@@ -2,11 +2,13 @@
 
 require File.expand_path('../boot', __FILE__)
 
+shift = (Time.at(1345090000) - Time.now).to_i + 30 * 24 * 3600
+
 puts "Starting seed"
 seed = CoinContainer.new(
   image: 'peercoin/seed',
   args: {
-    "timetravel" => -60*24*3600,
+    "timetravel" => shift,
   }
 )
 seed.wait_for_boot
@@ -19,7 +21,7 @@ nodes = node_names.map do |name|
     links: [seed.name],
     delete_at_exit: true,
     args: {
-      "timetravel" => -60*24*3600,
+      "timetravel" => shift,
     }
   )
 end
@@ -37,9 +39,13 @@ nodes.each_with_index do |node, i|
 
     amount_per_output = (amount / outputs).to_i
     puts "Sending #{amount_string} to node #{node_names[i]} in #{outputs} transactions of #{amount_per_output}"
-    outputs.times do
+    outputs.times do |i|
       seed.rpc("sendtoaddress", address, amount_per_output)
+      print "\r#{i + 1}"
+      STDOUT.flush
     end
+    puts
+    puts "Generating block to confirm"
     seed.generate_stake
 end
 
@@ -54,9 +60,13 @@ loop do
   end
 end
 
-
 nModifierInterval=60*20
 count = 64
+
+puts "Moving near protocol v5 switch time"
+shift = 1447700000 -  Time.parse(seed.info["time"]).to_i - count * nModifierInterval
+all.each { |n| n.rpc("timetravel", shift) }
+
 puts "Building next #{count} blocks at nModifierInterval intervals (#{nModifierInterval} seconds)"
 count.times do |i|
   all.each { |n| n.rpc("timetravel", nModifierInterval) }
@@ -66,11 +76,17 @@ count.times do |i|
 end
 puts
 
-puts "Building 10 more blocks at 1 minute intervals"
-10.times do |i|
-  all.each { |n| n.rpc("timetravel", 60) }
+puts "Moving to current time"
+START_TIME = Time.utc(2017, 1, 1, 12, 0, 0)
+last_blocks_interval = 40000
+shift = (START_TIME - Time.parse(seed.info["time"])).to_i
+last_blocks_count = shift / last_blocks_interval
+
+puts "Building #{last_blocks_count} more blocks at #{last_blocks_interval} seconds intervals to reach #{START_TIME}"
+last_blocks_count.times do |i|
+  all.each { |n| n.rpc("timetravel", last_blocks_interval) }
   seed.generate_stake
-  print "\r%2d/%2d" % [i+1, 10]
+  print "\r%2d/%2d" % [i+1, last_blocks_count]
   STDOUT.flush
 end
 puts
@@ -79,7 +95,7 @@ seed_height = seed.block_count
 
 puts "Waiting for all nodes to sync at seed height (#{seed_height})"
 loop do
-  heights = nodes.map(&:block_count)
+  heights = all.map(&:block_count)
   p heights
   break if heights.all? { |h| h == seed_height }
   sleep 1

@@ -33,9 +33,10 @@ class CoinContainer
     end
     name = options[:name]
 
+    connect_cmd = (options[:link_with_connect] ? "-connect" : "-addnode")
     connects = links.map do |linked_name, alias_name|
       upname = alias_name.upcase
-      "-addnode=$#{upname}_PORT_9903_TCP_ADDR:$#{upname}_PORT_9903_TCP_PORT"
+      "#{connect_cmd}=$#{upname}_PORT_9903_TCP_ADDR:$#{upname}_PORT_9903_TCP_PORT"
     end
 
     default_args = {
@@ -72,14 +73,14 @@ class CoinContainer
       bash_cmd += "echo Environment:; env; "
     end
 
-    bash_cmd += "./ppcoind " + cmd_args.join(" ")
+    bash_cmd += "./peercoind " + cmd_args.join(" ")
 
     if options[:remove_addr_after_shutdown]
-      bash_cmd += "; rm /.ppcoin/testnet/addr.dat"
+      bash_cmd += "; rm -f /root/.peercoin/testnet/peers.dat"
     end
 
     if options[:remove_wallet_after_shutdown]
-      bash_cmd += "; rm /.ppcoin/testnet/wallet.dat"
+      bash_cmd += "; rm /root/.peercoin/testnet/wallet.dat"
     end
 
     command = [
@@ -115,8 +116,8 @@ class CoinContainer
     node_container.start(
       'Binds' => ["#{File.expand_path('../../..', __FILE__)}:/code"],
       'PortBindings' => {
-        "9904/tcp" => ['127.0.0.1'],
-        "9903/tcp" => ['127.0.0.1'],
+        "9904/tcp" => [{}],
+        "9903/tcp" => [{}],
       },
       'Links' => links.map { |link_name, alias_name| "#{link_name}:#{alias_name}" },
     )

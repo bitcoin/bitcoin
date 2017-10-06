@@ -14,7 +14,7 @@ GEM
       archive-tar-minitar
       excon (>= 0.38.0)
       json
-    excon (0.39.5)
+    excon (0.57.1)
     gherkin (2.12.2)
       multi_json (~> 1.3)
     httparty (0.13.1)
@@ -37,3 +37,6 @@ DEPENDENCIES
   docker-api
   httparty
   rspec-expectations
+
+BUNDLED WITH
+   1.12.5
