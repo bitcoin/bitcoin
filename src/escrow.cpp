@@ -1850,7 +1850,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 		reselleralias = selleralias;
 		selleralias = theLinkedAlias;
 		fDepositPercentage = linkedOffer.auctionOffer.fDepositPercentage;
-		OfferLinkWhitelistEntry foundEntry;
+		COfferLinkWhitelistEntry foundEntry;
 		theLinkedAlias.offerWhitelist.GetLinkEntryByHash(theOffer.aliasTuple.first, foundEntry);
 		CAmount nTotalLinkedOfferPrice = AmountFromValue(strprintf("%.*f", 8, linkedOffer.GetPrice(foundEntry)*nQty));
 		nCommission = nTotalOfferPrice - nTotalLinkedOfferPrice;
@@ -1904,7 +1904,8 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	const UniValue& redeemScript_value = find_value(o, "redeemScript");
 	if (redeemScript_value.isStr())
 	{
-		redeemScript = ParseHex(redeemScript_value.get_str());
+		std::vector<unsigned char> data(ParseHex(redeemScript_value.get_str()));
+		redeemScript = CScript(data.begin(), data.end());
 	}
 	else
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4523 - " + _("Could not create escrow transaction: could not find redeem script in response"));
@@ -1928,7 +1929,6 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	if (!bBuyNow)
 		nFees += nDepositFee;
 	CAmount nAmountWithFee = nTotalOfferPrice+nFees;
-	CWalletTx wtx;
 	CRecipient recipientEscrow  = {scriptPubKey, bBuyNow? nAmountWithFee: nFees, false};
 	// if we are paying with SYS and we are using buy it now to buy at offer price or there is a deposit required as a bidder, then add this recp to vecSend to create payment otherwise no payment to escrow *yet*
 	if(extTxIdStr.empty() && (theOffer.auctionOffer.fDepositPercentage > 0 || bBuyNow))
@@ -2358,7 +2358,8 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 		const UniValue& redeemScript_value = find_value(o, "redeemScript");
 		if (redeemScript_value.isStr())
 		{
-			redeemScript = ParseHex(redeemScript_value.get_str());
+			std::vector<unsigned char> data(ParseHex(redeemScript_value.get_str()));
+			redeemScript = CScript(data.begin(), data.end());
 		}
 		else
 			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4523 - " + _("Could not create escrow transaction: could not find redeem script in response"));
@@ -2643,7 +2644,8 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 		const UniValue& redeemScript_value = find_value(o, "redeemScript");
 		if (redeemScript_value.isStr())
 		{
-			redeemScript = ParseHex(redeemScript_value.get_str());
+			std::vector<unsigned char> data(ParseHex(redeemScript_value.get_str()));
+			redeemScript = CScript(data.begin(), data.end());
 		}
 		else
 			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4523 - " + _("Could not create escrow transaction: could not find redeem script in response"));
@@ -2973,7 +2975,8 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 		const UniValue& redeemScript_value = find_value(o, "redeemScript");
 		if (redeemScript_value.isStr())
 		{
-			redeemScript = ParseHex(redeemScript_value.get_str());
+			std::vector<unsigned char> data(ParseHex(redeemScript_value.get_str()));
+			redeemScript = CScript(data.begin(), data.end());
 		}
 		else
 			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4523 - " + _("Could not create escrow transaction: could not find redeem script in response"));
@@ -3187,7 +3190,8 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 		const UniValue& redeemScript_value = find_value(o, "redeemScript");
 		if (redeemScript_value.isStr())
 		{
-			redeemScript = ParseHex(redeemScript_value.get_str());
+			std::vector<unsigned char> data(ParseHex(redeemScript_value.get_str()));
+			redeemScript = CScript(data.begin(), data.end());
 		}
 		else
 			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4523 - " + _("Could not create escrow transaction: could not find redeem script in response"));
