@@ -1006,7 +1006,7 @@ const string OfferNew(const string& node, const string& aliasname, const string&
 	bool auctionreqwitness = (auction_require_witness == "true") ? true : false;
 	BOOST_CHECK(find_value(r.get_obj(), "quantity").get_int() == qty);
 	BOOST_CHECK(find_value(r.get_obj(), "currency").get_str() == currency);
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "price").get_str(), price);
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "price").get_real(), boost::lexical_cast<float>(price));
 	BOOST_CHECK(find_value(r.get_obj(), "title").get_str() == title);
 	BOOST_CHECK(find_value(r.get_obj(), "description").get_str() == description);
 	if(offerType != "\"\"")
@@ -1032,7 +1032,7 @@ const string OfferNew(const string& node, const string& aliasname, const string&
 		BOOST_CHECK(find_value(r.get_obj(), "title").get_str() == title);
 		BOOST_CHECK(find_value(r.get_obj(), "description").get_str() == description);
 		BOOST_CHECK(find_value(r.get_obj(), "currency").get_str() == currency);
-		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "price").get_str(), price);
+		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "price").get_real(), boost::lexical_cast<float>(price));
 		if (offerType != "\"\"")
 			BOOST_CHECK(find_value(r.get_obj(), "offertype").get_str() == offerType);
 
@@ -1055,7 +1055,7 @@ const string OfferNew(const string& node, const string& aliasname, const string&
 		BOOST_CHECK(find_value(r.get_obj(), "title").get_str() == title);
 		BOOST_CHECK(find_value(r.get_obj(), "description").get_str() == description);
 		BOOST_CHECK(find_value(r.get_obj(), "currency").get_str() == currency);
-		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "price").get_str(), price);
+		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "price").get_real(), boost::lexical_cast<float>(price));
 		if (offerType != "\"\"")
 			BOOST_CHECK(find_value(r.get_obj(), "offertype").get_str() == offerType);
 
