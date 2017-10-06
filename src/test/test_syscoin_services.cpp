@@ -456,12 +456,10 @@ void ExpireAlias(const string& alias)
 		expiryTime = find_value(r.get_obj(), "expires_on").get_int64();
 	}
 	SetMockTime(expiryTime+1);
-	GenerateBlocks(5, "node1");
-	GenerateBlocks(5, "node2");
-	GenerateBlocks(5, "node3");
 	// ensure alias is expired
 	try
 	{
+		GenerateBlocks(5, "node1");
 		r = CallRPC("node1", "aliasinfo " + alias);
 	}
 	catch(const runtime_error &e)
@@ -474,6 +472,7 @@ void ExpireAlias(const string& alias)
 	}
 	try
 	{
+		GenerateBlocks(5, "node2");
 		r = CallRPC("node2", "aliasinfo " + alias);
 	}
 	catch(const runtime_error &e)
@@ -486,6 +485,7 @@ void ExpireAlias(const string& alias)
 	}
 	try
 	{
+		GenerateBlocks(5, "node3");
 		r = CallRPC("node3", "aliasinfo " + alias);
 	}
 	catch(const runtime_error &e)
