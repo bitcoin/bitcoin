@@ -1003,6 +1003,7 @@ const string OfferNew(const string& node, const string& aliasname, const string&
 	if(certguid != "\"\"")
 		BOOST_CHECK(find_value(r.get_obj(), "cert").get_str() == certguid);
 
+	bool auctionreqwitness = (auction_require_witness == "true") ? true : false;
 	BOOST_CHECK(find_value(r.get_obj(), "quantity").get_int() == qty);
 	BOOST_CHECK(find_value(r.get_obj(), "currency").get_str() == currency);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "price").get_str(), price);
@@ -1012,13 +1013,13 @@ const string OfferNew(const string& node, const string& aliasname, const string&
 		BOOST_CHECK(find_value(r.get_obj(), "offertype").get_str() == offerType);
 
 	if (auction_expires != "\"\"")
-		BOOST_CHECK(find_value(r.get_obj(), "auction_expires_on").get_int() == atoi(auction_expires));
+		BOOST_CHECK(find_value(r.get_obj(), "auction_expires_on").get_int() == boost::lexical_cast<int>(auction_expires));
 	if (auction_reserve != "\"\"")
-		BOOST_CHECK(find_value(r.get_obj(), "auction_expires_on").get_real() == atof(auction_reserve));
+		BOOST_CHECK(find_value(r.get_obj(), "auction_expires_on").get_real() == boost::lexical_cast<float>(auction_reserve));
 	if (auction_require_witness != "\"\"")
-		BOOST_CHECK(find_value(r.get_obj(), "auction_require_witness").get_bool() == auction_require_witness == "true"? true: false);
+		BOOST_CHECK(find_value(r.get_obj(), "auction_require_witness").get_bool() == auctionreqwitness);
 	if (auction_deposit != "\"\"")
-		BOOST_CHECK(find_value(r.get_obj(), "auction_deposit").get_real() == atof(auction_deposit));
+		BOOST_CHECK(find_value(r.get_obj(), "auction_deposit").get_real() == boost::lexical_cast<float>(auction_deposit));
 	
 	if(!otherNode1.empty())
 	{
@@ -1036,13 +1037,13 @@ const string OfferNew(const string& node, const string& aliasname, const string&
 			BOOST_CHECK(find_value(r.get_obj(), "offertype").get_str() == offerType);
 
 		if (auction_expires != "\"\"")
-			BOOST_CHECK(find_value(r.get_obj(), "auction_expires_on").get_int() == atoi(auction_expires));
+			BOOST_CHECK(find_value(r.get_obj(), "auction_expires_on").get_int() == boost::lexical_cast<int>(auction_expires));
 		if (auction_reserve != "\"\"")
-			BOOST_CHECK(find_value(r.get_obj(), "auction_expires_on").get_real() == atof(auction_reserve));
+			BOOST_CHECK(find_value(r.get_obj(), "auction_expires_on").get_real() == boost::lexical_cast<float>(auction_reserve));
 		if (auction_require_witness != "\"\"")
-			BOOST_CHECK(find_value(r.get_obj(), "auction_require_witness").get_bool() == auction_require_witness == "true" ? true : false);
+			BOOST_CHECK(find_value(r.get_obj(), "auction_require_witness").get_bool() == auctionreqwitness);
 		if (auction_deposit != "\"\"")
-			BOOST_CHECK(find_value(r.get_obj(), "auction_deposit").get_real() == atof(auction_deposit));
+			BOOST_CHECK(find_value(r.get_obj(), "auction_deposit").get_real() == boost::lexical_cast<float>(auction_deposit));
 	}
 	if(!otherNode2.empty())
 	{
@@ -1059,13 +1060,13 @@ const string OfferNew(const string& node, const string& aliasname, const string&
 			BOOST_CHECK(find_value(r.get_obj(), "offertype").get_str() == offerType);
 
 		if (auction_expires != "\"\"")
-			BOOST_CHECK(find_value(r.get_obj(), "auction_expires_on").get_int() == atoi(auction_expires));
+			BOOST_CHECK(find_value(r.get_obj(), "auction_expires_on").get_int() == boost::lexical_cast<int>(auction_expires));
 		if (auction_reserve != "\"\"")
-			BOOST_CHECK(find_value(r.get_obj(), "auction_expires_on").get_real() == atof(auction_reserve));
+			BOOST_CHECK(find_value(r.get_obj(), "auction_expires_on").get_real() == boost::lexical_cast<float>(auction_reserve));
 		if (auction_require_witness != "\"\"")
-			BOOST_CHECK(find_value(r.get_obj(), "auction_require_witness").get_bool() == auction_require_witness == "true" ? true : false);
+			BOOST_CHECK(find_value(r.get_obj(), "auction_require_witness").get_bool() == auctionreqwitness);
 		if (auction_deposit != "\"\"")
-			BOOST_CHECK(find_value(r.get_obj(), "auction_deposit").get_real() == atof(auction_deposit));
+			BOOST_CHECK(find_value(r.get_obj(), "auction_deposit").get_real() == boost::lexical_cast<float>(auction_deposit));
 	}
 	return guid;
 }
@@ -1092,7 +1093,7 @@ void OfferUpdate(const string& node, const string& aliasname, const string& offe
 	string offerupdatestr = "offerupdate " + aliasname + " " + offerguid + " " + category + " " + title + " " + qtyStr + " " + price + " " + description + " " + currency + " " + isprivateStr + " " + certguid + " " +  commissionStr + " " + paymentoptions + " " + offerType + " " + auction_expires + " " + auction_reserve + " " + auction_require_witness + " " + auction_deposit + " " + witness;
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, offerupdatestr));
 	GenerateBlocks(10, node);
-
+	bool auctionreqwitness = (auction_require_witness == "true") ? true : false;
 
 		
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "offerinfo " + offerguid));
@@ -1111,13 +1112,13 @@ void OfferUpdate(const string& node, const string& aliasname, const string& offe
 		BOOST_CHECK(find_value(r.get_obj(), "offertype").get_str() == offerType);
 
 	if (auction_expires != "\"\"")
-		BOOST_CHECK(find_value(r.get_obj(), "auction_expires_on").get_int() == atoi(auction_expires));
+		BOOST_CHECK(find_value(r.get_obj(), "auction_expires_on").get_int() == boost::lexical_cast<int>(auction_expires));
 	if (auction_reserve != "\"\"")
-		BOOST_CHECK(find_value(r.get_obj(), "auction_expires_on").get_real() == atof(auction_reserve));
+		BOOST_CHECK(find_value(r.get_obj(), "auction_expires_on").get_real() == boost::lexical_cast<float>(auction_reserve));
 	if (auction_require_witness != "\"\"")
-		BOOST_CHECK(find_value(r.get_obj(), "auction_require_witness").get_bool() == auction_require_witness == "true" ? true : false);
+		BOOST_CHECK(find_value(r.get_obj(), "auction_require_witness").get_bool() == auctionreqwitness);
 	if (auction_deposit != "\"\"")
-		BOOST_CHECK(find_value(r.get_obj(), "auction_deposit").get_real() == atof(auction_deposit));
+		BOOST_CHECK(find_value(r.get_obj(), "auction_deposit").get_real() == boost::lexical_cast<float>(auction_deposit));
 	if(!otherNode1.empty())
 	{
 		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode1, "offerinfo " + offerguid));
@@ -1136,13 +1137,13 @@ void OfferUpdate(const string& node, const string& aliasname, const string& offe
 			BOOST_CHECK(find_value(r.get_obj(), "offertype").get_str() == offerType);
 
 		if (auction_expires != "\"\"")
-			BOOST_CHECK(find_value(r.get_obj(), "auction_expires_on").get_int() == atoi(auction_expires));
+			BOOST_CHECK(find_value(r.get_obj(), "auction_expires_on").get_int() == boost::lexical_cast<int>(auction_expires));
 		if (auction_reserve != "\"\"")
-			BOOST_CHECK(find_value(r.get_obj(), "auction_expires_on").get_real() == atof(auction_reserve));
+			BOOST_CHECK(find_value(r.get_obj(), "auction_expires_on").get_real() == boost::lexical_cast<float>(auction_reserve));
 		if (auction_require_witness != "\"\"")
-			BOOST_CHECK(find_value(r.get_obj(), "auction_require_witness").get_bool() == auction_require_witness == "true" ? true : false);
+			BOOST_CHECK(find_value(r.get_obj(), "auction_require_witness").get_bool() == auctionreqwitness);
 		if (auction_deposit != "\"\"")
-			BOOST_CHECK(find_value(r.get_obj(), "auction_deposit").get_real() == atof(auction_deposit));
+			BOOST_CHECK(find_value(r.get_obj(), "auction_deposit").get_real() == boost::lexical_cast<float>(auction_deposit));
 	}
 	if(!otherNode2.empty())
 	{
@@ -1162,13 +1163,13 @@ void OfferUpdate(const string& node, const string& aliasname, const string& offe
 			BOOST_CHECK(find_value(r.get_obj(), "offertype").get_str() == offerType);
 
 		if (auction_expires != "\"\"")
-			BOOST_CHECK(find_value(r.get_obj(), "auction_expires_on").get_int() == atoi(auction_expires));
+			BOOST_CHECK(find_value(r.get_obj(), "auction_expires_on").get_int() == boost::lexical_cast<int>(auction_expires));
 		if (auction_reserve != "\"\"")
-			BOOST_CHECK(find_value(r.get_obj(), "auction_expires_on").get_real() == atof(auction_reserve));
+			BOOST_CHECK(find_value(r.get_obj(), "auction_expires_on").get_real() == boost::lexical_cast<float>(auction_reserve));
 		if (auction_require_witness != "\"\"")
-			BOOST_CHECK(find_value(r.get_obj(), "auction_require_witness").get_bool() == auction_require_witness == "true" ? true : false);
+			BOOST_CHECK(find_value(r.get_obj(), "auction_require_witness").get_bool() == auctionreqwitness);
 		if (auction_deposit != "\"\"")
-			BOOST_CHECK(find_value(r.get_obj(), "auction_deposit").get_real() == atof(auction_deposit));
+			BOOST_CHECK(find_value(r.get_obj(), "auction_deposit").get_real() == boost::lexical_cast<float>(auction_deposit));
 	}
 }
 
@@ -1219,12 +1220,12 @@ void EscrowBid(const string& node, const string& buyeralias, const string& escro
 	BOOST_CHECK(find_value(escrowBidObj, "status").get_str() == "valid");
 
 
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowinfo " + guid));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowinfo " + escrowguid));
 	string selleralias = find_value(r.get_obj(), "seller").get_str();
 	int qty = find_value(r.get_obj(), "quantity").get_int();
 	string arbiteralias = find_value(r.get_obj(), "arbiter").get_str();
 
-	BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == guid);
+	BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == escrowguid);
 	BOOST_CHECK(find_value(r.get_obj(), "buynow").get_bool() == false);
 	BOOST_CHECK(AmountFromValue(find_value(r.get_obj(), "total_without_fee")) == AmountFromValue(bid_in_payment_option)*qty);
 	BOOST_CHECK(find_value(r.get_obj(), "bid_in_offer_currency_per_unit").get_real() == atof(bid_in_offer_currency.c_str()));
@@ -1234,8 +1235,8 @@ void EscrowBid(const string& node, const string& buyeralias, const string& escro
 	BOOST_CHECK(find_value(r.get_obj(), "seller").get_str() == selleralias);
 	if (!otherNode1.empty())
 	{
-		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode1, "escrowinfo " + guid));
-		BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == guid);
+		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode1, "escrowinfo " + escrowguid));
+		BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == escrowguid);
 		BOOST_CHECK(find_value(r.get_obj(), "buynow").get_bool() == false);
 		BOOST_CHECK(AmountFromValue(find_value(r.get_obj(), "total_without_fee")) == AmountFromValue(bid_in_payment_option)*qty);
 		BOOST_CHECK(find_value(r.get_obj(), "bid_in_offer_currency_per_unit").get_real() == atof(bid_in_offer_currency.c_str()));
@@ -1246,8 +1247,8 @@ void EscrowBid(const string& node, const string& buyeralias, const string& escro
 	}
 	if (!otherNode2.empty())
 	{
-		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode2, "escrowinfo " + guid));
-		BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == guid);
+		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode2, "escrowinfo " + escrowguid));
+		BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == escrowguid);
 		BOOST_CHECK(find_value(r.get_obj(), "buynow").get_bool() == false);
 		BOOST_CHECK(AmountFromValue(find_value(r.get_obj(), "total_without_fee")) == AmountFromValue(bid_in_payment_option)*qty);
 		BOOST_CHECK(find_value(r.get_obj(), "bid_in_offer_currency_per_unit").get_real() == atof(bid_in_offer_currency.c_str()));
