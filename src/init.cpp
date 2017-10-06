@@ -1773,7 +1773,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
             InitWarning("You need at least one thread to mine. Using one thread.");
             nMineThreads = 1;
         } else if ( nMineThreads > MAX_MINE_THREADS ) {
-            InitWarning("For testing, mining with more than %u threads is disabled. Falling back to maximum.", MAX_MINE_THREADS);
+            InitWarning("For testing, mining with more than 16 threads is disabled. Falling back to maximum.");
             nMineThreads = MAX_MINE_THREADS;
         }
 
