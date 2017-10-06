@@ -464,60 +464,49 @@ void ExpireAlias(const string& alias)
 {
 	int64_t expiryTime = 0;
 	// ensure alias is expired
+	UniValue r;
 	try
 	{
-		UniValue r;
-		r = CallRPC("node1", "aliasinfo " + alias);
+		UniValue aliasres;
+		aliasres = CallRPC("node1", "aliasinfo " + alias);
 		expiryTime = find_value(r.get_obj(), "expires_on").get_int64();
 		SetMockTime(expiryTime + 1);
 		GenerateBlocks(5, "node1");
 		r = CallRPC("node1", "aliasinfo " + alias);
+		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), true);
 	}
 	catch(const runtime_error &e)
 	{
-		r = NullUniValue;
-	}
-	if(r.isObject())
-	{
-		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), true);
 	}
 	try
 	{
-		UniValue r;
 		if (expiryTime <= 0) {
-			r = CallRPC("node2", "aliasinfo " + alias);
+			UniValue aliasres;
+			raliasres = CallRPC("node2", "aliasinfo " + alias);
 			expiryTime = find_value(r.get_obj(), "expires_on").get_int64();
 			SetMockTime(expiryTime + 1);
 		}
 		GenerateBlocks(5, "node2");
 		r = CallRPC("node2", "aliasinfo " + alias);
+		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), true);
 	}
 	catch(const runtime_error &e)
 	{
-		r = NullUniValue;
-	}
-	if(r.isObject())
-	{
-		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), true);	
 	}
 	try
 	{
-		UniValue r;
 		if (expiryTime <= 0) {
-			r = CallRPC("node3", "aliasinfo " + alias);
+			UniValue aliasres;
+			aliasres = CallRPC("node3", "aliasinfo " + alias);
 			expiryTime = find_value(r.get_obj(), "expires_on").get_int64();
 			SetMockTime(expiryTime + 1);
 		}
 		GenerateBlocks(5, "node3");
 		r = CallRPC("node3", "aliasinfo " + alias);
+		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), true);
 	}
 	catch(const runtime_error &e)
 	{
-		r = NullUniValue;
-	}
-	if(r.isObject())
-	{
-		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), true);
 	}
 }
 void GetOtherNodes(const string& node, string& otherNode1, string& otherNode2)
