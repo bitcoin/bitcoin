@@ -1339,9 +1339,9 @@ UniValue syscoinquery(const UniValue& params, bool fHelp) {
 	return res;
 }
 UniValue aliasnew(const UniValue& params, bool fHelp) {
-	if (fHelp || 2 > params.size() || 8 < params.size())
+	if (fHelp || 1 > params.size() || 8 < params.size())
 		throw runtime_error(
-		"aliasnew <aliasname> <public value> [accept transfers=true] [expire_timestamp] [address] [encryption_privatekey] [encryption_publickey] [witness]\n"
+			"aliasnew <aliasname> [public value] [accept transfers=true] [expire_timestamp] [address] [encryption_privatekey] [encryption_publickey] [witness]\n"
 						"<aliasname> alias name.\n"
 						"<public value> alias public profile data, 1024 chars max.\n"
 						"<accept transfers> set to No if this alias should not allow a certificate to be transferred to it. Defaults to Yes.\n"	
