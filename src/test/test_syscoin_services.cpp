@@ -559,7 +559,7 @@ string AliasNew(const string& node, const string& aliasname, const string& pubda
 	BOOST_CHECK_NO_THROW(CallRPC(node, "aliasnew " + aliasname + " " + pubdata + " " + acceptTransfers +  " " + expireTime + " " + aliasAddress.ToString() + " " + strEncryptionPrivateKeyHex + " " + HexStr(vchPubEncryptionKey) + " " + witness));
 	GenerateBlocks(5, node);
 	// activation
-	BOOST_CHECK_NO_THROW(CallRPC(node, "aliasnew " + aliasname + " \"\" \"\""));
+	BOOST_CHECK_NO_THROW(CallRPC(node, "aliasnew " + aliasname + " \"\""));
 	GenerateBlocks(5, node);
 	BOOST_CHECK_THROW(CallRPC(node, "sendtoaddress " + aliasname + " 10"), runtime_error);
 	GenerateBlocks(5, node);
