@@ -745,7 +745,7 @@ void AliasAddWhitelist(const string& node, const string& owneralias, const strin
 	bool found = false;
 	UniValue r;
 	string whiteListArray = "\"{\\\"aliases\\\":[{\\\"alias\\\":\\\"" + aliasname + "\\\",\\\"discount_percentage\\\":" + discount + "}]}\"";
-	BOOST_CHECK_NO_THROW(CallRPC(node, "aliasupdatewhitelist " + owneralias + " " + whitelistArray + " " + witness));
+	BOOST_CHECK_NO_THROW(CallRPC(node, "aliasupdatewhitelist " + owneralias + " " + whiteListArray + " " + witness));
 	GenerateBlocks(10, node);
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliaswhitelist " + owneralias));
 	const UniValue &arrayValue = r.get_array();
@@ -786,6 +786,7 @@ void AliasClearWhitelist(const string& node, const string& owneralias, const str
 }
 int FindAliasDiscount(const string& node, const string& owneralias, const string &aliasname) 
 {
+	UniValue r;
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliaswhitelist " + owneralias));
 	const UniValue &arrayValue = r.get_array();
 	for (int i = 0; i<arrayValue.size(); i++)
