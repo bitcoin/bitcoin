@@ -72,6 +72,7 @@ BOOST_AUTO_TEST_CASE(generate_auction_reserve)
 	string buyNowStr = "false";
 	string networkFee = "\"\"";
 	string arbiterFee = "\"\"";
+	string witness = "\"\"";
 	string witnessFee = "\"\"";
 	string shippingFee = "\"\"";
 	string bid_in_payment_option = "0.11";
