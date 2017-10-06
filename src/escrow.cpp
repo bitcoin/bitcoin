@@ -2947,15 +2947,14 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 	// Buyer/Arbiter signs it
 	if(pwalletMain)
 	{
-		vector<unsigned char> redeemScript;
 		UniValue arrayParams(UniValue::VARR);
 		UniValue arrayOfKeys(UniValue::VARR);
 
 		// standard 2 of 3 multisig
 		arrayParams.push_back(2);
 		arrayOfKeys.push_back(stringFromVch(escrow.arbiterAliasTuple.first));
-		arrayOfKeys.push_back(stringFromVch(escrow.arbiterSellerTuple.first));
-		arrayOfKeys.push_back(stringFromVch(escrow.arbiterBuyerTuple.first));
+		arrayOfKeys.push_back(stringFromVch(escrow.sellerAliasTuple.first));
+		arrayOfKeys.push_back(stringFromVch(escrow.buyerAliasTuple.first));
 		arrayParams.push_back(arrayOfKeys);
 		UniValue resCreate;
 		CScript redeemScript;
@@ -3162,15 +3161,14 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 
 	if (pwalletMain)
 	{
-		vector<unsigned char> redeemScript;
 		UniValue arrayParams(UniValue::VARR);
 		UniValue arrayOfKeys(UniValue::VARR);
 
 		// standard 2 of 3 multisig
 		arrayParams.push_back(2);
 		arrayOfKeys.push_back(stringFromVch(escrow.arbiterAliasTuple.first));
-		arrayOfKeys.push_back(stringFromVch(escrow.arbiterSellerTuple.first));
-		arrayOfKeys.push_back(stringFromVch(escrow.arbiterBuyerTuple.first));
+		arrayOfKeys.push_back(stringFromVch(escrow.sellerAliasTuple.first));
+		arrayOfKeys.push_back(stringFromVch(escrow.buyerAliasTuple.first));
 		arrayParams.push_back(arrayOfKeys);
 		UniValue resCreate;
 		CScript redeemScript;
@@ -3694,9 +3692,8 @@ bool BuildEscrowJson(const CEscrow &escrow, const std::vector<std::vector<unsign
 	oEscrow.push_back(Pair("witnessfee", ValueFromAmount(escrow.nWitnessFee)));
 	oEscrow.push_back(Pair("shipping", ValueFromAmount(escrow.nShipping)));
 	oEscrow.push_back(Pair("deposit", ValueFromAmount(escrow.nDeposit)));
-	oEscrow.push_back(Pair("currency", IsOfferTypeInMask(theOffer.offerType, OFFERTYPE_COIN) ? GetPaymentOptionsString(escrow.nPaymentOption): theOffer.sCurrencyCode));
+	oEscrow.push_back(Pair("currency", IsOfferTypeInMask(theOffer.offerType, OFFERTYPE_COIN) ? GetPaymentOptionsString(escrow.nPaymentOption): stringFromVch(theOffer.sCurrencyCode)));
 	oEscrow.push_back(Pair("exttxid", escrow.extTxId.IsNull()? "": escrow.extTxId.GetHex()));
-	CScript inner(escrow.vchRedeemScript.begin(), escrow.vchRedeemScript.end());
 	oEscrow.push_back(Pair("escrowaddress", escrow.escrowAddress));
 	string strRedeemTxId = "";
 	if(!escrow.redeemTxId.IsNull())
