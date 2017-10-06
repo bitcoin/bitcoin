@@ -56,7 +56,7 @@ bool IsEscrowOp(int op) {
 // % fee on escrow value for arbiter
 int64_t GetEscrowArbiterFee(const int64_t &escrowValue, const float &fEscrowFee) {
 
-	float fFee = fEscrowFee
+	float fFee = fEscrowFee;
 	if (fFee < 0.005)
 		fFee = 0.005;
 	int fee = 1 / fFee;
