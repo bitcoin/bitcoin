@@ -1614,7 +1614,7 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 
 	if(!strAddress.empty())
 		DecodeBase58(strAddress, theAlias.vchAddress);
-	if(timeSet || copyAlias.nExpireTime <= chainActive.Tip()->nTime)
+	if(timeSet || copyAlias.nExpireTime <= chainActive.Tip()->GetMedianTimePast())
 		theAlias.nExpireTime = nTime;
 	else
 		theAlias.nExpireTime = copyAlias.nExpireTime;
