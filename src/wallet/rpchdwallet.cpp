@@ -2706,7 +2706,7 @@ static bool ParseOutput(
     }
     output.push_back(Pair("vout", o.vout));
     amounts.push_back(std::to_string(o.amount));
-    return (true);
+    return true;
 }
 
 static bool ParseOutputs(
@@ -2751,7 +2751,7 @@ static bool ParseOutputs(
             UniValue output(UniValue::VOBJ);
             match = ParseOutput(output, s, pwallet, addresses, amounts);
             if (!match) {
-                return (false);
+                return false;
             }
             output.push_back(Pair("amount", ValueFromAmount(-s.amount)));
             amount -= s.amount;
@@ -2777,7 +2777,7 @@ static bool ParseOutputs(
             UniValue output(UniValue::VOBJ);
             match = ParseOutput(output, r, pwallet, addresses, amounts);
             if (!match) {
-                return (false);
+                return false;
             }
             if (r.destination.type() == typeid(CKeyID)) {
                 CStealthAddress sx;
@@ -2804,7 +2804,7 @@ static bool ParseOutputs(
             UniValue output(UniValue::VOBJ);
             match = ParseOutput(output, s, pwallet, addresses, amounts);
             if (!match) {
-                return (false);
+                return false;
             }
             output.push_back(Pair("amount", ValueFromAmount(s.amount)));
             outputs.push_back(output);
@@ -2829,28 +2829,28 @@ static bool ParseOutputs(
             && category == "internal_transfer"
         )
     )) {
-        return (false);
+        return false;
     }
     // done if there's nothing to search for
     if (search == "") {
-        return (true);
+        return true;
     }
     // search in addresses
     if (std::any_of(addresses.begin(), addresses.end(), [search](std::string addr) {
-        return (addr.find(search) != std::string::npos);
+        return addr.find(search) != std::string::npos;
     })) {
-        return (true);
+        return true;
     }
     // search in amounts
     // character DOT '.' is not searched for: search "123" will find 1.23 and 12.3
     if (std::any_of(amounts.begin(), amounts.end(), [search](std::string amount) {
-        return (amount.find(search) != std::string::npos);
+        return amount.find(search) != std::string::npos;
     })) {
-        return (true);
+        return true;
     }
     
     // not found
-    return (false);
+    return false;
 }
 
 static bool ParseRecords(
@@ -2973,7 +2973,7 @@ static bool ParseRecords(
         entry.push_back(Pair("walletconflicts", conflicts));
         PushTime(entry, "time", rtx.nTimeReceived);
     }
-    return (true);
+    return true;
 }
 
 UniValue filtertransactions(const JSONRPCRequest &request)
@@ -3149,7 +3149,7 @@ UniValue filtertransactions(const JSONRPCRequest &request)
         i++;
     }
     
-    return (result);
+    return result;
 }
 
 enum SortCodes
