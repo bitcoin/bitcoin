@@ -29,13 +29,15 @@
 #include <boost/thread/exceptions.hpp>
 
 //Crown only features
-
 extern bool fMasterNode;
+extern bool fSystemNode;
 extern bool fLiteMode;
 extern bool fEnableInstantX;
 extern int nInstantXDepth;
 extern int64_t enforceMasternodePaymentsTime;
 extern std::string strMasterNodeAddr;
+extern std::string strSystemNodeAddr;
+extern std::string strSystemNodePrivKey;
 extern int keysLoaded;
 extern bool fSucessfullyLoaded;
 extern std::string strBudgetMode;
@@ -109,6 +111,7 @@ boost::filesystem::path GetDefaultDataDir();
 const boost::filesystem::path &GetDataDir(bool fNetSpecific = true);
 boost::filesystem::path GetConfigFile();
 boost::filesystem::path GetMasternodeConfigFile();
+boost::filesystem::path GetSystemnodeConfigFile();
 #ifndef WIN32
 boost::filesystem::path GetPidFile();
 void CreatePidFile(const boost::filesystem::path &path, pid_t pid);

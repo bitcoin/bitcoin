@@ -38,6 +38,7 @@ QT_FORMS_UI = \
   qt/forms/sendcoinsentry.ui \
   qt/forms/signverifymessagedialog.ui \
   qt/forms/masternodelist.ui \
+  qt/forms/systemnodelist.ui \
   qt/forms/transactiondescdialog.ui \
   qt/forms/multisigaddressentry.ui \
   qt/forms/multisigdialog.ui \
@@ -78,6 +79,7 @@ QT_MOC_CPP = \
   qt/moc_signverifymessagedialog.cpp \
   qt/moc_splashscreen.cpp \
   qt/moc_masternodelist.cpp \
+  qt/moc_systemnodelist.cpp \
   qt/moc_trafficgraphwidget.cpp \
   qt/moc_transactiondesc.cpp \
   qt/moc_transactiondescdialog.cpp \
@@ -150,6 +152,7 @@ BITCOIN_QT_H = \
   qt/signverifymessagedialog.h \
   qt/splashscreen.h \
   qt/masternodelist.h \
+  qt/systemnodelist.h \
   qt/trafficgraphwidget.h \
   qt/transactiondesc.h \
   qt/transactiondescdialog.h \
@@ -272,6 +275,7 @@ BITCOIN_QT_CPP += \
   qt/sendcoinsentry.cpp \
   qt/signverifymessagedialog.cpp \
   qt/masternodelist.cpp \
+  qt/systemnodelist.cpp \
   qt/transactiondesc.cpp \
   qt/transactiondescdialog.cpp \
   qt/transactionfilterproxy.cpp \

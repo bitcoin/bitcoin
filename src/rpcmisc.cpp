@@ -15,6 +15,7 @@
 #include "util.h"
 #include "spork.h"
 #include "masternode-sync.h"
+#include "systemnode-sync.h"
 #ifdef ENABLE_WALLET
 #include "wallet.h"
 #include "walletdb.h"
@@ -146,6 +147,48 @@ Value mnsync(const Array& params, bool fHelp)
         return "success";
     }
     return "failure";
+}
+
+Value snsync(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 1)
+        throw runtime_error(
+            "snsync [status|reset]\n"
+            "Returns the sync status or resets sync.\n"
+        );
+
+    std::string strMode = params[0].get_str();
+
+    if(strMode == "status") {
+        Object obj;
+
+        obj.push_back(Pair("IsBlockchainSynced", systemnodeSync.IsBlockchainSynced()));
+        obj.push_back(Pair("lastSystemnodeList", systemnodeSync.lastSystemnodeList));
+        obj.push_back(Pair("lastSystemnodeWinner", systemnodeSync.lastSystemnodeWinner));
+        obj.push_back(Pair("lastBudgetItem", systemnodeSync.lastBudgetItem));
+        obj.push_back(Pair("lastFailure", systemnodeSync.lastFailure));
+        obj.push_back(Pair("nCountFailures", systemnodeSync.nCountFailures));
+        obj.push_back(Pair("sumSystemnodeList", systemnodeSync.sumSystemnodeList));
+        obj.push_back(Pair("sumSystemnodeWinner", systemnodeSync.sumSystemnodeWinner));
+        obj.push_back(Pair("sumBudgetItemProp", systemnodeSync.sumBudgetItemProp));
+        obj.push_back(Pair("sumBudgetItemFin", systemnodeSync.sumBudgetItemFin));
+        obj.push_back(Pair("countSystemnodeList", systemnodeSync.countSystemnodeList));
+        obj.push_back(Pair("countSystemnodeWinner", systemnodeSync.countSystemnodeWinner));
+        obj.push_back(Pair("countBudgetItemProp", systemnodeSync.countBudgetItemProp));
+        obj.push_back(Pair("countBudgetItemFin", systemnodeSync.countBudgetItemFin));
+        obj.push_back(Pair("RequestedSystemnodeAssets", systemnodeSync.RequestedSystemnodeAssets));
+        obj.push_back(Pair("RequestedSystemnodeAttempt", systemnodeSync.RequestedSystemnodeAttempt));
+
+        return obj;
+    }
+
+    if(strMode == "reset")
+    {
+        systemnodeSync.Reset();
+        return "success";
+    }
+    return "failure";
+
 }
 
 #ifdef ENABLE_WALLET

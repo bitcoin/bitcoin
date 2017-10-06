@@ -317,7 +317,11 @@ static const CRPCCommand vRPCCommands[] =
     { "crown",               "mnbudgetvoteraw",       &mnbudgetvoteraw,        true,      true,       false },
     { "crown",               "mnfinalbudget",         &mnfinalbudget,          true,      true,       false },
     { "crown",               "mnsync",                &mnsync,                 true,      true,       false },
+    { "crown",               "snsync",                &snsync,                 true,      true,       false },
     { "crown",               "spork",                 &spork,                  true,      true,       false },
+    { "crown",               "systemnode",           &systemnode,            true,      true,       false },
+    { "crown",               "systemnodelist",       &systemnodelist,        true,      true,       false },
+    { "crown",               "systemnodebroadcast",  &systemnodebroadcast,   true,      true,       false },
 
     /* API features */
     { "api",                 "service",               &service,                true,      true,       false },

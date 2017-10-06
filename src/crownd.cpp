@@ -12,6 +12,7 @@
 #include "ui_interface.h"
 #include "util.h"
 #include "masternodeconfig.h"
+#include "systemnodeconfig.h"
 
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/filesystem.hpp>
@@ -113,6 +114,12 @@ bool AppInit(int argc, char* argv[])
         std::string strErr;
         if(!masternodeConfig.read(strErr)) {
             fprintf(stderr,"Error reading masternode configuration file: %s\n", strErr.c_str());
+            return false;
+        }
+
+        // parse systemnode.conf
+        if (!systemnodeConfig.read(strErr)) {
+            fprintf(stderr, "Error reading systemnode configuration file: %s\n", strErr.c_str());
             return false;
         }
 

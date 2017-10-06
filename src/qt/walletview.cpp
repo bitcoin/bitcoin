@@ -10,6 +10,7 @@
 #include "clientmodel.h"
 #include "guiutil.h"
 #include "masternodeconfig.h"
+#include "systemnodeconfig.h"
 #include "optionsmodel.h"
 #include "overviewpage.h"
 #include "receivecoinsdialog.h"
@@ -71,6 +72,9 @@ WalletView::WalletView(QWidget *parent):
     if (masternodeConfig.getCount() >= 0) {
         masternodeListPage = new MasternodeList();
     }
+    if (systemnodeConfig.getCount() >= 0) {
+        systemnodeListPage = new SystemnodeList();
+    }
 
     addWidget(overviewPage);
     addWidget(transactionsPage);
@@ -78,6 +82,9 @@ WalletView::WalletView(QWidget *parent):
     addWidget(sendCoinsPage);
     if (masternodeConfig.getCount() >= 0) {
         addWidget(masternodeListPage);
+    }
+    if (systemnodeConfig.getCount() >= 0) {
+        addWidget(systemnodeListPage);
     }
 
     // Clicking on a transaction on the overview pre-selects the transaction on the transaction history page
@@ -129,6 +136,9 @@ void WalletView::setClientModel(ClientModel *clientModel)
     if (masternodeConfig.getCount() >= 0) {
         masternodeListPage->setClientModel(clientModel);
     }
+    if (systemnodeConfig.getCount() >= 0) {
+        systemnodeListPage->setClientModel(clientModel);
+    }
 }
 
 void WalletView::setWalletModel(WalletModel *walletModel)
@@ -142,6 +152,9 @@ void WalletView::setWalletModel(WalletModel *walletModel)
     sendCoinsPage->setModel(walletModel);
     if (masternodeConfig.getCount() >= 0) {
         masternodeListPage->setWalletModel(walletModel);
+    }
+    if (systemnodeConfig.getCount() >= 0) {
+        systemnodeListPage->setWalletModel(walletModel);
     }
 
     if (walletModel)
@@ -210,6 +223,13 @@ void WalletView::gotoMasternodePage()
 {
     if (masternodeConfig.getCount() >= 0) {
         setCurrentWidget(masternodeListPage);
+    }
+}
+
+void WalletView::gotoSystemnodePage()
+{
+    if (systemnodeConfig.getCount() >= 0) {
+        setCurrentWidget(systemnodeListPage);
     }
 }
 

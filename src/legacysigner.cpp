@@ -39,7 +39,7 @@ bool CLegacySigner::SetCollateralAddress(std::string strAddress){
     return true;
 }
 
-bool CLegacySigner::IsVinAssociatedWithPubkey(CTxIn& vin, CPubKey& pubkey){
+bool CLegacySigner::IsVinAssociatedWithPubkey(CTxIn& vin, CPubKey& pubkey, int value){
     CScript payee2;
     payee2 = GetScriptForDestination(pubkey.GetID());
 
@@ -47,7 +47,7 @@ bool CLegacySigner::IsVinAssociatedWithPubkey(CTxIn& vin, CPubKey& pubkey){
     uint256 hash;
     if(GetTransaction(vin.prevout.hash, txVin, hash, true)){
         BOOST_FOREACH(CTxOut out, txVin.vout){
-            if(out.nValue == 10000*COIN){
+            if(out.nValue == value*COIN){
                 if(out.scriptPubKey == payee2) return true;
             }
         }

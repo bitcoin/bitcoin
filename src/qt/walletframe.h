@@ -58,6 +58,8 @@ public slots:
     void gotoSendCoinsPage(QString addr = "");
     /** Switch to masternode manager page */
     void gotoMasternodePage();
+    /** Switch to systemnode manager page */
+    void gotoSystemnodePage();
     /** Switch to multisig tab */
     void gotoMultisigTab();
 

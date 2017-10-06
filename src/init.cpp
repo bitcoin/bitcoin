@@ -30,6 +30,7 @@
 #include "masternode-payments.h"
 #include "masternodeman.h"
 #include "masternodeconfig.h"
+#include "systemnodeman.h"
 #include "spork.h"
 #include "utilmoneystr.h"
 #ifdef ENABLE_WALLET
@@ -417,6 +418,13 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += "  -masternodeprivkey=<n>     " + _("Set the masternode private key") + "\n";
     strUsage += "  -masternodeaddr=<n>        " + strprintf(_("Set external address:port to get to this masternode (example: %s)"), "128.127.106.235:9340") + "\n";
     strUsage += "  -budgetvotemode=<mode>     " + _("Change automatic finalized budget voting behavior. mode=auto: Vote for only exact finalized budget match to my generated budget. (string, default: auto)") + "\n";
+
+    strUsage += "\n" + _("Systemnode options:") + "\n";
+    strUsage += "  -systemnode=<n>            " + strprintf(_("Enable the client to act as a systemnode (0-1, default: %u)"), 0) + "\n";
+    strUsage += "  -snconf=<file>             " + strprintf(_("Specify systemnode configuration file (default: %s)"), "systemnode.conf") + "\n";
+    strUsage += "  -snconflock=<n>            " + strprintf(_("Lock systemnodes from systemnode configuration file (default: %u)"), 1) + "\n";
+    strUsage += "  -systemnodeprivkey=<n>     " + _("Set the systemnode private key") + "\n";
+    strUsage += "  -systemnodeaddr=<n>        " + strprintf(_("Set external address:port to get to this systemnode (example: %s)"), "128.127.106.235:9340") + "\n";
 
     strUsage += "\n" + _("InstantX options:") + "\n";
     strUsage += "  -enableinstantx=<n>    " + strprintf(_("Enable instantx, show confirmations for locked transactions (bool, default: %s)"), "true") + "\n";
@@ -1429,6 +1437,22 @@ bool AppInit2(boost::thread_group& threadGroup)
             LogPrintf("file format is unknown or invalid, please fix it manually\n");
     }
 
+    uiInterface.InitMessage(_("Loading systemnode cache..."));
+
+    CSystemnodeDB sndb;
+    CSystemnodeDB::ReadResult readResultS = sndb.Read(snodeman);
+    if (readResultS == CSystemnodeDB::FileError)
+        LogPrintf("Missing systemnode cache file - sncache.dat, will try to recreate\n");
+    else if (readResultS != CSystemnodeDB::Ok)
+    {
+        LogPrintf("Error reading sncache.dat: ");
+        if(readResultS == CSystemnodeDB::IncorrectFormat)
+            LogPrintf("magic is ok but data has invalid format, will try to recreate\n");
+        else
+            LogPrintf("file format is unknown or invalid, please fix it manually\n");
+    }
+
+
     uiInterface.InitMessage(_("Loading budget cache..."));
 
     CBudgetDB budgetdb;
@@ -1467,6 +1491,7 @@ bool AppInit2(boost::thread_group& threadGroup)
     }
 
     fMasterNode = GetBoolArg("-masternode", false);
+    fSystemNode = GetBoolArg("-systemnode", false);
 
     if((fMasterNode || masternodeConfig.getCount() > -1) && fTxIndex == false) {
         return InitError("Enabling Masternode support requires turning on transaction indexing."
@@ -1504,8 +1529,40 @@ bool AppInit2(boost::thread_group& threadGroup)
             return InitError(_("You must specify a masternodeprivkey in the configuration. Please see documentation for help."));
         }
     }
-    
-    //get the mode of budget voting for this masternode
+
+    if(fSystemNode) {
+        LogPrintf("IS SYSTEMNODE\n");
+        strSystemNodeAddr = GetArg("-systemnodeaddr", "");
+
+        LogPrintf(" addr %s\n", strSystemNodeAddr.c_str());
+
+        if(!strSystemNodeAddr.empty()){
+            CService addrTest = CService(strSystemNodeAddr);
+            if (!addrTest.IsValid()) {
+                return InitError("Invalid -systemnodeaddr address: " + strSystemNodeAddr);
+            }
+        }
+
+        strSystemNodePrivKey = GetArg("-systemnodeprivkey", "");
+        if(!strSystemNodePrivKey.empty()){
+            std::string errorMessage;
+
+            CKey key;
+            CPubKey pubkey;
+
+            if(!darkSendSigner.SetKey(strSystemNodePrivKey, errorMessage, key, pubkey))
+            {
+                return InitError(_("Invalid systemnodeprivkey. Please see documenation."));
+            }
+
+            activeSystemnode.pubKeySystemnode = pubkey;
+
+        } else {
+            return InitError(_("You must specify a systemnodeprivkey in the configuration. Please see documentation for help."));
+        }
+    }
+
+    //get the mode of budget voting for this throne
     strBudgetMode = GetArg("-budgetvotemode", "auto");
 
     if(GetBoolArg("-mnconflock", true) && pwalletMain) {
@@ -1528,6 +1585,9 @@ bool AppInit2(boost::thread_group& threadGroup)
     fLiteMode = GetBoolArg("-litemode", false);
     if(fMasterNode && fLiteMode){
         return InitError("You can not start a masternode in litemode");
+    }
+    if(fSystemNode && fLiteMode){
+        return InitError("You can not start a servicenode in litemode");
     }
 
     LogPrintf("fLiteMode %d\n", fLiteMode);

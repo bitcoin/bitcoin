@@ -140,6 +140,13 @@ void WalletFrame::gotoMasternodePage()
         i.value()->gotoMasternodePage();
 }
 
+void WalletFrame::gotoSystemnodePage()
+{
+    QMap<QString, WalletView*>::const_iterator i;
+    for (i = mapWalletViews.constBegin(); i != mapWalletViews.constEnd(); ++i)
+        i.value()->gotoSystemnodePage();
+}
+
 void WalletFrame::gotoMultisigTab()
 {
     WalletView *walletView = currentWalletView();
