@@ -239,8 +239,8 @@ BOOST_AUTO_TEST_CASE (generate_alias_offerexpiry_resync)
 	GenerateBlocks(5, "node3");
 	// change offer to an older alias, expire the alias and ensure that on resync the offer seems to be expired still
 	AliasNew("node1", "aliasold", "changeddata1");
-	printf("Sleeping 5 seconds between the creation of the two aliases for this test...\n");
-	MilliSleep(5000);
+	printf("Sleeping 7 seconds between the creation of the two aliases for this test...\n");
+	MilliSleep(7000);
 	GenerateBlocks(5, "node1");
 	GenerateBlocks(5, "node2");
 	GenerateBlocks(5, "node3");
