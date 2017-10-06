@@ -16,7 +16,7 @@ void StopNodes();
 void GenerateBlocks(int nBlocks, const string& node="node1");
 void GenerateMainNetBlocks(int nBlocks, const string& node);
 string CallExternal(string &cmd);
-void SetMocktime(const int64_t& expiryTime);
+void SetSysMocktime(const int64_t& expiryTime);
 void ExpireAlias(const string& alias);
 void GetOtherNodes(const string& node, string& otherNode1, string& otherNode2);
 string AliasNew(const string& node, const string& aliasname, const string& pubdata, string witness="\"\"");

@@ -36,7 +36,7 @@ bool IsCertOp(int op) {
 }
 
 uint64_t GetCertExpiration(const CCert& cert) {
-	uint64_t nTime = chainActive.Tip()->nTime + 1;
+	uint64_t nTime = chainActive.Tip()->GetMedianTimePast() + 1;
 	CAliasUnprunable aliasUnprunable;
 	if (paliasdb && paliasdb->ReadAliasUnprunable(cert.aliasTuple.first, aliasUnprunable) && !aliasUnprunable.IsNull())
 		nTime = aliasUnprunable.nExpireTime;
@@ -162,7 +162,7 @@ bool CCertDB::CleanupDatabase(int &servicesCleaned)
         try {
 			if (pcursor->GetKey(key) && key.first == "certi") {
 				const CNameTXIDTuple &certTuple = key.second;
-  				if (!GetCert(certTuple.first, txPos) || chainActive.Tip()->nTime >= GetCertExpiration(txPos))
+  				if (!GetCert(certTuple.first, txPos) || chainActive.Tip()->GetMedianTimePast() >= GetCertExpiration(txPos))
 				{
 					servicesCleaned++;
 					EraseCert(certTuple);
@@ -205,7 +205,7 @@ bool GetCert(const vector<unsigned char> &vchCert,
 		return false;
     if (!pcertdb->ReadCert(CNameTXIDTuple(vchCert, txid), txPos))
         return false;
-    if (chainActive.Tip()->nTime >= GetCertExpiration(txPos)) {
+    if (chainActive.Tip()->GetMedianTimePast() >= GetCertExpiration(txPos)) {
 		txPos.SetNull();
         string cert = stringFromVch(vchCert);
         LogPrintf("GetCert(%s) : expired", cert.c_str());
@@ -968,7 +968,7 @@ bool BuildCertJson(const CCert& cert, const CAliasIndex& alias, UniValue& oCert)
 	if (chainActive.Height() >= cert.nHeight) {
 		CBlockIndex *pindex = chainActive[cert.nHeight];
 		if (pindex) {
-			nTime = pindex->nTime;
+			nTime = pindex->GetMedianTimePast();
 		}
 	}
 	oCert.push_back(Pair("time", nTime));
@@ -979,7 +979,7 @@ bool BuildCertJson(const CCert& cert, const CAliasIndex& alias, UniValue& oCert)
 	oCert.push_back(Pair("access_flags", cert.nAccessFlags));
 	int64_t expired_time = GetCertExpiration(cert);
 	bool expired = false;
-    if(expired_time <= chainActive.Tip()->nTime)
+    if(expired_time <= chainActive.Tip()->GetMedianTimePast())
 	{
 		expired = true;
 	}  

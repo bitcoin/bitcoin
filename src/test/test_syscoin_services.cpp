@@ -415,7 +415,7 @@ void GenerateBlocks(int nBlocks, const string& node)
   height = 0;
   timeoutCounter = 0;
 }
-void SetMocktime(const int64_t& expiryTime) {
+void SetSysMocktime(const int64_t& expiryTime) {
 	BOOST_CHECK(expiryTime > 0);
 	string cmd = strprintf("setmocktime %lld", expiryTime);
 	try
@@ -471,7 +471,7 @@ void ExpireAlias(const string& alias)
 		UniValue aliasres;
 		aliasres = CallRPC("node1", "aliasinfo " + alias);
 		expiryTime = find_value(aliasres.get_obj(), "expires_on").get_int64();
-		SetMockTime(expiryTime + 100);
+		SetSysMocktime(expiryTime + 1);
 		r = CallRPC("node1", "aliasinfo " + alias);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), true);
 	}
@@ -484,7 +484,7 @@ void ExpireAlias(const string& alias)
 			UniValue aliasres;
 			aliasres = CallRPC("node2", "aliasinfo " + alias);
 			expiryTime = find_value(aliasres.get_obj(), "expires_on").get_int64();
-			SetMockTime(expiryTime + 100);
+			SetSysMocktime(expiryTime + 1);
 		}
 		r = CallRPC("node2", "aliasinfo " + alias);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), true);
@@ -498,7 +498,7 @@ void ExpireAlias(const string& alias)
 			UniValue aliasres;
 			aliasres = CallRPC("node3", "aliasinfo " + alias);
 			expiryTime = find_value(aliasres.get_obj(), "expires_on").get_int64();
-			SetMockTime(expiryTime + 100);
+			SetSysMocktime(expiryTime + 1);
 		}
 		r = CallRPC("node3", "aliasinfo " + alias);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), true);

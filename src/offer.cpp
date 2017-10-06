@@ -130,7 +130,7 @@ bool IsOfferTypeInMask(const uint32_t &mask, const uint32_t &offerType) {
 }
 uint64_t GetOfferExpiration(const COffer& offer) {
 	// dont prune by default, set nHeight to future time
-	uint64_t nTime = chainActive.Tip()->nTime + 1;
+	uint64_t nTime = chainActive.Tip()->GetMedianTimePast() + 1;
 	CAliasUnprunable aliasUnprunable;
 	// if service alias exists in unprunable db (this should always exist for any alias that ever existed) then get the last expire height set for this alias and check against it for pruning
 	if (paliasdb && paliasdb->ReadAliasUnprunable(offer.aliasTuple.first, aliasUnprunable) && !aliasUnprunable.IsNull())
@@ -200,7 +200,7 @@ bool COfferDB::CleanupDatabase(int &servicesCleaned)
         try {
 			if (pcursor->GetKey(keyTuple) && keyTuple.first == "offeri") {
 				const CNameTXIDTuple &offerTuple = keyTuple.second;
-  				if (!GetOffer(offerTuple.first, offer) || chainActive.Tip()->nTime >= GetOfferExpiration(offer))
+  				if (!GetOffer(offerTuple.first, offer) || chainActive.Tip()->GetMedianTimePast() >= GetOfferExpiration(offer))
 				{
 					servicesCleaned++;
 					EraseOffer(offerTuple);
@@ -242,7 +242,7 @@ bool GetOffer(const vector<unsigned char> &vchOffer,
 		return false;
 	if (!pofferdb->ReadOffer(CNameTXIDTuple(vchOffer, txid), txPos))
 		return false;
-	if (chainActive.Tip()->nTime >= GetOfferExpiration(txPos))
+	if (chainActive.Tip()->GetMedianTimePast() >= GetOfferExpiration(txPos))
 	{
 		txPos.SetNull();
 		string offer = stringFromVch(vchOffer);
@@ -518,7 +518,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1024 - " + _("Auction deposit percentage must be greator or equal to 0");
 					return error(errorMessage.c_str());
 				}
-				if (theOffer.auctionOffer.nExpireTime <= chainActive.Tip()->nTime)
+				if (theOffer.auctionOffer.nExpireTime <= chainActive.Tip()->GetMedianTimePast())
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4042 - " + _("Invalid auction expiry");
 					return error(errorMessage.c_str());
@@ -626,7 +626,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1024 - " + _("Auction deposit percentage must be greator or equal to 0");
 						return true;
 					}
-					if (theOffer.auctionOffer.nExpireTime <= chainActive.Tip()->nTime)
+					if (theOffer.auctionOffer.nExpireTime <= chainActive.Tip()->GetMedianTimePast())
 					{
 						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4042 - " + _("Invalid auction expiry");
 						return true;
@@ -828,7 +828,7 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 	}
 	uint32_t offerTypeMask = GetOfferTypeMaskFromString(offerType);
 
-	uint64_t nExpireTime = chainActive.Tip()->nTime + 3600;
+	uint64_t nExpireTime = chainActive.Tip()->GetMedianTimePast() + 3600;
 	if (CheckParam(params, 12))
 		nExpireTime = boost::lexical_cast<uint64_t>(params[12].get_str());
 
@@ -1519,7 +1519,7 @@ bool BuildOfferJson(const COffer& theOffer, UniValue& oOffer)
 	oOffer.push_back(Pair("cert", stringFromVch(vchCert)));
 	oOffer.push_back(Pair("txid", theOffer.txHash.GetHex()));
 	expired_time =  GetOfferExpiration(theOffer);
-    if(expired_time <= chainActive.Tip()->nTime)
+    if(expired_time <= chainActive.Tip()->GetMedianTimePast())
 	{
 		expired = true;
 	}

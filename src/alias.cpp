@@ -126,7 +126,7 @@ bool GetTimeToPrune(const CScript& scriptPubKey, uint64_t &nTime)
 		else
 		{
 			// setting to the tip means we don't prune this data, we keep it
-			nTime = chainActive.Tip()->nTime + 1;
+			nTime = chainActive.Tip()->GetMedianTimePast() + 1;
 			return true;
 		}
 	}
@@ -136,13 +136,13 @@ bool GetTimeToPrune(const CScript& scriptPubKey, uint64_t &nTime)
 		if (!pofferdb || !pofferdb->ReadOfferLastTXID(offer.vchOffer, txid))
 		{			
 			// setting to the tip means we don't prune this data, we keep it
-			nTime = chainActive.Tip()->nTime + 1;
+			nTime = chainActive.Tip()->GetMedianTimePast() + 1;
 			return true;
 		}
 		if (!pofferdb->ReadOffer(CNameTXIDTuple(offer.vchOffer, txid), offer))
 		{
 			// setting to the tip means we don't prune this data, we keep it
-			nTime = chainActive.Tip()->nTime + 1;
+			nTime = chainActive.Tip()->GetMedianTimePast() + 1;
 			return true;
 		}
 		nTime = GetOfferExpiration(offer);
@@ -154,13 +154,13 @@ bool GetTimeToPrune(const CScript& scriptPubKey, uint64_t &nTime)
 		if (!pcertdb || !pcertdb->ReadCertLastTXID(cert.vchCert, txid))
 		{
 			// setting to the tip means we don't prune this data, we keep it
-			nTime = chainActive.Tip()->nTime + 1;
+			nTime = chainActive.Tip()->GetMedianTimePast() + 1;
 			return true;
 		}
 		if (!pcertdb->ReadCert(CNameTXIDTuple(cert.vchCert, txid), cert))
 		{
 			// setting to the tip means we don't prune this data, we keep it
-			nTime = chainActive.Tip()->nTime + 1;
+			nTime = chainActive.Tip()->GetMedianTimePast() + 1;
 			return true;
 		}
 		nTime = GetCertExpiration(cert);
@@ -172,13 +172,13 @@ bool GetTimeToPrune(const CScript& scriptPubKey, uint64_t &nTime)
 		if (!pescrowdb || !pescrowdb->ReadEscrowLastTXID(escrow.vchEscrow, txid))
 		{
 			// setting to the tip means we don't prune this data, we keep it
-			nTime = chainActive.Tip()->nTime + 1;
+			nTime = chainActive.Tip()->GetMedianTimePast() + 1;
 			return true;
 		}
 		if (!pescrowdb->ReadEscrow(CNameTXIDTuple(escrow.vchEscrow, txid), escrow))
 		{
 			// setting to the tip means we don't prune this data, we keep it
-			nTime = chainActive.Tip()->nTime + 1;
+			nTime = chainActive.Tip()->GetMedianTimePast() + 1;
 			return true;
 		}
 		nTime = GetEscrowExpiration(escrow);
@@ -190,7 +190,7 @@ bool IsSysServiceExpired(const uint64_t &nTime)
 {
 	if(!chainActive.Tip() || fTxIndex)
 		return false;
-	return (chainActive.Tip()->nTime >= nTime);
+	return (chainActive.Tip()->GetMedianTimePast() >= nTime);
 
 }
 bool IsSyscoinScript(const CScript& scriptPubKey, int &op, vector<vector<unsigned char> > &vvchArgs)
@@ -530,11 +530,11 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				int nHeightTmp = nHeight;
 				if(nHeightTmp > chainActive.Height())
 					nHeightTmp = chainActive.Height();
-				uint64_t nTimeExpiry = theAlias.nExpireTime - chainActive[nHeightTmp]->nTime;
+				uint64_t nTimeExpiry = theAlias.nExpireTime - chainActive[nHeightTmp]->GetMedianTimePast();
 				// ensure aliases are good for atleast an hour
 				if (nTimeExpiry < 3600) {
 					nTimeExpiry = 3600;
-					theAlias.nExpireTime = chainActive[nHeightTmp]->nTime + 3600;
+					theAlias.nExpireTime = chainActive[nHeightTmp]->GetMedianTimePast() + 3600;
 				}
 				fYears = nTimeExpiry / ONE_YEAR_IN_SECONDS;
 				if(fYears < 1)
@@ -830,7 +830,7 @@ bool CAliasDB::CleanupDatabase(int &servicesCleaned)
 			if (pcursor->GetKey(key) && key.first == "namei") {
 				const CNameTXIDTuple &aliasTuple = key.second;
 				pcursor->GetValue(txPos);
-  				if (chainActive.Tip()->nTime >= txPos.nExpireTime)
+  				if (chainActive.Tip()->GetMedianTimePast() >= txPos.nExpireTime)
 				{
 					servicesCleaned++;
 					EraseAlias(aliasTuple);
@@ -841,7 +841,7 @@ bool CAliasDB::CleanupDatabase(int &servicesCleaned)
 				CNameTXIDTuple aliasTuple;
 				CAliasIndex alias;
 				pcursor->GetValue(aliasTuple);
-				if (GetAlias(aliasTuple.first, alias) && chainActive.Tip()->nTime >= alias.nExpireTime)
+				if (GetAlias(aliasTuple.first, alias) && chainActive.Tip()->GetMedianTimePast() >= alias.nExpireTime)
 				{
 					servicesCleaned++;
 					EraseAddress(alias.vchAddress);
@@ -909,7 +909,7 @@ bool GetAlias(const vector<unsigned char> &vchAlias,
 	if (!paliasdb->ReadAlias(CNameTXIDTuple(vchAlias, txid), txPos))
 		return false;
 	
-	if (chainActive.Tip()->nTime >= txPos.nExpireTime) {
+	if (chainActive.Tip()->GetMedianTimePast() >= txPos.nExpireTime) {
 		txPos.SetNull();
 		string alias = stringFromVch(vchAlias);
 		LogPrintf("GetAlias(%s) : expired", alias.c_str());
@@ -1392,12 +1392,12 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	string strAcceptCertTransfers = "true";
 	if(CheckParam(params, 2))
 		strAcceptCertTransfers = params[2].get_str();
-	uint64_t nTime = chainActive.Tip()->nTime+ONE_YEAR_IN_SECONDS;
+	uint64_t nTime = chainActive.Tip()->GetMedianTimePast()+ONE_YEAR_IN_SECONDS;
 	if(CheckParam(params, 3))
 		nTime = boost::lexical_cast<uint64_t>(params[3].get_str());
 	// sanity check set to 1 hr
-	if(nTime < chainActive.Tip()->nTime+3600)
-		nTime = chainActive.Tip()->nTime+3600;
+	if(nTime < chainActive.Tip()->GetMedianTimePast() +3600)
+		nTime = chainActive.Tip()->GetMedianTimePast() +3600;
 
 	string strAddress = "";
 	if(CheckParam(params, 4))
@@ -1494,7 +1494,7 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	CRecipient fee;
 	CreateFeeRecipient(scriptData, data, fee);
 	// calculate a fee if renewal is larger than default.. based on how many years you extend for it will be exponentially more expensive
-	uint64_t nTimeExpiry = nTime - chainActive.Tip()->nTime;
+	uint64_t nTimeExpiry = nTime - chainActive.Tip()->GetMedianTimePast();
 	if (nTimeExpiry < 3600)
 		nTimeExpiry = 3600;
 	float fYears = nTimeExpiry / ONE_YEAR_IN_SECONDS;
@@ -1574,7 +1574,7 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	if(CheckParam(params, 3))
 		strAcceptCertTransfers = params[3].get_str();
 	
-	uint64_t nTime = chainActive.Tip()->nTime+ONE_YEAR_IN_SECONDS;
+	uint64_t nTime = chainActive.Tip()->GetMedianTimePast() +ONE_YEAR_IN_SECONDS;
 	bool timeSet = false;
 	if(CheckParam(params, 4))
 	{
@@ -1582,8 +1582,8 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 		timeSet = true;
 	}
 	// sanity check set to 1 hr
-	if(nTime < chainActive.Tip()->nTime+3600)
-		nTime = chainActive.Tip()->nTime+3600;
+	if(nTime < chainActive.Tip()->GetMedianTimePast() +3600)
+		nTime = chainActive.Tip()->GetMedianTimePast() +3600;
 
 	string strEncryptionPrivateKey = "";
 	if(CheckParam(params, 5))
@@ -1650,7 +1650,7 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	CRecipient fee;
 	CreateFeeRecipient(scriptData, data, fee);
 	// calculate a fee if renewal is larger than default.. based on how many years you extend for it will be exponentially more expensive
-	uint64_t nTimeExpiry = nTime - chainActive.Tip()->nTime;
+	uint64_t nTimeExpiry = nTime - chainActive.Tip()->GetMedianTimePast();
 	if (nTimeExpiry < 3600)
 		nTimeExpiry = 3600;
 	float fYears = nTimeExpiry / ONE_YEAR_IN_SECONDS;
@@ -2136,14 +2136,14 @@ bool BuildAliasJson(const CAliasIndex& alias, UniValue& oName)
 	if (chainActive.Height() >= alias.nHeight) {
 		CBlockIndex *pindex = chainActive[alias.nHeight];
 		if (pindex) {
-			nTime = pindex->nTime;
+			nTime = pindex->GetMedianTimePast();
 		}
 	}
 	oName.push_back(Pair("time", nTime));
 	oName.push_back(Pair("address", EncodeBase58(alias.vchAddress)));
 	oName.push_back(Pair("acceptcerttransfers", alias.acceptCertTransfers));
 	expired_time = alias.nExpireTime;
-	if(expired_time <= chainActive.Tip()->nTime)
+	if(expired_time <= chainActive.Tip()->GetMedianTimePast())
 	{
 		expired = true;
 	}  

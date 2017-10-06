@@ -142,13 +142,13 @@ uint64_t GetEscrowExpiration(const CEscrow& escrow) {
 		if (paliasdb->ReadAliasUnprunable(escrow.buyerAliasTuple.first, aliasBuyerPrunable) && !aliasBuyerPrunable.IsNull())
 			nTime = aliasBuyerPrunable.nExpireTime;
 		// buyer is expired try seller
-		if(nTime <= chainActive.Tip()->nTime)
+		if(nTime <= chainActive.Tip()->GetMedianTimePast())
 		{
 			if (paliasdb->ReadAliasUnprunable(escrow.sellerAliasTuple.first, aliasSellerPrunable) && !aliasSellerPrunable.IsNull())
 			{
 				nTime = aliasSellerPrunable.nExpireTime;
 				// seller is expired try the arbiter
-				if(nTime <= chainActive.Tip()->nTime)
+				if(nTime <= chainActive.Tip()->GetMedianTimePast())
 				{
 					if (paliasdb->ReadAliasUnprunable(escrow.arbiterAliasTuple.first, aliasArbiterPrunable) && !aliasArbiterPrunable.IsNull())
 						nTime = aliasArbiterPrunable.nExpireTime;
@@ -381,7 +381,7 @@ bool CEscrowDB::CleanupDatabase(int &servicesCleaned)
         try {
 			if (pcursor->GetKey(key) && key.first == "escrowi") {
 				const CNameTXIDTuple &escrowTuple = key.second;
-  				if (!GetEscrow(escrowTuple.first, txPos) || chainActive.Tip()->nTime >= GetEscrowExpiration(txPos))
+  				if (!GetEscrow(escrowTuple.first, txPos) || chainActive.Tip()->GetMedianTimePast() >= GetEscrowExpiration(txPos))
 				{
 					servicesCleaned++;
 					EraseEscrow(escrowTuple);
@@ -413,7 +413,7 @@ bool GetEscrow(const CNameTXIDTuple &escrowTuple,
 	CEscrow& txPos) {
 	if (!pescrowdb || !pescrowdb->ReadEscrow(escrowTuple, txPos))
 		return false;
-	if (chainActive.Tip()->nTime >= GetEscrowExpiration(txPos)) {
+	if (chainActive.Tip()->GetMedianTimePast() >= GetEscrowExpiration(txPos)) {
 		string escrow = stringFromVch(escrowTuple.first);
 		LogPrintf("GetEscrow(%s) : expired", escrow.c_str());
 		return false;
@@ -427,7 +427,7 @@ bool GetEscrow(const vector<unsigned char> &vchEscrow,
 		return false;
 	if (!pescrowdb->ReadEscrow(CNameTXIDTuple(vchEscrow, txid), txPos))
 		return false;
-   if (chainActive.Tip()->nTime >= GetEscrowExpiration(txPos)) {
+   if (chainActive.Tip()->GetMedianTimePast() >= GetEscrowExpiration(txPos)) {
 	   txPos.SetNull();
         string escrow = stringFromVch(vchEscrow);
         LogPrintf("GetEscrow(%s) : expired", escrow.c_str());
@@ -951,7 +951,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4042 - " + _("Cannot bid below offer reserve price of: ") + boost::lexical_cast<string>(dbOffer.auctionOffer.fReservePrice) + " " + stringFromVch(dbOffer.sCurrencyCode);
 					return true;
 				}
-				if (dbOffer.auctionOffer.nExpireTime <= chainActive.Tip()->nTime)
+				if (dbOffer.auctionOffer.nExpireTime <= chainActive.Tip()->GetMedianTimePast())
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4042 - " + _("Offer auction has expired, cannot place bid!");
 					return true;
@@ -978,7 +978,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4042 - " + _("Cannot bid below linked offer reserve price of: ") + boost::lexical_cast<string>(myLinkOffer.auctionOffer.fReservePrice) + " " + stringFromVch(myLinkOffer.sCurrencyCode);
 						return true;
 					}
-					if (myLinkOffer.auctionOffer.nExpireTime <= chainActive.Tip()->nTime)
+					if (myLinkOffer.auctionOffer.nExpireTime <= chainActive.Tip()->GetMedianTimePast())
 					{
 						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4042 - " + _("Linked offer auction has expired, cannot place bid!");
 						return true;
@@ -1397,7 +1397,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4042 - " + _("Cannot purchase below offer reserve price of: ") + boost::lexical_cast<string>(dbOffer.auctionOffer.fReservePrice) + " " + stringFromVch(dbOffer.sCurrencyCode);
 						return true;
 					}
-					if (dbOffer.auctionOffer.nExpireTime <= chainActive.Tip()->nTime && !theEscrow.bBuyNow)
+					if (dbOffer.auctionOffer.nExpireTime <= chainActive.Tip()->GetMedianTimePast() && !theEscrow.bBuyNow)
 					{
 						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4042 - " + _("This auction has expired, cannot place bid");
 						return true;
@@ -1437,7 +1437,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4042 - " + _("Cannot purchase below linked offer reserve price of: ") + boost::lexical_cast<string>(dbOffer.auctionOffer.fReservePrice) + " " + stringFromVch(dbOffer.sCurrencyCode);
 						return true;
 					}
-					if (myLinkOffer.auctionOffer.nExpireTime <= chainActive.Tip()->nTime && !theEscrow.bBuyNow)
+					if (myLinkOffer.auctionOffer.nExpireTime <= chainActive.Tip()->GetMedianTimePast() && !theEscrow.bBuyNow)
 					{
 						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4042 - " + _("This linked offer auction has expired, cannot place bid");
 						return true;
@@ -3633,7 +3633,7 @@ void BuildFeedbackJson(const CEscrow& escrow, UniValue& oFeedback) {
 	if (chainActive.Height() >= escrow.nHeight) {
 		CBlockIndex *pindex = chainActive[escrow.nHeight];
 		if (pindex) {
-			sFeedbackTime = strprintf("%llu", pindex->nTime);
+			sFeedbackTime = strprintf("%llu", pindex->GetMedianTimePast());
 		}
 	}
 	const string &id = stringFromVch(escrow.vchEscrow) + boost::lexical_cast<std::string>(escrow.feedback.nFeedbackUserTo);
@@ -3651,7 +3651,7 @@ void BuildEscrowBidJson(const CEscrow& escrow, const string& status, UniValue& o
 	if (chainActive.Height() >= escrow.nHeight) {
 		CBlockIndex *pindex = chainActive[escrow.nHeight];
 		if (pindex) {
-			sBidTime = strprintf("%llu", pindex->nTime);
+			sBidTime = strprintf("%llu", pindex->GetMedianTimePast());
 		}
 	}
 	oBid.push_back(Pair("_id", escrow.txHash.GetHex()));
@@ -3674,7 +3674,7 @@ bool BuildEscrowJson(const CEscrow &escrow, const std::vector<std::vector<unsign
 	if (chainActive.Height() >= escrow.nHeight) {
 		CBlockIndex *pindex = chainActive[escrow.nHeight];
 		if (pindex) {
-			nTime = pindex->nTime;
+			nTime = pindex->GetMedianTimePast();
 		}
 	}
 	oEscrow.push_back(Pair("time", nTime));
@@ -3708,7 +3708,7 @@ bool BuildEscrowJson(const CEscrow &escrow, const std::vector<std::vector<unsign
     oEscrow.push_back(Pair("height", (int64_t)escrow.nHeight));
 	int64_t expired_time = GetEscrowExpiration(escrow);
 	bool expired = false;
-    if(expired_time <= chainActive.Tip()->nTime)
+    if(expired_time <= chainActive.Tip()->GetMedianTimePast())
 	{
 		expired = true;
 	}
