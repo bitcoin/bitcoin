@@ -38,7 +38,7 @@ public:
     BanMan(fs::path ban_file, CClientUIInterface* client_interface, int64_t default_ban_time);
     void Ban(const CNetAddr& netAddr, const BanReason& reason, int64_t bantimeoffset = 0, bool sinceUnixEpoch = false);
     void Ban(const CSubNet& subNet, const BanReason& reason, int64_t bantimeoffset = 0, bool sinceUnixEpoch = false);
-    void ClearBanned(); // needed for unit testing
+    void ClearBanned();
     bool IsBanned(CNetAddr ip);
     bool IsBanned(CSubNet subnet);
     bool Unban(const CNetAddr &ip);
@@ -54,12 +54,12 @@ private:
     //!clean unused entries (if bantime has expired)
     void SweepBanned();
 
-    banmap_t m_banned;
     CCriticalSection m_cs_banned;
-    bool m_is_dirty;
-    CClientUIInterface* m_client_interface = nullptr;
+    banmap_t m_banned GUARDED_BY(m_cs_banned);
+    bool m_is_dirty GUARDED_BY(m_cs_banned);
+    const CClientUIInterface* m_client_interface = nullptr;
     CBanDB m_ban_db;
-    int64_t m_default_ban_time;
+    const int64_t m_default_ban_time;
 };
 
 extern std::unique_ptr<BanMan> g_banman;
