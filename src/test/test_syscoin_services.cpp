@@ -482,7 +482,7 @@ void ExpireAlias(const string& alias)
 	{
 		if (expiryTime <= 0) {
 			UniValue aliasres;
-			raliasres = CallRPC("node2", "aliasinfo " + alias);
+			aliasres = CallRPC("node2", "aliasinfo " + alias);
 			expiryTime = find_value(r.get_obj(), "expires_on").get_int64();
 			SetMockTime(expiryTime + 1);
 		}
