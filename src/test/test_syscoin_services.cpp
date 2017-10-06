@@ -427,7 +427,7 @@ void SetSysMocktime(const int64_t& expiryTime) {
 		GenerateBlocks(5, "node1");
 		UniValue r;
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "getblockchaininfo"));
-		BOOST_CHECK(expiryTime >= find_value(r.get_obj(), "mediantime").get_int64());
+		BOOST_CHECK(expiryTime <= find_value(r.get_obj(), "mediantime").get_int64());
 	}
 	catch (const runtime_error &e)
 	{
@@ -441,7 +441,7 @@ void SetSysMocktime(const int64_t& expiryTime) {
 		GenerateBlocks(5, "node2");
 		UniValue r;
 		BOOST_CHECK_NO_THROW(r = CallRPC("node2", "getblockchaininfo"));
-		BOOST_CHECK(expiryTime >= find_value(r.get_obj(), "mediantime").get_int64());
+		BOOST_CHECK(expiryTime <= find_value(r.get_obj(), "mediantime").get_int64());
 	}
 	catch (const runtime_error &e)
 	{
@@ -455,7 +455,7 @@ void SetSysMocktime(const int64_t& expiryTime) {
 		GenerateBlocks(5, "node3");
 		UniValue r;
 		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "getblockchaininfo"));
-		BOOST_CHECK(expiryTime >= find_value(r.get_obj(), "mediantime").get_int64());
+		BOOST_CHECK(expiryTime <= find_value(r.get_obj(), "mediantime").get_int64());
 	}
 	catch (const runtime_error &e)
 	{
@@ -471,7 +471,7 @@ void ExpireAlias(const string& alias)
 		UniValue aliasres;
 		aliasres = CallRPC("node1", "aliasinfo " + alias);
 		expiryTime = find_value(aliasres.get_obj(), "expires_on").get_int64();
-		SetSysMocktime(expiryTime + 1);
+		SetSysMocktime(expiryTime + 100);
 		r = CallRPC("node1", "aliasinfo " + alias);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), true);
 	}
@@ -484,7 +484,7 @@ void ExpireAlias(const string& alias)
 			UniValue aliasres;
 			aliasres = CallRPC("node2", "aliasinfo " + alias);
 			expiryTime = find_value(aliasres.get_obj(), "expires_on").get_int64();
-			SetSysMocktime(expiryTime + 1);
+			SetSysMocktime(expiryTime + 100);
 		}
 		r = CallRPC("node2", "aliasinfo " + alias);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), true);
@@ -498,7 +498,7 @@ void ExpireAlias(const string& alias)
 			UniValue aliasres;
 			aliasres = CallRPC("node3", "aliasinfo " + alias);
 			expiryTime = find_value(aliasres.get_obj(), "expires_on").get_int64();
-			SetSysMocktime(expiryTime + 1);
+			SetSysMocktime(expiryTime + 100);
 		}
 		r = CallRPC("node3", "aliasinfo " + alias);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), true);
