@@ -424,11 +424,23 @@ void SetMocktime(const int64_t& expiryTime) {
 		{
 			BOOST_CHECK_NO_THROW(CallRPC("node1", cmd, true, false));
 		}
+	}
+	catch (const runtime_error &e)
+	{
+	}
+	try
+	{
 		CallRPC("node2", "getinfo");
 		if (expiryTime > 0)
 		{
 			BOOST_CHECK_NO_THROW(CallRPC("node2", cmd, true, false));
 		}
+	}
+	catch (const runtime_error &e)
+	{
+	}
+	try
+	{
 		CallRPC("node3", "getinfo");
 		if (expiryTime > 0)
 		{
