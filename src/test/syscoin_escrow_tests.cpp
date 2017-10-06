@@ -78,7 +78,8 @@ BOOST_AUTO_TEST_CASE(generate_auction_reserve)
 	string bid_in_payment_option = "0.11";
 	string bid_in_offer_currency = "0.009";
 	// try to underbid in offer currency
-	BOOST_CHECK_THROW(r = CallRPC("node1", "escrownew false buyerauction" + " " + offerguid + " " + qty + " " + buyNowStr + " " + bid_in_payment_option + " arbiterauction " + bid_in_offer_currency + " " + shippingFee + " " + networkFee + " " + arbiterFee + " " + witnessFee + " " + exttxid + " " + paymentoptions + " " + witness), runtime_error);
+	string query = "escrownew false buyerauction" + " " + offerguid + " " + qty + " " + buyNowStr + " " + bid_in_payment_option + " arbiterauction " + bid_in_offer_currency + " " + shippingFee + " " + networkFee + " " + arbiterFee + " " + witnessFee + " " + exttxid + " " + paymentoptions + " " + witness;
+	BOOST_CHECK_THROW(r = CallRPC("node1", query), runtime_error);
 
 	string guid = EscrowNewAuction("node1", "node2", "buyerauction", offerguid, qty, "0.0005", "0.01", "arbiterauction");
 	// assume rate is 1 sys = 10 USD
