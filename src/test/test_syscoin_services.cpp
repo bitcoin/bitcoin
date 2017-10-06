@@ -456,7 +456,9 @@ void ExpireAlias(const string& alias)
 		expiryTime = find_value(r.get_obj(), "expires_on").get_int64();
 	}
 	SetMockTime(expiryTime+1);
-	GenerateBlocks(5);
+	GenerateBlocks(5, "node1");
+	GenerateBlocks(5, "node2");
+	GenerateBlocks(5, "node3");
 	// ensure alias is expired
 	try
 	{
@@ -1085,7 +1087,7 @@ void OfferUpdate(const string& node, const string& aliasname, const string& offe
 	string oldcert = find_value(r.get_obj(), "cert").get_str();
 	int oldcommission = find_value(r.get_obj(), "commission").get_int();
 	int commission = atoi(commissionStr.c_str());
-	string oldpaymentoptions = find_value(r.get_obj(), "paymentoptions_display").get_str();
+	string oldpaymentoptions = find_value(r.get_obj(), "paymentoptions").get_str();
 	string olddescription = find_value(r.get_obj(), "description").get_str();
 	string oldtitle = find_value(r.get_obj(), "title").get_str();
 	string oldcategory = find_value(r.get_obj(), "category").get_str();
@@ -1103,7 +1105,7 @@ void OfferUpdate(const string& node, const string& aliasname, const string& offe
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "currency").get_str() , currency != "\"\""? currency: oldcurrency);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "price").get_real(), price != "\"\"" ? boost::lexical_cast<float>(price) : oldprice);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "commission").get_int() , commissionStr != "\"\""? commission: oldcommission);
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "paymentoptions_display").get_str() , paymentoptions != "\"\""? paymentoptions: oldpaymentoptions);
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "paymentoptions").get_str() , paymentoptions != "\"\""? paymentoptions: oldpaymentoptions);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "private").get_bool() , isprivateStr != "\"\""? isprivate: oldprivate);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "description").get_str(), description != "\"\""? description: olddescription);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "title").get_str(), title != "\"\""? title: oldtitle);
@@ -1128,7 +1130,7 @@ void OfferUpdate(const string& node, const string& aliasname, const string& offe
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "currency").get_str() , currency != "\"\""? currency: oldcurrency);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "price").get_real(), price != "\"\"" ? boost::lexical_cast<float>(price) : oldprice);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "commission").get_int() , commissionStr != "\"\""? commission: oldcommission);
-		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "paymentoptions_display").get_str() , paymentoptions != "\"\""? paymentoptions: oldpaymentoptions);
+		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "paymentoptions").get_str() , paymentoptions != "\"\""? paymentoptions: oldpaymentoptions);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "private").get_bool() , isprivateStr != "\"\""? isprivate: oldprivate);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "description").get_str(), description != "\"\""? description: olddescription);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "title").get_str(), title != "\"\""? title: oldtitle);
@@ -1154,7 +1156,7 @@ void OfferUpdate(const string& node, const string& aliasname, const string& offe
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "currency").get_str() , currency != "\"\""? currency: oldcurrency);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "price").get_real(), price != "\"\"" ? boost::lexical_cast<float>(price) : oldprice);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "commission").get_int() , commissionStr != "\"\""? commission: oldcommission);
-		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "paymentoptions_display").get_str() , paymentoptions != "\"\""? paymentoptions: oldpaymentoptions);
+		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "paymentoptions").get_str() , paymentoptions != "\"\""? paymentoptions: oldpaymentoptions);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "private").get_bool() , isprivateStr != "\"\""? isprivate: oldprivate);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "description").get_str(), description != "\"\""? description: olddescription);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "title").get_str(), title != "\"\""? title: oldtitle);
