@@ -457,7 +457,7 @@ void SetMocktime(const int64_t& expiryTime) {
 		GenerateBlocks(5, "node3");
 		UniValue r;
 		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "getblockchaininfo"));
-		BOOST_CHECK_EQUAL(expiryTime >= find_value(r.get_obj(), "mediantime").get_int64());
+		BOOST_CHECK(expiryTime >= find_value(r.get_obj(), "mediantime").get_int64());
 	}
 	catch (const runtime_error &e)
 	{
