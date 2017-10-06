@@ -245,8 +245,8 @@ public:
 class CDarkSendSigner
 {
 public:
-    /// Is the inputs associated with this public key? (and there is 10000 CRW - checking if valid throne)
-    bool IsVinAssociatedWithPubkey(CTxIn& vin, CPubKey& pubkey);
+    /// Is the inputs associated with this public key? (and there is enough CRW (10000 by default for checking if valid throne)
+    bool IsVinAssociatedWithPubkey(CTxIn& vin, CPubKey& pubkey, int value=10000);
     /// Set the private/public key values, returns true if successful
     bool SetKey(std::string strSecret, std::string& errorMessage, CKey& key, CPubKey& pubkey);
     /// Sign the message, returns true if successful
