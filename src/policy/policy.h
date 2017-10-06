@@ -15,7 +15,8 @@
 class CCoinsViewCache;
 
 /** Default for -blockmaxsize and -blockminsize, which control the range of sizes the mining code will create **/
-static const unsigned int DEFAULT_BLOCK_MAX_SIZE = 750000;
+// SYSCOIN 10MB blocks
+static const unsigned int DEFAULT_BLOCK_MAX_SIZE = 7500000;
 static const unsigned int DEFAULT_BLOCK_MIN_SIZE = 0;
 /** Default for -blockprioritysize, maximum space for zero/low-fee transactions **/
 static const unsigned int DEFAULT_BLOCK_PRIORITY_SIZE = 10000; // was 50000 in 0.12.0 and it is 0 in Syscoin since 0.12
