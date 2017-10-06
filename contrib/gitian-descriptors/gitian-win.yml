@@ -1,5 +1,5 @@
 ---
-name: "iop-hd-win-6.0.0b1"
+name: "iop-hd-win-6.0.0b2"
 enable_cache: true
 suites:
 - "trusty"
