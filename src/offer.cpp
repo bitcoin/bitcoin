@@ -1561,11 +1561,7 @@ bool BuildOfferJson(const COffer& theOffer, UniValue& oOffer)
 		offerTypeStr = GetOfferTypeString(theOffer.offerType);
 	}
 
-	if (nQty == -1)
-		oOffer.push_back(Pair("quantity", "unlimited"));
-	else
-		oOffer.push_back(Pair("quantity", nQty));
-
+	oOffer.push_back(Pair("quantity", nQty));
 	oOffer.push_back(Pair("offers_sold", sold));
 	oOffer.push_back(Pair("private", theOffer.bPrivate));
 	oOffer.push_back(Pair("description", stringFromVch(theOffer.sDescription)));
