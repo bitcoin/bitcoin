@@ -145,36 +145,6 @@ CSystemnodeDB::ReadResult CSystemnodeDB::Read(CSystemnodeMan& snodemanToLoad, bo
     return Ok;
 }
 
-void DumpSystemnodes()
-{
-    int64_t nStart = GetTimeMillis();
-
-    CSystemnodeDB sndb;
-    CSystemnodeMan tempMnodeman;
-
-    LogPrintf("Verifying sncache.dat format...\n");
-    CSystemnodeDB::ReadResult readResult = sndb.Read(tempMnodeman, true);
-    // there was an error and it was not an error on file opening => do not proceed
-    if (readResult == CSystemnodeDB::FileError)
-        LogPrintf("Missing systemnode cache file - sncache.dat, will try to recreate\n");
-    else if (readResult != CSystemnodeDB::Ok)
-    {
-        LogPrintf("Error reading sncache.dat: ");
-        if(readResult == CSystemnodeDB::IncorrectFormat)
-            LogPrintf("magic is ok but data has invalid format, will try to recreate\n");
-        else
-        {
-            LogPrintf("file format is unknown or invalid, please fix it manually\n");
-            return;
-        }
-    }
-    LogPrintf("Writting info to sncache.dat...\n");
-    sndb.Write(snodeman);
-
-    LogPrintf("Systemnode dump finished  %dms\n", GetTimeMillis() - nStart);
-}
-
-
 void CSystemnodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv)
 {
     if(fLiteMode) return; //disable all Darksend/Systemnode related functionality
@@ -190,11 +160,107 @@ void CSystemnodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         int nDoS = 0;
         if (CheckSnbAndUpdateSystemnodeList(snb, nDoS)) {
             // use announced Systemnode as a peer
-             addrman.Add(CAddress(snb.addr), pfrom->addr, 2*60*60);
+            addrman.Add(CAddress(snb.addr), pfrom->addr, 2*60*60);
         } else {
             if(nDoS > 0) Misbehaving(pfrom->GetId(), nDoS);
         }
+    } else if (strCommand == "snp") { //Systemnode Ping
+        CSystemnodePing snp;
+        vRecv >> snp;
+
+        LogPrint("systemnode", "snp - Systemnode ping, vin: %s\n", snp.vin.ToString());
+
+        if(mapSeenSystemnodePing.count(snp.GetHash())) return; //seen
+        mapSeenSystemnodePing.insert(make_pair(snp.GetHash(), snp));
+
+        int nDoS = 0;
+        if(snp.CheckAndUpdate(nDoS)) return;
+
+        if(nDoS > 0) {
+            // if anything significant failed, mark that node
+            Misbehaving(pfrom->GetId(), nDoS);
+        } else {
+            // if nothing significant failed, search existing Systemnode list
+            CSystemnode* pmn = Find(snp.vin);
+            // if it's known, don't ask for the mnb, just return
+            if(pmn != NULL) return;
+        }
+
+        // something significant is broken or mn is unknown,
+        // we might have to ask for a systemnode entry once
+        AskForSN(pfrom, snp.vin);
+
+    } 
+    else if (strCommand == "sndseg") { //Get Systemnode list or specific entry
+        CTxIn vin;
+        vRecv >> vin;
+
+        if(vin == CTxIn()) { //only should ask for this once
+            //local network
+            bool isLocal = (pfrom->addr.IsRFC1918() || pfrom->addr.IsLocal());
+
+            if(!isLocal && Params().NetworkID() == CBaseChainParams::MAIN) {
+                std::map<CNetAddr, int64_t>::iterator i = mAskedUsForSystemnodeList.find(pfrom->addr);
+                if (i != mAskedUsForSystemnodeList.end()){
+                    int64_t t = (*i).second;
+                    if (GetTime() < t) {
+                        Misbehaving(pfrom->GetId(), 34);
+                        LogPrintf("sndseg - peer already asked me for the list\n");
+                        return;
+                    }
+                }
+                int64_t askAgain = GetTime() + SYSTEMNODES_DSEG_SECONDS;
+                mAskedUsForSystemnodeList[pfrom->addr] = askAgain;
+            }
+        } //else, asking for a specific node which is ok
+
+
+        int nInvCount = 0;
+
+        BOOST_FOREACH(CSystemnode& sn, vSystemnodes) {
+            if(sn.addr.IsRFC1918()) continue; //local network
+
+            if(sn.IsEnabled()) {
+                LogPrint("systemnode", "sndseg - Sending Systemnode entry - %s \n", sn.addr.ToString());
+                if(vin == CTxIn() || vin == sn.vin){
+                    CSystemnodeBroadcast snb = CSystemnodeBroadcast(sn);
+                    uint256 hash = snb.GetHash();
+                    pfrom->PushInventory(CInv(MSG_SYSTEMNODE_ANNOUNCE, hash));
+                    nInvCount++;
+
+                    if(!mapSeenSystemnodeBroadcast.count(hash)) mapSeenSystemnodeBroadcast.insert(make_pair(hash, snb));
+
+                    if(vin == sn.vin) {
+                        LogPrintf("sndseg - Sent 1 Systemnode entries to %s\n", pfrom->addr.ToString());
+                        return;
+                    }
+                }
+            }
+        }
+
+        if(vin == CTxIn()) {
+            pfrom->PushMessage("mnssc", SYSTEMNODE_SYNC_LIST, nInvCount);
+            LogPrintf("sndseg - Sent %d Systemnode entries to %s\n", nInvCount, pfrom->addr.ToString());
+        }
     }
+
+}
+
+void CSystemnodeMan::AskForSN(CNode* pnode, CTxIn &vin)
+{
+    std::map<COutPoint, int64_t>::iterator i = mWeAskedForSystemnodeListEntry.find(vin.prevout);
+    if (i != mWeAskedForSystemnodeListEntry.end())
+    {
+        int64_t t = (*i).second;
+        if (GetTime() < t) return; // we've asked recently
+    }
+
+    // ask for the snb info once from the node that sent snp
+
+    LogPrintf("CSystemnodeMan::AskForSN - Asking node for missing entry, vin: %s\n", vin.ToString());
+    pnode->PushMessage("sndseg", vin);
+    int64_t askAgain = GetTime() + SYSTEMNODE_MIN_SNP_SECONDS;
+    mWeAskedForSystemnodeListEntry[vin.prevout] = askAgain;
 }
 
 bool CSystemnodeMan::CheckSnbAndUpdateSystemnodeList(CSystemnodeBroadcast snb, int& nDos)
@@ -263,6 +329,35 @@ CSystemnode *CSystemnodeMan::Find(const CPubKey &pubKeySystemnode)
             return &mn;
     }
     return NULL;
+}
+
+void DumpSystemnodes()
+{
+    int64_t nStart = GetTimeMillis();
+
+    CSystemnodeDB sndb;
+    CSystemnodeMan tempMnodeman;
+
+    LogPrintf("Verifying sncache.dat format...\n");
+    CSystemnodeDB::ReadResult readResult = sndb.Read(tempMnodeman, true);
+    // there was an error and it was not an error on file opening => do not proceed
+    if (readResult == CSystemnodeDB::FileError)
+        LogPrintf("Missing throne cache file - sncache.dat, will try to recreate\n");
+    else if (readResult != CSystemnodeDB::Ok)
+    {
+        LogPrintf("Error reading sncache.dat: ");
+        if(readResult == CSystemnodeDB::IncorrectFormat)
+            LogPrintf("magic is ok but data has invalid format, will try to recreate\n");
+        else
+        {
+            LogPrintf("file format is unknown or invalid, please fix it manually\n");
+            return;
+        }
+    }
+    LogPrintf("Writting info to sncache.dat...\n");
+    sndb.Write(snodeman);
+
+    LogPrintf("Systemnode dump finished  %dms\n", GetTimeMillis() - nStart);
 }
 
 bool CSystemnodeMan::Add(CSystemnode &sn)
@@ -347,14 +442,14 @@ void CSystemnodeMan::DsegUpdate(CNode* pnode)
             if (it != mWeAskedForSystemnodeList.end())
             {
                 if (GetTime() < (*it).second) {
-                    LogPrintf("dseg - we already asked %s for the list; skipping...\n", pnode->addr.ToString());
+                    LogPrintf("sndseg - we already asked %s for the list; skipping...\n", pnode->addr.ToString());
                     return;
                 }
             }
         }
     }
     
-    pnode->PushMessage("dseg", CTxIn());
+    pnode->PushMessage("sndseg", CTxIn());
     int64_t askAgain = GetTime() + SYSTEMNODES_DSEG_SECONDS;
     mWeAskedForSystemnodeList[pnode->addr] = askAgain;
 }

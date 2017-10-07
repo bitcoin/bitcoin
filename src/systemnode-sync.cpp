@@ -138,7 +138,7 @@ std::string CSystemnodeSync::GetSyncStatus()
 
 void CSystemnodeSync::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv)
 {
-    if (strCommand == "ssc") { //Sync status count
+    if (strCommand == "snssc") { //Sync status count
         int nItemID;
         int nCount;
         vRecv >> nItemID >> nCount;
@@ -170,7 +170,7 @@ void CSystemnodeSync::ProcessMessage(CNode* pfrom, std::string& strCommand, CDat
                 break;
         }
         
-        LogPrintf("CSystemnodeSync:ProcessMessage - ssc - got inventory count %d %d\n", nItemID, nCount);
+        LogPrintf("CSystemnodeSync:ProcessMessage - snssc - got inventory count %d %d\n", nItemID, nCount);
     }
 }
 
@@ -182,7 +182,7 @@ void CSystemnodeSync::ClearFulfilledRequest()
     BOOST_FOREACH(CNode* pnode, vNodes)
     {
         pnode->ClearFulfilledRequest("getspork");
-        pnode->ClearFulfilledRequest("mnsync");
+        pnode->ClearFulfilledRequest("snsync");
         pnode->ClearFulfilledRequest("mnwsync");
         pnode->ClearFulfilledRequest("busync");
     }

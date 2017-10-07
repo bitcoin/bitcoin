@@ -177,6 +177,7 @@ void PrepareShutdown()
     DumpThrones();
     DumpBudgets();
     DumpThronePayments();
+    DumpSystemnodes();
     UnregisterNodeSignals(GetNodeSignals());
 
     if (fFeeEstimatesInitialized)
