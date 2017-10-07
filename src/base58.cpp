@@ -68,26 +68,31 @@ std::string EncodeBase58(const unsigned char* pbegin, const unsigned char* pend)
 {
     // Skip & count leading zeroes.
     int zeroes = 0;
+    int length = 0;
     while (pbegin != pend && *pbegin == 0) {
         pbegin++;
         zeroes++;
     }
     // Allocate enough space in big-endian base58 representation.
-    std::vector<unsigned char> b58((pend - pbegin) * 138 / 100 + 1); // log(256) / log(58), rounded up.
+    int size = (pend - pbegin) * 138 / 100 + 1; // log(256) / log(58), rounded up.
+    std::vector<unsigned char> b58(size);
     // Process the bytes.
     while (pbegin != pend) {
         int carry = *pbegin;
+        int i = 0;
         // Apply "b58 = b58 * 256 + ch".
-        for (std::vector<unsigned char>::reverse_iterator it = b58.rbegin(); it != b58.rend(); it++) {
+        for (std::vector<unsigned char>::reverse_iterator it = b58.rbegin(); (carry != 0 || i < length) && (it != b58.rend()); it++, i++) {
             carry += 256 * (*it);
             *it = carry % 58;
             carry /= 58;
         }
+
         assert(carry == 0);
+        length = i;
         pbegin++;
     }
     // Skip leading zeroes in base58 result.
-    std::vector<unsigned char>::iterator it = b58.begin();
+    std::vector<unsigned char>::iterator it = b58.begin() + (size - length);
     while (it != b58.end() && *it == 0)
         it++;
     // Translate the result into a string.

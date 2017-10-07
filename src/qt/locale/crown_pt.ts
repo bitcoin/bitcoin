@@ -860,16 +860,16 @@ Endereço: %4
         <translation>Por favor seleccione um nível de privacidade.</translation>
     </message>
     <message>
-        <source>Use 2 separate thrones to mix funds up to 10000 CRW</source>
-        <translation>Usar 2 thrones distintos para misturar os fundos até 1000 CRW</translation>
+        <source>Use 2 separate masternodes to mix funds up to 10000 CRW</source>
+        <translation>Usar 2 masternodes distintos para misturar os fundos até 1000 CRW</translation>
     </message>
     <message>
-        <source>Use 8 separate thrones to mix funds up to 10000 CRW</source>
-        <translation>Usar 8 thrones distintos para misturar os fundos até 1000 CRW</translation>
+        <source>Use 8 separate masternodes to mix funds up to 10000 CRW</source>
+        <translation>Usar 8 masternodes distintos para misturar os fundos até 1000 CRW</translation>
     </message>
     <message>
-        <source>Use 16 separate thrones</source>
-        <translation>Usar 16 thrones</translation>
+        <source>Use 16 separate masternodes</source>
+        <translation>Usar 16 masternodes</translation>
     </message>
     <message>
         <source>This option is the quickest and will cost about ~0.025 CRW to anonymize 10000 CRW</source>
@@ -1182,8 +1182,8 @@ Endereço: %4
         <translation>Avançado</translation>
     </message>
     <message>
-        <source>This setting determines the amount of individual thrones that an input will be anonymized through.&lt;br/&gt;More rounds of anonymization gives a higher degree of privacy, but also costs more in fees.</source>
-        <translation>Esta opção determina o número de thrones pelos quais uma entrada será anonimizada. &lt;br/&gt; Mais rondas de anonimização fornecem um maior grau de privacidade, mas também tem um custo mais elevado em taxas.</translation>
+        <source>This setting determines the amount of individual masternodes that an input will be anonymized through.&lt;br/&gt;More rounds of anonymization gives a higher degree of privacy, but also costs more in fees.</source>
+        <translation>Esta opção determina o número de masternodes pelos quais uma entrada será anonimizada. &lt;br/&gt; Mais rondas de anonimização fornecem um maior grau de privacidade, mas também tem um custo mais elevado em taxas.</translation>
     </message>
     <message>
         <source>Whether to show coin control features or not.</source>
@@ -1451,8 +1451,8 @@ https://www.transifex.com/projects/p/crown/</translation>
         <translation>Iniciar/Parar Mistura</translation>
     </message>
     <message>
-        <source>The denominations you submitted to the Throne.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
-        <translation>As denominações que foram submetidas para o Throne.&lt;br&gt;Para misturar, outros utilizadores terão que submeter denominações iguais.</translation>
+        <source>The denominations you submitted to the Masternode.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
+        <translation>As denominações que foram submetidas para o Masternode.&lt;br&gt;Para misturar, outros utilizadores terão que submeter denominações iguais.</translation>
     </message>
     <message>
         <source>(Last Message)</source>
@@ -1808,8 +1808,8 @@ https://www.transifex.com/projects/p/crown/</translation>
         <translation>Cadeia de blocos</translation>
     </message>
     <message>
-        <source>Number of Thrones</source>
-        <translation>Número de Thrones</translation>
+        <source>Number of Masternodes</source>
+        <translation>Número de Masternodes</translation>
     </message>
     <message>
         <source>&amp;Console</source>
@@ -3394,8 +3394,8 @@ https://www.transifex.com/projects/p/crown/</translation>
         <translation>Aviso: wallet.dar corrompido mas os dados foram recuperados! A carteira original foi gravada como wallet{data/hora}.bak in %s; se o seu saldo ou transacções forem incorrectos deverá recuperar a partir de uma cópia de segurança.</translation>
     </message>
     <message>
-        <source>You must specify a throneprivkey in the configuration. Please see documentation for help.</source>
-        <translation>Tem que especificar uma throneprivkey na configuração. Por favor verifique a documentação para ajuda.</translation>
+        <source>You must specify a masternodeprivkey in the configuration. Please see documentation for help.</source>
+        <translation>Tem que especificar uma masternodeprivkey na configuração. Por favor verifique a documentação para ajuda.</translation>
     </message>
     <message>
         <source>(default: 1)</source>
@@ -3712,12 +3712,12 @@ https://www.transifex.com/projects/p/crown/</translation>
         <translation>Desactivar safemode, ultrapassar o evento de modo de segurança real (default: %u)</translation>
     </message>
     <message>
-        <source>Enable the client to act as a throne (0-1, default: %u)</source>
-        <translation>Permitir ao cliente actuar como um throne (0-1, omissão: %u)</translation>
+        <source>Enable the client to act as a masternode (0-1, default: %u)</source>
+        <translation>Permitir ao cliente actuar como um masternode (0-1, omissão: %u)</translation>
     </message>
     <message>
-        <source>Error connecting to Throne.</source>
-        <translation>Erro conectando ao Throne</translation>
+        <source>Error connecting to Masternode.</source>
+        <translation>Erro conectando ao Masternode</translation>
     </message>
     <message>
         <source>Error loading wallet.dat: Wallet requires newer version of Crown Core</source>
@@ -3856,11 +3856,11 @@ https://www.transifex.com/projects/p/crown/</translation>
         <translation>Carregando cache de orçamentos...</translation>
     </message>
     <message>
-        <source>Loading throne cache...</source>
-        <translation>A carregar a cache de thrones...</translation>
+        <source>Loading masternode cache...</source>
+        <translation>A carregar a cache de masternodes...</translation>
     </message>
     <message>
-        <source>Loading throne payment cache...</source>
+        <source>Loading masternode payment cache...</source>
         <translation>Carregando cache de pagamento de maternodes...</translation>
     </message>
     <message>
@@ -3868,8 +3868,8 @@ https://www.transifex.com/projects/p/crown/</translation>
         <translation>Bloqueio já efectuado.</translation>
     </message>
     <message>
-        <source>Lock thrones from throne configuration file (default: %u)</source>
-        <translation>Bloquear throne presentes no ficheiro de configuração (omissão: %u)</translation>
+        <source>Lock masternodes from masternode configuration file (default: %u)</source>
+        <translation>Bloquear masternode presentes no ficheiro de configuração (omissão: %u)</translation>
     </message>
     <message>
         <source>Maintain at most &lt;n&gt; connections to peers (default: %u)</source>
@@ -3892,16 +3892,16 @@ https://www.transifex.com/projects/p/crown/</translation>
         <translation>Necessita especificar a porta com -whitebind: '%s'</translation>
     </message>
     <message>
-        <source>No Thrones detected.</source>
-        <translation>Nenhum Throne detectado.</translation>
+        <source>No Masternodes detected.</source>
+        <translation>Nenhum Masternode detectado.</translation>
     </message>
     <message>
-        <source>No compatible Throne found.</source>
-        <translation>Nenhum Throne compatível encontrado.</translation>
+        <source>No compatible Masternode found.</source>
+        <translation>Nenhum Masternode compatível encontrado.</translation>
     </message>
     <message>
-        <source>Not in the Throne list.</source>
-        <translation>Não está na lista de Thrones.</translation>
+        <source>Not in the Masternode list.</source>
+        <translation>Não está na lista de Masternodes.</translation>
     </message>
     <message>
         <source>Number of automatic wallet backups (default: 10)</source>
@@ -3940,8 +3940,8 @@ https://www.transifex.com/projects/p/crown/</translation>
         <translation>Chave privada do servidor (default: %s)</translation>
     </message>
     <message>
-        <source>Set external address:port to get to this throne (example: %s)</source>
-        <translation>Definir endereço:porta externo para ligação a este throne (ex: %s)</translation>
+        <source>Set external address:port to get to this masternode (example: %s)</source>
+        <translation>Definir endereço:porta externo para ligação a este masternode (ex: %s)</translation>
     </message>
     <message>
         <source>Set key pool size to &lt;n&gt; (default: %u)</source>
@@ -3972,8 +3972,8 @@ https://www.transifex.com/projects/p/crown/</translation>
         <translation>Especificar timeout da conexão em milisegundos  (minimum: 1, default: %d)</translation>
     </message>
     <message>
-        <source>Specify throne configuration file (default: %s)</source>
-        <translation>Especificar ficheiro de configuração throne (default: %s)</translation>
+        <source>Specify masternode configuration file (default: %s)</source>
+        <translation>Especificar ficheiro de configuração masternode (default: %s)</translation>
     </message>
     <message>
         <source>Specify pid file (default: %s)</source>
@@ -3988,44 +3988,44 @@ https://www.transifex.com/projects/p/crown/</translation>
         <translation>Para de correr após importação de blocos do disco (default: %u)</translation>
     </message>
     <message>
-        <source>Submitted following entries to throne: %u / %d</source>
-        <translation>Apresentadas as seguintes entradas ao throne:  %u / %d </translation>
+        <source>Submitted following entries to masternode: %u / %d</source>
+        <translation>Apresentadas as seguintes entradas ao masternode:  %u / %d </translation>
     </message>
     <message>
-        <source>Submitted to throne, waiting for more entries ( %u / %d ) %s</source>
-        <translation>Apresentado ao throne, esperando por mais entradas ( %u / %d ) %s</translation>
+        <source>Submitted to masternode, waiting for more entries ( %u / %d ) %s</source>
+        <translation>Apresentado ao masternode, esperando por mais entradas ( %u / %d ) %s</translation>
     </message>
     <message>
-        <source>Submitted to throne, waiting in queue %s</source>
-        <translation>Apresentado ao throne, esperando na fila %s </translation>
+        <source>Submitted to masternode, waiting in queue %s</source>
+        <translation>Apresentado ao masternode, esperando na fila %s </translation>
     </message>
     <message>
         <source>Synchronizing budgets...</source>
         <translation>A sincronizar orçamentos...</translation>
     </message>
     <message>
-        <source>Synchronizing throne winners...</source>
-        <translation>A sincronizar thrones vencedores...</translation>
+        <source>Synchronizing masternode winners...</source>
+        <translation>A sincronizar masternodes vencedores...</translation>
     </message>
     <message>
-        <source>Synchronizing thrones...</source>
-        <translation>A sincronizar thrones...</translation>
+        <source>Synchronizing masternodes...</source>
+        <translation>A sincronizar masternodes...</translation>
     </message>
     <message>
         <source>Synchronizing sporks...</source>
         <translation>A sincronizar sporks...</translation>
     </message>
     <message>
-        <source>This is not a Throne.</source>
-        <translation>Este não é um Throne</translation>
+        <source>This is not a Masternode.</source>
+        <translation>Este não é um Masternode</translation>
     </message>
     <message>
         <source>Threshold for disconnecting misbehaving peers (default: %u)</source>
         <translation>Limiar para desconectar pares mal comportados (default: %u)</translation>
     </message>
     <message>
-        <source>Use N separate thrones to anonymize funds  (2-8, default: %u)</source>
-        <translation>Utilize N throne distintos para anonimizar fundos (2-8, default: %u)</translation>
+        <source>Use N separate masternodes to anonymize funds  (2-8, default: %u)</source>
+        <translation>Utilize N masternode distintos para anonimizar fundos (2-8, default: %u)</translation>
     </message>
     <message>
         <source>Use UPnP to map the listening port (default: %u)</source>
@@ -4048,32 +4048,32 @@ https://www.transifex.com/projects/p/crown/</translation>
         <translation>Tentar de novo...</translation>
     </message>
     <message>
-        <source>Invalid throneprivkey. Please see documenation.</source>
-        <translation>throneprivkey inválida. Por favor reveja a documentação.</translation>
+        <source>Invalid masternodeprivkey. Please see documenation.</source>
+        <translation>masternodeprivkey inválida. Por favor reveja a documentação.</translation>
     </message>
     <message>
         <source>(must be 9340 for mainnet)</source>
         <translation>(deve ser 9340 para mainnet)</translation>
     </message>
     <message>
-        <source>Can't find random Throne.</source>
-        <translation>Incapaz de encontrar Throne aleatório.</translation>
+        <source>Can't find random Masternode.</source>
+        <translation>Incapaz de encontrar Masternode aleatório.</translation>
     </message>
     <message>
         <source>Can't mix while sync in progress.</source>
         <translation>Incapaz de misturar enquanto sincronização está a decorrer.</translation>
     </message>
     <message>
-        <source>Could not parse throne.conf</source>
-        <translation>Incapaz de analizar throne.conf</translation>
+        <source>Could not parse masternode.conf</source>
+        <translation>Incapaz de analizar masternode.conf</translation>
     </message>
     <message>
         <source>Invalid netmask specified in -whitelist: '%s'</source>
         <translation>Netmask especificado invalido na -whitelist: '%s'</translation>
     </message>
     <message>
-        <source>Invalid port detected in throne.conf</source>
-        <translation>Port inválido detectado em throne.conf</translation>
+        <source>Invalid port detected in masternode.conf</source>
+        <translation>Port inválido detectado em masternode.conf</translation>
     </message>
     <message>
         <source>Invalid private key.</source>
@@ -4116,16 +4116,16 @@ https://www.transifex.com/projects/p/crown/</translation>
         <translation>A carregar carteira...</translation>
     </message>
     <message>
-        <source>Throne options:</source>
-        <translation>Opções de throne:</translation>
+        <source>Masternode options:</source>
+        <translation>Opções de masternode:</translation>
     </message>
     <message>
-        <source>Throne queue is full.</source>
-        <translation>A fila do throne está cheia.</translation>
+        <source>Masternode queue is full.</source>
+        <translation>A fila do masternode está cheia.</translation>
     </message>
     <message>
-        <source>Throne:</source>
-        <translation>Throne:</translation>
+        <source>Masternode:</source>
+        <translation>Masternode:</translation>
     </message>
     <message>
         <source>Missing input transaction information.</source>
@@ -4228,8 +4228,8 @@ https://www.transifex.com/projects/p/crown/</translation>
         <translation>Define o tamanho máximo do bloco em bytes (omissão %d)</translation>
     </message>
     <message>
-        <source>Set the throne private key</source>
-        <translation>Define a chave privada do throne</translation>
+        <source>Set the masternode private key</source>
+        <translation>Define a chave privada do masternode</translation>
     </message>
     <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>

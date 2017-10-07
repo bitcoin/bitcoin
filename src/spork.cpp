@@ -9,7 +9,7 @@
 #include "protocol.h"
 #include "spork.h"
 #include "main.h"
-#include "throne-budget.h"
+#include "masternode-budget.h"
 #include <boost/lexical_cast.hpp>
 
 using namespace std;
@@ -26,7 +26,7 @@ std::map<int, CSporkMessage> mapSporksActive;
 
 void ProcessSpork(CNode* pfrom, std::string& strCommand, CDataStream& vRecv)
 {
-    if(fLiteMode) return; //disable all darksend/throne related functionality
+    if(fLiteMode) return; //disable all masternode related functionality
 
     if (strCommand == "spork")
     {
@@ -85,10 +85,10 @@ bool IsSporkActive(int nSporkID)
         if(nSporkID == SPORK_2_INSTANTX) r = SPORK_2_INSTANTX_DEFAULT;
         if(nSporkID == SPORK_3_INSTANTX_BLOCK_FILTERING) r = SPORK_3_INSTANTX_BLOCK_FILTERING_DEFAULT;
         if(nSporkID == SPORK_5_MAX_VALUE) r = SPORK_5_MAX_VALUE_DEFAULT;
-        if(nSporkID == SPORK_7_THRONE_SCANNING) r = SPORK_7_THRONE_SCANNING_DEFAULT;
-        if(nSporkID == SPORK_8_THRONE_PAYMENT_ENFORCEMENT) r = SPORK_8_THRONE_PAYMENT_ENFORCEMENT_DEFAULT;
-        if(nSporkID == SPORK_9_THRONE_BUDGET_ENFORCEMENT) r = SPORK_9_THRONE_BUDGET_ENFORCEMENT_DEFAULT;
-        if(nSporkID == SPORK_10_THRONE_PAY_UPDATED_NODES) r = SPORK_10_THRONE_PAY_UPDATED_NODES_DEFAULT;
+        if(nSporkID == SPORK_7_MASTERNODE_SCANNING) r = SPORK_7_MASTERNODE_SCANNING_DEFAULT;
+        if(nSporkID == SPORK_8_MASTERNODE_PAYMENT_ENFORCEMENT) r = SPORK_8_MASTERNODE_PAYMENT_ENFORCEMENT_DEFAULT;
+        if(nSporkID == SPORK_9_MASTERNODE_BUDGET_ENFORCEMENT) r = SPORK_9_MASTERNODE_BUDGET_ENFORCEMENT_DEFAULT;
+        if(nSporkID == SPORK_10_MASTERNODE_PAY_UPDATED_NODES) r = SPORK_10_MASTERNODE_PAY_UPDATED_NODES_DEFAULT;
         if(nSporkID == SPORK_11_RESET_BUDGET) r = SPORK_11_RESET_BUDGET_DEFAULT;
         if(nSporkID == SPORK_12_RECONSIDER_BLOCKS) r = SPORK_12_RECONSIDER_BLOCKS_DEFAULT;
         if(nSporkID == SPORK_13_ENABLE_SUPERBLOCKS) r = SPORK_13_ENABLE_SUPERBLOCKS_DEFAULT;
@@ -111,10 +111,10 @@ int64_t GetSporkValue(int nSporkID)
         if(nSporkID == SPORK_2_INSTANTX) r = SPORK_2_INSTANTX_DEFAULT;
         if(nSporkID == SPORK_3_INSTANTX_BLOCK_FILTERING) r = SPORK_3_INSTANTX_BLOCK_FILTERING_DEFAULT;
         if(nSporkID == SPORK_5_MAX_VALUE) r = SPORK_5_MAX_VALUE_DEFAULT;
-        if(nSporkID == SPORK_7_THRONE_SCANNING) r = SPORK_7_THRONE_SCANNING_DEFAULT;
-        if(nSporkID == SPORK_8_THRONE_PAYMENT_ENFORCEMENT) r = SPORK_8_THRONE_PAYMENT_ENFORCEMENT_DEFAULT;
-        if(nSporkID == SPORK_9_THRONE_BUDGET_ENFORCEMENT) r = SPORK_9_THRONE_BUDGET_ENFORCEMENT_DEFAULT;
-        if(nSporkID == SPORK_10_THRONE_PAY_UPDATED_NODES) r = SPORK_10_THRONE_PAY_UPDATED_NODES_DEFAULT;
+        if(nSporkID == SPORK_7_MASTERNODE_SCANNING) r = SPORK_7_MASTERNODE_SCANNING_DEFAULT;
+        if(nSporkID == SPORK_8_MASTERNODE_PAYMENT_ENFORCEMENT) r = SPORK_8_MASTERNODE_PAYMENT_ENFORCEMENT_DEFAULT;
+        if(nSporkID == SPORK_9_MASTERNODE_BUDGET_ENFORCEMENT) r = SPORK_9_MASTERNODE_BUDGET_ENFORCEMENT_DEFAULT;
+        if(nSporkID == SPORK_10_MASTERNODE_PAY_UPDATED_NODES) r = SPORK_10_MASTERNODE_PAY_UPDATED_NODES_DEFAULT;
         if(nSporkID == SPORK_11_RESET_BUDGET) r = SPORK_11_RESET_BUDGET_DEFAULT;
         if(nSporkID == SPORK_12_RECONSIDER_BLOCKS) r = SPORK_12_RECONSIDER_BLOCKS_DEFAULT;
         if(nSporkID == SPORK_13_ENABLE_SUPERBLOCKS) r = SPORK_13_ENABLE_SUPERBLOCKS_DEFAULT;
@@ -178,7 +178,7 @@ bool CSporkManager::CheckSignature(CSporkMessage& spork)
     CPubKey pubkey(ParseHex(Params().SporkKey()));
 
     std::string errorMessage = "";
-    if(!darkSendSigner.VerifyMessage(pubkey, spork.vchSig, strMessage, errorMessage)){
+    if(!legacySigner.VerifyMessage(pubkey, spork.vchSig, strMessage, errorMessage)){
         return false;
     }
 
@@ -193,19 +193,19 @@ bool CSporkManager::Sign(CSporkMessage& spork)
     CPubKey pubkey2;
     std::string errorMessage = "";
 
-    if(!darkSendSigner.SetKey(strMasterPrivKey, errorMessage, key2, pubkey2))
+    if(!legacySigner.SetKey(strMasterPrivKey, errorMessage, key2, pubkey2))
     {
-        LogPrintf("CThronePayments::Sign - ERROR: Invalid throneprivkey: '%s'\n", errorMessage);
+        LogPrintf("CMasternodePayments::Sign - ERROR: Invalid masternodeprivkey: '%s'\n", errorMessage);
         return false;
     }
 
-    if(!darkSendSigner.SignMessage(strMessage, errorMessage, spork.vchSig, key2)) {
-        LogPrintf("CThronePayments::Sign - Sign message failed");
+    if(!legacySigner.SignMessage(strMessage, errorMessage, spork.vchSig, key2)) {
+        LogPrintf("CMasternodePayments::Sign - Sign message failed");
         return false;
     }
 
-    if(!darkSendSigner.VerifyMessage(pubkey2, spork.vchSig, strMessage, errorMessage)) {
-        LogPrintf("CThronePayments::Sign - Verify message failed");
+    if(!legacySigner.VerifyMessage(pubkey2, spork.vchSig, strMessage, errorMessage)) {
+        LogPrintf("CMasternodePayments::Sign - Verify message failed");
         return false;
     }
 
@@ -258,10 +258,10 @@ int CSporkManager::GetSporkIDByName(std::string strName)
     if(strName == "SPORK_2_INSTANTX") return SPORK_2_INSTANTX;
     if(strName == "SPORK_3_INSTANTX_BLOCK_FILTERING") return SPORK_3_INSTANTX_BLOCK_FILTERING;
     if(strName == "SPORK_5_MAX_VALUE") return SPORK_5_MAX_VALUE;
-    if(strName == "SPORK_7_THRONE_SCANNING") return SPORK_7_THRONE_SCANNING;
-    if(strName == "SPORK_8_THRONE_PAYMENT_ENFORCEMENT") return SPORK_8_THRONE_PAYMENT_ENFORCEMENT;
-    if(strName == "SPORK_9_THRONE_BUDGET_ENFORCEMENT") return SPORK_9_THRONE_BUDGET_ENFORCEMENT;
-    if(strName == "SPORK_10_THRONE_PAY_UPDATED_NODES") return SPORK_10_THRONE_PAY_UPDATED_NODES;
+    if(strName == "SPORK_7_MASTERNODE_SCANNING") return SPORK_7_MASTERNODE_SCANNING;
+    if(strName == "SPORK_8_MASTERNODE_PAYMENT_ENFORCEMENT") return SPORK_8_MASTERNODE_PAYMENT_ENFORCEMENT;
+    if(strName == "SPORK_9_MASTERNODE_BUDGET_ENFORCEMENT") return SPORK_9_MASTERNODE_BUDGET_ENFORCEMENT;
+    if(strName == "SPORK_10_MASTERNODE_PAY_UPDATED_NODES") return SPORK_10_MASTERNODE_PAY_UPDATED_NODES;
     if(strName == "SPORK_11_RESET_BUDGET") return SPORK_11_RESET_BUDGET;
     if(strName == "SPORK_12_RECONSIDER_BLOCKS") return SPORK_12_RECONSIDER_BLOCKS;
     if(strName == "SPORK_13_ENABLE_SUPERBLOCKS") return SPORK_13_ENABLE_SUPERBLOCKS;
@@ -274,10 +274,10 @@ std::string CSporkManager::GetSporkNameByID(int id)
     if(id == SPORK_2_INSTANTX) return "SPORK_2_INSTANTX";
     if(id == SPORK_3_INSTANTX_BLOCK_FILTERING) return "SPORK_3_INSTANTX_BLOCK_FILTERING";
     if(id == SPORK_5_MAX_VALUE) return "SPORK_5_MAX_VALUE";
-    if(id == SPORK_7_THRONE_SCANNING) return "SPORK_7_THRONE_SCANNING";
-    if(id == SPORK_8_THRONE_PAYMENT_ENFORCEMENT) return "SPORK_8_THRONE_PAYMENT_ENFORCEMENT";
-    if(id == SPORK_9_THRONE_BUDGET_ENFORCEMENT) return "SPORK_9_THRONE_BUDGET_ENFORCEMENT";
-    if(id == SPORK_10_THRONE_PAY_UPDATED_NODES) return "SPORK_10_THRONE_PAY_UPDATED_NODES";
+    if(id == SPORK_7_MASTERNODE_SCANNING) return "SPORK_7_MASTERNODE_SCANNING";
+    if(id == SPORK_8_MASTERNODE_PAYMENT_ENFORCEMENT) return "SPORK_8_MASTERNODE_PAYMENT_ENFORCEMENT";
+    if(id == SPORK_9_MASTERNODE_BUDGET_ENFORCEMENT) return "SPORK_9_MASTERNODE_BUDGET_ENFORCEMENT";
+    if(id == SPORK_10_MASTERNODE_PAY_UPDATED_NODES) return "SPORK_10_MASTERNODE_PAY_UPDATED_NODES";
     if(id == SPORK_11_RESET_BUDGET) return "SPORK_11_RESET_BUDGET";
     if(id == SPORK_12_RECONSIDER_BLOCKS) return "SPORK_12_RECONSIDER_BLOCKS";
     if(id == SPORK_13_ENABLE_SUPERBLOCKS) return "SPORK_13_ENABLE_SUPERBLOCKS";

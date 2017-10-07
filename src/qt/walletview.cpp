@@ -9,7 +9,7 @@
 #include "bitcoingui.h"
 #include "clientmodel.h"
 #include "guiutil.h"
-#include "throneconfig.h"
+#include "masternodeconfig.h"
 #include "systemnodeconfig.h"
 #include "optionsmodel.h"
 #include "overviewpage.h"
@@ -69,8 +69,8 @@ WalletView::WalletView(QWidget *parent):
 
     receiveCoinsPage = new ReceiveCoinsDialog();
     sendCoinsPage = new SendCoinsDialog();
-    if (throneConfig.getCount() >= 0) {
-        throneListPage = new ThroneList();
+    if (masternodeConfig.getCount() >= 0) {
+        masternodeListPage = new MasternodeList();
     }
     if (systemnodeConfig.getCount() >= 0) {
         systemnodeListPage = new SystemnodeList();
@@ -80,8 +80,8 @@ WalletView::WalletView(QWidget *parent):
     addWidget(transactionsPage);
     addWidget(receiveCoinsPage);
     addWidget(sendCoinsPage);
-    if (throneConfig.getCount() >= 0) {
-        addWidget(throneListPage);
+    if (masternodeConfig.getCount() >= 0) {
+        addWidget(masternodeListPage);
     }
     if (systemnodeConfig.getCount() >= 0) {
         addWidget(systemnodeListPage);
@@ -133,8 +133,8 @@ void WalletView::setClientModel(ClientModel *clientModel)
 
     overviewPage->setClientModel(clientModel);
     sendCoinsPage->setClientModel(clientModel);
-    if (throneConfig.getCount() >= 0) {
-        throneListPage->setClientModel(clientModel);
+    if (masternodeConfig.getCount() >= 0) {
+        masternodeListPage->setClientModel(clientModel);
     }
     if (systemnodeConfig.getCount() >= 0) {
         systemnodeListPage->setClientModel(clientModel);
@@ -150,8 +150,8 @@ void WalletView::setWalletModel(WalletModel *walletModel)
     overviewPage->setWalletModel(walletModel);
     receiveCoinsPage->setModel(walletModel);
     sendCoinsPage->setModel(walletModel);
-    if (throneConfig.getCount() >= 0) {
-        throneListPage->setWalletModel(walletModel);
+    if (masternodeConfig.getCount() >= 0) {
+        masternodeListPage->setWalletModel(walletModel);
     }
     if (systemnodeConfig.getCount() >= 0) {
         systemnodeListPage->setWalletModel(walletModel);
@@ -219,10 +219,10 @@ void WalletView::gotoSendCoinsPage(QString addr)
         sendCoinsPage->setAddress(addr);
 }
 
-void WalletView::gotoThronePage()
+void WalletView::gotoMasternodePage()
 {
-    if (throneConfig.getCount() >= 0) {
-        setCurrentWidget(throneListPage);
+    if (masternodeConfig.getCount() >= 0) {
+        setCurrentWidget(masternodeListPage);
     }
 }
 
@@ -324,9 +324,9 @@ void WalletView::unlockWallet()
         return;
     // Unlock wallet when requested by wallet model
 
-    if (walletModel->getEncryptionStatus() == WalletModel::Locked || walletModel->getEncryptionStatus() == WalletModel::UnlockedForAnonymizationOnly)
+    if (walletModel->getEncryptionStatus() == WalletModel::Locked)
     {
-        AskPassphraseDialog dlg(AskPassphraseDialog::UnlockAnonymize, this);
+        AskPassphraseDialog dlg(AskPassphraseDialog::Unlock, this);
         dlg.setModel(walletModel);
         dlg.exec();
     }

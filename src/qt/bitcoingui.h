@@ -26,7 +26,7 @@ class Notificator;
 class OptionsModel;
 class RPCConsole;
 class SendCoinsRecipient;
-class ThroneList;
+class MasternodeList;
 class UnitDisplayStatusBarControl;
 class WalletFrame;
 class WalletModel;
@@ -91,7 +91,7 @@ private:
     QMenuBar *appMenuBar;
     QAction *overviewAction;
     QAction *historyAction;
-    QAction *throneAction;
+    QAction *masternodeAction;
     QAction *systemnodeAction;
     QAction *quitAction;
     QAction *sendCoinsAction;
@@ -204,8 +204,8 @@ private slots:
     void gotoSignMessageTab(QString addr = "");
     /** Show Sign/Verify Message dialog and switch to verify message tab */
     void gotoVerifyMessageTab(QString addr = "");
-    /** Switch to throne manager page */
-    void gotoThronePage();
+    /** Switch to masternode manager page */
+    void gotoMasternodePage();
     /** Switch to systemnode manager page */
     void gotoSystemnodePage();
     /** Switch to multisig tab */

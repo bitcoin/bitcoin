@@ -405,8 +405,8 @@ Value getblocktemplate(const Array& params, bool fHelp)
             "        { ... }                       (json object) vote candidate\n"
             "        ,...\n"
             "  ],\n"
-            "  \"throne_payments\" : true|false,         (boolean) true, if throne payments are enabled\n"
-            "  \"enforce_throne_payments\" : true|false  (boolean) true, if throne payments are enforced\n"
+            "  \"masternode_payments\" : true|false,         (boolean) true, if masternode payments are enabled\n"
+            "  \"enforce_masternode_payments\" : true|false  (boolean) true, if masternode payments are enforced\n"
             "}\n"
 
             "\nExamples:\n"
@@ -641,8 +641,8 @@ Value getblocktemplate(const Array& params, bool fHelp)
         result.push_back(Pair("payee_amount", ""));
     }
 
-    result.push_back(Pair("throne_payments", pblock->nTime > Params().StartThronePayments()));
-    result.push_back(Pair("enforce_throne_payments", true));
+    result.push_back(Pair("masternode_payments", pblock->nTime > Params().StartMasternodePayments()));
+    result.push_back(Pair("enforce_masternode_payments", true));
 
     return result;
 }

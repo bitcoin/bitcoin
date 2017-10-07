@@ -55,28 +55,19 @@ SendCoinsDialog::SendCoinsDialog(QWidget *parent) :
 
     // Crown specific
     QSettings settings;
-    if (!settings.contains("bUseDarkSend"))
-        settings.setValue("bUseDarkSend", false);
     if (!settings.contains("bUseInstantX"))
         settings.setValue("bUseInstantX", false);
         
-    bool useDarkSend = settings.value("bUseDarkSend").toBool();
     bool useInstantX = settings.value("bUseInstantX").toBool();
     if(fLiteMode) {
-        ui->checkUseDarksend->setChecked(false);
-        ui->checkUseDarksend->setVisible(false);
         ui->checkInstantX->setVisible(false);
-        CoinControlDialog::coinControl->useDarkSend = false;
         CoinControlDialog::coinControl->useInstantX = false;
     }
     else{
-        ui->checkUseDarksend->setChecked(useDarkSend);
         ui->checkInstantX->setChecked(useInstantX);
-        CoinControlDialog::coinControl->useDarkSend = useDarkSend;
         CoinControlDialog::coinControl->useInstantX = useInstantX;
     }
     
-    connect(ui->checkUseDarksend, SIGNAL(stateChanged ( int )), this, SLOT(updateDisplayUnit()));
     connect(ui->checkInstantX, SIGNAL(stateChanged ( int )), this, SLOT(updateInstantX()));
 
     // Coin Control: clipboard actions
@@ -162,9 +153,9 @@ void SendCoinsDialog::setModel(WalletModel *model)
             }
         }
 
-        setBalance(model->getBalance(), model->getUnconfirmedBalance(), model->getImmatureBalance(), model->getAnonymizedBalance(),
+        setBalance(model->getBalance(), model->getUnconfirmedBalance(), model->getImmatureBalance(),
                    model->getWatchBalance(), model->getWatchUnconfirmedBalance(), model->getWatchImmatureBalance());
-        connect(model, SIGNAL(balanceChanged(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)), this, SLOT(setBalance(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)));
+        connect(model, SIGNAL(balanceChanged(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)), this, SLOT(setBalance(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)));
         connect(model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
         updateDisplayUnit();
 
@@ -242,9 +233,8 @@ void SendCoinsDialog::on_sendButton_clicked()
         return;
     }
 
-    QString strFunds = tr("using") + " <b>" + tr("anonymous funds") + "</b>";
+    QString strFunds = "";
     QString strFee = "";
-    recipients[0].inputType = ONLY_DENOMINATED;
 
     recipients[0].inputType = ALL_COINS;
     strFunds = tr("using") + " <b>" + tr("any available funds (not recommended)") + "</b>";
@@ -542,12 +532,11 @@ bool SendCoinsDialog::handlePaymentRequest(const SendCoinsRecipient &rv)
     return true;
 }
 
-void SendCoinsDialog::setBalance(const CAmount& balance, const CAmount& unconfirmedBalance, const CAmount& immatureBalance, const CAmount& anonymizedBalance,
+void SendCoinsDialog::setBalance(const CAmount& balance, const CAmount& unconfirmedBalance, const CAmount& immatureBalance,
                                  const CAmount& watchBalance, const CAmount& watchUnconfirmedBalance, const CAmount& watchImmatureBalance)
 {
     Q_UNUSED(unconfirmedBalance);
     Q_UNUSED(immatureBalance);
-    Q_UNUSED(anonymizedBalance);
     Q_UNUSED(watchBalance);
     Q_UNUSED(watchUnconfirmedBalance);
     Q_UNUSED(watchImmatureBalance);
@@ -555,13 +544,7 @@ void SendCoinsDialog::setBalance(const CAmount& balance, const CAmount& unconfir
     if(model && model->getOptionsModel())
     {
 	    uint64_t bal = 0;
-        QSettings settings;
-        settings.setValue("bUseDarkSend", ui->checkUseDarksend->isChecked());
-	    if(ui->checkUseDarksend->isChecked()) {
-		    bal = anonymizedBalance;
-	    } else {
-		    bal = balance;
-	    }
+		bal = balance;
 
         ui->labelBalance->setText(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), bal));
     }
@@ -572,9 +555,8 @@ void SendCoinsDialog::updateDisplayUnit()
     TRY_LOCK(cs_main, lockMain);
     if(!lockMain) return;
 
-    setBalance(model->getBalance(), model->getUnconfirmedBalance(), model->getImmatureBalance(), model->getAnonymizedBalance(),
+    setBalance(model->getBalance(), model->getUnconfirmedBalance(), model->getImmatureBalance(),
                    model->getWatchBalance(), model->getWatchUnconfirmedBalance(), model->getWatchImmatureBalance());
-    CoinControlDialog::coinControl->useDarkSend = ui->checkUseDarksend->isChecked();
     coinControlUpdateLabels();
     ui->customFee->setDisplayUnit(model->getOptionsModel()->getDisplayUnit());
     updateMinFeeLabel();
@@ -882,8 +864,6 @@ void SendCoinsDialog::coinControlUpdateLabels()
         if(entry)
             CoinControlDialog::payAmounts.append(entry->getValue().amount);
     }
-
-    ui->checkUseDarksend->setChecked(CoinControlDialog::coinControl->useDarkSend);
 
     if (CoinControlDialog::coinControl->HasSelected())
     {

@@ -20,20 +20,20 @@ static const int GETHEADERS_VERSION = 70030;
 //! disconnect from peers older than this proto version
 static const int MIN_PEER_PROTO_VERSION = 70050;
 
-//! minimum peer version accepted by DarksendPool
+//! minimum peer version accepted by legacySigner
 static const int MIN_POOL_PEER_PROTO_VERSION = 70050;
 
-//! minimum peer version for throne budgets
+//! minimum peer version for masternode budgets
 static const int MIN_BUDGET_PEER_PROTO_VERSION = 70050;
 
-//! minimum peer version for throne winner broadcasts
+//! minimum peer version for masternode winner broadcasts
 static const int MIN_MNW_PEER_PROTO_VERSION = 70050;
 
-//! minimum peer version that can receive throne payments
+//! minimum peer version that can receive masternode payments
 // V1 - Last protocol version before update
 // V2 - Newest protocol version
-static const int MIN_THRONE_PAYMENT_PROTO_VERSION_1 = 70040;
-static const int MIN_THRONE_PAYMENT_PROTO_VERSION_2 = 70050;
+static const int MIN_MASTERNODE_PAYMENT_PROTO_VERSION_1 = 70040;
+static const int MIN_MASTERNODE_PAYMENT_PROTO_VERSION_2 = 70050;
 
 //! nTime field added to CAddress, starting with this version;
 //! if possible, avoid requesting addresses nodes older than this

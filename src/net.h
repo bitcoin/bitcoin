@@ -68,7 +68,7 @@ void AddressCurrentlyConnected(const CService& addr);
 CNode* FindNode(const CNetAddr& ip);
 CNode* FindNode(const std::string& addrName);
 CNode* FindNode(const CService& ip);
-CNode* ConnectNode(CAddress addrConnect, const char *pszDest = NULL, bool darkSendMaster=false);
+CNode* ConnectNode(CAddress addrConnect, const char *pszDest = NULL, bool Masternode=false);
 bool OpenNetworkConnection(const CAddress& addrConnect, CSemaphoreGrant *grantOutbound = NULL, const char *strDest = NULL, bool fOneShot = false);
 void MapPort(bool fUseUPnP);
 unsigned short GetListenPort();
@@ -259,11 +259,11 @@ public:
     //    until they have initialized their bloom filter.
     bool fRelayTxes;
     // Should be 'true' only if we connected to this node to actually mix funds.
-    // In this case node will be released automatically via CThroneMan::ProcessThroneConnections().
+    // In this case node will be released automatically via CMasternodeMan::ProcessMasternodeConnections().
     // Connecting to verify connectability/status or connecting for sending/relaying single message
     // (even if it's relative to mixing e.g. for blinding) should NOT set this to 'true'.
     // For such cases node should be released manually (preferably right after corresponding code).
-    bool fDarkSendMaster;
+    bool fMasternode;
     CSemaphoreGrant grantOutbound;
     CCriticalSection cs_filter;
     CBloomFilter* pfilter;

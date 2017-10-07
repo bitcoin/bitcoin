@@ -1,14 +1,14 @@
-#include "thronelist.h"
-#include "ui_thronelist.h"
+#include "masternodelist.h"
+#include "ui_masternodelist.h"
 
 #include "sync.h"
 #include "clientmodel.h"
 #include "walletmodel.h"
-#include "activethrone.h"
-#include "throne-budget.h"
-#include "throne-sync.h"
-#include "throneconfig.h"
-#include "throneman.h"
+#include "activemasternode.h"
+#include "masternode-budget.h"
+#include "masternode-sync.h"
+#include "masternodeconfig.h"
+#include "masternodeman.h"
 #include "wallet.h"
 #include "init.h"
 #include "guiutil.h"
@@ -16,11 +16,11 @@
 #include <QTimer>
 #include <QMessageBox>
 
-CCriticalSection cs_thrones;
+CCriticalSection cs_masternodes;
 
-ThroneList::ThroneList(QWidget *parent) :
+MasternodeList::MasternodeList(QWidget *parent) :
     QWidget(parent),
-    ui(new Ui::ThroneList),
+    ui(new Ui::MasternodeList),
     clientModel(0),
     walletModel(0)
 {
@@ -37,25 +37,25 @@ ThroneList::ThroneList(QWidget *parent) :
     int columnActiveWidth = 130;
     int columnLastSeenWidth = 130;
 
-    ui->tableWidgetMyThrones->setColumnWidth(0, columnAliasWidth);
-    ui->tableWidgetMyThrones->setColumnWidth(1, columnAddressWidth);
-    ui->tableWidgetMyThrones->setColumnWidth(2, columnProtocolWidth);
-    ui->tableWidgetMyThrones->setColumnWidth(3, columnStatusWidth);
-    ui->tableWidgetMyThrones->setColumnWidth(4, columnActiveWidth);
-    ui->tableWidgetMyThrones->setColumnWidth(5, columnLastSeenWidth);
+    ui->tableWidgetMyMasternodes->setColumnWidth(0, columnAliasWidth);
+    ui->tableWidgetMyMasternodes->setColumnWidth(1, columnAddressWidth);
+    ui->tableWidgetMyMasternodes->setColumnWidth(2, columnProtocolWidth);
+    ui->tableWidgetMyMasternodes->setColumnWidth(3, columnStatusWidth);
+    ui->tableWidgetMyMasternodes->setColumnWidth(4, columnActiveWidth);
+    ui->tableWidgetMyMasternodes->setColumnWidth(5, columnLastSeenWidth);
 
-    ui->tableWidgetThrones->setColumnWidth(0, columnAddressWidth);
-    ui->tableWidgetThrones->setColumnWidth(1, columnProtocolWidth);
-    ui->tableWidgetThrones->setColumnWidth(2, columnStatusWidth);
-    ui->tableWidgetThrones->setColumnWidth(3, columnActiveWidth);
-    ui->tableWidgetThrones->setColumnWidth(4, columnLastSeenWidth);
+    ui->tableWidgetMasternodes->setColumnWidth(0, columnAddressWidth);
+    ui->tableWidgetMasternodes->setColumnWidth(1, columnProtocolWidth);
+    ui->tableWidgetMasternodes->setColumnWidth(2, columnStatusWidth);
+    ui->tableWidgetMasternodes->setColumnWidth(3, columnActiveWidth);
+    ui->tableWidgetMasternodes->setColumnWidth(4, columnLastSeenWidth);
 
-    ui->tableWidgetMyThrones->setContextMenuPolicy(Qt::CustomContextMenu);
+    ui->tableWidgetMyMasternodes->setContextMenuPolicy(Qt::CustomContextMenu);
 
     QAction *startAliasAction = new QAction(tr("Start alias"), this);
     contextMenu = new QMenu();
     contextMenu->addAction(startAliasAction);
-    connect(ui->tableWidgetMyThrones, SIGNAL(customContextMenuRequested(const QPoint&)), this, SLOT(showContextMenu(const QPoint&)));
+    connect(ui->tableWidgetMyMasternodes, SIGNAL(customContextMenuRequested(const QPoint&)), this, SLOT(showContextMenu(const QPoint&)));
     connect(startAliasAction, SIGNAL(triggered()), this, SLOT(on_startButton_clicked()));
 
     timer = new QTimer(this);
@@ -72,50 +72,50 @@ ThroneList::ThroneList(QWidget *parent) :
     ui->superblockLabel->setText(QString::number(nNext));
 }
 
-ThroneList::~ThroneList()
+MasternodeList::~MasternodeList()
 {
     delete ui;
 }
 
-void ThroneList::setClientModel(ClientModel *model)
+void MasternodeList::setClientModel(ClientModel *model)
 {
     this->clientModel = model;
     if(model)
     {
-        // try to update list when throne count changes
-        connect(clientModel, SIGNAL(strThronesChanged(QString)), this, SLOT(updateNodeList()));
+        // try to update list when masternode count changes
+        connect(clientModel, SIGNAL(strMasternodesChanged(QString)), this, SLOT(updateNodeList()));
     }
 }
 
-void ThroneList::setWalletModel(WalletModel *model)
+void MasternodeList::setWalletModel(WalletModel *model)
 {
     this->walletModel = model;
 }
 
-void ThroneList::showContextMenu(const QPoint &point)
+void MasternodeList::showContextMenu(const QPoint &point)
 {
-    QTableWidgetItem *item = ui->tableWidgetMyThrones->itemAt(point);
+    QTableWidgetItem *item = ui->tableWidgetMyMasternodes->itemAt(point);
     if(item) contextMenu->exec(QCursor::pos());
 }
 
-void ThroneList::StartAlias(std::string strAlias)
+void MasternodeList::StartAlias(std::string strAlias)
 {
     std::string statusObj;
     statusObj += "<center>Alias: " + strAlias;
 
-    BOOST_FOREACH(CThroneConfig::CThroneEntry mne, throneConfig.getEntries()) {
+    BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry mne, masternodeConfig.getEntries()) {
         if(mne.getAlias() == strAlias) {
             std::string errorMessage;
-            CThroneBroadcast mnb;
+            CMasternodeBroadcast mnb;
 
-            bool result = CThroneBroadcast::Create(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), errorMessage, mnb);
+            bool result = CMasternodeBroadcast::Create(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), errorMessage, mnb);
 
             if(result) {
-                statusObj += "<br>Successfully started throne." ;
-                mnodeman.UpdateThroneList(mnb);
+                statusObj += "<br>Successfully started masternode." ;
+                mnodeman.UpdateMasternodeList(mnb);
                 mnb.Relay();
             } else {
-                statusObj += "<br>Failed to start throne.<br>Error: " + errorMessage;
+                statusObj += "<br>Failed to start masternode.<br>Error: " + errorMessage;
             }
             break;
         }
@@ -128,27 +128,27 @@ void ThroneList::StartAlias(std::string strAlias)
     msg.exec();
 }
 
-void ThroneList::StartAll(std::string strCommand)
+void MasternodeList::StartAll(std::string strCommand)
 {
     int total = 0;
     int successful = 0;
     int fail = 0;
     std::string statusObj;
 
-    BOOST_FOREACH(CThroneConfig::CThroneEntry mne, throneConfig.getEntries()) {
+    BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry mne, masternodeConfig.getEntries()) {
         std::string errorMessage;
-        CThroneBroadcast mnb;
+        CMasternodeBroadcast mnb;
 
         CTxIn vin = CTxIn(uint256S(mne.getTxHash()), uint32_t(atoi(mne.getOutputIndex().c_str())));
-        CThrone *pmn = mnodeman.Find(vin);
+        CMasternode *pmn = mnodeman.Find(vin);
 
         if(strCommand == "start-missing" && pmn) continue;
 
-        bool result = CThroneBroadcast::Create(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), errorMessage, mnb);
+        bool result = CMasternodeBroadcast::Create(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), errorMessage, mnb);
 
         if(result) {
             successful++;
-            mnodeman.UpdateThroneList(mnb);
+            mnodeman.UpdateMasternodeList(mnb);
             mnb.Relay();
         } else {
             fail++;
@@ -159,7 +159,7 @@ void ThroneList::StartAll(std::string strCommand)
     pwalletMain->Lock();
 
     std::string returnObj;
-    returnObj = strprintf("Successfully started %d thrones, failed to start %d, total %d", successful, fail, total);
+    returnObj = strprintf("Successfully started %d masternodes, failed to start %d, total %d", successful, fail, total);
     if (fail > 0)
         returnObj += statusObj;
 
@@ -168,15 +168,15 @@ void ThroneList::StartAll(std::string strCommand)
     msg.exec();
 }
 
-void ThroneList::updateMyThroneInfo(QString alias, QString addr, QString privkey, QString txHash, QString txIndex, CThrone *pmn)
+void MasternodeList::updateMyMasternodeInfo(QString alias, QString addr, QString privkey, QString txHash, QString txIndex, CMasternode *pmn)
 {
     LOCK(cs_mnlistupdate);
     bool bFound = false;
     int nodeRow = 0;
 
-    for(int i=0; i < ui->tableWidgetMyThrones->rowCount(); i++)
+    for(int i=0; i < ui->tableWidgetMyMasternodes->rowCount(); i++)
     {
-        if(ui->tableWidgetMyThrones->item(i, 0)->text() == alias)
+        if(ui->tableWidgetMyMasternodes->item(i, 0)->text() == alias)
         {
             bFound = true;
             nodeRow = i;
@@ -185,8 +185,8 @@ void ThroneList::updateMyThroneInfo(QString alias, QString addr, QString privkey
     }
 
     if(nodeRow == 0 && !bFound) {
-        nodeRow = ui->tableWidgetMyThrones->rowCount();
-        ui->tableWidgetMyThrones->insertRow(nodeRow);
+        nodeRow = ui->tableWidgetMyMasternodes->rowCount();
+        ui->tableWidgetMyMasternodes->insertRow(nodeRow);
     }
 
     QTableWidgetItem *aliasItem = new QTableWidgetItem(alias);
@@ -197,49 +197,49 @@ void ThroneList::updateMyThroneInfo(QString alias, QString addr, QString privkey
     QTableWidgetItem *lastSeenItem = new QTableWidgetItem(QString::fromStdString(DateTimeStrFormat("%Y-%m-%d %H:%M", pmn ? pmn->lastPing.sigTime : 0)));
     QTableWidgetItem *pubkeyItem = new QTableWidgetItem(QString::fromStdString(pmn ? CBitcoinAddress(pmn->pubkey.GetID()).ToString() : ""));
 
-    ui->tableWidgetMyThrones->setItem(nodeRow, 0, aliasItem);
-    ui->tableWidgetMyThrones->setItem(nodeRow, 1, addrItem);
-    ui->tableWidgetMyThrones->setItem(nodeRow, 2, protocolItem);
-    ui->tableWidgetMyThrones->setItem(nodeRow, 3, statusItem);
-    ui->tableWidgetMyThrones->setItem(nodeRow, 4, activeSecondsItem);
-    ui->tableWidgetMyThrones->setItem(nodeRow, 5, lastSeenItem);
-    ui->tableWidgetMyThrones->setItem(nodeRow, 6, pubkeyItem);
+    ui->tableWidgetMyMasternodes->setItem(nodeRow, 0, aliasItem);
+    ui->tableWidgetMyMasternodes->setItem(nodeRow, 1, addrItem);
+    ui->tableWidgetMyMasternodes->setItem(nodeRow, 2, protocolItem);
+    ui->tableWidgetMyMasternodes->setItem(nodeRow, 3, statusItem);
+    ui->tableWidgetMyMasternodes->setItem(nodeRow, 4, activeSecondsItem);
+    ui->tableWidgetMyMasternodes->setItem(nodeRow, 5, lastSeenItem);
+    ui->tableWidgetMyMasternodes->setItem(nodeRow, 6, pubkeyItem);
 }
 
-void ThroneList::updateMyNodeList(bool reset) {
+void MasternodeList::updateMyNodeList(bool reset) {
     static int64_t lastMyListUpdate = 0;
 
-    // automatically update my throne list only once in MY_THRONELIST_UPDATE_SECONDS seconds,
+    // automatically update my masternode list only once in MY_MASTERNODELIST_UPDATE_SECONDS seconds,
     // this update still can be triggered manually at any time via button click
-    int64_t timeTillUpdate = lastMyListUpdate + MY_THRONELIST_UPDATE_SECONDS - GetTime();
+    int64_t timeTillUpdate = lastMyListUpdate + MY_MASTERNODELIST_UPDATE_SECONDS - GetTime();
     ui->secondsLabel->setText(QString::number(timeTillUpdate));
 
     if(timeTillUpdate > 0 && !reset) return;
     lastMyListUpdate = GetTime();
 
-    ui->tableWidgetThrones->setSortingEnabled(false);
-    BOOST_FOREACH(CThroneConfig::CThroneEntry mne, throneConfig.getEntries()) {
+    ui->tableWidgetMasternodes->setSortingEnabled(false);
+    BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry mne, masternodeConfig.getEntries()) {
         CTxIn vin = CTxIn(uint256S(mne.getTxHash()), uint32_t(atoi(mne.getOutputIndex().c_str())));
-        CThrone *pmn = mnodeman.Find(vin);
+        CMasternode *pmn = mnodeman.Find(vin);
 
-        updateMyThroneInfo(QString::fromStdString(mne.getAlias()), QString::fromStdString(mne.getIp()), QString::fromStdString(mne.getPrivKey()), QString::fromStdString(mne.getTxHash()),
+        updateMyMasternodeInfo(QString::fromStdString(mne.getAlias()), QString::fromStdString(mne.getIp()), QString::fromStdString(mne.getPrivKey()), QString::fromStdString(mne.getTxHash()),
             QString::fromStdString(mne.getOutputIndex()), pmn);
     }
-    ui->tableWidgetThrones->setSortingEnabled(true);
+    ui->tableWidgetMasternodes->setSortingEnabled(true);
 
     // reset "timer"
     ui->secondsLabel->setText("0");
 }
 
-void ThroneList::updateNodeList()
+void MasternodeList::updateNodeList()
 {
     static int64_t nTimeListUpdate = 0;
 
-      // to prevent high cpu usage update only once in THRONELIST_UPDATE_SECONDS secondsLabel
-      // or THRONELIST_FILTER_COOLDOWN_SECONDS seconds after filter was last changed
+      // to prevent high cpu usage update only once in MASTERNODELIST_UPDATE_SECONDS secondsLabel
+      // or MASTERNODELIST_FILTER_COOLDOWN_SECONDS seconds after filter was last changed
       int64_t nTimeToWait =   fFilterUpdated
-                              ? nTimeFilterUpdate - GetTime() + THRONELIST_FILTER_COOLDOWN_SECONDS
-                              : nTimeListUpdate - GetTime() + THRONELIST_UPDATE_SECONDS;
+                              ? nTimeFilterUpdate - GetTime() + MASTERNODELIST_FILTER_COOLDOWN_SECONDS
+                              : nTimeListUpdate - GetTime() + MASTERNODELIST_UPDATE_SECONDS;
 
     if(fFilterUpdated) ui->countLabel->setText(QString::fromStdString(strprintf("Please wait... %d", nTimeToWait)));
     if(nTimeToWait > 0) return;
@@ -247,18 +247,18 @@ void ThroneList::updateNodeList()
     nTimeListUpdate = GetTime();
     fFilterUpdated = false;
 
-    TRY_LOCK(cs_thrones, lockThrones);
-    if(!lockThrones)
+    TRY_LOCK(cs_masternodes, lockMasternodes);
+    if(!lockMasternodes)
         return;
 
     QString strToFilter;
     ui->countLabel->setText("Updating...");
-    ui->tableWidgetThrones->setSortingEnabled(false);
-    ui->tableWidgetThrones->clearContents();
-    ui->tableWidgetThrones->setRowCount(0);
-    std::vector<CThrone> vThrones = mnodeman.GetFullThroneVector();
+    ui->tableWidgetMasternodes->setSortingEnabled(false);
+    ui->tableWidgetMasternodes->clearContents();
+    ui->tableWidgetMasternodes->setRowCount(0);
+    std::vector<CMasternode> vMasternodes = mnodeman.GetFullMasternodeVector();
 
-    BOOST_FOREACH(CThrone& mn, vThrones)
+    BOOST_FOREACH(CMasternode& mn, vMasternodes)
     {
         // populate list
         // Address, Protocol, Status, Active Seconds, Last Seen, Pub Key
@@ -280,42 +280,42 @@ void ThroneList::updateNodeList()
             if (!strToFilter.contains(strCurrentFilter)) continue;
         }
 
-        ui->tableWidgetThrones->insertRow(0);
-        ui->tableWidgetThrones->setItem(0, 0, addressItem);
-        ui->tableWidgetThrones->setItem(0, 1, protocolItem);
-        ui->tableWidgetThrones->setItem(0, 2, statusItem);
-        ui->tableWidgetThrones->setItem(0, 3, activeSecondsItem);
-        ui->tableWidgetThrones->setItem(0, 4, lastSeenItem);
-        ui->tableWidgetThrones->setItem(0, 5, pubkeyItem);
+        ui->tableWidgetMasternodes->insertRow(0);
+        ui->tableWidgetMasternodes->setItem(0, 0, addressItem);
+        ui->tableWidgetMasternodes->setItem(0, 1, protocolItem);
+        ui->tableWidgetMasternodes->setItem(0, 2, statusItem);
+        ui->tableWidgetMasternodes->setItem(0, 3, activeSecondsItem);
+        ui->tableWidgetMasternodes->setItem(0, 4, lastSeenItem);
+        ui->tableWidgetMasternodes->setItem(0, 5, pubkeyItem);
     }
 
-    ui->countLabel->setText(QString::number(ui->tableWidgetThrones->rowCount()));
-    ui->tableWidgetThrones->setSortingEnabled(true);
+    ui->countLabel->setText(QString::number(ui->tableWidgetMasternodes->rowCount()));
+    ui->tableWidgetMasternodes->setSortingEnabled(true);
 
 }
 
-void ThroneList::on_filterLineEdit_textChanged(const QString &filterString) {
+void MasternodeList::on_filterLineEdit_textChanged(const QString &filterString) {
     strCurrentFilter = filterString;
     nTimeFilterUpdate = GetTime();
     fFilterUpdated = true;
-    ui->countLabel->setText(QString::fromStdString(strprintf("Please wait... %d", THRONELIST_FILTER_COOLDOWN_SECONDS)));
+    ui->countLabel->setText(QString::fromStdString(strprintf("Please wait... %d", MASTERNODELIST_FILTER_COOLDOWN_SECONDS)));
 }
 
-void ThroneList::on_startButton_clicked()
+void MasternodeList::on_startButton_clicked()
 {
     // Find selected node alias
-    QItemSelectionModel* selectionModel = ui->tableWidgetMyThrones->selectionModel();
+    QItemSelectionModel* selectionModel = ui->tableWidgetMyMasternodes->selectionModel();
     QModelIndexList selected = selectionModel->selectedRows();
     if(selected.count() == 0)
         return;
 
     QModelIndex index = selected.at(0);
     int r = index.row();
-    std::string strAlias = ui->tableWidgetMyThrones->item(r, 0)->text().toStdString();
+    std::string strAlias = ui->tableWidgetMyMasternodes->item(r, 0)->text().toStdString();
 
     // Display message box
-    QMessageBox::StandardButton retval = QMessageBox::question(this, tr("Confirm throne start"),
-        tr("Are you sure you want to start throne %1?").arg(QString::fromStdString(strAlias)),
+    QMessageBox::StandardButton retval = QMessageBox::question(this, tr("Confirm masternode start"),
+        tr("Are you sure you want to start masternode %1?").arg(QString::fromStdString(strAlias)),
         QMessageBox::Yes | QMessageBox::Cancel,
         QMessageBox::Cancel);
 
@@ -325,7 +325,7 @@ void ThroneList::on_startButton_clicked()
     }
 
     WalletModel::EncryptionStatus encStatus = walletModel->getEncryptionStatus();
-    if(encStatus == walletModel->Locked || encStatus == walletModel->UnlockedForAnonymizationOnly)
+    if(encStatus == walletModel->Locked)
     {
         WalletModel::UnlockContext ctx(walletModel->requestUnlock(true));
         if(!ctx.isValid())
@@ -340,11 +340,11 @@ void ThroneList::on_startButton_clicked()
     StartAlias(strAlias);
 }
 
-void ThroneList::on_startAllButton_clicked()
+void MasternodeList::on_startAllButton_clicked()
 {
     // Display message box
-    QMessageBox::StandardButton retval = QMessageBox::question(this, tr("Confirm all thrones start"),
-        tr("Are you sure you want to start ALL thrones?"),
+    QMessageBox::StandardButton retval = QMessageBox::question(this, tr("Confirm all masternodes start"),
+        tr("Are you sure you want to start ALL masternodes?"),
         QMessageBox::Yes | QMessageBox::Cancel,
         QMessageBox::Cancel);
 
@@ -354,7 +354,7 @@ void ThroneList::on_startAllButton_clicked()
     }
 
     WalletModel::EncryptionStatus encStatus = walletModel->getEncryptionStatus();
-    if(encStatus == walletModel->Locked || encStatus == walletModel->UnlockedForAnonymizationOnly)
+    if(encStatus == walletModel->Locked)
     {
         WalletModel::UnlockContext ctx(walletModel->requestUnlock(true));
         if(!ctx.isValid())
@@ -369,20 +369,20 @@ void ThroneList::on_startAllButton_clicked()
     StartAll();
 }
 
-void ThroneList::on_startMissingButton_clicked()
+void MasternodeList::on_startMissingButton_clicked()
 {
 
-    if(throneSync.RequestedThroneAssets <= THRONE_SYNC_LIST ||
-      throneSync.RequestedThroneAssets == THRONE_SYNC_FAILED) {
+    if(masternodeSync.RequestedMasternodeAssets <= MASTERNODE_SYNC_LIST ||
+      masternodeSync.RequestedMasternodeAssets == MASTERNODE_SYNC_FAILED) {
         QMessageBox::critical(this, tr("Command is not available right now"),
-            tr("You can't use this command until throne list is synced"));
+            tr("You can't use this command until masternode list is synced"));
         return;
     }
 
     // Display message box
     QMessageBox::StandardButton retval = QMessageBox::question(this,
-        tr("Confirm missing thrones start"),
-        tr("Are you sure you want to start MISSING thrones?"),
+        tr("Confirm missing masternodes start"),
+        tr("Are you sure you want to start MISSING masternodes?"),
         QMessageBox::Yes | QMessageBox::Cancel,
         QMessageBox::Cancel);
 
@@ -392,7 +392,7 @@ void ThroneList::on_startMissingButton_clicked()
     }
 
     WalletModel::EncryptionStatus encStatus = walletModel->getEncryptionStatus();
-    if(encStatus == walletModel->Locked || encStatus == walletModel->UnlockedForAnonymizationOnly)
+    if(encStatus == walletModel->Locked)
     {
         WalletModel::UnlockContext ctx(walletModel->requestUnlock(true));
         if(!ctx.isValid())
@@ -407,32 +407,32 @@ void ThroneList::on_startMissingButton_clicked()
     StartAll("start-missing");
 }
 
-void ThroneList::on_tableWidgetMyThrones_itemSelectionChanged()
+void MasternodeList::on_tableWidgetMyMasternodes_itemSelectionChanged()
 {
-    if(ui->tableWidgetMyThrones->selectedItems().count() > 0)
+    if(ui->tableWidgetMyMasternodes->selectedItems().count() > 0)
     {
         ui->startButton->setEnabled(true);
     }
 }
 
-void ThroneList::on_UpdateButton_clicked()
+void MasternodeList::on_UpdateButton_clicked()
 {
     updateMyNodeList(true);
 }
 
-void ThroneList::on_UpdateVotesButton_clicked()
+void MasternodeList::on_UpdateVotesButton_clicked()
 {
     updateVoteList(true);
 }
 
-void ThroneList::updateVoteList(bool reset)
+void MasternodeList::updateVoteList(bool reset)
 {
 
     static int64_t lastVoteListUpdate = 0;
 
-    // automatically update my throne list only once in MY_THRONELIST_UPDATE_SECONDS seconds,
+    // automatically update my masternode list only once in MY_MASTERNODELIST_UPDATE_SECONDS seconds,
     // this update still can be triggered manually at any time via button click
-    int64_t timeTillUpdate = lastVoteListUpdate + MY_THRONELIST_UPDATE_SECONDS - GetTime();
+    int64_t timeTillUpdate = lastVoteListUpdate + MY_MASTERNODELIST_UPDATE_SECONDS - GetTime();
     ui->voteSecondsLabel->setText(QString::number(timeTillUpdate));
 
     if(timeTillUpdate > 0 && !reset) return;
@@ -495,7 +495,7 @@ void ThroneList::updateVoteList(bool reset)
                 ui->tableWidgetVoting->setItem(0, 12, monthlyPaymentItem);
 
                 std::string projected;            
-                if ((int64_t)pbudgetProposal->GetYeas() - (int64_t)pbudgetProposal->GetNays() > (ui->tableWidgetThrones->rowCount()/10)){
+                if ((int64_t)pbudgetProposal->GetYeas() - (int64_t)pbudgetProposal->GetNays() > (ui->tableWidgetMasternodes->rowCount()/10)){
                     nTotalAllotted += pbudgetProposal->GetAmount()/100000000;
                     projected = "Yes";
                 } else {
@@ -514,10 +514,10 @@ void ThroneList::updateVoteList(bool reset)
 
 }
 
-void ThroneList::VoteMany(std::string strCommand)
+void MasternodeList::VoteMany(std::string strCommand)
 {
-    std::vector<CThroneConfig::CThroneEntry> mnEntries;
-    mnEntries = throneConfig.getEntries();
+    std::vector<CMasternodeConfig::CMasternodeEntry> mnEntries;
+    mnEntries = masternodeConfig.getEntries();
 
     int nVote = VOTE_ABSTAIN;
     if(strCommand == "yea") nVote = VOTE_YES;
@@ -539,32 +539,32 @@ void ThroneList::VoteMany(std::string strCommand)
     int failed = 0;
     std::string statusObj;
 
-    BOOST_FOREACH(CThroneConfig::CThroneEntry mne, throneConfig.getEntries()) {
+    BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry mne, masternodeConfig.getEntries()) {
         std::string errorMessage;
-        std::vector<unsigned char> vchThroNeSignature;
-        std::string strThroNeSignMessage;
+        std::vector<unsigned char> vchMasterNodeSignature;
+        std::string strMasterNodeSignMessage;
 
         CPubKey pubKeyCollateralAddress;
         CKey keyCollateralAddress;
-        CPubKey pubKeyThrone;
-        CKey keyThrone;
+        CPubKey pubKeyMasternode;
+        CKey keyMasternode;
 
-        if(!darkSendSigner.SetKey(mne.getPrivKey(), errorMessage, keyThrone, pubKeyThrone)){
+        if(!legacySigner.SetKey(mne.getPrivKey(), errorMessage, keyMasternode, pubKeyMasternode)){
             failed++;
-            statusObj += "\nFailed to vote with " + mne.getAlias() + ". Throne signing error, could not set key correctly: " + errorMessage;
+            statusObj += "\nFailed to vote with " + mne.getAlias() + ". Masternode signing error, could not set key correctly: " + errorMessage;
             continue;
         }
 
-        CThrone* pmn = mnodeman.Find(pubKeyThrone);
+        CMasternode* pmn = mnodeman.Find(pubKeyMasternode);
         if(pmn == NULL)
         {
             failed++;
-            statusObj += "\nFailed to vote with " + mne.getAlias() + ". Error: Can't find throne by pubkey";
+            statusObj += "\nFailed to vote with " + mne.getAlias() + ". Error: Can't find masternode by pubkey";
             continue;
         }
 
         CBudgetVote vote(pmn->vin, hash, nVote);
-        if(!vote.Sign(keyThrone, pubKeyThrone)){
+        if(!vote.Sign(keyMasternode, pubKeyMasternode)){
             failed++;
             statusObj += "\nFailed to vote with " + mne.getAlias() + ". Error: Failure to sign";
             continue;
@@ -572,7 +572,7 @@ void ThroneList::VoteMany(std::string strCommand)
 
         std::string strError = "";
         if(budget.UpdateProposal(vote, NULL, strError)) {
-            budget.mapSeenThroneBudgetVotes.insert(make_pair(vote.GetHash(), vote));
+            budget.mapSeenMasternodeBudgetVotes.insert(make_pair(vote.GetHash(), vote));
             vote.Relay();
             success++;
         } else {
@@ -591,11 +591,11 @@ void ThroneList::VoteMany(std::string strCommand)
     updateVoteList(true);
 }
 
-void ThroneList::on_voteManyYesButton_clicked()
+void MasternodeList::on_voteManyYesButton_clicked()
 {
     // Display message box
     QMessageBox::StandardButton retval = QMessageBox::question(this, tr("Confirm vote-many"),
-        tr("Are you sure you want to vote with ALL of your thrones?"),
+        tr("Are you sure you want to vote with ALL of your masternodes?"),
         QMessageBox::Yes | QMessageBox::Cancel,
         QMessageBox::Cancel);
 
@@ -605,7 +605,7 @@ void ThroneList::on_voteManyYesButton_clicked()
     }
 
     WalletModel::EncryptionStatus encStatus = walletModel->getEncryptionStatus();
-    if(encStatus == walletModel->Locked || encStatus == walletModel->UnlockedForAnonymizationOnly)
+    if(encStatus == walletModel->Locked)
     {
         WalletModel::UnlockContext ctx(walletModel->requestUnlock(true));
         if(!ctx.isValid())
@@ -620,11 +620,11 @@ void ThroneList::on_voteManyYesButton_clicked()
     VoteMany("yea");
 }
 
-void ThroneList::on_voteManyNoButton_clicked()
+void MasternodeList::on_voteManyNoButton_clicked()
 {
     // Display message box
     QMessageBox::StandardButton retval = QMessageBox::question(this, tr("Confirm vote-many"),
-        tr("Are you sure you want to vote with ALL of your thrones?"),
+        tr("Are you sure you want to vote with ALL of your masternodes?"),
         QMessageBox::Yes | QMessageBox::Cancel,
         QMessageBox::Cancel);
 
@@ -634,7 +634,7 @@ void ThroneList::on_voteManyNoButton_clicked()
     }
 
     WalletModel::EncryptionStatus encStatus = walletModel->getEncryptionStatus();
-    if(encStatus == walletModel->Locked || encStatus == walletModel->UnlockedForAnonymizationOnly)
+    if(encStatus == walletModel->Locked)
     {
         WalletModel::UnlockContext ctx(walletModel->requestUnlock(true));
         if(!ctx.isValid())
@@ -649,11 +649,11 @@ void ThroneList::on_voteManyNoButton_clicked()
     VoteMany("nay");
 }
 
-void ThroneList::on_voteManyAbstainButton_clicked()
+void MasternodeList::on_voteManyAbstainButton_clicked()
 {
     // Display message box
     QMessageBox::StandardButton retval = QMessageBox::question(this, tr("Confirm vote-many"),
-        tr("Are you sure you want to vote with ALL of your thrones?"),
+        tr("Are you sure you want to vote with ALL of your masternodes?"),
         QMessageBox::Yes | QMessageBox::Cancel,
         QMessageBox::Cancel);
 
@@ -663,7 +663,7 @@ void ThroneList::on_voteManyAbstainButton_clicked()
     }
 
     WalletModel::EncryptionStatus encStatus = walletModel->getEncryptionStatus();
-    if(encStatus == walletModel->Locked || encStatus == walletModel->UnlockedForAnonymizationOnly)
+    if(encStatus == walletModel->Locked)
     {
         WalletModel::UnlockContext ctx(walletModel->requestUnlock(true));
         if(!ctx.isValid())
@@ -678,7 +678,7 @@ void ThroneList::on_voteManyAbstainButton_clicked()
     VoteMany("abstain");
 }
 
-void ThroneList::on_tableWidgetVoting_itemSelectionChanged()
+void MasternodeList::on_tableWidgetVoting_itemSelectionChanged()
 {
     if(ui->tableWidgetVoting->selectedItems().count() > 0)
     {

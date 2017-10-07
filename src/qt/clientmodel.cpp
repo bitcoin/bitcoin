@@ -15,8 +15,8 @@
 #include "main.h"
 #include "net.h"
 #include "ui_interface.h"
-#include "throneman.h"
-#include "throne-sync.h"
+#include "masternodeman.h"
+#include "masternode-sync.h"
 #include "systemnodeman.h"
 #include "systemnode-sync.h"
 #include "util.h"
@@ -34,7 +34,7 @@ ClientModel::ClientModel(OptionsModel *optionsModel, QObject *parent) :
     optionsModel(optionsModel),
     peerTableModel(0),
     cachedNumBlocks(0),
-    cachedThroneCountString(""),
+    cachedMasternodeCountString(""),
     cachedSystemnodeCountString(""),
     cachedReindexing(0), cachedImporting(0),
     numBlocksAtStartup(-1), pollTimer(0)
@@ -76,7 +76,7 @@ int ClientModel::getNumConnections(unsigned int flags) const
     return nNum;
 }
 
-QString ClientModel::getThroneCountString() const
+QString ClientModel::getMasternodeCountString() const
 {
     return tr("Total: %1 (DS compatible: %2 / Enabled: %3)").arg(QString::number((int)mnodeman.size()))
             .arg(QString::number((int)mnodeman.CountEnabled(MIN_POOL_PEER_PROTO_VERSION)))
@@ -148,14 +148,14 @@ void ClientModel::updateTimer()
     // check for changed number of blocks we have, number of blocks peers claim to have, reindexing state and importing state
     if (cachedNumBlocks != newNumBlocks ||
         cachedReindexing != fReindex || cachedImporting != fImporting ||
-            throneSync.RequestedThroneAttempt != prevAttempt || throneSync.RequestedThroneAssets != prevAssets ||
+            masternodeSync.RequestedMasternodeAttempt != prevAttempt || masternodeSync.RequestedMasternodeAssets != prevAssets ||
             systemnodeSync.RequestedSystemnodeAttempt != prevAttemptSN || systemnodeSync.RequestedSystemnodeAssets != prevAssetsSN)
     {
         cachedNumBlocks = newNumBlocks;
         cachedReindexing = fReindex;
         cachedImporting = fImporting;
-        prevAttempt = throneSync.RequestedThroneAttempt;
-        prevAssets = throneSync.RequestedThroneAssets;
+        prevAttempt = masternodeSync.RequestedMasternodeAttempt;
+        prevAssets = masternodeSync.RequestedMasternodeAssets;
 
         prevAttemptSN = systemnodeSync.RequestedSystemnodeAttempt;
         prevAssetsSN = systemnodeSync.RequestedSystemnodeAssets;
@@ -174,13 +174,13 @@ void ClientModel::updateMnTimer()
     TRY_LOCK(cs_main, lockMain);
     if(!lockMain)
         return;
-    QString newThroneCountString = getThroneCountString();
+    QString newMasternodeCountString = getMasternodeCountString();
 
-    if (cachedThroneCountString != newThroneCountString)
+    if (cachedMasternodeCountString != newMasternodeCountString)
     {
-        cachedThroneCountString = newThroneCountString;
+        cachedMasternodeCountString = newMasternodeCountString;
 
-        emit strThronesChanged(cachedThroneCountString);
+        emit strMasternodesChanged(cachedMasternodeCountString);
     }
 }
 

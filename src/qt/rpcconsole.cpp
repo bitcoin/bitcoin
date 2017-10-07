@@ -310,8 +310,8 @@ void RPCConsole::setClientModel(ClientModel *model)
         setNumBlocks(model->getNumBlocks());
         connect(model, SIGNAL(numBlocksChanged(int)), this, SLOT(setNumBlocks(int)));
 
-        setThroneCount(model->getThroneCountString());
-        connect(model, SIGNAL(strThronesChanged(QString)), this, SLOT(setThroneCount(QString)));
+        setMasternodeCount(model->getMasternodeCountString());
+        connect(model, SIGNAL(strMasternodesChanged(QString)), this, SLOT(setMasternodeCount(QString)));
 
         setSystemnodeCount(model->getSystemnodeCountString());
         connect(model, SIGNAL(strSystemnodesChanged(QString)), this, SLOT(setSystemnodeCount(QString)));
@@ -488,9 +488,9 @@ void RPCConsole::setNumBlocks(int count)
         ui->lastBlockTime->setText(clientModel->getLastBlockDate().toString());
 }
 
-void RPCConsole::setThroneCount(const QString &strThrones)
+void RPCConsole::setMasternodeCount(const QString &strMasternodes)
 {
-    ui->throneCount->setText(strThrones);
+    ui->masternodeCount->setText(strMasternodes);
 }
 
 void RPCConsole::setSystemnodeCount(const QString &strSystemnodes)
