@@ -192,6 +192,20 @@ Value systemnode(const Array& params, bool fHelp)
         return returnObj;
     }
 
+    if(strCommand == "status")
+    {
+        if(!fSystemNode) throw runtime_error("This is not a masternode\n");
+
+        Object mnObj;
+        CSystemnode *pmn = snodeman.Find(activeSystemnode.vin);
+
+        mnObj.push_back(Pair("vin", activeSystemnode.vin.ToString()));
+        mnObj.push_back(Pair("service", activeSystemnode.service.ToString()));
+        if (pmn) mnObj.push_back(Pair("pubkey", CBitcoinAddress(pmn->pubkey.GetID()).ToString()));
+        mnObj.push_back(Pair("status", activeSystemnode.GetStatus()));
+        return mnObj;
+    }
+
     return Value::null;
 }
 

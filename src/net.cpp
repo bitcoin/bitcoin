@@ -388,12 +388,12 @@ CNode* FindNode(const CService& addr)
     return NULL;
 }
 
-CNode* ConnectNode(CAddress addrConnect, const char *pszDest, bool Masternode)
+CNode* ConnectNode(CAddress addrConnect, const char *pszDest, bool Masternode, bool Systemnode)
 {
     if (pszDest == NULL) {
         // we clean masternode connections in CMasternodeMan::ProcessMasternodeConnections()
         // so should be safe to skip this and connect to local Hot MN on CActiveMasternode::ManageStatus()
-        if (IsLocal(addrConnect) && !Masternode)
+        if (IsLocal(addrConnect) && !(Masternode || Systemnode))
             return NULL;
 
         // Look for an existing connection
@@ -401,6 +401,7 @@ CNode* ConnectNode(CAddress addrConnect, const char *pszDest, bool Masternode)
         if (pnode)
         {
             pnode->fMasternode = Masternode;
+            pnode->fSystemnode = Systemnode;
 
             pnode->AddRef();
             return pnode;
@@ -437,6 +438,7 @@ CNode* ConnectNode(CAddress addrConnect, const char *pszDest, bool Masternode)
 
         pnode->nTimeConnected = GetTime();
         if(Masternode) pnode->fMasternode = true;
+        if(Systemnode) pnode->fSystemnode = true;
 
         return pnode;
     } else if (!proxyConnectionFailed) {

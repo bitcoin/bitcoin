@@ -145,6 +145,22 @@ CSystemnodeDB::ReadResult CSystemnodeDB::Read(CSystemnodeMan& snodemanToLoad, bo
     return Ok;
 }
 
+void CSystemnodeMan::ProcessSystemnodeConnections()
+{
+    //we don't care about this for regtest
+    if(Params().NetworkID() == CBaseChainParams::REGTEST) return;
+
+    LOCK(cs_vNodes);
+    BOOST_FOREACH(CNode* pnode, vNodes) {
+        if(pnode->fSystemnode){
+            if(legacySigner.pSubmittedToSystemnode != NULL && pnode->addr == legacySigner.pSubmittedToSystemnode->addr) continue;
+            LogPrintf("Closing Systemnode connection %s \n", pnode->addr.ToString());
+            pnode->fSystemnode = false;
+            pnode->Release();
+        }
+    }
+}
+
 void CSystemnodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv)
 {
     if(fLiteMode) return; //disable all Systemnode related functionality

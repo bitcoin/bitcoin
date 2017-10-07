@@ -11,6 +11,9 @@
 #include "masternodeman.h"
 #include "masternode-payments.h"
 #include "masternode-sync.h"
+#include "activesystemnode.h"
+#include "systemnodeman.h"
+#include "systemnode-sync.h"
 
 class CTxIn;
 class CLegacySigner;
@@ -47,6 +50,7 @@ public:
     // where collateral should be made out to
     CScript collateralPubKey;
     CMasternode* pSubmittedToMasternode;
+    CSystemnode* pSubmittedToSystemnode;
 };
 
 void ThreadCheckLegacySigner();

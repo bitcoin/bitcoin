@@ -79,7 +79,7 @@ void CActiveSystemnode::ManageStatus()
 
         LogPrintf("CActiveSystemnode::ManageStatus() - Checking inbound connection to '%s'\n", service.ToString());
 
-        if(!ConnectNode((CAddress)service, NULL, true)){
+        if(!ConnectNode((CAddress)service, NULL, false, true)){
             notCapableReason = "Could not connect to " + service.ToString();
             LogPrintf("CActiveSystemnode::ManageStatus() - not capable: %s\n", notCapableReason);
             return;

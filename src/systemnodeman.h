@@ -112,6 +112,8 @@ public:
 
     std::vector<CSystemnode> GetFullSystemnodeVector() { Check(); return vSystemnodes; }
 
+    void ProcessSystemnodeConnections();
+
     void ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
 
     /// Return the number of (unique) Systemnodes

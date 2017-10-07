@@ -115,7 +115,8 @@ void ThreadCheckLegacySigner()
     // Make this thread recognisable as the wallet flushing thread
     RenameThread("crown-legacysigner");
 
-    unsigned int c = 0;
+    unsigned int c1 = 0;
+    unsigned int c2 = 0;
 
     while (true)
     {
@@ -127,13 +128,13 @@ void ThreadCheckLegacySigner()
 
         if(masternodeSync.IsBlockchainSynced()) {
 
-            c++;
+            c1++;
 
             // check if we should activate or ping every few minutes,
             // start right after sync is considered to be done
-            if(c % MASTERNODE_PING_SECONDS == 15) activeMasternode.ManageStatus();
+            if(c1 % MASTERNODE_PING_SECONDS == 15) activeMasternode.ManageStatus();
 
-            if(c % 60 == 0)
+            if(c1 % 60 == 0)
             {
                 mnodeman.CheckAndRemove();
                 mnodeman.ProcessMasternodeConnections();
@@ -141,7 +142,27 @@ void ThreadCheckLegacySigner()
                 CleanTransactionLocksList();
             }
 
-            //if(c % MASTERNODES_DUMP_SECONDS == 0) DumpMasternodes();
+            //if(c1 % MASTERNODES_DUMP_SECONDS == 0) DumpMasternodes();
         }
+
+        if(systemnodeSync.IsBlockchainSynced()) {
+
+            c2++;
+
+            // check if we should activate or ping every few minutes,
+            // start right after sync is considered to be done
+            if(c2 % SYSTEMNODE_PING_SECONDS == 15) activeSystemnode.ManageStatus();
+
+            if(c2 % 60 == 0)
+            {
+                snodeman.CheckAndRemove();
+                snodeman.ProcessSystemnodeConnections();
+                //masternodePayments.CleanPaymentList();
+                //CleanTransactionLocksList();
+            }
+
+            //if(c2 % MASTERNODES_DUMP_SECONDS == 0) DumpMasternodes();
+        }
+
     }
 }
