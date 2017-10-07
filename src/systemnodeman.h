@@ -21,6 +21,7 @@ using namespace std;
 class CSystemnodeMan;
 
 extern CSystemnodeMan snodeman;
+void DumpSystemnodes();
 
 /** Access to the SN database (sncache.dat)
  */
@@ -88,6 +89,9 @@ public:
 
     /// Add an entry
     bool Add(CSystemnode &mn);
+
+    /// Ask (source) node for mnb
+    void AskForSN(CNode *pnode, CTxIn &vin);
 
     /// Check all Systemnodes
     void Check();
