@@ -49,7 +49,7 @@ using namespace boost;
 #define SPORK_13_ENABLE_SUPERBLOCKS_DEFAULT                   4070908800   //OFF
 
 // TODO this should be changed later
-#define SPORK_8_SYSTEMNODE_PAYMENT_ENFORCEMENT                10007
+#define SPORK_8_SYSTEMNODE_PAYMENT_ENFORCEMENT                10013
 #define SPORK_8_SYSTEMNODE_PAYMENT_ENFORCEMENT_DEFAULT        4070908800  //OFF
     
 class CSporkMessage;

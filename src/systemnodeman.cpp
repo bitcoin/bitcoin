@@ -255,7 +255,7 @@ void CSystemnodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         }
 
         if(vin == CTxIn()) {
-            pfrom->PushMessage("mnssc", SYSTEMNODE_SYNC_LIST, nInvCount);
+            pfrom->PushMessage("snssc", SYSTEMNODE_SYNC_LIST, nInvCount);
             LogPrintf("sndseg - Sent %d Systemnode entries to %s\n", nInvCount, pfrom->addr.ToString());
         }
     }
