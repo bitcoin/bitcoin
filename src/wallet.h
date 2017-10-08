@@ -75,7 +75,7 @@ enum AvailableCoinsType
     ONLY_NOT10000IFMN = 3,
     ONLY_NONDENOMINATED_NOT10000IFMN = 4,
     ONLY_10000 = 5, // find throne outputs including locked ones (use with caution)
-    ONLY_500 // find systemnode outputs including locked ones
+    ONLY_500 = 6, // find systemnode outputs including locked ones
 };
 
 
