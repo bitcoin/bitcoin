@@ -45,6 +45,7 @@ public:
         ThreadsScriptVerif,     // int
         DatabaseCache,          // int
         SpendZeroConfChange,    // bool
+        ShowIncomingStakeNotifications, // bool
         Listen,                 // bool
         ReserveBalance,         // int
         OptionIDRowCount,
@@ -68,6 +69,8 @@ public:
     bool getProxySettings(QNetworkProxy& proxy) const;
     bool getCoinControlFeatures() { return fCoinControlFeatures; }
     const QString& getOverriddenByCommandLine() { return strOverriddenByCommandLine; }
+    
+    bool getShowIncomingStakeNotifications() { return fShowIncomingStakeNotifications; }
 
     /* Restart flag helper */
     void setRestartRequired(bool fRequired);
@@ -82,6 +85,7 @@ private:
     int nDisplayUnit;
     QString strThirdPartyTxUrls;
     bool fCoinControlFeatures;
+    bool fShowIncomingStakeNotifications;
     /* settings that were overridden by command-line */
     QString strOverriddenByCommandLine;
     

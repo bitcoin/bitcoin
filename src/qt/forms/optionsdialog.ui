@@ -163,6 +163,16 @@
             </property>
            </widget>
           </item>
+          <item>
+           <widget class="QCheckBox" name="showIncomingStakeNotifications">
+            <property name="toolTip">
+             <string>Display notification dialog for incoming stake transactions.</string>
+            </property>
+            <property name="text">
+             <string>&amp;Show incoming stake notifications</string>
+            </property>
+           </widget>
+          </item>
          </layout>
         </widget>
        </item>

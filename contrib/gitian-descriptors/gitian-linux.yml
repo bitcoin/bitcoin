@@ -1,5 +1,5 @@
 ---
-name: "particl-linux-0.15"
+name: "particl-linux-0.15.0.2"
 enable_cache: true
 suites:
 - "trusty"

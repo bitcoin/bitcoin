@@ -1,5 +1,5 @@
 ---
-name: "particl-win-0.15"
+name: "particl-win-0.15.0.2"
 enable_cache: true
 suites:
 - "trusty"

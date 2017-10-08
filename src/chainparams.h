@@ -50,8 +50,8 @@ class DevFundSettings
 {
 public:
     DevFundSettings(std::string sAddrTo, int nMinDevStakePercent_, int nDevOutputPeriod_)
-        : sDevFundAddresses(sAddrTo), nMinDevStakePercent(nMinDevStakePercent_), nDevOutputPeriod(nDevOutputPeriod_)
-        {};
+        : sDevFundAddresses(sAddrTo), nMinDevStakePercent(nMinDevStakePercent_), nDevOutputPeriod(nDevOutputPeriod_) {};
+
     std::string sDevFundAddresses;
     int nMinDevStakePercent; // [0, 100]
     int nDevOutputPeriod; // dev fund output is created every n blocks
@@ -79,33 +79,30 @@ public:
         EXT_ACC_HASH,
         EXT_PUBLIC_KEY_BTC,
         EXT_SECRET_KEY_BTC,
-
         PUBKEY_ADDRESS_256,
         SCRIPT_ADDRESS_256,
-
         MAX_BASE58_TYPES
     };
 
     const Consensus::Params& GetConsensus() const { return consensus; }
     const CMessageHeader::MessageStartChars& MessageStart() const { return pchMessageStart; }
     int GetDefaultPort() const { return nDefaultPort; }
-    
+
     int BIP44ID() const { return nBIP44ID; }
-    
+
     uint32_t GetModifierInterval() const { return nModifierInterval; }
     uint32_t GetStakeMinConfirmations() const { return nStakeMinConfirmations; }
     uint32_t GetTargetSpacing() const { return nTargetSpacing; }
     uint32_t GetTargetTimespan() const { return nTargetTimespan; }
     uint32_t GetStakeTimestampMask(int nHeight) const { return nStakeTimestampMask; } 
-    
+
     int64_t GetStakeCombineThreshold() const { return nStakeCombineThreshold; }
     int64_t GetStakeSplitThreshold() const { return nStakeSplitThreshold; }
     int64_t GetCoinYearReward(int64_t nTime) const;
-    
+
     const DevFundSettings *GetDevFundSettings(int64_t nTime) const;
-    
+
     int64_t GetProofOfStakeReward(const CBlockIndex *pindexPrev, int64_t nFees) const;
-    
 
     bool CheckImportCoinbase(int nHeight, uint256 &hash) const;
     uint32_t GetLastImportHeight() const { return nLastImportHeight; }
@@ -126,19 +123,19 @@ public:
     const std::vector<SeedSpec6>& FixedSeeds() const { return vFixedSeeds; }
     const CCheckpointData& Checkpoints() const { return checkpointData; }
     const ChainTxData& TxData() const { return chainTxData; }
-    
+
     bool IsBech32Prefix(const std::vector<unsigned char> &vchPrefixIn) const;
     bool IsBech32Prefix(const std::vector<unsigned char> &vchPrefixIn, CChainParams::Base58Type &rtype) const;
     bool IsBech32Prefix(const char *ps, size_t slen, CChainParams::Base58Type &rtype) const;
-    
+
     std::string NetworkID() const { return strNetworkID; }
-    
+
     void SetCoinYearReward(int64_t nCoinYearReward_)
     {
         assert(strNetworkID == "regtest");
         nCoinYearReward = nCoinYearReward_;
     }
-    
+
     void UpdateVersionBitsParameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout);
 protected:
     CChainParams() {}

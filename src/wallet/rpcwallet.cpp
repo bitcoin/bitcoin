@@ -247,7 +247,11 @@ UniValue getnewaddress(const JSONRPCRequest& request)
             {
                 LOCK(phdw->cs_wallet);
                 if (phdw->idDefaultAccount.IsNull())
-                    throw JSONRPCError(RPC_WALLET_ERROR, "No default account set.");
+                {
+                    if (!phdw->pEKMaster)
+                        throw JSONRPCError(RPC_WALLET_ERROR, _("Wallet has no active master key."));
+                    throw JSONRPCError(RPC_WALLET_ERROR, _("No default account set."));
+                };
             }
             if (0 != phdw->NewKeyFromAccount(newKey, false, fHardened, f256bit, strAccount.c_str()))
                 throw JSONRPCError(RPC_WALLET_ERROR, "NewKeyFromAccount failed.");
@@ -3326,14 +3330,14 @@ UniValue listunspent(const JSONRPCRequest& request)
 
     if (!request.params[4].isNull()) {
         const UniValue& options = request.params[4].get_obj();
-        
+
         RPCTypeCheckObj(options,
             {
                 {"maximumCount",            UniValueType(UniValue::VNUM)},
                 {"cc_format",               UniValueType(UniValue::VBOOL)},
                 {"include_immature",        UniValueType(UniValue::VBOOL)},
             }, true, false);
-        
+
         if (options.exists("minimumAmount"))
             nMinimumAmount = AmountFromValue(options["minimumAmount"]);
 
@@ -3345,10 +3349,10 @@ UniValue listunspent(const JSONRPCRequest& request)
 
         if (options.exists("maximumCount"))
             nMaximumCount = options["maximumCount"].get_int64();
-        
+
         if (options.exists("cc_format"))
             fCCFormat = options["cc_format"].get_bool();
-        
+
         if (options.exists("include_immature"))
             fIncludeImmature = options["include_immature"].get_bool();
     }

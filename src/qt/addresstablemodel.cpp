@@ -392,7 +392,8 @@ QString AddressTableModel::addRow(const QString &type, const QString &label, con
             sCommand += " false false true"; // "account", "bech32", "hardened", "256bit"
         
         UniValue rv;
-        walletModel->tryCallRpc(sCommand, rv);
+        if (!walletModel->tryCallRpc(sCommand, rv))
+            return QString();
         
         return QString::fromStdString(rv.get_str());
     }

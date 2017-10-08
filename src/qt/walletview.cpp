@@ -17,6 +17,7 @@
 #include "signverifymessagedialog.h"
 #include "transactiontablemodel.h"
 #include "transactionview.h"
+#include "transactionrecord.h"
 #include "walletmodel.h"
 
 #include "ui_interface.h"
@@ -165,6 +166,10 @@ void WalletView::processNewTransaction(const QModelIndex& parent, int start, int
     QModelIndex index = ttm->index(start, 0, parent);
     QString address = ttm->data(index, TransactionTableModel::AddressRole).toString();
     QString label = ttm->data(index, TransactionTableModel::LabelRole).toString();
+
+    if (!clientModel->getOptionsModel()->getShowIncomingStakeNotifications()
+        && ttm->data(index, TransactionTableModel::TypeRole) == TransactionRecord::Staked)
+        return;
 
     Q_EMIT incomingTransaction(date, walletModel->getOptionsModel()->getDisplayUnit(), amount, type, address, label);
 }

@@ -110,6 +110,10 @@ void OptionsModel::Init(bool resetSettings)
         settings.setValue("bSpendZeroConfChange", true);
     if (!gArgs.SoftSetBoolArg("-spendzeroconfchange", settings.value("bSpendZeroConfChange").toBool()))
         addOverriddenOption("-spendzeroconfchange");
+    
+    if (!settings.contains("fShowIncomingStakeNotifications"))
+        settings.setValue("fShowIncomingStakeNotifications", true);
+    fShowIncomingStakeNotifications = settings.value("fShowIncomingStakeNotifications").toBool();
 #endif
 
     // Network
@@ -239,6 +243,8 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
 #ifdef ENABLE_WALLET
         case SpendZeroConfChange:
             return settings.value("bSpendZeroConfChange");
+        case ShowIncomingStakeNotifications:
+            return fShowIncomingStakeNotifications;
 #endif
         case DisplayUnit:
             return nDisplayUnit;
@@ -363,6 +369,10 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
                 settings.setValue("bSpendZeroConfChange", value);
                 setRestartRequired(true);
             }
+            break;
+        case ShowIncomingStakeNotifications:
+            fShowIncomingStakeNotifications = value.toBool();
+            settings.setValue("fShowIncomingStakeNotifications", fShowIncomingStakeNotifications);
             break;
 #endif
         case DisplayUnit:
