@@ -626,6 +626,11 @@ int main(int argc, char *argv[])
                               QObject::tr("Error: Specified data directory \"%1\" does not exist.").arg(QString::fromStdString(gArgs.GetArg("-datadir", ""))));
         return EXIT_FAILURE;
     }
+    if (gArgs.IsArgSet("-walletdir") && !fs::is_directory(GetWalletDir())) {
+        QMessageBox::critical(0, QObject::tr(PACKAGE_NAME),
+                              QObject::tr("Error: Specified wallet directory \"%1\" does not exist.").arg(QString::fromStdString(gArgs.GetArg("-walletdir", ""))));
+        return EXIT_FAILURE;
+    }
     try {
         gArgs.ReadConfigFile(gArgs.GetArg("-conf", BITCOIN_CONF_FILENAME));
     } catch (const std::exception& e) {
