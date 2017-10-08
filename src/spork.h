@@ -50,6 +50,7 @@ using namespace boost;
 
 // TODO this should be changed later
 #define SPORK_8_SYSTEMNODE_PAYMENT_ENFORCEMENT                10007
+#define SPORK_8_SYSTEMNODE_PAYMENT_ENFORCEMENT_DEFAULT        4070908800  //OFF
     
 class CSporkMessage;
 class CSporkManager;

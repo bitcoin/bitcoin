@@ -125,6 +125,7 @@ void ThreadCheckLegacySigner()
 
         // try to sync from all available nodes, one step at a time
         masternodeSync.Process();
+        systemnodeSync.Process();
 
         if(masternodeSync.IsBlockchainSynced()) {
 
