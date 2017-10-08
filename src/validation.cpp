@@ -1871,7 +1871,7 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
     bool fCheckMinerSig = pindex->nHeight > pcheckpoint->nHeight;
 
     if (fIsMinerWhitelist && fCheckMinerSig ){
-        LogPrintf("Whitelist activated: Checking for Miner Signature.\n");
+        //LogPrintf("Whitelist activated: Checking for Miner Signature.\n");
         // first transaction is coinbase with only one input
         const CTransaction &tx = *(block.vtx[0]);
         const CScript scriptSig = tx.vin[0].scriptSig;
@@ -2072,7 +2072,7 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
     }
     
     // now apply admin actions.
-    LogPrintf("Looking for admin actions.\n");
+    //LogPrintf("Looking for admin actions.\n");
     //LogPrintf("Txns to check: %d \n",block.vtx.size()-1);
     for (unsigned int i = 1; i < block.vtx.size(); i++){ // start at 1, 0 is coinbase
         //LogPrintf("Checking txn %d.\n",i);

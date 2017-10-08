@@ -68,21 +68,21 @@ namespace {
     };
 
     struct MinerEntry {
-        char type;
+        char key;
         std::string addr;
-        MinerEntry() : type(WL_ADDRESS), addr(DUMMY) {}
-        MinerEntry(CIoPAddress address) : type(WL_ADDRESS), addr(address.ToString()) {}
-        MinerEntry(std::string address) : type(WL_ADDRESS), addr(address) {}
+        MinerEntry() : key(WL_ADDRESS), addr(DUMMY) {}
+        MinerEntry(CIoPAddress address) : key(WL_ADDRESS), addr(address.ToString()) {}
+        MinerEntry(std::string address) : key(WL_ADDRESS), addr(address) {}
         
         template<typename Stream>
         void Serialize(Stream &s) const {
-            s << type;
+            s << key;
             s << addr;
         }
         
         template<typename Stream>
         void Unserialize(Stream& s) {
-            s >> type;
+            s >> key;
             s >> addr;
         }
     };
@@ -250,7 +250,7 @@ bool CMinerWhitelistDB::WhitelistMiner(std::string address) {
     unsigned int number;
     Read(WL_NUMBER_MINERS, number);
     if (Read(mEntry, mDetails)) {
-        LogPrintf("MinerDatabase: Miner already in Database. %s\n", address);
+        //LogPrintf("MinerDatabase: Miner already in Database. %s\n", address);
         if (!mDetails.whitelisted) {
             LogPrintf("MinerDatabase: Adding Miner back to whitelist. %s\n", address);
             mDetails.whitelisted = true;
@@ -342,26 +342,29 @@ unsigned int CMinerWhitelistDB::GetWindowStart(unsigned int height) {
 
 bool CMinerWhitelistDB::DumpWindowStats(std::vector< std::pair< std::string, uint32_t > > *MinerVector) {
     LogPrintf("MinerDatabase: Dumping all miner stats.\n");
-    
+    Sync();
     std::unique_ptr<CDBIterator> it(NewIterator());
-    for (it->Seek(MinerEntry(DUMMY)); it->Valid(); it->Next()) { // Seek should end up at an address (they start with 'a')
-        MinerEntry entry = MinerEntry();
-        MinerDetails det = MinerDetails();
-        if (it->GetKey(entry)) { // Does this work? Should give false if Key is of other type than what we expect?!
+    MinerEntry entry = MinerEntry();
+    MinerDetails det = MinerDetails();
+    // This is kind of a dirty workaround. We scan the whole database, which is slow!
+    for (it->SeekToFirst(); it->Valid(); it->Next()) { // Seek should end up at an address (they start with 'a')
+        if (it->GetKey(entry) && entry.key == WL_ADDRESS) { // Does this work? Should give false if Key is of other type than what we expect?!
+            LogPrintf("Got entry type %s\n", entry.key);
+            // if (entry.key != WL_ADDRESS)
+            //     continue;
+            //LogPrintf("Got entry %s\n", entry.addr);
             if (entry.addr == DUMMY)
                 continue;
-            if (entry.type != WL_ADDRESS)
-                break;
             it->GetValue(det);
+            //LogPrintf("Got details: Blockcount %s\n", det.windowBlocks);
             if (det.whitelisted == false || det.windowBlocks == 0) 
                 continue;
             std::pair<std::string, uint32_t> elem;
             elem.first = entry.addr;
             elem.second = det.windowBlocks;
             (*MinerVector).push_back(elem);
-        }
-        else { // no miner anymore
-            break;
+        // } else { 
+        //     LogPrintf("Found something else!\n");
         }
     } 
     return true;
@@ -386,13 +389,17 @@ bool CMinerWhitelistDB::DumpStatsForMiner(std::string address, bool *wlisted, un
 
 
 bool CMinerWhitelistDB::MineBlock(unsigned int newHeight, std::string address) {
-    LogPrintf("MinerDatabase: Adding Block %d to the database. Mined by %s\n", newHeight, address);
+    //LogPrintf("MinerDatabase: Adding Block %d to the database. Mined by %s\n", newHeight, address);
     // First check that we are actually at the tip
     unsigned int currHeight;
     Read(DB_HEIGHT, currHeight);
     //LogPrintf("MinerDatabase: Database is currently at block %d\n", currHeight);
 
-    assert(newHeight==currHeight+1);
+    // assert(newHeight==currHeight+1);
+    if (newHeight!=currHeight+1 ) {
+        LogPrintf("Miner Whitelist database is corrupted. Please resync the blockchain by using `-reindex`");
+        return false;
+    }
 
     CDBBatch batch(*this);
     
@@ -408,7 +415,7 @@ bool CMinerWhitelistDB::MineBlock(unsigned int newHeight, std::string address) {
 
 
     // First make entry for the new Block
-    LogPrintf("MinerDatabase: Making entry for new block.\n");
+    //LogPrintf("MinerDatabase: Making entry for new block.\n");
     batch.Write(BlockEntry(newHeight), BlockDetails(address, IsCapEnabled(), GetCapFactor()));
     batch.Write(DB_HEIGHT, newHeight);
    
@@ -423,22 +430,29 @@ bool CMinerWhitelistDB::MineBlock(unsigned int newHeight, std::string address) {
             //LogPrintf("MinerDatabase: Creating Iterator\n");
             std::unique_ptr<CDBIterator> it(NewIterator());
             //LogPrintf("MinerDatabase: Starting Loop.\n");
-            for (it->Seek(MinerEntry(DUMMY)); it->Valid(); it->Next()) { // SeekToFirst should end up at an address (they start with 'a')
-                MinerEntry entry = MinerEntry();
-                MinerDetails det = MinerDetails();
-                //LogPrintf("MinerDatabase: Reading Entry.\n");
-                if (it->GetKey(entry)) { // Does this work? Should give false if Key is of other type than what we expect?!
+            Sync();
+            MinerEntry entry = MinerEntry();
+            MinerDetails det = MinerDetails();
+            // This is kind of a dirty workaround. We scan the whole database, which is slow!
+            for (it->SeekToFirst(); it->Valid(); it->Next()) { // SeekToFirst should end up at an address (they start with 'a')
+                if (it->GetKey(entry) && entry.key == WL_ADDRESS) { // Does this work? Should give false if Key is of other type than what we expect?!
+                    //LogPrintf("Got entry type %s\n", entry.key);
+                    // if (entry.key != WL_ADDRESS)
+                    //     continue;
+                    //LogPrintf("Got entry %s\n", entry.addr);
+                    if (entry.addr == DUMMY)
+                        continue;
                     it->GetValue(det);
                     if (entry.addr == address) { 
                         det.totalBlocks += 1;
                     }
                     det.windowBlocks = 0;
                     batch.Write(entry, det);
-                }
-                else { // no miner anymore
-                    break;
+                // } else { 
+                //     LogPrintf("Found something else.\n");
                 }
             } 
+            Sync();
         } 
         else {
             //LogPrintf("MinerDatabase: In window\n");
@@ -497,15 +511,19 @@ bool CMinerWhitelistDB::MineBlock(unsigned int newHeight, std::string address) {
 }
       
 bool CMinerWhitelistDB::RewindBlock(unsigned int index) {
-    LogPrintf("MinerDatabase: Removing Block %d from the database.\n", index);
+    //LogPrintf("MinerDatabase: Removing Block %d from the database.\n", index);
 
     CDBBatch batch(*this);
 
     // First check that we are actually at the tip
     unsigned int currHeight;
     Read(DB_HEIGHT, currHeight);
-    LogPrintf("MinerDatabase: Database was at block %d previously.\n", currHeight);
-    assert(currHeight==index);
+    //LogPrintf("MinerDatabase: Database was at block %d previously.\n", currHeight);
+    // assert(currHeight==index);
+    if (currHeight!=index) {
+        LogPrintf("Miner Whitelist database is corrupted. Please resync the blockchain by using `-reindex`");
+        return false;
+    }
 
     // See who mined this block
     BlockDetails currDets = BlockDetails();
@@ -523,6 +541,7 @@ bool CMinerWhitelistDB::RewindBlock(unsigned int index) {
     if ( index < Params().GetConsensus().minerCapSystemChangeHeight ) {
         // old system
         // code will never be used as the old system is buried unter checkpoints
+        // so this is more for understanding the system
 
         // This is what happens at the window border
         if (index%2016==0) {
@@ -627,7 +646,7 @@ bool CMinerWhitelistDB::hasExceededCap(std::string address) {
     unsigned int cap = CMinerWhitelistDB::GetCap();
     unsigned int blocks = CMinerWhitelistDB::GetBlocksInWindow(address);
     
-    LogPrintf("MinerCap: Has %s exceeded miner cap? %s > %s ?\n", address, blocks, cap);
+    //LogPrintf("MinerCap: Has %s exceeded miner cap? %s > %s ?\n", address, blocks, cap);
 
     // There has been a bug in the previous implementation that did not take the current block 
     // into account when counting the number of blocks mined. Fix these manually.
