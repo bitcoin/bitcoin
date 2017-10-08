@@ -356,8 +356,8 @@ bool CMinerWhitelistDB::DumpWindowStats(std::vector< std::pair< std::string, uin
             if (entry.key != WL_ADDRESS)
                 continue;
             LogPrintf("Got entry %s\n", entry.addr);
-            if (entry.addr == DUMMY)
-                continue;
+            // if (entry.addr == DUMMY)
+            //     continue;
             it->GetValue(det);
             LogPrintf("Got details: Blockcount %s\n", det.windowBlocks);
             if (det.whitelisted == false || det.windowBlocks == 0) 
@@ -443,8 +443,8 @@ bool CMinerWhitelistDB::MineBlock(unsigned int newHeight, std::string address) {
                     // if (entry.key != WL_ADDRESS)
                     //     continue;
                     //LogPrintf("Got entry %s\n", entry.addr);
-                    if (entry.addr == DUMMY)
-                        continue;
+                    // if (entry.addr == DUMMY)
+                    //     continue;
                     it->GetValue(det);
                     if (entry.addr == address) { 
                         det.totalBlocks += 1;
