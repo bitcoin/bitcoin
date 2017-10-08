@@ -808,12 +808,12 @@ Endereço: %4</translation>
     </message>
     <message>
         <location line="+6"/>
-        <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB.</source>
+        <source>Mandatory network transaction fee per kB transferred. Most transactions are 1 kB and incur a 0.01 PPC fee. Note: transfer size may increase depending on the number of input transactions required to be added together to fund the payment.</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location line="+15"/>
-        <source>Pay transaction &amp;fee</source>
+        <source>Additional network &amp;fee</source>
         <translation>Pagar taxa de &amp;transação</translation>
     </message>
     <message>

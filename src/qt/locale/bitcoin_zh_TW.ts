@@ -809,12 +809,12 @@ Address: %4
     </message>
     <message>
         <location line="+6"/>
-        <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB.</source>
+        <source>Mandatory network transaction fee per kB transferred. Most transactions are 1 kB and incur a 0.01 PPC fee. Note: transfer size may increase depending on the number of input transactions required to be added together to fund the payment.</source>
         <translation>非必要的交易手續費, 以 kB 為計費單位, 且有助於縮短你的交易處理時間. 大部份交易資料的大小是 1 kB.</translation>
     </message>
     <message>
         <location line="+15"/>
-        <source>Pay transaction &amp;fee</source>
+        <source>Additional network &amp;fee</source>
         <translation>付交易手續費</translation>
     </message>
     <message>
