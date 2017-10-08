@@ -343,20 +343,23 @@ unsigned int CMinerWhitelistDB::GetWindowStart(unsigned int height) {
 bool CMinerWhitelistDB::DumpWindowStats(std::vector< std::pair< std::string, uint32_t > > *MinerVector) {
     LogPrintf("MinerDatabase: Dumping all miner stats.\n");
     Sync();
+    if (IsEmpty())
+        LogPrintf("MinerDatabase: DB is empty.\n");
     std::unique_ptr<CDBIterator> it(NewIterator());
     MinerEntry entry = MinerEntry();
     MinerDetails det = MinerDetails();
     // This is kind of a dirty workaround. We scan the whole database, which is slow!
     for (it->SeekToFirst(); it->Valid(); it->Next()) { // Seek should end up at an address (they start with 'a')
-        if (it->GetKey(entry) && entry.key == WL_ADDRESS) { // Does this work? Should give false if Key is of other type than what we expect?!
+        //LogPrintf("MinerDatabase: Dumping all miner stats.\n");
+        if (it->GetKey(entry) ) { // Does this work? Should give false if Key is of other type than what we expect?!
             LogPrintf("Got entry type %s\n", entry.key);
-            // if (entry.key != WL_ADDRESS)
-            //     continue;
-            //LogPrintf("Got entry %s\n", entry.addr);
+            if (entry.key != WL_ADDRESS)
+                continue;
+            LogPrintf("Got entry %s\n", entry.addr);
             if (entry.addr == DUMMY)
                 continue;
             it->GetValue(det);
-            //LogPrintf("Got details: Blockcount %s\n", det.windowBlocks);
+            LogPrintf("Got details: Blockcount %s\n", det.windowBlocks);
             if (det.whitelisted == false || det.windowBlocks == 0) 
                 continue;
             std::pair<std::string, uint32_t> elem;
