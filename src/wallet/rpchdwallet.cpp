@@ -2682,7 +2682,7 @@ static void WalletTxToJSON(CWalletTx& wtx, UniValue& entry)
         entry.push_back(Pair(item.first, item.second));
 }
 
-static bool ParseOutput(
+static void ParseOutput(
     UniValue &                 output,
     const COutputEntry &       o,
     CHDWallet * const          pwallet,
@@ -2706,17 +2706,16 @@ static bool ParseOutput(
     }
     output.push_back(Pair("vout", o.vout));
     amounts.push_back(std::to_string(o.amount));
-    return true;
 }
 
-static bool ParseOutputs(
-    UniValue &           entry,
+static void ParseOutputs(
+    UniValue &           entries,
     CWalletTx &          wtx,
     CHDWallet * const    pwallet,
     const isminefilter & watchonly_filter,
-    std::string          search,
-    std::string          category
+    std::string          search
 ) {
+    UniValue entry(UniValue::VOBJ);
     // GetAmounts variables
     std::list<COutputEntry> listReceived;
     std::list<COutputEntry> listSent;
@@ -2734,7 +2733,6 @@ static bool ParseOutputs(
         
     std::vector<std::string> addresses;
     std::vector<std::string> amounts;
-    bool match;
     
     // common to every type of transaction
     UniValue outputs(UniValue::VARR);
@@ -2749,10 +2747,7 @@ static bool ParseOutputs(
         entry.push_back(Pair("fee", ValueFromAmount(-nFee)));
         for (const auto &s : listSent) {
             UniValue output(UniValue::VOBJ);
-            match = ParseOutput(output, s, pwallet, addresses, amounts);
-            if (!match) {
-                return false;
-            }
+            ParseOutput(output, s, pwallet, addresses, amounts);
             output.push_back(Pair("amount", ValueFromAmount(-s.amount)));
             amount -= s.amount;
             outputs.push_back(output);
@@ -2775,10 +2770,7 @@ static bool ParseOutputs(
         }
         for (const auto &r : listReceived) {
             UniValue output(UniValue::VOBJ);
-            match = ParseOutput(output, r, pwallet, addresses, amounts);
-            if (!match) {
-                return false;
-            }
+            ParseOutput(output, r, pwallet, addresses, amounts);
             if (r.destination.type() == typeid(CKeyID)) {
                 CStealthAddress sx;
                 CKeyID idK = boost::get<CKeyID>(r.destination);
@@ -2802,10 +2794,7 @@ static bool ParseOutputs(
         }
         for (const auto &s : listStaked) {
             UniValue output(UniValue::VOBJ);
-            match = ParseOutput(output, s, pwallet, addresses, amounts);
-            if (!match) {
-                return false;
-            }
+            ParseOutput(output, s, pwallet, addresses, amounts);
             output.push_back(Pair("amount", ValueFromAmount(s.amount)));
             outputs.push_back(output);
         }
@@ -2816,54 +2805,44 @@ static bool ParseOutputs(
     // total amount of outputs
     entry.push_back(Pair("amount", ValueFromAmount(amount)));
     
-    // this transaction's category
-    std::string this_category = entry["category"].get_str();
-    
-    // transaction's category is not specified category
-    // specified category is not "all"
-    // specified category is "internal_transfer" and transaction is neither "send" or "receive"
-    if (!(
-        (this_category == category || category == "all")
-        || (
-            (this_category == "send" || this_category == "receive")
-            && category == "internal_transfer"
-        )
-    )) {
-        return false;
+    if (entries.size() > 0) {
+        unsigned int last = entries.size() - 1;
+        // TODO
+     //    if (entries[last]["txid"].get_str() == entry["txid"].get_str()) {
+     //        entries.get(last).get("category") = "internal_transfer";
+     //        return ;
+     //    }
     }
-    // done if there's nothing to search for
-    if (search == "") {
-        return true;
+    if (search != "") {
+        // search in addresses
+        if (std::any_of(addresses.begin(), addresses.end(), [search](std::string addr) {
+            return addr.find(search) != std::string::npos;
+        })) {
+            entries.push_back(entry);
+            return ;
+        }
+        // search in amounts
+        // character DOT '.' is not searched for: search "123" will find 1.23 and 12.3
+        if (std::any_of(amounts.begin(), amounts.end(), [search](std::string amount) {
+            return amount.find(search) != std::string::npos;
+        })) {
+            entries.push_back(entry);
+            return ;
+        }
+    } else {
+        entries.push_back(entry);
     }
-    // search in addresses
-    if (std::any_of(addresses.begin(), addresses.end(), [search](std::string addr) {
-        return addr.find(search) != std::string::npos;
-    })) {
-        return true;
-    }
-    // search in amounts
-    // character DOT '.' is not searched for: search "123" will find 1.23 and 12.3
-    if (std::any_of(amounts.begin(), amounts.end(), [search](std::string amount) {
-        return amount.find(search) != std::string::npos;
-    })) {
-        return true;
-    }
-    
-    // not found
-    return false;
 }
 
-static bool ParseRecords(
-    UniValue &                 entry,
+static void ParseRecords(
+    UniValue &                 entries,
     const uint256 &            hash,
     const CTransactionRecord & rtx,
     CHDWallet * const          pwallet,
     const isminefilter &       watchonly_filter,
-    std::string                search,
-    std::string                category
+    std::string                search
 ) {
-    std::vector<std::string>   addresses;
-    std::vector<std::string>   amounts;
+    UniValue entry(UniValue::VOBJ);
     
     for (auto &record : rtx.vout) {
         
@@ -2973,7 +2952,21 @@ static bool ParseRecords(
         entry.push_back(Pair("walletconflicts", conflicts));
         PushTime(entry, "time", rtx.nTimeReceived);
     }
-    return true;
+    if (search != "") {
+        std::string amount = std::to_string(entry["amount"].get_real());
+        std::string address = entry["address"].get_str();
+        if (entry["stealth_address"].getType() != 0) {
+            if (entry["stealth_address"].get_str().find(search) != std::string::npos) {
+                entries.push_back(entry);
+            }
+        } else if (address.find(search) != std::string::npos) {
+            entries.push_back(entry);
+        } else if (amount.find(search) != std::string::npos) {
+            entries.push_back(entry);
+        }
+    } else {
+        entries.push_back(entry);
+    }
 }
 
 UniValue filtertransactions(const JSONRPCRequest &request)
@@ -2999,18 +2992,22 @@ UniValue filtertransactions(const JSONRPCRequest &request)
             "\t}\n"
             "\n"
             "\texpected values are as follows:\n"
-            "\t\tcount: \t\t\tnumber of entries to be displayed\n"
-            "\t\t\t\t\tcount > 0\n"
-            "\t\tskip: \t\t\tnumber of entries to skip\n"
-            "\t\t\t\t\tskip >= 0\n"
+            "\t\tcount: \t\t\tnumber of transactions to be displayed\n"
+            "\t\t\t\t\t(integer > 0)\n"
+            "\t\tskip: \t\t\tnumber of transactions to skip\n"
+            "\t\t\t\t\t(integer >= 0)\n"
             "\t\tinclude_watchonly: \twhether to include watchOnly transactions\n"
-            "\t\t\t\t\tbool string\n"
-            "\t\tsearch: \t\ta query to find in addresses and amounts\n"
-            "\t\t\t\t\tquery string\n"
-            "\t\tcategory: \t\tselect only one category of entries to return\n"
+            "\t\t\t\t\t(bool string)\n"
+            "\t\tsearch: \t\ta query to search addresses and amounts\n"
+            "\t\t\t\t\tcharacter DOT '.' is not searched for:\n"
+            "\t\t\t\t\tsearch \"123\" will find 1.23 and 12.3\n"
+            "\t\t\t\t\t(query string)\n"
+            "\t\tcategory: \t\tselect only one category of transactions to return\n"
+            "\t\t\t\t\t(string from list)\n"
             "\t\t\t\t\tall, send, orphan, immature, coinbase, receive,\n"
             "\t\t\t\t\torphaned_stake, stake, internal_transfer\n"
-            "\t\tsort: \t\t\tsort entries by criteria\n"
+            "\t\tsort: \t\t\tsort transactions by criteria\n"
+            "\t\t\t\t\t(string from list)\n"
             "\t\t\t\t\ttime \t\tmost recent first\n"
             "\t\t\t\t\taddress \talphabetical\n"
             "\t\t\t\t\tcategory \talphabetical\n"
@@ -3043,11 +3040,12 @@ UniValue filtertransactions(const JSONRPCRequest &request)
             false             // strict
         );
         if (options.exists("count")) {
-            count = options["count"].get_int();
-            if (count < 1) {
+            int _count = options["count"].get_int();
+            if (_count < 1) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER,
-                    strprintf("Invalid count: %i.", count));
+                    strprintf("Invalid count: %i.", _count));
             }
+            count = _count;
         }
         if (options.exists("skip")) {
             skip = options["skip"].get_int();
@@ -3103,32 +3101,19 @@ UniValue filtertransactions(const JSONRPCRequest &request)
     
     // for transactions and records
     UniValue transactions(UniValue::VARR);
-    bool match;
     
     // transaction processing
     const CHDWallet::TxItems &txOrdered = pwallet->wtxOrdered;
     CWallet::TxItems::const_reverse_iterator tit = txOrdered.rbegin();
-    UniValue prev(UniValue::VOBJ);
     while (tit != txOrdered.rend()) {
         CWalletTx* const pwtx = tit->second.first;
-        if (!pwtx) {
-            throw ;
-        }
-        UniValue transaction(UniValue::VOBJ);
-        match = ParseOutputs(transaction, *pwtx, pwallet, watchonly, search, category);
-        if (match) {
-            bool is_transfer = false;
-            if (prev.getValues().size() > 0 /* exclude first */) {
-                if (transaction["txid"].get_str() == prev["txid"].get_str()) {
-                    is_transfer = true;
-                    prev.get("category") = "internal_transfer";
-                }
-            }
-            if (!is_transfer) {
-                transactions.push_back(transaction);
-            }
-        }
-        prev = transaction;
+        ParseOutputs(
+            transactions,
+            *pwtx,
+            pwallet,
+            watchonly,
+            search
+        );
         tit++;
     }
     
@@ -3138,11 +3123,14 @@ UniValue filtertransactions(const JSONRPCRequest &request)
     while (rit != rtxOrdered.rend()) {
         const uint256 &hash = rit->second->first;
         const CTransactionRecord &rtx = rit->second->second;
-        UniValue record(UniValue::VOBJ);
-        match = ParseRecords(record, hash, rtx, pwallet, watchonly, search, category);
-        if (match) {
-            transactions.push_back(record);
-        }
+        ParseRecords(
+            transactions,
+            hash,
+            rtx,
+            pwallet,
+            watchonly,
+            search
+        );
         rit++;
     }
     
@@ -3170,13 +3158,13 @@ UniValue filtertransactions(const JSONRPCRequest &request)
     
     // count and skip
     UniValue result(UniValue::VARR);
-    unsigned int i = 0;
-    while (i < values.size() && count > 0) {
+    for (unsigned int i = 0; i < values.size() && count > 0; i++) {
         if (skip-- <= 0) {
-            result.push_back(values[i]);
-            count--;
+            if (values[i]["category"].get_str() == category || category == "all") {
+                result.push_back(values[i]);
+                count--;
+            }
         }
-        i++;
     }
     
     return result;
@@ -4124,8 +4112,8 @@ static UniValue SendToInner(const JSONRPCRequest &request, OutputTypes typeIn, O
             if (obj.exists("amount"))
                 nAmount = AmountFromValue(obj["amount"]);
             else
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "Must provide an address.");
-
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Must provide an amount.");
+            
             if (nAmount <= 0)
                 throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount");
             nTotal += nAmount;

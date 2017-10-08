@@ -163,6 +163,7 @@ PARTICL_SCRIPTS = [
     'smsg.py',
     'multisig.py',
     'coldstaking.py',
+    'filtertransactions.py'
 ]
 
 INSIGHT_SCRIPTS = [
