@@ -60,6 +60,7 @@
 namespace {
     struct CBlockIndexWorkComparator
     {
+        // Returns pa < pb in work-order
         bool operator()(const CBlockIndex *pa, const CBlockIndex *pb) const {
             // First sort by most total work, ...
             if (pa->nChainWork > pb->nChainWork) return false;
@@ -107,8 +108,7 @@ class CChainState {
 private:
     /**
      * The set of all CBlockIndex entries with BLOCK_VALID_TRANSACTIONS (for itself and all ancestors) and
-     * as good as our current tip or better. Entries may be failed, though, and pruning nodes may be
-     * missing the data for the block.
+     * as good as our current tip or better. Pruning nodes may be missing the data for the block.
      */
     std::set<CBlockIndex*, CBlockIndexWorkComparator> setBlockIndexCandidates;
 
@@ -206,6 +206,7 @@ private:
     CBlockIndex* FindMostWorkChain() EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     void ReceivedBlockTransactions(const CBlock& block, CBlockIndex* pindexNew, const CDiskBlockPos& pos, const Consensus::Params& consensusParams) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
+    void PruneInvalidBlockIndexCandidates(CBlockIndex* pindexInvalid);
 
     bool RollforwardBlock(const CBlockIndex* pindex, CCoinsViewCache& inputs, const CChainParams& params) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 } g_chainstate;
@@ -1281,6 +1282,48 @@ static void CheckForkWarningConditionsOnNewFork(CBlockIndex* pindexNewForkTip) E
     CheckForkWarningConditions();
 }
 
+// Helper for PruneInvalidBlockIndexCandidates
+static void PruneInvalidIndexCandidatesInSet(CBlockIndex* pindexInvalid, std::set<CBlockIndex*, CBlockIndexWorkComparator>& set_candidates) {
+    // Iterate set_candidates downwards, deleting parents of pindexInvalid,
+    // until we get to headers which are lower total-work than pindexInvalid
+    // (at which point they can't be parents of pindexInvalid).
+    std::set<CBlockIndex*, CBlockIndexWorkComparator>::reverse_iterator it = set_candidates.rbegin();
+    while (it != set_candidates.rend() && (*it)->nChainWork > pindexInvalid->nChainWork) {
+        if ((*it)->GetAncestor(pindexInvalid->nHeight) == pindexInvalid) {
+            CBlockIndex* pindexInvalidTip = *it;
+            if (!pindexBestInvalid || pindexInvalidTip->nChainWork > pindexBestInvalid->nChainWork)
+                pindexBestInvalid = pindexInvalidTip;
+
+            while (pindexInvalidTip != pindexInvalid) {
+                if (!(pindexInvalidTip->nStatus & BLOCK_FAILED_MASK)) {
+                    pindexInvalidTip->nStatus |= BLOCK_FAILED_CHILD;
+                    setDirtyBlockIndex.insert(pindexInvalidTip);
+                }
+                pindexInvalidTip = pindexInvalidTip->pprev;
+            }
+            std::set<CBlockIndex*, CBlockIndexWorkComparator>::iterator forward_it = it.base(); // Is one past it
+            forward_it--; // Now points to it
+            forward_it = set_candidates.erase(forward_it);
+            it = std::set<CBlockIndex*, CBlockIndexWorkComparator>::reverse_iterator(forward_it);
+            // forward_it == it.base() now points to one-past previous it, making it point to one-before previous it.
+        } else {
+            it++;
+        }
+    }
+    set_candidates.erase(pindexInvalid);
+}
+
+/**
+ * Removes any descendants of pindexInvalid from candidate blocks,
+ * marking them BLOCK_FAILED_CHILD as we go
+ */
+void CChainState::PruneInvalidBlockIndexCandidates(CBlockIndex* pindexInvalid) {
+    AssertLockHeld(cs_main);
+    assert(pindexInvalid->nStatus & BLOCK_FAILED_MASK);
+
+    PruneInvalidIndexCandidatesInSet(pindexInvalid, setBlockIndexCandidates);
+}
+
 void static InvalidChainFound(CBlockIndex* pindexNew) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     if (!pindexBestInvalid || pindexNew->nChainWork > pindexBestInvalid->nChainWork)
@@ -1302,7 +1345,7 @@ void CChainState::InvalidBlockFound(CBlockIndex *pindex, const CValidationState 
         pindex->nStatus |= BLOCK_FAILED_VALID;
         m_failed_blocks.insert(pindex);
         setDirtyBlockIndex.insert(pindex);
-        setBlockIndexCandidates.erase(pindex);
+        PruneInvalidBlockIndexCandidates(pindex);
         InvalidChainFound(pindex);
     }
 }
@@ -2490,28 +2533,21 @@ CBlockIndex* CChainState::FindMostWorkChain() {
         bool fInvalidAncestor = false;
         while (pindexTest && !chainActive.Contains(pindexTest)) {
             assert(pindexTest->nChainTx || pindexTest->nHeight == 0);
+            assert(pindexTest->IsValid(BLOCK_VALID_TRANSACTIONS));
 
             // Pruned nodes may have entries in setBlockIndexCandidates for
             // which block files have been deleted.  Remove those as candidates
             // for the most work chain if we come across them; we can't switch
             // to a chain unless we have all the non-active-chain parent blocks.
-            bool fFailedChain = pindexTest->nStatus & BLOCK_FAILED_MASK;
-            bool fMissingData = !(pindexTest->nStatus & BLOCK_HAVE_DATA);
-            if (fFailedChain || fMissingData) {
+            if (!(pindexTest->nStatus & BLOCK_HAVE_DATA)) {
                 // Candidate chain is not usable (either invalid or missing data)
-                if (fFailedChain && (pindexBestInvalid == nullptr || pindexNew->nChainWork > pindexBestInvalid->nChainWork))
-                    pindexBestInvalid = pindexNew;
                 CBlockIndex *pindexFailed = pindexNew;
                 // Remove the entire chain from the set.
                 while (pindexTest != pindexFailed) {
-                    if (fFailedChain) {
-                        pindexFailed->nStatus |= BLOCK_FAILED_CHILD;
-                    } else if (fMissingData) {
-                        // If we're missing data, then add back to mapBlocksUnlinked,
-                        // so that if the block arrives in the future we can try adding
-                        // to setBlockIndexCandidates again.
-                        mapBlocksUnlinked.insert(std::make_pair(pindexFailed->pprev, pindexFailed));
-                    }
+                    // If we're missing data, then add back to mapBlocksUnlinked,
+                    // so that if the block arrives in the future we can try adding
+                    // to setBlockIndexCandidates again.
+                    mapBlocksUnlinked.insert(std::make_pair(pindexFailed->pprev, pindexFailed));
                     setBlockIndexCandidates.erase(pindexFailed);
                     pindexFailed = pindexFailed->pprev;
                 }
@@ -4550,20 +4586,27 @@ void CChainState::CheckBlockIndex(const Consensus::Params& consensusParams)
             // Checks for not-invalid blocks.
             assert((pindex->nStatus & BLOCK_FAILED_MASK) == 0); // The failed mask cannot be set for blocks without invalid parents.
         }
-        if (!CBlockIndexWorkComparator()(pindex, chainActive.Tip()) && pindexFirstNeverProcessed == nullptr) {
-            if (pindexFirstInvalid == nullptr) {
-                // If this block sorts at least as good as the current tip and
-                // is valid and we have all data for its parents, it must be in
-                // setBlockIndexCandidates.  chainActive.Tip() must also be there
-                // even if some data has been pruned.
-                if (pindexFirstMissing == nullptr || pindex == chainActive.Tip()) {
-                    assert(setBlockIndexCandidates.count(pindex));
-                }
-                // If some parent is missing, then it could be that this block was in
-                // setBlockIndexCandidates but had to be removed because of the missing data.
-                // In this case it must be in mapBlocksUnlinked -- see test below.
+        if (pindex->nStatus & BLOCK_FAILED_CHILD) {
+            // Blocks which failed with "CHILD" must have an invalid parent
+            assert(pindexFirstInvalid);
+            assert(pindexFirstInvalid != pindex);
+            assert(!(pindex->nStatus & BLOCK_FAILED_VALID));
+        }
+        if (pindex->nStatus & BLOCK_FAILED_VALID) {
+            assert(!(pindex->nStatus & BLOCK_FAILED_CHILD));
+        }
+        if (!CBlockIndexWorkComparator()(pindex, chainActive.Tip()) && pindexFirstNeverProcessed == nullptr && pindexFirstInvalid == nullptr) {
+            // If this block sorts at least as good as the current tip and
+            // is valid and we have all data for its parents, it must be in
+            // setBlockIndexCandidates.  chainActive.Tip() must also be there
+            // even if some data has been pruned.
+            if (pindexFirstMissing == nullptr || pindex == chainActive.Tip()) {
+                assert(setBlockIndexCandidates.count(pindex));
             }
-        } else { // If this block sorts worse than the current tip or some ancestor's block has never been seen, it cannot be in setBlockIndexCandidates.
+            // If some parent is missing, then it could be that this block was in
+            // setBlockIndexCandidates but had to be removed because of the missing data.
+            // In this case it must be in mapBlocksUnlinked -- see test below.
+        } else { // If this block sorts worse than the current tip or some ancestor's block has never been seen or is invalid, it cannot be in setBlockIndexCandidates.
             assert(setBlockIndexCandidates.count(pindex) == 0);
         }
         // Check whether this block is in mapBlocksUnlinked.
