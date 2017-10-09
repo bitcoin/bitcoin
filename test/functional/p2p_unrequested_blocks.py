@@ -32,30 +32,23 @@ Node1 is unused in tests 3-7:
    Node0 should process all but the last block (too far ahead in height).
 
 5. Send a duplicate of the block in #3 to Node0.
-   Node0 should not process the block because it is unrequested, and stay on
-   the shorter chain.
+   Node0 should process the block even though it is unrequested, and reorg to
+   the longer chain.
 
-6. Send Node0 an inv for the height 3 block produced in #4 above.
-   Node0 should figure out that Node0 has the missing height 2 block and send a
-   getdata.
-
-7. Send Node0 the missing block again.
-   Node0 should process and the tip should advance.
-
-8. Create a fork which is invalid at a height longer than the current chain
+6. Create a fork which is invalid at a height longer than the current chain
    (ie to which the node will try to reorg) but which has headers built on top
    of the invalid block. Check that we get disconnected if we send more headers
    on the chain the node now knows to be invalid.
 
-9. Test Node1 is able to sync when connected to node0 (which should have sufficient
+7. Test Node1 is able to sync when connected to node0 (which should have sufficient
    work on its chain).
 """
 
 import time
 
 from test_framework.blocktools import create_block, create_coinbase, create_tx_with_script
-from test_framework.messages import CBlockHeader, CInv, msg_block, msg_headers, msg_inv
-from test_framework.mininode import mininode_lock, P2PInterface
+from test_framework.messages import CBlockHeader, msg_block, msg_headers
+from test_framework.mininode import P2PInterface
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error, connect_nodes, sync_blocks
 
@@ -99,8 +92,8 @@ class AcceptBlockTest(BitcoinTestFramework):
         for x in [test_node, min_work_node]:
             x.sync_with_ping()
         assert_equal(self.nodes[0].getblockcount(), 2)
-        assert_equal(self.nodes[1].getblockcount(), 1)
-        self.log.info("First height 2 block accepted by node0; correctly rejected by node1")
+        assert_equal(self.nodes[1].getblockcount(), 0)
+        self.log.info("First height 2 block accepted by node0; all blocks correctly rejected by node1")
 
         # 3. Send another block that builds on genesis.
         block_h1f = create_block(int("0x" + self.nodes[0].getblockhash(0), 0), create_coinbase(1), block_time)
@@ -192,8 +185,8 @@ class AcceptBlockTest(BitcoinTestFramework):
         assert_raises_rpc_error(-1, "Block not found on disk", self.nodes[0].getblock, all_blocks[-1].hash)
 
         # 5. Test handling of unrequested block on the node that didn't process
-        # Should still not be processed (even though it has a child that has more
-        # work).
+        # Should be processed as the node can figure out that it leads to a new
+        # chain that it will want.
 
         # The node should have requested the blocks at some point, so
         # disconnect/reconnect first
@@ -206,36 +199,13 @@ class AcceptBlockTest(BitcoinTestFramework):
         test_node.send_message(msg_block(block_h1f))
 
         test_node.sync_with_ping()
-        assert_equal(self.nodes[0].getblockcount(), 2)
-        self.log.info("Unrequested block that would complete more-work chain was ignored")
-
-        # 6. Try to get node to request the missing block.
-        # Poke the node with an inv for block at height 3 and see if that
-        # triggers a getdata on block 2 (it should if block 2 is missing).
-        with mininode_lock:
-            # Clear state so we can check the getdata request
-            test_node.last_message.pop("getdata", None)
-            test_node.send_message(msg_inv([CInv(2, block_h3.sha256)]))
-
-        test_node.sync_with_ping()
-        with mininode_lock:
-            getdata = test_node.last_message["getdata"]
-
-        # Check that the getdata includes the right block
-        assert_equal(getdata.inv[0].hash, block_h1f.sha256)
-        self.log.info("Inv at tip triggered getdata for unprocessed block")
-
-        # 7. Send the missing block for the third time (now it is requested)
-        test_node.send_message(msg_block(block_h1f))
-
-        test_node.sync_with_ping()
         assert_equal(self.nodes[0].getblockcount(), 290)
         self.nodes[0].getblock(all_blocks[286].hash)
         assert_equal(self.nodes[0].getbestblockhash(), all_blocks[286].hash)
         assert_raises_rpc_error(-1, "Block not found on disk", self.nodes[0].getblock, all_blocks[287].hash)
         self.log.info("Successfully reorged to longer chain from non-whitelisted peer")
 
-        # 8. Create a chain which is invalid at a height longer than the
+        # 6. Create a chain which is invalid at a height longer than the
         # current chain, but which has more blocks on top of that
         block_289f = create_block(all_blocks[284].sha256, create_coinbase(289), all_blocks[284].nTime+1)
         block_289f.solve()
@@ -300,7 +270,7 @@ class AcceptBlockTest(BitcoinTestFramework):
         test_node.send_message(headers_message)
         test_node.wait_for_disconnect()
 
-        # 9. Connect node1 to node0 and ensure it is able to sync
+        # 7. Connect node1 to node0 and ensure it is able to sync
         connect_nodes(self.nodes[0], 1)
         sync_blocks([self.nodes[0], self.nodes[1]])
         self.log.info("Successfully synced nodes 1 and 0")
