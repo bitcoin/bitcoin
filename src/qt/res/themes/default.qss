@@ -164,6 +164,7 @@ QToolBar > QToolButton {
 
 /* Status Bar */
 QStatusBar {
+    color: #ffffff;
     background: #333333;
     border-top: 1px solid #e1e1e1;
 }
@@ -174,6 +175,7 @@ QStatusBar QLabel {
 }
 
 QStatusBar::item {
+    color: #ffffff;
     border: none;
 }
 
