@@ -10,7 +10,7 @@
 
 // CChain chainActive;
 
-static const std::string DUMMY = "0000000000000000000000000000000000"; 
+static const std::string DUMMY = "0000"; 
 
 static const char WL_FACTOR  = 'f';
 static const char WL_WINDOW_LENGTH  = 'w';
@@ -341,7 +341,7 @@ unsigned int CMinerWhitelistDB::GetWindowStart(unsigned int height) {
 // }
 
 bool CMinerWhitelistDB::DumpWindowStats(std::vector< std::pair< std::string, uint32_t > > *MinerVector) {
-    LogPrintf("MinerDatabase: Dumping all miner stats.\n");
+    // LogPrintf("MinerDatabase: Dumping all miner stats.\n");
     // Sync();
     if (IsEmpty())
         LogPrintf("MinerDatabase: DB is empty.\n");
@@ -349,11 +349,11 @@ bool CMinerWhitelistDB::DumpWindowStats(std::vector< std::pair< std::string, uin
     for (it->Seek(MinerEntry(DUMMY)); it->Valid(); it->Next()) { // DUMMY is the lexically first address.
         MinerEntry entry;
         if (it->GetKey(entry) && entry.key == WL_ADDRESS) { // Does this work? Should give false if Key is of other type than what we expect?!
-            LogPrintf("Got entry type %s\n", entry.key);
-            LogPrintf("Got entry %s with pointer %x\n", entry.addr, entry.addr);
+            // LogPrintf("Got entry type %s\n", entry.key);
+            // LogPrintf("Got entry %s with pointer %x\n", entry.addr, entry.addr);
             MinerDetails det;
             it->GetValue(det);
-            LogPrintf("Got details: Blockcount %s\n", det.totalBlocks);
+            // LogPrintf("Got details: Blockcount %s\n", det.totalBlocks);
             if (det.windowBlocks == 0) 
                 continue; // do not print useless data
             MinerVector->emplace_back(entry.addr, det.windowBlocks);
@@ -378,7 +378,8 @@ bool CMinerWhitelistDB::DumpStatsForMiner(std::string address, bool *wlisted, un
     *windowBlocks = details.windowBlocks;
     *totalBlocks = details.totalBlocks;
     *lastBlock = details.blockVector.back();
-
+    // LogPrintf("Miner mined blocks:");
+    // for (const auto &item : details.blockVector) { LogPrintf("%d\n", item); }
     return true;
 }
 
@@ -425,26 +426,30 @@ bool CMinerWhitelistDB::MineBlock(unsigned int newHeight, std::string address) {
             //LogPrintf("MinerDatabase: Creating Iterator\n");
             std::unique_ptr<CDBIterator> it(NewIterator());
             //LogPrintf("MinerDatabase: Starting Loop.\n");
-            Sync();
+            // Sync();
             for (it->Seek(MinerEntry(DUMMY)); it->Valid(); it->Next()) { 
                 MinerEntry entry;
                 if (it->GetKey(entry) && entry.key == WL_ADDRESS) { // Does this work? Should give false if Key is of other type than what we expect?!
-                    LogPrintf("Got entry type %s\n", entry.key);
-                    LogPrintf("Got entry %s with pointer %x\n", entry.addr, entry.addr);
+                    // LogPrintf("Got entry type %s\n", entry.key);
+                    // LogPrintf("Got entry %s with pointer %x\n", entry.addr, entry.addr);
                     MinerDetails det;
                     it->GetValue(det);
-                    LogPrintf("Got details: Blockcount %s\n", det.totalBlocks);
+                    // LogPrintf("Got details: Blockcount %s\n", det.totalBlocks);
                     if (entry.addr == address) { 
                         det.totalBlocks += 1;
+                        det.blockVector.push_back(newHeight);
                     }
                     det.windowBlocks = 0;
+                    // if (entry.addr=="pUYarhCfAaRYeVv6rPPwnAAef6ZGfqj9AP" && entry.addr==address)
+                    //     LogPrintf("pUYarhCfAaRYeVv6rPPwnAAef6ZGfqj9AP is mining Block %u. Resetting. New Count is %u\n", newHeight, det.windowBlocks);
                     batch.Write(entry, det);
                 } else { // No miner anymore
-                    LogPrintf("Found something else.\n");
+                    // LogPrintf("Found something else.\n");
                     break;
                 }
-            } 
-            Sync();
+            }
+             
+            // Sync();
         } 
         else {
             //LogPrintf("MinerDatabase: In window\n");
@@ -455,6 +460,9 @@ bool CMinerWhitelistDB::MineBlock(unsigned int newHeight, std::string address) {
             // Increase counter for the one mining the block
             minDets.totalBlocks += 1;
             minDets.windowBlocks += 1;
+            // if (address=="pUYarhCfAaRYeVv6rPPwnAAef6ZGfqj9AP")
+            //     LogPrintf("pUYarhCfAaRYeVv6rPPwnAAef6ZGfqj9AP is mining Block %u. New Count is %u\n", newHeight, minDets.windowBlocks);
+            
             minDets.blockVector.push_back(newHeight);
             batch.Write(MinerEntry(address), minDets);
         }
@@ -474,8 +482,13 @@ bool CMinerWhitelistDB::MineBlock(unsigned int newHeight, std::string address) {
       
         // Check if there is a block dropping out of the window
         unsigned int blockDroppingOut = GetWindowStart(newHeight)-1;
+
+        // we should only let a block drop out if it counted toward the windowBlocks. 
+        // if we are at the minercapsystemchangeheight=40320, the block dropping out is 
+        // 40320-2016=38304, but block 38304 was not counted in windowBlocks 
+        // so we can start dropping blocks if 
         
-        if (blockDroppingOut) { // There is!
+        if (blockDroppingOut > 38304) { // There is!
             BlockDetails dropDets = BlockDetails();
             if (!Exists(BlockEntry(blockDroppingOut)))
                 return false;
@@ -485,6 +498,8 @@ bool CMinerWhitelistDB::MineBlock(unsigned int newHeight, std::string address) {
                 // dropping out of the window so decrease his count again.
                 minDets.windowBlocks -= 1;
                 batch.Write(MinerEntry(address), minDets);  
+                // if (dropDets.miner=="pUYarhCfAaRYeVv6rPPwnAAef6ZGfqj9AP")
+                //     LogPrintf("Block %u is removed from miner pUYarhCfAaRYeVv6rPPwnAAef6ZGfqj9AP. Also mined new Block. New Count is %u.\n", blockDroppingOut,minDets.windowBlocks);
             } else { // different Miner
                 MinerDetails otherDets = MinerDetails();
                 if (!Exists(MinerEntry(dropDets.miner)))
@@ -493,7 +508,10 @@ bool CMinerWhitelistDB::MineBlock(unsigned int newHeight, std::string address) {
                 otherDets.windowBlocks -= 1;
                 batch.Write(MinerEntry(address), minDets);  
                 batch.Write(MinerEntry(dropDets.miner), otherDets);  
+                // if (dropDets.miner=="pUYarhCfAaRYeVv6rPPwnAAef6ZGfqj9AP")
+                //     LogPrintf("Block %u is removed from miner pUYarhCfAaRYeVv6rPPwnAAef6ZGfqj9AP. New Count is %u.\n",blockDroppingOut,otherDets.windowBlocks);
             }
+            
         } else {
             batch.Write(MinerEntry(address), minDets);
         }
