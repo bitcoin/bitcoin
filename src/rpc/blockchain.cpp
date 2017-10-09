@@ -1170,6 +1170,7 @@ UniValue getblockchaininfo(const JSONRPCRequest& request)
             + HelpExampleRpc("getblockchaininfo", "")
         );
 
+    assert(chainActive.Tip() && "An empty blockchain should not be possible here.");
     LOCK(cs_main);
 
     UniValue obj(UniValue::VOBJ);
@@ -1201,6 +1202,7 @@ UniValue getblockchaininfo(const JSONRPCRequest& request)
         while (block && block->pprev && (block->pprev->nStatus & BLOCK_HAVE_DATA))
             block = block->pprev;
 
+        assert(block && "An empty blockchain should not be possible here.");
         obj.push_back(Pair("pruneheight",        block->nHeight));
     }
     obj.push_back(Pair("warnings", GetWarnings("statusbar")));
