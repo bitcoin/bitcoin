@@ -285,7 +285,7 @@ void ThreadSecureMsgPow()
                 LOCK(cs_smsgDB);
                 dbOutbox.EraseSmesg(chKey);
             }
-            
+
             if (rv != 0)
             {
                 LogPrintf("SecMsgPow: Could not get proof of work hash, message removed.\n");
@@ -579,7 +579,7 @@ int SecureMsgReadIni()
             {
                 CKeyID k;
                 CBitcoinAddress(cAddress).GetKeyID(k);
-                
+
                 if (k.IsNull())
                     LogPrintf("Could not parse key line %s, rv %d.\n", pValue, rv);
                 else
@@ -640,19 +640,19 @@ int SecureMsgWriteIni()
         fclose(fp);
         return false;
     };
-    
+
     for (std::vector<SecMsgAddress>::iterator it = smsgAddresses.begin(); it != smsgAddresses.end(); ++it)
     {
         errno = 0;
-        
+
         CBitcoinAddress cAddress(it->address);
-        
+
         if (!cAddress.IsValid())
         {
             LogPrintf("%s: Error saving address - invalid.", __func__);
             continue;
         };
-        
+
         if (fprintf(fp, "key=%s|%d|%d\n", cAddress.ToString().c_str(), it->fReceiveEnabled, it->fReceiveAnon) < 0)
         {
             LogPrintf("fprintf error: %s\n", strerror(errno));
@@ -678,7 +678,7 @@ bool SecureMsgStart(CWallet *pwallet, bool fDontStart, bool fScanChain)
         LogPrintf("Secure messaging not started.\n");
         return false;
     };
-    
+
     LogPrintf("Secure messaging starting.\n");
 
     if (pwalletSmsg)
@@ -779,7 +779,7 @@ bool SecureMsgEnable(CWallet *pwallet)
 
         smsgAddresses.clear(); // should be empty already
         smsgBuckets.clear(); // should be empty already
-        
+
         if (!SecureMsgStart(pwallet, false, false))
             return error("%s: SecureMsgStart failed.\n", __func__);
     } // cs_smsg
@@ -857,7 +857,7 @@ int SecureMsgReceiveData(CNode *pfrom, const std::string &strCommand, CDataStrea
             0: no error
             1: error
             2: unknown message
-        
+
         TODO:
         Explain better and make use of better terminology such as
         Node A <-> Node B <-> Node C
@@ -874,13 +874,13 @@ int SecureMsgReceiveData(CNode *pfrom, const std::string &strCommand, CDataStrea
 
         + smsgShow =
             (1) received a list of requested bucket hashes which the other party does not have.
-            (2) respond with smsgHave - contains all the message hashes within the requested buckets. 
+            (2) respond with smsgHave - contains all the message hashes within the requested buckets.
         + smsgHave =
             (1) A list of all the message hashes which a node has in response to smsgShow.
         + smsgWant =
             (1) A list of the message hashes that a node does not have and wants to retrieve from the node who sent smsgHave
-        + smsgMsg = 
-            (1) In response to 
+        + smsgMsg =
+            (1) In response to
         + smsgPing = ping request
         + smsgPong = pong response
         + smsgMatch =
@@ -1438,14 +1438,14 @@ bool SecureMsgSendData(CNode *pto, bool fSendTrickle)
 
                 if (LogAcceptCategory(BCLog::SMSG))
                     LogPrintf("Preparing bucket with hash %d for transfer to node %u. timeChanged=%d > lastMatched=%d\n", hash, pto->GetId(), bkt.timeChanged, pto->smsgData.lastMatched);
-                
+
                 size_t sz = vchData.size();
                 try { vchData.resize(vchData.size() + 16); } catch (std::exception& e)
                 {
                     LogPrintf("vchData.resize %u threw: %s.\n", vchData.size() + 16, e.what());
                     continue;
                 };
-                
+
                 uint8_t *p = &vchData[sz];
                 memcpy(p, &it->first, 8);
                 memcpy(p+8, &nMessages, 4);
@@ -1531,23 +1531,23 @@ static bool ScanBlock(const CBlock &block, SecMsgDB &addrpkdb,
     for (const auto &tx : block.vtx)
     {
         // Harvest public keys from coinstake txns
-        
+
         if (!tx->IsParticlVersion()) // skip legacy txns
             continue;
-        
+
         for (const auto &txin : tx->vin)
         {
             if (txin.IsAnonInput())
                 continue;
-            
+
             if (txin.scriptWitness.stack.size() != 2)
                 continue;
-            
+
             if (txin.scriptWitness.stack[1].size() != 33)
                 continue;
-            
+
             CPubKey pubKey(txin.scriptWitness.stack[1]);
-            
+
             if (!pubKey.IsValid()
                 || !pubKey.IsCompressed())
             {
@@ -1561,7 +1561,7 @@ static bool ScanBlock(const CBlock &block, SecMsgDB &addrpkdb,
                 case 0: nPubkeys++; break;      // added key
                 case 4: nDuplicates++; break;   // duplicate key
             };
-            
+
             if (tx->IsCoinStake()) // coinstake inputs are always from the same address/pubkey
                 break;
         };
@@ -2176,7 +2176,7 @@ int SecureMsgGetLocalKey(CKeyID &ckid, CPubKey &cpkOut)
 {
 #ifdef ENABLE_WALLET
     LogPrint(BCLog::SMSG, "SecureMsgGetLocalKey()\n");
-    
+
     if (!pwalletSmsg)
         return errorN(1, "%s: Wallet disabled.", __func__);
 
@@ -2601,7 +2601,7 @@ int SecureMsgStore(uint8_t *pHeader, uint8_t *pPayload, uint32_t nPayload, bool 
         fclose(fp);
         return errorN(1, "fseek failed: %s.", strerror(errno));
     };
-    
+
     ofs = ftell(fp);
 
     if (fwrite(pHeader,  sizeof(uint8_t), SMSG_HDR_LEN, fp) != (size_t)SMSG_HDR_LEN
@@ -2851,14 +2851,14 @@ int SecureMsgEncrypt(SecureMessage &smsg, const CKeyID &addressFrom, const CKeyI
     // Generate a new random EC key pair with private key called r and public key called R.
     CKey keyR;
     keyR.MakeNewKey(true); // make compressed key
-    
+
     secp256k1_pubkey pubkey;
     if (!secp256k1_ec_pubkey_parse(secp256k1_context_smsg, &pubkey, cpkDestK.begin(), cpkDestK.size()))
         return errorN(4, "%s: secp256k1_ec_pubkey_parse failed: %s.", __func__, HexStr(cpkDestK));
-    
+
     std::vector<uint8_t> vchP;
     vchP.resize(32);
-    
+
     if (!secp256k1_ecdh(secp256k1_context_smsg, &vchP[0], &pubkey, keyR.begin()))
         return errorN(6, "%s: secp256k1_ecdh failed.", __func__);
 
@@ -2990,10 +2990,10 @@ int SecureMsgSend(CKeyID &addressFrom, CKeyID &addressTo, std::string &message, 
 
     if (LogAcceptCategory(BCLog::SMSG))
     {
-        LogPrintf("SecureMsgSend(%s, %s, ...)\n", 
+        LogPrintf("SecureMsgSend(%s, %s, ...)\n",
             fSendAnonymous ? "anon" : CBitcoinAddress(addressFrom).ToString(), CBitcoinAddress(addressTo).ToString());
     };
-    
+
     if (!pwalletSmsg)
     {
         sError = "Wallet is not enabled.";
@@ -3030,7 +3030,7 @@ int SecureMsgSend(CKeyID &addressFrom, CKeyID &addressTo, std::string &message, 
             case 11: sError = "Encrypt failed.";                            break;
             default: sError = "Unspecified Error.";                         break;
         };
-        
+
         return errorN(rv, "%s: %s.", __func__, sError);
     };
 
@@ -3180,17 +3180,17 @@ int SecureMsgDecrypt(bool fTestOnly, CKeyID &address, uint8_t *pHeader, uint8_t 
 
     // Fetch private key k, used to decrypt
     CKey keyDest;
-    
+
     if (!pwalletSmsg->GetKey(address, keyDest))
         return errorN(3, "%s: Could not get private key for addressDest.", __func__);
 
     secp256k1_pubkey R;
     if (!secp256k1_ec_pubkey_parse(secp256k1_context_smsg, &R, psmsg->cpkR, 33))
         return errorN(1, "%s: secp256k1_ec_pubkey_parse failed: %s.", __func__, HexStr(psmsg->cpkR, psmsg->cpkR+33));
-    
+
     std::vector<uint8_t> vchP;
     vchP.resize(32);
-    
+
     // Do an EC point multiply with private key k and public key R. This gives you public key P.
     if (!secp256k1_ecdh(secp256k1_context_smsg, &vchP[0], &R, keyDest.begin()))
         return errorN(1, "%s: secp256k1_ecdh failed.", __func__);
@@ -3199,7 +3199,7 @@ int SecureMsgDecrypt(bool fTestOnly, CKeyID &address, uint8_t *pHeader, uint8_t 
     //  The first 32 bytes of H are called key_e and the last 32 bytes are called key_m.
     std::vector<uint8_t> vchHashedDec;
     vchHashedDec.resize(64);    // 512 bits
-    memset(vchHashedDec.data(), 0, 64); 
+    memset(vchHashedDec.data(), 0, 64);
     CSHA512().Write(&vchP[0], vchP.size()).Finalize(&vchHashedDec[0]);
     std::vector<uint8_t> key_e(&vchHashedDec[0], &vchHashedDec[0]+32);
     std::vector<uint8_t> key_m(&vchHashedDec[32], &vchHashedDec[32]+32);

@@ -17,11 +17,14 @@ enum WordListLanguages
     WLL_SPANISH         = 4,
     WLL_CHINESE_S       = 5,
     WLL_CHINESE_T       = 6,
-    
+    WLL_ITALIAN         = 7,
+    WLL_KOREAN          = 8,
+
     WLL_MAX
 };
 
 extern const char *mnLanguagesDesc[WLL_MAX];
+extern const char *mnLanguagesTag[WLL_MAX];
 
 int GetWord(int o, const char *pwl, int max, std::string &sWord);
 int GetWordOffset(const char *p, const char *pwl, int max, int &o);

@@ -128,6 +128,8 @@ BITCOIN_CORE_H = \
   key/wordlists/french.h \
   key/wordlists/japanese.h \
   key/wordlists/spanish.h \
+  key/wordlists/italian.h \
+  key/wordlists/korean.h \
   keystore.h \
   lz4/lz4.h \
   dbwrapper.h \

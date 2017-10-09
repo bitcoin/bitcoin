@@ -31,13 +31,13 @@ UniValue smsgenable(const JSONRPCRequest &request)
         throw std::runtime_error("Secure messaging is already enabled.");
 
     UniValue result(UniValue::VOBJ);
-    
+
     CWallet *pwallet = nullptr;
 #ifdef ENABLE_WALLET
     assert(vpwallets.size() > 0);
     pwallet = vpwallets[0];
 #endif
-    
+
     result.pushKV("result", (SecureMsgEnable(pwallet) ? "Enabled secure messaging." : "Failed to enable secure messaging."));
 
     return result;
@@ -71,7 +71,7 @@ UniValue smsgoptions(const JSONRPCRequest &request)
     std::string mode = "list";
     if (request.params.size() > 0)
         mode = request.params[0].get_str();
-    
+
     UniValue result(UniValue::VOBJ);
 
     if (mode == "list")
@@ -158,7 +158,7 @@ UniValue smsgoptions(const JSONRPCRequest &request)
         result.pushKV("result", "Unknown Mode.");
         result.pushKV("expected", "smsgoption [list|set <optname> <value>]");
     };
-    
+
     return result;
 }
 
@@ -609,7 +609,7 @@ UniValue smsgsendanon(const JSONRPCRequest &request)
 
     std::string addrTo    = request.params[0].get_str();
     std::string msg       = request.params[1].get_str();
-    
+
     CKeyID kiFrom, kiTo;
     CBitcoinAddress coinAddress(addrTo);
     if (!coinAddress.IsValid())
@@ -989,36 +989,36 @@ static bool sortMsgDesc(const std::pair<int64_t, UniValue> &a, const std::pair<i
 static int64_t strToEpoch(const char *input)
 {
     int year, month, day, hours, minutes, seconds;
-    int n = sscanf(input, "%d-%d-%dT%d:%d:%d", 
+    int n = sscanf(input, "%d-%d-%dT%d:%d:%d",
         &year, &month, &day, &hours, &minutes, &seconds);
-    
+
     struct tm tm;
     memset(&tm, 0, sizeof(tm));
-    
+
     if (n > 0
         && year >= 1970 && year <= 9999)
         tm.tm_year = year - 1900;
-    
+
     if (n > 1
         && month > 0 && month < 13)
         tm.tm_mon = month - 1;
-    
+
     if (n > 2
         && day > 0 && day < 32)
         tm.tm_mday = day;
-    
+
     if (n > 3
         && hours >= 0 && hours < 24)
         tm.tm_hour = hours;
-    
+
     if (n > 4
         && minutes >= 0 && minutes < 60)
         tm.tm_min = minutes;
-    
+
     if (n > 5
         && seconds >= 0 && seconds < 60)
         tm.tm_sec = seconds;
-    
+
     return (int64_t) mktime(&tm);
 };
 
@@ -1033,7 +1033,7 @@ UniValue smsgview(const JSONRPCRequest &request)
             "'*abc' will match addresses with labels ending 'abc'"
             "Full date/time format for from and to is yyyy-mm-ddThh:mm:ss"
             "From and to will accept incomplete inputs like: -from 2016");
-    
+
     if (!fSecMsgEnabled)
         throw std::runtime_error("Secure messaging is disabled.");
 
@@ -1084,9 +1084,9 @@ UniValue smsgview(const JSONRPCRequest &request)
                     matchType = 2;
                     sTemp.erase(sTemp.length()-1, 1);
                 };
-                
+
                 std::map<CTxDestination, CAddressBookData>::iterator itl;
-                
+
                 for (itl = pwalletSmsg->mapAddressBook.begin(); itl != pwalletSmsg->mapAddressBook.end(); ++itl)
                 {
                     if (part::stringsMatchI(itl->second.name, sTemp, matchType))
@@ -1109,7 +1109,7 @@ UniValue smsgview(const JSONRPCRequest &request)
     {
         fMatchAll = true;
     };
-    
+
     size_t i = 1;
     while (i < request.params.size())
     {
@@ -1207,8 +1207,8 @@ UniValue smsgview(const JSONRPCRequest &request)
                     CBitcoinAddress addrFrom(msg.sFromAddress);
                     if (addrFrom.IsValid())
                         addrFrom.GetKeyID(kiFrom);
-                    
-                    
+
+
                     if (!fMatchAll)
                     {
                         bool fSkip = true;
@@ -1269,7 +1269,7 @@ UniValue smsgview(const JSONRPCRequest &request)
                     objM.pushKV("from", sFrom);
                     objM.pushKV("to", sTo);
                     objM.pushKV("text", std::string((char*)&msg.vchMessage[0]));
-                    
+
                     vMessages.push_back(std::make_pair(msg.timestamp, objM));
                 } else
                 {
@@ -1277,7 +1277,7 @@ UniValue smsgview(const JSONRPCRequest &request)
                 };
             };
             delete it;
-            
+
             dbMsg.TxnCommit();
         };
     } // cs_smsgDB
@@ -1293,7 +1293,7 @@ UniValue smsgview(const JSONRPCRequest &request)
     };
 
     result.pushKV("messages", messageList);
-    
+
     if (LogAcceptCategory(BCLog::SMSG))
         result.pushKV("debug empty sent", (int)debugEmptySent);
 

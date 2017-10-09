@@ -170,10 +170,10 @@ int Bech32Decode(char* hrp, uint8_t *data, size_t *data_len, const char *input)
 {
     uint8_t cdata[256];
     size_t cdatalen = 0;
-    
+
     if (!bech32_decode(hrp, cdata, &cdatalen, input))
         return 0;
-    
+
     *data_len = 0;
     if (!convert_bits(data, data_len, 8, cdata, cdatalen, 5, 0))
         return 0;

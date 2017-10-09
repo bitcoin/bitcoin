@@ -187,8 +187,8 @@ void Shutdown()
     /// module was initialized.
     RenameThread("particl-shutoff");
     mempool.AddTransactionsUpdated(1);
-    
-    
+
+
     StopHTTPRPC();
     StopREST();
     StopRPC();
@@ -196,7 +196,7 @@ void Shutdown()
     SecureMsgShutdown();
 #ifdef ENABLE_WALLET
     ShutdownThreadStakeMiner();
-    
+
     for (CWalletRef pwallet : vpwallets) {
         pwallet->Flush(false);
     }
@@ -407,14 +407,14 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += HelpMessageOpt("-addressindex", strprintf(_("Maintain a full address index, used to query for the balance, txids and unspent outputs for addresses (default: %u)"), DEFAULT_ADDRESSINDEX));
     strUsage += HelpMessageOpt("-timestampindex", strprintf(_("Maintain a timestamp index for block hashes, used to query blocks hashes by a range of timestamps (default: %u)"), DEFAULT_TIMESTAMPINDEX));
     strUsage += HelpMessageOpt("-spentindex", strprintf(_("Maintain a full spent index, used to query the spending txid and input index for an outpoint (default: %u)"), DEFAULT_SPENTINDEX));
-    
+
     strUsage += HelpMessageOpt("-spentindex", strprintf(_("Maintain a full spent index, used to query the spending txid and input index for an outpoint (default: %u)"), DEFAULT_SPENTINDEX));
-    
+
     strUsage += HelpMessageOpt("-dbmaxopenfiles", strprintf(_("Maximum number of open files parameter passed to level-db (default: %u)"), DEFAULT_DB_MAX_OPEN_FILES));
     strUsage += HelpMessageOpt("-dbcompression", strprintf(_("Database compression parameter passed to level-db (default: %s)"), DEFAULT_DB_COMPRESSION ? "true" : "false"));
 
     strUsage += HelpMessageGroup(_("Connection options:"));
-    
+
     strUsage += HelpMessageOpt("-findpeers", _("Node will search for peers (default: 1)"));
     strUsage += HelpMessageOpt("-addnode=<ip>", _("Add a node to connect to and attempt to keep the connection open"));
     strUsage += HelpMessageOpt("-banscore=<n>", strprintf(_("Threshold for disconnecting misbehaving peers (default: %u)"), DEFAULT_BANSCORE_THRESHOLD));
@@ -553,15 +553,15 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += HelpMessageOpt("-rpcserialversion", strprintf(_("Sets the serialization of raw transaction or block hex returned in non-verbose mode, non-segwit(0) or segwit(1) (default: %d)"), DEFAULT_RPC_SERIALIZE_VERSION));
     strUsage += HelpMessageOpt("-rpcthreads=<n>", strprintf(_("Set the number of threads to service RPC calls (default: %d)"), DEFAULT_HTTP_THREADS));
     strUsage += HelpMessageOpt("-rpccorsdomain=<domain>", _("Allow JSON-RPC connections from specified domain (e.g. http://localhost:4200 or \"*\"). This needs to be set if you are using the Particl GUI in a browser."));
-    
+
     strUsage += HelpMessageOpt("-displaylocaltime", _("Display human readable time strings in local timezone (default: false)"));
     strUsage += HelpMessageOpt("-displayutctime", _("Display human readable time strings in UTC (default: false)"));
-    
+
     if (showDebug) {
         strUsage += HelpMessageOpt("-rpcworkqueue=<n>", strprintf("Set the depth of the work queue to service RPC calls (default: %d)", DEFAULT_HTTP_WORKQUEUE));
         strUsage += HelpMessageOpt("-rpcservertimeout=<n>", strprintf("Timeout during HTTP requests (default: %d)", DEFAULT_HTTP_SERVER_TIMEOUT));
     }
-    
+
     return strUsage;
 }
 
@@ -672,11 +672,11 @@ void ThreadImport(std::vector<fs::path> vImportFiles)
 {
     const CChainParams& chainparams = Params();
     RenameThread("particl-loadblk");
-    
+
     fBusyImporting = true;
     {
     CImportingNow imp;
-    
+
     // -reindex
     if (fReindex) {
         int nFile = 0;
@@ -722,12 +722,12 @@ void ThreadImport(std::vector<fs::path> vImportFiles)
             LogPrintf("Warning: Could not open blocks file %s\n", path.string());
         }
     }
-    
+
     } // End scope of CImportingNow (set fImporting to false)
-    
+
     assert(fImporting == false);
     assert(fReindex == false);
-    
+
     // scan for better chains in the block chain database, that are not yet connected in the active best chain
     CValidationState state;
     if (!ActivateBestChain(state, chainparams)) {
@@ -739,12 +739,12 @@ void ThreadImport(std::vector<fs::path> vImportFiles)
         LogPrintf("Stopping after block import\n");
         StartShutdown();
     }
-    
+
     if (gArgs.GetArg("-persistmempool", DEFAULT_PERSIST_MEMPOOL)) {
         LoadMempool();
         fDumpMempoolLater = !fRequestShutdown;
     }
-    
+
     fBusyImporting = false;
 }
 
@@ -977,11 +977,11 @@ bool AppInitParameterInteraction()
         InitWarning(strprintf(_("Reducing -maxconnections from %d to %d, because of system limitations."), nUserMaxConnections, nMaxConnections));
 
     // ********************************************************* Step 3: parameter-to-internal-flags
-    
+
     fParticlMode = !gArgs.GetBoolArg("-legacymode", false); // qa tests
     if (gArgs.GetBoolArg("-regtest", false) && !fParticlMode)
         ResetParams(CBaseChainParams::REGTEST, fParticlMode);
-    
+
     if (gArgs.IsArgSet("-debug")) {
         // Special-case: if -debug=0/-nodebug is set, turn off debugging messages
         const std::vector<std::string> categories = gArgs.GetArgs("-debug");
@@ -1029,7 +1029,7 @@ bool AppInitParameterInteraction()
 
     if (gArgs.IsArgSet("-blockminsize"))
         InitWarning("Unsupported argument -blockminsize ignored.");
-    
+
     // Checkmempool and checkblockindex default to true in regtest mode
     int ratio = std::min<int>(std::max<int>(gArgs.GetArg("-checkmempool", chainparams.DefaultConsistencyChecks() ? 1 : 0), 0), 1000000);
     if (ratio != 0) {
@@ -1085,7 +1085,7 @@ bool AppInitParameterInteraction()
         LogPrintf("Prune configured to target %uMiB on disk for block and undo files.\n", nPruneTarget / 1024 / 1024);
         fPruneMode = true;
     }
-    
+
     // TODO: Check pruning
     if (fPruneMode)
     {
@@ -1442,7 +1442,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     fReindex = gArgs.GetBoolArg("-reindex", false);
     fSkipRangeproof = gArgs.GetBoolArg("-skiprangeproofverify", false);
     bool fReindexChainState = gArgs.GetBoolArg("-reindex-chainstate", false);
-    
+
     fs::path blocksDir = GetDataDir() / "blocks";
     if (!fs::exists(blocksDir))
         fs::create_directories(blocksDir);
@@ -1619,7 +1619,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
                         LOCK(cs_main);
                         CBlockIndex* tip = chainActive.Tip();
                         RPCNotifyBlockChange(true, tip);
-                        
+
                         if (tip
                             && tip != chainActive.Genesis() // genesis block can be set in the future
                             && tip->nTime > GetAdjustedTime() + MAX_FUTURE_BLOCK_TIME) {
@@ -1628,7 +1628,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
                                         "Only rebuild the block database if you are sure that your computer's date and time are correct");
                             break;
                         }
-                        
+
                     }
 
                     if (!CVerifyDB().VerifyDB(chainparams, pcoinsdbview, gArgs.GetArg("-checklevel", DEFAULT_CHECKLEVEL),
@@ -1690,7 +1690,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     // ********************************************************* Step 8: load wallet
 #ifdef ENABLE_WALLET
-    
+
     if (fParticlMode)
     {
         if (!CHDWallet::InitLoadWallet())
@@ -1700,7 +1700,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
         if (!CWallet::InitLoadWallet())
             return InitError(_("Load wallet failed. Exiting."));
     };
-    
+
 #else
     LogPrintf("No wallet support compiled in!\n");
 #endif
@@ -1761,7 +1761,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
         }
         uiInterface.NotifyBlockTip.disconnect(BlockNotifyGenesisWait);
     }
-    
+
     // ********************************************************* Step 10.1: start secure messaging
 
 #ifdef ENABLE_WALLET
@@ -1865,7 +1865,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     // ********************************************************* Step 12: finished
 
     SetRPCWarmupFinished();
-    
+
     uiInterface.InitMessage(_("Done loading"));
 
 #ifdef ENABLE_WALLET

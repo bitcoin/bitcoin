@@ -37,7 +37,7 @@ BOOST_AUTO_TEST_CASE(mnemonic_test)
 BOOST_AUTO_TEST_CASE(mnemonic_test_fails)
 {
     // Fail tests
-    
+
     std::string sError;
     std::vector<uint8_t> vEntropy;
     std::string sWords = "legals winner thank year wave sausage worth useful legal winner thank yellow";
@@ -52,20 +52,20 @@ BOOST_AUTO_TEST_CASE(mnemonic_addchecksum)
     std::string sError;
     std::string sWordsIn = "abandon baby cabbage dad eager fabric gadget habit ice kangaroo lab";
     std::string sWordsOut;
-    
+
     BOOST_CHECK_MESSAGE(0 == MnemonicAddChecksum(-1, sWordsIn, sWordsOut, sError), "MnemonicAddChecksum: " << sError);
-    
+
     BOOST_CHECK_MESSAGE(sWordsOut == "abandon baby cabbage dad eager fabric gadget habit ice kangaroo lab absorb", "sWordsOut: " << sWordsOut);
-    
+
     // Must fail, len % 3 != 0
     std::string sWordsInFail = "abandon baby cabbage dad eager fabric gadget habit ice kangaroo";
     BOOST_CHECK_MESSAGE(4 == MnemonicAddChecksum(-1, sWordsInFail, sWordsOut, sError), "MnemonicAddChecksum: " << sError);
-    
-    
+
+
     std::string sWordsInFrench = "zoologie ficeler xénon voyelle village viande vignette sécréter séduire torpille remède";
-    
+
     BOOST_CHECK(0 == MnemonicAddChecksum(-1, sWordsInFrench, sWordsOut, sError));
-    
+
     BOOST_CHECK(sWordsOut == "zoologie ficeler xénon voyelle village viande vignette sécréter séduire torpille remède abolir");
 }
 

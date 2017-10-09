@@ -12,7 +12,7 @@
 // Compute the hash modifier for proof-of-stake
 uint256 ComputeStakeModifierV2(const CBlockIndex *pindexPrev, const uint256 &kernel);
 
-/** 
+/**
  * Check whether stake kernel meets hash target
  * Sets hashProofOfStake on success return
  */
@@ -23,7 +23,7 @@ bool CheckStakeKernelHash(const CBlockIndex *pindexPrev,
     bool fPrintProofOfStake=false);
 
 
-/** 
+/**
  * Check kernel hash target and coinstake signature
  * Sets hashProofOfStake on success return
  */
@@ -34,7 +34,7 @@ bool CheckProofOfStake(const CBlockIndex *pindexPrev, const CTransaction &tx, in
  */
 bool CheckCoinStakeTimestamp(int nHeight, int64_t nTimeBlock);
 
-/** 
+/**
  * Wrapper around CheckStakeKernelHash()
  * Also checks existence of kernel input and min age
  * Convenient for searching a kernel

@@ -225,7 +225,7 @@ public:
 
     unsigned int GetSerializeSize(int nType, int nVersion) const
     {
-        return 64 + 1 + 2 + 20 + 20 + 
+        return 64 + 1 + 2 + 20 + 20 +
             GetSizeOfCompactSize(vchMessage.size()) + vchMessage.size() * sizeof(uint8_t);
     };
     template<typename Stream>

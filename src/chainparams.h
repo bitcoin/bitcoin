@@ -94,7 +94,7 @@ public:
     uint32_t GetStakeMinConfirmations() const { return nStakeMinConfirmations; }
     uint32_t GetTargetSpacing() const { return nTargetSpacing; }
     uint32_t GetTargetTimespan() const { return nTargetTimespan; }
-    uint32_t GetStakeTimestampMask(int nHeight) const { return nStakeTimestampMask; } 
+    uint32_t GetStakeTimestampMask(int nHeight) const { return nStakeTimestampMask; }
 
     int64_t GetStakeCombineThreshold() const { return nStakeCombineThreshold; }
     int64_t GetStakeSplitThreshold() const { return nStakeSplitThreshold; }
@@ -139,7 +139,7 @@ public:
     void UpdateVersionBitsParameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout);
 protected:
     CChainParams() {}
-    
+
     void SetLastImportHeight()
     {
         nLastImportHeight = 0;
@@ -151,24 +151,24 @@ protected:
     CMessageHeader::MessageStartChars pchMessageStart;
     int nDefaultPort;
     int nBIP44ID;
-    
+
     uint32_t nModifierInterval;         // seconds to elapse before new modifier is computed
     uint32_t nStakeMinConfirmations;    // min depth in chain before staked output is spendable
     uint32_t nTargetSpacing;            // targeted number of seconds between blocks
     uint32_t nTargetTimespan;
-    
+
     int64_t nStakeCombineThreshold = 1000 * COIN;
     int64_t nStakeSplitThreshold = 2 * nStakeCombineThreshold;
     uint32_t nStakeTimestampMask = (1 << 4) -1; // 4 bits, every kernel stake hash will change every 16 seconds
-    
+
     int64_t nCoinYearReward = 2 * CENT; // 2% per year
-    
+
     std::vector<CImportedCoinbaseTxn> vImportedCoinbaseTxns;
     uint32_t nLastImportHeight;       // set from vImportedCoinbaseTxns
-    
+
     std::vector<std::pair<int64_t, DevFundSettings> > vDevFundSettings;
-    
-    
+
+
     uint64_t nPruneAfterHeight;
     std::vector<CDNSSeedData> vSeeds;
     std::vector<unsigned char> base58Prefixes[MAX_BASE58_TYPES];

@@ -35,7 +35,7 @@ const char *ExtKeyGetString(int ind)
         case 16:    return "Invalid params pointer";
         default:    return "Unknown error, check log";
     };
-    
+
 };
 
 std::vector<uint8_t> &SetCompressedInt64(std::vector<uint8_t> &v, uint64_t n)
@@ -44,7 +44,7 @@ std::vector<uint8_t> &SetCompressedInt64(std::vector<uint8_t> &v, uint64_t n)
     v.resize(b);
     if (b > 0)
         memcpy(&v[0], (uint8_t*) &n, b);
-    
+
     return v;
 };
 
@@ -57,7 +57,7 @@ int64_t GetCompressedInt64(const std::vector<uint8_t> &v, uint64_t &n)
     else
     if (b < 9)
         memcpy((uint8_t*) &n, &v[0], b);
-    
+
     return (int64_t)n;
 };
 
@@ -72,9 +72,9 @@ bool GetCKeyID(const std::vector<uint8_t> &v, CKeyID &n)
 {
     if (v.size() != 20)
         return false;
-    
+
     memcpy((uint8_t*) &n, &v[0], 20);
-    
+
     return true;
 };
 
@@ -83,7 +83,7 @@ std::vector<uint8_t> &SetString(std::vector<uint8_t> &v, const char *s)
     size_t len = strlen(s);
     v.resize(len);
     memcpy(&v[0], (uint8_t*) &s, len);
-    
+
     return v;
 };
 
@@ -91,7 +91,7 @@ std::vector<uint8_t> &SetChar(std::vector<uint8_t> &v, const uint8_t c)
 {
     v.resize(1);
     v[0] = c;
-    
+
     return v;
 };
 
@@ -99,7 +99,7 @@ std::vector<uint8_t> &PushUInt32(std::vector<uint8_t> &v, const uint32_t i)
 {
     size_t o = v.size();
     v.resize(o+4);
-    
+
     memcpy(&v[o], (uint8_t*) &i, 4);
     return v;
 };
@@ -112,12 +112,12 @@ static uint32_t strtou32max(const char *nptr, int base)
     char c;
     uintmax_t cutoff;
     int neg, any, cutlim;
-    
+
     s = nptr;
     do {
         c = *s++;
     } while (isspace((unsigned char)c));
-    
+
     if (c == '-') {
         neg = 1;
         c = *s++;
@@ -188,24 +188,24 @@ static inline int validDigit(char c, int base)
 int ExtractExtKeyPath(const std::string &sPath, std::vector<uint32_t> &vPath)
 {
     char data[512];
-    
+
     vPath.clear();
-    
+
     if (sPath.length() > sizeof(data) -2)
         return 2;
     if (sPath.length() < 1)
         return 3;
-    
+
     memcpy(data, sPath.data(), sPath.length());
     data[sPath.length()] = '\0';
-    
+
     int nSlashes = 0;
     for (size_t k = 0; k < sPath.length(); ++k)
     {
         if (sPath[k] == '/')
         {
             nSlashes++;
-            
+
             // Catch start or end '/', and '//'
             if (k == 0
                 || k == sPath.length()-1
@@ -213,11 +213,11 @@ int ExtractExtKeyPath(const std::string &sPath, std::vector<uint32_t> &vPath)
                 return 7;
         };
     };
-    
+
     vPath.reserve(nSlashes + 1);
-    
+
     char *p = strtok(data, "/");
-    
+
     while (p)
     {
         uint32_t nChild;
@@ -226,9 +226,9 @@ int ExtractExtKeyPath(const std::string &sPath, std::vector<uint32_t> &vPath)
             nChild = 0;
         } else
         {
-            
+
             bool fHarden = false;
-            
+
             // Don't allow octal, only hex and binary
             int nBase = *p == '0' && (*(p+1) == 'b' || *(p+1) == 'B') ? 2
                 : *p == '0' && (*(p+1) == 'x' || *(p+1) == 'X') ? 16 : 10;
@@ -246,12 +246,12 @@ int ExtractExtKeyPath(const std::string &sPath, std::vector<uint32_t> &vPath)
                 if (!validDigit(*p, nBase))
                     return 4;
             };
-            
+
             errno = 0;
             nChild = strtou32max(ps, nBase);
             if (errno != 0)
                 return 5;
-            
+
             if (fHarden)
             {
                 if ((nChild >> 31) == 0)
@@ -263,20 +263,20 @@ int ExtractExtKeyPath(const std::string &sPath, std::vector<uint32_t> &vPath)
                 };
             };
         };
-        
+
         vPath.push_back(nChild);
-        
+
         p = strtok(NULL, "/");
-        
+
         if (nChild == 0
             && vPath.size() != 1
             && p)
             return 6;
     };
-    
+
     if (vPath.size() < 1)
         return 3;
-    
+
     return 0;
 };
 
@@ -324,10 +324,10 @@ bool CExtKey::Derive(CExtKey &out, unsigned int nChild) const
 void CExtKey::SetMaster(const unsigned char *seed, unsigned int nSeedLen)
 {
     static const unsigned char hashkey[] = {'B','i','t','c','o','i','n',' ','s','e','e','d'};
-    
+
     std::vector<unsigned char, secure_allocator<unsigned char>> vout(64);
     CHMAC_SHA512(hashkey, sizeof(hashkey)).Write(seed, nSeedLen).Finalize(vout.data());
-    
+
     key.Set(&vout[0], &vout[32], true);
     memcpy(vchChainCode, &vout[32], 32);
     nDepth = 0;
@@ -444,7 +444,7 @@ bool CExtKeyPair::Derive(CExtPubKey &out, unsigned int nChild) const
     };
     if (!key.IsValid())
         return false;
-    
+
     out.nDepth = nDepth + 1;
     CKeyID id = pubkey.GetID();
     memcpy(&out.vchFingerprint[0], &id, 4);
@@ -511,7 +511,7 @@ void CExtKeyPair::SetMaster(const unsigned char *seed, unsigned int nSeedLen)
 
     std::vector<unsigned char, secure_allocator<unsigned char>> vout(64);
     CHMAC_SHA512(hashkey, sizeof(hashkey)).Write(seed, nSeedLen).Finalize(vout.data());
-    
+
     key.Set(&vout[0], &vout[32], true);
     pubkey = key.GetPubKey();
     memcpy(vchChainCode, &vout[32], 32);
@@ -535,7 +535,7 @@ int CExtKeyPair::SetKeyCode(const unsigned char *pkey, const unsigned char *pcod
 std::string CEKAStealthKey::ToStealthAddress() const
 {
     // Return base58 encoded public stealth address
-    
+
     CStealthAddress sxAddr;
     SetSxAddr(sxAddr);
     return sxAddr.Encoded();
@@ -549,7 +549,7 @@ int CEKAStealthKey::SetSxAddr(CStealthAddress &sxAddr) const
     sxAddr.scan_pubkey = pkScan;
     sxAddr.spend_pubkey = pkSpend;
     sxAddr.scan_secret.Set(skScan.begin(), true);
-    
+
     return 0;
 };
 
@@ -599,7 +599,7 @@ int CExtKeyAccount::HaveKey(const CKeyID &id, bool fUpdate, CEKAKey &ak)
         ak = mi->second;
         return 1;
     };
-    
+
     mi = mapLookAhead.find(id);
     if (mi != mapLookAhead.end())
     {
@@ -612,11 +612,11 @@ int CExtKeyAccount::HaveKey(const CKeyID &id, bool fUpdate, CEKAKey &ak)
         };
         return 2;
     };
-    
+
     AccKeySCMap::const_iterator miSck = mapStealthChildKeys.find(id);
     if (miSck != mapStealthChildKeys.end())
         return 1;
-    
+
     return 0;
 };
 
@@ -630,36 +630,36 @@ bool CExtKeyAccount::GetKey(const CKeyID &id, CKey &keyOut) const
 bool CExtKeyAccount::GetKey(const CEKAKey &ak, CKey &keyOut) const
 {
     LOCK(cs_account);
-    
+
     if (ak.nParent >= vExtKeys.size())
         return error("%s: Account key invalid parent ext key %d, account %s.", __func__, ak.nParent, GetIDString58());
-    
+
     const CStoredExtKey *chain = vExtKeys[ak.nParent];
-    
+
     if (chain->fLocked)
         return error("%s: Chain locked, account %s.", __func__, GetIDString58());
-    
+
     if (!chain->kp.Derive(keyOut, ak.nKey))
         return false;
-    
+
     return true;
 };
 
 bool CExtKeyAccount::GetKey(const CEKASCKey &asck, CKey &keyOut) const
 {
     LOCK(cs_account);
-    
+
     AccStealthKeyMap::const_iterator miSk = mapStealthKeys.find(asck.idStealthKey);
     if (miSk == mapStealthKeys.end())
         return error("%s: CEKASCKey Stealth key not in this account!", __func__);
-    
+
     return (0 == ExpandStealthChildKey(&miSk->second, asck.sShared, keyOut));
 };
 
 int CExtKeyAccount::GetKey(const CKeyID &id, CKey &keyOut, CEKAKey &ak, CKeyID &idStealth) const
 {
     LOCK(cs_account);
-    
+
     int rv = 0;
     AccKeyMap::const_iterator mi;
     AccKeySCMap::const_iterator miSck;
@@ -680,7 +680,7 @@ int CExtKeyAccount::GetKey(const CKeyID &id, CKey &keyOut, CEKAKey &ak, CKeyID &
     {
         return 0;
     };
-    
+
     // [rm] necessary?
     if (LogAcceptCategory(BCLog::HDWALLET) && keyOut.GetPubKey().GetID() != id)
     {
@@ -707,42 +707,42 @@ bool CExtKeyAccount::GetPubKey(const CKeyID &id, CPubKey &pkOut) const
     {
         return false;
     };
-    
+
     if (LogAcceptCategory(BCLog::HDWALLET)) // [rm] necessary?
     {
         if (pkOut.GetID() != id)
             return errorN(1, "%s: Extracted public key mismatch.", __func__);
     };
-    
+
     return true;
 };
 
 bool CExtKeyAccount::GetPubKey(const CEKAKey &ak, CPubKey &pkOut) const
 {
     LOCK(cs_account);
-    
+
     if (ak.nParent >= vExtKeys.size())
         return error("%s: Account key invalid parent ext key %d, account %s.", __func__, ak.nParent, GetIDString58());
-    
+
     const CStoredExtKey *chain = GetChain(ak.nParent);
-    
+
     if (!chain)
         return error("%s: Chain unknown, account %s.", __func__, GetIDString58());
-    
+
     if (!chain->kp.Derive(pkOut, ak.nKey))
         return false;
-    
+
     return true;
 };
 
 bool CExtKeyAccount::GetPubKey(const CEKASCKey &asck, CPubKey &pkOut) const
 {
     LOCK(cs_account);
-    
+
     AccStealthKeyMap::const_iterator miSk = mapStealthKeys.find(asck.idStealthKey);
     if (miSk == mapStealthKeys.end())
         return error("%s: CEKASCKey Stealth key not in this account!", __func__);
-    
+
     return (0 == ExpandStealthChildPubKey(&miSk->second, asck.sShared, pkOut));
 };
 
@@ -753,19 +753,19 @@ bool CExtKeyAccount::SaveKey(const CKeyID &id, CEKAKey &keyIn)
     AccKeyMap::const_iterator mi = mapKeys.find(id);
     if (mi != mapKeys.end())
         return false; // already saved
-    
+
     if (mapLookAhead.erase(id) != 1)
         LogPrintf("Warning: SaveKey %s key not found in look ahead %s.\n", GetIDString58(), CBitcoinAddress(id).ToString());
-    
+
     mapKeys[id] = keyIn;
-    
-    
+
+
     CStoredExtKey *pc;
     if (!IsHardened(keyIn.nKey)
         && (pc = GetChain(keyIn.nParent)) != nullptr)
     {
         // TODO: gaps?
-        if (keyIn.nKey == pc->nGenerated) 
+        if (keyIn.nKey == pc->nGenerated)
             pc->nGenerated++;
         else
         if (keyIn.nKey > pc->nGenerated)
@@ -780,24 +780,24 @@ bool CExtKeyAccount::SaveKey(const CKeyID &id, CEKAKey &keyIn)
                     LogPrintf("%s DeriveKey failed %d.\n", __func__, i);
                     break;
                 };
-                
+
                 CEKAKey ak;
                 if (1 != HaveKey(pk.GetID(), false, ak))
                     break;
-                
+
                 pc->nGenerated = i;
             };
         };
-        
+
         if (pc->nFlags & EAF_ACTIVE
             && pc->nFlags & EAF_RECEIVE_ON)
             AddLookAhead(keyIn.nParent, 1);
     };
-    
+
     if (LogAcceptCategory(BCLog::HDWALLET))
     {
         LogPrintf("Saved key %s %d, %s.\n", GetIDString58(), keyIn.nParent, CBitcoinAddress(id).ToString());
-        
+
         // Check match
         CStoredExtKey *pa;
         if ((pa = GetChain(keyIn.nParent)) != nullptr)
@@ -808,21 +808,21 @@ bool CExtKeyAccount::SaveKey(const CKeyID &id, CEKAKey &keyIn)
                 LogPrintf("Can't check hardened key when wallet locked.\n");
                 return true;
             };
-            
+
             CPubKey pk;
             if (!GetPubKey(keyIn, pk))
                 return error("GetPubKey failed.");
-            
+
             if (pk.GetID() != id)
                 return error("Key mismatch!");
-            
+
             LogPrintf("Key match verified.\n");
         } else
         {
             return error("Unknown chain.");
         };
     };
-    
+
     return true;
 };
 
@@ -860,28 +860,28 @@ int CExtKeyAccount::AddLookBehind(uint32_t nChain, uint32_t nKeys)
     CStoredExtKey *pc = GetChain(nChain);
     if (!pc)
         return errorN(1, "%s: Unknown chain, %d.", __func__, nChain);
-    
+
     if (LogAcceptCategory(BCLog::HDWALLET))
         LogPrintf("%s: chain %s, keys %d.\n", __func__, pc->GetIDString58(), nKeys);
-    
+
     AccKeyMap::const_iterator mi;
     uint32_t nChild = pc->nGenerated;
     uint32_t nChildOut = nChild;
-    
+
     CKeyID keyId;
     CPubKey pk;
     for (uint32_t k = 0; k < nKeys; ++k)
     {
         bool fGotKey = false;
-        
+
         if (nChild == 0)
         {
             LogPrint(BCLog::HDWALLET, "%s: chain %s, at key 0.\n", __func__, pc->GetIDString58());
             break;
         }
-        
+
         nChild -=1;
-        
+
         uint32_t nMaxTries = 32; // TODO: link to lookahead size
         for (uint32_t i = 0; i < nMaxTries; ++i) // nMaxTries > lookahead pool
         {
@@ -892,7 +892,7 @@ int CExtKeyAccount::AddLookBehind(uint32_t nChain, uint32_t nKeys)
                 continue;
             };
             nChild = nChildOut-1;
-            
+
             keyId = pk.GetID();
             if ((mi = mapKeys.find(keyId)) != mapKeys.end())
             {
@@ -900,26 +900,26 @@ int CExtKeyAccount::AddLookBehind(uint32_t nChain, uint32_t nKeys)
                     LogPrintf("%s: key exists in map skipping %s.\n", __func__, CBitcoinAddress(keyId).ToString());
                 continue;
             };
-            
+
             if ((mi = mapLookAhead.find(keyId)) != mapLookAhead.end())
                 continue;
-            
+
             fGotKey = true;
             break;
         };
-        
+
         if (!fGotKey)
         {
             LogPrintf("Error: %s - DeriveKey loop failed, chain %d, child %d.\n", __func__, nChain, nChild);
             continue;
         };
-        
+
         mapLookAhead[keyId] = CEKAKey(nChain, nChildOut);
-        
+
         if (LogAcceptCategory(BCLog::HDWALLET))
             LogPrintf("%s: Added %s, look-ahead size %u.\n", __func__, CBitcoinAddress(keyId).ToString(), mapLookAhead.size());
     };
-    
+
     return 0;
 };
 
@@ -929,20 +929,20 @@ int CExtKeyAccount::AddLookAhead(uint32_t nChain, uint32_t nKeys)
     CStoredExtKey *pc = GetChain(nChain);
     if (!pc)
         return errorN(1, "%s: Unknown chain, %d.", __func__, nChain);
-    
+
     AccKeyMap::const_iterator mi;
     uint32_t nChild = std::max(pc->nGenerated, pc->nLastLookAhead);
     uint32_t nChildOut = nChild;
-    
+
     if (LogAcceptCategory(BCLog::HDWALLET))
         LogPrintf("%s: chain %s, keys %d, from %d.\n", __func__, pc->GetIDString58(), nKeys, nChildOut);
-    
+
     CKeyID keyId;
     CPubKey pk;
     for (uint32_t k = 0; k < nKeys; ++k)
     {
         bool fGotKey = false;
-        
+
         uint32_t nMaxTries = 1000; // TODO: link to lookahead size
         for (uint32_t i = 0; i < nMaxTries; ++i) // nMaxTries > lookahead pool
         {
@@ -953,7 +953,7 @@ int CExtKeyAccount::AddLookAhead(uint32_t nChain, uint32_t nKeys)
                 continue;
             };
             nChild = nChildOut+1;
-            
+
             keyId = pk.GetID();
             if ((mi = mapKeys.find(keyId)) != mapKeys.end())
             {
@@ -961,23 +961,23 @@ int CExtKeyAccount::AddLookAhead(uint32_t nChain, uint32_t nKeys)
                     LogPrintf("%s: key exists in map skipping %s.\n", __func__, CBitcoinAddress(keyId).ToString());
                 continue;
             };
-            
+
             if ((mi = mapLookAhead.find(keyId)) != mapLookAhead.end())
                 continue;
-            
+
             fGotKey = true;
             break;
         };
-        
+
         if (!fGotKey)
         {
             LogPrintf("Error: %s - DeriveKey loop failed, chain %d, child %d.\n", __func__, nChain, nChild);
             continue;
         };
-        
+
         mapLookAhead[keyId] = CEKAKey(nChain, nChildOut);
         pc->nLastLookAhead = nChildOut;
-        
+
         if (LogAcceptCategory(BCLog::HDWALLET))
             LogPrintf("%s: Added %s, look-ahead size %u.\n", __func__, CBitcoinAddress(keyId).ToString(), mapLookAhead.size());
     };
@@ -989,41 +989,41 @@ int CExtKeyAccount::AddLookAhead(uint32_t nChain, uint32_t nKeys)
 int CExtKeyAccount::ExpandStealthChildKey(const CEKAStealthKey *aks, const CKey &sShared, CKey &kOut) const
 {
     // Derive the secret key of the stealth address and then the secret key out
-    
+
     LOCK(cs_account);
-    
+
     if (!aks)
         return errorN(1, "%s: Sanity checks failed.", __func__);
-    
+
     CKey kSpend;
     if (!GetKey(aks->akSpend, kSpend))
         return errorN(1, "%s: GetKey() failed.", __func__);
-    
+
     if (StealthSharedToSecretSpend(sShared, kSpend, kOut) != 0)
         return errorN(1, "%s: StealthSharedToSecretSpend() failed.", __func__);
-    
+
     return 0;
 };
 
 int CExtKeyAccount::ExpandStealthChildPubKey(const CEKAStealthKey *aks, const CKey &sShared, CPubKey &pkOut) const
 {
     // Works with locked wallet
-    
+
     LOCK(cs_account);
-    
+
     if (!aks)
         return errorN(1, "%s: Sanity checks failed.", __func__);
-    
+
     ec_point pkExtract;
-    
+
     if (StealthSharedToPublicKey(aks->pkSpend, sShared, pkExtract) != 0)
         return errorN(1, "%s: StealthSharedToPublicKey() failed.", __func__);
-    
+
     pkOut = CPubKey(pkExtract);
-    
+
     if (!pkOut.IsValid())
         return errorN(1, "%s: Invalid public key.", __func__);
-    
+
     return 0;
 };
 
@@ -1034,14 +1034,14 @@ int CExtKeyAccount::WipeEncryption()
     {
         if (!((*it)->nFlags & EAF_IS_CRYPTED))
             continue;
-        
+
         if ((*it)->fLocked)
             return errorN(1, "Attempting to undo encryption of a locked key.");
-        
+
         (*it)->nFlags &= ~EAF_IS_CRYPTED;
         (*it)->vchCryptedSecret.clear();
     };
-    
+
     return 0;
 };
 
@@ -1065,7 +1065,7 @@ int PathToString(const std::vector<uint8_t> &vPath, std::string &sPath, char cH,
     sPath = "";
     if (vPath.size() % 4 != 0)
         return 1;
-    
+
     sPath = "m";
     for (size_t o = nStart; o < vPath.size(); o+=4)
     {
@@ -1073,7 +1073,7 @@ int PathToString(const std::vector<uint8_t> &vPath, std::string &sPath, char cH,
         memcpy(&n, &vPath[o], 4);
         AppendPathLink(sPath, n, cH);
     };
-    
+
     return 0;
 };
 
@@ -1090,17 +1090,17 @@ bool IsBIP32(const char *base58)
     std::vector<uint8_t> vchBytes;
     if (!DecodeBase58(base58, vchBytes))
         return false;
-    
+
     if (vchBytes.size() != BIP32_KEY_LEN)
         return false;
-    
+
     if (0 == memcmp(&vchBytes[0], &Params().Base58Prefix(CChainParams::EXT_SECRET_KEY)[0], 4)
         || 0 == memcmp(&vchBytes[0], &Params().Base58Prefix(CChainParams::EXT_PUBLIC_KEY)[0], 4))
         return true;
-    
+
     if (!VerifyChecksum(vchBytes))
         return false;
-    
+
     return false;
 };
 
@@ -1109,9 +1109,9 @@ int AppendChainPath(const CStoredExtKey *pc, std::vector<uint32_t> &vPath)
     mapEKValue_t::const_iterator mvi = pc->mapValue.find(EKVT_PATH);
     if (mvi == pc->mapValue.end())
         return 1;
-    
+
     assert(mvi->second.size() % 4 == 0);
-    
+
     // Path on pc is relative to master key, get path relative to account by starting at 1
     for (size_t i = 4; i < mvi->second.size(); i+=4)
     {
@@ -1119,7 +1119,7 @@ int AppendChainPath(const CStoredExtKey *pc, std::vector<uint32_t> &vPath)
         memcpy(&tmp, &mvi->second[i], 4);
         vPath.push_back(tmp);
     };
-    
+
     return 0;
 };
 
@@ -1128,9 +1128,9 @@ int AppendChainPath(const CStoredExtKey *pc, std::vector<uint8_t> &vPath)
     mapEKValue_t::const_iterator mvi = pc->mapValue.find(EKVT_PATH);
     if (mvi == pc->mapValue.end())
         return 1;
-    
+
     assert(mvi->second.size() % 4 == 0);
-    
+
     // Path on pc is relative to master key, get path relative to account by starting at 1
     for (size_t i = 4; i < mvi->second.size(); i+=4)
     {
@@ -1138,7 +1138,7 @@ int AppendChainPath(const CStoredExtKey *pc, std::vector<uint8_t> &vPath)
         memcpy(&tmp, &mvi->second[i], 4);
         PushUInt32(vPath, tmp);
     };
-    
+
     return 0;
 };
 

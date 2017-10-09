@@ -18,6 +18,8 @@
 #include "key/wordlists/spanish.h"
 #include "key/wordlists/chinese_simplified.h"
 #include "key/wordlists/chinese_traditional.h"
+#include "key/wordlists/italian.h"
+#include "key/wordlists/korean.h"
 
 
 static const unsigned char *mnLanguages[] =
@@ -29,6 +31,8 @@ static const unsigned char *mnLanguages[] =
     spanish_txt,
     chinese_simplified_txt,
     chinese_traditional_txt,
+    italian_txt,
+    korean_txt,
 };
 
 static const uint32_t mnLanguageLens[] =
@@ -40,6 +44,8 @@ static const uint32_t mnLanguageLens[] =
     spanish_txt_len,
     chinese_simplified_txt_len,
     chinese_traditional_txt_len,
+    italian_txt_len,
+    korean_txt_len,
 };
 
 const char *mnLanguagesDesc[WLL_MAX] =
@@ -51,6 +57,21 @@ const char *mnLanguagesDesc[WLL_MAX] =
     "Spanish",
     "Chinese Simplified",
     "Chinese Traditional",
+    "Italian",
+    "Korean",
+};
+
+const char *mnLanguagesTag[WLL_MAX] =
+{
+    nullptr,
+    "english",
+    "french",
+    "japanese",
+    "spanish",
+    "chinese_s",
+    "chinese_t",
+    "italian",
+    "korean",
 };
 
 static void NormaliseUnicode(std::string &str)
@@ -70,11 +91,11 @@ int GetWord(int o, const char *pwl, int max, std::string &sWord)
         if (*pt == '\n')
             o--;
         pt++;
-        
+
         if (pt >= pwl+max)
             return 1;
     };
-    
+
     while (pt < (pwl+max))
     {
         if (*pt == '\n')
@@ -82,7 +103,7 @@ int GetWord(int o, const char *pwl, int max, std::string &sWord)
         sWord += *pt;
         pt++;
     };
-    
+
     return 1;
 };
 
@@ -125,20 +146,20 @@ int MnemonicDetectLanguage(const std::string &sWordList)
     char tmp[2048];
     if (sWordList.size() >= 2048)
         return errorN(-1, "%s: Word List too long.", __func__);
-    
+
     // try to detect the language
     // try max n words
-    // allow errors, tolerate spelling mistakes, mistakes will be reported in other functions 
+    // allow errors, tolerate spelling mistakes, mistakes will be reported in other functions
     for (int l = 1; l < WLL_MAX; ++l)
     {
         strcpy(tmp, sWordList.c_str());
-        
+
         char *pwl = (char*) mnLanguages[l];
         int m = mnLanguageLens[l];
-        
+
         // The chinese dialects have many words in common, match full phrase
         int maxTries = l == WLL_CHINESE_S || l == WLL_CHINESE_T ? 24 : 8;
-        
+
         int nHit = 0;
         int nMiss = 0;
         char *p;
@@ -150,21 +171,21 @@ int MnemonicDetectLanguage(const std::string &sWordList)
                 nHit++;
             else
                 nMiss++;
-            
+
             if (!maxTries--)
                 break;
             p = strtok(NULL, " ");
         };
-        
+
         // Chinese dialects overlap too much to tolerate failures
         if ((l == WLL_CHINESE_S || l == WLL_CHINESE_T)
             && nMiss > 0)
             continue;
-        
+
         if (nHit > nMiss && nMiss < 2) // tolerate max 2 failures
             return l;
     };
-    
+
     return 0;
 };
 
@@ -257,42 +278,42 @@ int MnemonicEncode(int nLanguage, const std::vector<uint8_t> &vEntropy, std::str
 
     if (nLanguage == WLL_JAPANESE)
         part::ReplaceStrInPlace(sWordList, " ", "\u3000");
-    
+
     return 0;
 };
 
 int MnemonicDecode(int nLanguage, const std::string &sWordListIn, std::vector<uint8_t> &vEntropy, std::string &sError, bool fIgnoreChecksum)
 {
     LogPrint(BCLog::HDWALLET, "%s: Language %d.\n", __func__, nLanguage);
-    
+
     std::string sWordList = sWordListIn;
     NormaliseUnicode(sWordList);
-    
+
     if (nLanguage == -1)
         nLanguage = MnemonicDetectLanguage(sWordList);
-    
+
     if (nLanguage < 1 || nLanguage > WLL_MAX)
     {
         sError = "Unknown language.";
         return errorN(1, "%s: %s", __func__, sError.c_str());
     };
-    
+
     LogPrint(BCLog::HDWALLET, "%s: Detected language %d.\n", __func__, nLanguage);
-    
+
     char tmp[2048];
     if (sWordList.size() >= 2048)
     {
         sError = "Word List too long.";
         return errorN(2, "%s: %s", __func__, sError.c_str());
     };
-    
+
     strcpy(tmp, sWordList.c_str());
-    
+
     char *pwl = (char*) mnLanguages[nLanguage];
     int m = mnLanguageLens[nLanguage];
-    
+
     std::vector<int> vWordInts;
-    
+
     char *p;
     p = strtok(tmp, " ");
     while (p != NULL)
@@ -303,37 +324,37 @@ int MnemonicDecode(int nLanguage, const std::string &sWordListIn, std::vector<ui
             sError = strprintf("Unknown word: %s", p);
             return errorN(3, "%s: %s", __func__, sError.c_str());
         };
-        
+
         vWordInts.push_back(ofs);
-        
+
         p = strtok(NULL, " ");
     };
-    
+
     if (!fIgnoreChecksum
         && vWordInts.size() % 3 != 0)
     {
         sError = "No. of words must be divisible by 3.";
         return errorN(4, "%s: %s", __func__, sError.c_str());
     };
-    
+
     int nBits = vWordInts.size() * 11;
     int nBytes = nBits/8 + (nBits % 8 == 0 ? 0 : 1);
     vEntropy.resize(nBytes);
-    
+
     memset(&vEntropy[0], 0, nBytes);
-    
+
     int i = 0;
     size_t wl = vWordInts.size();
     size_t el = vEntropy.size();
     for (size_t k = 0; k < wl; ++k)
     {
         int o = vWordInts[k];
-        
+
         int s = i / 8;
         int r = i % 8;
-        
+
         vEntropy[s] |= (o >> (r+3)) & 0x7FF;
-        
+
         if (s < (int)el-1)
         {
             if (r > 5)
@@ -350,43 +371,43 @@ int MnemonicDecode(int nLanguage, const std::string &sWordListIn, std::vector<ui
         };
         i += 11;
     };
-    
+
     if (fIgnoreChecksum)
         return 0;
-    
+
     // Checksum
     int nLenChecksum = nBits / 32;
     int nLenEntropy = nBits - nLenChecksum;
-    
+
     int nBytesEntropy = nLenEntropy / 8;
     int nBytesChecksum = nLenChecksum / 8 + (nLenChecksum % 8 == 0 ? 0 : 1);
-    
+
     std::vector<uint8_t> vCS;
-    
+
     vCS.resize(nBytesChecksum);
     memcpy(&vCS[0], &vEntropy[nBytesEntropy], nBytesChecksum);
-    
+
     vEntropy.resize(nBytesEntropy);
-    
+
     uint8_t hash[32];
     CSHA256().Write(&vEntropy[0], vEntropy.size()).Finalize((uint8_t*)hash);
-    
+
     std::vector<uint8_t> vCSTest;
-    
+
     vCSTest.resize(nBytesChecksum);
     memcpy(&vCSTest[0], &hash, nBytesChecksum);
-    
+
     int r = nLenChecksum % 8;
-    
+
     if (r > 0)
         vCSTest[nBytesChecksum-1] &= (((1<<r)-1) << (8-r));
-    
+
     if (vCSTest != vCS)
     {
         sError = "Checksum mismatch.";
         return errorN(5, "%s: %s", __func__, sError.c_str());
     };
-    
+
     return 0;
 };
 
@@ -396,7 +417,7 @@ static int mnemonicKdf(const uint8_t *password, size_t lenPassword,
     /*
     https://tools.ietf.org/html/rfc2898
     5.2 PBKDF2
-    
+
     F (P, S, c, i) = U_1 \xor U_2 \xor ... \xor U_c
     where
         U_1 = PRF (P, S || INT (i)) ,
@@ -436,24 +457,24 @@ static int mnemonicKdf(const uint8_t *password, size_t lenPassword,
 int MnemonicToSeed(const std::string &sMnemonic, const std::string &sPasswordIn, std::vector<uint8_t> &vSeed)
 {
     LogPrint(BCLog::HDWALLET, "%s\n", __func__);
-    
+
     vSeed.resize(64);
-    
+
     std::string sWordList = sMnemonic;
     NormaliseUnicode(sWordList);
-    
+
     std::string sPassword = sPasswordIn;
     NormaliseUnicode(sPassword);
-    
-    
+
+
     int nIterations = 2048;
-    
+
     std::string sSalt = std::string("mnemonic") + sPassword;
-    
+
     if (0 != mnemonicKdf((uint8_t*)sWordList.data(), sWordList.size(),
         (uint8_t*)sSalt.data(), sSalt.size(), nIterations, &vSeed[0]))
         return errorN(1, "%s: mnemonicKdf failed.", __func__);
-    
+
     return 0;
 };
 
@@ -463,40 +484,40 @@ int MnemonicAddChecksum(int nLanguageIn, const std::string &sWordListIn, std::st
     int nLanguage = nLanguageIn;
     if (nLanguage == -1)
         nLanguage = MnemonicDetectLanguage(sWordListIn); // needed here for MnemonicEncode, MnemonicDecode will complain if in error
-    
+
     int rv;
     std::vector<uint8_t> vEntropy;
     if (0 != (rv = MnemonicDecode(nLanguage, sWordListIn, vEntropy, sError, true)))
         return rv;
-    
+
     if (0 != (rv = MnemonicEncode(nLanguage, vEntropy, sWordListOut, sError)))
         return rv;
-    
+
     if (0 != (rv = MnemonicDecode(nLanguage, sWordListOut, vEntropy, sError)))
         return rv;
-    
+
     return 0;
 };
 
 int MnemonicGetWord(int nLanguage, int nWord, std::string &sWord, std::string &sError)
 {
     LogPrint(BCLog::HDWALLET, "%s: Language %d.\n", __func__, nLanguage);
-    
+
     if (nLanguage < 1 || nLanguage > WLL_MAX)
     {
         sError = "Unknown language.";
         return errorN(1, "%s: %s", __func__, sError.c_str());
     };
-    
-    
+
+
     char *pwl = (char*) mnLanguages[nLanguage];
     int m = mnLanguageLens[nLanguage];
-    
+
     if (0 != GetWord(nWord, pwl, m, sWord))
     {
         sError = strprintf("Word extract failed %d, language %d.", nWord, nLanguage);
         return errorN(3, "%s: %s", __func__, sError.c_str());
     };
-    
+
     return 0;
 };

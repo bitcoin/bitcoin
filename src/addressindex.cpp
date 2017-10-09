@@ -22,7 +22,7 @@ bool ExtractIndexInfo(const CScript *pScript, int &scriptType, std::vector<uint8
         hashBytes.assign(pScript->begin()+3, pScript->begin()+23);
         scriptType = 1;
     };
-    
+
     return true;
 };
 
@@ -33,19 +33,19 @@ bool ExtractIndexInfo(const CTxOutBase *out, int &scriptType, std::vector<uint8_
         LogPrintf("ERROR: %s - expected script pointer.\n", __func__);
         return false;
     };
-    
+
     nValue = out->IsType(OUTPUT_STANDARD) ? out->GetValue() : -1;
-    
+
     CScript tmpScript;
     if (HasIsCoinstakeOp(*pScript)
         && GetNonCoinstakeScriptPath(*pScript, tmpScript))
         pScript = &tmpScript;
-    
+
     ExtractIndexInfo(pScript, scriptType, hashBytes);
-    
+
     // Reset if HasIsCoinstakeOp
     pScript = out->GetPScriptPubKey();
-    
+
     return true;
 };
 

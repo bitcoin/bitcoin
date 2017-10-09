@@ -52,7 +52,7 @@ std::string StripQuotes(std::string s)
             s = s.substr(1, len - 1);
         return s;
     };
-    
+
     if (s[0] == '"')
     {
         if (s[len-1] == '"')

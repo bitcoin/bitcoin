@@ -28,7 +28,7 @@ public:
     uint32_t nTime;
     uint32_t nBits;
     uint32_t nNonce;
-    
+
 
     CBlockHeader()
     {
@@ -42,7 +42,7 @@ public:
         READWRITE(nVersion);
         READWRITE(hashPrevBlock);
         READWRITE(hashMerkleRoot);
-        
+
         if (IsParticlVersion())
         {
             READWRITE(hashWitnessMerkleRoot);
@@ -69,7 +69,7 @@ public:
     }
 
     uint256 GetHash() const;
-    
+
     bool IsParticlVersion()
     {
         // NOTE: Be very careful matching the version here: qa tests can fail silently
@@ -104,7 +104,7 @@ class CBlock : public CBlockHeader
 public:
     // network and disk
     std::vector<CTransactionRef> vtx;
-    
+
     // pos block signature - signed by one of the coin stake txout[N]'s owner
     std::vector<uint8_t> vchBlockSig;
 
@@ -121,12 +121,12 @@ public:
         SetNull();
         *((CBlockHeader*)this) = header;
     }
-    
+
     bool IsProofOfStake() const
     {
         return (vtx.size() > 0 && vtx[0]->IsCoinStake());
     }
-    
+
 
     bool IsProofOfWork() const
     {
@@ -139,7 +139,7 @@ public:
     inline void SerializationOp(Stream& s, Operation ser_action) {
         READWRITE(*(CBlockHeader*)this);
         READWRITE(vtx);
-        
+
         if (nVersion == PARTICL_BLOCK_VERSION)
             READWRITE(vchBlockSig);
     }

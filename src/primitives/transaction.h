@@ -154,7 +154,7 @@ public:
         READWRITE(prevout);
         READWRITE(scriptSig);
         READWRITE(nSequence);
-        
+
         if (IsAnonInput())
         {
             READWRITE(scriptData.stack);
@@ -177,14 +177,14 @@ public:
     {
         return prevout.n == ANON_MARKER;
     };
-    
+
     bool SetAnonInfo(uint32_t nInputs, uint32_t nRingSize)
     {
         memcpy(prevout.hash.begin(), &nInputs, 4);
         memcpy(prevout.hash.begin()+4, &nRingSize, 4);
         return true;
     };
-    
+
     bool GetAnonInfo(uint32_t &nInputs, uint32_t &nRingSize) const
     {
         memcpy(&nInputs, prevout.hash.begin(), 4);
@@ -205,7 +205,7 @@ class CTxOutBase
 public:
     CTxOutBase(uint8_t v) : nVersion(v) {};
     uint8_t nVersion;
-    
+
     template<typename Stream>
     void Serialize(Stream &s) const
     {
@@ -227,7 +227,7 @@ public:
                 assert(false);
         };
     };
-    
+
     template<typename Stream>
     void Unserialize(Stream &s)
     {
@@ -249,60 +249,60 @@ public:
                 assert(false);
         };
     };
-    
+
     uint8_t GetType() const
     {
         return nVersion;
     };
-    
+
     bool IsType(uint8_t nType) const
     {
         return nVersion == nType;
     };
-    
+
     bool IsStandardOutput() const
     {
         return nVersion == OUTPUT_STANDARD;
     };
-    
+
     const CTxOutStandard *GetStandardOutput() const
     {
         assert(nVersion == OUTPUT_STANDARD);
         return (CTxOutStandard*)this;
     };
-    
+
     virtual bool IsEmpty() const { return false;}
-    
+
     void SetValue(CAmount value);
-    
+
     CAmount GetValue() const;
-    
+
     virtual bool PutValue(std::vector<uint8_t> &vchAmount) const
     {
         return false;
     };
-    
+
     virtual bool GetScriptPubKey(CScript &scriptPubKey_) const
     {
         return false;
     };
-    
+
     virtual const CScript *GetPScriptPubKey() const
     {
         return nullptr;
     };
-    
+
     virtual secp256k1_pedersen_commitment *GetPCommitment()
     {
         return nullptr;
     };
-    
+
     virtual std::vector<uint8_t> *GetPRangeproof()
     {
         return nullptr;
     };
-    
-    
+
+
     std::string ToString() const;
 };
 
@@ -319,43 +319,43 @@ class CTxOutStandard : public CTxOutBase
 public:
     CTxOutStandard() : CTxOutBase(OUTPUT_STANDARD) {};
     CTxOutStandard(const CAmount& nValueIn, CScript scriptPubKeyIn);
-    
+
     CAmount nValue;
     CScript scriptPubKey;
-    
+
     template<typename Stream>
     void Serialize(Stream &s) const
     {
         s << nValue;
         s << *(CScriptBase*)(&scriptPubKey);
     };
-    
+
     template<typename Stream>
     void Unserialize(Stream &s)
     {
         s >> nValue;
         s >> *(CScriptBase*)(&scriptPubKey);
     };
-    
-    
+
+
     virtual bool IsEmpty() const
     {
         return (nValue == 0 && scriptPubKey.empty());
     }
-    
+
     bool PutValue(std::vector<uint8_t> &vchAmount) const
     {
         vchAmount.resize(8);
         memcpy(&vchAmount[0], &nValue, 8);
         return true;
     };
-    
+
     bool GetScriptPubKey(CScript &scriptPubKey_) const
     {
         scriptPubKey_ = scriptPubKey;
         return true;
     };
-    
+
     virtual const CScript *GetPScriptPubKey() const
     {
         return &scriptPubKey;
@@ -369,9 +369,9 @@ public:
     secp256k1_pedersen_commitment commitment;
     std::vector<uint8_t> vData; // first 33 bytes is always ephemeral pubkey, can contain token for stealth prefix matching
     CScript scriptPubKey;
-    
+
     std::vector<uint8_t> vRangeproof;
-    
+
     template<typename Stream>
     void Serialize(Stream &s) const
     {
@@ -379,7 +379,7 @@ public:
         s.write((char*)&commitment.data[0], 33);
         s << vData;
         s << *(CScriptBase*)(&scriptPubKey);
-        
+
         if (fAllowWitness)
         {
             s << vRangeproof;
@@ -388,40 +388,40 @@ public:
             WriteCompactSize(s, 0);
         };
     };
-    
+
     template<typename Stream>
     void Unserialize(Stream &s)
     {
         s.read((char*)&commitment.data[0], 33);
         s >> vData;
         s >> *(CScriptBase*)(&scriptPubKey);
-        
+
         s >> vRangeproof;
     };
-    
+
     bool PutValue(std::vector<uint8_t> &vchAmount) const
     {
         vchAmount.resize(33);
         memcpy(&vchAmount[0], commitment.data, 33);
         return true;
     };
-    
+
     bool GetScriptPubKey(CScript &scriptPubKey_) const
     {
         scriptPubKey_ = scriptPubKey;
         return true;
     };
-    
+
     virtual const CScript *GetPScriptPubKey() const
     {
         return &scriptPubKey;
     };
-    
+
     secp256k1_pedersen_commitment *GetPCommitment()
     {
         return &commitment;
     };
-    
+
     std::vector<uint8_t> *GetPRangeproof()
     {
         return &vRangeproof;
@@ -436,7 +436,7 @@ public:
     std::vector<uint8_t> vData; // first 33 bytes is always ephemeral pubkey, can contain token for stealth prefix matching
     secp256k1_pedersen_commitment commitment;
     std::vector<uint8_t> vRangeproof;
-    
+
     template<typename Stream>
     void Serialize(Stream &s) const
     {
@@ -444,7 +444,7 @@ public:
         s.write((char*)pk.begin(), 33);
         s.write((char*)&commitment.data[0], 33);
         s << vData;
-        
+
         if (fAllowWitness)
         {
             s << vRangeproof;
@@ -453,7 +453,7 @@ public:
             WriteCompactSize(s, 0);
         };
     };
-    
+
     template<typename Stream>
     void Unserialize(Stream &s)
     {
@@ -462,19 +462,19 @@ public:
         s >> vData;
         s >> vRangeproof;
     };
-    
+
     bool PutValue(std::vector<uint8_t> &vchAmount) const
     {
         vchAmount.resize(33);
         memcpy(&vchAmount[0], commitment.data, 33);
         return true;
     };
-    
+
     secp256k1_pedersen_commitment *GetPCommitment()
     {
         return &commitment;
     };
-    
+
     std::vector<uint8_t> *GetPRangeproof()
     {
         return &vRangeproof;
@@ -486,15 +486,15 @@ class CTxOutData : public CTxOutBase
 public:
     CTxOutData() : CTxOutBase(OUTPUT_DATA) {};
     CTxOutData(const std::vector<uint8_t> &vData_) : CTxOutBase(OUTPUT_DATA), vData(vData_) {};
-    
+
     std::vector<uint8_t> vData;
-    
+
     template<typename Stream>
     void Serialize(Stream &s) const
     {
         s << vData;
     };
-    
+
     template<typename Stream>
     void Unserialize(Stream &s)
     {
@@ -583,25 +583,25 @@ inline void UnserializeTransaction(TxType& tx, Stream& s) {
     uint8_t bv;
     tx.nVersion = 0;
     s >> bv;
-    
+
     if (bv >= PARTICL_TXN_VERSION)
     {
         tx.nVersion = bv;
-        
+
         s >> bv;
         tx.nVersion |= bv<<8; // TransactionTypes
-        
+
         s >> tx.nLockTime;
-        
+
         tx.vin.clear();
         s >> tx.vin;
-        
+
         size_t nOutputs = ReadCompactSize(s);
         tx.vpout.resize(nOutputs);
         for (size_t k = 0; k < tx.vpout.size(); ++k)
         {
             s >> bv;
-            
+
             switch (bv)
             {
                 case OUTPUT_STANDARD:
@@ -619,11 +619,11 @@ inline void UnserializeTransaction(TxType& tx, Stream& s) {
                 default:
                     return;
             };
-            
+
             tx.vpout[k]->nVersion = bv;
             s >> *tx.vpout[k];
         }
-        
+
         if (fAllowWitness)
         {
             for (auto &txin : tx.vin)
@@ -631,7 +631,7 @@ inline void UnserializeTransaction(TxType& tx, Stream& s) {
         };
         return;
     };
-    
+
     tx.nVersion |= bv;
     s >> bv;
     tx.nVersion |= bv<<8;
@@ -639,8 +639,8 @@ inline void UnserializeTransaction(TxType& tx, Stream& s) {
     tx.nVersion |= bv<<16;
     s >> bv;
     tx.nVersion |= bv<<24;
-    
-    
+
+
     unsigned char flags = 0;
     tx.vin.clear();
     tx.vout.clear();
@@ -674,25 +674,25 @@ inline void UnserializeTransaction(TxType& tx, Stream& s) {
 template<typename Stream, typename TxType>
 inline void SerializeTransaction(const TxType& tx, Stream& s) {
     const bool fAllowWitness = !(s.GetVersion() & SERIALIZE_TRANSACTION_NO_WITNESS);
-    
+
     if (IsParticlTxVersion(tx.nVersion))
     {
         uint8_t bv = tx.nVersion & 0xFF;
         s << bv;
-        
+
         bv = (tx.nVersion>>8) & 0xFF;
         s << bv; // TransactionType
-        
+
         s << tx.nLockTime;
         s << tx.vin;
-        
+
         WriteCompactSize(s, tx.vpout.size());
         for (size_t k = 0; k < tx.vpout.size(); ++k)
         {
             s << tx.vpout[k]->nVersion;
             s << *tx.vpout[k];
         };
-        
+
         if (fAllowWitness)
         {
             for (auto &txin : tx.vin)
@@ -700,9 +700,9 @@ inline void SerializeTransaction(const TxType& tx, Stream& s) {
         };
         return;
     };
-    
+
     s << tx.nVersion;
-    
+
     unsigned char flags = 0;
     // Consistency check
     if (fAllowWitness) {
@@ -742,7 +742,7 @@ public:
     // bumping the default CURRENT_VERSION at which point both CURRENT_VERSION and
     // MAX_STANDARD_VERSION will be equal.
     static const int32_t MAX_STANDARD_VERSION=2;
-    
+
     //static const int32_t CURRENT_PARTICL_VERSION=2;
 
     // The local variables are made const to prevent unintended modification
@@ -784,15 +784,15 @@ public:
     bool IsNull() const {
         return vin.empty() && vout.empty() && vpout.empty();
     }
-    
+
     bool IsParticlVersion() const {
         return IsParticlTxVersion(nVersion);
     }
-    
+
     int GetType() const {
         return (nVersion >> 8) & 0xFF;
     }
-    
+
     const uint256& GetHash() const {
         return hash;
     }
@@ -802,10 +802,10 @@ public:
 
     // Return sum of txouts.
     CAmount GetValueOut() const;
-    
+
     // Return sum of standard txouts and counts of output types
     CAmount GetPlainValueOut(size_t &nStandard, size_t &nCT, size_t &nRingCT) const;
-    
+
     // GetValueIn() is a method on CCoinsViewCache, because
     // inputs must be known to compute value in.
 
@@ -821,7 +821,7 @@ public:
         if (IsParticlVersion())
             return (GetType() == TXN_COINBASE
                 && vin.size() == 1 && vin[0].prevout.IsNull()); // TODO [rm]?
-        
+
         return (vin.size() == 1 && vin[0].prevout.IsNull());
     }
 
@@ -837,13 +837,13 @@ public:
     {
         if (vpout.size() < 2 || vpout[0]->nVersion != OUTPUT_DATA)
             return false;
-        
+
         std::vector<uint8_t> &vData = ((CTxOutData*)vpout[0].get())->vData;
         if (vData.size() < 4)
             return false;
-        
+
         memcpy(&height, &vData[0], 4);
-        
+
         return true;
     }
 
@@ -851,11 +851,11 @@ public:
     {
         if (vpout.size() < 2 || vpout[0]->nVersion != OUTPUT_DATA)
             return false;
-        
+
         std::vector<uint8_t> &vData = ((CTxOutData*)vpout[0].get())->vData;
         if (vData.size() < 2 || vData[0] != DO_FEE)
             return false;
-        
+
         size_t nb;
         return (0 == GetVarInt(vData, 1, (uint64_t&)nFee, nb));
     }
@@ -864,11 +864,11 @@ public:
     {
         if (vpout.size() < 1 || vpout[0]->nVersion != OUTPUT_DATA)
             return false;
-        
+
         std::vector<uint8_t> &vData = ((CTxOutData*)vpout[0].get())->vData;
         if (vData.size() < 5)
             return false;
-        
+
         size_t ofs = 4; // first 4 bytes will be height
         while (ofs < vData.size())
         {
@@ -885,7 +885,7 @@ public:
             };
             break;
         };
-        
+
         return false;
     }
 
@@ -938,11 +938,11 @@ struct CMutableTransaction
     CMutableTransaction(deserialize_type, Stream& s) {
         Unserialize(s);
     }
-    
+
     void SetType(int type) {
         nVersion |= (type & 0xFF) << 8;
     }
-    
+
     bool IsParticlVersion() const {
         return IsParticlTxVersion(nVersion);
     }

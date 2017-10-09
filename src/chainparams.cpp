@@ -78,7 +78,7 @@ bool CChainParams::IsBech32Prefix(const std::vector<unsigned char> &vchPrefixIn)
         if (vchPrefixIn == hrp)
             return true;
     };
-    
+
     return false;
 };
 
@@ -93,7 +93,7 @@ bool CChainParams::IsBech32Prefix(const std::vector<unsigned char> &vchPrefixIn,
             return true;
         };
     };
-    
+
     return false;
 };
 
@@ -103,7 +103,7 @@ bool CChainParams::IsBech32Prefix(const char *ps, size_t slen, CChainParams::Bas
     {
         auto &hrp = bech32Prefixes[k];
         size_t hrplen = hrp.size();
-        if (hrplen > 0 
+        if (hrplen > 0
             && slen > hrplen
             && strncmp(ps, (const char*)&hrp[0], hrplen) == 0)
         {
@@ -111,7 +111,7 @@ bool CChainParams::IsBech32Prefix(const char *ps, size_t slen, CChainParams::Bas
             return true;
         };
     };
-    
+
     return false;
 };
 
@@ -165,7 +165,7 @@ const std::pair<const char*, CAmount> regTestOutputs[] = {
     std::make_pair("27974d10ff5ba65052be7461d89ef2185acbe411", 10000 * COIN),
     std::make_pair("89ea3129b8dbf1238b20a50211d50d462a988f61", 10000 * COIN),
     std::make_pair("3baab5b42a409b7c6848a95dfd06ff792511d561", 10000 * COIN),
-    
+
     std::make_pair("649b801848cc0c32993fb39927654969a5af27b0", 5000 * COIN),
     std::make_pair("d669de30fa30c3e64a0303cb13df12391a2f7256", 5000 * COIN),
     std::make_pair("f0c0e3ebe4a1334ed6a5e9c1e069ef425c529934", 5000 * COIN),
@@ -244,14 +244,14 @@ const size_t nGenesisOutputsTestnet = sizeof(genesisOutputsTestnet) / sizeof(gen
 static CBlock CreateGenesisBlockRegTest(uint32_t nTime, uint32_t nNonce, uint32_t nBits)
 {
     const char *pszTimestamp = "The Times 03/Jan/2009 Chancellor on brink of second bailout for banks";
-    
+
     CMutableTransaction txNew;
     txNew.nVersion = PARTICL_TXN_VERSION;
     txNew.SetType(TXN_COINBASE);
     txNew.vin.resize(1);
     uint32_t nHeight = 0;  // bip34
     txNew.vin[0].scriptSig = CScript() << 486604799 << CScriptNum(4) << std::vector<unsigned char>((const unsigned char*)pszTimestamp, (const unsigned char*)pszTimestamp + strlen(pszTimestamp)) << OP_RETURN << nHeight;
-    
+
     txNew.vpout.resize(nGenesisOutputsRegtest);
     for (size_t k = 0; k < nGenesisOutputsRegtest; ++k)
     {
@@ -260,32 +260,32 @@ static CBlock CreateGenesisBlockRegTest(uint32_t nTime, uint32_t nNonce, uint32_
         out->scriptPubKey = CScript() << OP_DUP << OP_HASH160 << ParseHex(regTestOutputs[k].first) << OP_EQUALVERIFY << OP_CHECKSIG;
         txNew.vpout[k] = out;
     };
-    
+
     CBlock genesis;
     genesis.nTime    = nTime;
     genesis.nBits    = nBits;
     genesis.nNonce   = nNonce;
     genesis.nVersion = PARTICL_BLOCK_VERSION;
     genesis.vtx.push_back(MakeTransactionRef(std::move(txNew)));
-    
+
     genesis.hashPrevBlock.SetNull();
     genesis.hashMerkleRoot = BlockMerkleRoot(genesis);
     genesis.hashWitnessMerkleRoot = BlockWitnessMerkleRoot(genesis);
-    
+
     return genesis;
 }
 
 static CBlock CreateGenesisBlockTestNet(uint32_t nTime, uint32_t nNonce, uint32_t nBits)
 {
     const char *pszTimestamp = "The Times 03/Jan/2009 Chancellor on brink of second bailout for banks";
-    
+
     CMutableTransaction txNew;
     txNew.nVersion = PARTICL_TXN_VERSION;
     txNew.SetType(TXN_COINBASE);
     txNew.vin.resize(1);
     uint32_t nHeight = 0;  // bip34
     txNew.vin[0].scriptSig = CScript() << 486604799 << CScriptNum(4) << std::vector<unsigned char>((const unsigned char*)pszTimestamp, (const unsigned char*)pszTimestamp + strlen(pszTimestamp)) << OP_RETURN << nHeight;
-    
+
     txNew.vpout.resize(nGenesisOutputsTestnet);
     for (size_t k = 0; k < nGenesisOutputsTestnet; ++k)
     {
@@ -294,63 +294,63 @@ static CBlock CreateGenesisBlockTestNet(uint32_t nTime, uint32_t nNonce, uint32_
         out->scriptPubKey = CScript() << OP_DUP << OP_HASH160 << ParseHex(genesisOutputsTestnet[k].first) << OP_EQUALVERIFY << OP_CHECKSIG;
         txNew.vpout[k] = out;
     };
-    
-    
-    
-    
+
+
+
+
     // Foundation Fund Raiser Funds
     // rVDQRVBKnQEfNmykMSY9DHgqv8s7XZSf5R fc118af69f63d426f61c6a4bf38b56bcdaf8d069
     OUTPUT_PTR<CTxOutStandard> out = MAKE_OUTPUT<CTxOutStandard>();
     out->nValue = 397364 * COIN;
     out->scriptPubKey = CScript() << OP_HASH160 << ParseHex("fc118af69f63d426f61c6a4bf38b56bcdaf8d069") << OP_EQUAL;
     txNew.vpout.push_back(out);
-    
+
     // rVDQRVBKnQEfNmykMSY9DHgqv8s7XZSf5R fc118af69f63d426f61c6a4bf38b56bcdaf8d069
     out = MAKE_OUTPUT<CTxOutStandard>();
     out->nValue = 296138 * COIN;
     out->scriptPubKey = CScript() << OP_HASH160 << ParseHex("89ca93e03119d53fd9ad1e65ce22b6f8791f8a49") << OP_EQUAL;
     txNew.vpout.push_back(out);
-    
+
     // Community Initative
     // rAybJ7dx4t6heHy99WqGcXkoT4Bh3V9qZ8 340288104577fcc3a6a84b98f7eac1a54e5287ee
     out = MAKE_OUTPUT<CTxOutStandard>();
     out->nValue = 156675 * COIN;
     out->scriptPubKey = CScript() << OP_HASH160 << ParseHex("89ca93e03119d53fd9ad1e65ce22b6f8791f8a49") << OP_EQUAL;
     txNew.vpout.push_back(out);
-    
+
     // Contributors Left Over Funds
     // rAvmLShYFZ78aAHhFfUFsrHMoBuPPyckm5 3379aa2a4379ae6c51c7777d72e8e0ffff71881b
     out = MAKE_OUTPUT<CTxOutStandard>();
     out->nValue = 216346 * COIN;
     out->scriptPubKey = CScript() << OP_HASH160 << ParseHex("89ca93e03119d53fd9ad1e65ce22b6f8791f8a49") << OP_EQUAL;
     txNew.vpout.push_back(out);
-    
+
     // Reserved Particl for primary round
     // rLWLm1Hp7im3mq44Y1DgyirYgwvrmRASib 9c8c6c8c698f074180ecfdb38e8265c11f2a62cf
     out = MAKE_OUTPUT<CTxOutStandard>();
     out->nValue = 996000 * COIN;
     out->scriptPubKey = CScript() << 1512000000 << OP_CHECKLOCKTIMEVERIFY << OP_DROP << OP_HASH160<< ParseHex("9c8c6c8c698f074180ecfdb38e8265c11f2a62cf") << OP_EQUAL; // 2017-11-30
     txNew.vpout.push_back(out);
-    
-    
+
+
     CBlock genesis;
     genesis.nTime    = nTime;
     genesis.nBits    = nBits;
     genesis.nNonce   = nNonce;
     genesis.nVersion = PARTICL_BLOCK_VERSION;
     genesis.vtx.push_back(MakeTransactionRef(std::move(txNew)));
-    
+
     genesis.hashPrevBlock.SetNull();
     genesis.hashMerkleRoot = BlockMerkleRoot(genesis);
     genesis.hashWitnessMerkleRoot = BlockWitnessMerkleRoot(genesis);
-    
+
     return genesis;
 }
 
 static CBlock CreateGenesisBlockMainNet(uint32_t nTime, uint32_t nNonce, uint32_t nBits)
 {
     const char *pszTimestamp = "BTC 000000000000000000c679bc2209676d05129834627c7b1c02d1018b224c6f37";
-    
+
     CMutableTransaction txNew;
     txNew.nVersion = PARTICL_TXN_VERSION;
     txNew.SetType(TXN_COINBASE);
@@ -358,7 +358,7 @@ static CBlock CreateGenesisBlockMainNet(uint32_t nTime, uint32_t nNonce, uint32_
     txNew.vin.resize(1);
     uint32_t nHeight = 0;  // bip34
     txNew.vin[0].scriptSig = CScript() << 486604799 << CScriptNum(4) << std::vector<unsigned char>((const unsigned char*)pszTimestamp, (const unsigned char*)pszTimestamp + strlen(pszTimestamp)) << OP_RETURN << nHeight;
-    
+
     txNew.vpout.resize(nGenesisOutputs);
     for (size_t k = 0; k < nGenesisOutputs; ++k)
     {
@@ -367,52 +367,52 @@ static CBlock CreateGenesisBlockMainNet(uint32_t nTime, uint32_t nNonce, uint32_
         out->scriptPubKey = CScript() << OP_DUP << OP_HASH160 << ParseHex(genesisOutputs[k].first) << OP_EQUALVERIFY << OP_CHECKSIG;
         txNew.vpout[k] = out;
     };
-    
+
     // Foundation Fund Raiser Funds
     // RHFKJkrB4H38APUDVckr7TDwrK11N7V7mx
     OUTPUT_PTR<CTxOutStandard> out = MAKE_OUTPUT<CTxOutStandard>();
     out->nValue = 397364 * COIN;
     out->scriptPubKey = CScript() << OP_HASH160 << ParseHex("5766354dcb13caff682ed9451b9fe5bbb786996c") << OP_EQUAL;
     txNew.vpout.push_back(out);
-    
+
     out = MAKE_OUTPUT<CTxOutStandard>();
     out->nValue = 296138 * COIN;
     out->scriptPubKey = CScript() << OP_HASH160 << ParseHex("5766354dcb13caff682ed9451b9fe5bbb786996c") << OP_EQUAL;
     txNew.vpout.push_back(out);
-    
+
     // Community Initative
     // RKKgSiQcMjbC8TABRoyyny1gTU4fAEiQz9
     out = MAKE_OUTPUT<CTxOutStandard>();
     out->nValue = 156675 * COIN;
     out->scriptPubKey = CScript() << OP_HASH160 << ParseHex("6e29c4a11fd54916d024af16ca913cdf8f89cb31") << OP_EQUAL;
     txNew.vpout.push_back(out);
-    
+
     // Contributors Left Over Funds
     // RKiaVeyLUp7EmwHtCP92j8Vc1AodhpWi2U
     out = MAKE_OUTPUT<CTxOutStandard>();
     out->nValue = 216346 * COIN;
     out->scriptPubKey = CScript() << OP_HASH160 << ParseHex("727e5e75929bbf26912dd7833971d77e7450a33e") << OP_EQUAL;
     txNew.vpout.push_back(out);
-    
+
     // Reserved Particl for primary round
     // RNnoeeqBTkpPQH8d29Gf45dszVj9RtbmCu
     out = MAKE_OUTPUT<CTxOutStandard>();
     out->nValue = 996000 * COIN;
     out->scriptPubKey = CScript() << 1512000000 << OP_CHECKLOCKTIMEVERIFY << OP_DROP << OP_HASH160<< ParseHex("9433643b4fd5de3ebd7fdd68675f978f34585af1") << OP_EQUAL; // 2017-11-30
     txNew.vpout.push_back(out);
-    
-    
+
+
     CBlock genesis;
     genesis.nTime    = nTime;
     genesis.nBits    = nBits;
     genesis.nNonce   = nNonce;
     genesis.nVersion = PARTICL_BLOCK_VERSION;
     genesis.vtx.push_back(MakeTransactionRef(std::move(txNew)));
-    
+
     genesis.hashPrevBlock.SetNull();
     genesis.hashMerkleRoot = BlockMerkleRoot(genesis);
     genesis.hashWitnessMerkleRoot = BlockWitnessMerkleRoot(genesis);
-    
+
     return genesis;
 }
 
@@ -439,17 +439,17 @@ class CMainParams : public CChainParams {
 public:
     CMainParams() {
         strNetworkID = "main";
-        
+
         consensus.nSubsidyHalvingInterval = 210000;
         consensus.BIP34Height = 0;
         consensus.BIP65Height = 0;
         consensus.BIP66Height = 0;
         consensus.OpIsCoinstakeTime = 1510272000; // 2017-11-10 00:00:00 UTC
         consensus.fAllowOpIsCoinstakeWithP2PKH = false;
-        
-        
+
+
         consensus.powLimit = uint256S("000000000000bfffffffffffffffffffffffffffffffffffffffffffffffffff");
-        
+
         consensus.nPowTargetTimespan = 14 * 24 * 60 * 60; // two weeks
         consensus.nPowTargetSpacing = 10 * 60;
         consensus.fPowAllowMinDifficultyBlocks = false;
@@ -489,17 +489,17 @@ public:
         pchMessageStart[3] = 0xb4;
         nDefaultPort = 51738;
         nBIP44ID = 0x8000002C;
-        
+
         nModifierInterval = 10 * 60;    // 10 minutes
         nStakeMinConfirmations = 225;   // 225 * 2 minutes
         nTargetSpacing = 120;           // 2 minutes
         nTargetTimespan = 24 * 60;      // 24 mins
-        
+
         AddImportHashesMain(vImportedCoinbaseTxns);
         SetLastImportHeight();
-        
+
         nPruneAfterHeight = 100000;
-        
+
         genesis = CreateGenesisBlockMainNet(1500296400, 31429, 0x1f00ffff);
         consensus.hashGenesisBlock = genesis.GetHash();
 
@@ -531,7 +531,7 @@ public:
         base58Prefixes[EXT_ACC_HASH]       = {0x17}; // A
         base58Prefixes[EXT_PUBLIC_KEY_BTC] = {0x04, 0x88, 0xB2, 0x1E}; // xpub
         base58Prefixes[EXT_SECRET_KEY_BTC] = {0x04, 0x88, 0xAD, 0xE4}; // xprv
-        
+
         bech32Prefixes[PUBKEY_ADDRESS].assign       ("ph","ph"+2);
         bech32Prefixes[SCRIPT_ADDRESS].assign       ("pr","pr"+2);
         bech32Prefixes[PUBKEY_ADDRESS_256].assign   ("pl","pl"+2);
@@ -548,8 +548,8 @@ public:
         fDefaultConsistencyChecks = false;
         fRequireStandard = true;
         fMineBlocksOnDemand = false;
-        
-        
+
+
         checkpointData = (CCheckpointData) {
             {
                 { 5000,     uint256S("0xe786020ab94bc5461a07d744f3631a811b4ebf424fceda12274f2321883713f4")},
@@ -565,16 +565,16 @@ public:
             0.04        // * estimated number of transactions per second after that timestamp
         };
     }
-    
+
     void SetOld()
     {
         consensus.BIP34Height = 227931;
         consensus.BIP34Hash = uint256S("0x000000000000024b89b42a942fe0d9fea3bb44ab7bd1b19115dd6a759c0808b8");
         consensus.BIP65Height = 388381; // 000000000000000004c2b624ed5d7756c508d90fd0da2c7c679febfa6c4735f0
         consensus.BIP66Height = 363725; // 00000000000000000379eaa19dce8c9b722d46ae6a57c2f1a988119488b50931
-        
+
         consensus.powLimit = uint256S("00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
-        
+
         genesis = CreateGenesisBlock(1231006505, 2083236893, 0x1d00ffff, 1, 50 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
     }
@@ -593,9 +593,9 @@ public:
         consensus.BIP66Height = 0;
         consensus.OpIsCoinstakeTime = 0;
         consensus.fAllowOpIsCoinstakeWithP2PKH = true;
-        
+
         consensus.powLimit = uint256S("000000000005ffffffffffffffffffffffffffffffffffffffffffffffffffff");
-        
+
         consensus.nPowTargetTimespan = 14 * 24 * 60 * 60; // two weeks
         consensus.nPowTargetSpacing = 10 * 60;
         consensus.fPowAllowMinDifficultyBlocks = true;
@@ -623,43 +623,43 @@ public:
         //consensus.defaultAssumeValid = uint256S("0x000000000871ee6842d3648317ccc8a435eb8cc3c2429aee94faff9ba26b05a0"); //1043841
 
         consensus.nMinRCTOutputDepth = 12;
-        
+
         pchMessageStart[0] = 0x08;
         pchMessageStart[1] = 0x11;
         pchMessageStart[2] = 0x05;
         pchMessageStart[3] = 0x0b;
         nDefaultPort = 51938;
         nBIP44ID = 0x80000001;
-        
+
         nModifierInterval = 10 * 60;    // 10 minutes
         nStakeMinConfirmations = 225;   // 225 * 2 minutes
         nTargetSpacing = 120;           // 2 minutes
         nTargetTimespan = 24 * 60;      // 24 mins
-        
-        
+
+
         AddImportHashesTest(vImportedCoinbaseTxns);
         SetLastImportHeight();
-        
+
         nPruneAfterHeight = 1000;
 
 
         genesis = CreateGenesisBlockTestNet(1502309248, 5924, 0x1f00ffff);
         consensus.hashGenesisBlock = genesis.GetHash();
-        
+
         assert(consensus.hashGenesisBlock == uint256S("0x0000594ada5310b367443ee0afd4fa3d0bbd5850ea4e33cdc7d6a904a7ec7c90"));
         assert(genesis.hashMerkleRoot == uint256S("0x2c7f4d88345994e3849502061f6303d9666172e4dff3641d3472a72908eec002"));
         assert(genesis.hashWitnessMerkleRoot == uint256S("0xf9e2235c9531d5a19263ece36e82c4d5b71910d73cd0b677b81c5e50d17b6cda"));
-        
+
         vFixedSeeds.clear();
         vSeeds.clear();
         // nodes with support for servicebits filtering should be at the top
         vSeeds.emplace_back("testnet-seed.particl.io", true);
         vSeeds.emplace_back("dnsseed-testnet.particl.io", true);
-        
-        
+
+
         vDevFundSettings.push_back(std::make_pair(0, DevFundSettings("rTvv9vsbu269mjYYEecPYinDG8Bt7D86qD", 10, 60)));
-        
-        
+
+
         base58Prefixes[PUBKEY_ADDRESS]     = {0x76}; // p
         base58Prefixes[SCRIPT_ADDRESS]     = {0x7a};
         base58Prefixes[PUBKEY_ADDRESS_256] = {0x77};
@@ -672,7 +672,7 @@ public:
         base58Prefixes[EXT_ACC_HASH]       = {0x53}; // a
         base58Prefixes[EXT_PUBLIC_KEY_BTC] = {0x04, 0x35, 0x87, 0xCF}; // tpub
         base58Prefixes[EXT_SECRET_KEY_BTC] = {0x04, 0x35, 0x83, 0x94}; // tprv
-        
+
         bech32Prefixes[PUBKEY_ADDRESS].assign       ("tph","tph"+3);
         bech32Prefixes[SCRIPT_ADDRESS].assign       ("tpr","tpr"+3);
         bech32Prefixes[PUBKEY_ADDRESS_256].assign   ("tpl","tpl"+3);
@@ -683,7 +683,7 @@ public:
         bech32Prefixes[STEALTH_ADDRESS].assign      ("tps","tps"+3);
         bech32Prefixes[EXT_KEY_HASH].assign         ("tpek","tpek"+4);
         bech32Prefixes[EXT_KEY_HASH].assign         ("tpea","tpea"+4);
-        
+
 
         vFixedSeeds = std::vector<SeedSpec6>(pnSeed6_test, pnSeed6_test + ARRAYLEN(pnSeed6_test));
 
@@ -752,26 +752,26 @@ public:
         pchMessageStart[3] = 0x0c;
         nDefaultPort = 11938;
         nBIP44ID = 0x80000001;
-        
-        
+
+
         nModifierInterval = 2 * 60;     // 2 minutes
         nStakeMinConfirmations = 12;
         nTargetSpacing = 5;             // 5 seconds
         nTargetTimespan = 16 * 60;      // 16 mins
         nStakeTimestampMask = 0;
-        
+
         SetLastImportHeight();
-        
+
         nPruneAfterHeight = 1000;
-        
-        
+
+
         genesis = CreateGenesisBlockRegTest(1487714923, 0, 0x207fffff);
         consensus.hashGenesisBlock = genesis.GetHash();
         assert(consensus.hashGenesisBlock == uint256S("0x6cd174536c0ada5bfa3b8fde16b98ae508fff6586f2ee24cf866867098f25907"));
         assert(genesis.hashMerkleRoot == uint256S("0xf89653c7208af2c76a3070d436229fb782acbd065bd5810307995b9982423ce7"));
         assert(genesis.hashWitnessMerkleRoot == uint256S("0x36b66a1aff91f34ab794da710d007777ef5e612a320e1979ac96e5f292399639"));
-        
-        
+
+
         vFixedSeeds.clear(); //!< Regtest mode doesn't have any fixed seeds.
         vSeeds.clear();      //!< Regtest mode doesn't have any DNS seeds.
 
@@ -784,7 +784,7 @@ public:
                 {0, uint256S("0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206")},
             }
         };
-        
+
         base58Prefixes[PUBKEY_ADDRESS]     = {0x76}; // p
         base58Prefixes[SCRIPT_ADDRESS]     = {0x7a};
         base58Prefixes[PUBKEY_ADDRESS_256] = {0x77};
@@ -797,7 +797,7 @@ public:
         base58Prefixes[EXT_ACC_HASH]       = {0x53}; // a
         base58Prefixes[EXT_PUBLIC_KEY_BTC] = {0x04, 0x35, 0x87, 0xCF}; // tpub
         base58Prefixes[EXT_SECRET_KEY_BTC] = {0x04, 0x35, 0x83, 0x94}; // tprv
-        
+
         bech32Prefixes[PUBKEY_ADDRESS].assign       ("tph","tph"+3);
         bech32Prefixes[SCRIPT_ADDRESS].assign       ("tpr","tpr"+3);
         bech32Prefixes[PUBKEY_ADDRESS_256].assign   ("tpl","tpl"+3);
@@ -815,7 +815,7 @@ public:
             0
         };
     }
-    
+
     void SetOld()
     {
         genesis = CreateGenesisBlock(1296688602, 2, 0x207fffff, 1, 50 * COIN);

@@ -72,9 +72,9 @@ struct CExtPubKey {
         return a.nDepth == b.nDepth && memcmp(&a.vchFingerprint[0], &b.vchFingerprint[0], 4) == 0 && a.nChild == b.nChild &&
                memcmp(&a.vchChainCode[0], &b.vchChainCode[0], 32) == 0 && a.pubkey == b.pubkey;
     }
-    
+
     bool IsValid() const { return pubkey.IsValid(); }
-    
+
     CKeyID GetID() const {
         return pubkey.GetID();
     }
@@ -82,7 +82,7 @@ struct CExtPubKey {
     void Encode(unsigned char code[74]) const;
     void Decode(const unsigned char code[74]);
     bool Derive(CExtPubKey &out, unsigned int nChild) const;
-    
+
     template<typename Stream>
     void Serialize(Stream &s) const
     {
@@ -90,7 +90,7 @@ struct CExtPubKey {
         s.write((char*)vchFingerprint, 4);
         s.write((char*)&nChild, 4);
         s.write((char*)vchChainCode, 32);
-        
+
         pubkey.Serialize(s);
     }
     template<typename Stream>
@@ -100,7 +100,7 @@ struct CExtPubKey {
         s.read((char*)vchFingerprint, 4);
         s.read((char*)&nChild, 4);
         s.read((char*)vchChainCode, 32);
-        
+
         pubkey.Unserialize(s);
     }
 };
@@ -116,7 +116,7 @@ struct CExtKey {
         return a.nDepth == b.nDepth && memcmp(&a.vchFingerprint[0], &b.vchFingerprint[0], 4) == 0 && a.nChild == b.nChild &&
                memcmp(&a.vchChainCode[0], &b.vchChainCode[0], 32) == 0 && a.key == b.key;
     }
-    
+
     bool IsValid() const { return key.IsValid(); }
 
     void Encode(unsigned char code[74]) const;
@@ -125,12 +125,12 @@ struct CExtKey {
     CExtPubKey Neutered() const;
     void SetMaster(const unsigned char *seed, unsigned int nSeedLen);
     int SetKeyCode(const unsigned char *pkey, const unsigned char *pcode);
-    
+
     unsigned int GetSerializeSize(int nType, int nVersion) const
     {
         return 42 + (key.IsValid() ? 32 : 0);
     }
-    
+
     template<typename Stream>
     void Serialize(Stream &s) const
     {
@@ -138,7 +138,7 @@ struct CExtKey {
         s.write((char*)vchFingerprint, 4);
         s.write((char*)&nChild, 4);
         s.write((char*)vchChainCode, 32);
-        
+
         char fValid = key.IsValid();
         s.write((char*)&fValid, 1);
         if (fValid)
@@ -151,7 +151,7 @@ struct CExtKey {
         s.read((char*)vchFingerprint, 4);
         s.read((char*)&nChild, 4);
         s.read((char*)vchChainCode, 32);
-        
+
         char tmp[33];
         s.read((char*)tmp, 1); // key.IsValid()
         if (tmp[0])
@@ -172,7 +172,7 @@ public:
     unsigned char vchChainCode[32];
     CKey key;
     CPubKey pubkey;
-    
+
     CExtKeyPair() {};
     CExtKeyPair(CExtKey &vk)
     {
@@ -183,7 +183,7 @@ public:
         key = vk.key;
         pubkey = key.GetPubKey();
     };
-    
+
     CExtKey GetExtKey() const
     {
         CExtKey vk;
@@ -194,42 +194,42 @@ public:
         vk.key = key;
         return vk;
     };
-    
+
     CKeyID GetID() const {
         return pubkey.GetID();
     };
-    
+
     friend bool operator==(const CExtKeyPair &a, const CExtKeyPair &b)
     {
         return a.nDepth == b.nDepth && memcmp(&a.vchFingerprint[0], &b.vchFingerprint[0], 4) == 0 && a.nChild == b.nChild &&
                memcmp(&a.vchChainCode[0], &b.vchChainCode[0], 32) == 0 && a.key == b.key && a.pubkey == b.pubkey ;
     }
-    
+
     friend bool operator < (const CExtKeyPair &a, const CExtKeyPair &b)
     {
         return a.nDepth < b.nDepth || memcmp(&a.vchFingerprint[0], &b.vchFingerprint[0], 4) < 0 || a.nChild < b.nChild
             || memcmp(&a.vchChainCode[0], &b.vchChainCode[0], 32) < 0 || a.key < b.key || a.pubkey < b.pubkey ;
     }
-    
+
     bool IsValidV() const { return key.IsValid(); }
     bool IsValidP() const { return pubkey.IsValid(); }
 
     void EncodeV(unsigned char code[74]) const;
     void DecodeV(const unsigned char code[74]);
-    
+
     void EncodeP(unsigned char code[74]) const;
     void DecodeP(const unsigned char code[74]);
-    
+
     bool Derive(CExtKey &out, unsigned int nChild) const;
     bool Derive(CExtPubKey &out, unsigned int nChild) const;
     bool Derive(CKey &out, unsigned int nChild) const;
     bool Derive(CPubKey &out, unsigned int nChild) const;
-    
+
     CExtPubKey GetExtPubKey() const;
     CExtKeyPair Neutered() const;
     void SetMaster(const unsigned char *seed, unsigned int nSeedLen);
     int SetKeyCode(const unsigned char *pkey, const unsigned char *pcode);
-    
+
     template<typename Stream>
     void Serialize(Stream &s) const
     {
@@ -237,15 +237,15 @@ public:
         s.write((char*)vchFingerprint, 4);
         s.write((char*)&nChild, 4);
         s.write((char*)vchChainCode, 32);
-        
+
         char fValid = key.IsValid();
         s.write((char*)&fValid, 1);
         if (fValid)
             s.write((char*)key.begin(), 32);
-        
+
         pubkey.Serialize(s);
     }
-    
+
     template<typename Stream>
     void Unserialize(Stream &s)
     {
@@ -253,7 +253,7 @@ public:
         s.read((char*)vchFingerprint, 4);
         s.read((char*)&nChild, 4);
         s.read((char*)vchChainCode, 32);
-        
+
         char tmp[33];
         s.read((char*)tmp, 1); // key.IsValid()
         if (tmp[0])
@@ -279,31 +279,31 @@ public:
         nHGenerated = 0;
         nLastLookAhead = 0;
     };
-    
+
     std::string GetIDString58() const;
-    
+
     CKeyID GetID() const
     {
         return kp.GetID();
     };
-    
+
     bool operator <(const CStoredExtKey& y) const
     {
         return kp < y.kp;
     };
-    
+
     bool operator ==(const CStoredExtKey& y) const
     {
         // Compare pubkeys instead of CExtKeyPair for speed
         return kp.pubkey == y.kp.pubkey;
     };
-    
+
     template<typename T>
     int DeriveKey(T &keyOut, uint32_t nChildIn, uint32_t &nChildOut, bool fHardened = false) const
     {
         if (fHardened && !kp.IsValidV())
             return errorN(1, "Ext key does not contain a secret.");
-        
+
         for (uint32_t i = 0; i < MAX_DERIVE_TRIES; ++i)
         {
             if ((nChildIn >> 31) == 1)
@@ -311,20 +311,20 @@ public:
                 // TODO: auto spawn new master key
                 return errorN(1, "No more %skeys can be derived from master.", fHardened ? "hardened " : "");
             };
-            
+
             uint32_t nNum = fHardened ? nChildIn | 1 << 31 : nChildIn;
-            
+
             if (kp.Derive(keyOut, nNum))
             {
                 nChildOut = nNum; // nChildOut has bit 31 set for harnened keys
                 return 0;
             };
-            
+
             nChildIn++;
         };
         return 1;
     };
-    
+
     template<typename T>
     int DeriveNextKey(T &keyOut, uint32_t &nChildOut, bool fHardened = false, bool fUpdate = true)
     {
@@ -333,14 +333,14 @@ public:
         int rv;
         if ((rv = DeriveKey(keyOut, nChild, nChildOut, fHardened)) != 0)
             return rv;
-        
+
         nChild = nChildOut & ~(1 << 31); // Clear the hardened bit
         if (fUpdate)
             SetCounter(nChild+1, fHardened);
-        
+
         return 0;
     };
-    
+
     int SetCounter(uint32_t nC, bool fHardened)
     {
         if (fHardened)
@@ -349,12 +349,12 @@ public:
             nGenerated = nC;
         return 0;
     };
-    
+
     uint32_t GetCounter(bool fHardened)
     {
         return fHardened ? nHGenerated : nGenerated;
     };
-    
+
     template<typename Stream>
     void Serialize(Stream &s) const
     {
@@ -367,7 +367,7 @@ public:
         {
             s << kp;
         };
-        
+
         s << vchCryptedSecret;
         s << sLabel;
         s << nFlags;
@@ -379,7 +379,7 @@ public:
     void Unserialize(Stream &s)
     {
         s >> kp;
-        
+
         s >> vchCryptedSecret;
         s >> sLabel;
         s >> nFlags;
@@ -387,19 +387,19 @@ public:
         s >> nHGenerated;
         s >> mapValue;
     };
-    
+
     // When encrypted, pk can't be derived from vk
     CExtKeyPair kp;
     std::vector<uint8_t> vchCryptedSecret;
-    
+
     std::string sLabel;
-    
+
     uint8_t fLocked; // not part of nFlags so not saved
     uint32_t nFlags;
     uint32_t nGenerated;
     uint32_t nHGenerated;
     uint32_t nLastLookAhead; // in memory only
-    
+
     mapEKValue_t mapValue;
 };
 
@@ -409,7 +409,7 @@ class CEKAKey
 public:
     CEKAKey() : nParent(0), nKey(0) {};
     CEKAKey(uint32_t nParent_, uint32_t nKey_) : nParent(nParent_), nKey(nKey_) {};
-    
+
     template<typename Stream>
     void Serialize(Stream &s) const
     {
@@ -424,11 +424,11 @@ public:
         s >> nKey;
         s >> sLabel;
     };
-    
+
     uint32_t nParent; // chain identifier, vExtKeys
     uint32_t nKey;
     //uint32_t nChecksum; // TODO: is it worth storing 4 bytes of the id (160 hash here)
-    
+
     std::string sLabel; // TODO: use later
 };
 
@@ -439,7 +439,7 @@ class CEKASCKey
 public:
     CEKASCKey() {};
     CEKASCKey(CKeyID &idStealthKey_, CKey &sShared_) : idStealthKey(idStealthKey_), sShared(sShared_) {};
-    
+
     template<typename Stream>
     void Serialize(Stream &s) const
     {
@@ -458,7 +458,7 @@ public:
     // TODO: store an offset instead of the full id of the stealth address
     CKeyID idStealthKey; // id of parent stealth key (received on)
     CKey sShared;
-    
+
     //uint32_t nChecksum; // TODO: is it worth storing 4 bytes of the id (160 hash here)
     std::string sLabel; // TODO: use later
 };
@@ -477,27 +477,27 @@ public:
         CPubKey pk = skScan.GetPubKey();
         pkScan.resize(pk.size());
         memcpy(&pkScan[0], pk.begin(), pk.size());
-        
+
         akSpend = CEKAKey(nSpendParent_, nSpendKey_);
         pk = spendSecret_.GetPubKey();
         pkSpend.resize(pk.size());
         memcpy(&pkSpend[0], pk.begin(), pk.size());
-        
+
         nPrefixBits = nPrefixBits_;
         nPrefix = nPrefix_;
     };
-    
+
     std::string ToStealthAddress() const;
     int SetSxAddr(CStealthAddress &sxAddr) const;
-    
+
     int ToRaw(std::vector<uint8_t> &raw) const;
-    
+
     CKeyID GetID() const
     {
         // Not likely to be called very often
         return skScan.GetPubKey().GetID();
     };
-    
+
     template<typename Stream>
     void Serialize(Stream &s) const
     {
@@ -526,17 +526,17 @@ public:
         s >> nPrefixBits;
         s >> nPrefix;
     };
-    
+
     uint8_t nFlags; // options of CStealthAddress
     std::string sLabel;
     uint32_t nScanParent; // vExtKeys
     uint32_t nScanKey;
     CKey skScan;
     CEKAKey akSpend;
-    
+
     ec_point pkScan;
     ec_point pkSpend;
-    
+
     uint8_t nPrefixBits;
     uint32_t nPrefix;
 };
@@ -546,7 +546,7 @@ class CEKAKeyPack
 public:
     CEKAKeyPack() {};
     CEKAKeyPack(CKeyID id_, CEKAKey &ak_) : id(id_), ak(ak_) {};
-    
+
     template<typename Stream>
     void Serialize(Stream &s) const
     {
@@ -559,7 +559,7 @@ public:
         s >> id;
         s >> ak;
     };
-    
+
     CKeyID id;
     CEKAKey ak;
 };
@@ -569,7 +569,7 @@ class CEKASCKeyPack
 public:
     CEKASCKeyPack() {};
     CEKASCKeyPack(CKeyID id_, CEKASCKey &asck_) : id(id_), asck(asck_) {};
-    
+
     template<typename Stream>
     void Serialize(Stream &s) const
     {
@@ -582,7 +582,7 @@ public:
         s >> id;
         s >> asck;
     };
-    
+
     CKeyID id;
     CEKASCKey asck;
 };
@@ -592,7 +592,7 @@ class CEKAStealthKeyPack
 public:
     CEKAStealthKeyPack() {};
     CEKAStealthKeyPack(CKeyID id_, CEKAStealthKey &aks_) : id(id_), aks(aks_) {};
-    
+
     template<typename Stream>
     void Serialize(Stream &s) const
     {
@@ -605,7 +605,7 @@ public:
         s >> id;
         s >> aks;
     };
-    
+
     CKeyID id;
     CEKAStealthKey aks;
 };
@@ -629,7 +629,7 @@ public:
         nPackStealth = 0;
         nPackStealthKeys = 0;
     };
-    
+
     int FreeChains()
     {
         // Keys are normally freed by the wallet
@@ -641,34 +641,34 @@ public:
         };
         return 0;
     };
-    
+
     std::string GetIDString58() const;
-    
+
     CKeyID GetID() const
     {
         if (vExtKeyIDs.size() < 1)
             return CKeyID(); // CKeyID inits to 0
         return vExtKeyIDs[0];
     };
-    
+
     int HaveSavedKey(const CKeyID &id);
     int HaveKey(const CKeyID &id, bool fUpdate, CEKAKey &ak);
     bool GetKey(const CKeyID &id, CKey &keyOut) const;
     bool GetKey(const CEKAKey &ak, CKey &keyOut) const;
     bool GetKey(const CEKASCKey &asck, CKey &keyOut) const;
-    
+
     int GetKey(const CKeyID &id, CKey &keyOut, CEKAKey &ak, CKeyID &idStealth) const; // retuurns 1: chain, 2: stealth address
-    
-    
+
+
     bool GetPubKey(const CKeyID &id, CPubKey &pkOut) const;
     bool GetPubKey(const CEKAKey &ak, CPubKey &pkOut) const;
     bool GetPubKey(const CEKASCKey &asck, CPubKey &pkOut) const;
-    
+
     bool SaveKey(const CKeyID &id, CEKAKey &keyIn);
     bool SaveKey(const CKeyID &id, CEKASCKey &keyIn);
-    
+
     bool IsLocked(const CEKAStealthKey &aks);
-    
+
     bool GetChainNum(CStoredExtKey *p, uint32_t &nChain) const
     {
         for (size_t i = 0; i < vExtKeys.size(); ++i)
@@ -680,64 +680,64 @@ public:
         };
         return false;
     };
-    
+
     CStoredExtKey *GetChain(uint32_t nChain) const
     {
         if (nChain >= vExtKeys.size())
             return nullptr;
         return vExtKeys[nChain];
     };
-    
+
     CStoredExtKey *ChainExternal()
     {
         return GetChain(nActiveExternal);
     };
-    
+
     CStoredExtKey *ChainInternal()
     {
         return GetChain(nActiveInternal);
     };
-    
+
     CStoredExtKey *ChainStealth()
     {
         return GetChain(nActiveStealth);
     };
-    
+
     CStoredExtKey *ChainAccount()
     {
         if (vExtKeys.size() < 1)
             return nullptr;
         return vExtKeys[0];
     };
-    
+
     int AddLookBehind(uint32_t nChain, uint32_t nKeys);
     int AddLookAhead(uint32_t nChain, uint32_t nKeys);
-    
+
     int AddLookAheadInternal(uint32_t nKeys)
     {
         return AddLookAhead(nActiveInternal, nKeys);
     };
-    
+
     int AddLookAheadExternal(uint32_t nKeys)
     {
         return AddLookAhead(nActiveExternal, nKeys);
     };
-    
+
     int ExpandStealthChildKey(const CEKAStealthKey *aks, const CKey &sShared, CKey &kOut) const;
     int ExpandStealthChildPubKey(const CEKAStealthKey *aks, const CKey &sShared, CPubKey &pkOut) const;
-    
+
     int WipeEncryption();
-    
+
     template<typename Stream>
     void Serialize(Stream &s) const
     {
         s << sLabel;
         s << idMaster;
-        
+
         s << nActiveExternal;
         s << nActiveInternal;
         s << nActiveStealth;
-        
+
         s << vExtKeyIDs;
         s << nHeightCheckedUncrypted;
         s << nFlags;
@@ -751,11 +751,11 @@ public:
     {
         s >> sLabel;
         s >> idMaster;
-        
+
         s >> nActiveExternal;
         s >> nActiveInternal;
         s >> nActiveStealth;
-        
+
         s >> vExtKeyIDs;
         s >> nHeightCheckedUncrypted;
         s >> nFlags;
@@ -764,35 +764,35 @@ public:
         s >> nPackStealthKeys;
         s >> mapValue;
     };
-    
+
     // TODO: Could store used keys in archived packs, which don't get loaded into memory
     AccKeyMap mapKeys;
     AccKeyMap mapLookAhead;
-    
+
     AccKeySCMap mapStealthChildKeys; // keys derived from stealth addresses
-    
+
     AccStealthKeyMap mapStealthKeys;
     AccStealthKeyMap mapLookAheadStealth;
-    
+
     std::string sLabel; // account name
     CKeyID idMaster;
-    
+
     uint32_t nActiveExternal;
     uint32_t nActiveInternal;
     uint32_t nActiveStealth;
-    
+
     // Note: Stealth addresses consist of 2 secret keys, one of which (scan secret) must remain unencrypted while wallet locked
     // store a separate child key used only to derive secret keys
     // Stealth addresses must only ever be generated as hardened keys
-    
+
     mutable CCriticalSection cs_account;
-    
+
     // 0th key is always the account key
     std::vector<CStoredExtKey*> vExtKeys;
     std::vector<CKeyID> vExtKeyIDs;
-    
+
     int nHeightCheckedUncrypted; // last block checked while uncrypted
-    
+
     uint32_t nFlags;
     uint32_t nPack;
     uint32_t nPackStealth;

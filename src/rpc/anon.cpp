@@ -19,9 +19,9 @@ UniValue anonoutput(const JSONRPCRequest &request)
         throw std::runtime_error(
             "anonoutput [index/hex]\n"
             "\n");
-    
+
     UniValue result(UniValue::VOBJ);
-    
+
     if (request.params.size() == 0)
     {
         int64_t nLastRCTOutIndex;
@@ -30,9 +30,9 @@ UniValue anonoutput(const JSONRPCRequest &request)
         result.push_back(Pair("lastindex", (int)nLastRCTOutIndex));
         return result;
     };
-    
+
     std::string sIn = request.params[0].get_str();
-    
+
     int64_t nIndex;
     if (IsDigits(sIn))
     {
@@ -45,26 +45,26 @@ UniValue anonoutput(const JSONRPCRequest &request)
         if (!IsHex(sIn))
             throw JSONRPCError(RPC_INVALID_PARAMETER, sIn+" is not a hexadecimal or decimal string.");
         std::vector<uint8_t> vIn = ParseHex(sIn);
-        
+
         CCmpPubKey pk(vIn.begin(), vIn.end());
-        
+
         if (!pk.IsValid())
             throw JSONRPCError(RPC_INVALID_PARAMETER, sIn+" is not a valid compressed public key.");
-        
+
         if (!pblocktree->ReadRCTOutputLink(pk, nIndex))
             throw JSONRPCError(RPC_MISC_ERROR, "Output not indexed.");
     };
-    
+
     CAnonOutput ao;
     if (!pblocktree->ReadRCTOutput(nIndex, ao))
         throw JSONRPCError(RPC_MISC_ERROR, "Unknown index.");
-    
+
     result.pushKV("index", (int)nIndex);
     result.pushKV("publickey", HexStr(ao.pubkey.begin(), ao.pubkey.end()));
     result.pushKV("txnhash", HexStr(ao.outpoint.hash.begin(), ao.outpoint.hash.end()));
     result.pushKV("n", (int)ao.outpoint.n);
     result.pushKV("blockheight", ao.nBlockHeight);
-    
+
     return result;
 };
 

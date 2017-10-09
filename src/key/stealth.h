@@ -6,8 +6,8 @@
 #ifndef KEY_STEALTH_H
 #define KEY_STEALTH_H
 
-#include <stdlib.h> 
-#include <stdio.h> 
+#include <stdlib.h>
+#include <stdio.h>
 #include <vector>
 #include <inttypes.h>
 
@@ -38,58 +38,58 @@ public:
         options = 0;
         number_signatures = 0;
         prefix.number_bits = 0;
-        
+
         //index = 0;
     };
-    
+
     uint8_t options;
     stealth_prefix prefix;
     int number_signatures;
     ec_point scan_pubkey;
     ec_point spend_pubkey;
-    
+
     mutable std::string label;
-    
+
     CKey scan_secret;       // Better to store the scan secret here as it's needed often
     CKeyID spend_secret_id; // store the spend secret in a keystore
     //CKey spend_secret;
     //uint32_t index;
-    
+
     bool SetEncoded(const std::string &encodedAddress);
     std::string Encoded() const;
     std::string ToString() const {return Encoded();};
-    
+
     int FromRaw(const uint8_t *p, size_t nSize);
     int ToRaw(std::vector<uint8_t> &raw) const;
-    
+
     int SetScanPubKey(CPubKey pk);
-    
+
     CKeyID GetSpendKeyID() const;
-    
-    
+
+
     bool operator <(const CStealthAddress &y) const
     {
         return memcmp(&scan_pubkey[0], &y.scan_pubkey[0], EC_COMPRESSED_SIZE) < 0;
     };
-    
+
     bool operator ==(const CStealthAddress &y) const
     {
         return memcmp(&scan_pubkey[0], &y.scan_pubkey[0], EC_COMPRESSED_SIZE) == 0;
     };
-    
+
     template<typename Stream>
     void Serialize(Stream &s) const
     {
         s << options;
-        
+
         s << number_signatures;
         s << prefix.number_bits;
         s << prefix.bitfield;
-        
+
         s << scan_pubkey;
         s << spend_pubkey;
         s << label;
-        
+
         bool fHaveScanSecret = scan_secret.IsValid();
         s << fHaveScanSecret;
         if (fHaveScanSecret)
@@ -99,23 +99,23 @@ public:
     void Unserialize(Stream &s)
     {
         s >> options;
-        
+
         s >> number_signatures;
         s >> prefix.number_bits;
         s >> prefix.bitfield;
-        
+
         s >> scan_pubkey;
         s >> spend_pubkey;
         s >> label;
-        
+
         bool fHaveScanSecret;
         s >> fHaveScanSecret;
-        
+
         if (fHaveScanSecret)
         {
             s.read((char*)scan_secret.begin(), EC_SECRET_SIZE);
             scan_secret.SetFlags(true, true);
-            
+
             // Only derive spend_secret_id if also have the scan secret.
             if (spend_pubkey.size() == EC_COMPRESSED_SIZE) // TODO: won't work for multiple spend pubkeys
                 spend_secret_id = GetSpendKeyID();

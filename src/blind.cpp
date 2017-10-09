@@ -18,21 +18,21 @@ secp256k1_context *secp256k1_ctx_blind = nullptr;
 static int CountLeadingZeros(uint64_t nValueIn)
 {
     int nZeros = 0;
-    
+
     for (size_t i = 0; i < 64; ++i, nValueIn >>= 1)
     {
         if ((nValueIn & 1))
             break;
         nZeros++;
     };
-    
+
     return nZeros;
 };
 
 static int CountTrailingZeros(uint64_t nValueIn)
 {
     int nZeros = 0;
-    
+
     uint64_t mask = ((uint64_t)1) << 63;
     for (size_t i = 0; i < 64; ++i, nValueIn <<= 1)
     {
@@ -40,7 +40,7 @@ static int CountTrailingZeros(uint64_t nValueIn)
             break;
         nZeros++;
     };
-    
+
     return nZeros;
 };
 
@@ -60,18 +60,18 @@ static int64_t ipow(int64_t base, int exp)
 
 int SelectRangeProofParameters(uint64_t nValueIn, uint64_t &minValue, int &exponent, int &nBits)
 {
-    
+
     int nLeadingZeros = CountLeadingZeros(nValueIn);
     int nTrailingZeros = CountTrailingZeros(nValueIn);
-    
+
     size_t nBitsReq = 64 - nLeadingZeros - nTrailingZeros;
-    
-    
+
+
     nBits = 32;
-    
+
     // TODO: output rangeproof parameters should depend on the parameters of the inputs
     // TODO: drop low value bits to fee
-    
+
     if (nValueIn == 0)
     {
         exponent = GetRandInt(5);
@@ -79,39 +79,39 @@ int SelectRangeProofParameters(uint64_t nValueIn, uint64_t &minValue, int &expon
             nBits += GetRandInt(5);
         return 0;
     };
-    
-    
+
+
     uint64_t nTest = nValueIn;
     size_t nDiv10; // max exponent
     for (nDiv10 = 0; nTest % 10 == 0; nDiv10++, nTest /= 10) ;
-    
-    
+
+
     // TODO: how to pick best?
-    
+
     int eMin = nDiv10 / 2;
     exponent = eMin + GetRandInt(nDiv10-eMin);
-    
-    
+
+
     nTest = nValueIn / ipow(10, exponent);
-    
+
     nLeadingZeros = CountLeadingZeros(nTest);
     nTrailingZeros = CountTrailingZeros(nTest);
-    
+
     nBitsReq = 64 - nTrailingZeros;
-    
-    
-    
-    
+
+
+
+
     if (nBitsReq > 32)
     {
         nBits = nBitsReq;
     };
-    
+
     // make multiple of 4
     while (nBits < 63 && nBits % 4 != 0)
         nBits++;
-    
-    
+
+
     return 0;
 };
 

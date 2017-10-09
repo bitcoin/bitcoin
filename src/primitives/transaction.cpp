@@ -73,7 +73,7 @@ CAmount CTxOutBase::GetValue() const
             return 0;
         default:
             assert(false);
-            
+
     };
     */
     assert(nVersion == OUTPUT_STANDARD);
@@ -142,18 +142,18 @@ CAmount CTransaction::GetValueOut() const
         if (!MoneyRange(tx_out.nValue) || !MoneyRange(nValueOut))
             throw std::runtime_error(std::string(__func__) + ": value out of range");
     }
-        
+
     for (auto &txout : vpout)
     {
         if (!txout->IsStandardOutput())
             continue;
-        
+
         CAmount nValue = txout->GetValue();
         nValueOut += txout->GetValue();
         if (!MoneyRange(nValue) || !MoneyRange(nValueOut))
             throw std::runtime_error(std::string(__func__) + ": value out of range");
     };
-    
+
     return nValueOut;
 }
 
@@ -161,7 +161,7 @@ CAmount CTransaction::GetPlainValueOut(size_t &nStandard, size_t &nCT, size_t &n
 {
     // accumulators not cleared here intentionally
     CAmount nValueOut = 0;
-    
+
     for (auto &txout : vpout)
     {
         if (txout->IsType(OUTPUT_CT))
@@ -172,17 +172,17 @@ CAmount CTransaction::GetPlainValueOut(size_t &nStandard, size_t &nCT, size_t &n
         {
             nRingCT++;
         };
-        
+
         if (!txout->IsStandardOutput())
             continue;
-        
+
         nStandard++;
         CAmount nValue = txout->GetValue();
         nValueOut += txout->GetValue();
         if (!MoneyRange(nValue) || !MoneyRange(nValueOut))
             throw std::runtime_error(std::string(__func__) + ": value out of range");
     };
-    
+
     return nValueOut;
 };
 

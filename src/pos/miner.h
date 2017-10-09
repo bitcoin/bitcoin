@@ -18,7 +18,7 @@ class StakeThread
 {
 public:
     void condWaitFor(int ms);
-    
+
     StakeThread() {};
     std::thread thread;
     std::condition_variable condMinerProc;
