@@ -361,7 +361,7 @@ bool CMinerWhitelistDB::DumpWindowStats(std::vector< std::pair< std::string, uin
             break; // we are done with the addresses.
         }
     } 
-    for (const auto &item : *MinerVector) { LogPrintf("ap:%x a:%s d:%d", item.first, item.first, item.second); }
+    for (const auto &item : *MinerVector) { LogPrintf("ap:%x a:%s d:%d\n", item.first, item.first, item.second); }
     return true;
 }
 

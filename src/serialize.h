@@ -563,6 +563,7 @@ template<typename Stream, typename C>
 void Unserialize(Stream& is, std::basic_string<C>& str)
 {
     unsigned int nSize = ReadCompactSize(is);
+    str.clear(); // force allocating independent buffer
     str.resize(nSize);
     if (nSize != 0)
         is.read((char*)str.data(), nSize * sizeof(C));
