@@ -19,7 +19,6 @@ class MnemonicDialog : public QDialog
     Q_OBJECT
 private:
     WalletModel *walletModel;
-    void warningBox(QString msg);
 
 public:
     explicit MnemonicDialog(QWidget *parent, WalletModel *wm);

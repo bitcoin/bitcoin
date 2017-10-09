@@ -7,14 +7,14 @@
     <x>0</x>
     <y>0</y>
     <width>785</width>
-    <height>292</height>
+    <height>331</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>HD Wallet Setup</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="0" column="0">
+   <item row="1" column="0">
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
       <number>0</number>
@@ -318,6 +318,19 @@
        </item>
       </layout>
      </widget>
+    </widget>
+   </item>
+   <item row="0" column="0">
+    <widget class="QLabel" name="lblHelp">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
+     <property name="locale">
+      <locale language="English" country="UnitedKingdom"/>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
     </widget>
    </item>
   </layout>
