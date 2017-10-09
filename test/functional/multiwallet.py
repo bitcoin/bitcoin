@@ -39,6 +39,19 @@ class MultiWalletTest(BitcoinTestFramework):
         os.symlink(os.path.join(self.options.tmpdir, 'node0', 'regtest', 'w1'), os.path.join(self.options.tmpdir, 'node0', 'regtest', 'w12'))
         self.assert_start_raises_init_error(0, ['-wallet=w12'], 'Error loading wallet w12. -wallet filename must be a regular file.')
 
+        # should not initialize if the specified walletdir does not exist
+        self.assert_start_raises_init_error(0, ['-walletdir=bad'], 'Error: Specified wallet directory "bad" does not exist.')
+
+        # running the node with specified walletdir should only have the default wallet in it
+        os.mkdir(os.path.join(self.options.tmpdir, 'node0', 'regtest', 'walletdir'))
+        self.start_node(0, ['-wallet=w4', '-wallet=w5', '-walletdir=' + os.path.join(self.options.tmpdir, 'node0', 'regtest', 'walletdir')])
+        assert_equal(set(self.nodes[0].listwallets()), {"w4", "w5"})
+        w5 = self.nodes[0].get_wallet_rpc("w5")
+        w5_info = w5.getwalletinfo()
+        assert_equal(w5_info['immature_balance'], 0)
+
+        self.stop_node(0)
+
         self.start_node(0, self.extra_args[0])
 
         w1 = self.nodes[0].get_wallet_rpc("w1")
