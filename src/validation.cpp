@@ -137,6 +137,8 @@ private:
      */
     std::set<CBlockIndex*, CBlockIndexWorkComparator> setBlockIndexHeaderCandidates;
 
+    CBlockIndex *pindexBestHeader = nullptr;
+
     /**
      * Every received block is assigned a unique and increasing identifier, so we
      * know which one to give priority in case of a fork.
@@ -203,6 +205,7 @@ public:
 
     void UnloadBlockIndex();
 
+    const CBlockIndex* GetBestHeader();
 private:
     bool ActivateBestChainStep(CValidationState& state, const CChainParams& chainparams, CBlockIndex* pindexMostWork, const std::shared_ptr<const CBlock>& pblock, bool& fInvalidFound, ConnectTrace& connectTrace);
     bool ConnectTip(CValidationState& state, const CChainParams& chainparams, CBlockIndex* pindexNew, const std::shared_ptr<const CBlock>& pblock, ConnectTrace& connectTrace, DisconnectedBlockTransactions &disconnectpool);
@@ -228,7 +231,6 @@ CCriticalSection cs_main;
 
 BlockMap& mapBlockIndex = g_chainstate.mapBlockIndex;
 CChain& chainActive = g_chainstate.chainActive;
-CBlockIndex *pindexBestHeader = nullptr;
 CWaitableCriticalSection csBestBlock;
 CConditionVariable cvBlockChange;
 int nScriptCheckThreads = 0;
@@ -474,7 +476,7 @@ static bool IsCurrentForFeeEstimation()
         return false;
     if (chainActive.Tip()->GetBlockTime() < (GetTime() - MAX_FEE_ESTIMATION_TIP_AGE))
         return false;
-    if (chainActive.Height() < pindexBestHeader->nHeight - 1)
+    if (chainActive.Height() < GetBestHeader()->nHeight - 1)
         return false;
     return true;
 }
@@ -1193,7 +1195,7 @@ bool IsInitialBlockDownload()
     return false;
 }
 
-CBlockIndex *pindexBestForkTip = nullptr, *pindexBestForkBase = nullptr;
+static CBlockIndex *pindexBestForkTip = nullptr, *pindexBestForkBase = nullptr;
 
 static void AlertNotify(const std::string& strMessage)
 {
@@ -1353,6 +1355,18 @@ void CChainState::MaybeAddNewHeaderCandidate(CBlockIndex* pindex, bool chain_ord
     }
 
     setBlockIndexHeaderCandidates.insert(pindex);
+}
+
+const CBlockIndex* CChainState::GetBestHeader() {
+    LOCK(cs_main);
+    auto it = setBlockIndexHeaderCandidates.rbegin();
+    if (it == setBlockIndexHeaderCandidates.rend())
+        return nullptr;
+    return *it;
+}
+
+const CBlockIndex* GetBestHeader() {
+    return g_chainstate.GetBestHeader();
 }
 
 // Helper for PruneInvalidBlockIndexCandidates
@@ -1969,6 +1983,8 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
                 pindexBestHeader->GetAncestor(pindex->nHeight) == pindex &&
                 pindexBestHeader->nChainWork >= nMinimumChainWork) {
                 // This block is a member of the assumed verified chain and an ancestor of the best header.
+                // Note that we use pindexBestHeader here, not GetBestHeader(), ignoring potential
+                // chain-invalidity of the best header.
                 // The equivalent time check discourages hash power from extorting the network via DOS attack
                 //  into accepting an invalid block through telling users they must manually set assumevalid.
                 //  Requiring a software change or burying the invalid block, regardless of the setting, makes
@@ -2684,11 +2700,11 @@ bool CChainState::ActivateBestChainStep(CValidationState& state, const CChainPar
 static void NotifyHeaderTip() {
     bool fNotify = false;
     bool fInitialBlockDownload = false;
-    static CBlockIndex* pindexHeaderOld = nullptr;
-    CBlockIndex* pindexHeader = nullptr;
+    static const CBlockIndex* pindexHeaderOld = nullptr;
+    const CBlockIndex* pindexHeader = nullptr;
     {
         LOCK(cs_main);
-        pindexHeader = pindexBestHeader;
+        pindexHeader = GetBestHeader();
 
         if (pindexHeader != pindexHeaderOld) {
             fNotify = true;
@@ -4316,6 +4332,7 @@ bool RewindBlockIndex(const CChainParams& params) {
 
 void CChainState::UnloadBlockIndex() {
     nBlockSequenceId = 1;
+    pindexBestHeader = nullptr;
     g_failed_blocks.clear();
     setBlockIndexCandidates.clear();
     setBlockIndexHeaderCandidates.clear();
@@ -4329,7 +4346,6 @@ void UnloadBlockIndex()
     LOCK(cs_main);
     chainActive.SetTip(nullptr);
     pindexBestInvalid = nullptr;
-    pindexBestHeader = nullptr;
     mempool.clear();
     mapBlocksUnlinked.clear();
     vinfoBlockFile.clear();
