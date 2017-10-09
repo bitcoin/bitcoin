@@ -342,34 +342,26 @@ unsigned int CMinerWhitelistDB::GetWindowStart(unsigned int height) {
 
 bool CMinerWhitelistDB::DumpWindowStats(std::vector< std::pair< std::string, uint32_t > > *MinerVector) {
     LogPrintf("MinerDatabase: Dumping all miner stats.\n");
-    Sync();
+    // Sync();
     if (IsEmpty())
         LogPrintf("MinerDatabase: DB is empty.\n");
     std::unique_ptr<CDBIterator> it(NewIterator());
-    MinerEntry entry = MinerEntry();
-    MinerDetails det = MinerDetails();
-    // This is kind of a dirty workaround. We scan the whole database, which is slow!
-    for (it->SeekToFirst(); it->Valid(); it->Next()) { // Seek should end up at an address (they start with 'a')
-        //LogPrintf("MinerDatabase: Dumping all miner stats.\n");
-        if (it->GetKey(entry) ) { // Does this work? Should give false if Key is of other type than what we expect?!
+    for (it->Seek(MinerEntry(DUMMY)); it->Valid(); it->Next()) { // DUMMY is the lexically first address.
+        MinerEntry entry;
+        if (it->GetKey(entry) && entry.key == WL_ADDRESS) { // Does this work? Should give false if Key is of other type than what we expect?!
             LogPrintf("Got entry type %s\n", entry.key);
-            if (entry.key != WL_ADDRESS)
-                continue;
-            LogPrintf("Got entry %s\n", entry.addr);
-            // if (entry.addr == DUMMY)
-            //     continue;
+            LogPrintf("Got entry %s with pointer %x\n", entry.addr, entry.addr);
+            MinerDetails det;
             it->GetValue(det);
-            LogPrintf("Got details: Blockcount %s\n", det.windowBlocks);
-            if (det.whitelisted == false || det.windowBlocks == 0) 
-                continue;
-            std::pair<std::string, uint32_t> elem;
-            elem.first = entry.addr;
-            elem.second = det.windowBlocks;
-            (*MinerVector).push_back(elem);
-        // } else { 
-        //     LogPrintf("Found something else!\n");
+            LogPrintf("Got details: Blockcount %s\n", det.totalBlocks);
+            if (det.windowBlocks == 0) 
+                continue; // do not print useless data
+            MinerVector->emplace_back(entry.addr, det.windowBlocks);
+        } else { 
+            break; // we are done with the addresses.
         }
     } 
+    for (const auto &item : *MinerVector) { LogPrintf("ap:%x a:%s d:%d", item.first, item.first, item.second); }
     return true;
 }
 
@@ -434,25 +426,22 @@ bool CMinerWhitelistDB::MineBlock(unsigned int newHeight, std::string address) {
             std::unique_ptr<CDBIterator> it(NewIterator());
             //LogPrintf("MinerDatabase: Starting Loop.\n");
             Sync();
-            MinerEntry entry = MinerEntry();
-            MinerDetails det = MinerDetails();
-            // This is kind of a dirty workaround. We scan the whole database, which is slow!
-            for (it->SeekToFirst(); it->Valid(); it->Next()) { // SeekToFirst should end up at an address (they start with 'a')
+            for (it->Seek(MinerEntry(DUMMY)); it->Valid(); it->Next()) { 
+                MinerEntry entry;
                 if (it->GetKey(entry) && entry.key == WL_ADDRESS) { // Does this work? Should give false if Key is of other type than what we expect?!
-                    //LogPrintf("Got entry type %s\n", entry.key);
-                    // if (entry.key != WL_ADDRESS)
-                    //     continue;
-                    //LogPrintf("Got entry %s\n", entry.addr);
-                    // if (entry.addr == DUMMY)
-                    //     continue;
+                    LogPrintf("Got entry type %s\n", entry.key);
+                    LogPrintf("Got entry %s with pointer %x\n", entry.addr, entry.addr);
+                    MinerDetails det;
                     it->GetValue(det);
+                    LogPrintf("Got details: Blockcount %s\n", det.totalBlocks);
                     if (entry.addr == address) { 
                         det.totalBlocks += 1;
                     }
                     det.windowBlocks = 0;
                     batch.Write(entry, det);
-                // } else { 
-                //     LogPrintf("Found something else.\n");
+                } else { // No miner anymore
+                    LogPrintf("Found something else.\n");
+                    break;
                 }
             } 
             Sync();
