@@ -103,7 +103,7 @@ class MempoolPersistTest(BitcoinTestFramework):
         mempooldotnew1 = mempooldat1 + '.new'
         with os.fdopen(os.open(mempooldotnew1, os.O_CREAT, 0o000), 'w'):
             pass
-        assert_raises_jsonrpc(-1, "Unable to dump mempool to disk", self.nodes[1].savemempool)
+        assert_raises_rpc_error(-1, "Unable to dump mempool to disk", self.nodes[1].savemempool)
         os.remove(mempooldotnew1)
 
 if __name__ == '__main__':
