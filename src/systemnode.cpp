@@ -260,7 +260,7 @@ void CSystemnode::Check(bool forceCheck)
     if(!unitTest){
         CValidationState state;
         CMutableTransaction tx = CMutableTransaction();
-        CTxOut vout = CTxOut(0.99*COIN, legacySigner.collateralPubKey);
+        CTxOut vout = CTxOut(499.99*COIN, legacySigner.collateralPubKey);
         tx.vin.push_back(vin);
         tx.vout.push_back(vout);
 
@@ -437,7 +437,7 @@ bool CSystemnodeBroadcast::CheckInputsAndAdd(int& nDoS)
 
     CValidationState state;
     CMutableTransaction tx = CMutableTransaction();
-    CTxOut vout = CTxOut(0.99*COIN, legacySigner.collateralPubKey);
+    CTxOut vout = CTxOut(499.99*COIN, legacySigner.collateralPubKey);
     tx.vin.push_back(vin);
     tx.vout.push_back(vout);
 
