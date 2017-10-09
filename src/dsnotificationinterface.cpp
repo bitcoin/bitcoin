@@ -55,7 +55,7 @@ void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, con
         }
     }
 
-    if (fInitialDownload || !masternodeSync.IsBlockchainSynced())
+    if (fInitialDownload)
         return;
 
     mnodeman.UpdatedBlockTip(pindexNew);
