@@ -352,6 +352,7 @@ bool DecodeBase58Check(const std::string& str, std::vector<unsigned char>& vchRe
             CMalleablePubKey mPubKey;
             mPubKey.setvch(vchData);
             keyID = mPubKey.GetID();
+            return true;
         }
         default: return false;
         }
