@@ -153,10 +153,10 @@ class NodeImpl : public Node
     size_t getMempoolDynamicUsage() override { return ::mempool.DynamicMemoryUsage(); }
     bool getHeaderTip(int& height, int64_t& block_time) override
     {
-        LOCK(::cs_main);
-        if (::pindexBestHeader) {
-            height = ::pindexBestHeader->nHeight;
-            block_time = ::pindexBestHeader->GetBlockTime();
+        const CBlockIndex* best_header = ::GetBestHeader();
+        if (best_header) {
+            height = best_header->nHeight;
+            block_time = best_header->GetBlockTime();
             return true;
         }
         return false;
