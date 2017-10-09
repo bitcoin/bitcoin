@@ -94,10 +94,23 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
 
         if (fAllFromMe && fAllToMe)
         {
+            std::string address;
+            if (wtx.tx->vout.size() == 2)
+            {
+                for (const CTxOut& txout : wtx.tx->vout)
+                {
+                    if (wallet->IsChange(txout)) continue;
+
+                    CTxDestination destination;
+                    if (ExtractDestination(txout.scriptPubKey, destination))
+                    {
+                        address = EncodeDestination(destination);
+                    }
+                }
+            }
             // Payment to self
             CAmount nChange = wtx.GetChange();
-
-            parts.append(TransactionRecord(hash, nTime, TransactionRecord::SendToSelf, "",
+            parts.append(TransactionRecord(hash, nTime, TransactionRecord::SendToSelf, address,
                             -(nDebit - nChange), nCredit - nChange));
             parts.last().involvesWatchAddress = involvesWatchAddress;   // maybe pass to TransactionRecord as constructor argument
         }
