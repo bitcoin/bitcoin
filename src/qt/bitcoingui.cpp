@@ -204,6 +204,7 @@ void BitcoinGUI::createActions()
 
     mintingAction = new QAction(QIcon(":/icons/history"), tr("&Minting"), this);
     mintingAction->setToolTip(tr("Show your minting capacity"));
+    mintingAction->setToolTip(mintingAction->statusTip());
     mintingAction->setCheckable(true);
     mintingAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_5));
     tabGroup->addAction(mintingAction);
