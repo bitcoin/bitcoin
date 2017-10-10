@@ -2571,7 +2571,7 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 		if (escrow.nDeposit > 0)
 			createAddressUniValue.push_back(Pair(buyerAddressPayment.ToString(), ValueFromAmount(escrow.nDeposit)));
 	}
-	else if (role == "buyer")
+	else if (role == "seller")
 	{
 		createAddressUniValue.push_back(Pair(buyerAddressPayment.ToString(), ValueFromAmount(escrow.nArbiterFee + escrow.nDeposit)));
 	}
