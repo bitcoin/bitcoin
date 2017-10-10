@@ -72,6 +72,18 @@ struct VersionBitsCache
     void Clear();
 };
 
+struct IgnoreVersionBits {
+    int bit;
+    int64_t beginTime;
+    int64_t endTime;
+
+    IgnoreVersionBits(int _bit, int64_t _begin, int64_t _end)
+        : bit(_bit), beginTime(_begin), endTime(_end)
+    {
+    }
+};
+
+
 ThresholdState VersionBitsState(const CBlockIndex* pindexPrev, const Consensus::Params& params, Consensus::DeploymentPos pos, VersionBitsCache& cache);
 BIP9Stats VersionBitsStatistics(const CBlockIndex* pindexPrev, const Consensus::Params& params, Consensus::DeploymentPos pos);
 int VersionBitsStateSinceHeight(const CBlockIndex* pindexPrev, const Consensus::Params& params, Consensus::DeploymentPos pos, VersionBitsCache& cache);

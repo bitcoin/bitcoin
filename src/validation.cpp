@@ -1565,8 +1565,9 @@ void ThreadScriptCheck() {
 
 // Protected by cs_main
 VersionBitsCache versionbitscache;
+std::vector<IgnoreVersionBits> ignorebits;
 
-int32_t ComputeBlockVersion(const CBlockIndex* pindexPrev, const Consensus::Params& params)
+int32_t ComputeBlockVersion(const CBlockIndex* pindexPrev, const Consensus::Params& params, IgnoreBitsMode use_ignorebits)
 {
     LOCK(cs_main);
     int32_t nVersion = VERSIONBITS_TOP_BITS;
@@ -1575,6 +1576,14 @@ int32_t ComputeBlockVersion(const CBlockIndex* pindexPrev, const Consensus::Para
         ThresholdState state = VersionBitsState(pindexPrev, params, (Consensus::DeploymentPos)i, versionbitscache);
         if (state == THRESHOLD_LOCKED_IN || state == THRESHOLD_STARTED) {
             nVersion |= VersionBitsMask(params, (Consensus::DeploymentPos)i);
+        }
+    }
+    if (use_ignorebits == IgnoreBitsMode::ibmTRUE) {
+        int64_t mtp = (pindexPrev == nullptr ? 0 : pindexPrev->GetMedianTimePast());
+        for (const auto& ib : ignorebits) {
+            if (ib.beginTime <= mtp && mtp < ib.endTime) {
+                nVersion |= (((uint32_t)1) << ib.bit);
+            }
         }
     }
 
@@ -1601,7 +1610,7 @@ public:
     {
         return ((pindex->nVersion & VERSIONBITS_TOP_MASK) == VERSIONBITS_TOP_BITS) &&
                ((pindex->nVersion >> bit) & 1) != 0 &&
-               ((ComputeBlockVersion(pindex->pprev, params) >> bit) & 1) == 0;
+               ((ComputeBlockVersion(pindex->pprev, params, IgnoreBitsMode::ibmTRUE) >> bit) & 1) == 0;
     }
 };
 
@@ -2058,7 +2067,7 @@ void static UpdateTip(CBlockIndex *pindexNew, const CChainParams& chainParams) {
         // Check the version of the last 100 blocks to see if we need to upgrade:
         for (int i = 0; i < 100 && pindex != nullptr; i++)
         {
-            int32_t nExpectedVersion = ComputeBlockVersion(pindex->pprev, chainParams.GetConsensus());
+            int32_t nExpectedVersion = ComputeBlockVersion(pindex->pprev, chainParams.GetConsensus(), IgnoreBitsMode::ibmTRUE);
             if (pindex->nVersion > VERSIONBITS_LAST_OLD_BLOCK_VERSION && (pindex->nVersion & ~nExpectedVersion) != 0)
                 ++nUpgraded;
             pindex = pindex->pprev;
