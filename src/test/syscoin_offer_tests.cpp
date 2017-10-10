@@ -124,7 +124,7 @@ BOOST_AUTO_TEST_CASE(generate_offerwhitelists)
 	AliasNew("node1", "sellerwhitelistalias", "changeddata1");
 	AliasNew("node2", "selleraddwhitelistalias", "changeddata1");
 	AliasNew("node2", "selleraddwhitelistalias1", "changeddata1");
-
+	AliasNew("node3", "sellerwhitelistaliasarbiter", "changeddata1");
 	// generate a good offer
 	string offerguid = OfferNew("node1", "sellerwhitelistalias", "category", "title", "100", "9.00", "description", "SYS");
 	// add to whitelist
@@ -150,7 +150,7 @@ BOOST_AUTO_TEST_CASE(generate_offerwhitelists)
 
 	AliasAddWhitelist("node1", "sellerwhitelistalias", "selleraddwhitelistalias", "6");
 
-	OfferAccept("node1", "node2", "selleraddwhitelistalias1", offerguid, "1");
+	OfferAccept("node1", "node2", "selleraddwhitelistalias1", "sellerwhitelistaliasarbiter", offerguid, "1");
 
 	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress selleraddwhitelistalias1 100"), runtime_error);
 	GenerateBlocks(10);
@@ -167,11 +167,11 @@ BOOST_AUTO_TEST_CASE(generate_offerwhitelists)
 	BOOST_CHECK_THROW(CallRPC("node1", "aliasupdatewhitelist sellerwhitelistalias " + whiteListArray), runtime_error);
 
 	AliasAddWhitelist("node1", "sellerwhitelistalias", "selleraddwhitelistalias", "1");
-	OfferAccept("node1", "node2", "selleraddwhitelistalias1", offerguid, "1");
+	OfferAccept("node1", "node2", "selleraddwhitelistalias1", "sellerwhitelistaliasarbiter", offerguid, "1");
 	AliasAddWhitelist("node1", "sellerwhitelistalias", "selleraddwhitelistalias1", "2");
 
 
-	OfferAccept("node1", "node2", "selleraddwhitelistalias1", offerguid, "1", "2");
+	OfferAccept("node1", "node2", "selleraddwhitelistalias1", "sellerwhitelistaliasarbiter", offerguid, "1", "2");
 	AliasClearWhitelist("node1", "sellerwhitelistalias");
 
 
@@ -326,7 +326,7 @@ BOOST_AUTO_TEST_CASE (generate_offerupdate_editcurrency)
 	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress buyeraliascurrency 10000"), runtime_error);
 	GenerateBlocks(10);
 	// accept and confirm payment is accurate with usd
-	string escrowguid = OfferAccept("node1", "node2", "buyeraliascurrency", offerguid, "2");
+	string escrowguid = OfferAccept("node1", "node2", "buyeraliascurrency", "arbiteraliascurrency", offerguid, "2");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "escrowinfo " + escrowguid));
 	CAmount nTotal = AmountFromValue(find_value(r.get_obj(), "total"));
 	CAmount nArbiterFee = AmountFromValue(find_value(r.get_obj(), "arbiterfee"));
@@ -339,7 +339,7 @@ BOOST_AUTO_TEST_CASE (generate_offerupdate_editcurrency)
 	// perform a valid update
 	OfferUpdate("node1", "selleraliascurrency", offerguid, "category", "titlenew", "90", "0.15", "descriptionnew", "CAD");
 	// accept and confirm payment is accurate with cad
-	escrowguid = OfferAccept("node1", "node2", "buyeraliascurrency", offerguid, "3");
+	escrowguid = OfferAccept("node1", "node2", "buyeraliascurrency", "arbiteraliascurrency", offerguid, "3");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "escrowinfo " + escrowguid));
 	nTotal = AmountFromValue(find_value(r.get_obj(), "total"));
 	nArbiterFee = AmountFromValue(find_value(r.get_obj(), "arbiterfee"));
@@ -356,7 +356,7 @@ BOOST_AUTO_TEST_CASE (generate_offerupdate_editcurrency)
 
 	OfferUpdate("node1", "selleraliascurrency", offerguid, "category", "titlenew", "90", "1.00", "descriptionnew", "SYS");
 	// accept and confirm payment is accurate with sys
-	escrowguid = OfferAccept("node1", "node2", "buyeraliascurrency", offerguid, "3");
+	escrowguid = OfferAccept("node1", "node2", "buyeraliascurrency", "arbiteraliascurrency", offerguid, "3");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "escrowinfo " + escrowguid));
 	nTotal = AmountFromValue(find_value(r.get_obj(), "total"));
 	nArbiterFee = AmountFromValue(find_value(r.get_obj(), "arbiterfee"));
@@ -367,7 +367,7 @@ BOOST_AUTO_TEST_CASE (generate_offerupdate_editcurrency)
 
 	OfferUpdate("node1", "selleraliascurrency", offerguid, "category", "titlenew", "90", "0.00001000", "descriptionnew", "BTC");
 	// accept and confirm payment is accurate with btc
-	escrowguid = OfferAccept("node1", "node2", "buyeraliascurrency", offerguid, "4");
+	escrowguid = OfferAccept("node1", "node2", "buyeraliascurrency", "arbiteraliascurrency", offerguid, "4");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "escrowinfo " + escrowguid));
 	nTotal = AmountFromValue(find_value(r.get_obj(), "total"));
 	nArbiterFee = AmountFromValue(find_value(r.get_obj(), "arbiterfee"));
@@ -394,7 +394,7 @@ BOOST_AUTO_TEST_CASE (generate_offerupdate_editcurrency)
 	// still used BTC conversion amount
 	BOOST_CHECK_EQUAL(nTotal, AmountFromValue(10*0.00001000*100000.0));
 	// 2695.2 SYS/EUR
-	escrowguid = OfferAccept("node1", "node2", "buyeraliascurrency", offerguid, "3");
+	escrowguid = OfferAccept("node1", "node2", "buyeraliascurrency", "arbiteraliascurrency", offerguid, "3");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "escrowinfo " + escrowguid));
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "currency").get_str(), "EUR");
 	nTotal = AmountFromValue(find_value(r.get_obj(), "total"));
@@ -427,7 +427,7 @@ BOOST_AUTO_TEST_CASE (generate_offeraccept)
 	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress buyeralias3 10000"), runtime_error);
 	GenerateBlocks(10);
 	// perform a valid accept
-	string acceptguid = OfferAccept("node1", "node2", "buyeralias3", offerguid, "1");
+	string acceptguid = OfferAccept("node1", "node2", "buyeralias3", "arbiteralias3", offerguid, "1");
 
 	
 	// perform an accept on negative quantity
@@ -459,7 +459,7 @@ BOOST_AUTO_TEST_CASE (generate_linkedaccept)
 	string lofferguid = OfferLink("node2", "node2aliaslinked", offerguid, "20", "newdescription");
 	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress node3aliaslinked 8500"), runtime_error);
 	GenerateBlocks(10);
-	OfferAccept("node1", "node3", "node3aliaslinked", lofferguid, "6");
+	OfferAccept("node1", "node3", "node3aliaslinked", "node3aliaslinked", lofferguid, "6");
 }
 BOOST_AUTO_TEST_CASE (generate_cert_linkedaccept)
 {
@@ -490,7 +490,7 @@ BOOST_AUTO_TEST_CASE (generate_cert_linkedaccept)
 	BOOST_CHECK(hex_str.empty());
 	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress node3alias 1350"), runtime_error);
 	GenerateBlocks(10);
-	OfferAccept("node1", "node3", "node3alias", lofferguid, "1");
+	OfferAccept("node1", "node3", "node3alias", "node2alias", lofferguid, "1");
 	GenerateBlocks(5, "node1");
 	GenerateBlocks(5, "node3");
 }
@@ -574,7 +574,7 @@ BOOST_AUTO_TEST_CASE (generate_certofferexpired)
 	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress node2alias2 126"), runtime_error);
 	GenerateBlocks(10);
 	// updates the alias which updates the offer and cert using this alias
-	OfferAccept("node1", "node2", "node2alias2", offerguid, "1");
+	OfferAccept("node1", "node2", "node2alias2", "node3alias2", offerguid, "1");
 	// should pass: generate a cert offer
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "offernew node1alias2 certificates title 1 0.05 description USD " + certguid));
 

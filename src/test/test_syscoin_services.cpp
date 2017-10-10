@@ -1630,7 +1630,7 @@ void EscrowClaimRelease(const string& node, const string& role, const string& gu
 	GenerateBlocks(10, node);
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "offerinfo " + offer));
 	int nQtyOfferAfter = find_value(r.get_obj(), "quantity").get_int();
-	BOOST_CHECK_EQUAL(nQtyOfferBefore+nQty, nQtyOfferAfter);
+	BOOST_CHECK_EQUAL(nQtyOfferBefore-nQty, nQtyOfferAfter);
 
 	// get balances after
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasbalance " + selleralias));

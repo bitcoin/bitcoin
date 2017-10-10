@@ -770,6 +770,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasprunewithcertoffer)
 	StopNode("node3");
 	AliasNew("node1", "aliasprunewithcertoffer", "pubdata");
 	AliasNew("node2", "aliasprunewithcertoffer2", "pubdata");
+	AliasNew("node2", "aliasprunewithcertofferarbiter", "pubdata");
 	string certguid = CertNew("node1", "aliasprunewithcertoffer", "jag1", "pubdata");
 	string certofferguid = OfferNew("node1", "aliasprunewithcertoffer", "certificates", "title", "1", "0.05", "description", "SYS", certguid);	
 	string offerguid = OfferNew("node1", "aliasprunewithcertoffer", "category", "title", "1", "0.05", "description", "SYS");
@@ -777,8 +778,8 @@ BOOST_AUTO_TEST_CASE (generate_aliasprunewithcertoffer)
 	GenerateBlocks(10);	
 	OfferUpdate("node1", "aliasprunewithcertoffer", offerguid, "category", "titlenew", "1", "0.05", "descriptionnew", "USD");
 	OfferUpdate("node1", "aliasprunewithcertoffer", certofferguid, "certificates", "titlenew", "1", "0.05", "descriptionnew", "USD", "false", certguid);
-	OfferAccept("node1", "node2", "aliasprunewithcertoffer2", certofferguid, "1");
-	OfferAccept("node1", "node2", "aliasprunewithcertoffer2", offerguid, "1");
+	OfferAccept("node1", "node2", "aliasprunewithcertoffer2", "aliasprunewithcertofferarbiter", certofferguid, "1");
+	OfferAccept("node1", "node2", "aliasprunewithcertoffer2", "aliasprunewithcertofferarbiter", offerguid, "1");
 	ExpireAlias("aliasprunewithcertoffer2");
 	StartNode("node3");
 	GenerateBlocks(5, "node3");
