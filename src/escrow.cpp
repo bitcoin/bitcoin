@@ -1037,9 +1037,9 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 					theEscrow.bPaymentAck = true;
 
 
-				int nQty = dbOffer.nQty;
+				int nQty = theEscrow.nQty;
 				// if this is a linked offer we must update the linked offer qty
-				if (GetOffer(dbOffer.linkOfferTuple.first, myLinkOffer))
+				if (GetOffer(theEscrow.linkOfferTuple.first, myLinkOffer))
 				{
 					nQty = myLinkOffer.nQty;
 				}
@@ -1064,9 +1064,9 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 					}
 					else
 					{
-						dbOffer.nQty = nQty;
-						dbOffer.nSold++;
-						if (!dontaddtodb && !pofferdb->WriteOffer(dbOffer))
+						theEscrow.nQty = nQty;
+						theEscrow.nSold++;
+						if (!dontaddtodb && !pofferdb->WriteOffer(theEscrow))
 						{
 							errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4076 - " + _("Failed to write to offer to DB");
 							return error(errorMessage.c_str());
@@ -1141,42 +1141,41 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				}
 				// refund qty only if ack'd
 				if (theEscrow.bPaymentAck) {
-					if (GetOffer(theEscrow.offerTuple.first, dbOffer))
+					
+					int nQty = theEscrow.nQty;
+					COffer myLinkOffer;
+					if (GetOffer(theEscrow.linkOfferTuple.first, myLinkOffer))
 					{
-						int nQty = dbOffer.nQty;
-						COffer myLinkOffer;
-						if (GetOffer(dbOffer.linkOfferTuple.first, myLinkOffer))
-						{
-							nQty = myLinkOffer.nQty;
-						}
+						nQty = myLinkOffer.nQty;
+					}
 
-						if (nQty != -1)
+					if (nQty != -1)
+					{
+						if (theEscrow.extTxId.IsNull())
+							nQty += theEscrow.nQty;
+						if (!myLinkOffer.IsNull())
 						{
-							if (theEscrow.extTxId.IsNull())
-								nQty += theEscrow.nQty;
-							if (!myLinkOffer.IsNull())
+							myLinkOffer.nQty = nQty;
+							myLinkOffer.nSold--;
+							if (!dontaddtodb && !pofferdb->WriteOffer(myLinkOffer))
 							{
-								myLinkOffer.nQty = nQty;
-								myLinkOffer.nSold--;
-								if (!dontaddtodb && !pofferdb->WriteOffer(myLinkOffer))
-								{
-									errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4048 - " + _("Failed to write to offer link to DB");
-									return error(errorMessage.c_str());
-								}
+								errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4048 - " + _("Failed to write to offer link to DB");
+								return error(errorMessage.c_str());
 							}
-							else
+						}
+						else
+						{
+							theEscrow.nQty = nQty;
+							theEscrow.nSold--;
+							if (!dontaddtodb && !pofferdb->WriteOffer(theEscrow))
 							{
-								dbOffer.nQty = nQty;
-								dbOffer.nSold--;
-								if (!dontaddtodb && !pofferdb->WriteOffer(dbOffer))
-								{
-									errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4049 - " + _("Failed to write to offer to DB");
-									return error(errorMessage.c_str());
-								}
+								errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4049 - " + _("Failed to write to offer to DB");
+								return error(errorMessage.c_str());
 							}
 						}
 					}
 				}
+				
 				if (!serializedEscrow.vchWitness.empty())
 					theEscrow.vchWitness = serializedEscrow.vchWitness;
 
@@ -1285,9 +1284,9 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				// reduce qty if not already done so by ack
 				if (!theEscrow.bPaymentAck)
 				{
-					int nQty = dbOffer.nQty;
+					int nQty = theEscrow.nQty;
 					// if this is a linked offer we must update the linked offer qty
-					if (GetOffer(dbOffer.linkOfferTuple.first, myLinkOffer))
+					if (GetOffer(theEscrow.linkOfferTuple.first, myLinkOffer))
 					{
 						nQty = myLinkOffer.nQty;
 					}
@@ -1312,9 +1311,9 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 						}
 						else
 						{
-							dbOffer.nQty = nQty;
-							dbOffer.nSold++;
-							if (!dontaddtodb && !pofferdb->WriteOffer(dbOffer))
+							theEscrow.nQty = nQty;
+							theEscrow.nSold++;
+							if (!dontaddtodb && !pofferdb->WriteOffer(theEscrow))
 							{
 								errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4076 - " + _("Failed to write to offer to DB");
 								return error(errorMessage.c_str());
