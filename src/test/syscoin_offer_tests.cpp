@@ -378,7 +378,7 @@ BOOST_AUTO_TEST_CASE (generate_offerupdate_editcurrency)
 
 	// try to update currency and accept in same block, ensure payment uses old currency not new
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "offerupdate selleraliascurrency " + offerguid + " category title 93 0.2 desc EUR"));
-	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "escrownew buyeraliascurrency " + offerguid + " 10 arbiteraliascurrency"));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "escrownew false buyeraliascurrency " + offerguid + " 10 true 0 arbiteraliascurrency"));
 	const UniValue &arr = r.get_array();
 	escrowguid = arr[1].get_str();
 	GenerateBlocks(5);
@@ -431,13 +431,13 @@ BOOST_AUTO_TEST_CASE (generate_offeraccept)
 
 	
 	// perform an accept on negative quantity
-	BOOST_CHECK_THROW(r = CallRPC("node2", "escrownew buyeralias3 " + offerguid + " -1 arbiteralias3"), runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC("node2", "escrownew false buyeralias3 " + offerguid + " -1 true 0 arbiteralias3"), runtime_error);
 
 	// perform an accept on zero quantity
-	BOOST_CHECK_THROW(r = CallRPC("node2", "escrownew buyeralias3 " + offerguid + " 0 arbiteralias3"), runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC("node2", "escrownew false buyeralias3 " + offerguid + " 0 true 0 arbiteralias3"), runtime_error);
 
 	// perform an accept on more items than available
-	BOOST_CHECK_THROW(r = CallRPC("node2", "escrownew buyeralias3 " + offerguid + " 100 arbiteralias3"), runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC("node2", "escrownew false buyeralias3 " + offerguid + " 100 true 0 arbiteralias3"), runtime_error);
 
 
 }
@@ -514,7 +514,7 @@ BOOST_AUTO_TEST_CASE (generate_offerexpired)
 	ExpireAlias("buyeralias4");
 
 	// should fail: perform an accept on expired offer
-	BOOST_CHECK_THROW(r = CallRPC("node2", "escrownew buyeralias4 " + offerguid + " 1 arbiteralias4"), runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC("node2", "escrownew false buyeralias4 " + offerguid + " 1 true 0 arbiteralias4"), runtime_error);
 
 	// should fail: offer update on an expired offer
 	BOOST_CHECK_THROW(r = CallRPC("node1", "offerupdate selleralias4 " + offerguid + " category title 90 0.15 description"), runtime_error);
@@ -581,7 +581,7 @@ BOOST_AUTO_TEST_CASE (generate_certofferexpired)
 	offerguid = OfferNew("node1", "node1alias2a", "certificates", "title", "1", "0.05", "description", "USD", certguid1);
 	ExpireAlias("node2alias2");
 	// should fail: accept an offer with expired alias
-	BOOST_CHECK_THROW(r = CallRPC("node2", "escrownew node2alias2 " + offerguid + " 1 node3alias2"), runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC("node2", "escrownew false node2alias2 " + offerguid + " 1 true 0 node3alias2"), runtime_error);
 	// should fail: generate a cert offer using an expired cert
 	BOOST_CHECK_THROW(r = CallRPC("node1", "offernew node1alias2 certificates title 1 0.05 description USD " + certguid1), runtime_error);
 	/// should fail: generate a cert offer using an expired cert

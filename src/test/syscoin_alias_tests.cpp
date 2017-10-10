@@ -843,7 +843,8 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	AliasNew("node1", "aliasexpire0", "pubdata");
 	string aliasexpire1address =  AliasNew("node2", "aliasexpire1", "pubdata");
 	// should already exist and not be expired
-	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew aliasexpire2"), runtime_error);
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasnew aliasexpire2"));
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), false);
 	CKey privKey;
 	privKey.MakeNewKey(true);
 	CPubKey pubKey = privKey.GetPubKey();
@@ -862,11 +863,10 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	BOOST_CHECK_THROW(CallRPC("node2", "offerlink aliasexpirednode2 " + offerguid + " 5 newdetails"), runtime_error);
 	// should fail: generate an offer using expired alias
 	BOOST_CHECK_THROW(CallRPC("node2", "offernew aliasexpirednode2 category title 1 0.05 description USD"), runtime_error);
-
 	// should fail: new escrow with expired arbiter alias
-	BOOST_CHECK_THROW(CallRPC("node2", "escrownew aliasexpire2node2 " + offerguid + " 1 " + " aliasexpirednode2"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node2", "escrownew false aliasexpire2node2 " + offerguid + " 1 " + " true 0 aliasexpirednode2"), runtime_error);
 	// should fail: new escrow with expired alias
-	BOOST_CHECK_THROW(CallRPC("node2", "escrownew aliasexpirednode2 " + offerguid + " 1 " + " aliasexpire"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node2", "escrownew false aliasexpirednode2 " + offerguid + " 1 " + " true 0 aliasexpire"), runtime_error);
 
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate aliasexpire newdata1"));
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate aliasexpire2 newdata1"));

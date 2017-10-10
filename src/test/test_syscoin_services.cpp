@@ -1630,7 +1630,8 @@ void EscrowClaimRelease(const string& node, const string& role, const string& gu
 	GenerateBlocks(10, node);
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "offerinfo " + offer));
 	int nQtyOfferAfter = find_value(r.get_obj(), "quantity").get_int();
-	BOOST_CHECK_EQUAL(nQtyOfferBefore-nQty, nQtyOfferAfter);
+	// we have already changed qty as we ack the escrow when calling escrownew in this test suite
+	BOOST_CHECK_EQUAL(nQtyOfferBefore, nQtyOfferAfter);
 
 	// get balances after
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasbalance " + selleralias));
