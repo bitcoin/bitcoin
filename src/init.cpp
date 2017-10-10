@@ -71,6 +71,7 @@ bool fFeeEstimatesInitialized = false;
 static const bool DEFAULT_PROXYRANDOMIZE = true;
 static const bool DEFAULT_REST_ENABLE = false;
 static const bool DEFAULT_STOPAFTERBLOCKIMPORT = false;
+static const bool DEFAULT_VB_IGNORE_DEFAULTS = true;
 
 std::unique_ptr<CConnman> g_connman;
 std::unique_ptr<PeerLogicValidation> peerLogic;
@@ -440,6 +441,7 @@ std::string HelpMessage(HelpMessageMode mode)
         strUsage += HelpMessageOpt("-limitdescendantsize=<n>", strprintf("Do not accept transactions if any ancestor would have more than <n> kilobytes of in-mempool descendants (default: %u).", DEFAULT_DESCENDANT_SIZE_LIMIT));
         strUsage += HelpMessageOpt("-vbparams=deployment:start:end", "Use given start/end times for specified version bits deployment (regtest-only)");
         strUsage += HelpMessageOpt("-vbignore=bit:start:end", "Ignore use of given version bit between given start/end times");
+        strUsage += HelpMessageOpt("-vbignoredefaults=<n>", strprintf("Ignore version bits per chain defaults (default: %u).", DEFAULT_VB_IGNORE_DEFAULTS));
     }
     strUsage += HelpMessageOpt("-debug=<category>", strprintf(_("Output debugging information (default: %u, supplying <category> is optional)"), 0) + ". " +
         _("If <category> is not supplied or if <category> = 1, output all debugging information.") + " " + _("<category> can be:") + " " + ListLogCategories() + ".");
@@ -1109,6 +1111,12 @@ bool AppInitParameterInteraction()
         fEnableReplacement = (std::find(vstrReplacementModes.begin(), vstrReplacementModes.end(), "fee") != vstrReplacementModes.end());
     }
 
+    if (gArgs.GetBoolArg("-vbignoredefaults", DEFAULT_VB_IGNORE_DEFAULTS)) {
+        for (const IgnoreVersionBits& ivb : chainparams.IgnoreBits()) {
+            LogPrintf("Ignoring version bit %d from start=%ld, end=%ld (default)\n", ivb.bit, ivb.beginTime, ivb.endTime);
+            ignorebits.push_back(ivb);
+        }
+    }
     if (gArgs.IsArgSet("-vbignore")) {
         // Allow ignoring version bit parameters for forks that you will not enforce
         for (const std::string& strIgnoreVersionBits : gArgs.GetArgs("-vbignore")) {

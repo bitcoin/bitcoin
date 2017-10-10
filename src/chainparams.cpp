@@ -5,6 +5,7 @@
 
 #include <chainparams.h>
 #include <consensus/merkle.h>
+#include <versionbits.h>
 
 #include <tinyformat.h>
 #include <util.h>
@@ -171,6 +172,8 @@ public:
                         //   (the tx=... number in the SetBestChain debug.log lines)
             3.1         // * estimated number of transactions per second after that timestamp
         };
+
+        vIgnoreBits.clear();
     }
 };
 
@@ -261,6 +264,12 @@ public:
             0.15
         };
 
+        vIgnoreBits.clear();
+        vIgnoreBits.emplace_back(
+            28,         // BIP 109 by Bitcoin Classic
+            1453334400, // 2016-01-21 00:00:00 +0000
+            1514764800  // 2018-01-01 00:00:00 +0000
+            );
     }
 };
 
@@ -330,6 +339,8 @@ public:
             0,
             0
         };
+
+        vIgnoreBits.clear();
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,111);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,196);
