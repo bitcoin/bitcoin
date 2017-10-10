@@ -56,6 +56,7 @@ extern std::atomic<bool> fReopenDebugLog;
 extern CTranslationInterface translationInterface;
 
 extern const char * const BITCOIN_CONF_FILENAME;
+extern const char * const BITCOIN_NETCONF_FILENAME;
 extern const char * const BITCOIN_PID_FILENAME;
 
 extern std::atomic<uint32_t> logCategories;
@@ -173,7 +174,7 @@ bool TryCreateDirectories(const fs::path& p);
 fs::path GetDefaultDataDir();
 const fs::path &GetDataDir(bool fNetSpecific = true);
 void ClearDatadirCache();
-fs::path GetConfigFile(const std::string& confPath);
+fs::path GetConfigFile(const std::string& confPath, bool fNetSpecific = false);
 #ifndef WIN32
 fs::path GetPidFile();
 void CreatePidFile(const fs::path &path, pid_t pid);
@@ -203,7 +204,7 @@ protected:
     std::map<std::string, std::vector<std::string>> mapMultiArgs;
 public:
     void ParseParameters(int argc, const char*const argv[]);
-    void ReadConfigFile(const std::string& confPath);
+    void ReadConfigFile(const std::string& confPath, bool fNetSpecific = false);
 
     /**
      * Return a vector of strings of the given argument

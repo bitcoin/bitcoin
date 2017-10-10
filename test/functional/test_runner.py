@@ -128,6 +128,7 @@ BASE_SCRIPTS= [
     'uacomment.py',
     'p2p-acceptblock.py',
     'feature_logging.py',
+    'feature_netconf.py',
 ]
 
 EXTENDED_SCRIPTS = [
