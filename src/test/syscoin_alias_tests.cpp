@@ -829,7 +829,6 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	StopNode("node3");
 	printf("Sleeping 5 seconds between the creation of aliases for this test...\n");
 	MilliSleep(5000);	
-	GenerateBlocks(10);	
 	AliasNew("node1", "aliasexpire2", "pubdata");
 	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress aliasexpirednode2 3000"), runtime_error);
 	GenerateBlocks(10);	
@@ -842,9 +841,8 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	AliasNew("node1", "aliasexpire", "pubdata");
 	AliasNew("node1", "aliasexpire0", "pubdata");
 	string aliasexpire1address =  AliasNew("node2", "aliasexpire1", "pubdata");
-	// should already exist and not be expired
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasnew aliasexpire2"));
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), false);
+	// should already exist and not be expired so you can't create it again
+	BOOST_CHECK_THROW(r = CallRPC("node1", "aliasnew aliasexpire2"), runtime_error);
 	CKey privKey;
 	privKey.MakeNewKey(true);
 	CPubKey pubKey = privKey.GetPubKey();
