@@ -1298,7 +1298,7 @@ const string EscrowNewAuction(const string& node, const string& sellernode, cons
 	string guid = arr[1].get_str();
 	GenerateBlocks(10, node);
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "offerinfo " + offerguid));
-	CAmount offerprice = AmountFromValue(find_value(r.get_obj(), "price"));
+	CAmount offerprice = AmountFromValue(strprintf("%.*f", 8, find_value(r.get_obj(), "price").get_real()));
 	int nQtyAfter = find_value(r.get_obj(), "quantity").get_int();
 	BOOST_CHECK_EQUAL(nQtyAfter, nQtyBefore);
 	CAmount nTotal = offerprice;
@@ -1377,7 +1377,7 @@ const string EscrowNewBuyItNow(const string& node, const string& sellernode, con
 	string guid = arr[1].get_str();
 	GenerateBlocks(10, node);
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "offerinfo " + offerguid));
-	CAmount offerprice = AmountFromValue(find_value(r.get_obj(), "price"));
+	CAmount offerprice = AmountFromValue(strprintf("%.*f", 8, find_value(r.get_obj(), "price").get_real()));
 	int nQtyAfter = find_value(r.get_obj(), "quantity").get_int();
 	BOOST_CHECK_EQUAL(nQtyAfter, nQtyBefore);
 	CAmount nTotal = offerprice*qty;
