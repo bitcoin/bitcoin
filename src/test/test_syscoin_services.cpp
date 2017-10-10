@@ -1438,9 +1438,12 @@ const string EscrowNewBuyItNow(const string& node, const string& sellernode, con
 void EscrowRelease(const string& node, const string& role, const string& guid ,const string& witness)
 {
 	UniValue r;
-	const UniValue &escrowBidBefore = EscrowBidFilterFromGUID(node, guid);
-	BOOST_CHECK(!escrowBidBefore.empty());
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowinfo " + guid));
+	bool bBuyNow = find_value(r.get_obj(), "buynow").get_bool();
+	if (!bBuyNow) {
+		const UniValue &escrowBidBefore = EscrowBidFilterFromGUID(node, guid);
+		BOOST_CHECK(!escrowBidBefore.empty());
+	}
 	string offer = find_value(r.get_obj(), "offer").get_str();
 	string escrowaddress = find_value(r.get_obj(), "escrowaddress").get_str();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "getaddressutxos \"{\\\"addresses\\\": [\\\"" + escrowaddress + "\\\"]}\""));
@@ -1468,15 +1471,21 @@ void EscrowRelease(const string& node, const string& role, const string& guid ,c
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "offerinfo " + offer));
 	int nQtyOfferAfter = find_value(r.get_obj(), "quantity").get_int();
 	BOOST_CHECK_EQUAL(nQtyOfferAfter, nQtyOfferBefore);
-	const UniValue &escrowBidAfter = EscrowBidFilterFromGUID(node, guid);
-	BOOST_CHECK(!escrowBidAfter.empty());
+	if (!bBuyNow) {
+		const UniValue &escrowBidAfter = EscrowBidFilterFromGUID(node, guid);
+		BOOST_CHECK(!escrowBidAfter.empty());
+	}
 }
 void EscrowRefund(const string& node, const string& role, const string& guid, const string &witness)
 {
 	UniValue r;
-	const UniValue &escrowBidBefore = EscrowBidFilterFromGUID(node, guid);
-	BOOST_CHECK(!escrowBidBefore.empty());
+
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowinfo " + guid));
+	bool bBuyNow = find_value(r.get_obj(), "buynow").get_bool();
+	if (!bBuyNow) {
+		const UniValue &escrowBidBefore = EscrowBidFilterFromGUID(node, guid);
+		BOOST_CHECK(!escrowBidBefore.empty());
+	}
 	string offer = find_value(r.get_obj(), "offer").get_str();
 	int nQty = find_value(r.get_obj(), "quantity").get_int();
 	string escrowaddress = find_value(r.get_obj(), "escrowaddress").get_str();
@@ -1506,16 +1515,21 @@ void EscrowRefund(const string& node, const string& role, const string& guid, co
 	int nQtyOfferAfter = find_value(r.get_obj(), "quantity").get_int();
 	// refund adds qty
 	BOOST_CHECK_EQUAL(nQtyOfferAfter, nQtyOfferBefore+nQty);
-	const UniValue &escrowBidAfter = EscrowBidFilterFromGUID(node, guid);
-	BOOST_CHECK(escrowBidAfter.empty());
+	if (!bBuyNow) {
+		const UniValue &escrowBidAfter = EscrowBidFilterFromGUID(node, guid);
+		BOOST_CHECK(escrowBidAfter.empty());
+	}
 }
 void EscrowClaimRefund(const string& node, const string& role, const string& guid)
 {
 
 	UniValue r, a;
-	const UniValue &escrowBid = EscrowBidFilterFromGUID(node, guid);
-	BOOST_CHECK(escrowBid.empty());
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowinfo " + guid));
+	bool bBuyNow = find_value(r.get_obj(), "buynow").get_bool();
+	if (!bBuyNow) {
+		const UniValue &escrowBid = EscrowBidFilterFromGUID(node, guid);
+		BOOST_CHECK(escrowBid.empty());
+	}
 	string buyeralias = find_value(r.get_obj(), "buyer").get_str();
 	CAmount nEscrowFee = AmountFromValue(find_value(r.get_obj(), "networkfee"));
 	CAmount nArbiterFee = AmountFromValue(find_value(r.get_obj(), "arbiterfee"));
