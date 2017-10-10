@@ -107,7 +107,7 @@ static int AppInitRPC(int argc, char* argv[])
         return EXIT_FAILURE;
     }
     try {
-        gArgs.ReadConfigFile(gArgs.GetArg("-conf", BITCOIN_CONF_FILENAME));
+        gArgs.ReadConfigFile(gArgs.GetArg("-conf", BITCOIN_CONF_FILENAME), false);
     } catch (const std::exception& e) {
         fprintf(stderr,"Error reading configuration file: %s\n", e.what());
         return EXIT_FAILURE;
@@ -326,8 +326,7 @@ static UniValue CallRPC(BaseRequestHandler *rh, const std::string& strMethod, co
         if (!GetAuthCookie(&strRPCUserColonPass)) {
             throw std::runtime_error(strprintf(
                 _("Could not locate RPC credentials. No authentication cookie could be found, and RPC password is not set.  See -rpcpassword and -stdinrpcpass.  Configuration file: (%s)"),
-                    GetConfigFile(gArgs.GetArg("-conf", BITCOIN_CONF_FILENAME)).string().c_str()));
-
+                    GetConfigFile(gArgs.GetArg("-conf", BITCOIN_CONF_FILENAME), false).string().c_str()));
         }
     } else {
         strRPCUserColonPass = gArgs.GetArg("-rpcuser", "") + ":" + gArgs.GetArg("-rpcpassword", "");
