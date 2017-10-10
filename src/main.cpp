@@ -5149,10 +5149,10 @@ bool CheckWork(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey)
     uint256 hashTarget = CBigNum().SetCompact(pblock->nBits).getuint256();
 
     if (hash > hashTarget && pblock->IsProofOfWork())
-        return error("BitcoinMiner : proof-of-work not meeting target");
+        return error("PeercoinMiner : proof-of-work not meeting target");
 
     //// debug print
-    printf("BitcoinMiner:\n");
+    printf("PeercoinMiner:\n");
     printf("new block found  \n  hash: %s  \ntarget: %s\n", hash.GetHex().c_str(), hashTarget.GetHex().c_str());
     pblock->print();
     printf("generated %s\n", FormatMoney(pblock->vtx[0].vout[0].nValue).c_str());
@@ -5161,7 +5161,7 @@ bool CheckWork(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey)
     {
         LOCK(cs_main);
         if (pblock->hashPrevBlock != hashBestChain)
-            return error("BitcoinMiner : generated block is stale");
+            return error("PeercoinMiner : generated block is stale");
 
         // Remove key from key pool
         reservekey.KeepKey();
@@ -5175,7 +5175,7 @@ bool CheckWork(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey)
         // Process this block the same as if we had received it from another node
         CValidationState state;
         if (!ProcessBlock(state, NULL, pblock))
-            return error("BitcoinMiner : ProcessBlock, block not accepted");
+            return error("PeercoinMiner : ProcessBlock, block not accepted");
     }
 
     return true;
@@ -5251,7 +5251,7 @@ void BitcoinMiner(CWallet *pwallet, bool fProofOfStake)
             continue;
         }
 
-        printf("Running BitcoinMiner with %" PRIszu" transactions in block (%u bytes)\n", pblock->vtx.size(),
+        printf("Running PeercoinMiner with %" PRIszu" transactions in block (%u bytes)\n", pblock->vtx.size(),
                ::GetSerializeSize(*pblock, SER_NETWORK, PROTOCOL_VERSION));
 
         //
@@ -5358,7 +5358,7 @@ void BitcoinMiner(CWallet *pwallet, bool fProofOfStake)
     } }
     catch (boost::thread_interrupted)
     {
-        if(!fProofOfStake) printf("BitcoinMiner terminated\n");
+        if(!fProofOfStake) printf("PeercoinMiner terminated\n");
         throw;
     }
 }
