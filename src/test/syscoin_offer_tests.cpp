@@ -606,7 +606,6 @@ BOOST_AUTO_TEST_CASE (generate_offerpruning)
 	// then we let the service expire
 	ExpireAlias("pruneoffer");
 	StartNode("node2");
-	ExpireAlias("pruneoffer");
 	GenerateBlocks(5, "node2");
 	// it can still be found via search because node hasn't restarted and pruned itself
 	BOOST_CHECK_EQUAL(OfferFilter("node1", guid), true);
@@ -656,7 +655,6 @@ BOOST_AUTO_TEST_CASE (generate_offerpruning)
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(),true);	
 	GenerateBlocks(5, "node1");
 	StartNode("node3");
-	ExpireAlias("pruneoffer");  
 	GenerateBlocks(5, "node3");
 	// node3 shouldn't find the service at all (meaning node3 doesn't sync the data)
 	BOOST_CHECK_THROW(CallRPC("node3", "offerinfo " + guid1), runtime_error);

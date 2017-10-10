@@ -382,7 +382,6 @@ BOOST_AUTO_TEST_CASE (generate_escrowpruning)
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), false);	
 	ExpireAlias("buyeraliasprune");
 	StartNode("node3");
-	ExpireAlias("buyeraliasprune");
 	GenerateBlocks(5, "node3");
 	// node3 shouldn't find the service
 	BOOST_CHECK_THROW(CallRPC("node3", "escrowinfo " + guid1), runtime_error);

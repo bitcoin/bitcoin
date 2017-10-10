@@ -280,7 +280,6 @@ BOOST_AUTO_TEST_CASE (generate_alias_offerexpiry_resync)
 	StartNode("node1");
 
 	// aliasnew should still be active, but offer was set to aliasold so it should be expired
-	ExpireAlias("aliasold");
 	GenerateBlocks(5, "node1");
 
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "getblockchaininfo"));
@@ -292,7 +291,6 @@ BOOST_AUTO_TEST_CASE (generate_alias_offerexpiry_resync)
 	BOOST_CHECK_THROW(r = CallRPC("node1", "offerinfo " + offerguid), runtime_error);
 
 	StartNode("node3");
-	ExpireAlias("aliasold");
 	GenerateBlocks(5, "node3");
 
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "getblockchaininfo"));
@@ -300,12 +298,13 @@ BOOST_AUTO_TEST_CASE (generate_alias_offerexpiry_resync)
 	BOOST_CHECK(aliasoldexpiry <= mediantime);
 	BOOST_CHECK(aliasnewexpiry > mediantime);
 
+	// aliasnew should still be active
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo aliasnew"));
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), true);	
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), false);	
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "aliasinfo aliasnew"));
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), true);
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), false);
 	BOOST_CHECK_NO_THROW(r = CallRPC("node3", "aliasinfo aliasnew"));
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), true);
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), false);
 
 
 	// node 3 doesn't download the offer since it expired while node 3 was offline
@@ -617,7 +616,6 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpiredbuyback)
 	BOOST_CHECK_EQUAL(AliasFilter("node2", "aliasexpirebuyback1"), true);
 
 	StartNode("node3");
-	ExpireAlias("aliasexpirebuyback1");
 	GenerateBlocks(5, "node3");
 	BOOST_CHECK_EQUAL(AliasFilter("node1", "aliasexpirebuyback1"), true);
 	BOOST_CHECK_EQUAL(AliasFilter("node2", "aliasexpirebuyback1"), true);
@@ -641,7 +639,6 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpiredbuyback)
 	BOOST_CHECK_EQUAL(AliasFilter("node1", "aliasexpirebuyback2"), true);
 	BOOST_CHECK_EQUAL(AliasFilter("node2", "aliasexpirebuyback2"), true);
 	StartNode("node3");
-	ExpireAlias("aliasexpirebuyback2");
 	GenerateBlocks(5, "node3");
 	BOOST_CHECK_EQUAL(AliasFilter("node1", "aliasexpirebuyback2"), true);
 	BOOST_CHECK_EQUAL(AliasFilter("node2", "aliasexpirebuyback2"), true);
@@ -689,7 +686,6 @@ BOOST_AUTO_TEST_CASE (generate_aliaspruning)
 	// then we let the service expire
 	ExpireAlias("aliasprune");
 	StartNode("node2");
-	ExpireAlias("aliasprune");
 	GenerateBlocks(5, "node2");
 	BOOST_CHECK_EQUAL(AliasFilter("node1", "aliasprune"), true);
 	// and it should say its expired
@@ -733,7 +729,6 @@ BOOST_AUTO_TEST_CASE (generate_aliaspruning)
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), true);
 
 	StartNode("node3");
-	ExpireAlias("aliasprune");
 	GenerateBlocks(5, "node3");
 	// node3 shouldn't find the service at all (meaning node3 doesn't sync the data)
 	BOOST_CHECK_THROW(CallRPC("node3", "aliasinfo aliasprune1"), runtime_error);
@@ -759,7 +754,6 @@ BOOST_AUTO_TEST_CASE (generate_aliasprunewithoffer)
 	// last created alias should have furthest expiry
 	ExpireAlias("aliasprunewithoffer2");
 	StartNode("node3");
-	ExpireAlias("aliasprunewithoffer2");
 	GenerateBlocks(5, "node3");
 	// node3 shouldn't find the service at all (meaning node3 doesn't sync the data)
 	BOOST_CHECK_THROW(CallRPC("node3", "escrowinfo " + escrowguid), runtime_error);
@@ -787,7 +781,6 @@ BOOST_AUTO_TEST_CASE (generate_aliasprunewithcertoffer)
 	OfferAccept("node1", "node2", "aliasprunewithcertoffer2", offerguid, "1");
 	ExpireAlias("aliasprunewithcertoffer2");
 	StartNode("node3");
-	ExpireAlias("aliasprunewithcertoffer2");
 	GenerateBlocks(5, "node3");
 	// node3 shouldn't find the service at all (meaning node3 doesn't sync the data)
 	BOOST_CHECK_THROW(CallRPC("node3", "offerinfo " + offerguid), runtime_error);
@@ -811,7 +804,6 @@ BOOST_AUTO_TEST_CASE (generate_aliasprunewithcert)
 	GenerateBlocks(5, "node1");
 	ExpireAlias("aliasprunewithcert2");
 	StartNode("node3");
-	ExpireAlias("aliasprunewithcert2");
 	GenerateBlocks(5, "node3");
 	// node3 shouldn't find the service at all (meaning node3 doesn't sync the data)
 	BOOST_CHECK_THROW(CallRPC("node3", "certinfo " + certguid), runtime_error);
@@ -888,7 +880,6 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	GenerateBlocks(5, "node1");
 
 	StartNode("node3");
-	ExpireAlias("aliasexpirednode2");
 	
 	GenerateBlocks(5, "node3");
 	GenerateBlocks(5, "node2");
