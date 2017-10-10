@@ -1,4 +1,4 @@
-Project Barcelona
+Project Ravencoin 
 (old title: Bitcoin Core integration/staging tree)
 =====================================
 
@@ -6,7 +6,7 @@ WHAT IS THE PURPOSE OF THIS GIT?
 
 This is an experiment for exploring the use of the Bitcoin blockchain for tokenization of assets.
 
-THANK YOU to all of the 448 Bitcoin devs who made 14,368 contributions to Bitcoin which is the foundation for this repository.
+THANK YOU to all of the 448 Bitcoin devs who made 14,368 contributions to Bitcoin which was the foundation for this repository.
 
 
 
