@@ -3569,14 +3569,13 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
                 else
                     reservekey.ReturnKey();
 
-				// SYSCOIN use max-2 because we want RBF replacement to be on by default on this wallet
                 // Fill vin
                 //
                 // Note how the sequence number is set to max()-1 so that the
                 // nLockTime set above actually works.
                 BOOST_FOREACH(const PAIRTYPE(const CWalletTx*,unsigned int)& coin, setCoins){
                     CTxIn txin = CTxIn(coin.first->GetHash(),coin.second,CScript(),
-                                              std::numeric_limits<unsigned int>::max()-2);
+                                              std::numeric_limits<unsigned int>::max()-1);
                     txin.prevPubKey = coin.first->vout[coin.second].scriptPubKey;
                     txNew.vin.push_back(txin);
                 }
