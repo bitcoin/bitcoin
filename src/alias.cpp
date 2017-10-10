@@ -1273,37 +1273,15 @@ UniValue syscoinquery(const UniValue& params, bool fHelp) {
 	if (fHelp || 2 > params.size() || 3 < params.size())
 		throw runtime_error(
 			"syscoinquery <collection> <query> [options]\n"
-			"<collection> Collection name, either: 'alias', 'cert', 'offer', 'feedback', 'escrow'.\n"
+			"<collection> Collection name, either: 'alias', 'cert', 'offer', 'feedback', 'escrow', 'escrowbid'.\n"
 			"<query> JSON query on the collection to retrieve a set of documents.\n"
 			"<options> JSON option arguments into the query. Based on mongoc_collection_find_with_opts.\n"
 			+ HelpRequiringPassphrase());
 	string collection = params[0].get_str();
-	string query = params[1].get_str();
-	string options;
-	if (CheckParam(params, 2))
-		options = params[2].get_str();
-	
-	bson_t *filter = NULL;
-	bson_t *opts = NULL;
-	mongoc_cursor_t *cursor;
-	bson_error_t error;
-	const bson_t *doc;
-	char *str;
 	mongoc_collection_t *selectedCollection;
-	filter = bson_new_from_json((const uint8_t *)query.c_str(), -1, &error);
-	if (!filter) {
-		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5505 - " + boost::lexical_cast<string>(error.message));
-	}
-	if (options.size() > 0) {
-		opts = bson_new_from_json((const uint8_t *)options.c_str(), -1, &error);
-		if (!opts) {
-			bson_destroy(filter);
-			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5506 - " + boost::lexical_cast<string>(error.message));
-		}
-	}
 	if (collection == "alias")
 		selectedCollection = alias_collection;
-	else if(collection == "cert")
+	else if (collection == "cert")
 		selectedCollection = cert_collection;
 	else if (collection == "offer")
 		selectedCollection = offer_collection;
@@ -1316,6 +1294,33 @@ UniValue syscoinquery(const UniValue& params, bool fHelp) {
 	else
 		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5508 - " + _("Invalid selection collection name, please specify the collection parameter as either 'alias', 'cert', 'offer', 'feedback' or 'escrow'"));
 
+	string query = params[1].get_str();
+	string options = "";
+	if (CheckParam(params, 2))
+		options = params[2].get_str();
+	
+	bson_t *filter = NULL;
+	bson_t *opts = NULL;
+	mongoc_cursor_t *cursor;
+	bson_error_t error;
+	const bson_t *doc;
+	char *str;
+	try {
+		filter = bson_new_from_json((const uint8_t *)query.c_str(), -1, &error);
+		if (!filter) {
+			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5505 - " + boost::lexical_cast<string>(error.message));
+		}
+	}
+	catch (...) {
+		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5508 - " + _("Cannot convert query into JSON"));
+	}
+	if (!options.empty()) {
+		opts = bson_new_from_json((const uint8_t *)options.c_str(), -1, &error);
+		if (!opts) {
+			bson_destroy(filter);
+			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5506 - " + boost::lexical_cast<string>(error.message));
+		}
+	}
 	cursor = mongoc_collection_find_with_opts(selectedCollection, filter, opts, NULL);
 	UniValue res(UniValue::VARR);
 	while (mongoc_cursor_next(cursor, &doc)) {
