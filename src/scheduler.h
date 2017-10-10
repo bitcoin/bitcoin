@@ -81,7 +81,7 @@ private:
     int nThreadsServicingQueue;
     bool stopRequested;
     bool stopWhenEmpty;
-    bool shouldStop() { return stopRequested || (stopWhenEmpty && taskQueue.empty()); }
+    bool shouldStop() const { return stopRequested || (stopWhenEmpty && taskQueue.empty()); }
 };
 
 /**
@@ -102,7 +102,7 @@ private:
     void ProcessQueue();
 
 public:
-    SingleThreadedSchedulerClient(CScheduler *pschedulerIn) : m_pscheduler(pschedulerIn) {}
+    explicit SingleThreadedSchedulerClient(CScheduler *pschedulerIn) : m_pscheduler(pschedulerIn) {}
     void AddToProcessQueue(std::function<void (void)> func);
 
     // Processes all remaining queue members on the calling thread, blocking until queue is empty

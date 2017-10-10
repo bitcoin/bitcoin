@@ -330,6 +330,10 @@
         <translation>点击重新开启网络活动。</translation>
     </message>
     <message>
+        <source>Syncing Headers (%1%)...</source>
+        <translation>同步区块头 (%1%)...</translation>
+    </message>
+    <message>
         <source>Reindexing blocks on disk...</source>
         <translation>正在为数据块重建索引...</translation>
     </message>
@@ -3239,6 +3243,10 @@
     <message>
         <source>Wallet %s resides outside data directory %s</source>
         <translation>钱包 %s 在外部的数据目录 %s</translation>
+    </message>
+    <message>
+        <source>Wallet debugging/testing options:</source>
+        <translation>钱包调试/测试选项：</translation>
     </message>
     <message>
         <source>Wallet options:</source>

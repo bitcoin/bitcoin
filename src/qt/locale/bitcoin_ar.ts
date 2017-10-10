@@ -314,6 +314,18 @@
         <translation>افتح &amp;URI...</translation>
     </message>
     <message>
+        <source>Click to disable network activity.</source>
+        <translation>اضغط لإلغاء تفعيل الشبكه</translation>
+    </message>
+    <message>
+        <source>Network activity disabled.</source>
+        <translation>تم إلغاء تفعيل الشبكه</translation>
+    </message>
+    <message>
+        <source>Click to enable network activity again.</source>
+        <translation>اضغط لتفعيل الشبكه مره أخرى</translation>
+    </message>
+    <message>
         <source>Reindexing blocks on disk...</source>
         <translation>إعادة الفهرسة الكتل على القرص ...</translation>
     </message>
@@ -509,7 +521,11 @@
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>المحفظة &lt;b&gt;مشفرة&lt;/b&gt; و &lt;b&gt;مقفلة&lt;/b&gt; حاليا</translation>
     </message>
-    </context>
+    <message>
+        <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
+        <translation>خطأ فادح حدث . لا يمكن اتمام بيتكوين بامان سيتم الخروج</translation>
+    </message>
+</context>
 <context>
     <name>CoinControlDialog</name>
     <message>
@@ -607,6 +623,10 @@
     <message>
         <source>Copy after fee</source>
         <translation>نسخ بعد الرسوم</translation>
+    </message>
+    <message>
+        <source>Copy bytes</source>
+        <translation>نسخ البايتات </translation>
     </message>
     <message>
         <source>Copy change</source>
@@ -794,6 +814,10 @@
     <message>
         <source>Form</source>
         <translation>نمودج</translation>
+    </message>
+    <message>
+        <source>Unknown...</source>
+        <translation>غير معرف</translation>
     </message>
     <message>
         <source>Hide</source>
@@ -1361,6 +1385,10 @@
     <message>
         <source>Copy after fee</source>
         <translation>نسخ بعد الرسوم</translation>
+    </message>
+    <message>
+        <source>Copy bytes</source>
+        <translation>نسخ البايتات </translation>
     </message>
     <message>
         <source>Copy change</source>

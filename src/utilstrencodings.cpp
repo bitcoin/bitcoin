@@ -65,6 +65,19 @@ bool IsHex(const std::string& str)
     return (str.size() > 0) && (str.size()%2 == 0);
 }
 
+bool IsHexNumber(const std::string& str)
+{
+    size_t starting_location = 0;
+    if (str.size() > 2 && *str.begin() == '0' && *(str.begin()+1) == 'x') {
+        starting_location = 2;
+    }
+    for (auto c : str.substr(starting_location)) {
+        if (HexDigit(c) < 0) return false;
+    }
+    // Return false for empty string or "0x".
+    return (str.size() > starting_location);
+}
+
 std::vector<unsigned char> ParseHex(const char* psz)
 {
     // convert hex dump to vector
@@ -452,7 +465,7 @@ bool ParseInt32(const std::string& str, int32_t *out)
 {
     if (!ParsePrechecks(str))
         return false;
-    char *endp = NULL;
+    char *endp = nullptr;
     errno = 0; // strtol will not set errno if valid
     long int n = strtol(str.c_str(), &endp, 10);
     if(out) *out = (int32_t)n;
@@ -468,7 +481,7 @@ bool ParseInt64(const std::string& str, int64_t *out)
 {
     if (!ParsePrechecks(str))
         return false;
-    char *endp = NULL;
+    char *endp = nullptr;
     errno = 0; // strtoll will not set errno if valid
     long long int n = strtoll(str.c_str(), &endp, 10);
     if(out) *out = (int64_t)n;
@@ -485,7 +498,7 @@ bool ParseUInt32(const std::string& str, uint32_t *out)
         return false;
     if (str.size() >= 1 && str[0] == '-') // Reject negative values, unfortunately strtoul accepts these by default if they fit in the range
         return false;
-    char *endp = NULL;
+    char *endp = nullptr;
     errno = 0; // strtoul will not set errno if valid
     unsigned long int n = strtoul(str.c_str(), &endp, 10);
     if(out) *out = (uint32_t)n;
@@ -502,7 +515,7 @@ bool ParseUInt64(const std::string& str, uint64_t *out)
         return false;
     if (str.size() >= 1 && str[0] == '-') // Reject negative values, unfortunately strtoull accepts these by default if they fit in the range
         return false;
-    char *endp = NULL;
+    char *endp = nullptr;
     errno = 0; // strtoull will not set errno if valid
     unsigned long long int n = strtoull(str.c_str(), &endp, 10);
     if(out) *out = (uint64_t)n;
@@ -583,7 +596,7 @@ int64_t atoi64(const char* psz)
 #ifdef _MSC_VER
     return _atoi64(psz);
 #else
-    return strtoll(psz, NULL, 10);
+    return strtoll(psz, nullptr, 10);
 #endif
 }
 
@@ -592,7 +605,7 @@ int64_t atoi64(const std::string& str)
 #ifdef _MSC_VER
     return _atoi64(str.c_str());
 #else
-    return strtoll(str.c_str(), NULL, 10);
+    return strtoll(str.c_str(), nullptr, 10);
 #endif
 }
 

@@ -9,25 +9,21 @@ from test_framework.util import (
     assert_equal,
     connect_nodes_bi,
 )
-import os
 import shutil
 
-
 class WalletHDTest(BitcoinTestFramework):
-
-    def __init__(self):
-        super().__init__()
+    def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 2
-        self.extra_args = [['-usehd=0'], ['-usehd=1', '-keypool=0']]
+        self.extra_args = [[], ['-keypool=0']]
 
     def run_test (self):
         tmpdir = self.options.tmpdir
 
         # Make sure can't switch off usehd after wallet creation
         self.stop_node(1)
-        self.assert_start_raises_init_error(1, self.options.tmpdir, ['-usehd=0'], 'already existing HD wallet')
-        self.nodes[1] = self.start_node(1, self.options.tmpdir, self.extra_args[1])
+        self.assert_start_raises_init_error(1, ['-usehd=0'], 'already existing HD wallet')
+        self.start_node(1)
         connect_nodes_bi(self.nodes, 0, 1)
 
         # Make sure we use hd, keep masterkeyid
@@ -43,7 +39,7 @@ class WalletHDTest(BitcoinTestFramework):
         non_hd_add = self.nodes[0].getnewaddress()
         self.nodes[1].importprivkey(self.nodes[0].dumpprivkey(non_hd_add))
 
-        # This should be enough to keep the master key and the non-HD key 
+        # This should be enough to keep the master key and the non-HD key
         self.nodes[1].backupwallet(tmpdir + "/hd.bak")
         #self.nodes[1].dumpwallet(tmpdir + "/hd.dump")
 
@@ -55,7 +51,7 @@ class WalletHDTest(BitcoinTestFramework):
         for i in range(num_hd_adds):
             hd_add = self.nodes[1].getnewaddress()
             hd_info = self.nodes[1].validateaddress(hd_add)
-            assert_equal(hd_info["hdkeypath"], "m/0'/0'/"+str(i+1)+"'")
+            assert_equal(hd_info["hdkeypath"], "m/0'/0'/"+str(i)+"'")
             assert_equal(hd_info["hdmasterkeyid"], masterkeyid)
             self.nodes[0].sendtoaddress(hd_add, 1)
             self.nodes[0].generate(1)
@@ -72,24 +68,27 @@ class WalletHDTest(BitcoinTestFramework):
 
         self.log.info("Restore backup ...")
         self.stop_node(1)
-        os.remove(self.options.tmpdir + "/node1/regtest/wallet.dat")
+        # we need to delete the complete regtest directory
+        # otherwise node1 would auto-recover all funds in flag the keypool keys as used
+        shutil.rmtree(tmpdir + "/node1/regtest/blocks")
+        shutil.rmtree(tmpdir + "/node1/regtest/chainstate")
         shutil.copyfile(tmpdir + "/hd.bak", tmpdir + "/node1/regtest/wallet.dat")
-        self.nodes[1] = self.start_node(1, self.options.tmpdir, self.extra_args[1])
-        #connect_nodes_bi(self.nodes, 0, 1)
+        self.start_node(1)
 
         # Assert that derivation is deterministic
         hd_add_2 = None
         for _ in range(num_hd_adds):
             hd_add_2 = self.nodes[1].getnewaddress()
             hd_info_2 = self.nodes[1].validateaddress(hd_add_2)
-            assert_equal(hd_info_2["hdkeypath"], "m/0'/0'/"+str(_+1)+"'")
+            assert_equal(hd_info_2["hdkeypath"], "m/0'/0'/"+str(_)+"'")
             assert_equal(hd_info_2["hdmasterkeyid"], masterkeyid)
         assert_equal(hd_add, hd_add_2)
+        connect_nodes_bi(self.nodes, 0, 1)
+        self.sync_all()
 
         # Needs rescan
         self.stop_node(1)
-        self.nodes[1] = self.start_node(1, self.options.tmpdir, self.extra_args[1] + ['-rescan'])
-        #connect_nodes_bi(self.nodes, 0, 1)
+        self.start_node(1, extra_args=self.extra_args[1] + ['-rescan'])
         assert_equal(self.nodes[1].getbalance(), num_hd_adds + 1)
 
         # send a tx and make sure its using the internal chain for the changeoutput
@@ -99,7 +98,7 @@ class WalletHDTest(BitcoinTestFramework):
         for out in outs:
             if out['value'] != 1:
                 keypath = self.nodes[1].validateaddress(out['scriptPubKey']['addresses'][0])['hdkeypath']
-        
+
         assert_equal(keypath[0:7], "m/0'/1'")
 
 if __name__ == '__main__':

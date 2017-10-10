@@ -37,6 +37,7 @@ std::string HelpMessageCli()
     strUsage += HelpMessageOpt("-?", _("This help message"));
     strUsage += HelpMessageOpt("-conf=<file>", strprintf(_("Specify configuration file (default: %s)"), BITCOIN_CONF_FILENAME));
     strUsage += HelpMessageOpt("-datadir=<dir>", _("Specify data directory"));
+    strUsage += HelpMessageOpt("-getinfo", _("Get general information from the remote server. Note that unlike server-side RPC calls, the results of -getinfo is the result of multiple non-atomic requests. Some entries in the result may represent results from different states (e.g. wallet balance may be as of a different block from the chain state reported)"));
     AppendParamsHelpMessages(strUsage);
     strUsage += HelpMessageOpt("-named", strprintf(_("Pass named instead of positional arguments (default: %s)"), DEFAULT_NAMED));
     strUsage += HelpMessageOpt("-rpcconnect=<ip>", strprintf(_("Send commands to node running on <ip> (default: %s)"), DEFAULT_RPCCONNECT));
@@ -45,7 +46,9 @@ std::string HelpMessageCli()
     strUsage += HelpMessageOpt("-rpcuser=<user>", _("Username for JSON-RPC connections"));
     strUsage += HelpMessageOpt("-rpcpassword=<pw>", _("Password for JSON-RPC connections"));
     strUsage += HelpMessageOpt("-rpcclienttimeout=<n>", strprintf(_("Timeout in seconds during HTTP requests, or 0 for no timeout. (default: %d)"), DEFAULT_HTTP_CLIENT_TIMEOUT));
-    strUsage += HelpMessageOpt("-stdin", _("Read extra arguments from standard input, one per line until EOF/Ctrl-D (recommended for sensitive information such as passphrases)"));
+    strUsage += HelpMessageOpt("-stdinrpcpass", strprintf(_("Read RPC password from standard input as a single line.  When combined with -stdin, the first line from standard input is used for the RPC password.")));
+    strUsage += HelpMessageOpt("-stdin", _("Read extra arguments from standard input, one per line until EOF/Ctrl-D (recommended for sensitive information such as passphrases).  When combined with -stdinrpcpass, the first line from standard input is used for the RPC password."));
+    strUsage += HelpMessageOpt("-rpcwallet=<walletname>", _("Send RPC for non-default wallet on RPC server (argument is wallet filename in bitcoind directory, required if bitcoind/-Qt runs with multiple wallets)"));
 
     return strUsage;
 }
@@ -78,10 +81,10 @@ static int AppInitRPC(int argc, char* argv[])
     //
     // Parameters
     //
-    ParseParameters(argc, argv);
-    if (argc<2 || IsArgSet("-?") || IsArgSet("-h") || IsArgSet("-help") || IsArgSet("-version")) {
+    gArgs.ParseParameters(argc, argv);
+    if (argc<2 || gArgs.IsArgSet("-?") || gArgs.IsArgSet("-h") || gArgs.IsArgSet("-help") || gArgs.IsArgSet("-version")) {
         std::string strUsage = strprintf(_("%s RPC client version"), _(PACKAGE_NAME)) + " " + FormatFullVersion() + "\n";
-        if (!IsArgSet("-version")) {
+        if (!gArgs.IsArgSet("-version")) {
             strUsage += "\n" + _("Usage:") + "\n" +
                   "  bitcoin-cli [options] <command> [params]  " + strprintf(_("Send command to %s"), _(PACKAGE_NAME)) + "\n" +
                   "  bitcoin-cli [options] -named <command> [name=value] ... " + strprintf(_("Send command to %s (with named arguments)"), _(PACKAGE_NAME)) + "\n" +
@@ -99,11 +102,11 @@ static int AppInitRPC(int argc, char* argv[])
         return EXIT_SUCCESS;
     }
     if (!fs::is_directory(GetDataDir(false))) {
-        fprintf(stderr, "Error: Specified data directory \"%s\" does not exist.\n", GetArg("-datadir", "").c_str());
+        fprintf(stderr, "Error: Specified data directory \"%s\" does not exist.\n", gArgs.GetArg("-datadir", "").c_str());
         return EXIT_FAILURE;
     }
     try {
-        ReadConfigFile(GetArg("-conf", BITCOIN_CONF_FILENAME));
+        gArgs.ReadConfigFile(gArgs.GetArg("-conf", BITCOIN_CONF_FILENAME));
     } catch (const std::exception& e) {
         fprintf(stderr,"Error reading configuration file: %s\n", e.what());
         return EXIT_FAILURE;
@@ -115,7 +118,7 @@ static int AppInitRPC(int argc, char* argv[])
         fprintf(stderr, "Error: %s\n", e.what());
         return EXIT_FAILURE;
     }
-    if (GetBoolArg("-rpcssl", false))
+    if (gArgs.GetBoolArg("-rpcssl", false))
     {
         fprintf(stderr, "Error: SSL mode for RPC (-rpcssl) is no longer supported.\n");
         return EXIT_FAILURE;
@@ -160,8 +163,8 @@ static void http_request_done(struct evhttp_request *req, void *ctx)
 {
     HTTPReply *reply = static_cast<HTTPReply*>(ctx);
 
-    if (req == NULL) {
-        /* If req is NULL, it means an error occurred while connecting: the
+    if (req == nullptr) {
+        /* If req is nullptr, it means an error occurred while connecting: the
          * error code will have been passed to http_error_cb.
          */
         reply->status = 0;
@@ -189,7 +192,96 @@ static void http_error_cb(enum evhttp_request_error err, void *ctx)
 }
 #endif
 
-UniValue CallRPC(const std::string& strMethod, const UniValue& params)
+/** Class that handles the conversion from a command-line to a JSON-RPC request,
+ * as well as converting back to a JSON object that can be shown as result.
+ */
+class BaseRequestHandler
+{
+public:
+    virtual UniValue PrepareRequest(const std::string& method, const std::vector<std::string>& args) = 0;
+    virtual UniValue ProcessReply(const UniValue &batch_in) = 0;
+};
+
+/** Process getinfo requests */
+class GetinfoRequestHandler: public BaseRequestHandler
+{
+public:
+    const int ID_NETWORKINFO = 0;
+    const int ID_BLOCKCHAININFO = 1;
+    const int ID_WALLETINFO = 2;
+
+    /** Create a simulated `getinfo` request. */
+    UniValue PrepareRequest(const std::string& method, const std::vector<std::string>& args) override
+    {
+        UniValue result(UniValue::VARR);
+        result.push_back(JSONRPCRequestObj("getnetworkinfo", NullUniValue, ID_NETWORKINFO));
+        result.push_back(JSONRPCRequestObj("getblockchaininfo", NullUniValue, ID_BLOCKCHAININFO));
+        result.push_back(JSONRPCRequestObj("getwalletinfo", NullUniValue, ID_WALLETINFO));
+        return result;
+    }
+
+    /** Collect values from the batch and form a simulated `getinfo` reply. */
+    UniValue ProcessReply(const UniValue &batch_in) override
+    {
+        UniValue result(UniValue::VOBJ);
+        std::vector<UniValue> batch = JSONRPCProcessBatchReply(batch_in, 3);
+        // Errors in getnetworkinfo() and getblockchaininfo() are fatal, pass them on
+        // getwalletinfo() is allowed to fail in case there is no wallet.
+        if (!batch[ID_NETWORKINFO]["error"].isNull()) {
+            return batch[ID_NETWORKINFO];
+        }
+        if (!batch[ID_BLOCKCHAININFO]["error"].isNull()) {
+            return batch[ID_BLOCKCHAININFO];
+        }
+        result.pushKV("version", batch[ID_NETWORKINFO]["result"]["version"]);
+        result.pushKV("protocolversion", batch[ID_NETWORKINFO]["result"]["protocolversion"]);
+        if (!batch[ID_WALLETINFO].isNull()) {
+            result.pushKV("walletversion", batch[ID_WALLETINFO]["result"]["walletversion"]);
+            result.pushKV("balance", batch[ID_WALLETINFO]["result"]["balance"]);
+        }
+        result.pushKV("blocks", batch[ID_BLOCKCHAININFO]["result"]["blocks"]);
+        result.pushKV("timeoffset", batch[ID_NETWORKINFO]["result"]["timeoffset"]);
+        result.pushKV("connections", batch[ID_NETWORKINFO]["result"]["connections"]);
+        result.pushKV("proxy", batch[ID_NETWORKINFO]["result"]["networks"][0]["proxy"]);
+        result.pushKV("difficulty", batch[ID_BLOCKCHAININFO]["result"]["difficulty"]);
+        result.pushKV("testnet", UniValue(batch[ID_BLOCKCHAININFO]["result"]["chain"].get_str() == "test"));
+        if (!batch[ID_WALLETINFO].isNull()) {
+            result.pushKV("walletversion", batch[ID_WALLETINFO]["result"]["walletversion"]);
+            result.pushKV("balance", batch[ID_WALLETINFO]["result"]["balance"]);
+            result.pushKV("keypoololdest", batch[ID_WALLETINFO]["result"]["keypoololdest"]);
+            result.pushKV("keypoolsize", batch[ID_WALLETINFO]["result"]["keypoolsize"]);
+            if (!batch[ID_WALLETINFO]["result"]["unlocked_until"].isNull()) {
+                result.pushKV("unlocked_until", batch[ID_WALLETINFO]["result"]["unlocked_until"]);
+            }
+            result.pushKV("paytxfee", batch[ID_WALLETINFO]["result"]["paytxfee"]);
+        }
+        result.pushKV("relayfee", batch[ID_NETWORKINFO]["result"]["relayfee"]);
+        result.pushKV("warnings", batch[ID_NETWORKINFO]["result"]["warnings"]);
+        return JSONRPCReplyObj(result, NullUniValue, 1);
+    }
+};
+
+/** Process default single requests */
+class DefaultRequestHandler: public BaseRequestHandler {
+public:
+    UniValue PrepareRequest(const std::string& method, const std::vector<std::string>& args) override
+    {
+        UniValue params;
+        if(gArgs.GetBoolArg("-named", DEFAULT_NAMED)) {
+            params = RPCConvertNamedValues(method, args);
+        } else {
+            params = RPCConvertValues(method, args);
+        }
+        return JSONRPCRequestObj(method, params, 1);
+    }
+
+    UniValue ProcessReply(const UniValue &reply) override
+    {
+        return reply.get_obj();
+    }
+};
+
+static UniValue CallRPC(BaseRequestHandler *rh, const std::string& strMethod, const std::vector<std::string>& args)
 {
     std::string host;
     // In preference order, we choose the following for the port:
@@ -197,19 +289,19 @@ UniValue CallRPC(const std::string& strMethod, const UniValue& params)
     //     2. port in -rpcconnect (ie following : in ipv4 or ]: in ipv6)
     //     3. default port for chain
     int port = BaseParams().RPCPort();
-    SplitHostPort(GetArg("-rpcconnect", DEFAULT_RPCCONNECT), port, host);
-    port = GetArg("-rpcport", port);
+    SplitHostPort(gArgs.GetArg("-rpcconnect", DEFAULT_RPCCONNECT), port, host);
+    port = gArgs.GetArg("-rpcport", port);
 
     // Obtain event base
     raii_event_base base = obtain_event_base();
 
     // Synchronously look up hostname
     raii_evhttp_connection evcon = obtain_evhttp_connection_base(base.get(), host, port);
-    evhttp_connection_set_timeout(evcon.get(), GetArg("-rpcclienttimeout", DEFAULT_HTTP_CLIENT_TIMEOUT));
+    evhttp_connection_set_timeout(evcon.get(), gArgs.GetArg("-rpcclienttimeout", DEFAULT_HTTP_CLIENT_TIMEOUT));
 
     HTTPReply response;
     raii_evhttp_request req = obtain_evhttp_request(http_request_done, (void*)&response);
-    if (req == NULL)
+    if (req == nullptr)
         throw std::runtime_error("create http request failed");
 #if LIBEVENT_VERSION_NUMBER >= 0x02010300
     evhttp_request_set_error_cb(req.get(), http_error_cb);
@@ -217,16 +309,16 @@ UniValue CallRPC(const std::string& strMethod, const UniValue& params)
 
     // Get credentials
     std::string strRPCUserColonPass;
-    if (GetArg("-rpcpassword", "") == "") {
+    if (gArgs.GetArg("-rpcpassword", "") == "") {
         // Try fall back to cookie-based authentication if no password is provided
         if (!GetAuthCookie(&strRPCUserColonPass)) {
             throw std::runtime_error(strprintf(
-                _("Could not locate RPC credentials. No authentication cookie could be found, and no rpcpassword is set in the configuration file (%s)"),
-                    GetConfigFile(GetArg("-conf", BITCOIN_CONF_FILENAME)).string().c_str()));
+                _("Could not locate RPC credentials. No authentication cookie could be found, and RPC password is not set.  See -rpcpassword and -stdinrpcpass.  Configuration file: (%s)"),
+                    GetConfigFile(gArgs.GetArg("-conf", BITCOIN_CONF_FILENAME)).string().c_str()));
 
         }
     } else {
-        strRPCUserColonPass = GetArg("-rpcuser", "") + ":" + GetArg("-rpcpassword", "");
+        strRPCUserColonPass = gArgs.GetArg("-rpcuser", "") + ":" + gArgs.GetArg("-rpcpassword", "");
     }
 
     struct evkeyvalq* output_headers = evhttp_request_get_output_headers(req.get());
@@ -236,12 +328,25 @@ UniValue CallRPC(const std::string& strMethod, const UniValue& params)
     evhttp_add_header(output_headers, "Authorization", (std::string("Basic ") + EncodeBase64(strRPCUserColonPass)).c_str());
 
     // Attach request data
-    std::string strRequest = JSONRPCRequestObj(strMethod, params, 1).write() + "\n";
+    std::string strRequest = rh->PrepareRequest(strMethod, args).write() + "\n";
     struct evbuffer* output_buffer = evhttp_request_get_output_buffer(req.get());
     assert(output_buffer);
     evbuffer_add(output_buffer, strRequest.data(), strRequest.size());
 
-    int r = evhttp_make_request(evcon.get(), req.get(), EVHTTP_REQ_POST, "/");
+    // check if we should use a special wallet endpoint
+    std::string endpoint = "/";
+    std::string walletName = gArgs.GetArg("-rpcwallet", "");
+    if (!walletName.empty()) {
+        char *encodedURI = evhttp_uriencode(walletName.c_str(), walletName.size(), false);
+        if (encodedURI) {
+            endpoint = "/wallet/"+ std::string(encodedURI);
+            free(encodedURI);
+        }
+        else {
+            throw CConnectionFailed("uri-encode failed");
+        }
+    }
+    int r = evhttp_make_request(evcon.get(), req.get(), EVHTTP_REQ_POST, endpoint.c_str());
     req.release(); // ownership moved to evcon in above call
     if (r != 0) {
         throw CConnectionFailed("send http request failed");
@@ -262,7 +367,7 @@ UniValue CallRPC(const std::string& strMethod, const UniValue& params)
     UniValue valReply(UniValue::VSTR);
     if (!valReply.read(response.body))
         throw std::runtime_error("couldn't parse reply from server");
-    const UniValue& reply = valReply.get_obj();
+    const UniValue reply = rh->ProcessReply(valReply);
     if (reply.empty())
         throw std::runtime_error("expected reply to have result, error and id properties");
 
@@ -279,30 +384,40 @@ int CommandLineRPC(int argc, char *argv[])
             argc--;
             argv++;
         }
+        std::string rpcPass;
+        if (gArgs.GetBoolArg("-stdinrpcpass", false)) {
+            if (!std::getline(std::cin, rpcPass)) {
+                throw std::runtime_error("-stdinrpcpass specified but failed to read from standard input");
+            }
+            gArgs.ForceSetArg("-rpcpassword", rpcPass);
+        }
         std::vector<std::string> args = std::vector<std::string>(&argv[1], &argv[argc]);
-        if (GetBoolArg("-stdin", false)) {
+        if (gArgs.GetBoolArg("-stdin", false)) {
             // Read one arg per line from stdin and append
             std::string line;
-            while (std::getline(std::cin,line))
+            while (std::getline(std::cin, line)) {
                 args.push_back(line);
+            }
         }
-        if (args.size() < 1)
-            throw std::runtime_error("too few parameters (need at least command)");
-        std::string strMethod = args[0];
-        args.erase(args.begin()); // Remove trailing method name from arguments vector
-
-        UniValue params;
-        if(GetBoolArg("-named", DEFAULT_NAMED)) {
-            params = RPCConvertNamedValues(strMethod, args);
+        std::unique_ptr<BaseRequestHandler> rh;
+        std::string method;
+        if (gArgs.GetBoolArg("-getinfo", false)) {
+            rh.reset(new GetinfoRequestHandler());
+            method = "";
         } else {
-            params = RPCConvertValues(strMethod, args);
+            rh.reset(new DefaultRequestHandler());
+            if (args.size() < 1) {
+                throw std::runtime_error("too few parameters (need at least command)");
+            }
+            method = args[0];
+            args.erase(args.begin()); // Remove trailing method name from arguments vector
         }
 
         // Execute and handle connection failures with -rpcwait
-        const bool fWait = GetBoolArg("-rpcwait", false);
+        const bool fWait = gArgs.GetBoolArg("-rpcwait", false);
         do {
             try {
-                const UniValue reply = CallRPC(strMethod, params);
+                const UniValue reply = CallRPC(rh.get(), method, args);
 
                 // Parse reply
                 const UniValue& result = find_value(reply, "result");
@@ -323,6 +438,10 @@ int CommandLineRPC(int argc, char *argv[])
 
                         if (errMsg.isStr())
                             strPrint += "error message:\n"+errMsg.get_str();
+
+                        if (errCode.isNum() && errCode.get_int() == RPC_WALLET_NOT_SPECIFIED) {
+                            strPrint += "\nTry adding \"-rpcwallet=<filename>\" option to bitcoin-cli command line.";
+                        }
                     }
                 } else {
                     // Result
@@ -352,7 +471,7 @@ int CommandLineRPC(int argc, char *argv[])
         nRet = EXIT_FAILURE;
     }
     catch (...) {
-        PrintExceptionContinue(NULL, "CommandLineRPC()");
+        PrintExceptionContinue(nullptr, "CommandLineRPC()");
         throw;
     }
 
@@ -379,7 +498,7 @@ int main(int argc, char* argv[])
         PrintExceptionContinue(&e, "AppInitRPC()");
         return EXIT_FAILURE;
     } catch (...) {
-        PrintExceptionContinue(NULL, "AppInitRPC()");
+        PrintExceptionContinue(nullptr, "AppInitRPC()");
         return EXIT_FAILURE;
     }
 
@@ -390,7 +509,7 @@ int main(int argc, char* argv[])
     catch (const std::exception& e) {
         PrintExceptionContinue(&e, "CommandLineRPC()");
     } catch (...) {
-        PrintExceptionContinue(NULL, "CommandLineRPC()");
+        PrintExceptionContinue(nullptr, "CommandLineRPC()");
     }
     return ret;
 }

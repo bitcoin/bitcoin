@@ -50,6 +50,9 @@ public:
     Arena(void *base, size_t size, size_t alignment);
     virtual ~Arena();
 
+    Arena(const Arena& other) = delete; // non construction-copyable
+    Arena& operator=(const Arena&) = delete; // non copyable
+
     /** Memory statistics. */
     struct Stats
     {
@@ -85,9 +88,6 @@ public:
      */
     bool addressInArena(void *ptr) const { return ptr >= base && ptr < end; }
 private:
-    Arena(const Arena& other) = delete; // non construction-copyable
-    Arena& operator=(const Arena&) = delete; // non copyable
-
     /** Map of chunk address to chunk information. This class makes use of the
      * sorted order to merge previous and next chunks during deallocation.
      */
@@ -150,8 +150,11 @@ public:
      * If this callback is provided and returns false, the allocation fails (hard fail), if
      * it returns true the allocation proceeds, but it could warn.
      */
-    LockedPool(std::unique_ptr<LockedPageAllocator> allocator, LockingFailed_Callback lf_cb_in = 0);
+    explicit LockedPool(std::unique_ptr<LockedPageAllocator> allocator, LockingFailed_Callback lf_cb_in = nullptr);
     ~LockedPool();
+
+    LockedPool(const LockedPool& other) = delete; // non construction-copyable
+    LockedPool& operator=(const LockedPool&) = delete; // non copyable
 
     /** Allocate size bytes from this arena.
      * Returns pointer on success, or 0 if memory is full or
@@ -168,9 +171,6 @@ public:
     /** Get pool usage statistics */
     Stats stats() const;
 private:
-    LockedPool(const LockedPool& other) = delete; // non construction-copyable
-    LockedPool& operator=(const LockedPool&) = delete; // non copyable
-
     std::unique_ptr<LockedPageAllocator> allocator;
 
     /** Create an arena from locked pages */
@@ -217,7 +217,7 @@ public:
     }
 
 private:
-    LockedPoolManager(std::unique_ptr<LockedPageAllocator> allocator);
+    explicit LockedPoolManager(std::unique_ptr<LockedPageAllocator> allocator);
 
     /** Create a new LockedPoolManager specialized to the OS */
     static void CreateInstance();

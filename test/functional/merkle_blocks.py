@@ -8,11 +8,9 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 
 class MerkleBlockTest(BitcoinTestFramework):
-
-    def __init__(self):
-        super().__init__()
-        self.setup_clean_chain = True
+    def set_test_params(self):
         self.num_nodes = 4
+        self.setup_clean_chain = True
         # Nodes 0/1 are "wallet" nodes, Nodes 2/3 are used for testing
         self.extra_args = [[], [], [], ["-txindex"]]
 
@@ -40,7 +38,7 @@ class MerkleBlockTest(BitcoinTestFramework):
         tx2 = self.nodes[0].createrawtransaction([node0utxos.pop()], {self.nodes[1].getnewaddress(): 49.99})
         txid2 = self.nodes[0].sendrawtransaction(self.nodes[0].signrawtransaction(tx2)["hex"])
         # This will raise an exception because the transaction is not yet in a block
-        assert_raises_jsonrpc(-5, "Transaction not yet in block", self.nodes[0].gettxoutproof, [txid1])
+        assert_raises_rpc_error(-5, "Transaction not yet in block", self.nodes[0].gettxoutproof, [txid1])
 
         self.nodes[0].generate(1)
         blockhash = self.nodes[0].getblockhash(chain_height + 1)
@@ -65,11 +63,11 @@ class MerkleBlockTest(BitcoinTestFramework):
         txid_unspent = txid1 if txin_spent["txid"] != txid1 else txid2
 
         # We can't find the block from a fully-spent tx
-        assert_raises_jsonrpc(-5, "Transaction not yet in block", self.nodes[2].gettxoutproof, [txid_spent])
+        assert_raises_rpc_error(-5, "Transaction not yet in block", self.nodes[2].gettxoutproof, [txid_spent])
         # We can get the proof if we specify the block
         assert_equal(self.nodes[2].verifytxoutproof(self.nodes[2].gettxoutproof([txid_spent], blockhash)), [txid_spent])
         # We can't get the proof if we specify a non-existent block
-        assert_raises_jsonrpc(-5, "Block not found", self.nodes[2].gettxoutproof, [txid_spent], "00000000000000000000000000000000")
+        assert_raises_rpc_error(-5, "Block not found", self.nodes[2].gettxoutproof, [txid_spent], "00000000000000000000000000000000")
         # We can get the proof if the transaction is unspent
         assert_equal(self.nodes[2].verifytxoutproof(self.nodes[2].gettxoutproof([txid_unspent])), [txid_unspent])
         # We can get the proof if we provide a list of transactions and one of them is unspent. The ordering of the list should not matter.
@@ -78,7 +76,7 @@ class MerkleBlockTest(BitcoinTestFramework):
         # We can always get a proof if we have a -txindex
         assert_equal(self.nodes[2].verifytxoutproof(self.nodes[3].gettxoutproof([txid_spent])), [txid_spent])
         # We can't get a proof if we specify transactions from different blocks
-        assert_raises_jsonrpc(-5, "Not all transactions found in specified or retrieved block", self.nodes[2].gettxoutproof, [txid1, txid3])
+        assert_raises_rpc_error(-5, "Not all transactions found in specified or retrieved block", self.nodes[2].gettxoutproof, [txid1, txid3])
 
 
 if __name__ == '__main__':

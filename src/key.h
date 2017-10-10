@@ -56,11 +56,6 @@ public:
         keydata.resize(32);
     }
 
-    //! Destructor (again necessary because of memlocking).
-    ~CKey()
-    {
-    }
-
     friend bool operator==(const CKey& a, const CKey& b)
     {
         return a.fCompressed == b.fCompressed &&
@@ -172,6 +167,8 @@ struct CExtKey {
     {
         unsigned int len = ::ReadCompactSize(s);
         unsigned char code[BIP32_EXTKEY_SIZE];
+        if (len != BIP32_EXTKEY_SIZE)
+            throw std::runtime_error("Invalid extended key size\n");
         s.read((char *)&code[0], len);
         Decode(code);
     }

@@ -82,7 +82,7 @@ class CVectorWriter
  * @param[in]  nVersionIn Serialization Version (including any flags)
  * @param[in]  vchDataIn  Referenced byte vector to overwrite/append
  * @param[in]  nPosIn Starting position. Vector index where writes should start. The vector will initially
- *                    grow as necessary to  max(index, vec.size()). So to append, use vec.size().
+ *                    grow as necessary to  max(nPosIn, vec.size()). So to append, use vec.size().
 */
     CVectorWriter(int nTypeIn, int nVersionIn, std::vector<unsigned char>& vchDataIn, size_t nPosIn) : nType(nTypeIn), nVersion(nVersionIn), vchData(vchDataIn), nPos(nPosIn)
     {
@@ -91,7 +91,7 @@ class CVectorWriter
     }
 /*
  * (other params same as above)
- * @param[in]  args  A list of items to serialize starting at nPos.
+ * @param[in]  args  A list of items to serialize starting at nPosIn.
 */
     template <typename... Args>
     CVectorWriter(int nTypeIn, int nVersionIn, std::vector<unsigned char>& vchDataIn, size_t nPosIn, Args&&... args) : CVectorWriter(nTypeIn, nVersionIn, vchDataIn, nPosIn)
@@ -332,7 +332,7 @@ public:
     //
     bool eof() const             { return size() == 0; }
     CDataStream* rdbuf()         { return this; }
-    int in_avail()               { return size(); }
+    int in_avail() const         { return size(); }
 
     void SetType(int n)          { nType = n; }
     int GetType() const          { return nType; }
@@ -455,10 +455,6 @@ public:
 class CAutoFile
 {
 private:
-    // Disallow copies
-    CAutoFile(const CAutoFile&);
-    CAutoFile& operator=(const CAutoFile&);
-
     const int nType;
     const int nVersion;
 
@@ -475,11 +471,15 @@ public:
         fclose();
     }
 
+    // Disallow copies
+    CAutoFile(const CAutoFile&) = delete;
+    CAutoFile& operator=(const CAutoFile&) = delete;
+
     void fclose()
     {
         if (file) {
             ::fclose(file);
-            file = NULL;
+            file = nullptr;
         }
     }
 
@@ -487,7 +487,7 @@ public:
      * @note This will invalidate the CAutoFile object, and makes it the responsibility of the caller
      * of this function to clean up the returned FILE*.
      */
-    FILE* release()             { FILE* ret = file; file = NULL; return ret; }
+    FILE* release()             { FILE* ret = file; file = nullptr; return ret; }
 
     /** Get wrapped FILE* without transfer of ownership.
      * @note Ownership of the FILE* will remain with this class. Use this only if the scope of the
@@ -495,9 +495,9 @@ public:
      */
     FILE* Get() const           { return file; }
 
-    /** Return true if the wrapped FILE* is NULL, false otherwise.
+    /** Return true if the wrapped FILE* is nullptr, false otherwise.
      */
-    bool IsNull() const         { return (file == NULL); }
+    bool IsNull() const         { return (file == nullptr); }
 
     //
     // Stream subset
@@ -508,7 +508,7 @@ public:
     void read(char* pch, size_t nSize)
     {
         if (!file)
-            throw std::ios_base::failure("CAutoFile::read: file handle is NULL");
+            throw std::ios_base::failure("CAutoFile::read: file handle is nullptr");
         if (fread(pch, 1, nSize, file) != nSize)
             throw std::ios_base::failure(feof(file) ? "CAutoFile::read: end of file" : "CAutoFile::read: fread failed");
     }
@@ -516,7 +516,7 @@ public:
     void ignore(size_t nSize)
     {
         if (!file)
-            throw std::ios_base::failure("CAutoFile::ignore: file handle is NULL");
+            throw std::ios_base::failure("CAutoFile::ignore: file handle is nullptr");
         unsigned char data[4096];
         while (nSize > 0) {
             size_t nNow = std::min<size_t>(nSize, sizeof(data));
@@ -529,7 +529,7 @@ public:
     void write(const char* pch, size_t nSize)
     {
         if (!file)
-            throw std::ios_base::failure("CAutoFile::write: file handle is NULL");
+            throw std::ios_base::failure("CAutoFile::write: file handle is nullptr");
         if (fwrite(pch, 1, nSize, file) != nSize)
             throw std::ios_base::failure("CAutoFile::write: write failed");
     }
@@ -539,7 +539,7 @@ public:
     {
         // Serialize to this stream
         if (!file)
-            throw std::ios_base::failure("CAutoFile::operator<<: file handle is NULL");
+            throw std::ios_base::failure("CAutoFile::operator<<: file handle is nullptr");
         ::Serialize(*this, obj);
         return (*this);
     }
@@ -549,7 +549,7 @@ public:
     {
         // Unserialize from this stream
         if (!file)
-            throw std::ios_base::failure("CAutoFile::operator>>: file handle is NULL");
+            throw std::ios_base::failure("CAutoFile::operator>>: file handle is nullptr");
         ::Unserialize(*this, obj);
         return (*this);
     }
@@ -564,10 +564,6 @@ public:
 class CBufferedFile
 {
 private:
-    // Disallow copies
-    CBufferedFile(const CBufferedFile&);
-    CBufferedFile& operator=(const CBufferedFile&);
-
     const int nType;
     const int nVersion;
 
@@ -609,6 +605,10 @@ public:
         fclose();
     }
 
+    // Disallow copies
+    CBufferedFile(const CBufferedFile&) = delete;
+    CBufferedFile& operator=(const CBufferedFile&) = delete;
+
     int GetVersion() const { return nVersion; }
     int GetType() const { return nType; }
 
@@ -616,7 +616,7 @@ public:
     {
         if (src) {
             ::fclose(src);
-            src = NULL;
+            src = nullptr;
         }
     }
 
@@ -648,7 +648,7 @@ public:
     }
 
     // return the current reading position
-    uint64_t GetPos() {
+    uint64_t GetPos() const {
         return nReadPos;
     }
 

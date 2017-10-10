@@ -143,16 +143,6 @@ class TxStore(object):
             return None
         return value
 
-    def get_transaction(self, txhash):
-        ret = None
-        serialized_tx = self.get(txhash)
-        if serialized_tx is not None:
-            f = BytesIO(serialized_tx)
-            ret = CTransaction()
-            ret.deserialize(f)
-            ret.calc_sha256()
-        return ret
-
     def add_transaction(self, tx):
         tx.calc_sha256()
         try:

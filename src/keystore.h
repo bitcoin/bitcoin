@@ -30,7 +30,7 @@ public:
     //! Check whether a key corresponding to a given address is present in the store.
     virtual bool HaveKey(const CKeyID &address) const =0;
     virtual bool GetKey(const CKeyID &address, CKey& keyOut) const =0;
-    virtual void GetKeys(std::set<CKeyID> &setAddress) const =0;
+    virtual std::set<CKeyID> GetKeys() const =0;
     virtual bool GetPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const =0;
 
     //! Support for BIP 0013 : see https://github.com/bitcoin/bips/blob/master/bip-0013.mediawiki
@@ -71,18 +71,14 @@ public:
         }
         return result;
     }
-    void GetKeys(std::set<CKeyID> &setAddress) const override
+    std::set<CKeyID> GetKeys() const override
     {
-        setAddress.clear();
-        {
-            LOCK(cs_KeyStore);
-            KeyMap::const_iterator mi = mapKeys.begin();
-            while (mi != mapKeys.end())
-            {
-                setAddress.insert((*mi).first);
-                mi++;
-            }
+        LOCK(cs_KeyStore);
+        std::set<CKeyID> set_address;
+        for (const auto& mi : mapKeys) {
+            set_address.insert(mi.first);
         }
+        return set_address;
     }
     bool GetKey(const CKeyID &address, CKey &keyOut) const override
     {
@@ -97,14 +93,14 @@ public:
         }
         return false;
     }
-    virtual bool AddCScript(const CScript& redeemScript) override;
-    virtual bool HaveCScript(const CScriptID &hash) const override;
-    virtual bool GetCScript(const CScriptID &hash, CScript& redeemScriptOut) const override;
+    bool AddCScript(const CScript& redeemScript) override;
+    bool HaveCScript(const CScriptID &hash) const override;
+    bool GetCScript(const CScriptID &hash, CScript& redeemScriptOut) const override;
 
-    virtual bool AddWatchOnly(const CScript &dest) override;
-    virtual bool RemoveWatchOnly(const CScript &dest) override;
-    virtual bool HaveWatchOnly(const CScript &dest) const override;
-    virtual bool HaveWatchOnly() const override;
+    bool AddWatchOnly(const CScript &dest) override;
+    bool RemoveWatchOnly(const CScript &dest) override;
+    bool HaveWatchOnly(const CScript &dest) const override;
+    bool HaveWatchOnly() const override;
 };
 
 typedef std::vector<unsigned char, secure_allocator<unsigned char> > CKeyingMaterial;

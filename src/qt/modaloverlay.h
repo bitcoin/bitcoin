@@ -32,7 +32,7 @@ public Q_SLOTS:
     // will show or hide the modal layer
     void showHide(bool hide = false, bool userRequested = false);
     void closeClicked();
-    bool isLayerVisible() { return layerIsVisible; }
+    bool isLayerVisible() const { return layerIsVisible; }
 
 protected:
     bool eventFilter(QObject * obj, QEvent * ev);

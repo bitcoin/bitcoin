@@ -62,12 +62,28 @@
         <translation>آدرس های گیرنده</translation>
     </message>
     <message>
+        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation>اینها آدرس های شما برای فرستادن پرداخت هاست. همیشه قبل از فرستادن سکه ها مقدار و آدرس دریافت کننده را چک کنید.</translation>
+    </message>
+    <message>
+        <source>&amp;Copy Address</source>
+        <translation>کپی کردن آدرس</translation>
+    </message>
+    <message>
         <source>Copy &amp;Label</source>
         <translation>کپی و برچسب‌&amp;گذاری</translation>
     </message>
     <message>
         <source>&amp;Edit</source>
         <translation>&amp;ویرایش</translation>
+    </message>
+    <message>
+        <source>Export Address List</source>
+        <translation>صدور لیست آدرس ها</translation>
+    </message>
+    <message>
+        <source>Exporting Failed</source>
+        <translation>صدور موفق نبود</translation>
     </message>
     </context>
 <context>
@@ -108,12 +124,28 @@
         <translation>رمزنگاری کیف پول</translation>
     </message>
     <message>
+        <source>This operation needs your wallet passphrase to unlock the wallet.</source>
+        <translation>این عملیات نیاز به عبارت کیف پول شما برای بازگشایی کیف پول دارد</translation>
+    </message>
+    <message>
         <source>Unlock wallet</source>
         <translation>باز کردن قفل کیف پول</translation>
     </message>
     <message>
+        <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
+        <translation>این عملیات نیاز به عبارت کیف پول شما برای رمزگشایی کیف پول دارد.</translation>
+    </message>
+    <message>
         <source>Decrypt wallet</source>
         <translation>رمزگشایی کیف پول</translation>
+    </message>
+    <message>
+        <source>Change passphrase</source>
+        <translation>تغییر گذرواژه</translation>
+    </message>
+    <message>
+        <source>Enter the old passphrase and new passphrase to the wallet.</source>
+        <translation>عبارت کهنه و جدید کیف پول را وارد کنید.</translation>
     </message>
     <message>
         <source>Confirm wallet encryption</source>
@@ -248,6 +280,18 @@
     <message>
         <source>Open &amp;URI...</source>
         <translation>باز کردن &amp;آدرس</translation>
+    </message>
+    <message>
+        <source>Click to disable network activity.</source>
+        <translation>برای غیر فعال کردن فعالیت شبکه کلیک کنید.</translation>
+    </message>
+    <message>
+        <source>Network activity disabled.</source>
+        <translation>فعالیت شبکه غیر فعال شد.</translation>
+    </message>
+    <message>
+        <source>Click to enable network activity again.</source>
+        <translation>برای فعال کردن دوباره فعالیت شبکه کلیک کنید.</translation>
     </message>
     <message>
         <source>Reindexing blocks on disk...</source>
@@ -507,6 +551,10 @@
         <translation>تأیید شده</translation>
     </message>
     <message>
+        <source>Copy address</source>
+        <translation>کپی ادرس</translation>
+    </message>
+    <message>
         <source>Copy label</source>
         <translation>کپی برچسب</translation>
     </message>
@@ -529,6 +577,18 @@
     <message>
         <source>Copy quantity</source>
         <translation>کپی تعداد</translation>
+    </message>
+    <message>
+        <source>Copy fee</source>
+        <translation>رونوشت کارمزد</translation>
+    </message>
+    <message>
+        <source>Copy bytes</source>
+        <translation>کپی کردن بایت ها</translation>
+    </message>
+    <message>
+        <source>Copy change</source>
+        <translation>کپی کردن تغییر</translation>
     </message>
     <message>
         <source>(%1 locked)</source>
@@ -698,8 +758,28 @@
         <translation>فرم</translation>
     </message>
     <message>
+        <source>Unknown...</source>
+        <translation>مشخص نیست</translation>
+    </message>
+    <message>
         <source>Last block time</source>
         <translation>زمان آخرین بلوک</translation>
+    </message>
+    <message>
+        <source>Progress</source>
+        <translation>پیشروی</translation>
+    </message>
+    <message>
+        <source>Progress increase per hour</source>
+        <translation>پیشروی در هر ساعت بیشتر میشود</translation>
+    </message>
+    <message>
+        <source>calculating...</source>
+        <translation>در حال محاسبه...</translation>
+    </message>
+    <message>
+        <source>Estimated time left until synced</source>
+        <translation>زمان تخمینی تا سینک شدن</translation>
     </message>
     <message>
         <source>Hide</source>
@@ -921,6 +1001,10 @@
     </context>
 <context>
     <name>PaymentServer</name>
+    <message>
+        <source>Invalid payment request.</source>
+        <translation>درخواست پرداخت نامعتبر.</translation>
+    </message>
     </context>
 <context>
     <name>PeerTableModel</name>
@@ -1085,12 +1169,36 @@
         <translation>در:</translation>
     </message>
     <message>
+        <source>Out:</source>
+        <translation>خروجی:</translation>
+    </message>
+    <message>
         <source>Debug log file</source>
         <translation>فایلِ لاگِ اشکال زدایی</translation>
     </message>
     <message>
         <source>Clear console</source>
         <translation>پاکسازی کنسول</translation>
+    </message>
+    <message>
+        <source>1 &amp;hour</source>
+        <translation>1 ساعت</translation>
+    </message>
+    <message>
+        <source>1 &amp;day</source>
+        <translation>1 روز</translation>
+    </message>
+    <message>
+        <source>1 &amp;week</source>
+        <translation>1 هفته</translation>
+    </message>
+    <message>
+        <source>1 &amp;year</source>
+        <translation>1 سال</translation>
+    </message>
+    <message>
+        <source>Ban for</source>
+        <translation>محدود شده برای</translation>
     </message>
     <message>
         <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
@@ -1329,6 +1437,18 @@
         <translation>کپی مقدار</translation>
     </message>
     <message>
+        <source>Copy fee</source>
+        <translation>رونوشت کارمزد</translation>
+    </message>
+    <message>
+        <source>Copy bytes</source>
+        <translation>کپی کردن بایت ها</translation>
+    </message>
+    <message>
+        <source>Copy change</source>
+        <translation>کپی کردن تغییر</translation>
+    </message>
+    <message>
         <source>(no label)</source>
         <translation>(بدون برچسب)</translation>
     </message>
@@ -1515,6 +1635,10 @@
 <context>
     <name>TransactionView</name>
     <message>
+        <source>Copy address</source>
+        <translation>کپی ادرس</translation>
+    </message>
+    <message>
         <source>Copy label</source>
         <translation>کپی برچسب</translation>
     </message>
@@ -1533,6 +1657,10 @@
     <message>
         <source>Address</source>
         <translation>آدرس</translation>
+    </message>
+    <message>
+        <source>Exporting Failed</source>
+        <translation>صدور موفق نبود</translation>
     </message>
     </context>
 <context>

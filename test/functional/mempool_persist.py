@@ -28,21 +28,22 @@ Test is as follows:
   - Restart node0 with -persistmempool. Verify that it has 5
     transactions in its mempool. This tests that -persistmempool=0
     does not overwrite a previously valid mempool stored on disk.
+  - Remove node0 mempool.dat and verify savemempool RPC recreates it
+    and verify that node1 can load it and has 5 transaction in its
+    mempool.
+  - Verify that savemempool throws when the RPC is called if
+    node1 can't write to disk.
 
 """
+import os
 import time
 
-from test_framework.mininode import wait_until
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 
 class MempoolPersistTest(BitcoinTestFramework):
-
-    def __init__(self):
-        super().__init__()
-        # We need 3 nodes for this test. Node1 does not have a persistent mempool.
+    def set_test_params(self):
         self.num_nodes = 3
-        self.setup_clean_chain = False
         self.extra_args = [[], ["-persistmempool=0"], []]
 
     def run_test(self):
@@ -64,27 +65,46 @@ class MempoolPersistTest(BitcoinTestFramework):
 
         self.log.debug("Stop-start node0 and node1. Verify that node0 has the transactions in its mempool and node1 does not.")
         self.stop_nodes()
-        self.nodes = []
-        self.nodes.append(self.start_node(0, self.options.tmpdir))
-        self.nodes.append(self.start_node(1, self.options.tmpdir))
+        self.start_node(0)
+        self.start_node(1)
         # Give bitcoind a second to reload the mempool
         time.sleep(1)
-        assert wait_until(lambda: len(self.nodes[0].getrawmempool()) == 5)
+        wait_until(lambda: len(self.nodes[0].getrawmempool()) == 5)
         assert_equal(len(self.nodes[1].getrawmempool()), 0)
 
         self.log.debug("Stop-start node0 with -persistmempool=0. Verify that it doesn't load its mempool.dat file.")
         self.stop_nodes()
-        self.nodes = []
-        self.nodes.append(self.start_node(0, self.options.tmpdir, ["-persistmempool=0"]))
+        self.start_node(0, extra_args=["-persistmempool=0"])
         # Give bitcoind a second to reload the mempool
         time.sleep(1)
         assert_equal(len(self.nodes[0].getrawmempool()), 0)
 
         self.log.debug("Stop-start node0. Verify that it has the transactions in its mempool.")
         self.stop_nodes()
-        self.nodes = []
-        self.nodes.append(self.start_node(0, self.options.tmpdir))
-        assert wait_until(lambda: len(self.nodes[0].getrawmempool()) == 5)
+        self.start_node(0)
+        wait_until(lambda: len(self.nodes[0].getrawmempool()) == 5)
+
+        mempooldat0 = os.path.join(self.options.tmpdir, 'node0', 'regtest', 'mempool.dat')
+        mempooldat1 = os.path.join(self.options.tmpdir, 'node1', 'regtest', 'mempool.dat')
+        self.log.debug("Remove the mempool.dat file. Verify that savemempool to disk via RPC re-creates it")
+        os.remove(mempooldat0)
+        self.nodes[0].savemempool()
+        assert os.path.isfile(mempooldat0)
+
+        self.log.debug("Stop nodes, make node1 use mempool.dat from node0. Verify it has 5 transactions")
+        os.rename(mempooldat0, mempooldat1)
+        self.stop_nodes()
+        self.start_node(1, extra_args=[])
+        wait_until(lambda: len(self.nodes[1].getrawmempool()) == 5)
+
+        self.log.debug("Prevent bitcoind from writing mempool.dat to disk. Verify that `savemempool` fails")
+        # to test the exception we are setting bad permissions on a tmp file called mempool.dat.new
+        # which is an implementation detail that could change and break this test
+        mempooldotnew1 = mempooldat1 + '.new'
+        with os.fdopen(os.open(mempooldotnew1, os.O_CREAT, 0o000), 'w'):
+            pass
+        assert_raises_rpc_error(-1, "Unable to dump mempool to disk", self.nodes[1].savemempool)
+        os.remove(mempooldotnew1)
 
 if __name__ == '__main__':
     MempoolPersistTest().main()

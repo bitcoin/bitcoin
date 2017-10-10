@@ -17,7 +17,7 @@ benchmark::BenchRunner::BenchmarkMap &benchmark::BenchRunner::benchmarks() {
 
 static double gettimedouble(void) {
     struct timeval tv;
-    gettimeofday(&tv, NULL);
+    gettimeofday(&tv, nullptr);
     return tv.tv_usec * 0.000001 + tv.tv_sec;
 }
 
@@ -55,13 +55,13 @@ bool benchmark::State::KeepRunning()
     else {
         now = gettimedouble();
         double elapsed = now - lastTime;
-        double elapsedOne = elapsed * countMaskInv;
+        double elapsedOne = elapsed / (countMask + 1);
         if (elapsedOne < minTime) minTime = elapsedOne;
         if (elapsedOne > maxTime) maxTime = elapsedOne;
 
         // We only use relative values, so don't have to handle 64-bit wrap-around specially
         nowCycles = perf_cpucycles();
-        uint64_t elapsedOneCycles = (nowCycles - lastCycles) * countMaskInv;
+        uint64_t elapsedOneCycles = (nowCycles - lastCycles) / (countMask + 1);
         if (elapsedOneCycles < minCycles) minCycles = elapsedOneCycles;
         if (elapsedOneCycles > maxCycles) maxCycles = elapsedOneCycles;
 
@@ -69,7 +69,6 @@ bool benchmark::State::KeepRunning()
           // If the execution was much too fast (1/128th of maxElapsed), increase the count mask by 8x and restart timing.
           // The restart avoids including the overhead of this code in the measurement.
           countMask = ((countMask<<3)|7) & ((1LL<<60)-1);
-          countMaskInv = 1./(countMask+1);
           count = 0;
           minTime = std::numeric_limits<double>::max();
           maxTime = std::numeric_limits<double>::min();
@@ -81,7 +80,6 @@ bool benchmark::State::KeepRunning()
           uint64_t newCountMask = ((countMask<<1)|1) & ((1LL<<60)-1);
           if ((count & newCountMask)==0) {
               countMask = newCountMask;
-              countMaskInv = 1./(countMask+1);
           }
         }
     }
@@ -100,6 +98,7 @@ bool benchmark::State::KeepRunning()
     int64_t averageCycles = (nowCycles-beginCycles)/count;
     std::cout << std::fixed << std::setprecision(15) << name << "," << count << "," << minTime << "," << maxTime << "," << average << ","
               << minCycles << "," << maxCycles << "," << averageCycles << "\n";
+    std::cout.copyfmt(std::ios(nullptr));
 
     return false;
 }

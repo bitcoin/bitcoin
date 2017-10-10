@@ -9,8 +9,7 @@ from test_framework.util import *
 
 
 class SignRawTransactionsTest(BitcoinTestFramework):
-    def __init__(self):
-        super().__init__()
+    def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
 
@@ -42,22 +41,6 @@ class SignRawTransactionsTest(BitcoinTestFramework):
 
         # 2) No script verification error occurred
         assert 'errors' not in rawTxSigned
-
-        # Check that signrawtransaction doesn't blow up on garbage merge attempts
-        dummyTxInconsistent = self.nodes[0].createrawtransaction([inputs[0]], outputs)
-        rawTxUnsigned = self.nodes[0].signrawtransaction(rawTx + dummyTxInconsistent, inputs)
-
-        assert 'complete' in rawTxUnsigned
-        assert_equal(rawTxUnsigned['complete'], False)
-
-        # Check that signrawtransaction properly merges unsigned and signed txn, even with garbage in the middle
-        rawTxSigned2 = self.nodes[0].signrawtransaction(rawTxUnsigned["hex"] + dummyTxInconsistent + rawTxSigned["hex"], inputs)
-
-        assert 'complete' in rawTxSigned2
-        assert_equal(rawTxSigned2['complete'], True)
-
-        assert 'errors' not in rawTxSigned2
-
 
     def script_verification_error_test(self):
         """Create and sign a raw transaction with valid (vin 0), invalid (vin 1) and one missing (vin 2) input script.
@@ -99,7 +82,7 @@ class SignRawTransactionsTest(BitcoinTestFramework):
             assert_equal(decodedRawTx["vin"][i]["vout"], inp["vout"])
 
         # Make sure decoderawtransaction throws if there is extra data
-        assert_raises(JSONRPCException, self.nodes[0].decoderawtransaction, rawTx + "00")
+        assert_raises_rpc_error(-22, "TX decode failed", self.nodes[0].decoderawtransaction, rawTx + "00")
 
         rawTxSigned = self.nodes[0].signrawtransaction(rawTx, scripts, privKeys)
 

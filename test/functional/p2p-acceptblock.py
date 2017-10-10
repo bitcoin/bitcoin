@@ -60,8 +60,7 @@ class AcceptBlockTest(BitcoinTestFramework):
                           default=os.getenv("BITCOIND", "bitcoind"),
                           help="bitcoind binary to test")
 
-    def __init__(self):
-        super().__init__()
+    def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 2
         self.extra_args = [[], ["-whitelist=127.0.0.1"]]
@@ -172,7 +171,7 @@ class AcceptBlockTest(BitcoinTestFramework):
         # Blocks 1-287 should be accepted, block 288 should be ignored because it's too far ahead
         for x in all_blocks[:-1]:
             self.nodes[0].getblock(x.hash)
-        assert_raises_jsonrpc(-1, "Block not found on disk", self.nodes[0].getblock, all_blocks[-1].hash)
+        assert_raises_rpc_error(-1, "Block not found on disk", self.nodes[0].getblock, all_blocks[-1].hash)
 
         headers_message.headers.pop() # Ensure the last block is unrequested
         white_node.send_message(headers_message) # Send headers leading to tip

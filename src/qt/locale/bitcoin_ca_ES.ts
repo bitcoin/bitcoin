@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation>Feu clic dret per a editar l'adreça o l'etiqueta</translation>
+        <translation>Feu clic dret per a editar l'adreça o l'etiquetaccn</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -878,6 +878,10 @@
         <translation>Formulari</translation>
     </message>
     <message>
+        <source>Unknown...</source>
+        <translation>Desconegut...</translation>
+    </message>
+    <message>
         <source>Last block time</source>
         <translation>Últim temps de bloc</translation>
     </message>
@@ -1382,7 +1386,11 @@
     </context>
 <context>
     <name>QObject::QObject</name>
-    </context>
+    <message>
+        <source>Error: %1</source>
+        <translation>Avís: %1</translation>
+    </message>
+</context>
 <context>
     <name>QRImageWidget</name>
     <message>
@@ -2338,6 +2346,10 @@
         <translation>%1/fora de línia</translation>
     </message>
     <message>
+        <source>abandoned</source>
+        <translation>abandonada</translation>
+    </message>
+    <message>
         <source>%1/unconfirmed</source>
         <translation>%1/sense confirmar</translation>
     </message>
@@ -2468,7 +2480,11 @@
         <source>This pane shows a detailed description of the transaction</source>
         <translation>Aquest panell mostra una descripció detallada de la transacció</translation>
     </message>
-    </context>
+    <message>
+        <source>Details for %1</source>
+        <translation>Detalls per %1</translation>
+    </message>
+</context>
 <context>
     <name>TransactionTableModel</name>
     <message>
@@ -2657,6 +2673,10 @@
     <message>
         <source>Copy raw transaction</source>
         <translation>Copia la transacció crua</translation>
+    </message>
+    <message>
+        <source>Copy full transaction details</source>
+        <translation>Copia els detalls complets de la transacció</translation>
     </message>
     <message>
         <source>Edit label</source>
@@ -3140,6 +3160,10 @@
     <message>
         <source>Warning</source>
         <translation>Avís</translation>
+    </message>
+    <message>
+        <source>Warning: unknown new rules activated (versionbit %i)</source>
+        <translation>Avís: regles noves desconegudes activades (versionbit %i)</translation>
     </message>
     <message>
         <source>Zapping all transactions from wallet...</source>

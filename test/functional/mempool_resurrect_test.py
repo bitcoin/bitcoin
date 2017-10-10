@@ -9,12 +9,8 @@ from test_framework.util import *
 
 # Create one-input, one-output, no-fee transaction:
 class MempoolCoinbaseTest(BitcoinTestFramework):
-
-    def __init__(self):
-        super().__init__()
+    def set_test_params(self):
         self.num_nodes = 1
-        self.setup_clean_chain = False
-        # Just need one node for this test
         self.extra_args = [["-checkmempool"]]
 
     def run_test(self):

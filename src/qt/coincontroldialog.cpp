@@ -18,6 +18,7 @@
 #include "policy/fees.h"
 #include "policy/policy.h"
 #include "validation.h" // For mempool
+#include "wallet/fees.h"
 #include "wallet/wallet.h"
 
 #include <QApplication>
@@ -490,8 +491,6 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
         else nBytesInputs += 148;
     }
 
-    bool conservative_estimate = CalculateEstimateType(FeeEstimateMode::UNSET, coinControl->signalRbf);
-
     // calculation
     if (nQuantity > 0)
     {
@@ -512,7 +511,7 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
                 nBytes -= 34;
 
         // Fee
-        nPayFee = CWallet::GetMinimumFee(nBytes, coinControl->nConfirmTarget, ::mempool, ::feeEstimator, nullptr /* FeeCalculation */, false /* ignoreGlobalPayTxFee */, conservative_estimate);
+        nPayFee = GetMinimumFee(nBytes, *coinControl, ::mempool, ::feeEstimator, nullptr /* FeeCalculation */);
 
         if (nPayAmount > 0)
         {
@@ -583,12 +582,8 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
     QString toolTipDust = tr("This label turns red if any recipient receives an amount smaller than the current dust threshold.");
 
     // how many satoshis the estimated fee can vary per byte we guess wrong
-    double dFeeVary;
-    if (payTxFee.GetFeePerK() > 0)
-        dFeeVary = (double)std::max(CWallet::GetRequiredFee(1000), payTxFee.GetFeePerK()) / 1000;
-    else {
-        dFeeVary = (double)std::max(CWallet::GetRequiredFee(1000), ::feeEstimator.estimateSmartFee(coinControl->nConfirmTarget, NULL, ::mempool, conservative_estimate).GetFeePerK()) / 1000;
-    }
+    double dFeeVary = (double)nPayFee / nBytes;
+
     QString toolTip4 = tr("Can vary +/- %1 satoshi(s) per input.").arg(dFeeVary);
 
     l3->setToolTip(toolTip4);
@@ -665,7 +660,7 @@ void CoinControlDialog::updateView()
             QString sAddress = "";
             if(ExtractDestination(out.tx->tx->vout[out.i].scriptPubKey, outputAddress))
             {
-                sAddress = QString::fromStdString(CBitcoinAddress(outputAddress).ToString());
+                sAddress = QString::fromStdString(EncodeDestination(outputAddress));
 
                 // if listMode or change => show bitcoin address. In tree mode, address is not shown again for direct wallet address outputs
                 if (!treeMode || (!(sAddress == sWalletAddress)))

@@ -6,16 +6,14 @@
 
 import time
 
-from test_framework.test_framework import BitcoinTestFramework, BITCOIND_PROC_WAIT_TIMEOUT
+from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
-    assert_raises_jsonrpc,
+    assert_raises_rpc_error,
 )
 
 class WalletEncryptionTest(BitcoinTestFramework):
-
-    def __init__(self):
-        super().__init__()
+    def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
 
@@ -30,12 +28,11 @@ class WalletEncryptionTest(BitcoinTestFramework):
         assert_equal(len(privkey), 52)
 
         # Encrypt the wallet
-        self.nodes[0].encryptwallet(passphrase)
-        self.bitcoind_processes[0].wait(timeout=BITCOIND_PROC_WAIT_TIMEOUT)
-        self.nodes[0] = self.start_node(0, self.options.tmpdir)
+        self.nodes[0].node_encrypt_wallet(passphrase)
+        self.start_node(0)
 
         # Test that the wallet is encrypted
-        assert_raises_jsonrpc(-13, "Please enter the wallet passphrase with walletpassphrase first", self.nodes[0].dumpprivkey, address)
+        assert_raises_rpc_error(-13, "Please enter the wallet passphrase with walletpassphrase first", self.nodes[0].dumpprivkey, address)
 
         # Check that walletpassphrase works
         self.nodes[0].walletpassphrase(passphrase, 2)
@@ -43,20 +40,20 @@ class WalletEncryptionTest(BitcoinTestFramework):
 
         # Check that the timeout is right
         time.sleep(2)
-        assert_raises_jsonrpc(-13, "Please enter the wallet passphrase with walletpassphrase first", self.nodes[0].dumpprivkey, address)
+        assert_raises_rpc_error(-13, "Please enter the wallet passphrase with walletpassphrase first", self.nodes[0].dumpprivkey, address)
 
         # Test wrong passphrase
-        assert_raises_jsonrpc(-14, "wallet passphrase entered was incorrect", self.nodes[0].walletpassphrase, passphrase + "wrong", 10)
+        assert_raises_rpc_error(-14, "wallet passphrase entered was incorrect", self.nodes[0].walletpassphrase, passphrase + "wrong", 10)
 
         # Test walletlock
         self.nodes[0].walletpassphrase(passphrase, 84600)
         assert_equal(privkey, self.nodes[0].dumpprivkey(address))
         self.nodes[0].walletlock()
-        assert_raises_jsonrpc(-13, "Please enter the wallet passphrase with walletpassphrase first", self.nodes[0].dumpprivkey, address)
+        assert_raises_rpc_error(-13, "Please enter the wallet passphrase with walletpassphrase first", self.nodes[0].dumpprivkey, address)
 
         # Test passphrase changes
         self.nodes[0].walletpassphrasechange(passphrase, passphrase2)
-        assert_raises_jsonrpc(-14, "wallet passphrase entered was incorrect", self.nodes[0].walletpassphrase, passphrase, 10)
+        assert_raises_rpc_error(-14, "wallet passphrase entered was incorrect", self.nodes[0].walletpassphrase, passphrase, 10)
         self.nodes[0].walletpassphrase(passphrase2, 10)
         assert_equal(privkey, self.nodes[0].dumpprivkey(address))
 

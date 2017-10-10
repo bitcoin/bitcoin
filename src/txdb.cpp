@@ -35,7 +35,7 @@ namespace {
 struct CoinEntry {
     COutPoint* outpoint;
     char key;
-    CoinEntry(const COutPoint* ptr) : outpoint(const_cast<COutPoint*>(ptr)), key(DB_COIN)  {}
+    explicit CoinEntry(const COutPoint* ptr) : outpoint(const_cast<COutPoint*>(ptr)), key(DB_COIN)  {}
 
     template<typename Stream>
     void Serialize(Stream &s) const {
@@ -85,8 +85,8 @@ bool CCoinsViewDB::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock) {
     CDBBatch batch(db);
     size_t count = 0;
     size_t changed = 0;
-    size_t batch_size = (size_t)GetArg("-dbbatchsize", nDefaultDbBatchSize);
-    int crash_simulate = GetArg("-dbcrashratio", 0);
+    size_t batch_size = (size_t)gArgs.GetArg("-dbbatchsize", nDefaultDbBatchSize);
+    int crash_simulate = gArgs.GetArg("-dbcrashratio", 0);
     assert(!hashBlock.IsNull());
 
     uint256 old_tip = GetBestBlock();
@@ -371,21 +371,22 @@ bool CCoinsViewDB::Upgrade() {
     int64_t count = 0;
     LogPrintf("Upgrading utxo-set database...\n");
     LogPrintf("[0%%]...");
+    uiInterface.ShowProgress(_("Upgrading UTXO database"), 0, true);
     size_t batch_size = 1 << 24;
     CDBBatch batch(db);
-    uiInterface.SetProgressBreakAction(StartShutdown);
     int reportDone = 0;
+    std::pair<unsigned char, uint256> key;
+    std::pair<unsigned char, uint256> prev_key = {DB_COINS, uint256()};
     while (pcursor->Valid()) {
         boost::this_thread::interruption_point();
         if (ShutdownRequested()) {
             break;
         }
-        std::pair<unsigned char, uint256> key;
         if (pcursor->GetKey(key) && key.first == DB_COINS) {
             if (count++ % 256 == 0) {
                 uint32_t high = 0x100 * *key.second.begin() + *(key.second.begin() + 1);
                 int percentageDone = (int)(high * 100.0 / 65536.0 + 0.5);
-                uiInterface.ShowProgress(_("Upgrading UTXO database") + "\n"+ _("(press q to shutdown and continue later)") + "\n", percentageDone);
+                uiInterface.ShowProgress(_("Upgrading UTXO database"), percentageDone, true);
                 if (reportDone < percentageDone/10) {
                     // report max. every 10% step
                     LogPrintf("[%d%%]...", percentageDone);
@@ -409,6 +410,8 @@ bool CCoinsViewDB::Upgrade() {
             if (batch.SizeEstimate() > batch_size) {
                 db.WriteBatch(batch);
                 batch.Clear();
+                db.CompactRange(prev_key, key);
+                prev_key = key;
             }
             pcursor->Next();
         } else {
@@ -416,7 +419,8 @@ bool CCoinsViewDB::Upgrade() {
         }
     }
     db.WriteBatch(batch);
-    uiInterface.SetProgressBreakAction(std::function<void(void)>());
+    db.CompactRange({DB_COINS, uint256()}, key);
+    uiInterface.ShowProgress("", 100, false);
     LogPrintf("[%s].\n", ShutdownRequested() ? "CANCELLED" : "DONE");
-    return true;
+    return !ShutdownRequested();
 }
