@@ -1531,10 +1531,7 @@ void EscrowClaimRefund(const string& node, const string& role, const string& gui
 		BOOST_CHECK(escrowBid.empty());
 	}
 	string buyeralias = find_value(r.get_obj(), "buyer").get_str();
-	CAmount nEscrowFee = AmountFromValue(find_value(r.get_obj(), "networkfee"));
-	CAmount nArbiterFee = AmountFromValue(find_value(r.get_obj(), "arbiterfee"));
-	CAmount nBuyerTotal = AmountFromValue(find_value(r.get_obj(), "total"));
-	nBuyerTotal = nBuyerTotal - nEscrowFee - nArbiterFee;
+	CAmount nBuyerTotal = AmountFromValue(find_value(r.get_obj(), "total_without_fee"));
 	string escrowaddress = find_value(r.get_obj(), "escrowaddress").get_str();
 	BOOST_CHECK(!buyeralias.empty());
 	string offer = find_value(r.get_obj(), "offer").get_str();
@@ -1578,8 +1575,6 @@ void EscrowClaimRefund(const string& node, const string& role, const string& gui
 	balanceBuyerBefore += nBuyerTotal;
 	if(rootselleralias.empty())
 	{
-		if(abs(balanceBuyerAfter - balanceBuyerBefore) > 0.1*COIN)
-			balanceBuyerBefore += nEscrowFee+nArbiterFee;
 		BOOST_CHECK(abs(balanceBuyerAfter - balanceBuyerBefore) <= 0.1*COIN);
 	}
 
@@ -1603,10 +1598,7 @@ void EscrowClaimRelease(const string& node, const string& role, const string& gu
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowinfo " + guid));
 	string selleralias = find_value(r.get_obj(), "seller").get_str();
 	int nQty = find_value(r.get_obj(), "quantity").get_int();
-	CAmount nEscrowFee = AmountFromValue(find_value(r.get_obj(), "networkfee"));
-	CAmount nArbiterFee = AmountFromValue(find_value(r.get_obj(), "arbiterfee"));
-	CAmount nSellerTotal = AmountFromValue(find_value(r.get_obj(), "total"));
-	nSellerTotal = nSellerTotal - nEscrowFee - nArbiterFee;
+	CAmount nSellerTotal = AmountFromValue(find_value(r.get_obj(), "total_without_fee"));
 	string escrowaddress = find_value(r.get_obj(), "escrowaddress").get_str();
 	BOOST_CHECK(!selleralias.empty());
 	string offer = find_value(r.get_obj(), "offer").get_str();
@@ -1648,8 +1640,6 @@ void EscrowClaimRelease(const string& node, const string& role, const string& gu
 	// check balance after and before within 0.1 COIN (because of escrow output sent to the seller which adds to seller balance)
 	if(rootselleralias.empty())
 	{
-		if(abs(balanceSellerAfter - balanceSellerBefore) > 0.1*COIN)
-			balanceSellerBefore += nEscrowFee+nArbiterFee;
 		BOOST_CHECK(abs(balanceSellerAfter - balanceSellerBefore) <= 0.1*COIN);
 	}
 
