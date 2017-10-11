@@ -32,6 +32,7 @@
 #include "masternodeman.h"
 #include "masternodeconfig.h"
 #include "systemnodeman.h"
+#include "systemnodeconfig.h"
 #include "spork.h"
 #include "utilmoneystr.h"
 #ifdef ENABLE_WALLET
@@ -1578,6 +1579,19 @@ bool AppInit2(boost::thread_group& threadGroup)
             pwalletMain->LockCoin(outpoint);
         }
     }
+
+    if(GetBoolArg("-snconflock", true) && pwalletMain) {
+        LOCK(pwalletMain->cs_wallet);
+        LogPrintf("Locking Systemnodes:\n");
+        uint256 mnTxHash;
+        BOOST_FOREACH(CSystemnodeConfig::CSystemnodeEntry sne, systemnodeConfig.getEntries()) {
+            LogPrintf("  %s %s\n", sne.getTxHash(), sne.getOutputIndex());
+            mnTxHash.SetHex(sne.getTxHash());
+            COutPoint outpoint = COutPoint(mnTxHash, boost::lexical_cast<unsigned int>(sne.getOutputIndex()));
+            pwalletMain->LockCoin(outpoint);
+        }
+    }
+
 
     fEnableInstantX = GetBoolArg("-enableinstantx", fEnableInstantX);
     nInstantXDepth = GetArg("-instantxdepth", nInstantXDepth);
