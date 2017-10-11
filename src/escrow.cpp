@@ -2656,7 +2656,7 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 	}
 	CScript sellerScript;
 	GetAlias(CNameTXIDTuple(escrow.sellerAliasTuple.first, escrow.sellerAliasTuple.second), sellerAlias);
-	if (GetAlias(escrow.sellerAliasTuple.first, buyerAliasLatest))
+	if (GetAlias(escrow.sellerAliasTuple.first, sellerAliasLatest))
 	{
 		GetAddress(sellerAliasLatest, &sellerAddressPayment, sellerScript, escrow.nPaymentOption);
 	}
