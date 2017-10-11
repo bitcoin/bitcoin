@@ -42,8 +42,8 @@ private:
     //! Whether the public key corresponding to this private key is (to be) compressed.
     bool fCompressed;
 
-    //! The actual byte data
-    std::vector<unsigned char, secure_allocator<unsigned char> > keydata;
+    //! A generic storage of bytes using secure allocators
+    CPrivKey keydata;
 
     //! Check whether the 32-byte array pointed to by vch is valid keydata.
     bool static Check(const unsigned char* vch);
