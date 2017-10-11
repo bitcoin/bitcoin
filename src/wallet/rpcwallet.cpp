@@ -2749,16 +2749,17 @@ UniValue listwallets(const JSONRPCRequest& request)
             "Returns a list of currently loaded wallets.\n"
             "For full information on the wallet, use \"getwalletinfo\"\n"
             "\nResult:\n"
-            "[                         (json array of strings)\n"
-            "  \"walletname\"            (string) the wallet name\n"
-            "   ...\n"
-            "]\n"
+            "{\n"
+            "  \"loaded\":     [ \"walletname\" ... ] (json array of strings) Names of loaded wallets\n"
+            "  \"available\":  [ \"walletname\" ... ] (json array of strings) Names of BDB files in wallet directory (may not always actually be wallets)\n"
+            "}\n"
             "\nExamples:\n"
             + HelpExampleCli("listwallets", "")
             + HelpExampleRpc("listwallets", "")
         );
 
-    UniValue obj(UniValue::VARR);
+    std::set<std::string> loaded_set;
+    UniValue loaded(UniValue::VARR);
 
     for (CWalletRef pwallet : vpwallets) {
 
@@ -2768,10 +2769,37 @@ UniValue listwallets(const JSONRPCRequest& request)
 
         LOCK(pwallet->cs_wallet);
 
-        obj.push_back(pwallet->GetName());
+        loaded.push_back(pwallet->GetName());
+        loaded_set.insert(pwallet->GetName());
     }
 
-    return obj;
+    UniValue available(UniValue::VARR);
+    fs::path walletdir = GetWalletDir();
+    const unsigned char bdb_magic[4] = {0x62, 0x31, 0x05, 0x00}; // Berkeley DB Btree magic bytes
+
+    for (fs::directory_iterator it(walletdir); it != fs::directory_iterator(); ++it) {
+        if (!fs::is_regular_file(*it) || fs::is_symlink(*it)) continue;
+
+        std::ifstream file(it->path().string(), std::ios::binary);
+        if (!file.is_open()) continue;
+
+        file.seekg(12, std::ios::beg); // Magic bytes start at offset 12
+        unsigned char file_bytes[4] = {0};
+        file.read((char*)file_bytes, sizeof(file_bytes)); // Read 4 bytes of file to compare against magic
+
+        if (memcmp(file_bytes, bdb_magic, sizeof(bdb_magic)) == 0) {
+            // check if this wallet is already loaded
+            const std::string filename = it->path().filename().string();
+            if (loaded_set.count(filename) == 0) {
+                available.push_back(filename);
+            }
+        }
+    }
+
+    UniValue result(UniValue::VOBJ);
+    result.push_back(Pair("loaded", loaded));
+    result.push_back(Pair("available", available));
+    return result;
 }
 
 UniValue resendwallettransactions(const JSONRPCRequest& request)

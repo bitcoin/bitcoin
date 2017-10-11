@@ -19,7 +19,8 @@ class MultiWalletTest(BitcoinTestFramework):
         self.extra_args = [['-wallet=w1', '-wallet=w2', '-wallet=w3', '-wallet=w']]
 
     def run_test(self):
-        assert_equal(set(self.nodes[0].listwallets()), {"w1", "w2", "w3", "w"})
+        assert_equal(set(self.nodes[0].listwallets()['loaded']), {"w1", "w2", "w3", "w"})
+        assert_equal(set(self.nodes[0].listwallets()['available']), set())
 
         self.stop_node(0)
 
@@ -46,7 +47,7 @@ class MultiWalletTest(BitcoinTestFramework):
         wallet_dir2 = os.path.join(self.options.tmpdir, 'node0', 'regtest', 'walletdir')
         os.rename(wallet_dir, wallet_dir2)
         self.start_node(0, ['-wallet=w4', '-wallet=w5'])
-        assert_equal(set(self.nodes[0].listwallets()), {"w4", "w5"})
+        assert_equal(set(self.nodes[0].listwallets()['loaded']), {"w4", "w5"})
         w5 = self.nodes[0].get_wallet_rpc("w5")
         w5.generate(1)
         self.stop_node(0)
@@ -54,7 +55,7 @@ class MultiWalletTest(BitcoinTestFramework):
         # now if wallets/ exists again, but the rootdir is specified as the walletdir, w4 and w5 should still be loaded
         os.rename(wallet_dir2, wallet_dir)
         self.start_node(0, ['-wallet=w4', '-wallet=w5', '-walletdir=' + os.path.join(self.options.tmpdir, 'node0', 'regtest')])
-        assert_equal(set(self.nodes[0].listwallets()), {"w4", "w5"})
+        assert_equal(set(self.nodes[0].listwallets()['loaded']), {"w4", "w5"})
         w5 = self.nodes[0].get_wallet_rpc("w5")
         w5_info = w5.getwalletinfo()
         assert_equal(w5_info['immature_balance'], 50)
@@ -62,6 +63,10 @@ class MultiWalletTest(BitcoinTestFramework):
         self.stop_node(0)
 
         self.start_node(0, self.extra_args[0])
+
+        # ensure listwallets only names BDB files, not symlinks, other files or directories
+        open(os.path.join(wallet_dir, 'w01.dat'), 'a').close()
+        assert_equal(set(self.nodes[0].listwallets()['available']), {"w22"})
 
         w1 = self.nodes[0].get_wallet_rpc("w1")
         w2 = self.nodes[0].get_wallet_rpc("w2")
