@@ -228,7 +228,7 @@ void CEscrowDB::WriteEscrowIndex(const CEscrow& escrow, const std::vector<std::v
 	selector = BCON_NEW("_id", BCON_UTF8(stringFromVch(escrow.vchEscrow).c_str()));
 	write_concern = mongoc_write_concern_new();
 	mongoc_write_concern_set_w(write_concern, MONGOC_WRITE_CONCERN_W_UNACKNOWLEDGED);
-	if (BuildEscrowJson(escrow, vvchArgs, oName)) {
+	if (BuildEscrowIndexerJson(escrow, oName)) {
 		update = bson_new_from_json((unsigned char *)oName.write().c_str(), -1, &error);
 		if (!update || !mongoc_collection_update(escrow_collection, update_flags, selector, update, write_concern, &error)) {
 			LogPrintf("MONGODB ESCROW UPDATE ERROR: %s\n", error.message);
@@ -3133,32 +3133,6 @@ UniValue escrowinfo(const UniValue& params, bool fHelp) {
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4605 - " + _("Could not find this escrow"));
     return oEscrow;
 }
-UniValue escrowinfoadvanced(const UniValue& params, bool fHelp) {
-	if (fHelp || 1 != params.size())
-		throw runtime_error("escrowinfoadvanced <guid>\n"
-			"Show stored advanced values of a single escrow\n");
-
-	vector<unsigned char> vchEscrow = vchFromValue(params[0]);
-
-	UniValue oEscrow(UniValue::VOBJ);
-	CEscrow txPos;
-	uint256 txid;
-	if (!pescrowdb || !pescrowdb->ReadEscrowLastTXID(vchEscrow, txid))
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 5535 - " + _("Failed to read from escrow DB"));
-	if (!pescrowdb->ReadEscrow(CNameTXIDTuple(vchEscrow, txid), txPos))
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 5535 - " + _("Failed to read from escrow DB"));
-
-	CTransaction tx;
-	if (!GetSyscoinTransaction(txPos.nHeight, txPos.txHash, tx, Params().GetConsensus()))
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4604 - " + _("Failed to read from escrow tx"));
-	vector<vector<unsigned char> > vvch;
-	int op, nOut;
-	if (!DecodeEscrowTx(tx, op, nOut, vvch))
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4604 - " + _("Failed to decode escrow"));
-
-	oEscrow.push_back(Pair("redeem_script", HexStr(txPos.vchRedeemScript)));
-	return oEscrow;
-}
 void BuildFeedbackJson(const CEscrow& escrow, UniValue& oFeedback) {
 	string sFeedbackTime;
 	if (escrow.feedback.IsNull())
@@ -3180,17 +3154,10 @@ void BuildFeedbackJson(const CEscrow& escrow, UniValue& oFeedback) {
 	oFeedback.push_back(Pair("feedback", stringFromVch(escrow.feedback.vchFeedback)));
 }
 void BuildEscrowBidJson(const CEscrow& escrow, const string& status, UniValue& oBid) {
-	string sBidTime;
-	if (chainActive.Height() >= escrow.nHeight) {
-		CBlockIndex *pindex = chainActive[escrow.nHeight];
-		if (pindex) {
-			sBidTime = strprintf("%llu", pindex->GetMedianTimePast());
-		}
-	}
 	oBid.push_back(Pair("_id", escrow.txHash.GetHex()));
 	oBid.push_back(Pair("offer", stringFromVch(escrow.offerTuple.first)));
 	oBid.push_back(Pair("escrow", stringFromVch(escrow.vchEscrow)));
-	oBid.push_back(Pair("time", sBidTime));
+	oBid.push_back(Pair("height", (int)escrow.nHeight));
 	oBid.push_back(Pair("bidder", stringFromVch(escrow.linkAliasTuple.first)));
 	oBid.push_back(Pair("bid_in_offer_currency_per_unit", escrow.fBidPerUnit));
 	oBid.push_back(Pair("bid_in_payment_option_per_unit", ValueFromAmount(escrow.nBidPerUnit)));
@@ -3239,6 +3206,7 @@ bool BuildEscrowJson(const CEscrow &escrow, const std::vector<std::vector<unsign
 		strRedeemTxId = escrow.redeemTxId.GetHex();
     oEscrow.push_back(Pair("paymentoption", GetPaymentOptionsString(escrow.nPaymentOption)));
 	oEscrow.push_back(Pair("redeem_txid", strRedeemTxId));
+	oEscrow.push_back(Pair("redeem_script", HexStr(escrow.vchRedeemScript)));
     oEscrow.push_back(Pair("txid", escrow.txHash.GetHex()));
     oEscrow.push_back(Pair("height", (int64_t)escrow.nHeight));
 	int64_t expired_time = GetEscrowExpiration(escrow);
@@ -3266,6 +3234,17 @@ bool BuildEscrowJson(const CEscrow &escrow, const std::vector<std::vector<unsign
 		status += " (feedback)";
 	oEscrow.push_back(Pair("expired", expired));
 	oEscrow.push_back(Pair("status", status));
+	return true;
+}
+bool BuildEscrowIndexerJson(const CEscrow &escrow, UniValue& oEscrow)
+{
+	oEscrow.push_back(Pair("_id", escrow.txHash.GetHex()));
+	oEscrow.push_back(Pair("offer", stringFromVch(escrow.offerTuple.first)));
+	oEscrow.push_back(Pair("escrow", stringFromVch(escrow.vchEscrow)));
+	oEscrow.push_back(Pair("height", (int)escrow.nHeight));
+	oEscrow.push_back(Pair("seller", stringFromVch(escrow.sellerAliasTuple.first)));
+	oEscrow.push_back(Pair("arbiter", stringFromVch(escrow.arbiterAliasTuple.first)));
+	oEscrow.push_back(Pair("buyer", stringFromVch(escrow.buyerAliasTuple.first)));
 	return true;
 }
 void EscrowTxToJSON(const int op, const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash, UniValue &entry)

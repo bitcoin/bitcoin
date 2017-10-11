@@ -144,5 +144,6 @@ public:
 bool GetCert(const CNameTXIDTuple& certTuple);
 bool GetCert(const std::vector<unsigned char> &vchCert,CCert& txPos);
 bool BuildCertJson(const CCert& cert, const CAliasIndex& alias, UniValue& oName);
+bool BuildCertIndexerJson(const CCert& cert, const CAliasIndex& alias, UniValue& oName);
 uint64_t GetCertExpiration(const CCert& cert);
 #endif // CERT_H

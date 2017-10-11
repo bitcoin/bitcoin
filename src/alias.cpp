@@ -1214,11 +1214,11 @@ void CAliasDB::WriteAliasIndex(const CAliasIndex& alias) {
 	selector = BCON_NEW("_id", BCON_UTF8(stringFromVch(alias.vchAlias).c_str()));
 	write_concern = mongoc_write_concern_new();
 	mongoc_write_concern_set_w(write_concern, MONGOC_WRITE_CONCERN_W_UNACKNOWLEDGED);
-	if (BuildAliasJson(alias, oName)) {
-		update = bson_new_from_json((unsigned char *)oName.write().c_str(), -1, &error);
-		if (!update || !mongoc_collection_update(alias_collection, update_flags, selector, update, write_concern, &error)) {
-			LogPrintf("MONGODB ALIAS UPDATE ERROR: %s\n", error.message);
-		}
+	oName.push_back(Pair("_id", stringFromVch(alias.vchAlias)));
+	oName.push_back(Pair("address", EncodeBase58(alias.vchAddress)));
+	update = bson_new_from_json((unsigned char *)oName.write().c_str(), -1, &error);
+	if (!update || !mongoc_collection_update(alias_collection, update_flags, selector, update, write_concern, &error)) {
+		LogPrintf("MONGODB ALIAS UPDATE ERROR: %s\n", error.message);
 	}
 	if(update)
 		bson_destroy(update);

@@ -446,7 +446,6 @@ static const CRPCCommand vRPCCommands[] =
 	{ "wallet", "escrowinfo",              &escrowinfo,          false },
 	{ "wallet", "escrowfeedback",      &escrowfeedback,  false },
 	{ "wallet", "escrowacknowledge",      &escrowacknowledge,  false },
-	{ "wallet", "escrowinfoadvanced",              &escrowinfoadvanced,          false },
 #endif // ENABLE_WALLET
 };
 

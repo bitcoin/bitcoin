@@ -1438,9 +1438,8 @@ const string EscrowNewBuyItNow(const string& node, const string& sellernode, con
 void EscrowRelease(const string& node, const string& role, const string& guid ,const string& witness)
 {
 	UniValue r;
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowinfoadvanced " + guid));
-	string redeemScriptStr = find_value(r.get_obj(), "redeem_script").get_str();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowinfo " + guid));
+	string redeemScriptStr = find_value(r.get_obj(), "redeem_script").get_str();
 	bool bBuyNow = find_value(r.get_obj(), "buynow").get_bool();
 	if (!bBuyNow) {
 		const UniValue &escrowBidBefore = EscrowBidFilterFromGUID(node, guid);
@@ -1489,9 +1488,8 @@ void EscrowRelease(const string& node, const string& role, const string& guid ,c
 void EscrowRefund(const string& node, const string& role, const string& guid, const string &witness)
 {
 	UniValue r;
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowinfoadvanced " + guid));
-	string redeemScriptStr = find_value(r.get_obj(), "redeem_script").get_str();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowinfo " + guid));
+	string redeemScriptStr = find_value(r.get_obj(), "redeem_script").get_str();
 	bool bBuyNow = find_value(r.get_obj(), "buynow").get_bool();
 	if (!bBuyNow) {
 		const UniValue &escrowBidBefore = EscrowBidFilterFromGUID(node, guid);
@@ -1542,9 +1540,8 @@ void EscrowClaimRefund(const string& node, const string& guid)
 {
 
 	UniValue r, a;
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowinfoadvanced " + guid));
-	string redeemScriptStr = find_value(r.get_obj(), "redeem_script").get_str();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowinfo " + guid));
+	string redeemScriptStr = find_value(r.get_obj(), "redeem_script").get_str();
 	bool bBuyNow = find_value(r.get_obj(), "buynow").get_bool();
 	if (!bBuyNow) {
 		const UniValue &escrowBid = EscrowBidFilterFromGUID(node, guid);
@@ -1623,9 +1620,8 @@ const UniValue FindFeedback(const string& node, const string& txid)
 void EscrowClaimRelease(const string& node, const string& guid)
 {
 	UniValue r;
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowinfoadvanced " + guid));
-	string redeemScriptStr = find_value(r.get_obj(), "redeem_script").get_str();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowinfo " + guid));
+	string redeemScriptStr = find_value(r.get_obj(), "redeem_script").get_str();
 	string selleralias = find_value(r.get_obj(), "seller").get_str();
 	int nQty = find_value(r.get_obj(), "quantity").get_int();
 	CAmount nSellerTotal = AmountFromValue(find_value(r.get_obj(), "total_without_fee"));

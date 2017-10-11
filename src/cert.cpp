@@ -118,7 +118,7 @@ void CCertDB::WriteCertIndex(const CCert& cert) {
 	selector = BCON_NEW("_id", BCON_UTF8(stringFromVch(cert.vchCert).c_str()));
 	write_concern = mongoc_write_concern_new();
 	mongoc_write_concern_set_w(write_concern, MONGOC_WRITE_CONCERN_W_UNACKNOWLEDGED);
-	if (BuildCertJson(cert, certAlias, oName)) {
+	if (BuildCertIndexerJson(cert, certAlias, oName)) {
 		update = bson_new_from_json((unsigned char *)oName.write().c_str(), -1, &error);
 		if (!update || !mongoc_collection_update(cert_collection, update_flags, selector, update, write_concern, &error)) {
 			LogPrintf("MONGODB CERT UPDATE ERROR: %s\n", error.message);
@@ -989,7 +989,14 @@ bool BuildCertJson(const CCert& cert, const CAliasIndex& alias, UniValue& oCert)
 	oCert.push_back(Pair("expired", expired));
 	return true;
 }
-
+bool BuildCertIndexerJson(const CCert& cert, const CAliasIndex& alias, UniValue& oCert)
+{
+	oCert.push_back(Pair("_id", stringFromVch(cert.vchCert)));
+	oCert.push_back(Pair("title", stringFromVch(cert.vchTitle)));
+	oCert.push_back(Pair("category", stringFromVch(cert.sCategory)));
+	oCert.push_back(Pair("alias", stringFromVch(cert.aliasTuple.first)));
+	return true;
+}
 void CertTxToJSON(const int op, const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash, UniValue &entry)
 {
 	string opName = certFromOp(op);
