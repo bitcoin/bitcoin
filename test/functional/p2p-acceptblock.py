@@ -35,13 +35,18 @@ The test:
 
 7. Send Node0 the missing block again.
    Node0 should process and the tip should advance.
+
+8. Create a fork which is invalid at a height longer than the current chain
+   (ie to which the node will try to reorg) but which has headers built on top
+   of the invalid block. Check that we get disconnected if we send more headers
+   on the chain the node now knows to be invalid.
 """
 
 from test_framework.mininode import *
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 import time
-from test_framework.blocktools import create_block, create_coinbase
+from test_framework.blocktools import create_block, create_coinbase, create_transaction
 
 class AcceptBlockTest(BitcoinTestFramework):
     def add_options(self, parser):
@@ -220,7 +225,76 @@ class AcceptBlockTest(BitcoinTestFramework):
 
         test_node.sync_with_ping()
         assert_equal(self.nodes[0].getblockcount(), 290)
+        self.nodes[0].getblock(all_blocks[286].hash)
+        assert_equal(self.nodes[0].getbestblockhash(), all_blocks[286].hash)
+        assert_raises_rpc_error(-1, "Block not found on disk", self.nodes[0].getblock, all_blocks[287].hash)
         self.log.info("Successfully reorged to longer chain from non-whitelisted peer")
+
+        # 8. Create a chain which is invalid at a height longer than the
+        # current chain, but which has more blocks on top of that
+        block_289f = create_block(all_blocks[284].sha256, create_coinbase(289), all_blocks[284].nTime+1)
+        block_289f.solve()
+        block_290f = create_block(block_289f.sha256, create_coinbase(290), block_289f.nTime+1)
+        block_290f.solve()
+        block_291 = create_block(block_290f.sha256, create_coinbase(291), block_290f.nTime+1)
+        # block_291 spends a coinbase below maturity!
+        block_291.vtx.append(create_transaction(block_290f.vtx[0], 0, b"42", 1))
+        block_291.hashMerkleRoot = block_291.calc_merkle_root()
+        block_291.solve()
+        block_292 = create_block(block_291.sha256, create_coinbase(292), block_291.nTime+1)
+        block_292.solve()
+
+        # Now send all the headers on the chain and enough blocks to trigger reorg
+        headers_message = msg_headers()
+        headers_message.headers.append(CBlockHeader(block_289f))
+        headers_message.headers.append(CBlockHeader(block_290f))
+        headers_message.headers.append(CBlockHeader(block_291))
+        headers_message.headers.append(CBlockHeader(block_292))
+        test_node.send_message(headers_message)
+
+        test_node.sync_with_ping()
+        tip_entry_found = False
+        for x in self.nodes[0].getchaintips():
+            if x['hash'] == block_292.hash:
+                assert_equal(x['status'], "headers-only")
+                tip_entry_found = True
+        assert(tip_entry_found)
+
+        test_node.send_message(msg_block(block_289f))
+        test_node.send_message(msg_block(block_290f))
+
+        test_node.sync_with_ping()
+        self.nodes[0].getblock(block_289f.hash)
+        self.nodes[0].getblock(block_290f.hash)
+
+        test_node.send_message(msg_block(block_291))
+
+        # At this point we've sent an obviously-bogus block, wait for full processing
+        # without assuming whether we will be disconnected or not
+        try:
+            test_node.sync_with_ping(timeout=1)
+        except AssertionError:
+            test_node.wait_for_disconnect()
+
+            test_node = NodeConnCB()   # connects to node (not whitelisted)
+            connections[0] = NodeConn('127.0.0.1', p2p_port(0), self.nodes[0], test_node)
+            test_node.add_connection(connections[0])
+
+            NetworkThread().start() # Start up network handling in another thread
+            test_node.wait_for_verack()
+
+        # We should have failed reorg and switched back to 290 (but have block 291)
+        assert_equal(self.nodes[0].getblockcount(), 290)
+        assert_equal(self.nodes[0].getbestblockhash(), all_blocks[286].hash)
+        assert_equal(self.nodes[0].getblock(block_291.hash)["confirmations"], -1)
+
+        # Now send a new header on the invalid chain, indicating we're forked off, and expect to get disconnected
+        block_293 = create_block(block_292.sha256, create_coinbase(293), block_292.nTime+1)
+        block_293.solve()
+        headers_message = msg_headers()
+        headers_message.headers.append(CBlockHeader(block_293))
+        test_node.send_message(headers_message)
+        test_node.wait_for_disconnect()
 
         [ c.disconnect_node() for c in connections ]
 
