@@ -1315,10 +1315,9 @@ void CThinBlockData::ClearThinBlockData(CNode *pnode, uint256 hash)
 uint64_t CThinBlockData::AddThinBlockBytes(uint64_t bytes, CNode *pfrom)
 {
     pfrom->nLocalThinBlockBytes += bytes;
+    nThinBlockBytes.fetch_add(bytes);
 
-    LOCK(cs_thinblockstats);
-    nThinBlockBytes += bytes;
-    return nThinBlockBytes;
+    return nThinBlockBytes.load();
 }
 
 void CThinBlockData::DeleteThinBlockBytes(uint64_t bytes, CNode *pfrom)
@@ -1328,23 +1327,12 @@ void CThinBlockData::DeleteThinBlockBytes(uint64_t bytes, CNode *pfrom)
 
     if (bytes <= nThinBlockBytes)
     {
-        LOCK(cs_thinblockstats);
-        nThinBlockBytes -= bytes;
+        nThinBlockBytes.fetch_sub(bytes);
     }
 }
 
-void CThinBlockData::ResetThinBlockBytes()
-{
-    LOCK(cs_thinblockstats);
-    nThinBlockBytes = 0;
-}
-
-uint64_t CThinBlockData::GetThinBlockBytes()
-{
-    LOCK(cs_thinblockstats);
-    return nThinBlockBytes;
-}
-
+void CThinBlockData::ResetThinBlockBytes() { nThinBlockBytes.store(0); }
+uint64_t CThinBlockData::GetThinBlockBytes() { return nThinBlockBytes.load(); }
 bool HaveConnectThinblockNodes()
 {
     // Strip the port from then list of all the current in and outbound ip addresses
