@@ -13,6 +13,7 @@
 #include "streams.h"
 #include "txmempool.h"
 #include "util.h"
+#include <assert.h>
 
 static constexpr double INF_FEERATE = 1e99;
 
@@ -503,6 +504,7 @@ void TxConfirmStats::removeTx(unsigned int entryHeight, unsigned int nBestSeenHe
         }
     }
     if (!inBlock && (unsigned int)blocksAgo >= scale) { // Only counts as a failure if not confirmed for entire period
+        assert(this->scale != 0 && "this->scale is 0");
         unsigned int periodsAgo = blocksAgo / scale;
         for (size_t i = 0; i < periodsAgo && i < failAvg.size(); i++) {
             failAvg[i][bucketindex]++;
