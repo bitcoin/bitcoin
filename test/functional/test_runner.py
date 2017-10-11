@@ -123,6 +123,7 @@ BASE_SCRIPTS= [
     'uptime.py',
     'resendwallettransactions.py',
     'minchainwork.py',
+    'p2p-fingerprint.py',
 ]
 
 EXTENDED_SCRIPTS = [
