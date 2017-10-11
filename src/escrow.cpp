@@ -3107,7 +3107,7 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 	return res;
 }
 UniValue escrowinfo(const UniValue& params, bool fHelp) {
-    if (fHelp || 1 > params.size())
+    if (fHelp || 1 != params.size())
         throw runtime_error("escrowinfo <guid>\n"
                 "Show stored values of a single escrow\n");
 
@@ -3132,6 +3132,32 @@ UniValue escrowinfo(const UniValue& params, bool fHelp) {
 	if(!BuildEscrowJson(txPos, vvch, oEscrow))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4605 - " + _("Could not find this escrow"));
     return oEscrow;
+}
+UniValue escrowinfoadvanced(const UniValue& params, bool fHelp) {
+	if (fHelp || 1 != params.size())
+		throw runtime_error("escrowinfoadvanced <guid>\n"
+			"Show stored advanced values of a single escrow\n");
+
+	vector<unsigned char> vchEscrow = vchFromValue(params[0]);
+
+	UniValue oEscrow(UniValue::VOBJ);
+	CEscrow txPos;
+	uint256 txid;
+	if (!pescrowdb || !pescrowdb->ReadEscrowLastTXID(vchEscrow, txid))
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 5535 - " + _("Failed to read from escrow DB"));
+	if (!pescrowdb->ReadEscrow(CNameTXIDTuple(vchEscrow, txid), txPos))
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 5535 - " + _("Failed to read from escrow DB"));
+
+	CTransaction tx;
+	if (!GetSyscoinTransaction(txPos.nHeight, txPos.txHash, tx, Params().GetConsensus()))
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4604 - " + _("Failed to read from escrow tx"));
+	vector<vector<unsigned char> > vvch;
+	int op, nOut;
+	if (!DecodeEscrowTx(tx, op, nOut, vvch))
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4604 - " + _("Failed to decode escrow"));
+
+	oEscrow.push_back(Pair("redeem_script", HexStr(txPos.vchRedeemScript)));
+	return oEscrow;
 }
 void BuildFeedbackJson(const CEscrow& escrow, UniValue& oFeedback) {
 	string sFeedbackTime;

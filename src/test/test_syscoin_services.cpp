@@ -1438,6 +1438,8 @@ const string EscrowNewBuyItNow(const string& node, const string& sellernode, con
 void EscrowRelease(const string& node, const string& role, const string& guid ,const string& witness)
 {
 	UniValue r;
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowinfoadvanced " + guid));
+	string redeemScriptStr = find_value(r.get_obj(), "redeem_script").get_str();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowinfo " + guid));
 	bool bBuyNow = find_value(r.get_obj(), "buynow").get_bool();
 	if (!bBuyNow) {
@@ -1459,7 +1461,7 @@ void EscrowRelease(const string& node, const string& role, const string& guid ,c
 		inputStr += "{\\\"txid\\\":\\\"" + txidStr + "\\\",\\\"vout\\\":" + boost::lexical_cast<string>(nOut) + ",\\\"satoshis\\\":" + boost::lexical_cast<string>(satoshis) + "}";
 	}
 	inputStr += "]\"";
-	
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasaddscript " + redeemScriptStr));
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "offerinfo " + offer));
 	int nQtyOfferBefore = find_value(r.get_obj(), "quantity").get_int();
 	// create raw transaction, sign it and pass it to escrowrelease partially signed, escrow release will store the signatures and upon escrow claim, the buyer will sign and complete sending to network
@@ -1487,7 +1489,8 @@ void EscrowRelease(const string& node, const string& role, const string& guid ,c
 void EscrowRefund(const string& node, const string& role, const string& guid, const string &witness)
 {
 	UniValue r;
-
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowinfoadvanced " + guid));
+	string redeemScriptStr = find_value(r.get_obj(), "redeem_script").get_str();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowinfo " + guid));
 	bool bBuyNow = find_value(r.get_obj(), "buynow").get_bool();
 	if (!bBuyNow) {
@@ -1510,7 +1513,7 @@ void EscrowRefund(const string& node, const string& role, const string& guid, co
 		inputStr += "{\\\"txid\\\":\\\"" + txidStr + "\\\",\\\"vout\\\":" + boost::lexical_cast<string>(nOut) + ",\\\"satoshis\\\":" + boost::lexical_cast<string>(satoshis) + "}";
 	}
 	inputStr += "]\"";
-
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasaddscript " + redeemScriptStr));
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "offerinfo " + offer));
 	int nQtyOfferBefore = find_value(r.get_obj(), "quantity").get_int();
 	// "escrowcreaterawtransaction <type> <escrow guid> <user role> <[{\"txid\":\"id\",\"vout\":n, \"satoshis\":n},...]>\n"
@@ -1539,6 +1542,8 @@ void EscrowClaimRefund(const string& node, const string& guid)
 {
 
 	UniValue r, a;
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowinfoadvanced " + guid));
+	string redeemScriptStr = find_value(r.get_obj(), "redeem_script").get_str();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowinfo " + guid));
 	bool bBuyNow = find_value(r.get_obj(), "buynow").get_bool();
 	if (!bBuyNow) {
@@ -1568,7 +1573,7 @@ void EscrowClaimRefund(const string& node, const string& guid)
 		inputStr += "{\\\"txid\\\":\\\"" + txidStr + "\\\",\\\"vout\\\":" + boost::lexical_cast<string>(nOut) + ",\\\"satoshis\\\":" + boost::lexical_cast<string>(satoshis) + "}";
 	}
 	inputStr += "]\"";
-
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasaddscript " + redeemScriptStr));
 	// get balances before
 	BOOST_CHECK_NO_THROW(a = CallRPC(node, "aliasbalance " + buyeralias));
 	CAmount balanceBuyerBefore = AmountFromValue(find_value(a.get_obj(), "balance"));
@@ -1618,7 +1623,8 @@ const UniValue FindFeedback(const string& node, const string& txid)
 void EscrowClaimRelease(const string& node, const string& guid)
 {
 	UniValue r;
-
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowinfoadvanced " + guid));
+	string redeemScriptStr = find_value(r.get_obj(), "redeem_script").get_str();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowinfo " + guid));
 	string selleralias = find_value(r.get_obj(), "seller").get_str();
 	int nQty = find_value(r.get_obj(), "quantity").get_int();
@@ -1643,6 +1649,7 @@ void EscrowClaimRelease(const string& node, const string& guid)
 		inputStr += "{\\\"txid\\\":\\\"" + txidStr + "\\\",\\\"vout\\\":" + boost::lexical_cast<string>(nOut) + ",\\\"satoshis\\\":" + boost::lexical_cast<string>(satoshis) + "}";
 	}
 	inputStr += "]\"";
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasaddscript " + redeemScriptStr));
 	// get balances before
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasbalance " + selleralias));
 	CAmount balanceSellerBefore = AmountFromValue(find_value(r.get_obj(), "balance"));

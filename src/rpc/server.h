@@ -335,7 +335,7 @@ extern UniValue escrowcompleterefund(const UniValue& params, bool fHelp);
 extern UniValue escrowinfo(const UniValue& params, bool fHelp);
 extern UniValue escrowfeedback(const UniValue& params, bool fHelp);
 extern UniValue escrowacknowledge(const UniValue& params, bool fHelp);
-
+extern UniValue escrowinfoadvanced(const UniValue& params, bool fHelp);
 bool StartRPC();
 void InterruptRPC();
 void StopRPC();
