@@ -1469,6 +1469,7 @@ void EscrowRelease(const string& node, const string& role, const string& guid ,c
 	string rawtx = arr[0].get_str();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + rawtx));
 	const UniValue& hex_value = find_value(r.get_obj(), "hex");
+	BOOST_CHECK(hex_value.get_str() != rawtx);
 	// "escrowrelease <escrow guid> <user role> <rawtx> [witness]\n"
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowrelease " + guid + " " + role + " " + hex_value.get_str() + " " + witness));
 	BOOST_CHECK(r.get_array().size() == 1);
@@ -1518,6 +1519,7 @@ void EscrowRefund(const string& node, const string& role, const string& guid, co
 	string rawtx = arr[0].get_str();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + rawtx));
 	const UniValue& hex_value = find_value(r.get_obj(), "hex");
+	BOOST_CHECK(hex_value.get_str() != rawtx);
 	// "escrowrefund <escrow guid> <user role> <rawtx> [witness]\n"
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowrefund " + guid + " " + role + " " + hex_value.get_str() + " " + witness));
 	BOOST_CHECK(r.get_array().size() == 1);
@@ -1578,6 +1580,7 @@ void EscrowClaimRefund(const string& node, const string& guid)
 	const UniValue& hex_value = find_value(r.get_obj(), "hex");
 	// ensure escrow tx is fully signed
 	const UniValue& complete_value = find_value(r.get_obj(), "complete");
+	BOOST_CHECK(hex_value.get_str() != rawtx);
 	BOOST_CHECK(complete_value.get_bool());
 	// ensure that you cannot refund with partially signed tx
 	BOOST_CHECK_THROW(CallRPC(node, "escrowcompleterefund " + guid + " " + rawtx), runtime_error);
@@ -1652,6 +1655,7 @@ void EscrowClaimRelease(const string& node, const string& guid)
 	const UniValue& hex_value = find_value(r.get_obj(), "hex");
 	// ensure escrow tx is fully signed
 	const UniValue& complete_value = find_value(r.get_obj(), "complete");
+	BOOST_CHECK(hex_value.get_str() != rawtx);
 	BOOST_CHECK(complete_value.get_bool());
 	// ensure that you cannot release with partially signed tx
 	BOOST_CHECK_THROW(CallRPC(node, "escrowcompleterelease " + guid + " " + rawtx), runtime_error);
