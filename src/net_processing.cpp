@@ -2396,7 +2396,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         // unless we're still syncing with the network.
         // Such an unrequested block may still be processed, subject to the
         // conditions in AcceptBlock().
-        bool forceProcessing = pfrom->fWhitelisted && !IsInitialBlockDownload();
+        bool forceProcessing = false;
         const uint256 hash(pblock->GetHash());
         {
             LOCK(cs_main);
