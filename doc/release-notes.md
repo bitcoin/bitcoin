@@ -91,6 +91,10 @@ Low-level RPC changes
 - The wallet RPC `getreceivedbyaddress` will return an error if called with an address not in the wallet.
 
 
+- `listwallets` now returns two arrays of wallet names, one listing the `loaded` wallets
+  and one listing the `available` BDB database files in the wallet directory (generally these
+  will be wallets but may return false positives if there are other BDB files present).
+
 Credits
 =======
 
