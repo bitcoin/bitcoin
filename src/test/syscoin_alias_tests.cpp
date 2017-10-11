@@ -889,6 +889,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	GenerateBlocks(5, "node3");
 	GenerateBlocks(5, "node2");
 	GenerateBlocks(5, "node1");
+	AliasNew("node3", "aliasexpire3", "somedata");
 	// since all aliases are expired related to that escrow, the escrow was pruned
 	BOOST_CHECK_THROW(CallRPC("node3", "escrowinfo " + escrowguid), runtime_error);
 	// and node2
