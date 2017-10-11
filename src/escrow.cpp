@@ -1980,7 +1980,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	newEscrow.nWitnessFee = nWitnessFee;
 	newEscrow.nTotalWithFee = nAmountWithFee;
 	newEscrow.nTotalWithoutFee = nTotalOfferPrice;
-	newEscrow.vchRedeemScript = redeemScript;
+	newEscrow.vchRedeemScript = ParseHex(redeemScript_value.get_str());
 	newEscrow.nDeposit = nDepositFee;
 	newEscrow.nShipping = nShipping;
 	newEscrow.nBidPerUnit = nBidPerUnit;
@@ -2341,7 +2341,7 @@ UniValue escrowcreaterawtransaction(const UniValue& params, bool fHelp) {
 	string strRawTx = createEscrowSpendingTx;
 	// if this is called prior to escrowcompleterelease, then it probably has been signed already, so apply the existing inputs signatures to the escrow creation transaction
 	// and pass the new raw transaction to the next person to sign and call the escrowcompleterelease with the final raw tx.
-	if (!escrow.signedInput.empty()) {
+	if (!escrow.scriptSigs.empty()) {
 		CTransaction rawTx;
 		DecodeHexTx(rawTx, createEscrowSpendingTx);
 		CMutableTransaction rawTxm(rawTx);
@@ -2442,7 +2442,7 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
     CScript scriptPubKeyOrigSeller;
 
     scriptPubKeyOrigSeller << CScript::EncodeOP_N(OP_ESCROW_RELEASE) << vchEscrow << vchFromString("0") << vchHashEscrow << OP_2DROP << OP_2DROP;
-    scriptPubKeyOrigSeller += sellerScript;
+    scriptPubKeyOrigSeller += buyerScript;
 
 
 	vector<CRecipient> vecSend;
@@ -2478,7 +2478,6 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	signParams.push_back(EncodeHexTx(wtx));
 	const UniValue &resSign1 = tableRPC.execute("syscoinsignrawtransaction", signParams);
 	const UniValue& so = resSign1.get_obj();
-	hex_str = "";
 	string txid_str = "";
 	const UniValue& hex_value1 = find_value(so, "hex");
 	const UniValue& txid_value = find_value(so, "txid");
@@ -2559,7 +2558,7 @@ UniValue escrowcompleterelease(const UniValue& params, bool fHelp) {
 
     vector<unsigned char> vchHashEscrow = vchFromValue(hash.GetHex());
     scriptPubKeyBuyer << CScript::EncodeOP_N(OP_ESCROW_RELEASE) << vchEscrow << vchFromString("1") << vchHashEscrow << OP_2DROP << OP_2DROP;
-    scriptPubKeyBuyer += buyerScript;
+    scriptPubKeyBuyer += sellerScript;
 	vector<CRecipient> vecSend;
 	CRecipient recipientBuyer, recipientArbiter;
 	CreateRecipient(scriptPubKeyBuyer, recipientBuyer);
@@ -2743,7 +2742,6 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 	signParams.push_back(EncodeHexTx(wtx));
 	const UniValue &resSign1 = tableRPC.execute("syscoinsignrawtransaction", signParams);
 	const UniValue& so = resSign1.get_obj();
-	hex_str = "";
 	string txid_str = "";
 	const UniValue& hex_value1 = find_value(so, "hex");
 	const UniValue& txid_value = find_value(so, "txid");
@@ -2809,7 +2807,7 @@ UniValue escrowcompleterefund(const UniValue& params, bool fHelp) {
 	CScript scriptPubKeyAlias;
 
 	scriptPubKeyAlias = CScript() << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << buyerAliasLatest.vchAlias << buyerAliasLatest.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_DROP;
-	scriptPubKeyAlias += sellerScript;
+	scriptPubKeyAlias += buyerScript;
 
 
 
