@@ -830,6 +830,10 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	StopNode("node3");
 	printf("Sleeping 5 seconds between the creation of aliases for this test...\n");
 	MilliSleep(5000);	
+	GenerateBlocks(5, "node1");
+	GenerateBlocks(5, "node2");
+	GenerateBlocks(5, "node3");
+	GenerateBlocks(50);
 	AliasNew("node1", "aliasexpire2", "pubdata");
 	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress aliasexpirednode2 3000"), runtime_error);
 	GenerateBlocks(10);	
