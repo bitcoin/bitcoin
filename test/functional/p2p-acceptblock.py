@@ -103,7 +103,8 @@ class AcceptBlockTest(BitcoinTestFramework):
         test_node.send_message(msg_block(blocks_h2[0]))
         white_node.send_message(msg_block(blocks_h2[1]))
 
-        [ x.sync_with_ping() for x in [test_node, white_node] ]
+        for x in [test_node, white_node]:
+            x.sync_with_ping()
         assert_equal(self.nodes[0].getblockcount(), 2)
         assert_equal(self.nodes[1].getblockcount(), 2)
         self.log.info("First height 2 block accepted by both nodes")
@@ -116,7 +117,8 @@ class AcceptBlockTest(BitcoinTestFramework):
         test_node.send_message(msg_block(blocks_h2f[0]))
         white_node.send_message(msg_block(blocks_h2f[1]))
 
-        [ x.sync_with_ping() for x in [test_node, white_node] ]
+        for x in [test_node, white_node]:
+            x.sync_with_ping()
         for x in self.nodes[0].getchaintips():
             if x['hash'] == blocks_h2f[0].hash:
                 assert_equal(x['status'], "headers-only")
@@ -135,7 +137,8 @@ class AcceptBlockTest(BitcoinTestFramework):
         test_node.send_message(msg_block(blocks_h3[0]))
         white_node.send_message(msg_block(blocks_h3[1]))
 
-        [ x.sync_with_ping() for x in [test_node, white_node] ]
+        for x in [test_node, white_node]:
+            x.sync_with_ping()
         # Since the earlier block was not processed by node0, the new block
         # can't be fully validated.
         for x in self.nodes[0].getchaintips():
