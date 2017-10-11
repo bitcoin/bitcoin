@@ -2479,6 +2479,7 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	const UniValue &resSign1 = tableRPC.execute("syscoinsignrawtransaction", signParams);
 	const UniValue& so = resSign1.get_obj();
 	string txid_str = "";
+	string hex_str = "";
 	const UniValue& hex_value1 = find_value(so, "hex");
 	const UniValue& txid_value = find_value(so, "txid");
 	if (hex_value1.isStr())
@@ -2743,6 +2744,7 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 	const UniValue &resSign1 = tableRPC.execute("syscoinsignrawtransaction", signParams);
 	const UniValue& so = resSign1.get_obj();
 	string txid_str = "";
+	string hex_str = "";
 	const UniValue& hex_value1 = find_value(so, "hex");
 	const UniValue& txid_value = find_value(so, "txid");
 	if (hex_value1.isStr())
