@@ -15,10 +15,18 @@
 #include "util.h"
 #include "utiltime.h"
 #include "wallet/wallet.h"
+#include "wallet/sql/database.h"
+#include "wallet/sql/transactions.h"
+#include "wallet/sql/transactions-odb.hxx"
 
 #include <atomic>
 
 #include <boost/thread.hpp>
+
+#include <odb/database.hxx>
+#include <odb/transaction.hxx>
+
+using namespace odb::core;
 
 //
 // CWalletDB
@@ -48,6 +56,14 @@ bool CWalletDB::ErasePurpose(const std::string& strAddress)
 
 bool CWalletDB::WriteTx(const CWalletTx& wtx)
 {
+    std::auto_ptr <database> db(create_database());
+    {
+        transactions bt(std::string("tx"), 0);
+        transaction t(db->begin());
+        db->persist(bt);
+        t.commit();
+    }
+
     return WriteIC(std::make_pair(std::string("tx"), wtx.GetHash()), wtx);
 }
 
