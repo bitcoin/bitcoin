@@ -4,35 +4,24 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test processing of unrequested blocks.
 
-Since behavior differs when receiving unrequested blocks from whitelisted peers
-versus non-whitelisted peers, this tests the behavior of both (effectively two
-separate tests running in parallel).
-
-Setup: two nodes, node0 and node1, not connected to each other.  Node0 does not
-whitelist localhost, but node1 does. They will each be on their own chain for
-this test.
-
-We have one NodeConn connection to each, test_node and white_node respectively.
+We create one NodeConn connection to test_node.
 
 The test:
-1. Generate one block on each node, to leave IBD.
+1. Generate one block, to leave IBD.
 
-2. Mine a new block on each tip, and deliver to each node from node's peer.
+2. Mine a new block on the tip, and deliver from node's peer.
    The tip should advance.
 
-3. Mine a block that forks the previous block, and deliver to each node from
-   corresponding peer.
-   Node0 should not process this block (just accept the header), because it is
-   unrequested and doesn't have more work than the tip.
-   Node1 should process because this is coming from a whitelisted peer.
+3. Mine a block that forks from the genesis block, and deliver to test_node.
+   Node should not process this block (just accept the header), because it is
+   unrequested and doesn't have more or equal work to the tip.
 
-4. Send another block that builds on the forking block.
-   Node0 should process this block but be stuck on the shorter chain, because
-   it's missing an intermediate block.
-   Node1 should reorg to this longer chain.
+4. Send another two blocks that builds on the forking block.
+   Node should process the second block but be stuck on the shorter chain,
+   because it's missing an intermediate block.
 
-4b.Send 288 more blocks on the longer chain.
-   Node0 should process all but the last block (too far ahead in height).
+4c.Send 288 more blocks on the longer chain.
+   Node should process all but the last block (too far ahead in height).
    Send all headers to Node1, and then send the last block in that chain.
    Node1 should accept the block because it's coming from a whitelisted peer.
 
@@ -62,8 +51,8 @@ class AcceptBlockTest(BitcoinTestFramework):
 
     def set_test_params(self):
         self.setup_clean_chain = True
-        self.num_nodes = 2
-        self.extra_args = [[], ["-whitelist=127.0.0.1"]]
+        self.num_nodes = 1
+        self.extra_args = [[]]
 
     def setup_network(self):
         # Node0 will be used to test behavior of processing unrequested blocks
@@ -73,123 +62,141 @@ class AcceptBlockTest(BitcoinTestFramework):
 
     def run_test(self):
         # Setup the p2p connections and start up the network thread.
-        test_node = NodeConnCB()   # connects to node0 (not whitelisted)
-        white_node = NodeConnCB()  # connects to node1 (whitelisted)
+        test_node = NodeConnCB()   # connects to node (not whitelisted)
 
         connections = []
         connections.append(NodeConn('127.0.0.1', p2p_port(0), self.nodes[0], test_node))
-        connections.append(NodeConn('127.0.0.1', p2p_port(1), self.nodes[1], white_node))
         test_node.add_connection(connections[0])
-        white_node.add_connection(connections[1])
 
         NetworkThread().start() # Start up network handling in another thread
 
         # Test logic begins here
         test_node.wait_for_verack()
-        white_node.wait_for_verack()
 
-        # 1. Have both nodes mine a block (leave IBD)
-        [ n.generate(1) for n in self.nodes ]
-        tips = [ int("0x" + n.getbestblockhash(), 0) for n in self.nodes ]
+        # 1. Have nodes mine a block (leave IBD)
+        self.nodes[0].generate(1)
+        tip = int("0x" + self.nodes[0].getbestblockhash(), 0)
 
-        # 2. Send one block that builds on each tip.
+        # 2. Send one block that builds on the tip.
         # This should be accepted.
-        blocks_h2 = []  # the height 2 blocks on each node's chain
         block_time = int(time.time()) + 1
-        for i in range(2):
-            blocks_h2.append(create_block(tips[i], create_coinbase(2), block_time))
-            blocks_h2[i].solve()
-            block_time += 1
-        test_node.send_message(msg_block(blocks_h2[0]))
-        white_node.send_message(msg_block(blocks_h2[1]))
+        block_h2 = create_block(tip, create_coinbase(2), block_time)
+        block_h2.solve()
+        block_time += 1
+        test_node.send_message(msg_block(block_h2))
 
-        [ x.sync_with_ping() for x in [test_node, white_node] ]
+        test_node.sync_with_ping()
         assert_equal(self.nodes[0].getblockcount(), 2)
-        assert_equal(self.nodes[1].getblockcount(), 2)
-        self.log.info("First height 2 block accepted by both nodes")
+        self.log.info("First height 2 block accepted by node")
 
-        # 3. Send another block that builds on the original tip.
-        blocks_h2f = []  # Blocks at height 2 that fork off the main chain
-        for i in range(2):
-            blocks_h2f.append(create_block(tips[i], create_coinbase(2), blocks_h2[i].nTime+1))
-            blocks_h2f[i].solve()
-        test_node.send_message(msg_block(blocks_h2f[0]))
-        white_node.send_message(msg_block(blocks_h2f[1]))
+        # 3. Send another block that builds on genesis.
+        block_h1f = create_block(int("0x" + self.nodes[0].getblockhash(0), 0), create_coinbase(1), block_time)
+        block_time += 1
+        block_h1f.solve()
+        test_node.send_message(msg_block(block_h1f))
 
-        [ x.sync_with_ping() for x in [test_node, white_node] ]
+        test_node.sync_with_ping()
+        tip_entry_found = False
         for x in self.nodes[0].getchaintips():
-            if x['hash'] == blocks_h2f[0].hash:
+            if x['hash'] == block_h1f.hash:
                 assert_equal(x['status'], "headers-only")
+                tip_entry_found = True
+        assert(tip_entry_found)
 
-        for x in self.nodes[1].getchaintips():
-            if x['hash'] == blocks_h2f[1].hash:
-                assert_equal(x['status'], "valid-headers")
+        # 4. Send another two block that build on the fork.
+        block_h2f = []  # Blocks at height 2 that fork off the main chain
+        block_h2f = create_block(block_h1f.sha256, create_coinbase(2), block_time)
+        block_time += 1
+        block_h2f.solve()
+        test_node.send_message(msg_block(block_h2f))
 
-        self.log.info("Second height 2 block accepted only from whitelisted peer")
-
-        # 4. Now send another block that builds on the forking chain.
-        blocks_h3 = []
-        for i in range(2):
-            blocks_h3.append(create_block(blocks_h2f[i].sha256, create_coinbase(3), blocks_h2f[i].nTime+1))
-            blocks_h3[i].solve()
-        test_node.send_message(msg_block(blocks_h3[0]))
-        white_node.send_message(msg_block(blocks_h3[1]))
-
-        [ x.sync_with_ping() for x in [test_node, white_node] ]
-        # Since the earlier block was not processed by node0, the new block
+        test_node.sync_with_ping()
+        # Since the earlier block was not processed by node, the new block
         # can't be fully validated.
+        tip_entry_found = False
         for x in self.nodes[0].getchaintips():
-            if x['hash'] == blocks_h3[0].hash:
+            if x['hash'] == block_h2f.hash:
                 assert_equal(x['status'], "headers-only")
+                tip_entry_found = True
+        assert(tip_entry_found)
 
-        # But this block should be accepted by node0 since it has more work.
-        self.nodes[0].getblock(blocks_h3[0].hash)
+        # But this block should be accepted by node since it has equal work.
+        # TODO: We currently drop this block but likely shouldn't
+        #self.nodes[0].getblock(block_h2f.hash)
+        self.log.info("Second height 2 block accepted, but not reorg'ed to")
+
+        # 4b. Now send another block that builds on the forking chain.
+        block_h3 = create_block(block_h2f.sha256, create_coinbase(3), block_h2f.nTime+1)
+        block_h3.solve()
+        test_node.send_message(msg_block(block_h3))
+
+        test_node.sync_with_ping()
+        # Since the earlier block was not processed by node, the new block
+        # can't be fully validated.
+        tip_entry_found = False
+        for x in self.nodes[0].getchaintips():
+            if x['hash'] == block_h3.hash:
+                assert_equal(x['status'], "headers-only")
+                tip_entry_found = True
+        assert(tip_entry_found)
+
+        # But this block should be accepted by node since it has more work.
+        self.nodes[0].getblock(block_h3.hash)
         self.log.info("Unrequested more-work block accepted from non-whitelisted peer")
 
-        # Node1 should have accepted and reorged.
-        assert_equal(self.nodes[1].getblockcount(), 3)
-        self.log.info("Successfully reorged to length 3 chain from whitelisted peer")
+        # 4c. Now mine 288 more blocks and deliver; all should be processed but
+        # the last (height-too-high) on node (as long as its not missing any headers)
+        tip = block_h3
+        all_blocks = []
+        for i in range(288):
+            next_block = create_block(tip.sha256, create_coinbase(i + 4), tip.nTime+1)
+            next_block.solve()
+            all_blocks.append(next_block)
+            tip = next_block
 
-        # 4b. Now mine 288 more blocks and deliver; all should be processed but
-        # the last (height-too-high) on node0.  Node1 should process the tip if
-        # we give it the headers chain leading to the tip.
-        tips = blocks_h3
+        # Now send the block at height 5 and check that it wasn't accepted (missing header)
+        test_node.send_message(msg_block(all_blocks[1]))
+        test_node.sync_with_ping()
+        assert_raises_rpc_error(-5, "Block not found", self.nodes[0].getblock, all_blocks[1].hash)
+        assert_raises_rpc_error(-5, "Block not found", self.nodes[0].getblockheader, all_blocks[1].hash)
+
+        # The block at height 5 should be accepted if we provide the missing header, though
         headers_message = msg_headers()
-        all_blocks = []   # node0's blocks
-        for j in range(2):
-            for i in range(288):
-                next_block = create_block(tips[j].sha256, create_coinbase(i + 4), tips[j].nTime+1)
-                next_block.solve()
-                if j==0:
-                    test_node.send_message(msg_block(next_block))
-                    all_blocks.append(next_block)
-                else:
-                    headers_message.headers.append(CBlockHeader(next_block))
-                tips[j] = next_block
+        headers_message.headers.append(CBlockHeader(all_blocks[0]))
+        test_node.send_message(headers_message)
+        test_node.send_message(msg_block(all_blocks[1]))
+        test_node.sync_with_ping()
+        self.nodes[0].getblock(all_blocks[1].hash)
 
-        time.sleep(2)
+        # Now send the blocks in all_blocks
+        for i in range(288):
+            test_node.send_message(msg_block(all_blocks[i]))
+        test_node.sync_with_ping()
+
         # Blocks 1-287 should be accepted, block 288 should be ignored because it's too far ahead
         for x in all_blocks[:-1]:
             self.nodes[0].getblock(x.hash)
         assert_raises_rpc_error(-1, "Block not found on disk", self.nodes[0].getblock, all_blocks[-1].hash)
 
-        headers_message.headers.pop() # Ensure the last block is unrequested
-        white_node.send_message(headers_message) # Send headers leading to tip
-        white_node.send_message(msg_block(tips[1]))  # Now deliver the tip
-        white_node.sync_with_ping()
-        self.nodes[1].getblock(tips[1].hash)
-        self.log.info("Unrequested block far ahead of tip accepted from whitelisted peer")
-
         # 5. Test handling of unrequested block on the node that didn't process
         # Should still not be processed (even though it has a child that has more
         # work).
-        test_node.send_message(msg_block(blocks_h2f[0]))
 
-        # Here, if the sleep is too short, the test could falsely succeed (if the
-        # node hasn't processed the block by the time the sleep returns, and then
-        # the node processes it and incorrectly advances the tip).
-        # But this would be caught later on, when we verify that an inv triggers
-        # a getdata request for this block.
+        # The node should have requested the blocks at some point, so
+        # disconnect/reconnect first
+        connections[0].disconnect_node()
+        test_node.wait_for_disconnect()
+
+        test_node = NodeConnCB()   # connects to node (not whitelisted)
+        connections[0] = NodeConn('127.0.0.1', p2p_port(0), self.nodes[0], test_node)
+        test_node.add_connection(connections[0])
+
+        NetworkThread().start() # Start up network handling in another thread
+
+        test_node.wait_for_verack()
+        test_node.send_message(msg_block(block_h1f))
+        test_node.send_message(msg_block(block_h2f)) # This should not be required
+
         test_node.sync_with_ping()
         assert_equal(self.nodes[0].getblockcount(), 2)
         self.log.info("Unrequested block that would complete more-work chain was ignored")
@@ -200,18 +207,19 @@ class AcceptBlockTest(BitcoinTestFramework):
         with mininode_lock:
             # Clear state so we can check the getdata request
             test_node.last_message.pop("getdata", None)
-            test_node.send_message(msg_inv([CInv(2, blocks_h3[0].sha256)]))
+            test_node.send_message(msg_inv([CInv(2, block_h3.sha256)]))
 
         test_node.sync_with_ping()
         with mininode_lock:
             getdata = test_node.last_message["getdata"]
 
         # Check that the getdata includes the right block
-        assert_equal(getdata.inv[0].hash, blocks_h2f[0].sha256)
+        assert_equal(getdata.inv[0].hash, block_h1f.sha256)
         self.log.info("Inv at tip triggered getdata for unprocessed block")
 
         # 7. Send the missing block for the third time (now it is requested)
-        test_node.send_message(msg_block(blocks_h2f[0]))
+        test_node.send_message(msg_block(block_h1f))
+        test_node.send_message(msg_block(block_h2f)) # This should not be required
 
         test_node.sync_with_ping()
         assert_equal(self.nodes[0].getblockcount(), 290)
