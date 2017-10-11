@@ -2352,7 +2352,7 @@
     </message>
 </context>
 <context>
-    <name>iop-core</name>
+    <name>iop-hd</name>
     <message>
         <source>Options:</source>
         <translation>Опции:</translation>
@@ -2370,8 +2370,8 @@
         <translation>Въведете Ваш публичен адрес</translation>
     </message>
     <message>
-        <source>IoP Core</source>
-        <translation>Биткойн ядро</translation>
+        <source>IoP HD</source>
+        <translation>IoP HD</translation>
     </message>
     <message>
         <source>&lt;category&gt; can be:</source>

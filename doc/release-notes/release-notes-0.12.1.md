@@ -1,6 +1,6 @@
-IoP Core version 0.12.1 is now available from:
+IoP HD version 0.12.1 is now available from:
 
-  <https://iop.org/bin/iop-core-0.12.1/>
+  <https://iop.org/bin/iop-hd-0.12.1/>
 
 This is a new minor version release, including the BIP9, BIP68 and BIP112
 softfork, various bugfixes and updated translations.
@@ -27,10 +27,10 @@ Downgrade warning
 
 Because release 0.12.0 and later will obfuscate the chainstate on every
 fresh sync or reindex, the chainstate is not backwards-compatible with
-pre-0.12 versions of IoP Core or other software.
+pre-0.12 versions of IoP HD or other software.
 
 If you want to downgrade after you have done a reindex with 0.12.0 or later,
-you will need to reindex when you first start IoP Core version 0.11 or
+you will need to reindex when you first start IoP HD version 0.11 or
 earlier.
 
 Notable changes
@@ -84,7 +84,7 @@ For more information about the implementation, see
 BIP113 locktime enforcement soft fork
 -------------------------------------
 
-IoP Core 0.11.2 previously introduced mempool-only locktime
+IoP HD 0.11.2 previously introduced mempool-only locktime
 enforcement using GetMedianTimePast(). This release seeks to
 consensus enforce the rule.
 

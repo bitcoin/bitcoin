@@ -1012,14 +1012,14 @@
     <name>WalletView</name>
     </context>
 <context>
-    <name>iop-core</name>
+    <name>iop-hd</name>
     <message>
         <source>Options:</source>
         <translation>Lựa chọn:</translation>
     </message>
     <message>
-        <source>IoP Core</source>
-        <translation>IoP Core</translation>
+        <source>IoP HD</source>
+        <translation>IoP HD</translation>
     </message>
     <message>
         <source>(default: %u)</source>

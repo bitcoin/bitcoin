@@ -754,14 +754,14 @@
     </message>
     </context>
 <context>
-    <name>iop-core</name>
+    <name>iop-hd</name>
     <message>
         <source>Options:</source>
         <translation>Valikud:</translation>
     </message>
     <message>
-        <source>IoP Core</source>
-        <translation>IoP Core</translation>
+        <source>IoP HD</source>
+        <translation>IoP HD</translation>
     </message>
     <message>
         <source>Information</source>

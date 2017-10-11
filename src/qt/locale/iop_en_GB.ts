@@ -1836,7 +1836,7 @@
     <name>WalletView</name>
     </context>
 <context>
-    <name>iop-core</name>
+    <name>iop-hd</name>
     <message>
         <source>Options:</source>
         <translation>Options:</translation>
@@ -1894,8 +1894,8 @@
         <translation>Unable to start HTTP server. See debug log for details.</translation>
     </message>
     <message>
-        <source>IoP Core</source>
-        <translation>IoP Core</translation>
+        <source>IoP HD</source>
+        <translation>IoP HD</translation>
     </message>
     <message>
         <source>The %s developers</source>

@@ -23,7 +23,7 @@ public:
 class CScriptNum10
 {
 /**
- * The ScriptNum implementation from IoP Core 0.10.0, for cross-comparison.
+ * The ScriptNum implementation from IoP HD 0.10.0, for cross-comparison.
  */
 public:
 

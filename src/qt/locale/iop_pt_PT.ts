@@ -2925,7 +2925,7 @@
     </message>
     </context>
 <context>
-    <name>iop-core</name>
+    <name>iop-hd</name>
     <message>
         <source>Options:</source>
         <translation>Opções:</translation>
@@ -2983,8 +2983,8 @@
         <translation>Não é possível iniciar o servidor HTTP. Verifique o debug.log para detalhes.</translation>
     </message>
     <message>
-        <source>IoP Core</source>
-        <translation>IoP Core</translation>
+        <source>IoP HD</source>
+        <translation>IoP HD</translation>
     </message>
     <message>
         <source>The %s developers</source>

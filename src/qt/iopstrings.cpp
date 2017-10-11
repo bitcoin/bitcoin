@@ -9,142 +9,142 @@
 #define UNUSED
 #endif
 static const char UNUSED *iop_strings[] = {
-QT_TRANSLATE_NOOP("iop-core", "IoP Core"),
-QT_TRANSLATE_NOOP("iop-core", "The %s developers"),
-QT_TRANSLATE_NOOP("iop-core", ""
+QT_TRANSLATE_NOOP("iop-hd", "IoP HD"),
+QT_TRANSLATE_NOOP("iop-hd", "The %s developers"),
+QT_TRANSLATE_NOOP("iop-hd", ""
 "(1 = keep tx meta data e.g. account owner and payment request information, 2 "
 "= drop tx meta data)"),
-QT_TRANSLATE_NOOP("iop-core", ""
+QT_TRANSLATE_NOOP("iop-hd", ""
 "-maxtxfee is set very high! Fees this large could be paid on a single "
 "transaction."),
-QT_TRANSLATE_NOOP("iop-core", ""
+QT_TRANSLATE_NOOP("iop-hd", ""
 "A fee rate (in %s/kB) that will be used when fee estimation has insufficient "
 "data (default: %s)"),
-QT_TRANSLATE_NOOP("iop-core", ""
+QT_TRANSLATE_NOOP("iop-hd", ""
 "Accept relayed transactions received from whitelisted peers even when not "
 "relaying transactions (default: %d)"),
-QT_TRANSLATE_NOOP("iop-core", ""
+QT_TRANSLATE_NOOP("iop-hd", ""
 "Allow JSON-RPC connections from specified source. Valid for <ip> are a "
 "single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or "
 "a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times"),
-QT_TRANSLATE_NOOP("iop-core", ""
+QT_TRANSLATE_NOOP("iop-hd", ""
 "Bind to given address and always listen on it. Use [host]:port notation for "
 "IPv6"),
-QT_TRANSLATE_NOOP("iop-core", ""
+QT_TRANSLATE_NOOP("iop-hd", ""
 "Bind to given address and whitelist peers connecting to it. Use [host]:port "
 "notation for IPv6"),
-QT_TRANSLATE_NOOP("iop-core", ""
+QT_TRANSLATE_NOOP("iop-hd", ""
 "Bind to given address to listen for JSON-RPC connections. This option is "
 "ignored unless -rpcallowip is also passed. Port is optional and overrides -"
 "rpcport. Use [host]:port notation for IPv6. This option can be specified "
 "multiple times (default: 127.0.0.1 and ::1 i.e., localhost, or if -"
 "rpcallowip has been specified, 0.0.0.0 and :: i.e., all addresses)"),
-QT_TRANSLATE_NOOP("iop-core", ""
+QT_TRANSLATE_NOOP("iop-hd", ""
 "Cannot obtain a lock on data directory %s. %s is probably already running."),
-QT_TRANSLATE_NOOP("iop-core", ""
+QT_TRANSLATE_NOOP("iop-hd", ""
 "Connect only to the specified node(s); -connect=0 disables automatic "
 "connections"),
-QT_TRANSLATE_NOOP("iop-core", ""
+QT_TRANSLATE_NOOP("iop-hd", ""
 "Create new files with system default permissions, instead of umask 077 (only "
 "effective with disabled wallet functionality)"),
-QT_TRANSLATE_NOOP("iop-core", ""
+QT_TRANSLATE_NOOP("iop-hd", ""
 "Delete all wallet transactions and only recover those parts of the "
 "blockchain through -rescan on startup"),
-QT_TRANSLATE_NOOP("iop-core", ""
+QT_TRANSLATE_NOOP("iop-hd", ""
 "Discover own IP addresses (default: 1 when listening and no -externalip or -"
 "proxy)"),
-QT_TRANSLATE_NOOP("iop-core", ""
+QT_TRANSLATE_NOOP("iop-hd", ""
 "Distributed under the MIT software license, see the accompanying file %s or "
 "%s"),
-QT_TRANSLATE_NOOP("iop-core", ""
+QT_TRANSLATE_NOOP("iop-hd", ""
 "Do not keep transactions in the mempool longer than <n> hours (default: %u)"),
-QT_TRANSLATE_NOOP("iop-core", ""
+QT_TRANSLATE_NOOP("iop-hd", ""
 "Equivalent bytes per sigop in transactions for relay and mining (default: %u)"),
-QT_TRANSLATE_NOOP("iop-core", ""
+QT_TRANSLATE_NOOP("iop-hd", ""
 "Error loading %s: You can't enable HD on an already existing non-HD wallet"),
-QT_TRANSLATE_NOOP("iop-core", ""
+QT_TRANSLATE_NOOP("iop-hd", ""
 "Error loading wallet %s. -wallet parameter must only specify a filename (not "
 "a path)."),
-QT_TRANSLATE_NOOP("iop-core", ""
+QT_TRANSLATE_NOOP("iop-hd", ""
 "Error reading %s! All keys read correctly, but transaction data or address "
 "book entries might be missing or incorrect."),
-QT_TRANSLATE_NOOP("iop-core", ""
+QT_TRANSLATE_NOOP("iop-hd", ""
 "Error: Listening for incoming connections failed (listen returned error %s)"),
-QT_TRANSLATE_NOOP("iop-core", ""
+QT_TRANSLATE_NOOP("iop-hd", ""
 "Exclude debugging information for a category. Can be used in conjunction "
 "with -debug=1 to output debug logs for all categories except one or more "
 "specified categories."),
-QT_TRANSLATE_NOOP("iop-core", ""
+QT_TRANSLATE_NOOP("iop-hd", ""
 "Execute command when a relevant alert is received or we see a really long "
 "fork (%s in cmd is replaced by message)"),
-QT_TRANSLATE_NOOP("iop-core", ""
+QT_TRANSLATE_NOOP("iop-hd", ""
 "Execute command when a wallet transaction changes (%s in cmd is replaced by "
 "TxID)"),
-QT_TRANSLATE_NOOP("iop-core", ""
+QT_TRANSLATE_NOOP("iop-hd", ""
 "Execute command when the best block changes (%s in cmd is replaced by block "
 "hash)"),
-QT_TRANSLATE_NOOP("iop-core", ""
+QT_TRANSLATE_NOOP("iop-hd", ""
 "Extra transactions to keep in memory for compact block reconstructions "
 "(default: %u)"),
-QT_TRANSLATE_NOOP("iop-core", ""
+QT_TRANSLATE_NOOP("iop-hd", ""
 "Fees (in %s/kB) smaller than this are considered zero fee for relaying, "
 "mining and transaction creation (default: %s)"),
-QT_TRANSLATE_NOOP("iop-core", ""
+QT_TRANSLATE_NOOP("iop-hd", ""
 "Fees (in %s/kB) smaller than this are considered zero fee for transaction "
 "creation (default: %s)"),
-QT_TRANSLATE_NOOP("iop-core", ""
+QT_TRANSLATE_NOOP("iop-hd", ""
 "Force relay of transactions from whitelisted peers even if they violate "
 "local relay policy (default: %d)"),
-QT_TRANSLATE_NOOP("iop-core", ""
+QT_TRANSLATE_NOOP("iop-hd", ""
 "How thorough the block verification of -checkblocks is (0-4, default: %u)"),
-QT_TRANSLATE_NOOP("iop-core", ""
+QT_TRANSLATE_NOOP("iop-hd", ""
 "If <category> is not supplied or if <category> = 1, output all debugging "
 "information."),
-QT_TRANSLATE_NOOP("iop-core", ""
+QT_TRANSLATE_NOOP("iop-hd", ""
 "If paytxfee is not set, include enough fee so transactions begin "
 "confirmation on average within n blocks (default: %u)"),
-QT_TRANSLATE_NOOP("iop-core", ""
+QT_TRANSLATE_NOOP("iop-hd", ""
 "If this block is in the chain assume that it and its ancestors are valid and "
 "potentially skip their script verification (0 to verify all, default: %s, "
 "testnet: %s)"),
-QT_TRANSLATE_NOOP("iop-core", ""
+QT_TRANSLATE_NOOP("iop-hd", ""
 "Invalid amount for -maxtxfee=<amount>: '%s' (must be at least the minrelay "
 "fee of %s to prevent stuck transactions)"),
-QT_TRANSLATE_NOOP("iop-core", ""
+QT_TRANSLATE_NOOP("iop-hd", ""
 "Maintain a full transaction index, used by the getrawtransaction rpc call "
 "(default: %u)"),
-QT_TRANSLATE_NOOP("iop-core", ""
+QT_TRANSLATE_NOOP("iop-hd", ""
 "Maximum allowed median peer time offset adjustment. Local perspective of "
 "time may be influenced by peers forward or backward by this amount. "
 "(default: %u seconds)"),
-QT_TRANSLATE_NOOP("iop-core", ""
+QT_TRANSLATE_NOOP("iop-hd", ""
 "Maximum size of data in data carrier transactions we relay and mine "
 "(default: %u)"),
-QT_TRANSLATE_NOOP("iop-core", ""
+QT_TRANSLATE_NOOP("iop-hd", ""
 "Maximum total fees (in %s) to use in a single wallet transaction or raw "
 "transaction; setting this too low may abort large transactions (default: %s)"),
-QT_TRANSLATE_NOOP("iop-core", ""
+QT_TRANSLATE_NOOP("iop-hd", ""
 "Number of seconds to keep misbehaving peers from reconnecting (default: %u)"),
-QT_TRANSLATE_NOOP("iop-core", ""
+QT_TRANSLATE_NOOP("iop-hd", ""
 "Output debugging information (default: %u, supplying <category> is optional)"),
-QT_TRANSLATE_NOOP("iop-core", ""
+QT_TRANSLATE_NOOP("iop-hd", ""
 "Please check that your computer's date and time are correct! If your clock "
 "is wrong, %s will not work properly."),
-QT_TRANSLATE_NOOP("iop-core", ""
+QT_TRANSLATE_NOOP("iop-hd", ""
 "Please contribute if you find %s useful. Visit %s for further information "
 "about the software."),
-QT_TRANSLATE_NOOP("iop-core", ""
+QT_TRANSLATE_NOOP("iop-hd", ""
 "Prune configured below the minimum of %d MiB.  Please use a higher number."),
-QT_TRANSLATE_NOOP("iop-core", ""
+QT_TRANSLATE_NOOP("iop-hd", ""
 "Prune: last wallet synchronisation goes beyond pruned data. You need to -"
 "reindex (download the whole blockchain again in case of pruned node)"),
-QT_TRANSLATE_NOOP("iop-core", ""
+QT_TRANSLATE_NOOP("iop-hd", ""
 "Query for peer addresses via DNS lookup, if low on addresses (default: 1 "
 "unless -connect used)"),
-QT_TRANSLATE_NOOP("iop-core", ""
+QT_TRANSLATE_NOOP("iop-hd", ""
 "Randomize credentials for every proxy connection. This enables Tor stream "
 "isolation (default: %u)"),
-QT_TRANSLATE_NOOP("iop-core", ""
+QT_TRANSLATE_NOOP("iop-hd", ""
 "Reduce storage requirements by enabling pruning (deleting) of old blocks. "
 "This allows the pruneblockchain RPC to be called to delete specific blocks, "
 "and enables automatic pruning of old blocks if a target size in MiB is "
@@ -153,268 +153,268 @@ QT_TRANSLATE_NOOP("iop-core", ""
 "(default: 0 = disable pruning blocks, 1 = allow manual pruning via RPC, >%u "
 "= automatically prune block files to stay under the specified target size in "
 "MiB)"),
-QT_TRANSLATE_NOOP("iop-core", ""
+QT_TRANSLATE_NOOP("iop-hd", ""
 "Rescans are not possible in pruned mode. You will need to use -reindex which "
 "will download the whole blockchain again."),
-QT_TRANSLATE_NOOP("iop-core", ""
+QT_TRANSLATE_NOOP("iop-hd", ""
 "Set lowest fee rate (in %s/kB) for transactions to be included in block "
 "creation. (default: %s)"),
-QT_TRANSLATE_NOOP("iop-core", ""
+QT_TRANSLATE_NOOP("iop-hd", ""
 "Set the number of script verification threads (%u to %d, 0 = auto, <0 = "
 "leave that many cores free, default: %d)"),
-QT_TRANSLATE_NOOP("iop-core", ""
+QT_TRANSLATE_NOOP("iop-hd", ""
 "Sets the serialization of raw transaction or block hex returned in non-"
 "verbose mode, non-segwit(0) or segwit(1) (default: %d)"),
-QT_TRANSLATE_NOOP("iop-core", ""
+QT_TRANSLATE_NOOP("iop-hd", ""
 "Support filtering of blocks and transaction with bloom filters (default: %u)"),
-QT_TRANSLATE_NOOP("iop-core", ""
+QT_TRANSLATE_NOOP("iop-hd", ""
 "The block database contains a block which appears to be from the future. "
 "This may be due to your computer's date and time being set incorrectly. Only "
 "rebuild the block database if you are sure that your computer's date and "
 "time are correct"),
-QT_TRANSLATE_NOOP("iop-core", ""
+QT_TRANSLATE_NOOP("iop-hd", ""
 "The fee rate (in %s/kB) that indicates your tolerance for discarding change "
 "by adding it to the fee (default: %s). Note: An output is discarded if it is "
 "dust at this rate, but we will always discard up to the dust relay fee and a "
 "discard fee above that is limited by the fee estimate for the longest target"),
-QT_TRANSLATE_NOOP("iop-core", ""
+QT_TRANSLATE_NOOP("iop-hd", ""
 "The transaction amount is too small to send after the fee has been deducted"),
-QT_TRANSLATE_NOOP("iop-core", ""
+QT_TRANSLATE_NOOP("iop-hd", ""
 "This is a pre-release test build - use at your own risk - do not use for "
 "mining or merchant applications"),
-QT_TRANSLATE_NOOP("iop-core", ""
+QT_TRANSLATE_NOOP("iop-hd", ""
 "This is the transaction fee you may discard if change is smaller than dust "
 "at this level"),
-QT_TRANSLATE_NOOP("iop-core", ""
+QT_TRANSLATE_NOOP("iop-hd", ""
 "This is the transaction fee you may pay when fee estimates are not available."),
-QT_TRANSLATE_NOOP("iop-core", ""
+QT_TRANSLATE_NOOP("iop-hd", ""
 "This product includes software developed by the OpenSSL Project for use in "
 "the OpenSSL Toolkit %s and cryptographic software written by Eric Young and "
 "UPnP software written by Thomas Bernard."),
-QT_TRANSLATE_NOOP("iop-core", ""
+QT_TRANSLATE_NOOP("iop-hd", ""
 "Total length of network version string (%i) exceeds maximum length (%i). "
 "Reduce the number or size of uacomments."),
-QT_TRANSLATE_NOOP("iop-core", ""
+QT_TRANSLATE_NOOP("iop-hd", ""
 "Tries to keep outbound traffic under the given target (in MiB per 24h), 0 = "
 "no limit (default: %d)"),
-QT_TRANSLATE_NOOP("iop-core", ""
+QT_TRANSLATE_NOOP("iop-hd", ""
 "Unable to replay blocks. You will need to rebuild the database using -"
 "reindex-chainstate."),
-QT_TRANSLATE_NOOP("iop-core", ""
+QT_TRANSLATE_NOOP("iop-hd", ""
 "Unable to rewind the database to a pre-fork state. You will need to "
 "redownload the blockchain"),
-QT_TRANSLATE_NOOP("iop-core", ""
+QT_TRANSLATE_NOOP("iop-hd", ""
 "Unsupported argument -socks found. Setting SOCKS version isn't possible "
 "anymore, only SOCKS5 proxies are supported."),
-QT_TRANSLATE_NOOP("iop-core", ""
+QT_TRANSLATE_NOOP("iop-hd", ""
 "Unsupported argument -whitelistalwaysrelay ignored, use -whitelistrelay and/"
 "or -whitelistforcerelay."),
-QT_TRANSLATE_NOOP("iop-core", ""
+QT_TRANSLATE_NOOP("iop-hd", ""
 "Use UPnP to map the listening port (default: 1 when listening and no -proxy)"),
-QT_TRANSLATE_NOOP("iop-core", ""
+QT_TRANSLATE_NOOP("iop-hd", ""
 "Use hierarchical deterministic key generation (HD) after BIP32. Only has "
 "effect during wallet creation/first start"),
-QT_TRANSLATE_NOOP("iop-core", ""
+QT_TRANSLATE_NOOP("iop-hd", ""
 "Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: "
 "%s)"),
-QT_TRANSLATE_NOOP("iop-core", ""
+QT_TRANSLATE_NOOP("iop-hd", ""
 "Username and hashed password for JSON-RPC connections. The field <userpw> "
 "comes in the format: <USERNAME>:<SALT>$<HASH>. A canonical python script is "
 "included in share/rpcuser. The client then connects normally using the "
 "rpcuser=<USERNAME>/rpcpassword=<PASSWORD> pair of arguments. This option can "
 "be specified multiple times"),
-QT_TRANSLATE_NOOP("iop-core", ""
+QT_TRANSLATE_NOOP("iop-hd", ""
 "Wallet will not create transactions that violate mempool chain limits "
 "(default: %u)"),
-QT_TRANSLATE_NOOP("iop-core", ""
+QT_TRANSLATE_NOOP("iop-hd", ""
 "Warning: The network does not appear to fully agree! Some miners appear to "
 "be experiencing issues."),
-QT_TRANSLATE_NOOP("iop-core", ""
+QT_TRANSLATE_NOOP("iop-hd", ""
 "Warning: Unknown block versions being mined! It's possible unknown rules are "
 "in effect"),
-QT_TRANSLATE_NOOP("iop-core", ""
+QT_TRANSLATE_NOOP("iop-hd", ""
 "Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; "
 "if your balance or transactions are incorrect you should restore from a "
 "backup."),
-QT_TRANSLATE_NOOP("iop-core", ""
+QT_TRANSLATE_NOOP("iop-hd", ""
 "Warning: We do not appear to fully agree with our peers! You may need to "
 "upgrade, or other nodes may need to upgrade."),
-QT_TRANSLATE_NOOP("iop-core", ""
+QT_TRANSLATE_NOOP("iop-hd", ""
 "Whether to save the mempool on shutdown and load on restart (default: %u)"),
-QT_TRANSLATE_NOOP("iop-core", ""
+QT_TRANSLATE_NOOP("iop-hd", ""
 "Whitelist peers connecting from the given IP address (e.g. 1.2.3.4) or CIDR "
 "notated network (e.g. 1.2.3.0/24). Can be specified multiple times."),
-QT_TRANSLATE_NOOP("iop-core", ""
+QT_TRANSLATE_NOOP("iop-hd", ""
 "Whitelisted peers cannot be DoS banned and their transactions are always "
 "relayed, even if they are already in the mempool, useful e.g. for a gateway"),
-QT_TRANSLATE_NOOP("iop-core", ""
+QT_TRANSLATE_NOOP("iop-hd", ""
 "You need to rebuild the database using -reindex to go back to unpruned "
 "mode.  This will redownload the entire blockchain"),
-QT_TRANSLATE_NOOP("iop-core", "%d of last 100 blocks have unexpected version"),
-QT_TRANSLATE_NOOP("iop-core", "%s corrupt, salvage failed"),
-QT_TRANSLATE_NOOP("iop-core", "%s is set very high!"),
-QT_TRANSLATE_NOOP("iop-core", "(default: %s)"),
-QT_TRANSLATE_NOOP("iop-core", "(default: %u)"),
-QT_TRANSLATE_NOOP("iop-core", "(press q to shutdown and continue later)"),
-QT_TRANSLATE_NOOP("iop-core", "-maxmempool must be at least %d MB"),
-QT_TRANSLATE_NOOP("iop-core", "<category> can be:"),
-QT_TRANSLATE_NOOP("iop-core", "Accept command line and JSON-RPC commands"),
-QT_TRANSLATE_NOOP("iop-core", "Accept connections from outside (default: 1 if no -proxy or -connect)"),
-QT_TRANSLATE_NOOP("iop-core", "Accept public REST requests (default: %u)"),
-QT_TRANSLATE_NOOP("iop-core", "Add a node to connect to and attempt to keep the connection open"),
-QT_TRANSLATE_NOOP("iop-core", "Allow DNS lookups for -addnode, -seednode and -connect"),
-QT_TRANSLATE_NOOP("iop-core", "Always query for peer addresses via DNS lookup (default: %u)"),
-QT_TRANSLATE_NOOP("iop-core", "Append comment to the user agent string"),
-QT_TRANSLATE_NOOP("iop-core", "Attempt to recover private keys from a corrupt wallet on startup"),
-QT_TRANSLATE_NOOP("iop-core", "Automatically create Tor hidden service (default: %d)"),
-QT_TRANSLATE_NOOP("iop-core", "Block creation options:"),
-QT_TRANSLATE_NOOP("iop-core", "Cannot downgrade wallet"),
-QT_TRANSLATE_NOOP("iop-core", "Cannot resolve -%s address: '%s'"),
-QT_TRANSLATE_NOOP("iop-core", "Cannot write default address"),
-QT_TRANSLATE_NOOP("iop-core", "Chain selection options:"),
-QT_TRANSLATE_NOOP("iop-core", "Change index out of range"),
-QT_TRANSLATE_NOOP("iop-core", "Connect through SOCKS5 proxy"),
-QT_TRANSLATE_NOOP("iop-core", "Connect to a node to retrieve peer addresses, and disconnect"),
-QT_TRANSLATE_NOOP("iop-core", "Connection options:"),
-QT_TRANSLATE_NOOP("iop-core", "Copyright (C) %i-%i"),
-QT_TRANSLATE_NOOP("iop-core", "Corrupted block database detected"),
-QT_TRANSLATE_NOOP("iop-core", "Debugging/Testing options:"),
-QT_TRANSLATE_NOOP("iop-core", "Do not load the wallet and disable wallet RPC calls"),
-QT_TRANSLATE_NOOP("iop-core", "Do you want to rebuild the block database now?"),
-QT_TRANSLATE_NOOP("iop-core", "Done loading"),
-QT_TRANSLATE_NOOP("iop-core", "Enable publish hash block in <address>"),
-QT_TRANSLATE_NOOP("iop-core", "Enable publish hash transaction in <address>"),
-QT_TRANSLATE_NOOP("iop-core", "Enable publish raw block in <address>"),
-QT_TRANSLATE_NOOP("iop-core", "Enable publish raw transaction in <address>"),
-QT_TRANSLATE_NOOP("iop-core", "Enable transaction replacement in the memory pool (default: %u)"),
-QT_TRANSLATE_NOOP("iop-core", "Error initializing block database"),
-QT_TRANSLATE_NOOP("iop-core", "Error initializing wallet database environment %s!"),
-QT_TRANSLATE_NOOP("iop-core", "Error loading %s"),
-QT_TRANSLATE_NOOP("iop-core", "Error loading %s: Wallet corrupted"),
-QT_TRANSLATE_NOOP("iop-core", "Error loading %s: Wallet requires newer version of %s"),
-QT_TRANSLATE_NOOP("iop-core", "Error loading %s: You can't disable HD on an already existing HD wallet"),
-QT_TRANSLATE_NOOP("iop-core", "Error loading block database"),
-QT_TRANSLATE_NOOP("iop-core", "Error loading wallet %s. -wallet filename must be a regular file."),
-QT_TRANSLATE_NOOP("iop-core", "Error loading wallet %s. Duplicate -wallet filename specified."),
-QT_TRANSLATE_NOOP("iop-core", "Error loading wallet %s. Invalid characters in -wallet filename."),
-QT_TRANSLATE_NOOP("iop-core", "Error opening block database"),
-QT_TRANSLATE_NOOP("iop-core", "Error reading from database, shutting down."),
-QT_TRANSLATE_NOOP("iop-core", "Error upgrading chainstate database"),
-QT_TRANSLATE_NOOP("iop-core", "Error"),
-QT_TRANSLATE_NOOP("iop-core", "Error: A fatal internal error occurred, see debug.log for details"),
-QT_TRANSLATE_NOOP("iop-core", "Error: Disk space is low!"),
-QT_TRANSLATE_NOOP("iop-core", "Failed to listen on any port. Use -listen=0 if you want this."),
-QT_TRANSLATE_NOOP("iop-core", "Fee (in %s/kB) to add to transactions you send (default: %s)"),
-QT_TRANSLATE_NOOP("iop-core", "How many blocks to check at startup (default: %u, 0 = all)"),
-QT_TRANSLATE_NOOP("iop-core", "Importing..."),
-QT_TRANSLATE_NOOP("iop-core", "Imports blocks from external blk000??.dat file on startup"),
-QT_TRANSLATE_NOOP("iop-core", "Include IP addresses in debug output (default: %u)"),
-QT_TRANSLATE_NOOP("iop-core", "Incorrect or no genesis block found. Wrong datadir for network?"),
-QT_TRANSLATE_NOOP("iop-core", "Information"),
-QT_TRANSLATE_NOOP("iop-core", "Initialization sanity check failed. %s is shutting down."),
-QT_TRANSLATE_NOOP("iop-core", "Insufficient funds"),
-QT_TRANSLATE_NOOP("iop-core", "Invalid -onion address or hostname: '%s'"),
-QT_TRANSLATE_NOOP("iop-core", "Invalid -proxy address or hostname: '%s'"),
-QT_TRANSLATE_NOOP("iop-core", "Invalid amount for -%s=<amount>: '%s'"),
-QT_TRANSLATE_NOOP("iop-core", "Invalid amount for -discardfee=<amount>: '%s'"),
-QT_TRANSLATE_NOOP("iop-core", "Invalid amount for -fallbackfee=<amount>: '%s'"),
-QT_TRANSLATE_NOOP("iop-core", "Invalid amount for -paytxfee=<amount>: '%s' (must be at least %s)"),
-QT_TRANSLATE_NOOP("iop-core", "Invalid netmask specified in -whitelist: '%s'"),
-QT_TRANSLATE_NOOP("iop-core", "Keep at most <n> unconnectable transactions in memory (default: %u)"),
-QT_TRANSLATE_NOOP("iop-core", "Keep the transaction memory pool below <n> megabytes (default: %u)"),
-QT_TRANSLATE_NOOP("iop-core", "Keypool ran out, please call keypoolrefill first"),
-QT_TRANSLATE_NOOP("iop-core", "Listen for JSON-RPC connections on <port> (default: %u or testnet: %u)"),
-QT_TRANSLATE_NOOP("iop-core", "Listen for connections on <port> (default: %u or testnet: %u)"),
-QT_TRANSLATE_NOOP("iop-core", "Loading P2P addresses..."),
-QT_TRANSLATE_NOOP("iop-core", "Loading banlist..."),
-QT_TRANSLATE_NOOP("iop-core", "Loading block index..."),
-QT_TRANSLATE_NOOP("iop-core", "Loading wallet..."),
-QT_TRANSLATE_NOOP("iop-core", "Location of the auth cookie (default: data dir)"),
-QT_TRANSLATE_NOOP("iop-core", "Maintain at most <n> connections to peers (default: %u)"),
-QT_TRANSLATE_NOOP("iop-core", "Make the wallet broadcast transactions"),
-QT_TRANSLATE_NOOP("iop-core", "Maximum per-connection receive buffer, <n>*1000 bytes (default: %u)"),
-QT_TRANSLATE_NOOP("iop-core", "Maximum per-connection send buffer, <n>*1000 bytes (default: %u)"),
-QT_TRANSLATE_NOOP("iop-core", "Need to specify a port with -whitebind: '%s'"),
-QT_TRANSLATE_NOOP("iop-core", "Node relay options:"),
-QT_TRANSLATE_NOOP("iop-core", "Not enough file descriptors available."),
-QT_TRANSLATE_NOOP("iop-core", "Only connect to nodes in network <net> (ipv4, ipv6 or onion)"),
-QT_TRANSLATE_NOOP("iop-core", "Options:"),
-QT_TRANSLATE_NOOP("iop-core", "Password for JSON-RPC connections"),
-QT_TRANSLATE_NOOP("iop-core", "Prepend debug output with timestamp (default: %u)"),
-QT_TRANSLATE_NOOP("iop-core", "Print this help message and exit"),
-QT_TRANSLATE_NOOP("iop-core", "Print version and exit"),
-QT_TRANSLATE_NOOP("iop-core", "Prune cannot be configured with a negative value."),
-QT_TRANSLATE_NOOP("iop-core", "Prune mode is incompatible with -txindex."),
-QT_TRANSLATE_NOOP("iop-core", "Pruning blockstore..."),
-QT_TRANSLATE_NOOP("iop-core", "RPC server options:"),
-QT_TRANSLATE_NOOP("iop-core", "Rebuild chain state and block index from the blk*.dat files on disk"),
-QT_TRANSLATE_NOOP("iop-core", "Rebuild chain state from the currently indexed blocks"),
-QT_TRANSLATE_NOOP("iop-core", "Reducing -maxconnections from %d to %d, because of system limitations."),
-QT_TRANSLATE_NOOP("iop-core", "Relay and mine data carrier transactions (default: %u)"),
-QT_TRANSLATE_NOOP("iop-core", "Relay non-P2SH multisig (default: %u)"),
-QT_TRANSLATE_NOOP("iop-core", "Replaying blocks..."),
-QT_TRANSLATE_NOOP("iop-core", "Rescan the block chain for missing wallet transactions on startup"),
-QT_TRANSLATE_NOOP("iop-core", "Rescanning..."),
-QT_TRANSLATE_NOOP("iop-core", "Rewinding blocks..."),
-QT_TRANSLATE_NOOP("iop-core", "Run in the background as a daemon and accept commands"),
-QT_TRANSLATE_NOOP("iop-core", "Send trace/debug info to console instead of debug.log file"),
-QT_TRANSLATE_NOOP("iop-core", "Send transactions with full-RBF opt-in enabled (default: %u)"),
-QT_TRANSLATE_NOOP("iop-core", "Set database cache size in megabytes (%d to %d, default: %d)"),
-QT_TRANSLATE_NOOP("iop-core", "Set key pool size to <n> (default: %u)"),
-QT_TRANSLATE_NOOP("iop-core", "Set maximum BIP141 block weight (default: %d)"),
-QT_TRANSLATE_NOOP("iop-core", "Set maximum block size in bytes (default: %d)"),
-QT_TRANSLATE_NOOP("iop-core", "Set the number of threads to service RPC calls (default: %d)"),
-QT_TRANSLATE_NOOP("iop-core", "Show all debugging options (usage: --help -help-debug)"),
-QT_TRANSLATE_NOOP("iop-core", "Shrink debug.log file on client startup (default: 1 when no -debug)"),
-QT_TRANSLATE_NOOP("iop-core", "Signing transaction failed"),
-QT_TRANSLATE_NOOP("iop-core", "Specify configuration file (default: %s)"),
-QT_TRANSLATE_NOOP("iop-core", "Specify connection timeout in milliseconds (minimum: 1, default: %d)"),
-QT_TRANSLATE_NOOP("iop-core", "Specify data directory"),
-QT_TRANSLATE_NOOP("iop-core", "Specify pid file (default: %s)"),
-QT_TRANSLATE_NOOP("iop-core", "Specify wallet file (within data directory)"),
-QT_TRANSLATE_NOOP("iop-core", "Specify your own public address"),
-QT_TRANSLATE_NOOP("iop-core", "Spend unconfirmed change when sending transactions (default: %u)"),
-QT_TRANSLATE_NOOP("iop-core", "Starting network threads..."),
-QT_TRANSLATE_NOOP("iop-core", "The source code is available from %s."),
-QT_TRANSLATE_NOOP("iop-core", "The transaction amount is too small to pay the fee"),
-QT_TRANSLATE_NOOP("iop-core", "The wallet will avoid paying less than the minimum relay fee."),
-QT_TRANSLATE_NOOP("iop-core", "This is experimental software."),
-QT_TRANSLATE_NOOP("iop-core", "This is the minimum transaction fee you pay on every transaction."),
-QT_TRANSLATE_NOOP("iop-core", "This is the transaction fee you will pay if you send a transaction."),
-QT_TRANSLATE_NOOP("iop-core", "Threshold for disconnecting misbehaving peers (default: %u)"),
-QT_TRANSLATE_NOOP("iop-core", "Tor control port password (default: empty)"),
-QT_TRANSLATE_NOOP("iop-core", "Tor control port to use if onion listening enabled (default: %s)"),
-QT_TRANSLATE_NOOP("iop-core", "Transaction amount too small"),
-QT_TRANSLATE_NOOP("iop-core", "Transaction amounts must not be negative"),
-QT_TRANSLATE_NOOP("iop-core", "Transaction fee and change calculation failed"),
-QT_TRANSLATE_NOOP("iop-core", "Transaction has too long of a mempool chain"),
-QT_TRANSLATE_NOOP("iop-core", "Transaction must have at least one recipient"),
-QT_TRANSLATE_NOOP("iop-core", "Transaction too large for fee policy"),
-QT_TRANSLATE_NOOP("iop-core", "Transaction too large"),
-QT_TRANSLATE_NOOP("iop-core", "Unable to bind to %s on this computer (bind returned error %s)"),
-QT_TRANSLATE_NOOP("iop-core", "Unable to bind to %s on this computer. %s is probably already running."),
-QT_TRANSLATE_NOOP("iop-core", "Unable to start HTTP server. See debug log for details."),
-QT_TRANSLATE_NOOP("iop-core", "Unknown network specified in -onlynet: '%s'"),
-QT_TRANSLATE_NOOP("iop-core", "Unsupported argument -benchmark ignored, use -debug=bench."),
-QT_TRANSLATE_NOOP("iop-core", "Unsupported argument -debugnet ignored, use -debug=net."),
-QT_TRANSLATE_NOOP("iop-core", "Unsupported argument -tor found, use -onion."),
-QT_TRANSLATE_NOOP("iop-core", "Unsupported logging category %s=%s."),
-QT_TRANSLATE_NOOP("iop-core", "Upgrade wallet to latest format on startup"),
-QT_TRANSLATE_NOOP("iop-core", "Upgrading UTXO database"),
-QT_TRANSLATE_NOOP("iop-core", "Use UPnP to map the listening port (default: %u)"),
-QT_TRANSLATE_NOOP("iop-core", "Use the test chain"),
-QT_TRANSLATE_NOOP("iop-core", "User Agent comment (%s) contains unsafe characters."),
-QT_TRANSLATE_NOOP("iop-core", "Username for JSON-RPC connections"),
-QT_TRANSLATE_NOOP("iop-core", "Verifying blocks..."),
-QT_TRANSLATE_NOOP("iop-core", "Verifying wallet(s)..."),
-QT_TRANSLATE_NOOP("iop-core", "Wallet %s resides outside data directory %s"),
-QT_TRANSLATE_NOOP("iop-core", "Wallet debugging/testing options:"),
-QT_TRANSLATE_NOOP("iop-core", "Wallet needed to be rewritten: restart %s to complete"),
-QT_TRANSLATE_NOOP("iop-core", "Wallet options:"),
-QT_TRANSLATE_NOOP("iop-core", "Warning"),
-QT_TRANSLATE_NOOP("iop-core", "Warning: unknown new rules activated (versionbit %i)"),
-QT_TRANSLATE_NOOP("iop-core", "Whether to operate in a blocks only mode (default: %u)"),
-QT_TRANSLATE_NOOP("iop-core", "You need to rebuild the database using -reindex to change -txindex"),
-QT_TRANSLATE_NOOP("iop-core", "Zapping all transactions from wallet..."),
-QT_TRANSLATE_NOOP("iop-core", "ZeroMQ notification options:"),
+QT_TRANSLATE_NOOP("iop-hd", "%d of last 100 blocks have unexpected version"),
+QT_TRANSLATE_NOOP("iop-hd", "%s corrupt, salvage failed"),
+QT_TRANSLATE_NOOP("iop-hd", "%s is set very high!"),
+QT_TRANSLATE_NOOP("iop-hd", "(default: %s)"),
+QT_TRANSLATE_NOOP("iop-hd", "(default: %u)"),
+QT_TRANSLATE_NOOP("iop-hd", "(press q to shutdown and continue later)"),
+QT_TRANSLATE_NOOP("iop-hd", "-maxmempool must be at least %d MB"),
+QT_TRANSLATE_NOOP("iop-hd", "<category> can be:"),
+QT_TRANSLATE_NOOP("iop-hd", "Accept command line and JSON-RPC commands"),
+QT_TRANSLATE_NOOP("iop-hd", "Accept connections from outside (default: 1 if no -proxy or -connect)"),
+QT_TRANSLATE_NOOP("iop-hd", "Accept public REST requests (default: %u)"),
+QT_TRANSLATE_NOOP("iop-hd", "Add a node to connect to and attempt to keep the connection open"),
+QT_TRANSLATE_NOOP("iop-hd", "Allow DNS lookups for -addnode, -seednode and -connect"),
+QT_TRANSLATE_NOOP("iop-hd", "Always query for peer addresses via DNS lookup (default: %u)"),
+QT_TRANSLATE_NOOP("iop-hd", "Append comment to the user agent string"),
+QT_TRANSLATE_NOOP("iop-hd", "Attempt to recover private keys from a corrupt wallet on startup"),
+QT_TRANSLATE_NOOP("iop-hd", "Automatically create Tor hidden service (default: %d)"),
+QT_TRANSLATE_NOOP("iop-hd", "Block creation options:"),
+QT_TRANSLATE_NOOP("iop-hd", "Cannot downgrade wallet"),
+QT_TRANSLATE_NOOP("iop-hd", "Cannot resolve -%s address: '%s'"),
+QT_TRANSLATE_NOOP("iop-hd", "Cannot write default address"),
+QT_TRANSLATE_NOOP("iop-hd", "Chain selection options:"),
+QT_TRANSLATE_NOOP("iop-hd", "Change index out of range"),
+QT_TRANSLATE_NOOP("iop-hd", "Connect through SOCKS5 proxy"),
+QT_TRANSLATE_NOOP("iop-hd", "Connect to a node to retrieve peer addresses, and disconnect"),
+QT_TRANSLATE_NOOP("iop-hd", "Connection options:"),
+QT_TRANSLATE_NOOP("iop-hd", "Copyright (C) %i-%i"),
+QT_TRANSLATE_NOOP("iop-hd", "Corrupted block database detected"),
+QT_TRANSLATE_NOOP("iop-hd", "Debugging/Testing options:"),
+QT_TRANSLATE_NOOP("iop-hd", "Do not load the wallet and disable wallet RPC calls"),
+QT_TRANSLATE_NOOP("iop-hd", "Do you want to rebuild the block database now?"),
+QT_TRANSLATE_NOOP("iop-hd", "Done loading"),
+QT_TRANSLATE_NOOP("iop-hd", "Enable publish hash block in <address>"),
+QT_TRANSLATE_NOOP("iop-hd", "Enable publish hash transaction in <address>"),
+QT_TRANSLATE_NOOP("iop-hd", "Enable publish raw block in <address>"),
+QT_TRANSLATE_NOOP("iop-hd", "Enable publish raw transaction in <address>"),
+QT_TRANSLATE_NOOP("iop-hd", "Enable transaction replacement in the memory pool (default: %u)"),
+QT_TRANSLATE_NOOP("iop-hd", "Error initializing block database"),
+QT_TRANSLATE_NOOP("iop-hd", "Error initializing wallet database environment %s!"),
+QT_TRANSLATE_NOOP("iop-hd", "Error loading %s"),
+QT_TRANSLATE_NOOP("iop-hd", "Error loading %s: Wallet corrupted"),
+QT_TRANSLATE_NOOP("iop-hd", "Error loading %s: Wallet requires newer version of %s"),
+QT_TRANSLATE_NOOP("iop-hd", "Error loading %s: You can't disable HD on an already existing HD wallet"),
+QT_TRANSLATE_NOOP("iop-hd", "Error loading block database"),
+QT_TRANSLATE_NOOP("iop-hd", "Error loading wallet %s. -wallet filename must be a regular file."),
+QT_TRANSLATE_NOOP("iop-hd", "Error loading wallet %s. Duplicate -wallet filename specified."),
+QT_TRANSLATE_NOOP("iop-hd", "Error loading wallet %s. Invalid characters in -wallet filename."),
+QT_TRANSLATE_NOOP("iop-hd", "Error opening block database"),
+QT_TRANSLATE_NOOP("iop-hd", "Error reading from database, shutting down."),
+QT_TRANSLATE_NOOP("iop-hd", "Error upgrading chainstate database"),
+QT_TRANSLATE_NOOP("iop-hd", "Error"),
+QT_TRANSLATE_NOOP("iop-hd", "Error: A fatal internal error occurred, see debug.log for details"),
+QT_TRANSLATE_NOOP("iop-hd", "Error: Disk space is low!"),
+QT_TRANSLATE_NOOP("iop-hd", "Failed to listen on any port. Use -listen=0 if you want this."),
+QT_TRANSLATE_NOOP("iop-hd", "Fee (in %s/kB) to add to transactions you send (default: %s)"),
+QT_TRANSLATE_NOOP("iop-hd", "How many blocks to check at startup (default: %u, 0 = all)"),
+QT_TRANSLATE_NOOP("iop-hd", "Importing..."),
+QT_TRANSLATE_NOOP("iop-hd", "Imports blocks from external blk000??.dat file on startup"),
+QT_TRANSLATE_NOOP("iop-hd", "Include IP addresses in debug output (default: %u)"),
+QT_TRANSLATE_NOOP("iop-hd", "Incorrect or no genesis block found. Wrong datadir for network?"),
+QT_TRANSLATE_NOOP("iop-hd", "Information"),
+QT_TRANSLATE_NOOP("iop-hd", "Initialization sanity check failed. %s is shutting down."),
+QT_TRANSLATE_NOOP("iop-hd", "Insufficient funds"),
+QT_TRANSLATE_NOOP("iop-hd", "Invalid -onion address or hostname: '%s'"),
+QT_TRANSLATE_NOOP("iop-hd", "Invalid -proxy address or hostname: '%s'"),
+QT_TRANSLATE_NOOP("iop-hd", "Invalid amount for -%s=<amount>: '%s'"),
+QT_TRANSLATE_NOOP("iop-hd", "Invalid amount for -discardfee=<amount>: '%s'"),
+QT_TRANSLATE_NOOP("iop-hd", "Invalid amount for -fallbackfee=<amount>: '%s'"),
+QT_TRANSLATE_NOOP("iop-hd", "Invalid amount for -paytxfee=<amount>: '%s' (must be at least %s)"),
+QT_TRANSLATE_NOOP("iop-hd", "Invalid netmask specified in -whitelist: '%s'"),
+QT_TRANSLATE_NOOP("iop-hd", "Keep at most <n> unconnectable transactions in memory (default: %u)"),
+QT_TRANSLATE_NOOP("iop-hd", "Keep the transaction memory pool below <n> megabytes (default: %u)"),
+QT_TRANSLATE_NOOP("iop-hd", "Keypool ran out, please call keypoolrefill first"),
+QT_TRANSLATE_NOOP("iop-hd", "Listen for JSON-RPC connections on <port> (default: %u or testnet: %u)"),
+QT_TRANSLATE_NOOP("iop-hd", "Listen for connections on <port> (default: %u or testnet: %u)"),
+QT_TRANSLATE_NOOP("iop-hd", "Loading P2P addresses..."),
+QT_TRANSLATE_NOOP("iop-hd", "Loading banlist..."),
+QT_TRANSLATE_NOOP("iop-hd", "Loading block index..."),
+QT_TRANSLATE_NOOP("iop-hd", "Loading wallet..."),
+QT_TRANSLATE_NOOP("iop-hd", "Location of the auth cookie (default: data dir)"),
+QT_TRANSLATE_NOOP("iop-hd", "Maintain at most <n> connections to peers (default: %u)"),
+QT_TRANSLATE_NOOP("iop-hd", "Make the wallet broadcast transactions"),
+QT_TRANSLATE_NOOP("iop-hd", "Maximum per-connection receive buffer, <n>*1000 bytes (default: %u)"),
+QT_TRANSLATE_NOOP("iop-hd", "Maximum per-connection send buffer, <n>*1000 bytes (default: %u)"),
+QT_TRANSLATE_NOOP("iop-hd", "Need to specify a port with -whitebind: '%s'"),
+QT_TRANSLATE_NOOP("iop-hd", "Node relay options:"),
+QT_TRANSLATE_NOOP("iop-hd", "Not enough file descriptors available."),
+QT_TRANSLATE_NOOP("iop-hd", "Only connect to nodes in network <net> (ipv4, ipv6 or onion)"),
+QT_TRANSLATE_NOOP("iop-hd", "Options:"),
+QT_TRANSLATE_NOOP("iop-hd", "Password for JSON-RPC connections"),
+QT_TRANSLATE_NOOP("iop-hd", "Prepend debug output with timestamp (default: %u)"),
+QT_TRANSLATE_NOOP("iop-hd", "Print this help message and exit"),
+QT_TRANSLATE_NOOP("iop-hd", "Print version and exit"),
+QT_TRANSLATE_NOOP("iop-hd", "Prune cannot be configured with a negative value."),
+QT_TRANSLATE_NOOP("iop-hd", "Prune mode is incompatible with -txindex."),
+QT_TRANSLATE_NOOP("iop-hd", "Pruning blockstore..."),
+QT_TRANSLATE_NOOP("iop-hd", "RPC server options:"),
+QT_TRANSLATE_NOOP("iop-hd", "Rebuild chain state and block index from the blk*.dat files on disk"),
+QT_TRANSLATE_NOOP("iop-hd", "Rebuild chain state from the currently indexed blocks"),
+QT_TRANSLATE_NOOP("iop-hd", "Reducing -maxconnections from %d to %d, because of system limitations."),
+QT_TRANSLATE_NOOP("iop-hd", "Relay and mine data carrier transactions (default: %u)"),
+QT_TRANSLATE_NOOP("iop-hd", "Relay non-P2SH multisig (default: %u)"),
+QT_TRANSLATE_NOOP("iop-hd", "Replaying blocks..."),
+QT_TRANSLATE_NOOP("iop-hd", "Rescan the block chain for missing wallet transactions on startup"),
+QT_TRANSLATE_NOOP("iop-hd", "Rescanning..."),
+QT_TRANSLATE_NOOP("iop-hd", "Rewinding blocks..."),
+QT_TRANSLATE_NOOP("iop-hd", "Run in the background as a daemon and accept commands"),
+QT_TRANSLATE_NOOP("iop-hd", "Send trace/debug info to console instead of debug.log file"),
+QT_TRANSLATE_NOOP("iop-hd", "Send transactions with full-RBF opt-in enabled (default: %u)"),
+QT_TRANSLATE_NOOP("iop-hd", "Set database cache size in megabytes (%d to %d, default: %d)"),
+QT_TRANSLATE_NOOP("iop-hd", "Set key pool size to <n> (default: %u)"),
+QT_TRANSLATE_NOOP("iop-hd", "Set maximum BIP141 block weight (default: %d)"),
+QT_TRANSLATE_NOOP("iop-hd", "Set maximum block size in bytes (default: %d)"),
+QT_TRANSLATE_NOOP("iop-hd", "Set the number of threads to service RPC calls (default: %d)"),
+QT_TRANSLATE_NOOP("iop-hd", "Show all debugging options (usage: --help -help-debug)"),
+QT_TRANSLATE_NOOP("iop-hd", "Shrink debug.log file on client startup (default: 1 when no -debug)"),
+QT_TRANSLATE_NOOP("iop-hd", "Signing transaction failed"),
+QT_TRANSLATE_NOOP("iop-hd", "Specify configuration file (default: %s)"),
+QT_TRANSLATE_NOOP("iop-hd", "Specify connection timeout in milliseconds (minimum: 1, default: %d)"),
+QT_TRANSLATE_NOOP("iop-hd", "Specify data directory"),
+QT_TRANSLATE_NOOP("iop-hd", "Specify pid file (default: %s)"),
+QT_TRANSLATE_NOOP("iop-hd", "Specify wallet file (within data directory)"),
+QT_TRANSLATE_NOOP("iop-hd", "Specify your own public address"),
+QT_TRANSLATE_NOOP("iop-hd", "Spend unconfirmed change when sending transactions (default: %u)"),
+QT_TRANSLATE_NOOP("iop-hd", "Starting network threads..."),
+QT_TRANSLATE_NOOP("iop-hd", "The source code is available from %s."),
+QT_TRANSLATE_NOOP("iop-hd", "The transaction amount is too small to pay the fee"),
+QT_TRANSLATE_NOOP("iop-hd", "The wallet will avoid paying less than the minimum relay fee."),
+QT_TRANSLATE_NOOP("iop-hd", "This is experimental software."),
+QT_TRANSLATE_NOOP("iop-hd", "This is the minimum transaction fee you pay on every transaction."),
+QT_TRANSLATE_NOOP("iop-hd", "This is the transaction fee you will pay if you send a transaction."),
+QT_TRANSLATE_NOOP("iop-hd", "Threshold for disconnecting misbehaving peers (default: %u)"),
+QT_TRANSLATE_NOOP("iop-hd", "Tor control port password (default: empty)"),
+QT_TRANSLATE_NOOP("iop-hd", "Tor control port to use if onion listening enabled (default: %s)"),
+QT_TRANSLATE_NOOP("iop-hd", "Transaction amount too small"),
+QT_TRANSLATE_NOOP("iop-hd", "Transaction amounts must not be negative"),
+QT_TRANSLATE_NOOP("iop-hd", "Transaction fee and change calculation failed"),
+QT_TRANSLATE_NOOP("iop-hd", "Transaction has too long of a mempool chain"),
+QT_TRANSLATE_NOOP("iop-hd", "Transaction must have at least one recipient"),
+QT_TRANSLATE_NOOP("iop-hd", "Transaction too large for fee policy"),
+QT_TRANSLATE_NOOP("iop-hd", "Transaction too large"),
+QT_TRANSLATE_NOOP("iop-hd", "Unable to bind to %s on this computer (bind returned error %s)"),
+QT_TRANSLATE_NOOP("iop-hd", "Unable to bind to %s on this computer. %s is probably already running."),
+QT_TRANSLATE_NOOP("iop-hd", "Unable to start HTTP server. See debug log for details."),
+QT_TRANSLATE_NOOP("iop-hd", "Unknown network specified in -onlynet: '%s'"),
+QT_TRANSLATE_NOOP("iop-hd", "Unsupported argument -benchmark ignored, use -debug=bench."),
+QT_TRANSLATE_NOOP("iop-hd", "Unsupported argument -debugnet ignored, use -debug=net."),
+QT_TRANSLATE_NOOP("iop-hd", "Unsupported argument -tor found, use -onion."),
+QT_TRANSLATE_NOOP("iop-hd", "Unsupported logging category %s=%s."),
+QT_TRANSLATE_NOOP("iop-hd", "Upgrade wallet to latest format on startup"),
+QT_TRANSLATE_NOOP("iop-hd", "Upgrading UTXO database"),
+QT_TRANSLATE_NOOP("iop-hd", "Use UPnP to map the listening port (default: %u)"),
+QT_TRANSLATE_NOOP("iop-hd", "Use the test chain"),
+QT_TRANSLATE_NOOP("iop-hd", "User Agent comment (%s) contains unsafe characters."),
+QT_TRANSLATE_NOOP("iop-hd", "Username for JSON-RPC connections"),
+QT_TRANSLATE_NOOP("iop-hd", "Verifying blocks..."),
+QT_TRANSLATE_NOOP("iop-hd", "Verifying wallet(s)..."),
+QT_TRANSLATE_NOOP("iop-hd", "Wallet %s resides outside data directory %s"),
+QT_TRANSLATE_NOOP("iop-hd", "Wallet debugging/testing options:"),
+QT_TRANSLATE_NOOP("iop-hd", "Wallet needed to be rewritten: restart %s to complete"),
+QT_TRANSLATE_NOOP("iop-hd", "Wallet options:"),
+QT_TRANSLATE_NOOP("iop-hd", "Warning"),
+QT_TRANSLATE_NOOP("iop-hd", "Warning: unknown new rules activated (versionbit %i)"),
+QT_TRANSLATE_NOOP("iop-hd", "Whether to operate in a blocks only mode (default: %u)"),
+QT_TRANSLATE_NOOP("iop-hd", "You need to rebuild the database using -reindex to change -txindex"),
+QT_TRANSLATE_NOOP("iop-hd", "Zapping all transactions from wallet..."),
+QT_TRANSLATE_NOOP("iop-hd", "ZeroMQ notification options:"),
 };

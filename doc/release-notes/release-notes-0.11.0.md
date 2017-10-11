@@ -1,6 +1,6 @@
-IoP Core version 0.11.0 is now available from:
+IoP HD version 0.11.0 is now available from:
 
-  <https://iop.org/bin/iop-core-0.11.0/>
+  <https://iop.org/bin/iop-hd-0.11.0/>
 
 This is a new major version release, bringing both new features and
 bug fixes.
@@ -25,7 +25,7 @@ Downgrade warning
 
 Because release 0.10.0 and later makes use of headers-first synchronization and
 parallel block download (see further), the block files and databases are not
-backwards-compatible with pre-0.10 versions of IoP Core or other software:
+backwards-compatible with pre-0.10 versions of IoP HD or other software:
 
 * Blocks will be stored on disk out of order (in the order they are
 received, really), which makes it incompatible with some tools or
@@ -86,7 +86,7 @@ related to the blockchain in the iop system: the raw blocks as received over
 the network (blk???.dat), the undo data (rev???.dat), the block index and the 
 UTXO set (both LevelDB databases). The databases are built from the raw data.
 
-Block pruning allows IoP Core to delete the raw block and undo data once 
+Block pruning allows IoP HD to delete the raw block and undo data once 
 it's been validated and used to build the databases. At that point, the raw data 
 is used only to relay blocks to other nodes, to handle reorganizations, to look 
 up old transactions (if -txindex is enabled or via the RPC/REST interfaces), or 
@@ -95,7 +95,7 @@ all blocks in the blockchain.
 
 The user specifies how much space to allot for block & undo files. The minimum 
 allowed is 550MB. Note that this is in addition to whatever is required for the 
-block index and UTXO databases. The minimum was chosen so that IoP Core will 
+block index and UTXO databases. The minimum was chosen so that IoP HD will 
 be able to maintain at least 288 blocks on disk (two days worth of blocks at 10 
 minutes per block). In rare instances it is possible that the amount of space 
 used will exceed the pruning target in order to keep the required last 288 
@@ -404,7 +404,7 @@ git merge commit are mentioned.
 - #6104 `3e2559c` Show an init message while activating best chain
 - #6125 `351f73e` Clean up parsing of bool command line args
 - #5964 `b4c219b` Lightweight task scheduler
-- #6116 `30dc3c1` [OSX] rename IoP-Qt.app to IoP-Core.app
+- #6116 `30dc3c1` [OSX] rename IoP-Qt.app to IoP-HD.app
 - #6168 `b3024f0` contrib/linearize: Support linearization of testnet blocks
 - #6098 `7708fcd` Update Windows resource files (and add one for iop-tx)
 - #6159 `e1412d3` Catch errors on datadir lock and pidfile delete

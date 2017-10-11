@@ -1,4 +1,4 @@
-IoP Core version 0.9.0 is now available from:
+IoP HD version 0.9.0 is now available from:
 
   https://iop.org/bin/0.9.0/
 
@@ -59,11 +59,11 @@ Also, the first time you run a 0.8.x release on a 0.9 wallet it will rescan
 the blockchain for missing spent coins, which will take a long time (tens
 of minutes on a typical machine).
 
-Rebranding to IoP Core
+Rebranding to IoP HD
 ---------------------------
 
 To reduce confusion between IoP-the-network and IoP-the-software we
-have renamed the reference client to IoP Core.
+have renamed the reference client to IoP HD.
 
 
 OP_RETURN and data in the block chain
@@ -295,7 +295,7 @@ GUI:
 - Add Coin Control Features
 - Improve receive coins workflow: make the 'Receive' tab into a form to request
   payments, and move historical address list functionality to File menu.
-- Rebrand to `IoP Core`
+- Rebrand to `IoP HD`
 - Move initialization/shutdown to a thread. This prevents "Not responding"
   messages during startup. Also show a window during shutdown.
 - Don't regenerate autostart link on every client startup

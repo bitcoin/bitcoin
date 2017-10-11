@@ -1,4 +1,4 @@
-IoP Core version 0.9.5 is now available from:
+IoP HD version 0.9.5 is now available from:
 
   https://iop.org/bin/0.9.5/
 
@@ -24,7 +24,7 @@ Notable changes
 Mining and relay policy enhancements
 ------------------------------------
 
-IoP Core's block templates are now for version 3 blocks only, and any mining
+IoP HD's block templates are now for version 3 blocks only, and any mining
 software relying on its `getblocktemplate` must be updated in parallel to use
 libblkmaker either version 0.4.2 or any version from 0.5.1 onward.
 If you are solo mining, this will affect you the moment you upgrade IoP

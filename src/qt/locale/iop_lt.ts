@@ -936,7 +936,7 @@
     <name>WalletView</name>
     </context>
 <context>
-    <name>iop-core</name>
+    <name>iop-hd</name>
     <message>
         <source>Options:</source>
         <translation>Parinktys:</translation>
@@ -958,7 +958,7 @@
         <translation>Dirbti fone kaip šešėlyje ir priimti komandas</translation>
     </message>
     <message>
-        <source>IoP Core</source>
+        <source>IoP HD</source>
         <translation>IoP branduolys</translation>
     </message>
     <message>

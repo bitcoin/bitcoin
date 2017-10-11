@@ -231,7 +231,7 @@
     </message>
     <message>
         <source>IoP</source>
-        <translation>IoP Core</translation>
+        <translation>IoP HD</translation>
     </message>
     <message>
         <source>Wallet</source>
@@ -830,14 +830,14 @@
     </message>
     </context>
 <context>
-    <name>iop-core</name>
+    <name>iop-hd</name>
     <message>
-        <source>IoP Core</source>
-        <translation>IoP Core</translation>
+        <source>IoP HD</source>
+        <translation>IoP HD</translation>
     </message>
     <message>
         <source>Whitelisted peers cannot be DoS banned and their transactions are always relayed, even if they are already in the mempool, useful e.g. for a gateway</source>
-        <translation>iop-core</translation>
+        <translation>iop-hd</translation>
     </message>
     <message>
         <source>Information</source>

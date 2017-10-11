@@ -1,4 +1,4 @@
-Fuzz-testing IoP Core
+Fuzz-testing IoP HD
 ==========================
 
 A special test harness `test_iop_fuzzy` is provided to provide an easy
@@ -20,7 +20,7 @@ export AFLPATH=$PWD
 Instrumentation
 ----------------
 
-To build IoP Core using AFL instrumentation (this assumes that the
+To build IoP HD using AFL instrumentation (this assumes that the
 `AFLPATH` was set as above):
 ```
 ./configure --disable-ccache --disable-shared --enable-tests CC=${AFLPATH}/afl-gcc CXX=${AFLPATH}/afl-g++

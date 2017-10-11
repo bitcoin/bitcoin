@@ -579,7 +579,7 @@
     </message>
     </context>
 <context>
-    <name>iop-core</name>
+    <name>iop-hd</name>
     <message>
         <source>Information</source>
         <translation>Information</translation>

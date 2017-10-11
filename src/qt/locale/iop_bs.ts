@@ -154,10 +154,10 @@
     <name>WalletView</name>
     </context>
 <context>
-    <name>iop-core</name>
+    <name>iop-hd</name>
     <message>
-        <source>IoP Core</source>
-        <translation>IoP Jezrga</translation>
+        <source>IoP HD</source>
+        <translation>IoP HD</translation>
     </message>
     </context>
 </TS>

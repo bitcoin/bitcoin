@@ -146,7 +146,7 @@
     <name>WalletView</name>
     </context>
 <context>
-    <name>iop-core</name>
+    <name>iop-hd</name>
     <message>
         <source>Block creation options:</source>
         <translation>ব্লক তৈরির অপশনগুলো:</translation>

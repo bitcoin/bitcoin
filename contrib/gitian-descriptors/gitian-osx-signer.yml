@@ -7,7 +7,7 @@ architectures:
 packages:
 - "faketime"
 remotes:
-- "url": "https://github.com/iop-core/iop-detached-sigs.git"
+- "url": "https://github.com/iop-hd/iop-detached-sigs.git"
   "dir": "signature"
 files:
 - "iop-osx-unsigned.tar.gz"

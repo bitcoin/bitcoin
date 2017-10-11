@@ -570,6 +570,6 @@
     </message>
     </context>
 <context>
-    <name>iop-core</name>
+    <name>iop-hd</name>
     </context>
 </TS>

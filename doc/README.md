@@ -1,11 +1,11 @@
-IoP Core
+IoP HD
 =============
 
 Setup
 ---------------------
-IoP Core is the original IoP client and it builds the backbone of the network. It downloads and, by default, stores the entire history of IoP transactions (which is currently more than 100 GBs); depending on the speed of your computer and network connection, the synchronization process can take anywhere from a few hours to a day or more.
+IoP HD is the original IoP client and it builds the backbone of the network. It downloads and, by default, stores the entire history of IoP transactions (which is currently more than 100 GBs); depending on the speed of your computer and network connection, the synchronization process can take anywhere from a few hours to a day or more.
 
-To download IoP Core, visit [iopcore.org](https://iopcore.org/en/releases/).
+To download IoP HD, visit [iopcore.org](https://iopcore.org/en/releases/).
 
 Running
 ---------------------
@@ -24,7 +24,7 @@ Unpack the files into a directory, and then run iop-qt.exe.
 
 ### OS X
 
-Drag IoP-Core to your applications folder, and then run IoP-Core.
+Drag IoP-HD to your applications folder, and then run IoP-HD.
 
 ### Need Help?
 
@@ -62,7 +62,7 @@ The IoP repo's [root README](/README.md) contains relevant information on the de
 
 ### Resources
 * Discuss on the [IoPTalk](https://ioptalk.org/) forums, in the [Development & Technical Discussion board](https://ioptalk.org/index.php?board=6.0).
-* Discuss project-specific development on #iop-core-dev on Freenode. If you don't have an IRC client use [webchat here](http://webchat.freenode.net/?channels=iop-core-dev).
+* Discuss project-specific development on #iop-hd-dev on Freenode. If you don't have an IRC client use [webchat here](http://webchat.freenode.net/?channels=iop-hd-dev).
 * Discuss general IoP development on #iop-dev on Freenode. If you don't have an IRC client use [webchat here](http://webchat.freenode.net/?channels=iop-dev).
 
 ### Miscellaneous

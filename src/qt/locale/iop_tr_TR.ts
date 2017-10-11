@@ -314,7 +314,7 @@
     <name>WalletView</name>
     </context>
 <context>
-    <name>iop-core</name>
+    <name>iop-hd</name>
     <message>
         <source>Print this help message and exit</source>
         <translation>Bu yardım mesajını yazdır ve çıkış yap</translation>

@@ -706,10 +706,10 @@
     <name>WalletView</name>
     </context>
 <context>
-    <name>iop-core</name>
+    <name>iop-hd</name>
     <message>
-        <source>IoP Core</source>
-        <translation>IoP மையம்</translation>
+        <source>IoP HD</source>
+        <translation>IoP HD</translation>
     </message>
     <message>
         <source>(default: %u)</source>

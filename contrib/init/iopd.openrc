@@ -18,7 +18,7 @@ IOPD_BIN=${IOPD_BIN:-/usr/bin/iopd}
 IOPD_NICE=${IOPD_NICE:-${NICELEVEL:-0}}
 IOPD_OPTS="${IOPD_OPTS:-${IOP_OPTS}}"
 
-name="IoP Core Daemon"
+name="IoP HD Daemon"
 description="IoP cryptocurrency P2P network daemon"
 
 command="/usr/bin/iopd"

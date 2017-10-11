@@ -92,7 +92,7 @@ static void InitMessage(const std::string &message)
  */
 static std::string Translate(const char* psz)
 {
-    return QCoreApplication::translate("iop-core", psz).toStdString();
+    return QCoreApplication::translate("iop-hd", psz).toStdString();
 }
 
 static QString GetLangTerritory()
@@ -170,7 +170,7 @@ void DebugMessageHandler(QtMsgType type, const QMessageLogContext& context, cons
 }
 #endif
 
-/** Class encapsulating IoP Core startup and shutdown.
+/** Class encapsulating IoP HD startup and shutdown.
  * Allows running startup and shutdown in a different thread from the UI thread.
  */
 class IoPCore: public QObject

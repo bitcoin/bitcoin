@@ -1950,7 +1950,7 @@
     </message>
     </context>
 <context>
-    <name>iop-core</name>
+    <name>iop-hd</name>
     <message>
         <source>Options:</source>
         <translation>خيارات: </translation>
@@ -1960,8 +1960,8 @@
         <translation>حدد مجلد المعلومات</translation>
     </message>
     <message>
-        <source>IoP Core</source>
-        <translation>جوهر البيت كوين</translation>
+        <source>IoP HD</source>
+        <translation>IoP HD</translation>
     </message>
     <message>
         <source>The %s developers</source>
