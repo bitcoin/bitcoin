@@ -823,10 +823,11 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	AliasNew("node1", "aliasexpire", "somedata");
 	AliasNew("node1", "aliasexpire0", "somedata");
 	AliasNew("node2", "aliasexpire1", "somedata");
-	AliasNew("node3", "aliasexpire3", "somedata");
 	string aliasexpirenode2address = AliasNew("node2", "aliasexpirednode2", "somedata");
 	string offerguid = OfferNew("node1", "aliasexpire0", "category", "title", "100", "1.00", "description", "USD");
 	string certguid = CertNew("node1", "aliasexpire", "certtitle", "pubdata");
+	MilliSleep(2500);
+	AliasNew("node3", "aliasexpire3", "somedata");
 	StopNode("node3");
 	printf("Sleeping 5 seconds between the creation of aliases for this test...\n");
 	MilliSleep(5000);	
