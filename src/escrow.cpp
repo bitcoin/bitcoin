@@ -1536,8 +1536,8 @@ UniValue escrowbid(const UniValue& params, bool fHelp) {
 
 	if (!GetEscrow(vchEscrow, theEscrow))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4513 - " + _("Could not find an escrow with this identifier"));
-	CScriptID innerID(theEscrow.vchRedeemScript.begin(), theEscrow.vchRedeemScript.end());
-	CSyscoinAddress address(innerID, PaymentOptionToAddressType(paymentOptionMask));
+	CScriptID innerID(CScript(theEscrow.vchRedeemScript.begin(), theEscrow.vchRedeemScript.end()));
+	CSyscoinAddress address(innerID);
 
 	CScript scriptPubKey = GetScriptForDestination(address.Get());
 
@@ -1653,8 +1653,8 @@ UniValue escrowaddshipping(const UniValue& params, bool fHelp) {
 	if (!GetEscrow(vchEscrow, theEscrow))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4513 - " + _("Could not find an escrow with this identifier"));
 
-	CScriptID innerID(theEscrow.vchRedeemScript.begin(), theEscrow.vchRedeemScript.end());
-	CSyscoinAddress address(innerID, PaymentOptionToAddressType(paymentOptionMask));
+	CScriptID innerID(CScript(theEscrow.vchRedeemScript.begin(), theEscrow.vchRedeemScript.end()));
+	CSyscoinAddress address(innerID);
 	CScript scriptPubKey = GetScriptForDestination(address.Get());
 
 	CWalletTx wtx;
@@ -3217,7 +3217,7 @@ bool BuildEscrowJson(const CEscrow &escrow, const std::vector<std::vector<unsign
 	oEscrow.push_back(Pair("deposit", ValueFromAmount(escrow.nDeposit)));
 	oEscrow.push_back(Pair("currency", IsOfferTypeInMask(theOffer.offerType, OFFERTYPE_COIN) ? GetPaymentOptionsString(escrow.nPaymentOption): stringFromVch(theOffer.sCurrencyCode)));
 	oEscrow.push_back(Pair("exttxid", escrow.extTxId.IsNull()? "": escrow.extTxId.GetHex()));
-	CScriptID innerID(escrow.vchRedeemScript.begin(), escrow.vchRedeemScript.end());
+	CScriptID innerID(CScript(escrow.vchRedeemScript.begin(), escrow.vchRedeemScript.end()));
 	CSyscoinAddress address(innerID, PaymentOptionToAddressType(escrow.nPaymentOption));
 	oEscrow.push_back(Pair("escrowaddress", address.ToString()));
 	string strRedeemTxId = "";
