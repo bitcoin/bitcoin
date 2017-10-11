@@ -767,10 +767,11 @@ BOOST_AUTO_TEST_CASE (generate_aliasprunewithcertoffer)
 	GenerateBlocks(5);
 	GenerateBlocks(5, "node2");
 	GenerateBlocks(5, "node3");
+	AliasNew("node3", "aliasprunewithcertofferarbiter", "pubdata");
 	StopNode("node3");
 	AliasNew("node1", "aliasprunewithcertoffer", "pubdata");
 	AliasNew("node2", "aliasprunewithcertoffer2", "pubdata");
-	AliasNew("node3", "aliasprunewithcertofferarbiter", "pubdata");
+	
 	string certguid = CertNew("node1", "aliasprunewithcertoffer", "jag1", "pubdata");
 	string certofferguid = OfferNew("node1", "aliasprunewithcertoffer", "certificates", "title", "1", "0.05", "description", "SYS", certguid);	
 	string offerguid = OfferNew("node1", "aliasprunewithcertoffer", "category", "title", "1", "0.05", "description", "SYS");
