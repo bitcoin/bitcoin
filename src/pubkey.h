@@ -24,7 +24,10 @@
  * script supports up to 75 for single byte push
  */
 
-const unsigned int BIP32_EXTKEY_SIZE = 74;
+enum
+{
+    BIP32_EXTKEY_SIZE = 74
+};
 
 /** A reference to a CKey: the Hash160 of its serialized public key */
 class CKeyID : public uint160
@@ -204,8 +207,8 @@ struct CExtPubKey {
                a.chaincode == b.chaincode && a.pubkey == b.pubkey;
     }
 
-    void Encode(unsigned char code[74]) const;
-    void Decode(const unsigned char code[74]);
+    void Encode(unsigned char code[BIP32_EXTKEY_SIZE]) const;
+    void Decode(const unsigned char code[BIP32_EXTKEY_SIZE]);
     bool Derive(CExtPubKey& out, unsigned int nChild) const;
 
     void Serialize(CSizeComputer& s) const
