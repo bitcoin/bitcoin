@@ -327,11 +327,10 @@ extern UniValue certinfo(const UniValue& params, bool fHelp);
 
 extern UniValue escrownew(const UniValue& params, bool fHelp);
 extern UniValue escrowbid(const UniValue& params, bool fHelp);
+extern UniValue escrowcreaterawtransaction(const UniValue& params, bool fHelp);
 extern UniValue escrowrelease(const UniValue& params, bool fHelp);
-extern UniValue escrowclaimrelease(const UniValue& params, bool fHelp);
 extern UniValue escrowcompleterelease(const UniValue& params, bool fHelp);
 extern UniValue escrowrefund(const UniValue& params, bool fHelp);
-extern UniValue escrowclaimrefund(const UniValue& params, bool fHelp);
 extern UniValue escrowcompleterefund(const UniValue& params, bool fHelp);
 extern UniValue escrowinfo(const UniValue& params, bool fHelp);
 extern UniValue escrowfeedback(const UniValue& params, bool fHelp);

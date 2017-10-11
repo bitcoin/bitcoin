@@ -43,7 +43,7 @@ BOOST_AUTO_TEST_CASE(generate_auction_regular)
 
 	EscrowNewBuyItNow("node1", "node2", "buyerauction", offerguid, qty, "arbiterauction");
 	EscrowRelease("node1", "buyer", guid);
-	EscrowClaimRelease("node2", "seller", guid);
+	EscrowClaimRelease("node2", guid);
 	// after expiry can update
 	SetMockTime(mediantime + 1);
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "offerupdate sellerauction " + offerguid + " category title 90 0.15 description USD \"\" \"\" \"\" \"\" \"\" \"\" \"\" true"));
@@ -94,7 +94,7 @@ BOOST_AUTO_TEST_CASE(generate_auction_reserve)
 
 	EscrowNewBuyItNow("node1", "node2", "buyerauction", offerguid, qty, "arbiterauction");
 	EscrowRelease("node1", "buyer", guid);
-	EscrowClaimRelease("node2", "seller", guid);
+	EscrowClaimRelease("node2", guid);
 }
 BOOST_AUTO_TEST_CASE (generate_escrow_release)
 {
@@ -112,7 +112,7 @@ BOOST_AUTO_TEST_CASE (generate_escrow_release)
 	GenerateBlocks(10);
 	string guid = EscrowNewBuyItNow("node1", "node2", "buyeralias", offerguid, qty, "arbiteralias");
 	EscrowRelease("node1", "buyer", guid);	
-	EscrowClaimRelease("node2", "seller", guid);
+	EscrowClaimRelease("node2", guid);
 }
 BOOST_AUTO_TEST_CASE (generate_escrowrefund_seller)
 {
@@ -130,7 +130,7 @@ BOOST_AUTO_TEST_CASE (generate_escrowrefund_seller)
 	GenerateBlocks(10);
 	string guid = EscrowNewBuyItNow("node1", "node2", "buyeraliasrefund", offerguid, qty, "arbiteraliasrefund");
 	EscrowRefund("node2", "seller", guid);
-	EscrowClaimRefund("node1", "buyer", guid);
+	EscrowClaimRefund("node1", guid);
 }
 BOOST_AUTO_TEST_CASE (generate_escrowrefund_arbiter)
 {
@@ -141,7 +141,7 @@ BOOST_AUTO_TEST_CASE (generate_escrowrefund_arbiter)
 	GenerateBlocks(10);
 	string guid = EscrowNewBuyItNow("node1", "node2", "buyeraliasrefund", offerguid, qty, "arbiteraliasrefund");
 	EscrowRefund("node3", "arbiter", guid);
-	EscrowClaimRefund("node1", "buyer", guid);
+	EscrowClaimRefund("node1", guid);
 }
 BOOST_AUTO_TEST_CASE (generate_escrowrefund_invalid)
 {
@@ -171,21 +171,26 @@ BOOST_AUTO_TEST_CASE (generate_escrowrefund_invalid)
 	}
 	inputStr += "]\"";
 
-	// try to claim refund even if not refunded
-	BOOST_CHECK_THROW(CallRPC("node2", "escrowclaimrefund " + guid + " buyer " + inputStr), runtime_error);
 	// buyer cant refund to himself
-	BOOST_CHECK_THROW(CallRPC("node1", "escrowrefund " + guid + " buyer"), runtime_error);
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "escrowcreaterawtransaction refund " + guid + " " + inputStr + " buyer"));
+	const UniValue &arr = r.get_array();
+	string rawtx = arr[0].get_str();
+	BOOST_CHECK_THROW(CallRPC("node1", "escrowrefund " + guid + " buyer " + rawtx), runtime_error);
 	EscrowRefund("node2", "seller", guid);
 	// cant refund already refunded escrow
-	BOOST_CHECK_THROW(CallRPC("node2", "escrowrefund " + guid + " seller"), runtime_error);
-	// seller cannot
-	BOOST_CHECK_THROW(r = CallRPC("node2", "escrowclaimrefund " + guid + " buyer " + inputStr), runtime_error);
+	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "escrowcreaterawtransaction refund " + guid + " " + inputStr + "  seller"));
+	const UniValue &arr1 = r.get_array();
+	rawtx = arr1[0].get_str();
+	BOOST_CHECK_THROW(CallRPC("node2", "escrowrefund " + guid + " seller " + rawtx), runtime_error);
+
 	// arbiter can resend claim refund to buyer
 	EscrowRefund("node3", "arbiter", guid);
-	EscrowClaimRefund("node1", "buyer", guid);
+	EscrowClaimRefund("node1", guid);
 	// cant inititate another refund after claimed already
-	BOOST_CHECK_THROW(CallRPC("node2", "escrowrefund " + guid + " seller"), runtime_error);
-	BOOST_CHECK_THROW(CallRPC("node1", "escrowrefund " + guid + " buyer"), runtime_error);
+	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "escrowcreaterawtransaction refund " + guid + " " + inputStr + "  seller"));
+	const UniValue &arr2 = r.get_array();
+	rawtx = arr2[0].get_str();
+	BOOST_CHECK_THROW(CallRPC("node2", "escrowrefund " + guid + " seller " + rawtx), runtime_error);
 }
 BOOST_AUTO_TEST_CASE (generate_escrowrelease_invalid)
 {
@@ -214,22 +219,26 @@ BOOST_AUTO_TEST_CASE (generate_escrowrelease_invalid)
 	}
 	inputStr += "]\"";
 
-	// try to claim release even if not released
-	BOOST_CHECK_THROW(CallRPC("node2", "escrowclaimrelease " + guid + " seller " + inputStr), runtime_error);
 	// seller cant release buyers funds
-	BOOST_CHECK_THROW(CallRPC("node2", "escrowrelease " + guid + " seller"), runtime_error);
+	BOOST_CHECK_NO_THROW(CallRPC("node2", "escrowcreaterawtransaction release " + guid + " " + inputStr + " seller"));
+	const UniValue &arr = r.get_array();
+	string rawtx = arr[0].get_str();
+	BOOST_CHECK_THROW(CallRPC("node2", "escrowrelease " + guid + " seller " + rawtx), runtime_error);
 	EscrowRelease("node1", "buyer", guid);
 	// cant release already released escrow
-	BOOST_CHECK_THROW(CallRPC("node1", "escrowrelease " + guid + " buyer"), runtime_error);
-	// buyer cant
-	BOOST_CHECK_THROW(r = CallRPC("node1", "escrowclaimrelease " + guid + " seller " + inputStr), runtime_error);
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "escrowcreaterawtransaction release " + guid + " " + inputStr + " buyer"));
+	const UniValue &arr1 = r.get_array();
+	rawtx = arr1[0].get_str();
+	BOOST_CHECK_THROW(CallRPC("node1", "escrowrelease " + guid + " buyer " + rawtx), runtime_error);
 
 	EscrowRelease("node3", "arbiter", guid);
 
-	EscrowClaimRelease("node2", "seller", guid);
+	EscrowClaimRelease("node2", guid);
 	// cant inititate another release after claimed already
-	BOOST_CHECK_THROW(CallRPC("node1", "escrowrelease " + guid + " buyer"), runtime_error);
-	BOOST_CHECK_THROW(CallRPC("node1", "escrowrelease " + guid + " seller"), runtime_error);
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "escrowcreaterawtransaction release " + guid + " " + inputStr + " buyer"));
+	const UniValue &arr2 = r.get_array();
+	rawtx = arr2[0].get_str();
+	BOOST_CHECK_THROW(CallRPC("node1", "escrowrelease " + guid + " buyer " + rawtx), runtime_error);
 }
 BOOST_AUTO_TEST_CASE (generate_escrowrelease_arbiter)
 {
@@ -247,7 +256,7 @@ BOOST_AUTO_TEST_CASE (generate_escrowrelease_arbiter)
 	GenerateBlocks(10);
 	string guid = EscrowNewBuyItNow("node1", "node2", "buyeralias1", offerguid, qty, "arbiteralias1");
 	EscrowRelease("node3", "arbiter", guid);
-	EscrowClaimRelease("node2", "seller", guid);
+	EscrowClaimRelease("node2", guid);
 }
 BOOST_AUTO_TEST_CASE (generate_escrowfeedback)
 {
@@ -268,7 +277,7 @@ BOOST_AUTO_TEST_CASE (generate_escrowfeedback)
 	GenerateBlocks(10);
 	string guid = EscrowNewBuyItNow("node2", "node1", "buyerescrowfeedback", offerguid, qty, "arbiterescrowfeedback");
 	EscrowRelease("node3", "arbiter", guid);
-	EscrowClaimRelease("node1", "seller", guid);
+	EscrowClaimRelease("node1", guid);
 	// seller leaves feedback first to the other parties
 	EscrowFeedback("node1", "seller", guid,"feedbackbuyer", "1", FEEDBACKBUYER);
 	EscrowFeedback("node1", "seller", guid, "feedbackarbiter", "1", FEEDBACKARBITER);
@@ -339,7 +348,7 @@ BOOST_AUTO_TEST_CASE (generate_escrow_linked_release)
 	hex_str = AliasUpdate("node3", "arbiteralias2", "changeddata1");
 	BOOST_CHECK(hex_str.empty());
 	OfferUpdate("node2", "selleralias22", offerguid, "category", "titlenew", "100", "0.04", "descriptionnew", "EUR");
-	EscrowClaimRelease("node2", "seller", guid);
+	EscrowClaimRelease("node2", guid);
 }
 BOOST_AUTO_TEST_CASE (generate_escrowpruning)
 {
@@ -368,7 +377,7 @@ BOOST_AUTO_TEST_CASE (generate_escrowpruning)
 
 	EscrowRelease("node2", "buyer", guid1);
 	OfferUpdate("node1", "selleraliasprune", offerguid);
-	EscrowClaimRelease("node1", "seller", guid1);
+	EscrowClaimRelease("node1", guid1);
 	OfferUpdate("node1", "selleraliasprune", offerguid);
 	GenerateBlocks(5, "node1");
 	

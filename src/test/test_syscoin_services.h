@@ -45,9 +45,9 @@ const string EscrowNewBuyItNow(const string& node, const string& sellernode, con
 const string EscrowNewAuction(const string& node, const string& sellernode, const string& buyeralias, const string& offerguid, const string& qtyStr, const string& bid_in_payment_option, const string& bid_in_offer_currency, const string& arbiteralias, const string& witness = "\"\"");
 void EscrowBid(const string& node, const string& buyeralias, const string& escrowguid, const string& bid_in_payment_option, const string& bid_in_offer_currency, const string &witness = "\"\"");
 void EscrowRelease(const string& node, const string& role, const string& guid, const string& witness="\"\"");
-void EscrowClaimRelease(const string& node, const string& role, const string& guid);
+void EscrowClaimRelease(const string& node, const string& guid);
 void EscrowRefund(const string& node, const string& role, const string& guid, const string& witness="\"\"");
-void EscrowClaimRefund(const string& node, const string& role, const string& guid);
+void EscrowClaimRefund(const string& node, const string& guid);
 // SYSCOIN testing setup
 struct SyscoinTestingSetup {
     SyscoinTestingSetup();

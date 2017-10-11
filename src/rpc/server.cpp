@@ -438,11 +438,10 @@ static const CRPCCommand vRPCCommands[] =
 		// use the blockchain for escrow linked to offers
 	{ "wallet", "escrownew",         &escrownew,     false },
 	{ "wallet", "escrowbid",         &escrowbid,     false },
+	{ "wallet", "escrowcreaterawtransaction",      &escrowcreaterawtransaction,  false },
 	{ "wallet", "escrowrelease",      &escrowrelease,  false },
-	{ "wallet", "escrowclaimrelease",      &escrowclaimrelease,  false },
 	{ "wallet", "escrowcompleterelease",      &escrowcompleterelease,  false },
 	{ "wallet", "escrowrefund",          &escrowrefund,      false },
-	{ "wallet", "escrowclaimrefund",          &escrowclaimrefund,      false },
 	{ "wallet", "escrowcompleterefund",          &escrowcompleterefund,      false },
 	{ "wallet", "escrowinfo",              &escrowinfo,          false },
 	{ "wallet", "escrowfeedback",      &escrowfeedback,  false },

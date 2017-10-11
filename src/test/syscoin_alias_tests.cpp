@@ -750,7 +750,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasprunewithoffer)
 	string offerguid = OfferNew("node1", "aliasprunewithoffer", "category", "title", "1", "0.05", "description", "SYS");
 	string escrowguid = EscrowNewBuyItNow("node2", "node1", "aliasprunewithoffer2", offerguid, "1", "aliasprunewithoffer3");
 	EscrowRelease("node2", "buyer", escrowguid);
-	EscrowClaimRelease("node1", "seller", escrowguid);
+	EscrowClaimRelease("node1", escrowguid);
 	// last created alias should have furthest expiry
 	ExpireAlias("aliasprunewithoffer2");
 	StartNode("node3");
@@ -892,7 +892,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	CertUpdate("node1", certgoodguid, "pubdata");
 	// able to release and claim release on escrow with non-expired aliases with new pubkeys
 	EscrowRelease("node2", "buyer", escrowguid);	 
-	EscrowClaimRelease("node1", "seller", escrowguid); 
+	EscrowClaimRelease("node1", escrowguid); 
 
 	// should cleanup db for node1 and remove aliasexpirenode2address from alias address db
 	ExpireAlias("aliasexpirednode2");

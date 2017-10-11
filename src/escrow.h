@@ -19,6 +19,11 @@ int IndexOfEscrowOutput(const CTransaction& tx);
 void EscrowTxToJSON(const int op, const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash, UniValue &entry);
 std::string escrowFromOp(int op);
 bool RemoveEscrowScriptPrefix(const CScript& scriptIn, CScript& scriptOut);
+enum EscrowRoles {
+	BUYER = 1,
+	SELLER = 2,
+	ARBITER = 3,
+};
 class CEscrow {
 public:
 	std::vector<unsigned char> vchEscrow;
@@ -50,7 +55,8 @@ public:
 	CAmount nShipping;
 	CAmount nBidPerUnit;
 	float fBidPerUnit;
-	std::string escrowAddress;
+	std::vector<unsigned char> vchRedeemScript;
+	unsigned char role;
 	void ClearEscrow()
 	{
 		feedback.SetNull();
@@ -59,7 +65,7 @@ public:
 		offerTuple.first.clear();
 		scriptSigs.clear();
 		vchWitness.clear();
-		escrowAddress.clear();
+		vchRedeemScript.clear();
 	}
     CEscrow() {
         SetNull();
@@ -85,6 +91,7 @@ public:
 		READWRITE(VARINT(nQty));
 		READWRITE(VARINT(op));
 		READWRITE(VARINT(nPaymentOption));
+		READWRITE(VARINT(role));
         READWRITE(buyerAliasTuple);
 		READWRITE(vchEscrow);
 		READWRITE(linkAliasTuple);
@@ -99,7 +106,7 @@ public:
 		READWRITE(nWitnessFee);
 		READWRITE(fBidPerUnit);
 		READWRITE(nDeposit);
-		READWRITE(escrowAddress);
+		READWRITE(vchRedeemScript);
 		READWRITE(nShipping);
 		READWRITE(nBidPerUnit);
 	}
@@ -133,9 +140,10 @@ public:
 			&& a.nCommission == b.nCommission
 			&& a.nWitnessFee == b.nWitnessFee
 			&& a.vchWitness == b.vchWitness
-			&& a.escrowAddress == b.escrowAddress
+			&& a.vchRedeemScript == b.vchRedeemScript
 			&& a.nShipping == b.nShipping
 			&& a.nBidPerUnit == b.nBidPerUnit
+			&& a.role == b.role
         );
     }
 
@@ -167,16 +175,17 @@ public:
 		nShipping = b.nShipping;
 		nWitnessFee = b.nWitnessFee;
 		vchWitness = b.vchWitness;
-		escrowAddress = b.escrowAddress;
+		vchRedeemScript = b.vchRedeemScript;
 		nBidPerUnit = b.nBidPerUnit;
+		role = b.role;
         return *this;
     }
 
     friend bool operator!=(const CEscrow &a, const CEscrow &b) {
         return !(a == b);
     }
-	void SetNull() { nBidPerUnit = 0; vchWitness.clear();  fBidPerUnit = 0;  nDeposit = nTotalWithFee = nTotalWithoutFee = nArbiterFee = nNetworkFee = nCommission = nShipping = nWitnessFee = 0; extTxId.SetNull(); op = 0; bPaymentAck = bBuyNow = false; redeemTxId.SetNull(); linkAliasTuple.first.clear(); feedback.SetNull(); linkSellerAliasTuple.first.clear(); vchEscrow.clear(); nHeight = nPaymentOption = 0; txHash.SetNull(); nQty = 0; buyerAliasTuple.first.clear(); arbiterAliasTuple.first.clear(); sellerAliasTuple.first.clear(); offerTuple.first.clear(); scriptSigs.clear(); escrowAddress.clear(); }
-    bool IsNull() const { return (nBidPerUnit == 0 && vchWitness.empty() && fBidPerUnit == 0 && nDeposit == 0 && nTotalWithFee == 0 && nTotalWithoutFee == 0 && nArbiterFee == 0 && nShipping == 0 && nCommission == 0 && nNetworkFee == 0 && nWitnessFee == 0 && extTxId.IsNull() && !bBuyNow && !bPaymentAck && redeemTxId.IsNull() && linkSellerAliasTuple.first.empty() && linkAliasTuple.first.empty() && feedback.IsNull() && op == 0 && vchEscrow.empty() && txHash.IsNull() && nHeight == 0 && nPaymentOption == 0 && nQty == 0 && buyerAliasTuple.first.empty() && arbiterAliasTuple.first.empty() && sellerAliasTuple.first.empty() && offerTuple.first.empty() && scriptSigs.empty() && escrowAddress.empty()); }
+	void SetNull() { role = 0; nBidPerUnit = 0; vchWitness.clear();  fBidPerUnit = 0;  nDeposit = nTotalWithFee = nTotalWithoutFee = nArbiterFee = nNetworkFee = nCommission = nShipping = nWitnessFee = 0; extTxId.SetNull(); op = 0; bPaymentAck = bBuyNow = false; redeemTxId.SetNull(); linkAliasTuple.first.clear(); feedback.SetNull(); linkSellerAliasTuple.first.clear(); vchEscrow.clear(); nHeight = nPaymentOption = 0; txHash.SetNull(); nQty = 0; buyerAliasTuple.first.clear(); arbiterAliasTuple.first.clear(); sellerAliasTuple.first.clear(); offerTuple.first.clear(); scriptSigs.clear(); vchRedeemScript.clear(); }
+	bool IsNull() const { return (role == 0; nBidPerUnit == 0 && vchWitness.empty() && fBidPerUnit == 0 && nDeposit == 0 && nTotalWithFee == 0 && nTotalWithoutFee == 0 && nArbiterFee == 0 && nShipping == 0 && nCommission == 0 && nNetworkFee == 0 && nWitnessFee == 0 && extTxId.IsNull() && !bBuyNow && !bPaymentAck && redeemTxId.IsNull() && linkSellerAliasTuple.first.empty() && linkAliasTuple.first.empty() && feedback.IsNull() && op == 0 && vchEscrow.empty() && txHash.IsNull() && nHeight == 0 && nPaymentOption == 0 && nQty == 0 && buyerAliasTuple.first.empty() && arbiterAliasTuple.first.empty() && sellerAliasTuple.first.empty() && offerTuple.first.empty() && scriptSigs.empty() && vchRedeemScript.empty()); }
     bool UnserializeFromTx(const CTransaction &tx);
 	bool UnserializeFromData(const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash);
 	void Serialize(std::vector<unsigned char>& vchData);

@@ -127,10 +127,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "getaddressdeltas", 0},
     { "getaddressutxos", 0},
     { "getaddressmempool", 0},
-	{ "escrowrelease", 2 },
-	{ "escrowrefund", 2 },
-	{ "escrowclaimrelease", 2 },
-	{ "escrowclaimrefund", 2 },
+	{ "escrowcreaterawtransaction", 3 },
 	
 };
 
