@@ -99,7 +99,6 @@ bool Reader::ReadRecord(Slice* record, std::string* scratch) {
           // of a block followed by a kFullType or kFirstType record
           // at the beginning of the next block.
           if (scratch->empty()) {
-            in_fragmented_record = false;
           } else {
             ReportCorruption(scratch->size(), "partial record without end(1)");
           }
