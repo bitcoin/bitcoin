@@ -993,6 +993,7 @@ bool BuildCertIndexerJson(const CCert& cert, const CAliasIndex& alias, UniValue&
 {
 	oCert.push_back(Pair("_id", stringFromVch(cert.vchCert)));
 	oCert.push_back(Pair("title", stringFromVch(cert.vchTitle)));
+	oCert.push_back(Pair("height", (int)cert.nHeight));
 	oCert.push_back(Pair("category", stringFromVch(cert.sCategory)));
 	oCert.push_back(Pair("alias", stringFromVch(cert.aliasTuple.first)));
 	return true;
