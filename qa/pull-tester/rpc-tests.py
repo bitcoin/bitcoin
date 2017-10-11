@@ -94,6 +94,7 @@ BASE_SCRIPTS= [
     'p2p-leaktests.py',
     'p2p-compactblocks.py',
     'sporks.py',
+    'p2p-fingerprint.py',
 ]
 
 ZMQ_SCRIPTS = [
