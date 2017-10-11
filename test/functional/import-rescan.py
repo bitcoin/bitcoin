@@ -111,8 +111,7 @@ TIMESTAMP_WINDOW = 2 * 60 * 60
 
 
 class ImportRescanTest(BitcoinTestFramework):
-    def __init__(self):
-        super().__init__()
+    def set_test_params(self):
         self.num_nodes = 2 + len(IMPORT_NODES)
 
     def setup_network(self):
@@ -121,7 +120,8 @@ class ImportRescanTest(BitcoinTestFramework):
             if import_node.prune:
                 extra_args[i] += ["-prune=1"]
 
-        self.nodes = self.start_nodes(self.num_nodes, self.options.tmpdir, extra_args)
+        self.add_nodes(self.num_nodes, extra_args)
+        self.start_nodes()
         for i in range(1, self.num_nodes):
             connect_nodes(self.nodes[i], 0)
 

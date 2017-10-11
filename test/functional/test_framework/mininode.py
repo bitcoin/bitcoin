@@ -35,7 +35,7 @@ import time
 from threading import RLock, Thread
 
 from test_framework.siphash import siphash256
-from test_framework.util import hex_str_to_bytes, bytes_to_hex_str
+from test_framework.util import hex_str_to_bytes, bytes_to_hex_str, wait_until
 
 BIP0031_VERSION = 60000
 MY_VERSION = 70014  # past bip-31 for ping/pong
@@ -1358,23 +1358,6 @@ class msg_reject(object):
         return "msg_reject: %s %d %s [%064x]" \
             % (self.message, self.code, self.reason, self.data)
 
-# Helper function
-def wait_until(predicate, *, attempts=float('inf'), timeout=float('inf')):
-    if attempts == float('inf') and timeout == float('inf'):
-        timeout = 60
-    attempt = 0
-    elapsed = 0
-
-    while attempt < attempts and elapsed < timeout:
-        with mininode_lock:
-            if predicate():
-                return True
-        attempt += 1
-        elapsed += 0.05
-        time.sleep(0.05)
-
-    return False
-
 class msg_feefilter(object):
     command = b"feefilter"
 
@@ -1522,6 +1505,7 @@ class NodeConnCB(object):
             except:
                 print("ERROR delivering %s (%s)" % (repr(message),
                                                     sys.exc_info()[0]))
+                raise
 
     def set_deliver_sleep_time(self, value):
         with mininode_lock:
@@ -1591,21 +1575,21 @@ class NodeConnCB(object):
 
     def wait_for_disconnect(self, timeout=60):
         test_function = lambda: not self.connected
-        assert wait_until(test_function, timeout=timeout)
+        wait_until(test_function, timeout=timeout, lock=mininode_lock)
 
     # Message receiving helper methods
 
     def wait_for_block(self, blockhash, timeout=60):
         test_function = lambda: self.last_message.get("block") and self.last_message["block"].block.rehash() == blockhash
-        assert wait_until(test_function, timeout=timeout)
+        wait_until(test_function, timeout=timeout, lock=mininode_lock)
 
     def wait_for_getdata(self, timeout=60):
         test_function = lambda: self.last_message.get("getdata")
-        assert wait_until(test_function, timeout=timeout)
+        wait_until(test_function, timeout=timeout, lock=mininode_lock)
 
     def wait_for_getheaders(self, timeout=60):
         test_function = lambda: self.last_message.get("getheaders")
-        assert wait_until(test_function, timeout=timeout)
+        wait_until(test_function, timeout=timeout, lock=mininode_lock)
 
     def wait_for_inv(self, expected_inv, timeout=60):
         """Waits for an INV message and checks that the first inv object in the message was as expected."""
@@ -1614,11 +1598,11 @@ class NodeConnCB(object):
         test_function = lambda: self.last_message.get("inv") and \
                                 self.last_message["inv"].inv[0].type == expected_inv[0].type and \
                                 self.last_message["inv"].inv[0].hash == expected_inv[0].hash
-        assert wait_until(test_function, timeout=timeout)
+        wait_until(test_function, timeout=timeout, lock=mininode_lock)
 
     def wait_for_verack(self, timeout=60):
         test_function = lambda: self.message_count["verack"]
-        assert wait_until(test_function, timeout=timeout)
+        wait_until(test_function, timeout=timeout, lock=mininode_lock)
 
     # Message sending helper functions
 
@@ -1636,7 +1620,7 @@ class NodeConnCB(object):
     def sync_with_ping(self, timeout=60):
         self.send_message(msg_ping(nonce=self.ping_counter))
         test_function = lambda: self.last_message.get("pong") and self.last_message["pong"].nonce == self.ping_counter
-        assert wait_until(test_function, timeout=timeout)
+        wait_until(test_function, timeout=timeout, lock=mininode_lock)
         self.ping_counter += 1
         return True
 
@@ -1725,13 +1709,10 @@ class NodeConn(asyncore.dispatcher):
         self.cb.on_close(self)
 
     def handle_read(self):
-        try:
-            t = self.recv(8192)
-            if len(t) > 0:
-                self.recvbuf += t
-                self.got_data()
-        except:
-            pass
+        t = self.recv(8192)
+        if len(t) > 0:
+            self.recvbuf += t
+            self.got_data()
 
     def readable(self):
         return True
@@ -1797,8 +1778,10 @@ class NodeConn(asyncore.dispatcher):
                     self.got_message(t)
                 else:
                     logger.warning("Received unknown command from %s:%d: '%s' %s" % (self.dstaddr, self.dstport, command, repr(msg)))
+                    raise ValueError("Unknown command: '%s'" % (command))
         except Exception as e:
             logger.exception('got_data:', repr(e))
+            raise
 
     def send_message(self, message, pushbuf=False):
         if self.state != "connected" and not pushbuf:
@@ -1854,6 +1837,7 @@ class NetworkThread(Thread):
                     disconnected.append(obj)
             [ obj.handle_close() for obj in disconnected ]
             asyncore.loop(0.1, use_poll=True, map=mininode_socket_map, count=1)
+        logger.debug("Network thread closing")
 
 
 # An exception we can raise if we detect a potential disconnect

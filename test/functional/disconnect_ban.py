@@ -5,18 +5,17 @@
 """Test node disconnect and ban behavior"""
 import time
 
-from test_framework.mininode import wait_until
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import (assert_equal,
-                                 assert_raises_jsonrpc,
-                                 connect_nodes_bi)
+from test_framework.util import (
+    assert_equal,
+    assert_raises_jsonrpc,
+    connect_nodes_bi,
+    wait_until,
+)
 
 class DisconnectBanTest(BitcoinTestFramework):
-
-    def __init__(self):
-        super().__init__()
+    def set_test_params(self):
         self.num_nodes = 2
-        self.setup_clean_chain = False
 
     def run_test(self):
         self.log.info("Test setban and listbanned RPCs")
@@ -24,7 +23,7 @@ class DisconnectBanTest(BitcoinTestFramework):
         self.log.info("setban: successfully ban single IP address")
         assert_equal(len(self.nodes[1].getpeerinfo()), 2)  # node1 should have 2 connections to node0 at this point
         self.nodes[1].setban("127.0.0.1", "add")
-        assert wait_until(lambda: len(self.nodes[1].getpeerinfo()) == 0, timeout=10)
+        wait_until(lambda: len(self.nodes[1].getpeerinfo()) == 0, timeout=10)
         assert_equal(len(self.nodes[1].getpeerinfo()), 0)  # all nodes must be disconnected at this point
         assert_equal(len(self.nodes[1].listbanned()), 1)
 
@@ -66,8 +65,8 @@ class DisconnectBanTest(BitcoinTestFramework):
         assert_equal(len(self.nodes[1].listbanned()), 3)
 
         self.stop_node(1)
+        self.start_node(1)
 
-        self.nodes[1] = self.start_node(1, self.options.tmpdir)
         listAfterShutdown = self.nodes[1].listbanned()
         assert_equal("127.0.0.0/24", listAfterShutdown[0]['address'])
         assert_equal("127.0.0.0/32", listAfterShutdown[1]['address'])
@@ -90,7 +89,7 @@ class DisconnectBanTest(BitcoinTestFramework):
         self.log.info("disconnectnode: successfully disconnect node by address")
         address1 = self.nodes[0].getpeerinfo()[0]['addr']
         self.nodes[0].disconnectnode(address=address1)
-        assert wait_until(lambda: len(self.nodes[0].getpeerinfo()) == 1, timeout=10)
+        wait_until(lambda: len(self.nodes[0].getpeerinfo()) == 1, timeout=10)
         assert not [node for node in self.nodes[0].getpeerinfo() if node['addr'] == address1]
 
         self.log.info("disconnectnode: successfully reconnect node")
@@ -101,7 +100,7 @@ class DisconnectBanTest(BitcoinTestFramework):
         self.log.info("disconnectnode: successfully disconnect node by node id")
         id1 = self.nodes[0].getpeerinfo()[0]['id']
         self.nodes[0].disconnectnode(nodeid=id1)
-        assert wait_until(lambda: len(self.nodes[0].getpeerinfo()) == 1, timeout=10)
+        wait_until(lambda: len(self.nodes[0].getpeerinfo()) == 1, timeout=10)
         assert not [node for node in self.nodes[0].getpeerinfo() if node['id'] == id1]
 
 if __name__ == '__main__':

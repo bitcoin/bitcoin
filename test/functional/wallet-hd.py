@@ -11,11 +11,8 @@ from test_framework.util import (
 )
 import shutil
 
-
 class WalletHDTest(BitcoinTestFramework):
-
-    def __init__(self):
-        super().__init__()
+    def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 2
         self.extra_args = [['-usehd=0'], ['-usehd=1', '-keypool=0']]
@@ -25,8 +22,8 @@ class WalletHDTest(BitcoinTestFramework):
 
         # Make sure can't switch off usehd after wallet creation
         self.stop_node(1)
-        self.assert_start_raises_init_error(1, self.options.tmpdir, ['-usehd=0'], 'already existing HD wallet')
-        self.nodes[1] = self.start_node(1, self.options.tmpdir, self.extra_args[1])
+        self.assert_start_raises_init_error(1, ['-usehd=0'], 'already existing HD wallet')
+        self.start_node(1)
         connect_nodes_bi(self.nodes, 0, 1)
 
         # Make sure we use hd, keep masterkeyid
@@ -76,7 +73,7 @@ class WalletHDTest(BitcoinTestFramework):
         shutil.rmtree(tmpdir + "/node1/regtest/blocks")
         shutil.rmtree(tmpdir + "/node1/regtest/chainstate")
         shutil.copyfile(tmpdir + "/hd.bak", tmpdir + "/node1/regtest/wallet.dat")
-        self.nodes[1] = self.start_node(1, self.options.tmpdir, self.extra_args[1])
+        self.start_node(1)
 
         # Assert that derivation is deterministic
         hd_add_2 = None
@@ -91,7 +88,7 @@ class WalletHDTest(BitcoinTestFramework):
 
         # Needs rescan
         self.stop_node(1)
-        self.nodes[1] = self.start_node(1, self.options.tmpdir, self.extra_args[1] + ['-rescan'])
+        self.start_node(1, extra_args=self.extra_args[1] + ['-rescan'])
         assert_equal(self.nodes[1].getbalance(), num_hd_adds + 1)
 
         # send a tx and make sure its using the internal chain for the changeoutput

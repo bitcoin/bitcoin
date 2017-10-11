@@ -60,8 +60,7 @@ class AcceptBlockTest(BitcoinTestFramework):
                           default=os.getenv("BITCOIND", "bitcoind"),
                           help="bitcoind binary to test")
 
-    def __init__(self):
-        super().__init__()
+    def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 2
         self.extra_args = [[], ["-whitelist=127.0.0.1"]]

@@ -11,19 +11,13 @@ from test_framework.test_framework import BitcoinTestFramework, SkipTest
 from test_framework.util import *
 from test_framework.netutil import *
 
-
 class RPCBindTest(BitcoinTestFramework):
-
-    def __init__(self):
-        super().__init__()
+    def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
 
     def setup_network(self):
-        pass
-
-    def setup_nodes(self):
-        pass
+        self.add_nodes(self.num_nodes, None)
 
     def run_bind_test(self, allow_ips, connect_to, addresses, expected):
         '''
@@ -31,13 +25,15 @@ class RPCBindTest(BitcoinTestFramework):
         then try to connect, and check if the set of bound addresses
         matches the expected set.
         '''
+        self.log.info("Bind test for %s" % str(addresses))
         expected = [(addr_to_hex(addr), port) for (addr, port) in expected]
         base_args = ['-disablewallet', '-nolisten']
         if allow_ips:
             base_args += ['-rpcallowip=' + x for x in allow_ips]
         binds = ['-rpcbind='+addr for addr in addresses]
-        self.nodes = self.start_nodes(self.num_nodes, self.options.tmpdir, [base_args + binds], connect_to)
-        pid = self.bitcoind_processes[0].pid
+        self.nodes[0].rpchost = connect_to
+        self.start_node(0, base_args + binds)
+        pid = self.nodes[0].process.pid
         assert_equal(set(get_bind_addrs(pid)), set(expected))
         self.stop_nodes()
 
@@ -46,10 +42,12 @@ class RPCBindTest(BitcoinTestFramework):
         Start a node with rpcallow IP, and request getnetworkinfo
         at a non-localhost IP.
         '''
+        self.log.info("Allow IP test for %s:%d" % (rpchost, rpcport))
         base_args = ['-disablewallet', '-nolisten'] + ['-rpcallowip='+x for x in allow_ips]
-        self.nodes = self.start_nodes(self.num_nodes, self.options.tmpdir, [base_args])
+        self.nodes[0].rpchost = None
+        self.start_nodes([base_args])
         # connect to node through non-loopback interface
-        node = get_rpc_proxy(rpc_url(get_datadir_path(self.options.tmpdir, 0), 0, "%s:%d" % (rpchost, rpcport)), 0)
+        node = get_rpc_proxy(rpc_url(get_datadir_path(self.options.tmpdir, 0), 0, "%s:%d" % (rpchost, rpcport)), 0, coveragedir=self.options.coveragedir)
         node.getnetworkinfo()
         self.stop_nodes()
 
