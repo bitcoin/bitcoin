@@ -142,8 +142,7 @@ class AcceptBlockTest(BitcoinTestFramework):
         assert(tip_entry_found)
 
         # But this block should be accepted by node since it has equal work.
-        # TODO: We currently drop this block but likely shouldn't
-        #self.nodes[0].getblock(block_h2f.hash)
+        self.nodes[0].getblock(block_h2f.hash)
         self.log.info("Second height 2 block accepted, but not reorg'ed to")
 
         # 4b. Now send another block that builds on the forking chain.
@@ -215,7 +214,6 @@ class AcceptBlockTest(BitcoinTestFramework):
 
         test_node.wait_for_verack()
         test_node.send_message(msg_block(block_h1f))
-        test_node.send_message(msg_block(block_h2f)) # This should not be required
 
         test_node.sync_with_ping()
         assert_equal(self.nodes[0].getblockcount(), 2)
@@ -239,7 +237,6 @@ class AcceptBlockTest(BitcoinTestFramework):
 
         # 7. Send the missing block for the third time (now it is requested)
         test_node.send_message(msg_block(block_h1f))
-        test_node.send_message(msg_block(block_h2f)) # This should not be required
 
         test_node.sync_with_ping()
         assert_equal(self.nodes[0].getblockcount(), 290)
