@@ -128,6 +128,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "getaddressutxos", 0},
     { "getaddressmempool", 0},
 	{ "escrowcreaterawtransaction", 2 },
+	{ "aliasupdatewhitelist", 1 },
 	
 };
 
