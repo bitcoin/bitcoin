@@ -1022,7 +1022,7 @@ const string OfferNew(const string& node, const string& aliasname, const string&
 	if (price != "\"\"")
 		compareprice = boost::lexical_cast<float>(price);
 	else
-		compareprice = oldprice
+		compareprice = oldprice;
 	BOOST_CHECK(abs(find_value(r.get_obj(), "price").get_real() - compareprice) < 0.001);
 	BOOST_CHECK(find_value(r.get_obj(), "title").get_str() == title);
 	BOOST_CHECK(find_value(r.get_obj(), "description").get_str() == description);
@@ -1053,7 +1053,7 @@ const string OfferNew(const string& node, const string& aliasname, const string&
 		if (price != "\"\"")
 			compareprice = boost::lexical_cast<float>(price);
 		else
-			compareprice = oldprice
+			compareprice = oldprice;
 		BOOST_CHECK(abs(find_value(r.get_obj(), "price").get_real() - compareprice) < 0.001);
 		if (offerType != "\"\"")
 			BOOST_CHECK(find_value(r.get_obj(), "offertype").get_str() == offerType);
@@ -1081,7 +1081,7 @@ const string OfferNew(const string& node, const string& aliasname, const string&
 		if (price != "\"\"")
 			compareprice = boost::lexical_cast<float>(price);
 		else
-			compareprice = oldprice
+			compareprice = oldprice;
 		BOOST_CHECK(abs(find_value(r.get_obj(), "price").get_real() - compareprice) < 0.001);
 
 		if (offerType != "\"\"")
@@ -1132,8 +1132,8 @@ void OfferUpdate(const string& node, const string& aliasname, const string& offe
 	float compareprice = 0;
 	if (price != "\"\"")
 		compareprice = boost::lexical_cast<float>(price);
-	else 
-		compareprice = oldprice
+	else
+		compareprice = oldprice;
 	BOOST_CHECK(abs(find_value(r.get_obj(), "price").get_real() - compareprice) < 0.001);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "commission").get_int() , commissionStr != "\"\""? commission: oldcommission);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "paymentoptions").get_str() , paymentoptions != "\"\""? paymentoptions: oldpaymentoptions);
@@ -1163,8 +1163,8 @@ void OfferUpdate(const string& node, const string& aliasname, const string& offe
 		if (price != "\"\"")
 			compareprice = boost::lexical_cast<float>(price);
 		else
-			compareprice = oldprice
-			BOOST_CHECK(abs(find_value(r.get_obj(), "price").get_real() - compareprice) < 0.001);
+			compareprice = oldprice;
+		BOOST_CHECK(abs(find_value(r.get_obj(), "price").get_real() - compareprice) < 0.001);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "commission").get_int() , commissionStr != "\"\""? commission: oldcommission);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "paymentoptions").get_str() , paymentoptions != "\"\""? paymentoptions: oldpaymentoptions);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "private").get_bool() , isprivateStr != "\"\""? isprivate: oldprivate);
@@ -1194,7 +1194,7 @@ void OfferUpdate(const string& node, const string& aliasname, const string& offe
 		if (price != "\"\"")
 			compareprice = boost::lexical_cast<float>(price);
 		else
-			compareprice = oldprice
+			compareprice = oldprice;
 			BOOST_CHECK(abs(find_value(r.get_obj(), "price").get_real() - compareprice) < 0.001);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "commission").get_int() , commissionStr != "\"\""? commission: oldcommission);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "paymentoptions").get_str() , paymentoptions != "\"\""? paymentoptions: oldpaymentoptions);
