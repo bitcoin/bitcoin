@@ -2433,7 +2433,7 @@ UniValue aliasclearwhitelist(const UniValue& params, bool fHelp) {
 	COfferLinkWhitelistEntry entry;
 	// special case to clear all entries for this offer
 	entry.nDiscountPct = 127;
-
+	CAliasIndex copyAlias = theAlias;
 	theAlias.ClearAlias();
 	theAlias.nHeight = chainActive.Tip()->nHeight;
 	theAlias.offerWhitelist.PutWhitelistEntry(entry);
@@ -2443,14 +2443,14 @@ UniValue aliasclearwhitelist(const UniValue& params, bool fHelp) {
 	vector<unsigned char> vchHashAlias = vchFromValue(hash.GetHex());
 
 	CScript scriptPubKey;
-	scriptPubKey << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << theAlias.vchAlias << theAlias.vchGUID << vchHashAlias << vchWitness << OP_2DROP << OP_2DROP << OP_DROP;
+	scriptPubKey << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << copyAlias.vchAlias << copyAlias.vchGUID << vchHashAlias << vchWitness << OP_2DROP << OP_2DROP << OP_DROP;
 	scriptPubKey += scriptPubKeyOrig;
 
 	vector<CRecipient> vecSend;
 	CRecipient recipient;
 	CreateRecipient(scriptPubKey, recipient);
 	CRecipient recipientPayment;
-	CreateAliasRecipient(scriptPubKeyOrig, theAlias.vchAlias, recipientPayment);
+	CreateAliasRecipient(scriptPubKeyOrig, copyAlias.vchAlias, recipientPayment);
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
 	CRecipient fee;
@@ -2461,7 +2461,7 @@ UniValue aliasclearwhitelist(const UniValue& params, bool fHelp) {
 	CCoinControl coinControl;
 	coinControl.fAllowOtherInputs = false;
 	coinControl.fAllowWatchOnly = false;
-	SendMoneySyscoin(theAlias.vchAlias, vchWitness, "", recipient, recipientPayment, vecSend, wtx, &coinControl);
+	SendMoneySyscoin(copyAlias.vchAlias, vchWitness, "", recipient, recipientPayment, vecSend, wtx, &coinControl);
 
 	UniValue res(UniValue::VARR);
 	UniValue signParams(UniValue::VARR);
