@@ -17,9 +17,7 @@ from test_framework.test_framework import IoPTestFramework
 from test_framework.util import assert_equal
 
 class WalletAccountsTest(IoPTestFramework):
-
-    def __init__(self):
-        super().__init__()
+    def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
         self.extra_args = [[]]

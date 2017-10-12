@@ -24,13 +24,11 @@ TEST_QT_H = \
   qt/test/paymentservertests.h \
   qt/test/wallettests.h
 
-TEST_IOP_CPP = \
   test/test_iop.cpp \
-  test/testutil.cpp
+TEST_IOP_CPP = \
 
-TEST_IOP_H = \
   test/test_iop.h \
-  test/testutil.h
+TEST_IOP_H = \
 
 qt_test_test_iop_qt_CPPFLAGS = $(AM_CPPFLAGS) $(IOP_INCLUDES) $(IOP_QT_INCLUDES) \
   $(QT_INCLUDES) $(QT_TEST_INCLUDES) $(PROTOBUF_CFLAGS)
