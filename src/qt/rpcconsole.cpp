@@ -693,8 +693,9 @@ void RPCConsole::setClientModel(ClientModel *model)
 }
 
 #ifdef ENABLE_WALLET
-void RPCConsole::addWallet(const QString name, WalletModel * const walletModel)
+void RPCConsole::addWallet(WalletModel * const walletModel)
 {
+    const QString name = walletModel->getWalletName();
     CWalletRef * const ppwallet = new CWalletRef(walletModel->getWallet());
     ui->WalletSelector->addItem(name, QVariant::fromValue((void*)(ppwallet)));
     if (ui->WalletSelector->count() == 2 && !isVisible()) {
