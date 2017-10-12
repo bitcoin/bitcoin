@@ -429,6 +429,11 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1009 - " + _("Offer category too long");
 			return error(errorMessage.c_str());
 		}
+		if (theOffer.fPrice <= 0)
+		{
+			errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1009 - " + _("Offer price must be a positive number");
+			return error(errorMessage.c_str());
+		}
 		if(theOffer.linkOfferTuple.first.size() > MAX_GUID_LENGTH)
 		{
 			errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1010 - " + _("Offer link guid hash too long");
@@ -487,11 +492,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				if(theOffer.paymentOptions <= 0)
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1022 - " + _("Invalid payment option specified");
-					return error(errorMessage.c_str());
-				}
-				if (theOffer.fPrice <= 0)
-				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1009 - " + _("Offer price must be a positive number");
 					return error(errorMessage.c_str());
 				}
 			}
@@ -565,11 +565,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			if(theOffer.nCommission > 100 || theOffer.nCommission < -90)
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1034 - " + _("Commission percentage must be between -90 and 100");
-				return error(errorMessage.c_str());
-			}
-			if (theOffer.fPrice <= 0)
-			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1009 - " + _("Offer price must be a positive number");
 				return error(errorMessage.c_str());
 			}
 			break;
@@ -1042,7 +1037,8 @@ UniValue offerlink(const UniValue& params, bool fHelp) {
 	
 
 	// build offer
-	COffer newOffer;
+	COffer newOffer = linkOffer;
+	newOffer.ClearOffer();
 	newOffer.vchOffer = vchOffer;
 	newOffer.aliasTuple = CNameTXIDTuple(alias.vchAlias, alias.txHash, alias.vchGUID);
 	newOffer.sDescription = vchDescription;
