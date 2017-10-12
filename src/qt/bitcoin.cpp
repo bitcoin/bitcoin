@@ -1,6 +1,6 @@
 /*
  * W.J. van der Laan 2011-2012
- * The PPCoin Developers 2013
+ * The Peercoin developers 2013-2017
  */
 
 #include <QApplication>
