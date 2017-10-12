@@ -336,7 +336,6 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	{
 		theAlias.SetNull();
 	}
-	// we need to check for cert update specially because an alias update without data is sent along with offers linked with the alias
 	else if (!bData)
 	{
 		if(fDebug)
@@ -637,7 +636,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					if (whiteList.entries.size() > 20)
 					{
 						errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1094 -" + _("Too many affiliates for this whitelist, maximum 20 entries allowed");
-						theAlias.offerWhitelist.SetNull();
+						dbAlias.offerWhitelist.SetNull();
 					}
 					// special case we use to remove all entries
 					else if (whiteList.entries.size() == 1 && whiteList.entries.begin()->second.nDiscountPct == 127)
@@ -2370,6 +2369,7 @@ UniValue aliasupdatewhitelist(const UniValue& params, bool fHelp) {
 	scriptData << OP_RETURN << data;
 	CRecipient fee;
 	CreateFeeRecipient(scriptData, data, fee);
+	vecSend.push_back(fee);
 
 
 	CCoinControl coinControl;
