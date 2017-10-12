@@ -101,10 +101,6 @@ bool AppInit(int argc, char* argv[])
             fprintf(stderr, "Error: Specified data directory \"%s\" does not exist.\n", gArgs.GetArg("-datadir", "").c_str());
             return false;
         }
-        if (gArgs.IsArgSet("-walletdir") && !fs::is_directory(GetWalletDir())) {
-            fprintf(stderr, "Error: Specified wallet directory \"%s\" does not exist.\n", gArgs.GetArg("-walletdir", "").c_str());
-            return false;
-        }
         try
         {
             gArgs.ReadConfigFile(gArgs.GetArg("-conf", BITCOIN_CONF_FILENAME));

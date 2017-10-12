@@ -193,6 +193,12 @@ bool VerifyWallets()
         return true;
     }
 
+    if (gArgs.IsArgSet("-walletdir") && !fs::is_directory(GetWalletDir())) {
+        return InitError(strprintf(_("Error: Specified wallet directory \"%s\" does not exist."), gArgs.GetArg("-walletdir", "").c_str()));
+    }
+
+    LogPrintf("Using wallet directory %s\n", GetWalletDir().string());
+
     uiInterface.InitMessage(_("Verifying wallet(s)..."));
 
     // Keep track of each wallet absolute path to detect duplicates.
