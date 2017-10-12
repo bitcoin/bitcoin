@@ -17,6 +17,8 @@ class CCoinControl
 {
 public:
     CTxDestination destChange;
+    //! Style to use for change destination (if destChange unset)
+    OutputType m_change_type;
     //! If false, allows unselected inputs, but requires all selected inputs be used
     bool fAllowOtherInputs;
     //! Includes watch only addresses which match the ISMINE_WATCH_SOLVABLE criteria
@@ -40,6 +42,7 @@ public:
     void SetNull()
     {
         destChange = CNoDestination();
+        m_change_type = g_change_type;
         fAllowOtherInputs = false;
         fAllowWatchOnly = false;
         setSelected.clear();
