@@ -3212,6 +3212,67 @@ UniValue generate(const JSONRPCRequest& request)
     return generateBlocks(coinbase_script, num_generate, max_tries, true);
 }
 
+UniValue sethdseed(const JSONRPCRequest& request)
+{
+    CWallet* const pwallet = GetWalletForJSONRPCRequest(request);
+
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
+        return NullUniValue;
+    }
+
+    if (request.fHelp || request.params.size() > 2) {
+        throw std::runtime_error(
+            "sethdseed ( \"flushkeypool\" \"seed\" )\n"
+            "\nSet or reset the HD wallet seed.\n"
+            "\nNote that you will need to MAKE A NEW BACKUP of your wallet after setting the HD wallet seed.\n"
+            + HelpRequiringPassphrase(pwallet) +
+            "\nArguments:\n"
+            "1. \"flushkeypool\"       (boolean, optional, default=true) Whether to flush old unused addresses from the keypool.\n"
+            "                             If true, the next address from getnewaddress will be from this new seed.\n"
+            "                             If false, addresses from the existing keypool will be used until it has been depleted.\n"
+            "2. \"seed\"               (string, optional) The WIF private key to use as the new HD seed;\n"
+            "                             if not provided a random seed will be used.\n"
+            "\nResult:\n"
+            "true|false              (boolean) Returns true if successful\n"
+            "\nExamples:\n"
+            + HelpExampleCli("sethdseed", "")
+            + HelpExampleCli("sethdseed", "false")
+            + HelpExampleCli("sethdseed", "true \"c35c625bd2b3b20e1c98ed73d4dd2acf3c43a805d3fa303a6856ef1dd2a1e360\"")
+            + HelpExampleRpc("sethdseed", "true, \"c35c625bd2b3b20e1c98ed73d4dd2acf3c43a805d3fa303a6856ef1dd2a1e360\"")
+            );
+    }
+
+    LOCK2(cs_main, pwallet->cs_wallet);
+    EnsureWalletIsUnlocked(pwallet);
+
+    bool flush_key_pool = true;
+    if (!request.params[0].isNull()) flush_key_pool = request.params[0].get_bool();
+
+    CPubKey master_pub_key;
+    if (!request.params[1].isNull()) {
+        CBitcoinSecret secret;
+        if (!secret.SetString(request.params[1].get_str())) throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key encoding");
+
+        CKey key = secret.GetKey(), key2;
+        if (!key.IsValid()) throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Private key outside allowed range");
+
+        // check that we don't already have this key, compressed or otherwise
+        key2.Set(key.begin(), key.end(), !key.IsCompressed());
+        if (pwallet->HaveKey(key.GetPubKey().GetID()) || pwallet->HaveKey(key2.GetPubKey().GetID())) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Already have this key (either as an HD seed or as a loose private key)");
+        }
+
+        master_pub_key = pwallet->DeriveNewMasterHDKey(key);
+    } else {
+        master_pub_key = pwallet->GenerateNewHDMasterKey();
+    }
+
+    if (!pwallet->SetHDMasterKey(master_pub_key)) throw JSONRPCError(RPC_WALLET_ERROR, "Storing master key failed");
+    if (flush_key_pool) pwallet->NewKeyPool();
+
+    return true;
+}
+
 extern UniValue abortrescan(const JSONRPCRequest& request); // in rpcdump.cpp
 extern UniValue dumpprivkey(const JSONRPCRequest& request); // in rpcdump.cpp
 extern UniValue importprivkey(const JSONRPCRequest& request);
@@ -3276,6 +3337,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "walletpassphrasechange",   &walletpassphrasechange,   {"oldpassphrase","newpassphrase"} },
     { "wallet",             "walletpassphrase",         &walletpassphrase,         {"passphrase","timeout"} },
     { "wallet",             "removeprunedfunds",        &removeprunedfunds,        {"txid"} },
+    { "wallet",             "sethdseed",                &sethdseed,                {"flushkeypool","seed"} },
 
     { "generating",         "generate",                 &generate,                 {"nblocks","maxtries"} },
 };
