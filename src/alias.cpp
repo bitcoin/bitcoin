@@ -572,6 +572,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5022 - " + _("Cannot edit this alias, guid mismatch");
 					theAlias = dbAlias;
 				}
+				const COfferLinkWhitelist whiteList = theAlias.offerWhitelist;
 				if (theAlias.IsNull() || theAlias.offerWhitelist.entries.size() > 0)
 					theAlias = dbAlias;
 				else
@@ -650,7 +651,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					}
 					else
 					{
-						for (auto const &it : theAlias.offerWhitelist.entries)
+						for (auto const &it : whiteList.entries)
 						{
 							COfferLinkWhitelistEntry entry;
 							const COfferLinkWhitelistEntry& newEntry = it.second;
