@@ -62,7 +62,7 @@ public:
         The wallet model represents a bitcoin wallet, and offers access to the list of transactions, address book and sending
         functionality.
     */
-    bool addWallet(const QString& name, WalletModel *walletModel);
+    bool addWallet(WalletModel *walletModel);
     void removeAllWallets();
 #endif // ENABLE_WALLET
     bool enableWallet;

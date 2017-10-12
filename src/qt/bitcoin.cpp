@@ -487,14 +487,9 @@ void BitcoinApplication::initializeResult(bool success)
         for (CWalletRef pwallet : vpwallets) {
             WalletModel * const walletModel = new WalletModel(platformStyle, pwallet, optionsModel);
 
-            QString WalletName = QString::fromStdString(pwallet->GetName());
-            if (WalletName.endsWith(".dat")) {
-                WalletName.truncate(WalletName.size() - 4);
-            }
-
-            window->addWallet(WalletName, walletModel);
+            window->addWallet(walletModel);
             if (fFirstWallet) {
-                window->setCurrentWallet(WalletName);
+                window->setCurrentWallet(walletModel->getWalletName());
                 fFirstWallet = false;
             }
 
