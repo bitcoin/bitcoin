@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2014 Peercoin (PPCoin) developers
+// Copyright (c) 2012-2017 The Peercoin developers
 // Distributed under conditional MIT/X11 software license,
 // see the accompanying file COPYING
 //
