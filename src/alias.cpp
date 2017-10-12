@@ -573,62 +573,68 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					theAlias = dbAlias;
 				}
 				const COfferLinkWhitelist whiteList = theAlias.offerWhitelist;
-				if (theAlias.IsNull() || theAlias.offerWhitelist.entries.size() > 0)
+				if (theAlias.IsNull())
 					theAlias = dbAlias;
 				else
 				{
-					if (theAlias.vchPublicValue.empty())
-						theAlias.vchPublicValue = dbAlias.vchPublicValue;
-					if (theAlias.vchEncryptionPrivateKey.empty())
-						theAlias.vchEncryptionPrivateKey = dbAlias.vchEncryptionPrivateKey;
-					if (theAlias.vchEncryptionPublicKey.empty())
-						theAlias.vchEncryptionPublicKey = dbAlias.vchEncryptionPublicKey;
-
-					if (theAlias.vchAddress.empty())
-						theAlias.vchAddress = dbAlias.vchAddress;
-					theAlias.vchGUID = dbAlias.vchGUID;
-					theAlias.vchAlias = dbAlias.vchAlias;
-					// if transfer
-					if (dbAlias.vchAddress != theAlias.vchAddress)
-					{
-						// make sure xfer to pubkey doesn't point to an alias already, otherwise don't assign pubkey to alias
-						// we want to avoid aliases with duplicate addresses
-						if (paliasdb->ExistsAddress(theAlias.vchAddress))
-						{
-							vector<unsigned char> vchMyAlias;
-							if (paliasdb->ReadAddress(theAlias.vchAddress, vchMyAlias) && !vchMyAlias.empty() && vchMyAlias != dbAlias.vchAlias)
-							{
-								CAliasIndex dbReadAlias;
-								// ensure that you block transferring only if the recv address has an active alias associated with it
-								if (GetAlias(vchMyAlias, dbReadAlias)) {
-									errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5026 - " + _("An alias already exists with that address, try another public key");
-									theAlias = dbAlias;
-								}
-							}
-						}
-						if (dbAlias.nAccessFlags < 2)
-						{
-							errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5026 - " + _("Cannot edit this alias. Insufficient privileges.");
-							theAlias = dbAlias;
-						}
-						// let old address be re-occupied by a new alias
-						if (!dontaddtodb && errorMessage.empty())
-						{
-							paliasdb->EraseAddress(dbAlias.vchAddress);
-						}
-					}
+					// if updating whitelist, we dont allow updating any alias details
+					if (theAlias.offerWhitelist.entries.size() > 0)
+						theAlias = dbAlias;
 					else
 					{
-						if (dbAlias.nAccessFlags < 1)
+						if (theAlias.vchPublicValue.empty())
+							theAlias.vchPublicValue = dbAlias.vchPublicValue;
+						if (theAlias.vchEncryptionPrivateKey.empty())
+							theAlias.vchEncryptionPrivateKey = dbAlias.vchEncryptionPrivateKey;
+						if (theAlias.vchEncryptionPublicKey.empty())
+							theAlias.vchEncryptionPublicKey = dbAlias.vchEncryptionPublicKey;
+
+						if (theAlias.vchAddress.empty())
+							theAlias.vchAddress = dbAlias.vchAddress;
+						theAlias.vchGUID = dbAlias.vchGUID;
+						theAlias.vchAlias = dbAlias.vchAlias;
+						// if transfer
+						if (dbAlias.vchAddress != theAlias.vchAddress)
 						{
-							errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5026 - " + _("Cannot edit this alias. It is view-only.");
+							// make sure xfer to pubkey doesn't point to an alias already, otherwise don't assign pubkey to alias
+							// we want to avoid aliases with duplicate addresses
+							if (paliasdb->ExistsAddress(theAlias.vchAddress))
+							{
+								vector<unsigned char> vchMyAlias;
+								if (paliasdb->ReadAddress(theAlias.vchAddress, vchMyAlias) && !vchMyAlias.empty() && vchMyAlias != dbAlias.vchAlias)
+								{
+									CAliasIndex dbReadAlias;
+									// ensure that you block transferring only if the recv address has an active alias associated with it
+									if (GetAlias(vchMyAlias, dbReadAlias)) {
+										errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5026 - " + _("An alias already exists with that address, try another public key");
+										theAlias = dbAlias;
+									}
+								}
+							}
+							if (dbAlias.nAccessFlags < 2)
+							{
+								errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5026 - " + _("Cannot edit this alias. Insufficient privileges.");
+								theAlias = dbAlias;
+							}
+							// let old address be re-occupied by a new alias
+							if (!dontaddtodb && errorMessage.empty())
+							{
+								paliasdb->EraseAddress(dbAlias.vchAddress);
+							}
+						}
+						else
+						{
+							if (dbAlias.nAccessFlags < 1)
+							{
+								errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5026 - " + _("Cannot edit this alias. It is view-only.");
+								theAlias = dbAlias;
+							}
+						}
+						if (theAlias.nAccessFlags > dbAlias.nAccessFlags)
+						{
+							errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot modify for more lenient access. Only tighter access level can be granted.");
 							theAlias = dbAlias;
 						}
-					}
-					if (theAlias.nAccessFlags > dbAlias.nAccessFlags)
-					{
-						errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot modify for more lenient access. Only tighter access level can be granted.");
-						theAlias = dbAlias;
 					}
 				}
 				// if the txn whitelist entry exists (meaning we want to remove or add)
