@@ -756,7 +756,7 @@ void AliasAddWhitelist(const string& node, const string& owneralias, const strin
 {
 	bool found = false;
 	UniValue r;
-	string whiteListArray = "\"[{\\\"aliases\\\":[{\\\"alias\\\":\\\"" + aliasname + "\\\",\\\"discount_percentage\\\":" + discount + "}]}]\"";
+	string whiteListArray = "\"[{\\\"alias\\\":\\\"" + aliasname + "\\\",\\\"discount_percentage\\\":" + discount + "}]\"";
 	BOOST_CHECK_NO_THROW(CallRPC(node, "aliasupdatewhitelist " + owneralias + " " + whiteListArray + " " + witness));
 	GenerateBlocks(10, node);
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliaswhitelist " + owneralias));
@@ -775,7 +775,7 @@ void AliasAddWhitelist(const string& node, const string& owneralias, const strin
 void AliasRemoveWhitelist(const string& node, const string& owneralias, const string& aliasname, const string& discount, const string& witness)
 {
 	UniValue r;
-	string whiteListArray = "\"[{\\\"aliases\\\":[{\\\"alias\\\":\\\"" + aliasname + "\\\",\\\"discount_percentage\\\":" + discount + "}]}]\"";
+	string whiteListArray = "\"[{\\\"alias\\\":\\\"" + aliasname + "\\\",\\\"discount_percentage\\\":" + discount + "}]\"";
 	BOOST_CHECK_NO_THROW(CallRPC(node, "aliasupdatewhitelist " + owneralias + " " + whiteListArray + " " + witness));
 	GenerateBlocks(10, node);
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliaswhitelist " + owneralias));
