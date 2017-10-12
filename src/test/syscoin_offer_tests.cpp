@@ -133,14 +133,14 @@ BOOST_AUTO_TEST_CASE(generate_offerwhitelists)
 	AliasAddWhitelist("node1", "sellerwhitelistalias", "selleraddwhitelistalias1", "6");
 	// remove from whitelist
 	AliasRemoveWhitelist("node1", "sellerwhitelistalias", "selleraddwhitelistalias", "5");
-	string whiteListArray = "\"{\\\"aliases\\\":[{\\\"alias\\\":\\\"selleraddwhitelistalias\\\",\\\"discount_percentage\\\":5}]}\"";
+	string whiteListArray = "\"[{\\\"alias\\\":\\\"selleraddwhitelistalias\\\",\\\"discount_percentage\\\":5}]}\"";
 	BOOST_CHECK_THROW(CallRPC("node1", "aliasupdatewhitelist sellerwhitelistalias " + whiteListArray), runtime_error);
 
-	string hex_str = AliasUpdate("node1", "sellerwhitelistalias", "changeddata2", "privdata2");
+	string hex_str = AliasUpdate("node1", "sellerwhitelistalias", "changeddata2");
 	BOOST_CHECK(hex_str.empty());
-	hex_str = AliasUpdate("node2", "selleraddwhitelistalias", "changeddata2", "privdata2");
+	hex_str = AliasUpdate("node2", "selleraddwhitelistalias", "changeddata2");
 	BOOST_CHECK(hex_str.empty());
-	hex_str = AliasUpdate("node2", "selleraddwhitelistalias1", "changeddata2", "privdata2");
+	hex_str = AliasUpdate("node2", "selleraddwhitelistalias1", "changeddata2");
 	BOOST_CHECK(hex_str.empty());
 
 	// add to whitelist
@@ -155,15 +155,15 @@ BOOST_AUTO_TEST_CASE(generate_offerwhitelists)
 	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress selleraddwhitelistalias1 100"), runtime_error);
 	GenerateBlocks(10);
 
-	hex_str = AliasUpdate("node1", "sellerwhitelistalias", "changeddata2", "privdata2");
+	hex_str = AliasUpdate("node1", "sellerwhitelistalias", "changeddata2");
 	BOOST_CHECK(hex_str.empty());
-	hex_str = AliasUpdate("node2", "selleraddwhitelistalias", "changeddata2", "privdata2");
+	hex_str = AliasUpdate("node2", "selleraddwhitelistalias", "changeddata2");
 	BOOST_CHECK(hex_str.empty());
-	hex_str = AliasUpdate("node2", "selleraddwhitelistalias1", "changeddata2", "privdata2");
+	hex_str = AliasUpdate("node2", "selleraddwhitelistalias1", "changeddata2");
 	BOOST_CHECK(hex_str.empty());
 
 	AliasRemoveWhitelist("node1", "sellerwhitelistalias", "selleraddwhitelistalias", "6");
-	whiteListArray = "\"{\\\"aliases\\\":[{\\\"alias\\\":\\\"selleraddwhitelistalias\\\",\\\"discount_percentage\\\":6}]}\"";
+	whiteListArray = "\"[{\\\"alias\\\":\\\"selleraddwhitelistalias\\\",\\\"discount_percentage\\\":6}]}\"";
 	BOOST_CHECK_THROW(CallRPC("node1", "aliasupdatewhitelist sellerwhitelistalias " + whiteListArray), runtime_error);
 
 	AliasAddWhitelist("node1", "sellerwhitelistalias", "selleraddwhitelistalias", "1");
