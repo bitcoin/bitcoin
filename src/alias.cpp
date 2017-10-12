@@ -519,7 +519,8 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				return true;
 			}
 		}
-		if(!vchData.empty())
+		// whitelist alias updates don't update expiry date
+		if(!vchData.empty() && theAlias.offerWhitelist.entries.empty())
 		{
 			CAmount fee = GetDataFee(tx.vout[nDataOut].scriptPubKey);
 			float fYears;
