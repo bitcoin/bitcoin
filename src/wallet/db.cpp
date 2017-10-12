@@ -379,35 +379,33 @@ CDB::CDB(CWalletDBWrapper& dbw, const char* pszMode, bool fFlushOnCloseIn) : pdb
         if (!env->Open(GetDataDir()))
             throw std::runtime_error("CDB: Failed to open database environment.");
 
-        strFile = strFilename;
-        ++env->mapFileUseCount[strFile];
-        pdb = env->mapDb[strFile];
+        pdb = env->mapDb[strFilename];
         if (pdb == nullptr) {
             int ret;
-            pdb = new Db(env->dbenv, 0);
+            std::unique_ptr<Db> pdb_temp(new Db(env->dbenv, 0));
 
             bool fMockDb = env->IsMock();
             if (fMockDb) {
-                DbMpoolFile* mpf = pdb->get_mpf();
+                DbMpoolFile* mpf = pdb_temp->get_mpf();
                 ret = mpf->set_flags(DB_MPOOL_NOFILE, 1);
-                if (ret != 0)
-                    throw std::runtime_error(strprintf("CDB: Failed to configure for no temp file backing for database %s", strFile));
+                if (ret != 0) {
+                    throw std::runtime_error(strprintf("CDB: Failed to configure for no temp file backing for database %s", strFilename));
+                }
             }
 
-            ret = pdb->open(nullptr,                               // Txn pointer
-                            fMockDb ? nullptr : strFile.c_str(),   // Filename
-                            fMockDb ? strFile.c_str() : "main", // Logical db name
-                            DB_BTREE,                           // Database type
-                            nFlags,                             // Flags
+            ret = pdb_temp->open(nullptr,                             // Txn pointer
+                            fMockDb ? nullptr : strFilename.c_str(),  // Filename
+                            fMockDb ? strFilename.c_str() : "main",   // Logical db name
+                            DB_BTREE,                                 // Database type
+                            nFlags,                                   // Flags
                             0);
 
             if (ret != 0) {
-                delete pdb;
-                pdb = nullptr;
-                --env->mapFileUseCount[strFile];
-                strFile = "";
                 throw std::runtime_error(strprintf("CDB: Error %d, can't open database %s", ret, strFilename));
             }
+
+            pdb = pdb_temp.release();
+            env->mapDb[strFilename] = pdb;
 
             if (fCreate && !Exists(std::string("version"))) {
                 bool fTmp = fReadOnly;
@@ -415,9 +413,9 @@ CDB::CDB(CWalletDBWrapper& dbw, const char* pszMode, bool fFlushOnCloseIn) : pdb
                 WriteVersion(CLIENT_VERSION);
                 fReadOnly = fTmp;
             }
-
-            env->mapDb[strFile] = pdb;
         }
+        ++env->mapFileUseCount[strFilename];
+        strFile = strFilename;
     }
 }
 
