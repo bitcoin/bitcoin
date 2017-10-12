@@ -314,7 +314,7 @@ Clone the git repositories for iop and Gitian.
 
 ```bash
 git clone https://github.com/devrandom/gitian-builder.git
-git clone https://github.com/iop/iop
+git clone https://github.com/Internet-of-People/iop-hd.git
 git clone https://github.com/iop-hd/gitian.sigs.git
 ```
 
