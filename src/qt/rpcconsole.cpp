@@ -688,8 +688,9 @@ void RPCConsole::setClientModel(ClientModel *model)
 }
 
 #ifdef ENABLE_WALLET
-void RPCConsole::addWallet(const QString name, WalletModel * const walletModel)
+void RPCConsole::addWallet(WalletModel * const walletModel)
 {
+    const QString name = walletModel->getWalletName();
     // use name for text and internal data object (to allow to move to a wallet id later)
     ui->WalletSelector->addItem(name, name);
     if (ui->WalletSelector->count() == 2 && !isVisible()) {

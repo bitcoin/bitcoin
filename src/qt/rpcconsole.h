@@ -43,7 +43,7 @@ public:
     }
 
     void setClientModel(ClientModel *model);
-    void addWallet(const QString name, WalletModel * const walletModel);
+    void addWallet(WalletModel * const walletModel);
 
     enum MessageClass {
         MC_ERROR,
