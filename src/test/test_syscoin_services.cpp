@@ -1308,9 +1308,12 @@ const string EscrowNewAuction(const string& node, const string& sellernode, cons
 	int nQtyBefore = find_value(r.get_obj(), "quantity").get_int();
 	string selleralias = find_value(r.get_obj(), "alias").get_str();
 	string sellerlink_alias = find_value(r.get_obj(), "offerlink_seller").get_str();
+	int nDiscount = 0;
 	if (!sellerlink_alias.empty())
+	{
 		selleralias = sellerlink_alias;
-	int nDiscount = FindAliasDiscount("node1", selleralias, buyeralias);
+		nDiscount = FindAliasDiscount("node1", selleralias, buyeralias);
+	}
 	
 	string exttxid = "\"\"";
 	string paymentoptions = "\"\"";
