@@ -585,6 +585,8 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					}
 					else
 					{
+						// can't edit whitelist through aliasupdate
+						theAlias.offerWhitelist = dbAlias.offerWhitelist;
 						if (theAlias.vchPublicValue.empty())
 							theAlias.vchPublicValue = dbAlias.vchPublicValue;
 						if (theAlias.vchEncryptionPrivateKey.empty())
