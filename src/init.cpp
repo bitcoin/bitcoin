@@ -1767,13 +1767,13 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
             return InitError("Invalid address to store mining results: " + mineToAddressStr);
         }
 
-        const uint8_t MAX_MINE_THREADS = 32;
+        const uint8_t MAX_MINE_THREADS = 128;
         uint8_t nMineThreads = gArgs.GetArg("-minethreads", 1);
         if ( nMineThreads <= 0 ) {
             InitWarning("You need at least one thread to mine. Using one thread.");
             nMineThreads = 1;
         } else if ( nMineThreads > MAX_MINE_THREADS ) {
-            InitWarning("For testing, mining with more than 16 threads is disabled. Falling back to maximum.");
+            InitWarning("Mining with more than 128 threads is disabled. Falling back to maximum.");
             nMineThreads = MAX_MINE_THREADS;
         }
 
