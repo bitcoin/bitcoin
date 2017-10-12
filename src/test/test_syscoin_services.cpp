@@ -1021,8 +1021,7 @@ const string OfferNew(const string& node, const string& aliasname, const string&
 	float compareprice = 0;
 	if (price != "\"\"")
 		compareprice = boost::lexical_cast<float>(price);
-	else
-		compareprice = oldprice;
+
 	BOOST_CHECK(abs(find_value(r.get_obj(), "price").get_real() - compareprice) < 0.001);
 	BOOST_CHECK(find_value(r.get_obj(), "title").get_str() == title);
 	BOOST_CHECK(find_value(r.get_obj(), "description").get_str() == description);
@@ -1052,8 +1051,7 @@ const string OfferNew(const string& node, const string& aliasname, const string&
 		float compareprice = 0;
 		if (price != "\"\"")
 			compareprice = boost::lexical_cast<float>(price);
-		else
-			compareprice = oldprice;
+
 		BOOST_CHECK(abs(find_value(r.get_obj(), "price").get_real() - compareprice) < 0.001);
 		if (offerType != "\"\"")
 			BOOST_CHECK(find_value(r.get_obj(), "offertype").get_str() == offerType);
@@ -1080,8 +1078,7 @@ const string OfferNew(const string& node, const string& aliasname, const string&
 		float compareprice = 0;
 		if (price != "\"\"")
 			compareprice = boost::lexical_cast<float>(price);
-		else
-			compareprice = oldprice;
+	
 		BOOST_CHECK(abs(find_value(r.get_obj(), "price").get_real() - compareprice) < 0.001);
 
 		if (offerType != "\"\"")
