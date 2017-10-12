@@ -154,7 +154,7 @@
     <name>WalletView</name>
     </context>
 <context>
-    <name>iop-hd</name>
+    <name>iop-core</name>
     <message>
         <source>Error initializing block database</source>
         <translation>Error initialising block database</translation>

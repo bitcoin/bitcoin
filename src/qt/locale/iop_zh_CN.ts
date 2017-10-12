@@ -2978,7 +2978,7 @@
     </message>
 </context>
 <context>
-    <name>iop-hd</name>
+    <name>iop-core</name>
     <message>
         <source>Options:</source>
         <translation>选项：
@@ -3045,8 +3045,8 @@
         <translation>无法启动HTTP服务，查看日志获取更多信息</translation>
     </message>
     <message>
-        <source>IoP HD</source>
-        <translation>IoP HD</translation>
+        <source>IoP Core</source>
+        <translation>IoP Core</translation>
     </message>
     <message>
         <source>The %s developers</source>

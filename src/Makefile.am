@@ -74,7 +74,7 @@ if BUILD_IOP_UTILS
 endif
 
 .PHONY: FORCE check-symbols check-security
-# iop hd #
+# iop core #
 IOP_CORE_H = \
   addrdb.h \
   addrman.h \

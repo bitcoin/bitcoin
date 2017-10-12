@@ -2628,7 +2628,7 @@
     </message>
     </context>
 <context>
-    <name>iop-hd</name>
+    <name>iop-core</name>
     <message>
         <source>Information</source>
         <translation>情報</translation>

@@ -3,10 +3,10 @@ sudo checkinstall \
     --fstrans=yes \
     --nodoc \
     --maintainer="IoP Ventures LLC \<info@iop-ventures.com\>" \
-    --pkgsource="https://github.com/internet-of-people/iop-hd" \
+    --pkgsource="https://github.com/internet-of-people/iop-core" \
     --pkglicense=MIT \
     --pkggroup=net \
-    --pkgname=iop-hd \
+    --pkgname=iop-core \
     --pkgversion=6.0.0b2 \
     --pkgarch=$(dpkg \
     --print-architecture) \

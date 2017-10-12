@@ -1,4 +1,4 @@
-IoP HD version 0.9.4 is now available from:
+IoP Core version 0.9.4 is now available from:
 
   https://iop.org/bin/0.9.4/
 
@@ -25,15 +25,15 @@ various operating system maintainers. Review by Gregory Maxwell determined that
 this update is incompatible with the IoP system and could lead to consensus
 forks.
 
-IoP HD released binaries from https://iop.org are unaffected,
+IoP Core released binaries from https://iop.org are unaffected,
 as are any built with the gitian deterministic build system.
 
 However, if you are running either
 
 - The Ubuntu PPA from https://launchpad.net/~iop/+archive/ubuntu/iop
-- A third-party or self-compiled IoP HD
+- A third-party or self-compiled IoP Core
 
-upgrade to IoP HD 0.9.4, which includes a workaround, **before** updating
+upgrade to IoP Core 0.9.4, which includes a workaround, **before** updating
 OpenSSL.
 
 The incompatibility is due to the OpenSSL update changing the

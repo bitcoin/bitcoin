@@ -1,4 +1,4 @@
-IoP HD version 0.9.2 is now available from:
+IoP Core version 0.9.2 is now available from:
 
   https://iop.org/bin/0.9.2/
 

@@ -547,7 +547,7 @@ std::string HelpMessage(HelpMessageMode mode)
 
 std::string LicenseInfo()
 {
-    const std::string URL_SOURCE_CODE = "<https://github.com/Internet-of-People/iop-hd>";
+    const std::string URL_SOURCE_CODE = "<https://github.com/Internet-of-People/iop-core>";
     const std::string URL_WEBSITE = "<https://iop.global>";
 
     return CopyrightHolders(strprintf(_("Copyright (C) %i-%i"), 2009, COPYRIGHT_YEAR) + " ") + "\n" +

@@ -2804,7 +2804,7 @@
     </message>
 </context>
 <context>
-    <name>iop-hd</name>
+    <name>iop-core</name>
     <message>
         <source>Options:</source>
         <translation>Opcions:</translation>
@@ -2862,8 +2862,8 @@
         <translation>No s'ha pogut iniciar el servidor HTTP. Vegeu debug.log per a més detalls.</translation>
     </message>
     <message>
-        <source>IoP HD</source>
-        <translation>IoP HD</translation>
+        <source>IoP Core</source>
+        <translation>IoP Core</translation>
     </message>
     <message>
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>

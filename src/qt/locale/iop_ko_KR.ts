@@ -2988,7 +2988,7 @@
     </message>
 </context>
 <context>
-    <name>iop-hd</name>
+    <name>iop-core</name>
     <message>
         <source>Options:</source>
         <translation>옵션:</translation>
@@ -3058,8 +3058,8 @@
         <translation>HTTP 서버를 시작할 수 없습니다. 자세한 사항은 디버그 로그를 확인 하세요.</translation>
     </message>
     <message>
-        <source>IoP HD</source>
-        <translation>IoP HD</translation>
+        <source>IoP Core</source>
+        <translation>IoP Core</translation>
     </message>
     <message>
         <source>The %s developers</source>

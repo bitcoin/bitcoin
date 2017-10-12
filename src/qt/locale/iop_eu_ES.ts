@@ -818,7 +818,7 @@
     </message>
     </context>
 <context>
-    <name>iop-hd</name>
+    <name>iop-core</name>
     <message>
         <source>Options:</source>
         <translation>Aukerak</translation>

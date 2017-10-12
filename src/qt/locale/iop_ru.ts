@@ -2988,7 +2988,7 @@
     </message>
 </context>
 <context>
-    <name>iop-hd</name>
+    <name>iop-core</name>
     <message>
         <source>Options:</source>
         <translation>Параметры:</translation>
@@ -3058,8 +3058,8 @@
         <translation>Невозможно запустить HTTP сервер. Смотри debug лог для подробностей.</translation>
     </message>
     <message>
-        <source>IoP HD</source>
-        <translation>IoP HD</translation>
+        <source>IoP Core</source>
+        <translation>IoP Core</translation>
     </message>
     <message>
         <source>The %s developers</source>

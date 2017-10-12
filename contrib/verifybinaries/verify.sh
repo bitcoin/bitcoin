@@ -26,7 +26,7 @@ RCSUBDIR="test"
 HOST1="https://iopcore.org"
 HOST2="https://iop.org"
 BASEDIR="/bin/"
-VERSIONPREFIX="iop-hd-"
+VERSIONPREFIX="iop-core-"
 RCVERSIONSTRING="rc"
 
 if [ ! -d "$WORKINGDIR" ]; then
@@ -125,7 +125,7 @@ if [ $RET -ne 0 ]; then
       echo "Bad signature."
    elif [ $RET -eq 2 ]; then
       #or if a gpg error has occurred
-      echo "gpg error. Do you have the IoP HD binary release signing key installed?"
+      echo "gpg error. Do you have the IoP Core binary release signing key installed?"
    fi
 
    echo "gpg output:"

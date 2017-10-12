@@ -1,6 +1,6 @@
-IoP HD version *0.15.0.1* is now available from:
+IoP Core version *0.15.0.1* is now available from:
 
-  <https://iop.org/bin/iop-hd-0.15.0.1/>
+  <https://iop.org/bin/iop-core-0.15.0.1/>
 
 This is a minor bug fix for 0.15.0.
 
@@ -47,10 +47,10 @@ processing the entire blockchain.
 Compatibility
 ==============
 
-IoP HD is extensively tested on multiple operating systems using
+IoP Core is extensively tested on multiple operating systems using
 the Linux kernel, macOS 10.8+, and Windows Vista and later. Windows XP is not supported.
 
-IoP HD should also work on most other Unix-like systems but is not
+IoP Core should also work on most other Unix-like systems but is not
 frequently tested on them.
 
 Notable changes

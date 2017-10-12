@@ -5,10 +5,10 @@
 Make sure you obtain the proper release signing key and verify the fingerprint with several independent sources.
 
 ```sh
-$ gpg --fingerprint "IoP HD binary release signing key"
+$ gpg --fingerprint "IoP Core binary release signing key"
 pub   4096R/36C2E964 2015-06-24 [expires: 2017-02-13]
       Key fingerprint = 01EA 5486 DE18 A882 D4C2  6845 90C8 019E 36C2 E964
-uid                  Wladimir J. van der Laan (IoP HD binary release signing key) <laanwj@gmail.com>
+uid                  Wladimir J. van der Laan (IoP Core binary release signing key) <laanwj@gmail.com>
 ```
 
 #### Usage:
@@ -21,21 +21,21 @@ The script returns 0 if everything passes the checks. It returns 1 if either the
 
 
 ```sh
-./verify.sh iop-hd-0.11.2
-./verify.sh iop-hd-0.12.0
-./verify.sh iop-hd-0.13.0-rc3
+./verify.sh iop-core-0.11.2
+./verify.sh iop-core-0.12.0
+./verify.sh iop-core-0.13.0-rc3
 ```
 
 If you only want to download the binaries of certain platform, add the corresponding suffix, e.g.:
 
 ```sh
-./verify.sh iop-hd-0.11.2-osx
+./verify.sh iop-core-0.11.2-osx
 ./verify.sh 0.12.0-linux
-./verify.sh iop-hd-0.13.0-rc3-win64
+./verify.sh iop-core-0.13.0-rc3-win64
 ```
 
 If you do not want to keep the downloaded binaries, specify anything as the second parameter.
 
 ```sh
-./verify.sh iop-hd-0.13.0 delete
+./verify.sh iop-core-0.13.0 delete
 ```

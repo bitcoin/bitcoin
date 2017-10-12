@@ -1010,10 +1010,10 @@
     </message>
     </context>
 <context>
-    <name>iop-hd</name>
+    <name>iop-core</name>
     <message>
-        <source>IoP HD</source>
-        <translation>IoP HD</translation>
+        <source>IoP Core</source>
+        <translation>IoP Core</translation>
     </message>
     <message>
         <source>Information</source>

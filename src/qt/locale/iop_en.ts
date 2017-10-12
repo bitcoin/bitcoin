@@ -3988,7 +3988,7 @@
     </message>
 </context>
 <context>
-    <name>iop-hd</name>
+    <name>iop-core</name>
     <message>
         <location filename="../iopstrings.cpp" line="+341"/>
         <source>Options:</source>
@@ -4066,8 +4066,8 @@
     </message>
     <message>
         <location line="-384"/>
-        <source>IoP HD</source>
-        <translation type="unfinished">IoP HD</translation>
+        <source>IoP Core</source>
+        <translation type="unfinished">IoP Core</translation>
     </message>
     <message>
         <location line="+1"/>

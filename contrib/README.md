@@ -29,13 +29,13 @@ for Debian-based Linux systems. If you compile iopd/iop-qt yourself, there are s
 Notes on getting Gitian builds up and running using KVM.
 
 ### [Gitian-keys](/contrib/gitian-keys)
-PGP keys used for signing IoP HD [Gitian release](/doc/release-process.md) results.
+PGP keys used for signing IoP Core [Gitian release](/doc/release-process.md) results.
 
 ### [MacDeploy](/contrib/macdeploy) ###
 Scripts and notes for Mac builds. 
 
 ### [RPM](/contrib/rpm) ###
-RPM spec file for building iop-hd on RPM based distributions
+RPM spec file for building iop-core on RPM based distributions
 
 ### [Gitian-build](/contrib/gitian-build.sh) ###
 Script for running full Gitian builds.

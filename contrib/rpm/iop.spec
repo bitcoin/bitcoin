@@ -21,7 +21,7 @@ Summary:	Peer to Peer Cryptographic Currency
 Group:		Applications/System
 License:	MIT
 URL:		https://iop.org/
-Source0:	https://iop.org/bin/iop-hd-%{version}/iop-%{version}.tar.gz
+Source0:	https://iop.org/bin/iop-core-%{version}/iop-%{version}.tar.gz
 Source1:	http://download.oracle.com/berkeley-db/db-%{bdbv}.NC.tar.gz
 
 Source10:	https://raw.githubusercontent.com/iop/iop/v%{version}/contrib/debian/examples/iop.conf
@@ -124,13 +124,13 @@ BuildRequires:	checkpolicy
 BuildRequires:	%{_datadir}/selinux/devel/Makefile
 
 %description server
-This package provides a stand-alone iop-hd daemon. For most users, this
+This package provides a stand-alone iop-core daemon. For most users, this
 package is only needed if they need a full-node without the graphical client.
 
 Some third party wallet software will want this package to provide the actual
-iop-hd node they use to connect to the network.
+iop-core node they use to connect to the network.
 
-If you use the graphical iop-hd client then you almost certainly do not
+If you use the graphical iop-core client then you almost certainly do not
 need this package.
 
 %package utils
@@ -139,7 +139,7 @@ Group:		Applications/System
 
 %description utils
 This package provides several command line utilities for interacting with a
-iop-hd daemon.
+iop-core daemon.
 
 The iop-cli utility allows you to communicate and control a iop daemon
 over RPC, the iop-tx utility allows you to create a custom transaction, and
@@ -262,7 +262,7 @@ touch %{buildroot}%{_datadir}/pixmaps/*.xpm -r %{SOURCE100}
 
 # Desktop File - change the touch timestamp if modifying
 mkdir -p %{buildroot}%{_datadir}/applications
-cat <<EOF > %{buildroot}%{_datadir}/applications/iop-hd.desktop
+cat <<EOF > %{buildroot}%{_datadir}/applications/iop-core.desktop
 [Desktop Entry]
 Encoding=UTF-8
 Name=IoP
@@ -277,12 +277,12 @@ MimeType=x-scheme-handler/iop;
 Categories=Office;Finance;
 EOF
 # change touch date when modifying desktop
-touch -a -m -t 201511100546 %{buildroot}%{_datadir}/applications/iop-hd.desktop
-%{_bindir}/desktop-file-validate %{buildroot}%{_datadir}/applications/iop-hd.desktop
+touch -a -m -t 201511100546 %{buildroot}%{_datadir}/applications/iop-core.desktop
+%{_bindir}/desktop-file-validate %{buildroot}%{_datadir}/applications/iop-core.desktop
 
 # KDE protocol - change the touch timestamp if modifying
 mkdir -p %{buildroot}%{_datadir}/kde4/services
-cat <<EOF > %{buildroot}%{_datadir}/kde4/services/iop-hd.protocol
+cat <<EOF > %{buildroot}%{_datadir}/kde4/services/iop-core.protocol
 [Protocol]
 exec=iop-qt '%u'
 protocol=iop
@@ -296,7 +296,7 @@ makedir=false
 deleting=false
 EOF
 # change touch date when modifying protocol
-touch -a -m -t 201511100546 %{buildroot}%{_datadir}/kde4/services/iop-hd.protocol
+touch -a -m -t 201511100546 %{buildroot}%{_datadir}/kde4/services/iop-core.protocol
 %endif
 
 # man pages
@@ -373,8 +373,8 @@ rm -rf %{buildroot}
 %license COPYING db-%{bdbv}.NC-LICENSE
 %doc COPYING iop.conf.example doc/README.md doc/bips.md doc/files.md doc/multiwallet-qt.md doc/reduce-traffic.md doc/release-notes.md doc/tor.md
 %attr(0755,root,root) %{_bindir}/iop-qt
-%attr(0644,root,root) %{_datadir}/applications/iop-hd.desktop
-%attr(0644,root,root) %{_datadir}/kde4/services/iop-hd.protocol
+%attr(0644,root,root) %{_datadir}/applications/iop-core.desktop
+%attr(0644,root,root) %{_datadir}/kde4/services/iop-core.protocol
 %attr(0644,root,root) %{_datadir}/pixmaps/*.ico
 %attr(0644,root,root) %{_datadir}/pixmaps/*.bmp
 %attr(0644,root,root) %{_datadir}/pixmaps/*.svg
@@ -425,7 +425,7 @@ rm -rf %{buildroot}
 
 %changelog
 * Fri Feb 26 2016 Alice Wonder <buildmaster@librelamp.com> - 0.12.0-2
-- Rename Qt package from iop to iop-hd
+- Rename Qt package from iop to iop-core
 - Make building of the Qt package optional
 - When building the Qt package, default to Qt5 but allow building
 -  against Qt4

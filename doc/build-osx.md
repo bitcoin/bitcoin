@@ -24,7 +24,7 @@ If you want to build the disk image with `make deploy` (.dmg / optional), you ne
 
 NOTE: Building with Qt4 is still supported, however, could result in a broken UI. Building with Qt5 is recommended.
 
-Build IoP HD
+Build IoP Core
 ------------------------
 
 1. Clone the iop source code and cd into `iop`
@@ -32,7 +32,7 @@ Build IoP HD
         git clone https://github.com/iop/iop
         cd iop
 
-2.  Build iop-hd:
+2.  Build iop-core:
 
     Configure and build the headless iop binaries as well as the GUI (if Qt is found).
 
@@ -53,7 +53,7 @@ Build IoP HD
 Running
 -------
 
-IoP HD is now available at `./src/iopd`
+IoP Core is now available at `./src/iopd`
 
 Before running, it's recommended you create an RPC configuration file.
 

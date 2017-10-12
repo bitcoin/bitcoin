@@ -1,4 +1,4 @@
-IoP HD version 0.9.1 is now available from:
+IoP Core version 0.9.1 is now available from:
 
   https://iop.org/bin/0.9.1/
 
@@ -33,7 +33,7 @@ If you are upgrading from version 0.7.2 or earlier, the first time you run
 No code changes were made between 0.9.0 and 0.9.1. Only the dependencies were changed.
 
 - Upgrade OpenSSL to 1.0.1g. This release fixes the following vulnerabilities which can
-  affect the IoP HD software:
+  affect the IoP Core software:
 
   - CVE-2014-0160 ("heartbleed")
     A missing bounds check in the handling of the TLS heartbeat extension can

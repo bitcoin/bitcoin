@@ -262,7 +262,7 @@
     <name>WalletView</name>
     </context>
 <context>
-    <name>iop-hd</name>
+    <name>iop-core</name>
     <message>
         <source>Information</source>
         <translation>వర్తమానము</translation>

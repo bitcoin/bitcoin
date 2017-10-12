@@ -1,4 +1,4 @@
-IoP HD version 0.10.0 is now available from:
+IoP Core version 0.10.0 is now available from:
 
   https://iop.org/bin/0.10.0/
 
@@ -25,7 +25,7 @@ Downgrading warning
 
 Because release 0.10.0 makes use of headers-first synchronization and parallel
 block download (see further), the block files and databases are not
-backwards-compatible with older versions of IoP HD or other software:
+backwards-compatible with older versions of IoP Core or other software:
 
 * Blocks will be stored on disk out of order (in the order they are
 received, really), which makes it incompatible with some tools or
@@ -50,7 +50,7 @@ Notable changes
 Faster synchronization
 ----------------------
 
-IoP HD now uses 'headers-first synchronization'. This means that we first
+IoP Core now uses 'headers-first synchronization'. This means that we first
 ask peers for block headers (a total of 27 megabytes, as of December 2014) and
 validate those. In a second stage, when the headers have been discovered, we
 download the blocks. However, as we already know about the whole chain in
@@ -222,7 +222,7 @@ addresses need to added to the wallet before the payment, though.
 Consensus library
 -----------------
 
-Starting from 0.10.0, the IoP HD distribution includes a consensus library.
+Starting from 0.10.0, the IoP Core distribution includes a consensus library.
 
 The purpose of this library is to make the verification functionality that is
 critical to IoP's consensus available to other applications, e.g. to language
@@ -249,7 +249,7 @@ redemption scripts, allowing applications to make use of any valid
 script type, such as "n-of-m OR y", hash-locked oracle addresses, etc.
 While the IoP protocol has always supported these types of script,
 actually using them on mainnet has been previously inconvenient as
-standard IoP HD nodes wouldn't relay them to miners, nor would
+standard IoP Core nodes wouldn't relay them to miners, nor would
 most miners include them in blocks they mined.
 
 iop-tx
@@ -279,7 +279,7 @@ key and script operations easily accessible via command line.
 Mining and relay policy enhancements
 ------------------------------------
 
-IoP HD's block templates are now for version 3 blocks only, and any mining
+IoP Core's block templates are now for version 3 blocks only, and any mining
 software relying on its `getblocktemplate` must be updated in parallel to use
 libblkmaker either version 0.4.2 or any version from 0.5.1 onward.
 If you are solo mining, this will affect you the moment you upgrade IoP
@@ -292,10 +292,10 @@ achieving its 951/1001 status.
 The `prioritisetransaction` RPC method has been added to enable miners to
 manipulate the priority of transactions on an individual basis.
 
-IoP HD now supports BIP 22 long polling, so mining software can be
+IoP Core now supports BIP 22 long polling, so mining software can be
 notified immediately of new templates rather than having to poll periodically.
 
-Support for BIP 23 block proposals is now available in IoP HD's
+Support for BIP 23 block proposals is now available in IoP Core's
 `getblocktemplate` method. This enables miners to check the basic validity of
 their next block before expending work on it, reducing risks of accidental
 hardforks or mining invalid blocks.
@@ -313,7 +313,7 @@ AllowFreeThreshold(), in which case they are relayed subject to the rate limiter
 BIP 66: strict DER encoding for signatures
 ------------------------------------------
 
-IoP HD 0.10 implements BIP 66, which introduces block version 3, and a new
+IoP Core 0.10 implements BIP 66, which introduces block version 3, and a new
 consensus rule, which prohibits non-DER signatures. Such transactions have been
 non-standard since IoP v0.8.0 (released in February 2013), but were
 technically still permitted inside blocks.
@@ -522,7 +522,7 @@ Wallet:
 GUI:
 - `c21c74b` osx: Fix missing dock menu with qt5
 - `b90711c` Fix Transaction details shows wrong To:
-- `516053c` Make links in 'About IoP HD' clickable
+- `516053c` Make links in 'About IoP Core' clickable
 - `bdc83e8` Ensure payment request network matches client network
 - `65f78a1` Add GUI view of peer information
 - `06a91d9` VerifyDB progress reporting

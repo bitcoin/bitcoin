@@ -1,7 +1,7 @@
 Translation Strings Policy
 ===========================
 
-This document provides guidelines for internationalization of the IoP HD software.
+This document provides guidelines for internationalization of the IoP Core software.
 
 How to translate?
 ------------------

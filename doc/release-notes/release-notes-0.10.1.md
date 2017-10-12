@@ -1,6 +1,6 @@
-IoP HD version 0.10.1 is now available from:
+IoP Core version 0.10.1 is now available from:
 
-  <https://iop.org/bin/iop-hd-0.10.1/>
+  <https://iop.org/bin/iop-core-0.10.1/>
 
 This is a new minor version release, bringing bug fixes and translation 
 updates. It is recommended to upgrade to this version.
@@ -25,7 +25,7 @@ Downgrade warning
 
 Because release 0.10.0 and later makes use of headers-first synchronization and
 parallel block download (see further), the block files and databases are not
-backwards-compatible with pre-0.10 versions of IoP HD or other software:
+backwards-compatible with pre-0.10 versions of IoP Core or other software:
 
 * Blocks will be stored on disk out of order (in the order they are
 received, really), which makes it incompatible with some tools or

@@ -157,11 +157,11 @@ where possible keep them short, uncomplex and easy to verify.
 "Decision Making" Process
 -------------------------
 
-The following applies to code changes to the IoP HD project (and related
+The following applies to code changes to the IoP Core project (and related
 projects such as libsecp256k1), and is not to be confused with overall IoP
 Network Protocol consensus changes.
 
-Whether a pull request is merged into IoP HD rests with the project merge
+Whether a pull request is merged into IoP Core rests with the project merge
 maintainers and ultimately the project lead.
 
 Maintainers will take into consideration if a patch is in line with the general
@@ -260,7 +260,7 @@ about:
 Release Policy
 --------------
 
-The project leader is the release manager for each IoP HD release.
+The project leader is the release manager for each IoP Core release.
 
 Copyright
 ---------
