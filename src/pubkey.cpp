@@ -126,7 +126,6 @@ static int ecdsa_signature_parse_der_lax(const secp256k1_context* ctx, secp256k1
         return 0;
     }
     spos = pos;
-    pos += slen;
 
     /* Ignore leading zeroes in R */
     while (rlen > 0 && input[rpos] == 0) {
