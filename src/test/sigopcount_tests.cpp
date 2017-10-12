@@ -65,4 +65,5 @@ BOOST_AUTO_TEST_CASE(GetSigOpCount)
     BOOST_CHECK_EQUAL(p2sh.GetSigOpCount(scriptSig2), 3U);
 }
 
+
 BOOST_AUTO_TEST_SUITE_END()

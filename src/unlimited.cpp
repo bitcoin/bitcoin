@@ -1722,12 +1722,12 @@ extern UniValue getstructuresizes(const UniValue &params, bool fHelp)
         node.push_back(Pair("vRecvMsg", n.vRecvMsg.size()));
         if (n.pfilter)
         {
-            node.push_back(Pair("pfilter", n.pfilter->GetSerializeSize(SER_NETWORK, PROTOCOL_VERSION)));
+            node.push_back(Pair("pfilter", ::GetSerializeSize(*n.pfilter, SER_NETWORK, PROTOCOL_VERSION)));
         }
         if (n.pThinBlockFilter)
         {
             node.push_back(
-                Pair("pThinBlockFilter", n.pThinBlockFilter->GetSerializeSize(SER_NETWORK, PROTOCOL_VERSION)));
+                Pair("pThinBlockFilter", ::GetSerializeSize(*n.pThinBlockFilter, SER_NETWORK, PROTOCOL_VERSION)));
         }
         node.push_back(Pair("thinblock.vtx", n.thinBlock.vtx.size()));
         uint64_t thinBlockSize = ::GetSerializeSize(n.thinBlock, SER_NETWORK, PROTOCOL_VERSION);

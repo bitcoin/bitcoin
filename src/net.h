@@ -10,6 +10,8 @@
 #include "bloom.h"
 #include "chainparams.h"
 #include "compat.h"
+#include "fs.h"
+#include "hash.h"
 #include "limitedmap.h"
 #include "netbase.h"
 #include "primitives/block.h"
@@ -27,7 +29,6 @@
 #include <arpa/inet.h>
 #endif
 
-#include <boost/filesystem/path.hpp>
 #include <boost/foreach.hpp>
 #include <boost/signals2/signal.hpp>
 

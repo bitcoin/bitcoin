@@ -16,6 +16,50 @@ using namespace std;
 
 BOOST_FIXTURE_TEST_SUITE(serialize_tests, BasicTestingSetup)
 
+class CSerializeMethodsTestSingle
+{
+protected:
+    int intval;
+    bool boolval;
+    std::string stringval;
+    const char* charstrval;
+    CTransaction txval;
+public:
+    CSerializeMethodsTestSingle() = default;
+    CSerializeMethodsTestSingle(int intvalin, bool boolvalin, std::string stringvalin, const char* charstrvalin, CTransaction txvalin) : intval(intvalin), boolval(boolvalin), stringval(std::move(stringvalin)), charstrval(charstrvalin), txval(txvalin){}
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action) {
+        READWRITE(intval);
+        READWRITE(boolval);
+        READWRITE(stringval);
+        READWRITE(FLATDATA(charstrval));
+        READWRITE(txval);
+    }
+
+    bool operator==(const CSerializeMethodsTestSingle& rhs)
+    {
+        return  intval == rhs.intval && \
+                boolval == rhs.boolval && \
+                stringval == rhs.stringval && \
+                strcmp(charstrval, rhs.charstrval) == 0 && \
+                txval == rhs.txval;
+    }
+};
+
+class CSerializeMethodsTestMany : public CSerializeMethodsTestSingle
+{
+public:
+    using CSerializeMethodsTestSingle::CSerializeMethodsTestSingle;
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action) {
+        READWRITEMANY(intval, boolval, stringval, FLATDATA(charstrval), txval);
+    }
+};
+
 BOOST_AUTO_TEST_CASE(sizes)
 {
     BOOST_CHECK_EQUAL(sizeof(char), GetSerializeSize(char(0), 0));
