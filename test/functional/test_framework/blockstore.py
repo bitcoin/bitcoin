@@ -100,7 +100,7 @@ class BlockStore():
     def get_blocks(self, inv):
         responses = []
         for i in inv:
-            if (i.type == 2): # MSG_BLOCK
+            if (i.type == 2 or i.type == (2 | (1 << 30))): # MSG_BLOCK or MSG_WITNESS_BLOCK
                 data = self.get(i.hash)
                 if data is not None:
                     # Use msg_generic to avoid re-serialization
@@ -153,7 +153,7 @@ class TxStore():
     def get_transactions(self, inv):
         responses = []
         for i in inv:
-            if (i.type == 1): # MSG_TX
+            if (i.type == 1 or i.type == (1 | (1 << 30))): # MSG_TX or MSG_WITNESS_TX
                 tx = self.get(i.hash)
                 if tx is not None:
                     responses.append(msg_generic(b"tx", tx))
