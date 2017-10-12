@@ -572,14 +572,17 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5022 - " + _("Cannot edit this alias, guid mismatch");
 					theAlias = dbAlias;
 				}
-				const COfferLinkWhitelist whiteList = theAlias.offerWhitelist;
+				COfferLinkWhitelist whiteList;
 				if (theAlias.IsNull())
 					theAlias = dbAlias;
 				else
 				{
 					// if updating whitelist, we dont allow updating any alias details
 					if (theAlias.offerWhitelist.entries.size() > 0)
+					{
+						whiteList = theAlias.offerWhitelist;
 						theAlias = dbAlias;
+					}
 					else
 					{
 						if (theAlias.vchPublicValue.empty())
@@ -643,17 +646,17 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					if (whiteList.entries.size() > 20)
 					{
 						errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1094 -" + _("Too many affiliates for this whitelist, maximum 20 entries allowed");
-						dbAlias.offerWhitelist.SetNull();
+						theAlias.offerWhitelist.SetNull();
 					}
 					// special case we use to remove all entries
 					else if (whiteList.entries.size() == 1 && whiteList.entries.begin()->second.nDiscountPct == 127)
 					{
-						if (dbAlias.offerWhitelist.entries.empty())
+						if (theAlias.offerWhitelist.entries.empty())
 						{
 							errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1093 - " + _("Whitelist is already empty");
 						}
 						else
-							dbAlias.offerWhitelist.SetNull();
+							theAlias.offerWhitelist.SetNull();
 					}
 					else
 					{
@@ -666,15 +669,15 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 								continue;
 							}
 							// the stored whitelist has this entry (and its the same) then we want to remove this entry
-							if (dbAlias.offerWhitelist.GetLinkEntryByHash(newEntry.aliasLinkVchRand, entry) && newEntry == entry)
+							if (theAlias.offerWhitelist.GetLinkEntryByHash(newEntry.aliasLinkVchRand, entry) && newEntry == entry)
 							{
-								dbAlias.offerWhitelist.RemoveWhitelistEntry(newEntry.aliasLinkVchRand);
+								theAlias.offerWhitelist.RemoveWhitelistEntry(newEntry.aliasLinkVchRand);
 							}
 							// we want to add it to the whitelist
 							else
 							{
-								if (dbAlias.offerWhitelist.entries.size() < 20)
-									dbAlias.offerWhitelist.PutWhitelistEntry(newEntry);
+								if (theAlias.offerWhitelist.entries.size() < 20)
+									theAlias.offerWhitelist.PutWhitelistEntry(newEntry);
 								else
 								{
 									errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1094 -" + _("Too many affiliates for this whitelist, maximum 20 entries allowed");
@@ -682,7 +685,6 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 							}
 						}
 					}
-					theAlias.offerWhitelist = dbAlias.offerWhitelist;
 				}
 			}
 			else
