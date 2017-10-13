@@ -8,19 +8,33 @@
 #include "script/interpreter.h"
 #include "util.h"
 
-
 bool ExtractIndexInfo(const CScript *pScript, int &scriptType, std::vector<uint8_t> &hashBytes)
 {
-    scriptType = 0;
-    if (pScript->IsPayToScriptHash())
-    {
-        hashBytes.assign(pScript->begin()+2, pScript->begin()+22);
-        scriptType = 2;
-    } else
+    CScript tmpScript;
+    if (HasIsCoinstakeOp(*pScript)
+        && GetNonCoinstakeScriptPath(*pScript, tmpScript))
+        return ExtractIndexInfo(&tmpScript, scriptType, hashBytes);
+
+    scriptType = ADDR_INDT_UNKNOWN;
     if (pScript->IsPayToPublicKeyHash())
     {
         hashBytes.assign(pScript->begin()+3, pScript->begin()+23);
-        scriptType = 1;
+        scriptType = ADDR_INDT_PUBKEY_ADDRESS;
+    } else
+    if (pScript->IsPayToScriptHash())
+    {
+        hashBytes.assign(pScript->begin()+2, pScript->begin()+22);
+        scriptType = ADDR_INDT_SCRIPT_ADDRESS;
+    } else
+    if (pScript->IsPayToPublicKeyHash256())
+    {
+        hashBytes.assign(pScript->begin()+3, pScript->begin()+35);
+        scriptType = ADDR_INDT_PUBKEY_ADDRESS_256;
+    } else
+    if (pScript->IsPayToScriptHash256())
+    {
+        hashBytes.assign(pScript->begin()+2, pScript->begin()+34);
+        scriptType = ADDR_INDT_SCRIPT_ADDRESS_256;
     };
 
     return true;
@@ -36,15 +50,7 @@ bool ExtractIndexInfo(const CTxOutBase *out, int &scriptType, std::vector<uint8_
 
     nValue = out->IsType(OUTPUT_STANDARD) ? out->GetValue() : -1;
 
-    CScript tmpScript;
-    if (HasIsCoinstakeOp(*pScript)
-        && GetNonCoinstakeScriptPath(*pScript, tmpScript))
-        pScript = &tmpScript;
-
     ExtractIndexInfo(pScript, scriptType, hashBytes);
-
-    // Reset if HasIsCoinstakeOp
-    pScript = out->GetPScriptPubKey();
 
     return true;
 };

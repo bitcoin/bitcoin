@@ -28,6 +28,7 @@ public:
     }
 
     explicit base_blob(const std::vector<unsigned char>& vch);
+    explicit base_blob(const uint8_t *p, size_t l);
 
     bool IsNull() const
     {
@@ -113,6 +114,7 @@ public:
     uint160() {}
     uint160(const base_blob<160>& b) : base_blob<160>(b) {}
     explicit uint160(const std::vector<unsigned char>& vch) : base_blob<160>(vch) {}
+    explicit uint160(const uint8_t *p, size_t l) : base_blob<160>(p, l) {}
 };
 
 /** 256-bit opaque blob.
@@ -125,6 +127,7 @@ public:
     uint256() {}
     uint256(const base_blob<256>& b) : base_blob<256>(b) {}
     explicit uint256(const std::vector<unsigned char>& vch) : base_blob<256>(vch) {}
+    explicit uint256(const uint8_t *p, size_t l) : base_blob<256>(p, l) {}
 
     /** A cheap hash function that just returns 64 bits from the result, it can be
      * used when the contents are considered uniformly random. It is not appropriate

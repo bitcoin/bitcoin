@@ -1070,7 +1070,7 @@ bool HashOnchainActive(const uint256 &hash)
     return true;
 }
 
-bool GetAddressIndex(uint160 addressHash, int type,
+bool GetAddressIndex(uint256 addressHash, int type,
                      std::vector<std::pair<CAddressIndexKey, CAmount> > &addressIndex, int start, int end)
 {
     if (!fAddressIndex)
@@ -1082,7 +1082,7 @@ bool GetAddressIndex(uint160 addressHash, int type,
     return true;
 }
 
-bool GetAddressUnspent(uint160 addressHash, int type,
+bool GetAddressUnspent(uint256 addressHash, int type,
                        std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue> > &unspentOutputs)
 {
     if (!fAddressIndex)
@@ -1936,9 +1936,9 @@ DisconnectResult DisconnectBlock(const CBlock& block, const CBlockIndex* pindex,
                 || scriptType == 0)
                 continue;
             // undo receiving activity
-            view.addressIndex.push_back(std::make_pair(CAddressIndexKey(scriptType, uint160(hashBytes), pindex->nHeight, i, hash, k, false), nValue));
+            view.addressIndex.push_back(std::make_pair(CAddressIndexKey(scriptType, uint256(hashBytes.data(), hashBytes.size()), pindex->nHeight, i, hash, k, false), nValue));
             // undo unspent index
-            view.addressUnspentIndex.push_back(std::make_pair(CAddressUnspentKey(scriptType, uint160(hashBytes), hash, k), CAddressUnspentValue()));
+            view.addressUnspentIndex.push_back(std::make_pair(CAddressUnspentKey(scriptType, uint256(hashBytes.data(), hashBytes.size()), hash, k), CAddressUnspentValue()));
         };
 
         // Check that all outputs are available and match the outputs in the block itself
@@ -2005,9 +2005,9 @@ DisconnectResult DisconnectBlock(const CBlock& block, const CBlockIndex* pindex,
                             continue;
 
                         // undo spending activity
-                        view.addressIndex.push_back(std::make_pair(CAddressIndexKey(scriptType, uint160(hashBytes), pindex->nHeight, i, hash, j, true), nValue * -1));
+                        view.addressIndex.push_back(std::make_pair(CAddressIndexKey(scriptType, uint256(hashBytes.data(), hashBytes.size()), pindex->nHeight, i, hash, j, true), nValue * -1));
                         // restore unspent index
-                        view.addressUnspentIndex.push_back(std::make_pair(CAddressUnspentKey(scriptType, uint160(hashBytes), input.prevout.hash, input.prevout.n), CAddressUnspentValue(nValue, *pScript, coin.nHeight)));
+                        view.addressUnspentIndex.push_back(std::make_pair(CAddressUnspentKey(scriptType, uint256(hashBytes.data(), hashBytes.size()), input.prevout.hash, input.prevout.n), CAddressUnspentValue(nValue, *pScript, coin.nHeight)));
                     }; // if (fAddressIndex)
                 }; // for (unsigned int j = tx.vin.size(); j-- > 0;)
             };
@@ -2356,49 +2356,47 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
                                  REJECT_INVALID, "bad-txns-nonfinal");
             }
 
-            if (fAddressIndex || fSpentIndex)
+            if (tx.IsParticlVersion()
+                && (fAddressIndex || fSpentIndex))
             {
                 // Update spent inputs for insight
                 for (size_t j = 0; j < tx.vin.size(); j++)
                 {
                     const CTxIn input = tx.vin[j];
-                    if (tx.IsParticlVersion())
+                    if (input.IsAnonInput())
                     {
-                        if (input.IsAnonInput())
-                        {
-                            nAnonIn++;
-                            continue;
-                        };
+                        nAnonIn++;
+                        continue;
+                    };
 
-                        const Coin &coin = view.AccessCoin(input.prevout);
-                        const CScript *pScript = &coin.out.scriptPubKey;
+                    const Coin &coin = view.AccessCoin(input.prevout);
+                    const CScript *pScript = &coin.out.scriptPubKey;
 
-                        CAmount nValue = coin.nType == OUTPUT_CT ? 0 : coin.out.nValue;
-                        std::vector<uint8_t> hashBytes;
-                        int scriptType = 0;
+                    CAmount nValue = coin.nType == OUTPUT_CT ? 0 : coin.out.nValue;
+                    std::vector<uint8_t> hashBytes;
+                    int scriptType = 0;
 
-                        if (!ExtractIndexInfo(pScript, scriptType, hashBytes)
-                            || scriptType == 0)
-                            continue;
+                    if (!ExtractIndexInfo(pScript, scriptType, hashBytes)
+                        || scriptType == 0)
+                        continue;
 
-                        uint160 hashAddress;
-                        if (scriptType > 0)
-                            hashAddress = uint160(hashBytes);
+                    uint256 hashAddress;
+                    if (scriptType > 0)
+                        hashAddress = uint256(hashBytes.data(), hashBytes.size());
 
-                        if (fAddressIndex && scriptType > 0)
-                        {
-                            // record spending activity
-                            view.addressIndex.push_back(std::make_pair(CAddressIndexKey(scriptType, hashAddress, pindex->nHeight, i, txhash, j, true), nValue * -1));
-                            // remove address from unspent index
-                            view.addressUnspentIndex.push_back(std::make_pair(CAddressUnspentKey(scriptType, hashAddress, input.prevout.hash, input.prevout.n), CAddressUnspentValue()));
-                        };
+                    if (fAddressIndex && scriptType > 0)
+                    {
+                        // record spending activity
+                        view.addressIndex.push_back(std::make_pair(CAddressIndexKey(scriptType, hashAddress, pindex->nHeight, i, txhash, j, true), nValue * -1));
+                        // remove address from unspent index
+                        view.addressUnspentIndex.push_back(std::make_pair(CAddressUnspentKey(scriptType, hashAddress, input.prevout.hash, input.prevout.n), CAddressUnspentValue()));
+                    };
 
-                        if (fSpentIndex)
-                        {
-                            // add the spent index to determine the txid and input that spent an output
-                            // and to find the amount and address from an input
-                            view.spentIndex.push_back(std::make_pair(CSpentIndexKey(input.prevout.hash, input.prevout.n), CSpentIndexValue(txhash, j, pindex->nHeight, nValue, scriptType, hashAddress)));
-                        };
+                    if (fSpentIndex)
+                    {
+                        // add the spent index to determine the txid and input that spent an output
+                        // and to find the amount and address from an input
+                        view.spentIndex.push_back(std::make_pair(CSpentIndexKey(input.prevout.hash, input.prevout.n), CSpentIndexValue(txhash, j, pindex->nHeight, nValue, scriptType, hashAddress)));
                     };
                 };
             };
@@ -2560,9 +2558,9 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
                     continue;
 
                 // record receiving activity
-                view.addressIndex.push_back(std::make_pair(CAddressIndexKey(scriptType, uint160(hashBytes), pindex->nHeight, i, txhash, k, false), nValue));
+                view.addressIndex.push_back(std::make_pair(CAddressIndexKey(scriptType, uint256(hashBytes.data(), hashBytes.size()), pindex->nHeight, i, txhash, k, false), nValue));
                 // record unspent output
-                view.addressUnspentIndex.push_back(std::make_pair(CAddressUnspentKey(scriptType, uint160(hashBytes), txhash, k), CAddressUnspentValue(nValue, *pScript, pindex->nHeight)));
+                view.addressUnspentIndex.push_back(std::make_pair(CAddressUnspentKey(scriptType, uint256(hashBytes.data(), hashBytes.size()), txhash, k), CAddressUnspentValue(nValue, *pScript, pindex->nHeight)));
             };
         }; // if (fAddressIndex)
 

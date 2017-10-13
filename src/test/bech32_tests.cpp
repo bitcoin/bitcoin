@@ -28,26 +28,25 @@ BOOST_AUTO_TEST_CASE(bech32_test)
 {
     CBitcoinAddress addr_base58;
     CBitcoinAddress addr_bech32;
-    
+
     for (auto &v : testsPass)
     {
         addr_base58.SetString(v.first);
         CTxDestination dest = addr_base58.Get();
         BOOST_CHECK(addr_bech32.Set(dest, true));
         BOOST_CHECK(addr_bech32.ToString() == v.second);
-        
+
         CTxDestination dest2 = addr_bech32.Get();
         BOOST_CHECK(dest == dest2);
         CBitcoinAddress t58_back(dest2);
         BOOST_CHECK(t58_back.ToString() == v.first);
-        
-        
+
         CBitcoinAddress addr_bech32_2(v.second);
         BOOST_CHECK(addr_bech32_2.IsValid());
         CTxDestination dest3 = addr_bech32_2.Get();
         BOOST_CHECK(dest == dest3);
     };
-    
+
     for (auto &v : testsFail)
     {
         BOOST_CHECK(!addr_bech32.SetString(v));

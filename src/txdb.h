@@ -133,15 +133,15 @@ public:
     bool ReadReindexing(bool &fReindex);
     bool ReadTxIndex(const uint256 &txid, CDiskTxPos &pos);
     bool WriteTxIndex(const std::vector<std::pair<uint256, CDiskTxPos> > &list);
-    
+
     bool ReadSpentIndex(CSpentIndexKey &key, CSpentIndexValue &value);
     bool UpdateSpentIndex(const std::vector<std::pair<CSpentIndexKey, CSpentIndexValue> >&vect);
     bool UpdateAddressUnspentIndex(const std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue > >&vect);
-    bool ReadAddressUnspentIndex(uint160 addressHash, int type,
+    bool ReadAddressUnspentIndex(uint256 addressHash, int type,
                                  std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue> > &vect);
     bool WriteAddressIndex(const std::vector<std::pair<CAddressIndexKey, CAmount> > &vect);
     bool EraseAddressIndex(const std::vector<std::pair<CAddressIndexKey, CAmount> > &vect);
-    bool ReadAddressIndex(uint160 addressHash, int type,
+    bool ReadAddressIndex(uint256 addressHash, int type,
                           std::vector<std::pair<CAddressIndexKey, CAmount> > &addressIndex,
                           int start = 0, int end = 0);
     bool WriteTimestampIndex(const CTimestampIndexKey &timestampIndex);
@@ -151,26 +151,26 @@ public:
     bool WriteFlag(const std::string &name, bool fValue);
     bool ReadFlag(const std::string &name, bool &fValue);
     bool LoadBlockIndexGuts(const Consensus::Params& consensusParams, std::function<CBlockIndex*(const uint256&)> insertBlockIndex);
-    
+
     bool ReadLastRCTOutput(int64_t &rv);
     bool WriteLastRCTOutput(int64_t i);
-    
+
     bool ReadRCTOutput(int64_t i, CAnonOutput &ao);
     bool WriteRCTOutput(int64_t i, const CAnonOutput &ao);
     bool EraseRCTOutput(int64_t i);
-    
+
     bool ReadRCTOutputLink(const CCmpPubKey &pk, int64_t &i);
     bool WriteRCTOutputLink(const CCmpPubKey &pk, int64_t i);
     bool EraseRCTOutputLink(const CCmpPubKey &pk);
-    
+
     bool ReadRCTOutputCheckpoint(int nBlock, int64_t &i);
-    
-    
+
+
     bool ReadRCTKeyImage(const CCmpPubKey &ki, uint256 &txhash);
     bool WriteRCTKeyImage(const CCmpPubKey &ki, const uint256 &txhash);
     bool EraseRCTKeyImage(const CCmpPubKey &ki);
-    
-    
+
+
     //bool WriteRCTOutputBatch(std::vector<std::pair<int64_t, CAnonOutput> > &vao);
 };
 

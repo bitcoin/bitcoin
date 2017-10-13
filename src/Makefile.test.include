@@ -30,7 +30,6 @@ BITCOIN_TESTS =\
   test/addrman_tests.cpp \
   test/amount_tests.cpp \
   test/allocator_tests.cpp \
-  test/base32_tests.cpp \
   test/base58_tests.cpp \
   test/base64_tests.cpp \
   test/bech32_tests.cpp \
@@ -109,7 +108,7 @@ BITCOIN_TESTS += \
   wallet/test/hdwallet_test_fixture.h \
   wallet/test/hdwallet_tests.cpp \
   wallet/test/rpc_hdwallet_tests.cpp
-  
+
 if ENABLE_STAKE_TEST
   BITCOIN_TESTS += \
   wallet/test/stake_tests.cpp
@@ -120,7 +119,7 @@ endif
 
 test_test_particl_SOURCES = $(BITCOIN_TESTS) $(JSON_TEST_FILES) $(RAW_TEST_FILES)
 test_test_particl_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -I$(builddir)/test/ $(TESTDEFS) $(EVENT_CFLAGS)
-test_test_particl_LDADD = 
+test_test_particl_LDADD =
 
 if ENABLE_WALLET
 test_test_particl_LDADD += $(LIBPARTICL_WALLET)
@@ -166,7 +165,7 @@ CLEANFILES += $(CLEAN_BITCOIN_TEST)
 bitcoin_test: $(TEST_BINARY)
 
 bitcoin_test_check: $(TEST_BINARY) FORCE
-	$(MAKE) check-TESTS TESTS=$^ 
+	$(MAKE) check-TESTS TESTS=$^
 
 bitcoin_test_clean : FORCE
 	rm -f $(CLEAN_BITCOIN_TEST) $(test_test_particl_OBJECTS) $(TEST_BINARY)

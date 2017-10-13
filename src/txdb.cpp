@@ -291,7 +291,7 @@ bool CBlockTreeDB::UpdateAddressUnspentIndex(const std::vector<std::pair<CAddres
     return WriteBatch(batch);
 }
 
-bool CBlockTreeDB::ReadAddressUnspentIndex(uint160 addressHash, int type,
+bool CBlockTreeDB::ReadAddressUnspentIndex(uint256 addressHash, int type,
                                            std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue> > &unspentOutputs) {
 
     boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
@@ -331,7 +331,7 @@ bool CBlockTreeDB::EraseAddressIndex(const std::vector<std::pair<CAddressIndexKe
     return WriteBatch(batch);
 }
 
-bool CBlockTreeDB::ReadAddressIndex(uint160 addressHash, int type,
+bool CBlockTreeDB::ReadAddressIndex(uint256 addressHash, int type,
                                     std::vector<std::pair<CAddressIndexKey, CAmount> > &addressIndex,
                                     int start, int end) {
 
@@ -457,19 +457,19 @@ bool CBlockTreeDB::LoadBlockIndexGuts(const Consensus::Params& consensusParams, 
                 pindexNew->nNonce                   = diskindex.nNonce;
                 pindexNew->nStatus                  = diskindex.nStatus;
                 pindexNew->nTx                      = diskindex.nTx;
-                
+
                 pindexNew->nFlags                   = diskindex.nFlags;
                 pindexNew->bnStakeModifier          = diskindex.bnStakeModifier;
                 pindexNew->prevoutStake             = diskindex.prevoutStake;
                 //pindexNew->hashProof                = diskindex.hashProof;
-                
+
                 pindexNew->nMoneySupply             = diskindex.nMoneySupply;
-                
-                
+
+
                 if (pindexNew->nHeight == 0
                     && pindexNew->GetBlockHash() != Params().GetConsensus().hashGenesisBlock)
                     return error("LoadBlockIndex(): Genesis block hash incorrect: %s", pindexNew->ToString());
-                
+
                 if (fParticlMode)
                 {
                     // only CheckProofOfWork for genesis blocks
@@ -481,7 +481,7 @@ bool CBlockTreeDB::LoadBlockIndexGuts(const Consensus::Params& consensusParams, 
                 {
                     return error("%s: CheckProofOfWork failed: %s", __func__, pindexNew->ToString());
                 };
-                
+
                 pcursor->Next();
             } else {
                 return error("%s: failed to read value", __func__);
@@ -497,10 +497,10 @@ bool CBlockTreeDB::LoadBlockIndexGuts(const Consensus::Params& consensusParams, 
 bool CBlockTreeDB::ReadLastRCTOutput(int64_t &rv)
 {
     boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
-    
+
     if (!Read(DB_RCTOUTPUT_LAST, rv))
         rv = 0;
-    
+
     return true;
 };
 

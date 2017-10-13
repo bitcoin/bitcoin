@@ -115,7 +115,7 @@ public:
     bool Set(const CStealthAddress &sx, bool fBech32 = false);
     bool Set(const CExtKeyPair &ek, bool fBech32 = false);
     bool Set(const CTxDestination &dest, bool fBech32 = false);
-    
+
     bool IsValidStealthAddress() const;
     bool IsValidStealthAddress(const CChainParams &params) const;
     bool IsValid() const;
@@ -132,7 +132,7 @@ public:
     bool GetKeyID(CKeyID &keyID) const;
     bool GetKeyID(CKeyID256 &keyID) const;
     bool GetKeyID(CKeyID &keyID, CChainParams::Base58Type prefix) const;
-    bool GetIndexKey(uint160 &hashBytes, int &type) const;
+    bool GetIndexKey(uint256 &hashBytes, int &type) const;
     bool IsScript() const;
 };
 
@@ -166,16 +166,16 @@ public:
         std::vector<uint8_t> vchBytes;
         if (!DecodeBase58(base58, vchBytes))
             return 1;
-        
+
         if (vchBytes.size() != BIP32_KEY_LEN)
             return 2;
-        
+
         if (!VerifyChecksum(vchBytes))
             return 3;
-        
+
         if (0 != memcmp(&vchBytes[0], &Params().Base58Prefix(Type)[0], 4))
             return 4;
-        
+
         SetData(Params().Base58Prefix(Type), &vchBytes[4], &vchBytes[4]+Size);
         return 0;
     }
@@ -208,26 +208,26 @@ class CExtKey58 : public CBase58Data
 {
 public:
     CExtKey58() {};
-    
+
     CExtKey58(const CExtKeyPair &key, CChainParams::Base58Type type)
     {
         SetKey(key, type);
     };
-    
+
     void SetKeyV(const CExtKeyPair &key)
     {
         SetKey(key, CChainParams::EXT_SECRET_KEY);
     };
-    
+
     void SetKeyP(const CExtKeyPair &key)
     {
         SetKey(key, CChainParams::EXT_PUBLIC_KEY);
     };
-    
+
     void SetKey(const CExtKeyPair &key, CChainParams::Base58Type type)
     {
         uint8_t vch[74];
-        
+
         switch (type)
         {
             case CChainParams::EXT_SECRET_KEY:
@@ -240,10 +240,10 @@ public:
                 key.EncodeP(vch);
                 break;
         };
-        
+
         SetData(Params().Base58Prefix(type), vch, vch+74);
     };
-    
+
     CExtKeyPair GetKey()
     {
         CExtKeyPair rv;
@@ -256,7 +256,7 @@ public:
         rv.DecodeP(&vchData[0]);
         return rv;
     };
-    
+
     bool GetPubKey(CExtPubKey &rv, const CChainParams *pparams)
     {
         if (vchVersion == pparams->Base58Prefix(CChainParams::EXT_SECRET_KEY)
@@ -267,22 +267,22 @@ public:
             rv = ek.Neutered();
             return true;
         };
-        
+
         if (vchVersion == pparams->Base58Prefix(CChainParams::EXT_PUBLIC_KEY)
             || vchVersion == pparams->Base58Prefix(CChainParams::EXT_PUBLIC_KEY_BTC))
         {
             rv.Decode(&vchData[0]);
             return true;
         }
-        
+
         return false;
     };
-    
+
     int Set58(const char *base58);
     int Set58(const char *base58, CChainParams::Base58Type type, const CChainParams *pparams);
-    
+
     bool IsValid(CChainParams::Base58Type prefix) const;
-    
+
     std::string ToStringVersion(CChainParams::Base58Type prefix);
 };
 

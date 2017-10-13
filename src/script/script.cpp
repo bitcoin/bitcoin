@@ -139,7 +139,7 @@ const char* GetOpName(opcodetype opcode)
     //case OP_NOP9                   : return "OP_NOP9";
     case OP_ISCOINSTAKE            : return "OP_ISCOINSTAKE";
     case OP_NOP10                  : return "OP_NOP10";
-    
+
 
     case OP_INVALIDOPCODE          : return "OP_INVALIDOPCODE";
 
@@ -237,7 +237,7 @@ bool CScript::IsPayToPublicKeyHash256() const
     // Extra-fast test for pay-to-pubkey-hash CScripts:
     return (this->size() == 37 &&
         (*this)[0] == OP_DUP &&
-        (*this)[1] == OP_HASH160 &&
+        (*this)[1] == OP_SHA256 &&
         (*this)[2] == 0x20 &&
         (*this)[35] == OP_EQUALVERIFY &&
         (*this)[36] == OP_CHECKSIG);

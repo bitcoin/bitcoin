@@ -120,6 +120,16 @@ void AddAddress(CScript *script, UniValue &uv)
     {
         std::vector<unsigned char> hashBytes(script->begin()+3, script->begin()+23);
         uv.push_back(Pair("address", CBitcoinAddress(CKeyID(uint160(hashBytes))).ToString()));
+    } else
+    if (script->IsPayToScriptHash256())
+    {
+        std::vector<unsigned char> hashBytes(script->begin()+2, script->begin()+34);
+        uv.push_back(Pair("address", CBitcoinAddress(CScriptID256(uint256(hashBytes))).ToString()));
+    } else
+    if (script->IsPayToPublicKeyHash256())
+    {
+        std::vector<unsigned char> hashBytes(script->begin()+3, script->begin()+35);
+        uv.push_back(Pair("address", CBitcoinAddress(CKeyID256(uint256(hashBytes))).ToString()));
     };
 }
 
@@ -164,10 +174,14 @@ UniValue blockToDeltasJSON(const CBlock& block, const CBlockIndex* blockindex)
                 CSpentIndexKey spentKey(input.prevout.hash, input.prevout.n);
 
                 if (GetSpentIndex(spentKey, spentInfo)) {
-                    if (spentInfo.addressType == 1) {
-                        delta.push_back(Pair("address", CBitcoinAddress(CKeyID(spentInfo.addressHash)).ToString()));
-                    } else if (spentInfo.addressType == 2)  {
-                        delta.push_back(Pair("address", CBitcoinAddress(CScriptID(spentInfo.addressHash)).ToString()));
+                    if (spentInfo.addressType == ADDR_INDT_PUBKEY_ADDRESS) {
+                        delta.push_back(Pair("address", CBitcoinAddress(CKeyID(uint160(spentInfo.addressHash.begin(), 20))).ToString()));
+                    } else if (spentInfo.addressType == ADDR_INDT_SCRIPT_ADDRESS)  {
+                        delta.push_back(Pair("address", CBitcoinAddress(CScriptID(uint160(spentInfo.addressHash.begin(), 20))).ToString()));
+                    } else if (spentInfo.addressType == ADDR_INDT_PUBKEY_ADDRESS_256) {
+                        delta.push_back(Pair("address", CBitcoinAddress(CKeyID256(spentInfo.addressHash)).ToString()));
+                    } else if (spentInfo.addressType == ADDR_INDT_SCRIPT_ADDRESS_256)  {
+                        delta.push_back(Pair("address", CBitcoinAddress(CScriptID256(spentInfo.addressHash)).ToString()));
                     } else {
                         continue;
                     }
@@ -188,14 +202,14 @@ UniValue blockToDeltasJSON(const CBlock& block, const CBlockIndex* blockindex)
 
         UniValue outputs(UniValue::VARR);
 
-        
+
         for (unsigned int k = 0; k < tx.vpout.size(); k++) {
             const CTxOutBase *out = tx.vpout[k].get();
 
             UniValue delta(UniValue::VOBJ);
-            
+
             delta.push_back(Pair("index", (int)k));
-            
+
             switch (out->GetType())
             {
                 case OUTPUT_STANDARD:
@@ -351,7 +365,7 @@ UniValue getblockhashes(const JSONRPCRequest& request)
     unsigned int low = request.params[1].get_int();
     bool fActiveOnly = false;
     bool fLogicalTS = false;
-    
+
     if (request.params.size() > 2) {
         if (request.params[2].isObject()) {
             UniValue noOrphans = find_value(request.params[2].get_obj(), "noOrphans");
@@ -830,7 +844,7 @@ UniValue getmempoolentry(const JSONRPCRequest& request)
     }
 
     uint256 hash = ParseHashV(request.params[0], "parameter 1");
-    
+
 
     LOCK(mempool.cs);
 
@@ -1046,7 +1060,7 @@ static void ApplyStats(CCoinsStats &stats, CHashWriter& ss, const uint256& hash,
     for (const auto output : outputs) {
         ss << VARINT(output.first + 1);
         ss << output.second.out.scriptPubKey;
-        
+
         if (output.second.nType == OUTPUT_STANDARD)
         {
             ss << VARINT(output.second.out.nValue);

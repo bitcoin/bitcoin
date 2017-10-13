@@ -10,9 +10,17 @@
 #include "amount.h"
 #include "script/script.h"
 
+enum AddressIndexType {
+        ADDR_INDT_UNKNOWN                = 0,
+        ADDR_INDT_PUBKEY_ADDRESS         = 1,
+        ADDR_INDT_SCRIPT_ADDRESS         = 2,
+        ADDR_INDT_PUBKEY_ADDRESS_256     = 3,
+        ADDR_INDT_SCRIPT_ADDRESS_256     = 4,
+    };
+
 struct CAddressUnspentKey {
     unsigned int type;
-    uint160 hashBytes;
+    uint256 hashBytes;
     uint256 txhash;
     size_t index;
 
@@ -34,7 +42,7 @@ struct CAddressUnspentKey {
         index = ser_readdata32(s);
     }
 
-    CAddressUnspentKey(unsigned int addressType, uint160 addressHash, uint256 txid, size_t indexValue) {
+    CAddressUnspentKey(unsigned int addressType, uint256 addressHash, uint256 txid, size_t indexValue) {
         type = addressType;
         hashBytes = addressHash;
         txhash = txid;
@@ -46,7 +54,7 @@ struct CAddressUnspentKey {
     }
 
     void SetNull() {
-        type = 0;
+        type = ADDR_INDT_UNKNOWN;
         hashBytes.SetNull();
         txhash.SetNull();
         index = 0;
@@ -90,7 +98,7 @@ struct CAddressUnspentValue {
 
 struct CAddressIndexKey {
     unsigned int type;
-    uint160 hashBytes;
+    uint256 hashBytes;
     int blockHeight;
     unsigned int txindex;
     uint256 txhash;
@@ -124,7 +132,7 @@ struct CAddressIndexKey {
         spending = f;
     }
 
-    CAddressIndexKey(unsigned int addressType, uint160 addressHash, int height, int blockindex,
+    CAddressIndexKey(unsigned int addressType, uint256 addressHash, int height, int blockindex,
                      uint256 txid, size_t indexValue, bool isSpending) {
         type = addressType;
         hashBytes = addressHash;
@@ -140,7 +148,7 @@ struct CAddressIndexKey {
     }
 
     void SetNull() {
-        type = 0;
+        type = ADDR_INDT_UNKNOWN;
         hashBytes.SetNull();
         blockHeight = 0;
         txindex = 0;
@@ -148,12 +156,11 @@ struct CAddressIndexKey {
         index = 0;
         spending = false;
     }
-
 };
 
 struct CAddressIndexIteratorKey {
     unsigned int type;
-    uint160 hashBytes;
+    uint256 hashBytes;
 
     size_t GetSerializeSize() const {
         return 21;
@@ -169,7 +176,7 @@ struct CAddressIndexIteratorKey {
         hashBytes.Unserialize(s);
     }
 
-    CAddressIndexIteratorKey(unsigned int addressType, uint160 addressHash) {
+    CAddressIndexIteratorKey(unsigned int addressType, uint256 addressHash) {
         type = addressType;
         hashBytes = addressHash;
     }
@@ -179,14 +186,14 @@ struct CAddressIndexIteratorKey {
     }
 
     void SetNull() {
-        type = 0;
+        type = ADDR_INDT_UNKNOWN;
         hashBytes.SetNull();
     }
 };
 
 struct CAddressIndexIteratorHeightKey {
     unsigned int type;
-    uint160 hashBytes;
+    uint256 hashBytes;
     int blockHeight;
 
     size_t GetSerializeSize() const {
@@ -205,7 +212,7 @@ struct CAddressIndexIteratorHeightKey {
         blockHeight = ser_readdata32be(s);
     }
 
-    CAddressIndexIteratorHeightKey(unsigned int addressType, uint160 addressHash, int height) {
+    CAddressIndexIteratorHeightKey(unsigned int addressType, uint256 addressHash, int height) {
         type = addressType;
         hashBytes = addressHash;
         blockHeight = height;
@@ -216,7 +223,7 @@ struct CAddressIndexIteratorHeightKey {
     }
 
     void SetNull() {
-        type = 0;
+        type = ADDR_INDT_UNKNOWN;
         hashBytes.SetNull();
         blockHeight = 0;
     }
@@ -247,12 +254,12 @@ struct CMempoolAddressDelta
 struct CMempoolAddressDeltaKey
 {
     int type;
-    uint160 addressBytes;
+    uint256 addressBytes;
     uint256 txhash;
     unsigned int index;
     int spending;
 
-    CMempoolAddressDeltaKey(int addressType, uint160 addressHash, uint256 hash, unsigned int i, int s) {
+    CMempoolAddressDeltaKey(int addressType, uint256 addressHash, uint256 hash, unsigned int i, int s) {
         type = addressType;
         addressBytes = addressHash;
         txhash = hash;
@@ -260,7 +267,7 @@ struct CMempoolAddressDeltaKey
         spending = s;
     }
 
-    CMempoolAddressDeltaKey(int addressType, uint160 addressHash) {
+    CMempoolAddressDeltaKey(int addressType, uint256 addressHash) {
         type = addressType;
         addressBytes = addressHash;
         txhash.SetNull();

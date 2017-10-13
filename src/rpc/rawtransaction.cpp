@@ -44,7 +44,7 @@ void TxToJSONExpanded(const CTransaction& tx, const uint256 hashBlock, UniValue&
     entry.push_back(Pair("vsize", (int)::GetVirtualTransactionSize(tx)));
     entry.push_back(Pair("version", tx.nVersion));
     entry.push_back(Pair("locktime", (int64_t)tx.nLockTime));
-    
+
     UniValue vin(UniValue::VARR);
     for (const auto &txin : tx.vin)
     {
@@ -79,14 +79,19 @@ void TxToJSONExpanded(const CTransaction& tx, const uint256 hashBlock, UniValue&
                 {
                     in.push_back(Pair("type", "blind"));
                 }
-                if (spentInfo.addressType == 1) {
-                    in.push_back(Pair("address", CBitcoinAddress(CKeyID(spentInfo.addressHash)).ToString()));
-                } else if (spentInfo.addressType == 2)  {
-                    in.push_back(Pair("address", CBitcoinAddress(CScriptID(spentInfo.addressHash)).ToString()));
+                if (spentInfo.addressType == ADDR_INDT_PUBKEY_ADDRESS) {
+                    in.push_back(Pair("address", CBitcoinAddress(CKeyID(*((uint160*)&spentInfo.addressHash))).ToString()));
+                } else if (spentInfo.addressType == ADDR_INDT_SCRIPT_ADDRESS)  {
+                    in.push_back(Pair("address", CBitcoinAddress(CScriptID(*((uint160*)&spentInfo.addressHash))).ToString()));
+                } else if (spentInfo.addressType == ADDR_INDT_PUBKEY_ADDRESS_256)  {
+                    in.push_back(Pair("address", CBitcoinAddress(CKeyID256(spentInfo.addressHash)).ToString()));
+                } else if (spentInfo.addressType == ADDR_INDT_SCRIPT_ADDRESS_256)  {
+                    in.push_back(Pair("address", CBitcoinAddress(CScriptID256(spentInfo.addressHash)).ToString()));
                 }
+
             }
         };
-        
+
         if (tx.HasWitness())
         {
             if (!txin.scriptWitness.IsNull())
@@ -105,7 +110,7 @@ void TxToJSONExpanded(const CTransaction& tx, const uint256 hashBlock, UniValue&
     };
     entry.push_back(Pair("vin", vin));
     UniValue vout(UniValue::VARR);
-    
+
     for (unsigned int i = 0; i < tx.vpout.size(); i++)
     {
         UniValue out(UniValue::VOBJ);
@@ -113,7 +118,7 @@ void TxToJSONExpanded(const CTransaction& tx, const uint256 hashBlock, UniValue&
         OutputToJSON(txid, i, tx.vpout[i].get(), out);
         vout.push_back(out);
     };
-    
+
     entry.push_back(Pair("vout", vout));
 
     if (!hashBlock.IsNull())
@@ -256,7 +261,7 @@ UniValue getrawtransaction(const JSONRPCRequest& request)
 
     CTransactionRef tx;
     uint256 hashBlock;
-    
+
     int nHeight = 0;
     int nConfirmations = 0;
     int nBlockTime = 0;
@@ -459,7 +464,7 @@ UniValue createrawtransaction(const JSONRPCRequest& request)
     UniValue sendTo = request.params[1].get_obj();
 
     CMutableTransaction rawTx;
-    
+
     if (fParticlMode)
         rawTx.nVersion = PARTICL_TXN_VERSION;
 
@@ -516,7 +521,7 @@ UniValue createrawtransaction(const JSONRPCRequest& request)
 
         if (name_ == "data") {
             std::vector<unsigned char> data = ParseHexV(sendTo[name_].getValStr(),"Data");
-            
+
             if (fParticlMode)
             {
                 std::shared_ptr<CTxOutData> out = MAKE_OUTPUT<CTxOutData>();
@@ -535,11 +540,11 @@ UniValue createrawtransaction(const JSONRPCRequest& request)
             if (setAddress.count(address))
                 throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("Invalid parameter, duplicated address: ")+name_);
             setAddress.insert(address);
-            
-            
+
+
             CScript scriptPubKey = GetScriptForDestination(address.Get());
             CAmount nAmount = AmountFromValue(sendTo[name_]);
-            
+
             if (fParticlMode)
             {
                 std::shared_ptr<CTxOutStandard> out = MAKE_OUTPUT<CTxOutStandard>();
@@ -928,10 +933,10 @@ UniValue signrawtransaction(const JSONRPCRequest& request)
 
             {
             const Coin& coin = view.AccessCoin(out);
-            
+
             if (coin.nType != OUTPUT_STANDARD)
                 throw JSONRPCError(RPC_MISC_ERROR, "TODO: make work for !StandardOutput");
-            
+
             if (!coin.IsSpent() && coin.out.scriptPubKey != scriptPubKey) {
                 std::string err("Previous output scriptPubKey mismatch:\n");
                 err = err + ScriptToAsmStr(coin.out.scriptPubKey) + "\nvs:\n"+
@@ -992,7 +997,7 @@ UniValue signrawtransaction(const JSONRPCRequest& request)
     }
 
     bool fHashSingle = ((nHashType & ~SIGHASH_ANYONECANPAY) == SIGHASH_SINGLE);
-    
+
     // Script verification errors
     UniValue vErrors(UniValue::VARR);
 
@@ -1017,7 +1022,7 @@ UniValue signrawtransaction(const JSONRPCRequest& request)
         CScript prevPubKey = coin.out.scriptPubKey;
         CAmount amount = coin.out.nValue;
         memcpy(&vchAmount[0], &amount, 8);
-        
+
         // Only sign SIGHASH_SINGLE if there's a corresponding output:
         if (!fHashSingle || (i < nOutputs))
             ProduceSignature(MutableTransactionSignatureCreator(&keystore, &mtx, i, vchAmount, nHashType), prevPubKey, sigdata);

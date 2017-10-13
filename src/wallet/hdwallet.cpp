@@ -2083,8 +2083,6 @@ bool CHDWallet::IsChange(const CTxOutBase *txout) const
         };
     };
     return false;
-
-
 };
 
 int CHDWallet::GetChangeAddress(CPubKey &pk)
