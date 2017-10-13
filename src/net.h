@@ -84,8 +84,6 @@ static const bool DEFAULT_FORCEDNSSEED = false;
 static const size_t DEFAULT_MAXRECEIVEBUFFER = 5 * 1000;
 static const size_t DEFAULT_MAXSENDBUFFER    = 1 * 1000;
 
-static const ServiceFlags REQUIRED_SERVICES = NODE_NETWORK;
-
 // NOTE: When adjusting this, update rpcnet:setban's help ("24h")
 static const unsigned int DEFAULT_MISBEHAVING_BANTIME = 60 * 60 * 24;  // Default 24-hour ban
 
@@ -130,7 +128,6 @@ public:
     struct Options
     {
         ServiceFlags nLocalServices = NODE_NONE;
-        ServiceFlags nRelevantServices = NODE_NONE;
         int nMaxConnections = 0;
         int nMaxOutbound = 0;
         int nMaxAddnode = 0;
@@ -152,7 +149,6 @@ public:
 
     void Init(const Options& connOptions) {
         nLocalServices = connOptions.nLocalServices;
-        nRelevantServices = connOptions.nRelevantServices;
         nMaxConnections = connOptions.nMaxConnections;
         nMaxOutbound = std::min(connOptions.nMaxOutbound, connOptions.nMaxConnections);
         nMaxAddnode = connOptions.nMaxAddnode;
@@ -175,7 +171,7 @@ public:
     void Interrupt();
     bool GetNetworkActive() const { return fNetworkActive; };
     void SetNetworkActive(bool active);
-    bool OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant *grantOutbound = nullptr, const char *strDest = nullptr, bool fOneShot = false, bool fFeeler = false, bool fAddnode = false);
+    bool OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant *grantOutbound = nullptr, const char *strDest = nullptr, bool fOneShot = false, bool fFeeler = false, bool manual_connection = false);
     bool CheckIncomingNonce(uint64_t nonce);
 
     bool ForNode(NodeId id, std::function<bool(CNode* pnode)> func);
@@ -390,9 +386,6 @@ private:
     /** Services this instance offers */
     ServiceFlags nLocalServices;
 
-    /** Services this instance cares about */
-    ServiceFlags nRelevantServices;
-
     CSemaphore *semOutbound;
     CSemaphore *semAddnode;
     int nMaxConnections;
@@ -513,7 +506,7 @@ public:
     int nVersion;
     std::string cleanSubVer;
     bool fInbound;
-    bool fAddnode;
+    bool m_manual_connection;
     int nStartingHeight;
     uint64_t nSendBytes;
     mapMsgCmdSize mapSendBytesPerMsgCmd;
@@ -585,7 +578,6 @@ class CNode
 public:
     // socket
     std::atomic<ServiceFlags> nServices;
-    ServiceFlags nServicesExpected;
     SOCKET hSocket;
     size_t nSendSize; // total size of all vSendMsg entries
     size_t nSendOffset; // offset inside the first vSendMsg already sent
@@ -623,7 +615,7 @@ public:
     bool fWhitelisted; // This peer can bypass DoS banning.
     bool fFeeler; // If true this node is being used as a short lived feeler.
     bool fOneShot;
-    bool fAddnode;
+    bool m_manual_connection;
     bool fClient;
     const bool fInbound;
     std::atomic_bool fSuccessfullyConnected;
