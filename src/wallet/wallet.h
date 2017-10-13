@@ -19,6 +19,7 @@
 #include "wallet/rpcwallet.h"
 
 #include <algorithm>
+#include <atomic>
 #include <map>
 #include <set>
 #include <stdexcept>
@@ -38,6 +39,8 @@ extern CFeeRate payTxFee;
 extern unsigned int nTxConfirmTarget;
 extern bool bSpendZeroConfChange;
 extern bool fSendFreeTransactions;
+
+extern std::atomic<bool> fRescan;
 
 static const unsigned int DEFAULT_KEYPOOL_SIZE = 100;
 //! -paytxfee default
