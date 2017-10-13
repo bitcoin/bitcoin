@@ -1743,7 +1743,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 		nShipping = AmountFromValue(params[7].get_str());
 	}
 
-	int nNetworkFee = getFeePerByte(paymentOptionMask);
+	int nNetworkFee = 0;
 	float fEscrowFee = getEscrowFee();
 
 	float fWitnessFee = 0;
@@ -1779,7 +1779,8 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	}
 	// payment options - and convert payment options string to a bitmask for the txn
 	uint64_t paymentOptionMask = GetPaymentOptionsMaskFromString(paymentOption);
-
+	if (nNetworkFee <= 0)
+		nNetworkFee = getFeePerByte(paymentOptionMask);
 
 	CAmount nBidPerUnit = 0;
 	if (CheckParam(params, 13))
