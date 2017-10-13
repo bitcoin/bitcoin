@@ -1538,7 +1538,7 @@ bool BuildOfferJson(const COffer& theOffer, UniValue& oOffer)
 		auctionOffer = theOffer.auctionOffer;
 	if(!theOffer.linkOfferTuple.first.empty()) {
 		oOffer.push_back(Pair("currency", stringFromVch(linkOffer.sCurrencyCode)));
-		oOffer.push_back(Pair("price", linkOffer.GetPrice(true)));
+		oOffer.push_back(Pair("price", linkOffer.GetPrice()));
 		oOffer.push_back(Pair("commission", theOffer.nCommission));
 		oOffer.push_back(Pair("offerlink_guid", stringFromVch(theOffer.linkOfferTuple.first)));
 		oOffer.push_back(Pair("offerlink_seller", stringFromVch(linkOffer.aliasTuple.first)));
@@ -1553,7 +1553,7 @@ bool BuildOfferJson(const COffer& theOffer, UniValue& oOffer)
 	else
 	{
 		oOffer.push_back(Pair("currency", stringFromVch(theOffer.sCurrencyCode)));
-		oOffer.push_back(Pair("price", theOffer.GetPrice(true)));
+		oOffer.push_back(Pair("price", theOffer.GetPrice()));
 		oOffer.push_back(Pair("commission", 0));
 		oOffer.push_back(Pair("offerlink_guid", ""));
 		oOffer.push_back(Pair("offerlink_seller", ""));
@@ -1600,7 +1600,7 @@ bool BuildOfferIndexerJson(const COffer& theOffer, UniValue& oOffer)
 		auctionOffer = theOffer.auctionOffer;
 	if (!theOffer.linkOfferTuple.first.empty()) {
 		oOffer.push_back(Pair("currency", stringFromVch(linkOffer.sCurrencyCode)));
-		oOffer.push_back(Pair("price", linkOffer.GetPrice(true)));
+		oOffer.push_back(Pair("price", linkOffer.GetPrice()));
 		oOffer.push_back(Pair("paymentoptions", GetPaymentOptionsString(linkOffer.paymentOptions)));
 		nQty = linkOffer.nQty;
 		offerTypeStr = GetOfferTypeString(linkOffer.offerType);
@@ -1610,7 +1610,7 @@ bool BuildOfferIndexerJson(const COffer& theOffer, UniValue& oOffer)
 	else
 	{
 		oOffer.push_back(Pair("currency", stringFromVch(theOffer.sCurrencyCode)));
-		oOffer.push_back(Pair("price", theOffer.GetPrice(true)));
+		oOffer.push_back(Pair("price", theOffer.GetPrice()));
 		oOffer.push_back(Pair("paymentoptions", GetPaymentOptionsString(theOffer.paymentOptions)));
 		offerTypeStr = GetOfferTypeString(theOffer.offerType);
 	}
@@ -1701,54 +1701,15 @@ void OfferTxToJSON(const int op, const std::vector<unsigned char> &vchData, cons
 	if(!offer.sCurrencyCode.empty()  && offer.sCurrencyCode != dbOffer.sCurrencyCode)
 		entry.push_back(Pair("currency", stringFromVch(offer.sCurrencyCode)));
 
-	if(offer.GetPrice(true) != dbOffer.GetPrice(true))
-		entry.push_back(Pair("price", offer.GetPrice(true)));
+	if(offer.GetPrice() != dbOffer.GetPrice())
+		entry.push_back(Pair("price", offer.GetPrice()));
 
 	if(offer.bPrivate != dbOffer.bPrivate)
 		entry.push_back(Pair("private", offer.bPrivate));
 }
-double COffer::GetPrice(const COfferLinkWhitelistEntry& entry, bool display) const {
-	double price = boost::lexical_cast<double>(fPrice);
-	if (!display)
-	{
-		if (IsOfferTypeInMask(offerType, OFFERTYPE_COIN))
-			price = fUnits;
-		else if (fUnits != 1)
-			price *= fUnits;
-	}
-
-	char nDiscount = entry.nDiscountPct;
-	if (entry.nDiscountPct > 99)
-		nDiscount = 0;
-	// nMarkup is a percentage, commission minus discount
-	char nMarkup = nCommission - nDiscount;
-	if (nMarkup != 0)
-	{
-		double lMarkup = 1 / (nMarkup / 100.0);
-		lMarkup = floorf(lMarkup * 100) / 100;
-		double priceMarkup = price / lMarkup;
-		price += priceMarkup;
-	}
-	return price;
-}
-double COffer::GetPrice(bool display) const {
-	double price = boost::lexical_cast<double>(fPrice);
-	if (!display)
-	{
-		if (IsOfferTypeInMask(offerType, OFFERTYPE_COIN))
-			price = fUnits;
-		else if (fUnits != 1)
-			price *= fUnits;
-	}
-
-	// nMarkup is a percentage, commission
-	char nMarkup = nCommission;
-	if (nMarkup != 0)
-	{
-		double lMarkup = 1 / (nMarkup / 100.0);
-		lMarkup = floorf(lMarkup * 100) / 100;
-		double priceMarkup = price / lMarkup;
-		price += priceMarkup;
-	}
+float COffer::GetPrice() const {
+	float price = fPrice;
+	if (nCommission != 0)
+		price += price*(nCommission /100);
 	return price;
 }

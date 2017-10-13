@@ -868,9 +868,9 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	// should fail: generate an offer using expired alias
 	BOOST_CHECK_THROW(CallRPC("node2", "offernew aliasexpirednode2 category title 1 0.05 description USD"), runtime_error);
 	// should fail: new escrow with expired arbiter alias
-	BOOST_CHECK_THROW(CallRPC("node2", "escrownew false aliasexpire2node2 " + offerguid + " 1 " + " true 0 aliasexpirednode2"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node2", "escrownew false aliasexpire2node2 aliasexpirednode2 " + offerguid + " 1 " + " true 0"), runtime_error);
 	// should fail: new escrow with expired alias
-	BOOST_CHECK_THROW(CallRPC("node2", "escrownew false aliasexpirednode2 " + offerguid + " 1 " + " true 0 aliasexpire"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node2", "escrownew false aliasexpirednode2 aliasexpire " + offerguid + " 1 " + " true 0"), runtime_error);
 
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate aliasexpire newdata1"));
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate aliasexpire2 newdata1"));

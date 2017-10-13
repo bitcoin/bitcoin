@@ -161,8 +161,7 @@ public:
 			READWRITE(vchOffer);
 			READWRITE(linkAliasTuple);
 	}
-	double GetPrice(const COfferLinkWhitelistEntry& entry, bool display = false) const;
-	double GetPrice(bool display = false) const;
+	float GetPrice() const;
     inline friend bool operator==(const COffer &a, const COffer &b) {
 		return (
 			a.sCategory == b.sCategory

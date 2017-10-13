@@ -196,9 +196,6 @@ BOOST_AUTO_TEST_CASE (generate_offernew_linkedoffer)
 	// it was already added to whitelist, update it to 5% discount
 	AliasAddWhitelist("node1", "selleralias5", "selleralias6", "5");
 
-	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "offerinfo " + lofferguid));
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "price").get_real(), 12);
-
 	// generate a cert offer using a negative percentage bigger or equal to than discount which was set to 5% (uses -5 in calculcation)
 	BOOST_CHECK_THROW(r = CallRPC("node2", "offerlink selleralias6 " + offerguid + " -5 newdescription"), runtime_error);	
 
@@ -328,23 +325,15 @@ BOOST_AUTO_TEST_CASE (generate_offerupdate_editcurrency)
 	// accept and confirm payment is accurate with usd
 	string escrowguid = OfferAccept("node1", "node2", "buyeraliascurrency", "arbiteraliascurrency", offerguid, "2");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "escrowinfo " + escrowguid));
-	CAmount nTotal = AmountFromValue(find_value(r.get_obj(), "total"));
-	CAmount nArbiterFee = AmountFromValue(find_value(r.get_obj(), "arbiterfee"));
-	CAmount nNetworkFee = AmountFromValue(find_value(r.get_obj(), "networkfee"));
-	nTotal = nTotal - nArbiterFee - nNetworkFee;
-	CAmount sTotal = AmountFromValue(find_value(r.get_obj(), "stotal"));
+	CAmount nTotal = AmountFromValue(find_value(r.get_obj(), "total_without_fee"));
 	// 2690.1 SYS/USD
-	BOOST_CHECK_EQUAL(sTotal, AmountFromValue(2*0.05));
 	BOOST_CHECK_EQUAL(nTotal, AmountFromValue(2 * 0.05*2690.1));
 	// perform a valid update
 	OfferUpdate("node1", "selleraliascurrency", offerguid, "category", "titlenew", "90", "0.15", "descriptionnew", "CAD");
 	// accept and confirm payment is accurate with cad
 	escrowguid = OfferAccept("node1", "node2", "buyeraliascurrency", "arbiteraliascurrency", offerguid, "3");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "escrowinfo " + escrowguid));
-	nTotal = AmountFromValue(find_value(r.get_obj(), "total"));
-	nArbiterFee = AmountFromValue(find_value(r.get_obj(), "arbiterfee"));
-	nNetworkFee = AmountFromValue(find_value(r.get_obj(), "networkfee"));
-	nTotal = nTotal - nArbiterFee - nNetworkFee;
+	nTotal = AmountFromValue(find_value(r.get_obj(), "total_without_fee"));
 	// 2698.0 SYS/CAD
 	BOOST_CHECK_EQUAL(nTotal, AmountFromValue(3*0.15*2698.0));
 
@@ -358,10 +347,7 @@ BOOST_AUTO_TEST_CASE (generate_offerupdate_editcurrency)
 	// accept and confirm payment is accurate with sys
 	escrowguid = OfferAccept("node1", "node2", "buyeraliascurrency", "arbiteraliascurrency", offerguid, "3");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "escrowinfo " + escrowguid));
-	nTotal = AmountFromValue(find_value(r.get_obj(), "total"));
-	nArbiterFee = AmountFromValue(find_value(r.get_obj(), "arbiterfee"));
-	nNetworkFee = AmountFromValue(find_value(r.get_obj(), "networkfee"));
-	nTotal = nTotal - nArbiterFee - nNetworkFee;
+	nTotal = AmountFromValue(find_value(r.get_obj(), "total_without_fee"));
 	// 1 SYS/SYS
 	BOOST_CHECK_EQUAL(nTotal, AmountFromValue(3));
 
@@ -369,16 +355,13 @@ BOOST_AUTO_TEST_CASE (generate_offerupdate_editcurrency)
 	// accept and confirm payment is accurate with btc
 	escrowguid = OfferAccept("node1", "node2", "buyeraliascurrency", "arbiteraliascurrency", offerguid, "4");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "escrowinfo " + escrowguid));
-	nTotal = AmountFromValue(find_value(r.get_obj(), "total"));
-	nArbiterFee = AmountFromValue(find_value(r.get_obj(), "arbiterfee"));
-	nNetworkFee = AmountFromValue(find_value(r.get_obj(), "networkfee"));
-	nTotal = nTotal - nArbiterFee - nNetworkFee;
+	nTotal = AmountFromValue(find_value(r.get_obj(), "total_without_fee"));
 	// 100000.0 SYS/BTC
 	BOOST_CHECK_EQUAL(nTotal, AmountFromValue(4*0.00001000*100000.0));
 
 	// try to update currency and accept in same block, ensure payment uses old currency not new
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "offerupdate selleraliascurrency " + offerguid + " category title 93 0.2 desc EUR"));
-	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "escrownew false buyeraliascurrency " + offerguid + " 10 true 0 arbiteraliascurrency"));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "escrownew false buyeraliascurrency arbiteraliascurrency " + offerguid + " 10 true 0"));
 	const UniValue &arr = r.get_array();
 	escrowguid = arr[1].get_str();
 	GenerateBlocks(5);
@@ -387,20 +370,14 @@ BOOST_AUTO_TEST_CASE (generate_offerupdate_editcurrency)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "offerinfo " + offerguid));
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "currency").get_str(), "EUR");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "escrowinfo " + escrowguid));
-	nTotal = AmountFromValue(find_value(r.get_obj(), "total"));
-	nArbiterFee = AmountFromValue(find_value(r.get_obj(), "arbiterfee"));
-	nNetworkFee = AmountFromValue(find_value(r.get_obj(), "networkfee"));
-	nTotal = nTotal - nArbiterFee - nNetworkFee;
+	nTotal = AmountFromValue(find_value(r.get_obj(), "total_without_fee"));
 	// still used BTC conversion amount
 	BOOST_CHECK_EQUAL(nTotal, AmountFromValue(10*0.00001000*100000.0));
 	// 2695.2 SYS/EUR
 	escrowguid = OfferAccept("node1", "node2", "buyeraliascurrency", "arbiteraliascurrency", offerguid, "3");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "escrowinfo " + escrowguid));
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "currency").get_str(), "EUR");
-	nTotal = AmountFromValue(find_value(r.get_obj(), "total"));
-	nArbiterFee = AmountFromValue(find_value(r.get_obj(), "arbiterfee"));
-	nNetworkFee = AmountFromValue(find_value(r.get_obj(), "networkfee"));
-	nTotal = nTotal - nArbiterFee - nNetworkFee;
+	nTotal = AmountFromValue(find_value(r.get_obj(), "total_without_fee"));
 	BOOST_CHECK_EQUAL(nTotal, AmountFromValue(3*0.2*2695.2));
 
 	// linked offer with root and linked offer changing currencies
@@ -431,13 +408,13 @@ BOOST_AUTO_TEST_CASE (generate_offeraccept)
 
 	
 	// perform an accept on negative quantity
-	BOOST_CHECK_THROW(r = CallRPC("node2", "escrownew false buyeralias3 " + offerguid + " -1 true 0 arbiteralias3"), runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC("node2", "escrownew false buyeralias3 arbiteralias3 " + offerguid + " -1 true 0"), runtime_error);
 
 	// perform an accept on zero quantity
-	BOOST_CHECK_THROW(r = CallRPC("node2", "escrownew false buyeralias3 " + offerguid + " 0 true 0 arbiteralias3"), runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC("node2", "escrownew false buyeralias3 arbiteralias3 " + offerguid + " 0 true 0"), runtime_error);
 
 	// perform an accept on more items than available
-	BOOST_CHECK_THROW(r = CallRPC("node2", "escrownew false buyeralias3 " + offerguid + " 100 true 0 arbiteralias3"), runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC("node2", "escrownew false buyeralias3 arbiteralias3 " + offerguid + " 100 true 0"), runtime_error);
 
 
 }
@@ -514,7 +491,7 @@ BOOST_AUTO_TEST_CASE (generate_offerexpired)
 	ExpireAlias("buyeralias4");
 
 	// should fail: perform an accept on expired offer
-	BOOST_CHECK_THROW(r = CallRPC("node2", "escrownew false buyeralias4 " + offerguid + " 1 true 0 arbiteralias4"), runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC("node2", "escrownew false buyeralias4 arbiteralias4 " + offerguid + " 1 true 0"), runtime_error);
 
 	// should fail: offer update on an expired offer
 	BOOST_CHECK_THROW(r = CallRPC("node1", "offerupdate selleralias4 " + offerguid + " category title 90 0.15 description"), runtime_error);
@@ -581,7 +558,7 @@ BOOST_AUTO_TEST_CASE (generate_certofferexpired)
 	offerguid = OfferNew("node1", "node1alias2a", "certificates", "title", "1", "0.05", "description", "USD", certguid1);
 	ExpireAlias("node2alias2");
 	// should fail: accept an offer with expired alias
-	BOOST_CHECK_THROW(r = CallRPC("node2", "escrownew false node2alias2 " + offerguid + " 1 true 0 node3alias2"), runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC("node2", "escrownew false node2alias2 node3alias2 " + offerguid + " 1 true 0"), runtime_error);
 	// should fail: generate a cert offer using an expired cert
 	BOOST_CHECK_THROW(r = CallRPC("node1", "offernew node1alias2 certificates title 1 0.05 description USD " + certguid1), runtime_error);
 	/// should fail: generate a cert offer using an expired cert

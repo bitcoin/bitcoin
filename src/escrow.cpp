@@ -83,55 +83,20 @@ int64_t GetEscrowDepositFee(const int64_t &escrowValue, const float &fDepositPer
 	int64_t nMinDep = escrowValue / fee;
 	return nMinDep;
 }
-// check that the minimum arbiter fee is found in nBalance (escrow address balance)
-bool ValidateArbiterFee(const CAmount &nBalance, const CEscrow &escrow) {
-	CAmount nFee = nBalance;
-	nFee -= escrow.nTotalWithoutFee;
-	nFee -= escrow.nDeposit;
-	nFee -= escrow.nNetworkFee;
-	nFee -= escrow.nWitnessFee;
-	nFee -= escrow.nShipping;
-	return GetEscrowArbiterFee(escrow.nTotalWithoutFee, 0.005) <= nFee && nFee >= escrow.nArbiterFee;
+// check that the minimum arbiter fee is found
+bool ValidateArbiterFee(const CEscrow &escrow) {
+	CAmount nTotalWithoutFee = escrow.nAmountOrBidPerUnit*escrow.nQty;
+	return GetEscrowArbiterFee(nTotalWithoutFee, 0.005) <= escrow.nArbiterFee;
 }
-// check that the minimum deposit is found in nBalance (escrow address balance)
-bool ValidateDepositFee(const CAmount &nBalance, const float &fDepositPercentage, const CEscrow &escrow) {
-	CAmount nFee = nBalance;
-	nFee -= escrow.nTotalWithoutFee;
-	nFee -= escrow.nArbiterFee;
-	nFee -= escrow.nNetworkFee;
-	nFee -= escrow.nWitnessFee;
-	nFee -= escrow.nShipping;
-	return GetEscrowDepositFee(escrow.nTotalWithoutFee, fDepositPercentage) <= nFee && nFee >= escrow.nDeposit;
+// check that the minimum deposit is found
+bool ValidateDepositFee(const float &fDepositPercentage, const CEscrow &escrow) {
+	CAmount nTotalWithoutFee = escrow.nAmountOrBidPerUnit*escrow.nQty;
+	return GetEscrowDepositFee(nTotalWithoutFee, fDepositPercentage) <= escrow.nDeposit;
 }
-// check that the minimum network fee is found in nBalance (escrow address balance)
-bool ValidateNetworkFee(const CAmount &nBalance, const CEscrow &escrow) {
-	CAmount nFee = nBalance;
-	nFee -= escrow.nTotalWithoutFee;
-	nFee -= escrow.nArbiterFee;
-	nFee -= escrow.nDeposit;
-	nFee -= escrow.nWitnessFee;
-	nFee -= escrow.nShipping;
-	return getFeePerByte(escrow.nPaymentOption)*400 <= nFee && nFee >= escrow.nNetworkFee;
-}
-// check that the witness fee (if present) is found in nBalance (escrow address balance)
-bool ValidateWitnessFee(const CAmount &nBalance, const CEscrow &escrow) {
-	CAmount nFee = nBalance;
-	nFee -= escrow.nTotalWithoutFee;
-	nFee -= escrow.nArbiterFee;
-	nFee -= escrow.nNetworkFee;
-	nFee -= escrow.nDeposit;
-	nFee -= escrow.nShipping;
-	return nFee >= escrow.nWitnessFee;
-}
-// check that the shipping amount (if present) is found in nBalance (escrow address balance)
-bool ValidateShipping(const CAmount &nBalance, const CEscrow &escrow) {
-	CAmount nFee = nBalance;
-	nFee -= escrow.nTotalWithoutFee;
-	nFee -= escrow.nArbiterFee;
-	nFee -= escrow.nNetworkFee;
-	nFee -= escrow.nDeposit;
-	nFee -= escrow.nWitnessFee;
-	return nFee >= escrow.nShipping;
+// check that the minimum network fee is found
+bool ValidateNetworkFee(const CEscrow &escrow) {
+	CAmount nTotalWithoutFee = escrow.nAmountOrBidPerUnit*escrow.nQty;
+	return getFeePerByte(escrow.nPaymentOption)*400 <= escrow.nNetworkFee;
 }
 
 uint64_t GetEscrowExpiration(const CEscrow& escrow) {
@@ -173,6 +138,20 @@ string escrowFromOp(int op) {
     default:
         return "<unknown escrow op>";
     }
+	return "<unknown escrow op>";
+}
+string EscrowRoleToString(int role) {
+	switch (role) {
+	case EscrowRoles::BUYER:
+		return "buyer";
+	case EscrowRoles::SELLER:
+		return "seller";
+	case EscrowRoles::ARBITER:
+		return "arbiter";
+	default:
+		return "unknown";
+	}
+	return "unknown";
 }
 bool CEscrow::UnserializeFromData(const vector<unsigned char> &vchData, const vector<unsigned char> &vchHash) {
     try {
@@ -930,17 +909,12 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 
 			escrowOp = serializedEscrow.op;
 			if (op == OP_ESCROW_BID) {
-				if (theEscrow.offerTuple != serializedEscrow.offerTuple)
-				{
-					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4050 - " + _("Escrow bid offer mismatch");
-					return true;
-				}
 				if (theEscrow.op != OP_ESCROW_ACTIVATE)
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4050 - " + _("Can only bid on an active escrow");
 					return true;
 				}
-				if (serializedEscrow.nTotalWithFee <= theEscrow.nTotalWithFee)
+				if (serializedEscrow.nAmountOrBidPerUnit <= theEscrow.nAmountOrBidPerUnit)
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4040 - " + _("Bid must be higher than the previous bid, please enter a higher amount");
 					return true;
@@ -1006,7 +980,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				if (!serializedEscrow.vchWitness.empty())
 					theEscrow.vchWitness = serializedEscrow.vchWitness;
 				theEscrow.fBidPerUnit = serializedEscrow.fBidPerUnit;
-				theEscrow.nBidPerUnit = serializedEscrow.nBidPerUnit;
+				theEscrow.nAmountOrBidPerUnit = serializedEscrow.nAmountOrBidPerUnit;
 				theEscrow.op = escrowOp;
 				theEscrow.txHash = tx.GetHash();
 				theEscrow.nHeight = nHeight;
@@ -1027,12 +1001,6 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4040 - " + _("Shipping total was not increased");
 					return true;
 				}
-				if (serializedEscrow.nTotalWithFee <= theEscrow.nTotalWithFee)
-				{
-					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4040 - " + _("Total with fee must be increased with added shipping cost");
-					return true;
-				}
-				theEscrow.nTotalWithFee = serializedEscrow.nTotalWithFee;
 				theEscrow.nShipping = serializedEscrow.nShipping;
 			}
 			else if (op == OP_ESCROW_ACKNOWLEDGE)
@@ -1534,11 +1502,9 @@ UniValue escrowbid(const UniValue& params, bool fHelp) {
 
 	scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << bidderalias.vchAlias << bidderalias.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_DROP;
 	scriptPubKeyAlias += scriptPubKeyAliasOrig;
-	const CNameTXIDTuple &offerTuple = theEscrow.offerTuple;
 	theEscrow.ClearEscrow();
 	theEscrow.op = OP_ESCROW_ACTIVATE;
-	theEscrow.offerTuple = offerTuple;
-	theEscrow.nBidPerUnit = nBid;
+	theEscrow.nAmountOrBidPerUnit = nBid;
 	theEscrow.fBidPerUnit = fBid;
 	theEscrow.nHeight = chainActive.Tip()->nHeight;
 	theEscrow.linkAliasTuple = CNameTXIDTuple(bidderalias.vchAlias, bidderalias.txHash, bidderalias.vchGUID);
@@ -1659,7 +1625,6 @@ UniValue escrowaddshipping(const UniValue& params, bool fHelp) {
 
 	theEscrow.ClearEscrow();
 	theEscrow.op = OP_ESCROW_ADD_SHIPPING;
-	theEscrow.nTotalWithFee += nShipping;
 	theEscrow.nShipping += nShipping;
 	theEscrow.linkAliasTuple = CNameTXIDTuple(bidderalias.vchAlias, bidderalias.txHash, bidderalias.vchGUID);
 	theEscrow.nHeight = chainActive.Tip()->nHeight;
@@ -1731,62 +1696,83 @@ UniValue escrowaddshipping(const UniValue& params, bool fHelp) {
 	return res;
 }
 UniValue escrownew(const UniValue& params, bool fHelp) {
-    if (fHelp || params.size() < 7 ||  params.size() > 15)
+    if (fHelp || params.size() < 7 ||  params.size() > 17)
         throw runtime_error(
-			"escrownew <getamountandaddress> <alias> <offer> <quantity> <buynow> <bid_in_payment_option> <arbiter alias> [bid_in_offer_currency] [shipping amount] [network fee] [arbiter fee] [witness fee] [extTx] [payment option] [witness]\n"
+			"escrownew <getamountandaddress> <alias> <arbiter alias> <offer> <quantity> <buynow> <total_in_payment_option> [shipping amount] [network fee] [arbiter fee] [witness fee] [extTx] [payment option] [bid_in_payment_option] [bid_in_offer_currency] [witness]\n"
 				"<getamountandaddress> True or false. Get deposit and total escrow amount aswell as escrow address for funding. If buynow is false pass bid amount in bid_in_payment_option to get total needed to complete escrow. If buynow is true amount is calculated based on offer price and quantity.\n"
 				"<alias> An alias you own.\n"
+				"<arbiter alias> Alias of Arbiter.\n"
                 "<offer> GUID of offer that this escrow is managing.\n"
                 "<quantity> Quantity of items to buy of offer.\n"
 				"<buynow> Specify whether the escrow involves purchasing offer for the full offer price if set to true, or through a bidding auction if set to false. If buynow is false, an initial deposit may be used to secure a bid if required by the seller.\n"
-				"<bid_in_payment_option> Amount you are willing to pay escrow for this offer. Amount is in paymentOption currency. It is per unit of purchase. If buynow is set to true, this value is disregarded. \n"
-				"<arbiter alias> Alias of Arbiter.\n"
-				"<bid_in_offer_currency> Converted value of amount_in_payment_option from paymentOption currency to offer currency. For example: offer is priced in USD and purchased in BTC, this field will be the BTC/USD value. If buynow is set to true, this value is disregarded.\n"
+				"<total_in_payment_option> Total amount of the offer price. Amount is in paymentOption currency. It is per unit of purchase. \n"
 				"<shipping amount> Amount to add to shipping for merchant. Amount is in paymentOption currency. Example: If merchant requests 0.1 BTC for shipping and escrow is paid in BTC, enter 0.1 here. Default is 0. Buyer can also add shipping using escrowaddshipping upon merchant request.\n"
 				"<network fee> Network fee in satoshi per byte for the transaction. Generally the escrow transaction is about 400 bytes. Default is 25 for SYS or ZEC and 250 for BTC payments.\n"
 				"<arbiter fee> Arbiter fee in fractional amount of the amount_in_payment_option value. For example 0.75% is 0.0075 and represents 0.0075*amount_in_payment_option satoshis paid to arbiter in the event arbiter is used to resolve a dispute. Default and minimum is 0.005.\n"
 				"<witness fee> Witness fee in fractional amount of the amount_in_payment_option value. For example 0.3% is 0.003 and represents 0.003*amount_in_payment_option satoshis paid to witness in the event witness signs off on an escrow through any of the following calls escrownew/escrowbid/escrowrelease/escrowrefund. Default is 0.\n"
 				"<extTx> External transaction ID if paid with another blockchain.\n"
 				"<paymentOption> If extTx is defined, specify a valid payment option used to make payment. Default is SYS.\n"
+				"<bid_in_payment_option> Initial bid amount you are willing to pay escrow for this offer. Amount is in paymentOption currency. It is per unit of purchase. If buynow is set to true, this value is disregarded.\n"
+				"<bid_in_offer_currency> Converted value of bid_in_payment_option from paymentOption currency to offer currency. For example: offer is priced in USD and purchased in BTC, this field will be the BTC/USD value. If buynow is set to true, this value is disregarded.\n"
                 "<witness> Witness alias name that will sign for web-of-trust notarization of this transaction.\n"	
 				+ HelpRequiringPassphrase());
 	bool bGetAmountAndAddress = params[0].get_str() == "true" ? true : false;
 	vector<unsigned char> vchAlias = vchFromValue(params[1]);
-	vector<unsigned char> vchOffer = vchFromValue(params[2]);
+	string strArbiter = params[2].get_str();
+	vector<unsigned char> vchOffer = vchFromValue(params[3]);
 	unsigned int nQty = 1;
 
 	try {
-		nQty = boost::lexical_cast<unsigned int>(params[3].get_str());
+		nQty = boost::lexical_cast<unsigned int>(params[4].get_str());
 	} catch (std::exception &e) {
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4511 - " + _("Invalid quantity value. Quantity must be less than 4294967296."));
 	}
-	bool bBuyNow = params[4].get_str() == "true"? true: false;
-	CAmount nBidPerUnit = AmountFromValue(params[5]);
+	bool bBuyNow = params[5].get_str() == "true"? true: false;
+	CAmount nPricePerUnit = AmountFromValue(params[6]);
+	
 	uint64_t nHeight = chainActive.Tip()->nHeight;
-	string strArbiter = params[6].get_str();
 	boost::algorithm::to_lower(strArbiter);
 	// check for alias existence in DB
 	CAliasIndex arbiteralias;
 	if (!GetAlias(vchFromString(strArbiter), arbiteralias))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4509 - " + _("Failed to read arbiter alias from DB"));
 
-	float fBidPerUnit = 0;
+	CAmount nShipping = 0;
 	if (CheckParam(params, 7))
-		fBidPerUnit = boost::lexical_cast<float>(params[7].get_str());
+	{
+		nShipping = AmountFromValue(params[7].get_str());
+	}
+
+	int nNetworkFee = getFeePerByte(paymentOptionMask);
+	float fEscrowFee = getEscrowFee();
+
+	float fWitnessFee = 0;
+	if (CheckParam(params, 8))
+	{
+		nNetworkFee = boost::lexical_cast<int>(params[8].get_str());
+	}
+	if (CheckParam(params, 9))
+	{
+		fEscrowFee = boost::lexical_cast<float>(params[9].get_str());
+	}
+	if (CheckParam(params, 10))
+	{
+		fWitnessFee = boost::lexical_cast<float>(params[10].get_str());
+	}
 
 	string extTxIdStr = "";
-	if(CheckParam(params, 12))
-		extTxIdStr = params[12].get_str();
+	if (CheckParam(params, 11))
+		extTxIdStr = params[11].get_str();
 
 	// payment options - get payment options string if specified otherwise default to SYS
 	string paymentOption = "SYS";
-	if(CheckParam(params, 13))
+	if (CheckParam(params, 12))
 	{
-		paymentOption = params[13].get_str();
+		paymentOption = params[12].get_str();
 		boost::algorithm::to_upper(paymentOption);
 	}
 	// payment options - validate payment options string
-	if(!ValidatePaymentOptionsString(paymentOption))
+	if (!ValidatePaymentOptionsString(paymentOption))
 	{
 		string err = "SYSCOIN_ESCROW_RPC_ERROR ERRCODE: 4510 - " + _("Could not validate the payment option value");
 		throw runtime_error(err.c_str());
@@ -1794,32 +1780,19 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	// payment options - and convert payment options string to a bitmask for the txn
 	uint64_t paymentOptionMask = GetPaymentOptionsMaskFromString(paymentOption);
 
-	CAmount nShipping = 0;
-	if (CheckParam(params, 8))
-	{
-		nShipping = AmountFromValue(params[8].get_str());
-	}
 
-	int nNetworkFee = getFeePerByte(paymentOptionMask);
-	float fEscrowFee = getEscrowFee();
-
-	float fWitnessFee = 0;
-	if (CheckParam(params, 9))
+	CAmount nBidPerUnit = 0;
+	if (CheckParam(params, 13))
 	{
-		nNetworkFee = boost::lexical_cast<int>(params[9].get_str());
+		nBidPerUnit = AmountFromValue(params[13]);
 	}
-	if (CheckParam(params, 10))
-	{
-		fEscrowFee = boost::lexical_cast<float>(params[10].get_str());
-	}
-	if (CheckParam(params, 11))
-	{
-		fWitnessFee = boost::lexical_cast<float>(params[11].get_str());
-	}
+	float fBidPerUnit = 0;
+	if (CheckParam(params, 14))
+		fBidPerUnit = boost::lexical_cast<float>(params[14].get_str());
 
 	vector<unsigned char> vchWitness;
-	if(CheckParam(params, 14))
-		vchWitness = vchFromValue(params[14]);
+	if(CheckParam(params, 15))
+		vchWitness = vchFromValue(params[15]);
 
 	CAliasIndex buyeralias;
 	if (!GetAlias(vchAlias, buyeralias))
@@ -1838,7 +1811,6 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	if(theOffer.sCategory.size() > 0 && boost::algorithm::istarts_with(stringFromVch(theOffer.sCategory), "wanted"))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4515 - " + _("Cannot purchase a wanted offer"));
 
-	CAmount nTotalOfferPrice = AmountFromValue(strprintf("%.*f", 8, theOffer.GetPrice(COfferLinkWhitelistEntry())*nQty));
 
 	CScript scriptPubKeyAlias, scriptPubKeyAliasOrig;
 	CAliasIndex theLinkedAlias, reselleralias;
@@ -1860,10 +1832,11 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 		fDepositPercentage = linkedOffer.auctionOffer.fDepositPercentage;
 		COfferLinkWhitelistEntry foundEntry;
 		theLinkedAlias.offerWhitelist.GetLinkEntryByHash(theOffer.aliasTuple.first, foundEntry);
-		CAmount nTotalLinkedOfferPrice = AmountFromValue(strprintf("%.*f", 8, linkedOffer.GetPrice(foundEntry)*nQty));
-		nCommission = nTotalOfferPrice - nTotalLinkedOfferPrice;
-		if (nCommission < 0)
-			nCommission = 0;
+		int discount = foundEntry.nDiscountPct;
+		int commission = theOffer.nCommission;
+		int markup = discount + commission;
+		if(markup > 0)
+			nCommission = nAmountOrBidPerUnit*(markup/100);
 	}
 
 	
@@ -1925,7 +1898,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	
 	CSyscoinAddress address(strAddress);
 	scriptPubKey = GetScriptForDestination(address.Get());
-
+	CAmount nTotalOfferPrice = nPricePerUnit*nQty;
 	CAmount nEscrowFee = GetEscrowArbiterFee(nTotalOfferPrice, fEscrowFee);
 	CAmount nWitnessFee = GetEscrowWitnessFee(nTotalOfferPrice, fWitnessFee);
 	CAmount nDepositFee = GetEscrowDepositFee(nTotalOfferPrice, fDepositPercentage);
@@ -1966,12 +1939,10 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	newEscrow.nNetworkFee = nNetworkFee;
 	newEscrow.nArbiterFee = nEscrowFee;
 	newEscrow.nWitnessFee = nWitnessFee;
-	newEscrow.nTotalWithFee = nAmountWithFee;
-	newEscrow.nTotalWithoutFee = nTotalOfferPrice;
 	newEscrow.vchRedeemScript = ParseHex(redeemScript_value.get_str());
 	newEscrow.nDeposit = nDepositFee;
 	newEscrow.nShipping = nShipping;
-	newEscrow.nBidPerUnit = nBidPerUnit;
+	newEscrow.nAmountOrBidPerUnit = bBuyNow? nPricePerUnit: nBidPerUnit;
 	newEscrow.fBidPerUnit = fBidPerUnit;
 	newEscrow.vchWitness = vchWitness;
 	newEscrow.bBuyNow = bBuyNow;
@@ -1979,7 +1950,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	newEscrow.Serialize(data);
     uint256 hash = Hash(data.begin(), data.end());
 
-	if (newEscrow.nTotalWithFee != (newEscrow.nTotalWithoutFee + nFees))
+	if (nAmountWithFee != (nTotalOfferPrice + nFees))
 	{
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4040 - " + _("Mismatch when calculating total amount with fees"));
 	}
@@ -2236,38 +2207,31 @@ UniValue escrowcreaterawtransaction(const UniValue& params, bool fHelp) {
 		const UniValue& inputsObj = inputs[i].get_obj();
 		nBalance += find_value(inputsObj, "satoshis").get_int64();
 	}
-	if (escrow.bBuyNow) {
-		if (nBalance < escrow.nTotalWithFee) {
-			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4529 - " + _("Not enough funds in the escrow address to process this transaction. Expected amount: ") + boost::lexical_cast<string>(escrow.nTotalWithFee) + _(" Amount Found: ") + boost::lexical_cast<string>(nBalance));
-		}
-	}
-	else
-	{
-		if (nBalance < (escrow.nBidPerUnit + nEscrowFees)) {
-			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4529 - " + _("Not enough funds in the escrow address to process this transaction. Expected amount: ") + boost::lexical_cast<string>(escrow.nBidPerUnit + nEscrowFees) + _(" Amount Found: ") + boost::lexical_cast<string>(nBalance));
-		}
-	}
+	CAmount nTotalWithFee = (escrow.nAmountOrBidPerUnit*escrow.nQty) + nEscrowFees;
 	CAmount nBalanceTmp = nBalance;
+	// subtract total from the amount found in the address, if this is positive the UI should complain that not enough funds were found and that more funds are required
+	nBalance -= nTotalWithFee;
+
 	UniValue arrayCreateParams(UniValue::VARR);
 	UniValue createAddressUniValue(UniValue::VOBJ);
 	if (type == "refund") {
-		nBalance -= escrow.nNetworkFee;
+		nBalanceTmp -= escrow.nNetworkFee;
 		if (escrow.role == EscrowRoles::ARBITER || role == "arbiter")
 		{
-			nBalance -= escrow.nArbiterFee;
+			nBalanceTmp -= escrow.nArbiterFee;
 			createAddressUniValue.push_back(Pair(arbiterAddressPayment.ToString(), ValueFromAmount(escrow.nArbiterFee)));
 		}
-		createAddressUniValue.push_back(Pair(buyerAddressPayment.ToString(), ValueFromAmount(nBalance)));
+		createAddressUniValue.push_back(Pair(buyerAddressPayment.ToString(), ValueFromAmount(nBalanceTmp)));
 	}
 	else if (type == "release") {
-		nBalance -= escrow.nNetworkFee;
-		nBalance -= escrow.nArbiterFee;
-		nBalance -= escrow.nDeposit;
-		nBalance -= escrow.nWitnessFee;
+		nBalanceTmp -= escrow.nNetworkFee;
+		nBalanceTmp -= escrow.nArbiterFee;
+		nBalanceTmp -= escrow.nDeposit;
+		nBalanceTmp -= escrow.nWitnessFee;
 		// if linked offer send commission to affiliate
 		if (!theOffer.linkOfferTuple.first.empty())
 		{
-			nBalance -= escrow.nCommission;
+			nBalanceTmp -= escrow.nCommission;
 			if (escrow.nCommission > 0)
 				createAddressUniValue.push_back(Pair(linkSellerAddress.ToString(), ValueFromAmount(escrow.nCommission)));
 		}
@@ -2283,27 +2247,17 @@ UniValue escrowcreaterawtransaction(const UniValue& params, bool fHelp) {
 		}
 		if (escrow.nWitnessFee > 0)
 			createAddressUniValue.push_back(Pair(witnessAddressPayment.ToString(), ValueFromAmount(escrow.nWitnessFee)));
-		createAddressUniValue.push_back(Pair(sellerAddressPayment.ToString(), ValueFromAmount(nBalance)));
+		createAddressUniValue.push_back(Pair(sellerAddressPayment.ToString(), ValueFromAmount(nBalanceTmp)));
 
 	}
-	if (!ValidateArbiterFee(nBalanceTmp, escrow)) {
+	if (!ValidateArbiterFee(escrow)) {
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4532 - " + _("Could not validate arbiter fee in escrow"));
 	}
-	if (!ValidateDepositFee(nBalanceTmp, fDepositPercentage, escrow)) {
+	if (!ValidateDepositFee(fDepositPercentage, escrow)) {
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4532 - " + _("Could not validate deposit in escrow"));
 	}
-	if (!ValidateNetworkFee(nBalanceTmp, escrow)) {
+	if (!ValidateNetworkFee(escrow)) {
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4532 - " + _("Could not validate network fee in escrow"));
-	}
-	if (!ValidateWitnessFee(nBalanceTmp, escrow)) {
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4532 - " + _("Could not validate witness fee in escrow"));
-	}
-	if (!ValidateShipping(nBalanceTmp, escrow)) {
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4532 - " + _("Could not validate shipping in escrow"));
-	}
-	if (escrow.nTotalWithFee != (escrow.nTotalWithoutFee + nEscrowFees))
-	{
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4040 - " + _("Mismatch when calculating total amount with fees"));
 	}
 	if (escrow.bBuyNow && escrow.nDeposit > 0) {
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4532 - " + _("Cannot include deposit when using Buy It Now"));
@@ -2342,6 +2296,7 @@ UniValue escrowcreaterawtransaction(const UniValue& params, bool fHelp) {
 
 	UniValue res(UniValue::VARR);
 	res.push_back(strRawTx);
+	res.push_back(ValueFromAmount(nBalance));
 	return res;
 }
 UniValue escrowrelease(const UniValue& params, bool fHelp) {
@@ -3160,7 +3115,7 @@ void BuildEscrowBidJson(const CEscrow& escrow, const string& status, UniValue& o
 	oBid.push_back(Pair("height", (int)escrow.nHeight));
 	oBid.push_back(Pair("bidder", stringFromVch(escrow.linkAliasTuple.first)));
 	oBid.push_back(Pair("bid_in_offer_currency_per_unit", escrow.fBidPerUnit));
-	oBid.push_back(Pair("bid_in_payment_option_per_unit", ValueFromAmount(escrow.nBidPerUnit)));
+	oBid.push_back(Pair("bid_in_payment_option_per_unit", ValueFromAmount(escrow.nAmountOrBidPerUnit)));
 	oBid.push_back(Pair("witness", stringFromVch(escrow.vchWitness)));
 	oBid.push_back(Pair("status", status));
 }
@@ -3183,12 +3138,16 @@ bool BuildEscrowJson(const CEscrow &escrow, const std::vector<std::vector<unsign
 	oEscrow.push_back(Pair("buyer", stringFromVch(escrow.buyerAliasTuple.first)));
 	oEscrow.push_back(Pair("witness", stringFromVch(escrow.vchWitness)));
 	oEscrow.push_back(Pair("offer", stringFromVch(escrow.offerTuple.first)));
-	oEscrow.push_back(Pair("offerlink_seller", stringFromVch(escrow.linkSellerAliasTuple.first)));
+	oEscrow.push_back(Pair("offer_price", theOffer.GetPrice()));
+	oEscrow.push_back(Pair("reseller", stringFromVch(escrow.linkSellerAliasTuple.first)));
 	oEscrow.push_back(Pair("quantity", (int)escrow.nQty));
-	oEscrow.push_back(Pair("total_with_fee", ValueFromAmount(escrow.nTotalWithFee)));
-	oEscrow.push_back(Pair("total_without_fee", ValueFromAmount(escrow.nTotalWithoutFee)));
+	const CAmount &nEscrowFees = escrow.nDeposit + escrow.nArbiterFee + escrow.nWitnessFee + escrow.nNetworkFee + escrow.nShipping;
+	const CAmount &nTotalWithoutFee = escrow.nAmountOrBidPerUnit*escrow.nQty;
+	const CAmount &nTotalWithFee = nTotalWithoutFee + nEscrowFees;
+	oEscrow.push_back(Pair("total_with_fee", ValueFromAmount(nTotalWithFee)));
+	oEscrow.push_back(Pair("total_without_fee", ValueFromAmount(nTotalWithoutFee)));
 	oEscrow.push_back(Pair("bid_in_offer_currency_per_unit", escrow.fBidPerUnit));
-	oEscrow.push_back(Pair("bid_in_payment_option_per_unit", ValueFromAmount(escrow.nBidPerUnit)));
+	oEscrow.push_back(Pair("amount_or_bid_in_payment_option_per_unit", ValueFromAmount(escrow.nAmountOrBidPerUnit)));
 	oEscrow.push_back(Pair("buynow", escrow.bBuyNow));
 	oEscrow.push_back(Pair("commission", ValueFromAmount(escrow.nCommission)));
 	oEscrow.push_back(Pair("arbiterfee", ValueFromAmount(escrow.nArbiterFee)));
@@ -3209,6 +3168,7 @@ bool BuildEscrowJson(const CEscrow &escrow, const std::vector<std::vector<unsign
 	oEscrow.push_back(Pair("redeem_script", HexStr(escrow.vchRedeemScript)));
     oEscrow.push_back(Pair("txid", escrow.txHash.GetHex()));
     oEscrow.push_back(Pair("height", (int64_t)escrow.nHeight));
+	oEscrow.push_back(Pair("role", EscrowRoleToString(escrow.role)));
 	int64_t expired_time = GetEscrowExpiration(escrow);
 	bool expired = false;
     if(expired_time <= chainActive.Tip()->GetMedianTimePast())

@@ -3,7 +3,9 @@
 
 #include <stdio.h>
 #include <univalue.h>
+#include <map>
 using namespace std;
+map<string, float> pegRates;
 /** Testing syscoin services setup that configures a complete environment with 3 nodes.
  */
 UniValue CallRPC(const string &dataDir, const string& commandWithArgs, bool regTest = true, bool readJson = true);
@@ -41,8 +43,8 @@ bool OfferFilter(const string& node, const string& regex);
 void EscrowFeedback(const string& node, const string& role, const string& escrowguid, const string& feedback, const string& rating, char user, const string& witness="\"\"");
 const string OfferLink(const string& node, const string& alias, const string& guid, const string& commission, const string& newdetails, const string& witness="\"\"");
 const string OfferAccept(const string& ownernode, const string& node, const string& aliasname, const string& offerguid, const string& qty, const string& discountexpected = "\"\"", const string& witness="\"\"");
-const string EscrowNewBuyItNow(const string& node, const string& sellernode, const string& buyeralias, const string& offerguid, const string& qtyStr, const string& arbiteralias, const string& witness = "\"\"");
-const string EscrowNewAuction(const string& node, const string& sellernode, const string& buyeralias, const string& offerguid, const string& qtyStr, const string& bid_in_payment_option, const string& bid_in_offer_currency, const string& arbiteralias, const string& witness = "\"\"");
+const string EscrowNewBuyItNow(const string& node, const string& sellernode, const string& buyeralias, const string& offerguid, const string& qtyStr, const string& arbiteralias, const string& shippingFee = "\"\"", const string& networkFee = "\"\"", const string& arbiterFee = "\"\"", const string& witnessFee = "\"\"", const string& witness = "\"\"");
+const string EscrowNewAuction(const string& node, const string& sellernode, const string& buyeralias, const string& offerguid, const string& qtyStr, const string& bid_in_payment_option, const string& bid_in_offer_currency, const string& arbiteralias, const string& shippingFee = "\"\"", const string& networkFee = "\"\"", const string& arbiterFee = "\"\"", const string& witnessFee = "\"\"", const string& witness = "\"\"");
 void EscrowBid(const string& node, const string& buyeralias, const string& escrowguid, const string& bid_in_payment_option, const string& bid_in_offer_currency, const string &witness = "\"\"");
 void EscrowRelease(const string& node, const string& role, const string& guid, const string& witness="\"\"");
 void EscrowClaimRelease(const string& node, const string& guid);
