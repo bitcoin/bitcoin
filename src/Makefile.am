@@ -80,6 +80,7 @@ BITCOIN_CORE_H = \
   banentry.h \
   bitnodes.h \
   bloom.h \
+  buip055fork.h \
   chain.h \
   chainparams.h \
   chainparamsbase.h \
