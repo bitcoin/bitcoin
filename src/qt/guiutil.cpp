@@ -212,7 +212,7 @@ bool parseIoPURI(QString uri, SendCoinsRecipient *out)
     //    which will lower-case it (and thus invalidate the address).
     if(uri.startsWith("iop://", Qt::CaseInsensitive))
     {
-        uri.replace(0, 10, "iop:");
+        uri.replace(0, 6, "iop:");
     }
     QUrl uriInstance(uri);
     return parseIoPURI(uriInstance, out);
