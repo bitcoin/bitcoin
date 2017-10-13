@@ -378,8 +378,6 @@ QString TransactionTableModel::formatTxType(const TransactionRecord *wtx) const
         return tr("Payment to yourself");
     case TransactionRecord::Generated:
         return tr("Mined");
-    case TransactionRecord::PublicLabel:
-        return tr("Public label");
     default:
         return QString();
     }
@@ -618,8 +616,6 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
         return QDateTime::fromTime_t(static_cast<uint>(rec->time));
     case WatchonlyRole:
         return rec->involvesWatchAddress;
-    case PublicLabelRole:
-        return (rec->type == TransactionRecord::PublicLabel);
     case WatchonlyDecorationRole:
         return txWatchonlyDecoration(rec);
     case LongDescriptionRole:
