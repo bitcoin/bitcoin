@@ -947,7 +947,7 @@ UniValue extkey(const JSONRPCRequest &request)
             };
         }
         if (keyId.IsNull())
-            throw std::runtime_error(strprintf("Must specify ext key or id%s.", mode == "account" ? "or 'default'" : ""));
+            throw std::runtime_error(strprintf("Must specify ext key or id %s.", mode == "account" ? "or 'default'" : ""));
 
         int nListFull = 0; // 0 id only, 1 id+pubkey, 2 id+pubkey+secret
         if (request.params.size() > nParamOffset)
