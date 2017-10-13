@@ -6,7 +6,7 @@ This document provides guidelines for internationalization of the Bitcoin Core s
 How to translate?
 ------------------
 
-To mark a message as translatable
+To mark a message as translatable:
 
 - In GUI source code (under `src/qt`): use `tr("...")`
 
