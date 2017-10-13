@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE(generate_auction_reserve)
 	string shippingFee = "\"\"";
 	string bid_in_payment_option = "0.11";
 	string bid_in_offer_currency = "0.009";
-	string total_in_payment_option = strprintf("%.*f", 2, pegRates["USD"] * 0.01));
+	string total_in_payment_option = strprintf("%.*f", 2, pegRates["USD"] * 0.01);
 	// try to underbid in offer currency
 	string query = "escrownew false buyerauction arbiterauction " + offerguid + " " + qty + " " + buyNowStr + " " + total_in_payment_option + " " +  shippingFee + " " + networkFee + " " + arbiterFee + " " + witnessFee + " " + exttxid + " " + paymentoptions + " " + bid_in_payment_option + " " + bid_in_offer_currency + " " + witness;
 	BOOST_CHECK_THROW(r = CallRPC("node1", query), runtime_error);
@@ -270,7 +270,7 @@ BOOST_AUTO_TEST_CASE(generate_escrow_linked_release_with_peg_update)
 	AliasNew("node3", "arbiteralias333", "changeddata3");
 	string qty = "3";
 	string offerguid = OfferNew("node2", "selleralias33", "category", "title", "100", "0.05", "description", "EUR");
-	OfferAddWhitelist("node2", offerguid, "arbiteralias333", "5");
+	AliasAddWhitelist("node2", offerguid, "arbiteralias333", "5");
 	string commission = "3";
 	string description = "newdescription";
 	string offerlinkguid = OfferLink("node3", "arbiteralias333", offerguid, commission, description);
