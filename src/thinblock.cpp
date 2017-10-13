@@ -1806,7 +1806,7 @@ void BuildSeededBloomFilter(CBloomFilter &filterMemPool,
     if (nTimePassed > nHoursToGrow * 3600)
         nFPRate = nMaxFalsePositive;
 
-    uint32_t nMaxFilterSize = std::max(MAX_BLOOM_FILTER_SIZE, pfrom->nXthinBloomfilterSize);
+    uint32_t nMaxFilterSize = std::max(SMALLEST_MAX_BLOOM_FILTER_SIZE, pfrom->nXthinBloomfilterSize);
     filterMemPool = CBloomFilter(nElements, nFPRate, insecure_rand(), BLOOM_UPDATE_ALL, nMaxFilterSize);
     LogPrint("thin", "FPrate: %f Num elements in bloom filter:%d high priority txs:%d high fee txs:%d orphans:%d total "
                      "txs in mempool:%d\n",
