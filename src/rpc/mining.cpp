@@ -846,7 +846,11 @@ UniValue estimatesmartfee(const UniValue& params, bool fHelp)
             "1. nblocks     (numeric)\n"
             "\nResult:\n"
             "{\n"
+#ifdef BITCOIN_CASH
+            "  \"feerate\" : x.x,     (numeric) estimate fee-per-kilobyte (in BCC)\n"
+#else
             "  \"feerate\" : x.x,     (numeric) estimate fee-per-kilobyte (in BTC)\n"
+#endif
             "  \"blocks\" : n         (numeric) block number where estimate was found\n"
             "}\n"
             "\n"
