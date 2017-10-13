@@ -1836,7 +1836,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 		int commission = theOffer.nCommission;
 		int markup = discount + commission;
 		if(markup > 0)
-			nCommission = nAmountOrBidPerUnit*(markup/100);
+			nCommission = nPricePerUnit*(markup/100);
 	}
 
 	
@@ -3147,7 +3147,7 @@ bool BuildEscrowJson(const CEscrow &escrow, const std::vector<std::vector<unsign
 	oEscrow.push_back(Pair("total_with_fee", ValueFromAmount(nTotalWithFee)));
 	oEscrow.push_back(Pair("total_without_fee", ValueFromAmount(nTotalWithoutFee)));
 	oEscrow.push_back(Pair("bid_in_offer_currency_per_unit", escrow.fBidPerUnit));
-	oEscrow.push_back(Pair("amount_or_bid_in_payment_option_per_unit", ValueFromAmount(escrow.nAmountOrBidPerUnit)));
+	oEscrow.push_back(Pair("total_or_bid_in_payment_option_per_unit", ValueFromAmount(escrow.nAmountOrBidPerUnit)));
 	oEscrow.push_back(Pair("buynow", escrow.bBuyNow));
 	oEscrow.push_back(Pair("commission", ValueFromAmount(escrow.nCommission)));
 	oEscrow.push_back(Pair("arbiterfee", ValueFromAmount(escrow.nArbiterFee)));
