@@ -1315,9 +1315,9 @@ void CThinBlockData::ClearThinBlockData(CNode *pnode, uint256 hash)
 uint64_t CThinBlockData::AddThinBlockBytes(uint64_t bytes, CNode *pfrom)
 {
     pfrom->nLocalThinBlockBytes += bytes;
-    nThinBlockBytes.fetch_add(bytes);
+    uint64_t ret = nThinBlockBytes.fetch_add(bytes) + bytes;
 
-    return nThinBlockBytes.load();
+    return ret;
 }
 
 void CThinBlockData::DeleteThinBlockBytes(uint64_t bytes, CNode *pfrom)
