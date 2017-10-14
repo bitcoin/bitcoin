@@ -1524,6 +1524,7 @@ void EscrowRelease(const string& node, const string& role, const string& guid ,c
 	int icommission = find_value(r.get_obj(), "commission").get_int();
 
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowinfo " + guid));
+	int nQty = find_value(r.get_obj(), "quantity").get_int();
 	string buyeralias = find_value(r.get_obj(), "buyer").get_str();
 	float fPrice = find_value(r.get_obj(), "offer_price").get_real();
 	string redeemScriptStr = find_value(r.get_obj(), "redeem_script").get_str();
@@ -1532,11 +1533,11 @@ void EscrowRelease(const string& node, const string& role, const string& guid ,c
 	// since the core doesn't know the rate conversions this must be done externally, the seller/buyer/arbiter should check prior to signing escrow transactions.
 	CAmount nodeTotal = AmountFromValue(find_value(r.get_obj(), "total_without_fee"));
 	nodeTotal = nodeTotal / pegRates[currency];
-	BOOST_CHECK_EQUAL(AmountFromValue(strprintf("%.*f", 8, fPrice), nodeTotal));
+	BOOST_CHECK_EQUAL(AmountFromValue(strprintf("%.*f", 8, fPrice)), nodeTotal));
 	
 	BOOST_CHECK(pegRates.count(currency) > 0 && pegRates[currency] > 0);
 	CAmount offerprice = AmountFromValue(strprintf("%.*f", 8, fOfferPrice * pegRates[currency]));
-	CAmount nTotalOfferPrice = offerprice*qty;
+	CAmount nTotalOfferPrice = offerprice*nQty;
 	
 	int discount = 0;
 	string selleralias;
@@ -1612,7 +1613,7 @@ void EscrowRefund(const string& node, const string& role, const string& guid, co
 	string redeemScriptStr = find_value(r.get_obj(), "redeem_script").get_str();
 	// this step must be done in the UI, to ensure that the 'total_in_payment_option' parameter in escrownew is the right price according to the offer_price value converted into the offer currency
 	// since the core doesn't know the rate conversions this must be done externally, the seller/buyer/arbiter should check prior to signing escrow transactions.
-	CAmount nodeTotal = AmountFromValue(find_value(r.get_obj(), "total_without_fee");
+	CAmount nodeTotal = AmountFromValue(find_value(r.get_obj(), "total_without_fee"));
 	nodeTotal = nodeTotal / pegRates[currency];
 	BOOST_CHECK_EQUAL(AmountFromValue(strprintf("%.*f", 8, fOfferPrice)), nodeTotal);
 
@@ -1717,8 +1718,16 @@ void EscrowClaimRefund(const string& node, const string& guid)
 	inputStr += "]\"";
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasaddscript " + redeemScriptStr));
 	// get balances before
-	BOOST_CHECK_NO_THROW(a = CallRPC(node, "aliasbalance " + buyeralias));
-	CAmount balanceBuyerBefore = AmountFromValue(find_value(a.get_obj(), "balance"));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasbalance " + selleralias));
+	CAmount balanceSellerBefore = AmountFromValue(find_value(r.get_obj(), "balance"));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasbalance " + reselleralias));
+	CAmount balanceResellerBefore = AmountFromValue(find_value(r.get_obj(), "balance"));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasbalance " + buyeralias));
+	CAmount balanceBuyerBefore = AmountFromValue(find_value(r.get_obj(), "balance"));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasbalance " + arbiteralias));
+	CAmount balanceArbiterBefore = AmountFromValue(find_value(r.get_obj(), "balance"));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasbalance " + witnessalias));
+	CAmount balanceWitnessBefore = AmountFromValue(find_value(r.get_obj(), "balance"));
 	// "escrowcreaterawtransaction <type> <escrow guid> <[{\"txid\":\"id\",\"vout\":n, \"satoshis\":n},...]> [user role]\n"
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowcreaterawtransaction refund " + guid + " " + inputStr));
 	const UniValue &arr = r.get_array();
@@ -1744,15 +1753,10 @@ void EscrowClaimRefund(const string& node, const string& guid)
 	BOOST_CHECK_NO_THROW(a = CallRPC(node, "aliasbalance " + buyeralias));
 	CAmount balanceBuyerAfter = AmountFromValue(find_value(a.get_obj(), "balance"));
 	BOOST_CHECK(balanceBuyerBefore != balanceBuyerAfter);
-	balanceBuyerBefore += nBuyerTotal;
-
 
 	// get balances after
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasbalance " + selleralias));
 	CAmount balanceSellerAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
-
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasbalance " + buyeralias));
-	CAmount balanceBuyerAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
 
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasbalance " + reselleralias));
 	CAmount balanceResellerAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
@@ -1765,8 +1769,8 @@ void EscrowClaimRefund(const string& node, const string& guid)
 
 	balanceBuyerBefore += (nWitnessFee + nShipping + nDeposit);
 	// if buy it now(not auction), we must have paid total, otherwise we only refund some of the fees
-	if(bBuyNow)
-		balanceBuyerBefore += nTotalWithoutFee
+	if (bBuyNow)
+		balanceBuyerBefore += nTotalWithoutFee;
 	BOOST_CHECK(role == "arbiter" || role == "seller");
 	// if seller refunds it, buyer should get arbiter fee back
 	if (role == "seller")
@@ -1804,6 +1808,7 @@ void EscrowClaimRelease(const string& node, const string& guid)
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "offerinfo " + offer));
 	string currency = find_value(r.get_obj(), "currency").get_str();
 	float fOfferPrice = find_value(r.get_obj(), "price").get_real();
+	int icommission = find_value(r.get_obj(), "commission").get_int();
 
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowinfo " + guid));
 	string redeemScriptStr = find_value(r.get_obj(), "redeem_script").get_str();
@@ -1833,12 +1838,11 @@ void EscrowClaimRelease(const string& node, const string& guid)
 	BOOST_CHECK_EQUAL(AmountFromValue(strprintf("%.*f", 8, find_value(r.get_obj(), "offer_price").get_real())), nodeTotal);
 	BOOST_CHECK(pegRates.count(currency) > 0 && pegRates[currency] > 0);
 	CAmount offerprice = AmountFromValue(strprintf("%.*f", 8, fOfferPrice * pegRates[currency]));
-	CAmount nTotalOfferPrice = offerprice*qty;
+	CAmount nTotalOfferPrice = offerprice*nQty;
 	string sellerlink_alias = find_value(r.get_obj(), "offerlink_seller").get_str();
 	int discount = 0;
 	// this step must be done in the UI,
 	// check to ensure commission is correct
-	string selleralias;
 	if (!sellerlink_alias.empty())
 	{
 		selleralias = sellerlink_alias;
