@@ -1317,13 +1317,12 @@ const string EscrowNewAuction(const string& node, const string& sellernode, cons
 	CAmount nTotalOfferPrice = offerprice*qty;
 	CAmount nEscrowFee = GetEscrowArbiterFee(nTotalOfferPrice, boost::lexical_cast<float>(arbiterFee));
 	CAmount nWitnessFee = GetEscrowWitnessFee(nTotalOfferPrice, boost::lexical_cast<float>(witnessFee));
-	CAmount nNetworkFee = getFeePerByte(nTotalOfferPrice, boost::lexical_cast<float>(networkFee)) * 400;
+	CAmount nNetworkFee = 25 * 400;
 	CAmount nShipping = AmountFromValue(shipping);
 	string sellerlink_alias = find_value(r.get_obj(), "offerlink_seller").get_str();
 	int discount = 0;
 	// this step must be done in the UI,
 	// check to ensure commission is correct
-	string selleralias;
 	if (!sellerlink_alias.empty())
 	{
 		selleralias = sellerlink_alias;
@@ -1348,7 +1347,7 @@ const string EscrowNewAuction(const string& node, const string& sellernode, cons
 	CAmount nCommission = AmountFromValue(find_value(r.get_obj(), "commission"));
 	// this step must be done in the UI, to ensure that the 'total_in_payment_option' parameter is the right price according to the offer_price value converted into the offer currency
 	// since the core doesn't know the rate conversions this must be done externally, the seller/buyer/arbiter should check prior to signing escrow transactions.
-	CAmount nodeTotal = AmountFromValue(find_value(r.get_obj(), "total_without_fee") / pegRates[currency]);
+	CAmount nodeTotal = AmountFromValue(find_value(r.get_obj(), "total_without_fee") * 1/pegRates[currency]);
 	BOOST_CHECK_EQUAL(AmountFromValue(strprintf("%.*f", 8, find_value(r.get_obj(), "offer_price").get_real())), nodeTotal);
 
 	BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == guid);
@@ -1360,10 +1359,10 @@ const string EscrowNewAuction(const string& node, const string& sellernode, cons
 	BOOST_CHECK(find_value(r.get_obj(), "arbiter").get_str() == arbiteralias);
 	BOOST_CHECK(find_value(r.get_obj(), "seller").get_str() == selleralias);
 	BOOST_CHECK_EQUAL(nCommission , nCommissionCompare);
-	BOOST_CHECK_EQUAL(AmountFromValue(find_value(r.get_obj(), "arbiterfee")) == nEscrowFee);
-	BOOST_CHECK_EQUAL(AmountFromValue(find_value(r.get_obj(), "networkfee")) == nNetworkFee);
-	BOOST_CHECK_EQUAL(AmountFromValue(find_value(r.get_obj(), "witnessfee")) == nWitnessFee);
-	BOOST_CHECK_EQUAL(AmountFromValue(find_value(r.get_obj(), "shipping")) == nShipping);
+	BOOST_CHECK_EQUAL(AmountFromValue(find_value(r.get_obj(), "arbiterfee")) , nEscrowFee);
+	BOOST_CHECK_EQUAL(AmountFromValue(find_value(r.get_obj(), "networkfee")) , nNetworkFee);
+	BOOST_CHECK_EQUAL(AmountFromValue(find_value(r.get_obj(), "witnessfee")) , nWitnessFee);
+	BOOST_CHECK_EQUAL(AmountFromValue(find_value(r.get_obj(), "shipping")) , nShipping);
 
 	if (!otherNode1.empty())
 	{
@@ -1419,7 +1418,6 @@ const string EscrowNewBuyItNow(const string& node, const string& sellernode, con
 	int discount = 0;
 	// this step must be done in the UI,
 	// check to ensure commission is correct
-	string selleralias;
 	if (!sellerlink_alias.empty())
 	{
 		selleralias = sellerlink_alias;
@@ -1450,7 +1448,7 @@ const string EscrowNewBuyItNow(const string& node, const string& sellernode, con
 	CAmount nCommission = AmountFromValue(find_value(r.get_obj(), "commission"));
 	// this step must be done in the UI, to ensure that the 'total_in_payment_option' parameter is the right price according to the offer_price value converted into the offer currency
 	// since the core doesn't know the rate conversions this must be done externally, the seller/buyer/arbiter should check prior to signing escrow transactions.
-	CAmount nodeTotal = AmountFromValue(find_value(r.get_obj(), "total_without_fee") / pegRates[currency]);
+	CAmount nodeTotal = AmountFromValue(find_value(r.get_obj(), "total_without_fee") * 1/pegRates[currency]);
 	BOOST_CHECK_EQUAL(AmountFromValue(strprintf("%.*f", 8, find_value(r.get_obj(), "offer_price").get_real())), nodeTotal);
 	BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == guid);
 	BOOST_CHECK(find_value(r.get_obj(), "offer").get_str() == offerguid);
@@ -1461,10 +1459,10 @@ const string EscrowNewBuyItNow(const string& node, const string& sellernode, con
 	BOOST_CHECK_EQUAL(AmountFromValue(find_value(r.get_obj(), "total_without_fee")) , offerprice);
 
 	BOOST_CHECK_EQUAL(nCommission , nCommissionCompare);
-	BOOST_CHECK_EQUAL(AmountFromValue(find_value(r.get_obj(), "arbiterfee")) == nEscrowFee);
-	BOOST_CHECK_EQUAL(AmountFromValue(find_value(r.get_obj(), "networkfee")) == nNetworkFee);
-	BOOST_CHECK_EQUAL(AmountFromValue(find_value(r.get_obj(), "witnessfee")) == nWitnessFee);
-	BOOST_CHECK_EQUAL(AmountFromValue(find_value(r.get_obj(), "shipping")) == nShipping);
+	BOOST_CHECK_EQUAL(AmountFromValue(find_value(r.get_obj(), "arbiterfee")) , nEscrowFee);
+	BOOST_CHECK_EQUAL(AmountFromValue(find_value(r.get_obj(), "networkfee")) , nNetworkFee);
+	BOOST_CHECK_EQUAL(AmountFromValue(find_value(r.get_obj(), "witnessfee")) , nWitnessFee);
+	BOOST_CHECK_EQUAL(AmountFromValue(find_value(r.get_obj(), "shipping")) , nShipping);
 	if(!otherNode1.empty())
 	{
 		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode1, "escrowinfo " + guid));
@@ -1475,7 +1473,7 @@ const string EscrowNewBuyItNow(const string& node, const string& sellernode, con
 		BOOST_CHECK(find_value(r.get_obj(), "buynow").get_bool() == true);
 		BOOST_CHECK(find_value(r.get_obj(), "arbiter").get_str() == arbiteralias);
 		BOOST_CHECK(find_value(r.get_obj(), "seller").get_str() == selleralias);
-		BOOST_CHECK_EQUAL(AmountFromValue(find_value(r.get_obj(), "total_without_fee")) == offerprice);
+		BOOST_CHECK_EQUAL(AmountFromValue(find_value(r.get_obj(), "total_without_fee")) , offerprice);
 
 	}
 	if(!otherNode2.empty())
@@ -1488,7 +1486,7 @@ const string EscrowNewBuyItNow(const string& node, const string& sellernode, con
 		BOOST_CHECK(find_value(r.get_obj(), "buynow").get_bool() == true);
 		BOOST_CHECK(find_value(r.get_obj(), "arbiter").get_str() == arbiteralias);
 		BOOST_CHECK(find_value(r.get_obj(), "seller").get_str() == selleralias);
-		BOOST_CHECK_EQUAL(AmountFromValue(find_value(r.get_obj(), "total_without_fee")) == offerprice);
+		BOOST_CHECK_EQUAL(AmountFromValue(find_value(r.get_obj(), "total_without_fee")) , offerprice);
 	}
 	
 
@@ -1529,7 +1527,7 @@ void EscrowRelease(const string& node, const string& role, const string& guid ,c
 	CAmount nCommission = AmountFromValue(find_value(r.get_obj(), "commission"));
 	// this step must be done in the UI, to ensure that the 'total_in_payment_option' parameter in escrownew is the right price according to the offer_price value converted into the offer currency
 	// since the core doesn't know the rate conversions this must be done externally, the seller/buyer/arbiter should check prior to signing escrow transactions.
-	CAmount nodeTotal = AmountFromValue(find_value(r.get_obj(), "total_without_fee") / pegRates[currency]);
+	CAmount nodeTotal = AmountFromValue(find_value(r.get_obj(), "total_without_fee") * 1/pegRates[currency]);
 	BOOST_CHECK_EQUAL(AmountFromValue(strprintf("%.*f", 8, fPrice), nodeTotal);
 	
 	BOOST_CHECK(pegRates.count(currency) > 0 && pegRates[currency] > 0);
@@ -1610,7 +1608,7 @@ void EscrowRefund(const string& node, const string& role, const string& guid, co
 	string redeemScriptStr = find_value(r.get_obj(), "redeem_script").get_str();
 	// this step must be done in the UI, to ensure that the 'total_in_payment_option' parameter in escrownew is the right price according to the offer_price value converted into the offer currency
 	// since the core doesn't know the rate conversions this must be done externally, the seller/buyer/arbiter should check prior to signing escrow transactions.
-	CAmount nodeTotal = AmountFromValue(find_value(r.get_obj(), "total_without_fee") / pegRates[currency]);
+	CAmount nodeTotal = AmountFromValue(find_value(r.get_obj(), "total_without_fee") * 1/pegRates[currency]);
 	BOOST_CHECK_EQUAL(AmountFromValue(strprintf("%.*f", 8, fOfferPrice)), nodeTotal);
 
 	bool bBuyNow = find_value(r.get_obj(), "buynow").get_bool();
@@ -1674,7 +1672,7 @@ void EscrowClaimRefund(const string& node, const string& guid)
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowinfo " + guid));
 	// this step must be done in the UI, to ensure that the 'total_in_payment_option' parameter in escrownew is the right price according to the offer_price value converted into the offer currency
 	// since the core doesn't know the rate conversions this must be done externally, the seller/buyer/arbiter should check prior to signing escrow transactions.
-	CAmount nodeTotal = AmountFromValue(find_value(r.get_obj(), "total_without_fee")) / pegRates[currency]);
+	CAmount nodeTotal = AmountFromValue(find_value(r.get_obj(), "total_without_fee")) * 1/pegRates[currency]);
 	BOOST_CHECK_EQUAL(AmountFromValue(strprintf("%.*f", 8, find_value(r.get_obj(), "offer_price").get_real())), nodeTotal);
 	string redeemScriptStr = find_value(r.get_obj(), "redeem_script").get_str();
 	bool bBuyNow = find_value(r.get_obj(), "buynow").get_bool();
@@ -1824,7 +1822,7 @@ void EscrowClaimRelease(const string& node, const string& guid)
 
 	// this step must be done in the UI, to ensure that the 'total_in_payment_option' parameter in escrownew is the right price according to the offer_price value converted into the offer currency
 	// since the core doesn't know the rate conversions this must be done externally, the seller/buyer/arbiter should check prior to signing escrow transactions.
-	CAmount nodeTotal = AmountFromValue(find_value(r.get_obj(), "total_without_fee")) / pegRates[currency]);
+	CAmount nodeTotal = AmountFromValue(find_value(r.get_obj(), "total_without_fee")) * 1/pegRates[currency]);
 	BOOST_CHECK_EQUAL(AmountFromValue(strprintf("%.*f", 8, find_value(r.get_obj(), "offer_price").get_real())), nodeTotal);
 	BOOST_CHECK(pegRates.count(currency) > 0 && pegRates[currency] > 0);
 	CAmount offerprice = AmountFromValue(strprintf("%.*f", 8, fOfferPrice * pegRates[currency]));
