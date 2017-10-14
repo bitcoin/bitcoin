@@ -15,6 +15,7 @@
 #include <uint256.h>
 #include <version.h>
 
+#include <atomic>
 #include <stdint.h>
 #include <string>
 
@@ -299,6 +300,7 @@ enum ServiceFlags : uint64_t {
     // BIP process.
 };
 
+extern std::atomic<bool> g_initial_block_download_completed;
 /**
  * Gets the set of service flags which are "desirable" for a given peer.
  *
@@ -323,10 +325,12 @@ enum ServiceFlags : uint64_t {
  * If the NODE_NONE return value is changed, contrib/seeds/makeseeds.py
  * should be updated appropriately to filter for the same nodes.
  */
-ServiceFlags GetDesirableServiceFlags(ServiceFlags services);
-
-/** Set the current IBD status in order to figure out the desirable service flags */
-void SetServiceFlagsIBDCache(bool status);
+static ServiceFlags GetDesirableServiceFlags(ServiceFlags services) {
+    if ((services & NODE_NETWORK_LIMITED) && g_initial_block_download_completed) {
+        return ServiceFlags(NODE_NETWORK_LIMITED | NODE_WITNESS);
+    }
+    return ServiceFlags(NODE_NETWORK | NODE_WITNESS);
+}
 
 /**
  * A shortcut for (services & GetDesirableServiceFlags(services))
