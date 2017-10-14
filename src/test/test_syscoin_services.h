@@ -5,7 +5,7 @@
 #include <univalue.h>
 #include <map>
 using namespace std;
-map<string, float> pegRates;
+static map<string, float> pegRates;
 /** Testing syscoin services setup that configures a complete environment with 3 nodes.
  */
 UniValue CallRPC(const string &dataDir, const string& commandWithArgs, bool regTest = true, bool readJson = true);
