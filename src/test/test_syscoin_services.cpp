@@ -1513,20 +1513,23 @@ const string EscrowNewBuyItNow(const string& node, const string& sellernode, con
 void EscrowRelease(const string& node, const string& role, const string& guid ,const string& witness)
 {
 	UniValue r;
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowinfo " + guid));
+	string offer = find_value(r.get_obj(), "offer").get_str();
+
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "offerinfo " + offer));
 	string currency = find_value(r.get_obj(), "currency").get_str();
 	int nQtyOfferBefore = find_value(r.get_obj(), "quantity").get_int();
 	float fOfferPrice = find_value(r.get_obj(), "price").get_real();
 	string sellerlink_alias = find_value(r.get_obj(), "offerlink_seller").get_str();
+
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowinfo " + guid));
-	string offer = find_value(r.get_obj(), "offer").get_str();
 	string buyeralias = find_value(r.get_obj(), "buyer").get_str();
 	float fPrice = find_value(r.get_obj(), "offer_price").get_real();
 	string redeemScriptStr = find_value(r.get_obj(), "redeem_script").get_str();
 	CAmount nCommission = AmountFromValue(find_value(r.get_obj(), "commission"));
 	// this step must be done in the UI, to ensure that the 'total_in_payment_option' parameter in escrownew is the right price according to the offer_price value converted into the offer currency
 	// since the core doesn't know the rate conversions this must be done externally, the seller/buyer/arbiter should check prior to signing escrow transactions.
-	CAmount nodeTotal = AmountFromValue(find_value(r.get_obj(), "total_without_fee")) / pegRates[currency]);
+	CAmount nodeTotal = AmountFromValue(find_value(r.get_obj(), "total_without_fee") / pegRates[currency]);
 	BOOST_CHECK_EQUAL(AmountFromValue(strprintf("%.*f", 8, fPrice), nodeTotal);
 	
 	BOOST_CHECK(pegRates.count(currency) > 0 && pegRates[currency] > 0);
@@ -1607,8 +1610,8 @@ void EscrowRefund(const string& node, const string& role, const string& guid, co
 	string redeemScriptStr = find_value(r.get_obj(), "redeem_script").get_str();
 	// this step must be done in the UI, to ensure that the 'total_in_payment_option' parameter in escrownew is the right price according to the offer_price value converted into the offer currency
 	// since the core doesn't know the rate conversions this must be done externally, the seller/buyer/arbiter should check prior to signing escrow transactions.
-	CAmount nodeTotal = AmountFromValue(find_value(r.get_obj(), "total_without_fee")) / pegRates[currency]);
-	BOOST_CHECK_EQUAL(AmountFromValue(strprintf("%.*f", 8, fOfferPrice), nodeTotal);
+	CAmount nodeTotal = AmountFromValue(find_value(r.get_obj(), "total_without_fee") / pegRates[currency]);
+	BOOST_CHECK_EQUAL(AmountFromValue(strprintf("%.*f", 8, fOfferPrice)), nodeTotal);
 
 	bool bBuyNow = find_value(r.get_obj(), "buynow").get_bool();
 	if (!bBuyNow) {
