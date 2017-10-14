@@ -56,7 +56,10 @@ public:
         NetNodeId = 0,
         Address = 1,
         Subversion = 2,
-        Ping = 3
+        // everything after ping will be right aligned
+        Ping = 3,
+        Sent = 4,
+        Received = 5
     };
 
     /** @name Methods overridden from QAbstractTableModel
