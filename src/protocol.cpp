@@ -12,6 +12,8 @@
 # include <arpa/inet.h>
 #endif
 
+std::atomic<bool> g_initial_block_download_completed(false);
+
 namespace NetMsgType {
 const char *VERSION="version";
 const char *VERACK="verack";
