@@ -179,6 +179,7 @@ TxConfirmStats::TxConfirmStats(const std::vector<double>& defaultBuckets,
     : buckets(defaultBuckets), bucketMap(defaultBucketMap)
 {
     decay = _decay;
+    assert(_scale != 0 && "_scale must be non-zero");
     scale = _scale;
     confAvg.resize(maxPeriods);
     for (unsigned int i = 0; i < maxPeriods; i++) {
@@ -417,6 +418,9 @@ void TxConfirmStats::Read(CAutoFile& filein, int nFileVersion, size_t numBuckets
             throw std::runtime_error("Corrupt estimates file. Decay must be between 0 and 1 (non-inclusive)");
         }
         filein >> scale;
+        if (scale == 0) {
+            throw std::runtime_error("Corrupt estimates file. Scale must be non-zero");
+        }
     }
 
     filein >> avg;
