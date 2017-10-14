@@ -136,14 +136,14 @@ UniValue getnewaddress(const JSONRPCRequest& request)
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() > 1)
+    if (request.fHelp || (request.params.size() > 1 && IsDeprecatedRPCEnabled("accounts")) || (request.params.size() > 0 && !IsDeprecatedRPCEnabled("accounts")))
         throw std::runtime_error(
             "getnewaddress ( \"account\" )\n"
             "\nReturns a new Bitcoin address for receiving payments.\n"
             "If 'account' is specified (DEPRECATED), it is added to the address book \n"
             "so payments received with the address will be credited to 'account'.\n"
             "\nArguments:\n"
-            "1. \"account\"        (string, optional) DEPRECATED. The account name for the address to be linked to. If not provided, the default account \"\" is used. It can also be set to the empty string \"\" to represent the default account. The account does not need to exist, it will be created if there is no account by the given name.\n"
+            "1. \"account\"        (string, optional) DEPRECATED. This argument will be removed in a future version. To use this deprecated argument, start bitcoind with -deprecatedrpc=accounts. The account name for the address to be linked to. If not provided, the default account \"\" is used. It can also be set to the empty string \"\" to represent the default account. The account does not need to exist, it will be created if there is no account by the given name.\n"
             "\nResult:\n"
             "\"address\"    (string) The new bitcoin address\n"
             "\nExamples:\n"
@@ -155,8 +155,11 @@ UniValue getnewaddress(const JSONRPCRequest& request)
 
     // Parse the account first so we don't generate a key if there's an error
     std::string strAccount;
-    if (!request.params[0].isNull())
-        strAccount = AccountFromValue(request.params[0]);
+    if (IsDeprecatedRPCEnabled("accounts")) {
+        if (!request.params[0].isNull()) {
+            strAccount = AccountFromValue(request.params[0]);
+        }
+    }
 
     if (!pwallet->IsLocked()) {
         pwallet->TopUpKeyPool();
@@ -195,7 +198,7 @@ UniValue getaccountaddress(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() != 1)
         throw std::runtime_error(
             "getaccountaddress \"account\"\n"
-            "\nDEPRECATED. Returns the current Bitcoin address for receiving payments to this account.\n"
+            "\nDEPRECATED. This command is deprecated and will be removed in a future version. To be able to use this command, start bitcoind with -deprecatedrpc=accounts. Returns the current Bitcoin address for receiving payments to this account.\n"
             "\nArguments:\n"
             "1. \"account\"       (string, required) The account name for the address. It can also be set to the empty string \"\" to represent the default account. The account does not need to exist, it will be created and a new address created  if there is no account by the given name.\n"
             "\nResult:\n"
@@ -206,6 +209,10 @@ UniValue getaccountaddress(const JSONRPCRequest& request)
             + HelpExampleCli("getaccountaddress", "\"myaccount\"")
             + HelpExampleRpc("getaccountaddress", "\"myaccount\"")
         );
+
+    if (!IsDeprecatedRPCEnabled("accounts")) {
+        throw JSONRPCError(RPC_METHOD_DEPRECATED, "This command is deprecated and will be removed in a future version. To be able to use this command, start bitcoind with -deprecatedrpc=accounts.");
+    }
 
     LOCK2(cs_main, pwallet->cs_wallet);
 
@@ -267,7 +274,7 @@ UniValue setaccount(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
         throw std::runtime_error(
             "setaccount \"address\" \"account\"\n"
-            "\nDEPRECATED. Sets the account associated with the given address.\n"
+            "\nDEPRECATED. This command is deprecated and will be removed in a future version. To be able to use this command, start bitcoind with -deprecatedrpc=accounts. Sets the account associated with the given address.\n"
             "\nArguments:\n"
             "1. \"address\"         (string, required) The bitcoin address to be associated with an account.\n"
             "2. \"account\"         (string, required) The account to assign the address to.\n"
@@ -275,6 +282,10 @@ UniValue setaccount(const JSONRPCRequest& request)
             + HelpExampleCli("setaccount", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XX\" \"tabby\"")
             + HelpExampleRpc("setaccount", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XX\", \"tabby\"")
         );
+
+    if (!IsDeprecatedRPCEnabled("accounts")) {
+        throw JSONRPCError(RPC_METHOD_DEPRECATED, "This command is deprecated and will be removed in a future version. To be able to use this command, start bitcoind with -deprecatedrpc=accounts.");
+    }
 
     LOCK2(cs_main, pwallet->cs_wallet);
 
@@ -315,7 +326,7 @@ UniValue getaccount(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() != 1)
         throw std::runtime_error(
             "getaccount \"address\"\n"
-            "\nDEPRECATED. Returns the account associated with the given address.\n"
+            "\nDEPRECATED. This command is deprecated and will be removed in a future version. To be able to use this command, start bitcoind with -deprecatedrpc=accounts. Returns the account associated with the given address.\n"
             "\nArguments:\n"
             "1. \"address\"         (string, required) The bitcoin address for account lookup.\n"
             "\nResult:\n"
@@ -324,6 +335,10 @@ UniValue getaccount(const JSONRPCRequest& request)
             + HelpExampleCli("getaccount", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XX\"")
             + HelpExampleRpc("getaccount", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XX\"")
         );
+
+    if (!IsDeprecatedRPCEnabled("accounts")) {
+        throw JSONRPCError(RPC_METHOD_DEPRECATED, "This command is deprecated and will be removed in a future version. To be able to use this command, start bitcoind with -deprecatedrpc=accounts.");
+    }
 
     LOCK2(cs_main, pwallet->cs_wallet);
 
@@ -351,7 +366,7 @@ UniValue getaddressesbyaccount(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() != 1)
         throw std::runtime_error(
             "getaddressesbyaccount \"account\"\n"
-            "\nDEPRECATED. Returns the list of addresses for the given account.\n"
+            "\nDEPRECATED. This command is deprecated and will be removed in a future version. To be able to use this command, start bitcoind with -deprecatedrpc=accounts. Returns the list of addresses for the given account.\n"
             "\nArguments:\n"
             "1. \"account\"        (string, required) The account name.\n"
             "\nResult:\n"
@@ -363,6 +378,10 @@ UniValue getaddressesbyaccount(const JSONRPCRequest& request)
             + HelpExampleCli("getaddressesbyaccount", "\"tabby\"")
             + HelpExampleRpc("getaddressesbyaccount", "\"tabby\"")
         );
+
+    if (!IsDeprecatedRPCEnabled("accounts")) {
+        throw JSONRPCError(RPC_METHOD_DEPRECATED, "This command is deprecated and will be removed in a future version. To be able to use this command, start bitcoind with -deprecatedrpc=accounts.");
+    }
 
     LOCK2(cs_main, pwallet->cs_wallet);
 
@@ -527,7 +546,7 @@ UniValue listaddressgroupings(const JSONRPCRequest& request)
             "    [\n"
             "      \"address\",            (string) The bitcoin address\n"
             "      amount,                 (numeric) The amount in " + CURRENCY_UNIT + "\n"
-            "      \"account\"             (string, optional) DEPRECATED. The account\n"
+            "      \"account\"             (string, optional) DEPRECATED. This field will be removed in a future version. To see this deprecated field, start bitcoind with -deprecatedrpc=accounts. The account\n"
             "    ]\n"
             "    ,...\n"
             "  ]\n"
@@ -555,7 +574,7 @@ UniValue listaddressgroupings(const JSONRPCRequest& request)
             UniValue addressInfo(UniValue::VARR);
             addressInfo.push_back(EncodeDestination(address));
             addressInfo.push_back(ValueFromAmount(balances[address]));
-            {
+            if (IsDeprecatedRPCEnabled("accounts")) {
                 if (pwallet->mapAddressBook.find(address) != pwallet->mapAddressBook.end()) {
                     addressInfo.push_back(pwallet->mapAddressBook.find(address)->second.name);
                 }
@@ -705,7 +724,7 @@ UniValue getreceivedbyaccount(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
         throw std::runtime_error(
             "getreceivedbyaccount \"account\" ( minconf )\n"
-            "\nDEPRECATED. Returns the total amount received by addresses with <account> in transactions with at least [minconf] confirmations.\n"
+            "\nDEPRECATED. This command is deprecated and will be removed in a future version. To be able to use this command, start bitcoind with -deprecatedrpc=accounts. Returns the total amount received by addresses with <account> in transactions with at least [minconf] confirmations.\n"
             "\nArguments:\n"
             "1. \"account\"      (string, required) The selected account, may be the default account using \"\".\n"
             "2. minconf          (numeric, optional, default=1) Only include transactions confirmed at least this many times.\n"
@@ -721,6 +740,10 @@ UniValue getreceivedbyaccount(const JSONRPCRequest& request)
             "\nAs a json rpc call\n"
             + HelpExampleRpc("getreceivedbyaccount", "\"tabby\", 6")
         );
+
+    if (!IsDeprecatedRPCEnabled("accounts")) {
+        throw JSONRPCError(RPC_METHOD_DEPRECATED, "This command is deprecated and will be removed in a future version. To be able to use this command, start bitcoind with -deprecatedrpc=accounts.");
+    }
 
     ObserveSafeMode();
 
@@ -767,7 +790,7 @@ UniValue getbalance(const JSONRPCRequest& request)
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() > 3)
+    if (request.fHelp || (request.params.size() > 3 && IsDeprecatedRPCEnabled("accounts")) || (request.params.size() != 0 && !IsDeprecatedRPCEnabled("accounts")))
         throw std::runtime_error(
             "getbalance ( \"account\" minconf include_watchonly )\n"
             "\nIf account is not specified, returns the server's total available balance.\n"
@@ -775,7 +798,8 @@ UniValue getbalance(const JSONRPCRequest& request)
             "Note that the account \"\" is not the same as leaving the parameter out.\n"
             "The server total may be different to the balance in the default \"\" account.\n"
             "\nArguments:\n"
-            "1. \"account\"         (string, optional) DEPRECATED. The account string may be given as a\n"
+            "1. \"account\"         (string, optional) DEPRECATED. This argument will be removed in a future version. \n"
+            "                     To use this deprecated argument, start bitcoind with -deprecatedrpc=accounts. The account string may be given as a\n"
             "                     specific account name to find the balance associated with wallet keys in\n"
             "                     a named account, or as the empty string (\"\") to find the balance\n"
             "                     associated with wallet keys not in any named account, or as \"*\" to find\n"
@@ -787,8 +811,8 @@ UniValue getbalance(const JSONRPCRequest& request)
             "                     balances. In general, account balance calculation is not considered\n"
             "                     reliable and has resulted in confusing outcomes, so it is recommended to\n"
             "                     avoid passing this argument.\n"
-            "2. minconf           (numeric, optional, default=1) Only include transactions confirmed at least this many times.\n"
-            "3. include_watchonly (bool, optional, default=false) Also include balance in watch-only addresses (see 'importaddress')\n"
+            "2. minconf           (numeric, optional, default=1) DEPRECATED. An account must be specified. This argument will be removed in a future version. To use this deprecated argument, start bitcoind with -deprecatedrpc=accounts. Only include transactions confirmed at least this many times.\n"
+            "3. include_watchonly (bool, optional, default=false) DEPRECATED. An account must be specified. This argument will be removed in a future version. To use this deprecated argument, start bitcoind with -deprecatedrpc=accounts. Also include balance in watch-only addresses (see 'importaddress')\n"
             "\nResult:\n"
             "amount              (numeric) The total amount in " + CURRENCY_UNIT + " received for this account.\n"
             "\nExamples:\n"
@@ -808,34 +832,38 @@ UniValue getbalance(const JSONRPCRequest& request)
 
     LOCK2(cs_main, pwallet->cs_wallet);
 
-    const UniValue& account_value = request.params[0];
-    const UniValue& minconf = request.params[1];
-    const UniValue& include_watchonly = request.params[2];
+    if (IsDeprecatedRPCEnabled("accounts")) {
+        const UniValue& account_value = request.params[0];
+        const UniValue& minconf = request.params[1];
+        const UniValue& include_watchonly = request.params[2];
 
-    if (account_value.isNull()) {
-        if (!minconf.isNull()) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER,
-                "getbalance minconf option is only currently supported if an account is specified");
+        if (account_value.isNull()) {
+            if (!minconf.isNull()) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER,
+                    "getbalance minconf option is only currently supported if an account is specified");
+            }
+            if (!include_watchonly.isNull()) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER,
+                    "getbalance include_watchonly option is only currently supported if an account is specified");
+            }
+            return ValueFromAmount(pwallet->GetBalance());
         }
-        if (!include_watchonly.isNull()) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER,
-                "getbalance include_watchonly option is only currently supported if an account is specified");
-        }
-        return ValueFromAmount(pwallet->GetBalance());
+
+        const std::string& account_param = account_value.get_str();
+        const std::string* account = account_param != "*" ? &account_param : nullptr;
+
+        int nMinDepth = 1;
+        if (!minconf.isNull())
+            nMinDepth = minconf.get_int();
+        isminefilter filter = ISMINE_SPENDABLE;
+        if(!include_watchonly.isNull())
+            if(include_watchonly.get_bool())
+                filter = filter | ISMINE_WATCH_ONLY;
+
+        return ValueFromAmount(pwallet->GetLegacyBalance(filter, nMinDepth, account));
     }
 
-    const std::string& account_param = account_value.get_str();
-    const std::string* account = account_param != "*" ? &account_param : nullptr;
-
-    int nMinDepth = 1;
-    if (!minconf.isNull())
-        nMinDepth = minconf.get_int();
-    isminefilter filter = ISMINE_SPENDABLE;
-    if(!include_watchonly.isNull())
-        if(include_watchonly.get_bool())
-            filter = filter | ISMINE_WATCH_ONLY;
-
-    return ValueFromAmount(pwallet->GetLegacyBalance(filter, nMinDepth, account));
+    return ValueFromAmount(pwallet->GetBalance());
 }
 
 UniValue getunconfirmedbalance(const JSONRPCRequest &request)
@@ -872,7 +900,7 @@ UniValue movecmd(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() < 3 || request.params.size() > 5)
         throw std::runtime_error(
             "move \"fromaccount\" \"toaccount\" amount ( minconf \"comment\" )\n"
-            "\nDEPRECATED. Move a specified amount from one account in your wallet to another.\n"
+            "\nDEPRECATED. This command is deprecated and will be removed in a future version. To be able to use this command, start bitcoind with -deprecatedrpc=accounts. Move a specified amount from one account in your wallet to another.\n"
             "\nArguments:\n"
             "1. \"fromaccount\"   (string, required) The name of the account to move funds from. May be the default account using \"\".\n"
             "2. \"toaccount\"     (string, required) The name of the account to move funds to. May be the default account using \"\".\n"
@@ -889,6 +917,10 @@ UniValue movecmd(const JSONRPCRequest& request)
             "\nAs a json rpc call\n"
             + HelpExampleRpc("move", "\"timotei\", \"akiko\", 0.01, 6, \"happy birthday!\"")
         );
+
+    if (!IsDeprecatedRPCEnabled("accounts")) {
+        throw JSONRPCError(RPC_METHOD_DEPRECATED, "This command is deprecated and will be removed in a future version. To be able to use this command, start bitcoind with -deprecatedrpc=accounts.");
+    }
 
     ObserveSafeMode();
     LOCK2(cs_main, pwallet->cs_wallet);
@@ -997,13 +1029,13 @@ UniValue sendmany(const JSONRPCRequest& request)
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() < 2 || request.params.size() > 8)
+    if (request.fHelp || (request.params.size() < 2 && IsDeprecatedRPCEnabled("accounts")) || (request.params.size() < 1 && !IsDeprecatedRPCEnabled("accounts")) || (request.params.size() > 8 && IsDeprecatedRPCEnabled("accounts")) || (request.params.size() > 7 && !IsDeprecatedRPCEnabled("accounts")))
         throw std::runtime_error(
             "sendmany \"fromaccount\" {\"address\":amount,...} ( minconf \"comment\" [\"address\",...] replaceable conf_target \"estimate_mode\")\n"
             "\nSend multiple times. Amounts are double-precision floating point numbers."
             + HelpRequiringPassphrase(pwallet) + "\n"
             "\nArguments:\n"
-            "1. \"fromaccount\"         (string, required) DEPRECATED. The account to send the funds from. Should be \"\" for the default account\n"
+            "1. \"fromaccount\"         (string, required) DEPRECATED. This argument will be removed in a future version. To use this deprecated argument, start bitcoind with -deprecatedrpc=accounts. The account to send the funds from. Should be \"\" for the default account\n"
             "2. \"amounts\"             (string, required) A json object with addresses and amounts\n"
             "    {\n"
             "      \"address\":amount   (numeric or string) The bitcoin address is the key, the numeric amount (can be string) in " + CURRENCY_UNIT + " is the value\n"
@@ -1051,32 +1083,32 @@ UniValue sendmany(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
     }
 
-    std::string strAccount = AccountFromValue(request.params[0]);
-    UniValue sendTo = request.params[1].get_obj();
+    std::string strAccount = IsDeprecatedRPCEnabled("accounts") ? AccountFromValue(request.params[0]) : "";
+    UniValue sendTo = request.params[IsDeprecatedRPCEnabled("accounts") ? 1 : 0].get_obj();
     int nMinDepth = 1;
-    if (!request.params[2].isNull())
-        nMinDepth = request.params[2].get_int();
+    if (!request.params[IsDeprecatedRPCEnabled("accounts") ? 2 : 1].isNull())
+        nMinDepth = request.params[IsDeprecatedRPCEnabled("accounts") ? 2 : 1].get_int();
 
     CWalletTx wtx;
     wtx.strFromAccount = strAccount;
-    if (!request.params[3].isNull() && !request.params[3].get_str().empty())
-        wtx.mapValue["comment"] = request.params[3].get_str();
+    if (!request.params[IsDeprecatedRPCEnabled("accounts") ? 3 : 2].isNull() && !request.params[IsDeprecatedRPCEnabled("accounts") ? 3 : 2].get_str().empty())
+        wtx.mapValue["comment"] = request.params[IsDeprecatedRPCEnabled("accounts") ? 3 : 2].get_str();
 
     UniValue subtractFeeFromAmount(UniValue::VARR);
-    if (!request.params[4].isNull())
-        subtractFeeFromAmount = request.params[4].get_array();
+    if (!request.params[IsDeprecatedRPCEnabled("accounts") ? 4 : 3].isNull())
+        subtractFeeFromAmount = request.params[IsDeprecatedRPCEnabled("accounts") ? 4 : 3].get_array();
 
     CCoinControl coin_control;
-    if (!request.params[5].isNull()) {
-        coin_control.signalRbf = request.params[5].get_bool();
+    if (!request.params[IsDeprecatedRPCEnabled("accounts") ? 5 : 4].isNull()) {
+        coin_control.signalRbf = request.params[IsDeprecatedRPCEnabled("accounts") ? 5 : 4].get_bool();
     }
 
-    if (!request.params[6].isNull()) {
-        coin_control.m_confirm_target = ParseConfirmTarget(request.params[6]);
+    if (!request.params[IsDeprecatedRPCEnabled("accounts") ? 6 : 5].isNull()) {
+        coin_control.m_confirm_target = ParseConfirmTarget(request.params[IsDeprecatedRPCEnabled("accounts") ? 6 : 5]);
     }
 
-    if (!request.params[7].isNull()) {
-        if (!FeeModeFromString(request.params[7].get_str(), coin_control.m_fee_mode)) {
+    if (!request.params[IsDeprecatedRPCEnabled("accounts") ? 7 : 6].isNull()) {
+        if (!FeeModeFromString(request.params[IsDeprecatedRPCEnabled("accounts") ? 7 : 6].get_str(), coin_control.m_fee_mode)) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid estimate_mode parameter");
         }
     }
@@ -1148,7 +1180,7 @@ UniValue addmultisigaddress(const JSONRPCRequest& request)
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() < 2 || request.params.size() > 3)
+    if (request.fHelp || request.params.size() < 2 || (request.params.size() > 3 && IsDeprecatedRPCEnabled("accounts")) || (request.params.size() > 2 && !IsDeprecatedRPCEnabled("accounts")))
     {
         std::string msg = "addmultisigaddress nrequired [\"key\",...] ( \"account\" )\n"
             "\nAdd a nrequired-to-sign multisignature address to the wallet. Requires a new wallet backup.\n"
@@ -1162,7 +1194,7 @@ UniValue addmultisigaddress(const JSONRPCRequest& request)
             "       \"address\"  (string) bitcoin address or hex-encoded public key\n"
             "       ...,\n"
             "     ]\n"
-            "3. \"account\"      (string, optional) DEPRECATED. An account to assign the addresses to.\n"
+            "3. \"account\"      (string, optional) DEPRECATED. This argument will be removed in a future version. To use this deprecated argument, start bitcoind with -deprecatedrpc=accounts. An account to assign the addresses to.\n"
 
             "\nResult:\n"
             "\"address\"         (string) A bitcoin address associated with the keys.\n"
@@ -1179,8 +1211,10 @@ UniValue addmultisigaddress(const JSONRPCRequest& request)
     LOCK2(cs_main, pwallet->cs_wallet);
 
     std::string strAccount;
-    if (!request.params[2].isNull())
-        strAccount = AccountFromValue(request.params[2]);
+    if (IsDeprecatedRPCEnabled("accounts")) {
+        if (!request.params[2].isNull())
+            strAccount = AccountFromValue(request.params[2]);
+    }
 
     // Construct using pay-to-script-hash:
     CScript inner = _createmultisig_redeemScript(pwallet, request.params);
@@ -1419,7 +1453,9 @@ UniValue ListReceived(CWallet * const pwallet, const UniValue& params, bool fByA
             if(fIsWatchonly)
                 obj.push_back(Pair("involvesWatchonly", true));
             obj.push_back(Pair("address",       EncodeDestination(dest)));
-            obj.push_back(Pair("account",       strAccount));
+            if (IsDeprecatedRPCEnabled("accounts")) {
+                obj.push_back(Pair("account",       strAccount));
+            }
             obj.push_back(Pair("amount",        ValueFromAmount(nAmount)));
             obj.push_back(Pair("confirmations", (nConf == std::numeric_limits<int>::max() ? 0 : nConf)));
             if (!fByAccounts)
@@ -1446,7 +1482,9 @@ UniValue ListReceived(CWallet * const pwallet, const UniValue& params, bool fByA
             UniValue obj(UniValue::VOBJ);
             if((*it).second.fIsWatchonly)
                 obj.push_back(Pair("involvesWatchonly", true));
-            obj.push_back(Pair("account",       (*it).first));
+            if (IsDeprecatedRPCEnabled("accounts")) {
+                obj.push_back(Pair("account",       (*it).first));
+            }
             obj.push_back(Pair("amount",        ValueFromAmount(nAmount)));
             obj.push_back(Pair("confirmations", (nConf == std::numeric_limits<int>::max() ? 0 : nConf)));
             ret.push_back(obj);
@@ -1477,7 +1515,7 @@ UniValue listreceivedbyaddress(const JSONRPCRequest& request)
             "  {\n"
             "    \"involvesWatchonly\" : true,        (bool) Only returned if imported addresses were involved in transaction\n"
             "    \"address\" : \"receivingaddress\",  (string) The receiving address\n"
-            "    \"account\" : \"accountname\",       (string) DEPRECATED. The account of the receiving address. The default account is \"\".\n"
+            "    \"account\" : \"accountname\",       (string) DEPRECATED. This field will be removed in a future version. To see this deprecated field, start bitcoind with -deprecatedrpc=accounts. The account of the receiving address. The default account is \"\".\n"
             "    \"amount\" : x.xxx,                  (numeric) The total amount in " + CURRENCY_UNIT + " received by the address\n"
             "    \"confirmations\" : n,               (numeric) The number of confirmations of the most recent transaction included\n"
             "    \"label\" : \"label\",               (string) A comment for the address/transaction, if any\n"
@@ -1516,7 +1554,8 @@ UniValue listreceivedbyaccount(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() > 3)
         throw std::runtime_error(
             "listreceivedbyaccount ( minconf include_empty include_watchonly)\n"
-            "\nDEPRECATED. List balances by account.\n"
+            "\nDEPRECATED. This command is deprecated and will be removed in a future version. To be able to use this command, start bitcoind with -deprecatedrpc=accounts.\n"
+            "List balances by account.\n"
             "\nArguments:\n"
             "1. minconf           (numeric, optional, default=1) The minimum number of confirmations before payments are included.\n"
             "2. include_empty     (bool, optional, default=false) Whether to include accounts that haven't received any payments.\n"
@@ -1539,6 +1578,10 @@ UniValue listreceivedbyaccount(const JSONRPCRequest& request)
             + HelpExampleCli("listreceivedbyaccount", "6 true")
             + HelpExampleRpc("listreceivedbyaccount", "6, true, true")
         );
+
+    if (!IsDeprecatedRPCEnabled("accounts")) {
+        throw JSONRPCError(RPC_METHOD_DEPRECATED, "This command is deprecated and will be removed in a future version. To be able to use this command, start bitcoind with -deprecatedrpc=accounts.");
+    }
 
     ObserveSafeMode();
 
@@ -1660,7 +1703,9 @@ void AcentryToJSON(const CAccountingEntry& acentry, const std::string& strAccoun
         entry.push_back(Pair("category", "move"));
         entry.push_back(Pair("time", acentry.nTime));
         entry.push_back(Pair("amount", ValueFromAmount(acentry.nCreditDebit)));
-        entry.push_back(Pair("otheraccount", acentry.strOtherAccount));
+        if (IsDeprecatedRPCEnabled("accounts")) {
+            entry.push_back(Pair("otheraccount", acentry.strOtherAccount));
+        }
         entry.push_back(Pair("comment", acentry.strComment));
         ret.push_back(entry);
     }
@@ -1678,14 +1723,14 @@ UniValue listtransactions(const JSONRPCRequest& request)
             "listtransactions ( \"account\" count skip include_watchonly)\n"
             "\nReturns up to 'count' most recent transactions skipping the first 'from' transactions for account 'account'.\n"
             "\nArguments:\n"
-            "1. \"account\"    (string, optional) DEPRECATED. The account name. Should be \"*\".\n"
+            "1. \"account\"    (string, optional) DEPRECATED. This argument will be removed in a future version. To use this deprecated argument, start bitcoind with -deprecatedrpc=accounts. The account name. Should be \"*\".\n"
             "2. count          (numeric, optional, default=10) The number of transactions to return\n"
             "3. skip           (numeric, optional, default=0) The number of transactions to skip\n"
             "4. include_watchonly (bool, optional, default=false) Include transactions to watch-only addresses (see 'importaddress')\n"
             "\nResult:\n"
             "[\n"
             "  {\n"
-            "    \"account\":\"accountname\",       (string) DEPRECATED. The account name associated with the transaction. \n"
+            "    \"account\":\"accountname\",       (string) DEPRECATED. This field will be removed in a future version. To see this deprecated field, start bitcoind with -deprecatedrpc=accounts. The account name associated with the transaction. \n"
             "                                                It will be \"\" for the default account.\n"
             "    \"address\":\"address\",    (string) The bitcoin address of the transaction. Not present for \n"
             "                                                move transactions (category = move).\n"
@@ -1714,7 +1759,7 @@ UniValue listtransactions(const JSONRPCRequest& request)
             "    \"timereceived\": xxx,      (numeric) The time received in seconds since epoch (midnight Jan 1 1970 GMT). Available \n"
             "                                          for 'send' and 'receive' category of transactions.\n"
             "    \"comment\": \"...\",       (string) If a comment is associated with the transaction.\n"
-            "    \"otheraccount\": \"accountname\",  (string) DEPRECATED. For the 'move' category of transactions, the account the funds came \n"
+            "    \"otheraccount\": \"accountname\",  (string) DEPRECATED. This field will be removed in a future version. To see this deprecated field, start bitcoind with -deprecatedrpc=accounts. For the 'move' category of transactions, the account the funds came \n"
             "                                          from (for receiving funds, positive amounts), or went to (for sending funds,\n"
             "                                          negative amounts).\n"
             "    \"bip125-replaceable\": \"yes|no|unknown\",  (string) Whether this transaction could be replaced due to BIP125 (replace-by-fee);\n"
@@ -1742,17 +1787,19 @@ UniValue listtransactions(const JSONRPCRequest& request)
     LOCK2(cs_main, pwallet->cs_wallet);
 
     std::string strAccount = "*";
-    if (!request.params[0].isNull())
-        strAccount = request.params[0].get_str();
+    if (IsDeprecatedRPCEnabled("accounts")) {
+        if (!request.params[0].isNull())
+            strAccount = request.params[0].get_str();
+    }
     int nCount = 10;
-    if (!request.params[1].isNull())
-        nCount = request.params[1].get_int();
+    if (!request.params[IsDeprecatedRPCEnabled("accounts") ? 1 : 0].isNull())
+        nCount = request.params[IsDeprecatedRPCEnabled("accounts") ? 1 : 0].get_int();
     int nFrom = 0;
-    if (!request.params[2].isNull())
-        nFrom = request.params[2].get_int();
+    if (!request.params[IsDeprecatedRPCEnabled("accounts") ? 2 : 1].isNull())
+        nFrom = request.params[IsDeprecatedRPCEnabled("accounts") ? 2 : 1].get_int();
     isminefilter filter = ISMINE_SPENDABLE;
-    if(!request.params[3].isNull())
-        if(request.params[3].get_bool())
+    if(!request.params[IsDeprecatedRPCEnabled("accounts") ? 3 : 2].isNull())
+        if(request.params[IsDeprecatedRPCEnabled("accounts") ? 3 : 2].get_bool())
             filter = filter | ISMINE_WATCH_ONLY;
 
     if (nCount < 0)
@@ -1812,7 +1859,7 @@ UniValue listaccounts(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() > 2)
         throw std::runtime_error(
             "listaccounts ( minconf include_watchonly)\n"
-            "\nDEPRECATED. Returns Object that has account names as keys, account balances as values.\n"
+            "\nDEPRECATED. This command is deprecated and will be removed in a future version. To be able to use this command, start bitcoind with -deprecatedrpc=accounts. Returns Object that has account names as keys, account balances as values.\n"
             "\nArguments:\n"
             "1. minconf             (numeric, optional, default=1) Only include transactions with at least this many confirmations\n"
             "2. include_watchonly   (bool, optional, default=false) Include balances in watch-only addresses (see 'importaddress')\n"
@@ -1831,6 +1878,10 @@ UniValue listaccounts(const JSONRPCRequest& request)
             "\nAs json rpc call\n"
             + HelpExampleRpc("listaccounts", "6")
         );
+
+    if (!IsDeprecatedRPCEnabled("accounts")) {
+        throw JSONRPCError(RPC_METHOD_DEPRECATED, "This command is deprecated and will be removed in a future version. To be able to use this command, start bitcoind with -deprecatedrpc=accounts.");
+    }
 
     ObserveSafeMode();
 
@@ -1912,7 +1963,7 @@ UniValue listsinceblock(const JSONRPCRequest& request)
             "\nResult:\n"
             "{\n"
             "  \"transactions\": [\n"
-            "    \"account\":\"accountname\",       (string) DEPRECATED. The account name associated with the transaction. Will be \"\" for the default account.\n"
+            "    \"account\":\"accountname\",       (string) DEPRECATED. This field will be removed in a future version. To see this deprecated field, start bitcoind with -deprecatedrpc=accounts. The account name associated with the transaction. Will be \"\" for the default account.\n"
             "    \"address\":\"address\",    (string) The bitcoin address of the transaction. Not present for move transactions (category = move).\n"
             "    \"category\":\"send|receive\",     (string) The transaction category. 'send' has negative amounts, 'receive' has positive amounts.\n"
             "    \"amount\": x.xxx,          (numeric) The amount in " + CURRENCY_UNIT + ". This is negative for the 'send' category, and for the 'move' category for moves \n"
@@ -2062,7 +2113,7 @@ UniValue gettransaction(const JSONRPCRequest& request)
             "                                                   may be unknown for unconfirmed transactions not in the mempool\n"
             "  \"details\" : [\n"
             "    {\n"
-            "      \"account\" : \"accountname\",      (string) DEPRECATED. The account name involved in the transaction, can be \"\" for the default account.\n"
+            "      \"account\" : \"accountname\",      (string) DEPRECATED. This field will be removed in a future version. To see this deprecated field, start bitcoind with -deprecatedrpc=accounts. The account name involved in the transaction, can be \"\" for the default account.\n"
             "      \"address\" : \"address\",          (string) The bitcoin address involved in the transaction\n"
             "      \"category\" : \"send|receive\",    (string) The category, either 'send' or 'receive'\n"
             "      \"amount\" : x.xxx,                 (numeric) The amount in " + CURRENCY_UNIT + "\n"
@@ -2845,7 +2896,7 @@ UniValue listunspent(const JSONRPCRequest& request)
             "    \"txid\" : \"txid\",          (string) the transaction id \n"
             "    \"vout\" : n,               (numeric) the vout value\n"
             "    \"address\" : \"address\",    (string) the bitcoin address\n"
-            "    \"account\" : \"account\",    (string) DEPRECATED. The associated account, or \"\" for the default account\n"
+            "    \"account\" : \"account\",    (string) DEPRECATED. This field will be removed in a future version. To see this deprecated field, start bitcoind with -deprecatedrpc=accounts. The associated account, or \"\" for the default account\n"
             "    \"scriptPubKey\" : \"key\",   (string) the script key\n"
             "    \"amount\" : x.xxx,         (numeric) the transaction output amount in " + CURRENCY_UNIT + "\n"
             "    \"confirmations\" : n,      (numeric) The number of confirmations\n"
@@ -2948,7 +2999,7 @@ UniValue listunspent(const JSONRPCRequest& request)
         if (fValidAddress) {
             entry.push_back(Pair("address", EncodeDestination(address)));
 
-            if (pwallet->mapAddressBook.count(address)) {
+            if (IsDeprecatedRPCEnabled("accounts") && pwallet->mapAddressBook.count(address)) {
                 entry.push_back(Pair("account", pwallet->mapAddressBook[address].name));
             }
 

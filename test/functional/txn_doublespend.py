@@ -10,6 +10,7 @@ from test_framework.util import *
 class TxnMallTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 4
+        self.extra_args = [["-deprecatedrpc=accounts"], ["-deprecatedrpc=accounts"], ["-deprecatedrpc=accounts"], ["-deprecatedrpc=accounts"]]
 
     def add_options(self, parser):
         parser.add_option("--mineblock", dest="mine_block", default=False, action="store_true",

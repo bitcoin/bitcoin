@@ -19,6 +19,7 @@ class ListTransactionsTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
         self.enable_mocktime()
+        self.extra_args = [["-deprecatedrpc=accounts"], ["-deprecatedrpc=accounts"]]
 
     def run_test(self):
         # Simple send, 0 to 1:

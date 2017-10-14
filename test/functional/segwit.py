@@ -596,13 +596,13 @@ class SegWitTest(BitcoinTestFramework):
             txid = self.nodes[1].sendrawtransaction(rawtxfund)
 
             assert_equal(self.nodes[1].gettransaction(txid, True)["txid"], txid)
-            assert_equal(self.nodes[1].listtransactions("*", 1, 0, True)[0]["txid"], txid)
+            assert_equal(self.nodes[1].listtransactions(1, 0, True)[0]["txid"], txid)
 
             # Assert it is properly saved
             self.stop_node(1)
             self.start_node(1)
             assert_equal(self.nodes[1].gettransaction(txid, True)["txid"], txid)
-            assert_equal(self.nodes[1].listtransactions("*", 1, 0, True)[0]["txid"], txid)
+            assert_equal(self.nodes[1].listtransactions(1, 0, True)[0]["txid"], txid)
 
     def mine_and_test_listunspent(self, script_list, ismine):
         utxo = find_unspent(self.nodes[0], 50)
