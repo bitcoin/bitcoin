@@ -18,7 +18,6 @@ class FilterTransactionsTest(ParticlTestFramework):
         self.extra_args = [ [ '-debug' ] for i in range(self.num_nodes) ]
 
     def setup_network(self, split=False):
-        self.enable_mocktime()
         self.nodes = self.start_nodes(self.num_nodes, self.options.tmpdir, self.extra_args)
         connect_nodes_bi(self.nodes, 0, 1)
         connect_nodes_bi(self.nodes, 0, 2)
@@ -39,12 +38,16 @@ class FilterTransactionsTest(ParticlTestFramework):
         selfAddress2   = nodes[0].getnewaddress('self2')
         selfStealth    = nodes[0].getnewstealthaddress('stealth')
         selfSpending   = nodes[0].getnewaddress('spending', 'false', 'false', 'true')
+        selfExternal   = nodes[0].getnewextaddress('external')
         targetAddress  = nodes[1].getnewaddress('target')
         targetStealth  = nodes[1].getnewstealthaddress('taret stealth')
+        targetExternal = nodes[1].getnewextaddress('target external')
         stakingAddress = nodes[2].getnewaddress('staking')
-
+        
         # simple PART transaction
         nodes[0].sendtoaddress(targetAddress, 10)
+        self.sync_all()
+        nodes[1].sendtoaddress(selfAddress, 8)
 
         # PART to BLIND
         nodes[0].sendparttoblind(
@@ -58,12 +61,12 @@ class FilterTransactionsTest(ParticlTestFramework):
 
         # PART to ANON
         nodes[0].sendparttoanon(
-            selfStealth,          # address
+            targetStealth,        # address
             20,                   # amount
             '',                   # ?
             '',                   # ?
             False,                # substract fee
-            'node0 -> node0 p->a' # narrative
+            'node0 -> node1 p->a' # narrative
         )
 
         # several outputs
@@ -128,22 +131,22 @@ class FilterTransactionsTest(ParticlTestFramework):
                 'estimate_mode': 'CONSERVATIVE'
             }
         )
-
+        
+        ro = nodes[0].scanchain()
+        self.stakeBlocks(1)
         self.sync_all()
-
-        lol = nodes[0].filtertransactions({ 'category': 'send' })
-        print(json.dumps(lol, indent=4, default=self.jsonDecimal))
-        return
+        
+        # ro = nodes[0].filtertransactions({'count': 20})
+        # print(json.dumps(ro, indent=4, default=self.jsonDecimal))
 
         #
         # general
         #
-
+        
         # without argument
         ro = nodes[0].filtertransactions()
-        print(json.dumps(ro, indent=4, default=self.jsonDecimal))
-        # assert(len(ro) == x)
-
+        assert(len(ro) == 10)
+        
         # too much arguments
         try:
             nodes[0].filtertransactions('foo', 'bar')
@@ -185,24 +188,22 @@ class FilterTransactionsTest(ParticlTestFramework):
             assert('Invalid skip' in e.error['message'])
 
         # skip = count => no entry
-        ro = nodes[0].filtertransactions()
+        ro = nodes[0].filtertransactions({ 'count': 50 })
         ro = nodes[0].filtertransactions({ 'skip': len(ro) })
         assert(len(ro) == 0)
 
         # skip == count - 1 => one entry
-        ro = nodes[0].filtertransactions()
+        ro = nodes[0].filtertransactions({ 'count': 50 })
         ro = nodes[0].filtertransactions({ 'skip': len(ro) - 1 })
         assert(len(ro) == 1)
 
-        # TODO
         # skip: 1
+        ro = nodes[0].filtertransactions({ 'category': 'send', 'skip': 1 })
+        assert(float(ro[0]['amount']) == -20.0)
 
         #
         # include_watchonly
         #
-
-        # inputs
-        # If the spending wallet moves coin out of the coldstakescript the stakingwallet will see that txn with the inputs as watchonly
 
         ro = nodes[2].filtertransactions({ 'watchonly': False })
         assert(len(ro) == 0)
@@ -214,45 +215,44 @@ class FilterTransactionsTest(ParticlTestFramework):
         #
 
         queries = [
-            [targetAddress, 1],
-            [selfStealth,   2],
-            ['100',         2]
+            [targetAddress, 2],
+            [selfStealth,   1],
+            ['70000',       1]
         ]
 
         for query in queries:
             ro = nodes[0].filtertransactions({ 'search': query[0] })
-            # print(json.dumps(ro, indent=4, default=self.jsonDecimal))
-            # assert(len(ro) == query[1])
+            assert(len(ro) == query[1])
 
         #
         # category
         #
+
         # TODO
-        # 'all' transactions
         # 'orphan' transactions
         # 'immature' transactions
         # 'orphaned_stake' transactions
 
         categories = [
-            ['internal_transfer', 2],
+            ['internal_transfer', 4],
             ['coinbase',          1],
-            ['send',              0],
-            ['receive',           0],
+            ['send',              3],
+            ['receive',           1],
             ['stake',             0]
         ]
-
-        ro = nodes[0].filtertransactions({ 'category': 'send' })
-        print(json.dumps(ro, indent=4, default=self.jsonDecimal))
 
         for category in categories:
             ro = nodes[0].filtertransactions({ 'category': category[0] })
             for t in ro:
-                print(t['category'])
-                print(category[0])
                 assert(t['category'] == category[0])
-            # TODO
-            # assert(len(ro) == category[1])
-
+            if (category[0] != 'stake'):
+                assert(len(ro) == category[1])
+        
+        # category 'all'
+        length = len(nodes[0].filtertransactions())
+        ro = nodes[0].filtertransactions({ 'category': 'all' })
+        assert(len(ro) == length)
+        
         # invalid transaction category
         try:
             ro = nodes[0].filtertransactions({ 'category': 'invalid' })
@@ -263,13 +263,30 @@ class FilterTransactionsTest(ParticlTestFramework):
         #
         # sort
         #
-        # TODO
-        # sort by time
-        # sort by address
-        # sort by category
-        # sort by amount
-        # sort by confirmations
-        # sort by txid
+        
+        sortings = [
+            [ 'time',          'desc' ],
+            [ 'address',        'asc' ],
+            [ 'category',       'asc' ],
+            [ 'amount',        'desc' ],
+            [ 'confirmations', 'desc' ],
+            [ 'txid',           'asc' ]
+        ]
+        
+        for sorting in sortings:
+            ro = nodes[0].filtertransactions({ 'sort': sorting[0] })
+            prev = None
+            for t in ro:
+                if "address" not in t:
+                    t["address"] = t["outputs"][0]["address"]
+                if t["amount"] < 0:
+                    t["amount"] = -t["amount"]
+                if prev is not None:
+                    if sorting[1] == 'asc':
+                        assert(t[sorting[0]] >= prev[sorting[0]])
+                    if sorting[1] == 'desc':
+                        assert(t[sorting[0]] <= prev[sorting[0]])
+                prev = t
 
         # invalid sort
         try:
