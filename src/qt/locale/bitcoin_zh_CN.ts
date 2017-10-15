@@ -607,7 +607,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+70"/>
         <source>You can send this transaction for a fee of %1, which is burned and prevents spamming of the network. Do you want to pay the fee?</source>
-        <translation>该交易的字节数超标。您可以选择支付%1的交易费给处理您的交易的网络节点，有助于比特币网络的运行。您愿意支付这笔交易费用吗？</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="-140"/>
@@ -816,7 +816,7 @@ Address: %4
     <message>
         <location line="+15"/>
         <source>Additional network &amp;fee</source>
-        <translation>支付交易 &amp;费用</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+31"/>

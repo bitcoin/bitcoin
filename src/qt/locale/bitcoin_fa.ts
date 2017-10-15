@@ -810,7 +810,7 @@ Address: %4
     <message>
         <location line="+15"/>
         <source>Additional network &amp;fee</source>
-        <translation>دستمزد&amp;پر داخت معامله</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+31"/>

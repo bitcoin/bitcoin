@@ -607,7 +607,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+70"/>
         <source>You can send this transaction for a fee of %1, which is burned and prevents spamming of the network. Do you want to pay the fee?</source>
-        <translation>Transakcja przekracza limit. Możesz wysłać ją płacąc prowizję %1, która zostaje przekazana do węzłów, które ją prześlą i pomoże wspierać sieć Peercoin. Czy chcesz zapłacić prowizję?</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="-140"/>
@@ -815,7 +815,7 @@ Adres: %4
     <message>
         <location line="+15"/>
         <source>Additional network &amp;fee</source>
-        <translation>Płać prowizję za transakcje</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+31"/>

@@ -607,7 +607,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+70"/>
         <source>You can send this transaction for a fee of %1, which is burned and prevents spamming of the network. Do you want to pay the fee?</source>
-        <translation>這筆交易的資料大小超過限制了. 你還是可以付出 %1 的費用來傳送, 這筆費用會付給處理你的交易的節點, 並幫助維持整個網路. 你願意支付這項費用嗎?</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="-140"/>
@@ -810,12 +810,12 @@ Address: %4
     <message>
         <location line="+6"/>
         <source>Mandatory network transaction fee per kB transferred. Most transactions are 1 kB and incur a 0.01 PPC fee. Note: transfer size may increase depending on the number of input transactions required to be added together to fund the payment.</source>
-        <translation>非必要的交易手續費, 以 kB 為計費單位, 且有助於縮短你的交易處理時間. 大部份交易資料的大小是 1 kB.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+15"/>
         <source>Additional network &amp;fee</source>
-        <translation>付交易手續費</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+31"/>

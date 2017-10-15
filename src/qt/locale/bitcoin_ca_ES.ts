@@ -602,7 +602,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+70"/>
         <source>You can send this transaction for a fee of %1, which is burned and prevents spamming of the network. Do you want to pay the fee?</source>
-        <translation>Aquesta transacció supera el límit de tamany. Tot i així pots enviar-la amb una comissió de %1, que es destinen als nodes que processen la seva transacció i ajuda a donar suport a la xarxa. Vols pagar la comissió?</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="-140"/>
@@ -806,7 +806,7 @@ Address: %4
     <message>
         <location line="+15"/>
         <source>Additional network &amp;fee</source>
-        <translation>Pagar &amp;comisió de transacció</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+31"/>

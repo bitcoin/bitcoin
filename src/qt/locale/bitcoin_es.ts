@@ -610,7 +610,7 @@ Eric Young (eay@cryptsoft.com) y el software UPnP escrito por Thomas Bernard.</t
     <message>
         <location line="+70"/>
         <source>You can send this transaction for a fee of %1, which is burned and prevents spamming of the network. Do you want to pay the fee?</source>
-        <translation>Esta transacción supera el límite de tamaño. Puede enviarla con una comisión de %1, destinada a los nodos que procesen su transacción para contribuir al mantenimiento de la red. ¿Desea pagar esta comisión?</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="-140"/>
@@ -813,12 +813,12 @@ Dirección: %4
     <message>
         <location line="+6"/>
         <source>Mandatory network transaction fee per kB transferred. Most transactions are 1 kB and incur a 0.01 PPC fee. Note: transfer size may increase depending on the number of input transactions required to be added together to fund the payment.</source>
-        <translation>Tarifa de transacción opcional por kB que ayuda a asegurar que sus transacciones sean procesadas rápidamente. La mayoría de transacciones son de 1kB.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+15"/>
         <source>Additional network &amp;fee</source>
-        <translation>Comisión de &amp;transacciones</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+31"/>

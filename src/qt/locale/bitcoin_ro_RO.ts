@@ -806,7 +806,7 @@ Address: %4
     <message>
         <location line="+15"/>
         <source>Additional network &amp;fee</source>
-        <translation>Plăteşte comision pentru tranzacţie &amp;f</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+31"/>

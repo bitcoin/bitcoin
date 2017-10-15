@@ -813,7 +813,7 @@ Adresas: %4</translation>
     <message>
         <location line="+15"/>
         <source>Additional network &amp;fee</source>
-        <translation>&amp;Mokėti sandorio mokestį</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+31"/>

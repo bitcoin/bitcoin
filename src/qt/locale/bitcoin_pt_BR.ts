@@ -607,7 +607,7 @@ Este produto inclui software desenvolvido pelo Projeto OpenSSL para uso no OpenS
     <message>
         <location line="+70"/>
         <source>You can send this transaction for a fee of %1, which is burned and prevents spamming of the network. Do you want to pay the fee?</source>
-        <translation>A transação está acima do tamanho limite. Você ainda enviar ela com uma taxa de %1, que vai para os nós processam sua transação e ajuda a manter a rede. Você quer pagar a taxa?</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="-140"/>
@@ -814,7 +814,7 @@ Endereço: %4</translation>
     <message>
         <location line="+15"/>
         <source>Additional network &amp;fee</source>
-        <translation>Pagar taxa de &amp;transação</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+31"/>

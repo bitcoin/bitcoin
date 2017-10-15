@@ -809,7 +809,7 @@ Adresa: %4</translation>
     <message>
         <location line="+15"/>
         <source>Additional network &amp;fee</source>
-        <translation>Zaplatiť transakčné &amp;poplatky</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+31"/>
