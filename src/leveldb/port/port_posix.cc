@@ -55,9 +55,12 @@ void InitOnce(OnceType* once, void (*initializer)()) {
 
 bool HasAcceleratedCRC32C() {
 #if (defined(__x86_64__) || defined(__i386__)) && defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
   unsigned int eax, ebx, ecx, edx;
   __get_cpuid(1, &eax, &ebx, &ecx, &edx);
   return (ecx & (1 << 20)) != 0;
+#pragma GCC diagnostic pop
 #else
   return false;
 #endif
