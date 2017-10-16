@@ -606,7 +606,7 @@ Toode sisaldab OpenSSL Projekti all toodetud tarkvara, mis on kasutamiseks OpenS
     </message>
     <message>
         <location line="+70"/>
-        <source>This transaction is over the size limit. You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network. Do you want to pay the fee?</source>
+        <source>You can send this transaction for a fee of %1, which is burned and prevents spamming of the network. Do you want to pay the fee?</source>
         <translation>See tehing ületab mahupiirangu. Saatmine on võimalik %1, node&apos;idele ning võrgustiku toetuseks, makstava lisatasu eest. Kas nõustud lisatasuga?</translation>
     </message>
     <message>

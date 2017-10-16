@@ -606,7 +606,7 @@ Este produto inclui software desenvolvido pelo Projeto OpenSSL para uso no OpenS
     </message>
     <message>
         <location line="+70"/>
-        <source>This transaction is over the size limit. You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network. Do you want to pay the fee?</source>
+        <source>You can send this transaction for a fee of %1, which is burned and prevents spamming of the network. Do you want to pay the fee?</source>
         <translation>A transação está acima do tamanho limite. Você ainda enviar ela com uma taxa de %1, que vai para os nós processam sua transação e ajuda a manter a rede. Você quer pagar a taxa?</translation>
     </message>
     <message>

@@ -607,7 +607,7 @@ Denna produkten innehåller mjukvara utvecklad av OpenSSL Project för användni
     </message>
     <message>
         <location line="+70"/>
-        <source>This transaction is over the size limit. You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network. Do you want to pay the fee?</source>
+        <source>You can send this transaction for a fee of %1, which is burned and prevents spamming of the network. Do you want to pay the fee?</source>
         <translation>Transaktionen överskrider storleksgränsen. Du kan dock fortfarande skicka den mot en kostnad av %1, som går till noderna som behandlar din transaktion och bidrar till nätverket. Vill du betala denna avgift?</translation>
     </message>
     <message>
