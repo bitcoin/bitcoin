@@ -1829,6 +1829,7 @@ void EscrowClaimRelease(const string& node, const string& guid)
 	float fOfferPrice = find_value(r.get_obj(), "price").get_real();
 	int icommission = find_value(r.get_obj(), "commission").get_int();
 	string sellerlink_alias = find_value(r.get_obj(), "offerlink_seller").get_str();
+	int nQtyOfferBefore = find_value(r.get_obj(), "quantity").get_int();
 
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowinfo " + guid));
 	string redeemScriptStr = find_value(r.get_obj(), "redeem_script").get_str();
@@ -1874,8 +1875,6 @@ void EscrowClaimRelease(const string& node, const string& guid)
 		nCommissionCompare = nTotalOfferPrice*(markup / 100);
 
 	BOOST_CHECK_EQUAL(nCommission , nCommissionCompare);
-
-	int nQtyOfferBefore = find_value(r.get_obj(), "quantity").get_int();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "getaddressutxos \"{\\\"addresses\\\": [\\\"" + escrowaddress + "\\\"]}\""));
 	UniValue addressUTXOsArray = r.get_array();
 	// "\"[{\\\"txid\\\":\\\"myid\\\",\\\"vout\\\":0,\\\"satoshis\\\":10000}]\"
