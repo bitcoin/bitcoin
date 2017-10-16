@@ -1744,7 +1744,7 @@ void EscrowClaimRefund(const string& node, const string& guid)
 		balanceResellerBefore = AmountFromValue(find_value(r.get_obj(), "balance"));
 	}
 
-	CAmount balanceBuyerBefore = AmountFromValue(string(buyerEscrowAmountsBefore[guid.c_str()]));
+	CAmount balanceBuyerBefore = AmountFromValue(buyerEscrowAmountsBefore[guid.c_str()]);
 
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasbalance " + arbiteralias));
 	CAmount balanceArbiterBefore = AmountFromValue(find_value(r.get_obj(), "balance"));
@@ -1912,8 +1912,7 @@ void EscrowClaimRelease(const string& node, const string& guid)
 		BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasbalance " + reselleralias));
 		balanceResellerBefore = AmountFromValue(find_value(r.get_obj(), "balance"));
 	}
-
-	CAmount balanceBuyerBefore = AmountFromValue(string(buyerEscrowAmountsBefore[guid.c_str()]));
+	CAmount balanceBuyerBefore = AmountFromValue(buyerEscrowAmountsBefore[guid.c_str()]);
 
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasbalance " + arbiteralias));
 	CAmount balanceArbiterBefore = AmountFromValue(find_value(r.get_obj(), "balance"));
