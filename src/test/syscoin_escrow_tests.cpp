@@ -164,6 +164,8 @@ BOOST_AUTO_TEST_CASE (generate_escrowrefund_invalid)
 	string inputStr = "\"[";
 	for (unsigned int i = 0; i < addressUTXOsArray.size(); i++)
 	{
+		if (i > 0)
+			inputStr += ",";
 		const UniValue& utxoObj = addressUTXOsArray[i].get_obj();
 		const string& txidStr = find_value(utxoObj.get_obj(), "txid").get_str();
 		const int& nOut = find_value(utxoObj.get_obj(), "outputIndex").get_int();
@@ -212,6 +214,8 @@ BOOST_AUTO_TEST_CASE (generate_escrowrelease_invalid)
 	string inputStr = "\"[";
 	for (unsigned int i = 0; i < addressUTXOsArray.size(); i++)
 	{
+		if (i > 0)
+			inputStr += ",";
 		const UniValue& utxoObj = addressUTXOsArray[i].get_obj();
 		const string& txidStr = find_value(utxoObj.get_obj(), "txid").get_str();
 		const int& nOut = find_value(utxoObj.get_obj(), "outputIndex").get_int();

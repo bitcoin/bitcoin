@@ -1543,7 +1543,7 @@ void EscrowRelease(const string& node, const string& role, const string& guid ,c
 	// since the core doesn't know the rate conversions this must be done externally, the seller/buyer/arbiter should check prior to signing escrow transactions.
 	CAmount nodeTotal = AmountFromValue(find_value(r.get_obj(), "total_without_fee"));
 	nodeTotal = nodeTotal / pegRates[currency];
-	BOOST_CHECK_EQUAL(AmountFromValue(strprintf("%.*f", 8, fPrice)), nodeTotal);
+	BOOST_CHECK(abs(AmountFromValue(strprintf("%.*f", 8, fPrice)) - nodeTotal) <= 0.1*COIN);
 	
 	BOOST_CHECK(pegRates.count(currency) > 0 && pegRates[currency] > 0);
 	CAmount offerprice = AmountFromValue(strprintf("%.*f", 8, fOfferPrice * pegRates[currency]));
@@ -1577,6 +1577,8 @@ void EscrowRelease(const string& node, const string& role, const string& guid ,c
 	string inputStr = "\"[";
 	for (unsigned int i = 0; i < addressUTXOsArray.size(); i++)
 	{
+		if (i > 0)
+			inputStr += ",";
 		const UniValue& utxoObj = addressUTXOsArray[i].get_obj();
 		const string& txidStr = find_value(utxoObj.get_obj(), "txid").get_str();
 		const int& nOut = find_value(utxoObj.get_obj(), "outputIndex").get_int();
@@ -1640,6 +1642,8 @@ void EscrowRefund(const string& node, const string& role, const string& guid, co
 	string inputStr = "\"[";
 	for (unsigned int i = 0; i < addressUTXOsArray.size(); i++)
 	{
+		if (i > 0)
+			inputStr += ",";
 		const UniValue& utxoObj = addressUTXOsArray[i].get_obj();
 		const string& txidStr = find_value(utxoObj.get_obj(), "txid").get_str();
 		const int& nOut = find_value(utxoObj.get_obj(), "outputIndex").get_int();
@@ -1720,6 +1724,8 @@ void EscrowClaimRefund(const string& node, const string& guid)
 	string inputStr = "\"[";
 	for (unsigned int i = 0; i < addressUTXOsArray.size(); i++)
 	{
+		if (i > 0)
+			inputStr += ",";
 		const UniValue& utxoObj = addressUTXOsArray[i].get_obj();
 		const string& txidStr = find_value(utxoObj.get_obj(), "txid").get_str();
 		const int& nOut = find_value(utxoObj.get_obj(), "outputIndex").get_int();
@@ -1888,6 +1894,8 @@ void EscrowClaimRelease(const string& node, const string& guid)
 	string inputStr = "\"[";
 	for (unsigned int i = 0; i < addressUTXOsArray.size(); i++)
 	{
+		if (i > 0)
+			inputStr += ",";
 		const UniValue& utxoObj = addressUTXOsArray[i].get_obj();
 		const string& txidStr = find_value(utxoObj.get_obj(), "txid").get_str();
 		const int& nOut = find_value(utxoObj.get_obj(), "outputIndex").get_int();
