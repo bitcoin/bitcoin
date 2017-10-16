@@ -2210,7 +2210,7 @@ UniValue escrowcreaterawtransaction(const UniValue& params, bool fHelp) {
 	}
 	CAmount nTotalWithFee = (escrow.nAmountOrBidPerUnit*escrow.nQty) + nEscrowFees;
 	CAmount nBalanceTmp = nBalance;
-	// subtract total from the amount found in the address, if this is positive the UI should complain that not enough funds were found and that more funds are required
+	// subtract total from the amount found in the address, if this is negative the UI should complain that not enough funds were found and that more funds are required
 	nBalance -= nTotalWithFee;
 
 	UniValue arrayCreateParams(UniValue::VARR);

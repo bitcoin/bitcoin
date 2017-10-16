@@ -896,8 +896,11 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	BOOST_CHECK_NO_THROW(CallRPC("node2", "escrowinfo " + escrowguid));
 	// this will recreate the alias and give it a new pubkey.. we need to use the old pubkey to sign the multisig, the escrow rpc call must check for the right pubkey
 	BOOST_CHECK(aliasexpirenode2address != AliasNew("node2", "aliasexpirednode2", "somedata"));
-	// set buyer balance to 0 so the claim release test passes, buyer balance is 0 after recreating alias
-	buyerEscrowAmountsBefore[escrowguid] = ValueFromAmount(0);
+
+	// reset buyer balance for escrow because alias was recreated
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasbalance aliasexpirednode2"));
+	buyerEscrowAmountsBefore[escrowguid] = find_value(r.get_obj(), "balance");
+
 	CertUpdate("node1", certgoodguid, "pubdata");
 	// able to release and claim release on escrow with non-expired aliases with new pubkeys
 	EscrowRelease("node2", "buyer", escrowguid);	 

@@ -1592,7 +1592,7 @@ void EscrowRelease(const string& node, const string& role, const string& guid ,c
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowcreaterawtransaction release " + guid + " " + inputStr + " " + role));
 	const UniValue &arr = r.get_array();
 	string rawtx = arr[0].get_str();
-	BOOST_CHECK(AmountFromValue(arr[1]) <= 0);
+	BOOST_CHECK(AmountFromValue(arr[1]) >= 0);
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + rawtx));
 	const UniValue& hex_value = find_value(r.get_obj(), "hex");
 	BOOST_CHECK(hex_value.get_str() != rawtx);
@@ -1657,7 +1657,7 @@ void EscrowRefund(const string& node, const string& role, const string& guid, co
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowcreaterawtransaction refund " + guid + " " + inputStr + " " + role));
 	const UniValue &arr = r.get_array();
 	string rawtx = arr[0].get_str();
-	BOOST_CHECK(AmountFromValue(arr[1]) <= 0);
+	BOOST_CHECK(AmountFromValue(arr[1]) >= 0);
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + rawtx));
 	const UniValue& hex_value = find_value(r.get_obj(), "hex");
 	BOOST_CHECK(hex_value.get_str() != rawtx);
@@ -1758,7 +1758,7 @@ void EscrowClaimRefund(const string& node, const string& guid)
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowcreaterawtransaction refund " + guid + " " + inputStr));
 	const UniValue &arr = r.get_array();
 	string rawtx = arr[0].get_str();
-	BOOST_CHECK(AmountFromValue(arr[1]) <= 0);
+	BOOST_CHECK(AmountFromValue(arr[1]) >= 0);
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + rawtx));
 	const UniValue& hex_value = find_value(r.get_obj(), "hex");
 	// ensure escrow tx is fully signed
@@ -1926,7 +1926,7 @@ void EscrowClaimRelease(const string& node, const string& guid)
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowcreaterawtransaction release " + guid + " " + inputStr));
 	const UniValue &arr = r.get_array();
 	string rawtx = arr[0].get_str();
-	BOOST_CHECK(AmountFromValue(arr[1]) <= 0);
+	BOOST_CHECK(AmountFromValue(arr[1]) >= 0);
 	// rawtx should be partially signed already, now complete the signing process
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + rawtx));
 	const UniValue& hex_value = find_value(r.get_obj(), "hex");
