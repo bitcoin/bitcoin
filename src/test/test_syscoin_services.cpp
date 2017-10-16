@@ -1814,6 +1814,7 @@ void EscrowClaimRelease(const string& node, const string& guid)
 	string currency = find_value(r.get_obj(), "currency").get_str();
 	float fOfferPrice = find_value(r.get_obj(), "price").get_real();
 	int icommission = find_value(r.get_obj(), "commission").get_int();
+	string sellerlink_alias = find_value(r.get_obj(), "offerlink_seller").get_str();
 
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowinfo " + guid));
 	string redeemScriptStr = find_value(r.get_obj(), "redeem_script").get_str();
@@ -1844,7 +1845,7 @@ void EscrowClaimRelease(const string& node, const string& guid)
 	BOOST_CHECK(pegRates.count(currency) > 0 && pegRates[currency] > 0);
 	CAmount offerprice = AmountFromValue(strprintf("%.*f", 8, fOfferPrice * pegRates[currency]));
 	CAmount nTotalOfferPrice = offerprice*nQty;
-	string sellerlink_alias = find_value(r.get_obj(), "offerlink_seller").get_str();
+	
 	int discount = 0;
 	// this step must be done in the UI,
 	// check to ensure commission is correct
