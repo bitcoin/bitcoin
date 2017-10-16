@@ -1323,7 +1323,7 @@ const string EscrowNewAuction(const string& node, const string& sellernode, cons
 	CAmount nEscrowFee = GetEscrowArbiterFee(nTotalOfferPrice, boost::lexical_cast<float>(arbiterFee));
 	CAmount nWitnessFee = GetEscrowWitnessFee(nTotalOfferPrice, boost::lexical_cast<float>(witnessFee));
 	CAmount nNetworkFee = getFeePerByte(PAYMENTOPTION_SYS) * 400;
-	if (networkFee != \"\")
+	if (networkFee != "\"\"")
 		nNetworkFee = boost::lexical_cast<int>(networkFee) * 400 * COIN;
 	CAmount nShipping = AmountFromValue(shipping);
 	string sellerlink_alias = find_value(r.get_obj(), "offerlink_seller").get_str();
@@ -1426,7 +1426,7 @@ const string EscrowNewBuyItNow(const string& node, const string& sellernode, con
 	CAmount nEscrowFee = GetEscrowArbiterFee(nTotalOfferPrice, boost::lexical_cast<float>(arbiterFee));
 	CAmount nWitnessFee = GetEscrowWitnessFee(nTotalOfferPrice, boost::lexical_cast<float>(witnessFee));
 	CAmount nNetworkFee = getFeePerByte(PAYMENTOPTION_SYS)*400;
-	if (networkFee != \"\")
+	if (networkFee != "\"\"")
 		nNetworkFee = boost::lexical_cast<int>(networkFee)*400*COIN;
 	CAmount nShipping = AmountFromValue(shipping);
 	string sellerlink_alias = find_value(r.get_obj(), "offerlink_seller").get_str();
