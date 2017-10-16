@@ -2361,7 +2361,8 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                 // Download as much as possible, from earliest to latest.
                 for (const CBlockIndex *pindex : reverse_iterate(vToFetch)) {
                     if (nodestate->nBlocksInFlight >= MAX_BLOCKS_IN_TRANSIT_PER_PEER) {
-                        // Can't download any more from this peer
+                        LogPrint(BCLog::NET, "Reached maximum blocks in transit for peer=%d. Stop requesting more blocks\n",
+                                pfrom->GetId());
                         break;
                     }
                     uint32_t nFetchFlags = GetFetchFlags(pfrom);
