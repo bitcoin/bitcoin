@@ -6,7 +6,7 @@
 #include <map>
 using namespace std;
 static map<string, float> pegRates;
-static map<const char *, const char *> buyerEscrowAmountsBefore;
+static map<string, UniValue> buyerEscrowAmountsBefore;
 /** Testing syscoin services setup that configures a complete environment with 3 nodes.
  */
 UniValue CallRPC(const string &dataDir, const string& commandWithArgs, bool regTest = true, bool readJson = true);
