@@ -1321,7 +1321,7 @@ const string EscrowNewAuction(const string& node, const string& sellernode, cons
 	CAmount nNetworkFee = getFeePerByte(PAYMENTOPTION_SYS) * 400;
 	if (networkFee != "\"\"")
 		nNetworkFee = boost::lexical_cast<int>(networkFee) * 400 * COIN;
-	CAmount nShipping = AmountFromValue(shipping);
+	CAmount nShipping = AmountFromValue(shipping == "\"\"" ? "0" : shipping);
 	string sellerlink_alias = find_value(r.get_obj(), "offerlink_seller").get_str();
 	int discount = 0;
 	// this step must be done in the UI,
@@ -1415,11 +1415,11 @@ const string EscrowNewBuyItNow(const string& node, const string& sellernode, con
 	CAmount offerprice = AmountFromValue(strprintf("%.*f", 8, find_value(r.get_obj(), "price").get_real() * pegRates[currency]));
 	CAmount nTotalOfferPrice = offerprice*qty;
 	CAmount nEscrowFee = GetEscrowArbiterFee(nTotalOfferPrice, boost::lexical_cast<float>(arbiterFee == "\"\"" ? "0.05" : arbiterFee));
-	CAmount nWitnessFee = GetEscrowWitnessFee(nTotalOfferPrice, boost::lexical_cast<float>(witnessFee == "\"\"" ? "0" : witnessFee));
+	CAmount nWitnessFee = GetEscrowWitnessFee(nTotalOfferPrice, boost::lexical_cast<float>(witnessFee == "\"\"" ? "0.0" : witnessFee));
 	CAmount nNetworkFee = getFeePerByte(PAYMENTOPTION_SYS)*400;
 	if (networkFee != "\"\"")
 		nNetworkFee = boost::lexical_cast<int>(networkFee)*400*COIN;
-	CAmount nShipping = AmountFromValue(shipping);
+	CAmount nShipping = AmountFromValue(shipping == "\"\""? "0": shipping);
 	string sellerlink_alias = find_value(r.get_obj(), "offerlink_seller").get_str();
 	int discount = 0;
 	// this step must be done in the UI,
