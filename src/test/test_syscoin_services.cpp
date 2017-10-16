@@ -1316,13 +1316,8 @@ const string EscrowNewAuction(const string& node, const string& sellernode, cons
 	float fOfferPrice = find_value(r.get_obj(), "price").get_real();
 	CAmount offerprice = AmountFromValue(strprintf("%.*f", 8, fOfferPrice * pegRates[currency]));
 	CAmount nTotalOfferPrice = offerprice*qty;
-	// set defaults
-	if (arbiterFee == "\"\"")
-		arbiterFee = "0.05";
-	if (witnessFee == "\"\"")
-		witnessFee = "0";
-	CAmount nEscrowFee = GetEscrowArbiterFee(nTotalOfferPrice, boost::lexical_cast<float>(arbiterFee));
-	CAmount nWitnessFee = GetEscrowWitnessFee(nTotalOfferPrice, boost::lexical_cast<float>(witnessFee));
+	CAmount nEscrowFee = GetEscrowArbiterFee(nTotalOfferPrice, boost::lexical_cast<float>(arbiterFee == "\"\""? "0.05": arbiterFee));
+	CAmount nWitnessFee = GetEscrowWitnessFee(nTotalOfferPrice, boost::lexical_cast<float>(witnessFee == "\"\"" ? "0" : witnessFee));
 	CAmount nNetworkFee = getFeePerByte(PAYMENTOPTION_SYS) * 400;
 	if (networkFee != "\"\"")
 		nNetworkFee = boost::lexical_cast<int>(networkFee) * 400 * COIN;
@@ -1419,13 +1414,8 @@ const string EscrowNewBuyItNow(const string& node, const string& sellernode, con
 	BOOST_CHECK(pegRates.count(currency) > 0 && pegRates[currency] > 0);
 	CAmount offerprice = AmountFromValue(strprintf("%.*f", 8, find_value(r.get_obj(), "price").get_real() * pegRates[currency]));
 	CAmount nTotalOfferPrice = offerprice*qty;
-	// set defaults
-	if (arbiterFee == "\"\"")
-		arbiterFee = "0.05";
-	if (witnessFee == "\"\"")
-		witnessFee = "0";
-	CAmount nEscrowFee = GetEscrowArbiterFee(nTotalOfferPrice, boost::lexical_cast<float>(arbiterFee));
-	CAmount nWitnessFee = GetEscrowWitnessFee(nTotalOfferPrice, boost::lexical_cast<float>(witnessFee));
+	CAmount nEscrowFee = GetEscrowArbiterFee(nTotalOfferPrice, boost::lexical_cast<float>(arbiterFee == "\"\"" ? "0.05" : arbiterFee));
+	CAmount nWitnessFee = GetEscrowWitnessFee(nTotalOfferPrice, boost::lexical_cast<float>(witnessFee == "\"\"" ? "0" : witnessFee));
 	CAmount nNetworkFee = getFeePerByte(PAYMENTOPTION_SYS)*400;
 	if (networkFee != "\"\"")
 		nNetworkFee = boost::lexical_cast<int>(networkFee)*400*COIN;
