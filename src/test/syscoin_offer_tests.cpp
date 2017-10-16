@@ -327,7 +327,7 @@ BOOST_AUTO_TEST_CASE (generate_offerupdate_editcurrency)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "escrowinfo " + escrowguid));
 	CAmount nTotal = AmountFromValue(find_value(r.get_obj(), "total_without_fee"));
 	// 2690.1 SYS/USD
-	BOOST_CHECK_EQUAL(nTotal, AmountFromValue(2 * 0.05*2690.1));
+	BOOST_CHECK(abs(nTotal - AmountFromValue(2 * 0.05*2690.1)) <= 0.0001*COIN);
 	// perform a valid update
 	OfferUpdate("node1", "selleraliascurrency", offerguid, "category", "titlenew", "90", "0.15", "descriptionnew", "CAD");
 	// accept and confirm payment is accurate with cad
@@ -335,7 +335,7 @@ BOOST_AUTO_TEST_CASE (generate_offerupdate_editcurrency)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "escrowinfo " + escrowguid));
 	nTotal = AmountFromValue(find_value(r.get_obj(), "total_without_fee"));
 	// 2698.0 SYS/CAD
-	BOOST_CHECK_EQUAL(nTotal, AmountFromValue(3*0.15*2698.0));
+	BOOST_CHECK(abs(nTotal - AmountFromValue(3 * 0.15*2698.0)) <= 0.0001*COIN);
 
 	string hex_str = AliasUpdate("node1", "selleraliascurrency", "changeddata2");
 	BOOST_CHECK(hex_str.empty());
@@ -349,7 +349,7 @@ BOOST_AUTO_TEST_CASE (generate_offerupdate_editcurrency)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "escrowinfo " + escrowguid));
 	nTotal = AmountFromValue(find_value(r.get_obj(), "total_without_fee"));
 	// 1 SYS/SYS
-	BOOST_CHECK_EQUAL(nTotal, AmountFromValue(3));
+	BOOST_CHECK(abs(nTotal - AmountFromValue(3)) <= 0.0001*COIN);
 
 	OfferUpdate("node1", "selleraliascurrency", offerguid, "category", "titlenew", "90", "0.00001000", "descriptionnew", "BTC");
 	// accept and confirm payment is accurate with btc
@@ -357,7 +357,7 @@ BOOST_AUTO_TEST_CASE (generate_offerupdate_editcurrency)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "escrowinfo " + escrowguid));
 	nTotal = AmountFromValue(find_value(r.get_obj(), "total_without_fee"));
 	// 100000.0 SYS/BTC
-	BOOST_CHECK_EQUAL(nTotal, AmountFromValue(4*0.00001000*100000.0));
+	BOOST_CHECK(abs(nTotal - AmountFromValue(4 * 0.00001000*100000.0)) <= 0.0001*COIN);
 
 	// try to update currency and accept in same block, ensure payment uses old currency not new
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "offerupdate selleraliascurrency " + offerguid + " category title 93 0.2 desc EUR"));
@@ -372,13 +372,13 @@ BOOST_AUTO_TEST_CASE (generate_offerupdate_editcurrency)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "escrowinfo " + escrowguid));
 	nTotal = AmountFromValue(find_value(r.get_obj(), "total_without_fee"));
 	// still used BTC conversion amount
-	BOOST_CHECK_EQUAL(nTotal, AmountFromValue(10*0.00001000*100000.0));
+	BOOST_CHECK(abs(nTotal - AmountFromValue(10 * 0.00001000*100000.0)) <= 0.0001*COIN);
 	// 2695.2 SYS/EUR
 	escrowguid = OfferAccept("node1", "node2", "buyeraliascurrency", "arbiteraliascurrency", offerguid, "3");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "escrowinfo " + escrowguid));
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "currency").get_str(), "EUR");
 	nTotal = AmountFromValue(find_value(r.get_obj(), "total_without_fee"));
-	BOOST_CHECK_EQUAL(nTotal, AmountFromValue(3*0.2*2695.2));
+	BOOST_CHECK(abs(nTotal - AmountFromValue(3 * 0.2*2695.2)) <= 0.0001*COIN);
 
 	// linked offer with root and linked offer changing currencies
 
