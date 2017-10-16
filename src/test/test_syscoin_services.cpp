@@ -6,6 +6,7 @@
 #include "feedback.h"
 #include "cert.h"
 #include "escrow.h"
+#include "offer.h"
 #include "alias.h"
 #include "wallet/crypter.h"
 #include "random.h"
