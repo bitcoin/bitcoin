@@ -27,7 +27,7 @@ static int node4LastBlock=0;
 static bool node1Online = false;
 static bool node2Online = false;
 static bool node3Online = false;
-
+map<string, CAmount> buyerEscrowAmountsBefore;
 // SYSCOIN testing setup
 void StartNodes()
 {
@@ -1306,6 +1306,8 @@ const string EscrowNewAuction(const string& node, const string& sellernode, cons
 	GetOtherNodes(node, otherNode1, otherNode2);
 	UniValue r;
 	int qty = atoi(qtyStr.c_str());
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasbalance " + buyeralias));
+	CAmount balanceBuyerBefore = AmountFromValue(find_value(r.get_obj(), "balance"));
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "offerinfo " + offerguid));
 	int nQtyBefore = find_value(r.get_obj(), "quantity").get_int();
 	string selleralias = find_value(r.get_obj(), "alias").get_str();
@@ -1345,6 +1347,7 @@ const string EscrowNewAuction(const string& node, const string& sellernode, cons
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrownew false " + buyeralias + " " + arbiteralias + " " + offerguid + " " + qtyStr + " " + buyNowStr + " " + strTotalInPaymentOption + " " + shipping + " " + networkFee + " " + arbiterFee + " " + witnessFee + " " + exttxid + " " + paymentoptions + " " + bid_in_payment_option + " " + bid_in_offer_currency + " " + witness));
 	const UniValue &arr = r.get_array();
 	string guid = arr[1].get_str();
+	buyerEscrowAmountsBefore[guid] = balanceBuyerBefore;
 	GenerateBlocks(10, node);
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowinfo " + guid));
 	CAmount nCommission = AmountFromValue(find_value(r.get_obj(), "commission"));
@@ -1406,6 +1409,8 @@ const string EscrowNewBuyItNow(const string& node, const string& sellernode, con
 	GetOtherNodes(node, otherNode1, otherNode2);
 	UniValue r;
 	int qty = atoi(qtyStr.c_str());
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasbalance " + buyeralias));
+	CAmount balanceBuyerBefore = AmountFromValue(find_value(r.get_obj(), "balance"));
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "offerinfo " + offerguid));
 	int nQtyBefore = find_value(r.get_obj(), "quantity").get_int();
 	string selleralias = find_value(r.get_obj(), "alias").get_str();
@@ -1446,6 +1451,7 @@ const string EscrowNewBuyItNow(const string& node, const string& sellernode, con
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrownew false " + buyeralias + " " + arbiteralias + " " + offerguid + " " + qtyStr + " " + buyNowStr + " " + strTotalInPaymentOption + " " + shipping + " " + networkFee + " " + arbiterFee + " " + witnessFee + " " + exttxid + " " + paymentoptions + " " + strBidInPaymentOption + " " + strBidInPaymentOption + " " + witness));
 	const UniValue &arr = r.get_array();
 	string guid = arr[1].get_str();
+	buyerEscrowAmountsBefore[guid] = balanceBuyerBefore;
 	GenerateBlocks(10, node);
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "offerinfo " + offerguid));
 	int nQtyAfter = find_value(r.get_obj(), "quantity").get_int();
@@ -1731,8 +1737,9 @@ void EscrowClaimRefund(const string& node, const string& guid)
 		BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasbalance " + reselleralias));
 		balanceResellerBefore = AmountFromValue(find_value(r.get_obj(), "balance"));
 	}
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasbalance " + buyeralias));
-	CAmount balanceBuyerBefore = AmountFromValue(find_value(r.get_obj(), "balance"));
+
+	CAmount balanceBuyerBefore = buyerEscrowAmountsBefore[guid];
+
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasbalance " + arbiteralias));
 	CAmount balanceArbiterBefore = AmountFromValue(find_value(r.get_obj(), "balance"));
 
@@ -1897,8 +1904,9 @@ void EscrowClaimRelease(const string& node, const string& guid)
 		BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasbalance " + reselleralias));
 		balanceResellerBefore = AmountFromValue(find_value(r.get_obj(), "balance"));
 	}
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasbalance " + buyeralias));
-	CAmount balanceBuyerBefore = AmountFromValue(find_value(r.get_obj(), "balance"));
+
+	CAmount balanceBuyerBefore = buyerEscrowAmountsBefore[guid];
+
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasbalance " + arbiteralias));
 	CAmount balanceArbiterBefore = AmountFromValue(find_value(r.get_obj(), "balance"));
 	CAmount balanceWitnessBefore = 0;
