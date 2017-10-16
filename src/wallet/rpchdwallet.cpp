@@ -2995,6 +2995,7 @@ UniValue filtertransactions(const JSONRPCRequest &request)
             "                \"include_watchonly\": false,\n"
             "                \"search\":            ''\n"
             "                \"category\":          'all',\n"
+            "                \"type\":              'all',\n"
             "                \"sort\":              'time'\n"
             "        }\n"
             "\n"
@@ -3013,6 +3014,9 @@ UniValue filtertransactions(const JSONRPCRequest &request)
             "                                   (string from list)\n"
             "                                   all, send, orphan, immature, coinbase, receive,\n"
             "                                   orphaned_stake, stake, internal_transfer\n"
+            "                type:              select only one type of transactions to return\n"
+            "                                   (string from list)\n"
+            "                                   all, standard, anon, blind\n"
             "                sort:              sort transactions by criteria\n"
             "                                   (string from list)\n"
             "                                   time          most recent first\n"
@@ -3038,6 +3042,7 @@ UniValue filtertransactions(const JSONRPCRequest &request)
     isminefilter watchonly = ISMINE_SPENDABLE;
     std::string  search    = "";
     std::string  category  = "all";
+    std::string  type      = "all";
     std::string  sort      = "time";
 
     if (!request.params[0].isNull()) {
@@ -3049,6 +3054,7 @@ UniValue filtertransactions(const JSONRPCRequest &request)
                 {"watchonly", UniValueType(UniValue::VBOOL)},
                 {"search",    UniValueType(UniValue::VSTR)},
                 {"category",  UniValueType(UniValue::VSTR)},
+                {"type",      UniValueType(UniValue::VSTR)},
                 {"sort",      UniValueType(UniValue::VSTR)}
             },
             true,             // alow null
@@ -3094,6 +3100,20 @@ UniValue filtertransactions(const JSONRPCRequest &request)
             if (it == categories.end()) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER,
                     strprintf("Invalid category: %s.", category));
+            }
+        }
+        if (options.exists("type")) {
+            type = options["type"].get_str();
+            std::vector<std::string> types = {
+                "all",
+                "standard",
+                "anon",
+                "blind"
+            };
+            auto it = std::find(types.begin(), types.end(), type);
+            if (it == types.end()) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER,
+                    strprintf("Invalid type: %s.", type));
             }
         }
         if (options.exists("sort")) {
@@ -3177,10 +3197,25 @@ UniValue filtertransactions(const JSONRPCRequest &request)
         );
     });
     
-    // count and skip
+    // filter, skip and count
     UniValue result(UniValue::VARR);
+    // for every value while count is positive
     for (unsigned int i = 0; i < values.size() && count > 0; i++) {
+        // if value's category is relevant
         if (values[i]["category"].get_str() == category || category == "all") {
+            // if value's type is not relevant
+            if (values[i]["type"].getType() == 0) {
+                // value's type is undefined
+                if (!(type == "all" || type == "standard")) {
+                    // type is not 'all' or 'standard'
+                    continue ;
+                }
+            } else if (!(values[i]["type"].get_str() == type || type == "all")) {
+                // value's type is defined
+                // value's type is not type or 'all'
+                continue ;
+            }
+            // if we've skipped enough valid values
             if (skip-- <= 0) {
                 result.push_back(values[i]);
                 count--;

@@ -249,8 +249,8 @@ class FilterTransactionsTest(ParticlTestFramework):
                 assert(len(ro) == category[1])
         
         # category 'all'
-        length = len(nodes[0].filtertransactions())
-        ro = nodes[0].filtertransactions({ 'category': 'all' })
+        length = len(nodes[0].filtertransactions({'count': 20}))
+        ro = nodes[0].filtertransactions({ 'category': 'all', 'count': 20 })
         assert(len(ro) == length)
         
         # invalid transaction category
@@ -259,6 +259,37 @@ class FilterTransactionsTest(ParticlTestFramework):
             assert(False)
         except JSONRPCException as e:
             assert('Invalid category' in e.error['message'])
+
+        #
+        # type
+        #
+        
+        # type 'all'
+        length = len(nodes[0].filtertransactions({'count': 20}))
+        ro = nodes[0].filtertransactions({ 'type': 'all', 'count': 20 })
+        assert(len(ro) == length)
+        
+        # type 'standard'
+        ro = nodes[0].filtertransactions({ 'type': 'standard', 'count': 20 })
+        for t in ro:
+            assert('type' not in t)
+        
+        # type 'anon'
+        ro = nodes[0].filtertransactions({ 'type': 'anon', 'count': 20 })
+        for t in ro:
+            assert(t["type"] == 'anon')
+        
+        # type 'blind'
+        ro = nodes[0].filtertransactions({ 'type': 'blind', 'count': 20 })
+        for t in ro:
+            assert(t["type"] == 'blind')
+        
+        # invalid transaction type
+        try:
+            ro = nodes[0].filtertransactions({ 'type': 'invalid' })
+            assert(False)
+        except JSONRPCException as e:
+            assert('Invalid type' in e.error['message'])
 
         #
         # sort
