@@ -361,7 +361,9 @@ BOOST_AUTO_TEST_CASE (generate_offerupdate_editcurrency)
 
 	// try to update currency and accept in same block, ensure payment uses old currency not new
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "offerupdate selleraliascurrency " + offerguid + " category title 93 0.2 desc EUR"));
-	escrowguid = OfferAccept("node1", "node2", "buyeraliascurrency", "arbiteraliascurrency", offerguid, "10");
+	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "escrownew false buyeraliascurrency arbiteraliascurrency " + offerguid + " 10 true 1"));
+	const UniValue &arr = r.get_array();
+	escrowguid = arr[1].get_str();
 	GenerateBlocks(5);
 	GenerateBlocks(5);
 	GenerateBlocks(5, "node2");
@@ -434,7 +436,7 @@ BOOST_AUTO_TEST_CASE (generate_linkedaccept)
 	string lofferguid = OfferLink("node2", "node2aliaslinked", offerguid, "20", "newdescription");
 	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress node3aliaslinked 8500"), runtime_error);
 	GenerateBlocks(10);
-	OfferAccept("node1", "node3", "node3aliaslinked", "node3aliaslinked", lofferguid, "6");
+	OfferAccept("node1", "node3", "node2aliaslinked", "node3aliaslinked", lofferguid, "6");
 }
 BOOST_AUTO_TEST_CASE (generate_cert_linkedaccept)
 {
