@@ -838,7 +838,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	AliasNew("node1", "aliasexpire2", "pubdata");
 	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress aliasexpirednode2 3000"), runtime_error);
 	GenerateBlocks(10);	
-	string escrowguid = EscrowNewBuyItNow("node2", "node1", "aliasexpirednode2", offerguid, "1", "aliasexpire3");
+	const string &escrowguid = EscrowNewBuyItNow("node2", "node1", "aliasexpirednode2", offerguid, "1", "aliasexpire3");
 	string aliasexpire2node2address = AliasNew("node2", "aliasexpire2node2", "pubdata");
 	string certgoodguid = CertNew("node1", "aliasexpire2", "certtitle", "pubdata");
 	ExpireAlias("aliasexpirednode2");
