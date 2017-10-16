@@ -1725,14 +1725,22 @@ void EscrowClaimRefund(const string& node, const string& guid)
 	// get balances before
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasbalance " + selleralias));
 	CAmount balanceSellerBefore = AmountFromValue(find_value(r.get_obj(), "balance"));
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasbalance " + reselleralias));
-	CAmount balanceResellerBefore = AmountFromValue(find_value(r.get_obj(), "balance"));
+
+	CAmount balanceResellerBefore = 0;
+	if (!reselleralias.empty()) {
+		BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasbalance " + reselleralias));
+		balanceResellerBefore = AmountFromValue(find_value(r.get_obj(), "balance"));
+	}
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasbalance " + buyeralias));
 	CAmount balanceBuyerBefore = AmountFromValue(find_value(r.get_obj(), "balance"));
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasbalance " + arbiteralias));
 	CAmount balanceArbiterBefore = AmountFromValue(find_value(r.get_obj(), "balance"));
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasbalance " + witnessalias));
-	CAmount balanceWitnessBefore = AmountFromValue(find_value(r.get_obj(), "balance"));
+
+	CAmount balanceWitnessBefore = 0;
+	if (!witnessalias.empty()) {
+		BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasbalance " + witnessalias));
+		balanceWitnessBefore = AmountFromValue(find_value(r.get_obj(), "balance"));
+	}
 	// "escrowcreaterawtransaction <type> <escrow guid> <[{\"txid\":\"id\",\"vout\":n, \"satoshis\":n},...]> [user role]\n"
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowcreaterawtransaction refund " + guid + " " + inputStr));
 	const UniValue &arr = r.get_array();
@@ -1763,14 +1771,20 @@ void EscrowClaimRefund(const string& node, const string& guid)
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasbalance " + selleralias));
 	CAmount balanceSellerAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
 
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasbalance " + reselleralias));
-	CAmount balanceResellerAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
+	CAmount balanceResellerAfter = 0;
+	if (!reselleralias.empty()) {
+		BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasbalance " + reselleralias));
+		balanceResellerAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
+	}
 
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasbalance " + arbiteralias));
 	CAmount balanceArbiterAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
 
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasbalance " + witnessalias));
-	CAmount balanceWitnessAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
+	CAmount balanceWitnessAfter = 0;
+	if (!witnessalias.empty()) {
+		BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasbalance " + witnessalias));
+		balanceWitnessAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
+	}
 
 	balanceBuyerBefore += (nWitnessFee + nShipping + nDeposit);
 	// if buy it now(not auction), we must have paid total, otherwise we only refund some of the fees
@@ -1879,14 +1893,20 @@ void EscrowClaimRelease(const string& node, const string& guid)
 	// get balances before
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasbalance " + selleralias));
 	CAmount balanceSellerBefore = AmountFromValue(find_value(r.get_obj(), "balance"));
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasbalance " + reselleralias));
-	CAmount balanceResellerBefore = AmountFromValue(find_value(r.get_obj(), "balance"));
+	CAmount balanceResellerBefore = 0;
+	if (!reselleralias.empty()) {
+		BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasbalance " + reselleralias));
+		balanceResellerBefore = AmountFromValue(find_value(r.get_obj(), "balance"));
+	}
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasbalance " + buyeralias));
 	CAmount balanceBuyerBefore = AmountFromValue(find_value(r.get_obj(), "balance"));
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasbalance " + arbiteralias));
 	CAmount balanceArbiterBefore = AmountFromValue(find_value(r.get_obj(), "balance"));
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasbalance " + witnessalias));
-	CAmount balanceWitnessBefore = AmountFromValue(find_value(r.get_obj(), "balance"));
+	CAmount balanceWitnessBefore = 0;
+	if (!witnessalias.empty()) {
+		BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasbalance " + witnessalias));
+		balanceWitnessBefore = AmountFromValue(find_value(r.get_obj(), "balance"));
+	}
 	// "escrowcreaterawtransaction <type> <escrow guid> <[{\"txid\":\"id\",\"vout\":n, \"satoshis\":n},...]> [user role]\n"
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowcreaterawtransaction release " + guid + " " + inputStr));
 	const UniValue &arr = r.get_array();
@@ -1915,15 +1935,20 @@ void EscrowClaimRelease(const string& node, const string& guid)
 
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasbalance " + buyeralias));
 	CAmount balanceBuyerAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
-
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasbalance " + reselleralias));
-	CAmount balanceResellerAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
+	CAmount balanceResellerAfter = 0;
+	if (!reselleralias.empty()) {
+		BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasbalance " + reselleralias));
+		balanceResellerAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
+	}
 
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasbalance " + arbiteralias));
 	CAmount balanceArbiterAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
 
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasbalance " + witnessalias));
-	CAmount balanceWitnessAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
+	CAmount balanceWitnessAfter = 0;
+	if (!witnessalias.empty()) {
+		BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasbalance " + witnessalias));
+		balanceWitnessAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
+	}
 
 	balanceSellerBefore += (nTotalWithoutFee - nCommission);
 	balanceBuyerBefore -= (nTotalWithoutFee + nArbiterFee + nNetworkFee + nWitnessFee + nShipping + nDeposit);
