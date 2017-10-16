@@ -898,8 +898,8 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	BOOST_CHECK(aliasexpirenode2address != AliasNew("node2", "aliasexpirednode2", "somedata"));
 
 	// reset buyer balance for escrow because alias was recreated
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasbalance aliasexpirednode2"));
-	buyerEscrowAmountsBefore.insert(make_pair(escrowguid, find_value(r.get_obj(), "balance"));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasbalance aliasexpirednode2"));
+	buyerEscrowAmountsBefore.insert(make_pair(escrowguid, find_value(r.get_obj(), "balance")));
 
 	CertUpdate("node1", certgoodguid, "pubdata");
 	// able to release and claim release on escrow with non-expired aliases with new pubkeys
