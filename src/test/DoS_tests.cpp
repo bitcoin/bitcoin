@@ -84,6 +84,92 @@ BOOST_AUTO_TEST_CASE(outbound_slow_chain_eviction)
     peerLogic->FinalizeNode(dummyNode1.GetId(), dummy);
 }
 
+// Test eviction of an outbound peer due to stale tip
+BOOST_AUTO_TEST_CASE(outbound_stale_tip_eviction)
+{
+    std::atomic<bool> interruptDummy(false);
+
+    // Mock a few outbound peers
+    CAddress addr1(ip(0xa0b0c001), NODE_NONE);
+    CNode dummyNode1(id++, ServiceFlags(NODE_NETWORK|NODE_WITNESS), 0, INVALID_SOCKET, addr1, 0, 0, CAddress(), "", /*fInboundIn=*/ false);
+    dummyNode1.SetSendVersion(PROTOCOL_VERSION);
+
+    CAddress addr2(ip(0xaabbccdd), NODE_NONE);
+    CNode dummyNode2(id++, ServiceFlags(NODE_NETWORK|NODE_WITNESS), 0, INVALID_SOCKET, addr2, 0, 0, CAddress(), "", /*fInboundIn=*/ false);
+    dummyNode2.SetSendVersion(PROTOCOL_VERSION);
+
+    CAddress addr3(ip(0xbbccddaa), NODE_NONE);
+    // Ensure that nTimeConnected for node3 is after node2
+    // TODO: find a better way to do this than sleeping!
+    MilliSleep(1000);
+    CNode dummyNode3(id++, ServiceFlags(NODE_NETWORK|NODE_WITNESS), 0, INVALID_SOCKET, addr3, 0, 0, CAddress(), "", /*fInboundIn=*/ false);
+    dummyNode3.SetSendVersion(PROTOCOL_VERSION);
+
+    connman->AddToVNodes(dummyNode1);
+    connman->AddToVNodes(dummyNode2);
+    connman->AddToVNodes(dummyNode3);
+
+    peerLogic->InitializeNode(&dummyNode1);
+    peerLogic->InitializeNode(&dummyNode2);
+    peerLogic->InitializeNode(&dummyNode3);
+
+    dummyNode1.nVersion = 1;
+    dummyNode1.fSuccessfullyConnected = true;
+
+    dummyNode2.nVersion = 1;
+    dummyNode2.fSuccessfullyConnected = true;
+
+    dummyNode3.nVersion = 1;
+    dummyNode3.fSuccessfullyConnected = true;
+
+    int64_t start_time = GetTime();
+    SetMockTime(start_time - 10*60);
+    peerLogic->UpdateLastAnnouncement(dummyNode1.GetId());
+    SetMockTime(start_time - 30*60);
+    peerLogic->UpdateLastAnnouncement(dummyNode2.GetId());
+    SetMockTime(start_time - 20*60);
+    peerLogic->UpdateLastAnnouncement(dummyNode3.GetId());
+    SetMockTime(start_time);
+
+    peerLogic->ClearTipStaleCheckTime();
+
+    peerLogic->SendMessages(&dummyNode1, interruptDummy); // should set stale tip check time
+
+    SetMockTime(start_time + 119*60);
+
+    // Nothing should happen yet -- timeout not yet reached
+    peerLogic->SendMessages(&dummyNode2, interruptDummy);
+    BOOST_CHECK(dummyNode1.m_eviction_candidate == false);
+    BOOST_CHECK(dummyNode2.m_eviction_candidate == false);
+    BOOST_CHECK(dummyNode3.m_eviction_candidate == false);
+    BOOST_CHECK(dummyNode1.fDisconnect == false);
+    BOOST_CHECK(dummyNode2.fDisconnect == false);
+    BOOST_CHECK(dummyNode3.fDisconnect == false);
+
+    SetMockTime(start_time + 130*60);
+    // Now we should choose a peer to evict
+    peerLogic->SendMessages(&dummyNode3, interruptDummy);
+    BOOST_CHECK(dummyNode1.m_eviction_candidate == false);
+    BOOST_CHECK(dummyNode2.m_eviction_candidate == true);
+    BOOST_CHECK(dummyNode3.m_eviction_candidate == false);
+
+    // Check the handling of ties
+    SetMockTime(start_time - 20*60);
+    peerLogic->UpdateLastAnnouncement(dummyNode2.GetId());
+    SetMockTime(start_time + 260*60);
+    peerLogic->SendMessages(&dummyNode2, interruptDummy);
+    BOOST_CHECK(dummyNode1.m_eviction_candidate == false);
+    BOOST_CHECK(dummyNode2.m_eviction_candidate == false);
+    BOOST_CHECK(dummyNode3.m_eviction_candidate == true);
+
+    bool dummy;
+    peerLogic->FinalizeNode(dummyNode1.GetId(), dummy);
+    peerLogic->FinalizeNode(dummyNode2.GetId(), dummy);
+    peerLogic->FinalizeNode(dummyNode3.GetId(), dummy);
+
+    connman->ClearVNodes();
+}
+
 BOOST_AUTO_TEST_CASE(DoS_banning)
 {
     std::atomic<bool> interruptDummy(false);
