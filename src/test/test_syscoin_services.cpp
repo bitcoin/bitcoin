@@ -1346,7 +1346,7 @@ const string EscrowNewAuction(const string& node, const string& sellernode, cons
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrownew false " + buyeralias + " " + arbiteralias + " " + offerguid + " " + qtyStr + " " + buyNowStr + " " + strTotalInPaymentOption + " " + shipping + " " + networkFee + " " + arbiterFee + " " + witnessFee + " " + exttxid + " " + paymentoptions + " " + bid_in_payment_option + " " + bid_in_offer_currency + " " + witness));
 	const UniValue &arr = r.get_array();
 	string guid = arr[1].get_str();
-	buyerEscrowAmountsBefore[guid] = ValueFromAmount(balanceBuyerBefore);
+	buyerEscrowAmountsBefore[guid] = balanceBuyerBefore;
 	GenerateBlocks(10, node);
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowinfo " + guid));
 	CAmount nCommission = AmountFromValue(find_value(r.get_obj(), "commission"));
@@ -1450,7 +1450,7 @@ const string EscrowNewBuyItNow(const string& node, const string& sellernode, con
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrownew false " + buyeralias + " " + arbiteralias + " " + offerguid + " " + qtyStr + " " + buyNowStr + " " + strTotalInPaymentOption + " " + shipping + " " + networkFee + " " + arbiterFee + " " + witnessFee + " " + exttxid + " " + paymentoptions + " " + strBidInPaymentOption + " " + strBidInPaymentOption + " " + witness));
 	const UniValue &arr = r.get_array();
 	const string &guid = arr[1].get_str();
-	buyerEscrowAmountsBefore[guid] = ValueFromAmount(balanceBuyerBefore);
+	buyerEscrowAmountsBefore[guid] = balanceBuyerBefore;
 	GenerateBlocks(10, node);
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "offerinfo " + offerguid));
 	int nQtyAfter = find_value(r.get_obj(), "quantity").get_int();
@@ -1592,7 +1592,10 @@ void EscrowRelease(const string& node, const string& role, const string& guid ,c
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowcreaterawtransaction release " + guid + " " + inputStr + " " + role));
 	const UniValue &arr = r.get_array();
 	string rawtx = arr[0].get_str();
+
+	// UI should ensure value is >= 0  or else tell user it does not have enough funds in escrow address
 	BOOST_CHECK(AmountFromValue(arr[1]) >= 0);
+
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + rawtx));
 	const UniValue& hex_value = find_value(r.get_obj(), "hex");
 	BOOST_CHECK(hex_value.get_str() != rawtx);
@@ -1744,7 +1747,7 @@ void EscrowClaimRefund(const string& node, const string& guid)
 		balanceResellerBefore = AmountFromValue(find_value(r.get_obj(), "balance"));
 	}
 
-	CAmount balanceBuyerBefore = AmountFromValue(buyerEscrowAmountsBefore[guid]);
+	CAmount balanceBuyerBefore = buyerEscrowAmountsBefore[guid];
 
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasbalance " + arbiteralias));
 	CAmount balanceArbiterBefore = AmountFromValue(find_value(r.get_obj(), "balance"));
@@ -1913,7 +1916,7 @@ void EscrowClaimRelease(const string& node, const string& guid)
 		balanceResellerBefore = AmountFromValue(find_value(r.get_obj(), "balance"));
 	}
 
-	CAmount balanceBuyerBefore = AmountFromValue(buyerEscrowAmountsBefore[guid]);
+	CAmount balanceBuyerBefore = buyerEscrowAmountsBefore[guid];
 
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasbalance " + arbiteralias));
 	CAmount balanceArbiterBefore = AmountFromValue(find_value(r.get_obj(), "balance"));
