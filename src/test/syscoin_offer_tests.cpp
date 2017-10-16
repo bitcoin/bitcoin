@@ -361,9 +361,7 @@ BOOST_AUTO_TEST_CASE (generate_offerupdate_editcurrency)
 
 	// try to update currency and accept in same block, ensure payment uses old currency not new
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "offerupdate selleraliascurrency " + offerguid + " category title 93 0.2 desc EUR"));
-	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "escrownew false buyeraliascurrency arbiteraliascurrency " + offerguid + " 10 true 0"));
-	const UniValue &arr = r.get_array();
-	escrowguid = arr[1].get_str();
+	escrowguid = OfferAccept("node1", "node2", "buyeraliascurrency", "arbiteraliascurrency", offerguid, "10");
 	GenerateBlocks(5);
 	GenerateBlocks(5);
 	GenerateBlocks(5, "node2");
