@@ -14,7 +14,6 @@ from test_framework.blocktools import (create_block, create_coinbase)
 from test_framework.mininode import (
     CInv,
     NetworkThread,
-    NodeConn,
     NodeConnCB,
     msg_headers,
     msg_block,
@@ -23,10 +22,7 @@ from test_framework.mininode import (
     wait_until,
 )
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import (
-    assert_equal,
-    p2p_port,
-)
+from test_framework.util import assert_equal
 
 class P2PFingerprintTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -77,14 +73,10 @@ class P2PFingerprintTest(BitcoinTestFramework):
     # This does not currently test that stale blocks timestamped within the
     # last month but that have over a month's worth of work are also withheld.
     def run_test(self):
-        node0 = NodeConnCB()
-
-        connections = []
-        connections.append(NodeConn('127.0.0.1', p2p_port(0), self.nodes[0], node0))
-        node0.add_connection(connections[0])
+        p2p = self.nodes[0].add_p2p_connection(p2p_conn_type=NodeConnCB)
 
         NetworkThread().start()
-        node0.wait_for_verack()
+        p2p.wait_for_verack()
 
         # Set node time to 60 days ago
         self.nodes[0].setmocktime(int(time.time()) - 60 * 24 * 60 * 60)
@@ -99,10 +91,10 @@ class P2PFingerprintTest(BitcoinTestFramework):
         new_blocks = self.build_chain(5, block_hash, height, block_time)
 
         # Force reorg to a longer chain
-        node0.send_message(msg_headers(new_blocks))
-        node0.wait_for_getdata()
+        p2p.send_message(msg_headers(new_blocks))
+        p2p.wait_for_getdata()
         for block in new_blocks:
-            node0.send_and_ping(msg_block(block))
+            p2p.send_and_ping(msg_block(block))
 
         # Check that reorg succeeded
         assert_equal(self.nodes[0].getblockcount(), 13)
@@ -110,13 +102,13 @@ class P2PFingerprintTest(BitcoinTestFramework):
         stale_hash = int(block_hashes[-1], 16)
 
         # Check that getdata request for stale block succeeds
-        self.send_block_request(stale_hash, node0)
-        test_function = lambda: self.last_block_equals(stale_hash, node0)
+        self.send_block_request(stale_hash, p2p)
+        test_function = lambda: self.last_block_equals(stale_hash, p2p)
         wait_until(test_function, timeout=3)
 
         # Check that getheader request for stale block header succeeds
-        self.send_header_request(stale_hash, node0)
-        test_function = lambda: self.last_header_equals(stale_hash, node0)
+        self.send_header_request(stale_hash, p2p)
+        test_function = lambda: self.last_header_equals(stale_hash, p2p)
         wait_until(test_function, timeout=3)
 
         # Longest chain is extended so stale is much older than chain tip
@@ -126,32 +118,32 @@ class P2PFingerprintTest(BitcoinTestFramework):
 
         # Send getdata & getheaders to refresh last received getheader message
         block_hash = int(tip, 16)
-        self.send_block_request(block_hash, node0)
-        self.send_header_request(block_hash, node0)
-        node0.sync_with_ping()
+        self.send_block_request(block_hash, p2p)
+        self.send_header_request(block_hash, p2p)
+        p2p.sync_with_ping()
 
         # Request for very old stale block should now fail
-        self.send_block_request(stale_hash, node0)
+        self.send_block_request(stale_hash, p2p)
         time.sleep(3)
-        assert not self.last_block_equals(stale_hash, node0)
+        assert not self.last_block_equals(stale_hash, p2p)
 
         # Request for very old stale block header should now fail
-        self.send_header_request(stale_hash, node0)
+        self.send_header_request(stale_hash, p2p)
         time.sleep(3)
-        assert not self.last_header_equals(stale_hash, node0)
+        assert not self.last_header_equals(stale_hash, p2p)
 
         # Verify we can fetch very old blocks and headers on the active chain
         block_hash = int(block_hashes[2], 16)
-        self.send_block_request(block_hash, node0)
-        self.send_header_request(block_hash, node0)
-        node0.sync_with_ping()
+        self.send_block_request(block_hash, p2p)
+        self.send_header_request(block_hash, p2p)
+        p2p.sync_with_ping()
 
-        self.send_block_request(block_hash, node0)
-        test_function = lambda: self.last_block_equals(block_hash, node0)
+        self.send_block_request(block_hash, p2p)
+        test_function = lambda: self.last_block_equals(block_hash, p2p)
         wait_until(test_function, timeout=3)
 
-        self.send_header_request(block_hash, node0)
-        test_function = lambda: self.last_header_equals(block_hash, node0)
+        self.send_header_request(block_hash, p2p)
+        test_function = lambda: self.last_header_equals(block_hash, p2p)
         wait_until(test_function, timeout=3)
 
 if __name__ == '__main__':
