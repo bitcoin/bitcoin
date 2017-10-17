@@ -32,7 +32,6 @@ messagemap = {
     b"version": msg_version,
     b"verack": msg_verack,
     b"addr": msg_addr,
-    b"alert": msg_alert,
     b"inv": msg_inv,
     b"getdata": msg_getdata,
     b"getblocks": msg_getblocks,
@@ -108,7 +107,6 @@ class NodeConnCB():
         self.connection = None
 
     def on_addr(self, conn, message): pass
-    def on_alert(self, conn, message): pass
     def on_block(self, conn, message): pass
     def on_blocktxn(self, conn, message): pass
     def on_cmpctblock(self, conn, message): pass
