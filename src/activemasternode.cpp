@@ -308,6 +308,12 @@ void CActiveMasternode::ManageStateLocal(CConnman& connman)
             return;
         }
 
+        {
+            LOCK(cs_main);
+            // remember the hash of the block where masternode collateral had minimum required confirmations
+            mnb.nCollateralMinConfBlockHash = chainActive[GetUTXOHeight(outpoint) + Params().GetConsensus().nMasternodeMinimumConfirmations - 1]->GetBlockHash();
+        }
+
         fPingerEnabled = true;
         nState = ACTIVE_MASTERNODE_STARTED;
 
