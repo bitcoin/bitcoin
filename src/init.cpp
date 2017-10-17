@@ -277,7 +277,6 @@ void PrepareShutdown()
         if (pcoinsTip != NULL) {
             FlushStateToDisk();
         }
-		stopMongoDB();
         delete pcoinsTip;
         pcoinsTip = NULL;
         delete pcoinscatcher;
@@ -339,6 +338,8 @@ void Shutdown()
 #endif
     globalVerifyHandle.reset();
     ECC_Stop();
+	// SYSCOIN
+	stopMongoDB();
     LogPrintf("%s: done\n", __func__);
 }
 

@@ -134,6 +134,8 @@ BOOST_AUTO_TEST_CASE (generate_certpruning)
 	StartNode("node1");
 	GenerateBlocks(5, "node1");
 
+	BOOST_CHECK_THROW(CallRPC("node1", "certinfo " + guid), runtime_error);
+
 	BOOST_CHECK_EQUAL(CertFilter("node1", guid), false);
 	// create a new service
 	AliasNew("node1", "jagprune1", "temp");
