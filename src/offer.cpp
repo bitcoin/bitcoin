@@ -1708,6 +1708,6 @@ void OfferTxToJSON(const int op, const std::vector<unsigned char> &vchData, cons
 float COffer::GetPrice() const {
 	float price = fPrice;
 	if (nCommission != 0)
-		price += price*(nCommission /100);
+		price += price*((float)nCommission / 100.0f);
 	return price;
 }
