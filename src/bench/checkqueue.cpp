@@ -99,5 +99,5 @@ static void CCheckQueueSpeedPrevectorJob(benchmark::State& state)
     tg.interrupt_all();
     tg.join_all();
 }
-BENCHMARK(CCheckQueueSpeed);
-BENCHMARK(CCheckQueueSpeedPrevectorJob);
+BENCHMARK(CCheckQueueSpeed, 29000);
+BENCHMARK(CCheckQueueSpeedPrevectorJob, 1400);

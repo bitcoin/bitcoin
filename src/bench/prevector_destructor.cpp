@@ -32,5 +32,5 @@ static void PrevectorClear(benchmark::State& state)
     }
 }
 
-BENCHMARK(PrevectorDestructor);
-BENCHMARK(PrevectorClear);
+BENCHMARK(PrevectorDestructor, 5700);
+BENCHMARK(PrevectorClear, 5600);
