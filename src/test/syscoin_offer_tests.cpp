@@ -453,27 +453,27 @@ BOOST_AUTO_TEST_CASE (generate_cert_linkedaccept)
 	GenerateBlocks(5, "node2");
 	GenerateBlocks(5, "node3");
 
-	AliasNew("node1", "node1alias", "node1aliasdata");
-	AliasNew("node2", "node2alias", "node2aliasdata");
-	AliasNew("node3", "node3alias", "node2aliasdata");
+	AliasNew("node1", "node1aliascert", "node1aliasdata");
+	AliasNew("node2", "node2aliascert", "node2aliasdata");
+	AliasNew("node3", "node3aliascert", "node2aliasdata");
 
-	string certguid  = CertNew("node1", "node1alias", "title", "pubdata");
+	string certguid  = CertNew("node1", "node1aliascert", "title", "pubdata");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "certinfo " + certguid));
-	BOOST_CHECK(find_value(r.get_obj(), "alias").get_str() == "node1alias");
+	BOOST_CHECK(find_value(r.get_obj(), "alias").get_str() == "node1aliascert");
 	// generate a good cert offer
-	string offerguid = OfferNew("node1", "node1alias", "certificates", "title", "1", "0.05", "description", "USD", certguid);
-	AliasAddWhitelist("node1", "node1alias", "*", "0");
-	string lofferguid = OfferLink("node2", "node2alias", offerguid, "20", "newdescription");
+	string offerguid = OfferNew("node1", "node1aliascert", "certificates", "title", "1", "0.05", "description", "USD", certguid);
+	AliasAddWhitelist("node1", "node1aliascert", "*", "0");
+	string lofferguid = OfferLink("node2", "node2aliascert", offerguid, "20", "newdescription");
 
-	string hex_str = AliasUpdate("node1", "node1alias", "changeddata2");
+	string hex_str = AliasUpdate("node1", "node1aliascert", "changeddata2");
 	BOOST_CHECK(hex_str.empty());
-	hex_str = AliasUpdate("node2", "node2alias", "changeddata2");
+	hex_str = AliasUpdate("node2", "node2aliascert", "changeddata2");
 	BOOST_CHECK(hex_str.empty());
-	hex_str = AliasUpdate("node3", "node3alias", "changeddata3");
+	hex_str = AliasUpdate("node3", "node3aliascert", "changeddata3");
 	BOOST_CHECK(hex_str.empty());
-	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress node3alias 1350"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress node3aliascert 1350"), runtime_error);
 	GenerateBlocks(10);
-	OfferAccept("node1", "node3", "node3alias", "node2alias", lofferguid, "1");
+	OfferAccept("node1", "node3", "node3aliascert", "node2aliascert", lofferguid, "1");
 	GenerateBlocks(5, "node1");
 	GenerateBlocks(5, "node3");
 }
