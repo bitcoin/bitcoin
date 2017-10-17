@@ -10,7 +10,7 @@ import dbm.dumb as dbmd
 
 logger = logging.getLogger("TestFramework.blockstore")
 
-class BlockStore(object):
+class BlockStore():
     """BlockStore helper class.
 
     BlockStore keeps a map of blocks and implements helper functions for
@@ -127,7 +127,7 @@ class BlockStore(object):
         locator.vHave = r
         return locator
 
-class TxStore(object):
+class TxStore():
     def __init__(self, datadir):
         self.txDB = dbmd.open(datadir + "/transactions", 'c')
 
