@@ -213,6 +213,17 @@ void Interrupt(boost::thread_group& threadGroup)
 /** Preparing steps before shutting down or restarting the wallet */
 void PrepareShutdown()
 {
+	{
+		LOCK(cs_main);
+		// SYSCOIN
+		if (!fTxIndex)
+		{
+			int servicesCleaned = 0;
+			LogPrintf("%s: Cleaning up Syscoin Databases...\n", __func__);
+			CleanupSyscoinServiceDatabases(servicesCleaned);
+			LogPrintf("%s: Cleanup finished! Removed %d expired services...\n", __func__, servicesCleaned);
+		}
+	}
     fRequestShutdown = true; // Needed when we shutdown the wallet
     fRestartRequested = true; // Needed when we restart the wallet
     LogPrintf("%s: In progress...\n", __func__);
@@ -266,14 +277,6 @@ void PrepareShutdown()
 
     {
         LOCK(cs_main);
-		// SYSCOIN
-		if (!fTxIndex)
-		{
-			int servicesCleaned = 0;
-			LogPrintf("%s: Cleaning up Syscoin Databases...\n", __func__);
-			CleanupSyscoinServiceDatabases(servicesCleaned);
-			LogPrintf("%s: Cleanup finished! Removed %d expired services...\n", __func__, servicesCleaned);
-		}
         if (pcoinsTip != NULL) {
             FlushStateToDisk();
         }
