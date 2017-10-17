@@ -1538,7 +1538,6 @@ bool BuildOfferJson(const COffer& theOffer, UniValue& oOffer)
 		auctionOffer = theOffer.auctionOffer;
 	if(!theOffer.linkOfferTuple.first.empty()) {
 		oOffer.push_back(Pair("currency", stringFromVch(linkOffer.sCurrencyCode)));
-		oOffer.push_back(Pair("price", linkOffer.GetPrice()));
 		oOffer.push_back(Pair("commission", theOffer.nCommission));
 		oOffer.push_back(Pair("offerlink_guid", stringFromVch(theOffer.linkOfferTuple.first)));
 		oOffer.push_back(Pair("offerlink_seller", stringFromVch(linkOffer.aliasTuple.first)));
@@ -1553,7 +1552,6 @@ bool BuildOfferJson(const COffer& theOffer, UniValue& oOffer)
 	else
 	{
 		oOffer.push_back(Pair("currency", stringFromVch(theOffer.sCurrencyCode)));
-		oOffer.push_back(Pair("price", theOffer.GetPrice()));
 		oOffer.push_back(Pair("commission", 0));
 		oOffer.push_back(Pair("offerlink_guid", ""));
 		oOffer.push_back(Pair("offerlink_seller", ""));
@@ -1561,7 +1559,7 @@ bool BuildOfferJson(const COffer& theOffer, UniValue& oOffer)
 		oOffer.push_back(Pair("offer_units", theOffer.fUnits));
 		offerTypeStr = GetOfferTypeString(theOffer.offerType);
 	}
-
+	oOffer.push_back(Pair("price", theOffer.GetPrice()));
 	oOffer.push_back(Pair("quantity", nQty));
 	oOffer.push_back(Pair("offers_sold", sold));
 	oOffer.push_back(Pair("private", theOffer.bPrivate));
