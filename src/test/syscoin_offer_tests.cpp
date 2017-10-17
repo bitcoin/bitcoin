@@ -436,12 +436,12 @@ BOOST_AUTO_TEST_CASE (generate_linkedaccept)
 	string offerguid = OfferNew("node1", "node1aliaslinked", "category", "title", "10", "0.05", "description", "USD");
 	AliasAddWhitelist("node1", "node1aliaslinked" , "*", "0");
 	string lofferguid = OfferLink("node2", "node2aliaslinked", offerguid, "20", "newdescription");
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "offerinfo " + lofferguid));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "offerinfo " + lofferguid));
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "currency").get_str(), "USD");
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "price").get_real(), 0.05*1.2);
 	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress node3aliaslinked 850"), runtime_error);
 	GenerateBlocks(10);
-	OfferAccept("node2", "node3", "node3aliaslinked", "node3aliaslinked1", lofferguid, "6");
+	OfferAccept("node1", "node3", "node3aliaslinked", "node3aliaslinked1", lofferguid, "6");
 }
 BOOST_AUTO_TEST_CASE (generate_cert_linkedaccept)
 {
