@@ -482,12 +482,12 @@ bool CMasternodeMan::Has(const COutPoint& outpoint)
 //
 // Deterministically select the oldest/best masternode to pay on the network
 //
-bool CMasternodeMan::GetNextMasternodeInQueueForPayment(bool fFilterSigTime, bool fFilterScheduled, int& nCountRet, masternode_info_t& mnInfoRet)
+bool CMasternodeMan::GetNextMasternodeInQueueForPayment(bool fFilterSigTime, int& nCountRet, masternode_info_t& mnInfoRet)
 {
-    return GetNextMasternodeInQueueForPayment(nCachedBlockHeight, fFilterSigTime, fFilterScheduled, nCountRet, mnInfoRet);
+    return GetNextMasternodeInQueueForPayment(nCachedBlockHeight, fFilterSigTime, nCountRet, mnInfoRet);
 }
 
-bool CMasternodeMan::GetNextMasternodeInQueueForPayment(int nBlockHeight, bool fFilterSigTime, bool fFilterScheduled, int& nCountRet, masternode_info_t& mnInfoRet)
+bool CMasternodeMan::GetNextMasternodeInQueueForPayment(int nBlockHeight, bool fFilterSigTime, int& nCountRet, masternode_info_t& mnInfoRet)
 {
     mnInfoRet = masternode_info_t();
     nCountRet = 0;
@@ -515,7 +515,7 @@ bool CMasternodeMan::GetNextMasternodeInQueueForPayment(int nBlockHeight, bool f
         if(mnpair.second.nProtocolVersion < mnpayments.GetMinMasternodePaymentsProto()) continue;
 
         //it's in the list (up to 8 entries ahead of current block to allow propagation) -- so let's skip it
-        if(fFilterScheduled && mnpayments.IsScheduled(mnpair.second, nBlockHeight)) continue;
+        if(mnpayments.IsScheduled(mnpair.second, nBlockHeight)) continue;
 
         //it's too new, wait for a cycle
         if(fFilterSigTime && mnpair.second.sigTime + (nMnCount*2.6*60) > GetAdjustedTime()) continue;
@@ -530,7 +530,7 @@ bool CMasternodeMan::GetNextMasternodeInQueueForPayment(int nBlockHeight, bool f
 
     //when the network is in the process of upgrading, don't penalize nodes that recently restarted
     if(fFilterSigTime && nCountRet < nMnCount/3)
-        return GetNextMasternodeInQueueForPayment(nBlockHeight, false, fFilterScheduled, nCountRet, mnInfoRet);
+        return GetNextMasternodeInQueueForPayment(nBlockHeight, false, nCountRet, mnInfoRet);
 
     // Sort them low to high
     sort(vecMasternodeLastPaid.begin(), vecMasternodeLastPaid.end(), CompareLastPaidBlock());

@@ -166,9 +166,9 @@ public:
     bool GetMasternodeInfo(const CScript& payee, masternode_info_t& mnInfoRet);
 
     /// Find an entry in the masternode list that is next to be paid
-    bool GetNextMasternodeInQueueForPayment(int nBlockHeight, bool fFilterSigTime, bool fFilterScheduled, int& nCountRet, masternode_info_t& mnInfoRet);
+    bool GetNextMasternodeInQueueForPayment(int nBlockHeight, bool fFilterSigTime, int& nCountRet, masternode_info_t& mnInfoRet);
     /// Same as above but use current block height
-    bool GetNextMasternodeInQueueForPayment(bool fFilterSigTime, bool fFilterScheduled, int& nCountRet, masternode_info_t& mnInfoRet);
+    bool GetNextMasternodeInQueueForPayment(bool fFilterSigTime, int& nCountRet, masternode_info_t& mnInfoRet);
 
     /// Find a random entry
     masternode_info_t FindRandomNotInVec(const std::vector<COutPoint> &vecToExclude, int nProtocolVersion = -1);
