@@ -1181,7 +1181,7 @@ bool CheckParam(const UniValue& params, const unsigned int index)
 void startMongoDB(){
 	// SYSCOIN
 	nIndexPort = GetArg("-indexport", DEFAULT_INDEXPORT);
-	string uri_str = strprintf("mongodb://localhost:%d", nIndexPort);
+	string uri_str = strprintf("mongodb://127.0.0.1:%d", nIndexPort);
 	if (fDebug)
 		LogPrintf("Detecting the start of mongo indexer: ");
 	if (nIndexPort > 0) {
