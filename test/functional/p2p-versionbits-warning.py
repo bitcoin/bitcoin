@@ -23,7 +23,7 @@ WARN_UNKNOWN_RULES_MINED = "Unknown block versions being mined! It's possible un
 WARN_UNKNOWN_RULES_ACTIVE = "unknown new rules activated (versionbit {})".format(VB_UNKNOWN_BIT)
 VB_PATTERN = re.compile("^Warning.*versionbit")
 
-class TestNode(NodeConnCB):
+class TestNode(P2PInterface):
     def on_inv(self, message):
         pass
 
