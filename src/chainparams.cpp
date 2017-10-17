@@ -115,6 +115,9 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nStartTime = 1462060800; // May 1st, 2016
         consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nTimeout = 1493596800; // May 1st, 2017
 
+        // Nov, 13 hard fork
+        consensus.cashHardForkActivationTime = 1510600000;
+
         /**
          * The message start string is designed to be unlikely to occur in normal data.
          * The characters are rarely used upper ASCII, not valid as UTF-8, and produce
@@ -303,6 +306,9 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nStartTime = 1456790400; // March 1st, 2016
         consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nTimeout = 1493596800; // May 1st, 2017
 
+        // Nov, 13 hard fork
+        consensus.cashHardForkActivationTime = 1510600000;
+
         pchMessageStart[0] = 0x0b;
         pchMessageStart[1] = 0x11;
         pchMessageStart[2] = 0x09;
@@ -382,6 +388,9 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_CSV].bit = 0;
         consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nStartTime = 0;
         consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nTimeout = 999999999999ULL;
+
+        // Nov, 13 hard fork
+        consensus.cashHardForkActivationTime = 0;
 
         pchMessageStart[0] = 0xfa;
         pchMessageStart[1] = 0xbf;
