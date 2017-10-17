@@ -105,4 +105,4 @@ static void VerifyScriptBench(benchmark::State& state)
     }
 }
 
-BENCHMARK(VerifyScriptBench);
+BENCHMARK(VerifyScriptBench, 6300);
