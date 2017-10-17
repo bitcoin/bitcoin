@@ -37,7 +37,6 @@ from threading import RLock, Thread
 from test_framework.siphash import siphash256
 from test_framework.util import hex_str_to_bytes, bytes_to_hex_str, wait_until
 
-BIP0031_VERSION = 60000
 MY_VERSION = 70014  # past bip-31 for ping/pong
 MY_SUBVERSION = b"/python-mininode-tester:0.0.3/"
 MY_RELAY = 1 # from version 70001 onwards, fRelay should be appended to version messages (BIP37)
@@ -1195,22 +1194,6 @@ class msg_getaddr():
         return "msg_getaddr()"
 
 
-class msg_ping_prebip31():
-    command = b"ping"
-
-    def __init__(self):
-        pass
-
-    def deserialize(self, f):
-        pass
-
-    def serialize(self):
-        return b""
-
-    def __repr__(self):
-        return "msg_ping() (pre-bip31)"
-
-
 class msg_ping():
     command = b"ping"
 
@@ -1528,8 +1511,7 @@ class NodeConnCB():
             conn.send_message(want)
 
     def on_ping(self, conn, message):
-        if conn.ver_send > BIP0031_VERSION:
-            conn.send_message(msg_pong(message.nonce))
+        conn.send_message(msg_pong(message.nonce))
 
     def on_verack(self, conn, message):
         conn.ver_recv = conn.ver_send
@@ -1786,9 +1768,6 @@ class NodeConn(asyncore.dispatcher):
             self.last_sent = time.time()
 
     def got_message(self, message):
-        if message.command == b"version":
-            if message.nVersion <= BIP0031_VERSION:
-                self.messagemap[b'ping'] = msg_ping_prebip31
         if self.last_sent + 30 * 60 < time.time():
             self.send_message(self.messagemap[b'ping']())
         self._log_message("receive", message)
