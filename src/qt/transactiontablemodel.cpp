@@ -378,6 +378,10 @@ QString TransactionTableModel::formatTxType(const TransactionRecord *wtx) const
         return tr("Payment to yourself");
     case TransactionRecord::Generated:
         return tr("Mined");
+    case TransactionRecord::PublicLabel:
+        return tr("Public label");
+    case TransactionRecord::Other:
+        return tr("Other");
     default:
         return QString();
     }
@@ -409,7 +413,7 @@ QString TransactionTableModel::formatTxToAddress(const TransactionRecord *wtx, b
         watchAddress = wtx->involvesWatchAddress ? QString(" (") + tr("watch-only") + QString(")") : "";
     }
 
-    /* Get the first label. */    
+    /* Get the first label. */
     std::string address;
     QString label = pickLabelWithAddress(wtx->addresses, address);
 
