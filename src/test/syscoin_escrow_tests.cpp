@@ -23,12 +23,12 @@ BOOST_AUTO_TEST_CASE(generate_auction_regular)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "getblockchaininfo"));
 	int64_t mediantime = find_value(r.get_obj(), "mediantime").get_int64() + 3600;
 	string expiry = boost::lexical_cast<string>(mediantime);
-	string offerguid = OfferNew("node2", "sellerauction", "category", "title", "100", "0.05", "description", "USD", "\"\"" /*certguid*/, "\"\"" /*paymentoptions*/, "BUYNOW|AUCTION", expiry);
+	string offerguid = OfferNew("node2", "sellerauction", "category", "title", "100", "0.05", "description", "USD", "\"\"" /*certguid*/, "\"\"" /*paymentoptions*/, "BUYNOW+AUCTION", expiry);
 	// can't update offer auction settings until auction expires
 	//						"offerupdate <alias> <guid> [category] [title] [quantity] [price] [description] [currency] [private=false] [cert. guid] [commission] [paymentOptions] [offerType=BUYNOW] [auction_expires] [auction_reserve] [auction_require_witness] [auction_deposit] [witness]\n"
 	BOOST_CHECK_THROW(r = CallRPC("node2", "offerupdate sellerauction " + offerguid + " category title 90 0.15 description USD \"\" \"\" \"\" \"\" \"\" \"\" \"\" true"), runtime_error);
 
-	BOOST_CHECK_THROW(CallRPC("node1", "buyerauction buyerauction 500"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress buyerauction 500"), runtime_error);
 	GenerateBlocks(10);
 	string guid = EscrowNewAuction("node1", "node2", "buyerauction", offerguid, qty, "0.0005", "0.005", "arbiterauction");
 	// assume rate is 1 sys = 10 USD
@@ -56,15 +56,15 @@ BOOST_AUTO_TEST_CASE(generate_auction_reserve)
 	GenerateBlocks(5);
 	GenerateBlocks(5, "node2");
 	GenerateBlocks(5, "node3");
-	AliasNew("node1", "buyerauction", "changeddata1");
-	AliasNew("node2", "sellerauction", "changeddata2");
-	AliasNew("node3", "arbiterauction", "changeddata3");
+	AliasNew("node1", "buyerauction1", "changeddata1");
+	AliasNew("node2", "sellerauction1", "changeddata2");
+	AliasNew("node3", "arbiterauction1", "changeddata3");
 	string qty = "3";
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "getblockchaininfo"));
 	int64_t mediantime = find_value(r.get_obj(), "mediantime").get_int64() + 3600;
 	string expiry = boost::lexical_cast<string>(mediantime);
-	string offerguid = OfferNew("node2", "sellerauction", "category", "title", "100", "0.05", "description", "USD", "\"\"" /*certguid*/, "\"\"" /*paymentoptions*/, "BUYNOW|AUCTION", expiry, "0.01");
-	BOOST_CHECK_THROW(CallRPC("node1", "buyerauction buyerauction 500"), runtime_error);
+	string offerguid = OfferNew("node2", "sellerauction1", "category", "title", "100", "0.05", "description", "USD", "\"\"" /*certguid*/, "\"\"" /*paymentoptions*/, "BUYNOW+AUCTION", expiry, "0.01");
+	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress buyerauction1 500"), runtime_error);
 	GenerateBlocks(10);
 	string exttxid = "\"\"";
 	string paymentoptions = "\"\"";
@@ -79,21 +79,21 @@ BOOST_AUTO_TEST_CASE(generate_auction_reserve)
 	string bid_in_offer_currency = "0.009";
 	string total_in_payment_option = strprintf("%.*f", 2, pegRates["USD"] * 0.01);
 	// try to underbid in offer currency
-	string query = "escrownew false buyerauction arbiterauction " + offerguid + " " + qty + " " + buyNowStr + " " + total_in_payment_option + " " +  shippingFee + " " + networkFee + " " + arbiterFee + " " + witnessFee + " " + exttxid + " " + paymentoptions + " " + bid_in_payment_option + " " + bid_in_offer_currency + " " + witness;
+	string query = "escrownew false buyerauction1 arbiterauction1 " + offerguid + " " + qty + " " + buyNowStr + " " + total_in_payment_option + " " +  shippingFee + " " + networkFee + " " + arbiterFee + " " + witnessFee + " " + exttxid + " " + paymentoptions + " " + bid_in_payment_option + " " + bid_in_offer_currency + " " + witness;
 	BOOST_CHECK_THROW(r = CallRPC("node1", query), runtime_error);
 
-	string guid = EscrowNewAuction("node1", "node2", "buyerauction", offerguid, qty, "0.0005", "0.01", "arbiterauction");
+	string guid = EscrowNewAuction("node1", "node2", "buyerauction1", offerguid, qty, "0.0005", "0.01", "arbiterauction1");
 	// assume rate is 1 sys = 10 USD
-	EscrowBid("node1", "buyerauction", guid, "0.001", "0.02");
-	EscrowBid("node1", "buyerauction", guid, "0.002", "0.03");
+	EscrowBid("node1", "buyerauction1", guid, "0.001", "0.02");
+	EscrowBid("node1", "buyerauction1", guid, "0.002", "0.03");
 	// must bid higher
-	BOOST_CHECK_THROW(CallRPC("node1", "escrowbid buyerauction " + guid + " 0.002 0.02"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "escrowbid buyerauction1 " + guid + " 0.002 0.02"), runtime_error);
 	// must bid higher
-	BOOST_CHECK_THROW(CallRPC("node1", "escrowbid buyerauction " + guid + " 0.001 0.01"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "escrowbid buyerauction1 " + guid + " 0.001 0.01"), runtime_error);
 	// this is ok because merchant UI should check that the amount in SYS is = to converted amount to USD (1 sys = 10 USD) and if it is off, ask bidder to create a higher bid with correct amount set
-	EscrowBid("node1", "buyerauction", guid, "0.0001", "0.04");
+	EscrowBid("node1", "buyerauction1", guid, "0.0001", "0.04");
 
-	EscrowNewBuyItNow("node1", "node2", "buyerauction", offerguid, qty, "arbiterauction");
+	EscrowNewBuyItNow("node1", "node2", "buyerauction1", offerguid, qty, "arbiterauction1");
 	EscrowRelease("node1", "buyer", guid);
 	EscrowClaimRelease("node2", guid);
 }
