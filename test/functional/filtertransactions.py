@@ -107,7 +107,7 @@ class FilterTransactionsTest(ParticlTestFramework):
                 }
             ]
         )
-        txid = nodes[0].sendtoaddress(selfSpending, 100)
+        txid = nodes[0].sendtoaddress(selfSpending, 50)
         nodes[0].sendtypeto(
             'part',              # type in
             'part',              # type out
@@ -198,7 +198,11 @@ class FilterTransactionsTest(ParticlTestFramework):
         assert(len(ro) == 1)
 
         # skip: 1
-        ro = nodes[0].filtertransactions({ 'category': 'send', 'skip': 1 })
+        ro = nodes[0].filtertransactions({
+            'category': 'send',
+            'count':    20,
+            'skip':     1
+        })
         assert(float(ro[0]['amount']) == -20.0)
 
         #
@@ -308,7 +312,11 @@ class FilterTransactionsTest(ParticlTestFramework):
             ro = nodes[0].filtertransactions({ 'sort': sorting[0] })
             prev = None
             for t in ro:
-                if "address" not in t:
+                if "address" not in t and "stealth_address" in t:
+                    t["address"] = t["stealth_address"]
+                if "address" not in t and "stealth_address" in t["outputs"][0]:
+                    t["address"] = t["outputs"][0]["stealth_address"]
+                if "address" not in t and "address" in t["outputs"][0]:
                     t["address"] = t["outputs"][0]["address"]
                 if t["amount"] < 0:
                     t["amount"] = -t["amount"]
