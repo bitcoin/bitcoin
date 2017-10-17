@@ -440,7 +440,7 @@ BOOST_AUTO_TEST_CASE (generate_linkedaccept)
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "currency").get_str(), "USD");
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "commission").get_int(), 20);
 	BOOST_CHECK_EQUAL(((int)(find_value(r.get_obj(), "price").get_real() * 100)), 6);
-	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress node3aliaslinked 850"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress node3aliaslinked 965"), runtime_error);
 	GenerateBlocks(10);
 	OfferAccept("node1", "node3", "node3aliaslinked", "node1aliaslinked1", lofferguid, "6");
 }
