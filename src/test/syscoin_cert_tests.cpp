@@ -136,7 +136,7 @@ BOOST_AUTO_TEST_CASE (generate_certpruning)
 
 	BOOST_CHECK_EQUAL(CertFilter("node1", guid), false);
 	// create a new service
-	AliasNew("node1", "jagprune1", "temp", "data");
+	AliasNew("node1", "jagprune1", "temp");
 	string guid1 = CertNew("node1", "jagprune1", "title", "pubdata");
 	// ensure you can still update before expiry
 	CertUpdate("node1", guid1, "pubdata1");
