@@ -777,9 +777,9 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     nMaxTipAge = GetArg("-maxtipage", DEFAULT_MAX_TIP_AGE);
 
     // xthin bloom filter limits
-    nXthinBloomFilterSize = (uint32_t)GetArg("-xthinbloomfiltersize", MAX_BLOOM_FILTER_SIZE);
-    if (nXthinBloomFilterSize < MAX_BLOOM_FILTER_SIZE)
-        return InitError(strprintf(_("-xthinbloomfiltersize must be at least %d Bytes"), MAX_BLOOM_FILTER_SIZE));
+    nXthinBloomFilterSize = (uint32_t)GetArg("-xthinbloomfiltersize", SMALLEST_MAX_BLOOM_FILTER_SIZE);
+    if (nXthinBloomFilterSize < SMALLEST_MAX_BLOOM_FILTER_SIZE)
+        return InitError(strprintf(_("-xthinbloomfiltersize must be at least %d Bytes"), SMALLEST_MAX_BLOOM_FILTER_SIZE));
 
     // ********************************************************* Step 4: application initialization: dir lock, daemonize, pidfile, debug log
 
