@@ -160,6 +160,7 @@ void CMasternodeSync::ProcessTick(CConnman& connman)
         LogPrintf("CMasternodeSync::HasSyncFailures -- WARNING: no actions for too long, restarting sync...\n");
         Reset();
         SwitchToNextAsset(connman);
+        nTimeLastProcess = GetTime();
         return;
     }
     nTimeLastProcess = GetTime();
