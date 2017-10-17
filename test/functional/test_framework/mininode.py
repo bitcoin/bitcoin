@@ -23,6 +23,10 @@ import sys
 import time
 from threading import RLock, Thread
 
+from test_framework.primitives import *
+from test_framework.util import wait_until
+
+MIN_VERSION_SUPPORTED = 60001
 
 messagemap = {
     b"version": msg_version,
@@ -134,15 +138,11 @@ class NodeConnCB():
         conn.send_message(msg_pong(message.nonce))
 
     def on_verack(self, conn, message):
-        conn.ver_recv = conn.ver_send
         self.verack_received = True
 
     def on_version(self, conn, message):
-        if message.nVersion >= 209:
-            conn.send_message(msg_verack())
-        conn.ver_send = min(MY_VERSION, message.nVersion)
-        if message.nVersion < 209:
-            conn.ver_recv = conn.ver_send
+        assert message.nVersion >= MIN_VERSION_SUPPORTED, "Version {} received. Test framework only supports versions greater than {}".format(message.nVersion, MIN_VERSION_SUPPORTED)
+        conn.send_message(msg_verack())
         conn.nServices = message.nServices
 
     # Connection helper methods
@@ -213,8 +213,6 @@ class NodeConn(asyncore.dispatcher):
         self.socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
         self.sendbuf = b""
         self.recvbuf = b""
-        self.ver_send = 209
-        self.ver_recv = 209
         self.last_sent = 0
         self.state = "connecting"
         self.network = net
@@ -284,41 +282,27 @@ class NodeConn(asyncore.dispatcher):
                     return
                 if self.recvbuf[:4] != MAGIC_BYTES[self.network]:
                     raise ValueError("got garbage %s" % repr(self.recvbuf))
-                if self.ver_recv < 209:
-                    if len(self.recvbuf) < 4 + 12 + 4:
-                        return
-                    command = self.recvbuf[4:4+12].split(b"\x00", 1)[0]
-                    msglen = struct.unpack("<i", self.recvbuf[4+12:4+12+4])[0]
-                    checksum = None
-                    if len(self.recvbuf) < 4 + 12 + 4 + msglen:
-                        return
-                    msg = self.recvbuf[4+12+4:4+12+4+msglen]
-                    self.recvbuf = self.recvbuf[4+12+4+msglen:]
-                else:
-                    if len(self.recvbuf) < 4 + 12 + 4 + 4:
-                        return
-                    command = self.recvbuf[4:4+12].split(b"\x00", 1)[0]
-                    msglen = struct.unpack("<i", self.recvbuf[4+12:4+12+4])[0]
-                    checksum = self.recvbuf[4+12+4:4+12+4+4]
-                    if len(self.recvbuf) < 4 + 12 + 4 + 4 + msglen:
-                        return
-                    msg = self.recvbuf[4+12+4+4:4+12+4+4+msglen]
-                    th = sha256(msg)
-                    h = sha256(th)
-                    if checksum != h[:4]:
-                        raise ValueError("got bad checksum " + repr(self.recvbuf))
-                    self.recvbuf = self.recvbuf[4+12+4+4+msglen:]
-                if command in messagemap:
-                    f = BytesIO(msg)
-                    t = messagemap[command]()
-                    t.deserialize(f)
-                    self.got_message(t)
-                else:
-                    logger.warning("Received unknown command from %s:%d: '%s' %s" % (self.dstaddr, self.dstport, command, repr(msg)))
-                    raise ValueError("Unknown command: '%s'" % (command))
+                if len(self.recvbuf) < 4 + 12 + 4 + 4:
+                    return
+                command = self.recvbuf[4:4+12].split(b"\x00", 1)[0]
+                msglen = struct.unpack("<i", self.recvbuf[4+12:4+12+4])[0]
+                checksum = self.recvbuf[4+12+4:4+12+4+4]
+                if len(self.recvbuf) < 4 + 12 + 4 + 4 + msglen:
+                    return
+                msg = self.recvbuf[4+12+4+4:4+12+4+4+msglen]
+                th = sha256(msg)
+                h = sha256(th)
+                if checksum != h[:4]:
+                    raise ValueError("got bad checksum " + repr(self.recvbuf))
+                self.recvbuf = self.recvbuf[4+12+4+4+msglen:]
+                if command not in messagemap:
+                    raise ValueError("Received unknown command from %s:%d: '%s' %s" % (self.dstaddr, self.dstport, command, repr(msg)))
+                f = BytesIO(msg)
+                t = messagemap[command]()
+                t.deserialize(f)
+                self.got_message(t)
         except Exception as e:
-            logger.exception('got_data:', repr(e))
-            raise
+            logger.exception('Error reading message:', repr(e))
 
     def got_message(self, message):
         if self.last_sent + 30 * 60 < time.time():
@@ -361,10 +345,9 @@ class NodeConn(asyncore.dispatcher):
         tmsg += command
         tmsg += b"\x00" * (12 - len(command))
         tmsg += struct.pack("<I", len(data))
-        if self.ver_send >= 209:
-            th = sha256(data)
-            h = sha256(th)
-            tmsg += h[:4]
+        th = sha256(data)
+        h = sha256(th)
+        tmsg += h[:4]
         tmsg += data
         with mininode_lock:
             if (len(self.sendbuf) == 0 and not pushbuf):
