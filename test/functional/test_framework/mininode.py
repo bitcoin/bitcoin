@@ -203,7 +203,7 @@ class NodeConn(asyncore.dispatcher):
     """The actual NodeConn class
 
     This class provides an interface for a p2p connection to a specified node."""
-    def __init__(self, dstaddr, dstport, rpc, callback, net="regtest", services=NODE_NETWORK, send_version=True):
+    def __init__(self, dstaddr, dstport, callback, net="regtest", services=NODE_NETWORK, send_version=True):
         asyncore.dispatcher.__init__(self, map=mininode_socket_map)
         self.dstaddr = dstaddr
         self.dstport = dstport
@@ -234,7 +234,6 @@ class NodeConn(asyncore.dispatcher):
             self.connect((dstaddr, dstport))
         except:
             self.handle_close()
-        self.rpc = rpc
 
     # Connection and disconnection methods
 

@@ -173,7 +173,7 @@ class TestNode():
             dstport = p2p_port(self.index)
         p2p_conn = p2p_conn_type()
         self.p2ps.append(p2p_conn)
-        p2p_conn.add_connection(NodeConn(dstaddr, dstport, self.rpc, p2p_conn, services=services, send_version=send_version))
+        p2p_conn.add_connection(NodeConn(dstaddr, dstport, p2p_conn, services=services, send_version=send_version))
 
         return p2p_conn
 
