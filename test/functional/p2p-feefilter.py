@@ -23,11 +23,11 @@ def allInvsMatch(invsExpected, testnode):
     return False
 
 class TestNode(NodeConnCB):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, dstaddr, dstport, net="regtest", services=NODE_NETWORK, send_version=True):
+        super().__init__(dstaddr, dstport, net, services, send_version)
         self.txinvs = []
 
-    def on_inv(self, conn, message):
+    def on_inv(self, message):
         for i in message.inv:
             if (i.type == 1):
                 self.txinvs.append(hashToHex(i.hash))

@@ -22,6 +22,7 @@ from test_framework.mininode import (
     mininode_lock,
     msg_block,
     msg_getdata,
+    NODE_NETWORK,
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -34,7 +35,7 @@ from test_framework.util import (
 # message is received from the node-under-test. Subclass NodeConnCB and
 # override the on_*() methods if you need custom behaviour.
 class BaseNode(NodeConnCB):
-    def __init__(self):
+    def __init__(self, dstaddr, dstport, net="regtest", services=NODE_NETWORK, send_version=True):
         """Initialize the NodeConnCB
 
         Used to inialize custom properties for the Node that aren't
@@ -45,18 +46,18 @@ class BaseNode(NodeConnCB):
 
         Call super().__init__() first for standard initialization and then
         initialize custom properties."""
-        super().__init__()
+        super().__init__(dstaddr, dstport, net, services, send_version)
         # Stores a dictionary of all blocks received
         self.block_receive_map = defaultdict(int)
 
-    def on_block(self, conn, message):
+    def on_block(self, message):
         """Override the standard on_block callback
 
         Store the hash of a received block in the dictionary."""
         message.block.calc_sha256()
         self.block_receive_map[message.block.sha256] += 1
 
-    def on_inv(self, conn, message):
+    def on_inv(self, message):
         """Override the standard on_inv callback"""
         pass
 

@@ -14,11 +14,7 @@ import subprocess
 import time
 
 from .authproxy import JSONRPCException
-from .mininode import (
-    NodeConn,
-    NodeConnCB,
-    NODE_NETWORK,
-)
+from .mininode import NODE_NETWORK
 from .util import (
     assert_equal,
     get_rpc_proxy,
@@ -171,9 +167,9 @@ class TestNode():
         returns the connection to the caller."""
         if dstport is None:
             dstport = p2p_port(self.index)
-        p2p_conn = p2p_conn_type()
+
+        p2p_conn = p2p_conn_type(dstaddr, dstport, net="regtest", services=services, send_version=send_version)
         self.p2ps.append(p2p_conn)
-        p2p_conn.add_connection(NodeConn(dstaddr, dstport, p2p_conn, services=services, send_version=send_version))
 
         return p2p_conn
 
@@ -193,8 +189,8 @@ class TestNode():
 
     def disconnect_p2p(self, index=0):
         """Close the p2p connection to the node."""
-        if self.p2ps[index].connection is not None:
-            self.p2ps[index].connection.disconnect_node()
+        if self.p2ps[index].state == "connected":
+            self.p2ps[index].disconnect_node()
         self.p2ps.pop(index)
 
 class TestNodeCLI():

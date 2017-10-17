@@ -60,11 +60,11 @@ def test_witness_block(node, p2p, block, accepted, with_witness=True):
     assert_equal(node.rpc.getbestblockhash() == block.hash, accepted)
 
 class TestNode(NodeConnCB):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, dstaddr, dstport, net="regtest", services=NODE_NETWORK, send_version=True):
+        super().__init__(dstaddr, dstport, net, services, send_version)
         self.getdataset = set()
 
-    def on_getdata(self, conn, message):
+    def on_getdata(self, message):
         for inv in message.inv:
             self.getdataset.add(inv.hash)
 
@@ -147,7 +147,7 @@ class SegWitTest(BitcoinTestFramework):
     ''' Individual tests '''
     def test_witness_services(self):
         self.log.info("Verifying NODE_WITNESS service bit")
-        assert((self.test_node.connection.nServices & NODE_WITNESS) != 0)
+        assert((self.test_node.nServices & NODE_WITNESS) != 0)
 
 
     # See if sending a regular transaction works, and create a utxo

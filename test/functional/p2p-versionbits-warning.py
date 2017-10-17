@@ -24,7 +24,7 @@ WARN_UNKNOWN_RULES_ACTIVE = "unknown new rules activated (versionbit {})".format
 VB_PATTERN = re.compile("^Warning.*versionbit")
 
 class TestNode(NodeConnCB):
-    def on_inv(self, conn, message):
+    def on_inv(self, message):
         pass
 
 class VersionBitsWarningTest(BitcoinTestFramework):

@@ -16,8 +16,8 @@ from test_framework.script import CScript, OP_TRUE
 
 # TestNode: A peer we use to send messages to bitcoind, and store responses.
 class TestNode(NodeConnCB):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, dstaddr, dstport, net="regtest", services=NODE_NETWORK, send_version=True):
+        super().__init__(dstaddr, dstport, net, services, send_version)
         self.last_sendcmpct = []
         self.block_announced = False
         # Store the hashes of blocks we've seen announced.
@@ -25,21 +25,21 @@ class TestNode(NodeConnCB):
         # so we can eg wait until a particular block is announced.
         self.announced_blockhashes = set()
 
-    def on_sendcmpct(self, conn, message):
+    def on_sendcmpct(self, message):
         self.last_sendcmpct.append(message)
 
-    def on_cmpctblock(self, conn, message):
+    def on_cmpctblock(self, message):
         self.block_announced = True
         self.last_message["cmpctblock"].header_and_shortids.header.calc_sha256()
         self.announced_blockhashes.add(self.last_message["cmpctblock"].header_and_shortids.header.sha256)
 
-    def on_headers(self, conn, message):
+    def on_headers(self, message):
         self.block_announced = True
         for x in self.last_message["headers"].headers:
             x.calc_sha256()
             self.announced_blockhashes.add(x.sha256)
 
-    def on_inv(self, conn, message):
+    def on_inv(self, message):
         for x in self.last_message["inv"].inv:
             if x.type == 2:
                 self.block_announced = True
@@ -60,7 +60,7 @@ class TestNode(NodeConnCB):
         msg = msg_getheaders()
         msg.locator.vHave = locator
         msg.hashstop = hashstop
-        self.connection.send_message(msg)
+        self.send_message(msg)
 
     def send_header_for_blocks(self, new_blocks):
         headers_message = msg_headers()
@@ -86,7 +86,7 @@ class TestNode(NodeConnCB):
         This is used when we want to send a message into the node that we expect
         will get us disconnected, eg an invalid block."""
         self.send_message(message)
-        wait_until(lambda: not self.connected, timeout=timeout, lock=mininode_lock)
+        wait_until(lambda: self.state != "connected", timeout=timeout, lock=mininode_lock)
 
 class CompactBlocksTest(BitcoinTestFramework):
     def set_test_params(self):

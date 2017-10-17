@@ -82,8 +82,8 @@ from test_framework.blocktools import create_block, create_coinbase
 direct_fetch_response_time = 0.05
 
 class TestNode(NodeConnCB):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, dstaddr, dstport, net="regtest", services=NODE_NETWORK, send_version=True):
+        super().__init__(dstaddr, dstport, net, services, send_version)
         self.block_announced = False
         self.last_blockhash_announced = None
 
@@ -98,24 +98,24 @@ class TestNode(NodeConnCB):
         msg = msg_getdata()
         for x in block_hashes:
             msg.inv.append(CInv(2, x))
-        self.connection.send_message(msg)
+        self.send_message(msg)
 
     def get_headers(self, locator, hashstop):
         msg = msg_getheaders()
         msg.locator.vHave = locator
         msg.hashstop = hashstop
-        self.connection.send_message(msg)
+        self.send_message(msg)
 
     def send_block_inv(self, blockhash):
         msg = msg_inv()
         msg.inv = [CInv(2, blockhash)]
-        self.connection.send_message(msg)
+        self.send_message(msg)
 
-    def on_inv(self, conn, message):
+    def on_inv(self, message):
         self.block_announced = True
         self.last_blockhash_announced = message.inv[-1].hash
 
-    def on_headers(self, conn, message):
+    def on_headers(self, message):
         if len(message.headers):
             self.block_announced = True
             message.headers[-1].calc_sha256()
