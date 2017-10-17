@@ -14,7 +14,7 @@ from test_framework.blocktools import (create_block, create_coinbase)
 from test_framework.mininode import (
     CInv,
     NetworkThread,
-    NodeConnCB,
+    P2PInterface,
     msg_headers,
     msg_block,
     msg_getdata,
@@ -73,7 +73,7 @@ class P2PFingerprintTest(BitcoinTestFramework):
     # This does not currently test that stale blocks timestamped within the
     # last month but that have over a month's worth of work are also withheld.
     def run_test(self):
-        p2p = self.nodes[0].add_p2p_connection(p2p_conn_type=NodeConnCB)
+        p2p = self.nodes[0].add_p2p_connection(p2p_conn_type=P2PInterface)
 
         NetworkThread().start()
         p2p.wait_for_verack()

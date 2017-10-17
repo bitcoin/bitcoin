@@ -81,7 +81,7 @@ from test_framework.blocktools import create_block, create_coinbase
 
 direct_fetch_response_time = 0.05
 
-class TestNode(NodeConnCB):
+class TestNode(P2PInterface):
     def __init__(self, dstaddr, dstport, net="regtest", services=NODE_NETWORK, send_version=True):
         super().__init__(dstaddr, dstport, net, services, send_version)
         self.block_announced = False

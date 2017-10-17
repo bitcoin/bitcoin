@@ -22,7 +22,7 @@ def allInvsMatch(invsExpected, testnode):
         time.sleep(1)
     return False
 
-class TestNode(NodeConnCB):
+class TestNode(P2PInterface):
     def __init__(self, dstaddr, dstport, net="regtest", services=NODE_NETWORK, send_version=True):
         super().__init__(dstaddr, dstport, net, services, send_version)
         self.txinvs = []

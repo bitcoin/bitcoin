@@ -12,7 +12,7 @@ Setup: two nodes, node0 and node1, not connected to each other.  Node0 does not
 whitelist localhost, but node1 does. They will each be on their own chain for
 this test.
 
-We have one NodeConn connection to each, test_node and white_node respectively.
+We have one P2PInterface connection to each, test_node and white_node respectively.
 
 The test:
 1. Generate one block on each node, to leave IBD.
@@ -74,9 +74,9 @@ class AcceptBlockTest(BitcoinTestFramework):
     def run_test(self):
         # Setup the p2p connections and start up the network thread.
         # test_node connects to node0 (not whitelisted)
-        test_node = self.nodes[0].add_p2p_connection(p2p_conn_type=NodeConnCB)
+        test_node = self.nodes[0].add_p2p_connection(p2p_conn_type=P2PInterface)
         # test_node connects to node1 (whitelisted)
-        white_node = self.nodes[1].add_p2p_connection(p2p_conn_type=NodeConnCB)
+        white_node = self.nodes[1].add_p2p_connection(p2p_conn_type=P2PInterface)
 
         NetworkThread().start() # Start up network handling in another thread
 

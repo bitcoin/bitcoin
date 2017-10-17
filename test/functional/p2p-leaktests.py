@@ -20,7 +20,7 @@ from test_framework.util import *
 
 banscore = 10
 
-class CLazyNode(NodeConnCB):
+class CLazyNode(P2PInterface):
     def __init__(self, dstaddr, dstport, net="regtest", services=NODE_NETWORK, send_version=True):
         super().__init__(dstaddr, dstport, net, services, send_version)
         self.unexpected_msg = False
@@ -140,10 +140,10 @@ class P2PLeakTest(BitcoinTestFramework):
         self.log.info("Service bits 5 and 7 are allowed after August 1st 2018")
         self.nodes[0].setmocktime(1533168000)  # August 2nd 2018
 
-        allowed_service_bit5_node = self.nodes[0].add_p2p_connection(p2p_conn_type=NodeConnCB, services=NODE_NETWORK|NODE_UNSUPPORTED_SERVICE_BIT_5)
-        allowed_service_bit7_node = self.nodes[0].add_p2p_connection(p2p_conn_type=NodeConnCB, services=NODE_NETWORK|NODE_UNSUPPORTED_SERVICE_BIT_7)
+        allowed_service_bit5_node = self.nodes[0].add_p2p_connection(p2p_conn_type=P2PInterface, services=NODE_NETWORK|NODE_UNSUPPORTED_SERVICE_BIT_5)
+        allowed_service_bit7_node = self.nodes[0].add_p2p_connection(p2p_conn_type=P2PInterface, services=NODE_NETWORK|NODE_UNSUPPORTED_SERVICE_BIT_7)
 
-        NetworkThread().start()  # Network thread stopped when all previous NodeConnCBs disconnected. Restart it
+        NetworkThread().start()  # Network thread stopped when all previous P2PInterfaces disconnected. Restart it
 
         wait_until(lambda: allowed_service_bit5_node.message_count["verack"], lock=mininode_lock)
         wait_until(lambda: allowed_service_bit7_node.message_count["verack"], lock=mininode_lock)

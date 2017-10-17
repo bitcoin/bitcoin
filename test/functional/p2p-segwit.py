@@ -59,7 +59,7 @@ def test_witness_block(node, p2p, block, accepted, with_witness=True):
     p2p.sync_with_ping()
     assert_equal(node.rpc.getbestblockhash() == block.hash, accepted)
 
-class TestNode(NodeConnCB):
+class TestNode(P2PInterface):
     def __init__(self, dstaddr, dstport, net="regtest", services=NODE_NETWORK, send_version=True):
         super().__init__(dstaddr, dstport, net, services, send_version)
         self.getdataset = set()

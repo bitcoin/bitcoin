@@ -15,7 +15,7 @@ from test_framework.blocktools import create_block, create_coinbase, add_witness
 from test_framework.script import CScript, OP_TRUE
 
 # TestNode: A peer we use to send messages to bitcoind, and store responses.
-class TestNode(NodeConnCB):
+class TestNode(P2PInterface):
     def __init__(self, dstaddr, dstport, net="regtest", services=NODE_NETWORK, send_version=True):
         super().__init__(dstaddr, dstport, net, services, send_version)
         self.last_sendcmpct = []

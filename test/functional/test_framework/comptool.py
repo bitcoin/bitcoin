@@ -39,7 +39,7 @@ class RejectResult():
     def __repr__(self):
         return '%i:%s' % (self.code,self.reason or '*')
 
-class TestNode(NodeConnCB):
+class TestNode(P2PInterface):
 
     def __init__(self, block_store, tx_store, dstaddr, dstport, net="regtest", services=NODE_NETWORK, send_version=True):
         super().__init__(dstaddr, dstport, net, services, send_version)
