@@ -179,6 +179,7 @@ public:
     std::map<uint256, CMasternodePaymentVote> mapMasternodePaymentVotes;
     std::map<int, CMasternodeBlockPayees> mapMasternodeBlocks;
     std::map<COutPoint, int> mapMasternodesLastVote;
+    std::map<COutPoint, int> mapMasternodesDidNotVote;
 
     CMasternodePayments() : nStorageCoeff(1.25), nMinBlocksToStore(5000) {}
 
@@ -195,6 +196,7 @@ public:
     bool AddPaymentVote(const CMasternodePaymentVote& vote);
     bool HasVerifiedPaymentVote(uint256 hashIn);
     bool ProcessBlock(int nBlockHeight, CConnman& connman);
+    void CheckPreviousBlockVotes(int nPrevBlockHeight);
 
     void Sync(CNode* node, CConnman& connman);
     void RequestLowDataPaymentBlocks(CNode* pnode, CConnman& connman);

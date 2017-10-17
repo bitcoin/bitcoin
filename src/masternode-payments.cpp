@@ -777,6 +777,68 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight, CConnman& connman)
     return false;
 }
 
+void CMasternodePayments::CheckPreviousBlockVotes(int nPrevBlockHeight)
+{
+    if (!masternodeSync.IsWinnersListSynced()) return;
+
+    std::string debugStr;
+
+    debugStr += strprintf("CMasternodePayments::CheckPreviousBlockVotes -- nPrevBlockHeight=%d, expected voting MNs:\n", nPrevBlockHeight);
+
+    CMasternodeMan::rank_pair_vec_t mns;
+    if (!mnodeman.GetMasternodeRanks(mns, nPrevBlockHeight - 101, GetMinMasternodePaymentsProto())) {
+        debugStr += "CMasternodePayments::CheckPreviousBlockVotes -- GetMasternodeRanks failed\n";
+        LogPrint("mnpayments", "%s", debugStr);
+        return;
+    }
+
+    LOCK2(cs_mapMasternodeBlocks, cs_mapMasternodePaymentVotes);
+
+    for (int i = 0; i < MNPAYMENTS_SIGNATURES_TOTAL && i < (int)mns.size(); i++) {
+        auto mn = mns[i];
+        CScript payee;
+        bool found = false;
+
+        if (mapMasternodeBlocks.count(nPrevBlockHeight)) {
+            for (auto &p : mapMasternodeBlocks[nPrevBlockHeight].vecPayees) {
+                for (auto &voteHash : p.GetVoteHashes()) {
+                    if (!mapMasternodePaymentVotes.count(voteHash)) {
+                        debugStr += strprintf("CMasternodePayments::CheckPreviousBlockVotes --   could not find vote %s\n",
+                                              voteHash.ToString());
+                        continue;
+                    }
+                    auto vote = mapMasternodePaymentVotes[voteHash];
+                    if (vote.vinMasternode.prevout == mn.second.vin.prevout) {
+                        payee = vote.payee;
+                        found = true;
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (!found) {
+            debugStr += strprintf("CMasternodePayments::CheckPreviousBlockVotes --   %s - no vote received\n",
+                                  mn.second.vin.prevout.ToStringShort());
+            mapMasternodesDidNotVote[mn.second.vin.prevout]++;
+            continue;
+        }
+
+        CTxDestination address1;
+        ExtractDestination(payee, address1);
+        CBitcoinAddress address2(address1);
+
+        debugStr += strprintf("CMasternodePayments::CheckPreviousBlockVotes --   %s - voted for %s\n",
+                              mn.second.vin.prevout.ToStringShort(), address2.ToString());
+    }
+    debugStr += "CMasternodePayments::CheckPreviousBlockVotes -- Masternodes which missed a vote in the past:\n";
+    for (auto it : mapMasternodesDidNotVote) {
+        debugStr += strprintf("CMasternodePayments::CheckPreviousBlockVotes --   %s: %d\n", it.first.ToStringShort(), it.second);
+    }
+
+    LogPrint("mnpayments", "%s", debugStr);
+}
+
 void CMasternodePaymentVote::Relay(CConnman& connman)
 {
     // do not relay until synced
@@ -956,5 +1018,8 @@ void CMasternodePayments::UpdatedBlockTip(const CBlockIndex *pindex, CConnman& c
     nCachedBlockHeight = pindex->nHeight;
     LogPrint("mnpayments", "CMasternodePayments::UpdatedBlockTip -- nCachedBlockHeight=%d\n", nCachedBlockHeight);
 
-    ProcessBlock(nCachedBlockHeight + 10, connman);
+    int nFutureBlock = nCachedBlockHeight + 10;
+
+    CheckPreviousBlockVotes(nFutureBlock - 1);
+    ProcessBlock(nFutureBlock, connman);
 }
