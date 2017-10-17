@@ -1458,9 +1458,7 @@ class NodeConnCB():
     """Callback and helper functions for P2P connection to a bitcoind node.
 
     Individual testcases should subclass this and override the on_* methods
-    if they want to alter message handling behaviour.
-    """
-
+    if they want to alter message handling behaviour."""
     def __init__(self):
         # Track whether we have a P2P connection open to the node
         self.connected = False
@@ -1474,25 +1472,13 @@ class NodeConnCB():
         # A count of the number of ping messages we've sent to the node
         self.ping_counter = 1
 
-        # deliver_sleep_time is helpful for debugging race conditions in p2p
-        # tests; it causes message delivery to sleep for the specified time
-        # before acquiring the global lock and delivering the next message.
-        self.deliver_sleep_time = None
-
     # Message receiving methods
 
     def deliver(self, conn, message):
         """Receive message and dispatch message to appropriate callback.
 
         We keep a count of how many of each message type has been received
-        and the most recent message of each type.
-
-        Optionally waits for deliver_sleep_time before dispatching message.
-        """
-
-        deliver_sleep = self.get_deliver_sleep_time()
-        if deliver_sleep is not None:
-            time.sleep(deliver_sleep)
+        and the most recent message of each type."""
         with mininode_lock:
             try:
                 command = message.command.decode('ascii')
@@ -1503,10 +1489,6 @@ class NodeConnCB():
                 print("ERROR delivering %s (%s)" % (repr(message),
                                                     sys.exc_info()[0]))
                 raise
-
-    def get_deliver_sleep_time(self):
-        with mininode_lock:
-            return self.deliver_sleep_time
 
     # Callback methods. Can be overridden by subclasses in individual test
     # cases to provide custom message handling behaviour.
@@ -1616,9 +1598,10 @@ class NodeConnCB():
         wait_until(test_function, timeout=timeout, lock=mininode_lock)
         self.ping_counter += 1
 
-# The actual NodeConn class
-# This class provides an interface for a p2p connection to a specified node
 class NodeConn(asyncore.dispatcher):
+    """The actual NodeConn class
+
+    This class provides an interface for a p2p connection to a specified node."""
     messagemap = {
         b"version": msg_version,
         b"verack": msg_verack,
@@ -1838,13 +1821,3 @@ class NetworkThread(Thread):
             [ obj.handle_close() for obj in disconnected ]
             asyncore.loop(0.1, use_poll=True, map=mininode_socket_map, count=1)
         logger.debug("Network thread closing")
-
-
-# An exception we can raise if we detect a potential disconnect
-# (p2p or rpc) before the test is complete
-class EarlyDisconnectError(Exception):
-    def __init__(self, value):
-        self.value = value
-
-    def __str__(self):
-        return repr(self.value)
