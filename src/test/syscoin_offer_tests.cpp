@@ -431,6 +431,7 @@ BOOST_AUTO_TEST_CASE (generate_linkedaccept)
 	AliasNew("node1", "node1aliaslinked", "node1aliasdata");
 	AliasNew("node2", "node2aliaslinked", "node2aliasdata");
 	AliasNew("node3", "node3aliaslinked", "node2aliasdata");
+	AliasNew("node3", "node3aliaslinked1", "node2aliasdata");
 
 	string offerguid = OfferNew("node1", "node1aliaslinked", "category", "title", "10", "0.05", "description", "USD");
 	AliasAddWhitelist("node1", "node1aliaslinked" , "*", "0");
@@ -438,9 +439,9 @@ BOOST_AUTO_TEST_CASE (generate_linkedaccept)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "offerinfo " + lofferguid));
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "currency").get_str(), "USD");
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "price").get_real(), 0.05*1.2);
-	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress node3aliaslinked 8500"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress node3aliaslinked 850"), runtime_error);
 	GenerateBlocks(10);
-	OfferAccept("node1", "node3", "node2aliaslinked", "node3aliaslinked", lofferguid, "6");
+	OfferAccept("node2", "node3", "node3aliaslinked", "node3aliaslinked1", lofferguid, "6");
 }
 BOOST_AUTO_TEST_CASE (generate_cert_linkedaccept)
 {
