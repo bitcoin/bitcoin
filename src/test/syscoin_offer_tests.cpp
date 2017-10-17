@@ -437,7 +437,7 @@ BOOST_AUTO_TEST_CASE (generate_linkedaccept)
 	string lofferguid = OfferLink("node2", "node2aliaslinked", offerguid, "20", "newdescription");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "offerinfo " + lofferguid));
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "currency").get_str(), "USD");
-	BOOST_CHECK_EQUAL(AmountFromValue(find_value(r.get_obj(), "price")), 0.05*1.2*COIN);
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "price").get_real(), 0.05*1.2);
 	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress node3aliaslinked 8500"), runtime_error);
 	GenerateBlocks(10);
 	OfferAccept("node1", "node3", "node2aliaslinked", "node3aliaslinked", lofferguid, "6");
