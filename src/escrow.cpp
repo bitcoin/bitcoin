@@ -220,7 +220,7 @@ void CEscrowDB::WriteEscrowIndex(const CEscrow& escrow, const std::vector<std::v
 	if (write_concern)
 		mongoc_write_concern_destroy(write_concern);
 }
-void CEscrowDB::EraseEscrowIndex(const std::vector<unsigned char>& vchEscrow) {
+void CEscrowDB::EraseEscrowIndex(const std::vector<unsigned char>& vchEscrow, bool cleanup) {
 	if (!escrow_collection)
 		return;
 	bson_error_t error;
@@ -231,7 +231,7 @@ void CEscrowDB::EraseEscrowIndex(const std::vector<unsigned char>& vchEscrow) {
 	selector = BCON_NEW("_id", BCON_UTF8(stringFromVch(vchEscrow).c_str()));
 	write_concern = mongoc_write_concern_new();
 	mongoc_write_concern_set_w(write_concern, MONGOC_WRITE_CONCERN_W_UNACKNOWLEDGED);
-	if (!mongoc_collection_remove(escrow_collection, remove_flags, selector, write_concern, &error)) {
+	if (!mongoc_collection_remove(escrow_collection, remove_flags, selector, cleanup ? NULL : write_concern, &error)) {
 		LogPrintf("MONGODB ESCROW REMOVE ERROR: %s\n", error.message);
 	}
 	if (selector)
@@ -259,7 +259,7 @@ void CEscrowDB::WriteEscrowFeedbackIndex(const CEscrow& escrow) {
 	if (write_concern)
 		mongoc_write_concern_destroy(write_concern);
 }
-void CEscrowDB::EraseEscrowFeedbackIndex(const std::vector<unsigned char>& vchEscrow) {
+void CEscrowDB::EraseEscrowFeedbackIndex(const std::vector<unsigned char>& vchEscrow, bool cleanup) {
 	if (!feedback_collection)
 		return;
 	bson_error_t error;
@@ -272,7 +272,7 @@ void CEscrowDB::EraseEscrowFeedbackIndex(const std::vector<unsigned char>& vchEs
 	selector = BCON_NEW("escrow", BCON_UTF8(id.c_str()));
 	write_concern = mongoc_write_concern_new();
 	mongoc_write_concern_set_w(write_concern, MONGOC_WRITE_CONCERN_W_UNACKNOWLEDGED);
-	if (!mongoc_collection_remove(feedback_collection, remove_flags, selector, write_concern, &error)) {
+	if (!mongoc_collection_remove(feedback_collection, remove_flags, selector, cleanup ? NULL : write_concern, &error)) {
 		LogPrintf("MONGODB ESCROW FEEDBACK REMOVE ERROR: %s\n", error.message);
 	}
 	if (selector)
@@ -330,7 +330,7 @@ void CEscrowDB::RefundEscrowBidIndex(const std::vector<unsigned char>& vchEscrow
 	if (write_concern)
 		mongoc_write_concern_destroy(write_concern);
 }
-void CEscrowDB::EraseEscrowBidIndex(const std::vector<unsigned char>& vchEscrow) {
+void CEscrowDB::EraseEscrowBidIndex(const std::vector<unsigned char>& vchEscrow, bool cleanup) {
 	if (!escrowbid_collection)
 		return;
 	bson_error_t error;
@@ -341,7 +341,7 @@ void CEscrowDB::EraseEscrowBidIndex(const std::vector<unsigned char>& vchEscrow)
 	selector = BCON_NEW("escrow", BCON_UTF8(stringFromVch(vchEscrow).c_str()));
 	write_concern = mongoc_write_concern_new();
 	mongoc_write_concern_set_w(write_concern, MONGOC_WRITE_CONCERN_W_UNACKNOWLEDGED);
-	if (!mongoc_collection_remove(escrow_collection, remove_flags, selector, write_concern, &error)) {
+	if (!mongoc_collection_remove(escrow_collection, remove_flags, selector, cleanup ? NULL : write_concern, &error)) {
 		LogPrintf("MONGODB ESCROW BID REMOVE ERROR: %s\n", error.message);
 	}
 	if (selector)
@@ -363,7 +363,7 @@ bool CEscrowDB::CleanupDatabase(int &servicesCleaned)
   				if (!GetEscrow(escrowTuple.first, txPos) || chainActive.Tip()->GetMedianTimePast() >= GetEscrowExpiration(txPos))
 				{
 					servicesCleaned++;
-					EraseEscrow(escrowTuple);
+					EraseEscrow(escrowTuple, true);
 				}
             }
             pcursor->Next();

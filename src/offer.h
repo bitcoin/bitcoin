@@ -231,10 +231,10 @@ public:
 		return writeState;
 	}
 
-	bool EraseOffer(const CNameTXIDTuple& offerTuple) {
+	bool EraseOffer(const CNameTXIDTuple& offerTuple, bool cleanup = false) {
 		bool eraseState = Erase(make_pair(std::string("offeri"), offerTuple));
 		EraseOfferLastTXID(offerTuple.first);
-		EraseOfferIndex(offerTuple.first);
+		EraseOfferIndex(offerTuple.first, cleanup);
 	    return eraseState;
 	}
 
@@ -260,7 +260,7 @@ public:
 
 	bool CleanupDatabase(int &servicesCleaned);
 	void WriteOfferIndex(const COffer& offer);
-	void EraseOfferIndex(const std::vector<unsigned char>& vchOffer);
+	void EraseOfferIndex(const std::vector<unsigned char>& vchOffer, bool cleanup);
 
 };
 bool GetOffer(const CNameTXIDTuple& offerTuple, COffer& txPos);

@@ -1238,7 +1238,7 @@ void CAliasDB::WriteAliasIndex(const CAliasIndex& alias) {
 	if (write_concern)
 		mongoc_write_concern_destroy(write_concern);
 }
-void CAliasDB::EraseAliasIndex(const std::vector<unsigned char>& vchAlias) {
+void CAliasDB::EraseAliasIndex(const std::vector<unsigned char>& vchAlias, bool cleanup) {
 	bson_error_t error;
 	bson_t *selector = NULL;
 	mongoc_write_concern_t* write_concern = NULL;
@@ -1247,7 +1247,7 @@ void CAliasDB::EraseAliasIndex(const std::vector<unsigned char>& vchAlias) {
 	selector = BCON_NEW("_id", BCON_UTF8(stringFromVch(vchAlias).c_str()));
 	write_concern = mongoc_write_concern_new();
 	mongoc_write_concern_set_w(write_concern, MONGOC_WRITE_CONCERN_W_UNACKNOWLEDGED);
-	if (!mongoc_collection_remove(alias_collection, remove_flags, selector, write_concern, &error)) {
+	if (!mongoc_collection_remove(alias_collection, remove_flags, selector, cleanup? NULL: write_concern, &error)) {
 		LogPrintf("MONGODB ALIAS REMOVE ERROR: %s\n", error.message);
 	}
 	if (selector)

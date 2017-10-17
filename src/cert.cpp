@@ -131,7 +131,7 @@ void CCertDB::WriteCertIndex(const CCert& cert) {
 	if (write_concern)
 		mongoc_write_concern_destroy(write_concern);
 }
-void CCertDB::EraseCertIndex(const std::vector<unsigned char>& vchCert) {
+void CCertDB::EraseCertIndex(const std::vector<unsigned char>& vchCert, bool cleanup) {
 	if (!cert_collection)
 		return;
 	bson_error_t error;
@@ -142,7 +142,7 @@ void CCertDB::EraseCertIndex(const std::vector<unsigned char>& vchCert) {
 	selector = BCON_NEW("_id", BCON_UTF8(stringFromVch(vchCert).c_str()));
 	write_concern = mongoc_write_concern_new();
 	mongoc_write_concern_set_w(write_concern, MONGOC_WRITE_CONCERN_W_UNACKNOWLEDGED);
-	if (!mongoc_collection_remove(cert_collection, remove_flags, selector, write_concern, &error)) {
+	if (!mongoc_collection_remove(cert_collection, remove_flags, selector, cleanup ? NULL : write_concern, &error)) {
 		LogPrintf("MONGODB CERT REMOVE ERROR: %s\n", error.message);
 	}
 	
@@ -165,7 +165,7 @@ bool CCertDB::CleanupDatabase(int &servicesCleaned)
   				if (!GetCert(certTuple.first, txPos) || chainActive.Tip()->GetMedianTimePast() >= GetCertExpiration(txPos))
 				{
 					servicesCleaned++;
-					EraseCert(certTuple);
+					EraseCert(certTuple, true);
 				} 
 				
             }

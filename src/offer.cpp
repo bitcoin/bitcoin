@@ -203,7 +203,7 @@ bool COfferDB::CleanupDatabase(int &servicesCleaned)
   				if (!GetOffer(offerTuple.first, offer) || chainActive.Tip()->GetMedianTimePast() >= GetOfferExpiration(offer))
 				{
 					servicesCleaned++;
-					EraseOffer(offerTuple);
+					EraseOffer(offerTuple, true);
 				} 
 				
             }
@@ -1440,7 +1440,7 @@ void COfferDB::WriteOfferIndex(const COffer& offer) {
 	if (write_concern)
 		mongoc_write_concern_destroy(write_concern);
 }
-void COfferDB::EraseOfferIndex(const std::vector<unsigned char>& vchOffer) {
+void COfferDB::EraseOfferIndex(const std::vector<unsigned char>& vchOffer, bool cleanup) {
 	if (!offer_collection)
 		return;
 	bson_error_t error;
@@ -1451,7 +1451,7 @@ void COfferDB::EraseOfferIndex(const std::vector<unsigned char>& vchOffer) {
 	selector = BCON_NEW("_id", BCON_UTF8(stringFromVch(vchOffer).c_str()));
 	write_concern = mongoc_write_concern_new();
 	mongoc_write_concern_set_w(write_concern, MONGOC_WRITE_CONCERN_W_UNACKNOWLEDGED);
-	if (!mongoc_collection_remove(offer_collection, remove_flags, selector, write_concern, &error)) {
+	if (!mongoc_collection_remove(offer_collection, remove_flags, selector, cleanup ? NULL : write_concern, &error)) {
 		LogPrintf("MONGODB OFFER REMOVE ERROR: %s\n", error.message);
 	}
 	if (selector)

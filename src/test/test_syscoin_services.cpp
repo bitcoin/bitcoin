@@ -217,7 +217,6 @@ void StopNode (const string &dataDir) {
 		}
 	}
 	try {
-		MilliSleep(1000);
 		if (dataDir == "node1" && node1Online) {
 			printf("Stopping mongod on port 27017...\n");
 			string path = string("mongod --port=27017 --quiet --shutdown --dbpath=") + boost::filesystem::system_complete(dataDir + string("/db")).string();

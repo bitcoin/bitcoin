@@ -224,6 +224,7 @@ void PrepareShutdown()
 			LogPrintf("%s: Cleanup finished! Removed %d expired services...\n", __func__, servicesCleaned);
 		}
 	}
+	stopMongoDB();
     fRequestShutdown = true; // Needed when we shutdown the wallet
     fRestartRequested = true; // Needed when we restart the wallet
     LogPrintf("%s: In progress...\n", __func__);
@@ -341,8 +342,6 @@ void Shutdown()
 #endif
     globalVerifyHandle.reset();
     ECC_Stop();
-	// SYSCOIN
-	stopMongoDB();
     LogPrintf("%s: done\n", __func__);
 }
 

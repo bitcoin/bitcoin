@@ -107,11 +107,11 @@ public:
         return writeState;
     }
 
-    bool EraseCert(const CNameTXIDTuple& certTuple) {
+    bool EraseCert(const CNameTXIDTuple& certTuple, bool cleanup = false) {
 		bool eraseState = Erase(make_pair(std::string("certi"), certTuple));
 		EraseCertLastTXID(certTuple.first);
 		EraseCertFirstTXID(certTuple.first);
-		EraseCertIndex(certTuple.first);
+		EraseCertIndex(certTuple.first, cleanup);
         return eraseState;
     }
 
@@ -138,7 +138,7 @@ public:
 	}
 	bool CleanupDatabase(int &servicesCleaned);
 	void WriteCertIndex(const CCert& cert);
-	void EraseCertIndex(const std::vector<unsigned char>& vchCert);
+	void EraseCertIndex(const std::vector<unsigned char>& vchCert, bool cleanup);
 
 };
 bool GetCert(const CNameTXIDTuple& certTuple);

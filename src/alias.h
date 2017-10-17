@@ -236,10 +236,10 @@ public:
 	}
 
 
-	bool EraseAlias(const CNameTXIDTuple& aliasTuple) {
+	bool EraseAlias(const CNameTXIDTuple& aliasTuple, bool cleanup = false) {
 		bool eraseState = Erase(make_pair(std::string("namei"), CNameTXIDTuple(aliasTuple.first, aliasTuple.second)));
 		EraseAliasLastTXID(aliasTuple.first);
-		EraseAliasIndex(aliasTuple.first);
+		EraseAliasIndex(aliasTuple.first, cleanup);
 		return eraseState;
 	}
 	bool ReadAlias(const CNameTXIDTuple& aliasTuple, CAliasIndex& alias) {
@@ -268,7 +268,7 @@ public:
 	}
 	bool CleanupDatabase(int &servicesCleaned);
 	void WriteAliasIndex(const CAliasIndex& alias);
-	void EraseAliasIndex(const std::vector<unsigned char>& vchAlias);
+	void EraseAliasIndex(const std::vector<unsigned char>& vchAlias, bool cleanup);
 };
 
 class COfferDB;
