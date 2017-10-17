@@ -844,7 +844,7 @@ bool CAliasDB::CleanupDatabase(int &servicesCleaned)
   				if (chainActive.Tip()->GetMedianTimePast() >= txPos.nExpireTime)
 				{
 					servicesCleaned++;
-					EraseAlias(aliasTuple);
+					EraseAlias(aliasTuple, true);
 				} 
 				
             }
@@ -855,7 +855,7 @@ bool CAliasDB::CleanupDatabase(int &servicesCleaned)
 				if (GetAlias(aliasTuple.first, alias) && chainActive.Tip()->GetMedianTimePast() >= alias.nExpireTime)
 				{
 					servicesCleaned++;
-					EraseAddress(alias.vchAddress);
+					EraseAddress(alias.vchAddress, true);
 				}
 
 			}
