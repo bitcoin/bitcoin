@@ -855,7 +855,7 @@ bool CAliasDB::CleanupDatabase(int &servicesCleaned)
 				if (GetAlias(aliasTuple.first, alias) && chainActive.Tip()->GetMedianTimePast() >= alias.nExpireTime)
 				{
 					servicesCleaned++;
-					EraseAddress(alias.vchAddress, true);
+					EraseAddress(alias.vchAddress);
 				}
 
 			}
