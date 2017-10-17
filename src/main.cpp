@@ -1642,6 +1642,12 @@ int64_t GetMasternodePayment(int nHeight, int64_t blockValue)
     return ret;
 }
 
+int64_t GetSystemnodePayment(int nHeight, int64_t blockValue)
+{
+    int64_t ret = blockValue * 0.1; // start at 10%
+    return ret;
+}
+
 bool IsInitialBlockDownload()
 {
     const CChainParams& chainParams = Params();

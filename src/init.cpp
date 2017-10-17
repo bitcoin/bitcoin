@@ -32,6 +32,7 @@
 #include "masternodeman.h"
 #include "masternodeconfig.h"
 #include "systemnodeman.h"
+#include "systemnode-payments.h"
 #include "systemnodeconfig.h"
 #include "spork.h"
 #include "utilmoneystr.h"
@@ -1488,6 +1489,22 @@ bool AppInit2(boost::thread_group& threadGroup)
     {
         LogPrintf("Error reading mnpayments.dat: ");
         if(readResult3 == CMasternodePaymentDB::IncorrectFormat)
+            LogPrintf("magic is ok but data has invalid format, will try to recreate\n");
+        else
+            LogPrintf("file format is unknown or invalid, please fix it manually\n");
+    }
+
+    uiInterface.InitMessage(_("Loading systemnode payment cache..."));
+
+    CSystemnodePaymentDB snpayments;
+    CSystemnodePaymentDB::ReadResult readResult4 = snpayments.Read(systemnodePayments);
+    
+    if (readResult4 == CSystemnodePaymentDB::FileError)
+        LogPrintf("Missing systemnode payment cache - snpayments.dat, will try to recreate\n");
+    else if (readResult4 != CSystemnodePaymentDB::Ok)
+    {
+        LogPrintf("Error reading snpayments.dat: ");
+        if(readResult4 == CSystemnodePaymentDB::IncorrectFormat)
             LogPrintf("magic is ok but data has invalid format, will try to recreate\n");
         else
             LogPrintf("file format is unknown or invalid, please fix it manually\n");

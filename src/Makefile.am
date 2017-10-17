@@ -142,6 +142,7 @@ BITCOIN_CORE_H = \
   masternodeman.h \
   masternodeconfig.h \
   systemnode.h \
+  systemnode-payments.h \
   systemnode-sync.h \
   systemnodeman.h \
   systemnodeconfig.h \
@@ -234,6 +235,7 @@ libbitcoin_wallet_a_SOURCES = \
   masternodeman.cpp \
   systemnode-sync.cpp \
   systemnode.cpp \
+  systemnode-payments.cpp \
   systemnodeconfig.cpp \
   systemnodeman.cpp \
   rpcdump.cpp \
