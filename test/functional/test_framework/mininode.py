@@ -74,7 +74,7 @@ class NodeConn(asyncore.dispatcher):
 
     TODO: rename this class P2PConnection."""
 
-    def __init__(self, dstaddr, dstport, net="regtest", services=NODE_NETWORK, send_version=True):
+    def __init__(self, dstaddr, dstport, net="regtest"):
         super().__init__(map=mininode_socket_map)
         self.dstaddr = dstaddr
         self.dstport = dstport
@@ -86,23 +86,12 @@ class NodeConn(asyncore.dispatcher):
         self.network = net
         self.disconnect = False
 
-        if send_version:
-            # stuff version msg into sendbuf
-            # TODO: this is P2P payload-level logic. It should live in NodeConnCB
-            vt = msg_version()
-            vt.nServices = services
-            vt.addrTo.ip = self.dstaddr
-            vt.addrTo.port = self.dstport
-            vt.addrFrom.ip = "0.0.0.0"
-            vt.addrFrom.port = 0
-            self.send_message(vt, True)
-
         logger.info('Connecting to Bitcoin Node: %s:%d' % (self.dstaddr, self.dstport))
 
-        # try:
-        self.connect((dstaddr, dstport))
-        # except:
-        #     self.handle_close()
+        try:
+            self.connect((dstaddr, dstport))
+        except:
+            self.handle_close()
 
     # Connection and disconnection methods
 
@@ -261,7 +250,17 @@ class NodeConnCB(NodeConn):
     TODO: rename this class P2PInterface"""
 
     def __init__(self, dstaddr, dstport, net="regtest", services=NODE_NETWORK, send_version=True):
-        super().__init__(dstaddr, dstport, net, services, send_version)
+        super().__init__(dstaddr, dstport, net)
+
+        if send_version:
+            # send a version msg
+            vt = msg_version()
+            vt.nServices = services
+            vt.addrTo.ip = self.dstaddr
+            vt.addrTo.port = self.dstport
+            vt.addrFrom.ip = "0.0.0.0"
+            vt.addrFrom.port = 0
+            self.send_message(vt, True)
 
         # Track number of messages of each type received and the most recent
         # message of each type

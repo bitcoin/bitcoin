@@ -18,8 +18,8 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 
 class TestNode(NodeConnCB):
-    def __init__(self, dstaddr, dstport, net="regtest", services=NODE_NETWORK, send_version=True):
-        super().__init__(dstaddr, dstport, net, services, send_version)
+    def __init__(self, dstaddr, dstport):
+        super().__init__(dstaddr, dstport)
         self.block_receive_map = defaultdict(int)
 
     def on_inv(self, message):
