@@ -438,7 +438,8 @@ BOOST_AUTO_TEST_CASE (generate_linkedaccept)
 	string lofferguid = OfferLink("node2", "node2aliaslinked", offerguid, "20", "newdescription");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "offerinfo " + lofferguid));
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "currency").get_str(), "USD");
-	BOOST_CHECK_EQUAL(AmountFromValue(find_value(r.get_obj(), "price")), AmountFromValue("0.06"));
+	float rounded = ((int)(find_value(r.get_obj(), "price").get_real() * 100 + .5) / 100.0);
+	BOOST_CHECK_EQUAL(rounded, 0.06);
 	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress node3aliaslinked 850"), runtime_error);
 	GenerateBlocks(10);
 	OfferAccept("node1", "node3", "node3aliaslinked", "node3aliaslinked1", lofferguid, "6");
