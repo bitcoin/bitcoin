@@ -607,7 +607,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+70"/>
         <source>You can send this transaction for a fee of %1, which is burned and prevents spamming of the network. Do you want to pay the fee?</source>
-        <translation>פעולה זו חורגת מגבולות הגודל. עדיין באפשרותך לשלוח אותה תמורת עמלה של %1, המיועדת לצמתים שמעבדים את הפעולה שלך ועוזרת לתמוך ברשת. האם ברצונך לשלם את העמלה?</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="-140"/>
@@ -814,7 +814,7 @@ Address: %4
     <message>
         <location line="+15"/>
         <source>Additional network &amp;fee</source>
-        <translation>שלם &amp;עמלת פעולה</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+31"/>

@@ -818,7 +818,7 @@ Dirección: %4</translation>
     <message>
         <location line="+15"/>
         <source>Additional network &amp;fee</source>
-        <translation>Comisión de &amp;transacciónes</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+31"/>

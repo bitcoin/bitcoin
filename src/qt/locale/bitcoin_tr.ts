@@ -607,7 +607,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+70"/>
         <source>You can send this transaction for a fee of %1, which is burned and prevents spamming of the network. Do you want to pay the fee?</source>
-        <translation>Bu muamele boyut sınırlarını aşmıştır. Gene de %1 ücret ödeyerek gönderebilirsiniz, ki bu ücret muamelenizi işleyen ve şebekeye yardım eden düğümlere ödenecektir. Ücreti ödemek istiyor musunuz?</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="-140"/>
@@ -810,12 +810,12 @@ Adres: %4
     <message>
         <location line="+6"/>
         <source>Mandatory network transaction fee per kB transferred. Most transactions are 1 kB and incur a 0.01 PPC fee. Note: transfer size may increase depending on the number of input transactions required to be added together to fund the payment.</source>
-        <translation>Muamelelerin hızlı işlenmesini garantilemeye yardım eden, seçime dayalı kB başı muamele ücreti. Muamelelerin çoğunluğunun boyutu 1 kB&apos;dir.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+15"/>
         <source>Additional network &amp;fee</source>
-        <translation>Muamele ücreti &amp;öde</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+31"/>

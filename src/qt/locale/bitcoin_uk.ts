@@ -815,7 +815,7 @@ Address: %4
     <message>
         <location line="+15"/>
         <source>Additional network &amp;fee</source>
-        <translation>Заплатити комісі&amp;ю</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+31"/>

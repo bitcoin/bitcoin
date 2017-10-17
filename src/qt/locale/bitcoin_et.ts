@@ -607,7 +607,7 @@ Toode sisaldab OpenSSL Projekti all toodetud tarkvara, mis on kasutamiseks OpenS
     <message>
         <location line="+70"/>
         <source>You can send this transaction for a fee of %1, which is burned and prevents spamming of the network. Do you want to pay the fee?</source>
-        <translation>See tehing ületab mahupiirangu. Saatmine on võimalik %1, node&apos;idele ning võrgustiku toetuseks, makstava lisatasu eest. Kas nõustud lisatasuga?</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="-140"/>
@@ -814,7 +814,7 @@ Aadress: %4⏎</translation>
     <message>
         <location line="+15"/>
         <source>Additional network &amp;fee</source>
-        <translation>Tasu tehingu &amp;fee</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+31"/>
