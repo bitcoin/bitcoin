@@ -317,6 +317,7 @@ BOOST_AUTO_TEST_CASE (generate_offerupdate_editcurrency)
 	AliasNew("node1", "selleraliascurrency", "changeddata1");
 	AliasNew("node2", "buyeraliascurrency", "changeddata2");
 	AliasNew("node3", "arbiteraliascurrency", "changeddata2");
+	AliasNew("node3", "arbiteraliascurrency1", "changeddata2");
 
 	// generate a good offer
 	string offerguid = OfferNew("node1", "selleraliascurrency", "category", "title", "100", "0.05", "description", "USD");
@@ -361,7 +362,7 @@ BOOST_AUTO_TEST_CASE (generate_offerupdate_editcurrency)
 
 	// try to update currency and accept in same block, ensure payment uses old currency not new
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "offerupdate selleraliascurrency " + offerguid + " category title 93 0.2 desc EUR"));
-	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "escrownew false buyeraliascurrency arbiteraliascurrency " + offerguid + " 10 true 1"));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "escrownew false buyeraliascurrency arbiteraliascurrency1 " + offerguid + " 10 true 1"));
 	const UniValue &arr = r.get_array();
 	escrowguid = arr[1].get_str();
 	GenerateBlocks(5);
