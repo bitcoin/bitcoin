@@ -89,7 +89,7 @@ class TestNode(NodeConnCB):
         assert_equal(self.connection.rpc.getbestblockhash() == block.hash, accepted)
 
 # Used to keep track of anyone-can-spend outputs that we can use in the tests
-class UTXO(object):
+class UTXO():
     def __init__(self, sha256, n, nValue):
         self.sha256 = sha256
         self.n = n
