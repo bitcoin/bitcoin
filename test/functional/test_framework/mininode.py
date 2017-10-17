@@ -113,8 +113,7 @@ class NodeConnCB():
             conn.send_message(want)
 
     def on_ping(self, conn, message):
-        if conn.ver_send > BIP0031_VERSION:
-            conn.send_message(msg_pong(message.nonce))
+        conn.send_message(msg_pong(message.nonce))
 
     def on_verack(self, conn, message):
         conn.ver_recv = conn.ver_send
@@ -372,9 +371,6 @@ class NodeConn(asyncore.dispatcher):
             self.last_sent = time.time()
 
     def got_message(self, message):
-        if message.command == b"version":
-            if message.nVersion <= BIP0031_VERSION:
-                self.messagemap[b'ping'] = msg_ping_prebip31
         if self.last_sent + 30 * 60 < time.time():
             self.send_message(self.messagemap[b'ping']())
         self._log_message("receive", message)

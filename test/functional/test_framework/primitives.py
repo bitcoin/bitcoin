@@ -25,7 +25,6 @@ import time
 from test_framework.siphash import siphash256
 from test_framework.util import hex_str_to_bytes, bytes_to_hex_str
 
-BIP0031_VERSION = 60000
 MY_VERSION = 70014  # past bip-31 for ping/pong
 MY_SUBVERSION = b"/python-mininode-tester:0.0.3/"
 MY_RELAY = 1 # from version 70001 onwards, fRelay should be appended to version messages (BIP37)
@@ -1155,22 +1154,6 @@ class msg_getaddr():
 
     def __repr__(self):
         return "msg_getaddr()"
-
-
-class msg_ping_prebip31():
-    command = b"ping"
-
-    def __init__(self):
-        pass
-
-    def deserialize(self, f):
-        pass
-
-    def serialize(self):
-        return b""
-
-    def __repr__(self):
-        return "msg_ping() (pre-bip31)"
 
 
 class msg_ping():
