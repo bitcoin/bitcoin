@@ -213,6 +213,17 @@ void Interrupt(boost::thread_group& threadGroup)
 /** Preparing steps before shutting down or restarting the wallet */
 void PrepareShutdown()
 {
+	{
+		LOCK(cs_main);
+		// SYSCOIN
+		if (!fTxIndex)
+		{
+			int servicesCleaned = 0;
+			LogPrintf("%s: Cleaning up Syscoin Databases...\n", __func__);
+			CleanupSyscoinServiceDatabases(servicesCleaned);
+			LogPrintf("%s: Cleanup finished! Removed %d expired services...\n", __func__, servicesCleaned);
+		}
+	}
     fRequestShutdown = true; // Needed when we shutdown the wallet
     fRestartRequested = true; // Needed when we restart the wallet
     LogPrintf("%s: In progress...\n", __func__);
@@ -269,36 +280,6 @@ void PrepareShutdown()
         if (pcoinsTip != NULL) {
             FlushStateToDisk();
         }
-		// SYSCOIN
-		if (paliasdb != NULL)
-		{
-			if (!paliasdb->Flush())
-				LogPrintf("Failed to write to alias database!");
-			delete paliasdb;
-			paliasdb = NULL;
-		}
-		if (pofferdb != NULL)
-		{
-			if (!pofferdb->Flush())
-				LogPrintf("Failed to write to offer database!");
-			delete pofferdb;
-			pofferdb = NULL;
-		}
-		if (pcertdb != NULL)
-		{
-			if (!pcertdb->Flush())
-				LogPrintf("Failed to write to cert database!");
-			delete pcertdb;
-			pcertdb = NULL;
-		}
-		if (pescrowdb != NULL)
-		{
-			if (!pescrowdb->Flush())
-				LogPrintf("Failed to write to escrow database!");
-			delete pescrowdb;
-			pescrowdb = NULL;
-		}
-		stopMongoDB();
         delete pcoinsTip;
         pcoinsTip = NULL;
         delete pcoinscatcher;
@@ -360,6 +341,7 @@ void Shutdown()
 #endif
     globalVerifyHandle.reset();
     ECC_Stop();
+	stopMongoDB();
     LogPrintf("%s: done\n", __func__);
 }
 
@@ -1585,6 +1567,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
 				pcertdb = new CCertDB(nCoinCacheUsage * 2, false, fReindex);
 				pescrowdb = new CEscrowDB(nCoinCacheUsage * 2, false, fReindex);
 				startMongoDB();
+
                 if (fReindex) {
                     pblocktree->WriteReindexing(true);
                     //If we're reindexing in prune mode, wipe away unusable block files and all undo data files
@@ -1613,14 +1596,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
                     strLoadError = _("You need to rebuild the database using -reindex-chainstate to change -txindex");
                     break;
                 }
-				// SYSCOIN
-				if (!fTxIndex)
-				{
-					int servicesCleaned = 0;
-					LogPrintf("%s: Cleaning up Syscoin Databases...\n", __func__);
-					CleanupSyscoinServiceDatabases(servicesCleaned);
-					LogPrintf("%s: Cleanup finished! Removed %d expired services...\n", __func__, servicesCleaned);
-				}
+
                 // Check for changed -prune state.  What we are concerned about is a user who has pruned blocks
                 // in the past, but is now trying to run unpruned.
                 if (fHavePruned && !fPruneMode) {
