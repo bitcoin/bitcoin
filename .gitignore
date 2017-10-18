@@ -22,6 +22,8 @@ ppcoin-qt
 peercoin-qt
 PPCoin-Qt.app
 Peercoin-Qt.app
+.qmake.stash
+peercoin-qt_plugin_import.cpp
 
 # Unit-tests
 Makefile.test
@@ -37,6 +39,11 @@ qrc_*.cpp
 # Mac specific
 .DS_Store
 build
+
+# mingw / Windows
+release/
+*.Debug
+*.Release
 
 !src/leveldb-*/Makefile
 peercoin-qt
