@@ -442,4 +442,49 @@ BOOST_AUTO_TEST_CASE(script_combineSigs)
     BOOST_CHECK(combined == partial3c);
 }
 
+BOOST_AUTO_TEST_CASE(script_CHECKLOCKTIMEVERIFY)
+{
+    //
+    // Simple locktime script
+    //
+
+    CScript scriptSimpleLock = CScript() << OP_16 << OP_CHECKLOCKTIMEVERIFY;
+
+    CTransaction tx;
+    tx.vin.push_back(CTxIn());
+    // Fails since tx.nLockTime < 16
+    BOOST_CHECK(!VerifyScript(CScript(), scriptSimpleLock, tx, 0, SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY, 0));
+
+    tx.nLockTime = 16;
+    // Fails since tx.vin[0].nSequence = CTxIn::SEQUENCE_FINAL by default, which disables nLockTime.
+    BOOST_CHECK(!VerifyScript(CScript(), scriptSimpleLock, tx, 0, SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY, 0));
+
+    tx.vin[0].nSequence = CTxIn::SEQUENCE_FINAL-1;
+    BOOST_CHECK(VerifyScript(CScript(), scriptSimpleLock, tx, 0, SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY, 0));
+
+    // Verify larger locktime succeeds
+    tx.nLockTime = 17;
+    BOOST_CHECK(VerifyScript(CScript(), scriptSimpleLock, tx, 0, SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY, 0));
+
+    // Verify smaller locktime fails
+    tx.nLockTime = 15;
+    BOOST_CHECK(!VerifyScript(CScript(), scriptSimpleLock, tx, 0, SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY, 0));
+
+    // Compare timestamps
+    int64 nNow = GetTime();
+    CScript scriptSimpleTimeLock = CScript() << nNow << OP_CHECKLOCKTIMEVERIFY;
+    tx.nLockTime = nNow;
+    BOOST_CHECK(VerifyScript(CScript(), scriptSimpleTimeLock, tx, 0, SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY, 0));
+    tx.nLockTime = nNow+1;
+    BOOST_CHECK(VerifyScript(CScript(), scriptSimpleTimeLock, tx, 0, SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY, 0));
+    tx.nLockTime = nNow-1;
+    BOOST_CHECK(!VerifyScript(CScript(), scriptSimpleTimeLock, tx, 0, SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY, 0));
+
+    // Verify comparing timestamps with block heights fails
+    tx.nLockTime = nNow;
+    BOOST_CHECK(!VerifyScript(CScript(), scriptSimpleLock, tx, 0, SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY, 0));
+    tx.nLockTime = 300000000; // very large block height
+    BOOST_CHECK(!VerifyScript(CScript(), scriptSimpleTimeLock, tx, 0, SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY, 0));
+}
+
 BOOST_AUTO_TEST_SUITE_END()

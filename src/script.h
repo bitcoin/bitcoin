@@ -22,6 +22,10 @@ class CTransaction;
 
 static const unsigned int MAX_SCRIPT_ELEMENT_SIZE = 520; // bytes
 
+// Threshold for nLockTime: below this value it is interpreted as block number,
+// otherwise as UNIX timestamp.
+static const unsigned int LOCKTIME_THRESHOLD = 500000000; // Tue Nov  5 00:53:20 1985 UTC
+
 /** Signature hash types/flags */
 enum
 {
@@ -38,6 +42,21 @@ enum
     SCRIPT_VERIFY_P2SH      = (1U << 0),
     SCRIPT_VERIFY_STRICTENC = (1U << 1),
     SCRIPT_VERIFY_NOCACHE   = (1U << 2),
+
+    // Discourage use of NOPs reserved for upgrades (NOP1-10)
+    //
+    // Provided so that nodes can avoid accepting or mining transactions
+    // containing executed NOP's whose meaning may change after a soft-fork,
+    // thus rendering the script invalid; with this flag set executing
+    // discouraged NOPs fails the script. This verification flag will never be
+    // a mandatory flag applied to scripts in a block. NOPs that are not
+    // executed, e.g.  within an unexecuted IF ENDIF block, are *not* rejected.
+    SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_NOPS  = (1U << 7),
+
+    // Verify CHECKLOCKTIMEVERIFY
+    //
+    // See BIP65 for details.
+    SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY = (1U << 9),
 };
 
 enum txnouttype
@@ -193,6 +212,7 @@ enum opcodetype
     // expansion
     OP_NOP1 = 0xb0,
     OP_NOP2 = 0xb1,
+    OP_CHECKLOCKTIMEVERIFY = OP_NOP2,
     OP_NOP3 = 0xb2,
     OP_NOP4 = 0xb3,
     OP_NOP5 = 0xb4,
