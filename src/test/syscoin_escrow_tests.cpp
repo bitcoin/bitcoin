@@ -21,7 +21,7 @@ BOOST_AUTO_TEST_CASE(generate_auction_regular)
 	AliasNew("node3", "arbiterauction", "changeddata3");
 	string qty = "3";
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "getblockchaininfo"));
-	int64_t mediantime = find_value(r.get_obj(), "mediantime").get_int64() + 3600;
+	uint64_t mediantime = find_value(r.get_obj(), "mediantime").get_int64() + 3600;
 	string expiry = boost::lexical_cast<string>(mediantime);
 	string offerguid = OfferNew("node2", "sellerauction", "category", "title", "100", "0.05", "description", "USD", "\"\"" /*certguid*/, "\"\"" /*paymentoptions*/, "BUYNOW+AUCTION", expiry);
 	// can't update offer auction settings until auction expires
