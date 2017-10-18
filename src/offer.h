@@ -136,6 +136,7 @@ public:
 		linkAliasTuple.first.clear();
 		certTuple.first.clear();
 		sCurrencyCode.clear();
+		auctionOffer.SetNull();
 	}
 
  	ADD_SERIALIZE_METHODS;
@@ -160,6 +161,7 @@ public:
 			READWRITE(VARINT(paymentOptions));
 			READWRITE(vchOffer);
 			READWRITE(linkAliasTuple);
+			READWRITE(auctionOffer);
 	}
 	float GetPrice() const;
     inline friend bool operator==(const COffer &a, const COffer &b) {
@@ -183,6 +185,7 @@ public:
 			&& a.offerType == b.offerType
 			&& a.paymentOptions == b.paymentOptions
 			&& a.vchOffer == b.vchOffer
+			&& a.auctionOffer == b.auctionOffer
         );
     }
 
@@ -206,6 +209,7 @@ public:
 		offerType = b.offerType;
 		paymentOptions = b.paymentOptions;
 		vchOffer = b.vchOffer;
+		auctionOffer = b.auctionOffer;
         return *this;
     }
 
