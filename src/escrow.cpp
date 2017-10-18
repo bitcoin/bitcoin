@@ -281,7 +281,7 @@ void CEscrowDB::EraseEscrowFeedbackIndex(const std::vector<unsigned char>& vchEs
 		mongoc_write_concern_destroy(write_concern);
 }
 void CEscrowDB::WriteEscrowBidIndex(const CEscrow& escrow, const string& status) {
-	if (!escrowbid_collection || escrow.op != OP_ESCROW_BID)
+	if (!escrowbid_collection || escrow.op != OP_ESCROW_ACTIVATE)
 		return;
 	bson_error_t error;
 	bson_t *update = NULL;
