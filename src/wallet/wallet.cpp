@@ -3881,7 +3881,7 @@ CWallet* CWallet::CreateWalletFromFile(const std::string walletFile)
         // Top up the keypool
         if (!walletInstance->TopUpKeyPool()) {
             InitError(_("Unable to generate initial keys") += "\n");
-            return NULL;
+            return nullptr;
         }
 
         walletInstance->SetBestChain(chainActive.GetLocator());
