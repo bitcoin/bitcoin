@@ -1253,7 +1253,7 @@ void EscrowBid(const string& node, const string& buyeralias, const string& escro
 	BOOST_CHECK(ret.read(escrowBid[0].get_str()));
 	const UniValue &escrowBidObj = ret.get_obj();
 	BOOST_CHECK(find_value(escrowBidObj, "_id").get_str() == txid);
-	BOOST_CHECK)EQUAL(find_value(escrowBidObj, "bidder").get_str() , buyeralias);
+	BOOST_CHECK_EQUAL(find_value(escrowBidObj, "bidder").get_str() , buyeralias);
 	BOOST_CHECK(find_value(escrowBidObj, "escrow").get_str() == escrowguid);
 	BOOST_CHECK_EQUAL(AmountFromValue(find_value(escrowBidObj, "bid_in_payment_option_per_unit")), AmountFromValue(bid_in_payment_option));
 	BOOST_CHECK(find_value(escrowBidObj, "witness").get_str() == witness);
