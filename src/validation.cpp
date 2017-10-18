@@ -4672,8 +4672,9 @@ bool LoadMempool(void)
     }
 
     int64_t count = 0;
-    int64_t skipped = 0;
+    int64_t expired = 0;
     int64_t failed = 0;
+    int64_t already_there = 0;
     int64_t nNow = GetTime();
 
     try {
@@ -4703,10 +4704,18 @@ bool LoadMempool(void)
                 if (state.IsValid()) {
                     ++count;
                 } else {
-                    ++failed;
+                    // mempool may contain the transaction already, e.g. from
+                    // wallet(s) having loaded it while we were processing
+                    // mempool transactions; consider these as valid, instead of
+                    // failed, but mark them as 'already there'
+                    if (mempool.exists(tx->GetHash())) {
+                        ++already_there;
+                    } else {
+                        ++failed;
+                    }
                 }
             } else {
-                ++skipped;
+                ++expired;
             }
             if (ShutdownRequested())
                 return false;
@@ -4722,7 +4731,7 @@ bool LoadMempool(void)
         return false;
     }
 
-    LogPrintf("Imported mempool transactions from disk: %i successes, %i failed, %i expired\n", count, failed, skipped);
+    LogPrintf("Imported mempool transactions from disk: %i succeeded, %i failed, %i expired, %i already there\n", count, failed, expired, already_there);
     return true;
 }
 
