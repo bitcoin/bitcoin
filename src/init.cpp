@@ -298,7 +298,6 @@ void PrepareShutdown()
 			delete pescrowdb;
 			pescrowdb = NULL;
 		}
-		stopMongoDB();
         delete pcoinsTip;
         pcoinsTip = NULL;
         delete pcoinscatcher;
@@ -360,6 +359,7 @@ void Shutdown()
 #endif
     globalVerifyHandle.reset();
     ECC_Stop();
+	stopMongoDB();
     LogPrintf("%s: done\n", __func__);
 }
 
