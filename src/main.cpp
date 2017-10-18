@@ -2468,7 +2468,7 @@ bool ConnectBlock(const CBlock &block,
     int64_t nBIP16SwitchTime = 1333238400;
     bool fStrictPayToScriptHash = (pindex->GetBlockTime() >= nBIP16SwitchTime);
 
-    unsigned int flags = fStrictPayToScriptHash ? SCRIPT_VERIFY_P2SH : SCRIPT_VERIFY_NONE;
+    uint32_t flags = fStrictPayToScriptHash ? SCRIPT_VERIFY_P2SH : SCRIPT_VERIFY_NONE;
 
     if (pindex->forkActivated(miningForkTime.value))
     {
@@ -2498,6 +2498,16 @@ bool ConnectBlock(const CBlock &block,
     {
         flags |= SCRIPT_VERIFY_CHECKSEQUENCEVERIFY;
         nLockTimeFlags |= LOCKTIME_VERIFY_SEQUENCE;
+    }
+
+    // If the Cash HF is enabled, we start rejecting transaction that use a high
+    // s in their signature. We also make sure that signature that are supposed
+    // to fail (for instance in multisig or other forms of smart contracts) are
+    // null.
+    if (IsCashHFEnabled(config, pindex->pprev))
+    {
+        flags |= SCRIPT_VERIFY_LOW_S;
+        flags |= SCRIPT_VERIFY_NULLFAIL;
     }
 
     int64_t nTime2 = GetTimeMicros();

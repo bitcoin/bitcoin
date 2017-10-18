@@ -397,7 +397,7 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nTimeout = 999999999999ULL;
 
 #ifdef BITCOIN_CASH
-        // Nov, 13 hard fork
+        // Nov, 13 hard fork is always on on regtest.
         consensus.cashHardForkActivationTime = 0;
 #endif
         pchMessageStart[0] = 0xfa;
