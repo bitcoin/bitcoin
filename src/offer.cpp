@@ -518,7 +518,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1024 - " + _("Auction deposit percentage must be greator or equal to 0");
 					return error(errorMessage.c_str());
 				}
-				if (theOffer.auctionOffer.nExpireTime < chainActive.Tip()->GetMedianTimePast())
+				if (theOffer.auctionOffer.nExpireTime > 0 && theOffer.auctionOffer.nExpireTime < chainActive.Tip()->GetMedianTimePast())
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 4042 - " + _("Invalid auction expiry");
 					return error(errorMessage.c_str());
@@ -626,7 +626,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1024 - " + _("Auction deposit percentage must be greator or equal to 0");
 						return true;
 					}
-					if (theOffer.auctionOffer.nExpireTime < chainActive.Tip()->GetMedianTimePast())
+					if (theOffer.auctionOffer.nExpireTime > 0 && theOffer.auctionOffer.nExpireTime < chainActive.Tip()->GetMedianTimePast())
 					{
 						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 4042 - " + _("Invalid auction expiry");
 						return true;

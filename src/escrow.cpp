@@ -939,7 +939,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4042 - " + _("Cannot bid below offer reserve price of: ") + boost::lexical_cast<string>(dbOffer.auctionOffer.fReservePrice) + " " + stringFromVch(dbOffer.sCurrencyCode);
 					return true;
 				}
-				if (dbOffer.auctionOffer.nExpireTime <= chainActive.Tip()->GetMedianTimePast())
+				if (dbOffer.auctionOffer.nExpireTime > 0 && dbOffer.auctionOffer.nExpireTime < chainActive.Tip()->GetMedianTimePast())
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4042 - " + _("Offer auction has expired, cannot place bid!");
 					return true;
@@ -966,7 +966,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4042 - " + _("Cannot bid below linked offer reserve price of: ") + boost::lexical_cast<string>(myLinkOffer.auctionOffer.fReservePrice) + " " + stringFromVch(myLinkOffer.sCurrencyCode);
 						return true;
 					}
-					if (myLinkOffer.auctionOffer.nExpireTime <= chainActive.Tip()->GetMedianTimePast())
+					if (myLinkOffer.auctionOffer.nExpireTime > 0 && myLinkOffer.auctionOffer.nExpireTime < chainActive.Tip()->GetMedianTimePast())
 					{
 						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4042 - " + _("Linked offer auction has expired, cannot place bid!");
 						return true;
@@ -1370,7 +1370,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4042 - " + _("Cannot purchase below offer reserve price of: ") + boost::lexical_cast<string>(dbOffer.auctionOffer.fReservePrice) + " " + stringFromVch(dbOffer.sCurrencyCode);
 						return true;
 					}
-					if (dbOffer.auctionOffer.nExpireTime <= chainActive.Tip()->GetMedianTimePast() && !theEscrow.bBuyNow)
+					if (dbOffer.auctionOffer.nExpireTime > 0 && dbOffer.auctionOffer.nExpireTime < chainActive.Tip()->GetMedianTimePast() && !theEscrow.bBuyNow)
 					{
 						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4042 - " + _("This auction has expired, cannot place bid");
 						return true;
@@ -1410,7 +1410,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4042 - " + _("Cannot purchase below linked offer reserve price of: ") + boost::lexical_cast<string>(dbOffer.auctionOffer.fReservePrice) + " " + stringFromVch(dbOffer.sCurrencyCode);
 						return true;
 					}
-					if (myLinkOffer.auctionOffer.nExpireTime <= chainActive.Tip()->GetMedianTimePast() && !theEscrow.bBuyNow)
+					if (myLinkOffer.auctionOffer.nExpireTime > 0 && myLinkOffer.auctionOffer.nExpireTime < chainActive.Tip()->GetMedianTimePast() && !theEscrow.bBuyNow)
 					{
 						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4042 - " + _("This linked offer auction has expired, cannot place bid");
 						return true;
