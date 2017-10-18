@@ -1253,9 +1253,8 @@ void EscrowBid(const string& node, const string& buyeralias, const string& escro
 	BOOST_CHECK(ret.read(escrowBid[0].get_str()));
 	const UniValue &escrowBidObj = ret.get_obj();
 	BOOST_CHECK(find_value(escrowBidObj, "_id").get_str() == txid);
-	BOOST_CHECK(find_value(escrowBidObj, "bidder").get_str() == buyeralias);
+	BOOST_CHECK)EQUAL(find_value(escrowBidObj, "bidder").get_str() , buyeralias);
 	BOOST_CHECK(find_value(escrowBidObj, "escrow").get_str() == escrowguid);
-	BOOST_CHECK(find_value(escrowBidObj, "bid_in_offer_currency_per_unit").get_real() == atof(bid_in_offer_currency.c_str()));
 	BOOST_CHECK_EQUAL(AmountFromValue(find_value(escrowBidObj, "bid_in_payment_option_per_unit")), AmountFromValue(bid_in_payment_option));
 	BOOST_CHECK(find_value(escrowBidObj, "witness").get_str() == witness);
 	BOOST_CHECK(find_value(escrowBidObj, "status").get_str() == "valid");
@@ -1269,7 +1268,6 @@ void EscrowBid(const string& node, const string& buyeralias, const string& escro
 	BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == escrowguid);
 	BOOST_CHECK(find_value(r.get_obj(), "buynow").get_bool() == false);
 	BOOST_CHECK(AmountFromValue(find_value(r.get_obj(), "total_without_fee")) == AmountFromValue(bid_in_payment_option)*qty);
-	BOOST_CHECK(find_value(r.get_obj(), "bid_in_offer_currency_per_unit").get_real() == atof(bid_in_offer_currency.c_str()));
 	BOOST_CHECK_EQUAL(AmountFromValue(find_value(r.get_obj(), "total_or_bid_in_payment_option_per_unit")), AmountFromValue(bid_in_payment_option));
 	BOOST_CHECK(find_value(r.get_obj(), "buyer").get_str() == buyeralias);
 	BOOST_CHECK(find_value(r.get_obj(), "arbiter").get_str() == arbiteralias);
@@ -1280,7 +1278,6 @@ void EscrowBid(const string& node, const string& buyeralias, const string& escro
 		BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == escrowguid);
 		BOOST_CHECK(find_value(r.get_obj(), "buynow").get_bool() == false);
 		BOOST_CHECK(AmountFromValue(find_value(r.get_obj(), "total_without_fee")) == AmountFromValue(bid_in_payment_option)*qty);
-		BOOST_CHECK(find_value(r.get_obj(), "bid_in_offer_currency_per_unit").get_real() == atof(bid_in_offer_currency.c_str()));
 		BOOST_CHECK_EQUAL(AmountFromValue(find_value(r.get_obj(), "total_or_bid_in_payment_option_per_unit")), AmountFromValue(bid_in_payment_option));
 		BOOST_CHECK(find_value(r.get_obj(), "buyer").get_str() == buyeralias);
 		BOOST_CHECK(find_value(r.get_obj(), "arbiter").get_str() == arbiteralias);
@@ -1292,7 +1289,6 @@ void EscrowBid(const string& node, const string& buyeralias, const string& escro
 		BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == escrowguid);
 		BOOST_CHECK(find_value(r.get_obj(), "buynow").get_bool() == false);
 		BOOST_CHECK(AmountFromValue(find_value(r.get_obj(), "total_without_fee")) == AmountFromValue(bid_in_payment_option)*qty);
-		BOOST_CHECK(find_value(r.get_obj(), "bid_in_offer_currency_per_unit").get_real() == atof(bid_in_offer_currency.c_str()));
 		BOOST_CHECK_EQUAL(AmountFromValue(find_value(r.get_obj(), "total_or_bid_in_payment_option_per_unit")), AmountFromValue(bid_in_payment_option));
 		BOOST_CHECK(find_value(r.get_obj(), "buyer").get_str() == buyeralias);
 		BOOST_CHECK(find_value(r.get_obj(), "arbiter").get_str() == arbiteralias);
