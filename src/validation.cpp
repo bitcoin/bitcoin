@@ -3031,7 +3031,17 @@ static bool ContextualCheckBlock(const CBlock& block, CValidationState& state, c
     return true;
 }
 
-static bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state, const CChainParams& chainparams, CBlockIndex** ppindex)
+/**
+ * Validates and stores a new block header.
+ *
+ * Returns the new CBlockIndex in ppindex.
+ *
+ * known_not_failed_index may be provided to speed up validation. It must be a
+ * block which is known to have no failed parents (ie for which that fact was
+ * checked in the same cs_main context, eg something which was added via
+ * AcceptBlockHeader in the same cs_main lock).
+ */
+static bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state, const CChainParams& chainparams, CBlockIndex** ppindex, CBlockIndex* known_not_failed_index)
 {
     AssertLockHeld(cs_main);
     // Check for duplicate
@@ -3063,6 +3073,20 @@ static bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state
             return state.DoS(100, error("%s: prev block invalid", __func__), REJECT_INVALID, "bad-prevblk");
         if (!ContextualCheckBlockHeader(block, state, chainparams, pindexPrev, GetAdjustedTime()))
             return error("%s: Consensus::ContextualCheckBlockHeader: %s, %s", __func__, hash.ToString(), FormatStateMessage(state));
+
+        CBlockIndex* walk_index = pindexPrev;
+        while (walk_index && !walk_index->IsValid(BLOCK_VALID_SCRIPTS) && walk_index != known_not_failed_index) {
+            if (walk_index->nStatus & BLOCK_FAILED_MASK) {
+                CBlockIndex* invalid_walk_index = pindexPrev;
+                while (invalid_walk_index != walk_index) {
+                    invalid_walk_index->nStatus |= BLOCK_FAILED_CHILD;
+                    setDirtyBlockIndex.insert(invalid_walk_index);
+                    invalid_walk_index = invalid_walk_index->pprev;
+                }
+                return state.DoS(100, error("%s: prev block invalid", __func__), REJECT_INVALID, "bad-prevblk");
+            }
+            walk_index = walk_index->pprev;
+        }
     }
     if (pindex == nullptr)
         pindex = AddToBlockIndex(block);
@@ -3080,9 +3104,9 @@ bool ProcessNewBlockHeaders(const std::vector<CBlockHeader>& headers, CValidatio
 {
     {
         LOCK(cs_main);
+        CBlockIndex *pindex = nullptr; // Use a temp pindex instead of ppindex to avoid a const_cast
         for (const CBlockHeader& header : headers) {
-            CBlockIndex *pindex = nullptr; // Use a temp pindex instead of ppindex to avoid a const_cast
-            if (!AcceptBlockHeader(header, state, chainparams, &pindex)) {
+            if (!AcceptBlockHeader(header, state, chainparams, &pindex, pindex)) {
                 return false;
             }
             if (ppindex) {
@@ -3105,14 +3129,14 @@ static bool AcceptBlock(const std::shared_ptr<const CBlock>& pblock, CValidation
     CBlockIndex *pindexDummy = nullptr;
     CBlockIndex *&pindex = ppindex ? *ppindex : pindexDummy;
 
-    if (!AcceptBlockHeader(block, state, chainparams, &pindex))
+    if (!AcceptBlockHeader(block, state, chainparams, &pindex, nullptr))
         return false;
 
     // Try to process all requested blocks that we don't have, but only
     // process an unrequested block if it's new and has enough work to
     // advance our tip, and isn't too many blocks ahead.
     bool fAlreadyHave = pindex->nStatus & BLOCK_HAVE_DATA;
-    bool fHasMoreWork = (chainActive.Tip() ? pindex->nChainWork > chainActive.Tip()->nChainWork : true);
+    bool fHasMoreOrSameWork = (chainActive.Tip() ? pindex->nChainWork >= chainActive.Tip()->nChainWork : true);
     // Blocks that are too out-of-order needlessly limit the effectiveness of
     // pruning, because pruning will not delete block files that contain any
     // blocks which are too close in height to the tip.  Apply this test
@@ -3129,9 +3153,9 @@ static bool AcceptBlock(const std::shared_ptr<const CBlock>& pblock, CValidation
     // and unrequested blocks.
     if (fAlreadyHave) return true;
     if (!fRequested) {  // If we didn't ask for it:
-        if (pindex->nTx != 0) return true;  // This is a previously-processed block that was pruned
-        if (!fHasMoreWork) return true;     // Don't process less-work chains
-        if (fTooFarAhead) return true;      // Block height is too high
+        if (pindex->nTx != 0) return true;    // This is a previously-processed block that was pruned
+        if (!fHasMoreOrSameWork) return true; // Don't process less-work chains
+        if (fTooFarAhead) return true;        // Block height is too high
     }
     if (fNewBlock) *fNewBlock = true;
 
