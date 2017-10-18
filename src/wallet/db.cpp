@@ -413,7 +413,7 @@ CDB::CDB(CWalletDBWrapper& dbw, const char* pszMode, bool fFlushOnCloseIn) : pdb
         pdb = env->mapDb[strFilename];
         if (pdb == nullptr) {
             int ret;
-            std::unique_ptr<Db> pdb_temp(new Db(env->dbenv, 0));
+            std::unique_ptr<Db> pdb_temp = MakeUnique<Db>(env->dbenv.get(), 0);
 
             bool fMockDb = env->IsMock();
             if (fMockDb) {
