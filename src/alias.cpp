@@ -881,29 +881,21 @@ void CleanupSyscoinServiceDatabases(int &numServicesCleaned)
 	{
 		if (!paliasdb->Flush())
 			LogPrintf("Failed to write to alias database!");
-		delete paliasdb;
-		paliasdb = NULL;
 	}
 	if(pofferdb != NULL)
 	{
 		if (!pofferdb->Flush())
 			LogPrintf("Failed to write to offer database!");
-		delete pofferdb;
-		pofferdb = NULL;
 	}
 	if(pcertdb != NULL)
 	{
 		if (!pcertdb->Flush())
 			LogPrintf("Failed to write to cert database!");
-		delete pcertdb;
-		pcertdb = NULL;
 	}
 	if(pescrowdb != NULL)
 	{
 		if (!pescrowdb->Flush())
 			LogPrintf("Failed to write to escrow database!");
-		delete pescrowdb;
-		pescrowdb = NULL;
 	}
 }
 bool GetAlias(const CNameTXIDTuple &aliasTuple,
