@@ -124,6 +124,7 @@ BASE_SCRIPTS= [
     'resendwallettransactions.py',
     'minchainwork.py',
     'p2p-fingerprint.py',
+    'uacomment.py',
 ]
 
 EXTENDED_SCRIPTS = [
