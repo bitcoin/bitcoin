@@ -1352,7 +1352,7 @@ const string EscrowNewAuction(const string& node, const string& sellernode, cons
 	// since the core doesn't know the rate conversions this must be done externally, the seller/buyer/arbiter should check prior to signing escrow transactions.
 	CAmount nodeTotal = AmountFromValue(find_value(r.get_obj(), "total_without_fee"));
 	nodeTotal = nodeTotal / pegRates[currency];
-	BOOST_CHECK(abs(find_value(r.get_obj(), "bid_in_offer_currency_per_unit").get_real()*qty*COIN)) - nodeTotal) <= 0.1*COIN);
+	BOOST_CHECK(abs(find_value(r.get_obj(), "bid_in_offer_currency_per_unit").get_real()*qty*COIN) - nodeTotal <= 0.1*COIN);
 
 	BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == guid);
 	BOOST_CHECK(find_value(r.get_obj(), "offer").get_str() == offerguid);
