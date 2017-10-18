@@ -249,6 +249,7 @@ EXTRA_DIST += \
     test/util/data/txcreatemultisig3.json \
     test/util/data/txcreatemultisig4.hex \
     test/util/data/txcreatemultisig4.json \
+    test/util/data/txcreatemultisig5.json \
     test/util/data/txcreateoutpubkey1.hex \
     test/util/data/txcreateoutpubkey1.json \
     test/util/data/txcreateoutpubkey2.hex \
