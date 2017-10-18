@@ -6,7 +6,7 @@ addons:
   hostname: bitcoin-tester
 
 os: linux
-language: generic
+language: minimal
 cache:
   directories:
   - depends/built
