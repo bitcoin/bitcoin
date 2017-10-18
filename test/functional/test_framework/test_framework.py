@@ -110,8 +110,11 @@ class BitcoinTestFramework(object):
 
         check_json_precision()
 
+        self.options.cachedir = os.path.abspath(self.options.cachedir)
+
         # Set up temp directory and start logging
         if self.options.tmpdir:
+            self.options.tmpdir = os.path.abspath(self.options.tmpdir)
             os.makedirs(self.options.tmpdir, exist_ok=False)
         else:
             self.options.tmpdir = tempfile.mkdtemp(prefix="test")
