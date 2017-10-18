@@ -984,6 +984,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				theEscrow.op = escrowOp;
 				theEscrow.txHash = tx.GetHash();
 				theEscrow.nHeight = nHeight;
+				theEscrow.linkAliasTuple = serializedEscrow.linkAliasTuple;
 				// write escrow bid
 				if (!dontaddtodb)
 				{
@@ -1441,6 +1442,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 		theEscrow.op = escrowOp;
 		theEscrow.txHash = tx.GetHash();
 		theEscrow.nHeight = nHeight;
+		theEscrow.linkAliasTuple.clear();
         // write escrow
 		if (!dontaddtodb && !pescrowdb->WriteEscrow(vvchArgs, theEscrow))
 		{
