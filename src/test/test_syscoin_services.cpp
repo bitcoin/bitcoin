@@ -1241,7 +1241,7 @@ void EscrowBid(const string& node, const string& buyeralias, const string& escro
 {
 	string otherNode1, otherNode2;
 	GetOtherNodes(node, otherNode1, otherNode2);
-	UniValue r;
+	UniValue r, ret;
 
 	//										"escrowbid <alias> <escrow> <bid_in_payment_option> <bid_in_offer_currency> [witness]\n"
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowbid " + buyeralias + " " + escrowguid + " " +  bid_in_payment_option + " " + bid_in_offer_currency + " " + witness));
@@ -1250,7 +1250,8 @@ void EscrowBid(const string& node, const string& buyeralias, const string& escro
 	GenerateBlocks(10, node);
 	const UniValue &escrowBid = EscrowBidFilter(node, txid);
 	BOOST_CHECK(!escrowBid.empty());
-	const UniValue &escrowBidObj = escrowBid[0].get_obj();
+	BOOST_CHECK(ret.read(escrowBid[0].get_str()));
+	const UniValue &escrowBidObj = ret.get_obj();
 	BOOST_CHECK(find_value(escrowBidObj, "_id").get_str() == txid);
 	BOOST_CHECK(find_value(escrowBidObj, "bidder").get_str() == buyeralias);
 	BOOST_CHECK(find_value(escrowBidObj, "escrow").get_str() == escrowguid);
