@@ -80,7 +80,7 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
     ui->iopAtStartup->setToolTip(ui->iopAtStartup->toolTip().arg(tr(PACKAGE_NAME)));
     ui->iopAtStartup->setText(ui->iopAtStartup->text().arg(tr(PACKAGE_NAME)));
 
-    ui->openBitcoinConfButton->setToolTip(ui->openBitcoinConfButton->toolTip().arg(tr(PACKAGE_NAME)));
+    ui->openIoPConfButton->setToolTip(ui->openIoPConfButton->toolTip().arg(tr(PACKAGE_NAME)));
 
     ui->lang->setToolTip(ui->lang->toolTip().arg(tr(PACKAGE_NAME)));
     ui->lang->addItem(QString("(") + tr("default") + QString(")"), QVariant(""));
