@@ -1248,7 +1248,6 @@ void EscrowBid(const string& node, const string& buyeralias, const string& escro
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "offerinfo " + offerguid));
 	string currency = find_value(r.get_obj(), "currency").get_str();
 
-	float fPaymentOption = boost::lexical_cast<float>(bid_in_payment_option);
 	float fPaymentCurrency = boost::lexical_cast<float>(bid_in_offer_currency);
 	const string &bid_in_offer_currency1 = strprintf("%.*f", 8, fPaymentCurrency);
 	const string &bid_in_payment_option1 = strprintf("%.*f", 8, strprintf("%.*f", 8, pegRates[currency] * fPaymentCurrency));
@@ -1342,7 +1341,6 @@ const string EscrowNewAuction(const string& node, const string& sellernode, cons
 	string buyNowStr = "false";
 	string strTotalInPaymentOption = ValueFromAmount(offerprice).write();
 
-	float fPaymentOption = boost::lexical_cast<float>(bid_in_payment_option);
 	float fPaymentCurrency = boost::lexical_cast<float>(bid_in_offer_currency);
 	const string &bid_in_offer_currency1 = strprintf("%.*f", 8, fPaymentCurrency);
 	const string &bid_in_payment_option1 = strprintf("%.*f", 8, strprintf("%.*f", 8, pegRates[currency] * fPaymentCurrency));
