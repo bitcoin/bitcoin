@@ -1244,7 +1244,7 @@ void EscrowBid(const string& node, const string& buyeralias, const string& escro
 	GetOtherNodes(node, otherNode1, otherNode2);
 	UniValue r, ret;
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowinfo " + escrowguid));
-	string offerguid = AmountFromValue(find_value(r.get_obj(), "offer"));
+	string offerguid = find_value(r.get_obj(), "offer").get_str();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "offerinfo " + offerguid));
 	string currency = find_value(r.get_obj(), "currency").get_str();
 
