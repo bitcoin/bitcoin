@@ -30,16 +30,14 @@ BOOST_AUTO_TEST_CASE(generate_auction_regular)
 
 	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress buyerauction 500"), runtime_error);
 	GenerateBlocks(10);
-	string guid = EscrowNewAuction("node1", "node2", "buyerauction", offerguid, qty, "0.0005", "0.005", "arbiterauction");
-	// assume rate is 1 sys = 10 USD
-	EscrowBid("node1", "buyerauction", guid, "0.001", "0.01");
-	EscrowBid("node1", "buyerauction", guid, "0.002", "0.02");
+	string guid = EscrowNewAuction("node1", "node2", "buyerauction", offerguid, qty, "0.005", "arbiterauction");
+	EscrowBid("node1", "buyerauction", guid, "0.01");
+	EscrowBid("node1", "buyerauction", guid, "0.02");
 	// must bid higher
-	BOOST_CHECK_THROW(CallRPC("node1", "escrowbid buyerauction " + guid + " 0.002 0.02"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "escrowbid buyerauction " + guid + " 9 0.02"), runtime_error);
 	// must bid higher
-	BOOST_CHECK_THROW(CallRPC("node1", "escrowbid buyerauction " + guid + " 0.001 0.01"), runtime_error);
-	// this is ok because merchant UI should check that the amount in SYS is = to converted amount to USD (1 sys = 10 USD) and if it is off, ask bidder to create a higher bid with correct amount set
-	EscrowBid("node1", "buyerauction", guid, "0.0006", "0.03");
+	BOOST_CHECK_THROW(CallRPC("node1", "escrowbid buyerauction " + guid + " 9 0.01"), runtime_error);
+	EscrowBid("node1", "buyerauction", guid, "0.03");
 
 	EscrowNewBuyItNow("node1", "node2", "buyerauction", offerguid, qty, "arbiterauction");
 	EscrowRelease("node1", "buyer", guid);
@@ -82,16 +80,15 @@ BOOST_AUTO_TEST_CASE(generate_auction_reserve)
 	string query = "escrownew false buyerauction1 arbiterauction1 " + offerguid + " " + qty + " " + buyNowStr + " " + total_in_payment_option + " " +  shippingFee + " " + networkFee + " " + arbiterFee + " " + witnessFee + " " + exttxid + " " + paymentoptions + " " + bid_in_payment_option + " " + bid_in_offer_currency + " " + witness;
 	BOOST_CHECK_THROW(r = CallRPC("node1", query), runtime_error);
 
-	string guid = EscrowNewAuction("node1", "node2", "buyerauction1", offerguid, qty, "0.0005", "0.01", "arbiterauction1");
-	// assume rate is 1 sys = 10 USD
-	EscrowBid("node1", "buyerauction1", guid, "0.001", "0.02");
-	EscrowBid("node1", "buyerauction1", guid, "0.002", "0.03");
+	string guid = EscrowNewAuction("node1", "node2", "buyerauction1", offerguid, qty, "0.01", "arbiterauction1");
+	EscrowBid("node1", "buyerauction1", guid, "0.02");
+	EscrowBid("node1", "buyerauction1", guid, "0.03");
 	// must bid higher
-	BOOST_CHECK_THROW(CallRPC("node1", "escrowbid buyerauction1 " + guid + " 0.002 0.02"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "escrowbid buyerauction1 " + guid + " 9.002 0.02"), runtime_error);
 	// must bid higher
-	BOOST_CHECK_THROW(CallRPC("node1", "escrowbid buyerauction1 " + guid + " 0.001 0.01"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "escrowbid buyerauction1 " + guid + " 9.001 0.01"), runtime_error);
 	// this is ok because merchant UI should check that the amount in SYS is = to converted amount to USD (1 sys = 10 USD) and if it is off, ask bidder to create a higher bid with correct amount set
-	EscrowBid("node1", "buyerauction1", guid, "0.0001", "0.04");
+	EscrowBid("node1", "buyerauction1", guid, "0.04");
 
 	EscrowNewBuyItNow("node1", "node2", "buyerauction1", offerguid, qty, "arbiterauction1");
 	EscrowRelease("node1", "buyer", guid);

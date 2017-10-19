@@ -1238,13 +1238,20 @@ const string OfferAccept(const string& ownernode, const string& buyernode, const
 	EscrowClaimRelease(ownernode, escrowguid);
 	return escrowguid;
 }
-void EscrowBid(const string& node, const string& buyeralias, const string& escrowguid, const string& bid_in_payment_option, const string& bid_in_offer_currency, const string &witness)
+void EscrowBid(const string& node, const string& buyeralias, const string& escrowguid, const string& bid_in_offer_currency, const string &witness)
 {
 	string otherNode1, otherNode2;
 	GetOtherNodes(node, otherNode1, otherNode2);
 	UniValue r, ret;
-	const string &bid_in_payment_option1 = strprintf("%.*f", 8, boost::lexical_cast<float>(bid_in_payment_option));
-	const string &bid_in_offer_currency1 = strprintf("%.*f", 8, boost::lexical_cast<float>(bid_in_offer_currency));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowinfo " + escrowguid));
+	string offerguid = AmountFromValue(find_value(r.get_obj(), "offer"));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "offerinfo " + offerguid));
+	string currency = find_value(r.get_obj(), "currency").get_str();
+
+	float fPaymentOption = boost::lexical_cast<float>(bid_in_payment_option);
+	float fPaymentCurrency = boost::lexical_cast<float>(bid_in_offer_currency);
+	const string &bid_in_offer_currency1 = strprintf("%.*f", 8, fPaymentCurrency);
+	const string &bid_in_payment_option1 = strprintf("%.*f", 8, strprintf("%.*f", 8, pegRates[currency] * fPaymentCurrency));
 	//										"escrowbid <alias> <escrow> <bid_in_payment_option> <bid_in_offer_currency> [witness]\n"
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowbid " + buyeralias + " " + escrowguid + " " + bid_in_payment_option1 + " " + bid_in_offer_currency1 + " " + witness));
 	const UniValue &arr = r.get_array();
@@ -1291,7 +1298,7 @@ void EscrowBid(const string& node, const string& buyeralias, const string& escro
 		BOOST_CHECK(find_value(r.get_obj(), "buyer").get_str() == buyeralias);
 	}
 }
-const string EscrowNewAuction(const string& node, const string& sellernode, const string& buyeralias, const string& offerguid, const string& qtyStr, const string& bid_in_payment_option, const string& bid_in_offer_currency, const string& arbiteralias, const string& shipping, const string& networkFee, const string& arbiterFee, const string& witnessFee, const string &witness)
+const string EscrowNewAuction(const string& node, const string& sellernode, const string& buyeralias, const string& offerguid, const string& qtyStr, const string& bid_in_offer_currency, const string& arbiteralias, const string& shipping, const string& networkFee, const string& arbiterFee, const string& witnessFee, const string &witness)
 {
 	string otherNode1, otherNode2;
 	GetOtherNodes(node, otherNode1, otherNode2);
@@ -1334,8 +1341,13 @@ const string EscrowNewAuction(const string& node, const string& sellernode, cons
 	string redeemscript = "\"\"";
 	string buyNowStr = "false";
 	string strTotalInPaymentOption = ValueFromAmount(offerprice).write();
-	const string &bid_in_payment_option1 = strprintf("%.*f", 8, boost::lexical_cast<float>(bid_in_payment_option));
-	const string &bid_in_offer_currency1 = strprintf("%.*f", 8, boost::lexical_cast<float>(bid_in_offer_currency));
+
+	float fPaymentOption = boost::lexical_cast<float>(bid_in_payment_option);
+	float fPaymentCurrency = boost::lexical_cast<float>(bid_in_offer_currency);
+	const string &bid_in_offer_currency1 = strprintf("%.*f", 8, fPaymentCurrency);
+	const string &bid_in_payment_option1 = strprintf("%.*f", 8, strprintf("%.*f", 8, pegRates[currency] * fPaymentCurrency));
+
+
 	//										"escrownew <getamountandaddress> <alias> <arbiter alias> <offer> <quantity> <buynow> <total_in_payment_option> [shipping amount] [network fee] [arbiter fee] [witness fee] [extTx] [payment option] [bid_in_payment_option] [bid_in_offer_currency] [witness]\n"
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrownew false " + buyeralias + " " + arbiteralias + " " + offerguid + " " + qtyStr + " " + buyNowStr + " " + strTotalInPaymentOption + " " + shipping + " " + networkFee + " " + arbiterFee + " " + witnessFee + " " + exttxid + " " + paymentoptions + " " + bid_in_payment_option1 + " " + bid_in_offer_currency1 + " " + witness));
 	const UniValue &arr = r.get_array();
