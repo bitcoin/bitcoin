@@ -1243,10 +1243,10 @@ void EscrowBid(const string& node, const string& buyeralias, const string& escro
 	string otherNode1, otherNode2;
 	GetOtherNodes(node, otherNode1, otherNode2);
 	UniValue r, ret;
-	bid_in_payment_option = strprintf("%.*f", 8, boost::lexical_cast<float>(bid_in_payment_option));
-	bid_in_offer_currency = strprintf("%.*f", 8, boost::lexical_cast<float>(bid_in_offer_currency));
+	const string &bid_in_payment_option1 = strprintf("%.*f", 8, boost::lexical_cast<float>(bid_in_payment_option));
+	const string &bid_in_offer_currency1 = strprintf("%.*f", 8, boost::lexical_cast<float>(bid_in_offer_currency));
 	//										"escrowbid <alias> <escrow> <bid_in_payment_option> <bid_in_offer_currency> [witness]\n"
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowbid " + buyeralias + " " + escrowguid + " " +  bid_in_payment_option + " " + bid_in_offer_currency + " " + witness));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowbid " + buyeralias + " " + escrowguid + " " + bid_in_payment_option1 + " " + bid_in_offer_currency1 + " " + witness));
 	const UniValue &arr = r.get_array();
 	string txid = arr[0].get_str();
 	GenerateBlocks(10, node);
@@ -1257,7 +1257,7 @@ void EscrowBid(const string& node, const string& buyeralias, const string& escro
 	BOOST_CHECK(find_value(escrowBidObj, "_id").get_str() == txid);
 	BOOST_CHECK_EQUAL(find_value(escrowBidObj, "bidder").get_str() , buyeralias);
 	BOOST_CHECK(find_value(escrowBidObj, "escrow").get_str() == escrowguid);
-	CAmount bidPaymentOption = AmountFromValue(bid_in_payment_option);
+	CAmount bidPaymentOption = AmountFromValue(bid_in_payment_option1);
 	BOOST_CHECK_EQUAL(AmountFromValue(find_value(escrowBidObj, "bid_in_payment_option_per_unit")), bidPaymentOption);
 	BOOST_CHECK(find_value(escrowBidObj, "witness").get_str() == witness);
 	BOOST_CHECK(find_value(escrowBidObj, "status").get_str() == "valid");
@@ -1333,10 +1333,10 @@ const string EscrowNewAuction(const string& node, const string& sellernode, cons
 	string redeemscript = "\"\"";
 	string buyNowStr = "false";
 	string strTotalInPaymentOption = ValueFromAmount(offerprice).write();
-	bid_in_payment_option = strprintf("%.*f", 8, boost::lexical_cast<float>(bid_in_payment_option));
-	bid_in_offer_currency = strprintf("%.*f", 8, boost::lexical_cast<float>(bid_in_offer_currency));
+	const string &bid_in_payment_option1 = strprintf("%.*f", 8, boost::lexical_cast<float>(bid_in_payment_option));
+	const string &bid_in_offer_currency1 = strprintf("%.*f", 8, boost::lexical_cast<float>(bid_in_offer_currency));
 	//										"escrownew <getamountandaddress> <alias> <arbiter alias> <offer> <quantity> <buynow> <total_in_payment_option> [shipping amount] [network fee] [arbiter fee] [witness fee] [extTx] [payment option] [bid_in_payment_option] [bid_in_offer_currency] [witness]\n"
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrownew false " + buyeralias + " " + arbiteralias + " " + offerguid + " " + qtyStr + " " + buyNowStr + " " + strTotalInPaymentOption + " " + shipping + " " + networkFee + " " + arbiterFee + " " + witnessFee + " " + exttxid + " " + paymentoptions + " " + bid_in_payment_option + " " + bid_in_offer_currency + " " + witness));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrownew false " + buyeralias + " " + arbiteralias + " " + offerguid + " " + qtyStr + " " + buyNowStr + " " + strTotalInPaymentOption + " " + shipping + " " + networkFee + " " + arbiterFee + " " + witnessFee + " " + exttxid + " " + paymentoptions + " " + bid_in_payment_option1 + " " + bid_in_offer_currency1 + " " + witness));
 	const UniValue &arr = r.get_array();
 	string guid = arr[1].get_str();
 	GenerateBlocks(10, node);
@@ -1351,8 +1351,8 @@ const string EscrowNewAuction(const string& node, const string& sellernode, cons
 	BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == guid);
 	BOOST_CHECK(find_value(r.get_obj(), "offer").get_str() == offerguid);
 	BOOST_CHECK(find_value(r.get_obj(), "quantity").get_int() == qty);
-	CAmount bidPaymentOption = AmountFromValue(bid_in_payment_option);
-	BOOST_CHECK_EQUAL(((int)find_value(r.get_obj(), "bid_in_offer_currency_per_unit").get_real()*100) , ((int)atof(bid_in_offer_currency.c_str())*100));
+	CAmount bidPaymentOption = AmountFromValue(bid_in_payment_option1);
+	BOOST_CHECK_EQUAL(((int)find_value(r.get_obj(), "bid_in_offer_currency_per_unit").get_real()*100) , ((int)atof(bid_in_offer_currency1.c_str())*100));
 	BOOST_CHECK_EQUAL(AmountFromValue(find_value(r.get_obj(), "total_or_bid_in_payment_option_per_unit")), bidPaymentOption);
 	BOOST_CHECK(find_value(r.get_obj(), "buynow").get_bool() == false);
 	BOOST_CHECK(find_value(r.get_obj(), "arbiter").get_str() == arbiteralias);
@@ -1369,7 +1369,7 @@ const string EscrowNewAuction(const string& node, const string& sellernode, cons
 		BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == guid);
 		BOOST_CHECK(find_value(r.get_obj(), "offer").get_str() == offerguid);
 		BOOST_CHECK(find_value(r.get_obj(), "quantity").get_int() == qty);
-		BOOST_CHECK_EQUAL(((int)find_value(r.get_obj(), "bid_in_offer_currency_per_unit").get_real() * 100), ((int)atof(bid_in_offer_currency.c_str()) * 100));
+		BOOST_CHECK_EQUAL(((int)find_value(r.get_obj(), "bid_in_offer_currency_per_unit").get_real() * 100), ((int)atof(bid_in_offer_currency1.c_str()) * 100));
 		BOOST_CHECK_EQUAL(AmountFromValue(find_value(r.get_obj(), "total_or_bid_in_payment_option_per_unit")), bidPaymentOption);
 		BOOST_CHECK(find_value(r.get_obj(), "buynow").get_bool() == false);
 		BOOST_CHECK(find_value(r.get_obj(), "arbiter").get_str() == arbiteralias);
@@ -1381,7 +1381,7 @@ const string EscrowNewAuction(const string& node, const string& sellernode, cons
 		BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == guid);
 		BOOST_CHECK(find_value(r.get_obj(), "offer").get_str() == offerguid);
 		BOOST_CHECK(find_value(r.get_obj(), "quantity").get_int() == qty);
-		BOOST_CHECK_EQUAL(((int)find_value(r.get_obj(), "bid_in_offer_currency_per_unit").get_real() * 100), ((int)atof(bid_in_offer_currency.c_str()) * 100));
+		BOOST_CHECK_EQUAL(((int)find_value(r.get_obj(), "bid_in_offer_currency_per_unit").get_real() * 100), ((int)atof(bid_in_offer_currency1.c_str()) * 100));
 		BOOST_CHECK_EQUAL(AmountFromValue(find_value(r.get_obj(), "total_or_bid_in_payment_option_per_unit")), bidPaymentOption);
 		BOOST_CHECK(find_value(r.get_obj(), "buynow").get_bool() == false);
 		BOOST_CHECK(find_value(r.get_obj(), "arbiter").get_str() == arbiteralias);
@@ -1437,9 +1437,9 @@ const string EscrowNewBuyItNow(const string& node, const string& sellernode, con
 	string strDeposit = "\"\"";
 	string strTotal = ValueFromAmount(offerprice).write();
 	string strTotalInPaymentOption = ValueFromAmount(offerprice).write();
-	strBidInPaymentOption = strprintf("%.*f", 8, boost::lexical_cast<float>(strBidInPaymentOption));
+	const string &strBidInPaymentOption1 = strprintf("%.*f", 8, boost::lexical_cast<float>(strBidInPaymentOption));
 	//										"escrownew <getamountandaddress> <alias> <arbiter alias> <offer> <quantity> <buynow> <total_in_payment_option> [shipping amount] [network fee] [arbiter fee] [witness fee] [extTx] [payment option] [bid_in_payment_option] [bid_in_offer_currency] [witness]\n"
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrownew false " + buyeralias + " " + arbiteralias + " " + offerguid + " " + qtyStr + " " + buyNowStr + " " + strTotalInPaymentOption + " " + shipping + " " + networkFee + " " + arbiterFee + " " + witnessFee + " " + exttxid + " " + paymentoptions + " " + strBidInPaymentOption + " " + strBidInPaymentOption + " " + witness));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrownew false " + buyeralias + " " + arbiteralias + " " + offerguid + " " + qtyStr + " " + buyNowStr + " " + strTotalInPaymentOption + " " + shipping + " " + networkFee + " " + arbiterFee + " " + witnessFee + " " + exttxid + " " + paymentoptions + " " + strBidInPaymentOption1 + " " + strBidInPaymentOption1 + " " + witness));
 	const UniValue &arr = r.get_array();
 	const string &guid = arr[1].get_str();
 	GenerateBlocks(10, node);
