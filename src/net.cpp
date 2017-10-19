@@ -24,6 +24,7 @@
 #include "ui_interface.h"
 #include "unlimited.h"
 #include "utilstrencodings.h"
+#include "wallet/wallet.h"
 
 #ifdef WIN32
 #include <string.h>
@@ -883,6 +884,10 @@ static bool AttemptToEvictConnection(bool fPreferNewConnection)
 
 static void AcceptConnection(const ListenSocket &hListenSocket)
 {
+    // If a wallet rescan has started then do not accept any more connections until the rescan has completed.
+    if (fRescan)
+        return;
+
     struct sockaddr_storage sockaddr;
     socklen_t len = sizeof(sockaddr);
     SOCKET hSocket = accept(hListenSocket.socket, (struct sockaddr *)&sockaddr, &len);
