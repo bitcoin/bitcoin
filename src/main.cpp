@@ -2506,9 +2506,6 @@ bool ConnectBlock(const CBlock &block,
     // repeated locking and unlocking of cs_xval.
     std::vector<uint256> vHashesToDelete;
 
-    // Create a temporary view of the UTXO set
-    CCoinsViewCache viewTempCache(pcoinsTip);
-
     // Section for boost scoped lock on the scriptcheck_mutex
     boost::thread::id this_id(boost::this_thread::get_id());
 
@@ -2556,7 +2553,7 @@ bool ConnectBlock(const CBlock &block,
 
             if (!tx.IsCoinBase())
             {
-                if (!viewTempCache.HaveInputs(tx))
+                if (!view.HaveInputs(tx))
                 {
                     // If we were validating at the same time as another block and the other block wins the validation
                     // race
@@ -2577,7 +2574,7 @@ bool ConnectBlock(const CBlock &block,
                 prevheights.resize(tx.vin.size());
                 for (size_t j = 0; j < tx.vin.size(); j++)
                 {
-                    prevheights[j] = viewTempCache.AccessCoin(tx.vin[j].prevout).nHeight;
+                    prevheights[j] = view.AccessCoin(tx.vin[j].prevout).nHeight;
                 }
 
                 if (!SequenceLocks(tx, nLockTimeFlags, &prevheights, *pindex))
@@ -2591,13 +2588,13 @@ bool ConnectBlock(const CBlock &block,
                     // Add in sigops done by pay-to-script-hash inputs;
                     // this is to prevent a "rogue miner" from creating
                     // an incredibly-expensive-to-validate block.
-                    nSigOps += GetP2SHSigOpCount(tx, viewTempCache);
+                    nSigOps += GetP2SHSigOpCount(tx, view);
                     // if (nSigOps > MAX_BLOCK_SIGOPS)
                     //    return state.DoS(100, error("ConnectBlock(): too many sigops"),
                     //                     REJECT_INVALID, "bad-blk-sigops");
                 }
 
-                nFees += viewTempCache.GetValueIn(tx) - tx.GetValueOut();
+                nFees += view.GetValueIn(tx) - tx.GetValueOut();
 
                 // Only check inputs when the tx hash in not in the setPreVerifiedTxHash as would only
                 // happen if this were a regular block or when a tx is found within the returning XThinblock.
@@ -2619,8 +2616,8 @@ bool ConnectBlock(const CBlock &block,
                         std::vector<CScriptCheck> vChecks;
                         bool fCacheResults = fJustCheck; /* Don't cache results if we're actually connecting blocks
                                                             (still consult the cache, though) */
-                        if (!CheckInputs(tx, state, viewTempCache, fScriptChecks, flags, fCacheResults,
-                                &resourceTracker, PV->ThreadCount() ? &vChecks : NULL))
+                        if (!CheckInputs(tx, state, view, fScriptChecks, flags, fCacheResults, &resourceTracker,
+                                PV->ThreadCount() ? &vChecks : NULL))
                         {
                             return error("ConnectBlock(): CheckInputs on %s failed with %s", tx.GetHash().ToString(),
                                 FormatStateMessage(state));
@@ -2640,7 +2637,7 @@ bool ConnectBlock(const CBlock &block,
             {
                 blockundo.vtxundo.push_back(CTxUndo());
             }
-            UpdateCoins(tx, state, viewTempCache, i == 0 ? undoDummy : blockundo.vtxundo.back(), pindex->nHeight);
+            UpdateCoins(tx, state, view, i == 0 ? undoDummy : blockundo.vtxundo.back(), pindex->nHeight);
             vPos.push_back(std::make_pair(tx.GetHash(), pos));
             pos.nTxOffset += ::GetSerializeSize(tx, SER_DISK, CLIENT_VERSION);
 
@@ -2695,14 +2692,6 @@ bool ConnectBlock(const CBlock &block,
 
     // Quit any competing threads may be validating which have the same previous block before updating the UTXO.
     PV->QuitCompetingThreads(block.GetBlockHeader().hashPrevBlock);
-
-    // Flush the temporary UTXO view to the base view (the in memory UTXO main cache)
-    int64_t nUpdateCoinsTimeBegin = GetTimeMicros();
-    LogPrint("parallel", "Updating UTXO for %s\n", block.GetHash().ToString());
-    viewTempCache.Flush();
-
-    int64_t nUpdateCoinsTimeEnd = GetTimeMicros();
-    LogPrint("bench", "      - Update Coins %.3fms\n", nUpdateCoinsTimeEnd - nUpdateCoinsTimeBegin);
 
     int64_t nTime3 = GetTimeMicros();
     nTimeConnect += nTime3 - nTime2;
@@ -3129,13 +3118,16 @@ bool static ConnectTip(CValidationState &state,
             }
             return false;
         }
+        int64_t nStart = GetTimeMicros();
+        bool result = view.Flush();
+        assert(result);
+        LogPrint("bench", "      - Update Coins %.3fms\n", GetTimeMicros() - nStart);
+
         mapBlockSource.erase(pindexNew->GetBlockHash());
         nTime3 = GetTimeMicros();
         nTimeConnectTotal += nTime3 - nTime2;
         LogPrint(
             "bench", "  - Connect total: %.2fms [%.2fs]\n", (nTime3 - nTime2) * 0.001, nTimeConnectTotal * 0.000001);
-        bool result = view.Flush();
-        assert(result);
     }
 
     int64_t nTime4 = GetTimeMicros();
