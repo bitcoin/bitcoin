@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE(generate_auction_regular)
 	EscrowRelease("node1", "buyer", guid);
 	EscrowClaimRelease("node2", guid);
 	// after expiry can update
-	SetMockTime(mediantime + 100);
+	SetSysMocktime(mediantime + 1);
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "offerupdate sellerauction " + offerguid + " category title 90 0.15 description USD \"\" \"\" \"\" \"\" \"\" \"\" \"\" true"));
 }
 BOOST_AUTO_TEST_CASE(generate_auction_reserve)

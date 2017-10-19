@@ -627,13 +627,10 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1024 - " + _("Auction deposit percentage must be greator or equal to 0");
 						return true;
 					}
-					if (theOffer.auctionOffer.nExpireTime > 0 || dbOffer.auctionOffer.nExpireTime > 0)
+					if (dbOffer.auctionOffer.nExpireTime > 0 && dbOffer.auctionOffer.nExpireTime >= nTime && dbOffer.auctionOffer != theOffer.auctionOffer)
 					{
-						if (dbOffer.auctionOffer.nExpireTime >= nTime && dbOffer.auctionOffer != theOffer.auctionOffer)
-						{
-							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1024 - " + _("Cannot modify auction parameters while it is active. Please wait until auction has expired before updating.");
-							return true;
-						}
+						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1024 - " + _("Cannot modify auction parameters while it is active. Please wait until auction has expired before updating.");
+						return true;
 					}
 				}
 				// non linked offers cant edit commission
