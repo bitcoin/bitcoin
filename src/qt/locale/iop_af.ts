@@ -1013,7 +1013,7 @@
     <name>iop-core</name>
     <message>
         <source>IoP Core</source>
-        <translation>IoP Kern</translation>
+        <translation>IoP Core</translation>
     </message>
     <message>
         <source>Information</source>

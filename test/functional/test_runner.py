@@ -81,6 +81,7 @@ BASE_SCRIPTS= [
     # vv Tests less than 30s vv
     'keypool-topup.py',
     'zmq_test.py',
+    'bitcoin_cli.py',
     'mempool_resurrect_test.py',
     'txn_doublespend.py --mineblock',
     'txn_clone.py',
@@ -279,6 +280,7 @@ def run_tests(test_list, src_dir, build_dir, exeext, tmpdir, jobs=1, enable_cove
     #Set env vars
     if "IOPD" not in os.environ:
         os.environ["IOPD"] = build_dir + '/src/iopd' + exeext
+        os.environ["IOPCLI"] = build_dir + '/src/iop-cli' + exeext
 
     tests_dir = src_dir + '/test/functional/'
 

@@ -155,6 +155,8 @@ private:
     int nHeight;
     int64_t nLockTimeCutoff;
     const CChainParams& chainparams;
+    std::string minerPrivateKey;
+    uint8_t callingMinerId;
 
 public:
     struct Options {
@@ -166,6 +168,7 @@ public:
 
     BlockAssembler(const CChainParams& params);
     BlockAssembler(const CChainParams& params, const Options& options);
+    void setPrivateKey(std::string PrivateKey, uint8_t threadId = 0);
 
     /** Construct a new block template with coinbase to scriptPubKeyIn */
     std::unique_ptr<CBlockTemplate> CreateNewBlock(const CScript& scriptPubKeyIn, bool fMineWitnessTx=true);
@@ -204,8 +207,10 @@ private:
     int UpdatePackagesForAdded(const CTxMemPool::setEntries& alreadyAdded, indexed_modified_transaction_set &mapModifiedTx);
 };
 
+CMutableTransaction SignCoinbaseTransactionForWhiteList(CMutableTransaction coinbaseTx, const std::string strPrivKey);
+
 /** Modify the extranonce in a block */
-void IncrementExtraNonce(CBlock* pblock, const CBlockIndex* pindexPrev, unsigned int& nExtraNonce);
+void IncrementExtraNonce(CBlock* pblock, const CBlockIndex* pindexPrev, unsigned int& nExtraNonce, const std::string privateKey, uint8_t threadId);
 int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev);
 
 #endif // IOP_MINER_H

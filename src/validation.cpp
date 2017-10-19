@@ -1866,8 +1866,12 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
      // check if whitelist functionality is activated.
     bool fIsMinerWhitelist = pindex->nHeight > chainparams.GetConsensus().minerWhiteListActivationHeight;
      
-    if (fIsMinerWhitelist){
-        LogPrintf("Whitelist activated: Checking for Miner Signature.\n");
+    // get height of last checkpoint
+    CBlockIndex* pcheckpoint = Checkpoints::GetLastCheckpoint(chainparams.Checkpoints());
+    bool fCheckMinerSig = pindex->nHeight > pcheckpoint->nHeight;
+
+    if (fIsMinerWhitelist && fCheckMinerSig ){
+        //LogPrintf("Whitelist activated: Checking for Miner Signature.\n");
         // first transaction is coinbase with only one input
         const CTransaction &tx = *(block.vtx[0]);
         const CScript scriptSig = tx.vin[0].scriptSig;
@@ -1882,7 +1886,7 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
         ScriptError* serror = nullptr;
         if (!CheckSignatureEncoding(signature, SCRIPT_VERIFY_DERSIG, serror)){
             LogPrintf("Invalid coinbase transaction: Provided signature is not valid: %s \n", serror);
-            return state.DoS(100, false, REJECT_INVALID, "bad-CB-signature", false, "Coinbase invalid signature");
+            return state.DoS(100, false, REJECT_INVALID, "bad-CB-signature", false, "Coinbase signature is invalid.");
         }
 
         //we remove the sig hash type from the end of the signature
@@ -1898,7 +1902,7 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
         // make sure the public key is ok.
         if (!pkey.IsValid()){
             LogPrintf("Invalid coinbase transaction: Coinbase without valid public key: %s \n", HexStr(value));
-            return state.DoS(100, false, REJECT_INVALID, "bad-CB-publickey", false, "Coinbase publickey");
+            return state.DoS(100, false, REJECT_INVALID, "bad-CB-publickey", false, "Coinbase publickey is invalid.");
         }
 
         // verify the signature on the transaction hash without any input
@@ -1910,10 +1914,10 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
 
         CTransaction unTx = mutableTx;
         const uint256 sigHash = unTx.GetHash();
-
+        
         if (!pkey.Verify(sigHash, vchSig)){
-            LogPrintf("Invalid coinbase transaction: Coinbase without a valid signature: %s \n hash: %s\n publicKey: %s \n", HexStr(vchSig), sigHash.ToString(), HexStr(pkey));
-            return state.DoS(100, false, REJECT_INVALID, "bad-CB-signature", false, "Coinbase signature");
+            LogPrintf("Invalid coinbase transaction: Coinbase signature can not be verified: %s \n hash: %s\n publicKey: %s \n", HexStr(vchSig), sigHash.ToString(), HexStr(pkey));
+            return state.DoS(100, false, REJECT_INVALID, "bad-CB-signature", false, "Coinbase signature can not be verified.");
         }
 
         // to be valid, the public key used to sign the coinbase input must be from a valid miner an exists in the minerwhitelistdb
@@ -1921,12 +1925,12 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
         cAddress.Set(pkey.GetID());
         if (!cAddress.IsValid()){
             LogPrintf("Invalid coinbase transaction: Generated base58 IoP address is not valid. %s \n", cAddress.ToString());
-            return state.DoS(100, false, REJECT_INVALID, "bad-CB-address", false, "Coinbase Address");
+            return state.DoS(100, false, REJECT_INVALID, "bad-CB-address", false, "Address of miner is not valid");
         }
 
         if (!pminerwhitelist->isWhitelisted(cAddress.ToString())){
             LogPrintf("Invalid coinbase transaction: Coinbase not from an authorized miner: %s \n", cAddress.ToString());
-            return state.DoS(100, false, REJECT_INVALID, "bad-CB-miner", false, "Coinbase not authorized");
+            return state.DoS(100, false, REJECT_INVALID, "bad-CB-miner", false, "Miner is not authorized.");
         }
 
         // If the cap is active, we will validate the stats
@@ -1935,7 +1939,7 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
         if (pminerwhitelist->IsCapEnabled()){
             if (pminerwhitelist->hasExceededCap(strAddress)){
                 LogPrintf("Invalid coinbase transaction: Miner %s has exceeded the cap for this period.\n", strAddress);
-                return state.DoS(100, false, REJECT_INVALID, "bad-CAP-miner", false, "Miner Cap exceeded.");
+                return state.DoS(100, false, REJECT_INVALID, "bad-CAP-miner", false, "Miner has exceeded Cap.");
             }
         }
     }
@@ -2068,10 +2072,10 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
     }
     
     // now apply admin actions.
-    LogPrintf("Looking for admin actions.\n");
-    LogPrintf("Txns to check: %d \n",block.vtx.size()-1);
+    //LogPrintf("Looking for admin actions.\n");
+    //LogPrintf("Txns to check: %d \n",block.vtx.size()-1);
     for (unsigned int i = 1; i < block.vtx.size(); i++){ // start at 1, 0 is coinbase
-        LogPrintf("Checking txn %d.\n",i);
+        //LogPrintf("Checking txn %d.\n",i);
         const CTransaction &tx = *(block.vtx[i]);
         if (!tx.IsCoinBase()){
             for (unsigned int j = 0; j < tx.vin.size(); j++) {

@@ -404,7 +404,7 @@ git merge commit are mentioned.
 - #6104 `3e2559c` Show an init message while activating best chain
 - #6125 `351f73e` Clean up parsing of bool command line args
 - #5964 `b4c219b` Lightweight task scheduler
-- #6116 `30dc3c1` [OSX] rename IoP-Qt.app to IoP-Core.app
+- #6116 `30dc3c1` [OSX] rename IoP-Qt.app to IoP-Core.app // nvm
 - #6168 `b3024f0` contrib/linearize: Support linearization of testnet blocks
 - #6098 `7708fcd` Update Windows resource files (and add one for iop-tx)
 - #6159 `e1412d3` Catch errors on datadir lock and pidfile delete

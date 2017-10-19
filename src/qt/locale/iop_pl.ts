@@ -2964,7 +2964,7 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
     </message>
     <message>
         <source>IoP Core</source>
-        <translation>Rdzeń IoPa</translation>
+        <translation>IoP Core</translation>
     </message>
     <message>
         <source>The %s developers</source>

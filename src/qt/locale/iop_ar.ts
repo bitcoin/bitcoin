@@ -1961,7 +1961,7 @@
     </message>
     <message>
         <source>IoP Core</source>
-        <translation>جوهر البيت كوين</translation>
+        <translation>IoP Core</translation>
     </message>
     <message>
         <source>The %s developers</source>

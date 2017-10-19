@@ -641,7 +641,7 @@
     </message>
     <message>
         <source>IoP Core</source>
-        <translation>Craidd IoP</translation>
+        <translation>IoP Core</translation>
     </message>
     <message>
         <source>Information</source>

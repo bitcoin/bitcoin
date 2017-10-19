@@ -563,7 +563,7 @@ git merge commit are mentioned.
 - #8257 `ff03c50` Do not ask a UI question from iopd (sipa)
 - #8288 `91abb77` Network-specific example address (laanwj)
 - #7707 `a914968` UI support for abandoned transactions (jonasschnelli)
-- #8207 `f7a403b` Add a link to the IoP-Core repository and website to the About Dialog (MarcoFalke)
+- #8207 `f7a403b` Add a link to the iop-blockchain repository and website to the About Dialog (MarcoFalke)
 - #8281 `6a87eb0` Remove client name from debug window (laanwj)
 - #8407 `45eba4b` Add dbcache migration path (jonasschnelli)
 

@@ -579,7 +579,7 @@
     </message>
     <message>
         <source>IoP Core</source>
-        <translation>Биткоин Core</translation>
+        <translation>IoP Core</translation>
     </message>
     <message>
         <source>Warning</source>

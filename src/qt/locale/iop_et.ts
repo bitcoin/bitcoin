@@ -1759,7 +1759,7 @@
     </message>
     <message>
         <source>IoP Core</source>
-        <translation>IoPi tuumik</translation>
+        <translation>IoP Core</translation>
     </message>
     <message>
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>

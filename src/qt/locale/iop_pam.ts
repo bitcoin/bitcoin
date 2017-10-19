@@ -753,7 +753,7 @@
     </message>
     <message>
         <source>IoP Core</source>
-        <translation>Kapilubluban ning IoP</translation>
+        <translation>IoP Core</translation>
     </message>
     <message>
         <source>Block creation options:</source>

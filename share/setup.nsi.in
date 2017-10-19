@@ -6,7 +6,7 @@ SetCompressor /SOLID lzma
 # General Symbol Definitions
 !define REGKEY "SOFTWARE\$(^Name)"
 !define VERSION @CLIENT_VERSION_MAJOR@.@CLIENT_VERSION_MINOR@.@CLIENT_VERSION_REVISION@
-!define COMPANY "@PACKAGE_NAME@ project"
+!define COMPANY "IoP Ventures LLC"
 !define URL @PACKAGE_URL@
 
 # MUI Symbol Definitions

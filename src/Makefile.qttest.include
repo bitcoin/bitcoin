@@ -25,12 +25,10 @@ TEST_QT_H = \
   qt/test/wallettests.h
 
 TEST_IOP_CPP = \
-  test/test_iop.cpp \
-  test/testutil.cpp
+  test/test_iop.cpp
 
 TEST_IOP_H = \
-  test/test_iop.h \
-  test/testutil.h
+  test/test_iop.h
 
 qt_test_test_iop_qt_CPPFLAGS = $(AM_CPPFLAGS) $(IOP_INCLUDES) $(IOP_QT_INCLUDES) \
   $(QT_INCLUDES) $(QT_TEST_INCLUDES) $(PROTOBUF_CFLAGS)

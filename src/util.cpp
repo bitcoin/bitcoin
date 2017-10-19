@@ -524,13 +524,13 @@ void PrintExceptionContinue(const std::exception* pex, const char* pszThread)
 
 fs::path GetDefaultDataDir()
 {
-    // Windows < Vista: C:\Documents and Settings\Username\Application Data\IoP-HD
-    // Windows >= Vista: C:\Users\Username\AppData\Roaming\IoP-HD
-    // Mac: ~/Library/Application Support/IoP-HD
-    // Unix: ~/.iop-hd
+    // Windows < Vista: C:\Documents and Settings\Username\Application Data\IoP
+    // Windows >= Vista: C:\Users\Username\AppData\Roaming\IoP
+    // Mac: ~/Library/Application Support/IoP
+    // Unix: ~/.iop-core
 #ifdef WIN32
     // Windows
-    return GetSpecialFolderPath(CSIDL_APPDATA) / "IoP-HD";
+    return GetSpecialFolderPath(CSIDL_APPDATA) / "IoP";
 #else
     fs::path pathRet;
     char* pszHome = getenv("HOME");
@@ -540,10 +540,10 @@ fs::path GetDefaultDataDir()
         pathRet = fs::path(pszHome);
 #ifdef MAC_OSX
     // Mac
-    return pathRet / "Library/Application Support/IoP-HD";
+    return pathRet / "Library/Application Support/IoP";
 #else
     // Unix
-    return pathRet / ".iop-hd";
+    return pathRet / ".iop";
 #endif
 #endif
 }

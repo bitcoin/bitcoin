@@ -67,6 +67,17 @@
 #include "zmq/zmqnotificationinterface.h"
 #endif
 
+
+// TODO: this is a hack to access parts of the RPC miner code from here
+#include <univalue.h> // To declare the following function signature from rpc/mining.cpp
+#include <rpc/mining.h>
+// UniValue generateBlocks(std::shared_ptr<CReserveScript> coinbaseScript,
+//     int nGenerate, uint64_t nMaxTries, bool keepScript, const std::string &whiteListPrivKey, uint8_t threadId);
+
+#include "base58.h" // To access class CIoPAddress to handle the mining target address parameter
+void MinerThread(std::shared_ptr<CReserveScript> coinbaseScript, const CIoPAddress &whitelistAddress, uint8_t threadId);
+
+
 bool fFeeEstimatesInitialized = false;
 static const bool DEFAULT_PROXYRANDOMIZE = true;
 static const bool DEFAULT_REST_ENABLE = false;
@@ -367,6 +378,12 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += HelpMessageOpt("-dbcache=<n>", strprintf(_("Set database cache size in megabytes (%d to %d, default: %d)"), nMinDbCache, nMaxDbCache, nDefaultDbCache));
     if (showDebug)
         strUsage += HelpMessageOpt("-feefilter", strprintf("Tell other nodes to filter invs to us by our mempool min fee (default: %u)", DEFAULT_FEEFILTER));
+#ifdef ENABLE_WALLET
+    strUsage += HelpMessageOpt("-mine", _("Try to generate a new block for the network."));
+    strUsage += HelpMessageOpt("-minewhitelistaddr=<address>", _("To sign mined blocks you have to specify a whitelisted miner address approved by an admin. By default, mined coins will also be sent to this whitelisted address."));
+    strUsage += HelpMessageOpt("-minetoaddr=<address>", _("Send mined coins to this specified address instead of the default whitelisted address."));
+    strUsage += HelpMessageOpt("-minethreads=<n>", _("The number of threads that should run. The default is 1. Do not use more than you have logical CPU cores."));
+#endif
     strUsage += HelpMessageOpt("-loadblock=<file>", _("Imports blocks from external blk000??.dat file on startup"));
     strUsage += HelpMessageOpt("-maxorphantx=<n>", strprintf(_("Keep at most <n> unconnectable transactions in memory (default: %u)"), DEFAULT_MAX_ORPHAN_TRANSACTIONS));
     strUsage += HelpMessageOpt("-maxmempool=<n>", strprintf(_("Keep the transaction memory pool below <n> megabytes (default: %u)"), DEFAULT_MAX_MEMPOOL_SIZE));
@@ -530,8 +547,8 @@ std::string HelpMessage(HelpMessageMode mode)
 
 std::string LicenseInfo()
 {
-    const std::string URL_SOURCE_CODE = "<https://github.com/Internet-of-People/iop-hd>";
-    const std::string URL_WEBSITE = "<https://iop.cash>";
+    const std::string URL_SOURCE_CODE = "<https://github.com/Internet-of-People/iop-core>";
+    const std::string URL_WEBSITE = "<https://iop.global>";
 
     return CopyrightHolders(strprintf(_("Copyright (C) %i-%i"), 2009, COPYRIGHT_YEAR) + " ") + "\n" +
            "\n" +
@@ -1721,5 +1738,134 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     }
 #endif
 
+#ifdef ENABLE_WALLET
+    if (  gArgs.GetBoolArg("-mine", false) )
+    {
+        LogPrintf("Miner enabled, initializing\n");
+
+        // Changed option name
+        std::string whitelistAddressStr = gArgs.GetArg("-minewhitelistaddr","");
+        if ( whitelistAddressStr.empty()) {
+            // NOTE whitelisting may not be currently active, so give just a warning here instead of an error
+            InitWarning("Mining is enabled but whitelisted miner address is not specified.");
+        }
+
+        // minerWhiteListAddress must be a valid address on this network.
+        CIoPAddress whitelistAddress = CIoPAddress(whitelistAddressStr);
+        if ( ! whitelistAddress.IsValid() ){
+            return InitError("Invalid whitelisted miner address: " + whitelistAddressStr);
+        }
+
+        // Use whitelisted address for mining if no minetoaddress is given
+        std::string mineToAddressStr = gArgs.GetArg("-minetoaddr","");
+        if ( mineToAddressStr.empty() ) {
+            mineToAddressStr = whitelistAddressStr;
+        }
+
+        CIoPAddress mineToAddress(mineToAddressStr);
+        if ( ! mineToAddress.IsValid() ) {
+            return InitError("Invalid address to store mining results: " + mineToAddressStr);
+        }
+
+        const uint8_t MAX_MINE_THREADS = 128;
+        uint8_t nMineThreads = gArgs.GetArg("-minethreads", 1);
+        if ( nMineThreads <= 0 ) {
+            InitWarning("You need at least one thread to mine. Using one thread.");
+            nMineThreads = 1;
+        } else if ( nMineThreads > MAX_MINE_THREADS ) {
+            InitWarning("Mining with more than 128 threads is disabled. Falling back to maximum.");
+            nMineThreads = MAX_MINE_THREADS;
+        }
+
+        // TODO: Only support for main wallet at the moment!
+        if ( vpwallets[0]->IsLocked() ) {
+            InitWarning("Wallet is locked. Mining cannot start until you unlock it.\n"
+                        "E.g. you can release in menu option Help/Debug Window, tab Console by issuing command:\n"
+                        "walletpassphrase your_password_here 100");
+        }
+
+        if (! fRequestShutdown) {
+            std::shared_ptr<CReserveScript> coinbaseScript( new CReserveScript() );
+            coinbaseScript->reserveScript = GetScriptForDestination( mineToAddress.Get() );
+
+            for (uint8_t threadId = 0; threadId < nMineThreads; threadId++) {
+                threadGroup.create_thread(boost::bind(&MinerThread, coinbaseScript, whitelistAddress, threadId));
+            }
+        }
+    }
+#endif
+
+
     return !fRequestShutdown;
+}
+
+
+void MinerThread( std::shared_ptr<CReserveScript> coinbaseScript,
+    const CIoPAddress &whitelistAddress, uint8_t threadId )
+{
+    // we must wait for the wallet to be unlocked in order to get the private key
+
+    while ( vpwallets[0]->IsLocked() ) {
+        LogPrintf("Miner %u: Wallet is locked, waiting for unlock to pass private key to miner.\n", threadId);
+        MilliSleep(10000);
+    }
+
+    CKeyID keyID;
+    if (!whitelistAddress.GetKeyID(keyID)){
+        LogPrintf("Miner %u: Provided whitelist address does not refer to a known key.\n", threadId);
+        return;
+    }
+
+    CKey vchSecret;
+    if (!vpwallets[0]->GetKey(keyID, vchSecret)){
+        LogPrintf("Miner %u: Private key for %s is not known.\n", threadId, whitelistAddress.ToString());
+        return;
+    }
+
+
+    std::string privateKeyStr = CIoPSecret(vchSecret).ToString();
+    if (privateKeyStr.empty()){
+        LogPrintf("Miner %u: Couldn't get private key for specified whitelist address.\n", threadId);
+        return;
+    }
+
+    // Mine forever (until shutdown)
+    while (!fRequestShutdown) {
+        try {
+            /* before we start mining, let's make sure we withing the cap if the Miner Cap is enabled */
+            if (pminerwhitelist->IsCapEnabled()){
+                while (pminerwhitelist->hasExceededCap(whitelistAddress.ToString())){
+                    LogPrintf("Miner %u: Miner cap exceeded. Waiting a minute to retry...\n", threadId);
+                    MilliSleep(1000 * 60);
+                }
+            }
+
+            LogPrintf("Miner %u: Start mining block\n", threadId);
+            //if the miner white list control is enabled, then we provide the privateKeyStr value
+            UniValue result;
+            if (pminerwhitelist->IsWhitelistEnabled())
+                result = generateBlocks(coinbaseScript, 1, UINT64_MAX, true, privateKeyStr, threadId);
+            else
+                result = generateBlocks(coinbaseScript, 1, UINT64_MAX, true, "", threadId);
+
+            if (result.empty()) {
+                LogPrintf("Miner %u: Finished mining attempt with no success\n", threadId);
+            } else {
+                LogPrintf("Miner %u: Mined a block, yaay!!!\n", threadId);
+
+                //if we are in regtest, let's put the miner to sleep.
+                if (Params().NetworkIDString().compare("regtest") == 0)
+                    MilliSleep(3000);
+            }
+        } catch (boost::thread_interrupted &e) {
+            LogPrintf("Miner %u: Miner thread interrupt, shutting down\n", threadId);
+            return;
+        } catch (std::exception &e) {
+            LogPrintf("Miner %u: Mining failed: %s\n", threadId, e.what());
+            MilliSleep(10000);
+        } catch (...) {
+            LogPrintf("Miner %u: Mining failed with unknown error\n", threadId);
+            MilliSleep(10000);
+        }
+    }
 }

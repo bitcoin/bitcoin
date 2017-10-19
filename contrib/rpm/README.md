@@ -1,7 +1,7 @@
 RPM Spec File Notes
 -------------------
 
-The RPM spec file provided here is for IoP-Core 0.12.0 and builds on CentOS
+The RPM spec file provided here is for IoP Core 0.12.0 and builds on CentOS
 7 with either the CentOS provided OpenSSL library or with LibreSSL as packaged
 at [LibreLAMP.com](https://librelamp.com/). It should hopefully not be too
 difficult to port the RPM spec file to most RPM based Linux distributions.
@@ -137,7 +137,7 @@ want the OpenSSL development files.
 LibreSSL (and some newer builds of OpenSSL) do not have support for SSLv3. This
 can cause issues with the Boost package if the Boost package has not been
 patched accordingly. On those distributions, you will either need to build
-IoP-Core against OpenSSL or use a patched version of Boost in the build
+IoP Core against OpenSSL or use a patched version of Boost in the build
 system.
 
 As SSLv3 is no longer safe, distributions that have not patched Boost to work

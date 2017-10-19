@@ -24,7 +24,7 @@ Unpack the files into a directory, and then run iop-qt.exe.
 
 ### OS X
 
-Drag IoP-Core to your applications folder, and then run IoP-Core.
+Drag IoP Core to your applications folder, and then run IoP Core.
 
 ### Need Help?
 

@@ -82,12 +82,13 @@ def compile_copyright_regex(copyright_style, year_style, name):
     return re.compile('%s %s %s' % (copyright_style, year_style, name))
 
 EXPECTED_HOLDER_NAMES = [
+    "IoP Ventures LLC\n"
     "Satoshi Nakamoto\n",
     "The Bitcoin Core developers\n",
     "The Bitcoin Core developers \n",
-    "IoP Core Developers\n",
-    "the IoP Core developers\n",
-    "The IoP developers\n",
+    "Bitcoin Core Developers\n",
+    "the Bitcoin Core developers\n",
+    "The Bitcoin developers\n",
     "The LevelDB Authors\. All rights reserved\.\n",
     "BitPay Inc\.\n",
     "BitPay, Inc\.\n",

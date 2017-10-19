@@ -773,7 +773,7 @@
     </message>
     <message>
         <source>IoP Core</source>
-        <translation>iop core</translation>
+        <translation>IoP Core</translation>
     </message>
     <message>
         <source>Error loading block database</source>

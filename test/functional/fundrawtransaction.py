@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2016 The IoP Core developers
+# Copyright (c) 2014-2016 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the fundrawtransaction RPC."""
 
-from test_framework.test_framework import IoPTestFramework, IOPD_PROC_WAIT_TIMEOUT
+from test_framework.test_framework import IoPTestFramework
 from test_framework.util import *
 
 
@@ -14,13 +14,10 @@ def get_unspent(listunspent, amount):
             return utx
     raise AssertionError('Could not find unspent with amount={}'.format(amount))
 
-
 class RawTransactionsTest(IoPTestFramework):
-
-    def __init__(self):
-        super().__init__()
-        self.setup_clean_chain = True
+    def set_test_params(self):
         self.num_nodes = 4
+        self.setup_clean_chain = True
 
     def setup_network(self, split=False):
         self.setup_nodes()
@@ -449,12 +446,11 @@ class RawTransactionsTest(IoPTestFramework):
         ############################################################
         # locked wallet test
         self.stop_node(0)
+        self.nodes[1].node_encrypt_wallet("test")
         self.stop_node(2)
         self.stop_node(3)
-        self.nodes[1].encryptwallet("test")
-        self.iopd_processes[1].wait(timeout=IOPD_PROC_WAIT_TIMEOUT)
 
-        self.nodes = self.start_nodes(self.num_nodes, self.options.tmpdir)
+        self.start_nodes()
         # This test is not meant to test fee estimation and we'd like
         # to be sure all txs are sent at a consistent desired feerate
         for node in self.nodes:

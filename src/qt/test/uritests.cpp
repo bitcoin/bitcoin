@@ -13,54 +13,54 @@ void URITests::uriTests()
 {
     SendCoinsRecipient rv;
     QUrl uri;
-    uri.setUrl(QString("iop:175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W?req-dontexist="));
+    uri.setUrl(QString("iop:pALt2cJGyYomBRsERBndibwKpogg6Zn3eL?req-dontexist="));
     QVERIFY(!GUIUtil::parseIoPURI(uri, &rv));
 
-    uri.setUrl(QString("iop:175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W?dontexist="));
+    uri.setUrl(QString("iop:pALt2cJGyYomBRsERBndibwKpogg6Zn3eL?dontexist="));
     QVERIFY(GUIUtil::parseIoPURI(uri, &rv));
-    QVERIFY(rv.address == QString("175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W"));
+    QVERIFY(rv.address == QString("pALt2cJGyYomBRsERBndibwKpogg6Zn3eL"));
     QVERIFY(rv.label == QString());
     QVERIFY(rv.amount == 0);
 
-    uri.setUrl(QString("iop:175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W?label=Wikipedia Example Address"));
+    uri.setUrl(QString("iop:pALt2cJGyYomBRsERBndibwKpogg6Zn3eL?label=Wikipedia Example Address"));
     QVERIFY(GUIUtil::parseIoPURI(uri, &rv));
-    QVERIFY(rv.address == QString("175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W"));
+    QVERIFY(rv.address == QString("pALt2cJGyYomBRsERBndibwKpogg6Zn3eL"));
     QVERIFY(rv.label == QString("Wikipedia Example Address"));
     QVERIFY(rv.amount == 0);
 
-    uri.setUrl(QString("iop:175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W?amount=0.001"));
+    uri.setUrl(QString("iop:pALt2cJGyYomBRsERBndibwKpogg6Zn3eL?amount=0.001"));
     QVERIFY(GUIUtil::parseIoPURI(uri, &rv));
-    QVERIFY(rv.address == QString("175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W"));
+    QVERIFY(rv.address == QString("pALt2cJGyYomBRsERBndibwKpogg6Zn3eL"));
     QVERIFY(rv.label == QString());
     QVERIFY(rv.amount == 100000);
 
-    uri.setUrl(QString("iop:175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W?amount=1.001"));
+    uri.setUrl(QString("iop:pALt2cJGyYomBRsERBndibwKpogg6Zn3eL?amount=1.001"));
     QVERIFY(GUIUtil::parseIoPURI(uri, &rv));
-    QVERIFY(rv.address == QString("175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W"));
+    QVERIFY(rv.address == QString("pALt2cJGyYomBRsERBndibwKpogg6Zn3eL"));
     QVERIFY(rv.label == QString());
     QVERIFY(rv.amount == 100100000);
 
-    uri.setUrl(QString("iop:175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W?amount=100&label=Wikipedia Example"));
+    uri.setUrl(QString("iop:pALt2cJGyYomBRsERBndibwKpogg6Zn3eL?amount=100&label=Wikipedia Example"));
     QVERIFY(GUIUtil::parseIoPURI(uri, &rv));
-    QVERIFY(rv.address == QString("175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W"));
+    QVERIFY(rv.address == QString("pALt2cJGyYomBRsERBndibwKpogg6Zn3eL"));
     QVERIFY(rv.amount == 10000000000LL);
     QVERIFY(rv.label == QString("Wikipedia Example"));
 
-    uri.setUrl(QString("iop:175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W?message=Wikipedia Example Address"));
+    uri.setUrl(QString("iop:pALt2cJGyYomBRsERBndibwKpogg6Zn3eL?message=Wikipedia Example Address"));
     QVERIFY(GUIUtil::parseIoPURI(uri, &rv));
-    QVERIFY(rv.address == QString("175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W"));
+    QVERIFY(rv.address == QString("pALt2cJGyYomBRsERBndibwKpogg6Zn3eL"));
     QVERIFY(rv.label == QString());
 
-    QVERIFY(GUIUtil::parseIoPURI("iop://175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W?message=Wikipedia Example Address", &rv));
-    QVERIFY(rv.address == QString("175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W"));
+    QVERIFY(GUIUtil::parseIoPURI("iop://pALt2cJGyYomBRsERBndibwKpogg6Zn3eL?message=Wikipedia Example Address", &rv));
+    QVERIFY(rv.address == QString("pALt2cJGyYomBRsERBndibwKpogg6Zn3eL"));
     QVERIFY(rv.label == QString());
 
-    uri.setUrl(QString("iop:175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W?req-message=Wikipedia Example Address"));
+    uri.setUrl(QString("iop:pALt2cJGyYomBRsERBndibwKpogg6Zn3eL?req-message=Wikipedia Example Address"));
     QVERIFY(GUIUtil::parseIoPURI(uri, &rv));
 
-    uri.setUrl(QString("iop:175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W?amount=1,000&label=Wikipedia Example"));
+    uri.setUrl(QString("iop:pALt2cJGyYomBRsERBndibwKpogg6Zn3eL?amount=1,000&label=Wikipedia Example"));
     QVERIFY(!GUIUtil::parseIoPURI(uri, &rv));
 
-    uri.setUrl(QString("iop:175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W?amount=1,000.0&label=Wikipedia Example"));
+    uri.setUrl(QString("iop:pALt2cJGyYomBRsERBndibwKpogg6Zn3eL?amount=1,000.0&label=Wikipedia Example"));
     QVERIFY(!GUIUtil::parseIoPURI(uri, &rv));
 }

@@ -421,7 +421,7 @@
     <name>iop-core</name>
     <message>
         <source>IoP Core</source>
-        <translation>Биткойн ядро</translation>
+        <translation>IoP Core</translation>
     </message>
     </context>
 </TS>

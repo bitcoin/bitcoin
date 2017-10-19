@@ -65,17 +65,16 @@ IOP_TESTS =\
   test/scheduler_tests.cpp \
   test/script_P2SH_tests.cpp \
   test/script_tests.cpp \
+  test/script_standard_tests.cpp \
   test/scriptnum_tests.cpp \
   test/serialize_tests.cpp \
   test/sighash_tests.cpp \
   test/sigopcount_tests.cpp \
   test/skiplist_tests.cpp \
   test/streams_tests.cpp \
-  test/test_iop.cpp \
-  test/test_iop.h \
   test/test_iop_main.cpp \
-  test/testutil.cpp \
-  test/testutil.h \
+  test/test_iop.h \
+  test/test_iop.cpp \
   test/timedata_tests.cpp \
   test/torcontrol_tests.cpp \
   test/transaction_tests.cpp \
@@ -148,7 +147,7 @@ iop_test_clean : FORCE
 
 check-local:
 	@echo "Running test/util/iop-util-test.py..."
-	$(top_builddir)/test/util/iop-util-test.py
+	$(PYTHON) $(top_builddir)/test/util/iop-util-test.py
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C secp256k1 check
 if EMBEDDED_UNIVALUE
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C univalue check

@@ -3055,7 +3055,7 @@
     </message>
     <message>
         <source>IoP Core</source>
-        <translation>IoP Çekirdeği</translation>
+        <translation>IoP Core</translation>
     </message>
     <message>
         <source>The %s developers</source>

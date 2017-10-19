@@ -1,7 +1,7 @@
 IoP Core integration/staging tree
 =====================================
 
-[![Build Status](https://travis-ci.org/Internet-of-People/iop-hd.svg?branch=master)](https://travis-ci.org/Internet-of-People/iop-hd)
+[![Build Status](https://travis-ci.org/Internet-of-People/iop-core.svg?branch=master)](https://travis-ci.org/Internet-of-People/iop-core)
 
 https://iopcore.org
 

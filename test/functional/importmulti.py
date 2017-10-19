@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2016 The IoP Core developers
+# Copyright (c) 2014-2016 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the importmulti RPC."""
@@ -7,8 +7,7 @@ from test_framework.test_framework import IoPTestFramework
 from test_framework.util import *
 
 class ImportMultiTest (IoPTestFramework):
-    def __init__(self):
-        super().__init__()
+    def set_test_params(self):
         self.num_nodes = 2
         self.setup_clean_chain = True
 
@@ -429,7 +428,7 @@ class ImportMultiTest (IoPTestFramework):
 
         # restart nodes to check for proper serialization/deserialization of watch only address
         self.stop_nodes()
-        self.nodes = self.start_nodes(2, self.options.tmpdir)
+        self.start_nodes()
         address_assert = self.nodes[1].validateaddress(watchonly_address)
         assert_equal(address_assert['iswatchonly'], True)
         assert_equal(address_assert['ismine'], False)

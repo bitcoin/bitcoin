@@ -8,9 +8,7 @@ from test_framework.test_framework import IoPTestFramework
 from test_framework.util import *
 
 class MempoolLimitTest(IoPTestFramework):
-
-    def __init__(self):
-        super().__init__()
+    def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
         self.extra_args = [["-maxmempool=5", "-spendzeroconfchange=0"]]

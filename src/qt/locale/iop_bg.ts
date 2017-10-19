@@ -2371,7 +2371,7 @@
     </message>
     <message>
         <source>IoP Core</source>
-        <translation>Биткойн ядро</translation>
+        <translation>IoP Core</translation>
     </message>
     <message>
         <source>&lt;category&gt; can be:</source>

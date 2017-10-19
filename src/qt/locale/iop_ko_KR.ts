@@ -3059,7 +3059,7 @@
     </message>
     <message>
         <source>IoP Core</source>
-        <translation>비트코인 코어</translation>
+        <translation>IoP Core</translation>
     </message>
     <message>
         <source>The %s developers</source>

@@ -709,7 +709,7 @@
     <name>iop-core</name>
     <message>
         <source>IoP Core</source>
-        <translation>IoP மையம்</translation>
+        <translation>IoP Core</translation>
     </message>
     <message>
         <source>(default: %u)</source>

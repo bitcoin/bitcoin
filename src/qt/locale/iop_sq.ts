@@ -785,7 +785,7 @@
     </message>
     <message>
         <source>IoP Core</source>
-        <translation>Berthama IoP</translation>
+        <translation>IoP Core</translation>
     </message>
     <message>
         <source>Information</source>
