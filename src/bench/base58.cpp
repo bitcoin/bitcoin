@@ -22,7 +22,11 @@ static void Base58Encode(benchmark::State& state)
         }
     };
     while (state.KeepRunning()) {
+#ifndef _MSC_VER
         EncodeBase58(buff.begin(), buff.end());
+#else
+		EncodeBase58(buff.begin()._Ptr, buff.end()._Ptr);
+#endif
     }
 }
 
