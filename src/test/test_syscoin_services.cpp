@@ -27,6 +27,12 @@ static int node4LastBlock=0;
 static bool node1Online = false;
 static bool node2Online = false;
 static bool node3Online = false;
+static UniValue ValueFromString(const std::string &str)
+{
+	UniValue value;
+	BOOST_CHECK(value.setNumStr(str));
+	return value;
+}
 // SYSCOIN testing setup
 void StartNodes()
 {
