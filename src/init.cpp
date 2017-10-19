@@ -1613,14 +1613,6 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
                     strLoadError = _("You need to rebuild the database using -reindex-chainstate to change -txindex");
                     break;
                 }
-				// SYSCOIN
-				if (!fTxIndex)
-				{
-					int servicesCleaned = 0;
-					LogPrintf("%s: Cleaning up Syscoin Databases...\n", __func__);
-					CleanupSyscoinServiceDatabases(servicesCleaned);
-					LogPrintf("%s: Cleanup finished! Removed %d expired services...\n", __func__, servicesCleaned);
-				}
                 // Check for changed -prune state.  What we are concerned about is a user who has pruned blocks
                 // in the past, but is now trying to run unpruned.
                 if (fHavePruned && !fPruneMode) {
@@ -2095,7 +2087,14 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     GenerateSyscoins(GetBoolArg("-gen", DEFAULT_GENERATE), GetArg("-genproclimit", DEFAULT_GENERATE_THREADS), chainparams, connman);
 
     // ********************************************************* Step 13: finished
-
+	// SYSCOIN
+	if (!fTxIndex)
+	{
+		int servicesCleaned = 0;
+		LogPrintf("%s: Cleaning up Syscoin Databases...\n", __func__);
+		CleanupSyscoinServiceDatabases(servicesCleaned);
+		LogPrintf("%s: Cleanup finished! Removed %d expired services...\n", __func__, servicesCleaned);
+	}
     SetRPCWarmupFinished();
     uiInterface.InitMessage(_("Done loading"));
 
