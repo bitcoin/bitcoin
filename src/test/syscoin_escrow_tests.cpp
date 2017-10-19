@@ -39,7 +39,7 @@ BOOST_AUTO_TEST_CASE(generate_auction_regular)
 	// must bid higher
 	BOOST_CHECK_THROW(CallRPC("node1", "escrowbid buyerauction " + guid + " 0.001 0.01"), runtime_error);
 	// this is ok because merchant UI should check that the amount in SYS is = to converted amount to USD (1 sys = 10 USD) and if it is off, ask bidder to create a higher bid with correct amount set
-	EscrowBid("node1", "buyerauction", guid, "0.0001", "0.03");
+	EscrowBid("node1", "buyerauction", guid, "0.0006", "0.03");
 
 	EscrowNewBuyItNow("node1", "node2", "buyerauction", offerguid, qty, "arbiterauction");
 	EscrowRelease("node1", "buyer", guid);

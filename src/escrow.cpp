@@ -914,7 +914,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4050 - " + _("Can only bid on an active escrow");
 					return true;
 				}
-				if (serializedEscrow.nAmountOrBidPerUnit <= theEscrow.nAmountOrBidPerUnit)
+				if (serializedEscrow.nAmountOrBidPerUnit <= theEscrow.nAmountOrBidPerUnit || serializedEscrow.fBidPerUnit <= theEscrow.fBidPerUnit)
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4040 - " + _("Bid must be higher than the previous bid, please enter a higher amount");
 					return true;
