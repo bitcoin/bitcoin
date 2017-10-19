@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE(generate_auction_regular)
 BOOST_AUTO_TEST_CASE(generate_auction_reserve)
 {
 	// create regular auctio with reserve and try to underbid
-	printf("Running generate_auction_regular...\n");
+	printf("Running generate_auction_reserve...\n");
 	UniValue r;
 	GenerateBlocks(5);
 	GenerateBlocks(5, "node2");

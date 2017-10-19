@@ -1029,7 +1029,7 @@ const string OfferNew(const string& node, const string& aliasname, const string&
 		BOOST_CHECK(find_value(r.get_obj(), "offertype").get_str() == offerType);
 
 	if (auction_expires != "\"\"")
-		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "auction_expires_on").get_int64(), boost::lexical_cast<int>(auction_expires));
+		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "auction_expires_on").get_int64(), boost::lexical_cast<long>(auction_expires));
 	if (auction_reserve != "\"\"")
 		BOOST_CHECK_EQUAL(((int)(find_value(r.get_obj(), "auction_reserve_price").get_real() * 1000 + 0.5)), ((int)(boost::lexical_cast<float>(auction_reserve) * 1000)));
 	if (auction_require_witness != "\"\"")
@@ -1057,7 +1057,7 @@ const string OfferNew(const string& node, const string& aliasname, const string&
 			BOOST_CHECK(find_value(r.get_obj(), "offertype").get_str() == offerType);
 
 		if (auction_expires != "\"\"")
-			BOOST_CHECK_EQUAL(find_value(r.get_obj(), "auction_expires_on").get_int64(), boost::lexical_cast<int>(auction_expires));
+			BOOST_CHECK_EQUAL(find_value(r.get_obj(), "auction_expires_on").get_int64(), boost::lexical_cast<long>(auction_expires));
 		if (auction_reserve != "\"\"")
 			BOOST_CHECK_EQUAL(((int)(find_value(r.get_obj(), "auction_reserve_price").get_real() * 1000 + 0.5)), ((int)(boost::lexical_cast<float>(auction_reserve) * 1000)));
 		if (auction_require_witness != "\"\"")
@@ -1085,7 +1085,7 @@ const string OfferNew(const string& node, const string& aliasname, const string&
 			BOOST_CHECK(find_value(r.get_obj(), "offertype").get_str() == offerType);
 
 		if (auction_expires != "\"\"")
-			BOOST_CHECK_EQUAL(find_value(r.get_obj(), "auction_expires_on").get_int64(), boost::lexical_cast<int>(auction_expires));
+			BOOST_CHECK_EQUAL(find_value(r.get_obj(), "auction_expires_on").get_int64(), boost::lexical_cast<long>(auction_expires));
 		if (auction_reserve != "\"\"")
 			BOOST_CHECK_EQUAL(((int)(find_value(r.get_obj(), "auction_reserve_price").get_real() * 1000 + 0.5)), ((int)(boost::lexical_cast<float>(auction_reserve) * 1000)));
 		if (auction_require_witness != "\"\"")
@@ -1142,7 +1142,7 @@ void OfferUpdate(const string& node, const string& aliasname, const string& offe
 		BOOST_CHECK(find_value(r.get_obj(), "offertype").get_str() == offerType);
 
 	if (auction_expires != "\"\"")
-		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "auction_expires_on").get_int64(), boost::lexical_cast<int>(auction_expires));
+		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "auction_expires_on").get_int64(), boost::lexical_cast<long>(auction_expires));
 	if (auction_reserve != "\"\"")
 		BOOST_CHECK_EQUAL(((int)(find_value(r.get_obj(), "auction_reserve_price").get_real() * 1000 + 0.5)), ((int)(boost::lexical_cast<float>(auction_reserve) * 1000)));
 	if (auction_require_witness != "\"\"")
@@ -1172,7 +1172,7 @@ void OfferUpdate(const string& node, const string& aliasname, const string& offe
 			BOOST_CHECK(find_value(r.get_obj(), "offertype").get_str() == offerType);
 
 		if (auction_expires != "\"\"")
-			BOOST_CHECK_EQUAL(find_value(r.get_obj(), "auction_expires_on").get_int64(), boost::lexical_cast<int>(auction_expires));
+			BOOST_CHECK_EQUAL(find_value(r.get_obj(), "auction_expires_on").get_int64(), boost::lexical_cast<long>(auction_expires));
 		if (auction_reserve != "\"\"")
 			BOOST_CHECK_EQUAL(((int)(find_value(r.get_obj(), "auction_reserve_price").get_real() * 1000 + 0.5)), ((int)(boost::lexical_cast<float>(auction_reserve) * 1000)));
 		if (auction_require_witness != "\"\"")
@@ -1202,7 +1202,7 @@ void OfferUpdate(const string& node, const string& aliasname, const string& offe
 		if (offerType != "\"\"")
 			BOOST_CHECK(find_value(r.get_obj(), "offertype").get_str() == offerType);
 		if (auction_expires != "\"\"")
-			BOOST_CHECK_EQUAL(find_value(r.get_obj(), "auction_expires_on").get_int64(), boost::lexical_cast<int>(auction_expires));
+			BOOST_CHECK_EQUAL(find_value(r.get_obj(), "auction_expires_on").get_int64(), boost::lexical_cast<long>(auction_expires));
 		if (auction_reserve != "\"\"")
 			BOOST_CHECK_EQUAL(((int)(find_value(r.get_obj(), "auction_reserve_price").get_real() * 1000 + 0.5)), ((int)(boost::lexical_cast<float>(auction_reserve) * 1000)));
 		if (auction_require_witness != "\"\"")
