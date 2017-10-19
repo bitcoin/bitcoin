@@ -423,6 +423,8 @@ static const CRPCCommand vRPCCommands[] =
 	{ "wallet", "syscoinsignrawtransaction",		 &syscoinsignrawtransaction,	false },
 	{ "wallet", "syscoindecoderawtransaction",		 &syscoindecoderawtransaction,	false },
 	{ "wallet", "syscoinquery",          &syscoinquery,          false },
+	{ "wallet", "prunesyscoinservices",          &prunesyscoinservices,          false },
+
 		// use the blockchain as a distributed marketplace
 	{ "wallet", "offernew",             &offernew,             false },
 	{ "wallet", "offerupdate",          &offerupdate,          false },

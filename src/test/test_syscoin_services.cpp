@@ -167,6 +167,7 @@ void StartNode(const string &dataDir, bool regTest, const string& extraArgs)
 				}
 				node4LastBlock = 0;
 			}
+			CallRPC(dataDir, "prunesyscoinservices", regTest);
 		}
 		catch(const runtime_error& error)
 		{

@@ -306,6 +306,7 @@ extern UniValue aliasnew(const UniValue& params, bool fHelp);
 extern UniValue aliasupdate(const UniValue& params, bool fHelp);
 extern UniValue aliasinfo(const UniValue& params, bool fHelp);
 extern UniValue aliasbalance(const UniValue& params, bool fHelp);
+extern UniValue prunesyscoinservices(const UniValue& params, bool fHelp);
 extern UniValue aliaspay(const UniValue& params, bool fHelp);
 extern UniValue aliasaddscript(const UniValue& params, bool fHelp);
 extern UniValue aliasupdatewhitelist(const UniValue& params, bool fHelp);

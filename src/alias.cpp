@@ -1872,6 +1872,14 @@ string GenerateSyscoinGuid()
 	vector<unsigned char> vchGuidRand = CScriptNum(rand).getvch();
 	return HexStr(vchGuidRand);
 }
+UniValue prunesyscoinservices(const UniValue& params, bool fHelp)
+{
+	int servicesCleaned = 0;
+	CleanupSyscoinServiceDatabases(servicesCleaned);
+	UniValue res(UniValue::VOBJ);
+	res.push_back(Pair("services_cleaned", servicesCleaned));
+	return res;
+}
 UniValue aliasbalance(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
