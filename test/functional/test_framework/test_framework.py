@@ -228,7 +228,7 @@ class IoPTestFramework(object):
             self.nodes.append(TestNode(i, self.options.tmpdir, extra_args[i], rpchost, timewait=timewait, binary=binary[i], stderr=None, mocktime=self.mocktime, coverage_dir=self.options.coveragedir))
 
     def start_node(self, i, extra_args=None, stderr=None):
-        """Start a bitcoind"""
+        """Start a iopd"""
 
         node = self.nodes[i]
 
@@ -239,7 +239,7 @@ class IoPTestFramework(object):
             coverage.write_all_rpc_commands(self.options.coveragedir, node.rpc)
 
     def start_nodes(self, extra_args=None):
-        """Start multiple bitcoinds"""
+        """Start multiple iopds"""
 
         if extra_args is None:
             extra_args = [None] * self.num_nodes
