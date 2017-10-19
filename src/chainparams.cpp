@@ -272,8 +272,15 @@ public:
         vFixedSeeds.clear();
         vSeeds.clear();
 
-        vSeeds.push_back(CDNSSeedData("crown.tech", "testnet-seed.crown.tech"));
-        vSeeds.push_back(CDNSSeedData("infernopool.com", "crwtestnet.infernopool.com"));
+        vSeeds.push_back(CDNSSeedData("fra-testnet-crwdns", "fra-testnet-crwdns.infernopool.com"));
+        vSeeds.push_back(CDNSSeedData("blr-testnet-crwdns", "blr-testnet-crwdns.infernopool.com"));
+        vSeeds.push_back(CDNSSeedData("sgp-testnet-crwdns", "sgp-testnet-crwdns.infernopool.com"));
+        vSeeds.push_back(CDNSSeedData("lon-testnet-crwdns", "lon-testnet-crwdns.infernopool.com"));
+        vSeeds.push_back(CDNSSeedData("nyc-testnet-crwdns", "nyc-testnet-crwdns.infernopool.com"));
+        vSeeds.push_back(CDNSSeedData("tor-testnet-crwdns", "tor-testnet-crwdns.infernopool.com"));
+        vSeeds.push_back(CDNSSeedData("sfo-testnet-crwdns", "sfo-testnet-crwdns.infernopool.com"));
+        vSeeds.push_back(CDNSSeedData("ams-testnet-crwdns", "ams-testnet-crwdns.infernopool.com"));
+        vSeeds.push_back(CDNSSeedData("crw-testnet", "crw-testnet.infernopool.com"));
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,111);                    // Testnet crown addresses start with 'x' or 'y'
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,196);                    // Testnet crown script addresses start with '8' or '9'
