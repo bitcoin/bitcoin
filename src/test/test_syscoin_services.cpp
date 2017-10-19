@@ -1260,7 +1260,7 @@ void EscrowBid(const string& node, const string& buyeralias, const string& escro
 	CAmount bidPaymentOption = AmountFromValue(bid_in_payment_option1);
 	CAmount bidPaymentOptionObj = AmountFromValue(strprintf("%.*f", 8, boost::lexical_cast<float>(find_value(escrowBidObj, "bid_in_payment_option_per_unit").write())));
 	BOOST_CHECK_EQUAL(bidPaymentOptionObj, bidPaymentOption);
-	BOOST_CHECK(find_value(escrowBidObj, "witness").get_str() == witness);
+	BOOST_CHECK(find_value(escrowBidObj, "witness").get_str() == witness != "\"\"" ? witness : "");
 	BOOST_CHECK(find_value(escrowBidObj, "status").get_str() == "valid");
 
 
