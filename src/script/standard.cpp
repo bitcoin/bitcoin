@@ -159,13 +159,15 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<std::v
             else if (opcode2 == OP_SMALLINTEGER)
             {   // Single-byte small integer pushed onto vSolutions
                 if (opcode1 == OP_0 ||
-                    (opcode1 >= OP_1 && opcode1 <= OP_16))
-                {
+                    (opcode1 >= OP_1 && opcode1 <= OP_16)) {
                     char n = (char)CScript::DecodeOP_N(opcode1);
                     vSolutionsRet.push_back(valtype(1, n));
-                }
-                else
+                } else if (opcode1 == 0x01 && CScriptNum(vch1, true).getint() > 16 && CScriptNum(vch1, true).getint() <= 20) {
+                    // Handle single-byte pushes followed by values from 17 up to 20 for 20-of-20 CMV
+                    vSolutionsRet.push_back(vch1);
+                } else {
                     break;
+                }
             }
             else if (opcode1 != opcode2 || vch1 != vch2)
             {
