@@ -63,6 +63,13 @@ BOOST_AUTO_TEST_CASE(streams_serializedata_xor)
     BOOST_CHECK_EQUAL(
             std::string(expected_xor.begin(), expected_xor.end()), 
             std::string(ds.begin(), ds.end()));  
-}         
+}
+
+BOOST_AUTO_TEST_CASE(streams)
+{
+    // Smallest possible example
+    CDataStream ssx(SER_DISK, CLIENT_VERSION);
+    BOOST_CHECK_EQUAL(HexStr(ssx.begin(), ssx.end()), "");
+}
 
 BOOST_AUTO_TEST_SUITE_END()

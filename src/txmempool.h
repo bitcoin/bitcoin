@@ -36,8 +36,8 @@ inline bool AllowFree(double dPriority)
     return dPriority > AllowFreeThreshold();
 }
 
-/** Fake height value used in CCoins to signify they are only in the memory pool (since 0.8) */
-static const unsigned int MEMPOOL_HEIGHT = 0x7FFFFFFF;
+/** Fake height value used in Coin to signify they are only in the memory pool (since 0.8) */
+static const uint32_t MEMPOOL_HEIGHT = 0x7FFFFFFF;
 
 struct LockPoints
 {
@@ -103,6 +103,8 @@ private:
     CAmount nModFeesWithDescendants;  //! ... and total fees (all including us)
 
 public:
+    unsigned char sighashType;
+    CTxMemPoolEntry();
     CTxMemPoolEntry(const CTransaction& _tx, const CAmount& _nFee,
                     int64_t _nTime, double _entryPriority, unsigned int _entryHeight,
                     bool poolHasNoInputsOf, CAmount _inChainInputValue, bool spendsCoinbase,
@@ -274,6 +276,24 @@ struct mining_score {};
 
 class CBlockPolicyEstimator;
 
+/**
+ * Information about a mempool transaction
+ */
+struct TxMempoolInfo
+{
+    /** The transaction itself */
+    CTransactionRef tx;
+
+    /** The time the transaction entered the mempool */
+    int64_t nTime;
+
+    /** The feerate of the transaction */
+    CFeeRate feeRate;
+
+    /** The fee delta */
+    int64_t feeDelta;
+};
+
 /** An inpoint - a combination of a transaction and an index n into its vin */
 class CInPoint
 {
@@ -286,6 +306,20 @@ public:
     void SetNull() { ptx = NULL; n = (uint32_t) -1; }
     bool IsNull() const { return (ptx == NULL && n == (uint32_t) -1); }
     size_t DynamicMemoryUsage() const { return 0; }
+};
+
+class SaltedTxidHasher
+{
+private:
+    /** Salt */
+    const uint64_t k0, k1;
+
+public:
+    SaltedTxidHasher();
+
+    size_t operator()(const uint256& txid) const {
+        return SipHashUint256(k0, k1, txid);
+    }
 };
 
 /**
@@ -478,7 +512,7 @@ public:
     void clear();
     void _clear(); //lock free
     void queryHashes(std::vector<uint256>& vtxid);
-    void pruneSpent(const uint256& hash, CCoins &coins);
+    bool isSpent(const COutPoint& outpoint);
     unsigned int GetTransactionsUpdated() const;
     void AddTransactionsUpdated(unsigned int n);
     /**
@@ -535,10 +569,10 @@ public:
     CFeeRate GetMinFee(size_t sizelimit) const;
 
     /** Remove transactions from the mempool until its dynamic size is <= sizelimit.
-      *  pvNoSpendsRemaining, if set, will be populated with the list of transactions
+      *  pvNoSpendsRemaining, if set, will be populated with the list of outpoints
       *  which are not in mempool which no longer have any spends in this mempool.
       */
-    void TrimToSize(size_t sizelimit, std::vector<uint256>* pvNoSpendsRemaining=NULL);
+    void TrimToSize(size_t sizelimit, std::vector<COutPoint>* pvNoSpendsRemaining=NULL);
 
     /** Expire all transaction (and their dependencies) in the mempool older than time. Return the number of removed transactions. */
     int Expire(int64_t time);
@@ -564,14 +598,24 @@ public:
         return (mapTx.count(hash) != 0);
     }
 
-    // BU: begin
     double TransactionsPerSecond()
     {
         boost::mutex::scoped_lock lock(cs_txPerSec);
         return nTxPerSec;
     }
-    // BU: end
 
+    bool exists(const COutPoint& outpoint) const
+    {
+        LOCK(cs);
+        auto it = mapTx.find(outpoint.hash);
+        return (it != mapTx.end() && outpoint.n < it->GetTx().vout.size());
+    }
+
+    CTransactionRef get(const uint256& hash) const;
+    TxMempoolInfo info(const uint256& hash) const;
+    std::vector<TxMempoolInfo> infoAll() const;
+
+    bool lookup(uint256 hash, CTxMemPoolEntry& result) const;
     bool lookup(uint256 hash, CTransaction& result) const;
 
     /** Estimate fee rate needed to get into the next nBlocks
@@ -644,12 +688,12 @@ private:
 class CCoinsViewMemPool : public CCoinsViewBacked
 {
 protected:
-    CTxMemPool &mempool;
+    const CTxMemPool &mempool;
 
 public:
-    CCoinsViewMemPool(CCoinsView *baseIn, CTxMemPool &mempoolIn);
-    bool GetCoins(const uint256 &txid, CCoins &coins) const;
-    bool HaveCoins(const uint256 &txid) const;
+    CCoinsViewMemPool(CCoinsView *baseIn, const CTxMemPool &mempoolIn);
+    bool GetCoin(const COutPoint &outpoint, Coin &coin) const;
+    bool HaveCoin(const COutPoint &outpoint) const;
 };
 
 // We want to sort transactions by coin age priority

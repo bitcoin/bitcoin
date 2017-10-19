@@ -31,7 +31,7 @@ class SignRawTransactionsTest(BitcoinTestFramework):
         inputs = [
             # Valid pay-to-pubkey script
             {'txid': '9b907ef1e3c26fc71fe4a4b3580bc75264112f95050014157059c736f0202e71', 'vout': 0,
-             'scriptPubKey': '76a91460baa0f494b38ce3c940dea67f3804dc52d1fb9488ac'}
+             'scriptPubKey': '76a91460baa0f494b38ce3c940dea67f3804dc52d1fb9488ac', 'amount': 1.618}
         ]
 
         outputs = {'mpLQjfK79b7CCV4VMJWEWAj5Mpx8Up5zxB': 0.1}
@@ -68,10 +68,10 @@ class SignRawTransactionsTest(BitcoinTestFramework):
 
         scripts = [
             # Valid pay-to-pubkey script
-            {'txid': '9b907ef1e3c26fc71fe4a4b3580bc75264112f95050014157059c736f0202e71', 'vout': 0,
+            {'txid': '9b907ef1e3c26fc71fe4a4b3580bc75264112f95050014157059c736f0202e71', 'vout': 0, 'amount':1.618,
              'scriptPubKey': '76a91460baa0f494b38ce3c940dea67f3804dc52d1fb9488ac'},
             # Invalid script
-            {'txid': '5b8673686910442c644b1f4993d8f7753c7c8fcb5c87ee40d56eaeef25204547', 'vout': 7,
+            {'txid': '5b8673686910442c644b1f4993d8f7753c7c8fcb5c87ee40d56eaeef25204547', 'vout': 7, 'amount':1.618,
              'scriptPubKey': 'badbadbadbad'}
         ]
 
@@ -108,3 +108,12 @@ class SignRawTransactionsTest(BitcoinTestFramework):
 
 if __name__ == '__main__':
     SignRawTransactionsTest().main()
+
+def Test():
+    t = SignRawTransactionsTest()
+    t.drop_to_pdb = True
+    bitcoinConf = {
+        "debug": ["net", "blk", "thin", "mempool", "req", "bench", "evict"],  # "lck"
+        "blockprioritysize": 2000000  # we don't want any transactions rejected due to insufficient fees...
+    }
+    t.main(["--tmpdir=/ramdisk/test"], bitcoinConf, None)  # , "--tracerpc"])

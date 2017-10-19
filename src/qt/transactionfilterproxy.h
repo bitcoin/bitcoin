@@ -61,6 +61,7 @@ private:
     QString addrPrefix;
     quint32 typeFilter;
     WatchOnlyFilter watchOnlyFilter;
+    bool publicLabelFilter;
     CAmount minAmount;
     int limitRows;
     bool showInactive;

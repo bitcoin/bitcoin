@@ -170,8 +170,8 @@ int main(int argc, char **argv)
         {
             try
             {
-                CCoins block;
-                ds >> block;
+                Coin coin;
+                ds >> coin;
             } catch (const std::ios_base::failure& e) {return 0;}
             break;
         }

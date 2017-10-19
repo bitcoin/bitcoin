@@ -24,6 +24,7 @@
 #include "ui_interface.h"
 #include "unlimited.h"
 #include "utilstrencodings.h"
+#include "wallet/wallet.h"
 
 #ifdef WIN32
 #include <string.h>
@@ -539,11 +540,11 @@ bool CNode::ReceiveMsgBytes(const char *pch, unsigned int nBytes)
     {
         // get current incomplete message, or create a new one
         if (vRecvMsg.empty() || vRecvMsg.back().complete())
-            vRecvMsg.push_back(CNetMessage(Params().MessageStart(), SER_NETWORK, nRecvVersion));
+            vRecvMsg.push_back(CNetMessage(GetMagic(Params()), SER_NETWORK, nRecvVersion));
 
         CNetMessage &msg = vRecvMsg.back();
 
-        // absorb network data
+        // Absorb network data.
         int handled;
         if (!msg.in_data)
             handled = msg.readHeader(pch, nBytes);
@@ -883,6 +884,10 @@ static bool AttemptToEvictConnection(bool fPreferNewConnection)
 
 static void AcceptConnection(const ListenSocket &hListenSocket)
 {
+    // If a wallet rescan has started then do not accept any more connections until the rescan has completed.
+    if (fRescan)
+        return;
+
     struct sockaddr_storage sockaddr;
     socklen_t len = sizeof(sockaddr);
     SOCKET hSocket = accept(hListenSocket.socket, (struct sockaddr *)&sockaddr, &len);
@@ -2779,8 +2784,11 @@ CNode::CNode(SOCKET hSocketIn, const CAddress &addrIn, const std::string &addrNa
     nPingUsecStart = 0;
     nPingUsecTime = 0;
     fPingQueued = false;
+    // set when etablishing connection
+    fUsesCashMagic = false;
     nMinPingUsecTime = std::numeric_limits<int64_t>::max();
     thinBlockWaitingForTxns = -1; // BUIP010 Xtreme Thinblocks
+    nXthinBloomfilterSize = 0;
     addrFromPort = 0; // BU
     nLocalThinBlockBytes = 0;
 
@@ -2895,7 +2903,7 @@ void CNode::BeginMessage(const char *pszCommand) EXCLUSIVE_LOCK_FUNCTION(cs_vSen
 {
     ENTER_CRITICAL_SECTION(cs_vSend);
     assert(ssSend.size() == 0);
-    ssSend << CMessageHeader(Params().MessageStart(), pszCommand, 0);
+    ssSend << CMessageHeader(GetMagic(Params()), pszCommand, 0);
     LogPrint("net", "sending: %s ", SanitizeString(pszCommand));
     currentCommand = pszCommand;
 }
@@ -2903,9 +2911,7 @@ void CNode::BeginMessage(const char *pszCommand) EXCLUSIVE_LOCK_FUNCTION(cs_vSen
 void CNode::AbortMessage() UNLOCK_FUNCTION(cs_vSend)
 {
     ssSend.clear();
-
     LEAVE_CRITICAL_SECTION(cs_vSend);
-
     LogPrint("net", "(aborted)\n");
 }
 

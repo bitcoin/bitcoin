@@ -9,7 +9,7 @@
 
 namespace leveldb {
 
-// See doc/table_format.txt for an explanation of the filter block format.
+// See doc/table_format.md for an explanation of the filter block format.
 
 // Generate new filter every 2KB of data
 static const size_t kFilterBaseLg = 11;

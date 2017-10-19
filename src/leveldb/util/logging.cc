@@ -49,7 +49,7 @@ bool ConsumeDecimalNumber(Slice* in, uint64_t* val) {
   uint64_t v = 0;
   int digits = 0;
   while (!in->empty()) {
-    char c = (*in)[0];
+    unsigned char c = (*in)[0];
     if (c >= '0' && c <= '9') {
       ++digits;
       const unsigned int delta = (c - '0');

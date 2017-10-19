@@ -28,29 +28,31 @@ class CScriptCheck
 protected:
     ValidationResourceTracker *resourceTracker;
     CScript scriptPubKey;
+    CAmount amount;
     const CTransaction *ptxTo;
     unsigned int nIn;
     unsigned int nFlags;
     bool cacheStore;
     ScriptError error;
-    CAmount amount;
 
 public:
+    unsigned char sighashType;
     CScriptCheck()
-        : resourceTracker(NULL), ptxTo(0), nIn(0), nFlags(0), cacheStore(false), error(SCRIPT_ERR_UNKNOWN_ERROR),
-          amount(0)
+        : resourceTracker(nullptr), amount(0), ptxTo(0), nIn(0), nFlags(0), cacheStore(false),
+          error(SCRIPT_ERR_UNKNOWN_ERROR), sighashType(0)
     {
     }
+
     CScriptCheck(ValidationResourceTracker *resourceTrackerIn,
-        const CCoins &txFromIn,
+        const CScript &scriptPubKeyIn,
+        const CAmount amountIn,
         const CTransaction &txToIn,
         unsigned int nInIn,
         unsigned int nFlagsIn,
         bool cacheIn)
-        : resourceTracker(resourceTrackerIn), scriptPubKey(txFromIn.vout[txToIn.vin[nInIn].prevout.n].scriptPubKey),
-          ptxTo(&txToIn), nIn(nInIn), nFlags(nFlagsIn), cacheStore(cacheIn), error(SCRIPT_ERR_UNKNOWN_ERROR)
+        : resourceTracker(resourceTrackerIn), scriptPubKey(scriptPubKeyIn), amount(amountIn), ptxTo(&txToIn),
+          nIn(nInIn), nFlags(nFlagsIn), cacheStore(cacheIn), error(SCRIPT_ERR_UNKNOWN_ERROR), sighashType(0)
     {
-        amount = txFromIn.vout[txToIn.vin[nInIn].prevout.n].nValue;
     }
 
     bool operator()();
@@ -60,33 +62,15 @@ public:
         std::swap(resourceTracker, check.resourceTracker);
         scriptPubKey.swap(check.scriptPubKey);
         std::swap(ptxTo, check.ptxTo);
+        std::swap(amount, check.amount);
         std::swap(nIn, check.nIn);
         std::swap(nFlags, check.nFlags);
         std::swap(cacheStore, check.cacheStore);
         std::swap(error, check.error);
-        std::swap(amount, check.amount);
+        std::swap(sighashType, check.sighashType);
     }
 
     ScriptError GetScriptError() const { return error; }
-};
-
-class CScriptCheckAndAnalyze : public CScriptCheck
-{
-    CTransaction *ptxToNonConst;
-
-public:
-    CScriptCheckAndAnalyze() : CScriptCheck(), ptxToNonConst(0) {}
-    CScriptCheckAndAnalyze(ValidationResourceTracker *resourceTrackerIn,
-        const CCoins &txFromIn,
-        CTransaction &txToIn,
-        unsigned int nInIn,
-        unsigned int nFlagsIn,
-        bool cacheIn)
-        : CScriptCheck(resourceTrackerIn, txFromIn, txToIn, nInIn, nFlagsIn, cacheIn), ptxToNonConst(&txToIn)
-    {
-    }
-
-    bool operator()();
 };
 
 class CParallelValidation

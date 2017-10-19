@@ -39,7 +39,7 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 from random import randint
 import logging
-logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.INFO)
+logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO, stream=sys.stdout)
 
 class WalletBackupTest(BitcoinTestFramework):
 

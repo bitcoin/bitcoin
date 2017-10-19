@@ -6,6 +6,7 @@
 #ifndef BITCOIN_BLOOM_H
 #define BITCOIN_BLOOM_H
 
+#include "consensus/consensus.h"
 #include "serialize.h"
 
 #include <vector>
@@ -15,7 +16,6 @@ class CTransaction;
 class uint256;
 
 //! 20,000 items with fp rate < 0.1% or 10,000 items and <0.0001%
-static const unsigned int MAX_BLOOM_FILTER_SIZE = 36000; // bytes
 static const unsigned int MAX_HASH_FUNCS = 50;
 
 /**
@@ -60,7 +60,7 @@ private:
 
     /** Helper function to set up bloom filter from desired number of elements and false positive rate.
         Used by the constructors. Checks that the variables in sane ranges. */
-    void setup(unsigned int nElements, double nFPRate, unsigned int nTweakIn, unsigned char nFlagsIn, bool size_constrained);
+    void setup(unsigned int nElements, double nFPRate, unsigned int nTweakIn, unsigned char nFlagsIn, bool size_constrained, uint32_t  nMaxFilterSize);
 
     //! Checks for empty and full filters to avoid wasting cpu
     void UpdateEmptyFull();
@@ -79,13 +79,13 @@ public:
      * It should generally always be a random value (and is largely only exposed for unit testing)
      * nFlags should be one of the BLOOM_UPDATE_* enums (not _MASK)
      */
-    CBloomFilter(unsigned int nElements, double nFPRate, unsigned int nTweak, unsigned char nFlagsIn);
+    CBloomFilter(unsigned int nElements, double nFPRate, unsigned int nTweak, unsigned char nFlagsIn, uint32_t nMaxFilterSize = SMALLEST_MAX_BLOOM_FILTER_SIZE);
     CBloomFilter() : isFull(true), isEmpty(true), nHashFuncs(0), nTweak(0), nFlags(0) {}
 
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+    inline void SerializationOp(Stream& s, Operation ser_action) {
         READWRITE(vData);
         READWRITE(nHashFuncs);
         READWRITE(nTweak);
@@ -106,7 +106,7 @@ public:
     void clear();
     void reset(unsigned int nNewTweak);
 
-    //! True if the size is <= MAX_BLOOM_FILTER_SIZE and the number of hash functions is <= MAX_HASH_FUNCS
+    //! True if the size is <= SMALLEST_MAX_BLOOM_FILTER_SIZE and the number of hash functions is <= MAX_HASH_FUNCS
     //! (catch a filter which was just deserialized which was too big)
     bool IsWithinSizeConstraints() const;
 

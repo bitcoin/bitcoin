@@ -45,6 +45,11 @@ BIP0031_VERSION = 60000
 MAX_INV_SZ = 50000
 MAX_BLOCK_SIZE = 1000000
 
+class MiniNodeError(Exception):
+    pass
+
+class DisconnectedError(MiniNodeError):
+    pass
 
 # Keep our own socket map for asyncore, so that we can track disconnects
 # ourselves (to workaround an issue with closing an asyncore socket when
@@ -60,6 +65,7 @@ class NodeConnCB(object):
         # tests; it causes message delivery to sleep for the specified time
         # before acquiring the global lock and delivering the next message.
         self.deliver_sleep_time = None
+        self.disconnected = False
 
     def set_deliver_sleep_time(self, value):
         with mininode_lock:
@@ -75,6 +81,8 @@ class NodeConnCB(object):
     # global lock.
     def wait_for_verack(self):
         while True:
+            if self.disconnected:
+                raise DisconnectedError()
             with mininode_lock:
                 if self.verack_received:
                     return
@@ -134,7 +142,9 @@ class NodeConnCB(object):
 
     def on_reject(self, conn, message): pass
 
-    def on_close(self, conn): pass
+    def on_close(self, conn):
+        self.disconnected=True
+        pass
 
     def on_mempool(self, conn): pass
 
@@ -210,13 +220,24 @@ class NodeConn(asyncore.dispatcher):
         b"sendheaders": msg_sendheaders,
     }, bumessagemap)
 
-    MAGIC_BYTES = {
+    BTC_MAGIC_BYTES = {
         "mainnet": b"\xf9\xbe\xb4\xd9",   # mainnet
         "testnet3": b"\x0b\x11\x09\x07",  # testnet3
         "regtest": b"\xfa\xbf\xb5\xda"    # regtest
+        }
+
+    CASH_MAGIC_BYTES = {
+        "mainnet": b"\xe3\xe1\xf3\xe8",
+        "testnet3": b"\xf4\xe5\xf3\xf4",
+        "regtest": b"\xda\xb5\xbf\xfa",
     }
 
-    def __init__(self, dstaddr, dstport, rpc, callback, net="regtest", services=1):
+    def __init__(self, dstaddr, dstport, rpc, callback, net="regtest", services=1, bitcoinCash=False):
+        self.bitcoinCash = bitcoinCash
+        if self.bitcoinCash:
+            self.MAGIC_BYTES = self.CASH_MAGIC_BYTES
+        else:
+            self.MAGIC_BYTES = self.BTC_MAGIC_BYTES
         asyncore.dispatcher.__init__(self, map=mininode_socket_map)
         self.log = logging.getLogger("NodeConn(%s:%d)" % (dstaddr, dstport))
         self.dstaddr = dstaddr
@@ -317,7 +338,7 @@ class NodeConn(asyncore.dispatcher):
                 self.recvBufLen = nowLen
                 if nowLen < 4:
                     return
-                if self.recvbuf[:4] != self.MAGIC_BYTES[self.network]:
+                if (self.recvbuf[:4] != self.MAGIC_BYTES[self.network]) and (self.recvbuf[:4] != self.BTC_MAGIC_BYTES[self.network]):
                     raise ValueError("got garbage %s" % repr(self.recvbuf))
                 if self.ver_recv < 209:
                     if len(self.recvbuf) < 4 + 12 + 4:
@@ -403,6 +424,7 @@ class NetworkThread(Thread):
                     disconnected.append(obj)
             [obj.handle_close() for obj in disconnected]
             asyncore.loop(0.1, use_poll=True, map=mininode_socket_map, count=1)
+        logging.info("mininode network processing thread completed")
 
 
 # An exception we can raise if we detect a potential disconnect

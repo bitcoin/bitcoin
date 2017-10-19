@@ -111,13 +111,13 @@ uint64_t BlockAssembler::reserveBlockSize(const CScript &scriptPubKeyIn)
     uint64_t nHeaderSize, nCoinbaseSize;
 
     // BU add the proper block size quantity to the actual size
-    nHeaderSize = h.GetSerializeSize(SER_NETWORK, PROTOCOL_VERSION);
+    nHeaderSize = ::GetSerializeSize(h, SER_NETWORK, PROTOCOL_VERSION);
     assert(nHeaderSize == 80); // BU always 80 bytes
     nHeaderSize += 5; // tx count varint - 5 bytes is enough for 4 billion txs; 3 bytes for 65535 txs
 
     // This serializes with output value, a fixed-length 8 byte field, of zero and height, a serialized CScript
     // signed integer taking up 4 bytes for heights 32768-8388607 (around the year 2167) after which it will use 5.
-    nCoinbaseSize = coinbaseTx(scriptPubKeyIn, 400000, 0).GetSerializeSize(SER_NETWORK, PROTOCOL_VERSION);
+    nCoinbaseSize = ::GetSerializeSize(coinbaseTx(scriptPubKeyIn, 400000, 0), SER_NETWORK, PROTOCOL_VERSION);
 
     // BU Miners take the block we give them, wipe away our coinbase and add their own.
     // So if their reserve choice is bigger then our coinbase then use that.
@@ -379,8 +379,13 @@ void BlockAssembler::addScoreTxs(CBlockTemplate *pblocktemplate)
         {
             continue;
         }
+        // Reject the tx if we are on the fork, but the tx is not fork-signed
+        if (buip055ChainBlock && onlyAcceptForkSig.value && !IsTxBUIP055Only(*iter))
+        {
+            continue;
+        }
         // if tx is not applicable to this (unforked) chain, skip it
-        if (!buip055ChainBlock && IsTxBUIP055Only(iter->GetTx()))
+        if (!buip055ChainBlock && IsTxBUIP055Only(*iter))
         {
             continue;
         }
@@ -476,8 +481,13 @@ void BlockAssembler::addPriorityTxs(CBlockTemplate *pblocktemplate)
         {
             continue;
         }
+        // Reject the tx if we are on the fork, but the tx is not fork-signed
+        if (buip055ChainBlock && onlyAcceptForkSig.value && !IsTxBUIP055Only(*iter))
+        {
+            continue;
+        }
         // if tx is not applicable to this (unforked) chain, skip it
-        if (!buip055ChainBlock && IsTxBUIP055Only(iter->GetTx()))
+        if (!buip055ChainBlock && IsTxBUIP055Only(*iter))
         {
             continue;
         }

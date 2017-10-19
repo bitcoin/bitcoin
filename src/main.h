@@ -16,9 +16,11 @@
 #include "chain.h"
 #include "coins.h"
 #include "consensus/consensus.h"
+#include "fs.h"
 #include "net.h"
 #include "script/script_error.h"
 #include "sync.h"
+#include "txdb.h"
 #include "versionbits.h"
 
 #include <algorithm>
@@ -46,6 +48,17 @@ class CValidationState;
 
 struct CNodeStateStats;
 struct LockPoints;
+
+/** Global variable that points to the coins database */
+extern CCoinsViewDB *pcoinsdbview;
+
+enum FlushStateMode
+{
+    FLUSH_STATE_NONE,
+    FLUSH_STATE_IF_NEEDED,
+    FLUSH_STATE_PERIODIC,
+    FLUSH_STATE_ALWAYS
+};
 
 /** Default for DEFAULT_WHITELISTRELAY. */
 static const bool DEFAULT_WHITELISTRELAY = true;
@@ -182,6 +195,10 @@ extern bool fHavePruned;
 extern bool fPruneMode;
 /** Number of MiB of block files that we're trying to stay below. */
 extern uint64_t nPruneTarget;
+/** The maximum bloom filter size that we will support for an xthin request. This value is communicated to
+ *  our peer at the time we first make the connection.
+ */
+extern uint32_t nXthinBloomFilterSize;
 /** Block files containing a block-height within MIN_BLOCKS_TO_KEEP of chainActive.Tip() will not be pruned. */
 static const unsigned int MIN_BLOCKS_TO_KEEP = 288;
 
@@ -235,7 +252,7 @@ FILE *OpenBlockFile(const CDiskBlockPos &pos, bool fReadOnly = false);
 /** Open an undo file (rev?????.dat) */
 FILE *OpenUndoFile(const CDiskBlockPos &pos, bool fReadOnly = false);
 /** Translation to a filesystem path */
-boost::filesystem::path GetBlockPosFilename(const CDiskBlockPos &pos, const char *prefix);
+fs::path GetBlockPosFilename(const CDiskBlockPos &pos, const char *prefix);
 /** Import blocks from an external file */
 bool LoadExternalBlockFile(const CChainParams &chainparams, FILE *fileIn, CDiskBlockPos *dbp = NULL);
 /** Initialize a new block tree database + block data on disk */
@@ -321,6 +338,7 @@ CBlockIndex *InsertBlockIndex(uint256 hash);
 bool GetNodeStateStats(NodeId nodeid, CNodeStateStats &stats);
 /** Flush all state, indexes and buffers to disk. */
 void FlushStateToDisk();
+bool FlushStateToDisk(CValidationState &state, FlushStateMode mode);
 /** Prune block files and flush state to disk. */
 void PruneAndFlush();
 
@@ -346,33 +364,6 @@ struct CNodeStateStats
     int nCommonHeight;
     std::vector<int> vHeightInFlight;
 };
-
-struct CDiskTxPos : public CDiskBlockPos
-{
-    unsigned int nTxOffset; // after header
-
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream &s, Operation ser_action, int nType, int nVersion)
-    {
-        READWRITE(*(CDiskBlockPos *)this);
-        READWRITE(VARINT(nTxOffset));
-    }
-
-    CDiskTxPos(const CDiskBlockPos &blockIn, unsigned int nTxOffsetIn)
-        : CDiskBlockPos(blockIn.nFile, blockIn.nPos), nTxOffset(nTxOffsetIn)
-    {
-    }
-
-    CDiskTxPos() { SetNull(); }
-    void SetNull()
-    {
-        CDiskBlockPos::SetNull();
-        nTxOffset = 0;
-    }
-};
-
 
 /**
  * Count ECDSA signature operations the old-fashioned (pre-0.6) way
@@ -403,19 +394,8 @@ bool CheckInputs(const CTransaction &tx,
     unsigned int flags,
     bool cacheStore,
     ValidationResourceTracker *resourceTracker,
-    std::vector<CScriptCheck> *pvChecks = NULL);
-
-/**
-  same as above except modifies data in the tx to describe its properties.
- */
-bool CheckInputsAnalyzeTx(CTransaction &tx,
-    CValidationState &state,
-    const CCoinsViewCache &inputs,
-    bool fScriptChecks,
-    unsigned int flags,
-    bool cacheStore,
-    ValidationResourceTracker *resourceTracker,
-    std::vector<CScriptCheck> *pvChecks = NULL);
+    std::vector<CScriptCheck> *pvChecks = NULL,
+    unsigned char *sighashType = NULL);
 
 
 /** Apply the effects of this transaction on the UTXO set represented by view */
@@ -554,61 +534,6 @@ bool CheckIndexAgainstCheckpoint(const CBlockIndex *pindexPrev,
 /** Store block on disk. If dbp is non-NULL, the file is known to already reside on disk */
 bool AcceptBlock(CBlock &block, CValidationState &state, CBlockIndex **pindex, bool fRequested, CDiskBlockPos *dbp);
 bool AcceptBlockHeader(const CBlockHeader &block, CValidationState &state, CBlockIndex **ppindex = NULL);
-
-
-class CBlockFileInfo
-{
-public:
-    unsigned int nBlocks; //! number of blocks stored in file
-    unsigned int nSize; //! number of used bytes of block file
-    unsigned int nUndoSize; //! number of used bytes in the undo file
-    unsigned int nHeightFirst; //! lowest height of block in file
-    unsigned int nHeightLast; //! highest height of block in file
-    uint64_t nTimeFirst; //! earliest time of block in file
-    uint64_t nTimeLast; //! latest time of block in file
-
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream &s, Operation ser_action, int nType, int nVersion)
-    {
-        READWRITE(VARINT(nBlocks));
-        READWRITE(VARINT(nSize));
-        READWRITE(VARINT(nUndoSize));
-        READWRITE(VARINT(nHeightFirst));
-        READWRITE(VARINT(nHeightLast));
-        READWRITE(VARINT(nTimeFirst));
-        READWRITE(VARINT(nTimeLast));
-    }
-
-    void SetNull()
-    {
-        nBlocks = 0;
-        nSize = 0;
-        nUndoSize = 0;
-        nHeightFirst = 0;
-        nHeightLast = 0;
-        nTimeFirst = 0;
-        nTimeLast = 0;
-    }
-
-    CBlockFileInfo() { SetNull(); }
-    std::string ToString() const;
-
-    /** update statistics (does not update nSize) */
-    void AddBlock(unsigned int nHeightIn, uint64_t nTimeIn)
-    {
-        if (nBlocks == 0 || nHeightFirst > nHeightIn)
-            nHeightFirst = nHeightIn;
-        if (nBlocks == 0 || nTimeFirst > nTimeIn)
-            nTimeFirst = nTimeIn;
-        nBlocks++;
-        if (nHeightIn > nHeightLast)
-            nHeightLast = nHeightIn;
-        if (nTimeIn > nTimeLast)
-            nTimeLast = nTimeIn;
-    }
-};
 
 /** RAII wrapper for VerifyDB: Verify consistency of the block and coin databases */
 class CVerifyDB

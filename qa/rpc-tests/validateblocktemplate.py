@@ -10,7 +10,7 @@ import sys
 if sys.version_info[0] < 3:
     raise "Use Python 3"
 import logging
-logging.basicConfig(format='%(asctime)s.%(levelname)s: %(message)s', level=logging.INFO)
+logging.basicConfig(format='%(asctime)s.%(levelname)s: %(message)s', level=logging.INFO, stream=sys.stdout)
 
 # Test validateblocktemplate RPC call
 from test_framework.key import CECKey
@@ -339,14 +339,14 @@ class ValidateblocktemplateTest(BitcoinTestFramework):
 
 
 def Test():
-    t = ValidateblocktemplateTest()
-    bitcoinConf = {
+    try:
+        t = ValidateblocktemplateTest()
+        bitcoinConf = {
         "debug": ["net", "blk", "thin", "mempool", "req", "bench", "evict"],  # "lck"
         "blockprioritysize": 2000000  # we don't want any transactions rejected due to insufficient fees...
-    }
+        }
 #    t.main(["--tmpdir=/ramdisk/test", "--nocleanup", "--noshutdown"], bitcoinConf, None)
-    try:
-        t.main(["--tmpdir=/ramdisk/test"], bitcoinConf, None)
+        t.main(["--tmpdir=/ramdisk/test","--nocleanup", "--noshutdown"], bitcoinConf, None)
     except Exception as e:
         print(str(e))
         pdb.pm()

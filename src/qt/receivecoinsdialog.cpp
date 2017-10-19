@@ -13,8 +13,11 @@
 #include "optionsmodel.h"
 #include "platformstyle.h"
 #include "receiverequestdialog.h"
+#include "receivefreezedialog.h"
 #include "recentrequeststablemodel.h"
-#include "walletmodel.h"
+#include "unlimited.h"
+
+ReceiveFreezeDialog *freezeDialog;
 
 #include <QAction>
 #include <QCursor>
@@ -22,6 +25,7 @@
 #include <QMessageBox>
 #include <QScrollBar>
 #include <QTextDocument>
+#include <QCheckBox>
 
 ReceiveCoinsDialog::ReceiveCoinsDialog(const PlatformStyle *platformStyle, QWidget *parent) :
     QDialog(parent),
@@ -44,23 +48,29 @@ ReceiveCoinsDialog::ReceiveCoinsDialog(const PlatformStyle *platformStyle, QWidg
     }
 
     // context menu actions
+    QAction *copyAddressAction = new QAction(tr("Copy address"), this);
     QAction *copyLabelAction = new QAction(tr("Copy label"), this);
     QAction *copyMessageAction = new QAction(tr("Copy message"), this);
     QAction *copyAmountAction = new QAction(tr("Copy amount"), this);
 
     // context menu
     contextMenu = new QMenu();
+    contextMenu->addAction(copyAddressAction);
     contextMenu->addAction(copyLabelAction);
     contextMenu->addAction(copyMessageAction);
     contextMenu->addAction(copyAmountAction);
 
     // context menu signals
     connect(ui->recentRequestsView, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(showMenu(QPoint)));
+    connect(copyAddressAction, SIGNAL(triggered()), this, SLOT(copyAddress()));
     connect(copyLabelAction, SIGNAL(triggered()), this, SLOT(copyLabel()));
     connect(copyMessageAction, SIGNAL(triggered()), this, SLOT(copyMessage()));
     connect(copyAmountAction, SIGNAL(triggered()), this, SLOT(copyAmount()));
 
     connect(ui->clearButton, SIGNAL(clicked()), this, SLOT(clear()));
+
+    // initialize freeze
+    nFreezeLockTime = CScriptNum(0);
 }
 
 void ReceiveCoinsDialog::setModel(WalletModel *model)
@@ -103,6 +113,10 @@ void ReceiveCoinsDialog::clear()
     ui->reqLabel->setText("");
     ui->reqMessage->setText("");
     ui->reuseAddress->setChecked(false);
+    ui->freezeCheck->setChecked(false);
+    ui->freezeCheck->setText("Coin &Freeze");
+    nFreezeLockTime = CScriptNum(0);
+    freezeDialog = NULL;
     updateDisplayUnit();
 }
 
@@ -124,6 +138,56 @@ void ReceiveCoinsDialog::updateDisplayUnit()
     }
 }
 
+void ReceiveCoinsDialog::on_freezeDialog_hide()
+{
+    freezeDialog->getFreezeLockTime(nFreezeLockTime);
+
+    if (nFreezeLockTime == 0)
+    {
+        // user cancelled freeze
+        ui->freezeCheck->setChecked(false);
+        ui->freezeCheck->setText("Coin Freeze");
+    }
+    else
+    {
+        // user selected freeze
+        ui->freezeCheck->setChecked(true);
+
+        QString freezeLabel;
+        if (nFreezeLockTime.getint64() < LOCKTIME_THRESHOLD)
+
+          {
+            uint64_t height = GetBlockchainHeight();
+            uint64_t freezeHeight = nFreezeLockTime.getint();
+            uint64_t approxTimeMs = ((freezeHeight-height)*10*60*1000) + QDateTime::currentDateTime().toMSecsSinceEpoch();
+            
+            freezeLabel = (QString)("block: ") +  QString::number(freezeHeight) + (QString)(" (approximately: ") + QDateTime::fromMSecsSinceEpoch(approxTimeMs).date().toString() + ")";
+          }
+        else
+            freezeLabel = QDateTime::fromMSecsSinceEpoch(nFreezeLockTime.getint64() * 1000).toString("yyyy/MM/dd hh:mm");
+        ui->freezeCheck->setText("Coin freeze until " + freezeLabel);
+    }
+}
+
+void ReceiveCoinsDialog::on_freezeCheck_clicked()
+{
+
+  if (ui->freezeCheck->isChecked())  // If the user clicked on coin freeze, bring up the freeze dialog box
+    {
+      if (!freezeDialog)
+        {
+          freezeDialog = new ReceiveFreezeDialog(this);
+          freezeDialog->setModel(model->getOptionsModel());
+        }
+      freezeDialog->show();
+    }
+  else  // if the user unchecked, then hide the freeze dialog if its still showing
+    {
+      if (freezeDialog) freezeDialog->hide();
+    }
+
+}
+
 void ReceiveCoinsDialog::on_receiveButton_clicked()
 {
     if(!model || !model->getOptionsModel() || !model->getAddressTableModel() || !model->getRecentRequestsTableModel())
@@ -131,6 +195,8 @@ void ReceiveCoinsDialog::on_receiveButton_clicked()
 
     QString address;
     QString label = ui->reqLabel->text();
+    QString sFreezeLockTime = "";
+
     if(ui->reuseAddress->isChecked())
     {
         /* Choose existing receiving address */
@@ -147,11 +213,20 @@ void ReceiveCoinsDialog::on_receiveButton_clicked()
             return;
         }
     } else {
-        /* Generate new receiving address */
-        address = model->getAddressTableModel()->addRow(AddressTableModel::Receive, label, "");
+        /* Generate new receiving address and add to the address table */
+        address = model->getAddressTableModel()->addRow(AddressTableModel::Receive, label, "", CScriptNum(0));
+
+        // only use coin freeze if the freeze value is valid and the check box is still set
+        if ((nFreezeLockTime > 0)&&(ui->freezeCheck)&&(ui->freezeCheck->isChecked()))
+          {
+           /* Generate the freeze redeemScript and add to the address table.
+            * The address variable needs to show the freeze P2SH public key  */
+            address = model->getAddressTableModel()->addRow(AddressTableModel::Receive, label, "", nFreezeLockTime);
+            sFreezeLockTime = model->getAddressTableModel()->labelForFreeze(address);
+        }
     }
     SendCoinsRecipient info(address, label,
-        ui->reqAmount->value(), ui->reqMessage->text());
+        ui->reqAmount->value(), ui->reqMessage->text(), sFreezeLockTime, "");
     ReceiveRequestDialog *dialog = new ReceiveRequestDialog(this);
     dialog->setAttribute(Qt::WA_DeleteOnClose);
     dialog->setModel(model->getOptionsModel());
@@ -250,6 +325,12 @@ void ReceiveCoinsDialog::showMenu(const QPoint &point)
     if(selection.empty())
         return;
     contextMenu->exec(QCursor::pos());
+}
+
+// context menu action: copy address
+void ReceiveCoinsDialog::copyAddress()
+{
+    copyColumnToClipboard(RecentRequestsTableModel::Address);
 }
 
 // context menu action: copy label

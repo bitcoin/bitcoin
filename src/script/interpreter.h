@@ -7,6 +7,7 @@
 #ifndef BITCOIN_SCRIPT_INTERPRETER_H
 #define BITCOIN_SCRIPT_INTERPRETER_H
 
+#include "clientversion.h"
 #include "script_error.h"
 #include "primitives/transaction.h"
 
@@ -96,7 +97,13 @@ enum
 
 bool CheckSignatureEncoding(const std::vector<unsigned char> &vchSig, unsigned int flags, ScriptError* serror);
 
+// If you are signing you may call this function and the BitcoinCash or Legacy method will be chosen based on nHashType
 uint256 SignatureHash(const CScript &scriptCode, const CTransaction& txTo, unsigned int nIn, uint32_t nHashType, const CAmount &amount, size_t* nHashedOut=NULL);
+// If you are validating signatures, you must call the appropriate function based on what fork you are on, because
+// the nHashType SIGHASH_FORKID bit is undefined in Legacy mode -- that is, it is valid to set it to one but still
+// sign using the legacy method
+uint256 SignatureHashBitcoinCash(const CScript &scriptCode, const CTransaction& txTo, unsigned int nIn, uint32_t nHashType, const CAmount &amount, size_t* nHashedOut=NULL);
+uint256 SignatureHashLegacy(const CScript& scriptCode, const CTransaction& txTo, unsigned int nIn, uint32_t nHashType, const CAmount &amount, size_t* nHashedOut);
 
 class BaseSignatureChecker
 {
@@ -127,12 +134,17 @@ private:
     const CAmount amount;
     mutable size_t nBytesHashed;
     mutable size_t nSigops;
+    unsigned int nFlags;
 
 protected:
     virtual bool VerifySignature(const std::vector<unsigned char>& vchSig, const CPubKey& vchPubKey, const uint256& sighash) const;
 
 public:
-    TransactionSignatureChecker(const CTransaction* txToIn, unsigned int nInIn, const CAmount &amountIn) : txTo(txToIn), nIn(nInIn), amount(amountIn), nBytesHashed(0), nSigops(0) {}
+#ifdef BITCOIN_CASH
+    TransactionSignatureChecker(const CTransaction* txToIn, unsigned int nInIn, const CAmount &amountIn, unsigned int flags=SCRIPT_ENABLE_SIGHASH_FORKID) : txTo(txToIn), nIn(nInIn), amount(amountIn), nBytesHashed(0), nSigops(0), nFlags(flags) {}
+#else
+    TransactionSignatureChecker(const CTransaction* txToIn, unsigned int nInIn, const CAmount &amountIn, unsigned int flags=0) : txTo(txToIn), nIn(nInIn), amount(amountIn), nBytesHashed(0), nSigops(0), nFlags(flags) {}
+#endif
     bool CheckSig(const std::vector<unsigned char>& scriptSig, const std::vector<unsigned char>& vchPubKey, const CScript& scriptCode) const;
     bool CheckLockTime(const CScriptNum& nLockTime) const;
     bool CheckSequence(const CScriptNum& nSequence) const;
@@ -146,10 +158,14 @@ private:
     const CTransaction txTo;
 
 public:
-    MutableTransactionSignatureChecker(const CMutableTransaction* txToIn, unsigned int nInIn, const CAmount &amount) : TransactionSignatureChecker(&txTo, nInIn, amount), txTo(*txToIn) {}
+#ifdef BITCOIN_CASH
+    MutableTransactionSignatureChecker(const CMutableTransaction* txToIn, unsigned int nInIn, const CAmount &amount, unsigned int flags=SCRIPT_ENABLE_SIGHASH_FORKID) : TransactionSignatureChecker(&txTo, nInIn, amount, flags), txTo(*txToIn) {}
+#else
+    MutableTransactionSignatureChecker(const CMutableTransaction* txToIn, unsigned int nInIn, const CAmount &amount, unsigned int flags=0) : TransactionSignatureChecker(&txTo, nInIn, amount, flags), txTo(*txToIn) {}
+#endif
 };
 
-bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& script, unsigned int flags, const BaseSignatureChecker& checker, ScriptError* error = NULL, unsigned int* sighashtype=NULL);
-bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, unsigned int flags, const BaseSignatureChecker& checker, ScriptError* error = NULL, unsigned int* sighashtype=NULL);
+bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& script, unsigned int flags, const BaseSignatureChecker& checker, ScriptError* error = NULL, unsigned char* sighashtype=NULL);
+bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, unsigned int flags, const BaseSignatureChecker& checker, ScriptError* error = NULL, unsigned char* sighashtype=NULL);
 
 #endif // BITCOIN_SCRIPT_INTERPRETER_H

@@ -23,7 +23,7 @@
 
 using namespace std;
 
-void CBloomFilter::setup(unsigned int nElements, double nFPRate, unsigned int nTweakIn, unsigned char nFlagsIn, bool size_constrained) {
+void CBloomFilter::setup(unsigned int nElements, double nFPRate, unsigned int nTweakIn, unsigned char nFlagsIn, bool size_constrained, uint32_t nMaxFilterSize = SMALLEST_MAX_BLOOM_FILTER_SIZE) {
     if (nElements == 0) {
         LogPrintf("Construction of empty CBloomFilter attempted.\n");
         nElements = 1;
@@ -31,7 +31,7 @@ void CBloomFilter::setup(unsigned int nElements, double nFPRate, unsigned int nT
     unsigned desired_vdata_size = (unsigned int)(-1  / LN2SQUARED * nElements * log(nFPRate) / 8);
 
     if (size_constrained)
-        desired_vdata_size = min(desired_vdata_size, MAX_BLOOM_FILTER_SIZE);
+        desired_vdata_size = min(desired_vdata_size, nMaxFilterSize);
     
     vData.resize(desired_vdata_size, 0);
     isFull = vData.size() == 0;
@@ -46,12 +46,14 @@ void CBloomFilter::setup(unsigned int nElements, double nFPRate, unsigned int nT
     nFlags = nFlagsIn;
 }
 
-CBloomFilter::CBloomFilter(unsigned int nElements, double nFPRate, unsigned int nTweakIn, unsigned char nFlagsIn)  {
-    setup(nElements, nFPRate, nTweakIn, nFlagsIn, true);
+CBloomFilter::CBloomFilter(unsigned int nElements, double nFPRate, unsigned int nTweakIn, unsigned char nFlagsIn, uint32_t nMaxFilterSize)
+{
+    setup(nElements, nFPRate, nTweakIn, nFlagsIn, true, nMaxFilterSize);
 }
 
 // Private constructor used by CRollingBloomFilter
-CBloomFilter::CBloomFilter(unsigned int nElements, double nFPRate, unsigned int nTweakIn) {
+CBloomFilter::CBloomFilter(unsigned int nElements, double nFPRate, unsigned int nTweakIn)
+{
     setup(nElements, nFPRate, nTweakIn, BLOOM_UPDATE_NONE, false);
 }
 
@@ -133,7 +135,7 @@ void CBloomFilter::reset(unsigned int nNewTweak)
 
 bool CBloomFilter::IsWithinSizeConstraints() const
 {
-    return vData.size() <= MAX_BLOOM_FILTER_SIZE && nHashFuncs <= MAX_HASH_FUNCS;
+    return vData.size() <= SMALLEST_MAX_BLOOM_FILTER_SIZE && nHashFuncs <= MAX_HASH_FUNCS;
 }
 
 bool CBloomFilter::IsRelevantAndUpdate(const CTransaction& tx)
@@ -173,7 +175,7 @@ bool CBloomFilter::IsRelevantAndUpdate(const CTransaction& tx)
                     txnouttype type;
                     vector<vector<unsigned char> > vSolutions;
                     if (Solver(txout.scriptPubKey, type, vSolutions) &&
-                            (type == TX_PUBKEY || type == TX_MULTISIG))
+                            (type == TX_PUBKEY || type == TX_MULTISIG || type == TX_CLTV))
                         insert(COutPoint(hash, i));
                 }
                 break;

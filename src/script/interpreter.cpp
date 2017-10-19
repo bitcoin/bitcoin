@@ -238,7 +238,7 @@ bool static CheckMinimalPush(const valtype& data, opcodetype opcode) {
     return true;
 }
 
-bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, unsigned int flags, const BaseSignatureChecker& checker, ScriptError* serror, unsigned int* sighashtype)
+bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, unsigned int flags, const BaseSignatureChecker& checker, ScriptError* serror, unsigned char* sighashtype)
 {
     static const CScriptNum bnZero(0);
     static const CScriptNum bnOne(1);
@@ -258,7 +258,7 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, un
     if (sighashtype) *sighashtype=0;
 
     set_error(serror, SCRIPT_ERR_UNKNOWN_ERROR);
-    if (script.size() > 10000)
+    if (script.size() > MAX_SCRIPT_SIZE)
         return set_error(serror, SCRIPT_ERR_SCRIPT_SIZE);
     int nOpCount = 0;
     bool fRequireMinimal = (flags & SCRIPT_VERIFY_MINIMALDATA) != 0;
@@ -883,16 +883,9 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, un
                     uint32_t nHashType = GetHashType(vchSig);
                     // BU remember the sighashtype so we can use it to choose when to allow this tx
                     if (sighashtype) *sighashtype |= nHashType;
-                    if (nHashType & SIGHASH_FORKID)
-                    {
-                        if (!(flags & SCRIPT_ENABLE_SIGHASH_FORKID))
-                            return set_error(serror,
-                                             SCRIPT_ERR_ILLEGAL_FORKID);
-                    }
-                    else
-                    {
-                        scriptCode.FindAndDelete(CScript(vchSig));
-                    }
+
+                    // Drop the signature, since there's no way for a signature to sign itself
+                    scriptCode.FindAndDelete(CScript(vchSig));
 
                     if (!CheckSignatureEncoding(vchSig, flags, serror) || !CheckPubKeyEncoding(vchPubKey, flags, serror)) {
                         //serror is set
@@ -954,16 +947,7 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, un
                         uint32_t nHashType = GetHashType(vchSig);
                         // BU remember the sighashtype so we can use it to choose when to allow this tx
                         if (sighashtype) *sighashtype |= nHashType;
-                        if (nHashType & SIGHASH_FORKID)
-                        {
-                            if (!(flags & SCRIPT_ENABLE_SIGHASH_FORKID))
-                                return set_error(serror,
-                                                 SCRIPT_ERR_ILLEGAL_FORKID);
-                        }
-                        else
-                        {
-                            scriptCode.FindAndDelete(CScript(vchSig));
-                        }
+                        scriptCode.FindAndDelete(CScript(vchSig));
                     }
 
                     bool fSuccess = true;
@@ -1030,7 +1014,7 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, un
             }
 
             // Size limits
-            if (stack.size() + altstack.size() > 1000)
+            if (stack.size() + altstack.size() > MAX_STACK_SIZE)
                 return set_error(serror, SCRIPT_ERR_STACK_SIZE);
         }
     }
@@ -1069,7 +1053,7 @@ public:
 
     /** Serialize the passed scriptCode, skipping OP_CODESEPARATORs */
     template<typename S>
-    void SerializeScriptCode(S &s, int nType, int nVersion) const {
+    void SerializeScriptCode(S &s) const {
         CScript::const_iterator it = scriptCode.begin();
         CScript::const_iterator itBegin = it;
         opcodetype opcode;
@@ -1092,53 +1076,53 @@ public:
 
     /** Serialize an input of txTo */
     template<typename S>
-    void SerializeInput(S &s, unsigned int nInput, int nType, int nVersion) const {
+    void SerializeInput(S &s, unsigned int nInput) const {
         // In case of SIGHASH_ANYONECANPAY, only the input being signed is serialized
         if (fAnyoneCanPay)
             nInput = nIn;
         // Serialize the prevout
-        ::Serialize(s, txTo.vin[nInput].prevout, nType, nVersion);
+        ::Serialize(s, txTo.vin[nInput].prevout);
         // Serialize the script
         if (nInput != nIn)
             // Blank out other inputs' signatures
-            ::Serialize(s, CScriptBase(), nType, nVersion);
+            ::Serialize(s, CScriptBase());
         else
-            SerializeScriptCode(s, nType, nVersion);
+            SerializeScriptCode(s);
         // Serialize the nSequence
         if (nInput != nIn && (fHashSingle || fHashNone))
             // let the others update at will
-            ::Serialize(s, (int)0, nType, nVersion);
+            ::Serialize(s, (int)0);
         else
-            ::Serialize(s, txTo.vin[nInput].nSequence, nType, nVersion);
+            ::Serialize(s, txTo.vin[nInput].nSequence);
     }
 
     /** Serialize an output of txTo */
     template<typename S>
-    void SerializeOutput(S &s, unsigned int nOutput, int nType, int nVersion) const {
+    void SerializeOutput(S &s, unsigned int nOutput) const {
         if (fHashSingle && nOutput != nIn)
             // Do not lock-in the txout payee at other indices as txin
-            ::Serialize(s, CTxOut(), nType, nVersion);
+            ::Serialize(s, CTxOut());
         else
-            ::Serialize(s, txTo.vout[nOutput], nType, nVersion);
+            ::Serialize(s, txTo.vout[nOutput]);
     }
 
     /** Serialize txTo */
     template<typename S>
-    void Serialize(S &s, int nType, int nVersion) const {
+    void Serialize(S &s) const {
         // Serialize nVersion
-        ::Serialize(s, txTo.nVersion, nType, nVersion);
+        ::Serialize(s, txTo.nVersion);
         // Serialize vin
         unsigned int nInputs = fAnyoneCanPay ? 1 : txTo.vin.size();
         ::WriteCompactSize(s, nInputs);
         for (unsigned int nInput = 0; nInput < nInputs; nInput++)
-             SerializeInput(s, nInput, nType, nVersion);
+             SerializeInput(s, nInput);
         // Serialize vout
         unsigned int nOutputs = fHashNone ? 0 : (fHashSingle ? nIn+1 : txTo.vout.size());
         ::WriteCompactSize(s, nOutputs);
         for (unsigned int nOutput = 0; nOutput < nOutputs; nOutput++)
-             SerializeOutput(s, nOutput, nType, nVersion);
+             SerializeOutput(s, nOutput);
         // Serialize nLockTime
-        ::Serialize(s, txTo.nLockTime, nType, nVersion);
+        ::Serialize(s, txTo.nLockTime);
     }
 };
 
@@ -1166,7 +1150,9 @@ uint256 GetOutputsHash(const CTransaction &txTo) {
     return ss.GetHash();
 }
 
-uint256 SignatureHashForkAlg(const CScript &scriptCode, const CTransaction &txTo, unsigned int nIn, uint32_t nHashType,
+} // anon namespace
+
+uint256 SignatureHashBitcoinCash(const CScript &scriptCode, const CTransaction &txTo, unsigned int nIn, uint32_t nHashType,
     const CAmount &amount, size_t *nHashedOut)
 {
     static const uint256 one(uint256S("0000000000000000000000000000000000000000000000000000000000000001"));
@@ -1224,15 +1210,8 @@ uint256 SignatureHashForkAlg(const CScript &scriptCode, const CTransaction &txTo
     return one;
 }
 
-} // anon namespace
-
-
-uint256 SignatureHash(const CScript& scriptCode, const CTransaction& txTo, unsigned int nIn, uint32_t nHashType, const CAmount &amount, size_t* nHashedOut)
+uint256 SignatureHashLegacy(const CScript& scriptCode, const CTransaction& txTo, unsigned int nIn, uint32_t nHashType, const CAmount &amount, size_t* nHashedOut)
 {
-    if (nHashType & SIGHASH_FORKID) {
-        return SignatureHashForkAlg(scriptCode, txTo, nIn, nHashType, amount, nHashedOut);
-    }
-
     static const uint256 one(uint256S("0000000000000000000000000000000000000000000000000000000000000001"));
     if (nIn >= txTo.vin.size()) {
         //  nIn out of range
@@ -1258,6 +1237,15 @@ uint256 SignatureHash(const CScript& scriptCode, const CTransaction& txTo, unsig
     return ss.GetHash();
 }
 
+uint256 SignatureHash(const CScript& scriptCode, const CTransaction& txTo, unsigned int nIn, uint32_t nHashType, const CAmount &amount, size_t* nHashedOut)
+{
+    if (nHashType & SIGHASH_FORKID)
+    {
+        return SignatureHashBitcoinCash(scriptCode, txTo, nIn, nHashType, amount, nHashedOut);
+    }
+    return SignatureHashLegacy(scriptCode, txTo, nIn, nHashType, amount, nHashedOut);
+}
+
 bool TransactionSignatureChecker::VerifySignature(const std::vector<unsigned char>& vchSig, const CPubKey& pubkey, const uint256& sighash) const
 {
     return pubkey.Verify(sighash, vchSig);
@@ -1276,8 +1264,20 @@ bool TransactionSignatureChecker::CheckSig(const vector<unsigned char>& vchSigIn
     int nHashType = vchSig.back();
     vchSig.pop_back();
 
+    uint256 sighash;
     size_t nHashed = 0;
-    uint256 sighash = SignatureHash(scriptCode, *txTo, nIn, nHashType, amount, &nHashed);
+    // If BCC sighash is possible, check the bit, otherwise ignore the bit.  This is needed because
+    // the bit is undefined (can be any value) before the fork. See block 264084 tx 102
+    if (nFlags & SCRIPT_ENABLE_SIGHASH_FORKID)
+    {
+        if (nHashType & SIGHASH_FORKID)
+            sighash = SignatureHashBitcoinCash(scriptCode, *txTo, nIn, nHashType, amount, &nHashed);
+        else return false;
+    }
+    else
+    {
+        sighash = SignatureHashLegacy(scriptCode, *txTo, nIn, nHashType, amount, &nHashed);
+    }
     nBytesHashed += nHashed;
     ++nSigops;
 
@@ -1369,7 +1369,7 @@ bool TransactionSignatureChecker::CheckSequence(const CScriptNum& nSequence) con
     return true;
 }
 
-bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, unsigned int flags, const BaseSignatureChecker& checker, ScriptError* serror, unsigned int* sighashtype)
+bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, unsigned int flags, const BaseSignatureChecker& checker, ScriptError* serror, unsigned char* sighashtype)
 {
     set_error(serror, SCRIPT_ERR_UNKNOWN_ERROR);
 

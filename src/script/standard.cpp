@@ -10,6 +10,7 @@
 #include "script/script.h"
 #include "util.h"
 #include "utilstrencodings.h"
+#include "core_io.h" // freeze for debug only
 
 #include <boost/foreach.hpp>
 
@@ -32,6 +33,8 @@ const char* GetTxnOutputType(txnouttype t)
     case TX_SCRIPTHASH: return "scripthash";
     case TX_MULTISIG: return "multisig";
     case TX_NULL_DATA: return "nulldata";
+    case TX_CLTV: return "cltv";  // CLTV HODL Freeze
+    case TX_LABELPUBLIC: return "publiclabel";
     }
     return NULL;
 }
@@ -53,9 +56,17 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, vector<vector<unsi
 
         // Sender provides N pubkeys, receivers provides M signatures
         mTemplates.insert(make_pair(TX_MULTISIG, CScript() << OP_SMALLINTEGER << OP_PUBKEYS << OP_SMALLINTEGER << OP_CHECKMULTISIG));
+
+        // Freeze tx using CLTV ; nFreezeLockTime CLTV DROP (0x21 pubkeys) checksig
+        mTemplates.insert(make_pair(TX_CLTV, CScript() << OP_BIGINTEGER << OP_CHECKLOCKTIMEVERIFY << OP_DROP << OP_PUBKEYS << OP_CHECKSIG));
+
+        // LabelPublc OP_RETURN data size format small
+        mTemplates.insert(make_pair(TX_LABELPUBLIC, CScript() << OP_RETURN << OP_BIGINTEGER << OP_DATA));
+
     }
 
     vSolutionsRet.clear();
+    //LogPrintf("Freeze Solve: %s \n ", ::ScriptToAsmStr(scriptPubKey));
 
     // Shortcut for pay-to-script-hash, which are more constrained than the other types:
     // it is always OP_HASH160 20 [20 byte hash] OP_EQUAL
@@ -64,16 +75,6 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, vector<vector<unsi
         typeRet = TX_SCRIPTHASH;
         vector<unsigned char> hashBytes(scriptPubKey.begin()+2, scriptPubKey.begin()+22);
         vSolutionsRet.push_back(hashBytes);
-        return true;
-    }
-
-    // Provably prunable, data-carrying output
-    //
-    // So long as script passes the IsUnspendable() test and all but the first
-    // byte passes the IsPushOnly() test we don't care what exactly is in the
-    // script.
-    if (scriptPubKey.size() >= 1 && scriptPubKey[0] == OP_RETURN && scriptPubKey.IsPushOnly(scriptPubKey.begin()+1)) {
-        typeRet = TX_NULL_DATA;
         return true;
     }
 
@@ -90,6 +91,8 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, vector<vector<unsi
         // Compare
         CScript::const_iterator pc1 = script1.begin();
         CScript::const_iterator pc2 = script2.begin();
+
+        // generate key list
         while (true)
         {
             if (pc1 == script1.end() && pc2 == script2.end())
@@ -110,7 +113,6 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, vector<vector<unsi
                 break;
             if (!script2.GetOp(pc2, opcode2, vch2))
                 break;
-
             // Template matching opcodes:
             if (opcode2 == OP_PUBKEYS)
             {
@@ -149,12 +151,39 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, vector<vector<unsi
                 else
                     break;
             }
+            else if (opcode2 == OP_BIGINTEGER)
+            {
+                try
+                {
+                    CScriptNum n(vch1, true, 5);
+                    // if try reaches here without scriptnum_error
+                    // then vch1 is a valid bigint
+                    vSolutionsRet.push_back(vch1);
+                }
+                catch (scriptnum_error &)
+                {
+                    // the data is not a proper big int so this is not a match
+                    break;
+                } // end try/catch
+            }
+            else if (opcode2 == OP_DATA)
+                vSolutionsRet.push_back(vch1);
             else if (opcode1 != opcode2 || vch1 != vch2)
             {
                 // Others must match exactly
                 break;
             }
         }
+    }
+
+    // Provably prunable, data-carrying output
+    //
+    // So long as script passes the IsUnspendable() test and all but the first
+    // byte passes the IsPushOnly() test we don't care what exactly is in the
+    // script.
+    if (scriptPubKey.size() >= 1 && scriptPubKey[0] == OP_RETURN && scriptPubKey.IsPushOnly(scriptPubKey.begin()+1)) {
+        typeRet = TX_NULL_DATA;
+        return true;
     }
 
     vSolutionsRet.clear();
@@ -187,6 +216,15 @@ bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)
     {
         addressRet = CScriptID(uint160(vSolutions[0]));
         return true;
+    }
+    else if (whichType == TX_CLTV)
+    {
+    	CPubKey pubKey(vSolutions[1]);
+		if (!pubKey.IsValid())
+			return false;
+
+		addressRet = pubKey.GetID();
+		return true;
     }
     // Multisig txns have more than one address...
     return false;
@@ -222,6 +260,7 @@ bool ExtractDestinations(const CScript& scriptPubKey, txnouttype& typeRet, vecto
     }
     else
     {
+    	// Freeze TX_CLTV also here
         nRequiredRet = 1;
         CTxDestination address;
         if (!ExtractDestination(scriptPubKey, address))
@@ -282,4 +321,48 @@ CScript GetScriptForMultisig(int nRequired, const std::vector<CPubKey>& keys)
         script << ToByteVector(key);
     script << CScript::EncodeOP_N(keys.size()) << OP_CHECKMULTISIG;
     return script;
+}
+
+CScript GetScriptForFreeze(CScriptNum nFreezeLockTime, const CPubKey& pubKey)
+{
+	// TODO Perhaps add limit tests for nLockTime eg. 10 year max lock
+	return CScript() << nFreezeLockTime << OP_CHECKLOCKTIMEVERIFY << OP_DROP << std::vector<unsigned char>(pubKey.begin(), pubKey.end()) << OP_CHECKSIG;
+
+}
+
+/*
+ * Create an OP_RETURN script (thanks coinspark)
+ *
+ */
+CScript GetScriptLabelPublic(const string &labelPublic)
+{
+
+    int64_t nLabelPublic;
+    // string hexMsg = HexStr(labelPublic);
+    nLabelPublic = int64_t(labelPublic.c_str());
+    if (nLabelPublic > 0)
+    {
+        int sizeLabelPublic = labelPublic.size();
+
+        CScript scriptDataPublic ;
+
+        if (sizeLabelPublic <= 75)
+            // length byte + data (https://en.bitcoin.it/wiki/Script);
+            //scriptDataPublic = bytearray((sizeLabelPublic,))+ labelPublic;
+            scriptDataPublic = CScript() << OP_RETURN << CScriptNum(sizeLabelPublic) << std::vector<unsigned char>(labelPublic.begin(), labelPublic.end());
+
+        else if (sizeLabelPublic <= 256)
+            // OP_PUSHDATA1 format
+            //scriptDataPublic = "\x4c" + bytearray((metadata_len,)) + labelPublic;
+            scriptDataPublic = CScript() << OP_RETURN << OP_PUSHDATA1 << CScriptNum(sizeLabelPublic) << std::vector<unsigned char>(labelPublic.begin(), labelPublic.end());
+
+        else
+            // OP_PUSHDATA2 format
+            //scriptDataPublic = "\x4d"+ bytearray((sizeLabelPublic%256,)) + bytearray((int(sizeLabelPublic/256),)) + labelPublic;
+            scriptDataPublic = CScript() << OP_RETURN << OP_PUSHDATA2 << CScriptNum(sizeLabelPublic % 256) << CScriptNum(int(sizeLabelPublic/256)) << std::vector<unsigned char>(labelPublic.begin(), labelPublic.end());
+
+        return scriptDataPublic;
+
+    } else return CScript();
+
 }

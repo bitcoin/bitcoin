@@ -28,7 +28,7 @@ public:
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+    inline void SerializationOp(Stream& s, Operation ser_action) {
         unsigned int nDate = date.toTime_t();
 
         READWRITE(this->nVersion);
@@ -70,6 +70,7 @@ public:
         Label = 1,
         Message = 2,
         Amount = 3,
+        Address = 4,
         NUMBER_OF_COLUMNS
     };
 

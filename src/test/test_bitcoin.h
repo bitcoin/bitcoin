@@ -2,12 +2,12 @@
 #define BITCOIN_TEST_TEST_BITCOIN_H
 
 #include "chainparamsbase.h"
+#include "fs.h"
 #include "key.h"
 #include "pubkey.h"
 #include "txdb.h"
 #include "txmempool.h"
 
-#include <boost/filesystem.hpp>
 #include <boost/thread.hpp>
 
 /** Basic testing setup.
@@ -25,7 +25,7 @@ struct BasicTestingSetup {
  */
 struct TestingSetup: public BasicTestingSetup {
     CCoinsViewDB *pcoinsdbview;
-    boost::filesystem::path pathTemp;
+    fs::path pathTemp;
     boost::thread_group threadGroup;
 
     TestingSetup(const std::string& chainName = CBaseChainParams::MAIN);

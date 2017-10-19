@@ -39,6 +39,7 @@ enum
     DEFAULT_CHECKPOINT_DAYS =
         30, // Default for the number of days in the past we check scripts during initial block download
 
+    MAX_HEADER_REQS_DURING_IBD = 3,
 // if the blockchain is this far (in seconds) behind the current time, only request headers from a single
 // peer.  This makes IBD more efficient.  We make BITCOIN_CASH more lenient here because mining could be
 // more erratic and this node is likely to connect to non-BCC nodes.
@@ -47,6 +48,9 @@ enum
 #else
     SINGLE_PEER_REQUEST_MODE_AGE = (24 * 60 * 60),
 #endif
+
+    BITCOIN_CASH_FORK_HEIGHT = 478559,
+
 };
 
 class CBlock;
@@ -56,6 +60,8 @@ struct CDiskBlockPos;
 class CNode;
 class CNodeRef;
 class CChainParams;
+
+extern uint256 bitcoinCashForkBlockHash;
 
 extern std::set<CBlockIndex *> setDirtyBlockIndex;
 extern uint32_t blockVersion; // Overrides the mined block version if non-zero
@@ -203,9 +209,9 @@ extern void IsInitialBlockDownloadInit();
 extern bool IsChainNearlySyncd();
 extern void IsChainNearlySyncdInit();
 extern uint64_t LargestBlockSeen(uint64_t nBlockSize = 0);
+extern int GetBlockchainHeight();
 
 // BUIP010 Xtreme Thinblocks: begin
-
 // Xpress Validation: begin
 // Transactions that have already been accepted into the memory pool do not need to be
 // re-verified and can avoid having to do a second and expensive CheckInputs() when
@@ -265,4 +271,5 @@ extern CCriticalSection cs_blockvalidationthread;
 void InterruptBlockValidationThreads();
 
 extern CTweak<uint64_t> miningForkTime;
+extern CTweak<bool> onlyAcceptForkSig;
 #endif

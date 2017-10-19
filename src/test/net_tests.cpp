@@ -16,7 +16,7 @@ using namespace std;
 class CAddrManSerializationMock : public CAddrMan
 {
 public:
-    virtual void Serialize(CDataStream& s, int nType, int nVersionDummy) const = 0;
+    virtual void Serialize(CDataStream& s) const = 0;
 
     //! Ensure that bucket placement is always the same for testing purposes.
     void MakeDeterministic()
@@ -29,21 +29,21 @@ public:
 class CAddrManUncorrupted : public CAddrManSerializationMock
 {
 public:
-    void Serialize(CDataStream& s, int nType, int nVersionDummy) const
+    void Serialize(CDataStream& s) const
     {
-        CAddrMan::Serialize(s, nType, nVersionDummy);
+        CAddrMan::Serialize(s);
     }
 };
 
 class CAddrManCorrupted : public CAddrManSerializationMock
 {
 public:
-    void Serialize(CDataStream& s, int nType, int nVersionDummy) const
+    void Serialize(CDataStream& s) const
     {
         // Produces corrupt output that claims addrman has 20 addrs when it only has one addr.
         unsigned char nVersion = 1;
         s << nVersion;
-        s << ((unsigned char)32);
+        s << uint8_t(32);
         s << nKey;
         s << 10; // nNew
         s << 10; // nTried
@@ -63,7 +63,7 @@ CDataStream AddrmanToStream(CAddrManSerializationMock& addrman)
     ssPeersIn << FLATDATA(Params().MessageStart());
     ssPeersIn << addrman;
     std::string str = ssPeersIn.str();
-    vector<unsigned char> vchData(str.begin(), str.end());
+    std::vector<uint8_t> vchData(str.begin(), str.end());
     return CDataStream(vchData, SER_DISK, CLIENT_VERSION);
 }
 
@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE(caddrdb_read)
 
     BOOST_CHECK(addrman1.size() == 0);
     try {
-        unsigned char pchMsgTmp[4];
+        uint8_t pchMsgTmp[4];
         ssPeers1 >> FLATDATA(pchMsgTmp);
         ssPeers1 >> addrman1;
     } catch (const std::exception& e) {
@@ -122,7 +122,7 @@ BOOST_AUTO_TEST_CASE(caddrdb_read_corrupted)
     CAddrMan addrman1;
     BOOST_CHECK(addrman1.size() == 0);
     try {
-        unsigned char pchMsgTmp[4];
+        uint8_t pchMsgTmp[4];
         ssPeers1 >> FLATDATA(pchMsgTmp);
         ssPeers1 >> addrman1;
     } catch (const std::exception& e) {

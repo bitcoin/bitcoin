@@ -178,10 +178,18 @@ CTweakRef<uint64_t> miningBlockSize("mining.blockSize",
 CTweak<uint64_t> miningForkTime("mining.forkTime",
     "Time in seconds since the epoch to initiate a hard fork as per BUIP055.",
     1501590000); // Tue 1 Aug 2017 12:20:00 UTC, uahf-technical-spec.md REQ-2
+CTweak<bool> onlyAcceptForkSig("net.onlyRelayForkSig",
+    "Once the fork occurs, only relay transactions signed using the new signature scheme",
+    true);
+
 #else
 CTweak<uint64_t> miningForkTime("mining.forkTime",
     "Time in seconds since the epoch to initiate a hard fork as per BUIP055.",
     0);
+CTweak<bool> onlyAcceptForkSig("net.onlyRelayForkSig",
+    "Once the fork occurs, only accept transactions signed using the new signature scheme",
+    false);
+
 #endif
 
 CTweak<bool> unsafeGetBlockTemplate("mining.unsafeGetBlockTemplate",
@@ -278,3 +286,5 @@ CStatHistory<uint64_t> nBlockValidationTime("blockValidationTime", STAT_OP_MAX |
 CCriticalSection cs_blockvalidationtime;
 
 CThinBlockData thindata; // Singleton class
+
+uint256 bitcoinCashForkBlockHash = uint256S("000000000000000000651ef99cb9fcbe0dadde1d424bd9f15ff20136191a5eec");

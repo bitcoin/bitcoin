@@ -8,6 +8,7 @@
 #include "script/interpreter.h"
 #include "unlimited.h"
 #include "chainparams.h"
+#include "txmempool.h"
 
 #include <inttypes.h>
 #include <vector>
@@ -47,12 +48,39 @@ bool ValidateBUIP055Block(const CBlock &block, CValidationState &state, int nHei
     return true;
 }
 
-
-bool IsTxBUIP055Only(const CTransaction& tx)
+bool IsTxProbablyNewSigHash(const CTransaction& tx)
 {
-    if (tx.sighashType & SIGHASH_FORKID)
+    //bool newsighash = false;
+    bool oldsighash = false;
+    for (auto txin : tx.vin)
     {
-        LogPrintf("txn is BUIP055-specific\n");
+        std::vector<unsigned char> data;
+        CScript::const_iterator pc(txin.scriptSig.begin());
+        opcodetype op;
+        if (txin.scriptSig.GetOp(pc, op, data))
+        {
+            if (!data.empty())
+            {
+                if (data.back() & SIGHASH_FORKID)
+                {
+                    //newsighash = true;
+                }
+                else
+                {
+                    oldsighash = true;
+                }
+            }
+        }
+
+    }
+    return (oldsighash == false);
+}
+
+bool IsTxBUIP055Only(const CTxMemPoolEntry& txentry)
+{
+    if (txentry.sighashType & SIGHASH_FORKID)
+    {
+        // LogPrintf("txn is BUIP055-specific\n");
         return true;
     }
     return false;
@@ -67,6 +95,7 @@ bool IsTxOpReturnInvalid(const CTransaction &tx)
         {
             CScript::const_iterator pc(txout.scriptPubKey.begin());
             opcodetype op;
+#if 0 // Allow OP_RETURN anywhere
             for (;pc != txout.scriptPubKey.end();)
             {
                 if (txout.scriptPubKey.GetOp(pc, op))
@@ -74,6 +103,12 @@ bool IsTxOpReturnInvalid(const CTransaction &tx)
                     if (op == OP_RETURN) break;
                 }
             }
+#else // OP_RETURN must be the first instruction
+            if (txout.scriptPubKey.GetOp(pc, op))
+                {
+                    if (op != OP_RETURN) return false;
+                }
+#endif
             if (pc != txout.scriptPubKey.end())
             {
                 std::vector<unsigned char> data;

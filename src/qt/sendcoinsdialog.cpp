@@ -210,7 +210,26 @@ void SendCoinsDialog::on_sendButton_clicked()
         {
             if(entry->validate())
             {
-                recipients.append(entry->getValue());
+                SendCoinsRecipient rcp(entry->getValue());
+
+                if (rcp.labelPublic != "")
+                {
+                    // Add extra recipient for public data and
+                    // set amount to 0 because OP_RETURN is unspendable
+                    // Inserting BEFORE the tx output related to the public label
+                    SendCoinsRecipient rcpdata = rcp;
+                    rcpdata.amount = 0;
+                    rcpdata.fSubtractFeeFromAmount = false;
+                    recipients.append(rcpdata);
+
+                    // blank rcp.labelPublic because prepareTransaction will overwrite
+                    // the recipient script into an OP_RETURN when labelPublic != ""
+                    rcp.labelPublic = "";
+
+                }
+
+                recipients.append(rcp);
+
             }
             else
             {
@@ -223,6 +242,8 @@ void SendCoinsDialog::on_sendButton_clicked()
     {
         return;
     }
+
+
 
     fNewRecipientAllowed = false;
     WalletModel::UnlockContext ctx(model->requestUnlock());
@@ -256,35 +277,46 @@ void SendCoinsDialog::on_sendButton_clicked()
     QStringList formatted;
     Q_FOREACH(const SendCoinsRecipient &rcp, currentTransaction.getRecipients())
     {
-        // generate bold amount string
-        QString amount = "<b>" + BitcoinUnits::formatHtmlWithUnit(model->getOptionsModel()->getDisplayUnit(), rcp.amount);
-        amount.append("</b>");
-        // generate monospace address string
-        QString address = "<span style='font-family: monospace;'>" + rcp.address;
-        address.append("</span>");
-
         QString recipientElement;
 
-        if (!rcp.paymentRequest.IsInitialized()) // normal payment
-        {
-            if(rcp.label.length() > 0) // label with address
+        // Show public label on send confirmation dialog if it exists
+        if (!rcp.labelPublic.isEmpty())
+            recipientElement = tr("<b>Public label:</b> %1").arg(rcp.labelPublic);
+        else {
+            // generate bold amount string
+            QString amount = "<b>" + BitcoinUnits::formatHtmlWithUnit(model->getOptionsModel()->getDisplayUnit(), rcp.amount);
+            amount.append("</b>");
+            // generate monospace address string
+            QString address = "<span style='font-family: monospace;'>" + rcp.address;
+            address.append("</span>");
+
+            if (!rcp.paymentRequest.IsInitialized()) // normal payment
             {
-                recipientElement = tr("%1 to %2").arg(amount, GUIUtil::HtmlEscape(rcp.label));
-                recipientElement.append(QString(" (%1)").arg(address));
+                if(rcp.label.length() > 0) // label with address
+                {
+                    recipientElement = tr("%1 to %2").arg(amount, GUIUtil::HtmlEscape(rcp.label));
+                    recipientElement.append(QString(" (%1)").arg(address));
+                }
+                else // just address
+                {
+                    recipientElement = tr("%1 to %2").arg(amount, address);
+                }
             }
-            else // just address
+            else if(!rcp.authenticatedMerchant.isEmpty()) // authenticated payment request
+            {
+                recipientElement = tr("%1 to %2").arg(amount, GUIUtil::HtmlEscape(rcp.authenticatedMerchant));
+            }
+            else // unauthenticated payment request
             {
                 recipientElement = tr("%1 to %2").arg(amount, address);
             }
-        }
-        else if(!rcp.authenticatedMerchant.isEmpty()) // authenticated payment request
-        {
-            recipientElement = tr("%1 to %2").arg(amount, GUIUtil::HtmlEscape(rcp.authenticatedMerchant));
-        }
-        else // unauthenticated payment request
-        {
-            recipientElement = tr("%1 to %2").arg(amount, address);
-        }
+            if (!rcp.freezeLockTime.isEmpty()) // freeze payment
+            {
+                recipientElement.append(tr("<br><br><b>WARNING!!! DESTINATION IS A FREEZE ADDRESS<br>UNSPENDABLE UNTIL</b> %1 <br>*************************************************<br>").arg(GUIUtil::HtmlEscape(rcp.freezeLockTime)));
+            }
+
+        } // else if (!rcp.labelPublic.isEmpty())
+
 
         formatted.append(recipientElement);
     }

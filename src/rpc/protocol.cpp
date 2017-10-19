@@ -69,9 +69,9 @@ static const std::string COOKIEAUTH_USER = "__cookie__";
 /** Default name for auth cookie file */
 static const std::string COOKIEAUTH_FILE = ".cookie";
 
-boost::filesystem::path GetAuthCookieFile()
+fs::path GetAuthCookieFile()
 {
-    boost::filesystem::path path(GetArg("-rpccookiefile", COOKIEAUTH_FILE));
+    fs::path path(GetArg("-rpccookiefile", COOKIEAUTH_FILE));
     if (!path.is_complete()) path = GetDataDir() / path;
     return path;
 }
@@ -86,7 +86,7 @@ bool GenerateAuthCookie(std::string *cookie_out)
      * these are set to 077 in init.cpp unless overridden with -sysperms.
      */
     std::ofstream file;
-    boost::filesystem::path filepath = GetAuthCookieFile();
+    fs::path filepath = GetAuthCookieFile();
     file.open(filepath.string().c_str());
     if (!file.is_open()) {
         LogPrintf("Unable to open cookie authentication file %s for writing\n", filepath.string());
@@ -105,7 +105,7 @@ bool GetAuthCookie(std::string *cookie_out)
 {
     std::ifstream file;
     std::string cookie;
-    boost::filesystem::path filepath = GetAuthCookieFile();
+    fs::path filepath = GetAuthCookieFile();
     file.open(filepath.string().c_str());
     if (!file.is_open())
         return false;
@@ -120,8 +120,8 @@ bool GetAuthCookie(std::string *cookie_out)
 void DeleteAuthCookie()
 {
     try {
-        boost::filesystem::remove(GetAuthCookieFile());
-    } catch (const boost::filesystem::filesystem_error& e) {
+        fs::remove(GetAuthCookieFile());
+    } catch (const fs::filesystem_error& e) {
         LogPrintf("%s: Unable to remove random auth cookie file: %s\n", __func__, e.what());
     }
 }

@@ -8,7 +8,10 @@
 #define BITCOIN_NET_H
 
 #include "bloom.h"
+#include "chainparams.h"
 #include "compat.h"
+#include "fs.h"
+#include "hash.h"
 #include "limitedmap.h"
 #include "netbase.h"
 #include "primitives/block.h"
@@ -26,7 +29,6 @@
 #include <arpa/inet.h>
 #endif
 
-#include <boost/filesystem/path.hpp>
 #include <boost/foreach.hpp>
 #include <boost/signals2/signal.hpp>
 
@@ -387,6 +389,7 @@ public:
     uint64_t nGetXBlockTxLastTime; // The last time a get_xblocktx request was made
     double nGetXthinCount; // Count how many get_xthin requests are made
     uint64_t nGetXthinLastTime; // The last time a get_xthin request was made
+    uint32_t nXthinBloomfilterSize; // The maximum xthin bloom filter size (in bytes) that our peer will accept.
     // BUIP010 Xtreme Thinblocks: end section
 
     unsigned short addrFromPort;
@@ -455,6 +458,8 @@ public:
 
 
     CNode(SOCKET hSocketIn, const CAddress &addrIn, const std::string &addrNameIn = "", bool fInboundIn = false);
+    // Whether the node uses the bitcoin cash magic to communicate.
+    std::atomic<bool> fUsesCashMagic;
     ~CNode();
 
 private:
@@ -499,6 +504,11 @@ public:
         nRecvVersion = nVersionIn;
         BOOST_FOREACH (CNetMessage &msg, vRecvMsg)
             msg.SetVersion(nVersionIn);
+    }
+
+    const CMessageHeader::MessageStartChars &GetMagic(const CChainParams &params) const
+    {
+        return fUsesCashMagic ? params.CashMessageStart() : params.MessageStart();
     }
 
     CNode *AddRef()

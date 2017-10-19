@@ -15,6 +15,7 @@
 
 #include <QFont>
 #include <QDebug>
+#include <QDateTime>
 
 const QString AddressTableModel::Send = "S";
 const QString AddressTableModel::Receive = "R";
@@ -85,7 +86,7 @@ public:
             BOOST_FOREACH(const PAIRTYPE(CTxDestination, CAddressBookData)& item, wallet->mapAddressBook)
             {
                 const CBitcoinAddress& address = item.first;
-                bool fMine = IsMine(*wallet, address.Get());
+                bool fMine = wallet->IsMine(address.Get());
                 AddressTableEntry::Type addressType = translateTransactionType(
                         QString::fromStdString(item.second.purpose), fMine);
                 const std::string& strName = item.second.name;
@@ -343,7 +344,7 @@ void AddressTableModel::updateEntry(const QString &address,
     priv->updateEntry(address, label, isMine, purpose, status);
 }
 
-QString AddressTableModel::addRow(const QString &type, const QString &label, const QString &address)
+QString AddressTableModel::addRow(const QString &type, const QString &label, const QString &address, const CScriptNum nFreezeLockTime)
 {
     std::string strLabel = label.toStdString();
     std::string strAddress = address.toStdString();
@@ -386,7 +387,14 @@ QString AddressTableModel::addRow(const QString &type, const QString &label, con
                 return QString();
             }
         }
-        strAddress = CBitcoinAddress(newKey.GetID()).ToString();
+        // Generate and load freeze script if nFreezeLockTime > 0
+        if (nFreezeLockTime > 0)
+        {
+        	if (!wallet->LoadFreezeScript(newKey, nFreezeLockTime, strLabel, strAddress))
+        		return QString();
+        }
+        else
+        	strAddress = CBitcoinAddress(newKey.GetID()).ToString();
     }
     else
     {
@@ -423,14 +431,39 @@ bool AddressTableModel::removeRows(int row, int count, const QModelIndex &parent
  */
 QString AddressTableModel::labelForAddress(const QString &address) const
 {
+    QString returnLabel = "";
     {
         LOCK(wallet->cs_wallet);
         CBitcoinAddress address_parsed(address.toStdString());
         std::map<CTxDestination, CAddressBookData>::iterator mi = wallet->mapAddressBook.find(address_parsed.Get());
         if (mi != wallet->mapAddressBook.end())
         {
-            return QString::fromStdString(mi->second.name);
+            returnLabel = QString::fromStdString(mi->second.name);
         }
+
+
+    }
+    return returnLabel;
+
+}
+
+/* Look up label for freeze in wallet, if not found return empty string.
+ */
+QString AddressTableModel::labelForFreeze(const QString &address) const
+{
+    {
+        LOCK(wallet->cs_wallet);
+        CBitcoinAddress address_parsed(address.toStdString());
+        CScript dest = GetScriptForDestination(address_parsed.Get());
+        CScriptNum nFreezeLockTime(0);
+        if (isFreezeCLTV(*wallet, dest, nFreezeLockTime))
+        {
+            if (nFreezeLockTime.getint64() < LOCKTIME_THRESHOLD)
+                return (QString)("Block:") +  QString::number(nFreezeLockTime.getint());
+            else
+                return QDateTime::fromMSecsSinceEpoch(nFreezeLockTime.getint64() * 1000).toString();
+        }
+
     }
     return QString();
 }

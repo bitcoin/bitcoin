@@ -7,6 +7,7 @@
 #define BITCOIN_CHECKQUEUE_H
 
 #include <algorithm>
+#include <atomic>
 #include <vector>
 
 #include <boost/foreach.hpp>
@@ -60,11 +61,8 @@ private:
      */
     unsigned int nTodo;
 
-    //! mutex to protect fQuit.
-    boost::mutex mutex_fQuit;
-
     //! Whether we're shutting down.
-    bool fQuit;
+    std::atomic<bool> fQuit;
 
     //! The maximum number of elements to be processed in one batch
     unsigned int nBatchSize;
@@ -90,7 +88,6 @@ private:
                         queue.clear();
                         condMaster.notify_one();
                     }
-                    boost::mutex::scoped_lock lock(mutex_fQuit);
                     if (fQuit && !fMaster) {
                         nTodo = 0;
                         queue.clear();
@@ -109,7 +106,6 @@ private:
                         if (fMaster)
                             fAllOk = true;
                         // return the current status
-                        boost::mutex::scoped_lock lock(mutex_fQuit);
                         fQuit = false; // reset the flag before returning
                         return fRet;
                     }
@@ -160,7 +156,6 @@ public:
     //! Quit execution of any remaining checks.
     void Quit(bool flag = true)
     {
-        boost::mutex::scoped_lock lock(mutex_fQuit);
         fQuit = flag;
     }
 

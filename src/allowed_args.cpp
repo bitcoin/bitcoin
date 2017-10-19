@@ -585,7 +585,10 @@ static void addNodeRelayOptions(AllowedArgs &allowedArgs)
                         "average data rates, the client may send extra data to bring the average back to '-receiveavg' "
                         "but the data rate will not exceed this parameter (default: %u)"),
                     DEFAULT_MAX_SEND_BURST))
-        .addArg("use-thinblocks", optionalBool, _("Enable thin blocks to speed up the relay of blocks (default: 1)"));
+        .addArg("use-thinblocks", optionalBool, _("Enable thin blocks to speed up the relay of blocks (default: 1)"))
+        .addArg("xthinbloomfiltersize=<n>", requiredInt,
+            strprintf(_("The maximum xthin bloom filter size that our node will accept in Bytes (default: %u)"),
+                    SMALLEST_MAX_BLOOM_FILTER_SIZE));
 }
 
 static void addBlockCreationOptions(AllowedArgs &allowedArgs)

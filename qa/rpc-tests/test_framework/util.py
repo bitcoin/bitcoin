@@ -19,6 +19,7 @@ from base64 import b64encode
 from decimal import Decimal, ROUND_DOWN
 import decimal
 import json
+import http.client
 import random
 import shutil
 import subprocess
@@ -38,6 +39,17 @@ PerfectFractions = True
 BTC = 100000000
 mBTC = 100000
 uBTC = 100
+# The maximum number of nodes a single test can spawn
+MAX_NODES = 8
+# Don't assign rpc or p2p ports lower than this
+PORT_MIN = 11000
+# The number of ports to "reserve" for p2p and rpc, each
+PORT_RANGE = 5000
+
+
+class PortSeed:
+    # Must be initialized with a unique integer for each process
+    n = None
 
 #Set Mocktime default to OFF.
 #MOCKTIME is only needed for scripts that use the
@@ -47,11 +59,10 @@ uBTC = 100
 MOCKTIME = 0
 
 def enable_mocktime():
-    #For backwared compatibility of the python scripts
-    #with previous versions of the cache, set MOCKTIME 
-    #to Jan 1, 2014 + (201 * 10 * 60)
+    # Set the mocktime to be after the Bitcoin Cash fork so
+    # in normal tests blockchains the fork is in the past
     global MOCKTIME
-    MOCKTIME = 1388534400 + (201 * 10 * 60)
+    MOCKTIME = 1501600000 + (201 * 10 * 60)
 
 def disable_mocktime():
     global MOCKTIME
@@ -93,44 +104,11 @@ def get_rpc_proxy(url, node_number, timeout=None):
 
 
 def p2p_port(n):
-    #If port is already defined then return port
-    if os.getenv("node" + str(n)):
-        return int(os.getenv("node" + str(n)))
-    #If no port defined then find an available port
-    if n == 0:
-        port = 11000 + n + os.getpid()%990
-    else:
-        port = int(os.getenv("node" + str(n-1))) + 1
-    from subprocess import check_output
-    netStatOut = check_output(["netstat", "-n"])
-    for portInUse in re.findall(b"tcp.*?:(11\d\d\d)",netStatOut.lower()):
-        #print portInUse
-        if port == int(portInUse):
-            port += 1
-    os.environ["node" + str(n)] = str(port)
-
-    #print "port node " + str(n) + " is " + str(port)
-    return int(port)
+    assert(n <= MAX_NODES)
+    return PORT_MIN + n + (MAX_NODES * PortSeed.n) % (PORT_RANGE - 1 - MAX_NODES)
 
 def rpc_port(n):
-    #If port is already defined then return port
-    if os.getenv("rpcnode" + str(n)):
-        return int(os.getenv("rpcnode" + str(n)))
-    #If no port defined then find an available port
-    if n == 0:
-        port = 12000 + n + os.getpid()%990
-    else:
-        port = int(os.getenv("rpcnode" + str(n-1))) + 1
-    from subprocess import check_output
-    netStatOut = check_output(["netstat", "-n"])
-    for portInUse in re.findall(b"tcp.*?:(12\d\d\d)",netStatOut.lower()):
-        #print portInUse
-        if port == int(portInUse):
-            port += 1
-    os.environ["rpcnode" + str(n)] = str(port)
-
-    #print "port rpcnode " + str(n) + " is " + str(port)
-    return int(port)
+    return PORT_MIN + PORT_RANGE + n + (MAX_NODES * PortSeed.n) % (PORT_RANGE - 1 - MAX_NODES)
 
 def check_json_precision():
     """Make sure json library being used does not lose precision converting BTC values"""
@@ -168,7 +146,9 @@ def sync_mempools(rpc_connections, wait=1,verbose=1):
     Wait until everybody has the same transactions in their memory
     pools
     """
+    count = 0
     while True:
+        count += 1
         pool = set(rpc_connections[0].getrawmempool())
         num_match = 1
         pool_len = [len(pool)]
@@ -177,7 +157,7 @@ def sync_mempools(rpc_connections, wait=1,verbose=1):
             if tmp == pool:
                 num_match = num_match+1
             pool_len.append(len(tmp))
-        if verbose:
+        if verbose and count%30==0:
             logging.info("sync mempool: " + str(pool_len))
         if num_match == len(rpc_connections):
             break
@@ -359,8 +339,8 @@ def start_nodes(num_nodes, dirname, extra_args=None, rpchost=None, binary=None,t
     """
     Start multiple bitcoinds, return RPC connections to them
     """
-    if extra_args is None: extra_args = [ None for i in range(num_nodes) ]
-    if binary is None: binary = [ None for i in range(num_nodes) ]
+    if extra_args is None: extra_args = [ None for _ in range(num_nodes) ]
+    if binary is None: binary = [ None for _ in range(num_nodes) ]
     rpcs = []
     try:
         for i in range(num_nodes):
@@ -374,13 +354,19 @@ def log_filename(dirname, n_node, logname):
     return os.path.join(dirname, "node"+str(n_node), "regtest", logname)
 
 def stop_node(node, i):
-    node.stop()
+    try:
+        node.stop()
+    except http.client.CannotSendRequest as e:
+        print("WARN: Unable to stop node: " + repr(e))
     bitcoind_processes[i].wait()
     del bitcoind_processes[i]
 
 def stop_nodes(nodes):
     for node in nodes:
-        node.stop()
+        try:
+            node.stop()
+        except http.client.CannotSendRequest as e:
+            print("WARN: Unable to stop node: " + repr(e))
     del nodes[:] # Emptying array closes connections as a side effect
 
 def set_node_times(nodes, t):
@@ -411,7 +397,7 @@ def interconnect_nodes(nodes):
       for to in nodes:
         if frm == to: continue
         up = urlparse.urlparse(to.url)
-        ip_port = up.hostname + ":" + str(up.port-1000)  # this is the RPC port but we want the p2p port so -1000
+        ip_port = up.hostname + ":" + str(up.port - PORT_RANGE)  # this is the RPC port but we want the p2p port so -1000
         frm.addnode(ip_port, "onetry")
 
 def find_output(node, txid, amount):

@@ -63,6 +63,7 @@ UniValue getinfo(const UniValue& params, bool fHelp)
             "  \"unlocked_until\": ttt,      (numeric) the timestamp in seconds since epoch (midnight Jan 1 1970 GMT) that the wallet is unlocked for transfers, or 0 if the wallet is locked\n"
             "  \"paytxfee\": x.xxxx,         (numeric) the transaction fee set in " + CURRENCY_UNIT + "/kB\n"
             "  \"relayfee\": x.xxxx,         (numeric) minimum relay fee for non-free transactions in " + CURRENCY_UNIT + "/kB\n"
+            "  \"fork\": \"...\"             (string) \"Bitcoin Cash\" or \"Bitcoin\".  Will display as Bitcoin pre-fork.\n"
             "  \"errors\": \"...\"           (string) any error messages\n"
             "}\n"
             "\nExamples:\n"
@@ -105,6 +106,18 @@ UniValue getinfo(const UniValue& params, bool fHelp)
 #endif
     obj.push_back(Pair("relayfee",      ValueFromAmount(::minRelayTxFee.GetFeePerK())));
     obj.push_back(Pair("errors",        GetWarnings("statusbar")));
+    CBlockIndex *cashFork = chainActive.Tip();
+    if (cashFork) cashFork = cashFork->GetAncestor(BITCOIN_CASH_FORK_HEIGHT);
+    std::string fork="Bitcoin";
+    if (cashFork && cashFork->phashBlock)
+    {
+        if (*cashFork->phashBlock == bitcoinCashForkBlockHash)
+        {
+            fork = "Bitcoin Cash";
+        }
+    }
+    obj.push_back(Pair("fork", fork));
+
     return obj;
 }
 
@@ -194,7 +207,7 @@ UniValue validateaddress(const UniValue& params, bool fHelp)
         ret.push_back(Pair("scriptPubKey", HexStr(scriptPubKey.begin(), scriptPubKey.end())));
 
 #ifdef ENABLE_WALLET
-        isminetype mine = pwalletMain ? IsMine(*pwalletMain, dest) : ISMINE_NO;
+        isminetype mine = pwalletMain ? IsMine(*pwalletMain, dest, chainActive.Tip()) : ISMINE_NO;
         ret.push_back(Pair("ismine", (mine & ISMINE_SPENDABLE) ? true : false));
         ret.push_back(Pair("iswatchonly", (mine & ISMINE_WATCH_ONLY) ? true: false));
         UniValue detail = boost::apply_visitor(DescribeAddressVisitor(), dest);

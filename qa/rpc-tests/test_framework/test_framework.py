@@ -6,11 +6,13 @@
 
 # Base class for RPC testing
 
-# Add python-bitcoinrpc to module search path:
+import logging
+import optparse
 import os
 import sys
 import time       # BU added
 import random     # BU added
+import pdb        # BU added
 import shutil
 import tempfile
 import traceback
@@ -27,11 +29,13 @@ from .util import (
     enable_coverage,
     check_json_precision,
     initialize_chain_clean,
+    PortSeed,
 )
-from .authproxy import AuthServiceProxy, JSONRPCException
+from .authproxy import JSONRPCException
 
 
 class BitcoinTestFramework(object):
+    drop_to_pdb = os.getenv("DROP_TO_PDB", "")
 
     # These may be over-ridden by subclasses:
     def run_test(self):
@@ -119,7 +123,7 @@ class BitcoinTestFramework(object):
         """
         argsOverride: pass your own values for sys.argv in this field (or pass None) to use sys.argv
         bitcoinConfDict:  Pass a dictionary of values you want written to bitcoin.conf.  If you have a key with multiple values, pass a list of the values as the value, for example:
-        { "debug":["net","blk","thin","lck","mempool","req","bench","evict"] }        
+        { "debug":["net","blk","thin","lck","mempool","req","bench","evict"] }
         This framework provides values for the necessary fields (like regtest=1).  But you can override these
         defaults by setting them in this dictionary.
 
@@ -133,12 +137,14 @@ class BitcoinTestFramework(object):
                           help="Leave bitcoinds and test.* datadir on exit or error")
         parser.add_option("--noshutdown", dest="noshutdown", default=False, action="store_true",
                           help="Don't stop bitcoinds after the test execution")
-        parser.add_option("--srcdir", dest="srcdir", default="../../src",
+        parser.add_option("--srcdir", dest="srcdir", default=os.path.normpath(os.path.dirname(os.path.realpath(__file__))+"/../../../src"),
                           help="Source directory containing bitcoind/bitcoin-cli (default: %default)")
         parser.add_option("--tmpdir", dest="tmpdir", default=tempfile.mkdtemp(prefix="test"),
                           help="Root directory for datadirs")
         parser.add_option("--tracerpc", dest="trace_rpc", default=False, action="store_true",
                           help="Print out all RPC calls as they are made")
+        parser.add_option("--portseed", dest="port_seed", default=os.getpid(), type='int',
+                          help="The seed to use for assigning port numbers (default: current process id)")
         parser.add_option("--coveragedir", dest="coveragedir",
                           help="Write tested RPC commands into this directory")
         # BU: added for tests using randomness (e.g. excessive.py)
@@ -155,21 +161,23 @@ class BitcoinTestFramework(object):
         random.seed(self.randomseed)
         print("Random seed: %s" % self.randomseed)
 
+        self.options.tmpdir = os.path.join(self.options.tmpdir, str(self.options.port_seed))
+
         if self.options.trace_rpc:
-            import logging
-            logging.basicConfig(level=logging.DEBUG)
+            logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
 
         if self.options.coveragedir:
             enable_coverage(self.options.coveragedir)
 
-        os.environ['PATH'] = self.options.srcdir+":"+self.options.srcdir+"/qt:"+os.environ['PATH']
+        PortSeed.n = self.options.port_seed
+
+        os.environ['PATH'] = self.options.srcdir + ":" + os.path.join(self.options.srcdir, "qt") + ":" + os.environ['PATH']
 
         check_json_precision()
 
         success = False
         try:
-            if not os.path.isdir(self.options.tmpdir):
-                os.makedirs(self.options.tmpdir)
+            os.makedirs(self.options.tmpdir, exist_ok=False)
 
             # Not pretty but, I changed the function signature
             # of setup_chain to allow customization of the setup.
@@ -180,23 +188,30 @@ class BitcoinTestFramework(object):
               self.setup_chain(bitcoinConfDict, wallets)
 
             self.setup_network()
-
             self.run_test()
-
             success = True
-
         except JSONRPCException as e:
             print("JSONRPC error: "+e.error['message'])
-            traceback.print_tb(sys.exc_info()[2])
+            typ, value, tb = sys.exc_info()
+            traceback.print_tb(tb)
+            if self.drop_to_pdb: pdb.post_mortem(tb)
         except AssertionError as e:
             print("Assertion failed: " + str(e))
-            traceback.print_tb(sys.exc_info()[2])
+            typ, value, tb = sys.exc_info()
+            traceback.print_tb(tb)
+            if self.drop_to_pdb: pdb.post_mortem(tb)
         except KeyError as e:
             print("key not found: "+ str(e))
-            traceback.print_tb(sys.exc_info()[2])
+            typ, value, tb = sys.exc_info()
+            traceback.print_tb(tb)
+            if self.drop_to_pdb: pdb.post_mortem(tb)
         except Exception as e:
             print("Unexpected exception caught during testing: " + repr(e))
-            traceback.print_tb(sys.exc_info()[2])
+            typ, value, tb = sys.exc_info()
+            traceback.print_tb(tb)
+            if self.drop_to_pdb: pdb.post_mortem(tb)
+        except KeyboardInterrupt as e:
+            print("Exiting after " + repr(e))
 
         if not self.options.noshutdown:
             print("Stopping nodes")
