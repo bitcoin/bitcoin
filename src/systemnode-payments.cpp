@@ -197,36 +197,47 @@ void CSystemnodePayments::FillBlockPayee(CMutableTransaction& txNew, int64_t nFe
     CScript payee;
 
     //spork
-    //if(!systemnodePayments.GetBlockPayee(pindexPrev->nHeight+1, payee)){
-    //    //no systemnode detected
-    //    CSystemnode* winningNode = snodeman.GetCurrentMasterNode(1);
-    //    if(winningNode){
-    //        payee = GetScriptForDestination(winningNode->pubkey.GetID());
-    //    } else {
-    //        LogPrintf("CreateNewBlock: Failed to detect systemnode to pay\n");
-    //        hasPayment = false;
-    //    }
-    //}
+    if(!systemnodePayments.GetBlockPayee(pindexPrev->nHeight+1, payee)){
+        //no systemnode detected
+        CSystemnode* winningNode = snodeman.GetCurrentSystemNode(1);
+        if(winningNode) {
+            payee = GetScriptForDestination(winningNode->pubkey.GetID());
+        } else {
+            LogPrintf("CreateNewBlock: Failed to detect systemnode to pay\n");
+            hasPayment = false;
+        }
+    }
 
     CAmount blockValue = GetBlockValue(pindexPrev->nBits, pindexPrev->nHeight, nFees);
     CAmount systemnodePayment = GetSystemnodePayment(pindexPrev->nHeight+1, blockValue);
 
+    // This is already done in masternode
     //txNew.vout[0].nValue = blockValue;
 
-    //if(hasPayment){
-    //    txNew.vout.resize(2);
+    if(hasPayment) {
+        txNew.vout.resize(3);
 
-    //    txNew.vout[1].scriptPubKey = payee;
-    //    txNew.vout[1].nValue = systemnodePayment;
+        // [0] is for miner, [1] masternode, [2] systemnode
+        txNew.vout[2].scriptPubKey = payee;
+        txNew.vout[2].nValue = systemnodePayment;
 
-    //    txNew.vout[0].nValue -= systemnodePayment;
+        txNew.vout[0].nValue -= systemnodePayment;
 
-    //    CTxDestination address1;
-    //    ExtractDestination(payee, address1);
-    //    CBitcoinAddress address2(address1);
+        CTxDestination address1;
+        ExtractDestination(payee, address1);
+        CBitcoinAddress address2(address1);
 
-    //    LogPrintf("Systemnode payment to %s\n", address2.ToString().c_str());
-    //}
+        LogPrintf("Systemnode payment to %s\n", address2.ToString().c_str());
+    }
+}
+
+bool CSystemnodePayments::GetBlockPayee(int nBlockHeight, CScript& payee)
+{
+    if(mapSystemnodeBlocks.count(nBlockHeight)){
+        return mapSystemnodeBlocks[nBlockHeight].GetPayee(payee);
+    }
+
+    return false;
 }
 
 void CSystemnodePayments::CleanPaymentList()

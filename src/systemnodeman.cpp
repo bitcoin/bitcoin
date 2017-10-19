@@ -502,6 +502,30 @@ void CSystemnodeMan::Check()
     }
 }
 
+CSystemnode* CSystemnodeMan::GetCurrentSystemNode(int mod, int64_t nBlockHeight, int minProtocol)
+{
+    int64_t score = 0;
+    CSystemnode* winner = NULL;
+
+    // scan for winner
+    BOOST_FOREACH(CSystemnode& mn, vSystemnodes) {
+        mn.Check();
+        if(mn.protocolVersion < minProtocol || !mn.IsEnabled()) continue;
+
+        // calculate the score for each Systemnode
+        uint256 n = mn.CalculateScore(mod, nBlockHeight);
+        int64_t n2 = UintToArith256(n).GetCompact(false);
+
+        // determine the winner
+        if(n2 > score){
+            score = n2;
+            winner = &mn;
+        }
+    }
+
+    return winner;
+}
+
 void CSystemnodeMan::CheckAndRemove(bool forceExpiredRemoval)
 {
     Check();

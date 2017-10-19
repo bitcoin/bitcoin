@@ -110,6 +110,9 @@ public:
     CSystemnode* Find(const CTxIn& vin);
     CSystemnode* Find(const CPubKey& pubKeySystemnode);
 
+    /// Get the current winner for this block
+    CSystemnode* GetCurrentSystemNode(int mod=1, int64_t nBlockHeight=0, int minProtocol=0);
+
     std::vector<CSystemnode> GetFullSystemnodeVector() { Check(); return vSystemnodes; }
 
     void ProcessSystemnodeConnections();

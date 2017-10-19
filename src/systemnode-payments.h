@@ -228,6 +228,7 @@ public:
     }
 
     void CleanPaymentList();
+    bool GetBlockPayee(int nBlockHeight, CScript& payee);
     void FillBlockPayee(CMutableTransaction& txNew, int64_t nFees);
     std::string ToString() const;
 

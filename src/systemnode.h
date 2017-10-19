@@ -164,6 +164,8 @@ public:
         return !(a.vin == b.vin);
     }
 
+    uint256 CalculateScore(int mod=1, int64_t nBlockHeight=0);
+
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
