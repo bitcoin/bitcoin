@@ -1,17 +1,30 @@
+Bitcoin Core version *0.15.0.1* is now available from:
+
+  <https://bitcoin.org/bin/bitcoin-core-0.15.0.1/>
+
+and
+
+  <https://bitcoincore.org/bin/bitcoin-core-0.15.0.1/>
+
+This is a minor bug fix for 0.15.0.
+
 Please report bugs using the issue tracker at GitHub:
 
-  <https://github.com/Internet-of-People/iop-core/issues>
+  <https://github.com/bitcoin/bitcoin/issues>
 
+To receive security and update notifications, please subscribe to:
+
+  <https://bitcoincore.org/en/list/announcements/join/>
 
 How to Upgrade
 ==============
 
 If you are running an older version, shut it down. Wait until it has completely
 shut down (which might take a few minutes for older versions), then run the 
-installer (on Windows) or just copy over `/Applications/IoP-Qt` (on Mac)
-or `iopd`/`iop-qt` (on Linux).
+installer (on Windows) or just copy over `/Applications/Bitcoin-Qt` (on Mac)
+or `bitcoind`/`bitcoin-qt` (on Linux).
 
-The first time you run version 6.0.0 or higher, your chainstate database will
+The first time you run version 0.15.0 or higher, your chainstate database will
 be converted to a new format, which will take anywhere from a few minutes to
 half an hour, depending on the speed of your machine.
 
@@ -38,28 +51,37 @@ processing the entire blockchain.
 Compatibility
 ==============
 
-IoP Core is extensively tested on multiple operating systems using
+Bitcoin Core is extensively tested on multiple operating systems using
 the Linux kernel, macOS 10.8+, and Windows Vista and later. Windows XP is not supported.
 
-IoP Core should also work on most other Unix-like systems but is not
+Bitcoin Core should also work on most other Unix-like systems but is not
 frequently tested on them.
 
 Notable changes
 ===============
 
+GUI startup crash issue
+-------------------------
 
+After upgrade to 0.15.0, some clients would crash at startup because a custom
+fee setting was configured that no longer exists in the GUI. This is a minimal
+patch to avoid this issue from occuring.
 
-0.15.1 Change log
-=================
+0.15.0.1 Change log
+====================
 
-- `dumpwallet` no longer allows overwriting files. This is a security measure
-  as well as prevents dangerous user mistakes.
+-  #11332 `46c8d23` Fix possible crash with invalid nCustomFeeRadio in QSettings (achow101, TheBlueMatt)
+
+Also the manpages were updated, as this was forgotten for 0.15.0.
 
 Credits
 =======
 
 Thanks to everyone who directly contributed to this release:
 
-(fill this in)
+- Andrew Chow
+- Matt Corallo
+- Jonas Schnelli
+- Wladimir J. van der Laan
 
-As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/iop/).
+As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/bitcoin/).
