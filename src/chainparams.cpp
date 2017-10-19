@@ -146,15 +146,15 @@ public:
         assert(genesis.hashMerkleRoot == uint256S("0xfa6ef9872494fa9662cf0fecf8c0135a6932e76d7a8764e1155207f3205c7c88")); // PM-Tech: ChainCoin
 
 
-        vSeeds.emplace_back("seed1.chaincoin.org", true);
-        vSeeds.emplace_back("seed2.chaincoin.org", true);
-        vSeeds.emplace_back("seed3.chaincoin.org", true);
-        vSeeds.emplace_back("seed4.chaincoin.org", true);
-        vSeeds.emplace_back("seed5.chaincoin.org", true);
-        vSeeds.emplace_back("seed6.chaincoin.org", true);
-        vSeeds.emplace_back("seed7.chaincoin.org", true);
-        vSeeds.emplace_back("seed8.chaincoin.org", true);
-        vSeeds.emplace_back("chc1.hashunlimited.com", true);
+        vSeeds.emplace_back("seed1.chaincoin.org");
+        vSeeds.emplace_back("seed2.chaincoin.org");
+        vSeeds.emplace_back("seed3.chaincoin.org");
+        vSeeds.emplace_back("seed4.chaincoin.org");
+        vSeeds.emplace_back("seed5.chaincoin.org");
+        vSeeds.emplace_back("seed6.chaincoin.org");
+        vSeeds.emplace_back("seed7.chaincoin.org");
+        vSeeds.emplace_back("seed8.chaincoin.org");
+        vSeeds.emplace_back("chc1.hashunlimited.com");
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,28); // PM-Tech: ChainCoin
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,4); // PM-Tech: ChainCoin
@@ -163,7 +163,7 @@ public:
         base58Prefixes[EXT_PUBLIC_KEY] = {0x04, 0x88, 0xB2, 0x1E};
         base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x88, 0xAD, 0xE4};
 
-        bech32_hrp = "cc";
+        bech32_hrp = "chc";
 
         vFixedSeeds = std::vector<SeedSpec6>(pnSeed6_main, pnSeed6_main + ARRAYLEN(pnSeed6_main));
 
@@ -187,8 +187,8 @@ public:
                 { 277316, uint256S("0x00000016a20503fe496e79d34fb85c33f633059315c046ffa1b4826d08a1e856")},
                 { 483849, uint256S("0x000001eb7f8124282ab62296e63d3145ff6c84cf18afae4d4b8e02cd3182b6a8")},
                 {1066428, uint256S("0x000000012dc5256d977b50270d1ca5642726308dcf26b6c219985edb8f2ab8f6")},
-//                {1300730, uint256S("0x0000000001fdf11c0b4238b448c9a9643c7862575124fe0d7ee6fe7b5e7dba30")},
-//                {1384154, uint256S("0x0000000000fb3c41fb8a955b3c9fca128e57e51834347ea368adbea309fcd265")},
+                {1300730, uint256S("0x0000000001fdf11c0b4238b448c9a9643c7862575124fe0d7ee6fe7b5e7dba30")},
+                {1384154, uint256S("0x0000000000fb3c41fb8a955b3c9fca128e57e51834347ea368adbea309fcd265")},
            }
        };
 
@@ -275,8 +275,8 @@ public:
         vSeeds.clear();
 
         // nodes with support for servicebits filtering should be at the top
-        vSeeds.emplace_back("test.chaincoin.org", true);
-        vSeeds.emplace_back("test1.hashunlimited.com", true);
+        vSeeds.emplace_back("test.chaincoin.org");
+        vSeeds.emplace_back("test1.hashunlimited.com");
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,80);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,44);
@@ -284,7 +284,7 @@ public:
         base58Prefixes[EXT_PUBLIC_KEY] = {0x04, 0x35, 0x87, 0xCF};
         base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x35, 0x83, 0x94};
 
-        bech32_hrp = "tc";
+        bech32_hrp = "tchc";
 
         vFixedSeeds = std::vector<SeedSpec6>(pnSeed6_test, pnSeed6_test + ARRAYLEN(pnSeed6_test));
 
@@ -407,7 +407,7 @@ public:
         base58Prefixes[EXT_PUBLIC_KEY] = {0x04, 0x35, 0x87, 0xCF};
         base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x35, 0x83, 0x94};
 
-        bech32_hrp = "ccrt";
+        bech32_hrp = "chcrt";
     }
 };
 
