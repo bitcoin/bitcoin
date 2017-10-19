@@ -330,6 +330,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		LogPrintf("*Trying to add offer in coinbase transaction, skipping...");
 		return true;
 	}
+	const uint64_t &nTime = chainActive.Tip()->GetMedianTimePast();
 	if (fDebug)
 		LogPrintf("*** OFFER %d %d %s %s %s %d\n", nHeight,
 			chainActive.Tip()->nHeight, tx.GetHash().ToString().c_str(),
@@ -518,7 +519,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1024 - " + _("Auction deposit percentage must be greator or equal to 0");
 					return error(errorMessage.c_str());
 				}
-				if (theOffer.auctionOffer.nExpireTime > 0 && theOffer.auctionOffer.nExpireTime < chainActive.Tip()->GetMedianTimePast())
+				if (theOffer.auctionOffer.nExpireTime > 0 && theOffer.auctionOffer.nExpireTime < nTime)
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 4042 - " + _("Invalid auction expiry");
 					return error(errorMessage.c_str());
@@ -626,17 +627,14 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1024 - " + _("Auction deposit percentage must be greator or equal to 0");
 						return true;
 					}
-					if (theOffer.auctionOffer.nExpireTime > 0 && theOffer.auctionOffer.nExpireTime < chainActive.Tip()->GetMedianTimePast())
+					if (theOffer.auctionOffer.nExpireTime > 0 || dbOffer.auctionOffer.nExpireTime > 0)
 					{
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 4042 - " + _("Invalid auction expiry");
-						return true;
-					}
-					else
-						if (dbOffer.auctionOffer != theOffer.auctionOffer)
+						if (dbOffer.auctionOffer.nExpireTime >= nTime && dbOffer.auctionOffer != theOffer.auctionOffer)
 						{
 							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1024 - " + _("Cannot modify auction parameters while it is active. Please wait until auction has expired before updating.");
 							return true;
 						}
+					}
 				}
 				// non linked offers cant edit commission
 				if (theOffer.linkOfferTuple.first.empty())
