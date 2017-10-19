@@ -34,9 +34,12 @@ BOOST_AUTO_TEST_CASE(generate_auction_regular)
 	EscrowBid("node1", "buyerauction", guid, "0.01");
 	EscrowBid("node1", "buyerauction", guid, "0.02");
 	// must bid higher
+	BOOST_CHECK_THROW(CallRPC("node1", "escrowbid buyerauction " + guid + " 0 0.03"), runtime_error);
+	// must bid higher
 	BOOST_CHECK_THROW(CallRPC("node1", "escrowbid buyerauction " + guid + " 9 0.02"), runtime_error);
 	// must bid higher
 	BOOST_CHECK_THROW(CallRPC("node1", "escrowbid buyerauction " + guid + " 9 0.01"), runtime_error);
+
 	EscrowBid("node1", "buyerauction", guid, "0.03");
 
 	EscrowNewBuyItNow("node1", "node2", "buyerauction", offerguid, qty, "arbiterauction");
