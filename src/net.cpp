@@ -1577,19 +1577,6 @@ void MapPort(bool)
 
 
 
-static std::string GetDNSHost(const CDNSSeedData& data, ServiceFlags* requiredServiceBits)
-{
-    //use default host for non-filter-capable seeds or if we use the default service bits (NODE_NETWORK)
-    if (!data.supportsServiceBitsFiltering || *requiredServiceBits == NODE_NETWORK) {
-        *requiredServiceBits = NODE_NETWORK;
-        return data.host;
-    }
-
-    // See chainparams.cpp, most dnsseeds only support one or two possible servicebits hostnames
-    return strprintf("x%x.%s", *requiredServiceBits, data.host);
-}
-
-
 void CConnman::ThreadDNSAddressSeed()
 {
     // goal: only query DNS seeds if address need is acute
@@ -1612,22 +1599,22 @@ void CConnman::ThreadDNSAddressSeed()
         }
     }
 
-    const std::vector<CDNSSeedData> &vSeeds = Params().DNSSeeds();
+    const std::vector<std::string> &vSeeds = Params().DNSSeeds();
     int found = 0;
 
     LogPrintf("Loading addresses from DNS seeds (could take a while)\n");
 
-    for (const CDNSSeedData &seed : vSeeds) {
+    for (const std::string &seed : vSeeds) {
         if (interruptNet) {
             return;
         }
         if (HaveNameProxy()) {
-            AddOneShot(seed.host);
+            AddOneShot(seed);
         } else {
             std::vector<CNetAddr> vIPs;
             std::vector<CAddress> vAdd;
             ServiceFlags requiredServiceBits = GetDesirableServiceFlags(NODE_NONE);
-            std::string host = GetDNSHost(seed, &requiredServiceBits);
+            std::string host = strprintf("x%x.%s", requiredServiceBits, seed);
             CNetAddr resolveSource;
             if (!resolveSource.SetInternal(host)) {
                 continue;
@@ -1643,6 +1630,10 @@ void CConnman::ThreadDNSAddressSeed()
                     found++;
                 }
                 addrman.Add(vAdd, resolveSource);
+            } else {
+                // We now avoid directly using results from DNS Seeds which do not support service bit filtering,
+                // instead using them as a oneshot to get nodes with our desired service bits.
+                AddOneShot(seed);
             }
         }
     }
