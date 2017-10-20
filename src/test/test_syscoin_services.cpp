@@ -1626,7 +1626,6 @@ void EscrowRefund(const string& node, const string& role, const string& guid, co
 
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "offerinfo " + offer));
 	string currency = find_value(r.get_obj(), "currency").get_str();
-	float fOfferPrice = find_value(r.get_obj(), "price").get_real();
 	int nQtyOfferBefore = find_value(r.get_obj(), "quantity").get_int();
 
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowinfo " + guid));
@@ -1643,7 +1642,6 @@ void EscrowRefund(const string& node, const string& role, const string& guid, co
 		const UniValue &escrowBidBefore = EscrowBidFilterFromGUID(node, guid);
 		BOOST_CHECK(!escrowBidBefore.empty());
 	}
-	int nQty = find_value(r.get_obj(), "quantity").get_int();
 	string escrowaddress = find_value(r.get_obj(), "escrowaddress").get_str();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "getaddressutxos \"{\\\"addresses\\\": [\\\"" + escrowaddress + "\\\"]}\""));
 	UniValue addressUTXOsArray = r.get_array();
