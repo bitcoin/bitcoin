@@ -1622,6 +1622,7 @@ void EscrowRefund(const string& node, const string& role, const string& guid, co
 	UniValue r;
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowinfo " + guid));
 	string offer = find_value(r.get_obj(), "offer").get_str();
+	int nQty = find_value(r.get_obj(), "quantity").get_int();
 
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "offerinfo " + offer));
 	string currency = find_value(r.get_obj(), "currency").get_str();
@@ -1634,7 +1635,8 @@ void EscrowRefund(const string& node, const string& role, const string& guid, co
 	// since the core doesn't know the rate conversions this must be done externally, the seller/buyer/arbiter should check prior to signing escrow transactions.
 	CAmount nodeTotal = AmountFromValue(find_value(r.get_obj(), "total_without_fee"));
 	nodeTotal = nodeTotal / pegRates[currency];
-	BOOST_CHECK_EQUAL(AmountFromValue(strprintf("%.*f", 8, fOfferPrice)), nodeTotal);
+	BOOST_CHECK(abs(AmountFromValue(strprintf("%.*f", 8, find_value(r.get_obj(), "offer_price").get_real()*nQty)) - nodeTotal) <= 0.1*COIN);
+
 
 	bool bBuyNow = find_value(r.get_obj(), "buynow").get_bool();
 	if (!bBuyNow) {
@@ -1690,12 +1692,13 @@ void EscrowClaimRefund(const string& node, const string& guid)
 
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowinfo " + guid));
 	string offer = find_value(r.get_obj(), "offer").get_str();
+	int nQty = find_value(r.get_obj(), "quantity").get_int();
 
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "offerinfo " + offer));
 	string currency = find_value(r.get_obj(), "currency").get_str();
 	string rootselleralias = find_value(r.get_obj(), "offerlink_seller").get_str();
 	int nQtyOfferBefore = find_value(r.get_obj(), "quantity").get_int();
-	int nQty = find_value(r.get_obj(), "quantity").get_int();
+	
 
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowinfo " + guid));
 	// this step must be done in the UI, to ensure that the 'total_without_fee' parameter in escrownew is the right price according to the offer_price value converted into the offer currency
