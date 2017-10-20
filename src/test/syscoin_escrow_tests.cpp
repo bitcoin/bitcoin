@@ -20,6 +20,7 @@ BOOST_AUTO_TEST_CASE(generate_auction_regular)
 	AliasNew("node1", "buyerauction1a", "changeddata1");
 	AliasNew("node2", "sellerauction", "changeddata2");
 	AliasNew("node3", "arbiterauction", "changeddata3");
+	AliasNew("node3", "arbiterauctiona", "changeddata3");
 	string qty = "3";
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "getblockchaininfo"));
 	uint64_t mediantime = find_value(r.get_obj(), "mediantime").get_int64() + 3600;
@@ -30,7 +31,6 @@ BOOST_AUTO_TEST_CASE(generate_auction_regular)
 	BOOST_CHECK_THROW(r = CallRPC("node2", "offerupdate sellerauction " + offerguid + " category title 90 0.15 description USD \"\" \"\" \"\" \"\" \"\" \"\" \"\" true"), runtime_error);
 
 	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress buyerauction 500"), runtime_error);
-	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress buyerauction1a 400"), runtime_error);
 	GenerateBlocks(10);
 	string guid = EscrowNewAuction("node1", "node2", "buyerauction", offerguid, qty, "0.005", "arbiterauction");
 	EscrowBid("node1", "buyerauction", guid, "0.01");
@@ -44,7 +44,7 @@ BOOST_AUTO_TEST_CASE(generate_auction_regular)
 
 	EscrowBid("node1", "buyerauction", guid, "0.03");
 
-	EscrowNewBuyItNow("node1", "node2", "buyerauction1a", offerguid, qty, "arbiterauction");
+	EscrowNewBuyItNow("node1", "node2", "buyerauction", offerguid, qty, "arbiterauctiona");
 	EscrowRelease("node1", "buyer", guid);
 	EscrowClaimRelease("node2", guid);
 	// after expiry can update
@@ -63,13 +63,13 @@ BOOST_AUTO_TEST_CASE(generate_auction_reserve)
 	AliasNew("node1", "buyerauction1b", "changeddata1");
 	AliasNew("node2", "sellerauction1", "changeddata2");
 	AliasNew("node3", "arbiterauction1", "changeddata3");
+	AliasNew("node3", "arbiterauction1a", "changeddata3");
 	string qty = "3";
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "getblockchaininfo"));
 	int64_t mediantime = find_value(r.get_obj(), "mediantime").get_int64() + 3600;
 	string expiry = boost::lexical_cast<string>(mediantime);
 	string offerguid = OfferNew("node2", "sellerauction1", "category", "title", "100", "0.05", "description", "USD", "\"\"" /*certguid*/, "\"\"" /*paymentoptions*/, "BUYNOW+AUCTION", expiry, "0.01");
 	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress buyerauction1 500"), runtime_error);
-	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress buyerauction1b 400"), runtime_error);
 	GenerateBlocks(10);
 	string exttxid = "\"\"";
 	string paymentoptions = "\"\"";
@@ -97,7 +97,7 @@ BOOST_AUTO_TEST_CASE(generate_auction_reserve)
 	
 	EscrowBid("node1", "buyerauction1", guid, "0.04");
 
-	EscrowNewBuyItNow("node1", "node2", "buyerauction1b", offerguid, qty, "arbiterauction1");
+	EscrowNewBuyItNow("node1", "node2", "buyerauction1", offerguid, qty, "arbiterauction1a");
 	EscrowRelease("node1", "buyer", guid);
 	EscrowClaimRelease("node2", guid);
 }
