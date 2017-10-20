@@ -70,7 +70,7 @@ BASE_SCRIPTS= [
     # vv Tests less than 2m vv
     'p2p_instantsend.py',
     'wallet_basic.py',
-    'wallet_accounts.py',
+    'wallet_labels.py',
     'wallet_dump.py',
     'rpc_listtransactions.py',
     'feature_multikeysporks.py',
