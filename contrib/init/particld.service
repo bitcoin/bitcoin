@@ -14,7 +14,7 @@ ExecStart=/home/particl/Particl/particld -daemon -pid=/home/particl/.particl/par
 ExecStop=/home/particl/Particl/particl-cli -conf=/home/particl/.particl/particl.conf stop
 ExecStop=/usr/bin/sleep 25
 
-Restart=always
+Restart=no
 PrivateTmp=true
 TimeoutStopSec=60s
 TimeoutStartSec=2s
