@@ -1850,6 +1850,7 @@ void EscrowClaimRelease(const string& node, const string& guid)
 	float fOfferPrice = find_value(r.get_obj(), "price").get_real();
 	int icommission = find_value(r.get_obj(), "commission").get_int();
 	string sellerlink_alias = find_value(r.get_obj(), "offerlink_seller").get_str();
+	string offertype = find_value(r.get_obj(), "offertype").get_str();
 	int nQtyOfferBefore = find_value(r.get_obj(), "quantity").get_int();
 
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowinfo " + guid));
@@ -1950,8 +1951,12 @@ void EscrowClaimRelease(const string& node, const string& guid)
 	GenerateBlocks(10, node);
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "offerinfo " + offer));
 	int nQtyOfferAfter = find_value(r.get_obj(), "quantity").get_int();
-	// we have already changed qty as we ack the escrow when calling escrownew in this test suite
-	BOOST_CHECK_EQUAL(nQtyOfferBefore, nQtyOfferAfter);
+	// we have already changed qty as we ack the escrow when calling escrownew in this test suite unless its an auction(we are not acking auction bids or buynow purchases in our test suite)
+	if (offertype != "AUCTION") {
+		BOOST_CHECK_EQUAL(nQtyOfferBefore, nQtyOfferAfter);
+	}
+	else
+		BOOST_CHECK_EQUAL(nQtyOfferBefore-nQty, nQtyOfferAfter);
 
 	// get balances after
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasbalance " + selleralias));

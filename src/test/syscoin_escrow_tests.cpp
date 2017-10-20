@@ -17,6 +17,7 @@ BOOST_AUTO_TEST_CASE(generate_auction_regular)
 	GenerateBlocks(5, "node2");
 	GenerateBlocks(5, "node3");
 	AliasNew("node1", "buyerauction", "changeddata1");
+	AliasNew("node1", "buyerauction1a", "changeddata1");
 	AliasNew("node2", "sellerauction", "changeddata2");
 	AliasNew("node3", "arbiterauction", "changeddata3");
 	string qty = "3";
@@ -42,7 +43,7 @@ BOOST_AUTO_TEST_CASE(generate_auction_regular)
 
 	EscrowBid("node1", "buyerauction", guid, "0.03");
 
-	EscrowNewBuyItNow("node1", "node2", "buyerauction", offerguid, qty, "arbiterauction");
+	EscrowNewBuyItNow("node1", "node2", "buyerauction1a", offerguid, qty, "arbiterauction");
 	EscrowRelease("node1", "buyer", guid);
 	EscrowClaimRelease("node2", guid);
 	// after expiry can update
@@ -58,6 +59,7 @@ BOOST_AUTO_TEST_CASE(generate_auction_reserve)
 	GenerateBlocks(5, "node2");
 	GenerateBlocks(5, "node3");
 	AliasNew("node1", "buyerauction1", "changeddata1");
+	AliasNew("node1", "buyerauction1b", "changeddata1");
 	AliasNew("node2", "sellerauction1", "changeddata2");
 	AliasNew("node3", "arbiterauction1", "changeddata3");
 	string qty = "3";
@@ -93,7 +95,7 @@ BOOST_AUTO_TEST_CASE(generate_auction_reserve)
 	// this is ok because merchant UI should check that the amount in SYS is = to converted amount to USD (1 sys = 10 USD) and if it is off, ask bidder to create a higher bid with correct amount set
 	EscrowBid("node1", "buyerauction1", guid, "0.04");
 
-	EscrowNewBuyItNow("node1", "node2", "buyerauction1", offerguid, qty, "arbiterauction1");
+	EscrowNewBuyItNow("node1", "node2", "buyerauction1b", offerguid, qty, "arbiterauction1");
 	EscrowRelease("node1", "buyer", guid);
 	EscrowClaimRelease("node2", guid);
 }
