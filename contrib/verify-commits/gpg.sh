@@ -46,6 +46,11 @@ for LINE in $(echo "$GPG_RES"); do
 		REVSIG=true
 		GOODREVSIG="[GNUPG:] GOODSIG ${LINE#* * *}"
 		;;
+	"[GNUPG:] EXPKEYSIG "*)
+		[ "$BITCOIN_VERIFY_COMMITS_ALLOW_REVSIG" != 1 ] && exit 1
+		REVSIG=true
+		GOODREVSIG="[GNUPG:] GOODSIG ${LINE#* * *}"
+		;;
 	esac
 done
 if ! $VALID; then
