@@ -24,7 +24,6 @@
 #include "ui_interface.h"
 #include "unlimited.h"
 #include "utilstrencodings.h"
-#include "wallet/wallet.h"
 
 #ifdef WIN32
 #include <string.h>
@@ -67,6 +66,8 @@
 #define IPV6_PROTECTION_LEVEL 23
 #endif
 #endif
+
+extern std::atomic<bool> fRescan;
 
 using namespace std;
 
