@@ -32,6 +32,15 @@ struct CompareScoreTxIn
     }
 };
 
+struct CompareScoreSN
+{
+    bool operator()(const pair<int64_t, CSystemnode>& t1,
+                    const pair<int64_t, CSystemnode>& t2) const
+    {
+        return t1.first < t2.first;
+    }
+};
+
 // TODO remove this later
 int GetMinSystemnodePaymentsProto() {
     return IsSporkActive(SPORK_10_MASTERNODE_PAY_UPDATED_NODES)
@@ -168,6 +177,42 @@ CSystemnodeDB::ReadResult CSystemnodeDB::Read(CSystemnodeMan& snodemanToLoad, bo
     }
 
     return Ok;
+}
+
+std::vector<pair<int, CSystemnode> > CSystemnodeMan::GetSystemnodeRanks(int64_t nBlockHeight, int minProtocol)
+{
+    std::vector<pair<int64_t, CSystemnode> > vecSystemnodeScores;
+    std::vector<pair<int, CSystemnode> > vecSystemnodeRanks;
+
+    //make sure we know about this block
+    uint256 hash = uint256();
+    if(!GetBlockHash(hash, nBlockHeight)) return vecSystemnodeRanks;
+
+    // scan for winner
+    BOOST_FOREACH(CSystemnode& mn, vSystemnodes) {
+
+        mn.Check();
+
+        if(mn.protocolVersion < minProtocol) continue;
+        if(!mn.IsEnabled()) {
+            continue;
+        }
+
+        uint256 n = mn.CalculateScore(1, nBlockHeight);
+        int64_t n2 = UintToArith256(n).GetCompact(false);
+
+        vecSystemnodeScores.push_back(make_pair(n2, mn));
+    }
+
+    sort(vecSystemnodeScores.rbegin(), vecSystemnodeScores.rend(), CompareScoreSN());
+
+    int rank = 0;
+    BOOST_FOREACH (PAIRTYPE(int64_t, CSystemnode)& s, vecSystemnodeScores){
+        rank++;
+        vecSystemnodeRanks.push_back(make_pair(rank, s.second));
+    }
+
+    return vecSystemnodeRanks;
 }
 
 void CSystemnodeMan::ProcessSystemnodeConnections()

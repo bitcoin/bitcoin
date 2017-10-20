@@ -172,6 +172,7 @@ CSystemnode::CSystemnode()
     lastPing = CSystemnodePing();
     unitTest = false;
     protocolVersion = PROTOCOL_VERSION;
+    nLastDsq = 0;
     lastTimeChecked = 0;
 }
 
@@ -188,6 +189,7 @@ CSystemnode::CSystemnode(const CSystemnode& other)
     lastPing = other.lastPing;
     unitTest = other.unitTest;
     protocolVersion = other.protocolVersion;
+    nLastDsq = other.nLastDsq;
     lastTimeChecked = 0;
 }
 
@@ -204,6 +206,8 @@ CSystemnode::CSystemnode(const CSystemnodeBroadcast& snb)
     lastPing = snb.lastPing;
     unitTest = false;
     protocolVersion = snb.protocolVersion;
+    nLastDsq = snb.nLastDsq;
+    lastTimeChecked = 0;
 }
 
 bool CSystemnode::IsValidNetAddr()
@@ -613,6 +617,7 @@ CSystemnodeBroadcast::CSystemnodeBroadcast()
     lastPing = CSystemnodePing();
     unitTest = false;
     protocolVersion = PROTOCOL_VERSION;
+    nLastDsq = 0;
 }
 
 CSystemnodeBroadcast::CSystemnodeBroadcast(CService newAddr, CTxIn newVin, CPubKey newPubkey, CPubKey newPubkey2, int protocolVersionIn)
@@ -627,6 +632,7 @@ CSystemnodeBroadcast::CSystemnodeBroadcast(CService newAddr, CTxIn newVin, CPubK
     lastPing = CSystemnodePing();
     unitTest = false;
     protocolVersion = protocolVersionIn;
+    nLastDsq = 0;
 }
 
 CSystemnodeBroadcast::CSystemnodeBroadcast(const CSystemnode& mn)
@@ -641,6 +647,7 @@ CSystemnodeBroadcast::CSystemnodeBroadcast(const CSystemnode& mn)
     lastPing = mn.lastPing;
     unitTest = mn.unitTest;
     protocolVersion = mn.protocolVersion;
+    nLastDsq = mn.nLastDsq;
 }
 
 bool CSystemnodeBroadcast::Create(std::string strService, std::string strKeySystemnode, std::string strTxHash, std::string strOutputIndex, std::string& strErrorMessage, CSystemnodeBroadcast &snb, bool fOffline) {
@@ -731,6 +738,23 @@ bool CSystemnodeBroadcast::Sign(CKey& keyCollateralAddress)
 
     if(!legacySigner.SignMessage(strMessage, errorMessage, sig, keyCollateralAddress)) {
         LogPrintf("CSystemnodeBroadcast::Sign() - Error: %s\n", errorMessage);
+        return false;
+    }
+
+    return true;
+}
+
+bool CSystemnodeBroadcast::VerifySignature()
+{
+    std::string errorMessage;
+
+    std::string vchPubKey(pubkey.begin(), pubkey.end());
+    std::string vchPubKey2(pubkey2.begin(), pubkey2.end());
+
+    std::string strMessage = addr.ToString() + boost::lexical_cast<std::string>(sigTime) + vchPubKey + vchPubKey2 + boost::lexical_cast<std::string>(protocolVersion);
+
+    if(!legacySigner.VerifyMessage(pubkey, sig, strMessage, errorMessage)) {
+        LogPrintf("CSystemnodeBroadcast::VerifySignature() - Error: %s\n", errorMessage);
         return false;
     }
 

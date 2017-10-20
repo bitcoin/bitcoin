@@ -114,6 +114,7 @@ bool fEnableInstantX = true;
 int nInstantXDepth = 5;
 /** Spork enforcement enabled time */
 int64_t enforceMasternodePaymentsTime = 4085657524;
+int64_t enforceSystemnodePaymentsTime = 4085657524;
 bool fSucessfullyLoaded = false;
 string strBudgetMode = "";
 

@@ -35,6 +35,7 @@ extern bool fLiteMode;
 extern bool fEnableInstantX;
 extern int nInstantXDepth;
 extern int64_t enforceMasternodePaymentsTime;
+extern int64_t enforceSystemnodePaymentsTime;
 extern std::string strMasterNodeAddr;
 extern std::string strSystemNodeAddr;
 extern std::string strSystemNodePrivKey;

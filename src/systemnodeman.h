@@ -118,6 +118,7 @@ public:
 
     std::vector<CSystemnode> GetFullSystemnodeVector() { Check(); return vSystemnodes; }
     
+    std::vector<pair<int, CSystemnode> > GetSystemnodeRanks(int64_t nBlockHeight, int minProtocol=0);
     int GetSystemnodeRank(const CTxIn &vin, int64_t nBlockHeight, int minProtocol=0, bool fOnlyActive=true);
 
     void ProcessSystemnodeConnections();
