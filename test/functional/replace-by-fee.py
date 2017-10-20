@@ -72,11 +72,13 @@ class ReplaceByFeeTest(BitcoinTestFramework):
                            ["-mempoolreplacement=0"]]
 
     def run_test(self):
-        # Leave IBD and ensure nodes are synced
+        # Leave IBD
         self.nodes[0].generate(1)
-        self.sync_all()
 
         make_utxo(self.nodes[0], 1*COIN)
+
+        # Ensure nodes are synced
+        self.sync_all()
 
         self.log.info("Running test simple doublespend...")
         self.test_simple_doublespend()
