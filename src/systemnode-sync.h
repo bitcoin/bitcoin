@@ -8,7 +8,7 @@
 #define SYSTEMNODE_SYNC_INITIAL           0
 #define SYSTEMNODE_SYNC_SPORKS            1
 #define SYSTEMNODE_SYNC_LIST              2
-#define SYSTEMNODE_SYNC_MNW               3
+#define SYSTEMNODE_SYNC_SNW               3
 #define SYSTEMNODE_SYNC_BUDGET            4
 #define SYSTEMNODE_SYNC_BUDGET_PROP       10
 #define SYSTEMNODE_SYNC_BUDGET_FIN        11
@@ -28,9 +28,8 @@ extern CSystemnodeSync systemnodeSync;
 class CSystemnodeSync
 {
 public:
-    std::map<uint256, int> mapSeenSyncMNB;
-    std::map<uint256, int> mapSeenSyncMNW;
-    std::map<uint256, int> mapSeenSyncBudget;
+    std::map<uint256, int> mapSeenSyncSNB;
+    std::map<uint256, int> mapSeenSyncSNW;
 
     int64_t lastSystemnodeList;
     int64_t lastSystemnodeWinner;
@@ -59,6 +58,7 @@ public:
     CSystemnodeSync();
 
     void AddedSystemnodeList(uint256 hash);
+    void AddedSystemnodeWinner(uint256 hash);
     void GetNextAsset();
     std::string GetSyncStatus();
     void ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);

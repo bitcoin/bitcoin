@@ -123,6 +123,8 @@ public:
     std::vector<unsigned char> sig;
     int activeState;
     int64_t sigTime; //snb message time
+    int cacheInputAge;
+    int cacheInputAgeBlock;
     bool unitTest;
     int protocolVersion;
     CSystemnodePing lastPing;
@@ -183,6 +185,9 @@ public:
             READWRITE(lastPing);
             READWRITE(unitTest);
     }
+
+    int64_t SecondsSincePayment();
+
     bool UpdateFromNewBroadcast(CSystemnodeBroadcast& snb);
     void Check(bool forceCheck = false);
     bool IsBroadcastedWithin(int seconds)
@@ -194,6 +199,17 @@ public:
         return activeState == SYSTEMNODE_ENABLED;
     }
     bool IsValidNetAddr();
+    int GetSystemnodeInputAge()
+    {
+        if(chainActive.Tip() == NULL) return 0;
+
+        if(cacheInputAge == 0){
+            cacheInputAge = GetInputAge(vin);
+            cacheInputAgeBlock = chainActive.Tip()->nHeight;
+        }
+
+        return cacheInputAge+(chainActive.Tip()->nHeight-cacheInputAgeBlock);
+    }
     bool IsPingedWithin(int seconds, int64_t now = -1)
     {
         now == -1 ? now = GetAdjustedTime() : now;
@@ -213,6 +229,7 @@ public:
 
         return strStatus;
     }
+    int64_t GetLastPaid();
 };
 
 //

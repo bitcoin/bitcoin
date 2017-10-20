@@ -158,11 +158,11 @@ void ThreadCheckLegacySigner()
             {
                 snodeman.CheckAndRemove();
                 snodeman.ProcessSystemnodeConnections();
-                //masternodePayments.CleanPaymentList();
-                //CleanTransactionLocksList();
+                systemnodePayments.CleanPaymentList();
+                CleanTransactionLocksList();
             }
 
-            //if(c2 % MASTERNODES_DUMP_SECONDS == 0) DumpMasternodes();
+            //if(c2 % SYSTEMNODES_DUMP_SECONDS == 0) DumpSystemnodes();
         }
 
     }

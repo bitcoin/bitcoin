@@ -20,6 +20,7 @@
 #include "wallet.h"
 #endif
 #include "masternode-payments.h"
+#include "systemnode-payments.h"
 
 #include <boost/thread.hpp>
 #include <boost/tuple/tuple.hpp>
@@ -325,6 +326,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
 
         // Masternode and general budget payments
         FillBlockPayee(txNew, nFees);
+        SNFillBlockPayee(txNew, nFees);
 
         // Make payee
 	    if(txNew.vout.size() > 1){

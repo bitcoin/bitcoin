@@ -188,6 +188,10 @@ public:
         READWRITE(*(CScriptBase*)(&payee));
         READWRITE(vchSig);
     }
+    bool Sign(CKey& keySystemnode, CPubKey& pubKeySystemnode);
+    bool IsValid(CNode* pnode, std::string& strError);
+    bool SignatureValid();
+    void Relay();
 
     std::string ToString()
     {
@@ -220,6 +224,7 @@ public:
         nSyncedFromPeer = 0;
         nLastBlockHeight = 0;
     }
+    bool AddWinningSystemnode(CSystemnodePaymentWinner& winner);
 
     void Clear() {
         LOCK2(cs_mapSystemnodeBlocks, cs_mapSystemnodePayeeVotes);
@@ -227,8 +232,13 @@ public:
         mapSystemnodePayeeVotes.clear();
     }
 
+    bool ProcessBlock(int nBlockHeight);
+    void ProcessMessageSystemnodePayments(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
+    void Sync(CNode* node, int nCountNeeded);
     void CleanPaymentList();
     bool GetBlockPayee(int nBlockHeight, CScript& payee);
+    bool IsScheduled(CSystemnode& mn, int nNotBlockHeight);
+    bool CanVote(COutPoint outSystemnode, int nBlockHeight);
     void FillBlockPayee(CMutableTransaction& txNew, int64_t nFees);
     std::string ToString() const;
 

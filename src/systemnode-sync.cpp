@@ -64,9 +64,8 @@ void CSystemnodeSync::Reset()
     lastSystemnodeList = 0;
     lastSystemnodeWinner = 0;
     lastBudgetItem = 0;
-    mapSeenSyncMNB.clear();
-    mapSeenSyncMNW.clear();
-    mapSeenSyncBudget.clear();
+    mapSeenSyncSNB.clear();
+    mapSeenSyncSNW.clear();
     lastFailure = 0;
     nCountFailures = 0;
     sumSystemnodeList = 0;
@@ -85,13 +84,26 @@ void CSystemnodeSync::Reset()
 void CSystemnodeSync::AddedSystemnodeList(uint256 hash)
 {
     if(snodeman.mapSeenSystemnodeBroadcast.count(hash)) {
-        if(mapSeenSyncMNB[hash] < SYSTEMNODE_SYNC_THRESHOLD) {
+        if(mapSeenSyncSNB[hash] < SYSTEMNODE_SYNC_THRESHOLD) {
             lastSystemnodeList = GetTime();
-            mapSeenSyncMNB[hash]++;
+            mapSeenSyncSNB[hash]++;
         }
     } else {
         lastSystemnodeList = GetTime();
-        mapSeenSyncMNB.insert(make_pair(hash, 1));
+        mapSeenSyncSNB.insert(make_pair(hash, 1));
+    }
+}
+
+void CSystemnodeSync::AddedSystemnodeWinner(uint256 hash)
+{
+    if(systemnodePayments.mapSystemnodePayeeVotes.count(hash)) {
+        if(mapSeenSyncSNW[hash] < SYSTEMNODE_SYNC_THRESHOLD) {
+            lastSystemnodeWinner = GetTime();
+            mapSeenSyncSNW[hash]++;
+        }
+    } else {
+        lastSystemnodeWinner = GetTime();
+        mapSeenSyncSNW.insert(make_pair(hash, 1));
     }
 }
 
@@ -108,9 +120,9 @@ void CSystemnodeSync::GetNextAsset()
             RequestedSystemnodeAssets = SYSTEMNODE_SYNC_LIST;
             break;
         case(SYSTEMNODE_SYNC_LIST):
-            RequestedSystemnodeAssets = SYSTEMNODE_SYNC_MNW;
+            RequestedSystemnodeAssets = SYSTEMNODE_SYNC_SNW;
             break;
-        case(SYSTEMNODE_SYNC_MNW):
+        case(SYSTEMNODE_SYNC_SNW):
             RequestedSystemnodeAssets = SYSTEMNODE_SYNC_BUDGET;
             break;
         case(SYSTEMNODE_SYNC_BUDGET):
@@ -128,7 +140,7 @@ std::string CSystemnodeSync::GetSyncStatus()
         case SYSTEMNODE_SYNC_INITIAL: return _("Synchronization pending...");
         case SYSTEMNODE_SYNC_SPORKS: return _("Synchronizing sporks...");
         case SYSTEMNODE_SYNC_LIST: return _("Synchronizing systemnodes...");
-        case SYSTEMNODE_SYNC_MNW: return _("Synchronizing systemnode winners...");
+        case SYSTEMNODE_SYNC_SNW: return _("Synchronizing systemnode winners...");
         case SYSTEMNODE_SYNC_BUDGET: return _("Synchronizing budgets...");
         case SYSTEMNODE_SYNC_FAILED: return _("Synchronization failed");
         case SYSTEMNODE_SYNC_FINISHED: return _("Synchronization finished");
@@ -153,7 +165,7 @@ void CSystemnodeSync::ProcessMessage(CNode* pfrom, std::string& strCommand, CDat
                 sumSystemnodeList += nCount;
                 countSystemnodeList++;
                 break;
-            case(SYSTEMNODE_SYNC_MNW):
+            case(SYSTEMNODE_SYNC_SNW):
                 if(nItemID != RequestedSystemnodeAssets) return;
                 sumSystemnodeWinner += nCount;
                 countSystemnodeWinner++;
@@ -183,7 +195,7 @@ void CSystemnodeSync::ClearFulfilledRequest()
     {
         pnode->ClearFulfilledRequest("getspork");
         pnode->ClearFulfilledRequest("snsync");
-        pnode->ClearFulfilledRequest("mnwsync");
+        pnode->ClearFulfilledRequest("snwsync");
         pnode->ClearFulfilledRequest("busync");
     }
 }
@@ -287,7 +299,7 @@ void CSystemnodeSync::Process()
                 return;
             }
 
-            if(RequestedSystemnodeAssets == SYSTEMNODE_SYNC_MNW) {
+            if(RequestedSystemnodeAssets == SYSTEMNODE_SYNC_SNW) {
                 if(lastSystemnodeWinner > 0 && lastSystemnodeWinner < GetTime() - SYSTEMNODE_SYNC_TIMEOUT*2 && RequestedSystemnodeAttempt >= SYSTEMNODE_SYNC_THRESHOLD){ //hasn't received a new item in the last five seconds, so we'll move to the
                     GetNextAsset();
                     return;

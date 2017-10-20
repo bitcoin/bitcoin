@@ -14,6 +14,31 @@
 /** Systemnode manager */
 CSystemnodeMan snodeman;
 
+struct CompareLastPaid
+{
+    bool operator()(const pair<int64_t, CTxIn>& t1,
+                    const pair<int64_t, CTxIn>& t2) const
+    {
+        return t1.first < t2.first;
+    }
+};
+
+struct CompareScoreTxIn
+{
+    bool operator()(const pair<int64_t, CTxIn>& t1,
+                    const pair<int64_t, CTxIn>& t2) const
+    {
+        return t1.first < t2.first;
+    }
+};
+
+// TODO remove this later
+int GetMinSystemnodePaymentsProto() {
+    return IsSporkActive(SPORK_10_MASTERNODE_PAY_UPDATED_NODES)
+                         ? MIN_MASTERNODE_PAYMENT_PROTO_VERSION_2
+                         : MIN_MASTERNODE_PAYMENT_PROTO_VERSION_1;
+}
+
 //
 // CSystemnodeDB
 //
@@ -347,6 +372,71 @@ CSystemnode *CSystemnodeMan::Find(const CPubKey &pubKeySystemnode)
     return NULL;
 }
 
+// 
+// Deterministically select the oldest/best systemnode to pay on the network
+//
+CSystemnode* CSystemnodeMan::GetNextSystemnodeInQueueForPayment(int nBlockHeight, bool fFilterSigTime, int& nCount)
+{
+    LOCK(cs);
+
+    CSystemnode *pBestSystemnode = NULL;
+    std::vector<pair<int64_t, CTxIn> > vecSystemnodeLastPaid;
+
+    /*
+        Make a vector with all of the last paid times
+    */
+
+    int nSnCount = CountEnabled();
+    BOOST_FOREACH(CSystemnode &sn, vSystemnodes)
+    {
+        sn.Check();
+        if(!sn.IsEnabled()) continue;
+
+        // //check protocol version
+        if(sn.protocolVersion < GetMinSystemnodePaymentsProto()) continue;
+
+        //it's in the list (up to 8 entries ahead of current block to allow propagation) -- so let's skip it
+        if(systemnodePayments.IsScheduled(sn, nBlockHeight)) continue;
+
+        //it's too new, wait for a cycle
+        if(fFilterSigTime && sn.sigTime + (nSnCount*2.6*60) > GetAdjustedTime()) continue;
+
+        //make sure it has as many confirmations as there are systemnodes
+        if(sn.GetSystemnodeInputAge() < nSnCount) continue;
+
+        vecSystemnodeLastPaid.push_back(make_pair(sn.SecondsSincePayment(), sn.vin));
+    }
+
+    nCount = (int)vecSystemnodeLastPaid.size();
+
+    //when the network is in the process of upgrading, don't penalize nodes that recently restarted
+    if(fFilterSigTime && nCount < nSnCount/3) return GetNextSystemnodeInQueueForPayment(nBlockHeight, false, nCount);
+
+    // Sort them high to low
+    sort(vecSystemnodeLastPaid.rbegin(), vecSystemnodeLastPaid.rend(), CompareLastPaid());
+
+    // Look at 1/10 of the oldest nodes (by last payment), calculate their scores and pay the best one
+    //  -- This doesn't look at who is being paid in the +8-10 blocks, allowing for double payments very rarely
+    //  -- 1/100 payments should be a double payment on mainnet - (1/(3000/10))*2
+    //  -- (chance per block * chances before IsScheduled will fire)
+    int nTenthNetwork = CountEnabled()/10;
+    int nCountTenth = 0; 
+    arith_uint256 nHigh = 0;
+    BOOST_FOREACH (PAIRTYPE(int64_t, CTxIn)& s, vecSystemnodeLastPaid) {
+        CSystemnode* pmn = Find(s.second);
+        if(!pmn) break;
+
+        arith_uint256 n = UintToArith256(pmn->CalculateScore(1, nBlockHeight-100));
+        if(n > nHigh){
+            nHigh = n;
+            pBestSystemnode = pmn;
+        }
+        nCountTenth++;
+        if(nCountTenth >= nTenthNetwork) break;
+    }
+    return pBestSystemnode;
+}
+
 void DumpSystemnodes()
 {
     int64_t nStart = GetTimeMillis();
@@ -425,14 +515,6 @@ void CSystemnodeMan::Remove(CTxIn vin)
         ++it;
     }
 }
-
-// TODO remove this later
-int GetMinSystemnodePaymentsProto() {
-    return IsSporkActive(SPORK_10_MASTERNODE_PAY_UPDATED_NODES)
-                         ? MIN_MASTERNODE_PAYMENT_PROTO_VERSION_2
-                         : MIN_MASTERNODE_PAYMENT_PROTO_VERSION_1;
-}
-
 
 int CSystemnodeMan::CountEnabled(int protocolVersion)
 {
@@ -526,6 +608,40 @@ CSystemnode* CSystemnodeMan::GetCurrentSystemNode(int mod, int64_t nBlockHeight,
     return winner;
 }
 
+int CSystemnodeMan::GetSystemnodeRank(const CTxIn& vin, int64_t nBlockHeight, int minProtocol, bool fOnlyActive)
+{
+    std::vector<pair<int64_t, CTxIn> > vecSystemnodeScores;
+
+    //make sure we know about this block
+    uint256 hash = uint256();
+    if(!GetBlockHash(hash, nBlockHeight)) return -1;
+
+    // scan for winner
+    BOOST_FOREACH(CSystemnode& sn, vSystemnodes) {
+        if(sn.protocolVersion < minProtocol) continue;
+        if(fOnlyActive) {
+            sn.Check();
+            if(!sn.IsEnabled()) continue;
+        }
+        uint256 n = sn.CalculateScore(1, nBlockHeight);
+        int64_t n2 = UintToArith256(n).GetCompact(false);
+
+        vecSystemnodeScores.push_back(make_pair(n2, sn.vin));
+    }
+
+    sort(vecSystemnodeScores.rbegin(), vecSystemnodeScores.rend(), CompareScoreTxIn());
+
+    int rank = 0;
+    BOOST_FOREACH (PAIRTYPE(int64_t, CTxIn)& s, vecSystemnodeScores){
+        rank++;
+        if(s.second.prevout == vin.prevout) {
+            return rank;
+        }
+    }
+
+    return -1;
+}
+
 void CSystemnodeMan::CheckAndRemove(bool forceExpiredRemoval)
 {
     Check();
@@ -547,7 +663,7 @@ void CSystemnodeMan::CheckAndRemove(bool forceExpiredRemoval)
             map<uint256, CSystemnodeBroadcast>::iterator it3 = mapSeenSystemnodeBroadcast.begin();
             while(it3 != mapSeenSystemnodeBroadcast.end()){
                 if((*it3).second.vin == (*it).vin){
-                    systemnodeSync.mapSeenSyncMNB.erase((*it3).first);
+                    systemnodeSync.mapSeenSyncSNB.erase((*it3).first);
                     mapSeenSystemnodeBroadcast.erase(it3++);
                 } else {
                     ++it3;
@@ -605,7 +721,7 @@ void CSystemnodeMan::CheckAndRemove(bool forceExpiredRemoval)
     while(it3 != mapSeenSystemnodeBroadcast.end()){
         if((*it3).second.lastPing.sigTime < GetTime() - SYSTEMNODE_REMOVAL_SECONDS*2){
             LogPrint("systemnode", "CSystemnodeMan::CheckAndRemove - Removing expired Systemnode broadcast %s\n", (*it3).second.GetHash().ToString());
-            systemnodeSync.mapSeenSyncMNB.erase((*it3).second.GetHash());
+            systemnodeSync.mapSeenSyncSNB.erase((*it3).second.GetHash());
             mapSeenSystemnodeBroadcast.erase(it3++);
         } else {
             ++it3;
@@ -623,4 +739,3 @@ void CSystemnodeMan::CheckAndRemove(bool forceExpiredRemoval)
     }
 
 }
-

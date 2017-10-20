@@ -180,6 +180,7 @@ void PrepareShutdown()
     DumpBudgets();
     DumpMasternodePayments();
     DumpSystemnodes();
+    DumpSystemnodePayments();
     UnregisterNodeSignals(GetNodeSignals());
 
     if (fFeeEstimatesInitialized)

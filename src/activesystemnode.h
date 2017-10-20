@@ -10,8 +10,8 @@
 #include "key.h"
 #include "init.h"
 #include "wallet.h"
-//#include "darksend.h"
 #include "systemnode-sync.h"
+#include "legacysigner.h"
 #include "systemnode.h"
 
 #define ACTIVE_SYSTEMNODE_INITIAL                     0 // initial state

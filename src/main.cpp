@@ -3357,6 +3357,11 @@ bool ProcessNewBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDis
             budget.NewBlock();
         }
     }
+    if(!fLiteMode){
+        if (systemnodeSync.RequestedSystemnodeAssets > SYSTEMNODE_SYNC_LIST) {
+            systemnodePayments.ProcessBlock(GetHeight()+10);
+        }
+    }
 
     LogPrintf("%s : ACCEPTED\n", __func__);
     return true;
@@ -4090,6 +4095,12 @@ bool static AlreadyHave(const CInv& inv)
         return false;
     case MSG_MASTERNODE_PING:
         return mnodeman.mapSeenMasternodePing.count(inv.hash);
+    case MSG_SYSTEMNODE_WINNER:
+        if(systemnodePayments.mapSystemnodePayeeVotes.count(inv.hash)) {
+            systemnodeSync.AddedSystemnodeWinner(inv.hash);
+            return true;
+        }
+        return false;
     case MSG_SYSTEMNODE_ANNOUNCE:
         if(snodeman.mapSeenSystemnodeBroadcast.count(inv.hash)) {
             systemnodeSync.AddedSystemnodeList(inv.hash);
@@ -4303,8 +4314,15 @@ void static ProcessGetData(CNode* pfrom)
                         pushed = true;
                     }
                 }
-
-
+                if (!pushed && inv.type == MSG_SYSTEMNODE_WINNER) {
+                    if(systemnodePayments.mapSystemnodePayeeVotes.count(inv.hash)){
+                        CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
+                        ss.reserve(1000);
+                        ss << systemnodePayments.mapSystemnodePayeeVotes[inv.hash];
+                        pfrom->PushMessage("snw", ss);
+                        pushed = true;
+                    }
+                }
                 if (!pushed && inv.type == MSG_SYSTEMNODE_ANNOUNCE) {
                     if(snodeman.mapSeenSystemnodeBroadcast.count(inv.hash)){
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);

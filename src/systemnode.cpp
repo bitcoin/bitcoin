@@ -308,6 +308,67 @@ void CSystemnode::Check(bool forceCheck)
     activeState = SYSTEMNODE_ENABLED; // OK
 }
 
+int64_t CSystemnode::SecondsSincePayment() {
+    CScript pubkeyScript;
+    pubkeyScript = GetScriptForDestination(pubkey.GetID());
+
+    int64_t sec = (GetAdjustedTime() - GetLastPaid());
+    int64_t month = 60*60*24*30;
+    if(sec < month) return sec; //if it's less than 30 days, give seconds
+
+    CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
+    ss << vin;
+    ss << sigTime;
+    uint256 hash =  ss.GetHash();
+
+    // return some deterministic value for unknown/unpaid but force it to be more than 30 days old
+    return month + UintToArith256(hash).GetCompact(false);
+}
+
+int64_t CSystemnode::GetLastPaid() {
+    CBlockIndex* pindexPrev = chainActive.Tip();
+    if(pindexPrev == NULL) return false;
+
+    CScript mnpayee;
+    mnpayee = GetScriptForDestination(pubkey.GetID());
+
+    CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
+    ss << vin;
+    ss << sigTime;
+    uint256 hash =  ss.GetHash();
+
+    // use a deterministic offset to break a tie -- 2.5 minutes
+    int64_t nOffset = UintToArith256(hash).GetCompact(false) % 150; 
+
+    if (chainActive.Tip() == NULL) return false;
+
+    const CBlockIndex *BlockReading = chainActive.Tip();
+
+    int nMnCount = snodeman.CountEnabled()*1.25;
+    int n = 0;
+    for (unsigned int i = 1; BlockReading && BlockReading->nHeight > 0; i++) {
+        if(n >= nMnCount){
+            return 0;
+        }
+        n++;
+
+        if(systemnodePayments.mapSystemnodeBlocks.count(BlockReading->nHeight)){
+            /*
+                Search for this payee, with at least 2 votes. This will aid in consensus allowing the network 
+                to converge on the same payees quickly, then keep the same schedule.
+            */
+            if(systemnodePayments.mapSystemnodeBlocks[BlockReading->nHeight].HasPayeeWithVotes(mnpayee, 2)){
+                return BlockReading->nTime + nOffset;
+            }
+        }
+
+        if (BlockReading->pprev == NULL) { assert(BlockReading); break; }
+        BlockReading = BlockReading->pprev;
+    }
+
+    return 0;
+}
+
 //
 // CSystemnodeBroadcast
 //
@@ -477,7 +538,7 @@ bool CSystemnodeBroadcast::CheckInputsAndAdd(int& nDoS)
         if(!lockMain) {
             // not snb fault, let it to be checked again later
             snodeman.mapSeenSystemnodeBroadcast.erase(GetHash());
-            systemnodeSync.mapSeenSyncMNB.erase(GetHash());
+            systemnodeSync.mapSeenSyncSNB.erase(GetHash());
             return false;
         }
 
@@ -494,7 +555,7 @@ bool CSystemnodeBroadcast::CheckInputsAndAdd(int& nDoS)
         LogPrintf("snb - Input must have at least %d confirmations\n", SYSTEMNODE_MIN_CONFIRMATIONS);
         // maybe we miss few blocks, let this snb to be checked again later
         snodeman.mapSeenSystemnodeBroadcast.erase(GetHash());
-        systemnodeSync.mapSeenSyncMNB.erase(GetHash());
+        systemnodeSync.mapSeenSyncSNB.erase(GetHash());
         return false;
     }
 

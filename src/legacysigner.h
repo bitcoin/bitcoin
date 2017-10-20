@@ -13,6 +13,7 @@
 #include "masternode-sync.h"
 #include "activesystemnode.h"
 #include "systemnodeman.h"
+#include "systemnode-payments.h"
 #include "systemnode-sync.h"
 
 class CTxIn;

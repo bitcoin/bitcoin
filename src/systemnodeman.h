@@ -110,10 +110,15 @@ public:
     CSystemnode* Find(const CTxIn& vin);
     CSystemnode* Find(const CPubKey& pubKeySystemnode);
 
+    /// Find an entry in the systemnode list that is next to be paid
+    CSystemnode* GetNextSystemnodeInQueueForPayment(int nBlockHeight, bool fFilterSigTime, int& nCount);
+
     /// Get the current winner for this block
     CSystemnode* GetCurrentSystemNode(int mod=1, int64_t nBlockHeight=0, int minProtocol=0);
 
     std::vector<CSystemnode> GetFullSystemnodeVector() { Check(); return vSystemnodes; }
+    
+    int GetSystemnodeRank(const CTxIn &vin, int64_t nBlockHeight, int minProtocol=0, bool fOnlyActive=true);
 
     void ProcessSystemnodeConnections();
 
