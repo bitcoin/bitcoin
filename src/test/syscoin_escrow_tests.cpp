@@ -30,6 +30,7 @@ BOOST_AUTO_TEST_CASE(generate_auction_regular)
 	BOOST_CHECK_THROW(r = CallRPC("node2", "offerupdate sellerauction " + offerguid + " category title 90 0.15 description USD \"\" \"\" \"\" \"\" \"\" \"\" \"\" true"), runtime_error);
 
 	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress buyerauction 500"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress buyerauction1 400"), runtime_error);
 	GenerateBlocks(10);
 	string guid = EscrowNewAuction("node1", "node2", "buyerauction", offerguid, qty, "0.005", "arbiterauction");
 	EscrowBid("node1", "buyerauction", guid, "0.01");
@@ -68,6 +69,7 @@ BOOST_AUTO_TEST_CASE(generate_auction_reserve)
 	string expiry = boost::lexical_cast<string>(mediantime);
 	string offerguid = OfferNew("node2", "sellerauction1", "category", "title", "100", "0.05", "description", "USD", "\"\"" /*certguid*/, "\"\"" /*paymentoptions*/, "BUYNOW+AUCTION", expiry, "0.01");
 	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress buyerauction1 500"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress buyerauction1b 400"), runtime_error);
 	GenerateBlocks(10);
 	string exttxid = "\"\"";
 	string paymentoptions = "\"\"";
@@ -92,7 +94,7 @@ BOOST_AUTO_TEST_CASE(generate_auction_reserve)
 	BOOST_CHECK_THROW(CallRPC("node1", "escrowbid buyerauction1 " + guid + " 9.002 0.02"), runtime_error);
 	// must bid higher
 	BOOST_CHECK_THROW(CallRPC("node1", "escrowbid buyerauction1 " + guid + " 9.001 0.01"), runtime_error);
-	// this is ok because merchant UI should check that the amount in SYS is = to converted amount to USD (1 sys = 10 USD) and if it is off, ask bidder to create a higher bid with correct amount set
+	
 	EscrowBid("node1", "buyerauction1", guid, "0.04");
 
 	EscrowNewBuyItNow("node1", "node2", "buyerauction1b", offerguid, qty, "arbiterauction1");
