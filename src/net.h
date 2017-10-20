@@ -295,6 +295,9 @@ public:
     unsigned int GetReceiveFloodSize() const;
 
     void WakeMessageHandler();
+
+    void AddToVNodes(CNode &node);
+    void ClearVNodes();
 private:
     struct ListenSocket {
         SOCKET socket;

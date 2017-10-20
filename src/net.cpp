@@ -2862,3 +2862,15 @@ uint64_t CConnman::CalculateKeyedNetGroup(const CAddress& ad) const
 
     return GetDeterministicRandomizer(RANDOMIZER_ID_NETGROUP).Write(vchNetGroup.data(), vchNetGroup.size()).Finalize();
 }
+
+void CConnman::AddToVNodes(CNode &node)
+{
+    LOCK(cs_vNodes);
+    vNodes.push_back(&node);
+}
+
+void CConnman::ClearVNodes()
+{
+    LOCK(cs_vNodes);
+    vNodes.clear();
+}
