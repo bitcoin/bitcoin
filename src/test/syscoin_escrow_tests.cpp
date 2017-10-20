@@ -30,7 +30,7 @@ BOOST_AUTO_TEST_CASE(generate_auction_regular)
 	BOOST_CHECK_THROW(r = CallRPC("node2", "offerupdate sellerauction " + offerguid + " category title 90 0.15 description USD \"\" \"\" \"\" \"\" \"\" \"\" \"\" true"), runtime_error);
 
 	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress buyerauction 500"), runtime_error);
-	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress buyerauction1 400"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress buyerauction1a 400"), runtime_error);
 	GenerateBlocks(10);
 	string guid = EscrowNewAuction("node1", "node2", "buyerauction", offerguid, qty, "0.005", "arbiterauction");
 	EscrowBid("node1", "buyerauction", guid, "0.01");
