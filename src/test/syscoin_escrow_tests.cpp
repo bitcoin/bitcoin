@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE(generate_auction_regular)
 }
 BOOST_AUTO_TEST_CASE(generate_auction_reserve)
 {
-	// create regular auctio with reserve and try to underbid
+	// create regular auction with reserve and try to underbid
 	printf("Running generate_auction_reserve...\n");
 	UniValue r;
 	GenerateBlocks(5);
@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE(generate_auction_reserve)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "getblockchaininfo"));
 	int64_t mediantime = find_value(r.get_obj(), "mediantime").get_int64() + 3600;
 	string expiry = boost::lexical_cast<string>(mediantime);
-	string offerguid = OfferNew("node2", "sellerauction1", "category", "title", "100", "0.05", "description", "USD", "\"\"" /*certguid*/, "\"\"" /*paymentoptions*/, "BUYNOW+AUCTION", expiry, "0.01");
+	string offerguid = OfferNew("node2", "sellerauction1", "category", "title", "100", "0.05", "description", "USD", "\"\"" /*certguid*/, "\"\"" /*paymentoptions*/, "BUYNOW+AUCTION", expiry, "0.011");
 	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress buyerauction1 500"), runtime_error);
 	GenerateBlocks(10);
 	string exttxid = "\"\"";
@@ -80,14 +80,14 @@ BOOST_AUTO_TEST_CASE(generate_auction_reserve)
 	string witness = "\"\"";
 	string witnessFee = "\"\"";
 	string shippingFee = "\"\"";
-	string bid_in_payment_option = "0.11";
-	string bid_in_offer_currency = "0.009";
-	string total_in_payment_option = strprintf("%.*f", 2, pegRates["USD"] * 0.01);
+	string bid_in_offer_currency = "0.01";
+	string total_in_payment_option = strprintf("%.*f", 2, pegRates["USD"] * 0.05);
+	string bid_in_payment_option = strprintf("%.*f", 2, pegRates["USD"] * 0.01);
 	// try to underbid in offer currency
 	string query = "escrownew false buyerauction1 arbiterauction1 " + offerguid + " " + qty + " " + buyNowStr + " " + total_in_payment_option + " " +  shippingFee + " " + networkFee + " " + arbiterFee + " " + witnessFee + " " + exttxid + " " + paymentoptions + " " + bid_in_payment_option + " " + bid_in_offer_currency + " " + witness;
 	BOOST_CHECK_THROW(r = CallRPC("node1", query), runtime_error);
 
-	string guid = EscrowNewAuction("node1", "node2", "buyerauction1", offerguid, qty, "0.01", "arbiterauction1");
+	string guid = EscrowNewAuction("node1", "node2", "buyerauction1", offerguid, qty, "0.011", "arbiterauction1");
 	EscrowBid("node1", "buyerauction1", guid, "0.02");
 	EscrowBid("node1", "buyerauction1", guid, "0.03");
 	// must bid higher
