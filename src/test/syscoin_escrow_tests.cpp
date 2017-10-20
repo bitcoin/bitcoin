@@ -80,14 +80,14 @@ BOOST_AUTO_TEST_CASE(generate_auction_reserve)
 	string witness = "\"\"";
 	string witnessFee = "\"\"";
 	string shippingFee = "\"\"";
-	string bid_in_offer_currency = "0.01";
+	string bid_in_offer_currency = "0.015";
 	string total_in_payment_option = strprintf("%.*f", 2, pegRates["USD"] * 0.05);
-	string bid_in_payment_option = strprintf("%.*f", 2, pegRates["USD"] * 0.01);
+	string bid_in_payment_option = strprintf("%.*f", 2, pegRates["USD"] * 0.015);
 	// try to underbid in offer currency
 	string query = "escrownew false buyerauction1 arbiterauction1 " + offerguid + " " + qty + " " + buyNowStr + " " + total_in_payment_option + " " +  shippingFee + " " + networkFee + " " + arbiterFee + " " + witnessFee + " " + exttxid + " " + paymentoptions + " " + bid_in_payment_option + " " + bid_in_offer_currency + " " + witness;
 	BOOST_CHECK_THROW(r = CallRPC("node1", query), runtime_error);
 
-	string guid = EscrowNewAuction("node1", "node2", "buyerauction1", offerguid, qty, "0.011", "arbiterauction1");
+	string guid = EscrowNewAuction("node1", "node2", "buyerauction1", offerguid, qty, "0.016", "arbiterauction1");
 	EscrowBid("node1", "buyerauction1", guid, "0.02");
 	EscrowBid("node1", "buyerauction1", guid, "0.03");
 	// must bid higher
