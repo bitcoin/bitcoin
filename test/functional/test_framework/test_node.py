@@ -63,10 +63,10 @@ class TestNode():
         self.url = None
         self.log = logging.getLogger('TestFramework.node%d' % i)
 
-    def __getattr__(self, *args, **kwargs):
+    def __getattr__(self, name):
         """Dispatches any unrecognised messages to the RPC connection."""
         assert self.rpc_connected and self.rpc is not None, "Error: no RPC connection"
-        return self.rpc.__getattr__(*args, **kwargs)
+        return getattr(self.rpc, name)
 
     def start(self, extra_args=None, stderr=None):
         """Start the node."""
