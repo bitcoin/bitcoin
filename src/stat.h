@@ -6,6 +6,8 @@
 #define STAT_H
 
 #include <boost/asio.hpp>
+#include <boost/asio/steady_timer.hpp>
+#include <chrono>
 #include <boost/bind.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 // c++11 #include <type_traits>
@@ -34,7 +36,7 @@ typedef std::map<CStatKey, CStatBase *> CStatMap;
 
 extern CStatMap statistics;
 extern boost::asio::io_service stat_io_service;
-extern boost::posix_time::milliseconds statMinInterval;
+extern std::chrono::milliseconds statMinInterval;
 
 template <typename NUM>
 void statAverage(NUM &tally, const NUM &cur, unsigned int sampleCounts)
@@ -181,32 +183,30 @@ class CStatHistory : public CStat<DataType, RecordType>
 {
 protected:
     unsigned int op;
-    boost::asio::deadline_timer timer;
+    boost::asio::steady_timer timer;
     RecordType history[STATISTICS_NUM_RANGES][STATISTICS_SAMPLES];
-    int64_t **historyTime = new int64_t *[STATISTICS_NUM_RANGES];
+    int64_t historyTime[STATISTICS_NUM_RANGES][STATISTICS_SAMPLES];
     int loc[STATISTICS_NUM_RANGES];
     int len[STATISTICS_NUM_RANGES];
     uint64_t timerCount;
+    std::chrono::steady_clock::time_point timerStartSteady;
     unsigned int sampleCount;
     RecordType total;
 
 public:
     CStatHistory() : CStat<DataType, RecordType>(), op(STAT_OP_SUM | STAT_KEEP_COUNT), timer(stat_io_service)
     {
-        initHistoryTime();
         Clear(false);
     }
     CStatHistory(const char *name, unsigned int operation = STAT_OP_SUM)
         : CStat<DataType, RecordType>(name), op(operation), timer(stat_io_service)
     {
-        initHistoryTime();
         Clear();
     }
 
     CStatHistory(const std::string &name, unsigned int operation = STAT_OP_SUM)
         : CStat<DataType, RecordType>(name), op(operation), timer(stat_io_service)
     {
-        initHistoryTime();
         Clear();
     }
 
@@ -222,24 +222,6 @@ public:
         CStat<DataType, RecordType>::init(name);
         op = operation;
         Clear();
-    }
-
-
-    void initHistoryTime(void)
-    {
-        for (int i = 0; i < STATISTICS_NUM_RANGES; i++)
-        {
-            historyTime[i] = new int64_t[STATISTICS_SAMPLES];
-        }
-    }
-
-    void delHistoryTime(void)
-    {
-        for (int i = STATISTICS_NUM_RANGES; i > 0;)
-        {
-            delete[] historyTime[--i];
-        }
-        delete[] historyTime;
     }
 
     void Clear(bool fStart = true)
@@ -263,7 +245,7 @@ public:
             Start();
     }
 
-    virtual ~CStatHistory() { delHistoryTime(); }
+    virtual ~CStatHistory() { }
     CStatHistory &operator<<(const DataType &rhs)
     {
         if (op & STAT_INDIVIDUAL)
@@ -301,13 +283,19 @@ public:
     void Start()
     {
         if (!(op & STAT_INDIVIDUAL))
+        {
+            timerStartSteady = std::chrono::steady_clock::now();
+            timerCount = 0;
             wait();
+        }
     }
 
     void Stop()
     {
         if (!op & STAT_INDIVIDUAL)
+        {
             timer.cancel();
+        }
     }
 
     int Series(int series, DataType *array, int len)
@@ -494,8 +482,8 @@ public:
                 if (op & STAT_OP_AVE)
                     accumulator /= ((DataType)operateSampleCount[i]);
                 history[i + 1][loc[i + 1]] = accumulator;
-                historyTime[i + 1][loc[i + 1]] = cur_time;
-
+                // times for accumulated statistics indicate the beginning of the interval
+                historyTime[i + 1][loc[i + 1]] = historyTime[i][start];
                 loc[i + 1]++;
                 len[i + 1]++;
                 if (loc[i + 1] >= STATISTICS_SAMPLES)
@@ -511,7 +499,10 @@ public:
 protected:
     void wait()
     {
-        timer.expires_from_now(statMinInterval);
+        // to account for drift we keep checking back against the start time.
+        std::chrono::steady_clock::time_point now =  std::chrono::steady_clock::now();
+        auto next = std::chrono::milliseconds((timerCount+1)*statMinInterval) + timerStartSteady - now;
+        timer.expires_from_now(next);
         timer.async_wait(boost::bind(&CStatHistory::timeout, this, boost::asio::placeholders::error));
     }
 };
