@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(generate_auction_reserve)
 	GenerateBlocks(5, "node2");
 	GenerateBlocks(5, "node3");
 	AliasNew("node1", "buyerauction1", "changeddata1");
-	AliasNew("node1", "buyerauction1b", "changeddata1");
+
 	AliasNew("node2", "sellerauction1", "changeddata2");
 	AliasNew("node3", "arbiterauction1", "changeddata3");
 	AliasNew("node3", "arbiterauction1a", "changeddata3");
@@ -80,9 +80,9 @@ BOOST_AUTO_TEST_CASE(generate_auction_reserve)
 	string witness = "\"\"";
 	string witnessFee = "\"\"";
 	string shippingFee = "\"\"";
-	string bid_in_offer_currency = "0.015";
+	string bid_in_offer_currency = "0.01";
 	string total_in_payment_option = strprintf("%.*f", 2, pegRates["USD"] * 0.05);
-	string bid_in_payment_option = strprintf("%.*f", 2, pegRates["USD"] * 0.015);
+	string bid_in_payment_option = strprintf("%.*f", 2, pegRates["USD"] * 0.01);
 	// try to underbid in offer currency
 	string query = "escrownew false buyerauction1 arbiterauction1 " + offerguid + " " + qty + " " + buyNowStr + " " + total_in_payment_option + " " +  shippingFee + " " + networkFee + " " + arbiterFee + " " + witnessFee + " " + exttxid + " " + paymentoptions + " " + bid_in_payment_option + " " + bid_in_offer_currency + " " + witness;
 	BOOST_CHECK_THROW(r = CallRPC("node1", query), runtime_error);

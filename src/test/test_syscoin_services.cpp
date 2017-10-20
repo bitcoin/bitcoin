@@ -1449,10 +1449,12 @@ const string EscrowNewBuyItNow(const string& node, const string& sellernode, con
 	string strBidInOfferCurrency = "\"\"";
 	string strBidInPaymentOption = "\"\"";
 	string strDeposit = "\"\"";
-	string strTotal = ValueFromAmount(offerprice).write();
 	string strTotalInPaymentOption = ValueFromAmount(offerprice).write();
+	float fPaymentCurrency = find_value(r.get_obj(), "price").get_real();
+	const string &bid_in_offer_currency = strprintf("%.*f", 8, fPaymentCurrency);
+	const string &bid_in_payment_option = strprintf("%.*f", 8, strprintf("%.*f", 8, pegRates[currency] * fPaymentCurrency));
 	//										"escrownew <getamountandaddress> <alias> <arbiter alias> <offer> <quantity> <buynow> <total_in_payment_option> [shipping amount] [network fee] [arbiter fee] [witness fee] [extTx] [payment option] [bid_in_payment_option] [bid_in_offer_currency] [witness]\n"
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrownew false " + buyeralias + " " + arbiteralias + " " + offerguid + " " + qtyStr + " " + buyNowStr + " " + strTotalInPaymentOption + " " + shipping + " " + networkFee + " " + arbiterFee + " " + witnessFee + " " + exttxid + " " + paymentoptions + " " + strBidInPaymentOption + " " + strBidInPaymentOption + " " + witness));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrownew false " + buyeralias + " " + arbiteralias + " " + offerguid + " " + qtyStr + " " + buyNowStr + " " + strTotalInPaymentOption + " " + shipping + " " + networkFee + " " + arbiterFee + " " + witnessFee + " " + exttxid + " " + paymentoptions + " " + bid_in_payment_option + " " + bid_in_offer_currency + " " + witness));
 	const UniValue &arr = r.get_array();
 	const string &guid = arr[1].get_str();
 	GenerateBlocks(10, node);
