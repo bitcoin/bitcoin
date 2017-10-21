@@ -22,8 +22,6 @@
 #include "utilmoneystr.h"
 #include "utilstrencodings.h"
 
-#include <stdio.h>
-
 #include <boost/algorithm/string.hpp>
 
 static bool fCreateBlank;
@@ -250,7 +248,7 @@ static void MutateTxAddInput(CMutableTransaction& tx, const std::string& strInpu
     // extract the optional sequence number
     uint32_t nSequenceIn=std::numeric_limits<unsigned int>::max();
     if (vStrInputParts.size() > 2)
-        nSequenceIn = std::stoul(vStrInputParts[2]);
+        nSequenceIn = stoul(vStrInputParts[2], 0, 10);
 
     // append to transaction input list
     CTxIn txin(txid, vout, CScript(), nSequenceIn);
@@ -340,10 +338,10 @@ static void MutateTxAddOutMultiSig(CMutableTransaction& tx, const std::string& s
     CAmount value = ExtractAndValidateValue(vStrInputParts[0]);
 
     // Extract REQUIRED
-    uint32_t required = stoul(vStrInputParts[1]);
+    uint32_t required = stoul(vStrInputParts[1], 0, 10);
 
     // Extract NUMKEYS
-    uint32_t numkeys = stoul(vStrInputParts[2]);
+    uint32_t numkeys = stoul(vStrInputParts[2], 0, 10);
 
     // Validate there are the correct number of pubkeys
     if (vStrInputParts.size() < numkeys + 3)
