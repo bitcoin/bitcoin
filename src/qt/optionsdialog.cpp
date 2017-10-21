@@ -102,17 +102,11 @@ void OptionsDialog::setModel(OptionsModel *model)
 {
     this->model = model;
 
-    if(model)
-    {
-        connect(model, SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
-
+    if(model) {
         mapper->setModel(model);
         setMapper();
         mapper->toFirst();
     }
-
-    /* update the display unit, to not use the default ("BTC") */
-    updateDisplayUnit();
 
     /* warn only when language selection changes by user action (placed here so init via mapper doesn't trigger this) */
     connect(ui->lang, SIGNAL(valueChanged()), this, SLOT(showRestartWarning_Lang()));
@@ -124,7 +118,6 @@ void OptionsDialog::setModel(OptionsModel *model)
 void OptionsDialog::setMapper()
 {
     /* Main */
-    mapper->addMapping(ui->transactionFee, OptionsModel::Fee);
     mapper->addMapping(ui->bitcoinAtStartup, OptionsModel::StartAtStartup);
     mapper->addMapping(ui->checkpointEnforce, OptionsModel::CheckpointEnforce);
 
@@ -236,15 +229,6 @@ void OptionsDialog::showRestartWarning_Lang()
     {
         QMessageBox::warning(this, tr("Warning"), tr("This setting will take effect after restarting Peercoin."), QMessageBox::Ok);
         fRestartWarningDisplayed_Lang = true;
-    }
-}
-
-void OptionsDialog::updateDisplayUnit()
-{
-    if(model)
-    {
-        /* Update transactionFee with the current unit */
-        ui->transactionFee->setDisplayUnit(model->getDisplayUnit());
     }
 }
 
