@@ -7,9 +7,9 @@
 
 #include <boost/asio.hpp>
 #include <boost/asio/steady_timer.hpp>
-#include <chrono>
 #include <boost/bind.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
+#include <chrono>
 // c++11 #include <type_traits>
 #include "univalue/include/univalue.h"
 
@@ -245,7 +245,7 @@ public:
             Start();
     }
 
-    virtual ~CStatHistory() { }
+    virtual ~CStatHistory() {}
     CStatHistory &operator<<(const DataType &rhs)
     {
         if (op & STAT_INDIVIDUAL)
@@ -500,8 +500,8 @@ protected:
     void wait()
     {
         // to account for drift we keep checking back against the start time.
-        std::chrono::steady_clock::time_point now =  std::chrono::steady_clock::now();
-        auto next = std::chrono::milliseconds((timerCount+1)*statMinInterval) + timerStartSteady - now;
+        std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
+        auto next = std::chrono::milliseconds((timerCount + 1) * statMinInterval) + timerStartSteady - now;
         timer.expires_from_now(next);
         timer.async_wait(boost::bind(&CStatHistory::timeout, this, boost::asio::placeholders::error));
     }
