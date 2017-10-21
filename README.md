@@ -5,8 +5,15 @@ IoP Core integration/staging tree
 
 https://iopcore.org
 
+
+**RELEASE NOTE v6.0.0**
+-----------------------
+
+This major release is meant to replace the old version of the IoP Blockchain client. While the consensus remains fully compatible, the structure of the data directory does not. Please read the [release notes](doc/release-notes/release-notes-6.0.0.md) very carefully if you update from version 5.0.1 or below.
+
+
 What is IoP?
-----------------
+------------
 
 IoP is an experimental digital currency that enables instant payments to
 anyone, anywhere in the world. IoP uses peer-to-peer technology to operate
