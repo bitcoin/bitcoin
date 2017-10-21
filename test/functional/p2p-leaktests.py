@@ -20,9 +20,9 @@ from test_framework.util import *
 
 banscore = 10
 
-class CLazyNode(NodeConnCB):
-    def __init__(self):
-        super().__init__()
+class CLazyNode(P2PInterface):
+    def __init__(self, dstaddr, dstport, net="regtest", services=NODE_NETWORK, send_version=True):
+        super().__init__(dstaddr, dstport, net, services, send_version)
         self.unexpected_msg = False
         self.ever_connected = False
 
@@ -30,66 +30,64 @@ class CLazyNode(NodeConnCB):
         self.unexpected_msg = True
         self.log.info("should not have received message: %s" % message.command)
 
-    def on_open(self, conn):
-        self.connected = True
+    def on_open(self):
         self.ever_connected = True
 
-    def on_version(self, conn, message): self.bad_message(message)
-    def on_verack(self, conn, message): self.bad_message(message)
-    def on_reject(self, conn, message): self.bad_message(message)
-    def on_inv(self, conn, message): self.bad_message(message)
-    def on_addr(self, conn, message): self.bad_message(message)
-    def on_alert(self, conn, message): self.bad_message(message)
-    def on_getdata(self, conn, message): self.bad_message(message)
-    def on_getblocks(self, conn, message): self.bad_message(message)
-    def on_tx(self, conn, message): self.bad_message(message)
-    def on_block(self, conn, message): self.bad_message(message)
-    def on_getaddr(self, conn, message): self.bad_message(message)
-    def on_headers(self, conn, message): self.bad_message(message)
-    def on_getheaders(self, conn, message): self.bad_message(message)
-    def on_ping(self, conn, message): self.bad_message(message)
-    def on_mempool(self, conn): self.bad_message(message)
-    def on_pong(self, conn, message): self.bad_message(message)
-    def on_feefilter(self, conn, message): self.bad_message(message)
-    def on_sendheaders(self, conn, message): self.bad_message(message)
-    def on_sendcmpct(self, conn, message): self.bad_message(message)
-    def on_cmpctblock(self, conn, message): self.bad_message(message)
-    def on_getblocktxn(self, conn, message): self.bad_message(message)
-    def on_blocktxn(self, conn, message): self.bad_message(message)
+    def on_version(self, message): self.bad_message(message)
+    def on_verack(self, message): self.bad_message(message)
+    def on_reject(self, message): self.bad_message(message)
+    def on_inv(self, message): self.bad_message(message)
+    def on_addr(self, message): self.bad_message(message)
+    def on_getdata(self, message): self.bad_message(message)
+    def on_getblocks(self, message): self.bad_message(message)
+    def on_tx(self, message): self.bad_message(message)
+    def on_block(self, message): self.bad_message(message)
+    def on_getaddr(self, message): self.bad_message(message)
+    def on_headers(self, message): self.bad_message(message)
+    def on_getheaders(self, message): self.bad_message(message)
+    def on_ping(self, message): self.bad_message(message)
+    def on_mempool(self, message): self.bad_message(message)
+    def on_pong(self, message): self.bad_message(message)
+    def on_feefilter(self, message): self.bad_message(message)
+    def on_sendheaders(self, message): self.bad_message(message)
+    def on_sendcmpct(self, message): self.bad_message(message)
+    def on_cmpctblock(self, message): self.bad_message(message)
+    def on_getblocktxn(self, message): self.bad_message(message)
+    def on_blocktxn(self, message): self.bad_message(message)
 
 # Node that never sends a version. We'll use this to send a bunch of messages
 # anyway, and eventually get disconnected.
 class CNodeNoVersionBan(CLazyNode):
     # send a bunch of veracks without sending a message. This should get us disconnected.
     # NOTE: implementation-specific check here. Remove if bitcoind ban behavior changes
-    def on_open(self, conn):
-        super().on_open(conn)
+    def on_open(self):
+        super().on_open()
         for i in range(banscore):
             self.send_message(msg_verack())
 
-    def on_reject(self, conn, message): pass
+    def on_reject(self, message): pass
 
 # Node that never sends a version. This one just sits idle and hopes to receive
 # any message (it shouldn't!)
 class CNodeNoVersionIdle(CLazyNode):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, dstaddr, dstport, net="regtest", services=NODE_NETWORK, send_version=True):
+        super().__init__(dstaddr, dstport, net, services, send_version)
 
 # Node that sends a version but not a verack.
 class CNodeNoVerackIdle(CLazyNode):
-    def __init__(self):
+    def __init__(self, dstaddr, dstport, net="regtest", services=NODE_NETWORK, send_version=True):
         self.version_received = False
-        super().__init__()
+        super().__init__(dstaddr, dstport, net, services, send_version)
 
-    def on_reject(self, conn, message): pass
-    def on_verack(self, conn, message): pass
+    def on_reject(self, message): pass
+    def on_verack(self, message): pass
     # When version is received, don't reply with a verack. Instead, see if the
     # node will give us a message that it shouldn't. This is not an exhaustive
     # list!
-    def on_version(self, conn, message):
+    def on_version(self, message):
         self.version_received = True
-        conn.send_message(msg_ping())
-        conn.send_message(msg_getaddr())
+        self.send_message(msg_ping())
+        self.send_message(msg_getaddr())
 
 class P2PLeakTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -97,24 +95,13 @@ class P2PLeakTest(BitcoinTestFramework):
         self.extra_args = [['-banscore='+str(banscore)]]
 
     def run_test(self):
-        no_version_bannode = CNodeNoVersionBan()
-        no_version_idlenode = CNodeNoVersionIdle()
-        no_verack_idlenode = CNodeNoVerackIdle()
-        unsupported_service_bit5_node = CLazyNode()
-        unsupported_service_bit7_node = CLazyNode()
-
         self.nodes[0].setmocktime(1501545600)  # August 1st 2017
-        connections = []
-        connections.append(NodeConn('127.0.0.1', p2p_port(0), self.nodes[0], no_version_bannode, send_version=False))
-        connections.append(NodeConn('127.0.0.1', p2p_port(0), self.nodes[0], no_version_idlenode, send_version=False))
-        connections.append(NodeConn('127.0.0.1', p2p_port(0), self.nodes[0], no_verack_idlenode))
-        connections.append(NodeConn('127.0.0.1', p2p_port(0), self.nodes[0], unsupported_service_bit5_node, services=NODE_NETWORK|NODE_UNSUPPORTED_SERVICE_BIT_5))
-        connections.append(NodeConn('127.0.0.1', p2p_port(0), self.nodes[0], unsupported_service_bit7_node, services=NODE_NETWORK|NODE_UNSUPPORTED_SERVICE_BIT_7))
-        no_version_bannode.add_connection(connections[0])
-        no_version_idlenode.add_connection(connections[1])
-        no_verack_idlenode.add_connection(connections[2])
-        unsupported_service_bit5_node.add_connection(connections[3])
-        unsupported_service_bit7_node.add_connection(connections[4])
+
+        no_version_bannode = self.nodes[0].add_p2p_connection(p2p_conn_type=CNodeNoVersionBan, send_version=False)
+        no_version_idlenode = self.nodes[0].add_p2p_connection(p2p_conn_type=CNodeNoVersionIdle, send_version=False)
+        no_verack_idlenode = self.nodes[0].add_p2p_connection(p2p_conn_type=CNodeNoVerackIdle)
+        unsupported_service_bit5_node = self.nodes[0].add_p2p_connection(p2p_conn_type=CLazyNode, services=NODE_NETWORK|NODE_UNSUPPORTED_SERVICE_BIT_5)
+        unsupported_service_bit7_node = self.nodes[0].add_p2p_connection(p2p_conn_type=CLazyNode, services=NODE_NETWORK|NODE_UNSUPPORTED_SERVICE_BIT_7)
 
         NetworkThread().start()  # Start up network handling in another thread
 
@@ -131,13 +118,14 @@ class P2PLeakTest(BitcoinTestFramework):
         time.sleep(5)
 
         #This node should have been banned
-        assert not no_version_bannode.connected
+        assert no_version_bannode.state != "connected"
 
         # These nodes should have been disconnected
-        assert not unsupported_service_bit5_node.connected
-        assert not unsupported_service_bit7_node.connected
+        assert unsupported_service_bit5_node.state != "connected"
+        assert unsupported_service_bit7_node.state != "connected"
 
-        [conn.disconnect_node() for conn in connections]
+        for _ in range(5):
+            self.nodes[0].disconnect_p2p()
 
         # Wait until all connections are closed
         wait_until(lambda: len(self.nodes[0].getpeerinfo()) == 0)
@@ -152,15 +140,10 @@ class P2PLeakTest(BitcoinTestFramework):
         self.log.info("Service bits 5 and 7 are allowed after August 1st 2018")
         self.nodes[0].setmocktime(1533168000)  # August 2nd 2018
 
-        allowed_service_bit5_node = NodeConnCB()
-        allowed_service_bit7_node = NodeConnCB()
+        allowed_service_bit5_node = self.nodes[0].add_p2p_connection(p2p_conn_type=P2PInterface, services=NODE_NETWORK|NODE_UNSUPPORTED_SERVICE_BIT_5)
+        allowed_service_bit7_node = self.nodes[0].add_p2p_connection(p2p_conn_type=P2PInterface, services=NODE_NETWORK|NODE_UNSUPPORTED_SERVICE_BIT_7)
 
-        connections.append(NodeConn('127.0.0.1', p2p_port(0), self.nodes[0], allowed_service_bit5_node, services=NODE_NETWORK|NODE_UNSUPPORTED_SERVICE_BIT_5))
-        connections.append(NodeConn('127.0.0.1', p2p_port(0), self.nodes[0], allowed_service_bit7_node, services=NODE_NETWORK|NODE_UNSUPPORTED_SERVICE_BIT_7))
-        allowed_service_bit5_node.add_connection(connections[5])
-        allowed_service_bit7_node.add_connection(connections[6])
-
-        NetworkThread().start()  # Network thread stopped when all previous NodeConnCBs disconnected. Restart it
+        NetworkThread().start()  # Network thread stopped when all previous P2PInterfaces disconnected. Restart it
 
         wait_until(lambda: allowed_service_bit5_node.message_count["verack"], lock=mininode_lock)
         wait_until(lambda: allowed_service_bit7_node.message_count["verack"], lock=mininode_lock)
