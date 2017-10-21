@@ -62,8 +62,9 @@ BOOST_AUTO_TEST_CASE(generate_auction_regular)
 	string query = "escrownew true buyerauction arbiterauction " + offerguid + " " + qty + " " + buyNowStr + " " + total_in_payment_option + " " + shippingFee + " " + networkFee + " " + arbiterFee + " " + witnessFee + " " + exttxid + " " + paymentoptions + " " + bid_in_payment_option + " " + bid_in_offer_currency + " " + witness;
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", query));
 	string totalWithFees = find_value(r.get_obj(), "totalwithfees").write();
+	string escrowaddress = find_value(r.get_obj(), "address").get_str();
 	// should probably pay in offer currency, convert rate, should probably also first check balance of escrow address and pay the difference incase a deposit was paid or another payment was already done.
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliaspay buyerauction SYS \"{\\\"sellerauction\\\":" + totalWithFees + "}\""));
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliaspay buyerauction SYS \"{\\\"" + escrowaddress + "\\\":" + totalWithFees + "}\""));
 	GenerateBlocks(5);
 	GenerateBlocks(5, "node2");
 	GenerateBlocks(5, "node3");
@@ -130,8 +131,9 @@ BOOST_AUTO_TEST_CASE(generate_auction_reserve)
 	query = "escrownew true buyerauction arbiterauction " + offerguid + " " + qty + " " + buyNowStr + " " + total_in_payment_option + " " + shippingFee + " " + networkFee + " " + arbiterFee + " " + witnessFee + " " + exttxid + " " + paymentoptions + " " + bid_in_payment_option + " " + bid_in_offer_currency + " " + witness;
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", query));
 	string totalWithFees = find_value(r.get_obj(), "totalwithfees").write();
+	string escrowaddress = find_value(r.get_obj(), "address").get_str();
 	// should probably pay in offer currency, convert rate, should probably also first check balance of escrow address and pay the difference incase a deposit was paid or another payment was already done.
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliaspay buyerauction1 SYS \"{\\\"sellerauction1\\\":" + totalWithFees + "}\""));
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliaspay buyerauction1 SYS \"{\\\"" + escrowaddress + "\\\":" + totalWithFees + "}\""));
 	GenerateBlocks(5);
 	GenerateBlocks(5, "node2");
 	GenerateBlocks(5, "node3");
