@@ -123,19 +123,11 @@ BOOST_AUTO_TEST_CASE(generate_auction_reserve)
 	EscrowNewBuyItNow("node1", "node2", "buyerauction1", offerguid, qty, "arbiterauction1a");
 
 	// get amount owing
-	string exttxid = "\"\"";
-	string paymentoptions = "\"\"";
-	string redeemscript = "\"\"";
-	string buyNowStr = "true";
-	string networkFee = "\"\"";
-	string arbiterFee = "\"\"";
-	string witness = "\"\"";
-	string witnessFee = "\"\"";
-	string shippingFee = "\"\"";
-	string bid_in_offer_currency = "0.04";
-	string total_in_payment_option = strprintf("%.*f", 2, pegRates["USD"] * 0.05);
-	string bid_in_payment_option = strprintf("%.*f", 2, pegRates["USD"] * 0.04);
-	string query = "escrownew true buyerauction arbiterauction " + offerguid + " " + qty + " " + buyNowStr + " " + total_in_payment_option + " " + shippingFee + " " + networkFee + " " + arbiterFee + " " + witnessFee + " " + exttxid + " " + paymentoptions + " " + bid_in_payment_option + " " + bid_in_offer_currency + " " + witness;
+	buyNowStr = "true";
+	bid_in_offer_currency = "0.04";
+	total_in_payment_option = strprintf("%.*f", 2, pegRates["USD"] * 0.05);
+	bid_in_payment_option = strprintf("%.*f", 2, pegRates["USD"] * 0.04);
+	query = "escrownew true buyerauction arbiterauction " + offerguid + " " + qty + " " + buyNowStr + " " + total_in_payment_option + " " + shippingFee + " " + networkFee + " " + arbiterFee + " " + witnessFee + " " + exttxid + " " + paymentoptions + " " + bid_in_payment_option + " " + bid_in_offer_currency + " " + witness;
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", query));
 	string totalWithFees = find_value(r.get_obj(), "totalwithfees").write();
 	// should probably pay in offer currency, convert rate, should probably also first check balance of escrow address and pay the difference incase a deposit was paid or another payment was already done.
