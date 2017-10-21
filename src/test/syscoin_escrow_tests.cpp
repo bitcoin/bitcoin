@@ -45,6 +45,29 @@ BOOST_AUTO_TEST_CASE(generate_auction_regular)
 	EscrowBid("node1", "buyerauction", guid, "0.03");
 
 	EscrowNewBuyItNow("node1", "node2", "buyerauction", offerguid, qty, "arbiterauctiona");
+
+	// get amount owing
+	string exttxid = "\"\"";
+	string paymentoptions = "\"\"";
+	string redeemscript = "\"\"";
+	string buyNowStr = "true";
+	string networkFee = "\"\"";
+	string arbiterFee = "\"\"";
+	string witness = "\"\"";
+	string witnessFee = "\"\"";
+	string shippingFee = "\"\"";
+	string bid_in_offer_currency = "0.03";
+	string total_in_payment_option = strprintf("%.*f", 2, pegRates["USD"] * 0.05);
+	string bid_in_payment_option = strprintf("%.*f", 2, pegRates["USD"] * 0.03);
+	string query = "escrownew true buyerauction arbiterauction " + offerguid + " " + qty + " " + buyNowStr + " " + total_in_payment_option + " " + shippingFee + " " + networkFee + " " + arbiterFee + " " + witnessFee + " " + exttxid + " " + paymentoptions + " " + bid_in_payment_option + " " + bid_in_offer_currency + " " + witness;
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", query));
+	string totalWithFees = find_value(r.get_obj(), "totalwithfees").write();
+	// should probably pay in offer currency, convert rate, should probably also first check balance of escrow address and pay the difference incase a deposit was paid or another payment was already done.
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliaspay buyerauction SYS \"{\\\"sellerauction\\\":" + totalWithFees + "}\""));
+	GenerateBlocks(5);
+	GenerateBlocks(5, "node2");
+	GenerateBlocks(5, "node3");
+
 	EscrowRelease("node1", "buyer", guid);
 	EscrowClaimRelease("node2", guid);
 	// after expiry can update
@@ -69,7 +92,7 @@ BOOST_AUTO_TEST_CASE(generate_auction_reserve)
 	int64_t mediantime = find_value(r.get_obj(), "mediantime").get_int64() + 3600;
 	string expiry = boost::lexical_cast<string>(mediantime);
 	string offerguid = OfferNew("node2", "sellerauction1", "category", "title", "100", "0.05", "description", "USD", "\"\"" /*certguid*/, "\"\"" /*paymentoptions*/, "BUYNOW+AUCTION", expiry, "0.011");
-	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress buyerauction1 500"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress buyerauction1 1000"), runtime_error);
 	GenerateBlocks(10);
 	string exttxid = "\"\"";
 	string paymentoptions = "\"\"";
@@ -98,6 +121,29 @@ BOOST_AUTO_TEST_CASE(generate_auction_reserve)
 	EscrowBid("node1", "buyerauction1", guid, "0.04");
 
 	EscrowNewBuyItNow("node1", "node2", "buyerauction1", offerguid, qty, "arbiterauction1a");
+
+	// get amount owing
+	string exttxid = "\"\"";
+	string paymentoptions = "\"\"";
+	string redeemscript = "\"\"";
+	string buyNowStr = "true";
+	string networkFee = "\"\"";
+	string arbiterFee = "\"\"";
+	string witness = "\"\"";
+	string witnessFee = "\"\"";
+	string shippingFee = "\"\"";
+	string bid_in_offer_currency = "0.04";
+	string total_in_payment_option = strprintf("%.*f", 2, pegRates["USD"] * 0.05);
+	string bid_in_payment_option = strprintf("%.*f", 2, pegRates["USD"] * 0.04);
+	string query = "escrownew true buyerauction arbiterauction " + offerguid + " " + qty + " " + buyNowStr + " " + total_in_payment_option + " " + shippingFee + " " + networkFee + " " + arbiterFee + " " + witnessFee + " " + exttxid + " " + paymentoptions + " " + bid_in_payment_option + " " + bid_in_offer_currency + " " + witness;
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", query));
+	string totalWithFees = find_value(r.get_obj(), "totalwithfees").write();
+	// should probably pay in offer currency, convert rate, should probably also first check balance of escrow address and pay the difference incase a deposit was paid or another payment was already done.
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliaspay buyerauction1 SYS \"{\\\"sellerauction1\\\":" + totalWithFees + "}\""));
+	GenerateBlocks(5);
+	GenerateBlocks(5, "node2");
+	GenerateBlocks(5, "node3");
+
 	EscrowRelease("node1", "buyer", guid);
 	EscrowClaimRelease("node2", guid);
 }
