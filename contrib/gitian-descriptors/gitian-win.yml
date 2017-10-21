@@ -1,5 +1,5 @@
 ---
-name: "iop-core-win-6.0.0b2"
+name: "iop-core-win-6.0.0"
 enable_cache: true
 suites:
 - "trusty"
