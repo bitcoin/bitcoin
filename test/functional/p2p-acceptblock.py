@@ -8,17 +8,22 @@ Since behavior differs when receiving unrequested blocks from whitelisted peers
 versus non-whitelisted peers, this tests the behavior of both (effectively two
 separate tests running in parallel).
 
-Setup: two nodes, node0 and node1, not connected to each other.  Node0 does not
+Setup: three nodes, node0+node1+node2, not connected to each other.  Node0 does not
 whitelist localhost, but node1 does. They will each be on their own chain for
-this test.
+this test.  Node2 will have nMinimumChainWork set to 0x10, so it won't process
+low-work unrequested blocks.
 
-We have one NodeConn connection to each, test_node and white_node respectively.
+We have one NodeConn connection to each, test_node, white_node, and min_work_node,
+respectively.
 
 The test:
 1. Generate one block on each node, to leave IBD.
 
 2. Mine a new block on each tip, and deliver to each node from node's peer.
-   The tip should advance.
+   The tip should advance for node0 and node1, but node2 should skip processing
+   due to nMinimumChainWork.
+
+Node2 is unused in tests 3-7:
 
 3. Mine a block that forks the previous block, and deliver to each node from
    corresponding peer.
@@ -46,6 +51,10 @@ The test:
 
 7. Send Node0 the missing block again.
    Node0 should process and the tip should advance.
+
+8. Test Node2 is able to sync when connected to node0 (which should have sufficient
+work on its chain).
+
 """
 
 from test_framework.mininode import *
@@ -62,52 +71,60 @@ class AcceptBlockTest(BitcoinTestFramework):
 
     def set_test_params(self):
         self.setup_clean_chain = True
-        self.num_nodes = 2
-        self.extra_args = [[], ["-whitelist=127.0.0.1"]]
+        self.num_nodes = 3
+        self.extra_args = [[], ["-whitelist=127.0.0.1"], ["-minimumchainwork=0x10"]]
 
     def setup_network(self):
         # Node0 will be used to test behavior of processing unrequested blocks
         # from peers which are not whitelisted, while Node1 will be used for
         # the whitelisted case.
+        # Node2 will be used for non-whitelisted peers to test the interaction
+        # with nMinimumChainWork.
         self.setup_nodes()
 
     def run_test(self):
         # Setup the p2p connections and start up the network thread.
         test_node = NodeConnCB()   # connects to node0 (not whitelisted)
         white_node = NodeConnCB()  # connects to node1 (whitelisted)
+        min_work_node = NodeConnCB()  # connects to node2 (not whitelisted)
 
         connections = []
         connections.append(NodeConn('127.0.0.1', p2p_port(0), self.nodes[0], test_node))
         connections.append(NodeConn('127.0.0.1', p2p_port(1), self.nodes[1], white_node))
+        connections.append(NodeConn('127.0.0.1', p2p_port(2), self.nodes[2], min_work_node))
         test_node.add_connection(connections[0])
         white_node.add_connection(connections[1])
+        min_work_node.add_connection(connections[2])
 
         NetworkThread().start() # Start up network handling in another thread
 
         # Test logic begins here
         test_node.wait_for_verack()
         white_node.wait_for_verack()
+        min_work_node.wait_for_verack()
 
-        # 1. Have both nodes mine a block (leave IBD)
+        # 1. Have nodes mine a block (nodes1/2 leave IBD)
         [ n.generate(1) for n in self.nodes ]
         tips = [ int("0x" + n.getbestblockhash(), 0) for n in self.nodes ]
 
         # 2. Send one block that builds on each tip.
-        # This should be accepted.
+        # This should be accepted by nodes 1/2
         blocks_h2 = []  # the height 2 blocks on each node's chain
         block_time = self.mocktime + 1
-        for i in range(2):
+        for i in range(3):
             blocks_h2.append(create_block(tips[i], create_coinbase(2), block_time + 1))
             blocks_h2[i].solve()
             block_time += 1
         test_node.send_message(msg_block(blocks_h2[0]))
         white_node.send_message(msg_block(blocks_h2[1]))
+        min_work_node.send_message(msg_block(blocks_h2[2]))
 
-        for x in [test_node, white_node]:
+        for x in [test_node, white_node, min_work_node]:
             x.sync_with_ping()
         assert_equal(self.nodes[0].getblockcount(), 2)
         assert_equal(self.nodes[1].getblockcount(), 2)
-        self.log.info("First height 2 block accepted by both nodes")
+        assert_equal(self.nodes[2].getblockcount(), 1)
+        self.log.info("First height 2 block accepted by node0/node1; correctly rejected by node2")
 
         # 3. Send another block that builds on the original tip.
         blocks_h2f = []  # Blocks at height 2 that fork off the main chain
@@ -220,6 +237,11 @@ class AcceptBlockTest(BitcoinTestFramework):
         test_node.sync_with_ping()
         assert_equal(self.nodes[0].getblockcount(), 290)
         self.log.info("Successfully reorged to longer chain from non-whitelisted peer")
+
+        # 8. Connect node2 to node0 and ensure it is able to sync
+        connect_nodes(self.nodes[0], 2)
+        sync_blocks([self.nodes[0], self.nodes[2]])
+        self.log.info("Successfully synced nodes 2 and 0")
 
         [ c.disconnect_node() for c in connections ]
 
