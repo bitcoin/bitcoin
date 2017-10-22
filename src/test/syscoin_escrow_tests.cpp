@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(generate_auction_regular)
 	GenerateBlocks(5, "node2");
 	GenerateBlocks(5, "node3");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "getaddressbalance \"{\\\"addresses\\\": [\\\"" + escrowaddress + "\\\"]}\""));
-	BOOST_CHECK_EQUAL(ValueFromAmount(find_value(r.get_obj(), "balance")).write(), totalWithFees);
+	BOOST_CHECK_EQUAL(AmountFromValue(find_value(r.get_obj(), "balance")), AmountFromValue(totalWithFees));
 
 
 	EscrowRelease("node1", "buyer", guid);
@@ -144,7 +144,7 @@ BOOST_AUTO_TEST_CASE(generate_auction_reserve)
 	GenerateBlocks(5, "node2");
 	GenerateBlocks(5, "node3");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "getaddressbalance \"{\\\"addresses\\\": [\\\"" + escrowaddress + "\\\"]}\""));
-	BOOST_CHECK_EQUAL(ValueFromAmount(find_value(r.get_obj(), "balance")).write(), totalWithFees);
+	BOOST_CHECK_EQUAL(AmountFromValue(find_value(r.get_obj(), "balance")), AmountFromValue(totalWithFees));
 
 
 	EscrowRelease("node1", "buyer", guid);
