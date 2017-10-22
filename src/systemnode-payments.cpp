@@ -228,7 +228,7 @@ void CSystemnodePayments::ProcessMessageSystemnodePayments(CNode* pfrom, std::st
             return;
         }
 
-        int nFirstBlock = nHeight - (mnodeman.CountEnabled()*1.25);
+        int nFirstBlock = nHeight - (snodeman.CountEnabled()*1.25);
         if(winner.nBlockHeight < nFirstBlock || winner.nBlockHeight > nHeight+20){
             LogPrint("mnpayments", "snw - winner out of range - FirstBlock %d Height %d bestHeight %d\n", nFirstBlock, winner.nBlockHeight, nHeight);
             return;
@@ -249,7 +249,7 @@ void CSystemnodePayments::ProcessMessageSystemnodePayments(CNode* pfrom, std::st
             LogPrintf("snw - invalid signature\n");
             if(systemnodeSync.IsSynced()) Misbehaving(pfrom->GetId(), 20);
             // it could just be a non-synced systemnode
-            mnodeman.AskForMN(pfrom, winner.vinSystemnode);
+            snodeman.AskForSN(pfrom, winner.vinSystemnode);
             return;
         }
 
@@ -350,7 +350,7 @@ void CSystemnodePayments::CleanPaymentList()
     }
 
     //keep up to five cycles for historical sake
-    int nLimit = std::max(int(mnodeman.size()*1.25), 1000);
+    int nLimit = std::max(int(snodeman.size()*1.25), 1000);
 
     std::map<uint256, CSystemnodePaymentWinner>::iterator it = mapSystemnodePayeeVotes.begin();
     while(it != mapSystemnodePayeeVotes.end()) {
