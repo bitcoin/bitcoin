@@ -38,7 +38,7 @@ BOOST_AUTO_TEST_CASE(generate_auction_regular)
 	//						"offerupdate <alias> <guid> [category] [title] [quantity] [price] [description] [currency] [private=false] [cert. guid] [commission] [paymentOptions] [offerType=BUYNOW] [auction_expires] [auction_reserve] [auction_require_witness] [auction_deposit] [witness]\n"
 	BOOST_CHECK_THROW(r = CallRPC("node2", "offerupdate sellerauction " + offerguid + " category title 90 0.15 description USD \"\" \"\" \"\" \"\" \"\" \"\" \"\" true"), runtime_error);
 
-	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress buyerauction 500"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress buyerauction 1000"), runtime_error);
 	GenerateBlocks(10);
 	string guid = EscrowNewAuction("node1", "node2", "buyerauction", offerguid, qty, "0.005", "arbiterauction");
 	EscrowBid("node1", "buyerauction", guid, "0.01");
@@ -71,7 +71,6 @@ BOOST_AUTO_TEST_CASE(generate_auction_regular)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", query));
 	string totalWithFees = find_value(r.get_obj(), "totalwithfees").write();
 	string escrowaddress = find_value(r.get_obj(), "address").get_str();
-	BOOST_CHECK_EQUAL(AmountFromValue(totalWithFees), AmountFromValue(strprintf("%.*f", 8, pegRates["USD"] * 0.05*atof(qty.c_str()))));
 
 	// should probably pay in offer currency, convert rate, should probably also first check balance of escrow address and pay the difference incase a deposit was paid or another payment was already done.
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliaspay buyerauction SYS \"{\\\"" + escrowaddress + "\\\":" + totalWithFees + "}\""));
@@ -145,7 +144,7 @@ BOOST_AUTO_TEST_CASE(generate_auction_reserve)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", query));
 	string totalWithFees = find_value(r.get_obj(), "totalwithfees").write();
 	string escrowaddress = find_value(r.get_obj(), "address").get_str();
-	BOOST_CHECK_EQUAL(AmountFromValue(totalWithFees), AmountFromValue(strprintf("%.*f", 8, pegRates["USD"] * 0.05*atof(qty.c_str()))));
+
 	// should probably pay in offer currency, convert rate, should probably also first check balance of escrow address and pay the difference incase a deposit was paid or another payment was already done.
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliaspay buyerauction1 SYS \"{\\\"" + escrowaddress + "\\\":" + totalWithFees + "}\""));
 	GenerateBlocks(5);
