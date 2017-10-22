@@ -10,6 +10,14 @@
 BOOST_FIXTURE_TEST_SUITE (syscoin_escrow_tests, BasicSyscoinTestingSetup)
 BOOST_AUTO_TEST_CASE(generate_auction_regular)
 {
+	// rate converstion to SYS
+	pegRates["USD"] = 2690.1;
+	pegRates["EUR"] = 2695.2;
+	pegRates["GBP"] = 2697.3;
+	pegRates["CAD"] = 2698.0;
+	pegRates["BTC"] = 100000.0;
+	pegRates["ZEC"] = 10000.0;
+	pegRates["SYS"] = 1.0;
 	// create regular auction, bid and do buynow 
 	printf("Running generate_auction_regular...\n");
 	UniValue r;
