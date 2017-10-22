@@ -58,7 +58,7 @@ std::string FormatScript(const CScript& script)
         ret += strprintf("0x%x ", HexStr(it2, script.end()));
         break;
     }
-    return ret.substr(0, ret.size() - 1);
+    return ret.size() > 0 ? ret.substr(0, ret.size() - 1) : ret;
 }
 
 const std::map<unsigned char, std::string> mapSigHashTypes = {
