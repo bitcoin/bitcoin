@@ -1955,7 +1955,7 @@ void EscrowClaimRelease(const string& node, const string& guid)
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "offerinfo " + offer));
 	int nQtyOfferAfter = find_value(r.get_obj(), "quantity").get_int();
 	// we have already changed qty as we ack the escrow when calling escrownew in this test suite unless its an auction(we are not acking auction bids or buynow purchases in our test suite)
-	if (offertype != "AUCTION") {
+	if (offertype.find("AUCTION") != offerType.end()) {
 		BOOST_CHECK_EQUAL(nQtyOfferBefore, nQtyOfferAfter);
 	}
 	else
