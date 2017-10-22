@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(generate_auction_regular)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", query));
 	string totalWithFees = find_value(r.get_obj(), "totalwithfees").write();
 	string escrowaddress = find_value(r.get_obj(), "address").get_str();
-	BOOST_CHECK_EQUAL(AmountFromValue(totalWithFees), AmountFromValue(strprintf("%.*f", 2, pegRates["USD"] * 0.05*atoi(qty.c_str()))));
+	BOOST_CHECK_EQUAL(AmountFromValue(totalWithFees), AmountFromValue(strprintf("%.*f", 2, pegRates["USD"] * 0.05*atof(qty.c_str()))));
 
 	// should probably pay in offer currency, convert rate, should probably also first check balance of escrow address and pay the difference incase a deposit was paid or another payment was already done.
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliaspay buyerauction SYS \"{\\\"" + escrowaddress + "\\\":" + totalWithFees + "}\""));
@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(generate_auction_regular)
 	GenerateBlocks(5, "node2");
 	GenerateBlocks(5, "node3");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "getaddressbalance \"{\\\"addresses\\\": [\\\"" + escrowaddress + "\\\"]}\""));
-	BOOST_CHECK_EQUAL(AmountFromValue(find_value(r.get_obj(), "balance")), AmountFromValue(totalWithFees));
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "balance").get_int64(), AmountFromValue(totalWithFees));
 
 
 	EscrowRelease("node1", "buyer", guid);
@@ -137,14 +137,14 @@ BOOST_AUTO_TEST_CASE(generate_auction_reserve)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", query));
 	string totalWithFees = find_value(r.get_obj(), "totalwithfees").write();
 	string escrowaddress = find_value(r.get_obj(), "address").get_str();
-	BOOST_CHECK_EQUAL(AmountFromValue(totalWithFees), AmountFromValue(strprintf("%.*f", 2, pegRates["USD"] * 0.05*atoi(qty.c_str()))));
+	BOOST_CHECK_EQUAL(AmountFromValue(totalWithFees), AmountFromValue(strprintf("%.*f", 2, pegRates["USD"] * 0.05*atof(qty.c_str()))));
 	// should probably pay in offer currency, convert rate, should probably also first check balance of escrow address and pay the difference incase a deposit was paid or another payment was already done.
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliaspay buyerauction1 SYS \"{\\\"" + escrowaddress + "\\\":" + totalWithFees + "}\""));
 	GenerateBlocks(5);
 	GenerateBlocks(5, "node2");
 	GenerateBlocks(5, "node3");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "getaddressbalance \"{\\\"addresses\\\": [\\\"" + escrowaddress + "\\\"]}\""));
-	BOOST_CHECK_EQUAL(AmountFromValue(find_value(r.get_obj(), "balance")), AmountFromValue(totalWithFees));
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "balance").get_int64(), AmountFromValue(totalWithFees));
 
 
 	EscrowRelease("node1", "buyer", guid);
