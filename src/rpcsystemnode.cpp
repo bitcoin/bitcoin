@@ -669,7 +669,6 @@ Value systemnodebroadcast(const Array& params, bool fHelp)
                 resultObj.push_back(Pair("vchSig", EncodeBase64(&snb.sig[0], snb.sig.size())));
                 resultObj.push_back(Pair("sigTime", snb.sigTime));
                 resultObj.push_back(Pair("protocolVersion", snb.protocolVersion));
-                resultObj.push_back(Pair("nLastDsq", snb.nLastDsq));
 
                 Object lastPingObj;
                 lastPingObj.push_back(Pair("vin", snb.lastPing.vin.ToString()));

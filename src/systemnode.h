@@ -127,7 +127,6 @@ public:
     int cacheInputAgeBlock;
     bool unitTest;
     int protocolVersion;
-    int64_t nLastDsq; //the dsq count from the last dsq broadcast of this node
     CSystemnodePing lastPing;
 
     CSystemnode();
@@ -151,7 +150,6 @@ public:
         swap(first.lastPing, second.lastPing);
         swap(first.unitTest, second.unitTest);
         swap(first.protocolVersion, second.protocolVersion);
-        swap(first.nLastDsq, second.nLastDsq);
     }
 
     CSystemnode& operator=(CSystemnode from)
@@ -186,7 +184,6 @@ public:
             READWRITE(activeState);
             READWRITE(lastPing);
             READWRITE(unitTest);
-            READWRITE(nLastDsq);
     }
 
     int64_t SecondsSincePayment();
@@ -268,7 +265,6 @@ public:
         READWRITE(sigTime);
         READWRITE(protocolVersion);
         READWRITE(lastPing);
-        READWRITE(nLastDsq);
     }
 
     uint256 GetHash(){
