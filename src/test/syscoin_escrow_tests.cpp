@@ -135,7 +135,7 @@ BOOST_AUTO_TEST_CASE(generate_auction_reserve)
 	bid_in_payment_option = strprintf("%.*f", 2, pegRates["USD"] * 0.04);
 	query = "escrownew true buyerauction1 arbiterauction1 " + offerguid + " " + qty + " " + buyNowStr + " " + total_in_payment_option + " " + shippingFee + " " + networkFee + " " + arbiterFee + " " + witnessFee + " " + exttxid + " " + paymentoptions + " " + bid_in_payment_option + " " + bid_in_offer_currency + " " + witness;
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", query));
-	BOOST_CHECK_EQUAL(AmountFromValue(totalWithFees), AmountFromValue(strprintf("%.*f", 2, pegRates["USD"] * 0.05*atoi(qty).c_str())));
+	BOOST_CHECK_EQUAL(AmountFromValue(totalWithFees), AmountFromValue(strprintf("%.*f", 2, pegRates["USD"] * 0.05*atoi(qty.c_str()))));
 	string totalWithFees = find_value(r.get_obj(), "totalwithfees").write();
 	string escrowaddress = find_value(r.get_obj(), "address").get_str();
 	// should probably pay in offer currency, convert rate, should probably also first check balance of escrow address and pay the difference incase a deposit was paid or another payment was already done.
