@@ -135,6 +135,10 @@ namespace {
     /** Number of outbound peers with m_chain_sync.m_protect. */
     int g_outbound_peers_with_protect_from_disconnect = 0;
 
+
+    /** When our tip was last updated. */
+    int64_t g_last_tip_update = 0;
+
     /** Relay map, protected by cs_main. */
     typedef std::map<uint256, CTransactionRef> MapRelay;
     MapRelay mapRelay;
@@ -242,6 +246,9 @@ struct CNodeState {
 
     ChainSyncTimeoutState m_chain_sync;
 
+    //! Time of last new block announcement
+    int64_t m_last_block_announcement;
+
     CNodeState(CAddress addrIn, std::string addrNameIn) : address(addrIn), name(addrNameIn) {
         fCurrentlyConnected = false;
         nMisbehavior = 0;
@@ -265,6 +272,7 @@ struct CNodeState {
         fWantsCmpctWitness = false;
         fSupportsDesiredCmpctVersion = false;
         m_chain_sync = { 0, nullptr, false, false };
+        m_last_block_announcement = 0;
     }
 };
 
@@ -807,6 +815,8 @@ void PeerLogicValidation::BlockConnected(const std::shared_ptr<const CBlock>& pb
         }
         LogPrint(BCLog::MEMPOOL, "Erased %d orphan tx included or conflicted by block\n", nErased);
     }
+
+    g_last_tip_update = GetTime();
 }
 
 // All of the following cache a recent block, and are protected by cs_most_recent_block
@@ -1369,6 +1379,7 @@ bool static ProcessHeadersMessage(CNode *pfrom, CConnman *connman, const std::ve
         return true;
     }
 
+    bool received_new_header = false;
     const CBlockIndex *pindexLast = nullptr;
     {
         LOCK(cs_main);
@@ -1408,6 +1419,12 @@ bool static ProcessHeadersMessage(CNode *pfrom, CConnman *connman, const std::ve
                 return error("non-continuous headers sequence");
             }
             hashLastBlock = header.GetHash();
+        }
+
+        // If we don't have the last header, then they'll have given us
+        // something new (if these headers are valid).
+        if (mapBlockIndex.find(hashLastBlock) == mapBlockIndex.end()) {
+            received_new_header = true;
         }
     }
 
@@ -1472,6 +1489,10 @@ bool static ProcessHeadersMessage(CNode *pfrom, CConnman *connman, const std::ve
         // From here, pindexBestKnownBlock should be guaranteed to be non-null,
         // because it is set in UpdateBlockAvailability. Some nullptr checks
         // are still present, however, as belt-and-suspenders.
+
+        if (received_new_header && pindexLast->nChainWork > chainActive.Tip()->nChainWork) {
+            nodestate->m_last_block_announcement = GetTime();
+        }
 
         if (nCount == MAX_HEADERS_RESULTS) {
             // Headers message had its maximum size; the peer may have more headers.
@@ -2421,6 +2442,8 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         CBlockHeaderAndShortTxIDs cmpctblock;
         vRecv >> cmpctblock;
 
+        bool received_new_header = false;
+
         {
         LOCK(cs_main);
 
@@ -2429,6 +2452,10 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             if (!IsInitialBlockDownload())
                 connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::GETHEADERS, chainActive.GetLocator(pindexBestHeader), uint256()));
             return true;
+        }
+
+        if (mapBlockIndex.find(cmpctblock.header.GetHash()) == mapBlockIndex.end()) {
+            received_new_header = true;
         }
         }
 
@@ -2468,6 +2495,14 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         assert(pindex);
         UpdateBlockAvailability(pfrom->GetId(), pindex->GetBlockHash());
 
+        CNodeState *nodestate = State(pfrom->GetId());
+
+        // If this was a new header with more work than our tip, update the
+        // peer's last block announcement time
+        if (received_new_header && pindex->nChainWork > chainActive.Tip()->nChainWork) {
+            nodestate->m_last_block_announcement = GetTime();
+        }
+
         std::map<uint256, std::pair<NodeId, std::list<QueuedBlock>::iterator> >::iterator blockInFlightIt = mapBlocksInFlight.find(pindex->GetBlockHash());
         bool fAlreadyInFlight = blockInFlightIt != mapBlocksInFlight.end();
 
@@ -2489,8 +2524,6 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         // If we're not close to tip yet, give up and let parallel block fetch work its magic
         if (!fAlreadyInFlight && !CanDirectFetch(chainparams.GetConsensus()))
             return true;
-
-        CNodeState *nodestate = State(pfrom->GetId());
 
         if (IsWitnessEnabled(pindex->pprev, chainparams.GetConsensus()) && !nodestate->fSupportsDesiredCmpctVersion) {
             // Don't bother trying to process compact blocks from v1 peers
