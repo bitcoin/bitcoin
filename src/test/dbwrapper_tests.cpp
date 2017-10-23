@@ -39,7 +39,7 @@ BOOST_AUTO_TEST_CASE(dbwrapper)
         uint256 res;
 
         // Ensure that we're doing real obfuscation when obfuscate=true
-        BOOST_CHECK(obfuscate != is_null_key(dbw.GetObfuscateKey()));
+        BOOST_CHECK(obfuscate != is_null_key(dbwrapper_private::GetObfuscateKey(dbw)));
 
         BOOST_CHECK(dbw.Write(key, in));
         BOOST_CHECK(dbw.Read(key, res));
@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(dbwrapper_batch)
         uint256 in3 = GetRandHash();
 
         uint256 res;
-        CDBBatch batch(&dbw.GetObfuscateKey());
+        CDBBatch batch(dbw);
 
         batch.Write(key, in);
         batch.Write(key2, in2);
@@ -156,7 +156,7 @@ BOOST_AUTO_TEST_CASE(existing_data_no_obfuscate)
     BOOST_CHECK_EQUAL(res2.ToString(), in.ToString());
 
     BOOST_CHECK(!odbw.IsEmpty()); // There should be existing data
-    BOOST_CHECK(is_null_key(odbw.GetObfuscateKey())); // The key should be an empty string
+    BOOST_CHECK(is_null_key(dbwrapper_private::GetObfuscateKey(odbw))); // The key should be an empty string
 
     uint256 in2 = GetRandHash();
     uint256 res3;
@@ -193,7 +193,7 @@ BOOST_AUTO_TEST_CASE(existing_data_reindex)
     // Check that the key/val we wrote with unobfuscated wrapper doesn't exist
     uint256 res2;
     BOOST_CHECK(!odbw.Read(key, res2));
-    BOOST_CHECK(!is_null_key(odbw.GetObfuscateKey()));
+    BOOST_CHECK(!is_null_key(dbwrapper_private::GetObfuscateKey(odbw)));
 
     uint256 in2 = GetRandHash();
     uint256 res3;
