@@ -292,7 +292,7 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
         for (const CTxOut& txout : wtx.tx->vout)
             if(wallet->IsMine(txout))
                 strHTML += "<b>" + tr("Credit") + ":</b> " + BitcoinUnits::formatHtmlWithUnit(unit, wallet->GetCredit(txout, ISMINE_ALL)) + "<br>";
-        
+
         for (const auto &txout : wtx.tx->vpout)
             if(wallet->IsMine(txout.get()))
                 strHTML += "<b>" + tr("Credit") + ":</b> " + BitcoinUnits::formatHtmlWithUnit(unit, wallet->GetCredit(txout.get(), ISMINE_ALL)) + "<br>";
@@ -302,13 +302,12 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
 
         strHTML += "<br><b>" + tr("Inputs") + ":</b>";
         strHTML += "<ul>";
-        
-        CHDWallet *phdw = (CHDWallet*) wallet;
+
         CCoinsViewCache view(pcoinsTip);
         for (const auto &txin : wtx.tx->vin)
         {
             COutPoint prevout = txin.prevout;
-            
+
             Coin prev;
             if (view.GetCoin(prevout, prev))
             {
@@ -316,18 +315,18 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
                     continue;
                 strHTML += "<li>";
                 CTxDestination address;
-                
+
                 const CScript *pScript = &prev.out.scriptPubKey;
                 CAmount nValue = prev.out.nValue;
-                
+
                 if (ExtractDestination(*pScript, address))
                 {
                     if (wallet->mapAddressBook.count(address) && !wallet->mapAddressBook[address].name.empty())
                         strHTML += GUIUtil::HtmlEscape(wallet->mapAddressBook[address].name) + " ";
                     strHTML += QString::fromStdString(CBitcoinAddress(address).ToString());
                 };
-                
-                
+
+
                 if (prev.nType == OUTPUT_STANDARD)
                     strHTML = strHTML + " " + tr("Amount") + "=" + BitcoinUnits::formatHtmlWithUnit(unit, nValue);
                 else
@@ -352,7 +351,7 @@ QString TransactionDesc::toHTML(CHDWallet *wallet, CTransactionRecord &rtx, Tran
     LOCK2(cs_main, wallet->cs_wallet);
     strHTML.reserve(4000);
     strHTML += "<html><font face='verdana, arial, helvetica, sans-serif'>";
-    
+
     int64_t nTime = rtx.GetTxTime();
 
     //strHTML += "<b>" + tr("Status") + ":</b> " + FormatTxStatus(wtx);
@@ -368,8 +367,8 @@ QString TransactionDesc::toHTML(CHDWallet *wallet, CTransactionRecord &rtx, Tran
 
     strHTML += "<b>" + tr("Date") + ":</b> " + (nTime ? GUIUtil::dateTimeStr(nTime) : "") + "<br>";
     strHTML += "<b>" + tr("Transaction ID") + ":</b> " + rec->getTxID() + "<br>";
-    
-    
+
+
     JSONRPCRequest request;
     QByteArray encodedName = QUrl::toPercentEncoding(QString::fromStdString(wallet->GetName()));
     request.URI = "/wallet/"+std::string(encodedName.constData(), encodedName.length());
@@ -378,29 +377,29 @@ QString TransactionDesc::toHTML(CHDWallet *wallet, CTransactionRecord &rtx, Tran
     params.push_back(rec->getTxID().toStdString());
     request.params = params;
     UniValue rv = gettransaction(request);
-    
+
     if (!rv["hex"].isNull())
         strHTML += "<b>" + tr("Transaction total size") + ":</b> " + QString::number(rv["hex"].get_str().length() / 2) + " bytes<br>";
-    
+
     strHTML += "<b>" + tr("Confirmations") + ":</b> " + QString::number(rv["confirmations"].get_int()) + "<br>";
-    
+
     if (!rv["blockhash"].isNull())
     {
         strHTML += "<b>" + tr("Block hash") + ":</b> " + QString::fromStdString(rv["blockhash"].get_str()) + "<br>";
         strHTML += "<b>" + tr("Block index") + ":</b> " + QString::number(rv["blockindex"].get_int()) + "<br>";
         strHTML += "<b>" + tr("Block time") + ":</b> " + GUIUtil::dateTimeStr(rv["blocktime"].get_int()) + "<br>";
     };
-    
+
     strHTML += "<b>Details:</b><br>";
     strHTML += "<p>";
-    
+
     std::string sDetails = rv["details"].write(1);
     part::ReplaceStrInPlace(sDetails, "\n", "<br>");
     strHTML += QString::fromStdString(sDetails);
-    
+
     strHTML += "</p>";
-    
-    
+
+
     strHTML += "</font></html>";
     return strHTML;
 };

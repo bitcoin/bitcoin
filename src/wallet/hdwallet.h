@@ -399,9 +399,9 @@ public:
 
     bool LoadTxRecords(CHDWalletDB *pwdb);
 
-    bool EncryptWallet(const SecureString &strWalletPassphrase);
+    bool EncryptWallet(const SecureString &strWalletPassphrase) override;
     bool Lock();
-    bool Unlock(const SecureString &strWalletPassphrase);
+    bool Unlock(const SecureString &strWalletPassphrase) override;
 
 
     bool HaveAddress(const CBitcoinAddress &address);
@@ -417,7 +417,7 @@ public:
 
     bool GetPubKey(const CKeyID &address, CPubKey &pkOut) const;
 
-    bool GetKeyFromPool(CPubKey &key);
+    bool GetKeyFromPool(CPubKey &key, bool internal = false) override;
 
     bool HaveStealthAddress(const CStealthAddress &sxAddr) const;
     bool GetStealthAddressScanKey(CStealthAddress &sxAddr) const;
@@ -427,8 +427,8 @@ public:
     bool AddressBookChangedNotify(const CTxDestination &address, ChangeType nMode);
     bool SetAddressBook(CHDWalletDB *pwdb, const CTxDestination &address, const std::string &strName,
         const std::string &purpose, const std::vector<uint32_t> &vPath, bool fNotifyChanged=true);
-    bool SetAddressBook(const CTxDestination &address, const std::string &strName, const std::string &strPurpose);
-    bool DelAddressBook(const CTxDestination &address);
+    bool SetAddressBook(const CTxDestination &address, const std::string &strName, const std::string &strPurpose) override;
+    bool DelAddressBook(const CTxDestination &address) override;
 
 
     int64_t GetOldestActiveAccountTime();
@@ -438,10 +438,9 @@ public:
     isminetype IsMine(const CScript &scriptPubKey, CKeyID &keyID,
         CEKAKey &ak, CExtKeyAccount *&pa, bool &isInvalid, SigVersion = SIGVERSION_BASE);
 
-    isminetype IsMine(const CTxOutBase *txout) const ;
+    isminetype IsMine(const CTxOutBase *txout) const override;
     bool IsMine(const CTransaction& tx) const override;
-    bool IsFromMe(const CTransaction& tx) const;
-
+    bool IsFromMe(const CTransaction& tx) const override;
 
 
     /**
@@ -453,8 +452,8 @@ public:
     CAmount GetDebit(CHDWalletDB *pwdb, const CTransactionRecord &rtx, const isminefilter& filter) const;
 
 
-    CAmount GetCredit(const CTxOutBase *txout, const isminefilter &filter) const;
-    CAmount GetCredit(const CTransaction &tx, const isminefilter &filter) const;
+    CAmount GetCredit(const CTxOutBase *txout, const isminefilter &filter) const override;
+    CAmount GetCredit(const CTransaction &tx, const isminefilter &filter) const override;
 
     void GetCredit(const CTransaction &tx, CAmount &nSpendable, CAmount &nWatchOnly) const;
 
@@ -462,9 +461,9 @@ public:
     bool InMempool(const uint256 &hash) const;
     bool IsTrusted(const uint256 &hash, const uint256 &blockhash, int nIndex = 0) const;
 
-    CAmount GetBalance() const;
+    CAmount GetBalance() const override;
     CAmount GetStakeableBalance() const;        // Includes watch_only
-    CAmount GetUnconfirmedBalance() const;
+    CAmount GetUnconfirmedBalance() const override;
     CAmount GetBlindBalance();
     CAmount GetAnonBalance();
     CAmount GetStaked();
@@ -517,7 +516,7 @@ public:
 
 
 
-    bool LoadToWallet(const CWalletTx& wtxIn);
+    bool LoadToWallet(const CWalletTx& wtxIn) override;
     bool LoadToWallet(const uint256 &hash, const CTransactionRecord &rtx);
 
     /** Remove txn from mapwallet and TxSpends */
@@ -595,14 +594,20 @@ public:
     int ScanChainFromHeight(int nHeight);
 
     /**
+     * Estimate the minimum fee considering user set parameters
+     * and the required fee
+     */
+    CAmount GetMinimumFee(unsigned int nTxBytes, const CCoinControl& coin_control, const CTxMemPool& pool, const CBlockPolicyEstimator& estimator, FeeCalculation *feeCalc) const override;
+    /**
      * Insert additional inputs into the transaction by
      * calling CreateTransaction();
      */
-    bool FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& nChangePosInOut, std::string& strFailReason, bool lockUnspents, const std::set<int>& setSubtractFeeFromOutputs, CCoinControl);
+    bool FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& nChangePosInOut, std::string& strFailReason, bool lockUnspents, const std::set<int>& setSubtractFeeFromOutputs, CCoinControl) override;
+    bool SignTransaction(CMutableTransaction& tx) override;
 
     bool CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet, int& nChangePosInOut,
                            std::string& strFailReason, const CCoinControl& coin_control, bool sign = true) override;
-    bool CommitTransaction(CWalletTx &wtxNew, CReserveKey &reservekey, CConnman *connman, CValidationState &state);
+    bool CommitTransaction(CWalletTx &wtxNew, CReserveKey &reservekey, CConnman *connman, CValidationState &state) override;
     bool CommitTransaction(CWalletTx &wtxNew, CTransactionRecord &rtx,
         CReserveKey &reservekey, CConnman *connman, CValidationState &state);
 
@@ -621,11 +626,11 @@ public:
     bool FindStealthTransactions(const CTransaction &tx, mapValue_t &mapNarr);
 
     bool ScanForOwnedOutputs(const CTransaction &tx, size_t &nCT, size_t &nRingCT, mapValue_t &mapNarr);
-    bool AddToWalletIfInvolvingMe(const CTransactionRef& ptx, const CBlockIndex* pIndex, int posInBlock, bool fUpdate);
+    bool AddToWalletIfInvolvingMe(const CTransactionRef& ptx, const CBlockIndex* pIndex, int posInBlock, bool fUpdate) override;
 
     CWalletTx *GetTempWalletTx(const uint256& hash);
 
-    const CWalletTx *GetWalletTx(const uint256& hash) const;
+    const CWalletTx *GetWalletTx(const uint256& hash) const override;
     CWalletTx *GetWalletTx(const uint256& hash);
 
     int InsertTempTxn(const uint256 &txid, const CTransactionRecord *rtx) const;
@@ -651,7 +656,7 @@ public:
      * populate vCoins with vector of available COutputs.
      */
     void AvailableCoins(std::vector<COutput>& vCoins, bool fOnlySafe=true, const CCoinControl *coinControl = nullptr, const CAmount& nMinimumAmount = 1, const CAmount& nMaximumAmount = MAX_MONEY, const CAmount& nMinimumSumAmount = MAX_MONEY, const uint64_t& nMaximumCount = 0, const int& nMinDepth = 0, const int& nMaxDepth = 0x7FFFFFFF, bool fIncludeImmature=false) const override;
-    bool SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAmount& nTargetValue, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet, const CCoinControl *coinControl = nullptr) const;
+    bool SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAmount& nTargetValue, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet, const CCoinControl *coinControl = nullptr) const override;
 
     void AvailableBlindedCoins(std::vector<COutputR>& vCoins, bool fOnlySafe=true, const CCoinControl *coinControl = nullptr, const CAmount& nMinimumAmount = 1, const CAmount& nMaximumAmount = MAX_MONEY, const CAmount& nMinimumSumAmount = MAX_MONEY, const uint64_t& nMaximumCount = 0, const int& nMinDepth = 0, const int& nMaxDepth = 0x7FFFFFFF, bool fIncludeImmature=false) const;
     bool SelectBlindedCoins(const std::vector<COutputR>& vAvailableCoins, const CAmount& nTargetValue, std::vector<std::pair<MapRecords_t::const_iterator,unsigned int> > &setCoinsRet, CAmount &nValueRet, const CCoinControl *coinControl = nullptr) const;
@@ -661,15 +666,15 @@ public:
 
     bool SelectCoinsMinConf(const CAmount& nTargetValue, int nConfMine, int nConfTheirs, uint64_t nMaxAncestors, std::vector<COutputR> vCoins, std::vector<std::pair<MapRecords_t::const_iterator,unsigned int> > &setCoinsRet, CAmount &nValueRet) const;
 
-    bool IsSpent(const uint256& hash, unsigned int n) const;
+    bool IsSpent(const uint256& hash, unsigned int n) const override;
 
     std::set<uint256> GetConflicts(const uint256 &txid) const;
 
     /* Mark a transaction (and it in-wallet descendants) as abandoned so its inputs may be respent. */
     bool AbandonTransaction(const uint256 &hashTx) override;
 
-    void MarkConflicted(const uint256 &hashBlock, const uint256 &hashTx);
-    void SyncMetaData(std::pair<TxSpends::iterator, TxSpends::iterator>);
+    void MarkConflicted(const uint256 &hashBlock, const uint256 &hashTx) override;
+    void SyncMetaData(std::pair<TxSpends::iterator, TxSpends::iterator>) override;
 
     bool GetSetting(const std::string &setting, UniValue &json);
     bool SetSetting(const std::string &setting, const UniValue &json);

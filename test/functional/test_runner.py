@@ -257,11 +257,13 @@ def main():
     else:
         # No individual tests have been specified.
         # Run all base tests, and optionally run extended tests.
+        test_list = []
         if args.particl:
-            test_list = PARTICL_SCRIPTS
-        elif args.insight:
-            test_list = INSIGHT_SCRIPTS
-        else:
+            test_list += PARTICL_SCRIPTS
+        if args.insight:
+            test_list += INSIGHT_SCRIPTS
+
+        if len(test_list) == 0:
             test_list = BASE_SCRIPTS
             if args.extended:
                 # place the EXTENDED_SCRIPTS first since the three longest ones
@@ -343,7 +345,7 @@ def run_tests(test_list, src_dir, build_dir, exeext, tmpdir, jobs=1, enable_cove
             if gArgs.withstdout:
                 print(BOLD[1] + 'stdout:\n' + BOLD[0] + stdout + '\n')
                 print(BOLD[1] + 'stderr:\n' + BOLD[0] + stderr + '\n')
-            
+
             logging.debug("\n%s%s%s passed, Duration: %s s" % (BOLD[1], test_result.name, BOLD[0], test_result.time))
         elif test_result.status == "Skipped":
             logging.debug("\n%s%s%s skipped" % (BOLD[1], test_result.name, BOLD[0]))

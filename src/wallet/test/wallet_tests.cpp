@@ -596,6 +596,8 @@ public:
     {
         CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
         ::bitdb.MakeMock();
+
+        gArgs.ForceSetArg("-legacymode", "1");
         fParticlWallet = false;
         wallet.reset(new CWallet(std::unique_ptr<CWalletDBWrapper>(new CWalletDBWrapper(&bitdb, "wallet_test.dat"))));
         bool firstRun;

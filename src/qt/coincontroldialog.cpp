@@ -106,7 +106,7 @@ CoinControlDialog::CoinControlDialog(const PlatformStyle *_platformStyle, QWidge
     // toggle tree/list mode
     connect(ui->radioTreeMode, SIGNAL(toggled(bool)), this, SLOT(radioTreeMode(bool)));
     connect(ui->radioListMode, SIGNAL(toggled(bool)), this, SLOT(radioListMode(bool)));
-    
+
     connect(ui->cbxType, SIGNAL(currentIndexChanged(int)), this, SLOT(cbxTypeChanged(int)));
 
     // click on checkbox
@@ -148,7 +148,7 @@ CoinControlDialog::CoinControlDialog(const PlatformStyle *_platformStyle, QWidge
         ui->radioTreeMode->click();
     if (settings.contains("nCoinControlSortColumn") && settings.contains("nCoinControlSortOrder"))
         sortView(settings.value("nCoinControlSortColumn").toInt(), ((Qt::SortOrder)settings.value("nCoinControlSortOrder").toInt()));
-    
+
     if (coinControl->nCoinType == OUTPUT_CT)
         ui->cbxType->setCurrentIndex(1);
     else
@@ -466,26 +466,26 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
     std::vector<COutPoint> vCoinControl;
     std::vector<COutput>   vOutputs;
     coinControl->ListSelected(vCoinControl);
-    
-    
+
+
     //model->getOutputRecords(vCoinControl, vOutputs);
     if (coinControl->nCoinType != OUTPUT_STANDARD)
     {
         CHDWallet *phdw = model->getParticlWallet();
-        
+
         for (const auto &op : vCoinControl)
         {
             MapRecords_t::const_iterator mri = phdw->mapRecords.find(op.hash);
             if (mri == phdw->mapRecords.end())
                 continue;
-            
+
             const COutputRecord *oR = mri->second.GetOutput(op.n);
-            
+
             if (!oR)
                 continue;
-            
+
             nQuantity++;
-            
+
             nAmount += oR->nValue;
         };
     } else
@@ -506,7 +506,7 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
             // Quantity
             nQuantity++;
 
-            
+
             // Amount
             CAmount nOutputValue = out.tx->tx->vpout[out.i]->GetValue();
             nAmount += nOutputValue;
@@ -515,10 +515,10 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
             CTxDestination address;
             int witnessversion = 0;
             std::vector<unsigned char> witnessprogram;
-            
-            
+
+
             const CScript *pScriptPubKey = out.tx->tx->vpout[out.i]->GetPScriptPubKey();
-            
+
             if (!pScriptPubKey)
             {
                 nBytesInputs += 148;
@@ -563,7 +563,7 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
                 nBytes -= 34;
 
         // Fee
-        nPayFee = CWallet::GetMinimumFee(nBytes, *coinControl, ::mempool, ::feeEstimator, nullptr /* FeeCalculation */);
+        nPayFee = model->getParticlWallet()->GetMinimumFee(nBytes, *coinControl, ::mempool, ::feeEstimator, nullptr /* FeeCalculation */);
 
         if (nPayAmount > 0)
         {
@@ -670,12 +670,12 @@ void CoinControlDialog::updateView()
     int nDisplayUnit = model->getOptionsModel()->getDisplayUnit();
 
     std::map<QString, std::vector<CCoinControlEntry> > mapCoins;
-    
+
     QString sType = ui->cbxType->currentText().toLower();
-    
+
     model->listCoins(mapCoins,
         sType == "anon" ? OUTPUT_RINGCT : sType == "blind" ? OUTPUT_CT : OUTPUT_STANDARD);
-    
+
     for (const auto &coins : mapCoins)
     {
         CCoinControlWidgetItem *itemWalletAddress = new CCoinControlWidgetItem();
@@ -784,7 +784,7 @@ void CoinControlDialog::updateView()
             itemWalletAddress->setTextAlignment(COLUMN_AMOUNT, Qt::AlignRight);
         }
     }
-    
+
 
     // expand all partially selected
     if (treeMode)

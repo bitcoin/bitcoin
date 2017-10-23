@@ -1086,7 +1086,8 @@ UniValue sendrawtransaction(const JSONRPCRequest& request)
 
     CCoinsViewCache &view = *pcoinsTip;
     bool fHaveChain = false;
-    for (size_t o = 0; !fHaveChain && o < tx->vout.size(); o++) {
+    size_t nOutputs = tx->IsParticlVersion() ? tx->vpout.size() : tx->vout.size();
+    for (size_t o = 0; !fHaveChain && o < nOutputs; o++) {
         const Coin& existingCoin = view.AccessCoin(COutPoint(hashTx, o));
         fHaveChain = !existingCoin.IsSpent();
     }

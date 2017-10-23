@@ -145,9 +145,9 @@ class CAddressBookData
 public:
     std::string name;
     std::string purpose;
-    
+
     std::vector<uint32_t> vPath; // index to m is stored in first entry
-    
+
     mutable uint8_t nOwned; // 0 unknown, 1 yes, 2 no
 
     CAddressBookData()
@@ -155,7 +155,7 @@ public:
         nOwned = 0;
         purpose = "unknown";
     }
-    
+
     ADD_SERIALIZE_METHODS;
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream &s, Operation ser_action)
@@ -232,7 +232,7 @@ public:
      * compatibility.
      */
     int nIndex;
-    
+
     mutable bool fHeightCached;
     mutable int nCachedHeight;
 
@@ -298,10 +298,10 @@ public:
             // Store original hash
             if (vHashes.size() < 1)
                 vHashes.resize(1);
-            
+
             vHashes[0] = hashBlock;
         };
-        
+
         hashBlock = ABANDON_HASH;
     }
 
@@ -310,7 +310,7 @@ public:
     bool IsCoinStake() const { return tx->IsCoinStake(); }
 };
 
-/** 
+/**
  * A transaction with a bunch of additional info that only the owner cares about.
  * It includes any unrecorded transactions needed to link it back to the block chain.
  */
@@ -555,14 +555,14 @@ public:
     COutPoint outpoint;
     CTxOut txout;
     CTxOutBaseRef txoutBase;
-    
+
     CAmount GetValue() const
     {
         if (txoutBase.get())
             return txoutBase->GetValue();
         return txout.nValue;
     }
-    
+
 
     bool operator<(const CInputCoin& rhs) const {
         return outpoint < rhs.outpoint;
@@ -725,7 +725,7 @@ private:
 };
 
 
-/** 
+/**
  * A CWallet is an extension of a keystore, which also maintains a set of transactions and balances,
  * and provides the ability to create new transactions.
  */
@@ -983,7 +983,7 @@ public:
     void GetKeyBirthTimes(std::map<CTxDestination, int64_t> &mapKeyBirth) const;
     unsigned int ComputeTimeSmart(const CWalletTx& wtx) const;
 
-    /** 
+    /**
      * Increment the next transaction order id
      * @return next transaction order id
      */
@@ -1019,7 +1019,7 @@ public:
      * calling CreateTransaction();
      */
     virtual bool FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& nChangePosInOut, std::string& strFailReason, bool lockUnspents, const std::set<int>& setSubtractFeeFromOutputs, CCoinControl);
-    bool SignTransaction(CMutableTransaction& tx);
+    virtual bool SignTransaction(CMutableTransaction& tx);
 
     /**
      * Create a new transaction paying the recipients with a set of coins
@@ -1043,7 +1043,7 @@ public:
      * Estimate the minimum fee considering user set parameters
      * and the required fee
      */
-    static CAmount GetMinimumFee(unsigned int nTxBytes, const CCoinControl& coin_control, const CTxMemPool& pool, const CBlockPolicyEstimator& estimator, FeeCalculation *feeCalc);
+    virtual CAmount GetMinimumFee(unsigned int nTxBytes, const CCoinControl& coin_control, const CTxMemPool& pool, const CBlockPolicyEstimator& estimator, FeeCalculation *feeCalc) const;
     /**
      * Return the minimum required fee taking into account the
      * floating relay fee and user set minimum transaction fee
@@ -1076,13 +1076,13 @@ public:
      * filter, otherwise returns 0
      */
     virtual CAmount GetDebit(const CTxIn& txin, const isminefilter& filter) const;
-    
+
     isminetype IsMine(const CTxOut& txout) const;
     CAmount GetCredit(const CTxOut& txout, const isminefilter& filter) const;
-    
+
     virtual isminetype IsMine(const CTxOutBase *txout) const {assert(false);};
     virtual CAmount GetCredit(const CTxOutBase *txout, const isminefilter &filter) const { return 0;};
-    
+
     virtual bool IsChange(const CTxOutBase *txout) const {assert(false);};
     bool IsChange(const CTxOut& txout) const;
     CAmount GetChange(const CTxOut& txout) const;
@@ -1117,7 +1117,7 @@ public:
     }
 
     void GetScriptForMining(std::shared_ptr<CReserveScript> &script);
-    
+
     unsigned int GetKeyPoolSize()
     {
         AssertLockHeld(cs_wallet); // set{Ex,In}ternalKeyPool
@@ -1148,8 +1148,8 @@ public:
     //  This function will perform salvage on the wallet if requested, as long as only one wallet is
     //  being loaded (CWallet::ParameterInteraction forbids -salvagewallet, -zapwallettxes or -upgradewallet with multiwallet).
     static bool Verify();
-    
-    /** 
+
+    /**
      * Address book entry changed.
      * @note called with lock cs_wallet held.
      */
@@ -1158,7 +1158,7 @@ public:
             const std::string &purpose,
             ChangeType status)> NotifyAddressBookChanged;
 
-    /** 
+    /**
      * Wallet transaction added, removed or updated.
      * @note called with lock cs_wallet held.
      */
@@ -1209,11 +1209,11 @@ public:
 
     /* Returns true if HD is enabled */
     virtual bool IsHDEnabled() const;
-    
+
 
     /* Generates a new HD master key (will not be activated) */
     CPubKey GenerateNewHDMasterKey();
-    
+
     /* Set the current HD master key (will reset the chain child index counters)
        Sets the master key's version based on the current wallet version (so the
        caller must ensure the current wallet version is correct before calling
@@ -1253,7 +1253,7 @@ public:
 };
 
 
-/** 
+/**
  * Account information.
  * Stored in wallet with key "acc"+string account name.
  */

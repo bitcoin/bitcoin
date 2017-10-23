@@ -1853,8 +1853,8 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
                 size_t nEnd = (i == nThreads-1) ? nWallets : nPerThread * (i+1);
                 StakeThread *t = new StakeThread();
                 GetHDWallet(vpwallets[i])->nStakeThread = i;
-                std::string sName = strprintf("miner%d", i);
-                t->thread = std::thread(&TraceThread<std::function<void()> >, sName.c_str(), std::function<void()>(std::bind(&ThreadStakeMiner, i, vpwallets, nStart, nEnd)));
+                t->sName = strprintf("miner%d", i);
+                t->thread = std::thread(&TraceThread<std::function<void()> >, t->sName.c_str(), std::function<void()>(std::bind(&ThreadStakeMiner, i, vpwallets, nStart, nEnd)));
                 vStakeThreads.push_back(t);
             };
             //threadStakeMiner = std::thread(&TraceThread<std::function<void()> >, "miner", std::function<void()>(std::bind(&ThreadStakeMiner, vpwallets, nStart, nEnd)));

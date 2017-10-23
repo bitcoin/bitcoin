@@ -1025,9 +1025,9 @@ bool CHDWallet::GetPubKey(const CKeyID &address, CPubKey& pkOut) const
     return CCryptoKeyStore::GetPubKey(address, pkOut);
 };
 
-bool CHDWallet::GetKeyFromPool(CPubKey &key)
+bool CHDWallet::GetKeyFromPool(CPubKey &key, bool internal)
 {
-    // return a key from the internal chain
+    // Always return a key from the internal chain
     return 0 == NewKeyFromAccount(key, true, false, false, nullptr);
 };
 
@@ -1817,7 +1817,6 @@ CAmount CHDWallet::GetStakeableBalance() const
         nBalance += pcoin->GetAvailableWatchOnlyCredit();  // TODO: split stakeable and non-stakeable watch type
     };
 
-    nBalance += CWallet::GetBalance();
     return nBalance;
 };
 
@@ -2966,7 +2965,6 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
     bool fOnlyStandardOutputs;
     InspectOutputs(vecSend, nValue, nSubtractFeeFromAmount, fOnlyStandardOutputs);
 
-
     if (0 != ExpandTempRecipients(vecSend, pc, sError))
         return 1; // sError is set
 
@@ -2987,6 +2985,7 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
     assert(txNew.nLockTime <= (unsigned int)chainActive.Height());
     assert(txNew.nLockTime < LOCKTIME_THRESHOLD);
 
+    coinControl->fHaveAnonOutputs = HaveAnonOutputs(vecSend);
     FeeCalculation feeCalc;
     CAmount nFeeNeeded;
     unsigned int nBytes;
@@ -3188,8 +3187,6 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
             }
 
             nFeeNeeded = GetMinimumFee(nBytes, *coinControl, ::mempool, ::feeEstimator, &feeCalc);
-            if (HaveAnonOutputs(vecSend))
-                nFeeNeeded *= ANON_FEE_MULTIPLIER;
 
             // If we made it here and we aren't even able to meet the relay fee on the next pass, give up
             // because we must be at the maximum allowed fee.
@@ -3451,6 +3448,7 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
     assert(txNew.nLockTime <= (unsigned int)chainActive.Height());
     assert(txNew.nLockTime < LOCKTIME_THRESHOLD);
 
+    coinControl->fHaveAnonOutputs = HaveAnonOutputs(vecSend);
     FeeCalculation feeCalc;
     CAmount nFeeNeeded;
     unsigned int nBytes;
@@ -3603,8 +3601,6 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
             CTransaction txNewConst(txNew);
 
             nFeeNeeded = GetMinimumFee(nBytes, *coinControl, ::mempool, ::feeEstimator, &feeCalc);
-            if (HaveAnonOutputs(vecSend))
-                nFeeNeeded *= ANON_FEE_MULTIPLIER;
 
 
             // If we made it here and we aren't even able to meet the relay fee on the next pass, give up
@@ -3704,8 +3700,6 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
 
         size_t nBlindedInputs = vpBlinds.size();
 
-
-
         std::vector<uint8_t> vBlindPlain;
         vBlindPlain.resize(32);
         memset(&vBlindPlain[0], 0, 32);
@@ -3742,7 +3736,6 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
             // sum of output blinding values must equal sum of input blinding values
             if (!secp256k1_pedersen_blind_sum(secp256k1_ctx_blind, &r.vBlind[0], &vpBlinds[0], vpBlinds.size(), nBlindedInputs))
                 return errorN(1, sError, __func__, "secp256k1_pedersen_blind_sum failed.");
-
 
             if (0 != AddCTData(pout, r, sError))
                 return 1; // sError will be set
@@ -3782,9 +3775,6 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                 nIn++;
             };
         };
-
-
-
 
 
         rtx.nFee = nFeeRet;
@@ -4037,6 +4027,7 @@ int CHDWallet::AddAnonInputs(CWalletTx &wtx, CTransactionRecord &rtx,
 
     txNew.nLockTime = 0;
 
+    coinControl->fHaveAnonOutputs = true;
     FeeCalculation feeCalc;
     CAmount nFeeNeeded;
     unsigned int nBytes;
@@ -4096,10 +4087,8 @@ int CHDWallet::AddAnonInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                 r.nType = OUTPUT_RINGCT;
                 r.fChange = true;
 
-
                 if (!SetChangeDest(coinControl, r, sError))
                     return errorN(1, sError, __func__, ("SetChangeDest failed: " + sError).c_str());
-
 
                 if (nChange > ::minRelayTxFee.GetFee(2048)) // TODO: better output size estimate
                 {
@@ -4235,9 +4224,6 @@ int CHDWallet::AddAnonInputs(CWalletTx &wtx, CTransactionRecord &rtx,
             CTransaction txNewConst(txNew);
 
             nFeeNeeded = GetMinimumFee(nBytes, *coinControl, ::mempool, ::feeEstimator, &feeCalc);
-            //if (HaveAnonOutputs(vecSend))
-                nFeeNeeded *= ANON_FEE_MULTIPLIER;
-
 
             // If we made it here and we aren't even able to meet the relay fee on the next pass, give up
             // because we must be at the maximum allowed fee.
@@ -7049,6 +7035,71 @@ int CHDWallet::ScanChainFromHeight(int nHeight)
     return 0;
 };
 
+CAmount CHDWallet::GetMinimumFee(unsigned int nTxBytes, const CCoinControl& coin_control, const CTxMemPool& pool, const CBlockPolicyEstimator& estimator, FeeCalculation *feeCalc) const
+{
+    /* User control of how to calculate fee uses the following parameter precedence:
+       1. coin_control.m_feerate
+       2. coin_control.m_confirm_target
+       3. payTxFee (user-set global variable)
+       4. nTxConfirmTarget (user-set global variable)
+       The first parameter that is set is used.
+    */
+    CAmount fee_needed;
+    if (coin_control.m_feerate) { // 1.
+        fee_needed = coin_control.m_feerate->GetFee(nTxBytes);
+        if (feeCalc) feeCalc->reason = FeeReason::PAYTXFEE;
+    }
+    else if (!coin_control.m_confirm_target && ::payTxFee != CFeeRate(0)) { // 3. TODO: remove magic value of 0 for global payTxFee
+        fee_needed = ::payTxFee.GetFee(nTxBytes);
+        if (feeCalc) feeCalc->reason = FeeReason::PAYTXFEE;
+    }
+    else { // 2. or 4.
+        // We will use smart fee estimation
+        unsigned int target = coin_control.m_confirm_target ? *coin_control.m_confirm_target : ::nTxConfirmTarget;
+        // By default estimates are economical iff we are signaling opt-in-RBF
+        bool conservative_estimate = !coin_control.signalRbf;
+        // Allow to override the default fee estimate mode over the CoinControl instance
+        if (coin_control.m_fee_mode == FeeEstimateMode::CONSERVATIVE) conservative_estimate = true;
+        else if (coin_control.m_fee_mode == FeeEstimateMode::ECONOMICAL) conservative_estimate = false;
+
+        fee_needed = estimator.estimateSmartFee(target, feeCalc, conservative_estimate).GetFee(nTxBytes);
+        if (fee_needed == 0) {
+            // if we don't have enough data for estimateSmartFee, then use fallbackFee
+            fee_needed = fallbackFee.GetFee(nTxBytes);
+            if (feeCalc) feeCalc->reason = FeeReason::FALLBACK;
+        }
+        // Obey mempool min fee when using smart fee estimation
+        CAmount min_mempool_fee = pool.GetMinFee(gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000).GetFee(nTxBytes);
+        if (fee_needed < min_mempool_fee) {
+            fee_needed = min_mempool_fee;
+            if (feeCalc) feeCalc->reason = FeeReason::MEMPOOL_MIN;
+        }
+    }
+
+    // Allow to override automatic min/max check over coin control instance
+    if (!coin_control.fOverrideFeeRate)
+    {
+        // prevent user from paying a fee below minRelayTxFee or minTxFee
+        CAmount required_fee = GetRequiredFee(nTxBytes);
+        if (required_fee > fee_needed) {
+            fee_needed = required_fee;
+            if (feeCalc) feeCalc->reason = FeeReason::REQUIRED;
+        }
+        // But always obey the maximum
+        if (fee_needed > maxTxFee) {
+            fee_needed = maxTxFee;
+            if (feeCalc) feeCalc->reason = FeeReason::MAXTXFEE;
+        }
+    }
+
+    if (coin_control.fHaveAnonOutputs)
+        fee_needed *= ANON_FEE_MULTIPLIER;
+
+    fee_needed += coin_control.m_extrafee;
+
+    return fee_needed;
+};
+
 bool CHDWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& nChangePosInOut, std::string& strFailReason, bool lockUnspents, const std::set<int>& setSubtractFeeFromOutputs, CCoinControl coinControl)
 {
     std::vector<CRecipient> vecSend;
@@ -7101,6 +7152,52 @@ bool CHDWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& 
 
     return true;
 };
+
+bool CHDWallet::SignTransaction(CMutableTransaction &tx)
+{
+    AssertLockHeld(cs_wallet); // mapWallet
+
+    // sign the new tx
+    CTransaction txNewConst(tx);
+    int nIn = 0;
+    for (const auto& input : tx.vin) {
+        CScript scriptPubKey;
+        CAmount amount;
+
+        MapWallet_t::const_iterator mi = mapWallet.find(input.prevout.hash);
+        if (mi != mapWallet.end())
+        {
+            if (input.prevout.n >= mi->second.tx->vpout.size())
+                return false;
+
+            scriptPubKey = mi->second.tx->vout[input.prevout.n].scriptPubKey;
+            amount = mi->second.tx->vout[input.prevout.n].nValue;
+        } else
+        {
+            MapRecords_t::const_iterator mir = mapRecords.find(input.prevout.hash);
+            if (mir == mapRecords.end())
+                return false;
+
+            const COutputRecord *oR = mir->second.GetOutput(input.prevout.n);
+            if (!oR)
+                return false;
+
+            scriptPubKey = oR->scriptPubKey;
+            amount = oR->nValue;
+        };
+
+        SignatureData sigdata;
+
+        std::vector<uint8_t> vchAmount(8);
+        memcpy(&vchAmount[0], &amount, 8);
+        if (!ProduceSignature(TransactionSignatureCreator(this, &txNewConst, nIn, vchAmount, SIGHASH_ALL), scriptPubKey, sigdata)) {
+            return false;
+        }
+        UpdateTransaction(tx, nIn, sigdata);
+        nIn++;
+    }
+    return true;
+}
 
 bool CHDWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet,
                                 int& nChangePosInOut, std::string& strFailReason, const CCoinControl& coin_control, bool sign)
@@ -8102,7 +8199,7 @@ bool CHDWallet::AddToWalletIfInvolvingMe(const CTransactionRef& ptx, const CBloc
                 {
                     if (range.first->second != tx.GetHash())
                     {
-                        const CWalletTx *wtxConflicted = GetWalletTx(range.first->second); // cointakes will only be in mapwallet
+                        const CWalletTx *wtxConflicted = GetWalletTx(range.first->second); // coinstakes will only be in mapwallet
                         if (wtxConflicted && wtxConflicted->isAbandoned() && wtxConflicted->IsCoinStake())
                         {
                             // Respending input from orphaned coinstake, leave abandoned
@@ -9381,7 +9478,7 @@ bool CHDWallet::SelectBlindedCoins(const std::vector<COutputR> &vAvailableCoins,
     // add preset inputs to the total value selected
     nValueRet += nValueFromPresetInputs;
 
-    std::shuffle(std::begin(setCoinsRet), std::end(setCoinsRet), std::default_random_engine(unsigned(time(NULL))));
+    random_shuffle(setCoinsRet.begin(), setCoinsRet.end(), GetRandInt);
 
     return res;
 };
@@ -9457,7 +9554,7 @@ void CHDWallet::AvailableAnonCoins(std::vector<COutputR> &vCoins, bool fOnlySafe
         };
     };
 
-    std::shuffle(std::begin(vCoins), std::end(vCoins), std::default_random_engine(unsigned(time(NULL))));
+    random_shuffle(vCoins.begin(), vCoins.end(), GetRandInt);
 };
 
 /*
@@ -9925,8 +10022,6 @@ void CHDWallet::MarkConflicted(const uint256 &hashBlock, const uint256 &hashTx)
 
     if (LogAcceptCategory(BCLog::HDWALLET))
         LogPrintf("%s: %s, %s processed %d txns.", __func__, hashBlock.ToString(), hashTx.ToString(), done.size());
-
-    //return CWallet::MarkConflicted(hashBlock, hashTx);
 };
 
 void CHDWallet::SyncMetaData(std::pair<TxSpends::iterator, TxSpends::iterator> range)
@@ -10176,7 +10271,7 @@ void CHDWallet::AvailableCoinsForStaking(std::vector<COutput> &vCoins, int64_t n
 
     }
 
-    std::shuffle(std::begin(vCoins), std::end(vCoins), std::default_random_engine(unsigned(time(NULL))));
+    random_shuffle(vCoins.begin(), vCoins.end(), GetRandInt);
 };
 
 bool CHDWallet::SelectCoinsForStaking(int64_t nTargetValue, int64_t nTime, int nHeight, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, int64_t& nValueRet) const
@@ -10225,14 +10320,6 @@ bool CHDWallet::CreateCoinStake(unsigned int nBits, int64_t nTime, int nBlockHei
     CBlockIndex *pindexPrev = chainActive.Tip();
     arith_uint256 bnTargetPerCoinDay;
     bnTargetPerCoinDay.SetCompact(nBits);
-
-    txNew.vin.clear();
-    txNew.vout.clear();
-    txNew.vpout.clear();
-
-    // Mark as coin stake transaction
-    txNew.nVersion = PARTICL_TXN_VERSION;
-    txNew.SetType(TXN_COINSTAKE);
 
     CAmount nBalance = GetStakeableBalance();
     if (nBalance <= nReserveBalance)
@@ -10378,16 +10465,19 @@ bool CHDWallet::CreateCoinStake(unsigned int nBits, int64_t nTime, int nBlockHei
                 };
             };
 
-            txNew.nVersion = PARTICL_TXN_VERSION;
-            txNew.SetType(TXN_COINSTAKE);
+            // Ensure txn is empty
             txNew.vin.clear();
             txNew.vout.clear();
+            txNew.vpout.clear();
+
+            // Mark as coin stake transaction
+            txNew.nVersion = PARTICL_TXN_VERSION;
+            txNew.SetType(TXN_COINSTAKE);
 
             txNew.vin.push_back(CTxIn(pcoin.first->GetHash(), pcoin.second));
 
             nCredit += kernelOut->nValue;
             vwtxPrev.push_back(pcoin.first);
-
 
             std::shared_ptr<CTxOutData> out0 = MAKE_OUTPUT<CTxOutData>();
             out0->vData.resize(4);
@@ -10590,9 +10680,6 @@ bool CHDWallet::SignBlock(CBlockTemplate *pblocktemplate, int nHeight, int64_t n
     LogPrint(BCLog::POS, "%s, nBits %d\n", __func__, pblock->nBits);
 
     CMutableTransaction txCoinStake;
-    txCoinStake.nVersion = PARTICL_TXN_VERSION;
-    txCoinStake.SetType(TXN_COINSTAKE);
-
     if (CreateCoinStake(pblock->nBits, nSearchTime, nHeight, nFees, txCoinStake, key))
     {
         LogPrint(BCLog::POS, "%s: Kernel found.\n", __func__);

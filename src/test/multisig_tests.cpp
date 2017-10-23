@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE(multisig_verify)
     CAmount amount = 0;
     std::vector<uint8_t> vchAmount(8);
     memcpy(&vchAmount[0], &amount, 8);
-    
+
     for (int i = 0; i < 4; i++)
         key[i].MakeNewKey(true);
 
@@ -194,7 +194,7 @@ BOOST_AUTO_TEST_CASE(multisig_Solver1)
     //
     CBasicKeyStore keystore, emptykeystore, partialkeystore;
     CKey key[3];
-    CTxDestination keyaddr[3];
+    std::vector<CTxDestination> keyaddr(3); // Wmaybe-uninitialized
     for (int i = 0; i < 3; i++)
     {
         key[i].MakeNewKey(true);

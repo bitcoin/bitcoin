@@ -100,7 +100,7 @@ bool static IsCompressedPubKey(const valtype &vchPubKey) {
  * Where R and S are not negative (their first byte has its highest bit not set), and not
  * excessively padded (do not start with a 0 byte, unless an otherwise negative number follows,
  * in which case a single 0 byte is necessary and even required).
- * 
+ *
  * See https://bitcointalk.org/index.php?topic=8392.msg127623#msg127623
  *
  * This function is consensus-critical since BIP66.
@@ -140,7 +140,7 @@ bool static IsValidSignatureEncoding(const std::vector<unsigned char> &sig) {
     // Verify that the length of the signature matches the sum of the length
     // of the elements.
     if ((size_t)(lenR + lenS + 7) != sig.size()) return false;
- 
+
     // Check whether the R element is an integer.
     if (sig[2] != 0x02) return false;
 
@@ -424,7 +424,7 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
 
                     break;
                 }
-                
+
                 case OP_ISCOINSTAKE:
                 {
                     //if (flags & SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_NOPS)
@@ -1005,7 +1005,7 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
                     // Clean up stack of actual arguments
                     while (i-- > 1) {
                         // If the operation failed, we require that all signatures must be empty vector
-                        
+
                         if (!fSuccess && (flags & SCRIPT_VERIFY_NULLFAIL) && !ikey2 && stacktop(-1).size())
                             return set_error(serror, SCRIPT_ERR_SIG_NULLFAIL);
                         if (ikey2 > 0)
@@ -1149,7 +1149,7 @@ public:
         ::WriteCompactSize(s, nInputs);
         for (unsigned int nInput = 0; nInput < nInputs; nInput++)
              SerializeInput(s, nInput);
-        
+
         if (txTo.IsParticlVersion())
         {
             // Serialize vpout
@@ -1188,7 +1188,7 @@ uint256 GetSequenceHash(const CTransaction& txTo) {
 
 uint256 GetOutputsHash(const CTransaction& txTo) {
     CHashWriter ss(SER_GETHASH, 0);
-    
+
     if (txTo.IsParticlVersion())
     {
         for (unsigned int n = 0; n < txTo.vpout.size(); n++)
@@ -1232,7 +1232,7 @@ uint256 SignatureHash(const CScript& scriptCode, const CTransaction& txTo, unsig
             hashOutputs = cache ? cache->hashOutputs : GetOutputsHash(txTo);
         } else if ((nHashType & 0x1f) == SIGHASH_SINGLE && nIn < nOutputs) {
             CHashWriter ss(SER_GETHASH, 0);
-            
+
             if (txTo.IsParticlVersion())
                 ss << *(txTo.vpout[nIn].get());
             else
@@ -1251,11 +1251,11 @@ uint256 SignatureHash(const CScript& scriptCode, const CTransaction& txTo, unsig
         // may already be contain in hashSequence.
         ss << txTo.vin[nIn].prevout;
         ss << scriptCode;
-        
+
         //ss << amount;
         if (amount.size() > 0)
             ss.write((const char*)&amount[0], amount.size()); // Make unit tests still pass, same as << CAmount when amount.size() == 8
-        
+
         ss << txTo.vin[nIn].nSequence;
         // Outputs (none/one/all, depending on flags)
         ss << hashOutputs;
@@ -1466,16 +1466,16 @@ bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const C
     }
 
     std::vector<std::vector<unsigned char> > stack, stackCopy;
-    
+
     if (checker.IsParticlVersion())
     {
         assert(witness);
-        
+
         if (scriptSig.size() != 0) {
             // The scriptSig must be _exactly_ CScript(), otherwise we reintroduce malleability.
             return set_error(serror, SCRIPT_ERR_WITNESS_MALLEATED);
         }
-        
+
         stack = witness->stack;
     } else
     {
@@ -1483,19 +1483,19 @@ bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const C
             // serror is set
             return false;
     };
-    
+
     if (flags & SCRIPT_VERIFY_P2SH)
         stackCopy = stack;
-    
+
     if (!EvalScript(stack, scriptPubKey, flags, checker, SIGVERSION_BASE, serror))
         // serror is set
         return false;
-    
+
     if (stack.empty())
         return set_error(serror, SCRIPT_ERR_EVAL_FALSE);
     if (CastToBool(stack.back()) == false)
         return set_error(serror, SCRIPT_ERR_EVAL_FALSE);
-    
+
     // Bare witness programs
     int witnessversion;
     std::vector<unsigned char> witnessprogram;
@@ -1515,7 +1515,7 @@ bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const C
         }
     }
 
-    
+
     // Additional validation for spend-to-script-hash transactions:
     if ((flags & SCRIPT_VERIFY_P2SH)
         && (scriptPubKey.IsPayToScriptHash() || scriptPubKey.IsPayToTimeLockedScriptHash()))
@@ -1581,7 +1581,7 @@ bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const C
         // that WITNESS implies P2SH. Otherwise, going from WITNESS->P2SH+WITNESS would be
         // possible, which is not a softfork.
         assert((flags & SCRIPT_VERIFY_P2SH) != 0);
-        
+
         if (!checker.IsParticlVersion())
         if (!hadWitness && !witness->IsNull()) {
             return set_error(serror, SCRIPT_ERR_WITNESS_UNEXPECTED);
@@ -1642,19 +1642,19 @@ size_t CountWitnessSigOps(const CScript& scriptSig, const CScript& scriptPubKey,
 bool HasIsCoinstakeOp(const CScript &script)
 {
     CScript::const_iterator pc = script.begin();
-    
+
     if (pc == script.end())
         return false;
-    
+
     opcodetype opcode;
     valtype vchPushValue;
 
     if (!script.GetOp(pc, opcode, vchPushValue))
         return false;
-    
+
     if (opcode == OP_ISCOINSTAKE)
         return true;
-    
+
     return false;
 };
 
@@ -1662,16 +1662,16 @@ bool IsSpendScriptP2PKH(const CScript &script)
 {
     CScript::const_iterator pc = script.begin();
     CScript::const_iterator pend = script.end();
-    
+
     opcodetype opcode;
     valtype vchPushValue;
-    
+
     bool fFoundOp = false;
     while (pc < pend)
     {
         if (!script.GetOp(pc, opcode, vchPushValue))
             break;
-        
+
         if (!fFoundOp
             && opcode == OP_ELSE)
         {
@@ -1679,7 +1679,7 @@ bool IsSpendScriptP2PKH(const CScript &script)
             return script.IsPayToPublicKeyHash(ofs);
         };
     };
-    
+
     return false;
 };
 
@@ -1688,26 +1688,26 @@ bool GetCoinstakeScriptPath(const CScript &scriptIn, CScript &scriptOut)
     CScript::const_iterator pc = scriptIn.begin();
     CScript::const_iterator pend = scriptIn.end();
     CScript::const_iterator pcStart = pc;
-    
+
     opcodetype opcode;
     valtype vchPushValue;
-    
+
     bool fFoundOp = false;
     while (pc < pend)
     {
         if (!scriptIn.GetOp(pc, opcode, vchPushValue))
             break;
-        
+
         if (!fFoundOp
             && opcode == OP_ISCOINSTAKE)
         {
             pc++; // skip over if
-            
+
             pcStart = pc;
             fFoundOp = true;
             continue;
         };
-        
+
         if (fFoundOp && opcode == OP_ELSE)
         {
             pc--;
@@ -1715,7 +1715,7 @@ bool GetCoinstakeScriptPath(const CScript &scriptIn, CScript &scriptOut)
             return true;
         };
     };
-    
+
     return false;
 };
 
@@ -1724,16 +1724,16 @@ bool GetNonCoinstakeScriptPath(const CScript &scriptIn, CScript &scriptOut)
     CScript::const_iterator pc = scriptIn.begin();
     CScript::const_iterator pend = scriptIn.end();
     CScript::const_iterator pcStart = pc;
-    
+
     opcodetype opcode;
     valtype vchPushValue;
-    
+
     bool fFoundOp = false;
     while (pc < pend)
     {
         if (!scriptIn.GetOp(pc, opcode, vchPushValue))
             break;
-        
+
         if (!fFoundOp
             && opcode == OP_ELSE)
         {
@@ -1741,7 +1741,7 @@ bool GetNonCoinstakeScriptPath(const CScript &scriptIn, CScript &scriptOut)
             fFoundOp = true;
             continue;
         };
-        
+
         if (fFoundOp && opcode == OP_ENDIF)
         {
             pc--;
@@ -1749,7 +1749,7 @@ bool GetNonCoinstakeScriptPath(const CScript &scriptIn, CScript &scriptOut)
             return true;
         };
     };
-    
+
     return false;
 };
 
@@ -1758,33 +1758,33 @@ bool SplitConditionalCoinstakeScript(const CScript &scriptIn, CScript &scriptOut
     CScript::const_iterator pc = scriptIn.begin();
     CScript::const_iterator pend = scriptIn.end();
     CScript::const_iterator pcStart = pc;
-    
+
     opcodetype opcode;
     valtype vchPushValue;
-    
+
     bool fFoundOp = false, fFoundElse = false;
     while (pc < pend)
     {
         if (!scriptIn.GetOp(pc, opcode, vchPushValue))
             break;
-        
+
         if (!fFoundOp
             && opcode == OP_ISCOINSTAKE)
         {
             pc++; // skip over if
-            
+
             pcStart = pc;
             fFoundOp = true;
             continue;
         };
-        
+
         if (fFoundElse && opcode == OP_ENDIF)
         {
             pc--;
             scriptOutB = CScript(pcStart, pc);
             return true;
         };
-        
+
         if (fFoundOp && opcode == OP_ELSE)
         {
             scriptOutA = CScript(pcStart, pc-1);
@@ -1792,6 +1792,6 @@ bool SplitConditionalCoinstakeScript(const CScript &scriptIn, CScript &scriptOut
             fFoundElse = true;
         };
     };
-    
+
     return false;
 };

@@ -136,17 +136,6 @@ bool IsConfirmedInNPrevBlocks(const uint256 &hashBlock, const CBlockIndex *pinde
     return false;
 }
 
-static bool CheckAge(const CBlockIndex *pindexTip, const uint256 &hashKernelBlock, int &nDepth)
-{
-    // pindexTip is the current tip of the chain
-    // hashKernelBlock is the hash of the block containing the kernel transaction
-
-    int nRequiredDepth = std::min((int)(Params().GetStakeMinConfirmations()-1), (int)(pindexTip->nHeight / 2));
-
-    if (IsConfirmedInNPrevBlocks(hashKernelBlock, pindexTip, nRequiredDepth, nDepth))
-        return false;
-    return true;
-}
 
 // Check kernel hash target and coinstake signature
 bool CheckProofOfStake(const CBlockIndex *pindexPrev, const CTransaction &tx, int64_t nTime, unsigned int nBits, uint256 &hashProofOfStake, uint256 &targetProofOfStake)
@@ -196,44 +185,6 @@ bool CheckProofOfStake(const CBlockIndex *pindexPrev, const CTransaction &tx, in
 
     uint32_t nBlockFromTime = pindex->GetBlockTime();
 
-    /*
-    // First try finding the previous transaction in database
-    // read transaction and block header, fTxIndex should be enabled by default
-    if (!GetTransaction(txin.prevout.hash, txKernel, Params().GetConsensus(), blockKernel, true))
-    {
-        if (fDebug) LogPrint(BCLog::POS, "%s: GetTransaction failed for %s\n", __func__, txin.prevout.hash.ToString());
-        return state.DoS(1, error("%s: prevout-not-in-chain", __func__), REJECT_INVALID, "prevout-not-in-chain");
-    };
-
-    const CTxOutBase *kernelout= txKernel->vpout[txin.prevout.n].get();
-    if (!kernelout->IsStandardOutput())
-        return state.DoS(100, error("%s: invalid-prevout", __func__), REJECT_INVALID, "invalid-prevout");
-
-    const CTxOutStandard *kernelouts = kernelout->GetStandardOutput();
-    const CScript &kernelPubKey = kernelouts->scriptPubKey;
-    const CAmount &amount = kernelouts->nValue;
-
-    // Verify signature
-    const CScript &scriptSig = txin.scriptSig;
-    const CScriptWitness *witness = &txin.scriptWitness;
-    ScriptError serror = SCRIPT_ERR_OK;
-
-    std::vector<uint8_t> vchAmount(8);
-    memcpy(&vchAmount[0], &amount, 8);
-    // all inputs are checked later during CheckInputs
-    if (!VerifyScript(scriptSig, kernelPubKey, witness, STANDARD_SCRIPT_VERIFY_FLAGS, TransactionSignatureChecker(&tx, 0, vchAmount), &serror))
-        return state.DoS(100, error("%s: verify-script-failed, txn %s, reason %s", __func__, tx.GetHash().ToString(), ScriptErrorString(serror)),
-            REJECT_INVALID, "verify-script-failed");
-
-    const uint256 hashBlock = blockKernel.GetHash();
-
-    // Min age requirement
-    int nDepth;
-    if (!CheckAge(pindexPrev, hashBlock, nDepth))
-        return state.DoS(100, error("%s: Tried to stake at depth %d", __func__, nDepth + 1), REJECT_INVALID, "invalid-stake-depth");
-
-    uint32_t nBlockFromTime = blockKernel.nTime;
-    */
 
     if (!CheckStakeKernelHash(pindexPrev, nBits, nBlockFromTime,
         amount, txin.prevout, nTime, hashProofOfStake, targetProofOfStake, LogAcceptCategory(BCLog::POS)))

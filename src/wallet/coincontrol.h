@@ -45,6 +45,8 @@ public:
     bool signalRbf;
     //! Fee estimation mode to control arguments to estimateSmartFee
     FeeEstimateMode m_fee_mode;
+    mutable bool fHaveAnonOutputs;
+    CAmount m_extrafee;
 
     CCoinControl()
     {
@@ -63,6 +65,8 @@ public:
         m_confirm_target.reset();
         signalRbf = fWalletRbf;
         m_fee_mode = FeeEstimateMode::UNSET;
+        fHaveAnonOutputs = false;
+        m_extrafee = 0;
     }
 
     bool HasSelected() const
@@ -94,7 +98,7 @@ public:
     {
         vOutpoints.assign(setSelected.begin(), setSelected.end());
     }
-    
+
     size_t NumSelected()
     {
         return setSelected.size();

@@ -101,9 +101,9 @@ SendCoinsDialog::SendCoinsDialog(const PlatformStyle *_platformStyle, QWidget *p
     connect(clipboardBytesAction, SIGNAL(triggered()), this, SLOT(coinControlClipboardBytes()));
     connect(clipboardLowOutputAction, SIGNAL(triggered()), this, SLOT(coinControlClipboardLowOutput()));
     connect(clipboardChangeAction, SIGNAL(triggered()), this, SLOT(coinControlClipboardChange()));
-    
+
     connect(ui->cbxTypeFrom, SIGNAL(currentIndexChanged(int)), this, SLOT(cbxTypeFromChanged(int)));
-    
+
     ui->labelCoinControlQuantity->addAction(clipboardQuantityAction);
     ui->labelCoinControlAmount->addAction(clipboardAmountAction);
     ui->labelCoinControlFee->addAction(clipboardFeeAction);
@@ -167,7 +167,7 @@ void SendCoinsDialog::setModel(WalletModel *_model)
         CHDWalletBalances bal;
         CHDWallet *pw = model->getParticlWallet();
         pw->GetBalances(bal);
-        
+
         setBalance(bal.nPart, bal.nPartStaked, bal.nBlind, bal.nAnon, bal.nPartUnconf, bal.nPartImmature,
             bal.nPartWatchOnly, bal.nPartWatchOnlyUnconf, 0, bal.nPartWatchOnlyStaked);
         connect(model, SIGNAL(balanceChanged(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)),
@@ -282,7 +282,7 @@ void SendCoinsDialog::on_sendButton_clicked()
         ctrl = *CoinControlDialog::coinControl;
 
     updateCoinControlState(ctrl);
-    
+
     prepareStatus = model->prepareTransaction(currentTransaction, ctrl);
     if (prepareStatus.status != WalletModel::OK)
     {
@@ -292,41 +292,41 @@ void SendCoinsDialog::on_sendButton_clicked()
         fNewRecipientAllowed = true;
         return;
     };
-    
-    
+
+
     QString sCommand = "sendtypeto ";
-    
+
     // TODO: Translations?
     QString sTypeFrom = ui->cbxTypeFrom->currentText();
     QString sTypeTo = ui->cbxTypeTo->currentText();
-    
+
     sCommand += sTypeFrom.toLower() + " ";
     sCommand += sTypeTo.toLower();
-    
+
     sCommand += " [";
-    
+
     int nRecipient = 0;
     for (const auto &rcp : currentTransaction.getRecipients())
     {
         if (nRecipient > 0)
             sCommand += ",";
-        
+
         sCommand += "{\"address\":\""+rcp.address+"\",\"amount\":"
             + BitcoinUnits::format(BitcoinUnits::BTC, rcp.amount, false, BitcoinUnits::separatorNever);
-        
+
         if (rcp.fSubtractFeeFromAmount)
             sCommand += ",\"subfee\":true";
-        
+
         if (!rcp.narration.isEmpty())
             sCommand += ",\"narr\":\""+rcp.narration+"\"";
         sCommand += "}";
-        
+
         nRecipient++;
     };
-    
+
     int nRingSize = ui->spinRingSize->value();
     int nMaxInputs = ui->spinMaxInputs->value();
-    
+
     sCommand += "] \"\" \"\" "+QString::number(nRingSize)+" "+QString::number(nMaxInputs);
 
 
@@ -345,13 +345,13 @@ void SendCoinsDialog::on_sendButton_clicked()
         if (ctrl.m_confirm_target)
             sCoinControl += ",\"conf_target\":" + QString::number(*ctrl.m_confirm_target);
     };
-    
+
     if (!boost::get<CNoDestination>(&ctrl.destChange))
     {
         CBitcoinAddress addrChange(ctrl.destChange);
         sCoinControl += ",\"changeaddress\":\""+QString::fromStdString(addrChange.ToString())+"\"";
     };
-    
+
     if (ctrl.NumSelected() > 0)
     {
         sCoinControl += ",\"inputs\":[";
@@ -373,27 +373,27 @@ void SendCoinsDialog::on_sendButton_clicked()
     QString sGetFeeCommand = sCommand + " true" + sCoinControl;
     if (!model->tryCallRpc(sGetFeeCommand, rv))
         return;
-    
+
     double rFee = rv["fee"].get_real();
-    
+
     bool fSubbedFee = rv["outputs_fee"].size() > 0 ? true : false;
-    
+
     size_t nBytes = rv["bytes"].get_int64();
-    
-    
+
+
     CAmount txFee = rFee * COIN;
-    
+
     // Format confirmation message
     QStringList formatted;
     for (const auto &rcp : currentTransaction.getRecipients())
     {
         // generate bold amount string
         CAmount nValue = rcp.amount;
-        
+
         const UniValue &uv = rv["outputs_fee"][rcp.address.toStdString().c_str()];
         if (uv.isNum())
             nValue = uv.get_int64();
-        
+
         QString amount = "<b>" + BitcoinUnits::formatHtmlWithUnit(model->getOptionsModel()->getDisplayUnit(), nValue);
         amount.append("</b>");
         // generate monospace address string
@@ -435,7 +435,7 @@ void SendCoinsDialog::on_sendButton_clicked()
         questionString.append("<hr /><span style='color:#aa0000;'>");
         questionString.append("Estimated "+BitcoinUnits::formatHtmlWithUnit(model->getOptionsModel()->getDisplayUnit(), txFee));
         questionString.append("</span> ");
-        
+
         if (fSubbedFee)
             questionString.append(tr("removed for transaction fee"));
         else
@@ -444,14 +444,14 @@ void SendCoinsDialog::on_sendButton_clicked()
         // append transaction size
         questionString.append(" (" + QString::number((double)nBytes / 1000) + " kB)");
     }
-    
+
     // add total amount in all subdivision units
     questionString.append("<hr />");
-    
+
     CAmount totalAmount = currentTransaction.getTotalTransactionAmount();
     if (!fSubbedFee)
         totalAmount += txFee;
-    
+
     QStringList alternativeUnits;
     for (BitcoinUnits::Unit u : BitcoinUnits::availableUnits())
     {
@@ -480,16 +480,16 @@ void SendCoinsDialog::on_sendButton_clicked()
         fNewRecipientAllowed = true;
         return;
     }
-    
-    
+
+
     WalletModel::SendCoinsReturn sendStatus = WalletModel::OK;
-    
+
     sCommand += " false";
     sCommand += sCoinControl;
-    
+
     if (!model->tryCallRpc(sCommand, rv))
         sendStatus = WalletModel::TransactionCreationFailed;
-    
+
     // Update Addressbook
     for (const auto &rcp : currentTransaction.getRecipients())
     {
@@ -498,10 +498,10 @@ void SendCoinsDialog::on_sendButton_clicked()
         QString strLabel = rcp.label;
         sCommand += strLabel.isEmpty() ? " \"\"" : (" \"" + strLabel + "\"");
         sCommand += " send";
-        
+
         model->tryCallRpc(sCommand, rv);
     };
-    
+
     processSendCoinsReturn(sendStatus);
 
     if (sendStatus.status == WalletModel::OK)
@@ -520,10 +520,10 @@ void SendCoinsDialog::clear()
     {
         ui->entries->takeAt(0)->widget()->deleteLater();
     }
-    
+
     ui->cbxTypeFrom->setCurrentIndex(ui->cbxTypeFrom->findText("Part"));
     ui->cbxTypeTo->setCurrentIndex(ui->cbxTypeTo->findText("Part"));
-    
+
     addEntry();
 
     updateTabsAndLabels();
@@ -662,7 +662,7 @@ void SendCoinsDialog::setBalance(const CAmount& balance, const CAmount& staked, 
     if(model && model->getOptionsModel())
     {
         QString sBalance = BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), balance);
-        
+
         if (blindBalance > 0)
             sBalance += "\n" + BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), blindBalance) + " B";
         if (anonBalance > 0)
@@ -678,7 +678,7 @@ void SendCoinsDialog::updateDisplayUnit()
     CHDWalletBalances bal;
     CHDWallet *pw = model->getParticlWallet();
     pw->GetBalances(bal);
-    
+
     setBalance(bal.nPart, bal.nPartStaked, bal.nBlind, bal.nAnon, bal.nPartUnconf, bal.nPartImmature,
         bal.nPartWatchOnly, bal.nPartWatchOnlyUnconf, 0, bal.nPartWatchOnlyStaked);
     ui->customFee->setDisplayUnit(model->getOptionsModel()->getDisplayUnit());
@@ -818,7 +818,7 @@ void SendCoinsDialog::updateSmartFeeLabel()
     updateCoinControlState(coin_control);
     coin_control.m_feerate.reset(); // Explicitly use only fee estimation rate for smart fee labels
     FeeCalculation feeCalc;
-    CFeeRate feeRate = CFeeRate(CWallet::GetMinimumFee(1000, coin_control, ::mempool, ::feeEstimator, &feeCalc));
+    CFeeRate feeRate = CFeeRate(model->getParticlWallet()->GetMinimumFee(1000, coin_control, ::mempool, ::feeEstimator, &feeCalc));
 
     ui->labelSmartFee->setText(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), feeRate.GetFeePerK()) + "/kB");
 

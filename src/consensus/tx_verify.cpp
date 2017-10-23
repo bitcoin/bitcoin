@@ -149,7 +149,7 @@ unsigned int GetP2SHSigOpCount(const CTransaction& tx, const CCoinsViewCache& in
     {
         if (tx.vin[i].IsAnonInput())
             continue;
-        
+
         const Coin& coin = inputs.AccessCoin(tx.vin[i].prevout);
         assert(!coin.IsSpent());
         const CTxOut &prevout = coin.out;
@@ -174,12 +174,12 @@ int64_t GetTransactionSigOpCost(const CTransaction& tx, const CCoinsViewCache& i
     {
         if (tx.vin[i].IsAnonInput())
             continue;
-        
+
         const Coin& coin = inputs.AccessCoin(tx.vin[i].prevout);
         assert(!coin.IsSpent());
         const CTxOut &prevout = coin.out;
         nSigOps += CountWitnessSigOps(tx.vin[i].scriptSig, prevout.scriptPubKey, &tx.vin[i].scriptWitness, flags);
-        
+
     };
     return nSigOps;
 }
@@ -191,7 +191,7 @@ bool CheckValue(CValidationState &state, CAmount nValue, CAmount &nValueOut)
     if (nValue > MAX_MONEY)
         return state.DoS(100, false, REJECT_INVALID, "bad-txns-vout-toolarge");
     nValueOut += nValue;
-    
+
     return true;
 }
 
@@ -199,7 +199,7 @@ bool CheckStandardOutput(CValidationState &state, const Consensus::Params& conse
 {
     if (!CheckValue(state, p->nValue, nValueOut))
         return false;
-    
+
     if (HasIsCoinstakeOp(p->scriptPubKey))
     {
         if (GetAdjustedTime() < consensusParams.OpIsCoinstakeTime)
@@ -210,7 +210,7 @@ bool CheckStandardOutput(CValidationState &state, const Consensus::Params& conse
                 return state.DoS(10, false, REJECT_INVALID, "bad-txns-vout-opiscoinstake-spend-p2pkh");
         };
     };
-    
+
     return true;
 }
 
@@ -218,27 +218,27 @@ bool CheckBlindOutput(CValidationState &state, const CTxOutCT *p)
 {
     if (p->vData.size() < 33 || p->vData.size() > 33 + 5)
         return state.DoS(100, false, REJECT_INVALID, "bad-ctout-ephem-size");
-    
+
     size_t nRangeProofLen = 5134;
     if (p->vRangeproof.size() > nRangeProofLen)
         return state.DoS(100, false, REJECT_INVALID, "bad-ctout-rangeproof-size");
-    
+
     if ((fBusyImporting) && fSkipRangeproof)
         return true;
-    
+
     uint64_t min_value, max_value;
     int rv = secp256k1_rangeproof_verify(secp256k1_ctx_blind, &min_value, &max_value,
         &p->commitment, p->vRangeproof.data(), p->vRangeproof.size(),
         nullptr, 0,
         secp256k1_generator_h);
-    
+
     if (LogAcceptCategory(BCLog::RINGCT))
         LogPrintf("%s: rv, min_value, max_value %d, %s, %s\n", __func__,
             rv, FormatMoney((CAmount)min_value), FormatMoney((CAmount)max_value));
-    
+
     if (rv != 1)
         return state.DoS(100, false, REJECT_INVALID, "bad-ctout-rangeproof-verify");
-    
+
     return true;
 }
 
@@ -246,30 +246,30 @@ bool CheckAnonOutput(CValidationState &state, const CTxOutRingCT *p)
 {
     if (Params().NetworkID() == "main")
         return state.DoS(100, false, REJECT_INVALID, "AnonOutput in mainnet");
-    
+
     if (p->vData.size() < 33 || p->vData.size() > 33 + 5)
         return state.DoS(100, false, REJECT_INVALID, "bad-rctout-ephem-size");
-    
+
     size_t nRangeProofLen = 5134;
     if (p->vRangeproof.size() > nRangeProofLen)
         return state.DoS(100, false, REJECT_INVALID, "bad-rctout-rangeproof-size");
-    
+
     if ((fBusyImporting) && fSkipRangeproof)
         return true;
-    
+
     uint64_t min_value, max_value;
     int rv = secp256k1_rangeproof_verify(secp256k1_ctx_blind, &min_value, &max_value,
         &p->commitment, p->vRangeproof.data(), p->vRangeproof.size(),
         nullptr, 0,
         secp256k1_generator_h);
-    
+
     if (LogAcceptCategory(BCLog::RINGCT))
         LogPrintf("%s: rv, min_value, max_value %d, %s, %s\n", __func__,
             rv, FormatMoney((CAmount)min_value), FormatMoney((CAmount)max_value));
-    
+
     if (rv != 1)
         return state.DoS(100, false, REJECT_INVALID, "bad-rctout-rangeproof-verify");
-    
+
     return true;
 }
 
@@ -277,11 +277,11 @@ bool CheckDataOutput(CValidationState &state, const CTxOutData *p)
 {
     if (p->vData.size() < 1)
         return state.DoS(100, false, REJECT_INVALID, "bad-output-data-size");
-    
+
     const size_t MAX_DATA_OUTPUT_SIZE = 34 + 5 + 34; // DO_STEALTH 33, DO_STEALTH_PREFIX 4, DO_NARR_CRYPT (max 32 bytes)
     if (p->vData.size() > MAX_DATA_OUTPUT_SIZE)
         return state.DoS(100, false, REJECT_INVALID, "bad-output-data-size");
-    
+
     return true;
 }
 
@@ -290,11 +290,11 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state, bool fChe
     // Basic checks that don't depend on any context
     if (tx.vin.empty())
         return state.DoS(10, false, REJECT_INVALID, "bad-txns-vin-empty");
-    
+
     // Size limits (this doesn't take the witness into account, as that hasn't been checked for malleability)
     if (::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS) * WITNESS_SCALE_FACTOR > MAX_BLOCK_WEIGHT)
         return state.DoS(100, false, REJECT_INVALID, "bad-txns-oversize");
-    
+
     if (tx.IsParticlVersion())
     {
         const Consensus::Params& consensusParams = Params().GetConsensus();
@@ -302,7 +302,7 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state, bool fChe
             return state.DoS(10, false, REJECT_INVALID, "bad-txns-vpout-empty");
         if (!tx.vout.empty())
             return state.DoS(10, false, REJECT_INVALID, "bad-txns-vout-not-empty");
-        
+
         size_t nStandardOutputs = 0;
         CAmount nValueOut = 0;
         size_t nDataOutputs = 0;
@@ -328,24 +328,24 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state, bool fChe
                         return false;
                     nDataOutputs++;
                     break;
-                default: 
+                default:
                     return state.DoS(100, false, REJECT_INVALID, "bad-txns-unknown-output-version");
             };
-            
+
             if (!MoneyRange(nValueOut))
                 return state.DoS(100, false, REJECT_INVALID, "bad-txns-txouttotal-toolarge");
         };
-        
+
         if (nDataOutputs > 1 + nStandardOutputs) // extra 1 for ct fee output
             return state.DoS(100, false, REJECT_INVALID, "too-many-data-outputs");
     } else
     {
         if (fParticlMode)
             return state.DoS(100, false, REJECT_INVALID, "bad-txn-version");
-        
+
         if (tx.vout.empty())
             return state.DoS(10, false, REJECT_INVALID, "bad-txns-vout-empty");
-        
+
         // Check for negative or overflow output values
         CAmount nValueOut = 0;
         for (const auto& txout : tx.vout)
@@ -391,7 +391,7 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
     // for an attacker to attempt to split the network.
     if (!inputs.HaveInputs(tx))
         return state.Invalid(false, 0, "", "Inputs unavailable");
-    
+
     std::vector<const secp256k1_pedersen_commitment*> vpCommitsIn, vpCommitsOut;
     size_t nStandard = 0, nCt = 0, nRingCT = 0;
     CAmount nValueIn = 0;
@@ -414,7 +414,7 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
             {
                 if (fParticlMode)
                 {
-                    // ease in the restriction to start the chain
+                    // Ease in the restriction to start the chain
                     int nRequiredDepth = std::min(COINBASE_MATURITY, (int)(coin.nHeight / 2));
                     if (nSpendHeight - coin.nHeight < nRequiredDepth)
                         return state.Invalid(false,
@@ -439,7 +439,6 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
             } else
             if (coin.nType == OUTPUT_CT)
             {
-                //const CTxOutCT *ctout = (CTxOutCT*) txprevout;
                 vpCommitsIn.push_back(&coin.commitment);
                 nCt++;
             } else
@@ -453,16 +452,16 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
                 return state.DoS(100, false, REJECT_INVALID, "bad-txns-inputvalues-outofrange");
         };
     }
-    
+
     if ((nStandard > 0 && (nCt > 0 || nRingCT > 0))
         || (nCt > 0 && (nStandard > 0 || nRingCT > 0))
         || (nRingCT > 0 && (nCt > 0 || nStandard > 0)))
         return state.DoS(100, false, REJECT_INVALID, "mixed-input-types");
-    
+
     // GetPlainValueOut adds to nStandard, nCt, nRingCT
     CAmount nPlainValueOut = tx.GetPlainValueOut(nStandard, nCt, nRingCT);
-    
-    
+
+
     CAmount nTxFee = 0;
     if (fParticlMode)
     {
@@ -477,12 +476,12 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
             } else
             {
                 nTxFee = nValueIn - nPlainValueOut;
-                
+
                 if (nValueIn < nPlainValueOut)
                     return state.DoS(100, false, REJECT_INVALID, "bad-txns-in-belowout", false,
                         strprintf("value in (%s) < value out (%s)", FormatMoney(nValueIn), FormatMoney(nPlainValueOut)));
             };
-            
+
             if (nTxFee < 0)
                 return state.DoS(100, false, REJECT_INVALID, "bad-txns-fee-negative");
             nFees += nTxFee;
@@ -503,17 +502,17 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
         if (!MoneyRange(nFees))
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-fee-outofrange");
     };
-    
+
     if (nCt > 0 && nRingCT == 0)
     {
         nPlainValueOut += nTxFee;
-        
+
         if (!MoneyRange(nPlainValueOut))
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-out-outofrange");
-        
+
         if (!MoneyRange(nValueIn))
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-in-outofrange");
-        
+
         // commitments must sum to 0
         secp256k1_pedersen_commitment plainInCommitment, plainOutCommitment;
         uint8_t blindPlain[32];
@@ -541,7 +540,7 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
 
         int rv = secp256k1_pedersen_verify_tally(secp256k1_ctx_blind,
             vpCommitsIn.data(), vpCommitsIn.size(), vpCommitsOut.data(), vpCommitsOut.size());
-        
+
         if (rv != 1)
             return state.DoS(100, false, REJECT_INVALID, "bad-commitment-sum");
     };

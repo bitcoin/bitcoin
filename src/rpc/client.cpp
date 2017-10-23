@@ -150,63 +150,65 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "tallyvotes", 0, "proposal" },
     { "tallyvotes", 1, "height_start" },
     { "tallyvotes", 2, "height_end" },
-    
+
     { "sendparttoblind", 1, "amount" },
     { "sendparttoblind", 4, "subtractfeefromamount" },
     { "sendparttoanon", 1, "amount" },
     { "sendparttoanon", 4, "subtractfeefromamount" },
-    
+
     { "sendblindtopart", 1, "amount" },
     { "sendblindtopart", 4, "subtractfeefromamount" },
     { "sendblindtoblind", 1, "amount" },
     { "sendblindtoblind", 4, "subtractfeefromamount" },
     { "sendblindtoanon", 1, "amount" },
     { "sendblindtoanon", 4, "subtractfeefromamount" },
-    
+
     { "sendanontopart", 1, "amount" },
     { "sendanontopart", 4, "subtractfeefromamount" },
     { "sendanontopart", 6, "ringsize" },
     { "sendanontopart", 7, "inputs_per_sig" },
-    
+
     { "sendanontoblind", 1, "amount" },
     { "sendanontoblind", 4, "subtractfeefromamount" },
     { "sendanontoblind", 6, "ringsize" },
     { "sendanontoblind", 7, "inputs_per_sig" },
-    
+
     { "sendanontoanon", 1, "amount" },
     { "sendanontoanon", 4, "subtractfeefromamount" },
     { "sendanontoanon", 6, "ringsize" },
     { "sendanontoanon", 7, "inputs_per_sig" },
-    
+
     { "sendtypeto", 2, "outputs" },
     { "sendtypeto", 5, "ringsize" },
     { "sendtypeto", 6, "inputs_per_sig" },
     { "sendtypeto", 7, "test_fee" },
     { "sendtypeto", 8, "coincontrol" },
-    
+
     { "buildscript", 0, "json" },
-    
+
     { "walletsettings", 1, "json" },
-    
+
     { "getnewextaddress", 1, "childno" },
-    
+
     { "listunspentanon", 0, "minconf" },
     { "listunspentanon", 1, "maxconf" },
     { "listunspentanon", 2, "addresses" },
     { "listunspentanon", 3, "include_unsafe" },
     { "listunspentanon", 4, "query_options" },
-    
+
     { "listunspentblind", 0, "minconf" },
     { "listunspentblind", 1, "maxconf" },
     { "listunspentblind", 2, "addresses" },
     { "listunspentblind", 3, "include_unsafe" },
     { "listunspentblind", 4, "query_options" },
-    
-    
+
+    { "smsgsend", 3, "paid_msg" },
+
+
     { "logging", 0, "include" },
     { "logging", 1, "exclude" },
     { "disconnectnode", 1, "nodeid" },
-    
+
     // Echo with conversion (For testing only)
     { "echojson", 0, "arg0" },
     { "echojson", 1, "arg1" },

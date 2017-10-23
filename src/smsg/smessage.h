@@ -33,6 +33,10 @@ const unsigned int SMSG_MAX_AMSG_BYTES = 512;               // the user input pa
 // max size of payload worst case compression
 const unsigned int SMSG_MAX_MSG_WORST = LZ4_COMPRESSBOUND(SMSG_MAX_MSG_BYTES+SMSG_PL_HDR_LEN);
 
+
+const CAmount nFundingTxnFeePerK = 100000;
+const CAmount nMsgFeePerKPerDay = 10000;
+
 #define SMSG_MASK_UNREAD            (1 << 0)
 
 extern bool fSecMsgEnabled;
@@ -64,12 +68,15 @@ extern CCriticalSection cs_smsg;            // all except inbox and outbox
 class SecureMessage
 {
 public:
-    SecureMessage()
+    SecureMessage() {};
+    SecureMessage(bool fPaid)
     {
-        nPayload = 0;
-        pPayload = nullptr;
+        if (fPaid)
+        {
+            version[0] = 3;
+            version[1] = 0;
+        };
     };
-
     ~SecureMessage()
     {
         if (pPayload)
@@ -77,16 +84,34 @@ public:
         pPayload = nullptr;
     };
 
+    bool GetFundingTxid(uint256 &txid)
+    {
+        if (version[0] != 3 || !pPayload || nPayload < 32)
+            return false;
+        memcpy(txid.begin(), pPayload+(nPayload-32), 32);
+        return true;
+    };
+
+    uint8_t *data()
+    {
+        return &hash[0];
+    }
+
+    const uint8_t *data() const
+    {
+        return &hash[0];
+    }
+
     uint8_t  hash[4];
-    uint8_t  version[2];
+    uint8_t  version[2] = {2, 1};
     uint8_t  flags;
     int64_t  timestamp;
     uint8_t  iv[16];
     uint8_t  cpkR[33];
     uint8_t  mac[32];
-    uint8_t  nonce[4];
-    uint32_t nPayload;
-    uint8_t* pPayload;
+    uint8_t  nonce[4]; // nDaysRetention when paid message
+    uint32_t nPayload = 0;
+    uint8_t* pPayload = nullptr;
 };
 #pragma pack(pop)
 
@@ -217,7 +242,7 @@ class SecMsgStored
 {
 public:
     int64_t              timeReceived;
-    char                 status;         // read etc
+    uint8_t              status;         // read etc
     uint16_t             folderId;
     CKeyID               addrTo;         // when in owned addr, when sent remote addr
     CKeyID               addrOutbox;     // owned address this copy was encrypted with
@@ -292,7 +317,10 @@ int SecureMsgStoreUnscanned(uint8_t *pHeader, uint8_t *pPayload, uint32_t nPaylo
 int SecureMsgStore(uint8_t *pHeader, uint8_t *pPayload, uint32_t nPayload, bool fUpdateBucket);
 int SecureMsgStore(SecureMessage& smsg, bool fUpdateBucket);
 
-int SecureMsgSend(CKeyID &addressFrom, CKeyID &addressTo, std::string &message, std::string &sError);
+int SecureMsgSend(CKeyID &addressFrom, CKeyID &addressTo, std::string &message, std::string &sError, bool fPaid=false, size_t nDaysRetention=0, bool fTestFee=false, CAmount *nFee=NULL);
+
+int SecureMsgHash(const SecureMessage &smsg, uint160 &hash);
+int SecureMsgFund(SecureMessage &smsg, std::string &sError, bool fTestFee, CAmount *nFee);
 
 int SecureMsgValidate(uint8_t *pHeader, uint8_t *pPayload, uint32_t nPayload);
 int SecureMsgSetHash (uint8_t *pHeader, uint8_t *pPayload, uint32_t nPayload);

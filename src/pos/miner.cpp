@@ -29,7 +29,7 @@ void StakeThread::condWaitFor(int ms)
 {
     std::unique_lock<std::mutex> lock(mtxMinerProc);
     fWakeMinerProc = false;
-    condMinerProc.wait_for(lock, std::chrono::milliseconds(ms), [&] { return fWakeMinerProc; });
+    condMinerProc.wait_for(lock, std::chrono::milliseconds(ms), [this] { return this->fWakeMinerProc; });
 };
 
 std::atomic<bool> fStopMinerProc(false);
@@ -228,7 +228,7 @@ void ShutdownThreadStakeMiner()
             std::lock_guard<std::mutex> lock(t->mtxMinerProc);
             t->fWakeMinerProc = true;
         }
-        t->condMinerProc.notify_one();
+        t->condMinerProc.notify_all();
 
         t->thread.join();
         delete t;
@@ -249,7 +249,7 @@ void WakeThreadStakeMiner(CHDWallet *pwallet)
         t->fWakeMinerProc = true;
     }
 
-    t->condMinerProc.notify_one();
+    t->condMinerProc.notify_all();
 };
 
 bool ThreadStakeMinerStopped()
@@ -284,16 +284,8 @@ void ThreadStakeMiner(size_t nThreadID, std::vector<CWalletRef> &vpwallets, size
         if (fReindex || fImporting || fBusyImporting)
         {
             fIsStaking = false;
+            LogPrint(BCLog::POS, "%s: Block import/reindex.\n", __func__);
             condWaitFor(nThreadID, 30000);
-            continue;
-        };
-
-        if (g_connman->vNodes.empty() || IsInitialBlockDownload())
-        {
-            fIsStaking = false;
-            fTryToSync = true;
-            LogPrint(BCLog::POS, "%s: IsInitialBlockDownload\n", __func__);
-            condWaitFor(nThreadID, 2000);
             continue;
         };
 
@@ -309,6 +301,16 @@ void ThreadStakeMiner(size_t nThreadID, std::vector<CWalletRef> &vpwallets, size
                 continue;
             };
         };
+
+        if (g_connman->vNodes.empty() || IsInitialBlockDownload())
+        {
+            fIsStaking = false;
+            fTryToSync = true;
+            LogPrint(BCLog::POS, "%s: IsInitialBlockDownload\n", __func__);
+            condWaitFor(nThreadID, 2000);
+            continue;
+        };
+
 
         {
             LOCK(cs_main);
@@ -379,7 +381,7 @@ void ThreadStakeMiner(size_t nThreadID, std::vector<CWalletRef> &vpwallets, size
             {
                 pwallet->nIsStaking = CHDWallet::NOT_STAKING_BALANCE;
                 nWaitFor = std::min(nWaitFor, (size_t)60000);
-                pwallet->nLastCoinStakeSearchTime = nSearchTime + 60000;
+                pwallet->nLastCoinStakeSearchTime = nSearchTime + 60;
                 LogPrint(BCLog::POS, "%s: Wallet %d, low balance.\n", __func__, i);
                 continue;
             };
@@ -421,11 +423,10 @@ void ThreadStakeMiner(size_t nThreadID, std::vector<CWalletRef> &vpwallets, size
                 int nRequiredDepth = std::min((int)(Params().GetStakeMinConfirmations()-1), (int)(nBestHeight / 2));
                 if (pwallet->deepestTxnDepth < nRequiredDepth-4)
                 {
-                    size_t nSleep = (nRequiredDepth - pwallet->deepestTxnDepth) / 4;
                     pwallet->nIsStaking = CHDWallet::NOT_STAKING_DEPTH;
+                    size_t nSleep = (nRequiredDepth - pwallet->deepestTxnDepth) / 4;
                     nWaitFor = std::min(nWaitFor, (size_t)(nSleep * 1000));
-                    //condWaitFor(nSleep * 1000);
-                    pwallet->nLastCoinStakeSearchTime = nSearchTime + nSleep * 1000;
+                    pwallet->nLastCoinStakeSearchTime = nSearchTime + nSleep;
                     LogPrint(BCLog::POS, "%s: Wallet %d, no outputs with required depth, sleeping for %ds.\n", __func__, i, nSleep);
                     continue;
                 };

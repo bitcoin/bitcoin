@@ -13,6 +13,7 @@
 #include "test/test_particl.h"
 #include "validation.h"
 #include "wallet/wallet.h"
+#include "wallet/hdwallet.h"
 
 #include <QAbstractButton>
 #include <QAction>
@@ -142,6 +143,9 @@ void BumpFee(TransactionView& view, const uint256& txid, bool expectDisabled, st
 //     src/qt/test/test_bitcoin-qt -platform cocoa    # macOS
 void TestSendCoins()
 {
+    // TODO: convert to CHDWallet or modify gui code to allow CWallet again
+    return;
+
     // Set up wallet and chain with 105 blocks (5 mature blocks for spending).
     TestChain100Setup test;
     for (int i = 0; i < 5; ++i) {
@@ -149,7 +153,7 @@ void TestSendCoins()
     }
     bitdb.MakeMock();
     std::unique_ptr<CWalletDBWrapper> dbw(new CWalletDBWrapper(&bitdb, "wallet_test.dat"));
-    CWallet wallet(std::move(dbw));
+    CHDWallet wallet(std::move(dbw));
     bool firstRun;
     wallet.LoadWallet(firstRun);
     {
@@ -192,6 +196,5 @@ void TestSendCoins()
 
 void WalletTests::walletTests()
 {
-    // TODO: convert to CHDWallet or modify gui code to allow CWallet again
-    //TestSendCoins();
+    TestSendCoins();
 }

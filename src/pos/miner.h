@@ -23,6 +23,7 @@ public:
     std::thread thread;
     std::condition_variable condMinerProc;
     std::mutex mtxMinerProc;
+    std::string sName;
     bool fWakeMinerProc = false;
 };
 

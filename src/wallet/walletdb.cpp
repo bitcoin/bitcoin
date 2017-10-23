@@ -435,13 +435,13 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
             {
               CPubKey vchPubKey;
               ssKey >> vchPubKey;
-              keyID = vchPubKey.GetID();
+              keyID = CTxDestination(vchPubKey.GetID());
             }
             else if (strType == "watchmeta")
             {
               CScript script;
               ssKey >> script;
-              keyID = CScriptID(script);
+              keyID = CTxDestination(CScriptID(script));
             }
 
             CKeyMetadata keyMeta;
@@ -754,7 +754,7 @@ void MaybeCompactWalletDB()
     if (!gArgs.GetBoolArg("-flushwallet", DEFAULT_FLUSHWALLET)) {
         return;
     }
-    
+
     // Make this thread recognisable as the wallet flushing thread
     RenameThread("particl-wallet");
 

@@ -49,6 +49,7 @@ enum DataOutputTypes
     DO_VOTE                 = 5,
     DO_FEE                  = 6,
     DO_DEV_FUND_CFWD        = 7,
+    DO_FUND_MSG             = 8,
 };
 
 inline bool IsParticlTxVersion(int nVersion)

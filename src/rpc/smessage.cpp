@@ -12,6 +12,7 @@
 #include "smsg/db.h"
 #include "script/ismine.h"
 #include "utilstrencodings.h"
+#include "core_io.h"
 
 #ifdef ENABLE_WALLET
 #include "wallet/wallet.h"
@@ -558,17 +559,26 @@ UniValue smsggetpubkey(const JSONRPCRequest &request)
 
 UniValue smsgsend(const JSONRPCRequest &request)
 {
-    if (request.fHelp || request.params.size() != 3)
+    if (request.fHelp || request.params.size() < 3 || request.params.size() > 6)
         throw std::runtime_error(
-            "smsgsend <addrFrom> <addrTo> <message>\n"
+            "smsgsend <addrFrom> <addrTo> <message>  (paid retention testfee)n"
             "Send an encrypted message from addrFrom to addrTo.");
 
     if (!fSecMsgEnabled)
         throw std::runtime_error("Secure messaging is disabled.");
 
+    RPCTypeCheck(request.params,
+        {UniValue::VSTR, UniValue::VSTR, UniValue::VSTR,
+         UniValue::VBOOL, UniValue::VNUM, UniValue::VBOOL}, true);
+
     std::string addrFrom  = request.params[0].get_str();
     std::string addrTo    = request.params[1].get_str();
     std::string msg       = request.params[2].get_str();
+
+    bool fPaid = request.params[3].isNull() ? false : request.params[3].get_bool();
+    int nRetention = request.params[4].isNull() ? 1 : request.params[4].get_int();
+    bool fTestFee = request.params[5].isNull() ? false : request.params[5].get_bool();
+    CAmount nFee;
 
     CKeyID kiFrom, kiTo;
     CBitcoinAddress coinAddress(addrFrom);
@@ -585,13 +595,15 @@ UniValue smsgsend(const JSONRPCRequest &request)
 
     UniValue result(UniValue::VOBJ);
     std::string sError;
-    if (SecureMsgSend(kiFrom, kiTo, msg, sError) != 0)
+    if (SecureMsgSend(kiFrom, kiTo, msg, sError, fPaid, nRetention, fTestFee, &nFee) != 0)
     {
         result.pushKV("result", "Send failed.");
         result.pushKV("error", sError);
     } else
     {
-        result.pushKV("result", "Sent.");
+        result.pushKV("result", fTestFee ? "Not Sent." : "Sent.");
+        if (fPaid)
+            result.pushKV("fee", ValueFromAmount(nFee));
     };
 
     return result;
