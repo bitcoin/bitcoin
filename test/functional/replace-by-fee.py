@@ -72,7 +72,13 @@ class ReplaceByFeeTest(BitcoinTestFramework):
                            ["-mempoolreplacement=0"]]
 
     def run_test(self):
+        # Leave IBD
+        self.nodes[0].generate(1)
+
         make_utxo(self.nodes[0], 1*COIN)
+
+        # Ensure nodes are synced
+        self.sync_all()
 
         self.log.info("Running test simple doublespend...")
         self.test_simple_doublespend()
@@ -110,13 +116,18 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         """Simple doublespend"""
         tx0_outpoint = make_utxo(self.nodes[0], int(1.1*COIN))
 
+        # make_utxo may have generated a bunch of blocks, so we need to sync
+        # before we can spend the coins generated, or else the resulting
+        # transactions might not be accepted by our peers.
+        self.sync_all()
+
         tx1a = CTransaction()
         tx1a.vin = [CTxIn(tx0_outpoint, nSequence=0)]
         tx1a.vout = [CTxOut(1*COIN, CScript([b'a']))]
         tx1a_hex = txToHex(tx1a)
         tx1a_txid = self.nodes[0].sendrawtransaction(tx1a_hex, True)
 
-        self.sync_all([self.nodes])
+        self.sync_all()
 
         # Should fail because we haven't changed the fee
         tx1b = CTransaction()
