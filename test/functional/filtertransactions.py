@@ -28,6 +28,11 @@ class FilterTransactionsTest(ParticlTestFramework):
     def run_test(self):
         nodes = self.nodes
 
+        # Stop staking
+        ro = nodes[0].reservebalance(True, 10000000)
+        ro = nodes[1].reservebalance(True, 10000000)
+        ro = nodes[2].reservebalance(True, 10000000)
+
         # import keys for node wallets
         nodes[0].extkeyimportmaster('abandon baby cabbage dad eager fabric gadget habit ice kangaroo lab absorb')
         nodes[1].extkeyimportmaster('drip fog service village program equip minute dentist series hawk crop sphere olympic lazy garbage segment fox library good alley steak jazz force inmate')
@@ -43,10 +48,10 @@ class FilterTransactionsTest(ParticlTestFramework):
         targetStealth  = nodes[1].getnewstealthaddress('taret stealth')
         targetExternal = nodes[1].getnewextaddress('target external')
         stakingAddress = nodes[2].getnewaddress('staking')
-        
+
         # simple PART transaction
         nodes[0].sendtoaddress(targetAddress, 10)
-        self.sync_all()
+        self.stakeBlocks(1)
         nodes[1].sendtoaddress(selfAddress, 8)
 
         # PART to BLIND
@@ -131,11 +136,11 @@ class FilterTransactionsTest(ParticlTestFramework):
                 'estimate_mode': 'CONSERVATIVE'
             }
         )
-        
+
         ro = nodes[0].scanchain()
         self.stakeBlocks(1)
         self.sync_all()
-        
+
         ro = nodes[0].filtertransactions({'count': 1, 'category': 'send'})
         print(json.dumps(ro, indent=4, default=self.jsonDecimal))
         ro = nodes[0].filtertransactions({'type': 'blind'})
@@ -144,11 +149,11 @@ class FilterTransactionsTest(ParticlTestFramework):
         #
         # general
         #
-        
+
         # without argument
         ro = nodes[0].filtertransactions()
         assert(len(ro) == 10)
-        
+
         # too much arguments
         try:
             nodes[0].filtertransactions('foo', 'bar')
@@ -253,12 +258,12 @@ class FilterTransactionsTest(ParticlTestFramework):
                 assert(t['category'] == category[0])
             if (category[0] != 'stake'):
                 assert(len(ro) == category[1])
-        
+
         # category 'all'
         length = len(nodes[0].filtertransactions({'count': 20}))
         ro = nodes[0].filtertransactions({ 'category': 'all', 'count': 20 })
         assert(len(ro) == length)
-        
+
         # invalid transaction category
         try:
             ro = nodes[0].filtertransactions({ 'category': 'invalid' })
@@ -269,27 +274,27 @@ class FilterTransactionsTest(ParticlTestFramework):
         #
         # type
         #
-        
+
         # type 'all'
         length = len(nodes[0].filtertransactions({'count': 20}))
         ro = nodes[0].filtertransactions({ 'type': 'all', 'count': 20 })
         assert(len(ro) == length)
-        
+
         # type 'standard'
         ro = nodes[0].filtertransactions({ 'type': 'standard', 'count': 20 })
         for t in ro:
             assert('type' not in t)
-        
+
         # type 'anon'
         ro = nodes[0].filtertransactions({ 'type': 'anon', 'count': 20 })
         for t in ro:
             assert(t["type"] == 'anon')
-        
+
         # type 'blind'
         ro = nodes[0].filtertransactions({ 'type': 'blind', 'count': 20 })
         for t in ro:
             assert(t["type"] == 'blind')
-        
+
         # invalid transaction type
         try:
             ro = nodes[0].filtertransactions({ 'type': 'invalid' })
@@ -300,7 +305,7 @@ class FilterTransactionsTest(ParticlTestFramework):
         #
         # sort
         #
-        
+
         sortings = [
             [ 'time',          'desc' ],
             [ 'address',        'asc' ],
@@ -309,7 +314,7 @@ class FilterTransactionsTest(ParticlTestFramework):
             [ 'confirmations', 'desc' ],
             [ 'txid',           'asc' ]
         ]
-        
+
         for sorting in sortings:
             ro = nodes[0].filtertransactions({ 'sort': sorting[0] })
             prev = None

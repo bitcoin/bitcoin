@@ -2723,9 +2723,11 @@ static void ParseOutputs(
     if (strSentAccount != "") {
         entry.push_back(Pair("account", strSentAccount));
     }
-    entry.push_back(Pair("abandoned", wtx.isAbandoned()));
     WalletTxToJSON(wtx, entry, true);
-    
+
+    if (!listStaked.empty() || !listSent.empty())
+        entry.push_back(Pair("abandoned", wtx.isAbandoned()));
+
     // staked
     if (!listStaked.empty()) {
         if (wtx.GetDepthInMainChain() < 1) {
@@ -2874,8 +2876,7 @@ static void ParseRecords(
     size_t  nOwned      = 0;
     size_t  nFrom       = 0;
     CAmount totalAmount = 0;
-    
-    
+
     int confirmations = pwallet->GetDepthInMainChain(rtx.blockHash);
     push(entry, "confirmations", confirmations);
     if (confirmations > 0) {
@@ -2885,7 +2886,7 @@ static void ParseRecords(
     } else {
         push(entry, "trusted", pwallet->IsTrusted(hash, rtx.blockHash));
     };
-    
+
     push(entry, "txid", hash.ToString());
     UniValue conflicts(UniValue::VARR);
     std::set<uint256> setconflicts = pwallet->GetConflicts(hash);
@@ -2900,9 +2901,9 @@ static void ParseRecords(
     if (rtx.nFlags & ORF_LOCKED) {
         push(entry, "require_unlock", "true");
     }
-    
+
     for (auto &record : rtx.vout) {
-        
+
         UniValue output(UniValue::VOBJ);
 
         if (record.nFlags & ORF_CHANGE) {
@@ -2966,11 +2967,11 @@ static void ParseRecords(
             : record.nType == OUTPUT_CT       ? "blind"
             : record.nType == OUTPUT_RINGCT   ? "anon"
             : "unknown");
-        
+
         if (!record.sNarration.empty()) {
             push(output, "narration", record.sNarration);
         }
-        
+
         CAmount amount = record.nValue;
         if (!(record.nFlags & ORF_OWNED)) {
             amount *= -1;
@@ -2981,12 +2982,12 @@ static void ParseRecords(
         push(output, "vout", record.n);
         outputs.push_back(output);
     }
-    
+
     if (nFrom > 0) {
         push(entry, "abandoned", rtx.IsAbandoned());
         push(entry, "fee", ValueFromAmount(-rtx.nFee));
     }
-    
+
     if (nOwned && nFrom) {
         push(entry, "category", "internal_transfer");
     } else if (nOwned) {
@@ -2994,12 +2995,12 @@ static void ParseRecords(
     } else if (nFrom) {
         push(entry, "category", "send");
     }
-    
+
     push(entry, "outputs", outputs);
-    
+
     push(entry, "amount", ValueFromAmount(totalAmount));
     amounts.push_back(std::to_string(ValueFromAmount(totalAmount).get_real()));
-    
+
     if (search != "") {
         // search in addresses
         if (std::any_of(addresses.begin(), addresses.end(), [search](std::string addr) {
@@ -3195,7 +3196,7 @@ UniValue filtertransactions(const JSONRPCRequest &request)
             }
         }
     }
-    
+
     // for transactions and records
     UniValue transactions(UniValue::VARR);
 
@@ -3230,7 +3231,7 @@ UniValue filtertransactions(const JSONRPCRequest &request)
         );
         rit++;
     }
-    
+
     // sort
     std::vector<UniValue> values = transactions.getValues();
     std::sort(values.begin(), values.end(), [sort] (UniValue a, UniValue b) -> bool {
@@ -3254,7 +3255,7 @@ UniValue filtertransactions(const JSONRPCRequest &request)
             : false
         );
     });
-    
+
     // filter, skip and count
     UniValue result(UniValue::VARR);
     // for every value while count is positive
