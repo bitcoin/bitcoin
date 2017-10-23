@@ -964,13 +964,13 @@ void StartRPCThreads()
             _("%s, you must set a rpcpassword in the configuration file:\n"
               "%s\n"
               "It is recommended you use the following random password:\n"
-              "rpcuser=bitcoinrpc\n"
+              "rpcuser=peercoinrpc\n"
               "rpcpassword=%s\n"
               "(you do not need to remember this password)\n"
               "The username and password MUST NOT be the same.\n"
               "If the file does not exist, create it with owner-readable-only file permissions.\n"
               "It is also recommended to set alertnotify so you are notified of problems;\n"
-              "for example: alertnotify=echo %%s | mail -s \"Bitcoin Alert\" admin@foo.com\n"),
+              "for example: alertnotify=echo %%s | mail -s \"Peercoin Alert\" admin@foo.com\n"),
                 strWhatAmI.c_str(),
                 GetConfigFile().string().c_str(),
                 EncodeBase58(&rand_pwd[0],&rand_pwd[0]+32).c_str()),
