@@ -51,8 +51,8 @@ bool CastToBool(const valtype& vch)
  * Script is a stack machine (like Forth) that evaluates a predicate
  * returning a bool indicating valid or not.  There are no loops.
  */
-#define stacktop(i)  (stack.at((size_t)((ssize_t)stack.size() + (ssize_t)i)))
-#define altstacktop(i)  (altstack.at((size_t)((ssize_t)altstack.size() + (ssize_t)i)))
+#define stacktop(i)  (stack.at((size_t)((int)stack.size() + (int)(i))))
+#define altstacktop(i)  (altstack.at((size_t)((int)altstack.size() + (int)(i))))
 static inline void popstack(std::vector<valtype>& stack)
 {
     if (stack.empty())
