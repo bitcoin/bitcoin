@@ -4,6 +4,7 @@
 
 #include "systemnodeman.h"
 #include "systemnode-sync.h"
+#include "masternodeman.h"
 #include "legacysigner.h"
 #include "util.h"
 #include "addrman.h"
@@ -368,6 +369,11 @@ bool CSystemnodeMan::CheckSnbAndUpdateSystemnodeList(CSystemnodeBroadcast snb, i
         return false;
     }
 
+    if (mnodeman.Find(snb.addr) != NULL) {
+        LogPrint("systemnode", "CSystemnodeMan::CheckSnbAndUpdateSystemnodeList - There is already a masternode with the same ip: %s\n", snb.addr.ToString());
+        return false;
+    }
+
     if(!snb.CheckAndUpdate(nDos)) {
         LogPrint("systemnode", "CSystemnodeMan::CheckSnbAndUpdateSystemnodeList - Systemnode broadcast, vin: %s CheckAndUpdate failed\n", snb.vin.ToString());
         return false;
@@ -413,6 +419,18 @@ CSystemnode *CSystemnodeMan::Find(const CPubKey &pubKeySystemnode)
     {
         if(mn.pubkey2 == pubKeySystemnode)
             return &mn;
+    }
+    return NULL;
+}
+
+CSystemnode *CSystemnodeMan::Find(const CService& addr)
+{
+    LOCK(cs);
+
+    BOOST_FOREACH(CSystemnode& sn, vSystemnodes)
+    {
+        if(sn.addr == addr)
+            return &sn;
     }
     return NULL;
 }

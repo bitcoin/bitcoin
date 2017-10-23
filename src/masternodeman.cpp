@@ -4,6 +4,7 @@
 
 #include "masternodeman.h"
 #include "masternode.h"
+#include "systemnodeman.h"
 #include "activemasternode.h"
 #include "legacysigner.h"
 #include "util.h"
@@ -435,6 +436,18 @@ CMasternode *CMasternodeMan::Find(const CPubKey &pubKeyMasternode)
     return NULL;
 }
 
+CMasternode *CMasternodeMan::Find(const CService& addr)
+{
+    LOCK(cs);
+
+    BOOST_FOREACH(CMasternode& mn, vMasternodes)
+    {
+        if(mn.addr == addr)
+            return &mn;
+    }
+    return NULL;
+}
+
 // 
 // Deterministically select the oldest/best masternode to pay on the network
 //
@@ -842,6 +855,11 @@ bool CMasternodeMan::CheckMnbAndUpdateMasternodeList(CMasternodeBroadcast mnb, i
 
     if(!mnb.CheckAndUpdate(nDos)){
         LogPrint("masternode", "CMasternodeMan::CheckMnbAndUpdateMasternodeList - Masternode broadcast, vin: %s CheckAndUpdate failed\n", mnb.vin.ToString());
+        return false;
+    }
+
+    if (snodeman.Find(mnb.addr) != NULL) {
+        LogPrint("masternode", "CMasternodeMan::CheckMnbAndUpdateMasternodeList - There is already a systemnode with the same ip: %s\n", mnb.addr.ToString());
         return false;
     }
 

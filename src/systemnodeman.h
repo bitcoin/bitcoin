@@ -109,6 +109,7 @@ public:
     /// Find an entry
     CSystemnode* Find(const CTxIn& vin);
     CSystemnode* Find(const CPubKey& pubKeySystemnode);
+    CSystemnode* Find(const CService& addr);
 
     /// Find an entry in the systemnode list that is next to be paid
     CSystemnode* GetNextSystemnodeInQueueForPayment(int nBlockHeight, bool fFilterSigTime, int& nCount);
