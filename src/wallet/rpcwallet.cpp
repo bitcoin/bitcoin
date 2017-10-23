@@ -84,8 +84,11 @@ void EnsureWalletIsUnlocked(CWallet * const pwallet)
         throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED, "Error: Wallet is unlocked for staking only.");
 }
 
-void WalletTxToJSON(const CWalletTx& wtx, UniValue& entry)
-{
+void WalletTxToJSON(
+    const CWalletTx& wtx,
+    UniValue& entry,
+    bool fFilterMode
+) {
     int confirms = wtx.GetDepthInMainChain();
     entry.push_back(Pair("confirmations", confirms));
     if (wtx.IsCoinBase())
@@ -103,7 +106,8 @@ void WalletTxToJSON(const CWalletTx& wtx, UniValue& entry)
     UniValue conflicts(UniValue::VARR);
     for (const uint256& conflict : wtx.GetConflicts())
         conflicts.push_back(conflict.GetHex());
-    entry.push_back(Pair("walletconflicts", conflicts));
+    if (conflicts.size() > 0 || !fFilterMode)
+        entry.push_back(Pair("walletconflicts", conflicts));
     PushTime(entry, "time", wtx.GetTxTime());
     PushTime(entry, "timereceived", wtx.nTimeReceived);
 
@@ -119,8 +123,9 @@ void WalletTxToJSON(const CWalletTx& wtx, UniValue& entry)
     }
     entry.push_back(Pair("bip125_replaceable", rbfStatus));
 
-    for (const std::pair<std::string, std::string>& item : wtx.mapValue)
-        entry.push_back(Pair(item.first, item.second));
+    if (!fFilterMode)
+        for (const std::pair<std::string, std::string>& item : wtx.mapValue)
+            entry.push_back(Pair(item.first, item.second));
 }
 
 void RecordTxToJSON(CHDWallet *phdw, const uint256 &hash, const CTransactionRecord& rtx, UniValue &entry)

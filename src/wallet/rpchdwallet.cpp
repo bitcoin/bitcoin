@@ -2652,12 +2652,18 @@ static bool ParseOutput(
     UniValue &                 output,
     const COutputEntry &       o,
     CHDWallet * const          pwallet,
+    CWalletTx &                wtx,
     const isminefilter &       watchonly,
     std::vector<std::string> & addresses,
     std::vector<std::string> & amounts
 ) {
     CBitcoinAddress addr;
 
+    std::string sKey = strprintf("n%d", o.vout);
+    mapValue_t::iterator mvi = wtx.mapValue.find(sKey);
+    if (mvi != wtx.mapValue.end()) {
+        output.push_back(Pair("narration", mvi->second));
+    }
     if (addr.Set(o.destination)) {
         output.push_back(Pair("address", addr.ToString()));
         addresses.push_back(addr.ToString());
@@ -2694,6 +2700,7 @@ static void ParseOutputs(
     std::list<COutputEntry> listSent;
     std::list<COutputEntry> listStaked;
     CAmount nFee;
+    CAmount amount = 0;
     std::string strSentAccount;
 
     wtx.GetAmounts(
@@ -2711,13 +2718,14 @@ static void ParseOutputs(
     std::vector<std::string> addresses;
     std::vector<std::string> amounts;
 
-    // common to every type of transaction
     UniValue outputs(UniValue::VARR);
-    entry.push_back(Pair("account", strSentAccount));
+    // common to every type of transaction
+    if (strSentAccount != "") {
+        entry.push_back(Pair("account", strSentAccount));
+    }
     entry.push_back(Pair("abandoned", wtx.isAbandoned()));
-    WalletTxToJSON(wtx, entry);
-    CAmount amount = 0;
-
+    WalletTxToJSON(wtx, entry, true);
+    
     // staked
     if (!listStaked.empty()) {
         if (wtx.GetDepthInMainChain() < 1) {
@@ -2727,7 +2735,15 @@ static void ParseOutputs(
         }
         for (const auto &s : listStaked) {
             UniValue output(UniValue::VOBJ);
-            if (!ParseOutput(output, s, pwallet, watchonly, addresses, amounts)) {
+            if (!ParseOutput(
+                output,
+                s,
+                pwallet,
+                wtx,
+                watchonly,
+                addresses,
+                amounts
+            )) {
                 return ;
             }
             output.push_back(Pair("amount", ValueFromAmount(s.amount)));
@@ -2741,7 +2757,14 @@ static void ParseOutputs(
             entry.push_back(Pair("fee", ValueFromAmount(-nFee)));
             for (const auto &s : listSent) {
                 UniValue output(UniValue::VOBJ);
-                if (!ParseOutput(output, s, pwallet, watchonly, addresses, amounts)) {
+                if (!ParseOutput(output,
+                    s,
+                    pwallet,
+                    wtx,
+                    watchonly,
+                    addresses,
+                    amounts
+                )) {
                     return ;
                 }
                 output.push_back(Pair("amount", ValueFromAmount(-s.amount)));
@@ -2754,7 +2777,15 @@ static void ParseOutputs(
         if (!listReceived.empty()) {
             for (const auto &r : listReceived) {
                 UniValue output(UniValue::VOBJ);
-                if (!ParseOutput(output, r, pwallet, watchonly, addresses, amounts)) {
+                if (!ParseOutput(
+                    output,
+                    r,
+                    pwallet,
+                    wtx,
+                    watchonly,
+                    addresses,
+                    amounts
+                )) {
                     return ;
                 }
                 if (r.destination.type() == typeid(CKeyID)) {
@@ -2768,12 +2799,9 @@ static void ParseOutputs(
                 amount += r.amount;
 
                 bool fExists = false;
-                for (size_t i = 0; i < outputs.size(); ++i)
-                {
+                for (size_t i = 0; i < outputs.size(); ++i) {
                     auto &o = outputs.get(i);
-                    if (o["vout"].get_int() == r.vout)
-                    {
-                        o.push_back(Pair("send_to_self", true));
+                    if (o["vout"].get_int() == r.vout) {
                         o.get("amount").setStr(part::AmountToString(r.amount));
                         fExists = true;
                     }
@@ -2793,11 +2821,11 @@ static void ParseOutputs(
             }
         } else if (!nFee) {
             entry.push_back(Pair("category", "receive"));
-        } else
-        if (amount == 0)
+        } else if (amount == 0) {
             entry.push_back(Pair("category", "internal_transfer"));
-        else
+        } else {
             entry.push_back(Pair("category", "send"));
+        }
     };
 
     entry.push_back(Pair("outputs", outputs));
@@ -2847,8 +2875,6 @@ static void ParseRecords(
     size_t  nFrom       = 0;
     CAmount totalAmount = 0;
     
-    push(entry, "txid", hash.ToString());
-    PushTime(entry, "time", rtx.nTimeReceived);
     
     int confirmations = pwallet->GetDepthInMainChain(rtx.blockHash);
     push(entry, "confirmations", confirmations);
@@ -2860,6 +2886,7 @@ static void ParseRecords(
         push(entry, "trusted", pwallet->IsTrusted(hash, rtx.blockHash));
     };
     
+    push(entry, "txid", hash.ToString());
     UniValue conflicts(UniValue::VARR);
     std::set<uint256> setconflicts = pwallet->GetConflicts(hash);
     setconflicts.erase(hash);
@@ -2869,6 +2896,7 @@ static void ParseRecords(
     if (conflicts.size() > 0) {
         push(entry, "walletconflicts", conflicts);
     }
+    PushTime(entry, "time", rtx.nTimeReceived);
     if (rtx.nFlags & ORF_LOCKED) {
         push(entry, "require_unlock", "true");
     }
@@ -2928,7 +2956,7 @@ static void ParseRecords(
 
         if (extracted && dest.type() == typeid(CNoDestination)) {
             push(output, "address", "none");
-        } else {
+        } else if (extracted) {
             push(output, "address", addr.ToString());
             addresses.push_back(addr.ToString());
         }
@@ -2938,7 +2966,7 @@ static void ParseRecords(
             : record.nType == OUTPUT_CT       ? "blind"
             : record.nType == OUTPUT_RINGCT   ? "anon"
             : "unknown");
-
+        
         if (!record.sNarration.empty()) {
             push(output, "narration", record.sNarration);
         }
@@ -2948,10 +2976,15 @@ static void ParseRecords(
             amount *= -1;
         }
         totalAmount += amount;
-        push(output, "amount", ValueFromAmount(amount));
         amounts.push_back(std::to_string(ValueFromAmount(amount).get_real()));
+        push(output, "amount", ValueFromAmount(amount));
         push(output, "vout", record.n);
         outputs.push_back(output);
+    }
+    
+    if (nFrom > 0) {
+        push(entry, "abandoned", rtx.IsAbandoned());
+        push(entry, "fee", ValueFromAmount(-rtx.nFee));
     }
     
     if (nOwned && nFrom) {
@@ -2962,12 +2995,8 @@ static void ParseRecords(
         push(entry, "category", "send");
     }
     
-    if (nFrom > 0) {
-        push(entry, "abandoned", rtx.IsAbandoned());
-        push(entry, "fee", ValueFromAmount(-rtx.nFee));
-    }
-    
     push(entry, "outputs", outputs);
+    
     push(entry, "amount", ValueFromAmount(totalAmount));
     amounts.push_back(std::to_string(ValueFromAmount(totalAmount).get_real()));
     
@@ -3061,9 +3090,9 @@ UniValue filtertransactions(const JSONRPCRequest &request)
             "\n"
             "        Examples:\n"
             "            List only when category is 'stake'\n"
-            "                " + HelpExampleCli("filtertransactions", "'{\\\"category\\\":\\\"stake\\\"}'") + "\n"
+            "                " + HelpExampleCli("filtertransactions", "\"{\\\"category\\\":\\\"stake\\\"}\"") + "\n"
             "            Multiple arguments\n"
-            "                " + HelpExampleCli("filtertransactions", "'{\\\"sort\\\":\\\"amount\\\", \\\"category\\\":\\\"receive\\\"}'") + "\n"
+            "                " + HelpExampleCli("filtertransactions", "\"{\\\"sort\\\":\\\"amount\\\", \\\"category\\\":\\\"receive\\\"}\"") + "\n"
             "            As a JSON-RPC call\n"
             "                " + HelpExampleRpc("filtertransactions", "{\\\"category\\\":\\\"stake\\\"}") + "\n"
         );
