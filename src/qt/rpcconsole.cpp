@@ -1043,18 +1043,6 @@ void RPCConsole::on_sldGraphRange_valueChanged(int value)
     setTrafficGraphRange(static_cast<TrafficGraphData::GraphRange>(value));
 }
 
-QString RPCConsole::FormatBytes(quint64 bytes)
-{
-    if(bytes < 1024)
-        return QString(tr("%1 B")).arg(bytes);
-    if(bytes < 1024 * 1024)
-        return QString(tr("%1 KB")).arg(bytes / 1024);
-    if(bytes < 1024 * 1024 * 1024)
-        return QString(tr("%1 MB")).arg(bytes / 1024 / 1024);
-
-    return QString(tr("%1 GB")).arg(bytes / 1024 / 1024 / 1024);
-}
-
 void RPCConsole::setTrafficGraphRange(TrafficGraphData::GraphRange range)
 {
     ui->trafficGraph->setGraphRangeMins(range);
@@ -1063,8 +1051,8 @@ void RPCConsole::setTrafficGraphRange(TrafficGraphData::GraphRange range)
 
 void RPCConsole::updateTrafficStats(quint64 totalBytesIn, quint64 totalBytesOut)
 {
-    ui->lblBytesIn->setText(FormatBytes(totalBytesIn));
-    ui->lblBytesOut->setText(FormatBytes(totalBytesOut));
+    ui->lblBytesIn->setText(GUIUtil::formatBytes(totalBytesIn));
+    ui->lblBytesOut->setText(GUIUtil::formatBytes(totalBytesOut));
 }
 
 void RPCConsole::peerSelected(const QItemSelection &selected, const QItemSelection &deselected)
@@ -1158,8 +1146,8 @@ void RPCConsole::updateNodeDetail(const CNodeCombinedStats *stats)
     ui->peerServices->setText(GUIUtil::formatServicesStr(stats->nodeStats.nServices));
     ui->peerLastSend->setText(stats->nodeStats.nLastSend ? GUIUtil::formatDurationStr(GetSystemTimeInSeconds() - stats->nodeStats.nLastSend) : tr("never"));
     ui->peerLastRecv->setText(stats->nodeStats.nLastRecv ? GUIUtil::formatDurationStr(GetSystemTimeInSeconds() - stats->nodeStats.nLastRecv) : tr("never"));
-    ui->peerBytesSent->setText(FormatBytes(stats->nodeStats.nSendBytes));
-    ui->peerBytesRecv->setText(FormatBytes(stats->nodeStats.nRecvBytes));
+    ui->peerBytesSent->setText(GUIUtil::formatBytes(stats->nodeStats.nSendBytes));
+    ui->peerBytesRecv->setText(GUIUtil::formatBytes(stats->nodeStats.nRecvBytes));
     ui->peerConnTime->setText(GUIUtil::formatDurationStr(GetSystemTimeInSeconds() - stats->nodeStats.nTimeConnected));
     ui->peerPingTime->setText(GUIUtil::formatPingTime(stats->nodeStats.dPingTime));
     ui->peerPingWait->setText(GUIUtil::formatPingTime(stats->nodeStats.dPingWait));
