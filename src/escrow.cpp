@@ -2853,7 +2853,7 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 	string userto = params[4].get_str();
 	vector<unsigned char> vchWitness;
 	if(CheckParam(params, 5))
-		vchWitness = vchFromValue(params[5);
+		vchWitness = vchFromValue(params[5]);
     // this is a syscoin transaction
     CWalletTx wtx;
 	CEscrow escrow;
@@ -2998,17 +2998,17 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 	CreateRecipient(scriptPubKeyBuyer, recipientBuyer);
 	CreateRecipient(scriptPubKeyArbiter, recipientArbiter);
 	// buyer
-	if(role == "buyer")
+	if(userfrom == "buyer")
 	{
 		vecSend.push_back(recipientBuyer);
 	}
 	// seller
-	else if(role == "seller" || role == "reseller")
+	else if(userfrom == "seller" || userfrom == "reseller")
 	{
 		vecSend.push_back(recipientSeller);
 	}
 	// arbiter
-	else if(role == "arbiter")
+	else if(userfrom == "arbiter")
 	{
 		vecSend.push_back(recipientArbiter);
 	}
