@@ -25,6 +25,18 @@
 
 #include <memory>
 
+void CConnmanTest::AddNode(CNode& node)
+{
+    LOCK(g_connman->cs_vNodes);
+    g_connman->vNodes.push_back(&node);
+}
+
+void CConnmanTest::ClearNodes()
+{
+    LOCK(g_connman->cs_vNodes);
+    g_connman->vNodes.clear();
+}
+
 uint256 insecure_rand_seed = GetRandHash();
 FastRandomContext insecure_rand_ctx(insecure_rand_seed);
 
