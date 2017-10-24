@@ -111,7 +111,7 @@ void SplitHostPort(std::string in, int &portOut, std::string &hostOut) {
     // if a : is found, and it either follows a [...], or no other : is in the string, treat it as port separator
     bool fHaveColon = colon != in.npos;
     bool fBracketed = fHaveColon && (in[0]=='[' && in[colon-1]==']'); // if there is a colon, and in[0]=='[', colon is not 0, so in[colon-1] is safe
-    bool fMultiColon = fHaveColon && (in.find_last_of(':',colon-1) != in.npos);
+    bool fMultiColon = fHaveColon && colon != 0 && (in.find_last_of(':', colon - 1) != in.npos);
     if (fHaveColon && (colon==0 || fBracketed || !fMultiColon)) {
         int32_t n;
         if (ParseInt32(in.substr(colon + 1), &n) && n > 0 && n < 0x10000) {
