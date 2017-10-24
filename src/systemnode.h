@@ -244,8 +244,8 @@ public:
     CSystemnodeBroadcast(const CSystemnode& sn);
 
     /// Create Systemnode broadcast, needs to be relayed manually after that
-    static bool Create(CTxIn txin, CService service, CKey keyCollateral, CPubKey pubKeyCollateral, CKey keySystemnodeNew, CPubKey pubKeySystemnodeNew, std::string &strErrorMessage, CSystemnodeBroadcast &mnb);
-    static bool Create(std::string strService, std::string strKey, std::string strTxHash, std::string strOutputIndex, std::string& strErrorMessage, CSystemnodeBroadcast &mnb, bool fOffline = false);
+    static bool Create(CTxIn txin, CService service, CKey keyCollateral, CPubKey pubKeyCollateral, CKey keySystemnodeNew, CPubKey pubKeySystemnodeNew, std::string &strErrorMessage, CSystemnodeBroadcast &snb);
+    static bool Create(std::string strService, std::string strKey, std::string strTxHash, std::string strOutputIndex, std::string& strErrorMessage, CSystemnodeBroadcast &snb, bool fOffline = false);
 
     bool CheckAndUpdate(int& nDoS);
     bool CheckInputsAndAdd(int& nDos);

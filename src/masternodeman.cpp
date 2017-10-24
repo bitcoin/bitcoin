@@ -859,7 +859,7 @@ bool CMasternodeMan::CheckMnbAndUpdateMasternodeList(CMasternodeBroadcast mnb, i
     }
 
     if (snodeman.Find(mnb.addr) != NULL) {
-        LogPrint("masternode", "CMasternodeMan::CheckMnbAndUpdateMasternodeList - There is already a systemnode with the same ip: %s\n", mnb.addr.ToString());
+        LogPrintf("CMasternodeMan::CheckMnbAndUpdateMasternodeList - There is already a systemnode with the same ip: %s\n", mnb.addr.ToString());
         return false;
     }
 

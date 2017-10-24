@@ -370,7 +370,7 @@ bool CSystemnodeMan::CheckSnbAndUpdateSystemnodeList(CSystemnodeBroadcast snb, i
     }
 
     if (mnodeman.Find(snb.addr) != NULL) {
-        LogPrint("systemnode", "CSystemnodeMan::CheckSnbAndUpdateSystemnodeList - There is already a masternode with the same ip: %s\n", snb.addr.ToString());
+        LogPrintf("CSystemnodeMan::CheckSnbAndUpdateSystemnodeList - There is already a masternode with the same ip: %s\n", snb.addr.ToString());
         return false;
     }
 

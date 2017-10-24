@@ -237,7 +237,7 @@ public:
     void Sync(CNode* node, int nCountNeeded);
     void CleanPaymentList();
     bool GetBlockPayee(int nBlockHeight, CScript& payee);
-    bool IsScheduled(CSystemnode& mn, int nNotBlockHeight);
+    bool IsScheduled(CSystemnode& sn, int nNotBlockHeight);
     bool CanVote(COutPoint outSystemnode, int nBlockHeight);
     void FillBlockPayee(CMutableTransaction& txNew, int64_t nFees);
     std::string ToString() const;
