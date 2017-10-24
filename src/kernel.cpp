@@ -19,6 +19,10 @@ unsigned int nProtocolV04TestSwitchTime = 1395700000;
 // Protocol switch time of v0.5 kernel protocol
 unsigned int nProtocolV05SwitchTime     = 1461700000;
 unsigned int nProtocolV05TestSwitchTime = 1447700000;
+// Protocol switch time of v0.6 kernel protocol
+// supermajority hardfork: actual fork will happen later than switch time
+const unsigned int nProtocolV06SwitchTime     = 1513050000; // Tue 12 Dec 03:40:00 UTC 2017
+const unsigned int nProtocolV06TestSwitchTime = 1508198400; // Tue 17 Oct 00:00:00 UTC 2017
 
 
 // Modifier interval: time to elapse before new modifier is computed
@@ -54,10 +58,21 @@ bool IsProtocolV05(unsigned int nTimeTx)
 }
 
 // Whether a given block is subject to new v0.6 protocol
-bool IsProtocolV06(unsigned int nTimeBlock)
+// Test against previous block index! (always available)
+bool IsProtocolV06(const CBlockIndex* pindexPrev)
 {
-    // TODO decide on upgrade timing
+  if (pindexPrev->nTime < (fTestNet? nProtocolV06TestSwitchTime : nProtocolV06SwitchTime))
     return false;
+
+  // if 900 of the last 1,000 blocks are version 2 or greater (90/100 if testnet):
+  // Soft-forking PoS can be dangerous if the super majority is too low
+  // The stake majority will decrease after the fork
+  // since only coindays of updated nodes will get destroyed.
+  if ((!fTestNet && CBlockIndex::IsSuperMajority(2, pindexPrev, 900, 1000)) ||
+      (fTestNet && CBlockIndex::IsSuperMajority(2, pindexPrev, 90, 100)))
+    return true;
+
+  return false;
 }
 
 // Get the last stake modifier and its generation time from a given block

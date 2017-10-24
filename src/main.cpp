@@ -1752,6 +1752,11 @@ bool CBlock::ConnectBlock(CValidationState &state, CBlockIndex* pindex, CCoinsVi
     unsigned int flags = SCRIPT_VERIFY_NOCACHE |
                          (fStrictPayToScriptHash ? SCRIPT_VERIFY_P2SH : SCRIPT_VERIFY_NONE);
 
+    // Start enforcing CHECKLOCKTIMEVERIFY, (BIP65) for ProtocolV06 blocks.
+    if (IsProtocolV06(pindex->pprev)) {
+        flags |= SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY;
+    }
+
     CBlockUndo blockundo;
 
     CCheckQueueControl<CScriptCheck> control(fScriptChecks && nScriptCheckThreads ? &scriptcheckqueue : NULL);
@@ -2472,21 +2477,15 @@ bool CBlock::AcceptBlock(CValidationState &state, CDiskBlockPos *dbp)
             && !CheckSyncCheckpoint(hash, pindexPrev))
             return state.Invalid(error("AcceptBlock() : rejected by synchronized checkpoint"));
 
-        // Reject block.nVersion=1 blocks when 95% (75% on testnet) of the network has upgraded:
-        if (nVersion < 2 && IsProtocolV06(nTime))
+        if (IsProtocolV06(pindexPrev))
         {
-            if ((!fTestNet && CBlockIndex::IsSuperMajority(2, pindexPrev, 950, 1000)) ||
-                (fTestNet && CBlockIndex::IsSuperMajority(2, pindexPrev, 75, 100)))
+            // Reject block.nVersion=1 blocks when protocol v06 got activated.
+            if (nVersion < 2)
             {
                 return state.Invalid(error("AcceptBlock() : rejected nVersion=1 block"));
             }
-        }
-        // Enforce block.nVersion=2 rule that the coinbase starts with serialized block height
-        if (nVersion >= 2 && IsProtocolV06(nTime))
-        {
-            // if 750 of the last 1,000 blocks are version 2 or greater (51/100 if testnet):
-            if ((!fTestNet && CBlockIndex::IsSuperMajority(2, pindexPrev, 750, 1000)) ||
-                (fTestNet && CBlockIndex::IsSuperMajority(2, pindexPrev, 51, 100)))
+            // Enforce block.nVersion=2 rule that the coinbase starts with serialized block height
+            else
             {
                 CScript expect = CScript() << nHeight;
                 if (vtx[0].vin[0].scriptSig.size() < expect.size() ||
@@ -2532,11 +2531,15 @@ bool CBlock::AcceptBlock(CValidationState &state, CDiskBlockPos *dbp)
 bool CBlockIndex::IsSuperMajority(int minVersion, const CBlockIndex* pstart, unsigned int nRequired, unsigned int nToCheck)
 {
     unsigned int nFound = 0;
-    for (unsigned int i = 0; i < nToCheck && nFound < nRequired && pstart != NULL; i++)
+    for (unsigned int i = 0; i < nToCheck && nFound < nRequired && pstart != NULL; pstart = pstart->pprev )
     {
+        if (!pstart->IsProofOfStake())
+            continue;
+
         if (pstart->nVersion >= minVersion)
             ++nFound;
-        pstart = pstart->pprev;
+
+        i++;
     }
     return (nFound >= nRequired);
 }
