@@ -335,7 +335,7 @@ BOOST_AUTO_TEST_CASE(generate_escrow_linked_release_with_peg_update)
 	AliasNew("node3", "arbiteralias33", "changeddata3");
 	string qty = "3";
 	string offerguid = OfferNew("node2", "selleralias33", "category", "title", "100", "0.05", "description", "EUR");
-	AliasAddWhitelist("node2", offerguid, "arbiteralias33", "5");
+	AliasAddWhitelist("node2", "selleralias33", "arbiteralias33", "5");
 	string commission = "3";
 	string description = "newdescription";
 	string offerlinkguid = OfferLink("node3", "arbiteralias33", offerguid, commission, description);

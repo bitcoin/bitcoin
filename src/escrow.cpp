@@ -2838,9 +2838,9 @@ UniValue escrowcompleterefund(const UniValue& params, bool fHelp) {
 	return res;
 }
 UniValue escrowfeedback(const UniValue& params, bool fHelp) {
-    if (fHelp || params.size() < 6 || params.size() > 7)
+    if (fHelp || params.size() < 4 || params.size() > 5)
         throw runtime_error(
-		"escrowfeedback <escrow guid> <user role> <feedbackprimary> <ratingprimary> <feedbacksecondary> <ratingasecondary> [witness]\n"
+		"escrowfeedback <escrow guid> <user role> <rating> <feedback> [witness]\n"
                         "Send feedback for primary and secondary users in escrow, depending on who you are. Ratings are numbers from 1 to 5. User Role is either 'buyer', 'seller', 'reseller', or 'arbiter'.\n"
 						"If you are the buyer, feedbackprimary is for seller and feedbacksecondary is for arbiter.\n"
 						"If you are the seller, feedbackprimary is for buyer and feedbacksecondary is for arbiter.\n"
@@ -2850,17 +2850,13 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
    // gather & validate inputs
     vector<unsigned char> vchEscrow = vchFromValue(params[0]);
 	string role = params[1].get_str();
-	int nRatingPrimary = 0;
-	int nRatingSecondary = 0;
-	vector<unsigned char> vchFeedbackPrimary;
-	vector<unsigned char> vchFeedbackSecondary;
-	vchFeedbackPrimary = vchFromValue(params[2]);
-	nRatingPrimary = boost::lexical_cast<int>(params[3].get_str());
-	vchFeedbackSecondary = vchFromValue(params[4]);
-	nRatingSecondary = boost::lexical_cast<int>(params[5].get_str());
+	int nRating = 0;
+	vector<unsigned char> vchFeedback;
+	nRating = boost::lexical_cast<int>(params[2].get_str());
+	vchFeedback = vchFromValue(params[3]);
 	vector<unsigned char> vchWitness;
-	if(CheckParam(params, 6))
-		vchWitness = vchFromValue(params[6]);
+	if(CheckParam(params, 4))
+		vchWitness = vchFromValue(params[4]);
     // this is a syscoin transaction
     CWalletTx wtx;
 	CEscrow escrow;
