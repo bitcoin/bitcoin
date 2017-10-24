@@ -287,7 +287,7 @@ BOOST_AUTO_TEST_CASE(generate_escrowrelease_invalid)
 	inputStr += "]\"";
 
 	// seller cant release buyers funds
-	BOOST_CHECK_NO_THROW(CallRPC("node2", "escrowcreaterawtransaction release " + guid + " " + inputStr + " seller"));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "escrowcreaterawtransaction release " + guid + " " + inputStr + " seller"));
 	const UniValue &arr = r.get_array();
 	string rawtx = arr[0].get_str();
 	BOOST_CHECK_THROW(CallRPC("node2", "escrowrelease " + guid + " seller " + rawtx), runtime_error);
