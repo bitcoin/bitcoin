@@ -591,9 +591,12 @@ bool CNode::ReceiveMsgBytes(const char *pch, unsigned int nBytes)
                     strCommand == NetMsgType::XTHINBLOCK || strCommand == NetMsgType::THINBLOCK ||
                     strCommand == NetMsgType::XBLOCKTX || strCommand == NetMsgType::GET_XBLOCKTX)
                 {
-                    vRecvMsg.push_front(msg);
-                    vRecvMsg.pop_back();
-                    LogPrint("thin", "Receive Queue: pushed %s to the front of the queue\n", strCommand);
+                    // Move the this last message to the front of the queue.
+                    std::rotate(vRecvMsg.begin(), vRecvMsg.end() - 1, vRecvMsg.end());
+
+                    std::string strFirstMsgCommand = vRecvMsg[0].hdr.GetCommand();
+                    DbgAssert(strFirstMsgCommand == strCommand, );
+                    LogPrint("thin", "Receive Queue: pushed %s to the front of the queue\n", strFirstMsgCommand);
                 }
             }
             // BU: end
