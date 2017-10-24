@@ -1225,19 +1225,29 @@ void EscrowFeedback(const string& node, const string& userfrom, const string& es
 	GenerateBlocks(10, node);
 	
 	r = FindFeedback(node, escrowTxid);
-	char feedbackuserenum;
+	char feedbackusertoenum;
 	if (userto == "buyer")
-		feedbackuserenum = FEEDBACKBUYER;
+		feedbackusertoenum = FEEDBACKBUYER;
 	else if (userto == "arbiter")
-		feedbackuserenum = FEEDBACKARBITER;
-	else if (userto = "seller")
-		feedbackuserenum = FEEDBACKSELLER;
+		feedbackusertoenum = FEEDBACKARBITER;
+	else if (userto == "seller")
+		feedbackusertoenum = FEEDBACKSELLER;
+
+	char feedbackuserfromenum;
+	if (userfrom == "buyer")
+		feedbackuserfromenum = FEEDBACKBUYER;
+	else if (userfrom == "arbiter")
+		feedbackuserfromenum = FEEDBACKARBITER;
+	else if (userfrom == "seller" || userfrom == "reseller")
+		feedbackuserfromenum = FEEDBACKSELLER;
+
 	BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == escrowguid + feedbackuserenum);
 	BOOST_CHECK(find_value(r.get_obj(), "escrow").get_str() == escrowguid);
 	BOOST_CHECK(find_value(r.get_obj(), "txid").get_str() == escrowTxid);
 	BOOST_CHECK(find_value(r.get_obj(), "rating").get_int() == atoi(rating.c_str()));
 	BOOST_CHECK(find_value(r.get_obj(), "feedback").get_str() == rating);
-	BOOST_CHECK(find_value(r.get_obj(), "feedbackto").get_int() == userto);
+	BOOST_CHECK(find_value(r.get_obj(), "feedbackuserfrom").get_int() == feedbackuserfromenum);
+	BOOST_CHECK(find_value(r.get_obj(), "feedbackuserto").get_int() == feedbackusertoenum);
 }
 const string OfferAccept(const string& ownernode, const string& buyernode, const string& aliasname, const string& arbiter, const string& offerguid, const string& qty, const string& witness) {
 	const string &escrowguid = EscrowNewBuyItNow(buyernode, ownernode, aliasname, offerguid, qty, arbiter);

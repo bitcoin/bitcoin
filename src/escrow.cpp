@@ -3101,7 +3101,8 @@ void BuildFeedbackJson(const CEscrow& escrow, UniValue& oFeedback) {
 	oFeedback.push_back(Pair("txid", escrow.txHash.GetHex()));
 	oFeedback.push_back(Pair("time", sFeedbackTime));
 	oFeedback.push_back(Pair("rating", escrow.feedback.nRating));
-	oFeedback.push_back(Pair("feedbackuser", escrow.feedback.nFeedbackUserFrom));
+	oFeedback.push_back(Pair("feedbackuserfrom", escrow.feedback.nFeedbackUserFrom));
+	oFeedback.push_back(Pair("feedbackuserto", escrow.feedback.nFeedbackUserTo));
 	oFeedback.push_back(Pair("feedback", stringFromVch(escrow.feedback.vchFeedback)));
 }
 void BuildEscrowBidJson(const CEscrow& escrow, const string& status, UniValue& oBid) {
