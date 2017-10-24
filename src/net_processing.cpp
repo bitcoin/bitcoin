@@ -614,6 +614,8 @@ bool AddOrphanTx(const CTransactionRef& tx, NodeId peer) EXCLUSIVE_LOCKS_REQUIRE
     auto ret = mapOrphanTransactions.emplace(hash, COrphanTx{tx, peer, GetTime() + ORPHAN_TX_EXPIRE_TIME});
     assert(ret.second);
     for (const CTxIn& txin : tx->vin) {
+        if (txin.IsAnonInput())
+            continue;
         mapOrphanTransactionsByPrev[txin.prevout].insert(ret.first);
     }
 
@@ -631,6 +633,8 @@ int static EraseOrphanTx(uint256 hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
         return 0;
     for (const CTxIn& txin : it->second.tx->vin)
     {
+        if (txin.IsAnonInput())
+            continue;
         auto itPrev = mapOrphanTransactionsByPrev.find(txin.prevout);
         if (itPrev == mapOrphanTransactionsByPrev.end())
             continue;
@@ -722,9 +726,9 @@ void DecMisbehaving(NodeId nodeid, int howmuch)
     CNodeState *state = State(nodeid);
     if (state == nullptr)
         return;
-    
+
     //LogPrintf("%s: %s peer=%d (%d -> %d)\n", __func__, state->name, nodeid, state->nMisbehavior, state->nMisbehavior - howmuch < 0 ? 0 : state->nMisbehavior - howmuch);
-    
+
     state->nMisbehavior -= howmuch;
     if (state->nMisbehavior < 0)
         state->nMisbehavior = 0;
@@ -752,6 +756,8 @@ void PeerLogicValidation::BlockConnected(const std::shared_ptr<const CBlock>& pb
 
         // Which orphan pool entries must we evict?
         for (const auto& txin : tx.vin) {
+            if (txin.IsAnonInput())
+                continue;
             auto itByPrev = mapOrphanTransactionsByPrev.find(txin.prevout);
             if (itByPrev == mapOrphanTransactionsByPrev.end()) continue;
             for (auto mi = itByPrev->second.begin(); mi != itByPrev->second.end(); ++mi) {
@@ -807,8 +813,8 @@ void PeerLogicValidation::NewPoWValidBlock(const CBlockIndex *pindex, const std:
             return;
         ProcessBlockAvailability(pnode->GetId());
         CNodeState &state = *State(pnode->GetId());
-        
-        
+
+
         // If the peer has, or we announced to them the previous block already,
         // but we don't think they have this one, go ahead and announce it
         if (state.fPreferHeaderAndIDs && (!fWitnessEnabled || state.fWantsCmpctWitness) &&
@@ -918,11 +924,11 @@ bool IncomingBlockChecked(const CBlock &block, CValidationState &state)
             Misbehaving(it->second.first, 10);
         rv = false;
     };
-    
+
     if (!rv)
     if (it != mapBlockSource.end())
         mapBlockSource.erase(it);
-    
+
     return rv;
 }
 
@@ -1367,7 +1373,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             PushNodeVersion(pfrom, connman, GetAdjustedTime());
 
         connman.PushMessage(pfrom, CNetMsgMaker(INIT_PROTO_VERSION).Make(NetMsgType::VERACK));
-        
+
         pfrom->nStartingHeight = nStartingHeight;
         pfrom->nChainHeight = nStartingHeight;
         {
@@ -1568,7 +1574,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         bool fAnnounceUsingCMPCTBLOCK = false;
         uint64_t nCMPCTBLOCKVersion = 0;
         vRecv >> fAnnounceUsingCMPCTBLOCK >> nCMPCTBLOCKVersion;
-        
+
         if (nCMPCTBLOCKVersion == 1 || ((pfrom->GetLocalServices() & NODE_WITNESS) && nCMPCTBLOCKVersion == 2)) {
             LOCK(cs_main);
             // fProvidesHeaderAndIDs is used to "lock in" version of compact blocks we send (fWantsCmpctWitness)
@@ -1876,7 +1882,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         if (!AlreadyHave(inv) && AcceptToMemoryPool(mempool, state, ptx, true, &fMissingInputs, &lRemovedTxn)) {
             mempool.check(pcoinsTip);
             RelayTransaction(tx, connman);
-            for (unsigned int i = 0; i < tx.vout.size(); i++) {
+            for (unsigned int i = 0; i < tx.GetNumVOuts(); i++) {
                 vWorkQueue.emplace_back(inv.hash, i);
             }
 
@@ -1914,7 +1920,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                     if (AcceptToMemoryPool(mempool, stateDummy, porphanTx, true, &fMissingInputs2, &lRemovedTxn)) {
                         LogPrint(BCLog::MEMPOOL, "   accepted orphan tx %s\n", orphanHash.ToString());
                         RelayTransaction(orphanTx, connman);
-                        for (unsigned int i = 0; i < orphanTx.vout.size(); i++) {
+                        for (unsigned int i = 0; i < orphanTx.GetNumVOuts(); i++) {
                             vWorkQueue.emplace_back(orphanHash, i);
                         }
                         vEraseQueue.push_back(orphanHash);
@@ -1952,6 +1958,8 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         {
             bool fRejectedParents = false; // It may be the case that the orphans parents have all been rejected
             for (const CTxIn& txin : tx.vin) {
+                if (txin.IsAnonInput())
+                    continue;
                 if (recentRejects->contains(txin.prevout.hash)) {
                     fRejectedParents = true;
                     break;
@@ -1960,6 +1968,8 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             if (!fRejectedParents) {
                 uint32_t nFetchFlags = GetFetchFlags(pfrom);
                 for (const CTxIn& txin : tx.vin) {
+                    if (txin.IsAnonInput())
+                        continue;
                     CInv _inv(MSG_TX | nFetchFlags, txin.prevout.hash);
                     pfrom->AddInventoryKnown(_inv);
                     if (!AlreadyHave(_inv)) pfrom->AskFor(_inv);
@@ -2107,7 +2117,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             return true;
 
         CNodeState *nodestate = State(pfrom->GetId());
-        
+
         if (IsWitnessEnabled(pindex->pprev, chainparams.GetConsensus()) && !nodestate->fSupportsDesiredCmpctVersion) {
             // Don't bother trying to process compact blocks from v1 peers
             // after segwit activates.
@@ -2538,7 +2548,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         //BIP0031_VERSION
         uint64_t nonce = 0;
         vRecv >> nonce;
-        
+
         int nChainHeight;
         vRecv >> nChainHeight;
         pfrom->nChainHeight = nChainHeight;
@@ -2546,8 +2556,8 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             LOCK(cs_main);
             connman.cPeerBlockCounts.input(nChainHeight);
         }
-        
-        
+
+
         // Echo the message back with the nonce. This allows for two useful features:
         //
         // 1) A remote node can quickly check if the connection is operational
@@ -2696,7 +2706,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
 
     else if (2 != SecureMsgReceiveData(pfrom, strCommand, vRecv))
     {
-        
+
     } else
     {
         // Ignore unknown commands for extensibility
@@ -3398,7 +3408,7 @@ bool SendMessages(CNode* pto, CConnman& connman, const std::atomic<bool>& interr
             }
         }
     }
-    
+
     if (fSecMsgEnabled)
     {
         bool fSendTrickle = pto->fWhitelisted;

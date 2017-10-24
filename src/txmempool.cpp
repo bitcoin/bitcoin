@@ -677,27 +677,15 @@ void CTxMemPool::removeRecursive(const CTransaction &origTx, MemPoolRemovalReaso
             // be sure to remove any children that are in the pool. This can
             // happen during chain re-orgs if origTx isn't re-accepted into
             // the mempool for any reason.
-            if (fParticlMode)
-            {
-                for (unsigned int i = 0; i < origTx.vpout.size(); i++) {
-                    auto it = mapNextTx.find(COutPoint(origTx.GetHash(), i));
-                    if (it == mapNextTx.end())
-                        continue;
-                    txiter nextit = mapTx.find(it->second->GetHash());
-                    assert(nextit != mapTx.end());
-                    txToRemove.insert(nextit);
-                }
-            } else
-            {
-                for (unsigned int i = 0; i < origTx.vout.size(); i++) {
-                    auto it = mapNextTx.find(COutPoint(origTx.GetHash(), i));
-                    if (it == mapNextTx.end())
-                        continue;
-                    txiter nextit = mapTx.find(it->second->GetHash());
-                    assert(nextit != mapTx.end());
-                    txToRemove.insert(nextit);
-                }
-            };
+
+            for (unsigned int i = 0; i < origTx.GetNumVOuts(); i++) {
+                auto it = mapNextTx.find(COutPoint(origTx.GetHash(), i));
+                if (it == mapNextTx.end())
+                    continue;
+                txiter nextit = mapTx.find(it->second->GetHash());
+                assert(nextit != mapTx.end());
+                txToRemove.insert(nextit);
+            }
         }
         setEntries setAllRemoves;
         for (txiter it : txToRemove) {

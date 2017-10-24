@@ -71,7 +71,7 @@ static bool SignStep(const BaseSignatureCreator& creator, const CScript& scriptP
     ret.clear();
 
     std::vector<valtype> vSolutions;
-    
+
     if (HasIsCoinstakeOp(scriptPubKey))
     {
         CScript scriptPath;
@@ -84,7 +84,7 @@ static bool SignStep(const BaseSignatureCreator& creator, const CScript& scriptP
             if (!GetNonCoinstakeScriptPath(scriptPubKey, scriptPath))
                 return false;
         };
-        
+
         if (!Solver(scriptPath, whichTypeRet, vSolutions))
             return false;
     } else
@@ -92,7 +92,7 @@ static bool SignStep(const BaseSignatureCreator& creator, const CScript& scriptP
         if (!Solver(scriptPubKey, whichTypeRet, vSolutions))
             return false;
     };
-    
+
     CKeyID keyID;
     switch (whichTypeRet)
     {
@@ -191,7 +191,7 @@ bool ProduceSignature(const BaseSignatureCreator& creator, const CScript& fromPu
     bool P2SH = false;
     CScript subscript;
     sigdata.scriptWitness.stack.clear();
-    
+
     if (solved && (whichType == TX_SCRIPTHASH || whichType == TX_TIMELOCKED_SCRIPTHASH))
     {
         // Solver returns the subscript that needs to be evaluated;
@@ -228,7 +228,7 @@ bool ProduceSignature(const BaseSignatureCreator& creator, const CScript& fromPu
     if (P2SH) {
         result.push_back(std::vector<unsigned char>(subscript.begin(), subscript.end()));
     }
-    
+
     if (creator.IsParticlVersion())
     {
         sigdata.scriptWitness.stack = result;
@@ -236,12 +236,12 @@ bool ProduceSignature(const BaseSignatureCreator& creator, const CScript& fromPu
     {
         sigdata.scriptSig = PushAll(result);
     };
-    
+
     ScriptError serror = SCRIPT_ERR_OK;
-    
+
     // Test solution
     bool rv = solved && VerifyScript(sigdata.scriptSig, fromPubKey, &sigdata.scriptWitness, STANDARD_SCRIPT_VERIFY_FLAGS, creator.Checker(), &serror);
-    
+
     return rv;
 }
 
@@ -257,12 +257,12 @@ SignatureData DataFromTransaction(const CMutableTransaction& tx, unsigned int nI
 void UpdateTransaction(CMutableTransaction& tx, unsigned int nIn, const SignatureData& data)
 {
     assert(tx.vin.size() > nIn);
-    
+
     if (tx.IsParticlVersion())
     {
         assert(data.scriptSig.empty());
     };
-    
+
     tx.vin[nIn].scriptSig = data.scriptSig;
     tx.vin[nIn].scriptWitness = data.scriptWitness;
 }
@@ -284,8 +284,8 @@ bool SignSignature(const CKeyStore &keystore, const CTransaction& txFrom, CMutab
 {
     assert(nIn < txTo.vin.size());
     CTxIn& txin = txTo.vin[nIn];
-    assert(txin.prevout.n < txFrom.vout.size());
-    
+    assert(txin.prevout.n < txFrom.GetNumVOuts());
+
     CScript scriptPubKey;
     std::vector<uint8_t> vchAmount;
     if (txFrom.IsParticlVersion())
@@ -335,7 +335,7 @@ static std::vector<valtype> CombineMultisig(const CScript& scriptPubKey, const B
             const valtype& pubkey = vSolutions[i+1];
             if (sigs.count(pubkey))
                 continue; // Already got a sig for this pubkey
-            
+
             if (checker.CheckSig(sig, pubkey, scriptPubKey, sigversion))
             {
                 sigs[pubkey] = sig;
@@ -416,7 +416,7 @@ static Stacks CombineSignatures(const CScript& scriptPubKey, const BaseSignature
         // Signatures are bigger than placeholders or empty scripts:
         if (sigs1.script.empty() || sigs1.script[0].empty())
             return sigs2;
-        
+
         return sigs1;
     case TX_WITNESS_V0_KEYHASH:
         // Signatures are bigger than placeholders or empty scripts:
@@ -504,7 +504,7 @@ class DummySignatureCheckerParticl : public BaseSignatureChecker
 // IsParticlVersion() must return true to skip stack evaluation
 public:
     DummySignatureCheckerParticl() {}
-    
+
     bool IsParticlVersion() const { return true; }
 
     bool CheckSig(const std::vector<unsigned char>& scriptSig, const std::vector<unsigned char>& vchPubKey, const CScript& scriptCode, SigVersion sigversion) const

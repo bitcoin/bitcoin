@@ -31,7 +31,7 @@ int64_t CalculateMaximumSignedTxSize(const CTransaction &tx, const CWallet *pWal
     // wallet, with a valid index into the vout array.
     for (auto& input : tx.vin) {
         const auto mi = pWallet->mapWallet.find(input.prevout.hash);
-        assert(mi != pWallet->mapWallet.end() && input.prevout.n < mi->second.tx->vout.size());
+        assert(mi != pWallet->mapWallet.end() && input.prevout.n < mi->second.tx->GetNumVOuts());
         vCoins.emplace_back(CInputCoin(&(mi->second), input.prevout.n));
     }
     if (!pWallet->DummySignTx(txNew, vCoins)) {

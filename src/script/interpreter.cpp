@@ -1150,21 +1150,11 @@ public:
         for (unsigned int nInput = 0; nInput < nInputs; nInput++)
              SerializeInput(s, nInput);
 
-        if (txTo.IsParticlVersion())
-        {
-            // Serialize vpout
-            unsigned int nOutputs = fHashNone ? 0 : (fHashSingle ? nIn+1 : txTo.vpout.size());
-            ::WriteCompactSize(s, nOutputs);
-            for (unsigned int nOutput = 0; nOutput < nOutputs; nOutput++)
-                 SerializeOutput(s, nOutput);
-        } else
-        {
-            // Serialize vout
-            unsigned int nOutputs = fHashNone ? 0 : (fHashSingle ? nIn+1 : txTo.vout.size());
-            ::WriteCompactSize(s, nOutputs);
-            for (unsigned int nOutput = 0; nOutput < nOutputs; nOutput++)
-                 SerializeOutput(s, nOutput);
-        };
+        // Serialize vpout
+        unsigned int nOutputs = fHashNone ? 0 : (fHashSingle ? nIn+1 : txTo.GetNumVOuts());
+        ::WriteCompactSize(s, nOutputs);
+        for (unsigned int nOutput = 0; nOutput < nOutputs; nOutput++)
+             SerializeOutput(s, nOutput);
         // Serialize nLockTime
         ::Serialize(s, txTo.nLockTime);
     }
@@ -1227,10 +1217,9 @@ uint256 SignatureHash(const CScript& scriptCode, const CTransaction& txTo, unsig
             hashSequence = cache ? cache->hashSequence : GetSequenceHash(txTo);
         }
 
-        size_t nOutputs = txTo.IsParticlVersion() ? txTo.vpout.size() : txTo.vout.size();
         if ((nHashType & 0x1f) != SIGHASH_SINGLE && (nHashType & 0x1f) != SIGHASH_NONE) {
             hashOutputs = cache ? cache->hashOutputs : GetOutputsHash(txTo);
-        } else if ((nHashType & 0x1f) == SIGHASH_SINGLE && nIn < nOutputs) {
+        } else if ((nHashType & 0x1f) == SIGHASH_SINGLE && nIn < txTo.GetNumVOuts()) {
             CHashWriter ss(SER_GETHASH, 0);
 
             if (txTo.IsParticlVersion())
@@ -1275,7 +1264,7 @@ uint256 SignatureHash(const CScript& scriptCode, const CTransaction& txTo, unsig
 
     // Check for invalid use of SIGHASH_SINGLE
     if ((nHashType & 0x1f) == SIGHASH_SINGLE) {
-        if (nIn >= txTo.vout.size()) {
+        if (nIn >= txTo.GetNumVOuts()) {
             //  nOut out of range
             return one;
         }

@@ -93,6 +93,8 @@ bool CheckTxScriptsSanity(const CMutableTransaction& tx)
     // Check input scripts for non-coinbase txs
     if (!CTransaction(tx).IsCoinBase()) {
         for (unsigned int i = 0; i < tx.vin.size(); i++) {
+            if (tx.vin[i].IsAnonInput())
+                continue;
             if (!tx.vin[i].scriptSig.HasValidOps() || tx.vin[i].scriptSig.size() > MAX_SCRIPT_SIZE) {
                 return false;
             }
@@ -104,7 +106,16 @@ bool CheckTxScriptsSanity(const CMutableTransaction& tx)
             return false;
         }
     }
-    
+
+    for (unsigned int i = 0; i < tx.vpout.size(); i++) {
+        const CScript *pscript = tx.vpout[i]->GetPScriptPubKey();
+        if (!pscript) // anon output
+            continue;
+        if (!pscript->HasValidOps() || pscript->size() > MAX_SCRIPT_SIZE) {
+            return false;
+        }
+    }
+
     return true;
 }
 

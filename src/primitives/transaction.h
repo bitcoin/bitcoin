@@ -794,6 +794,11 @@ public:
         return (nVersion >> 8) & 0xFF;
     }
 
+    size_t GetNumVOuts() const
+    {
+        return IsParticlTxVersion(nVersion) ? vpout.size() : vout.size();
+    }
+
     const uint256& GetHash() const {
         return hash;
     }
@@ -946,6 +951,11 @@ struct CMutableTransaction
 
     bool IsParticlVersion() const {
         return IsParticlTxVersion(nVersion);
+    }
+
+    size_t GetNumVOuts() const
+    {
+        return IsParticlTxVersion(nVersion) ? vpout.size() : vout.size();
     }
 
     /** Compute the hash of this CMutableTransaction. This is computed on the

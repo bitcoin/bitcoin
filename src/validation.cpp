@@ -465,13 +465,12 @@ static bool CheckInputsFromMempoolAndCache(const CTransaction& tx, CValidationSt
         const CTransactionRef& txFrom = pool.get(txin.prevout.hash);
         if (txFrom) {
             assert(txFrom->GetHash() == txin.prevout.hash);
+            assert(txFrom->GetNumVOuts() > txin.prevout.n);
             if (txFrom->IsParticlVersion())
             {
-                assert(txFrom->vpout.size() > txin.prevout.n);
                 assert(coin.Matches(txFrom->vpout[txin.prevout.n].get()));
             } else
             {
-                assert(txFrom->vout.size() > txin.prevout.n);
                 assert(txFrom->vout[txin.prevout.n] == coin.out);
             }
         } else {
@@ -603,9 +602,8 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
                 coins_to_uncache.push_back(txin.prevout);
             }
             if (!view.HaveCoin(txin.prevout)) {
-                size_t nOutputs = tx.IsParticlVersion() ? tx.vpout.size() : tx.vout.size();
                 // Are inputs missing because we already have the tx?
-                for (size_t out = 0; out < nOutputs; out++) {
+                for (size_t out = 0; out < tx.GetNumVOuts(); out++) {
                     // Optimistically just do efficient check of cache for outputs
                     if (pcoinsTip->HaveCoinInCache(COutPoint(hash, out))) {
                         return state.Invalid(false, REJECT_DUPLICATE, "txn-already-known");
@@ -1896,8 +1894,8 @@ DisconnectResult DisconnectBlock(const CBlock& block, const CBlockIndex* pindex,
                     };
                 };
 
-                    view.anonOutputLinks[txout->pk] = view.nLastRCTOutput;
-                    view.nLastRCTOutput--;
+                view.anonOutputLinks[txout->pk] = view.nLastRCTOutput;
+                view.nLastRCTOutput--;
 
                 continue;
             };
@@ -1922,7 +1920,6 @@ DisconnectResult DisconnectBlock(const CBlock& block, const CBlockIndex* pindex,
                 }
             };
 
-
             if (!fAddressIndex
                 || (!out->IsType(OUTPUT_STANDARD)
                 && !out->IsType(OUTPUT_CT)))
@@ -1941,22 +1938,10 @@ DisconnectResult DisconnectBlock(const CBlock& block, const CBlockIndex* pindex,
             view.addressUnspentIndex.push_back(std::make_pair(CAddressUnspentKey(scriptType, uint256(hashBytes.data(), hashBytes.size()), hash, k), CAddressUnspentValue()));
         };
 
-        // Check that all outputs are available and match the outputs in the block itself
-        // exactly.
-        for (size_t o = 0; o < tx.vout.size(); o++) {
-            if (!tx.vout[o].scriptPubKey.IsUnspendable()) {
-                COutPoint out(hash, o);
-                Coin coin;
-                bool is_spent = view.SpendCoin(out, &coin);
-                if (!is_spent || tx.vout[o] != coin.out || pindex->nHeight != coin.nHeight || is_coinbase != coin.fCoinBase) {
-                    fClean = false; // transaction output mismatch
-                }
-            }
-        }
 
-        // restore inputs
         if (fParticlMode)
         {
+            // restore inputs
             if (!tx.IsCoinBase())
             {
                 if (nVtxundo < 0 || nVtxundo >= (int)blockUndo.vtxundo.size())
@@ -2013,6 +1998,19 @@ DisconnectResult DisconnectBlock(const CBlock& block, const CBlockIndex* pindex,
             };
         } else
         {
+            // Check that all outputs are available and match the outputs in the block itself
+            // exactly.
+            for (size_t o = 0; o < tx.vout.size(); o++) {
+                if (!tx.vout[o].scriptPubKey.IsUnspendable()) {
+                    COutPoint out(hash, o);
+                    Coin coin;
+                    bool is_spent = view.SpendCoin(out, &coin);
+                    if (!is_spent || tx.vout[o] != coin.out || pindex->nHeight != coin.nHeight || is_coinbase != coin.fCoinBase) {
+                        fClean = false; // transaction output mismatch
+                    }
+                }
+            }
+
             if (i > 0) { // not coinbases
                 CTxUndo &txundo = blockUndo.vtxundo[i-1];
                 if (txundo.vprevout.size() != tx.vin.size()) {
@@ -2276,7 +2274,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 
     if (fEnforceBIP30) {
         for (const auto& tx : block.vtx) {
-            for (size_t o = 0; o < tx->vout.size(); o++) {
+            for (size_t o = 0; o < tx->GetNumVOuts(); o++) {
                 if (view.HaveCoin(COutPoint(tx->GetHash(), o))) {
                     return state.DoS(100, error("ConnectBlock(): tried to overwrite transaction"),
                                      REJECT_INVALID, "bad-txns-BIP30");

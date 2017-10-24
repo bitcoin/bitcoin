@@ -48,8 +48,8 @@ static int AppInitRawTx(int argc, char* argv[])
         fprintf(stderr, "Error: %s\n", e.what());
         return EXIT_FAILURE;
     }
-    
-    fParticlMode = !gArgs.GetBoolArg("-legacymode", false); // qa tests 
+
+    fParticlMode = !gArgs.GetBoolArg("-legacymode", false); // qa tests
     fCreateBlank = gArgs.GetBoolArg("-create", false);
 
     if (argc<2 || gArgs.IsArgSet("-?") || gArgs.IsArgSet("-h") || gArgs.IsArgSet("-help"))
@@ -474,6 +474,19 @@ static void MutateTxDelOutput(CMutableTransaction& tx, const std::string& strOut
 {
     // parse requested deletion index
     int outIdx = atoi(strOutIdx);
+
+    if (tx.IsParticlVersion())
+    {
+        if (outIdx < 0 || outIdx >= (int)tx.vpout.size()) {
+            std::string strErr = "Invalid TX output index '" + strOutIdx + "'";
+            throw std::runtime_error(strErr.c_str());
+        }
+
+        // delete output from transaction
+        tx.vpout.erase(tx.vpout.begin() + outIdx);
+        return;
+    }
+
     if (outIdx < 0 || outIdx >= (int)tx.vout.size()) {
         std::string strErr = "Invalid TX output index '" + strOutIdx + "'";
         throw std::runtime_error(strErr.c_str());
@@ -629,12 +642,12 @@ static void MutateTxSign(CMutableTransaction& tx, const std::string& flagStr)
         }
         const CScript& prevPubKey = coin.out.scriptPubKey;
         const CAmount& amount = coin.out.nValue;
-        
+
         std::vector<uint8_t> vchAmount(8);
         memcpy(&vchAmount[0], &amount, 8);
         SignatureData sigdata;
         // Only sign SIGHASH_SINGLE if there's a corresponding output:
-        if (!fHashSingle || (i < mergedTx.vout.size()))
+        if (!fHashSingle || (i < mergedTx.GetNumVOuts()))
             ProduceSignature(MutableTransactionSignatureCreator(&keystore, &mergedTx, i, vchAmount, nHashType), prevPubKey, sigdata);
 
         // ... and merge in other signatures:

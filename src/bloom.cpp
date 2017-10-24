@@ -148,7 +148,7 @@ bool CBloomFilter::IsRelevantAndUpdate(const CTransaction& tx)
         const CTxOut& txout = tx.vout[i];
         // Match if the filter contains any arbitrary script data element in any scriptPubKey in tx
         // If this matches, also add the specific output that was matched.
-        // This means clients don't have to update the filter themselves when a new relevant tx 
+        // This means clients don't have to update the filter themselves when a new relevant tx
         // is discovered in order to find spending transactions, which avoids round-tripping and race conditions.
         CScript::const_iterator pc = txout.scriptPubKey.begin();
         std::vector<unsigned char> data;
@@ -175,11 +175,48 @@ bool CBloomFilter::IsRelevantAndUpdate(const CTransaction& tx)
         }
     }
 
+    for (unsigned int i = 0; i < tx.vpout.size(); i++)
+    {
+        const CScript *pscript = tx.vpout[i]->GetPScriptPubKey();
+        if (!pscript)
+            continue;
+
+        // Match if the filter contains any arbitrary script data element in any scriptPubKey in tx
+        // If this matches, also add the specific output that was matched.
+        // This means clients don't have to update the filter themselves when a new relevant tx
+        // is discovered in order to find spending transactions, which avoids round-tripping and race conditions.
+        CScript::const_iterator pc = pscript->begin();
+        std::vector<unsigned char> data;
+        while (pc < pscript->end())
+        {
+            opcodetype opcode;
+            if (!pscript->GetOp(pc, opcode, data))
+                break;
+            if (data.size() != 0 && contains(data))
+            {
+                fFound = true;
+                if ((nFlags & BLOOM_UPDATE_MASK) == BLOOM_UPDATE_ALL)
+                    insert(COutPoint(hash, i));
+                else if ((nFlags & BLOOM_UPDATE_MASK) == BLOOM_UPDATE_P2PUBKEY_ONLY)
+                {
+                    txnouttype type;
+                    std::vector<std::vector<unsigned char> > vSolutions;
+                    if (Solver(*pscript, type, vSolutions) &&
+                            (type == TX_PUBKEY || type == TX_MULTISIG))
+                        insert(COutPoint(hash, i));
+                }
+                break;
+            }
+        }
+    }
+
     if (fFound)
         return true;
 
     for (const CTxIn& txin : tx.vin)
     {
+        if (txin.IsAnonInput())
+            continue;
         // Match if the filter contains an outpoint tx spends
         if (contains(txin.prevout))
             return true;

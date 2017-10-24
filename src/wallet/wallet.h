@@ -537,15 +537,13 @@ public:
         if (!walletTx)
             throw std::invalid_argument("walletTx should not be null");
 
+        if (i >= walletTx->tx->GetNumVOuts())
+            throw std::out_of_range("The output index is out of range");
         if (walletTx->tx->IsParticlVersion())
         {
-            if (i >= walletTx->tx->vpout.size())
-                throw std::out_of_range("The output index is out of range");
             txoutBase = walletTx->tx->vpout[i];
         } else
         {
-            if (i >= walletTx->tx->vout.size())
-                throw std::out_of_range("The output index is out of range");
             txout = walletTx->tx->vout[i];
         }
 

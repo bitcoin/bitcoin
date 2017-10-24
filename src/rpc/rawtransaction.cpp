@@ -1015,8 +1015,6 @@ UniValue signrawtransaction(const JSONRPCRequest& request)
         if (coin.nType != OUTPUT_STANDARD)
             throw JSONRPCError(RPC_MISC_ERROR, "TODO: make work for !StandardOutput");
 
-        size_t nOutputs = fParticlMode ? mtx.vpout.size() : mtx.vout.size();
-
         std::vector<uint8_t> vchAmount(8);
         SignatureData sigdata;
         CScript prevPubKey = coin.out.scriptPubKey;
@@ -1024,7 +1022,7 @@ UniValue signrawtransaction(const JSONRPCRequest& request)
         memcpy(&vchAmount[0], &amount, 8);
 
         // Only sign SIGHASH_SINGLE if there's a corresponding output:
-        if (!fHashSingle || (i < nOutputs))
+        if (!fHashSingle || (i < mtx.GetNumVOuts()))
             ProduceSignature(MutableTransactionSignatureCreator(&keystore, &mtx, i, vchAmount, nHashType), prevPubKey, sigdata);
 
         sigdata = CombineSignatures(prevPubKey, TransactionSignatureChecker(&txConst, i, vchAmount), sigdata, DataFromTransaction(mtx, i));
@@ -1086,8 +1084,7 @@ UniValue sendrawtransaction(const JSONRPCRequest& request)
 
     CCoinsViewCache &view = *pcoinsTip;
     bool fHaveChain = false;
-    size_t nOutputs = tx->IsParticlVersion() ? tx->vpout.size() : tx->vout.size();
-    for (size_t o = 0; !fHaveChain && o < nOutputs; o++) {
+    for (size_t o = 0; !fHaveChain && o < tx->GetNumVOuts(); o++) {
         const Coin& existingCoin = view.AccessCoin(COutPoint(hashTx, o));
         fHaveChain = !existingCoin.IsSpent();
     }
