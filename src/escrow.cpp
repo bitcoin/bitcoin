@@ -2838,25 +2838,22 @@ UniValue escrowcompleterefund(const UniValue& params, bool fHelp) {
 	return res;
 }
 UniValue escrowfeedback(const UniValue& params, bool fHelp) {
-    if (fHelp || params.size() < 4 || params.size() > 5)
+    if (fHelp || params.size() < 5 || params.size() > 6)
         throw runtime_error(
-		"escrowfeedback <escrow guid> <user role> <rating> <feedback> [witness]\n"
-                        "Send feedback for primary and secondary users in escrow, depending on who you are. Ratings are numbers from 1 to 5. User Role is either 'buyer', 'seller', 'reseller', or 'arbiter'.\n"
-						"If you are the buyer, feedbackprimary is for seller and feedbacksecondary is for arbiter.\n"
-						"If you are the seller, feedbackprimary is for buyer and feedbacksecondary is for arbiter.\n"
-						"If you are the arbiter, feedbackprimary is for buyer and feedbacksecondary is for seller.\n"
-						"If arbiter didn't do any work for this escrow you can leave his feedback empty and rating as a 0.\n"
+			"escrowfeedback <escrow guid> <userfrom> <rating> <feedback> <userto> [witness]\n"
+                        "Send feedback for primary and secondary users in escrow, depending on who you are. Ratings are numbers from 1 to 5. User From and User To is either 'buyer', 'seller', 'reseller', or 'arbiter'.\n"
                         + HelpRequiringPassphrase());
    // gather & validate inputs
     vector<unsigned char> vchEscrow = vchFromValue(params[0]);
-	string role = params[1].get_str();
+	string userfrom = params[1].get_str();
 	int nRating = 0;
 	vector<unsigned char> vchFeedback;
 	nRating = boost::lexical_cast<int>(params[2].get_str());
 	vchFeedback = vchFromValue(params[3]);
+	string userto = params[4].get_str();
 	vector<unsigned char> vchWitness;
-	if(CheckParam(params, 4))
-		vchWitness = vchFromValue(params[4]);
+	if(CheckParam(params, 5))
+		vchWitness = vchFromValue(params[5);
     // this is a syscoin transaction
     CWalletTx wtx;
 	CEscrow escrow;
@@ -2896,7 +2893,7 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 	CAliasIndex theAlias;
 	CScript scriptPubKeyAlias, scriptPubKeyAliasOrig;
 
-	if(role == "buyer")
+	if(userfrom == "buyer")
 	{
 			
 		scriptPubKeyAlias = CScript() << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << buyerAliasLatest.vchAlias << buyerAliasLatest.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_DROP;
@@ -2905,7 +2902,7 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 		vchLinkAlias = buyerAliasLatest.vchAlias;
 		theAlias = buyerAliasLatest;
 	}
-	else if(role == "seller")
+	else if(userfrom == "seller")
 	{	
 		scriptPubKeyAlias = CScript() << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << sellerAliasLatest.vchAlias << sellerAliasLatest.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_DROP;
 		scriptPubKeyAlias += sellerScript;
@@ -2913,7 +2910,7 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 		vchLinkAlias = sellerAliasLatest.vchAlias;
 		theAlias = sellerAliasLatest;
 	}
-	else if(role == "reseller")
+	else if(userfrom == "reseller")
 	{
 		scriptPubKeyAlias = CScript() << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << resellerAliasLatest.vchAlias << resellerAliasLatest.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_DROP;
 		scriptPubKeyAlias += resellerScript;
@@ -2921,7 +2918,7 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 		vchLinkAlias = resellerAliasLatest.vchAlias;
 		theAlias = resellerAliasLatest;
 	}
-	else if(role == "arbiter")
+	else if(userfrom == "arbiter")
 	{		
 		scriptPubKeyAlias  = CScript() << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << arbiterAliasLatest.vchAlias << arbiterAliasLatest.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_DROP;
 		scriptPubKeyAlias += arbiterScript;
@@ -2937,52 +2934,52 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 	escrow.nHeight = chainActive.Tip()->nHeight;
 	escrow.linkAliasTuple = CNameTXIDTuple(theAlias.vchAlias, theAlias.txHash, theAlias.vchGUID);
 	// buyer
-	if(role == "buyer")
+	CFeedback feedback;
+	feedback.nRating = nRating;
+	feedback.vchFeedback = vchFeedback;
+	if(userfrom == "buyer")
 	{
-		CFeedback sellerFeedback(FEEDBACKBUYER, FEEDBACKSELLER);
-		sellerFeedback.vchFeedback = vchFeedbackPrimary;
-		sellerFeedback.nRating = nRatingPrimary;
-		CFeedback arbiterFeedback(FEEDBACKBUYER, FEEDBACKARBITER);
-		arbiterFeedback.vchFeedback = vchFeedbackSecondary;
-		arbiterFeedback.nRating = nRatingSecondary;
+		feedback.nFeedbackUserFrom = FEEDBACKBUYER;
+		if (userto == "seller")
+			feedback.nFeedbackUserTo = FEEDBACKSELLER;
+		else if (userto == "arbiter")
+			feedback.nFeedbackUserTo = FEEDBACKARBITER;
 		
 	}
 	// seller
-	else if(role == "seller")
+	else if(userfrom == "seller")
 	{
-		CFeedback buyerFeedback(FEEDBACKSELLER, FEEDBACKBUYER);
-		buyerFeedback.vchFeedback = vchFeedbackPrimary;
-		buyerFeedback.nRating = nRatingPrimary;
-		CFeedback arbiterFeedback(FEEDBACKSELLER, FEEDBACKARBITER);
-		arbiterFeedback.vchFeedback = vchFeedbackSecondary;
-		arbiterFeedback.nRating = nRatingSecondary;
+		feedback.nFeedbackUserFrom = FEEDBACKSELLER;
+		if (userto == "buyer")
+			feedback.nFeedbackUserTo = FEEDBACKBUYER;
+		else if (userto == "arbiter")
+			feedback.nFeedbackUserTo = FEEDBACKARBITER;
 
 	}
-	else if(role == "reseller")
+	else if(userfrom == "reseller")
 	{
-		CFeedback buyerFeedback(FEEDBACKSELLER, FEEDBACKBUYER);
-		buyerFeedback.vchFeedback = vchFeedbackPrimary;
-		buyerFeedback.nRating = nRatingPrimary;
-		CFeedback arbiterFeedback(FEEDBACKSELLER, FEEDBACKARBITER);
-		arbiterFeedback.vchFeedback = vchFeedbackSecondary;
-		arbiterFeedback.nRating = nRatingSecondary;
+		feedback.nFeedbackUserFrom = FEEDBACKBUYER;
+		if (userto == "buyer")
+			feedback.nFeedbackUserTo = FEEDBACKBUYER;
+		else if (userto == "arbiter")
+			feedback.nFeedbackUserTo = FEEDBACKARBITER;
 
 	}
 	// arbiter
-	else if(role == "arbiter")
+	else if(userfrom == "arbiter")
 	{
-		CFeedback buyerFeedback(FEEDBACKARBITER, FEEDBACKBUYER);
-		buyerFeedback.vchFeedback = vchFeedbackPrimary;
-		buyerFeedback.nRating = nRatingPrimary;
-		CFeedback sellerFeedback(FEEDBACKARBITER, FEEDBACKSELLER);
-		sellerFeedback.vchFeedback = vchFeedbackSecondary;
-		sellerFeedback.nRating = nRatingSecondary;
+		feedback.nFeedbackUserFrom = FEEDBACKARBITER;
+		if (userto == "buyer")
+			feedback.nFeedbackUserTo = FEEDBACKBUYER;
+		else if (userto == "seller")
+			feedback.nFeedbackUserTo = FEEDBACKSELLER;
 
 	}
 	else
 	{
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4603 - " + _("You must be either the arbiter, buyer or seller to leave feedback on this escrow"));
 	}
+	escrow.feedback = feedback;
 	vector<unsigned char> data;
 	escrow.Serialize(data);
     uint256 hash = Hash(data.begin(), data.end());

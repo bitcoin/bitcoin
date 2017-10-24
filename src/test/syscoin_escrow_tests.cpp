@@ -399,8 +399,8 @@ BOOST_AUTO_TEST_CASE(generate_escrowfeedback)
 	EscrowRelease("node3", "arbiter", guid);
 	EscrowClaimRelease("node1", guid);
 	// seller leaves feedback first to the other parties
-	EscrowFeedback("node1", "seller", guid, "feedbackbuyer", "1", FEEDBACKBUYER);
-	EscrowFeedback("node1", "seller", guid, "feedbackarbiter", "1", FEEDBACKARBITER);
+	EscrowFeedback("node1", "seller", guid, "feedbackbuyer", "1", "buyer");
+	EscrowFeedback("node1", "seller", guid, "feedbackarbiter", "1", "arbiter");
 
 	// leave another feedback and notice that you can't find it in the indexer (first feedback will be indexed only per user per guid+touser combination)
 	string escrowfeedbackstr = "escrowfeedback " + guid + " seller feedback 1";
@@ -412,8 +412,8 @@ BOOST_AUTO_TEST_CASE(generate_escrowfeedback)
 	BOOST_CHECK(r.isNull());
 
 	// buyer can leave feedback
-	EscrowFeedback("node2", "buyer", guid, "feedbackseller", "1", FEEDBACKSELLER);
-	EscrowFeedback("node2", "buyer", guid, "feedbackarbiter", "1", FEEDBACKARBITER);
+	EscrowFeedback("node2", "buyer", guid, "feedbackseller", "1", "seller");
+	EscrowFeedback("node2", "buyer", guid, "feedbackarbiter", "1", "arbiter");
 
 	// leave another feedback and notice that you can't find it in the indexer (first feedback will be indexed only per user per guid+touser combination)
 	escrowfeedbackstr = "escrowfeedback " + guid + " buyer feedback 1";
@@ -425,8 +425,8 @@ BOOST_AUTO_TEST_CASE(generate_escrowfeedback)
 	BOOST_CHECK(r.isNull());
 
 	// arbiter leaves feedback
-	EscrowFeedback("node3", "arbiter", guid, "feedbackbuyer", "4", FEEDBACKBUYER);
-	EscrowFeedback("node3", "arbiter", guid, "feedbackseller", "4", FEEDBACKSELLER);
+	EscrowFeedback("node3", "arbiter", guid, "feedbackbuyer", "4", "buyer");
+	EscrowFeedback("node3", "arbiter", guid, "feedbackseller", "4", "seller");
 
 	// leave another feedback and notice that you can't find it in the indexer (first feedback will be indexed only per user per guid+touser combination)
 	escrowfeedbackstr = "escrowfeedback " + guid + " arbiter feedback 1";

@@ -1213,10 +1213,10 @@ void OfferUpdate(const string& node, const string& aliasname, const string& offe
 	}
 }
 
-void EscrowFeedback(const string& node, const string& role, const string& escrowguid, const string& feedback, const string& rating,  char user, const string& witness) {
+void EscrowFeedback(const string& node, const string& userfrom, const string& escrowguid, const string& feedback, const string& rating,  const string& userto, const string& witness) {
 
 	UniValue r, ret;
-	string escrowfeedbackstr = "escrowfeedback " + escrowguid + " " + role + " " + feedback + " " + rating  + witness;
+	string escrowfeedbackstr = "escrowfeedback " + escrowguid + " " + userfrom + " " + feedback + " " + rating  " " + userto + " " + witness;
 
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, escrowfeedbackstr));
 	const UniValue &arr = r.get_array();
@@ -1225,12 +1225,19 @@ void EscrowFeedback(const string& node, const string& role, const string& escrow
 	GenerateBlocks(10, node);
 	
 	r = FindFeedback(node, escrowTxid);
-	BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == escrowguid + user);
+	char feedbackuserenum;
+	if (userto == "buyer")
+		feedbackuserenum = FEEDBACKBUYER;
+	else if (userto == "arbiter")
+		feedbackuserenum = FEEDBACKARBITER;
+	else if (userto = "seller")
+		feedbackuserenum = FEEDBACKSELLER;
+	BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == escrowguid + feedbackuserenum);
 	BOOST_CHECK(find_value(r.get_obj(), "escrow").get_str() == escrowguid);
 	BOOST_CHECK(find_value(r.get_obj(), "txid").get_str() == escrowTxid);
 	BOOST_CHECK(find_value(r.get_obj(), "rating").get_int() == atoi(rating.c_str()));
 	BOOST_CHECK(find_value(r.get_obj(), "feedback").get_str() == rating);
-	BOOST_CHECK(find_value(r.get_obj(), "feedbackto").get_int() == user);
+	BOOST_CHECK(find_value(r.get_obj(), "feedbackto").get_int() == userto);
 }
 const string OfferAccept(const string& ownernode, const string& buyernode, const string& aliasname, const string& arbiter, const string& offerguid, const string& qty, const string& witness) {
 	const string &escrowguid = EscrowNewBuyItNow(buyernode, ownernode, aliasname, offerguid, qty, arbiter);
