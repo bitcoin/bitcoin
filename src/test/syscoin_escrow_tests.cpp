@@ -403,7 +403,7 @@ BOOST_AUTO_TEST_CASE(generate_escrowfeedback)
 	EscrowFeedback("node1", "seller", guid, "feedbackarbiter", "1", "arbiter");
 
 	// leave another feedback and notice that you can't find it in the indexer (first feedback will be indexed only per user per guid+touser combination)
-	string escrowfeedbackstr = "escrowfeedback " + guid + " seller feedback 1";
+	string escrowfeedbackstr = "escrowfeedback " + guid + " seller feedback 1 buyer";
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", escrowfeedbackstr));
 	UniValue arr = r.get_array();
 	string feedbackTxid = arr[0].get_str();
@@ -416,7 +416,7 @@ BOOST_AUTO_TEST_CASE(generate_escrowfeedback)
 	EscrowFeedback("node2", "buyer", guid, "feedbackarbiter", "1", "arbiter");
 
 	// leave another feedback and notice that you can't find it in the indexer (first feedback will be indexed only per user per guid+touser combination)
-	escrowfeedbackstr = "escrowfeedback " + guid + " buyer feedback 1";
+	escrowfeedbackstr = "escrowfeedback " + guid + " buyer feedback 1 seller";
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", escrowfeedbackstr));
 	arr = r.get_array();
 	feedbackTxid = arr[0].get_str();
@@ -429,7 +429,7 @@ BOOST_AUTO_TEST_CASE(generate_escrowfeedback)
 	EscrowFeedback("node3", "arbiter", guid, "feedbackseller", "4", "seller");
 
 	// leave another feedback and notice that you can't find it in the indexer (first feedback will be indexed only per user per guid+touser combination)
-	escrowfeedbackstr = "escrowfeedback " + guid + " arbiter feedback 1";
+	escrowfeedbackstr = "escrowfeedback " + guid + " arbiter feedback 1 buyer";
 	BOOST_CHECK_NO_THROW(r = CallRPC("node3", escrowfeedbackstr));
 	arr = r.get_array();
 	feedbackTxid = arr[0].get_str();
@@ -502,10 +502,10 @@ BOOST_AUTO_TEST_CASE(generate_escrowpruning)
 	GenerateBlocks(5, "node1");
 
 	// leave some feedback (escrow is complete but not expired yet)
-	EscrowFeedback("node1", "seller", guid1, "feedbackbuyer", "1", FEEDBACKBUYER);
+	EscrowFeedback("node1", "seller", guid1, "feedbackbuyer", "1", "buyer");
 
 	// try to leave feedback it should let you because aliases not expired
-	EscrowFeedback("node2", "buyer", guid1, "feedbackseller", "1", FEEDBACKSELLER);
+	EscrowFeedback("node2", "buyer", guid1, "feedbackseller", "1", "seller");
 
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "escrowinfo " + guid1));
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), false);
@@ -516,7 +516,7 @@ BOOST_AUTO_TEST_CASE(generate_escrowpruning)
 	BOOST_CHECK_THROW(CallRPC("node3", "escrowinfo " + guid1), runtime_error);
 	BOOST_CHECK_EQUAL(EscrowFilter("node3", guid1), false);
 	// cannot leave feedback on expired escrow
-	BOOST_CHECK_THROW(CallRPC("node2", "escrowfeedback " + guid1 + " buyer 1 2 3 4"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node2", "escrowfeedback " + guid1 + " buyer feedback 2 seller"), runtime_error);
 	ECC_Stop();
 }
 
