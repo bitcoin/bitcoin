@@ -1091,8 +1091,10 @@ bool AppInitParameterInteraction()
     // Option to startup with mocktime set (used for regression testing):
     SetMockTime(gArgs.GetArg("-mocktime", 0)); // SetMockTime(0) is a no-op
 
-    if (gArgs.GetBoolArg("-peerbloomfilters", DEFAULT_PEERBLOOMFILTERS))
+    if (gArgs.GetBoolArg("-peerbloomfilters", DEFAULT_PEERBLOOMFILTERS)) {
         nLocalServices = ServiceFlags(nLocalServices | NODE_BLOOM);
+        InitWarning(_("Running peer bloom filters may present severe risks to node operators (BIP37)"));
+    }
 
     if (gArgs.GetArg("-rpcserialversion", DEFAULT_RPC_SERIALIZE_VERSION) < 0)
         return InitError("rpcserialversion must be non-negative.");
