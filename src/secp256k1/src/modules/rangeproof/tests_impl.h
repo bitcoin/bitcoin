@@ -16,6 +16,8 @@
 
 #include "include/secp256k1_rangeproof.h"
 
+static int rangeproof_count = 32;
+
 static void test_pedersen(void) {
     secp256k1_pedersen_commitment commits[19];
     const secp256k1_pedersen_commitment *cptr[19];
@@ -252,7 +254,7 @@ static void test_rangeproof(void) {
         CHECK(maxv >= v);
     }
     memcpy(&commit2, &commit, sizeof(commit));
-    for (i = 0; i < 10 * (size_t) count; i++) {
+    for (i = 0; i < 10 * (size_t) rangeproof_count; i++) {
         int exp;
         int min_bits;
         v = secp256k1_rands64(0, UINT64_MAX >> (secp256k1_rand32()&63));
@@ -357,10 +359,10 @@ void test_multiple_generators(void) {
 
 void run_rangeproof_tests(void) {
     int i;
-    for (i = 0; i < 10*count; i++) {
+    for (i = 0; i < 10*rangeproof_count; i++) {
         test_pedersen();
     }
-    for (i = 0; i < 10*count; i++) {
+    for (i = 0; i < 10*rangeproof_count; i++) {
         test_borromean();
     }
     test_rangeproof();
