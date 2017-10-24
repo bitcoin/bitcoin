@@ -332,16 +332,16 @@ BOOST_AUTO_TEST_CASE(generate_escrow_linked_release_with_peg_update)
 	GenerateBlocks(5, "node3");
 	AliasNew("node1", "buyeralias33", "changeddata1");
 	AliasNew("node2", "selleralias33", "changeddata2");
-	AliasNew("node3", "arbiteralias333", "changeddata3");
+	AliasNew("node3", "arbiteralias33", "changeddata3");
 	string qty = "3";
 	string offerguid = OfferNew("node2", "selleralias33", "category", "title", "100", "0.05", "description", "EUR");
-	AliasAddWhitelist("node2", offerguid, "arbiteralias333", "5");
+	AliasAddWhitelist("node2", offerguid, "arbiteralias33", "5");
 	string commission = "3";
 	string description = "newdescription";
-	string offerlinkguid = OfferLink("node3", "arbiteralias333", offerguid, commission, description);
+	string offerlinkguid = OfferLink("node3", "arbiteralias33", offerguid, commission, description);
 	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress buyeralias33 40000"), runtime_error);
 	GenerateBlocks(10);
-	string guid = EscrowNewBuyItNow("node1", "node2", "buyeralias33", offerlinkguid, qty, "arbiteralias333");
+	string guid = EscrowNewBuyItNow("node1", "node2", "buyeralias33", offerlinkguid, qty, "arbiteralias33");
 	EscrowRelease("node1", "buyer", guid);
 	UniValue r;
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "escrowinfo " + guid));
@@ -349,7 +349,7 @@ BOOST_AUTO_TEST_CASE(generate_escrow_linked_release_with_peg_update)
 	// 2695.2 SYS/EUR
 	BOOST_CHECK_EQUAL(nTotal, AmountFromValue(3 * 0.05*1.03*2695.2));
 	pegRates["EUR"] = 218;
-	guid = EscrowNewBuyItNow("node1", "node2", "buyeralias33", offerlinkguid, "2", "arbiteralias333");
+	guid = EscrowNewBuyItNow("node1", "node2", "buyeralias33", offerlinkguid, "2", "arbiteralias33");
 	EscrowRelease("node1", "buyer", guid);
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "escrowinfo " + guid));
 	nTotal = AmountFromValue(find_value(r.get_obj(), "total"));
@@ -358,7 +358,7 @@ BOOST_AUTO_TEST_CASE(generate_escrow_linked_release_with_peg_update)
 
 	OfferUpdate("node2", "selleralias33", offerguid, "category", "titlenew", "100", "0.07", "descriptionnew", "EUR", "\"\"", "\"\"", "6");
 
-	guid = EscrowNewBuyItNow("node1", "node2", "buyeralias33", offerlinkguid, "4", "arbiteralias333");
+	guid = EscrowNewBuyItNow("node1", "node2", "buyeralias33", offerlinkguid, "4", "arbiteralias33");
 	EscrowRelease("node1", "buyer", guid);
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "escrowinfo " + guid));
 	nTotal = AmountFromValue(find_value(r.get_obj(), "total_without_fee"));
@@ -370,7 +370,7 @@ BOOST_AUTO_TEST_CASE(generate_escrow_linked_release_with_peg_update)
 	// restore EUR peg
 	pegRates["EUR"] = 2695.2;
 
-	guid = EscrowNewBuyItNow("node1", "node2", "buyeralias33", offerlinkguid, "3", "arbiteralias333");
+	guid = EscrowNewBuyItNow("node1", "node2", "buyeralias33", offerlinkguid, "3", "arbiteralias33");
 	EscrowRelease("node1", "buyer", guid);
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "escrowinfo " + guid));
 	nTotal = AmountFromValue(find_value(r.get_obj(), "total_without_fee"));
