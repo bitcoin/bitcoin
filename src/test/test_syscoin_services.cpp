@@ -1216,7 +1216,7 @@ void OfferUpdate(const string& node, const string& aliasname, const string& offe
 void EscrowFeedback(const string& node, const string& userfrom, const string& escrowguid, const string& feedback, const string& rating,  const string& userto, const string& witness) {
 
 	UniValue r, ret;
-	string escrowfeedbackstr = "escrowfeedback " + escrowguid + " " + userfrom + " " + feedback + " " + rating  " " + userto + " " + witness;
+	string escrowfeedbackstr = "escrowfeedback " + escrowguid + " " + userfrom + " " + feedback + " " + rating + " " + userto + " " + witness;
 
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, escrowfeedbackstr));
 	const UniValue &arr = r.get_array();
