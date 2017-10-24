@@ -1241,7 +1241,7 @@ void EscrowFeedback(const string& node, const string& userfrom, const string& es
 	else if (userfrom == "seller" || userfrom == "reseller")
 		feedbackuserfromenum = FEEDBACKSELLER;
 
-	BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == escrowguid + feedbackuserenum);
+	BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == escrowguid + feedbackusertoenum);
 	BOOST_CHECK(find_value(r.get_obj(), "escrow").get_str() == escrowguid);
 	BOOST_CHECK(find_value(r.get_obj(), "txid").get_str() == escrowTxid);
 	BOOST_CHECK(find_value(r.get_obj(), "rating").get_int() == atoi(rating.c_str()));
