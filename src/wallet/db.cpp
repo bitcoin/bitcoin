@@ -381,15 +381,15 @@ bool CDB::Rewrite(const string& strFile, const char* pszSkip)
                                 break;
                             }
                             if (pszSkip &&
-                                strncmp(&ssKey[0], pszSkip, std::min(ssKey.size(), strlen(pszSkip))) == 0)
+                                strncmp(ssKey.data(), pszSkip, std::min(ssKey.size(), strlen(pszSkip))) == 0)
                                 continue;
-                            if (strncmp(&ssKey[0], "\x07version", 8) == 0) {
+                            if (strncmp(ssKey.data(), "\x07version", 8) == 0) {
                                 // Update version:
                                 ssValue.clear();
                                 ssValue << CLIENT_VERSION;
                             }
-                            Dbt datKey(&ssKey[0], ssKey.size());
-                            Dbt datValue(&ssValue[0], ssValue.size());
+                            Dbt datKey(ssKey.data(), ssKey.size());
+                            Dbt datValue(ssValue.data(), ssValue.size());
                             int ret2 = pdbCopy->put(NULL, &datKey, &datValue, DB_NOOVERWRITE);
                             if (ret2 > 0)
                                 fSuccess = false;
