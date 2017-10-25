@@ -37,8 +37,15 @@ BENCHMARK(CODE_TO_TIME);
  */
  
 namespace benchmark {
-
-    using clock = std::chrono::high_resolution_clock;
+    // On many systems, the high_resolution_clock offers no better resolution than the steady_clock.
+    // If that's the case, prefer the steady_clock.
+    struct best_clock {
+        using hi_res_clock = std::chrono::high_resolution_clock;
+        using steady_clock = std::chrono::steady_clock;
+        static constexpr bool steady_is_high_res = std::ratio_less_equal<steady_clock::period, hi_res_clock::period>::value;
+        using type = std::conditional<steady_is_high_res, steady_clock, hi_res_clock>::type;
+    };
+    using clock = best_clock::type;
     using time_point = clock::time_point;
     using duration = clock::duration;
 
