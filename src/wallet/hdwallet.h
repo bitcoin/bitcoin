@@ -35,6 +35,10 @@ enum OutputRecordFlags
     ORF_SPENT        = (1 << 3),
     ORF_LOCKED       = (1 << 4), // Needs wallet to be unlocked for further processing
     ORF_STAKEONLY    = (1 << 5),
+    ORF_WATCHONLY    = (1 << 6),
+
+    ORF_OWN_WATCH    = ORF_STAKEONLY | ORF_WATCHONLY,
+    ORF_OWN_ANY      = ORF_OWNED | ORF_OWN_WATCH,
 
     ORF_BLIND_IN     = (1 << 14),
     ORF_ANON_IN      = (1 << 15),

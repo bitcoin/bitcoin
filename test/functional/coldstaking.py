@@ -277,6 +277,24 @@ class ColdStakingTest(ParticlTestFramework):
                 assert(ek['num_derives'] == '5')
         assert(fFound)
 
+        # Test mapRecord watchonly
+        ro = nodes[1].getwalletinfo()
+        wotBefore = ro['watchonly_total_balance']
+
+        n1unspent = nodes[1].listunspent()
+        addr2_1s = nodes[2].getnewstealthaddress()
+
+        coincontrol = {'inputs':[{'tx':n1unspent[0]['txid'],'n':n1unspent[0]['vout']}]}
+        outputs = [{'address':addr2_1s, 'amount':1, 'narr':'p2b,0->2'},]
+        txid = nodes[0].sendtypeto('part', 'blind', outputs, 'comment', 'comment-to', 4, 64, False, coincontrol)
+
+        self.sync_all()
+
+        ro = nodes[1].getwalletinfo()
+        wotAfter = ro['watchonly_total_balance']
+        assert(wotAfter > wotBefore-Decimal(2.0))
+
+
         #assert(False)
         #print(json.dumps(ro, indent=4, default=self.jsonDecimal))
 

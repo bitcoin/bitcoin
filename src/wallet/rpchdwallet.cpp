@@ -3710,6 +3710,9 @@ UniValue getstakinginfo(const JSONRPCRequest &request)
     obj.pushKV("percentyearreward", rCoinYearReward);
     obj.pushKV("moneysupply", ValueFromAmount(nMoneySupply));
 
+    if (pwallet->nReserveBalance > 0)
+        obj.pushKV("reserve", ValueFromAmount(pwallet->nReserveBalance));
+
     if (pwallet->nUserDevFundCedePercent > 0)
         obj.pushKV("userfoundationdonationpercent", pwallet->nUserDevFundCedePercent);
 
@@ -4608,8 +4611,8 @@ static std::string SendHelp(CHDWallet *pwallet, OutputTypes typeIn, OutputTypes 
             "                            The narration is stored in the blockchain and is sent encrypted when destination is a stealth address and uncrypted otherwise.\n";
     if (typeIn == OUTPUT_RINGCT)
         rv +=
-            "7. ringsize        (int, optional).\n"
-            "8. inputs_per_sig  (int, optional).\n";
+            "7. ringsize        (int, optional, default=4).\n"
+            "8. inputs_per_sig  (int, optional, default=64).\n";
 
     rv +=
             "\nResult:\n"
@@ -4735,8 +4738,8 @@ UniValue sendtypeto(const JSONRPCRequest &request)
             "5. \"comment_to\"      (string, optional) A comment to store the name of the person or organization \n"
             "                            to which you're sending the transaction. This is not part of the \n"
             "                            transaction, just kept in your wallet.\n"
-            "6. ringsize         (int, optional) Only applies when typein is anon.\n"
-            "7. inputs_per_sig   (int, optional) Only applies when typein is anon.\n"
+            "6. ringsize         (int, optional, default=4) Only applies when typein is anon.\n"
+            "7. inputs_per_sig   (int, optional, default=64) Only applies when typein is anon.\n"
             "8. test_fee         (bool, optional, default=false) Only return the fee it would cost to send, txn is discarded.\n"
             "9. coin_control     (json, optional) Coincontrol object.\n"
             "   {\"changeaddress\": ,\n"

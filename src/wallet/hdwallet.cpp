@@ -2024,27 +2024,42 @@ bool CHDWallet::GetBalances(CHDWalletBalances &bal)
 
         for (const auto &r : rtx.vout)
         {
-            if (!(r.nFlags & ORF_OWNED) || IsSpent(txhash, r.n))
+            if (!(r.nFlags & ORF_OWN_ANY)
+                || IsSpent(txhash, r.n))
                 continue;
             switch (r.nType)
             {
                 case OUTPUT_RINGCT:
+                    if (!(r.nFlags & ORF_OWNED))
+                        continue;
                     if (fTrusted)
                         bal.nAnon += r.nValue;
                     else
                         bal.nAnonUnconf += r.nValue;
                     break;
                 case OUTPUT_CT:
+                    if (!(r.nFlags & ORF_OWNED))
+                        continue;
                     if (fTrusted)
                         bal.nBlind += r.nValue;
                     else
                         bal.nBlindUnconf += r.nValue;
                     break;
                 case OUTPUT_STANDARD:
-                    if (fTrusted)
-                        bal.nPart += r.nValue;
-                    else
-                        bal.nPartUnconf += r.nValue;
+                    if (r.nFlags & ORF_OWNED)
+                    {
+                        if (fTrusted)
+                            bal.nPart += r.nValue;
+                        else
+                            bal.nPartUnconf += r.nValue;
+                    } else
+                    if (r.nFlags & ORF_OWN_WATCH)
+                    {
+                        if (fTrusted)
+                            bal.nPartWatchOnly += r.nValue;
+                        else
+                            bal.nPartWatchOnlyUnconf += r.nValue;
+                    };
                     break;
                 default:
                     break;
@@ -8085,7 +8100,6 @@ bool CHDWallet::ScanForOwnedOutputs(const CTransaction &tx, size_t &nCT, size_t 
         if (txout->IsType(OUTPUT_CT))
         {
             nCT++;
-
             const CTxOutCT *ctout = (CTxOutCT*) txout.get();
 
             CTxDestination address;
@@ -8125,7 +8139,6 @@ bool CHDWallet::ScanForOwnedOutputs(const CTransaction &tx, size_t &nCT, size_t 
         if (txout->IsType(OUTPUT_RINGCT))
         {
             nRingCT++;
-
             const CTxOutRingCT *rctout = (CTxOutRingCT*) txout.get();
 
             CKeyID idk = rctout->pk.GetID();
@@ -8281,7 +8294,6 @@ bool CHDWallet::AddToWalletIfInvolvingMe(const CTransactionRef& ptx, const CBloc
             };
         };
 
-
         if (nCT > 0 || nRingCT > 0)
         {
             bool fExisted = mapRecords.count(tx.GetHash()) != 0;
@@ -8397,7 +8409,6 @@ int CHDWallet::InsertTempTxn(const uint256 &txid, const CTransactionRecord *rtx)
 
 int CHDWallet::OwnStandardOut(const CTxOutStandard *pout, const CTxOutData *pdata, COutputRecord &rout, bool &fUpdated)
 {
-
     if (pdata)
     {
         std::string sNarr;
@@ -8412,17 +8423,22 @@ int CHDWallet::OwnStandardOut(const CTxOutStandard *pout, const CTxOutData *pdat
     CEKAKey ak;
     CExtKeyAccount *pa = nullptr;
     bool isInvalid;
-    if (IsMine(pout->scriptPubKey, idk, ak, pa, isInvalid) != ISMINE_SPENDABLE)
-    {
+    isminetype mine = IsMine(pout->scriptPubKey, idk, ak, pa, isInvalid);
+    if (!(mine & ISMINE_ALL))
         return 0;
-    };
 
     if (pa && pa->nActiveInternal == ak.nParent) // TODO: could check EKVT_KEY_TYPE
         rout.nFlags |= ORF_CHANGE | ORF_FROM;
 
-
     rout.nType = OUTPUT_STANDARD;
-    rout.nFlags |= ORF_OWNED;
+    if (mine & ISMINE_SPENDABLE)
+        rout.nFlags |= ORF_OWNED;
+    else
+    if (mine & ISMINE_WATCH_COLDSTAKE)
+        rout.nFlags |= ORF_STAKEONLY;
+    else
+        rout.nFlags |= ORF_WATCHONLY;
+
     rout.nValue = pout->nValue;
     rout.scriptPubKey = pout->scriptPubKey;
 
@@ -8432,7 +8448,6 @@ int CHDWallet::OwnStandardOut(const CTxOutStandard *pout, const CTxOutData *pdat
 int CHDWallet::OwnBlindOut(CHDWalletDB *pwdb, const uint256 &txhash, const CTxOutCT *pout, const CStoredExtKey *pc, uint32_t &nLastChild,
     COutputRecord &rout, CStoredTransaction &stx, bool &fUpdated)
 {
-
     /*
     bool fDecoded = false;
     if (pc && !IsLocked()) // check if output is from this wallet
@@ -8452,17 +8467,22 @@ int CHDWallet::OwnBlindOut(CHDWalletDB *pwdb, const uint256 &txhash, const CTxOu
     CEKAKey ak;
     CExtKeyAccount *pa = nullptr;
     bool isInvalid;
-    if (IsMine(pout->scriptPubKey, idk, ak, pa, isInvalid) != ISMINE_SPENDABLE)
+    isminetype mine = IsMine(pout->scriptPubKey, idk, ak, pa, isInvalid);
+    if (!(mine & ISMINE_ALL))
         return 0;
 
     if (pa && pa->nActiveInternal == ak.nParent)
         rout.nFlags |= ORF_CHANGE | ORF_FROM;
 
+    rout.nType = OUTPUT_CT;
+
+    if (mine & ISMINE_SPENDABLE)
+        rout.nFlags |= ORF_OWNED;
+    else
+        rout.nFlags |= ORF_WATCHONLY;
 
     if (IsLocked())
     {
-        rout.nType = OUTPUT_CT;
-        rout.nFlags |= ORF_OWNED;
         rout.nFlags |= ORF_LOCKED;
         rout.nValue = 0;
 
@@ -8513,8 +8533,6 @@ int CHDWallet::OwnBlindOut(CHDWalletDB *pwdb, const uint256 &txhash, const CTxOu
     if (nNarr > 0)
         rout.sNarration.assign((const char*)msg, nNarr);
 
-    rout.nType = OUTPUT_CT;
-    rout.nFlags |= ORF_OWNED;
     rout.nValue = amountOut;
     rout.scriptPubKey = pout->scriptPubKey;
 
@@ -8527,7 +8545,6 @@ int CHDWallet::OwnBlindOut(CHDWalletDB *pwdb, const uint256 &txhash, const CTxOu
 int CHDWallet::OwnAnonOut(CHDWalletDB *pwdb, const uint256 &txhash, const CTxOutRingCT *pout, const CStoredExtKey *pc, uint32_t &nLastChild,
     COutputRecord &rout, CStoredTransaction &stx, bool &fUpdated)
 {
-
     CKeyID idk = pout->pk.GetID();
     CKey key;
     CKeyID idStealth;
@@ -8674,7 +8691,7 @@ bool CHDWallet::AddToRecord(CTransactionRecord &rtxIn, const CTransaction &tx,
 
     uint256 txhash = tx.GetHash();
 
-    // Inserts only if not already there, returns tx inserted or tx found
+    // Inserts only if not exists, returns tx inserted or tx found
     std::pair<MapRecords_t::iterator, bool> ret = mapRecords.insert(std::make_pair(txhash, rtxIn));
     CTransactionRecord &rtx = ret.first->second;
 
@@ -9176,7 +9193,7 @@ void CHDWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, con
             if (r.nType != OUTPUT_STANDARD)
                 continue;
 
-            if (!(r.nFlags & ORF_OWNED))
+            if (!(r.nFlags & ORF_OWNED) && !(r.nFlags & ORF_STAKEONLY))
                 continue;
 
             if (IsSpent(txid, r.n))
@@ -9201,7 +9218,9 @@ void CHDWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, con
                     return;
                 };
             };
-            vCoins.emplace_back(&twi->second, r.n, nDepth, true, true, safeTx);
+
+            bool fSpendableIn = r.nFlags & ORF_OWNED;
+            vCoins.emplace_back(&twi->second, r.n, nDepth, fSpendableIn, true, safeTx);
 
             if (nMinimumSumAmount != MAX_MONEY) {
                 nTotal += r.nValue;
@@ -10237,7 +10256,8 @@ void CHDWallet::AvailableCoinsForStaking(std::vector<COutput> &vCoins, int64_t n
                 if (r.nType != OUTPUT_STANDARD)
                     continue;
 
-                if (r.nFlags & ORF_OWNED && !(IsSpent(txid, r.n)))
+                if ((r.nFlags & ORF_OWNED || r.nFlags & ORF_STAKEONLY)
+                    && !(IsSpent(txid, r.n)))
                 {
                     std::vector<std::vector<uint8_t> > vSolutionsRet;
                     txnouttype typeRet;

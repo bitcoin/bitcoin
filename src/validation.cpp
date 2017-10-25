@@ -4626,7 +4626,6 @@ bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<cons
             //GetMainSignals().BlockChecked(*pblock, state);
             IncomingBlockChecked(*pblock, state);
         };
-
     }
 
     NotifyHeaderTip();
