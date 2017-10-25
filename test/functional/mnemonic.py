@@ -12,8 +12,7 @@ class MnemonicTest (BitcoinTestFramework):
         super().__init__()
         self.setup_clean_chain = True
         self.num_nodes = 1
-        #self.extra_args = [ ['-debug',] for i in range(self.num_nodes)]
-        self.extra_args = [ [] for i in range(self.num_nodes)]
+        self.extra_args = [ ['-debug',] for i in range(self.num_nodes)]
 
     def setup_network(self, split=False):
         self.nodes = self.start_nodes(self.num_nodes, self.options.tmpdir, self.extra_args)
@@ -89,7 +88,6 @@ class MnemonicTest (BitcoinTestFramework):
             assert("Num bytes entropy out of range [16,64]" in e.error['message'])
 
         ro = node.mnemonic("new", "", "english", "64")
-        #print(json.dumps(ro, indent=4))
         assert(len(ro['mnemonic'].split(' ')) == 48)
 
         try:
@@ -121,8 +119,8 @@ class MnemonicTest (BitcoinTestFramework):
         ro = node.mnemonic('decode', '', 'sortir hygiène boueux détourer doyen émission prospère tunnel cerveau miracle brioche feuille arbitre terne alléger prison connoter diable méconnu fraise pelle carbone erreur admettre')
         assert(ro['master'] == 'tprv8ZgxMBicQKsPdsKV1vzsQkRQp5TobgyfXsBLcU49jmnC2zBT4Cd5LTCtdoWe5gg7EPjjQnAsxbMG1qyoCn1bHn6n4c1ZEdFLKg1TJAwTriQ')
 
-
-        #print(json.dumps(ro, indent=4))
+        #assert(False)
+        #print(json.dumps(ro, indent=4, default=self.jsonDecimal))
 
 
 if __name__ == '__main__':

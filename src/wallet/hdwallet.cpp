@@ -5680,7 +5680,6 @@ int CHDWallet::ExtKeyUnlock(CStoredExtKey *sek, const CKeyingMaterial &vMKey)
     if (!sek->kp.IsValidV())
         return errorN(1, "Failed decrypting ext key %s", sek->GetIDString58().c_str());
 
-    // Check, necessary?
     if (sek->kp.key.GetPubKey() != sek->kp.pubkey)
         return errorN(1, "Decrypted ext key mismatch %s", sek->GetIDString58().c_str());
 
@@ -10232,7 +10231,6 @@ void CHDWallet::AvailableCoinsForStaking(std::vector<COutput> &vCoins, int64_t n
                     continue;
 
                 CKeyID keyID = CKeyID(uint160(vSolutionsRet[0]));
-
                 if (HaveKey(keyID))
                     vCoins.push_back(COutput(pcoin, i, nDepth, true, true, true));
             };

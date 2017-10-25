@@ -576,8 +576,8 @@ class WalletParticlTest(ParticlTestFramework):
         ro = nodes[0].extkey("account")
 
         nHardened = 0
-        for chain in ro["chains"]:
-            if chain["function"] == "active_external":
+        for chain in ro['chains']:
+            if chain['function'] == "active_external":
                 nHardened = chain["num_derives_h"]
                 break
         assert(nHardened == "1")
@@ -613,7 +613,6 @@ class WalletParticlTest(ParticlTestFramework):
         assert(scriptHex == 'b86376a914cf3837ef2e493d5b485c7f4536f27415c5cd3b6088ac6776a82064aae0fc202e17e16f708ad811d1bdb9eab37d2911601a428eae3cdbdf57603988ac68')
 
 
-
         coincontrol = {'changeaddress':scriptHex,'debug':True}
         outputs = [{'address':sAddrSpend, 'amount':1, 'narr':'not change'},]
         ro = nodes[2].sendtypeto('part', 'part', outputs, 'comment', 'comment-to', 4, 32, True, coincontrol)
@@ -629,9 +628,10 @@ class WalletParticlTest(ParticlTestFramework):
         assert(fFound)
 
 
+        ro = nodes[1].walletpassphrasechange('changedPass', 'changedPass2')
 
-        #print(json.dumps(ro, indent=4, default=self.jsonDecimal))
         #assert(False)
+        #print(json.dumps(ro, indent=4, default=self.jsonDecimal))
 
 
 if __name__ == '__main__':

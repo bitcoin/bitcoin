@@ -35,11 +35,11 @@ const char* GetTxnOutputType(txnouttype t)
     case TX_PUBKEYHASH: return "pubkeyhash";
     case TX_SCRIPTHASH: return "scripthash";
     case TX_MULTISIG: return "multisig";
-    
+
     case TX_NULL_DATA: return "nulldata";
     case TX_WITNESS_V0_KEYHASH: return "witness_v0_keyhash";
     case TX_WITNESS_V0_SCRIPTHASH: return "witness_v0_scripthash";
-    
+
     case TX_SCRIPTHASH256: return "scripthash256";
     case TX_PUBKEYHASH256: return "pubkeyhash256";
     case TX_TIMELOCKED_SCRIPTHASH: return "timelocked_scripthash";
@@ -74,7 +74,7 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<std::v
     }
 
     vSolutionsRet.clear();
-    
+
     opcodetype opcode;
     std::vector<unsigned char> vch1;
     CScript::const_iterator pc1 = scriptPubKey.begin();
@@ -83,7 +83,7 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<std::v
     {
         if (!scriptPubKey.GetOp(pc1, opcode, vch1))
             break;
-        
+
         if (k == 0)
         {
             if (0 <= opcode && opcode <= OP_PUSHDATA4)
@@ -107,13 +107,13 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<std::v
     };
     bool fIsTimeLocked = k == 3;
     CScript::const_iterator tli = pc1;
-    
+
     if (fIsTimeLocked) // Check further for TX_TIMELOCKED_SCRIPTHASH
     for (k = 0; k < 3; ++k)
     {
         if (!scriptPubKey.GetOp(pc1, opcode, vch1))
             break;
-        
+
         if (k == 0)
         {
             if (opcode != OP_HASH160)
@@ -133,10 +133,10 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<std::v
             return true;
         }
     };
-    
+
     vSolutionsRet.clear();
-    
-    
+
+
     if (!fIsTimeLocked)
     {
         // Shortcut for pay-to-script-hash, which are more constrained than the other types:
@@ -148,7 +148,7 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<std::v
             vSolutionsRet.push_back(hashBytes);
             return true;
         }
-        
+
         if (scriptPubKey.IsPayToScriptHash256())
         {
             typeRet = TX_SCRIPTHASH256;
@@ -156,9 +156,7 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<std::v
             vSolutionsRet.push_back(hashBytes);
             return true;
         }
-        
-        
-        
+
         int witnessversion;
         std::vector<unsigned char> witnessprogram;
         if (scriptPubKey.IsWitnessProgram(witnessversion, witnessprogram)) {
@@ -213,7 +211,7 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<std::v
                     if (m < 1 || n < 1 || m > n || vSolutionsRet.size()-2 != n)
                         return false;
                 }
-                
+
                 if (fIsTimeLocked)
                 switch (typeRet)
                 {
@@ -222,14 +220,14 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<std::v
                     case TX_MULTISIG:   typeRet = TX_TIMELOCKED_MULTISIG;   break;
                     default: break;
                 };
-                
+
                 return true;
             }
             if (!script1.GetOp(pc1, opcode1, vch1))
                 break;
             if (!script2.GetOp(pc2, opcode2, vch2))
                 break;
-            
+
             // Template matching opcodes:
             if (opcode2 == OP_PUBKEYS)
             {
@@ -297,7 +295,7 @@ bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)
         CScript scriptB;
         if (!GetNonCoinstakeScriptPath(scriptPubKey, scriptB))
             return false;
-        
+
         // Return only the spending address
         return ExtractDestination(scriptB, addressRet);
     };
@@ -343,19 +341,19 @@ bool ExtractDestinations(const CScript& scriptPubKey, txnouttype& typeRet, std::
     addressRet.clear();
     typeRet = TX_NONSTANDARD;
     std::vector<valtype> vSolutions;
-    
+
     if (HasIsCoinstakeOp(scriptPubKey))
     {
         CScript scriptB;
         if (!GetNonCoinstakeScriptPath(scriptPubKey, scriptB))
             return false;
-        
+
         // Return only the spending address to keep insight working
         ExtractDestinations(scriptB, typeRet, addressRet, nRequiredRet);
-        
+
         return true;
     };
-    
+
     if (!Solver(scriptPubKey, typeRet, vSolutions))
         return false;
 
@@ -417,19 +415,19 @@ public:
         *script << OP_HASH160 << ToByteVector(scriptID) << OP_EQUAL;
         return true;
     }
-    
+
     bool operator()(const CStealthAddress &ek) const {
         script->clear();
         LogPrintf("CScriptVisitor(CStealthAddress) TODO\n");
         return false;
     }
-    
+
     bool operator()(const CExtKeyPair &ek) const {
         script->clear();
         LogPrintf("CScriptVisitor(CExtKeyPair) TODO\n");
         return false;
     }
-    
+
     bool operator()(const CKeyID256 &keyID) const {
         script->clear();
         *script << OP_DUP << OP_SHA256 << ToByteVector(keyID) << OP_EQUALVERIFY << OP_CHECKSIG;
