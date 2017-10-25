@@ -77,6 +77,11 @@ bool CProposalValidator::ValidateName()
         return false;
     }
 
+    if(strName.size() > 40) {
+        strErrorMessages += "name exceeds 40 characters;";
+        return false;
+    }
+
     std::string strNameStripped = StripWhitespace(strName);
 
     if(strNameStripped.empty()) {
