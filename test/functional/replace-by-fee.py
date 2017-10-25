@@ -285,7 +285,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
                 self.nodes[0].getrawtransaction(tx.hash)
 
     def test_replacement_feeperkb(self):
-        """Replacement requires fee-per-KB to be higher"""
+        """Replacement requires fee-per-WU to be higher"""
         tx0_outpoint = make_utxo(self.nodes[0], int(1.1*COIN))
 
         tx1a = CTransaction()
@@ -294,7 +294,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         tx1a_hex = txToHex(tx1a)
         self.nodes[0].sendrawtransaction(tx1a_hex, True)
 
-        # Higher fee, but the fee per KB is much lower, so the replacement is
+        # Higher fee, but the fee per WU is much lower, so the replacement is
         # rejected.
         tx1b = CTransaction()
         tx1b.vin = [CTxIn(tx0_outpoint, nSequence=0)]
@@ -497,7 +497,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         tx1a_hex = txToHex(tx1a)
         tx1a_txid = self.nodes[0].sendrawtransaction(tx1a_hex, True)
 
-        # Higher fee, but the actual fee per KB is much lower.
+        # Higher fee, but the actual fee per WU is much lower.
         tx1b = CTransaction()
         tx1b.vin = [CTxIn(tx0_outpoint, nSequence=0)]
         tx1b.vout = [CTxOut(int(0.001*COIN), CScript([b'a'*740000]))]

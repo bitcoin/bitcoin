@@ -13,6 +13,8 @@
 
 #include <string>
 
+extern const std::string CURRENCY_UNIT;
+
 class CCoinsViewCache;
 class CTxOut;
 

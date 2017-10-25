@@ -171,12 +171,12 @@ CFeeBumper::CFeeBumper(const CWallet *pWallet, const uint256 txidIn, const CCoin
         nNewFeeRate = CFeeRate(nNewFee, maxNewTxSize);
 
         // New fee rate must be at least old rate + minimum incremental relay rate
-        // walletIncrementalRelayFee.GetFeePerK() should be exact, because it's initialized
-        // in that unit (fee per kb).
+        // walletIncrementalRelayFee.GetFeePerWU() should be exact, because it's initialized
+        // in that unit (fee per WU).
         // However, nOldFeeRate is a calculated value from the tx fee/size, so
         // add 1 satoshi to the result, because it may have been rounded down.
-        if (nNewFeeRate.GetFeePerK() < nOldFeeRate.GetFeePerK() + 1 + walletIncrementalRelayFee.GetFeePerK()) {
-            nNewFeeRate = CFeeRate(nOldFeeRate.GetFeePerK() + 1 + walletIncrementalRelayFee.GetFeePerK());
+        if (nNewFeeRate.GetFeePerWU() < nOldFeeRate.GetFeePerWU() + 1 + walletIncrementalRelayFee.GetFeePerWU()) {
+            nNewFeeRate = CFeeRate(nOldFeeRate.GetFeePerWU() + 1 + walletIncrementalRelayFee.GetFeePerWU());
             nNewFee = nNewFeeRate.GetFee(maxNewTxSize);
         }
     }
@@ -195,8 +195,8 @@ CFeeBumper::CFeeBumper(const CWallet *pWallet, const uint256 txidIn, const CCoin
     // in a rare situation where the mempool minimum fee increased significantly since the fee estimation just a
     // moment earlier. In this case, we report an error to the user, who may use totalFee to make an adjustment.
     CFeeRate minMempoolFeeRate = mempool.GetMinFee(gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000);
-    if (nNewFeeRate.GetFeePerK() < minMempoolFeeRate.GetFeePerK()) {
-        vErrors.push_back(strprintf("New fee rate (%s) is less than the minimum fee rate (%s) to get into the mempool. totalFee value should to be at least %s or settxfee value should be at least %s to add transaction.", FormatMoney(nNewFeeRate.GetFeePerK()), FormatMoney(minMempoolFeeRate.GetFeePerK()), FormatMoney(minMempoolFeeRate.GetFee(maxNewTxSize)), FormatMoney(minMempoolFeeRate.GetFeePerK())));
+    if (nNewFeeRate.GetFeePerWU() < minMempoolFeeRate.GetFeePerWU()) {
+        vErrors.push_back(strprintf("New fee rate (%s) is less than the minimum fee rate (%s) to get into the mempool. totalFee value should to be at least %s or settxfee value should be at least %s to add transaction.", FormatMoney(nNewFeeRate.GetFeePerWU()), FormatMoney(minMempoolFeeRate.GetFeePerWU()), FormatMoney(minMempoolFeeRate.GetFee(maxNewTxSize)), FormatMoney(minMempoolFeeRate.GetFeePerWU())));
         currentResult = BumpFeeResult::WALLET_ERROR;
         return;
     }

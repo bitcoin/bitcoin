@@ -14,6 +14,7 @@
 #include "util.h"
 #include "utilstrencodings.h"
 
+const std::string CURRENCY_UNIT = "BTC";
 
 CAmount GetDustThreshold(const CTxOut& txout, const CFeeRate& dustRelayFeeIn)
 {

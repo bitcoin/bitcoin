@@ -810,7 +810,7 @@ UniValue estimatefee(const JSONRPCRequest& request)
     if (feeRate == CFeeRate(0))
         return -1.0;
 
-    return ValueFromAmount(feeRate.GetFeePerK());
+    return ValueFromAmount(feeRate.GetFeePerWU());
 }
 
 UniValue estimatesmartfee(const JSONRPCRequest& request)
@@ -835,7 +835,7 @@ UniValue estimatesmartfee(const JSONRPCRequest& request)
             "       \"CONSERVATIVE\"\n"
             "\nResult:\n"
             "{\n"
-            "  \"feerate\" : x.x,     (numeric, optional) estimate fee rate in " + CURRENCY_UNIT + "/kB\n"
+            "  \"feerate\" : x.x,     (numeric, optional) estimate fee rate in Sat/WU\n"
             "  \"errors\": [ str... ] (json array of strings, optional) Errors encountered during processing\n"
             "  \"blocks\" : n         (numeric) block number where estimate was found\n"
             "}\n"
@@ -865,7 +865,7 @@ UniValue estimatesmartfee(const JSONRPCRequest& request)
     FeeCalculation feeCalc;
     CFeeRate feeRate = ::feeEstimator.estimateSmartFee(conf_target, &feeCalc, conservative);
     if (feeRate != CFeeRate(0)) {
-        result.push_back(Pair("feerate", ValueFromAmount(feeRate.GetFeePerK())));
+        result.push_back(Pair("feerate", ValueFromAmount(feeRate.GetFeePerWU())));
     } else {
         errors.push_back("Insufficient data or no feerate found");
         result.push_back(Pair("errors", errors));
@@ -894,7 +894,7 @@ UniValue estimaterawfee(const JSONRPCRequest& request)
             "\nResult:\n"
             "{\n"
             "  \"short\" : {            (json object, optional) estimate for short time horizon\n"
-            "      \"feerate\" : x.x,        (numeric, optional) estimate fee rate in " + CURRENCY_UNIT + "/kB\n"
+            "      \"feerate\" : x.x,        (numeric, optional) estimate fee rate in Sat/WU\n"
             "      \"decay\" : x.x,          (numeric) exponential decay (per block) for historical moving average of confirmation data\n"
             "      \"scale\" : x,            (numeric) The resolution of confirmation targets at this time horizon\n"
             "      \"pass\" : {              (json object, optional) information about the lowest range of feerates to succeed in meeting the threshold\n"
@@ -957,7 +957,7 @@ UniValue estimaterawfee(const JSONRPCRequest& request)
 
         // CFeeRate(0) is used to indicate error as a return value from estimateRawFee
         if (feeRate != CFeeRate(0)) {
-            horizon_result.push_back(Pair("feerate", ValueFromAmount(feeRate.GetFeePerK())));
+            horizon_result.push_back(Pair("feerate", ValueFromAmount(feeRate.GetFeePerWU())));
             horizon_result.push_back(Pair("decay", buckets.decay));
             horizon_result.push_back(Pair("scale", (int)buckets.scale));
             horizon_result.push_back(Pair("pass", passbucket));

@@ -587,15 +587,15 @@ void CBlockPolicyEstimator::processTransaction(const CTxMemPoolEntry& entry, boo
     }
     trackedTxs++;
 
-    // Feerates are stored and reported as BTC-per-kb:
+    // Feerates are stored and reported as Sat-per-WU:
     CFeeRate feeRate(entry.GetFee(), entry.GetTxSize());
 
     mapMemPoolTxs[hash].blockHeight = txHeight;
-    unsigned int bucketIndex = feeStats->NewTx(txHeight, (double)feeRate.GetFeePerK());
+    unsigned int bucketIndex = feeStats->NewTx(txHeight, (double)feeRate.GetFeePerWU());
     mapMemPoolTxs[hash].bucketIndex = bucketIndex;
-    unsigned int bucketIndex2 = shortStats->NewTx(txHeight, (double)feeRate.GetFeePerK());
+    unsigned int bucketIndex2 = shortStats->NewTx(txHeight, (double)feeRate.GetFeePerWU());
     assert(bucketIndex == bucketIndex2);
-    unsigned int bucketIndex3 = longStats->NewTx(txHeight, (double)feeRate.GetFeePerK());
+    unsigned int bucketIndex3 = longStats->NewTx(txHeight, (double)feeRate.GetFeePerWU());
     assert(bucketIndex == bucketIndex3);
 }
 
@@ -617,12 +617,12 @@ bool CBlockPolicyEstimator::processBlockTx(unsigned int nBlockHeight, const CTxM
         return false;
     }
 
-    // Feerates are stored and reported as BTC-per-kb:
+    // Feerates are stored and reported as BTC-per-WU:
     CFeeRate feeRate(entry->GetFee(), entry->GetTxSize());
 
-    feeStats->Record(blocksToConfirm, (double)feeRate.GetFeePerK());
-    shortStats->Record(blocksToConfirm, (double)feeRate.GetFeePerK());
-    longStats->Record(blocksToConfirm, (double)feeRate.GetFeePerK());
+    feeStats->Record(blocksToConfirm, (double)feeRate.GetFeePerWU());
+    shortStats->Record(blocksToConfirm, (double)feeRate.GetFeePerWU());
+    longStats->Record(blocksToConfirm, (double)feeRate.GetFeePerWU());
     return true;
 }
 
@@ -1035,7 +1035,7 @@ void CBlockPolicyEstimator::FlushUnconfirmed(CTxMemPool& pool) {
 
 FeeFilterRounder::FeeFilterRounder(const CFeeRate& minIncrementalFee)
 {
-    CAmount minFeeLimit = std::max(CAmount(1), minIncrementalFee.GetFeePerK() / 2);
+    CAmount minFeeLimit = std::max(CAmount(1), minIncrementalFee.GetFeePerWU() / 2);
     feeset.insert(0);
     for (double bucketBoundary = minFeeLimit; bucketBoundary <= MAX_FILTER_FEERATE; bucketBoundary *= FEE_FILTER_SPACING) {
         feeset.insert(bucketBoundary);

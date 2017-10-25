@@ -273,25 +273,25 @@ Set key pool size to <n> (default: 1000)
 .HP
 \fB\-fallbackfee=\fR<amt>
 .IP
-A fee rate (in BTC/kB) that will be used when fee estimation has
+A fee rate (in Sat/WU) that will be used when fee estimation has
 insufficient data (default: 0.0002)
 .HP
 \fB\-discardfee=\fR<amt>
 .IP
-The fee rate (in BTC/kB) that indicates your tolerance for discarding
-change by adding it to the fee (default: 0.0001). Note: An output
+The fee rate (in Sat/WU) that indicates your tolerance for discarding
+change by adding it to the fee (default: 0.25. Note: An output
 is discarded if it is dust at this rate, but we will always
 discard up to the dust relay fee and a discard fee above that is
 limited by the fee estimate for the longest target
 .HP
 \fB\-mintxfee=\fR<amt>
 .IP
-Fees (in BTC/kB) smaller than this are considered zero fee for
+Fees (in Sat/WU) smaller than this are considered zero fee for
 transaction creation (default: 0.00001)
 .HP
 \fB\-paytxfee=\fR<amt>
 .IP
-Fee (in BTC/kB) to add to transactions you send (default: 0.00)
+Fee (in Sat/WU) to add to transactions you send (default: 0.00)
 .HP
 \fB\-rescan\fR
 .IP
@@ -431,7 +431,7 @@ Enable transaction replacement in the memory pool (default: 1)
 .HP
 \fB\-minrelaytxfee=\fR<amt>
 .IP
-Fees (in BTC/kB) smaller than this are considered zero fee for relaying,
+Fees (in Sat/WU) smaller than this are considered zero fee for relaying,
 mining and transaction creation (default: 0.00001)
 .HP
 \fB\-whitelistrelay\fR
@@ -457,7 +457,7 @@ blockmaxweight
 .HP
 \fB\-blockmintxfee=\fR<amt>
 .IP
-Set lowest fee rate (in BTC/kB) for transactions to be included in block
+Set lowest fee rate (in Sat/WU) for transactions to be included in block
 creation. (default: 0.00001)
 .PP
 RPC server options:

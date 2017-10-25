@@ -996,7 +996,7 @@ CFeeRate CTxMemPool::GetMinFee(size_t sizelimit) const {
         rollingMinimumFeeRate = rollingMinimumFeeRate / pow(2.0, (time - lastRollingFeeUpdate) / halflife);
         lastRollingFeeUpdate = time;
 
-        if (rollingMinimumFeeRate < (double)incrementalRelayFee.GetFeePerK() / 2) {
+        if (rollingMinimumFeeRate < (double)incrementalRelayFee.GetFeePerWU() / 2) {
             rollingMinimumFeeRate = 0;
             return CFeeRate(0);
         }
@@ -1006,8 +1006,8 @@ CFeeRate CTxMemPool::GetMinFee(size_t sizelimit) const {
 
 void CTxMemPool::trackPackageRemoved(const CFeeRate& rate) {
     AssertLockHeld(cs);
-    if (rate.GetFeePerK() > rollingMinimumFeeRate) {
-        rollingMinimumFeeRate = rate.GetFeePerK();
+    if (rate.GetFeePerWU() > rollingMinimumFeeRate) {
+        rollingMinimumFeeRate = rate.GetFeePerWU();
         blockSinceLastRollingFeeBump = false;
     }
 }
