@@ -1244,8 +1244,9 @@ void EscrowFeedback(const string& node, const string& userfrom, const string& es
 		feedbackuserfromenum = FEEDBACKARBITER;
 	else if (userfrom == "seller" || userfrom == "reseller")
 		feedbackuserfromenum = FEEDBACKSELLER;
-
-	string feedbackid = escrowguid + boost::lexical_cast<string>(feedbackusertoenum);
+	string enumval;
+	enumval.push_back(feedbackusertoenum);
+	string feedbackid = escrowguid + enumval;
 	r = FindFeedback(node, feedbackid);
 	BOOST_CHECK(!ret.isNull());
 	BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == feedbackid);
