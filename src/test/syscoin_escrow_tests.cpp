@@ -356,7 +356,7 @@ BOOST_AUTO_TEST_CASE(generate_escrow_linked_release_with_peg_update)
 	// 218.2 SYS/EUR
 	BOOST_CHECK_EQUAL(nTotal, AmountFromValue(2 * 0.05*1.03*218.2));
 
-	OfferUpdate("node2", "selleralias33", offerguid, "category", "titlenew", "100", "0.07", "descriptionnew", "EUR", "\"\"", "\"\"", "6");
+	OfferUpdate("node2", "selleralias33", offerlinkguid, "category", "titlenew", "100", "0.07", "descriptionnew", "EUR", "\"\"", "\"\"", "6");
 
 	guid = EscrowNewBuyItNow("node1", "node2", "buyeralias33", offerlinkguid, "4", "arbiteralias33");
 	EscrowRelease("node1", "buyer", guid);
