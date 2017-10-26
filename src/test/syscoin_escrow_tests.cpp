@@ -324,9 +324,9 @@ BOOST_AUTO_TEST_CASE(generate_escrowrelease_arbiter)
 	EscrowRelease("node3", "arbiter", guid);
 	EscrowClaimRelease("node2", guid);
 }
-BOOST_AUTO_TEST_CASE(generate_escrow_linked_release_with_peg_update)
+BOOST_AUTO_TEST_CASE(generate_escrow_linked_release)
 {
-	printf("Running generate_escrow_linked_release_with_peg_update...\n");
+	printf("Running generate_escrow_linked_release...\n");
 	GenerateBlocks(5);
 	GenerateBlocks(5, "node2");
 	GenerateBlocks(5, "node3");
@@ -349,13 +349,12 @@ BOOST_AUTO_TEST_CASE(generate_escrow_linked_release_with_peg_update)
 	CAmount nTotal = AmountFromValue(find_value(r.get_obj(), "total_without_fee"));
 	// 2695.2 SYS/EUR
 	BOOST_CHECK(abs(nTotal - AmountFromValue(3 * 0.05*1.03*2695.2)) <= 0.1*COIN);
-	pegRates["EUR"] = 218;
 	guid = EscrowNewBuyItNow("node1", "node2", "buyeralias33", offerlinkguid, "2", "arbiteralias33");
 	EscrowRelease("node1", "buyer", guid);
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "escrowinfo " + guid));
 	nTotal = AmountFromValue(find_value(r.get_obj(), "total_without_fee"));
-	// 218.2 SYS/EUR
-	BOOST_CHECK(abs(nTotal - AmountFromValue(2 * 0.05*1.03*218.2)) <= 0.1*COIN);
+	// 2695.2 SYS/EUR
+	BOOST_CHECK(abs(nTotal - AmountFromValue(2 * 0.05*1.03*2695.2)) <= 0.1*COIN);
 
 
 	OfferUpdate("node3", "reselleralias33", offerlinkguid, "newcategory", "titlenew", "\"\"", "\"\"", "descriptionnew", "\"\"", "\"\"", "\"\"", "6");
@@ -364,13 +363,12 @@ BOOST_AUTO_TEST_CASE(generate_escrow_linked_release_with_peg_update)
 	EscrowRelease("node1", "buyer", guid);
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "escrowinfo " + guid));
 	nTotal = AmountFromValue(find_value(r.get_obj(), "total_without_fee"));
-	// 218.2SYS/EUR
-	BOOST_CHECK(abs(nTotal -  AmountFromValue(4 * 0.05*1.06*218.2)) <= 0.1*COIN);
+	// 2695.2 SYS/EUR
+	BOOST_CHECK(abs(nTotal -  AmountFromValue(4 * 0.05*1.06*2695.2)) <= 0.1*COIN);
 
 	GenerateBlocks(5, "node2");
 	EscrowClaimRelease("node2", guid);
-	// restore EUR peg
-	pegRates["EUR"] = 2695.2;
+
 
 	guid = EscrowNewBuyItNow("node1", "node2", "buyeralias33", offerlinkguid, "3", "arbiteralias33");
 	EscrowRelease("node1", "buyer", guid);
