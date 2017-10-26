@@ -406,7 +406,7 @@ BOOST_AUTO_TEST_CASE(generate_escrowfeedback)
 	string escrowfeedbackstr = "escrowfeedback " + guid + " seller feedback 1 buyer";
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", escrowfeedbackstr));
 	GenerateBlocks(10, "node1");
-	string feedbackid = guid + CFeedback::FeedbackUserToString(FEEDBACKBUYER);
+	string feedbackid = guid + CFeedback::FeedbackUserToString(FEEDBACKSELLER) + CFeedback::FeedbackUserToString(FEEDBACKBUYER);
 	r = FindFeedback("node1", feedbackid);
 	BOOST_CHECK(r.isNull());
 
@@ -418,7 +418,7 @@ BOOST_AUTO_TEST_CASE(generate_escrowfeedback)
 	escrowfeedbackstr = "escrowfeedback " + guid + " buyer feedback 1 seller";
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", escrowfeedbackstr));
 	GenerateBlocks(10, "node2");
-	feedbackid = guid + CFeedback::FeedbackUserToString(FEEDBACKSELLER);
+	feedbackid = guid + CFeedback::FeedbackUserToString(FEEDBACKBUYER) + CFeedback::FeedbackUserToString(FEEDBACKSELLER);
 	r = FindFeedback("node2", feedbackid);
 	BOOST_CHECK(r.isNull());
 
@@ -430,7 +430,7 @@ BOOST_AUTO_TEST_CASE(generate_escrowfeedback)
 	escrowfeedbackstr = "escrowfeedback " + guid + " arbiter feedback 1 buyer";
 	BOOST_CHECK_NO_THROW(r = CallRPC("node3", escrowfeedbackstr));
 	GenerateBlocks(10, "node3");
-	feedbackid = guid + CFeedback::FeedbackUserToString(FEEDBACKBUYER);
+	feedbackid = guid + CFeedback::FeedbackUserToString(FEEDBACKARBITER) + CFeedback::FeedbackUserToString(FEEDBACKBUYER);
 	r = FindFeedback("node3", feedbackid);
 	BOOST_CHECK(r.isNull());
 }
