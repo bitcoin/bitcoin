@@ -1,0 +1,166 @@
+# Copyright (c) 2013-2016 The Bitcoin Core developers
+# Distributed under the MIT software license, see the accompanying
+# file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+TESTS += test/test_bitcoin
+bin_PROGRAMS += test/test_bitcoin
+noinst_PROGRAMS += test/test_bitcoin_fuzzy
+TEST_SRCDIR = test
+TEST_BINARY=test/test_bitcoin$(EXEEXT)
+
+JSON_TEST_FILES = \
+  test/data/script_tests.json \
+  test/data/base58_keys_valid.json \
+  test/data/base58_encode_decode.json \
+  test/data/base58_keys_invalid.json \
+  test/data/tx_invalid.json \
+  test/data/tx_valid.json \
+  test/data/sighash.json
+
+RAW_TEST_FILES =
+
+GENERATED_TEST_FILES = $(JSON_TEST_FILES:.json=.json.h) $(RAW_TEST_FILES:.raw=.raw.h)
+
+# test_bitcoin binary #
+BITCOIN_TESTS =\
+  test/arith_uint256_tests.cpp \
+  test/scriptnum10.h \
+  test/addrman_tests.cpp \
+  test/amount_tests.cpp \
+  test/allocator_tests.cpp \
+  test/base32_tests.cpp \
+  test/base58_tests.cpp \
+  test/base64_tests.cpp \
+  test/bech32_tests.cpp \
+  test/bip32_tests.cpp \
+  test/blockencodings_tests.cpp \
+  test/bloom_tests.cpp \
+  test/bswap_tests.cpp \
+  test/checkqueue_tests.cpp \
+  test/coins_tests.cpp \
+  test/compress_tests.cpp \
+  test/crypto_tests.cpp \
+  test/cuckoocache_tests.cpp \
+  test/DoS_tests.cpp \
+  test/getarg_tests.cpp \
+  test/hash_tests.cpp \
+  test/key_tests.cpp \
+  test/limitedmap_tests.cpp \
+  test/dbwrapper_tests.cpp \
+  test/main_tests.cpp \
+  test/mempool_tests.cpp \
+  test/merkle_tests.cpp \
+  test/merkleblock_tests.cpp \
+  test/miner_tests.cpp \
+  test/multisig_tests.cpp \
+  test/net_tests.cpp \
+  test/netbase_tests.cpp \
+  test/pmt_tests.cpp \
+  test/policyestimator_tests.cpp \
+  test/pow_tests.cpp \
+  test/prevector_tests.cpp \
+  test/raii_event_tests.cpp \
+  test/random_tests.cpp \
+  test/reverselock_tests.cpp \
+  test/rpc_tests.cpp \
+  test/sanity_tests.cpp \
+  test/scheduler_tests.cpp \
+  test/script_P2SH_tests.cpp \
+  test/script_tests.cpp \
+  test/script_standard_tests.cpp \
+  test/scriptnum_tests.cpp \
+  test/serialize_tests.cpp \
+  test/sighash_tests.cpp \
+  test/sigopcount_tests.cpp \
+  test/skiplist_tests.cpp \
+  test/streams_tests.cpp \
+  test/test_bitcoin.cpp \
+  test/test_bitcoin.h \
+  test/test_bitcoin_main.cpp \
+  test/timedata_tests.cpp \
+  test/torcontrol_tests.cpp \
+  test/transaction_tests.cpp \
+  test/txvalidationcache_tests.cpp \
+  test/versionbits_tests.cpp \
+  test/uint256_tests.cpp \
+  test/univalue_tests.cpp \
+  test/util_tests.cpp
+
+if ENABLE_WALLET
+BITCOIN_TESTS += \
+  wallet/test/wallet_test_fixture.cpp \
+  wallet/test/wallet_test_fixture.h \
+  wallet/test/accounting_tests.cpp \
+  wallet/test/wallet_tests.cpp \
+  wallet/test/crypto_tests.cpp
+endif
+
+test_test_bitcoin_SOURCES = $(BITCOIN_TESTS) $(JSON_TEST_FILES) $(RAW_TEST_FILES)
+test_test_bitcoin_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -I$(builddir)/test/ $(TESTDEFS) $(EVENT_CFLAGS)
+test_test_bitcoin_LDADD =
+if ENABLE_WALLET
+test_test_bitcoin_LDADD += $(LIBBITCOIN_WALLET)
+endif
+test_test_bitcoin_LDADD += $(LIBBITCOIN_SERVER) $(LIBBITCOIN_CLI) $(LIBBITCOIN_COMMON) $(LIBBITCOIN_UTIL) $(LIBBITCOIN_CONSENSUS) $(LIBBITCOIN_CRYPTO) $(LIBUNIVALUE) \
+  $(LIBLEVELDB) $(LIBLEVELDB_SSE42) $(LIBMEMENV) $(BOOST_LIBS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB) $(LIBSECP256K1) $(EVENT_LIBS) $(EVENT_PTHREADS_LIBS)
+test_test_bitcoin_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+
+test_test_bitcoin_LDADD += $(LIBBITCOIN_CONSENSUS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS)
+test_test_bitcoin_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) -static
+
+if ENABLE_ZMQ
+test_test_bitcoin_LDADD += $(ZMQ_LIBS)
+endif
+#
+
+# test_bitcoin_fuzzy binary #
+test_test_bitcoin_fuzzy_SOURCES = test/test_bitcoin_fuzzy.cpp
+test_test_bitcoin_fuzzy_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_test_bitcoin_fuzzy_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_test_bitcoin_fuzzy_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+
+test_test_bitcoin_fuzzy_LDADD = \
+  $(LIBUNIVALUE) \
+  $(LIBBITCOIN_SERVER) \
+  $(LIBBITCOIN_COMMON) \
+  $(LIBBITCOIN_UTIL) \
+  $(LIBBITCOIN_CONSENSUS) \
+  $(LIBBITCOIN_CRYPTO) \
+  $(LIBSECP256K1)
+
+test_test_bitcoin_fuzzy_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
+#
+
+nodist_test_test_bitcoin_SOURCES = $(GENERATED_TEST_FILES)
+
+$(BITCOIN_TESTS): $(GENERATED_TEST_FILES)
+
+CLEAN_BITCOIN_TEST = test/*.gcda test/*.gcno $(GENERATED_TEST_FILES)
+
+CLEANFILES += $(CLEAN_BITCOIN_TEST)
+
+bitcoin_test: $(TEST_BINARY)
+
+bitcoin_test_check: $(TEST_BINARY) FORCE
+	$(MAKE) check-TESTS TESTS=$^
+
+bitcoin_test_clean : FORCE
+	rm -f $(CLEAN_BITCOIN_TEST) $(test_test_bitcoin_OBJECTS) $(TEST_BINARY)
+
+check-local:
+	@echo "Running test/util/bitcoin-util-test.py..."
+	$(PYTHON) $(top_builddir)/test/util/bitcoin-util-test.py
+	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C secp256k1 check
+if EMBEDDED_UNIVALUE
+	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C univalue check
+endif
+
+%.json.h: %.json
+	@$(MKDIR_P) $(@D)
+	@{ \
+	 echo "namespace json_tests{" && \
+	 echo "static unsigned const char $(*F)[] = {" && \
+	 $(HEXDUMP) -v -e '8/1 "0x%02x, "' -e '"\n"' $< | $(SED) -e 's/0x  ,//g' && \
+	 echo "};};"; \
+	} > "$@.new" && mv -f "$@.new" "$@"
+	@echo "Generated $@"
