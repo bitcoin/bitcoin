@@ -1246,7 +1246,7 @@ void EscrowFeedback(const string& node, const string& userfrom, const string& es
 		feedbackuserfromenum = FEEDBACKSELLER;
 	string feedbackid = escrowguid + CFeedback::FeedbackUserToString(feedbackusertoenum) + CFeedback::FeedbackUserToString(feedbackusertoenum);
 	r = FindFeedback(node, feedbackid);
-	BOOST_CHECK(!r.isNull());
+	BOOST_CHECK(r.isObject());
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "_id").get_str() , feedbackid);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "escrow").get_str() , escrowguid);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "offer").get_str() , offerguid);

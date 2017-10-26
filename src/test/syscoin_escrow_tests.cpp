@@ -408,7 +408,7 @@ BOOST_AUTO_TEST_CASE(generate_escrowfeedback)
 	GenerateBlocks(10, "node1");
 	string feedbackid = guid + CFeedback::FeedbackUserToString(FEEDBACKSELLER) + CFeedback::FeedbackUserToString(FEEDBACKBUYER);
 	r = FindFeedback("node1", feedbackid);
-	BOOST_CHECK(r.isNull());
+	BOOST_CHECK(!r.isObject());
 
 	// buyer can leave feedback
 	EscrowFeedback("node2", "buyer", guid, "feedbackseller", "1", "seller");
@@ -420,7 +420,7 @@ BOOST_AUTO_TEST_CASE(generate_escrowfeedback)
 	GenerateBlocks(10, "node2");
 	feedbackid = guid + CFeedback::FeedbackUserToString(FEEDBACKBUYER) + CFeedback::FeedbackUserToString(FEEDBACKSELLER);
 	r = FindFeedback("node2", feedbackid);
-	BOOST_CHECK(r.isNull());
+	BOOST_CHECK(!r.isObject());
 
 	// arbiter leaves feedback
 	EscrowFeedback("node3", "arbiter", guid, "feedbackbuyer", "4", "buyer");
@@ -432,7 +432,7 @@ BOOST_AUTO_TEST_CASE(generate_escrowfeedback)
 	GenerateBlocks(10, "node3");
 	feedbackid = guid + CFeedback::FeedbackUserToString(FEEDBACKARBITER) + CFeedback::FeedbackUserToString(FEEDBACKBUYER);
 	r = FindFeedback("node3", feedbackid);
-	BOOST_CHECK(r.isNull());
+	BOOST_CHECK(!r.isObject());
 }
 BOOST_AUTO_TEST_CASE(generate_escrow_linked_release)
 {
