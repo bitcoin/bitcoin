@@ -3090,7 +3090,7 @@ void BuildFeedbackJson(const CEscrow& escrow, UniValue& oFeedback) {
 			sFeedbackTime = strprintf("%llu", pindex->GetMedianTimePast());
 		}
 	}
-	const string &id = stringFromVch(escrow.vchEscrow) + boost::lexical_cast<std::string>(escrow.feedback.nFeedbackUserTo);
+	const string &id = stringFromVch(escrow.vchEscrow) + CFeedback::FeedbackEnumToString(escrow.feedback.nFeedbackUserTo);
 	oFeedback.push_back(Pair("_id", id));
 	oFeedback.push_back(Pair("offer", stringFromVch(escrow.offerTuple.first)));
 	oFeedback.push_back(Pair("escrow", stringFromVch(escrow.vchEscrow)));

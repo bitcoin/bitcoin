@@ -92,7 +92,15 @@ public:
     friend bool operator!=(const CFeedback &a, const CFeedback &b) {
         return !(a == b);
     }
-
+	static string FeedbackEnumToString(const unsigned char nFeedback) {
+		switch (nFeedback) {
+			case FEEDBACKNONE:			return "NONE";
+			case FEEDBACKBUYER:			return "BUYER";
+			case FEEDBACKSELLER:		return "SELLER";
+			case FEEDBACKARBITER:		return "ARBITER";
+			default:                    return "";
+		}
+	}
     void SetNull() {  nRating = 0; nFeedbackUserFrom = 0; nFeedbackUserTo = 0; vchFeedback.clear();}
     bool IsNull() const { return (  nRating == 0 && nFeedbackUserFrom == 0 && nFeedbackUserTo == 0 && vchFeedback.empty()); }
 };

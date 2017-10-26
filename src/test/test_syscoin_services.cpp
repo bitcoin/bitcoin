@@ -1229,7 +1229,7 @@ void EscrowFeedback(const string& node, const string& userfrom, const string& es
 	string escrowTxid = arr[0].get_str();
 
 	GenerateBlocks(10, node);
-	char feedbackusertoenum;
+	unsigned char feedbackusertoenum;
 	if (userto == "buyer")
 		feedbackusertoenum = FEEDBACKBUYER;
 	else if (userto == "arbiter")
@@ -1244,9 +1244,7 @@ void EscrowFeedback(const string& node, const string& userfrom, const string& es
 		feedbackuserfromenum = FEEDBACKARBITER;
 	else if (userfrom == "seller" || userfrom == "reseller")
 		feedbackuserfromenum = FEEDBACKSELLER;
-	string enumval;
-	enumval.push_back(feedbackusertoenum);
-	string feedbackid = escrowguid + enumval;
+	string feedbackid = escrowguid + CFeedback::FeedbackEnumToString(feedbackusertoenum);
 	r = FindFeedback(node, feedbackid);
 	BOOST_CHECK(!ret.isNull());
 	BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == feedbackid);

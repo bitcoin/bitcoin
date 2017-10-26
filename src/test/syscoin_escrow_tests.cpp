@@ -406,9 +406,7 @@ BOOST_AUTO_TEST_CASE(generate_escrowfeedback)
 	string escrowfeedbackstr = "escrowfeedback " + guid + " seller feedback 1 buyer";
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", escrowfeedbackstr));
 	GenerateBlocks(10, "node1");
-	string enumval;
-	enumval.push_back(FEEDBACKBUYER);
-	string feedbackid = guid + enumval;
+	feedbackid = guid + CFeedback::FeedbackEnumToString(FEEDBACKBUYER);
 	r = FindFeedback("node1", feedbackid);
 	BOOST_CHECK(r.isNull());
 
@@ -420,9 +418,7 @@ BOOST_AUTO_TEST_CASE(generate_escrowfeedback)
 	escrowfeedbackstr = "escrowfeedback " + guid + " buyer feedback 1 seller";
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", escrowfeedbackstr));
 	GenerateBlocks(10, "node2");
-	enumval.clear();
-	enumval.push_back(FEEDBACKSELLER);
-	feedbackid = guid + enumval;
+	feedbackid = guid + CFeedback::FeedbackEnumToString(FEEDBACKSELLER);
 	r = FindFeedback("node2", feedbackid);
 	BOOST_CHECK(r.isNull());
 
@@ -434,9 +430,7 @@ BOOST_AUTO_TEST_CASE(generate_escrowfeedback)
 	escrowfeedbackstr = "escrowfeedback " + guid + " arbiter feedback 1 buyer";
 	BOOST_CHECK_NO_THROW(r = CallRPC("node3", escrowfeedbackstr));
 	GenerateBlocks(10, "node3");
-	enumval.clear();
-	enumval.push_back(FEEDBACKBUYER);
-	feedbackid = guid + enumval;
+	feedbackid = guid + CFeedback::FeedbackEnumToString(FEEDBACKBUYER);
 	r = FindFeedback("node3", feedbackid);
 	BOOST_CHECK(r.isNull());
 }
