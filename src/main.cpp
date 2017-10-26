@@ -1139,18 +1139,22 @@ std::string FormatStateMessage(const CValidationState &state)
         state.GetDebugMessage().empty() ? "" : ", " + state.GetDebugMessage(), state.GetRejectCode());
 }
 
-static bool IsCashHFEnabled(const Config &config, int64_t nMedianTimePast) {
-    return nMedianTimePast >=
-           config.GetChainParams().GetConsensus().cashHardForkActivationTime;
+#ifdef BITCOIN_CASH
+static bool IsCashHFEnabled(const Config &config, int64_t nMedianTimePast)
+{
+    return nMedianTimePast >= config.GetChainParams().GetConsensus().cashHardForkActivationTime;
 }
 
-bool IsCashHFEnabled(const Config &config, const CBlockIndex *pindexPrev) {
-    if (pindexPrev == nullptr) {
+bool IsCashHFEnabled(const Config &config, const CBlockIndex *pindexPrev)
+{
+    if (pindexPrev == nullptr)
+    {
         return false;
     }
 
     return IsCashHFEnabled(config, pindexPrev->GetMedianTimePast());
 }
+#endif
 
 bool AcceptToMemoryPoolWorker(CTxMemPool &pool,
     CValidationState &state,
