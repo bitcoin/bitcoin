@@ -4,6 +4,7 @@
 
 // Unit tests for denial-of-service detection/prevention code
 
+#include "consensus/validation.h"
 #include "chainparams.h"
 #include "keystore.h"
 #include "net.h"
@@ -98,7 +99,7 @@ BOOST_AUTO_TEST_CASE(DoS_banning)
     peerLogic->InitializeNode(&dummyNode1);
     dummyNode1.nVersion = 1;
     dummyNode1.fSuccessfullyConnected = true;
-    Misbehaving(dummyNode1.GetId(), 100); // Should get banned
+    Misbehaving(dummyNode1.GetId(), DoS_SEVERITY::CRITICAL); // Should get banned
     peerLogic->SendMessages(&dummyNode1, interruptDummy);
     BOOST_CHECK(connman->IsBanned(addr1));
     BOOST_CHECK(!connman->IsBanned(ip(0xa0b0c001|0x0000ff00))); // Different IP, not banned
@@ -109,11 +110,11 @@ BOOST_AUTO_TEST_CASE(DoS_banning)
     peerLogic->InitializeNode(&dummyNode2);
     dummyNode2.nVersion = 1;
     dummyNode2.fSuccessfullyConnected = true;
-    Misbehaving(dummyNode2.GetId(), 50);
+    Misbehaving(dummyNode2.GetId(), DoS_SEVERITY::HIGH);
     peerLogic->SendMessages(&dummyNode2, interruptDummy);
     BOOST_CHECK(!connman->IsBanned(addr2)); // 2 not banned yet...
     BOOST_CHECK(connman->IsBanned(addr1));  // ... but 1 still should be
-    Misbehaving(dummyNode2.GetId(), 50);
+    Misbehaving(dummyNode2.GetId(), DoS_SEVERITY::HIGH);
     peerLogic->SendMessages(&dummyNode2, interruptDummy);
     BOOST_CHECK(connman->IsBanned(addr2));
 
@@ -134,13 +135,13 @@ BOOST_AUTO_TEST_CASE(DoS_banscore)
     peerLogic->InitializeNode(&dummyNode1);
     dummyNode1.nVersion = 1;
     dummyNode1.fSuccessfullyConnected = true;
-    Misbehaving(dummyNode1.GetId(), 100);
+    Misbehaving(dummyNode1.GetId(), DoS_SEVERITY::CRITICAL);
     peerLogic->SendMessages(&dummyNode1, interruptDummy);
     BOOST_CHECK(!connman->IsBanned(addr1));
-    Misbehaving(dummyNode1.GetId(), 10);
+    Misbehaving(dummyNode1.GetId(), DoS_SEVERITY::MEDIUM);
     peerLogic->SendMessages(&dummyNode1, interruptDummy);
     BOOST_CHECK(!connman->IsBanned(addr1));
-    Misbehaving(dummyNode1.GetId(), 1);
+    Misbehaving(dummyNode1.GetId(), DoS_SEVERITY::LOW);
     peerLogic->SendMessages(&dummyNode1, interruptDummy);
     BOOST_CHECK(connman->IsBanned(addr1));
     gArgs.ForceSetArg("-banscore", std::to_string(DEFAULT_BANSCORE_THRESHOLD));
@@ -164,7 +165,7 @@ BOOST_AUTO_TEST_CASE(DoS_bantime)
     dummyNode.nVersion = 1;
     dummyNode.fSuccessfullyConnected = true;
 
-    Misbehaving(dummyNode.GetId(), 100);
+    Misbehaving(dummyNode.GetId(), DoS_SEVERITY::CRITICAL);
     peerLogic->SendMessages(&dummyNode, interruptDummy);
     BOOST_CHECK(connman->IsBanned(addr));
 
