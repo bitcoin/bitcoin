@@ -21,7 +21,7 @@ public:
     
     // Cap management
     bool EnableCap(unsigned int factor);
-    bool ReEnableCap();
+    bool RevertCap();
     
     bool DisableCap();
     bool IsCapEnabled();
