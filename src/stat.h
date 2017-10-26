@@ -356,6 +356,7 @@ public:
         int pos = loc[series] - 1 + ago;
         if (pos < 0)
             pos += STATISTICS_SAMPLES;
+        assert(pos < STATISTICS_SAMPLES);
         return history[series][pos];
     }
 
@@ -396,6 +397,9 @@ public:
         int pos = loc[series] - 1 + ago;
         if (pos < 0)
             pos += STATISTICS_SAMPLES;
+        assert(pos < STATISTICS_SAMPLES);
+        assert(series >= 0);
+        assert(pos >= 0);
         return historyTime[series][pos];
     }
 
@@ -419,6 +423,8 @@ public:
             sampleCount = 0;
 
         int64_t cur_time = GetTimeMillis();
+        assert(loc[0] < STATISTICS_SAMPLES);
+        assert(loc[0] >= 0);
         history[0][loc[0]] = samples[0];
         historyTime[0][loc[0]] = cur_time;
         loc[0]++;
@@ -481,6 +487,11 @@ public:
                 // series.
                 if (op & STAT_OP_AVE)
                     accumulator /= ((DataType)operateSampleCount[i]);
+                assert(i + 1 < STATISTICS_NUM_RANGES);
+                assert(loc[i + 1] < STATISTICS_SAMPLES);
+                assert(start < STATISTICS_SAMPLES);
+                assert(start >= 0);
+                assert(loc[i + 1] >= 0);
                 history[i + 1][loc[i + 1]] = accumulator;
                 // times for accumulated statistics indicate the beginning of the interval
                 historyTime[i + 1][loc[i + 1]] = historyTime[i][start];
