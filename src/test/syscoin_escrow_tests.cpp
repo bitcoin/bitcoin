@@ -361,8 +361,8 @@ BOOST_AUTO_TEST_CASE (generate_escrowfeedback)
 	// leave another feedback and notice that you can't find it in the indexer (first feedback will be indexed only per user per guid+touser combination)
 	escrowfeedbackstr = "escrowfeedback " + guid + " buyer feedback 1";
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", escrowfeedbackstr));
-	arr = r.get_array();
-	feedbackTxid = arr[0].get_str();
+	UniValue arr1 = r.get_array();
+	feedbackTxid = arr1[0].get_str();
 	GenerateBlocks(10, "node2");
 	r = FindFeedback("node2", feedbackTxid);
 	BOOST_CHECK(r.isNull());
@@ -374,8 +374,8 @@ BOOST_AUTO_TEST_CASE (generate_escrowfeedback)
 	// leave another feedback and notice that you can't find it in the indexer (first feedback will be indexed only per user per guid+touser combination)
 	escrowfeedbackstr = "escrowfeedback " + guid + " arbiter feedback 1";
 	BOOST_CHECK_NO_THROW(r = CallRPC("node3", escrowfeedbackstr));
-	arr = r.get_array();
-	feedbackTxid = arr[0].get_str();
+	UniValue arr2 = r.get_array();
+	feedbackTxid = arr2[0].get_str();
 	GenerateBlocks(10, "node3");
 	r = FindFeedback("node3", feedbackTxid);
 	BOOST_CHECK(r.isNull());
