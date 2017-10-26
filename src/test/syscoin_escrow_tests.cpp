@@ -324,9 +324,9 @@ BOOST_AUTO_TEST_CASE(generate_escrowrelease_arbiter)
 	EscrowRelease("node3", "arbiter", guid);
 	EscrowClaimRelease("node2", guid);
 }
-BOOST_AUTO_TEST_CASE(generate_escrow_linked_release)
+BOOST_AUTO_TEST_CASE(generate_escrow_linked_release2)
 {
-	printf("Running generate_escrow_linked_release...\n");
+	printf("Running generate_escrow_linked_release2...\n");
 	GenerateBlocks(5);
 	GenerateBlocks(5, "node2");
 	GenerateBlocks(5, "node3");
