@@ -11,8 +11,6 @@
 #include "util.h"
 #include "addrman.h"
 
-int GetMinSystemnodePaymentsProto();
-
 class CSystemnodeSync;
 CSystemnodeSync systemnodeSync;
 
@@ -249,7 +247,7 @@ void CSystemnodeSync::Process()
             return;
         }
 
-        if (pnode->nVersion >= GetMinSystemnodePaymentsProto()) {
+        if (pnode->nVersion >= MIN_SYSTEMNODE_PAYMENT_PROTO_VERSION) {
 
             if(RequestedSystemnodeAssets == SYSTEMNODE_SYNC_LIST) {
                 if(fDebug) LogPrintf("CSystemnodeSync::Process() - lastSystemnodeList %lld (GetTime() - SYSTEMNODE_SYNC_TIMEOUT) %lld\n", lastSystemnodeList, GetTime() - SYSTEMNODE_SYNC_TIMEOUT);

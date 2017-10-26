@@ -12,8 +12,6 @@
 #include "addrman.h"
 #include <boost/lexical_cast.hpp>
 
-int GetMinSystemnodePaymentsProto();
-
 //
 // CSystemnodePing
 //
@@ -85,7 +83,7 @@ bool CSystemnodePing::CheckAndUpdate(int& nDos, bool fRequireEnabled, bool fChec
 
     // see if we have this Systemnode
     CSystemnode* psn = snodeman.Find(vin);
-    if(psn != NULL && psn->protocolVersion >= GetMinSystemnodePaymentsProto())
+    if(psn != NULL && psn->protocolVersion >= MIN_SYSTEMNODE_PAYMENT_PROTO_VERSION)
     {
         if (fRequireEnabled && !psn->IsEnabled()) return false;
 
@@ -385,7 +383,7 @@ bool CSystemnodeBroadcast::CheckAndUpdate(int& nDos)
         return false;
     }
 
-    if(protocolVersion < GetMinSystemnodePaymentsProto()) {
+    if(protocolVersion < MIN_SYSTEMNODE_PAYMENT_PROTO_VERSION) {
         LogPrintf("snb - ignoring outdated systemnode %s protocol version %d\n", vin.ToString(), protocolVersion);
         return false;
     }
