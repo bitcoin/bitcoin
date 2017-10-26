@@ -1247,7 +1247,7 @@ void EscrowFeedback(const string& node, const string& userfrom, const string& es
 
 	string feedbackid = escrowguid + boost::lexical_cast<string>(feedbackusertoenum);
 	r = FindFeedback(node, feedbackid);
-
+	BOOST_CHECK(!ret.isNull());
 	BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == feedbackid);
 	BOOST_CHECK(find_value(r.get_obj(), "escrow").get_str() == escrowguid);
 	BOOST_CHECK(find_value(r.get_obj(), "offer").get_str() == offerguid);
@@ -1864,7 +1864,6 @@ const UniValue FindFeedback(const string& node, const string& id)
 	BOOST_CHECK(r.type() == UniValue::VARR);
 	const UniValue &arrayValue = r.get_array();
 	BOOST_CHECK(ret.read(arrayValue[0].get_str()));
-	BOOST_CHECK(!ret.isNull());
 	return ret;
 }
 void EscrowClaimRelease(const string& node, const string& guid)
