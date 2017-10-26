@@ -344,6 +344,7 @@ BOOST_AUTO_TEST_CASE(generate_escrow_linked_release2)
 	GenerateBlocks(10);
 	string guid = EscrowNewBuyItNow("node1", "node2", "buyeralias33", offerlinkguid, qty, "arbiteralias33");
 	EscrowRelease("node1", "buyer", guid);
+	EscrowClaimRelease("node2", guid);
 	UniValue r;
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "escrowinfo " + guid));
 	CAmount nTotal = AmountFromValue(find_value(r.get_obj(), "total_without_fee"));
@@ -355,7 +356,7 @@ BOOST_AUTO_TEST_CASE(generate_escrow_linked_release2)
 	nTotal = AmountFromValue(find_value(r.get_obj(), "total_without_fee"));
 	// 2695.2 SYS/EUR
 	BOOST_CHECK(abs(nTotal - AmountFromValue(2 * 0.05*1.03*2695.2)) <= 0.1*COIN);
-
+	EscrowClaimRelease("node2", guid);
 
 	OfferUpdate("node3", "reselleralias33", offerlinkguid, "newcategory", "titlenew", "\"\"", "\"\"", "descriptionnew", "\"\"", "\"\"", "\"\"", "6");
 	OfferUpdate("node2", "selleralias33", offerguid, "\"\"", "\"\"", "\"\"", "0.07");
@@ -365,8 +366,6 @@ BOOST_AUTO_TEST_CASE(generate_escrow_linked_release2)
 	nTotal = AmountFromValue(find_value(r.get_obj(), "total_without_fee"));
 	// 2695.2 SYS/EUR
 	BOOST_CHECK(abs(nTotal -  AmountFromValue("799.93536"/*4 * 0.07*1.06*2695.2*/)) <= 0.1*COIN);
-
-	GenerateBlocks(5, "node2");
 	EscrowClaimRelease("node2", guid);
 
 
@@ -376,6 +375,7 @@ BOOST_AUTO_TEST_CASE(generate_escrow_linked_release2)
 	nTotal = AmountFromValue(find_value(r.get_obj(), "total_without_fee"));
 	// 2695.2SYS/EUR
 	BOOST_CHECK(abs(nTotal - AmountFromValue("599.95152"/*3 * 0.07*1.06*2695.2*/)) <= 0.1*COIN);
+	EscrowClaimRelease("node2", guid);
 
 }
 BOOST_AUTO_TEST_CASE(generate_escrowfeedback)
