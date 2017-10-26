@@ -294,6 +294,19 @@ class ColdStakingTest(ParticlTestFramework):
         wotAfter = ro['watchonly_total_balance']
         assert(wotAfter > wotBefore-Decimal(2.0))
 
+        ro = nodes[1].listtransactions('*', 10, 0)
+        assert(len(ro) == 0)
+
+        ro = nodes[1].listtransactions('*', 10, 0, True)
+
+        fFound = False
+        for e in ro:
+            if e['txid'] == txid:
+                fFound = True
+                assert(e['involvesWatchonly'] == True)
+        assert(fFound)
+
+
 
         #assert(False)
         #print(json.dumps(ro, indent=4, default=self.jsonDecimal))

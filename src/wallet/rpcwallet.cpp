@@ -1858,7 +1858,6 @@ void ListTransactions(CWallet* const pwallet, const CWalletTx& wtx, const std::s
             ret.push_back(entry);
         }
     };
-
 }
 
 void ListRecord(CHDWallet *phdw, const uint256 &hash, const CTransactionRecord &rtx,
@@ -1869,6 +1868,9 @@ void ListRecord(CHDWallet *phdw, const uint256 &hash, const CTransactionRecord &
     for (auto &r : rtx.vout)
     {
         if (r.nFlags & ORF_CHANGE)
+            continue;
+
+        if (!(r.nFlags & ORF_OWNED) && !(filter & ISMINE_WATCH_ONLY))
             continue;
 
         std::string account;
@@ -1887,6 +1889,8 @@ void ListRecord(CHDWallet *phdw, const uint256 &hash, const CTransactionRecord &
             continue;
 
         UniValue entry(UniValue::VOBJ);
+        if (r.nFlags & ORF_OWN_WATCH)
+            entry.push_back(Pair("involvesWatchonly", true));
         entry.push_back(Pair("account", account));
 
         if (r.vPath.size() > 0)
@@ -1945,18 +1949,16 @@ void ListRecord(CHDWallet *phdw, const uint256 &hash, const CTransactionRecord &
         }
 
         entry.push_back(Pair("category", sCategory));
-
         entry.push_back(Pair("type", r.nType == OUTPUT_STANDARD ? "standard"
                 : r.nType == OUTPUT_CT ? "blind" : r.nType == OUTPUT_RINGCT ? "anon" : "unknown"));
 
         if (r.nFlags & ORF_OWNED && r.nFlags & ORF_FROM)
             entry.push_back(Pair("fromself", "true"));
 
-        entry.push_back(Pair("amount", ValueFromAmount(r.nValue * ((r.nFlags & ORF_OWNED) ? 1 : -1))));
+        entry.push_back(Pair("amount", ValueFromAmount(r.nValue * ((r.nFlags & ORF_OWN_ANY) ? 1 : -1))));
 
         if (r.nFlags & ORF_FROM)
             entry.push_back(Pair("fee", ValueFromAmount(-rtx.nFee)));
-
 
         entry.push_back(Pair("vout", r.n));
 

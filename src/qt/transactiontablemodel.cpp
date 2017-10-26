@@ -90,7 +90,7 @@ public:
                 if(TransactionRecord::showTransaction(it->second))
                     cachedWallet.append(TransactionRecord::decomposeTransaction(wallet, it->second));
             }
-            
+
             CHDWallet *phdw = (CHDWallet*)wallet;
             for (MapRecords_t::iterator it = phdw->mapRecords.begin(); it != phdw->mapRecords.end(); ++it)
             {
@@ -98,8 +98,8 @@ public:
                     cachedWallet.append(TransactionRecord::decomposeTransaction(phdw, it->first, it->second));
             };
         }
-        
-        
+
+
     }
 
     /* Update our model of the wallet incrementally, to synchronize our model of the wallet
@@ -223,7 +223,7 @@ public:
                     CHDWallet *phdw = (CHDWallet*)wallet;
                     std::map<uint256, CWalletTx>::iterator mi = wallet->mapWallet.find(rec->hash);
                     MapRecords_t::iterator mri;
-                    
+
                     if(mi != wallet->mapWallet.end())
                     {
                         rec->updateStatus(mi->second);
@@ -232,8 +232,6 @@ public:
                     {
                         rec->updateStatus(phdw, mri->second);
                     }
-                    
-                    
                 }
             }
             return rec;
@@ -797,7 +795,7 @@ static void NotifyTransactionChanged(TransactionTableModel *ttm, CWallet *wallet
     // Determine whether to show transaction or not (determine this here so that no relocking is needed in GUI thread)
     bool inWallet = mi != wallet->mapWallet.end();
     bool showTransaction = (inWallet && TransactionRecord::showTransaction(mi->second));
-    
+
     if (!inWallet)
     {
         CHDWallet *phdw = (CHDWallet*)wallet;

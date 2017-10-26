@@ -62,7 +62,7 @@ double GetPoSKernelPS()
         {
             if (pindexPrevStake)
             {
-                dStakeKernelsTriedAvg += GetDifficulty(pindexPrevStake) * 4294967296.0; // TODO: what is this constant?
+                dStakeKernelsTriedAvg += GetDifficulty(pindexPrevStake) * 4294967296.0;
                 nStakesTime += pindexPrevStake->nTime - pindex->nTime;
                 nStakesHandled++;
             }
@@ -233,6 +233,7 @@ void ShutdownThreadStakeMiner()
         t->thread.join();
         delete t;
     };
+    vStakeThreads.clear();
 };
 
 void WakeThreadStakeMiner(CHDWallet *pwallet)
@@ -259,6 +260,7 @@ bool ThreadStakeMinerStopped()
 
 static inline void condWaitFor(size_t nThreadID, int ms)
 {
+    assert(vStakeThreads.size() > nThreadID);
     StakeThread *t = vStakeThreads[nThreadID];
     t->condWaitFor(ms);
 };
