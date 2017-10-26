@@ -14,6 +14,14 @@ const unsigned int MAX_ALIAS_UPDATES_PER_BLOCK = 5;
 BOOST_AUTO_TEST_CASE (generate_big_aliasdata)
 {
 	ECC_Start();
+		// rate converstion to SYS
+	pegRates["USD"] = 2690.1;
+	pegRates["EUR"] = 2695.2;
+	pegRates["GBP"] = 2697.3;
+	pegRates["CAD"] = 2698.0;
+	pegRates["BTC"] = 100000.0;
+	pegRates["ZEC"] = 10000.0;
+	pegRates["SYS"] = 1.0;
 	printf("Running generate_big_aliasdata...\n");
 	GenerateBlocks(200,"node1");
 	GenerateBlocks(200,"node2");

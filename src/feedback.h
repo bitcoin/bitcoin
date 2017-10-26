@@ -62,11 +62,6 @@ public:
     CFeedback() {
         SetNull();
     }
-    CFeedback(unsigned char nAcceptFeedbackUserFrom, unsigned char nAcceptFeedbackUserTo) {
-        SetNull();
-		nFeedbackUserFrom = nAcceptFeedbackUserFrom;
-		nFeedbackUserTo = nAcceptFeedbackUserTo;
-    }
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>

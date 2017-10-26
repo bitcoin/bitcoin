@@ -94,7 +94,7 @@ bool fEnableReplacement = DEFAULT_ENABLE_REPLACEMENT;
 
 uint256 hashAssumeValid;
 
-/** Fees smaller than this (in duffs) are considered zero fee (for relaying, mining and transaction creation) */
+/** Fees smaller than this (in satoshi) are considered zero fee (for relaying, mining and transaction creation) */
 CFeeRate minRelayTxFee = CFeeRate(DEFAULT_MIN_RELAY_TX_FEE);
 
 CTxMemPool mempool(::minRelayTxFee);
@@ -110,7 +110,7 @@ static void CheckBlockIndex(const Consensus::Params& consensusParams);
 /** Constant stuff for coinbase transactions we create: */
 CScript COINBASE_FLAGS;
 
-const string strMessageMagic = "DarkCoin Signed Message:\n";
+const string strMessageMagic = "Syscoin Signed Message:\n";
 
 // Internal stuff
 namespace {

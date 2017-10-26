@@ -1213,10 +1213,10 @@ void OfferUpdate(const string& node, const string& aliasname, const string& offe
 	}
 }
 
-void EscrowFeedback(const string& node, const string& role, const string& escrowguid, const string& feedback, const string& rating,  char user, const string& witness) {
+void EscrowFeedback(const string& node, const string& userfrom, const string& escrowguid, const string& feedback, const string& rating,  const string& userto, const string& witness) {
 
 	UniValue r, ret;
-	string escrowfeedbackstr = "escrowfeedback " + escrowguid + " " + role + " " + feedback + " " + rating  + witness;
+	string escrowfeedbackstr = "escrowfeedback " + escrowguid + " " + userfrom + " " + feedback + " " + rating + " " + userto + " " + witness;
 
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, escrowfeedbackstr));
 	const UniValue &arr = r.get_array();
@@ -1225,12 +1225,29 @@ void EscrowFeedback(const string& node, const string& role, const string& escrow
 	GenerateBlocks(10, node);
 	
 	r = FindFeedback(node, escrowTxid);
-	BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == escrowguid + user);
+	char feedbackusertoenum;
+	if (userto == "buyer")
+		feedbackusertoenum = FEEDBACKBUYER;
+	else if (userto == "arbiter")
+		feedbackusertoenum = FEEDBACKARBITER;
+	else if (userto == "seller")
+		feedbackusertoenum = FEEDBACKSELLER;
+
+	char feedbackuserfromenum;
+	if (userfrom == "buyer")
+		feedbackuserfromenum = FEEDBACKBUYER;
+	else if (userfrom == "arbiter")
+		feedbackuserfromenum = FEEDBACKARBITER;
+	else if (userfrom == "seller" || userfrom == "reseller")
+		feedbackuserfromenum = FEEDBACKSELLER;
+
+	BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == escrowguid + feedbackusertoenum);
 	BOOST_CHECK(find_value(r.get_obj(), "escrow").get_str() == escrowguid);
 	BOOST_CHECK(find_value(r.get_obj(), "txid").get_str() == escrowTxid);
 	BOOST_CHECK(find_value(r.get_obj(), "rating").get_int() == atoi(rating.c_str()));
 	BOOST_CHECK(find_value(r.get_obj(), "feedback").get_str() == rating);
-	BOOST_CHECK(find_value(r.get_obj(), "feedbackto").get_int() == user);
+	BOOST_CHECK(find_value(r.get_obj(), "feedbackuserfrom").get_int() == feedbackuserfromenum);
+	BOOST_CHECK(find_value(r.get_obj(), "feedbackuserto").get_int() == feedbackusertoenum);
 }
 const string OfferAccept(const string& ownernode, const string& buyernode, const string& aliasname, const string& arbiter, const string& offerguid, const string& qty, const string& witness) {
 	const string &escrowguid = EscrowNewBuyItNow(buyernode, ownernode, aliasname, offerguid, qty, arbiter);
@@ -1955,7 +1972,7 @@ void EscrowClaimRelease(const string& node, const string& guid)
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "offerinfo " + offer));
 	int nQtyOfferAfter = find_value(r.get_obj(), "quantity").get_int();
 	// we have already changed qty as we ack the escrow when calling escrownew in this test suite unless its an auction(we are not acking auction bids or buynow purchases in our test suite)
-	if (offertype != "AUCTION") {
+	if (offertype.find("AUCTION") == std::string::npos) {
 		BOOST_CHECK_EQUAL(nQtyOfferBefore, nQtyOfferAfter);
 	}
 	else
