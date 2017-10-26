@@ -405,10 +405,12 @@ BOOST_AUTO_TEST_CASE(generate_escrowfeedback)
 	// leave another feedback and notice that you can't find it in the indexer (first feedback will be indexed only per user per guid+touser combination)
 	string escrowfeedbackstr = "escrowfeedback " + guid + " seller feedback 1 buyer";
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", escrowfeedbackstr));
+	const UniValue &arr = r.get_array();
+	string escrowTxid = arr[0].get_str();
 	GenerateBlocks(10, "node1");
 	string feedbackid = guid + CFeedback::FeedbackUserToString(FEEDBACKSELLER) + CFeedback::FeedbackUserToString(FEEDBACKBUYER);
 	r = FindFeedback("node1", feedbackid);
-	BOOST_CHECK(!r.isObject());
+	BOOST_CHECK(find_value(r.get_obj(), "txid").get_str() != escrowTxid);
 
 	// buyer can leave feedback
 	EscrowFeedback("node2", "buyer", guid, "feedbackseller", "1", "seller");
@@ -417,10 +419,13 @@ BOOST_AUTO_TEST_CASE(generate_escrowfeedback)
 	// leave another feedback and notice that you can't find it in the indexer (first feedback will be indexed only per user per guid+touser combination)
 	escrowfeedbackstr = "escrowfeedback " + guid + " buyer feedback 1 seller";
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", escrowfeedbackstr));
+	const UniValue &arr1 = r.get_array();
+	escrowTxid = arr1[0].get_str();
 	GenerateBlocks(10, "node2");
 	feedbackid = guid + CFeedback::FeedbackUserToString(FEEDBACKBUYER) + CFeedback::FeedbackUserToString(FEEDBACKSELLER);
 	r = FindFeedback("node2", feedbackid);
-	BOOST_CHECK(!r.isObject());
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "txid").get_str(), escrowTxid);
+	BOOST_CHECK(find_value(r.get_obj(), "txid").get_str() != escrowTxid);
 
 	// arbiter leaves feedback
 	EscrowFeedback("node3", "arbiter", guid, "feedbackbuyer", "4", "buyer");
@@ -429,10 +434,12 @@ BOOST_AUTO_TEST_CASE(generate_escrowfeedback)
 	// leave another feedback and notice that you can't find it in the indexer (first feedback will be indexed only per user per guid+touser combination)
 	escrowfeedbackstr = "escrowfeedback " + guid + " arbiter feedback 1 buyer";
 	BOOST_CHECK_NO_THROW(r = CallRPC("node3", escrowfeedbackstr));
+	const UniValue &arr2 = r.get_array();
+	escrowTxid = arr2[0].get_str();
 	GenerateBlocks(10, "node3");
 	feedbackid = guid + CFeedback::FeedbackUserToString(FEEDBACKARBITER) + CFeedback::FeedbackUserToString(FEEDBACKBUYER);
 	r = FindFeedback("node3", feedbackid);
-	BOOST_CHECK(!r.isObject());
+	BOOST_CHECK(find_value(r.get_obj(), "txid").get_str() != escrowTxid);
 }
 BOOST_AUTO_TEST_CASE(generate_escrow_linked_release)
 {
