@@ -422,7 +422,7 @@ BOOST_AUTO_TEST_CASE(generate_escrowfeedback)
 	GenerateBlocks(10, "node2");
 	enumval.clear();
 	enumval.push_back(FEEDBACKSELLER);
-	string feedbackid = guid + enumval;
+	feedbackid = guid + enumval;
 	r = FindFeedback("node2", feedbackid);
 	BOOST_CHECK(r.isNull());
 
