@@ -1229,8 +1229,6 @@ void EscrowFeedback(const string& node, const string& userfrom, const string& es
 	string escrowTxid = arr[0].get_str();
 
 	GenerateBlocks(10, node);
-	
-	r = FindFeedback(node, escrowTxid);
 	char feedbackusertoenum;
 	if (userto == "buyer")
 		feedbackusertoenum = FEEDBACKBUYER;
@@ -1247,7 +1245,10 @@ void EscrowFeedback(const string& node, const string& userfrom, const string& es
 	else if (userfrom == "seller" || userfrom == "reseller")
 		feedbackuserfromenum = FEEDBACKSELLER;
 
-	BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == escrowguid + feedbackusertoenum);
+	string feedbackid = escrowguid + feedbackusertoenum;
+	r = FindFeedback(node, feedbackid);
+
+	BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == feedbackid);
 	BOOST_CHECK(find_value(r.get_obj(), "escrow").get_str() == escrowguid);
 	BOOST_CHECK(find_value(r.get_obj(), "offer").get_str() == offerguid);
 	BOOST_CHECK(find_value(r.get_obj(), "txid").get_str() == escrowTxid);
@@ -1855,10 +1856,10 @@ void EscrowClaimRefund(const string& node, const string& guid)
 
 }
 
-const UniValue FindFeedback(const string& node, const string& txid)
+const UniValue FindFeedback(const string& node, const string& id)
 {
 	UniValue r, ret;
-	string query = "\"{\\\"_id\\\":\\\"" + txid + "\\\"}\"";
+	string query = "\"{\\\"_id\\\":\\\"" + id + "\\\"}\"";
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinquery feedback " + query));
 	BOOST_CHECK(r.type() == UniValue::VARR);
 	const UniValue &arrayValue = r.get_array();
