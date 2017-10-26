@@ -295,6 +295,9 @@ public:
     unsigned int GetReceiveFloodSize() const;
 
     void WakeMessageHandler();
+
+    void AddToVNodes(CNode &node);
+    void ClearVNodes();
 private:
     struct ListenSocket {
         SOCKET socket;
@@ -616,6 +619,14 @@ public:
     bool fFeeler; // If true this node is being used as a short lived feeler.
     bool fOneShot;
     bool m_manual_connection;
+
+    // m_eviction_candidate should be set to true for outbound,
+    // non-manual-connection peers that are suitable for eviction, if evicting
+    // such a peer would make room for a new outbound peer
+    // m_eviction_candidate will be set to false by CConnman if not all
+    // outbound connections are up.
+    bool m_eviction_candidate;
+
     bool fClient;
     const bool fInbound;
     std::atomic_bool fSuccessfullyConnected;

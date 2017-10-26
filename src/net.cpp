@@ -1768,6 +1768,28 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
             }
         }
 
+        // Disconnect outbound peers marked for eviction
+        // Idea: if our outbound peers look bad (based on metrics designed
+        // to ensure connectivity to consensus-compatible peers), then we
+        // may wish to disconnect them if we have other peers we would try
+        // instead.
+        // If we're not yet using all our outbound peer slots, just clear the
+        // eviction flag -- this prevents an unnecessary/undesired eviction
+        // from happening later, if the flag was set before all our peer slots
+        // were in use.
+        {
+            LOCK(cs_vNodes);
+            for (CNode* pnode : vNodes) {
+                if (nOutbound >= nMaxOutbound && !pnode->fInbound && !pnode->m_manual_connection && pnode->m_eviction_candidate) {
+                    LogPrint(BCLog::NET, "disconnecting outbound peer=%d (marked for eviction)\n", pnode->GetId());
+                    pnode->fDisconnect = true;
+                } else {
+                    // If we can't evict for some reason, disable the flag
+                    pnode->m_eviction_candidate = false;
+                }
+            }
+        }
+
         // Feeler Connections
         //
         // Design goals:
@@ -2706,6 +2728,7 @@ CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn
     fWhitelisted = false;
     fOneShot = false;
     m_manual_connection = false;
+    m_eviction_candidate = false;
     fClient = false; // set by version message
     fFeeler = false;
     fSuccessfullyConnected = false;
@@ -2861,4 +2884,16 @@ uint64_t CConnman::CalculateKeyedNetGroup(const CAddress& ad) const
     std::vector<unsigned char> vchNetGroup(ad.GetGroup());
 
     return GetDeterministicRandomizer(RANDOMIZER_ID_NETGROUP).Write(vchNetGroup.data(), vchNetGroup.size()).Finalize();
+}
+
+void CConnman::AddToVNodes(CNode &node)
+{
+    LOCK(cs_vNodes);
+    vNodes.push_back(&node);
+}
+
+void CConnman::ClearVNodes()
+{
+    LOCK(cs_vNodes);
+    vNodes.clear();
 }

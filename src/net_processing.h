@@ -21,6 +21,14 @@ static const unsigned int DEFAULT_BLOCK_RECONSTRUCTION_EXTRA_TXN = 100;
  *  Timeout = base + per_header * (expected number of headers) */
 static constexpr int64_t HEADERS_DOWNLOAD_TIMEOUT_BASE = 15 * 60 * 1000000; // 15 minutes
 static constexpr int64_t HEADERS_DOWNLOAD_TIMEOUT_PER_HEADER = 1000; // 1ms/header
+/** Protect at least this many outbound peers from disconnection due to slow/
+ * behind headers chain.
+ */
+static constexpr int32_t MAX_OUTBOUND_PEERS_TO_PROTECT_FROM_DISCONNECT = 4;
+/** Timeout for (unprotected) outbound peers to sync to our chainwork, in seconds */
+static constexpr int64_t CHAIN_SYNC_TIMEOUT = 20 * 60; // 20 minutes
+/** Interval for checking whether our tip seems to be stale, in seconds */
+static constexpr int64_t STALE_TIP_CHECK_INTERVAL = 10 * 60; // 10 minutes
 
 class PeerLogicValidation : public CValidationInterface, public NetEventsInterface {
 private:
@@ -47,6 +55,10 @@ public:
     * @return                      True if there is more work to be done
     */
     bool SendMessages(CNode* pto, std::atomic<bool>& interrupt) override;
+
+    // Accessors to clear/update net_processing state, for testing purposes.
+    void UpdateLastAnnouncement(NodeId id);
+    void ClearTipStaleCheckTime();
 };
 
 struct CNodeStateStats {
