@@ -92,8 +92,8 @@ public:
     friend bool operator!=(const CFeedback &a, const CFeedback &b) {
         return !(a == b);
     }
-	static std::string FeedbackEnumToString(const unsigned char nFeedback) {
-		switch (nFeedback) {
+	static std::string FeedbackUserToString(const unsigned char nFeedbackUser) {
+		switch (nFeedbackUser) {
 			case FEEDBACKNONE:			return "NONE";
 			case FEEDBACKBUYER:			return "BUYER";
 			case FEEDBACKSELLER:		return "SELLER";
