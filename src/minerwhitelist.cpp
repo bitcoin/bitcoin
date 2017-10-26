@@ -165,9 +165,9 @@ bool CMinerWhitelistDB::EnableCap(unsigned int factor) {
     return WriteBatch(batch);
 }
 
-bool CMinerWhitelistDB::ReEnableCap() {
+bool CMinerWhitelistDB::RevertCap() {
     unsigned int height;
-    LogPrintf("MinerDatabase: Re-Enabling Cap with previous factor.\n");
+    LogPrintf("MinerDatabase: Reverting Cap to previous state.\n");
     if (!Read(DB_HEIGHT, height))
         return false;
     BlockDetails det = BlockDetails();
@@ -175,8 +175,12 @@ bool CMinerWhitelistDB::ReEnableCap() {
         return false;
     LogPrintf("MinerDatabase: Previous factor was %d\n", det.prevFactor);
     CDBBatch batch(*this);
-    batch.Write(WL_CAP_ENABLED, true);
     batch.Write(WL_FACTOR, det.prevFactor);
+    if (det.prevFactor == 0) {
+        batch.Write(WL_CAP_ENABLED, false);
+    } else {
+        batch.Write(WL_CAP_ENABLED, true);
+    }
     return WriteBatch(batch);
 }
 
