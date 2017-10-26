@@ -50,6 +50,9 @@ static const CAmount nHighTransactionMaxFeeWarning = 100 * nHighTransactionFeeWa
 //! Largest (in bytes) free transaction we're willing to create
 static const unsigned int MAX_FREE_TRANSACTION_CREATE_SIZE = 1000;
 
+static const int MASTERNODE_COLLATERAL = 10000;
+static const int SYSTEMNODE_COLLATERAL = 500;
+
 class CAccountingEntry;
 class CCoinControl;
 class COutput;

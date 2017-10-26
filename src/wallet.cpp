@@ -1205,9 +1205,9 @@ void CWallet::AvailableCoins(vector<COutput>& vCoins, bool fOnlyConfirmed, const
                 if(coin_type == ONLY_NOT10000IFMN) {
                     found = !(fMasterNode && pcoin->vout[i].nValue == 10000*COIN);
                 } else if(coin_type == ONLY_10000) {
-                    found = pcoin->vout[i].nValue == 10000*COIN;
+                    found = pcoin->vout[i].nValue == MASTERNODE_COLLATERAL*COIN;
                 } else if (coin_type == ONLY_500) {
-                    found = pcoin->vout[i].nValue == 500*COIN;
+                    found = pcoin->vout[i].nValue == SYSTEMNODE_COLLATERAL*COIN;
                 } else {
                     found = true;
                 }

@@ -41,7 +41,7 @@ public:
     }
     bool SetCollateralAddress(std::string strAddress);
     /// Is the inputs associated with this public key? (and there is enough CRW (10000 by default for checking if valid masternode)
-    bool IsVinAssociatedWithPubkey(CTxIn& vin, CPubKey& pubkey, int value=10000);
+    bool IsVinAssociatedWithPubkey(CTxIn& vin, CPubKey& pubkey, int value=MASTERNODE_COLLATERAL);
     /// Set the private/public key values, returns true if successful
     bool SetKey(std::string strSecret, std::string& errorMessage, CKey& key, CPubKey& pubkey);
     /// Sign the message, returns true if successful
