@@ -1303,11 +1303,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				if (!theEscrow.linkSellerAliasTuple.first.empty())
 					vchSellerAlias = theEscrow.linkSellerAliasTuple.first;
 
-				if (serializedEscrow.offerTuple.first != theEscrow.offerTuple.first) {
-					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4066 - " + _("Offer GUID incorrect in feedback payload");
-					serializedEscrow = theEscrow;
-				}
-				else if (serializedEscrow.feedback.nFeedbackUserFrom == serializedEscrow.feedback.nFeedbackUserTo)
+				if (serializedEscrow.feedback.nFeedbackUserFrom == serializedEscrow.feedback.nFeedbackUserTo)
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4061 - " + _("Cannot send yourself feedback");
 					serializedEscrow = theEscrow;
@@ -1339,6 +1335,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				}
 				serializedEscrow.txHash = tx.GetHash();
 				serializedEscrow.nHeight = nHeight;
+				serializedEscrow.offerTuple = theEscrow.offerTuple;
 				if (!dontaddtodb) {
 					pescrowdb->WriteEscrowFeedbackIndex(serializedEscrow);
 				}
@@ -2926,7 +2923,6 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 		vchLinkAlias = arbiterAliasLatest.vchAlias;
 		theAlias = arbiterAliasLatest;
 	}
-
 	escrow.ClearEscrow();
 	escrow.vchEscrow = vchEscrow;
 	escrow.op = OP_ESCROW_COMPLETE;

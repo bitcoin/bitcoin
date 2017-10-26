@@ -499,7 +499,6 @@ BOOST_AUTO_TEST_CASE(generate_escrowpruning)
 	OfferUpdate("node1", "selleraliasprune", offerguid);
 	EscrowClaimRelease("node1", guid1);
 	OfferUpdate("node1", "selleraliasprune", offerguid);
-	GenerateBlocks(5, "node1");
 
 	// leave some feedback (escrow is complete but not expired yet)
 	EscrowFeedback("node1", "seller", guid1, "feedbackbuyer", "1", "buyer");
