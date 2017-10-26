@@ -92,7 +92,7 @@ public:
     friend bool operator!=(const CFeedback &a, const CFeedback &b) {
         return !(a == b);
     }
-	static string FeedbackEnumToString(const unsigned char nFeedback) {
+	static std::string FeedbackEnumToString(const unsigned char nFeedback) {
 		switch (nFeedback) {
 			case FEEDBACKNONE:			return "NONE";
 			case FEEDBACKBUYER:			return "BUYER";
