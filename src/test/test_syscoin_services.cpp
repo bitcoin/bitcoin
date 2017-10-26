@@ -1219,6 +1219,9 @@ void OfferUpdate(const string& node, const string& aliasname, const string& offe
 void EscrowFeedback(const string& node, const string& userfrom, const string& escrowguid, const string& feedback, const string& rating,  const string& userto, const string& witness) {
 
 	UniValue r, ret;
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowinfo " + escrowguid));
+	string offerguid = find_value(r.get_obj(), "offer").get_str();
+
 	string escrowfeedbackstr = "escrowfeedback " + escrowguid + " " + userfrom + " " + feedback + " " + rating + " " + userto + " " + witness;
 
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, escrowfeedbackstr));
@@ -1246,6 +1249,7 @@ void EscrowFeedback(const string& node, const string& userfrom, const string& es
 
 	BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == escrowguid + feedbackusertoenum);
 	BOOST_CHECK(find_value(r.get_obj(), "escrow").get_str() == escrowguid);
+	BOOST_CHECK(find_value(r.get_obj(), "offer").get_str() == offerguid);
 	BOOST_CHECK(find_value(r.get_obj(), "txid").get_str() == escrowTxid);
 	BOOST_CHECK(find_value(r.get_obj(), "rating").get_int() == atoi(rating.c_str()));
 	BOOST_CHECK(find_value(r.get_obj(), "feedback").get_str() == rating);
