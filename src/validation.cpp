@@ -4092,14 +4092,17 @@ void static CheckBlockIndex(const Consensus::Params& consensusParams)
 
     assert(forward.size() == mapBlockIndex.size());
 
-    std::pair<std::multimap<CBlockIndex*,CBlockIndex*>::iterator,std::multimap<CBlockIndex*,CBlockIndex*>::iterator> rangeGenesis = forward.equal_range(nullptr);
+    auto rangeGenesis = forward.equal_range(nullptr);
     CBlockIndex *pindex = rangeGenesis.first->second;
-    rangeGenesis.first++;
+    std::stack<std::pair<std::multimap<CBlockIndex*,CBlockIndex*>::iterator,std::multimap<CBlockIndex*,CBlockIndex*>::iterator>> siblings;
+    siblings.push(rangeGenesis);
+    ++rangeGenesis.first;
     assert(rangeGenesis.first == rangeGenesis.second); // There is only one index entry with parent nullptr.
 
     // Genesis block checks.
     assert(pindex->GetBlockHash() == consensusParams.hashGenesisBlock); // Genesis block's hash must match.
     assert(pindex == chainActive.Genesis()); // The current active chain's genesis block must be this block.
+
 
     // Iterate over the entire block tree, using depth-first search.
     // Along the way, remember whether there are blocks on the path from genesis
@@ -4204,10 +4207,11 @@ void static CheckBlockIndex(const Consensus::Params& consensusParams)
         // End: actual consistency checks.
 
         // Try descending into the first subnode.
-        std::pair<std::multimap<CBlockIndex*,CBlockIndex*>::iterator,std::multimap<CBlockIndex*,CBlockIndex*>::iterator> range = forward.equal_range(pindex);
+        auto range = forward.equal_range(pindex);
         if (range.first != range.second) {
             // A subnode was found.
             pindex = range.first->second;
+            siblings.push(range);
             nHeight++;
             continue;
         }
@@ -4223,23 +4227,17 @@ void static CheckBlockIndex(const Consensus::Params& consensusParams)
             if (pindex == pindexFirstNotTransactionsValid) pindexFirstNotTransactionsValid = nullptr;
             if (pindex == pindexFirstNotChainValid) pindexFirstNotChainValid = nullptr;
             if (pindex == pindexFirstNotScriptsValid) pindexFirstNotScriptsValid = nullptr;
-            // Find our parent.
-            CBlockIndex* pindexPar = pindex->pprev;
-            // Find which child we just visited.
-            std::pair<std::multimap<CBlockIndex*,CBlockIndex*>::iterator,std::multimap<CBlockIndex*,CBlockIndex*>::iterator> rangePar = forward.equal_range(pindexPar);
-            while (rangePar.first->second != pindex) {
-                assert(rangePar.first != rangePar.second); // Our parent must have at least the node we're coming from as child.
-                rangePar.first++;
-            }
-            // Proceed to the next one.
-            rangePar.first++;
-            if (rangePar.first != rangePar.second) {
+
+            // Proceed to the next sibling.
+            ++siblings.top().first;
+            if (siblings.top().first != siblings.top().second) {
                 // Move to the sibling.
-                pindex = rangePar.first->second;
+                pindex = siblings.top().first->second;
                 break;
             } else {
                 // Move up further.
-                pindex = pindexPar;
+                pindex = pindex->pprev;
+                siblings.pop();
                 nHeight--;
                 continue;
             }
@@ -4248,6 +4246,7 @@ void static CheckBlockIndex(const Consensus::Params& consensusParams)
 
     // Check that we actually traversed the entire map.
     assert(nNodes == forward.size());
+    assert(siblings.empty());
 }
 
 std::string CBlockFileInfo::ToString() const
