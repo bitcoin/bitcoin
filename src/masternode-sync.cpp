@@ -161,12 +161,12 @@ std::string CMasternodeSync::GetSyncStatus()
 {
     switch (masternodeSync.RequestedMasternodeAssets) {
         case MASTERNODE_SYNC_INITIAL: return _("Synchronization pending...");
-        case MASTERNODE_SYNC_SPORKS: return _("Synchronizing sporks...");
+        case MASTERNODE_SYNC_SPORKS: return _("Synchronizing masternode sporks...");
         case MASTERNODE_SYNC_LIST: return _("Synchronizing masternodes...");
         case MASTERNODE_SYNC_MNW: return _("Synchronizing masternode winners...");
-        case MASTERNODE_SYNC_BUDGET: return _("Synchronizing budgets...");
-        case MASTERNODE_SYNC_FAILED: return _("Synchronization failed");
-        case MASTERNODE_SYNC_FINISHED: return _("Synchronization finished");
+        case MASTERNODE_SYNC_BUDGET: return _("Synchronizing masternode budgets...");
+        case MASTERNODE_SYNC_FAILED: return _("Masternode synchronization failed");
+        case MASTERNODE_SYNC_FINISHED: return _("Masternode synchronization finished");
     }
     return "";
 }

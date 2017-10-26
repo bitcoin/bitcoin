@@ -5,8 +5,6 @@
 #include "main.h"
 #include "activesystemnode.h"
 #include "systemnode-sync.h"
-//#include "systemnode-payments.h"
-//#include "systemnode-budget.h"
 #include "systemnode.h"
 #include "systemnodeman.h"
 #include "spork.h"
@@ -123,9 +121,6 @@ void CSystemnodeSync::GetNextAsset()
             RequestedSystemnodeAssets = SYSTEMNODE_SYNC_SNW;
             break;
         case(SYSTEMNODE_SYNC_SNW):
-            RequestedSystemnodeAssets = SYSTEMNODE_SYNC_BUDGET;
-            break;
-        case(SYSTEMNODE_SYNC_BUDGET):
             LogPrintf("CSystemnodeSync::GetNextAsset - Sync has finished\n");
             RequestedSystemnodeAssets = SYSTEMNODE_SYNC_FINISHED;
             break;
@@ -138,12 +133,11 @@ std::string CSystemnodeSync::GetSyncStatus()
 {
     switch (systemnodeSync.RequestedSystemnodeAssets) {
         case SYSTEMNODE_SYNC_INITIAL: return _("Synchronization pending...");
-        case SYSTEMNODE_SYNC_SPORKS: return _("Synchronizing sporks...");
+        case SYSTEMNODE_SYNC_SPORKS: return _("Synchronizing systemnode sporks...");
         case SYSTEMNODE_SYNC_LIST: return _("Synchronizing systemnodes...");
         case SYSTEMNODE_SYNC_SNW: return _("Synchronizing systemnode winners...");
-        case SYSTEMNODE_SYNC_BUDGET: return _("Synchronizing budgets...");
-        case SYSTEMNODE_SYNC_FAILED: return _("Synchronization failed");
-        case SYSTEMNODE_SYNC_FINISHED: return _("Synchronization finished");
+        case SYSTEMNODE_SYNC_FAILED: return _("Systemnode synchronization failed");
+        case SYSTEMNODE_SYNC_FINISHED: return _("Systemnode synchronization finished");
     }
     return "";
 }
@@ -169,16 +163,6 @@ void CSystemnodeSync::ProcessMessage(CNode* pfrom, std::string& strCommand, CDat
                 if(nItemID != RequestedSystemnodeAssets) return;
                 sumSystemnodeWinner += nCount;
                 countSystemnodeWinner++;
-                break;
-            case(SYSTEMNODE_SYNC_BUDGET_PROP):
-                if(RequestedSystemnodeAssets != SYSTEMNODE_SYNC_BUDGET) return;
-                sumBudgetItemProp += nCount;
-                countBudgetItemProp++;
-                break;
-            case(SYSTEMNODE_SYNC_BUDGET_FIN):
-                if(RequestedSystemnodeAssets != SYSTEMNODE_SYNC_BUDGET) return;
-                sumBudgetItemFin += nCount;
-                countBudgetItemFin++;
                 break;
         }
         
@@ -334,44 +318,6 @@ void CSystemnodeSync::Process()
 
                 return;
             }
-        }
-
-        if (pnode->nVersion >= MIN_BUDGET_PEER_PROTO_VERSION) {
-
-            if(RequestedSystemnodeAssets == SYSTEMNODE_SYNC_BUDGET){
-                //we'll start rejecting votes if we accidentally get set as synced too soon
-                if(lastBudgetItem > 0 && lastBudgetItem < GetTime() - SYSTEMNODE_SYNC_TIMEOUT*2 && 
-                   RequestedSystemnodeAttempt >= SYSTEMNODE_SYNC_THRESHOLD)
-                { 
-                    //hasn't received a new item in the last five seconds, so we'll move to the
-                    GetNextAsset();
-
-                    //try to activate our systemnode if possible
-                    activeSystemnode.ManageStatus();
-                    return;
-                }
-
-                // timeout
-                if(lastBudgetItem == 0 &&
-                (RequestedSystemnodeAttempt >= SYSTEMNODE_SYNC_THRESHOLD*3 || GetTime() - nAssetSyncStarted > SYSTEMNODE_SYNC_TIMEOUT*5)) {
-                    // maybe there is no budgets at all, so just finish syncing
-                    GetNextAsset();
-                    activeSystemnode.ManageStatus();
-                    return;
-                }
-
-                if(pnode->HasFulfilledRequest("busync")) continue;
-                pnode->FulfilledRequest("busync");
-
-                if(RequestedSystemnodeAttempt >= SYSTEMNODE_SYNC_THRESHOLD*3) return;
-
-                uint256 n = uint256();
-                pnode->PushMessage("snvs", n); //sync systemnode votes
-                RequestedSystemnodeAttempt++;
-                
-                return;
-            }
-
         }
     }
 }

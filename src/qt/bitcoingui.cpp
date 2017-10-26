@@ -866,18 +866,20 @@ void BitcoinGUI::setNumBlocks(int count)
 
     // Set icon state: spinning if catching up, tick otherwise
 //    if(secs < 25*60) // 90*60 for bitcoin but we are 4x times faster
-    if(masternodeSync.IsBlockchainSynced())
+    if(masternodeSync.IsBlockchainSynced() && systemnodeSync.IsBlockchainSynced())
     {
-        QString strSyncStatus;
+        QString strSyncStatusMN;
+        QString strSyncStatusSN;
         tooltip = tr("Up to date") + QString(".<br>") + tooltip;
 
-        if(masternodeSync.IsSynced()) {
+        if(masternodeSync.IsSynced() && systemnodeSync.IsSynced()) {
             progressBarLabel->setVisible(false);
             progressBar->setVisible(false);
             labelBlocksIcon->setPixmap(QIcon(":/icons/synced").pixmap(STATUSBAR_ICONSIZE, STATUSBAR_ICONSIZE));
         } else {
 
-            int nAttempt;
+            int nAttemptMN;
+            int nAttemptSN;
             int progress = 0;
 
             labelBlocksIcon->setPixmap(QIcon(QString(
@@ -890,17 +892,27 @@ void BitcoinGUI::setNumBlocks(int count)
                 walletFrame->showOutOfSyncWarning(false);
 #endif // ENABLE_WALLET
 
-            nAttempt = masternodeSync.RequestedMasternodeAttempt < MASTERNODE_SYNC_THRESHOLD ?
-                        masternodeSync.RequestedMasternodeAttempt + 1 : MASTERNODE_SYNC_THRESHOLD;
-            progress = nAttempt + (masternodeSync.RequestedMasternodeAssets - 1) * MASTERNODE_SYNC_THRESHOLD;
-            progressBar->setMaximum(4 * MASTERNODE_SYNC_THRESHOLD);
+            nAttemptMN = masternodeSync.RequestedMasternodeAttempt < MASTERNODE_SYNC_THRESHOLD ?
+                         masternodeSync.RequestedMasternodeAttempt + 1 : MASTERNODE_SYNC_THRESHOLD;
+            nAttemptSN = systemnodeSync.RequestedSystemnodeAttempt < SYSTEMNODE_SYNC_THRESHOLD ?
+                         systemnodeSync.RequestedSystemnodeAttempt + 1 : SYSTEMNODE_SYNC_THRESHOLD;
+            progress = nAttemptMN + (masternodeSync.RequestedMasternodeAssets - 1) * MASTERNODE_SYNC_THRESHOLD +
+                       nAttemptSN + (systemnodeSync.RequestedSystemnodeAssets - 1) * SYSTEMNODE_SYNC_THRESHOLD;
+            progressBar->setMaximum(4 * MASTERNODE_SYNC_THRESHOLD + 3 * SYSTEMNODE_SYNC_THRESHOLD);
             progressBar->setFormat(tr("Synchronizing additional data: %p%"));
             progressBar->setValue(progress);
         }
 
-        strSyncStatus = QString(masternodeSync.GetSyncStatus().c_str());
-        progressBarLabel->setText(strSyncStatus);
-        tooltip = strSyncStatus + QString("<br>") + tooltip;
+        strSyncStatusMN = QString(masternodeSync.GetSyncStatus().c_str());
+        strSyncStatusSN = QString(systemnodeSync.GetSyncStatus().c_str());
+
+        // SN and MN synchronisation is done simultaneously so
+        // progressBarLabel text switches between SN and MN statuses
+        static bool showMasternodeStatus = true;
+        progressBarLabel->setText(showMasternodeStatus ? strSyncStatusMN : strSyncStatusSN);
+        showMasternodeStatus = !showMasternodeStatus;
+
+        tooltip = strSyncStatusMN + QString("<br>") + strSyncStatusSN + QString("<br>") + tooltip;
     }
     else
     {
