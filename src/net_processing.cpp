@@ -550,6 +550,15 @@ void FindNextBlocksToDownload(NodeId nodeid, unsigned int count, std::vector<con
 
 } // namespace
 
+// This function is used for testing the stale tip eviction logic, see
+// DoS_tests.cpp
+void UpdateLastBlockAnnounceTime(NodeId node, int64_t time_in_seconds)
+{
+    LOCK(cs_main);
+    CNodeState *state = State(node);
+    if (state) state->m_last_block_announcement = time_in_seconds;
+}
+
 // Returns true for outbound peers, excluding manual connections, feelers, and
 // one-shots
 bool IsOutboundDisconnectionCandidate(const CNode *node)
