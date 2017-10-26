@@ -2363,6 +2363,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                     LOCK(cs_main);
                     Misbehaving(pfrom->GetId(), nDoS);
                 }
+                pfrom->fDisconnect = true;
                 return error("invalid header received");
             }
         }
