@@ -1400,7 +1400,7 @@ UniValue getstat(const UniValue &params, bool fHelp)
     if (fHelp || (params.size() < 1))
         throw runtime_error("getstat"
                             "\nReturns the current settings for the network send and receive bandwidth and burst in "
-                            "kilobytes per second.\n"
+                            "kilobytes per second.\nTo get a list of available statistics use \"getstatlist\".\n"
                             "\nArguments: \n"
                             "1. \"statistic\"     (string, required) Specify what statistic you want\n"
                             "2. \"series\"  (string, optional) Specify what data series you want.  Options are "
