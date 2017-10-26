@@ -76,6 +76,9 @@ will only create hierarchical deterministic (HD) wallets.
 
 Low-level RPC changes
 ----------------------
+- `listsinceblock` will now throw an error if an unknown `blockhash` argument
+  value is passed, instead of returning a list of all wallet transactions since
+  the genesis block.
 - The "currentblocksize" value in getmininginfo has been removed.
 - The deprecated RPC `getinfo` was removed. It is recommended that the more specific RPCs are used:
   * `getblockchaininfo`

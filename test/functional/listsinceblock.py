@@ -5,7 +5,7 @@
 """Test the listsincelast RPC."""
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal
+from test_framework.util import assert_equal, assert_array_result, assert_raises_rpc_error
 
 class ListSinceBlockTest (BitcoinTestFramework):
     def set_test_params(self):
@@ -16,9 +16,42 @@ class ListSinceBlockTest (BitcoinTestFramework):
         self.nodes[2].generate(101)
         self.sync_all()
 
+        self.test_no_blockhash()
+        self.test_invalid_blockhash()
         self.test_reorg()
         self.test_double_spend()
         self.test_double_send()
+
+    def test_no_blockhash(self):
+        txid = self.nodes[2].sendtoaddress(self.nodes[0].getnewaddress(), 1)
+        blockhash, = self.nodes[2].generate(1)
+        self.sync_all()
+
+        txs = self.nodes[0].listtransactions()
+        assert_array_result(txs, {"txid": txid}, {
+            "category": "receive",
+            "amount": 1,
+            "blockhash": blockhash,
+            "confirmations": 1,
+        })
+        assert_equal(
+            self.nodes[0].listsinceblock(),
+            {"lastblock": blockhash,
+             "removed": [],
+             "transactions": txs})
+        assert_equal(
+            self.nodes[0].listsinceblock(""),
+            {"lastblock": blockhash,
+             "removed": [],
+             "transactions": txs})
+
+    def test_invalid_blockhash(self):
+        assert_raises_rpc_error(-5, "Block not found", self.nodes[0].listsinceblock,
+                                "42759cde25462784395a337460bde75f58e73d3f08bd31fdc3507cbac856a2c4")
+        assert_raises_rpc_error(-5, "Block not found", self.nodes[0].listsinceblock,
+                                "0000000000000000000000000000000000000000000000000000000000000000")
+        assert_raises_rpc_error(-5, "Block not found", self.nodes[0].listsinceblock,
+                                "invalid-hex")
 
     def test_reorg(self):
         '''
