@@ -342,8 +342,10 @@ bool FlushStateToDisk(CValidationState &state, FlushStateMode mode);
 /** Prune block files and flush state to disk. */
 void PruneAndFlush();
 
+#ifdef BITCOIN_CASH
 /** Check is Cash HF has activated. */
 bool IsCashHFEnabled(const Config &config, const CBlockIndex *pindexPrev);
+#endif
 
 /** (try to) add transaction to memory pool **/
 bool AcceptToMemoryPool(CTxMemPool &pool,
