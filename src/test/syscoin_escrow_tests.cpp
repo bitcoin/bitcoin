@@ -424,7 +424,6 @@ BOOST_AUTO_TEST_CASE(generate_escrowfeedback)
 	GenerateBlocks(10, "node2");
 	feedbackid = guid + CFeedback::FeedbackUserToString(FEEDBACKBUYER) + CFeedback::FeedbackUserToString(FEEDBACKSELLER);
 	r = FindFeedback("node2", feedbackid);
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "txid").get_str(), escrowTxid);
 	BOOST_CHECK(find_value(r.get_obj(), "txid").get_str() != escrowTxid);
 
 	// arbiter leaves feedback
@@ -481,13 +480,14 @@ BOOST_AUTO_TEST_CASE(generate_escrowpruning)
 	printf("Running generate_escrowpruning...\n");
 	AliasNew("node1", "selleraliasprune", "changeddata2");
 	AliasNew("node2", "buyeraliasprune", "changeddata2");
+	AliasNew("node3", "arbiteraliasprune", "changeddata2");
 	string offerguid = OfferNew("node1", "selleraliasprune", "category", "title", "100", "0.05", "description", "USD");
 	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress buyeraliasprune 200"), runtime_error);
 	GenerateBlocks(10);
 	// stop node3
 	StopNode("node3");
 	// create a new service
-	string guid1 = EscrowNewBuyItNow("node2", "node1", "buyeraliasprune", offerguid, "1", "selleraliasprune");
+	string guid1 = EscrowNewBuyItNow("node2", "node1", "buyeraliasprune", offerguid, "1", "arbiteraliasprune");
 	OfferUpdate("node1", "selleraliasprune", offerguid, "category", "titlenew", "100", "0.05", "descriptionnew");
 	// stop and start node1
 	StopNode("node1");
