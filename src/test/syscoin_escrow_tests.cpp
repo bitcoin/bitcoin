@@ -405,10 +405,9 @@ BOOST_AUTO_TEST_CASE(generate_escrowfeedback)
 	// leave another feedback and notice that you can't find it in the indexer (first feedback will be indexed only per user per guid+touser combination)
 	string escrowfeedbackstr = "escrowfeedback " + guid + " seller feedback 1 buyer";
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", escrowfeedbackstr));
-	UniValue arr = r.get_array();
-	string feedbackTxid = arr[0].get_str();
 	GenerateBlocks(10, "node1");
-	r = FindFeedback("node1", feedbackTxid);
+	string feedbackid = guid + boost::lexical_cast<string>(FEEDBACKBUYER);
+	r = FindFeedback("node1", feedbackid);
 	BOOST_CHECK(r.isNull());
 
 	// buyer can leave feedback
@@ -418,10 +417,9 @@ BOOST_AUTO_TEST_CASE(generate_escrowfeedback)
 	// leave another feedback and notice that you can't find it in the indexer (first feedback will be indexed only per user per guid+touser combination)
 	escrowfeedbackstr = "escrowfeedback " + guid + " buyer feedback 1 seller";
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", escrowfeedbackstr));
-	UniValue arr1 = r.get_array();
-	feedbackTxid = arr1[0].get_str();
 	GenerateBlocks(10, "node2");
-	r = FindFeedback("node2", feedbackTxid);
+	feedbackid = guid + boost::lexical_cast<string>(FEEDBACKSELLER);
+	r = FindFeedback("node2", feedbackid);
 	BOOST_CHECK(r.isNull());
 
 	// arbiter leaves feedback
@@ -431,10 +429,9 @@ BOOST_AUTO_TEST_CASE(generate_escrowfeedback)
 	// leave another feedback and notice that you can't find it in the indexer (first feedback will be indexed only per user per guid+touser combination)
 	escrowfeedbackstr = "escrowfeedback " + guid + " arbiter feedback 1 buyer";
 	BOOST_CHECK_NO_THROW(r = CallRPC("node3", escrowfeedbackstr));
-	UniValue arr2 = r.get_array();
-	feedbackTxid = arr2[0].get_str();
 	GenerateBlocks(10, "node3");
-	r = FindFeedback("node3", feedbackTxid);
+	feedbackid = guid + boost::lexical_cast<string>(FEEDBACKBUYER);
+	r = FindFeedback("node3", feedbackid);
 	BOOST_CHECK(r.isNull());
 }
 BOOST_AUTO_TEST_CASE(generate_escrow_linked_release)
