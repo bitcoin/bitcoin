@@ -1862,7 +1862,8 @@ const UniValue FindFeedback(const string& node, const string& id)
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinquery feedback " + query));
 	BOOST_CHECK(r.type() == UniValue::VARR);
 	const UniValue &arrayValue = r.get_array();
-	BOOST_CHECK(ret.read(arrayValue[0].get_str()));
+	if(arrayValue.size() > 0)
+		BOOST_CHECK(ret.read(arrayValue[0].get_str()));
 	return ret;
 }
 void EscrowClaimRelease(const string& node, const string& guid)
