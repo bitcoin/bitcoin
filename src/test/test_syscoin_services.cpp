@@ -1252,7 +1252,7 @@ void EscrowFeedback(const string& node, const string& userfrom, const string& es
 	BOOST_CHECK(find_value(r.get_obj(), "offer").get_str() == offerguid);
 	BOOST_CHECK(find_value(r.get_obj(), "txid").get_str() == escrowTxid);
 	BOOST_CHECK(find_value(r.get_obj(), "rating").get_int() == atoi(rating.c_str()));
-	BOOST_CHECK(find_value(r.get_obj(), "feedback").get_str() == rating);
+	BOOST_CHECK(find_value(r.get_obj(), "feedback").get_str() == feedback);
 	BOOST_CHECK(find_value(r.get_obj(), "feedbackuserfrom").get_int() == feedbackuserfromenum);
 	BOOST_CHECK(find_value(r.get_obj(), "feedbackuserto").get_int() == feedbackusertoenum);
 }
