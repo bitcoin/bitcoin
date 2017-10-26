@@ -2840,7 +2840,7 @@ UniValue escrowcompleterefund(const UniValue& params, bool fHelp) {
 UniValue escrowfeedback(const UniValue& params, bool fHelp) {
     if (fHelp || params.size() < 5 || params.size() > 6)
         throw runtime_error(
-			"escrowfeedback <escrow guid> <userfrom> <rating> <feedback> <userto> [witness]\n"
+			"escrowfeedback <escrow guid> <userfrom> <feedback> <rating> <userto> [witness]\n"
                         "Send feedback for primary and secondary users in escrow, depending on who you are. Ratings are numbers from 1 to 5. User From and User To is either 'buyer', 'seller', 'reseller', or 'arbiter'.\n"
                         + HelpRequiringPassphrase());
    // gather & validate inputs
@@ -2848,8 +2848,8 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 	string userfrom = params[1].get_str();
 	int nRating = 0;
 	vector<unsigned char> vchFeedback;
-	nRating = boost::lexical_cast<int>(params[2].get_str());
-	vchFeedback = vchFromValue(params[3]);
+	vchFeedback = vchFromValue(params[2]);
+	nRating = boost::lexical_cast<int>(params[3].get_str());
 	string userto = params[4].get_str();
 	vector<unsigned char> vchWitness;
 	if(CheckParam(params, 5))
