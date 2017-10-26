@@ -333,12 +333,13 @@ BOOST_AUTO_TEST_CASE(generate_escrow_linked_release_with_peg_update)
 	AliasNew("node1", "buyeralias33", "changeddata1");
 	AliasNew("node2", "selleralias33", "changeddata2");
 	AliasNew("node3", "arbiteralias33", "changeddata3");
+	AliasNew("node3", "reselleralias33", "changeddata3");
 	string qty = "3";
 	string offerguid = OfferNew("node2", "selleralias33", "category", "title", "100", "0.05", "description", "EUR");
-	AliasAddWhitelist("node2", "selleralias33", "arbiteralias33", "5");
+	AliasAddWhitelist("node2", "selleralias33", "reselleralias33", "5");
 	string commission = "3";
 	string description = "newdescription";
-	string offerlinkguid = OfferLink("node3", "arbiteralias33", offerguid, commission, description);
+	string offerlinkguid = OfferLink("node3", "reselleralias33", offerguid, commission, description);
 	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress buyeralias33 40000"), runtime_error);
 	GenerateBlocks(10);
 	string guid = EscrowNewBuyItNow("node1", "node2", "buyeralias33", offerlinkguid, qty, "arbiteralias33");
@@ -356,7 +357,7 @@ BOOST_AUTO_TEST_CASE(generate_escrow_linked_release_with_peg_update)
 	// 218.2 SYS/EUR
 	BOOST_CHECK_EQUAL(nTotal, AmountFromValue(2 * 0.05*1.03*218.2));
 
-	OfferUpdate("node2", "selleralias33", offerlinkguid, "category", "titlenew", "100", "0.07", "descriptionnew", "EUR", "\"\"", "\"\"", "6");
+	OfferUpdate("node2", "reselleralias33", offerlinkguid, "category", "titlenew", "100", "0.07", "descriptionnew", "EUR", "\"\"", "\"\"", "6");
 
 	guid = EscrowNewBuyItNow("node1", "node2", "buyeralias33", offerlinkguid, "4", "arbiteralias33");
 	EscrowRelease("node1", "buyer", guid);
