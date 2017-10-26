@@ -1132,7 +1132,8 @@ void OfferUpdate(const string& node, const string& aliasname, const string& offe
 		compareprice = boost::lexical_cast<float>(price);
 	else
 		compareprice = oldprice;
-	BOOST_CHECK(abs(find_value(r.get_obj(), "price").get_real() - compareprice) < 0.001);
+	if(commissionStr == "\"\"")
+		BOOST_CHECK(abs(find_value(r.get_obj(), "price").get_real() - compareprice) < 0.001);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "commission").get_int() , commissionStr != "\"\""? commission: oldcommission);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "paymentoptions").get_str() , paymentoptions != "\"\""? paymentoptions: oldpaymentoptions);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "private").get_bool() , isprivateStr != "\"\""? isprivate: oldprivate);
@@ -1162,7 +1163,8 @@ void OfferUpdate(const string& node, const string& aliasname, const string& offe
 			compareprice = boost::lexical_cast<float>(price);
 		else
 			compareprice = oldprice;
-		BOOST_CHECK(abs(find_value(r.get_obj(), "price").get_real() - compareprice) < 0.001);
+		if (commissionStr == "\"\"")
+			BOOST_CHECK(abs(find_value(r.get_obj(), "price").get_real() - compareprice) < 0.001);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "commission").get_int() , commissionStr != "\"\""? commission: oldcommission);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "paymentoptions").get_str() , paymentoptions != "\"\""? paymentoptions: oldpaymentoptions);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "private").get_bool() , isprivateStr != "\"\""? isprivate: oldprivate);
@@ -1193,6 +1195,7 @@ void OfferUpdate(const string& node, const string& aliasname, const string& offe
 			compareprice = boost::lexical_cast<float>(price);
 		else
 			compareprice = oldprice;
+		if (commissionStr == "\"\"")
 			BOOST_CHECK(abs(find_value(r.get_obj(), "price").get_real() - compareprice) < 0.001);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "commission").get_int() , commissionStr != "\"\""? commission: oldcommission);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "paymentoptions").get_str() , paymentoptions != "\"\""? paymentoptions: oldpaymentoptions);
