@@ -171,12 +171,12 @@ public:
     bool CheckLockTime(const CScriptNum& nLockTime) const;
     bool CheckSequence(const CScriptNum& nSequence) const;
 
-    virtual bool IsCoinStake() const
+    virtual bool IsCoinStake() const override
     {
         return txTo && txTo->IsCoinStake();
     }
 
-    bool IsParticlVersion() const
+    bool IsParticlVersion() const override
     {
         return txTo && txTo->IsParticlVersion();
     }

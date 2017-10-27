@@ -16,6 +16,9 @@
 
 #include <boost/thread.hpp>
 
+
+
+
 #if BOOST_VERSION > 105300
 #ifndef BOOST_MESSAGE
 #define BOOST_MESSAGE(msg) BOOST_TEST_MESSAGE(msg)
@@ -40,6 +43,19 @@ static inline uint256 InsecureRand256() { return insecure_rand_ctx.rand256(); }
 static inline uint64_t InsecureRandBits(int bits) { return insecure_rand_ctx.randbits(bits); }
 static inline uint64_t InsecureRandRange(uint64_t range) { return insecure_rand_ctx.randrange(range); }
 static inline bool InsecureRandBool() { return insecure_rand_ctx.randbool(); }
+
+static inline void InsecureNewKey(CKey &key, bool fCompressed)
+{
+    uint256 i = InsecureRand256();
+    key.Set(i.begin(), fCompressed);
+    assert(key.IsValid()); // Failure should be very rare
+}
+static inline void InsecureRandBytes(uint8_t *p, size_t n)
+{
+    assert(n <= 32);
+    uint256 i = InsecureRand256();
+    memcpy(p, i.begin(), n);
+}
 
 /** Basic testing setup.
  * This just configures logging and chain parameters.
@@ -104,7 +120,7 @@ struct TestMemPoolEntryHelper
     TestMemPoolEntryHelper() :
         nFee(0), nTime(0), nHeight(1),
         spendsCoinbase(false), sigOpCost(4) { }
-    
+
     CTxMemPoolEntry FromTx(const CMutableTransaction &tx);
     CTxMemPoolEntry FromTx(const CTransaction &tx);
 

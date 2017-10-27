@@ -101,7 +101,7 @@ bool IsDust(const CTxOutBase *txout, const CFeeRate& dustRelayFee)
     /**
      * Check transaction inputs to mitigate two
      * potential denial-of-service attacks:
-     * 
+     *
      * 1. scriptSigs with extra data stuffed into them,
      *    not consumed by scriptPubKey (or P2SH script)
      * 2. P2SH scripts with a crazy number of expensive
@@ -118,7 +118,7 @@ bool IsDust(const CTxOutBase *txout, const CFeeRate& dustRelayFee)
 bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType, const bool witnessEnabled)
 {
     const Consensus::Params& consensusParams = Params().GetConsensus();
-    
+
     if (chainActive.Time() >= consensusParams.OpIsCoinstakeTime)
     {
         // TODO: better method
@@ -127,11 +127,11 @@ bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType, const bool w
             CScript scriptA, scriptB;
             if (!SplitConditionalCoinstakeScript(scriptPubKey, scriptA, scriptB))
                 return false;
-            
+
             return IsStandard(scriptA, whichType, witnessEnabled) && IsStandard(scriptB, whichType, witnessEnabled);
         };
     };
-    
+
     std::vector<std::vector<unsigned char> > vSolutions;
     if (!Solver(scriptPubKey, whichType, vSolutions))
         return false;
@@ -194,7 +194,7 @@ bool IsStandardTx(const CTransaction& tx, std::string& reason, const bool witnes
 
     unsigned int nDataOut = 0;
     txnouttype whichType;
-    
+
     for (const CTxOut& txout : tx.vout) {
         if (!::IsStandard(txout.scriptPubKey, whichType, witnessEnabled)) {
             reason = "scriptpubkey";
@@ -214,10 +214,10 @@ bool IsStandardTx(const CTransaction& tx, std::string& reason, const bool witnes
 
     for (const auto txout : tx.vpout) {
         const CTxOutBase *p = txout.get();
-        
+
         if (!p->IsType(OUTPUT_STANDARD) && !p->IsType(OUTPUT_CT))
             continue;
-        
+
         if (!::IsStandard(*p->GetPScriptPubKey(), whichType, witnessEnabled)) {
             reason = "scriptpubkey";
             return false;
@@ -247,26 +247,26 @@ bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
 {
     if (tx.IsCoinBase())
         return true; // Coinbases don't use vin normally
-    
+
     if (fParticlMode)
     {
         for (unsigned int i = 0; i < tx.vin.size(); i++)
         {
             if (tx.vin[i].IsAnonInput())
                 continue;
-            
+
             const Coin& coin = mapInputs.AccessCoin(tx.vin[i].prevout);
             const CTxOut& prev = coin.out;
-            
+
             if (coin.nType != OUTPUT_STANDARD && coin.nType != OUTPUT_CT)
                 return false;
-            
-            
+
+
             std::vector<std::vector<unsigned char> > vSolutions;
             txnouttype whichType;
             // get the scriptPubKey corresponding to this input:
             const CScript& prevScript = prev.scriptPubKey;
-            
+
             if (!Solver(prevScript, whichType, vSolutions))
                 return false;
 
@@ -286,10 +286,10 @@ bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
                 }
             };
         };
-        
+
         return true;
     };
-    
+
     for (unsigned int i = 0; i < tx.vin.size(); i++)
     {
         const CTxOut& prev = mapInputs.AccessCoin(tx.vin[i].prevout).out;
@@ -338,12 +338,12 @@ bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
             };
             continue;
         };
-        
+
         // We don't care if witness for this input is empty, since it must not be bloated.
         // If the script is invalid without witness, it would be caught sooner or later during validation.
         if (tx.vin[i].scriptWitness.IsNull())
             continue;
-        
+
         CScript prevScript;
         const CTxOut &prev = mapInputs.AccessCoin(tx.vin[i].prevout).out;
 
@@ -352,11 +352,11 @@ bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
 
         if (prevScript.IsPayToScriptHash()) {
             std::vector <std::vector<unsigned char> > stack;
-            
+
             // If the scriptPubKey is P2SH, we try to extract the redeemScript casually by converting the scriptSig
             // into a stack. We do not check IsPushOnly nor compare the hash as these will be done later anyway.
             // If the check fails at this stage, we know that this txid must be a bad one.
-            
+
             if (!tx.IsParticlVersion())
             {
                 if (!EvalScript(stack, tx.vin[i].scriptSig, SCRIPT_VERIFY_NONE, BaseSignatureChecker(), SIGVERSION_BASE))
@@ -365,7 +365,7 @@ bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
             {
                 stack = tx.vin[i].scriptWitness.stack;
             };
-            
+
             if (stack.empty())
                 return false;
             prevScript = CScript(stack.back().begin(), stack.back().end());
@@ -378,14 +378,14 @@ bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
         if (!tx.IsParticlVersion()
             && !prevScript.IsWitnessProgram(witnessversion, witnessprogram))
             return false;
-        
+
         // Check P2WSH standard limits
         if (witnessversion == 0 && witnessprogram.size() == 32) {
-            
+
             if (tx.vin[i].scriptWitness.stack.back().size() > MAX_STANDARD_P2WSH_SCRIPT_SIZE)
                 return false;
             size_t sizeWitnessStack = tx.vin[i].scriptWitness.stack.size() - 1;
-            
+
             if (sizeWitnessStack > MAX_STANDARD_P2WSH_STACK_ITEMS)
                 return false;
             for (unsigned int j = 0; j < sizeWitnessStack; j++) {

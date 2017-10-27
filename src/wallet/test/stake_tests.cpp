@@ -26,7 +26,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-extern CWallet* pwalletMain;
+extern CWallet *pwalletMain;
 
 extern UniValue CallRPC(std::string args, std::string wallet="");
 
@@ -141,6 +141,7 @@ static void AddAnonTxn(CHDWallet *pwallet, CBitcoinAddress &address, CAmount amo
 
 BOOST_AUTO_TEST_CASE(stake_test)
 {
+    SeedInsecureRand();
     CHDWallet *pwallet = (CHDWallet*) pwalletMain;
     UniValue rv;
 
@@ -202,7 +203,7 @@ BOOST_AUTO_TEST_CASE(stake_test)
     }
 
     CKey kRecv;
-    kRecv.MakeNewKey(true);
+    InsecureNewKey(kRecv, true);
     CKeyID idRecv = kRecv.GetPubKey().GetID();
 
     bool fSubtractFeeFromAmount = false;
@@ -299,7 +300,6 @@ BOOST_AUTO_TEST_CASE(stake_test)
     std::string extaddr = StripQuotes(rv.write());
 
     BOOST_CHECK(pwallet->GetBalance() + pwallet->GetStaked() == 12500000108911);
-
 
     {
         LOCK2(cs_main, pwallet->cs_wallet);

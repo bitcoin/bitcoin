@@ -404,22 +404,22 @@ public:
     bool LoadTxRecords(CHDWalletDB *pwdb);
 
     bool EncryptWallet(const SecureString &strWalletPassphrase) override;
-    bool Lock();
+    bool Lock() override;
     bool Unlock(const SecureString &strWalletPassphrase) override;
 
 
     bool HaveAddress(const CBitcoinAddress &address);
     bool HaveKey(const CKeyID &address, CEKAKey &ak, CExtKeyAccount *&pa) const;
-    bool HaveKey(const CKeyID &address) const;
+    bool HaveKey(const CKeyID &address) const override;
 
     bool HaveExtKey(const CKeyID &address) const;
 
     bool HaveTransaction(const uint256 &txhash) const;
 
     int GetKey(const CKeyID &address, CKey &keyOut, CExtKeyAccount *&pa, CEKAKey &ak, CKeyID &idStealth) const;
-    bool GetKey(const CKeyID &address, CKey &keyOut) const;
+    bool GetKey(const CKeyID &address, CKey &keyOut) const override;
 
-    bool GetPubKey(const CKeyID &address, CPubKey &pkOut) const;
+    bool GetPubKey(const CKeyID &address, CPubKey &pkOut) const override;
 
     bool GetKeyFromPool(CPubKey &key, bool internal = false) override;
 
@@ -476,7 +476,7 @@ public:
     bool GetBalances(CHDWalletBalances &bal);
 
 
-    bool IsChange(const CTxOutBase *txout) const;
+    bool IsChange(const CTxOutBase *txout) const override;
 
     int GetChangeAddress(CPubKey &pk);
 

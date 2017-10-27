@@ -29,8 +29,8 @@ BOOST_AUTO_TEST_CASE(smsg_test_ckeyId_inits_null)
 
 BOOST_AUTO_TEST_CASE(smsg_test)
 {
-
 #ifdef ENABLE_WALLET
+    SeedInsecureRand();
     fParticlMode = true;
     g_connman = std::unique_ptr<CConnman>(new CConnman(GetRand(std::numeric_limits<uint64_t>::max()), GetRand(std::numeric_limits<uint64_t>::max())));
 
@@ -44,7 +44,7 @@ BOOST_AUTO_TEST_CASE(smsg_test)
     std::vector<CKey> keyOwn(nKeys);
     for (int i = 0; i < nKeys; i++)
     {
-        keyOwn[i].MakeNewKey(true);
+        InsecureNewKey(keyOwn[i], true);
         LOCK(keystore.cs_wallet);
         keystore.AddKey(keyOwn[i]);
     };
@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(smsg_test)
     std::vector<CKey> keyRemote(nKeys);
     for (int i = 0; i < nKeys; i++)
     {
-        keyRemote[i].MakeNewKey(true);
+        InsecureNewKey(keyRemote[i], true);
         LOCK(keystore.cs_wallet);
         keystore.AddKey(keyRemote[i]); // need pubkey
     };

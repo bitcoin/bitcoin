@@ -60,12 +60,10 @@ static int64_t ipow(int64_t base, int exp)
 
 int SelectRangeProofParameters(uint64_t nValueIn, uint64_t &minValue, int &exponent, int &nBits)
 {
-
     int nLeadingZeros = CountLeadingZeros(nValueIn);
     int nTrailingZeros = CountTrailingZeros(nValueIn);
 
     size_t nBitsReq = 64 - nLeadingZeros - nTrailingZeros;
-
 
     nBits = 32;
 
@@ -100,8 +98,6 @@ int SelectRangeProofParameters(uint64_t nValueIn, uint64_t &minValue, int &expon
     nBitsReq = 64 - nTrailingZeros;
 
 
-
-
     if (nBitsReq > 32)
     {
         nBits = nBitsReq;
@@ -110,7 +106,6 @@ int SelectRangeProofParameters(uint64_t nValueIn, uint64_t &minValue, int &expon
     // make multiple of 4
     while (nBits < 63 && nBits % 4 != 0)
         nBits++;
-
 
     return 0;
 };

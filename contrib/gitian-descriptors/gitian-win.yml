@@ -1,5 +1,5 @@
 ---
-name: "particl-win-0.15.0.2"
+name: "particl-win-0.15.0.3"
 enable_cache: true
 suites:
 - "trusty"
@@ -154,10 +154,10 @@ script: |
     make ${MAKEOPTS} -C src check-security
     make deploy
     make install DESTDIR=${INSTALLPATH}
-    
+
     rename 's/-setup\.exe$/-setup-unsigned.exe/' *-setup.exe
     cp -f particl-*setup*.exe $OUTDIR/
-    
+
     cd installed
     mv ${DISTNAME}/bin/*.dll ${DISTNAME}/lib/
     find . -name "lib*.la" -delete
