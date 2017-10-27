@@ -6066,7 +6066,12 @@ bool ProcessMessage(CNode *pfrom, std::string strCommand, CDataStream &vRecv, in
                 if ((!fAlreadyHave && !IsInitialBlockDownload()) ||
                     (!fAlreadyHave && Params().NetworkIDString() == "regtest"))
                 {
-                    requester.AskFor(inv, pfrom);
+                    // Since we now only rely on headers for block requests, if we get an INV from an older node or
+                    // if there was a very large re-org which resulted in a revert to block announcements via INV,
+                    // we will instead request the header rather than the block.  This is safer and prevents an
+                    // attacker from sending us fake INV's for blocks that do not exist or try to get us to request
+                    // and download fake blocks.
+                    pfrom->PushMessage(NetMsgType::GETHEADERS, chainActive.GetLocator(pindexBestHeader), inv.hash);
                 }
                 else
                 {
