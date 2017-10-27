@@ -50,17 +50,15 @@ BOOST_AUTO_TEST_CASE(block_subsidy_test)
 
 BOOST_AUTO_TEST_CASE(subsidy_limit_test)
 {
-    // tested in syscoin_tests.cpp
-    //const Consensus::Params& consensusParams = Params(CBaseChainParams::MAIN).GetConsensus();
-    //CAmount nSum = 0;
-    //for (int nHeight = 0; nHeight < 14000000; nHeight += 1000) {
-    //    /* @TODO fix subsidity, add nBits */
-    //    CAmount nSubsidy = GetBlockSubsidy(0, nHeight, consensusParams);
-    //    BOOST_CHECK(nSubsidy <= 25 * COIN);
-    //    nSum += nSubsidy * 1000;
-    //    BOOST_CHECK(MoneyRange(nSum));
-    //}
-    //BOOST_CHECK_EQUAL(nSum, 1350824726649000ULL);
+    const Consensus::Params& consensusParams = Params(CBaseChainParams::MAIN).GetConsensus();
+    CAmount nSum = 0;
+    for (int nHeight = 0; nHeight < 14000000; nHeight += 1000) {
+        CAmount nSubsidy = GetBlockSubsidy(nHeight, consensusParams);
+        BOOST_CHECK(nSubsidy <= 55.66 * COIN);
+        nSum += nSubsidy * 1000;
+        BOOST_CHECK(MoneyRange(nSum));
+    }
+    BOOST_CHECK_EQUAL(nSum, 1350824726649000ULL);
 }
 
 bool ReturnFalse() { return false; }

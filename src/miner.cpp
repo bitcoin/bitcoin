@@ -283,9 +283,8 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
             }
 
         }
-
-        // NOTE: unlike in syscoin, we need to pass PREVIOUS block height here
-        CAmount blockReward = nFees + GetBlockSubsidy(pindexPrev->nBits, pindexPrev->nHeight, Params().GetConsensus());
+		// SYSCOIN
+        CAmount blockReward = nFees + GetBlockSubsidy(nHeight, Params().GetConsensus());
 
         // Compute regular coinbase transaction.
         txNew.vout[0].nValue = blockReward;
