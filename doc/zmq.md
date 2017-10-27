@@ -66,7 +66,7 @@ address. The same address can be used in more than one notification.
 
 For instance:
 
-    $ ravend -zmqpubhashtx=tcp://127.0.0.1:28332 \
+    $ ravend -zmqpubhashtx=tcp://127.0.0.1:28766 \
                -zmqpubrawtx=ipc:///tmp/ravend.tx.raw
 
 Each PUB notification has a topic and body, where the header
