@@ -51,14 +51,14 @@ BOOST_AUTO_TEST_CASE(block_subsidy_test)
 BOOST_AUTO_TEST_CASE(subsidy_limit_test)
 {
     const Consensus::Params& consensusParams = Params(CBaseChainParams::MAIN).GetConsensus();
-    CAmount nSum = 0;
-    for (int nHeight = 0; nHeight < 14000000; nHeight += 1000) {
+    CAmount nSum = 528465209*COIN;
+    for (int nHeight = 428770; nHeight < 30000000; nHeight += 1000) {
         CAmount nSubsidy = GetBlockSubsidy(nHeight, consensusParams);
-        BOOST_CHECK(nSubsidy <= 55.66 * COIN);
+        BOOST_CHECK(nSubsidy <= 38.5 * COIN);
         nSum += nSubsidy * 1000;
         BOOST_CHECK(MoneyRange(nSum));
     }
-    BOOST_CHECK_EQUAL(nSum, 1350824726649000ULL);
+    BOOST_CHECK_EQUAL(nSum, 88555117428588000ULL);
 }
 
 bool ReturnFalse() { return false; }

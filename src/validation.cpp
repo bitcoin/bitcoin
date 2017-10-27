@@ -1360,25 +1360,21 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
 			return 521460000 * COIN;
 		}
 	}
-	CAmount nSubsidy = 10 * COIN;
+	CAmount nSubsidy = 38.5 * COIN;
 	int reductions = nHeight / consensusParams.nSubsidyHalvingInterval;
-	// Force block reward to zero when right shift is undefined.
-	if (reductions >= 640)
+	if (reductions >= 50)
 		return 0;
 	// Subsidy is cut in half every 525600 blocks which will occur approximately every year.
-	
 	// yearly decline of production by 5% per year, projected ~888M coins max by year 2050+.
 	for (int i = 0; i < reductions; i++) {
 		nSubsidy -= nSubsidy / 20;
 	}
-	// masternode payout
-	nSubsidy += nSubsidy*4.566;
 	return nSubsidy;
 }
 
 CAmount GetMasternodePayment(int nHeight, CAmount blockValue)
 {
-    return blockValue*0.85;
+    return blockValue*0.75;
 }
 
 bool IsInitialBlockDownload()
