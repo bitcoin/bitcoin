@@ -22,6 +22,49 @@ static const unsigned char REJECT_NONSTANDARD = 0x40;
 static const unsigned char REJECT_INSUFFICIENTFEE = 0x42;
 static const unsigned char REJECT_CHECKPOINT = 0x43;
 
+/** A "reason" why something was invalid, suitable for determining whether the
+  * provider of the object should be banned/ignored/disconnected/etc.
+  * These are much more granular than the rejection codes, which may be more
+  * useful for some other use-cases.
+  */
+enum class ValidationInvalidReason {
+    // txn and blocks:
+    NONE,                    //!< not actually invalid
+    CONSENSUS,               //!< invalid by consensus rules (excluding any below reasons)
+    /**
+     * Invalid by a change to consensus rules more recent than SegWit.
+     * Currently unused as there are no such consensus rule changes, and any download
+     * sources realistically need to support SegWit in order to provide useful data,
+     * so differentiating between always-invalid and invalid-by-pre-SegWit-soft-fork
+     * is uninteresting.
+     */
+    RECENT_CONSENSUS_CHANGE,
+    CACHED_INVALID,          //!< this object was cached as being invalid, but we don't know why
+    // Only blocks:
+    BLOCK_MUTATED,           //!< the block's data didn't match the data committed to by the PoW
+    BLOCK_MISSING_PREV,      //!< We don't have the previous block the checked one is built on
+    BLOCK_INVALID_PREV,      //!< A block this one builds on is invalid
+    BLOCK_BAD_TIME,          //!< block timestamp was > 2 hours in the future (or our clock is bad)
+    BLOCK_CHECKPOINT,        //!< the block failed to meet one of our checkpoints
+    // Only loose txn:
+    TX_NOT_STANDARD,          //!< didn't meet our local policy rules
+    TX_MISSING_INPUTS,        //!< a transaction was missing some of its inputs (or its inputs were spent at < coinbase maturity height)
+    /**
+     * Transaction might be missing a witness, have a witness prior to SegWit
+     * activation, or witness may have been malleated (which includes
+     * non-standard witnesses).
+     */
+    TX_WITNESS_MUTATED,
+    /**
+     * Tx already in mempool or conflicts with a tx in the chain
+     * (if it conflicts with another tx in mempool, we use MEMPOOL_POLICY as it failed to reach the RBF threshold)
+     * TODO: Currently this is only used if the transaction already exists in the mempool or on chain,
+     * TODO: ATMP's fMissingInputs and a valid CValidationState being used to indicate missing inputs
+     */
+    TX_CONFLICT,
+    TX_MEMPOOL_POLICY,        //!< violated mempool's fee/size/descendant/RBF/etc limits
+};
+
 /** Capture information about block/transaction validation */
 class CValidationState {
 private:
@@ -30,17 +73,19 @@ private:
         MODE_INVALID, //!< network rule violation (DoS value may be set)
         MODE_ERROR,   //!< run-time error
     } mode;
+    ValidationInvalidReason reason;
     int nDoS;
     std::string strRejectReason;
     unsigned int chRejectCode;
     bool corruptionPossible;
     std::string strDebugMessage;
 public:
-    CValidationState() : mode(MODE_VALID), nDoS(0), chRejectCode(0), corruptionPossible(false) {}
-    bool DoS(int level, bool ret = false,
+    CValidationState() : mode(MODE_VALID), reason(ValidationInvalidReason::NONE), nDoS(0), chRejectCode(0), corruptionPossible(false) {}
+    bool DoS(int level, ValidationInvalidReason reasonIn, bool ret = false,
              unsigned int chRejectCodeIn=0, const std::string &strRejectReasonIn="",
              bool corruptionIn=false,
              const std::string &strDebugMessageIn="") {
+        reason = reasonIn;
         chRejectCode = chRejectCodeIn;
         strRejectReason = strRejectReasonIn;
         corruptionPossible = corruptionIn;
@@ -51,10 +96,10 @@ public:
         mode = MODE_INVALID;
         return ret;
     }
-    bool Invalid(bool ret = false,
+    bool Invalid(ValidationInvalidReason _reason, bool ret = false,
                  unsigned int _chRejectCode=0, const std::string &_strRejectReason="",
                  const std::string &_strDebugMessage="") {
-        return DoS(0, ret, _chRejectCode, _strRejectReason, false, _strDebugMessage);
+        return DoS(0, _reason, ret, _chRejectCode, _strRejectReason, false, _strDebugMessage);
     }
     bool Error(const std::string& strRejectReasonIn) {
         if (mode == MODE_VALID)
@@ -84,6 +129,8 @@ public:
     void SetCorruptionPossible() {
         corruptionPossible = true;
     }
+    ValidationInvalidReason GetReason() const { return reason; }
+    int GetDoS() const { return nDoS; }
     unsigned int GetRejectCode() const { return chRejectCode; }
     std::string GetRejectReason() const { return strRejectReason; }
     std::string GetDebugMessage() const { return strDebugMessage; }
