@@ -2504,11 +2504,13 @@ bool ConnectBlock(const CBlock &block,
     // s in their signature. We also make sure that signature that are supposed
     // to fail (for instance in multisig or other forms of smart contracts) are
     // null.
+#ifdef BITCOIN_CASH
     if (IsCashHFEnabled(config, pindex->pprev))
     {
         flags |= SCRIPT_VERIFY_LOW_S;
         flags |= SCRIPT_VERIFY_NULLFAIL;
     }
+#endif
 
     int64_t nTime2 = GetTimeMicros();
     nTimeForks += nTime2 - nTime1;
