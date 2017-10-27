@@ -1365,7 +1365,7 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
 	if (reductions >= 50)
 		return 0;
 	// Subsidy is cut in half every 525600 blocks which will occur approximately every year.
-	// yearly decline of production by 5% per year, projected ~888M coins max by year 2050+.
+	// yearly decline of production by 5% per year, projected ~888M coins max by year 2067+.
 	for (int i = 0; i < reductions; i++) {
 		nSubsidy -= nSubsidy / 20;
 	}
