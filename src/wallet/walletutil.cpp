@@ -17,6 +17,10 @@ fs::path GetWalletDir()
         }
     } else {
         path = GetDataDir();
+        // If a wallets directory exists, use that, otherwise default to GetDataDir
+        if (fs::is_directory(path / "wallets")) {
+            path /= "wallets";
+        }
     }
 
     return path;
