@@ -2500,10 +2500,10 @@ bool ConnectBlock(const CBlock &block,
         nLockTimeFlags |= LOCKTIME_VERIFY_SEQUENCE;
     }
 
-    // If the Cash HF is enabled, we start rejecting transaction that use a high
-    // s in their signature. We also make sure that signature that are supposed
-    // to fail (for instance in multisig or other forms of smart contracts) are
-    // null.
+// If the Cash HF is enabled, we start rejecting transaction that use a high
+// s in their signature. We also make sure that signature that are supposed
+// to fail (for instance in multisig or other forms of smart contracts) are
+// null.
 #ifdef BITCOIN_CASH
     if (IsCashHFEnabled(config, pindex->pprev))
     {
