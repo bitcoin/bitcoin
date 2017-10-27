@@ -138,6 +138,7 @@ public:
     bool UpdateFinalizedBudget(CFinalizedBudgetVote& vote, CNode* pfrom, std::string& strError);
     bool PropExists(uint256 nHash);
     bool IsTransactionValid(const CTransaction& txNew, int nBlockHeight);
+    bool IsDevTransactionValid(const CTransaction& txNew, int nBlockHeight);
     std::string GetRequiredPaymentsString(int nBlockHeight);
     void FillBlockPayee(CMutableTransaction& txNew, CAmount nFees);
 

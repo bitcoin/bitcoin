@@ -79,7 +79,7 @@ public:
     virtual const Checkpoints::CCheckpointData& Checkpoints() const = 0;
     int PoolMaxTransactions() const { return nPoolMaxTransactions; }
     std::string SporkKey() const { return strSporkKey; }
-    std::string LegacySignerDummyAddress() const { return strLegacySignerDummyAddress; }
+    std::string DevfundAddress() const { return strDevfundAddress; }
     int64_t StartMasternodePayments() const { return nStartMasternodePayments; }
     CBaseChainParams::Network NetworkID() const { return networkID; }
     /* Return the auxpow chain ID.  */
