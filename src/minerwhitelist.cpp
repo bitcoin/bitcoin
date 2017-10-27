@@ -381,7 +381,11 @@ bool CMinerWhitelistDB::DumpStatsForMiner(std::string address, bool *wlisted, un
     *wlisted = details.whitelisted;
     *windowBlocks = details.windowBlocks;
     *totalBlocks = details.totalBlocks;
-    *lastBlock = details.blockVector.back();
+    if (details.totalBlocks == 0) {
+        *lastBlock = 0;
+    } else {
+        *lastBlock = details.blockVector.back();
+    }
     return true;
 }
 
