@@ -1365,12 +1365,11 @@ CAmount GetBlockSubsidy(int nPrevBits, int nPrevHeight, const Consensus::Params&
 			return 521460000 * COIN;
 		}
 	}
-	CAmount nSubsidy;
+	CAmount nSubsidy = 10 * COIN;
 	int reductions = nHeight / consensusParams.nSubsidyHalvingInterval;
 	// Force block reward to zero when right shift is undefined.
 	if (reductions >= 640)
 		return 0;
-	CAmount nSubsidy = 10 * COIN;
 	// Subsidy is cut in half every 525600 blocks which will occur approximately every year.
 	
 	// yearly decline of production by 5% per year, projected ~888M coins max by year 2050+.
