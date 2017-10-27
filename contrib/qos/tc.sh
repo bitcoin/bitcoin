@@ -1,4 +1,4 @@
-# Copyright (c) 2017 The Bitcoin Core developers
+# Copyright (c) 2017 The Raven Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,7 +6,7 @@
 IF="eth0"
 #limit of the network interface in question
 LINKCEIL="1gbit"
-#limit outbound Bitcoin protocol traffic to this rate
+#limit outbound Raven protocol traffic to this rate
 LIMIT="160kbit"
 #defines the IPv4 address space for which you wish to disable rate limiting
 LOCALNET_V4="192.168.0.0/16"

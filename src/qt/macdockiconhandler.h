@@ -1,9 +1,9 @@
-// Copyright (c) 2011-2015 The Bitcoin Core developers
+// Copyright (c) 2011-2015 The Raven Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_QT_MACDOCKICONHANDLER_H
-#define BITCOIN_QT_MACDOCKICONHANDLER_H
+#ifndef RAVEN_QT_MACDOCKICONHANDLER_H
+#define RAVEN_QT_MACDOCKICONHANDLER_H
 
 #include <QMainWindow>
 #include <QObject>
@@ -41,4 +41,4 @@ private:
     QMainWindow *mainWindow;
 };
 
-#endif // BITCOIN_QT_MACDOCKICONHANDLER_H
+#endif // RAVEN_QT_MACDOCKICONHANDLER_H

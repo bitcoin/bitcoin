@@ -1,15 +1,15 @@
 [Unit]
-Description=Bitcoin's distributed currency daemon
+Description=Raven's distributed currency daemon
 After=network.target
 
 [Service]
-User=bitcoin
-Group=bitcoin
+User=raven
+Group=raven
 
 Type=forking
-PIDFile=/var/lib/bitcoind/bitcoind.pid
-ExecStart=/usr/bin/bitcoind -daemon -pid=/var/lib/bitcoind/bitcoind.pid \
--conf=/etc/bitcoin/bitcoin.conf -datadir=/var/lib/bitcoind -disablewallet
+PIDFile=/var/lib/ravend/ravend.pid
+ExecStart=/usr/bin/ravend -daemon -pid=/var/lib/ravend/ravend.pid \
+-conf=/etc/raven/raven.conf -datadir=/var/lib/ravend -disablewallet
 
 Restart=always
 PrivateTmp=true
