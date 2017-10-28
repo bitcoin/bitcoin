@@ -13,6 +13,9 @@
   <property name="windowTitle">
    <string>Welcome</string>
   </property>
+  <property name="styleSheet">
+         <string notr="true">QWidget { background: rgba(15,15,15,240); color: rgb(12,175,165); }</string>
+  </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
     <widget class="QLabel" name="welcomeLabel">

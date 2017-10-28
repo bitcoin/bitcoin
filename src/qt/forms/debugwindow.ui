@@ -10,6 +10,9 @@
     <height>430</height>
    </rect>
   </property>
+  <property name="styleSheet">
+         <string notr="true">QWidget { background: rgba(15,15,15,240); color: rgb(12,175,165); }</string>
+  </property>
   <property name="windowTitle">
    <string>Debug window</string>
   </property>
