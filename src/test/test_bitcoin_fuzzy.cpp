@@ -19,6 +19,7 @@
 #include "undo.h"
 #include "version.h"
 #include "pubkey.h"
+#include "blockencodings.h"
 
 #include <stdint.h>
 #include <unistd.h>
@@ -45,6 +46,8 @@ enum TEST_ID {
     CBLOOMFILTER_DESERIALIZE,
     CDISKBLOCKINDEX_DESERIALIZE,
     CTXOUTCOMPRESSOR_DESERIALIZE,
+    BLOCKTRANSACTIONS_DESERIALIZE,
+    BLOCKTRANSACTIONSREQUEST_DESERIALIZE,
     TEST_ID_END
 };
 
@@ -241,6 +244,26 @@ int test_one_input(std::vector<uint8_t> buffer) {
             try
             {
                 ds >> toc;
+            } catch (const std::ios_base::failure& e) {return 0;}
+
+            break;
+        }
+        case BLOCKTRANSACTIONS_DESERIALIZE:
+        {
+            try
+            {
+                BlockTransactions bt;
+                ds >> bt;
+            } catch (const std::ios_base::failure& e) {return 0;}
+
+            break;
+        }
+        case BLOCKTRANSACTIONSREQUEST_DESERIALIZE:
+        {
+            try
+            {
+                BlockTransactionsRequest btr;
+                ds >> btr;
             } catch (const std::ios_base::failure& e) {return 0;}
 
             break;
