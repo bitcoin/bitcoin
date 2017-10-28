@@ -13,7 +13,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/filesystem.hpp>
 
-#include "masternode-payments.h"
+#include "masternode-budget.h"
 
 /** Object for who's going to get paid on which blocks */
 CSystemnodePayments systemnodePayments;
@@ -283,7 +283,12 @@ void SNFillBlockPayee(CMutableTransaction& txNew, int64_t nFees)
 {
     CBlockIndex* pindexPrev = chainActive.Tip();
     if(!pindexPrev) return;
-    systemnodePayments.FillBlockPayee(txNew, nFees);
+
+    if(IsSporkActive(SPORK_13_ENABLE_SUPERBLOCKS) && budget.IsBudgetPaymentBlock(pindexPrev->nHeight+1)){
+        // Doesn't pay systemnode, miners get the full amount on these blocks
+    } else {
+        systemnodePayments.FillBlockPayee(txNew, nFees);
+    }
 }
 
 void CSystemnodePayments::FillBlockPayee(CMutableTransaction& txNew, int64_t nFees)
