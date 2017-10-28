@@ -140,7 +140,7 @@ script: |
   # Correct tar file order
   mkdir -p temp
   pushd temp
-  tar xmf ../$SOURCEDIST
+  tar xf ../$SOURCEDIST
   find syscoin-* | sort | tar --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > ../$SOURCEDIST
   popd
 
@@ -152,7 +152,7 @@ script: |
     cd distsrc-${i}
     INSTALLPATH=`pwd`/installed/${DISTNAME}
     mkdir -p ${INSTALLPATH}
-    tar --strip-components=1 -xmf ../$SOURCEDIST
+    tar --strip-components=1 -xf ../$SOURCEDIST
 
     CONFIG_SITE=${BASEPREFIX}/${i}/share/config.site ./configure --prefix=/ --disable-ccache --disable-maintainer-mode --disable-dependency-tracking ${CONFIGFLAGS} CFLAGS="${HOST_CFLAGS}" CXXFLAGS="${HOST_CXXFLAGS}" LDFLAGS="${HOST_LDFLAGS}"
     make ${MAKEOPTS}
