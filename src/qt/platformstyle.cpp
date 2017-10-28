@@ -12,6 +12,7 @@
 #include <QImage>
 #include <QPalette>
 #include <QPixmap>
+#include <QSettings>
 
 static const struct {
     const char *platformId;

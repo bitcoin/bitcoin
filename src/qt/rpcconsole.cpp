@@ -434,7 +434,6 @@ RPCConsole::RPCConsole(const PlatformStyle *_platformStyle, QWidget *parent) :
         // Restore failed (perhaps missing setting), center the window
         move(QApplication::desktop()->availableGeometry().center() - frameGeometry().center());
     }
-    QSettings settings; 
     if(settings.value("theme").toString() == "dark") 
     {   
         setStyleSheet( 

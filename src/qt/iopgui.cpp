@@ -163,6 +163,12 @@ IoPGUI::IoPGUI(const PlatformStyle *_platformStyle, const NetworkStyle *networkS
                     "QProgressBar {color: rgb(31,31,31); background: rgb(62,62,62);  border: 1px solid grey; border-radius: 7px; padding: 1px; text-align: center; }" 
                     "QProgressBar::chunk {color: rgb(31,31,31); background: qlineargradient(x1:0, y1:0, x2: 0.5, y2: 0, x3: 1, y3: 0, stop: 0 rgb(108,200,239), stop: 1 rgb(102,204,204), stop: 2 rgb(12,175,165)); border-radius: 7px; margin: 0px; }"
                     "#iopLogo:hover { background: rgb(45,45,45); }"
+                    "#labelWalletStatus { border: none }"
+                    "#labelTransactionsStatus { border: none }"
+                    "#lineWatchBalance { border: none }"
+                    "#line { border: none; color: rgb(119,119,119) }"
+                    "#widgetCoinControl { border: none }"
+                    "#checkBoxCoinControlChange { padding-left: 5px }"
                 );
     }
 
@@ -234,6 +240,7 @@ IoPGUI::IoPGUI(const PlatformStyle *_platformStyle, const NetworkStyle *networkS
     QFrame *frameBlocks = new QFrame();
     frameBlocks->setContentsMargins(0,0,0,0);
     frameBlocks->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Preferred);
+    frameBlocks->setStyleSheet("border: none");
     QHBoxLayout *frameBlocksLayout = new QHBoxLayout(frameBlocks);
     frameBlocksLayout->setContentsMargins(3,0,3,0);
     frameBlocksLayout->setSpacing(3);
@@ -287,7 +294,7 @@ IoPGUI::IoPGUI(const PlatformStyle *_platformStyle, const NetworkStyle *networkS
 
     connect(connectionsControl, SIGNAL(clicked(QPoint)), this, SLOT(toggleNetworkActive()));
 
-    modalOverlay = new ModalOverlay(platformStyle(), this->centralWidget());
+    modalOverlay = new ModalOverlay(platformStyle, this->centralWidget());
 #ifdef ENABLE_WALLET
     if(enableWallet) {
         connect(walletFrame, SIGNAL(requestedSyncWarningInfo()), this, SLOT(showModalOverlay()));
