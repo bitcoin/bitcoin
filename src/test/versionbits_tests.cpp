@@ -47,13 +47,20 @@ class VersionBitsTester
     // Test counter (to identify failures)
     int num;
 
+    // Optimise by removing new/delete, speeds up test in some cases (Travis CI win32)
+
+    std::vector<CBlockIndex> vblocks;
+    size_t nMaxHeight = 0;
+    size_t n = 0;
+
 public:
-    VersionBitsTester() : num(0) {}
+    VersionBitsTester(size_t nMaxHeight_) : num(0), nMaxHeight(nMaxHeight_) {vblocks.resize(nMaxHeight);}
 
     VersionBitsTester& Reset() {
-        for (unsigned int i = 0; i < vpblock.size(); i++) {
-            delete vpblock[i];
-        }
+        //for (unsigned int i = 0; i < vpblock.size(); i++) {
+        //    delete vpblock[i];
+        //}
+        n = 0;
         for (unsigned int  i = 0; i < CHECKERS; i++) {
             checker[i] = TestConditionChecker();
         }
@@ -66,8 +73,10 @@ public:
     }
 
     VersionBitsTester& Mine(unsigned int height, int32_t nTime, int32_t nVersion) {
+        assert(nMaxHeight >= height);
         while (vpblock.size() < height) {
-            CBlockIndex* pindex = new CBlockIndex();
+            //CBlockIndex* pindex = new CBlockIndex();
+            CBlockIndex* pindex = &vblocks[n++];
             pindex->nHeight = vpblock.size();
             pindex->pprev = vpblock.size() > 0 ? vpblock.back() : nullptr;
             pindex->nTime = nTime;
@@ -147,7 +156,7 @@ BOOST_AUTO_TEST_CASE(versionbits_test)
 {
     for (int i = 0; i < 64; i++) {
         // DEFINED -> FAILED
-        VersionBitsTester().TestDefined().TestStateSinceHeight(0)
+        VersionBitsTester(24000).TestDefined().TestStateSinceHeight(0)
                            .Mine(1, TestTime(1), 0x100).TestDefined().TestStateSinceHeight(0)
                            .Mine(11, TestTime(11), 0x100).TestDefined().TestStateSinceHeight(0)
                            .Mine(989, TestTime(989), 0x100).TestDefined().TestStateSinceHeight(0)
@@ -248,7 +257,7 @@ BOOST_AUTO_TEST_CASE(versionbits_computeblockversion)
     // In the first chain, test that the bit is set by CBV until it has failed.
     // In the second chain, test the bit is set by CBV while STARTED and
     // LOCKED-IN, and then no longer set while ACTIVE.
-    VersionBitsTester firstChain, secondChain;
+    VersionBitsTester firstChain(16000), secondChain(16000);
 
     // Start generating blocks before nStartTime
     int64_t nTime = nStartTime - 1;

@@ -123,6 +123,8 @@ BOOST_AUTO_TEST_CASE(DoS_bantime)
 
     SetMockTime(nStartTime+60*60*24+1);
     BOOST_CHECK(!connman->IsBanned(addr));
+
+    SetMockTime(0);
 }
 
 CTransactionRef RandomOrphan()

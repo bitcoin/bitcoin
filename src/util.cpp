@@ -448,14 +448,14 @@ void *memrchr(const void *s, int c, size_t n)
 {
     if (n < 1)
         return NULL;
-    
+
     unsigned char *cp = (unsigned char*) s + n;
-    
+
     do {
         if (*(--cp) == (unsigned char) c)
             return (void*) cp;
     } while (--n != 0);
-    
+
     return NULL;
 };
 
@@ -465,11 +465,11 @@ int memcmp_nta(const void *cs, const void *ct, size_t count)
 {
     const unsigned char *su1, *su2;
     int res = 0;
-    
+
     for (su1 = (unsigned char*)cs, su2 = (unsigned char*)ct;
         0 < count; ++su1, ++su2, count--)
         res |= (*su1 ^ *su2);
-    
+
     return res;
 };
 
@@ -500,13 +500,13 @@ bool GetStringBool(const std::string &value, bool &fOut)
         fOut = true;
         return true;
     };
-    
+
     if (IsStringBoolNegative(value))
     {
         fOut = false;
         return true;
     };
-    
+
     return false;
 };
 
@@ -535,7 +535,7 @@ std::string BytesReadable(uint64_t nBytes)
         return strprintf("%.2f MB", nBytes/1024.0/1024.0);
     if (nBytes >= 1024)
         return strprintf("%.2f KB", nBytes/1024.0);
-    
+
     return strprintf("%d B", nBytes);
 };
 
@@ -546,7 +546,7 @@ static bool icompare_pred(unsigned char a, unsigned char b)
 bool stringsMatchI(const std::string &sString, const std::string &sFind, int type)
 {
     // case insensitive
-    
+
     switch (type)
     {
         case 0: // full match
@@ -559,7 +559,7 @@ bool stringsMatchI(const std::string &sString, const std::string &sFind, int typ
             return sString.length() >= sFind.length()
                 && std::equal(sFind.begin(), sFind.end(), sString.begin(), icompare_pred);
     };
-    
+
     return 0; // unknown type
 };
 
@@ -578,7 +578,7 @@ std::string &TrimQuotes(std::string &s)
         return s;
     if (s.front() == '"')
         s.erase(0, 1);
-    
+
     size_t n = s.size();
     if (n < 1)
         return s;
@@ -713,7 +713,6 @@ static CCriticalSection csPathCached;
 
 const fs::path &GetDataDir(bool fNetSpecific)
 {
-
     LOCK(csPathCached);
 
     fs::path &path = fNetSpecific ? pathCachedNetSpecific : pathCached;

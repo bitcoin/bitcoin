@@ -18,7 +18,6 @@
 
 
 
-
 #if BOOST_VERSION > 105300
 #ifndef BOOST_MESSAGE
 #define BOOST_MESSAGE(msg) BOOST_TEST_MESSAGE(msg)
@@ -72,7 +71,7 @@ struct BasicTestingSetup {
  */
 class CConnman;
 struct TestingSetup: public BasicTestingSetup {
-    //CCoinsViewDB *pcoinsdbview;
+    CCoinsViewDB *pcoinsdbview;
     fs::path pathTemp;
     boost::thread_group threadGroup;
     CConnman* connman;

@@ -51,10 +51,13 @@ struct StakeTestingSetup: public TestingSetup {
         RegisterHDWalletRPCCommands(tableRPC);
         ECC_Start_Stealth();
         ECC_Start_Blinding();
+        ::pcoinsdbview = pcoinsdbview;
+        SetMockTime(0);
     }
 
     ~StakeTestingSetup()
     {
+        ::pcoinsdbview = nullptr;
         UnregisterValidationInterface(pwalletMain);
         delete pwalletMain;
         pwalletMain = nullptr;
@@ -85,10 +88,6 @@ void StakeNBlocks(CHDWallet *pwallet, size_t nBlocks)
             nBestHeight = chainActive.Height();
         }
 
-        boost::shared_ptr<CReserveScript> coinbaseScript;
-        boost::shared_ptr<CReserveKey> rKey(new CReserveKey(pwallet));
-        coinbaseScript = rKey;
-
         int64_t nSearchTime = GetAdjustedTime() & ~Params().GetStakeTimestampMask(nBestHeight+1);
         if (nSearchTime <= pwallet->nLastCoinStakeSearchTime)
         {
@@ -96,7 +95,8 @@ void StakeNBlocks(CHDWallet *pwallet, size_t nBlocks)
             continue;
         };
 
-        std::unique_ptr<CBlockTemplate> pblocktemplate(BlockAssembler(Params()).CreateNewBlock(coinbaseScript->reserveScript));
+        CScript coinbaseScript;
+        std::unique_ptr<CBlockTemplate> pblocktemplate(BlockAssembler(Params()).CreateNewBlock(coinbaseScript));
         BOOST_REQUIRE(pblocktemplate.get());
 
         if (pwallet->SignBlock(pblocktemplate.get(), nBestHeight+1, nSearchTime))
@@ -104,9 +104,7 @@ void StakeNBlocks(CHDWallet *pwallet, size_t nBlocks)
             CBlock *pblock = &pblocktemplate->block;
 
             if (CheckStake(pblock))
-            {
                  nStaked++;
-            };
         };
 
         if (nStaked >= nBlocks)
