@@ -658,7 +658,7 @@ bool CBudgetManager::IsDevTransactionValid(const CTransaction& txNew, int nBlock
 {
     int nCurrentBudgetPayment = nBlockHeight % GetBudgetPaymentCycleBlocks();
     if(nCurrentBudgetPayment > 0) {
-        LogPrintf("CFinalizedBudget::IsTransactionValid - Invalid block - height: %d start: %d\n", nBlockHeight, GetBlockStart());
+        LogPrintf("CFinalizedBudget::IsTransactionValid - Invalid block - height: %d\n", nBlockHeight);
         return false;
     }
 
@@ -675,7 +675,7 @@ bool CBudgetManager::IsDevTransactionValid(const CTransaction& txNew, int nBlock
         ExtractDestination(devscript, address1);
         CBitcoinAddress address2(address1);
 
-        LogPrintf("CFinalizedBudget::IsTransactionValid - Missing required payment - %s: %d\n", address2.ToString(), vecBudgetPayments[nCurrentBudgetPayment].nAmount);
+        LogPrintf("CFinalizedBudget::IsTransactionValid - Missing required payment - %s\n", address2.ToString());
     }
     
     return found;
