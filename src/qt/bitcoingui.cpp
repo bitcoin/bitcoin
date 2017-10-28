@@ -327,7 +327,7 @@ void BitcoinGUI::createActions(const NetworkStyle *networkStyle)
     }
 
     if (systemnodeConfig.getCount() >= 0) {
-        systemnodeAction = new QAction(QIcon(":/icons/throne"), tr("&Systemnodes"), this);
+        systemnodeAction = new QAction(QIcon(":/icons/systemnode"), tr("&Systemnodes"), this);
         systemnodeAction->setStatusTip(tr("Browse systemnodes"));
         systemnodeAction->setToolTip(systemnodeAction->statusTip());
         systemnodeAction->setCheckable(true);
