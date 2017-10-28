@@ -3,7 +3,8 @@ TARGET = peercoin-qt
 macx:TARGET = "Peercoin-Qt"
 VERSION = 0.6.0
 INCLUDEPATH += src src/json src/qt
-QT += network core widgets
+QT += network core
+greaterThan(QT_MAJOR_VERSION, 4):QT+=widgets
 DEFINES += QT_GUI BOOST_THREAD_USE_LIB BOOST_SPIRIT_THREADSAFE
 CONFIG += no_include_pwd
 CONFIG += thread
@@ -54,7 +55,7 @@ win32:QMAKE_LFLAGS *= -Wl,--large-address-aware
 contains(USE_QRCODE, 1) {
     message(Building with QRCode support)
     DEFINES += USE_QRCODE
-    LIBS += -lqrencode -lpng
+    LIBS += -lqrencode
 }
 
 # use: qmake "USE_UPNP=1" ( enabled by default; default)
