@@ -17,7 +17,7 @@ packages:
 - "binutils-arm-linux-gnueabihf"
 - "g++-4.8-multilib"
 - "gcc-4.8-multilib"
-- "binutils-gold"
+- "binutils"
 - "git-core"
 - "pkg-config"
 - "autoconf"
@@ -28,7 +28,7 @@ packages:
 - "ca-certificates"
 - "python"
 remotes:
-- "url": "https://github.com/syscoin/syscoin2.git"
+- "url": "https://github.com/einalex/syscoin2.git"
   "dir": "syscoin"
 files: []
 script: |
@@ -140,7 +140,7 @@ script: |
   # Correct tar file order
   mkdir -p temp
   pushd temp
-  tar xf ../$SOURCEDIST
+  tar xmf ../$SOURCEDIST
   find syscoin-* | sort | tar --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > ../$SOURCEDIST
   popd
 
@@ -152,7 +152,7 @@ script: |
     cd distsrc-${i}
     INSTALLPATH=`pwd`/installed/${DISTNAME}
     mkdir -p ${INSTALLPATH}
-    tar --strip-components=1 -xf ../$SOURCEDIST
+    tar --strip-components=1 -xmf ../$SOURCEDIST
 
     CONFIG_SITE=${BASEPREFIX}/${i}/share/config.site ./configure --prefix=/ --disable-ccache --disable-maintainer-mode --disable-dependency-tracking ${CONFIGFLAGS} CFLAGS="${HOST_CFLAGS}" CXXFLAGS="${HOST_CXXFLAGS}" LDFLAGS="${HOST_LDFLAGS}"
     make ${MAKEOPTS}
@@ -174,7 +174,7 @@ script: |
     find . -name "lib*.a" -delete
     rm -rf ${DISTNAME}/lib/pkgconfig
     find ${DISTNAME}/bin -type f -executable -exec ../contrib/devtools/split-debug.sh {} {} {}.dbg \;
-    find ${DISTNAME}/lib -type f -exec ../contrib/devtools/split-debug.sh {} {} {}.dbg \;
+    #find ${DISTNAME}/lib -type f -exec ../contrib/devtools/split-debug.sh {} {} {}.dbg \;
     find ${DISTNAME} -not -name "*.dbg" | sort | tar --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > ${OUTDIR}/${DISTNAME}-${i}.tar.gz
     find ${DISTNAME} -name "*.dbg" | sort | tar --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > ${OUTDIR}/${DISTNAME}-${i}-debug.tar.gz
     cd ../../
