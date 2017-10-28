@@ -1,8 +1,9 @@
 The IoP Blockchain client version *6.0.1* is now available
 
-HOTFIX
+Fixes
 ======
-This minor release fixes a bug that might cause a client to get stuck on the shorter chain during a soft fork.
+This minor release fixes a bug that might cause a client to get stuck on the shorter chain during a soft fork. 
+The log output during mining has been significantly reduced.
 
 
 General Information
