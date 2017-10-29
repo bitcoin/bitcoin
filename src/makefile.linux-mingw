@@ -37,8 +37,10 @@ DEFS=-D_MT -DWIN32 -D_WINDOWS -DBOOST_THREAD_USE_LIB -DBOOST_SPIRIT_THREADSAFE
 DEBUGFLAGS=-g
 xCXXFLAGS=-O2 -w -Wall -Wextra -Wformat -Wformat-security -Wno-unused-parameter $(DEBUGFLAGS) $(DEFS) $(INCLUDEPATHS) $(CXXFLAGS)
 # enable: ASLR, DEP and large address aware
-xLDFLAGS=-Wl,--dynamicbase -Wl,--nxcompat -Wl,--large-address-aware $(LDFLAGS)
-
+xLDFLAGS=-Wl,--dynamicbase -Wl,--nxcompat $(LDFLAGS)
+ifeq (${HOST}, i686-w64-mingw32)
+	xLDFLAGS+=-Wl,--large-address-aware
+endif
 TESTDEFS = -DTEST_DATA_DIR=$(abspath test/data)
 
 ifndef USE_UPNP
