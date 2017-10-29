@@ -3,7 +3,8 @@ TARGET = peercoin-qt
 macx:TARGET = "Peercoin-Qt"
 VERSION = 0.6.0
 INCLUDEPATH += src src/json src/qt
-QT += network core widgets
+QT += network core
+greaterThan(QT_MAJOR_VERSION, 4):QT+=widgets
 DEFINES += QT_GUI BOOST_THREAD_USE_LIB BOOST_SPIRIT_THREADSAFE
 CONFIG += no_include_pwd
 CONFIG += thread
@@ -47,14 +48,17 @@ QMAKE_CXXFLAGS *= -D_FORTIFY_SOURCE=2
 # for extra security on Windows: enable ASLR and DEP via GCC linker flags
 win32:QMAKE_LFLAGS *= -Wl,--dynamicbase -Wl,--nxcompat
 # on Windows: enable GCC large address aware linker flag
-win32:QMAKE_LFLAGS *= -Wl,--large-address-aware
+contains(CROSS_COMPILE, i686-w64-mingw32) {
+    QMAKE_LFLAGS *= -Wl,--large-address-aware
+}
 
 # use: qmake "USE_QRCODE=1"
 # libqrencode (http://fukuchi.org/works/qrencode/index.en.html) must be installed for support
 contains(USE_QRCODE, 1) {
     message(Building with QRCode support)
     DEFINES += USE_QRCODE
-    LIBS += -lqrencode -lpng
+    LIBS += -lqrencode
+    win32:LIBS += -lpng
 }
 
 # use: qmake "USE_UPNP=1" ( enabled by default; default)
@@ -72,6 +76,10 @@ contains(USE_UPNP, -) {
     INCLUDEPATH += $$MINIUPNPC_INCLUDE_PATH
     LIBS += $$join(MINIUPNPC_LIB_PATH,,-L,) -lminiupnpc
     win32:LIBS += -liphlpapi
+}
+
+contains(MINIUPNP_STATICLIB, 1) {
+     DEFINES += MINIUPNP_STATICLIB
 }
 
 # use: qmake "USE_DBUS=1"
@@ -108,7 +116,7 @@ LIBS += $$PWD/src/leveldb/libleveldb.a $$PWD/src/leveldb/libmemenv.a
     isEmpty(QMAKE_RANLIB) {
         QMAKE_RANLIB = $$replace(QMAKE_STRIP, strip, ranlib)
     }
-    LIBS += -lshlwapi -lz -pthread
+    LIBS += -lshlwapi -lz
     genleveldb.commands = cd $$PWD/src/leveldb && CC=$$QMAKE_CC CXX=$$QMAKE_CXX TARGET_OS=OS_WINDOWS_CROSSCOMPILE $(MAKE) OPT=\"$$QMAKE_CXXFLAGS $$QMAKE_CXXFLAGS_RELEASE\" libleveldb.a libmemenv.a && $$QMAKE_RANLIB $$PWD/src/leveldb/libleveldb.a && $$QMAKE_RANLIB $$PWD/src/leveldb/libmemenv.a
 }
 genleveldb.target = $$PWD/src/leveldb/libleveldb.a
@@ -418,7 +426,7 @@ win32:!contains(MINGW_THREAD_BUGFIX, 0) {
 macx:HEADERS += src/qt/macdockiconhandler.h
 macx:OBJECTIVE_SOURCES += src/qt/macdockiconhandler.mm
 macx:LIBS += -framework Foundation -framework ApplicationServices -framework AppKit
-macx:DEFINES += MAC_OSX MSG_NOSIGNAL=0
+macx:DEFINES += BOOST_NO_CXX11_SCOPED_ENUMS MAC_OSX MSG_NOSIGNAL=0
 macx:ICON = src/qt/res/icons/peercoin.icns
 macx:QMAKE_CFLAGS_THREAD += -pthread
 macx:QMAKE_LFLAGS_THREAD += -pthread
