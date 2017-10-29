@@ -45,7 +45,7 @@ Var StartMenuGroup
 !insertmacro MUI_LANGUAGE English
 
 # Installer attributes
-OutFile peercoin-0.6.0-win32-setup.exe
+OutFile peercoin-${VERSION}-setup.exe
 InstallDir $PROGRAMFILES\Peercoin
 CRCCheck on
 XPStyle on
