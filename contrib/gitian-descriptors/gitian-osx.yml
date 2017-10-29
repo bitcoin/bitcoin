@@ -1,5 +1,5 @@
 ---
-name: "syscoin-osx-0.13"
+name: "syscoin-osx-2.1.6"
 enable_cache: true
 suites:
 - "trusty"

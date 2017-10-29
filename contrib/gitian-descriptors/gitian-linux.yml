@@ -1,5 +1,5 @@
 ---
-name: "syscoin-linux-0.13"
+name: "syscoin-linux-2.1.6"
 enable_cache: true
 suites:
 - "trusty"
