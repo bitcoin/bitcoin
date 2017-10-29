@@ -19,8 +19,8 @@ RUN cd gitian-builder/inputs && wget 'ftp://ftp.simplesystems.org/pub/png/src/hi
 RUN cd gitian-builder/inputs && wget 'http://fukuchi.org/works/qrencode/qrencode-3.4.3.tar.bz2'
 RUN cd gitian-builder/inputs && wget 'http://downloads.sourceforge.net/project/boost/boost/1.55.0/boost_1_55_0.tar.bz2'
 RUN cd gitian-builder/inputs && wget 'https://svn.boost.org/trac/boost/raw-attachment/ticket/7262/boost-mingw.patch' -O boost-mingw-gas-cross-compile-2013-03-03.patch
-#RUN cd gitian-builder/inputs && wget 'https://download.qt-project.org/archive/qt/4.8/4.8.5/qt-everywhere-opensource-src-4.8.5.tar.gz'
-RUN cd gitian-builder/inputs && wget 'https://master.qt.io/archive/qt/5.7/5.7.1/single/qt-everywhere-opensource-src-5.7.1.tar.gz'
+RUN cd gitian-builder/inputs && wget 'https://download.qt-project.org/archive/qt/4.8/4.8.5/qt-everywhere-opensource-src-4.8.5.tar.gz'
+#RUN cd gitian-builder/inputs && wget 'https://master.qt.io/archive/qt/5.7/5.7.1/single/qt-everywhere-opensource-src-5.7.1.tar.gz'
 RUN cd gitian-builder/inputs && wget 'http://curl.haxx.se/download/curl-7.41.0.tar.gz'
 
 ADD setup.sh /setup.sh
