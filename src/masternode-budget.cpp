@@ -132,7 +132,12 @@ void CBudgetManager::SubmitFinalBudget()
 
     int nBlockStart = nCurrentHeight - nCurrentHeight % GetBudgetPaymentCycleBlocks() + GetBudgetPaymentCycleBlocks();
     if(nSubmittedHeight >= nBlockStart) return;
-    if(nBlockStart - nCurrentHeight > 1440*2) return; // allow submitting final budget only when 2 days left before payments
+    CAmount amount = 1440;
+    if (Params().NetworkID() == CBaseChainParams::TESTNET) {
+        // Relatively 43200 / 30 = 1440, for testnet 50 / 30 ~ 2
+        amount = 2;
+    }
+    if(nBlockStart - nCurrentHeight > amount*2) return; // allow submitting final budget only when 2 days left before payments
 
     std::vector<CBudgetProposal*> vBudgetProposals = budget.GetBudget();
     std::string strBudgetName = "main";
@@ -503,7 +508,11 @@ void CBudgetManager::FillBlockPayee(CMutableTransaction& txNew, CAmount nFees)
         // These are super blocks, so their value can be much larger than normal
         CTxDestination dest = CBitcoinAddress(Params().DevfundAddress()).Get();
         txNew.vout[1].scriptPubKey = GetScriptForDestination(dest);
-        txNew.vout[1].nValue = 4320000000000;
+        CAmount coins = 43200 * COIN;
+        if (Params().NetworkID() == CBaseChainParams::TESTNET) {
+            coins = 50 * COIN;
+        }
+        txNew.vout[1].nValue = coins;
 
         LogPrintf("CBudgetManager::FillBlockPayee - Budget payment to Dev fund for %lld\n", nAmount);
     }
@@ -583,7 +592,12 @@ bool CBudgetManager::HasNextFinalizedBudget()
     if(masternodeSync.IsBudgetFinEmpty()) return true;
 
     int nBlockStart = pindexPrev->nHeight - pindexPrev->nHeight % GetBudgetPaymentCycleBlocks() + GetBudgetPaymentCycleBlocks();
-    if(nBlockStart - pindexPrev->nHeight > 1440*2) return true; //we wouldn't have the budget yet
+    CAmount amount = 1440;
+    if (Params().NetworkID() == CBaseChainParams::TESTNET) {
+        // Relatively 43200 / 30 = 1440, for testnet 50 / 30 ~ 2
+        amount = 2;
+    }
+    if(nBlockStart - pindexPrev->nHeight > amount*2) return true; //we wouldn't have the budget yet
 
     if(budget.IsBudgetPaymentBlock(nBlockStart)) return true;
 
@@ -667,7 +681,11 @@ bool CBudgetManager::IsDevTransactionValid(const CTransaction& txNew, int nBlock
     CScript devscript = GetScriptForDestination(dest);
     BOOST_FOREACH(CTxOut out, txNew.vout)
     {
-        if(devscript == out.scriptPubKey && 4320000000000 == out.nValue)
+        CAmount coins = 43200 * COIN;
+        if (Params().NetworkID() == CBaseChainParams::TESTNET) {
+            coins = 50 * COIN;
+        }
+        if(devscript == out.scriptPubKey && coins == out.nValue)
             found = true;
     }
     if(!found) {
