@@ -214,6 +214,7 @@ RES_ICONS = \
   qt/res/icons/send.png \
   qt/res/icons/synced.png \
   qt/res/icons/masternode.png \
+  qt/res/icons/systemnode.png \
   qt/res/icons/toolbar.png \
   qt/res/icons/transaction0.png \
   qt/res/icons/transaction2.png \
