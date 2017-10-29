@@ -76,6 +76,10 @@ contains(USE_UPNP, -) {
     win32:LIBS += -liphlpapi
 }
 
+contains(MINIUPNP_STATICLIB, 1) {
+     DEFINES += MINIUPNP_STATICLIB
+}
+
 # use: qmake "USE_DBUS=1"
 contains(USE_DBUS, 1) {
     message(Building with DBUS (Freedesktop notifications) support)
