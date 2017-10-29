@@ -56,6 +56,7 @@ contains(USE_QRCODE, 1) {
     message(Building with QRCode support)
     DEFINES += USE_QRCODE
     LIBS += -lqrencode
+    win32:LIBS += -lpng
 }
 
 # use: qmake "USE_UPNP=1" ( enabled by default; default)
