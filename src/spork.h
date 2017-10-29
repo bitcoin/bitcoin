@@ -24,7 +24,7 @@ using namespace boost;
     - This would result in old clients getting confused about which spork is for what
 */
 #define SPORK_START                                           10001
-#define SPORK_END                                             10012
+#define SPORK_END                                             10013
 
 #define SPORK_2_INSTANTX                                      10001
 #define SPORK_3_INSTANTX_BLOCK_FILTERING                      10002
@@ -48,7 +48,6 @@ using namespace boost;
 #define SPORK_12_RECONSIDER_BLOCKS_DEFAULT                    0
 #define SPORK_13_ENABLE_SUPERBLOCKS_DEFAULT                   4070908800   //OFF
 
-// TODO this should be changed later
 #define SPORK_8_SYSTEMNODE_PAYMENT_ENFORCEMENT                10013
 #define SPORK_8_SYSTEMNODE_PAYMENT_ENFORCEMENT_DEFAULT        4070908800  //OFF
     

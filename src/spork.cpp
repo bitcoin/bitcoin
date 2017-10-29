@@ -77,6 +77,11 @@ void ProcessSpork(CNode* pfrom, std::string& strCommand, CDataStream& vRecv)
 // grab the spork, otherwise say it's off
 bool IsSporkActive(int nSporkID)
 {
+    // TODO Remove later
+    // Workaround to activate all sporks for testnet
+    if (Params().NetworkID() == CBaseChainParams::TESTNET) {
+        return true;
+    }
     int64_t r = -1;
 
     if(mapSporksActive.count(nSporkID)){
