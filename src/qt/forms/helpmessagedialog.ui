@@ -10,6 +10,9 @@
     <height>400</height>
    </rect>
   </property>
+  <property name="styleSheet">
+    <string notr="true">#frame { border: none }</string>
+  </property>
   <layout class="QHBoxLayout" name="horizontalLayout_2">
    <property name="spacing">
     <number>0</number>
@@ -48,11 +51,11 @@
        <property name="maximumSize">
         <size>
          <width>100</width>
-         <height>100</height>
+         <height>88</height>
         </size>
        </property>
        <property name="pixmap">
-        <pixmap resource="../iop.qrc">:/icons/iop</pixmap>
+        <pixmap resource="../iop.qrc">:/icons/iop_transparent</pixmap>
        </property>
        <property name="scaledContents">
         <bool>true</bool>
@@ -60,7 +63,7 @@
        <property name="alignment">
         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
        </property>
-      </widget>
+     </widget>
      </item>
      <item>
       <widget class="QFrame" name="frame">
