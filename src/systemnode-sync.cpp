@@ -175,10 +175,9 @@ void CSystemnodeSync::ClearFulfilledRequest()
 
     BOOST_FOREACH(CNode* pnode, vNodes)
     {
-        pnode->ClearFulfilledRequest("getspork");
+        pnode->ClearFulfilledRequest("sngetspork");
         pnode->ClearFulfilledRequest("snsync");
         pnode->ClearFulfilledRequest("snwsync");
-        pnode->ClearFulfilledRequest("busync");
     }
 }
 
@@ -237,8 +236,8 @@ void CSystemnodeSync::Process()
 
         //set to synced
         if(RequestedSystemnodeAssets == SYSTEMNODE_SYNC_SPORKS){
-            if(pnode->HasFulfilledRequest("getspork")) continue;
-            pnode->FulfilledRequest("getspork");
+            if(pnode->HasFulfilledRequest("sngetspork")) continue;
+            pnode->FulfilledRequest("sngetspork");
 
             pnode->PushMessage("getsporks"); //get current network sporks
             if(RequestedSystemnodeAttempt >= 2) GetNextAsset();
@@ -310,8 +309,8 @@ void CSystemnodeSync::Process()
                 CBlockIndex* pindexPrev = chainActive.Tip();
                 if(pindexPrev == NULL) return;
 
-                int nMnCount = snodeman.CountEnabled();
-                pnode->PushMessage("snget", nMnCount); //sync payees
+                int nSnCount = snodeman.CountEnabled();
+                pnode->PushMessage("snget", nSnCount); //sync payees
                 RequestedSystemnodeAttempt++;
 
                 return;

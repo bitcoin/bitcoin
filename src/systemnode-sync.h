@@ -9,8 +9,6 @@
 #define SYSTEMNODE_SYNC_SPORKS            1
 #define SYSTEMNODE_SYNC_LIST              2
 #define SYSTEMNODE_SYNC_SNW               3
-#define SYSTEMNODE_SYNC_BUDGET_PROP       10
-#define SYSTEMNODE_SYNC_BUDGET_FIN        11
 #define SYSTEMNODE_SYNC_FAILED            998
 #define SYSTEMNODE_SYNC_FINISHED          999
 
