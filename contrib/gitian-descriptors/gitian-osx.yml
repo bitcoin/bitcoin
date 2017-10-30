@@ -29,7 +29,7 @@ packages:
 - "python-setuptools"
 reference_datetime: "2017-01-01 00:00:00"
 remotes:
-- "url": "https://github.com/syscoin/syscoin2.git"
+- "url": "https://github.com/einalex/syscoin2.git"
   "dir": "syscoin"
 files:
 - "MacOSX10.9.sdk.tar.gz"
