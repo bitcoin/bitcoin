@@ -82,7 +82,7 @@ UniValue getinfo(const UniValue& params, bool fHelp)
     UniValue obj(UniValue::VOBJ);
     obj.push_back(Pair("version", CLIENT_VERSION));
 	// SYSCOIN
-	obj.push_back(Pair("sysversion", SYSCOIN_CLIENT_VERSION));
+	obj.push_back(Pair("btcversion", BITCOIN_CLIENT_VERSION));
     obj.push_back(Pair("protocolversion", PROTOCOL_VERSION));
 #ifdef ENABLE_WALLET
     if (pwalletMain) {
