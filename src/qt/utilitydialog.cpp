@@ -37,9 +37,10 @@ HelpMessageDialog::HelpMessageDialog(QWidget *parent, bool about) :
 {
     ui->setupUi(this);
 
-    QString version = tr(PACKAGE_NAME) + " " + tr("version") + " " + QString::fromStdString(FormatFullVersion());
+    QString version = tr("Syscoin Client") + " " + tr("version") + " " + QString::fromStdString(FormatFullVersion());
+    QString bitcoinversion = tr("built upon Bitcoin Core") + " " + tr("version") + " " + QString::fromStdString(FormatBitcoinVersion());
 	// SYSCOIN
-	QString sysversion = tr("Syscoin Client") + " " + tr("version") + " " + QString::fromStdString(SYSCOIN_CLIENT_VERSION);
+	//QString sysversion = tr("Syscoin Client") + " " + tr("version") + " " + QString::fromStdString(SYSCOIN_CLIENT_VERSION);
     /* On x86 add a bit specifier to the version so that users can distinguish between
      * 32 and 64 bit builds. On other architectures, 32/64 bit may be more ambigious.
      */
@@ -66,7 +67,7 @@ HelpMessageDialog::HelpMessageDialog(QWidget *parent, bool about) :
         ui->aboutMessage->setTextFormat(Qt::RichText);
         ui->scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
         text = version + "\n" + licenseInfo;
-        ui->aboutMessage->setText(version + "<br><br>" + licenseInfoHTML);
+        ui->aboutMessage->setText(version + "<br>" + bitcoinversion + "<br><br>" + licenseInfoHTML);
         ui->aboutMessage->setWordWrap(true);
         ui->helpMessage->setVisible(false);
 		// SYSCOIN
