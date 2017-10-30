@@ -574,8 +574,7 @@ UniValue certnew(const UniValue& params, bool fHelp) {
 						"<alias> An alias you own.\n"
 						"<title> title, 256 characters max.\n"
                         "<public> public data, 256 characters max.\n"
-						"<safe search> set to No if this cert should only show in the search when safe search is not selected. Defaults to Yes (cert shows with or without safe search selected in search lists).\n"                     
-						"<category> category, 25 characters max. Defaults to certificates\n"
+						"<category> category, 256 characters max. Defaults to certificates\n"
 						"<witness> Witness alias name that will sign for web-of-trust notarization of this transaction.\n"	
 						+ HelpRequiringPassphrase());
 	vector<unsigned char> vchAlias = vchFromValue(params[0]);
@@ -685,10 +684,10 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
         throw runtime_error(
 		"certupdate <guid> [title] [public] [category=certificates] [witness]\n"
 						"Perform an update on an certificate you control.\n"
-						"<guid> certificate guidkey.\n"
-						"<title> certificate title, 256 characters max.\n"
-                        "<public> public data, 256 characters max.\n"                
-						"<category> category, 256 characters max. Defaults to certificates\n"
+						"<guid> Certificate guidkey.\n"
+						"<title> Certificate title, 256 characters max.\n"
+                        "<public> Public data, 256 characters max.\n"                
+						"<category> Category, 256 characters max. Defaults to certificates\n"
 						"<witness> Witness alias name that will sign for web-of-trust notarization of this transaction.\n"	
 						+ HelpRequiringPassphrase());
 	vector<unsigned char> vchCert = vchFromValue(params[0]);
