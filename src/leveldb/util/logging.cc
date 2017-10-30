@@ -55,7 +55,7 @@ bool ConsumeDecimalNumber(Slice* in, uint64_t* val) {
       const int delta = (c - '0');
       static const uint64_t kMaxUint64 = ~static_cast<uint64_t>(0);
       if (v > kMaxUint64/10 ||
-          (v == kMaxUint64/10 && delta > kMaxUint64%10)) {
+          (v == kMaxUint64/10 && delta > (int)(kMaxUint64%10))) {
         // Overflow
         return false;
       }
