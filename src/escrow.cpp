@@ -1575,36 +1575,31 @@ UniValue escrowbid(const UniValue& params, bool fHelp) {
 	return res;
 }
 UniValue escrowaddshipping(const UniValue& params, bool fHelp) {
-	if (fHelp || params.size() < 3 || params.size() > 4)
+	if (fHelp || params.size() < 2 || params.size() > 3)
 		throw runtime_error(
-			"escrowbid <alias> <escrow> <shipping amount> [witness]\n"
-			"<alias> An alias you own.\n"
+			"escrowbid <escrow> <shipping amount> [witness]\n"
 			"<escrow> Escrow GUID to add shipping to.\n"
 			"<shipping amount> Amount to add to shipping for merchant. Amount is in payment option currency. Example: If merchant requests 0.1 BTC for shipping and escrow is paid in BTC, enter 0.1 here.\n"
 			"<witness> Witness alias name that will sign for web-of-trust notarization of this transaction.\n"
 			+ HelpRequiringPassphrase());
 
-	vector<unsigned char> vchAlias = vchFromValue(params[0]);
-	vector<unsigned char> vchEscrow = vchFromValue(params[1]);
-	CAmount nShipping = AmountFromValue(params[2]);
+	vector<unsigned char> vchEscrow = vchFromValue(params[0]);
+	CAmount nShipping = AmountFromValue(params[1]);
 	uint64_t nHeight = chainActive.Tip()->nHeight;
-	// check for alias existence in DB
-	CAliasIndex bidalias;
-	if (!GetAlias(vchAlias, bidalias))
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4509 - " + _("Failed to read alias from DB"));
 
 	vector<unsigned char> vchWitness;
-	if (CheckParam(params, 3))
-		vchWitness = vchFromValue(params[3]);
+	if (CheckParam(params, 2))
+		vchWitness = vchFromValue(params[2]);
 
-	CAliasIndex bidderalias;
-	if (!GetAlias(vchAlias, bidderalias))
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4512 - " + _("Could not find alias with this name"));
 	CScript scriptPubKeyAliasOrig, scriptPubKeyAlias;
 	CEscrow theEscrow;
 
 	if (!GetEscrow(vchEscrow, theEscrow))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4513 - " + _("Could not find an escrow with this identifier"));
+
+	CAliasIndex bidderalias;
+	if (!GetAlias(theEscrow.buyerAliasTuple.first, bidderalias))
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4512 - " + _("Could not find alias with this name"));
 
 	CScriptID innerID(CScript(theEscrow.vchRedeemScript.begin(), theEscrow.vchRedeemScript.end()));
 	CSyscoinAddress address(innerID);
