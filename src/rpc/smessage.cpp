@@ -458,14 +458,7 @@ UniValue smsgaddkey(const JSONRPCRequest &request)
     if (rv != 0)
     {
         result.pushKV("result", "Public key not added to db.");
-        switch (rv)
-        {
-            case 2:     result.pushKV("reason", "publicKey is invalid.");                  break;
-            case 3:     result.pushKV("reason", "publicKey does not match address.");      break;
-            case 4:     result.pushKV("reason", "address is already in db.");              break;
-            case 5:     result.pushKV("reason", "address is invalid.");                    break;
-            default:    result.pushKV("reason", "error.");                                 break;
-        };
+        result.pushKV("reason", SecureMessageGetString(rv));
     } else
     {
         result.pushKV("result", "Added public key to db.");
@@ -492,22 +485,17 @@ UniValue smsggetpubkey(const JSONRPCRequest &request)
     int rv = SecureMsgGetLocalPublicKey(address, publicKey);
     switch (rv)
     {
-        case 0:
+        case SMSG_NO_ERROR:
             result.pushKV("result", "Success.");
             result.pushKV("address", address);
             result.pushKV("publickey", publicKey);
             return result; // success, don't check db
-        case 2:
-        case 3:
-            result.pushKV("result", "Failed.");
-            result.pushKV("message", "Invalid address.");
-            return result;
-        case 4:
+        case SMSG_WALLET_NO_PUBKEY:
             break; // check db
         //case 1:
         default:
             result.pushKV("result", "Failed.");
-            result.pushKV("message", "Error.");
+            result.pushKV("reason", SecureMessageGetString(rv));
             return result;
     };
 
@@ -527,7 +515,7 @@ UniValue smsggetpubkey(const JSONRPCRequest &request)
 
     switch (rv)
     {
-        case 0:
+        case SMSG_NO_ERROR:
             if (!cpkFromDB.IsValid()
                 || !cpkFromDB.IsCompressed())
             {
@@ -543,14 +531,13 @@ UniValue smsggetpubkey(const JSONRPCRequest &request)
                 result.pushKV("publickey", publicKey);
             };
             break;
-        case 2:
+        case SMSG_PUBKEY_NOT_EXISTS:
             result.pushKV("result", "Failed.");
             result.pushKV("message", "Address not found in wallet or db.");
             return result;
-        //case 1:
         default:
             result.pushKV("result", "Failed.");
-            result.pushKV("message", "Error, GetStoredKey().");
+            result.pushKV("reason", SecureMessageGetString(rv));
             return result;
     };
 

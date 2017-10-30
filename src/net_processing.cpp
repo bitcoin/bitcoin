@@ -2704,7 +2704,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         // message would be undesirable as we transmit it ourselves.
     }
 
-    else if (2 != SecureMsgReceiveData(pfrom, strCommand, vRecv))
+    else if (SMSG_UNKNOWN_MESSAGE != SecureMsgReceiveData(pfrom, strCommand, vRecv))
     {
 
     } else

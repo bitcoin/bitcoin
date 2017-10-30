@@ -78,9 +78,6 @@ BOOST_AUTO_TEST_CASE(smsg_test)
 
         bool fSendAnonymous = rand() % 3 == 0;
 
-        BOOST_MESSAGE("sAddrFrom " << (fSendAnonymous ? std::string("Anon") : sAddrFrom));
-        BOOST_MESSAGE("sAddrTo " << sAddrTo);
-
         BOOST_CHECK_MESSAGE(0 == (rv = SecureMsgEncrypt(smsg, fSendAnonymous ? idNull : kFrom, kTo, sTestMessage)), "SecureMsgEncrypt " << rv);
 
         BOOST_CHECK_MESSAGE(0 == (rv = SecureMsgSetHash((uint8_t*)&smsg, ((uint8_t*)&smsg) + SMSG_HDR_LEN, smsg.nPayload)), "SecureMsgSetHash " << rv);
@@ -92,7 +89,8 @@ BOOST_AUTO_TEST_CASE(smsg_test)
         BOOST_CHECK(msg.vchMessage.size()-1 == sTestMessage.size()
             && 0 == memcmp(&msg.vchMessage[0], sTestMessage.data(), msg.vchMessage.size()-1));
 
-        BOOST_CHECK_MESSAGE(1 == (rv = SecureMsgDecrypt(false, kFail, smsg, msg)), "SecureMsgDecrypt " << rv);
+        rv = SecureMsgDecrypt(false, kFail, smsg, msg);
+        BOOST_CHECK_MESSAGE(SMSG_MAC_MISMATCH == rv, "SecureMsgDecrypt " << SecureMessageGetString(rv));
     };
 
     SecureMsgShutdown();
