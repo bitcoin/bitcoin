@@ -28,7 +28,7 @@ packages:
 - "python-dev"
 - "python-setuptools"
 remotes:
-- "url": "https://github.com/syscoin/syscoin2.git"
+- "url": "https://github.com/einalex/syscoin2.git"
   "dir": "syscoin"
 files:
 - "MacOSX10.11.sdk.tar.gz"
