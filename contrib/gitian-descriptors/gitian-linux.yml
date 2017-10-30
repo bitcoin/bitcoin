@@ -34,7 +34,7 @@ files: []
 script: |
   WRAP_DIR=$HOME/wrapped
   #HOSTS="i686-pc-linux-gnu x86_64-linux-gnu arm-linux-gnueabihf aarch64-linux-gnu"
-  HOSTS="x86_64-linux-gnu i686-pc-linux-gnu"
+  HOSTS="arm-linux-gnueabihf aarch64-linux-gnu"
   CONFIGFLAGS="--enable-glibc-back-compat --enable-reduce-exports --disable-bench --disable-gui-tests"
   FAKETIME_HOST_PROGS=""
   FAKETIME_PROGS="date ar ranlib nm"
