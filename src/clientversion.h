@@ -64,6 +64,7 @@
 #include <vector>
 // SYSCOIN
 static const std::string SYSCOIN_CLIENT_VERSION = SYSCOIN_VERSION;
+static const std::string BITCOIN_CLIENT_VERSION = BITCOIN_VERSION;
 static const int CLIENT_VERSION =
                            1000000 * CLIENT_VERSION_MAJOR
                          +   10000 * CLIENT_VERSION_MINOR
