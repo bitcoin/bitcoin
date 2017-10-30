@@ -566,7 +566,7 @@ bool IsOutboundDisconnectionCandidate(const CNode *node)
     return !(node->fInbound || node->m_manual_connection || node->fFeeler || node->fOneShot);
 }
 
-void PeerLogicValidation::InitializeNode(CNode *pnode) EXCLUSIVE_LOCKS_REQUIRED(cs_filter) {
+void PeerLogicValidation::InitializeNode(CNode *pnode) {
     CAddress addr = pnode->addr;
     std::string addrName = pnode->GetAddrName();
     NodeId nodeid = pnode->GetId();
