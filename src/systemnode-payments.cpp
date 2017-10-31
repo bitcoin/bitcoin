@@ -567,7 +567,7 @@ void CSystemnodePayments::Sync(CNode* node, int nCountNeeded)
         }
         ++it;
     }
-    node->PushMessage("ssc", SYSTEMNODE_SYNC_SNW, nInvCount);
+    node->PushMessage("snssc", SYSTEMNODE_SYNC_SNW, nInvCount);
 }
 
 // Is this systemnode scheduled to get paid soon? 
