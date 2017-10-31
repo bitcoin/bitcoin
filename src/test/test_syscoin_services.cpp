@@ -639,17 +639,19 @@ string AliasTransfer(const string& node, const string& aliasname, const string& 
 
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasupdate " + aliasname + " " + pubdata + " " + address + " " + acceptTransfers + " " + expires + " " + encryptionpubkey + " " + encryptionpubkey + " " + witness));
 	UniValue varray = r.get_array();
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + varray[0].get_str()));
 	string hex_str;
 	try
 	{
-		r = CallRPC(node, "signrawtransaction " + varray[0].get_str());
 		hex_str = find_value(r.get_obj(), "hex").get_str();
-		r = CallRPC(node, "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str());
+		if (find_value(r.get_obj(), "complete").get_str(), "false")
+			return hex_str;
 	}
-	catch (UniValue& objError)
+	catch (runtime_error &err)
 	{
 		return hex_str;
 	}
+	BOOST_CHECK_NO_THROW(CallRPC(node, "syscoinsendrawtransaction " + hex_str));
 	GenerateBlocks(5, tonode);
 	GenerateBlocks(5, node);
 
@@ -696,17 +698,19 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 	// "aliasupdate <aliasname> [public value]  [address] [accept_transfers=true] [expire_timestamp] [encryption_privatekey] [encryption_publickey] [witness]\n"
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasupdate " + aliasname + " " + pubdata + " " + addressStr + " " + acceptTransfers + " " + expires + " " + encryptionpubkey + " " + encryptionpubkey + " " + witness));
 	UniValue varray = r.get_array();
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + varray[0].get_str()));
 	string hex_str;
 	try
 	{
-		r = CallRPC(node, "signrawtransaction " + varray[0].get_str());
 		hex_str = find_value(r.get_obj(), "hex").get_str();
-		r = CallRPC(node, "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str());
+		if (find_value(r.get_obj(), "complete").get_str(), "false")
+			return hex_str;
 	}
-	catch (UniValue& objError)
+	catch (runtime_error &err)
 	{
 		return hex_str;
 	}
+	BOOST_CHECK_NO_THROW(CallRPC(node, "syscoinsendrawtransaction " + hex_str));
 	GenerateBlocks(5, node);
 	GenerateBlocks(5, node);
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasbalance " + aliasname));
@@ -1574,11 +1578,11 @@ const string EscrowNewBuyItNow(const string& node, const string& sellernode, con
 	
 
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowacknowledge " + guid));
-	UniValue arrres = r.get_array();
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + arrres[0].get_str()));
-	BOOST_CHECK_THROW(r = CallRPC(node, "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()), runtime_error);
+	UniValue varray = r.get_array();
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + varray[0].get_str()));
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "complete").get_str(), "false"));
 	BOOST_CHECK_NO_THROW(r = CallRPC(sellernode, "escrowacknowledge " + guid));
-	arrres = r.get_array();
+	UniValue arrres = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(sellernode, "signrawtransaction " + arrres[0].get_str()));
 	BOOST_CHECK_NO_THROW(r = CallRPC(sellernode, "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
 	GenerateBlocks(10, sellernode);
