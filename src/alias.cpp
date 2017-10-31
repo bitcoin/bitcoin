@@ -1736,16 +1736,30 @@ void AliasTxToJSON(const int op, const vector<unsigned char> &vchData, const vec
 
 }
 UniValue syscoinsendrawtransaction(const UniValue& params, bool fHelp) {
-	if (fHelp || 1 != params.size())
-		throw runtime_error("syscoinsendrawtransaction <hexstring>\n"
-				"Signed raw transaction (serialized, hex-encoded) sent out to the network\n"
-				"<hexstring> The transaction hex string.\n");
+	if (fHelp || params.size() < 1 || params.size() > 3)
+		throw runtime_error("syscoinsendrawtransaction \"hexstring\" ( allowhighfees instantsend )\n"
+			"\nSubmits raw transaction (serialized, hex-encoded) to local node and network.\n"
+			"\nAlso see createrawtransaction and signrawtransaction calls.\n"
+			"\nArguments:\n"
+			"1. \"hexstring\"    (string, required) The hex string of the raw transaction)\n"
+			"2. allowhighfees  (boolean, optional, default=false) Allow high fees\n"
+			"3. instantsend    (boolean, optional, default=false) Use InstantSend to send this transaction\n");
+	RPCTypeCheck(params, boost::assign::list_of(UniValue::VSTR)(UniValue::VBOOL)(UniValue::VBOOL));
 	const string &hexstring = params[0].get_str();
+	bool fOverrideFees = false;
+	if (params.size() > 1)
+		fOverrideFees = params[1].get_bool();
+
+	bool fInstantSend = false;
+	if (params.size() > 2)
+		fInstantSend = params[2].get_bool();
 	CTransaction tx;
 	if (!DecodeHexTx(tx, hexstring))
 		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5534 - " + _("Could not send raw transaction: Cannot decode transaction from hex string"));
 	UniValue arraySendParams(UniValue::VARR);
 	arraySendParams.push_back(hexstring);
+	arraySendParams.push_back(fOverrideFees);
+	arraySendParams.push_back(fInstantSend);
 	UniValue returnRes, res;
 	try
 	{
