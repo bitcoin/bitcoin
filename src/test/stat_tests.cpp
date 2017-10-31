@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_CASE(stat_testvectors)
   BOOST_CHECK(s3->History(1,0) == 120000);  
   BOOST_CHECK(s4->History(1,0) == 3.3); 
 
-  statMinInterval=boost::posix_time::milliseconds(10); // boost::posix_time::seconds(1); // Speed things up
+  statMinInterval=std::chrono::milliseconds(30); // Speed things up
   for (int i=0;i<12;i++)
     for (int j=0;j<30;j++)
     {
@@ -116,6 +116,12 @@ BOOST_AUTO_TEST_CASE(stat_testvectors)
   BOOST_CHECK(s1->Series(0, array, 15) == 15);
   for (int i=0;i<15;i++)
     BOOST_CHECK(array[i] == 5);
+
+  delete s1;
+  delete s2;
+  delete s3;
+  delete s4;
+  delete s5;
 }
 
 BOOST_AUTO_TEST_CASE(stat_empty_construct)
@@ -125,14 +131,16 @@ BOOST_AUTO_TEST_CASE(stat_empty_construct)
           This hopefully primes the same memory for the test below to be
           non-zero, so the (formerly) missing initialization can be caught.
         */
-        CStatHistory<uint64_t> stats("name");
-        stats += 0x5555555555555555UL;
-        BOOST_CHECK(stats() == 0x5555555555555555UL);
+        CStatHistory<uint64_t> *stats = new CStatHistory<uint64_t>("name");
+        (*stats) += 0x5555555555555555UL;
+        BOOST_CHECK((*stats)() == 0x5555555555555555UL);
+        delete stats;
     }
     {
-        CStatHistory<uint64_t> stats;
+        CStatHistory<uint64_t> *stats = new CStatHistory<uint64_t>();
         // check that default constructor zeroes as well
-        BOOST_CHECK(stats() == 0UL); 
+        BOOST_CHECK((*stats)() == 0UL);
+        delete stats; 
     }
 }
 
