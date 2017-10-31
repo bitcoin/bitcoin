@@ -92,6 +92,9 @@ BOOST_AUTO_TEST_CASE(generate_auction_regular)
 	// after expiry can update
 	SetSysMocktime(mediantime + 1);
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "offerupdate sellerauction " + offerguid + " category title 90 0.15 description USD \"\" \"\" \"\" \"\" \"\" \"\" \"\" true"));
+	UniValue arr = r.get_array();
+	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "signrawtransaction " + arr[0].get_str()));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
 }
 BOOST_AUTO_TEST_CASE(generate_auction_reserve)
 {
@@ -411,8 +414,12 @@ BOOST_AUTO_TEST_CASE(generate_escrowfeedback)
 	// leave another feedback and notice that you can't find it in the indexer (first feedback will be indexed only per user per guid+touser combination)
 	string escrowfeedbackstr = "escrowfeedback " + guid + " seller feedback 1 buyer";
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", escrowfeedbackstr));
-	const UniValue &arr = r.get_array();
-	string escrowTxid = arr[0].get_str();
+	UniValue arr = r.get_array();
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + arr[0].get_str()));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
+	CTransaction tx;
+	DecodeHexTx(tx, arr[0].get_str());
+	string escrowTxid = tx.GetHash().ToString();
 	GenerateBlocks(10, "node1");
 	string feedbackid = guid + CFeedback::FeedbackUserToString(FEEDBACKSELLER) + CFeedback::FeedbackUserToString(FEEDBACKBUYER);
 	r = FindFeedback("node1", feedbackid);
@@ -425,8 +432,12 @@ BOOST_AUTO_TEST_CASE(generate_escrowfeedback)
 	// leave another feedback and notice that you can't find it in the indexer (first feedback will be indexed only per user per guid+touser combination)
 	escrowfeedbackstr = "escrowfeedback " + guid + " buyer feedback 1 seller";
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", escrowfeedbackstr));
-	const UniValue &arr1 = r.get_array();
-	escrowTxid = arr1[0].get_str();
+	UniValue arr1 = r.get_array();
+	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "signrawtransaction " + arr[0].get_str()));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
+	CTransaction tx;
+	DecodeHexTx(tx, arr1[0].get_str());
+	escrowTxid = tx.GetHash().ToString();
 	GenerateBlocks(10, "node2");
 	feedbackid = guid + CFeedback::FeedbackUserToString(FEEDBACKBUYER) + CFeedback::FeedbackUserToString(FEEDBACKSELLER);
 	r = FindFeedback("node2", feedbackid);
@@ -439,8 +450,12 @@ BOOST_AUTO_TEST_CASE(generate_escrowfeedback)
 	// leave another feedback and notice that you can't find it in the indexer (first feedback will be indexed only per user per guid+touser combination)
 	escrowfeedbackstr = "escrowfeedback " + guid + " arbiter feedback 1 buyer";
 	BOOST_CHECK_NO_THROW(r = CallRPC("node3", escrowfeedbackstr));
-	const UniValue &arr2 = r.get_array();
-	escrowTxid = arr2[0].get_str();
+	UniValue arr2 = r.get_array();
+	BOOST_CHECK_NO_THROW(r = CallRPC("node3", "signrawtransaction " + arr[0].get_str()));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node3", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
+	CTransaction tx;
+	DecodeHexTx(tx, arr2[0].get_str());
+	escrowTxid = tx.GetHash().ToString();
 	GenerateBlocks(10, "node3");
 	feedbackid = guid + CFeedback::FeedbackUserToString(FEEDBACKARBITER) + CFeedback::FeedbackUserToString(FEEDBACKBUYER);
 	r = FindFeedback("node3", feedbackid);

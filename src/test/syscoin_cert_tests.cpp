@@ -44,15 +44,10 @@ BOOST_AUTO_TEST_CASE (generate_certupdate)
 	// update an cert that isn't yours
 	UniValue r;
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "certupdate " + guid + " title pubdata"));
-	const UniValue& resArray = r.get_array();
-	if(resArray.size() > 1)
-	{
-		const UniValue& complete_value = resArray[1];
-		bool bComplete = false;
-		if (complete_value.isStr())
-			bComplete = complete_value.get_str() == "true";
-		BOOST_CHECK(!bComplete);
-	}
+	UniValue arr = r.get_array();
+	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "signrawtransaction " + arr[0].get_str()));
+	BOOST_CHECK(!find_value(r.get_obj(), "complete").get_bool());
+
 	CertUpdate("node1", guid, "pub1");
 	// shouldnt update data, just uses prev data because it hasnt changed
 	CertUpdate("node1", guid);
@@ -79,15 +74,9 @@ BOOST_AUTO_TEST_CASE (generate_certtransfer)
 
 	// xfer an cert that isn't yours
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "certtransfer " + guid + " jagcert2"));
-	const UniValue& resArray = r.get_array();
-	if(resArray.size() > 1)
-	{
-		const UniValue& complete_value = resArray[1];
-		bool bComplete = false;
-		if (complete_value.isStr())
-			bComplete = complete_value.get_str() == "true";
-		BOOST_CHECK(!bComplete);
-	}
+	UniValue arr = r.get_array();
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + arr[0].get_str()));
+	BOOST_CHECK(!find_value(r.get_obj(), "complete").get_bool());
 	// update xferred cert
 	certdata = "newdata";
 	certtitle = "newtitle";

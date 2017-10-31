@@ -280,15 +280,10 @@ BOOST_AUTO_TEST_CASE (generate_offerupdate)
 
 	// should fail: offer cannot be updated by someone other than owner
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "offerupdate selleralias2 " + offerguid + " category title 90 0.15 description"));
-	const UniValue& resArray = r.get_array();
-	if(resArray.size() > 1)
-	{
-		const UniValue& complete_value = resArray[1];
-		bool bComplete = false;
-		if (complete_value.isStr())
-			bComplete = complete_value.get_str() == "true";
-		BOOST_CHECK(!bComplete);
-	}
+	UniValue arr = r.get_array();
+	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "signrawtransaction " + arr[0].get_str()));
+	BOOST_CHECK(!find_value(r.get_obj(), "complete").get_bool());
+
 	// should fail: generate an offer with unknown alias
 	BOOST_CHECK_THROW(r = CallRPC("node1", "offerupdate fooalias " + offerguid + " category title 90 0.15 description"), runtime_error);
 
@@ -361,9 +356,15 @@ BOOST_AUTO_TEST_CASE (generate_offerupdate_editcurrency)
 	BOOST_CHECK(abs(nTotal - AmountFromValue(4 * 0.00001000*100000.0)) <= 0.0001*COIN);
 
 	// try to update currency and accept in same block, ensure payment uses old currency not new
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "offerupdate selleraliascurrency " + offerguid + " category title 93 0.2 desc EUR"));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "offerupdate selleraliascurrency " + offerguid + " category title 93 0.2 desc EUR"));
+	UniValue arr = r.get_array();
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + arr[0].get_str()));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
+
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "escrownew false buyeraliascurrency arbiteraliascurrency1 " + offerguid + " 10 true 1"));
-	const UniValue &arr = r.get_array();
+	UniValue arr1 = r.get_array();
+	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "signrawtransaction " + arr1[0].get_str()));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
 	escrowguid = arr[1].get_str();
 	GenerateBlocks(5);
 	GenerateBlocks(5);
@@ -560,6 +561,9 @@ BOOST_AUTO_TEST_CASE (generate_certofferexpired)
 	OfferAccept("node1", "node2", "node2alias2", "node3alias2", offerguid, "1");
 	// should pass: generate a cert offer
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "offernew node1alias2 certificates title 1 0.05 description USD " + certguid));
+	UniValue arr = r.get_array();
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + arr[0].get_str()));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
 
 	offerguid = OfferNew("node1", "node1alias2a", "certificates", "title", "1", "0.05", "description", "USD", certguid1);
 	ExpireAlias("node2alias2");
