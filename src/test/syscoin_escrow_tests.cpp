@@ -435,7 +435,6 @@ BOOST_AUTO_TEST_CASE(generate_escrowfeedback)
 	UniValue arr1 = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "signrawtransaction " + arr[0].get_str()));
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
-	CTransaction tx;
 	DecodeHexTx(tx, arr1[0].get_str());
 	escrowTxid = tx.GetHash().ToString();
 	GenerateBlocks(10, "node2");
@@ -453,7 +452,6 @@ BOOST_AUTO_TEST_CASE(generate_escrowfeedback)
 	UniValue arr2 = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC("node3", "signrawtransaction " + arr[0].get_str()));
 	BOOST_CHECK_NO_THROW(r = CallRPC("node3", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
-	CTransaction tx;
 	DecodeHexTx(tx, arr2[0].get_str());
 	escrowTxid = tx.GetHash().ToString();
 	GenerateBlocks(10, "node3");
