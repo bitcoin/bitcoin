@@ -67,7 +67,7 @@
     </message>
     <message>
         <source>These are your Dash addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>Nämä ovat Dash osoitteesi suoritusten vastaanottamiseen. Suositellaan että annat uuden osoitteen kullekin siirtotapahtumalle.</translation>
+        <translation>Nämä ovat Dash osoitteesi suoritusten vastaanottamiseen. Suositellaan että käytät uutta osoitetta kullekin siirtotapahtumalle.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -1059,7 +1059,7 @@
     <message>
         <source>As this is the first time the program is launched, you can choose where Dash Core will store its data.</source>
         <translation>Koska tämä on ensimmäinen kerta kun ohjelma käynnistetään, voit valita minne Dash Core tallettaa datansa.
-Varoitus: Jos käytät käyttöjärjestelmää (Live os) suoraan usb, dvd tai cd levyltä, ohjaa talletettava data eri levyasemalle turvalliseen paikkaan.</translation>
+Varoitus: Jos käytät käyttöjärjestelmää suoraan usb, dvd tai cd levyltä (Live os), ohjaa talletettava data eri levyasemalle turvalliseen paikkaan.</translation>
     </message>
     <message>
         <source>Dash Core will download and store a copy of the Dash block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
@@ -1221,11 +1221,11 @@ Varoitus: Jos käytät käyttöjärjestelmää (Live os) suoraan usb, dvd tai cd
     </message>
     <message>
         <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the Dash network, as detailed below.</source>
-        <translation>Viimeisimmät siirtotapahtumat eivät välttämättä ole vielä näkyvissä, ja siksi lompakon saldo voi olla väärin. Saldo korjaantuu oikeaksi kun lompakon synkronointi Dash verkon kanssa on valmis.</translation>
+        <translation>Viimeisimmät siirtotapahtumat eivät välttämättä ole vielä näkyvissä, ja siksi lompakon saldo voi olla väärin. Saldo korjaantuu oikeaksi kun lompakon synkronointi Dash verkkoon on valmis.</translation>
     </message>
     <message>
         <source>Attempting to spend Dash that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
-        <translation>Yritys käyttää Dash:eja joihin vaikuttaa ei näkyvissä olevat siirtotapahtumat, verkko hylkää ne.</translation>
+        <translation>Yritys käyttää Dash:eja joihin vaikuttaa ei näkyvissä olevat siirtotapahtumat, tulevat hylätyksi Dash verkossa.</translation>
     </message>
     <message>
         <source>Number of blocks left</source>
@@ -1257,7 +1257,7 @@ Varoitus: Jos käytät käyttöjärjestelmää (Live os) suoraan usb, dvd tai cd
     </message>
     <message>
         <source>Estimated time left until synced</source>
-        <translation>Synkronoinnin jälljellä oleva arvioitu aika</translation>
+        <translation>Synkronoinnin jälljellä oleva aika</translation>
     </message>
     <message>
         <source>Hide</source>
@@ -4075,11 +4075,7 @@ Näillä toiminnoilla voit korjata korruptoituneen lohkoketjun tai puuttuvat/van
     </message>
     <message>
         <source>This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit &lt;https://www.openssl.org/&gt; and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.</source>
-        <translation>Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin &lt;https://www.openssl.org/&gt; sekä Eric Youngin kehittämän salausohjelmiston ja Thomas Bernardin kehittämän UPnP ohjelmiston.
-
-------------------------------------------------------------------
-
-Käännös päivitetty: 2.10.2017 by AjM.</translation>
+        <translation>Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin &lt;https://www.openssl.org/&gt; sekä Eric Youngin kehittämän salausohjelmiston ja Thomas Bernardin kehittämän UPnP ohjelmiston.</translation>
     </message>
     <message>
         <source>Unable to locate enough funds for this transaction that are not equal 1000 DASH.</source>
