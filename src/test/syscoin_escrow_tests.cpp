@@ -5,6 +5,7 @@
 #include "feedback.h"
 #include "alias.h"
 #include "cert.h"
+#include "core_io.h"
 #include "base58.h"
 #include <boost/lexical_cast.hpp>
 BOOST_FIXTURE_TEST_SUITE(syscoin_escrow_tests, BasicSyscoinTestingSetup)
