@@ -56,6 +56,7 @@ boost::thread_specific_ptr<LockStack> lockstack;
 
 
 std::atomic<bool> fIsInitialBlockDownload{false};
+std::atomic<bool> fRescan{false}; // this flag is set to true when a wallet rescan has been invoked.
 
 // main.cpp CriticalSections:
 CCriticalSection cs_LastBlockFile;
@@ -128,7 +129,7 @@ int interruptIntervals[] = {30, 30 * 12, 30 * 12 * 24, 30 * 12 * 24 * 30};
 
 CTxMemPool mempool(::minRelayTxFee);
 
-boost::posix_time::milliseconds statMinInterval(10000);
+std::chrono::milliseconds statMinInterval(10000);
 boost::asio::io_service stat_io_service;
 
 std::list<CStatBase *> mallocedStats;

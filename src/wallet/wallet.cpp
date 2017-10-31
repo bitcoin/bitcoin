@@ -43,8 +43,6 @@ unsigned int nTxConfirmTarget = DEFAULT_TX_CONFIRM_TARGET;
 bool bSpendZeroConfChange = DEFAULT_SPEND_ZEROCONF_CHANGE;
 bool fSendFreeTransactions = DEFAULT_SEND_FREE_TRANSACTIONS;
 
-std::atomic<bool> fRescan{false}; // this flag is set to true when a wallet rescan has been invoked.
-
 const char * DEFAULT_WALLET_DAT = "wallet.dat";
 
 /**
