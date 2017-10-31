@@ -5189,6 +5189,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         snodeman.ProcessMessage(pfrom, strCommand, vRecv);
         budget.ProcessMessage(pfrom, strCommand, vRecv);
         masternodePayments.ProcessMessageMasternodePayments(pfrom, strCommand, vRecv);
+        systemnodePayments.ProcessMessageSystemnodePayments(pfrom, strCommand, vRecv);
         ProcessMessageInstantX(pfrom, strCommand, vRecv);
         ProcessSpork(pfrom, strCommand, vRecv);
         masternodeSync.ProcessMessage(pfrom, strCommand, vRecv);
