@@ -408,6 +408,8 @@ class SendHeadersTest(BitcoinTestFramework):
                 if j == 0:
                     # Announce via inv
                     test_node.send_block_inv(tip)
+                    test_node.wait_for_getheaders()
+                    test_node.send_header_for_blocks(blocks)
                     test_node.wait_for_getdata([tip], timeout=5)
                     # Test that duplicate inv's won't result in duplicate
                     # getdata requests, or duplicate headers announcements
