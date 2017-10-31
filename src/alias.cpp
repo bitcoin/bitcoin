@@ -1760,7 +1760,7 @@ UniValue syscoinsendrawtransaction(const UniValue& params, bool fHelp) {
 	arraySendParams.push_back(hexstring);
 	arraySendParams.push_back(fOverrideFees);
 	arraySendParams.push_back(fInstantSend);
-	UniValue returnRes, res;
+	UniValue returnRes;
 	try
 	{
 		returnRes = tableRPC.execute("sendrawtransaction", arraySendParams);
@@ -1771,6 +1771,7 @@ UniValue syscoinsendrawtransaction(const UniValue& params, bool fHelp) {
 	}
 	if (!returnRes.isStr())
 		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5534 - " + _("Could not send raw transaction: Invalid response from sendrawtransaction"));
+	UniValue res(UniValue::VOBJ);
 	res.push_back(Pair("txid", returnRes.get_str()));
 	// check for alias registration, if so save the info in this node for alias activation calls after a block confirmation
 	vector<vector<unsigned char> > vvch;
