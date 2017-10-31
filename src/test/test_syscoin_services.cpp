@@ -644,7 +644,7 @@ string AliasTransfer(const string& node, const string& aliasname, const string& 
 	try
 	{
 		hex_str = find_value(r.get_obj(), "hex").get_str();
-		if (find_value(r.get_obj(), "complete").get_str(), "false")
+		if (!find_value(r.get_obj(), "complete").get_bool())
 			return hex_str;
 	}
 	catch (runtime_error &err)
@@ -703,7 +703,7 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 	try
 	{
 		hex_str = find_value(r.get_obj(), "hex").get_str();
-		if (find_value(r.get_obj(), "complete").get_str(), "false")
+		if (!find_value(r.get_obj(), "complete").get_bool())
 			return hex_str;
 	}
 	catch (runtime_error &err)
