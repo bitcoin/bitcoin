@@ -573,13 +573,13 @@ string AliasNew(const string& node, const string& aliasname, const string& pubda
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasnew " + aliasname + " " + pubdata + " " + acceptTransfers +  " " + expireTime + " " + aliasAddress.ToString() + " " + strEncryptionPrivateKeyHex + " " + HexStr(vchPubEncryptionKey) + " " + witness));
 	UniValue varray = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + varray[0].get_str()));
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "sendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
 	GenerateBlocks(5, node);
 	// activation
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasnew " + aliasname + " \"\""));
 	UniValue varray1 = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + varray1[0].get_str()));
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "sendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
 	GenerateBlocks(5, node);
 	BOOST_CHECK_THROW(CallRPC(node, "sendtoaddress " + aliasname + " 10"), runtime_error);
 	GenerateBlocks(5, node);
@@ -644,7 +644,7 @@ string AliasTransfer(const string& node, const string& aliasname, const string& 
 	{
 		r = CallRPC(node, "signrawtransaction " + varray[0].get_str());
 		hex_str = r.get_str();
-		r = CallRPC(node, "sendrawtransaction " + find_value(r.get_obj(), "hex").get_str());
+		r = CallRPC(node, "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str());
 	}
 	catch (UniValue& objError)
 	{
@@ -701,7 +701,7 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 	{
 		r = CallRPC(node, "signrawtransaction " + varray[0].get_str());
 		hex_str = r.get_str();
-		r = CallRPC(node, "sendrawtransaction " + find_value(r.get_obj(), "hex").get_str());
+		r = CallRPC(node, "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str());
 	}
 	catch (UniValue& objError)
 	{
@@ -766,7 +766,7 @@ void AliasAddWhitelist(const string& node, const string& owneralias, const strin
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasupdatewhitelist " + owneralias + " " + whiteListArray + " " + witness));
 	UniValue varray = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + varray[0].get_str()));
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "sendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
 	GenerateBlocks(10, node);
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliaswhitelist " + owneralias));
 	const UniValue &arrayValue = r.get_array();
@@ -788,7 +788,7 @@ void AliasRemoveWhitelist(const string& node, const string& owneralias, const st
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasupdatewhitelist " + owneralias + " " + whiteListArray + " " + witness));
 	UniValue varray = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + varray[0].get_str()));
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "sendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
 	GenerateBlocks(10, node);
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliaswhitelist " + owneralias));
 	const UniValue &arrayValue = r.get_array();
@@ -804,7 +804,7 @@ void AliasClearWhitelist(const string& node, const string& owneralias, const str
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasclearwhitelist " + owneralias + " " + witness));
 	UniValue varray = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + varray[0].get_str()));
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "sendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
 	GenerateBlocks(10, node);
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliaswhitelist " + owneralias));
 	const UniValue &arrayValue = r.get_array();
@@ -888,7 +888,7 @@ const string CertNew(const string& node, const string& alias, const string& titl
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "certnew " + alias + " " + title + " " + pubdata + " " + " certificates " + witness));
 	UniValue arr = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + arr[0].get_str()));
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "sendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
 
 	string guid = arr[1].get_str();
 	GenerateBlocks(10, node);
@@ -928,7 +928,7 @@ void CertUpdate(const string& node, const string& guid, const string& title, con
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "certupdate " + guid + " " + title + " " + pubdata + " certificates " + witness));
 	UniValue arr = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + arr[0].get_str()));
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "sendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
 	GenerateBlocks(10, node);
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "certinfo " + guid));
 	BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == guid);
@@ -967,7 +967,7 @@ void CertTransfer(const string& node, const string &tonode, const string& guid, 
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "certtransfer " + guid + " " + toalias + " " + pubdata + " " + witness));
 	UniValue arr = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + arr[0].get_str()));
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "sendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
 	GenerateBlocks(5, node);
 	GenerateBlocks(5, tonode);
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "certinfo " + guid));
@@ -989,7 +989,7 @@ const string OfferLink(const string& node, const string& alias, const string& gu
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "offerlink " + alias + " " + guid + " " + commissionStr + " " + newdetails + " " + witness));
 	UniValue arr = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + arr[0].get_str()));
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "sendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
 	string linkedguid = arr[1].get_str();
 	GenerateBlocks(10, node);
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "offerinfo " + linkedguid));
@@ -1034,7 +1034,7 @@ const string OfferNew(const string& node, const string& aliasname, const string&
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, offercreatestr));
 	UniValue arr = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + arr[0].get_str()));
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "sendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
 	string guid = arr[1].get_str();
 	GenerateBlocks(10, node);
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "offerinfo " + guid));
@@ -1147,7 +1147,7 @@ void OfferUpdate(const string& node, const string& aliasname, const string& offe
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, offerupdatestr));
 	UniValue arr = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + arr[0].get_str()));
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "sendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
 	GenerateBlocks(10, node);
 	bool auctionreqwitness = (auction_require_witness == "true") ? true : false;
 
@@ -1257,7 +1257,7 @@ void EscrowFeedback(const string& node, const string& userfrom, const string& es
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, escrowfeedbackstr));
 	UniValue arr = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + arr[0].get_str()));
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "sendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
 	CTransaction tx;
 	DecodeHexTx(tx, arr[0].get_str());
 
@@ -1312,7 +1312,7 @@ void EscrowBid(const string& node, const string& buyeralias, const string& escro
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowbid " + buyeralias + " " + escrowguid + " " + bid_in_payment_option1 + " " + bid_in_offer_currency1 + " " + witness));
 	UniValue arr = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + arr[0].get_str()));
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "sendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
 	CTransaction tx;
 	DecodeHexTx(tx, arr[0].get_str());
 	string txid = tx.GetHash().ToString();
@@ -1411,7 +1411,7 @@ const string EscrowNewAuction(const string& node, const string& sellernode, cons
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrownew false " + buyeralias + " " + arbiteralias + " " + offerguid + " " + qtyStr + " " + buyNowStr + " " + strTotalInPaymentOption + " " + shipping + " " + networkFee + " " + arbiterFee + " " + witnessFee + " " + exttxid + " " + paymentoptions + " " + bid_in_payment_option1 + " " + bid_in_offer_currency1 + " " + witness));
 	UniValue arr = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + arr[0].get_str()));
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "sendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
 	string guid = arr[1].get_str();
 	GenerateBlocks(10, node);
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowinfo " + guid));
@@ -1520,7 +1520,7 @@ const string EscrowNewBuyItNow(const string& node, const string& sellernode, con
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrownew false " + buyeralias + " " + arbiteralias + " " + offerguid + " " + qtyStr + " " + buyNowStr + " " + strTotalInPaymentOption + " " + shipping + " " + networkFee + " " + arbiterFee + " " + witnessFee + " " + exttxid + " " + paymentoptions + " " + bid_in_payment_option + " " + bid_in_offer_currency + " " + witness));
 	UniValue arr = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + arr[0].get_str()));
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "sendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
 	const string &guid = arr[1].get_str();
 	GenerateBlocks(10, node);
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "offerinfo " + offerguid));
@@ -1576,11 +1576,11 @@ const string EscrowNewBuyItNow(const string& node, const string& sellernode, con
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowacknowledge " + guid));
 	UniValue arrres = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + arrres[0].get_str()));
-	BOOST_CHECK_THROW(r = CallRPC(node, "sendrawtransaction " + find_value(r.get_obj(), "hex").get_str()), runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC(node, "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()), runtime_error);
 	BOOST_CHECK_NO_THROW(r = CallRPC(sellernode, "escrowacknowledge " + guid));
 	arrres = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(sellernode, "signrawtransaction " + arrres[0].get_str()));
-	BOOST_CHECK_NO_THROW(r = CallRPC(sellernode, "sendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
+	BOOST_CHECK_NO_THROW(r = CallRPC(sellernode, "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
 	GenerateBlocks(10, sellernode);
 	BOOST_CHECK_THROW(r = CallRPC(sellernode, "escrowacknowledge " + guid), runtime_error);
 	BOOST_CHECK_NO_THROW(r = CallRPC(sellernode, "offerinfo " + offerguid));
@@ -1671,7 +1671,7 @@ void EscrowRelease(const string& node, const string& role, const string& guid ,c
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowrelease " + guid + " " + role + " " + hex_value.get_str() + " " + witness));
 	UniValue arr1 = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + arr1[0].get_str()));
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "sendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
 	GenerateBlocks(10, node);
 	GenerateBlocks(10, node);
 
@@ -1738,7 +1738,7 @@ void EscrowRefund(const string& node, const string& role, const string& guid, co
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowrefund " + guid + " " + role + " " + hex_value.get_str() + " " + witness));
 	UniValue arr1 = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + arr1[0].get_str()));
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "sendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
 	GenerateBlocks(10, node);
 	GenerateBlocks(10, node);
 
@@ -1847,7 +1847,7 @@ void EscrowClaimRefund(const string& node, const string& guid)
 	BOOST_CHECK_NO_THROW(CallRPC(node, "escrowcompleterefund " + guid + " " + hex_value.get_str()));
 	UniValue arr1 = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + arr1[0].get_str()));
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "sendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
 	GenerateBlocks(10, node);
 	GenerateBlocks(10, node);
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "offerinfo " + offer));
@@ -2021,7 +2021,7 @@ void EscrowClaimRelease(const string& node, const string& guid)
 	BOOST_CHECK_NO_THROW(CallRPC(node, "escrowcompleterelease " + guid + " " + hex_value.get_str()));
 	UniValue arr1 = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + arr1[0].get_str()));
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "sendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
 	GenerateBlocks(10, node);
 	GenerateBlocks(10, node);
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "offerinfo " + offer));
