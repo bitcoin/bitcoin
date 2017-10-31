@@ -363,9 +363,10 @@ BOOST_AUTO_TEST_CASE (generate_offerupdate_editcurrency)
 
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "escrownew false buyeraliascurrency arbiteraliascurrency1 " + offerguid + " 10 true 1"));
 	UniValue arr1 = r.get_array();
+	escrowguid = arr1[1].get_str();
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "signrawtransaction " + arr1[0].get_str()));
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
-	escrowguid = arr[1].get_str();
+	
 	GenerateBlocks(5);
 	GenerateBlocks(5);
 	GenerateBlocks(5, "node2");
