@@ -577,8 +577,8 @@ string AliasNew(const string& node, const string& aliasname, const string& pubda
 	GenerateBlocks(5, node);
 	// activation
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasnew " + aliasname + " \"\""));
-	UniValue varray = r.get_array();
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + varray[0].get_str()));
+	UniValue varray1 = r.get_array();
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + varray1[0].get_str()));
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "sendrawtransaction " + r.get_str()));
 	GenerateBlocks(5, node);
 	BOOST_CHECK_THROW(CallRPC(node, "sendtoaddress " + aliasname + " 10"), runtime_error);
