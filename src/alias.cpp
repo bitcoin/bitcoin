@@ -1522,34 +1522,8 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 
 	SendMoneySyscoin(vchAlias, vchWitness, "", recipient, recipientPayment, vecSend, wtx, &coinControl, useOnlyAliasPaymentToFund);
 	UniValue res(UniValue::VARR);
-
-	UniValue signParams(UniValue::VARR);
-	signParams.push_back(EncodeHexTx(wtx));
-	const UniValue &resSign = tableRPC.execute("syscoinsignrawtransaction", signParams);
-	const UniValue& so = resSign.get_obj();
-	string hex_str = "";
-	string txid_str = "";
-	const UniValue& hex_value = find_value(so, "hex");
-	const UniValue& txid_value = find_value(so, "txid");
-	if (hex_value.isStr())
-		hex_str = hex_value.get_str();
-	if (txid_value.isStr())
-		txid_str = txid_value.get_str();
-	const UniValue& complete_value = find_value(so, "complete");
-	bool bComplete = false;
-	if (complete_value.isBool())
-		bComplete = complete_value.get_bool();
-	if(bComplete)
-	{
-		res.push_back(txid_str);
-		res.push_back(strAddress);
-	}
-	else
-	{
-		res.push_back(hex_str);
-		res.push_back(strAddress);
-		res.push_back("false");
-	}
+	res.push_back(EncodeHexTx(wtx));
+	res.push_back(strAddress);
 	return res;
 }
 UniValue aliasupdate(const UniValue& params, bool fHelp) {
@@ -1677,32 +1651,7 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	
 	SendMoneySyscoin(vchAlias, vchWitness, "", recipient, recipientPayment, vecSend, wtx, &coinControl, useOnlyAliasPaymentToFund, transferAlias);
 	UniValue res(UniValue::VARR);
-	UniValue signParams(UniValue::VARR);
-	signParams.push_back(EncodeHexTx(wtx));
-	const UniValue &resSign = tableRPC.execute("syscoinsignrawtransaction", signParams);
-	const UniValue& so = resSign.get_obj();
-	string hex_str = "";
-	string txid_str = "";
-	const UniValue& hex_value = find_value(so, "hex");
-	const UniValue& txid_value = find_value(so, "txid");
-	if (hex_value.isStr())
-		hex_str = hex_value.get_str();
-	if (txid_value.isStr())
-		txid_str = txid_value.get_str();
-	const UniValue& complete_value = find_value(so, "complete");
-	bool bComplete = false;
-	if (complete_value.isBool())
-		bComplete = complete_value.get_bool();
-	if(bComplete)
-	{
-		res.push_back(txid_str);
-	}
-	else
-	{
-		res.push_back(hex_str);
-		res.push_back("false");
-	}
-	
+	res.push_back(EncodeHexTx(wtx));
 	return res;
 }
 UniValue syscoindecoderawtransaction(const UniValue& params, bool fHelp) {
@@ -1786,79 +1735,52 @@ void AliasTxToJSON(const int op, const vector<unsigned char> &vchData, const vec
 		entry.push_back(Pair("renewal", alias.nExpireTime));
 
 }
-UniValue syscoinsignrawtransaction(const UniValue& params, bool fHelp) {
+UniValue syscoinsendrawtransaction(const UniValue& params, bool fHelp) {
 	if (fHelp || 1 != params.size())
-		throw runtime_error("syscoinsignrawtransaction <hexstring>\n"
-				"Sign inputs for raw transaction (serialized, hex-encoded) and sends them out to the network if signing is complete\n"
+		throw runtime_error("syscoinsendrawtransaction <hexstring>\n"
+				"Signed raw transaction (serialized, hex-encoded) sent out to the network\n"
 				"<hexstring> The transaction hex string.\n");
 	const string &hexstring = params[0].get_str();
-	UniValue res;
-	UniValue arraySignParams(UniValue::VARR);
-	arraySignParams.push_back(hexstring);
+	CTransaction tx;
+	if (!DecodeHexTx(tx, hexstring))
+		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5534 - " + _("Could not send raw transaction: Cannot decode transaction from hex string"));
+	UniValue arraySendParams(UniValue::VARR);
+	arraySendParams.push_back(hexstring);
+	UniValue returnRes, res;
 	try
 	{
-		res = tableRPC.execute("signrawtransaction", arraySignParams);
+		returnRes = tableRPC.execute("sendrawtransaction", arraySendParams);
 	}
 	catch (UniValue& objError)
 	{
-		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5532 - " + _("Could not sign raw transaction: ") + find_value(objError, "message").get_str());
-	}	
-	if (!res.isObject())
-		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5533 - " + _("Could not sign raw transaction: Invalid response from signrawtransaction"));
-	
-	const UniValue& so = res.get_obj();
-	string hex_str = "";
-
-	const UniValue& hex_value = find_value(so, "hex");
-	if (hex_value.isStr())
-		hex_str = hex_value.get_str();
-	const UniValue& complete_value = find_value(so, "complete");
-	bool bComplete = false;
-	if (complete_value.isBool())
-		bComplete = complete_value.get_bool();
-
-	if(bComplete)
-	{
-		UniValue arraySendParams(UniValue::VARR);
-		arraySendParams.push_back(hex_str);
-		UniValue returnRes;
-		try
+		throw runtime_error(find_value(objError, "message").get_str());
+	}
+	if (!returnRes.isStr())
+		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5534 - " + _("Could not send raw transaction: Invalid response from sendrawtransaction"));
+	res.push_back(Pair("txid", returnRes.get_str()));
+	// check for alias registration, if so save the info in this node for alias activation calls after a block confirmation
+	vector<vector<unsigned char> > vvch;
+	int op;
+	for (unsigned int i = 0; i < tx.vout.size(); i++) {
+		const CTxOut& out = tx.vout[i];
+		if (DecodeAliasScript(out.scriptPubKey, op, vvch) && op == OP_ALIAS_ACTIVATE) 
 		{
-			returnRes = tableRPC.execute("sendrawtransaction", arraySendParams);
-		}
-		catch (UniValue& objError)
-		{
-			throw runtime_error(find_value(objError, "message").get_str());
-		}
-		if (!returnRes.isStr())
-			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5534 - " + _("Could not send raw transaction: Invalid response from sendrawtransaction"));
-		res.push_back(Pair("txid", returnRes.get_str()));
-		// check for alias registration, if so save the info in this node for alias activation calls after a block confirmation
-		CTransaction tx;
-		if(!DecodeHexTx(tx,hex_str))
-			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5534 - " + _("Could not send raw transaction: Cannot decode transaction from hex string"));
-		vector<vector<unsigned char> > vvch;
-		int op;
-		for (unsigned int i = 0; i < tx.vout.size(); i++) {
-			const CTxOut& out = tx.vout[i];
-			if (DecodeAliasScript(out.scriptPubKey, op, vvch) && op == OP_ALIAS_ACTIVATE) 
+			if(vvch.size() == 1)
 			{
-				if(vvch.size() == 1)
-				{
-					if(!mapAliasRegistrations.count(vvch[0]))
-						mapAliasRegistrations.insert(make_pair(vvch[0], COutPoint(tx.GetHash(), i)));
-				}
-				else if(vvch.size() >= 3)
-				{
-					if(mapAliasRegistrations.count(vvch[2]) > 0)
-						mapAliasRegistrations.erase(vvch[2]);
-					if(mapAliasRegistrationData.count(vvch[0]) > 0)
-						mapAliasRegistrationData.erase(vvch[0]);
-				}
-				break;
+				if(!mapAliasRegistrations.count(vvch[0]))
+					mapAliasRegistrations.insert(make_pair(vvch[0], COutPoint(tx.GetHash(), i)));
 			}
+			else if(vvch.size() >= 3)
+			{
+				if(mapAliasRegistrations.count(vvch[2]) > 0)
+					mapAliasRegistrations.erase(vvch[2]);
+				if(mapAliasRegistrationData.count(vvch[0]) > 0)
+					mapAliasRegistrationData.erase(vvch[0]);
+			}
+			break;
 		}
 	}
+	
 	return res;
 }
 bool IsMyAlias(const CAliasIndex& alias)
@@ -2178,7 +2100,7 @@ UniValue aliaspay(const UniValue& params, bool fHelp) {
             + HelpRequiringPassphrase() + "\n"
             "\nArguments:\n"
 			"1. \"aliasfrom\"			(string, required) Alias to pay from\n"
-			"2. \"currency\"			(string, required) Currency to pay from, must be valid in the rates peg in aliasfrom\n"
+			"2. \"currency\"			(string, required) Currency to pay from\n"
             "3. \"amounts\"             (string, required) A json object with aliases and amounts\n"
             "    {\n"
             "      \"address\":amount   (numeric or string) The syscoin alias is the key, the numeric amount (can be string) in SYS is the value\n"
@@ -2266,31 +2188,7 @@ UniValue aliaspay(const UniValue& params, bool fHelp) {
 	SendMoneySyscoin(theAlias.vchAlias, vchFromString(""), strCurrency, recipient, recipientPayment, vecSend, wtx, &coinControl);
 	
 	UniValue res(UniValue::VARR);
-	UniValue signParams(UniValue::VARR);
-	signParams.push_back(EncodeHexTx(wtx));
-	const UniValue &resSign = tableRPC.execute("syscoinsignrawtransaction", signParams);
-	const UniValue& so = resSign.get_obj();
-	string hex_str = "";
-	string txid_str = "";
-	const UniValue& hex_value = find_value(so, "hex");
-	const UniValue& txid_value = find_value(so, "txid");
-	if (hex_value.isStr())
-		hex_str = hex_value.get_str();
-	if (txid_value.isStr())
-		txid_str = txid_value.get_str();
-	const UniValue& complete_value = find_value(so, "complete");
-	bool bComplete = false;
-	if (complete_value.isBool())
-		bComplete = complete_value.get_bool();
-	if(bComplete)
-	{
-		res.push_back(txid_str);
-	}
-	else
-	{
-		res.push_back(hex_str);
-		res.push_back("false");
-	}
+	res.push_back(EncodeHexTx(wtx));
 	return res;
 }
 UniValue aliasaddscript(const UniValue& params, bool fHelp) {
@@ -2389,31 +2287,7 @@ UniValue aliasupdatewhitelist(const UniValue& params, bool fHelp) {
 	SendMoneySyscoin(copyAlias.vchAlias, vchWitness, "", recipient, recipientPayment, vecSend, wtx, &coinControl);
 
 	UniValue res(UniValue::VARR);
-	UniValue signParams(UniValue::VARR);
-	signParams.push_back(EncodeHexTx(wtx));
-	const UniValue &resSign = tableRPC.execute("syscoinsignrawtransaction", signParams);
-	const UniValue& so = resSign.get_obj();
-	string hex_str = "";
-	string txid_str = "";
-	const UniValue& hex_value = find_value(so, "hex");
-	const UniValue& txid_value = find_value(so, "txid");
-	if (hex_value.isStr())
-		hex_str = hex_value.get_str();
-	if (txid_value.isStr())
-		txid_str = txid_value.get_str();
-	const UniValue& complete_value = find_value(so, "complete");
-	bool bComplete = false;
-	if (complete_value.isBool())
-		bComplete = complete_value.get_bool();
-	if (bComplete)
-	{
-		res.push_back(txid_str);
-	}
-	else
-	{
-		res.push_back(hex_str);
-		res.push_back("false");
-	}
+	res.push_back(EncodeHexTx(wtx));
 	return res;
 }
 UniValue aliasclearwhitelist(const UniValue& params, bool fHelp) {
@@ -2474,31 +2348,7 @@ UniValue aliasclearwhitelist(const UniValue& params, bool fHelp) {
 	SendMoneySyscoin(copyAlias.vchAlias, vchWitness, "", recipient, recipientPayment, vecSend, wtx, &coinControl);
 
 	UniValue res(UniValue::VARR);
-	UniValue signParams(UniValue::VARR);
-	signParams.push_back(EncodeHexTx(wtx));
-	const UniValue &resSign = tableRPC.execute("syscoinsignrawtransaction", signParams);
-	const UniValue& so = resSign.get_obj();
-	string hex_str = "";
-	string txid_str = "";
-	const UniValue& hex_value = find_value(so, "hex");
-	const UniValue& txid_value = find_value(so, "txid");
-	if (hex_value.isStr())
-		hex_str = hex_value.get_str();
-	if (txid_value.isStr())
-		txid_str = txid_value.get_str();
-	const UniValue& complete_value = find_value(so, "complete");
-	bool bComplete = false;
-	if (complete_value.isBool())
-		bComplete = complete_value.get_bool();
-	if (bComplete)
-	{
-		res.push_back(txid_str);
-	}
-	else
-	{
-		res.push_back(hex_str);
-		res.push_back("false");
-	}
+	res.push_back(EncodeHexTx(wtx));
 	return res;
 }
 

@@ -634,7 +634,7 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
 		}
 	}
 	// now create the transaction and fake sign with enough funding from alias utxo's (if coinControl specified fAllowOtherInputs(true) then and only then are wallet inputs are allowed)
-	// actual signing happens in syscoinsignrawtransaction outside of this function call after the wtxNew raw transaction is returned back to it
+	// actual signing happens in signrawtransaction outside of this function call after the wtxNew raw transaction is returned back to it
 	if (!pwalletMain->CreateTransaction(vecSend, wtxNew, reservekey, nFeeRequired, nChangePosRet, strError, coinControl, false, currencyCode, true, useOnlyAliasPaymentToFund)) {
 		throw runtime_error(strError);
 	}

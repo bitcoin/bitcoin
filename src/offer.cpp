@@ -947,33 +947,8 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 	coinControl.fAllowWatchOnly = false;
 	SendMoneySyscoin(vchAlias, vchWitness, "", aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
 	UniValue res(UniValue::VARR);
-	UniValue signParams(UniValue::VARR);
-	signParams.push_back(EncodeHexTx(wtx));
-	const UniValue &resSign = tableRPC.execute("syscoinsignrawtransaction", signParams);
-	const UniValue& so = resSign.get_obj();
-	string hex_str = "";
-	string txid_str = "";
-	const UniValue& hex_value = find_value(so, "hex");
-	const UniValue& txid_value = find_value(so, "txid");
-	if (hex_value.isStr())
-		hex_str = hex_value.get_str();
-	if (txid_value.isStr())
-		txid_str = txid_value.get_str();
-	const UniValue& complete_value = find_value(so, "complete");
-	bool bComplete = false;
-	if (complete_value.isBool())
-		bComplete = complete_value.get_bool();
-	if(bComplete)
-	{
-		res.push_back(txid_str);
-		res.push_back(stringFromVch(vchOffer));
-	}
-	else
-	{
-		res.push_back(hex_str);
-		res.push_back(stringFromVch(vchOffer));
-		res.push_back("false");
-	}
+	res.push_back(EncodeHexTx(wtx));
+	res.push_back(stringFromVch(vchOffer));
 	return res;
 }
 
@@ -1082,33 +1057,9 @@ UniValue offerlink(const UniValue& params, bool fHelp) {
 	SendMoneySyscoin(vchAlias, vchWitness, "", aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
 
 	UniValue res(UniValue::VARR);
-	UniValue signParams(UniValue::VARR);
-	signParams.push_back(EncodeHexTx(wtx));
-	const UniValue &resSign = tableRPC.execute("syscoinsignrawtransaction", signParams);
-	const UniValue& so = resSign.get_obj();
-	string hex_str = "";
-	string txid_str = "";
-	const UniValue& hex_value = find_value(so, "hex");
-	const UniValue& txid_value = find_value(so, "txid");
-	if (hex_value.isStr())
-		hex_str = hex_value.get_str();
-	if (txid_value.isStr())
-		txid_str = txid_value.get_str();
-	const UniValue& complete_value = find_value(so, "complete");
-	bool bComplete = false;
-	if (complete_value.isBool())
-		bComplete = complete_value.get_bool();
-	if(bComplete)
-	{
-		res.push_back(txid_str);
-		res.push_back(stringFromVch(vchOffer));
-	}
-	else
-	{
-		res.push_back(hex_str);
-		res.push_back(stringFromVch(vchOffer));
-		res.push_back("false");
-	}	return res;
+	res.push_back(EncodeHexTx(wtx));
+	res.push_back(stringFromVch(vchOffer));
+	return res;
 }
 UniValue offerupdate(const UniValue& params, bool fHelp) {
 	if (fHelp || params.size() < 2 || params.size() > 18)
@@ -1381,31 +1332,7 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 
 	SendMoneySyscoin(alias.vchAlias, vchWitness, "", aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
 	UniValue res(UniValue::VARR);
-	UniValue signParams(UniValue::VARR);
-	signParams.push_back(EncodeHexTx(wtx));
-	const UniValue &resSign = tableRPC.execute("syscoinsignrawtransaction", signParams);
-	const UniValue& so = resSign.get_obj();
-	string hex_str = "";
-	string txid_str = "";
-	const UniValue& hex_value = find_value(so, "hex");
-	const UniValue& txid_value = find_value(so, "txid");
-	if (hex_value.isStr())
-		hex_str = hex_value.get_str();
-	if (txid_value.isStr())
-		txid_str = txid_value.get_str();
-	const UniValue& complete_value = find_value(so, "complete");
-	bool bComplete = false;
-	if (complete_value.isBool())
-		bComplete = complete_value.get_bool();
-	if(bComplete)
-	{
-		res.push_back(txid_str);
-	}
-	else
-	{
-		res.push_back(hex_str);
-		res.push_back("false");
-	}
+	res.push_back(EncodeHexTx(wtx));
 	return res;
 }
 

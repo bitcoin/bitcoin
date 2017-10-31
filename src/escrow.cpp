@@ -1546,32 +1546,7 @@ UniValue escrowbid(const UniValue& params, bool fHelp) {
 	coinControl.fAllowWatchOnly = false;
 	SendMoneySyscoin(vchAlias, vchWitness, "", aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
 	UniValue res(UniValue::VARR);
-
-	UniValue signParams(UniValue::VARR);
-	signParams.push_back(EncodeHexTx(wtx));
-	const UniValue &resSign = tableRPC.execute("syscoinsignrawtransaction", signParams);
-	const UniValue& so = resSign.get_obj();
-	string hex_str = "";
-	string txid_str = "";
-	const UniValue& hex_value = find_value(so, "hex");
-	const UniValue& txid_value = find_value(so, "txid");
-	if (hex_value.isStr())
-		hex_str = hex_value.get_str();
-	if (txid_value.isStr())
-		txid_str = txid_value.get_str();
-	const UniValue& complete_value = find_value(so, "complete");
-	bool bComplete = false;
-	if (complete_value.isBool())
-		bComplete = complete_value.get_bool();
-	if (bComplete)
-	{
-		res.push_back(txid_str);
-	}
-	else
-	{
-		res.push_back(hex_str);
-		res.push_back("false");
-	}
+	res.push_back(EncodeHexTx(wtx));
 	return res;
 }
 UniValue escrowaddshipping(const UniValue& params, bool fHelp) {
@@ -1661,32 +1636,7 @@ UniValue escrowaddshipping(const UniValue& params, bool fHelp) {
 	coinControl.fAllowWatchOnly = false;
 	SendMoneySyscoin(vchAlias, vchWitness, "", aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
 	UniValue res(UniValue::VARR);
-
-	UniValue signParams(UniValue::VARR);
-	signParams.push_back(EncodeHexTx(wtx));
-	const UniValue &resSign = tableRPC.execute("syscoinsignrawtransaction", signParams);
-	const UniValue& so = resSign.get_obj();
-	string hex_str = "";
-	string txid_str = "";
-	const UniValue& hex_value = find_value(so, "hex");
-	const UniValue& txid_value = find_value(so, "txid");
-	if (hex_value.isStr())
-		hex_str = hex_value.get_str();
-	if (txid_value.isStr())
-		txid_str = txid_value.get_str();
-	const UniValue& complete_value = find_value(so, "complete");
-	bool bComplete = false;
-	if (complete_value.isBool())
-		bComplete = complete_value.get_bool();
-	if (bComplete)
-	{
-		res.push_back(txid_str);
-	}
-	else
-	{
-		res.push_back(hex_str);
-		res.push_back("false");
-	}
+	res.push_back(EncodeHexTx(wtx));
 	return res;
 }
 UniValue escrownew(const UniValue& params, bool fHelp) {
@@ -1984,33 +1934,8 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	coinControl.fAllowWatchOnly = false;
 	SendMoneySyscoin(buyeralias.vchAlias, vchWitness, stringFromVch(theOffer.sCurrencyCode), aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
 	UniValue res(UniValue::VARR);
-	UniValue signParams(UniValue::VARR);
-	signParams.push_back(EncodeHexTx(wtx));
-	const UniValue &resSign = tableRPC.execute("syscoinsignrawtransaction", signParams);
-	const UniValue& so = resSign.get_obj();
-	string hex_str = "";
-	string txid_str = "";
-	const UniValue& hex_value = find_value(so, "hex");
-	const UniValue& txid_value = find_value(so, "txid");
-	if (hex_value.isStr())
-		hex_str = hex_value.get_str();
-	if (txid_value.isStr())
-		txid_str = txid_value.get_str();
-	const UniValue& complete_value = find_value(so, "complete");
-	bool bComplete = false;
-	if (complete_value.isBool())
-		bComplete = complete_value.get_bool();
-	if(bComplete)
-	{
-		res.push_back(txid_str);
-		res.push_back(stringFromVch(vchEscrow));
-	}
-	else
-	{
-		res.push_back(hex_str);
-		res.push_back(stringFromVch(vchEscrow));
-		res.push_back("false");
-	}
+	res.push_back(EncodeHexTx(wtx));
+	res.push_back(stringFromVch(vchEscrow));
 	return res;
 }
 UniValue escrowacknowledge(const UniValue& params, bool fHelp) {
@@ -2101,32 +2026,7 @@ UniValue escrowacknowledge(const UniValue& params, bool fHelp) {
 	coinControl.fAllowWatchOnly = false;
 	SendMoneySyscoin(escrow.linkAliasTuple.first, vchWitness, "", aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
 	UniValue res(UniValue::VARR);
-
-	UniValue signParams(UniValue::VARR);
-	signParams.push_back(EncodeHexTx(wtx));
-	const UniValue &resSign = tableRPC.execute("syscoinsignrawtransaction", signParams);
-	const UniValue& so = resSign.get_obj();
-	string hex_str = "";
-	string txid_str = "";
-	const UniValue& hex_value = find_value(so, "hex");
-	const UniValue& txid_value = find_value(so, "txid");
-	if (hex_value.isStr())
-		hex_str = hex_value.get_str();
-	if (txid_value.isStr())
-		txid_str = txid_value.get_str();
-	const UniValue& complete_value = find_value(so, "complete");
-	bool bComplete = false;
-	if (complete_value.isBool())
-		bComplete = complete_value.get_bool();
-	if (bComplete)
-	{
-		res.push_back(txid_str);
-	}
-	else
-	{
-		res.push_back(hex_str);
-		res.push_back("false");
-	}
+	res.push_back(EncodeHexTx(wtx));
 	return res;
 
 }
@@ -2411,32 +2311,7 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	}
 	
 	UniValue res(UniValue::VARR);
-
-	UniValue signParams(UniValue::VARR);
-	signParams.push_back(EncodeHexTx(wtx));
-	const UniValue &resSign1 = tableRPC.execute("syscoinsignrawtransaction", signParams);
-	const UniValue& so = resSign1.get_obj();
-	string txid_str = "";
-	string hex_str = "";
-	const UniValue& hex_value1 = find_value(so, "hex");
-	const UniValue& txid_value = find_value(so, "txid");
-	if (hex_value1.isStr())
-		hex_str = hex_value1.get_str();
-	if (txid_value.isStr())
-		txid_str = txid_value.get_str();
-	const UniValue& complete_value = find_value(so, "complete");
-	bool bComplete = false;
-	if (complete_value.isBool())
-		bComplete = complete_value.get_bool();
-	if(bComplete)
-	{
-		res.push_back(txid_str);
-	}
-	else
-	{
-		res.push_back(hex_str);
-		res.push_back("false");
-	}
+	res.push_back(EncodeHexTx(wtx));
 	return res;
 }
 
@@ -2533,32 +2408,8 @@ UniValue escrowcompleterelease(const UniValue& params, bool fHelp) {
 	{
 		throw runtime_error(find_value(objError, "message").get_str());
 	}
-	UniValue signParams(UniValue::VARR);
-	signParams.push_back(EncodeHexTx(wtx));
 	UniValue res(UniValue::VARR);
-	const UniValue &resSign = tableRPC.execute("syscoinsignrawtransaction", signParams);
-	const UniValue& so = resSign.get_obj();
-	string hex_str = "";
-	string txid_str = "";
-	const UniValue& hex_value = find_value(so, "hex");
-	const UniValue& txid_value = find_value(so, "txid");
-	if (hex_value.isStr())
-		hex_str = hex_value.get_str();
-	if (txid_value.isStr())
-		txid_str = txid_value.get_str();
-	const UniValue& complete_value = find_value(so, "complete");
-	bool bComplete = false;
-	if (complete_value.isBool())
-		bComplete = complete_value.get_bool();
-	if(bComplete)
-	{
-		res.push_back(txid_str);
-	}
-	else
-	{
-		res.push_back(hex_str);
-		res.push_back("false");
-	}
+	res.push_back(EncodeHexTx(wtx));
 	return res;
 }
 UniValue escrowrefund(const UniValue& params, bool fHelp) {
@@ -2676,32 +2527,7 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 	}
 
 	UniValue res(UniValue::VARR);
-
-	UniValue signParams(UniValue::VARR);
-	signParams.push_back(EncodeHexTx(wtx));
-	const UniValue &resSign1 = tableRPC.execute("syscoinsignrawtransaction", signParams);
-	const UniValue& so = resSign1.get_obj();
-	string txid_str = "";
-	string hex_str = "";
-	const UniValue& hex_value1 = find_value(so, "hex");
-	const UniValue& txid_value = find_value(so, "txid");
-	if (hex_value1.isStr())
-		hex_str = hex_value1.get_str();
-	if (txid_value.isStr())
-		txid_str = txid_value.get_str();
-	const UniValue& complete_value = find_value(so, "complete");
-	bool bComplete = false;
-	if (complete_value.isBool())
-		bComplete = complete_value.get_bool();
-	if (bComplete)
-	{
-		res.push_back(txid_str);
-	}
-	else
-	{
-		res.push_back(hex_str);
-		res.push_back("false");
-	}
+	res.push_back(EncodeHexTx(wtx));
 	return res;
 }
 
@@ -2801,32 +2627,8 @@ UniValue escrowcompleterefund(const UniValue& params, bool fHelp) {
 	{
 		throw runtime_error(find_value(objError, "message").get_str());
 	}
-	UniValue signParams(UniValue::VARR);
-	signParams.push_back(EncodeHexTx(wtx));
 	UniValue res(UniValue::VARR);
-	const UniValue &resSign = tableRPC.execute("syscoinsignrawtransaction", signParams);
-	const UniValue& so = resSign.get_obj();
-	string hex_str = "";
-	string txid_str = "";
-	const UniValue& hex_value = find_value(so, "hex");
-	const UniValue& txid_value = find_value(so, "txid");
-	if (hex_value.isStr())
-		hex_str = hex_value.get_str();
-	if (txid_value.isStr())
-		txid_str = txid_value.get_str();
-	const UniValue& complete_value = find_value(so, "complete");
-	bool bComplete = false;
-	if (complete_value.isBool())
-		bComplete = complete_value.get_bool();
-	if (bComplete)
-	{
-		res.push_back(txid_str);
-	}
-	else
-	{
-		res.push_back(hex_str);
-		res.push_back("false");
-	}
+	res.push_back(EncodeHexTx(wtx));
 	return res;
 }
 UniValue escrowfeedback(const UniValue& params, bool fHelp) {
@@ -3021,31 +2823,7 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 	coinControl.fAllowWatchOnly = false;
 	SendMoneySyscoin(escrow.linkAliasTuple.first, vchWitness, "", aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
 	UniValue res(UniValue::VARR);
-	UniValue signParams(UniValue::VARR);
-	signParams.push_back(EncodeHexTx(wtx));
-	const UniValue &resSign = tableRPC.execute("syscoinsignrawtransaction", signParams);
-	const UniValue& so = resSign.get_obj();
-	string hex_str = "";
-	string txid_str = "";
-	const UniValue& hex_value = find_value(so, "hex");
-	const UniValue& txid_value = find_value(so, "txid");
-	if (hex_value.isStr())
-		hex_str = hex_value.get_str();
-	if (txid_value.isStr())
-		txid_str = txid_value.get_str();
-	const UniValue& complete_value = find_value(so, "complete");
-	bool bComplete = false;
-	if (complete_value.isBool())
-		bComplete = complete_value.get_bool();
-	if(bComplete)
-	{
-		res.push_back(txid_str);
-	}
-	else
-	{
-		res.push_back(hex_str);
-		res.push_back("false");
-	}
+	res.push_back(EncodeHexTx(wtx));
 	return res;
 }
 UniValue escrowinfo(const UniValue& params, bool fHelp) {

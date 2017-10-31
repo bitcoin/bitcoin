@@ -420,7 +420,7 @@ static const CRPCCommand vRPCCommands[] =
 	{ "wallet", "aliasupdatewhitelist",        &aliasupdatewhitelist,       false },
 	{ "wallet", "aliasclearwhitelist",        &aliasclearwhitelist,       false },
 	{ "wallet", "aliaswhitelist",        &aliaswhitelist,       false },
-	{ "wallet", "syscoinsignrawtransaction",		 &syscoinsignrawtransaction,	false },
+	{ "wallet", "syscoinsendrawtransaction",		 &syscoinsendrawtransaction,	false },
 	{ "wallet", "syscoindecoderawtransaction",		 &syscoindecoderawtransaction,	false },
 	{ "wallet", "syscoinquery",          &syscoinquery,          false },
 	{ "wallet", "prunesyscoinservices",          &prunesyscoinservices,          false },

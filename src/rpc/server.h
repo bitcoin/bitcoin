@@ -312,7 +312,7 @@ extern UniValue aliasaddscript(const UniValue& params, bool fHelp);
 extern UniValue aliasupdatewhitelist(const UniValue& params, bool fHelp);
 extern UniValue aliasclearwhitelist(const UniValue& params, bool fHelp);
 extern UniValue aliaswhitelist(const UniValue& params, bool fHelp);
-extern UniValue syscoinsignrawtransaction(const UniValue& params, bool fHelp);
+extern UniValue syscoinsendrawtransaction(const UniValue& params, bool fHelp);
 extern UniValue syscoindecoderawtransaction(const UniValue& params, bool fHelp);
 extern UniValue syscoinquery(const UniValue& params, bool fHelp);
 
