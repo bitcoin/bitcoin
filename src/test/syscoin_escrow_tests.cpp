@@ -76,7 +76,10 @@ BOOST_AUTO_TEST_CASE(generate_auction_regular)
 	// should probably pay in offer currency, convert rate, should probably also first check balance of escrow address and pay the difference incase a deposit was paid or another payment was already done.
 	string total_bid_in_payment_option = strprintf("%.*f", 8, totalFees + (pegRates["USD"] * 0.03*atoi(qty)));
 	// should probably pay in offer currency, convert rate, should probably also first check balance of escrow address and pay the difference incase a deposit was paid or another payment was already done.
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliaspay buyerauction SYS \"{\\\"" + escrowaddress + "\\\":" + total_bid_in_payment_option + "}\""));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliaspay buyerauction SYS \"{\\\"" + escrowaddress + "\\\":" + total_bid_in_payment_option + "}\""));
+	UniValue varray = r.get_array();
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + varray[0].get_str()));
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
 	GenerateBlocks(5);
 	GenerateBlocks(5, "node2");
 	GenerateBlocks(5, "node3");
@@ -150,7 +153,10 @@ BOOST_AUTO_TEST_CASE(generate_auction_reserve)
 
 	// should probably pay in offer currency, convert rate, should probably also first check balance of escrow address and pay the difference incase a deposit was paid or another payment was already done.
 	string total_bid_in_payment_option = strprintf("%.*f", 8, totalFees + (pegRates["USD"] * 0.04*atoi(qty)));
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliaspay buyerauction1 SYS \"{\\\"" + escrowaddress + "\\\":" + total_bid_in_payment_option + "}\""));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliaspay buyerauction1 SYS \"{\\\"" + escrowaddress + "\\\":" + total_bid_in_payment_option + "}\""));
+	UniValue varray = r.get_array();
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + varray[0].get_str()));
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
 	GenerateBlocks(5);
 	GenerateBlocks(5, "node2");
 	GenerateBlocks(5, "node3");
