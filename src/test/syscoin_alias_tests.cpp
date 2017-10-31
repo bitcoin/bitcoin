@@ -33,8 +33,8 @@ BOOST_AUTO_TEST_CASE (generate_big_aliasdata)
 	AliasNew("node1", "jag1", gooddata);
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasnew jag2 " + baddata));
 	UniValue varray = r.get_array();
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + varray[0].get_str()));
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "signrawtransaction " + varray[0].get_str()));
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
 	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew jag2"), runtime_error);
 	GenerateBlocks(5);	
 }
@@ -49,8 +49,8 @@ BOOST_AUTO_TEST_CASE (generate_aliaswitness)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo witness1"));
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str(), "pub");
 	BOOST_CHECK(!hex_str.empty());
-	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "signrawtransaction " + hex_str));
-	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "syscoinsendrawtransaction " + r.get_str()));
+	BOOST_CHECK_NO_THROW(CallRPC("node2", "signrawtransaction " + hex_str));
+	BOOST_CHECK_NO_THROW(CallRPC("node2", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
 	GenerateBlocks(5, "node2");
 	GenerateBlocks(5);
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo witness1"));
@@ -496,7 +496,7 @@ BOOST_AUTO_TEST_CASE (generate_multisigalias)
 	BOOST_CHECK(!hex_str.empty());
 	BOOST_CHECK_NO_THROW(CallRPC("node2", "aliasaddscript " + redeemScript));
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "signrawtransaction " + hex_str));
-	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "syscoinsendrawtransaction " + r.get_str()));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
 	GenerateBlocks(5, "node2");
 	GenerateBlocks(5);
 	// pay to multisig and check balance
@@ -525,7 +525,7 @@ BOOST_AUTO_TEST_CASE (generate_multisigalias)
 	addressStr = address_value.get_str();
 	hex_str = AliasUpdate("node1", "jagnodemultisig1", "pubdata", addressStr);
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "signrawtransaction " + hex_str));
-	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "syscoinsendrawtransaction " + r.get_str()));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
 	GenerateBlocks(5, "node2");
 	GenerateBlocks(5);
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo jagnodemultisig1"));
@@ -558,7 +558,7 @@ BOOST_AUTO_TEST_CASE (generate_multisigalias)
 	hex_str = AliasUpdate("node3", "jagnodemultisig1", "\"\"", oldAddressStr);
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasaddscript " + redeemScript));
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + hex_str));
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinsendrawtransaction " + r.get_str()));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
 	GenerateBlocks(5, "node3");
 	GenerateBlocks(5);
 	// pay to multisig and check balance
