@@ -13,6 +13,7 @@ BOOST_FIXTURE_TEST_SUITE (syscoin_alias_tests, BasicSyscoinTestingSetup)
 const unsigned int MAX_ALIAS_UPDATES_PER_BLOCK = 5;
 BOOST_AUTO_TEST_CASE (generate_big_aliasdata)
 {
+	UniValue r;
 	ECC_Start();
 		// rate converstion to SYS
 	pegRates["USD"] = 2690.1;
@@ -30,7 +31,10 @@ BOOST_AUTO_TEST_CASE (generate_big_aliasdata)
 	string gooddata = "SfsddfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsDfdfddSfsddfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsDfdfdd";
 	string baddata = gooddata + "a";
 	AliasNew("node1", "jag1", gooddata);
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasnew jag2 " + baddata));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasnew jag2 " + baddata));
+	UniValue varray = r.get_array();
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + varray[0].get_str()));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
 	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew jag2"), runtime_error);
 	GenerateBlocks(5);	
 }

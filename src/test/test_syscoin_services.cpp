@@ -643,7 +643,7 @@ string AliasTransfer(const string& node, const string& aliasname, const string& 
 	try
 	{
 		r = CallRPC(node, "signrawtransaction " + varray[0].get_str());
-		hex_str = r.get_str();
+		hex_str = find_value(r.get_obj(), "hex").get_str();
 		r = CallRPC(node, "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str());
 	}
 	catch (UniValue& objError)
@@ -700,7 +700,7 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 	try
 	{
 		r = CallRPC(node, "signrawtransaction " + varray[0].get_str());
-		hex_str = r.get_str();
+		hex_str = find_value(r.get_obj(), "hex").get_str();
 		r = CallRPC(node, "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str());
 	}
 	catch (UniValue& objError)
