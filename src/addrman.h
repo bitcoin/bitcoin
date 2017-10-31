@@ -186,31 +186,31 @@ private:
     mutable CCriticalSection cs_addrMan;
 
     //! last used nId
-    int nIdCount;
+    int nIdCount GUARDED_BY(cs_addrMan);
 
     //! table with information about all nIds
-    std::map<int, CAddrInfo> mapInfo;
+    std::map<int, CAddrInfo> mapInfo GUARDED_BY(cs_addrMan);
 
     //! find an nId based on its network address
-    std::map<CNetAddr, int> mapAddr;
+    std::map<CNetAddr, int> mapAddr GUARDED_BY(cs_addrMan);
 
     //! randomly-ordered vector of all nIds
     std::vector<int> vRandom GUARDED_BY(cs_addrMan);
 
     // number of "tried" entries
-    int nTried;
+    int nTried GUARDED_BY(cs_addrMan);
 
     //! list of "tried" buckets
-    int vvTried[ADDRMAN_TRIED_BUCKET_COUNT][ADDRMAN_BUCKET_SIZE];
+    int vvTried[ADDRMAN_TRIED_BUCKET_COUNT][ADDRMAN_BUCKET_SIZE] GUARDED_BY(cs_addrMan);
 
     //! number of (unique) "new" entries
-    int nNew;
+    int nNew GUARDED_BY(cs_addrMan);
 
     //! list of "new" buckets
-    int vvNew[ADDRMAN_NEW_BUCKET_COUNT][ADDRMAN_BUCKET_SIZE];
+    int vvNew[ADDRMAN_NEW_BUCKET_COUNT][ADDRMAN_BUCKET_SIZE] GUARDED_BY(cs_addrMan);
 
     //! last time Good was called (memory only)
-    int64_t nLastGood;
+    int64_t nLastGood GUARDED_BY(cs_addrMan);
 
 protected:
     //! secret key to randomize bucket select with
@@ -455,10 +455,8 @@ public:
 
     void Clear()
     {
-        {
-            LOCK(cs_addrMan);
-            std::vector<int>().swap(vRandom);
-        }
+        LOCK(cs_addrMan);
+        std::vector<int>().swap(vRandom);
         nKey = GetRandHash();
         for (size_t bucket = 0; bucket < ADDRMAN_NEW_BUCKET_COUNT; bucket++) {
             for (size_t entry = 0; entry < ADDRMAN_BUCKET_SIZE; entry++) {

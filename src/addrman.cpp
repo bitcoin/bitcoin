@@ -65,7 +65,7 @@ double CAddrInfo::GetChance(int64_t nNow) const
     return fChance;
 }
 
-CAddrInfo* CAddrMan::Find(const CNetAddr& addr, int* pnId)
+CAddrInfo* CAddrMan::Find(const CNetAddr& addr, int* pnId) EXCLUSIVE_LOCKS_REQUIRED(cs_addrMan)
 {
     std::map<CNetAddr, int>::iterator it = mapAddr.find(addr);
     if (it == mapAddr.end())
@@ -312,7 +312,7 @@ bool CAddrMan::Add_(const CAddress& addr, const CNetAddr& source, int64_t nTimeP
     return fNew;
 }
 
-void CAddrMan::Attempt_(const CService& addr, bool fCountFailure, int64_t nTime)
+void CAddrMan::Attempt_(const CService& addr, bool fCountFailure, int64_t nTime) EXCLUSIVE_LOCKS_REQUIRED(cs_addrMan)
 {
     CAddrInfo* pinfo = Find(addr);
 
@@ -334,7 +334,7 @@ void CAddrMan::Attempt_(const CService& addr, bool fCountFailure, int64_t nTime)
     }
 }
 
-CAddrInfo CAddrMan::Select_(bool newOnly)
+CAddrInfo CAddrMan::Select_(bool newOnly) EXCLUSIVE_LOCKS_REQUIRED(cs_addrMan)
 {
     if (size() == 0)
         return CAddrInfo();
@@ -480,7 +480,7 @@ void CAddrMan::GetAddr_(std::vector<CAddress>& vAddr) EXCLUSIVE_LOCKS_REQUIRED(c
     }
 }
 
-void CAddrMan::Connected_(const CService& addr, int64_t nTime)
+void CAddrMan::Connected_(const CService& addr, int64_t nTime) EXCLUSIVE_LOCKS_REQUIRED(cs_addrMan)
 {
     CAddrInfo* pinfo = Find(addr);
 
@@ -500,7 +500,7 @@ void CAddrMan::Connected_(const CService& addr, int64_t nTime)
         info.nTime = nTime;
 }
 
-void CAddrMan::SetServices_(const CService& addr, ServiceFlags nServices)
+void CAddrMan::SetServices_(const CService& addr, ServiceFlags nServices) EXCLUSIVE_LOCKS_REQUIRED(cs_addrMan)
 {
     CAddrInfo* pinfo = Find(addr);
 
