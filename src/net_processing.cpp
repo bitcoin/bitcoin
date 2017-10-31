@@ -1447,8 +1447,8 @@ bool static ProcessHeadersMessage(CNode *pfrom, CConnman *connman, const std::ve
     if (!ProcessNewBlockHeaders(headers, state, chainparams, &pindexLast, &first_invalid_header)) {
         int nDoS;
         if (state.IsInvalid(nDoS)) {
+            LOCK(cs_main);
             if (nDoS > 0) {
-                LOCK(cs_main);
                 Misbehaving(pfrom->GetId(), nDoS);
             }
             if (punish_duplicate_invalid && mapBlockIndex.find(first_invalid_header.GetHash()) != mapBlockIndex.end()) {
