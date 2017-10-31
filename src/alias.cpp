@@ -1351,7 +1351,7 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 		throw runtime_error(
 			"aliasnew <aliasname> [public value] [accept transfers=true] [expire_timestamp] [address] [encryption_privatekey] [encryption_publickey] [witness]\n"
 						"<aliasname> alias name.\n"
-						"<public value> alias public profile data, 256 chars max.\n"
+						"<public value> alias public profile data, 256 characters max.\n"
 						"<accept transfers> set to No if this alias should not allow a certificate to be transferred to it. Defaults to Yes.\n"	
 						"<expire_timestamp> String. Time in seconds. Future time when to expire alias. It is exponentially more expensive per year, calculation is FEERATE*(2.88^years). FEERATE is the dynamic satoshi per byte fee set in the rate peg alias used for this alias. Defaults to 1 year.\n"	
 						"<address> Address for this alias.\n"		
@@ -1532,7 +1532,7 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 		"aliasupdate <aliasname> [public value] [address] [accept_transfers=true] [expire_timestamp] [encryption_privatekey] [encryption_publickey] [witness]\n"
 						"Update and possibly transfer an alias.\n"
 						"<aliasname> alias name.\n"
-						"<public_value> alias public profile data, 256 chars max.\n"			
+						"<public_value> alias public profile data, 256 characters max.\n"			
 						"<address> Address of alias.\n"		
 						"<accept_transfers> set to No if this alias should not allow a certificate to be transferred to it. Defaults to Yes.\n"		
 						"<expire_timestamp> String. Time in seconds. Future time when to expire alias. It is exponentially more expensive per year, calculation is 2.88^years. FEERATE is the dynamic satoshi per byte fee set in the rate peg alias used for this alias. Defaults to 1 year.\n"		
