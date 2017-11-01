@@ -14,10 +14,15 @@
  */
 
 //! These need to be macros, as clientversion.cpp's and syscoin*-res.rc's voodoo requires it
-#define CLIENT_VERSION_MAJOR 0
-#define CLIENT_VERSION_MINOR 13
-#define CLIENT_VERSION_REVISION 2
+#define CLIENT_VERSION_MAJOR 2
+#define CLIENT_VERSION_MINOR 1
+#define CLIENT_VERSION_REVISION 6
 #define CLIENT_VERSION_BUILD 0
+
+#define BITCOIN_VERSION_MAJOR 0
+#define BITCOIN_VERSION_MINOR 13
+#define BITCOIN_VERSION_REVISION 2
+#define BITCOIN_VERSION_BUILD 0
 
 //! Set to true for release, false for prerelease or test build
 #define CLIENT_VERSION_IS_RELEASE true
@@ -29,6 +34,13 @@
 #define COPYRIGHT_YEAR 2016
 
 #endif //HAVE_CONFIG_H
+
+#define BUILD_VERSION(maj, min, rev, build) \
+    DO_STRINGIZE(maj) "." DO_STRINGIZE(min) "." DO_STRINGIZE(rev) "." DO_STRINGIZE(build)
+
+#define SYSCOIN_VERSION BUILD_VERSION(CLIENT_VERSION_MAJOR, CLIENT_VERSION_MINOR, CLIENT_VERSION_REVISION, CLIENT_VERSION_BUILD)
+#define BITCOIN_VERSION BUILD_VERSION(BITCOIN_VERSION_MAJOR, BITCOIN_VERSION_MINOR, BITCOIN_VERSION_REVISION, BITCOIN_VERSION_BUILD)
+
 
 /**
  * Converts the parameter X to a string after macro replacement on X has been performed.
@@ -51,7 +63,8 @@
 #include <string>
 #include <vector>
 // SYSCOIN
-static const std::string SYSCOIN_CLIENT_VERSION = "2.1.5";
+static const std::string SYSCOIN_CLIENT_VERSION = SYSCOIN_VERSION;
+static const std::string BITCOIN_CLIENT_VERSION = BITCOIN_VERSION;
 static const int CLIENT_VERSION =
                            1000000 * CLIENT_VERSION_MAJOR
                          +   10000 * CLIENT_VERSION_MINOR
@@ -63,6 +76,7 @@ extern const std::string CLIENT_BUILD;
 
 
 std::string FormatFullVersion();
+std::string FormatBitcoinVersion();
 std::string FormatSubVersion(const std::string& name, int nClientVersion, const std::vector<std::string>& comments);
 
 #endif // WINDRES_PREPROC
