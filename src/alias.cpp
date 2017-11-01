@@ -1764,11 +1764,10 @@ void TransferAliasBalances(const vector<unsigned char> &vchAlias, const CScript&
 UniValue aliasnew(const UniValue& params, bool fHelp) {
 	if (fHelp || 4 > params.size() || 10 < params.size())
 		throw runtime_error(
-		"aliasnew <aliaspeg> <aliasname> <password> <public value> [private value] [safe search=Yes] [accept transfers=Yes] [expire=31536000] [nrequired=0] [\"alias\",...]\n"
+		"aliasnew <aliaspeg> <aliasname> <password> <public value> [safe search=Yes] [accept transfers=Yes] [expire=31536000] [nrequired=0] [\"alias\",...]\n"
 						"<aliasname> alias name.\n"
 						"<password> used to generate your public/private key that controls this alias. Warning: Calling this function over a public network can lead to someone reading your password in plain text.\n"
 						"<public value> alias public profile data, 1024 chars max.\n"
-						"<private value> alias private profile data, 1024 chars max. Will be private and readable by owner only.\n"
 						"<safe search> set to No if this alias should only show in the search when safe search is not selected. Defaults to Yes (alias shows with or without safe search selected in search lists).\n"	
 						"<accept transfers> set to No if this alias should not allow a certificate to be transferred to it. Defaults to Yes.\n"	
 						"<expire> String. Time in seconds. Future time when to expire alias. It is exponentially more expensive per year, calculation is FEERATE*(1.5^years). FEERATE is the dynamic satoshi per byte fee set in the rate peg alias used for this alias. Defaults to 1 year.\n"	
@@ -1817,39 +1816,35 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	vchAlias = vchFromString(strName);
 
 	vector<unsigned char> vchPublicValue;
-	vector<unsigned char> vchPrivateValue;
 	string strPassword = params[2].get_str().c_str();
 	if(strPassword.size() < 4 && strPassword.size() > 0)
 		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5507 - " + _("Invalid Syscoin Identity. Please enter a password atleast 4 characters long"));
 	string strPublicValue = params[3].get_str();
 	vchPublicValue = vchFromString(strPublicValue);
 
-	string strPrivateValue = params.size()>=5?params[4].get_str():"";
 	string strSafeSearch = "Yes";
 	string strAcceptCertTransfers = "Yes";
 
+	if(params.size() >= 5)
+	{
+		strSafeSearch = params[4].get_str();
+	}
 	if(params.size() >= 6)
 	{
-		strSafeSearch = params[5].get_str();
-	}
-	if(params.size() >= 7)
-	{
-		strAcceptCertTransfers = params[6].get_str();
+		strAcceptCertTransfers = params[5].get_str();
 	}
 	uint64_t nTime = chainActive.Tip()->nTime+ONE_YEAR_IN_SECONDS;
-	if(params.size() >= 8)
-		nTime = boost::lexical_cast<uint64_t>(params[7].get_str());
+	if(params.size() >= 7)
+		nTime = boost::lexical_cast<uint64_t>(params[6].get_str());
 	// sanity check set to 1 hr
 	if(nTime < chainActive.Tip()->nTime+3600)
 		nTime = chainActive.Tip()->nTime+3600;
     int nMultiSig = 1;
-	if(params.size() >= 9)
-		nMultiSig = boost::lexical_cast<int>(params[8].get_str());
+	if(params.size() >= 8)
+		nMultiSig = boost::lexical_cast<int>(params[7].get_str());
     UniValue aliasNames;
-	if(params.size() >= 10)
-		aliasNames = params[9].get_array();
-	
-	vchPrivateValue = vchFromString(strPrivateValue);
+	if(params.size() >= 9)
+		aliasNames = params[8].get_array();
 
 	CWalletTx wtx;
 
@@ -1905,7 +1900,6 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	newAlias.nHeight = chainActive.Tip()->nHeight;
 	newAlias.vchPubKey = vchPubKey;
 	newAlias.vchPublicValue = vchPublicValue;
-	newAlias.vchPrivateValue = vchPrivateValue;
 	newAlias.nExpireTime = nTime;
 	newAlias.vchPassword = vchFromString(strPassword);
 	newAlias.safetyLevel = 0;

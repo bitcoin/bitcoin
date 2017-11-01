@@ -819,6 +819,24 @@ UniValue getreceivedbyaccount(const UniValue& params, bool fHelp)
     return ValueFromAmount(nAmount);
 }
 
+UniValue getwalletbalance(const UniValue& params, bool fHelp)
+{
+    if (!EnsureWalletIsAvailable(fHelp))
+        return NullUniValue;
+
+    if (fHelp || params.size() > 0)
+        throw runtime_error(
+            "getwalletbalance ()\n"
+            "\nReturns the server's total available balance.\n"
+            "\nExamples:\n"
+            "\nThe total amount in the wallet\n"
+            + HelpExampleCli("getwalletbalance", "")
+        );
+
+    LOCK2(cs_main, pwalletMain->cs_wallet);
+
+    return  ValueFromAmount(pwalletMain->GetBalance());
+}
 
 UniValue getbalance(const UniValue& params, bool fHelp)
 {
@@ -3065,6 +3083,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "getaccount",               &getaccount,               true  },
     { "wallet",             "getaddressesbyaccount",    &getaddressesbyaccount,    true  },
     { "wallet",             "getbalance",               &getbalance,               false },
+    { "wallet",             "getwalletbalance",         &getwalletbalance,         false },
     { "wallet",             "getnewaddress",            &getnewaddress,            true  },
     { "wallet",             "getrawchangeaddress",      &getrawchangeaddress,      true  },
     { "wallet",             "getreceivedbyaccount",     &getreceivedbyaccount,     false },
