@@ -421,7 +421,7 @@ BOOST_AUTO_TEST_CASE(generate_escrowfeedback)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
 	CTransaction tx;
 	DecodeHexTx(tx, arr[0].get_str());
-	string escrowTxid = tx.GetHash().ToString();
+	string escrowTxid = tx.GetHash().HexStr();
 	GenerateBlocks(10, "node1");
 	string feedbackid = guid + CFeedback::FeedbackUserToString(FEEDBACKSELLER) + CFeedback::FeedbackUserToString(FEEDBACKBUYER);
 	r = FindFeedback("node1", feedbackid);
@@ -453,11 +453,11 @@ BOOST_AUTO_TEST_CASE(generate_escrowfeedback)
 	escrowfeedbackstr = "escrowfeedback " + guid + " arbiter feedback 1 buyer";
 	BOOST_CHECK_NO_THROW(r = CallRPC("node3", escrowfeedbackstr));
 	UniValue arr2 = r.get_array();
-	BOOST_CHECK_NO_THROW(r = CallRPC("node3", "signrawtransaction " + arr[0].get_str()));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node3", "signrawtransaction " + arr2[0].get_str()));
 	finalhexstr = find_value(r.get_obj(), "hex").get_str();
-	BOOST_CHECK_NO_THROW(r = CallRPC("node3", "syscoinsendrawtransaction " + finalhexstr));
+	BOOST_CHECK_NO_THROW(CallRPC("node3", "syscoinsendrawtransaction " + finalhexstr));
 	DecodeHexTx(tx, finalhexstr);
-	escrowTxid = tx.GetHash().ToString();
+	escrowTxid = tx.GetHash().HexStr();
 	GenerateBlocks(10, "node3");
 	feedbackid = guid + CFeedback::FeedbackUserToString(FEEDBACKARBITER) + CFeedback::FeedbackUserToString(FEEDBACKBUYER);
 	r = FindFeedback("node3", feedbackid);
