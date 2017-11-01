@@ -560,6 +560,7 @@ if verbose >= 3:
     print app_bundle, "->", target
 
 os.mkdir("dist")
+os.mkdir("dist/.background")
 shutil.copytree(app_bundle, target)
 
 applicationBundle = ApplicationBundleInfo(target)
@@ -723,7 +724,7 @@ if config.dmg is not None:
             print "+ Applying fancy settings +"
         
         if fancy.has_key("background_picture"):
-            bg_path = os.path.join(disk_root, os.path.basename(fancy["background_picture"]))
+            bg_path = os.path.join(disk_root, ".background/", os.path.basename(fancy["background_picture"]))
             if verbose >= 3:
                 print fancy["background_picture"], "->", bg_path
             shutil.copy2(fancy["background_picture"], bg_path)
@@ -782,7 +783,7 @@ if config.dmg is not None:
             # Set background file, then call SetFile to make it invisible.
             # (note: making it invisible first makes set background picture fail)
             bgscript = Template("""set background picture of theViewOptions to file "$bgpic"
-                   do shell script "SetFile -a V /Volumes/$disk/$bgpic" """)
+                   do shell script "SetFile -a V /Volumes/$disk/.background/$bgpic" """)
             params["background_commands"] = bgscript.substitute({"bgpic" : os.path.basename(bg_path), "disk" : params["disk"]})
 
         s = appscript.substitute(params)
