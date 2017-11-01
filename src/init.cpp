@@ -1867,6 +1867,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     // ********************************************************* Step 11a: setup PrivateSend
     fMasterNode = GetBoolArg("-masternode", false);
+    // TODO: masternode should have no wallet
 
     if((fMasterNode || masternodeConfig.getCount() > -1) && fTxIndex == false) {
         return InitError("Enabling Masternode support requires turning on transaction indexing."
@@ -1875,12 +1876,6 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     if(fMasterNode) {
         LogPrintf("MASTERNODE:\n");
-
-        if(!GetArg("-masternodeaddr", "").empty()) {
-            // Hot masternode (either local or remote) should get its address in
-            // CActiveMasternode::ManageState() automatically and no longer relies on masternodeaddr.
-            return InitError(_("masternodeaddr option is deprecated. Please use masternode.conf to manage your remote masternodes."));
-        }
 
         std::string strMasterNodePrivKey = GetArg("-masternodeprivkey", "");
         if(!strMasterNodePrivKey.empty()) {
