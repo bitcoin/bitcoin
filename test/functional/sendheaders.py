@@ -225,6 +225,10 @@ class SendHeadersTest(BitcoinTestFramework):
         inv_node.wait_for_verack()
         test_node.wait_for_verack()
 
+        # Ensure verack's have been processed by our peer
+        inv_node.sync_with_ping()
+        test_node.sync_with_ping()
+
         tip = int(self.nodes[0].getbestblockhash(), 16)
 
         # PART 1
