@@ -1288,7 +1288,7 @@ void EscrowFeedback(const string& node, const string& userfrom, const string& es
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "_id").get_str() , feedbackid);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "escrow").get_str() , escrowguid);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "offer").get_str() , offerguid);
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "txid").get_str() , tx.GetHash().HexStr());
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "txid").get_str() , tx.GetHash().GetHex());
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "rating").get_int() , atoi(rating.c_str()));
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "feedback").get_str() , feedback);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "feedbackuserfrom").get_int() , feedbackuserfromenum);
