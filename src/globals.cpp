@@ -283,8 +283,8 @@ CStatHistory<uint64_t, MinValMax<uint64_t> > poolSize; // "memPool/size",STAT_OP
 CStatHistory<uint64_t> recvAmt;
 CStatHistory<uint64_t> sendAmt;
 CStatHistory<uint64_t> nTxValidationTime("txValidationTime", STAT_OP_MAX | STAT_INDIVIDUAL);
-CStatHistory<uint64_t> nBlockValidationTime("blockValidationTime", STAT_OP_MAX | STAT_INDIVIDUAL);
 CCriticalSection cs_blockvalidationtime;
+CStatHistory<uint64_t> nBlockValidationTime("blockValidationTime", STAT_OP_MAX | STAT_INDIVIDUAL);
 
 CThinBlockData thindata; // Singleton class
 

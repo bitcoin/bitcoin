@@ -405,6 +405,10 @@ public:
 
     void timeout(const boost::system::error_code &e)
     {
+        if (e==boost::asio::error::operation_aborted)
+        {
+            return;
+        }
         if (e)
             return;
 

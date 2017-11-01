@@ -436,6 +436,16 @@ FILE *blockReceiptLog = NULL;
 
 void UnlimitedCleanup()
 {
+    txAdded.Stop();
+    poolSize.Stop();
+    recvAmt.Stop();
+    sendAmt.Stop();
+    nTxValidationTime.Stop();
+    {
+        LOCK(cs_blockvalidationtime);
+        nBlockValidationTime.Stop();
+    }
+
     CStatBase *obj = NULL;
     while (!mallocedStats.empty())
     {

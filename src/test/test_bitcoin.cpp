@@ -155,3 +155,14 @@ bool ShutdownRequested()
 {
   return false;
 }
+
+struct SetupCleanup {
+    SetupCleanup()   { std::cout << "setup\n"; }
+    ~SetupCleanup()
+    {
+        std::cout << "teardown\n";
+        UnlimitedCleanup();
+    }
+};
+
+BOOST_GLOBAL_FIXTURE(SetupCleanup);
