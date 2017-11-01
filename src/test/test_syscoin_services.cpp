@@ -364,7 +364,7 @@ void GenerateBlocks(int nBlocks, const string& node)
   timeoutCounter = 0;
   while(!otherNode1.empty() && height < newHeight)
   {
-	  MilliSleep(100);
+	  MilliSleep(1000);
 	  try
 	  {
 		r = CallRPC(otherNode1, "getinfo");
@@ -380,7 +380,7 @@ void GenerateBlocks(int nBlocks, const string& node)
 	  }
 	  height = find_value(r.get_obj(), "blocks").get_int();
 	  timeoutCounter++;
-	  if (timeoutCounter > 300) {
+	  if (timeoutCounter > 10) {
 		  printf("Error: Timeout on getinfo for %s, height %d vs newHeight %d!\n", otherNode1.c_str(), height, newHeight);
 		  break;
 	  }
@@ -391,7 +391,7 @@ void GenerateBlocks(int nBlocks, const string& node)
   timeoutCounter = 0;
   while(!otherNode2.empty() &&height < newHeight)
   {
-	  MilliSleep(100);
+	  MilliSleep(1000);
 	  try
 	  {
 		r = CallRPC(otherNode2, "getinfo");
@@ -407,7 +407,7 @@ void GenerateBlocks(int nBlocks, const string& node)
 	  }
 	  height = find_value(r.get_obj(), "blocks").get_int();
 	  timeoutCounter++;
-	  if (timeoutCounter > 300) {
+	  if (timeoutCounter > 10) {
 		printf("Error: Timeout on getinfo for %s, height %d vs newHeight %d!\n", otherNode2.c_str(), height, newHeight);
 		break;
 	  }
