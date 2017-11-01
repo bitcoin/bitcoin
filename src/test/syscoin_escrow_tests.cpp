@@ -420,9 +420,10 @@ BOOST_AUTO_TEST_CASE(generate_escrowfeedback)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + arr[0].get_str()));
 	string finalhexstr = find_value(r.get_obj(), "hex").get_str();
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinsendrawtransaction " + finalhexstr));
-	CTransaction tx;
-	DecodeHexTx(tx, finalhexstr);
-	string escrowTxid = tx.GetHash().GetHex();
+
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "decoderawtransaction " + finalhexstr));
+	string escrowTxid = find_value(r.get_obj(), "txid").get_str();
+
 	GenerateBlocks(10, "node1");
 	string feedbackid = guid + CFeedback::FeedbackUserToString(FEEDBACKSELLER) + CFeedback::FeedbackUserToString(FEEDBACKBUYER);
 	r = FindFeedback("node1", feedbackid);
@@ -439,8 +440,10 @@ BOOST_AUTO_TEST_CASE(generate_escrowfeedback)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "signrawtransaction " + arr1[0].get_str()));
 	finalhexstr = find_value(r.get_obj(), "hex").get_str();
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "syscoinsendrawtransaction " + finalhexstr));
-	DecodeHexTx(tx, finalhexstr);
-	escrowTxid = tx.GetHash().ToString();
+
+	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "decoderawtransaction " + finalhexstr));
+	escrowTxid = find_value(r.get_obj(), "txid").get_str();
+
 	GenerateBlocks(10, "node2");
 	feedbackid = guid + CFeedback::FeedbackUserToString(FEEDBACKBUYER) + CFeedback::FeedbackUserToString(FEEDBACKSELLER);
 	r = FindFeedback("node2", feedbackid);
@@ -457,8 +460,9 @@ BOOST_AUTO_TEST_CASE(generate_escrowfeedback)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node3", "signrawtransaction " + arr2[0].get_str()));
 	finalhexstr = find_value(r.get_obj(), "hex").get_str();
 	BOOST_CHECK_NO_THROW(CallRPC("node3", "syscoinsendrawtransaction " + finalhexstr));
-	DecodeHexTx(tx, finalhexstr);
-	escrowTxid = tx.GetHash().GetHex();
+
+	BOOST_CHECK_NO_THROW(r = CallRPC("node3", "decoderawtransaction " + finalhexstr));
+	escrowTxid = find_value(r.get_obj(), "txid").get_str();
 	GenerateBlocks(10, "node3");
 	feedbackid = guid + CFeedback::FeedbackUserToString(FEEDBACKARBITER) + CFeedback::FeedbackUserToString(FEEDBACKBUYER);
 	r = FindFeedback("node3", feedbackid);

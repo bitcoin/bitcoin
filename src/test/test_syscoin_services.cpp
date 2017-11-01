@@ -1263,8 +1263,9 @@ void EscrowFeedback(const string& node, const string& userfrom, const string& es
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + arr[0].get_str()));
 	string finalsignedhex = find_value(r.get_obj(), "hex").get_str();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinsendrawtransaction " + finalsignedhex));
-	CTransaction tx;
-	DecodeHexTx(tx, finalsignedhex);
+
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "decoderawtransaction " + finalsignedhex));
+	string txid = find_value(r.get_obj(), "txid").get_str();
 
 	GenerateBlocks(10, node);
 	unsigned char feedbackusertoenum;
@@ -1288,7 +1289,7 @@ void EscrowFeedback(const string& node, const string& userfrom, const string& es
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "_id").get_str() , feedbackid);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "escrow").get_str() , escrowguid);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "offer").get_str() , offerguid);
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "txid").get_str() , tx.GetHash().GetHex());
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "txid").get_str() , txid);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "rating").get_int() , atoi(rating.c_str()));
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "feedback").get_str() , feedback);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "feedbackuserfrom").get_int() , feedbackuserfromenum);
@@ -1319,9 +1320,10 @@ void EscrowBid(const string& node, const string& buyeralias, const string& escro
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + arr[0].get_str()));
 	string finalsignedhex = find_value(r.get_obj(), "hex").get_str();
 	BOOST_CHECK_NO_THROW(CallRPC(node, "syscoinsendrawtransaction " + finalsignedhex));
-	CTransaction tx;
-	DecodeHexTx(tx, finalsignedhex);
-	string txid = tx.GetHash().GetHex();
+
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "decoderawtransaction " + finalhexstr));
+	string txid = find_value(r.get_obj(), "txid").get_str();
+
 	GenerateBlocks(10, node);
 	const UniValue &escrowBid = EscrowBidFilter(node, txid);
 	BOOST_CHECK(!escrowBid.empty());
