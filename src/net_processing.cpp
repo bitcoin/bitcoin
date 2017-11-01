@@ -2656,7 +2656,7 @@ static bool SendRejectsAndCheckIfBanned(CNode* pnode, CConnman& connman)
         state.fShouldBan = false;
         if (pnode->fWhitelisted)
             LogPrintf("Warning: not punishing whitelisted peer %s!\n", pnode->addr.ToString());
-        else if (pnode->fAddnode)
+        else if (pnode->m_manual_connection)
             LogPrintf("Warning: not punishing addnoded peer %s!\n", pnode->addr.ToString());
         else {
             pnode->fDisconnect = true;
