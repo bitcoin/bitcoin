@@ -229,7 +229,7 @@ BOOST_AUTO_TEST_CASE(coin_selection_tests)
         // they tried to consolidate 10 50k coins into one 500k coin, and ended up with 50k in change
         empty_wallet();
         for (int j = 0; j < 20; j++)
-            add_coin(50000 * COIN);
+            add_coin(5000 * COIN);
 
         BOOST_CHECK( testWallet.SelectCoinsMinConf(500000 * COIN, 1, 1, 0, vCoins, setCoinsRet, nValueRet));
         BOOST_CHECK_EQUAL(nValueRet, 500000 * COIN); // we should get the exact amount

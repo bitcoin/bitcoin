@@ -165,7 +165,7 @@ class ReplaceByFeeTest(RavenTestFramework):
     def test_doublespend_chain(self):
         """Doublespend of a long chain"""
 
-        initial_nValue = 50*COIN
+        initial_nValue = 50000*COIN
         tx0_outpoint = make_utxo(self.nodes[0], initial_nValue)
 
         prevout = tx0_outpoint

@@ -56,7 +56,7 @@ BOOST_AUTO_TEST_CASE(compress_amounts)
         BOOST_CHECK(TestEncode(i * COIN));
 
     for (uint64_t i = 1; i <= NUM_MULTIPLES_50BTC; i++)
-        BOOST_CHECK(TestEncode(i * 50000 * COIN));
+        BOOST_CHECK(TestEncode(i * 5000 * COIN));
 
     for (uint64_t i = 0; i < 100000; i++)
         BOOST_CHECK(TestDecode(i));
