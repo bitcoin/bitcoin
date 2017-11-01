@@ -189,12 +189,12 @@ bool CPrivateSend::IsCollateralValid(const CTransaction& txCollateral)
     }
 
     BOOST_FOREACH(const CTxIn txin, txCollateral.vin) {
-        CCoins coins;
-        if(!GetUTXOCoins(txin.prevout, coins)) {
+        Coin coin;
+        if(!GetUTXOCoin(txin.prevout, coin)) {
             LogPrint("privatesend", "CPrivateSend::IsCollateralValid -- Unknown inputs in collateral transaction, txCollateral=%s", txCollateral.ToString());
             return false;
         }
-        nValueIn += coins.vout[txin.prevout.n].nValue;
+        nValueIn += coin.out.nValue;
     }
 
     //collateral transactions are required to pay out a small fee to the miners

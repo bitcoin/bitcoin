@@ -65,6 +65,24 @@ BOOST_AUTO_TEST_CASE(siphash)
     BOOST_CHECK_EQUAL(hasher.Finalize(),  0xe612a3cb9ecba951ull);
 
     BOOST_CHECK_EQUAL(SipHashUint256(0x0706050403020100ULL, 0x0F0E0D0C0B0A0908ULL, uint256S("1f1e1d1c1b1a191817161514131211100f0e0d0c0b0a09080706050403020100")), 0x7127512f72f27cceull);
+
+    // Check consistency between CSipHasher and SipHashUint256[Extra].
+    // TODO reenable when backporting Bitcoin #10321
+    /*FastRandomContext ctx;
+    for (int i = 0; i < 16; ++i) {
+        uint64_t k1 = ctx.rand64();
+        uint64_t k2 = ctx.rand64();
+        uint256 x = GetRandHash();
+        uint32_t n = ctx.rand32();
+        uint8_t nb[4];
+        WriteLE32(nb, n);
+        CSipHasher sip256(k1, k2);
+        sip256.Write(x.begin(), 32);
+        CSipHasher sip288 = sip256;
+        sip288.Write(nb, 4);
+        BOOST_CHECK_EQUAL(SipHashUint256(k1, k2, x), sip256.Finalize());
+        BOOST_CHECK_EQUAL(SipHashUint256Extra(k1, k2, x, n), sip288.Finalize());
+    }*/
 }
 
 BOOST_AUTO_TEST_SUITE_END()
