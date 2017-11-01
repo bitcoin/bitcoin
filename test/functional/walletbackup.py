@@ -192,6 +192,16 @@ class WalletBackupTest(BitcoinTestFramework):
         assert_equal(self.nodes[1].getbalance(), balance1)
         assert_equal(self.nodes[2].getbalance(), balance2)
 
+        # Backup to source wallet file must fail
+        sourcePaths = [
+            tmpdir + "/node0/regtest/wallet.dat",
+            tmpdir + "/node0/./regtest/wallet.dat",
+            tmpdir + "/node0/regtest/",
+            tmpdir + "/node0/regtest"]
+
+        for sourcePath in sourcePaths:
+            assert_raises_rpc_error(-4, "backup failed", self.nodes[0].backupwallet, sourcePath)
+
 
 if __name__ == '__main__':
     WalletBackupTest().main()
