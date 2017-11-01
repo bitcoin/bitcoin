@@ -27,34 +27,35 @@ class OptionsModel : public QAbstractListModel
 public:
     explicit OptionsModel(QObject *parent = 0, bool resetSettings = false);
 
-    enum OptionID {
-        StartAtStartup,         // bool
-        MinimizeToTray,         // bool
-        MapPortUPnP,            // bool
-        MinimizeOnClose,        // bool
-        ProxyUse,               // bool
-        ProxyIP,                // QString
-        ProxyPort,              // int
-        ProxyUseTor,            // bool
-        ProxyIPTor,             // QString
-        ProxyPortTor,           // int
-        DisplayUnit,            // BitcoinUnits::Unit
-        ThirdPartyTxUrls,       // QString
-        Language,               // QString
-        CoinControlFeatures,    // bool
-        ThreadsScriptVerif,     // int
-        DatabaseCache,          // int
-        SpendZeroConfChange,    // bool
-        Listen,                 // bool
+    enum OptionID
+    {
+        StartAtStartup, // bool
+        MinimizeToTray, // bool
+        MapPortUPnP, // bool
+        MinimizeOnClose, // bool
+        ProxyUse, // bool
+        ProxyIP, // QString
+        ProxyPort, // int
+        ProxyUseTor, // bool
+        ProxyIPTor, // QString
+        ProxyPortTor, // int
+        DisplayUnit, // BitcoinUnits::Unit
+        ThirdPartyTxUrls, // QString
+        Language, // QString
+        CoinControlFeatures, // bool
+        ThreadsScriptVerif, // int
+        DatabaseCache, // int
+        SpendZeroConfChange, // bool
+        Listen, // bool
         OptionIDRowCount,
     };
 
     void Init(bool resetSettings = false);
     void Reset();
 
-    int rowCount(const QModelIndex & parent = QModelIndex()) const;
-    QVariant data(const QModelIndex & index, int role = Qt::DisplayRole) const;
-    bool setData(const QModelIndex & index, const QVariant & value, int role = Qt::EditRole);
+    int rowCount(const QModelIndex &parent = QModelIndex()) const;
+    QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const;
+    bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole);
     /** Updates current unit in memory, settings and emits displayUnitChanged(newUnit) signal */
     void setDisplayUnit(const QVariant &value);
 
@@ -63,10 +64,9 @@ public:
     bool getMinimizeOnClose() { return fMinimizeOnClose; }
     int getDisplayUnit() { return nDisplayUnit; }
     QString getThirdPartyTxUrls() { return strThirdPartyTxUrls; }
-    bool getProxySettings(QNetworkProxy& proxy) const;
+    bool getProxySettings(QNetworkProxy &proxy) const;
     bool getCoinControlFeatures() { return fCoinControlFeatures; }
-    const QString& getOverriddenByCommandLine() { return strOverriddenByCommandLine; }
-
+    const QString &getOverriddenByCommandLine() { return strOverriddenByCommandLine; }
     /* Restart flag helper */
     void setRestartRequired(bool fRequired);
     bool isRestartRequired();

@@ -12,18 +12,14 @@
 #include <QDataWidgetMapper>
 #include <QMessageBox>
 
-EditAddressDialog::EditAddressDialog(Mode mode, QWidget *parent) :
-    QDialog(parent),
-    ui(new Ui::EditAddressDialog),
-    mapper(0),
-    mode(mode),
-    model(0)
+EditAddressDialog::EditAddressDialog(Mode mode, QWidget *parent)
+    : QDialog(parent), ui(new Ui::EditAddressDialog), mapper(0), mode(mode), model(0)
 {
     ui->setupUi(this);
 
     GUIUtil::setupAddressWidget(ui->addressEdit, this);
 
-    switch(mode)
+    switch (mode)
     {
     case NewReceivingAddress:
         setWindowTitle(tr("New receiving address"));
@@ -45,15 +41,11 @@ EditAddressDialog::EditAddressDialog(Mode mode, QWidget *parent) :
     mapper->setSubmitPolicy(QDataWidgetMapper::ManualSubmit);
 }
 
-EditAddressDialog::~EditAddressDialog()
-{
-    delete ui;
-}
-
+EditAddressDialog::~EditAddressDialog() { delete ui; }
 void EditAddressDialog::setModel(AddressTableModel *model)
 {
     this->model = model;
-    if(!model)
+    if (!model)
         return;
 
     mapper->setModel(model);
@@ -61,28 +53,22 @@ void EditAddressDialog::setModel(AddressTableModel *model)
     mapper->addMapping(ui->addressEdit, AddressTableModel::Address);
 }
 
-void EditAddressDialog::loadRow(int row)
-{
-    mapper->setCurrentIndex(row);
-}
-
+void EditAddressDialog::loadRow(int row) { mapper->setCurrentIndex(row); }
 bool EditAddressDialog::saveCurrentRow()
 {
-    if(!model)
+    if (!model)
         return false;
 
-    switch(mode)
+    switch (mode)
     {
     case NewReceivingAddress:
     case NewSendingAddress:
-        address = model->addRow(
-                mode == NewSendingAddress ? AddressTableModel::Send : AddressTableModel::Receive,
-                ui->labelEdit->text(),
-                ui->addressEdit->text(), CScriptNum(0));
+        address = model->addRow(mode == NewSendingAddress ? AddressTableModel::Send : AddressTableModel::Receive,
+            ui->labelEdit->text(), ui->addressEdit->text(), CScriptNum(0));
         break;
     case EditReceivingAddress:
     case EditSendingAddress:
-        if(mapper->submit())
+        if (mapper->submit())
         {
             address = ui->addressEdit->text();
         }
@@ -93,12 +79,12 @@ bool EditAddressDialog::saveCurrentRow()
 
 void EditAddressDialog::accept()
 {
-    if(!model)
+    if (!model)
         return;
 
-    if(!saveCurrentRow())
+    if (!saveCurrentRow())
     {
-        switch(model->getEditStatus())
+        switch (model->getEditStatus())
         {
         case AddressTableModel::OK:
             // Failed with unknown reason. Just reject.
@@ -117,27 +103,20 @@ void EditAddressDialog::accept()
                 QMessageBox::Ok, QMessageBox::Ok);
             break;
         case AddressTableModel::WALLET_UNLOCK_FAILURE:
-            QMessageBox::critical(this, windowTitle(),
-                tr("Could not unlock wallet."),
-                QMessageBox::Ok, QMessageBox::Ok);
+            QMessageBox::critical(
+                this, windowTitle(), tr("Could not unlock wallet."), QMessageBox::Ok, QMessageBox::Ok);
             break;
         case AddressTableModel::KEY_GENERATION_FAILURE:
-            QMessageBox::critical(this, windowTitle(),
-                tr("New key generation failed."),
-                QMessageBox::Ok, QMessageBox::Ok);
+            QMessageBox::critical(
+                this, windowTitle(), tr("New key generation failed."), QMessageBox::Ok, QMessageBox::Ok);
             break;
-
         }
         return;
     }
     QDialog::accept();
 }
 
-QString EditAddressDialog::getAddress() const
-{
-    return address;
-}
-
+QString EditAddressDialog::getAddress() const { return address; }
 void EditAddressDialog::setAddress(const QString &address)
 {
     this->address = address;

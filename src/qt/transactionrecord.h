@@ -17,7 +17,7 @@ class CWallet;
 class CWalletTx;
 
 // Addresses need to preserve their txout order for accurate display so implemented as list (instead of map)
-typedef std::pair<std::string,CScript> Address;
+typedef std::pair<std::string, CScript> Address;
 typedef std::list<Address> AddressList;
 
 /** UI model for transaction status. The transaction status is the part of a transaction that will change over time.
@@ -25,24 +25,26 @@ typedef std::list<Address> AddressList;
 class TransactionStatus
 {
 public:
-    TransactionStatus():
-        countsForBalance(false), sortKey(""),
-        matures_in(0), status(Offline), depth(0), open_for(0), cur_num_blocks(-1)
-    { }
+    TransactionStatus()
+        : countsForBalance(false), sortKey(""), matures_in(0), status(Offline), depth(0), open_for(0),
+          cur_num_blocks(-1)
+    {
+    }
 
-    enum Status {
-        Confirmed,          /**< Have 6 or more confirmations (normal tx) or fully mature (mined tx) **/
+    enum Status
+    {
+        Confirmed, /**< Have 6 or more confirmations (normal tx) or fully mature (mined tx) **/
         /// Normal (sent/received) transactions
-        OpenUntilDate,      /**< Transaction not yet final, waiting for date */
-        OpenUntilBlock,     /**< Transaction not yet final, waiting for block */
-        Offline,            /**< Not sent to any other nodes **/
-        Unconfirmed,        /**< Not yet mined into a block **/
-        Confirming,         /**< Confirmed, but waiting for the recommended number of confirmations **/
-        Conflicted,         /**< Conflicts with other transaction or mempool **/
+        OpenUntilDate, /**< Transaction not yet final, waiting for date */
+        OpenUntilBlock, /**< Transaction not yet final, waiting for block */
+        Offline, /**< Not sent to any other nodes **/
+        Unconfirmed, /**< Not yet mined into a block **/
+        Confirming, /**< Confirmed, but waiting for the recommended number of confirmations **/
+        Conflicted, /**< Conflicts with other transaction or mempool **/
         /// Generated (mined) transactions
-        Immature,           /**< Mined but waiting for maturity */
-        MaturesWarning,     /**< Transaction will likely not mature because no nodes have confirmed */
-        NotAccepted         /**< Mined but not accepted */
+        Immature, /**< Mined but waiting for maturity */
+        MaturesWarning, /**< Transaction will likely not mature because no nodes have confirmed */
+        NotAccepted /**< Mined but not accepted */
     };
 
     /// Transaction counts towards available balance
@@ -89,22 +91,19 @@ public:
     /** Number of confirmation recommended for accepting a transaction */
     static const int RecommendedNumConfirmations = 6;
 
-    TransactionRecord():
-            hash(), time(0), type(Other), addresses(), debit(0), credit(0), idx(0)
+    TransactionRecord() : hash(), time(0), type(Other), addresses(), debit(0), credit(0), idx(0) {}
+    TransactionRecord(uint256 hash, qint64 time)
+        : hash(hash), time(time), type(Other), addresses(), debit(0), credit(0), idx(0)
     {
     }
 
-    TransactionRecord(uint256 hash, qint64 time):
-            hash(hash), time(time), type(Other), addresses(), debit(0),
-            credit(0), idx(0)
-    {
-    }
-
-    TransactionRecord(uint256 hash, qint64 time,
-                Type type, const AddressList &addresses,
-                const CAmount& debit, const CAmount& credit):
-            hash(hash), time(time), type(type), addresses(addresses), debit(debit), credit(credit),
-            idx(0)
+    TransactionRecord(uint256 hash,
+        qint64 time,
+        Type type,
+        const AddressList &addresses,
+        const CAmount &debit,
+        const CAmount &credit)
+        : hash(hash), time(time), type(type), addresses(addresses), debit(debit), credit(credit), idx(0)
     {
     }
 

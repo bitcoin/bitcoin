@@ -29,13 +29,8 @@
 #include <QSettings>
 #include <QStringList>
 
-OptionsModel::OptionsModel(QObject *parent, bool resetSettings) :
-    QAbstractListModel(parent)
-{
-    Init(resetSettings);
-}
-
-void OptionsModel::addOverriddenOption(const std::string& option)
+OptionsModel::OptionsModel(QObject *parent, bool resetSettings) : QAbstractListModel(parent) { Init(resetSettings); }
+void OptionsModel::addOverriddenOption(const std::string &option)
 {
     strOverriddenByCommandLine += QString::fromStdString(option) + "=" + QString::fromStdString(mapArgs[option]) + " ";
 }
@@ -119,7 +114,8 @@ void OptionsModel::Init(bool resetSettings)
     if (!settings.contains("addrProxy"))
         settings.setValue("addrProxy", "127.0.0.1:9050");
     // Only try to set -proxy, if user has enabled fUseProxy
-    if (settings.value("fUseProxy").toBool() && !SoftSetArg("-proxy", settings.value("addrProxy").toString().toStdString()))
+    if (settings.value("fUseProxy").toBool() &&
+        !SoftSetArg("-proxy", settings.value("addrProxy").toString().toStdString()))
         addOverriddenOption("-proxy");
     else if (!settings.value("fUseProxy").toBool() && !GetArg("-proxy", "").empty())
         addOverriddenOption("-proxy");
@@ -129,9 +125,10 @@ void OptionsModel::Init(bool resetSettings)
     if (!settings.contains("addrSeparateProxyTor"))
         settings.setValue("addrSeparateProxyTor", "127.0.0.1:9050");
     // Only try to set -onion, if user has enabled fUseSeparateProxyTor
-    if (settings.value("fUseSeparateProxyTor").toBool() && !SoftSetArg("-onion", settings.value("addrSeparateProxyTor").toString().toStdString()))
+    if (settings.value("fUseSeparateProxyTor").toBool() &&
+        !SoftSetArg("-onion", settings.value("addrSeparateProxyTor").toString().toStdString()))
         addOverriddenOption("-onion");
-    else if(!settings.value("fUseSeparateProxyTor").toBool() && !GetArg("-onion", "").empty())
+    else if (!settings.value("fUseSeparateProxyTor").toBool() && !GetArg("-onion", "").empty())
         addOverriddenOption("-onion");
 
     // Display
@@ -155,17 +152,15 @@ void OptionsModel::Reset()
         GUIUtil::SetStartOnSystemStartup(false);
 }
 
-int OptionsModel::rowCount(const QModelIndex& parent) const
-{
-    return OptionIDRowCount;
-}
-
+int OptionsModel::rowCount(const QModelIndex &parent) const { return OptionIDRowCount; }
 // read QSettings values and return them
-QVariant OptionsModel::data(const QModelIndex& index, int role) const
+QVariant OptionsModel::data(const QModelIndex &index, int role) const
 {
-    if (role == Qt::EditRole) {
+    if (role == Qt::EditRole)
+    {
         QSettings settings;
-        switch (index.row()) {
+        switch (index.row())
+        {
         case StartAtStartup:
             return GUIUtil::GetStartOnSystemStartup();
         case MinimizeToTray:
@@ -182,12 +177,14 @@ QVariant OptionsModel::data(const QModelIndex& index, int role) const
         // default proxy
         case ProxyUse:
             return settings.value("fUseProxy", false);
-        case ProxyIP: {
+        case ProxyIP:
+        {
             // contains IP at index 0 and port at index 1
             QStringList strlIpPort = settings.value("addrProxy").toString().split(":", QString::SkipEmptyParts);
             return strlIpPort.at(0);
         }
-        case ProxyPort: {
+        case ProxyPort:
+        {
             // contains IP at index 0 and port at index 1
             QStringList strlIpPort = settings.value("addrProxy").toString().split(":", QString::SkipEmptyParts);
             return strlIpPort.at(1);
@@ -196,14 +193,18 @@ QVariant OptionsModel::data(const QModelIndex& index, int role) const
         // separate Tor proxy
         case ProxyUseTor:
             return settings.value("fUseSeparateProxyTor", false);
-        case ProxyIPTor: {
+        case ProxyIPTor:
+        {
             // contains IP at index 0 and port at index 1
-            QStringList strlIpPort = settings.value("addrSeparateProxyTor").toString().split(":", QString::SkipEmptyParts);
+            QStringList strlIpPort =
+                settings.value("addrSeparateProxyTor").toString().split(":", QString::SkipEmptyParts);
             return strlIpPort.at(0);
         }
-        case ProxyPortTor: {
+        case ProxyPortTor:
+        {
             // contains IP at index 0 and port at index 1
-            QStringList strlIpPort = settings.value("addrSeparateProxyTor").toString().split(":", QString::SkipEmptyParts);
+            QStringList strlIpPort =
+                settings.value("addrSeparateProxyTor").toString().split(":", QString::SkipEmptyParts);
             return strlIpPort.at(1);
         }
 
@@ -233,12 +234,14 @@ QVariant OptionsModel::data(const QModelIndex& index, int role) const
 }
 
 // write QSettings values
-bool OptionsModel::setData(const QModelIndex& index, const QVariant& value, int role)
+bool OptionsModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
     bool successful = true; /* set to false on parse error */
-    if (role == Qt::EditRole) {
+    if (role == Qt::EditRole)
+    {
         QSettings settings;
-        switch (index.row()) {
+        switch (index.row())
+        {
         case StartAtStartup:
             successful = GUIUtil::SetStartOnSystemStartup(value.toBool());
             break;
@@ -257,27 +260,33 @@ bool OptionsModel::setData(const QModelIndex& index, const QVariant& value, int 
 
         // default proxy
         case ProxyUse:
-            if (settings.value("fUseProxy") != value) {
+            if (settings.value("fUseProxy") != value)
+            {
                 settings.setValue("fUseProxy", value.toBool());
                 setRestartRequired(true);
             }
             break;
-        case ProxyIP: {
+        case ProxyIP:
+        {
             // contains current IP at index 0 and current port at index 1
             QStringList strlIpPort = settings.value("addrProxy").toString().split(":", QString::SkipEmptyParts);
             // if that key doesn't exist or has a changed IP
-            if (!settings.contains("addrProxy") || strlIpPort.at(0) != value.toString()) {
+            if (!settings.contains("addrProxy") || strlIpPort.at(0) != value.toString())
+            {
                 // construct new value from new IP and current port
                 QString strNewValue = value.toString() + ":" + strlIpPort.at(1);
                 settings.setValue("addrProxy", strNewValue);
                 setRestartRequired(true);
             }
-        } break;
-        case ProxyPort: {
+        }
+        break;
+        case ProxyPort:
+        {
             // contains current IP at index 0 and current port at index 1
             QStringList strlIpPort = settings.value("addrProxy").toString().split(":", QString::SkipEmptyParts);
             // if that key doesn't exist or has a changed port
-            if (!settings.contains("addrProxy") || strlIpPort.at(1) != value.toString()) {
+            if (!settings.contains("addrProxy") || strlIpPort.at(1) != value.toString())
+            {
                 // construct new value from current IP and new port
                 QString strNewValue = strlIpPort.at(0) + ":" + value.toString();
                 settings.setValue("addrProxy", strNewValue);
@@ -288,16 +297,20 @@ bool OptionsModel::setData(const QModelIndex& index, const QVariant& value, int 
 
         // separate Tor proxy
         case ProxyUseTor:
-            if (settings.value("fUseSeparateProxyTor") != value) {
+            if (settings.value("fUseSeparateProxyTor") != value)
+            {
                 settings.setValue("fUseSeparateProxyTor", value.toBool());
                 setRestartRequired(true);
             }
             break;
-        case ProxyIPTor: {
+        case ProxyIPTor:
+        {
             // contains current IP at index 0 and current port at index 1
-            QStringList strlIpPort = settings.value("addrSeparateProxyTor").toString().split(":", QString::SkipEmptyParts);
+            QStringList strlIpPort =
+                settings.value("addrSeparateProxyTor").toString().split(":", QString::SkipEmptyParts);
             // if that key doesn't exist or has a changed IP
-            if (!settings.contains("addrSeparateProxyTor") || strlIpPort.at(0) != value.toString()) {
+            if (!settings.contains("addrSeparateProxyTor") || strlIpPort.at(0) != value.toString())
+            {
                 // construct new value from new IP and current port
                 QString strNewValue = value.toString() + ":" + strlIpPort.at(1);
                 settings.setValue("addrSeparateProxyTor", strNewValue);
@@ -305,11 +318,14 @@ bool OptionsModel::setData(const QModelIndex& index, const QVariant& value, int 
             }
         }
         break;
-        case ProxyPortTor: {
+        case ProxyPortTor:
+        {
             // contains current IP at index 0 and current port at index 1
-            QStringList strlIpPort = settings.value("addrSeparateProxyTor").toString().split(":", QString::SkipEmptyParts);
+            QStringList strlIpPort =
+                settings.value("addrSeparateProxyTor").toString().split(":", QString::SkipEmptyParts);
             // if that key doesn't exist or has a changed port
-            if (!settings.contains("addrSeparateProxyTor") || strlIpPort.at(1) != value.toString()) {
+            if (!settings.contains("addrSeparateProxyTor") || strlIpPort.at(1) != value.toString())
+            {
                 // construct new value from current IP and new port
                 QString strNewValue = strlIpPort.at(0) + ":" + value.toString();
                 settings.setValue("addrSeparateProxyTor", strNewValue);
@@ -320,7 +336,8 @@ bool OptionsModel::setData(const QModelIndex& index, const QVariant& value, int 
 
 #ifdef ENABLE_WALLET
         case SpendZeroConfChange:
-            if (settings.value("bSpendZeroConfChange") != value) {
+            if (settings.value("bSpendZeroConfChange") != value)
+            {
                 settings.setValue("bSpendZeroConfChange", value);
                 setRestartRequired(true);
             }
@@ -330,14 +347,16 @@ bool OptionsModel::setData(const QModelIndex& index, const QVariant& value, int 
             setDisplayUnit(value);
             break;
         case ThirdPartyTxUrls:
-            if (strThirdPartyTxUrls != value.toString()) {
+            if (strThirdPartyTxUrls != value.toString())
+            {
                 strThirdPartyTxUrls = value.toString();
                 settings.setValue("strThirdPartyTxUrls", strThirdPartyTxUrls);
                 setRestartRequired(true);
             }
             break;
         case Language:
-            if (settings.value("language") != value) {
+            if (settings.value("language") != value)
+            {
                 settings.setValue("language", value);
                 setRestartRequired(true);
             }
@@ -348,19 +367,22 @@ bool OptionsModel::setData(const QModelIndex& index, const QVariant& value, int 
             Q_EMIT coinControlFeaturesChanged(fCoinControlFeatures);
             break;
         case DatabaseCache:
-            if (settings.value("nDatabaseCache") != value) {
+            if (settings.value("nDatabaseCache") != value)
+            {
                 settings.setValue("nDatabaseCache", value);
                 setRestartRequired(true);
             }
             break;
         case ThreadsScriptVerif:
-            if (settings.value("nThreadsScriptVerif") != value) {
+            if (settings.value("nThreadsScriptVerif") != value)
+            {
                 settings.setValue("nThreadsScriptVerif", value);
                 setRestartRequired(true);
             }
             break;
         case Listen:
-            if (settings.value("fListen") != value) {
+            if (settings.value("fListen") != value)
+            {
                 settings.setValue("fListen", value);
                 setRestartRequired(true);
             }
@@ -368,7 +390,6 @@ bool OptionsModel::setData(const QModelIndex& index, const QVariant& value, int 
         default:
             break;
         }
-
     }
 
     Q_EMIT dataChanged(index, index);
@@ -377,9 +398,10 @@ bool OptionsModel::setData(const QModelIndex& index, const QVariant& value, int 
 }
 
 /** Updates current unit in memory, settings and emits displayUnitChanged(newUnit) signal */
-void OptionsModel::setDisplayUnit(const QVariant& value)
+void OptionsModel::setDisplayUnit(const QVariant &value)
 {
-    if (!value.isNull()) {
+    if (!value.isNull())
+    {
         QSettings settings;
         nDisplayUnit = value.toInt();
         settings.setValue("nDisplayUnit", nDisplayUnit);
@@ -387,18 +409,20 @@ void OptionsModel::setDisplayUnit(const QVariant& value)
     }
 }
 
-bool OptionsModel::getProxySettings(QNetworkProxy& proxy) const
+bool OptionsModel::getProxySettings(QNetworkProxy &proxy) const
 {
     // Directly query current base proxy, because
     // GUI settings can be overridden with -proxy.
     proxyType curProxy;
-    if (GetProxy(NET_IPV4, curProxy)) {
+    if (GetProxy(NET_IPV4, curProxy))
+    {
         proxy.setType(QNetworkProxy::Socks5Proxy);
         proxy.setHostName(QString::fromStdString(curProxy.proxy.ToStringIP()));
         proxy.setPort(curProxy.proxy.GetPort());
 
         return true;
-    } else
+    }
+    else
         proxy.setType(QNetworkProxy::NoProxy);
 
     return false;

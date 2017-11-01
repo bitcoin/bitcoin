@@ -17,8 +17,9 @@ class PlatformStyle;
 class SendCoinsEntry;
 class SendCoinsRecipient;
 
-namespace Ui {
-    class SendCoinsDialog;
+namespace Ui
+{
+class SendCoinsDialog;
 }
 
 QT_BEGIN_NAMESPACE
@@ -39,7 +40,8 @@ public:
     void setClientModel(ClientModel *clientModel);
     void setModel(WalletModel *model);
 
-    /** Set up the tab chain manually, as Qt messes up the tab chain by default in some cases (issue https://bugreports.qt-project.org/browse/QTBUG-10907).
+    // bugreports.qt-project.org/browse/QTBUG-10907).
+    /** Set up the tab chain manually, as Qt messes up the tab chain by default in some cases (issue https:
      */
     QWidget *setupTabChain(QWidget *prev);
 
@@ -53,8 +55,12 @@ public Q_SLOTS:
     void accept();
     SendCoinsEntry *addEntry();
     void updateTabsAndLabels();
-    void setBalance(const CAmount& balance, const CAmount& unconfirmedBalance, const CAmount& immatureBalance,
-                    const CAmount& watchOnlyBalance, const CAmount& watchUnconfBalance, const CAmount& watchImmatureBalance);
+    void setBalance(const CAmount &balance,
+        const CAmount &unconfirmedBalance,
+        const CAmount &immatureBalance,
+        const CAmount &watchOnlyBalance,
+        const CAmount &watchUnconfBalance,
+        const CAmount &watchImmatureBalance);
 
 private:
     Ui::SendCoinsDialog *ui;
@@ -75,7 +81,7 @@ private Q_SLOTS:
     void on_sendButton_clicked();
     void on_buttonChooseFee_clicked();
     void on_buttonMinimizeFee_clicked();
-    void removeEntry(SendCoinsEntry* entry);
+    void removeEntry(SendCoinsEntry *entry);
     void updateDisplayUnit();
     void coinControlFeatureChanged(bool);
     void coinControlButtonClicked();

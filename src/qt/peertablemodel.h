@@ -19,7 +19,8 @@ QT_BEGIN_NAMESPACE
 class QTimer;
 QT_END_NAMESPACE
 
-struct CNodeCombinedStats {
+struct CNodeCombinedStats
+{
     CNodeStats nodeStats;
     CNodeStateStats nodeStateStats;
     bool fNodeStateStatsAvailable;
@@ -28,8 +29,7 @@ struct CNodeCombinedStats {
 class NodeLessThan
 {
 public:
-    NodeLessThan(int nColumn, Qt::SortOrder fOrder) :
-        column(nColumn), order(fOrder) {}
+    NodeLessThan(int nColumn, Qt::SortOrder fOrder) : column(nColumn), order(fOrder) {}
     bool operator()(const CNodeCombinedStats &left, const CNodeCombinedStats &right) const;
 
 private:
@@ -52,7 +52,8 @@ public:
     void startAutoRefresh();
     void stopAutoRefresh();
 
-    enum ColumnIndex {
+    enum ColumnIndex
+    {
         Address = 0,
         Subversion = 1,
         Ping = 2

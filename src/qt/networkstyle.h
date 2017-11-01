@@ -21,9 +21,11 @@ public:
     const QIcon &getAppIcon() const { return appIcon; }
     const QIcon &getTrayAndWindowIcon() const { return trayAndWindowIcon; }
     const QString &getTitleAddText() const { return titleAddText; }
-
 private:
-    NetworkStyle(const QString &appName, const int iconColorHueShift, const int iconColorSaturationReduction, const char *titleAddText);
+    NetworkStyle(const QString &appName,
+        const int iconColorHueShift,
+        const int iconColorSaturationReduction,
+        const char *titleAddText);
 
     QString appName;
     QIcon appIcon;

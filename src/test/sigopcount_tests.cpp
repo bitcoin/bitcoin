@@ -3,12 +3,12 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "pubkey.h"
 #include "key.h"
+#include "pubkey.h"
 #include "script/script.h"
 #include "script/standard.h"
-#include "uint256.h"
 #include "test/test_bitcoin.h"
+#include "uint256.h"
 
 #include <vector>
 
@@ -18,8 +18,7 @@
 using namespace std;
 
 // Helpers:
-static std::vector<unsigned char>
-Serialize(const CScript& s)
+static std::vector<unsigned char> Serialize(const CScript &s)
 {
     std::vector<unsigned char> sSerialized(s.begin(), s.end());
     return sSerialized;

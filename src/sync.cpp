@@ -14,7 +14,7 @@
 #include <boost/thread.hpp>
 
 #ifdef DEBUG_LOCKCONTENTION
-void PrintLockContention(const char* pszName, const char* pszFile, int nLine)
+void PrintLockContention(const char *pszName, const char *pszFile, int nLine)
 {
     LogPrintf("LOCKCONTENTION: %s\n", pszName);
     LogPrintf("Locker: %s:%d\n", pszFile, nLine);
@@ -34,22 +34,21 @@ void PrintLockContention(const char* pszName, const char* pszFile, int nLine)
 //
 
 // BU move to sync.h because I need to create these in globals.cpp
-//struct CLockLocation {
-CLockLocation::CLockLocation(const char* pszName, const char* pszFile, int nLine, bool fTryIn)
-    {
-        mutexName = pszName;
-        sourceFile = pszFile;
-        sourceLine = nLine;
-        fTry = fTryIn;
-    }
+// struct CLockLocation {
+CLockLocation::CLockLocation(const char *pszName, const char *pszFile, int nLine, bool fTryIn)
+{
+    mutexName = pszName;
+    sourceFile = pszFile;
+    sourceLine = nLine;
+    fTry = fTryIn;
+}
 
 std::string CLockLocation::ToString() const
-    {
-        return mutexName + "  " + sourceFile + ":" + itostr(sourceLine) + (fTry ? " (TRY)" : "");
-    }
+{
+    return mutexName + "  " + sourceFile + ":" + itostr(sourceLine) + (fTry ? " (TRY)" : "");
+}
 
 std::string CLockLocation::MutexName() const { return mutexName; }
-
 #if 0
     bool fTry;
 private:
@@ -67,7 +66,9 @@ extern LockStackMap lockorders;
 extern boost::thread_specific_ptr<LockStack> lockstack;
 
 
-static void potential_deadlock_detected(const std::pair<void*, void*>& mismatch, const LockStack& s1, const LockStack& s2)
+static void potential_deadlock_detected(const std::pair<void *, void *> &mismatch,
+    const LockStack &s1,
+    const LockStack &s2)
 {
     // We attempt to not assert on probably-not deadlocks by assuming that
     // a try lock will immediately have otherwise bailed if it had
@@ -81,14 +82,17 @@ static void potential_deadlock_detected(const std::pair<void*, void*>& mismatch,
 
     LogPrintf("POTENTIAL DEADLOCK DETECTED\n");
     LogPrintf("Previous lock order was:\n");
-    BOOST_FOREACH (const PAIRTYPE(void*, CLockLocation) & i, s2) {
-        if (i.first == mismatch.first) {
+    BOOST_FOREACH (const PAIRTYPE(void *, CLockLocation) & i, s2)
+    {
+        if (i.first == mismatch.first)
+        {
             LogPrintf(" (1)");
             if (!firstLocked && secondLocked && i.second.fTry)
                 onlyMaybeDeadlock = true;
             firstLocked = true;
         }
-        if (i.first == mismatch.second) {
+        if (i.first == mismatch.second)
+        {
             LogPrintf(" (2)");
             if (!secondLocked && firstLocked && i.second.fTry)
                 onlyMaybeDeadlock = true;
@@ -99,14 +103,17 @@ static void potential_deadlock_detected(const std::pair<void*, void*>& mismatch,
     firstLocked = false;
     secondLocked = false;
     LogPrintf("Current lock order is:\n");
-    BOOST_FOREACH (const PAIRTYPE(void*, CLockLocation) & i, s1) {
-        if (i.first == mismatch.first) {
+    BOOST_FOREACH (const PAIRTYPE(void *, CLockLocation) & i, s1)
+    {
+        if (i.first == mismatch.first)
+        {
             LogPrintf(" (1)");
             if (!firstLocked && secondLocked && i.second.fTry)
                 onlyMaybeDeadlock = true;
             firstLocked = true;
         }
-        if (i.first == mismatch.second) {
+        if (i.first == mismatch.second)
+        {
             LogPrintf(" (2)");
             if (!secondLocked && firstLocked && i.second.fTry)
                 onlyMaybeDeadlock = true;
@@ -117,7 +124,7 @@ static void potential_deadlock_detected(const std::pair<void*, void*>& mismatch,
     assert(onlyMaybeDeadlock);
 }
 
-static void push_lock(void* c, const CLockLocation& locklocation, bool fTry)
+static void push_lock(void *c, const CLockLocation &locklocation, bool fTry)
 {
     if (lockstack.get() == NULL)
         lockstack.reset(new LockStack);
@@ -125,18 +132,22 @@ static void push_lock(void* c, const CLockLocation& locklocation, bool fTry)
     dd_mutex.lock();
 
     (*lockstack).push_back(std::make_pair(c, locklocation));
-    // If this is a blocking lock operation, we want to make sure that the locking order between 2 mutexes is consistent across the program
-    if (!fTry) {
-        BOOST_FOREACH (const PAIRTYPE(void*, CLockLocation) & i, (*lockstack)) {
+    // If this is a blocking lock operation, we want to make sure that the locking order between 2 mutexes is consistent
+    // across the program
+    if (!fTry)
+    {
+        BOOST_FOREACH (const PAIRTYPE(void *, CLockLocation) & i, (*lockstack))
+        {
             if (i.first == c)
                 break;
 
-            std::pair<void*, void*> p1 = std::make_pair(i.first, c);
-            if (lockorders.count(p1))  // If this order has already been placed into the order map, we've already tested it
+            std::pair<void *, void *> p1 = std::make_pair(i.first, c);
+            // If this order has already been placed into the order map, we've already tested it
+            if (lockorders.count(p1))
                 continue;
             lockorders[p1] = (*lockstack);
             // check to see if the opposite order has ever occurred, if so flag a possible deadlock
-            std::pair<void*, void*> p2 = std::make_pair(c, i.first);
+            std::pair<void *, void *> p2 = std::make_pair(c, i.first);
             if (lockorders.count(p2))
                 potential_deadlock_detected(p1, lockorders[p1], lockorders[p2]);
         }
@@ -151,29 +162,25 @@ static void pop_lock()
     dd_mutex.unlock();
 }
 
-void EnterCritical(const char* pszName, const char* pszFile, int nLine, void* cs, bool fTry)
+void EnterCritical(const char *pszName, const char *pszFile, int nLine, void *cs, bool fTry)
 {
     push_lock(cs, CLockLocation(pszName, pszFile, nLine, fTry), fTry);
 }
 
-void LeaveCritical()
-{
-    pop_lock();
-}
-
-void DeleteCritical(const void* cs)
+void LeaveCritical() { pop_lock(); }
+void DeleteCritical(const void *cs)
 {
     dd_mutex.lock();
     LockStackMap::iterator prev = lockorders.end();
-    for (LockStackMap::iterator i=lockorders.begin();i != lockorders.end(); ++i)
-      {
+    for (LockStackMap::iterator i = lockorders.begin(); i != lockorders.end(); ++i)
+    {
         // if prev is valid and one of its locks is the one we are deleting, then erase the entry
         if ((prev != lockorders.end()) && ((prev->first.first == cs) || (prev->first.second == cs)))
-          {
+        {
             lockorders.erase(prev);
-          }
+        }
         prev = i;
-      }
+    }
     dd_mutex.unlock();
 }
 
@@ -181,37 +188,34 @@ void DeleteCritical(const void* cs)
 std::string LocksHeld()
 {
     std::string result;
-    BOOST_FOREACH (const PAIRTYPE(void*, CLockLocation) & i, *lockstack)
+    BOOST_FOREACH (const PAIRTYPE(void *, CLockLocation) & i, *lockstack)
         result += i.second.ToString() + std::string("\n");
     return result;
 }
 
-void AssertLockHeldInternal(const char* pszName, const char* pszFile, int nLine, void* cs)
+void AssertLockHeldInternal(const char *pszName, const char *pszFile, int nLine, void *cs)
 {
-    BOOST_FOREACH (const PAIRTYPE(void*, CLockLocation) & i, *lockstack)
+    BOOST_FOREACH (const PAIRTYPE(void *, CLockLocation) & i, *lockstack)
         if (i.first == cs)
             return;
-    fprintf(stderr, "Assertion failed: lock %s not held in %s:%i; locks held:\n%s", pszName, pszFile, nLine, LocksHeld().c_str());
+    fprintf(stderr, "Assertion failed: lock %s not held in %s:%i; locks held:\n%s", pszName, pszFile, nLine,
+        LocksHeld().c_str());
     abort();
 }
 
-#ifdef DEBUG_LOCKORDER // BU normally CCriticalSection is a typedef, but when lockorder debugging is on we need to delete the critical section from the lockorder map
-CCriticalSection::CCriticalSection():name(NULL)
-{
-}
-
-CCriticalSection::CCriticalSection(const char* n):name(n)
-{
-}
-
+// BU normally CCriticalSection is a typedef, but when lockorder debugging is on we need to delete the critical section
+// from the lockorder map
+#ifdef DEBUG_LOCKORDER
+CCriticalSection::CCriticalSection() : name(NULL) {}
+CCriticalSection::CCriticalSection(const char *n) : name(n) {}
 CCriticalSection::~CCriticalSection()
 {
-  if (name)
+    if (name)
     {
-      printf("Destructing %s\n", name);
-      fflush(stdout);
+        printf("Destructing %s\n", name);
+        fflush(stdout);
     }
-  DeleteCritical((void*) this);
+    DeleteCritical((void *)this);
 }
 #endif
 

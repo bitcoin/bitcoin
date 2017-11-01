@@ -6,8 +6,8 @@
 #include "dbwrapper.h"
 
 #include "fs.h"
-#include "util.h"
 #include "random.h"
+#include "util.h"
 
 #include <leveldb/cache.h>
 #include <leveldb/env.h>
@@ -23,7 +23,8 @@ static leveldb::Options GetOptions(size_t nCacheSize)
     options.filter_policy = leveldb::NewBloomFilterPolicy(10);
     options.compression = leveldb::kNoCompression;
     options.max_open_files = 64;
-    if (leveldb::kMajorVersion > 1 || (leveldb::kMajorVersion == 1 && leveldb::kMinorVersion >= 16)) {
+    if (leveldb::kMajorVersion > 1 || (leveldb::kMajorVersion == 1 && leveldb::kMinorVersion >= 16))
+    {
         // LevelDB versions before 1.16 consider short writes to be corruption. Only trigger error
         // on corruption in later versions.
         options.paranoid_checks = true;
@@ -31,7 +32,7 @@ static leveldb::Options GetOptions(size_t nCacheSize)
     return options;
 }
 
-CDBWrapper::CDBWrapper(const fs::path& path, size_t nCacheSize, bool fMemory, bool fWipe, bool obfuscate)
+CDBWrapper::CDBWrapper(const fs::path &path, size_t nCacheSize, bool fMemory, bool fWipe, bool obfuscate)
 {
     penv = NULL;
     readoptions.verify_checksums = true;
@@ -40,11 +41,15 @@ CDBWrapper::CDBWrapper(const fs::path& path, size_t nCacheSize, bool fMemory, bo
     syncoptions.sync = true;
     options = GetOptions(nCacheSize);
     options.create_if_missing = true;
-    if (fMemory) {
+    if (fMemory)
+    {
         penv = leveldb::NewMemEnv(leveldb::Env::Default());
         options.env = penv;
-    } else {
-        if (fWipe) {
+    }
+    else
+    {
+        if (fWipe)
+        {
             LogPrintf("Wiping LevelDB in %s\n", path.string());
             leveldb::Status result = leveldb::DestroyDB(path.string(), options);
             dbwrapper_private::HandleError(result);
@@ -61,7 +66,8 @@ CDBWrapper::CDBWrapper(const fs::path& path, size_t nCacheSize, bool fMemory, bo
 
     bool key_exists = Read(OBFUSCATE_KEY_KEY, obfuscate_key);
 
-    if (!key_exists && obfuscate && IsEmpty()) {
+    if (!key_exists && obfuscate && IsEmpty())
+    {
         // Initialize non-degenerate obfuscation if it won't upset
         // existing, non-obfuscated data.
         std::vector<unsigned char> new_key = CreateObfuscateKey();
@@ -88,7 +94,7 @@ CDBWrapper::~CDBWrapper()
     options.env = NULL;
 }
 
-bool CDBWrapper::WriteBatch(CDBBatch& batch, bool fSync)
+bool CDBWrapper::WriteBatch(CDBBatch &batch, bool fSync)
 {
     leveldb::Status status = pdb->Write(fSync ? syncoptions : writeoptions, &batch.batch);
     dbwrapper_private::HandleError(status);
@@ -112,7 +118,6 @@ std::vector<unsigned char> CDBWrapper::CreateObfuscateKey() const
     unsigned char buff[OBFUSCATE_KEY_NUM_BYTES];
     GetRandBytes(buff, OBFUSCATE_KEY_NUM_BYTES);
     return std::vector<unsigned char>(&buff[0], &buff[OBFUSCATE_KEY_NUM_BYTES]);
-
 }
 
 bool CDBWrapper::IsEmpty()
@@ -126,10 +131,9 @@ CDBIterator::~CDBIterator() { delete piter; }
 bool CDBIterator::Valid() const { return piter->Valid(); }
 void CDBIterator::SeekToFirst() { piter->SeekToFirst(); }
 void CDBIterator::Next() { piter->Next(); }
-
-namespace dbwrapper_private {
-
-void HandleError(const leveldb::Status& status)
+namespace dbwrapper_private
+{
+void HandleError(const leveldb::Status &status)
 {
     if (status.ok())
         return;
@@ -143,9 +147,5 @@ void HandleError(const leveldb::Status& status)
     throw dbwrapper_error("Unknown database error");
 }
 
-const std::vector<unsigned char>& GetObfuscateKey(const CDBWrapper &w)
-{
-    return w.obfuscate_key;
-}
-
+const std::vector<unsigned char> &GetObfuscateKey(const CDBWrapper &w) { return w.obfuscate_key; }
 };

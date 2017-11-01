@@ -14,8 +14,9 @@
 
 class OptionsModel;
 
-namespace Ui {
-    class ReceiveRequestDialog;
+namespace Ui
+{
+class ReceiveRequestDialog;
 }
 
 QT_BEGIN_NAMESPACE

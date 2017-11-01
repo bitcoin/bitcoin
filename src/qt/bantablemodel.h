@@ -14,7 +14,8 @@
 class ClientModel;
 class BanTablePriv;
 
-struct CCombinedBan {
+struct CCombinedBan
+{
     CSubNet subnet;
     CBanEntry banEntry;
 };
@@ -22,9 +23,8 @@ struct CCombinedBan {
 class BannedNodeLessThan
 {
 public:
-    BannedNodeLessThan(int nColumn, Qt::SortOrder fOrder) :
-        column(nColumn), order(fOrder) {}
-    bool operator()(const CCombinedBan& left, const CCombinedBan& right) const;
+    BannedNodeLessThan(int nColumn, Qt::SortOrder fOrder) : column(nColumn), order(fOrder) {}
+    bool operator()(const CCombinedBan &left, const CCombinedBan &right) const;
 
 private:
     int column;
@@ -44,7 +44,8 @@ public:
     void startAutoRefresh();
     void stopAutoRefresh();
 
-    enum ColumnIndex {
+    enum ColumnIndex
+    {
         Address = 0,
         Bantime = 1
     };

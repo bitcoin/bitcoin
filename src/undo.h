@@ -7,7 +7,7 @@
 #ifndef BITCOIN_UNDO_H
 #define BITCOIN_UNDO_H
 
-#include "compressor.h" 
+#include "compressor.h"
 #include "consensus/consensus.h"
 #include "primitives/transaction.h"
 #include "serialize.h"
@@ -21,34 +21,38 @@
  */
 class TxInUndoSerializer
 {
-    const Coin* txout;
+    const Coin *txout;
 
 public:
-    template<typename Stream>
-    void Serialize(Stream &s) const {
+    template <typename Stream>
+    void Serialize(Stream &s) const
+    {
         ::Serialize(s, VARINT(txout->nHeight * 2 + (txout->fCoinBase ? 1 : 0)));
-        if (txout->nHeight > 0) {
+        if (txout->nHeight > 0)
+        {
             // Required to maintain compatibility with older undo format.
             ::Serialize(s, (unsigned char)0);
         }
         ::Serialize(s, CTxOutCompressor(REF(txout->out)));
     }
 
-    TxInUndoSerializer(const Coin* coin) : txout(coin) {}
+    TxInUndoSerializer(const Coin *coin) : txout(coin) {}
 };
 
 class TxInUndoDeserializer
 {
-    Coin* txout;
+    Coin *txout;
 
 public:
-    template<typename Stream>
-    void Unserialize(Stream &s) {
+    template <typename Stream>
+    void Unserialize(Stream &s)
+    {
         unsigned int nCode = 0;
         ::Unserialize(s, VARINT(nCode));
         txout->nHeight = nCode / 2;
         txout->fCoinBase = nCode & 1;
-        if (txout->nHeight > 0) {
+        if (txout->nHeight > 0)
+        {
             // Old versions stored the version number for the last spend of
             // a transaction's outputs. Non-final spends were indicated with
             // height = 0.
@@ -58,10 +62,11 @@ public:
         ::Unserialize(s, REF(CTxOutCompressor(REF(txout->out))));
     }
 
-    TxInUndoDeserializer(Coin* coin) : txout(coin) {}
+    TxInUndoDeserializer(Coin *coin) : txout(coin) {}
 };
 
-static const size_t MAX_INPUTS_PER_BLOCK = std::numeric_limits<long long>::max() / ::GetSerializeSize(CTxIn(), SER_NETWORK, PROTOCOL_VERSION);
+static const size_t MAX_INPUTS_PER_BLOCK =
+    std::numeric_limits<long long>::max() / ::GetSerializeSize(CTxIn(), SER_NETWORK, PROTOCOL_VERSION);
 
 /** Undo information for a CTransaction */
 class CTxUndo
@@ -71,25 +76,30 @@ public:
     std::vector<Coin> vprevout;
 
     template <typename Stream>
-    void Serialize(Stream& s) const {
+    void Serialize(Stream &s) const
+    {
         // TODO: avoid reimplementing vector serializer
         uint64_t count = vprevout.size();
         ::Serialize(s, COMPACTSIZE(REF(count)));
-        for (const auto& prevout : vprevout) {
+        for (const auto &prevout : vprevout)
+        {
             ::Serialize(s, REF(TxInUndoSerializer(&prevout)));
         }
     }
 
     template <typename Stream>
-    void Unserialize(Stream& s) {
+    void Unserialize(Stream &s)
+    {
         // TODO: avoid reimplementing vector deserializer
         uint64_t count = 0;
         ::Unserialize(s, COMPACTSIZE(count));
-        if (count > MAX_INPUTS_PER_BLOCK) {
+        if (count > MAX_INPUTS_PER_BLOCK)
+        {
             throw std::ios_base::failure("Too many input undo records");
         }
         vprevout.resize(count);
-        for (auto& prevout : vprevout) {
+        for (auto &prevout : vprevout)
+        {
             ::Unserialize(s, REF(TxInUndoDeserializer(&prevout)));
         }
     }
@@ -104,7 +114,8 @@ public:
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
+    inline void SerializationOp(Stream &s, Operation ser_action)
+    {
         READWRITE(vtxundo);
     }
 };

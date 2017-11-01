@@ -6,8 +6,8 @@
 #ifndef BITCOIN_QT_TRAFFICGRAPHWIDGET_H
 #define BITCOIN_QT_TRAFFICGRAPHWIDGET_H
 
-#include <QWidget>
 #include <QQueue>
+#include <QWidget>
 
 class ClientModel;
 

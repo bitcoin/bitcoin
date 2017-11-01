@@ -22,7 +22,7 @@ class QDBusInterface;
 QT_END_NAMESPACE
 
 /** Cross-platform desktop notification client. */
-class Notificator: public QObject
+class Notificator : public QObject
 {
     Q_OBJECT
 
@@ -36,9 +36,9 @@ public:
     // Message class
     enum Class
     {
-        Information,    /**< Informational message */
-        Warning,        /**< Notify user of potential problem */
-        Critical        /**< An error occurred */
+        Information, /**< Informational message */
+        Warning, /**< Notify user of potential problem */
+        Critical /**< An error occurred */
     };
 
 public Q_SLOTS:
@@ -50,18 +50,22 @@ public Q_SLOTS:
        @param[in] millisTimeout notification timeout in milliseconds (defaults to 10 seconds)
        @note Platform implementations are free to ignore any of the provided fields except for \a text.
      */
-    void notify(Class cls, const QString &title, const QString &text,
-                const QIcon &icon = QIcon(), int millisTimeout = 10000);
+    void notify(Class cls,
+        const QString &title,
+        const QString &text,
+        const QIcon &icon = QIcon(),
+        int millisTimeout = 10000);
 
 private:
     QWidget *parent;
-    enum Mode {
-        None,                       /**< Ignore informational notifications, and show a modal pop-up dialog for Critical notifications. */
-        Freedesktop,                /**< Use DBus org.freedesktop.Notifications */
-        QSystemTray,                /**< Use QSystemTray::showMessage */
-        Growl12,                    /**< Use the Growl 1.2 notification system (Mac only) */
-        Growl13,                    /**< Use the Growl 1.3 notification system (Mac only) */
-        UserNotificationCenter      /**< Use the 10.8+ User Notification Center (Mac only) */
+    enum Mode
+    {
+        None, /**< Ignore informational notifications, and show a modal pop-up dialog for Critical notifications. */
+        Freedesktop, /**< Use DBus org.freedesktop.Notifications */
+        QSystemTray, /**< Use QSystemTray::showMessage */
+        Growl12, /**< Use the Growl 1.2 notification system (Mac only) */
+        Growl13, /**< Use the Growl 1.3 notification system (Mac only) */
+        UserNotificationCenter /**< Use the 10.8+ User Notification Center (Mac only) */
     };
     QString programName;
     Mode mode;

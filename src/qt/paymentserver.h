@@ -54,7 +54,7 @@ class QUrl;
 QT_END_NAMESPACE
 
 // BIP70 max payment request size in bytes (DoS protection)
-//extern const qint64 BIP70_MAX_PAYMENTREQUEST_SIZE;
+// extern const qint64 BIP70_MAX_PAYMENTREQUEST_SIZE;
 enum
 {
     BIP70_MAX_PAYMENTREQUEST_SIZE = 50000
@@ -77,7 +77,7 @@ public:
     static bool ipcSendCommandLine();
 
     // parent should be QApplication object
-    PaymentServer(QObject* parent, bool startLocalServer = true);
+    PaymentServer(QObject *parent, bool startLocalServer = true);
     ~PaymentServer();
 
     // Load root certificate authorities. Pass NULL (default)
@@ -85,22 +85,21 @@ public:
     // or, if that's not set, to use the system default root certificates.
     // If you pass in a store, you should not X509_STORE_free it: it will be
     // freed either at exit or when another set of CAs are loaded.
-    static void LoadRootCAs(X509_STORE* store = NULL);
+    static void LoadRootCAs(X509_STORE *store = NULL);
 
     // Return certificate store
-    static X509_STORE* getCertStore() { return certStore; }
-
+    static X509_STORE *getCertStore() { return certStore; }
     // OptionsModel is used for getting proxy settings and display unit
     void setOptionsModel(OptionsModel *optionsModel);
 
     // Verify that the payment request network matches the client network
-    static bool verifyNetwork(const payments::PaymentDetails& requestDetails);
+    static bool verifyNetwork(const payments::PaymentDetails &requestDetails);
     // Verify if the payment request is expired
-    static bool verifyExpired(const payments::PaymentDetails& requestDetails);
+    static bool verifyExpired(const payments::PaymentDetails &requestDetails);
     // Verify the payment request size is valid as per BIP70
     static bool verifySize(qint64 requestSize);
     // Verify the payment request amount is valid
-    static bool verifyAmount(const CAmount& requestAmount);
+    static bool verifyAmount(const CAmount &requestAmount);
 
 Q_SIGNALS:
     // Fired when a valid payment request is received
@@ -118,16 +117,16 @@ public Q_SLOTS:
     void uiReady();
 
     // Submit Payment message to a merchant, get back PaymentACK:
-    void fetchPaymentACK(CWallet* wallet, SendCoinsRecipient recipient, QByteArray transaction);
+    void fetchPaymentACK(CWallet *wallet, SendCoinsRecipient recipient, QByteArray transaction);
 
     // Handle an incoming URI, URI with local file scheme or file
-    void handleURIOrFile(const QString& s);
+    void handleURIOrFile(const QString &s);
 
 private Q_SLOTS:
     void handleURIConnection();
-    void netRequestFinished(QNetworkReply*);
-    void reportSslErrors(QNetworkReply*, const QList<QSslError> &);
-    void handlePaymentACK(const QString& paymentACKMsg);
+    void netRequestFinished(QNetworkReply *);
+    void reportSslErrors(QNetworkReply *, const QList<QSslError> &);
+    void handlePaymentACK(const QString &paymentACKMsg);
 
 protected:
     // Constructor registers this on the parent QApplication to
@@ -135,20 +134,20 @@ protected:
     bool eventFilter(QObject *object, QEvent *event);
 
 private:
-    static bool readPaymentRequestFromFile(const QString& filename, PaymentRequestPlus& request);
-    bool processPaymentRequest(const PaymentRequestPlus& request, SendCoinsRecipient& recipient);
-    void fetchRequest(const QUrl& url);
+    static bool readPaymentRequestFromFile(const QString &filename, PaymentRequestPlus &request);
+    bool processPaymentRequest(const PaymentRequestPlus &request, SendCoinsRecipient &recipient);
+    void fetchRequest(const QUrl &url);
 
     // Setup networking
     void initNetManager();
 
-    bool saveURIs;                      // true during startup
-    QLocalServer* uriServer;
+    bool saveURIs; // true during startup
+    QLocalServer *uriServer;
 
-    static X509_STORE* certStore;       // Trusted root certificates
+    static X509_STORE *certStore; // Trusted root certificates
     static void freeCertStore();
 
-    QNetworkAccessManager* netManager;  // Used to fetch payment requests
+    QNetworkAccessManager *netManager; // Used to fetch payment requests
 
     OptionsModel *optionsModel;
 };

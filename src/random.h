@@ -20,7 +20,7 @@ void RandAddSeedPerfmon();
 /**
  * Functions to gather random data via the OpenSSL PRNG
  */
-void GetRandBytes(unsigned char* buf, int num);
+void GetRandBytes(unsigned char *buf, int num);
 uint64_t GetRand(uint64_t nMax);
 int GetRandInt(int nMax);
 uint256 GetRandHash();
@@ -36,28 +36,29 @@ void seed_insecure_rand(bool fDeterministic = false);
  * is completely deterministic and insecure after that.
  * This class is not thread-safe.
  */
-class FastRandomContext {
+class FastRandomContext
+{
 public:
     explicit FastRandomContext(bool fDeterministic = false);
 
     uint32_t Rz;
     uint32_t Rw;
 
-    uint32_t rand32() {
+    uint32_t rand32()
+    {
         Rz = 36969 * (Rz & 65535) + (Rz >> 16);
         Rw = 18000 * (Rw & 65535) + (Rw >> 16);
         return (Rw << 16) + Rz;
     }
 
-    uint64_t rand64() {
+    uint64_t rand64()
+    {
         uint64_t a = rand32();
         uint64_t b = rand32();
         return (b << 32) + a;
     }
 
-    bool randbool() {
-        return rand32() & 1;
-    }
+    bool randbool() { return rand32() & 1; }
 };
 
 /* Number of random bytes returned by GetOSRand.
