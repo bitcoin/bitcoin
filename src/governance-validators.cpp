@@ -250,13 +250,6 @@ bool CProposalValidator::GetDataValue(const std::string& strKey, int64_t& nValue
             nValue = uValue.get_int64();
             fOK = true;
             break;
-        case UniValue::VSTR:
-        {
-            std::istringstream istr(uValue.get_str());
-            istr >> nValue;
-            fOK = ! istr.fail();
-        }
-        break;
         default:
             break;
         }
@@ -280,13 +273,6 @@ bool CProposalValidator::GetDataValue(const std::string& strKey, double& dValue)
             dValue = uValue.get_real();
             fOK = true;
             break;
-        case UniValue::VSTR:
-        {
-            std::istringstream istr(uValue.get_str());
-            istr >> dValue;
-            fOK = ! istr.fail();
-        }
-        break;
         default:
             break;
         }
