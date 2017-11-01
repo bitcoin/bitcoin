@@ -1280,3 +1280,4 @@ src/crypto/.libs/libchaincoinconsensus_la-sha256_sse4.o
 src/test/.deps/test_test_bitcoin-bech32_tests.Po
 src/test/.deps/test_test_bitcoin-merkleblock_tests.Po
 test/config.ini
+chaincoin.icns
