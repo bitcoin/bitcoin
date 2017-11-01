@@ -1261,9 +1261,10 @@ void EscrowFeedback(const string& node, const string& userfrom, const string& es
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, escrowfeedbackstr));
 	UniValue arr = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + arr[0].get_str()));
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
+	string finalsignedhex = find_value(r.get_obj(), "hex").get_str();
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinsendrawtransaction " + finalsignedhex));
 	CTransaction tx;
-	DecodeHexTx(tx, arr[0].get_str());
+	DecodeHexTx(tx, finalsignedhex);
 
 	GenerateBlocks(10, node);
 	unsigned char feedbackusertoenum;
