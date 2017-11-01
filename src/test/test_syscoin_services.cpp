@@ -1321,7 +1321,7 @@ void EscrowBid(const string& node, const string& buyeralias, const string& escro
 	string finalsignedhex = find_value(r.get_obj(), "hex").get_str();
 	BOOST_CHECK_NO_THROW(CallRPC(node, "syscoinsendrawtransaction " + finalsignedhex));
 
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "decoderawtransaction " + finalhexstr));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "decoderawtransaction " + finalsignedhex));
 	string txid = find_value(r.get_obj(), "txid").get_str();
 
 	GenerateBlocks(10, node);
