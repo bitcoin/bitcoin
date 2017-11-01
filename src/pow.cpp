@@ -13,14 +13,13 @@
 #include "uint256.h"
 #include "util.h"
 
-unsigned int GetNextWorkRequired(const CBlockIndex *pindexLast,
-    const CBlockHeader *pblock,
-    const Consensus::Params &params)
+#ifndef BITCOIN_CASH
+uint32_t GetNextWorkRequired(const CBlockIndex *pindexLast, const CBlockHeader *pblock, const Consensus::Params &params)
 {
     unsigned int nProofOfWorkLimit = UintToArith256(params.powLimit).GetCompact();
 
     // Genesis block
-    if (pindexLast == NULL)
+    if (pindexLast == nullptr)
         return nProofOfWorkLimit;
 
     // Only change once per difficulty adjustment interval
@@ -88,34 +87,37 @@ unsigned int GetNextWorkRequired(const CBlockIndex *pindexLast,
     return nPow.GetCompact();
 }
 
-uint32_t GetNextWorkRequired(const CBlockIndex *pindexPrev,
-                             const CBlockHeader *pblock,
-                             const Consensus::Params &params) {
+#else
+uint32_t GetNextWorkRequired(const CBlockIndex *pindexPrev, const CBlockHeader *pblock, const Consensus::Params &params)
+{
     // Genesis block
-    if (pindexPrev == nullptr) {
+    if (pindexPrev == nullptr)
+    {
         return UintToArith256(params.powLimit).GetCompact();
     }
 
     // Special rule for regtest: we never retarget.
-    if (params.fPowNoRetargeting) {
+    if (params.fPowNoRetargeting)
+    {
         return pindexPrev->nBits;
     }
 
-#ifdef BITCOIN_CASH
-    if (pindexPrev->GetMedianTimePast() >=
-        GetArg("-newdaaactivationtime", params.cashHardForkActivationTime)) {
+    if (pindexPrev->GetMedianTimePast() >= GetArg("-newdaaactivationtime", params.cashHardForkActivationTime))
+    {
         return GetNextCashWorkRequired(pindexPrev, pblock, params);
     }
-#endif
 
     return GetNextEDAWorkRequired(pindexPrev, pblock, params);
 }
+#endif
 
-uint32_t CalculateNextWorkRequired(const CBlockIndex *pindexPrev,
-                                   int64_t nFirstBlockTime,
-                                   const Consensus::Params &params) {
-    if (params.fPowNoRetargeting) {
-        return pindexPrev->nBits;
+uint32_t CalculateNextWorkRequired(const CBlockIndex *pindexLast,
+    int64_t nFirstBlockTime,
+    const Consensus::Params &params)
+{
+    if (params.fPowNoRetargeting)
+    {
+        return pindexLast->nBits;
     }
 
     // Limit adjustment step
@@ -196,15 +198,16 @@ int64_t GetBlockProofEquivalentTime(const CBlockIndex &to,
         return sign * std::numeric_limits<int64_t>::max();
     }
     return sign * r.GetLow64();
-
+}
 #ifdef BITCOIN_CASH
 /**
  * Compute the a target based on the work done between 2 blocks and the time
  * required to produce that work.
  */
 static arith_uint256 ComputeTarget(const CBlockIndex *pindexFirst,
-                                   const CBlockIndex *pindexLast,
-                                   const Consensus::Params &params) {
+    const CBlockIndex *pindexLast,
+    const Consensus::Params &params)
+{
     assert(pindexLast->nHeight > pindexFirst->nHeight);
 
     /**
@@ -219,9 +222,12 @@ static arith_uint256 ComputeTarget(const CBlockIndex *pindexFirst,
     // adjustement we are going to do.
     assert(pindexLast->nTime > pindexFirst->nTime);
     int64_t nActualTimespan = pindexLast->nTime - pindexFirst->nTime;
-    if (nActualTimespan > 288 * params.nPowTargetSpacing) {
+    if (nActualTimespan > 288 * params.nPowTargetSpacing)
+    {
         nActualTimespan = 288 * params.nPowTargetSpacing;
-    } else if (nActualTimespan < 72 * params.nPowTargetSpacing) {
+    }
+    else if (nActualTimespan < 72 * params.nPowTargetSpacing)
+    {
         nActualTimespan = 72 * params.nPowTargetSpacing;
     }
 
@@ -239,7 +245,8 @@ static arith_uint256 ComputeTarget(const CBlockIndex *pindexFirst,
  * To reduce the impact of timestamp manipulation, we select the block we are
  * basing our computation on via a median of 3.
  */
-static const CBlockIndex *GetSuitableBlock(const CBlockIndex *pindex) {
+static const CBlockIndex *GetSuitableBlock(const CBlockIndex *pindex)
+{
     assert(pindex->nHeight >= 3);
 
     /**
@@ -253,15 +260,18 @@ static const CBlockIndex *GetSuitableBlock(const CBlockIndex *pindex) {
     blocks[0] = blocks[1]->pprev;
 
     // Sorting network.
-    if (blocks[0]->nTime > blocks[2]->nTime) {
+    if (blocks[0]->nTime > blocks[2]->nTime)
+    {
         std::swap(blocks[0], blocks[2]);
     }
 
-    if (blocks[0]->nTime > blocks[1]->nTime) {
+    if (blocks[0]->nTime > blocks[1]->nTime)
+    {
         std::swap(blocks[0], blocks[1]);
     }
 
-    if (blocks[1]->nTime > blocks[2]->nTime) {
+    if (blocks[1]->nTime > blocks[2]->nTime)
+    {
         std::swap(blocks[1], blocks[2]);
     }
 
@@ -279,8 +289,9 @@ static const CBlockIndex *GetSuitableBlock(const CBlockIndex *pindex) {
  * input, this ensures the algorithm is more resistant to malicious inputs.
  */
 uint32_t GetNextCashWorkRequired(const CBlockIndex *pindexPrev,
-                                 const CBlockHeader *pblock,
-                                 const Consensus::Params &params) {
+    const CBlockHeader *pblock,
+    const Consensus::Params &params)
+{
     // This cannot handle the genesis block and early blocks in general.
     assert(pindexPrev);
 
@@ -288,8 +299,8 @@ uint32_t GetNextCashWorkRequired(const CBlockIndex *pindexPrev,
     // If the new block's timestamp is more than 2* 10 minutes then allow
     // mining of a min-difficulty block.
     if (params.fPowAllowMinDifficultyBlocks &&
-        (pblock->GetBlockTime() >
-         pindexPrev->GetBlockTime() + 2 * params.nPowTargetSpacing)) {
+        (pblock->GetBlockTime() > pindexPrev->GetBlockTime() + 2 * params.nPowTargetSpacing))
+    {
         return UintToArith256(params.powLimit).GetCompact();
     }
 
@@ -303,19 +314,18 @@ uint32_t GetNextCashWorkRequired(const CBlockIndex *pindexPrev,
 
     // Get the first suitable block of the difficulty interval.
     uint32_t nHeightFirst = nHeight - 144;
-    const CBlockIndex *pindexFirst =
-        GetSuitableBlock(pindexPrev->GetAncestor(nHeightFirst));
+    const CBlockIndex *pindexFirst = GetSuitableBlock(pindexPrev->GetAncestor(nHeightFirst));
     assert(pindexFirst);
 
     // Compute the target based on time and work done during the interval.
-    const arith_uint256 nextTarget =
-        ComputeTarget(pindexFirst, pindexLast, params);
+    const arith_uint256 nextTarget = ComputeTarget(pindexFirst, pindexLast, params);
 
     const arith_uint256 powLimit = UintToArith256(params.powLimit);
-    if (nextTarget > powLimit) {
+    if (nextTarget > powLimit)
+    {
         return powLimit.GetCompact();
     }
 
     return nextTarget.GetCompact();
-#endif
 }
+#endif
