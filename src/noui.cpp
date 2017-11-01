@@ -13,14 +13,15 @@
 #include <stdint.h>
 #include <string>
 
-static bool noui_ThreadSafeMessageBox(const std::string& message, const std::string& caption, unsigned int style)
+static bool noui_ThreadSafeMessageBox(const std::string &message, const std::string &caption, unsigned int style)
 {
     bool fSecure = style & CClientUIInterface::SECURE;
     style &= ~CClientUIInterface::SECURE;
 
     std::string strCaption;
     // Check for usage of predefined caption
-    switch (style) {
+    switch (style)
+    {
     case CClientUIInterface::MSG_ERROR:
         strCaption += _("Error");
         break;
@@ -40,11 +41,7 @@ static bool noui_ThreadSafeMessageBox(const std::string& message, const std::str
     return false;
 }
 
-static void noui_InitMessage(const std::string& message)
-{
-    LogPrintf("init message: %s\n", message);
-}
-
+static void noui_InitMessage(const std::string &message) { LogPrintf("init message: %s\n", message); }
 void noui_connect()
 {
     // Connect bitcoind signal handlers

@@ -16,15 +16,15 @@
 #include <QDebug>
 #include <QList>
 
-bool BannedNodeLessThan::operator()(const CCombinedBan& left, const CCombinedBan& right) const
+bool BannedNodeLessThan::operator()(const CCombinedBan &left, const CCombinedBan &right) const
 {
-    const CCombinedBan* pLeft = &left;
-    const CCombinedBan* pRight = &right;
+    const CCombinedBan *pLeft = &left;
+    const CCombinedBan *pRight = &right;
 
     if (order == Qt::DescendingOrder)
         std::swap(pLeft, pRight);
 
-    switch(column)
+    switch (column)
     {
     case BanTableModel::Address:
         return pLeft->subnet.ToString().compare(pRight->subnet.ToString()) < 0;
@@ -69,11 +69,7 @@ public:
             qStableSort(cachedBanlist.begin(), cachedBanlist.end(), BannedNodeLessThan(sortColumn, sortOrder));
     }
 
-    int size() const
-    {
-        return cachedBanlist.size();
-    }
-
+    int size() const { return cachedBanlist.size(); }
     CCombinedBan *index(int idx)
     {
         if (idx >= 0 && idx < cachedBanlist.size())
@@ -83,9 +79,7 @@ public:
     }
 };
 
-BanTableModel::BanTableModel(ClientModel *parent) :
-    QAbstractTableModel(parent),
-    clientModel(parent)
+BanTableModel::BanTableModel(ClientModel *parent) : QAbstractTableModel(parent), clientModel(parent)
 {
     columns << tr("IP/Netmask") << tr("Banned Until");
     priv = new BanTablePriv();
@@ -105,18 +99,20 @@ int BanTableModel::rowCount(const QModelIndex &parent) const
 int BanTableModel::columnCount(const QModelIndex &parent) const
 {
     Q_UNUSED(parent);
-    return columns.length();;
+    return columns.length();
+    ;
 }
 
 QVariant BanTableModel::data(const QModelIndex &index, int role) const
 {
-    if(!index.isValid())
+    if (!index.isValid())
         return QVariant();
 
-    CCombinedBan *rec = static_cast<CCombinedBan*>(index.internalPointer());
+    CCombinedBan *rec = static_cast<CCombinedBan *>(index.internalPointer());
 
-    if (role == Qt::DisplayRole) {
-        switch(index.column())
+    if (role == Qt::DisplayRole)
+    {
+        switch (index.column())
         {
         case Address:
             return QString::fromStdString(rec->subnet.ToString());
@@ -132,9 +128,9 @@ QVariant BanTableModel::data(const QModelIndex &index, int role) const
 
 QVariant BanTableModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
-    if(orientation == Qt::Horizontal)
+    if (orientation == Qt::Horizontal)
     {
-        if(role == Qt::DisplayRole && section < columns.size())
+        if (role == Qt::DisplayRole && section < columns.size())
         {
             return columns[section];
         }
@@ -144,7 +140,7 @@ QVariant BanTableModel::headerData(int section, Qt::Orientation orientation, int
 
 Qt::ItemFlags BanTableModel::flags(const QModelIndex &index) const
 {
-    if(!index.isValid())
+    if (!index.isValid())
         return 0;
 
     Qt::ItemFlags retval = Qt::ItemIsSelectable | Qt::ItemIsEnabled;

@@ -30,12 +30,12 @@ public:
 
     void setClientModel(ClientModel *clientModel);
 
-    bool addWallet(const QString& name, WalletModel *walletModel);
-    bool setCurrentWallet(const QString& name);
+    bool addWallet(const QString &name, WalletModel *walletModel);
+    bool setCurrentWallet(const QString &name);
     bool removeWallet(const QString &name);
     void removeAllWallets();
 
-    bool handlePaymentRequest(const SendCoinsRecipient& recipient);
+    bool handlePaymentRequest(const SendCoinsRecipient &recipient);
 
     void showOutOfSyncWarning(bool fShow);
 
@@ -43,7 +43,7 @@ private:
     QStackedWidget *walletStack;
     BitcoinGUI *gui;
     ClientModel *clientModel;
-    QMap<QString, WalletView*> mapWalletViews;
+    QMap<QString, WalletView *> mapWalletViews;
 
     bool bOutOfSync;
 

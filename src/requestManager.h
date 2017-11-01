@@ -60,9 +60,9 @@ public:
 
 struct MatchCNodeRequestData // Compare a CNodeRequestData object to a node
 {
-    CNode* node;
-    MatchCNodeRequestData(CNode* n) : node(n){};
-    inline bool operator()(const CNodeRequestData& nd) const { return nd.node == node; }
+    CNode *node;
+    MatchCNodeRequestData(CNode *n) : node(n){};
+    inline bool operator()(const CNodeRequestData &nd) const { return nd.node == node; }
 };
 
 class CUnknownObj
@@ -94,7 +94,7 @@ class CRequestManager
 {
 protected:
 #ifdef DEBUG
-    friend UniValue getstructuresizes(const UniValue& params, bool fHelp);
+    friend UniValue getstructuresizes(const UniValue &params, bool fHelp);
 #endif
 
     // map of transactions

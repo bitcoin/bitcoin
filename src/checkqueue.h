@@ -70,36 +70,44 @@ private:
     /** Internal function that does bulk of the verification work. */
     bool Loop(bool fMaster = false)
     {
-        boost::condition_variable& cond = fMaster ? condMaster : condWorker;
+        boost::condition_variable &cond = fMaster ? condMaster : condWorker;
         std::vector<T> vChecks;
         vChecks.reserve(nBatchSize);
         unsigned int nNow = 0;
         bool fOk = true;
-        do {
+        do
+        {
             {
                 boost::unique_lock<boost::mutex> lock(mutex);
                 // first do the clean-up of the previous loop run (allowing us to do it in the same critsect)
-                if (nNow) {
+                if (nNow)
+                {
                     fAllOk &= fOk;
                     if (nTodo >= nNow)
                         nTodo -= nNow;
-                    if (nTodo == 0 && !fMaster) {
+                    if (nTodo == 0 && !fMaster)
+                    {
                         // We processed the last element; inform the master it can exit and return the result
                         queue.clear();
                         condMaster.notify_one();
                     }
-                    if (fQuit && !fMaster) {
+                    if (fQuit && !fMaster)
+                    {
                         nTodo = 0;
                         queue.clear();
                         condMaster.notify_one();
                     }
-                } else {
+                }
+                else
+                {
                     // first iteration
                     nTotal++;
                 }
                 // logically, the do loop starts here
-                while (queue.empty()) {
-                    if ((fMaster) && nTodo == 0) {
+                while (queue.empty())
+                {
+                    if ((fMaster) && nTodo == 0)
+                    {
                         nTotal--;
                         bool fRet = fAllOk;
                         // reset the status for new work later
@@ -120,7 +128,8 @@ private:
                 // * Don't do batches smaller than 1 (duh), or larger than nBatchSize.
                 nNow = std::max(1U, std::min(nBatchSize, (unsigned int)queue.size() / (nTotal + nIdle + 1)));
                 vChecks.resize(nNow);
-                for (unsigned int i = 0; i < nNow; i++) {
+                for (unsigned int i = 0; i < nNow; i++)
+                {
                     // We want the lock on the mutex to be as short as possible, so swap jobs from the global
                     // queue to the local batch vector instead of copying.
                     vChecks[i].swap(queue.back());
@@ -130,7 +139,7 @@ private:
                 fOk = fAllOk;
             }
             // execute work
-            BOOST_FOREACH (T& check, vChecks)
+            BOOST_FOREACH (T &check, vChecks)
                 if (fOk)
                     fOk = check();
             vChecks.clear();
@@ -139,31 +148,23 @@ private:
 
 public:
     //! Create a new check queue
-    CCheckQueue(unsigned int nBatchSizeIn) : nIdle(0), nTotal(0), fAllOk(true), nTodo(0), fQuit(false), nBatchSize(nBatchSizeIn) {}
+    CCheckQueue(unsigned int nBatchSizeIn)
+        : nIdle(0), nTotal(0), fAllOk(true), nTodo(0), fQuit(false), nBatchSize(nBatchSizeIn)
+    {
+    }
 
     //! Worker thread
-    void Thread()
-    {
-        Loop();
-    }
-
+    void Thread() { Loop(); }
     //! Wait until execution finishes, and return whether all evaluations were successful.
-    bool Wait()
-    {
-        return Loop(true);
-    }
-
+    bool Wait() { return Loop(true); }
     //! Quit execution of any remaining checks.
-    void Quit(bool flag = true)
-    {
-        fQuit = flag;
-    }
-
+    void Quit(bool flag = true) { fQuit = flag; }
     //! Add a batch of checks to the queue
-    void Add(std::vector<T>& vChecks)
+    void Add(std::vector<T> &vChecks)
     {
         boost::unique_lock<boost::mutex> lock(mutex);
-        BOOST_FOREACH (T& check, vChecks) {
+        BOOST_FOREACH (T &check, vChecks)
+        {
             queue.push_back(T());
             check.swap(queue.back());
         }
@@ -174,16 +175,12 @@ public:
             condWorker.notify_all();
     }
 
-    ~CCheckQueue()
-    {
-    }
-
+    ~CCheckQueue() {}
     bool IsIdle()
     {
         boost::unique_lock<boost::mutex> lock(mutex);
         return (nTotal == nIdle && nTodo == 0 && fAllOk == true);
     }
-
 };
 
 /**
@@ -194,25 +191,27 @@ template <typename T>
 class CCheckQueueControl
 {
 private:
-    CCheckQueue<T>* pqueue;
+    CCheckQueue<T> *pqueue;
     bool fDone;
 
 public:
     CCheckQueueControl() {} // BU: parallel block validation
-    CCheckQueueControl(CCheckQueue<T>* pqueueIn) : pqueue(pqueueIn), fDone(false)
+    CCheckQueueControl(CCheckQueue<T> *pqueueIn) : pqueue(pqueueIn), fDone(false)
     {
         // passed queue is supposed to be unused, or NULL
-        if (pqueue != NULL) {
+        if (pqueue != NULL)
+        {
             bool isIdle = pqueue->IsIdle();
             assert(isIdle);
         }
     }
 
-    void Queue(CCheckQueue<T>* pqueueIn)
+    void Queue(CCheckQueue<T> *pqueueIn)
     {
         pqueue = pqueueIn;
         // passed queue is supposed to be unused, or NULL
-        if (pqueue != NULL) {
+        if (pqueue != NULL)
+        {
             bool isIdle = pqueue->IsIdle();
             assert(isIdle);
             fDone = false;
@@ -230,7 +229,7 @@ public:
         return fRet;
     }
 
-    void Add(std::vector<T>& vChecks)
+    void Add(std::vector<T> &vChecks)
     {
         if (pqueue != NULL)
             pqueue->Add(vChecks);

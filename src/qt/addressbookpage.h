@@ -12,8 +12,9 @@ class AddressTableModel;
 class OptionsModel;
 class PlatformStyle;
 
-namespace Ui {
-    class AddressBookPage;
+namespace Ui
+{
+class AddressBookPage;
 }
 
 QT_BEGIN_NAMESPACE
@@ -31,14 +32,16 @@ class AddressBookPage : public QDialog
     Q_OBJECT
 
 public:
-    enum Tabs {
+    enum Tabs
+    {
         SendingTab = 0,
         ReceivingTab = 1
     };
 
-    enum Mode {
+    enum Mode
+    {
         ForSelection, /**< Open address book to pick address */
-        ForEditing  /**< Open address book for editing */
+        ForEditing /**< Open address book for editing */
     };
 
     explicit AddressBookPage(const PlatformStyle *platformStyle, Mode mode, Tabs tab, QWidget *parent);
@@ -46,7 +49,6 @@ public:
 
     void setModel(AddressTableModel *model);
     const QString &getReturnValue() const { return returnValue; }
-
 public Q_SLOTS:
     void done(int retval);
 

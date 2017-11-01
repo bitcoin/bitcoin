@@ -4,8 +4,8 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #include "addrman.h"
 #include "test/test_bitcoin.h"
-#include <string>
 #include <boost/test/unit_test.hpp>
+#include <string>
 
 #include "hash.h"
 #include "random.h"
@@ -17,11 +17,7 @@ class CAddrManTest : public CAddrMan
     uint64_t state;
 
 public:
-    CAddrManTest()
-    {
-        state = 1;
-    }
-
+    CAddrManTest() { state = 1; }
     //! Ensure that bucket placement is always the same for testing purposes.
     void MakeDeterministic()
     {
@@ -35,20 +31,13 @@ public:
         return (unsigned int)(state % nMax);
     }
 
-    CAddrInfo* Find(const CNetAddr& addr, int* pnId = NULL)
-    {
-        return CAddrMan::Find(addr, pnId);
-    }
-
-    CAddrInfo* Create(const CAddress& addr, const CNetAddr& addrSource, int* pnId = NULL)
+    CAddrInfo *Find(const CNetAddr &addr, int *pnId = NULL) { return CAddrMan::Find(addr, pnId); }
+    CAddrInfo *Create(const CAddress &addr, const CNetAddr &addrSource, int *pnId = NULL)
     {
         return CAddrMan::Create(addr, addrSource, pnId);
     }
 
-    void Delete(int nId)
-    {
-        CAddrMan::Delete(nId);
-    }
+    void Delete(int nId) { CAddrMan::Delete(nId); }
 };
 
 BOOST_FIXTURE_TEST_SUITE(addrman_tests, BasicTestingSetup)
@@ -198,15 +187,16 @@ BOOST_AUTO_TEST_CASE(addrman_new_collisions)
 
     BOOST_CHECK(addrman.size() == 0);
 
-    for (unsigned int i = 1; i < 18; i++) {
+    for (unsigned int i = 1; i < 18; i++)
+    {
         CService addr = CService("250.1.1." + boost::to_string(i));
         addrman.Add(CAddress(addr), source);
 
-        //Test 13: No collision in new table yet.
+        // Test 13: No collision in new table yet.
         BOOST_CHECK(addrman.size() == i);
     }
 
-    //Test 14: new table collision!
+    // Test 14: new table collision!
     CService addr1 = CService("250.1.1.18");
     addrman.Add(CAddress(addr1), source);
     BOOST_CHECK(addrman.size() == 17);
@@ -227,17 +217,18 @@ BOOST_AUTO_TEST_CASE(addrman_tried_collisions)
 
     BOOST_CHECK(addrman.size() == 0);
 
-    for (unsigned int i = 1; i < 80; i++) {
+    for (unsigned int i = 1; i < 80; i++)
+    {
         CService addr = CService("250.1.1." + boost::to_string(i));
         addrman.Add(CAddress(addr), source);
         addrman.Good(CAddress(addr));
 
-        //Test 15: No collision in tried table yet.
+        // Test 15: No collision in tried table yet.
         BOOST_TEST_MESSAGE(addrman.size());
         BOOST_CHECK(addrman.size() == i);
     }
 
-    //Test 16: tried table collision!
+    // Test 16: tried table collision!
     CService addr1 = CService("250.1.1.80");
     addrman.Add(CAddress(addr1), source);
     BOOST_CHECK(addrman.size() == 79);
@@ -268,19 +259,19 @@ BOOST_AUTO_TEST_CASE(addrman_find)
     addrman.Add(addr3, source1);
 
     // Test 17: ensure Find returns an IP matching what we searched on.
-    CAddrInfo* info1 = addrman.Find(addr1);
+    CAddrInfo *info1 = addrman.Find(addr1);
     BOOST_CHECK(info1);
     if (info1)
         BOOST_CHECK(info1->ToString() == "250.1.2.1:8333");
 
     // Test 18; Find does not discriminate by port number.
-    CAddrInfo* info2 = addrman.Find(addr2);
+    CAddrInfo *info2 = addrman.Find(addr2);
     BOOST_CHECK(info2);
     if (info2)
         BOOST_CHECK(info2->ToString() == info1->ToString());
 
     // Test 19: Find returns another IP matching what we searched on.
-    CAddrInfo* info3 = addrman.Find(addr3);
+    CAddrInfo *info3 = addrman.Find(addr3);
     BOOST_CHECK(info3);
     if (info3)
         BOOST_CHECK(info3->ToString() == "251.255.2.1:8333");
@@ -299,12 +290,12 @@ BOOST_AUTO_TEST_CASE(addrman_create)
     CNetAddr source1 = CNetAddr("250.1.2.1");
 
     int nId;
-    CAddrInfo* pinfo = addrman.Create(addr1, source1, &nId);
+    CAddrInfo *pinfo = addrman.Create(addr1, source1, &nId);
 
     // Test 20: The result should be the same as the input addr.
     BOOST_CHECK(pinfo->ToString() == "250.1.2.1:8333");
 
-    CAddrInfo* info2 = addrman.Find(addr1);
+    CAddrInfo *info2 = addrman.Find(addr1);
     BOOST_CHECK(info2->ToString() == "250.1.2.1:8333");
 }
 
@@ -328,7 +319,7 @@ BOOST_AUTO_TEST_CASE(addrman_delete)
     BOOST_CHECK(addrman.size() == 1);
     addrman.Delete(nId);
     BOOST_CHECK(addrman.size() == 0);
-    CAddrInfo* info2 = addrman.Find(addr1);
+    CAddrInfo *info2 = addrman.Find(addr1);
     BOOST_CHECK(info2 == NULL);
 }
 
@@ -366,7 +357,7 @@ BOOST_AUTO_TEST_CASE(addrman_getaddr)
     addrman.Add(addr5, source1);
 
     // GetAddr returns 23% of addresses, 23% of 5 is 1 rounded down.
-    BOOST_CHECK(addrman.GetAddr().size() == 1); 
+    BOOST_CHECK(addrman.GetAddr().size() == 1);
 
     // Test 24: Ensure GetAddr works with new and tried addresses.
     addrman.Good(CAddress(addr1));
@@ -374,13 +365,15 @@ BOOST_AUTO_TEST_CASE(addrman_getaddr)
     BOOST_CHECK(addrman.GetAddr().size() == 1);
 
     // Test 25: Ensure GetAddr still returns 23% when addrman has many addrs.
-    for (unsigned int i = 1; i < (8 * 256); i++) {
+    for (unsigned int i = 1; i < (8 * 256); i++)
+    {
         int octet1 = i % 256;
         int octet2 = (i / 256) % 256;
         int octet3 = (i / (256 * 2)) % 256;
-        string strAddr = boost::to_string(octet1) + "." + boost::to_string(octet2) + "." + boost::to_string(octet3) + ".23";
+        string strAddr =
+            boost::to_string(octet1) + "." + boost::to_string(octet2) + "." + boost::to_string(octet3) + ".23";
         CAddress addr = CAddress(CService(strAddr));
-        
+
         // Ensure that for all addrs in addrman, isTerrible == false.
         addr.nTime = GetAdjustedTime();
         addrman.Add(addr, CNetAddr(strAddr));
@@ -430,10 +423,10 @@ BOOST_AUTO_TEST_CASE(caddrinfo_get_tried_bucket)
     BOOST_CHECK(info1.GetTriedBucket(nKey1) != info2.GetTriedBucket(nKey1));
 
     set<int> buckets;
-    for (int i = 0; i < 255; i++) {
-        CAddrInfo infoi = CAddrInfo(
-            CAddress(CService("250.1.1." + boost::to_string(i))),
-            CNetAddr("250.1.1." + boost::to_string(i)));
+    for (int i = 0; i < 255; i++)
+    {
+        CAddrInfo infoi =
+            CAddrInfo(CAddress(CService("250.1.1." + boost::to_string(i))), CNetAddr("250.1.1." + boost::to_string(i)));
         int bucket = infoi.GetTriedBucket(nKey1);
         buckets.insert(bucket);
     }
@@ -442,10 +435,10 @@ BOOST_AUTO_TEST_CASE(caddrinfo_get_tried_bucket)
     BOOST_CHECK(buckets.size() == 8);
 
     buckets.clear();
-    for (int j = 0; j < 255; j++) {
+    for (int j = 0; j < 255; j++)
+    {
         CAddrInfo infoj = CAddrInfo(
-            CAddress(CService("250." + boost::to_string(j) + ".1.1")),
-            CNetAddr("250." + boost::to_string(j) + ".1.1"));
+            CAddress(CService("250." + boost::to_string(j) + ".1.1")), CNetAddr("250." + boost::to_string(j) + ".1.1"));
         int bucket = infoj.GetTriedBucket(nKey1);
         buckets.insert(bucket);
     }
@@ -483,10 +476,10 @@ BOOST_AUTO_TEST_CASE(caddrinfo_get_new_bucket)
     BOOST_CHECK(info1.GetNewBucket(nKey1) == info2.GetNewBucket(nKey1));
 
     set<int> buckets;
-    for (int i = 0; i < 255; i++) {
-        CAddrInfo infoi = CAddrInfo(
-            CAddress(CService("250.1.1." + boost::to_string(i))),
-            CNetAddr("250.1.1." + boost::to_string(i)));
+    for (int i = 0; i < 255; i++)
+    {
+        CAddrInfo infoi =
+            CAddrInfo(CAddress(CService("250.1.1." + boost::to_string(i))), CNetAddr("250.1.1." + boost::to_string(i)));
         int bucket = infoi.GetNewBucket(nKey1);
         buckets.insert(bucket);
     }
@@ -495,11 +488,11 @@ BOOST_AUTO_TEST_CASE(caddrinfo_get_new_bucket)
     BOOST_CHECK(buckets.size() == 1);
 
     buckets.clear();
-    for (int j = 0; j < 4 * 255; j++) {
-        CAddrInfo infoj = CAddrInfo(CAddress(
-                                        CService(
-                                            boost::to_string(250 + (j / 255)) + "." + boost::to_string(j % 256) + ".1.1")),
-            CNetAddr("251.4.1.1"));
+    for (int j = 0; j < 4 * 255; j++)
+    {
+        CAddrInfo infoj =
+            CAddrInfo(CAddress(CService(boost::to_string(250 + (j / 255)) + "." + boost::to_string(j % 256) + ".1.1")),
+                CNetAddr("251.4.1.1"));
         int bucket = infoj.GetNewBucket(nKey1);
         buckets.insert(bucket);
     }
@@ -508,10 +501,9 @@ BOOST_AUTO_TEST_CASE(caddrinfo_get_new_bucket)
     BOOST_CHECK(buckets.size() <= 64);
 
     buckets.clear();
-    for (int p = 0; p < 255; p++) {
-        CAddrInfo infoj = CAddrInfo(
-            CAddress(CService("250.1.1.1")),
-            CNetAddr("250." + boost::to_string(p) + ".1.1"));
+    for (int p = 0; p < 255; p++)
+    {
+        CAddrInfo infoj = CAddrInfo(CAddress(CService("250.1.1.1")), CNetAddr("250." + boost::to_string(p) + ".1.1"));
         int bucket = infoj.GetNewBucket(nKey1);
         buckets.insert(bucket);
     }

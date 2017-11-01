@@ -7,9 +7,9 @@
 #ifndef BITCOIN_TXDB_H
 #define BITCOIN_TXDB_H
 
+#include "chain.h"
 #include "coins.h"
 #include "dbwrapper.h"
-#include "chain.h"
 
 #include <map>
 #include <string>
@@ -24,7 +24,7 @@ class uint256;
 //! -dbcache default (MiB)
 static const int64_t nDefaultDbCache = 500;
 //! max. -dbcache in (MiB)
-static const int64_t nMaxDbCache = sizeof(void*) > 4 ? 16384 : 2048;
+static const int64_t nMaxDbCache = sizeof(void *) > 4 ? 16384 : 2048;
 //! min. -dbcache in (MiB)
 static const int64_t nMinDbCache = 4;
 //! max increase in cache size since the last time we did a full flush
@@ -45,19 +45,20 @@ struct CDiskTxPos : public CDiskBlockPos
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
-        READWRITE(*(CDiskBlockPos*)this);
+    inline void SerializationOp(Stream &s, Operation ser_action)
+    {
+        READWRITE(*(CDiskBlockPos *)this);
         READWRITE(VARINT(nTxOffset));
     }
 
-    CDiskTxPos(const CDiskBlockPos &blockIn, unsigned int nTxOffsetIn) : CDiskBlockPos(blockIn.nFile, blockIn.nPos), nTxOffset(nTxOffsetIn) {
+    CDiskTxPos(const CDiskBlockPos &blockIn, unsigned int nTxOffsetIn)
+        : CDiskBlockPos(blockIn.nFile, blockIn.nPos), nTxOffset(nTxOffsetIn)
+    {
     }
 
-    CDiskTxPos() {
-        SetNull();
-    }
-
-    void SetNull() {
+    CDiskTxPos() { SetNull(); }
+    void SetNull()
+    {
         CDiskBlockPos::SetNull();
         nTxOffset = 0;
     }
@@ -87,11 +88,10 @@ public:
 };
 
 /** Specialization of CCoinsViewCursor to iterate over a CCoinsViewDB */
-class CCoinsViewDBCursor: public CCoinsViewCursor
+class CCoinsViewDBCursor : public CCoinsViewCursor
 {
 public:
     ~CCoinsViewDBCursor() {}
-
     bool GetKey(COutPoint &key) const;
     bool GetValue(Coin &coin) const;
     unsigned int GetValueSize() const;
@@ -100,8 +100,10 @@ public:
     void Next();
 
 private:
-    CCoinsViewDBCursor(CDBIterator* pcursorIn, const uint256 &hashBlockIn):
-        CCoinsViewCursor(hashBlockIn), pcursor(pcursorIn) {}
+    CCoinsViewDBCursor(CDBIterator *pcursorIn, const uint256 &hashBlockIn)
+        : CCoinsViewCursor(hashBlockIn), pcursor(pcursorIn)
+    {
+    }
     std::unique_ptr<CDBIterator> pcursor;
     std::pair<char, COutPoint> keyTmp;
 
@@ -113,11 +115,15 @@ class CBlockTreeDB : public CDBWrapper
 {
 public:
     CBlockTreeDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
+
 private:
-    CBlockTreeDB(const CBlockTreeDB&);
-    void operator=(const CBlockTreeDB&);
+    CBlockTreeDB(const CBlockTreeDB &);
+    void operator=(const CBlockTreeDB &);
+
 public:
-    bool WriteBatchSync(const std::vector<std::pair<int, const CBlockFileInfo*> >& fileInfo, int nLastFile, const std::vector<const CBlockIndex*>& blockinfo);
+    bool WriteBatchSync(const std::vector<std::pair<int, const CBlockFileInfo *> > &fileInfo,
+        int nLastFile,
+        const std::vector<const CBlockIndex *> &blockinfo);
     bool ReadBlockFileInfo(int nFile, CBlockFileInfo &fileinfo);
     bool ReadLastBlockFile(int &nFile);
     bool WriteReindexing(bool fReindex);

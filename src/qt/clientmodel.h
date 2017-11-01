@@ -6,8 +6,8 @@
 #ifndef BITCOIN_QT_CLIENTMODEL_H
 #define BITCOIN_QT_CLIENTMODEL_H
 
-#include <QObject>
 #include <QDateTime>
+#include <QObject>
 
 class AddressTableModel;
 class BanTableModel;
@@ -23,18 +23,20 @@ QT_BEGIN_NAMESPACE
 class QTimer;
 QT_END_NAMESPACE
 
-enum BlockSource {
+enum BlockSource
+{
     BLOCK_SOURCE_NONE,
     BLOCK_SOURCE_REINDEX,
     BLOCK_SOURCE_DISK,
     BLOCK_SOURCE_NETWORK
 };
 
-enum NumConnections {
+enum NumConnections
+{
     CONNECTIONS_NONE = 0,
-    CONNECTIONS_IN   = (1U << 0),
-    CONNECTIONS_OUT  = (1U << 1),
-    CONNECTIONS_ALL  = (CONNECTIONS_IN | CONNECTIONS_OUT),
+    CONNECTIONS_IN = (1U << 0),
+    CONNECTIONS_OUT = (1U << 1),
+    CONNECTIONS_ALL = (CONNECTIONS_IN | CONNECTIONS_OUT),
 };
 
 /** Model for Bitcoin network client. */
@@ -43,7 +45,7 @@ class ClientModel : public QObject
     Q_OBJECT
 
 public:
-    explicit ClientModel(OptionsModel *optionsModel, UnlimitedModel* ul, QObject *parent = 0);
+    explicit ClientModel(OptionsModel *optionsModel, UnlimitedModel *ul, QObject *parent = 0);
     ~ClientModel();
 
     OptionsModel *getOptionsModel();
@@ -100,12 +102,12 @@ private:
 
 Q_SIGNALS:
     void numConnectionsChanged(int count);
-    void numBlocksChanged(int count, const QDateTime& blockDate, double nVerificationProgress);
+    void numBlocksChanged(int count, const QDateTime &blockDate, double nVerificationProgress);
     void mempoolSizeChanged(long count, size_t mempoolSizeInBytes);
     void orphanPoolSizeChanged(long count);
     void alertsChanged(const QString &warnings);
     void bytesChanged(quint64 totalBytesIn, quint64 totalBytesOut);
-    void transactionsPerSecondChanged(double tansactionsPerSecond);  // BU:
+    void transactionsPerSecondChanged(double tansactionsPerSecond); // BU:
 
     //! Fired when a message should be reported to the user
     void message(const QString &title, const QString &message, unsigned int style);

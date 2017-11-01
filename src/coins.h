@@ -12,8 +12,8 @@
 #include "hash.h"
 #include "memusage.h"
 #include "serialize.h"
-#include "uint256.h"
 #include "sync.h"
+#include "uint256.h"
 
 #include <assert.h>
 #include <stdint.h>
@@ -35,7 +35,10 @@ struct CCoinsStats
     uint64_t nDiskSize;
     CAmount nTotalAmount;
 
-    CCoinsStats() : nHeight(0), nTransactions(0), nTransactionOutputs(0), nSerializedSize(0), nDiskSize(0), nTotalAmount(0) {}
+    CCoinsStats()
+        : nHeight(0), nTransactions(0), nTransactionOutputs(0), nSerializedSize(0), nDiskSize(0), nTotalAmount(0)
+    {
+    }
 };
 
 /**
@@ -58,32 +61,36 @@ public:
     uint32_t nHeight : 31;
 
     //! construct a Coin from a CTxOut and height/coinbase information.
-    Coin(CTxOut&& outIn, int nHeightIn, bool fCoinBaseIn) : out(std::move(outIn)), fCoinBase(fCoinBaseIn), nHeight(nHeightIn) {}
-    Coin(const CTxOut& outIn, int nHeightIn, bool fCoinBaseIn) : out(outIn), fCoinBase(fCoinBaseIn),nHeight(nHeightIn) {}
+    Coin(CTxOut &&outIn, int nHeightIn, bool fCoinBaseIn)
+        : out(std::move(outIn)), fCoinBase(fCoinBaseIn), nHeight(nHeightIn)
+    {
+    }
+    Coin(const CTxOut &outIn, int nHeightIn, bool fCoinBaseIn) : out(outIn), fCoinBase(fCoinBaseIn), nHeight(nHeightIn)
+    {
+    }
 
-    void Clear() {
+    void Clear()
+    {
         out.SetNull();
         fCoinBase = false;
         nHeight = 0;
     }
 
     //! empty constructor
-    Coin() : fCoinBase(false), nHeight(0) { }
-
-    bool IsCoinBase() const {
-        return fCoinBase;
-    }
-
-    template<typename Stream>
-    void Serialize(Stream &s) const {
+    Coin() : fCoinBase(false), nHeight(0) {}
+    bool IsCoinBase() const { return fCoinBase; }
+    template <typename Stream>
+    void Serialize(Stream &s) const
+    {
         assert(!IsSpent());
         uint32_t code = nHeight * 2 + fCoinBase;
         ::Serialize(s, VARINT(code));
         ::Serialize(s, CTxOutCompressor(REF(out)));
     }
 
-    template<typename Stream>
-    void Unserialize(Stream &s) {
+    template <typename Stream>
+    void Unserialize(Stream &s)
+    {
         uint32_t code = 0;
         ::Unserialize(s, VARINT(code));
         nHeight = code >> 1;
@@ -91,13 +98,8 @@ public:
         ::Unserialize(s, REF(CTxOutCompressor(out)));
     }
 
-    bool IsSpent() const {
-        return out.IsNull();
-    }
-
-    size_t DynamicMemoryUsage() const {
-        return memusage::DynamicUsage(out.scriptPubKey);
-    }
+    bool IsSpent() const { return out.IsNull(); }
+    size_t DynamicMemoryUsage() const { return memusage::DynamicUsage(out.scriptPubKey); }
 };
 
 class SaltedOutpointHasher
@@ -114,9 +116,7 @@ public:
      * unordered_map will behave unpredictably if the custom hasher returns a
      * uint64_t, resulting in failures when syncing the chain (#4634).
      */
-    size_t operator()(const COutPoint& id) const {
-        return SipHashUint256Extra(k0, k1, id.hash, id.n);
-    }
+    size_t operator()(const COutPoint &id) const { return SipHashUint256Extra(k0, k1, id.hash, id.n); }
 };
 
 struct CCoinsCacheEntry
@@ -124,13 +124,14 @@ struct CCoinsCacheEntry
     Coin coin; // The actual cached data.
     unsigned char flags;
 
-    enum Flags {
+    enum Flags
+    {
         DIRTY = (1 << 0), // This cache entry is potentially different from the version in the parent view.
         FRESH = (1 << 1), // The parent view does not have this entry (or it is pruned).
     };
 
     CCoinsCacheEntry() : flags(0) {}
-    explicit CCoinsCacheEntry(Coin&& coin_) : coin(std::move(coin_)), flags(0) {}
+    explicit CCoinsCacheEntry(Coin &&coin_) : coin(std::move(coin_)), flags(0) {}
 };
 
 typedef std::unordered_map<COutPoint, CCoinsCacheEntry, SaltedOutpointHasher> CCoinsMap;
@@ -139,7 +140,7 @@ typedef std::unordered_map<COutPoint, CCoinsCacheEntry, SaltedOutpointHasher> CC
 class CCoinsViewCursor
 {
 public:
-    CCoinsViewCursor(const uint256 &hashBlockIn): hashBlock(hashBlockIn) {}
+    CCoinsViewCursor(const uint256 &hashBlockIn) : hashBlock(hashBlockIn) {}
     virtual ~CCoinsViewCursor();
 
     virtual bool GetKey(COutPoint &key) const = 0;
@@ -181,7 +182,6 @@ public:
 
     //! As we use CCoinsViews polymorphically, have a virtual destructor
     virtual ~CCoinsView() {}
-
     //! Estimate database size (0 if not implemented)
     virtual size_t EstimateSize() const { return 0; }
 };
@@ -241,20 +241,20 @@ public:
      * more efficient than GetCoin. Modifications to other cache entries are
      * allowed while accessing the returned pointer.
      */
-    const Coin& AccessCoin(const COutPoint &output) const;
+    const Coin &AccessCoin(const COutPoint &output) const;
 
     /**
      * Add a coin. Set potential_overwrite to true if a non-pruned version may
      * already exist.
      */
-    void AddCoin(const COutPoint& outpoint, Coin&& coin, bool potential_overwrite);
+    void AddCoin(const COutPoint &outpoint, Coin &&coin, bool potential_overwrite);
 
     /**
      * Spend a coin. Pass moveto in order to get the deleted data.
      * If no unspent output exists for the passed outpoint, this call
      * has no effect.
      */
-    void SpendCoin(const COutPoint &outpoint, Coin* moveto = nullptr);
+    void SpendCoin(const COutPoint &outpoint, Coin *moveto = nullptr);
 
     /**
      * Push the modifications applied to this cache to its base.
@@ -263,7 +263,7 @@ public:
      */
     bool Flush();
 
-    /** 
+    /**
      * Remove excess entries from this cache.
      * Entries are trimmed starting from the beginning of the map.  In this way if those entries
      * are needed later they will all be collocated near the the beginning of the leveldb database
@@ -294,10 +294,10 @@ public:
      * @param[in] tx        transaction for which we are checking input total
      * @return        Sum of value of all inputs (scriptSigs)
      */
-    CAmount GetValueIn(const CTransaction& tx) const;
+    CAmount GetValueIn(const CTransaction &tx) const;
 
     //! Check whether all prevouts of the transaction are present in the UTXO set represented by this view
-    bool HaveInputs(const CTransaction& tx) const;
+    bool HaveInputs(const CTransaction &tx) const;
 
     /**
      * Return priority of tx at height nHeight. Also calculate the sum of the values of the inputs
@@ -310,7 +310,8 @@ private:
     CCoinsMap::iterator FetchCoin(const COutPoint &outpoint) const;
 
     /**
-     * By making the copy constructor private, we prevent accidentally using it when one intends to create a cache on top of a base cache.
+     * By making the copy constructor private, we prevent accidentally using it when one intends to create a cache on
+     * top of a base cache.
      */
     CCoinsViewCache(const CCoinsViewCache &);
 };
@@ -319,9 +320,9 @@ private:
 // It assumes that overwrites are only possible for coinbase transactions,
 // TODO: pass in a boolean to limit these possible overwrites to known
 // (pre-BIP34) cases.
-void AddCoins(CCoinsViewCache& cache, const CTransaction& tx, int nHeight);
+void AddCoins(CCoinsViewCache &cache, const CTransaction &tx, int nHeight);
 
 //! Utility function to find any unspent output with a given txid.
-const Coin& AccessByTxid(const CCoinsViewCache& cache, const uint256& txid);
+const Coin &AccessByTxid(const CCoinsViewCache &cache, const uint256 &txid);
 
 #endif // BITCOIN_COINS_H

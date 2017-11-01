@@ -10,8 +10,9 @@
 
 class AddressTableModel;
 
-namespace Ui {
-    class EditAddressDialog;
+namespace Ui
+{
+class EditAddressDialog;
 }
 
 QT_BEGIN_NAMESPACE
@@ -25,7 +26,8 @@ class EditAddressDialog : public QDialog
     Q_OBJECT
 
 public:
-    enum Mode {
+    enum Mode
+    {
         NewReceivingAddress,
         NewSendingAddress,
         EditReceivingAddress,

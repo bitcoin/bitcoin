@@ -22,8 +22,9 @@ class OptionsModel;
 class PlatformStyle;
 class WalletModel;
 
-namespace Ui {
-    class ReceiveCoinsDialog;
+namespace Ui
+{
+class ReceiveCoinsDialog;
 }
 
 QT_BEGIN_NAMESPACE
@@ -36,7 +37,8 @@ class ReceiveCoinsDialog : public QDialog
     Q_OBJECT
 
 public:
-    enum ColumnWidths {
+    enum ColumnWidths
+    {
         DATE_COLUMN_WIDTH = 130,
         LABEL_COLUMN_WIDTH = 120,
         AMOUNT_MINIMUM_COLUMN_WIDTH = 160,

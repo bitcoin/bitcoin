@@ -3,8 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "util.h"
 #include "test/test_bitcoin.h"
+#include "util.h"
 
 #include <string>
 #include <vector>
@@ -15,20 +15,25 @@
 
 BOOST_FIXTURE_TEST_SUITE(getarg_tests, BasicTestingSetup)
 
-enum Kind { BITCOIND = 0, CONFIGFILE = 1, BITCOIN_CLI = 2};
+enum Kind
+{
+    BITCOIND = 0,
+    CONFIGFILE = 1,
+    BITCOIN_CLI = 2
+};
 
-static void ResetArgs(const std::string& strArg, Kind kind=BITCOIND)
+static void ResetArgs(const std::string &strArg, Kind kind = BITCOIND)
 {
     std::vector<std::string> vecArg;
     if (strArg.size())
-      boost::split(vecArg, strArg, boost::is_space(), boost::token_compress_on);
+        boost::split(vecArg, strArg, boost::is_space(), boost::token_compress_on);
 
     // Insert dummy executable name:
     vecArg.insert(vecArg.begin(), "testbitcoin");
 
     // Convert to char*:
-    std::vector<const char*> vecChar;
-    BOOST_FOREACH(std::string& s, vecArg)
+    std::vector<const char *> vecChar;
+    BOOST_FOREACH (std::string &s, vecArg)
         vecChar.push_back(s.c_str());
 
     if (kind == CONFIGFILE)
@@ -51,13 +56,15 @@ BOOST_AUTO_TEST_CASE(boolarg)
     BOOST_CHECK(!GetBoolArg("-fooo", false));
     BOOST_CHECK(GetBoolArg("-fooo", true));
 
-    for (auto strValue : std::list<std::string>{"0", "f", "n", "false", "no"}) {
+    for (auto strValue : std::list<std::string>{"0", "f", "n", "false", "no"})
+    {
         ResetArgs("-listen=" + strValue);
         BOOST_CHECK(!GetBoolArg("-listen", false));
         BOOST_CHECK(!GetBoolArg("-listen", true));
     }
 
-    for (auto strValue : std::list<std::string>{"", "1", "t", "y", "true", "yes"}) {
+    for (auto strValue : std::list<std::string>{"", "1", "t", "y", "true", "yes"})
+    {
         ResetArgs("-listen=" + strValue);
         BOOST_CHECK(GetBoolArg("-listen", false));
         BOOST_CHECK(GetBoolArg("-listen", true));
@@ -72,15 +79,15 @@ BOOST_AUTO_TEST_CASE(boolarg)
     BOOST_CHECK(!GetBoolArg("-listen", false));
     BOOST_CHECK(!GetBoolArg("-listen", true));
 
-    ResetArgs("-listen -nolisten");  // -nolisten should win
+    ResetArgs("-listen -nolisten"); // -nolisten should win
     BOOST_CHECK(!GetBoolArg("-listen", false));
     BOOST_CHECK(!GetBoolArg("-listen", true));
 
-    ResetArgs("-listen=1 -nolisten=1");  // -nolisten should win
+    ResetArgs("-listen=1 -nolisten=1"); // -nolisten should win
     BOOST_CHECK(!GetBoolArg("-listen", false));
     BOOST_CHECK(!GetBoolArg("-listen", true));
 
-    ResetArgs("-listen=0 -nolisten=0");  // -nolisten=0 should win
+    ResetArgs("-listen=0 -nolisten=0"); // -nolisten=0 should win
     BOOST_CHECK(GetBoolArg("-listen", false));
     BOOST_CHECK(GetBoolArg("-listen", true));
 

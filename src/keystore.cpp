@@ -12,16 +12,15 @@
 
 #include <boost/foreach.hpp>
 
-bool CKeyStore::AddKey(const CKey &key) {
-    return AddKeyPubKey(key, key.GetPubKey());
-}
-
+bool CKeyStore::AddKey(const CKey &key) { return AddKeyPubKey(key, key.GetPubKey()); }
 bool CBasicKeyStore::GetPubKey(const CKeyID &address, CPubKey &vchPubKeyOut) const
 {
     CKey key;
-    if (!GetKey(address, key)) {
+    if (!GetKey(address, key))
+    {
         WatchKeyMap::const_iterator it = mapWatchKeys.find(address);
-        if (it != mapWatchKeys.end()) {
+        if (it != mapWatchKeys.end())
+        {
             vchPubKeyOut = it->second;
             return true;
         }
@@ -31,14 +30,14 @@ bool CBasicKeyStore::GetPubKey(const CKeyID &address, CPubKey &vchPubKeyOut) con
     return true;
 }
 
-bool CBasicKeyStore::AddKeyPubKey(const CKey& key, const CPubKey &pubkey)
+bool CBasicKeyStore::AddKeyPubKey(const CKey &key, const CPubKey &pubkey)
 {
     LOCK(cs_KeyStore);
     mapKeys[pubkey.GetID()] = key;
     return true;
 }
 
-bool CBasicKeyStore::AddCScript(const CScript& redeemScript)
+bool CBasicKeyStore::AddCScript(const CScript &redeemScript)
 {
     if (redeemScript.size() > MAX_SCRIPT_ELEMENT_SIZE)
         return error("CBasicKeyStore::AddCScript(): redeemScripts > %i bytes are invalid", MAX_SCRIPT_ELEMENT_SIZE);
@@ -48,13 +47,13 @@ bool CBasicKeyStore::AddCScript(const CScript& redeemScript)
     return true;
 }
 
-bool CBasicKeyStore::HaveCScript(const CScriptID& hash) const
+bool CBasicKeyStore::HaveCScript(const CScriptID &hash) const
 {
     LOCK(cs_KeyStore);
     return mapScripts.count(hash) > 0;
 }
 
-bool CBasicKeyStore::GetCScript(const CScriptID &hash, CScript& redeemScriptOut) const
+bool CBasicKeyStore::GetCScript(const CScriptID &hash, CScript &redeemScriptOut) const
 {
     LOCK(cs_KeyStore);
     ScriptMap::const_iterator mi = mapScripts.find(hash);
@@ -66,9 +65,9 @@ bool CBasicKeyStore::GetCScript(const CScriptID &hash, CScript& redeemScriptOut)
     return false;
 }
 
-static bool ExtractPubKey(const CScript &dest, CPubKey& pubKeyOut)
+static bool ExtractPubKey(const CScript &dest, CPubKey &pubKeyOut)
 {
-    //TODO: Use Solver to extract this?
+    // TODO: Use Solver to extract this?
     CScript::const_iterator pc = dest.begin();
     opcodetype opcode;
     std::vector<unsigned char> vch;

@@ -11,15 +11,16 @@
 
 #include "net.h"
 
-#include <QWidget>
 #include <QCompleter>
+#include <QWidget>
 
 class ClientModel;
 class PlatformStyle;
 class RPCTimerInterface;
 
-namespace Ui {
-    class RPCConsole;
+namespace Ui
+{
+class RPCConsole;
 }
 
 QT_BEGIN_NAMESPACE
@@ -28,7 +29,7 @@ class QItemSelection;
 QT_END_NAMESPACE
 
 /** Local Bitcoin RPC console. */
-class RPCConsole: public QWidget
+class RPCConsole : public QWidget
 {
     Q_OBJECT
 
@@ -38,7 +39,8 @@ public:
 
     void setClientModel(ClientModel *model);
 
-    enum MessageClass {
+    enum MessageClass
+    {
         MC_ERROR,
         MC_DEBUG,
         CMD_REQUEST,
@@ -46,7 +48,8 @@ public:
         CMD_ERROR
     };
 
-    enum TabTypes {
+    enum TabTypes
+    {
         TAB_INFO = 0,
         TAB_CONSOLE = 1,
         TAB_GRAPH = 2,
@@ -54,7 +57,7 @@ public:
     };
 
 protected:
-    virtual bool eventFilter(QObject* obj, QEvent *event);
+    virtual bool eventFilter(QObject *obj, QEvent *event);
     void keyPressEvent(QKeyEvent *);
 
 private Q_SLOTS:
@@ -70,9 +73,9 @@ private Q_SLOTS:
     void showEvent(QShowEvent *event);
     void hideEvent(QHideEvent *event);
     /** Show custom context menu on Peers tab */
-    void showPeersTableContextMenu(const QPoint& point);
+    void showPeersTableContextMenu(const QPoint &point);
     /** Show custom context menu on Bans tab */
-    void showBanTableContextMenu(const QPoint& point);
+    void showBanTableContextMenu(const QPoint &point);
     /** Hides ban table if no bans are present */
     void showOrHideBanTableIfRequired();
     /** clear the selected node */
@@ -88,7 +91,7 @@ public Q_SLOTS:
     /** Set number of connections shown in the UI */
     void setNumConnections(int count);
     /** Set number of blocks and last block date shown in the UI */
-    void setNumBlocks(int count, const QDateTime& blockDate, double nVerificationProgress);
+    void setNumBlocks(int count, const QDateTime &blockDate, double nVerificationProgress);
     /** Set size (number of transactions and memory usage) of the mempool in the UI */
     void setMempoolSize(long numberOfTxs, size_t dynUsage);
     /** Set number of transactions in ophan pool in the UI */

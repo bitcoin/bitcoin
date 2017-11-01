@@ -6,7 +6,7 @@
 #ifndef BITCOIN_NETBASE_H
 #define BITCOIN_NETBASE_H
 
-#include "netaddress.h"  // For CService, serialize.h, etc.
+#include "netaddress.h" // For CService, serialize.h, etc.
 
 extern int nConnectTimeout;
 extern bool fNameLookup;
@@ -19,11 +19,13 @@ static const int DEFAULT_NAME_LOOKUP = true;
 class proxyType
 {
 public:
-    proxyType(): randomize_credentials(false) {}
-    proxyType(const CService &proxy, bool randomize_credentials=false): proxy(proxy), randomize_credentials(randomize_credentials) {}
+    proxyType() : randomize_credentials(false) {}
+    proxyType(const CService &proxy, bool randomize_credentials = false)
+        : proxy(proxy), randomize_credentials(randomize_credentials)
+    {
+    }
 
     bool IsValid() const { return proxy.IsValid(); }
-
     CService proxy;
     bool randomize_credentials;
 };
@@ -46,7 +48,7 @@ bool HaveNameProxy();
                                    resolve.  This can be very time consuming depending on your machine's DNS lookup time
  * @return True if resolution succeeded
  */
-bool LookupHost(const char *pszName, std::vector<CNetAddr>& vIP, unsigned int nMaxSolutions, bool fAllowDnsResolution);
+bool LookupHost(const char *pszName, std::vector<CNetAddr> &vIP, unsigned int nMaxSolutions, bool fAllowDnsResolution);
 
 /**
  * Resolve a string hostname into an IP address:port "service".
@@ -57,7 +59,7 @@ bool LookupHost(const char *pszName, std::vector<CNetAddr>& vIP, unsigned int nM
                                    resolve.  This can be very time consuming depending on your machine's DNS lookup time
  * @return True if resolution succeeded
  */
-bool Lookup(const char *pszName, CService& addr, int portDefault, bool fAllowDnsResolution);
+bool Lookup(const char *pszName, CService &addr, int portDefault, bool fAllowDnsResolution);
 
 /**
  * Resolve a string hostname into an array of possible IP address/port "services".
@@ -68,7 +70,11 @@ bool Lookup(const char *pszName, CService& addr, int portDefault, bool fAllowDns
                                    resolve.  This can be very time consuming depending on your machine's DNS lookup time
  * @return True if resolution succeeded
  */
-bool Lookup(const char *pszName, std::vector<CService>& vAddr, int portDefault, unsigned int nMaxSolutions, bool fAllowDnsResolution);
+bool Lookup(const char *pszName,
+    std::vector<CService> &vAddr,
+    int portDefault,
+    unsigned int nMaxSolutions,
+    bool fAllowDnsResolution);
 
 /**
  * Resolve a string numeric hostname into an IP address:port "service".
@@ -77,16 +83,21 @@ bool Lookup(const char *pszName, std::vector<CService>& vAddr, int portDefault, 
  * @param[in]  portDefault         If a port is not specified in pszName, use this one.
  * @return True if resolution succeeded
  */
-bool LookupNumeric(const char *pszName, CService& addr, int portDefault = 0);
+bool LookupNumeric(const char *pszName, CService &addr, int portDefault = 0);
 
-bool ConnectSocket(const CService &addr, SOCKET& hSocketRet, int nTimeout, bool *outProxyConnectionFailed = 0);
-bool ConnectSocketByName(CService &addr, SOCKET& hSocketRet, const char *pszDest, int portDefault, int nTimeout, bool *outProxyConnectionFailed = 0);
+bool ConnectSocket(const CService &addr, SOCKET &hSocketRet, int nTimeout, bool *outProxyConnectionFailed = 0);
+bool ConnectSocketByName(CService &addr,
+    SOCKET &hSocketRet,
+    const char *pszDest,
+    int portDefault,
+    int nTimeout,
+    bool *outProxyConnectionFailed = 0);
 /** Return readable error string for a network error code */
 std::string NetworkErrorString(int err);
 /** Close socket and set hSocket to INVALID_SOCKET */
-bool CloseSocket(SOCKET& hSocket);
+bool CloseSocket(SOCKET &hSocket);
 /** Disable or enable blocking-mode for a socket */
-bool SetSocketNonBlocking(SOCKET& hSocket, bool fNonBlocking);
+bool SetSocketNonBlocking(SOCKET &hSocket, bool fNonBlocking);
 /**
  * Convert milliseconds to a struct timeval for e.g. select.
  */

@@ -8,22 +8,19 @@
 #include "bitcoinaddressvalidator.h"
 #include "guiconstants.h"
 
-QValidatedLineEdit::QValidatedLineEdit(QWidget *parent) :
-    QLineEdit(parent),
-    valid(true),
-    checkValidator(0)
+QValidatedLineEdit::QValidatedLineEdit(QWidget *parent) : QLineEdit(parent), valid(true), checkValidator(0)
 {
     connect(this, SIGNAL(textChanged(QString)), this, SLOT(markValid()));
 }
 
 void QValidatedLineEdit::setValid(bool valid)
 {
-    if(valid == this->valid)
+    if (valid == this->valid)
     {
         return;
     }
 
-    if(valid)
+    if (valid)
     {
         setStyleSheet("");
     }
@@ -104,11 +101,7 @@ void QValidatedLineEdit::checkValidity()
     Q_EMIT validationDidChange(this);
 }
 
-void QValidatedLineEdit::setCheckValidator(const QValidator *v)
-{
-    checkValidator = v;
-}
-
+void QValidatedLineEdit::setCheckValidator(const QValidator *v) { checkValidator = v; }
 bool QValidatedLineEdit::isValid()
 {
     // use checkValidator in case the QValidatedLineEdit is disabled

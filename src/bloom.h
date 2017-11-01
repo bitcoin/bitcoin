@@ -52,7 +52,7 @@ private:
     unsigned int nTweak;
     unsigned char nFlags;
 
-    unsigned int Hash(unsigned int nHashNum, const std::vector<unsigned char>& vDataToHash) const;
+    unsigned int Hash(unsigned int nHashNum, const std::vector<unsigned char> &vDataToHash) const;
 
     // Private constructor for CRollingBloomFilter, no restrictions on size
     CBloomFilter(unsigned int nElements, double nFPRate, unsigned int nTweak);
@@ -60,16 +60,21 @@ private:
 
     /** Helper function to set up bloom filter from desired number of elements and false positive rate.
         Used by the constructors. Checks that the variables in sane ranges. */
-    void setup(unsigned int nElements, double nFPRate, unsigned int nTweakIn, unsigned char nFlagsIn, bool size_constrained, uint32_t  nMaxFilterSize);
+    void setup(unsigned int nElements,
+        double nFPRate,
+        unsigned int nTweakIn,
+        unsigned char nFlagsIn,
+        bool size_constrained,
+        uint32_t nMaxFilterSize);
 
     //! Checks for empty and full filters to avoid wasting cpu
     void UpdateEmptyFull();
+
 public:
     //! for testing only
     bool getFull() const { return isFull; }
     //! for testing only
     unsigned int vDataSize() const { return vData.size(); }
-
     /**
      * Creates a new bloom filter which will provide the given fp rate when filled with the given number of elements
      * Note that if the given parameters will result in a filter outside the bounds of the protocol limits,
@@ -79,29 +84,34 @@ public:
      * It should generally always be a random value (and is largely only exposed for unit testing)
      * nFlags should be one of the BLOOM_UPDATE_* enums (not _MASK)
      */
-    CBloomFilter(unsigned int nElements, double nFPRate, unsigned int nTweak, unsigned char nFlagsIn, uint32_t nMaxFilterSize = SMALLEST_MAX_BLOOM_FILTER_SIZE);
+    CBloomFilter(unsigned int nElements,
+        double nFPRate,
+        unsigned int nTweak,
+        unsigned char nFlagsIn,
+        uint32_t nMaxFilterSize = SMALLEST_MAX_BLOOM_FILTER_SIZE);
     CBloomFilter() : isFull(true), isEmpty(true), nHashFuncs(0), nTweak(0), nFlags(0) {}
-
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
+    inline void SerializationOp(Stream &s, Operation ser_action)
+    {
         READWRITE(vData);
         READWRITE(nHashFuncs);
         READWRITE(nTweak);
         READWRITE(nFlags);
-        if (ser_action.ForRead()) {
+        if (ser_action.ForRead())
+        {
             UpdateEmptyFull();
         }
     }
 
-    void insert(const std::vector<unsigned char>& vKey);
-    void insert(const COutPoint& outpoint);
-    void insert(const uint256& hash);
+    void insert(const std::vector<unsigned char> &vKey);
+    void insert(const COutPoint &outpoint);
+    void insert(const uint256 &hash);
 
-    bool contains(const std::vector<unsigned char>& vKey) const;
-    bool contains(const COutPoint& outpoint) const;
-    bool contains(const uint256& hash) const;
+    bool contains(const std::vector<unsigned char> &vKey) const;
+    bool contains(const COutPoint &outpoint) const;
+    bool contains(const uint256 &hash) const;
 
     void clear();
     void reset(unsigned int nNewTweak);
@@ -111,7 +121,7 @@ public:
     bool IsWithinSizeConstraints() const;
 
     //! Also adds any outputs which match the filter to the filter (to match their spending txes)
-    bool IsRelevantAndUpdate(const CTransaction& tx);
+    bool IsRelevantAndUpdate(const CTransaction &tx);
 };
 
 /**
@@ -133,10 +143,10 @@ public:
     // constructed before the randomizer is properly initialized.
     CRollingBloomFilter(unsigned int nElements, double nFPRate);
 
-    void insert(const std::vector<unsigned char>& vKey);
-    void insert(const uint256& hash);
-    bool contains(const std::vector<unsigned char>& vKey) const;
-    bool contains(const uint256& hash) const;
+    void insert(const std::vector<unsigned char> &vKey);
+    void insert(const uint256 &hash);
+    bool contains(const std::vector<unsigned char> &vKey) const;
+    bool contains(const uint256 &hash) const;
 
     void reset();
 

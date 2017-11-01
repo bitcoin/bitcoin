@@ -26,7 +26,7 @@
 #include <boost/test/unit_test.hpp>
 
 // Tests this internal-to-main.cpp method:
-extern bool AddOrphanTx(const CTransaction& tx, NodeId peer);
+extern bool AddOrphanTx(const CTransaction &tx, NodeId peer);
 extern void EraseOrphansFor(NodeId peer);
 extern void EraseOrphansByTime();
 extern unsigned int LimitOrphanTxSize(unsigned int nMaxOrphans, uint64_t nMaxBytes);
@@ -47,11 +47,7 @@ size_t GetNumberBanEntries()
     return banmap.size();
 }
 
-bool DoesBanlistFileExist()
-{
-    return boost::filesystem::exists(boost::filesystem::path(GetDataDir() / "banlist.dat"));
-}
-
+bool DoesBanlistFileExist() { return boost::filesystem::exists(boost::filesystem::path(GetDataDir() / "banlist.dat")); }
 bool RemoveBanlistFile()
 {
     boost::filesystem::path path(GetDataDir() / "banlist.dat");
@@ -233,7 +229,7 @@ BOOST_AUTO_TEST_CASE(DoS_misbehaving_ban_tests)
     dosMan.Misbehaving(&dummyNode1, 100); // Should get banned
     SendMessages(&dummyNode1);
     BOOST_CHECK(dosMan.IsBanned(addr1));
-    BOOST_CHECK(!dosMan.IsBanned(ip(0xa0b0c001|0x0000ff00))); // Different IP, not banned
+    BOOST_CHECK(!dosMan.IsBanned(ip(0xa0b0c001 | 0x0000ff00))); // Different IP, not banned
 
     CAddress addr2(ip(0xa0b0c002));
     CNode dummyNode2(INVALID_SOCKET, addr2, "", true);
@@ -241,7 +237,7 @@ BOOST_AUTO_TEST_CASE(DoS_misbehaving_ban_tests)
     dosMan.Misbehaving(&dummyNode2, 50);
     SendMessages(&dummyNode2);
     BOOST_CHECK(!dosMan.IsBanned(addr2)); // 2 not banned yet...
-    BOOST_CHECK(dosMan.IsBanned(addr1));  // ... but 1 still should be
+    BOOST_CHECK(dosMan.IsBanned(addr1)); // ... but 1 still should be
     dosMan.Misbehaving(&dummyNode2, 50);
     SendMessages(&dummyNode2);
     BOOST_CHECK(dosMan.IsBanned(addr2));
@@ -287,7 +283,7 @@ BOOST_AUTO_TEST_CASE(DoS_bantime_expiration)
     // Ensure we still have exactly 1 entry in our banlist
     BOOST_CHECK(GetNumberBanEntries() == 1);
 
-    SetMockTime(nStartTime+60*60);
+    SetMockTime(nStartTime + 60 * 60);
     BOOST_CHECK(dosMan.IsBanned(addr));
 
     // Verify that SweepBanned still does not remove the entry
@@ -295,7 +291,7 @@ BOOST_AUTO_TEST_CASE(DoS_bantime_expiration)
     // Ensure we still have exactly 1 entry in our banlist
     BOOST_CHECK(GetNumberBanEntries() == 1);
 
-    SetMockTime(nStartTime+60*60*24+1);
+    SetMockTime(nStartTime + 60 * 60 * 24 + 1);
     BOOST_CHECK(!dosMan.IsBanned(addr));
 
     // Verify that SweepBanned does remove the entry this time as it is expired
@@ -330,7 +326,7 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
         tx.vin[0].prevout.hash = GetRandHash();
         tx.vin[0].scriptSig << OP_1;
         tx.vout.resize(1);
-        tx.vout[0].nValue = 1*CENT;
+        tx.vout[0].nValue = 1 * CENT;
         tx.vout[0].scriptPubKey = GetScriptForDestination(key.GetPubKey().GetID());
 
         LOCK(cs_orphancache);
@@ -358,7 +354,7 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
         tx.vin[0].prevout.hash = GetRandHash();
         tx.vin[0].scriptSig << OP_1;
         tx.vout.resize(1);
-        tx.vout[0].nValue = 1*CENT;
+        tx.vout[0].nValue = 1 * CENT;
         tx.vout[0].scriptPubKey = GetScriptForDestination(key.GetPubKey().GetID());
 
         LOCK(cs_orphancache);
@@ -375,7 +371,7 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
         tx.vin[0].prevout.n = 0;
         tx.vin[0].prevout.hash = txPrev.GetHash();
         tx.vout.resize(1);
-        tx.vout[0].nValue = 1*CENT;
+        tx.vout[0].nValue = 1 * CENT;
         tx.vout[0].scriptPubKey = GetScriptForDestination(key.GetPubKey().GetID());
         SignSignature(keystore, txPrev, tx, 0);
 
@@ -390,7 +386,7 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
 
         CMutableTransaction tx;
         tx.vout.resize(1);
-        tx.vout[0].nValue = 1*CENT;
+        tx.vout[0].nValue = 1 * CENT;
         tx.vout[0].scriptPubKey = GetScriptForDestination(key.GetPubKey().GetID());
         tx.vin.resize(500);
         for (unsigned int j = 0; j < tx.vin.size(); j++)
@@ -405,7 +401,9 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
             tx.vin[j].scriptSig = tx.vin[0].scriptSig;
 
         LOCK(cs_orphancache);
-        BOOST_CHECK(AddOrphanTx(tx, i));  // BU, we keep orphans up to the configured memory limit to help xthin compression so this should succeed whereas it fails in other clients
+        // BU, we keep orphans up to the configured memory limit to help xthin compression so this should succeed
+        // whereas it fails in other clients
+        BOOST_CHECK(AddOrphanTx(tx, i));
     }
 
     // Test LimitOrphanTxSize() function: limit by number of txns
@@ -433,7 +431,7 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
             tx.vin[0].prevout.hash = GetRandHash();
             tx.vin[0].scriptSig << OP_1;
             tx.vout.resize(1);
-            tx.vout[0].nValue = 1*CENT;
+            tx.vout[0].nValue = 1 * CENT;
             tx.vout[0].scriptPubKey = GetScriptForDestination(key.GetPubKey().GetID());
 
             AddOrphanTx(tx, i);
@@ -443,33 +441,33 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
         BOOST_CHECK(mapOrphanTransactions.size() == 50);
 
         // Advance the clock 1 minute
-        SetMockTime(nStartTime+60);
+        SetMockTime(nStartTime + 60);
         EraseOrphansByTime();
         BOOST_CHECK(mapOrphanTransactions.size() == 50);
 
         // Advance the clock 10 minutes
-        SetMockTime(nStartTime+60*10);
+        SetMockTime(nStartTime + 60 * 10);
         EraseOrphansByTime();
         BOOST_CHECK(mapOrphanTransactions.size() == 50);
 
         // Advance the clock 1 hour
-        SetMockTime(nStartTime+60*60);
+        SetMockTime(nStartTime + 60 * 60);
         EraseOrphansByTime();
         BOOST_CHECK(mapOrphanTransactions.size() == 50);
 
         // Advance the clock DEFAULT_ORPHANPOOL_EXPIRY hours
-        SetMockTime(nStartTime+60*60*DEFAULT_ORPHANPOOL_EXPIRY);
+        SetMockTime(nStartTime + 60 * 60 * DEFAULT_ORPHANPOOL_EXPIRY);
         EraseOrphansByTime();
         BOOST_CHECK(mapOrphanTransactions.size() == 50);
 
         /** Test the boundary where orphans should get purged. **/
         // Advance the clock DEFAULT_ORPHANPOOL_EXPIRY hours plus 4 minutes 59 seconds
-        SetMockTime(nStartTime+60*60*DEFAULT_ORPHANPOOL_EXPIRY + 299);
+        SetMockTime(nStartTime + 60 * 60 * DEFAULT_ORPHANPOOL_EXPIRY + 299);
         EraseOrphansByTime();
         BOOST_CHECK(mapOrphanTransactions.size() == 50);
 
         // Advance the clock DEFAULT_ORPHANPOOL_EXPIRY hours plus 5 minutes
-        SetMockTime(nStartTime+60*60*DEFAULT_ORPHANPOOL_EXPIRY + 300);
+        SetMockTime(nStartTime + 60 * 60 * DEFAULT_ORPHANPOOL_EXPIRY + 300);
         EraseOrphansByTime();
         BOOST_CHECK(mapOrphanTransactions.size() == 0);
     }

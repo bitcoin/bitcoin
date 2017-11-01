@@ -21,11 +21,8 @@
 
 #include <QClipboard>
 
-SignVerifyMessageDialog::SignVerifyMessageDialog(const PlatformStyle *platformStyle, QWidget *parent) :
-    QDialog(parent),
-    ui(new Ui::SignVerifyMessageDialog),
-    model(0),
-    platformStyle(platformStyle)
+SignVerifyMessageDialog::SignVerifyMessageDialog(const PlatformStyle *platformStyle, QWidget *parent)
+    : QDialog(parent), ui(new Ui::SignVerifyMessageDialog), model(0), platformStyle(platformStyle)
 {
     ui->setupUi(this);
 
@@ -56,16 +53,8 @@ SignVerifyMessageDialog::SignVerifyMessageDialog(const PlatformStyle *platformSt
     ui->signatureIn_VM->setFont(GUIUtil::fixedPitchFont());
 }
 
-SignVerifyMessageDialog::~SignVerifyMessageDialog()
-{
-    delete ui;
-}
-
-void SignVerifyMessageDialog::setModel(WalletModel *model)
-{
-    this->model = model;
-}
-
+SignVerifyMessageDialog::~SignVerifyMessageDialog() { delete ui; }
+void SignVerifyMessageDialog::setModel(WalletModel *model) { this->model = model; }
 void SignVerifyMessageDialog::setAddress_SM(const QString &address)
 {
     ui->addressIn_SM->setText(address);
@@ -105,11 +94,7 @@ void SignVerifyMessageDialog::on_addressBookButton_SM_clicked()
     }
 }
 
-void SignVerifyMessageDialog::on_pasteButton_SM_clicked()
-{
-    setAddress_SM(QApplication::clipboard()->text());
-}
-
+void SignVerifyMessageDialog::on_pasteButton_SM_clicked() { setAddress_SM(QApplication::clipboard()->text()); }
 void SignVerifyMessageDialog::on_signMessageButton_SM_clicked()
 {
     if (!model)
@@ -122,7 +107,8 @@ void SignVerifyMessageDialog::on_signMessageButton_SM_clicked()
     if (!addr.IsValid())
     {
         ui->statusLabel_SM->setStyleSheet("QLabel { color: red; }");
-        ui->statusLabel_SM->setText(tr("The entered address is invalid.") + QString(" ") + tr("Please check the address and try again."));
+        ui->statusLabel_SM->setText(
+            tr("The entered address is invalid.") + QString(" ") + tr("Please check the address and try again."));
         return;
     }
     CKeyID keyID;
@@ -130,7 +116,8 @@ void SignVerifyMessageDialog::on_signMessageButton_SM_clicked()
     {
         ui->addressIn_SM->setValid(false);
         ui->statusLabel_SM->setStyleSheet("QLabel { color: red; }");
-        ui->statusLabel_SM->setText(tr("The entered address does not refer to a key.") + QString(" ") + tr("Please check the address and try again."));
+        ui->statusLabel_SM->setText(tr("The entered address does not refer to a key.") + QString(" ") +
+                                    tr("Please check the address and try again."));
         return;
     }
 
@@ -202,7 +189,8 @@ void SignVerifyMessageDialog::on_verifyMessageButton_VM_clicked()
     if (!addr.IsValid())
     {
         ui->statusLabel_VM->setStyleSheet("QLabel { color: red; }");
-        ui->statusLabel_VM->setText(tr("The entered address is invalid.") + QString(" ") + tr("Please check the address and try again."));
+        ui->statusLabel_VM->setText(
+            tr("The entered address is invalid.") + QString(" ") + tr("Please check the address and try again."));
         return;
     }
     CKeyID keyID;
@@ -210,7 +198,8 @@ void SignVerifyMessageDialog::on_verifyMessageButton_VM_clicked()
     {
         ui->addressIn_VM->setValid(false);
         ui->statusLabel_VM->setStyleSheet("QLabel { color: red; }");
-        ui->statusLabel_VM->setText(tr("The entered address does not refer to a key.") + QString(" ") + tr("Please check the address and try again."));
+        ui->statusLabel_VM->setText(tr("The entered address does not refer to a key.") + QString(" ") +
+                                    tr("Please check the address and try again."));
         return;
     }
 
@@ -221,7 +210,8 @@ void SignVerifyMessageDialog::on_verifyMessageButton_VM_clicked()
     {
         ui->signatureIn_VM->setValid(false);
         ui->statusLabel_VM->setStyleSheet("QLabel { color: red; }");
-        ui->statusLabel_VM->setText(tr("The signature could not be decoded.") + QString(" ") + tr("Please check the signature and try again."));
+        ui->statusLabel_VM->setText(
+            tr("The signature could not be decoded.") + QString(" ") + tr("Please check the signature and try again."));
         return;
     }
 
@@ -234,7 +224,8 @@ void SignVerifyMessageDialog::on_verifyMessageButton_VM_clicked()
     {
         ui->signatureIn_VM->setValid(false);
         ui->statusLabel_VM->setStyleSheet("QLabel { color: red; }");
-        ui->statusLabel_VM->setText(tr("The signature did not match the message digest.") + QString(" ") + tr("Please check the signature and try again."));
+        ui->statusLabel_VM->setText(tr("The signature did not match the message digest.") + QString(" ") +
+                                    tr("Please check the signature and try again."));
         return;
     }
 

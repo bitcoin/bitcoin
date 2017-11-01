@@ -12,9 +12,9 @@
 
 bool CScriptCompressor::IsToKeyID(CKeyID &hash) const
 {
-    if (script.size() == 25 && script[0] == OP_DUP && script[1] == OP_HASH160
-                            && script[2] == 20 && script[23] == OP_EQUALVERIFY
-                            && script[24] == OP_CHECKSIG) {
+    if (script.size() == 25 && script[0] == OP_DUP && script[1] == OP_HASH160 && script[2] == 20 &&
+        script[23] == OP_EQUALVERIFY && script[24] == OP_CHECKSIG)
+    {
         memcpy(&hash, &script[3], 20);
         return true;
     }
@@ -23,8 +23,8 @@ bool CScriptCompressor::IsToKeyID(CKeyID &hash) const
 
 bool CScriptCompressor::IsToScriptID(CScriptID &hash) const
 {
-    if (script.size() == 23 && script[0] == OP_HASH160 && script[1] == 20
-                            && script[22] == OP_EQUAL) {
+    if (script.size() == 23 && script[0] == OP_HASH160 && script[1] == 20 && script[22] == OP_EQUAL)
+    {
         memcpy(&hash, &script[2], 20);
         return true;
     }
@@ -33,13 +33,13 @@ bool CScriptCompressor::IsToScriptID(CScriptID &hash) const
 
 bool CScriptCompressor::IsToPubKey(CPubKey &pubkey) const
 {
-    if (script.size() == 35 && script[0] == 33 && script[34] == OP_CHECKSIG
-                            && (script[1] == 0x02 || script[1] == 0x03)) {
+    if (script.size() == 35 && script[0] == 33 && script[34] == OP_CHECKSIG && (script[1] == 0x02 || script[1] == 0x03))
+    {
         pubkey.Set(&script[1], &script[34]);
         return true;
     }
-    if (script.size() == 67 && script[0] == 65 && script[66] == OP_CHECKSIG
-                            && script[1] == 0x04) {
+    if (script.size() == 67 && script[0] == 65 && script[66] == OP_CHECKSIG && script[1] == 0x04)
+    {
         pubkey.Set(&script[1], &script[66]);
         return pubkey.IsFullyValid(); // if not fully valid, a case that would not be compressible
     }
@@ -49,27 +49,33 @@ bool CScriptCompressor::IsToPubKey(CPubKey &pubkey) const
 bool CScriptCompressor::Compress(std::vector<unsigned char> &out) const
 {
     CKeyID keyID;
-    if (IsToKeyID(keyID)) {
+    if (IsToKeyID(keyID))
+    {
         out.resize(21);
         out[0] = 0x00;
         memcpy(&out[1], &keyID, 20);
         return true;
     }
     CScriptID scriptID;
-    if (IsToScriptID(scriptID)) {
+    if (IsToScriptID(scriptID))
+    {
         out.resize(21);
         out[0] = 0x01;
         memcpy(&out[1], &scriptID, 20);
         return true;
     }
     CPubKey pubkey;
-    if (IsToPubKey(pubkey)) {
+    if (IsToPubKey(pubkey))
+    {
         out.resize(33);
         memcpy(&out[1], &pubkey[1], 32);
-        if (pubkey[0] == 0x02 || pubkey[0] == 0x03) {
+        if (pubkey[0] == 0x02 || pubkey[0] == 0x03)
+        {
             out[0] = pubkey[0];
             return true;
-        } else if (pubkey[0] == 0x04) {
+        }
+        else if (pubkey[0] == 0x04)
+        {
             out[0] = 0x04 | (pubkey[64] & 0x01);
             return true;
         }
@@ -88,7 +94,8 @@ unsigned int CScriptCompressor::GetSpecialSize(unsigned int nSize) const
 
 bool CScriptCompressor::Decompress(unsigned int nSize, const std::vector<unsigned char> &in)
 {
-    switch(nSize) {
+    switch (nSize)
+    {
     case 0x00:
         script.resize(25);
         script[0] = OP_DUP;
@@ -145,17 +152,21 @@ uint64_t CTxOutCompressor::CompressAmount(uint64_t n)
     if (n == 0)
         return 0;
     int e = 0;
-    while (((n % 10) == 0) && e < 9) {
+    while (((n % 10) == 0) && e < 9)
+    {
         n /= 10;
         e++;
     }
-    if (e < 9) {
+    if (e < 9)
+    {
         int d = (n % 10);
         assert(d >= 1 && d <= 9);
         n /= 10;
-        return 1 + (n*9 + d - 1)*10 + e;
-    } else {
-        return 1 + (n - 1)*10 + 9;
+        return 1 + (n * 9 + d - 1) * 10 + e;
+    }
+    else
+    {
+        return 1 + (n - 1) * 10 + 9;
     }
 }
 
@@ -169,16 +180,20 @@ uint64_t CTxOutCompressor::DecompressAmount(uint64_t x)
     int e = x % 10;
     x /= 10;
     uint64_t n = 0;
-    if (e < 9) {
+    if (e < 9)
+    {
         // x = 9*n + d - 1
         int d = (x % 9) + 1;
         x /= 9;
         // x = n
-        n = x*10 + d;
-    } else {
-        n = x+1;
+        n = x * 10 + d;
     }
-    while (e) {
+    else
+    {
+        n = x + 1;
+    }
+    while (e)
+    {
         n *= 10;
         e--;
     }

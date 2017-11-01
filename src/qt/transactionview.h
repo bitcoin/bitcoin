@@ -8,8 +8,8 @@
 
 #include "guiutil.h"
 
-#include <QWidget>
 #include <QKeyEvent>
+#include <QWidget>
 
 class PlatformStyle;
 class TransactionFilterProxy;
@@ -50,7 +50,8 @@ public:
         Range
     };
 
-    enum ColumnWidths {
+    enum ColumnWidths
+    {
         STATUS_COLUMN_WIDTH = 30,
         WATCHONLY_COLUMN_WIDTH = 23,
         DATE_COLUMN_WIDTH = 120,
@@ -81,7 +82,7 @@ private:
 
     GUIUtil::TableViewLastColumnResizingFixer *columnResizingFixer;
 
-    virtual void resizeEvent(QResizeEvent* event);
+    virtual void resizeEvent(QResizeEvent *event);
 
     bool eventFilter(QObject *obj, QEvent *event);
 
@@ -99,7 +100,7 @@ private Q_SLOTS:
     void updateWatchOnlyColumn(bool fHaveWatchOnly);
 
 Q_SIGNALS:
-    void doubleClicked(const QModelIndex&);
+    void doubleClicked(const QModelIndex &);
 
     /**  Fired when a message should be reported to the user */
     void message(const QString &title, const QString &message, unsigned int style);
@@ -111,8 +112,7 @@ public Q_SLOTS:
     void changedPrefix(const QString &prefix);
     void changedAmount(const QString &amount);
     void exportClicked();
-    void focusTransaction(const QModelIndex&);
-
+    void focusTransaction(const QModelIndex &);
 };
 
 #endif // BITCOIN_QT_TRANSACTIONVIEW_H

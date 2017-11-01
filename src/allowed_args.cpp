@@ -474,7 +474,8 @@ static void addDebuggingOptions(AllowedArgs &allowedArgs, HelpMessageMode mode)
         .addDebugArg("testsafemode", optionalBool, strprintf("Force safe mode (default: %u)", DEFAULT_TESTSAFEMODE))
         .addDebugArg("dropmessagestest=<n>", requiredInt, "Randomly drop 1 of every <n> network messages")
         .addDebugArg("fuzzmessagestest=<n>", requiredInt, "Randomly fuzz 1 of every <n> network messages")
-        .addDebugArg("pvtest", optionalBool, strprintf("Slow down input checking to 1 every second (default: %u)", DEFAULT_PV_TESTMODE))
+        .addDebugArg("pvtest", optionalBool,
+            strprintf("Slow down input checking to 1 every second (default: %u)", DEFAULT_PV_TESTMODE))
 #ifdef ENABLE_WALLET
         .addDebugArg("flushwallet", optionalBool,
             strprintf("Run a thread to flush wallet periodically (default: %u)", DEFAULT_FLUSHWALLET))

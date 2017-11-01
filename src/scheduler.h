@@ -11,8 +11,8 @@
 // boost::thread / boost::function / boost::chrono should be ported to
 // std::thread / std::function / std::chrono when we support C++11.
 //
-#include <boost/function.hpp>
 #include <boost/chrono/chrono.hpp>
+#include <boost/function.hpp>
 #include <boost/thread.hpp>
 #include <map>
 
@@ -64,12 +64,12 @@ public:
     // Tell any threads running serviceQueue to stop as soon as they're
     // done servicing whatever task they're currently servicing (drain=false)
     // or when there is no work left to be done (drain=true)
-    void stop(bool drain=false);
+    void stop(bool drain = false);
 
     // Returns number of tasks waiting to be serviced,
     // and first and last task times
     size_t getQueueInfo(boost::chrono::system_clock::time_point &first,
-                        boost::chrono::system_clock::time_point &last) const;
+        boost::chrono::system_clock::time_point &last) const;
 
 private:
     std::multimap<boost::chrono::system_clock::time_point, Function> taskQueue;
