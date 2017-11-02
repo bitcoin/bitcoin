@@ -230,7 +230,8 @@ BOOST_AUTO_TEST_CASE(base58_keys_valid_gen)
                 continue;
             }
             CSyscoinAddress addrOut;
-            BOOST_CHECK_MESSAGE(addrOut.Set(dest), "encode dest: " + strTest);
+			// SYSCOIN
+            BOOST_CHECK_MESSAGE(addrOut.Set(dest, CChainParams::ADDRESS_BTC), "encode dest: " + strTest);
             BOOST_CHECK_MESSAGE(addrOut.ToString() == exp_base58string, "mismatch: " + strTest);
         }
     }
