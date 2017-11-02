@@ -1,0 +1,157 @@
+---
+name: "peercoin-deps"
+suites:
+- "trusty"
+architectures:
+- "amd64"
+packages:
+- "git-core"
+- "clang"
+- "llvm-dev"
+- "faketime"
+- "psmisc"
+reference_datetime: "2011-01-30 00:00:00"
+remotes: []
+files:
+- "openssl-1.0.1i.tar.gz"
+- "miniupnpc-2.0.20170509.tar.gz"
+- "qrencode-3.4.3.tar.bz2"
+- "db-4.8.30.NC.tar.gz"
+- "curl-7.41.0.tar.gz"
+- "boost_1_55_0.tar.bz2"
+- "osxcross.tar.xz"
+script: |
+  #
+  # Input Integrity Check
+  echo "3c179f46ca77069a6a0bac70212a9b3b838b2f66129cb52d568837fc79d8fcc7  openssl-1.0.1i.tar.gz"         | sha256sum -c
+  echo "d3c368627f5cdfb66d3ebd64ca39ba54d6ff14a61966dbecb8dd296b7039f16a  miniupnpc-2.0.20170509.tar.gz" | sha256sum -c
+  echo "dfd71487513c871bad485806bfd1fdb304dedc84d2b01a8fb8e0940b50597a98  qrencode-3.4.3.tar.bz2"        | sha256sum -c
+  echo "12edc0df75bf9abd7f82f821795bcee50f42cb2e5f76a6a281b85732798364ef  db-4.8.30.NC.tar.gz"           | sha256sum -c
+  echo "58c9f7cb1be9c26e6a2fd9326c14e054780dc4bb74b590a1d47fb3788a31535d  curl-7.41.0.tar.gz"            | sha256sum -c
+  echo "fff00023dd79486d444c8e29922f4072e1d451fc5a4d2b6075852ead7f2b7b52  boost_1_55_0.tar.bz2"          | shasum -c
+  #
+  export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1
+  export FAKETIME=$REFERENCE_DATETIME
+  export TZ=UTC
+  BUILDDIR=$HOME/build
+  INSTALLPREFIX=$HOME/install
+  TEMPDIR=$HOME/tmp
+  DEPSDIR=$HOME/deps
+  SDK=$DEPSDIR/SDK/MacOSX10.10.sdk
+  HOST=x86_64-apple-darwin14
+  MIN_VERSION=10.6
+  #
+  mkdir -p $INSTALLPREFIX $BUILDDIR $DEPSDIR
+  cd $DEPSDIR
+  tar xf $BUILDDIR/osxcross.tar.xz
+  PATH=$PATH:$DEPSDIR/bin
+  #
+  cd $BUILDDIR
+  tar xzf openssl-1.0.1i.tar.gz
+  cd openssl-1.0.1i
+  CC=cc ./Configure --cross-compile-prefix=$HOST- darwin64-x86_64-cc no-shared no-zlib no-dso no-krb5 --openssldir=$INSTALLPREFIX -fPIC
+  make
+  make install_sw
+  #
+  cd $BUILDDIR
+  tar xzf db-4.8.30.NC.tar.gz
+  cd db-4.8.30.NC/build_unix
+  sed -i 's/__atomic_compare_exchange/__atomic_compare_exchange_db/g' ../dbinc/atomic.h
+  ../dist/configure --prefix=$INSTALLPREFIX --enable-cxx --host=$HOST --disable-shared --disable-replication
+  make $MAKEOPTS library_build
+  make install_lib install_include
+  #
+  cd $BUILDDIR
+  tar xzf miniupnpc-2.0.20170509.tar.gz
+  cd miniupnpc-2.0.20170509
+  sed -i 's/$(shell uname -s)/Darwin/' Makefile
+  sed -i 's/libtool/x86_64-apple-darwin14-libtool/' Makefile
+  CC=$HOST-cc AR=$HOST-ar make -f Makefile libminiupnpc.a
+  install -d $INSTALLPREFIX/include/miniupnpc
+  install *.h $INSTALLPREFIX/include/miniupnpc
+  install libminiupnpc.a  $INSTALLPREFIX/lib
+  #
+  cd $BUILDDIR
+  tar --warning=no-timestamp -xjf boost_1_55_0.tar.bz2
+  cd boost_1_55_0
+  ./bootstrap.sh --with-libraries=chrono,filesystem,program_options,system,thread,test
+  echo "using darwin : : ${HOST}-clang++
+        :
+        <cxxflags>\"-target ${HOST} -mmacosx-version-min=${MIN_VERSION} --sysroot ${SDK} -msse2 -Qunused-arguments -I${INSTALLPREFIX}/include -DBOOST_HAS_INT128=1\"
+        <linkflags>\"-L${INSTALLPREFIX}/lib -B${DEPSDIR}/bin\"
+        <archiver>\"${HOST}-libtool\"
+        <striper>\"${HOST}-strip\" :
+  ;" > user-config.jam
+  ./b2 -d2 --layout=tagged --build-type=complete --prefix="${INSTALLPREFIX}" --toolset=darwin-4.2.1 --user-config=user-config.jam variant=release threading=multi link=static install
+
+  #
+  cd $BUILDDIR
+  tar xjf qrencode-3.4.3.tar.bz2
+  cd qrencode-3.4.3
+  unset FAKETIME # unset fake time during configure, as it does some clock sanity tests
+  #   need --with-pic to avoid relocation error in 64 bit builds
+  CC=$HOST-cc ./configure --host=$HOST --prefix=$INSTALLPREFIX --enable-static --disable-shared --with-pic --without-tools --disable-dependency-tracking
+  # Workaround to prevent re-configuring by make; make all files have a date in the past
+  find . -print0 | xargs -r0 touch -t 200001010000
+  export FAKETIME=$REFERENCE_DATETIME
+  make $MAKEOPTS install
+  #
+  cd $BUILDDIR
+  tar xzf curl-7.41.0.tar.gz
+  cd curl-7.41.0
+  unset FAKETIME # unset fake time during configure, as it does some clock sanity tests
+  CC=$HOST-cc ./configure --host=$HOST --prefix=$INSTALLPREFIX \
+    --enable-static \
+    --disable-shared \
+    --disable-ftp \
+    --disable-file \
+    --disable-ldap \
+    --disable-ldaps \
+    --disable-rtsp \
+    --disable-dict \
+    --disable-tftp \
+    --disable-pop3 \
+    --disable-imap \
+    --disable-smtp \
+    --disable-gopher \
+    --disable-manual \
+    --disable-smb \
+    --disable-libcurl-option \
+    --disable-threaded-resolver \
+    --enable-versioned-symbols \
+    --enable-soname-bump \
+    --disable-telnet \
+    --disable-cookies \
+    --disable-sspi \
+    --disable-ntlm-wb \
+    --without-libssh2 \
+    --without-librtmp \
+    --without-winssl \
+    --without-winidn \
+    --without-libidn \
+    --without-darwinssl \
+    --without-libmetalink \
+    --without-curl \
+    --disable-tls-srp \
+    --disable-unix-sockets \
+    --with-ssl=$INSTALLPREFIX
+  # Workaround to prevent re-configuring by make; make all files have a date in the past
+  find . -print0 | xargs -r0 touch -t 200001010000
+  export FAKETIME=$REFERENCE_DATETIME
+  make $MAKEOPTS install
+
+  
+  cd $BUILDDIR
+
+
+  # post-process all generated libraries to be deterministic
+  # extract them to a temporary directory then re-build them deterministically
+  for LIB in $(find $INSTALLPREFIX -name \*.a); do
+      rm -rf $TEMPDIR && mkdir $TEMPDIR && cd $TEMPDIR
+      $HOST-ar xv $LIB | cut -b5- | grep -v SYMDEF > /tmp/list.txt
+      rm $LIB
+      $HOST-ar crs $LIB $(cat /tmp/list.txt)
+  done
+  
+  cd $INSTALLPREFIX
+  find include lib | sort | tar --no-recursion -cJf $OUTDIR/peercoin-deps-osx-gitian-r1.tar.xz -T -

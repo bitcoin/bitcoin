@@ -1,0 +1,113 @@
+---
+name: "peercoin"
+suites:
+- "trusty"
+architectures:
+- "amd64"
+packages:
+- "git-core"
+- "clang"
+- "llvm-dev"
+- "unzip"
+- "zip"
+- "nsis"
+- "faketime"
+- "autoconf2.13"
+- "libtool"
+- "automake"
+- "pkg-config"
+- "bsdmainutils"
+- "python"
+- "genisoimage"
+reference_datetime: "2013-06-01 00:00:00"
+remotes:
+- "url": "https://github.com/peercoin/peercoin.git"
+  "dir": "peercoin"
+files:
+- "qt-osx-5.5.0-gitian.tar.xz"
+- "peercoin-deps-osx-gitian-r1.tar.xz"
+- "osxcross.tar.xz"
+script: |
+  # Defines
+  export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1
+  export FAKETIME=$REFERENCE_DATETIME
+  export TZ=UTC
+  INDIR=$HOME/build
+  OPTFLAGS='-O2'
+  TEMPDIR="$HOME/tempdir"
+  BUILDDIR=$HOME/build
+  DEPSDIR=$HOME/deps
+  HOST=x86_64-apple-darwin14
+  DISTNAME=x86_64-darwin
+  MIN_VERSION=10.6
+  SDK_VERSION=10.10
+  SDK=${DEPSDIR}/SDK/MacOSX${SDK_VERSION}.sdk
+  export PATH=$DEPSDIR/host/bin:$DEPSDIR:$DEPSDIR/bin:$PATH
+  NEEDDIST=1
+  # Qt: workaround for determinism in resource ordering
+  #  Qt5's rcc uses a QHash to store the files for the resource.
+  #  A security fix in QHash makes the ordering of keys to be different on every run
+  #  (https://qt.gitorious.org/qt/qtbase/commit/c01eaa438200edc9a3bbcd8ae1e8ded058bea268).
+  #  This is good in general but qrc shouldn't be doing a traversal over a randomized container.
+  #  The thorough solution would be to use QMap instead of QHash, but this requires patching Qt.
+  #  For now luckily there is a test mode that forces a fixed seed.
+  export QT_RCC_TEST=1
+  mkdir -p $BUILDDIR $BINDIR $DEPSDIR
+  cd $DEPSDIR
+  tar xf $BUILDDIR/peercoin-deps-osx-gitian-r1.tar.xz
+  tar xf $BUILDDIR/osxcross.tar.xz
+  mkdir -p $HOME/install
+  cd $HOME/install
+  tar xf $BUILDDIR/qt-osx-5.5.0-gitian.tar.xz
+  #
+  cd $BUILDDIR/peercoin
+  mkdir -p $OUTDIR/src
+  git archive HEAD | tar -x -C $OUTDIR/src
+  cp $OUTDIR/src/doc/README.md $OUTDIR/readme.txt
+  cp $OUTDIR/src/COPYING $OUTDIR/COPYING.txt
+  #
+  #cd src
+  #make -f makefile.linux-mingw HOST="$HOST" DEPSDIR="$DEPSDIR" CURDIR="$BUILDDIR/peercoin/src" STATIC=1 $MAKEOPTS USE_UPNP=1 BOOST_LIB_SUFFIX="-mt-s" DEBUGFLAGS= 
+  #cp peercoind.exe $BINDIR/
+  #cd ..
+  #
+
+  sed -i 's/i386/x86_64/' bitcoin-qt.pro
+  sed -i 's/X10.5/X10.10/' bitcoin-qt.pro
+
+  sed -i 's/uname -s/echo -n Darwin/' src/leveldb/build_detect_platform
+  sed -i 's/FORCE//' bitcoin-qt.pro
+
+  #$DEPSDIR/qt/host/bin/qmake -spec unsupported/win32-g++-cross MINIUPNPC_LIB_PATH=$HOME/build/miniupnpc MINIUPNPC_INCLUDE_PATH=$HOME/build/ BDB_LIB_PATH=$HOME/build/db-4.8.30.NC/build_unix BDB_INCLUDE_PATH=$HOME/build/db-4.8.30.NC/build_unix BOOST_LIB_PATH=$HOME/build/lib BOOST_INCLUDE_PATH=$HOME/build/include BOOST_LIB_SUFFIX=-mt-s BOOST_THREAD_LIB_SUFFIX=_win32-mt-s OPENSSL_LIB_PATH=$HOME/build/openssl-1.0.1h OPENSSL_INCLUDE_PATH=$HOME/build/openssl-1.0.1h/include INCLUDEPATH=$HOME/build DEFINES=BOOST_THREAD_USE_LIB BITCOIN_NEED_QT_PLUGINS=1 QMAKE_LRELEASE=lrelease QMAKE_CXXFLAGS=-frandom-seed=bitcoin USE_BUILD_INFO=1
+  ~/install/host/bin/qmake -xplatform macx-clang-linux RELEASE=1 QMAKE_LRELEASE="~/install/host/bin/lrelease" MINIUPNPC_LIB_PATH="$DEPSDIR/lib" MINIUPNPC_INCLUDE_PATH="$DEPSDIR/include" BDB_LIB_PATH="$DEPSDIR/lib" BDB_INCLUDE_PATH="$DEPSDIR/include" BOOST_LIB_PATH="$DEPSDIR/lib" BOOST_INCLUDE_PATH="$DEPSDIR/include" BOOST_LIB_SUFFIX="-mt-s" BOOST_THREAD_LIB_SUFFIX="-mt-s" OPENSSL_LIB_PATH="$DEPSDIR/lib" OPENSSL_INCLUDE_PATH="$DEPSDIR/include" INCLUDEPATH="$DEPSDIR/include" DEFINES="OS_MACOSX BOOST_THREAD_USE_LIB USE_BUILD_INFO=1" QMAKE_CXXFLAGS+="-target ${HOST} -mmacosx-version-min=${MIN_VERSION} --sysroot ${SDK} -mlinker-version=242 -I/home/ubuntu/deps/SDK/MacOSX10.10.sdk/usr/include -I/home/ubuntu/deps/include -DBOOST_HAS_INT128=1 -frandom-seed=peercoin"
+
+  make /home/ubuntu/build/peercoin/src/leveldb/libleveldb.a
+
+  cd src/leveldb
+  $HOST-ar crs libleveldb.a db/builder.o db/c.o db/dbformat.o db/db_impl.o db/db_iter.o db/filename.o db/log_reader.o db/log_writer.o db/memtable.o db/repair.o db/table_cache.o db/version_edit.o db/version_set.o db/write_batch.o table/block_builder.o table/block.o table/filter_block.o table/format.o table/iterator.o table/merger.o table/table_builder.o table/table.o table/two_level_iterator.o util/arena.o util/bloom.o util/cache.o util/coding.o util/comparator.o util/crc32c.o util/env.o util/env_posix.o util/filter_policy.o util/hash.o util/histogram.o util/logging.o util/options.o util/status.o port/port_posix.o
+  $HOST-ar crs libmemenv.a helpers/memenv/memenv.o
+  cd ../..
+  mkdir ../tmp && cd ../tmp
+  $HOST-ar xv ../peercoin/src/leveldb/libleveldb.a | cut -b5- | grep -v SYMDEF > list.txt
+  $HOST-ar crs libleveldb.a $(cat list.txt)
+  cp libleveldb.a ../peercoin/src/leveldb
+
+  cd ../peercoin
+  rm -rf ../tmp/
+
+  make $MAKEOPTS
+
+  # macdeploy: TODO: .dmg
+  export OTOOL=${HOST}-otool
+  export INSTALLNAMETOOL=${HOST}-install_name_tool
+  export STRIP=${HOST}-strip
+  chmod +x contrib/macdeploy/macdeployqtplus
+  OTOOL=${HOST}-otool INSTALLNAMETOOL=${HOST}-install_name_tool STRIP=${HOST}-strip contrib/macdeploy/macdeployqtplus Peercoin-Qt.app -add-qt-tr da,de,es,hu,ru,uk,zh_CN,zh_TW -verbose 2
+  mkdir -p  dist/.background
+  install contrib/macdeploy/background.png dist/.background
+  install contrib/macdeploy/DS_Store dist/.DS_Store
+  cd dist
+  ln -sf /Applications Applications
+  cd ..
+  genisoimage -no-cache-inodes -l -probe -V "Peercoin-Qt" -no-pad -r -apple -o Peercoin.tmp.dmg dist
+  dmg dmg Peercoin.tmp.dmg $OUTDIR/Peercoin-Qt.dmg
