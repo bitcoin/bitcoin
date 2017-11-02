@@ -31,8 +31,10 @@ BOOST_AUTO_TEST_CASE(skiplist_test)
     {
         if (i > 0)
         {
-            BOOST_CHECK(vIndex[i].pskip == &vIndex[vIndex[i].pskip->nHeight]);
-            BOOST_CHECK(vIndex[i].pskip->nHeight < i);
+            if (vIndex[i].pskip != &vIndex[vIndex[i].pskip->nHeight]) // Skips logging if successful
+                BOOST_CHECK(vIndex[i].pskip == &vIndex[vIndex[i].pskip->nHeight]);
+            if (vIndex[i].pskip->nHeight >= i)
+                BOOST_CHECK(vIndex[i].pskip->nHeight < i);
         }
         else
         {
@@ -63,8 +65,10 @@ BOOST_AUTO_TEST_CASE(getlocator_test)
         vBlocksMain[i].pprev = i ? &vBlocksMain[i - 1] : NULL;
         vBlocksMain[i].phashBlock = &vHashMain[i];
         vBlocksMain[i].BuildSkip();
-        BOOST_CHECK_EQUAL((int)UintToArith256(vBlocksMain[i].GetBlockHash()).GetLow64(), vBlocksMain[i].nHeight);
-        BOOST_CHECK(vBlocksMain[i].pprev == NULL || vBlocksMain[i].nHeight == vBlocksMain[i].pprev->nHeight + 1);
+        if ((int)UintToArith256(vBlocksMain[i].GetBlockHash()).GetLow64() != vBlocksMain[i].nHeight)
+            BOOST_CHECK_EQUAL((int)UintToArith256(vBlocksMain[i].GetBlockHash()).GetLow64(), vBlocksMain[i].nHeight);
+        if (!(vBlocksMain[i].pprev == NULL || vBlocksMain[i].nHeight == vBlocksMain[i].pprev->nHeight + 1))
+            BOOST_CHECK(vBlocksMain[i].pprev == NULL || vBlocksMain[i].nHeight == vBlocksMain[i].pprev->nHeight + 1);
     }
 
     // Build a branch that splits off at block 49999, 50000 blocks long.
@@ -78,8 +82,10 @@ BOOST_AUTO_TEST_CASE(getlocator_test)
         vBlocksSide[i].pprev = i ? &vBlocksSide[i - 1] : &vBlocksMain[49999];
         vBlocksSide[i].phashBlock = &vHashSide[i];
         vBlocksSide[i].BuildSkip();
-        BOOST_CHECK_EQUAL((int)UintToArith256(vBlocksSide[i].GetBlockHash()).GetLow64(), vBlocksSide[i].nHeight);
-        BOOST_CHECK(vBlocksSide[i].pprev == NULL || vBlocksSide[i].nHeight == vBlocksSide[i].pprev->nHeight + 1);
+        if ((int)UintToArith256(vBlocksSide[i].GetBlockHash()).GetLow64() != vBlocksSide[i].nHeight)
+            BOOST_CHECK_EQUAL((int)UintToArith256(vBlocksSide[i].GetBlockHash()).GetLow64(), vBlocksSide[i].nHeight);
+        if (!(vBlocksSide[i].pprev == NULL || vBlocksSide[i].nHeight == vBlocksSide[i].pprev->nHeight + 1))
+            BOOST_CHECK(vBlocksSide[i].pprev == NULL || vBlocksSide[i].nHeight == vBlocksSide[i].pprev->nHeight + 1);
     }
 
     // Build a CChain for the main branch.
