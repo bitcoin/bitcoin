@@ -137,7 +137,6 @@ CTxMemPoolEntry TestMemPoolEntryHelper::FromTx(CMutableTransaction &tx, CTxMemPo
 void Shutdown(void *parg) { exit(0); }
 void StartShutdown() { exit(0); }
 bool ShutdownRequested() { return false; }
-
 using namespace boost::program_options;
 
 struct StartupShutdown
@@ -145,13 +144,13 @@ struct StartupShutdown
     StartupShutdown()
     {
         options_description optDef("Options");
-        optDef.add_options()
-            ("testhelp", "program options information")
-            ("log_level", "set boost logging (all, test_suite, message, warning, error, ...)")
-            ("log_bitcoin", value<std::string>()->required(), "bitcoin logging destination (console, none)");
+        optDef.add_options()("testhelp", "program options information")(
+            "log_level", "set boost logging (all, test_suite, message, warning, error, ...)")(
+            "log_bitcoin", value<std::string>()->required(), "bitcoin logging destination (console, none)");
         variables_map opts;
         store(parse_command_line(boost::unit_test::framework::master_test_suite().argc,
-                                 boost::unit_test::framework::master_test_suite().argv, optDef), opts);
+                  boost::unit_test::framework::master_test_suite().argv, optDef),
+            opts);
 
         if (opts.count("testhelp"))
         {
@@ -174,9 +173,7 @@ struct StartupShutdown
             }
         }
     }
-    ~StartupShutdown()
-    {
-    }
+    ~StartupShutdown() {}
 };
 
-BOOST_GLOBAL_FIXTURE( StartupShutdown );
+BOOST_GLOBAL_FIXTURE(StartupShutdown);

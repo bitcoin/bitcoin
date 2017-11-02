@@ -27,11 +27,11 @@ BOOST_AUTO_TEST_CASE(skiplist_test)
         vIndex[i].BuildSkip();
     }
 
-    for (int i=0; i<SKIPLIST_LENGTH; i++)
+    for (int i = 0; i < SKIPLIST_LENGTH; i++)
     {
         if (i > 0)
         {
-            if (vIndex[i].pskip != &vIndex[vIndex[i].pskip->nHeight])  // Skips logging if successful
+            if (vIndex[i].pskip != &vIndex[vIndex[i].pskip->nHeight]) // Skips logging if successful
                 BOOST_CHECK(vIndex[i].pskip == &vIndex[vIndex[i].pskip->nHeight]);
             if (vIndex[i].pskip->nHeight >= i)
                 BOOST_CHECK(vIndex[i].pskip->nHeight < i);
