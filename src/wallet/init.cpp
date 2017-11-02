@@ -178,15 +178,18 @@ bool WalletParameterInteraction()
 
 void RegisterWalletRPC(CRPCTable &t)
 {
-    if (gArgs.GetBoolArg("-disablewallet", false)) return;
+    if (gArgs.GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET)) {
+        return;
+    }
 
     RegisterWalletRPCCommands(t);
 }
 
 bool VerifyWallets()
 {
-    if (gArgs.GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET))
+    if (gArgs.GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET)) {
         return true;
+    }
 
     uiInterface.InitMessage(_("Verifying wallet(s)..."));
 
