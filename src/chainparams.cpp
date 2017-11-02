@@ -186,15 +186,20 @@ public:
 		vSeeds.push_back(CDNSSeedData("seed4.syscoin.org", "seed4.syscoin.org"));
 
 
-		base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1, 0);
-		base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1, 5);
-		base58Prefixes[SECRET_KEY] = std::vector<unsigned char>(1, 128);
+
+		base58Prefixes[PUBKEY_ADDRESS_SYS] = std::vector<unsigned char>(1, 63);
+		base58Prefixes[SCRIPT_ADDRESS_SYS] = std::vector<unsigned char>(1, 5);
+		base58Prefixes[SECRET_KEY_SYS] = std::vector<unsigned char>(1, 128);
+
+		base58Prefixes[PUBKEY_ADDRESS_BTC] = std::vector<unsigned char>(1, 0);
+		base58Prefixes[SCRIPT_ADDRESS_BTC] = std::vector<unsigned char>(1, 5);
+		base58Prefixes[SECRET_KEY_BTC] = std::vector<unsigned char>(1, 128);
 
 		base58Prefixes[PUBKEY_ADDRESS_ZEC] = { 0x1C,0xB8 };
 		base58Prefixes[SCRIPT_ADDRESS_ZEC] = { 0x1C,0xBD };
-		base58Prefixes[PUBKEY_ADDRESS_SYS] = std::vector<unsigned char>(1, 63);
+		base58Prefixes[SECRET_KEY_ZEC] = std::vector<unsigned char>(1, 128);
 
-		base58Prefixes[SECRET_KEY_SYS] = std::vector<unsigned char>(1, 191);
+
         // Syscoin BIP32 pubkeys start with 'xpub' (Syscoin defaults)
         base58Prefixes[EXT_PUBLIC_KEY] = boost::assign::list_of(0x04)(0x88)(0xB2)(0x1E).convert_to_container<std::vector<unsigned char> >();
         // Syscoin BIP32 prvkeys start with 'xprv' (Syscoin defaults)
@@ -320,14 +325,17 @@ public:
         vFixedSeeds.clear();
         vSeeds.clear();
 
-		base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1, 111);
-		base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1, 196);
-		base58Prefixes[SECRET_KEY] = std::vector<unsigned char>(1, 239);
+		base58Prefixes[PUBKEY_ADDRESS_SYS] = std::vector<unsigned char>(1, 65);
+		base58Prefixes[SCRIPT_ADDRESS_SYS] = std::vector<unsigned char>(1, 196);
+		base58Prefixes[SECRET_KEY_SYS] = std::vector<unsigned char>(1, 239);
+
+		base58Prefixes[PUBKEY_ADDRESS_BTC] = std::vector<unsigned char>(1, 111);
+		base58Prefixes[SCRIPT_ADDRESS_BTC] = std::vector<unsigned char>(1, 196);
+		base58Prefixes[SECRET_KEY_BTC] = std::vector<unsigned char>(1, 239);
 
 		base58Prefixes[PUBKEY_ADDRESS_ZEC] = std::vector<unsigned char>(0x1C, 0xB8);
-		base58Prefixes[PUBKEY_ADDRESS_SYS] = std::vector<unsigned char>(1, 65);
 		base58Prefixes[SCRIPT_ADDRESS_ZEC] = std::vector<unsigned char>(0x1C, 0xBD);
-		base58Prefixes[SECRET_KEY_SYS] = std::vector<unsigned char>(1, 193);
+		base58Prefixes[SECRET_KEY_ZEC] = std::vector<unsigned char>(1, 239);
         // Testnet Syscoin BIP32 pubkeys start with 'tpub' (Syscoin defaults)
         base58Prefixes[EXT_PUBLIC_KEY] = boost::assign::list_of(0x04)(0x35)(0x87)(0xCF).convert_to_container<std::vector<unsigned char> >();
         // Testnet Syscoin BIP32 prvkeys start with 'tprv' (Syscoin defaults)
@@ -440,14 +448,17 @@ public:
             0,
             0
         };
-		base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1, 111);
-		base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1, 196);
-		base58Prefixes[SECRET_KEY] = std::vector<unsigned char>(1, 239);
+		base58Prefixes[PUBKEY_ADDRESS_SYS] = std::vector<unsigned char>(1, 65);
+		base58Prefixes[SCRIPT_ADDRESS_SYS] = std::vector<unsigned char>(1, 196);
+		base58Prefixes[SECRET_KEY_SYS] = std::vector<unsigned char>(1, 239);
+
+		base58Prefixes[PUBKEY_ADDRESS_BTC] = std::vector<unsigned char>(1, 111);
+		base58Prefixes[SCRIPT_ADDRESS_BTC] = std::vector<unsigned char>(1, 196);
+		base58Prefixes[SECRET_KEY_BTC] = std::vector<unsigned char>(1, 239);
 
 		base58Prefixes[PUBKEY_ADDRESS_ZEC] = { 0x1C,0xB8 };
 		base58Prefixes[SCRIPT_ADDRESS_ZEC] = { 0x1C,0xBD };
-		base58Prefixes[PUBKEY_ADDRESS_SYS] = std::vector<unsigned char>(1, 65);
-		base58Prefixes[SECRET_KEY_SYS] = std::vector<unsigned char>(1, 193);
+		base58Prefixes[SECRET_KEY_ZEC] = std::vector<unsigned char>(1, 239);
         // Regtest Syscoin BIP32 pubkeys start with 'tpub' (Syscoin defaults)
         base58Prefixes[EXT_PUBLIC_KEY] = boost::assign::list_of(0x04)(0x35)(0x87)(0xCF).convert_to_container<std::vector<unsigned char> >();
         // Regtest Syscoin BIP32 prvkeys start with 'tprv' (Syscoin defaults)

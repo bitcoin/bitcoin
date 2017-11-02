@@ -311,18 +311,15 @@ UniValue validateaddress(const UniValue& params, bool fHelp)
 		CTxDestination dest = address.Get();
 		address.Set(dest, CChainParams::ADDRESS_SYS);
 		string currentAddress = address.ToString();
-		// SYSCOIN v1 addy compatibility
-		CSyscoinAddress v1addr;
-		v1addr.Set(dest, CChainParams::ADDRESS_OLDSYS);
-		string addressStr = params[0].get_str();
-		ret.push_back(Pair("v1address", v1addr.ToString()));
-		if (addressStr[0] == 'S')
-			ret.push_back(Pair("address", v1addr.ToString()));
-		else
-			ret.push_back(Pair("address", currentAddress));
+		ret.push_back(Pair("address", currentAddress));
 		CSyscoinAddress zaddr;
 		zaddr.Set(dest, CChainParams::ADDRESS_ZEC);
 		ret.push_back(Pair("zaddress", zaddr.ToString()));
+
+		CSyscoinAddress btcaddr;
+		zaddr.Set(dest, CChainParams::ADDRESS_BTC);
+		ret.push_back(Pair("btcaddress", btcaddr.ToString()));
+
 		// SYSCOIN alias from address
 		address = CSyscoinAddress(address.ToString());
 		ret.push_back(Pair("alias", address.aliasName));
@@ -456,11 +453,14 @@ UniValue createmultisig(const UniValue& params, bool fHelp)
 	UniValue result(UniValue::VOBJ);
 	// SYSCOIN v1 addy by default
 	CTxDestination dest = address.Get();
-	CSyscoinAddress v2addr;
-	v2addr.Set(dest);
+	CSyscoinAddress btcaddr;
+	btcaddr.Set(dest, CChainParams::ADDRESS_BTC);
 	CSyscoinAddress zaddr;
 	zaddr.Set(dest, CChainParams::ADDRESS_ZEC);
-	result.push_back(Pair("address", v2addr.ToString()));
+	CSyscoinAddress addr;
+	addr.Set(dest, CChainParams::ADDRESS_SYS);
+	result.push_back(Pair("address", addr.ToString()));
+	result.push_back(Pair("btcaddress", btcaddr.ToString()));
 	result.push_back(Pair("zaddress", zaddr.ToString()));
 	result.push_back(Pair("redeemScript", HexStr(inner.begin(), inner.end())));
 

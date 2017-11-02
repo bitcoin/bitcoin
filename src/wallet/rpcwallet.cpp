@@ -168,51 +168,9 @@ UniValue getnewaddress(const UniValue& params, bool fHelp)
 
     pwalletMain->SetAddressBook(keyID, strAccount, "receive");
 
-	// SYSCOIN to send v1 address by default
-	return CSyscoinAddress(keyID, CChainParams::ADDRESS_OLDSYS).ToString();
-}
-
-// SYSCOIN
-UniValue getv2address(const UniValue& params, bool fHelp)
-{
-	if (!EnsureWalletIsAvailable(fHelp))
-		return NullUniValue;
-
-	if (fHelp || params.size() > 1)
-		throw runtime_error(
-			"getv2address ( \"account\" )\n"
-			"\nReturns a new Syscoin (starts with 1) address for receiving payments.\n"
-			"If 'account' is specified (DEPRECATED), it is added to the address book \n"
-			"so payments received with the address will be credited to 'account'.\n"
-			"\nArguments:\n"
-			"1. \"account\"        (string, optional) DEPRECATED. The account name for the address to be linked to. If not provided, the default account \"\" is used. It can also be set to the empty string \"\" to represent the default account. The account does not need to exist, it will be created if there is no account by the given name.\n"
-			"\nResult:\n"
-			"\"syscoinaddress\"    (string) The new syscoin address\n"
-			"\nExamples:\n"
-			+ HelpExampleCli("getv2address", "")
-			+ HelpExampleRpc("getv2address", "")
-		);
-
-	LOCK2(cs_main, pwalletMain->cs_wallet);
-
-	// Parse the account first so we don't generate a key if there's an error
-	string strAccount;
-	if (params.size() > 0)
-		strAccount = AccountFromValue(params[0]);
-
-	if (!pwalletMain->IsLocked())
-		pwalletMain->TopUpKeyPool();
-
-	// Generate a new key that is added to wallet
-	CPubKey newKey;
-	if (!pwalletMain->GetKeyFromPool(newKey, false))
-		throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first");
-	CKeyID keyID = newKey.GetID();
-
-	pwalletMain->SetAddressBook(keyID, strAccount, "receive");
-
 	return CSyscoinAddress(keyID).ToString();
 }
+
 UniValue getzaddress(const UniValue& params, bool fHelp)
 {
 	if (!EnsureWalletIsAvailable(fHelp))
@@ -240,6 +198,34 @@ UniValue getzaddress(const UniValue& params, bool fHelp)
 	CSyscoinAddress zecAddress;
 	zecAddress.Set(sysAddress.Get(), CChainParams::ADDRESS_ZEC);
 	return zecAddress.ToString();
+}
+UniValue getbtcaddress(const UniValue& params, bool fHelp)
+{
+	if (!EnsureWalletIsAvailable(fHelp))
+		return NullUniValue;
+
+	if (fHelp || params.size() != 1)
+		throw runtime_error(
+			"getbtcaddress ( \"address\" )\n"
+			"\nReturns a new BTC address for receiving payments in BTC tokens.\n"
+			"so payments received with the address will be credited to 'account'.\n"
+			"\nArguments:\n"
+			"1. \"address\"        (string) Syscoin alias or address to convert to BTC address.\n"
+			"\nResult:\n"
+			"\"btcaddress\"    (string) The new zcash address\n"
+			"\nExamples:\n"
+			+ HelpExampleCli("getzaddress", "\"myalias\"")
+			+ HelpExampleRpc("getzaddress", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\"")
+		);
+
+	string strAddress = params[0].get_str();
+	CSyscoinAddress sysAddress(strAddress);
+
+	if (!sysAddress.isAlias)
+		throw JSONRPCError(RPC_INVALID_PARAMS, "Error: Please provide an alias or an address belonging to an alias");
+	CSyscoinAddress btcAddress;
+	btcAddress.Set(sysAddress.Get(), CChainParams::ADDRESS_BTC);
+	return btcAddress.ToString();
 }
 CSyscoinAddress GetAccountAddress(string strAccount, bool bForceNew=false)
 {
@@ -1725,12 +1711,9 @@ UniValue listreceivedbyaccount(const UniValue& params, bool fHelp)
 
 static void MaybePushAddress(UniValue & entry, const CTxDestination &dest)
 {
-	// SYSCOIN address is v1 address by default for backward compatibility, v2 address is new scheme
 	CSyscoinAddress addr;
-	if (addr.Set(dest, CChainParams::ADDRESS_OLDSYS))
-		entry.push_back(Pair("address", addr.ToString()));
 	if (addr.Set(dest))
-		entry.push_back(Pair("v2address", addr.ToString()));
+		entry.push_back(Pair("address", addr.ToString()));
 }
 
 // SYSCOIN
@@ -3105,11 +3088,7 @@ UniValue listunspent(const UniValue& params, bool fHelp)
         entry.push_back(Pair("vout", out.i));
         CTxDestination address;
         if (ExtractDestination(out.tx->vout[out.i].scriptPubKey, address)) {
-			// SYSCOIN v1 addy by default
-			CSyscoinAddress v1addr;
-			v1addr.Set(address, CChainParams::ADDRESS_OLDSYS);
 			entry.push_back(Pair("address", v1addr.ToString()));
-			entry.push_back(Pair("v2address", CSyscoinAddress(address).ToString()));
             if (pwalletMain->mapAddressBook.count(address))
                 entry.push_back(Pair("account", pwalletMain->mapAddressBook[address].name));
         }

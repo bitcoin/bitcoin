@@ -301,7 +301,7 @@ extern UniValue sentinelping(const UniValue& params, bool fHelp);
 // SYSCOIN service rpc functions
 extern UniValue getauxblock(const UniValue& params, bool fHelp);
 extern UniValue getzaddress(const UniValue& params, bool fHelp);
-extern UniValue getv2address(const UniValue& params, bool fHelp); // in rpcwallet.cpp
+extern UniValue getbtcaddress(const UniValue& params, bool fHelp);
 extern UniValue aliasnew(const UniValue& params, bool fHelp);
 extern UniValue aliasupdate(const UniValue& params, bool fHelp);
 extern UniValue aliasinfo(const UniValue& params, bool fHelp);

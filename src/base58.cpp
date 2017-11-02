@@ -312,10 +312,10 @@ CSyscoinAddress::CSyscoinAddress(const char* pszAddress) {
 // SYSCOIN support old sys
 bool CSyscoinAddress::Set(const CKeyID& id, CChainParams::AddressType sysVer)
 {
-	if (sysVer == CChainParams::ADDRESS_OLDSYS)
+	if (sysVer == CChainParams::ADDRESS_SYS)
 		SetData(Params().Base58Prefix(CChainParams::PUBKEY_ADDRESS_SYS), &id, 20);
-	else if (sysVer == CChainParams::ADDRESS_SYS)
-		SetData(Params().Base58Prefix(CChainParams::PUBKEY_ADDRESS), &id, 20);
+	else if (sysVer == CChainParams::ADDRESS_BTC)
+		SetData(Params().Base58Prefix(CChainParams::PUBKEY_ADDRESS_BTC), &id, 20);
 	else if (sysVer == CChainParams::ADDRESS_ZEC)
 		SetData(Params().Base58Prefix(CChainParams::PUBKEY_ADDRESS_ZEC), &id, 20);
 	return true;
@@ -323,8 +323,10 @@ bool CSyscoinAddress::Set(const CKeyID& id, CChainParams::AddressType sysVer)
 
 bool CSyscoinAddress::Set(const CScriptID& id, CChainParams::AddressType sysVer)
 {
-	if (sysVer == CChainParams::ADDRESS_SYS || sysVer == CChainParams::ADDRESS_OLDSYS)
-		SetData(Params().Base58Prefix(CChainParams::SCRIPT_ADDRESS), &id, 20);
+	if (sysVer == CChainParams::ADDRESS_SYS)
+		SetData(Params().Base58Prefix(CChainParams::SCRIPT_ADDRESS_SYS), &id, 20);
+	else if (sysVer == CChainParams::ADDRESS_BTC)
+		SetData(Params().Base58Prefix(CChainParams::SCRIPT_ADDRESS_BTC), &id, 20);
 	else if (sysVer == CChainParams::ADDRESS_ZEC)
 		SetData(Params().Base58Prefix(CChainParams::SCRIPT_ADDRESS_ZEC), &id, 20);
 	return true;
@@ -344,10 +346,11 @@ bool CSyscoinAddress::IsValid(const CChainParams& params) const
 {
     bool fCorrectSize = vchData.size() == 20;
 	// SYSCOIN allow old SYSCOIN address scheme
-	bool fKnownVersion = vchVersion == params.Base58Prefix(CChainParams::PUBKEY_ADDRESS) ||
-		vchVersion == params.Base58Prefix(CChainParams::PUBKEY_ADDRESS_SYS) ||
+	bool fKnownVersion = vchVersion == params.Base58Prefix(CChainParams::PUBKEY_ADDRESS_SYS) ||
+		vchVersion == params.Base58Prefix(CChainParams::PUBKEY_ADDRESS_BTC) ||
 		vchVersion == params.Base58Prefix(CChainParams::PUBKEY_ADDRESS_ZEC) ||
-		vchVersion == params.Base58Prefix(CChainParams::SCRIPT_ADDRESS) ||
+		vchVersion == params.Base58Prefix(CChainParams::SCRIPT_ADDRESS_SYS) ||
+		vchVersion == params.Base58Prefix(CChainParams::SCRIPT_ADDRESS_BTC) ||
 		vchVersion == params.Base58Prefix(CChainParams::SCRIPT_ADDRESS_ZEC);
     return fCorrectSize && fKnownVersion;
 }
@@ -359,11 +362,12 @@ CTxDestination CSyscoinAddress::Get() const
 	uint160 id;
 	memcpy(&id, &vchData[0], 20);
 	// SYSCOIN allow old SYSCOIN address scheme
-	if (vchVersion == Params().Base58Prefix(CChainParams::PUBKEY_ADDRESS) ||
-		vchVersion == Params().Base58Prefix(CChainParams::PUBKEY_ADDRESS_SYS) ||
+	if (vchVersion == Params().Base58Prefix(CChainParams::PUBKEY_ADDRESS_SYS) ||
+		vchVersion == Params().Base58Prefix(CChainParams::PUBKEY_ADDRESS_BTC) ||
 		vchVersion == Params().Base58Prefix(CChainParams::PUBKEY_ADDRESS_ZEC))
 		return CKeyID(id);
-	else if (vchVersion == Params().Base58Prefix(CChainParams::SCRIPT_ADDRESS) ||
+	else if (vchVersion == Params().Base58Prefix(CChainParams::SCRIPT_ADDRESS_SYS) ||
+		vchVersion == Params().Base58Prefix(CChainParams::SCRIPT_ADDRESS_BTC)	||
 		vchVersion == Params().Base58Prefix(CChainParams::SCRIPT_ADDRESS_ZEC))
 		return CScriptID(id);
 	else
@@ -374,11 +378,11 @@ bool CSyscoinAddress::GetIndexKey(uint160& hashBytes, int& type) const
 {
     if (!IsValid()) {
         return false;
-    } else if (vchVersion == Params().Base58Prefix(CChainParams::PUBKEY_ADDRESS)) {
+    } else if (vchVersion == Params().Base58Prefix(CChainParams::PUBKEY_ADDRESS_SYS)) {
         memcpy(&hashBytes, &vchData[0], 20);
         type = 1;
         return true;
-    } else if (vchVersion == Params().Base58Prefix(CChainParams::SCRIPT_ADDRESS)) {
+    } else if (vchVersion == Params().Base58Prefix(CChainParams::SCRIPT_ADDRESS_SYS)) {
         memcpy(&hashBytes, &vchData[0], 20);
         type = 2;
         return true;
@@ -390,7 +394,7 @@ bool CSyscoinAddress::GetIndexKey(uint160& hashBytes, int& type) const
 bool CSyscoinAddress::GetKeyID(CKeyID& keyID) const
 {
 	// SYSCOIN allow old SYSCOIN address scheme
-	if (!IsValid() || (vchVersion != Params().Base58Prefix(CChainParams::PUBKEY_ADDRESS) && vchVersion != Params().Base58Prefix(CChainParams::PUBKEY_ADDRESS_SYS) && vchVersion != Params().Base58Prefix(CChainParams::PUBKEY_ADDRESS_ZEC)))
+	if (!IsValid() || (vchVersion != Params().Base58Prefix(CChainParams::PUBKEY_ADDRESS_SYS) && vchVersion != Params().Base58Prefix(CChainParams::PUBKEY_ADDRESS_BTC) && vchVersion != Params().Base58Prefix(CChainParams::PUBKEY_ADDRESS_ZEC)))
 		return false;
 	uint160 id;
 	memcpy(&id, &vchData[0], 20);
@@ -400,12 +404,12 @@ bool CSyscoinAddress::GetKeyID(CKeyID& keyID) const
 
 bool CSyscoinAddress::IsScript() const
 {
-	return IsValid() && (vchVersion == Params().Base58Prefix(CChainParams::SCRIPT_ADDRESS) || vchVersion == Params().Base58Prefix(CChainParams::SCRIPT_ADDRESS_ZEC));
+	return IsValid() && (vchVersion == Params().Base58Prefix(CChainParams::SCRIPT_ADDRESS_SYS) || vchVersion == Params().Base58Prefix(CChainParams::SCRIPT_ADDRESS_BTC) || vchVersion == Params().Base58Prefix(CChainParams::SCRIPT_ADDRESS_ZEC));
 }
 void CSyscoinSecret::SetKey(const CKey& vchSecret)
 {
     assert(vchSecret.IsValid());
-    SetData(Params().Base58Prefix(CChainParams::SECRET_KEY), vchSecret.begin(), vchSecret.size());
+    SetData(Params().Base58Prefix(CChainParams::SECRET_KEY_SYS), vchSecret.begin(), vchSecret.size());
     if (vchSecret.IsCompressed())
         vchData.push_back(1);
 }
@@ -421,9 +425,7 @@ CKey CSyscoinSecret::GetKey()
 bool CSyscoinSecret::IsValid() const
 {
 	bool fExpectedFormat = vchData.size() == 32 || (vchData.size() == 33 && vchData[32] == 1);
-	// SYSCOIN allow old SYSCOIN address scheme
-	bool fCorrectVersion = vchVersion == Params().Base58Prefix(CChainParams::SECRET_KEY) ||
-		vchVersion == Params().Base58Prefix(CChainParams::SECRET_KEY_SYS);
+	bool fCorrectVersion = vchVersion == Params().Base58Prefix(CChainParams::SECRET_KEY_SYS);
 	return fExpectedFormat && fCorrectVersion;
 }
 

@@ -373,8 +373,6 @@ static const CRPCCommand vRPCCommands[] =
     { "wallet",             "getaddressesbyaccount",  &getaddressesbyaccount,  true  },
     { "wallet",             "getbalance",             &getbalance,             false },
     { "wallet",             "getnewaddress",          &getnewaddress,          true  },
-		// SYSCOIN support old/new sys
-	{ "wallet",             "getv2address",           &getv2address,          true },
     { "wallet",             "getrawchangeaddress",    &getrawchangeaddress,    true  },
     { "wallet",             "getreceivedbyaccount",   &getreceivedbyaccount,   false },
     { "wallet",             "getreceivedbyaddress",   &getreceivedbyaddress,   false },
@@ -407,9 +405,8 @@ static const CRPCCommand vRPCCommands[] =
     { "wallet",             "walletlock",             &walletlock,             true  },
     { "wallet",             "walletpassphrasechange", &walletpassphrasechange, true  },
     { "wallet",             "walletpassphrase",       &walletpassphrase,       true  },
-		// SYSCOIN support old/new sys and zec
-	{ "wallet",             "getv2address",           &getv2address,          true },
 	{ "wallet",             "getzaddress",            &getzaddress,           true },
+	{ "wallet",             "getbtcaddress",          &getbtcaddress,           true },
 		// SYSCOIN rpc functions
 	{ "wallet", "aliasnew",          &aliasnew,          false },
 	{ "wallet", "aliasupdate",       &aliasupdate,       false },

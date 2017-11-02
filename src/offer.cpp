@@ -1575,10 +1575,13 @@ std::string GetPaymentOptionsString(const uint64_t &paymentOptions)
 }
 CChainParams::AddressType PaymentOptionToAddressType(const uint64_t &paymentOption)
 {
-	CChainParams::AddressType myAddressType = CChainParams::ADDRESS_SYS;
-	if(paymentOption == PAYMENTOPTION_ZEC)
-		myAddressType = CChainParams::ADDRESS_ZEC;
-	return myAddressType;
+	if (paymentOption == PAYMENTOPTION_SYS)
+		return CChainParams::ADDRESS_SYS;
+	else if (paymentOption == PAYMENTOPTION_BTC)
+		return CChainParams::ADDRESS_BTC;
+	else if(paymentOption == PAYMENTOPTION_ZEC)
+		return CChainParams::ADDRESS_ZEC;
+	return CChainParams::ADDRESS_SYS;
 }
 
 void OfferTxToJSON(const int op, const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash, UniValue &entry)
