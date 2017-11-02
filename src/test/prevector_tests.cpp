@@ -34,39 +34,43 @@ class prevector_tester
         BOOST_CHECK_EQUAL(real_vector.empty(), pre_vector.empty());
         for (Size s = 0; s < real_vector.size(); s++)
         {
-            BOOST_CHECK(real_vector[s] == pre_vector[s]);
-            BOOST_CHECK(&(pre_vector[s]) == &(pre_vector.begin()[s]));
-            BOOST_CHECK(&(pre_vector[s]) == &*(pre_vector.begin() + s));
-            BOOST_CHECK(&(pre_vector[s]) == &*((pre_vector.end() + s) - real_vector.size()));
+            if (real_vector[s] != pre_vector[s])
+                BOOST_CHECK(real_vector[s] == pre_vector[s]);
+            if (&(pre_vector[s]) != &(pre_vector.begin()[s]))
+                BOOST_CHECK(&(pre_vector[s]) == &(pre_vector.begin()[s]));
+            if (&(pre_vector[s]) != &*(pre_vector.begin() + s))
+                BOOST_CHECK(&(pre_vector[s]) == &*(pre_vector.begin() + s));
+            if (&(pre_vector[s]) != &*((pre_vector.end() + s) - real_vector.size()))
+                BOOST_CHECK(&(pre_vector[s]) == &*((pre_vector.end() + s) - real_vector.size()));
         }
         // BOOST_CHECK(realtype(pre_vector) == real_vector);
         BOOST_CHECK(pretype(real_vector.begin(), real_vector.end()) == pre_vector);
         BOOST_CHECK(pretype(pre_vector.begin(), pre_vector.end()) == pre_vector);
         size_t pos = 0;
-        BOOST_FOREACH (const T &v, pre_vector)
-        {
-            BOOST_CHECK(v == real_vector[pos++]);
+        BOOST_FOREACH(const T& v, pre_vector) {
+            if (v != real_vector[pos++])
+             BOOST_CHECK(v == real_vector[pos++]);
         }
-        BOOST_REVERSE_FOREACH (const T &v, pre_vector)
-        {
-            BOOST_CHECK(v == real_vector[--pos]);
+        BOOST_REVERSE_FOREACH(const T& v, pre_vector) {
+            if (v != real_vector[--pos])
+             BOOST_CHECK(v == real_vector[--pos]);
         }
-        BOOST_FOREACH (const T &v, const_pre_vector)
-        {
-            BOOST_CHECK(v == real_vector[pos++]);
+        BOOST_FOREACH(const T& v, const_pre_vector) {
+            if (v != real_vector[pos++])
+                BOOST_CHECK(v == real_vector[pos++]);
         }
-        BOOST_REVERSE_FOREACH (const T &v, const_pre_vector)
-        {
-            BOOST_CHECK(v == real_vector[--pos]);
+        BOOST_REVERSE_FOREACH(const T& v, const_pre_vector) {
+            if (v != real_vector[--pos])
+                BOOST_CHECK(v == real_vector[--pos]);
         }
         CDataStream ss1(SER_DISK, 0);
         CDataStream ss2(SER_DISK, 0);
         ss1 << real_vector;
         ss2 << pre_vector;
         BOOST_CHECK_EQUAL(ss1.size(), ss2.size());
-        for (Size s = 0; s < ss1.size(); s++)
-        {
-            BOOST_CHECK_EQUAL(ss1[s], ss2[s]);
+        for (Size s = 0; s < ss1.size(); s++) {
+            if (ss1[s] != ss2[s])
+              BOOST_CHECK_EQUAL(ss1[s], ss2[s]);
         }
     }
 

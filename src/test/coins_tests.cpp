@@ -115,7 +115,7 @@ public:
 
 BOOST_FIXTURE_TEST_SUITE(coins_tests, BasicTestingSetup)
 
-static const unsigned int NUM_SIMULATION_ITERATIONS = 40000;
+static const unsigned int NUM_SIMULATION_ITERATIONS = 10000;
 
 // This is a large randomized insert/remove simulation test on a variable-size
 // stack of caches on top of CCoinsViewTest.
