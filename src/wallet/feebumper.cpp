@@ -196,7 +196,13 @@ CFeeBumper::CFeeBumper(const CWallet *pWallet, const uint256 txidIn, const CCoin
     // moment earlier. In this case, we report an error to the user, who may use totalFee to make an adjustment.
     CFeeRate minMempoolFeeRate = mempool.GetMinFee(gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000);
     if (nNewFeeRate.GetFeePerK() < minMempoolFeeRate.GetFeePerK()) {
-        vErrors.push_back(strprintf("New fee rate (%s) is less than the minimum fee rate (%s) to get into the mempool. totalFee value should to be at least %s or settxfee value should be at least %s to add transaction.", FormatMoney(nNewFeeRate.GetFeePerK()), FormatMoney(minMempoolFeeRate.GetFeePerK()), FormatMoney(minMempoolFeeRate.GetFee(maxNewTxSize)), FormatMoney(minMempoolFeeRate.GetFeePerK())));
+        vErrors.push_back(strprintf(
+            "New fee rate (%s) is lower than the minimum fee rate (%s) to get into the mempool -- "
+            "the totalFee value should be at least %s or the settxfee value should be at least %s to add transaction",
+            FormatMoney(nNewFeeRate.GetFeePerK()),
+            FormatMoney(minMempoolFeeRate.GetFeePerK()),
+            FormatMoney(minMempoolFeeRate.GetFee(maxNewTxSize)),
+            FormatMoney(minMempoolFeeRate.GetFeePerK())));
         currentResult = BumpFeeResult::WALLET_ERROR;
         return;
     }
@@ -267,7 +273,7 @@ bool CFeeBumper::commit(CWallet *pWallet)
     CValidationState state;
     if (!pWallet->CommitTransaction(wtxBumped, reservekey, g_connman.get(), state)) {
         // NOTE: CommitTransaction never returns false, so this should never happen.
-        vErrors.push_back(strprintf("Error: The transaction was rejected! Reason given: %s", state.GetRejectReason()));
+        vErrors.push_back(strprintf("The transaction was rejected: %s", state.GetRejectReason()));
         return false;
     }
 
@@ -275,7 +281,7 @@ bool CFeeBumper::commit(CWallet *pWallet)
     if (state.IsInvalid()) {
         // This can happen if the mempool rejected the transaction.  Report
         // what happened in the "errors" response.
-        vErrors.push_back(strprintf("Error: The transaction was rejected: %s", FormatStateMessage(state)));
+        vErrors.push_back(strprintf("The transaction was rejected: %s", FormatStateMessage(state)));
     }
 
     // mark the original tx as bumped
@@ -284,7 +290,7 @@ bool CFeeBumper::commit(CWallet *pWallet)
         // along with an exception. It would be good to return information about
         // wtxBumped to the caller even if marking the original transaction
         // replaced does not succeed for some reason.
-        vErrors.push_back("Error: Created new bumpfee transaction but could not mark the original transaction as replaced.");
+        vErrors.push_back("Created new bumpfee transaction but could not mark the original transaction as replaced");
     }
     return true;
 }
