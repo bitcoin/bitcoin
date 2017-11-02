@@ -37,6 +37,8 @@ public:
     // Managing Whitelist
     bool WhitelistMiner(std::string address);
     bool BlacklistMiner(std::string address);
+    bool RevertWhitelistMiner(std::string address);
+    bool RevertBlacklistMiner(std::string address);
     bool ExistMiner(std::string address);
     bool isWhitelisted(std::string address);
     

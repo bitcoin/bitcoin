@@ -1583,15 +1583,15 @@ static DisconnectResult DisconnectBlock(const CBlock& block, const CBlockIndex* 
                                 if (address.IsValid()){
                                     switch(action)
                                     {
-                                        case CMinerWhitelistDB::ADD_MINER: // revert this, so blacklist miner
+                                        case CMinerWhitelistDB::ADD_MINER: // revert this
                                             if (!Params().GetConsensus().minerWhiteListAdminAddress.count(address.ToString()))
-                                                pminerwhitelist->BlacklistMiner(address.ToString());
+                                                pminerwhitelist->RevertWhitelistMiner(address.ToString());
                                             //LogPrintf("MinerWhitelistTransaction: Miner address added: %s \n", address.ToString());
                                             break;
-                                        case CMinerWhitelistDB::REMOVE_MINER: // revert this, so whitelist miner
+                                        case CMinerWhitelistDB::REMOVE_MINER: // revert this
                                             // will act on the address only if is not the admin.
                                             if (!Params().GetConsensus().minerWhiteListAdminAddress.count(address.ToString()))
-                                                pminerwhitelist->WhitelistMiner(address.ToString());
+                                                pminerwhitelist->RevertBlacklistMiner(address.ToString());
                                             
                                             //LogPrintf("MinerWhitelistTransaction: Miner address removed: %s \n", address.ToString());
                                             break;
