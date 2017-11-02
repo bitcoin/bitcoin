@@ -36,7 +36,7 @@ int64_t GetBlockProofEquivalentTime(const CBlockIndex &to,
  * Bitcoin cash's difficulty adjustment mechanism.
  */
 uint32_t GetNextCashWorkRequired(const CBlockIndex *pindexPrev,
-                                 const CBlockHeader *pblock,
-                                 const Consensus::Params &params);
+    const CBlockHeader *pblock,
+    const Consensus::Params &params);
 
 #endif // BITCOIN_POW_H

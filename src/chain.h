@@ -348,9 +348,9 @@ arith_uint256 GetBlockProof(const CBlockIndex &block);
  * seconds.
  */
 int64_t GetBlockProofEquivalentTime(const CBlockIndex &to,
-                                    const CBlockIndex &from,
-                                    const CBlockIndex &tip,
-                                    const Consensus::Params &);
+    const CBlockIndex &from,
+    const CBlockIndex &tip,
+    const Consensus::Params &);
 
 /** Used to marshal pointers into hashes for db storage. */
 class CDiskBlockIndex : public CBlockIndex
