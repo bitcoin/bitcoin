@@ -79,3 +79,9 @@ script:
 after_script:
     - echo $TRAVIS_COMMIT_RANGE
     - echo $TRAVIS_COMMIT_LOG
+notifications:
+    irc:
+        channels:
+            - "chat.freenode.net#bitcoin-core-dev"
+        on_success: change
+        on_failure: always
