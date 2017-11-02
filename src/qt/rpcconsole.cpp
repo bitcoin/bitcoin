@@ -434,7 +434,14 @@ RPCConsole::RPCConsole(const PlatformStyle *_platformStyle, QWidget *parent) :
         // Restore failed (perhaps missing setting), center the window
         move(QApplication::desktop()->availableGeometry().center() - frameGeometry().center());
     }
-
+    if(settings.value("theme").toString() == "dark") 
+    {   
+        setStyleSheet( 
+            "QWidget { background: rgba(45,45,45); color: rgb(12,175,165); }" 
+            "QTableView { border: 1px solid rgb(119,119,119); selection-background-color: rgb(62,62,62); selection-color: rgb(108,200,239); alternate-background: rgb(31,31,31); }" 
+            "QTableView::item { border-right: 1px solid rgb(119,119,119); border-bottom: 1px solid rgb(119,119,119);}" 
+        ); 
+    } 
     ui->openDebugLogfileButton->setToolTip(ui->openDebugLogfileButton->toolTip().arg(tr(PACKAGE_NAME)));
 
     if (platformStyle->getImagesOnButtons()) {

@@ -627,6 +627,30 @@
         </layout>
        </item>
        <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_4_Display">
+         <item>
+          <widget class="QLabel" name="ThemeLabel">
+           <property name="text">
+            <string>&amp;Theme to use:</string>
+           </property>
+           <property name="textFormat">
+            <enum>Qt::PlainText</enum>
+           </property>
+           <property name="buddy">
+            <cstring>theme</cstring>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QValueComboBox" name="theme">
+           <property name="toolTip">
+            <string>Choose the theme to use.</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+    </item>
+       <item>
         <spacer name="verticalSpacer_Display">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
