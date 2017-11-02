@@ -178,47 +178,11 @@ public:
 
     void PushMessage(CNode* pnode, CSerializedNetMsg&& msg);
 
-    template<typename Callable>
-    void ForEachNode(Callable&& func)
-    {
-        LOCK(cs_vNodes);
-        for (auto&& node : vNodes) {
-            if (NodeFullyConnected(node))
-                func(node);
-        }
-    };
+    void ForEachNode(std::function<void (CNode* pnode)> func);
+    void ForEachNode(std::function<void (const CNode* pnode)> func) const;
 
-    template<typename Callable>
-    void ForEachNode(Callable&& func) const
-    {
-        LOCK(cs_vNodes);
-        for (auto&& node : vNodes) {
-            if (NodeFullyConnected(node))
-                func(node);
-        }
-    };
-
-    template<typename Callable, typename CallableAfter>
-    void ForEachNodeThen(Callable&& pre, CallableAfter&& post)
-    {
-        LOCK(cs_vNodes);
-        for (auto&& node : vNodes) {
-            if (NodeFullyConnected(node))
-                pre(node);
-        }
-        post();
-    };
-
-    template<typename Callable, typename CallableAfter>
-    void ForEachNodeThen(Callable&& pre, CallableAfter&& post) const
-    {
-        LOCK(cs_vNodes);
-        for (auto&& node : vNodes) {
-            if (NodeFullyConnected(node))
-                pre(node);
-        }
-        post();
-    };
+    void ForEachNodeThen(std::function<void (CNode* pnode)> pre, std::function<void ()> post);
+    void ForEachNodeThen(std::function<void (const CNode* pnode)> pre, std::function<void ()> post) const;
 
     // Addrman functions
     size_t GetAddressCount() const;
