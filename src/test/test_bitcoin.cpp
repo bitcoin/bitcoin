@@ -156,7 +156,8 @@ bool ShutdownRequested()
   return false;
 }
 
-struct SetupCleanup {
+struct SetupCleanup
+{
     SetupCleanup()   { std::cout << "setup\n"; }
     ~SetupCleanup()
     {
