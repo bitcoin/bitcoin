@@ -1170,6 +1170,200 @@ bool CheckParam(const UniValue& params, const unsigned int index)
 	}
 	return false;
 }
+void setupOfferIndexes() {
+	bson_t keys;
+	const char *collection_name = "offer";
+	char *index_name;
+	bson_t reply;
+	char *reply_str;
+	bson_error_t error;
+	bool r;
+
+	bson_init(&keys);
+	BSON_APPEND_INT32(&keys, "category", 1);
+	BSON_APPEND_INT32(&keys, "paymentoptions", 1);
+	BSON_APPEND_INT32(&keys, "alias", 1);
+	BSON_APPEND_INT32(&keys, "offertype", 1);
+	BSON_APPEND_INT32(&keys, "title", "text");
+	index_name = mongoc_collection_keys_to_index_string(&keys);
+	create_indexes = BCON_NEW("createIndexes",
+		BCON_UTF8(collection_name),
+		"indexes",
+		"[",
+		"{",
+		"key",
+		BCON_DOCUMENT(&keys),
+		"name",
+		BCON_UTF8(index_name),
+		"}",
+		"]");
+
+	r = mongoc_database_write_command_with_opts(
+		db, create_indexes, NULL /* opts */, &reply, &error);
+
+	if (!r) {
+		LogPrintf("Error in createIndexes: %s\n", error.message);
+	}
+	bson_destroy(&keys);
+	bson_free(index_name);
+	bson_free(reply_str);
+	bson_destroy(&reply);
+	bson_destroy(create_indexes);
+}
+void setupEscrowIndexes() {
+	bson_t keys;
+	const char *collection_name = "escrow";
+	char *index_name;
+	bson_t reply;
+	char *reply_str;
+	bson_error_t error;
+	bool r;
+
+	bson_init(&keys);
+	BSON_APPEND_INT32(&keys, "offer", 1);
+	BSON_APPEND_INT32(&keys, "seller", 1);
+	BSON_APPEND_INT32(&keys, "arbiter", 1);
+	BSON_APPEND_INT32(&keys, "buyer", 1);
+	index_name = mongoc_collection_keys_to_index_string(&keys);
+	create_indexes = BCON_NEW("createIndexes",
+		BCON_UTF8(collection_name),
+		"indexes",
+		"[",
+		"{",
+		"key",
+		BCON_DOCUMENT(&keys),
+		"name",
+		BCON_UTF8(index_name),
+		"}",
+		"]");
+
+	r = mongoc_database_write_command_with_opts(
+		db, create_indexes, NULL /* opts */, &reply, &error);
+
+	if (!r) {
+		LogPrintf("Error in createIndexes: %s\n", error.message);
+	}
+	bson_destroy(&keys);
+	bson_free(index_name);
+	bson_free(reply_str);
+	bson_destroy(&reply);
+	bson_destroy(create_indexes);
+}
+void setupEscrowBidIndexes() {
+	bson_t keys;
+	const char *collection_name = "escrowbid";
+	char *index_name;
+	bson_t reply;
+	char *reply_str;
+	bson_error_t error;
+	bool r;
+
+	bson_init(&keys);
+	BSON_APPEND_INT32(&keys, "offer", 1);
+	BSON_APPEND_INT32(&keys, "escrow", 1);
+	BSON_APPEND_INT32(&keys, "bidder", 1);
+	index_name = mongoc_collection_keys_to_index_string(&keys);
+	create_indexes = BCON_NEW("createIndexes",
+		BCON_UTF8(collection_name),
+		"indexes",
+		"[",
+		"{",
+		"key",
+		BCON_DOCUMENT(&keys),
+		"name",
+		BCON_UTF8(index_name),
+		"}",
+		"]");
+
+	r = mongoc_database_write_command_with_opts(
+		db, create_indexes, NULL /* opts */, &reply, &error);
+
+	if (!r) {
+		LogPrintf("Error in createIndexes: %s\n", error.message);
+	}
+	bson_destroy(&keys);
+	bson_free(index_name);
+	bson_free(reply_str);
+	bson_destroy(&reply);
+	bson_destroy(create_indexes);
+}
+void setupCertIndexes() {
+	bson_t keys;
+	const char *collection_name = "cert";
+	char *index_name;
+	bson_t reply;
+	char *reply_str;
+	bson_error_t error;
+	bool r;
+
+	bson_init(&keys);
+	BSON_APPEND_INT32(&keys, "category", 1);
+	BSON_APPEND_INT32(&keys, "alias", 1);
+	BSON_APPEND_INT32(&keys, "title", "text");
+	index_name = mongoc_collection_keys_to_index_string(&keys);
+	create_indexes = BCON_NEW("createIndexes",
+		BCON_UTF8(collection_name),
+		"indexes",
+		"[",
+		"{",
+		"key",
+		BCON_DOCUMENT(&keys),
+		"name",
+		BCON_UTF8(index_name),
+		"}",
+		"]");
+
+	r = mongoc_database_write_command_with_opts(
+		db, create_indexes, NULL /* opts */, &reply, &error);
+
+	if (!r) {
+		LogPrintf("Error in createIndexes: %s\n", error.message);
+	}
+	bson_destroy(&keys);
+	bson_free(index_name);
+	bson_free(reply_str);
+	bson_destroy(&reply);
+	bson_destroy(create_indexes);
+}
+void setupFeedbackIndexes() {
+	bson_t keys;
+	const char *collection_name = "feedback";
+	char *index_name;
+	bson_t reply;
+	char *reply_str;
+	bson_error_t error;
+	bool r;
+
+	bson_init(&keys);
+	BSON_APPEND_INT32(&keys, "offer", 1);
+	BSON_APPEND_INT32(&keys, "escrow", 1);
+	BSON_APPEND_INT32(&keys, "feedbackuserfrom", 1);
+	BSON_APPEND_INT32(&keys, "feedbackuserto", 1);
+	index_name = mongoc_collection_keys_to_index_string(&keys);
+	create_indexes = BCON_NEW("createIndexes",
+		BCON_UTF8(collection_name),
+		"indexes",
+		"[",
+		"{",
+		"key",
+		BCON_DOCUMENT(&keys),
+		"name",
+		BCON_UTF8(index_name),
+		"}",
+		"]");
+
+	r = mongoc_database_write_command_with_opts(
+		db, create_indexes, NULL /* opts */, &reply, &error);
+
+	if (!r) {
+		LogPrintf("Error in createIndexes: %s\n", error.message);
+	}
+	bson_destroy(&keys);
+	bson_free(index_name);
+	bson_free(reply_str);
+	bson_destroy(&reply);
+	bson_destroy(create_indexes);
+}
 void startMongoDB(){
 	// SYSCOIN
 	nIndexPort = GetArg("-indexport", DEFAULT_INDEXPORT);
@@ -1186,10 +1380,15 @@ void startMongoDB(){
 		database = mongoc_client_get_database(client, "syscoindb");
 		alias_collection = mongoc_client_get_collection(client, "syscoindb", "alias");
 		offer_collection = mongoc_client_get_collection(client, "syscoindb", "offer");
+		setupOfferIndexes();
 		escrow_collection = mongoc_client_get_collection(client, "syscoindb", "escrow");
+		setupEscrowIndexes();
 		escrowbid_collection = mongoc_client_get_collection(client, "syscoindb", "escrowbid");
+		setupEscrowBidIndexes();
 		cert_collection = mongoc_client_get_collection(client, "syscoindb", "cert");
+		setupCertIndexes();
 		feedback_collection = mongoc_client_get_collection(client, "syscoindb", "feedback");
+		setupFeedbackIndexes();
 		BSON_ASSERT(alias_collection);
 		BSON_ASSERT(offer_collection);
 		BSON_ASSERT(escrow_collection);
