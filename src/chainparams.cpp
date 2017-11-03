@@ -9,10 +9,16 @@
 #include "tinyformat.h"
 #include "util.h"
 #include "utilstrencodings.h"
+#include "arith_uint256.h"
 
 #include <assert.h>
 
 #include "chainparamsseeds.h"
+
+//TODO: Take these out
+extern double algoHashTotal[16];
+extern int algoHashHits[16];
+
 
 static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesisOutputScript, uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward)
 {
@@ -119,10 +125,28 @@ public:
         pchMessageStart[3] = 0x4e;
         nDefaultPort = 8767;
         nPruneAfterHeight = 100000;
+                                  
+        uint256 TempHashHolding;         
+        uint256 BestBlockHash = uint256S("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+        for (int i=0;i<5000000;i++) {
+            genesis = CreateGenesisBlock(1509740671, i, 0x1d00ffff, 4, 5000 * COIN);
+            genesis.hashPrevBlock = TempHashHolding; 
+            consensus.hashGenesisBlock = genesis.GetHash();
 
-        genesis = CreateGenesisBlock(1231006505, 2083236893, 0x1d00ffff, 1, 5000 * COIN);
-        consensus.hashGenesisBlock = genesis.GetHash();
-        std::cout << consensus.hashGenesisBlock.ToString();
+            if (UintToArith256(consensus.hashGenesisBlock) < UintToArith256(BestBlockHash)) {
+                BestBlockHash = consensus.hashGenesisBlock;
+                std::cout << BestBlockHash.GetHex() << " Nonce: " << i << "\n";
+            }
+
+            TempHashHolding = consensus.hashGenesisBlock;
+            //std::cout << consensus.hashGenesisBlock.GetHex() << "\n";
+        }
+        std::cout << "\n";
+        std::cout << "\n";
+        std::cout << "\n";
+
+        std::cout << BestBlockHash.GetHex();
+
         assert(consensus.hashGenesisBlock == uint256S("0x000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f"));
         assert(genesis.hashMerkleRoot == uint256S("0x4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"));
 

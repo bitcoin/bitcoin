@@ -12,6 +12,7 @@
 
 uint256 CBlockHeader::GetHash() const
 {
+    //std::cout << "PrevBlockHash: " << hashPrevBlock.GetHex() << "\n";
     return HashX16R(BEGIN(nVersion), END(nNonce), hashPrevBlock);
 }
 
