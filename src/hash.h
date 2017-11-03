@@ -416,19 +416,19 @@ inline uint256 HashX16R(const T1 pbegin, const T1 pend, const uint256 PrevBlockH
                 sph_groestl512_close(&ctx_groestl, static_cast<void*>(&hash[i]));
                 break;
             case 3:
-                sph_skein512_init(&ctx_skein);
-                sph_skein512 (&ctx_skein, toHash, lenToHash);
-                sph_skein512_close(&ctx_skein, static_cast<void*>(&hash[i]));
-                break;
-            case 4:
                 sph_jh512_init(&ctx_jh);
                 sph_jh512 (&ctx_jh, toHash, lenToHash);
                 sph_jh512_close(&ctx_jh, static_cast<void*>(&hash[i]));
                 break;
-            case 5:
+            case 4:
                 sph_keccak512_init(&ctx_keccak);
                 sph_keccak512 (&ctx_keccak, toHash, lenToHash);
                 sph_keccak512_close(&ctx_keccak, static_cast<void*>(&hash[i]));
+                break;
+            case 5:
+                sph_skein512_init(&ctx_skein);
+                sph_skein512 (&ctx_skein, toHash, lenToHash);
+                sph_skein512_close(&ctx_skein, static_cast<void*>(&hash[i]));
                 break;
             case 6:
                 sph_luffa512_init(&ctx_luffa);
