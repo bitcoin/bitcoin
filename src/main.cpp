@@ -1144,19 +1144,19 @@ std::string FormatStateMessage(const CValidationState &state)
 }
 
 #ifdef BITCOIN_CASH
-static bool IsCashHFEnabled(const Config &config, int64_t nMedianTimePast)
+static bool IsCashHFEnabled(const CChainParams &chainparams, int64_t nMedianTimePast)
 {
-    return nMedianTimePast >= config.GetChainParams().GetConsensus().cashHardForkActivationTime;
+    return nMedianTimePast >= chainparams.GetConsensus().cashHardForkActivationTime;
 }
 
-bool IsCashHFEnabled(const Config &config, const CBlockIndex *pindexPrev)
+bool IsCashHFEnabled(const CChainParams &chainparams, const CBlockIndex *pindexPrev)
 {
     if (pindexPrev == nullptr)
     {
         return false;
     }
 
-    return IsCashHFEnabled(config, pindexPrev->GetMedianTimePast());
+    return IsCashHFEnabled(chainparams, pindexPrev->GetMedianTimePast());
 }
 #endif
 
@@ -2505,7 +2505,7 @@ bool ConnectBlock(const CBlock &block,
 // to fail (for instance in multisig or other forms of smart contracts) are
 // null.
 #ifdef BITCOIN_CASH
-    if (IsCashHFEnabled(config, pindex->pprev))
+    if (IsCashHFEnabled(chainparams, pindex->pprev))
     {
         flags |= SCRIPT_VERIFY_LOW_S;
         flags |= SCRIPT_VERIFY_NULLFAIL;
