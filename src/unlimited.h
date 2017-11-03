@@ -230,6 +230,9 @@ extern void LoadFilter(CNode *pfrom, CBloomFilter *filter);
 extern CSemaphore *semOutboundAddNode;
 extern CStatHistory<uint64_t> recvAmt;
 extern CStatHistory<uint64_t> sendAmt;
+extern CStatHistory<uint64_t> nTxValidationTime;
+extern CStatHistory<uint64_t> nBlockValidationTime;
+extern CCriticalSection cs_blockvalidationtime;
 
 // Connection Slot mitigation - used to track connection attempts and evictions
 struct ConnectionHistory
