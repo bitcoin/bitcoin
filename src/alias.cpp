@@ -1185,7 +1185,7 @@ void setupOfferIndexes() {
 	BSON_APPEND_INT32(&keys, "paymentoptions", 1);
 	BSON_APPEND_INT32(&keys, "alias", 1);
 	BSON_APPEND_INT32(&keys, "offertype", 1);
-	BSON_APPEND_UTF8(&keys, "title", BCON_UTF8("text"));
+	BSON_APPEND_UTF8(&keys, "title", "text");
 	index_name = mongoc_collection_keys_to_index_string(&keys);
 	create_indexes = BCON_NEW("createIndexes",
 		BCON_UTF8(collection_name),
@@ -1303,7 +1303,7 @@ void setupCertIndexes() {
 	bson_init(&keys);
 	BSON_APPEND_INT32(&keys, "category", 1);
 	BSON_APPEND_INT32(&keys, "alias", 1);
-	BSON_APPEND_UTF8(&keys, "title", BCON_UTF8("text"));
+	BSON_APPEND_UTF8(&keys, "title", "text");
 	index_name = mongoc_collection_keys_to_index_string(&keys);
 	create_indexes = BCON_NEW("createIndexes",
 		BCON_UTF8(collection_name),
