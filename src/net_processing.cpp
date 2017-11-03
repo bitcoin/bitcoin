@@ -153,6 +153,8 @@ struct CBlockReject {
  * and we're no longer holding the node's locks.
  */
 struct CNodeState {
+    //! The CConnman reference to the connection
+    CNode* connection;
     //! The peer's address
     const CService address;
     //! Whether we have a fully established connection.
@@ -238,7 +240,7 @@ struct CNodeState {
     //! Time of last new block announcement
     int64_t m_last_block_announcement;
 
-    CNodeState(CAddress addrIn, std::string addrNameIn) : address(addrIn), name(addrNameIn) {
+    CNodeState(CNode* connectionIn) : connection(connectionIn), address(connection->addr), name(connection->GetAddrName()) {
         fCurrentlyConnected = false;
         nMisbehavior = 0;
         fShouldBan = false;
@@ -567,12 +569,11 @@ bool IsOutboundDisconnectionCandidate(const CNode *node)
 }
 
 void PeerLogicValidation::InitializeNode(CNode *pnode) {
-    CAddress addr = pnode->addr;
-    std::string addrName = pnode->GetAddrName();
     NodeId nodeid = pnode->GetId();
+    pnode->AddRef();
     {
         LOCK(cs_main);
-        mapNodeState.emplace_hint(mapNodeState.end(), std::piecewise_construct, std::forward_as_tuple(nodeid), std::forward_as_tuple(addr, std::move(addrName)));
+        mapNodeState.emplace_hint(mapNodeState.end(), std::piecewise_construct, std::forward_as_tuple(nodeid), std::forward_as_tuple(pnode));
     }
     if(!pnode->fInbound)
         PushNodeVersion(pnode, connman, GetTime());
@@ -601,6 +602,7 @@ void PeerLogicValidation::FinalizeNode(NodeId nodeid, bool& fUpdateConnectionTim
     g_outbound_peers_with_protect_from_disconnect -= state->m_chain_sync.m_protect;
     assert(g_outbound_peers_with_protect_from_disconnect >= 0);
 
+    state->connection->Release();
     mapNodeState.erase(nodeid);
 
     if (mapNodeState.empty()) {
