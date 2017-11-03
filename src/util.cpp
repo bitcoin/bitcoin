@@ -107,7 +107,7 @@ std::atomic<uint32_t> logCategories(0);
 static std::unique_ptr<CCriticalSection[]> ppmutexOpenSSL;
 void locking_callback(int mode, int i, const char* file, int line) NO_THREAD_SAFETY_ANALYSIS
 {
-    if (mode & CRYPTO_LOCK) {
+    if (mode) {
         ENTER_CRITICAL_SECTION(ppmutexOpenSSL[i]);
     } else {
         LEAVE_CRITICAL_SECTION(ppmutexOpenSSL[i]);
@@ -141,8 +141,6 @@ public:
     }
     ~CInit()
     {
-        // Securely erase the memory used by the PRNG
-        RAND_cleanup();
         // Shutdown OpenSSL library multithreading support
         CRYPTO_set_locking_callback(nullptr);
         // Clear the set of locks now to maintain symmetry with the constructor.
