@@ -560,7 +560,7 @@ void CWallet::SyncMetaData(std::pair<TxSpends::iterator, TxSpends::iterator> ran
  * Outpoint is spent if any non-conflicted transaction
  * spends it:
  */
-bool CWallet::IsSpent(const uint256& hash, unsigned int n) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet)
+bool CWallet::IsSpent(const uint256& hash, unsigned int n) const EXCLUSIVE_LOCKS_REQUIRED(cs_main, cs_wallet)
 {
     const COutPoint outpoint(hash, n);
     std::pair<TxSpends::const_iterator, TxSpends::const_iterator> range;
@@ -1722,7 +1722,7 @@ void CWallet::ReacceptWalletTransactions()
     }
 }
 
-bool CWalletTx::RelayWalletTransaction(CConnman* connman)
+bool CWalletTx::RelayWalletTransaction(CConnman* connman) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     assert(pwallet->GetBroadcastTransactions());
     if (!IsCoinBase() && !isAbandoned() && GetDepthInMainChain() == 0)
@@ -1820,7 +1820,7 @@ CAmount CWalletTx::GetCredit(const isminefilter& filter) const
     return credit;
 }
 
-CAmount CWalletTx::GetImmatureCredit(bool fUseCache) const
+CAmount CWalletTx::GetImmatureCredit(bool fUseCache) const EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     if (IsCoinBase() && GetBlocksToMaturity() > 0 && IsInMainChain())
     {
@@ -1834,7 +1834,7 @@ CAmount CWalletTx::GetImmatureCredit(bool fUseCache) const
     return 0;
 }
 
-CAmount CWalletTx::GetAvailableCredit(bool fUseCache) const
+CAmount CWalletTx::GetAvailableCredit(bool fUseCache) const EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     if (pwallet == nullptr)
         return 0;
@@ -1865,7 +1865,7 @@ CAmount CWalletTx::GetAvailableCredit(bool fUseCache) const
     return nCredit;
 }
 
-CAmount CWalletTx::GetImmatureWatchOnlyCredit(const bool& fUseCache) const
+CAmount CWalletTx::GetImmatureWatchOnlyCredit(const bool& fUseCache) const EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     if (IsCoinBase() && GetBlocksToMaturity() > 0 && IsInMainChain())
     {
@@ -1879,7 +1879,7 @@ CAmount CWalletTx::GetImmatureWatchOnlyCredit(const bool& fUseCache) const
     return 0;
 }
 
-CAmount CWalletTx::GetAvailableWatchOnlyCredit(const bool& fUseCache) const
+CAmount CWalletTx::GetAvailableWatchOnlyCredit(const bool& fUseCache) const EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     if (pwallet == nullptr)
         return 0;
@@ -1923,7 +1923,7 @@ bool CWalletTx::InMempool() const
     return fInMempool;
 }
 
-bool CWalletTx::IsTrusted() const
+bool CWalletTx::IsTrusted() const EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     // Quick answer in most cases
     if (!CheckFinalTx(*tx))
@@ -1963,7 +1963,7 @@ bool CWalletTx::IsEquivalentTo(const CWalletTx& _tx) const
         return CTransaction(tx1) == CTransaction(tx2);
 }
 
-std::vector<uint256> CWallet::ResendWalletTransactionsBefore(int64_t nTime, CConnman* connman)
+std::vector<uint256> CWallet::ResendWalletTransactionsBefore(int64_t nTime, CConnman* connman) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     std::vector<uint256> result;
 
@@ -1988,7 +1988,7 @@ std::vector<uint256> CWallet::ResendWalletTransactionsBefore(int64_t nTime, CCon
     return result;
 }
 
-void CWallet::ResendWalletTransactions(int64_t nBestBlockTime, CConnman* connman)
+void CWallet::ResendWalletTransactions(int64_t nBestBlockTime, CConnman* connman) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     // Do this infrequently and randomly to avoid giving away
     // that these are our transactions.
@@ -3430,7 +3430,7 @@ int64_t CWallet::GetOldestKeyPoolTime()
     return oldestKey;
 }
 
-std::map<CTxDestination, CAmount> CWallet::GetAddressBalances()
+std::map<CTxDestination, CAmount> CWallet::GetAddressBalances() EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     std::map<CTxDestination, CAmount> balances;
 
@@ -4048,7 +4048,7 @@ CWallet* CWallet::CreateWalletFromFile(const std::string walletFile) EXCLUSIVE_L
 
 std::atomic<bool> CWallet::fFlushScheduled(false);
 
-void CWallet::postInitProcess(CScheduler& scheduler)
+void CWallet::postInitProcess(CScheduler& scheduler) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     // Add wallet transactions that aren't already in a block to mempool
     // Do this here as mempool requires genesis block to be loaded
@@ -4112,7 +4112,7 @@ int CMerkleTx::GetDepthInMainChain(const CBlockIndex* &pindexRet) const EXCLUSIV
     return ((nIndex == -1) ? (-1) : 1) * (chainActive.Height() - pindex->nHeight + 1);
 }
 
-int CMerkleTx::GetBlocksToMaturity() const
+int CMerkleTx::GetBlocksToMaturity() const EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     if (!IsCoinBase())
         return 0;

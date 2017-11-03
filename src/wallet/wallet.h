@@ -29,6 +29,8 @@
 #include <utility>
 #include <vector>
 
+extern CCriticalSection cs_main;
+
 typedef CWallet* CWalletRef;
 extern std::vector<CWalletRef> vpwallets;
 
@@ -244,9 +246,9 @@ public:
      *  0  : in memory pool, waiting to be included in a block
      * >=1 : this many blocks deep in the main chain
      */
-    int GetDepthInMainChain(const CBlockIndex* &pindexRet) const;
-    int GetDepthInMainChain() const { const CBlockIndex *pindexRet; return GetDepthInMainChain(pindexRet); }
-    bool IsInMainChain() const { const CBlockIndex *pindexRet; return GetDepthInMainChain(pindexRet) > 0; }
+    int GetDepthInMainChain(const CBlockIndex* &pindexRet) const EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    int GetDepthInMainChain() const EXCLUSIVE_LOCKS_REQUIRED(cs_main) { const CBlockIndex *pindexRet; return GetDepthInMainChain(pindexRet); }
+    bool IsInMainChain() const EXCLUSIVE_LOCKS_REQUIRED(cs_main) { const CBlockIndex *pindexRet; return GetDepthInMainChain(pindexRet) > 0; }
     int GetBlocksToMaturity() const;
     bool hashUnset() const { return (hashBlock.IsNull() || hashBlock == ABANDON_HASH); }
     bool isAbandoned() const { return (hashBlock == ABANDON_HASH); }
