@@ -429,7 +429,7 @@
                </sizepolicy>
               </property>-->
             <property name="styleSheet">
-              <string notr="true">QPushButton {width: 187; height: 165; margin: 0px; padding: 10; border: none; textalign:left; image: url(:/icons/iop_transparent) }</string>
+              <string notr="true">QPushButton {width: 187; height: 165; margin: 0px; padding: 10; border: none; textalign:left; image: url(:/icons/iop) }</string>
             </property>
             <property name="toolTip">
                <string>http://iop.global</string>
