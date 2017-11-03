@@ -1178,6 +1178,7 @@ void setupOfferIndexes() {
 	char *reply_str;
 	bson_error_t error;
 	bool r;
+	bson_t *create_indexes;
 
 	bson_init(&keys);
 	BSON_APPEND_INT32(&keys, "category", 1);
@@ -1218,6 +1219,7 @@ void setupEscrowIndexes() {
 	char *reply_str;
 	bson_error_t error;
 	bool r;
+	bson_t *create_indexes;
 
 	bson_init(&keys);
 	BSON_APPEND_INT32(&keys, "offer", 1);
@@ -1257,6 +1259,7 @@ void setupEscrowBidIndexes() {
 	char *reply_str;
 	bson_error_t error;
 	bool r;
+	bson_t *create_indexes;
 
 	bson_init(&keys);
 	BSON_APPEND_INT32(&keys, "offer", 1);
@@ -1295,6 +1298,7 @@ void setupCertIndexes() {
 	char *reply_str;
 	bson_error_t error;
 	bool r;
+	bson_t *create_indexes;
 
 	bson_init(&keys);
 	BSON_APPEND_INT32(&keys, "category", 1);
@@ -1333,6 +1337,7 @@ void setupFeedbackIndexes() {
 	char *reply_str;
 	bson_error_t error;
 	bool r;
+	bson_t *create_indexes;
 
 	bson_init(&keys);
 	BSON_APPEND_INT32(&keys, "offer", 1);
