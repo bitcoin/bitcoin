@@ -1789,6 +1789,8 @@ CAmount CWalletTx::GetAvailableCredit(bool fUseCache) const
     if (pwallet == nullptr)
         return 0;
 
+    AssertLockHeld(pwallet->cs_wallet);
+
     // Must wait until coinbase is safely deep enough in the chain before valuing it
     if (IsCoinBase() && GetBlocksToMaturity() > 0)
         return 0;
@@ -1832,6 +1834,8 @@ CAmount CWalletTx::GetAvailableWatchOnlyCredit(const bool& fUseCache) const
 {
     if (pwallet == nullptr)
         return 0;
+
+    AssertLockHeld(pwallet->cs_wallet);
 
     // Must wait until coinbase is safely deep enough in the chain before valuing it
     if (IsCoinBase() && GetBlocksToMaturity() > 0)
