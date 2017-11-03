@@ -183,6 +183,7 @@ CBlockTemplate *BlockAssembler::CreateNewBlock(const CScript &scriptPubKeyIn, bo
 
     LOCK2(cs_main, mempool.cs);
     CBlockIndex *pindexPrev = chainActive.Tip();
+    assert(pindexPrev); // can't make a new block if we don't even have the genesis block
     nHeight = pindexPrev->nHeight + 1;
 
     buip055ChainBlock = pindexPrev->IsforkActiveOnNextBlock(miningForkTime.value);

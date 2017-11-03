@@ -245,7 +245,7 @@ public:
             Start();
     }
 
-    virtual ~CStatHistory() {}
+    virtual ~CStatHistory() { Stop(); }
     CStatHistory &operator<<(const DataType &rhs)
     {
         if (op & STAT_INDIVIDUAL)
@@ -292,7 +292,7 @@ public:
 
     void Stop()
     {
-        if (!op & STAT_INDIVIDUAL)
+        if (!(op & STAT_INDIVIDUAL))
         {
             timer.cancel();
         }
@@ -405,6 +405,10 @@ public:
 
     void timeout(const boost::system::error_code &e)
     {
+        if (e == boost::asio::error::operation_aborted)
+        {
+            return;
+        }
         if (e)
             return;
 

@@ -140,10 +140,6 @@ CScript COINBASE_FLAGS;
 
 const std::string strMessageMagic = "Bitcoin Signed Message:\n";
 
-extern CStatHistory<uint64_t> nTxValidationTime;
-extern CStatHistory<uint64_t> nBlockValidationTime;
-extern CCriticalSection cs_blockvalidationtime;
-
 extern CCriticalSection cs_LastBlockFile;
 extern CCriticalSection cs_nBlockSequenceId;
 

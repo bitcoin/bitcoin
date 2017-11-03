@@ -65,7 +65,8 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
         pblocktree = new CBlockTreeDB(1 << 20, true);
         pcoinsdbview = new CCoinsViewDB(1 << 23, true);
         pcoinsTip = new CCoinsViewCache(pcoinsdbview);
-        InitBlockIndex(chainparams);
+        bool worked = InitBlockIndex(chainparams);
+        assert(worked);
 
         PV.reset(new CParallelValidation(3, &threadGroup));
         RegisterNodeSignals(GetNodeSignals());
@@ -154,3 +155,15 @@ bool ShutdownRequested()
 {
   return false;
 }
+
+struct SetupCleanup
+{
+    SetupCleanup()   { std::cout << "setup\n"; }
+    ~SetupCleanup()
+    {
+        std::cout << "teardown\n";
+        UnlimitedCleanup();
+    }
+};
+
+BOOST_GLOBAL_FIXTURE(SetupCleanup);
