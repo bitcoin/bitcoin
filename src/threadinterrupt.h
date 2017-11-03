@@ -30,7 +30,7 @@ public:
 
 private:
     std::condition_variable cond;
-    CWaitableCriticalSection mut;
+    Mutex mut;
     std::atomic<bool> flag;
 };
 
