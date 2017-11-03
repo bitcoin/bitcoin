@@ -1199,7 +1199,7 @@ void setupOfferIndexes() {
 		"]");
 
 	r = mongoc_database_write_command_with_opts(
-		db, create_indexes, NULL /* opts */, &reply, &error);
+		database, create_indexes, NULL /* opts */, &reply, &error);
 
 	if (!r) {
 		LogPrintf("Error in createIndexes: %s\n", error.message);
@@ -1238,7 +1238,7 @@ void setupEscrowIndexes() {
 		"]");
 
 	r = mongoc_database_write_command_with_opts(
-		db, create_indexes, NULL /* opts */, &reply, &error);
+		database, create_indexes, NULL /* opts */, &reply, &error);
 
 	if (!r) {
 		LogPrintf("Error in createIndexes: %s\n", error.message);
@@ -1276,7 +1276,7 @@ void setupEscrowBidIndexes() {
 		"]");
 
 	r = mongoc_database_write_command_with_opts(
-		db, create_indexes, NULL /* opts */, &reply, &error);
+		database, create_indexes, NULL /* opts */, &reply, &error);
 
 	if (!r) {
 		LogPrintf("Error in createIndexes: %s\n", error.message);
@@ -1314,7 +1314,7 @@ void setupCertIndexes() {
 		"]");
 
 	r = mongoc_database_write_command_with_opts(
-		db, create_indexes, NULL /* opts */, &reply, &error);
+		database, create_indexes, NULL /* opts */, &reply, &error);
 
 	if (!r) {
 		LogPrintf("Error in createIndexes: %s\n", error.message);
@@ -1353,7 +1353,7 @@ void setupFeedbackIndexes() {
 		"]");
 
 	r = mongoc_database_write_command_with_opts(
-		db, create_indexes, NULL /* opts */, &reply, &error);
+		database, create_indexes, NULL /* opts */, &reply, &error);
 
 	if (!r) {
 		LogPrintf("Error in createIndexes: %s\n", error.message);
