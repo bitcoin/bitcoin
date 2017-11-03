@@ -116,6 +116,11 @@ public:
         return block;
     }
 
+    // void SetPrevBlockHash(uint256 prevHash) 
+    // {
+    //     block.hashPrevBlock = prevHash;
+    // }
+
     std::string ToString() const;
 };
 
