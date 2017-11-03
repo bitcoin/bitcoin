@@ -448,11 +448,11 @@ class ImportMultiTest (BitcoinTestFramework):
 
         # Bad or missing timestamps
         self.log.info("Should throw on invalid or missing timestamp values")
-        assert_raises_message(JSONRPCException, 'Missing required timestamp field for key',
+        assert_raises_rpc_error(-3, 'Missing required timestamp field for key',
             self.nodes[1].importmulti, [{
                 "scriptPubKey": address['scriptPubKey'],
             }])
-        assert_raises_message(JSONRPCException, 'Expected number or "now" timestamp value for key. got type string',
+        assert_raises_rpc_error(-3, 'Expected number or "now" timestamp value for key. got type string',
             self.nodes[1].importmulti, [{
                 "scriptPubKey": address['scriptPubKey'],
                 "timestamp": "",

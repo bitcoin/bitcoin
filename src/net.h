@@ -33,7 +33,6 @@
 #include <arpa/inet.h>
 #endif
 
-#include <boost/signals2/signal.hpp>
 
 class CScheduler;
 class CNode;
@@ -116,7 +115,7 @@ struct CSerializedNetMsg
     std::string command;
 };
 
-
+class NetEventsInterface;
 class CConnman
 {
 public:
@@ -138,6 +137,7 @@ public:
         int nMaxFeeler = 0;
         int nBestHeight = 0;
         CClientUIInterface* uiInterface = nullptr;
+        NetEventsInterface* m_msgproc = nullptr;
         unsigned int nSendBufferMaxSize = 0;
         unsigned int nReceiveFloodSize = 0;
         uint64_t nMaxOutboundTimeframe = 0;
@@ -156,6 +156,7 @@ public:
         nMaxFeeler = connOptions.nMaxFeeler;
         nBestHeight = connOptions.nBestHeight;
         clientInterface = connOptions.uiInterface;
+        m_msgproc = connOptions.m_msgproc;
         nSendBufferMaxSize = connOptions.nSendBufferMaxSize;
         nReceiveFloodSize = connOptions.nReceiveFloodSize;
         nMaxOutboundTimeframe = connOptions.nMaxOutboundTimeframe;
@@ -170,7 +171,7 @@ public:
     void Interrupt();
     bool GetNetworkActive() const { return fNetworkActive; };
     void SetNetworkActive(bool active);
-    bool OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant *grantOutbound = nullptr, const char *strDest = nullptr, bool fOneShot = false, bool fFeeler = false, bool fAddnode = false);
+    bool OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant *grantOutbound = nullptr, const char *strDest = nullptr, bool fOneShot = false, bool fFeeler = false, bool manual_connection = false);
     bool CheckIncomingNonce(uint64_t nonce);
 
     bool ForNode(NodeId id, std::function<bool(CNode* pnode)> func);
@@ -249,6 +250,19 @@ public:
     bool Unban(const CSubNet &ip);
     void GetBanned(banmap_t &banmap);
     void SetBanned(const banmap_t &banmap);
+
+    // This allows temporarily exceeding nMaxOutbound, with the goal of finding
+    // a peer that is better than all our current peers.
+    void SetTryNewOutboundPeer(bool flag);
+    bool GetTryNewOutboundPeer();
+
+    // Return the number of outbound peers we have in excess of our target (eg,
+    // if we previously called SetTryNewOutboundPeer(true), and have since set
+    // to false, we may have extra peers that we wish to disconnect). This may
+    // return a value less than (num_outbound_connections - num_outbound_slots)
+    // in cases where some outbound connections are not yet fully connected, or
+    // not yet fully disconnected.
+    int GetExtraOutboundCount();
 
     bool AddNode(const std::string& node);
     bool RemoveAddedNode(const std::string& node);
@@ -396,6 +410,7 @@ private:
     int nMaxFeeler;
     std::atomic<int> nBestHeight;
     CClientUIInterface* clientInterface;
+    NetEventsInterface* m_msgproc;
 
     /** SipHasher seeds for deterministic randomness */
     const uint64_t nSeed0, nSeed1;
@@ -414,6 +429,13 @@ private:
     std::thread threadOpenAddedConnections;
     std::thread threadOpenConnections;
     std::thread threadMessageHandler;
+
+    /** flag for deciding to connect to an extra outbound peer,
+     *  in excess of nMaxOutbound
+     *  This takes the place of a feeler connection */
+    std::atomic_bool m_try_another_outbound_peer;
+
+    friend struct CConnmanTest;
 };
 extern std::unique_ptr<CConnman> g_connman;
 void Discover(boost::thread_group& threadGroup);
@@ -436,18 +458,17 @@ struct CombinerAll
     }
 };
 
-// Signals for message handling
-struct CNodeSignals
+/**
+ * Interface for message handling
+ */
+class NetEventsInterface
 {
-    boost::signals2::signal<bool (CNode*, CConnman&, std::atomic<bool>&), CombinerAll> ProcessMessages;
-    boost::signals2::signal<bool (CNode*, CConnman&, std::atomic<bool>&), CombinerAll> SendMessages;
-    boost::signals2::signal<void (CNode*, CConnman&)> InitializeNode;
-    boost::signals2::signal<void (NodeId, bool&)> FinalizeNode;
+public:
+    virtual bool ProcessMessages(CNode* pnode, std::atomic<bool>& interrupt) = 0;
+    virtual bool SendMessages(CNode* pnode, std::atomic<bool>& interrupt) = 0;
+    virtual void InitializeNode(CNode* pnode) = 0;
+    virtual void FinalizeNode(NodeId id, bool& update_connection_time) = 0;
 };
-
-
-CNodeSignals& GetNodeSignals();
-
 
 enum
 {
@@ -508,7 +529,7 @@ public:
     int nVersion;
     std::string cleanSubVer;
     bool fInbound;
-    bool fAddnode;
+    bool m_manual_connection;
     int nStartingHeight;
     uint64_t nSendBytes;
     mapMsgCmdSize mapSendBytesPerMsgCmd;
@@ -618,7 +639,7 @@ public:
     bool fWhitelisted; // This peer can bypass DoS banning.
     bool fFeeler; // If true this node is being used as a short lived feeler.
     bool fOneShot;
-    bool fAddnode;
+    bool m_manual_connection;
     bool fClient;
     const bool fInbound;
     std::atomic_bool fSuccessfullyConnected;

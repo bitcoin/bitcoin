@@ -193,12 +193,15 @@ void Shutdown()
     }
 #endif
     MapPort(false);
+
+    // Because these depend on each-other, we make sure that neither can be
+    // using the other before destroying them.
     UnregisterValidationInterface(peerLogic.get());
+    if(g_connman) g_connman->Stop();
     peerLogic.reset();
     g_connman.reset();
 
     StopTorControl();
-    UnregisterNodeSignals(GetNodeSignals());
     if (fDumpMempoolLater && gArgs.GetArg("-persistmempool", DEFAULT_PERSIST_MEMPOOL)) {
         DumpMempool();
     }
@@ -362,6 +365,9 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += HelpMessageOpt("-maxorphantx=<n>", strprintf(_("Keep at most <n> unconnectable transactions in memory (default: %u)"), DEFAULT_MAX_ORPHAN_TRANSACTIONS));
     strUsage += HelpMessageOpt("-maxmempool=<n>", strprintf(_("Keep the transaction memory pool below <n> megabytes (default: %u)"), DEFAULT_MAX_MEMPOOL_SIZE));
     strUsage += HelpMessageOpt("-mempoolexpiry=<n>", strprintf(_("Do not keep transactions in the mempool longer than <n> hours (default: %u)"), DEFAULT_MEMPOOL_EXPIRY));
+    if (showDebug) {
+        strUsage += HelpMessageOpt("-minimumchainwork=<hex>", strprintf("Minimum work assumed to exist on a valid chain in hex (default: %s, testnet: %s)", defaultChainParams->GetConsensus().nMinimumChainWork.GetHex(), testnetChainParams->GetConsensus().nMinimumChainWork.GetHex()));
+    }
     strUsage += HelpMessageOpt("-persistmempool", strprintf(_("Whether to save the mempool on shutdown and load on restart (default: %u)"), DEFAULT_PERSIST_MEMPOOL));
     strUsage += HelpMessageOpt("-blockreconstructionextratxn=<n>", strprintf(_("Extra transactions to keep in memory for compact block reconstructions (default: %u)"), DEFAULT_BLOCK_RECONSTRUCTION_EXTRA_TXN));
     strUsage += HelpMessageOpt("-par=<n>", strprintf(_("Set the number of script verification threads (%u to %d, 0 = auto, <0 = leave that many cores free, default: %d)"),
@@ -494,7 +500,7 @@ std::string HelpMessage(HelpMessageMode mode)
 
     strUsage += HelpMessageGroup(_("Block creation options:"));
     strUsage += HelpMessageOpt("-blockmaxweight=<n>", strprintf(_("Set maximum BIP141 block weight (default: %d)"), DEFAULT_BLOCK_MAX_WEIGHT));
-    strUsage += HelpMessageOpt("-blockmaxsize=<n>", strprintf(_("Set maximum block size in bytes (default: %d)"), DEFAULT_BLOCK_MAX_SIZE));
+    strUsage += HelpMessageOpt("-blockmaxsize=<n>", _("Set maximum BIP141 block weight to this * 4. Deprecated, use blockmaxweight"));
     strUsage += HelpMessageOpt("-blockmintxfee=<amt>", strprintf(_("Set lowest fee rate (in %s/kB) for transactions to be included in block creation. (default: %s)"), CURRENCY_UNIT, FormatMoney(DEFAULT_BLOCK_MIN_TX_FEE)));
     if (showDebug)
         strUsage += HelpMessageOpt("-blockversion=<n>", "Override block version to test forking scenarios");
@@ -796,6 +802,15 @@ void InitParameterInteraction()
         if (gArgs.SoftSetBoolArg("-whitelistrelay", true))
             LogPrintf("%s: parameter interaction: -whitelistforcerelay=1 -> setting -whitelistrelay=1\n", __func__);
     }
+
+    if (gArgs.IsArgSet("-blockmaxsize")) {
+        unsigned int max_size = gArgs.GetArg("-blockmaxsize", 0);
+        if (gArgs.SoftSetArg("blockmaxweight", strprintf("%d", max_size * WITNESS_SCALE_FACTOR))) {
+            LogPrintf("%s: parameter interaction: -blockmaxsize=%d -> setting -blockmaxweight=%d (-blockmaxsize is deprecated!)\n", __func__, max_size, max_size * WITNESS_SCALE_FACTOR);
+        } else {
+            LogPrintf("%s: Ignoring blockmaxsize setting which is overridden by blockmaxweight", __func__);
+        }
+    }
 }
 
 static std::string ResolveErrMsg(const char * const optname, const std::string& strBind)
@@ -978,6 +993,20 @@ bool AppInitParameterInteraction()
         LogPrintf("Assuming ancestors of block %s have valid signatures.\n", hashAssumeValid.GetHex());
     else
         LogPrintf("Validating signatures for all blocks.\n");
+
+    if (gArgs.IsArgSet("-minimumchainwork")) {
+        const std::string minChainWorkStr = gArgs.GetArg("-minimumchainwork", "");
+        if (!IsHexNumber(minChainWorkStr)) {
+            return InitError(strprintf("Invalid non-hex (%s) minimum chain work value specified", minChainWorkStr));
+        }
+        nMinimumChainWork = UintToArith256(uint256S(minChainWorkStr));
+    } else {
+        nMinimumChainWork = UintToArith256(chainparams.GetConsensus().nMinimumChainWork);
+    }
+    LogPrintf("Setting nMinimumChainWork=%s\n", nMinimumChainWork.GetHex());
+    if (nMinimumChainWork < UintToArith256(chainparams.GetConsensus().nMinimumChainWork)) {
+        LogPrintf("Warning: nMinimumChainWork set below default value of %s\n", chainparams.GetConsensus().nMinimumChainWork.GetHex());
+    }
 
     // mempool limits
     int64_t nMempoolSizeMax = gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000;
@@ -1258,9 +1287,8 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     g_connman = std::unique_ptr<CConnman>(new CConnman(GetRand(std::numeric_limits<uint64_t>::max()), GetRand(std::numeric_limits<uint64_t>::max())));
     CConnman& connman = *g_connman;
 
-    peerLogic.reset(new PeerLogicValidation(&connman));
+    peerLogic.reset(new PeerLogicValidation(&connman, scheduler));
     RegisterValidationInterface(peerLogic.get());
-    RegisterNodeSignals(GetNodeSignals());
 
     // sanitize comments per BIP-0014, format user agent and check total size
     std::vector<std::string> uacomments;
@@ -1651,6 +1679,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     connOptions.nMaxFeeler = 1;
     connOptions.nBestHeight = chainActive.Height();
     connOptions.uiInterface = &uiInterface;
+    connOptions.m_msgproc = peerLogic.get();
     connOptions.nSendBufferMaxSize = 1000*gArgs.GetArg("-maxsendbuffer", DEFAULT_MAXSENDBUFFER);
     connOptions.nReceiveFloodSize = 1000*gArgs.GetArg("-maxreceivebuffer", DEFAULT_MAXRECEIVEBUFFER);
 

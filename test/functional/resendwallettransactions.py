@@ -5,7 +5,7 @@
 """Test resendwallettransactions RPC."""
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal, assert_raises_jsonrpc
+from test_framework.util import assert_equal, assert_raises_rpc_error
 
 class ResendWalletTransactionsTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -14,7 +14,7 @@ class ResendWalletTransactionsTest(BitcoinTestFramework):
 
     def run_test(self):
         # Should raise RPC_WALLET_ERROR (-4) if walletbroadcast is disabled.
-        assert_raises_jsonrpc(-4, "Error: Wallet transaction broadcasting is disabled with -walletbroadcast", self.nodes[0].resendwallettransactions)
+        assert_raises_rpc_error(-4, "Error: Wallet transaction broadcasting is disabled with -walletbroadcast", self.nodes[0].resendwallettransactions)
 
         # Should return an empty array if there aren't unconfirmed wallet transactions.
         self.stop_node(0)

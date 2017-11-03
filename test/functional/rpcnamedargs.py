@@ -7,7 +7,7 @@
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
-    assert_raises_jsonrpc,
+    assert_raises_rpc_error,
 )
 
 class NamedArgumentTest(BitcoinTestFramework):
@@ -19,7 +19,7 @@ class NamedArgumentTest(BitcoinTestFramework):
         h = node.help(command='getinfo')
         assert(h.startswith('getinfo\n'))
 
-        assert_raises_jsonrpc(-8, 'Unknown named parameter', node.help, random='getinfo')
+        assert_raises_rpc_error(-8, 'Unknown named parameter', node.help, random='getinfo')
 
         h = node.getblockhash(height=0)
         node.getblock(blockhash=h)

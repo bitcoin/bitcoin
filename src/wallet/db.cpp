@@ -20,6 +20,40 @@
 
 #include <boost/thread.hpp>
 
+namespace {
+//! Make sure database has a unique fileid within the environment. If it
+//! doesn't, throw an error. BDB caches do not work properly when more than one
+//! open database has the same fileid (values written to one database may show
+//! up in reads to other databases).
+//!
+//! BerkeleyDB generates unique fileids by default
+//! (https://docs.oracle.com/cd/E17275_01/html/programmer_reference/program_copy.html),
+//! so bitcoin should never create different databases with the same fileid, but
+//! this error can be triggered if users manually copy database files.
+void CheckUniqueFileid(const CDBEnv& env, const std::string& filename, Db& db)
+{
+    if (env.IsMock()) return;
+
+    u_int8_t fileid[DB_FILE_ID_LEN];
+    int ret = db.get_mpf()->get_fileid(fileid);
+    if (ret != 0) {
+        throw std::runtime_error(strprintf("CDB: Can't open database %s (get_fileid failed with %d)", filename, ret));
+    }
+
+    for (const auto& item : env.mapDb) {
+        u_int8_t item_fileid[DB_FILE_ID_LEN];
+        if (item.second && item.second->get_mpf()->get_fileid(item_fileid) == 0 &&
+            memcmp(fileid, item_fileid, sizeof(fileid)) == 0) {
+            const char* item_filename = nullptr;
+            item.second->get_dbname(&item_filename, nullptr);
+            throw std::runtime_error(strprintf("CDB: Can't open database %s (duplicates fileid %s from %s)", filename,
+                HexStr(std::begin(item_fileid), std::end(item_fileid)),
+                item_filename ? item_filename : "(unknown database)"));
+        }
+    }
+}
+} // namespace
+
 //
 // CDB
 //
@@ -379,35 +413,34 @@ CDB::CDB(CWalletDBWrapper& dbw, const char* pszMode, bool fFlushOnCloseIn) : pdb
         if (!env->Open(GetDataDir()))
             throw std::runtime_error("CDB: Failed to open database environment.");
 
-        strFile = strFilename;
-        ++env->mapFileUseCount[strFile];
-        pdb = env->mapDb[strFile];
+        pdb = env->mapDb[strFilename];
         if (pdb == nullptr) {
             int ret;
-            pdb = new Db(env->dbenv, 0);
+            std::unique_ptr<Db> pdb_temp(new Db(env->dbenv, 0));
 
             bool fMockDb = env->IsMock();
             if (fMockDb) {
-                DbMpoolFile* mpf = pdb->get_mpf();
+                DbMpoolFile* mpf = pdb_temp->get_mpf();
                 ret = mpf->set_flags(DB_MPOOL_NOFILE, 1);
-                if (ret != 0)
-                    throw std::runtime_error(strprintf("CDB: Failed to configure for no temp file backing for database %s", strFile));
+                if (ret != 0) {
+                    throw std::runtime_error(strprintf("CDB: Failed to configure for no temp file backing for database %s", strFilename));
+                }
             }
 
-            ret = pdb->open(nullptr,                               // Txn pointer
-                            fMockDb ? nullptr : strFile.c_str(),   // Filename
-                            fMockDb ? strFile.c_str() : "main", // Logical db name
-                            DB_BTREE,                           // Database type
-                            nFlags,                             // Flags
+            ret = pdb_temp->open(nullptr,                             // Txn pointer
+                            fMockDb ? nullptr : strFilename.c_str(),  // Filename
+                            fMockDb ? strFilename.c_str() : "main",   // Logical db name
+                            DB_BTREE,                                 // Database type
+                            nFlags,                                   // Flags
                             0);
 
             if (ret != 0) {
-                delete pdb;
-                pdb = nullptr;
-                --env->mapFileUseCount[strFile];
-                strFile = "";
                 throw std::runtime_error(strprintf("CDB: Error %d, can't open database %s", ret, strFilename));
             }
+            CheckUniqueFileid(*env, strFilename, *pdb_temp);
+
+            pdb = pdb_temp.release();
+            env->mapDb[strFilename] = pdb;
 
             if (fCreate && !Exists(std::string("version"))) {
                 bool fTmp = fReadOnly;
@@ -415,9 +448,9 @@ CDB::CDB(CWalletDBWrapper& dbw, const char* pszMode, bool fFlushOnCloseIn) : pdb
                 WriteVersion(CLIENT_VERSION);
                 fReadOnly = fTmp;
             }
-
-            env->mapDb[strFile] = pdb;
         }
+        ++env->mapFileUseCount[strFilename];
+        strFile = strFilename;
     }
 }
 
@@ -673,6 +706,11 @@ bool CWalletDBWrapper::Backup(const std::string& strDest)
                     pathDest /= strFile;
 
                 try {
+                    if (fs::equivalent(pathSrc, pathDest)) {
+                        LogPrintf("cannot backup to wallet source file %s\n", pathDest.string());
+                        return false;
+                    }
+
                     fs::copy_file(pathSrc, pathDest, fs::copy_option::overwrite_if_exists);
                     LogPrintf("copied %s to %s\n", strFile, pathDest.string());
                     return true;
