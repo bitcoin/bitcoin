@@ -114,6 +114,15 @@ public:
      * main thread, do not call any other HTTPRequest methods after calling this.
      */
     void WriteReply(int nStatus, const std::string& strReply = "");
+
+    /**
+     * Write HTTP reply from the callback thread
+     *
+     * @note Behavior is exactly the same as WriteReply, except that the send queue
+     * is bypassed. This should _only_ be called from inside the request
+     * callback, the from any other thread is undefined.
+     */
+    void WriteReplyImmediate(int nStatus, const std::string& strReply = "");
 };
 
 /** Event handler closure.
