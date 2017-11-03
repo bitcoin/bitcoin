@@ -1175,7 +1175,6 @@ void setupOfferIndexes() {
 	const char *collection_name = "offer";
 	char *index_name;
 	bson_t reply;
-	char *reply_str;
 	bson_error_t error;
 	bool r;
 	bson_t *create_indexes;
@@ -1207,7 +1206,6 @@ void setupOfferIndexes() {
 	}
 	bson_destroy(&keys);
 	bson_free(index_name);
-	bson_free(reply_str);
 	bson_destroy(&reply);
 	bson_destroy(create_indexes);
 }
@@ -1216,7 +1214,6 @@ void setupEscrowIndexes() {
 	const char *collection_name = "escrow";
 	char *index_name;
 	bson_t reply;
-	char *reply_str;
 	bson_error_t error;
 	bool r;
 	bson_t *create_indexes;
@@ -1247,7 +1244,6 @@ void setupEscrowIndexes() {
 	}
 	bson_destroy(&keys);
 	bson_free(index_name);
-	bson_free(reply_str);
 	bson_destroy(&reply);
 	bson_destroy(create_indexes);
 }
@@ -1256,7 +1252,6 @@ void setupEscrowBidIndexes() {
 	const char *collection_name = "escrowbid";
 	char *index_name;
 	bson_t reply;
-	char *reply_str;
 	bson_error_t error;
 	bool r;
 	bson_t *create_indexes;
@@ -1286,7 +1281,6 @@ void setupEscrowBidIndexes() {
 	}
 	bson_destroy(&keys);
 	bson_free(index_name);
-	bson_free(reply_str);
 	bson_destroy(&reply);
 	bson_destroy(create_indexes);
 }
@@ -1295,7 +1289,6 @@ void setupCertIndexes() {
 	const char *collection_name = "cert";
 	char *index_name;
 	bson_t reply;
-	char *reply_str;
 	bson_error_t error;
 	bool r;
 	bson_t *create_indexes;
@@ -1325,7 +1318,6 @@ void setupCertIndexes() {
 	}
 	bson_destroy(&keys);
 	bson_free(index_name);
-	bson_free(reply_str);
 	bson_destroy(&reply);
 	bson_destroy(create_indexes);
 }
@@ -1334,7 +1326,6 @@ void setupFeedbackIndexes() {
 	const char *collection_name = "feedback";
 	char *index_name;
 	bson_t reply;
-	char *reply_str;
 	bson_error_t error;
 	bool r;
 	bson_t *create_indexes;
@@ -1365,7 +1356,6 @@ void setupFeedbackIndexes() {
 	}
 	bson_destroy(&keys);
 	bson_free(index_name);
-	bson_free(reply_str);
 	bson_destroy(&reply);
 	bson_destroy(create_indexes);
 }
