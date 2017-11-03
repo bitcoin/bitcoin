@@ -50,7 +50,7 @@ struct CUpdatedBlock
     int height;
 };
 
-static CWaitableCriticalSection cs_blockchange;
+static Mutex cs_blockchange;
 static std::condition_variable cond_blockchange;
 static CUpdatedBlock latestblock;
 
