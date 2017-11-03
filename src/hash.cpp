@@ -7,6 +7,9 @@
 #include "crypto/hmac_sha512.h"
 #include "pubkey.h"
 
+//TODO remove these
+double algoHashTotal[16];
+int algoHashHits[16];
 
 inline uint32_t ROTL32(uint32_t x, int8_t r)
 {
