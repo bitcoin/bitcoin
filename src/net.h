@@ -673,7 +673,6 @@ protected:
 
 public:
     uint256 hashContinue;
-    std::atomic<int> nStartingHeight;
 
     // flood relay
     std::vector<CAddress> vAddrToSend;

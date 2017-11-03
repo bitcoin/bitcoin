@@ -209,6 +209,8 @@ struct CNodeState {
      * otherwise: whether this peer sends non-witnesses in cmpctblocks/blocktxns.
      */
     bool fSupportsDesiredCmpctVersion;
+    //! The height this peer claimed to have in their version message
+    int nStartingHeight;
 
     /** State used to enforce CHAIN_SYNC_TIMEOUT
       * Only in effect for outbound, non-manual connections, with
@@ -262,6 +264,7 @@ struct CNodeState {
         fHaveWitness = false;
         fWantsCmpctWitness = false;
         fSupportsDesiredCmpctVersion = false;
+        nStartingHeight = -1;
         m_chain_sync = { 0, nullptr, false, false };
         m_last_block_announcement = 0;
     }
@@ -621,6 +624,7 @@ bool GetNodeStateStats(NodeId nodeid, CNodeStateStats &stats) {
     if (state == nullptr)
         return false;
     stats.nMisbehavior = state->nMisbehavior;
+    stats.nStartingHeight = state->nStartingHeight;
     stats.nSyncHeight = state->pindexBestKnownBlock ? state->pindexBestKnownBlock->nHeight : -1;
     stats.nCommonHeight = state->pindexLastCommonBlock ? state->pindexLastCommonBlock->nHeight : -1;
     for (const QueuedBlock& queue : state->vBlocksInFlight) {
@@ -904,14 +908,16 @@ void PeerLogicValidation::UpdatedBlockTip(const CBlockIndex *pindexNew, const CB
                 break;
             }
         }
+        LOCK(cs_main);
         // Relay inventory, but don't relay old inventory during initial block download.
-        connman->ForEachNode([nNewHeight, &vHashes](CNode* pnode) {
-            if (nNewHeight > (pnode->nStartingHeight != -1 ? pnode->nStartingHeight - 2000 : 0)) {
+        for (auto& node : mapNodeState) {
+            CNodeState& nodestate = node.second;
+            if (nNewHeight > (nodestate.nStartingHeight != -1 ? nodestate.nStartingHeight - 2000 : 0)) {
                 for (const uint256& hash : reverse_iterate(vHashes)) {
-                    pnode->PushBlockHash(hash);
+                    nodestate.connection->PushBlockHash(hash);
                 }
             }
-        });
+        }
         connman->WakeMessageHandler();
     }
 
@@ -1369,7 +1375,7 @@ bool static ProcessHeadersMessage(CNode *pfrom, CConnman *connman, const std::ve
             // Headers message had its maximum size; the peer may have more headers.
             // TODO: optimize: if pindexLast is an ancestor of chainActive.Tip or pindexBestHeader, continue
             // from there instead.
-            LogPrint(BCLog::NET, "more getheaders (%d) to end to peer=%d (startheight:%d)\n", pindexLast->nHeight, pfrom->GetId(), pfrom->nStartingHeight);
+            LogPrint(BCLog::NET, "more getheaders (%d) to end to peer=%d (startheight:%d)\n", pindexLast->nHeight, pfrom->GetId(), nodestate->nStartingHeight);
             connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::GETHEADERS, chainActive.GetLocator(pindexLast), uint256()));
         }
 
@@ -1607,7 +1613,10 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             pfrom->strSubVer = strSubVer;
             pfrom->cleanSubVer = cleanSubVer;
         }
-        pfrom->nStartingHeight = nStartingHeight;
+        {
+            LOCK(cs_main);
+            State(pfrom->GetId())->nStartingHeight = nStartingHeight;
+        }
         pfrom->fClient = !(nServices & NODE_NETWORK);
         {
             LOCK(pfrom->cs_filter);
@@ -1663,7 +1672,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
 
         LogPrintf("receive version message: %s: version %d, blocks=%d, us=%s, peer=%d%s\n",
                   cleanSubVer, pfrom->nVersion,
-                  pfrom->nStartingHeight, addrMe.ToString(), pfrom->GetId(),
+                  nStartingHeight, addrMe.ToString(), pfrom->GetId(),
                   remoteAddr);
 
         int64_t nTimeOffset = nTime - GetTime();
@@ -3222,7 +3231,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto, std::atomic<bool>& interruptM
                    got back an empty response.  */
                 if (pindexStart->pprev)
                     pindexStart = pindexStart->pprev;
-                LogPrint(BCLog::NET, "initial getheaders (%d) to peer=%d (startheight:%d)\n", pindexStart->nHeight, pto->GetId(), pto->nStartingHeight);
+                LogPrint(BCLog::NET, "initial getheaders (%d) to peer=%d (startheight:%d)\n", pindexStart->nHeight, pto->GetId(), state.nStartingHeight);
                 connman->PushMessage(pto, msgMaker.Make(NetMsgType::GETHEADERS, chainActive.GetLocator(pindexStart), uint256()));
             }
         }

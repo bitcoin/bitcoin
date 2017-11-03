@@ -685,7 +685,6 @@ void CNode::copyStats(CNodeStats &stats)
     }
     X(fInbound);
     X(m_manual_connection);
-    X(nStartingHeight);
     {
         LOCK(cs_vSend);
         X(mapSendBytesPerMsgCmd);
@@ -2759,7 +2758,6 @@ CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn
     nSendSize = 0;
     nSendOffset = 0;
     hashContinue = uint256();
-    nStartingHeight = -1;
     filterInventoryKnown.reset();
     fSendMempool = false;
     fGetAddr = false;

@@ -71,6 +71,7 @@ private:
 
 struct CNodeStateStats {
     int nMisbehavior;
+    int nStartingHeight;
     int nSyncHeight;
     int nCommonHeight;
     std::vector<int> vHeightInFlight;
