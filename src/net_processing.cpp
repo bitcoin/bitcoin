@@ -129,7 +129,7 @@ namespace {
     int g_outbound_peers_with_protect_from_disconnect = 0;
 
     /** When our tip was last updated. */
-    int64_t g_last_tip_update = 0;
+    int64_t g_last_tip_update GUARDED_BY(cs_main) = 0;
 
     /** Relay map, protected by cs_main. */
     typedef std::map<uint256, CTransactionRef> MapRelay;
@@ -435,7 +435,7 @@ void MaybeSetPeerAsAnnouncingHeaderAndIDs(NodeId nodeid, CConnman* connman) EXCL
     }
 }
 
-bool TipMayBeStale(const Consensus::Params &consensusParams)
+bool TipMayBeStale(const Consensus::Params &consensusParams) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     AssertLockHeld(cs_main);
     if (g_last_tip_update == 0) {
