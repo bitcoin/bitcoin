@@ -296,7 +296,7 @@ void RandAddSeedSleep()
 }
 
 
-static CWaitableCriticalSection cs_rng_state;
+static Mutex cs_rng_state;
 static unsigned char rng_state[32] = {0};
 static uint64_t rng_counter = 0;
 
