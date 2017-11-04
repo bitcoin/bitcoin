@@ -717,8 +717,6 @@ public:
     std::atomic<int64_t> nPingUsecTime;
     // Best measured round-trip time.
     std::atomic<int64_t> nMinPingUsecTime;
-    // Whether a ping is requested.
-    std::atomic<bool> fPingQueued;
     // Minimum fee rate with which to filter inv's to this node
     CAmount minFeeFilter;
     CCriticalSection cs_feeFilter;

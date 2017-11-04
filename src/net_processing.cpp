@@ -211,6 +211,8 @@ struct CNodeState {
     bool fSupportsDesiredCmpctVersion;
     //! The height this peer claimed to have in their version message
     int nStartingHeight;
+    //! Whether we should send this peer a ping immediately
+    bool fPingQueued;
 
     /** State used to enforce CHAIN_SYNC_TIMEOUT
       * Only in effect for outbound, non-manual connections, with
@@ -265,6 +267,7 @@ struct CNodeState {
         fWantsCmpctWitness = false;
         fSupportsDesiredCmpctVersion = false;
         nStartingHeight = -1;
+        fPingQueued = false;
         m_chain_sync = { 0, nullptr, false, false };
         m_last_block_announcement = 0;
     }
@@ -1002,6 +1005,14 @@ void RelayTransaction(const uint256& tx_hash, CConnman* connman)
     CInv inv(MSG_TX, tx_hash);
     for (auto& node : mapNodeState) {
         node.second.connection->PushInventory(inv);
+    }
+}
+
+void QueuePingForAllPeers()
+{
+    LOCK(cs_main);
+    for (auto& node : mapNodeState) {
+        node.second.fPingQueued = true;
     }
 }
 
@@ -3133,11 +3144,19 @@ bool PeerLogicValidation::SendMessages(CNode* pto, std::atomic<bool>& interruptM
         // If we get here, the outgoing message serialization version is set and can't change.
         const CNetMsgMaker msgMaker(pto->GetSendVersion());
 
+        TRY_LOCK(cs_main, lockMain); // Acquire cs_main for IsInitialBlockDownload() and CNodeState()
+        if (!lockMain)
+            return true;
+
+        if (SendRejectsAndCheckIfBanned(pto, connman))
+            return true;
+        CNodeState &state = *State(pto->GetId());
+
         //
         // Message: ping
         //
         bool pingSend = false;
-        if (pto->fPingQueued) {
+        if (state.fPingQueued) {
             // RPC ping request by user
             pingSend = true;
         }
@@ -3150,7 +3169,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto, std::atomic<bool>& interruptM
             while (nonce == 0) {
                 GetRandBytes((unsigned char*)&nonce, sizeof(nonce));
             }
-            pto->fPingQueued = false;
+            state.fPingQueued = false;
             pto->nPingUsecStart = GetTimeMicros();
             if (pto->nVersion > BIP0031_VERSION) {
                 pto->nPingNonceSent = nonce;
@@ -3161,14 +3180,6 @@ bool PeerLogicValidation::SendMessages(CNode* pto, std::atomic<bool>& interruptM
                 connman->PushMessage(pto, msgMaker.Make(NetMsgType::PING));
             }
         }
-
-        TRY_LOCK(cs_main, lockMain); // Acquire cs_main for IsInitialBlockDownload() and CNodeState()
-        if (!lockMain)
-            return true;
-
-        if (SendRejectsAndCheckIfBanned(pto, connman))
-            return true;
-        CNodeState &state = *State(pto->GetId());
 
         // Address refresh broadcast
         int64_t nNow = GetTimeMicros();

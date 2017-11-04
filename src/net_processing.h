@@ -83,5 +83,7 @@ bool GetNodeStateStats(NodeId nodeid, CNodeStateStats &stats);
 void Misbehaving(NodeId nodeid, int howmuch);
 /** Relay a transaction that is in mempool to all our peers */
 void RelayTransaction(const uint256& tx_hash, CConnman* connman);
+/** Send all of our peers a ping */
+void QueuePingForAllPeers();
 
 #endif // BITCOIN_NET_PROCESSING_H
