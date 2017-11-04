@@ -172,9 +172,12 @@ IoPGUI::IoPGUI(const PlatformStyle *_platformStyle, const NetworkStyle *networkS
                     "#checkBoxCoinControlChange { padding-left: 5px }"
                     "QFrame {border: none} "
                     "QToolbar {border: none} "
-                    "#frameFeeSelection {border: none}"
-                    //"#frame {border: none}"
-                    //"#frame_2 {border: none}"
+                    "#frameFeeSelection {border: none}" //inner fee Selection frame, should be borderless!
+                    "#frame {border: none}" //balances frame
+                    "#frame_2 {border: none}" //recent transactions
+                    "#SendCoins {border: none}" //sendcoins top frame
+                    //"#frameFee {border: none}" //sendcoins lower frame
+                    "#frame2 {border: none}" //receive coins
                 );
     }
 
@@ -330,7 +333,6 @@ IoPGUI::~IoPGUI()
 void IoPGUI::createActions()
 {
     QActionGroup *tabGroup = new QActionGroup(this);
-
     overviewAction = new QAction(platformStyle->SingleColorIcon(":/icons/overview"), tr("&Overview"), this);
     overviewAction->setStatusTip(tr("Show general overview of wallet"));
     overviewAction->setToolTip(overviewAction->statusTip());
@@ -509,6 +511,12 @@ void IoPGUI::createToolBars()
     if(walletFrame)
     {
         QToolBar *toolbar = addToolBar(tr("Tabs toolbar"));
+        QSettings settings;
+        if(settings.value("theme").toString() == "dark")
+        {
+            //Borderless Toolbar
+            toolbar->setStyleSheet("border: none");
+        }
         toolbar->setMovable(false);
         toolbar->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
         toolbar->addAction(overviewAction);
