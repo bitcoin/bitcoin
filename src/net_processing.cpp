@@ -422,21 +422,20 @@ void MaybeSetPeerAsAnnouncingHeaderAndIDs(NodeId nodeid, CConnman* connman) {
                 return;
             }
         }
-        connman->ForNode(nodeid, [connman](CNode* pfrom){
-            uint64_t nCMPCTBLOCKVersion = (pfrom->GetLocalServices() & NODE_WITNESS) ? 2 : 1;
-            if (lNodesAnnouncingHeaderAndIDs.size() >= 3) {
-                // As per BIP152, we only get 3 of our peers to announce
-                // blocks using compact encodings.
-                connman->ForNode(lNodesAnnouncingHeaderAndIDs.front(), [connman, nCMPCTBLOCKVersion](CNode* pnodeStop){
-                    connman->PushMessage(pnodeStop, CNetMsgMaker(pnodeStop->GetSendVersion()).Make(NetMsgType::SENDCMPCT, /*fAnnounceUsingCMPCTBLOCK=*/false, nCMPCTBLOCKVersion));
-                    return true;
-                });
-                lNodesAnnouncingHeaderAndIDs.pop_front();
+        CNode* pfrom = nodestate->connection;
+        uint64_t nCMPCTBLOCKVersion = (pfrom->GetLocalServices() & NODE_WITNESS) ? 2 : 1;
+        if (lNodesAnnouncingHeaderAndIDs.size() >= 3) {
+            // As per BIP152, we only get 3 of our peers to announce
+            // blocks using compact encodings.
+            CNodeState* stop_node = State(lNodesAnnouncingHeaderAndIDs.front());
+            if (stop_node != nullptr) {
+                CNode* pnodeStop = stop_node->connection;
+                connman->PushMessage(pnodeStop, CNetMsgMaker(pnodeStop->GetSendVersion()).Make(NetMsgType::SENDCMPCT, /*fAnnounceUsingCMPCTBLOCK=*/false, nCMPCTBLOCKVersion));
             }
-            connman->PushMessage(pfrom, CNetMsgMaker(pfrom->GetSendVersion()).Make(NetMsgType::SENDCMPCT, /*fAnnounceUsingCMPCTBLOCK=*/true, nCMPCTBLOCKVersion));
-            lNodesAnnouncingHeaderAndIDs.push_back(pfrom->GetId());
-            return true;
-        });
+            lNodesAnnouncingHeaderAndIDs.pop_front();
+        }
+        connman->PushMessage(pfrom, CNetMsgMaker(pfrom->GetSendVersion()).Make(NetMsgType::SENDCMPCT, /*fAnnounceUsingCMPCTBLOCK=*/true, nCMPCTBLOCKVersion));
+        lNodesAnnouncingHeaderAndIDs.push_back(pfrom->GetId());
     }
 }
 
@@ -872,12 +871,13 @@ void PeerLogicValidation::NewPoWValidBlock(const CBlockIndex *pindex, const std:
         fWitnessesPresentInMostRecentCompactBlock = fWitnessEnabled;
     }
 
-    connman->ForEachNode([this, &pcmpctblock, pindex, &msgMaker, fWitnessEnabled, &hashBlock](CNode* pnode) {
+    for (auto& node : mapNodeState) {
+        CNode* pnode = node.second.connection;
         // TODO: Avoid the repeated-serialization here
         if (pnode->nVersion < INVALID_CB_NO_BAN_VERSION || pnode->fDisconnect)
-            return;
-        ProcessBlockAvailability(pnode->GetId());
-        CNodeState &state = *State(pnode->GetId());
+            continue;
+        ProcessBlockAvailability(node.first);
+        CNodeState &state = node.second;
         // If the peer has, or we announced to them the previous block already,
         // but we don't think they have this one, go ahead and announce it
         if (state.fPreferHeaderAndIDs && (!fWitnessEnabled || state.fWantsCmpctWitness) &&
@@ -888,7 +888,7 @@ void PeerLogicValidation::NewPoWValidBlock(const CBlockIndex *pindex, const std:
             connman->PushMessage(pnode, msgMaker.Make(NetMsgType::CMPCTBLOCK, *pcmpctblock));
             state.pindexBestHeaderSent = pindex;
         }
-    });
+    }
 }
 
 void PeerLogicValidation::UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) {
@@ -997,11 +997,12 @@ bool static AlreadyHave(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 
 static void RelayTransaction(const CTransaction& tx, CConnman* connman)
 {
+    AssertLockHeld(cs_main);
+
     CInv inv(MSG_TX, tx.GetHash());
-    connman->ForEachNode([&inv](CNode* pnode)
-    {
-        pnode->PushInventory(inv);
-    });
+    for (auto& node : mapNodeState) {
+        node.second.connection->PushInventory(inv);
+    }
 }
 
 static void RelayAddress(const CAddress& addr, bool fReachable, CConnman* connman)
@@ -1018,9 +1019,11 @@ static void RelayAddress(const CAddress& addr, bool fReachable, CConnman* connma
     std::array<std::pair<uint64_t, CNode*>,2> best{{{0, nullptr}, {0, nullptr}}};
     assert(nRelayNodes <= best.size());
 
-    auto sortfunc = [&best, &hasher, nRelayNodes](CNode* pnode) {
+    LOCK(cs_main);
+    for (auto& node : mapNodeState) {
+        CNode* pnode = node.second.connection;
         if (pnode->nVersion >= CADDR_TIME_VERSION) {
-            uint64_t hashKey = CSipHasher(hasher).Write(pnode->GetId()).Finalize();
+            uint64_t hashKey = CSipHasher(hasher).Write(node.first).Finalize();
             for (unsigned int i = 0; i < nRelayNodes; i++) {
                  if (hashKey > best[i].first) {
                      std::copy(best.begin() + i, best.begin() + nRelayNodes - 1, best.begin() + i + 1);
@@ -1029,15 +1032,11 @@ static void RelayAddress(const CAddress& addr, bool fReachable, CConnman* connma
                  }
             }
         }
-    };
+    }
 
-    auto pushfunc = [&addr, &best, nRelayNodes, &insecure_rand] {
-        for (unsigned int i = 0; i < nRelayNodes && best[i].first != 0; i++) {
-            best[i].second->PushAddress(addr, insecure_rand);
-        }
-    };
-
-    connman->ForEachNodeThen(std::move(sortfunc), std::move(pushfunc));
+    for (unsigned int i = 0; i < nRelayNodes && best[i].first != 0; i++) {
+        best[i].second->PushAddress(addr, insecure_rand);
+    }
 }
 
 void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParams, CConnman* connman, const std::atomic<bool>& interruptMsgProc)
@@ -3042,48 +3041,44 @@ void PeerLogicValidation::EvictExtraOutboundPeers(int64_t time_in_seconds)
         // Pick the outbound peer that least recently announced
         // us a new block, with ties broken by choosing the more recent
         // connection (higher node id)
-        NodeId worst_peer = -1;
+        CNodeState* worst_peer = nullptr;
         int64_t oldest_block_announcement = std::numeric_limits<int64_t>::max();
 
         LOCK(cs_main);
 
-        connman->ForEachNode([&](CNode* pnode) {
+        for (auto& node : mapNodeState) {
+            CNode* pnode = node.second.connection;
             // Ignore non-outbound peers, or nodes marked for disconnect already
             if (!IsOutboundDisconnectionCandidate(pnode) || pnode->fDisconnect) return;
-            CNodeState *state = State(pnode->GetId());
-            if (state == nullptr) return; // shouldn't be possible, but just in case
+            CNodeState *state = &node.second;
             // Don't evict our protected peers
             if (state->m_chain_sync.m_protect) return;
-            if (state->m_last_block_announcement < oldest_block_announcement || (state->m_last_block_announcement == oldest_block_announcement && pnode->GetId() > worst_peer)) {
-                worst_peer = pnode->GetId();
+            if (state->m_last_block_announcement < oldest_block_announcement || (state->m_last_block_announcement == oldest_block_announcement &&
+                        (!worst_peer || pnode->GetId() > worst_peer->connection->GetId()))) {
+                worst_peer = state;
                 oldest_block_announcement = state->m_last_block_announcement;
             }
-        });
-        if (worst_peer != -1) {
-            bool disconnected = connman->ForNode(worst_peer, [&](CNode *pnode) {
-                // Only disconnect a peer that has been connected to us for
-                // some reasonable fraction of our check-frequency, to give
-                // it time for new information to have arrived.
-                // Also don't disconnect any peer we're trying to download a
-                // block from.
-                CNodeState &state = *State(pnode->GetId());
-                if (time_in_seconds - pnode->nTimeConnected > MINIMUM_CONNECT_TIME && state.nBlocksInFlight == 0) {
-                    LogPrint(BCLog::NET, "disconnecting extra outbound peer=%d (last block announcement received at time %d)\n", pnode->GetId(), oldest_block_announcement);
-                    pnode->fDisconnect = true;
-                    return true;
-                } else {
-                    LogPrint(BCLog::NET, "keeping outbound peer=%d chosen for eviction (connect time: %d, blocks_in_flight: %d)\n", pnode->GetId(), pnode->nTimeConnected, state.nBlocksInFlight);
-                    return false;
-                }
-            });
-            if (disconnected) {
-                // If we disconnected an extra peer, that means we successfully
-                // connected to at least one peer after the last time we
-                // detected a stale tip. Don't try any more extra peers until
-                // we next detect a stale tip, to limit the load we put on the
-                // network from these extra connections.
-                connman->SetTryNewOutboundPeer(false);
+        }
+        if (worst_peer != nullptr) {
+            // Only disconnect a peer that has been connected to us for
+            // some reasonable fraction of our check-frequency, to give
+            // it time for new information to have arrived.
+            // Also don't disconnect any peer we're trying to download a
+            // block from.
+            CNode* pnode = worst_peer->connection;
+            if (time_in_seconds - pnode->nTimeConnected > MINIMUM_CONNECT_TIME && worst_peer->nBlocksInFlight == 0) {
+                LogPrint(BCLog::NET, "disconnecting extra outbound peer=%d (last block announcement received at time %d)\n", pnode->GetId(), oldest_block_announcement);
+                pnode->fDisconnect = true;
+            } else {
+                LogPrint(BCLog::NET, "keeping outbound peer=%d chosen for eviction (connect time: %d, blocks_in_flight: %d)\n", pnode->GetId(), pnode->nTimeConnected, worst_peer->nBlocksInFlight);
+                return;
             }
+            // If we disconnected an extra peer, that means we successfully
+            // connected to at least one peer after the last time we
+            // detected a stale tip. Don't try any more extra peers until
+            // we next detect a stale tip, to limit the load we put on the
+            // network from these extra connections.
+            connman->SetTryNewOutboundPeer(false);
         }
     }
 }
