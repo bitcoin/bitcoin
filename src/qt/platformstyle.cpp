@@ -85,6 +85,8 @@ PlatformStyle::PlatformStyle(const QString &_name, bool _imagesOnButtons, bool _
     if(settings.value("theme").toString() == "dark") 
     { 
         //dark theme
+        imagesOnButtons = true;
+        colorizeIcons = true;
         singleColor = QColor(12,175,165); 
         textColor = QColor(12,175,165);         
     } else {

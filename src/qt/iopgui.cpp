@@ -144,7 +144,8 @@ IoPGUI::IoPGUI(const PlatformStyle *_platformStyle, const NetworkStyle *networkS
                     "QAbstractSpinBox::down-arrow { border: none; padding: 0; width: 7px; height: 7px; image: url(:/icons/down_arrow) }"                    
                     "QAbstractSpinBox::up-arrow:off { border: none; padding: 0; width: 7px; height: 7px; image: url(:/icons/up_arrow_off) }"                    
                     "QAbstractSpinBox::down-arrow:off { border: none; padding: 0; width: 7px; height: 7px; image: url(:/icons/down_arrow_off) }"                    
-                    ".QFrame { border-style: solid; border-width: 1px;  border-color: rgb(119,119,119) }"
+                    //".QFrame { border: none }"
+                    ".QFrame { border-style: solid; border-width: 1px;  border-color: rgb(119,119,119) }"                    
                     //"QLabel { border-style: none; border-width: 1px;  border-color: rgb(119,119,119) }"
                     "QTableView { border: 1px solid rgb(119,119,119); selection-background-color: rgb(62,62,62); selection-color: rgb(108,200,239); alternate-background: rgb(31,31,31); }"
                     "QTableView::item { border-right: 1px solid rgb(119,119,119); border-bottom: 1px solid rgb(119,119,119);}"                    
@@ -169,6 +170,11 @@ IoPGUI::IoPGUI(const PlatformStyle *_platformStyle, const NetworkStyle *networkS
                     "#line { border: none; color: rgb(119,119,119) }"
                     "#widgetCoinControl { border: none }"
                     "#checkBoxCoinControlChange { padding-left: 5px }"
+                    "QFrame {border: none} "
+                    "QToolbar {border: none} "
+                    "#frameFeeSelection {border: none}"
+                    //"#frame {border: none}"
+                    //"#frame_2 {border: none}"
                 );
     }
 

@@ -631,7 +631,7 @@
          <item>
           <widget class="QLabel" name="ThemeLabel">
            <property name="text">
-            <string>&amp;Theme to use:</string>
+            <string>&amp;Theme:</string>
            </property>
            <property name="textFormat">
             <enum>Qt::PlainText</enum>
@@ -644,7 +644,7 @@
          <item>
           <widget class="QValueComboBox" name="theme">
            <property name="toolTip">
-            <string>Choose the theme to use.</string>
+            <string>theme</string>
            </property>
           </widget>
          </item>
