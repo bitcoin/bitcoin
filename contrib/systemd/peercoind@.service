@@ -1,0 +1,23 @@
+[Unit]
+Description=Peercoin daemon
+After=network.target 
+Conflicts=peercoind-tor@%i.service
+
+[Service]
+User=%i
+Group=users
+Type=forking
+Restart=always
+RestartSec=15
+ExecStart=/usr/bin/peercoind -daemon
+TimeoutStopSec=60s
+TimeoutStartSec=2s
+
+## security
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=full
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

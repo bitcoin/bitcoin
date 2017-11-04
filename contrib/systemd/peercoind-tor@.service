@@ -1,0 +1,25 @@
+[Unit]
+Description=Peercoin daemon - tor
+After=network.target
+Wants=tor.service
+Conflicts=peercoind@%i.service
+
+[Service]
+User=%i
+Group=users
+PermissionsStartOnly=true
+Type=forking
+Restart=always
+RestartSec=15
+ExecStart=/usr/bin/peercoind -daemon -proxy=127.0.0.1:9050
+TimeoutStopSec=60s
+TimeoutStartSec=2s
+
+## security
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=true
+NoNewPrivileges=true
+
+[Install]
+WantedBy=default.target

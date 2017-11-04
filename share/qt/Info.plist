@@ -15,7 +15,7 @@
 	<key>CFBundleSignature</key>
 	<string>????</string>
 	<key>CFBundleExecutable</key>
-	<string>Bitcoin-Qt</string>
+	<string>Peercoin-Qt</string>
 	<key>CFBundleIdentifier</key>
 	<string>org.bitcoinfoundation.Bitcoin-Qt</string>
         <key>CFBundleURLTypes</key>

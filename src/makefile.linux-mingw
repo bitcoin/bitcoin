@@ -2,10 +2,12 @@
 # Distributed under the MIT/X11 software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-DEPSDIR:=/usr/i586-mingw32msvc
+#DEPSDIR:=/usr/i586-mingw32msvc
 
-CC := i586-mingw32msvc-gcc
-CXX := i586-mingw32msvc-g++
+#CC := i586-mingw32msvc-gcc
+#CXX := i586-mingw32msvc-g++
+CC := ${HOST}-gcc
+CXX := ${HOST}-g++
 
 USE_UPNP:=0
 USE_IPV6:=1
@@ -13,15 +15,12 @@ USE_IPV6:=1
 INCLUDEPATHS= \
  -I"$(CURDIR)" \
  -I"$(CURDIR)"/obj \
- -I"$(DEPSDIR)/boost_1_50_0" \
- -I"$(DEPSDIR)/db-4.8.30.NC/build_unix" \
- -I"$(DEPSDIR)/openssl-1.0.1g/include" \
- -I"$(DEPSDIR)"
+ -I"$(DEPSDIR)/include/boost" \
+ -I"$(DEPSDIR)/include/openssl" \
+ -I"$(DEPSDIR)/include"
 
 LIBPATHS= \
- -L"$(DEPSDIR)/boost_1_50_0/stage/lib" \
- -L"$(DEPSDIR)/db-4.8.30.NC/build_unix" \
- -L"$(DEPSDIR)/openssl-1.0.1g"
+ -L"$(DEPSDIR)/lib"
 
 LIBS= \
   $(CURDIR)/leveldb/libleveldb.a $(CURDIR)/leveldb/libmemenv.a \
@@ -38,8 +37,10 @@ DEFS=-D_MT -DWIN32 -D_WINDOWS -DBOOST_THREAD_USE_LIB -DBOOST_SPIRIT_THREADSAFE
 DEBUGFLAGS=-g
 xCXXFLAGS=-O2 -w -Wall -Wextra -Wformat -Wformat-security -Wno-unused-parameter $(DEBUGFLAGS) $(DEFS) $(INCLUDEPATHS) $(CXXFLAGS)
 # enable: ASLR, DEP and large address aware
-xLDFLAGS=-Wl,--dynamicbase -Wl,--nxcompat -Wl,--large-address-aware $(LDFLAGS)
-
+xLDFLAGS=-Wl,--dynamicbase -Wl,--nxcompat $(LDFLAGS)
+ifeq (${HOST}, i686-w64-mingw32)
+	xLDFLAGS+=-Wl,--large-address-aware
+endif
 TESTDEFS = -DTEST_DATA_DIR=$(abspath test/data)
 
 ifndef USE_UPNP
@@ -48,7 +49,7 @@ endif
 ifneq (${USE_UPNP}, -)
 	LIBPATHS += -L"$(DEPSDIR)/miniupnpc"
 	LIBS += -l miniupnpc -l iphlpapi
-	DEFS += -DSTATICLIB -DUSE_UPNP=$(USE_UPNP)
+	DEFS += -DSTATICLIB -DMINIUPNP_STATICLIB -DUSE_UPNP=$(USE_UPNP)
 endif
 
 ifneq (${USE_IPV6}, -)

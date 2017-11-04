@@ -1,0 +1,225 @@
+---
+name: "peercoin-qt"
+suites:
+- "trusty"
+architectures:
+- "amd64"
+packages:
+- "clang"
+- "llvm-dev" 
+- "zip"
+- "unzip"
+- "faketime"
+- "libz-dev"
+- "ruby-full"
+- "perl"
+- "python"
+- "m4"
+- "bison"
+- "gperf"
+- "sharutils"
+reference_datetime: "2011-01-30 00:00:00"
+remotes: []
+files:
+- "qt-everywhere-opensource-src-5.5.0.tar.gz"
+- "peercoin-deps-osx-gitian-r1.tar.xz"
+- "osxcross.tar.xz"
+script: |
+  # Integrity Check
+  #
+  # Defines
+  export TZ=UTC
+  BUILDDIR=$HOME/build
+  TEMPDIR=$HOME/tmp
+  INSTALLPREFIX=$HOME/install
+  DEPSDIR=$HOME/deps
+  HOST=x86_64-apple-darwin14
+  MIN_VERSION=10.6
+  SDK_VERSION=10.10
+  SDK=${DEPSDIR}/SDK/MacOSX${SDK_VERSION}.sdk
+  #
+  # Qt: workaround for determinism in resource ordering
+  #  Qt5's rcc uses a QHash to store the files for the resource.
+  #  A security fix in QHash makes the ordering of keys to be different on every run
+  #  (https://qt.gitorious.org/qt/qtbase/commit/c01eaa438200edc9a3bbcd8ae1e8ded058bea268).
+  #  This is good in general but qrc shouldn't be doing a traversal over a randomized container.
+  #  The thorough solution would be to use QMap instead of QHash, but this requires patching Qt.
+  #  For now luckily there is a test mode that forces a fixed seed.
+  export QT_RCC_TEST=1
+  #
+  # Fix our paths 
+  export PATH="$DEPSDIR/bin:$DEPSDIR/lib:$PATH"
+  export INCLUDE="$DEPSDIR/include:$INCLUDE"
+  export LIB="$DEPSDIR/lib:$LIB"
+  #
+  mkdir -p $INSTALLPREFIX $INSTALLPREFIX/host/bin $DEPSDIR $BUILDDIR
+  #
+  cd $DEPSDIR
+  tar xf $BUILDDIR/peercoin-deps-osx-gitian-r1.tar.xz
+  tar xf $BUILDDIR/osxcross.tar.xz
+  cd $BUILDDIR
+  tar xf $BUILDDIR/qt-everywhere-opensource-src-5.5.0.tar.gz
+  #
+  QTDIR=$BUILDDIR/qt-everywhere-opensource-src-5.5.0
+  cd $QTDIR
+  SPECDIR="qtbase/mkspecs"
+  SPECNAME="macx-clang-linux"
+  SPECFILE="${SPECDIR}/${SPECNAME}/qmake.conf"
+  rm -rf ${SPECDIR}/${SPECNAME}
+  cp -rp ${SPECDIR}/macx-clang ${SPECDIR}/${SPECNAME}
+  sed 's/qt_instdate=`date +%Y-%m-%d`/qt_instdate=2011-01-30/' -i qtbase/configure
+  sed 's/if \[ "$$$$XPLATFORM_MAC" = "yes" \]; then xspecvals=$$$$(macSDKify/if \[ "$$$$BUILD_ON_MAC" = "yes" \]; then xspecvals=$$$$(macSDKify/' -i qtbase/configure
+  #
+  sed 's/load(qt_config)//' -i $SPECFILE
+  cat > ${SPECFILE} <<ENDCONF
+  MAKEFILE_GENERATOR      = UNIX
+  CONFIG                 += app_bundle incremental global_init_link_order lib_version_first plugin_no_soname absolute_library_soname
+  DEFINES                += QT_NO_PRINTER QT_NO_PRINTDIALOG
+  QMAKE_INCREMENTAL_STYLE = sublib
+  include(../common/macx.conf)
+  include(../common/gcc-base-mac.conf)
+  include(../common/clang.conf)
+  include(../common/clang-mac.conf)
+  QMAKE_INCDIR=$DEPSDIR/include
+  QMAKE_LIBDIR=$DEPSDIR/lib
+  QMAKE_CC=${HOST}-clang
+  QMAKE_CXX=${HOST}-clang++
+  QMAKE_LINK=${HOST}-clang++
+  QMAKE_XCODE_VERSION=4.3
+  QMAKE_XCODE_DEVELOPER_PATH=/Developer
+  QMAKE_MACOSX_DEPLOYMENT_TARGET = ${MIN_VERSION}
+  QMAKE_MAC_SDK=macosx
+  QMAKE_MAC_SDK.macosx.path = ${SDK}
+  QMAKE_MAC_SDK.macosx.version = ${SDK_VERSION}
+  QMAKE_MAC_SDK.macosx.platform_path = /.care
+  QMAKE_MAC_SDK.macosx.platform_name = macosx
+  QMAKE_CFLAGS += -target ${HOST} -mmacosx-version-min=${MIN_VERSION} --sysroot ${SDK} -mlinker-version=242
+  QMAKE_OBJECTIVE_CFLAGS += -target ${HOST} -mmacosx-version-min=${MIN_VERSION} --sysroot ${SDK} -mlinker-version=242
+  QMAKE_CXXFLAGS += -target ${HOST} -mmacosx-version-min=${MIN_VERSION} --sysroot ${SDK} -mlinker-version=242
+  QMAKE_AR = ${HOST}-ar cq
+  QMAKE_HOST = ${HOST}
+  QMAKE_LD = ${HOST}-ld
+  QMAKE_RANLIB=${HOST}-ranlib
+  QMAKE_LIBTOOL=${HOST}-libtool
+  QMAKE_INSTALL_NAME_TOOL=${HOST}-install_name_tool
+  load(qt_config)
+  ENDCONF
+  #
+  CONFIG_OPTS="
+  -opensource -confirm-license
+  -release
+  -xplatform $SPECNAME
+  -no-audio-backend
+  -no-glib
+  -no-cups
+  -no-iconv
+  -no-gif
+  -no-freetype
+  -no-nis
+  -no-pch
+  -no-qml-debug
+  -nomake examples
+  -nomake tests
+  -no-feature-style-windowsmobile
+  -no-feature-style-windowsce
+  -no-sql-db2
+  -no-sql-ibase
+  -no-sql-oci
+  -no-sql-tds
+  -no-sql-mysql
+  -no-sql-odbc
+  -no-sql-psql
+  -no-sql-sqlite
+  -no-sql-sqlite2
+  -prefix $INSTALLPREFIX
+  -bindir ${INSTALLPREFIX}/host/bin
+  -device-option CROSS_COMPILE=${HOST}-
+  -no-icu
+  -v
+  -qt-libpng
+  -qt-libjpeg
+  -qt-zlib
+  -qt-pcre
+  -no-c++11
+  -no-pulseaudio
+  -no-openvg
+  -no-opengl
+  -no-xrender
+  -no-alsa
+  -no-mtdev
+  -no-mitshm
+  -no-kms
+  -no-reduce-relocations
+  -no-egl
+  -no-eglfs
+  -no-linuxfb
+  -no-xinput2
+  -no-libudev
+  -no-gstreamer
+  -no-use-gold-linker
+  -optimized-qmake
+  -skip qtwinextras
+  -skip qtandroidextras
+  -skip qtmacextras
+  -skip qtx11extras
+  -skip qtsvg
+  -skip qtxmlpatterns
+  -skip qtdeclarative
+  -skip qtquickcontrols
+  -skip qtmultimedia
+  -skip qtactiveqt
+  -skip qtlocation
+  -skip qtsensors
+  -skip qtconnectivity
+  -skip qtwebsockets
+  -skip qtwebchannel
+  -skip qtwebkit-examples
+  -skip qtimageformats
+  -skip qtgraphicaleffects
+  -skip qtscript
+  -skip qtquick1
+  -skip qtwayland
+  -skip qtserialport
+  -skip qtenginio
+  -skip qtwebengine
+  -skip qt3d
+  -skip qtcanvas3d
+  -skip qtdoc"
+  #export CC
+  #export CXX
+  #export CXXFLAGS="-target ${HOST} -mmacosx-version-min=${MIN_VERSION} --sysroot ${SDK} -mlinker-version=242"
+  #export CFLAGS="-target ${HOST} -mmacosx-version-min=${MIN_VERSION} --sysroot ${SDK} -mlinker-version=242"
+  OPENSSL_LIBS="-L$DEPSDIR/lib -lssl -lcrypto" ./configure $CONFIG_OPTS
+  #-prefix $INSTALLPREFIX -bindir $INSTALLPREFIX/host/bin -confirm-license -release -opensource -xplatform $SPECNAME -device-option CROSS_COMPILE="$HOST-" -no-audio-backend -no-sql-odbc -no-nis -no-cups -no-iconv -no-dbus -no-gif -no-opengl -no-compile-examples -no-feature-style-windowsce -no-feature-style-windowsmobile -no-use-gold-linker -no-kms -no-gstreamer -no-qml-debug -skip qtsvg -skip qtwebkit-examples -skip qtserialport -skip qtdeclarative -skip qtmultimedia -skip qtimageformats -skip qtlocation -skip qtsensors -skip qtquick1 -skip qtquickcontrols -skip qtactiveqt -skip qtconnectivity -skip qtwinextras -skip qtxmlpatterns -skip qtscript -skip qtdoc -system-libpng -system-zlib -icu -v
+  #
+  make $MAKEOPTS
+  make $MAKEOPTS install
+  #
+  cd $BUILDDIR
+  #
+  # post-process all generated libraries and plugins to be deterministic
+  # extract them to a temporary directory then re-build them deterministically
+  #for LIB in $(find $INSTALLPREFIX -name *.a); do
+  #    rm -rf $TEMPDIR && mkdir $TEMPDIR && cd $TEMPDIR
+  #    $HOST-ar xv $LIB | cut -b5- > /tmp/list.txt
+  #    rm $LIB
+  #    $HOST-ar crsD $LIB $(cat /tmp/list.txt)
+  #done
+  #
+  cd $INSTALLPREFIX
+  # Remove unused non-deterministic stuff
+  rm host/bin/qtpaths lib/libQt5Bootstrap.a lib/libQt5Bootstrap.la
+  rm -f ${INSTALLPREFIX}/lib/Qt*.framework/Qt*.prl
+  cd include
+  ln -sf ../lib/QtNetwork.framework/Headers/ QtNetwork
+  ln -sf ../lib/QtWidgets.framework/Headers/ QtWidgets
+  ln -sf ../lib/QtGui.framework/Headers/ QtGui
+  ln -sf ../lib/QtCore.framework/Headers/ QtCore
+  ln -sf ../lib/QtTest.framework/Headers/ QtTest
+  ln -sf ../lib/QtWebKitWidgets.framework/Headers/ QtWebKitWidgets
+  cd ..
+  # as zip stores file timestamps, use faketime to intercept stat calls to set dates for all files to reference date
+  export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1
+  export FAKETIME=$REFERENCE_DATETIME
+  find -print0 | xargs -r0 touch -h # fix up timestamps before packaging
+  find | sort | tar --no-recursion -cJf $OUTDIR/qt-osx-5.5.0-gitian.tar.xz -T -
