@@ -339,7 +339,7 @@ private:
     CNode* ConnectNode(CAddress addrConnect, const char *pszDest, bool fCountFailure);
     bool IsWhitelistedRange(const CNetAddr &addr);
 
-    void DeleteNode(CNode* pnode);
+    void FinalizeNode(CNode* pnode);
 
     NodeId GetNewNodeId();
 
@@ -391,9 +391,21 @@ private:
     CCriticalSection cs_vOneShots;
     std::vector<std::string> vAddedNodes;
     CCriticalSection cs_vAddedNodes;
-    std::vector<CNode*> vNodes;
-    std::list<CNode*> vNodesDisconnected;
+    /**
+     * Nodes are first InitializeNode'd, then added to vNodes.
+     * After that, all calls to NetEventsInterface functions happen on the
+     * message handler thread to avoid calling two such functions at the same
+     * time for the same peer. After a node gets fDisconnect we first close
+     * the socket then move it to vNodesToFinalize on the socket handler
+     * thread, then the message handler thread picks it up, calls
+     * FinalizeNode on it, then moves it to vNodesDisconnected. From there,
+     * the socket handler thread will eventually delete the CNode itself once
+     * the refcount reaches 0.
+     */
     mutable CCriticalSection cs_vNodes;
+    std::vector<CNode*> vNodes;
+    std::vector<CNode*> vNodesToFinalize GUARDED_BY(cs_vNodes);
+    std::list<CNode*> vNodesDisconnected GUARDED_BY(cs_vNodes);
     std::atomic<NodeId> nLastNodeId;
 
     /** Services this instance offers */

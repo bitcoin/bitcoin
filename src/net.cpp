@@ -1161,13 +1161,17 @@ void CConnman::ThreadSocketHandler()
 
                     // hold in disconnected pool until all refs are released
                     pnode->Release();
-                    vNodesDisconnected.push_back(pnode);
+                    vNodesToFinalize.push_back(pnode);
                 }
             }
         }
         {
-            // Delete disconnected nodes
-            std::list<CNode*> vNodesDisconnectedCopy = vNodesDisconnected;
+            // Delete finalized nodes
+            std::list<CNode*> vNodesDisconnectedCopy;
+            {
+                LOCK(cs_vNodes);
+                vNodesDisconnectedCopy = vNodesDisconnected;
+            }
             for (CNode* pnode : vNodesDisconnectedCopy)
             {
                 // wait until threads are done using it
@@ -1183,8 +1187,11 @@ void CConnman::ThreadSocketHandler()
                         }
                     }
                     if (fDelete) {
-                        vNodesDisconnected.remove(pnode);
-                        DeleteNode(pnode);
+                        {
+                            LOCK(cs_vNodes);
+                            vNodesDisconnected.remove(pnode);
+                        }
+                        delete pnode;
                     }
                 }
             }
@@ -2030,6 +2037,17 @@ void CConnman::ThreadMessageHandler()
                 pnode->Release();
         }
 
+        {
+            LOCK(cs_vNodes);
+            vNodesCopy = vNodesToFinalize;
+            vNodesToFinalize.clear();
+        }
+        for (CNode* pnode : vNodesCopy) {
+            FinalizeNode(pnode);
+            LOCK(cs_vNodes);
+            vNodesDisconnected.push_back(pnode);
+        }
+
         std::unique_lock<std::mutex> lock(mutexMsgProc);
         if (!fMoreWork) {
             condMsgProc.wait_until(lock, std::chrono::steady_clock::now() + std::chrono::milliseconds(100), [this] { return fMsgProcWake; });
@@ -2445,20 +2463,30 @@ void CConnman::Stop()
                 LogPrintf("CloseSocket(hListenSocket) failed with error %s\n", NetworkErrorString(WSAGetLastError()));
 
     // clean up some globals (to help leak detection)
-    for (CNode *pnode : vNodes) {
-        DeleteNode(pnode);
+    std::vector<CNode*> nodes_to_clean_up;
+    std::vector<CNode*> nodes_to_delete;
+    {
+        LOCK(cs_vNodes);
+        nodes_to_clean_up.insert(nodes_to_clean_up.end(), vNodes.begin(), vNodes.end());
+        vNodes.clear();
+        nodes_to_clean_up.insert(nodes_to_clean_up.end(), vNodesToFinalize.begin(), vNodesToFinalize.end());
+        vNodesToFinalize.clear();
+        nodes_to_delete.insert(nodes_to_delete.end(), vNodesDisconnected.begin(), vNodesDisconnected.end());
+        vNodesDisconnected.clear();
     }
-    for (CNode *pnode : vNodesDisconnected) {
-        DeleteNode(pnode);
+    for (CNode *pnode : nodes_to_clean_up) {
+        FinalizeNode(pnode);
+        delete pnode;
     }
-    vNodes.clear();
-    vNodesDisconnected.clear();
+    for (CNode *pnode : nodes_to_delete) {
+        delete pnode;
+    }
     vhListenSocket.clear();
     semOutbound.reset();
     semAddnode.reset();
 }
 
-void CConnman::DeleteNode(CNode* pnode)
+void CConnman::FinalizeNode(CNode* pnode)
 {
     assert(pnode);
     bool fUpdateConnectionTime = false;
@@ -2466,7 +2494,6 @@ void CConnman::DeleteNode(CNode* pnode)
     if(fUpdateConnectionTime) {
         addrman.Connected(pnode->addr);
     }
-    delete pnode;
 }
 
 CConnman::~CConnman()
