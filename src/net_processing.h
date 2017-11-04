@@ -81,5 +81,7 @@ struct CNodeStateStats {
 bool GetNodeStateStats(NodeId nodeid, CNodeStateStats &stats);
 /** Increase a node's misbehavior score. */
 void Misbehaving(NodeId nodeid, int howmuch);
+/** Relay a transaction that is in mempool to all our peers */
+void RelayTransaction(const uint256& tx_hash, CConnman* connman);
 
 #endif // BITCOIN_NET_PROCESSING_H

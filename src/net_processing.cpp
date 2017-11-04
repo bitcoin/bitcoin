@@ -995,11 +995,11 @@ bool static AlreadyHave(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
     return true;
 }
 
-static void RelayTransaction(const CTransaction& tx, CConnman* connman)
+void RelayTransaction(const uint256& tx_hash, CConnman* connman)
 {
-    AssertLockHeld(cs_main);
+    LOCK(cs_main);
 
-    CInv inv(MSG_TX, tx.GetHash());
+    CInv inv(MSG_TX, tx_hash);
     for (auto& node : mapNodeState) {
         node.second.connection->PushInventory(inv);
     }
@@ -2113,7 +2113,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         if (!AlreadyHave(inv) &&
             AcceptToMemoryPool(mempool, state, ptx, &fMissingInputs, &lRemovedTxn, false /* bypass_limits */, 0 /* nAbsurdFee */)) {
             mempool.check(pcoinsTip.get());
-            RelayTransaction(tx, connman);
+            RelayTransaction(tx.GetHash(), connman);
             for (unsigned int i = 0; i < tx.vout.size(); i++) {
                 vWorkQueue.emplace_back(inv.hash, i);
             }
@@ -2151,7 +2151,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                         continue;
                     if (AcceptToMemoryPool(mempool, stateDummy, porphanTx, &fMissingInputs2, &lRemovedTxn, false /* bypass_limits */, 0 /* nAbsurdFee */)) {
                         LogPrint(BCLog::MEMPOOL, "   accepted orphan tx %s\n", orphanHash.ToString());
-                        RelayTransaction(orphanTx, connman);
+                        RelayTransaction(orphanTx.GetHash(), connman);
                         for (unsigned int i = 0; i < orphanTx.vout.size(); i++) {
                             vWorkQueue.emplace_back(orphanHash, i);
                         }
@@ -2242,7 +2242,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                 int nDoS = 0;
                 if (!state.IsInvalid(nDoS) || nDoS == 0) {
                     LogPrintf("Force relaying tx %s from whitelisted peer=%d\n", tx.GetHash().ToString(), pfrom->GetId());
-                    RelayTransaction(tx, connman);
+                    RelayTransaction(tx.GetHash(), connman);
                 } else {
                     LogPrintf("Not relaying invalid transaction %s from whitelisted peer=%d (%s)\n", tx.GetHash().ToString(), pfrom->GetId(), FormatStateMessage(state));
                 }

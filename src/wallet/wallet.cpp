@@ -17,6 +17,7 @@
 #include <keystore.h>
 #include <validation.h>
 #include <net.h>
+#include <net_processing.h>
 #include <policy/fees.h>
 #include <policy/policy.h>
 #include <policy/rbf.h>
@@ -1733,11 +1734,7 @@ bool CWalletTx::RelayWalletTransaction(CConnman* connman)
         if (InMempool() || AcceptToMemoryPool(maxTxFee, state)) {
             LogPrintf("Relaying wtx %s\n", GetHash().ToString());
             if (connman) {
-                CInv inv(MSG_TX, GetHash());
-                connman->ForEachNode([&inv](CNode* pnode)
-                {
-                    pnode->PushInventory(inv);
-                });
+                RelayTransaction(GetHash(), connman);
                 return true;
             }
         }
