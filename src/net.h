@@ -174,51 +174,7 @@ public:
     bool OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant *grantOutbound = nullptr, const char *strDest = nullptr, bool fOneShot = false, bool fFeeler = false, bool manual_connection = false);
     bool CheckIncomingNonce(uint64_t nonce);
 
-    bool ForNode(NodeId id, std::function<bool(CNode* pnode)> func);
-
     void PushMessage(CNode* pnode, CSerializedNetMsg&& msg);
-
-    template<typename Callable>
-    void ForEachNode(Callable&& func)
-    {
-        LOCK(cs_vNodes);
-        for (auto&& node : vNodes) {
-            if (NodeFullyConnected(node))
-                func(node);
-        }
-    };
-
-    template<typename Callable>
-    void ForEachNode(Callable&& func) const
-    {
-        LOCK(cs_vNodes);
-        for (auto&& node : vNodes) {
-            if (NodeFullyConnected(node))
-                func(node);
-        }
-    };
-
-    template<typename Callable, typename CallableAfter>
-    void ForEachNodeThen(Callable&& pre, CallableAfter&& post)
-    {
-        LOCK(cs_vNodes);
-        for (auto&& node : vNodes) {
-            if (NodeFullyConnected(node))
-                pre(node);
-        }
-        post();
-    };
-
-    template<typename Callable, typename CallableAfter>
-    void ForEachNodeThen(Callable&& pre, CallableAfter&& post) const
-    {
-        LOCK(cs_vNodes);
-        for (auto&& node : vNodes) {
-            if (NodeFullyConnected(node))
-                pre(node);
-        }
-        post();
-    };
 
     // Addrman functions
     size_t GetAddressCount() const;
@@ -357,9 +313,6 @@ private:
     // Network stats
     void RecordBytesRecv(uint64_t bytes);
     void RecordBytesSent(uint64_t bytes);
-
-    // Whether the node should be passed out in ForEach* callbacks
-    static bool NodeFullyConnected(const CNode* pnode);
 
     // Network usage totals
     CCriticalSection cs_totalBytesRecv;
