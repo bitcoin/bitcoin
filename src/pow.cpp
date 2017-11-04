@@ -296,7 +296,6 @@ static arith_uint256 ComputeTarget(const CBlockIndex *pindexFirst,
 
     // In order to avoid difficulty cliffs, we bound the amplitude of the
     // adjustement we are going to do.
-    assert(pindexLast->nTime > pindexFirst->nTime);
     int64_t nActualTimespan = pindexLast->nTime - pindexFirst->nTime;
     if (nActualTimespan > 288 * params.nPowTargetSpacing)
     {
