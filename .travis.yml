@@ -1,0 +1,11 @@
+language: cpp
+before_install:
+  - sudo apt-get update -qq
+  - sudo apt-get install -qq libboost-all-dev
+  - sudo apt-get install -qq libdb++-dev
+  - sudo apt-get install -qq libminiupnpc-dev
+install: true
+script:
+  - qmake BITCOIN_QT_TEST=1 && make && ./bitcoin-qt_test
+  - cd src && make -f makefile.unix test
+
