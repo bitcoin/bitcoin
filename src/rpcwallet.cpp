@@ -1347,6 +1347,9 @@ Value walletpassphrase(const Array& params, bool fHelp)
     if (!pwalletMain->IsLocked())
         throw JSONRPCError(RPC_WALLET_ALREADY_UNLOCKED, "Error: Wallet is already unlocked, use walletlock first if need to change unlock settings.");
 
+    if (params[1].get_int64() < 0)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Negative timeout or int64 overflow (range: 0-2147483647).");
+
     // Note that the walletpassphrase is stored in params[0] which is not mlock()ed
     SecureString strWalletPass;
     strWalletPass.reserve(100);
@@ -1366,6 +1369,7 @@ Value walletpassphrase(const Array& params, bool fHelp)
 
     NewThread(ThreadTopUpKeyPool, NULL);
     int64* pnSleepTime = new int64(params[1].get_int64());
+    if (*pnSleepTime > 2147483647) *pnSleepTime = 2147483647;
     NewThread(ThreadCleanWalletPassphrase, pnSleepTime);
 
     // ppcoin: if user OS account compromised prevent trivial sendmoney commands
