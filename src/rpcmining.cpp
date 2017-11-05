@@ -399,14 +399,18 @@ Value getblocktemplate(const Array& params, bool fHelp)
             "  \"curtime\" : ttt,                  (numeric) current timestamp in seconds since epoch (Jan 1 1970 GMT)\n"
             "  \"bits\" : \"xxx\",                 (string) compressed target of next block\n"
             "  \"height\" : n                      (numeric) The height of the next block\n"
-            "  \"payee\" : \"xxx\",                (string) required payee for the next block\n"
-            "  \"payee_amount\" : n,               (numeric) required amount to pay\n"
+            "  \"payee\" : \"xxx\",                (string) required masternode payee for the next block\n"
+            "  \"payee_amount\" : n,               (numeric) required amount to pay masternode\n"
             "  \"votes\" : [\n                     (array) show vote candidates\n"
             "        { ... }                       (json object) vote candidate\n"
             "        ,...\n"
             "  ],\n"
             "  \"masternode_payments\" : true|false,         (boolean) true, if masternode payments are enabled\n"
             "  \"enforce_masternode_payments\" : true|false  (boolean) true, if masternode payments are enforced\n"
+            "  \"systemnode_payments\" : true|false,         (boolean) true, if systemnode payments are enabled\n"
+            "  \"enforce_systemnode_payments\" : true|false  (boolean) true, if systemnode payments are enforced\n"
+            "  \"payeeSN\" : \"xxx\",                        (string) required systemnode payee for the next block\n"
+            "  \"payeeSN_amount\" : n,                       (numeric) required amount to pay systemnode \n"
             "}\n"
 
             "\nExamples:\n"
@@ -643,6 +647,20 @@ Value getblocktemplate(const Array& params, bool fHelp)
 
     result.push_back(Pair("masternode_payments", pblock->nTime > Params().StartMasternodePayments()));
     result.push_back(Pair("enforce_masternode_payments", true));
+
+    result.push_back(Pair("systemnode_payments", pblock->nTime > Params().StartMasternodePayments()));
+    result.push_back(Pair("enforce_systemnode_payments", true));
+
+    if(pblock->payeeSN != CScript()){
+        CTxDestination address1;
+        ExtractDestination(pblock->payeeSN, address1);
+        CBitcoinAddress address2(address1);
+        result.push_back(Pair("payeeSN", address2.ToString().c_str()));
+        result.push_back(Pair("payeeSN_amount", (int64_t)pblock->vtx[0].vout[2].nValue));
+    } else {
+        result.push_back(Pair("payeeSN", ""));
+        result.push_back(Pair("payeeSN_amount", ""));
+    }
 
     return result;
 }
