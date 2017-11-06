@@ -258,18 +258,18 @@ private:
     std::map<double, unsigned int> bucketMap GUARDED_BY(cs_feeEstimator); // Map of bucket upper-bound to index into all vectors by bucket
 
     /** Process a transaction confirmed in a block*/
-    bool processBlockTx(unsigned int nBlockHeight, const CTxMemPoolEntry* entry);
+    bool processBlockTx(unsigned int nBlockHeight, const CTxMemPoolEntry* entry) EXCLUSIVE_LOCKS_REQUIRED(cs_feeEstimator);
 
     /** Helper for estimateSmartFee */
-    double estimateCombinedFee(unsigned int confTarget, double successThreshold, bool checkShorterHorizon, EstimationResult *result) const;
+    double estimateCombinedFee(unsigned int confTarget, double successThreshold, bool checkShorterHorizon, EstimationResult *result) const EXCLUSIVE_LOCKS_REQUIRED(cs_feeEstimator);
     /** Helper for estimateSmartFee */
-    double estimateConservativeFee(unsigned int doubleTarget, EstimationResult *result) const;
+    double estimateConservativeFee(unsigned int doubleTarget, EstimationResult *result) const EXCLUSIVE_LOCKS_REQUIRED(cs_feeEstimator);
     /** Number of blocks of data recorded while fee estimates have been running */
-    unsigned int BlockSpan() const;
+    unsigned int BlockSpan() const EXCLUSIVE_LOCKS_REQUIRED(cs_feeEstimator);
     /** Number of blocks of recorded fee estimate data represented in saved data file */
-    unsigned int HistoricalBlockSpan() const;
+    unsigned int HistoricalBlockSpan() const EXCLUSIVE_LOCKS_REQUIRED(cs_feeEstimator);
     /** Calculation of highest target that reasonable estimate can be provided for */
-    unsigned int MaxUsableEstimate() const;
+    unsigned int MaxUsableEstimate() const EXCLUSIVE_LOCKS_REQUIRED(cs_feeEstimator);
 };
 
 class FeeFilterRounder

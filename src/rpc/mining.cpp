@@ -105,7 +105,7 @@ UniValue getnetworkhashps(const JSONRPCRequest& request)
     return GetNetworkHashPS(!request.params[0].isNull() ? request.params[0].get_int() : 120, !request.params[1].isNull() ? request.params[1].get_int() : -1);
 }
 
-UniValue generateBlocks(std::shared_ptr<CReserveScript> coinbaseScript, int nGenerate, uint64_t nMaxTries, bool keepScript)
+UniValue generateBlocks(std::shared_ptr<CReserveScript> coinbaseScript, int nGenerate, uint64_t nMaxTries, bool keepScript) EXCLUSIVE_LOCKS_REQUIRED(cs_LastBlockFile)
 {
     static const int nInnerLoopCount = 0x10000;
     int nHeightEnd = 0;
@@ -153,7 +153,7 @@ UniValue generateBlocks(std::shared_ptr<CReserveScript> coinbaseScript, int nGen
     return blockHashes;
 }
 
-UniValue generatetoaddress(const JSONRPCRequest& request)
+UniValue generatetoaddress(const JSONRPCRequest& request) EXCLUSIVE_LOCKS_REQUIRED(cs_LastBlockFile)
 {
     if (request.fHelp || request.params.size() < 2 || request.params.size() > 3)
         throw std::runtime_error(
@@ -707,7 +707,7 @@ protected:
     }
 };
 
-UniValue submitblock(const JSONRPCRequest& request)
+UniValue submitblock(const JSONRPCRequest& request) EXCLUSIVE_LOCKS_REQUIRED(cs_LastBlockFile)
 {
     // We allow 2 arguments for compliance with BIP22. Argument 2 is ignored.
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 2) {

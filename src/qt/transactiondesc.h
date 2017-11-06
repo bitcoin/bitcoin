@@ -8,10 +8,14 @@
 #include <QObject>
 #include <QString>
 
+#include "sync.h"
+
 class TransactionRecord;
 
 class CWallet;
 class CWalletTx;
+
+extern CCriticalSection cs_main;
 
 /** Provide a human-readable extended HTML description of a transaction.
  */
@@ -25,7 +29,7 @@ public:
 private:
     TransactionDesc() {}
 
-    static QString FormatTxStatus(const CWalletTx& wtx);
+    static QString FormatTxStatus(const CWalletTx& wtx) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 };
 
 #endif // BITCOIN_QT_TRANSACTIONDESC_H

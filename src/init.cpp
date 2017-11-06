@@ -611,7 +611,7 @@ void CleanupBlockRevFiles()
     }
 }
 
-void ThreadImport(std::vector<fs::path> vImportFiles)
+void ThreadImport(std::vector<fs::path> vImportFiles) EXCLUSIVE_LOCKS_REQUIRED(cs_LastBlockFile)
 {
     const CChainParams& chainparams = Params();
     RenameThread("bitcoin-loadblk");

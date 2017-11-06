@@ -175,7 +175,7 @@ public:
 
     CConnman(uint64_t seed0, uint64_t seed1);
     ~CConnman();
-    bool Start(CScheduler& scheduler, const Options& options);
+    bool Start(CScheduler& scheduler, const Options& options) EXCLUSIVE_LOCKS_REQUIRED(cs_totalBytesRecv, cs_totalBytesSent);
     void Stop();
     void Interrupt();
     bool GetNetworkActive() const { return fNetworkActive; };

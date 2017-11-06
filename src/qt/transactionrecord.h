@@ -6,6 +6,7 @@
 #define BITCOIN_QT_TRANSACTIONRECORD_H
 
 #include <amount.h>
+#include <sync.h>
 #include <uint256.h>
 
 #include <QList>
@@ -13,6 +14,8 @@
 
 class CWallet;
 class CWalletTx;
+
+extern CCriticalSection cs_main;
 
 /** UI model for transaction status. The transaction status is the part of a transaction that will change over time.
  */
@@ -136,11 +139,11 @@ public:
 
     /** Update status from core wallet tx.
      */
-    void updateStatus(const CWalletTx &wtx);
+    void updateStatus(const CWalletTx &wtx) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     /** Return whether a status update is needed.
      */
-    bool statusUpdateNeeded() const;
+    bool statusUpdateNeeded() const EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 };
 
 #endif // BITCOIN_QT_TRANSACTIONRECORD_H

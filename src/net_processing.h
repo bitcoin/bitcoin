@@ -10,6 +10,8 @@
 #include <validationinterface.h>
 #include <consensus/params.h>
 
+extern CCriticalSection cs_main;
+
 /** Default for -maxorphantx, maximum number of orphan transactions kept in memory */
 static const unsigned int DEFAULT_MAX_ORPHAN_TRANSACTIONS = 100;
 /** Expiration time for orphan transactions in seconds */
@@ -61,7 +63,7 @@ public:
     */
     bool SendMessages(CNode* pto, std::atomic<bool>& interrupt) override EXCLUSIVE_LOCKS_REQUIRED(pto->cs_sendProcessing);
 
-    void ConsiderEviction(CNode *pto, int64_t time_in_seconds);
+    void ConsiderEviction(CNode *pto, int64_t time_in_seconds) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     void CheckForStaleTipAndEvictPeers(const Consensus::Params &consensusParams);
     void EvictExtraOutboundPeers(int64_t time_in_seconds);
 
@@ -79,6 +81,6 @@ struct CNodeStateStats {
 /** Get statistics from node state */
 bool GetNodeStateStats(NodeId nodeid, CNodeStateStats &stats);
 /** Increase a node's misbehavior score. */
-void Misbehaving(NodeId nodeid, int howmuch);
+void Misbehaving(NodeId nodeid, int howmuch) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 #endif // BITCOIN_NET_PROCESSING_H
