@@ -3265,6 +3265,7 @@ static bool AcceptBlock(const std::shared_ptr<const CBlock>& pblock, CValidation
         return AbortNode(state, std::string("System error: ") + e.what());
     }
 
+    LOCK(cs_LastBlockFile);
     if (fCheckForPruning)
         FlushStateToDisk(chainparams, state, FLUSH_STATE_NONE); // we just allocated more disk space for block files
 
