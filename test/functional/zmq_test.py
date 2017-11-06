@@ -25,6 +25,7 @@ class ZMQSubscriber:
 
     def receive(self):
         topic, body, seq = self.socket.recv_multipart()
+
         # Topic should match the subscriber topic.
         assert_equal(topic, self.topic)
         # Sequence should be incremental.
@@ -90,11 +91,12 @@ class ZMQTest (BitcoinTestFramework):
         self.sync_all()
 
         for x in range(num_blocks):
-            # Should receive the json broadcasted raw transaction.
+            # Should receive the json decoded transaction.
             decodedtx = self.decodedtx.receive()
 
             # Should receive the coinbase txid.
             txid = self.hashtx.receive()
+            assert_equal(bytes_to_hex_str(txid), json.loads(decodedtx.decode('utf-8'))['txid'])
 
             # Should receive the coinbase raw transaction.
             hex = self.rawtx.receive()
@@ -116,13 +118,13 @@ class ZMQTest (BitcoinTestFramework):
 
         # Should receive the json broadcasted raw transaction.
         decodedtx = self.decodedtx.receive()
-        assert_equal(payment_txid, json.loads(decodedtx[3:])['txid'])
+        assert_equal(payment_txid, json.loads(decodedtx.decode('utf-8'))['txid'])
 
         # Should receive the broadcasted txid.
         txid = self.hashtx.receive()
         assert_equal(payment_txid, bytes_to_hex_str(txid))
 
-        # Should receive the broadcasted raw transaction.
+        # Should receive the json decoded transaction.
         hex = self.rawtx.receive()
         assert_equal(payment_txid, bytes_to_hex_str(hash256(hex)))
 
