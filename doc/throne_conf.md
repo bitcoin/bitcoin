@@ -1,12 +1,12 @@
-Multi throne config
+Multi masternode config
 =======================
 
-The multi throne config allows to control multiple thrones from a single wallet. The wallet needs to have a valid collaral output of 1000 coins for each throne. To use this, place a file named throne.conf in the data directory of your install:
+The multi masternode config allows to control multiple masternodes from a single wallet. The wallet needs to have a valid collaral output of 1000 coins for each masternode. To use this, place a file named masternode.conf in the data directory of your install:
  * Windows: %APPDATA%\Crown\
  * Mac OS: ~/Library/Application Support/Crown/
  * Unix/Linux: ~/.crown/
 
-The new throne.conf format consists of a space seperated text file. Each line consisting of an alias, IP address followed by port, throne private key, collateral output transaction id, collateral output index, donation address and donation percentage (the latter two are optional and should be in format "address:percentage").
+The new masternode.conf format consists of a space seperated text file. Each line consisting of an alias, IP address followed by port, masternode private key, collateral output transaction id, collateral output index, donation address and donation percentage (the latter two are optional and should be in format "address:percentage").
 
 Example:
 ```
@@ -17,16 +17,16 @@ mn3 127.0.0.4:19340 92Da1aYg6sbenP6uwskJgEY2XWB5LwJ7bXRqc3UPeShtHWJDjDv db478e78
 
 In the example above:
 * the collateral for mn1 consists of transaction http://test.explorer.crown.fr/tx/2bcd3c84c84f87eaa86e4e56834c92927a07f9e18718810b92e0d0324456a67c, output index 0 has amount 1000
-* throne 2 will donate 33% of its income
-* throne 3 will donate 100% of its income
+* masternode 2 will donate 33% of its income
+* masternode 3 will donate 100% of its income
 
 
 The following new RPC commands are supported:
-* list-conf: shows the parsed throne.conf
+* list-conf: shows the parsed masternode.conf
 * start-alias \<alias\>
 * stop-alias \<alias\>
 * start-many
 * stop-many
 * outputs: list available collateral output transaction ids and corresponding collateral output indexes
 
-When using the multi throne setup, it is advised to run the wallet with 'throne=0' as it is not needed anymore.
+When using the multi masternode setup, it is advised to run the wallet with 'masternode=0' as it is not needed anymore.

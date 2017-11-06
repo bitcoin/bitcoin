@@ -15,8 +15,10 @@
 #include "main.h"
 #include "net.h"
 #include "ui_interface.h"
-#include "throneman.h"
-#include "throne-sync.h"
+#include "masternodeman.h"
+#include "masternode-sync.h"
+#include "systemnodeman.h"
+#include "systemnode-sync.h"
 #include "util.h"
 
 #include <stdint.h>
@@ -32,7 +34,8 @@ ClientModel::ClientModel(OptionsModel *optionsModel, QObject *parent) :
     optionsModel(optionsModel),
     peerTableModel(0),
     cachedNumBlocks(0),
-    cachedThroneCountString(""),
+    cachedMasternodeCountString(""),
+    cachedSystemnodeCountString(""),
     cachedReindexing(0), cachedImporting(0),
     numBlocksAtStartup(-1), pollTimer(0)
 {
@@ -45,6 +48,11 @@ ClientModel::ClientModel(OptionsModel *optionsModel, QObject *parent) :
     connect(pollMnTimer, SIGNAL(timeout()), this, SLOT(updateMnTimer()));
     // no need to update as frequent as data for balances/txes/blocks
     pollMnTimer->start(MODEL_UPDATE_DELAY * 4);
+
+    pollSnTimer = new QTimer(this);
+    connect(pollSnTimer, SIGNAL(timeout()), this, SLOT(updateSnTimer()));
+    // no need to update as frequent as data for balances/txes/blocks
+    pollSnTimer->start(MODEL_UPDATE_DELAY * 4);
 
     subscribeToCoreSignals();
 }
@@ -68,12 +76,20 @@ int ClientModel::getNumConnections(unsigned int flags) const
     return nNum;
 }
 
-QString ClientModel::getThroneCountString() const
+QString ClientModel::getMasternodeCountString() const
 {
     return tr("Total: %1 (DS compatible: %2 / Enabled: %3)").arg(QString::number((int)mnodeman.size()))
             .arg(QString::number((int)mnodeman.CountEnabled(MIN_POOL_PEER_PROTO_VERSION)))
             .arg(QString::number((int)mnodeman.CountEnabled()));
 }
+
+QString ClientModel::getSystemnodeCountString() const
+{
+    return tr("Total: %1 (DS compatible: %2 / Enabled: %3)").arg(QString::number((int)snodeman.size()))
+            .arg(QString::number((int)snodeman.CountEnabled(MIN_POOL_PEER_PROTO_VERSION)))
+            .arg(QString::number((int)snodeman.CountEnabled()));
+}
+
 
 int ClientModel::getNumBlocks() const
 {
@@ -126,17 +142,23 @@ void ClientModel::updateTimer()
 
     static int prevAttempt = -1;
     static int prevAssets = -1;
+    static int prevAttemptSN = -1;
+    static int prevAssetsSN = -1;
 
     // check for changed number of blocks we have, number of blocks peers claim to have, reindexing state and importing state
     if (cachedNumBlocks != newNumBlocks ||
         cachedReindexing != fReindex || cachedImporting != fImporting ||
-            throneSync.RequestedThroneAttempt != prevAttempt || throneSync.RequestedThroneAssets != prevAssets)
+            masternodeSync.RequestedMasternodeAttempt != prevAttempt || masternodeSync.RequestedMasternodeAssets != prevAssets ||
+            systemnodeSync.RequestedSystemnodeAttempt != prevAttemptSN || systemnodeSync.RequestedSystemnodeAssets != prevAssetsSN)
     {
         cachedNumBlocks = newNumBlocks;
         cachedReindexing = fReindex;
         cachedImporting = fImporting;
-        prevAttempt = throneSync.RequestedThroneAttempt;
-        prevAssets = throneSync.RequestedThroneAssets;
+        prevAttempt = masternodeSync.RequestedMasternodeAttempt;
+        prevAssets = masternodeSync.RequestedMasternodeAssets;
+
+        prevAttemptSN = systemnodeSync.RequestedSystemnodeAttempt;
+        prevAssetsSN = systemnodeSync.RequestedSystemnodeAssets;
 
         emit numBlocksChanged(newNumBlocks);
     }
@@ -152,15 +174,34 @@ void ClientModel::updateMnTimer()
     TRY_LOCK(cs_main, lockMain);
     if(!lockMain)
         return;
-    QString newThroneCountString = getThroneCountString();
+    QString newMasternodeCountString = getMasternodeCountString();
 
-    if (cachedThroneCountString != newThroneCountString)
+    if (cachedMasternodeCountString != newMasternodeCountString)
     {
-        cachedThroneCountString = newThroneCountString;
+        cachedMasternodeCountString = newMasternodeCountString;
 
-        emit strThronesChanged(cachedThroneCountString);
+        emit strMasternodesChanged(cachedMasternodeCountString);
     }
 }
+
+void ClientModel::updateSnTimer()
+{
+    // Get required lock upfront. This avoids the GUI from getting stuck on
+    // periodical polls if the core is holding the locks for a longer time -
+    // for example, during a wallet rescan.
+    TRY_LOCK(cs_main, lockMain);
+    if(!lockMain)
+        return;
+    QString newSystemnodeCountString = getSystemnodeCountString();
+
+    if (cachedSystemnodeCountString != newSystemnodeCountString)
+    {
+        cachedSystemnodeCountString = newSystemnodeCountString;
+
+        emit strSystemnodesChanged(cachedSystemnodeCountString);
+    }
+}
+
 
 void ClientModel::updateNumConnections(int numConnections)
 {

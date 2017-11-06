@@ -7,6 +7,8 @@
 #define BITCOIN_COINS_H
 
 #include "compressor.h"
+#include "core_memusage.h"
+#include "memusage.h"
 #include "serialize.h"
 #include "uint256.h"
 
@@ -252,6 +254,14 @@ public:
                 return false;
         return true;
     }
+
+    size_t DynamicMemoryUsage() const {
+        size_t ret = memusage::DynamicUsage(vout);
+        BOOST_FOREACH(const CTxOut &out, vout) {
+            ret += RecursiveDynamicUsage(out.scriptPubKey);
+        }
+        return ret;
+    }
 };
 
 class CCoinsKeyHasher
@@ -356,7 +366,8 @@ class CCoinsModifier
 private:
     CCoinsViewCache& cache;
     CCoinsMap::iterator it;
-    CCoinsModifier(CCoinsViewCache& cache_, CCoinsMap::iterator it_);
+    size_t cachedCoinUsage; // Cached memory usage of the CCoins object before modification
+    CCoinsModifier(CCoinsViewCache& cache_, CCoinsMap::iterator it_, size_t usage);
 
 public:
     CCoins* operator->() { return &it->second.coins; }
@@ -372,12 +383,16 @@ protected:
     /* Whether this cache has an active modifier. */
     bool hasModifier;
 
+
     /**
      * Make mutable so that we can "fill the cache" even from Get-methods
      * declared as "const".  
      */
     mutable uint256 hashBlock;
     mutable CCoinsMap cacheCoins;
+
+    /* Cached dynamic memory usage for the inner CCoins objects. */
+    mutable size_t cachedCoinsUsage;
 
 public:
     CCoinsViewCache(CCoinsView *baseIn);
@@ -424,6 +439,9 @@ public:
 
     //! Calculate the size of the cache (in number of transactions)
     unsigned int GetCacheSize() const;
+
+    //! Calculate the size of the cache (in bytes)
+    size_t DynamicMemoryUsage() const;
 
     /** 
      * Amount of crown coming in to a transaction

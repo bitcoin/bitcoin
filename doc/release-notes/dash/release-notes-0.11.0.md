@@ -23,7 +23,7 @@ Crown Core:
 - Adapted BIP44 coin type `5` for Crown (0x80000005) as defined in SLIP-0044
 - Added new units: `duffs` (1 / 100.000.000 DRK)
 - Added units for testnet: tDRK, mtDRK, utDRK, tduffs
-- Added new DNS seed from throne.io
+- Added new DNS seed from masternode.io
 - Fixed wallet locking after sending coins
 - Add `-regtest` mode, similar to testnet but private with instant block
   generation with `setgenerate` RPC.
@@ -32,15 +32,15 @@ Crown Core:
   `keepass`, `keepassport`, `keepasskey`, `keepassid`, `keepassname`
 
 
-Thrones:
+Masternodes:
 
-- Improve support for start-many with multi throne config
-- New throne rpc commands: stop-many, start-alias, stop-alias, list-conf
-- Fixed possible throne payments exploit
-- Better support for non-specific throne payments
-- Added throne support for regtest
-- Randomly sort thrones before picking next winner
-- Show number of thrones in debug window
+- Improve support for start-many with multi masternode config
+- New masternode rpc commands: stop-many, start-alias, stop-alias, list-conf
+- Fixed possible masternode payments exploit
+- Better support for non-specific masternode payments
+- Added masternode support for regtest
+- Randomly sort masternodes before picking next winner
+- Show number of masternodes in debug window
 
 
 Darksend:

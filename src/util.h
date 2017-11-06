@@ -29,20 +29,18 @@
 #include <boost/thread/exceptions.hpp>
 
 //Crown only features
-
-extern bool fThroNe;
+extern bool fMasterNode;
+extern bool fSystemNode;
 extern bool fLiteMode;
 extern bool fEnableInstantX;
 extern int nInstantXDepth;
-extern int nDarksendRounds;
-extern int nAnonymizeCrownAmount;
-extern int nLiquidityProvider;
-extern bool fEnableDarksend;
-extern int64_t enforceThronePaymentsTime;
-extern std::string strThroNeAddr;
+extern int64_t enforceMasternodePaymentsTime;
+extern int64_t enforceSystemnodePaymentsTime;
+extern std::string strMasterNodeAddr;
+extern std::string strSystemNodeAddr;
+extern std::string strSystemNodePrivKey;
 extern int keysLoaded;
 extern bool fSucessfullyLoaded;
-extern std::vector<int64_t> darkSendDenominations;
 extern std::string strBudgetMode;
 
 extern std::map<std::string, std::string> mapArgs;
@@ -113,7 +111,8 @@ bool TryCreateDirectory(const boost::filesystem::path& p);
 boost::filesystem::path GetDefaultDataDir();
 const boost::filesystem::path &GetDataDir(bool fNetSpecific = true);
 boost::filesystem::path GetConfigFile();
-boost::filesystem::path GetThroneConfigFile();
+boost::filesystem::path GetMasternodeConfigFile();
+boost::filesystem::path GetSystemnodeConfigFile();
 #ifndef WIN32
 boost::filesystem::path GetPidFile();
 void CreatePidFile(const boost::filesystem::path &path, pid_t pid);

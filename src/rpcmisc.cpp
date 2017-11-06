@@ -14,7 +14,8 @@
 #include "timedata.h"
 #include "util.h"
 #include "spork.h"
-#include "throne-sync.h"
+#include "masternode-sync.h"
+#include "systemnode-sync.h"
 #ifdef ENABLE_WALLET
 #include "wallet.h"
 #include "walletdb.h"
@@ -119,22 +120,22 @@ Value mnsync(const Array& params, bool fHelp)
     if(strMode == "status") {
         Object obj;
 
-        obj.push_back(Pair("IsBlockchainSynced", throneSync.IsBlockchainSynced()));
-        obj.push_back(Pair("lastThroneList", throneSync.lastThroneList));
-        obj.push_back(Pair("lastThroneWinner", throneSync.lastThroneWinner));
-        obj.push_back(Pair("lastBudgetItem", throneSync.lastBudgetItem));
-        obj.push_back(Pair("lastFailure", throneSync.lastFailure));
-        obj.push_back(Pair("nCountFailures", throneSync.nCountFailures));
-        obj.push_back(Pair("sumThroneList", throneSync.sumThroneList));
-        obj.push_back(Pair("sumThroneWinner", throneSync.sumThroneWinner));
-        obj.push_back(Pair("sumBudgetItemProp", throneSync.sumBudgetItemProp));
-        obj.push_back(Pair("sumBudgetItemFin", throneSync.sumBudgetItemFin));
-        obj.push_back(Pair("countThroneList", throneSync.countThroneList));
-        obj.push_back(Pair("countThroneWinner", throneSync.countThroneWinner));
-        obj.push_back(Pair("countBudgetItemProp", throneSync.countBudgetItemProp));
-        obj.push_back(Pair("countBudgetItemFin", throneSync.countBudgetItemFin));
-        obj.push_back(Pair("RequestedThroneAssets", throneSync.RequestedThroneAssets));
-        obj.push_back(Pair("RequestedThroneAttempt", throneSync.RequestedThroneAttempt));
+        obj.push_back(Pair("IsBlockchainSynced", masternodeSync.IsBlockchainSynced()));
+        obj.push_back(Pair("lastMasternodeList", masternodeSync.lastMasternodeList));
+        obj.push_back(Pair("lastMasternodeWinner", masternodeSync.lastMasternodeWinner));
+        obj.push_back(Pair("lastBudgetItem", masternodeSync.lastBudgetItem));
+        obj.push_back(Pair("lastFailure", masternodeSync.lastFailure));
+        obj.push_back(Pair("nCountFailures", masternodeSync.nCountFailures));
+        obj.push_back(Pair("sumMasternodeList", masternodeSync.sumMasternodeList));
+        obj.push_back(Pair("sumMasternodeWinner", masternodeSync.sumMasternodeWinner));
+        obj.push_back(Pair("sumBudgetItemProp", masternodeSync.sumBudgetItemProp));
+        obj.push_back(Pair("sumBudgetItemFin", masternodeSync.sumBudgetItemFin));
+        obj.push_back(Pair("countMasternodeList", masternodeSync.countMasternodeList));
+        obj.push_back(Pair("countMasternodeWinner", masternodeSync.countMasternodeWinner));
+        obj.push_back(Pair("countBudgetItemProp", masternodeSync.countBudgetItemProp));
+        obj.push_back(Pair("countBudgetItemFin", masternodeSync.countBudgetItemFin));
+        obj.push_back(Pair("RequestedMasternodeAssets", masternodeSync.RequestedMasternodeAssets));
+        obj.push_back(Pair("RequestedMasternodeAttempt", masternodeSync.RequestedMasternodeAttempt));
 
 
         return obj;
@@ -142,10 +143,52 @@ Value mnsync(const Array& params, bool fHelp)
 
     if(strMode == "reset")
     {
-        throneSync.Reset();
+        masternodeSync.Reset();
         return "success";
     }
     return "failure";
+}
+
+Value snsync(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 1)
+        throw runtime_error(
+            "snsync [status|reset]\n"
+            "Returns the sync status or resets sync.\n"
+        );
+
+    std::string strMode = params[0].get_str();
+
+    if(strMode == "status") {
+        Object obj;
+
+        obj.push_back(Pair("IsBlockchainSynced", systemnodeSync.IsBlockchainSynced()));
+        obj.push_back(Pair("lastSystemnodeList", systemnodeSync.lastSystemnodeList));
+        obj.push_back(Pair("lastSystemnodeWinner", systemnodeSync.lastSystemnodeWinner));
+        obj.push_back(Pair("lastBudgetItem", systemnodeSync.lastBudgetItem));
+        obj.push_back(Pair("lastFailure", systemnodeSync.lastFailure));
+        obj.push_back(Pair("nCountFailures", systemnodeSync.nCountFailures));
+        obj.push_back(Pair("sumSystemnodeList", systemnodeSync.sumSystemnodeList));
+        obj.push_back(Pair("sumSystemnodeWinner", systemnodeSync.sumSystemnodeWinner));
+        obj.push_back(Pair("sumBudgetItemProp", systemnodeSync.sumBudgetItemProp));
+        obj.push_back(Pair("sumBudgetItemFin", systemnodeSync.sumBudgetItemFin));
+        obj.push_back(Pair("countSystemnodeList", systemnodeSync.countSystemnodeList));
+        obj.push_back(Pair("countSystemnodeWinner", systemnodeSync.countSystemnodeWinner));
+        obj.push_back(Pair("countBudgetItemProp", systemnodeSync.countBudgetItemProp));
+        obj.push_back(Pair("countBudgetItemFin", systemnodeSync.countBudgetItemFin));
+        obj.push_back(Pair("RequestedSystemnodeAssets", systemnodeSync.RequestedSystemnodeAssets));
+        obj.push_back(Pair("RequestedSystemnodeAttempt", systemnodeSync.RequestedSystemnodeAttempt));
+
+        return obj;
+    }
+
+    if(strMode == "reset")
+    {
+        systemnodeSync.Reset();
+        return "success";
+    }
+    return "failure";
+
 }
 
 #ifdef ENABLE_WALLET
