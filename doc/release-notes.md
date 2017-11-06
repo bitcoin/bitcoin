@@ -30,7 +30,7 @@ be converted to a new format, which will take anywhere from a few minutes to
 half an hour, depending on the speed of your machine.
 
 The file format of `fee_estimates.dat` changed in version 0.15.0. Hence, a
-downgrade from version 0.15.0 or upgrade to version 0.15.0 will cause all fee
+downgrade from version 0.15 or upgrade to version 0.15 will cause all fee
 estimates to be discarded.
 
 Note that the block database format also changed in version 0.8.0 and there is no
@@ -58,8 +58,41 @@ the Linux kernel, macOS 10.8+, and Windows Vista and later. Windows XP is not su
 Bitcoin Core should also work on most other Unix-like systems but is not
 frequently tested on them.
 
+
 Notable changes
 ===============
+
+Network fork safety enhancements
+--------------------------------
+
+A number of changes to the way Bitcoin Core deals with peer connections and invalid blocks
+have been made, as a safety precaution against blockchain forks and misbehaving peers.
+
+- Unrequested blocks with less work than the minimum-chain-work are now no longer processed even
+if they have more work than the tip (a potential issue during IBD where the tip may have low-work).
+This prevents peers wasting the resources of a node. 
+
+- Peers which provide a chain with less work than the minimum-chain-work during IBD will now be disconnected.
+
+- For a given outbound peer, we now check whether their best known block has at least as much work as our tip. If it
+doesn't, and if we still haven't heard about a block with sufficient work after a 20 minute timeout, then we send
+a single getheaders message, and wait 2 more minutes. If after two minutes their best known block has insufficient
+work, we disconnect that peer. We protect 4 of our outbound peers from being disconnected by this logic to prevent
+excessive network topology changes as a result of this algorithm, while still ensuring that we have a reasonable
+number of nodes not known to be on bogus chains.
+
+- Outbound (non-manual) peers that serve us block headers that are already known to be invalid (other than compact
+block announcements, because BIP 152 explicitly permits nodes to relay compact blocks before fully validating them)
+will now be disconnected.
+
+- If the chain tip has not been advanced for over 30 minutes, we now assume the tip may be stale and will try to connect
+to an additional outbound peer. A periodic check ensures that if this extra peer connection is in use, we will disconnect
+the peer that least recently announced a new block.
+
+- The set of all known invalid-themselves blocks (i.e. blocks which we attempted to connect but which were found to be
+invalid) are now tracked and used to check if new headers build on an invalid chain. This ensures that everything that
+descends from an invalid block is marked as such.
+
 
 Miner block size limiting deprecated
 ------------------------------------
@@ -73,16 +106,43 @@ implied blockmaxweight, instead of limiting block size directly. Any miners who 
 to limit their blocks by size, instead of by weight, will have to do so manually by
 removing transactions from their block template directly.
 
+
+GUI settings backed up on reset
+-------------------------------
+
+The GUI settings will now be written to `guisettings.ini.bak` in the data directory before wiping them when
+the `-resetguisettings` argument is used. This can be used to retroactively troubleshoot issues due to the
+GUI settings.
+
+
+Duplicate wallets disallowed
+----------------------------
+
+Previously, it was possible to open the same wallet twice by manually copying the wallet file, causing
+issues when both were opened simultaneously. It is no longer possible to open copies of the same wallet.
+
+
+Debug `-minimumchainwork` argument added
+----------------------------------------
+
+A hidden debug argument `-minimumchainwork` has been added to allow a custom minimum work value to be used
+when validating a chain.
+
+
 Low-level RPC changes
 ----------------------
+
 - The "currentblocksize" value in getmininginfo has been removed.
 
 - `dumpwallet` no longer allows overwriting files. This is a security measure
   as well as prevents dangerous user mistakes.
 
+- `backupwallet` will now fail when attempting to backup to source file, rather than
+  destroying the wallet.
+
 - `listsinceblock` will now throw an error if an unknown `blockhash` argument
   value is passed, instead of returning a list of all wallet transactions since
-  the genesis block.
+  the genesis block. The behaviour is unchanged when an empty string is provided.
 
 0.15.1 Change log
 =================
@@ -179,6 +239,7 @@ Low-level RPC changes
 - #10957 `50bd3f6` Avoid returning a BIP9Stats object with uninitialized values (practicalswift)
 - #11539 `01223a0` [verify-commits] Allow revoked keys to expire (TheBlueMatt)
 
+
 Credits
 =======
 
@@ -203,12 +264,12 @@ Thanks to everyone who directly contributed to this release:
 - Lucas Betschart
 - MarcoFalke
 - Matt Corallo
-- MeshCollider
 - Paul Berg
 - Pedro Branco
 - Pieter Wuille
 - practicalswift
 - Russell Yanofsky
+- Samuel Dobson
 - Suhas Daftuar
 - Tomas van der Wansem
 - Wladimir J. van der Laan
