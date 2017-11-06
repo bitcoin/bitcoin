@@ -496,7 +496,7 @@ void static RavenMiner(const CChainParams& chainparams)
     unsigned int nExtraNonce = 0;
 
     std::shared_ptr<CReserveScript> coinbaseScript;
-    GetMainSignals().ScriptForMining(coinbaseScript);
+    //GetMainSignals().ScriptForMining(coinbaseScript);
 
     try {
         // Throw an error if no script was provided.  This can happen

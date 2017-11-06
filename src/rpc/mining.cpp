@@ -976,9 +976,10 @@ UniValue estimaterawfee(const JSONRPCRequest& request)
     return result;
 }
 
-UniValue getgenerate(const UniValue& params, bool fHelp)
+
+UniValue getgenerate(const JSONRPCRequest& request)
 {
-    if (fHelp || params.size() != 0)
+    if (request.fHelp || request.params.size() != 0)
         throw std::runtime_error(
             "getgenerate\n"
             "\nReturn if the server is set to generate coins or not. The default is false.\n"
@@ -995,9 +996,9 @@ UniValue getgenerate(const UniValue& params, bool fHelp)
     return gArgs.GetBoolArg("-gen", DEFAULT_GENERATE);
 }
 
-UniValue setgenerate(const UniValue& params, bool fHelp)
+UniValue setgenerate(const JSONRPCRequest& request)
 {
-    if (fHelp || params.size() < 1 || params.size() > 2)
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
         throw std::runtime_error(
             "setgenerate generate ( genproclimit )\n"
             "\nSet 'generate' true or false to turn generation on or off.\n"
@@ -1021,13 +1022,13 @@ UniValue setgenerate(const UniValue& params, bool fHelp)
         throw JSONRPCError(RPC_METHOD_NOT_FOUND, "Use the generate method instead of setgenerate on this network");
 
     bool fGenerate = true;
-    if (params.size() > 0)
-        fGenerate = params[0].get_bool();
+    if (request.params.size() > 0)
+        fGenerate = request.params[0].get_bool();
 
     int nGenProcLimit = gArgs.GetArg("-genproclimit", DEFAULT_GENERATE_THREADS);
-    if (params.size() > 1)
+    if (request.params.size() > 1)
     {
-        nGenProcLimit = params[1].get_int();
+        nGenProcLimit = request.params[1].get_int();
         if (nGenProcLimit == 0)
             fGenerate = false;
     }
@@ -1051,6 +1052,9 @@ static const CRPCCommand commands[] =
     { "mining",             "getblocktemplate",       &getblocktemplate,       {"template_request"} },
     { "mining",             "submitblock",            &submitblock,            {"hexdata","dummy"} },
 
+    /* Coin generation */
+    { "generating",         "getgenerate",            &getgenerate,            {}  },
+    { "generating",         "setgenerate",            &setgenerate,            {"generate", "genproclimit"}  },
 
     { "generating",         "generatetoaddress",      &generatetoaddress,      {"nblocks","address","maxtries"} },
 

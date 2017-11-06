@@ -63,7 +63,7 @@ protected:
 
     virtual void BlockFound(const uint256 &hash) {};
 
-    virtual void GetScriptForMining(std::shared_ptr<CReserveScript>&) {};
+    //virtual void GetScriptForMining(std::shared_ptr<CReserveScript>&) {};
 
     friend void ::RegisterValidationInterface(CValidationInterface*);
     friend void ::UnregisterValidationInterface(CValidationInterface*);
@@ -97,7 +97,7 @@ public:
     void BlockChecked(const CBlock&, const CValidationState&);
     void NewPoWValidBlock(const CBlockIndex *, const std::shared_ptr<const CBlock>&);
     void BlockFound(const uint256 &);
-    void ScriptForMining(const std::shared_ptr<const CReserveScript>&);
+    //void ScriptForMining(const std::shared_ptr<const CReserveScript>&);
 
 };
 

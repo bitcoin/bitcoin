@@ -13,6 +13,7 @@
 #include "ui_interface.h"
 #include "util.h"
 #include "utilstrencodings.h"
+#include "mining.h"
 
 #include <univalue.h>
 
@@ -268,6 +269,8 @@ static const CRPCCommand vRPCCommands[] =
     { "control",            "help",                   &help,                   {"command"}  },
     { "control",            "stop",                   &stop,                   {}  },
     { "control",            "uptime",                 &uptime,                 {}  },
+    
+   
 };
 
 CRPCTable::CRPCTable()
