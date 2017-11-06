@@ -178,9 +178,15 @@ QT_QRC = qt/bitcoin.qrc
 QT_QRC_LOCALE_CPP = qt/qrc_bitcoin_locale.cpp
 QT_QRC_LOCALE = qt/bitcoin_locale.qrc
 
+if ENABLE_BIP70
 PROTOBUF_CC = qt/paymentrequest.pb.cc
 PROTOBUF_H = qt/paymentrequest.pb.h
 PROTOBUF_PROTO = qt/paymentrequest.proto
+else
+PROTOBUF_CC =
+PROTOBUF_H =
+PROTOBUF_PROTO =
+endif
 
 BITCOIN_QT_H = \
   qt/addressbookpage.h \
@@ -330,7 +336,6 @@ BITCOIN_QT_WALLET_CPP = \
   qt/editaddressdialog.cpp \
   qt/openuridialog.cpp \
   qt/overviewpage.cpp \
-  qt/paymentrequestplus.cpp \
   qt/paymentserver.cpp \
   qt/receivecoinsdialog.cpp \
   qt/receiverequestdialog.cpp \
@@ -349,13 +354,19 @@ BITCOIN_QT_WALLET_CPP = \
   qt/walletmodeltransaction.cpp \
   qt/walletview.cpp
 
+BITCOIN_QT_WALLET_BIP70_CPP = \
+  qt/paymentrequestplus.cpp
+
 BITCOIN_QT_CPP = $(BITCOIN_QT_BASE_CPP)
 if TARGET_WINDOWS
 BITCOIN_QT_CPP += $(BITCOIN_QT_WINDOWS_CPP)
 endif
 if ENABLE_WALLET
 BITCOIN_QT_CPP += $(BITCOIN_QT_WALLET_CPP)
-endif
+if ENABLE_BIP70
+BITCOIN_QT_CPP += $(BITCOIN_QT_WALLET_BIP70_CPP)
+endif # ENABLE_BIP70
+endif # ENABLE_WALLET
 
 RES_IMAGES =
 

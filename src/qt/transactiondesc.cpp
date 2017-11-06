@@ -2,6 +2,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#ifdef HAVE_CONFIG_H
+#include <config/bitcoin-config.h>
+#endif
+
 #include <qt/transactiondesc.h>
 
 #include <qt/bitcoinunits.h>
@@ -257,6 +261,7 @@ QString TransactionDesc::toHTML(interfaces::Node& node, interfaces::Wallet& wall
         if (r.first == "Message")
             strHTML += "<br><b>" + tr("Message") + ":</b><br>" + GUIUtil::HtmlEscape(r.second, true) + "<br>";
 
+#ifdef ENABLE_BIP70
     //
     // PaymentRequest info:
     //
@@ -271,6 +276,7 @@ QString TransactionDesc::toHTML(interfaces::Node& node, interfaces::Wallet& wall
                 strHTML += "<b>" + tr("Merchant") + ":</b> " + GUIUtil::HtmlEscape(merchant) + "<br>";
         }
     }
+#endif
 
     if (wtx.is_coinbase)
     {
