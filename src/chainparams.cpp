@@ -125,43 +125,63 @@ public:
         pchMessageStart[3] = 0x4e;
         nDefaultPort = 8767;
         nPruneAfterHeight = 100000;
-                                  
-        uint256 TempHashHolding;         
-        uint256 BestBlockHash = uint256S("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
-        for (int i=0;i<5000000;i++) {
-            genesis = CreateGenesisBlock(1509740671, i, 0x1d00ffff, 4, 5000 * COIN);
-            genesis.hashPrevBlock = TempHashHolding; 
-            consensus.hashGenesisBlock = genesis.GetHash();
+                  
 
-            if (UintToArith256(consensus.hashGenesisBlock) < UintToArith256(BestBlockHash)) {
-                BestBlockHash = consensus.hashGenesisBlock;
-                std::cout << BestBlockHash.GetHex() << " Nonce: " << i << "\n";
-            }
+        // arith_uint256 test;
+        // bool fNegative;
+        // bool fOverflow;
+        // test.SetCompact(0x1e00ffff, &fNegative, &fOverflow);
+        // std::cout << "Test threshold: " << test.GetHex() << "\n\n";
 
-            TempHashHolding = consensus.hashGenesisBlock;
-            //std::cout << consensus.hashGenesisBlock.GetHex() << "\n";
-        }
-        std::cout << "\n";
-        std::cout << "\n";
-        std::cout << "\n";
 
-        std::cout << BestBlockHash.GetHex();
+        // uint256 TempHashHolding = uint256S("0x0000000000000000000000000000000000000000000000000000000000000000");
+        // uint256 BestBlockHash = uint256S("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+        // for (int i=0;i<40000000;i++) {
+        //     genesis = CreateGenesisBlock(1509740671, i, 0x1e00ffff, 4, 5000 * COIN);
+        //     //genesis.hashPrevBlock = TempHashHolding; 
+        //     consensus.hashGenesisBlock = genesis.GetHash();
 
-        std::cout << "\n";
-        std::cout << "\n";
-        int totalHits = 0;
-        double totalTime = 0.0;
+        //     arith_uint256 BestBlockHashArith = UintToArith256(BestBlockHash);
+        //     if (UintToArith256(consensus.hashGenesisBlock) < BestBlockHashArith) {
+        //         BestBlockHash = consensus.hashGenesisBlock;
+        //         std::cout << BestBlockHash.GetHex() << " Nonce: " << i << "\n";
+        //         std::cout << "   PrevBlockHash: " << genesis.hashPrevBlock.GetHex() << "\n";
+        //     }
 
-        for(int x = 0; x < 16; x++) {
-            totalHits += algoHashHits[x];
-            totalTime += algoHashTotal[x];
-            std::cout << "hash algo " << x << " hits " << algoHashHits[x] << " total " << algoHashTotal[x] << " avg " << algoHashTotal[x]/algoHashHits[x] << std::endl;
-        }
+        //     TempHashHolding = consensus.hashGenesisBlock;
 
-        std::cout << "Totals: hash algo " <<  " hits " << totalHits << " total " << totalTime << " avg " << totalTime/totalHits << std::endl;
+        //     if (BestBlockHashArith < test)
+        //         break;
+        //     //std::cout << consensus.hashGenesisBlock.GetHex() << "\n";
+        // }
+        // std::cout << "\n";
+        // std::cout << "\n";
+        // std::cout << "\n";
 
-        assert(consensus.hashGenesisBlock == uint256S("0x000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f"));
-        assert(genesis.hashMerkleRoot == uint256S("0x4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"));
+        // std::cout << BestBlockHash.GetHex();
+
+        // std::cout << "\n";
+        // std::cout << "\n";
+        // int totalHits = 0;
+        // double totalTime = 0.0;
+
+        // for(int x = 0; x < 16; x++) {
+        //     totalHits += algoHashHits[x];
+        //     totalTime += algoHashTotal[x];
+        //     std::cout << "hash algo " << x << " hits " << algoHashHits[x] << " total " << algoHashTotal[x] << " avg " << algoHashTotal[x]/algoHashHits[x] << std::endl;
+        // }
+
+        // std::cout << "Totals: hash algo " <<  " hits " << totalHits << " total " << totalTime << " avg " << totalTime/totalHits << std::endl;
+
+        //genesis.hashPrevBlock = TempHashHolding; 
+        genesis = CreateGenesisBlock(1509740671, 15881500, 0x1e00ffff, 4, 5000 * COIN); 
+
+        consensus.hashGenesisBlock = genesis.GetHash();        
+        std::cout << consensus.hashGenesisBlock.GetHex() << "\n";
+        std::cout << "Merkle: " << genesis.hashMerkleRoot.GetHex() << "\n";
+
+        assert(consensus.hashGenesisBlock == uint256S("0x0000004519318f9a8c1e984ff8bc2b6666457307885a227401276b85781f946d"));
+        assert(genesis.hashMerkleRoot == uint256S("0x042c3bf0de92abb825469aa10b788566eac73534aca049224c46eade08f851ac"));
 
         vSeeds.emplace_back("seed.raven.tzero.com", true); 
 
