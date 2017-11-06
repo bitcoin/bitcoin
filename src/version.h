@@ -33,7 +33,7 @@ static const int MIN_MNW_PEER_PROTO_VERSION = 70051;
 // V1 - Last protocol version before update
 // V2 - Newest protocol version
 static const int MIN_MASTERNODE_PAYMENT_PROTO_VERSION_1 = 70040;
-static const int MIN_MASTERNODE_PAYMENT_PROTO_VERSION_2 = 70050;
+static const int MIN_MASTERNODE_PAYMENT_PROTO_VERSION_2 = 70051;
 
 static const int MIN_SYSTEMNODE_PAYMENT_PROTO_VERSION = 70051;
 
