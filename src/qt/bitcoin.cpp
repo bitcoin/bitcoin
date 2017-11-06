@@ -632,8 +632,8 @@ bool TryMigrateQtAppSettings(const QString &oldOrg, const QString &oldApp, const
     // lastly we need to add the flag which indicates we have performed a migration
     sink.setValue(APP_SETTINGS_MIGRATED_FLAG, true);
 
-    LogPrintf("APP SETTINGS: Settings successfully migrated from '%s/%s' to '%s/%s'\n",
-        oldOrg.toStdString(), oldApp.toStdString(), newOrg.toStdString(), newApp.toStdString());
+    LogPrintf("APP SETTINGS: Settings successfully migrated from '%s/%s' to '%s/%s'\n", oldOrg.toStdString(),
+        oldApp.toStdString(), newOrg.toStdString(), newApp.toStdString());
 
     // NOTE: sink will go out of scope upon return so we don't need to manually call sync()
 
@@ -696,17 +696,17 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
     }
 
-    /// 3. Migrate application settings, if necessary
-    // BU changed the QAPP_ORG_NAME and since this is used for reading the app settings
-    // from the registry (Windows) or a configuration file (Linux/OSX)
-    // we need to check to see if we need to migrate old settings to the new location
+/// 3. Migrate application settings, if necessary
+// BU changed the QAPP_ORG_NAME and since this is used for reading the app settings
+// from the registry (Windows) or a configuration file (Linux/OSX)
+// we need to check to see if we need to migrate old settings to the new location
 #ifdef BITCOIN_CASH
     bool fMigrated = false;
     // For BUCash, first try to migrate from BTC BU settings
     fMigrated = TryMigrateQtAppSettings(QAPP_ORG_NAME, QAPP_APP_NAME_DEFAULT, QAPP_ORG_NAME, QAPP_APP_NAME_BUCASH);
     // Then try to migrate from non-BU client settings (if we didn't just migrate from BU settings)
-    fMigrated = fMigrated ||
-        TryMigrateQtAppSettings(QAPP_ORG_NAME_LEGACY, QAPP_APP_NAME_DEFAULT, QAPP_ORG_NAME, QAPP_APP_NAME_BUCASH);
+    fMigrated = fMigrated || TryMigrateQtAppSettings(
+                                 QAPP_ORG_NAME_LEGACY, QAPP_APP_NAME_DEFAULT, QAPP_ORG_NAME, QAPP_APP_NAME_BUCASH);
 
     // If we just migrated and this is a BUcash node, have the user reconfirm the data directory.
     // This is necessary in case the user wants to run side-by-side BTC chain and BCC chain nodes

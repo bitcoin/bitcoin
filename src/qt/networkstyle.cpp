@@ -3,8 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "clientversion.h" // for BITCOIN_CASH define (if on BUCash branch)
 #include "networkstyle.h"
+#include "clientversion.h" // for BITCOIN_CASH define (if on BUCash branch)
 
 #include "guiconstants.h"
 
