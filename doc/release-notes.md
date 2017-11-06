@@ -198,6 +198,8 @@ Detailed [change log](https://github.com/dashpay/dash/compare/v0.12.1.x...dashpa
 - [`502748487`](https://github.com/dashpay/dash/commit/502748487) bump MIN_INSTANTSEND_PROTO_VERSION to 70208 (#1650)
 - [`788ae63ac`](https://github.com/dashpay/dash/commit/788ae63ac) Fix edge case for IS (skip inputs that are too large) (#1695)
 - [`470e5435c`](https://github.com/dashpay/dash/commit/470e5435c) remove InstantSend votes for failed lock attemts after some timeout (#1705)
+- [`a9293ad03`](https://github.com/dashpay/dash/commit/a9293ad03) update setAskFor on TXLOCKVOTE (#1713)
+- [`859144809`](https://github.com/dashpay/dash/commit/859144809) fix bug introduced in #1695 (#1714)
 
 ### Governance:
 - [`4595db0ce`](https://github.com/dashpay/dash/commit/4595db0ce) Few changes for governance rpc: (#1351)
@@ -259,6 +261,7 @@ Detailed [change log](https://github.com/dashpay/dash/compare/v0.12.1.x...dashpa
 - [`296cfd2ef`](https://github.com/dashpay/dash/commit/296cfd2ef) Fix compilation with qt < 5.2 (#1672)
 - [`11afd7cfd`](https://github.com/dashpay/dash/commit/11afd7cfd) Translations201710 - en, de, fi, fr, ru, vi (#1659)
 - [`14d11e4a8`](https://github.com/dashpay/dash/commit/14d11e4a8) Translations 201710 part2 (#1676)
+- [`2144dae91`](https://github.com/dashpay/dash/commit/2144dae91) Add hires version of `light` theme for Hi-DPI screens (#1712)
 
 ### DIP0001:
 - [`cd262bf64`](https://github.com/dashpay/dash/commit/cd262bf64) DIP0001 implementation (#1594)
@@ -293,6 +296,7 @@ Detailed [change log](https://github.com/dashpay/dash/compare/v0.12.1.x...dashpa
 - [`5617aef07`](https://github.com/dashpay/dash/commit/5617aef07) Documentation: Update undocumented messages in protocol-documentation.md  (#1596)
 - [`72ef788c5`](https://github.com/dashpay/dash/commit/72ef788c5) Update `instantsend.md` according to PR#1628 changes (#1663)
 - [`304b886d0`](https://github.com/dashpay/dash/commit/304b886d0) Update build-osx.md formatting (#1690)
+- [`578d55979`](https://github.com/dashpay/dash/commit/578d55979) 12.2 release notes (#1675)
 
 ### Other (noticeable) refactoring and fixes:
 - [`98990b683`](https://github.com/dashpay/dash/commit/98990b683) Refactor: CDarkSendSigner (#1410)
