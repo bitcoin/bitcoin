@@ -261,7 +261,7 @@ void CSystemnodeSync::Process()
                 // timeout
                 if(lastSystemnodeList == 0 &&
                 (RequestedSystemnodeAttempt >= SYSTEMNODE_SYNC_THRESHOLD*3 || GetTime() - nAssetSyncStarted > SYSTEMNODE_SYNC_TIMEOUT*5)) {
-                    if(IsSporkActive(SPORK_8_SYSTEMNODE_PAYMENT_ENFORCEMENT)) {
+                    if(IsSporkActive(SPORK_14_SYSTEMNODE_PAYMENT_ENFORCEMENT)) {
                         LogPrintf("CSystemnodeSync::Process - ERROR - Sync has failed, will retry later\n");
                         RequestedSystemnodeAssets = SYSTEMNODE_SYNC_FAILED;
                         RequestedSystemnodeAttempt = 0;
@@ -292,7 +292,7 @@ void CSystemnodeSync::Process()
                 // timeout
                 if(lastSystemnodeWinner == 0 &&
                 (RequestedSystemnodeAttempt >= SYSTEMNODE_SYNC_THRESHOLD*3 || GetTime() - nAssetSyncStarted > SYSTEMNODE_SYNC_TIMEOUT*5)) {
-                    if(IsSporkActive(SPORK_8_SYSTEMNODE_PAYMENT_ENFORCEMENT)) {
+                    if(IsSporkActive(SPORK_14_SYSTEMNODE_PAYMENT_ENFORCEMENT)) {
                         LogPrintf("CSystemnodeSync::Process - ERROR - Sync has failed, will retry later\n");
                         RequestedSystemnodeAssets = SYSTEMNODE_SYNC_FAILED;
                         RequestedSystemnodeAttempt = 0;
