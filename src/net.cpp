@@ -612,6 +612,11 @@ void CConnman::SweepBanned()
         else
             ++it;
     }
+
+    // update UI
+    if(setBannedIsDirty && clientInterface) {
+        clientInterface->BannedListChanged();
+    }
 }
 
 bool CConnman::BannedSetIsDirty()
