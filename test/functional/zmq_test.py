@@ -116,7 +116,7 @@ class ZMQTest (BitcoinTestFramework):
         payment_txid = self.nodes[1].sendtoaddress(self.nodes[0].getnewaddress(), 1.0)
         self.sync_all()
 
-        # Should receive the json broadcasted raw transaction.
+        # Should receive the json decoded transaction.
         decodedtx = self.decodedtx.receive()
         assert_equal(payment_txid, json.loads(decodedtx.decode('utf-8'))['txid'])
 
@@ -124,7 +124,7 @@ class ZMQTest (BitcoinTestFramework):
         txid = self.hashtx.receive()
         assert_equal(payment_txid, bytes_to_hex_str(txid))
 
-        # Should receive the json decoded transaction.
+        # Should receive the broadcasted raw transaction.
         hex = self.rawtx.receive()
         assert_equal(payment_txid, bytes_to_hex_str(hash256(hex)))
 
