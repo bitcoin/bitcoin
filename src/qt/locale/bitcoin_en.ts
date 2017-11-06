@@ -335,12 +335,12 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>Sign &amp;message...</translation>
     </message>
     <message>
-        <location line="+293"/>
+        <location line="+313"/>
         <source>Synchronizing with network...</source>
         <translation>Synchronizing with network...</translation>
     </message>
     <message>
-        <location line="-374"/>
+        <location line="-394"/>
         <source>&amp;Overview</source>
         <translation>&amp;Overview</translation>
     </message>
@@ -415,7 +415,7 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>&amp;Change Passphrase...</translation>
     </message>
     <message>
-        <location line="+298"/>
+        <location line="+318"/>
         <source>Importing blocks from disk...</source>
         <translation>Importing blocks from disk...</translation>
     </message>
@@ -425,7 +425,7 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>Reindexing blocks on disk...</translation>
     </message>
     <message>
-        <location line="-372"/>
+        <location line="-392"/>
         <source>Send coins to a Peercoin address</source>
         <translation>Send coins to a Peercoin address</translation>
     </message>
@@ -461,12 +461,12 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <location line="-184"/>
-        <location line="+562"/>
+        <location line="+582"/>
         <source>Peercoin</source>
         <translation>Peercoin</translation>
     </message>
     <message>
-        <location line="-562"/>
+        <location line="-582"/>
         <source>Wallet</source>
         <translation>Wallet</translation>
     </message>
@@ -536,7 +536,27 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>Verify messages to ensure they were signed with specified Peercoin addresses</translation>
     </message>
     <message>
-        <location line="+29"/>
+        <location line="+5"/>
+        <source>&amp;Chatroom</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Open https://peercoin.chat in a web browser.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>&amp;Forum</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Open https://talk.peercoin.net in a web browser.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+28"/>
         <source>&amp;File</source>
         <translation>&amp;File</translation>
     </message>
@@ -551,7 +571,7 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>&amp;Help</translation>
     </message>
     <message>
-        <location line="+12"/>
+        <location line="+14"/>
         <source>Tabs toolbar</source>
         <translation>Tabs toolbar</translation>
     </message>
@@ -562,12 +582,12 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>[testnet]</translation>
     </message>
     <message>
-        <location line="+47"/>
+        <location line="+49"/>
         <source>Peercoin client</source>
         <translation>Peercoin client</translation>
     </message>
     <message numerus="yes">
-        <location line="+146"/>
+        <location line="+154"/>
         <source>%n active connection(s) to Peercoin network</source>
         <translation>
             <numerusform>%n active connection to Peercoin network</numerusform>
@@ -2881,7 +2901,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Peercoin Alert&quot; admin@foo
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+12"/>
         <source>Acceptable ciphers (default: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</source>
         <translation type="unfinished">Acceptable ciphers (default: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</translation>
     </message>

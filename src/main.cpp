@@ -5201,9 +5201,16 @@ void BitcoinMiner(CWallet *pwallet, bool fProofOfStake)
     CReserveKey reservekey(pwallet);
     unsigned int nExtraNonce = 0;
 
-    string strMintMessage = _("Info: Minting suspended due to locked wallet."); 
+    string strMintMessage = _("Info: Minting suspended due to locked wallet.");
+    string strMintDisabledMessage = _("Info: Minting disabled by 'nominting' option.");
 
     try { loop {
+        if (GetBoolArg("-nominting"))
+        {
+            strMintWarning = strMintDisabledMessage;
+            return;
+        }
+
         while (vNodes.empty())
             MilliSleep(1000);
 
@@ -5214,8 +5221,6 @@ void BitcoinMiner(CWallet *pwallet, bool fProofOfStake)
         }
         strMintWarning = "";
 
-        if (GetBoolArg("-nominting"))
-            return;
         //
         // Create new block
         //
