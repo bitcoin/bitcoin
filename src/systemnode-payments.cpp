@@ -154,6 +154,58 @@ CSystemnodePaymentDB::ReadResult CSystemnodePaymentDB::Read(CSystemnodePayments&
     return Ok;
 }
 
+bool SNIsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight)
+{
+    if(!systemnodeSync.IsSynced()) { //there is no budget data to use to check anything -- find the longest chain
+        LogPrint("snpayments", "Client not synced, skipping block payee checks\n");
+        return true;
+    }
+
+    //check if it's a budget block
+    if(IsSporkActive(SPORK_13_ENABLE_SUPERBLOCKS)){
+        if(budget.IsBudgetPaymentBlock(nBlockHeight)){
+            if(budget.IsTransactionValid(txNew, nBlockHeight)){
+                return true;
+            } else {
+                LogPrintf("Invalid budget payment detected %s\n", txNew.ToString().c_str());
+                if(IsSporkActive(SPORK_9_MASTERNODE_BUDGET_ENFORCEMENT)){
+                    return false;
+                } else {
+                    LogPrintf("Budget enforcement is disabled, accepting block\n");
+                    return true;
+                }
+            }
+        }
+    }
+
+    //check for systemnode payee
+    if(systemnodePayments.IsTransactionValid(txNew, nBlockHeight))
+    {
+        return true;
+    } else {
+        LogPrintf("Invalid mn payment detected %s\n", txNew.ToString().c_str());
+        if(IsSporkActive(SPORK_14_SYSTEMNODE_PAYMENT_ENFORCEMENT)){
+            return false;
+        } else {
+            LogPrintf("Systemnode payment enforcement is disabled, accepting block\n");
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool CSystemnodePayments::IsTransactionValid(const CTransaction& txNew, int nBlockHeight)
+{
+    LOCK(cs_mapSystemnodeBlocks);
+
+    if(mapSystemnodeBlocks.count(nBlockHeight)){
+        return mapSystemnodeBlocks[nBlockHeight].IsTransactionValid(txNew);
+    }
+
+    return true;
+}
+
 void DumpSystemnodePayments()
 {
     int64_t nStart = GetTimeMillis();
@@ -332,6 +384,53 @@ void CSystemnodePayments::FillBlockPayee(CMutableTransaction& txNew, int64_t nFe
 
         LogPrintf("Systemnode payment to %s\n", address2.ToString().c_str());
     }
+}
+
+bool CSystemnodeBlockPayees::IsTransactionValid(const CTransaction& txNew)
+{
+    LOCK(cs_vecPayments);
+
+    int nMaxSignatures = 0;
+    std::string strPayeesPossible = "";
+
+    CAmount systemnodePayment = GetSystemnodePayment(nBlockHeight, txNew.GetValueOut());
+
+    //require at least 6 signatures
+
+    BOOST_FOREACH(CSystemnodePayee& payee, vecPayments)
+        if(payee.nVotes >= nMaxSignatures && payee.nVotes >= SNPAYMENTS_SIGNATURES_REQUIRED)
+            nMaxSignatures = payee.nVotes;
+
+    // if we don't have at least 6 signatures on a payee, approve whichever is the longest chain
+    if(nMaxSignatures < SNPAYMENTS_SIGNATURES_REQUIRED) return true;
+
+    BOOST_FOREACH(CSystemnodePayee& payee, vecPayments)
+    {
+        bool found = false;
+        BOOST_FOREACH(CTxOut out, txNew.vout){
+            if(payee.scriptPubKey == out.scriptPubKey && systemnodePayment == out.nValue){
+                found = true;
+            }
+        }
+
+        if(payee.nVotes >= SNPAYMENTS_SIGNATURES_REQUIRED){
+            if(found) return true;
+
+            CTxDestination address1;
+            ExtractDestination(payee.scriptPubKey, address1);
+            CBitcoinAddress address2(address1);
+
+            if(strPayeesPossible == ""){
+                strPayeesPossible += address2.ToString();
+            } else {
+                strPayeesPossible += "," + address2.ToString();
+            }
+        }
+    }
+
+
+    LogPrintf("CSystemnodePayments::IsTransactionValid - Missing required payment - %s\n", strPayeesPossible.c_str());
+    return false;
 }
 
 bool CSystemnodePayments::GetBlockPayee(int nBlockHeight, CScript& payee)

@@ -85,6 +85,7 @@ public:
 
     // memory only
     mutable CScript payee;
+    mutable CScript payeeSN;
     mutable std::vector<uint256> vMerkleTree;
     mutable bool fChecked;
 
@@ -114,6 +115,7 @@ public:
         fChecked = false;
         vMerkleTree.clear();
         payee = CScript();
+        payeeSN = CScript();
     }
 
     CBlockHeader GetBlockHeader() const

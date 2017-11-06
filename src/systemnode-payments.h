@@ -26,6 +26,8 @@ extern CSystemnodePayments systemnodePayments;
 
 void SNFillBlockPayee(CMutableTransaction& txNew, int64_t nFees);
 
+bool SNIsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight);
+
 void DumpSystemnodePayments();
 
 /** Save Systemnode Payment Data (snpayments.dat)
@@ -236,6 +238,7 @@ public:
     void ProcessMessageSystemnodePayments(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
     void Sync(CNode* node, int nCountNeeded);
     void CleanPaymentList();
+    bool IsTransactionValid(const CTransaction& txNew, int nBlockHeight);
     bool GetBlockPayee(int nBlockHeight, CScript& payee);
     bool IsScheduled(CSystemnode& sn, int nNotBlockHeight);
     bool CanVote(COutPoint outSystemnode, int nBlockHeight);
