@@ -1375,21 +1375,21 @@ void startMongoDB(){
 		database = mongoc_client_get_database(client, "syscoindb");
 		alias_collection = mongoc_client_get_collection(client, "syscoindb", "alias");
 		offer_collection = mongoc_client_get_collection(client, "syscoindb", "offer");
-		setupOfferIndexes();
 		escrow_collection = mongoc_client_get_collection(client, "syscoindb", "escrow");
-		setupEscrowIndexes();
 		escrowbid_collection = mongoc_client_get_collection(client, "syscoindb", "escrowbid");
-		setupEscrowBidIndexes();
 		cert_collection = mongoc_client_get_collection(client, "syscoindb", "cert");
-		setupCertIndexes();
 		feedback_collection = mongoc_client_get_collection(client, "syscoindb", "feedback");
-		setupFeedbackIndexes();
 		BSON_ASSERT(alias_collection);
 		BSON_ASSERT(offer_collection);
 		BSON_ASSERT(escrow_collection);
 		BSON_ASSERT(escrowbid_collection);
 		BSON_ASSERT(cert_collection);
 		BSON_ASSERT(feedback_collection);
+		setupOfferIndexes();
+		setupEscrowIndexes();
+		setupEscrowBidIndexes();
+		setupCertIndexes();
+		setupFeedbackIndexes();
 		LogPrintf("Mongo c client loaded!\n");
 	}
 	else
