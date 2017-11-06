@@ -7,7 +7,11 @@
 
 #include <qt/walletmodel.h>
 
+#include <amount.h>
+
 #include <QObject>
+
+#include <memory>
 
 class SendCoinsRecipient;
 
