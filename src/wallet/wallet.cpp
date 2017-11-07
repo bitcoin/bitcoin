@@ -2406,7 +2406,7 @@ void CWallet::AvailableCoins(vector<COutput>& vCoins, bool fOnlyConfirmed, const
 			for (unsigned int i = 0; i < pcoin->vout.size(); i++) {
 				// SYSCOIN txs are unspendable by wallet unless using coincontrol(and the tx is selected)
 				// if its not alias specific payment then do this check, as an alias payment will use previous alias inputs
-				if (!bAliasPay || !coinControl || !coinControl->IsSelected(COutPoint((*it).first, i))))
+				if (!bAliasPay || !coinControl || !coinControl->IsSelected(COutPoint((*it).first, i)))
 				{
 					CTxDestination sysdestination;
 					if (pcoin->vout.size() >= i && ExtractDestination(pcoin->vout[i].scriptPubKey, sysdestination))
