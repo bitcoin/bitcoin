@@ -20,13 +20,21 @@ class TestConditionChecker : public AbstractThresholdConditionChecker
 {
 private:
     mutable ThresholdConditionCache cache;
+    bool height_based = false;
+    int64_t height_start = 0;
+    int64_t height_timeout = 0;
 
 public:
-    int64_t BeginTime(const Consensus::Params& params) const override { return TestTime(10000); }
-    int64_t EndTime(const Consensus::Params& params) const override { return TestTime(20000); }
+    int64_t BeginTime(const Consensus::Params& params) const override { return this->height_based ? 0 : TestTime(10000); }
+    int64_t EndTime(const Consensus::Params& params) const override { return this->height_based ? 0 : TestTime(20000); }
+    int64_t BeginHeight(const Consensus::Params& params) const override { return this->height_start; }
+    int64_t EndHeight(const Consensus::Params& params) const override { return this->height_timeout; }
     int Period(const Consensus::Params& params) const override { return 1000; }
     int Threshold(const Consensus::Params& params) const override { return 900; }
     bool Condition(const CBlockIndex* pindex, const Consensus::Params& params) const override { return (pindex->nVersion & 0x100); }
+    void SetHeightBased(int64_t flag) { this->height_based = flag; }
+    void SetHeightStart(int64_t n) { this->height_start = n; }
+    void SetHeightTimeout(int64_t n) { this->height_timeout = n; }
 
     ThresholdState GetStateFor(const CBlockIndex* pindexPrev) const { return AbstractThresholdConditionChecker::GetStateFor(pindexPrev, paramsDummy, cache); }
     int GetStateSinceHeightFor(const CBlockIndex* pindexPrev) const { return AbstractThresholdConditionChecker::GetStateSinceHeightFor(pindexPrev, paramsDummy, cache); }
@@ -49,6 +57,15 @@ class VersionBitsTester
 
 public:
     VersionBitsTester() : num(0) {}
+
+    VersionBitsTester& SetCheckerHeightBasedTest(bool flag, int64_t height_start, int64_t height_timeout) {
+        for (unsigned int  i = 0; i < CHECKERS; i++) {
+            checker[i].SetHeightBased(flag);
+            checker[i].SetHeightStart(height_start);
+            checker[i].SetHeightTimeout(height_timeout);
+        }
+        return *this;
+    }
 
     VersionBitsTester& Reset() {
         for (unsigned int i = 0; i < vpblock.size(); i++) {
@@ -204,7 +221,30 @@ BOOST_AUTO_TEST_CASE(versionbits_test)
                            .Mine(4000, TestTime(10000), 0).TestStarted().TestStateSinceHeight(3000)
                            .Mine(5000, TestTime(10000), 0).TestStarted().TestStateSinceHeight(3000)
                            .Mine(6000, TestTime(20000), 0).TestFailed().TestStateSinceHeight(6000)
-                           .Mine(7000, TestTime(20000), 0x100).TestFailed().TestStateSinceHeight(6000);
+                           .Mine(7000, TestTime(20000), 0x100).TestFailed().TestStateSinceHeight(6000)
+
+        // DEFINED -> STARTED -> LOCKEDIN -> ACTIVE (mandatory lockin)
+                           .Reset().SetCheckerHeightBasedTest(true, 2000, 4000).TestDefined().TestStateSinceHeight(0)
+                           .Mine(999, TestTime(999), 0).TestDefined().TestStateSinceHeight(0)
+                           .Mine(1000, TestTime(1000), 0).TestDefined().TestStateSinceHeight(0)
+                           .Mine(2000, TestTime(10000), 0).TestStarted().TestStateSinceHeight(2000)
+                           .Mine(4000, TestTime(10001), 0).TestLockedIn().TestStateSinceHeight(4000)
+                           .Mine(5000, TestTime(10002), 0).TestActive().TestStateSinceHeight(5000)
+                           .Mine(7000, TestTime(20000), 0x100).TestActive().TestStateSinceHeight(5000)
+
+        // DEFINED -> STARTED -> LOCKEDIN -> ACTIVE (mandatory lockin but activation by signalling)
+                           .Reset().SetCheckerHeightBasedTest(true, 3000, 10000).TestDefined().TestStateSinceHeight(0)
+                           .Mine(1, TestTime(1), 0x200).TestDefined().TestStateSinceHeight(0)
+                           .Mine(1000, TestTime(9999) - 1, 0x200).TestDefined().TestStateSinceHeight(0)
+                           .Mine(2000, TestTime(10000), 0x101).TestDefined().TestStateSinceHeight(0)
+                           .Mine(3000, TestTime(10010), 0x200).TestStarted().TestStateSinceHeight(3000)
+                           .Mine(3050, TestTime(10020), 0x200).TestStarted().TestStateSinceHeight(3000) // 50 old blocks
+                           .Mine(3950, TestTime(11999), 0x100).TestStarted().TestStateSinceHeight(3000) // 900 new blocks
+                           .Mine(3999, TestTime(12000), 0x200).TestStarted().TestStateSinceHeight(3000) // 49 old blocks
+                           .Mine(4000, TestTime(12500), 0x200).TestLockedIn().TestStateSinceHeight(4000) // 1 old block
+                           .Mine(4999, TestTime(13000), 0).TestLockedIn().TestStateSinceHeight(4000)
+                           .Mine(5000, TestTime(13001), 0).TestActive().TestStateSinceHeight(5000)
+        ;
     }
 
     // Sanity checks of version bit deployments

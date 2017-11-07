@@ -26,6 +26,9 @@ ThresholdState AbstractThresholdConditionChecker::GetStateFor(const CBlockIndex*
     int nThreshold = Threshold(params);
     int64_t nTimeStart = BeginTime(params);
     int64_t nTimeTimeout = EndTime(params);
+    int64_t nHeightStart = BeginHeight(params);
+    int64_t nHeightTimeout = EndHeight(params);
+    bool fHeightBased = (nTimeStart == 0 && nTimeTimeout == 0) ? true : false;
 
     // A block's state is always the same as that of the first of its period, so it is computed based on a pindexPrev whose height equals a multiple of nPeriod - 1.
     if (pindexPrev != nullptr) {
@@ -40,7 +43,8 @@ ThresholdState AbstractThresholdConditionChecker::GetStateFor(const CBlockIndex*
             cache[pindexPrev] = THRESHOLD_DEFINED;
             break;
         }
-        if (pindexPrev->GetMedianTimePast() < nTimeStart) {
+        if ((fHeightBased && (pindexPrev->nHeight + 1) < nHeightStart) ||
+            (!fHeightBased && pindexPrev->GetMedianTimePast() < nTimeStart)) {
             // Optimization: don't recompute down further, as we know every earlier block will be before the start time
             cache[pindexPrev] = THRESHOLD_DEFINED;
             break;
@@ -61,16 +65,19 @@ ThresholdState AbstractThresholdConditionChecker::GetStateFor(const CBlockIndex*
 
         switch (state) {
             case THRESHOLD_DEFINED: {
-                if (pindexPrev->GetMedianTimePast() >= nTimeTimeout) {
+                if ((fHeightBased && (pindexPrev->nHeight + 1) >= nHeightTimeout) ||
+                    (!fHeightBased && pindexPrev->GetMedianTimePast() >= nTimeTimeout)) {
                     stateNext = THRESHOLD_FAILED;
-                } else if (pindexPrev->GetMedianTimePast() >= nTimeStart) {
+                } else if ((fHeightBased && (pindexPrev->nHeight + 1) >= nHeightStart) ||
+                           (!fHeightBased && pindexPrev->GetMedianTimePast() >= nTimeStart)) {
                     stateNext = THRESHOLD_STARTED;
                 }
                 break;
             }
             case THRESHOLD_STARTED: {
-                if (pindexPrev->GetMedianTimePast() >= nTimeTimeout) {
-                    stateNext = THRESHOLD_FAILED;
+                if ((fHeightBased && (pindexPrev->nHeight + 1) >= nHeightTimeout) ||
+                    (!fHeightBased && pindexPrev->GetMedianTimePast() >= nTimeTimeout)) {
+                    stateNext = (fHeightBased == true) ? THRESHOLD_LOCKED_IN : THRESHOLD_FAILED;
                     break;
                 }
                 // We need to count
@@ -176,6 +183,8 @@ private:
 protected:
     int64_t BeginTime(const Consensus::Params& params) const override { return params.vDeployments[id].nStartTime; }
     int64_t EndTime(const Consensus::Params& params) const override { return params.vDeployments[id].nTimeout; }
+    int64_t BeginHeight(const Consensus::Params& params) const override { return params.vDeployments[id].nStartHeight; }
+    int64_t EndHeight(const Consensus::Params& params) const override { return params.vDeployments[id].nTimeoutHeight; }
     int Period(const Consensus::Params& params) const override { return params.nMinerConfirmationWindow; }
     int Threshold(const Consensus::Params& params) const override { return params.nRuleChangeActivationThreshold; }
 

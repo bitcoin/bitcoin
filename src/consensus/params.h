@@ -28,9 +28,13 @@ struct BIP9Deployment {
     /** Bit position to select the particular bit in nVersion. */
     int bit;
     /** Start MedianTime for version bits miner confirmation. Can be a date in the past */
-    int64_t nStartTime;
+    int64_t nStartTime = 0;
     /** Timeout/expiry MedianTime for the deployment attempt. */
-    int64_t nTimeout;
+    int64_t nTimeout = 0;
+    /** Start block height for version bits miner confirmation. Should be a retarget block, can be in the past */
+    int64_t nStartHeight = 0;
+    /** Timeout/expiry block height for the deployment attempt. Should be a retarget block. */
+    int64_t nTimeoutHeight = 0;
 };
 
 /**

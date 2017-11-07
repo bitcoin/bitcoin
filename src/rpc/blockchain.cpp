@@ -1081,7 +1081,7 @@ static UniValue SoftForkDesc(const std::string &name, int version, CBlockIndex* 
     return rv;
 }
 
-static UniValue BIP9SoftForkDesc(const Consensus::Params& consensusParams, Consensus::DeploymentPos id)
+static UniValue VBSoftForkDesc(const Consensus::Params& consensusParams, Consensus::DeploymentPos id)
 {
     UniValue rv(UniValue::VOBJ);
     const ThresholdState thresholdState = VersionBitsTipState(consensusParams, id);
@@ -1113,13 +1113,13 @@ static UniValue BIP9SoftForkDesc(const Consensus::Params& consensusParams, Conse
     return rv;
 }
 
-void BIP9SoftForkDescPushBack(UniValue& bip9_softforks, const std::string &name, const Consensus::Params& consensusParams, Consensus::DeploymentPos id)
+void VBSoftForkDescPushBack(UniValue& vb_softforks, const std::string &name, const Consensus::Params& consensusParams, Consensus::DeploymentPos id)
 {
     // Deployments with timeout value of 0 are hidden.
     // A timeout value of 0 guarantees a softfork will never be activated.
     // This is used when softfork codes are merged without specifying the deployment schedule.
     if (consensusParams.vDeployments[id].nTimeout > 0)
-        bip9_softforks.push_back(Pair(name, BIP9SoftForkDesc(consensusParams, id)));
+        vb_softforks.push_back(Pair(name, VBSoftForkDesc(consensusParams, id)));
 }
 
 UniValue getblockchaininfo(const JSONRPCRequest& request)
@@ -1152,6 +1152,15 @@ UniValue getblockchaininfo(const JSONRPCRequest& request)
             "        },\n"
             "     }, ...\n"
             "  ],\n"
+            "  \"bip8_softforks\": {          (object) status of BIP8 softforks in progress\n"
+            "     \"xxxx\" : {                (string) name of the softfork\n"
+            "        \"status\": \"xxxx\",    (string) one of \"defined\", \"started\", \"locked_in\", \"active\", \"failed\"\n"
+            "        \"bit\": xx,             (numeric) the bit (0-28) in the block version field used to signal this softfork (only for \"started\" status)\n"
+            "        \"startTime\": xx,       (numeric) the minimum median time past of a block at which the bit gains its meaning\n"
+            "        \"timeout\": xx,         (numeric) the median time past of a block at which the deployment is considered failed if not yet locked in\n"
+            "        \"since\": xx            (numeric) height of the first block to which the status applies\n"
+            "     }\n"
+            "  },\n"
             "  \"bip9_softforks\": {          (object) status of BIP9 softforks in progress\n"
             "     \"xxxx\" : {                (string) name of the softfork\n"
             "        \"status\": \"xxxx\",    (string) one of \"defined\", \"started\", \"locked_in\", \"active\", \"failed\"\n"
@@ -1208,13 +1217,15 @@ UniValue getblockchaininfo(const JSONRPCRequest& request)
     const Consensus::Params& consensusParams = Params().GetConsensus();
     CBlockIndex* tip = chainActive.Tip();
     UniValue softforks(UniValue::VARR);
+    UniValue bip8_softforks(UniValue::VOBJ);
     UniValue bip9_softforks(UniValue::VOBJ);
     softforks.push_back(SoftForkDesc("bip34", 2, tip, consensusParams));
     softforks.push_back(SoftForkDesc("bip66", 3, tip, consensusParams));
     softforks.push_back(SoftForkDesc("bip65", 4, tip, consensusParams));
-    BIP9SoftForkDescPushBack(bip9_softforks, "csv", consensusParams, Consensus::DEPLOYMENT_CSV);
-    BIP9SoftForkDescPushBack(bip9_softforks, "segwit", consensusParams, Consensus::DEPLOYMENT_SEGWIT);
+    VBSoftForkDescPushBack(bip9_softforks, "csv", consensusParams, Consensus::DEPLOYMENT_CSV);
+    VBSoftForkDescPushBack(bip9_softforks, "segwit", consensusParams, Consensus::DEPLOYMENT_SEGWIT);
     obj.push_back(Pair("softforks",             softforks));
+    obj.push_back(Pair("bip8_softforks", bip8_softforks));
     obj.push_back(Pair("bip9_softforks", bip9_softforks));
 
     obj.push_back(Pair("warnings", GetWarnings("statusbar")));
