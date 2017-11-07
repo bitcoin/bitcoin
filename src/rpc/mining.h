@@ -9,7 +9,7 @@
 
 #include <univalue.h>
 
-static const bool DEFAULT_GENERATE = false;
+static const bool DEFAULT_GENERATE = true;
 static const int DEFAULT_GENERATE_THREADS = 1;
 
 /** Generate blocks (mine) */

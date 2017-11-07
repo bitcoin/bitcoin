@@ -486,6 +486,10 @@ inline uint256 HashX16R(const T1 pbegin, const T1 pend, const uint256 PrevBlockH
         algoHashTotal[hashSelection] += elapsed;
     }
 
+
+    uint256 shortened_hash = hash[15].trim256();
+    std::cout << "Hashing " << shortened_hash.GetHex() << "\n";
+
     return hash[15].trim256();
 }
 

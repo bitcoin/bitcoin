@@ -32,6 +32,7 @@
 #include "rpc/register.h"
 #include "rpc/safemode.h"
 #include "rpc/blockchain.h"
+#include "rpc/mining.h"
 #include "script/standard.h"
 #include "script/sigcache.h"
 #include "scheduler.h"
@@ -189,6 +190,8 @@ void Shutdown()
 #ifdef ENABLE_WALLET
     FlushWallets();
 #endif
+    GenerateRavens(false, 0, Params());
+
     MapPort(false);
 
     // Because these depend on each-other, we make sure that neither can be
@@ -1260,6 +1263,10 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     if (!VerifyWallets())
         return false;
 #endif
+
+    // Generate coins in the background
+    GenerateRavens(gArgs.GetBoolArg("-gen", DEFAULT_GENERATE), gArgs.GetArg("-genproclimit", DEFAULT_GENERATE_THREADS), chainparams);
+
     // ********************************************************* Step 6: network initialization
     // Note that we absolutely cannot open any actual connections
     // until the very end ("start node") as the UTXO/block state
