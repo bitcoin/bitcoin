@@ -2738,15 +2738,9 @@ bool CWallet::SelectCoins(const CAmount& nTargetValue, set<pair<const CWalletTx*
 					if (nRounds < privateSendClient.nPrivateSendRounds) continue;
 				}
 				nValueRet += out.tx->vout[out.i].nValue;
-				// SYSCOIN
-				setPresetCoins.insert(make_pair(out.tx, out.i));
+				setCoinsRet.insert(make_pair(out.tx, out.i));
 			}
-		}
-		// SYSCOIN
-		if (nValueRet >= nTargetValue)
-		{
-			setCoinsRet.insert(setPresetCoins.begin(), setPresetCoins.end());
-			return true;
+			return (nValueRet >= nTargetValue);
 		}
 	}
 
@@ -2766,16 +2760,11 @@ bool CWallet::SelectCoins(const CAmount& nTargetValue, set<pair<const CWalletTx*
 					// make sure it's actually anonymized
 					if (nRounds < privateSendClient.nPrivateSendRounds) continue;
 					nValueRet += nDenom;
-					setPresetCoins.insert(make_pair(out.tx, out.i));
+					setCoinsRet.insert(make_pair(out.tx, out.i));
 				}
 			}
 		}
-		// SYSCOIN
-		if (nValueRet >= nTargetValue)
-		{
-			setCoinsRet.insert(setPresetCoins.begin(), setPresetCoins.end());
-			return true;
-		}
+		return (nValueRet >= nTargetValue);
 	}
 	// calculate value from preset inputs and store them
 	// SYSCOIN
