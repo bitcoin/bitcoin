@@ -49,7 +49,7 @@ static const CAmount DEFAULT_TRANSACTION_FEE = 0;
 //! -paytxfee will warn if called with a higher fee than this amount (in satoshis) per KB
 static const CAmount nHighTransactionFeeWarning = 0.01 * COIN;
 //! -fallbackfee default
-static const CAmount DEFAULT_LEGACY_FALLBACK_FEE = 20000;
+static const CAmount DEFAULT_LEGACY_FALLBACK_FEE = 1000;
 static const CAmount DEFAULT_DIP0001_FALLBACK_FEE = 1000;
 //! -mintxfee default
 /**
@@ -57,7 +57,7 @@ static const CAmount DEFAULT_DIP0001_FALLBACK_FEE = 1000;
 * so it's still 10 times lower comparing to syscoin.
 * 2017-07: we are 10x smaller now, let's lower defaults 10x via the same BIP9 bit as DIP0001
 */
-static const CAmount DEFAULT_LEGACY_TRANSACTION_MINFEE = 10000; // was 1000
+static const CAmount DEFAULT_LEGACY_TRANSACTION_MINFEE = 1000; // was 1000
 static const CAmount DEFAULT_DIP0001_TRANSACTION_MINFEE = 1000;
 //! -maxtxfee default
 static const CAmount DEFAULT_TRANSACTION_MAXFEE = 0.2 * COIN; // "smallest denom" + X * "denom tails"

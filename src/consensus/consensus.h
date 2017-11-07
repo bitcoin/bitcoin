@@ -11,7 +11,7 @@
 static const unsigned int MAX_LEGACY_BLOCK_SIZE = (10 * 1000 * 1000);
 inline unsigned int MaxBlockSize(bool fDIP0001Active /*= false */)
 {
-    return fDIP0001Active ? MAX_LEGACY_BLOCK_SIZE * 2 : MAX_LEGACY_BLOCK_SIZE;
+    return MAX_LEGACY_BLOCK_SIZE;
 }
 /** The maximum allowed number of signature check operations in a block (network rule) */
 // static const unsigned int MAX_BLOCK_SIGOPS = MAX_BLOCK_SIZE/50;
