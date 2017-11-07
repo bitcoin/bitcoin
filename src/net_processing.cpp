@@ -2483,7 +2483,7 @@ bool SendMessages(CNode* pto, CConnman& connman, std::atomic<bool>& interruptMsg
                     if (fFoundStartingHeader) {
                         // add this to the headers message
 						// SYSCOIN
-						vHeaders.push_back(pindex->GetBlockHeader(chainparams.GetConsensus()));
+						vHeaders.push_back(pindex->GetBlockHeader(chainParams.GetConsensus()));
                     } else if (PeerHasHeader(&state, pindex)) {
                         continue; // keep looking for the first new block
                     } else if (pindex->pprev == NULL || PeerHasHeader(&state, pindex->pprev)) {
@@ -2491,7 +2491,7 @@ bool SendMessages(CNode* pto, CConnman& connman, std::atomic<bool>& interruptMsg
                         // Start sending headers.
                         fFoundStartingHeader = true;
 						// SYSCOIN
-						vHeaders.push_back(pindex->GetBlockHeader(chainparams.GetConsensus()));
+						vHeaders.push_back(pindex->GetBlockHeader(chainParams.GetConsensus()));
                     } else {
                         // Peer doesn't have this header or the prior one -- nothing will
                         // connect, so bail out.
