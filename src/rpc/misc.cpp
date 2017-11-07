@@ -168,14 +168,14 @@ UniValue mnsync(const UniValue& params, bool fHelp)
 
     if(strMode == "next")
     {
-        masternodeSync.SwitchToNextAsset();
+        masternodeSync.SwitchToNextAsset(*g_connman);
         return "sync updated to " + masternodeSync.GetAssetName();
     }
 
     if(strMode == "reset")
     {
         masternodeSync.Reset();
-		masternodeSync.SwitchToNextAsset();
+		masternodeSync.SwitchToNextAsset(*g_connman);
         return "success";
     }
     return "failure";
@@ -226,6 +226,8 @@ public:
 */
 UniValue spork(const UniValue& params, bool fHelp)
 {
+	if (!g_connman)
+		throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
     if(params.size() == 1 && params[0].get_str() == "show"){
         UniValue ret(UniValue::VOBJ);
         for(int nSporkID = SPORK_START; nSporkID <= SPORK_END; nSporkID++){
@@ -250,7 +252,7 @@ UniValue spork(const UniValue& params, bool fHelp)
         int64_t nValue = params[1].get_int64();
 
         //broadcast new spork
-        if(sporkManager.UpdateSpork(nSporkID, nValue)){
+        if(sporkManager.UpdateSpork(nSporkID, nValue, *g_connman)){
             sporkManager.ExecuteSpork(nSporkID, nValue);
             return "success";
         } else {

@@ -88,7 +88,7 @@ class WalletTest (SyscoinTestFramework):
 
         # node0 should end up with 100000 SYS in block rewards plus fees, but
         # minus the 210 plus fees sent to node2
-        assert_equal(self.nodes[0].getbalance(), 100000-210)
+        assert_equal(self.nodes[0].getbalance(), 1000-210)
         assert_equal(self.nodes[2].getbalance(), 210)
 
         # Node0 should have two unspent outputs.
@@ -116,17 +116,17 @@ class WalletTest (SyscoinTestFramework):
         self.sync_all()
 
         assert_equal(self.nodes[0].getbalance(), 0)
-        assert_equal(self.nodes[2].getbalance(), 100000)
-        assert_equal(self.nodes[2].getbalance("from1"), 100000-210)
+        assert_equal(self.nodes[2].getbalance(), 1000)
+        assert_equal(self.nodes[2].getbalance("from1"), 1000-210)
 
         # Send 100 SYS normal
         address = self.nodes[0].getnewaddress("test")
-        fee_per_byte = Decimal('0.001') / 100000
-        self.nodes[2].settxfee(fee_per_byte * 100000)
+        fee_per_byte = Decimal('0.001') / 1000
+        self.nodes[2].settxfee(fee_per_byte * 1000)
         txid = self.nodes[2].sendtoaddress(address, 100, "", "", False)
         self.nodes[2].generate(1)
         self.sync_all()
-        node_2_bal = self.check_fee_amount(self.nodes[2].getbalance(), Decimal('90000'), fee_per_byte, count_bytes(self.nodes[2].getrawtransaction(txid)))
+        node_2_bal = self.check_fee_amount(self.nodes[2].getbalance(), Decimal('900'), fee_per_byte, count_bytes(self.nodes[2].getrawtransaction(txid)))
         assert_equal(self.nodes[0].getbalance(), Decimal('100'))
 
         # Send 100 SYS with subtract fee from amount
@@ -138,7 +138,7 @@ class WalletTest (SyscoinTestFramework):
         node_0_bal = self.check_fee_amount(self.nodes[0].getbalance(), Decimal('200'), fee_per_byte, count_bytes(self.nodes[2].getrawtransaction(txid)))
 
         # Sendmany 100 SYS
-        txid = self.nodes[2].sendmany('from1', {address: 100}, 0, "", [])
+        txid = self.nodes[2].sendmany('from1', {address: 100}, 0, False, "", [])
         self.nodes[2].generate(1)
         self.sync_all()
         node_0_bal += Decimal('100')
@@ -146,7 +146,7 @@ class WalletTest (SyscoinTestFramework):
         assert_equal(self.nodes[0].getbalance(), node_0_bal)
 
         # Sendmany 100 SYS with subtract fee from amount
-        txid = self.nodes[2].sendmany('from1', {address: 100}, 0, "", [address])
+        txid = self.nodes[2].sendmany('from1', {address: 100}, 0, False, "", [address])
         self.nodes[2].generate(1)
         self.sync_all()
         node_2_bal -= Decimal('100')

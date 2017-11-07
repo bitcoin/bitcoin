@@ -68,8 +68,8 @@ if "SYSCLI" not in os.environ:
     os.environ["SYSCLI"] = buildDir + '/src/syscoin-cli' + EXEEXT
 
 if EXEEXT == ".exe" and "-win" not in opts:
-    # https://github.com/syscoin/syscoin2/commit/d52802551752140cf41f0d9a225a43e84404d3e9
-    # https://github.com/syscoin/syscoin2/pull/5677#issuecomment-136646964
+    # https://github.com/syscoin/syscoin/commit/d52802551752140cf41f0d9a225a43e84404d3e9
+    # https://github.com/syscoin/syscoin/pull/5677#issuecomment-136646964
     print "Win tests currently disabled by default.  Use -win option to enable"
     sys.exit(0)
 
@@ -108,6 +108,7 @@ testScripts = [
     'proxy_test.py',
     'merkle_blocks.py',
     'fundrawtransaction.py',
+    'fundrawtransaction-hd.py',
     'signrawtransactions.py',
     'walletbackup.py',
     'nodehandling.py',
@@ -121,6 +122,7 @@ testScripts = [
     'disablewallet.py',
     'sendheaders.py', # NOTE: needs syscoin_hash to pass
     'keypool.py',
+    'keypool-hd.py',
     'prioritise_transaction.py',
     'invalidblockrequest.py', # NOTE: needs syscoin_hash to pass
     'invalidtxrequest.py', # NOTE: needs syscoin_hash to pass
@@ -137,7 +139,7 @@ testScriptsExt = [
     'bip68-sequence.py',
     'bipdersig-p2p.py', # NOTE: needs syscoin_hash to pass
     'bipdersig.py',
-    'getblocktemplate_longpoll.py', # FIXME: "socket.error: [Errno 54] Connection reset by peer" on my Mac, same as  https://github.com/syscoin/syscoin2/issues/6651
+    'getblocktemplate_longpoll.py', # FIXME: "socket.error: [Errno 54] Connection reset by peer" on my Mac, same as  https://github.com/syscoin/syscoin/issues/6651
     'getblocktemplate_proposals.py',
     'txn_doublespend.py',
     'txn_clone.py --mineblock',

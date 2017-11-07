@@ -29,7 +29,7 @@ class CTxMemPool;
  * included in blocks before transactions of lower fee/priority.   So for
  * example if you wanted to know what fee you should put on a transaction to
  * be included in a block within the next 5 blocks, you would start by looking
- * at the bucket with with the highest fee transactions and verifying that a
+ * at the bucket with the highest fee transactions and verifying that a
  * sufficiently high percentage of them were confirmed within 5 blocks and
  * then you would look at the next highest fee bucket, and so on, stopping at
  * the last bucket to pass the test.   The average fee of transactions in this
@@ -87,13 +87,13 @@ private:
     // Count the total # of txs in each bucket
     // Track the historical moving average of this total over blocks
     std::vector<double> txCtAvg;
-    // and calcuate the total for the current block to update the moving average
+    // and calculate the total for the current block to update the moving average
     std::vector<int> curBlockTxCt;
 
     // Count the total # of txs confirmed within Y blocks in each bucket
     // Track the historical moving average of theses totals over blocks
     std::vector<std::vector<double> > confAvg; // confAvg[Y][X]
-    // and calcuate the totals for the current block to update the moving averages
+    // and calculate the totals for the current block to update the moving averages
     std::vector<std::vector<int> > curBlockConf; // curBlockConf[Y][X]
 
     // Sum the total priority/fee of all tx's in each bucket

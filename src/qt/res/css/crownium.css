@@ -1160,6 +1160,34 @@ margin-top:12px;
 margin-left:0px; /* CSS Voodoo - set to -66px to hide default transaction icons */
 }
 
+/* MODAL OVERLAY */
+
+QWidget#bgWidget { /* The 'frame' overlaying the overview-page */
+    background:qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: .01 #f6f6f6, stop: .1 rgba(250, 250, 250, 128), stop: .95 rgba(250, 250, 250, 255), stop: 1 #ebebeb);
+    color:#616161;
+    padding-left:10px;
+    padding-right:10px;
+}
+
+QWidget#bgWidget .QPushButton#warningIcon {
+width:64px;
+height:64px;
+padding:5px;
+background-color:transparent;
+}
+
+QWidget#contentWidget { /* The actual content with the text/buttons/etc... */
+border-image: url(':/images/crownium/drkblue_walletFrame_bg') 0 0 0 0 stretch stretch;
+border-top:0px solid #000;
+margin:0;
+padding-top:20px;
+padding-bottom: 20px;
+}
+
+QWidget#bgWidget .QPushButton#closeButton {
+
+}
+
 /* SEND DIALOG */
 
 QDialog#SendCoinsDialog .QFrame#frameCoinControl { /* Coin Control Section */

@@ -87,9 +87,9 @@ UniValue getpeerinfo(const UniValue& params, bool fHelp)
             "    \"bytesrecv\": n,            (numeric) The total bytes received\n"
             "    \"conntime\": ttt,           (numeric) The connection time in seconds since epoch (Jan 1 1970 GMT)\n"
             "    \"timeoffset\": ttt,         (numeric) The time offset in seconds\n"
-            "    \"pingtime\": n,             (numeric) ping time\n"
-            "    \"minping\": n,              (numeric) minimum observed ping time\n"
-            "    \"pingwait\": n,             (numeric) ping wait\n"
+            "    \"pingtime\": n,             (numeric) ping time (if available)\n"
+            "    \"minping\": n,              (numeric) minimum observed ping time (if any at all)\n"
+            "    \"pingwait\": n,             (numeric) ping wait (if non-zero)\n"
             "    \"version\": v,              (numeric) The peer version, such as 7001\n"
             "    \"subver\": \"/Syscoin Core:x.x.x/\",  (string) The string version\n"
             "    \"inbound\": true|false,     (boolean) Inbound (true) or Outbound (false)\n"
@@ -141,8 +141,10 @@ UniValue getpeerinfo(const UniValue& params, bool fHelp)
         obj.push_back(Pair("bytesrecv", stats.nRecvBytes));
         obj.push_back(Pair("conntime", stats.nTimeConnected));
         obj.push_back(Pair("timeoffset", stats.nTimeOffset));
-        obj.push_back(Pair("pingtime", stats.dPingTime));
-        obj.push_back(Pair("minping", stats.dPingMin));
+        if (stats.dPingTime > 0.0)
+            obj.push_back(Pair("pingtime", stats.dPingTime));
+        if (stats.dMinPing < std::numeric_limits<int64_t>::max()/1e6)
+            obj.push_back(Pair("minping", stats.dMinPing));
         if (stats.dPingWait > 0.0)
             obj.push_back(Pair("pingwait", stats.dPingWait));
         obj.push_back(Pair("version", stats.nVersion));
@@ -402,6 +404,7 @@ UniValue getnetworkinfo(const UniValue& params, bool fHelp)
             "  \"localrelay\": true|false,              (bool) true if transaction relay is requested from peers\n"
             "  \"timeoffset\": xxxxx,                   (numeric) the time offset\n"
             "  \"connections\": xxxxx,                  (numeric) the number of connections\n"
+            "  \"networkactive\": true|false,           (bool) whether p2p networking is enabled\n"
             "  \"networks\": [                          (array) information per network\n"
             "  {\n"
             "    \"name\": \"xxx\",                     (string) network (ipv4, ipv6 or onion)\n"
@@ -436,8 +439,10 @@ UniValue getnetworkinfo(const UniValue& params, bool fHelp)
         obj.push_back(Pair("localservices", strprintf("%016x", g_connman->GetLocalServices())));
     obj.push_back(Pair("localrelay",     fRelayTxes));
     obj.push_back(Pair("timeoffset",    GetTimeOffset()));
-    if(g_connman)
+    if (g_connman) {
+        obj.push_back(Pair("networkactive", g_connman->GetNetworkActive()));
         obj.push_back(Pair("connections",   (int)g_connman->GetNodeCount(CConnman::CONNECTIONS_ALL)));
+    }
     obj.push_back(Pair("networks",      GetNetworksInfo()));
     obj.push_back(Pair("relayfee",      ValueFromAmount(::minRelayTxFee.GetFeePerK())));
     UniValue localAddresses(UniValue::VARR);
@@ -487,10 +492,13 @@ UniValue setban(const UniValue& params, bool fHelp)
     if (params[0].get_str().find("/") != string::npos)
         isSubnet = true;
 
-    if (!isSubnet)
-        netAddr = CNetAddr(params[0].get_str());
+    if (!isSubnet) {
+        CNetAddr resolved;
+        LookupHost(params[0].get_str().c_str(), resolved, false);
+        netAddr = resolved;
+    }
     else
-        subNet = CSubNet(params[0].get_str());
+        LookupSubNet(params[0].get_str().c_str(), subNet);
 
     if (! (isSubnet ? subNet.IsValid() : netAddr.IsValid()) )
         throw JSONRPCError(RPC_CLIENT_NODE_ALREADY_ADDED, "Error: Invalid IP/Subnet");
@@ -567,4 +575,22 @@ UniValue clearbanned(const UniValue& params, bool fHelp)
     g_connman->ClearBanned();
 
     return NullUniValue;
+}
+
+UniValue setnetworkactive(const UniValue& params, bool fHelp)
+{
+    if (fHelp || params.size() != 1) {
+        throw runtime_error(
+            "setnetworkactive true|false\n"
+            "Disable/enable all p2p network activity."
+        );
+    }
+
+    if (!g_connman) {
+        throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
+    }
+
+    g_connman->SetNetworkActive(params[0].get_bool());
+
+    return g_connman->GetNetworkActive();
 }

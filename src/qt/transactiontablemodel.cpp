@@ -312,6 +312,9 @@ QString TransactionTableModel::formatTxStatus(const TransactionRecord *wtx) cons
     case TransactionStatus::Unconfirmed:
         status = tr("Unconfirmed");
         break;
+    case TransactionStatus::Abandoned:
+        status = tr("Abandoned");
+        break;
     case TransactionStatus::Confirming:
         status = tr("Confirming (%1 of %2 recommended confirmations)").arg(wtx->status.depth).arg(TransactionRecord::RecommendedNumConfirmations);
         break;
@@ -493,6 +496,8 @@ QVariant TransactionTableModel::txStatusDecoration(const TransactionRecord *wtx)
         return COLOR_TX_STATUS_OFFLINE;
     case TransactionStatus::Unconfirmed:
         return QIcon(":/icons/" + theme + "/transaction_0");
+    case TransactionStatus::Abandoned:
+        return QIcon(":/icons/" + theme + "/transaction_abandoned");
     case TransactionStatus::Confirming:
         switch(wtx->status.depth)
         {
@@ -598,6 +603,11 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
     case Qt::TextAlignmentRole:
         return column_alignments[index.column()];
     case Qt::ForegroundRole:
+        // Use the "danger" color for abandoned transactions
+        if(rec->status.status == TransactionStatus::Abandoned)
+        {
+            return COLOR_TX_STATUS_DANGER;
+        }
         // Non-confirmed (but not immature) as transactions are grey
         if(!rec->status.countsForBalance && rec->status.status != TransactionStatus::Immature)
         {
@@ -634,6 +644,33 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
         return QString::fromStdString(rec->hash.ToString());
     case TxHexRole:
         return priv->getTxHex(rec);
+    case TxPlainTextRole:
+        {
+            QString details;
+            QString txLabel = walletModel->getAddressTableModel()->labelForAddress(QString::fromStdString(rec->address));
+
+            details.append(formatTxDate(rec));
+            details.append(" ");
+            details.append(formatTxStatus(rec));
+            details.append(". ");
+            if(!formatTxType(rec).isEmpty()) {
+                details.append(formatTxType(rec));
+                details.append(" ");
+            }
+            if(!rec->address.empty()) {
+                if(txLabel.isEmpty())
+                    details.append(tr("(no label)") + " ");
+                else {
+                    details.append("(");
+                    details.append(txLabel);
+                    details.append(") ");
+                }
+                details.append(QString::fromStdString(rec->address));
+                details.append(" ");
+            }
+            details.append(formatTxAmount(rec, false, SyscoinUnits::separatorNever));
+            return details;
+        }
     case ConfirmedRole:
         return rec->status.countsForBalance;
     case FormattedAmountRole:

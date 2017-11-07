@@ -5,7 +5,6 @@
 #ifndef SYSCOIN_QT_PEERTABLEMODEL_H
 #define SYSCOIN_QT_PEERTABLEMODEL_H
 
-#include "validation.h" // For CNodeStateStats
 #include "net_processing.h" // For CNodeStateStats
 #include "net.h"
 
@@ -47,6 +46,7 @@ class PeerTableModel : public QAbstractTableModel
 
 public:
     explicit PeerTableModel(ClientModel *parent = 0);
+    ~PeerTableModel();
     const CNodeCombinedStats *getNodeStats(int idx);
     int getRowByNodeId(NodeId nodeid);
     void startAutoRefresh();
@@ -76,7 +76,7 @@ public Q_SLOTS:
 private:
     ClientModel *clientModel;
     QStringList columns;
-    PeerTablePriv *priv;
+    std::unique_ptr<PeerTablePriv> priv;
     QTimer *timer;
 };
 

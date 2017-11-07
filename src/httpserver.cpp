@@ -207,12 +207,17 @@ static bool ClientAllowed(const CNetAddr& netaddr)
 static bool InitHTTPAllowList()
 {
     rpc_allow_subnets.clear();
-    rpc_allow_subnets.push_back(CSubNet("127.0.0.0/8")); // always allow IPv4 local subnet
-    rpc_allow_subnets.push_back(CSubNet("::1"));         // always allow IPv6 localhost
+    CNetAddr localv4;
+    CNetAddr localv6;
+    LookupHost("127.0.0.1", localv4, false);
+    LookupHost("::1", localv6, false);
+    rpc_allow_subnets.push_back(CSubNet(localv4, 8));      // always allow IPv4 local subnet
+    rpc_allow_subnets.push_back(CSubNet(localv6));         // always allow IPv6 localhost
     if (mapMultiArgs.count("-rpcallowip")) {
         const std::vector<std::string>& vAllow = mapMultiArgs["-rpcallowip"];
         BOOST_FOREACH (std::string strAllow, vAllow) {
-            CSubNet subnet(strAllow);
+            CSubNet subnet;
+            LookupSubNet(strAllow.c_str(), subnet);
             if (!subnet.IsValid()) {
                 uiInterface.ThreadSafeMessageBox(
                     strprintf("Invalid -rpcallowip subnet specification: %s. Valid are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24).", strAllow),
@@ -492,7 +497,7 @@ void StopHTTPServer()
         // at least libevent 2.0.21 and always introduced a delay. In libevent
         // master that appears to be solved, so in the future that solution
         // could be used again (if desirable).
-        // (see discussion in https://github.com/syscoin/syscoin2/pull/6990)
+        // (see discussion in https://github.com/syscoin/syscoin/pull/6990)
 #if BOOST_VERSION >= 105000
         if (!threadHTTP.try_join_for(boost::chrono::milliseconds(2000))) {
 #else
@@ -626,7 +631,7 @@ CService HTTPRequest::GetPeer()
         const char* address = "";
         uint16_t port = 0;
         evhttp_connection_get_peer(con, (char**)&address, &port);
-        peer = CService(address, port);
+        peer = LookupNumeric(address, port);
     }
     return peer;
 }

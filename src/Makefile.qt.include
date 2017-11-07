@@ -28,6 +28,7 @@ QT_FORMS_UI = \
   qt/forms/editaddressdialog.ui \
   qt/forms/helpmessagedialog.ui \
   qt/forms/intro.ui \
+  qt/forms/modaloverlay.ui \
   qt/forms/masternodelist.ui \
   qt/forms/openuridialog.ui \
   qt/forms/optionsdialog.ui \
@@ -59,6 +60,7 @@ QT_MOC_CPP = \
   qt/moc_intro.cpp \
   qt/moc_macdockiconhandler.cpp \
   qt/moc_macnotificationhandler.cpp \
+  qt/moc_modaloverlay.cpp \
   qt/moc_masternodelist.cpp \
   qt/moc_notificator.cpp \
   qt/moc_openuridialog.cpp \
@@ -128,6 +130,7 @@ SYSCOIN_QT_H = \
   qt/intro.h \
   qt/macdockiconhandler.h \
   qt/macnotificationhandler.h \
+  qt/modaloverlay.h \
   qt/masternodelist.h \
   qt/networkstyle.h \
   qt/notificator.h \
@@ -167,6 +170,8 @@ SYSCOIN_QT_H = \
 RES_ICONS = \
   qt/res/icons/syscoin.ico \
   qt/res/icons/syscoin.png \
+  qt/res/icons/chevron.png \
+  qt/res/icons/warning.png \
   qt/res/icons/drkblue/add.png \
   qt/res/icons/drkblue/address-book.png \
   qt/res/icons/drkblue/browse.png \
@@ -217,6 +222,10 @@ RES_ICONS = \
   qt/res/icons/drkblue/about.png \
   qt/res/icons/drkblue/about_qt.png \
   qt/res/icons/drkblue/verify.png \
+  qt/res/icons/drkblue/fontbigger.png \
+  qt/res/icons/drkblue/fontsmaller.png \
+  qt/res/icons/drkblue/transaction_abandoned.png \
+  qt/res/icons/drkblue/network_disabled.png \
   qt/res/icons/crownium/add.png \
   qt/res/icons/crownium/address-book.png \
   qt/res/icons/crownium/browse.png \
@@ -267,6 +276,10 @@ RES_ICONS = \
   qt/res/icons/crownium/about.png \
   qt/res/icons/crownium/about_qt.png \
   qt/res/icons/crownium/verify.png \
+  qt/res/icons/crownium/fontbigger.png \
+  qt/res/icons/crownium/fontsmaller.png \
+  qt/res/icons/crownium/transaction_abandoned.png \
+  qt/res/icons/crownium/network_disabled.png \
   qt/res/icons/light/add.png \
   qt/res/icons/light/address-book.png \
   qt/res/icons/light/browse.png \
@@ -317,6 +330,10 @@ RES_ICONS = \
   qt/res/icons/light/about.png \
   qt/res/icons/light/about_qt.png \
   qt/res/icons/light/verify.png \
+  qt/res/icons/light/fontbigger.png \
+  qt/res/icons/light/fontsmaller.png \
+  qt/res/icons/light/transaction_abandoned.png \
+  qt/res/icons/light/network_disabled.png \
   qt/res/icons/trad/add.png \
   qt/res/icons/trad/address-book.png \
   qt/res/icons/trad/browse.png \
@@ -366,7 +383,11 @@ RES_ICONS = \
   qt/res/icons/trad/tx_mined.png \
   qt/res/icons/trad/about.png \
   qt/res/icons/trad/about_qt.png \
-  qt/res/icons/trad/verify.png
+  qt/res/icons/trad/verify.png \
+  qt/res/icons/trad/fontbigger.png \
+  qt/res/icons/trad/fontsmaller.png \
+  qt/res/icons/trad/transaction_abandoned.png \
+  qt/res/icons/trad/network_disabled.png
 
 SYSCOIN_QT_CPP = \
   qt/bantablemodel.cpp \
@@ -378,6 +399,7 @@ SYSCOIN_QT_CPP = \
   qt/csvmodelwriter.cpp \
   qt/guiutil.cpp \
   qt/intro.cpp \
+  qt/modaloverlay.cpp \
   qt/networkstyle.cpp \
   qt/notificator.cpp \
   qt/optionsdialog.cpp \
@@ -483,7 +505,8 @@ RES_IMAGES = \
 RES_CSS = \
   qt/res/css/drkblue.css \
   qt/res/css/crownium.css \
-  qt/res/css/light.css
+  qt/res/css/light.css \
+  qt/res/css/light-hires.css
 
 RES_MOVIES = $(wildcard qt/res/movies/spinner-*.png)
 
@@ -534,8 +557,8 @@ endif
 if ENABLE_ZMQ
 qt_syscoin_qt_LDADD += $(LIBSYSCOIN_ZMQ) $(ZMQ_LIBS)
 endif
-qt_syscoin_qt_LDADD += $(LIBSYSCOIN_CLI) $(LIBSYSCOIN_COMMON) $(LIBSYSCOIN_UTIL) $(LIBSYSCOIN_CRYPTO) $(LIBUNIVALUE) $(LIBLEVELDB) $(LIBMEMENV) \
-  $(BOOST_LIBS) $(QT_LIBS) $(QT_DBUS_LIBS) $(QR_LIBS) $(PROTOBUF_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(LIBSECP256K1) $(LIBBSON) $(LIBMONGODB) \
+qt_syscoin_qt_LDADD += $(LIBSYSCOIN_CLI) $(LIBSYSCOIN_COMMON) $(LIBSYSCOIN_UTIL) $(LIBSYSCOIN_CRYPTO) $(LIBUNIVALUE) $(LIBLEVELDB) $(LIBMEMENV) $(LIBBSON) $(LIBMONGODB) \
+  $(BOOST_LIBS) $(QT_LIBS) $(QT_DBUS_LIBS) $(QR_LIBS) $(PROTOBUF_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(LIBSECP256K1) \
   $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS)
 qt_syscoin_qt_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(QT_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 qt_syscoin_qt_LIBTOOLFLAGS = --tag CXX
@@ -545,11 +568,11 @@ QT_QM=$(QT_TS:.ts=.qm)
 
 SECONDARY: $(QT_QM)
 
-qt/syscoinstrings.cpp: $(libsyscoin_server_a_SOURCES) $(libsyscoin_wallet_a_SOURCES) $(libsyscoin_common_a_SOURCES)
+qt/syscoinstrings.cpp: $(libsyscoin_server_a_SOURCES) $(libsyscoin_wallet_a_SOURCES) $(libsyscoin_common_a_SOURCES) $(libsyscoin_zmq_a_SOURCES) $(libsyscoin_consensus_a_SOURCES) $(libsyscoin_util_a_SOURCES)
 	@test -n $(XGETTEXT) || echo "xgettext is required for updating translations"
 	$(AM_V_GEN) cd $(srcdir); XGETTEXT=$(XGETTEXT) ../share/qt/extract_strings_qt.py $^
 
-translate: qt/syscoinstrings.cpp $(QT_FORMS_UI) $(QT_FORMS_UI) $(SYSCOIN_QT_CPP) $(SYSCOIN_QT_H) $(SYSCOIN_MM)
+translate: qt/syscoinstrings.cpp $(QT_FORMS_UI) $(QT_FORMS_UI) $(SYSCOIN_QT_CPP) qt/syscoin.cpp $(SYSCOIN_QT_H) $(SYSCOIN_MM)
 	@test -n $(LUPDATE) || echo "lupdate is required for updating translations"
 	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(LUPDATE) $^ -locations relative -no-obsolete -ts qt/locale/syscoin_en.ts
 

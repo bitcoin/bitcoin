@@ -10,10 +10,17 @@ const struct BIP9DeploymentInfo VersionBitsDeploymentInfo[Consensus::MAX_VERSION
     {
         /*.name =*/ "testdummy",
         /*.gbt_force =*/ true,
+        /*.check_mn_protocol =*/ false,
     },
     {
         /*.name =*/ "csv",
         /*.gbt_force =*/ true,
+        /*.check_mn_protocol =*/ false,
+    },
+    {
+        /*.name =*/ "dip0001",
+        /*.gbt_force =*/ true,
+        /*.check_mn_protocol =*/ true,
     }
 };
 
@@ -113,8 +120,8 @@ private:
 protected:
     int64_t BeginTime(const Consensus::Params& params) const { return params.vDeployments[id].nStartTime; }
     int64_t EndTime(const Consensus::Params& params) const { return params.vDeployments[id].nTimeout; }
-    int Period(const Consensus::Params& params) const { return params.nMinerConfirmationWindow; }
-    int Threshold(const Consensus::Params& params) const { return params.nRuleChangeActivationThreshold; }
+    int Period(const Consensus::Params& params) const { return params.vDeployments[id].nWindowSize ? params.vDeployments[id].nWindowSize : params.nMinerConfirmationWindow; }
+    int Threshold(const Consensus::Params& params) const { return params.vDeployments[id].nThreshold ? params.vDeployments[id].nThreshold : params.nRuleChangeActivationThreshold; }
 
     bool Condition(const CBlockIndex* pindex, const Consensus::Params& params) const
     {

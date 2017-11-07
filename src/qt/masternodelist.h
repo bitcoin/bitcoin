@@ -1,7 +1,7 @@
 #ifndef MASTERNODELIST_H
 #define MASTERNODELIST_H
 
-#include "masternode.h"
+#include "primitives/transaction.h"
 #include "platformstyle.h"
 #include "sync.h"
 #include "util.h"
@@ -45,7 +45,7 @@ private:
     bool fFilterUpdated;
 
 public Q_SLOTS:
-    void updateMyMasternodeInfo(QString strAlias, QString strAddr, masternode_info_t& infoMn);
+    void updateMyMasternodeInfo(QString strAlias, QString strAddr, const COutPoint& outpoint);
     void updateMyNodeList(bool fForce = false);
     void updateNodeList();
 

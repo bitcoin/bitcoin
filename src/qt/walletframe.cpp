@@ -57,6 +57,8 @@ bool WalletFrame::addWallet(const QString& name, WalletModel *walletModel)
     // Ensure a walletView is able to show the main window
     connect(walletView, SIGNAL(showNormalIfMinimized()), gui, SLOT(showNormalIfMinimized()));
 
+    connect(walletView, SIGNAL(outOfSyncWarningClicked()), this, SLOT(outOfSyncWarningClicked()));
+
     return true;
 }
 
@@ -209,3 +211,7 @@ WalletView *WalletFrame::currentWalletView()
     return qobject_cast<WalletView*>(walletStack->currentWidget());
 }
 
+void WalletFrame::outOfSyncWarningClicked()
+{
+    Q_EMIT requestedSyncWarningInfo();
+}

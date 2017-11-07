@@ -211,8 +211,8 @@ void PushNodeVersion(CNode *pnode, CConnman& connman, int64_t nTime)
     NodeId nodeid = pnode->GetId();
     CAddress addr = pnode->addr;
 
-    CAddress addrYou = (addr.IsRoutable() && !IsProxy(addr) ? addr : CAddress(CService("0.0.0.0", 0), addr.nServices));
-    CAddress addrMe = GetLocalAddress(&addr, nLocalNodeServices);
+    CAddress addrYou = (addr.IsRoutable() && !IsProxy(addr) ? addr : CAddress(CService(), addr.nServices));
+    CAddress addrMe = CAddress(CService(), nLocalNodeServices);
 
     connman.PushMessageWithVersion(pnode, INIT_PROTO_VERSION, NetMsgType::VERSION, PROTOCOL_VERSION, (uint64_t)nLocalNodeServices, nTime, addrYou, addrMe,
             nonce, strSubVersion, nNodeStartingHeight, ::fRelayTxes);
@@ -1231,12 +1231,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                 pfrom->fGetAddr = true;
             }
             connman.MarkAddressGood(pfrom->addr);
-        } else {
-            if (((CNetAddr)pfrom->addr) == (CNetAddr)addrFrom)
-            {
-                connman.AddNewAddress(addrFrom, addrFrom);
-                connman.MarkAddressGood(addrFrom);
-            }
         }
 
         // Relay alerts
@@ -1386,24 +1380,35 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             if (inv.type == MSG_BLOCK) {
                 UpdateBlockAvailability(pfrom->GetId(), inv.hash);
                 if (!fAlreadyHave && !fImporting && !fReindex && !mapBlocksInFlight.count(inv.hash)) {
-                    // First request the headers preceding the announced block. In the normal fully-synced
-                    // case where a new block is announced that succeeds the current tip (no reorganization),
-                    // there are no such headers.
-                    // Secondly, and only when we are close to being synced, we request the announced block directly,
-                    // to avoid an extra round-trip. Note that we must *first* ask for the headers, so by the
-                    // time the block arrives, the header chain leading up to it is already validated. Not
-                    // doing this will result in the received block being rejected as an orphan in case it is
-                    // not a direct successor.
-                    connman.PushMessage(pfrom, NetMsgType::GETHEADERS, chainActive.GetLocator(pindexBestHeader), inv.hash);
-                    CNodeState *nodestate = State(pfrom->GetId());
-                    if (CanDirectFetch(chainparams.GetConsensus()) &&
-                        nodestate->nBlocksInFlight < MAX_BLOCKS_IN_TRANSIT_PER_PEER) {
-                        vToFetch.push_back(inv);
-                        // Mark block as in flight already, even though the actual "getdata" message only goes out
-                        // later (within the same cs_main lock, though).
-                        MarkBlockAsInFlight(pfrom->GetId(), inv.hash, chainparams.GetConsensus());
+                    if (chainparams.DelayGetHeadersTime() != 0 && pindexBestHeader->GetBlockTime() < GetAdjustedTime() - chainparams.DelayGetHeadersTime()) {
+                        // We are pretty far from being completely synced at the moment. If we would initiate a new
+                        // chain of GETHEADERS/HEADERS now, we may end up downnloading the full chain from multiple
+                        // peers at the same time, slowing down the initial sync. At the same time, we don't know
+                        // if the peer we got this INV from may have a chain we don't know about yet, so we HAVE TO
+                        // send a GETHEADERS message at some point in time. This is delayed to later in SendMessages
+                        // when the headers chain has catched up enough.
+                        LogPrint("net", "delaying getheaders (%d) %s to peer=%d\n", pindexBestHeader->nHeight, inv.hash.ToString(), pfrom->id);
+                        pfrom->PushBlockHashFromINV(inv.hash);
+                    } else {
+                        // First request the headers preceding the announced block. In the normal fully-synced
+                        // case where a new block is announced that succeeds the current tip (no reorganization),
+                        // there are no such headers.
+                        // Secondly, and only when we are close to being synced, we request the announced block directly,
+                        // to avoid an extra round-trip. Note that we must *first* ask for the headers, so by the
+                        // time the block arrives, the header chain leading up to it is already validated. Not
+                        // doing this will result in the received block being rejected as an orphan in case it is
+                        // not a direct successor.
+                        connman.PushMessage(pfrom, NetMsgType::GETHEADERS, chainActive.GetLocator(pindexBestHeader), inv.hash);
+                        CNodeState *nodestate = State(pfrom->GetId());
+                        if (CanDirectFetch(chainparams.GetConsensus()) &&
+                            nodestate->nBlocksInFlight < MAX_BLOCKS_IN_TRANSIT_PER_PEER) {
+                            vToFetch.push_back(inv);
+                            // Mark block as in flight already, even though the actual "getdata" message only goes out
+                            // later (within the same cs_main lock, though).
+                            MarkBlockAsInFlight(pfrom->GetId(), inv.hash, chainparams.GetConsensus());
+                        }
+                        LogPrint("net", "getheaders (%d) %s to peer=%d\n", pindexBestHeader->nHeight, inv.hash.ToString(), pfrom->id);
                     }
-                    LogPrint("net", "getheaders (%d) %s to peer=%d\n", pindexBestHeader->nHeight, inv.hash.ToString(), pfrom->id);
                 }
             }
             else
@@ -1526,7 +1531,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         for (; pindex; pindex = chainActive.Next(pindex))
         {
 			// SYSCOIN
-            vHeaders.push_back(pindex->GetBlockHeader(chainparams.GetConsensus()));
+			vHeaders.push_back(pindex->GetBlockHeader(chainparams.GetConsensus()));
             if (--nLimit <= 0 || pindex->GetBlockHash() == hashStop)
                 break;
         }
@@ -1575,7 +1580,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
         // Process custom logic, no matter if tx will be accepted to mempool later or not
         if (strCommand == NetMsgType::TXLOCKREQUEST) {
-            if(!instantsend.ProcessTxLockRequest(txLockRequest)) {
+            if(!instantsend.ProcessTxLockRequest(txLockRequest, connman)) {
                 LogPrint("instantsend", "TXLOCKREQUEST -- failed %s\n", txLockRequest.GetHash().ToString());
                 return false;
             }
@@ -1586,27 +1591,28 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                 return true; // not an error
             }
 
-            CMasternode* pmn = mnodeman.Find(dstx.vin);
-            if(pmn == NULL) {
+            CMasternode mn;
+
+            if(!mnodeman.Get(dstx.vin.prevout, mn)) {
                 LogPrint("privatesend", "DSTX -- Can't find masternode %s to verify %s\n", dstx.vin.prevout.ToStringShort(), hashTx.ToString());
                 return false;
             }
 
-            if(!pmn->fAllowMixingTx) {
+            if(!mn.fAllowMixingTx) {
                 LogPrint("privatesend", "DSTX -- Masternode %s is sending too many transactions %s\n", dstx.vin.prevout.ToStringShort(), hashTx.ToString());
                 return true;
                 // TODO: Not an error? Could it be that someone is relaying old DSTXes
                 // we have no idea about (e.g we were offline)? How to handle them?
             }
 
-            if(!dstx.CheckSignature(pmn->pubKeyMasternode)) {
+            if(!dstx.CheckSignature(mn.pubKeyMasternode)) {
                 LogPrint("privatesend", "DSTX -- CheckSignature() failed for %s\n", hashTx.ToString());
                 return false;
             }
 
             LogPrintf("DSTX -- Got Masternode transaction %s\n", hashTx.ToString());
             mempool.PrioritiseTransaction(hashTx, hashTx.ToString(), 1000, 0.1*COIN);
-            pmn->fAllowMixingTx = false;
+            mnodeman.DisallowMixing(dstx.vin.prevout);
         }
 
         LOCK(cs_main);
@@ -1771,11 +1777,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             ReadCompactSize(vRecv); // ignore tx count; assume it is 0.
         }
 
-        if (nCount == 0) {
-            // Nothing interesting. Stop asking this peers for more headers.
-            return true;
-        }
-
         CBlockIndex *pindexLast = NULL;
         {
         LOCK(cs_main);
@@ -1812,6 +1813,20 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             // from there instead.
             LogPrint("net", "more getheaders (%d) to end to peer=%d (startheight:%d)\n", pindexLast->nHeight, pfrom->id, pfrom->nStartingHeight);
             connman.PushMessage(pfrom, NetMsgType::GETHEADERS, chainActive.GetLocator(pindexLast), uint256());
+        } else {
+            if (chainparams.DelayGetHeadersTime() != 0 && pindexBestHeader->GetBlockTime() < GetAdjustedTime() - chainparams.DelayGetHeadersTime()) {
+                // peer has sent us a HEADERS message below maximum size and we are still quite far from being fully
+                // synced, this means we probably got a bad peer for initial sync and need to continue with another one.
+                // By disconnecting we force to start a new iteration of initial headers sync in SendMessages
+                // TODO should we handle whitelisted peers here as we do in headers sync timeout handling?
+                pfrom->fDisconnect = true;
+                return error("detected bad peer for initial headers sync, disconnecting %d", pfrom->id);
+            }
+
+            if (nCount == 0) {
+                // Nothing interesting. Stop asking this peers for more headers.
+                return true;
+            }
         }
 
         bool fCanDirectFetch = CanDirectFetch(chainparams.GetConsensus());
@@ -2148,14 +2163,14 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         if (found)
         {
             //probably one the extensions
-            privateSendClient.ProcessMessage(pfrom, strCommand, vRecv);
-            privateSendServer.ProcessMessage(pfrom, strCommand, vRecv);
-            mnodeman.ProcessMessage(pfrom, strCommand, vRecv);
-            mnpayments.ProcessMessage(pfrom, strCommand, vRecv);
-            instantsend.ProcessMessage(pfrom, strCommand, vRecv);
-            sporkManager.ProcessSpork(pfrom, strCommand, vRecv);
+            privateSendClient.ProcessMessage(pfrom, strCommand, vRecv, connman);
+            privateSendServer.ProcessMessage(pfrom, strCommand, vRecv, connman);
+            mnodeman.ProcessMessage(pfrom, strCommand, vRecv, connman);
+            mnpayments.ProcessMessage(pfrom, strCommand, vRecv, connman);
+            instantsend.ProcessMessage(pfrom, strCommand, vRecv, connman);
+            sporkManager.ProcessSpork(pfrom, strCommand, vRecv, connman);
             masternodeSync.ProcessMessage(pfrom, strCommand, vRecv);
-            governance.ProcessMessage(pfrom, strCommand, vRecv);
+            governance.ProcessMessage(pfrom, strCommand, vRecv, connman);
         }
         else
         {
@@ -2281,7 +2296,8 @@ bool ProcessMessages(CNode* pfrom, CConnman& connman, std::atomic<bool>& interru
 
 bool SendMessages(CNode* pto, CConnman& connman, std::atomic<bool>& interruptMsgProc)
 {
-    const Consensus::Params& consensusParams = Params().GetConsensus();
+    const CChainParams chainParams = Params();
+    const Consensus::Params& consensusParams = chainParams.GetConsensus();
     {
         // Don't send anything until the version handshake is complete
         if (!pto->fSuccessfullyConnected || pto->fDisconnect)
@@ -2398,6 +2414,17 @@ bool SendMessages(CNode* pto, CConnman& connman, std::atomic<bool>& interruptMsg
             }
         }
 
+        if (chainParams.DelayGetHeadersTime() != 0 && pindexBestHeader->GetBlockTime() >= GetAdjustedTime() - chainParams.DelayGetHeadersTime()) {
+            // Headers chain has catched up enough so we can send out GETHEADER messages which were initially meant to
+            // be sent directly after INV was received
+            LOCK(pto->cs_inventory);
+            BOOST_FOREACH(const uint256 &hash, pto->vBlockHashesFromINV) {
+                LogPrint("net", "process delayed getheaders (%d) to peer=%d\n", pindexBestHeader->nHeight, pto->id);
+                connman.PushMessage(pto, NetMsgType::GETHEADERS, chainActive.GetLocator(pindexBestHeader), hash);
+            }
+            pto->vBlockHashesFromINV.clear();
+        }
+
         // Resend wallet transactions that haven't gotten in a block yet
         // Except during reindex, importing and IBD, when old wallet
         // transactions become unconfirmed and spams other nodes.
@@ -2456,7 +2483,7 @@ bool SendMessages(CNode* pto, CConnman& connman, std::atomic<bool>& interruptMsg
                     if (fFoundStartingHeader) {
                         // add this to the headers message
 						// SYSCOIN
-                        vHeaders.push_back(pindex->GetBlockHeader(consensusParams));
+						vHeaders.push_back(pindex->GetBlockHeader(chainparams.GetConsensus()));
                     } else if (PeerHasHeader(&state, pindex)) {
                         continue; // keep looking for the first new block
                     } else if (pindex->pprev == NULL || PeerHasHeader(&state, pindex->pprev)) {
@@ -2464,7 +2491,7 @@ bool SendMessages(CNode* pto, CConnman& connman, std::atomic<bool>& interruptMsg
                         // Start sending headers.
                         fFoundStartingHeader = true;
 						// SYSCOIN
-                        vHeaders.push_back(pindex->GetBlockHeader(consensusParams));
+						vHeaders.push_back(pindex->GetBlockHeader(chainparams.GetConsensus()));
                     } else {
                         // Peer doesn't have this header or the prior one -- nothing will
                         // connect, so bail out.
@@ -2597,7 +2624,7 @@ bool SendMessages(CNode* pto, CConnman& connman, std::atomic<bool>& interruptMsg
         // Check for headers sync timeouts
         if (state.fSyncStarted && state.nHeadersSyncTimeout < std::numeric_limits<int64_t>::max()) {
             // Detect whether this is a stalling initial-headers-sync peer
-            if (pindexBestHeader->GetBlockTime() <= GetAdjustedTime() - 6*60*60) { // was 24*60*60 in bitcoin
+            if (pindexBestHeader->GetBlockTime() <= GetAdjustedTime() - 6*60*60) { // was 24*60*60 in syscoin
                 if (nNow > state.nHeadersSyncTimeout && nSyncStarted == 1 && (nPreferredDownload - state.fPreferredDownload >= 1)) {
                     // Disconnect a (non-whitelisted) peer if it is our only sync peer,
                     // and we have others we could be using instead.

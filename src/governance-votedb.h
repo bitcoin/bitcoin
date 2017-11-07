@@ -72,7 +72,7 @@ public:
 
     CGovernanceObjectVoteFile& operator=(const CGovernanceObjectVoteFile& other);
 
-    void RemoveVotesFromMasternode(const CTxIn& vinMasternode);
+    void RemoveVotesFromMasternode(const COutPoint& outpointMasternode);
 
     ADD_SERIALIZE_METHODS;
 

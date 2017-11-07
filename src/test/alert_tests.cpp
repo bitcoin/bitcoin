@@ -9,7 +9,6 @@
 #include "chainparams.h"
 #include "clientversion.h"
 #include "data/alertTests.raw.h"
-#include "validation.h" // For PartitionCheck
 #include "serialize.h"
 #include "streams.h"
 #include "util.h"
@@ -57,7 +56,6 @@ bool SignAndSave(CAlert &alert)
 //
 void GenerateAlertTests()
 {
-#if 0
     CAlert alert;
     alert.nRelayUntil   = 60;
     alert.nExpiration   = 24 * 60 * 60;
@@ -106,7 +104,6 @@ void GenerateAlertTests()
     alert.strStatusBar  = "Evil Alert'; /bin/ls; echo '";
     alert.setSubVer.clear();
     SignAndSave(alert);
-#endif
 }
 
 struct ReadAlerts : public TestingSetup

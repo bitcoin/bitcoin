@@ -138,7 +138,7 @@ class TxnMallTest(SyscoinTestFramework):
 
         # Check node0's total balance; should be same as before the clone, + 100000 SYS for 2 matured,
         # less possible orphaned matured subsidy
-        expected += 100000
+        expected += 1000
         if (self.options.mine_block): 
             expected -= 500
         assert_equal(self.nodes[0].getbalance(), expected)
@@ -155,7 +155,7 @@ class TxnMallTest(SyscoinTestFramework):
                                                                 + fund_foo_tx["fee"]
                                                                 -   290
                                                                 + fund_bar_tx["fee"]
-                                                                +  100000)
+                                                                +  1000)
 
         # Node1's "from0" account balance
         assert_equal(self.nodes[1].getbalance("from0", 0), -(tx1["amount"] + tx2["amount"]))

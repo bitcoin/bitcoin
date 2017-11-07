@@ -216,7 +216,7 @@ public:
             }
         }
 
-        LogPrintf("Writting info to %s...\n", strFilename);
+        LogPrintf("Writing info to %s...\n", strFilename);
         Write(objToSave);
         LogPrintf("%s dump finished  %dms\n", strFilename, GetTimeMillis() - nStart);
 

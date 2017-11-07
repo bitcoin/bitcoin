@@ -8,6 +8,7 @@
 #include "masternode.h"
 #include "privatesend.h"
 #include "wallet/wallet.h"
+#include "privatesend-util.h"
 
 class CPrivateSendClient;
 class CConnman;
@@ -36,14 +37,16 @@ private:
     mutable CCriticalSection cs_darksend;
 
     // Keep track of the used Masternodes
-    std::vector<CTxIn> vecMasternodesUsed;
+    std::vector<COutPoint> vecMasternodesUsed;
 
     std::vector<CAmount> vecDenominationsSkipped;
     std::vector<COutPoint> vecOutPointLocked;
 
     int nCachedLastSuccessBlock;
-    int nMinBlockSpacing; //required blocks between mixes
-    const CBlockIndex *pCurrentBlockIndex; // Keep track of current block index
+    int nMinBlocksToWait; // how many blocks to wait after one successful mixing tx in non-multisession mode
+
+    // Keep track of current block height
+    int nCachedBlockHeight;
 
     int nEntriesCount;
     bool fLastEntryAccepted;
@@ -53,6 +56,8 @@ private:
 
     CMutableTransaction txMyCollateral; // client side collateral
 
+    CKeyHolderStorage keyHolderStorage; // storage for keys used in PrepareDenominate
+
     /// Check for process
     void CheckPool();
     void CompletedTransaction(PoolMessage nMessageID);
@@ -61,10 +66,12 @@ private:
         return std::find(vecDenominationsSkipped.begin(), vecDenominationsSkipped.end(), nDenomValue) != vecDenominationsSkipped.end();
     }
 
+    bool WaitForAnotherBlock();
+
     // Make sure we have enough keys since last backup
     bool CheckAutomaticBackup();
-    bool JoinExistingQueue(CAmount nBalanceNeedsAnonymized);
-    bool StartNewQueue(CAmount nValueMin, CAmount nBalanceNeedsAnonymized);
+    bool JoinExistingQueue(CAmount nBalanceNeedsAnonymized, CConnman& connman);
+    bool StartNewQueue(CAmount nValueMin, CAmount nBalanceNeedsAnonymized, CConnman& connman);
 
     /// Create denominations
     bool CreateDenominated(CConnman& connman);
@@ -75,11 +82,11 @@ private:
     bool MakeCollateralAmounts(const CompactTallyItem& tallyItem, bool fTryDenominated, CConnman& connman);
 
     /// As a client, submit part of a future mixing transaction to a Masternode to start the process
-    bool SubmitDenominate();
+    bool SubmitDenominate(CConnman& connman);
     /// step 1: prepare denominated inputs and outputs
     bool PrepareDenominate(int nMinRounds, int nMaxRounds, std::string& strErrorRet, std::vector<CTxIn>& vecTxInRet, std::vector<CTxOut>& vecTxOutRet);
     /// step 2: send denominated inputs and outputs prepared in step 1
-    bool SendDenominate(const std::vector<CTxIn>& vecTxIn, const std::vector<CTxOut>& vecTxOut);
+    bool SendDenominate(const std::vector<CTxIn>& vecTxIn, const std::vector<CTxOut>& vecTxOut, CConnman& connman);
 
     /// Get Masternode updates about the progress of mixing
     bool CheckPoolStateUpdate(PoolState nStateNew, int nEntriesCountNew, PoolStatusUpdate nStatusUpdate, PoolMessage nMessageID, int nSessionIDNew=0);
@@ -87,9 +94,9 @@ private:
     void SetState(PoolState nStateNew);
 
     /// As a client, check and sign the final transaction
-    bool SignFinalTransaction(const CTransaction& finalTransactionNew, CNode* pnode);
+    bool SignFinalTransaction(const CTransaction& finalTransactionNew, CNode* pnode, CConnman& connman);
 
-    void RelayIn(const CDarkSendEntry& entry);
+    void RelayIn(const CDarkSendEntry& entry, CConnman& connman);
 
     void SetNull();
 
@@ -106,7 +113,7 @@ public:
 
     CPrivateSendClient() :
         nCachedLastSuccessBlock(0),
-        nMinBlockSpacing(0),
+        nMinBlocksToWait(1),
         txMyCollateral(CMutableTransaction()),
         nPrivateSendRounds(DEFAULT_PRIVATESEND_ROUNDS),
         nPrivateSendAmount(DEFAULT_PRIVATESEND_AMOUNT),
@@ -116,11 +123,11 @@ public:
         nCachedNumBlocks(std::numeric_limits<int>::max()),
         fCreateAutoBackups(true) { SetNull(); }
 
-    void ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
+    void ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv, CConnman& connman);
 
     void ClearSkippedDenominations() { vecDenominationsSkipped.clear(); }
 
-    void SetMinBlockSpacing(int nMinBlockSpacingIn) { nMinBlockSpacing = nMinBlockSpacingIn; }
+    void SetMinBlocksToWait(int nMinBlocksToWaitIn) { nMinBlocksToWait = nMinBlocksToWaitIn; }
 
     void ResetPool();
 

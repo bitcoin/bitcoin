@@ -226,10 +226,9 @@ private:
     static const int MAX_TIME_FUTURE_DEVIATION;
     static const int RELIABLE_PROPAGATION_TIME;
 
-    // Keep track of current block index
-    const CBlockIndex *pCurrentBlockIndex;
-
     int64_t nTimeLastDiff;
+
+    // keep track of current block height
     int nCachedBlockHeight;
 
     // keep track of the scanning errors
@@ -266,23 +265,22 @@ private:
 
     bool fRateChecksEnabled;
 
-    class CRateChecksGuard
+    class ScopedLockBool
     {
-        CGovernanceManager& govman;
-        bool fRateChecksPrev;
+        bool& ref;
+        bool fPrevValue;
 
     public:
-        CRateChecksGuard(bool value, CGovernanceManager& gm) : govman(gm)
+        ScopedLockBool(CCriticalSection& _cs, bool& _ref, bool _value) : ref(_ref)
         {
-            ENTER_CRITICAL_SECTION(govman.cs)
-            fRateChecksPrev = govman.fRateChecksEnabled;
-            govman.fRateChecksEnabled = value;
+            AssertLockHeld(_cs);
+            fPrevValue = ref;
+            ref = _value;
         }
 
-        ~CRateChecksGuard()
+        ~ScopedLockBool()
         {
-            govman.fRateChecksEnabled = fRateChecksPrev;
-            LEAVE_CRITICAL_SECTION(govman.cs)
+            ref = fPrevValue;
         }
     };
 
@@ -301,20 +299,20 @@ public:
      */
     bool ConfirmInventoryRequest(const CInv& inv);
 
-    void Sync(CNode* node, const uint256& nProp, const CBloomFilter& filter);
+    void Sync(CNode* node, const uint256& nProp, const CBloomFilter& filter, CConnman& connman);
 
-    void ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
+    void ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv, CConnman& connman);
 
-    void DoMaintenance();
+    void DoMaintenance(CConnman& connman);
 
     CGovernanceObject *FindGovernanceObject(const uint256& nHash);
 
     std::vector<CGovernanceVote> GetMatchingVotes(const uint256& nParentHash);
-    std::vector<CGovernanceVote> GetCurrentVotes(const uint256& nParentHash, const CTxIn& mnCollateralOutpointFilter);
+    std::vector<CGovernanceVote> GetCurrentVotes(const uint256& nParentHash, const COutPoint& mnCollateralOutpointFilter);
     std::vector<CGovernanceObject*> GetAllNewerThan(int64_t nMoreThanTime);
 
     bool IsBudgetPaymentBlock(int nBlockHeight);
-    void AddGovernanceObject(CGovernanceObject& govobj, CNode* pfrom = NULL);
+    void AddGovernanceObject(CGovernanceObject& govobj, CConnman& connman, CNode* pfrom = NULL);
 
     std::string GetRequiredPaymentsString(int nBlockHeight);
 
@@ -368,7 +366,7 @@ public:
         }
     }
 
-    void UpdatedBlockTip(const CBlockIndex *pindex);
+    void UpdatedBlockTip(const CBlockIndex *pindex, CConnman& connman);
     int64_t GetLastDiffTime() { return nTimeLastDiff; }
     void UpdateLastDiffTime(int64_t nTimeIn) { nTimeLastDiff = nTimeIn; }
 
@@ -401,19 +399,19 @@ public:
 
     bool MasternodeRateCheck(const CGovernanceObject& govobj, bool fUpdateFailStatus, bool fForce, bool& fRateCheckBypassed);
 
-    bool ProcessVoteAndRelay(const CGovernanceVote& vote, CGovernanceException& exception) {
-        bool fOK = ProcessVote(NULL, vote, exception);
+    bool ProcessVoteAndRelay(const CGovernanceVote& vote, CGovernanceException& exception, CConnman& connman) {
+        bool fOK = ProcessVote(NULL, vote, exception, connman);
         if(fOK) {
-            vote.Relay();
+            vote.Relay(connman);
         }
         return fOK;
     }
 
-    void CheckMasternodeOrphanVotes();
+    void CheckMasternodeOrphanVotes(CConnman& connman);
 
-    void CheckMasternodeOrphanObjects();
+    void CheckMasternodeOrphanObjects(CConnman& connman);
 
-    void CheckPostponedObjects();
+    void CheckPostponedObjects(CConnman& connman);
 
     bool AreRateChecksEnabled() const {
         LOCK(cs);
@@ -422,11 +420,11 @@ public:
 
     void InitOnLoad();
 
-    int RequestGovernanceObjectVotes(CNode* pnode);
-    int RequestGovernanceObjectVotes(const std::vector<CNode*>& vNodesCopy);
+    int RequestGovernanceObjectVotes(CNode* pnode, CConnman& connman);
+    int RequestGovernanceObjectVotes(const std::vector<CNode*>& vNodesCopy, CConnman& connman);
 
 private:
-    void RequestGovernanceObject(CNode* pfrom, const uint256& nHash, bool fUseFilter = false);
+    void RequestGovernanceObject(CNode* pfrom, const uint256& nHash, CConnman& connman, bool fUseFilter = false);
 
     void AddInvalidVote(const CGovernanceVote& vote)
     {
@@ -438,7 +436,7 @@ private:
         mapOrphanVotes.Insert(vote.GetHash(), vote_time_pair_t(vote, GetAdjustedTime() + GOVERNANCE_ORPHAN_EXPIRATION_TIME));
     }
 
-    bool ProcessVote(CNode* pfrom, const CGovernanceVote& vote, CGovernanceException& exception);
+    bool ProcessVote(CNode* pfrom, const CGovernanceVote& vote, CGovernanceException& exception, CConnman& connman);
 
     /// Called to indicate a requested object has been received
     bool AcceptObjectMessage(const uint256& nHash);
@@ -448,20 +446,15 @@ private:
 
     static bool AcceptMessage(const uint256& nHash, hash_s_t& setHash);
 
-    void CheckOrphanVotes(CGovernanceObject& govobj, CGovernanceException& exception);
+    void CheckOrphanVotes(CGovernanceObject& govobj, CGovernanceException& exception, CConnman& connman);
 
     void RebuildIndexes();
-
-    /// Returns MN index, handling the case of index rebuilds
-    int GetMasternodeIndex(const CTxIn& masternodeVin);
-
-    void RebuildVoteMaps();
 
     void AddCachedTriggers();
 
     bool UpdateCurrentWatchdog(CGovernanceObject& watchdogNew);
 
-    void RequestOrphanObjects();
+    void RequestOrphanObjects(CConnman& connman);
 
     void CleanOrphanObjects();
 

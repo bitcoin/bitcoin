@@ -11,6 +11,7 @@
 
 class CMasternode;
 class CMasternodeBroadcast;
+class CConnman;
 
 static const int MASTERNODE_CHECK_SECONDS               =   5;
 static const int MASTERNODE_MIN_MNB_SECONDS             =   5 * 60;
@@ -41,7 +42,7 @@ public:
 
     CMasternodePing() = default;
 
-    CMasternodePing(CTxIn& vinNew);
+    CMasternodePing(const COutPoint& outpoint);
 
     ADD_SERIALIZE_METHODS;
 
@@ -69,13 +70,13 @@ public:
         return ss.GetHash();
     }
 
-    bool IsExpired() const { return GetTime() - sigTime > MASTERNODE_NEW_START_REQUIRED_SECONDS; }
+    bool IsExpired() const { return GetAdjustedTime() - sigTime > MASTERNODE_NEW_START_REQUIRED_SECONDS; }
 
-    bool Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode);
+    bool Sign(const CKey& keyMasternode, const CPubKey& pubKeyMasternode);
     bool CheckSignature(CPubKey& pubKeyMasternode, int &nDos);
     bool SimpleCheck(int& nDos);
-    bool CheckAndUpdate(CMasternode* pmn, bool fFromNewBroadcast, int& nDos);
-    void Relay();
+    bool CheckAndUpdate(CMasternode* pmn, bool fFromNewBroadcast, int& nDos, CConnman& connman);
+    void Relay(CConnman& connman);
 };
 
 inline bool operator==(const CMasternodePing& a, const CMasternodePing& b)
@@ -98,11 +99,11 @@ struct masternode_info_t
         nActiveState{activeState}, nProtocolVersion{protoVer}, sigTime{sTime} {}
 
     masternode_info_t(int activeState, int protoVer, int64_t sTime,
-                      CTxIn const& vin, CService const& addr,
+                      COutPoint const& outpoint, CService const& addr,
                       CPubKey const& pkCollAddr, CPubKey const& pkMN,
                       int64_t tWatchdogV = 0) :
         nActiveState{activeState}, nProtocolVersion{protoVer}, sigTime{sTime},
-        vin{vin}, addr{addr},
+        vin{outpoint}, addr{addr},
         pubKeyCollateralAddress{pkCollAddr}, pubKeyMasternode{pkMN},
         nTimeLastWatchdogVote{tWatchdogV} {}
 
@@ -124,7 +125,7 @@ struct masternode_info_t
 };
 
 //
-// The Masternode Class. For managing the Darksend process. It contains the input of the 100000SYS, signature to prove
+// The Masternode Class. For managing the Darksend process. It contains the input of the 100000 SYS, signature to prove
 // it's the one who own that ip address and code for calculating the payment election.
 //
 class CMasternode : public masternode_info_t
@@ -155,7 +156,7 @@ public:
     CMasternodePing lastPing{};
     std::vector<unsigned char> vchSig{};
 
-    int nCacheCollateralBlock{};
+    uint256 nCollateralMinConfBlockHash{};
     int nBlockLastPaid{};
     int nPoSeBanScore{};
     int nPoSeBanHeight{};
@@ -168,7 +169,7 @@ public:
     CMasternode();
     CMasternode(const CMasternode& other);
     CMasternode(const CMasternodeBroadcast& mnb);
-    CMasternode(CService addrNew, CTxIn vinNew, CPubKey pubKeyCollateralAddressNew, CPubKey pubKeyMasternodeNew, int nProtocolVersionIn);
+    CMasternode(CService addrNew, COutPoint outpointNew, CPubKey pubKeyCollateralAddressNew, CPubKey pubKeyMasternodeNew, int nProtocolVersionIn);
 
     ADD_SERIALIZE_METHODS;
 
@@ -187,7 +188,7 @@ public:
         READWRITE(nTimeLastPaid);
         READWRITE(nTimeLastWatchdogVote);
         READWRITE(nActiveState);
-        READWRITE(nCacheCollateralBlock);
+        READWRITE(nCollateralMinConfBlockHash);
         READWRITE(nBlockLastPaid);
         READWRITE(nProtocolVersion);
         READWRITE(nPoSeBanScore);
@@ -200,10 +201,10 @@ public:
     // CALCULATE A RANK AGAINST OF GIVEN BLOCK
     arith_uint256 CalculateScore(const uint256& blockHash);
 
-    bool UpdateFromNewBroadcast(CMasternodeBroadcast& mnb);
+    bool UpdateFromNewBroadcast(CMasternodeBroadcast& mnb, CConnman& connman);
 
-    static CollateralStatus CheckCollateral(CTxIn vin);
-    static CollateralStatus CheckCollateral(CTxIn vin, int& nHeight);
+    static CollateralStatus CheckCollateral(const COutPoint& outpoint);
+    static CollateralStatus CheckCollateral(const COutPoint& outpoint, int& nHeightRet);
     void Check(bool fForce = false);
 
     bool IsBroadcastedWithin(int nSeconds) { return GetAdjustedTime() - sigTime < nSeconds; }
@@ -258,14 +259,13 @@ public:
 
     void IncreasePoSeBanScore() { if(nPoSeBanScore < MASTERNODE_POSE_BAN_MAX_SCORE) nPoSeBanScore++; }
     void DecreasePoSeBanScore() { if(nPoSeBanScore > -MASTERNODE_POSE_BAN_MAX_SCORE) nPoSeBanScore--; }
+    void PoSeBan() { nPoSeBanScore = MASTERNODE_POSE_BAN_MAX_SCORE; }
 
     masternode_info_t GetInfo();
 
     static std::string StateToString(int nStateIn);
     std::string GetStateString() const;
     std::string GetStatus() const;
-
-    int GetCollateralAge();
 
     int GetLastPaidTime() { return nTimeLastPaid; }
     int GetLastPaidBlock() { return nBlockLastPaid; }
@@ -285,7 +285,7 @@ public:
         static_cast<masternode_info_t&>(*this)=from;
         lastPing = from.lastPing;
         vchSig = from.vchSig;
-        nCacheCollateralBlock = from.nCacheCollateralBlock;
+        nCollateralMinConfBlockHash = from.nCollateralMinConfBlockHash;
         nBlockLastPaid = from.nBlockLastPaid;
         nPoSeBanScore = from.nPoSeBanScore;
         nPoSeBanHeight = from.nPoSeBanHeight;
@@ -318,8 +318,8 @@ public:
 
     CMasternodeBroadcast() : CMasternode(), fRecovery(false) {}
     CMasternodeBroadcast(const CMasternode& mn) : CMasternode(mn), fRecovery(false) {}
-    CMasternodeBroadcast(CService addrNew, CTxIn vinNew, CPubKey pubKeyCollateralAddressNew, CPubKey pubKeyMasternodeNew, int nProtocolVersionIn) :
-        CMasternode(addrNew, vinNew, pubKeyCollateralAddressNew, pubKeyMasternodeNew, nProtocolVersionIn), fRecovery(false) {}
+    CMasternodeBroadcast(CService addrNew, COutPoint outpointNew, CPubKey pubKeyCollateralAddressNew, CPubKey pubKeyMasternodeNew, int nProtocolVersionIn) :
+        CMasternode(addrNew, outpointNew, pubKeyCollateralAddressNew, pubKeyMasternodeNew, nProtocolVersionIn), fRecovery(false) {}
 
     ADD_SERIALIZE_METHODS;
 
@@ -345,16 +345,16 @@ public:
     }
 
     /// Create Masternode broadcast, needs to be relayed manually after that
-    static bool Create(CTxIn vin, CService service, CKey keyCollateralAddressNew, CPubKey pubKeyCollateralAddressNew, CKey keyMasternodeNew, CPubKey pubKeyMasternodeNew, std::string &strErrorRet, CMasternodeBroadcast &mnbRet);
+    static bool Create(const COutPoint& outpoint, const CService& service, const CKey& keyCollateralAddressNew, const CPubKey& pubKeyCollateralAddressNew, const CKey& keyMasternodeNew, const CPubKey& pubKeyMasternodeNew, std::string &strErrorRet, CMasternodeBroadcast &mnbRet);
     static bool Create(std::string strService, std::string strKey, std::string strTxHash, std::string strOutputIndex, std::string& strErrorRet, CMasternodeBroadcast &mnbRet, bool fOffline = false);
 
     bool SimpleCheck(int& nDos);
-    bool Update(CMasternode* pmn, int& nDos);
+    bool Update(CMasternode* pmn, int& nDos, CConnman& connman);
     bool CheckOutpoint(int& nDos);
 
-    bool Sign(CKey& keyCollateralAddress);
+    bool Sign(const CKey& keyCollateralAddress);
     bool CheckSignature(int& nDos);
-    void Relay();
+    void Relay(CConnman& connman);
 };
 
 class CMasternodeVerification

@@ -70,7 +70,7 @@ class MerkleBlockTest(SyscoinTestFramework):
         txid_spent = txin_spent["txid"]
         txid_unspent = txid1 if txin_spent["txid"] != txid1 else txid2
 
-        # We cant find the block from a fully-spent tx
+        # We can't find the block from a fully-spent tx
         # Doesn't apply to Syscoin Core - we have txindex always on
         # assert_raises(JSONRPCException, self.nodes[2].gettxoutproof, [txid_spent])
         # ...but we can if we specify the block

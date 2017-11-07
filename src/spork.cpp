@@ -3,9 +3,9 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "chainparams.h"
-#include "net_processing.h"
 #include "validation.h"
 #include "messagesigner.h"
+#include "net_processing.h"
 #include "spork.h"
 
 #include <boost/lexical_cast.hpp>
@@ -17,7 +17,7 @@ CSporkManager sporkManager;
 
 std::map<uint256, CSporkMessage> mapSporks;
 
-void CSporkManager::ProcessSpork(CNode* pfrom, std::string& strCommand, CDataStream& vRecv)
+void CSporkManager::ProcessSpork(CNode* pfrom, std::string& strCommand, CDataStream& vRecv, CConnman& connman)
 {
     if(fLiteMode) return; // disable all Syscoin specific functionality
 
@@ -55,7 +55,7 @@ void CSporkManager::ProcessSpork(CNode* pfrom, std::string& strCommand, CDataStr
 
         mapSporks[hash] = spork;
         mapSporksActive[spork.nSporkID] = spork;
-        spork.Relay();
+        spork.Relay(connman);
 
         //does a task if needed
         ExecuteSpork(spork.nSporkID, spork.nValue);
@@ -65,7 +65,7 @@ void CSporkManager::ProcessSpork(CNode* pfrom, std::string& strCommand, CDataStr
         std::map<int, CSporkMessage>::iterator it = mapSporksActive.begin();
 
         while(it != mapSporksActive.end()) {
-            g_connman->PushMessage(pfrom, NetMsgType::SPORK, it->second);
+            connman.PushMessage(pfrom, NetMsgType::SPORK, it->second);
             it++;
         }
     }
@@ -101,13 +101,13 @@ void CSporkManager::ExecuteSpork(int nSporkID, int nValue)
     }
 }
 
-bool CSporkManager::UpdateSpork(int nSporkID, int64_t nValue)
+bool CSporkManager::UpdateSpork(int nSporkID, int64_t nValue, CConnman& connman)
 {
 
-    CSporkMessage spork = CSporkMessage(nSporkID, nValue, GetTime());
+    CSporkMessage spork = CSporkMessage(nSporkID, nValue, GetAdjustedTime());
 
     if(spork.Sign(strMasterPrivKey)) {
-        spork.Relay();
+        spork.Relay(connman);
         mapSporks[spork.GetHash()] = spork;
         mapSporksActive[nSporkID] = spork;
         return true;
@@ -141,7 +141,7 @@ bool CSporkManager::IsSporkActive(int nSporkID)
         }
     }
 
-    return r < GetTime();
+    return r < GetAdjustedTime();
 }
 
 // grab the value of the spork on the network, or the default
@@ -257,8 +257,8 @@ bool CSporkMessage::CheckSignature()
     return true;
 }
 
-void CSporkMessage::Relay()
+void CSporkMessage::Relay(CConnman& connman)
 {
     CInv inv(MSG_SPORK, GetHash());
-    g_connman->RelayInv(inv);
+    connman.RelayInv(inv);
 }

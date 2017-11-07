@@ -72,14 +72,14 @@ bool CDarksendQueue::CheckSignature(const CPubKey& pubKeyMasternode)
     return true;
 }
 
-bool CDarksendQueue::Relay()
+bool CDarksendQueue::Relay(CConnman& connman)
 {
-    std::vector<CNode*> vNodesCopy = g_connman->CopyNodeVector();
+    std::vector<CNode*> vNodesCopy = connman.CopyNodeVector();
     BOOST_FOREACH(CNode* pnode, vNodesCopy)
         if(pnode->nVersion >= MIN_PRIVATESEND_PEER_PROTO_VERSION)
-            g_connman->PushMessage(pnode, NetMsgType::DSQUEUE, (*this));
+            connman.PushMessage(pnode, NetMsgType::DSQUEUE, (*this));
 
-    g_connman->ReleaseNodeVector(vNodesCopy);
+    connman.ReleaseNodeVector(vNodesCopy);
     return true;
 }
 
@@ -178,7 +178,6 @@ bool CPrivateSend::IsCollateralValid(const CTransaction& txCollateral)
 
     CAmount nValueIn = 0;
     CAmount nValueOut = 0;
-    bool fMissingTx = false;
 
     BOOST_FOREACH(const CTxOut txout, txCollateral.vout) {
         nValueOut += txout.nValue;
@@ -190,19 +189,12 @@ bool CPrivateSend::IsCollateralValid(const CTransaction& txCollateral)
     }
 
     BOOST_FOREACH(const CTxIn txin, txCollateral.vin) {
-        CTransaction txPrev;
-        uint256 hash;
-        if(GetTransaction(txin.prevout.hash, txPrev, Params().GetConsensus(), hash, true)) {
-            if(txPrev.vout.size() > txin.prevout.n)
-                nValueIn += txPrev.vout[txin.prevout.n].nValue;
-        } else {
-            fMissingTx = true;
+        CCoins coins;
+        if(!GetUTXOCoins(txin.prevout, coins)) {
+            LogPrint("privatesend", "CPrivateSend::IsCollateralValid -- Unknown inputs in collateral transaction, txCollateral=%s", txCollateral.ToString());
+            return false;
         }
-    }
-
-    if(fMissingTx) {
-        LogPrint("privatesend", "CPrivateSend::IsCollateralValid -- Unknown inputs in collateral transaction, txCollateral=%s", txCollateral.ToString());
-        return false;
+        nValueIn += coins.vout[txin.prevout.n].nValue;
     }
 
     //collateral transactions are required to pay out a small fee to the miners
@@ -426,7 +418,7 @@ void CPrivateSend::SyncTransaction(const CTransaction& tx, const CBlock* pblock)
 }
 
 //TODO: Rename/move to core
-void ThreadCheckPrivateSend()
+void ThreadCheckPrivateSend(CConnman& connman)
 {
     if(fLiteMode) return; // disable all Syscoin specific functionality
 
@@ -444,7 +436,7 @@ void ThreadCheckPrivateSend()
         MilliSleep(1000);
 
         // try to sync from all available nodes, one step at a time
-        masternodeSync.ProcessTick();
+        masternodeSync.ProcessTick(connman);
 
         if(masternodeSync.IsBlockchainSynced() && !ShutdownRequested()) {
 
@@ -456,20 +448,20 @@ void ThreadCheckPrivateSend()
             // check if we should activate or ping every few minutes,
             // slightly postpone first run to give net thread a chance to connect to some peers
             if(nTick % MASTERNODE_MIN_MNP_SECONDS == 15)
-                activeMasternode.ManageState();
+                activeMasternode.ManageState(connman);
 
             if(nTick % 60 == 0) {
-                mnodeman.ProcessMasternodeConnections();
-                mnodeman.CheckAndRemove();
+                mnodeman.ProcessMasternodeConnections(connman);
+                mnodeman.CheckAndRemove(connman);
                 mnpayments.CheckAndRemove();
                 instantsend.CheckAndRemove();
             }
             if(fMasterNode && (nTick % (60 * 5) == 0)) {
-                mnodeman.DoFullVerificationStep();
+                mnodeman.DoFullVerificationStep(connman);
             }
 
             if(nTick % (60 * 5) == 0) {
-                governance.DoMaintenance();
+                governance.DoMaintenance(connman);
             }
         }
     }

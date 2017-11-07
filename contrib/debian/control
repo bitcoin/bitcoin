@@ -26,7 +26,7 @@ Build-Depends: debhelper,
 Standards-Version: 3.9.2
 Homepage: https://www.syscoin.org/
 Vcs-Git: git://github.com/syscoin/syscoin.git
-Vcs-Browser: https://github.com/syscoin/syscoin2
+Vcs-Browser: https://github.com/syscoin/syscoin
 
 Package: syscoind
 Architecture: any

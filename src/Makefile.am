@@ -121,6 +121,7 @@ SYSCOIN_CORE_H = \
   privatesend.h \
   privatesend-client.h \
   privatesend-server.h \
+  privatesend-util.h \
   dsnotificationinterface.h \
   governance.h \
   governance-classes.h \
@@ -152,6 +153,7 @@ SYSCOIN_CORE_H = \
   miner.h \
   net.h \
   net_processing.h \
+  netaddress.h \
   netbase.h \
   netfulfilledman.h \
   noui.h \
@@ -304,6 +306,7 @@ libsyscoin_wallet_a_SOURCES = \
   masternodeman.cpp \
   keepass.cpp \
   privatesend-client.cpp \
+  privatesend-util.cpp \
   wallet/crypter.cpp \
   wallet/db.cpp \
   wallet/rpcdump.cpp \
@@ -324,6 +327,7 @@ crypto_libsyscoin_crypto_a_SOURCES = \
   crypto/hmac_sha512.cpp \
   crypto/hmac_sha512.h \
   crypto/ripemd160.cpp \
+  crypto/aes_helper.c \
   crypto/ripemd160.h \
   crypto/sha1.cpp \
   crypto/sha1.h \
@@ -331,7 +335,6 @@ crypto_libsyscoin_crypto_a_SOURCES = \
   crypto/sha256.h \
   crypto/sha512.cpp \
   crypto/sha512.h
-
 
 # common: shared between syscoind, and syscoin-qt and non-server tools
 libsyscoin_common_a_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES)
@@ -351,6 +354,7 @@ libsyscoin_common_a_SOURCES = \
   hdchain.cpp \
   key.cpp \
   keystore.cpp \
+  netaddress.cpp \
   netbase.cpp \
   primitives/block.cpp \
   primitives/pureheader.cpp \
@@ -468,9 +472,7 @@ syscoin_tx_LDADD = \
   $(LIBSYSCOIN_COMMON) \
   $(LIBSYSCOIN_UTIL) \
   $(LIBSYSCOIN_CRYPTO) \
-  $(LIBSECP256K1) \
-  $(LIBBSON) \
-  $(LIBMONGODB)
+  $(LIBSECP256K1)
 
 syscoin_tx_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
 #

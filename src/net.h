@@ -11,7 +11,7 @@
 #include "bloom.h"
 #include "compat.h"
 #include "limitedmap.h"
-#include "netbase.h"
+#include "netaddress.h"
 #include "protocol.h"
 #include "random.h"
 #include "streams.h"
@@ -139,6 +139,8 @@ public:
     void Stop();
     void Interrupt();
     bool BindListenPort(const CService &bindAddr, std::string& strError, bool fWhitelisted = false);
+    bool GetNetworkActive() const { return fNetworkActive; };
+    void SetNetworkActive(bool active);
     bool OpenNetworkConnection(const CAddress& addrConnect, CSemaphoreGrant *grantOutbound = NULL, const char *strDest = NULL, bool fOneShot = false, bool fFeeler = false);
     bool CheckIncomingNonce(uint64_t nonce);
 
@@ -352,10 +354,8 @@ public:
 
     size_t GetNodeCount(NumConnections num);
     void GetNodeStats(std::vector<CNodeStats>& vstats);
-    bool DisconnectAddress(const CNetAddr& addr);
     bool DisconnectNode(const std::string& node);
     bool DisconnectNode(NodeId id);
-    bool DisconnectSubnet(const CSubNet& subnet);
 
     unsigned int GetSendBufferSize() const;
 
@@ -466,6 +466,7 @@ private:
     unsigned int nReceiveFloodSize;
 
     std::vector<ListenSocket> vhListenSocket;
+    bool fNetworkActive;
     banmap_t setBanned;
     CCriticalSection cs_setBanned;
     bool setBannedIsDirty;
@@ -614,8 +615,9 @@ public:
     bool fWhitelisted;
     double dPingTime;
     double dPingWait;
-    double dPingMin;
+    double dMinPing;
     std::string addrLocal;
+    CAddress addr;
 };
 
 
@@ -749,6 +751,9 @@ public:
     // Used for headers announcements - unfiltered blocks to relay
     // Also protected by cs_inventory
     std::vector<uint256> vBlockHashesToAnnounce;
+    // Blocks received by INV while headers chain was too far behind. These are used to delay GETHEADERS messages
+    // Also protected by cs_inventory
+    std::vector<uint256> vBlockHashesFromINV;
 
     // Block and TXN accept times
     std::atomic<int64_t> nLastBlockTime;
@@ -880,6 +885,12 @@ public:
     {
         LOCK(cs_inventory);
         vBlockHashesToAnnounce.push_back(hash);
+    }
+
+    void PushBlockHashFromINV(const uint256 &hash)
+    {
+        LOCK(cs_inventory);
+        vBlockHashesFromINV.push_back(hash);
     }
 
     void AskFor(const CInv& inv);

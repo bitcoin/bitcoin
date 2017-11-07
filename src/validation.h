@@ -1,6 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2017 The Dash Core developers
+// Copyright (c) 2009-2015 The Syscoin Core developers
+// Copyright (c) 2014-2017 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -53,7 +53,13 @@ static const bool DEFAULT_ALERTS = true;
 static const bool DEFAULT_WHITELISTRELAY = true;
 /** Default for DEFAULT_WHITELISTFORCERELAY. */
 static const bool DEFAULT_WHITELISTFORCERELAY = true;
-static const unsigned int DEFAULT_MIN_RELAY_TX_FEE = 1000;
+/** Default for -minrelaytxfee, minimum relay fee for transactions
+ * We are ~100 times smaller then syscoin now (2016-03-01), set minRelayTxFee only 10 times higher
+ * so it's still 10 times lower comparing to syscoin.
+ * 2017-07: we are 10x smaller now, let's lower defaults 10x via the same BIP9 bit as DIP0001
+ */
+static const unsigned int DEFAULT_LEGACY_MIN_RELAY_TX_FEE = 10000; // was 1000
+static const unsigned int DEFAULT_DIP0001_MIN_RELAY_TX_FEE = 1000;
 /** Default for -maxorphantx, maximum number of orphan transactions kept in memory */
 static const unsigned int DEFAULT_MAX_ORPHAN_TRANSACTIONS = 100;
 /** Default for -limitancestorcount, max number of in-mempool ancestors */
@@ -102,10 +108,10 @@ static const unsigned int AVG_ADDRESS_BROADCAST_INTERVAL = 30;
 /** Average delay between trickled inventory broadcasts in seconds.
  *  Blocks, whitelisted receivers, and a random 25% of transactions bypass this. */
 static const unsigned int AVG_INVENTORY_BROADCAST_INTERVAL = 5;
-/** Block download timeout base, expressed in millionths of the block interval (i.e. 1 min) */
-static const int64_t BLOCK_DOWNLOAD_TIMEOUT_BASE = 100000;
-/** Additional block download timeout per parallel downloading peer (i.e. 0.5 min) */
-static const int64_t BLOCK_DOWNLOAD_TIMEOUT_PER_PEER = BLOCK_DOWNLOAD_TIMEOUT_BASE / 2;
+/** Block download timeout base, expressed in millionths of the block interval (i.e. 2.5 min) */
+static const int64_t BLOCK_DOWNLOAD_TIMEOUT_BASE = 250000;
+/** Additional block download timeout per parallel downloading peer (i.e. 1.25 min) */
+static const int64_t BLOCK_DOWNLOAD_TIMEOUT_PER_PEER = 125000;
 
 static const unsigned int DEFAULT_LIMITFREERELAY = 15;
 static const bool DEFAULT_RELAYPRIORITY = true;
@@ -116,10 +122,10 @@ static const unsigned int DEFAULT_BYTES_PER_SIGOP = 20;
 static const bool DEFAULT_CHECKPOINTS_ENABLED = true;
 static const bool DEFAULT_TXINDEX = false;
 static const bool DEFAULT_ADDRESSINDEX = false;
-// SYSCOIN
-static const bool DEFAULT_INDEXPORT = 0;
 static const bool DEFAULT_TIMESTAMPINDEX = false;
 static const bool DEFAULT_SPENTINDEX = false;
+// SYSCOIN
+static const bool DEFAULT_INDEXPORT = 0;
 static const unsigned int DEFAULT_BANSCORE_THRESHOLD = 100;
 
 static const bool DEFAULT_TESTSAFEMODE = false;
@@ -160,6 +166,10 @@ extern bool fEnableReplacement;
 
 extern std::map<uint256, int64_t> mapRejectedBlocks;
 
+static const int DIP0001_PROTOCOL_VERSION = 70208;
+extern std::atomic<bool> fDIP0001WasLockedIn;
+extern std::atomic<bool> fDIP0001ActiveAtTip;
+
 /** Block hash whose ancestors we will assume to have valid scripts without checking them. */
 extern uint256 hashAssumeValid;
 
@@ -182,15 +192,15 @@ static const unsigned int MIN_BLOCKS_TO_KEEP = 288;
 static const signed int DEFAULT_CHECKBLOCKS = MIN_BLOCKS_TO_KEEP;
 static const unsigned int DEFAULT_CHECKLEVEL = 3;
 
-// Require that user allocate at least 550MB for block & undo files (blk???.dat and rev???.dat)
-// At 1MB per block, 288 blocks = 288MB.
-// Add 15% for Undo data = 331MB
-// Add 20% for Orphan block rate = 397MB
-// We want the low water mark after pruning to be at least 397 MB and since we prune in
+// Require that user allocate at least 945MB for block & undo files (blk???.dat and rev???.dat)
+// At 2MB per block, 288 blocks = 576MB.
+// Add 15% for Undo data = 662MB
+// Add 20% for Orphan block rate = 794MB
+// We want the low water mark after pruning to be at least 794 MB and since we prune in
 // full block file chunks, we need the high water mark which triggers the prune to be
-// one 128MB block file + added 15% undo data = 147MB greater for a total of 545MB
-// Setting the target to > than 550MB will make it likely we can respect the target.
-static const uint64_t MIN_DISK_SPACE_FOR_BLOCK_FILES = 550 * 1024 * 1024;
+// one 128MB block file + added 15% undo data = 147MB greater for a total of 941MB
+// Setting the target to > than 945MB will make it likely we can respect the target.
+static const uint64_t MIN_DISK_SPACE_FOR_BLOCK_FILES = 945 * 1024 * 1024;
 
 /** 
  * Process an incoming block. This only returns after the best known valid
@@ -292,10 +302,9 @@ void PruneAndFlush();
 bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransaction &tx, bool fLimitFree,
                         bool* pfMissingInputs, bool fOverrideMempoolLimit=false, bool fRejectAbsurdFee=false, bool fDryRun=false);
 
+bool GetUTXOCoins(const COutPoint& outpoint, CCoins& coins);
 int GetUTXOHeight(const COutPoint& outpoint);
-int GetInputAge(const CTxIn &txin);
-int GetInputAgeIX(const uint256 &nTXHash, const CTxIn &txin);
-int GetIXConfirmations(const uint256 &nTXHash);
+int GetUTXOConfirmations(const COutPoint& outpoint);
 
 /** Convert CValidationState to a human-readable message for logging */
 std::string FormatStateMessage(const CValidationState &state);
@@ -738,13 +747,14 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 /** Context-independent validity checks */
 bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Consensus::Params& consensusParams, bool fCheckPOW = true);
 bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::Params& consensusParams, bool fCheckPOW = true, bool fCheckMerkleRoot = true);
+// SYSCOIN for auxpow tests
+bool CheckProofOfWork(const CBlockHeader& block, const Consensus::Params& params);
 
 /** Context-dependent validity checks */
 // SYSCOIN
 bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& state, const CBlockIndex* pindexPrev, const Consensus::Params& consensusParams, int64_t nAdjustedTime);
 bool ContextualCheckBlock(const CBlock& block, CValidationState& state, CBlockIndex *pindexPrev);
-// SYSCOIN for auxpow tests
-bool CheckProofOfWork(const CBlockHeader& block, const Consensus::Params& params);
+
 /** Check a block is completely valid from start to finish (only works on top of our current best block, with cs_main held) */
 bool TestBlockValidity(CValidationState& state, const CChainParams& chainparams, const CBlock& block, CBlockIndex* pindexPrev, bool fCheckPOW = true, bool fCheckMerkleRoot = true);
 
@@ -841,7 +851,7 @@ extern VersionBitsCache versionbitscache;
 /**
  * Determine what nVersion a new block should use.
  */
-int32_t ComputeBlockVersion(const CBlockIndex* pindexPrev, const Consensus::Params& params);
+int32_t ComputeBlockVersion(const CBlockIndex* pindexPrev, const Consensus::Params& params, bool fAssumeMasternodeIsUpgraded = false);
 
 /**
  * Return true if hash can be found in chainActive at nBlockHeight height.

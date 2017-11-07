@@ -8,6 +8,7 @@
 #include "guiconstants.h"
 #include "guiutil.h"
 
+#include "validation.h" // for cs_main
 #include "sync.h"
 
 #include <QDebug>
@@ -31,7 +32,7 @@ bool NodeLessThan::operator()(const CNodeCombinedStats &left, const CNodeCombine
     case PeerTableModel::Subversion:
         return pLeft->cleanSubVer.compare(pRight->cleanSubVer) < 0;
     case PeerTableModel::Ping:
-        return pLeft->dPingTime < pRight->dPingTime;
+        return pLeft->dMinPing < pRight->dMinPing;
     }
 
     return false;
@@ -113,18 +114,23 @@ PeerTableModel::PeerTableModel(ClientModel *parent) :
     clientModel(parent),
     timer(0)
 {
-    columns << tr("NodeId") << tr("Node/Service") << tr("User Agent") << tr("Ping Time");
-    priv = new PeerTablePriv();
+    columns << tr("NodeId") << tr("Node/Service") << tr("User Agent") << tr("Ping");
+    priv.reset(new PeerTablePriv());
     // default to unsorted
     priv->sortColumn = -1;
 
     // set up timer for auto refresh
-    timer = new QTimer();
+    timer = new QTimer(this);
     connect(timer, SIGNAL(timeout()), SLOT(refresh()));
     timer->setInterval(MODEL_UPDATE_DELAY);
 
     // load initial data
     refresh();
+}
+
+PeerTableModel::~PeerTableModel()
+{
+    // Intentionally left empty
 }
 
 void PeerTableModel::startAutoRefresh()
@@ -146,7 +152,7 @@ int PeerTableModel::rowCount(const QModelIndex &parent) const
 int PeerTableModel::columnCount(const QModelIndex &parent) const
 {
     Q_UNUSED(parent);
-    return columns.length();;
+    return columns.length();
 }
 
 QVariant PeerTableModel::data(const QModelIndex &index, int role) const
@@ -166,7 +172,7 @@ QVariant PeerTableModel::data(const QModelIndex &index, int role) const
         case Subversion:
             return QString::fromStdString(rec->nodeStats.cleanSubVer);
         case Ping:
-            return GUIUtil::formatPingTime(rec->nodeStats.dPingTime);
+            return GUIUtil::formatPingTime(rec->nodeStats.dMinPing);
         }
     } else if (role == Qt::TextAlignmentRole) {
         if (index.column() == Ping)

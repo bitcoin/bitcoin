@@ -61,8 +61,8 @@ int64_t GetEscrowArbiterFee(const int64_t &escrowValue, const float &fEscrowFee)
 		fFee = 0.005;
 	int fee = 1 / fFee;
 	int64_t nFee = escrowValue / fee;
-	if (nFee < DEFAULT_MIN_RELAY_TX_FEE)
-		nFee = DEFAULT_MIN_RELAY_TX_FEE;
+	if (nFee < DEFAULT_LEGACY_MIN_RELAY_TX_FEE)
+		nFee = DEFAULT_LEGACY_MIN_RELAY_TX_FEE;
 	return nFee;
 }
 
