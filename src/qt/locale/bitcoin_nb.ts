@@ -921,7 +921,7 @@
     </message>
     <message>
         <source>&amp;Reset Options</source>
-        <translation>&amp;Tilbakestill Instillinger</translation>
+        <translation>&amp;Tilbakestill Innstillinger</translation>
     </message>
     <message>
         <source>&amp;Network</source>
@@ -1017,7 +1017,7 @@
     </message>
     <message>
         <source>Hide tray icon</source>
-        <translation>Skjul søppel ikon</translation>
+        <translation>Skjul ikon i systemkurv</translation>
     </message>
     <message>
         <source>Show only a tray icon after minimizing the window.</source>
