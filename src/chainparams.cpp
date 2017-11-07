@@ -54,7 +54,7 @@ static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesi
  */
 static CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward)
 {
-    const char* pszTimestamp = "Doubting, dreaming dreams no mortals ever dared to dream before; But the silence was unbroken, and the stillness gave no token";
+    const char* pszTimestamp = "Doubting, dreaming dreams no mortals ever dared to dream before";
     const CScript genesisOutputScript = CScript() << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5f") << OP_CHECKSIG;
     return CreateGenesisBlock(pszTimestamp, genesisOutputScript, nTime, nNonce, nBits, nVersion, genesisReward);
 }
@@ -85,7 +85,7 @@ public:
         // consensus.BIP34Hash = uint256S("0x000000000000024b89b42a942fe0d9fea3bb44ab7bd1b19115dd6a759c0808b8");
         // consensus.BIP65Height = 388381; // 000000000000000004c2b624ed5d7756c508d90fd0da2c7c679febfa6c4735f0
         // consensus.BIP66Height = 363725; // 00000000000000000379eaa19dce8c9b722d46ae6a57c2f1a988119488b50931
-        consensus.powLimit = uint256S("00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+        consensus.powLimit = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.nPowTargetTimespan = 2016 * 60; // 1.4 days
         consensus.nPowTargetSpacing = 1 * 60;
         consensus.fPowAllowMinDifficultyBlocks = false;
@@ -183,7 +183,7 @@ public:
         assert(consensus.hashGenesisBlock == uint256S("0x0000004519318f9a8c1e984ff8bc2b6666457307885a227401276b85781f946d"));
         assert(genesis.hashMerkleRoot == uint256S("0x042c3bf0de92abb825469aa10b788566eac73534aca049224c46eade08f851ac"));
 
-        vSeeds.emplace_back("seed.raven.tzero.com", true); 
+        vSeeds.emplace_back("seed.raven.mediciventures.com", true); 
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,60);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,122);
@@ -269,7 +269,7 @@ public:
         vFixedSeeds.clear();
         vSeeds.clear();
         // nodes with support for servicebits filtering should be at the top
-        vSeeds.emplace_back("testnet-seed.raven.tzero.com", true);
+        vSeeds.emplace_back("testnet-seed.raven.mediciventures.com", true);
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,111);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,196);
