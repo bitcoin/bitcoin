@@ -58,7 +58,7 @@ static const bool DEFAULT_WHITELISTFORCERELAY = true;
  * so it's still 10 times lower comparing to syscoin.
  * 2017-07: we are 10x smaller now, let's lower defaults 10x via the same BIP9 bit as DIP0001
  */
-static const unsigned int DEFAULT_LEGACY_MIN_RELAY_TX_FEE = 10000; // was 1000
+static const unsigned int DEFAULT_LEGACY_MIN_RELAY_TX_FEE = 1000;
 static const unsigned int DEFAULT_DIP0001_MIN_RELAY_TX_FEE = 1000;
 /** Default for -maxorphantx, maximum number of orphan transactions kept in memory */
 static const unsigned int DEFAULT_MAX_ORPHAN_TRANSACTIONS = 100;
