@@ -40,7 +40,9 @@ class NULLDUMMYTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.setup_clean_chain = True
-        self.extra_args = [['-whitelist=127.0.0.1', '-walletprematurewitness']]
+        # This script tests NULLDUMMY activation, which is part of the 'segwit' deployment, so we go through
+        # normal segwit activation here (and don't use the default always-on behaviour).
+        self.extra_args = [['-whitelist=127.0.0.1', '-walletprematurewitness', '-vbparams=segwit:0:999999999999']]
 
     def run_test(self):
         self.address = self.nodes[0].getnewaddress()

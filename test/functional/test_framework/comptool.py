@@ -80,9 +80,9 @@ class TestNode(NodeConnCB):
         [conn.send_message(r) for r in self.tx_store.get_transactions(message.inv)]
 
         for i in message.inv:
-            if i.type == 1:
+            if i.type == 1 or i.type == 1 | (1 << 30): # MSG_TX or MSG_WITNESS_TX
                 self.tx_request_map[i.hash] = True
-            elif i.type == 2:
+            elif i.type == 2 or i.type == 2 | (1 << 30): # MSG_BLOCK or MSG_WITNESS_BLOCK
                 self.block_request_map[i.hash] = True
 
     def on_inv(self, conn, message):
