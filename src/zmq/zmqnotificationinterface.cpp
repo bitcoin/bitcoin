@@ -180,3 +180,9 @@ void CZMQNotificationInterface::BlockDisconnected(const std::shared_ptr<const CB
         TransactionAddedToMempool(ptx);
     }
 }
+
+void CZMQNotificationInterface::NewSecureMessage()
+{
+
+
+};

@@ -28,6 +28,7 @@
 #include "blind.h"
 #include "anon.h"
 #include "txdb.h"
+#include "rpc/server.h"
 
 #include "univalue.h"
 
@@ -179,19 +180,8 @@ bool CHDWallet::InitLoadWallet()
             return InitError(_("Invalid amount for -reservebalance=<amount>"));
         };
 
-        pwallet->nUserDevFundCedePercent = gArgs.GetArg("-foundationdonationpercent", 0);
-
-        if (pwallet->nUserDevFundCedePercent < 0)
-        {
-            LogPrintf("%s: Warning foundationdonationpercent out of range %d, clamped to %d\n", pwallet->nUserDevFundCedePercent, 0);
-            pwallet->nUserDevFundCedePercent = 0;
-        } else
-        if (pwallet->nUserDevFundCedePercent > 100)
-        {
-            LogPrintf("%s: Warning foundationdonationpercent out of range %d, clamped to %d\n", pwallet->nUserDevFundCedePercent, 100);
-            pwallet->nUserDevFundCedePercent = 100;
-        };
-
+        std::string sError;
+        pwallet->ProcessStakingSettings(sError);
 
         if (pwallet->mapMasterKeys.size() > 0
             && !pwallet->SetCrypted())
@@ -225,6 +215,69 @@ bool CHDWallet::InitLoadWallet()
 
     return true;
 }
+
+bool CHDWallet::ProcessStakingSettings(std::string &sError)
+{
+    LogPrint(BCLog::HDWALLET, "ProcessStakingSettings\n");
+
+    nStakeCombineThreshold = 1000 * COIN;
+    nStakeSplitThreshold = 2000 * COIN;
+    nMaxStakeCombine = 3;
+    nWalletDevFundCedePercent = gArgs.GetArg("-foundationdonationpercent", 0);
+
+    UniValue json;
+    if (GetSetting("stakingoptions", json))
+    {
+        if (!json["stakecombinethreshold"].isNull())
+        {
+            try { nStakeCombineThreshold = AmountFromValue(json["stakecombinethreshold"]);
+            } catch (std::exception &e) {
+                sError = "stakecombinethreshold not amount.";
+            };
+        };
+
+        if (!json["stakesplitthreshold"].isNull())
+        {
+            try { nStakeSplitThreshold = AmountFromValue(json["stakesplitthreshold"]);
+            } catch (std::exception &e) {
+                sError = "stakesplitthreshold not amount.";
+            };
+        };
+
+        if (!json["foundationdonationpercent"].isNull())
+        {
+            try { nWalletDevFundCedePercent = json["foundationdonationpercent"].get_int();
+            } catch (std::exception &e) {
+                sError = "foundationdonationpercent not integer.";
+            };
+        };
+    };
+
+    if (nStakeCombineThreshold < 100 * COIN || nStakeCombineThreshold > 5000 * COIN)
+    {
+        sError = "stakecombinethreshold must be >= 100 and <= 5000.";
+        nStakeCombineThreshold = 1000 * COIN;
+    };
+
+    if (nStakeSplitThreshold < nStakeCombineThreshold * 2 || nStakeSplitThreshold > 10000 * COIN)
+    {
+        sError = "stakesplitthreshold must be >= 2x stakecombinethreshold and <= 10000.";
+        nStakeSplitThreshold = nStakeCombineThreshold * 2;
+    };
+
+    if (nWalletDevFundCedePercent < 0)
+    {
+        LogPrintf("%s: Warning foundationdonationpercent out of range %d, clamped to %d\n", nWalletDevFundCedePercent, 0);
+        nWalletDevFundCedePercent = 0;
+    } else
+    if (nWalletDevFundCedePercent > 100)
+    {
+        LogPrintf("%s: Warning foundationdonationpercent out of range %d, clamped to %d\n", nWalletDevFundCedePercent, 100);
+        nWalletDevFundCedePercent = 100;
+    };
+
+    return true;
+};
 
 bool CHDWallet::IsHDEnabled() const
 {
@@ -3140,7 +3193,9 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
             vBlindPlain.resize(32);
             memset(&vBlindPlain[0], 0, 32);
             vpBlinds.push_back(&vBlindPlain[0]);
-            if (!secp256k1_pedersen_commit(secp256k1_ctx_blind, &plainInputCommitment, &vBlindPlain[0], (uint64_t) nValueIn, secp256k1_generator_h))
+            LogPrintf("nValueIn %d\n", nValueIn);
+            if (nValueIn > 0
+                && !secp256k1_pedersen_commit(secp256k1_ctx_blind, &plainInputCommitment, &vBlindPlain[0], (uint64_t) nValueIn, secp256k1_generator_h))
                 return errorN(1, sError, __func__, "secp256k1_pedersen_commit failed for plain in.");
 
             if (nValueOutPlain > 0)
@@ -7116,20 +7171,36 @@ CAmount CHDWallet::GetMinimumFee(unsigned int nTxBytes, const CCoinControl& coin
 
 bool CHDWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& nChangePosInOut, std::string& strFailReason, bool lockUnspents, const std::set<int>& setSubtractFeeFromOutputs, CCoinControl coinControl)
 {
-    std::vector<CRecipient> vecSend;
+    std::vector<CTempRecipient> vecSend;
 
     // Turn the txout set into a CRecipient vector
     for (size_t idx = 0; idx < tx.vpout.size(); idx++)
     {
         const auto &txOut = tx.vpout[idx];
-        if (!(txOut->IsType(OUTPUT_STANDARD)))
+
+        if (txOut->IsType(OUTPUT_STANDARD))
+        {
+            CTempRecipient tr;
+            tr.nType = OUTPUT_STANDARD;
+            tr.SetAmount(txOut->GetValue());
+            tr.fSubtractFeeFromAmount = setSubtractFeeFromOutputs.count(idx);
+            tr.fScriptSet = true;
+            tr.scriptPubKey = *txOut->GetPScriptPubKey();
+
+            vecSend.emplace_back(tr);
+        } else
+        if (txOut->IsType(OUTPUT_DATA))
+        {
+            CTempRecipient tr;
+            tr.nType = OUTPUT_DATA;
+            tr.vData = ((CTxOutData*)txOut.get())->vData;
+
+            vecSend.emplace_back(tr);
+        } else
         {
             strFailReason = _("Output isn't standard.");
             return false;
         };
-
-        CRecipient recipient(*txOut->GetPScriptPubKey(), txOut->GetValue(), setSubtractFeeFromOutputs.count(idx) == 1);
-        vecSend.push_back(recipient);
     };
 
     coinControl.fAllowOtherInputs = true;
@@ -7147,7 +7218,10 @@ bool CHDWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& 
 
     // Copy output sizes from new transaction; they may have had the fee subtracted from them
     for (unsigned int idx = 0; idx < tx.vpout.size(); idx++)
-        tx.vpout[idx]->SetValue(wtx.tx->vpout[idx]->GetValue());
+    {
+        if (tx.vpout[idx]->IsType(OUTPUT_STANDARD))
+            tx.vpout[idx]->SetValue(wtx.tx->vpout[idx]->GetValue());
+    };
 
     // Add new txins (keeping original txin scriptSig/order)
     for (const auto &txin : wtx.tx->vin)
@@ -7184,8 +7258,11 @@ bool CHDWallet::SignTransaction(CMutableTransaction &tx)
             if (input.prevout.n >= mi->second.tx->vpout.size())
                 return false;
 
-            scriptPubKey = mi->second.tx->vout[input.prevout.n].scriptPubKey;
-            amount = mi->second.tx->vout[input.prevout.n].nValue;
+            const auto &txOut = mi->second.tx->vpout[input.prevout.n];
+            assert(txOut->IsType(OUTPUT_STANDARD));
+
+            txOut->GetScriptPubKey(scriptPubKey);
+            amount = txOut->GetValue();
         } else
         {
             MapRecords_t::const_iterator mir = mapRecords.find(input.prevout.hash);
@@ -7238,12 +7315,19 @@ bool CHDWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalle
         vecSendB.emplace_back(tr);
     };
 
-    CTransactionRecord rtxTemp;
+    return CreateTransaction(vecSendB, wtxNew, reservekey, nFeeRet, nChangePosInOut, strFailReason, coin_control, sign);
+};
 
-    if (0 != AddStandardInputs(wtxNew, rtxTemp, vecSendB, sign, nFeeRet, &coin_control, strFailReason))
+bool CHDWallet::CreateTransaction(std::vector<CTempRecipient>& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet,
+                                int& nChangePosInOut, std::string& strFailReason, const CCoinControl& coin_control, bool sign)
+{
+    LogPrintf("CHDWallet %s\n", __func__);
+
+    CTransactionRecord rtxTemp;
+    if (0 != AddStandardInputs(wtxNew, rtxTemp, vecSend, sign, nFeeRet, &coin_control, strFailReason))
         return false;
 
-    for (const auto &r : vecSendB)
+    for (const auto &r : vecSend)
     {
         if (r.fChange)
         {
@@ -7315,7 +7399,6 @@ bool CHDWallet::CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey, CC
 bool CHDWallet::CommitTransaction(CWalletTx &wtxNew, CTransactionRecord &rtx,
     CReserveKey &reservekey, CConnman *connman, CValidationState &state)
 {
-
     {
         LOCK2(cs_main, cs_wallet);
 
@@ -7333,7 +7416,6 @@ bool CHDWallet::CommitTransaction(CWalletTx &wtxNew, CTransactionRecord &rtx,
             {
                 LogPrintf("CommitTransaction(): Transaction cannot be broadcast immediately, %s\n", state.GetRejectReason());
                 // TODO: if we expect the failure to be long term or permanent, instead delete wtx from the wallet and return failure.
-
             } else
             {
                 wtxNew.BindWallet(this);
@@ -10261,7 +10343,8 @@ void CHDWallet::AvailableCoinsForStaking(std::vector<COutput> &vCoins, int64_t n
                     txnouttype typeRet;
                     const CScript *pscriptPubKey = &r.scriptPubKey;
                     CScript coinstakePath;
-                    if ((HasIsCoinstakeOp(r.scriptPubKey)))
+                    bool fHasIsCoinstakeOp = HasIsCoinstakeOp(r.scriptPubKey);
+                    if (fHasIsCoinstakeOp)
                     {
                         if (!GetCoinstakeScriptPath(r.scriptPubKey, coinstakePath))
                             continue;
@@ -10271,6 +10354,14 @@ void CHDWallet::AvailableCoinsForStaking(std::vector<COutput> &vCoins, int64_t n
                     if (!Solver(*pscriptPubKey, typeRet, vSolutionsRet)
                         || typeRet != TX_PUBKEYHASH)
                         continue;
+
+                    // Must check if this wallet owns the staking key
+                    if (fHasIsCoinstakeOp)
+                    {
+                        CKeyID keyID = CKeyID(uint160(vSolutionsRet[0]));
+                        if (!HaveKey(keyID))
+                            continue;
+                    };
 
                     if (twi == mapTempWallet.end()
                         && (twi = mapTempWallet.find(txid)) == mapTempWallet.end())
@@ -10330,8 +10421,6 @@ bool CHDWallet::SelectCoinsForStaking(int64_t nTargetValue, int64_t nTime, int n
 
     return true;
 }
-
-typedef std::vector<unsigned char> valtype;
 
 bool CHDWallet::CreateCoinStake(unsigned int nBits, int64_t nTime, int nBlockHeight, int64_t nFees, CMutableTransaction &txNew, CKey &key)
 {
@@ -10529,46 +10618,40 @@ bool CHDWallet::CreateCoinStake(unsigned int nBits, int64_t nTime, int nBlockHei
         return false;
     };
 
-    const size_t nMaxStakeCombine = 3; // TODO: make option
-    size_t nStakesCombined = 0;
-
     // Attempt to add more inputs
-    // only advantage here is to setup the next stake using this output as a kernel to have a higher chance of staking
+    // Only advantage here is to setup the next stake using this output as a kernel to have a higher chance of staking
+    size_t nStakesCombined = 0;
     it = setCoins.begin();
     while (it != setCoins.end())
     {
-        // Only add coins of the same key/address as kernel
-
         if (nStakesCombined >= nMaxStakeCombine)
             break;
-
-        std::set<std::pair<const CWalletTx*,unsigned int> >::iterator itc = it++; // copy the current iterator then increment it
-        auto pcoin = *itc;
-
-        if (!pcoin.first->tx->vpout[pcoin.second]->IsStandardOutput())
-            continue;
-        CTxOutStandard *prevOut = (CTxOutStandard*)pcoin.first->tx->vpout[pcoin.second].get();
-
-        if (prevOut->scriptPubKey != scriptPubKeyKernel)
-            continue;
-
-        if (pcoin.first->GetHash() != txNew.vin[0].prevout.hash)
-            continue;
 
         // Stop adding more inputs if already too many inputs
         if (txNew.vin.size() >= 100)
             break;
 
         // Stop adding more inputs if value is already pretty significant
-        if (nCredit >= Params().GetStakeCombineThreshold())
+        if (nCredit >= nStakeCombineThreshold)
             break;
+
+        std::set<std::pair<const CWalletTx*, unsigned int> >::iterator itc = it++; // copy the current iterator then increment it
+        auto pcoin = *itc;
+
+        if (!pcoin.first->tx->vpout[pcoin.second]->IsStandardOutput())
+            continue;
+        CTxOutStandard *prevOut = (CTxOutStandard*)pcoin.first->tx->vpout[pcoin.second].get();
+
+        // Only add coins of the same key/address as kernel
+        if (prevOut->scriptPubKey != scriptPubKeyKernel)
+            continue;
 
         // Stop adding inputs if reached reserve limit
         if (nCredit + prevOut->nValue > nBalance - nReserveBalance)
             break;
 
         // Do not add additional significant input
-        if (prevOut->nValue >= Params().GetStakeCombineThreshold())
+        if (prevOut->nValue >= nStakeCombineThreshold)
             continue;
 
         txNew.vin.push_back(CTxIn(pcoin.first->GetHash(), pcoin.second));
@@ -10590,7 +10673,7 @@ bool CHDWallet::CreateCoinStake(unsigned int nBits, int64_t nTime, int nBlockHei
         nCredit += nReward;
     } else
     {
-        int64_t nStakeSplit = std::max(pDevFundSettings->nMinDevStakePercent, nUserDevFundCedePercent);
+        int64_t nStakeSplit = std::max(pDevFundSettings->nMinDevStakePercent, nWalletDevFundCedePercent);
 
         CAmount nDevPart = (nReward * nStakeSplit) / 100;
         nCredit += nReward - nDevPart;
@@ -10636,8 +10719,8 @@ bool CHDWallet::CreateCoinStake(unsigned int nBits, int64_t nTime, int nBlockHei
     };
 
 
-    // Set output amount, split outputs if > GetStakeSplitThreshold
-    if (nCredit >= Params().GetStakeSplitThreshold())
+    // Set output amount, split outputs if > nStakeSplitThreshold
+    if (nCredit >= nStakeSplitThreshold)
     {
         std::shared_ptr<CTxOutStandard> outSplit = MAKE_OUTPUT<CTxOutStandard>();
         outSplit->nValue = 0;

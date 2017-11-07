@@ -1764,7 +1764,7 @@ void ListTransactions(CWallet* const pwallet, const CWalletTx& wtx, const std::s
     // Received
     if (listReceived.size() > 0 && wtx.GetDepthInMainChain() >= nMinDepth)
     {
-        for (const COutputEntry& r : listReceived)
+        for (const COutputEntry &r : listReceived)
         {
             std::string account;
             if (pwallet->mapAddressBook.count(r.destination))
@@ -1939,7 +1939,7 @@ void ListRecord(CHDWallet *phdw, const uint256 &hash, const CTransactionRecord &
             //continue;
             sCategory = "receive";
         } else
-        if (r.nFlags & ORF_OWNED)
+        if (r.nFlags & ORF_OWN_ANY)
         {
             sCategory = "receive";
         } else

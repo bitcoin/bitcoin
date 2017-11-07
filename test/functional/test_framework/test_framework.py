@@ -217,12 +217,12 @@ class BitcoinTestFramework(object):
         if binary is None:
             binary = os.getenv("BITCOIND", "particld")
         args = [binary, "-datadir=" + datadir, "-server", "-keypool=1", "-discover=0", "-rest", "-logtimemicros", "-debug", "-debugexclude=libevent", "-debugexclude=leveldb", "-mocktime=" + str(self.mocktime), "-uacomment=testnode%d" % i]
-        
+
         if legacymode:
             if extra_args is None:
                 extra_args = []
             extra_args.append("-legacymode")
-        
+
         if extra_args is not None:
             args.extend(extra_args)
         self.bitcoind_processes[i] = subprocess.Popen(args, stderr=stderr)

@@ -16,11 +16,11 @@ def isclose(a, b, rel_tol=1e-09, abs_tol=0.0):
 class ParticlTestFramework(BitcoinTestFramework):
     def __init__(self):
         super().__init__()
-    
+
     def start_node(self, i, dirname, extra_args=None, rpchost=None, timewait=None, binary=None, stderr=None):
         return super().start_node(i, dirname, extra_args, rpchost, timewait, binary, stderr, False)
-    
-    
+
+
     def wait_for_height(self, node, nHeight, nTries=500):
         for i in range(nTries):
             time.sleep(1)
@@ -28,19 +28,19 @@ class ParticlTestFramework(BitcoinTestFramework):
             if ro['blocks'] >= nHeight:
                 return True
         return False
-    
+
     def wait_for_mempool(self, node, txnHash, nTries=50):
         for i in range(50):
             time.sleep(0.5)
             try:
                 ro = node.getmempoolentry(txnHash)
-                
+
                 if ro['size'] >= 100 and ro['height'] >= 0:
                     return True
             except:
                 continue
         return False
-    
+
     def stakeToHeight(self, height, fSync=True, nStakeNode=0, nSyncCheckNode=1):
         ro = self.nodes[nStakeNode].walletsettings('stakelimit', {'height':height})
         ro = self.nodes[nStakeNode].reservebalance(False)
@@ -50,12 +50,12 @@ class ParticlTestFramework(BitcoinTestFramework):
             return
         self.sync_all()
         assert(self.nodes[nSyncCheckNode].getblockcount() == height)
-    
-    def stakeBlocks(self, nBlocks):
-        height = self.nodes[0].getblockcount()
-        
-        self.stakeToHeight(height + nBlocks)
-    
+
+    def stakeBlocks(self, nBlocks, nStakeNode=0):
+        height = self.nodes[nStakeNode].getblockcount()
+
+        self.stakeToHeight(height + nBlocks, nStakeNode=nStakeNode)
+
     def jsonDecimal(self, obj):
         if isinstance(obj, decimal.Decimal):
             return str(obj)

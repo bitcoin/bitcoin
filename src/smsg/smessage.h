@@ -24,17 +24,21 @@ enum SecureMessageCodes {
     SMSG_PUBKEY_MISMATCH,
     SMSG_PUBKEY_EXISTS,
     SMSG_PUBKEY_NOT_EXISTS,
+    SMSG_KEY_EXISTS,
+    SMSG_KEY_NOT_EXISTS,
     SMSG_UNKNOWN_KEY,
     SMSG_UNKNOWN_KEY_FROM,
     SMSG_ALLOCATE_FAILED,
     SMSG_MAC_MISMATCH,
     SMSG_WALLET_UNSET,
     SMSG_WALLET_NO_PUBKEY,
+    SMSG_WALLET_NO_KEY,
     SMSG_WALLET_LOCKED,
     SMSG_DISABLED,
     SMSG_UNKNOWN_MESSAGE,
     SMSG_PAYLOAD_OVER_SIZE,
     SMSG_TIME_IN_FUTURE,
+    SMSG_TIME_EXPIRED,
     SMSG_INVALID_HASH,
     SMSG_CHECKSUM_MISMATCH,
     SMSG_SHUTDOWN_DETECTED,
@@ -47,15 +51,18 @@ enum SecureMessageCodes {
 const unsigned int SMSG_HDR_LEN        = 104;               // length of unencrypted header, 4 + 2 + 1 + 8 + 16 + 33 + 32 + 4 + 4
 const unsigned int SMSG_PL_HDR_LEN     = 1+20+65+4;         // length of encrypted header in payload
 
-const unsigned int SMSG_BUCKET_LEN     = 60 * 10;           // seconds
-const unsigned int SMSG_RETENTION      = 60 * 60 * 48;      // seconds
-const unsigned int SMSG_MAX_PAID_TTL   = 86400 * 31;        // seconds
+const unsigned int SMSG_BUCKET_LEN     = 60 * 60 * 1;       // seconds
+const unsigned int SMSG_RETENTION_OLD  = 60 * 60 * 48;      // seconds
+
+const unsigned int SMSG_SECONDS_IN_DAY = 86400;
+const unsigned int SMSG_MAX_PAID_TTL   = SMSG_SECONDS_IN_DAY * 31;        // seconds
+const unsigned int SMSG_RETENTION      = SMSG_MAX_PAID_TTL;
 const unsigned int SMSG_SEND_DELAY     = 2;                 // seconds, SecureMsgSendData will delay this long between firing
 const unsigned int SMSG_THREAD_DELAY   = 30;
 const unsigned int SMSG_THREAD_LOG_GAP = 6;
 
 const unsigned int SMSG_TIME_LEEWAY    = 24;
-const unsigned int SMSG_TIME_IGNORE    = 90;                // seconds that a peer is ignored for if they fail to deliver messages for a smsgWant
+const unsigned int SMSG_TIME_IGNORE    = 90;                // seconds a peer is ignored for if they fail to deliver messages for a smsgWant
 
 
 const unsigned int SMSG_MAX_MSG_BYTES  = 4096;              // the user input part
@@ -64,9 +71,11 @@ const unsigned int SMSG_MAX_AMSG_BYTES = 512;               // the user input pa
 // max size of payload worst case compression
 const unsigned int SMSG_MAX_MSG_WORST = LZ4_COMPRESSBOUND(SMSG_MAX_MSG_BYTES+SMSG_PL_HDR_LEN);
 
+static const int MIN_SMSG_PROTO_VERSION = 90006;
 
-const CAmount nFundingTxnFeePerK = 100000;
-const CAmount nMsgFeePerKPerDay = 10000;
+
+const CAmount nFundingTxnFeePerK = 200000;
+const CAmount nMsgFeePerKPerDay =   50000;
 
 #define SMSG_MASK_UNREAD            (1 << 0)
 
@@ -95,6 +104,15 @@ extern CWallet                          *pwalletSmsg;
 
 extern CCriticalSection cs_smsg;            // all except inbox and outbox
 
+
+inline bool GetFundingTxid(const uint8_t *pPayload, size_t nPayload, uint256 &txid)
+{
+    if (!pPayload || nPayload < 32)
+        return false;
+    memcpy(txid.begin(), pPayload+(nPayload-32), 32);
+    return true;
+};
+
 #pragma pack(push, 1)
 class SecureMessage
 {
@@ -117,10 +135,9 @@ public:
 
     bool GetFundingTxid(uint256 &txid)
     {
-        if (version[0] != 3 || !pPayload || nPayload < 32)
+        if (version[0] != 3)
             return false;
-        memcpy(txid.begin(), pPayload+(nPayload-32), 32);
-        return true;
+        return ::GetFundingTxid(pPayload, nPayload, txid);
     };
 
     uint8_t *data()
@@ -133,14 +150,14 @@ public:
         return &hash[0];
     }
 
-    uint8_t  hash[4];
+    uint8_t  hash[4] = {0, 0, 0, 0};
     uint8_t  version[2] = {2, 1};
-    uint8_t  flags;
-    int64_t  timestamp;
+    uint8_t  flags = 0;
+    int64_t  timestamp = 0;
     uint8_t  iv[16];
     uint8_t  cpkR[33];
     uint8_t  mac[32];
-    uint8_t  nonce[4]; // nDaysRetention when paid message
+    uint8_t  nonce[4] = {0, 0, 0, 0}; // nDaysRetention when paid message
     uint32_t nPayload = 0;
     uint8_t* pPayload = nullptr;
 };
@@ -159,7 +176,7 @@ public:
 class SecMsgToken
 {
 public:
-    SecMsgToken(int64_t ts, uint8_t *p, int np, long int o)
+    SecMsgToken(int64_t ts, uint8_t *p, int np, long int o, uint8_t ttl_)
     {
         timestamp = ts;
 
@@ -168,21 +185,22 @@ public:
         else
             memcpy(sample, p, 8);
         offset = o;
+        ttl = ttl_;
     };
 
     SecMsgToken() {};
 
     bool operator <(const SecMsgToken &y) const
     {
-        // pack and memcmp from timesent?
         if (timestamp == y.timestamp)
             return memcmp(sample, y.sample, 8) < 0;
         return timestamp < y.timestamp;
-    }
+    };
 
-    int64_t timestamp;    // TODO doesn't need to be full 64 bytes?
-    uint8_t sample[8];    // first 8 bytes of payload - a hash
+    int64_t timestamp;
+    uint8_t sample[8];    // first 8 bytes of payload
     int64_t offset;       // offset
+    uint8_t ttl;          // days
 };
 
 class SecMsgBucket
@@ -194,13 +212,18 @@ public:
         hash            = 0;
         nLockCount      = 0;
         nLockPeerId     = 0;
+        nLeastTTL       = 0;
+        nActive         = 0;
     };
 
     void hashBucket();
+    size_t CountActive();
 
     int64_t               timeChanged;
     uint32_t              hash;           // token set should get ordered the same on each node
     uint32_t              nLockCount;     // set when smsgWant first sent, unset at end of smsgMsg, ticks down in ThreadSecureMsg()
+    uint32_t              nLeastTTL;      // lowest ttl in days of messages in bkt
+    uint32_t              nActive;        // Number of untimedout messages in bucket
     NodeId                nLockPeerId;    // id of peer that bucket is locked for
     std::set<SecMsgToken> setTokens;
 };
@@ -268,7 +291,6 @@ public:
     bool fScanIncoming;
 };
 
-
 class SecMsgStored
 {
 public:
@@ -281,7 +303,7 @@ public:
 
     unsigned int GetSerializeSize(int nType, int nVersion) const
     {
-        return 64 + 1 + 2 + 20 + 20 +
+        return sizeof(timeReceived) + sizeof(status) + sizeof(folderId) + 20 + 20 +
             GetSizeOfCompactSize(vchMessage.size()) + vchMessage.size() * sizeof(uint8_t);
     };
     template<typename Stream>
@@ -329,6 +351,7 @@ bool ScanChainForPublicKeys(CBlockIndex *pindexStart);
 bool SecureMsgScanBlockChain();
 bool SecureMsgScanBuckets();
 
+int SecureMsgManageLocalKey(CKeyID &keyId, ChangeType mode);
 int SecureMsgWalletUnlocked();
 int SecureMsgWalletKeyChanged(CKeyID &keyId, const std::string &sLabel, ChangeType mode);
 
@@ -340,18 +363,19 @@ int SecureMsgGetLocalPublicKey(std::string &strAddress, std::string &strPublicKe
 
 //int SecureMsgAddAddress(CKeyID &address, CPubKey &publicKey); // TODO: necessary?
 int SecureMsgAddAddress(std::string &address, std::string &publicKey);
+int SecureMsgAddLocalAddress(std::string &sAddress);
 
 int SecureMsgRetrieve(SecMsgToken &token, std::vector<uint8_t> &vchData);
 
 int SecureMsgReceive(CNode *pfrom, std::vector<uint8_t> &vchData);
 
 int SecureMsgStoreUnscanned(uint8_t *pHeader, uint8_t *pPayload, uint32_t nPayload);
-int SecureMsgStore(uint8_t *pHeader, uint8_t *pPayload, uint32_t nPayload, bool fUpdateBucket);
-int SecureMsgStore(SecureMessage& smsg, bool fUpdateBucket);
+int SecureMsgStore(uint8_t *pHeader, uint8_t *pPayload, uint32_t nPayload, bool fHashBucket);
+int SecureMsgStore(SecureMessage& smsg, bool fHashBucket);
 
 int SecureMsgSend(CKeyID &addressFrom, CKeyID &addressTo, std::string &message, std::string &sError, bool fPaid=false, size_t nDaysRetention=0, bool fTestFee=false, CAmount *nFee=NULL);
 
-int SecureMsgHash(const SecureMessage &smsg, uint160 &hash);
+int SecureMsgHash(const SecureMessage &smsg, const uint8_t *pPayload, uint32_t nPayload, uint160 &hash);
 int SecureMsgFund(SecureMessage &smsg, std::string &sError, bool fTestFee, CAmount *nFee);
 
 int SecureMsgValidate(uint8_t *pHeader, uint8_t *pPayload, uint32_t nPayload);

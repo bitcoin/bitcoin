@@ -14,7 +14,7 @@ class StealthTest(ParticlTestFramework):
         super().__init__()
         self.setup_clean_chain = True
         self.num_nodes = 3
-        self.extra_args = [ ['-debug',] for i in range(self.num_nodes)]
+        self.extra_args = [ ['-debug','-noacceptnonstdtxn'] for i in range(self.num_nodes)]
 
     def setup_network(self, split=False):
         self.nodes = self.start_nodes(self.num_nodes, self.options.tmpdir, self.extra_args)

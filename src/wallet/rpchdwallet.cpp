@@ -2753,7 +2753,6 @@ static void ParseOutputs(
         }
         amount += -nFee;
     } else {
-
         // sent
         if (!listSent.empty()) {
             entry.push_back(Pair("fee", ValueFromAmount(-nFee)));
@@ -2875,6 +2874,7 @@ static void ParseRecords(
     UniValue outputs(UniValue::VARR);
     size_t  nOwned      = 0;
     size_t  nFrom       = 0;
+    size_t  nWatchOnly  = 0;
     CAmount totalAmount = 0;
 
     int confirmations = pwallet->GetDepthInMainChain(rtx.blockHash);
@@ -2909,11 +2909,14 @@ static void ParseRecords(
         if (record.nFlags & ORF_CHANGE) {
             continue ;
         }
-        if (record.nFlags & ORF_OWNED) {
+        if (record.nFlags & ORF_OWN_ANY) {
             nOwned++;
         }
         if (record.nFlags & ORF_FROM) {
             nFrom++;
+        }
+        if (record.nFlags & ORF_OWN_WATCH) {
+            nWatchOnly++;
         }
 
         CBitcoinAddress addr;
@@ -2973,7 +2976,7 @@ static void ParseRecords(
         }
 
         CAmount amount = record.nValue;
-        if (!(record.nFlags & ORF_OWNED)) {
+        if (!(record.nFlags & ORF_OWN_ANY)) {
             amount *= -1;
         }
         totalAmount += amount;
@@ -2994,6 +2997,10 @@ static void ParseRecords(
         push(entry, "category", "receive");
     } else if (nFrom) {
         push(entry, "category", "send");
+    };
+
+    if (nWatchOnly) {
+        push(entry, "involvesWatchonly", "true");
     }
 
     push(entry, "outputs", outputs);
@@ -3112,15 +3119,15 @@ UniValue filtertransactions(const JSONRPCRequest &request)
         const UniValue & options = request.params[0].get_obj();
         RPCTypeCheckObj(options,
             {
-                {"count",     UniValueType(UniValue::VNUM)},
-                {"skip",      UniValueType(UniValue::VNUM)},
-                {"watchonly", UniValueType(UniValue::VBOOL)},
-                {"search",    UniValueType(UniValue::VSTR)},
-                {"category",  UniValueType(UniValue::VSTR)},
-                {"type",      UniValueType(UniValue::VSTR)},
-                {"sort",      UniValueType(UniValue::VSTR)}
+                {"count",               UniValueType(UniValue::VNUM)},
+                {"skip",                UniValueType(UniValue::VNUM)},
+                {"include_watchonly",   UniValueType(UniValue::VBOOL)},
+                {"search",              UniValueType(UniValue::VSTR)},
+                {"category",            UniValueType(UniValue::VSTR)},
+                {"type",                UniValueType(UniValue::VSTR)},
+                {"sort",                UniValueType(UniValue::VSTR)}
             },
-            true,             // alow null
+            true,             // allow null
             false             // strict
         );
         if (options.exists("count")) {
@@ -3138,8 +3145,8 @@ UniValue filtertransactions(const JSONRPCRequest &request)
                     strprintf("Invalid skip number: %i.", skip));
             }
         }
-        if (options.exists("watchonly")) {
-            if (options["watchonly"].get_bool()) {
+        if (options.exists("include_watchonly")) {
+            if (options["include_watchonly"].get_bool()) {
                 watchonly = watchonly | ISMINE_WATCH_ONLY;
             }
         }
@@ -3713,8 +3720,8 @@ UniValue getstakinginfo(const JSONRPCRequest &request)
     if (pwallet->nReserveBalance > 0)
         obj.pushKV("reserve", ValueFromAmount(pwallet->nReserveBalance));
 
-    if (pwallet->nUserDevFundCedePercent > 0)
-        obj.pushKV("userfoundationdonationpercent", pwallet->nUserDevFundCedePercent);
+    if (pwallet->nWalletDevFundCedePercent > 0)
+        obj.pushKV("walletfoundationdonationpercent", pwallet->nWalletDevFundCedePercent);
 
     const DevFundSettings *pDevFundSettings = Params().GetDevFundSettings(nTipTime);
     if (pDevFundSettings && pDevFundSettings->nMinDevStakePercent > 0)
@@ -5115,8 +5122,12 @@ UniValue walletsettings(const JSONRPCRequest &request)
             "\nManage wallet settings.\n"
             "\nchangeaddress {\"address_standard\":,\"coldstakingaddress\":}.\n"
             "   - \"address_standard\": Change address for standard inputs.\n"
-            "   - \"coldstakingaddress\": Cold staking address for standard inputs."
-            "\nstakelimit {\"height\":,int}.\n"
+            "   - \"coldstakingaddress\": Cold staking address for standard inputs.\n"
+            "\nstakingoptions {\"stakecombinethreshold\":str,\"stakesplitthreshold\":str,\"foundationdonationpercent\":int}.\n"
+            "   - \"stakecombinethreshold\": Join outputs below this value.\n"
+            "   - \"stakesplitthreshold\": Split outputs above this value.\n"
+            "   - \"foundationdonationpercent\": .\n"
+            "\nstakelimit {\"height\":int}.\n"
             "   Don't stake above height, used in functional testing.\n"
             "\nEmpty json object will clear the setting.\n"
             "\nstakelimit {}.\n"
@@ -5154,7 +5165,6 @@ UniValue walletsettings(const JSONRPCRequest &request)
             {
                 if (!pwallet->EraseSetting(sSetting))
                     throw JSONRPCError(RPC_WALLET_ERROR, _("EraseSetting failed."));
-
                 result.pushKV(sSetting, "cleared");
                 return result;
             };
@@ -5202,6 +5212,81 @@ UniValue walletsettings(const JSONRPCRequest &request)
             json.pushKV("time", GetTime());
             if (!pwallet->SetSetting(sSetting, json))
                 throw JSONRPCError(RPC_WALLET_ERROR, _("SetSetting failed."));
+
+            if (warnings.size() > 0)
+                result.pushKV("warnings", warnings);
+        } else
+        {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, _("Must be json object."));
+        };
+        result.pushKV(sSetting, json);
+    } else
+    if (sSetting == "stakingoptions")
+    {
+        UniValue json;
+        UniValue warnings(UniValue::VARR);
+
+        if (request.params.size() == 1)
+        {
+            if (!pwallet->GetSetting("stakingoptions", json))
+                result.pushKV(sSetting, "default");
+            else
+                result.pushKV(sSetting, json);
+            return result;
+        };
+
+        if (request.params[1].isObject())
+        {
+            json = request.params[1].get_obj();
+
+            const std::vector<std::string> &vKeys = json.getKeys();
+            if (vKeys.size() < 1)
+            {
+                if (!pwallet->EraseSetting(sSetting))
+                    throw JSONRPCError(RPC_WALLET_ERROR, _("EraseSetting failed."));
+                result.pushKV(sSetting, "cleared");
+                return result;
+            };
+
+            UniValue jsonOld;
+            bool fHaveOldSetting = pwallet->GetSetting(sSetting, jsonOld);
+
+            for (const auto &sKey : vKeys)
+            {
+                if (sKey == "stakecombinethreshold")
+                {
+                    CAmount test = AmountFromValue(json["stakecombinethreshold"]);
+                    if (test < 0)
+                        throw JSONRPCError(RPC_INVALID_PARAMETER, _("stakecombinethreshold can't be negative."));
+                } else
+                if (sKey == "stakesplitthreshold")
+                {
+                    CAmount test = AmountFromValue(json["stakesplitthreshold"]);
+                    if (test < 0)
+                        throw JSONRPCError(RPC_INVALID_PARAMETER, _("stakesplitthreshold can't be negative."));
+                } else
+                if (sKey == "foundationdonationpercent")
+                {
+                    if (!json["foundationdonationpercent"].isNum())
+                        throw JSONRPCError(RPC_INVALID_PARAMETER, _("foundationdonationpercent must be a number."));
+                } else
+                {
+                    warnings.push_back("Unknown key " + sKey);
+                };
+            };
+
+            json.pushKV("time", GetTime());
+            if (!pwallet->SetSetting(sSetting, json))
+                throw JSONRPCError(RPC_WALLET_ERROR, _("SetSetting failed."));
+
+            std::string sError;
+            pwallet->ProcessStakingSettings(sError);
+            if (!sError.empty())
+            {
+                result.pushKV("error", sError);
+                if (fHaveOldSetting)
+                    pwallet->SetSetting(sSetting, jsonOld);
+            };
 
             if (warnings.size() > 0)
                 result.pushKV("warnings", warnings);

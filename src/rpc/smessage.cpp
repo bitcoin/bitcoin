@@ -445,7 +445,7 @@ UniValue smsgaddkey(const JSONRPCRequest &request)
     if (request.fHelp || request.params.size() != 2)
         throw std::runtime_error(
             "smsgaddkey <address> <pubkey>\n"
-            "Add address, pubkey pair to database.");
+            "Add address and matching public key to database.");
 
     if (!fSecMsgEnabled)
         throw std::runtime_error("Secure messaging is disabled.");
@@ -461,11 +461,39 @@ UniValue smsgaddkey(const JSONRPCRequest &request)
         result.pushKV("reason", SecureMessageGetString(rv));
     } else
     {
-        result.pushKV("result", "Added public key to db.");
+        result.pushKV("result", "Public key added to db.");
     };
 
     return result;
 }
+
+UniValue smsgaddlocaladdress(const JSONRPCRequest &request)
+{
+    if (request.fHelp || request.params.size() != 1)
+        throw std::runtime_error(
+            "smsgaddlocaladdress <address>\n"
+            "Enable receiving messages on <address>.\n"
+            "Key for <address> must exist in the wallet.");
+
+    if (!fSecMsgEnabled)
+        throw std::runtime_error("Secure messaging is disabled.");
+
+    std::string addr = request.params[0].get_str();
+
+    UniValue result(UniValue::VOBJ);
+    int rv = SecureMsgAddLocalAddress(addr);
+    if (rv != 0)
+    {
+        result.pushKV("result", "Address not added.");
+        result.pushKV("reason", SecureMessageGetString(rv));
+    } else
+    {
+        result.pushKV("result", "Receiving messages enabled for address.");
+    };
+
+    return result;
+}
+
 
 UniValue smsggetpubkey(const JSONRPCRequest &request)
 {
@@ -566,6 +594,9 @@ UniValue smsgsend(const JSONRPCRequest &request)
     int nRetention = request.params[4].isNull() ? 1 : request.params[4].get_int();
     bool fTestFee = request.params[5].isNull() ? false : request.params[5].get_bool();
     CAmount nFee;
+
+    if (fPaid && Params().NetworkID() == "main")
+        throw std::runtime_error("Paid SMSG not yet active on mainnet.");
 
     CKeyID kiFrom, kiTo;
     CBitcoinAddress coinAddress(addrFrom);
@@ -884,20 +915,23 @@ UniValue smsgbuckets(const JSONRPCRequest &request)
 
             for (it = smsgBuckets.begin(); it != smsgBuckets.end(); ++it)
             {
-                std::set<SecMsgToken>& tokenSet = it->second.setTokens;
+                std::set<SecMsgToken> &tokenSet = it->second.setTokens;
 
                 std::string sBucket = std::to_string(it->first);
                 std::string sFile = sBucket + "_01.dat";
 
                 std::string sHash = std::to_string(it->second.hash);
 
+                size_t nActiveMessages = it->second.CountActive();
+
                 nBuckets++;
-                nMessages += tokenSet.size();
+                nMessages += nActiveMessages;
 
                 UniValue objM(UniValue::VOBJ);
                 objM.pushKV("bucket", sBucket);
                 objM.pushKV("time", part::GetTimeString(it->first, cbuf, sizeof(cbuf)));
                 objM.pushKV("no. messages", strprintf("%u", tokenSet.size()));
+                objM.pushKV("active messages", strprintf("%u", nActiveMessages));
                 objM.pushKV("hash", sHash);
                 objM.pushKV("last changed", part::GetTimeString(it->second.timeChanged, cbuf, sizeof(cbuf)));
 
@@ -1320,6 +1354,7 @@ static const CRPCCommand commands[] =
     { "smsg",               "smsgscanchain",          &smsgscanchain,          true, {} },
     { "smsg",               "smsgscanbuckets",        &smsgscanbuckets,        true, {} },
     { "smsg",               "smsgaddkey",             &smsgaddkey,             true, {} },
+    { "smsg",               "smsgaddlocaladdress",    &smsgaddlocaladdress,    true, {} },
     { "smsg",               "smsggetpubkey",          &smsggetpubkey,          true, {} },
     { "smsg",               "smsgsend",               &smsgsend,               true, {} },
     { "smsg",               "smsgsendanon",           &smsgsendanon,           true, {} },

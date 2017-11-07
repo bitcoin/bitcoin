@@ -142,9 +142,10 @@ class FilterTransactionsTest(ParticlTestFramework):
         self.sync_all()
 
         ro = nodes[0].filtertransactions({'count': 1, 'category': 'send'})
-        print(json.dumps(ro, indent=4, default=self.jsonDecimal))
+        assert(len(ro) == 1)
         ro = nodes[0].filtertransactions({'type': 'blind'})
-        print(json.dumps(ro, indent=4, default=self.jsonDecimal))
+        assert(len(ro) == 0)
+
 
         #
         # general
@@ -216,9 +217,9 @@ class FilterTransactionsTest(ParticlTestFramework):
         # include_watchonly
         #
 
-        ro = nodes[2].filtertransactions({ 'watchonly': False })
+        ro = nodes[2].filtertransactions({ 'include_watchonly': False })
         assert(len(ro) == 0)
-        ro = nodes[2].filtertransactions({ 'watchonly': True })
+        ro = nodes[2].filtertransactions({ 'include_watchonly': True })
         assert(len(ro) == 1)
 
         #

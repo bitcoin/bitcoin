@@ -94,7 +94,7 @@ bool IsDust(const CTxOutBase *txout, const CFeeRate& dustRelayFee)
 {
     if (txout->IsType(OUTPUT_STANDARD))
         return (((CTxOutStandard*)txout)->nValue < GetDustThreshold((CTxOutStandard*)txout, minRelayTxFee));
-    return true;
+    return false;
 };
 
 
@@ -261,13 +261,12 @@ bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
             if (coin.nType != OUTPUT_STANDARD && coin.nType != OUTPUT_CT)
                 return false;
 
-
-            std::vector<std::vector<unsigned char> > vSolutions;
             txnouttype whichType;
             // get the scriptPubKey corresponding to this input:
             const CScript& prevScript = prev.scriptPubKey;
 
-            if (!Solver(prevScript, whichType, vSolutions))
+            //if (!Solver(prevScript, whichType, vSolutions))
+            if (!::IsStandard(prevScript, whichType, true))
                 return false;
 
             if (whichType == TX_SCRIPTHASH)

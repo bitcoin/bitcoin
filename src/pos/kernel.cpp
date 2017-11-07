@@ -137,6 +137,18 @@ bool IsConfirmedInNPrevBlocks(const uint256 &hashBlock, const CBlockIndex *pinde
 }
 
 
+static bool CheckAge(const CBlockIndex *pindexTip, const uint256 &hashKernelBlock, int &nDepth)
+{
+    // pindexTip is the current tip of the chain
+    // hashKernelBlock is the hash of the block containing the kernel transaction
+
+    int nRequiredDepth = std::min((int)(Params().GetStakeMinConfirmations()-1), (int)(pindexTip->nHeight / 2));
+
+    if (IsConfirmedInNPrevBlocks(hashKernelBlock, pindexTip, nRequiredDepth, nDepth))
+        return false;
+    return true;
+}
+
 // Check kernel hash target and coinstake signature
 bool CheckProofOfStake(const CBlockIndex *pindexPrev, const CTransaction &tx, int64_t nTime, unsigned int nBits, uint256 &hashProofOfStake, uint256 &targetProofOfStake)
 {
@@ -148,34 +160,57 @@ bool CheckProofOfStake(const CBlockIndex *pindexPrev, const CTransaction &tx, in
         || tx.vin.size() < 1)
         return state.DoS(100, error("%s: malformed-txn %s", __func__, tx.GetHash().ToString()), REJECT_INVALID, "malformed-txn");
 
-    CBlock blockKernel; // block containing stake kernel, GetTransaction should only fill the header.
-    CTransactionRef txKernel;
+    uint256 hashBlock;
+    CTransactionRef txPrev;
 
     // Kernel (input 0) must match the stake hash target per coin age (nBits)
     const CTxIn &txin = tx.vin[0];
 
-    // TODO: Will fail in ContextualCheckBlock if kernel is spent
+    CBlockIndex *pindex = NULL;
+    int nDepth;
+    CScript kernelPubKey;
+    CAmount amount;
+
     Coin coin;
     if (!pcoinsTip->GetCoin(txin.prevout, coin) || coin.IsSpent())
-        return state.DoS(1, error("%s: prevout-not-available", __func__), REJECT_INVALID, "prevout-not-available");
-    if (coin.nType != OUTPUT_STANDARD)
-        return state.DoS(100, error("%s: invalid-prevout", __func__), REJECT_INVALID, "invalid-prevout");
+    {
+        // Must find the prevout in the txdb / blocks
 
-    CBlockIndex *pindex = chainActive[coin.nHeight];
-    if (!pindex)
-        return state.DoS(100, error("%s: invalid-prevout", __func__), REJECT_INVALID, "invalid-prevout");
+        if (!GetTransaction(txin.prevout.hash, txPrev, Params().GetConsensus(), hashBlock, true)
+            || txin.prevout.n >= txPrev->vpout.size())
+            return state.DoS(1, error("%s: prevout-not-in-chain", __func__), REJECT_INVALID, "prevout-not-in-chain");
 
-    int nRequiredDepth = std::min((int)(Params().GetStakeMinConfirmations()-1), (int)(pindexPrev->nHeight / 2));
-    int nDepth = pindexPrev->nHeight - coin.nHeight;
-    if (nRequiredDepth > nDepth)
-        return state.DoS(100, error("%s: Tried to stake at depth %d", __func__, nDepth + 1), REJECT_INVALID, "invalid-stake-depth");
+        const CTxOutBase *outPrev = txPrev->vpout[txin.prevout.n].get();
+        if (!outPrev->IsStandardOutput())
+            return state.DoS(100, error("%s: invalid-prevout", __func__), REJECT_INVALID, "invalid-prevout");
+
+        int nDepth;
+        if (!CheckAge(pindexPrev, hashBlock, nDepth))
+            return state.DoS(100, error("%s: Tried to stake at depth %d", __func__, nDepth + 1), REJECT_INVALID, "invalid-stake-depth");
+
+        kernelPubKey = *outPrev->GetPScriptPubKey();
+        amount = outPrev->GetValue();
+    } else
+    {
+        if (coin.nType != OUTPUT_STANDARD)
+            return state.DoS(100, error("%s: invalid-prevout", __func__), REJECT_INVALID, "invalid-prevout");
+
+        pindex = chainActive[coin.nHeight];
+        if (!pindex)
+            return state.DoS(100, error("%s: invalid-prevout", __func__), REJECT_INVALID, "invalid-prevout");
+
+        nDepth = pindexPrev->nHeight - coin.nHeight;
+        int nRequiredDepth = std::min((int)(Params().GetStakeMinConfirmations()-1), (int)(pindexPrev->nHeight / 2));
+        if (nRequiredDepth > nDepth)
+            return state.DoS(100, error("%s: Tried to stake at depth %d", __func__, nDepth + 1), REJECT_INVALID, "invalid-stake-depth");
+
+        kernelPubKey = coin.out.scriptPubKey;
+        amount = coin.out.nValue;
+    };
 
     const CScript &scriptSig = txin.scriptSig;
     const CScriptWitness *witness = &txin.scriptWitness;
     ScriptError serror = SCRIPT_ERR_OK;
-
-    const CScript &kernelPubKey = coin.out.scriptPubKey;
-    const CAmount &amount = coin.out.nValue;
     std::vector<uint8_t> vchAmount(8);
     memcpy(&vchAmount[0], &amount, 8);
     // Redundant: all inputs are checked later during CheckInputs
@@ -198,13 +233,44 @@ bool CheckProofOfStake(const CBlockIndex *pindexPrev, const CTransaction &tx, in
     // If Coin owners detect this, they can move their coin to a new address.
     if (HasIsCoinstakeOp(kernelPubKey))
     {
-        CAmount nVerify = 0;
+        for (size_t k = 1; k < tx.vin.size(); ++k)
+        {
+            const CTxIn &txin = tx.vin[k];
+            Coin coin;
+            if (!pcoinsTip->GetCoin(txin.prevout, coin) || coin.IsSpent())
+            {
+                if (!GetTransaction(txin.prevout.hash, txPrev, Params().GetConsensus(), hashBlock, true)
+                    || txin.prevout.n >= txPrev->vpout.size())
+                    return state.DoS(1, error("%s: prevout-not-in-chain %d", __func__, k), REJECT_INVALID, "prevout-not-in-chain");
 
+                const CTxOutBase *outPrev = txPrev->vpout[txin.prevout.n].get();
+                if (!outPrev->IsStandardOutput())
+                    return state.DoS(100, error("%s: invalid-prevout %d", __func__, k), REJECT_INVALID, "invalid-prevout");
+
+                if (kernelPubKey != *outPrev->GetPScriptPubKey())
+                    return state.DoS(100, error("%s: mixed-prevout-scripts %d", __func__, k), REJECT_INVALID, "mixed-prevout-scripts");
+                amount += outPrev->GetValue();
+
+                LogPrint(BCLog::POS, "%s: Input %d of coinstake %s is spent.", k, tx.GetHash().ToString());
+            } else
+            {
+                if (coin.nType != OUTPUT_STANDARD)
+                    return state.DoS(100, error("%s: invalid-prevout %d", __func__, k), REJECT_INVALID, "invalid-prevout");
+                if (kernelPubKey != coin.out.scriptPubKey)
+                    return state.DoS(100, error("%s: mixed-prevout-scripts %d", __func__, k), REJECT_INVALID, "mixed-prevout-scripts");
+                amount += coin.out.nValue;
+            };
+        };
+
+        CAmount nVerify = 0;
         for (const auto &txout : tx.vpout)
         {
             if (!txout->IsType(OUTPUT_STANDARD))
+            {
+                if (!txout->IsType(OUTPUT_DATA))
+                    return state.DoS(100, error("%s: bad-output-type", __func__), REJECT_INVALID, "bad-output-type");
                 continue;
-
+            };
             const CScript *pOutPubKey = txout->GetPScriptPubKey();
 
             if (pOutPubKey && *pOutPubKey == kernelPubKey)

@@ -1306,7 +1306,12 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
 
         vRecv >> nVersion >> nServiceInt >> nTime >> addrMe;
         nSendVersion = std::min(nVersion, PROTOCOL_VERSION);
+
+        // Clear NODE_SMSG service flag if old peer version
+        if (nVersion < MIN_SMSG_PROTO_VERSION)
+            nServiceInt &= ~NODE_SMSG;
         nServices = ServiceFlags(nServiceInt);
+
         if (!pfrom->fInbound)
         {
             connman.SetServices(pfrom->addr, nServices);

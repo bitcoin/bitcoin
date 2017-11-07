@@ -30,6 +30,8 @@ protected:
     void BlockDisconnected(const std::shared_ptr<const CBlock>& pblock) override;
     void UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) override;
 
+    void NewSecureMessage() override;
+
 private:
     CZMQNotificationInterface();
 

@@ -161,6 +161,7 @@ PARTICL_SCRIPTS = [
     'wallet-particl.py',
     'mnemonic.py',
     'smsg.py',
+    'smsgpaid.py',
     'multisig.py',
     'coldstaking.py',
     'filtertransactions.py'

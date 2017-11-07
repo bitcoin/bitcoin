@@ -25,7 +25,7 @@ static const uint8_t MAX_PARTICL_TXN_VERSION = 0xBF;
 
 enum OutputTypes
 {
-    OUTPUT_NULL             = 0, // marker for CCoinsView
+    OUTPUT_NULL             = 0, // marker for CCoinsView (0.14)
     OUTPUT_STANDARD         = 1,
     OUTPUT_CT               = 2,
     OUTPUT_RINGCT           = 3,
@@ -849,7 +849,6 @@ public:
             return false;
 
         memcpy(&height, &vData[0], 4);
-
         return true;
     }
 

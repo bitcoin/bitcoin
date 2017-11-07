@@ -239,7 +239,6 @@ public:
 
     // TODO: range proof parameters, try to keep similar for fee
 
-
     CKey sEphem;
     CPubKey pkTo;
     int n;
@@ -389,6 +388,8 @@ public:
     static std::string GetWalletHelpString(bool showDebug);
 
     static bool InitLoadWallet();
+
+    bool ProcessStakingSettings(std::string &sError);
 
     /* Returns true if HD is enabled, and default account set */
     bool IsHDEnabled() const override;
@@ -611,6 +612,8 @@ public:
 
     bool CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet, int& nChangePosInOut,
                            std::string& strFailReason, const CCoinControl& coin_control, bool sign = true) override;
+    bool CreateTransaction(std::vector<CTempRecipient>& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet, int& nChangePosInOut,
+                           std::string& strFailReason, const CCoinControl& coin_control, bool sign = true);
     bool CommitTransaction(CWalletTx &wtxNew, CReserveKey &reservekey, CConnman *connman, CValidationState &state) override;
     bool CommitTransaction(CWalletTx &wtxNew, CTransactionRecord &rtx,
         CReserveKey &reservekey, CConnman *connman, CValidationState &state);
@@ -721,8 +724,14 @@ public:
 
     std::vector<CVoteToken> vVoteTokens;
 
-    int nUserDevFundCedePercent;
-    bool fUnlockForStakingOnly; // temporary, non-optimal solution.
+    // Staking Settings
+    CAmount nStakeCombineThreshold;
+    CAmount nStakeSplitThreshold;
+    size_t nMaxStakeCombine = 3;
+    int nWalletDevFundCedePercent;
+
+
+    bool fUnlockForStakingOnly; // Use coldstaking instead
 
     int64_t nRCTOutSelectionGroup1;
     int64_t nRCTOutSelectionGroup2;
