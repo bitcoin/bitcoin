@@ -76,6 +76,7 @@ src/qt/test/moc*.cpp
 Makefile
 bitcoin-qt
 Bitcoin-Qt.app
+background.tiff*
 
 # Unit-tests
 Makefile.test
