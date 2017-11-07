@@ -95,7 +95,7 @@ public:
     std::string SporkPubKey() const { return strSporkPubKey; }
 protected:
     CChainParams() {}
-
+	int64_t nDelayGetHeadersTime;
     Consensus::Params consensus;
     CMessageHeader::MessageStartChars pchMessageStart;
     //! Raw pub key bytes for the broadcast alert signing key.
