@@ -13,7 +13,8 @@
 #include "utilstrencodings.h"
 
 #include <boost/foreach.hpp>
-
+// SYSCOIN need constant SYSCOIN_TX_VERSION
+extern int GetSyscoinTxVersion();
     /**
      * Check transaction inputs to mitigate two
      * potential denial-of-service attacks:
@@ -49,8 +50,9 @@ bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType)
             return false;
         if (m < 1 || m > n)
             return false;
+	// SYSCOIN check for size of sys tx, normal tx size is checked in isstandardtx now
     } else if (whichType == TX_NULL_DATA &&
-               (!fAcceptDatacarrier || scriptPubKey.size() > nMaxDatacarrierBytes))
+		(!fAcceptDatacarrier || scriptPubKey.size() > nMaxDatacarrierBytes * 19))
           return false;
 
     return whichType != TX_NONSTANDARD;
@@ -58,10 +60,11 @@ bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType)
 
 bool IsStandardTx(const CTransaction& tx, std::string& reason)
 {
-    if (tx.nVersion > CTransaction::MAX_STANDARD_VERSION || tx.nVersion < 1) {
-        reason = "version";
-        return false;
-    }
+	// SYSCOIN check for syscoin or bitcoin tx
+	if ((tx.nVersion > CTransaction::MAX_STANDARD_VERSION || tx.nVersion < 1) && tx.nVersion != GetSyscoinTxVersion()) {
+		reason = "version";
+		return false;
+	}
 
     // Extremely large transactions with lots of inputs can cost the network
     // almost as much to process as they cost the sender in fees, because
@@ -100,8 +103,18 @@ bool IsStandardTx(const CTransaction& tx, std::string& reason)
             return false;
         }
 
-        if (whichType == TX_NULL_DATA)
-            nDataOut++;
+		if (whichType == TX_NULL_DATA)
+		{
+			// SYSCOIN if not syscoin tx and opreturn size is bigger than maxcarrier bytes, return false
+			// we need this because if it is a sys tx then we allow 75x maxcarrier bytes.
+			if (tx.nVersion != GetSyscoinTxVersion() && txout.scriptPubKey.size() > nMaxDatacarrierBytes)
+			{
+				reason = "scriptpubkey";
+				return false;
+			}
+
+			nDataOut++;
+		}
         else if ((whichType == TX_MULTISIG) && (!fIsBareMultisigStd)) {
             reason = "bare-multisig";
             return false;
