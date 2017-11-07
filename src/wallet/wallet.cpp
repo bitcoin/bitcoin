@@ -2681,7 +2681,7 @@ bool CWallet::SelectCoins(const CAmount& nTargetValue, set<pair<const CWalletTx*
 
 	vector<COutput> vCoins;
 	// SYSCOIN
-	AvailableCoins(vCoins, true, coinControl, false, bAliasPay, nCoinType, fUseInstantSend);
+	AvailableCoins(vCoins, true, coinControl, bAliasPay, false, nCoinType, fUseInstantSend);
 
 	// SYSCOIN
 	set<pair<const CWalletTx*, uint32_t> > setPresetCoins;
