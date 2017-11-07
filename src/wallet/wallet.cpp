@@ -2452,7 +2452,8 @@ void CWallet::AvailableCoins(vector<COutput>& vCoins, bool fOnlyConfirmed, const
 					(!coinControl || !coinControl->HasSelected() || coinControl->fAllowOtherInputs || coinControl->IsSelected((*it).first, i)))
 					vCoins.push_back(COutput(pcoin, i, nDepth,
 					((mine & ISMINE_SPENDABLE) != ISMINE_NO) ||
-						(coinControl && coinControl->fAllowWatchOnly && (mine & ISMINE_WATCH_SOLVABLE) != ISMINE_NO)));
+						(coinControl && coinControl->fAllowWatchOnly && (mine & ISMINE_WATCH_SOLVABLE) != ISMINE_NO),
+						(mine & (ISMINE_SPENDABLE | ISMINE_WATCH_SOLVABLE)) != ISMINE_NO));
 			}
 		}
 	}
@@ -3667,8 +3668,12 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
 					// Not enough fee: enough priority?
 					double dPriorityNeeded = mempool.estimateSmartPriority(nTxConfirmTarget);
 					// Require at least hard-coded AllowFree.
-					//if (dPriority >= dPriorityNeeded && AllowFree(dPriority))
-					//	break;
+					if (dPriority >= dPriorityNeeded && AllowFree(dPriority))
+						break;
+
+					// Small enough, and priority high enough, to send for free
+					//                    if (dPriorityNeeded > 0 && dPriority >= dPriorityNeeded)
+					//                        break;
 
 				}
 				CAmount nFeeNeeded = max(nFeePay, GetMinimumFee(nBytes, nTxConfirmTarget, mempool));
