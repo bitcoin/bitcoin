@@ -482,7 +482,7 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state)
 	if (tx.vout.empty())
 		return state.DoS(10, false, REJECT_INVALID, "bad-txns-vout-empty");
 	// Size limits
-	if (::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION) > MAX_LEGACY_BLOCK_SIZE)
+	if (::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION) > MAX_STANDARD_TX_SIZE)
 		return state.DoS(100, false, REJECT_INVALID, "bad-txns-oversize");
 
 	// Check for negative or overflow output values
@@ -518,16 +518,6 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state)
 			if (txin.prevout.IsNull())
 				return state.DoS(10, false, REJECT_INVALID, "bad-txns-prevout-null");
 	}
-
-	return true;
-}
-bool ContextualCheckTransaction(const CTransaction& tx, CValidationState &state, CBlockIndex * const pindexPrev)
-{
-	bool fDIP0001Active_context = (VersionBitsState(pindexPrev, Params().GetConsensus(), Consensus::DEPLOYMENT_DIP0001, versionbitscache) == THRESHOLD_ACTIVE);
-
-	// Size limits
-	if (fDIP0001Active_context && ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION) > MAX_STANDARD_TX_SIZE)
-		return state.DoS(100, false, REJECT_INVALID, "bad-txns-oversize");
 
 	return true;
 }
@@ -610,7 +600,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 	if (pfMissingInputs)
 		*pfMissingInputs = false;
 
-	if (!CheckTransaction(tx, state) || !ContextualCheckTransaction(tx, state, chainActive.Tip()))
+	if (!CheckTransaction(tx, state))
 		return false;
 
 	// Coinbase is only valid in a block, not as a loose transaction
@@ -2191,7 +2181,6 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 	std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue> > addressUnspentIndex;
 	std::vector<std::pair<CSpentIndexKey, CSpentIndexValue> > spentIndex;
 
-	bool fDIP0001Active_context = (VersionBitsState(pindex->pprev, chainparams.GetConsensus(), Consensus::DEPLOYMENT_DIP0001, versionbitscache) == THRESHOLD_ACTIVE);
 
 	for (unsigned int i = 0; i < block.vtx.size(); i++)
 	{
@@ -2200,7 +2189,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 
 		nInputs += tx.vin.size();
 		nSigOps += GetLegacySigOpCount(tx);
-		if (nSigOps > MaxBlockSigOps(fDIP0001Active_context))
+		if (nSigOps > MaxBlockSigOps(true))
 			return state.DoS(100, error("ConnectBlock(): too many sigops"),
 				REJECT_INVALID, "bad-blk-sigops");
 
@@ -2282,7 +2271,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 				// this is to prevent a "rogue miner" from creating
 				// an incredibly-expensive-to-validate block.
 				nSigOps += GetP2SHSigOpCount(tx, view);
-				if (nSigOps > MaxBlockSigOps(fDIP0001Active_context))
+				if (nSigOps > MaxBlockSigOps(true))
 					return state.DoS(100, error("ConnectBlock(): too many sigops"),
 						REJECT_INVALID, "bad-blk-sigops");
 			}
@@ -3416,11 +3405,9 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, CBlockIn
 		? pindexPrev->GetMedianTimePast()
 		: block.GetBlockTime();
 
-	// Check that all transactions are finalized
-	bool fDIP0001Active_context = (VersionBitsState(pindexPrev, consensusParams, Consensus::DEPLOYMENT_DIP0001, versionbitscache) == THRESHOLD_ACTIVE);
 
 	// Size limits
-	unsigned int nMaxBlockSize = MaxBlockSize(fDIP0001Active_context);
+	unsigned int nMaxBlockSize = MaxBlockSize(true);
 	if (block.vtx.empty() || block.vtx.size() > nMaxBlockSize || ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION) > nMaxBlockSize)
 		return state.DoS(100, error("%s: size limits failed", __func__),
 			REJECT_INVALID, "bad-blk-length");
@@ -3432,13 +3419,13 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, CBlockIn
 		if (!IsFinalTx(tx, nHeight, nLockTimeCutoff)) {
 			return state.DoS(10, error("%s: contains a non-final transaction", __func__), REJECT_INVALID, "bad-txns-nonfinal");
 		}
-		if (fDIP0001Active_context && ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION) > MAX_STANDARD_TX_SIZE) {
+		if (::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION) > MAX_STANDARD_TX_SIZE) {
 			return state.DoS(100, error("%s: contains an over-sized transaction", __func__), REJECT_INVALID, "bad-txns-oversized");
 		}
 		nSigOps += GetLegacySigOpCount(tx);
 	}
 	// Check sigops
-	if (nSigOps > MaxBlockSigOps(fDIP0001Active_context))
+	if (nSigOps > MaxBlockSigOps(true))
 		return state.DoS(100, error("%s: out-of-bounds SigOpCount", __func__),
 			REJECT_INVALID, "bad-blk-sigops");
 	// Enforce block.nVersion=2 rule that the coinbase starts with serialized block height
