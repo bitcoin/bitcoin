@@ -3319,7 +3319,6 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
 				if (instantsend.GetLockedOutPointTxHash(txin.prevout, hashLocked) && hashLocked != tx.GetHash()) {
 					// The node which relayed this will have to swtich later,
 					// relaying instantsend data won't help it.
-					instantsend.Relay(hashLocked);
 					LOCK(cs_main);
 					mapRejectedBlocks.insert(make_pair(block.GetHash(), GetTime()));
 					return state.DoS(0, error("CheckBlock(SYS): transaction %s conflicts with transaction lock %s",
@@ -3433,11 +3432,11 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, CBlockIn
 		if (!IsFinalTx(tx, nHeight, nLockTimeCutoff)) {
 			return state.DoS(10, error("%s: contains a non-final transaction", __func__), REJECT_INVALID, "bad-txns-nonfinal");
 		}
+		if (fDIP0001Active_context && ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION) > MAX_STANDARD_TX_SIZE) {
+			return state.DoS(100, error("%s: contains an over-sized transaction", __func__), REJECT_INVALID, "bad-txns-oversized");
+		}
+		nSigOps += GetLegacySigOpCount(tx);
 	}
-	if (fDIP0001Active_context && ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION) > MAX_STANDARD_TX_SIZE) {
-		return state.DoS(100, error("%s: contains an over-sized transaction", __func__), REJECT_INVALID, "bad-txns-oversized");
-	}
-	nSigOps += GetLegacySigOpCount(tx);
 	// Check sigops
 	if (nSigOps > MaxBlockSigOps(fDIP0001Active_context))
 		return state.DoS(100, error("%s: out-of-bounds SigOpCount", __func__),
