@@ -2209,6 +2209,7 @@ CAmount CWallet::GetAnonymizedBalance() const
 			for (map<uint256, CWalletTx>::const_iterator it = mapWallet.find(outpoint.hash); it != mapWallet.end() && it->first == outpoint.hash; ++it) {
 				if (it->second.IsTrusted())
 					nTotal += it->second.GetAnonymizedCredit();
+			}
 		}
 	}
 
