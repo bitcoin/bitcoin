@@ -20,6 +20,7 @@ void RegisterWalletRPCCommands(CRPCTable &t);
  * @return nullptr if no wallet should be used, or a pointer to the CWallet
  */
 CWallet *GetWalletForJSONRPCRequest(const JSONRPCRequest& request);
+CWallet *GetFirstWallet();
 
 std::string HelpRequiringPassphrase(CWallet *);
 void EnsureWalletIsUnlocked(CWallet *);

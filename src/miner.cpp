@@ -27,6 +27,10 @@
 #include "utilmoneystr.h"
 #include "validationinterface.h"
 
+#include "wallet/wallet.h"
+#include "wallet/rpcwallet.h"
+
+
 #include <boost/thread.hpp>
 #include <algorithm>
 #include <queue>
@@ -489,23 +493,55 @@ static bool ProcessBlockFound(const CBlock* pblock, const CChainParams& chainpar
 // ***TODO*** that part changed in bitcoin, we are using a mix with old one here for now
 void static RavenMiner(const CChainParams& chainparams)
 {
+    std::cout << "In Raven Miner" << std::endl;
     LogPrintf("RavenMiner -- started\n");
     SetThreadPriority(THREAD_PRIORITY_LOWEST);
     RenameThread("raven-miner");
 
+    std::cout << "After thread rename" << std::endl;
+
     unsigned int nExtraNonce = 0;
 
+
+    CWallet *  pWallet = GetFirstWallet();
+
+    if (!EnsureWalletIsAvailable(pWallet, false)) {
+        LogPrintf("RavenMiner -- Wallet not available\n");
+    }
+
+
+
+
+
     std::shared_ptr<CReserveScript> coinbaseScript;
+
+    pWallet->GetScriptForMining(coinbaseScript);
     //GetMainSignals().ScriptForMining(coinbaseScript);
+
+    if (!coinbaseScript)
+        std::cout << "coinbaseScript is NULL" << std::endl;
+
+    if (coinbaseScript->reserveScript.empty())
+        std::cout << "coinbaseScript is empty" << std::endl;
+
+    std::cout << "Before try in miner" << std::endl;
 
     try {
         // Throw an error if no script was provided.  This can happen
         // due to some internal error but also if the keypool is empty.
         // In the latter case, already the pointer is NULL.
+        std::cout << "Before coinbase script" << std::endl;
         if (!coinbaseScript || coinbaseScript->reserveScript.empty())
+        {
+            std::cout << "Throwing no coinbase script" << std::endl;
             throw std::runtime_error("No coinbase script available (mining requires a wallet)");
+        }
+
+        std::cout << "After coinbase script" << std::endl;
 
         while (true) {
+            std::cout << "Top of mining loop" << std::endl;
+
             if (chainparams.MiningRequiresPeers()) {
                 // Busy-wait for the network to come online so we don't waste time mining
                 // on an obsolete chain. In regtest mode we expect to fly solo.
@@ -513,10 +549,12 @@ void static RavenMiner(const CChainParams& chainparams)
                     if ((g_connman->GetNodeCount(CConnman::CONNECTIONS_ALL) > 0) && !IsInitialBlockDownload()) {
                         break;
                     }
+                    std::cout << "Waiting for peers to mine" << std::endl;
                     MilliSleep(1000);
                 } while (true);
             }
 
+            std::cout << "Before creating block to mine" << std::endl;
 
             //
             // Create new block
@@ -614,6 +652,10 @@ void static RavenMiner(const CChainParams& chainparams)
 
 void GenerateRavens(bool fGenerate, int nThreads, const CChainParams& chainparams)
 {
+    std::cout << "In GenerateRavens" << std::endl;
+    std::cout << "fGenerate: " << fGenerate << std::endl;
+    std::cout << "nThreads: " << nThreads << std::endl;
+
     static boost::thread_group* minerThreads = NULL;
 
     if (nThreads < 0)
@@ -630,6 +672,8 @@ void GenerateRavens(bool fGenerate, int nThreads, const CChainParams& chainparam
         return;
 
     minerThreads = new boost::thread_group();
-    for (int i = 0; i < nThreads; i++)
+    for (int i = 0; i < nThreads; i++){
+        std::cout << "Starting mining thread: " << i << std::endl;        
         minerThreads->create_thread(boost::bind(&RavenMiner, boost::cref(chainparams)));
+    }
 }

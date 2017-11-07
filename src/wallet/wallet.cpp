@@ -3579,13 +3579,21 @@ void CWallet::MarkReserveKeysAsUsed(int64_t keypool_id)
 
 void CWallet::GetScriptForMining(std::shared_ptr<CReserveScript> &script)
 {
+    std::cout << "In CWallet::GetScriptForMining" << std::endl;
+
     std::shared_ptr<CReserveKey> rKey = std::make_shared<CReserveKey>(this);
     CPubKey pubkey;
     if (!rKey->GetReservedKey(pubkey))
+    {
+        std::cout << "Bailing out of CWallet::GetScriptForMining" << std::endl;
         return;
+    }
 
+    std::cout << "Assigning script in CWallet::GetScriptForMining" << std::endl;
     script = rKey;
+    std::cout << "Setting script in CWallet::GetScriptForMining" << std::endl;
     script->reserveScript = CScript() << ToByteVector(pubkey) << OP_CHECKSIG;
+    std::cout << "Out of CWallet::GetScriptForMining" << std::endl;
 }
 
 void CWallet::LockCoin(const COutPoint& output)
