@@ -7,6 +7,9 @@
 #endif
 
 #include <chainparams.h>
+#include <interfaces/node.h>
+#include <qt/bitcoin.h>
+#include <qt/test/apptests.h>
 #include <qt/test/rpcnestedtests.h>
 #include <util/system.h>
 #include <qt/test/uritests.h>
@@ -47,12 +50,13 @@ int main(int argc, char *argv[])
 {
     SetupEnvironment();
     SetupNetworking();
-    SelectParams(CBaseChainParams::MAIN);
+    SelectParams(CBaseChainParams::REGTEST);
     noui_connect();
     ClearDatadirCache();
     fs::path pathTemp = fs::temp_directory_path() / strprintf("test_bitcoin-qt_%lu_%i", (unsigned long)GetTime(), (int)GetRand(100000));
     fs::create_directories(pathTemp);
     gArgs.ForceSetArg("-datadir", pathTemp.string());
+    auto node = interfaces::MakeNode();
 
     bool fInvalid = false;
 
@@ -67,11 +71,15 @@ int main(int argc, char *argv[])
 
     // Don't remove this, it's needed to access
     // QApplication:: and QCoreApplication:: in the tests
-    QApplication app(argc, argv);
+    BitcoinApplication app(*node, argc, argv);
     app.setApplicationName("Bitcoin-Qt-test");
 
     SSL_library_init();
 
+    AppTests app_tests(app);
+    if (QTest::qExec(&app_tests) != 0) {
+        fInvalid = true;
+    }
     URITests test1;
     if (QTest::qExec(&test1) != 0) {
         fInvalid = true;
