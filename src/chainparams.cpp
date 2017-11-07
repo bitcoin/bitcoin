@@ -127,6 +127,9 @@ public:
         nPruneAfterHeight = 100000;
                   
 
+        /////////////////////////////////////////////////////////////////
+
+
         // arith_uint256 test;
         // bool fNegative;
         // bool fOverflow;
@@ -173,15 +176,24 @@ public:
 
         // std::cout << "Totals: hash algo " <<  " hits " << totalHits << " total " << totalTime << " avg " << totalTime/totalHits << std::endl;
 
-        //genesis.hashPrevBlock = TempHashHolding; 
-        genesis = CreateGenesisBlock(1509740671, 15881500, 0x1e00ffff, 4, 5000 * COIN); 
+        // genesis.hashPrevBlock = TempHashHolding; 
+
+
+
+
+
+        /////////////////////////////////////////////////////////////////
+
+
+
+        genesis = CreateGenesisBlock(1509740671, 13173510, 0x1e00ffff, 4, 5000 * COIN); 
 
         consensus.hashGenesisBlock = genesis.GetHash();        
         std::cout << consensus.hashGenesisBlock.GetHex() << "\n";
         std::cout << "Merkle: " << genesis.hashMerkleRoot.GetHex() << "\n";
 
-        assert(consensus.hashGenesisBlock == uint256S("0x0000004519318f9a8c1e984ff8bc2b6666457307885a227401276b85781f946d"));
-        assert(genesis.hashMerkleRoot == uint256S("0x042c3bf0de92abb825469aa10b788566eac73534aca049224c46eade08f851ac"));
+        assert(consensus.hashGenesisBlock == uint256S("0x00000013dd11f2bd679ee383ecd15b7b093400f38f547b2299007d5166ac981d"));
+        assert(genesis.hashMerkleRoot == uint256S("0xa4c84e05d4f74f0df5e69a8c2e85524f9776555980a60312ab0fd524cd9b1474"));
 
         vSeeds.emplace_back("seed.raven.mediciventures.com", true); 
 
