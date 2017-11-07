@@ -84,6 +84,7 @@ libconftest.dylib*
 Makefile
 dash-qt
 Dash-Qt.app
+background.tiff*
 !/depends/Makefile
 
 # Unit-tests
