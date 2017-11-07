@@ -37,7 +37,8 @@
 class CScheduler;
 class CNode;
 
-namespace boost {
+namespace boost
+{
     class thread_group;
 } // namespace boost
 

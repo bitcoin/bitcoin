@@ -77,7 +77,8 @@ struct CLogCategoryActive
     bool active;
 };
 
-namespace BCLog {
+namespace BCLog
+{
     enum LogFlags : uint32_t {
         NONE        = 0,
         NET         = (1 <<  0),
@@ -103,7 +104,8 @@ namespace BCLog {
         LEVELDB     = (1 << 20),
         ALL         = ~(uint32_t)0,
     };
-}
+}  // namespace BCLog
+
 /** Return true if log accepts specified category */
 static inline bool LogAcceptCategory(uint32_t category)
 {

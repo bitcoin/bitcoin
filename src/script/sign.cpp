@@ -300,7 +300,7 @@ struct Stacks
         return result;
     }
 };
-}
+}  // namespace
 
 static Stacks CombineSignatures(const CScript& scriptPubKey, const BaseSignatureChecker& checker,
                                  const txnouttype txType, const std::vector<valtype>& vSolutions,
@@ -387,7 +387,8 @@ SignatureData CombineSignatures(const CScript& scriptPubKey, const BaseSignature
     return CombineSignatures(scriptPubKey, checker, txType, vSolutions, Stacks(scriptSig1), Stacks(scriptSig2), SIGVERSION_BASE).Output();
 }
 
-namespace {
+namespace
+{
 /** Dummy signature checker which accepts all signatures. */
 class DummySignatureChecker : public BaseSignatureChecker
 {

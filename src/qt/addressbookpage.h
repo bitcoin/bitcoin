@@ -10,7 +10,8 @@
 class AddressTableModel;
 class PlatformStyle;
 
-namespace Ui {
+namespace Ui
+{
     class AddressBookPage;
 }
 

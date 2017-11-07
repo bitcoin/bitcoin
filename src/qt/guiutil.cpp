@@ -75,7 +75,8 @@ extern double NSAppKitVersionNumber;
 #endif
 #endif
 
-namespace GUIUtil {
+namespace GUIUtil
+{
 
 QString dateTimeStr(const QDateTime &date)
 {

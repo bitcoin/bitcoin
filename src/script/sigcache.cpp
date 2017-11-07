@@ -14,7 +14,8 @@
 #include "cuckoocache.h"
 #include <boost/thread.hpp>
 
-namespace {
+namespace
+{
 /**
  * Valid signature cache, to avoid doing expensive ECDSA signature checking
  * twice for every transaction (once when accepted into memory pool, and

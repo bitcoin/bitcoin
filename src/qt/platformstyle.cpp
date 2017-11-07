@@ -29,7 +29,8 @@ static const struct {
 };
 static const unsigned platform_styles_count = sizeof(platform_styles)/sizeof(*platform_styles);
 
-namespace {
+namespace
+{
 /* Local functions for colorizing single-color images */
 
 void MakeSingleColorImage(QImage& img, const QColor& colorbase)
@@ -69,7 +70,7 @@ QIcon ColorizeIcon(const QString& filename, const QColor& colorbase)
     return QIcon(QPixmap::fromImage(ColorizeImage(filename, colorbase)));
 }
 
-}
+}  // namespace
 
 
 PlatformStyle::PlatformStyle(const QString &_name, bool _imagesOnButtons, bool _colorizeIcons, bool _useExtraSpacing):

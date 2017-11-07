@@ -753,7 +753,8 @@ bool CTxMemPool::CompareDepthAndScore(const uint256& hasha, const uint256& hashb
     return counta < countb;
 }
 
-namespace {
+namespace
+{
 class DepthAndScoreComparator
 {
 public:

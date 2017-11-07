@@ -257,7 +257,7 @@ void TestGUI()
     bitdb.Reset();
 }
 
-}
+}  // namespace
 
 void WalletTests::walletTests()
 {

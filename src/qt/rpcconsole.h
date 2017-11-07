@@ -18,7 +18,8 @@ class ClientModel;
 class PlatformStyle;
 class RPCTimerInterface;
 
-namespace Ui {
+namespace Ui
+{
     class RPCConsole;
 }
 

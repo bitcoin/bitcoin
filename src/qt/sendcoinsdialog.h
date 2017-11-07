@@ -17,7 +17,8 @@ class PlatformStyle;
 class SendCoinsEntry;
 class SendCoinsRecipient;
 
-namespace Ui {
+namespace Ui
+{
     class SendCoinsDialog;
 }
 

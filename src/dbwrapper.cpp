@@ -194,7 +194,8 @@ bool CDBIterator::Valid() const { return piter->Valid(); }
 void CDBIterator::SeekToFirst() { piter->SeekToFirst(); }
 void CDBIterator::Next() { piter->Next(); }
 
-namespace dbwrapper_private {
+namespace dbwrapper_private
+{
 
 void HandleError(const leveldb::Status& status)
 {

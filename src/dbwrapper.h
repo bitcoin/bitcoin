@@ -29,7 +29,8 @@ class CDBWrapper;
 
 /** These should be considered an implementation detail of the specific database.
  */
-namespace dbwrapper_private {
+namespace dbwrapper_private
+{
 
 /** Handle database error by throwing dbwrapper_error exception.
  */
@@ -41,7 +42,7 @@ void HandleError(const leveldb::Status& status);
  */
 const std::vector<unsigned char>& GetObfuscateKey(const CDBWrapper &w);
 
-};
+}  // namespace dbwrapper_private
 
 /** Batch of changes queued to be written to a CDBWrapper */
 class CDBBatch

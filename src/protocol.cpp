@@ -12,7 +12,8 @@
 # include <arpa/inet.h>
 #endif
 
-namespace NetMsgType {
+namespace NetMsgType
+{
 const char *VERSION="version";
 const char *VERACK="verack";
 const char *ADDR="addr";

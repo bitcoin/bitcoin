@@ -71,7 +71,8 @@ static const int STALE_RELAY_AGE_LIMIT = 30 * 24 * 60 * 60;
 static const int HISTORICAL_BLOCK_AGE = 7 * 24 * 60 * 60;
 
 // Internal stuff
-namespace {
+namespace
+{
     /** Number of nodes with fSyncStarted. */
     int nSyncStarted = 0;
 

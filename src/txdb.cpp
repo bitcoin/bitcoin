@@ -30,7 +30,8 @@ static const char DB_FLAG = 'F';
 static const char DB_REINDEX_FLAG = 'R';
 static const char DB_LAST_BLOCK = 'l';
 
-namespace {
+namespace
+{
 
 struct CoinEntry {
     COutPoint* outpoint;
@@ -52,7 +53,7 @@ struct CoinEntry {
     }
 };
 
-}
+}  // namespace
 
 CCoinsViewDB::CCoinsViewDB(size_t nCacheSize, bool fMemory, bool fWipe) : db(GetDataDir() / "chainstate", nCacheSize, fMemory, fWipe, true) 
 {
@@ -302,7 +303,8 @@ bool CBlockTreeDB::LoadBlockIndexGuts(const Consensus::Params& consensusParams, 
     return true;
 }
 
-namespace {
+namespace
+{
 
 //! Legacy class to deserialize pre-pertxout database entries without reindex.
 class CCoins
@@ -355,7 +357,7 @@ public:
     }
 };
 
-}
+}  // namespace
 
 /** Upgrade the database from older formats.
  *

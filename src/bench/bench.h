@@ -35,7 +35,8 @@ BENCHMARK(CODE_TO_TIME);
 
  */
  
-namespace benchmark {
+namespace benchmark
+{
 
     class State {
         std::string name;
@@ -71,7 +72,7 @@ namespace benchmark {
 
         static void RunAll(double elapsedTimeForOne=1.0);
     };
-}
+}  // namespace benchmark
 
 // BENCHMARK(foo) expands to:  benchmark::BenchRunner bench_11foo("foo", foo);
 #define BENCHMARK(n) \

@@ -15,7 +15,8 @@
 
 typedef std::vector<unsigned char> valtype;
 
-namespace {
+namespace
+{
 
 inline bool set_success(ScriptError* ret)
 {
@@ -1043,7 +1044,8 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
     return set_success(serror);
 }
 
-namespace {
+namespace
+{
 
 /**
  * Wrapper that serializes like CTransaction, but with the modifications

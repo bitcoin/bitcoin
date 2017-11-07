@@ -162,7 +162,8 @@ namespace tfm = tinyformat;
 #   define TINYFORMAT_HIDDEN
 #endif
 
-namespace tinyformat {
+namespace tinyformat
+{
 
 class format_error: public std::runtime_error
 {
@@ -172,7 +173,8 @@ public:
 };
 
 //------------------------------------------------------------------------------
-namespace detail {
+namespace detail
+{
 
 // Test whether type T1 is convertible to type T2
 template <typename T1, typename T2>
@@ -486,7 +488,8 @@ cog.outl('#define TINYFORMAT_FOREACH_ARGNUM(m) \\\n    ' +
 
 
 
-namespace detail {
+namespace detail
+{
 
 // Type-opaque holder for an argument to format(), with associated actions on
 // the type held as explicit function pointers.  This allows FormatArg's for
@@ -870,7 +873,8 @@ class FormatList
 typedef const FormatList& FormatListRef;
 
 
-namespace detail {
+namespace detail
+{
 
 // Format list subclass with fixed storage to avoid dynamic allocation
 template<int N>
