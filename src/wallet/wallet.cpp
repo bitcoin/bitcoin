@@ -2738,12 +2738,18 @@ bool CWallet::SelectCoins(const CAmount& nTargetValue, set<pair<const CWalletTx*
 					if (nRounds < privateSendClient.nPrivateSendRounds) continue;
 				}
 				nValueRet += out.tx->vout[out.i].nValue;
-				setCoinsRet.insert(make_pair(out.tx, out.i));
+				// SYSCOIN
+				setPresetCoins.insert(make_pair(out.tx, out.i));
 			}
+		}
+		// SYSCOIN
+		if (nValueRet >= nTargetValue)
+		{
+			setCoinsRet.insert(setPresetCoins.begin(), setPresetCoins.end());
+			return true;
 		}
 	}
 
-	return (nValueRet >= nTargetValue);
 	//if we're doing only denominated, we need to round up to the nearest smallest denomination
 	if (nCoinType == ONLY_DENOMINATED) {
 		std::vector<CAmount> vecPrivateSendDenominations = CPrivateSend::GetStandardDenominations();
@@ -2760,11 +2766,16 @@ bool CWallet::SelectCoins(const CAmount& nTargetValue, set<pair<const CWalletTx*
 					// make sure it's actually anonymized
 					if (nRounds < privateSendClient.nPrivateSendRounds) continue;
 					nValueRet += nDenom;
-					setCoinsRet.insert(make_pair(out.tx, out.i));
+					setPresetCoins.insert(make_pair(out.tx, out.i));
 				}
 			}
 		}
-		return (nValueRet >= nTargetValue);
+		// SYSCOIN
+		if (nValueRet >= nTargetValue)
+		{
+			setCoinsRet.insert(setPresetCoins.begin(), setPresetCoins.end());
+			return true;
+		}
 	}
 	// calculate value from preset inputs and store them
 	// SYSCOIN
