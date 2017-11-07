@@ -814,8 +814,8 @@
         <translation>Този етикет става червен, ако получателят получи сума, по-малка от прага за незначителен остатък.</translation>
     </message>
     <message>
-        <source>Can vary +/- %1 duff(s) per input.</source>
-        <translation>Може да варира +/- %1 duff(s) за вход.</translation>
+        <source>Can vary +/- %1 satoshi(s) per input.</source>
+        <translation>Може да варира +/- %1 satoshi(s) за вход.</translation>
     </message>
     <message>
         <source>(no label)</source>

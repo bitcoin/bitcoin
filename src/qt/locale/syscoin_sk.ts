@@ -798,8 +798,8 @@
         <translation>Tento popis sčervenie ak ktorýkoľvek príjemca dostane sumu menšiu ako súčasný limit pre "prach".</translation>
     </message>
     <message>
-        <source>Can vary +/- %1 duff(s) per input.</source>
-        <translation>Môže sa pohybovať +/- %1 duff(y) pre vstup.</translation>
+        <source>Can vary +/- %1 satoshi(s) per input.</source>
+        <translation>Môže sa pohybovať +/- %1 satoshi(y) pre vstup.</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -2509,11 +2509,11 @@ https://www.transifex.com/projects/p/syscoin/</translation>
     </message>
     <message>
         <source>If the custom fee is set to 1000 satoshi and the transaction is only 250 bytes, then "per kilobyte" only pays 250 satoshi in fee,&lt;br /&gt;while "at least" pays 1000 satoshi. For transactions bigger than a kilobyte both pay by kilobyte.</source>
-        <translation>Ak je vlastný poplatok nastavený na 1000 duffov a transakcia je len 250 bytov, v tom prípade "za kilobajt" zaplatí iba 250 duffov na poplatkoch, &lt;br /&gt;zatiaľ čo "pri najmenšom" zaplatí 1000 duffov. Pre transakcie väčšie ako jeden kilobajt, obe zaplatia rovnako za kilobajt. </translation>
+        <translation>Ak je vlastný poplatok nastavený na 1000 satoshiov a transakcia je len 250 bytov, v tom prípade "za kilobajt" zaplatí iba 250 satoshiov na poplatkoch, &lt;br /&gt;zatiaľ čo "pri najmenšom" zaplatí 1000 satoshiov. Pre transakcie väčšie ako jeden kilobajt, obe zaplatia rovnako za kilobajt. </translation>
     </message>
     <message>
         <source>If the custom fee is set to 1000 satoshi and the transaction is only 250 bytes, then "per kilobyte" only pays 250 satoshi in fee,&lt;br /&gt;while "total at least" pays 1000 satoshi. For transactions bigger than a kilobyte both pay by kilobyte.</source>
-        <translation>Ak je vlastný poplatok nastavený na 1000 duffov a transakcia je len 250 bytov, v tom prípade "za kilobajt" zaplatí iba 250 duffov na poplatkoch, &lt;br /&gt;zatiaľ čo "celkovo pri najmenšom" zaplatí 1000 duffov. Pre transakcie väčšie ako jeden kilobajt, obe zaplatia rovnako za kilobajt. </translation>
+        <translation>Ak je vlastný poplatok nastavený na 1000 satoshiov a transakcia je len 250 bytov, v tom prípade "za kilobajt" zaplatí iba 250 satoshiov na poplatkoch, &lt;br /&gt;zatiaľ čo "celkovo pri najmenšom" zaplatí 1000 satoshiov. Pre transakcie väčšie ako jeden kilobajt, obe zaplatia rovnako za kilobajt. </translation>
     </message>
     <message>
         <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks.&lt;br /&gt;But be aware that this can end up in a never confirming transaction once there is more demand for syscoin transactions than the network can process.</source>

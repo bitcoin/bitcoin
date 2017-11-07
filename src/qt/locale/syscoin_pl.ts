@@ -783,7 +783,7 @@
     </message>
     <message>
         <source>Copy dust</source>
-        <translation>Kopiuj pył (kwota poniżej 5460 duffów)</translation>
+        <translation>Kopiuj pył (kwota poniżej 546 satoshiów)</translation>
     </message>
     <message>
         <source>Copy change</source>
@@ -814,8 +814,8 @@
         <translation>Etykieta staje się czerwona, jeżeli któryś z odbiorców otrzymuje kwotę mniejszą niż obecna granica pyłu.</translation>
     </message>
     <message>
-        <source>Can vary +/- %1 duff(s) per input.</source>
-        <translation>Może się różnić około +/- %1 duff(ów) na transację.</translation>
+        <source>Can vary +/- %1 satoshi(s) per input.</source>
+        <translation>Może się różnić około +/- %1 satoshi(ów) na transację.</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -2708,11 +2708,11 @@ https://www.transifex.com/projects/p/syscoin/</translation>
     </message>
     <message>
         <source>If the custom fee is set to 1000 satoshi and the transaction is only 250 bytes, then "per kilobyte" only pays 250 satoshi in fee,&lt;br /&gt;while "at least" pays 1000 satoshi. For transactions bigger than a kilobyte both pay by kilobyte.</source>
-        <translation>Jeśli ręcznie ustalona opłata wynosi 1000 Duffów, a sama transakcja ma tylko 250 bajtów, to opłata "za kilobajt" wynosi tylko 250 duffów. &lt;br/&gt;Dzieje się tak dla każdej transakcji poniżej 1000 duffów. W przypadku transakcji większych niż jedrn kilobajt opłata jest naliczana od kilobajta. </translation>
+        <translation>Jeśli ręcznie ustalona opłata wynosi 1000 satoshiów, a sama transakcja ma tylko 250 bajtów, to opłata "za kilobajt" wynosi tylko 250 satoshiów. &lt;br/&gt;Dzieje się tak dla każdej transakcji poniżej 1000 satoshiów. W przypadku transakcji większych niż jedrn kilobajt opłata jest naliczana od kilobajta. </translation>
     </message>
     <message>
         <source>If the custom fee is set to 1000 satoshi and the transaction is only 250 bytes, then "per kilobyte" only pays 250 satoshi in fee,&lt;br /&gt;while "total at least" pays 1000 satoshi. For transactions bigger than a kilobyte both pay by kilobyte.</source>
-        <translation>Jeśli ręcznie ustalona opłata wynosi 1000 Duffów, a sama transakcja ma tylko 250 bitów, to opłata "za kilobajt" wynosi tylko 250 duffów.&lt;br/&gt; Dzieje się tak dla każdej transakcji poniżej 1000 duffów. W przypadku transakcji większych niż jeden kilobajt opłata jest naliczana od kilobajta.</translation>
+        <translation>Jeśli ręcznie ustalona opłata wynosi 1000 satoshiów, a sama transakcja ma tylko 250 bitów, to opłata "za kilobajt" wynosi tylko 250 satoshiów.&lt;br/&gt; Dzieje się tak dla każdej transakcji poniżej 1000 satoshiów. W przypadku transakcji większych niż jeden kilobajt opłata jest naliczana od kilobajta.</translation>
     </message>
     <message>
         <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks.&lt;br /&gt;But be aware that this can end up in a never confirming transaction once there is more demand for syscoin transactions than the network can process.</source>
@@ -2816,7 +2816,7 @@ https://www.transifex.com/projects/p/syscoin/</translation>
     </message>
     <message>
         <source>Copy dust</source>
-        <translation>skopiuj drobne (poniżej 5460 duffów)</translation>
+        <translation>skopiuj drobne (poniżej 546 satoshiów)</translation>
     </message>
     <message>
         <source>Copy change</source>

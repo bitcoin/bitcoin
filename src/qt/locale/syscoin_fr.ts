@@ -814,8 +814,8 @@
         <translation>Cette étiquette devient rouge si l'un des destinataires reçoit un montant inférieur au niveau de "poussière".</translation>
     </message>
     <message>
-        <source>Can vary +/- %1 duff(s) per input.</source>
-        <translation>Peut varier de ± %1 duff(s) par entrée.</translation>
+        <source>Can vary +/- %1 satoshi(s) per input.</source>
+        <translation>Peut varier de ± %1 satoshi(s) par entrée.</translation>
     </message>
     <message>
         <source>(no label)</source>

@@ -761,8 +761,8 @@ Address: %4
         <translation>中高</translation>
     </message>
     <message>
-        <source>Can vary +/- %1 duff(s) per input.</source>
-        <translation>每笔输入可能会有 +/- %1个duff(s)的偏差.</translation>
+        <source>Can vary +/- %1 satoshi(s) per input.</source>
+        <translation>每笔输入可能会有 +/- %1个satoshi(s)的偏差.</translation>
     </message>
     <message>
         <source>n/a</source>
