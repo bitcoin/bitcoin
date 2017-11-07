@@ -3327,6 +3327,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
 				}
 			}
 		}
+	}
 	else {
 		LogPrintf("CheckBlock(SYS): spork is off, skipping transaction locking checks\n");
 	}
