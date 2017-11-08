@@ -74,32 +74,22 @@ private:
         MODE_ERROR,   //!< run-time error
     } mode;
     ValidationInvalidReason reason;
-    int nDoS;
     std::string strRejectReason;
     unsigned int chRejectCode;
-    bool corruptionPossible;
     std::string strDebugMessage;
 public:
-    CValidationState() : mode(MODE_VALID), reason(ValidationInvalidReason::NONE), nDoS(0), chRejectCode(0), corruptionPossible(false) {}
-    bool DoS(int level, ValidationInvalidReason reasonIn, bool ret = false,
+    CValidationState() : mode(MODE_VALID), reason(ValidationInvalidReason::NONE), chRejectCode(0) {}
+    bool Invalid(ValidationInvalidReason reasonIn, bool ret = false,
              unsigned int chRejectCodeIn=0, const std::string &strRejectReasonIn="",
-             bool corruptionIn=false,
              const std::string &strDebugMessageIn="") {
         reason = reasonIn;
         chRejectCode = chRejectCodeIn;
         strRejectReason = strRejectReasonIn;
-        corruptionPossible = corruptionIn;
         strDebugMessage = strDebugMessageIn;
         if (mode == MODE_ERROR)
             return ret;
-        nDoS += level;
         mode = MODE_INVALID;
         return ret;
-    }
-    bool Invalid(ValidationInvalidReason _reason, bool ret = false,
-                 unsigned int _chRejectCode=0, const std::string &_strRejectReason="",
-                 const std::string &_strDebugMessage="") {
-        return DoS(0, _reason, ret, _chRejectCode, _strRejectReason, false, _strDebugMessage);
     }
     bool Error(const std::string& strRejectReasonIn) {
         if (mode == MODE_VALID)
@@ -116,14 +106,7 @@ public:
     bool IsError() const {
         return mode == MODE_ERROR;
     }
-    bool CorruptionPossible() const {
-        return corruptionPossible;
-    }
-    void SetCorruptionPossible() {
-        corruptionPossible = true;
-    }
     ValidationInvalidReason GetReason() const { return reason; }
-    int GetDoS() const { return nDoS; }
     unsigned int GetRejectCode() const { return chRejectCode; }
     std::string GetRejectReason() const { return strRejectReason; }
     std::string GetDebugMessage() const { return strDebugMessage; }
