@@ -495,7 +495,7 @@ static bool ProcessBlockFound(const CBlock* pblock, const CChainParams& chainpar
 CWallet *GetFirstWallet() {
     while(vpwallets.size() == 0){
         std::cout << "Wallet size: " << vpwallets.size() << std::endl;
-        MilliSleep(10);
+        MilliSleep(100);
 
     }
     if (vpwallets.size() == 0)
