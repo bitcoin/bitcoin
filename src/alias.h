@@ -227,11 +227,11 @@ public:
 		WriteAliasIndex(alias);
 		return writeState;
 	}
-	bool WriteAlias(const CAliasUnprunable &aliasUnprunable, const std::vector<unsigned char>& address, const CAliasIndex& alias) {
+	bool WriteAlias(const CAliasUnprunable &aliasUnprunable, const std::vector<unsigned char>& address, const CAliasIndex& alias, const int &op) {
 		if(address.empty())
 			return false;	
 		bool writeState = WriteAliasLastTXID(alias.vchAlias, alias.txHash) && Write(make_pair(std::string("namei"), CNameTXIDTuple(alias.vchAlias, alias.txHash)), alias) && Write(make_pair(std::string("namea"), address), alias.vchAlias) && Write(make_pair(std::string("nameu"), alias.vchAlias), aliasUnprunable);
-		WriteAliasIndex(alias);
+		WriteAliasIndex(alias, op);
 		return writeState;
 	}
 
@@ -267,8 +267,11 @@ public:
 		return Erase(make_pair(std::string("namelt"), alias));
 	}
 	bool CleanupDatabase(int &servicesCleaned);
-	void WriteAliasIndex(const CAliasIndex& alias);
+	void WriteAliasIndex(const CAliasIndex& alias, const int &op);
 	void EraseAliasIndex(const std::vector<unsigned char>& vchAlias, bool cleanup);
+	void WriteAliasHistoryIndex(const CAliasIndex& alias, const int &op);
+	void EraseAliasHistoryIndex(const std::vector<unsigned char>& vchAlias);
+	void WriteAliasIndexTxHistory(const CAliasIndex& alias, const std::string &type, const std::string &guid, const CAmount &nValue);
 };
 
 class COfferDB;
@@ -333,4 +336,5 @@ bool IsMyAlias(const CAliasIndex& alias);
 void GetAddress(const CAliasIndex &alias, CSyscoinAddress* address, CScript& script, const uint32_t nPaymentOption=1);
 void startMongoDB();
 void stopMongoDB();
+std::string GetSyscoinTransactionDescription(const int op, const std::vector<std::vector<unsigned char> > &vvchArgs, const CTransaction &tx, std::string& responseEnglish, std::string& responseGUID);
 #endif // ALIAS_H

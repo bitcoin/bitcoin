@@ -29,6 +29,7 @@
 
 using namespace std;
 // SYSCOIN
+#include "alias.h"
 #include "offer.h"
 #include "escrow.h"
 #include "coincontrol.h"
@@ -49,7 +50,7 @@ extern int GetSyscoinTxVersion();
 extern bool IsSyscoinScript(const CScript& scriptPubKey, int &op, vector<vector<unsigned char> > &vvchArgs);
 extern bool DecodeAndParseSyscoinTx(const CTransaction& tx, int& op, int& nOut, vector<vector<unsigned char> >& vvch);
 extern int aliasselectpaymentcoins(const vector<unsigned char> &vchAlias, const CAmount &nAmount, vector<COutPoint>& outPoints, bool& bIsFunded, CAmount &nRequiredAmount, bool bSelectFeePlacementOnly, bool bSelectAll = false, bool bNoAliasRecipient = false);
-
+extern string GetSyscoinTransactionDescription(const int op, const vector<vector<unsigned char> > &vvchArgs, const CTransaction &tx, string& responseEnglish, string& responseGUID);
 int64_t nWalletUnlockTime;
 static CCriticalSection cs_nWalletUnlockTime;
 
@@ -1718,142 +1719,6 @@ static void MaybePushAddress(UniValue & entry, const CTxDestination &dest)
     if (addr.Set(dest))
         entry.push_back(Pair("address", addr.ToString()));
 }
-// SYSCOIN
-string GetSyscoinTransactionDescription(const int op, const vector<vector<unsigned char> > &vvchArgs, const string &type, const CWalletTx &wtx, string& responseEnglish, string& responseGUID, string& responseGUID1)
-{
-	responseGUID = stringFromVch(vvchArgs[0]);
-	string strResponse = "";
-	COffer offer;
-	CEscrow escrow;
-	switch (op)
-	{
-	case OP_ALIAS_ACTIVATE:
-		strResponse = _("Alias Activated");
-		responseEnglish = "Alias Activated";
-		break;
-	case OP_ALIAS_PAYMENT:
-		if (type == "send")
-		{
-			strResponse = _("Alias Payment Sent");
-			responseEnglish = "Alias Payment Sent";
-		}
-		else if (type == "recv")
-		{
-			strResponse = _("Alias Payment Received");
-			responseEnglish = "Alias Payment Received";
-		}
-		break;
-	case OP_ALIAS_UPDATE:
-		if (type == "send")
-		{
-			strResponse = _("Alias Updated");
-			responseEnglish = "Alias Updated";
-		}
-		else if (type == "recv")
-		{
-			strResponse = _("Alias Received");
-			responseEnglish = "Alias Received";
-		}
-		break;
-	case OP_OFFER_ACTIVATE:
-		strResponse = _("Offer Activated");
-		responseEnglish = "Offer Activated";
-		break;
-	case OP_OFFER_UPDATE:
-		strResponse = _("Offer Updated");
-		responseEnglish = "Offer Updated";
-		break;
-	case OP_CERT_ACTIVATE:
-		strResponse = _("Certificate Activated");
-		responseEnglish = "Certificate Activated";
-		break;
-	case OP_CERT_UPDATE:
-		strResponse = _("Certificate Updated");
-		responseEnglish = "Certificate Updated";
-		break;
-	case OP_CERT_TRANSFER:
-		if (type == "send")
-		{
-			strResponse = _("Certificate Transferred");
-			responseEnglish = "Certificate Transferred";
-		}
-		else if (type == "recv")
-		{
-			strResponse = _("Certificate Received");
-			responseEnglish = "Certificate Received";
-		}
-		break;
-	case OP_ESCROW_ACTIVATE:
-		escrow = CEscrow(wtx);
-		if (escrow.bPaymentAck)
-		{
-			strResponse = _("Escrow Acknowledged");
-			responseEnglish = "Escrow Acknowledged";
-		}
-		else
-		{
-			strResponse = _("Escrow Activated");
-			responseEnglish = "Escrow Activated";
-		}
-		break;
-	case OP_ESCROW_RELEASE:
-		if (vvchArgs[1] == vchFromString("1"))
-		{
-			strResponse = _("Escrow Release Complete");
-			responseEnglish = "Escrow Release Complete";
-		}
-		else
-		{
-			if (type == "send")
-			{
-				strResponse = _("Escrow Released");
-				responseEnglish = "Escrow Released";
-			}
-			else if (type == "recv")
-			{
-				strResponse = _("Escrow Release Received");
-				responseEnglish = "Escrow Release Received";
-			}
-		}
-		break;
-	case OP_ESCROW_COMPLETE:
-		if (type == "send")
-		{
-			strResponse = _("Escrow Feedback");
-			responseEnglish = "Escrow Feedback";
-		}
-		else if (type == "recv")
-		{
-			strResponse = _("Escrow Feedback Received");
-			responseEnglish = "Escrow Feedback Received";
-		}
-		break;
-	case OP_ESCROW_REFUND:
-		if (vvchArgs[1] == vchFromString("1"))
-		{
-			strResponse = _("Escrow Refund Complete");
-			responseEnglish = "Escrow Refund Complete";
-		}
-		else
-		{
-			if (type == "send")
-			{
-				strResponse = _("Escrow Refunded");
-				responseEnglish = "Escrow Refunded";
-			}
-			else if (type == "recv")
-			{
-				strResponse = _("Escrow Refund Received");
-				responseEnglish = "Escrow Refund Received";
-			}
-		}
-		break;
-	default:
-		return "";
-	}
-	strResponse += " " + stringFromVch(vvchArgs[0]);
-	return strResponse;
-}
 void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDepth, bool fLong, UniValue& ret, const isminefilter& filter)
 {
     CAmount nFee;
@@ -1898,13 +1763,10 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
 				mapSysTx[wtx.GetHash()] = true;
 				string strResponseEnglish = "";
 				string strResponseGUID = "";
-				string strResponseGUID1 = "";
-				strResponse = GetSyscoinTransactionDescription(op, vvchArgs, "send", wtx, strResponseEnglish, strResponseGUID, strResponseGUID1);
+				strResponse = GetSyscoinTransactionDescription(op, vvchArgs, wtx, strResponseEnglish, strResponseGUID);
 				entry.push_back(Pair("systx", strResponse));
 				entry.push_back(Pair("systype", strResponseEnglish));
 				entry.push_back(Pair("sysguid", strResponseGUID));
-				if (!strResponseGUID1.empty())
-					entry.push_back(Pair("sysguid1", strResponseGUID1));
 			}
             ret.push_back(entry);
         }
@@ -1952,13 +1814,10 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
 					mapSysTx[wtx.GetHash()] = true;
 					string strResponseEnglish = "";
 					string strResponseGUID = "";
-					string strResponseGUID1 = "";
-					strResponse = GetSyscoinTransactionDescription(op, vvchArgs, "recv", wtx, strResponseEnglish, strResponseGUID, strResponseGUID1);
+					strResponse = GetSyscoinTransactionDescription(op, vvchArgs, wtx, strResponseEnglish, strResponseGUID);
 					entry.push_back(Pair("systx", strResponse));
 					entry.push_back(Pair("systype", strResponseEnglish));
 					entry.push_back(Pair("sysguid", strResponseGUID));
-					if (!strResponseGUID1.empty())
-						entry.push_back(Pair("sysguid1", strResponseGUID1));
 				}
                 ret.push_back(entry);
             }

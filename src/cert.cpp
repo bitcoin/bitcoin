@@ -107,18 +107,13 @@ void CCertDB::WriteCertIndex(const CCert& cert) {
 	bson_t *selector = NULL;
 	mongoc_write_concern_t* write_concern = NULL;
 	UniValue oName(UniValue::VOBJ);
-	CAliasIndex certAlias;
-	if (!GetAlias(cert.aliasTuple.first, certAlias))
-	{
-		return;
-	}
 
 	mongoc_update_flags_t update_flags;
 	update_flags = (mongoc_update_flags_t)(MONGOC_UPDATE_NO_VALIDATE | MONGOC_UPDATE_UPSERT);
 	selector = BCON_NEW("_id", BCON_UTF8(stringFromVch(cert.vchCert).c_str()));
 	write_concern = mongoc_write_concern_new();
 	mongoc_write_concern_set_w(write_concern, MONGOC_WRITE_CONCERN_W_UNACKNOWLEDGED);
-	if (BuildCertIndexerJson(cert, certAlias, oName)) {
+	if (BuildCertIndexerJson(cert, oName)) {
 		update = bson_new_from_json((unsigned char *)oName.write().c_str(), -1, &error);
 		if (!update || !mongoc_collection_update(cert_collection, update_flags, selector, update, write_concern, &error)) {
 			LogPrintf("MONGODB CERT UPDATE ERROR: %s\n", error.message);
@@ -126,6 +121,46 @@ void CCertDB::WriteCertIndex(const CCert& cert) {
 	}
 	if (update)
 		bson_destroy(update);
+	if (selector)
+		bson_destroy(selector);
+	if (write_concern)
+		mongoc_write_concern_destroy(write_concern);
+}
+void CCertDB::WriteCertIndexHistory(const CCert& cert, const int &op) {
+	if (!certhistory_collection)
+		return;
+	bson_error_t error;
+	bson_t *insert = NULL;
+	mongoc_write_concern_t* write_concern = NULL;
+	UniValue oName(UniValue::VOBJ);
+	oName.push_back(Pair("op", certFromOp(op)));
+	write_concern = mongoc_write_concern_new();
+	mongoc_write_concern_set_w(write_concern, MONGOC_WRITE_CONCERN_W_UNACKNOWLEDGED);
+
+	if (BuildCertIndexerHistoryJson(cert, oName)) {
+		insert = bson_new_from_json((unsigned char *)oName.write().c_str(), -1, &error);
+		if (!insert || !mongoc_collection_insert(certhistory_collection, (mongoc_insert_flags_t)MONGOC_INSERT_NO_VALIDATE, insert, write_concern, &error)) {
+			LogPrintf("MONGODB CERT HISTORY ERROR: %s\n", error.message);
+		}
+	}
+
+	if (insert)
+		bson_destroy(insert);
+	if (write_concern)
+		mongoc_write_concern_destroy(write_concern);
+}
+void CCertDB::EraseCertIndexHistory(const std::vector<unsigned char>& vchCert) {
+	bson_error_t error;
+	bson_t *selector = NULL;
+	mongoc_write_concern_t* write_concern = NULL;
+	mongoc_remove_flags_t remove_flags;
+	remove_flags = (mongoc_remove_flags_t)(MONGOC_REMOVE_NONE);
+	selector = BCON_NEW("cert", BCON_UTF8(stringFromVch(vchCert).c_str()));
+	write_concern = mongoc_write_concern_new();
+	mongoc_write_concern_set_w(write_concern, MONGOC_WRITE_CONCERN_W_UNACKNOWLEDGED);
+	if (!mongoc_collection_remove(certhistory_collection, remove_flags, selector, cleanup ? NULL : write_concern, &error)) {
+		LogPrintf("MONGODB CERT HISTORY REMOVE ERROR: %s\n", error.message);
+	}
 	if (selector)
 		bson_destroy(selector);
 	if (write_concern)
@@ -544,7 +579,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 		theCert.txHash = tx.GetHash();
         // write cert  
 
-        if (!dontaddtodb && (!pcertdb->WriteCert(theCert) || (op == OP_CERT_ACTIVATE && !pcertdb->WriteCertFirstTXID(vvchArgs[0], theCert.txHash))))
+        if (!dontaddtodb && (!pcertdb->WriteCert(theCert, op) || (op == OP_CERT_ACTIVATE && !pcertdb->WriteCertFirstTXID(vvchArgs[0], theCert.txHash))))
 		{
 			errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to write to certifcate DB");
             return error(errorMessage.c_str());
@@ -875,15 +910,11 @@ UniValue certinfo(const UniValue& params, bool fHelp) {
 	if (!DecodeCertTx(tx, op, nOut, vvch))
 		throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 4604 - " + _("Failed to decode cert"));
 
-	CAliasIndex alias;
-	if (!GetAlias(txPos.aliasTuple, alias))
-		throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2516 - " + _("Failed to read cert alias from alias DB"));
-
-	if(!BuildCertJson(txPos, alias, oCert))
+	if(!BuildCertJson(txPos, oCert))
 		oCert.clear();
     return oCert;
 }
-bool BuildCertJson(const CCert& cert, const CAliasIndex& alias, UniValue& oCert)
+bool BuildCertJson(const CCert& cert, UniValue& oCert)
 {
     oCert.push_back(Pair("_id", stringFromVch(cert.vchCert)));
     oCert.push_back(Pair("txid", cert.txHash.GetHex()));
@@ -913,7 +944,36 @@ bool BuildCertJson(const CCert& cert, const CAliasIndex& alias, UniValue& oCert)
 	oCert.push_back(Pair("expired", expired));
 	return true;
 }
-bool BuildCertIndexerJson(const CCert& cert, const CAliasIndex& alias, UniValue& oCert)
+bool BuildCertIndexerHistoryJson(const CCert& cert, UniValue& oCert)
+{
+	oCert.push_back(Pair("_id", cert.txHash.GetHex()));
+	oCert.push_back(Pair("cert", stringFromVch(cert.vchCert)));
+	oCert.push_back(Pair("height", (int64_t)cert.nHeight));
+	int64_t nTime = 0;
+	if (chainActive.Height() >= cert.nHeight) {
+		CBlockIndex *pindex = chainActive[cert.nHeight];
+		if (pindex) {
+			nTime = pindex->GetMedianTimePast();
+		}
+	}
+	oCert.push_back(Pair("time", nTime));
+	oCert.push_back(Pair("title", stringFromVch(cert.vchTitle)));
+	oCert.push_back(Pair("publicvalue", stringFromVch(cert.vchPubData)));
+	oCert.push_back(Pair("category", stringFromVch(cert.sCategory)));
+	oCert.push_back(Pair("alias", stringFromVch(cert.aliasTuple.first)));
+	oCert.push_back(Pair("access_flags", cert.nAccessFlags));
+	int64_t expired_time = GetCertExpiration(cert);
+	bool expired = false;
+	if (expired_time <= chainActive.Tip()->GetMedianTimePast())
+	{
+		expired = true;
+	}
+
+	oCert.push_back(Pair("expires_on", expired_time));
+	oCert.push_back(Pair("expired", expired));
+	return true;
+}
+bool BuildCertIndexerJson(const CCert& cert, UniValue& oCert)
 {
 	oCert.push_back(Pair("_id", stringFromVch(cert.vchCert)));
 	oCert.push_back(Pair("title", stringFromVch(cert.vchTitle)));

@@ -101,9 +101,9 @@ class CCertDB : public CDBWrapper {
 public:
     CCertDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "certificates", nCacheSize, fMemory, fWipe) {}
 
-    bool WriteCert(const CCert& cert) {
+    bool WriteCert(const CCert& cert, const int &op) {
 		bool writeState = WriteCertLastTXID(cert.vchCert, cert.txHash) && Write(make_pair(std::string("certi"), CNameTXIDTuple(cert.vchCert, cert.txHash)), cert);
-		WriteCertIndex(cert);
+		WriteCertIndex(cert, op);
         return writeState;
     }
 
@@ -137,13 +137,16 @@ public:
 		return Erase(make_pair(std::string("certft"), cert));
 	}
 	bool CleanupDatabase(int &servicesCleaned);
-	void WriteCertIndex(const CCert& cert);
+	void WriteCertIndex(const CCert& cert, const int &op);
 	void EraseCertIndex(const std::vector<unsigned char>& vchCert, bool cleanup);
+	void WriteCertIndexHistory(const CCert& cert, const int &op);
+	void EraseCertIndexHistory(const std::vector<unsigned char>& vchCert);
 
 };
 bool GetCert(const CNameTXIDTuple& certTuple);
 bool GetCert(const std::vector<unsigned char> &vchCert,CCert& txPos);
-bool BuildCertJson(const CCert& cert, const CAliasIndex& alias, UniValue& oName);
-bool BuildCertIndexerJson(const CCert& cert, const CAliasIndex& alias, UniValue& oName);
+bool BuildCertJson(const CCert& cert, UniValue& oName);
+bool BuildCertIndexerJson(const CCert& cert,UniValue& oName);
+bool BuildCertIndexerHistoryJson(const CCert& cert, UniValue& oName);
 uint64_t GetCertExpiration(const CCert& cert);
 #endif // CERT_H

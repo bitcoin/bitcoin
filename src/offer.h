@@ -229,9 +229,9 @@ class COfferDB : public CDBWrapper {
 public:
 	COfferDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "offers", nCacheSize, fMemory, fWipe) {}
 
-	bool WriteOffer(const COffer& offer) {
+	bool WriteOffer(const COffer& offer, const int &op) {
 		bool writeState = WriteOfferLastTXID(offer.vchOffer, offer.txHash) && Write(make_pair(std::string("offeri"), CNameTXIDTuple(offer.vchOffer, offer.txHash)), offer);
-		WriteOfferIndex(offer);
+		WriteOfferIndex(offer, op);
 		return writeState;
 	}
 
@@ -263,13 +263,16 @@ public:
 	}
 
 	bool CleanupDatabase(int &servicesCleaned);
-	void WriteOfferIndex(const COffer& offer);
+	void WriteOfferIndex(const COffer& offer, const int &op);
 	void EraseOfferIndex(const std::vector<unsigned char>& vchOffer, bool cleanup);
+	void WriteOfferIndexHistory(const COffer& offer, const int &op);
+	void EraseOfferIndexHistory(const std::vector<unsigned char>& vchOffer);
 
 };
 bool GetOffer(const CNameTXIDTuple& offerTuple, COffer& txPos);
 bool GetOffer(const std::vector<unsigned char> &vchOffer, COffer& txPos);
 bool BuildOfferJson(const COffer& theOffer, UniValue& oOffer);
 bool BuildOfferIndexerJson(const COffer& theOffer, UniValue& oOffer);
+bool BuildOfferIndexerHistoryJson(const COffer& theOffer, UniValue& oOffer);
 uint64_t GetOfferExpiration(const COffer& offer);
 #endif // OFFER_H
