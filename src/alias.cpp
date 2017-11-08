@@ -334,17 +334,6 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	vector<unsigned char> vchAlias;
 	vector<unsigned char> vchHash;
 	int nDataOut;
-	if (!dontaddtodb) {
-		int nOutHistory;
-		int opHistory;
-		vector<vector<unsigned char> > vvchHistory;
-		if (DecodeAndParseSyscoinTx(tx, opHistory, nOutHistory, vvchHistory)) {
-			string strResponseEnglish = "";
-			string strResponseGUID = "";
-			string strResponse = GetSyscoinTransactionDescription(opHistory, vvchHistory, tx, strResponseEnglish, strResponseGUID);
-			paliasdb->WriteAliasIndexTxHistory(alias, strResponseEnglish, strResponseGUID, tx.vout[nOutHistory].nValue);
-		}
-	}
 	bool bData = GetSyscoinData(tx, vchData, vchHash, nDataOut);
 	if(bData && !theAlias.UnserializeFromData(vchData, vchHash))
 	{
@@ -520,6 +509,17 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	}
 	
 	if (!fJustCheck ) {
+		if (!dontaddtodb) {
+			int nOutHistory;
+			int opHistory;
+			vector<vector<unsigned char> > vvchHistory;
+			if (DecodeAndParseSyscoinTx(tx, opHistory, nOutHistory, vvchHistory)) {
+				string strResponseEnglish = "";
+				string strResponseGUID = "";
+				string strResponse = GetSyscoinTransactionDescription(opHistory, vvchHistory, tx, strResponseEnglish, strResponseGUID);
+				paliasdb->WriteAliasIndexTxHistory(stringFromVch(vvchArgs[0]), tx.GetHash(), nHeight, strResponseEnglish, strResponseGUID, tx.vout[nOutHistory].nValue);
+			}
+		}
 		CAliasIndex dbAlias;
 		string strName = stringFromVch(vvchArgs[0]);
 		boost::algorithm::to_lower(strName);
@@ -1647,7 +1647,7 @@ void CAliasDB::EraseAliasIndex(const std::vector<unsigned char>& vchAlias, bool 
 	EraseAliasIndexHistory(vchAlias);
 	EraseAliasIndexTxHistory(vchAlias);
 }
-void CAliasDB::WriteAliasIndexTxHistory(const CAliasIndex& alias, const string &type, const string &guid, const CAmount &nValue) {
+void CAliasDB::WriteAliasIndexTxHistory(const string &alias, const uint256 &txHash, const uint64_t& nHeight, const string &type, const string &guid, const CAmount &nValue) {
 	if (!aliastxhistory_collection)
 		return;
 	bson_error_t error;
@@ -1656,7 +1656,7 @@ void CAliasDB::WriteAliasIndexTxHistory(const CAliasIndex& alias, const string &
 	UniValue oName(UniValue::VOBJ);
 	write_concern = mongoc_write_concern_new();
 	mongoc_write_concern_set_w(write_concern, MONGOC_WRITE_CONCERN_W_UNACKNOWLEDGED);
-	BuildAliasIndexerTxHistoryJson(alias, type, guid, nValue, oName);
+	BuildAliasIndexerTxHistoryJson(alias, txHash, nHeight, type, guid, nValue, oName);
 	insert = bson_new_from_json((unsigned char *)oName.write().c_str(), -1, &error);
 	if (!insert || !mongoc_collection_insert(aliastxhistory_collection, (mongoc_insert_flags_t)MONGOC_INSERT_NO_VALIDATE, insert, write_concern, &error)) {
 		LogPrintf("MONGODB ALIAS TX HISTORY ERROR: %s\n", error.message);
@@ -2585,18 +2585,16 @@ bool BuildAliasIndexerHistoryJson(const CAliasIndex& alias, UniValue& oName)
 	oName.push_back(Pair("expired", expired));
 	return true;
 }
-bool BuildAliasIndexerTxHistoryJson(const CAliasIndex& alias, const string &type, const string &guid, const CAmount &nValue, UniValue& oName)
+bool BuildAliasIndexerTxHistoryJson(const string &alias, const uint256 &txHash, const uint64_t& nHeight, const string &type, const string &guid, const CAmount &nValue, UniValue& oName)
 {
-	bool expired = false;
-	int64_t expired_time = 0;
-	oName.push_back(Pair("_id", alias.txHash.GetHex()));
-	oName.push_back(Pair("alias", stringFromVch(alias.vchAlias)));
+	oName.push_back(Pair("_id", txHash.GetHex()));
+	oName.push_back(Pair("alias", alias));
 	oName.push_back(Pair("type", type));
 	oName.push_back(Pair("guid", guid));
 	oName.push_back(Pair("value", ValueFromAmount(nValue)));
 	int64_t nTime = 0;
-	if (chainActive.Height() >= alias.nHeight) {
-		CBlockIndex *pindex = chainActive[alias.nHeight];
+	if (chainActive.Height() >= nHeight) {
+		CBlockIndex *pindex = chainActive[nHeight];
 		if (pindex) {
 			nTime = pindex->GetMedianTimePast();
 		}

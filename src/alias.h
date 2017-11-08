@@ -222,11 +222,6 @@ class CAliasDB : public CDBWrapper {
 public:
     CAliasDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "aliases", nCacheSize, fMemory, fWipe) {
     }
-	bool WriteAlias(const CAliasIndex& alias) {
-		bool writeState = Write(make_pair(std::string("namei"), CNameTXIDTuple(alias.vchAlias, alias.txHash)), alias);
-		WriteAliasIndex(alias);
-		return writeState;
-	}
 	bool WriteAlias(const CAliasUnprunable &aliasUnprunable, const std::vector<unsigned char>& address, const CAliasIndex& alias, const int &op) {
 		if(address.empty())
 			return false;	
@@ -271,7 +266,7 @@ public:
 	void EraseAliasIndex(const std::vector<unsigned char>& vchAlias, bool cleanup);
 	void WriteAliasIndexHistory(const CAliasIndex& alias, const int &op);
 	void EraseAliasIndexHistory(const std::vector<unsigned char>& vchAlias);
-	void WriteAliasIndexTxHistory(const CAliasIndex& alias, const std::string &type, const std::string &guid, const CAmount &nValue);
+	void WriteAliasIndexTxHistory(const std::string &alias, const uint256 &txHash, const uint64_t& nHeight, const std::string &type, const std::string &guid, const CAmount &nValue);
 	void EraseAliasIndexTxHistory(const std::vector<unsigned char>& vchAlias);
 };
 
@@ -338,4 +333,5 @@ void GetAddress(const CAliasIndex &alias, CSyscoinAddress* address, CScript& scr
 void startMongoDB();
 void stopMongoDB();
 std::string GetSyscoinTransactionDescription(const int op, const std::vector<std::vector<unsigned char> > &vvchArgs, const CTransaction &tx, std::string& responseEnglish, std::string& responseGUID);
+bool BuildAliasIndexerHistoryJson(const CAliasIndex& alias, UniValue& oName);
 #endif // ALIAS_H
