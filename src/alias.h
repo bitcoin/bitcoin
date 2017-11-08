@@ -269,9 +269,10 @@ public:
 	bool CleanupDatabase(int &servicesCleaned);
 	void WriteAliasIndex(const CAliasIndex& alias, const int &op);
 	void EraseAliasIndex(const std::vector<unsigned char>& vchAlias, bool cleanup);
-	void WriteAliasHistoryIndex(const CAliasIndex& alias, const int &op);
-	void EraseAliasHistoryIndex(const std::vector<unsigned char>& vchAlias);
+	void WriteAliasIndexHistory(const CAliasIndex& alias, const int &op);
+	void EraseAliasIndexHistory(const std::vector<unsigned char>& vchAlias);
 	void WriteAliasIndexTxHistory(const CAliasIndex& alias, const std::string &type, const std::string &guid, const CAmount &nValue);
+	void EraseAliasIndexTxHistory(const std::vector<unsigned char>& vchAlias);
 };
 
 class COfferDB;
