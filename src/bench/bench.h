@@ -9,6 +9,7 @@
 #include <limits>
 #include <map>
 #include <string>
+#include <chrono>
 
 #include <boost/preprocessor/cat.hpp>
 #include <boost/preprocessor/stringize.hpp>
@@ -36,12 +37,23 @@ BENCHMARK(CODE_TO_TIME);
  */
  
 namespace benchmark {
+    // On many systems, the high_resolution_clock offers no better resolution than the steady_clock.
+    // If that's the case, prefer the steady_clock.
+    struct best_clock {
+        using hi_res_clock = std::chrono::high_resolution_clock;
+        using steady_clock = std::chrono::steady_clock;
+        static constexpr bool steady_is_high_res = std::ratio_less_equal<steady_clock::period, hi_res_clock::period>::value;
+        using type = std::conditional<steady_is_high_res, steady_clock, hi_res_clock>::type;
+    };
+    using clock = best_clock::type;
+    using time_point = clock::time_point;
+    using duration = clock::duration;
 
     class State {
         std::string name;
-        double maxElapsed;
-        double beginTime;
-        double lastTime, minTime, maxTime;
+        duration maxElapsed;
+        time_point beginTime, lastTime;
+        duration minTime, maxTime;
         uint64_t count;
         uint64_t countMask;
         uint64_t beginCycles;
@@ -49,9 +61,9 @@ namespace benchmark {
         uint64_t minCycles;
         uint64_t maxCycles;
     public:
-        State(std::string _name, double _maxElapsed) : name(_name), maxElapsed(_maxElapsed), count(0) {
-            minTime = std::numeric_limits<double>::max();
-            maxTime = std::numeric_limits<double>::min();
+        State(std::string _name, duration _maxElapsed) : name(_name), maxElapsed(_maxElapsed), count(0) {
+            minTime = duration::max();
+            maxTime = duration::zero();
             minCycles = std::numeric_limits<uint64_t>::max();
             maxCycles = std::numeric_limits<uint64_t>::min();
             countMask = 1;
@@ -69,7 +81,7 @@ namespace benchmark {
     public:
         BenchRunner(std::string name, BenchFunction func);
 
-        static void RunAll(double elapsedTimeForOne=1.0);
+        static void RunAll(duration elapsedTimeForOne = std::chrono::seconds(1));
     };
 }
 
