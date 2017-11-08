@@ -33,7 +33,7 @@ using namespace std;
 #include "offer.h"
 #include "escrow.h"
 #include "coincontrol.h"
-extern bool DecodeAliasTx(const CTransaction& tx, int& op, int& nOut, vector<vector<unsigned char> >& vvch, bool payment = false);
+extern bool DecodeAliasTx(const CTransaction& tx, int& op, int& nOut, vector<vector<unsigned char> >& vvch, bool payment);
 extern bool DecodeOfferTx(const CTransaction& tx, int& op, int& nOut, vector<vector<unsigned char> >& vvch);
 extern bool DecodeCertTx(const CTransaction& tx, int& op, int& nOut, vector<vector<unsigned char> >& vvch);
 extern bool DecodeEscrowTx(const CTransaction& tx, int& op, int& nOut, vector<vector<unsigned char> >& vvch);
@@ -49,7 +49,7 @@ extern unsigned int MAX_ALIAS_UPDATES_PER_BLOCK;
 extern int GetSyscoinTxVersion();
 extern bool IsSyscoinScript(const CScript& scriptPubKey, int &op, vector<vector<unsigned char> > &vvchArgs);
 extern bool DecodeAndParseSyscoinTx(const CTransaction& tx, int& op, int& nOut, vector<vector<unsigned char> >& vvch);
-extern int aliasselectpaymentcoins(const vector<unsigned char> &vchAlias, const CAmount &nAmount, vector<COutPoint>& outPoints, bool& bIsFunded, CAmount &nRequiredAmount, bool bSelectFeePlacementOnly, bool bSelectAll = false, bool bNoAliasRecipient = false);
+extern int aliasselectpaymentcoins(const vector<unsigned char> &vchAlias, const CAmount &nAmount, vector<COutPoint>& outPoints, bool& bIsFunded, CAmount &nRequiredAmount, bool bSelectFeePlacementOnly, bool bSelectAll, bool bNoAliasRecipient);
 extern string GetSyscoinTransactionDescription(const int op, const vector<vector<unsigned char> > &vvchArgs, const CTransaction &tx, string& responseEnglish, string& responseGUID);
 int64_t nWalletUnlockTime;
 static CCriticalSection cs_nWalletUnlockTime;
