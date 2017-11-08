@@ -1647,6 +1647,23 @@ void CAliasDB::EraseAliasIndex(const std::vector<unsigned char>& vchAlias, bool 
 	EraseAliasIndexHistory(vchAlias, cleanup);
 	EraseAliasIndexTxHistory(vchAlias, cleanup);
 }
+bool BuildAliasIndexerTxHistoryJson(const string &alias, const uint256 &txHash, const uint64_t& nHeight, const string &type, const string &guid, const CAmount &nValue, UniValue& oName)
+{
+	oName.push_back(Pair("_id", txHash.GetHex()));
+	oName.push_back(Pair("alias", alias));
+	oName.push_back(Pair("type", type));
+	oName.push_back(Pair("guid", guid));
+	oName.push_back(Pair("value", ValueFromAmount(nValue)));
+	int64_t nTime = 0;
+	if (chainActive.Height() >= nHeight) {
+		CBlockIndex *pindex = chainActive[nHeight];
+		if (pindex) {
+			nTime = pindex->GetMedianTimePast();
+		}
+	}
+	oName.push_back(Pair("time", nTime));
+	return true;
+}
 void CAliasDB::WriteAliasIndexTxHistory(const string &alias, const uint256 &txHash, const uint64_t& nHeight, const string &type, const string &guid, const CAmount &nValue) {
 	if (!aliastxhistory_collection)
 		return;
@@ -2583,23 +2600,6 @@ bool BuildAliasIndexerHistoryJson(const CAliasIndex& alias, UniValue& oName)
 	}
 	oName.push_back(Pair("expires_on", expired_time));
 	oName.push_back(Pair("expired", expired));
-	return true;
-}
-bool BuildAliasIndexerTxHistoryJson(const string &alias, const uint256 &txHash, const uint64_t& nHeight, const string &type, const string &guid, const CAmount &nValue, UniValue& oName)
-{
-	oName.push_back(Pair("_id", txHash.GetHex()));
-	oName.push_back(Pair("alias", alias));
-	oName.push_back(Pair("type", type));
-	oName.push_back(Pair("guid", guid));
-	oName.push_back(Pair("value", ValueFromAmount(nValue)));
-	int64_t nTime = 0;
-	if (chainActive.Height() >= nHeight) {
-		CBlockIndex *pindex = chainActive[nHeight];
-		if (pindex) {
-			nTime = pindex->GetMedianTimePast();
-		}
-	}
-	oName.push_back(Pair("time", nTime));
 	return true;
 }
 UniValue aliaspay(const UniValue& params, bool fHelp) {
