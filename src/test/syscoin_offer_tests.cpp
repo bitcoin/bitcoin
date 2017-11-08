@@ -316,7 +316,11 @@ BOOST_AUTO_TEST_CASE (generate_offerupdate_editcurrency)
 
 	// generate a good offer
 	string offerguid = OfferNew("node1", "selleraliascurrency", "category", "title", "100", "0.05", "description", "USD");
-	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress buyeraliascurrency 10000"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress buyeraliascurrency 2000"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress buyeraliascurrency 2000"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress buyeraliascurrency 2000"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress buyeraliascurrency 2000"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress buyeraliascurrency 2000"), runtime_error);
 	GenerateBlocks(10);
 	// accept and confirm payment is accurate with usd
 	string escrowguid = OfferAccept("node1", "node2", "buyeraliascurrency", "arbiteraliascurrency", offerguid, "2");
@@ -404,7 +408,11 @@ BOOST_AUTO_TEST_CASE (generate_offeraccept)
 
 	// generate a good offer
 	string offerguid = OfferNew("node1", "selleralias3", "category", "title", "100", "0.01", "description", "USD");
-	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress buyeralias3 10000"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress buyeralias3 2000"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress buyeralias3 2000"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress buyeralias3 2000"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress buyeralias3 2000"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress buyeralias3 2000"), runtime_error);
 	GenerateBlocks(10);
 	// perform a valid accept
 	string acceptguid = OfferAccept("node1", "node2", "buyeralias3", "arbiteralias3", offerguid, "1");
