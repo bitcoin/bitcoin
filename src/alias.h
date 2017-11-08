@@ -265,9 +265,9 @@ public:
 	void WriteAliasIndex(const CAliasIndex& alias, const int &op);
 	void EraseAliasIndex(const std::vector<unsigned char>& vchAlias, bool cleanup);
 	void WriteAliasIndexHistory(const CAliasIndex& alias, const int &op);
-	void EraseAliasIndexHistory(const std::vector<unsigned char>& vchAlias);
+	void EraseAliasIndexHistory(const std::vector<unsigned char>& vchAlias, bool cleanup);
 	void WriteAliasIndexTxHistory(const std::string &alias, const uint256 &txHash, const uint64_t& nHeight, const std::string &type, const std::string &guid, const CAmount &nValue);
-	void EraseAliasIndexTxHistory(const std::vector<unsigned char>& vchAlias);
+	void EraseAliasIndexTxHistory(const std::vector<unsigned char>& vchAlias, bool cleanup);
 };
 
 class COfferDB;

@@ -149,7 +149,7 @@ void CCertDB::WriteCertIndexHistory(const CCert& cert, const int &op) {
 	if (write_concern)
 		mongoc_write_concern_destroy(write_concern);
 }
-void CCertDB::EraseCertIndexHistory(const std::vector<unsigned char>& vchCert) {
+void CCertDB::EraseCertIndexHistory(const std::vector<unsigned char>& vchCert, bool cleanup) {
 	bson_error_t error;
 	bson_t *selector = NULL;
 	mongoc_write_concern_t* write_concern = NULL;

@@ -1611,7 +1611,7 @@ void CAliasDB::WriteAliasIndexHistory(const CAliasIndex& alias, const int &op) {
 	if (write_concern)
 		mongoc_write_concern_destroy(write_concern);
 }
-void CAliasDB::EraseAliasIndexHistory(const std::vector<unsigned char>& vchAlias) {
+void CAliasDB::EraseAliasIndexHistory(const std::vector<unsigned char>& vchAlias, bool cleanup) {
 	bson_error_t error;
 	bson_t *selector = NULL;
 	mongoc_write_concern_t* write_concern = NULL;
@@ -1667,7 +1667,7 @@ void CAliasDB::WriteAliasIndexTxHistory(const string &alias, const uint256 &txHa
 	if (write_concern)
 		mongoc_write_concern_destroy(write_concern);
 }
-void CAliasDB::EraseAliasIndexTxHistory(const std::vector<unsigned char>& vchAlias) {
+void CAliasDB::EraseAliasIndexTxHistory(const std::vector<unsigned char>& vchAlias, bool cleanup) {
 	bson_error_t error;
 	bson_t *selector = NULL;
 	mongoc_write_concern_t* write_concern = NULL;

@@ -266,7 +266,7 @@ public:
 	void WriteOfferIndex(const COffer& offer, const int &op);
 	void EraseOfferIndex(const std::vector<unsigned char>& vchOffer, bool cleanup);
 	void WriteOfferIndexHistory(const COffer& offer, const int &op);
-	void EraseOfferIndexHistory(const std::vector<unsigned char>& vchOffer);
+	void EraseOfferIndexHistory(const std::vector<unsigned char>& vchOffer, bool cleanup);
 
 };
 bool GetOffer(const CNameTXIDTuple& offerTuple, COffer& txPos);

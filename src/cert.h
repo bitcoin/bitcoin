@@ -140,7 +140,7 @@ public:
 	void WriteCertIndex(const CCert& cert, const int &op);
 	void EraseCertIndex(const std::vector<unsigned char>& vchCert, bool cleanup);
 	void WriteCertIndexHistory(const CCert& cert, const int &op);
-	void EraseCertIndexHistory(const std::vector<unsigned char>& vchCert);
+	void EraseCertIndexHistory(const std::vector<unsigned char>& vchCert, bool cleanup);
 
 };
 bool GetCert(const CNameTXIDTuple& certTuple);
