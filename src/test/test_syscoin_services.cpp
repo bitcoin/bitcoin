@@ -364,7 +364,7 @@ void GenerateBlocks(int nBlocks, const string& node)
   BOOST_CHECK(height >= newHeight);
   height = 0;
   timeoutCounter = 0;
-  MilliSleep(100);
+  MilliSleep(10);
   while(!otherNode1.empty() && height < newHeight)
   {
 	  try
@@ -382,11 +382,11 @@ void GenerateBlocks(int nBlocks, const string& node)
 	  }
 	  height = find_value(r.get_obj(), "blocks").get_int();
 	  timeoutCounter++;
-	  if (timeoutCounter > 10) {
+	  if (timeoutCounter > 100) {
 		  printf("Error: Timeout on getinfo for %s, height %d vs newHeight %d!\n", otherNode1.c_str(), height, newHeight);
 		  break;
 	  }
-	  MilliSleep(1000);
+	  MilliSleep(10);
   }
   if(!otherNode1.empty())
 	BOOST_CHECK(height >= newHeight);
@@ -409,11 +409,11 @@ void GenerateBlocks(int nBlocks, const string& node)
 	  }
 	  height = find_value(r.get_obj(), "blocks").get_int();
 	  timeoutCounter++;
-	  if (timeoutCounter > 10) {
+	  if (timeoutCounter > 100) {
 		printf("Error: Timeout on getinfo for %s, height %d vs newHeight %d!\n", otherNode2.c_str(), height, newHeight);
 		break;
 	  }
-	  MilliSleep(1000);
+	  MilliSleep(10);
   }
   if(!otherNode2.empty())
 	BOOST_CHECK(height >= newHeight);
@@ -428,8 +428,6 @@ void SetSysMocktime(const int64_t& expiryTime) {
 		CallRPC("node1", "getinfo");
 		BOOST_CHECK_NO_THROW(CallRPC("node1", cmd, true, false));
 		GenerateBlocks(5, "node1");
-		GenerateBlocks(5, "node1");
-		GenerateBlocks(5, "node1");
 		UniValue r;
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "getblockchaininfo"));
 		BOOST_CHECK(expiryTime <= find_value(r.get_obj(), "mediantime").get_int64());
@@ -442,8 +440,6 @@ void SetSysMocktime(const int64_t& expiryTime) {
 		CallRPC("node2", "getinfo");
 		BOOST_CHECK_NO_THROW(CallRPC("node2", cmd, true, false));
 		GenerateBlocks(5, "node2");
-		GenerateBlocks(5, "node2");
-		GenerateBlocks(5, "node2");
 		UniValue r;
 		BOOST_CHECK_NO_THROW(r = CallRPC("node2", "getblockchaininfo"));
 		BOOST_CHECK(expiryTime <= find_value(r.get_obj(), "mediantime").get_int64());
@@ -455,8 +451,6 @@ void SetSysMocktime(const int64_t& expiryTime) {
 	{
 		CallRPC("node3", "getinfo");
 		BOOST_CHECK_NO_THROW(CallRPC("node3", cmd, true, false));
-		GenerateBlocks(5, "node3");
-		GenerateBlocks(5, "node3");
 		GenerateBlocks(5, "node3");
 		UniValue r;
 		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "getblockchaininfo"));
