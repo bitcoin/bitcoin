@@ -23,13 +23,8 @@
 #include <boost/range/adaptor/reversed.hpp>
 #include <mongoc.h>
 using namespace std;
-extern mongoc_client_t *client;
-extern mongoc_database_t *database;
-extern mongoc_collection_t *alias_collection;
-extern mongoc_collection_t *offer_collection;
 extern mongoc_collection_t *escrow_collection;
 extern mongoc_collection_t *escrowbid_collection;
-extern mongoc_collection_t *cert_collection;
 extern mongoc_collection_t *feedback_collection;
 extern CScript _createmultisig_redeemScript(const UniValue& params);
 extern void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsigned char> &vchWitness, const string &currencyCode, const CRecipient &aliasRecipient, const CRecipient &aliasPaymentRecipient, vector<CRecipient> &vecSend, CWalletTx& wtxNew, CCoinControl* coinControl, bool useOnlyAliasPaymentToFund=true, bool transferAlias=false);

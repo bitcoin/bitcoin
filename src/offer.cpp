@@ -26,13 +26,8 @@
 #include <boost/range/adaptor/reversed.hpp>
 #include <mongoc.h>
 using namespace std;
-extern mongoc_client_t *client;
-extern mongoc_database_t *database;
-extern mongoc_collection_t *alias_collection;
-extern mongoc_collection_t *offer_collection;
-extern mongoc_collection_t *escrow_collection;
-extern mongoc_collection_t *cert_collection;
-extern mongoc_collection_t *feedback_collection;
+extern mongoc_collection_t *offer_collection = NULL;
+extern mongoc_collection_t *offerhistory_collection = NULL;
 extern void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsigned char> &vchWitness, const string &currencyCode, const CRecipient &aliasRecipient, const CRecipient &aliasPaymentRecipient, vector<CRecipient> &vecSend, CWalletTx& wtxNew, CCoinControl* coinControl, bool useOnlyAliasPaymentToFund=true, bool transferAlias=false);
 bool IsOfferOp(int op) {
 	return op == OP_OFFER_ACTIVATE
@@ -1371,11 +1366,12 @@ void COfferDB::WriteOfferIndexHistory(const COffer& offer, const int &op) {
 	mongoc_write_concern_t* write_concern = NULL;
 	UniValue oName(UniValue::VOBJ);
 	string serviceFromOp = "";
-	if (serviceFromOp = escrowFromOp(op))
-		oName.push_back(Pair("op", serviceFromOp));
-	else if (serviceFromOp = offerFromOp(op))
-		oName.push_back(Pair("op", serviceFromOp));
+	if (IsEscrowOp(op))
+		serviceFromOp = escrowFromOp(op);
+	else if (IsOfferOp(op))
+		serviceFromOp = offerFromOp(op);
 
+	oName.push_back(Pair("op", serviceFromOp));
 	write_concern = mongoc_write_concern_new();
 	mongoc_write_concern_set_w(write_concern, MONGOC_WRITE_CONCERN_W_UNACKNOWLEDGED);
 
