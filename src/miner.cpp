@@ -36,6 +36,8 @@
 #include <queue>
 #include <utility>
 
+
+extern std::vector<CWalletRef> vpwallets;
 //////////////////////////////////////////////////////////////////////////////
 //
 // RavenMiner
@@ -490,6 +492,17 @@ static bool ProcessBlockFound(const CBlock* pblock, const CChainParams& chainpar
     return true;
 }
 
+CWallet *GetFirstWallet() {
+    while(vpwallets.size() == 0){
+        std::cout << "Wallet size: " << vpwallets.size() << std::endl;
+        MilliSleep(1000);
+
+    }
+    if (vpwallets.size() == 0)
+        return(NULL);
+    return(vpwallets[0]);
+}
+
 // ***TODO*** that part changed in bitcoin, we are using a mix with old one here for now
 void static RavenMiner(const CChainParams& chainparams)
 {
@@ -509,13 +522,19 @@ void static RavenMiner(const CChainParams& chainparams)
         LogPrintf("RavenMiner -- Wallet not available\n");
     }
 
+    std::cout << "After EnsureWalletIsAvailable" << std::endl;
 
 
+    if (pWallet == NULL)
+        std::cout << "pWallet is NULL" << std::endl;
 
 
     std::shared_ptr<CReserveScript> coinbaseScript;
 
     pWallet->GetScriptForMining(coinbaseScript);
+
+    std::cout << "After pWallet->GetScriptForMining" << std::endl;
+
     //GetMainSignals().ScriptForMining(coinbaseScript);
 
     if (!coinbaseScript)

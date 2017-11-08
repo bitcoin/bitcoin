@@ -487,8 +487,13 @@ inline uint256 HashX16R(const T1 pbegin, const T1 pend, const uint256 PrevBlockH
     }
 
 
-    uint256 shortened_hash = hash[15].trim256();
-    std::cout << "Hashing " << shortened_hash.GetHex() << "\n";
+    //Just to watch it hash every X hashes
+    static long count = 0;
+    if (count % 32000  == 0) {
+        uint256 shortened_hash = hash[15].trim256();
+        std::cout << "Hashing " << shortened_hash.GetHex() << "\n";
+    }
+    /////////////////////////////////////
 
     return hash[15].trim256();
 }

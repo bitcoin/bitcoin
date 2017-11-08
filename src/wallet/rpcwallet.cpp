@@ -50,10 +50,6 @@ CWallet *GetWalletForJSONRPCRequest(const JSONRPCRequest& request)
     return ::vpwallets.size() == 1 || (request.fHelp && ::vpwallets.size() > 0) ? ::vpwallets[0] : nullptr;
 }
 
-CWallet *GetWallet() 
-{
-    return vpwallets[0];
-}
 
 std::string HelpRequiringPassphrase(CWallet * const pwallet)
 {
