@@ -48,25 +48,23 @@ class FeeFilterTest(BitcoinTestFramework):
         sync_blocks(self.nodes)
 
         # Setup the p2p connections and start up the network thread.
-        test_node = TestNode()
-        connection = NodeConn('127.0.0.1', p2p_port(0), self.nodes[0], test_node)
-        test_node.add_connection(connection)
+        self.nodes[0].add_p2p_connection(TestNode())
         NetworkThread().start()
-        test_node.wait_for_verack()
+        self.nodes[0].p2p.wait_for_verack()
 
         # Test that invs are received for all txs at feerate of 20 sat/byte
         node1.settxfee(Decimal("0.00020000"))
         txids = [node1.sendtoaddress(node1.getnewaddress(), 1) for x in range(3)]
-        assert(allInvsMatch(txids, test_node))
-        test_node.clear_invs()
+        assert(allInvsMatch(txids, self.nodes[0].p2p))
+        self.nodes[0].p2p.clear_invs()
 
         # Set a filter of 15 sat/byte
-        test_node.send_and_ping(msg_feefilter(15000))
+        self.nodes[0].p2p.send_and_ping(msg_feefilter(15000))
 
         # Test that txs are still being received (paying 20 sat/byte)
         txids = [node1.sendtoaddress(node1.getnewaddress(), 1) for x in range(3)]
-        assert(allInvsMatch(txids, test_node))
-        test_node.clear_invs()
+        assert(allInvsMatch(txids, self.nodes[0].p2p))
+        self.nodes[0].p2p.clear_invs()
 
         # Change tx fee rate to 10 sat/byte and test they are no longer received
         node1.settxfee(Decimal("0.00010000"))
@@ -82,14 +80,14 @@ class FeeFilterTest(BitcoinTestFramework):
         # as well.
         node0.settxfee(Decimal("0.00020000"))
         txids = [node0.sendtoaddress(node0.getnewaddress(), 1)]
-        assert(allInvsMatch(txids, test_node))
-        test_node.clear_invs()
+        assert(allInvsMatch(txids, self.nodes[0].p2p))
+        self.nodes[0].p2p.clear_invs()
 
         # Remove fee filter and check that txs are received again
-        test_node.send_and_ping(msg_feefilter(0))
+        self.nodes[0].p2p.send_and_ping(msg_feefilter(0))
         txids = [node1.sendtoaddress(node1.getnewaddress(), 1) for x in range(3)]
-        assert(allInvsMatch(txids, test_node))
-        test_node.clear_invs()
+        assert(allInvsMatch(txids, self.nodes[0].p2p))
+        self.nodes[0].p2p.clear_invs()
 
 if __name__ == '__main__':
     FeeFilterTest().main()
