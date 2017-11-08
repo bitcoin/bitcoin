@@ -78,14 +78,10 @@ class AcceptBlockTest(BitcoinTestFramework):
 
     def run_test(self):
         # Setup the p2p connections and start up the network thread.
-        test_node = NodeConnCB()   # connects to node0
-        min_work_node = NodeConnCB()  # connects to node1
-
-        connections = []
-        connections.append(NodeConn('127.0.0.1', p2p_port(0), self.nodes[0], test_node))
-        connections.append(NodeConn('127.0.0.1', p2p_port(1), self.nodes[1], min_work_node))
-        test_node.add_connection(connections[0])
-        min_work_node.add_connection(connections[1])
+        # test_node connects to node0 (not whitelisted)
+        test_node = self.nodes[0].add_p2p_connection(NodeConnCB())
+        # min_work_node connects to node1
+        min_work_node = self.nodes[1].add_p2p_connection(NodeConnCB())
 
         NetworkThread().start() # Start up network handling in another thread
 
@@ -209,12 +205,9 @@ class AcceptBlockTest(BitcoinTestFramework):
 
         # The node should have requested the blocks at some point, so
         # disconnect/reconnect first
-        connections[0].disconnect_node()
-        test_node.wait_for_disconnect()
 
-        test_node = NodeConnCB()   # connects to node (not whitelisted)
-        connections[0] = NodeConn('127.0.0.1', p2p_port(0), self.nodes[0], test_node)
-        test_node.add_connection(connections[0])
+        self.nodes[0].disconnect_p2p()
+        test_node = self.nodes[0].add_p2p_connection(NodeConnCB())
 
         test_node.wait_for_verack()
         test_node.send_message(msg_block(block_h1f))
@@ -298,9 +291,8 @@ class AcceptBlockTest(BitcoinTestFramework):
         except AssertionError:
             test_node.wait_for_disconnect()
 
-            test_node = NodeConnCB()   # connects to node (not whitelisted)
-            connections[0] = NodeConn('127.0.0.1', p2p_port(0), self.nodes[0], test_node)
-            test_node.add_connection(connections[0])
+            self.nodes[0].disconnect_p2p()
+            test_node = self.nodes[0].add_p2p_connection(NodeConnCB())
 
             NetworkThread().start() # Start up network handling in another thread
             test_node.wait_for_verack()
@@ -322,8 +314,6 @@ class AcceptBlockTest(BitcoinTestFramework):
         connect_nodes(self.nodes[0], 1)
         sync_blocks([self.nodes[0], self.nodes[1]])
         self.log.info("Successfully synced nodes 1 and 0")
-
-        [ c.disconnect_node() for c in connections ]
 
 if __name__ == '__main__':
     AcceptBlockTest().main()

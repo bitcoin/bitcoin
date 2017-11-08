@@ -712,23 +712,12 @@ class CompactBlocksTest(BitcoinTestFramework):
 
     def run_test(self):
         # Setup the p2p connections and start up the network thread.
-        self.test_node = TestNode()
-        self.second_node = TestNode()
-        self.old_node = TestNode()
-
-        connections = []
-        connections.append(NodeConn('127.0.0.1', p2p_port(0), self.nodes[0], self.test_node))
-        connections.append(NodeConn('127.0.0.1', p2p_port(1), self.nodes[1],
-                    self.second_node, services=NODE_NETWORK))
-        connections.append(NodeConn('127.0.0.1', p2p_port(1), self.nodes[1],
-                    self.old_node, services=NODE_NETWORK))
-        self.test_node.add_connection(connections[0])
-        self.second_node.add_connection(connections[1])
-        self.old_node.add_connection(connections[2])
+        self.test_node = self.nodes[0].add_p2p_connection(TestNode())
+        self.second_node = self.nodes[1].add_p2p_connection(TestNode(), services=NODE_NETWORK)
+        self.old_node = self.nodes[1].add_p2p_connection(TestNode(), services=NODE_NETWORK)
 
         NetworkThread().start()  # Start up network handling in another thread
 
-        # Test logic begins here
         self.test_node.wait_for_verack()
 
         # We will need UTXOs to construct transactions in later tests.

@@ -64,16 +64,12 @@ class VersionBitsWarningTest(BitcoinTestFramework):
 
     def run_test(self):
         # Setup the p2p connection and start up the network thread.
-        test_node = TestNode()
-
-        connections = []
-        connections.append(NodeConn('127.0.0.1', p2p_port(0), self.nodes[0], test_node))
-        test_node.add_connection(connections[0])
+        self.nodes[0].add_p2p_connection(TestNode())
 
         NetworkThread().start() # Start up network handling in another thread
 
         # Test logic begins here
-        test_node.wait_for_verack()
+        self.nodes[0].p2p.wait_for_verack()
 
         # 1. Have the node mine one period worth of blocks
         self.nodes[0].generate(VB_PERIOD)
@@ -81,7 +77,7 @@ class VersionBitsWarningTest(BitcoinTestFramework):
         # 2. Now build one period of blocks on the tip, with < VB_THRESHOLD
         # blocks signaling some unknown bit.
         nVersion = VB_TOP_BITS | (1<<VB_UNKNOWN_BIT)
-        self.send_blocks_with_version(test_node, VB_THRESHOLD-1, nVersion)
+        self.send_blocks_with_version(self.nodes[0].p2p, VB_THRESHOLD-1, nVersion)
 
         # Fill rest of period with regular version blocks
         self.nodes[0].generate(VB_PERIOD - VB_THRESHOLD + 1)
@@ -93,7 +89,7 @@ class VersionBitsWarningTest(BitcoinTestFramework):
 
         # 3. Now build one period of blocks with >= VB_THRESHOLD blocks signaling
         # some unknown bit
-        self.send_blocks_with_version(test_node, VB_THRESHOLD, nVersion)
+        self.send_blocks_with_version(self.nodes[0].p2p, VB_THRESHOLD, nVersion)
         self.nodes[0].generate(VB_PERIOD - VB_THRESHOLD)
         # Might not get a versionbits-related alert yet, as we should
         # have gotten a different alert due to more than 51/100 blocks
