@@ -188,7 +188,7 @@ namespace {
       * BLOCK_FAILED_VALID blocks in a set should be just fine and work just as
       * well.
       *
-      * Because we alreardy walk mapBlockIndex in height-order at startup, we go
+      * Because we already walk mapBlockIndex in height-order at startup, we go
       * ahead and mark descendants of invalid blocks as FAILED_CHILD at that time,
       * instead of putting things in this set.
       */
