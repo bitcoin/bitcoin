@@ -568,7 +568,9 @@ void static RavenMiner(const CChainParams& chainparams)
                     if ((g_connman->GetNodeCount(CConnman::CONNECTIONS_ALL) > 0) && !IsInitialBlockDownload()) {
                         break;
                     }
-                    std::cout << "Waiting for peers to mine" << std::endl;
+                    std::cout << "Waiting for peers to mine.  Peers: " << (g_connman->GetNodeCount(CConnman::CONNECTIONS_ALL)) << std::endl;
+                    std::cout << "IsInitialBlockDownload: " << IsInitialBlockDownload() << std::endl;
+
                     MilliSleep(1000);
                 } while (true);
             }
