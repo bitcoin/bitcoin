@@ -7,16 +7,10 @@
 
 #include <boost/test/unit_test.hpp>
 
-BOOST_FIXTURE_TEST_SUITE(sync_tests, BasicTestingSetup)
-
-BOOST_AUTO_TEST_CASE(potential_deadlock_detected)
+namespace {
+template <typename MutexType>
+void TestPotentialDeadLockDetected(MutexType& mutex1, MutexType& mutex2)
 {
-    #ifdef DEBUG_LOCKORDER
-    bool prev = g_debug_lockorder_abort;
-    g_debug_lockorder_abort = false;
-    #endif
-
-    CCriticalSection mutex1, mutex2;
     {
         LOCK2(mutex1, mutex2);
     }
@@ -32,6 +26,23 @@ BOOST_AUTO_TEST_CASE(potential_deadlock_detected)
     #else
     BOOST_CHECK(!error_thrown);
     #endif
+}
+} // namespace
+
+BOOST_FIXTURE_TEST_SUITE(sync_tests, BasicTestingSetup)
+
+BOOST_AUTO_TEST_CASE(potential_deadlock_detected)
+{
+    #ifdef DEBUG_LOCKORDER
+    bool prev = g_debug_lockorder_abort;
+    g_debug_lockorder_abort = false;
+    #endif
+
+    CCriticalSection rmutex1, rmutex2;
+    TestPotentialDeadLockDetected(rmutex1, rmutex2);
+
+    CWaitableCriticalSection mutex1, mutex2;
+    TestPotentialDeadLockDetected(mutex1, mutex2);
 
     #ifdef DEBUG_LOCKORDER
     g_debug_lockorder_abort = prev;
