@@ -5,6 +5,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "chainparams.h"
+#include "clientversion.h"
 #include "consensus/merkle.h"
 
 #include "tinyformat.h"
@@ -397,7 +398,7 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nTimeout = 999999999999ULL;
 
 #ifdef BITCOIN_CASH
-        // Nov, 13 hard fork
+        // Nov, 13 hard fork is always on on regtest.
         consensus.cashHardForkActivationTime = 0;
 #endif
         pchMessageStart[0] = 0xfa;

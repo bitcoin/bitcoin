@@ -42,7 +42,8 @@ static std::map<string, unsigned int> mapFlagNames =
         (unsigned int)SCRIPT_VERIFY_MINIMALDATA)(string("NULLDUMMY"), (unsigned int)SCRIPT_VERIFY_NULLDUMMY)(
         string("DISCOURAGE_UPGRADABLE_NOPS"),
         (unsigned int)SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_NOPS)(string("CLEANSTACK"),
-        (unsigned int)SCRIPT_VERIFY_CLEANSTACK)(string("CHECKLOCKTIMEVERIFY"),
+        (unsigned int)SCRIPT_VERIFY_CLEANSTACK)(string("NULLFAIL"), (unsigned int)SCRIPT_VERIFY_NULLFAIL)(
+        string("CHECKLOCKTIMEVERIFY"),
         (unsigned int)SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY)(string("CHECKSEQUENCEVERIFY"),
         (unsigned int)SCRIPT_VERIFY_CHECKSEQUENCEVERIFY)(std::string("SIGHASH_FORKID"),
         (unsigned int)SCRIPT_ENABLE_SIGHASH_FORKID);
