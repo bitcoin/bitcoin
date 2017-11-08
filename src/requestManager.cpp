@@ -46,8 +46,11 @@ unsigned int ACCEPTABLE_PING_USEC = 25 * 1000;
 
 // When should I request an object from someone else (in microseconds)
 unsigned int MIN_TX_REQUEST_RETRY_INTERVAL = DEFAULT_MIN_TX_REQUEST_RETRY_INTERVAL;
+unsigned int txReqRetryInterval = MIN_TX_REQUEST_RETRY_INTERVAL;
 // When should I request a block from someone else (in microseconds)
 unsigned int MIN_BLK_REQUEST_RETRY_INTERVAL = DEFAULT_MIN_BLK_REQUEST_RETRY_INTERVAL;
+unsigned int blkReqRetryInterval = MIN_BLK_REQUEST_RETRY_INTERVAL;
+
 
 // defined in main.cpp.  should be moved into a utilities file but want to make rebasing easier
 extern bool CanDirectFetch(const Consensus::Params &consensusParams);

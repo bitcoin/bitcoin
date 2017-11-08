@@ -29,14 +29,13 @@ successful receipt, "requester.Rejected(...)" to indicate a bad object (request 
 #include "net.h"
 #include "stat.h"
 // When should I request a tx from someone else (in microseconds). cmdline/bitcoin.conf: -txretryinterval
+extern unsigned int txReqRetryInterval;
 extern unsigned int MIN_TX_REQUEST_RETRY_INTERVAL;
 static const unsigned int DEFAULT_MIN_TX_REQUEST_RETRY_INTERVAL = 5 * 1000 * 1000;
 // When should I request a block from someone else (in microseconds). cmdline/bitcoin.conf: -blkretryinterval
+extern unsigned int blkReqRetryInterval;
 extern unsigned int MIN_BLK_REQUEST_RETRY_INTERVAL;
 static const unsigned int DEFAULT_MIN_BLK_REQUEST_RETRY_INTERVAL = 5 * 1000 * 1000;
-
-// How long in seconds we wait for a xthin request to be fullfilled before disconnecting the node.
-static const unsigned int THINBLOCK_DOWNLOAD_TIMEOUT = 30;
 
 class CNode;
 

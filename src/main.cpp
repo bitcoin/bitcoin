@@ -7332,11 +7332,14 @@ bool SendMessages(CNode *pto)
             std::map<uint256, CNode::CThinBlockInFlight>::iterator iter = pto->mapThinBlocksInFlight.begin();
             while (iter != pto->mapThinBlocksInFlight.end())
             {
-                if (!(*iter).second.fReceived && (GetTime() - (*iter).second.nRequestTime) > THINBLOCK_DOWNLOAD_TIMEOUT)
+                // Use a timeout of 6 times the retry inverval before disconnecting.  This way only a max of 6
+                // re-requested thinblocks could be in memory at any one time.
+                if (!(*iter).second.fReceived &&
+                    (GetTime() - (*iter).second.nRequestTime) > 6 * blkReqRetryInterval / 1000000)
                 {
                     if (!pto->fWhitelisted && Params().NetworkIDString() != "regtest")
                     {
-                        LogPrint("thin", "ERROR: Disconnecting peer=%d due to download timeout exceeded "
+                        LogPrint("thin", "ERROR: Disconnecting peer=%d due to thinblock download timeout exceeded "
                                          "(%d secs)\n",
                             pto->GetId(), (GetTime() - (*iter).second.nRequestTime));
                         pto->fDisconnect = true;
