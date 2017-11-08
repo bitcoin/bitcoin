@@ -2862,7 +2862,7 @@ void CConnman::ThreadMessageHandler()
 
         ReleaseNodeVector(vNodesCopy);
 
-        std::unique_lock<std::mutex> lock(mutexMsgProc);
+        WAIT_LOCK(mutexMsgProc, lock);
         if (!fMoreWork) {
             condMsgProc.wait_until(lock, std::chrono::steady_clock::now() + std::chrono::milliseconds(100), [this] { return fMsgProcWake; });
         }
@@ -3198,7 +3198,7 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
     flagInterruptMsgProc = false;
 
     {
-        std::unique_lock<std::mutex> lock(mutexMsgProc);
+        LOCK(mutexMsgProc);
         fMsgProcWake = false;
     }
 
