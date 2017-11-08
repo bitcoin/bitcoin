@@ -792,18 +792,21 @@ public:
     // NO_THREAD_SAFETY_ANALYSIS: Intentionally setting
     // nOrderPosNext/nTimeFirstKey/nWalletVersion/nWalletMaxVersion without
     // holding cs_wallet.
-    void SetNull() NO_THREAD_SAFETY_ANALYSIS
+    void SetNull()
     {
-        nWalletVersion = FEATURE_BASE;
-        nWalletMaxVersion = FEATURE_BASE;
+        {
+            LOCK(cs_wallet);
+            nWalletVersion = FEATURE_BASE;
+            nWalletMaxVersion = FEATURE_BASE;
+            nOrderPosNext = 0;
+            nTimeFirstKey = 0;
+        }
         nMasterKeyMaxID = 0;
         pwalletdbEncryption = nullptr;
-        nOrderPosNext = 0;
         nAccountingEntryNumber = 0;
         nNextResend = 0;
         nLastResend = 0;
         m_max_keypool_index = 0;
-        nTimeFirstKey = 0;
         fBroadcastTransactions = false;
         nRelockTime = 0;
         fAbortRescan = false;
