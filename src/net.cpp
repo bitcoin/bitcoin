@@ -2265,7 +2265,7 @@ bool CConnman::InitBinds(const std::vector<CService>& binds, const std::vector<C
     return fBound;
 }
 
-bool CConnman::Start(CScheduler& scheduler, const Options& connOptions) EXCLUSIVE_LOCKS_REQUIRED(cs_totalBytesRecv, cs_totalBytesSent)
+bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
 {
     Init(connOptions);
 
