@@ -21,6 +21,7 @@
 #include <mongoc.h>
 using namespace std;
 extern mongoc_collection_t *cert_collection;
+extern mongoc_collection_t *certhistory_collection;
 extern void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsigned char> &vchWitness, const string &currencyCode, const CRecipient &aliasRecipient, const CRecipient &aliasPaymentRecipient, vector<CRecipient> &vecSend, CWalletTx& wtxNew, CCoinControl* coinControl, bool useOnlyAliasPaymentToFund=true, bool transferAlias=false);
 bool IsCertOp(int op) {
     return op == OP_CERT_ACTIVATE
@@ -92,7 +93,7 @@ void CCert::Serialize( vector<unsigned char> &vchData) {
 	vchData = vector<unsigned char>(dsCert.begin(), dsCert.end());
 
 }
-void CCertDB::WriteCertIndex(const CCert& cert) {
+void CCertDB::WriteCertIndex(const CCert& cert, const int& op) {
 	if (!cert_collection)
 		return;
 	bson_error_t error;
@@ -118,6 +119,7 @@ void CCertDB::WriteCertIndex(const CCert& cert) {
 		bson_destroy(selector);
 	if (write_concern)
 		mongoc_write_concern_destroy(write_concern);
+	WriteCertIndexHistory(cert, op);
 }
 void CCertDB::WriteCertIndexHistory(const CCert& cert, const int &op) {
 	if (!certhistory_collection)

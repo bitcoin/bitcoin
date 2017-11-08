@@ -26,8 +26,8 @@
 #include <boost/range/adaptor/reversed.hpp>
 #include <mongoc.h>
 using namespace std;
-extern mongoc_collection_t *offer_collection = NULL;
-extern mongoc_collection_t *offerhistory_collection = NULL;
+extern mongoc_collection_t *offer_collection;
+extern mongoc_collection_t *offerhistory_collection;
 extern void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsigned char> &vchWitness, const string &currencyCode, const CRecipient &aliasRecipient, const CRecipient &aliasPaymentRecipient, vector<CRecipient> &vecSend, CWalletTx& wtxNew, CCoinControl* coinControl, bool useOnlyAliasPaymentToFund=true, bool transferAlias=false);
 bool IsOfferOp(int op) {
 	return op == OP_OFFER_ACTIVATE
