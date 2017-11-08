@@ -1644,8 +1644,8 @@ void CAliasDB::EraseAliasIndex(const std::vector<unsigned char>& vchAlias, bool 
 		bson_destroy(selector);
 	if (write_concern)
 		mongoc_write_concern_destroy(write_concern);
-	EraseAliasIndexHistory(vchAlias);
-	EraseAliasIndexTxHistory(vchAlias);
+	EraseAliasIndexHistory(vchAlias, cleanup);
+	EraseAliasIndexTxHistory(vchAlias, cleanup);
 }
 void CAliasDB::WriteAliasIndexTxHistory(const string &alias, const uint256 &txHash, const uint64_t& nHeight, const string &type, const string &guid, const CAmount &nValue) {
 	if (!aliastxhistory_collection)

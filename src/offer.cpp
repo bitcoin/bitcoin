@@ -1426,7 +1426,7 @@ void COfferDB::EraseOfferIndex(const std::vector<unsigned char>& vchOffer, bool 
 		bson_destroy(selector);
 	if (write_concern)
 		mongoc_write_concern_destroy(write_concern);
-	EraseOfferIndexHistory(vchOffer);
+	EraseOfferIndexHistory(vchOffer, cleanup);
 }
 UniValue offerinfo(const UniValue& params, bool fHelp) {
 	if (fHelp || 1 > params.size())

@@ -185,6 +185,7 @@ void CCertDB::EraseCertIndex(const std::vector<unsigned char>& vchCert, bool cle
 		bson_destroy(selector);
 	if (write_concern)
 		mongoc_write_concern_destroy(write_concern);
+	EraseCertIndexHistory(vchCert, cleanup);
 }
 bool CCertDB::CleanupDatabase(int &servicesCleaned)
 {
