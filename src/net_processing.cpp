@@ -959,27 +959,68 @@ void Misbehaving(NodeId pnode, int howmuch, const std::string& message) EXCLUSIV
         LogPrint(BCLog::NET, "%s: %s peer=%d (%d -> %d)%s\n", __func__, state->name, pnode, state->nMisbehavior-howmuch, state->nMisbehavior, message_prefixed);
 }
 
+/**
+ * Returns true if the given validation state result may result in a peer
+ * banning/disconnecting us. We use this to determine which unaccepted
+ * transactions from a whitelisted peer that we can safely relay.
+ */
 static bool TxRelayMayResultInDisconnect(const CValidationState& state)
 {
-    return (state.GetDoS() > 0);
+    return state.GetReason() == ValidationInvalidReason::CONSENSUS;
 }
 
 /**
  * Potentially ban a node based on the contents of a CValidationState object
- * TODO: net_processing should make the punish decision based on the reason
- * a tx/block was invalid, rather than just the nDoS score handed back by validation.
  *
- * @parameter via_compact_block: this bool is passed in because net_processing should
+ * @param[in] via_compact_block: this bool is passed in because net_processing should
  * punish peers differently depending on whether the data was provided in a compact
  * block message or not. If the compact block had a valid header, but contained invalid
  * txs, the peer should not be punished. See BIP 152.
+ *
+ * @return Returns true if the peer was punished (probably disconnected)
+ *
+ * Changes here may need to be reflected in TxRelayMayResultInDisconnect().
  */
 static bool MaybePunishNode(NodeId nodeid, const CValidationState& state, bool via_compact_block, const std::string& message = "") {
-    int nDoS = state.GetDoS();
-    if (nDoS > 0 && !via_compact_block) {
-         LOCK(cs_main);
-         Misbehaving(nodeid, nDoS, message);
-         return true;
+    switch (state.GetReason()) {
+    case ValidationInvalidReason::NONE:
+        break;
+    // The node is providing invalid data:
+    case ValidationInvalidReason::CONSENSUS:
+    case ValidationInvalidReason::BLOCK_MUTATED:
+        if (!via_compact_block) {
+            LOCK(cs_main);
+            Misbehaving(nodeid, 100, message);
+            return true;
+        }
+        break;
+    // Handled elsewhere for now
+    case ValidationInvalidReason::CACHED_INVALID:
+        break;
+    case ValidationInvalidReason::BLOCK_INVALID_HEADER:
+    case ValidationInvalidReason::BLOCK_CHECKPOINT:
+    case ValidationInvalidReason::BLOCK_INVALID_PREV:
+        {
+            LOCK(cs_main);
+            Misbehaving(nodeid, 100, message);
+        }
+        return true;
+    // Conflicting (but not necessarily invalid) data or different policy:
+    case ValidationInvalidReason::BLOCK_MISSING_PREV:
+        {
+            // TODO: Handle this much more gracefully (10 DoS points is super arbitrary)
+            LOCK(cs_main);
+            Misbehaving(nodeid, 10, message);
+        }
+        return true;
+    case ValidationInvalidReason::RECENT_CONSENSUS_CHANGE:
+    case ValidationInvalidReason::BLOCK_TIME_FUTURE:
+    case ValidationInvalidReason::TX_NOT_STANDARD:
+    case ValidationInvalidReason::TX_MISSING_INPUTS:
+    case ValidationInvalidReason::TX_WITNESS_MUTATED:
+    case ValidationInvalidReason::TX_CONFLICT:
+    case ValidationInvalidReason::TX_MEMPOOL_POLICY:
+        break;
     }
     if (message != "") {
         LogPrint(BCLog::NET, "peer=%d: %s\n", nodeid, message);
@@ -2513,14 +2554,13 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                 // to policy, allowing the node to function as a gateway for
                 // nodes hidden behind it.
                 //
-                // Never relay transactions that we would assign a non-zero DoS
-                // score for, as we expect peers to do the same with us in that
-                // case.
-                if (!state.IsInvalid() || !TxRelayMayResultInDisconnect(state)) {
+                // Never relay transactions that might result in being
+                // disconnected (or banned).
+                if (state.IsInvalid() && TxRelayMayResultInDisconnect(state)) {
+                    LogPrintf("Not relaying invalid transaction %s from whitelisted peer=%d (%s)\n", tx.GetHash().ToString(), pfrom->GetId(), FormatStateMessage(state));
+                } else {
                     LogPrintf("Force relaying tx %s from whitelisted peer=%d\n", tx.GetHash().ToString(), pfrom->GetId());
                     RelayTransaction(tx, connman);
-                } else {
-                    LogPrintf("Not relaying invalid transaction %s from whitelisted peer=%d (%s)\n", tx.GetHash().ToString(), pfrom->GetId(), FormatStateMessage(state));
                 }
             }
         }
@@ -2590,21 +2630,8 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         const CBlockIndex *pindex = nullptr;
         CValidationState state;
         if (!ProcessNewBlockHeaders({cmpctblock.header}, state, chainparams, &pindex)) {
-            if (state.IsInvalid() && received_new_header) {
-                // In this situation, the block header is known to be invalid.
-                // If we never created a CBlockIndex entry for it, then the
-                // header must be bad just by inspection (and is not one that
-                // looked okay but the block later turned out to be invalid for
-                // some other reason).
-                // We should punish compact block peers that give us an invalid
-                // header (other than a "duplicate-invalid" one, see
-                // ProcessHeadersMessage), so set via_compact_block to false
-                // here.
-                // TODO: when we switch from DoS scores to reasons that
-                // tx/blocks are invalid, this call should set
-                // via_compact_block to true, since MaybePunishNode will have
-                // sufficient information to act correctly.
-                MaybePunishNode(pfrom->GetId(), state, /*via_compact_block*/ false, "invalid header via cmpctblock");
+            if (state.IsInvalid()) {
+                MaybePunishNode(pfrom->GetId(), state, /*via_compact_block*/ true, "invalid header via cmpctblock");
                 return true;
             }
         }
