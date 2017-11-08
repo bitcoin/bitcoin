@@ -84,7 +84,11 @@ BOOST_AUTO_TEST_CASE(GetBlockProofEquivalentTime_test)
         blocks[i].nHeight = i;
         blocks[i].nTime = 1269211443 + i * params.nPowTargetSpacing;
         blocks[i].nBits = 0x207fffff; /* target 0x7fffff000... */
+#ifndef BITCOIN_CASH
         blocks[i].nChainWork = i ? blocks[i - 1].nChainWork + GetBlockProof(blocks[i - 1]) : arith_uint256(0);
+#else
+        blocks[i].nChainWork = i ? blocks[i - 1].nChainWork + GetBlockProof(blocks[i]) : arith_uint256(0);
+#endif
     }
 
     for (int j = 0; j < 1000; j++)
@@ -105,7 +109,9 @@ static CBlockIndex GetBlockIndex(CBlockIndex *pindexPrev, int64_t nTimeInterval,
     block.nHeight = pindexPrev->nHeight + 1;
     block.nTime = pindexPrev->nTime + nTimeInterval;
     block.nBits = nBits;
-
+#ifdef BITCOIN_CASH
+    block.nChainWork = pindexPrev->nChainWork + GetBlockProof(block);
+#endif
     return block;
 }
 
@@ -120,12 +126,15 @@ BOOST_AUTO_TEST_CASE(retargeting_test)
     arith_uint256 currentPow = powLimit >> 1;
     uint32_t initialBits = currentPow.GetCompact();
 
-    // Genesis block?
+    // Genesis block.
     blocks[0] = CBlockIndex();
     blocks[0].nHeight = 0;
     blocks[0].nTime = 1269211443;
     blocks[0].nBits = initialBits;
 
+#ifdef BITCOIN_CASH
+    blocks[0].nChainWork = GetBlockProof(blocks[0]);
+#endif
     // Pile up some blocks.
     for (size_t i = 1; i < 100; i++)
     {
@@ -173,5 +182,180 @@ BOOST_AUTO_TEST_CASE(retargeting_test)
     BOOST_CHECK(powLimit.GetCompact() != currentPow.GetCompact());
     BOOST_CHECK_EQUAL(GetNextWorkRequired(&blocks[114], &blkHeaderDummy, params), powLimit.GetCompact());
 }
+
+#ifdef BITCOIN_CASH
+BOOST_AUTO_TEST_CASE(cash_difficulty_test)
+{
+    SelectParams(CBaseChainParams::MAIN);
+    const Consensus::Params &params = Params().GetConsensus();
+
+    std::vector<CBlockIndex> blocks(3000);
+
+    const arith_uint256 powLimit = UintToArith256(params.powLimit);
+    uint32_t powLimitBits = powLimit.GetCompact();
+    arith_uint256 currentPow = powLimit >> 4;
+    uint32_t initialBits = currentPow.GetCompact();
+
+    // Genesis block.
+    blocks[0] = CBlockIndex();
+    blocks[0].nHeight = 0;
+    blocks[0].nTime = 1269211443;
+    blocks[0].nBits = initialBits;
+
+    blocks[0].nChainWork = GetBlockProof(blocks[0]);
+
+    // Block counter.
+    size_t i;
+
+    // Pile up some blocks every 10 mins to establish some history.
+    for (i = 1; i < 2050; i++)
+    {
+        blocks[i] = GetBlockIndex(&blocks[i - 1], 600, initialBits);
+    }
+
+    CBlockHeader blkHeaderDummy;
+    uint32_t nBits = GetNextCashWorkRequired(&blocks[2049], &blkHeaderDummy, params);
+
+    // Difficulty stays the same as long as we produce a block every 10 mins.
+    for (size_t j = 0; j < 10; i++, j++)
+    {
+        blocks[i] = GetBlockIndex(&blocks[i - 1], 600, nBits);
+        BOOST_CHECK_EQUAL(GetNextCashWorkRequired(&blocks[i], &blkHeaderDummy, params), nBits);
+    }
+
+    // Make sure we skip over blocks that are out of wack. To do so, we produce
+    // a block that is far in the future, and then produce a block with the
+    // expected timestamp.
+    blocks[i] = GetBlockIndex(&blocks[i - 1], 6000, nBits);
+    BOOST_CHECK_EQUAL(GetNextCashWorkRequired(&blocks[i++], &blkHeaderDummy, params), nBits);
+    blocks[i] = GetBlockIndex(&blocks[i - 1], 2 * 600 - 6000, nBits);
+    BOOST_CHECK_EQUAL(GetNextCashWorkRequired(&blocks[i++], &blkHeaderDummy, params), nBits);
+
+    // The system should continue unaffected by the block with a bogous
+    // timestamps.
+    for (size_t j = 0; j < 20; i++, j++)
+    {
+        blocks[i] = GetBlockIndex(&blocks[i - 1], 600, nBits);
+        BOOST_CHECK_EQUAL(GetNextCashWorkRequired(&blocks[i], &blkHeaderDummy, params), nBits);
+    }
+
+    // We start emitting blocks slightly faster. The first block has no impact.
+    blocks[i] = GetBlockIndex(&blocks[i - 1], 550, nBits);
+    BOOST_CHECK_EQUAL(GetNextCashWorkRequired(&blocks[i++], &blkHeaderDummy, params), nBits);
+
+    // Now we should see difficulty increase slowly.
+    for (size_t j = 0; j < 10; i++, j++)
+    {
+        blocks[i] = GetBlockIndex(&blocks[i - 1], 550, nBits);
+        const uint32_t nextBits = GetNextCashWorkRequired(&blocks[i], &blkHeaderDummy, params);
+
+        arith_uint256 currentTarget;
+        currentTarget.SetCompact(nBits);
+        arith_uint256 nextTarget;
+        nextTarget.SetCompact(nextBits);
+
+        // Make sure that difficulty increases very slowly.
+        BOOST_CHECK(nextTarget < currentTarget);
+        BOOST_CHECK((currentTarget - nextTarget) < (currentTarget >> 10));
+
+        nBits = nextBits;
+    }
+
+    // Check the actual value.
+    BOOST_CHECK_EQUAL(nBits, 0x1c0fe7b1);
+
+    // If we dramatically shorten block production, difficulty increases faster.
+    for (size_t j = 0; j < 20; i++, j++)
+    {
+        blocks[i] = GetBlockIndex(&blocks[i - 1], 10, nBits);
+        const uint32_t nextBits = GetNextCashWorkRequired(&blocks[i], &blkHeaderDummy, params);
+
+        arith_uint256 currentTarget;
+        currentTarget.SetCompact(nBits);
+        arith_uint256 nextTarget;
+        nextTarget.SetCompact(nextBits);
+
+        // Make sure that difficulty increases faster.
+        BOOST_CHECK(nextTarget < currentTarget);
+        BOOST_CHECK((currentTarget - nextTarget) < (currentTarget >> 4));
+
+        nBits = nextBits;
+    }
+
+    // Check the actual value.
+    BOOST_CHECK_EQUAL(nBits, 0x1c0db19f);
+
+    // We start to emit blocks significantly slower. The first block has no
+    // impact.
+    blocks[i] = GetBlockIndex(&blocks[i - 1], 6000, nBits);
+    nBits = GetNextCashWorkRequired(&blocks[i++], &blkHeaderDummy, params);
+
+    // Check the actual value.
+    BOOST_CHECK_EQUAL(nBits, 0x1c0d9222);
+
+    // If we dramatically slow down block production, difficulty decreases.
+    for (size_t j = 0; j < 93; i++, j++)
+    {
+        blocks[i] = GetBlockIndex(&blocks[i - 1], 6000, nBits);
+        const uint32_t nextBits = GetNextCashWorkRequired(&blocks[i], &blkHeaderDummy, params);
+
+        arith_uint256 currentTarget;
+        currentTarget.SetCompact(nBits);
+        arith_uint256 nextTarget;
+        nextTarget.SetCompact(nextBits);
+
+        // Check the difficulty decreases.
+        BOOST_CHECK(nextTarget <= powLimit);
+        BOOST_CHECK(nextTarget > currentTarget);
+        BOOST_CHECK((nextTarget - currentTarget) < (currentTarget >> 3));
+
+        nBits = nextBits;
+    }
+
+    // Check the actual value.
+    BOOST_CHECK_EQUAL(nBits, 0x1c2f13b9);
+
+    // Due to the window of time being bounded, next block's difficulty actually
+    // gets harder.
+    blocks[i] = GetBlockIndex(&blocks[i - 1], 6000, nBits);
+    nBits = GetNextCashWorkRequired(&blocks[i++], &blkHeaderDummy, params);
+    BOOST_CHECK_EQUAL(nBits, 0x1c2ee9bf);
+
+    // And goes down again. It takes a while due to the window being bounded and
+    // the skewed block causes 2 blocks to get out of the window.
+    for (size_t j = 0; j < 192; i++, j++)
+    {
+        blocks[i] = GetBlockIndex(&blocks[i - 1], 6000, nBits);
+        const uint32_t nextBits = GetNextCashWorkRequired(&blocks[i], &blkHeaderDummy, params);
+
+        arith_uint256 currentTarget;
+        currentTarget.SetCompact(nBits);
+        arith_uint256 nextTarget;
+        nextTarget.SetCompact(nextBits);
+
+        // Check the difficulty decreases.
+        BOOST_CHECK(nextTarget <= powLimit);
+        BOOST_CHECK(nextTarget > currentTarget);
+        BOOST_CHECK((nextTarget - currentTarget) < (currentTarget >> 3));
+
+        nBits = nextBits;
+    }
+
+    // Check the actual value.
+    BOOST_CHECK_EQUAL(nBits, 0x1d00ffff);
+
+    // Once the difficulty reached the minimum allowed level, it doesn't get any
+    // easier.
+    for (size_t j = 0; j < 5; i++, j++)
+    {
+        blocks[i] = GetBlockIndex(&blocks[i - 1], 6000, nBits);
+        const uint32_t nextBits = GetNextCashWorkRequired(&blocks[i], &blkHeaderDummy, params);
+
+        // Check the difficulty stays constant.
+        BOOST_CHECK_EQUAL(nextBits, powLimitBits);
+        nBits = nextBits;
+    }
+}
+#endif
 
 BOOST_AUTO_TEST_SUITE_END()
