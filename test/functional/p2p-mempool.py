@@ -19,16 +19,14 @@ class P2PMempoolTests(BitcoinTestFramework):
         self.extra_args = [["-peerbloomfilters=0"]]
 
     def run_test(self):
-        #connect a mininode
-        aTestNode = NodeConnCB()
-        node = NodeConn('127.0.0.1', p2p_port(0), self.nodes[0], aTestNode)
-        aTestNode.add_connection(node)
+        # Add a p2p connection
+        self.nodes[0].add_p2p_connection(NodeConnCB())
         NetworkThread().start()
-        aTestNode.wait_for_verack()
+        self.nodes[0].p2p.wait_for_verack()
 
         #request mempool
-        aTestNode.send_message(msg_mempool())
-        aTestNode.wait_for_disconnect()
+        self.nodes[0].p2p.send_message(msg_mempool())
+        self.nodes[0].p2p.wait_for_disconnect()
 
         #mininode must be disconnected at this point
         assert_equal(len(self.nodes[0].getpeerinfo()), 0)
