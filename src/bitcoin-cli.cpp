@@ -146,13 +146,13 @@ const char *http_errorstring(int code)
     case EVREQ_HTTP_EOF:
         return "EOF reached";
     case EVREQ_HTTP_INVALID_HEADER:
-        return "error while reading header, or invalid header";
+        return "error encountered while reading header, or invalid header";
     case EVREQ_HTTP_BUFFER_ERROR:
         return "error encountered while reading or writing";
     case EVREQ_HTTP_REQUEST_CANCEL:
         return "request was canceled";
     case EVREQ_HTTP_DATA_TOO_LONG:
-        return "response body is larger than allowed";
+        return "response body was larger than allowed";
 #endif
     default:
         return "unknown";
