@@ -147,10 +147,7 @@ public:
         std::vector<std::string> m_added_nodes;
     };
 
-    // NO_THREAD_SAFETY_ANALYSIS: Intentionally setting
-    // nMaxOutboundTimeframe/nMaxOutboundLimit without holding
-    // cs_totalBytesSent.
-    void Init(const Options& connOptions) NO_THREAD_SAFETY_ANALYSIS {
+    void Init(const Options& connOptions) {
         nLocalServices = connOptions.nLocalServices;
         nMaxConnections = connOptions.nMaxConnections;
         nMaxOutbound = std::min(connOptions.nMaxOutbound, connOptions.nMaxConnections);
@@ -175,7 +172,7 @@ public:
 
     CConnman(uint64_t seed0, uint64_t seed1);
     ~CConnman();
-    bool Start(CScheduler& scheduler, const Options& options) EXCLUSIVE_LOCKS_REQUIRED(cs_totalBytesRecv, cs_totalBytesSent);
+    bool Start(CScheduler& scheduler, const Options& options);
     void Stop();
     void Interrupt();
     bool GetNetworkActive() const { return fNetworkActive; };
