@@ -207,7 +207,7 @@ class AcceptBlockTest(BitcoinTestFramework):
         # The node should have requested the blocks at some point, so
         # disconnect/reconnect first
 
-        self.nodes[0].disconnect_p2p()
+        self.nodes[0].disconnect_p2ps()
         test_node = self.nodes[0].add_p2p_connection(NodeConnCB())
 
         test_node.wait_for_verack()
@@ -292,7 +292,7 @@ class AcceptBlockTest(BitcoinTestFramework):
         except AssertionError:
             test_node.wait_for_disconnect()
 
-            self.nodes[0].disconnect_p2p()
+            self.nodes[0].disconnect_p2ps()
             test_node = self.nodes[0].add_p2p_connection(NodeConnCB())
 
             NetworkThread().start() # Start up network handling in another thread
