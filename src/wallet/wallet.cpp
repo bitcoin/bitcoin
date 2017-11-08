@@ -2683,28 +2683,20 @@ bool CWallet::SelectCoins(const CAmount& nTargetValue, set<pair<const CWalletTx*
 	// SYSCOIN
 	AvailableCoins(vCoins, true, coinControl, bAliasPay, false, nCoinType, fUseInstantSend);
 
-	if (coinControl && coinControl->HasSelected() && !coinControl->fAllowOtherInputs)
+	// SYSCOIN
+	set<pair<const CWalletTx*, uint32_t> > setPresetCoins;
+	if (coinControl && coinControl->HasSelected())
 	{
-		// coin control -> return all selected outputs (we want all selected to go into the transaction for sure)
-		// SYSCOIN
+		// add all coin control inputs to setCoinsRet based on UTXO db lookup, txindex must be enabled for nodes that are supporting wallet-less spending based on alias UTXOs.
 		CCoinsViewCache view(pcoinsTip);
 		const CCoins *coins;
 		CTransaction tx;
 		uint256 hashBlock;
-		BOOST_FOREACH(const COutput& out, vCoins)
+		std::vector<COutPoint> vInputs;
+		if (coinControl)
+			coinControl->ListSelected(vInputs);
+		BOOST_FOREACH(const COutPoint& outpoint, vInputs)
 		{
-			if (!out.fSpendable)
-				continue;
-
-			if (nCoinType == ONLY_DENOMINATED) {
-				COutPoint outpoint = COutPoint(out.tx->GetHash(), out.i);
-				int nRounds = GetOutpointPrivateSendRounds(outpoint);
-				// make sure it's actually anonymized
-				if (nRounds < privateSendClient.nPrivateSendRounds) continue;
-			}
-			nValueRet += out.tx->vout[out.i].nValue;
-			setCoinsRet.insert(make_pair(out.tx, out.i));
-			// SYSCOIN
 			coins = view.AccessCoins(outpoint.hash);
 			if (coins == NULL)
 				continue;
@@ -2723,8 +2715,33 @@ bool CWallet::SelectCoins(const CAmount& nTargetValue, set<pair<const CWalletTx*
 			wtx->nIndex = coins->nHeight;
 			wtx->hashBlock = hashBlock;
 			mapWtxToDelete.push_back(wtx);
+			setPresetCoins.insert(make_pair(wtx, outpoint.n));
 		}
-		return (nValueRet >= nTargetValue);
+
+		if (nValueRet >= nTargetValue)
+		{
+			setCoinsRet.insert(setPresetCoins.begin(), setPresetCoins.end());
+			return true;
+		}
+		// coin control -> return all selected outputs (we want all selected to go into the transaction for sure)
+		if (!coinControl->fAllowOtherInputs)
+		{
+			BOOST_FOREACH(const COutput& out, vCoins)
+			{
+				if (!out.fSpendable)
+					continue;
+
+				if (nCoinType == ONLY_DENOMINATED) {
+					COutPoint outpoint = COutPoint(out.tx->GetHash(), out.i);
+					int nRounds = GetOutpointPrivateSendRounds(outpoint);
+					// make sure it's actually anonymized
+					if (nRounds < privateSendClient.nPrivateSendRounds) continue;
+				}
+				nValueRet += out.tx->vout[out.i].nValue;
+				setCoinsRet.insert(make_pair(out.tx, out.i));
+			}
+			return (nValueRet >= nTargetValue);
+		}
 	}
 
 	//if we're doing only denominated, we need to round up to the nearest smallest denomination
@@ -2750,7 +2767,8 @@ bool CWallet::SelectCoins(const CAmount& nTargetValue, set<pair<const CWalletTx*
 		return (nValueRet >= nTargetValue);
 	}
 	// calculate value from preset inputs and store them
-	set<pair<const CWalletTx*, uint32_t> > setPresetCoins;
+	// SYSCOIN
+	//set<pair<const CWalletTx*, uint32_t> > setPresetCoins;
 	CAmount nValueFromPresetInputs = 0;
 
 	std::vector<COutPoint> vPresetInputs;
