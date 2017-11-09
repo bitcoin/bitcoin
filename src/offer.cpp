@@ -928,7 +928,7 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 	CRecipient aliasRecipient;
 	CreateRecipient(scriptPubKeyAlias, aliasRecipient);
 	CRecipient aliasPaymentRecipient;
-	CreateAliasRecipient(scriptPubKeyOrig, alias.vchAlias, aliasPaymentRecipient);
+	CreateAliasRecipient(scriptPubKeyOrig, aliasPaymentRecipient);
 
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
@@ -1037,7 +1037,7 @@ UniValue offerlink(const UniValue& params, bool fHelp) {
 	CRecipient aliasRecipient;
 	CreateRecipient(scriptPubKeyAlias, aliasRecipient);
 	CRecipient aliasPaymentRecipient;
-	CreateAliasRecipient(scriptPubKeyOrig, alias.vchAlias, aliasPaymentRecipient);
+	CreateAliasRecipient(scriptPubKeyOrig, aliasPaymentRecipient);
 
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
@@ -1313,7 +1313,7 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	CRecipient aliasRecipient;
 	CreateRecipient(scriptPubKeyAlias, aliasRecipient);
 	CRecipient aliasPaymentRecipient;
-	CreateAliasRecipient(scriptPubKeyOrig, alias.vchAlias, aliasPaymentRecipient);
+	CreateAliasRecipient(scriptPubKeyOrig, aliasPaymentRecipient);
 
 	CScript scriptData;
 	scriptData << OP_RETURN << data;

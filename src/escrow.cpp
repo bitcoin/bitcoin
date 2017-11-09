@@ -1521,7 +1521,7 @@ UniValue escrowbid(const UniValue& params, bool fHelp) {
 	CRecipient aliasRecipient;
 	CreateRecipient(scriptPubKeyAlias, aliasRecipient);
 	CRecipient aliasPaymentRecipient;
-	CreateAliasRecipient(scriptPubKeyAliasOrig, bidderalias.vchAlias, aliasPaymentRecipient);
+	CreateAliasRecipient(scriptPubKeyAliasOrig, aliasPaymentRecipient);
 
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
@@ -1611,7 +1611,7 @@ UniValue escrowaddshipping(const UniValue& params, bool fHelp) {
 	CRecipient aliasRecipient;
 	CreateRecipient(scriptPubKeyAlias, aliasRecipient);
 	CRecipient aliasPaymentRecipient;
-	CreateAliasRecipient(scriptPubKeyAliasOrig, bidderalias.vchAlias, aliasPaymentRecipient);
+	CreateAliasRecipient(scriptPubKeyAliasOrig, aliasPaymentRecipient);
 
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
@@ -1908,7 +1908,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	CRecipient aliasRecipient;
 	CreateRecipient(scriptPubKeyAlias, aliasRecipient);
 	CRecipient aliasPaymentRecipient;
-	CreateAliasRecipient(scriptPubKeyAliasOrig, buyeralias.vchAlias, aliasPaymentRecipient);
+	CreateAliasRecipient(scriptPubKeyAliasOrig, aliasPaymentRecipient);
 
 
 	CScript scriptData;
@@ -2001,7 +2001,7 @@ UniValue escrowacknowledge(const UniValue& params, bool fHelp) {
 	CRecipient aliasRecipient;
 	CreateRecipient(scriptPubKeyAlias, aliasRecipient);
 	CRecipient aliasPaymentRecipient;
-	CreateAliasRecipient(sellerScript, sellerAliasLatest.vchAlias, aliasPaymentRecipient);
+	CreateAliasRecipient(sellerScript, aliasPaymentRecipient);
 
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
@@ -2281,7 +2281,7 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	CRecipient aliasRecipient;
 	CreateRecipient(scriptPubKeyAlias, aliasRecipient);
 	CRecipient aliasPaymentRecipient;
-	CreateAliasRecipient(scriptPubKeyAliasOrig, theAlias.vchAlias, aliasPaymentRecipient);
+	CreateAliasRecipient(scriptPubKeyAliasOrig, aliasPaymentRecipient);
 
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
@@ -2372,7 +2372,7 @@ UniValue escrowcompleterelease(const UniValue& params, bool fHelp) {
 	CRecipient aliasRecipient;
 	CreateRecipient(scriptPubKeyAlias, aliasRecipient);
 	CRecipient aliasPaymentRecipient;
-	CreateAliasRecipient(sellerScript, sellerAliasLatest.vchAlias, aliasPaymentRecipient);
+	CreateAliasRecipient(sellerScript, aliasPaymentRecipient);
 
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
@@ -2497,7 +2497,7 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 	CRecipient aliasRecipient;
 	CreateRecipient(scriptPubKeyAlias, aliasRecipient);
 	CRecipient aliasPaymentRecipient;
-	CreateAliasRecipient(scriptPubKeyAliasOrig, theAlias.vchAlias, aliasPaymentRecipient);
+	CreateAliasRecipient(scriptPubKeyAliasOrig, aliasPaymentRecipient);
 
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
@@ -2591,7 +2591,7 @@ UniValue escrowcompleterefund(const UniValue& params, bool fHelp) {
 	CRecipient aliasRecipient;
 	CreateRecipient(scriptPubKeyAlias, aliasRecipient);
 	CRecipient aliasPaymentRecipient;
-	CreateAliasRecipient(buyerScript, buyerAliasLatest.vchAlias, aliasPaymentRecipient);
+	CreateAliasRecipient(buyerScript, aliasPaymentRecipient);
 
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
@@ -2798,7 +2798,7 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 	CRecipient aliasRecipient;
 	CreateRecipient(scriptPubKeyAlias, aliasRecipient);
 	CRecipient aliasPaymentRecipient;
-	CreateAliasRecipient(scriptPubKeyAliasOrig, theAlias.vchAlias, aliasPaymentRecipient);
+	CreateAliasRecipient(scriptPubKeyAliasOrig, aliasPaymentRecipient);
 
 	CScript scriptData;
 	scriptData << OP_RETURN << data;

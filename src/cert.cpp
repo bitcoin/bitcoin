@@ -665,7 +665,7 @@ UniValue certnew(const UniValue& params, bool fHelp) {
 	CRecipient aliasRecipient;
 	CreateRecipient(scriptPubKeyAlias, aliasRecipient);
 	CRecipient aliasPaymentRecipient;
-	CreateAliasRecipient(scriptPubKeyOrig, theAlias.vchAlias, aliasPaymentRecipient);
+	CreateAliasRecipient(scriptPubKeyOrig, aliasPaymentRecipient);
 		
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
@@ -759,7 +759,7 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
 	CRecipient aliasRecipient;
 	CreateRecipient(scriptPubKeyAlias, aliasRecipient);
 	CRecipient aliasPaymentRecipient;
-	CreateAliasRecipient(scriptPubKeyOrig, theAlias.vchAlias, aliasPaymentRecipient);
+	CreateAliasRecipient(scriptPubKeyOrig, aliasPaymentRecipient);
 		
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
@@ -863,7 +863,7 @@ UniValue certtransfer(const UniValue& params, bool fHelp) {
 	CRecipient aliasRecipient;
 	CreateRecipient(scriptPubKeyAlias, aliasRecipient);
 	CRecipient aliasPaymentRecipient;
-	CreateAliasRecipient(scriptPubKeyFromOrig, fromAlias.vchAlias, aliasPaymentRecipient);
+	CreateAliasRecipient(scriptPubKeyFromOrig, aliasPaymentRecipient);
 
 	CScript scriptData;
 	scriptData << OP_RETURN << data;

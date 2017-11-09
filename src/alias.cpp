@@ -1103,10 +1103,10 @@ void CreateRecipient(const CScript& scriptPubKey, CRecipient& recipient)
 	recipient = recp;
 	CTxOut txout(recipient.nAmount,	recipient.scriptPubKey);
     size_t nSize = txout.GetSerializeSize(SER_DISK,0)+148u;
-	CAmount nFee = CWallet::GetRequiredFee(nSize);
+	CAmount nFee = 3*CWallet::GetRequiredFee(nSize);
 	recipient.nAmount = nFee;
 }
-void CreateAliasRecipient(const CScript& scriptPubKeyDest, const vector<unsigned char>& vchAlias, CRecipient& recipient)
+void CreateAliasRecipient(const CScript& scriptPubKeyDest, CRecipient& recipient)
 {
 	CAmount nFee = 0;
 	CRecipient recp = { scriptPubKeyDest, 0, false};
@@ -1117,7 +1117,7 @@ void CreateAliasRecipient(const CScript& scriptPubKeyDest, const vector<unsigned
 	// create utxo min 1500 bytes worth of fees
 	if(nSize < 1500)
 		nSize = 1500;
-	nFee = CWallet::GetRequiredFee(nSize);
+	nFee = 3*CWallet::GetRequiredFee(nSize);
 	recipient.nAmount = nFee;
 }
 void CreateFeeRecipient(CScript& scriptPubKey, const vector<unsigned char>& data, CRecipient& recipient)
@@ -1943,7 +1943,7 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	CRecipient recipient;
 	CreateRecipient(scriptPubKey, recipient);
 	CRecipient recipientPayment;
-	CreateAliasRecipient(scriptPubKeyOrig, vchAlias, recipientPayment);
+	CreateAliasRecipient(scriptPubKeyOrig, recipientPayment);
 	CScript scriptData;
 	
 	scriptData << OP_RETURN << data;
@@ -2073,7 +2073,7 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	CRecipient recipient;
 	CreateRecipient(scriptPubKey, recipient);
 	CRecipient recipientPayment;
-	CreateAliasRecipient(scriptPubKeyOrig, copyAlias.vchAlias, recipientPayment);
+	CreateAliasRecipient(scriptPubKeyOrig, recipientPayment);
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
 	CRecipient fee;
@@ -2304,7 +2304,7 @@ UniValue aliasbalance(const UniValue& params, bool fHelp)
 		if(DecodeAliasScript(coins->vout[nOut].scriptPubKey, op, vvch) && vvch[0] != theAlias.vchAlias)
 			continue;
 		// some dust sized outputs are reserved to pay for fees only using aliasselectpaymentcoins (with bSelectFeePlacementOnly set to true)
-		if (coins->vout[nOut].nValue <= CWallet::GetRequiredFee(1500))
+		if (coins->vout[nOut].nValue <= 3*CWallet::GetRequiredFee(1500))
 			continue;
 
 		destaddy = CSyscoinAddress(payDest);
@@ -2372,7 +2372,7 @@ int aliasselectpaymentcoins(const vector<unsigned char> &vchAlias, const CAmount
 			continue;  
 		if (!bSelectAll) {
 			// fee placement were ones that were almost dust outputs used for subsequent updates
-			if (coins->vout[nOut].nValue <= CWallet::GetRequiredFee(1500))
+			if (coins->vout[nOut].nValue <= 3*CWallet::GetRequiredFee(1500))
 			{
 				// alias pay doesn't include recipient, no utxo inputs used for aliaspay, for aliaspay we don't care about these small dust amounts
 				if (bNoAliasRecipient)
@@ -2642,7 +2642,7 @@ UniValue aliaspay(const UniValue& params, bool fHelp) {
 	CScript scriptPubKeyOrig;
 	CSyscoinAddress addressAlias;
 	GetAddress(theAlias, &addressAlias, scriptPubKeyOrig);
-	CreateAliasRecipient(scriptPubKeyOrig, theAlias.vchAlias, recipientPayment);	
+	CreateAliasRecipient(scriptPubKeyOrig, recipientPayment);	
 	SendMoneySyscoin(theAlias.vchAlias, vchFromString(""), strCurrency, recipient, recipientPayment, vecSend, wtx, &coinControl);
 	
 	UniValue res(UniValue::VARR);
@@ -2731,7 +2731,7 @@ UniValue aliasupdatewhitelist(const UniValue& params, bool fHelp) {
 	CRecipient recipient;
 	CreateRecipient(scriptPubKey, recipient);
 	CRecipient recipientPayment;
-	CreateAliasRecipient(scriptPubKeyOrig, copyAlias.vchAlias, recipientPayment);
+	CreateAliasRecipient(scriptPubKeyOrig, recipientPayment);
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
 	CRecipient fee;
@@ -2792,7 +2792,7 @@ UniValue aliasclearwhitelist(const UniValue& params, bool fHelp) {
 	CRecipient recipient;
 	CreateRecipient(scriptPubKey, recipient);
 	CRecipient recipientPayment;
-	CreateAliasRecipient(scriptPubKeyOrig, copyAlias.vchAlias, recipientPayment);
+	CreateAliasRecipient(scriptPubKeyOrig, recipientPayment);
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
 	CRecipient fee;
