@@ -125,7 +125,6 @@ static void secp256k1_ecmult_gen(const secp256k1_ecmult_gen_context *ctx, secp25
     secp256k1_ge add;
     secp256k1_ge_storage adds;
     secp256k1_scalar gnb;
-    int bits;
     int i, j;
     memset(&adds, 0, sizeof(adds));
     *r = ctx->initial;
@@ -133,7 +132,7 @@ static void secp256k1_ecmult_gen(const secp256k1_ecmult_gen_context *ctx, secp25
     secp256k1_scalar_add(&gnb, gn, &ctx->blind);
     add.infinity = 0;
     for (j = 0; j < 64; j++) {
-        bits = secp256k1_scalar_get_bits(&gnb, j * 4, 4);
+        const int bits = secp256k1_scalar_get_bits(&gnb, j * 4, 4);
         for (i = 0; i < 16; i++) {
             /** This uses a conditional move to avoid any secret data in array indexes.
              *   _Any_ use of secret indexes has been demonstrated to result in timing
@@ -150,7 +149,6 @@ static void secp256k1_ecmult_gen(const secp256k1_ecmult_gen_context *ctx, secp25
         secp256k1_ge_from_storage(&add, &adds);
         secp256k1_gej_add_ge(r, r, &add);
     }
-    bits = 0;
     secp256k1_ge_clear(&add);
     secp256k1_scalar_clear(&gnb);
 }
