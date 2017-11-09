@@ -312,7 +312,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	// alias registration has args size of 1 we don't care to validate it until the activation comes in with args size of 4
 	if (vvchArgs.size() <= 4)
 		return true;
-	if (fDebug)
+	if (fDebug && !dontaddtodb)
 		LogPrintf("*** ALIAS %d %d op=%s %s nOut=%d %s\n", nHeight, chainActive.Tip()->nHeight, aliasFromOp(op).c_str(), tx.GetHash().ToString().c_str(), nOut, fJustCheck ? "JUSTCHECK" : "BLOCK");
 	const COutPoint *prevOutput = NULL;
 	const CCoins *prevCoins;

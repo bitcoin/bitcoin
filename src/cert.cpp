@@ -327,7 +327,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 		LogPrintf("*Trying to add cert in coinbase transaction, skipping...");
 		return true;
 	}
-	if (fDebug)
+	if (fDebug && !dontaddtodb)
 		LogPrintf("*** CERT %d %d %s %s\n", nHeight,
 			chainActive.Tip()->nHeight, tx.GetHash().ToString().c_str(),
 			fJustCheck ? "JUSTCHECK" : "BLOCK");

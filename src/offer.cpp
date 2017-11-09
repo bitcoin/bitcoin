@@ -326,7 +326,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		return true;
 	}
 	const uint64_t &nTime = chainActive.Tip()->GetMedianTimePast();
-	if (fDebug)
+	if (fDebug && !dontaddtodb)
 		LogPrintf("*** OFFER %d %d %s %s %s %d\n", nHeight,
 			chainActive.Tip()->nHeight, tx.GetHash().ToString().c_str(),
 			fJustCheck ? "JUSTCHECK" : "BLOCK", " VVCH SIZE: ", vvchArgs.size());

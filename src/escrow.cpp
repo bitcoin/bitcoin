@@ -506,7 +506,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 	int prevAliasOp = 0;
 	bool foundAlias = false;
 	bool foundWitnessAlias = false;
-	if (fDebug)
+	if (fDebug && !dontaddtodb)
 		LogPrintf("*** ESCROW %d %d %s %s\n", nHeight,
 			chainActive.Tip()->nHeight, tx.GetHash().ToString().c_str(),
 			fJustCheck ? "JUSTCHECK" : "BLOCK");
