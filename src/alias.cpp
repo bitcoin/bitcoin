@@ -339,12 +339,6 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	{
 		theAlias.SetNull();
 	}
-	else if (!bData)
-	{
-		if(fDebug)
-			LogPrintf("CheckAliasInputs(): Null alias, skipping...\n");	
-		return true;
-	}
 	
 
 	if(fJustCheck)
@@ -564,7 +558,10 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				
 		if (op == OP_ALIAS_UPDATE)
 		{
-			if (!dbAlias.IsNull())
+			bool dbAliasNull = dbAlias.IsNull();
+			if (dbAliasNull)
+				theAlias.SetNull();
+			if (!dbAliasNull)
 			{
 				CTxDestination aliasDest;
 				if (vvchPrevArgs.size() <= 0 || vvchPrevArgs[0] != vvchArgs[0] || !prevCoins || !prevOutput || prevOutput->n >= prevCoins->vout.size() || !ExtractDestination(prevCoins->vout[prevOutput->n].scriptPubKey, aliasDest))
@@ -586,11 +583,8 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5022 - " + _("Cannot edit this alias, guid mismatch");
 					theAlias = dbAlias;
 				}
-				COfferLinkWhitelist whiteList;
-				if (theAlias.IsNull())
-					theAlias = dbAlias;
-				else
-				{
+				if (!theAlias.IsNull()) {
+					COfferLinkWhitelist whiteList;
 					// if updating whitelist, we dont allow updating any alias details
 					if (theAlias.offerWhitelist.entries.size() > 0)
 					{
@@ -655,48 +649,50 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 							theAlias = dbAlias;
 						}
 					}
-				}
-				// if the txn whitelist entry exists (meaning we want to remove or add)
-				if (whiteList.entries.size() >= 1)
-				{
-					if (whiteList.entries.size() > 20)
+
+
+					// if the txn whitelist entry exists (meaning we want to remove or add)
+					if (whiteList.entries.size() >= 1)
 					{
-						errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1094 -" + _("Too many affiliates for this whitelist, maximum 20 entries allowed");
-						theAlias.offerWhitelist.SetNull();
-					}
-					// special case we use to remove all entries
-					else if (whiteList.entries.size() == 1 && whiteList.entries.begin()->second.nDiscountPct == 127)
-					{
-						if (theAlias.offerWhitelist.entries.empty())
+						if (whiteList.entries.size() > 20)
 						{
-							errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1093 - " + _("Whitelist is already empty");
+							errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1094 -" + _("Too many affiliates for this whitelist, maximum 20 entries allowed");
+							theAlias.offerWhitelist.SetNull();
+						}
+						// special case we use to remove all entries
+						else if (whiteList.entries.size() == 1 && whiteList.entries.begin()->second.nDiscountPct == 127)
+						{
+							if (theAlias.offerWhitelist.entries.empty())
+							{
+								errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1093 - " + _("Whitelist is already empty");
+							}
+							else
+								theAlias.offerWhitelist.SetNull();
 						}
 						else
-							theAlias.offerWhitelist.SetNull();
-					}
-					else
-					{
-						for (auto const &it : whiteList.entries)
 						{
-							COfferLinkWhitelistEntry entry;
-							const COfferLinkWhitelistEntry& newEntry = it.second;
-							if (newEntry.nDiscountPct > 99) {
-								errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1094 -" + _("Whitelist discount must be between 0 and 99");
-								continue;
-							}
-							// the stored whitelist has this entry (and its the same) then we want to remove this entry
-							if (theAlias.offerWhitelist.GetLinkEntryByHash(newEntry.aliasLinkVchRand, entry) && newEntry == entry)
+							for (auto const &it : whiteList.entries)
 							{
-								theAlias.offerWhitelist.RemoveWhitelistEntry(newEntry.aliasLinkVchRand);
-							}
-							// we want to add it to the whitelist
-							else
-							{
-								if (theAlias.offerWhitelist.entries.size() < 20)
-									theAlias.offerWhitelist.PutWhitelistEntry(newEntry);
+								COfferLinkWhitelistEntry entry;
+								const COfferLinkWhitelistEntry& newEntry = it.second;
+								if (newEntry.nDiscountPct > 99) {
+									errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1094 -" + _("Whitelist discount must be between 0 and 99");
+									continue;
+								}
+								// the stored whitelist has this entry (and its the same) then we want to remove this entry
+								if (theAlias.offerWhitelist.GetLinkEntryByHash(newEntry.aliasLinkVchRand, entry) && newEntry == entry)
+								{
+									theAlias.offerWhitelist.RemoveWhitelistEntry(newEntry.aliasLinkVchRand);
+								}
+								// we want to add it to the whitelist
 								else
 								{
-									errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1094 -" + _("Too many affiliates for this whitelist, maximum 20 entries allowed");
+									if (theAlias.offerWhitelist.entries.size() < 20)
+										theAlias.offerWhitelist.PutWhitelistEntry(newEntry);
+									else
+									{
+										errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1094 -" + _("Too many affiliates for this whitelist, maximum 20 entries allowed");
+									}
 								}
 							}
 						}
@@ -717,24 +713,27 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				return true;
 			}
 		}
-		theAlias.nHeight = nHeight;
-		theAlias.txHash = tx.GetHash();
-	
-		CAliasUnprunable aliasUnprunable;
-		aliasUnprunable.vchGUID = theAlias.vchGUID;
-		aliasUnprunable.nExpireTime = theAlias.nExpireTime;
-		if (!dontaddtodb && !paliasdb->WriteAlias(aliasUnprunable, theAlias.vchAddress, theAlias, op))
+		if (!theAlias.IsNull())
 		{
-			errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5034 - " + _("Failed to write to alias DB");
-			return error(errorMessage.c_str());
+			theAlias.nHeight = nHeight;
+			theAlias.txHash = tx.GetHash();
+
+			CAliasUnprunable aliasUnprunable;
+			aliasUnprunable.vchGUID = theAlias.vchGUID;
+			aliasUnprunable.nExpireTime = theAlias.nExpireTime;
+			if (!dontaddtodb && !paliasdb->WriteAlias(aliasUnprunable, theAlias.vchAddress, theAlias, op))
+			{
+				errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5034 - " + _("Failed to write to alias DB");
+				return error(errorMessage.c_str());
+			}
+
+			if (fDebug)
+				LogPrintf(
+					"CONNECTED ALIAS: name=%s  op=%s  hash=%s  height=%d\n",
+					stringFromVch(vchAlias).c_str(),
+					aliasFromOp(op).c_str(),
+					tx.GetHash().ToString().c_str(), nHeight);
 		}
-	
-		if(fDebug)
-			LogPrintf(
-				"CONNECTED ALIAS: name=%s  op=%s  hash=%s  height=%d\n",
-				stringFromVch(vchAlias).c_str(),
-				aliasFromOp(op).c_str(),
-				tx.GetHash().ToString().c_str(), nHeight);
 	}
 
 	return true;
@@ -1597,10 +1596,11 @@ void CAliasDB::WriteAliasIndexHistory(const CAliasIndex& alias, const int &op) {
 	bson_t *insert = NULL;
 	mongoc_write_concern_t* write_concern = NULL;
 	UniValue oName(UniValue::VOBJ);
-	oName.push_back(Pair("op", aliasFromOp(op)));
+	
 	write_concern = mongoc_write_concern_new();
 	mongoc_write_concern_set_w(write_concern, MONGOC_WRITE_CONCERN_W_UNACKNOWLEDGED);
 	BuildAliasIndexerHistoryJson(alias, oName);
+	oName.push_back(Pair("op", aliasFromOp(op)));
 	insert = bson_new_from_json((unsigned char *)oName.write().c_str(), -1, &error);
 	if (!insert || !mongoc_collection_insert(aliashistory_collection, (mongoc_insert_flags_t)MONGOC_INSERT_NO_VALIDATE, insert, write_concern, &error)) {
 		LogPrintf("MONGODB ALIAS HISTORY ERROR: %s\n", error.message);
@@ -2576,8 +2576,6 @@ bool BuildAliasJson(const CAliasIndex& alias, UniValue& oName)
 }
 bool BuildAliasIndexerHistoryJson(const CAliasIndex& alias, UniValue& oName)
 {
-	bool expired = false;
-	int64_t expired_time = 0;
 	oName.push_back(Pair("_id", alias.txHash.GetHex()));
 	oName.push_back(Pair("encryption_privatekey", HexStr(alias.vchEncryptionPrivateKey)));
 	oName.push_back(Pair("encryption_publickey", HexStr(alias.vchEncryptionPublicKey)));
@@ -2593,13 +2591,6 @@ bool BuildAliasIndexerHistoryJson(const CAliasIndex& alias, UniValue& oName)
 	oName.push_back(Pair("time", nTime));
 	oName.push_back(Pair("address", EncodeBase58(alias.vchAddress)));
 	oName.push_back(Pair("acceptcerttransfers", alias.acceptCertTransfers));
-	expired_time = alias.nExpireTime;
-	if (expired_time <= chainActive.Tip()->GetMedianTimePast())
-	{
-		expired = true;
-	}
-	oName.push_back(Pair("expires_on", expired_time));
-	oName.push_back(Pair("expired", expired));
 	return true;
 }
 UniValue aliaspay(const UniValue& params, bool fHelp) {

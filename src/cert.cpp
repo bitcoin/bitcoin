@@ -128,11 +128,11 @@ void CCertDB::WriteCertIndexHistory(const CCert& cert, const int &op) {
 	bson_t *insert = NULL;
 	mongoc_write_concern_t* write_concern = NULL;
 	UniValue oName(UniValue::VOBJ);
-	oName.push_back(Pair("op", certFromOp(op)));
 	write_concern = mongoc_write_concern_new();
 	mongoc_write_concern_set_w(write_concern, MONGOC_WRITE_CONCERN_W_UNACKNOWLEDGED);
 
 	if (BuildCertIndexerHistoryJson(cert, oName)) {
+		oName.push_back(Pair("op", certFromOp(op)));
 		insert = bson_new_from_json((unsigned char *)oName.write().c_str(), -1, &error);
 		if (!insert || !mongoc_collection_insert(certhistory_collection, (mongoc_insert_flags_t)MONGOC_INSERT_NO_VALIDATE, insert, write_concern, &error)) {
 			LogPrintf("MONGODB CERT HISTORY ERROR: %s\n", error.message);
@@ -958,15 +958,6 @@ bool BuildCertIndexerHistoryJson(const CCert& cert, UniValue& oCert)
 	oCert.push_back(Pair("category", stringFromVch(cert.sCategory)));
 	oCert.push_back(Pair("alias", stringFromVch(cert.aliasTuple.first)));
 	oCert.push_back(Pair("access_flags", cert.nAccessFlags));
-	int64_t expired_time = GetCertExpiration(cert);
-	bool expired = false;
-	if (expired_time <= chainActive.Tip()->GetMedianTimePast())
-	{
-		expired = true;
-	}
-
-	oCert.push_back(Pair("expires_on", expired_time));
-	oCert.push_back(Pair("expired", expired));
 	return true;
 }
 bool BuildCertIndexerJson(const CCert& cert, UniValue& oCert)

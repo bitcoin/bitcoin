@@ -1371,11 +1371,12 @@ void COfferDB::WriteOfferIndexHistory(const COffer& offer, const int &op) {
 	else if (IsOfferOp(op))
 		serviceFromOp = offerFromOp(op);
 
-	oName.push_back(Pair("op", serviceFromOp));
+	
 	write_concern = mongoc_write_concern_new();
 	mongoc_write_concern_set_w(write_concern, MONGOC_WRITE_CONCERN_W_UNACKNOWLEDGED);
 
 	if (BuildOfferIndexerHistoryJson(offer, oName)) {
+		oName.push_back(Pair("op", serviceFromOp));
 		insert = bson_new_from_json((unsigned char *)oName.write().c_str(), -1, &error);
 		if (!insert || !mongoc_collection_insert(offerhistory_collection, (mongoc_insert_flags_t)MONGOC_INSERT_NO_VALIDATE, insert, write_concern, &error)) {
 			LogPrintf("MONGODB OFFER HISTORY ERROR: %s\n", error.message);
@@ -1533,7 +1534,6 @@ bool BuildOfferJson(const COffer& theOffer, UniValue& oOffer)
 	oOffer.push_back(Pair("alias", stringFromVch(theOffer.aliasTuple.first)));
 	oOffer.push_back(Pair("address", EncodeBase58(latestAlias.vchAddress)));
 	oOffer.push_back(Pair("offertype", offerTypeStr));
-	
 	oOffer.push_back(Pair("auction_expires_on", auctionOffer.nExpireTime));
 	oOffer.push_back(Pair("auction_reserve_price", auctionOffer.fReservePrice));
 	oOffer.push_back(Pair("auction_require_witness", auctionOffer.bRequireWitness));
@@ -1556,6 +1556,7 @@ bool BuildOfferIndexerJson(const COffer& theOffer, UniValue& oOffer)
 	oOffer.push_back(Pair("cert", stringFromVch(vchCert)));
 	oOffer.push_back(Pair("height", (int)theOffer.nHeight));
 	oOffer.push_back(Pair("category", stringFromVch(theOffer.sCategory)));
+	oOffer.push_back(Pair("title", stringFromVch(theOffer.sTitle)));
 	int nQty = theOffer.nQty;
 	string offerTypeStr = "";
 	CAuctionOffer auctionOffer;
@@ -1565,6 +1566,7 @@ bool BuildOfferIndexerJson(const COffer& theOffer, UniValue& oOffer)
 		oOffer.push_back(Pair("currency", stringFromVch(linkOffer.sCurrencyCode)));
 		oOffer.push_back(Pair("price", linkOffer.GetPrice(theOffer.nCommission)));
 		oOffer.push_back(Pair("paymentoptions", GetPaymentOptionsString(linkOffer.paymentOptions)));
+		oOffer.push_back(Pair("offer_units", linkOffer.fUnits));
 		nQty = linkOffer.nQty;
 		offerTypeStr = GetOfferTypeString(linkOffer.offerType);
 		if (IsOfferTypeInMask(linkOffer.offerType, OFFERTYPE_AUCTION))
@@ -1575,6 +1577,7 @@ bool BuildOfferIndexerJson(const COffer& theOffer, UniValue& oOffer)
 		oOffer.push_back(Pair("currency", stringFromVch(theOffer.sCurrencyCode)));
 		oOffer.push_back(Pair("price", theOffer.GetPrice()));
 		oOffer.push_back(Pair("paymentoptions", GetPaymentOptionsString(theOffer.paymentOptions)));
+		oOffer.push_back(Pair("offer_units", theOffer.fUnits));
 		offerTypeStr = GetOfferTypeString(theOffer.offerType);
 	}
 
@@ -1605,6 +1608,7 @@ bool BuildOfferIndexerHistoryJson(const COffer& theOffer, UniValue& oOffer)
 	if (!theOffer.linkOfferTuple.first.empty()) {
 		oOffer.push_back(Pair("currency", ""));
 		oOffer.push_back(Pair("price", 0));
+		oOffer.push_back(Pair("commission", theOffer.nCommission));
 		oOffer.push_back(Pair("paymentoptions", ""));
 		nQty = 0;
 		offerTypeStr = "";
@@ -1614,6 +1618,7 @@ bool BuildOfferIndexerHistoryJson(const COffer& theOffer, UniValue& oOffer)
 	{
 		oOffer.push_back(Pair("currency", stringFromVch(theOffer.sCurrencyCode)));
 		oOffer.push_back(Pair("price", theOffer.GetPrice()));
+		oOffer.push_back(Pair("commission", 0));
 		oOffer.push_back(Pair("paymentoptions", GetPaymentOptionsString(theOffer.paymentOptions)));
 		offerTypeStr = GetOfferTypeString(theOffer.offerType);
 	}
@@ -1625,6 +1630,8 @@ bool BuildOfferIndexerHistoryJson(const COffer& theOffer, UniValue& oOffer)
 	oOffer.push_back(Pair("offertype", offerTypeStr));
 	oOffer.push_back(Pair("auction_expires_on", auctionOffer.nExpireTime));
 	oOffer.push_back(Pair("auction_reserve_price", auctionOffer.fReservePrice));
+	oOffer.push_back(Pair("auction_require_witness", auctionOffer.bRequireWitness));
+	oOffer.push_back(Pair("auction_deposit", auctionOffer.fDepositPercentage));
 	return true;
 }
 std::string GetOfferTypeString(const uint32_t &offerType)
