@@ -136,7 +136,6 @@ bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType, const bool w
     if (!Solver(scriptPubKey, whichType, vSolutions))
         return false;
 
-
     if (whichType == TX_MULTISIG)
     {
         unsigned char m = vSolutions.front()[0];

@@ -431,7 +431,7 @@ std::string SecureMsgGetHelpString(bool showDebug)
     strUsage += HelpMessageOpt("-smsgscanchain", _("Scan the block chain for public key addresses on startup. (default: false)"));
     strUsage += HelpMessageOpt("-smsgscanincoming", _("Scan incoming blocks for public key addresses. (default: false)"));
     strUsage += HelpMessageOpt("-smsgnotify=<cmd>", _("Execute command when a message is received. (%s in cmd is replaced by receiving address)"));
-    strUsage += HelpMessageOpt("-smsgsaddnewkeys", _("Scan for incoming transactions on new wallet keys. (default: false)"));
+    strUsage += HelpMessageOpt("-smsgsaddnewkeys", _("Scan for incoming messages on new wallet keys. (default: false)"));
 
     return strUsage;
 };
