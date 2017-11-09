@@ -2,6 +2,7 @@ prefix=@prefix@
 exec_prefix=@exec_prefix@
 libdir=@libdir@
 includedir=@includedir@
+version=@version@
 
 Name: @PACKAGE_NAME@ consensus library
 Description: Library for the Bitcoin consensus protocol.
