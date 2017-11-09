@@ -309,6 +309,9 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		LogPrintf("*Trying to add alias in coinbase transaction, skipping...");
 		return true;
 	}
+	// alias registration has args size of 1 we don't care to validate it until the activation comes in with args size of 4
+	if (vvchArgs.size() <= 4)
+		return true;
 	if (fDebug)
 		LogPrintf("*** ALIAS %d %d op=%s %s nOut=%d %s\n", nHeight, chainActive.Tip()->nHeight, aliasFromOp(op).c_str(), tx.GetHash().ToString().c_str(), nOut, fJustCheck ? "JUSTCHECK" : "BLOCK");
 	const COutPoint *prevOutput = NULL;
@@ -332,9 +335,6 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	{
 		theAlias.SetNull();
 	}
-	// alias registration has args size of 1 we don't care to validate it until the activation comes in with args size of 4
-	if (vvchArgs.size() <= 4)
-		return true;
 	if(fJustCheck)
 	{
 		
@@ -987,7 +987,7 @@ bool GetAliasOfTx(const CTransaction& tx, vector<unsigned char>& name) {
 	int op;
 	int nOut;
 
-	bool good = DecodeAliasTx(tx, op, nOut, vvchArgs, false) || DecodeAliasTx(tx, op, nOut, vvchArgs, true);
+	bool good = DecodeAliasTx(tx, op, nOut, vvchArgs);
 	if (!good)
 		return error("GetAliasOfTx() : could not decode a syscoin tx");
 
@@ -1012,16 +1012,16 @@ bool DecodeAndParseAliasTx(const CTransaction& tx, int& op, int& nOut,
 		vector<vector<unsigned char> >& vvch)
 {
 	CAliasIndex alias;
-	bool decode = DecodeAliasTx(tx, op, nOut, vvch, false);
+	bool decode = DecodeAliasTx(tx, op, nOut, vvch);
 	if(decode)
 	{
 		bool parse = alias.UnserializeFromTx(tx);
 		return decode && parse;
 	}
-	return DecodeAliasTx(tx, op, nOut, vvch, true);
+	return false;
 }
 bool DecodeAliasTx(const CTransaction& tx, int& op, int& nOut,
-		vector<vector<unsigned char> >& vvch, bool payment) {
+		vector<vector<unsigned char> >& vvch) {
 	bool found = false;
 
 
@@ -1137,7 +1137,6 @@ CAmount GetDataFee(const CScript& scriptPubKey)
 	recipient = recp;
 	CTxOut txout(0,	recipient.scriptPubKey);
     size_t nSize = txout.GetSerializeSize(SER_DISK,0)+148u;
-	int nFeePerByte = getFeePerByte(PAYMENTOPTION_SYS);
 	nFee = CWallet::GetMinimumFee(nSize, nTxConfirmTarget, mempool);
 	recipient.nAmount = nFee;
 	return recipient.nAmount;

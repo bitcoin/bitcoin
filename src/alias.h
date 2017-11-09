@@ -300,7 +300,7 @@ bool GetAlias(const std::vector<unsigned char> &vchAlias, CAliasIndex& alias);
 bool CheckParam(const UniValue& params, const unsigned int index);
 int IndexOfAliasOutput(const CTransaction& tx);
 bool GetAliasOfTx(const CTransaction& tx, std::vector<unsigned char>& name);
-bool DecodeAliasTx(const CTransaction& tx, int& op, int& nOut, std::vector<std::vector<unsigned char> >& vvch, bool payment=false);
+bool DecodeAliasTx(const CTransaction& tx, int& op, int& nOut, std::vector<std::vector<unsigned char> >& vvch);
 bool DecodeAndParseAliasTx(const CTransaction& tx, int& op, int& nOut, std::vector<std::vector<unsigned char> >& vvch);
 bool DecodeAndParseSyscoinTx(const CTransaction& tx, int& op, int& nOut, std::vector<std::vector<unsigned char> >& vvch);
 bool DecodeAliasScript(const CScript& script, int& op,
