@@ -108,7 +108,7 @@ void WalletTxToJSON(const CWalletTx& wtx, UniValue& entry)
     std::string rbfStatus = "no";
     if (confirms <= 0) {
         LOCK(mempool.cs);
-        RBFTransactionState rbfState = IsRBFOptIn(wtx, mempool);
+        RBFTransactionState rbfState = IsRBFOptIn(*wtx.tx, mempool);
         if (rbfState == RBF_TRANSACTIONSTATE_UNKNOWN)
             rbfStatus = "unknown";
         else if (rbfState == RBF_TRANSACTIONSTATE_REPLACEABLE_BIP125)
@@ -2051,7 +2051,7 @@ UniValue gettransaction(const JSONRPCRequest& request)
     ListTransactions(pwallet, wtx, "*", 0, false, details, filter);
     entry.push_back(Pair("details", details));
 
-    std::string strHex = EncodeHexTx(static_cast<CTransaction>(wtx), RPCSerializationFlags());
+    std::string strHex = EncodeHexTx(*wtx.tx, RPCSerializationFlags());
     entry.push_back(Pair("hex", strHex));
 
     return entry;
