@@ -456,13 +456,13 @@ bool ResetBlockFailureFlags(CBlockIndex *pindex);
 extern CChain chainActive;
 
 /** Global variable that points to the coins database (protected by cs_main) */
-extern CCoinsViewDB *pcoinsdbview;
+extern std::unique_ptr<CCoinsViewDB> pcoinsdbview;
 
 /** Global variable that points to the active CCoinsView (protected by cs_main) */
-extern CCoinsViewCache *pcoinsTip;
+extern std::unique_ptr<CCoinsViewCache> pcoinsTip;
 
 /** Global variable that points to the active block tree (protected by cs_main) */
-extern CBlockTreeDB *pblocktree;
+extern std::unique_ptr<CBlockTreeDB> pblocktree;
 
 /**
  * Return the spend height, which is one more than the inputs.GetBestBlock().

@@ -62,15 +62,15 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName)
         fPrintToDebugLog = false; // don't want to write to debug.log file
         fCheckBlockIndex = true;
         SelectParams(chainName);
-        evoDb = new CEvoDB(1 << 20, true, true);
-        deterministicMNManager = new CDeterministicMNManager(*evoDb);
+        evoDb.reset(new CEvoDB(1 << 20, true, true));
+        deterministicMNManager.reset(new CDeterministicMNManager(*evoDb));
         noui_connect();
 }
 
 BasicTestingSetup::~BasicTestingSetup()
 {
-        delete deterministicMNManager;
-        delete evoDb;
+        deterministicMNManager.reset();
+        evoDb.reset();
 
         ECC_Stop();
 }
@@ -93,10 +93,10 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
         mempool.setSanityCheck(1.0);
         g_connman = std::unique_ptr<CConnman>(new CConnman(0x1337, 0x1337)); // Deterministic randomness for tests.
         connman = g_connman.get();
-        pblocktree = new CBlockTreeDB(1 << 20, true);
-        pcoinsdbview = new CCoinsViewDB(1 << 23, true);
+        pblocktree.reset(new CBlockTreeDB(1 << 20, true));
+        pcoinsdbview.reset(new CCoinsViewDB(1 << 23, true));
         llmq::InitLLMQSystem(*evoDb, nullptr, true);
-        pcoinsTip = new CCoinsViewCache(pcoinsdbview);
+        pcoinsTip.reset(new CCoinsViewCache(pcoinsdbview.get()));
         if (!LoadGenesisBlock(chainparams)) {
             throw std::runtime_error("LoadGenesisBlock failed.");
         }
@@ -122,10 +122,10 @@ TestingSetup::~TestingSetup()
         g_connman.reset();
         peerLogic.reset();
         UnloadBlockIndex();
-        delete pcoinsTip;
+        pcoinsTip.reset();
         llmq::DestroyLLMQSystem();
-        delete pcoinsdbview;
-        delete pblocktree;
+        pcoinsdbview.reset();
+        pblocktree.reset();
         fs::remove_all(pathTemp);
 }
 

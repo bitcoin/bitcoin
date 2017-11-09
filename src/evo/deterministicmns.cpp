@@ -21,7 +21,7 @@
 static const std::string DB_LIST_SNAPSHOT = "dmn_S";
 static const std::string DB_LIST_DIFF = "dmn_D";
 
-CDeterministicMNManager* deterministicMNManager;
+std::unique_ptr<CDeterministicMNManager> deterministicMNManager;
 
 std::string CDeterministicMNState::ToString() const
 {

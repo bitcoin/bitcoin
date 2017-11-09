@@ -76,13 +76,12 @@ void CDBEnv::EnvShutdown()
 
 void CDBEnv::Reset()
 {
-    delete dbenv;
-    dbenv = new DbEnv(DB_CXX_NO_EXCEPTIONS);
+    dbenv.reset(new DbEnv(DB_CXX_NO_EXCEPTIONS));
     fDbEnvInit = false;
     fMockDb = false;
 }
 
-CDBEnv::CDBEnv() : dbenv(nullptr)
+CDBEnv::CDBEnv()
 {
     Reset();
 }
@@ -90,8 +89,6 @@ CDBEnv::CDBEnv() : dbenv(nullptr)
 CDBEnv::~CDBEnv()
 {
     EnvShutdown();
-    delete dbenv;
-    dbenv = nullptr;
 }
 
 void CDBEnv::Close()
@@ -183,7 +180,7 @@ CDBEnv::VerifyResult CDBEnv::Verify(const std::string& strFile, recoverFunc_type
     LOCK(cs_db);
     assert(mapFileUseCount.count(strFile) == 0);
 
-    Db db(dbenv, 0);
+    Db db(dbenv.get(), 0);
     int result = db.verify(strFile.c_str(), nullptr, nullptr, 0);
     if (result == 0)
         return VERIFY_OK;
@@ -226,7 +223,7 @@ bool CDB::Recover(const std::string& filename, void *callbackDataIn, bool (*reco
     }
     LogPrintf("Salvage(aggressive) found %u records\n", salvagedData.size());
 
-    std::unique_ptr<Db> pdbCopy(new Db(bitdb.dbenv, 0));
+    std::unique_ptr<Db> pdbCopy = MakeUnique<Db>(bitdb.dbenv.get(), 0);
     int ret = pdbCopy->open(nullptr,               // Txn pointer
                             filename.c_str(),   // Filename
                             "main",             // Logical db name
@@ -335,7 +332,7 @@ bool CDBEnv::Salvage(const std::string& strFile, bool fAggressive, std::vector<C
 
     std::stringstream strDump;
 
-    Db db(dbenv, 0);
+    Db db(dbenv.get(), 0);
     int result = db.verify(strFile.c_str(), nullptr, &strDump, flags);
     if (result == DB_VERIFY_BAD) {
         LogPrintf("CDBEnv::Salvage: Database salvage found errors, all data may not be recoverable.\n");
@@ -417,7 +414,7 @@ CDB::CDB(CWalletDBWrapper& dbw, const char* pszMode, bool fFlushOnCloseIn) : pdb
         pdb = env->mapDb[strFilename];
         if (pdb == nullptr) {
             int ret;
-            std::unique_ptr<Db> pdb_temp(new Db(env->dbenv, 0));
+            std::unique_ptr<Db> pdb_temp = MakeUnique<Db>(env->dbenv.get(), 0);
 
             bool fMockDb = env->IsMock();
             if (fMockDb) {
@@ -526,7 +523,7 @@ bool CDB::Rewrite(CWalletDBWrapper& dbw, const char* pszSkip)
                 std::string strFileRes = strFile + ".rewrite";
                 { // surround usage of db with extra {}
                     CDB db(dbw, "r");
-                    Db* pdbCopy = new Db(env->dbenv, 0);
+                    std::unique_ptr<Db> pdbCopy = MakeUnique<Db>(env->dbenv.get(), 0);
 
                     int ret = pdbCopy->open(nullptr,               // Txn pointer
                                             strFileRes.c_str(), // Filename
@@ -575,13 +572,12 @@ bool CDB::Rewrite(CWalletDBWrapper& dbw, const char* pszSkip)
                     } else {
                         pdbCopy->close(0);
                     }
-                    delete pdbCopy;
                 }
                 if (fSuccess) {
-                    Db dbA(env->dbenv, 0);
+                    Db dbA(env->dbenv.get(), 0);
                     if (dbA.remove(strFile.c_str(), nullptr, 0))
                         fSuccess = false;
-                    Db dbB(env->dbenv, 0);
+                    Db dbB(env->dbenv.get(), 0);
                     if (dbB.rename(strFileRes.c_str(), nullptr, strFile.c_str(), 0))
                         fSuccess = false;
                 }
