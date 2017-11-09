@@ -2299,7 +2299,7 @@ UniValue aliasbalance(const UniValue& params, bool fHelp)
 			continue;
 		if(DecodeAliasScript(coins->vout[nOut].scriptPubKey, op, vvch) && vvch[0] != theAlias.vchAlias)
 			continue;
-		// some dust sized outputs are reserved to pay for fees only using aliasselectpaymentcoins (with bSelectFeePlacementOnly set to true)
+		// some dust sized outputs are reserved to pay for fees only using aliasselectpaymentcoins (with bSelectFeePlacement set to true)
 		if (coins->vout[nOut].nValue <= 3*CWallet::GetRequiredFee(1500))
 			continue;
 
@@ -2318,7 +2318,7 @@ UniValue aliasbalance(const UniValue& params, bool fHelp)
 	res.push_back(Pair("balance", ValueFromAmount(nAmount)));
     return  res;
 }
-int aliasselectpaymentcoins(const vector<unsigned char> &vchAlias, const CAmount &nAmount, vector<COutPoint>& outPoints, bool& bIsFunded, CAmount &nRequiredAmount, bool bSelectFeePlacementOnly, bool bSelectAll, bool bNoAliasRecipient)
+int aliasselectpaymentcoins(const vector<unsigned char> &vchAlias, const CAmount &nAmount, vector<COutPoint>& outPoints, bool& bIsFunded, CAmount &nRequiredAmount, bool bSelectFeePlacement, bool bSelectAll, bool bNoAliasRecipient)
 {
 	LOCK2(cs_main, mempool.cs);
 	CCoinsViewCache view(pcoinsTip);
@@ -2373,12 +2373,15 @@ int aliasselectpaymentcoins(const vector<unsigned char> &vchAlias, const CAmount
 				// alias pay doesn't include recipient, no utxo inputs used for aliaspay, for aliaspay we don't care about these small dust amounts
 				if (bNoAliasRecipient)
 					continue;
+				// if this output is a fee placement because its of low value and we aren't selecting fee outputs then continue
+				else if (!bSelectFeePlacement)
+					continue;
 				unspentUTXOs++;
 				if (unspentUTXOs >= MAX_ALIAS_UPDATES_PER_BLOCK) {
 					continue;
 				}
 			}
-			else if (bSelectFeePlacementOnly)
+			else if (bSelectFeePlacement)
 				continue;
 		}
 		

@@ -605,7 +605,7 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
 		if (nTotal > 0 || transferAlias)
 		{
 			vector<COutPoint> outPoints;
-			// select all if alias transferred
+			// select all if alias transferred otherwise just get enough outputs to fund nTotal
 			aliasselectpaymentcoins(vchAlias, nTotal, outPoints, bIsAliasPaymentFunded, nRequiredPaymentFunds, false, transferAlias, aliasRecipient.scriptPubKey.empty());
 			if (!bIsAliasPaymentFunded || transferAlias)
 			{
