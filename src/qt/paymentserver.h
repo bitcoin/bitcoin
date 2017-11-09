@@ -81,6 +81,9 @@ public:
     explicit PaymentServer(QObject* parent, bool startLocalServer = true);
     ~PaymentServer();
 
+    // OptionsModel is used for getting proxy settings and display unit
+    void setOptionsModel(OptionsModel *optionsModel);
+
 #ifdef ENABLE_BIP70
     // Load root certificate authorities. Pass nullptr (default)
     // to read from the file specified in the -rootcertificates setting,
@@ -91,12 +94,7 @@ public:
 
     // Return certificate store
     static X509_STORE* getCertStore();
-#endif
 
-    // OptionsModel is used for getting proxy settings and display unit
-    void setOptionsModel(OptionsModel *optionsModel);
-
-#ifdef ENABLE_BIP70
     // Verify that the payment request network matches the client network
     static bool verifyNetwork(const payments::PaymentDetails& requestDetails);
     // Verify if the payment request is expired
@@ -111,26 +109,26 @@ Q_SIGNALS:
     // Fired when a valid payment request is received
     void receivedPaymentRequest(SendCoinsRecipient);
 
+    // Fired when a message should be reported to the user
+    void message(const QString &title, const QString &message, unsigned int style);
+
 #ifdef ENABLE_BIP70
     // Fired when a valid PaymentACK is received
     void receivedPaymentACK(const QString &paymentACKMsg);
 #endif
-
-    // Fired when a message should be reported to the user
-    void message(const QString &title, const QString &message, unsigned int style);
 
 public Q_SLOTS:
     // Signal this when the main window's UI is ready
     // to display payment requests to the user
     void uiReady();
 
+    // Handle an incoming URI, URI with local file scheme or file
+    void handleURIOrFile(const QString& s);
+
 #ifdef ENABLE_BIP70
     // Submit Payment message to a merchant, get back PaymentACK:
     void fetchPaymentACK(CWallet* wallet, const SendCoinsRecipient& recipient, QByteArray transaction);
 #endif
-
-    // Handle an incoming URI, URI with local file scheme or file
-    void handleURIOrFile(const QString& s);
 
 private Q_SLOTS:
     void handleURIConnection();
@@ -146,6 +144,10 @@ protected:
     bool eventFilter(QObject *object, QEvent *event);
 
 private:
+    bool saveURIs;                      // true during startup
+    QLocalServer* uriServer;
+    OptionsModel *optionsModel;
+
 #ifdef ENABLE_BIP70
     static bool readPaymentRequestFromFile(const QString& filename, PaymentRequestPlus& request);
     bool processPaymentRequest(const PaymentRequestPlus& request, SendCoinsRecipient& recipient);
@@ -153,16 +155,8 @@ private:
 
     // Setup networking
     void initNetManager();
-#endif
-
-    bool saveURIs;                      // true during startup
-    QLocalServer* uriServer;
-
-#ifdef ENABLE_BIP70
     QNetworkAccessManager* netManager;  // Used to fetch payment requests
 #endif
-
-    OptionsModel *optionsModel;
 };
 
 #endif // BITCOIN_QT_PAYMENTSERVER_H
