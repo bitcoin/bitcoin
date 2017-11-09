@@ -2398,8 +2398,14 @@ int aliasselectpaymentcoins(const vector<unsigned char> &vchAlias, const CAmount
 			{
 				outPoints.push_back(COutPoint(txid, nOut));
 				nCurrentAmount += coins->vout[nOut].nValue;
-				if(nCurrentAmount >= nDesiredAmount)
+				if (nCurrentAmount >= nDesiredAmount) {
 					bIsFunded = true;
+					if (!bSelectAll)
+					{
+						nRequiredAmount = 0;
+						return numResults - (int)outPoints.size();
+					}
+				}
 			}
 		}		
     }
