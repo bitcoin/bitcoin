@@ -61,6 +61,7 @@ QT_FORMS_UI = \
   qt/forms/addressbookpage.ui \
   qt/forms/askpassphrasedialog.ui \
   qt/forms/editaddressdialog.ui \
+  qt/forms/coincontroldialog.ui \
   qt/forms/optionsdialog.ui \
   qt/forms/overviewpage.ui \
   qt/forms/qrcodedialog.ui \
@@ -82,9 +83,14 @@ QT_MOC_CPP = \
   qt/moc_bitcoingui.cpp \
   qt/moc_bitcoinunits.cpp \
   qt/moc_clientmodel.cpp \
+  qt/moc_coincontroldialog.cpp \
+  qt/moc_coincontroltreewidget.cpp \
   qt/moc_csvmodelwriter.cpp \
   qt/moc_editaddressdialog.cpp \
   qt/moc_guiutil.cpp \
+  qt/moc_mintingview.cpp \
+  qt/moc_mintingtablemodel.cpp \
+  qt/moc_mintingfilterproxy.cpp \
   qt/moc_monitoreddatamapper.cpp \
   qt/moc_notificator.cpp \
   qt/moc_optionsdialog.cpp \
@@ -131,12 +137,17 @@ PPCOIN_QT_H = \
   qt/bitcoingui.h \
   qt/bitcoinunits.h \
   qt/clientmodel.h \
+  qt/coincontroldialog.h \
+  qt/coincontroltreewidget.h \
   qt/csvmodelwriter.h \
   qt/editaddressdialog.h \
   qt/guiconstants.h \
   qt/guiutil.h \
   qt/macdockiconhandler.h \
   qt/macnotificationhandler.h \
+  qt/mintingview.h \
+  qt/mintingtablemodel.h \
+  qt/mintingfilterproxy.h \
   qt/monitoreddatamapper.h \
   qt/notificator.h \
   qt/optionsdialog.h \
@@ -163,7 +174,7 @@ PPCOIN_QT_H = \
   qt/walletview.h
 
 RES_ICONS = \
-  qt/res/icons/ppcoin.png \
+  qt/res/icons/peercoin.png \
   qt/res/icons/address-book.png \
   qt/res/icons/quit.png \
   qt/res/icons/send.png \
@@ -203,7 +214,7 @@ RES_ICONS = \
   qt/res/icons/filesave.png \
   qt/res/icons/qrcode.png \
   qt/res/icons/debugwindow.png \
-  qt/res/icons/ppcoin.ico \
+  qt/res/icons/peercoin.ico \
   qt/res/icons/bitcoin_testnet.ico
 
 PPCOIN_QT_CPP = \
@@ -231,9 +242,14 @@ PPCOIN_QT_CPP += \
   qt/addressbookpage.cpp \
   qt/addresstablemodel.cpp \
   qt/askpassphrasedialog.cpp \
+  qt/coincontroldialog.cpp \
+  qt/coincontroltreewidget.cpp \
   qt/editaddressdialog.cpp \
   qt/overviewpage.cpp \
   qt/paymentserver.cpp \
+  qt/mintingview.cpp \
+  qt/mintingtablemodel.cpp \
+  qt/mintingfilterproxy.cpp \
   qt/sendcoinsdialog.cpp \
   qt/sendcoinsentry.cpp \
   qt/signverifymessagedialog.cpp \

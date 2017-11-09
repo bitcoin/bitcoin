@@ -37,7 +37,7 @@ bin_PROGRAMS =
 TESTS =
 
 if BUILD_BITCOIND
-  bin_PROGRAMS += ppcoind
+  bin_PROGRAMS += peercoind
 endif
 
 if BUILD_BITCOIN_CLI
@@ -131,6 +131,9 @@ libppcoin_wallet_a_SOURCES = \
   db.cpp \
   rpcdump.cpp \
   rpcmining.cpp \
+  rpcminting.cpp \
+  script.cpp \
+  kernelrecord.cpp \
   wallet.cpp \
   walletdb.cpp \
   rpcwallet.cpp \
@@ -141,7 +144,6 @@ libppcoin_common_a_SOURCES = \
   key.cpp \
   netbase.cpp \
   protocol.cpp \
-  script.cpp \
   rpcprotocol.cpp \
   sync.cpp \
   util.cpp \
@@ -155,8 +157,8 @@ libppcoin_cli_a_SOURCES = \
 nodist_libppcoin_common_a_SOURCES = $(top_srcdir)/src/obj/build.h
 #
 
-# ppcoind binary #
-ppcoind_LDADD = \
+# peercoind binary #
+peercoind_LDADD = \
   libppcoin_server.a \
   libppcoin_cli.a \
   libppcoin_common.a \
@@ -164,17 +166,17 @@ ppcoind_LDADD = \
   $(LIBMEMENV) \
   $(BOOST_LIBS)
 if ENABLE_WALLET
-ppcoind_LDADD += libppcoin_wallet.a
+peercoind_LDADD += libppcoin_wallet.a
 endif
-ppcoind_SOURCES = bitcoind.cpp
-ppcoind_LDFLAGS = $(AM_LDFLAGS)
+peercoind_SOURCES = bitcoind.cpp
+peercoind_LDFLAGS = $(AM_LDFLAGS)
 
 if TARGET_WINDOWS
-ppcoind_SOURCES += bitcoind-res.rc
+peercoind_SOURCES += bitcoind-res.rc
 endif
 
 AM_CPPFLAGS += $(BDB_CPPFLAGS)
-ppcoind_LDADD += $(BDB_LIBS)
+peercoind_LDADD += $(BDB_LIBS)
 
 # bitcoin-cli binary #
 peercoin_cli_LDADD = libppcoin_cli.a libppcoin_common.a $(BOOST_LIBS)

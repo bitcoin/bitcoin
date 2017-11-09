@@ -123,7 +123,6 @@ int main(int argc, char *argv[])
 
 #if QT_VERSION < 0x050000
     // Internal string conversion is all UTF-8
-#if QT_VERSION < 0x050000
     QTextCodec::setCodecForTr(QTextCodec::codecForName("UTF-8"));
     QTextCodec::setCodecForCStrings(QTextCodec::codecForTr());
 #endif
