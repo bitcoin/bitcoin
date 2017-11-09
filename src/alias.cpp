@@ -549,8 +549,10 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		{
 			bool dbAliasNull = dbAlias.IsNull();
 			
-			if (dbAliasNull)
+			if (dbAliasNull) {
 				theAlias.SetNull();
+				theAliasNull = true;
+			}
 			if (!dbAliasNull)
 			{
 				CTxDestination aliasDest;
