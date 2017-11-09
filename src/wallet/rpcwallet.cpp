@@ -559,7 +559,8 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
 	{
 		BOOST_FOREACH(const COutPoint& outpoint, outPoints)
 		{
-			coinControl->Select(outpoint);
+			if (!coinControl->IsSelected(outpoint))
+				coinControl->Select(outpoint);
 		}
 	}
 
@@ -614,12 +615,14 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
 					throw runtime_error("SYSCOIN_RPC_ERROR ERRCODE: 9000 - " + _("The Syscoin Alias does not have enough funds to complete this transaction. You need to deposit the following amount of coins in order for the transaction to succeed: ") + ValueFromAmount(nRequiredFeePlaceholderFunds).write());
 				BOOST_FOREACH(const COutPoint& outpoint, feeOutPoints)
 				{
-					coinControl->Select(outpoint);
+					if(!coinControl->IsSelected(outpoint))
+						coinControl->Select(outpoint);
 				}
 			}
 			BOOST_FOREACH(const COutPoint& outpoint, outPoints)
 			{
-				coinControl->Select(outpoint);
+				if (!coinControl->IsSelected(outpoint))
+					coinControl->Select(outpoint);
 			}
 		}
 	}
