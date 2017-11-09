@@ -10,6 +10,17 @@ Setup:
   receive inv's (omitted from testing description below, this is our control).
   Second node is used for creating reorgs.
 
+test_null_locators
+==================
+
+Sends two getheaders requests with null locator values. First request's hashstop
+value refers to validated block, while second request's hashstop value refers to
+a block which hasn't been validated. Verifies only the first request returns
+headers.
+
+test_nonnull_locators
+=====================
+
 Part 1: No headers announcements before "sendheaders"
 a. node mines a block [expect: inv]
    send getdata for the block [expect: block]
@@ -221,6 +232,29 @@ class SendHeadersTest(BitcoinTestFramework):
         inv_node.sync_with_ping()
         test_node.sync_with_ping()
 
+        self.test_null_locators(test_node)
+        self.test_nonnull_locators(test_node, inv_node)
+
+    def test_null_locators(self, test_node):
+        tip = self.nodes[0].getblockheader(self.nodes[0].generate(1)[0])
+        tip_hash = int(tip["hash"], 16)
+
+        self.log.info("Verify getheaders with null locator and valid hashstop returns headers.")
+        test_node.clear_last_announcement()
+        test_node.get_headers(locator=[], hashstop=tip_hash)
+        assert_equal(test_node.check_last_announcement(headers=[tip_hash]), True)
+
+        self.log.info("Verify getheaders with null locator and invalid hashstop does not return headers.")
+        block = create_block(int(tip["hash"], 16), create_coinbase(tip["height"] + 1), tip["mediantime"] + 1)
+        block.solve()
+        test_node.send_header_for_blocks([block])
+        test_node.clear_last_announcement()
+        test_node.get_headers(locator=[], hashstop=int(block.hash, 16))
+        test_node.sync_with_ping()
+        assert_equal(test_node.block_announced, False)
+        test_node.send_message(msg_block(block))
+
+    def test_nonnull_locators(self, test_node, inv_node):
         tip = int(self.nodes[0].getbestblockhash(), 16)
 
         # PART 1
