@@ -36,6 +36,33 @@ bool CBasicKeyStore::AddKeyPubKey(const CKey& key, const CPubKey &pubkey)
     return true;
 }
 
+bool CBasicKeyStore::HaveKey(const CKeyID &address) const
+{
+    LOCK(cs_KeyStore);
+    return mapKeys.count(address) > 0;
+}
+
+std::set<CKeyID> CBasicKeyStore::GetKeys() const
+{
+    LOCK(cs_KeyStore);
+    std::set<CKeyID> set_address;
+    for (const auto& mi : mapKeys) {
+        set_address.insert(mi.first);
+    }
+    return set_address;
+}
+
+bool CBasicKeyStore::GetKey(const CKeyID &address, CKey &keyOut) const
+{
+    LOCK(cs_KeyStore);
+    KeyMap::const_iterator mi = mapKeys.find(address);
+    if (mi != mapKeys.end()) {
+        keyOut = mi->second;
+        return true;
+    }
+    return false;
+}
+
 bool CBasicKeyStore::AddCScript(const CScript& redeemScript)
 {
     if (redeemScript.size() > MAX_SCRIPT_ELEMENT_SIZE)
