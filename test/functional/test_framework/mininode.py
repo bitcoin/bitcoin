@@ -37,7 +37,7 @@ from threading import RLock, Thread
 from test_framework.siphash import siphash256
 from test_framework.util import hex_str_to_bytes, bytes_to_hex_str, wait_until
 
-BIP0031_VERSION = 60000
+MIN_VERSION_SUPPORTED = 60001
 MY_VERSION = 70014  # past bip-31 for ping/pong
 MY_SUBVERSION = b"/python-mininode-tester:0.0.3/"
 MY_RELAY = 1 # from version 70001 onwards, fRelay should be appended to version messages (BIP37)
@@ -666,81 +666,6 @@ class CBlock(CBlockHeader):
                time.ctime(self.nTime), self.nBits, self.nNonce, repr(self.vtx))
 
 
-class CUnsignedAlert():
-    def __init__(self):
-        self.nVersion = 1
-        self.nRelayUntil = 0
-        self.nExpiration = 0
-        self.nID = 0
-        self.nCancel = 0
-        self.setCancel = []
-        self.nMinVer = 0
-        self.nMaxVer = 0
-        self.setSubVer = []
-        self.nPriority = 0
-        self.strComment = b""
-        self.strStatusBar = b""
-        self.strReserved = b""
-
-    def deserialize(self, f):
-        self.nVersion = struct.unpack("<i", f.read(4))[0]
-        self.nRelayUntil = struct.unpack("<q", f.read(8))[0]
-        self.nExpiration = struct.unpack("<q", f.read(8))[0]
-        self.nID = struct.unpack("<i", f.read(4))[0]
-        self.nCancel = struct.unpack("<i", f.read(4))[0]
-        self.setCancel = deser_int_vector(f)
-        self.nMinVer = struct.unpack("<i", f.read(4))[0]
-        self.nMaxVer = struct.unpack("<i", f.read(4))[0]
-        self.setSubVer = deser_string_vector(f)
-        self.nPriority = struct.unpack("<i", f.read(4))[0]
-        self.strComment = deser_string(f)
-        self.strStatusBar = deser_string(f)
-        self.strReserved = deser_string(f)
-
-    def serialize(self):
-        r = b""
-        r += struct.pack("<i", self.nVersion)
-        r += struct.pack("<q", self.nRelayUntil)
-        r += struct.pack("<q", self.nExpiration)
-        r += struct.pack("<i", self.nID)
-        r += struct.pack("<i", self.nCancel)
-        r += ser_int_vector(self.setCancel)
-        r += struct.pack("<i", self.nMinVer)
-        r += struct.pack("<i", self.nMaxVer)
-        r += ser_string_vector(self.setSubVer)
-        r += struct.pack("<i", self.nPriority)
-        r += ser_string(self.strComment)
-        r += ser_string(self.strStatusBar)
-        r += ser_string(self.strReserved)
-        return r
-
-    def __repr__(self):
-        return "CUnsignedAlert(nVersion %d, nRelayUntil %d, nExpiration %d, nID %d, nCancel %d, nMinVer %d, nMaxVer %d, nPriority %d, strComment %s, strStatusBar %s, strReserved %s)" \
-            % (self.nVersion, self.nRelayUntil, self.nExpiration, self.nID,
-               self.nCancel, self.nMinVer, self.nMaxVer, self.nPriority,
-               self.strComment, self.strStatusBar, self.strReserved)
-
-
-class CAlert():
-    def __init__(self):
-        self.vchMsg = b""
-        self.vchSig = b""
-
-    def deserialize(self, f):
-        self.vchMsg = deser_string(f)
-        self.vchSig = deser_string(f)
-
-    def serialize(self):
-        r = b""
-        r += ser_string(self.vchMsg)
-        r += ser_string(self.vchSig)
-        return r
-
-    def __repr__(self):
-        return "CAlert(vchMsg.sz %d, vchSig.sz %d)" \
-            % (len(self.vchMsg), len(self.vchSig))
-
-
 class PrefilledTransaction():
     def __init__(self, index=0, tx = None):
         self.index = index
@@ -1044,25 +969,6 @@ class msg_addr():
         return "msg_addr(addrs=%s)" % (repr(self.addrs))
 
 
-class msg_alert():
-    command = b"alert"
-
-    def __init__(self):
-        self.alert = CAlert()
-
-    def deserialize(self, f):
-        self.alert = CAlert()
-        self.alert.deserialize(f)
-
-    def serialize(self):
-        r = b""
-        r += self.alert.serialize()
-        return r
-
-    def __repr__(self):
-        return "msg_alert(alert=%s)" % (repr(self.alert), )
-
-
 class msg_inv():
     command = b"inv"
 
@@ -1193,22 +1099,6 @@ class msg_getaddr():
 
     def __repr__(self):
         return "msg_getaddr()"
-
-
-class msg_ping_prebip31():
-    command = b"ping"
-
-    def __init__(self):
-        pass
-
-    def deserialize(self, f):
-        pass
-
-    def serialize(self):
-        return b""
-
-    def __repr__(self):
-        return "msg_ping() (pre-bip31)"
 
 
 class msg_ping():
@@ -1458,9 +1348,7 @@ class NodeConnCB():
     """Callback and helper functions for P2P connection to a bitcoind node.
 
     Individual testcases should subclass this and override the on_* methods
-    if they want to alter message handling behaviour.
-    """
-
+    if they want to alter message handling behaviour."""
     def __init__(self):
         # Track whether we have a P2P connection open to the node
         self.connected = False
@@ -1474,25 +1362,13 @@ class NodeConnCB():
         # A count of the number of ping messages we've sent to the node
         self.ping_counter = 1
 
-        # deliver_sleep_time is helpful for debugging race conditions in p2p
-        # tests; it causes message delivery to sleep for the specified time
-        # before acquiring the global lock and delivering the next message.
-        self.deliver_sleep_time = None
-
     # Message receiving methods
 
     def deliver(self, conn, message):
         """Receive message and dispatch message to appropriate callback.
 
         We keep a count of how many of each message type has been received
-        and the most recent message of each type.
-
-        Optionally waits for deliver_sleep_time before dispatching message.
-        """
-
-        deliver_sleep = self.get_deliver_sleep_time()
-        if deliver_sleep is not None:
-            time.sleep(deliver_sleep)
+        and the most recent message of each type."""
         with mininode_lock:
             try:
                 command = message.command.decode('ascii')
@@ -1503,10 +1379,6 @@ class NodeConnCB():
                 print("ERROR delivering %s (%s)" % (repr(message),
                                                     sys.exc_info()[0]))
                 raise
-
-    def get_deliver_sleep_time(self):
-        with mininode_lock:
-            return self.deliver_sleep_time
 
     # Callback methods. Can be overridden by subclasses in individual test
     # cases to provide custom message handling behaviour.
@@ -1519,7 +1391,6 @@ class NodeConnCB():
         self.connection = None
 
     def on_addr(self, conn, message): pass
-    def on_alert(self, conn, message): pass
     def on_block(self, conn, message): pass
     def on_blocktxn(self, conn, message): pass
     def on_cmpctblock(self, conn, message): pass
@@ -1546,19 +1417,15 @@ class NodeConnCB():
             conn.send_message(want)
 
     def on_ping(self, conn, message):
-        if conn.ver_send > BIP0031_VERSION:
-            conn.send_message(msg_pong(message.nonce))
+        conn.send_message(msg_pong(message.nonce))
 
     def on_verack(self, conn, message):
         conn.ver_recv = conn.ver_send
         self.verack_received = True
 
     def on_version(self, conn, message):
-        if message.nVersion >= 209:
-            conn.send_message(msg_verack())
-        conn.ver_send = min(MY_VERSION, message.nVersion)
-        if message.nVersion < 209:
-            conn.ver_recv = conn.ver_send
+        assert message.nVersion >= MIN_VERSION_SUPPORTED, "Version {} received. Test framework only supports versions greater than {}".format(message.nVersion, MIN_VERSION_SUPPORTED)
+        conn.send_message(msg_verack())
         conn.nServices = message.nServices
 
     # Connection helper methods
@@ -1616,14 +1483,14 @@ class NodeConnCB():
         wait_until(test_function, timeout=timeout, lock=mininode_lock)
         self.ping_counter += 1
 
-# The actual NodeConn class
-# This class provides an interface for a p2p connection to a specified node
 class NodeConn(asyncore.dispatcher):
+    """The actual NodeConn class
+
+    This class provides an interface for a p2p connection to a specified node."""
     messagemap = {
         b"version": msg_version,
         b"verack": msg_verack,
         b"addr": msg_addr,
-        b"alert": msg_alert,
         b"inv": msg_inv,
         b"getdata": msg_getdata,
         b"getblocks": msg_getblocks,
@@ -1740,40 +1607,27 @@ class NodeConn(asyncore.dispatcher):
                     return
                 if self.recvbuf[:4] != self.MAGIC_BYTES[self.network]:
                     raise ValueError("got garbage %s" % repr(self.recvbuf))
-                if self.ver_recv < 209:
-                    if len(self.recvbuf) < 4 + 12 + 4:
-                        return
-                    command = self.recvbuf[4:4+12].split(b"\x00", 1)[0]
-                    msglen = struct.unpack("<i", self.recvbuf[4+12:4+12+4])[0]
-                    checksum = None
-                    if len(self.recvbuf) < 4 + 12 + 4 + msglen:
-                        return
-                    msg = self.recvbuf[4+12+4:4+12+4+msglen]
-                    self.recvbuf = self.recvbuf[4+12+4+msglen:]
-                else:
-                    if len(self.recvbuf) < 4 + 12 + 4 + 4:
-                        return
-                    command = self.recvbuf[4:4+12].split(b"\x00", 1)[0]
-                    msglen = struct.unpack("<i", self.recvbuf[4+12:4+12+4])[0]
-                    checksum = self.recvbuf[4+12+4:4+12+4+4]
-                    if len(self.recvbuf) < 4 + 12 + 4 + 4 + msglen:
-                        return
-                    msg = self.recvbuf[4+12+4+4:4+12+4+4+msglen]
-                    th = sha256(msg)
-                    h = sha256(th)
-                    if checksum != h[:4]:
-                        raise ValueError("got bad checksum " + repr(self.recvbuf))
-                    self.recvbuf = self.recvbuf[4+12+4+4+msglen:]
-                if command in self.messagemap:
-                    f = BytesIO(msg)
-                    t = self.messagemap[command]()
-                    t.deserialize(f)
-                    self.got_message(t)
-                else:
-                    logger.warning("Received unknown command from %s:%d: '%s' %s" % (self.dstaddr, self.dstport, command, repr(msg)))
-                    raise ValueError("Unknown command: '%s'" % (command))
+                if len(self.recvbuf) < 4 + 12 + 4 + 4:
+                    return
+                command = self.recvbuf[4:4+12].split(b"\x00", 1)[0]
+                msglen = struct.unpack("<i", self.recvbuf[4+12:4+12+4])[0]
+                checksum = self.recvbuf[4+12+4:4+12+4+4]
+                if len(self.recvbuf) < 4 + 12 + 4 + 4 + msglen:
+                    return
+                msg = self.recvbuf[4+12+4+4:4+12+4+4+msglen]
+                th = sha256(msg)
+                h = sha256(th)
+                if checksum != h[:4]:
+                    raise ValueError("got bad checksum " + repr(self.recvbuf))
+                self.recvbuf = self.recvbuf[4+12+4+4+msglen:]
+                if command not in self.messagemap:
+                    raise ValueError("Received unknown command from %s:%d: '%s' %s" % (self.dstaddr, self.dstport, command, repr(msg)))
+                f = BytesIO(msg)
+                t = self.messagemap[command]()
+                t.deserialize(f)
+                self.got_message(t)
         except Exception as e:
-            logger.exception('got_data:', repr(e))
+            logger.exception('Error reading message:', repr(e))
             raise
 
     def send_message(self, message, pushbuf=False):
@@ -1786,10 +1640,9 @@ class NodeConn(asyncore.dispatcher):
         tmsg += command
         tmsg += b"\x00" * (12 - len(command))
         tmsg += struct.pack("<I", len(data))
-        if self.ver_send >= 209:
-            th = sha256(data)
-            h = sha256(th)
-            tmsg += h[:4]
+        th = sha256(data)
+        h = sha256(th)
+        tmsg += h[:4]
         tmsg += data
         with mininode_lock:
             if (len(self.sendbuf) == 0 and not pushbuf):
@@ -1803,9 +1656,6 @@ class NodeConn(asyncore.dispatcher):
             self.last_sent = time.time()
 
     def got_message(self, message):
-        if message.command == b"version":
-            if message.nVersion <= BIP0031_VERSION:
-                self.messagemap[b'ping'] = msg_ping_prebip31
         if self.last_sent + 30 * 60 < time.time():
             self.send_message(self.messagemap[b'ping']())
         self._log_message("receive", message)
@@ -1838,13 +1688,3 @@ class NetworkThread(Thread):
             [ obj.handle_close() for obj in disconnected ]
             asyncore.loop(0.1, use_poll=True, map=mininode_socket_map, count=1)
         logger.debug("Network thread closing")
-
-
-# An exception we can raise if we detect a potential disconnect
-# (p2p or rpc) before the test is complete
-class EarlyDisconnectError(Exception):
-    def __init__(self, value):
-        self.value = value
-
-    def __str__(self):
-        return repr(self.value)
