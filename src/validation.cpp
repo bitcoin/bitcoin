@@ -559,7 +559,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, const CCoinsViewCache& inputs, b
 			if (fDebug && !errorMessage.empty())
 				LogPrintf("%s\n", errorMessage.c_str());
 		}
-		if (good)
+		if (good && errorMessage.empty())
 		{
 			if (DecodeCertTx(tx, op, nOut, vvchArgs))
 			{
