@@ -661,7 +661,7 @@ bool WalletModel::transactionCanBeBumped(uint256 hash) const
 {
     LOCK2(cs_main, wallet->cs_wallet);
     const CWalletTx *wtx = wallet->GetWalletTx(hash);
-    return wtx && SignalsOptInRBF(*wtx) && !wtx->mapValue.count("replaced_by_txid");
+    return wtx && SignalsOptInRBF(*(wtx->tx)) && !wtx->mapValue.count("replaced_by_txid");
 }
 
 bool WalletModel::bumpFee(uint256 hash)
