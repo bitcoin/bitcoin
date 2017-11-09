@@ -4,13 +4,18 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <boost/assign/list_of.hpp>
-
+#include "base58.h"
+#include "rpcserver.h"
+#include "init.h"
+#include "net.h"
+#include "netbase.h"
+#include "util.h"
 #include "wallet.h"
 #include "walletdb.h"
-#include "bitcoinrpc.h"
 #include "init.h"
 #include "base58.h"
+
+#include <boost/assign/list_of.hpp>
 
 using namespace std;
 using namespace boost;
@@ -91,7 +96,7 @@ Value getinfo(const Array& params, bool fHelp)
     obj.push_back(Pair("keypoolsize",   pwalletMain->GetKeyPoolSize()));
     obj.push_back(Pair("paytxfee",      ValueFromAmount(nTransactionFee)));
     if (pwalletMain->IsCrypted())
-        obj.push_back(Pair("unlocked_until", (boost::int64_t)nWalletUnlockTime / 1000));
+        obj.push_back(Pair("unlocked_until", (boost::int64_t)nWalletUnlockTime));
     obj.push_back(Pair("errors",        GetWarnings("statusbar")));
 #ifdef TESTING
     obj.push_back(Pair("time",          DateTimeStrFormat(GetAdjustedTime())));
@@ -1278,7 +1283,6 @@ Value keypoolrefill(const Array& params, bool fHelp)
 
     return Value::null;
 }
-
 
 void ThreadTopUpKeyPool(void* parg)
 {

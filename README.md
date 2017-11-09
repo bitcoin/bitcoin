@@ -15,8 +15,32 @@ Peercoin Official Development Repo
 [Forum](https://talk.peercoin.net),
 [Intro & Important Links](https://talk.peercoin.net/t/what-is-peercoin-intro-important-links/2889)
 
-Repo Guidelines
-================================
+Testing
+-------
+
+Testing and code review is the bottleneck for development; we get more pull
+requests than we can review and test. Please be patient and help out, and
+remember this is a security-critical project where any mistake might cost people
+lots of money.
+
+### Automated Testing
+
+Developers are strongly encouraged to write unit tests for new code, and to
+submit new unit tests for old code.
+
+Unit tests can be compiled and run (assuming they weren't disabled in configure) with:
+  make check
+
+Every pull request is built for both Windows and Linux on a dedicated server,
+and unit and sanity tests are automatically run. The binaries produced may be
+used for manual QA testing — a link to them will appear in a comment on the
+pull request posted by [BitcoinPullTester](https://github.com/BitcoinPullTester). See https://github.com/TheBlueMatt/test-scripts
+for the build/test scripts.
+
+### Manual Quality Assurance (QA) Testing
+
+Large changes should have a test plan, and should be tested by somebody other
+than the developer who wrote the code.
 
 * Developers work in their own forks, then submit pull requests when they think their feature or bug fix is ready.
 * If it is a simple/trivial/non-controversial change, then one of the development team members simply pulls it.

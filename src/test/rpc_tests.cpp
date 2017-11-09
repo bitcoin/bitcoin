@@ -1,10 +1,14 @@
+#include "rpcserver.h"
+#include "rpcclient.h"
+
+#include "base58.h"
+
 #include <boost/algorithm/string.hpp>
 #include <boost/foreach.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "base58.h"
 #include "util.h"
-#include "bitcoinrpc.h"
 
 using namespace std;
 using namespace json_spirit;
