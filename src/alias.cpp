@@ -1110,11 +1110,11 @@ void CreateAliasRecipient(const CScript& scriptPubKeyDest, CRecipient& recipient
 	recipient = recp;
 	CTxOut txout(0,	recipient.scriptPubKey);
 	size_t nSize = txout.GetSerializeSize(SER_DISK,0)+148u;
-	// create alias payment utxo max 1500 bytes worth of fees
-	// create utxo min 1500 bytes worth of fees
-	if(nSize < 1500)
-		nSize = 1500;
-	nFee = 3*CWallet::GetRequiredFee(nSize);
+	// create alias payment utxo max 1000 bytes worth of fees
+	// create utxo min 1kb worth of fees
+	if(nSize < 1000)
+		nSize = 1000;
+	nFee = CWallet::GetMinimumFee(nSize, nTxConfirmTarget, mempool);
 	recipient.nAmount = nFee;
 }
 void CreateFeeRecipient(CScript& scriptPubKey, const vector<unsigned char>& data, CRecipient& recipient)
@@ -2299,8 +2299,8 @@ UniValue aliasbalance(const UniValue& params, bool fHelp)
 			continue;
 		if(DecodeAliasScript(coins->vout[nOut].scriptPubKey, op, vvch) && vvch[0] != theAlias.vchAlias)
 			continue;
-		// some dust sized outputs are reserved to pay for fees only using aliasselectpaymentcoins (with bSelectFeePlacement set to true)
-		if (coins->vout[nOut].nValue <= 3*CWallet::GetRequiredFee(1500))
+		// some smaller sized outputs are reserved to pay for fees only using aliasselectpaymentcoins (with bSelectFeePlacement set to true)
+		if (coins->vout[nOut].nValue <= 0.01*COIN)
 			continue;
 
 		destaddy = CSyscoinAddress(payDest);
@@ -2367,8 +2367,8 @@ int aliasselectpaymentcoins(const vector<unsigned char> &vchAlias, const CAmount
 		if (DecodeAliasScript(coins->vout[nOut].scriptPubKey, op, vvch))
 			continue;  
 		if (!bSelectAll) {
-			// fee placement were ones that were almost dust outputs used for subsequent updates
-			if (coins->vout[nOut].nValue <= 3*CWallet::GetRequiredFee(1500))
+			// fee placement were ones that were smaller outputs used for subsequent updates
+			if (coins->vout[nOut].nValue <= 0.01*COIN)
 			{
 				// alias pay doesn't include recipient, no utxo inputs used for aliaspay, for aliaspay we don't care about these small dust amounts
 				if (bNoAliasRecipient)
