@@ -332,20 +332,15 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	{
 		theAlias.SetNull();
 	}
-	
-
+	// alias registration has args size of 1 we don't care to validate it until the activation comes in with args size of 4
+	if (vvchArgs.size() <= 4)
+		return true;
 	if(fJustCheck)
 	{
 		
 		if(vvchArgs.size() != 4)
 		{
 			errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5001 - " + _("Alias arguments incorrect size");
-			return error(errorMessage.c_str());
-		}
-		
-		else if(vvchArgs.size() <= 0 || vvchArgs.size() > 4)
-		{
-			errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5002 - " + _("Alias payment arguments incorrect size");
 			return error(errorMessage.c_str());
 		}
 		
