@@ -789,9 +789,6 @@ public:
         pwalletdbEncryption = nullptr;
     }
 
-    // NO_THREAD_SAFETY_ANALYSIS: Intentionally setting
-    // nOrderPosNext/nTimeFirstKey/nWalletVersion/nWalletMaxVersion without
-    // holding cs_wallet.
     void SetNull()
     {
         {
