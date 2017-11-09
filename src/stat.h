@@ -6,8 +6,10 @@
 #define STAT_H
 
 #include <boost/asio.hpp>
+#include <boost/asio/steady_timer.hpp>
 #include <boost/bind.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
+#include <chrono>
 // c++11 #include <type_traits>
 #include "univalue/include/univalue.h"
 
@@ -34,7 +36,7 @@ typedef std::map<CStatKey, CStatBase *> CStatMap;
 
 extern CStatMap statistics;
 extern boost::asio::io_service stat_io_service;
-extern boost::posix_time::milliseconds statMinInterval;
+extern std::chrono::milliseconds statMinInterval;
 
 template <typename NUM>
 void statAverage(NUM &tally, const NUM &cur, unsigned int sampleCounts)
@@ -68,6 +70,8 @@ public:
     virtual UniValue GetNow() = 0; // Returns the current value of this statistic
     virtual UniValue GetTotal() = 0; // Returns the cumulative value of this statistic
     virtual UniValue GetSeries(const std::string &name, int count) = 0; // Returns the historical or series data
+    // Returns the historical or series data along with timestamp
+    virtual UniValue GetSeriesTime(const std::string &name, int count) = 0;
 };
 
 template <class DataType, class RecordType = DataType>
@@ -143,6 +147,10 @@ public:
     {
         return NullUniValue; // Has no series data
     }
+    virtual UniValue GetSeriesTime(const std::string &name, int count)
+    {
+        return NullUniValue; // Has no series data
+    }
 
     virtual ~CStat()
     {
@@ -170,24 +178,25 @@ enum
     STATISTICS_SAMPLES = 300,
 };
 
-
 template <class DataType, class RecordType = DataType>
 class CStatHistory : public CStat<DataType, RecordType>
 {
 protected:
     unsigned int op;
-    boost::asio::deadline_timer timer;
+    boost::asio::steady_timer timer;
     RecordType history[STATISTICS_NUM_RANGES][STATISTICS_SAMPLES];
+    int64_t historyTime[STATISTICS_NUM_RANGES][STATISTICS_SAMPLES];
     int loc[STATISTICS_NUM_RANGES];
     int len[STATISTICS_NUM_RANGES];
     uint64_t timerCount;
+    std::chrono::steady_clock::time_point timerStartSteady;
     unsigned int sampleCount;
     RecordType total;
 
 public:
     CStatHistory() : CStat<DataType, RecordType>(), op(STAT_OP_SUM | STAT_KEEP_COUNT), timer(stat_io_service)
     {
-        Clear();
+        Clear(false);
     }
     CStatHistory(const char *name, unsigned int operation = STAT_OP_SUM)
         : CStat<DataType, RecordType>(name), op(operation), timer(stat_io_service)
@@ -215,7 +224,7 @@ public:
         Clear();
     }
 
-    void Clear(void)
+    void Clear(bool fStart = true)
     {
         timerCount = 0;
         sampleCount = 0;
@@ -227,13 +236,16 @@ public:
             for (int j = 0; j < STATISTICS_SAMPLES; j++)
             {
                 history[i][j] = RecordType();
+                historyTime[i][j] = 0;
             }
         total = RecordType();
         this->value = RecordType();
-        Start();
+
+        if (fStart)
+            Start();
     }
 
-    virtual ~CStatHistory() {}
+    virtual ~CStatHistory() { Stop(); }
     CStatHistory &operator<<(const DataType &rhs)
     {
         if (op & STAT_INDIVIDUAL)
@@ -271,13 +283,19 @@ public:
     void Start()
     {
         if (!(op & STAT_INDIVIDUAL))
+        {
+            timerStartSteady = std::chrono::steady_clock::now();
+            timerCount = 0;
             wait();
+        }
     }
 
     void Stop()
     {
-        if (!op & STAT_INDIVIDUAL)
+        if (!(op & STAT_INDIVIDUAL))
+        {
             timer.cancel();
+        }
     }
 
     int Series(int series, DataType *array, int len)
@@ -338,11 +356,59 @@ public:
         int pos = loc[series] - 1 + ago;
         if (pos < 0)
             pos += STATISTICS_SAMPLES;
+        assert(pos < STATISTICS_SAMPLES);
         return history[series][pos];
+    }
+
+    virtual UniValue GetSeriesTime(const std::string &name, int count)
+    {
+        for (int series = 0; series < STATISTICS_NUM_RANGES; series++)
+        {
+            if (name == sampleNames[series])
+            {
+                UniValue data(UniValue::VARR);
+                UniValue times(UniValue::VARR);
+                UniValue ret(UniValue::VARR);
+                if (count < 0)
+                    count = 0;
+                if (count > len[series])
+                    count = len[series];
+                for (int i = -1 * (count - 1); i <= 0; i++)
+                {
+                    const RecordType &sample = History(series, i);
+                    const int64_t &sample_time = HistoryTime(series, i);
+                    data.push_back((UniValue)sample);
+                    times.push_back((UniValue)sample_time);
+                }
+                ret.push_back(data);
+                ret.push_back(times);
+                return ret;
+            }
+        }
+        return NullUniValue; // No series of this name
+    }
+
+    // 0 is latest, then pass a negative number for prior
+    const int64_t &HistoryTime(int series, int ago)
+    {
+        assert(ago <= 0);
+        assert(series < STATISTICS_NUM_RANGES);
+        assert(-1 * ago <= STATISTICS_SAMPLES);
+        int pos = loc[series] - 1 + ago;
+        if (pos < 0)
+            pos += STATISTICS_SAMPLES;
+        assert(pos < STATISTICS_SAMPLES);
+        assert(series >= 0);
+        assert(pos >= 0);
+        return historyTime[series][pos];
     }
 
     void timeout(const boost::system::error_code &e)
     {
+        if (e == boost::asio::error::operation_aborted)
+        {
+            return;
+        }
         if (e)
             return;
 
@@ -360,7 +426,11 @@ public:
         if ((op & STAT_KEEP_COUNT) == 0)
             sampleCount = 0;
 
+        int64_t cur_time = GetTimeMillis();
+        assert(loc[0] < STATISTICS_SAMPLES);
+        assert(loc[0] >= 0);
         history[0][loc[0]] = samples[0];
+        historyTime[0][loc[0]] = cur_time;
         loc[0]++;
         len[0]++;
         if (loc[0] >= STATISTICS_SAMPLES)
@@ -391,7 +461,6 @@ public:
             {
                 int start = loc[i];
                 RecordType accumulator = RecordType();
-
                 // First time in the loop we need to assign
                 start--;
                 if (start < 0)
@@ -418,10 +487,18 @@ public:
                     }
                 }
                 // All done accumulating.  Now store the data in the proper history field -- its going in the next
+
                 // series.
                 if (op & STAT_OP_AVE)
                     accumulator /= ((DataType)operateSampleCount[i]);
+                assert(i + 1 < STATISTICS_NUM_RANGES);
+                assert(loc[i + 1] < STATISTICS_SAMPLES);
+                assert(start < STATISTICS_SAMPLES);
+                assert(start >= 0);
+                assert(loc[i + 1] >= 0);
                 history[i + 1][loc[i + 1]] = accumulator;
+                // times for accumulated statistics indicate the beginning of the interval
+                historyTime[i + 1][loc[i + 1]] = historyTime[i][start];
                 loc[i + 1]++;
                 len[i + 1]++;
                 if (loc[i + 1] >= STATISTICS_SAMPLES)
@@ -437,7 +514,10 @@ public:
 protected:
     void wait()
     {
-        timer.expires_from_now(statMinInterval);
+        // to account for drift we keep checking back against the start time.
+        std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
+        auto next = std::chrono::milliseconds((timerCount + 1) * statMinInterval) + timerStartSteady - now;
+        timer.expires_from_now(next);
         timer.async_wait(boost::bind(&CStatHistory::timeout, this, boost::asio::placeholders::error));
     }
 };

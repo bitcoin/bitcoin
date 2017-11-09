@@ -23,8 +23,9 @@ class WalletModel;
 class CCoinControl;
 class CTxMemPool;
 
-namespace Ui {
-    class CoinControlDialog;
+namespace Ui
+{
+class CoinControlDialog;
 }
 
 #define ASYMP_UTF8 "\xE2\x89\x88"
@@ -40,7 +41,7 @@ public:
     void setModel(WalletModel *model);
 
     // static because also called from sendcoinsdialog
-    static void updateLabels(WalletModel*, QDialog*);
+    static void updateLabels(WalletModel *, QDialog *);
     static QString getPriorityLabel(double dPriority, double mempoolEstimatePriority);
 
     static QList<CAmount> payAmounts;
@@ -124,9 +125,9 @@ private Q_SLOTS:
     void clipboardChange();
     void radioTreeMode(bool);
     void radioListMode(bool);
-    void viewItemChanged(QTreeWidgetItem*, int);
+    void viewItemChanged(QTreeWidgetItem *, int);
     void headerSectionClicked(int);
-    void buttonBoxClicked(QAbstractButton*);
+    void buttonBoxClicked(QAbstractButton *);
     void buttonSelectAllClicked();
     void updateLabelLocked();
 };

@@ -33,12 +33,12 @@ extern bool IsTxOpReturnInvalid(const CTransaction &tx);
 extern bool UpdateBUIP055Globals(CBlockIndex *activeTip);
 
 // Return true if this transaction can only be committed post-fork
-extern bool IsTxBUIP055Only(const CTxMemPoolEntry& tx);
+extern bool IsTxBUIP055Only(const CTxMemPoolEntry &tx);
 
 // It is not possible to provably determine whether an arbitrary script signs using the old or new sighash type
 // without executing the previous output and input scripts.  But we can make a good guess by assuming that
 // these are standard scripts.
-bool IsTxProbablyNewSigHash(const CTransaction& tx);
+bool IsTxProbablyNewSigHash(const CTransaction &tx);
 
 extern CTweak<uint64_t> miningForkTime;
 extern CTweak<uint64_t> miningForkEB;

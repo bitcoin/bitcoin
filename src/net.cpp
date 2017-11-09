@@ -67,6 +67,8 @@
 #endif
 #endif
 
+extern std::atomic<bool> fRescan;
+
 using namespace std;
 
 namespace
@@ -539,7 +541,7 @@ bool CNode::ReceiveMsgBytes(const char *pch, unsigned int nBytes)
     {
         // get current incomplete message, or create a new one
         if (vRecvMsg.empty() || vRecvMsg.back().complete())
-            vRecvMsg.push_back(CNetMessage(Params().MessageStart(), SER_NETWORK, nRecvVersion));
+            vRecvMsg.push_back(CNetMessage(GetMagic(Params()), SER_NETWORK, nRecvVersion));
 
         CNetMessage &msg = vRecvMsg.back();
 
@@ -589,9 +591,12 @@ bool CNode::ReceiveMsgBytes(const char *pch, unsigned int nBytes)
                     strCommand == NetMsgType::XTHINBLOCK || strCommand == NetMsgType::THINBLOCK ||
                     strCommand == NetMsgType::XBLOCKTX || strCommand == NetMsgType::GET_XBLOCKTX)
                 {
-                    vRecvMsg.push_front(msg);
-                    vRecvMsg.pop_back();
-                    LogPrint("thin", "Receive Queue: pushed %s to the front of the queue\n", strCommand);
+                    // Move the this last message to the front of the queue.
+                    std::rotate(vRecvMsg.begin(), vRecvMsg.end() - 1, vRecvMsg.end());
+
+                    std::string strFirstMsgCommand = vRecvMsg[0].hdr.GetCommand();
+                    DbgAssert(strFirstMsgCommand == strCommand, );
+                    LogPrint("thin", "Receive Queue: pushed %s to the front of the queue\n", strFirstMsgCommand);
                 }
             }
             // BU: end
@@ -883,6 +888,10 @@ static bool AttemptToEvictConnection(bool fPreferNewConnection)
 
 static void AcceptConnection(const ListenSocket &hListenSocket)
 {
+    // If a wallet rescan has started then do not accept any more connections until the rescan has completed.
+    if (fRescan)
+        return;
+
     struct sockaddr_storage sockaddr;
     socklen_t len = sizeof(sockaddr);
     SOCKET hSocket = accept(hListenSocket.socket, (struct sockaddr *)&sockaddr, &len);
@@ -2783,6 +2792,7 @@ CNode::CNode(SOCKET hSocketIn, const CAddress &addrIn, const std::string &addrNa
     fUsesCashMagic = false;
     nMinPingUsecTime = std::numeric_limits<int64_t>::max();
     thinBlockWaitingForTxns = -1; // BUIP010 Xtreme Thinblocks
+    nXthinBloomfilterSize = 0;
     addrFromPort = 0; // BU
     nLocalThinBlockBytes = 0;
 
@@ -2897,7 +2907,7 @@ void CNode::BeginMessage(const char *pszCommand) EXCLUSIVE_LOCK_FUNCTION(cs_vSen
 {
     ENTER_CRITICAL_SECTION(cs_vSend);
     assert(ssSend.size() == 0);
-    ssSend << CMessageHeader(Params().MessageStart(), pszCommand, 0);
+    ssSend << CMessageHeader(GetMagic(Params()), pszCommand, 0);
     LogPrint("net", "sending: %s ", SanitizeString(pszCommand));
     currentCommand = pszCommand;
 }

@@ -7,8 +7,8 @@
 #define BITCOIN_QT_OPTIONSDIALOG_H
 
 #include <QDialog>
-#include <QValidator>
 #include <QIntValidator>
+#include <QValidator>
 
 class OptionsModel;
 class QValidatedLineEdit;
@@ -42,10 +42,10 @@ class OptionsDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit OptionsDialog(QWidget* parent, bool enableWallet);
+    explicit OptionsDialog(QWidget *parent, bool enableWallet);
     ~OptionsDialog();
 
-    void setModel(OptionsModel* model);
+    void setModel(OptionsModel *model);
     void setMapper();
 
 private Q_SLOTS:

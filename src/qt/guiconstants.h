@@ -62,9 +62,11 @@ static const int MAX_URI_LENGTH = 255;
 #define SPINNER_FRAMES 36
 
 #define QAPP_ORG_NAME "BitcoinUnlimited"
+#define QAPP_ORG_NAME_LEGACY "Bitcoin"
 #define QAPP_ORG_DOMAIN "bitcoinunlimited.info"
 #define QAPP_APP_NAME_DEFAULT "Bitcoin-Qt"
 #define QAPP_APP_NAME_TESTNET "Bitcoin-Qt-testnet"
-#define QAPP_APP_NAME_NOLNET "Bitcoin-Qt-nolimit"   // BU
+#define QAPP_APP_NAME_NOLNET "Bitcoin-Qt-nolimit" // BU
+#define QAPP_APP_NAME_BUCASH "Bitcoin-Qt-BUcash"
 
 #endif // BITCOIN_QT_GUICONSTANTS_H

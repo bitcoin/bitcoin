@@ -42,12 +42,15 @@ extern CCriticalSection cs_orphancache; // from main.h
 extern CRequestManager requester;
 
 // Any ping < 25 ms is good
-unsigned int ACCEPTABLE_PING_USEC = 25*1000;
+unsigned int ACCEPTABLE_PING_USEC = 25 * 1000;
 
 // When should I request an object from someone else (in microseconds)
 unsigned int MIN_TX_REQUEST_RETRY_INTERVAL = DEFAULT_MIN_TX_REQUEST_RETRY_INTERVAL;
+unsigned int txReqRetryInterval = MIN_TX_REQUEST_RETRY_INTERVAL;
 // When should I request a block from someone else (in microseconds)
 unsigned int MIN_BLK_REQUEST_RETRY_INTERVAL = DEFAULT_MIN_BLK_REQUEST_RETRY_INTERVAL;
+unsigned int blkReqRetryInterval = MIN_BLK_REQUEST_RETRY_INTERVAL;
+
 
 // defined in main.cpp.  should be moved into a utilities file but want to make rebasing easier
 extern bool CanDirectFetch(const Consensus::Params &consensusParams);
@@ -90,7 +93,7 @@ void CRequestManager::cleanup(OdMap::iterator &itemIt)
         if (node)
         {
             i->clear();
-            //LogPrint("req", "ReqMgr: %s cleanup - removed ref to %d count %d.\n", item.obj.ToString(), node->GetId(),
+            // LogPrint("req", "ReqMgr: %s cleanup - removed ref to %d count %d.\n", item.obj.ToString(), node->GetId(),
             //    node->GetRefCount());
             node->Release();
         }
@@ -149,7 +152,7 @@ void CRequestManager::AskFor(const CInv &obj, CNode *from, unsigned int priority
         data.priority = max(priority, data.priority);
         if (data.AddSource(from))
         {
-            //LogPrint("blk", "%s available at %s\n", obj.ToString().c_str(), from->addrName.c_str());
+            // LogPrint("blk", "%s available at %s\n", obj.ToString().c_str(), from->addrName.c_str());
         }
     }
     else
@@ -335,7 +338,7 @@ bool CUnknownObj::AddSource(CNode *from)
         availableFrom.push_back(req);
         return true;
     }
-  return false;
+    return false;
 }
 
 bool RequestBlock(CNode *pfrom, CInv obj)
@@ -356,9 +359,10 @@ bool RequestBlock(CNode *pfrom, CInv obj)
     if (IsChainNearlySyncd() || chainParams.NetworkIDString() == "regtest")
     {
         BlockMap::iterator idxIt = mapBlockIndex.find(obj.hash);
-        if (idxIt == mapBlockIndex.end())  // only request if we don't already have the header
+        if (idxIt == mapBlockIndex.end()) // only request if we don't already have the header
         {
-            LogPrint("net", "getheaders (%d) %s to peer=%d\n", pindexBestHeader->nHeight, obj.hash.ToString(), pfrom->id);
+            LogPrint(
+                "net", "getheaders (%d) %s to peer=%d\n", pindexBestHeader->nHeight, obj.hash.ToString(), pfrom->id);
             pfrom->PushMessage(NetMsgType::GETHEADERS, chainActive.GetLocator(pindexBestHeader), obj.hash);
         }
     }
@@ -386,7 +390,7 @@ bool RequestBlock(CNode *pfrom, CInv obj)
                              mi != mapOrphanTransactions.end(); ++mi)
                             vOrphanHashes.push_back((*mi).first);
                     }
-                    BuildSeededBloomFilter(filterMemPool, vOrphanHashes, inv2.hash);
+                    BuildSeededBloomFilter(filterMemPool, vOrphanHashes, inv2.hash, pfrom);
                     ss << inv2;
                     ss << filterMemPool;
                     MarkBlockAsInFlight(pfrom->GetId(), obj.hash, chainParams.GetConsensus());
@@ -413,7 +417,7 @@ bool RequestBlock(CNode *pfrom, CInv obj)
                              mi != mapOrphanTransactions.end(); ++mi)
                             vOrphanHashes.push_back((*mi).first);
                     }
-                    BuildSeededBloomFilter(filterMemPool, vOrphanHashes, inv2.hash);
+                    BuildSeededBloomFilter(filterMemPool, vOrphanHashes, inv2.hash, pfrom);
                     ss << inv2;
                     ss << filterMemPool;
                     pfrom->PushMessage(NetMsgType::GET_XTHIN, ss);
@@ -538,7 +542,7 @@ void CRequestManager::SendRequests()
                     item.outstandingReqs++;
                     int64_t then = item.lastRequestTime;
                     item.lastRequestTime = now;
-                    LEAVE_CRITICAL_SECTION(cs_objDownloader);  // item and itemIter are now invalid
+                    LEAVE_CRITICAL_SECTION(cs_objDownloader); // item and itemIter are now invalid
                     bool reqblkResult = RequestBlock(next.node, obj);
                     ENTER_CRITICAL_SECTION(cs_objDownloader);
                     if (!reqblkResult)
@@ -546,7 +550,7 @@ void CRequestManager::SendRequests()
                         // having released cs_objDownloader, item and itemiter may be invalid.
                         // So in the rare case that we could not request the block we need to
                         // find the item again (if it exists) and set the tracking back to what it was
-                        itemIter =  mapBlkInfo.find(obj.hash);
+                        itemIter = mapBlkInfo.find(obj.hash);
                         if (itemIter != mapBlkInfo.end())
                         {
                             item = itemIter->second;
@@ -564,7 +568,7 @@ void CRequestManager::SendRequests()
                     // Instead we'll forget about it -- the node is already popped of of the available list so now we'll
                     // release our reference.
                     LOCK(cs_vNodes);
-                    //LogPrint("req", "ReqMgr: %s removed block ref to %d count %d\n", obj.ToString(),
+                    // LogPrint("req", "ReqMgr: %s removed block ref to %d count %d\n", obj.ToString(),
                     //    next.node->GetId(), next.node->GetRefCount());
                     next.node->Release();
                     next.node = NULL;
@@ -653,14 +657,14 @@ void CRequestManager::SendRequests()
 
                             item.outstandingReqs++;
                             item.lastRequestTime = now;
-                            LEAVE_CRITICAL_SECTION(cs_objDownloader);  // do not use "item" after releasing this
+                            LEAVE_CRITICAL_SECTION(cs_objDownloader); // do not use "item" after releasing this
                             next.node->mapAskFor.insert(std::make_pair(now, obj));
                             ENTER_CRITICAL_SECTION(cs_objDownloader);
                         }
                         {
                             LOCK(cs_vNodes);
-                            LogPrint("req", "ReqMgr: %s removed tx ref to %d count %d\n",
-                                obj.ToString(), next.node->GetId(), next.node->GetRefCount());
+                            LogPrint("req", "ReqMgr: %s removed tx ref to %d count %d\n", obj.ToString(),
+                                next.node->GetId(), next.node->GetRefCount());
                             next.node->Release();
                             next.node = NULL;
                         }
@@ -690,7 +694,7 @@ bool CRequestManager::IsNodePingAcceptable(CNode *pfrom)
             vPingTimes.push_back(pnode->nPingUsecTime);
         }
     }
-    if (nValidNodes < 10)  // Take anything if we are poorly connected
+    if (nValidNodes < 10) // Take anything if we are poorly connected
         return true;
 
     // Calculate Standard Deviation and Mean of Ping Time

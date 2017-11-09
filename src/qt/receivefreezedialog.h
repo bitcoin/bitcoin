@@ -12,8 +12,9 @@
 
 class OptionsModel;
 
-namespace Ui {
-    class ReceiveFreezeDialog;
+namespace Ui
+{
+class ReceiveFreezeDialog;
 }
 
 class ReceiveFreezeDialog : public QDialog
@@ -39,7 +40,6 @@ private Q_SLOTS:
 private:
     Ui::ReceiveFreezeDialog *ui;
     OptionsModel *model;
-
 };
 
 #endif // BITCOIN_QT_RECEIVEFREEZEDIALOG_H

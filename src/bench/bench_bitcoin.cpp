@@ -5,6 +5,7 @@
 
 #include "bench.h"
 
+#include "crypto/sha256.h"
 #include "key.h"
 #include "main.h"
 #include "util.h"
@@ -20,6 +21,7 @@ boost::thread_specific_ptr<LockStack> lockstack;
 int
 main(int argc, char** argv)
 {
+    SHA256AutoDetect();
     ECC_Start();
     SetupEnvironment();
     fPrintToDebugLog = false; // don't want to write to debug.log file

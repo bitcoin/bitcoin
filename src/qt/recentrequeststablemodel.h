@@ -9,16 +9,15 @@
 #include "walletmodel.h"
 
 #include <QAbstractTableModel>
-#include <QStringList>
 #include <QDateTime>
+#include <QStringList>
 
 class CWallet;
 
 class RecentRequestEntry
 {
 public:
-    RecentRequestEntry() : nVersion(RecentRequestEntry::CURRENT_VERSION), id(0) { }
-
+    RecentRequestEntry() : nVersion(RecentRequestEntry::CURRENT_VERSION), id(0) {}
     static const int CURRENT_VERSION = 1;
     int nVersion;
     int64_t id;
@@ -28,7 +27,8 @@ public:
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+    inline void SerializationOp(Stream &s, Operation ser_action)
+    {
         unsigned int nDate = date.toTime_t();
 
         READWRITE(this->nVersion);
@@ -45,8 +45,7 @@ public:
 class RecentRequestEntryLessThan
 {
 public:
-    RecentRequestEntryLessThan(int nColumn, Qt::SortOrder fOrder):
-        column(nColumn), order(fOrder) {}
+    RecentRequestEntryLessThan(int nColumn, Qt::SortOrder fOrder) : column(nColumn), order(fOrder) {}
     bool operator()(RecentRequestEntry &left, RecentRequestEntry &right) const;
 
 private:
@@ -57,7 +56,7 @@ private:
 /** Model for list of recently generated payment requests / bitcoin: URIs.
  * Part of wallet model.
  */
-class RecentRequestsTableModel: public QAbstractTableModel
+class RecentRequestsTableModel : public QAbstractTableModel
 {
     Q_OBJECT
 
@@ -65,7 +64,8 @@ public:
     explicit RecentRequestsTableModel(CWallet *wallet, WalletModel *parent);
     ~RecentRequestsTableModel();
 
-    enum ColumnIndex {
+    enum ColumnIndex
+    {
         Date = 0,
         Label = 1,
         Message = 2,
@@ -101,7 +101,8 @@ private:
     QList<RecentRequestEntry> list;
     int64_t nReceiveRequestsMaxId;
 
-    /** Updates the column title to "Amount (DisplayUnit)" and emits headerDataChanged() signal for table headers to react. */
+    /** Updates the column title to "Amount (DisplayUnit)" and emits headerDataChanged() signal for table headers to
+     * react. */
     void updateAmountColumnTitle();
     /** Gets title for amount column including current display unit if optionsModel reference available. */
     QString getAmountTitle();

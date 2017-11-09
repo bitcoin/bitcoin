@@ -11,14 +11,15 @@
 
 #include "chainparams.h"
 #include "clientmodel.h"
+#include "fs.h"
 #include "guiconstants.h"
 #include "guiutil.h"
 #include "intro.h"
 #include "networkstyle.h"
 #include "optionsmodel.h"
 #include "platformstyle.h"
-#include "unlimitedmodel.h" // BU
 #include "splashscreen.h"
+#include "unlimitedmodel.h" // BU
 #include "utilitydialog.h"
 #include "winshutdownmonitor.h"
 
@@ -39,7 +40,6 @@
 
 #include <stdint.h>
 
-#include <boost/filesystem/operations.hpp>
 #include <boost/thread.hpp>
 
 #include <QApplication>
@@ -48,10 +48,10 @@
 #include <QLocale>
 #include <QMessageBox>
 #include <QSettings>
+#include <QSslConfiguration>
 #include <QThread>
 #include <QTimer>
 #include <QTranslator>
-#include <QSslConfiguration>
 
 #if defined(QT_STATICPLUGIN)
 #include <QtPlugin>
@@ -80,18 +80,14 @@ Q_IMPORT_PLUGIN(QCocoaIntegrationPlugin);
 #endif
 
 // Declare meta types used for QMetaObject::invokeMethod
-Q_DECLARE_METATYPE(bool*)
+Q_DECLARE_METATYPE(bool *)
 Q_DECLARE_METATYPE(CAmount)
 
-static void InitMessage(const std::string &message)
-{
-    LogPrintf("init message: %s\n", message);
-}
-
+static void InitMessage(const std::string &message) { LogPrintf("init message: %s\n", message); }
 /*
    Translate string to current locale using Qt.
  */
-static std::string Translate(const char* psz)
+static std::string Translate(const char *psz)
 {
     return QCoreApplication::translate("bitcoin-unlimited", psz).toStdString();
 }
@@ -104,7 +100,7 @@ static QString GetLangTerritory()
     QString lang_territory = QLocale::system().name();
     // 2) Language from QSettings
     QString lang_territory_qsettings = settings.value("language", "").toString();
-    if(!lang_territory_qsettings.isEmpty())
+    if (!lang_territory_qsettings.isEmpty())
         lang_territory = lang_territory_qsettings;
     // 3) -lang command line argument
     lang_territory = QString::fromStdString(GetArg("-lang", lang_territory.toStdString()));
@@ -112,7 +108,10 @@ static QString GetLangTerritory()
 }
 
 /** Set up translations */
-static void initTranslations(QTranslator &qtTranslatorBase, QTranslator &qtTranslator, QTranslator &translatorBase, QTranslator &translator)
+static void initTranslations(QTranslator &qtTranslatorBase,
+    QTranslator &qtTranslator,
+    QTranslator &translatorBase,
+    QTranslator &translator)
 {
     // Remove old translators
     QApplication::removeTranslator(&qtTranslatorBase);
@@ -157,7 +156,7 @@ void DebugMessageHandler(QtMsgType type, const char *msg)
     LogPrint(category, "GUI: %s\n", msg);
 }
 #else
-void DebugMessageHandler(QtMsgType type, const QMessageLogContext& context, const QString &msg)
+void DebugMessageHandler(QtMsgType type, const QMessageLogContext &context, const QString &msg)
 {
     Q_UNUSED(context);
     const char *category = (type == QtDebugMsg) ? "qt" : NULL;
@@ -168,7 +167,7 @@ void DebugMessageHandler(QtMsgType type, const QMessageLogContext& context, cons
 /** Class encapsulating Bitcoin startup and shutdown.
  * Allows running startup and shutdown in a different thread from the UI thread.
  */
-class BitcoinCore: public QObject
+class BitcoinCore : public QObject
 {
     Q_OBJECT
 public:
@@ -192,7 +191,7 @@ private:
 };
 
 /** Main Bitcoin application object */
-class BitcoinApplication: public QApplication
+class BitcoinApplication : public QApplication
 {
     Q_OBJECT
 public:
@@ -221,7 +220,6 @@ public:
 
     /// Get process return value
     int getReturnValue() { return returnValue; }
-
     /// Get window identifier of QMainWindow (BitcoinGUI)
     WId getMainWinId() const;
 
@@ -245,7 +243,7 @@ private:
     BitcoinGUI *window;
     QTimer *pollShutdownTimer;
 #ifdef ENABLE_WALLET
-    PaymentServer* paymentServer;
+    PaymentServer *paymentServer;
     WalletModel *walletModel;
 #endif
     int returnValue;
@@ -256,11 +254,7 @@ private:
 
 #include "bitcoin.moc"
 
-BitcoinCore::BitcoinCore():
-    QObject()
-{
-}
-
+BitcoinCore::BitcoinCore() : QObject() {}
 void BitcoinCore::handleRunawayException(const std::exception *e)
 {
     PrintExceptionContinue(e, "Runaway exception");
@@ -274,9 +268,13 @@ void BitcoinCore::initialize()
         qDebug() << __func__ << ": Running AppInit2 in thread";
         int rv = AppInit2(threadGroup, scheduler);
         Q_EMIT initializeResult(rv);
-    } catch (const std::exception& e) {
+    }
+    catch (const std::exception &e)
+    {
         handleRunawayException(&e);
-    } catch (...) {
+    }
+    catch (...)
+    {
         handleRunawayException(NULL);
     }
 }
@@ -292,34 +290,31 @@ void BitcoinCore::shutdown()
         Shutdown();
         qDebug() << __func__ << ": Shutdown finished";
         Q_EMIT shutdownResult(1);
-    } catch (const std::exception& e) {
+    }
+    catch (const std::exception &e)
+    {
         handleRunawayException(&e);
-    } catch (...) {
+    }
+    catch (...)
+    {
         handleRunawayException(NULL);
     }
 }
 
-BitcoinApplication::BitcoinApplication(int &argc, char **argv):
-    QApplication(argc, argv),
-    coreThread(0),
-    optionsModel(0),
-    unlimitedModel(0),
-    clientModel(0),
-    window(0),
-    pollShutdownTimer(0),
+BitcoinApplication::BitcoinApplication(int &argc, char **argv)
+    : QApplication(argc, argv), coreThread(0), optionsModel(0), unlimitedModel(0), clientModel(0), window(0),
+      pollShutdownTimer(0),
 #ifdef ENABLE_WALLET
-    paymentServer(0),
-    walletModel(0),
+      paymentServer(0), walletModel(0),
 #endif
-    returnValue(0),
-    platformStyle(0)
+      returnValue(0), platformStyle(0)
 {
     setQuitOnLastWindowClosed(false);
 }
 
 BitcoinApplication::~BitcoinApplication()
 {
-    if(coreThread)
+    if (coreThread)
     {
         qDebug() << __func__ << ": Stopping thread";
         Q_EMIT stopThread();
@@ -338,14 +333,11 @@ BitcoinApplication::~BitcoinApplication()
     delete platformStyle;
     platformStyle = 0;
     delete unlimitedModel;
-    unlimitedModel=0;
+    unlimitedModel = 0;
 }
 
 #ifdef ENABLE_WALLET
-void BitcoinApplication::createPaymentServer()
-{
-    paymentServer = new PaymentServer(this);
-}
+void BitcoinApplication::createPaymentServer() { paymentServer = new PaymentServer(this); }
 #endif
 
 void BitcoinApplication::createPlatformStyle()
@@ -361,7 +353,7 @@ void BitcoinApplication::createPlatformStyle()
 void BitcoinApplication::createOptionsModel(bool resetSettings)
 {
     optionsModel = new OptionsModel(NULL, resetSettings);
-    unlimitedModel = new UnlimitedModel();  // BU
+    unlimitedModel = new UnlimitedModel(); // BU
 }
 
 void BitcoinApplication::createWindow(const NetworkStyle *networkStyle)
@@ -380,12 +372,12 @@ void BitcoinApplication::createSplashScreen(const NetworkStyle *networkStyle)
     // Qt::WA_DeleteOnClose to make sure that the window will be deleted eventually.
     splash->setAttribute(Qt::WA_DeleteOnClose);
     splash->show();
-    connect(this, SIGNAL(splashFinished(QWidget*)), splash, SLOT(slotFinish(QWidget*)));
+    connect(this, SIGNAL(splashFinished(QWidget *)), splash, SLOT(slotFinish(QWidget *)));
 }
 
 void BitcoinApplication::startThread()
 {
-    if(coreThread)
+    if (coreThread)
         return;
     coreThread = new QThread(this);
     BitcoinCore *executor = new BitcoinCore();
@@ -445,7 +437,7 @@ void BitcoinApplication::initializeResult(int retval)
     qDebug() << __func__ << ": Initialization result: " << retval;
     // Set exit result: 0 if successful, 1 if failure
     returnValue = retval ? 0 : 1;
-    if(retval)
+    if (retval)
     {
         // Log this only after AppInit2 finishes, as then logging setup is guaranteed complete
         qWarning() << "Platform customization:" << platformStyle->getName();
@@ -454,24 +446,24 @@ void BitcoinApplication::initializeResult(int retval)
         paymentServer->setOptionsModel(optionsModel);
 #endif
 
-        clientModel = new ClientModel(optionsModel,unlimitedModel);
+        clientModel = new ClientModel(optionsModel, unlimitedModel);
         window->setClientModel(clientModel);
 
 #ifdef ENABLE_WALLET
-        if(pwalletMain)
+        if (pwalletMain)
         {
             walletModel = new WalletModel(platformStyle, pwalletMain, optionsModel);
 
             window->addWallet(BitcoinGUI::DEFAULT_WALLET, walletModel);
             window->setCurrentWallet(BitcoinGUI::DEFAULT_WALLET);
 
-            connect(walletModel, SIGNAL(coinsSent(CWallet*,SendCoinsRecipient,QByteArray)),
-                             paymentServer, SLOT(fetchPaymentACK(CWallet*,const SendCoinsRecipient&,QByteArray)));
+            connect(walletModel, SIGNAL(coinsSent(CWallet *, SendCoinsRecipient, QByteArray)), paymentServer,
+                SLOT(fetchPaymentACK(CWallet *, const SendCoinsRecipient &, QByteArray)));
         }
 #endif
 
         // If -min option passed, start window minimized.
-        if(GetBoolArg("-min", false))
+        if (GetBoolArg("-min", false))
         {
             window->showMinimized();
         }
@@ -484,15 +476,16 @@ void BitcoinApplication::initializeResult(int retval)
 #ifdef ENABLE_WALLET
         // Now that initialization/startup is done, process any command-line
         // bitcoin: URIs or payment requests:
-        connect(paymentServer, SIGNAL(receivedPaymentRequest(SendCoinsRecipient)),
-                         window, SLOT(handlePaymentRequest(SendCoinsRecipient)));
-        connect(window, SIGNAL(receivedURI(QString)),
-                         paymentServer, SLOT(handleURIOrFile(QString)));
-        connect(paymentServer, SIGNAL(message(QString,QString,unsigned int)),
-                         window, SLOT(message(QString,QString,unsigned int)));
+        connect(paymentServer, SIGNAL(receivedPaymentRequest(SendCoinsRecipient)), window,
+            SLOT(handlePaymentRequest(SendCoinsRecipient)));
+        connect(window, SIGNAL(receivedURI(QString)), paymentServer, SLOT(handleURIOrFile(QString)));
+        connect(paymentServer, SIGNAL(message(QString, QString, unsigned int)), window,
+            SLOT(message(QString, QString, unsigned int)));
         QTimer::singleShot(100, paymentServer, SLOT(uiReady()));
 #endif
-    } else {
+    }
+    else
+    {
         quit(); // Exit main loop
     }
 }
@@ -505,7 +498,9 @@ void BitcoinApplication::shutdownResult(int retval)
 
 void BitcoinApplication::handleRunawayException(const QString &message)
 {
-    QMessageBox::critical(0, "Runaway exception", BitcoinGUI::tr("A fatal error occurred. Bitcoin can no longer continue safely and will quit.") + QString("\n\n") + message);
+    QMessageBox::critical(0, "Runaway exception",
+        BitcoinGUI::tr("A fatal error occurred. Bitcoin can no longer continue safely and will quit.") +
+            QString("\n\n") + message);
     ::exit(EXIT_FAILURE);
 }
 
@@ -517,7 +512,7 @@ WId BitcoinApplication::getMainWinId() const
     return window->winId();
 }
 
-const char* APP_SETTINGS_MIGRATED_FLAG = "fMigrated";
+const char *APP_SETTINGS_MIGRATED_FLAG = "fMigrated";
 /**
 * Checks to see if Qt App Settings have already had migration performed, based
 * on the presence of setting `fMigrated` with a value of true.
@@ -527,15 +522,15 @@ const char* APP_SETTINGS_MIGRATED_FLAG = "fMigrated";
 */
 bool CanMigrateQtAppSettings(const QSettings &to, const QSettings &from)
 {
-    //first check to see if the desired settings are already marked as migrated
+    // first check to see if the desired settings are already marked as migrated
     if (to.value(APP_SETTINGS_MIGRATED_FLAG, false).toBool())
         return false;
 
-    //next verify that the source settings actually exist/have values
+    // next verify that the source settings actually exist/have values
     if (from.allKeys().size() <= 0)
         return false;
 
-    //last verify that the desired settings are writable
+    // last verify that the desired settings are writable
     if (!to.isWritable())
         return error("%s: App Settings are not writable, migration skipped.", __func__);
 
@@ -552,35 +547,35 @@ bool CanMigrateQtAppSettings(const QSettings &to, const QSettings &from)
 */
 bool BackupQtAppSettings(const QSettings &source, const QString &backupName)
 {
-    //parameter saftey check
+    // parameter saftey check
     if (backupName.trimmed().size() <= 0)
         return error("%s: Parameter backupName must contain a non-whitespace value.", __func__);
 
-    //verify there are settings to actually backup (if not just return true)
+    // verify there are settings to actually backup (if not just return true)
     if (source.allKeys().size() <= 0)
         return true;
 
-    //The backup settings location
-    QSettings backup(backupName, QAPP_APP_NAME_DEFAULT);
+    // The backup settings location
+    QSettings backup(backupName, source.applicationName());
 
-    //verify that the backup location is writable
+    // verify that the backup location is writable
     if (!backup.isWritable())
         return error("%s: Unable to backup existing App Settings, backup location is not writable.", __func__);
 
-    //Get the list of all keys in the source location
+    // Get the list of all keys in the source location
     QStringList keys = source.allKeys();
 
-    //Loop through all keys in the source location
-    //NOTE: Loop may not handle sub-keys correctly w/o modification (though currently there aren't any sub-keys)
-    Q_FOREACH(const QString& key, keys)
+    // Loop through all keys in the source location
+    // NOTE: Loop may not handle sub-keys correctly w/o modification (though currently there aren't any sub-keys)
+    Q_FOREACH (const QString &key, keys)
     {
-        //copy every setting in source to backukp
+        // copy every setting in source to backukp
         backup.setValue(key, source.value(key));
     }
 
     LogPrintf("APP SETTINGS: Settings successfully backed up to '%s'\n", backupName.toStdString());
 
-    //NOTE: backup will go out of scope upon return so we don't need to manually call sync()
+    // NOTE: backup will go out of scope upon return so we don't need to manually call sync()
 
     return true;
 }
@@ -591,49 +586,56 @@ bool BackupQtAppSettings(const QSettings &source, const QString &backupName)
 * Migration will only be performed if there are alternate settings and a prior
 * migration has not been performed.
 * @param[in] oldOrg    Org name to migrate settings from
+* @param[in] oldApp    App name to migrate settings from
 * @param[in] newOrg    Org name to migrate settings to
+* @param[in] newApp    App name to migrate settings to
 * @return true if migration was performed, otherwise false
 * @see CanMigrateQtAppSettings()
 * @see BackupQtAppSettings()
 */
-bool TryMigrateQtAppSettings(const QString &oldOrg, const QString &newOrg)
+bool TryMigrateQtAppSettings(const QString &oldOrg, const QString &oldApp, const QString &newOrg, const QString &newApp)
 {
-    //parameter saftey checks
+    // parameter saftey checks
     if (oldOrg.trimmed().size() <= 0)
         return error("%s: Parameter oldOrg must contain a non-whitespace value.", __func__);
+    if (oldApp.trimmed().size() <= 0)
+        return error("%s: Parameter oldApp must contain a non-whitespace value.", __func__);
     if (newOrg.trimmed().size() <= 0)
         return error("%s: Parameter newOrg must contain a non-whitespace value.", __func__);
+    if (newApp.trimmed().size() <= 0)
+        return error("%s: Parameter newApp must contain a non-whitespace value.", __func__);
 
-    //The desired settings location
-    QSettings sink(newOrg, QAPP_APP_NAME_DEFAULT);
-    //The previous settings location
-    QSettings source(oldOrg, QAPP_APP_NAME_DEFAULT);
+    // The desired settings location
+    QSettings sink(newOrg, newApp);
+    // The previous settings location
+    QSettings source(oldOrg, oldApp);
 
-    //Check to see if we actually can/need to migrate
+    // Check to see if we actually can/need to migrate
     if (!CanMigrateQtAppSettings(sink, source))
         return false;
 
-    //as a saftey precaution save a backup copy of the current settings prior to overwriting
+    // as a saftey precaution save a backup copy of the current settings prior to overwriting
     if (!BackupQtAppSettings(sink, newOrg + ".bak"))
         return false;
 
-    //Get the list of all keys in the source location
+    // Get the list of all keys in the source location
     QStringList keys = source.allKeys();
 
-    //Loop through all keys in the source location
-    //NOTE: Loop may not handle sub-keys correctly w/o modification (though currently there aren't any sub-keys)
-    Q_FOREACH(const QString& key, keys)
+    // Loop through all keys in the source location
+    // NOTE: Loop may not handle sub-keys correctly w/o modification (though currently there aren't any sub-keys)
+    Q_FOREACH (const QString &key, keys)
     {
-        //copy every setting in source to sink, even if the key is empty
+        // copy every setting in source to sink, even if the key is empty
         sink.setValue(key, source.value(key));
     }
 
-    //lastly we need to add the flag which indicates we have performed a migration
+    // lastly we need to add the flag which indicates we have performed a migration
     sink.setValue(APP_SETTINGS_MIGRATED_FLAG, true);
 
-    LogPrintf("APP SETTINGS: Settings successfully migrated from '%s' to '%s'\n", oldOrg.toStdString(), newOrg.toStdString());
+    LogPrintf("APP SETTINGS: Settings successfully migrated from '%s/%s' to '%s/%s'\n", oldOrg.toStdString(),
+        oldApp.toStdString(), newOrg.toStdString(), newApp.toStdString());
 
-    //NOTE: sink will go out of scope upon return so we don't need to manually call sync()
+    // NOTE: sink will go out of scope upon return so we don't need to manually call sync()
 
     return true;
 }
@@ -643,9 +645,9 @@ int main(int argc, char *argv[])
 {
     SetupEnvironment();
 
-    // Do not refer to data directory yet, this can be overridden by Intro::pickDataDirectory
+// Do not refer to data directory yet, this can be overridden by Intro::pickDataDirectory
 
-    /// 1. Basic Qt initialization (not dependent on parameters or configuration)
+/// 1. Basic Qt initialization (not dependent on parameters or configuration)
 #if QT_VERSION < 0x050000
     // Internal string conversion is all UTF-8
     QTextCodec::setCodecForTr(QTextCodec::codecForName("UTF-8"));
@@ -675,33 +677,59 @@ int main(int argc, char *argv[])
 #endif
 
     // Register meta types used for QMetaObject::invokeMethod
-    qRegisterMetaType< bool* >();
-    //   Need to pass name here as CAmount is a typedef (see http://qt-project.org/doc/qt-5/qmetatype.html#qRegisterMetaType)
+    qRegisterMetaType<bool *>();
+    // qt-project.org/doc/qt-5/qmetatype.html#qRegisterMetaType)
+    //   Need to pass name here as CAmount is a typedef (see http:
     //   IMPORTANT if it is no longer a typedef use the normal variant above
-    qRegisterMetaType< CAmount >("CAmount");
+    qRegisterMetaType<CAmount>("CAmount");
 
     /// 2. Parse command-line options. Command-line options take precedence:
     AllowedArgs::BitcoinQt allowedArgs(&tweaks);
-    try {
+    try
+    {
         ParseParameters(argc, argv, allowedArgs);
-    } catch (const std::exception& e) {
-        QMessageBox::critical(0, QObject::tr("Bitcoin"),
-                              QObject::tr("Error: Cannot parse program options: %1.").arg(e.what()));
+    }
+    catch (const std::exception &e)
+    {
+        QMessageBox::critical(
+            0, QObject::tr("Bitcoin"), QObject::tr("Error: Cannot parse program options: %1.").arg(e.what()));
         return EXIT_FAILURE;
     }
 
-    /// 3. Migrate application settings, if necessary
-    // BU changed the QAPP_ORG_NAME and since this is used for reading the app settings
-    // from the registry (Windows) or a configuration file (Linux/OSX)
-    // we need to check to see if we need to migrate old settings to the new location
-    TryMigrateQtAppSettings("Bitcoin", QAPP_ORG_NAME);
+/// 3. Migrate application settings, if necessary
+// BU changed the QAPP_ORG_NAME and since this is used for reading the app settings
+// from the registry (Windows) or a configuration file (Linux/OSX)
+// we need to check to see if we need to migrate old settings to the new location
+#ifdef BITCOIN_CASH
+    bool fMigrated = false;
+    // For BUCash, first try to migrate from BTC BU settings
+    fMigrated = TryMigrateQtAppSettings(QAPP_ORG_NAME, QAPP_APP_NAME_DEFAULT, QAPP_ORG_NAME, QAPP_APP_NAME_BUCASH);
+    // Then try to migrate from non-BU client settings (if we didn't just migrate from BU settings)
+    fMigrated = fMigrated || TryMigrateQtAppSettings(
+                                 QAPP_ORG_NAME_LEGACY, QAPP_APP_NAME_DEFAULT, QAPP_ORG_NAME, QAPP_APP_NAME_BUCASH);
+
+    // If we just migrated and this is a BUcash node, have the user reconfirm the data directory.
+    // This is necessary in case the user wants to run side-by-side BTC chain and BCC chain nodes
+    // in which case each instance requires a different data directory.
+    if (fMigrated)
+        SoftSetBoolArg("-choosedatadir", true);
+#else
+    // Try to migrate from non-BU client settings
+    TryMigrateQtAppSettings(QAPP_ORG_NAME_LEGACY, QAPP_APP_NAME_DEFAULT, QAPP_ORG_NAME, QAPP_APP_NAME_DEFAULT);
+#endif
 
     /// 4. Application identification
     // must be set before OptionsModel is initialized or translations are loaded,
     // as it is used to locate QSettings
     QApplication::setOrganizationName(QAPP_ORG_NAME);
     QApplication::setOrganizationDomain(QAPP_ORG_DOMAIN);
+#ifdef BITCOIN_CASH
+    // Use a different app name for BUCash to enable side-by-side installations which won't
+    // interfere with each other
+    QApplication::setApplicationName(QAPP_APP_NAME_BUCASH);
+#else
     QApplication::setApplicationName(QAPP_APP_NAME_DEFAULT);
+#endif
     GUIUtil::SubstituteFonts(GetLangTerritory());
 
     /// 5. Initialization of translations, so that intro dialog is in user's language
@@ -726,17 +754,21 @@ int main(int argc, char *argv[])
 
     /// 7. Determine availability of data directory and parse bitcoin.conf
     /// - Do not call GetDataDir(true) before this step finishes
-    if (!boost::filesystem::is_directory(GetDataDir(false)))
+    if (!fs::is_directory(GetDataDir(false)))
     {
-        QMessageBox::critical(0, QObject::tr(PACKAGE_NAME),
-                              QObject::tr("Error: Specified data directory \"%1\" does not exist.").arg(QString::fromStdString(mapArgs["-datadir"])));
+        QMessageBox::critical(
+            0, QObject::tr(PACKAGE_NAME), QObject::tr("Error: Specified data directory \"%1\" does not exist.")
+                                              .arg(QString::fromStdString(mapArgs["-datadir"])));
         return EXIT_FAILURE;
     }
-    try {
+    try
+    {
         ReadConfigFile(mapArgs, mapMultiArgs, allowedArgs);
-    } catch (const std::exception& e) {
+    }
+    catch (const std::exception &e)
+    {
         QMessageBox::critical(0, QObject::tr(PACKAGE_NAME),
-                              QObject::tr("Error: Cannot parse configuration file: %1. Only use key=value syntax.").arg(e.what()));
+            QObject::tr("Error: Cannot parse configuration file: %1. Only use key=value syntax.").arg(e.what()));
         return EXIT_FAILURE;
     }
 
@@ -750,9 +782,12 @@ int main(int argc, char *argv[])
     // - Needs to be done before createOptionsModel
 
     // Check for -testnet or -regtest parameter (Params() calls are only valid after this clause)
-    try {
+    try
+    {
         SelectParams(ChainNameFromCommandLine());
-    } catch(std::exception &e) {
+    }
+    catch (std::exception &e)
+    {
         QMessageBox::critical(0, QObject::tr(PACKAGE_NAME), QObject::tr("Error: %1").arg(e.what()));
         return EXIT_FAILURE;
     }
@@ -761,11 +796,13 @@ int main(int argc, char *argv[])
     PaymentServer::ipcParseCommandLine(argc, argv);
 #endif
 
-    QScopedPointer<const NetworkStyle> networkStyle(NetworkStyle::instantiate(QString::fromStdString(Params().NetworkIDString())));
+    QScopedPointer<const NetworkStyle> networkStyle(
+        NetworkStyle::instantiate(QString::fromStdString(Params().NetworkIDString())));
     assert(!networkStyle.isNull());
     // Allow for separate UI settings for testnets
     QApplication::setApplicationName(networkStyle->getAppName());
-    // Re-initialize translations after changing application name (language in network-specific settings can be different)
+    // Re-initialize translations after changing application name (language in network-specific settings can be
+    // different)
     initTranslations(qtTranslatorBase, qtTranslator, translatorBase, translator);
 
 #ifdef ENABLE_WALLET
@@ -791,7 +828,8 @@ int main(int argc, char *argv[])
     qInstallMsgHandler(DebugMessageHandler);
 #else
 #if defined(Q_OS_WIN)
-    // Install global event filter for processing Windows session related Windows messages (WM_QUERYENDSESSION and WM_ENDSESSION)
+    // Install global event filter for processing Windows session related Windows messages (WM_QUERYENDSESSION and
+    // WM_ENDSESSION)
     qApp->installNativeEventFilter(new WinShutdownMonitor());
 #endif
     // Install qDebug() message handler to route to debug.log
@@ -815,15 +853,20 @@ int main(int argc, char *argv[])
         app.createWindow(networkStyle.data());
         app.requestInitialize();
 #if defined(Q_OS_WIN) && QT_VERSION >= 0x050000
-        WinShutdownMonitor::registerShutdownBlockReason(QObject::tr("%1 didn't yet exit safely...").arg(QObject::tr(PACKAGE_NAME)), (HWND)app.getMainWinId());
+        WinShutdownMonitor::registerShutdownBlockReason(
+            QObject::tr("%1 didn't yet exit safely...").arg(QObject::tr(PACKAGE_NAME)), (HWND)app.getMainWinId());
 #endif
         app.exec();
         app.requestShutdown();
         app.exec();
-    } catch (const std::exception& e) {
+    }
+    catch (const std::exception &e)
+    {
         PrintExceptionContinue(&e, "Runaway exception");
         app.handleRunawayException(QString::fromStdString(strMiscWarning));
-    } catch (...) {
+    }
+    catch (...)
+    {
         PrintExceptionContinue(NULL, "Runaway exception");
         app.handleRunawayException(QString::fromStdString(strMiscWarning));
     }

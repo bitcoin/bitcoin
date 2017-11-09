@@ -28,10 +28,11 @@ class TransactionTableModel : public QAbstractTableModel
     Q_OBJECT
 
 public:
-    explicit TransactionTableModel(const PlatformStyle *platformStyle, CWallet* wallet, WalletModel *parent = 0);
+    explicit TransactionTableModel(const PlatformStyle *platformStyle, CWallet *wallet, WalletModel *parent = 0);
     ~TransactionTableModel();
 
-    enum ColumnIndex {
+    enum ColumnIndex
+    {
         Status = 0,
         Watchonly = 1,
         Date = 2,
@@ -43,15 +44,14 @@ public:
     /** Roles to get specific information from a transaction row.
         These are independent of column.
     */
-    enum RoleIndex {
+    enum RoleIndex
+    {
         /** Type of transaction */
         TypeRole = Qt::UserRole,
         /** Date and time this transaction was created */
         DateRole,
         /** Watch-only boolean */
         WatchonlyRole,
-        /** Public label boolean */
-        PublicLabelRole,
         /** Watch-only icon */
         WatchonlyDecorationRole,
         /** Long description (HTML format) */
@@ -82,11 +82,10 @@ public:
     int columnCount(const QModelIndex &parent) const;
     QVariant data(const QModelIndex &index, int role) const;
     QVariant headerData(int section, Qt::Orientation orientation, int role) const;
-    QModelIndex index(int row, int column, const QModelIndex & parent = QModelIndex()) const;
+    QModelIndex index(int row, int column, const QModelIndex &parent = QModelIndex()) const;
     bool processingQueuedTransactions() { return fProcessingQueuedTransactions; }
-
 private:
-    CWallet* wallet;
+    CWallet *wallet;
     WalletModel *walletModel;
     QStringList columns;
     TransactionTablePriv *priv;
@@ -102,10 +101,12 @@ private:
     QString formatTxDate(const TransactionRecord *wtx) const;
     QString formatTxType(const TransactionRecord *wtx) const;
     QString formatTxToAddress(const TransactionRecord *wtx, bool tooltip) const;
-    QString formatTxAmount(const TransactionRecord *wtx, bool showUnconfirmed=true, BitcoinUnits::SeparatorStyle separators=BitcoinUnits::separatorStandard) const;
+    QString formatTxAmount(const TransactionRecord *wtx,
+        bool showUnconfirmed = true,
+        BitcoinUnits::SeparatorStyle separators = BitcoinUnits::separatorStandard) const;
     QString formatTooltip(const TransactionRecord *rec) const;
 #ifdef ENABLE_WALLET
-    QString pickLabelWithAddress(AddressList listAddresses, std::string& address) const;
+    QString pickLabelWithAddress(AddressList listAddresses, std::string &address) const;
 #endif
 
     QVariant txStatusDecoration(const TransactionRecord *wtx) const;
@@ -117,11 +118,11 @@ public Q_SLOTS:
     void updateTransaction(const QString &hash, int status, bool showTransaction);
     void updateConfirmations();
     void updateDisplayUnit();
-    /** Updates the column title to "Amount (DisplayUnit)" and emits headerDataChanged() signal for table headers to react. */
+    /** Updates the column title to "Amount (DisplayUnit)" and emits headerDataChanged() signal for table headers to
+     * react. */
     void updateAmountColumnTitle();
     /* Needed to update fProcessingQueuedTransactions through a QueuedConnection */
     void setProcessingQueuedTransactions(bool value) { fProcessingQueuedTransactions = value; }
-
     friend class TransactionTablePriv;
 };
 

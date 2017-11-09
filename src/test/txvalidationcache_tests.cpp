@@ -7,19 +7,19 @@
 #include "key.h"
 #include "main.h"
 #include "miner.h"
+#include "parallel.h"
 #include "pubkey.h"
-#include "txmempool.h"
 #include "random.h"
 #include "script/standard.h"
 #include "test/test_bitcoin.h"
+#include "txmempool.h"
 #include "utiltime.h"
 
 #include <boost/test/unit_test.hpp>
 
-BOOST_AUTO_TEST_SUITE(txvalidationcache_tests)  // BU harmonize suite name with filename
+BOOST_AUTO_TEST_SUITE(txvalidationcache_tests) // BU harmonize suite name with filename
 
-static bool
-ToMemPool(CMutableTransaction& tx)
+static bool ToMemPool(CMutableTransaction &tx)
 {
     LOCK(cs_main);
 
@@ -33,7 +33,7 @@ BOOST_FIXTURE_TEST_CASE(tx_mempool_block_doublespend, TestChain100Setup)
     // validated going into the memory pool does not allow
     // double-spends in blocks to pass validation when they should not.
 
-    CScript scriptPubKey = CScript() <<  ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG;
+    CScript scriptPubKey = CScript() << ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG;
 
 
     unsigned int sighashType = SIGHASH_ALL;
@@ -49,7 +49,7 @@ BOOST_FIXTURE_TEST_CASE(tx_mempool_block_doublespend, TestChain100Setup)
         spends[i].vin[0].prevout.hash = coinbaseTxns[0].GetHash();
         spends[i].vin[0].prevout.n = 0;
         spends[i].vout.resize(1);
-        spends[i].vout[0].nValue = 11*CENT;
+        spends[i].vout[0].nValue = 11 * CENT;
         spends[i].vout[0].scriptPubKey = scriptPubKey;
 
         // Sign:

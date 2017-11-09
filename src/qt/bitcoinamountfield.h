@@ -18,7 +18,7 @@ QT_END_NAMESPACE
 
 /** Widget for entering bitcoin amounts.
   */
-class BitcoinAmountField: public QWidget
+class BitcoinAmountField : public QWidget
 {
     Q_OBJECT
 
@@ -29,11 +29,11 @@ class BitcoinAmountField: public QWidget
 public:
     explicit BitcoinAmountField(QWidget *parent = 0);
 
-    CAmount value(bool *value=0) const;
-    void setValue(const CAmount& value);
+    CAmount value(bool *value = 0) const;
+    void setValue(const CAmount &value);
 
     /** Set single step in satoshis **/
-    void setSingleStep(const CAmount& step);
+    void setSingleStep(const CAmount &step);
 
     /** Make read-only **/
     void setReadOnly(bool fReadOnly);
@@ -52,7 +52,8 @@ public:
     /** Enable/Disable. */
     void setEnabled(bool fEnabled);
 
-    /** Qt messes up the tab chain by default in some cases (issue https://bugreports.qt-project.org/browse/QTBUG-10907),
+    // bugreports.qt-project.org/browse/QTBUG-10907),
+    /** Qt messes up the tab chain by default in some cases (issue https:
         in these cases we have to set it up manually.
     */
     QWidget *setupTabChain(QWidget *prev);
@@ -70,7 +71,6 @@ private:
 
 private Q_SLOTS:
     void unitChanged(int idx);
-
 };
 
 #endif // BITCOIN_QT_BITCOINAMOUNTFIELD_H

@@ -13,6 +13,7 @@
 #include "coincontrol.h"
 #include "consensus/consensus.h"
 #include "consensus/validation.h"
+#include "fs.h"
 #include "key.h"
 #include "keystore.h"
 #include "main.h"
@@ -31,7 +32,6 @@
 #include <assert.h>
 
 #include <boost/algorithm/string/replace.hpp>
-#include <boost/filesystem.hpp>
 #include <boost/thread.hpp>
 
 using namespace std;
@@ -1246,6 +1246,22 @@ bool CWalletTx::WriteToDisk(CWalletDB *pwalletdb)
  */
 int CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, bool fUpdate)
 {
+    // Begin rescan by setting fRescan to true.  This prevents any new inbound network connections
+    // from being initiated and thus prevents us from banning repeated and failed network connection
+    // attempts while the rescan is in progress.  Once the flag is set then it is safe to disconnect
+    // any current connections. Note: we don't disconnect nodes in regtest as this prevents the tests
+    // from passing since the nodes will not auto-reconnect after a wallet scan has completed.
+    fRescan = true;
+    if (Params().NetworkIDString() != "regtest")
+    {
+        LOCK(cs_vNodes);
+        for (CNode *pnode : vNodes)
+        {
+            LogPrintf("Disconnecting peer: %s before wallet rescan\n", pnode->GetLogName());
+            pnode->fDisconnect = true;
+        }
+    }
+
     int ret = 0;
     int64_t nNow = GetTime();
     const CChainParams& chainParams = Params();
@@ -1282,6 +1298,9 @@ int CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, bool fUpdate)
         }
         ShowProgress(_("Rescanning..."), 100); // hide progress dialog in GUI
     }
+    // Rescan is now finished. Set to false to allow network connections to resume.
+    fRescan = false;
+
     return ret;
 }
 

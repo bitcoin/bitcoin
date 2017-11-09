@@ -184,7 +184,7 @@ bool CThinBlock::process(CNode *pfrom, int nSizeThinBlock)
     {
         // We have all the transactions now that are in this block: try to reassemble and process.
         pfrom->thinBlockWaitingForTxns = -1;
-        int blockSize = pfrom->thinBlock.GetSerializeSize(SER_NETWORK, CBlock::CURRENT_VERSION);
+        int blockSize = ::GetSerializeSize(pfrom->thinBlock, SER_NETWORK, CBlock::CURRENT_VERSION);
         LogPrint("thin",
             "Reassembled thinblock for %s (%d bytes). Message was %d bytes, compression ratio %3.2f peer=%s\n",
             pfrom->thinBlock.GetHash().ToString(), blockSize, nSizeThinBlock,
@@ -409,7 +409,7 @@ bool CXThinBlockTx::HandleMessage(CDataStream &vRecv, CNode *pfrom)
 
         // for compression statistics, we have to add up the size of xthinblock and the re-requested thinBlockTx.
         int nSizeThinBlockTx = msgSize;
-        int blockSize = pfrom->thinBlock.GetSerializeSize(SER_NETWORK, CBlock::CURRENT_VERSION);
+        int blockSize = ::GetSerializeSize(pfrom->thinBlock, SER_NETWORK, CBlock::CURRENT_VERSION);
         LogPrint("thin", "Reassembled xblocktx for %s (%d bytes). Message was %d bytes (thinblock) and %d bytes "
                          "(re-requested tx), compression ratio %3.2f, peer=%s\n",
             pfrom->thinBlock.GetHash().ToString(), blockSize, pfrom->nSizeThinBlock, nSizeThinBlockTx,
@@ -832,7 +832,7 @@ bool CXThinBlock::process(CNode *pfrom,
 
     // We now have all the transactions now that are in this block
     pfrom->thinBlockWaitingForTxns = -1;
-    int blockSize = pfrom->thinBlock.GetSerializeSize(SER_NETWORK, CBlock::CURRENT_VERSION);
+    int blockSize = ::GetSerializeSize(pfrom->thinBlock, SER_NETWORK, CBlock::CURRENT_VERSION);
     LogPrint("thin",
         "Reassembled xthinblock for %s (%d bytes). Message was %d bytes, compression ratio %3.2f, peer=%s\n",
         pfrom->thinBlock.GetHash().ToString(), blockSize, pfrom->nSizeThinBlock,
@@ -1315,10 +1315,9 @@ void CThinBlockData::ClearThinBlockData(CNode *pnode, uint256 hash)
 uint64_t CThinBlockData::AddThinBlockBytes(uint64_t bytes, CNode *pfrom)
 {
     pfrom->nLocalThinBlockBytes += bytes;
+    uint64_t ret = nThinBlockBytes.fetch_add(bytes) + bytes;
 
-    LOCK(cs_thinblockstats);
-    nThinBlockBytes += bytes;
-    return nThinBlockBytes;
+    return ret;
 }
 
 void CThinBlockData::DeleteThinBlockBytes(uint64_t bytes, CNode *pfrom)
@@ -1328,23 +1327,12 @@ void CThinBlockData::DeleteThinBlockBytes(uint64_t bytes, CNode *pfrom)
 
     if (bytes <= nThinBlockBytes)
     {
-        LOCK(cs_thinblockstats);
-        nThinBlockBytes -= bytes;
+        nThinBlockBytes.fetch_sub(bytes);
     }
 }
 
-void CThinBlockData::ResetThinBlockBytes()
-{
-    LOCK(cs_thinblockstats);
-    nThinBlockBytes = 0;
-}
-
-uint64_t CThinBlockData::GetThinBlockBytes()
-{
-    LOCK(cs_thinblockstats);
-    return nThinBlockBytes;
-}
-
+void CThinBlockData::ResetThinBlockBytes() { nThinBlockBytes.store(0); }
+uint64_t CThinBlockData::GetThinBlockBytes() { return nThinBlockBytes.load(); }
 bool HaveConnectThinblockNodes()
 {
     // Strip the port from then list of all the current in and outbound ip addresses
@@ -1620,6 +1608,7 @@ bool IsThinBlockValid(CNode *pfrom, const std::vector<CTransaction> &vMissingTx,
 void BuildSeededBloomFilter(CBloomFilter &filterMemPool,
     vector<uint256> &vOrphanHashes,
     uint256 hash,
+    CNode *pfrom,
     bool fDeterministic)
 {
     int64_t nStartTimer = GetTimeMillis();
@@ -1817,7 +1806,8 @@ void BuildSeededBloomFilter(CBloomFilter &filterMemPool,
     if (nTimePassed > nHoursToGrow * 3600)
         nFPRate = nMaxFalsePositive;
 
-    filterMemPool = CBloomFilter(nElements, nFPRate, insecure_rand(), BLOOM_UPDATE_ALL);
+    uint32_t nMaxFilterSize = std::max(SMALLEST_MAX_BLOOM_FILTER_SIZE, pfrom->nXthinBloomfilterSize);
+    filterMemPool = CBloomFilter(nElements, nFPRate, insecure_rand(), BLOOM_UPDATE_ALL, nMaxFilterSize);
     LogPrint("thin", "FPrate: %f Num elements in bloom filter:%d high priority txs:%d high fee txs:%d orphans:%d total "
                      "txs in mempool:%d\n",
         nFPRate, nElements, setPriorityMemPoolHashes.size(), setHighScoreMemPoolHashes.size(), vOrphanHashes.size(),

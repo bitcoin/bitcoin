@@ -7,28 +7,28 @@
 #ifndef BITCOIN_UINT256_H
 #define BITCOIN_UINT256_H
 
+#include "crypto/common.h"
 #include <assert.h>
 #include <cstring>
 #include <stdexcept>
 #include <stdint.h>
 #include <string>
 #include <vector>
-#include "crypto/common.h"
 
 /** Template base class for fixed-sized opaque blobs. */
-template<unsigned int BITS>
+template <unsigned int BITS>
 class base_blob
 {
 protected:
-    enum { WIDTH=BITS/8 };
-    uint8_t data[WIDTH];
-public:
-    base_blob()
+    enum
     {
-        memset(data, 0, sizeof(data));
-    }
+        WIDTH = BITS / 8
+    };
+    uint8_t data[WIDTH];
 
-    explicit base_blob(const std::vector<unsigned char>& vch);
+public:
+    base_blob() { memset(data, 0, sizeof(data)); }
+    explicit base_blob(const std::vector<unsigned char> &vch);
 
     bool IsNull() const
     {
@@ -38,60 +38,48 @@ public:
         return true;
     }
 
-    void SetNull()
+    void SetNull() { memset(data, 0, sizeof(data)); }
+    friend inline bool operator==(const base_blob &a, const base_blob &b)
     {
-        memset(data, 0, sizeof(data));
+        return memcmp(a.data, b.data, sizeof(a.data)) == 0;
     }
-
-    friend inline bool operator==(const base_blob& a, const base_blob& b) { return memcmp(a.data, b.data, sizeof(a.data)) == 0; }
-    friend inline bool operator!=(const base_blob& a, const base_blob& b) { return memcmp(a.data, b.data, sizeof(a.data)) != 0; }
-    friend inline bool operator<(const base_blob& a, const base_blob& b) { return memcmp(a.data, b.data, sizeof(a.data)) < 0; }
+    friend inline bool operator!=(const base_blob &a, const base_blob &b)
+    {
+        return memcmp(a.data, b.data, sizeof(a.data)) != 0;
+    }
+    friend inline bool operator<(const base_blob &a, const base_blob &b)
+    {
+        return memcmp(a.data, b.data, sizeof(a.data)) < 0;
+    }
 
     std::string GetHex() const;
-    void SetHex(const char* psz);
-    void SetHex(const std::string& str);
+    void SetHex(const char *psz);
+    void SetHex(const std::string &str);
     std::string ToString() const;
 
-    unsigned char* begin()
+    unsigned char *begin() { return &data[0]; }
+    unsigned char *end() { return &data[WIDTH]; }
+    const unsigned char *begin() const { return &data[0]; }
+    const unsigned char *end() const { return &data[WIDTH]; }
+    unsigned int size() const { return sizeof(data); }
+    uint64_t GetUint64(int pos) const
     {
-        return &data[0];
+        const uint8_t *ptr = data + pos * 8;
+        return ((uint64_t)ptr[0]) | ((uint64_t)ptr[1]) << 8 | ((uint64_t)ptr[2]) << 16 | ((uint64_t)ptr[3]) << 24 |
+               ((uint64_t)ptr[4]) << 32 | ((uint64_t)ptr[5]) << 40 | ((uint64_t)ptr[6]) << 48 |
+               ((uint64_t)ptr[7]) << 56;
     }
 
-    unsigned char* end()
+    template <typename Stream>
+    void Serialize(Stream &s) const
     {
-        return &data[WIDTH];
+        s.write((char *)data, sizeof(data));
     }
 
-    const unsigned char* begin() const
+    template <typename Stream>
+    void Unserialize(Stream &s)
     {
-        return &data[0];
-    }
-
-    const unsigned char* end() const
-    {
-        return &data[WIDTH];
-    }
-
-    unsigned int size() const
-    {
-        return sizeof(data);
-    }
-
-    unsigned int GetSerializeSize(int nType, int nVersion) const
-    {
-        return sizeof(data);
-    }
-
-    template<typename Stream>
-    void Serialize(Stream& s, int nType, int nVersion) const
-    {
-        s.write((char*)data, sizeof(data));
-    }
-
-    template<typename Stream>
-    void Unserialize(Stream& s, int nType, int nVersion)
-    {
-        s.read((char*)data, sizeof(data));
+        s.read((char *)data, sizeof(data));
     }
 };
 
@@ -99,11 +87,12 @@ public:
  * @note This type is called uint160 for historical reasons only. It is an opaque
  * blob of 160 bits and has no integer operations.
  */
-class uint160 : public base_blob<160> {
+class uint160 : public base_blob<160>
+{
 public:
     uint160() {}
-    uint160(const base_blob<160>& b) : base_blob<160>(b) {}
-    explicit uint160(const std::vector<unsigned char>& vch) : base_blob<160>(vch) {}
+    uint160(const base_blob<160> &b) : base_blob<160>(b) {}
+    explicit uint160(const std::vector<unsigned char> &vch) : base_blob<160>(vch) {}
 };
 
 /** 256-bit opaque blob.
@@ -111,26 +100,22 @@ public:
  * opaque blob of 256 bits and has no integer operations. Use arith_uint256 if
  * those are required.
  */
-class uint256 : public base_blob<256> {
+class uint256 : public base_blob<256>
+{
 public:
     uint256() {}
-    uint256(const base_blob<256>& b) : base_blob<256>(b) {}
-    explicit uint256(const std::vector<unsigned char>& vch) : base_blob<256>(vch) {}
-
+    uint256(const base_blob<256> &b) : base_blob<256>(b) {}
+    explicit uint256(const std::vector<unsigned char> &vch) : base_blob<256>(vch) {}
     /** A cheap hash function that just returns 64 bits from the result, it can be
      * used when the contents are considered uniformly random. It is not appropriate
      * when the value can easily be influenced from outside as e.g. a network adversary could
      * provide values to trigger worst-case behavior.
      */
-    uint64_t GetCheapHash() const
-    {
-        return ReadLE64(data);
-    }
-
+    uint64_t GetCheapHash() const { return ReadLE64(data); }
     /** A more secure, salted hash function.
      * @note This hash is not stable between little and big endian.
      */
-    uint64_t GetHash(const uint256& salt) const;
+    uint64_t GetHash(const uint256 &salt) const;
 };
 
 /* uint256 from const char *.
@@ -147,7 +132,7 @@ inline uint256 uint256S(const char *str)
  * This is a separate function because the constructor uint256(const std::string &str) can result
  * in dangerously catching uint256(0) via std::string(const char*).
  */
-inline uint256 uint256S(const std::string& str)
+inline uint256 uint256S(const std::string &str)
 {
     uint256 rv;
     rv.SetHex(str);

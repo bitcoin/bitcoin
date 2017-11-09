@@ -12,7 +12,7 @@
 #include <string.h>
 
 template <unsigned int BITS>
-base_blob<BITS>::base_blob(const std::vector<unsigned char>& vch)
+base_blob<BITS>::base_blob(const std::vector<unsigned char> &vch)
 {
     assert(vch.size() == sizeof(data));
     memcpy(data, &vch[0], sizeof(data));
@@ -28,7 +28,7 @@ std::string base_blob<BITS>::GetHex() const
 }
 
 template <unsigned int BITS>
-void base_blob<BITS>::SetHex(const char* psz)
+void base_blob<BITS>::SetHex(const char *psz)
 {
     memset(data, 0, sizeof(data));
 
@@ -41,15 +41,17 @@ void base_blob<BITS>::SetHex(const char* psz)
         psz += 2;
 
     // hex string to uint
-    const char* pbegin = psz;
+    const char *pbegin = psz;
     while (::HexDigit(*psz) != -1)
         psz++;
     psz--;
-    unsigned char* p1 = (unsigned char*)data;
-    unsigned char* pend = p1 + WIDTH;
-    while (psz >= pbegin && p1 < pend) {
+    unsigned char *p1 = (unsigned char *)data;
+    unsigned char *pend = p1 + WIDTH;
+    while (psz >= pbegin && p1 < pend)
+    {
         *p1 = ::HexDigit(*psz--);
-        if (psz >= pbegin) {
+        if (psz >= pbegin)
+        {
             *p1 |= ((unsigned char)::HexDigit(*psz--) << 4);
             p1++;
         }
@@ -57,7 +59,7 @@ void base_blob<BITS>::SetHex(const char* psz)
 }
 
 template <unsigned int BITS>
-void base_blob<BITS>::SetHex(const std::string& str)
+void base_blob<BITS>::SetHex(const std::string &str)
 {
     SetHex(str.c_str());
 }
@@ -69,20 +71,20 @@ std::string base_blob<BITS>::ToString() const
 }
 
 // Explicit instantiations for base_blob<160>
-template base_blob<160>::base_blob(const std::vector<unsigned char>&);
+template base_blob<160>::base_blob(const std::vector<unsigned char> &);
 template std::string base_blob<160>::GetHex() const;
 template std::string base_blob<160>::ToString() const;
-template void base_blob<160>::SetHex(const char*);
-template void base_blob<160>::SetHex(const std::string&);
+template void base_blob<160>::SetHex(const char *);
+template void base_blob<160>::SetHex(const std::string &);
 
 // Explicit instantiations for base_blob<256>
-template base_blob<256>::base_blob(const std::vector<unsigned char>&);
+template base_blob<256>::base_blob(const std::vector<unsigned char> &);
 template std::string base_blob<256>::GetHex() const;
 template std::string base_blob<256>::ToString() const;
-template void base_blob<256>::SetHex(const char*);
-template void base_blob<256>::SetHex(const std::string&);
+template void base_blob<256>::SetHex(const char *);
+template void base_blob<256>::SetHex(const std::string &);
 
-static void inline HashMix(uint32_t& a, uint32_t& b, uint32_t& c)
+static void inline HashMix(uint32_t &a, uint32_t &b, uint32_t &c)
 {
     // Taken from lookup3, by Bob Jenkins.
     a -= c;
@@ -105,7 +107,7 @@ static void inline HashMix(uint32_t& a, uint32_t& b, uint32_t& c)
     b += a;
 }
 
-static void inline HashFinal(uint32_t& a, uint32_t& b, uint32_t& c)
+static void inline HashFinal(uint32_t &a, uint32_t &b, uint32_t &c)
 {
     // Taken from lookup3, by Bob Jenkins.
     c ^= b;
@@ -124,11 +126,11 @@ static void inline HashFinal(uint32_t& a, uint32_t& b, uint32_t& c)
     c -= ((b << 24) | (b >> 8));
 }
 
-uint64_t uint256::GetHash(const uint256& salt) const
+uint64_t uint256::GetHash(const uint256 &salt) const
 {
     uint32_t a, b, c;
-    const uint32_t *pn = (const uint32_t*)data;
-    const uint32_t *salt_pn = (const uint32_t*)salt.data;
+    const uint32_t *pn = (const uint32_t *)data;
+    const uint32_t *salt_pn = (const uint32_t *)salt.data;
     a = b = c = 0xdeadbeef + WIDTH;
 
     a += pn[0] ^ salt_pn[0];

@@ -3,8 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "chainparams.h"
 #include "main.h"
+#include "chainparams.h"
 
 #include "test/test_bitcoin.h"
 
@@ -13,14 +13,15 @@
 
 BOOST_FIXTURE_TEST_SUITE(main_tests, TestingSetup)
 
-static void TestBlockSubsidyHalvings(const Consensus::Params& consensusParams)
+static void TestBlockSubsidyHalvings(const Consensus::Params &consensusParams)
 {
     int maxHalvings = 64;
     CAmount nInitialSubsidy = 50 * COIN;
 
     CAmount nPreviousSubsidy = nInitialSubsidy * 2; // for height == 0
     BOOST_CHECK_EQUAL(nPreviousSubsidy, nInitialSubsidy * 2);
-    for (int nHalvings = 0; nHalvings < maxHalvings; nHalvings++) {
+    for (int nHalvings = 0; nHalvings < maxHalvings; nHalvings++)
+    {
         int nHeight = nHalvings * consensusParams.nSubsidyHalvingInterval;
         CAmount nSubsidy = GetBlockSubsidy(nHeight, consensusParams);
         BOOST_CHECK(nSubsidy <= nInitialSubsidy);
@@ -46,9 +47,10 @@ BOOST_AUTO_TEST_CASE(block_subsidy_test)
 
 BOOST_AUTO_TEST_CASE(subsidy_limit_test)
 {
-    const Consensus::Params& consensusParams = Params(CBaseChainParams::MAIN).GetConsensus();
+    const Consensus::Params &consensusParams = Params(CBaseChainParams::MAIN).GetConsensus();
     CAmount nSum = 0;
-    for (int nHeight = 0; nHeight < 14000000; nHeight += 1000) {
+    for (int nHeight = 0; nHeight < 14000000; nHeight += 1000)
+    {
         CAmount nSubsidy = GetBlockSubsidy(nHeight, consensusParams);
         BOOST_CHECK(nSubsidy <= 50 * COIN);
         nSum += nSubsidy * 1000;
@@ -59,10 +61,9 @@ BOOST_AUTO_TEST_CASE(subsidy_limit_test)
 
 bool ReturnFalse() { return false; }
 bool ReturnTrue() { return true; }
-
 BOOST_AUTO_TEST_CASE(test_combiner_all)
 {
-    boost::signals2::signal<bool (), CombinerAll> Test;
+    boost::signals2::signal<bool(), CombinerAll> Test;
     BOOST_CHECK(Test());
     Test.connect(&ReturnFalse);
     BOOST_CHECK(!Test());

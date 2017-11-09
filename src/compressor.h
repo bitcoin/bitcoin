@@ -38,6 +38,7 @@ private:
     static const unsigned int nSpecialScripts = 6;
 
     CScript &script;
+
 protected:
     /**
      * These check for scripts for which a special case with a shorter encoding is defined.
@@ -53,21 +54,15 @@ protected:
     bool Compress(std::vector<unsigned char> &out) const;
     unsigned int GetSpecialSize(unsigned int nSize) const;
     bool Decompress(unsigned int nSize, const std::vector<unsigned char> &out);
-public:
-    CScriptCompressor(CScript &scriptIn) : script(scriptIn) { }
 
-    unsigned int GetSerializeSize(int nType, int nVersion) const {
+public:
+    CScriptCompressor(CScript &scriptIn) : script(scriptIn) {}
+    template <typename Stream>
+    void Serialize(Stream &s) const
+    {
         std::vector<unsigned char> compr;
         if (Compress(compr))
-            return compr.size();
-        unsigned int nSize = script.size() + nSpecialScripts;
-        return script.size() + VARINT(nSize).GetSerializeSize(nType, nVersion);
-    }
-
-    template<typename Stream>
-    void Serialize(Stream &s, int nType, int nVersion) const {
-        std::vector<unsigned char> compr;
-        if (Compress(compr)) {
+        {
             s << CFlatData(compr);
             return;
         }
@@ -76,19 +71,30 @@ public:
         s << CFlatData(script);
     }
 
-    template<typename Stream>
-    void Unserialize(Stream &s, int nType, int nVersion) {
+    template <typename Stream>
+    void Unserialize(Stream &s)
+    {
         unsigned int nSize = 0;
         s >> VARINT(nSize);
-        if (nSize < nSpecialScripts) {
+        if (nSize < nSpecialScripts)
+        {
             std::vector<unsigned char> vch(GetSpecialSize(nSize), 0x00);
             s >> REF(CFlatData(vch));
             Decompress(nSize, vch);
             return;
         }
         nSize -= nSpecialScripts;
-        script.resize(nSize);
-        s >> REF(CFlatData(script));
+        if (nSize > MAX_SCRIPT_SIZE)
+        {
+            // Overly long script, replace with a short invalid one
+            script << OP_RETURN;
+            s.ignore(nSize);
+        }
+        else
+        {
+            script.resize(nSize);
+            s >> REF(CFlatData(script));
+        }
     }
 };
 
@@ -102,16 +108,19 @@ public:
     static uint64_t CompressAmount(uint64_t nAmount);
     static uint64_t DecompressAmount(uint64_t nAmount);
 
-    CTxOutCompressor(CTxOut &txoutIn) : txout(txoutIn) { }
-
+    CTxOutCompressor(CTxOut &txoutIn) : txout(txoutIn) {}
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-        if (!ser_action.ForRead()) {
+    inline void SerializationOp(Stream &s, Operation ser_action)
+    {
+        if (!ser_action.ForRead())
+        {
             uint64_t nVal = CompressAmount(txout.nValue);
             READWRITE(VARINT(nVal));
-        } else {
+        }
+        else
+        {
             uint64_t nVal = 0;
             READWRITE(VARINT(nVal));
             txout.nValue = DecompressAmount(nVal);

@@ -11,25 +11,27 @@
 
 #include "key.h"
 #include "script/script.h"
+#include "test/test_bitcoin.h"
 #include "uint256.h"
 #include "util.h"
 #include "utilstrencodings.h"
-#include "test/test_bitcoin.h"
 
 #include <boost/foreach.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include <univalue.h>
 
-extern UniValue read_json(const std::string& jsondata);
+extern UniValue read_json(const std::string &jsondata);
 
 BOOST_FIXTURE_TEST_SUITE(base58_tests, BasicTestingSetup)
 
 // Goal: test low-level base58 encoding functionality
 BOOST_AUTO_TEST_CASE(base58_EncodeBase58)
 {
-    UniValue tests = read_json(std::string(json_tests::base58_encode_decode, json_tests::base58_encode_decode + sizeof(json_tests::base58_encode_decode)));
-    for (unsigned int idx = 0; idx < tests.size(); idx++) {
+    UniValue tests = read_json(std::string(
+        json_tests::base58_encode_decode, json_tests::base58_encode_decode + sizeof(json_tests::base58_encode_decode)));
+    for (unsigned int idx = 0; idx < tests.size(); idx++)
+    {
         UniValue test = tests[idx];
         std::string strTest = test.write();
         if (test.size() < 2) // Allow for extra stuff (useful for comments)
@@ -39,19 +41,19 @@ BOOST_AUTO_TEST_CASE(base58_EncodeBase58)
         }
         std::vector<unsigned char> sourcedata = ParseHex(test[0].get_str());
         std::string base58string = test[1].get_str();
-        BOOST_CHECK_MESSAGE(
-                    EncodeBase58(begin_ptr(sourcedata), end_ptr(sourcedata)) == base58string,
-                    strTest);
+        BOOST_CHECK_MESSAGE(EncodeBase58(begin_ptr(sourcedata), end_ptr(sourcedata)) == base58string, strTest);
     }
 }
 
 // Goal: test low-level base58 decoding functionality
 BOOST_AUTO_TEST_CASE(base58_DecodeBase58)
 {
-    UniValue tests = read_json(std::string(json_tests::base58_encode_decode, json_tests::base58_encode_decode + sizeof(json_tests::base58_encode_decode)));
+    UniValue tests = read_json(std::string(
+        json_tests::base58_encode_decode, json_tests::base58_encode_decode + sizeof(json_tests::base58_encode_decode)));
     std::vector<unsigned char> result;
 
-    for (unsigned int idx = 0; idx < tests.size(); idx++) {
+    for (unsigned int idx = 0; idx < tests.size(); idx++)
+    {
         UniValue test = tests[idx];
         std::string strTest = test.write();
         if (test.size() < 2) // Allow for extra stuff (useful for comments)
@@ -62,14 +64,15 @@ BOOST_AUTO_TEST_CASE(base58_DecodeBase58)
         std::vector<unsigned char> expected = ParseHex(test[0].get_str());
         std::string base58string = test[1].get_str();
         BOOST_CHECK_MESSAGE(DecodeBase58(base58string, result), strTest);
-        BOOST_CHECK_MESSAGE(result.size() == expected.size() && std::equal(result.begin(), result.end(), expected.begin()), strTest);
+        BOOST_CHECK_MESSAGE(
+            result.size() == expected.size() && std::equal(result.begin(), result.end(), expected.begin()), strTest);
     }
 
     BOOST_CHECK(!DecodeBase58("invalid", result));
 
     // check that DecodeBase58 skips whitespace, but still fails with unexpected non-whitespace at the end.
     BOOST_CHECK(!DecodeBase58(" \t\n\v\f\r skip \r\f\v\n\t a", result));
-    BOOST_CHECK( DecodeBase58(" \t\n\v\f\r skip \r\f\v\n\t ", result));
+    BOOST_CHECK(DecodeBase58(" \t\n\v\f\r skip \r\f\v\n\t ", result));
     std::vector<unsigned char> expected = ParseHex("971a55");
     BOOST_CHECK_EQUAL_COLLECTIONS(result.begin(), result.end(), expected.begin(), expected.end());
 }
@@ -79,20 +82,12 @@ class TestAddrTypeVisitor : public boost::static_visitor<bool>
 {
 private:
     std::string exp_addrType;
+
 public:
-    TestAddrTypeVisitor(const std::string &exp_addrType) : exp_addrType(exp_addrType) { }
-    bool operator()(const CKeyID &id) const
-    {
-        return (exp_addrType == "pubkey");
-    }
-    bool operator()(const CScriptID &id) const
-    {
-        return (exp_addrType == "script");
-    }
-    bool operator()(const CNoDestination &no) const
-    {
-        return (exp_addrType == "none");
-    }
+    TestAddrTypeVisitor(const std::string &exp_addrType) : exp_addrType(exp_addrType) {}
+    bool operator()(const CKeyID &id) const { return (exp_addrType == "pubkey"); }
+    bool operator()(const CScriptID &id) const { return (exp_addrType == "script"); }
+    bool operator()(const CNoDestination &no) const { return (exp_addrType == "none"); }
 };
 
 // Visitor to check address payload
@@ -100,8 +95,9 @@ class TestPayloadVisitor : public boost::static_visitor<bool>
 {
 private:
     std::vector<unsigned char> exp_payload;
+
 public:
-    TestPayloadVisitor(std::vector<unsigned char> &exp_payload) : exp_payload(exp_payload) { }
+    TestPayloadVisitor(std::vector<unsigned char> &exp_payload) : exp_payload(exp_payload) {}
     bool operator()(const CKeyID &id) const
     {
         uint160 exp_key(exp_payload);
@@ -112,22 +108,21 @@ public:
         uint160 exp_key(exp_payload);
         return exp_key == id;
     }
-    bool operator()(const CNoDestination &no) const
-    {
-        return exp_payload.size() == 0;
-    }
+    bool operator()(const CNoDestination &no) const { return exp_payload.size() == 0; }
 };
 
 // Goal: check that parsed keys match test payload
 BOOST_AUTO_TEST_CASE(base58_keys_valid_parse)
 {
-    UniValue tests = read_json(std::string(json_tests::base58_keys_valid, json_tests::base58_keys_valid + sizeof(json_tests::base58_keys_valid)));
+    UniValue tests = read_json(std::string(
+        json_tests::base58_keys_valid, json_tests::base58_keys_valid + sizeof(json_tests::base58_keys_valid)));
     std::vector<unsigned char> result;
     CBitcoinSecret secret;
     CBitcoinAddress addr;
     SelectParams(CBaseChainParams::MAIN);
 
-    for (unsigned int idx = 0; idx < tests.size(); idx++) {
+    for (unsigned int idx = 0; idx < tests.size(); idx++)
+    {
         UniValue test = tests[idx];
         std::string strTest = test.write();
         if (test.size() < 3) // Allow for extra stuff (useful for comments)
@@ -144,16 +139,18 @@ BOOST_AUTO_TEST_CASE(base58_keys_valid_parse)
             SelectParams(CBaseChainParams::TESTNET);
         else
             SelectParams(CBaseChainParams::MAIN);
-        if(isPrivkey)
+        if (isPrivkey)
         {
             bool isCompressed = find_value(metadata, "isCompressed").get_bool();
             // Must be valid private key
             // Note: CBitcoinSecret::SetString tests isValid, whereas CBitcoinAddress does not!
-            BOOST_CHECK_MESSAGE(secret.SetString(exp_base58string), "!SetString:"+ strTest);
+            BOOST_CHECK_MESSAGE(secret.SetString(exp_base58string), "!SetString:" + strTest);
             BOOST_CHECK_MESSAGE(secret.IsValid(), "!IsValid:" + strTest);
             CKey privkey = secret.GetKey();
             BOOST_CHECK_MESSAGE(privkey.IsCompressed() == isCompressed, "compressed mismatch:" + strTest);
-            BOOST_CHECK_MESSAGE(privkey.size() == exp_payload.size() && std::equal(privkey.begin(), privkey.end(), exp_payload.begin()), "key mismatch:" + strTest);
+            BOOST_CHECK_MESSAGE(
+                privkey.size() == exp_payload.size() && std::equal(privkey.begin(), privkey.end(), exp_payload.begin()),
+                "key mismatch:" + strTest);
 
             // Private key must be invalid public key
             addr.SetString(exp_base58string);
@@ -167,7 +164,8 @@ BOOST_AUTO_TEST_CASE(base58_keys_valid_parse)
             BOOST_CHECK_MESSAGE(addr.IsValid(), "!IsValid:" + strTest);
             BOOST_CHECK_MESSAGE(addr.IsScript() == (exp_addrType == "script"), "isScript mismatch" + strTest);
             CTxDestination dest = addr.Get();
-            BOOST_CHECK_MESSAGE(boost::apply_visitor(TestAddrTypeVisitor(exp_addrType), dest), "addrType mismatch" + strTest);
+            BOOST_CHECK_MESSAGE(
+                boost::apply_visitor(TestAddrTypeVisitor(exp_addrType), dest), "addrType mismatch" + strTest);
 
             // Public key must be invalid private key
             secret.SetString(exp_base58string);
@@ -179,10 +177,12 @@ BOOST_AUTO_TEST_CASE(base58_keys_valid_parse)
 // Goal: check that generated keys match test vectors
 BOOST_AUTO_TEST_CASE(base58_keys_valid_gen)
 {
-    UniValue tests = read_json(std::string(json_tests::base58_keys_valid, json_tests::base58_keys_valid + sizeof(json_tests::base58_keys_valid)));
+    UniValue tests = read_json(std::string(
+        json_tests::base58_keys_valid, json_tests::base58_keys_valid + sizeof(json_tests::base58_keys_valid)));
     std::vector<unsigned char> result;
 
-    for (unsigned int idx = 0; idx < tests.size(); idx++) {
+    for (unsigned int idx = 0; idx < tests.size(); idx++)
+    {
         UniValue test = tests[idx];
         std::string strTest = test.write();
         if (test.size() < 3) // Allow for extra stuff (useful for comments)
@@ -199,7 +199,7 @@ BOOST_AUTO_TEST_CASE(base58_keys_valid_gen)
             SelectParams(CBaseChainParams::TESTNET);
         else
             SelectParams(CBaseChainParams::MAIN);
-        if(isPrivkey)
+        if (isPrivkey)
         {
             bool isCompressed = find_value(metadata, "isCompressed").get_bool();
             CKey key;
@@ -213,15 +213,15 @@ BOOST_AUTO_TEST_CASE(base58_keys_valid_gen)
         {
             std::string exp_addrType = find_value(metadata, "addrType").get_str();
             CTxDestination dest;
-            if(exp_addrType == "pubkey")
+            if (exp_addrType == "pubkey")
             {
                 dest = CKeyID(uint160(exp_payload));
             }
-            else if(exp_addrType == "script")
+            else if (exp_addrType == "script")
             {
                 dest = CScriptID(uint160(exp_payload));
             }
-            else if(exp_addrType == "none")
+            else if (exp_addrType == "none")
             {
                 dest = CNoDestination();
             }
@@ -247,12 +247,15 @@ BOOST_AUTO_TEST_CASE(base58_keys_valid_gen)
 // Goal: check that base58 parsing code is robust against a variety of corrupted data
 BOOST_AUTO_TEST_CASE(base58_keys_invalid)
 {
-    UniValue tests = read_json(std::string(json_tests::base58_keys_invalid, json_tests::base58_keys_invalid + sizeof(json_tests::base58_keys_invalid))); // Negative testcases
+    // Negative testcases
+    UniValue tests = read_json(std::string(
+        json_tests::base58_keys_invalid, json_tests::base58_keys_invalid + sizeof(json_tests::base58_keys_invalid)));
     std::vector<unsigned char> result;
     CBitcoinSecret secret;
     CBitcoinAddress addr;
 
-    for (unsigned int idx = 0; idx < tests.size(); idx++) {
+    for (unsigned int idx = 0; idx < tests.size(); idx++)
+    {
         UniValue test = tests[idx];
         std::string strTest = test.write();
         if (test.size() < 1) // Allow for extra stuff (useful for comments)
@@ -272,4 +275,3 @@ BOOST_AUTO_TEST_CASE(base58_keys_invalid)
 
 
 BOOST_AUTO_TEST_SUITE_END()
-

@@ -18,6 +18,11 @@ static const unsigned int MAX_TX_SIGOPS = BLOCKSTREAM_CORE_MAX_BLOCK_SIZE/50;
 */
 static const unsigned int DEFAULT_LARGEST_TRANSACTION = 1000000;
 
+/** This is the default max bloom filter size allowed on the bitcoin network.  In Bitcoin Unlimited we have the ability
+ *  to communicate to our peer what max bloom filter size we will accept but still observe this value as a default.
+ */
+static const unsigned int SMALLEST_MAX_BLOOM_FILTER_SIZE = 36000; // bytes
+
 /** Coinbase transaction outputs can only be spent after this number of new blocks (network rule) */
 static const int COINBASE_MATURITY = 100;
 

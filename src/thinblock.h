@@ -13,6 +13,7 @@
 #include "stat.h"
 #include "sync.h"
 #include "uint256.h"
+#include <atomic>
 #include <vector>
 
 class CDataStream;
@@ -40,7 +41,7 @@ public:
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream &s, Operation ser_action, int nType, int nVersion)
+    inline void SerializationOp(Stream &s, Operation ser_action)
     {
         READWRITE(header);
         READWRITE(vTxHashes);
@@ -79,7 +80,7 @@ public:
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream &s, Operation ser_action, int nType, int nVersion)
+    inline void SerializationOp(Stream &s, Operation ser_action)
     {
         READWRITE(header);
         READWRITE(vTxHashes);
@@ -113,7 +114,7 @@ public:
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream &s, Operation ser_action, int nType, int nVersion)
+    inline void SerializationOp(Stream &s, Operation ser_action)
     {
         READWRITE(blockhash);
         READWRITE(vMissingTx);
@@ -143,7 +144,7 @@ public:
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream &s, Operation ser_action, int nType, int nVersion)
+    inline void SerializationOp(Stream &s, Operation ser_action)
     {
         READWRITE(blockhash);
         READWRITE(setCheapHashesToRequest);
@@ -154,6 +155,9 @@ public:
 class CThinBlockData
 {
 private:
+    /* The sum total of all bytes for thinblocks currently in process of being reconstructed */
+    std::atomic<uint64_t> nThinBlockBytes{0};
+
     CCriticalSection cs_mapThinBlockTimer; // locks mapThinBlockTimer
     std::map<uint256, uint64_t> mapThinBlockTimer;
 
@@ -171,8 +175,6 @@ private:
     std::map<int64_t, double> mapThinBlockResponseTime;
     std::map<int64_t, double> mapThinBlockValidationTime;
     std::map<int64_t, int> mapThinBlocksInBoundReRequestedTx;
-    /* The sum total of all bytes for thinblocks currently in process of being reconstructed */
-    uint64_t nThinBlockBytes;
 
     /**
         Add new entry to statistics array; also removes old timestamps
@@ -244,6 +246,7 @@ bool IsThinBlockValid(CNode *pfrom, const std::vector<CTransaction> &vMissingTx,
 void BuildSeededBloomFilter(CBloomFilter &memPoolFilter,
     std::vector<uint256> &vOrphanHashes,
     uint256 hash,
+    CNode *pfrom,
     bool fDeterministic = false);
 
 // Xpress Validation: begin

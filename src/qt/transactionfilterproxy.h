@@ -26,8 +26,7 @@ public:
     /** Type filter bit field (all types) */
     static const quint32 ALL_TYPES = 0xFFFFFFFF;
 
-    static quint32 TYPE(int type) { return 1<<type; }
-
+    static quint32 TYPE(int type) { return 1 << type; }
     enum WatchOnlyFilter
     {
         WatchOnlyFilter_All,
@@ -41,9 +40,8 @@ public:
       @note Type filter takes a bit field created with TYPE() or ALL_TYPES
      */
     void setTypeFilter(quint32 modes);
-    void setMinAmount(const CAmount& minimum);
+    void setMinAmount(const CAmount &minimum);
     void setWatchOnlyFilter(WatchOnlyFilter filter);
-    void setPublicLabelFilter(bool filter);
 
     /** Set maximum number of rows returned, -1 if unlimited. */
     void setLimit(int limit);
@@ -54,7 +52,7 @@ public:
     int rowCount(const QModelIndex &parent = QModelIndex()) const;
 
 protected:
-    bool filterAcceptsRow(int source_row, const QModelIndex & source_parent) const;
+    bool filterAcceptsRow(int source_row, const QModelIndex &source_parent) const;
 
 private:
     QDateTime dateFrom;

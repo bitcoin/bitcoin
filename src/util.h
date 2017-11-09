@@ -17,6 +17,7 @@
 
 #include "allowed_args.h"
 #include "compat.h"
+#include "fs.h"
 #include "tinyformat.h"
 #include "utiltime.h"
 
@@ -26,7 +27,6 @@
 #include <string>
 #include <vector>
 
-#include <boost/filesystem/path.hpp>
 #include <boost/signals2/signal.hpp>
 #include <boost/thread/exceptions.hpp>
 
@@ -39,11 +39,20 @@
 #else
 #define DbgStringify(x) #x
 #define DbgStringifyIntLiteral(x) DbgStringify(x)
-#define DbgAssert(pred, execInRelease) do { if (!(pred)) { LogPrintStr(std::string(__FILE__ "(" DbgStringifyIntLiteral(__LINE__) "): Debug Assertion failed: \"" #pred "\"\n")); execInRelease; }} while(0)
+#define DbgAssert(pred, execInRelease)                                                                        \
+    do                                                                                                        \
+    {                                                                                                         \
+        if (!(pred))                                                                                          \
+        {                                                                                                     \
+            LogPrintStr(std::string(                                                                          \
+                __FILE__ "(" DbgStringifyIntLiteral(__LINE__) "): Debug Assertion failed: \"" #pred "\"\n")); \
+            execInRelease;                                                                                    \
+        }                                                                                                     \
+    } while (0)
 #endif
 
 static const bool DEFAULT_LOGTIMEMICROS = false;
-static const bool DEFAULT_LOGIPS        = true;
+static const bool DEFAULT_LOGIPS = true;
 static const bool DEFAULT_LOGTIMESTAMPS = true;
 
 // For bitcoin-cli
@@ -55,7 +64,7 @@ class CTranslationInterface
 {
 public:
     /** Translate a message to the native language of the user. */
-    boost::signals2::signal<std::string (const char* psz)> Translate;
+    boost::signals2::signal<std::string(const char *psz)> Translate;
 };
 
 extern std::map<std::string, std::string> mapArgs;
@@ -71,14 +80,14 @@ extern bool fLogIPs;
 extern volatile bool fReopenDebugLog;
 extern CTranslationInterface translationInterface;
 
-extern const char * const BITCOIN_CONF_FILENAME;
-extern const char * const BITCOIN_PID_FILENAME;
+extern const char *const BITCOIN_CONF_FILENAME;
+extern const char *const BITCOIN_PID_FILENAME;
 
 /**
  * Translation function: Call Translate signal on UI interface, which returns a boost::optional result.
  * If no translation slot is registered, nothing is returned, and simply return the input.
  */
-inline std::string _(const char* psz)
+inline std::string _(const char *psz)
 {
     boost::optional<std::string> rv = translationInterface.Translate(psz);
     return rv ? (*rv) : psz;
@@ -88,21 +97,22 @@ void SetupEnvironment();
 bool SetupNetworking();
 
 /** Return true if log accepts specified category */
-bool LogAcceptCategory(const char* category);
+bool LogAcceptCategory(const char *category);
 /** Send a string to the log output */
 int LogPrintStr(const std::string &str);
 
 #define LogPrintf(...) LogPrint(NULL, __VA_ARGS__)
 
-template<typename T1, typename... Args>
-static inline int LogPrint(const char* category, const char* fmt, const T1& v1, const Args&... args)
+template <typename T1, typename... Args>
+static inline int LogPrint(const char *category, const char *fmt, const T1 &v1, const Args &... args)
 {
-    if(!LogAcceptCategory(category)) return 0;                            \
+    if (!LogAcceptCategory(category))
+        return 0;
     return LogPrintStr(tfm::format(fmt, v1, args...));
 }
 
-template<typename T1, typename... Args>
-bool error(const char* fmt, const T1& v1, const Args&... args)
+template <typename T1, typename... Args>
+bool error(const char *fmt, const T1 &v1, const Args &... args)
 {
     LogPrintStr("ERROR: " + tfm::format(fmt, v1, args...) + "\n");
     return false;
@@ -113,12 +123,13 @@ bool error(const char* fmt, const T1& v1, const Args&... args)
  * the variadic templates above (and don't take format arguments but
  * bare strings).
  */
-static inline int LogPrint(const char* category, const char* s)
+static inline int LogPrint(const char *category, const char *s)
 {
-    if(!LogAcceptCategory(category)) return 0;
+    if (!LogAcceptCategory(category))
+        return 0;
     return LogPrintStr(s);
 }
-static inline bool error(const char* s)
+static inline bool error(const char *s)
 {
     LogPrintStr(std::string("ERROR: ") + s + "\n");
     return false;
@@ -140,31 +151,31 @@ static inline bool error(const char* s)
  */
 extern std::string formatInfoUnit(double value);
 
-void PrintExceptionContinue(const std::exception *pex, const char* pszThread);
-void ParseParameters(int argc, const char*const argv[], const AllowedArgs::AllowedArgs& allowedArgs);
+void PrintExceptionContinue(const std::exception *pex, const char *pszThread);
+void ParseParameters(int argc, const char *const argv[], const AllowedArgs::AllowedArgs &allowedArgs);
 void FileCommit(FILE *fileout);
 bool TruncateFile(FILE *file, unsigned int length);
 int RaiseFileDescriptorLimit(int nMinFD);
 void AllocateFileRange(FILE *file, unsigned int offset, unsigned int length);
-bool RenameOver(boost::filesystem::path src, boost::filesystem::path dest);
-bool TryCreateDirectory(const boost::filesystem::path& p);
-boost::filesystem::path GetDefaultDataDir();
-const boost::filesystem::path &GetDataDir(bool fNetSpecific = true);
+bool RenameOver(fs::path src, fs::path dest);
+bool TryCreateDirectories(const fs::path &p);
+fs::path GetDefaultDataDir();
+const fs::path &GetDataDir(bool fNetSpecific = true);
 void ClearDatadirCache();
-boost::filesystem::path GetConfigFile();
+fs::path GetConfigFile(const std::string &confPath);
 #ifndef WIN32
-boost::filesystem::path GetPidFile();
-void CreatePidFile(const boost::filesystem::path &path, pid_t pid);
+fs::path GetPidFile();
+void CreatePidFile(const fs::path &path, pid_t pid);
 #endif
-void ReadConfigFile(std::map<std::string, std::string>& mapSettingsRet,
-                    std::map<std::string, std::vector<std::string> >& mapMultiSettingsRet,
-                    const AllowedArgs::AllowedArgs& allowedArgs);
+void ReadConfigFile(std::map<std::string, std::string> &mapSettingsRet,
+    std::map<std::string, std::vector<std::string> > &mapMultiSettingsRet,
+    const AllowedArgs::AllowedArgs &allowedArgs);
 #ifdef WIN32
-boost::filesystem::path GetSpecialFolderPath(int nFolder, bool fCreate = true);
+fs::path GetSpecialFolderPath(int nFolder, bool fCreate = true);
 #endif
 void OpenDebugLog();
 void ShrinkDebugFile();
-void runCommand(const std::string& strCommand);
+void runCommand(const std::string &strCommand);
 
 inline bool IsSwitchChar(char c)
 {
@@ -182,7 +193,7 @@ inline bool IsSwitchChar(char c)
  * @param default (e.g. "1")
  * @return command-line argument or default value
  */
-std::string GetArg(const std::string& strArg, const std::string& strDefault);
+std::string GetArg(const std::string &strArg, const std::string &strDefault);
 
 /**
  * Return integer argument or default value
@@ -191,7 +202,7 @@ std::string GetArg(const std::string& strArg, const std::string& strDefault);
  * @param default (e.g. 1)
  * @return command-line argument (0 if invalid number) or default value
  */
-int64_t GetArg(const std::string& strArg, int64_t nDefault);
+int64_t GetArg(const std::string &strArg, int64_t nDefault);
 
 /**
  * Return boolean argument or default value
@@ -200,7 +211,7 @@ int64_t GetArg(const std::string& strArg, int64_t nDefault);
  * @param default (true or false)
  * @return command-line argument or default value
  */
-bool GetBoolArg(const std::string& strArg, bool fDefault);
+bool GetBoolArg(const std::string &strArg, bool fDefault);
 
 /**
  * Set an argument if it doesn't already have a value
@@ -209,7 +220,7 @@ bool GetBoolArg(const std::string& strArg, bool fDefault);
  * @param strValue Value (e.g. "1")
  * @return true if argument gets set, false if it already had a value
  */
-bool SoftSetArg(const std::string& strArg, const std::string& strValue);
+bool SoftSetArg(const std::string &strArg, const std::string &strValue);
 
 /**
  * Set a boolean argument if it doesn't already have a value
@@ -218,7 +229,7 @@ bool SoftSetArg(const std::string& strArg, const std::string& strValue);
  * @param fValue Value (e.g. false)
  * @return true if argument gets set, false if it already had a value
  */
-bool SoftSetBoolArg(const std::string& strArg, bool fValue);
+bool SoftSetBoolArg(const std::string &strArg, bool fValue);
 
 /**
  * Return the number of physical cores available on the current system.
@@ -228,12 +239,13 @@ bool SoftSetBoolArg(const std::string& strArg, bool fValue);
 int GetNumCores();
 
 void SetThreadPriority(int nPriority);
-void RenameThread(const char* name);
+void RenameThread(const char *name);
 
 /**
  * .. and a wrapper that just calls func once
  */
-template <typename Callable> void TraceThread(const char* name,  Callable func)
+template <typename Callable>
+void TraceThread(const char *name, Callable func)
 {
     std::string s = strprintf("bitcoin-%s", name);
     RenameThread(s.c_str());
@@ -243,21 +255,23 @@ template <typename Callable> void TraceThread(const char* name,  Callable func)
         func();
         LogPrintf("%s thread exit\n", name);
     }
-    catch (const boost::thread_interrupted&)
+    catch (const boost::thread_interrupted &)
     {
         LogPrintf("%s thread interrupt\n", name);
         throw;
     }
-    catch (const std::exception& e) {
+    catch (const std::exception &e)
+    {
         PrintExceptionContinue(&e, name);
         throw;
     }
-    catch (...) {
+    catch (...)
+    {
         PrintExceptionContinue(NULL, name);
         throw;
     }
 }
 
-std::string CopyrightHolders(const std::string& strPrefix);
+std::string CopyrightHolders(const std::string &strPrefix);
 
 #endif // BITCOIN_UTIL_H

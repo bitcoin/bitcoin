@@ -31,6 +31,7 @@ import pdb
 import os
 import time
 import shutil
+import signal
 import sys
 import subprocess
 import tempfile
@@ -437,6 +438,10 @@ class RPCTestHandler:
             time.sleep(.5)
             for j in self.jobs:
                 (name, time0, proc) = j
+                if os.getenv('TRAVIS') == 'true' and int(time.time() - time0) > 20 * 60:
+                    # In travis, timeout individual tests after 20 minutes (to stop tests hanging and not
+                    # providing useful output.
+                    proc.send_signal(signal.SIGINT)
                 if proc.poll() is not None:
                     (stdout, stderr) = proc.communicate(timeout=3)
                     passed = stderr == "" and proc.returncode == 0

@@ -11,36 +11,44 @@ using namespace std;
 /**
  * CChain implementation
  */
-void CChain::SetTip(CBlockIndex *pindex) {
-    if (pindex == NULL) {
+void CChain::SetTip(CBlockIndex *pindex)
+{
+    if (pindex == NULL)
+    {
         vChain.clear();
         return;
     }
     vChain.resize(pindex->nHeight + 1);
-    while (pindex && vChain[pindex->nHeight] != pindex) {
+    while (pindex && vChain[pindex->nHeight] != pindex)
+    {
         vChain[pindex->nHeight] = pindex;
         pindex = pindex->pprev;
     }
 }
 
-CBlockLocator CChain::GetLocator(const CBlockIndex *pindex) const {
+CBlockLocator CChain::GetLocator(const CBlockIndex *pindex) const
+{
     int nStep = 1;
     std::vector<uint256> vHave;
     vHave.reserve(32);
 
     if (!pindex)
         pindex = Tip();
-    while (pindex) {
+    while (pindex)
+    {
         vHave.push_back(pindex->GetBlockHash());
         // Stop when we have added the genesis block.
         if (pindex->nHeight == 0)
             break;
         // Exponentially larger steps back, plus the genesis block.
         int nHeight = std::max(pindex->nHeight - nStep, 0);
-        if (Contains(pindex)) {
+        if (Contains(pindex))
+        {
             // Use O(1) CChain index if possible.
             pindex = (*this)[nHeight];
-        } else {
+        }
+        else
+        {
             // Otherwise, use O(log n) skiplist.
             pindex = pindex->GetAncestor(nHeight);
         }
@@ -51,8 +59,10 @@ CBlockLocator CChain::GetLocator(const CBlockIndex *pindex) const {
     return CBlockLocator(vHave);
 }
 
-const CBlockIndex *CChain::FindFork(const CBlockIndex *pindex) const {
-    if (pindex == NULL) {
+const CBlockIndex *CChain::FindFork(const CBlockIndex *pindex) const
+{
+    if (pindex == NULL)
+    {
         return NULL;
     }
     if (pindex->nHeight > Height())
@@ -64,9 +74,9 @@ const CBlockIndex *CChain::FindFork(const CBlockIndex *pindex) const {
 
 /** Turn the lowest '1' bit in the binary representation of a number into a '0'. */
 int static inline InvertLowestOne(int n) { return n & (n - 1); }
-
 /** Compute what height to jump back to with the CBlockIndex::pskip pointer. */
-int static inline GetSkipHeight(int height) {
+int static inline GetSkipHeight(int height)
+{
     if (height < 2)
         return 0;
 
@@ -76,24 +86,27 @@ int static inline GetSkipHeight(int height) {
     return (height & 1) ? InvertLowestOne(InvertLowestOne(height - 1)) + 1 : InvertLowestOne(height);
 }
 
-CBlockIndex* CBlockIndex::GetAncestor(int height)
+CBlockIndex *CBlockIndex::GetAncestor(int height)
 {
     if (height > nHeight || height < 0)
         return NULL;
 
-    CBlockIndex* pindexWalk = this;
+    CBlockIndex *pindexWalk = this;
     int heightWalk = nHeight;
-    while (heightWalk > height) {
+    while (heightWalk > height)
+    {
         int heightSkip = GetSkipHeight(heightWalk);
         int heightSkipPrev = GetSkipHeight(heightWalk - 1);
         if (pindexWalk->pskip != NULL &&
             (heightSkip == height ||
-             (heightSkip > height && !(heightSkipPrev < heightSkip - 2 &&
-                                       heightSkipPrev >= height)))) {
+                (heightSkip > height && !(heightSkipPrev < heightSkip - 2 && heightSkipPrev >= height))))
+        {
             // Only follow pskip if pprev->pskip isn't better than pskip->pprev.
             pindexWalk = pindexWalk->pskip;
             heightWalk = heightSkip;
-        } else {
+        }
+        else
+        {
             assert(pindexWalk->pprev);
             pindexWalk = pindexWalk->pprev;
             heightWalk--;
@@ -102,9 +115,9 @@ CBlockIndex* CBlockIndex::GetAncestor(int height)
     return pindexWalk;
 }
 
-const CBlockIndex* CBlockIndex::GetAncestor(int height) const
+const CBlockIndex *CBlockIndex::GetAncestor(int height) const
 {
-    return const_cast<CBlockIndex*>(this)->GetAncestor(height);
+    return const_cast<CBlockIndex *>(this)->GetAncestor(height);
 }
 
 void CBlockIndex::BuildSkip()
@@ -115,7 +128,8 @@ void CBlockIndex::BuildSkip()
 
 bool CBlockIndex::forkActivated(int time)
 {
-    if (time==0) return false;
+    if (time == 0)
+        return false;
 
     if (pprev && pprev->GetMedianTimePast() >= time)
     {
@@ -126,28 +140,40 @@ bool CBlockIndex::forkActivated(int time)
 
 bool CBlockIndex::forkActivateNow(int time)
 {
-    if (time==0) return false;
+    if (time == 0)
+        return false;
     return (pprev && pprev->forkAtNextBlock(time));
 }
 
 bool CBlockIndex::IsforkActiveOnNextBlock(int time)
 {
-    if (time==0) return false;
+    if (time == 0)
+        return false;
     // if the fork is already activated
-    if (forkActivated(time)) return true;
-    if (GetMedianTimePast() >= time) return true;
+    if (forkActivated(time))
+        return true;
+    if (GetMedianTimePast() >= time)
+        return true;
     return false;
 }
 
 bool CBlockIndex::forkAtNextBlock(int time)
 {
-    if (time==0) return false;
+    if (time == 0)
+        return false;
 
     // if the fork is already activated
-    if (forkActivated(time)) return false;
+    if (forkActivated(time))
+        return false;
 
-    if (GetMedianTimePast() >= time) return true;
+    if (GetMedianTimePast() >= time)
+        return true;
     return false;
 }
 
 
+std::string CBlockFileInfo::ToString() const
+{
+    return strprintf("CBlockFileInfo(blocks=%u, size=%u, heights=%u...%u, time=%s...%s)", nBlocks, nSize, nHeightFirst,
+        nHeightLast, DateTimeStrFormat("%Y-%m-%d", nTimeFirst), DateTimeStrFormat("%Y-%m-%d", nTimeLast));
+}

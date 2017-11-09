@@ -20,11 +20,7 @@ public:
     //! Minimum absolute fee (not per kilobyte)
     CAmount nMinimumTotalFee;
 
-    CCoinControl()
-    {
-        SetNull();
-    }
-
+    CCoinControl() { SetNull(); }
     void SetNull()
     {
         destChange = CNoDestination();
@@ -34,33 +30,17 @@ public:
         nMinimumTotalFee = 0;
     }
 
-    bool HasSelected() const
-    {
-        return (setSelected.size() > 0);
-    }
-
-    bool IsSelected(const uint256& hash, unsigned int n) const
+    bool HasSelected() const { return (setSelected.size() > 0); }
+    bool IsSelected(const uint256 &hash, unsigned int n) const
     {
         COutPoint outpt(hash, n);
         return (setSelected.count(outpt) > 0);
     }
 
-    void Select(const COutPoint& output)
-    {
-        setSelected.insert(output);
-    }
-
-    void UnSelect(const COutPoint& output)
-    {
-        setSelected.erase(output);
-    }
-
-    void UnSelectAll()
-    {
-        setSelected.clear();
-    }
-
-    void ListSelected(std::vector<COutPoint>& vOutpoints) const
+    void Select(const COutPoint &output) { setSelected.insert(output); }
+    void UnSelect(const COutPoint &output) { setSelected.erase(output); }
+    void UnSelectAll() { setSelected.clear(); }
+    void ListSelected(std::vector<COutPoint> &vOutpoints) const
     {
         vOutpoints.assign(setSelected.begin(), setSelected.end());
     }

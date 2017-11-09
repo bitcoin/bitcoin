@@ -18,27 +18,24 @@ public:
     static const PlatformStyle *instantiate(const QString &platformId);
 
     const QString &getName() const { return name; }
-
     bool getImagesOnButtons() const { return imagesOnButtons; }
     bool getUseExtraSpacing() const { return useExtraSpacing; }
-
     QColor TextColor() const { return textColor; }
     QColor SingleColor() const { return singleColor; }
-
     /** Colorize an image (given filename) with the icon color */
-    QImage SingleColorImage(const QString& filename) const;
+    QImage SingleColorImage(const QString &filename) const;
 
     /** Colorize an icon (given filename) with the icon color */
-    QIcon SingleColorIcon(const QString& filename) const;
+    QIcon SingleColorIcon(const QString &filename) const;
 
     /** Colorize an icon (given object) with the icon color */
-    QIcon SingleColorIcon(const QIcon& icon) const;
+    QIcon SingleColorIcon(const QIcon &icon) const;
 
     /** Colorize an icon (given filename) with the text color */
-    QIcon TextColorIcon(const QString& filename) const;
+    QIcon TextColorIcon(const QString &filename) const;
 
     /** Colorize an icon (given object) with the text color */
-    QIcon TextColorIcon(const QIcon& icon) const;
+    QIcon TextColorIcon(const QIcon &icon) const;
 
 private:
     PlatformStyle(const QString &name, bool imagesOnButtons, bool colorizeIcons, bool useExtraSpacing);
@@ -53,4 +50,3 @@ private:
 };
 
 #endif // BITCOIN_QT_PLATFORMSTYLE_H
-

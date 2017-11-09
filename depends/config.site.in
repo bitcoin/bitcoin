@@ -13,14 +13,11 @@ fi
 if test -z $with_qt_translationdir; then
   with_qt_translationdir=$depends_prefix/translations
 fi
-if test -z $with_qt_bindir; then
+if test -z $with_qt_bindir && test -z "@no_qt@"; then
   with_qt_bindir=$depends_prefix/native/bin
 fi
-if test -z $with_protoc_bindir; then
+if test -z $with_protoc_bindir && test -z "@no_qt@"; then
   with_protoc_bindir=$depends_prefix/native/bin
-fi
-if test -z $with_comparison_tool; then
-  with_comparison_tool=$depends_prefix/native/share/BitcoindComparisonTool_jar/BitcoindComparisonTool.jar
 fi
 
 
@@ -56,9 +53,10 @@ PKG_CONFIG="`which pkg-config` --static"
 # These two need to remain exported because pkg-config does not see them
 # otherwise. That means they must be unexported at the end of configure.ac to
 # avoid ruining the cache. Sigh.
-
-export PKG_CONFIG_LIBDIR=$depends_prefix/lib/pkgconfig
-export PKG_CONFIG_PATH=$depends_prefix/share/pkgconfig
+export PKG_CONFIG_PATH=$depends_prefix/share/pkgconfig:$depends_prefix/lib/pkgconfig
+if test -z "@allow_host_packages@"; then
+  export PKGCONFIG_LIBDIR=
+fi
 
 CPPFLAGS="-I$depends_prefix/include/ $CPPFLAGS"
 LDFLAGS="-L$depends_prefix/lib $LDFLAGS"

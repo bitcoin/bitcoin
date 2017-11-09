@@ -436,6 +436,16 @@ FILE *blockReceiptLog = NULL;
 
 void UnlimitedCleanup()
 {
+    txAdded.Stop();
+    poolSize.Stop();
+    recvAmt.Stop();
+    sendAmt.Stop();
+    nTxValidationTime.Stop();
+    {
+        LOCK(cs_blockvalidationtime);
+        nBlockValidationTime.Stop();
+    }
+
     CStatBase *obj = NULL;
     while (!mallocedStats.empty())
     {
@@ -1374,17 +1384,26 @@ UniValue getstatlist(const UniValue &params, bool fHelp)
 UniValue getstat(const UniValue &params, bool fHelp)
 {
     string specificIssue;
+    bool verbose = false;
+
+    // check for param  --verbose or -v
+    string::size_type params_offset = 0;
+    if (params[0].isStr() && (params[0].get_str() == "--verbose" || params[0].get_str() == "-v"))
+    {
+        verbose = true;
+        ++params_offset;
+    }
 
     int count = 0;
-    if (params.size() < 3)
+    if (params.size() < (3 + params_offset))
         count = 1; // if a count is not specified, give the latest sample
     else
     {
-        if (!params[2].isNum())
+        if (!params[2 + params_offset].isNum())
         {
             try
             {
-                count = boost::lexical_cast<int>(params[2].get_str());
+                count = boost::lexical_cast<int>(params[2 + params_offset].get_str());
             }
             catch (const boost::bad_lexical_cast &)
             {
@@ -1394,27 +1413,37 @@ UniValue getstat(const UniValue &params, bool fHelp)
         }
         else
         {
-            count = params[2].get_int();
+            count = params[2 + params_offset].get_int();
         }
     }
-    if (fHelp || (params.size() < 1))
+    if (fHelp || (params.size() < (1 + params_offset)))
         throw runtime_error("getstat"
                             "\nReturns the current settings for the network send and receive bandwidth and burst in "
-                            "kilobytes per second.\n"
+                            "kilobytes per second.\nTo get a list of available statistics use \"getstatlist\".\n"
                             "\nArguments: \n"
-                            "1. \"statistic\"     (string, required) Specify what statistic you want\n"
-                            "2. \"series\"  (string, optional) Specify what data series you want.  Options are "
+                            "1. \"-v\" or \"--verbose\" (string, optional) full details\n"
+                            "2. \"statistic\"     (string, required) Specify what statistic you want\n"
+                            "3. \"series\"  (string, optional) Specify what data series you want.  Options are "
                             "\"total\", \"now\",\"all\", \"sec10\", \"min5\", \"hourly\", \"daily\",\"monthly\".  "
                             "Default is all.\n"
-                            "3. \"count\"  (string, optional) Specify the number of samples you want.\n"
+                            "4. \"count\"  (string, optional) Specify the number of samples you want.\n"
 
                             "\nResult:\n"
                             "  {\n"
                             "    \"<statistic name>\"\n"
                             "    {\n"
+                            "    \"<series meta>\"\n (Only with --verbose|-v) "
+                            "      [\n"
+                            "        \"Series\": Requested series.\n"
+                            "        \"SampleSize\": Requested sample group size.\"\n"
+                            "      ],\n"
                             "    \"<series name>\"\n"
                             "      [\n"
                             "      <data>, (any type) The data points in the series\n"
+                            "      ],\n"
+                            "    \"timestamp\"\n"
+                            "      [\n"
+                            "      <time> (time only with --verbose|-v)\n"
                             "      ],\n"
                             "    ...\n"
                             "    },\n"
@@ -1426,16 +1455,16 @@ UniValue getstat(const UniValue &params, bool fHelp)
     UniValue ret(UniValue::VARR);
 
     string seriesStr;
-    if (params.size() < 2)
+    if (params.size() < (2 + params_offset))
         seriesStr = "total";
     else
-        seriesStr = params[1].get_str();
+        seriesStr = params[1 + params_offset].get_str();
     // uint_t series = 0;
     // if (series == "now") series |= 1;
     // if (series == "all") series = 0xfffffff;
     LOCK(cs_statMap);
 
-    CStatBase *base = FindStatistic(params[0].get_str().c_str());
+    CStatBase *base = FindStatistic(params[0 + params_offset].get_str().c_str());
     if (base)
     {
         UniValue ustat(UniValue::VOBJ);
@@ -1449,8 +1478,24 @@ UniValue getstat(const UniValue &params, bool fHelp)
         }
         else
         {
-            UniValue series = base->GetSeries(seriesStr, count);
-            ustat.push_back(Pair(seriesStr, series));
+            UniValue series;
+            if (verbose)
+            {
+                series = base->GetSeriesTime(seriesStr, count);
+
+                string metaStr = "meta";
+                UniValue metaData(UniValue::VARR);
+                metaData.push_back("Series:" + seriesStr);
+                metaData.push_back("SampleSize:" + boost::lexical_cast<std::string>(count));
+                ustat.push_back(Pair(metaStr, metaData));
+                ustat.push_back(Pair(seriesStr, series[0]));
+                ustat.push_back(Pair("timestamp", series[1]));
+            }
+            else
+            {
+                series = base->GetSeries(seriesStr, count);
+                ustat.push_back(Pair(seriesStr, series));
+            }
         }
 
         ret.push_back(ustat);
@@ -1722,12 +1767,12 @@ extern UniValue getstructuresizes(const UniValue &params, bool fHelp)
         node.push_back(Pair("vRecvMsg", n.vRecvMsg.size()));
         if (n.pfilter)
         {
-            node.push_back(Pair("pfilter", n.pfilter->GetSerializeSize(SER_NETWORK, PROTOCOL_VERSION)));
+            node.push_back(Pair("pfilter", ::GetSerializeSize(*n.pfilter, SER_NETWORK, PROTOCOL_VERSION)));
         }
         if (n.pThinBlockFilter)
         {
             node.push_back(
-                Pair("pThinBlockFilter", n.pThinBlockFilter->GetSerializeSize(SER_NETWORK, PROTOCOL_VERSION)));
+                Pair("pThinBlockFilter", ::GetSerializeSize(*n.pThinBlockFilter, SER_NETWORK, PROTOCOL_VERSION)));
         }
         node.push_back(Pair("thinblock.vtx", n.thinBlock.vtx.size()));
         uint64_t thinBlockSize = ::GetSerializeSize(n.thinBlock, SER_NETWORK, PROTOCOL_VERSION);

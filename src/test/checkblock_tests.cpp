@@ -16,7 +16,7 @@
 #include <boost/filesystem/path.hpp>
 #include <boost/test/unit_test.hpp>
 
-bool read_block(const std::string& filename, CBlock& block)
+bool read_block(const std::string &filename, CBlock &block)
 {
     namespace fs = boost::filesystem;
     fs::path testFile = fs::current_path() / "data" / filename;
@@ -26,19 +26,21 @@ bool read_block(const std::string& filename, CBlock& block)
         testFile = fs::path(BOOST_PP_STRINGIZE(TEST_DATA_DIR)) / filename;
     }
 #endif
-    FILE* fp = fopen(testFile.string().c_str(), "rb");
-    if (!fp) return false;
+    FILE *fp = fopen(testFile.string().c_str(), "rb");
+    if (!fp)
+        return false;
 
     fseek(fp, 8, SEEK_SET); // skip msgheader/size
 
     CAutoFile filein(fp, SER_DISK, CLIENT_VERSION);
-    if (filein.IsNull()) return false;
+    if (filein.IsNull())
+        return false;
 
     filein >> block;
     return true;
 }
 
-BOOST_FIXTURE_TEST_SUITE(checkblock_tests, BasicTestingSetup)  // BU harmonize suite name with filename
+BOOST_FIXTURE_TEST_SUITE(checkblock_tests, BasicTestingSetup) // BU harmonize suite name with filename
 
 
 BOOST_AUTO_TEST_CASE(TestBlock)
@@ -48,14 +50,18 @@ BOOST_AUTO_TEST_CASE(TestBlock)
     {
         CValidationState state;
 
-        uint64_t blockSize = ::GetSerializeSize(testblock, SER_NETWORK, PROTOCOL_VERSION); //53298 B for test.dat
+        uint64_t blockSize = ::GetSerializeSize(testblock, SER_NETWORK, PROTOCOL_VERSION); // 53298 B for test.dat
 
         BOOST_CHECK_MESSAGE(CheckBlock(testblock, state, false, false), "Basic CheckBlock failed");
-        BOOST_CHECK_MESSAGE(!testblock.fExcessive, "Block with size " << blockSize << " ought not to have been excessive when excessiveBlockSize is " << excessiveBlockSize );
-        excessiveBlockSize = blockSize -1;
+        BOOST_CHECK_MESSAGE(!testblock.fExcessive,
+            "Block with size " << blockSize << " ought not to have been excessive when excessiveBlockSize is "
+                               << excessiveBlockSize);
+        excessiveBlockSize = blockSize - 1;
         BOOST_CHECK_MESSAGE(CheckBlock(testblock, state, false, false), "Basic CheckBlock failed");
-        BOOST_CHECK_MESSAGE(testblock.fExcessive, "Block with size " << blockSize << " ought to have been excessive when excessiveBlockSize is " << excessiveBlockSize );
-        excessiveBlockSize = DEFAULT_EXCESSIVE_BLOCK_SIZE;  // set it back to the default that other tests expect
+        BOOST_CHECK_MESSAGE(testblock.fExcessive,
+            "Block with size " << blockSize << " ought to have been excessive when excessiveBlockSize is "
+                               << excessiveBlockSize);
+        excessiveBlockSize = DEFAULT_EXCESSIVE_BLOCK_SIZE; // set it back to the default that other tests expect
     }
 }
 
