@@ -555,11 +555,11 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				return true;
 			}
 		}
-				
+		bool theAliasNull = theAlias.IsNull();
 		if (op == OP_ALIAS_UPDATE)
 		{
 			bool dbAliasNull = dbAlias.IsNull();
-			bool theAliasNull = theAlias.IsNull();
+			
 			if (dbAliasNull)
 				theAlias.SetNull();
 			if (!dbAliasNull)
