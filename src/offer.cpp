@@ -384,7 +384,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				continue;
 			if(foundAlias)
 				break;
-			if (!foundAlias && IsAliasOp(pop, true) && vvch.size() >= 2 && theOffer.aliasTuple.first == vvch[0] && theOffer.aliasTuple.third == vvch[1])
+			if (!foundAlias && IsAliasOp(pop) && vvch.size() >= 2 && theOffer.aliasTuple.first == vvch[0] && theOffer.aliasTuple.third == vvch[1])
 			{
 				foundAlias = true;
 				prevAliasOp = pop;

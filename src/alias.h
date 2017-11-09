@@ -294,7 +294,7 @@ void CreateAliasRecipient(const CScript& scriptPubKey, const std::vector<unsigne
 int aliasselectpaymentcoins(const std::vector<unsigned char> &vchAlias, const CAmount &nAmount, std::vector<COutPoint>& outPoints, bool& bIsFunded, CAmount &nRequiredAmount, bool bSelectFeePlacementOnly, bool bSelectAll=false, bool bNoAliasRecipient=false);
 CAmount GetDataFee(const CScript& scriptPubKey);
 bool IsSyscoinTxMine(const CTransaction& tx,const std::string &type);
-bool IsAliasOp(int op, bool ismine=false);
+bool IsAliasOp(int op);
 bool GetAlias(const CNameTXIDTuple& aliasTuple, CAliasIndex& alias);
 bool GetAlias(const std::vector<unsigned char> &vchAlias, CAliasIndex& alias);
 bool CheckParam(const UniValue& params, const unsigned int index);
