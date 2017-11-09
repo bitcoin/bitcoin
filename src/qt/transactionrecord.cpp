@@ -285,7 +285,7 @@ void TransactionRecord::updateStatus(const CWalletTx &wtx, int chainLockHeight)
         status.label = QString::fromStdString(addrBookIt->second.name);
     }
 
-    if (!CheckFinalTx(wtx))
+    if (!CheckFinalTx(*wtx.tx))
     {
         if (wtx.tx->nLockTime < LOCKTIME_THRESHOLD)
         {
