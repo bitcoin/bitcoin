@@ -28,7 +28,7 @@
 using namespace std;
 extern mongoc_collection_t *offer_collection;
 extern mongoc_collection_t *offerhistory_collection;
-extern void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsigned char> &vchWitness, const string &currencyCode, const CRecipient &aliasRecipient, const CRecipient &aliasPaymentRecipient, vector<CRecipient> &vecSend, CWalletTx& wtxNew, CCoinControl* coinControl, bool useOnlyAliasPaymentToFund=true, bool transferAlias=false);
+extern void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsigned char> &vchWitness, const string &currencyCode, const CRecipient &aliasRecipient, const CRecipient &aliasPaymentRecipient, vector<CRecipient> &vecSend, CWalletTx& wtxNew, CCoinControl* coinControl, bool transferAlias=false);
 bool IsOfferOp(int op) {
 	return op == OP_OFFER_ACTIVATE
         || op == OP_OFFER_UPDATE;
@@ -384,7 +384,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				continue;
 			if(foundAlias)
 				break;
-			if (!foundAlias && IsAliasOp(pop, true) && vvch.size() >= 4 && vvch[3].empty() && theOffer.aliasTuple.first == vvch[0] && theOffer.aliasTuple.third == vvch[1])
+			if (!foundAlias && IsAliasOp(pop, true) && vvch.size() >= 2 && theOffer.aliasTuple.first == vvch[0] && theOffer.aliasTuple.third == vvch[1])
 			{
 				foundAlias = true;
 				prevAliasOp = pop;
@@ -447,7 +447,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1014 - " + _("Offer guid in the data output does not match the guid in the transaction");
 				return error(errorMessage.c_str());
 			}
-			if(!IsAliasOp(prevAliasOp, true) || vvchPrevAliasArgs.empty())
+			if(!IsAliasOp(prevAliasOp) || vvchPrevAliasArgs.empty())
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1015 - " + _("Alias input mismatch");
 				return error(errorMessage.c_str());
@@ -527,7 +527,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1014 - " + _("Offer guid in the data output does not match the guid in the transaction");
 				return error(errorMessage.c_str());
 			}
-			if(!IsAliasOp(prevAliasOp, true) || vvchPrevAliasArgs.empty())
+			if(!IsAliasOp(prevAliasOp) || vvchPrevAliasArgs.empty())
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1026 - " + _("Alias input mismatch");
 				return error(errorMessage.c_str());

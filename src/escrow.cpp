@@ -27,7 +27,7 @@ extern mongoc_collection_t *escrow_collection;
 extern mongoc_collection_t *escrowbid_collection;
 extern mongoc_collection_t *feedback_collection;
 extern CScript _createmultisig_redeemScript(const UniValue& params);
-extern void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsigned char> &vchWitness, const string &currencyCode, const CRecipient &aliasRecipient, const CRecipient &aliasPaymentRecipient, vector<CRecipient> &vecSend, CWalletTx& wtxNew, CCoinControl* coinControl, bool useOnlyAliasPaymentToFund=true, bool transferAlias=false);
+extern void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsigned char> &vchWitness, const string &currencyCode, const CRecipient &aliasRecipient, const CRecipient &aliasPaymentRecipient, vector<CRecipient> &vecSend, CWalletTx& wtxNew, CCoinControl* coinControl, bool transferAlias=false);
 void PutToEscrowList(std::vector<CEscrow> &escrowList, CEscrow& index) {
 	int i = escrowList.size() - 1;
 	BOOST_REVERSE_FOREACH(CEscrow &o, escrowList) {
@@ -562,7 +562,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 			if(foundAlias)
 				break;
 
-			else if (!foundAlias && IsAliasOp(pop, true) && vvch.size() >= 4 && theEscrow.vchWitness == vvch[3])
+			else if (!foundAlias && IsAliasOp(pop) && vvch.size() >= 4 && theEscrow.vchWitness == vvch[3])
 			{
 				if (theEscrow.vchWitness.empty())
 				{
@@ -617,14 +617,14 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 		}
 		switch (op) {
 			case OP_ESCROW_ACKNOWLEDGE:
-				if (!IsAliasOp(prevAliasOp, true) || vvchPrevAliasArgs.empty() || theEscrow.linkAliasTuple.first != vvchPrevAliasArgs[0] || theEscrow.linkAliasTuple.third != vvchPrevAliasArgs[1])
+				if (!IsAliasOp(prevAliasOp) || vvchPrevAliasArgs.empty() || theEscrow.linkAliasTuple.first != vvchPrevAliasArgs[0] || theEscrow.linkAliasTuple.third != vvchPrevAliasArgs[1])
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4010 - " + _("Alias input mismatch");
 					return error(errorMessage.c_str());
 				}
 				break;
 			case OP_ESCROW_ACTIVATE:
-				if(!IsAliasOp(prevAliasOp, true) || vvchPrevAliasArgs.empty() || theEscrow.buyerAliasTuple.first != vvchPrevAliasArgs[0] || theEscrow.buyerAliasTuple.third != vvchPrevAliasArgs[1])
+				if(!IsAliasOp(prevAliasOp) || vvchPrevAliasArgs.empty() || theEscrow.buyerAliasTuple.first != vvchPrevAliasArgs[0] || theEscrow.buyerAliasTuple.third != vvchPrevAliasArgs[1])
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4011 - " + _("Alias input mismatch");
 					return error(errorMessage.c_str());
@@ -667,7 +667,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				break;
 			case OP_ESCROW_BID:
 				
-				if (!IsAliasOp(prevAliasOp, true) || vvchPrevAliasArgs.empty() || theEscrow.buyerAliasTuple.first != vvchPrevAliasArgs[0] || theEscrow.buyerAliasTuple.third != vvchPrevAliasArgs[1])
+				if (!IsAliasOp(prevAliasOp) || vvchPrevAliasArgs.empty() || theEscrow.buyerAliasTuple.first != vvchPrevAliasArgs[0] || theEscrow.buyerAliasTuple.third != vvchPrevAliasArgs[1])
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4011 - " + _("Alias input mismatch");
 					return error(errorMessage.c_str());
@@ -701,7 +701,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				break;
 			case OP_ESCROW_ADD_SHIPPING:
 
-				if (!IsAliasOp(prevAliasOp, true) || vvchPrevAliasArgs.empty() || theEscrow.buyerAliasTuple.first != vvchPrevAliasArgs[0] || theEscrow.buyerAliasTuple.third != vvchPrevAliasArgs[1])
+				if (!IsAliasOp(prevAliasOp) || vvchPrevAliasArgs.empty() || theEscrow.buyerAliasTuple.first != vvchPrevAliasArgs[0] || theEscrow.buyerAliasTuple.third != vvchPrevAliasArgs[1])
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4011 - " + _("Alias input mismatch");
 					return error(errorMessage.c_str());
@@ -764,7 +764,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 
 				break;
 			case OP_ESCROW_COMPLETE:
-				if(!IsAliasOp(prevAliasOp, true) || vvchPrevAliasArgs.empty() || theEscrow.linkAliasTuple.first != vvchPrevAliasArgs[0] || theEscrow.linkAliasTuple.third != vvchPrevAliasArgs[1])
+				if(!IsAliasOp(prevAliasOp) || vvchPrevAliasArgs.empty() || theEscrow.linkAliasTuple.first != vvchPrevAliasArgs[0] || theEscrow.linkAliasTuple.third != vvchPrevAliasArgs[1])
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4023 - " + _("Alias input mismatch");
 					return error(errorMessage.c_str());
@@ -787,7 +787,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				}
 				break;
 			case OP_ESCROW_REFUND:
-				if(!IsAliasOp(prevAliasOp, true) || vvchPrevAliasArgs.empty() || theEscrow.linkAliasTuple.first != vvchPrevAliasArgs[0]  || theEscrow.linkAliasTuple.third != vvchPrevAliasArgs[1])
+				if(!IsAliasOp(prevAliasOp) || vvchPrevAliasArgs.empty() || theEscrow.linkAliasTuple.first != vvchPrevAliasArgs[0]  || theEscrow.linkAliasTuple.third != vvchPrevAliasArgs[1])
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4027 - " + _("Alias input mismatch");
 					return error(errorMessage.c_str());

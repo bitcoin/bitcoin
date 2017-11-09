@@ -2373,7 +2373,7 @@ CAmount CWallet::GetImmatureWatchOnlyBalance() const
 	return nTotal;
 }
 
-void CWallet::AvailableCoins(vector<COutput>& vCoins, bool fOnlyConfirmed, const CCoinControl *coinControl, bool bAliasPay, bool fIncludeZeroValue, AvailableCoinsType nCoinType, bool fUseInstantSend) const
+void CWallet::AvailableCoins(vector<COutput>& vCoins, bool fOnlyConfirmed, const CCoinControl *coinControl, bool fIncludeZeroValue, AvailableCoinsType nCoinType, bool fUseInstantSend) const
 {
 	vCoins.clear();
 
@@ -2405,8 +2405,7 @@ void CWallet::AvailableCoins(vector<COutput>& vCoins, bool fOnlyConfirmed, const
 
 			for (unsigned int i = 0; i < pcoin->vout.size(); i++) {
 				// SYSCOIN txs are unspendable by wallet unless using coincontrol(and the tx is selected)
-				// if its not alias specific payment then do this check, as an alias payment will use previous alias inputs
-				if (!bAliasPay || !coinControl || !coinControl->IsSelected(COutPoint((*it).first, i)))
+				if (!coinControl || !coinControl->IsSelected(COutPoint((*it).first, i)))
 				{
 					CTxDestination sysdestination;
 					if (pcoin->vout.size() >= i && ExtractDestination(pcoin->vout[i].scriptPubKey, sysdestination))
@@ -2535,7 +2534,7 @@ bool less_then_denom(const COutput& out1, const COutput& out2)
 }
 
 bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const int nConfMine, const int nConfTheirs, vector<COutput> vCoins,
-	set<pair<const CWalletTx*, unsigned int> >& setCoinsRet, CAmount& nValueRet, bool bAliasPay, bool fUseInstantSend) const
+	set<pair<const CWalletTx*, unsigned int> >& setCoinsRet, CAmount& nValueRet, bool fUseInstantSend) const
 {
 	setCoinsRet.clear();
 	nValueRet = 0;
@@ -2574,20 +2573,17 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const int nConfMin
 			int i = output.i;
 			CAmount n = pcoin->vout[i].nValue;
 			// SYSCOIN inputs are unspendable by normal wallet selection
-			if (!bAliasPay)
+			CTxDestination sysdestination;
+			if (pcoin->vout.size() >= i && ExtractDestination(pcoin->vout[i].scriptPubKey, sysdestination))
 			{
-				CTxDestination sysdestination;
-				if (pcoin->vout.size() >= i && ExtractDestination(pcoin->vout[i].scriptPubKey, sysdestination))
-				{
-					int op;
-					vector<vector<unsigned char> > vvchArgs;
-					if (IsSyscoinScript(pcoin->vout[i].scriptPubKey, op, vvchArgs) && op != OP_ALIAS_PAYMENT)
-						continue;
-					CSyscoinAddress address = CSyscoinAddress(sysdestination);
-					address = CSyscoinAddress(address.ToString());
-					if (address.isAlias)
-						continue;
-				}
+				int op;
+				vector<vector<unsigned char> > vvchArgs;
+				if (IsSyscoinScript(pcoin->vout[i].scriptPubKey, op, vvchArgs))
+					continue;
+				CSyscoinAddress address = CSyscoinAddress(sysdestination);
+				address = CSyscoinAddress(address.ToString());
+				if (address.isAlias)
+					continue;
 			}
 			if (tryDenom == 0 && IsDenominatedAmount(n)) continue; // we don't want denom values on first run
 
@@ -2675,13 +2671,13 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const int nConfMin
 	return true;
 }
 // SYSCOIN
-bool CWallet::SelectCoins(const CAmount& nTargetValue, set<pair<const CWalletTx*, unsigned int> >& setCoinsRet, CAmount& nValueRet, const CCoinControl* coinControl, bool bAliasPay, AvailableCoinsType nCoinType, bool fUseInstantSend) const
+bool CWallet::SelectCoins(const CAmount& nTargetValue, set<pair<const CWalletTx*, unsigned int> >& setCoinsRet, CAmount& nValueRet, const CCoinControl* coinControl, AvailableCoinsType nCoinType, bool fUseInstantSend) const
 {
 	// Note: this function should never be used for "always free" tx types like dstx
 
 	vector<COutput> vCoins;
 	// SYSCOIN
-	AvailableCoins(vCoins, true, coinControl, bAliasPay, false, nCoinType, fUseInstantSend);
+	AvailableCoins(vCoins, true, coinControl, false, nCoinType, fUseInstantSend);
 
 	// SYSCOIN
 	set<pair<const CWalletTx*, uint32_t> > setPresetCoins;
@@ -2781,13 +2777,11 @@ bool CWallet::SelectCoins(const CAmount& nTargetValue, set<pair<const CWalletTx*
 		{
 			const CWalletTx* pcoin = &it->second;
 			// SYSCOIN txs are unspendable unless input to another syscoin tx (passed into createtransaction)
-			// // allow alias payment if bAliasPay is set to true
-			if (!bAliasPay && pcoin->nVersion == GetSyscoinTxVersion())
+			if (pcoin->nVersion == GetSyscoinTxVersion())
 			{
 				int op;
 				vector<vector<unsigned char> > vvchArgs;
-				// anything but a payment can't spend it
-				if (pcoin->vout.size() >= outpoint.n && IsSyscoinScript(pcoin->vout[outpoint.n].scriptPubKey, op, vvchArgs) && op != OP_ALIAS_PAYMENT)
+				if (pcoin->vout.size() >= outpoint.n && IsSyscoinScript(pcoin->vout[outpoint.n].scriptPubKey, op, vvchArgs))
 					continue;
 
 			}
@@ -2813,9 +2807,9 @@ bool CWallet::SelectCoins(const CAmount& nTargetValue, set<pair<const CWalletTx*
 	}
 
 	bool res = nTargetValue <= nValueFromPresetInputs ||
-		SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, 1, 6, vCoins, setCoinsRet, nValueRet, bAliasPay, fUseInstantSend) ||
-		SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, 1, 1, vCoins, setCoinsRet, nValueRet, bAliasPay, fUseInstantSend) ||
-		(bSpendZeroConfChange && SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, 0, 1, vCoins, setCoinsRet, nValueRet, bAliasPay, fUseInstantSend));
+		SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, 1, 6, vCoins, setCoinsRet, nValueRet, fUseInstantSend) ||
+		SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, 1, 1, vCoins, setCoinsRet, nValueRet, fUseInstantSend) ||
+		(bSpendZeroConfChange && SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, 0, 1, vCoins, setCoinsRet, nValueRet, fUseInstantSend));
 
 	// because SelectCoinsMinConf clears the setCoinsRet, we now add the possible inputs to the coinset
 	setCoinsRet.insert(setPresetCoins.begin(), setPresetCoins.end());
@@ -3256,7 +3250,7 @@ bool CWallet::GetBudgetSystemCollateralTX(CWalletTx& tx, uint256 hash, CAmount a
 	vecSend.push_back((CRecipient) { scriptChange, amount, false });
 
 	CCoinControl *coinControl = NULL;
-	bool success = CreateTransaction(vecSend, tx, reservekey, nFeeRet, nChangePosRet, strFail, coinControl, true, "", false, false, ALL_COINS, fUseInstantSend);
+	bool success = CreateTransaction(vecSend, tx, reservekey, nFeeRet, nChangePosRet, strFail, coinControl, true, "", false, ALL_COINS, fUseInstantSend);
 	if (!success) {
 		LogPrintf("CWallet::GetBudgetSystemCollateralTX -- Error: %s\n", strFail);
 		return false;
@@ -3283,7 +3277,7 @@ bool CWallet::ConvertList(std::vector<CTxIn> vecTxIn, std::vector<CAmount>& vecA
 }
 // SYSCOIN
 bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet,
-	int& nChangePosRet, std::string& strFailReason, const CCoinControl* coinControl, bool sign, const string &currencyCode, bool sysTx, bool bAliasPay, AvailableCoinsType nCoinType, bool fUseInstantSend)
+	int& nChangePosRet, std::string& strFailReason, const CCoinControl* coinControl, bool sign, const string &currencyCode, bool sysTx, AvailableCoinsType nCoinType, bool fUseInstantSend)
 {
 	CAmount nFeePay = fUseInstantSend ? CTxLockRequest().GetMinFee() : 0;
 
@@ -3367,34 +3361,9 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
 				// vouts to the payees
 				BOOST_FOREACH(const CRecipient& recipient, vecSend)
 				{
-					// SYSCOIN pay to alias
-					CRecipient myrecipient = recipient;
-					CTxDestination payDest;
-					int op;
-					vector<vector<unsigned char> > vvchArgs;
-					if (!myrecipient.scriptPubKey.IsUnspendable() && !IsSyscoinScript(myrecipient.scriptPubKey, op, vvchArgs)) {
-						if (ExtractDestination(myrecipient.scriptPubKey, payDest))
-						{
-							CSyscoinAddress address(payDest);
-							address = CSyscoinAddress(address.ToString());
-							if (address.isAlias)
-							{
-								myrecipient.scriptPubKey = GetScriptForDestination(payDest);
-								CScript scriptPubKey;
-								if (currencyCode.empty())
-									scriptPubKey << CScript::EncodeOP_N(OP_ALIAS_PAYMENT) << vchFromString(address.aliasName) << OP_2DROP;
-								else
-									scriptPubKey << CScript::EncodeOP_N(OP_ALIAS_PAYMENT) << vchFromString(address.aliasName) << vchFromString("0") << vchFromString(currencyCode) << OP_2DROP << OP_2DROP;
-								scriptPubKey += myrecipient.scriptPubKey;
-								// SYSCOIN
-								myrecipient = { scriptPubKey, myrecipient.nAmount, myrecipient.fSubtractFeeFromAmount };
-								txNew.nVersion = GetSyscoinTxVersion();
-							}
-						}
-					}
-					CTxOut txout(myrecipient.nAmount, myrecipient.scriptPubKey);
+					CTxOut txout(recipient.nAmount, recipient.scriptPubKey);
 
-					if (myrecipient.fSubtractFeeFromAmount)
+					if (recipient.fSubtractFeeFromAmount)
 					{
 						txout.nValue -= nFeeRet / nSubtractFeeFromAmount; // Subtract fee equally from each selected recipient
 
@@ -3407,8 +3376,7 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
 
 					if (txout.IsDust(::minRelayTxFee))
 					{
-						// SYSCOIN
-						if (myrecipient.fSubtractFeeFromAmount && nFeeRet > 0)
+						if (recipient.fSubtractFeeFromAmount && nFeeRet > 0)
 						{
 							if (txout.nValue < 0)
 								strFailReason = _("The transaction amount is too small to pay the fee");
@@ -3429,7 +3397,7 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
 				for (CWalletTx* wtx : mapWtxToDelete)
 					delete wtx;
 				mapWtxToDelete.clear();
-				if (!SelectCoins(nValueToSelect, setCoins, nValueIn, coinControl, bAliasPay, nCoinType, fUseInstantSend))
+				if (!SelectCoins(nValueToSelect, setCoins, nValueIn, coinControl, nCoinType, fUseInstantSend))
 				{
 					if (nCoinType == ONLY_NOT100000IFMN) {
 						strFailReason = _("Unable to locate enough funds for this transaction that are not equal 100000 SYS.");
@@ -3520,7 +3488,7 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
 								nLastIndex = 0;
 							std::set<pair<const CWalletTx*, unsigned int> >::iterator it = setCoins.begin();
 							std::advance(it, nLastIndex);
-							if (bAliasPay && ExtractDestination(it->first->vout[it->second].scriptPubKey, payDest))
+							if (ExtractDestination(it->first->vout[it->second].scriptPubKey, payDest))
 							{
 								address = CSyscoinAddress(payDest);
 								address = CSyscoinAddress(address.ToString());

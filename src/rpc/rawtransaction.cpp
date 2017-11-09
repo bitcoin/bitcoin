@@ -450,10 +450,6 @@ UniValue createrawtransaction(const UniValue& params, bool fHelp)
 			CScript scriptPubKey = GetScriptForDestination(address.Get());
 			if (address.isAlias && bSyscoinBlockchainTx)
 			{
-				CScript scriptPubKeyOrig;
-				scriptPubKeyOrig << CScript::EncodeOP_N(OP_ALIAS_PAYMENT) << vchFromString(address.aliasName) << OP_2DROP;
-				scriptPubKeyOrig += scriptPubKey;
-				scriptPubKey = scriptPubKeyOrig;
 				rawTx.nVersion = GetSyscoinTxVersion();
 			}
 

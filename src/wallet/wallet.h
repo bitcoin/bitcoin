@@ -562,7 +562,7 @@ private:
 	* all coins from coinControl are selected; Never select unconfirmed coins
 	* if they are not ours
 	*/
-	bool SelectCoins(const CAmount& nTargetValue, std::set<std::pair<const CWalletTx*, unsigned int> >& setCoinsRet, CAmount& nValueRet, const CCoinControl *coinControl = NULL, bool bAliasPay = false, AvailableCoinsType nCoinType = ALL_COINS, bool fUseInstantSend = true) const;
+	bool SelectCoins(const CAmount& nTargetValue, std::set<std::pair<const CWalletTx*, unsigned int> >& setCoinsRet, CAmount& nValueRet, const CCoinControl *coinControl = NULL, AvailableCoinsType nCoinType = ALL_COINS, bool fUseInstantSend = true) const;
 
 	CWalletDB *pwalletdbEncryption;
 
@@ -705,7 +705,7 @@ public:
 	/**
 	* populate vCoins with vector of available COutputs.
 	*/
-	void AvailableCoins(std::vector<COutput>& vCoins, bool fOnlyConfirmed = true, const CCoinControl *coinControl = NULL, bool fIncludeZeroValue = false, bool bAliasPay = false, AvailableCoinsType nCoinType = ALL_COINS, bool fUseInstantSend = false) const;
+	void AvailableCoins(std::vector<COutput>& vCoins, bool fOnlyConfirmed = true, const CCoinControl *coinControl = NULL, bool fIncludeZeroValue = false, AvailableCoinsType nCoinType = ALL_COINS, bool fUseInstantSend = false) const;
 
 	/**
 	* Shuffle and select coins until nTargetValue is reached while avoiding
@@ -713,7 +713,7 @@ public:
 	* completion the coin set and corresponding actual target value is
 	* assembled
 	*/
-	bool SelectCoinsMinConf(const CAmount& nTargetValue, int nConfMine, int nConfTheirs, std::vector<COutput> vCoins, std::set<std::pair<const CWalletTx*, unsigned int> >& setCoinsRet, CAmount& nValueRet, bool bAliasPay = false, bool fUseInstantSend = false) const;
+	bool SelectCoinsMinConf(const CAmount& nTargetValue, int nConfMine, int nConfTheirs, std::vector<COutput> vCoins, std::set<std::pair<const CWalletTx*, unsigned int> >& setCoinsRet, CAmount& nValueRet, bool fUseInstantSend = false) const;
 
 	bool SelectCoinsByDenominations(int nDenom, CAmount nValueMin, CAmount nValueMax, std::vector<CTxIn>& vecTxInRet, std::vector<COutput>& vCoinsRet, CAmount& nValueRet, int nPrivateSendRoundsMin, int nPrivateSendRoundsMax);
 	bool GetCollateralTxIn(CTxIn& txinRet, CAmount& nValueRet) const;
@@ -839,7 +839,7 @@ public:
 	* selected by SelectCoins(); Also create the change output, when needed
 	*/
 	bool CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet, int& nChangePosRet,
-		std::string& strFailReason, const CCoinControl *coinControl = NULL, bool sign = true, const std::string &currencyCode = "", bool sysTx = false, bool bAliasPay = false, AvailableCoinsType nCoinType = ALL_COINS, bool fUseInstantSend = false);
+		std::string& strFailReason, const CCoinControl *coinControl = NULL, bool sign = true, const std::string &currencyCode = "", bool sysTx = false, AvailableCoinsType nCoinType = ALL_COINS, bool fUseInstantSend = false);
 	bool CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey, CConnman* connman, std::string strCommand = "tx");
 
 	bool CreateCollateralTransaction(CMutableTransaction& txCollateral, std::string& strReason);

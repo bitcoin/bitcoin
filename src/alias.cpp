@@ -40,7 +40,7 @@ typedef map<vector<unsigned char>, COutPoint > mapAliasRegistrationsType;
 typedef map<vector<unsigned char>, vector<unsigned char> > mapAliasRegistrationsDataType;
 mapAliasRegistrationsType mapAliasRegistrations;
 mapAliasRegistrationsDataType mapAliasRegistrationData;
-extern void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsigned char> &vchWitness, const string &currencyCode, const CRecipient &aliasRecipient, const CRecipient &aliasPaymentRecipient, vector<CRecipient> &vecSend, CWalletTx& wtxNew, CCoinControl* coinControl, bool useOnlyAliasPaymentToFund=true, bool transferAlias=false);
+extern void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsigned char> &vchWitness, const string &currencyCode, const CRecipient &aliasRecipient, const CRecipient &aliasPaymentRecipient, vector<CRecipient> &vecSend, CWalletTx& wtxNew, CCoinControl* coinControl, bool transferAlias=false);
 extern int nIndexPort;
 mongoc_client_t *client = NULL;
 mongoc_database_t *database = NULL;
@@ -246,14 +246,9 @@ void PutToAliasList(std::vector<CAliasIndex> &aliasList, CAliasIndex& index) {
     aliasList.push_back(index);
 }
 
-bool IsAliasOp(int op, bool ismine) {
-	if(ismine)
+bool IsAliasOp(int op) {
 		return op == OP_ALIAS_ACTIVATE
 			|| op == OP_ALIAS_UPDATE;
-	else
-		return op == OP_ALIAS_ACTIVATE
-			|| op == OP_ALIAS_UPDATE
-			|| op == OP_ALIAS_PAYMENT;
 }
 string aliasFromOp(int op) {
 	switch (op) {
@@ -261,8 +256,6 @@ string aliasFromOp(int op) {
 		return "aliasupdate";
 	case OP_ALIAS_ACTIVATE:
 		return "aliasactivate";
-	case OP_ALIAS_PAYMENT:
-		return "aliaspayment";
 	default:
 		return "<unknown alias op>";
 	}
@@ -384,7 +377,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				prevCoins = NULL;
 				continue;
 			}
-			if (IsAliasOp(pop, true) && ((vvchArgs[0] == vvch[0] && vvchArgs[1] == vvch[1]) || op == OP_ALIAS_ACTIVATE)) {
+			if (IsAliasOp(pop) && ((vvchArgs[0] == vvch[0] && vvchArgs[1] == vvch[1]) || op == OP_ALIAS_ACTIVATE)) {
 				prevOp = pop;
 				vvchPrevArgs = vvch;
 				break;
@@ -408,7 +401,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					continue;
 				}
 				// match 4th element in scriptpubkey of alias update with witness input scriptpubkey, if names match then sig is provided
-				if (IsAliasOp(pop, true) && vvchArgs[3] == vvch[0]) {
+				if (IsAliasOp(pop) && vvchArgs[3] == vvch[0]) {
 					bWitnessSigFound = true;
 					break;
 				}
@@ -481,7 +474,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				}
 				break;
 			case OP_ALIAS_UPDATE:
-				if (!IsAliasOp(prevOp, true))
+				if (!IsAliasOp(prevOp))
 				{
 					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5012 - " + _("Alias input to this transaction not found");
 					return error(errorMessage.c_str());
@@ -513,6 +506,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				string strResponse = GetSyscoinTransactionDescription(opHistory, vvchHistory, tx, strResponseEnglish, strResponseGUID);
 				paliasdb->WriteAliasIndexTxHistory(stringFromVch(vvchArgs[0]), tx.GetHash(), nHeight, strResponseEnglish, strResponseGUID, tx.vout[nOutHistory].nValue);
 			}
+			
 		}
 		CAliasIndex dbAlias;
 		string strName = stringFromVch(vvchArgs[0]);
@@ -984,7 +978,7 @@ int IndexOfAliasOutput(const CTransaction& tx) {
 	for (unsigned int i = 0; i < tx.vout.size(); i++) {
 		const CTxOut& out = tx.vout[i];
 		// find an output you own
-		if (pwalletMain->IsMine(out) && DecodeAliasScript(out.scriptPubKey, op, vvch) && op != OP_ALIAS_PAYMENT) {
+		if (pwalletMain->IsMine(out) && DecodeAliasScript(out.scriptPubKey, op, vvch)) {
 			return i;
 		}
 	}
@@ -1005,7 +999,6 @@ bool GetAliasOfTx(const CTransaction& tx, vector<unsigned char>& name) {
 	switch (op) {
 	case OP_ALIAS_ACTIVATE:
 	case OP_ALIAS_UPDATE:
-	case OP_ALIAS_PAYMENT:
 		name = vvchArgs[0];
 		return true;
 	}
@@ -1041,14 +1034,11 @@ bool DecodeAliasTx(const CTransaction& tx, int& op, int& nOut,
 	for (unsigned int i = 0; i < tx.vout.size(); i++) {
 		const CTxOut& out = tx.vout[i];
 		vector<vector<unsigned char> > vvchRead;
-		if (DecodeAliasScript(out.scriptPubKey, op, vvchRead) && ((op == OP_ALIAS_PAYMENT && payment) || (op != OP_ALIAS_PAYMENT && !payment))) {
-			if(op == OP_ALIAS_PAYMENT || vvchRead.size() >= 3)
-			{
-				nOut = i;
-				found = true;
-				vvch = vvchRead;
-				break;
-			}
+		if (DecodeAliasScript(out.scriptPubKey, op, vvchRead)) {
+			nOut = i;
+			found = true;
+			vvch = vvchRead;
+			break;
 		}
 	}
 	if (!found)
@@ -1113,28 +1103,21 @@ void CreateRecipient(const CScript& scriptPubKey, CRecipient& recipient)
 	recipient = recp;
 	CTxOut txout(recipient.nAmount,	recipient.scriptPubKey);
     size_t nSize = txout.GetSerializeSize(SER_DISK,0)+148u;
-	CAmount nFee = CWallet::GetMinimumFee(nSize, nTxConfirmTarget, mempool);
+	CAmount nFee = CWallet::GetRequiredFee(nSize);
 	recipient.nAmount = nFee;
 }
 void CreateAliasRecipient(const CScript& scriptPubKeyDest, const vector<unsigned char>& vchAlias, CRecipient& recipient)
 {
 	CAmount nFee = 0;
-	CScript scriptChangeOrig;
-	scriptChangeOrig << CScript::EncodeOP_N(OP_ALIAS_PAYMENT) << vchAlias << vchFromString("1") << OP_DROP << OP_2DROP;
-	scriptChangeOrig += scriptPubKeyDest;
-	CRecipient recp = {scriptChangeOrig, 0, false};
+	CRecipient recp = { scriptPubKeyDest, 0, false};
 	recipient = recp;
-	int nFeePerByte = getFeePerByte(PAYMENTOPTION_SYS);
 	CTxOut txout(0,	recipient.scriptPubKey);
 	size_t nSize = txout.GetSerializeSize(SER_DISK,0)+148u;
 	// create alias payment utxo max 1500 bytes worth of fees
 	// create utxo min 1500 bytes worth of fees
 	if(nSize < 1500)
 		nSize = 1500;
-	if(nFeePerByte <= 0)
-		nFee = CWallet::GetMinimumFee(nSize, nTxConfirmTarget, mempool);
-	else
-		nFee = nFeePerByte * nSize;
+	nFee = CWallet::GetRequiredFee(nSize);
 	recipient.nAmount = nFee;
 }
 void CreateFeeRecipient(CScript& scriptPubKey, const vector<unsigned char>& data, CRecipient& recipient)
@@ -1148,12 +1131,7 @@ void CreateFeeRecipient(CScript& scriptPubKey, const vector<unsigned char>& data
 	recipient = recp;
 	CTxOut txout(0,	recipient.scriptPubKey);
 	size_t nSize = txout.GetSerializeSize(SER_DISK,0)+148u;
-	int nFeePerByte = getFeePerByte(PAYMENTOPTION_SYS);
-	if(nFeePerByte <= 0)
-		nFee = CWallet::GetMinimumFee(nSize, nTxConfirmTarget, mempool);
-	else
-		nFee = nFeePerByte * nSize;
-
+	nFee = CWallet::GetMinimumFee(nSize, nTxConfirmTarget, mempool);
 	recipient.nAmount = nFee;
 }
 CAmount GetDataFee(const CScript& scriptPubKey)
@@ -1165,11 +1143,7 @@ CAmount GetDataFee(const CScript& scriptPubKey)
 	CTxOut txout(0,	recipient.scriptPubKey);
     size_t nSize = txout.GetSerializeSize(SER_DISK,0)+148u;
 	int nFeePerByte = getFeePerByte(PAYMENTOPTION_SYS);
-	if(nFeePerByte <= 0)
-		nFee = CWallet::GetMinimumFee(nSize, nTxConfirmTarget, mempool);
-	else
-		nFee = nFeePerByte * nSize;
-
+	nFee = CWallet::GetMinimumFee(nSize, nTxConfirmTarget, mempool);
 	recipient.nAmount = nFee;
 	return recipient.nAmount;
 }
@@ -1992,9 +1966,8 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	}
 	coinControl.fAllowOtherInputs = true;
 	coinControl.fAllowWatchOnly = true;
-	bool useOnlyAliasPaymentToFund = false;
 
-	SendMoneySyscoin(vchAlias, vchWitness, "", recipient, recipientPayment, vecSend, wtx, &coinControl, useOnlyAliasPaymentToFund);
+	SendMoneySyscoin(vchAlias, vchWitness, "", recipient, recipientPayment, vecSend, wtx, &coinControl);
 	UniValue res(UniValue::VARR);
 	res.push_back(EncodeHexTx(wtx));
 	res.push_back(strAddress);
@@ -2118,12 +2091,11 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	CCoinControl coinControl;
 	coinControl.fAllowOtherInputs = false;
 	coinControl.fAllowWatchOnly = false;
-	bool useOnlyAliasPaymentToFund = true;
 	bool transferAlias = false;
 	if(newAddress.ToString() != EncodeBase58(copyAlias.vchAddress))
 		transferAlias = true;
 	
-	SendMoneySyscoin(vchAlias, vchWitness, "", recipient, recipientPayment, vecSend, wtx, &coinControl, useOnlyAliasPaymentToFund, transferAlias);
+	SendMoneySyscoin(vchAlias, vchWitness, "", recipient, recipientPayment, vecSend, wtx, &coinControl, transferAlias);
 	UniValue res(UniValue::VARR);
 	res.push_back(EncodeHexTx(wtx));
 	return res;
@@ -2150,24 +2122,6 @@ UniValue syscoindecoderawtransaction(const UniValue& params, bool fHelp) {
 	if(DecodeAndParseSyscoinTx(rawTx, op, nOut, vvch))
 		SysTxToJSON(op, vchData, vchHash, output);
 	
-	bool sendCoin = false;
-	for (unsigned int i = 0; i < rawTx.vout.size(); i++) {
-		int tmpOp;
-		vector<vector<unsigned char> > tmpvvch;	
-		if(!IsSyscoinDataOutput(rawTx.vout[i]) && (!IsSyscoinScript(rawTx.vout[i].scriptPubKey, tmpOp, tmpvvch) || tmpOp == OP_ALIAS_PAYMENT))
-		{
-			if(!pwalletMain->IsMine(rawTx.vout[i]))
-			{
-				sendCoin = true;
-				break;
-			}
-		}
-
-	}
-	if(sendCoin)
-		output.push_back(Pair("warning", _("Warning: This transaction sends coins to an address or alias you do not own")));
-	else
-		output.push_back(Pair("warning", ""));
 	return output;
 }
 void SysTxToJSON(const int op, const vector<unsigned char> &vchData, const vector<unsigned char> &vchHash, UniValue &entry)
@@ -2348,10 +2302,11 @@ UniValue aliasbalance(const UniValue& params, bool fHelp)
 		if (!ExtractDestination(coins->vout[nOut].scriptPubKey, payDest)) 
 			continue;
 		if(DecodeAliasScript(coins->vout[nOut].scriptPubKey, op, vvch) && vvch[0] != theAlias.vchAlias)
-			continue;  
-		// some outputs are reserved to pay for fees only
-		if(vvch.size() > 1 && vvch[1] == vchFromString("1"))
 			continue;
+		// some dust sized outputs are reserved to pay for fees only using aliasselectpaymentcoins (with bSelectFeePlacementOnly set to true)
+		if (coins->vout[nOut].nValue <= CWallet::GetRequiredFee(1500))
+			continue;
+
 		destaddy = CSyscoinAddress(payDest);
 		if (destaddy.ToString() == strAddressFrom)
 		{  
@@ -2412,28 +2367,25 @@ int aliasselectpaymentcoins(const vector<unsigned char> &vchAlias, const CAmount
    
 		if(!coins->IsAvailable(nOut))
 			continue;
-		if (DecodeAliasScript(coins->vout[nOut].scriptPubKey, op, vvch) && vvch[0] != theAlias.vchAlias)
+		// look for non alias inputs, coins that can be used to fund this transaction, aliasunspent is used to get the alias utxo for proof of ownership
+		if (DecodeAliasScript(coins->vout[nOut].scriptPubKey, op, vvch))
 			continue;  
-		if(vvch.size() > 1)
-		{
-			// if no alias recipient was used to create another UTXO
-			// and if not selecting all inputs, ensure you leave atleast one alias UTXO for next alias update
-			if (bNoAliasRecipient && !bSelectAll && IsAliasOp(op, true)) {
+		if (!bSelectAll) {
+			// fee placement were ones that were almost dust outputs used for subsequent updates
+			if (coins->vout[nOut].nValue <= CWallet::GetRequiredFee(1500))
+			{
+				// alias pay doesn't include recipient, no utxo inputs used for aliaspay, for aliaspay we don't care about these small dust amounts
+				if (bNoAliasRecipient)
+					continue;
 				unspentUTXOs++;
 				if (unspentUTXOs >= MAX_ALIAS_UPDATES_PER_BLOCK) {
 					continue;
 				}
 			}
-			if(vvch[1] == vchFromString("1"))
-			{
-				if(!bSelectFeePlacementOnly)
-					continue;
-			}
-			else if(bSelectFeePlacementOnly)
+			else if (bSelectFeePlacementOnly)
 				continue;
 		}
-		else if(bSelectFeePlacementOnly)
-			continue;
+		
 		if (!ExtractDestination(coins->vout[nOut].scriptPubKey, payDest)) 
 			continue;
 		destaddy = CSyscoinAddress(payDest);
@@ -2498,7 +2450,7 @@ int aliasunspent(const vector<unsigned char> &vchAlias, COutPoint& outpoint)
 
 		if (!coins->IsAvailable(nOut))
 			continue;
-		if (!DecodeAliasScript(coins->vout[nOut].scriptPubKey, op, vvch) || vvch[0] != theAlias.vchAlias || vvch[1] != theAlias.vchGUID || !IsAliasOp(op, true))
+		if (!DecodeAliasScript(coins->vout[nOut].scriptPubKey, op, vvch) || vvch[0] != theAlias.vchAlias || vvch[1] != theAlias.vchGUID || !IsAliasOp(op))
 			continue;
 		if (!ExtractDestination(coins->vout[nOut].scriptPubKey, aliasDest))
 			continue;
@@ -2907,10 +2859,6 @@ string GetSyscoinTransactionDescription(const int op, const vector<vector<unsign
 	case OP_ALIAS_ACTIVATE:
 		strResponse = _("Alias Activated");
 		responseEnglish = "Alias Activated";
-		break;
-	case OP_ALIAS_PAYMENT:
-		strResponse = _("Alias Payment");
-		responseEnglish = "Alias Payment";
 		break;
 	case OP_ALIAS_UPDATE:
 		strResponse = _("Alias Updated");
