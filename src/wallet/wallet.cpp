@@ -2871,7 +2871,7 @@ bool CWallet::SelectCoinsByDenominations(int nDenom, CAmount nValueMin, CAmount 
 	nValueRet = 0;
 
 	vector<COutput> vCoins;
-	AvailableCoins(vCoins, true, NULL, false, false, ONLY_DENOMINATED);
+	AvailableCoins(vCoins, true, NULL, false, ONLY_DENOMINATED);
 
 	std::random_shuffle(vCoins.rbegin(), vCoins.rend(), GetRandInt);
 
@@ -3040,7 +3040,7 @@ bool CWallet::SelectCoinsDark(CAmount nValueMin, CAmount nValueMax, std::vector<
 	nValueRet = 0;
 
 	vector<COutput> vCoins;
-	AvailableCoins(vCoins, true, coinControl, false, false, nPrivateSendRoundsMin < 0 ? ONLY_NONDENOMINATED_NOT100000IFMN : ONLY_DENOMINATED);
+	AvailableCoins(vCoins, true, coinControl, false, nPrivateSendRoundsMin < 0 ? ONLY_NONDENOMINATED_NOT100000IFMN : ONLY_DENOMINATED);
 
 	//order the array so largest nondenom are first, then denominations, then very small inputs.
 	sort(vCoins.rbegin(), vCoins.rend(), CompareByPriority());
@@ -3096,7 +3096,7 @@ bool CWallet::GetMasternodeOutpointAndKeys(COutPoint& outpointRet, CPubKey& pubK
 
 	// Find possible candidates
 	std::vector<COutput> vPossibleCoins;
-	AvailableCoins(vPossibleCoins, true, NULL, false, false, ONLY_100000);
+	AvailableCoins(vPossibleCoins, true, NULL, false, ONLY_100000);
 	if (vPossibleCoins.empty()) {
 		LogPrintf("CWallet::GetMasternodeOutpointAndKeys -- Could not locate any valid masternode vin\n");
 		return false;
@@ -3177,7 +3177,7 @@ int CWallet::CountInputsWithAmount(CAmount nInputAmount)
 bool CWallet::HasCollateralInputs(bool fOnlyConfirmed) const
 {
 	vector<COutput> vCoins;
-	AvailableCoins(vCoins, fOnlyConfirmed, NULL, false, false, ONLY_PRIVATESEND_COLLATERAL);
+	AvailableCoins(vCoins, fOnlyConfirmed, NULL, false, ONLY_PRIVATESEND_COLLATERAL);
 
 	return !vCoins.empty();
 }
