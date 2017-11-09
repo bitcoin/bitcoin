@@ -534,7 +534,9 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
 
 	CWalletTx wtxNew1, wtxNew2;
 	// get total output required
-	if (!pwalletMain->CreateTransaction(vecSend, wtxNew1, reservekey, nFeeRequired, nChangePosRet, strError, coinControl, false, currencyCode, true)) {
+	// if aliasRecipient.scriptPubKey.empty() then it is not a syscoin tx, so don't set tx flag for syscoin tx in createtransaction()
+	// this is because aliasRecipient means an alias utxo was used to create a transaction, common to every syscoin service transaction, aliaspay doesn't use an alias utxo it just sends money from address to address but uses alias outputs to fund it and sign externally using zero knowledge auth.
+	if (!pwalletMain->CreateTransaction(vecSend, wtxNew1, reservekey, nFeeRequired, nChangePosRet, strError, coinControl, false, currencyCode, !aliasRecipient.scriptPubKey.empty())) {
 		throw runtime_error(strError);
 	}
 
@@ -578,7 +580,7 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
 	if (nBalance > 0 && !bAliasRegistration)
 	{
 		// get total output required
-		if (!pwalletMain->CreateTransaction(vecSend, wtxNew2, reservekey, nFeeRequired, nChangePosRet, strError, coinControl, false, currencyCode, true)) {
+		if (!pwalletMain->CreateTransaction(vecSend, wtxNew2, reservekey, nFeeRequired, nChangePosRet, strError, coinControl, false, currencyCode, !aliasRecipient.scriptPubKey.empty())) {
 			throw runtime_error(strError);
 		}
 		CAmount nOutputTotal = 0;
@@ -623,7 +625,7 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
 	}
 	// now create the transaction and fake sign with enough funding from alias utxo's (if coinControl specified fAllowOtherInputs(true) then and only then are wallet inputs are allowed)
 	// actual signing happens in signrawtransaction outside of this function call after the wtxNew raw transaction is returned back to it
-	if (!pwalletMain->CreateTransaction(vecSend, wtxNew, reservekey, nFeeRequired, nChangePosRet, strError, coinControl, false, currencyCode, true)) {
+	if (!pwalletMain->CreateTransaction(vecSend, wtxNew, reservekey, nFeeRequired, nChangePosRet, strError, coinControl, false, currencyCode, !aliasRecipient.scriptPubKey.empty())) {
 		throw runtime_error(strError);
 	}
 	// run a check on the inputs without putting them into the db, just to ensure it will go into the mempool without issues
