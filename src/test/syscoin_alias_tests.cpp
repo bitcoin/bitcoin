@@ -101,14 +101,19 @@ BOOST_AUTO_TEST_CASE (generate_aliasmultiupdate)
 	AliasNew("node1", "jagmultiupdate", "data");
 	string hex_str = AliasUpdate("node1", "jagmultiupdate", "changeddata");
 	BOOST_CHECK(hex_str.empty());
-	// can do 5 free updates, 1 above and 4 below
-	for (unsigned int i = 0; i < MAX_ALIAS_UPDATES_PER_BLOCK - 1; i++)
+	// can do 5 free updates
+	for (unsigned int i = 0; i < MAX_ALIAS_UPDATES_PER_BLOCK; i++)
 	{
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasupdate jagmultiupdate changedata1"));
 		UniValue varray = r.get_array();
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + varray[0].get_str()));
 		BOOST_CHECK_NO_THROW(CallRPC("node1", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
 	}
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasupdate jagmultiupdate changedata1"));
+	UniValue varray = r.get_array();
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + varray[0].get_str()));
+	BOOST_CHECK_THROW(CallRPC("node1", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()), runtime_error);
+
 
 	GenerateBlocks(10, "node1");
 	GenerateBlocks(10, "node1");
@@ -120,7 +125,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasmultiupdate)
 	BOOST_CHECK(!hex_str.empty());
 
 	// new owner can update
-	for (unsigned int i = 0; i < MAX_ALIAS_UPDATES_PER_BLOCK; i++)
+	for (unsigned int i = 0; i < MAX_ALIAS_UPDATES_PER_BLOCK+1; i++)
 	{
 		BOOST_CHECK_NO_THROW(r = CallRPC("node2", "aliasupdate jagmultiupdate changedata4"));
 		UniValue varray = r.get_array();
@@ -128,10 +133,15 @@ BOOST_AUTO_TEST_CASE (generate_aliasmultiupdate)
 		BOOST_CHECK_NO_THROW(CallRPC("node2", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
 	}
 
+	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "aliasupdate jagmultiupdate changedata4"));
+	UniValue varray = r.get_array();
+	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "signrawtransaction " + varray[0].get_str()));
+	BOOST_CHECK_THROW(CallRPC("node2", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()), runtime_error);
+
 	// after generation MAX_ALIAS_UPDATES_PER_BLOCK utxo's should be available
 	GenerateBlocks(10, "node2");
 	GenerateBlocks(10, "node2");
-	for (unsigned int i = 0; i < MAX_ALIAS_UPDATES_PER_BLOCK; i++)
+	for (unsigned int i = 0; i < MAX_ALIAS_UPDATES_PER_BLOCK+1; i++)
 	{
 		BOOST_CHECK_NO_THROW(r = CallRPC("node2", "aliasupdate jagmultiupdate changedata5"));
 		UniValue varray = r.get_array();
@@ -151,7 +161,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasmultiupdate)
 	// ensure can't update after transfer
 	hex_str = AliasTransfer("node2", "jagmultiupdate", "node1", "changedata8");
 	BOOST_CHECK(!hex_str.empty());
-	for (unsigned int i = 0; i < MAX_ALIAS_UPDATES_PER_BLOCK; i++)
+	for (unsigned int i = 0; i < MAX_ALIAS_UPDATES_PER_BLOCK+1; i++)
 	{
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasupdate jagmultiupdate changedata9"));
 		UniValue varray = r.get_array();
@@ -275,7 +285,7 @@ BOOST_AUTO_TEST_CASE (generate_aliaspay)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + varray2[0].get_str()));
 	BOOST_CHECK_THROW(CallRPC("node1", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()), runtime_error);
 
-	for (unsigned int i = 0; i < MAX_ALIAS_UPDATES_PER_BLOCK; i++)
+	for (unsigned int i = 0; i < MAX_ALIAS_UPDATES_PER_BLOCK+1; i++)
 	{
 		BOOST_CHECK_NO_THROW(r = CallRPC("node2", "aliasupdate alias2.aliaspay.tld changedata2"));
 		UniValue varray = r.get_array();
@@ -283,7 +293,7 @@ BOOST_AUTO_TEST_CASE (generate_aliaspay)
 		BOOST_CHECK_NO_THROW(CallRPC("node2", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
 	}
 
-	for (unsigned int i = 0; i < MAX_ALIAS_UPDATES_PER_BLOCK; i++)
+	for (unsigned int i = 0; i < MAX_ALIAS_UPDATES_PER_BLOCK+1; i++)
 	{
 		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "aliasupdate alias3.aliaspay.tld changedata3"));
 		UniValue varray = r.get_array();
