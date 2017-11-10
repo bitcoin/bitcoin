@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(generate_auction_regular)
 	GenerateBlocks(5, "node2");
 	GenerateBlocks(5, "node3");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "getaddressbalance \"{\\\"addresses\\\": [\\\"" + escrowaddress + "\\\"]}\""));
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "balance").get_int64(), AmountFromValue(total_bid_in_payment_option));
+	BOOST_CHECK_EQUAL(AmountFromValue(find_value(r.get_obj(), "balance")), AmountFromValue(total_bid_in_payment_option));
 
 
 	EscrowRelease("node1", "buyer", guid);
@@ -165,7 +165,7 @@ BOOST_AUTO_TEST_CASE(generate_auction_reserve)
 	GenerateBlocks(5, "node2");
 	GenerateBlocks(5, "node3");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "getaddressbalance \"{\\\"addresses\\\": [\\\"" + escrowaddress + "\\\"]}\""));
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "balance").get_int64(), AmountFromValue(total_bid_in_payment_option));
+	BOOST_CHECK_EQUAL(AmountFromValue(find_value(r.get_obj(), "balance")), AmountFromValue(total_bid_in_payment_option));
 
 
 	EscrowRelease("node1", "buyer", guid);
@@ -252,9 +252,9 @@ BOOST_AUTO_TEST_CASE(generate_escrowrefund_invalid)
 		if (i > 0)
 			inputStr += ",";
 		const UniValue& utxoObj = addressUTXOsArray[i].get_obj();
-		const string& txidStr = find_value(utxoObj.get_obj(), "txid").get_str();
-		const int& nOut = find_value(utxoObj.get_obj(), "outputIndex").get_int();
-		CAmount satoshis = find_value(utxoObj.get_obj(), "satoshis").get_int64();
+		const string& txidStr = find_value(utxoObj, "txid").get_str();
+		const int& nOut = find_value(utxoObj, "outputIndex").get_int();
+		CAmount satoshis = AmountFromValue(find_value(utxoObj, "satoshis"));
 		inputStr += "{\\\"txid\\\":\\\"" + txidStr + "\\\",\\\"vout\\\":" + boost::lexical_cast<string>(nOut) + ",\\\"satoshis\\\":" + boost::lexical_cast<string>(satoshis) + "}";
 	}
 	inputStr += "]\"";
@@ -300,9 +300,9 @@ BOOST_AUTO_TEST_CASE(generate_escrowrelease_invalid)
 		if (i > 0)
 			inputStr += ",";
 		const UniValue& utxoObj = addressUTXOsArray[i].get_obj();
-		const string& txidStr = find_value(utxoObj.get_obj(), "txid").get_str();
-		const int& nOut = find_value(utxoObj.get_obj(), "outputIndex").get_int();
-		CAmount satoshis = find_value(utxoObj.get_obj(), "satoshis").get_int64();
+		const string& txidStr = find_value(utxoObj, "txid").get_str();
+		const int& nOut = find_value(utxoObj, "outputIndex").get_int();
+		CAmount satoshis = AmountFromValue(find_value(utxoObj, "satoshis"));
 		inputStr += "{\\\"txid\\\":\\\"" + txidStr + "\\\",\\\"vout\\\":" + boost::lexical_cast<string>(nOut) + ",\\\"satoshis\\\":" + boost::lexical_cast<string>(satoshis) + "}";
 	}
 	inputStr += "]\"";

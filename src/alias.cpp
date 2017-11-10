@@ -2246,7 +2246,6 @@ UniValue aliasbalance(const UniValue& params, bool fHelp)
             "\nArguments:\n"
             "1. \"alias\"  (string, required) The syscoin alias for transactions.\n"
        );
-	LOCK(cs_main);
 	vector<unsigned char> vchAlias = vchFromValue(params[0]);
 	CAmount nAmount = 0;
 	CAliasIndex theAlias;
@@ -2275,39 +2274,20 @@ UniValue aliasbalance(const UniValue& params, bool fHelp)
 		return  res;
 	}
 
-	CCoinsViewCache view(pcoinsTip);
-	const CCoins *coins;
-	CTxDestination payDest;
-	CSyscoinAddress destaddy;
   	int op;
 	vector<vector<unsigned char> > vvch;
     for (unsigned int i = 0;i<utxoArray.size();i++)
     {
 		const UniValue& utxoObj = utxoArray[i].get_obj();
-		const uint256& txid = uint256S(find_value(utxoObj.get_obj(), "txid").get_str());
-		const int& nOut = find_value(utxoObj.get_obj(), "outputIndex").get_int();
-		coins = view.AccessCoins(txid);
-		if(coins == NULL)
-			continue; 
-		if(!coins->IsAvailable(nOut))
-			continue;
-		if (!ExtractDestination(coins->vout[nOut].scriptPubKey, payDest)) 
-			continue;
-		if(DecodeAliasScript(coins->vout[nOut].scriptPubKey, op, vvch) && vvch[0] != theAlias.vchAlias)
+		const std::vector<unsigned char> &data(ParseHex(find_value(utxoObj, "script").get_str()));
+		const CScript& scriptPubKey = CScript(data.begin(), data.end());
+		const CAmount &nValue = AmountFromValue(find_value(utxoObj, "satoshis"));
+		if (DecodeAliasScript(scriptPubKey, op, vvch))
 			continue;
 		// some smaller sized outputs are reserved to pay for fees only using aliasselectpaymentcoins (with bSelectFeePlacement set to true)
-		if (coins->vout[nOut].nValue <= 0.01*COIN)
+		if (nValue <= 0.01*COIN)
 			continue;
-
-		destaddy = CSyscoinAddress(payDest);
-		if (destaddy.ToString() == strAddressFrom)
-		{  
-			COutPoint outp(txid, nOut);
-			auto it = mempool.mapNextTx.find(outp);
-			if (it != mempool.mapNextTx.end())
-				continue;
-			nAmount += coins->vout[nOut].nValue;
-		}		
+		nAmount += nValue;
 		
     }
 	UniValue res(UniValue::VOBJ);
@@ -2316,9 +2296,6 @@ UniValue aliasbalance(const UniValue& params, bool fHelp)
 }
 int aliasselectpaymentcoins(const vector<unsigned char> &vchAlias, const CAmount &nAmount, vector<COutPoint>& outPoints, bool& bIsFunded, CAmount &nRequiredAmount, bool bSelectFeePlacement, bool bSelectAll, bool bNoAliasRecipient)
 {
-	LOCK2(cs_main, mempool.cs);
-	CCoinsViewCache view(pcoinsTip);
-	const CCoins *coins;
 	int numCoinsLeft = 0;
 	int numResults = 0;
 	CAmount nCurrentAmount = 0;
@@ -2344,26 +2321,21 @@ int aliasselectpaymentcoins(const vector<unsigned char> &vchAlias, const CAmount
 	
   	int op;
 	vector<vector<unsigned char> > vvch;
-	CTxDestination payDest;
-	CSyscoinAddress destaddy;
 	bIsFunded = false;
 	for (unsigned int i = 0; i<utxoArray.size(); i++)
 	{
 		const UniValue& utxoObj = utxoArray[i].get_obj();
 		const uint256& txid = uint256S(find_value(utxoObj.get_obj(), "txid").get_str());
 		const int& nOut = find_value(utxoObj.get_obj(), "outputIndex").get_int();
-		coins = view.AccessCoins(txid);
-		if(coins == NULL)
-			continue;
-   
-		if(!coins->IsAvailable(nOut))
-			continue;
+		const std::vector<unsigned char> &data(ParseHex(find_value(utxoObj, "script").get_str()));
+		const CScript& scriptPubKey = CScript(data.begin(), data.end());
+		const CAmount &nValue = AmountFromValue(find_value(utxoObj, "satoshis"));
 		// look for non alias inputs, coins that can be used to fund this transaction, aliasunspent is used to get the alias utxo for proof of ownership
-		if (DecodeAliasScript(coins->vout[nOut].scriptPubKey, op, vvch))
+		if (DecodeAliasScript(scriptPubKey, op, vvch))
 			continue;  
 		if (!bSelectAll) {
 			// fee placement were ones that were smaller outputs used for subsequent updates
-			if (coins->vout[nOut].nValue <= 0.01*COIN)
+			if (nValue <= 0.01*COIN)
 			{
 				// alias pay doesn't include recipient, no utxo inputs used for aliaspay, for aliaspay we don't care about these small dust amounts
 				if (bNoAliasRecipient)
@@ -2375,25 +2347,16 @@ int aliasselectpaymentcoins(const vector<unsigned char> &vchAlias, const CAmount
 			else if (bSelectFeePlacement)
 				continue;
 		}
-		
-		if (!ExtractDestination(coins->vout[nOut].scriptPubKey, payDest)) 
-			continue;
-		destaddy = CSyscoinAddress(payDest);
-		if (destaddy.ToString() == strAddressFrom)
-		{  
-			auto it = mempool.mapNextTx.find(COutPoint(txid, nOut));
-			if (it != mempool.mapNextTx.end())
-				continue;
-			numResults++;
-			if(!bIsFunded || bSelectAll)
-			{
-				outPoints.push_back(COutPoint(txid, nOut));
-				nCurrentAmount += coins->vout[nOut].nValue;
-				if (nCurrentAmount >= nDesiredAmount) {
-					bIsFunded = true;
-				}
+		 
+		numResults++;
+		if(!bIsFunded || bSelectAll)
+		{
+			outPoints.push_back(COutPoint(txid, nOut));
+			nCurrentAmount += nValue;
+			if (nCurrentAmount >= nDesiredAmount) {
+				bIsFunded = true;
 			}
-		}		
+		}	
     }
 	nRequiredAmount = nDesiredAmount - nCurrentAmount;
 	if(nRequiredAmount < 0)
@@ -2403,11 +2366,9 @@ int aliasselectpaymentcoins(const vector<unsigned char> &vchAlias, const CAmount
 }
 int aliasunspent(const vector<unsigned char> &vchAlias, COutPoint& outpoint)
 {
-	LOCK2(cs_main, mempool.cs);
 	CAliasIndex theAlias;
 	if (!GetAlias(vchAlias, theAlias))
 		return 0;
-	const string &strAddressFrom = EncodeBase58(theAlias.vchAddress);
 	UniValue paramsUTXO(UniValue::VARR);
 	UniValue param(UniValue::VOBJ);
 	UniValue utxoParams(UniValue::VARR);
@@ -2420,41 +2381,25 @@ int aliasunspent(const vector<unsigned char> &vchAlias, COutPoint& outpoint)
 		utxoArray = resUTXOs.get_array();
 	else
 		return 0;
-	CTxDestination aliasDest;
-	CSyscoinAddress prevaddy;
+
 	int numResults = 0;
 	CAmount nCurrentAmount = 0;
-	CCoinsViewCache view(pcoinsTip);
-	const CCoins *coins;
 	bool funded = false;
 	for (unsigned int i = 0; i<utxoArray.size(); i++)
 	{
 		const UniValue& utxoObj = utxoArray[i].get_obj();
 		const uint256& txid = uint256S(find_value(utxoObj.get_obj(), "txid").get_str());
 		const int& nOut = find_value(utxoObj.get_obj(), "outputIndex").get_int();
-		coins = view.AccessCoins(txid);
-
-		if(coins == NULL)
-			continue;
+		const std::vector<unsigned char> &data(ParseHex(find_value(utxoObj, "script").get_str()));
+		const CScript& scriptPubKey = CScript(data.begin(), data.end());
 		int op;
 		vector<vector<unsigned char> > vvch;
-
-		if (!coins->IsAvailable(nOut))
-			continue;
-		if (!DecodeAliasScript(coins->vout[nOut].scriptPubKey, op, vvch) || vvch.size() <= 1 || vvch[0] != theAlias.vchAlias || vvch[1] != theAlias.vchGUID)
-			continue;
-		if (!ExtractDestination(coins->vout[nOut].scriptPubKey, aliasDest))
-			continue;
-		prevaddy = CSyscoinAddress(aliasDest);
-		if (strAddressFrom != prevaddy.ToString())
+		if (!DecodeAliasScript(scriptPubKey, op, vvch) || vvch.size() <= 1 || vvch[0] != theAlias.vchAlias || vvch[1] != theAlias.vchGUID)
 			continue;
 
 		numResults++;
 		if (!funded)
 		{
-			auto it = mempool.mapNextTx.find(COutPoint(txid, nOut));
-			if (it != mempool.mapNextTx.end())
-				continue;
 			outpoint = COutPoint(txid, nOut);
 			funded = true;
 		}
