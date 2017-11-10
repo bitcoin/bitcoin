@@ -7,17 +7,17 @@
 #define BITCOIN_VALIDATION_H
 
 #if defined(HAVE_CONFIG_H)
-#include "config/bitcoin-config.h"
+#include <config/bitcoin-config.h>
 #endif
 
-#include "amount.h"
-#include "coins.h"
-#include "fs.h"
-#include "protocol.h" // For CMessageHeader::MessageStartChars
-#include "policy/feerate.h"
-#include "script/script_error.h"
-#include "sync.h"
-#include "versionbits.h"
+#include <amount.h>
+#include <coins.h>
+#include <fs.h>
+#include <protocol.h> // For CMessageHeader::MessageStartChars
+#include <policy/feerate.h>
+#include <script/script_error.h>
+#include <sync.h>
+#include <versionbits.h>
 
 #include <algorithm>
 #include <exception>

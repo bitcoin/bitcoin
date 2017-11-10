@@ -5,7 +5,7 @@
 #ifndef BITCOIN_RPC_MINING_H
 #define BITCOIN_RPC_MINING_H
 
-#include "script/script.h"
+#include <script/script.h>
 
 #include <univalue.h>
 
