@@ -182,15 +182,14 @@ bool CCoinsViewCache::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlockIn
                     cacheCoins.erase(itUs);
                 } else {
                     // A normal modification.
+                    // In case the child is FRESH, apply it to the parent only
+                    // if it assured to have communicated its state to the
+                    // grandparent, that is if the parent isn't DIRTY.
+                    const bool fresh = (it->second.flags & CCoinsCacheEntry::FRESH) && (!(itUs->second.flags & CCoinsCacheEntry::DIRTY));
                     cachedCoinsUsage -= itUs->second.coin.DynamicMemoryUsage();
                     itUs->second.coin = std::move(it->second.coin);
                     cachedCoinsUsage += itUs->second.coin.DynamicMemoryUsage();
-                    itUs->second.flags |= CCoinsCacheEntry::DIRTY;
-                    // NOTE: It is possible the child has a FRESH flag here in
-                    // the event the entry we found in the parent is pruned. But
-                    // we must not copy that FRESH flag to the parent as that
-                    // pruned state likely still needs to be communicated to the
-                    // grandparent.
+                    itUs->second.flags |= CCoinsCacheEntry::DIRTY | (fresh ? CCoinsCacheEntry::FRESH : 0);
                 }
             }
         }
