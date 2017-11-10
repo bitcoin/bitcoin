@@ -139,9 +139,11 @@ bool AppInit(int argc, char *argv[])
 
         // Command-line RPC
         bool fCommandLine = false;
-        for (int i = 1; i < argc; i++) {
-            if (!IsSwitchChar(argv[i][0]) && !boost::algorithm::istarts_with(argv[i], "bitcoin:")
-                    &&! boost::algorithm::istarts_with(argv[i], "bitcoincash:")) {
+        for (int i = 1; i < argc; i++)
+        {
+            if (!IsSwitchChar(argv[i][0]) && !boost::algorithm::istarts_with(argv[i], "bitcoin:") &&
+                !boost::algorithm::istarts_with(argv[i], "bitcoincash:"))
+            {
                 fCommandLine = true;
                 break;
             }

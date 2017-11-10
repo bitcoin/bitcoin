@@ -39,11 +39,11 @@ QString BitcoinUnits::name(int unit)
     {
 #ifdef BITCOIN_CASH
     case BTC:
-        return QString("BCC");
+        return QString("BCH");
     case mBTC:
-        return QString("mBCC");
+        return QString("mBCH");
     case uBTC:
-        return QString::fromUtf8("μBCC");
+        return QString::fromUtf8("μBCH");
 #else
     case BTC:
         return QString("BTC");
@@ -52,7 +52,8 @@ QString BitcoinUnits::name(int unit)
     case uBTC:
         return QString::fromUtf8("μBTC");
 #endif
-    default: return QString("???");
+    default:
+        return QString("???");
     }
 }
 

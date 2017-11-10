@@ -42,7 +42,7 @@ enum
     MAX_HEADER_REQS_DURING_IBD = 3,
 // if the blockchain is this far (in seconds) behind the current time, only request headers from a single
 // peer.  This makes IBD more efficient.  We make BITCOIN_CASH more lenient here because mining could be
-// more erratic and this node is likely to connect to non-BCC nodes.
+// more erratic and this node is likely to connect to non-BCH nodes.
 #ifdef BITCOIN_CASH
     SINGLE_PEER_REQUEST_MODE_AGE = (7 * 24 * 60 * 60),
 #else
