@@ -138,8 +138,11 @@ BOOST_AUTO_TEST_CASE (generate_aliasmultiupdate)
 		BOOST_CHECK_NO_THROW(r = CallRPC("node2", "signrawtransaction " + varray[0].get_str()));
 		BOOST_CHECK_NO_THROW(CallRPC("node2", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
 	}
-	// an extra output was created from above 
-	BOOST_CHECK_NO_THROW(CallRPC("node2", "aliasupdate jagmultiupdate changedata6"));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "aliasupdate jagmultiupdate changedata5"));
+	UniValue varray = r.get_array();
+	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "signrawtransaction " + varray[0].get_str()));
+	BOOST_CHECK_THROW(CallRPC("node2", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()), runtime_error);
+
 	GenerateBlocks(10, "node2");
 	GenerateBlocks(10, "node2");
 	// transfer sends utxo's to new owner
@@ -156,7 +159,11 @@ BOOST_AUTO_TEST_CASE (generate_aliasmultiupdate)
 		BOOST_CHECK_NO_THROW(CallRPC("node1", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
 	}
 	
-	BOOST_CHECK_THROW(CallRPC("node1", "aliasupdate jagmultiupdate changedata10"), runtime_error);
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasupdate jagmultiupdate changedata9"));
+	UniValue varray = r.get_array();
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + varray[0].get_str()));
+	BOOST_CHECK_THROW(CallRPC("node1", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()), runtime_error);
+
 	GenerateBlocks(10, "node1");
 	GenerateBlocks(10, "node1");
 	hex_str = AliasUpdate("node1", "jagmultiupdate", "changeddata11");
@@ -263,7 +270,10 @@ BOOST_AUTO_TEST_CASE (generate_aliaspay)
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + varray[0].get_str()));
 		BOOST_CHECK_NO_THROW(CallRPC("node1", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
 	}
-	BOOST_CHECK_THROW(CallRPC("node1", "aliasupdate alias1.aliaspay.tld changedata1"), runtime_error);
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasupdate alias1.aliaspay.tld changedata1"));
+	UniValue varray = r.get_array();
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + varray[0].get_str()));
+	BOOST_CHECK_THROW(CallRPC("node1", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()), runtime_error);
 
 	for (unsigned int i = 0; i < MAX_ALIAS_UPDATES_PER_BLOCK; i++)
 	{
