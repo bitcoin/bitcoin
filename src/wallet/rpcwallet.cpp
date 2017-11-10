@@ -522,16 +522,16 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
 		numResults = aliasunspent(vchAlias, aliasOutPoint) - 1;
 		if (numResults < 0)
 			numResults = 0;
-		if ((numResults > 0 && numResults >= (MAX_ALIAS_UPDATES_PER_BLOCK - 1)))
+		if ((numResults > 0 && numResults >= (MAX_ALIAS_UPDATES_PER_BLOCK - 1)) || bAliasRegistration)
 			numResults = MAX_ALIAS_UPDATES_PER_BLOCK - 1;
 		if (transferAlias)
 			numResults = 0;
 		// for the alias utxo (1 per transaction is used)
-		if (!aliasRecipient.scriptPubKey.empty() && !bAliasRegistration)
+		if (!aliasRecipient.scriptPubKey.empty())
 		{
 			for (unsigned int i = numResults; i < MAX_ALIAS_UPDATES_PER_BLOCK; i++)
 				vecSend.push_back(aliasRecipient);
-			if (!aliasOutPoint.IsNull())
+			if (!aliasOutPoint.IsNull() && !bAliasRegistration)
 				coinControl->Select(aliasOutPoint);
 		}
 	}
