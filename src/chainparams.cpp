@@ -338,11 +338,26 @@ public:
         vFixedSeeds.clear();
         vSeeds.clear();
         // nodes with support for servicebits filtering should be at the top
+#ifdef BITCOIN_CASH
+        // Bitcoin ABC seeder
+        vSeeds.push_back(CDNSSeedData("bitcoinabc.org", "testnet-seed.bitcoinabc.org", true));
+        // bitcoinforks seeders
+        vSeeds.push_back(CDNSSeedData( "bitcoinforks.org", "testnet-seed-abc.bitcoinforks.org", true));
+        // BU seeder
+        vSeeds.push_back(CDNSSeedData("bitcoinunlimited.info", "testnet-seed.bitcoinunlimited.info", true));
+        // Bitprim
+        vSeeds.push_back( CDNSSeedData("bitprim.org", "testnet-seed.bitprim.org", true));
+        // Amaury SÉCHET
+        vSeeds.push_back( CDNSSeedData("deadalnix.me", "testnet-seed.deadalnix.me", true));
+        // criptolayer.net
+        vSeeds.push_back(CDNSSeedData("criptolayer.net", "testnet-seeder.criptolayer.net", true));
+#else
         vSeeds.push_back(
             CDNSSeedData("testnetbitcoin.jonasschnelli.ch", "testnet-seed.bitcoin.jonasschnelli.ch", true));
         vSeeds.push_back(CDNSSeedData("bitcoin.petertodd.org", "testnet-seed.bitcoin.petertodd.org"));
         vSeeds.push_back(CDNSSeedData("bluematt.me", "testnet-seed.bluematt.me"));
         vSeeds.push_back(CDNSSeedData("bitcoin.schildbach.de", "testnet-seed.bitcoin.schildbach.de"));
+#endif
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1, 111);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1, 196);
@@ -362,8 +377,9 @@ public:
 
         checkpointData =
             (CCheckpointData){boost::assign::map_list_of(
-                                  546, uint256S("000000002a936ca763904c3c35fce2f3556c559c0214345d31b1bcebf76acb70")),
-                1337966069, 1488, 300};
+                                  546, uint256S("000000002a936ca763904c3c35fce2f3556c559c0214345d31b1bcebf76acb70"))(
+                                  1155876, uint256S("00000000000e38fef93ed9582a7df43815d5c2ba9fd37ef70c9a0ea4a285b8f5")),
+                1501616524, 1488, 300};
     }
 };
 static CTestNetParams testNetParams;
