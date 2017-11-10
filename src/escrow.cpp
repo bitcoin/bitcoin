@@ -2149,7 +2149,6 @@ UniValue escrowcreaterawtransaction(const UniValue& params, bool fHelp) {
 	}
 	arrayCreateParams.push_back(inputs);
 	arrayCreateParams.push_back(createAddressUniValue);
-	arrayCreateParams.push_back(NullUniValue);
 	UniValue resCreate;
 	try
 	{
