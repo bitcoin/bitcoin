@@ -902,7 +902,6 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	GenerateBlocks(5, "node3");
 	GenerateBlocks(50);
 	AliasNew("node1", "aliasexpire2", "pubdata");
-	MilliSleep(1000);
 	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress aliasexpirednode2 3000"), runtime_error);
 	GenerateBlocks(10);	
 	const string &escrowguid = EscrowNewBuyItNow("node2", "node1", "aliasexpirednode2", offerguid, "1", "aliasexpire3");
@@ -943,11 +942,11 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	UniValue arr = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + arr[0].get_str()));
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasupdate aliasexpire2 newdata1"));
-	UniValue arr1 = r.get_array();
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + arr1[0].get_str()));
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
+	string hex_str = AliasUpdate("node1", "aliasexpire2", "newdata1");
+	BOOST_CHECK(!hex_str.empty());
 	GenerateBlocks(5, "node1");
+	hex_str = AliasUpdate("node1", "aliasexpire2", "newpubdata");
+	BOOST_CHECK(!hex_str.empty());
 	
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "certupdate " + certgoodguid + " titlenew pubdata"));
 	UniValue arr2 = r.get_array();
