@@ -1791,7 +1791,12 @@ bool DisconnectBlock(const CBlock& block, CValidationState& state, const CBlockI
 
 				if (out.scriptPubKey.IsPayToScriptHash()) {
 					// SYSCOIN
-					CScript scriptOut = out.scriptPubKey;
+					CScript scriptOut;
+					CScript scriptPubKeyOut;
+					if (RemoveSyscoinScript(out.scriptPubKey, scriptPubKeyOut))
+						scriptOut = scriptPubKeyOut;
+					else
+						scriptOut = out.scriptPubKey;
 					vector<unsigned char> hashBytes(scriptOut.begin() + 2, scriptOut.begin() + 22);
 
 					// undo receiving activity
@@ -1803,7 +1808,12 @@ bool DisconnectBlock(const CBlock& block, CValidationState& state, const CBlockI
 				}
 				else if (out.scriptPubKey.IsPayToPublicKeyHash()) {
 					// SYSCOIN
-					CScript scriptOut = out.scriptPubKey;
+					CScript scriptOut;
+					CScript scriptPubKeyOut;
+					if (RemoveSyscoinScript(out.scriptPubKey, scriptPubKeyOut))
+						scriptOut = scriptPubKeyOut;
+					else
+						scriptOut = out.scriptPubKey;
 					vector<unsigned char> hashBytes(scriptOut.begin() + 3, scriptOut.begin() + 23);
 
 					// undo receiving activity
@@ -1862,7 +1872,12 @@ bool DisconnectBlock(const CBlock& block, CValidationState& state, const CBlockI
 					const CTxOut &prevout = view.GetOutputFor(tx.vin[j]);
 					if (prevout.scriptPubKey.IsPayToScriptHash()) {
 						// SYSCOIN
-						CScript scriptOut = prevout.scriptPubKey;
+						CScript scriptOut;
+						CScript scriptPubKeyOut;
+						if (RemoveSyscoinScript(prevout.scriptPubKey, scriptPubKeyOut))
+							scriptOut = scriptPubKeyOut;
+						else
+							scriptOut = prevout.scriptPubKey;
 						vector<unsigned char> hashBytes(scriptOut.begin() + 2, scriptOut.begin() + 22);
 
 						// undo spending activity
@@ -1875,7 +1890,12 @@ bool DisconnectBlock(const CBlock& block, CValidationState& state, const CBlockI
 					}
 					else if (prevout.scriptPubKey.IsPayToPublicKeyHash()) {
 						// SYSCOIN
-						CScript scriptOut = prevout.scriptPubKey;
+						CScript scriptOut;
+						CScript scriptPubKeyOut;
+						if (RemoveSyscoinScript(prevout.scriptPubKey, scriptPubKeyOut))
+							scriptOut = scriptPubKeyOut;
+						else
+							scriptOut = prevout.scriptPubKey;
 						vector<unsigned char> hashBytes(scriptOut.begin() + 3, scriptOut.begin() + 23);
 
 						// undo spending activity
@@ -2203,13 +2223,23 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 
 					if (prevout.scriptPubKey.IsPayToScriptHash()) {
 						// SYSCOIN
-						CScript scriptOut = prevout.scriptPubKey;
+						CScript scriptOut;
+						CScript scriptPubKeyOut;
+						if (RemoveSyscoinScript(prevout.scriptPubKey, scriptPubKeyOut))
+							scriptOut = scriptPubKeyOut;
+						else
+							scriptOut = prevout.scriptPubKey;
 						hashBytes = uint160(vector <unsigned char>(scriptOut.begin() + 2, scriptOut.begin() + 22));
 						addressType = 2;
 					}
 					else if (prevout.scriptPubKey.IsPayToPublicKeyHash()) {
 						// SYSCOIN
-						CScript scriptOut = prevout.scriptPubKey;
+						CScript scriptOut;
+						CScript scriptPubKeyOut;
+						if (RemoveSyscoinScript(prevout.scriptPubKey, scriptPubKeyOut))
+							scriptOut = scriptPubKeyOut;
+						else
+							scriptOut = prevout.scriptPubKey;
 						hashBytes = uint160(vector <unsigned char>(scriptOut.begin() + 3, scriptOut.begin() + 23));
 						addressType = 1;
 					}
@@ -2265,7 +2295,12 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 
 				if (out.scriptPubKey.IsPayToScriptHash()) {
 					// SYSCOIN
-					CScript scriptOut = out.scriptPubKey;
+					CScript scriptOut;
+					CScript scriptPubKeyOut;
+					if (RemoveSyscoinScript(out.scriptPubKey, scriptPubKeyOut))
+						scriptOut = scriptPubKeyOut;
+					else
+						scriptOut = out.scriptPubKey;
 					vector<unsigned char> hashBytes(scriptOut.begin() + 2, scriptOut.begin() + 22);
 
 					// record receiving activity
@@ -2277,7 +2312,12 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 				}
 				else if (out.scriptPubKey.IsPayToPublicKeyHash()) {
 					// SYSCOIN
-					CScript scriptOut = out.scriptPubKey;
+					CScript scriptOut;
+					CScript scriptPubKeyOut;
+					if (RemoveSyscoinScript(out.scriptPubKey, scriptPubKeyOut))
+						scriptOut = scriptPubKeyOut;
+					else
+						scriptOut = out.scriptPubKey;
 					vector<unsigned char> hashBytes(scriptOut.begin() + 3, scriptOut.begin() + 23);
 
 					// record receiving activity

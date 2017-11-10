@@ -435,7 +435,12 @@ void CTxMemPool::addAddressIndex(const CTxMemPoolEntry &entry, const CCoinsViewC
         const CTxOut &prevout = view.GetOutputFor(input);
         if (prevout.scriptPubKey.IsPayToScriptHash()) {
 			// SYSCOIN
-			CScript scriptOut = prevout.scriptPubKey;
+			CScript scriptOut;
+			CScript scriptPubKeyOut;
+			if (RemoveSyscoinScript(prevout.scriptPubKey, scriptPubKeyOut))
+				scriptOut = scriptPubKeyOut;
+			else
+				scriptOut = prevout.scriptPubKey;
             vector<unsigned char> hashBytes(scriptOut.begin()+2, scriptOut.begin()+22);
             CMempoolAddressDeltaKey key(2, uint160(hashBytes), txhash, j, 1);
             CMempoolAddressDelta delta(entry.GetTime(), prevout.nValue * -1, input.prevout.hash, input.prevout.n);
@@ -443,7 +448,12 @@ void CTxMemPool::addAddressIndex(const CTxMemPoolEntry &entry, const CCoinsViewC
             inserted.push_back(key);
         } else if (prevout.scriptPubKey.IsPayToPublicKeyHash()) {
 			// SYSCOIN
-			CScript scriptOut = prevout.scriptPubKey;
+			CScript scriptOut;
+			CScript scriptPubKeyOut;
+			if (RemoveSyscoinScript(prevout.scriptPubKey, scriptPubKeyOut))
+				scriptOut = scriptPubKeyOut;
+			else
+				scriptOut = prevout.scriptPubKey;
             vector<unsigned char> hashBytes(scriptOut.begin()+3, scriptOut.begin()+23);
             CMempoolAddressDeltaKey key(1, uint160(hashBytes), txhash, j, 1);
             CMempoolAddressDelta delta(entry.GetTime(), prevout.nValue * -1, input.prevout.hash, input.prevout.n);
@@ -456,14 +466,24 @@ void CTxMemPool::addAddressIndex(const CTxMemPoolEntry &entry, const CCoinsViewC
         const CTxOut &out = tx.vout[k];
         if (out.scriptPubKey.IsPayToScriptHash()) {
 			// SYSCOIN
-			CScript scriptOut = out.scriptPubKey;
+			CScript scriptOut;
+			CScript scriptPubKeyOut;
+			if (RemoveSyscoinScript(out.scriptPubKey, scriptPubKeyOut))
+				scriptOut = scriptPubKeyOut;
+			else
+				scriptOut = out.scriptPubKey;
             vector<unsigned char> hashBytes(scriptOut.begin()+2, scriptOut.begin()+22);
             CMempoolAddressDeltaKey key(2, uint160(hashBytes), txhash, k, 0);
             mapAddress.insert(make_pair(key, CMempoolAddressDelta(entry.GetTime(), out.nValue)));
             inserted.push_back(key);
         } else if (out.scriptPubKey.IsPayToPublicKeyHash()) {
 			// SYSCOIN
-			CScript scriptOut = out.scriptPubKey;
+			CScript scriptOut;
+			CScript scriptPubKeyOut;
+			if (RemoveSyscoinScript(out.scriptPubKey, scriptPubKeyOut))
+				scriptOut = scriptPubKeyOut;
+			else
+				scriptOut = out.scriptPubKey;
             vector<unsigned char> hashBytes(scriptOut.begin()+3, scriptOut.begin()+23);
             std::pair<addressDeltaMap::iterator,bool> ret;
             CMempoolAddressDeltaKey key(1, uint160(hashBytes), txhash, k, 0);
@@ -521,12 +541,22 @@ void CTxMemPool::addSpentIndex(const CTxMemPoolEntry &entry, const CCoinsViewCac
 
         if (prevout.scriptPubKey.IsPayToScriptHash()) {
 			// SYSCOIN
-			CScript scriptOut = prevout.scriptPubKey;
+			CScript scriptOut;
+			CScript scriptPubKeyOut;
+			if (RemoveSyscoinScript(prevout.scriptPubKey, scriptPubKeyOut))
+				scriptOut = scriptPubKeyOut;
+			else
+				scriptOut = prevout.scriptPubKey;
             addressHash = uint160(vector<unsigned char> (scriptOut.begin()+2, scriptOut.begin()+22));
             addressType = 2;
         } else if (prevout.scriptPubKey.IsPayToPublicKeyHash()) {
 			// SYSCOIN
-			CScript scriptOut = prevout.scriptPubKey;
+			CScript scriptOut;
+			CScript scriptPubKeyOut;
+			if (RemoveSyscoinScript(prevout.scriptPubKey, scriptPubKeyOut))
+				scriptOut = scriptPubKeyOut;
+			else
+				scriptOut = prevout.scriptPubKey;
             addressHash = uint160(vector<unsigned char> (scriptOut.begin()+3, scriptOut.begin()+23));
             addressType = 1;
         } else {
