@@ -829,19 +829,7 @@ UniValue signrawtransaction(const JSONRPCRequest& request)
 
     int nHashType = SIGHASH_ALL;
     if (!request.params[3].isNull()) {
-        static std::map<std::string, int> mapSigHashValues = {
-            {std::string("ALL"), int(SIGHASH_ALL)},
-            {std::string("ALL|ANYONECANPAY"), int(SIGHASH_ALL|SIGHASH_ANYONECANPAY)},
-            {std::string("NONE"), int(SIGHASH_NONE)},
-            {std::string("NONE|ANYONECANPAY"), int(SIGHASH_NONE|SIGHASH_ANYONECANPAY)},
-            {std::string("SINGLE"), int(SIGHASH_SINGLE)},
-            {std::string("SINGLE|ANYONECANPAY"), int(SIGHASH_SINGLE|SIGHASH_ANYONECANPAY)},
-        };
-        std::string strHashType = request.params[3].get_str();
-        if (mapSigHashValues.count(strHashType))
-            nHashType = mapSigHashValues[strHashType];
-        else
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid sighash param");
+        nHashType = ParseSigHash(request.params[3].get_str(), "sighashtype");
     }
 
     bool fHashSingle = ((nHashType & ~SIGHASH_ANYONECANPAY) == SIGHASH_SINGLE);

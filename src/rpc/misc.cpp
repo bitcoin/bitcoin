@@ -320,6 +320,77 @@ UniValue createmultisig(const JSONRPCRequest& request)
     return result;
 }
 
+UniValue getsignaturehash(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() < 5 || request.params.size() > 6)
+        throw std::runtime_error(
+            "getsignaturehash \"tx\" \"scriptcode\" amount \"sigversion\" inputindex (\"sighashtype\")\n"
+            "\nCreate the hash to sign for the given input\n"
+
+            "\nArguments:\n"
+            "1. \"tx\"                 (string, required) The transaction hex string\n"
+            "2. \"scriptcode\"         (string, required) The scriptCode to sign\n"
+            "3. \"amount\"             (numeric, required) The amount spent in satoshi\n"
+            "4. \"sigversion\"         (string, required) The signature version\n"
+            "       \"BASE\"\n"
+            "       \"WITNESS_V0\"\n"
+            "5. inputindex             (numeric, required) The index of the input to sign\n"
+            "6. \"sighashtype\"        (string, optional, default=ALL) The signature hash type. Must be one of\n"
+            "       \"ALL\"\n"
+            "       \"NONE\"\n"
+            "       \"SINGLE\"\n"
+            "       \"ALL|ANYONECANPAY\"\n"
+            "       \"NONE|ANYONECANPAY\"\n"
+            "       \"SINGLE|ANYONECANPAY\"\n"
+            "\nResult:\n"
+            "\"signature\"             (string) hex string of the signature\n"
+
+            "\nExamples:\n"
+            + HelpExampleCli("getsignaturehash", "\"txhex\" \"scriptcode\" \"0.01\" \"WITNESS_V0\" 1 \"SINGLE\"")
+            + HelpExampleRpc("getsignaturehash", "\"txhex\" \"scriptcode\" \"0.01\" \"WITNESS_V0\" 1 \"SINGLE\"")
+        );
+
+    RPCTypeCheck(request.params,
+    {
+        UniValue::VSTR, // tx
+        UniValue::VSTR, // scriptCode
+        UniValue::VNUM, // amount
+        UniValue::VSTR, // sigVersion
+        UniValue::VNUM // inputIndex
+    }, false);
+
+    CMutableTransaction mtx;
+    if (!DecodeHexTx(mtx, request.params[0].get_str(), true))
+    {
+        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed");
+    }
+
+    std::vector<unsigned char> scriptCodeData(ParseHexV(request.params[1], "scriptCode"));
+    CScript scriptCode(scriptCodeData.begin(), scriptCodeData.end());
+
+    CAmount amount = request.params[2].get_int64();
+    if (!MoneyRange(amount))
+        throw JSONRPCError(RPC_TYPE_ERROR, "Amount out of range");
+    SigVersion sigVersion;
+    static std::map<std::string, SigVersion> mapSigVersionValues = {
+        { std::string("BASE"), SigVersion::SIGVERSION_BASE },
+        { std::string("WITNESS_V0"), SigVersion::SIGVERSION_WITNESS_V0 },
+    };
+    std::string strHashType = request.params[3].get_str();
+    if (mapSigVersionValues.count(strHashType))
+        sigVersion = mapSigVersionValues[strHashType];
+    else
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid sigversion param");
+
+    int inputIndex = request.params[4].get_int();
+    int nHashType = SIGHASH_ALL;
+    if (!request.params[5].isNull()) {
+        nHashType = ParseSigHash(request.params[5].get_str(), "sighashtype");
+    }
+    auto hash = SignatureHash(scriptCode, mtx, inputIndex, nHashType, amount, sigVersion);
+    return hash.GetHex();
+}
+
 UniValue verifymessage(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 3)
@@ -611,6 +682,7 @@ static const CRPCCommand commands[] =
     { "control",            "logging",                &logging,                {"include", "exclude"}},
     { "util",               "validateaddress",        &validateaddress,        {"address"} }, /* uses wallet if enabled */
     { "util",               "createmultisig",         &createmultisig,         {"nrequired","keys"} },
+    { "util",               "getsignaturehash",       &getsignaturehash,       { "tx", "scriptcode", "amount", "sigversion", "inputindex", "sighashtype" } },
     { "util",               "verifymessage",          &verifymessage,          {"address","signature","message"} },
     { "util",               "signmessagewithprivkey", &signmessagewithprivkey, {"privkey","message"} },
 
