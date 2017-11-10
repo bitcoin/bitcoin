@@ -1099,7 +1099,7 @@ void CreateRecipient(const CScript& scriptPubKey, CRecipient& recipient)
 	recipient = recp;
 	CTxOut txout(recipient.nAmount,	recipient.scriptPubKey);
     size_t nSize = txout.GetSerializeSize(SER_DISK,0)+148u;
-	CAmount nFee = CWallet::GetMinimumFee(nSize, nTxConfirmTarget, mempool);
+	CAmount nFee = 3 * minRelayTxFee.GetFee(nSize);
 	recipient.nAmount = nFee;
 }
 void CreateAliasRecipient(const CScript& scriptPubKeyDest, CRecipient& recipient)
@@ -1134,7 +1134,7 @@ CAmount GetDataFee(const CScript& scriptPubKey)
 	recipient = recp;
 	CTxOut txout(0,	recipient.scriptPubKey);
     size_t nSize = txout.GetSerializeSize(SER_DISK,0)+148u;
-	nFee = GetMinimumFee(nSize, nTxConfirmTarget, mempool);
+	nFee = 3 * minRelayTxFee.GetFee(nSize);
 	recipient.nAmount = nFee;
 	return recipient.nAmount;
 }
@@ -2288,7 +2288,7 @@ UniValue aliasbalance(const UniValue& params, bool fHelp)
 		if (DecodeAliasScript(scriptPubKey, op, vvch))
 			continue;
 		// some smaller sized outputs are reserved to pay for fees only using aliasselectpaymentcoins (with bSelectFeePlacement set to true)
-		if (nValue <= 0.01*COIN)
+		if (nValue <= CWallet::GetMinimumFee(1000, nTxConfirmTarget, mempool))
 			continue;
 		{
 			LOCK(mempool.cs);
@@ -2344,7 +2344,7 @@ int aliasselectpaymentcoins(const vector<unsigned char> &vchAlias, const CAmount
 			continue;  
 		if (!bSelectAll) {
 			// fee placement were ones that were smaller outputs used for subsequent updates
-			if (nValue <= 0.01*COIN)
+			if (nValue <= CWallet::GetMinimumFee(1000, nTxConfirmTarget, mempool))
 			{
 				// alias pay doesn't include recipient, no utxo inputs used for aliaspay, for aliaspay we don't care about these small dust amounts
 				if (bNoAliasRecipient)

@@ -584,7 +584,7 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
 	{
 		// create utxo minimum 1kb worth of fees if alias is first activated
 		if ((op == OP_ALIAS_ACTIVATE && vvch.size() > 1) || op != OP_ALIAS_ACTIVATE) {
-			CAmount nMinFee = GetMinimumFee(1000, nTxConfirmTarget, mempool);
+			CAmount nMinFee = CWallet::GetMinimumFee(1000, nTxConfirmTarget, mempool);
 			if (aliasFeePlaceholderRecipient.nAmount < nMinFee)
 				aliasFeePlaceholderRecipient.nAmount = nMinFee;
 		}
