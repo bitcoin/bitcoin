@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "crypto/sha256.h"
-#include "crypto/common.h"
+#include <crypto/sha256.h>
+#include <crypto/common.h>
 
 #include <assert.h>
 #include <string.h>
