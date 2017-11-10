@@ -517,27 +517,25 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			}
 		}
 		// whitelist alias updates don't update expiry date
-		if(!vchData.empty() && theAlias.offerWhitelist.entries.empty())
+		if(!vchData.empty() && theAlias.offerWhitelist.entries.empty() && theAlias.nExpireTime > 0)
 		{
 			CAmount fee = GetDataFee(tx.vout[nDataOut].scriptPubKey);
 			float fYears;
-			// if this is an alias payload get expire time and figure out if alias payload pays enough fees for expiry
-			if(!theAlias.IsNull())
-			{
-				int nHeightTmp = nHeight;
-				if(nHeightTmp > chainActive.Height())
-					nHeightTmp = chainActive.Height();
-				uint64_t nTimeExpiry = theAlias.nExpireTime - chainActive[nHeightTmp]->GetMedianTimePast();
-				// ensure aliases are good for atleast an hour
-				if (nTimeExpiry < 3600) {
-					nTimeExpiry = 3600;
-					theAlias.nExpireTime = chainActive[nHeightTmp]->GetMedianTimePast() + 3600;
-				}
-				fYears = nTimeExpiry / ONE_YEAR_IN_SECONDS;
-				if(fYears < 1)
-					fYears = 1;
-				fee *= powf(2.88,fYears);
+			//  get expire time and figure out if alias payload pays enough fees for expiry
+			int nHeightTmp = nHeight;
+			if(nHeightTmp > chainActive.Height())
+				nHeightTmp = chainActive.Height();
+			uint64_t nTimeExpiry = theAlias.nExpireTime - chainActive[nHeightTmp]->GetMedianTimePast();
+			// ensure aliases are good for atleast an hour
+			if (nTimeExpiry < 3600) {
+				nTimeExpiry = 3600;
+				theAlias.nExpireTime = chainActive[nHeightTmp]->GetMedianTimePast() + 3600;
 			}
+			fYears = nTimeExpiry / ONE_YEAR_IN_SECONDS;
+			if(fYears < 1)
+				fYears = 1;
+			fee *= powf(2.88,fYears);
+			
 			if ((fee-10000) > tx.vout[nDataOut].nValue) 
 			{
 				errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5019 - " + _("Transaction does not pay enough fee: ") + ValueFromAmount(tx.vout[nDataOut].nValue).write() + "/" + ValueFromAmount(fee-10000).write() + "/" + boost::lexical_cast<string>(fYears) + " years.";
@@ -596,7 +594,8 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 							theAlias.vchEncryptionPrivateKey = dbAlias.vchEncryptionPrivateKey;
 						if (theAlias.vchEncryptionPublicKey.empty())
 							theAlias.vchEncryptionPublicKey = dbAlias.vchEncryptionPublicKey;
-
+						if (theAlias.nExpireTime == 0)
+							theAlias.nExpireTime = dbAlias.nExpireTime;
 						if (theAlias.vchAddress.empty())
 							theAlias.vchAddress = dbAlias.vchAddress;
 						theAlias.vchGUID = dbAlias.vchGUID;
@@ -2038,7 +2037,7 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	if(timeSet || copyAlias.nExpireTime <= chainActive.Tip()->GetMedianTimePast())
 		theAlias.nExpireTime = nTime;
 	else
-		theAlias.nExpireTime = copyAlias.nExpireTime;
+		theAlias.nExpireTime = 0;
 	theAlias.nAccessFlags = copyAlias.nAccessFlags;
 	if(strAcceptCertTransfers.empty())
 		theAlias.acceptCertTransfers = copyAlias.acceptCertTransfers;
@@ -2070,14 +2069,16 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	scriptData << OP_RETURN << data;
 	CRecipient fee;
 	CreateFeeRecipient(scriptData, data, fee);
-	// calculate a fee if renewal is larger than default.. based on how many years you extend for it will be exponentially more expensive
-	uint64_t nTimeExpiry = nTime - chainActive.Tip()->GetMedianTimePast();
-	if (nTimeExpiry < 3600)
-		nTimeExpiry = 3600;
-	float fYears = nTimeExpiry / ONE_YEAR_IN_SECONDS;
-	if(fYears < 1)
-		fYears = 1;
-	fee.nAmount *= powf(2.88,fYears);
+	if (timeSet) {
+		// calculate a fee if renewal is larger than default.. based on how many years you extend for it will be exponentially more expensive
+		uint64_t nTimeExpiry = nTime - chainActive.Tip()->GetMedianTimePast();
+		if (nTimeExpiry < 3600)
+			nTimeExpiry = 3600;
+		float fYears = nTimeExpiry / ONE_YEAR_IN_SECONDS;
+		if (fYears < 1)
+			fYears = 1;
+		fee.nAmount *= powf(2.88, fYears);
+	}
 	
 	vecSend.push_back(fee);
 	CCoinControl coinControl;
