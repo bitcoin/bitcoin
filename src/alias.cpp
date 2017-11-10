@@ -1100,7 +1100,7 @@ void CreateRecipient(const CScript& scriptPubKey, CRecipient& recipient)
 	recipient = recp;
 	CTxOut txout(recipient.nAmount,	recipient.scriptPubKey);
     size_t nSize = txout.GetSerializeSize(SER_DISK,0)+148u;
-	CAmount nFee = 3*CWallet::GetRequiredFee(nSize);
+	CAmount nFee = CWallet::GetMinimumFee(nSize, nTxConfirmTarget, mempool);
 	recipient.nAmount = nFee;
 }
 void CreateAliasRecipient(const CScript& scriptPubKeyDest, CRecipient& recipient)
@@ -1110,10 +1110,6 @@ void CreateAliasRecipient(const CScript& scriptPubKeyDest, CRecipient& recipient
 	recipient = recp;
 	CTxOut txout(0,	recipient.scriptPubKey);
 	size_t nSize = txout.GetSerializeSize(SER_DISK,0)+148u;
-	// create alias payment utxo max 1000 bytes worth of fees
-	// create utxo min 1kb worth of fees
-	if(nSize < 1000)
-		nSize = 1000;
 	nFee = CWallet::GetMinimumFee(nSize, nTxConfirmTarget, mempool);
 	recipient.nAmount = nFee;
 }

@@ -573,6 +573,12 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
 	bool bNeedNewAliasPaymentInputs = numFeeCoinsLeft == 0 || numResults <= 0;
 	if (bNeedNewAliasPaymentInputs && !bAliasRegistration)
 	{
+		// create utxo minimum 1kb worth of fees if alias is first activated
+		if (op == OP_ALIAS_ACTIVATE && vvch.size() > 1) {
+			CAmount nMinFee = CWallet::GetMinimumFee(1000, nTxConfirmTarget, mempool);
+			if (aliasFeePlaceholderRecipient.nFee < nMinFee)
+				aliasFeePlaceholderRecipient.nFee = nMinFee;
+		}
 		for (unsigned int i = 0; i<MAX_ALIAS_UPDATES_PER_BLOCK; i++)
 		{
 			vecSend.push_back(aliasFeePlaceholderRecipient);
