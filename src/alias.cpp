@@ -2372,6 +2372,7 @@ int aliasunspent(const vector<unsigned char> &vchAlias, COutPoint& outpoint)
 	UniValue paramsUTXO(UniValue::VARR);
 	UniValue param(UniValue::VOBJ);
 	UniValue utxoParams(UniValue::VARR);
+	const string &strAddressFrom = EncodeBase58(theAlias.vchAddress);
 	utxoParams.push_back(strAddressFrom);
 	param.push_back(Pair("addresses", utxoParams));
 	paramsUTXO.push_back(param);
