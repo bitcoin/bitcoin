@@ -377,8 +377,9 @@ public:
 
         checkpointData =
             (CCheckpointData){boost::assign::map_list_of(
-                                  546, uint256S("000000002a936ca763904c3c35fce2f3556c559c0214345d31b1bcebf76acb70")),
-                1337966069, 1488, 300};
+                                  546, uint256S("000000002a936ca763904c3c35fce2f3556c559c0214345d31b1bcebf76acb70"))(
+                                  1155876, uint256S("00000000000e38fef93ed9582a7df43815d5c2ba9fd37ef70c9a0ea4a285b8f5")),
+                1501616524, 1488, 300};
     }
 };
 static CTestNetParams testNetParams;
