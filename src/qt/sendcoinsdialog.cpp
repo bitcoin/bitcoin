@@ -599,6 +599,34 @@ void SendCoinsDialog::on_buttonMinimizeFee_clicked()
     minimizeFeeSection(true);
 }
 
+void SendCoinsDialog::on_buttonSendAll_clicked()
+{
+    // Get CCoinControl instance if CoinControl is enabled or create a new one
+    CCoinControl coinControl;
+    if (model->getOptionsModel()->getCoinControlFeatures())
+        coinControl = *CoinControlDialog::coinControl;
+
+    // Calculate total amount to spend
+    CAmount nTotalAmount = model->getBalance(&coinControl);
+
+    // Calculate amount per entry
+    int nEntries = ui->entries->count();
+    CAmount nAmountPerEntry = (nEntries ? (nTotalAmount / nEntries) : nTotalAmount);
+
+    for(int i = 0; i < nEntries; ++i)
+    {
+        SendCoinsEntry *entry = qobject_cast<SendCoinsEntry*>(ui->entries->itemAt(i)->widget());
+        if(entry)
+        {
+            // Check subtract fee from amount checkbox
+            entry->checkSubtractFeeFromAmount();
+
+            // Set new amount for entry
+            entry->setAmount(nAmountPerEntry);
+        }
+    }
+}
+
 void SendCoinsDialog::setMinimumFee()
 {
     ui->customFee->setValue(GetRequiredFee(1000));

@@ -1218,6 +1218,13 @@
       </spacer>
      </item>
      <item>
+      <widget class="QPushButton" name="buttonSendAll">
+       <property name="text">
+        <string>Send All</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <layout class="QHBoxLayout" name="horizontalLayout_2">
        <property name="spacing">
         <number>3</number>
