@@ -516,20 +516,24 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
 		coinControl->Select(aliasOutPointWitness);
 	}
 	COutPoint aliasOutPoint;
-	int numResults = aliasunspent(vchAlias, aliasOutPoint) - 1;
-	if (numResults < 0)
-		numResults = 0;
-	if ((numResults > 0 && numResults >= (MAX_ALIAS_UPDATES_PER_BLOCK - 1)) || bAliasRegistration)
-		numResults = MAX_ALIAS_UPDATES_PER_BLOCK - 1;
-	if (transferAlias)
-		numResults = 0;
-	// for the alias utxo (1 per transaction is used)
-	if (!aliasRecipient.scriptPubKey.empty())
-	{
-		for (unsigned int i = numResults; i<MAX_ALIAS_UPDATES_PER_BLOCK; i++)
-			vecSend.push_back(aliasRecipient);
-		if (!aliasOutPoint.IsNull() && !bAliasRegistration)
-			coinControl->Select(aliasOutPoint);
+	int numResults = 0;
+	// if alias inputs used, need to ensure new alias utxo's are created as prev ones need to be used for proof of ownership
+	if (!aliasRecipient.scriptPubKey.empty()) {
+		numResults = aliasunspent(vchAlias, aliasOutPoint) - 1;
+		if (numResults < 0)
+			numResults = 0;
+		if ((numResults > 0 && numResults >= (MAX_ALIAS_UPDATES_PER_BLOCK - 1)) || bAliasRegistration)
+			numResults = MAX_ALIAS_UPDATES_PER_BLOCK - 1;
+		if (transferAlias)
+			numResults = 0;
+		// for the alias utxo (1 per transaction is used)
+		if (!aliasRecipient.scriptPubKey.empty())
+		{
+			for (unsigned int i = numResults; i < MAX_ALIAS_UPDATES_PER_BLOCK; i++)
+				vecSend.push_back(aliasRecipient);
+			if (!aliasOutPoint.IsNull() && !bAliasRegistration)
+				coinControl->Select(aliasOutPoint);
+		}
 	}
 
 	CWalletTx wtxNew1, wtxNew2;
@@ -553,14 +557,17 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
 	bool bIsAliasPaymentFunded = false;
 	int numFeeCoinsLeft = -1;
 	vector<COutPoint> outPoints;
-	// select coins from alias to pay for this tx
-	numFeeCoinsLeft = aliasselectpaymentcoins(vchAlias, nTotal, outPoints, bAreFeePlaceholdersFunded, nRequiredFeePlaceholderFunds, !aliasRecipient.scriptPubKey.empty(), transferAlias, aliasRecipient.scriptPubKey.empty());
-	if (!bAliasRegistration)
-	{
-		BOOST_FOREACH(const COutPoint& outpoint, outPoints)
+	// if alias input is used, we need to use fees to pay the data portion of the service tx
+	if (!aliasRecipient.scriptPubKey.empty()) {
+		// select coins from alias to pay for this tx
+		numFeeCoinsLeft = aliasselectpaymentcoins(vchAlias, nTotal, outPoints, bAreFeePlaceholdersFunded, nRequiredFeePlaceholderFunds, true, transferAlias, false);
+		if (!bAliasRegistration)
 		{
-			if (!coinControl->IsSelected(outpoint))
-				coinControl->Select(outpoint);
+			BOOST_FOREACH(const COutPoint& outpoint, outPoints)
+			{
+				if (!coinControl->IsSelected(outpoint))
+					coinControl->Select(outpoint);
+			}
 		}
 	}
 
@@ -571,7 +578,7 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
 	CAmount nBalance = AmountFromValue(find_value(result.get_obj(), "balance"));
 	// if fee placement utxo's have been used up (or we are creating a new alias) use balance(alias or wallet) for funding as well as create more fee placeholders
 	bool bNeedNewAliasPaymentInputs = numFeeCoinsLeft == 0;
-	if (bNeedNewAliasPaymentInputs && !bAliasRegistration)
+	if (bNeedNewAliasPaymentInputs && !bAliasRegistration && !aliasRecipient.scriptPubKey.empty()) {
 	{
 		// create utxo minimum 1kb worth of fees if alias is first activated
 		if ((op == OP_ALIAS_ACTIVATE && vvch.size() > 1) || op != OP_ALIAS_ACTIVATE) {
