@@ -1021,6 +1021,7 @@ UniValue setgenerate(const JSONRPCRequest& request)
     if (Params().MineBlocksOnDemand())
         throw JSONRPCError(RPC_METHOD_NOT_FOUND, "Use the generate method instead of setgenerate on this network");
 
+
     bool fGenerate = true;
     if (request.params.size() > 0)
         fGenerate = request.params[0].get_bool();
