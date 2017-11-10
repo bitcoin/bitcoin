@@ -131,6 +131,23 @@ uint256 ParseHashV(const UniValue& v, std::string strName)
     result.SetHex(strHex);
     return result;
 }
+
+int ParseSigHash(const std::string& sighash, const std::string& parameter_name)
+{
+    int nHashType = 0;
+    static const std::map<std::string, int> sighash_values = {
+        { std::string("ALL"), int(SIGHASH_ALL) },
+        { std::string("ALL|ANYONECANPAY"), int(SIGHASH_ALL | SIGHASH_ANYONECANPAY) },
+        { std::string("NONE"), int(SIGHASH_NONE) },
+        { std::string("NONE|ANYONECANPAY"), int(SIGHASH_NONE | SIGHASH_ANYONECANPAY) },
+        { std::string("SINGLE"), int(SIGHASH_SINGLE) },
+        { std::string("SINGLE|ANYONECANPAY"), int(SIGHASH_SINGLE | SIGHASH_ANYONECANPAY) },
+    };
+    auto it = sighash_values.find(sighash);
+    if (it == sighash_values.end()) throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid %s param", parameter_name));
+    return (*it).second;
+}
+
 uint256 ParseHashO(const UniValue& o, std::string strKey)
 {
     return ParseHashV(find_value(o, strKey), strKey);
