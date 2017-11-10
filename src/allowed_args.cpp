@@ -240,6 +240,11 @@ static void addGeneralOptions(AllowedArgs &allowedArgs, HelpMessageMode mode)
             strprintf(_("How thorough the block verification of -checkblocks is (0-4, default: %u)"),
                     DEFAULT_CHECKLEVEL));
 
+#ifdef BITCOIN_CASH
+    allowedArgs.addArg("newdaaactivationtime=<epoch>", requiredInt,
+        strprintf(_("Bitcoin Cash November 13th activation time (default: %u"), 1510600000));
+#endif
+
 #ifndef WIN32
     if (mode == HMM_BITCOIND)
         allowedArgs.addArg("daemon", optionalBool, _("Run in the background as a daemon and accept commands"));
