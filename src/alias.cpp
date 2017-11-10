@@ -2287,6 +2287,10 @@ UniValue aliasbalance(const UniValue& params, bool fHelp)
 		// some smaller sized outputs are reserved to pay for fees only using aliasselectpaymentcoins (with bSelectFeePlacement set to true)
 		if (nValue <= 0.01*COIN)
 			continue;
+		LOCK(mempool.cs);
+		auto it = mempool.mapNextTx.find(COutPoint(txid, nOut));
+		if (it != mempool.mapNextTx.end())
+			continue;
 		nAmount += nValue;
 		
     }
@@ -2351,6 +2355,10 @@ int aliasselectpaymentcoins(const vector<unsigned char> &vchAlias, const CAmount
 		numResults++;
 		if(!bIsFunded || bSelectAll)
 		{
+			LOCK(mempool.cs);
+			auto it = mempool.mapNextTx.find(COutPoint(txid, nOut));
+			if (it != mempool.mapNextTx.end())
+				continue;
 			outPoints.push_back(COutPoint(txid, nOut));
 			nCurrentAmount += nValue;
 			if (nCurrentAmount >= nDesiredAmount) {
@@ -2401,6 +2409,10 @@ int aliasunspent(const vector<unsigned char> &vchAlias, COutPoint& outpoint)
 		numResults++;
 		if (!funded)
 		{
+			LOCK(mempool.cs);
+			auto it = mempool.mapNextTx.find(COutPoint(txid, nOut));
+			if (it != mempool.mapNextTx.end())
+				continue;
 			outpoint = COutPoint(txid, nOut);
 			funded = true;
 		}
