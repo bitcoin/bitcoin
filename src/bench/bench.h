@@ -59,12 +59,17 @@ namespace benchmark {
         uint64_t minCycles;
         uint64_t maxCycles;
     public:
-        State(std::string _name, duration _maxElapsed) : name(_name), maxElapsed(_maxElapsed), count(0) {
-            minTime = duration::max();
-            maxTime = duration::zero();
-            minCycles = std::numeric_limits<uint64_t>::max();
-            maxCycles = std::numeric_limits<uint64_t>::min();
-            countMask = 1;
+        State(std::string _name, duration _maxElapsed) :
+            name(_name),
+            maxElapsed(_maxElapsed),
+            minTime(duration::max()),
+            maxTime(duration::zero()),
+            count(0),
+            countMask(1),
+            beginCycles(0),
+            lastCycles(0),
+            minCycles(std::numeric_limits<uint64_t>::max()),
+            maxCycles(std::numeric_limits<uint64_t>::min()) {
         }
         bool KeepRunning();
     };
