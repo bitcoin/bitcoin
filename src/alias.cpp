@@ -1110,7 +1110,7 @@ void CreateAliasRecipient(const CScript& scriptPubKeyDest, CRecipient& recipient
 	recipient = recp;
 	CTxOut txout(0,	recipient.scriptPubKey);
 	size_t nSize = txout.GetSerializeSize(SER_DISK,0)+148u;
-	nFee = CWallet::GetMinimumFee(nSize, nTxConfirmTarget, mempool);
+	nFee = 3 * minRelayTxFee.GetFee(nSize);
 	recipient.nAmount = nFee;
 }
 void CreateFeeRecipient(CScript& scriptPubKey, const vector<unsigned char>& data, CRecipient& recipient)
@@ -1124,7 +1124,7 @@ void CreateFeeRecipient(CScript& scriptPubKey, const vector<unsigned char>& data
 	recipient = recp;
 	CTxOut txout(0,	recipient.scriptPubKey);
 	size_t nSize = txout.GetSerializeSize(SER_DISK,0)+148u;
-	nFee = CWallet::GetMinimumFee(nSize, nTxConfirmTarget, mempool);
+	nFee = 3 * minRelayTxFee.GetFee(nSize);
 	recipient.nAmount = nFee;
 }
 CAmount GetDataFee(const CScript& scriptPubKey)
@@ -1135,7 +1135,7 @@ CAmount GetDataFee(const CScript& scriptPubKey)
 	recipient = recp;
 	CTxOut txout(0,	recipient.scriptPubKey);
     size_t nSize = txout.GetSerializeSize(SER_DISK,0)+148u;
-	nFee = CWallet::GetMinimumFee(nSize, nTxConfirmTarget, mempool);
+	nFee = 3*minRelayTxFee.GetFee(nSize);
 	recipient.nAmount = nFee;
 	return recipient.nAmount;
 }

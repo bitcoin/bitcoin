@@ -522,16 +522,16 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
 		numResults = aliasunspent(vchAlias, aliasOutPoint) - 1;
 		if (numResults < 0)
 			numResults = 0;
-		if ((numResults > 0 && numResults >= (MAX_ALIAS_UPDATES_PER_BLOCK - 1)) || bAliasRegistration)
+		if ((numResults > 0 && numResults >= (MAX_ALIAS_UPDATES_PER_BLOCK - 1)))
 			numResults = MAX_ALIAS_UPDATES_PER_BLOCK - 1;
 		if (transferAlias)
 			numResults = 0;
 		// for the alias utxo (1 per transaction is used)
-		if (!aliasRecipient.scriptPubKey.empty())
+		if (!aliasRecipient.scriptPubKey.empty() && !bAliasRegistration)
 		{
 			for (unsigned int i = numResults; i < MAX_ALIAS_UPDATES_PER_BLOCK; i++)
 				vecSend.push_back(aliasRecipient);
-			if (!aliasOutPoint.IsNull() && !bAliasRegistration)
+			if (!aliasOutPoint.IsNull())
 				coinControl->Select(aliasOutPoint);
 		}
 	}
@@ -561,6 +561,8 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
 	if (!aliasRecipient.scriptPubKey.empty()) {
 		// select coins from alias to pay for this tx
 		numFeeCoinsLeft = aliasselectpaymentcoins(vchAlias, nTotal, outPoints, bAreFeePlaceholdersFunded, nRequiredFeePlaceholderFunds, true, transferAlias, false);
+		if (transferAlias)
+			numFeeCoinsLeft = 0;
 		if (!bAliasRegistration)
 		{
 			BOOST_FOREACH(const COutPoint& outpoint, outPoints)
@@ -582,7 +584,7 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
 	{
 		// create utxo minimum 1kb worth of fees if alias is first activated
 		if ((op == OP_ALIAS_ACTIVATE && vvch.size() > 1) || op != OP_ALIAS_ACTIVATE) {
-			CAmount nMinFee = CWallet::GetMinimumFee(1000, nTxConfirmTarget, mempool);
+			CAmount nMinFee = 3 * minRelayTxFee.GetFee(1000);;
 			if (aliasFeePlaceholderRecipient.nAmount < nMinFee)
 				aliasFeePlaceholderRecipient.nAmount = nMinFee;
 		}
