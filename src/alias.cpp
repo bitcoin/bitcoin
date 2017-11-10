@@ -1134,7 +1134,7 @@ CAmount GetDataFee(const CScript& scriptPubKey)
 	recipient = recp;
 	CTxOut txout(0,	recipient.scriptPubKey);
     size_t nSize = txout.GetSerializeSize(SER_DISK,0)+148u;
-	nFee = 3*minRelayTxFee.GetFee(nSize);
+	nFee = GetMinimumFee(nSize, nTxConfirmTarget, mempool);
 	recipient.nAmount = nFee;
 	return recipient.nAmount;
 }
