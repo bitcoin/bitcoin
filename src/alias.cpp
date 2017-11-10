@@ -2343,7 +2343,6 @@ int aliasselectpaymentcoins(const vector<unsigned char> &vchAlias, const CAmount
 		return -1;
 	
   	int op;
-	int unspentUTXOs = 0;
 	vector<vector<unsigned char> > vvch;
 	CTxDestination payDest;
 	CSyscoinAddress destaddy;
@@ -2372,10 +2371,6 @@ int aliasselectpaymentcoins(const vector<unsigned char> &vchAlias, const CAmount
 				// if this output is a fee placement because its of low value and we aren't selecting fee outputs then continue
 				else if (!bSelectFeePlacement)
 					continue;
-				unspentUTXOs++;
-				if (unspentUTXOs >= MAX_ALIAS_UPDATES_PER_BLOCK) {
-					continue;
-				}
 			}
 			else if (bSelectFeePlacement)
 				continue;
