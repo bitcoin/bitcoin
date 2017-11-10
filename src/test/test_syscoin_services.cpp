@@ -1816,7 +1816,7 @@ void EscrowClaimRefund(const string& node, const string& guid)
 		const UniValue& utxoObj = addressUTXOsArray[i].get_obj();
 		const string& txidStr = find_value(utxoObj, "txid").get_str();
 		const int& nOut = find_value(utxoObj, "outputIndex").get_int();
-		CAmount satoshis = AmountFromValue(find_value(utxoObj., "satoshis"));
+		CAmount satoshis = AmountFromValue(find_value(utxoObj, "satoshis"));
 		inputStr += "{\\\"txid\\\":\\\"" + txidStr + "\\\",\\\"vout\\\":" + boost::lexical_cast<string>(nOut) + ",\\\"satoshis\\\":" + boost::lexical_cast<string>(satoshis) + "}";
 	}
 	inputStr += "]\"";
