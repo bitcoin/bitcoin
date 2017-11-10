@@ -634,7 +634,7 @@ void ThreadImport(std::vector<fs::path> vImportFiles) EXCLUSIVE_LOCKS_REQUIRED(c
             nFile++;
         }
         {
-            LOCK(cs_main);
+            LOCK(cs_main); // reading the value pointed to by 'pblocktree' requires holding mutex 'cs_main'
             pblocktree->WriteReindexing(false);
         }
         fReindex = false;
@@ -1200,9 +1200,7 @@ bool AppInitLockDataDirectory()
     return true;
 }
 
-// NO_THREAD_SAFETY_ANALYSIS: Access to guarded variables happens before any
-// thread is started.
-bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler) NO_THREAD_SAFETY_ANALYSIS
+bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
 {
     const CChainParams& chainparams = Params();
     // ********************************************************* Step 4a: application initialization
@@ -1424,7 +1422,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler) NO_THR
 
                 if (fReset) {
                     {
-                        LOCK(cs_main);
+                        LOCK(cs_main); // reading the value pointed to by 'pblocktree' requires holding mutex 'cs_main'
                         pblocktree->WriteReindexing(true);
                     }
                     //If we're reindexing in prune mode, wipe away unusable block files and all undo data files
@@ -1483,7 +1481,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler) NO_THR
                 // If necessary, upgrade from older database format.
                 // This is a no-op if we cleared the coinsviewdb with -reindex or -reindex-chainstate
                 {
-                    LOCK(cs_main);
+                    LOCK(cs_main); // reading the value pointed to by 'pcoinsdbview' requires holding mutex 'cs_main'
                     if (!pcoinsdbview->Upgrade()) {
                         strLoadError = _("Error upgrading chainstate database");
                         break;
@@ -1501,7 +1499,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler) NO_THR
 
                 bool is_coinsview_empty;
                 {
-                    LOCK(cs_main);
+                    LOCK(cs_main); // reading the value pointed to by 'pcoinsTip' requires holding mutex 'cs_main'
                     is_coinsview_empty = fReset || fReindexChainState || pcoinsTip->GetBestBlock().IsNull();
                 }
                 if (!is_coinsview_empty) {
@@ -1671,7 +1669,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler) NO_THR
 
     //// debug print
     {
-        LOCK(cs_main);
+        LOCK(cs_main); // reading variables 'mapBlockIndex' and 'chainActive' require holding mutex 'cs_main'
         LogPrintf("mapBlockIndex.size() = %u\n", mapBlockIndex.size());
         chain_active_height = chainActive.Height();
     }

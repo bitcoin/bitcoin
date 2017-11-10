@@ -266,11 +266,11 @@ bool LoadExternalBlockFile(const CChainParams& chainparams, FILE* fileIn, CDiskB
 bool LoadGenesisBlock(const CChainParams& chainparams);
 /** Load the block tree and coins database from disk,
  * initializing state if we're running with -reindex. */
-bool LoadBlockIndex(const CChainParams& chainparams) EXCLUSIVE_LOCKS_REQUIRED(cs_LastBlockFile, cs_main);
+bool LoadBlockIndex(const CChainParams& chainparams);
 /** Update the chain tip based on database information. */
-bool LoadChainTip(const CChainParams& chainparams) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+bool LoadChainTip(const CChainParams& chainparams);
 /** Unload database information */
-void UnloadBlockIndex() EXCLUSIVE_LOCKS_REQUIRED(cs_LastBlockFile, cs_nBlockSequenceId);
+void UnloadBlockIndex();
 /** Run an instance of the script checking thread */
 void ThreadScriptCheck();
 /** Check whether we are doing an initial block download (synchronizing from disk or network) */
@@ -302,7 +302,7 @@ CBlockIndex * InsertBlockIndex(uint256 hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 /** Flush all state, indexes and buffers to disk. */
 void FlushStateToDisk();
 /** Prune block files and flush state to disk. */
-void PruneAndFlush() EXCLUSIVE_LOCKS_REQUIRED(cs_LastBlockFile);
+void PruneAndFlush();
 /** Prune block files up to a given height */
 void PruneBlockFilesManual(int nManualPruneHeight);
 
@@ -393,7 +393,7 @@ public:
 };
 
 /** Initializes the script-execution cache */
-void InitScriptExecutionCache() EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+void InitScriptExecutionCache();
 
 
 /** Functions for disk access for blocks */

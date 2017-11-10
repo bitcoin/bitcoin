@@ -1246,7 +1246,7 @@ int GetSpendHeight(const CCoinsViewCache& inputs)
 static CuckooCache::cache<uint256, SignatureCacheHasher> scriptExecutionCache GUARDED_BY(cs_main);
 static uint256 scriptExecutionCacheNonce(GetRandHash());
 
-void InitScriptExecutionCache() EXCLUSIVE_LOCKS_REQUIRED(cs_main) {
+void InitScriptExecutionCache() {
     // nMaxCacheSize is unsigned. If -maxsigcachesize is set to zero,
     // setup_bytes creates the minimum possible cache (2 elements).
     size_t nMaxCacheSize = std::min(std::max((int64_t)0, gArgs.GetArg("-maxsigcachesize", DEFAULT_MAX_SIG_CACHE_SIZE) / 2), MAX_MAX_SIG_CACHE_SIZE) * ((size_t) 1 << 20);
@@ -2029,7 +2029,7 @@ void FlushStateToDisk() {
     FlushStateToDisk(chainparams, state, FLUSH_STATE_ALWAYS);
 }
 
-void PruneAndFlush() EXCLUSIVE_LOCKS_REQUIRED(cs_LastBlockFile) {
+void PruneAndFlush() {
     CValidationState state;
     {
         LOCK(cs_LastBlockFile);
@@ -3546,7 +3546,7 @@ CBlockIndex * InsertBlockIndex(uint256 hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
     return pindexNew;
 }
 
-bool static LoadBlockIndexDB(const CChainParams& chainparams) EXCLUSIVE_LOCKS_REQUIRED(cs_main, cs_LastBlockFile)
+bool static LoadBlockIndexDB(const CChainParams& chainparams)
 {
     LOCK(cs_main);
     if (!pblocktree->LoadBlockIndexGuts(chainparams.GetConsensus(), InsertBlockIndex))
@@ -3649,7 +3649,7 @@ bool static LoadBlockIndexDB(const CChainParams& chainparams) EXCLUSIVE_LOCKS_RE
     return true;
 }
 
-bool LoadChainTip(const CChainParams& chainparams) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+bool LoadChainTip(const CChainParams& chainparams)
 {
     LOCK(cs_main);
     if (chainActive.Tip() && chainActive.Tip()->GetBlockHash() == pcoinsTip->GetBestBlock()) return true;
@@ -3965,7 +3965,7 @@ bool RewindBlockIndex(const CChainParams& params)
 // May NOT be used after any connections are up as much
 // of the peer-processing logic assumes a consistent
 // block index state
-void UnloadBlockIndex() EXCLUSIVE_LOCKS_REQUIRED(cs_LastBlockFile, cs_nBlockSequenceId)
+void UnloadBlockIndex()
 {
     LOCK(cs_main);
     setBlockIndexCandidates.clear();
