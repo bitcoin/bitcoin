@@ -1249,7 +1249,11 @@ void InitScriptExecutionCache() {
     // nMaxCacheSize is unsigned. If -maxsigcachesize is set to zero,
     // setup_bytes creates the minimum possible cache (2 elements).
     size_t nMaxCacheSize = std::min(std::max((int64_t)0, gArgs.GetArg("-maxsigcachesize", DEFAULT_MAX_SIG_CACHE_SIZE) / 2), MAX_MAX_SIG_CACHE_SIZE) * ((size_t) 1 << 20);
-    size_t nElems = scriptExecutionCache.setup_bytes(nMaxCacheSize);
+    size_t nElems;
+    {
+        LOCK(cs_main);
+        nElems = scriptExecutionCache.setup_bytes(nMaxCacheSize);
+    }
     LogPrintf("Using %zu MiB out of %zu/2 requested for script execution cache, able to store %zu elements\n",
             (nElems*sizeof(uint256)) >>20, (nMaxCacheSize*2)>>20, nElems);
 }
@@ -2026,7 +2030,10 @@ void FlushStateToDisk() {
 
 void PruneAndFlush() {
     CValidationState state;
-    fCheckForPruning = true;
+    {
+        LOCK(cs_LastBlockFile);
+        fCheckForPruning = true;
+    }
     const CChainParams& chainparams = Params();
     FlushStateToDisk(chainparams, state, FLUSH_STATE_NONE);
 }
@@ -3539,6 +3546,7 @@ CBlockIndex * InsertBlockIndex(uint256 hash)
 
 bool static LoadBlockIndexDB(const CChainParams& chainparams)
 {
+    LOCK(cs_main);
     if (!pblocktree->LoadBlockIndexGuts(chainparams.GetConsensus(), InsertBlockIndex))
         return false;
 
@@ -3586,6 +3594,7 @@ bool static LoadBlockIndexDB(const CChainParams& chainparams)
             pindexBestHeader = pindex;
     }
 
+    LOCK(cs_LastBlockFile);
     // Load block file info
     pblocktree->ReadLastBlockFile(nLastBlockFile);
     vinfoBlockFile.resize(nLastBlockFile + 1);
@@ -3640,6 +3649,7 @@ bool static LoadBlockIndexDB(const CChainParams& chainparams)
 
 bool LoadChainTip(const CChainParams& chainparams)
 {
+    LOCK(cs_main);
     if (chainActive.Tip() && chainActive.Tip()->GetBlockHash() == pcoinsTip->GetBestBlock()) return true;
 
     if (pcoinsTip->GetBestBlock().IsNull() && mapBlockIndex.size() == 1) {
@@ -3963,8 +3973,14 @@ void UnloadBlockIndex()
     mempool.clear();
     mapBlocksUnlinked.clear();
     vinfoBlockFile.clear();
-    nLastBlockFile = 0;
-    nBlockSequenceId = 1;
+    {
+        LOCK(cs_LastBlockFile);
+        nLastBlockFile = 0;
+    }
+    {
+        LOCK(cs_nBlockSequenceId);
+        nBlockSequenceId = 1;
+    }
     setDirtyBlockIndex.clear();
     g_failed_blocks.clear();
     setDirtyFileInfo.clear();
