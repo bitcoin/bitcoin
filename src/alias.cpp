@@ -2355,16 +2355,16 @@ int aliasselectpaymentcoins(const vector<unsigned char> &vchAlias, const CAmount
 			else if (bSelectFeePlacement)
 				continue;
 		}
-		 
+		const COutPoint &outPointToCheck = COutPoint(txid, nOut);
+		{
+			LOCK(mempool.cs);
+			auto it = mempool.mapNextTx.find(outPointToCheck);
+			if (it != mempool.mapNextTx.end())
+				continue;
+		}
 		if(!bIsFunded || bSelectAll)
 		{
-			{
-				LOCK(mempool.cs);
-				auto it = mempool.mapNextTx.find(COutPoint(txid, nOut));
-				if (it != mempool.mapNextTx.end())
-					continue;
-			}
-			outPoints.push_back(COutPoint(txid, nOut));
+			outPoints.push_back(outPointToCheck);
 			nCurrentAmount += nValue;
 			if (nCurrentAmount >= nDesiredAmount) {
 				bIsFunded = true;
@@ -2411,16 +2411,16 @@ int aliasunspent(const vector<unsigned char> &vchAlias, COutPoint& outpoint)
 		vector<vector<unsigned char> > vvch;
 		if (!DecodeAliasScript(scriptPubKey, op, vvch) || vvch.size() <= 1 || vvch[0] != theAlias.vchAlias || vvch[1] != theAlias.vchGUID)
 			continue;
-
+		const COutPoint &outPointToCheck = COutPoint(txid, nOut);
+		{
+			LOCK(mempool.cs);
+			auto it = mempool.mapNextTx.find(outPointToCheck);
+			if (it != mempool.mapNextTx.end())
+				continue;
+		}
 		if (!funded)
 		{
-			{
-				LOCK(mempool.cs);
-				auto it = mempool.mapNextTx.find(COutPoint(txid, nOut));
-				if (it != mempool.mapNextTx.end())
-					continue;
-			}
-			outpoint = COutPoint(txid, nOut);
+			outpoint = outPointToCheck;
 			funded = true;
 		}
 		numResults++;
