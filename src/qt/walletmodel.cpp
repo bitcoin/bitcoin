@@ -320,7 +320,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
         }
 
 		// SYSCOIN pass in false to not sign
-		bool fCreated = wallet->CreateTransaction(vecSend, *newTx, *keyChange, nFeeRequired, nChangePosRet, strFailReason, coinControl, false, "", false, recipients[0].inputType, recipients[0].fUseInstantSend);
+		bool fCreated = wallet->CreateTransaction(vecSend, *newTx, *keyChange, nFeeRequired, nChangePosRet, strFailReason, coinControl, false, false, recipients[0].inputType, recipients[0].fUseInstantSend);
 
         transaction.setTransactionFee(nFeeRequired);
         if (fSubtractFeeFromAmount && fCreated)

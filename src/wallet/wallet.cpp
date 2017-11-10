@@ -3250,7 +3250,7 @@ bool CWallet::GetBudgetSystemCollateralTX(CWalletTx& tx, uint256 hash, CAmount a
 	vecSend.push_back((CRecipient) { scriptChange, amount, false });
 
 	CCoinControl *coinControl = NULL;
-	bool success = CreateTransaction(vecSend, tx, reservekey, nFeeRet, nChangePosRet, strFail, coinControl, true, "", false, ALL_COINS, fUseInstantSend);
+	bool success = CreateTransaction(vecSend, tx, reservekey, nFeeRet, nChangePosRet, strFail, coinControl, true, false, ALL_COINS, fUseInstantSend);
 	if (!success) {
 		LogPrintf("CWallet::GetBudgetSystemCollateralTX -- Error: %s\n", strFail);
 		return false;
@@ -3277,7 +3277,7 @@ bool CWallet::ConvertList(std::vector<CTxIn> vecTxIn, std::vector<CAmount>& vecA
 }
 // SYSCOIN
 bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet,
-	int& nChangePosRet, std::string& strFailReason, const CCoinControl* coinControl, bool sign, const string &currencyCode, bool sysTx, AvailableCoinsType nCoinType, bool fUseInstantSend)
+	int& nChangePosRet, std::string& strFailReason, const CCoinControl* coinControl, bool sign, bool sysTx, AvailableCoinsType nCoinType, bool fUseInstantSend)
 {
 	CAmount nFeePay = fUseInstantSend ? CTxLockRequest().GetMinFee() : 0;
 

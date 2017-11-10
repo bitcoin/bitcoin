@@ -40,7 +40,7 @@ typedef map<vector<unsigned char>, COutPoint > mapAliasRegistrationsType;
 typedef map<vector<unsigned char>, vector<unsigned char> > mapAliasRegistrationsDataType;
 mapAliasRegistrationsType mapAliasRegistrations;
 mapAliasRegistrationsDataType mapAliasRegistrationData;
-extern void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsigned char> &vchWitness, const string &currencyCode, const CRecipient &aliasRecipient, CRecipient &aliasPaymentRecipient, vector<CRecipient> &vecSend, CWalletTx& wtxNew, CCoinControl* coinControl, bool transferAlias=false);
+extern void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsigned char> &vchWitness, const CRecipient &aliasRecipient, CRecipient &aliasPaymentRecipient, vector<CRecipient> &vecSend, CWalletTx& wtxNew, CCoinControl* coinControl, bool transferAlias=false);
 extern int nIndexPort;
 mongoc_client_t *client = NULL;
 mongoc_database_t *database = NULL;
@@ -1959,7 +1959,7 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	coinControl.fAllowOtherInputs = true;
 	coinControl.fAllowWatchOnly = true;
 
-	SendMoneySyscoin(vchAlias, vchWitness, "", recipient, recipientPayment, vecSend, wtx, &coinControl);
+	SendMoneySyscoin(vchAlias, vchWitness, recipient, recipientPayment, vecSend, wtx, &coinControl);
 	UniValue res(UniValue::VARR);
 	res.push_back(EncodeHexTx(wtx));
 	res.push_back(strAddress);
@@ -2087,7 +2087,7 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	if(newAddress.ToString() != EncodeBase58(copyAlias.vchAddress))
 		transferAlias = true;
 	
-	SendMoneySyscoin(vchAlias, vchWitness, "", recipient, recipientPayment, vecSend, wtx, &coinControl, transferAlias);
+	SendMoneySyscoin(vchAlias, vchWitness, recipient, recipientPayment, vecSend, wtx, &coinControl, transferAlias);
 	UniValue res(UniValue::VARR);
 	res.push_back(EncodeHexTx(wtx));
 	return res;
@@ -2634,7 +2634,7 @@ UniValue aliaspay(const UniValue& params, bool fHelp) {
 	CSyscoinAddress addressAlias;
 	GetAddress(theAlias, &addressAlias, scriptPubKeyOrig);
 	CreateAliasRecipient(scriptPubKeyOrig, recipientPayment);	
-	SendMoneySyscoin(theAlias.vchAlias, vchFromString(""), strCurrency, recipient, recipientPayment, vecSend, wtx, &coinControl);
+	SendMoneySyscoin(theAlias.vchAlias, vchFromString(""), recipient, recipientPayment, vecSend, wtx, &coinControl);
 	
 	UniValue res(UniValue::VARR);
 	res.push_back(EncodeHexTx(wtx));
@@ -2733,7 +2733,7 @@ UniValue aliasupdatewhitelist(const UniValue& params, bool fHelp) {
 	CCoinControl coinControl;
 	coinControl.fAllowOtherInputs = false;
 	coinControl.fAllowWatchOnly = false;
-	SendMoneySyscoin(copyAlias.vchAlias, vchWitness, "", recipient, recipientPayment, vecSend, wtx, &coinControl);
+	SendMoneySyscoin(copyAlias.vchAlias, vchWitness, recipient, recipientPayment, vecSend, wtx, &coinControl);
 
 	UniValue res(UniValue::VARR);
 	res.push_back(EncodeHexTx(wtx));
@@ -2794,7 +2794,7 @@ UniValue aliasclearwhitelist(const UniValue& params, bool fHelp) {
 	CCoinControl coinControl;
 	coinControl.fAllowOtherInputs = false;
 	coinControl.fAllowWatchOnly = false;
-	SendMoneySyscoin(copyAlias.vchAlias, vchWitness, "", recipient, recipientPayment, vecSend, wtx, &coinControl);
+	SendMoneySyscoin(copyAlias.vchAlias, vchWitness, recipient, recipientPayment, vecSend, wtx, &coinControl);
 
 	UniValue res(UniValue::VARR);
 	res.push_back(EncodeHexTx(wtx));
