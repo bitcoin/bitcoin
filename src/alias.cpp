@@ -2279,6 +2279,8 @@ UniValue aliasbalance(const UniValue& params, bool fHelp)
     for (unsigned int i = 0;i<utxoArray.size();i++)
     {
 		const UniValue& utxoObj = utxoArray[i].get_obj();
+		const uint256& txid = uint256S(find_value(utxoObj.get_obj(), "txid").get_str());
+		const int& nOut = find_value(utxoObj.get_obj(), "outputIndex").get_int();
 		const std::vector<unsigned char> &data(ParseHex(find_value(utxoObj, "script").get_str()));
 		const CScript& scriptPubKey = CScript(data.begin(), data.end());
 		const CAmount &nValue = AmountFromValue(find_value(utxoObj, "satoshis"));
