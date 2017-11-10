@@ -554,7 +554,7 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
 	int numFeeCoinsLeft = -1;
 	vector<COutPoint> outPoints;
 	// select coins from alias to pay for this tx
-	numFeeCoinsLeft = aliasselectpaymentcoins(vchAlias, nTotal, outPoints, bAreFeePlaceholdersFunded, nRequiredFeePlaceholderFunds, true, transferAlias, aliasRecipient.scriptPubKey.empty());
+	numFeeCoinsLeft = aliasselectpaymentcoins(vchAlias, nTotal, outPoints, bAreFeePlaceholdersFunded, nRequiredFeePlaceholderFunds, !aliasRecipient.scriptPubKey.empty(), transferAlias, aliasRecipient.scriptPubKey.empty());
 	if (!bAliasRegistration)
 	{
 		BOOST_FOREACH(const COutPoint& outpoint, outPoints)
