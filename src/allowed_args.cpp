@@ -31,7 +31,7 @@
 
 // These globals are needed here so bitcoin-cli can link
 #ifdef BITCOIN_CASH
-const std::string CURRENCY_UNIT = "BCC";
+const std::string CURRENCY_UNIT = "BCH";
 #else
 const std::string CURRENCY_UNIT = "BTC";
 #endif
