@@ -957,7 +957,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	BOOST_CHECK_THROW(CallRPC("node1", "offerupdate aliasexpire0 " + offerguid + " category title 100 0.05 description"), runtime_error);
 	GenerateBlocks(5, "node1");
 	// cannot update cert because it expired and was renewed
-	BOOST_CHECK_THROW(CallRPC("node1", "certupdate " + certguid + " jag1 pubdata"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "certupdate " + certguid + " aliasexpire pubdata"), runtime_error);
 	GenerateBlocks(5, "node1");
 
 	StartNode("node3");

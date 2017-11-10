@@ -491,18 +491,6 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	}
 	
 	if (!fJustCheck ) {
-		if (!dontaddtodb) {
-			int nOutHistory;
-			int opHistory;
-			vector<vector<unsigned char> > vvchHistory;
-			if (DecodeAndParseSyscoinTx(tx, opHistory, nOutHistory, vvchHistory)) {
-				string strResponseEnglish = "";
-				string strResponseGUID = "";
-				string strResponse = GetSyscoinTransactionDescription(opHistory, vvchHistory, tx, strResponseEnglish, strResponseGUID);
-				paliasdb->WriteAliasIndexTxHistory(stringFromVch(vvchArgs[0]), tx.GetHash(), nHeight, strResponseEnglish, strResponseGUID, tx.vout[nOutHistory].nValue);
-			}
-			
-		}
 		CAliasIndex dbAlias;
 		string strName = stringFromVch(vvchArgs[0]);
 		boost::algorithm::to_lower(strName);
@@ -706,6 +694,18 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5028 - " + _("Trying to renew an alias that isn't expired");
 				return true;
 			}
+		}
+		if (!dontaddtodb) {
+			int nOutHistory;
+			int opHistory;
+			vector<vector<unsigned char> > vvchHistory;
+			if (DecodeAndParseSyscoinTx(tx, opHistory, nOutHistory, vvchHistory)) {
+				string strResponseEnglish = "";
+				string strResponseGUID = "";
+				string strResponse = GetSyscoinTransactionDescription(opHistory, vvchHistory, tx, strResponseEnglish, strResponseGUID);
+				paliasdb->WriteAliasIndexTxHistory(stringFromVch(vvchArgs[0]), tx.GetHash(), nHeight, strResponseEnglish, strResponseGUID, tx.vout[nOutHistory].nValue);
+			}
+
 		}
 		if (!theAliasNull)
 		{
