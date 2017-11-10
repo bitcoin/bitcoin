@@ -1,5 +1,5 @@
 
-#include "governance-types.h"
+#include <governance-types.h>
 
 GovernanceObjectType GovernanceStringToType(std::string strType) {
     GovernanceObjectType type = Error;

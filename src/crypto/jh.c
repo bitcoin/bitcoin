@@ -33,7 +33,7 @@
 #include <stddef.h>
 #include <string.h>
 
-#include "sph_jh.h"
+#include <crypto/sph_jh.h>
 
 #ifdef __cplusplus
 extern "C"{

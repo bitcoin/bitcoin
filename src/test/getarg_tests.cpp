@@ -2,14 +2,13 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "util.h"
-#include "test/test_chaincoin.h"
+#include <util.h>
+#include <test/test_bitcoin.h>
 
 #include <string>
 #include <vector>
 
 #include <boost/algorithm/string.hpp>
-#include <boost/foreach.hpp>
 #include <boost/test/unit_test.hpp>
 
 BOOST_FIXTURE_TEST_SUITE(getarg_tests, BasicTestingSetup)
@@ -21,7 +20,7 @@ static void ResetArgs(const std::string& strArg)
       boost::split(vecArg, strArg, boost::is_space(), boost::token_compress_on);
 
     // Insert dummy executable name:
-    vecArg.insert(vecArg.begin(), "testchaincoin");
+    vecArg.insert(vecArg.begin(), "testbitcoin");
 
     // Convert to char*:
     std::vector<const char*> vecChar;
@@ -126,7 +125,7 @@ BOOST_AUTO_TEST_CASE(intarg)
     BOOST_CHECK_EQUAL(gArgs.GetArg("-bar", 11), 0);
 }
 
-BOOST_AUTO_TEST_CASE(doublechaincoin)
+BOOST_AUTO_TEST_CASE(doubledash)
 {
     ResetArgs("--foo");
     BOOST_CHECK_EQUAL(gArgs.GetBoolArg("-foo", false), true);

@@ -33,7 +33,7 @@
 #include <stddef.h>
 #include <string.h>
 
-#include "sph_skein.h"
+#include <crypto/sph_skein.h>
 
 #ifdef __cplusplus
 extern "C"{

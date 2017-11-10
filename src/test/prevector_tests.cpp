@@ -3,12 +3,13 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <vector>
-#include "prevector.h"
+#include <prevector.h>
 
-#include "serialize.h"
-#include "streams.h"
+#include <reverse_iterator.h>
+#include <serialize.h>
+#include <streams.h>
 
-#include "test/test_bitcoin.h"
+#include <test/test_bitcoin.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -56,13 +57,13 @@ class prevector_tester {
         for (const T& v : pre_vector) {
              local_check(v == real_vector[pos++]);
         }
-        BOOST_REVERSE_FOREACH(const T& v, pre_vector) {
+        for (const T& v : reverse_iterate(pre_vector)) {
              local_check(v == real_vector[--pos]);
         }
         for (const T& v : const_pre_vector) {
              local_check(v == real_vector[pos++]);
         }
-        BOOST_REVERSE_FOREACH(const T& v, const_pre_vector) {
+        for (const T& v : reverse_iterate(const_pre_vector)) {
              local_check(v == real_vector[--pos]);
         }
         CDataStream ss1(SER_DISK, 0);

@@ -43,7 +43,7 @@
  * @author   Thomas Pornin <thomas.pornin@cryptolog.com>
  */
 
-#include "sph_types.h"
+#include <crypto/sph_types.h>
 #ifdef __cplusplus
 extern "C"{
 #endif

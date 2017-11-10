@@ -34,7 +34,7 @@
 #include <string.h>
 #include <limits.h>
 
-#include "sph_simd.h"
+#include <crypto/sph_simd.h>
 
 #ifdef __cplusplus
 extern "C"{

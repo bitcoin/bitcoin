@@ -33,7 +33,7 @@
 #include <stddef.h>
 #include <string.h>
 
-#include "sph_groestl.h"
+#include <crypto/sph_groestl.h>
 
 #ifdef __cplusplus
 extern "C"{

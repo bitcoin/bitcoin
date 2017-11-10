@@ -6,11 +6,11 @@
 
 //#define ENABLE_CHAINCOIN_DEBUG
 
-#include "base58.h"
-#include "governance.h"
-#include "key.h"
-#include "script/standard.h"
-#include "util.h"
+#include <base58.h>
+#include <governance.h>
+#include <key.h>
+#include <script/standard.h>
+#include <util.h>
 
 #include <boost/shared_ptr.hpp>
 

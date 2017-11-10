@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2015 The Bitcoin Core developers
+// Copyright (c) 2011-2016 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,11 +8,11 @@
 #include <iomanip>
 #include <limits>
 #include <cmath>
-#include "uint256.h"
-#include "arith_uint256.h"
+#include <uint256.h>
+#include <arith_uint256.h>
 #include <string>
-#include "version.h"
-#include "test/test_chaincoin.h"
+#include <version.h>
+#include <test/test_bitcoin.h>
 
 BOOST_FIXTURE_TEST_SUITE(arith_uint256_tests, BasicTestingSetup)
 

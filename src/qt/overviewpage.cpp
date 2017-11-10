@@ -119,7 +119,7 @@ public:
     const PlatformStyle *platformStyle;
 
 };
-#include "overviewpage.moc"
+#include <overviewpage.moc>
 
 OverviewPage::OverviewPage(const PlatformStyle *platformStyle, QWidget *parent) :
     QWidget(parent),

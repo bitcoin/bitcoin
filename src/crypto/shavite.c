@@ -33,7 +33,7 @@
 #include <stddef.h>
 #include <string.h>
 
-#include "sph_shavite.h"
+#include <crypto/sph_shavite.h>
 
 #ifdef __cplusplus
 extern "C"{
@@ -62,7 +62,7 @@ extern "C"{
  */
 
 #define AES_BIG_ENDIAN   0
-#include "aes_helper.c"
+#include <crypto/aes_helper.c>
 
 static const sph_u32 IV224[] = {
 	C32(0x6774F31C), C32(0x990AE210), C32(0xC87D4274), C32(0xC9546371),
@@ -102,7 +102,7 @@ static const sph_u32 IV512[] = {
  * 
 
 #define AES_BIG_ENDIAN   1
-#include "aes_helper.c"
+#include <crypto/aes_helper.c>
 
 static const sph_u32 IV224[] = {
 	C32(0xC4C67795), C32(0xC0B1817F), C32(0xEAD88924), C32(0x1ABB1BB0),

@@ -28,7 +28,7 @@
 #include <event2/util.h>
 #include <event2/keyvalq_struct.h>
 
-#include "support/events.h"
+#include <support/events.h>
 
 #ifdef EVENT__HAVE_NETINET_IN_H
 #include <netinet/in.h>

@@ -2,12 +2,12 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "clientversion.h"
-#include "consensus/validation.h"
-#include "validation.h" // For CheckBlock
-#include "primitives/block.h"
-#include "test/test_chaincoin.h"
-#include "utiltime.h"
+#include <clientversion.h>
+#include <consensus/validation.h>
+#include <validation.h> // For CheckBlock
+#include <primitives/block.h>
+#include <test/test_chaincoin.h>
+#include <utiltime.h>
 
 #include <cstdio>
 

@@ -1,16 +1,15 @@
-// Copyright (c) 2012-2015 The Bitcoin Core developers
+// Copyright (c) 2012-2016 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "serialize.h"
-#include "streams.h"
-#include "hash.h"
-#include "test/test_chaincoin.h"
+#include <serialize.h>
+#include <streams.h>
+#include <hash.h>
+#include <test/test_bitcoin.h>
 
 #include <stdint.h>
 
 #include <boost/test/unit_test.hpp>
-using namespace std;
 
 BOOST_FIXTURE_TEST_SUITE(serialize_tests, BasicTestingSetup)
 
@@ -21,10 +20,10 @@ protected:
     bool boolval;
     std::string stringval;
     const char* charstrval;
-    CTransaction txval;
+    CTransactionRef txval;
 public:
     CSerializeMethodsTestSingle() = default;
-    CSerializeMethodsTestSingle(int intvalin, bool boolvalin, std::string stringvalin, const char* charstrvalin, CTransaction txvalin) : intval(intvalin), boolval(boolvalin), stringval(std::move(stringvalin)), charstrval(charstrvalin), txval(txvalin){}
+    CSerializeMethodsTestSingle(int intvalin, bool boolvalin, std::string stringvalin, const char* charstrvalin, CTransaction txvalin) : intval(intvalin), boolval(boolvalin), stringval(std::move(stringvalin)), charstrval(charstrvalin), txval(MakeTransactionRef(txvalin)){}
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
@@ -42,7 +41,7 @@ public:
                 boolval == rhs.boolval && \
                 stringval == rhs.stringval && \
                 strcmp(charstrval, rhs.charstrval) == 0 && \
-                txval == rhs.txval;
+                *txval == *rhs.txval;
     }
 };
 
@@ -203,10 +202,31 @@ BOOST_AUTO_TEST_CASE(varints)
     }
 }
 
+BOOST_AUTO_TEST_CASE(varints_bitpatterns)
+{
+    CDataStream ss(SER_DISK, 0);
+    ss << VARINT(0); BOOST_CHECK_EQUAL(HexStr(ss), "00"); ss.clear();
+    ss << VARINT(0x7f); BOOST_CHECK_EQUAL(HexStr(ss), "7f"); ss.clear();
+    ss << VARINT((int8_t)0x7f); BOOST_CHECK_EQUAL(HexStr(ss), "7f"); ss.clear();
+    ss << VARINT(0x80); BOOST_CHECK_EQUAL(HexStr(ss), "8000"); ss.clear();
+    ss << VARINT((uint8_t)0x80); BOOST_CHECK_EQUAL(HexStr(ss), "8000"); ss.clear();
+    ss << VARINT(0x1234); BOOST_CHECK_EQUAL(HexStr(ss), "a334"); ss.clear();
+    ss << VARINT((int16_t)0x1234); BOOST_CHECK_EQUAL(HexStr(ss), "a334"); ss.clear();
+    ss << VARINT(0xffff); BOOST_CHECK_EQUAL(HexStr(ss), "82fe7f"); ss.clear();
+    ss << VARINT((uint16_t)0xffff); BOOST_CHECK_EQUAL(HexStr(ss), "82fe7f"); ss.clear();
+    ss << VARINT(0x123456); BOOST_CHECK_EQUAL(HexStr(ss), "c7e756"); ss.clear();
+    ss << VARINT((int32_t)0x123456); BOOST_CHECK_EQUAL(HexStr(ss), "c7e756"); ss.clear();
+    ss << VARINT(0x80123456U); BOOST_CHECK_EQUAL(HexStr(ss), "86ffc7e756"); ss.clear();
+    ss << VARINT((uint32_t)0x80123456U); BOOST_CHECK_EQUAL(HexStr(ss), "86ffc7e756"); ss.clear();
+    ss << VARINT(0xffffffff); BOOST_CHECK_EQUAL(HexStr(ss), "8efefefe7f"); ss.clear();
+    ss << VARINT(0x7fffffffffffffffLL); BOOST_CHECK_EQUAL(HexStr(ss), "fefefefefefefefe7f"); ss.clear();
+    ss << VARINT(0xffffffffffffffffULL); BOOST_CHECK_EQUAL(HexStr(ss), "80fefefefefefefefe7f"); ss.clear();
+}
+
 BOOST_AUTO_TEST_CASE(compactsize)
 {
     CDataStream ss(SER_DISK, 0);
-    vector<char>::size_type i, j;
+    std::vector<char>::size_type i, j;
 
     for (i = 1; i <= MAX_SIZE; i *= 2)
     {
@@ -239,7 +259,7 @@ BOOST_AUTO_TEST_CASE(noncanonical)
     // Write some non-canonical CompactSize encodings, and
     // make sure an exception is thrown when read back.
     CDataStream ss(SER_DISK, 0);
-    vector<char>::size_type n;
+    std::vector<char>::size_type n;
 
     // zero encoded with three bytes:
     ss.write("\xfd\x00\x00", 3);
@@ -317,55 +337,6 @@ BOOST_AUTO_TEST_CASE(insert_delete)
     CSerializeData d;
     ss.GetAndClear(d);
     BOOST_CHECK_EQUAL(ss.size(), 0);
-}
-
-// Change struct size and check if it can be deserialized
-// from old version archive and vice versa
-struct old_version
-{
-    int field1;
-
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
-        READWRITE(field1);
-    }
-};\
-struct new_version
-{
-    int field1;
-    int field2;
-
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
-        READWRITE(field1);
-        if(ser_action.ForRead() && (s.size() == 0))
-        {
-            field2 = 0;
-            return;
-        }
-        READWRITE(field2);
-    }
-};
-
-BOOST_AUTO_TEST_CASE(check_backward_compatibility)
-{
-    CDataStream ss(SER_DISK, 0);
-    old_version old_src({5});
-    ss << old_src;
-    new_version new_dest({6, 7});
-    BOOST_REQUIRE_NO_THROW(ss >> new_dest);
-    BOOST_REQUIRE(old_src.field1 == new_dest.field1);
-    BOOST_REQUIRE(ss.size() == 0);
-
-    new_version new_src({6, 7});
-    ss << new_src;
-    old_version old_dest({5});
-    BOOST_REQUIRE_NO_THROW(ss >> old_dest);
-    BOOST_REQUIRE(new_src.field1 == old_dest.field1);
 }
 
 BOOST_AUTO_TEST_CASE(class_methods)

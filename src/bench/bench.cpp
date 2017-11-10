@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "bench.h"
-#include "perf.h"
+#include <bench/bench.h>
+#include <bench/perf.h>
 
 #include <assert.h>
 #include <iostream>

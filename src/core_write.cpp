@@ -7,7 +7,6 @@
 #include <base58.h>
 #include <consensus/consensus.h>
 #include <consensus/validation.h>
-#include <primitives/transaction.h>
 #include <script/script.h>
 #include <script/standard.h>
 #include <serialize.h>
