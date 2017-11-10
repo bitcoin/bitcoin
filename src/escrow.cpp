@@ -2150,8 +2150,6 @@ UniValue escrowcreaterawtransaction(const UniValue& params, bool fHelp) {
 	arrayCreateParams.push_back(inputs);
 	arrayCreateParams.push_back(createAddressUniValue);
 	arrayCreateParams.push_back(NullUniValue);
-	// if external blockchain then we dont set the alias payments scriptpubkey
-	arrayCreateParams.push_back(escrow.extTxId.IsNull());
 	UniValue resCreate;
 	try
 	{
