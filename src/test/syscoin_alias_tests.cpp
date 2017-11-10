@@ -138,8 +138,8 @@ BOOST_AUTO_TEST_CASE (generate_aliasmultiupdate)
 		BOOST_CHECK_NO_THROW(r = CallRPC("node2", "signrawtransaction " + varray[0].get_str()));
 		BOOST_CHECK_NO_THROW(CallRPC("node2", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
 	}
-
-	BOOST_CHECK_THROW(CallRPC("node2", "aliasupdate jagmultiupdate changedata6"), runtime_error);
+	// an extra output was created from above 
+	BOOST_CHECK_NO_THROW(CallRPC("node2", "aliasupdate jagmultiupdate changedata6"));
 	GenerateBlocks(10, "node2");
 	GenerateBlocks(10, "node2");
 	// transfer sends utxo's to new owner
