@@ -1279,7 +1279,7 @@ bool TransactionSignatureChecker::CheckSig(const vector<unsigned char>& vchSigIn
 
     uint256 sighash;
     size_t nHashed = 0;
-    // If BCC sighash is possible, check the bit, otherwise ignore the bit.  This is needed because
+    // If BCH sighash is possible, check the bit, otherwise ignore the bit.  This is needed because
     // the bit is undefined (can be any value) before the fork. See block 264084 tx 102
     if (nFlags & SCRIPT_ENABLE_SIGHASH_FORKID)
     {

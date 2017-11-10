@@ -709,7 +709,7 @@ int main(int argc, char *argv[])
                                  QAPP_ORG_NAME_LEGACY, QAPP_APP_NAME_DEFAULT, QAPP_ORG_NAME, QAPP_APP_NAME_BUCASH);
 
     // If we just migrated and this is a BUcash node, have the user reconfirm the data directory.
-    // This is necessary in case the user wants to run side-by-side BTC chain and BCC chain nodes
+    // This is necessary in case the user wants to run side-by-side BTC chain and BCH chain nodes
     // in which case each instance requires a different data directory.
     if (fMigrated)
         SoftSetBoolArg("-choosedatadir", true);
