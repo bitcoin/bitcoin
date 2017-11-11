@@ -472,6 +472,54 @@ static inline JSONRPCRequest transformNamedArguments(const JSONRPCRequest& in, c
     return out;
 }
 
+/**
+ * Process positional arguments into an Object of named arguments, based on the
+ * passed-in specification for the RPC call's arguments.
+ */
+static inline JSONRPCRequest transformPositionalArguments(const JSONRPCRequest& in, const std::vector<std::string>& argNames)
+{
+    JSONRPCRequest out = in;
+    if (in.params.size() > argNames.size()) {
+        // Too many params, so just trigger help
+        out.fHelp = true;
+        return out;
+    }
+    out.params = UniValue(UniValue::VOBJ);
+    out.params.pushKV(ARGS_WERE_POSITIONAL, true);
+    for (size_t i = 0; i < in.params.size(); ++i) {
+        const UniValue &val = in.params[i];
+        const std::string &argNamePattern = argNames[i];
+        if (argNamePattern == "options") {
+            // Flatten options object
+            if (!val.isObject()) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "options parameter must be an Object");
+            }
+            out.params.pushKVs(val);
+        } else {
+            std::vector<std::string> vargNames;
+            boost::algorithm::split(vargNames, argNamePattern, boost::algorithm::is_any_of("|"));
+            for (const std::string & argName : vargNames) {
+                out.params.pushKV(argName, val);
+            }
+        }
+    }
+    // Return request with positional arguments transformed to named arguments
+    return out;
+}
+
+static inline JSONRPCRequest transformArguments(const JSONRPCRequest& in, const std::vector<std::string>& argNames, const bool want_named_args)
+{
+    if (want_named_args == in.params.isObject()) {
+        // Already in desired form; no changes needed
+        return in;
+    }
+    if (want_named_args) {
+        return transformPositionalArguments(in, argNames);
+    } else {
+        return transformNamedArguments(in, argNames);
+    }
+}
+
 UniValue CRPCTable::execute(const JSONRPCRequest &request) const
 {
     // Return immediately if in warmup
@@ -491,11 +539,7 @@ UniValue CRPCTable::execute(const JSONRPCRequest &request) const
     try
     {
         // Execute, convert arguments to array if necessary
-        if (request.params.isObject()) {
-            return pcmd->actor(transformNamedArguments(request, pcmd->argNames));
-        } else {
-            return pcmd->actor(request);
-        }
+        return pcmd->actor(transformArguments(request, pcmd->argNames, pcmd->named_args));
     }
     catch (const std::exception& e)
     {

@@ -19,6 +19,8 @@
 
 static const unsigned int DEFAULT_RPC_SERIALIZE_VERSION = 1;
 
+static const std::string ARGS_WERE_POSITIONAL = "_positional";
+
 class CRPCCommand;
 
 namespace RPCServer
@@ -135,6 +137,7 @@ public:
     std::string name;
     rpcfn_type actor;
     std::vector<std::string> argNames;
+    bool named_args;
 };
 
 /**
