@@ -706,33 +706,35 @@ theAlias = dbAlias;
 				string strResponseEnglish = "";
 				string strResponseGUID = "";
 				string strResponse = GetSyscoinTransactionDescription(opHistory, vvchHistory, tx, strResponseEnglish, strResponseGUID);
-				string user1 = stringFromVch(vvchArgs[0]);
-				string user2 = "";
-				string user3 = "";
-				if (opHistory == OP_ALIAS_UPDATE) {
-					if (!newAddress.empty())
-						user2 = newAddress;
+				if (strResponse != "") {
+					string user1 = stringFromVch(vvchArgs[0]);
+					string user2 = "";
+					string user3 = "";
+					if (opHistory == OP_ALIAS_UPDATE) {
+						if (!newAddress.empty())
+							user2 = newAddress;
+					}
+					else if (opHistory == OP_CERT_TRANSFER) {
+						CCert cert(tx);
+						user2 = stringFromVch(cert.linkAliasTuple.first);
+					}
+					else if (opHistory == OP_OFFER_UPDATE)
+					{
+						COffer offer(tx);
+						if (!offer.linkAliasTuple.IsNull())
+							user2 = stringFromVch(offer.linkAliasTuple.first);
+					}
+					else if (IsEscrowOp(opHistory)) {
+						CEscrow escrow(tx);
+						const string &buyer = stringFromVch(escrow.buyerAliasTuple.first);
+						const string &seller = stringFromVch(escrow.sellerAliasTuple.first);
+						const string &arbiter = stringFromVch(escrow.arbiterAliasTuple.first);
+						user1 = buyer;
+						user2 = seller;
+						user3 = arbiter;
+					}
+					paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, strResponseGUID);
 				}
-				else if (opHistory == OP_CERT_TRANSFER) {
-					CCert cert(tx);
-					user2 = stringFromVch(cert.linkAliasTuple.first);
-				}
-				else if (opHistory == OP_OFFER_UPDATE)
-				{
-					COffer offer(tx);
-					if (!offer.linkAliasTuple.IsNull())
-						user2 = stringFromVch(offer.linkAliasTuple.first);
-				}
-				else if (IsEscrowOp(opHistory)) {
-					CEscrow escrow(tx);
-					const string &buyer = stringFromVch(escrow.buyerAliasTuple.first);
-					const string &seller = stringFromVch(escrow.sellerAliasTuple.first);
-					const string &arbiter = stringFromVch(escrow.arbiterAliasTuple.first);
-					user1 = buyer;
-					user2 = seller;
-					user3 = arbiter;
-				}
-				paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, strResponseGUID);
 			}
 
 		}
