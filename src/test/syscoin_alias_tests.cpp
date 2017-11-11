@@ -906,6 +906,8 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	const string &escrowguid = EscrowNewBuyItNow("node2", "node1", "aliasexpirednode2", offerguid, "1", "aliasexpire3");
 	string aliasexpire2node2address = AliasNew("node2", "aliasexpire2node2", "pubdata");
 	AliasNew("node1", "aliasexpire2", "pubdata");
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo aliasexpire2"));
+	int64_t expires_on = find_value(r.get_obj(), "expires_on").get_int64();
 	string certgoodguid = CertNew("node1", "aliasexpire2", "certtitle", "pubdata");
 	ExpireAlias("aliasexpirednode2");
 	GenerateBlocks(5, "node2");
@@ -981,7 +983,8 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	BOOST_CHECK_NO_THROW(CallRPC("node2", "escrowinfo " + escrowguid));
 	// this will recreate the alias and give it a new pubkey.. we need to use the old pubkey to sign the multisig, the escrow rpc call must check for the right pubkey
 	BOOST_CHECK(aliasexpirenode2address != AliasNew("node2", "aliasexpirednode2", "somedata"));
-
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "certinfo " + certgoodguid));
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expires_on").get_str(), expires_on);
 	CertUpdate("node1", certgoodguid, "pubdata");
 	// able to release and claim release on escrow with non-expired aliases with new pubkeys
 	EscrowRelease("node2", "buyer", escrowguid);	 
