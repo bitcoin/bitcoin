@@ -1813,7 +1813,7 @@ void EscrowRelease(const string& node, const string& role, const string& guid ,c
 
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "offerinfo " + offer));
 	string currency = find_value(r.get_obj(), "currency").get_str();
-	string sellerlink_alias = find_value(r.get_obj(), "sellerlink_alias").get_str();
+	string sellerlink_alias = find_value(r.get_obj(), "offerlink_seller").get_str();
 	int nQtyOfferBefore = find_value(r.get_obj(), "quantity").get_int();
 	float fOfferPrice = find_value(r.get_obj(), "price").get_real();
 	int icommission = find_value(r.get_obj(), "commission").get_int();
