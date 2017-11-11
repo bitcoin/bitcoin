@@ -208,7 +208,7 @@ std::string CRPCTable::help(const std::string& strCommand, const JSONRPCRequest&
 
 UniValue help(const JSONRPCRequest& jsonRequest)
 {
-    if (jsonRequest.fHelp || jsonRequest.params.size() > 1)
+    if (jsonRequest.fHelp) {
         throw std::runtime_error(
             "help ( \"command\" )\n"
             "\nList all commands, or get help for a specified command.\n"
@@ -217,10 +217,16 @@ UniValue help(const JSONRPCRequest& jsonRequest)
             "\nResult:\n"
             "\"text\"     (string) The help text\n"
         );
+    }
+
+    RPCTypeCheckObj(jsonRequest.params, {
+        {"command", {UniValue::VSTR, UniValue::VNULL}},
+    }, false, true);
 
     std::string strCommand;
-    if (jsonRequest.params.size() > 0)
-        strCommand = jsonRequest.params[0].get_str();
+    if (!jsonRequest.params["command"].isNull()) {
+        strCommand = jsonRequest.params["command"].get_str();
+    }
 
     return tableRPC.help(strCommand, jsonRequest);
 }
@@ -262,7 +268,7 @@ static const CRPCCommand vRPCCommands[] =
 { //  category              name                      actor (function)         argNames
   //  --------------------- ------------------------  -----------------------  ----------
     /* Overall control/query calls */
-    { "control",            "help",                   &help,                   {"command"}  },
+    { "control",            "help",                   &help,                   {"command"}, true  },
     { "control",            "stop",                   &stop,                   {}  },
     { "control",            "uptime",                 &uptime,                 {}  },
 };
