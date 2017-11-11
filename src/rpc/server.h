@@ -10,6 +10,7 @@
 #include <rpc/protocol.h>
 #include <uint256.h>
 
+#include <algorithm>
 #include <list>
 #include <map>
 #include <stdint.h>
@@ -29,13 +30,63 @@ namespace RPCServer
     void OnStopped(std::function<void ()> slot);
 }
 
-/** Wrapper for UniValue::VType, which includes typeAny:
- * Used to denote don't care type. */
-struct UniValueType {
-    UniValueType(UniValue::VType _type) : typeAny(false), type(_type) {}
-    UniValueType() : typeAny(true) {}
+/** Set of allowed UniValue::VTypes. */
+class UniValueType {
+private:
+    std::vector<bool> m_allowed_types;
     bool typeAny;
-    UniValue::VType type;
+
+public:
+    UniValueType(UniValue::VType _type) : typeAny(false) {
+        auto type_int = unsigned(_type);
+        m_allowed_types.resize(type_int + 1);
+        m_allowed_types[type_int] = true;
+    }
+    UniValueType(std::vector<UniValue::VType> types) : typeAny(false) {
+        unsigned int type_vector_size = 0;
+        for (const auto type : types) {
+            type_vector_size = std::max(type_vector_size, unsigned(type) + 1);
+        }
+        m_allowed_types.resize(type_vector_size);
+        for (const auto type : types) {
+            m_allowed_types[unsigned(type)] = true;
+        }
+    }
+    UniValueType(std::initializer_list<UniValue::VType> types) : UniValueType(std::vector<UniValue::VType>(types)) { }
+    UniValueType() : typeAny(true) {}
+
+    bool IsAllowed(UniValue::VType type) const {
+        if (typeAny) return true;
+        auto type_int = unsigned(type);
+        if (type_int >= m_allowed_types.size()) {
+            return false;
+        }
+        return m_allowed_types[type_int];
+    }
+
+    // NOTE: Only valid if not typeAny! Will abort otherwise.
+    std::vector<UniValue::VType> AllAllowedTypes() const {
+        assert(!typeAny);
+        std::vector<UniValue::VType> result;
+        for (size_t i = 0; i < m_allowed_types.size(); ++i) {
+            if (m_allowed_types[i]) {
+                result.push_back(UniValue::VType(i));
+            }
+        }
+        return result;
+    }
+
+    std::string DescribeAllowedTypes() const {
+        if (typeAny) return "any";
+        std::string s;
+        for (const auto type : AllAllowedTypes()) {
+            if (!s.empty()) {
+                s += " or ";
+            }
+            s += uvTypeName(type);
+        }
+        return s;
+    }
 };
 
 class JSONRPCRequest

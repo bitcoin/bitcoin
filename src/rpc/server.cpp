@@ -68,8 +68,8 @@ void RPCTypeCheck(const UniValue& params,
 
 void RPCTypeCheckArgument(const UniValue& value, const UniValueType& typeExpected)
 {
-    if (!typeExpected.typeAny && value.type() != typeExpected.type) {
-        throw JSONRPCError(RPC_TYPE_ERROR, strprintf("Expected type %s, got %s", uvTypeName(typeExpected.type), uvTypeName(value.type())));
+    if (!typeExpected.IsAllowed(value.type())) {
+        throw JSONRPCError(RPC_TYPE_ERROR, strprintf("Expected type %s, got %s", typeExpected.DescribeAllowedTypes(), uvTypeName(value.type())));
     }
 }
 
@@ -80,14 +80,14 @@ void RPCTypeCheckObj(const UniValue& o,
 {
     for (const auto& t : typesExpected) {
         const UniValue& v = find_value(o, t.first);
-        if (!fAllowNull && v.isNull())
-            throw JSONRPCError(RPC_TYPE_ERROR, strprintf("Missing %s", t.first));
-
-        if (!(t.second.typeAny || v.type() == t.second.type || (fAllowNull && v.isNull()))) {
-            std::string err = strprintf("Expected type %s for %s, got %s",
-                uvTypeName(t.second.type), t.first, uvTypeName(v.type()));
-            throw JSONRPCError(RPC_TYPE_ERROR, err);
+        if (t.second.IsAllowed(v.type()) || (fAllowNull && v.isNull())) {
+            continue;
         }
+        if (v.isNull()) {
+            throw JSONRPCError(RPC_TYPE_ERROR, strprintf("Missing %s", t.first));
+        }
+
+        throw JSONRPCError(RPC_TYPE_ERROR, strprintf("Expected type %s for %s, got %s", t.second.DescribeAllowedTypes(), t.first, uvTypeName(v.type())));
     }
 
     if (fStrict)
