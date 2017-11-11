@@ -640,6 +640,8 @@ UniValue dumpwallet(const JSONRPCRequest& request)
     const std::map<CKeyID, int64_t>& mapKeyPool = pwallet->GetAllReserveKeys();
     pwallet->GetKeyBirthTimes(mapKeyBirth);
 
+    std::set<CScriptID> scripts = pwallet->GetCScripts();
+
     // sort time/key pairs
     std::vector<std::pair<int64_t, CKeyID> > vKeyBirth;
     for (const auto& entry : mapKeyBirth) {
@@ -691,6 +693,15 @@ UniValue dumpwallet(const JSONRPCRequest& request)
                 file << "change=1";
             }
             file << strprintf(" # addr=%s%s\n", strAddr, (pwallet->mapKeyMetadata[keyid].hdKeypath.size() > 0 ? " hdkeypath="+pwallet->mapKeyMetadata[keyid].hdKeypath : ""));
+        }
+    }
+    file << "\n";
+    for (const CScriptID &scriptid : scripts) {
+        CScript script;
+        std::string address = EncodeDestination(scriptid);
+        if(pwallet->GetCScript(scriptid, script)) {
+            file << strprintf("%s 0 script=1", HexStr(script.begin(), script.end()));
+            file << strprintf(" # addr=%s\n", address);
         }
     }
     file << "\n";
