@@ -77,6 +77,16 @@ bool CBasicKeyStore::HaveCScript(const CScriptID& hash) const
     return mapScripts.count(hash) > 0;
 }
 
+std::set<CScriptID> CBasicKeyStore::GetCScripts() const
+{
+    LOCK(cs_KeyStore);
+    std::set<CScriptID> set_script;
+    for (const auto& mi : mapScripts) {
+        set_script.insert(mi.first);
+    }
+    return set_script;
+}
+
 bool CBasicKeyStore::GetCScript(const CScriptID &hash, CScript& redeemScriptOut) const
 {
     LOCK(cs_KeyStore);
