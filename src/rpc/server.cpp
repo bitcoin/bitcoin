@@ -515,12 +515,27 @@ static inline JSONRPCRequest transformPositionalArguments(const JSONRPCRequest& 
 
 static inline JSONRPCRequest transformArguments(const JSONRPCRequest& in, const std::vector<std::string>& argNames, const bool want_named_args)
 {
-    if (want_named_args == in.params.isObject()) {
+    if (!want_named_args && !in.params.isObject()) {
         // Already in desired form; no changes needed
         return in;
     }
     if (want_named_args) {
-        return transformPositionalArguments(in, argNames);
+        if (in.params.isObject()) {
+            const UniValue& options_val = in.params["options"];
+            if (!options_val.isNull()) {
+                // Flatten options
+                if (!options_val.isObject()) {
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, "options parameter must be an Object");
+                }
+                auto out = in;
+                out.params.pushKVs(options_val);
+                out.params.pushKV("options", UniValue());
+                return out;
+            }
+            return in;
+        } else {
+            return transformPositionalArguments(in, argNames);
+        }
     } else {
         return transformNamedArguments(in, argNames);
     }
