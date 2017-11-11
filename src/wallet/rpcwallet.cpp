@@ -3337,7 +3337,7 @@ UniValue bumpfee(const JSONRPCRequest& request)
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
         return NullUniValue;
 
-    if (request.fHelp || request.params.size() < 1 || request.params.size() > 2) {
+    if (request.fHelp || request.params["txid"].isNull()) {
         throw std::runtime_error(
             "bumpfee \"txid\" ( options ) \n"
             "\nBumps the fee of an opt-in-RBF transaction T, replacing it with a new transaction B.\n"
@@ -3384,24 +3384,22 @@ UniValue bumpfee(const JSONRPCRequest& request)
             HelpExampleCli("bumpfee", "<txid>"));
     }
 
-    RPCTypeCheck(request.params, {UniValue::VSTR, UniValue::VOBJ});
+    RPCTypeCheckObj(request.params, {
+        {"txid", UniValue::VSTR},
+        {"confTarget", {UniValue::VNULL, UniValue::VNUM}},
+        {"totalFee", {UniValue::VNULL, UniValue::VNUM}},
+        {"replaceable", {UniValue::VNULL, UniValue::VBOOL}},
+        {"estimate_mode", {UniValue::VNULL, UniValue::VSTR}},
+    }, false, true);
     uint256 hash;
-    hash.SetHex(request.params[0].get_str());
+    hash.SetHex(request.params["txid"].get_str());
 
     // optional parameters
     CAmount totalFee = 0;
     CCoinControl coin_control;
     coin_control.signalRbf = true;
-    if (!request.params[1].isNull()) {
-        UniValue options = request.params[1];
-        RPCTypeCheckObj(options,
-            {
-                {"confTarget", UniValueType(UniValue::VNUM)},
-                {"totalFee", UniValueType(UniValue::VNUM)},
-                {"replaceable", UniValueType(UniValue::VBOOL)},
-                {"estimate_mode", UniValueType(UniValue::VSTR)},
-            },
-            true, true);
+    {
+        const UniValue& options = request.params;
 
         if (options.exists("confTarget") && options.exists("totalFee")) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "confTarget and totalFee options should not both be set. Please provide either a confirmation target for fee estimation or an explicit total fee for the transaction.");
@@ -3834,7 +3832,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "addmultisigaddress",               &addmultisigaddress,            {"nrequired","keys","label|account","address_type"} },
     { "hidden",             "addwitnessaddress",                &addwitnessaddress,             {"address","p2sh"} },
     { "wallet",             "backupwallet",                     &backupwallet,                  {"destination"} },
-    { "wallet",             "bumpfee",                          &bumpfee,                       {"txid", "options"} },
+    { "wallet",             "bumpfee",                          &bumpfee,                       {"txid", "options"}, true },
     { "wallet",             "dumpprivkey",                      &dumpprivkey,                   {"address"}  },
     { "wallet",             "dumpwallet",                       &dumpwallet,                    {"filename"} },
     { "wallet",             "encryptwallet",                    &encryptwallet,                 {"passphrase"} },
