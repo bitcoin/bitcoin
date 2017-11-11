@@ -713,7 +713,7 @@ theAlias = dbAlias;
 					if (!newAddress.empty())
 						user2 = newAddress;
 				}
-				else if (opHistory == OP_CERT_TRANSFERRED) {
+				else if (opHistory == OP_CERT_TRANSFER) {
 					CCert cert(tx);
 					user2 = stringFromVch(cert.linkAliasTuple.first);
 				}
