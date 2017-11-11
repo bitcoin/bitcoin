@@ -2544,6 +2544,9 @@ UniValue abandontransaction(const JSONRPCRequest& request)
         if (!IsHDWallet(pwallet) || !GetHDWallet(pwallet)->HaveTransaction(hash))
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction not eligible for abandonment");
     };
+    if (!pwallet->AbandonTransaction(hash)) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction not eligible for abandonment");
+    }
 
     return NullUniValue;
 }

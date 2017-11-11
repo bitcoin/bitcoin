@@ -625,7 +625,7 @@ public:
     bool GetStealthByIndex(uint32_t sxId, CStealthAddress &sx) const;
     bool GetStealthLinked(const CKeyID &idK, CStealthAddress &sx);
     bool ProcessLockedStealthOutputs();
-    bool ProcessLockedAnonOutputs();
+    bool ProcessLockedBlindedOutputs();
     bool ProcessStealthOutput(const CTxDestination &address,
         std::vector<uint8_t> &vchEphemPK, uint32_t prefix, bool fHavePrefix, CKey &sShared, bool fNeedShared=false);
 
@@ -650,6 +650,7 @@ public:
 
     bool AddTxinToSpends(const CTxIn &txin, const uint256 &txhash);
 
+    bool ProcessPlaceholder(CHDWalletDB *pwdb, const CTransaction &tx, CTransactionRecord &rtx);
     bool AddToRecord(CTransactionRecord &rtxIn, const CTransaction &tx,
         const CBlockIndex *pIndex, int posInBlock, bool fFlushOnClose=true);
 

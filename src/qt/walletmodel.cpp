@@ -63,13 +63,13 @@ WalletModel::WalletModel(const PlatformStyle *platformStyle, CWallet *_wallet, O
     pollTimer = new QTimer(this);
     connect(pollTimer, SIGNAL(timeout()), this, SLOT(pollBalanceChanged()));
     pollTimer->start(MODEL_UPDATE_DELAY);
-    
+
     cachedBlindBalance = 0;
     cachedAnonBalance = 0;
-    
-    
+
+
     connect(getOptionsModel(), SIGNAL(reserveBalanceChanged(CAmount)), this, SLOT(reserveBalanceChanged(CAmount)));
-    
+
     subscribeToCoreSignals();
 }
 
@@ -163,14 +163,14 @@ void WalletModel::checkBalanceChanged()
     CAmount newBalance = 0;
     CAmount newBlindBalance = 0;
     CAmount newAnonBalance = 0;
-    
+
     CAmount newUnconfirmedBalance = 0;
     CAmount newImmatureBalance = 0;
     CAmount newWatchOnlyBalance = 0;
     CAmount newWatchUnconfBalance = 0;
     CAmount newWatchImmatureBalance = 0;
     CAmount newWatchStakedBalance = 0;
-    
+
     CHDWalletBalances bal;
     if (fParticlWallet)
     {
@@ -308,7 +308,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
     {
         return DuplicateAddress;
     }
-    
+
     /*
     CAmount nBalance = getBalance(&coinControl);
 
@@ -317,7 +317,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
         return AmountExceedsBalance;
     }
 
-    
+
     {
         LOCK2(cs_main, wallet->cs_wallet);
 
@@ -460,7 +460,7 @@ WalletModel::EncryptionStatus WalletModel::getEncryptionStatus() const
     {
         if (((CHDWallet*)wallet)->fUnlockForStakingOnly)
             return UnlockedForStaking;
-        
+
         return Unlocked;
     }
 }
@@ -654,7 +654,7 @@ void WalletModel::getOutputs(const std::vector<COutPoint>& vOutpoints, std::vect
             vOutputs.push_back(out);
             continue;
         };
-        
+
         if (!wallet->mapWallet.count(outpoint.hash)) continue;
         int nDepth = wallet->mapWallet[outpoint.hash].GetDepthInMainChain();
         if (nDepth < 0) continue;
@@ -690,7 +690,7 @@ bool WalletModel::tryCallRpc(const QString &sCommand, UniValue &rv) const
         warningBox(tr("Wallet Model"), QString::fromStdString(e.what()));
         return false;
     };
-    
+
     return true;
 };
 
@@ -711,10 +711,10 @@ void WalletModel::listCoins(std::map<QString, std::vector<CCoinControlEntry> >& 
     wallet->AvailableCoins(vCoins);
 
     LOCK2(cs_main, wallet->cs_wallet); // ListLockedCoins, mapWallet
-    
+
     UniValue rv;
     QString sCommand;
-    
+
     if (nType == OUTPUT_RINGCT)
         sCommand =  + "listunspentanon 1 9999999 [] false {\"cc_format\":true}";
     else
@@ -725,11 +725,11 @@ void WalletModel::listCoins(std::map<QString, std::vector<CCoinControlEntry> >& 
 
     if (!tryCallRpc(sCommand, rv))
         return;
-    
+
     for (size_t i = 0; i < rv.size(); ++i)
     {
         const UniValue &uvi = rv[i];
-        
+
         CCoinControlEntry entry;
         entry.nType = nType;
         entry.op.hash.SetHex(uvi["txid"].get_str());
@@ -737,21 +737,21 @@ void WalletModel::listCoins(std::map<QString, std::vector<CCoinControlEntry> >& 
         entry.nDepth = uvi["confirmations"].get_int();
         entry.nValue = uvi["amount"].get_int64();
         entry.nTxTime = uvi["time"].get_int64();
-        
+
         const UniValue &uvs = uvi["scriptPubKey"];
         if (uvs.isStr())
         {
             std::vector<uint8_t> vScript = ParseHex(uvs.get_str());
             entry.scriptPubKey = CScript(vScript.begin(), vScript.end());
         };
-        
+
         const UniValue &uvb = uvi["spendable"];
         if (!uvb.isNull() && !uvb.get_bool())
             continue;
         mapCoins[QString::fromStdString(uvi["address"].get_str())].push_back(entry);
     };
-    
-    
+
+
     /*
     std::vector<COutPoint> vLockedCoins;
     wallet->ListLockedCoins(vLockedCoins);
@@ -767,8 +767,8 @@ void WalletModel::listCoins(std::map<QString, std::vector<CCoinControlEntry> >& 
             vCoins.push_back(out);
     }
     */
-    
-    
+
+
     /*
     BOOST_FOREACH(const COutput& out, vCoins)
     {

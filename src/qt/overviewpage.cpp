@@ -202,7 +202,7 @@ void OverviewPage::setReservedBalance(CAmount reservedBalance)
 {
     if (!walletModel || !walletModel->getOptionsModel())
         return;
-    
+
     int unit = walletModel->getOptionsModel()->getDisplayUnit();
     currentReservedBalance = reservedBalance;
     ui->labelReservedText->setVisible(reservedBalance);
@@ -257,7 +257,7 @@ void OverviewPage::setWalletModel(WalletModel *model)
         connect(model, SIGNAL(balanceChanged(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)),
             this, SLOT(setBalance(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)));
         model->checkBalanceChanged();
-        
+
         connect(walletModel->getOptionsModel(), SIGNAL(reserveBalanceChanged(CAmount)), this, SLOT(setReservedBalance(CAmount)));
         setReservedBalance(model->getReserveBalance());
 
@@ -281,7 +281,7 @@ void OverviewPage::updateDisplayUnit()
                        currentWatchOnlyBalance, currentWatchUnconfBalance, currentWatchImmatureBalance, currentWatchStakedBalance);
             setReservedBalance(currentReservedBalance);
         };
-        
+
         // Update txdelegate->unit with the current unit
         txdelegate->unit = walletModel->getOptionsModel()->getDisplayUnit();
 

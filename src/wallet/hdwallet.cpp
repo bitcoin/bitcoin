@@ -937,7 +937,7 @@ bool CHDWallet::Unlock(const SecureString &strWalletPassphrase)
             return false;
 
         ProcessLockedStealthOutputs();
-        ProcessLockedAnonOutputs();
+        ProcessLockedBlindedOutputs();
         SecureMsgWalletUnlocked();
     } // cs_main, cs_wallet
 
@@ -1887,6 +1887,10 @@ CAmount CHDWallet::GetUnconfirmedBalance() const
         if (IsTrusted(txhash, rtx.blockHash))
             continue;
 
+        CTransactionRef ptx = mempool.get(txhash);
+        if (!ptx)
+            continue;
+
         for (const auto &r : rtx.vout)
         {
             if (r.nFlags & ORF_OWNED && !IsSpent(txhash, r.n))
@@ -2074,6 +2078,12 @@ bool CHDWallet::GetBalances(CHDWalletBalances &bal)
         const auto &rtx = ri.second;
 
         bool fTrusted = IsTrusted(txhash, rtx.blockHash);
+        bool fInMempool = false;
+        if (!fTrusted)
+        {
+            CTransactionRef ptx = mempool.get(txhash);
+            fInMempool = !ptx ? false : true;
+        };
 
         for (const auto &r : rtx.vout)
         {
@@ -2087,7 +2097,7 @@ bool CHDWallet::GetBalances(CHDWalletBalances &bal)
                         continue;
                     if (fTrusted)
                         bal.nAnon += r.nValue;
-                    else
+                    else if (fInMempool)
                         bal.nAnonUnconf += r.nValue;
                     break;
                 case OUTPUT_CT:
@@ -2095,7 +2105,7 @@ bool CHDWallet::GetBalances(CHDWalletBalances &bal)
                         continue;
                     if (fTrusted)
                         bal.nBlind += r.nValue;
-                    else
+                    else if (fInMempool)
                         bal.nBlindUnconf += r.nValue;
                     break;
                 case OUTPUT_STANDARD:
@@ -2103,14 +2113,14 @@ bool CHDWallet::GetBalances(CHDWalletBalances &bal)
                     {
                         if (fTrusted)
                             bal.nPart += r.nValue;
-                        else
+                        else if (fInMempool)
                             bal.nPartUnconf += r.nValue;
                     } else
                     if (r.nFlags & ORF_OWN_WATCH)
                     {
                         if (fTrusted)
                             bal.nPartWatchOnly += r.nValue;
-                        else
+                        else if (fInMempool)
                             bal.nPartWatchOnlyUnconf += r.nValue;
                     };
                     break;
@@ -7713,7 +7723,7 @@ bool CHDWallet::ProcessLockedStealthOutputs()
     return true;
 };
 
-bool CHDWallet::ProcessLockedAnonOutputs()
+bool CHDWallet::ProcessLockedBlindedOutputs()
 {
     LogPrint(BCLog::HDWALLET, "%s\n", __func__);
     AssertLockHeld(cs_wallet);
@@ -7813,6 +7823,12 @@ bool CHDWallet::ProcessLockedAnonOutputs()
 
         if (fUpdated)
         {
+            // If txn has change, it must have been sent by this wallet
+            if (rtx.HaveChange())
+            {
+                ProcessPlaceholder(&wdb, *stx.tx.get(), rtx);
+            };
+
             if (!wdb.WriteTxRecord(op.hash, rtx)
                 || !wdb.WriteStoredTx(op.hash, stx))
                 return false;
@@ -7871,7 +7887,7 @@ bool CHDWallet::ProcessStealthOutput(const CTxDestination &address,
         if (!MatchPrefix(it->prefix.number_bits, it->prefix.bitfield, prefix, fHavePrefix))
             continue;
 
-         if (!it->scan_secret.IsValid())
+        if (!it->scan_secret.IsValid())
             continue; // stealth address is not owned
 
         if (StealthSecret(it->scan_secret, vchEphemPK, it->spend_pubkey, sShared, pkExtracted) != 0)
@@ -8762,6 +8778,41 @@ bool CHDWallet::AddTxinToSpends(const CTxIn &txin, const uint256 &txhash)
     return true;
 };
 
+bool CHDWallet::ProcessPlaceholder(CHDWalletDB *pwdb, const CTransaction &tx, CTransactionRecord &rtx)
+{
+    rtx.EraseOutput(PLACEHOLDER_N);
+
+    CAmount nDebit = GetDebit(pwdb, rtx, ISMINE_ALL);
+    CAmount nCredit = rtx.TotalOutput() + rtx.nFee;
+    if (nDebit != nCredit)
+    {
+        LogPrint(BCLog::HDWALLET, "%s: Inserting placeholder output: %s, %d\n", __func__, tx.GetHash().ToString(), nDebit - nCredit);
+
+        const COutputRecord *pROutChange = rtx.GetChangeOutput();
+
+        int nType = OUTPUT_STANDARD;
+        for (size_t i = 0; i < tx.vpout.size(); ++i)
+        {
+            const auto &txout = tx.vpout[i];
+            if (!(txout->IsType(OUTPUT_CT) || txout->IsType(OUTPUT_RINGCT)))
+                continue;
+            if (pROutChange && pROutChange->n == i)
+                continue;
+            nType = txout->GetType();
+            break;
+        };
+
+        COutputRecord rout;
+        rout.n = PLACEHOLDER_N;
+        rout.nType = nType;
+        rout.nFlags |= ORF_FROM;
+        rout.nValue = nDebit - nCredit;
+
+        rtx.InsertOutput(rout);
+    };
+    return true;
+};
+
 bool CHDWallet::AddToRecord(CTransactionRecord &rtxIn, const CTransaction &tx,
     const CBlockIndex *pIndex, int posInBlock, bool fFlushOnClose)
 {
@@ -8964,38 +9015,7 @@ bool CHDWallet::AddToRecord(CTransactionRecord &rtxIn, const CTransaction &tx,
                     r.nFlags |= ORF_FROM;
             };
 
-
-            rtx.EraseOutput(PLACEHOLDER_N);
-
-            CAmount nDebit = GetDebit(&wdb, rtx, ISMINE_ALL);
-            CAmount nCredit = rtx.TotalOutput() + rtx.nFee;
-            if (nDebit != nCredit)
-            {
-                LogPrint(BCLog::HDWALLET, "%s: Inserting placeholder output: %s, %d\n", __func__, txhash.ToString(), nDebit - nCredit);
-
-                const COutputRecord *pROutChange = rtx.GetChangeOutput();
-
-                int nType = OUTPUT_STANDARD;
-                for (size_t i = 0; i < tx.vpout.size(); ++i)
-                {
-                    const auto &txout = tx.vpout[i];
-                    if (!(txout->IsType(OUTPUT_CT) || txout->IsType(OUTPUT_RINGCT)))
-                        continue;
-                    if (pROutChange && pROutChange->n == i)
-                        continue;
-                    nType = txout->GetType();
-                    break;
-                };
-
-                COutputRecord rout;
-                rout.n = PLACEHOLDER_N;
-                rout.nType = nType;
-                rout.nFlags |= ORF_FROM;
-                rout.nValue = nDebit - nCredit;
-
-                rtx.InsertOutput(rout);
-
-            };
+            ProcessPlaceholder(&wdb, tx, rtx);
         };
 
         stx.tx = MakeTransactionRef(tx);
