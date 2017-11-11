@@ -985,7 +985,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	BOOST_CHECK(aliasexpirenode2address != AliasNew("node2", "aliasexpirednode2", "somedata"));
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "certinfo " + certgoodguid));
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expires_on").get_int64(), expires_on);
-	CertUpdate("node1", certgoodguid, "pubdata");
+	CertUpdate("node1", certgoodguid, "titlenewpub");
 	// able to release and claim release on escrow with non-expired aliases with new pubkeys
 	EscrowRelease("node2", "buyer", escrowguid);	 
 	EscrowClaimRelease("node1", escrowguid); 
