@@ -530,6 +530,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				return true;
 			}
 		}
+		string newAddress = "";
 		bool theAliasNull = theAlias.IsNull();
 		if (op == OP_ALIAS_UPDATE)
 		{
@@ -586,6 +587,8 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 							theAlias.nExpireTime = dbAlias.nExpireTime;
 						if (theAlias.vchAddress.empty())
 							theAlias.vchAddress = dbAlias.vchAddress;
+						else
+							newAddress = EncodeBase58(theAlias.vchAddress);
 						theAlias.vchGUID = dbAlias.vchGUID;
 						theAlias.vchAlias = dbAlias.vchAlias;
 						// if transfer
@@ -621,8 +624,8 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						{
 							if (dbAlias.nAccessFlags < 1)
 							{
-								errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5026 - " + _("Cannot edit this alias. It is view-only.");
-								theAlias = dbAlias;
+errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5026 - " + _("Cannot edit this alias. It is view-only.");
+theAlias = dbAlias;
 							}
 						}
 						if (theAlias.nAccessFlags > dbAlias.nAccessFlags)
@@ -687,9 +690,9 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				return true;
 			}
 		}
-		else if(op == OP_ALIAS_ACTIVATE)
+		else if (op == OP_ALIAS_ACTIVATE)
 		{
-			if(!dbAlias.IsNull())
+			if (!dbAlias.IsNull())
 			{
 				errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5028 - " + _("Trying to renew an alias that isn't expired");
 				return true;
@@ -703,7 +706,33 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				string strResponseEnglish = "";
 				string strResponseGUID = "";
 				string strResponse = GetSyscoinTransactionDescription(opHistory, vvchHistory, tx, strResponseEnglish, strResponseGUID);
-				paliasdb->WriteAliasIndexTxHistory(stringFromVch(vvchArgs[0]), tx.GetHash(), nHeight, strResponseEnglish, strResponseGUID, tx.vout[nOutHistory].nValue);
+				string user1 = stringFromVch(vvchArgs[0]);
+				string user2 = "";
+				string user3 = "";
+				if (opHistory == OP_ALIAS_UPDATE) {
+					if (!newAddress.empty())
+						user2 = newAddress;
+				}
+				else if (opHistory == OP_CERT_TRANSFERRED) {
+					CCert cert(tx);
+					user2 = stringFromVch(cert.linkAliasTuple.first);
+				}
+				else if (opHistory == OP_OFFER_UPDATE)
+				{
+					COffer offer(tx);
+					if (!offer.linkAliasTuple.IsNull())
+						user2 = stringFromVch(offer.linkAliasTuple.first);
+				}
+				else if (IsEscrowOp(opHistory)) {
+					CEscrow escrow(tx);
+					const string &buyer = stringFromVch(escrow.buyerAliasTuple.first);
+					const string &seller = stringFromVch(escrow.sellerAliasTuple.first);
+					const string &arbiter = stringFromVch(escrow.arbiterAliasTuple.first);
+					user1 = buyer;
+					user2 = seller;
+					user3 = arbiter;
+				}
+				paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, strResponseGUID);
 			}
 
 		}
@@ -1197,7 +1226,9 @@ void setupAliasTxHistoryIndexes() {
 	bson_t *create_indexes;
 
 	bson_init(&keys);
-	BSON_APPEND_INT32(&keys, "alias", 1);
+	BSON_APPEND_INT32(&keys, "user1", 1);
+	BSON_APPEND_INT32(&keys, "user2", 1);
+	BSON_APPEND_INT32(&keys, "user3", 1);
 	index_name = mongoc_collection_keys_to_index_string(&keys);
 	create_indexes = BCON_NEW("createIndexes",
 		BCON_UTF8(collection_name),
@@ -1616,13 +1647,15 @@ void CAliasDB::EraseAliasIndex(const std::vector<unsigned char>& vchAlias, bool 
 	EraseAliasIndexHistory(vchAlias, cleanup);
 	EraseAliasIndexTxHistory(vchAlias, cleanup);
 }
-bool BuildAliasIndexerTxHistoryJson(const string &alias, const uint256 &txHash, const uint64_t& nHeight, const string &type, const string &guid, const CAmount &nValue, UniValue& oName)
+bool BuildAliasIndexerTxHistoryJson(const string &user1, const string &user2, const string &user3, const uint256 &txHash, const uint64_t& nHeight, const string &type, const string &guid, UniValue& oName)
 {
 	oName.push_back(Pair("_id", txHash.GetHex()));
-	oName.push_back(Pair("alias", alias));
+	oName.push_back(Pair("user1", user1));
+	oName.push_back(Pair("user2", user2));
+	oName.push_back(Pair("user3", user3));
 	oName.push_back(Pair("type", type));
 	oName.push_back(Pair("guid", guid));
-	oName.push_back(Pair("value", ValueFromAmount(nValue)));
+	oName.push_back(Pair("height", nHeight));
 	int64_t nTime = 0;
 	if (chainActive.Height() >= nHeight) {
 		CBlockIndex *pindex = chainActive[nHeight];
@@ -1633,7 +1666,7 @@ bool BuildAliasIndexerTxHistoryJson(const string &alias, const uint256 &txHash, 
 	oName.push_back(Pair("time", nTime));
 	return true;
 }
-void CAliasDB::WriteAliasIndexTxHistory(const string &alias, const uint256 &txHash, const uint64_t& nHeight, const string &type, const string &guid, const CAmount &nValue) {
+void CAliasDB::WriteAliasIndexTxHistory(const string &user1, const string &user2, const string &user3, const uint256 &txHash, const uint64_t& nHeight, const string &type, const string &guid) {
 	if (!aliastxhistory_collection)
 		return;
 	bson_error_t error;
@@ -1642,7 +1675,7 @@ void CAliasDB::WriteAliasIndexTxHistory(const string &alias, const uint256 &txHa
 	UniValue oName(UniValue::VOBJ);
 	write_concern = mongoc_write_concern_new();
 	mongoc_write_concern_set_w(write_concern, MONGOC_WRITE_CONCERN_W_UNACKNOWLEDGED);
-	BuildAliasIndexerTxHistoryJson(alias, txHash, nHeight, type, guid, nValue, oName);
+	BuildAliasIndexerTxHistoryJson(user1, user2, user3, txHash, nHeight, type, guid, oName);
 	insert = bson_new_from_json((unsigned char *)oName.write().c_str(), -1, &error);
 	if (!insert || !mongoc_collection_insert(aliastxhistory_collection, (mongoc_insert_flags_t)MONGOC_INSERT_NO_VALIDATE, insert, write_concern, &error)) {
 		LogPrintf("MONGODB ALIAS TX HISTORY ERROR: %s\n", error.message);

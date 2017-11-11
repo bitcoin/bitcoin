@@ -25,6 +25,7 @@ string AliasNew(const string& node, const string& aliasname, const string& pubda
 string AliasUpdate(const string& node, const string& aliasname, const string& pubdata="\"\"", string addressStr = "\"\"", string witness="\"\"");
 string AliasTransfer(const string& node, const string& aliasname, const string& tonode, const string& pubdata="\"\"", const string& witness="\"\"");
 bool AliasFilter(const string& node, const string& regex);
+bool AliasTxHistoryFilter(const string& node, const string& regex);
 void AliasAddWhitelist(const string& node, const string& aliasowner, const string& aliasname, const string& discount, const string& witness = "\"\"");
 void AliasRemoveWhitelist(const string& node, const string& aliasowner, const string& aliasname, const string& discount, const string& witness = "\"\"");
 void AliasClearWhitelist(const string& node, const string& aliasowner, const string& witness = "\"\"");

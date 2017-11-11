@@ -93,6 +93,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasupdate)
 	BOOST_CHECK(hex_str.empty());
 
 }
+
 BOOST_AUTO_TEST_CASE (generate_aliasmultiupdate)
 {
 	printf("Running generate_aliasmultiupdate...\n");
@@ -902,7 +903,6 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	GenerateBlocks(5, "node3");
 	GenerateBlocks(50);
 	AliasNew("node1", "aliasexpire2", "pubdata");
-	MilliSleep(1000);
 	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress aliasexpirednode2 3000"), runtime_error);
 	GenerateBlocks(10);	
 	const string &escrowguid = EscrowNewBuyItNow("node2", "node1", "aliasexpirednode2", offerguid, "1", "aliasexpire3");
