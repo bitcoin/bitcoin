@@ -10,6 +10,9 @@ from test_framework.util import (
     assert_raises_rpc_error,
 )
 
+# anyone-can-spend p2sh
+test_address = '2N9hLwkSqr1cPQAPxbrGVUjxyjD11G2e1he'
+
 class NamedArgumentTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
@@ -29,6 +32,20 @@ class NamedArgumentTest(BitcoinTestFramework):
         assert_equal(node.echo(arg1=1), [None, 1])
         assert_equal(node.echo(arg9=None), [None]*10)
         assert_equal(node.echo(arg0=0,arg3=3,arg9=9), [0] + [None]*2 + [3] + [None]*5 + [9])
+
+        # Explicit options param
+        frtout = node.fundrawtransaction(hexstring='01000000000100100000000000000151ffffffff', options={'changeAddress': test_address, 'changePosition': 0})
+        assert_equal(node.decoderawtransaction(frtout['hex'])['vout'][0]['scriptPubKey']['addresses'], [test_address])
+
+        # Passing options as named args
+        frtout = node.fundrawtransaction(hexstring='01000000000100100000000000000151ffffffff', changeAddress=test_address, changePosition=0)
+        assert_equal(node.decoderawtransaction(frtout['hex'])['vout'][0]['scriptPubKey']['addresses'], [test_address])
+
+        # Passing options as named args + explicit options
+        frtout = node.fundrawtransaction(hexstring='01000000000100100000000000000151ffffffff', changeAddress=test_address, options={'changePosition': 0})
+        assert_equal(node.decoderawtransaction(frtout['hex'])['vout'][0]['scriptPubKey']['addresses'], [test_address])
+        frtout = node.fundrawtransaction(hexstring='01000000000100100000000000000151ffffffff', options={'changeAddress': test_address}, changePosition=0)
+        assert_equal(node.decoderawtransaction(frtout['hex'])['vout'][0]['scriptPubKey']['addresses'], [test_address])
 
 if __name__ == '__main__':
     NamedArgumentTest().main()
