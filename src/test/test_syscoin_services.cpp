@@ -1296,7 +1296,8 @@ void OfferUpdate(const string& node, const string& aliasname, const string& offe
 	BOOST_CHECK(ret.read(txHistoryResult[0].get_str()));
 	const UniValue &historyResultObj = ret.get_obj();
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "user1").get_str(), oldalias);
-	BOOST_CHECK_EQUAL(find_value(historyResultObj, "user2").get_str(), aliasname);
+	if(oldalias != aliasname)
+		BOOST_CHECK_EQUAL(find_value(historyResultObj, "user2").get_str(), aliasname);
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "_id").get_str(), txid);
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "guid").get_str(), offerguid);
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "type").get_str(), "Offer Updated");
