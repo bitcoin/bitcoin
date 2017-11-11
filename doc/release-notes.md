@@ -56,18 +56,6 @@ frequently tested on them.
 Notable changes
 ===============
 
-Miner block size limiting deprecated
-------------------------------------
-
-Though blockmaxweight has been preferred for limiting the size of blocks returned by
-getblocktemplate since 0.13.0, blockmaxsize remained as an option for those who wished
-to limit their block size directly. Using this option resulted in a few UI issues as
-well as non-optimal fee selection and ever-so-slightly worse performance, and has thus
-now been deprecated. Further, the blockmaxsize option is now used only to calculate an
-implied blockmaxweight, instead of limiting block size directly. Any miners who wish
-to limit their blocks by size, instead of by weight, will have to do so manually by
-removing transactions from their block template directly.
-
 HD-wallets by default
 ---------------------
 Due to a backward-incompatible change in the wallet database, wallets created
@@ -76,18 +64,13 @@ will only create hierarchical deterministic (HD) wallets.
 
 Low-level RPC changes
 ----------------------
-- `listsinceblock` will now throw an error if an unknown `blockhash` argument
-  value is passed, instead of returning a list of all wallet transactions since
-  the genesis block.
-- The "currentblocksize" value in getmininginfo has been removed.
 - The deprecated RPC `getinfo` was removed. It is recommended that the more specific RPCs are used:
   * `getblockchaininfo`
   * `getnetworkinfo`
   * `getwalletinfo`
   * `getmininginfo`
+- The wallet RPC `getreceivedbyaddress` will return an error if called with an address not in the wallet.
 
-- `dumpwallet` no longer allows overwriting files. This is a security measure
-  as well as prevents dangerous user mistakes.
 
 Credits
 =======
