@@ -126,5 +126,19 @@ class WalletDumpTest(BitcoinTestFramework):
         # Overwriting should fail
         assert_raises_rpc_error(-8, "already exists", self.nodes[0].dumpwallet, tmpdir + "/node0/wallet.unencrypted.dump")
 
+        # Restart node with new wallet, and test importwallet
+        self.stop_node(0)
+        self.start_node(0, ['-wallet=w2'])
+
+        # Make sure the address is not IsMine before import
+        result = self.nodes[0].validateaddress(multisig_addr)
+        assert(result['ismine'] == False)
+
+        self.nodes[0].importwallet(os.path.abspath(tmpdir + "/node0/wallet.unencrypted.dump"))
+
+        # Now check IsMine is true
+        result = self.nodes[0].validateaddress(multisig_addr)
+        assert(result['ismine'] == True)
+
 if __name__ == '__main__':
     WalletDumpTest().main ()
