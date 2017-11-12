@@ -132,53 +132,73 @@ IoPGUI::IoPGUI(const PlatformStyle *_platformStyle, const NetworkStyle *networkS
     {
     QString appstyle = "fusion";
     QApplication::setStyle(appstyle);    
-    setStyleSheet("QFrame { background: rgb(31,31,31); alternate-background-color: rgb(31,31,31);}"
-                    "QWidget {background: rgb(45,45,45); color: rgb(12,175,165); }"
-                    "QHeaderView { background: rgb(31,31,31)} "
-                    "QLineEdit { background: rgb(31,31,31); border-style: solid; border-width: 1px;  border-color: rgb(119,119,119) }"
-                    "QAbstractSpinBox { background: rgb(31,31,31); border-style: solid; border-width: 1px;  border-color: rgb(119,119,119); padding: 0px }"
-                    "QSpinBox::down-button:off {width: 30px; border: solid }"
-                    "QComboBox { background: rgb(31,31,31); }"
-                    //"QSpinBox::down-button { subcontrol-origin: border; subcontrol-position: center; width: 16px; border-color: rgb(32,32,32); border-width: 1px;}"
-                    "QAbstractSpinBox::up-arrow { border: none; padding: 0; width: 7px; height: 7px; image: url(:/icons/up_arrow) }"
-                    "QAbstractSpinBox::down-arrow { border: none; padding: 0; width: 7px; height: 7px; image: url(:/icons/down_arrow) }"                    
-                    "QAbstractSpinBox::up-arrow:off { border: none; padding: 0; width: 7px; height: 7px; image: url(:/icons/up_arrow_off) }"                    
-                    "QAbstractSpinBox::down-arrow:off { border: none; padding: 0; width: 7px; height: 7px; image: url(:/icons/down_arrow_off) }"                    
-                    //".QFrame { border: none }"
-                    ".QFrame { border-style: solid; border-width: 1px;  border-color: rgb(119,119,119) }"                    
-                    //"QLabel { border-style: none; border-width: 1px;  border-color: rgb(119,119,119) }"
-                    "QTableView { border: 1px solid rgb(119,119,119); selection-background-color: rgb(62,62,62); selection-color: rgb(108,200,239); alternate-background: rgb(31,31,31); }"
-                    "QTableView::item { border-right: 1px solid rgb(119,119,119); border-bottom: 1px solid rgb(119,119,119);}"                    
-                    "RecentRequestsTableModel::item { selection-background: rgb(62,62,62); selection-color: rgb(108,200,239); alternate-background: rgb(31,31,31); }"
-                    //"QToolBar {background: red; border-color: rgb (32,32,32); border-style: solid; border-width: 1px }"
-                    "QToolButton { background: rgb(45,45,45); border-color: rgb(12,175,165); border-style: solid; border-width: 1px; border-radius: 5px; padding: 6px; margin: 3px}"
-                    "QToolButton:hover { background: rgb(62,62,62); border-color: rgb(12,175,165); border-style: solid; border-width: 1px; border-radius: 5px; padding: 6px}"                    
-                    "QToolButton:checked { background: rgb(31,31,31); border-color: rgb(108,200,239); border-style: solid; border-width: 1px; border-radius: 5px; padding: 6px}"
-                    "QScrollBar {border: 2px solid rgb(62,62,62); background: rgb(32,32,32); margin: 0px 20px 0 20px;}"
-                    "QScrollBar::handle { background: rgb(62,62,62); }"
-                    //"QCheckBox::indicator { background: rgb(31,31,31); }"
-                    "QMenu:item:selected { color: rgb(108,200,239); background: rgb(31,31,31); }"
-                    "QMenuBar:item:selected { color: rgb(108,200,239); background: rgb(31,31,31); }"
-                    "QPushButton { background: rgb(45,45,45); color: rgb(12,175,165); border-width: 1px; padding: 6px; border-style: solid; border-radius: 5px ; border-color: rgb(12,175,165)}"
-                    "QPushButton:hover { background: rgb(31,31,31); }"
-                    "QProgressBar {color: rgb(31,31,31); background: rgb(62,62,62);  border: 1px solid grey; border-radius: 7px; padding: 1px; text-align: center; }" 
-                    "QProgressBar::chunk {color: rgb(31,31,31); background: qlineargradient(x1:0, y1:0, x2: 0.5, y2: 0, x3: 1, y3: 0, stop: 0 rgb(108,200,239), stop: 1 rgb(102,204,204), stop: 2 rgb(12,175,165)); border-radius: 7px; margin: 0px; }"
-                    "#iopLogo:hover { background: rgb(45,45,45); }"
-                    "#labelWalletStatus { border: none }"
-                    "#labelTransactionsStatus { border: none }"
-                    "#lineWatchBalance { border: none }"
-                    "#line { border: none; color: rgb(119,119,119) }"
-                    "#widgetCoinControl { border: none }"
-                    "#checkBoxCoinControlChange { padding-left: 5px }"
-                    "QFrame {border: none} "
-                    "QToolbar {border: none} "
-                    "#frameFeeSelection {border: none}" //inner fee Selection frame, should be borderless!
-                    "#frame {border: none}" //balances frame
-                    "#frame_2 {border: none}" //recent transactions
-                    "#SendCoins {border: none}" //sendcoins top frame
-                    //"#frameFee {border: none}" //sendcoins lower frame
-                    "#frame2 {border: none}" //receive coins
-                );
+    setStyleSheet(
+        //General stylesheet
+        "QFrame { background: rgb(31,31,31,0); alternate-background-color: rgb(31,31,31); border: none}"
+        //".QFrame { border-style: solid; border-width: 1px;  border-color: rgb(54,54,54); }"  
+        "QWidget {background: rgb(45,45,45); color: rgb(12,175,165); }"
+
+        "QLineEdit { background: rgb(31,31,31); border-style: solid; border-width: 1px;  border-color: rgb(54,54,54) }"
+
+        //Menu
+        "QMenu:item:selected { background: rgb(31,31,31)}"
+        "QMenuBar { background-color: rgb(62,62,62); border: solid 1px rgb(31,31,31);}"
+        "QMenuBar:item { padding: 5px; spacing: 0px }"
+        "QMenuBar:item:selected { background: rgb(31,31,31); }"
+
+        //Toolbar
+        "#toolbar {background: rgb(62,62,62); border-left: none; border-right:none; border-top: 2px ridge rgb(45,45,45); border-bottom: 3px solid rgb(45,45,45); padding-top: 0px;}"
+        "#toolbar > QToolButton { background: rgb(62,62,62); border-color: rgb(62,62,62); border-style: solid; border-width: 1px; border-radius: 0px; padding: 6px; padding-left: 9px; padding-right: 9px; margin-bottom: 1px;}"
+        "#toolbar > QToolButton:hover { background: rgb(45,45,45); border-color: rgb(62,62,62); border-top-color: rgb(45,45,45);  border-style: solid; border-width: 1px; border-radius: 0px}"                    
+        "#toolbar > QToolButton:checked { background: rgb(45,45,45); border-color: rgb(45,45,45); border-style: solid; border-width: 1px; border-radius: 0px; border-top-left-radius: 5px; border-top-right-radius: 5px;}"
+        
+        //Buttons (and Icons)
+        "QPushButton { background: rgb(62,62,62); color: rgb(12,175,165); border-color: rgb(31,31,31); border-width: 1px; padding: 6px; border-style: outset; border-radius: 0px ;}"
+        "QPushButton:hover { background: rgb(31,31,31); }"
+
+        //Combo boxes
+        "QComboBox { background: rgb(31,31,31); border-style: outset; border-width: 1px;  border-color: rgb(54,54,54);}"
+        "QAbstractSpinBox { background: rgb(31,31,31); border-style: solid; border-width: 1px;  border-color: rgb(54,54,54); padding: 0px }"
+        "QSpinBox::down-button:off {width: 30px; border: solid }"
+        "QAbstractSpinBox::up-arrow { border: none; padding: 0; width: 7px; height: 7px; image: url(:/icons/up_arrow) }"
+        "QAbstractSpinBox::down-arrow { border: none; padding: 0; width: 7px; height: 7px; image: url(:/icons/down_arrow) }"                    
+        "QAbstractSpinBox::up-arrow:off { border: none; padding: 0; width: 7px; height: 7px; image: url(:/icons/up_arrow_off) }"                    
+        "QAbstractSpinBox::down-arrow:off { border: none; padding: 0; width: 7px; height: 7px; image: url(:/icons/down_arrow_off) }"                    
+        
+        //Table view
+        "QHeaderView { background: rgb(31,31,31)} "
+        "QTableView { border: 1px solid rgb(54,54,54); selection-background-color: rgb(62,62,62); selection-color: rgb(108,200,239); alternate-background: rgb(31,31,31); }"
+        "QTableView::item { border-right: 1px solid rgb(54,54,54); border-bottom: 1px solid rgb(54,54,54);}"                    
+        "RecentRequestsTableModel::item { selection-background: rgb(62,62,62); selection-color: rgb(108,200,239); alternate-background: rgb(31,31,31); }"
+        
+        //Scrollbar
+        "QScrollBar {border: 2px solid rgb(62,62,62); background: rgb(31,31,31); margin: 0px 20px 0 20px;}"
+        "QScrollBar::handle { background: rgb(62,62,62); }"
+        
+        //Progress Bar
+        "QProgressBar {color: rgb(31,31,31); background: rgb(62,62,62);  border: 1px solid grey; border-radius: 7px; padding: 1px; text-align: center; }" 
+        "QProgressBar::chunk {color: rgb(31,31,31); background: qlineargradient(x1:0, y1:0, x2: 0.5, y2: 0, x3: 1, y3: 0, stop: 0 rgb(108,200,239), stop: 1 rgb(102,204,204), stop: 2 rgb(12,175,165)); border-radius: 7px; margin: 0px; }"
+        
+        //Overview logo
+        "#iopLogo:hover { background: rgb(45,45,45); }"
+        
+        //Balance seperator line
+        "#line { border-top: none; border-left: none; border-right: none; border-bottom: 1px; border-style: solid; border-color: rgb(12,175,165) }"
+
+        //Disturbing borders
+        "#labelWalletStatus { border: none }"
+        "#labelTransactionsStatus { border: none }"
+        "#lineWatchBalance { border: none }"
+        "#widgetCoinControl { border: none }"
+        "#frameFeeSelection {border: none}"
+
+        //Optional Borders
+        "#frame { border: none}"            //balances frame
+        "#frame_2 {border: none}"           //recent transactions
+        "#SendCoins {border: none}"         //sendcoins top frame
+        "#frameFee {border: none}"        //sendcoins lower frame
+        "#frame2 {border: none}"            //receive coins
+        );
     }
 
     QString windowTitle = tr(PACKAGE_NAME) + " - ";
@@ -511,12 +531,7 @@ void IoPGUI::createToolBars()
     if(walletFrame)
     {
         QToolBar *toolbar = addToolBar(tr("Tabs toolbar"));
-        QSettings settings;
-        if(settings.value("theme").toString() == "dark")
-        {
-            //Borderless Toolbar
-            toolbar->setStyleSheet("border: none");
-        }
+        toolbar->setObjectName("toolbar");
         toolbar->setMovable(false);
         toolbar->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
         toolbar->addAction(overviewAction);
