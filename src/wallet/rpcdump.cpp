@@ -500,40 +500,52 @@ UniValue importwallet(const JSONRPCRequest& request)
         if (vstr.size() < 2)
             continue;
         CBitcoinSecret vchSecret;
-        if (!vchSecret.SetString(vstr[0]))
-            continue;
-        CKey key = vchSecret.GetKey();
-        CPubKey pubkey = key.GetPubKey();
-        assert(key.VerifyPubKey(pubkey));
-        CKeyID keyid = pubkey.GetID();
-        if (pwallet->HaveKey(keyid)) {
-            LogPrintf("Skipping import of %s (key already present)\n", EncodeDestination(keyid));
-            continue;
-        }
-        int64_t nTime = DecodeDumpTime(vstr[1]);
-        std::string strLabel;
-        bool fLabel = true;
-        for (unsigned int nStr = 2; nStr < vstr.size(); nStr++) {
-            if (boost::algorithm::starts_with(vstr[nStr], "#"))
-                break;
-            if (vstr[nStr] == "change=1")
-                fLabel = false;
-            if (vstr[nStr] == "reserve=1")
-                fLabel = false;
-            if (boost::algorithm::starts_with(vstr[nStr], "label=")) {
-                strLabel = DecodeDumpString(vstr[nStr].substr(6));
-                fLabel = true;
+        if (vchSecret.SetString(vstr[0])) {
+            CKey key = vchSecret.GetKey();
+            CPubKey pubkey = key.GetPubKey();
+            assert(key.VerifyPubKey(pubkey));
+            CKeyID keyid = pubkey.GetID();
+            if (pwallet->HaveKey(keyid)) {
+                LogPrintf("Skipping import of %s (key already present)\n", EncodeDestination(keyid));
+                continue;
             }
+            int64_t nTime = DecodeDumpTime(vstr[1]);
+            std::string strLabel;
+            bool fLabel = true;
+            for (unsigned int nStr = 2; nStr < vstr.size(); nStr++) {
+                if (boost::algorithm::starts_with(vstr[nStr], "#"))
+                    break;
+                if (vstr[nStr] == "change=1")
+                    fLabel = false;
+                if (vstr[nStr] == "reserve=1")
+                    fLabel = false;
+                if (boost::algorithm::starts_with(vstr[nStr], "label=")) {
+                    strLabel = DecodeDumpString(vstr[nStr].substr(6));
+                    fLabel = true;
+                }
+            }
+            LogPrintf("Importing %s...\n", EncodeDestination(keyid));
+            if (!pwallet->AddKeyPubKey(key, pubkey)) {
+                fGood = false;
+                continue;
+            }
+            pwallet->mapKeyMetadata[keyid].nCreateTime = nTime;
+            if (fLabel)
+                pwallet->SetAddressBook(keyid, strLabel, "receive");
+            nTimeBegin = std::min(nTimeBegin, nTime);
+        } else if(IsHex(vstr[0])) {
+           std::vector<unsigned char> vData(ParseHex(vstr[0]));
+           CScript script = CScript(vData.begin(), vData.end());
+           if (pwallet->HaveCScript(script)) {
+               LogPrintf("Skipping import of %s (script already present)\n", vstr[0]);
+               continue;
+           }
+           if(!pwallet->AddCScript(script)) {
+               LogPrintf("Error importing script %s\n", vstr[0]);
+               fGood = false;
+               continue;
+           }
         }
-        LogPrintf("Importing %s...\n", EncodeDestination(keyid));
-        if (!pwallet->AddKeyPubKey(key, pubkey)) {
-            fGood = false;
-            continue;
-        }
-        pwallet->mapKeyMetadata[keyid].nCreateTime = nTime;
-        if (fLabel)
-            pwallet->SetAddressBook(keyid, strLabel, "receive");
-        nTimeBegin = std::min(nTimeBegin, nTime);
     }
     file.close();
     pwallet->ShowProgress("", 100); // hide progress dialog in GUI
@@ -542,7 +554,7 @@ UniValue importwallet(const JSONRPCRequest& request)
     pwallet->MarkDirty();
 
     if (!fGood)
-        throw JSONRPCError(RPC_WALLET_ERROR, "Error adding some keys to wallet");
+        throw JSONRPCError(RPC_WALLET_ERROR, "Error adding some keys/scripts to wallet");
 
     return NullUniValue;
 }
