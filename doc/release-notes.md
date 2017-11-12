@@ -100,6 +100,10 @@ The `share/rpcuser/rpcuser.py` script was renamed to `share/rpcauth/rpcauth.py`.
 used to create `rpcauth` credentials for a JSON-RPC user.
 
 
+- `dumpwallet` now includes hex-encoded scripts from the wallet in the dumpfile, and
+  `importwallet` now imports these scripts, but corresponding addresses may not be added
+  correctly or a manual rescan may be required to find relevant transactions.
+
 Credits
 =======
 
