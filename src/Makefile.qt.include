@@ -97,6 +97,7 @@ QT_MOC_CPP = \
   qt/moc_optionsmodel.cpp \
   qt/moc_overviewpage.cpp \
   qt/moc_paymentserver.cpp \
+  qt/moc_qrcodedialog.cpp \
   qt/moc_qvalidatedlineedit.cpp \
   qt/moc_qvaluecombobox.cpp \
   qt/moc_rpcconsole.cpp \
@@ -308,7 +309,7 @@ if TARGET_WINDOWS
   qt_peercoin_qt_SOURCES += $(PPCOIN_RC)
 endif
 if USE_QRCODE
-  qt_peercoin_qt_SOURCES += qrcodedialog.cpp
+  qt_peercoin_qt_SOURCES += qt/qrcodedialog.cpp
 endif
 qt_peercoin_qt_LDADD = qt/libppcoinqt.a $(LIBPPCOIN_SERVER) 
 if ENABLE_WALLET
