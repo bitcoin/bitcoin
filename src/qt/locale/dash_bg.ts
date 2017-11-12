@@ -1,4 +1,4 @@
-<TS language="bg" version="2.1">
+<TS language="bg" version="2.0">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -168,6 +168,10 @@
         <translation>Смяна на паролата</translation>
     </message>
     <message>
+        <source>Enter the old passphrase and new passphrase to the wallet.</source>
+        <translation>Въведете старата парола и нова парола за портфейла.</translation>
+    </message>
+    <message>
         <source>Confirm wallet encryption</source>
         <translation>Потвърдете на шифрирането на портфейла</translation>
     </message>
@@ -182,10 +186,6 @@
     <message>
         <source>Wallet encrypted</source>
         <translation>Портфейлът е шифриран</translation>
-    </message>
-    <message>
-        <source>Enter the old passphrase and new passphrase to the wallet.</source>
-        <translation>Въведете старата парола и нова парола за портфейла.</translation>
     </message>
     <message>
         <source>Dash Core will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your dashs from being stolen by malware infecting your computer.</source>
@@ -241,6 +241,10 @@
 </context>
 <context>
     <name>BitcoinGUI</name>
+    <message>
+        <source>A fatal error occurred. Dash Core can no longer continue safely and will quit.</source>
+        <translation>Възникна фатална грешка. Dash Core не може да продължи безопасно и ще се изключи.</translation>
+    </message>
     <message>
         <source>Dash Core</source>
         <translation>Dash Ядро</translation>
@@ -320,6 +324,10 @@
     <message>
         <source>&amp;Options...</source>
         <translation>&amp;Опции...</translation>
+    </message>
+    <message>
+        <source>Modify configuration options for Dash Core</source>
+        <translation>Промяна опциите за конфигуриране на Dash Core</translation>
     </message>
     <message>
         <source>&amp;Show / Hide</source>
@@ -422,8 +430,20 @@
         <translation>Покажи опции за възстановяване на портфейла</translation>
     </message>
     <message>
+        <source>Open Wallet &amp;Configuration File</source>
+        <translation>Отвори Портфейл &amp;Конфигурационен файл</translation>
+    </message>
+    <message>
         <source>Open configuration file</source>
         <translation>Отвори конфигурационния файл</translation>
+    </message>
+    <message>
+        <source>Open &amp;Masternode Configuration File</source>
+        <translation>Отвори &amp;Masternode конфигурационен файл</translation>
+    </message>
+    <message>
+        <source>Open Masternode configuration file</source>
+        <translation>Отвори Masternode конфигурационен файл</translation>
     </message>
     <message>
         <source>Show Automatic &amp;Backups</source>
@@ -462,12 +482,16 @@
         <translation>&amp;Опции на командния ред</translation>
     </message>
     <message>
-        <source>Dash Core client</source>
-        <translation>Dash Core клиент</translation>
+        <source>Show the Dash Core help message to get a list with possible Dash Core command-line options</source>
+        <translation>Покажи съобщението за помощ на Dash Core за да получите списък с възможните опции за командния ред на Dash Core</translation>
     </message>
     <message>
-        <source>Synchronizing additional data: %p%</source>
-        <translation>Синхронизиране на допълнителни данни: %p%</translation>
+        <source>&amp;PrivateSend information</source>
+        <translation>&amp;PrivateSend информация</translation>
+    </message>
+    <message>
+        <source>Show the PrivateSend basic information</source>
+        <translation>Показване на базова информация на PrivateSend </translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -489,81 +513,45 @@
         <source>Tabs toolbar</source>
         <translation>Лента с инструменти</translation>
     </message>
+    <message>
+        <source>Dash Core client</source>
+        <translation>Dash Core клиент</translation>
+    </message>
     <message numerus="yes">
         <source>%n active connection(s) to Dash network</source>
         <translation><numerusform>%n активни връзки към Dash мрежата</numerusform><numerusform>%n активни връзки към Dash мрежата</numerusform></translation>
+    </message>
+    <message>
+        <source>Network activity disabled</source>
+        <translation>Мрежова активност изключена</translation>
+    </message>
+    <message>
+        <source>Syncing Headers (%1%)...</source>
+        <translation>Синхронизиране на Headers (%1%)...</translation>
     </message>
     <message>
         <source>Synchronizing with network...</source>
         <translation>Синхронизиране с мрежата...</translation>
     </message>
     <message>
-        <source>Importing blocks from disk...</source>
-        <translation>Въвеждат се блокове от диска...</translation>
+        <source>Indexing blocks on disk...</source>
+        <translation>Индексиране блоковете на диска ...</translation>
+    </message>
+    <message>
+        <source>Processing blocks on disk...</source>
+        <translation>Обработване блоковете на диска...</translation>
     </message>
     <message>
         <source>Reindexing blocks on disk...</source>
         <translation>Преиндексиране на блокове на диска...</translation>
     </message>
     <message>
-        <source>No block source available...</source>
-        <translation>Няма източник на блокове...</translation>
-    </message>
-    <message>
-        <source>Up to date</source>
-        <translation>Синхронизиран</translation>
-    </message>
-    <message numerus="yes">
-        <source>%n hour(s)</source>
-        <translation><numerusform>%n часа</numerusform><numerusform>%n часа</numerusform></translation>
-    </message>
-    <message>
-        <source>Modify configuration options for Dash Core</source>
-        <translation>Промяна опциите за конфигуриране на Dash Core</translation>
-    </message>
-    <message>
-        <source>Open Wallet &amp;Configuration File</source>
-        <translation>Отвори Портфейл &amp;Конфигурационен файл</translation>
-    </message>
-    <message>
-        <source>Open &amp;Masternode Configuration File</source>
-        <translation>Отвори &amp;Masternode конфигурационен файл</translation>
-    </message>
-    <message>
-        <source>Open Masternode configuration file</source>
-        <translation>Отвори Masternode конфигурационен файл</translation>
-    </message>
-    <message>
-        <source>Show the Dash Core help message to get a list with possible Dash Core command-line options</source>
-        <translation>Покажи съобщението за помощ на Dash Core за да получите списък с възможните опции за командния ред на Dash Core</translation>
-    </message>
-    <message>
-        <source>&amp;PrivateSend information</source>
-        <translation>&amp;PrivateSend информация</translation>
-    </message>
-    <message>
-        <source>Show the PrivateSend basic information</source>
-        <translation>Показване на базова информация на PrivateSend </translation>
+        <source>Connecting to peers...</source>
+        <translation>Свързване към пиъри...</translation>
     </message>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
         <translation><numerusform>Обработени %n блок(а) от историята на транзакциите.</numerusform><numerusform>Обработени %n блока от историята на транзакциите.</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n day(s)</source>
-        <translation><numerusform>%n дни</numerusform><numerusform>%n дни</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n week(s)</source>
-        <translation><numerusform>%n седмици</numerusform><numerusform>%n седмици</numerusform></translation>
-    </message>
-    <message>
-        <source>%1 and %2</source>
-        <translation>%1 и %2</translation>
-    </message>
-    <message numerus="yes">
-        <source>%n year(s)</source>
-        <translation><numerusform>%n години</numerusform><numerusform>%n години</numerusform></translation>
     </message>
     <message>
         <source>%1 behind</source>
@@ -580,6 +568,14 @@
     <message>
         <source>Transactions after this will not yet be visible.</source>
         <translation>Транзакции след това, все още няма да се виждат.</translation>
+    </message>
+    <message>
+        <source>Up to date</source>
+        <translation>Синхронизиран</translation>
+    </message>
+    <message>
+        <source>Synchronizing additional data: %p%</source>
+        <translation>Синхронизиране на допълнителни данни: %p%</translation>
     </message>
     <message>
         <source>Error</source>
@@ -632,12 +628,20 @@
         <translation>Входяща транзакция</translation>
     </message>
     <message>
-        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt; for mixing only</source>
-        <translation>Портфеилът е &lt;b&gt;криптиран&lt;/b&gt; и в момента &lt;b&gt;е отключен&lt;/b&gt; само за миксиране</translation>
+        <source>HD key generation is &lt;b&gt;enabled&lt;/b&gt;</source>
+        <translation>HD ключ генератора е &lt;b&gt;включен&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <source>HD key generation is &lt;b&gt;disabled&lt;/b&gt;</source>
+        <translation>HD ключ генератора е &lt;b&gt;изключен&lt;/b&gt;</translation>
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
         <translation>Портфейлът е &lt;b&gt;криптиран&lt;/b&gt; и в момента &lt;b&gt;отключен&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt; for mixing only</source>
+        <translation>Портфеилът е &lt;b&gt;криптиран&lt;/b&gt; и в момента &lt;b&gt;е отключен&lt;/b&gt; само за миксиране</translation>
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
@@ -668,10 +672,6 @@
     <message>
         <source>Amount:</source>
         <translation>Сума:</translation>
-    </message>
-    <message>
-        <source>Priority:</source>
-        <translation>Приоритет:</translation>
     </message>
     <message>
         <source>Fee:</source>
@@ -742,10 +742,6 @@
         <translation>Потвърдени</translation>
     </message>
     <message>
-        <source>Priority</source>
-        <translation>Приоритет</translation>
-    </message>
-    <message>
         <source>Copy address</source>
         <translation>Копирай адрес</translation>
     </message>
@@ -786,10 +782,6 @@
         <translation>Копирай байтовете</translation>
     </message>
     <message>
-        <source>Copy priority</source>
-        <translation>Копирай приоритета</translation>
-    </message>
-    <message>
         <source>Copy dust</source>
         <translation>Копирай остатъка</translation>
     </message>
@@ -806,68 +798,8 @@
         <translation>Избран е не анонимизиран вход. &lt;b&gt;PrivateSend ще бъде изключен.&lt;/b&gt;&lt;br&gt;&lt;br&gt;Ако все още желаете да използвате PrivateSend, моля отмаркирайте всички не анонимизирани входове и след това изберете PrivateSend опцията отново.</translation>
     </message>
     <message>
-        <source>highest</source>
-        <translation>най-висок</translation>
-    </message>
-    <message>
-        <source>higher</source>
-        <translation>по-висок</translation>
-    </message>
-    <message>
-        <source>high</source>
-        <translation>висок</translation>
-    </message>
-    <message>
-        <source>medium-high</source>
-        <translation>средно-висок</translation>
-    </message>
-    <message>
-        <source>This label turns red if the transaction size is greater than 1000 bytes.</source>
-        <translation>Този етикет  става червен, ако размера на транзакцията е повече от 1000 байта.</translation>
-    </message>
-    <message>
-        <source>This label turns red if the priority is smaller than "medium".</source>
-        <translation>Този етикет става червен ако приоритета е по-малък от "среден".</translation>
-    </message>
-    <message>
-        <source>This label turns red if any recipient receives an amount smaller than %1.</source>
-        <translation>Този етикет става червен, ако всеки получател получи количество по малко от %1.</translation>
-    </message>
-    <message>
-        <source>Can vary +/- %1 duff(s) per input.</source>
-        <translation>Може да варира +/- %1 duff(s) за вход.</translation>
-    </message>
-    <message>
-        <source>n/a</source>
-        <translation>няма такъв</translation>
-    </message>
-    <message>
-        <source>medium</source>
-        <translation>среден</translation>
-    </message>
-    <message>
-        <source>low-medium</source>
-        <translation>средно-нисък</translation>
-    </message>
-    <message>
-        <source>low</source>
-        <translation>нисък</translation>
-    </message>
-    <message>
-        <source>lower</source>
-        <translation>по-нисък</translation>
-    </message>
-    <message>
-        <source>lowest</source>
-        <translation>най-нисък</translation>
-    </message>
-    <message>
         <source>(%1 locked)</source>
         <translation>(%1 заключен)</translation>
-    </message>
-    <message>
-        <source>none</source>
-        <translation>липсва</translation>
     </message>
     <message>
         <source>yes</source>
@@ -878,16 +810,12 @@
         <translation>не</translation>
     </message>
     <message>
-        <source>This means a fee of at least %1 per kB is required.</source>
-        <translation>Това означава, че е нужна такса поне %1 за кБ.</translation>
+        <source>This label turns red if any recipient receives an amount smaller than the current dust threshold.</source>
+        <translation>Този етикет става червен, ако получателят получи сума, по-малка от прага за незначителен остатък.</translation>
     </message>
     <message>
-        <source>Can vary +/- 1 byte per input.</source>
-        <translation>Може да варира +/- 1 байта за вход.</translation>
-    </message>
-    <message>
-        <source>Transactions with higher priority are more likely to get included into a block.</source>
-        <translation>Транзакции с по-висок приоритет е по-вероятно да бъдат включени в блок.</translation>
+        <source>Can vary +/- %1 duff(s) per input.</source>
+        <translation>Може да варира +/- %1 duff(s) за вход.</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -900,6 +828,10 @@
     <message>
         <source>(change)</source>
         <translation>(ресто)</translation>
+    </message>
+    <message>
+        <source>n/a</source>
+        <translation>няма такъв</translation>
     </message>
 </context>
 <context>
@@ -1086,22 +1018,6 @@
         <translation>Изберете директория за данни при стартиране (по подразбиране: %u)</translation>
     </message>
     <message>
-        <source>Show splash screen on startup (default: %u)</source>
-        <translation>Покажи начален екран при стартиране (по подразбиране: %u)</translation>
-    </message>
-    <message>
-        <source>Reset all settings changes made over the GUI</source>
-        <translation>Нулиране на всички настройки направени чрез GUI</translation>
-    </message>
-    <message>
-        <source>PrivateSend information</source>
-        <translation>PrivateSend информация</translation>
-    </message>
-    <message>
-        <source>&lt;h3&gt;PrivateSend Basics&lt;/h3&gt; PrivateSend gives you true financial privacy by obscuring the origins of your funds. All the Dash in your wallet is comprised of different "inputs" which you can think of as separate, discrete coins.&lt;br&gt; PrivateSend uses an innovative process to mix your inputs with the inputs of two other people, without having your coins ever leave your wallet. You retain control of your money at all times..&lt;hr&gt; &lt;b&gt;The PrivateSend process works like this:&lt;/b&gt;&lt;ol type="1"&gt; &lt;li&gt;PrivateSend begins by breaking your transaction inputs down into standard denominations. These denominations are 0.01 DASH, 0.1 DASH, 1 DASH and 10 DASH -- sort of like the paper money you use every day.&lt;/li&gt; &lt;li&gt;Your wallet then sends requests to specially configured software nodes on the network, called "masternodes." These masternodes are informed then that you are interested in mixing a certain denomination. No identifiable information is sent to the masternodes, so they never know "who" you are.&lt;/li&gt; &lt;li&gt;When two other people send similar messages, indicating that they wish to mix the same denomination, a mixing session begins. The masternode mixes up the inputs and instructs all three users' wallets to pay the now-transformed input back to themselves. Your wallet pays that denomination directly to itself, but in a different address (called a change address).&lt;/li&gt; &lt;li&gt;In order to fully obscure your funds, your wallet must repeat this process a number of times with each denomination. Each time the process is completed, it's called a "round." Each round of PrivateSend makes it exponentially more difficult to determine where your funds originated.&lt;/li&gt; &lt;li&gt;This mixing process happens in the background without any intervention on your part. When you wish to make a transaction, your funds will already be anonymized. No additional waiting is required.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;IMPORTANT:&lt;/b&gt; Your wallet only contains 1000 of these "change addresses." Every time a mixing event happens, up to 9 of your addresses are used up. This means those 1000 addresses last for about 100 mixing events. When 900 of them are used, your wallet must create more addresses. It can only do this, however, if you have automatic backups enabled.&lt;br&gt; Consequently, users who have backups disabled will also have PrivateSend disabled. &lt;hr&gt;For more info see &lt;a href="https://dashpay.atlassian.net/wiki/display/DOC/PrivateSend"&gt;https://dashpay.atlassian.net/wiki/display/DOC/PrivateSend&lt;/a&gt;         </source>
-        <translation>&lt;h3&gt;PrivateSend основни понятия&lt;/h3&gt; PrivateSend ви дава истинска финансова независимост чрез скриване произхода на средствата ви. Всички Dash монети в портфейла ви са съставени от различни "входове" които можете да приемете като отделни дискретни монети&lt;br&gt; PrivateSend използва иновативен процес като смесва вашите входове с входовете на други двама души без монетите да напускат изобщо портфейла ви. Имате пълен контрол върху парите си през цялото време. &lt;hr&gt; &lt;b&gt; PrivateSend процесът работи по следния начин:&lt;/b&gt;&lt;ol type="1"&gt; &lt;li&gt;PrivateSend започва чрез разделяне на транзакцията ви до стандартни деноминации. Тези деноминации са 0.01 DASH, 0.1 DASH, 1 DASH и 10 DASH --подобно на стандартните пари, които ползваме ежедневно.&lt;/li&gt; &lt;li&gt;Вашия портфейл изпраща запитване към специално конфигурираните софтуерни възли в мрежата, наречени "masternodes." Тези masternodes са информирани, че се интересувате от смесване на определена деноминация. Никаква идентификационна информация не се изпраща към   masternodes, така, че те никога не знаят "кой" сте.&lt;/li&gt; &lt;li&gt;Когато други двама души изпратят подобни съобщения, обозначаващи, че искат да смесят същата деноминация, смесващата сесия започва. Masternode смесват входовете и инструктират портфейлите на тримата потребители да платят новотрансформираните входове обратно към притежателите им. Вашият портфейл плаща деноминацията директно на себе си, но с различен адрес (наричан сменен адрес).  &lt;/li&gt; &lt;li&gt;С цел напълно скриване на доходите ви, вашият портфейл трябва да повтори този процес няколко пъти във всяка деноминация.  Всеки път завършеният процес се нарича "цикъл." Всеки цикъл на PrivateSend прави откриването на първоначалния източник на вашите средства напълно непроследим.&lt;/li&gt; &lt;li&gt;Този смесващ процес се случва като процес на заден фон без никаква намеса от ваша страна. Когато искате да направите транзакция, вашите средства са винаги анонимни. Не е необходимо допълнително изчакване. &lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;ВАЖНО:&lt;/b&gt; Вашият портфейл съдържа само 1000 от тези "сменяеми адреси". Всеки път когато се случва смесването до 9 от вашите адреси се ползват.  Това означава, че тези 1000 адреси се миксират в около 100 смесващи събития. Когато 900 се използват, вашия портфейл трябва да създаде повече адреси. Това може да стане само ако имате автоматично архивиране.&lt;br&gt; Следователно, потребителите, на които е изключено автоматичното архивиране, нямат и  PrivateSend включено. &lt;hr&gt;За повече информация вижте&lt;a href="https://dashpay.atlassian.net/wiki/display/DOC/PrivateSend"&gt;https://dashpay.atlassian.net/wiki/display/DOC/PrivateSend&lt;/a&gt;         </translation>
-    </message>
-    <message>
         <source>Set language, for example "de_DE" (default: system locale)</source>
         <translation>Задаване на език, например "de_DE" (по подразбиране: какъвто е от системата)</translation>
     </message>
@@ -1112,6 +1028,22 @@
     <message>
         <source>Set SSL root certificates for payment request (default: -system-)</source>
         <translation>Задай SSL основен сертификат при искане за плащане (по подразбиране: -system-)</translation>
+    </message>
+    <message>
+        <source>Show splash screen on startup (default: %u)</source>
+        <translation>Покажи начален екран при стартиране (по подразбиране: %u)</translation>
+    </message>
+    <message>
+        <source>Reset all settings changed in the GUI</source>
+        <translation>Нулиране на всички настройки направени чрез GUI</translation>
+    </message>
+    <message>
+        <source>PrivateSend information</source>
+        <translation>PrivateSend информация</translation>
+    </message>
+    <message>
+        <source>&lt;h3&gt;PrivateSend Basics&lt;/h3&gt; PrivateSend gives you true financial privacy by obscuring the origins of your funds. All the Dash in your wallet is comprised of different "inputs" which you can think of as separate, discrete coins.&lt;br&gt; PrivateSend uses an innovative process to mix your inputs with the inputs of two other people, without having your coins ever leave your wallet. You retain control of your money at all times..&lt;hr&gt; &lt;b&gt;The PrivateSend process works like this:&lt;/b&gt;&lt;ol type="1"&gt; &lt;li&gt;PrivateSend begins by breaking your transaction inputs down into standard denominations. These denominations are 0.01 DASH, 0.1 DASH, 1 DASH and 10 DASH -- sort of like the paper money you use every day.&lt;/li&gt; &lt;li&gt;Your wallet then sends requests to specially configured software nodes on the network, called "masternodes." These masternodes are informed then that you are interested in mixing a certain denomination. No identifiable information is sent to the masternodes, so they never know "who" you are.&lt;/li&gt; &lt;li&gt;When two other people send similar messages, indicating that they wish to mix the same denomination, a mixing session begins. The masternode mixes up the inputs and instructs all three users' wallets to pay the now-transformed input back to themselves. Your wallet pays that denomination directly to itself, but in a different address (called a change address).&lt;/li&gt; &lt;li&gt;In order to fully obscure your funds, your wallet must repeat this process a number of times with each denomination. Each time the process is completed, it's called a "round." Each round of PrivateSend makes it exponentially more difficult to determine where your funds originated.&lt;/li&gt; &lt;li&gt;This mixing process happens in the background without any intervention on your part. When you wish to make a transaction, your funds will already be anonymized. No additional waiting is required.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;IMPORTANT:&lt;/b&gt; Your wallet only contains 1000 of these "change addresses." Every time a mixing event happens, up to 9 of your addresses are used up. This means those 1000 addresses last for about 100 mixing events. When 900 of them are used, your wallet must create more addresses. It can only do this, however, if you have automatic backups enabled.&lt;br&gt; Consequently, users who have backups disabled will also have PrivateSend disabled. &lt;hr&gt;For more info see &lt;a href="https://dashpay.atlassian.net/wiki/display/DOC/PrivateSend"&gt;https://dashpay.atlassian.net/wiki/display/DOC/PrivateSend&lt;/a&gt;         </source>
+        <translation>&lt;h3&gt;PrivateSend основни понятия&lt;/h3&gt; PrivateSend ви дава истинска финансова независимост чрез скриване произхода на средствата ви. Всички Dash монети в портфейла ви са съставени от различни "входове" които можете да приемете като отделни дискретни монети&lt;br&gt; PrivateSend използва иновативен процес като смесва вашите входове с входовете на други двама души без монетите да напускат изобщо портфейла ви. Имате пълен контрол върху парите си през цялото време. &lt;hr&gt; &lt;b&gt; PrivateSend процесът работи по следния начин:&lt;/b&gt;&lt;ol type="1"&gt; &lt;li&gt;PrivateSend започва чрез разделяне на транзакцията ви до стандартни деноминации. Тези деноминации са 0.01 DASH, 0.1 DASH, 1 DASH и 10 DASH --подобно на стандартните пари, които ползваме ежедневно.&lt;/li&gt; &lt;li&gt;Вашия портфейл изпраща запитване към специално конфигурираните софтуерни възли в мрежата, наречени "masternodes." Тези masternodes са информирани, че се интересувате от смесване на определена деноминация. Никаква идентификационна информация не се изпраща към   masternodes, така, че те никога не знаят "кой" сте.&lt;/li&gt; &lt;li&gt;Когато други двама души изпратят подобни съобщения, обозначаващи, че искат да смесят същата деноминация, смесващата сесия започва. Masternode смесват входовете и инструктират портфейлите на тримата потребители да платят новотрансформираните входове обратно към притежателите им. Вашият портфейл плаща деноминацията директно на себе си, но с различен адрес (наричан сменен адрес).  &lt;/li&gt; &lt;li&gt;С цел напълно скриване на доходите ви, вашият портфейл трябва да повтори този процес няколко пъти във всяка деноминация.  Всеки път завършеният процес се нарича "цикъл." Всеки цикъл на PrivateSend прави откриването на първоначалния източник на вашите средства напълно непроследим.&lt;/li&gt; &lt;li&gt;Този смесващ процес се случва като процес на заден фон без никаква намеса от ваша страна. Когато искате да направите транзакция, вашите средства са винаги анонимни. Не е необходимо допълнително изчакване. &lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;ВАЖНО:&lt;/b&gt; Вашият портфейл съдържа само 1000 от тези "сменяеми адреси". Всеки път когато се случва смесването до 9 от вашите адреси се ползват.  Това означава, че тези 1000 адреси се миксират в около 100 смесващи събития. Когато 900 се използват, вашия портфейл трябва да създаде повече адреси. Това може да стане само ако имате автоматично архивиране.&lt;br&gt; Следователно, потребителите, на които е изключено автоматичното архивиране, нямат и  PrivateSend включено. &lt;hr&gt;За повече информация вижте&lt;a href="https://dashpay.atlassian.net/wiki/display/DOC/PrivateSend"&gt;https://dashpay.atlassian.net/wiki/display/DOC/PrivateSend&lt;/a&gt;         </translation>
     </message>
 </context>
 <context>
@@ -1278,6 +1210,61 @@
     <message>
         <source>Are you sure you want to start MISSING masternodes?</source>
         <translation>Сигурен ли сте, че искате стартирането на ЛИПСВАЩИТЕ masternodes? </translation>
+    </message>
+</context>
+<context>
+    <name>ModalOverlay</name>
+    <message>
+        <source>Form</source>
+        <translation>Форма</translation>
+    </message>
+    <message>
+        <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the Dash network, as detailed below.</source>
+        <translation>Скорошните транзакции може да не са видими, поради което салдото на портфейла Ви може да е неправилно. Тази информация ще бъде правилна, след като портфейлът ви е завършил синхронизиране с Dash мрежата, както е описано по-долу.</translation>
+    </message>
+    <message>
+        <source>Attempting to spend Dash that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
+        <translation>Опита да похарчите Dash, които са  от не визуализирани транзакции няма да бъде приет от мрежата.</translation>
+    </message>
+    <message>
+        <source>Number of blocks left</source>
+        <translation>Оставащ брой блокове</translation>
+    </message>
+    <message>
+        <source>Unknown...</source>
+        <translation>Неизвестни...</translation>
+    </message>
+    <message>
+        <source>Last block time</source>
+        <translation>Време на последния блок</translation>
+    </message>
+    <message>
+        <source>Progress</source>
+        <translation>Прогрес</translation>
+    </message>
+    <message>
+        <source>~</source>
+        <translation>~</translation>
+    </message>
+    <message>
+        <source>Progress increase per hour</source>
+        <translation>Увеличаване напредъка за час</translation>
+    </message>
+    <message>
+        <source>calculating...</source>
+        <translation>изчисляване...</translation>
+    </message>
+    <message>
+        <source>Estimated time left until synced</source>
+        <translation>Оставащо време до синхронизиране</translation>
+    </message>
+    <message>
+        <source>Hide</source>
+        <translation>Скрий</translation>
+    </message>
+    <message>
+        <source>Unknown. Syncing Headers (%1)...</source>
+        <translation>Неизвестен. Синхронизиране на Headers (%1) ...</translation>
     </message>
 </context>
 <context>
@@ -1496,6 +1483,14 @@
     <message>
         <source>&amp;Window</source>
         <translation>&amp;Прозорец</translation>
+    </message>
+    <message>
+        <source>&amp;Hide the icon from the system tray.</source>
+        <translation>&amp;Скрии иконата от системният трей.</translation>
+    </message>
+    <message>
+        <source>Hide tray icon</source>
+        <translation>Скрий try иконата</translation>
     </message>
     <message>
         <source>Show only a tray icon after minimizing the window.</source>
@@ -1743,8 +1738,16 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>несинхронизиран</translation>
     </message>
     <message>
-        <source>Disabled</source>
-        <translation>Неактивно</translation>
+        <source>Automatic backups are disabled, no mixing available!</source>
+        <translation>Автоматичното архивиране е изключено, няма миксиране на разположение!</translation>
+    </message>
+    <message>
+        <source>Start Mixing</source>
+        <translation>Стартирай миксиране</translation>
+    </message>
+    <message>
+        <source>Stop Mixing</source>
+        <translation>Спри миксиране</translation>
     </message>
     <message>
         <source>No inputs detected</source>
@@ -1753,6 +1756,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message numerus="yes">
         <source>%n Rounds</source>
         <translation><numerusform>%n Цикли</numerusform><numerusform>%n Цикли</numerusform></translation>
+    </message>
+    <message>
+        <source>Found enough compatible inputs to anonymize %1</source>
+        <translation>Намерени са достатъчно съвместими постъпления за анонимизиране %1</translation>
     </message>
     <message>
         <source>Not enough compatible inputs to anonymize &lt;span style='color:red;'&gt;%1&lt;/span&gt;,&lt;br&gt;will anonymize &lt;span style='color:red;'&gt;%2&lt;/span&gt; instead</source>
@@ -1767,6 +1774,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Деноминирани</translation>
     </message>
     <message>
+        <source>Mixed</source>
+        <translation>Смесени</translation>
+    </message>
+    <message>
         <source>Anonymized</source>
         <translation>Анонимизирани</translation>
     </message>
@@ -1775,28 +1786,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation><numerusform>Деноминирани входове имат %5 от %n цикъла средно</numerusform><numerusform>Деноминирани входове имат %5 от %n цикъла средно</numerusform></translation>
     </message>
     <message>
-        <source>Found enough compatible inputs to anonymize %1</source>
-        <translation>Намерени са достатъчно съвместими постъпления за анонимизиране %1</translation>
-    </message>
-    <message>
-        <source>Automatic backups are disabled, no mixing available!</source>
-        <translation>Автоматичното архивиране е изключено, няма миксиране на разположение!</translation>
-    </message>
-    <message>
-        <source>Start Mixing</source>
-        <translation>Стартирай миксиране</translation>
-    </message>
-    <message>
-        <source>Stop Mixing</source>
-        <translation>Спри миксиране</translation>
-    </message>
-    <message>
-        <source>Mixed</source>
-        <translation>Смесени</translation>
-    </message>
-    <message>
         <source>keys left: %1</source>
         <translation>оставащи ключове: %1</translation>
+    </message>
+    <message>
+        <source>Disabled</source>
+        <translation>Неактивно</translation>
     </message>
     <message>
         <source>Very low number of keys left since last automatic backup!</source>
@@ -1841,6 +1836,10 @@ https://www.transifex.com/projects/p/dash/</translation>
 </translation>
     </message>
     <message>
+        <source>N/A</source>
+        <translation>N/A</translation>
+    </message>
+    <message>
         <source>PrivateSend was successfully reset.</source>
         <translation>PrivateSend беше успешно нулиран.</translation>
     </message>
@@ -1855,10 +1854,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Wallet is locked and user declined to unlock. Disabling PrivateSend.</source>
         <translation>Портфейлът е заключен и потребителя отказва отключване. PrivateSend е деактивиран.</translation>
-    </message>
-    <message>
-        <source>N/A</source>
-        <translation>N/A</translation>
     </message>
 </context>
 <context>
@@ -1880,20 +1875,16 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Неправилен URL на заявка за плащане: %1</translation>
     </message>
     <message>
-        <source>Payment request file handling</source>
-        <translation>Обработка на файл със заявка за плащане</translation>
-    </message>
-    <message>
-        <source>Payment request expired.</source>
-        <translation>Заявката за плащане е изтекла</translation>
-    </message>
-    <message>
         <source>Invalid payment address %1</source>
         <translation>Невалиден адрес за плащане %1</translation>
     </message>
     <message>
         <source>URI cannot be parsed! This can be caused by an invalid Dash address or malformed URI parameters.</source>
         <translation>Грешка при анализ на URI! Това може да е следствие от неправилен Dash адрес или неправилно зададени URI параметри.</translation>
+    </message>
+    <message>
+        <source>Payment request file handling</source>
+        <translation>Обработка на файл със заявка за плащане</translation>
     </message>
     <message>
         <source>Payment request file cannot be read! This can be caused by an invalid payment request file.</source>
@@ -1906,6 +1897,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Payment request network doesn't match client network.</source>
         <translation>Заявка за плащане на мрежата не съвпада с клиентската мрежа.</translation>
+    </message>
+    <message>
+        <source>Payment request expired.</source>
+        <translation>Заявката за плащане е изтекла</translation>
     </message>
     <message>
         <source>Payment request is not initialized.</source>
@@ -1955,20 +1950,48 @@ https://www.transifex.com/projects/p/dash/</translation>
 <context>
     <name>PeerTableModel</name>
     <message>
-        <source>User Agent</source>
-        <translation>Потребителски агент</translation>
-    </message>
-    <message>
-        <source>Ping Time</source>
-        <translation>Време пинг</translation>
+        <source>NodeId</source>
+        <translation>Node Id</translation>
     </message>
     <message>
         <source>Node/Service</source>
         <translation>Възел/Услуга</translation>
     </message>
+    <message>
+        <source>User Agent</source>
+        <translation>Потребителски агент</translation>
+    </message>
+    <message>
+        <source>Ping</source>
+        <translation>Пинг</translation>
+    </message>
 </context>
 <context>
     <name>QObject</name>
+    <message>
+        <source>Dash Core</source>
+        <translation>Dash Core</translation>
+    </message>
+    <message>
+        <source>Error: Specified data directory "%1" does not exist.</source>
+        <translation>Грешка: Указаната папка с данни "%1" не съществува.</translation>
+    </message>
+    <message>
+        <source>Error: Cannot parse configuration file: %1. Only use key=value syntax.</source>
+        <translation>Грешка: Не може да се анализира конфигурационния файл: %1. Използвайте само синтаксис key=value .</translation>
+    </message>
+    <message>
+        <source>Error: %1</source>
+        <translation>Грешка: %1</translation>
+    </message>
+    <message>
+        <source>Error reading masternode configuration file: %1</source>
+        <translation>Грешка при четене конфигурационният файл на masternode : %1</translation>
+    </message>
+    <message>
+        <source>Dash Core didn't yet exit safely...</source>
+        <translation>Dash Core все още не е приключило ...</translation>
+    </message>
     <message>
         <source>Amount</source>
         <translation>Сума</translation>
@@ -2004,6 +2027,38 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>%1 ms</source>
         <translation>%1 милисекунди</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n second(s)</source>
+        <translation><numerusform>%n секунди</numerusform><numerusform>%n секунди</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n minute(s)</source>
+        <translation><numerusform>%n минути</numerusform><numerusform>%n минути</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n hour(s)</source>
+        <translation><numerusform>%n часа</numerusform><numerusform>%n часа</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n day(s)</source>
+        <translation><numerusform>%n дни</numerusform><numerusform>%n days</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n week(s)</source>
+        <translation><numerusform>%n седмици</numerusform><numerusform>%n weeks</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n year(s)</source>
+        <translation><numerusform>%n години</numerusform><numerusform>%n years</numerusform></translation>
+    </message>
+    <message>
+        <source>%1 and %2</source>
+        <translation>%1 и %2</translation>
+    </message>
+    <message>
+        <source>unknown</source>
+        <translation>неизвестен</translation>
     </message>
 </context>
 <context>
@@ -2074,10 +2129,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Debug log file</source>
         <translation>Лог-файл за откриване на грешки</translation>
-    </message>
-    <message>
-        <source>Build date</source>
-        <translation>Дата на създаване</translation>
     </message>
     <message>
         <source>Current number of blocks</source>
@@ -2188,6 +2239,18 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Потребителски агент</translation>
     </message>
     <message>
+        <source>Datadir</source>
+        <translation>Datadir</translation>
+    </message>
+    <message>
+        <source>Decrease font size</source>
+        <translation>Намаляване размера на шрифта</translation>
+    </message>
+    <message>
+        <source>Increase font size</source>
+        <translation>Увеличаване размера на шрифта</translation>
+    </message>
+    <message>
         <source>Services</source>
         <translation>Услуги</translation>
     </message>
@@ -2218,6 +2281,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Ping Wait</source>
         <translation>Изчакване пинг</translation>
+    </message>
+    <message>
+        <source>Min Ping</source>
+        <translation>Min Ping</translation>
     </message>
     <message>
         <source>Time Offset</source>
@@ -2284,20 +2351,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>-reindex: Възстановява блок индекс веригата от настоящия blk000??.dat файл.</translation>
     </message>
     <message>
-        <source>In:</source>
-        <translation>Вход:</translation>
+        <source>&amp;Disconnect</source>
+        <translation>&amp;Прекъсване</translation>
     </message>
     <message>
-        <source>Out:</source>
-        <translation>Изход:</translation>
-    </message>
-    <message>
-        <source>&amp;Disconnect Node</source>
-        <translation>&amp;Прекъсване Node</translation>
-    </message>
-    <message>
-        <source>Ban Node for</source>
-        <translation>Бан на Node за</translation>
+        <source>Ban for</source>
+        <translation>Бан на за</translation>
     </message>
     <message>
         <source>1 &amp;hour</source>
@@ -2316,8 +2375,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>1 &amp;година</translation>
     </message>
     <message>
-        <source>&amp;Unban Node</source>
-        <translation>&amp;Премахване на бан за Node</translation>
+        <source>&amp;Unban</source>
+        <translation>&amp;Премахване на бан</translation>
     </message>
     <message>
         <source>Welcome to the Dash Core RPC console.</source>
@@ -2330,6 +2389,18 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Type &lt;b&gt;help&lt;/b&gt; for an overview of available commands.</source>
         <translation>Напишете &lt;b&gt;help&lt;/b&gt;, за да прегледате възможните команди.</translation>
+    </message>
+    <message>
+        <source>In:</source>
+        <translation>Вход:</translation>
+    </message>
+    <message>
+        <source>Out:</source>
+        <translation>Изход:</translation>
+    </message>
+    <message>
+        <source>Network activity disabled</source>
+        <translation>Мрежова активност изключена</translation>
     </message>
     <message>
         <source>%1 B</source>
@@ -2459,6 +2530,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Премахване</translation>
     </message>
     <message>
+        <source>Copy URI</source>
+        <translation>Копирай URI</translation>
+    </message>
+    <message>
         <source>Copy label</source>
         <translation>Копирай наименование</translation>
     </message>
@@ -2522,6 +2597,14 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>InstantSend</translation>
     </message>
     <message>
+        <source>Yes</source>
+        <translation>Да</translation>
+    </message>
+    <message>
+        <source>No</source>
+        <translation>Не</translation>
+    </message>
+    <message>
         <source>Resulting URI too long, try to reduce the text for label / message.</source>
         <translation>Получения URI е твърде дълъг, опитайте да съкратите текста на наименованието / съобщението.</translation>
     </message>
@@ -2545,10 +2628,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Съобщение</translation>
     </message>
     <message>
-        <source>Amount</source>
-        <translation>Сума</translation>
-    </message>
-    <message>
         <source>(no label)</source>
         <translation>(няма наименование)</translation>
     </message>
@@ -2559,6 +2638,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>(no amount)</source>
         <translation>(липсва сума)</translation>
+    </message>
+    <message>
+        <source>Amount</source>
+        <translation>Сума</translation>
     </message>
 </context>
 <context>
@@ -2596,24 +2679,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Сума:</translation>
     </message>
     <message>
-        <source>Priority:</source>
-        <translation>Приоритет:</translation>
-    </message>
-    <message>
-        <source>medium</source>
-        <translation>среден</translation>
-    </message>
-    <message>
         <source>Fee:</source>
         <translation>Такса:</translation>
     </message>
     <message>
         <source>Dust:</source>
         <translation>Незначителен остатък:</translation>
-    </message>
-    <message>
-        <source>no</source>
-        <translation>не</translation>
     </message>
     <message>
         <source>After Fee:</source>
@@ -2760,10 +2831,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Копирай байтовете</translation>
     </message>
     <message>
-        <source>Copy priority</source>
-        <translation>Копирай приоритета</translation>
-    </message>
-    <message>
         <source>Copy dust</source>
         <translation>Копирай остатъка</translation>
     </message>
@@ -2792,22 +2859,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>и InstantSend</translation>
     </message>
     <message>
-        <source>Duplicate address found: addresses should only be used once each.</source>
-        <translation>Намерен е дублиран адрес:адресите трябва да се използват по веднъж всеки.</translation>
-    </message>
-    <message>
-        <source>A fee higher than %1 is considered an absurdly high fee.</source>
-        <translation>Такса по-висока от %1 се смята за абсурдно висока.</translation>
-    </message>
-    <message>
-        <source>Payment request expired.</source>
-        <translation>Заявката за плащане е изтекла</translation>
-    </message>
-    <message>
-        <source>Pay only the required fee of %1</source>
-        <translation>Плати само задължителната такса от %1</translation>
-    </message>
-    <message>
         <source>%1 to %2</source>
         <translation>%1 до %2</translation>
     </message>
@@ -2824,16 +2875,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Обща сума = &lt;b&gt;%1&lt;/b&gt;&lt;br /&gt;= %2</translation>
     </message>
     <message>
-        <source>Confirm send coins</source>
-        <translation>Потвърди изпращането на монетите</translation>
-    </message>
-    <message numerus="yes">
-        <source>Estimated to begin confirmation within %n block(s).</source>
-        <translation><numerusform>Очаква се да започне потвърждение в %n блока.</numerusform><numerusform>Очаква се да започне потвърждение в %n блока.</numerusform></translation>
-    </message>
-    <message>
         <source>&lt;b&gt;(%1 of %2 entries displayed)&lt;/b&gt;</source>
         <translation>&lt;b&gt;(%1 of %2 показани записи)&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <source>Confirm send coins</source>
+        <translation>Потвърди изпращането на монетите</translation>
     </message>
     <message>
         <source>The recipient address is not valid. Please recheck.</source>
@@ -2852,12 +2899,32 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Общият сбор надхвърля вашия баланс, когато се добави  %1 такса за операцията.</translation>
     </message>
     <message>
+        <source>Duplicate address found: addresses should only be used once each.</source>
+        <translation>Намерен е дублиран адрес:адресите трябва да се използват по веднъж всеки.</translation>
+    </message>
+    <message>
         <source>Transaction creation failed!</source>
         <translation>Грешка при създаването на транзакция!</translation>
     </message>
     <message>
         <source>The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
         <translation>Транзакцията беше отхвърлена! Това може да се случи, ако някои от монетите в портфейла ви, вече са изразходвани, например ако се използва копие от wallet.dat и монетите са изразходвани в копието, но не са отбелязани като изразходвани тук.</translation>
+    </message>
+    <message>
+        <source>A fee higher than %1 is considered an absurdly high fee.</source>
+        <translation>Такса по-висока от %1 се смята за абсурдно висока.</translation>
+    </message>
+    <message>
+        <source>Payment request expired.</source>
+        <translation>Заявката за плащане е изтекла</translation>
+    </message>
+    <message>
+        <source>Pay only the required fee of %1</source>
+        <translation>Плати само задължителната такса от %1</translation>
+    </message>
+    <message numerus="yes">
+        <source>Estimated to begin confirmation within %n block(s).</source>
+        <translation><numerusform>Очаква се да започне потвърждение в %n блока.</numerusform><numerusform>Очаква се да започне потвърждение в %n блока.</numerusform></translation>
     </message>
     <message>
         <source>Warning: Invalid Dash address</source>
@@ -3108,6 +3175,10 @@ https://www.transifex.com/projects/p/dash/</translation>
 <context>
     <name>SplashScreen</name>
     <message>
+        <source>[testnet]</source>
+        <translation>[testnet]</translation>
+    </message>
+    <message>
         <source>Dash Core</source>
         <translation>Dash Ядро</translation>
     </message>
@@ -3122,10 +3193,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>The Dash Core developers</source>
         <translation>Водещи Dash разработчици</translation>
-    </message>
-    <message>
-        <source>[testnet]</source>
-        <translation>[testnet]</translation>
     </message>
 </context>
 <context>
@@ -3152,6 +3219,22 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>%1/offline</source>
         <translation>%1/офлайн</translation>
+    </message>
+    <message>
+        <source>0/unconfirmed, %1</source>
+        <translation>0/непотвърдени, %1</translation>
+    </message>
+    <message>
+        <source>in memory pool</source>
+        <translation>В memory pool</translation>
+    </message>
+    <message>
+        <source>not in memory pool</source>
+        <translation>Извън memory pool</translation>
+    </message>
+    <message>
+        <source>abandoned</source>
+        <translation>изоставен</translation>
     </message>
     <message>
         <source>%1/unconfirmed</source>
@@ -3266,6 +3349,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>ID на транзакцията</translation>
     </message>
     <message>
+        <source>Transaction total size</source>
+        <translation>Краен размер на транзакцията</translation>
+    </message>
+    <message>
         <source>Merchant</source>
         <translation>Търговец</translation>
     </message>
@@ -3340,6 +3427,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Непотвърдено</translation>
     </message>
     <message>
+        <source>Abandoned</source>
+        <translation>Изоставен</translation>
+    </message>
+    <message>
         <source>Confirming (%1 of %2 recommended confirmations)</source>
         <translation>Потвърждаване (%1 от %2 препоръчвани потвърждения)</translation>
     </message>
@@ -3376,6 +3467,18 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Получени чрез PrivateSend</translation>
     </message>
     <message>
+        <source>Sent to</source>
+        <translation>Изпратени на</translation>
+    </message>
+    <message>
+        <source>Payment to yourself</source>
+        <translation>Плащане към себе си</translation>
+    </message>
+    <message>
+        <source>Mined</source>
+        <translation>Емитирани</translation>
+    </message>
+    <message>
         <source>PrivateSend Denominate</source>
         <translation>PrivateSend деноминиране</translation>
     </message>
@@ -3396,28 +3499,16 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>PrivateSend</translation>
     </message>
     <message>
-        <source>User-defined intent/purpose of the transaction.</source>
-        <translation>Дефинирани от потребителя намерение/цели на сделката.</translation>
-    </message>
-    <message>
-        <source>Sent to</source>
-        <translation>Изпратени на</translation>
-    </message>
-    <message>
-        <source>Payment to yourself</source>
-        <translation>Плащане към себе си</translation>
-    </message>
-    <message>
-        <source>Mined</source>
-        <translation>Емитирани</translation>
-    </message>
-    <message>
         <source>watch-only</source>
         <translation>наблюдавани</translation>
     </message>
     <message>
         <source>(n/a)</source>
         <translation>(n/a)</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(без наименование)</translation>
     </message>
     <message>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
@@ -3434,6 +3525,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Whether or not a watch-only address is involved in this transaction.</source>
         <translation>Дали има или не наблюдаван/watch-only адрес участващ в тази транзакция.</translation>
+    </message>
+    <message>
+        <source>User-defined intent/purpose of the transaction.</source>
+        <translation>Дефинирани от потребителя намерение/цели на сделката.</translation>
     </message>
     <message>
         <source>Amount removed from or added to balance.</source>
@@ -3523,6 +3618,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Минимална сума</translation>
     </message>
     <message>
+        <source>Abandon transaction</source>
+        <translation>Изоставена транзакция</translation>
+    </message>
+    <message>
         <source>Copy address</source>
         <translation>Копирай адрес</translation>
     </message>
@@ -3541,6 +3640,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Copy raw transaction</source>
         <translation>Копира необработена транзакция</translation>
+    </message>
+    <message>
+        <source>Copy full transaction details</source>
+        <translation>Копирай всички детайли за транзакцията</translation>
     </message>
     <message>
         <source>Edit label</source>
@@ -3770,10 +3873,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Опции за създаване на блок:</translation>
     </message>
     <message>
-        <source>Can't denominate: no compatible inputs left.</source>
-        <translation>Не може да бъде деноминирано: няма останали съвместими входящи средства.</translation>
-    </message>
-    <message>
         <source>Cannot downgrade wallet</source>
         <translation>Връщане към по-стара версия на портфейла е невъзможно</translation>
     </message>
@@ -3918,6 +4017,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Разпространява се под MIT софтуерен лиценз,вижте придружаващият файл COPYING или&lt;http://www.opensource.org/licenses/mit-license.php&gt;.</translation>
     </message>
     <message>
+        <source>Error loading %s: You can't enable HD on a already existing non-HD wallet</source>
+        <translation>Грешка при зареждане %s: Не може да включите HD на вече съществуващ не-HD портфейл</translation>
+    </message>
+    <message>
         <source>Found unconfirmed denominated outputs, will wait till they confirm to continue.</source>
         <translation>Намерени са непотвърдени деноминирани средства, трябва да изчакате потвърждаването им за да продължите</translation>
     </message>
@@ -3930,12 +4033,20 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Ако paytxfee не е зададен,включва достатъчно такса, така транзакциите започват потвърждение средно в рамките n блокове(по подразбиране: %u)</translation>
     </message>
     <message>
+        <source>If this block is in the chain assume that it and its ancestors are valid and potentially skip their script verification (0 to verify all, default: %s, testnet: %s)</source>
+        <translation>Ако този блок е във веригата приемете, че той и предишните са валидни и евентуално пропуснете този скрипт за проверка (0 за проверка на всичко, по подразбиране: %s, testnet: %s)</translation>
+    </message>
+    <message>
         <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s' (must be at least the minrelay fee of %s to prevent stuck transactions)</source>
         <translation>Невалидна сума за -maxtxfee=&lt;amount&gt;: '%s' (трябва да бъде най-малко от %s за да се избегне забиване на транзакциите)</translation>
     </message>
     <message>
         <source>Maintain a full transaction index, used by the getrawtransaction rpc call (default: %u)</source>
         <translation>Поддържай пълен списък с транзакциите, използван от getrawtransaction rpc повикването (по подразбиране: %u)</translation>
+    </message>
+    <message>
+        <source>Make sure to encrypt your wallet and delete all non-encrypted backups after you verified that wallet works!</source>
+        <translation>Уверете се, че шифровате портфейла си и изтривате всички некриптирани архиви, след като сте проверили, че този портфейл работи!</translation>
     </message>
     <message>
         <source>Maximum size of data in data carrier transactions we relay and mine (default: %u)</source>
@@ -3966,8 +4077,24 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Не са намерени достатъчно  средства за тази транзакция, които не са равни на 1000 DASH.</translation>
     </message>
     <message>
+        <source>Use hierarchical deterministic key generation (HD) after bip39/bip44. Only has effect during wallet creation/first start</source>
+        <translation>Използвайте йерархично детерминиращо генериране на ключ (HD) след bip39 / bip44. Има ефект само по време на създаване на портфейла / първия старт</translation>
+    </message>
+    <message>
         <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: %s)</source>
         <translation>Използва отделен SOCKS5 прокси, за достигне на пиъри чрез Tor скрити услуги (по подразбиране: %s)</translation>
+    </message>
+    <message>
+        <source>User defined mnemonic for HD wallet (bip39). Only has effect during wallet creation/first start (default: randomly generated)</source>
+        <translation>Потребителски дефиниран мнемоничен за HD портфейла (bip39). Има ефект само по време на създаване на портфейла / първия старт (по подразбиране: произволно генериран)</translation>
+    </message>
+    <message>
+        <source>User defined seed for HD wallet (should be in hex). Only has effect during wallet creation/first start (default: randomly generated)</source>
+        <translation>Дефинирани от потребителя части за HD портфейл (трябва да са в шестнадесети). Има ефект само  по време на създаването на портфейла / първия старт (по подразбиране: произволно генериран)</translation>
+    </message>
+    <message>
+        <source>Warning: incorrect parameter -walletbackupsdir, path must exist! Using default path.</source>
+        <translation>Внимание: неправилен параметър -walletbackupsdir, пътят трябва да съществува! Използване на пътя по подразбиране.</translation>
     </message>
     <message>
         <source>Whitelist peers connecting from the given netmask or IP address. Can be specified multiple times.</source>
@@ -3976,6 +4103,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Whitelisted peers cannot be DoS banned and their transactions are always relayed, even if they are already in the mempool, useful e.g. for a gateway</source>
         <translation>Whitelisted не могат да бъдат DoS забранени и техните транзакции ще бъдат винаги предадени, дори ако вече са в  mempool, полезно напр. за gateway</translation>
+    </message>
+    <message>
+        <source>You need to rebuild the database using -reindex-chainstate to change -txindex</source>
+        <translation>Нужно е възстановяване на базата данни, използвайте -reindex-chainstate за промяна  на -txindex</translation>
     </message>
     <message>
         <source>(default: %s)</source>
@@ -3990,8 +4121,16 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Винаги пускай заявка за адреси на пиъри през DNS справката (по подразбиране:  %u)</translation>
     </message>
     <message>
+        <source>Can't mix: no compatible inputs found!</source>
+        <translation>Не може да бъде миксирано: няма останали съвместими входящи средства.</translation>
+    </message>
+    <message>
         <source>Cannot resolve -whitebind address: '%s'</source>
         <translation>Не може да установи -whitebind адрес: '%s'</translation>
+    </message>
+    <message>
+        <source>Chain selection options:</source>
+        <translation>Опции за избор на верига:</translation>
     </message>
     <message>
         <source>Connect through SOCKS5 proxy</source>
@@ -4014,12 +4153,36 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Активиране на клиента да работи като masternode (0-1, по подразбиране: %u)</translation>
     </message>
     <message>
+        <source>Entry exceeds maximum size.</source>
+        <translation>Входа надвишава максималният размер.</translation>
+    </message>
+    <message>
         <source>Error connecting to Masternode.</source>
         <translation>Грешка при свързване с Masternode.</translation>
     </message>
     <message>
+        <source>Error loading %s: You can't disable HD on a already existing HD wallet</source>
+        <translation>Грешка при зареждане %s: Не може да изключите HD на вече съществуващ HD портфейл</translation>
+    </message>
+    <message>
         <source>Error loading wallet.dat: Wallet requires newer version of Dash Core</source>
         <translation>Грешка при зареждане на wallet.dat: портфейлът изисква по-нова версия на Dash Core</translation>
+    </message>
+    <message>
+        <source>Failed to load fulfilled requests cache from</source>
+        <translation>Неуспешно зареждане на  кеш с изпълнени заявки от</translation>
+    </message>
+    <message>
+        <source>Failed to load governance cache from</source>
+        <translation>Неуспешно зареждане кеша за управлението от</translation>
+    </message>
+    <message>
+        <source>Failed to load masternode cache from</source>
+        <translation>Неуспешно зареждане на masternode кеша от</translation>
+    </message>
+    <message>
+        <source>Failed to load masternode payments cache from</source>
+        <translation>Неуспешно зареждане на кеша за masternode плащанията от</translation>
     </message>
     <message>
         <source>Found enough users, signing ( waiting %s )</source>
@@ -4102,12 +4265,24 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Невалидна сума за -paytxfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
+        <source>Keypool ran out, please call keypoolrefill first</source>
+        <translation>Keypool изтече, моля поискайте първо keypoolrefill</translation>
+    </message>
+    <message>
         <source>Listen for JSON-RPC connections on &lt;port&gt; (default: %u or testnet: %u)</source>
         <translation>Очаквай JSON-RPC входящи връзки на &lt;port&gt; (по подразбиране:%u или за тестовата мрежа: %u)</translation>
     </message>
     <message>
         <source>Listen for connections on &lt;port&gt; (default: %u or testnet: %u)</source>
         <translation>Слушане за входящи връзки на &lt;port&gt; (по подразбиране:%u или за тестовата мрежа: %u)</translation>
+    </message>
+    <message>
+        <source>Loading banlist...</source>
+        <translation>Зареждане на бан лист...</translation>
+    </message>
+    <message>
+        <source>Loading fulfilled requests cache...</source>
+        <translation>Зараждане на кеша с изпълнените заявки...</translation>
     </message>
     <message>
         <source>Loading masternode cache...</source>
@@ -4138,6 +4313,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>В процес на смесване...</translation>
     </message>
     <message>
+        <source>Mnemonic passphrase is too long, must be at most 256 characters</source>
+        <translation>Мнемоничната парола е твърде дълга, трябва да бъде не по-дълга от 256 символа</translation>
+    </message>
+    <message>
         <source>Need to specify a port with -whitebind: '%s'</source>
         <translation>Нужно е определяне на порта с -whitebind: '%s'</translation>
     </message>
@@ -4164,6 +4343,14 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Prepend debug output with timestamp (default: %u)</source>
         <translation>Прикрепва справката за грешки към времевия запис(по подразбиране:  %u)</translation>
+    </message>
+    <message>
+        <source>Rebuild chain state and block index from the blk*.dat files on disk</source>
+        <translation>Възстановяване състоянието на веригата и блок индекса от blk*.dat файловете на диска</translation>
+    </message>
+    <message>
+        <source>Rebuild chain state from the currently indexed blocks</source>
+        <translation>Възстановяване състоянието на веригата от сега индексирани блокове</translation>
     </message>
     <message>
         <source>Send trace/debug info to debug.log file (default: %u)</source>
@@ -4218,6 +4405,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Изпратено към Мастернода, чака в опашката %s</translation>
     </message>
     <message>
+        <source>Synchroning blockchain...</source>
+        <translation>Синхронизиране на блок-веригата...</translation>
+    </message>
+    <message>
         <source>Synchronization failed</source>
         <translation>Синхронизацията е неуспешна</translation>
     </message>
@@ -4228,10 +4419,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Synchronizing masternodes...</source>
         <translation>Синхронизиране на masternodes ...</translation>
-    </message>
-    <message>
-        <source>Synchronizing sporks...</source>
-        <translation>Синхронизиране на sporks...</translation>
     </message>
     <message>
         <source>This is not a Masternode.</source>
@@ -4286,12 +4473,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Използвай UPnP за определяне на порта за слушане (по подразбиране: %u)</translation>
     </message>
     <message>
-        <source>User Agent comment (%s) contains unsafe characters.</source>
-        <translation>User Agent comment (%s) съдържа опасни символи.</translation>
+        <source>Use the test chain</source>
+        <translation>Използвайте тестовата мрежа</translation>
     </message>
     <message>
-        <source>Value more than PrivateSend pool maximum allows.</source>
-        <translation>Стойност повече от максимално позволената в PrivateSend басейна.</translation>
+        <source>User Agent comment (%s) contains unsafe characters.</source>
+        <translation>User Agent comment (%s) съдържа опасни символи.</translation>
     </message>
     <message>
         <source>Wallet needed to be rewritten: restart Dash Core to complete</source>
@@ -4506,20 +4693,16 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Използвайте UPnP за определяне на порта за слушане (по подразбиране: 1 когато слуша без прокси)</translation>
     </message>
     <message>
+        <source>User defined mnemonic passphrase for HD wallet (bip39). Only has effect during wallet creation/first start (default: empty string)</source>
+        <translation>Потребителски дефиниран мнемонична парола за HD портфейла (bip39). Има ефект само по време на създаване на портфейла / първия старт (по подразбиране:празен низ )</translation>
+    </message>
+    <message>
         <source>Username and hashed password for JSON-RPC connections. The field &lt;userpw&gt; comes in the format: &lt;USERNAME&gt;:&lt;SALT&gt;$&lt;HASH&gt;. A canonical python script is included in share/rpcuser. This option can be specified multiple times</source>
         <translation>Потребител и хаш парола за JSON-RPC връзки.Полето&lt;userpw&gt;е във формат: &lt;USERNAME&gt;:&lt;SALT&gt;$&lt;HASH&gt;. Канонически питон скрипт е включена в share/rpcuser. Тази опция може да бъде променяна многократно</translation>
     </message>
     <message>
         <source>WARNING! Failed to replenish keypool, please unlock your wallet to do so.</source>
         <translation>ВНИМАНИЕ! Неуспешно попълване на keypool, моля отключете портфейла си за да се извърши.</translation>
-    </message>
-    <message>
-        <source>WARNING: abnormally high number of blocks generated, %d blocks received in the last %d hours (%d expected)</source>
-        <translation>ВНИМАНИЕ: Ненормално висок брой генерирани блокове, %d блока получени през последните %d часа (%d очаквани)</translation>
-    </message>
-    <message>
-        <source>WARNING: check your network connection, %d blocks received in the last %d hours (%d expected)</source>
-        <translation>ВНИМАНИЕ: проверете вашата връзка, %d блока получени през последните %d часа (%d очаквани)</translation>
     </message>
     <message>
         <source>Wallet is locked, can't replenish keypool! Automatic backups and mixing are disabled, please unlock your wallet to replenish keypool.</source>
@@ -4560,10 +4743,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>&lt;category&gt; can be:</source>
         <translation>&lt;category&gt; може да бъде:</translation>
-    </message>
-    <message>
-        <source>Activating best chain...</source>
-        <translation>Активиране на най-добрата верига ...</translation>
     </message>
     <message>
         <source>Append comment to the user agent string</source>
@@ -4674,10 +4853,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Зареждане на блок индекса...</translation>
     </message>
     <message>
-        <source>Loading fullfiled requests cache...</source>
-        <translation>Зарежда се кеш с изпълнени заявки...</translation>
-    </message>
-    <message>
         <source>Loading governance cache...</source>
         <translation>Зарежда се  masternode кеш...</translation>
     </message>
@@ -4724,10 +4899,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>No errors detected.</source>
         <translation>Не са открити грешки.</translation>
-    </message>
-    <message>
-        <source>No funds detected in need of denominating.</source>
-        <translation>Не са открити суми нуждаещи се от деноминиране.</translation>
     </message>
     <message>
         <source>No matching denominations found for mixing.</source>
@@ -4796,10 +4967,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Pruning blockstore...</source>
         <translation>Изчистване на блоковото пространство...</translation>
-    </message>
-    <message>
-        <source>Rebuild block chain index from current blk000??.dat files on startup</source>
-        <translation>Възстановяване индекса на блок регистъра от настоящия blk000??.dat файла при стартиране</translation>
     </message>
     <message>
         <source>Rescan the block chain for missing wallet transactions on startup</source>
@@ -5008,10 +5175,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Warning</source>
         <translation>Предупреждение</translation>
-    </message>
-    <message>
-        <source>You need to rebuild the database using -reindex to change -txindex</source>
-        <translation>Необходимо е повторно изграждане на базата данни използвайки -reindex, за да промените -txindex</translation>
     </message>
     <message>
         <source>Your entries added successfully.</source>

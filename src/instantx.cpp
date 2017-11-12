@@ -64,8 +64,9 @@ void CInstantSend::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataSt
 #endif
         LOCK(cs_instantsend);
 
-
         uint256 nVoteHash = vote.GetHash();
+
+        pfrom->setAskFor.erase(nVoteHash);
 
         if(mapTxLockVotes.count(nVoteHash)) return;
         mapTxLockVotes.insert(std::make_pair(nVoteHash, vote));
@@ -667,7 +668,7 @@ void CInstantSend::CheckAndRemove()
         }
     }
 
-    // remove expired orphan votes
+    // remove timed out orphan votes
     std::map<uint256, CTxLockVote>::iterator itOrphanVote = mapTxLockVotesOrphan.begin();
     while(itOrphanVote != mapTxLockVotesOrphan.end()) {
         if(itOrphanVote->second.IsTimedOut()) {
@@ -680,11 +681,23 @@ void CInstantSend::CheckAndRemove()
         }
     }
 
-    // remove expired masternode orphan votes (DOS protection)
+    // remove invalid votes and votes for failed lock attempts
+    itVote = mapTxLockVotes.begin();
+    while(itVote != mapTxLockVotes.end()) {
+        if(itVote->second.IsFailed()) {
+            LogPrint("instantsend", "CInstantSend::CheckAndRemove -- Removing vote for failed lock attempt: txid=%s  masternode=%s\n",
+                    itVote->second.GetTxHash().ToString(), itVote->second.GetMasternodeOutpoint().ToStringShort());
+            mapTxLockVotes.erase(itVote++);
+        } else {
+            ++itVote;
+        }
+    }
+
+    // remove timed out masternode orphan votes (DOS protection)
     std::map<COutPoint, int64_t>::iterator itMasternodeOrphan = mapMasternodeOrphanVotes.begin();
     while(itMasternodeOrphan != mapMasternodeOrphanVotes.end()) {
         if(itMasternodeOrphan->second < GetTime()) {
-            LogPrint("instantsend", "CInstantSend::CheckAndRemove -- Removing expired orphan masternode vote: masternode=%s\n",
+            LogPrint("instantsend", "CInstantSend::CheckAndRemove -- Removing timed out orphan masternode vote: masternode=%s\n",
                     itMasternodeOrphan->first.ToStringShort());
             mapMasternodeOrphanVotes.erase(itMasternodeOrphan++);
         } else {
@@ -1083,7 +1096,12 @@ bool CTxLockVote::IsExpired(int nHeight) const
 
 bool CTxLockVote::IsTimedOut() const
 {
-    return GetTime() - nTimeCreated > INSTANTSEND_TIMEOUT_SECONDS;
+    return GetTime() - nTimeCreated > INSTANTSEND_LOCK_TIMEOUT_SECONDS;
+}
+
+bool CTxLockVote::IsFailed() const
+{
+    return (GetTime() - nTimeCreated > INSTANTSEND_FAILED_TIMEOUT_SECONDS) && !instantsend.IsLockedInstantSendTransaction(GetTxHash());
 }
 
 //
@@ -1184,7 +1202,7 @@ bool CTxLockCandidate::IsExpired(int nHeight) const
 
 bool CTxLockCandidate::IsTimedOut() const
 {
-    return GetTime() - nTimeCreated > INSTANTSEND_TIMEOUT_SECONDS;
+    return GetTime() - nTimeCreated > INSTANTSEND_LOCK_TIMEOUT_SECONDS;
 }
 
 void CTxLockCandidate::Relay(CConnman& connman) const

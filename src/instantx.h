@@ -28,9 +28,14 @@ extern CInstantSend instantsend;
 static const int INSTANTSEND_CONFIRMATIONS_REQUIRED = 6;
 static const int DEFAULT_INSTANTSEND_DEPTH          = 5;
 
-static const int INSTANTSEND_TIMEOUT_SECONDS        = 15;
-
 static const int MIN_INSTANTSEND_PROTO_VERSION      = 70208;
+
+// For how long we are going to accept votes/locks
+// after we saw the first one for a specific transaction
+static const int INSTANTSEND_LOCK_TIMEOUT_SECONDS   = 15;
+// For how long we are going to keep invalid votes and votes for failed lock attempts,
+// must be greater than INSTANTSEND_LOCK_TIMEOUT_SECONDS
+static const int INSTANTSEND_FAILED_TIMEOUT_SECONDS = 60;
 
 extern bool fEnableInstantSend;
 extern int nInstantSendDepth;
@@ -184,6 +189,7 @@ public:
     void SetConfirmedHeight(int nConfirmedHeightIn) { nConfirmedHeight = nConfirmedHeightIn; }
     bool IsExpired(int nHeight) const;
     bool IsTimedOut() const;
+    bool IsFailed() const;
 
     bool Sign();
     bool CheckSignature() const;
