@@ -15,7 +15,20 @@ using the Windows Subsystem For Linux is the most straightforward. If you are bu
 another method, please contribute the instructions here for others who are running versions
 of Windows that are not compatible with the Windows Subsystem for Linux.
 
-Compiling with Windows Subsystem For Linux
+Compiling with Windows 10 Subsystem For Linux (build 1607+)
+-------------------------------------------
+
+With the fall 2017 Windows 10 Creator update the Windows Subsystem for Linux is
+out of Beta and officially released. Using this windows feature you can build
+and run bitcoin by following the standard Linux instructions for the distribution you
+deploy.
+
+These are the [instructions](https://msdn.microsoft.com/en-us/commandline/wsl/install-win10) for enabling the Windows Subsystem for Linux in Windows 10 (build 1607+).
+
+Instructions for building under the various Linux distibutions in the Windows
+Subsystem for Linux can be found in [build-unix.md](./build-unix.md). 
+
+Compiling with Windows 10 Subsystem For Linux (prior to build 1607)
 -------------------------------------------
 
 With Windows 10, Microsoft has released a new feature named the [Windows
