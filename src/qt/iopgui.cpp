@@ -146,6 +146,9 @@ IoPGUI::IoPGUI(const PlatformStyle *_platformStyle, const NetworkStyle *networkS
 
         "QLineEdit { background: " + darkGray + "; border-style: solid; border-width: 1px;  border-color: " + lightGray + ";}"
 
+        //Checkbox
+        "QCheckBox {padding: 5px;}"
+
         //Table view
         "QHeaderView { background: " + darkGray + ";} "
         "QTableView { border: 1px solid " + lightGray + "; selection-background-color: " + lightGray + "; selection-color: "+ fontGray + "; alternate-background: " + darkGray + ";}"
@@ -196,7 +199,7 @@ IoPGUI::IoPGUI(const PlatformStyle *_platformStyle, const NetworkStyle *networkS
         //Buttons (and Icons)
         "QPushButton { background-color: " + lightGray + "; color: " + fontGray + "; border-color: " + darkGray + "; border-width: 1px; padding: 6px; border-style: outset; border-radius: 0px ;}"
         "QPushButton:hover { background-color: " + darkGray + ";}"
-      
+
         //Disturbing borders
         "#labelWalletStatus { border: none;}"
         "#labelTransactionsStatus { border: none;}"
