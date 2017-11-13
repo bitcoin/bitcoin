@@ -160,14 +160,6 @@ class TestNode():
     def wait_until_stopped(self, timeout=BITCOIND_PROC_WAIT_TIMEOUT):
         wait_until(self.is_node_stopped, timeout=timeout)
 
-    def node_encrypt_wallet(self, passphrase):
-        """"Encrypts the wallet.
-
-        This causes bitcoind to shutdown, so this method takes
-        care of cleaning up resources."""
-        self.encryptwallet(passphrase)
-        self.wait_until_stopped()
-
     def add_p2p_connection(self, p2p_conn, *args, **kwargs):
         """Add a p2p connection to the node.
 

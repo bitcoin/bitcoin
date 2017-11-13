@@ -279,6 +279,7 @@ bool OpenWallets()
         return true;
     }
 
+    bitdb.Reset();
     for (const std::string& walletFile : gArgs.GetArgs("-wallet")) {
         CWallet * const pwallet = CWallet::CreateWalletFromFile(walletFile);
         if (!pwallet) {
@@ -305,6 +306,7 @@ void FlushWallets() {
 void StopWallets() {
     for (CWalletRef pwallet : vpwallets) {
         pwallet->Flush(true);
+        UnregisterValidationInterface(pwallet);
     }
 }
 

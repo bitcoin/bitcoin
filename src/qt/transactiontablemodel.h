@@ -81,6 +81,11 @@ public:
     QModelIndex index(int row, int column, const QModelIndex & parent = QModelIndex()) const;
     bool processingQueuedTransactions() const { return fProcessingQueuedTransactions; }
 
+    void ReloadWallet();
+
+    void subscribeToCoreSignals();
+    void unsubscribeFromCoreSignals();
+
 private:
     CWallet* wallet;
     WalletModel *walletModel;
@@ -88,9 +93,6 @@ private:
     TransactionTablePriv *priv;
     bool fProcessingQueuedTransactions;
     const PlatformStyle *platformStyle;
-
-    void subscribeToCoreSignals();
-    void unsubscribeFromCoreSignals();
 
     QString lookupAddress(const std::string &address, bool tooltip) const;
     QVariant addressColor(const TransactionRecord *wtx) const;

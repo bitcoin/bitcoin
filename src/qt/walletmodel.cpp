@@ -742,3 +742,19 @@ int WalletModel::getDefaultConfirmTarget() const
 {
     return nTxConfirmTarget;
 }
+void WalletModel::ReloadWallet()
+{
+    this->wallet = vpwallets[0];
+    addressTableModel->ReloadWallet();
+    transactionTableModel->ReloadWallet();
+}
+
+void WalletModel::SubscribeTableModelToCoreSignals()
+{
+    transactionTableModel->subscribeToCoreSignals();
+}
+
+void WalletModel::UnsubscribeTableModelFromCoreSignals()
+{
+    transactionTableModel->unsubscribeFromCoreSignals();
+}
