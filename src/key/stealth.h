@@ -56,8 +56,8 @@ public:
     //uint32_t index;
 
     bool SetEncoded(const std::string &encodedAddress);
-    std::string Encoded() const;
-    std::string ToString() const {return Encoded();};
+    std::string Encoded(bool fBech32=false) const;
+    std::string ToString(bool fBech32=false) const {return Encoded(fBech32);};
 
     int FromRaw(const uint8_t *p, size_t nSize);
     int ToRaw(std::vector<uint8_t> &raw) const;
@@ -65,7 +65,6 @@ public:
     int SetScanPubKey(CPubKey pk);
 
     CKeyID GetSpendKeyID() const;
-
 
     bool operator <(const CStealthAddress &y) const
     {

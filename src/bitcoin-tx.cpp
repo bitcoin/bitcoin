@@ -618,7 +618,7 @@ static void MutateTxSign(CMutableTransaction& tx, const std::string& flagStr)
 
             // if redeemScript given and private keys given,
             // add redeemScript to the tempKeystore so it can be signed:
-            if ((scriptPubKey.IsPayToScriptHash() || scriptPubKey.IsPayToWitnessScriptHash()) &&
+            if ((scriptPubKey.IsPayToScriptHash() || scriptPubKey.IsPayToScriptHash256() || scriptPubKey.IsPayToWitnessScriptHash()) &&
                 prevOut.exists("redeemScript")) {
                 UniValue v = prevOut["redeemScript"];
                 std::vector<unsigned char> rsData(ParseHexUV(v, "redeemScript"));

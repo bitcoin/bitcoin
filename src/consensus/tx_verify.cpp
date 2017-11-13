@@ -153,7 +153,7 @@ unsigned int GetP2SHSigOpCount(const CTransaction& tx, const CCoinsViewCache& in
         const Coin& coin = inputs.AccessCoin(tx.vin[i].prevout);
         assert(!coin.IsSpent());
         const CTxOut &prevout = coin.out;
-        if (prevout.scriptPubKey.IsPayToScriptHash())
+        if (prevout.scriptPubKey.IsPayToScriptHashAny())
             nSigOps += prevout.scriptPubKey.GetSigOpCount(tx.vin[i].scriptSig);
     }
     return nSigOps;

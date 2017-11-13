@@ -299,7 +299,8 @@ bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
         if (!Solver(prevScript, whichType, vSolutions))
             return false;
 
-        if (whichType == TX_SCRIPTHASH)
+        if (whichType == TX_SCRIPTHASH
+            || whichType == TX_SCRIPTHASH256)
         {
             std::vector<std::vector<unsigned char> > stack;
             // convert the scriptSig into a stack, so we can inspect the redeemScript
@@ -348,7 +349,7 @@ bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
         // get the scriptPubKey corresponding to this input:
         prevScript = prev.scriptPubKey;
 
-        if (prevScript.IsPayToScriptHash()) {
+        if (prevScript.IsPayToScriptHashAny()) {
             std::vector <std::vector<unsigned char> > stack;
 
             // If the scriptPubKey is P2SH, we try to extract the redeemScript casually by converting the scriptSig

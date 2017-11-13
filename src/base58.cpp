@@ -545,9 +545,8 @@ CTxDestination CBitcoinAddress::Get() const
     {
         //uint256 id;
         //memcpy(&id, vchData.data(), 32);
-        //return CScriptID256(*((uint256*)vchData.data()));
+        return CScriptID256(*((uint256*)vchData.data()));
     };
-
 
     return CNoDestination();
 }

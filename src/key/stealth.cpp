@@ -117,9 +117,9 @@ int CStealthAddress::ToRaw(std::vector<uint8_t> &raw) const
     return 0;
 };
 
-std::string CStealthAddress::Encoded() const
+std::string CStealthAddress::Encoded(bool fBech32) const
 {
-    return CBitcoinAddress(*this).ToString();
+    return CBitcoinAddress(*this, fBech32).ToString();
 
 };
 

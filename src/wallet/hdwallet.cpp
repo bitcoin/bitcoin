@@ -957,6 +957,13 @@ bool CHDWallet::HaveAddress(const CBitcoinAddress &address)
         return HaveKey(id);
     };
 
+    if (dest.type() == typeid(CKeyID256))
+    {
+        CKeyID256 id256 = boost::get<CKeyID256>(dest);
+        CKeyID id(id256);
+        return HaveKey(id);
+    };
+
     if (dest.type() == typeid(CExtKeyPair))
     {
         CExtKeyPair ek = boost::get<CExtKeyPair>(dest);
@@ -1081,7 +1088,7 @@ bool CHDWallet::GetPubKey(const CKeyID &address, CPubKey& pkOut) const
 bool CHDWallet::GetKeyFromPool(CPubKey &key, bool internal)
 {
     // Always return a key from the internal chain
-    return 0 == NewKeyFromAccount(key, true, false, false, nullptr);
+    return 0 == NewKeyFromAccount(key, true, false, false, false, nullptr);
 };
 
 bool CHDWallet::HaveStealthAddress(const CStealthAddress &sxAddr) const
@@ -1210,7 +1217,7 @@ bool CHDWallet::AddressBookChangedNotify(const CTxDestination &address, ChangeTy
 };
 
 bool CHDWallet::SetAddressBook(CHDWalletDB *pwdb, const CTxDestination &address, const std::string &strName,
-    const std::string &strPurpose, const std::vector<uint32_t> &vPath, bool fNotifyChanged)
+    const std::string &strPurpose, const std::vector<uint32_t> &vPath, bool fNotifyChanged, bool fBech32)
 {
     ChangeType nMode;
     isminetype tIsMine;
@@ -1228,6 +1235,7 @@ bool CHDWallet::SetAddressBook(CHDWalletDB *pwdb, const CTxDestination &address,
 
         entry->name = strName;
         entry->vPath = vPath;
+        entry->fBech32 = fBech32;
 
         tIsMine = ::IsMine(*this, address);
         if (!strPurpose.empty()) /* update purpose only if requested */
@@ -1263,7 +1271,7 @@ bool CHDWallet::SetAddressBook(CHDWalletDB *pwdb, const CTxDestination &address,
     return true;
 };
 
-bool CHDWallet::SetAddressBook(const CTxDestination &address, const std::string &strName, const std::string &strPurpose)
+bool CHDWallet::SetAddressBook(const CTxDestination &address, const std::string &strName, const std::string &strPurpose, bool fBech32)
 {
     bool fOwned;
     ChangeType nMode;
@@ -1283,6 +1291,7 @@ bool CHDWallet::SetAddressBook(const CTxDestination &address, const std::string 
         entry->name = strName;
         if (!strPurpose.empty())
             entry->purpose = strPurpose;
+        entry->fBech32 = fBech32;
     }
 
     if (fOwned
@@ -6584,7 +6593,8 @@ int CHDWallet::ExtKeyGetIndex(CExtKeyAccount *sea, uint32_t &index)
     return 0;
 };
 
-int CHDWallet::NewKeyFromAccount(CHDWalletDB *pwdb, const CKeyID &idAccount, CPubKey &pkOut, bool fInternal, bool fHardened, bool f256bit, const char *plabel)
+int CHDWallet::NewKeyFromAccount(CHDWalletDB *pwdb, const CKeyID &idAccount, CPubKey &pkOut,
+    bool fInternal, bool fHardened, bool f256bit, bool fBech32, const char *plabel)
 {
     // If plabel is not null, add to mapAddressBook
 
@@ -6674,17 +6684,17 @@ int CHDWallet::NewKeyFromAccount(CHDWalletDB *pwdb, const CKeyID &idAccount, CPu
         if (f256bit)
         {
             CKeyID256 idKey256 = pkOut.GetID256();
-            SetAddressBook(pwdb, idKey256, plabel, "receive", vPath, false);
+            SetAddressBook(pwdb, idKey256, plabel, "receive", vPath, false, fBech32);
         } else
         {
-            SetAddressBook(pwdb, idKey, plabel, "receive", vPath, false);
+            SetAddressBook(pwdb, idKey, plabel, "receive", vPath, false, fBech32);
         };
     };
 
     return 0;
 };
 
-int CHDWallet::NewKeyFromAccount(CPubKey &pkOut, bool fInternal, bool fHardened, bool f256bit, const char *plabel)
+int CHDWallet::NewKeyFromAccount(CPubKey &pkOut, bool fInternal, bool fHardened, bool f256bit, bool fBech32, const char *plabel)
 {
     {
         LOCK(cs_wallet);
@@ -6693,7 +6703,7 @@ int CHDWallet::NewKeyFromAccount(CPubKey &pkOut, bool fInternal, bool fHardened,
         if (!wdb.TxnBegin())
             return errorN(1, "%s TxnBegin failed.", __func__);
 
-        if (0 != NewKeyFromAccount(&wdb, idDefaultAccount, pkOut, fInternal, fHardened, f256bit, plabel))
+        if (0 != NewKeyFromAccount(&wdb, idDefaultAccount, pkOut, fInternal, fHardened, f256bit, fBech32, plabel))
         {
             wdb.TxnAbort();
             return 1;
@@ -6712,7 +6722,7 @@ int CHDWallet::NewKeyFromAccount(CPubKey &pkOut, bool fInternal, bool fHardened,
 
 int CHDWallet::NewStealthKeyFromAccount(
     CHDWalletDB *pwdb, const CKeyID &idAccount, std::string &sLabel,
-    CEKAStealthKey &akStealthOut, uint32_t nPrefixBits, const char *pPrefix)
+    CEKAStealthKey &akStealthOut, uint32_t nPrefixBits, const char *pPrefix, bool fBech32)
 {
     if (LogAcceptCategory(BCLog::HDWALLET))
     {
@@ -6833,13 +6843,13 @@ int CHDWallet::NewStealthKeyFromAccount(
             return errorN(1, "%s WriteExtAccount failed.", __func__);
     };
 
-    SetAddressBook(pwdb, sxAddr, sLabel, "receive", vPath, false);
+    SetAddressBook(pwdb, sxAddr, sLabel, "receive", vPath, false, fBech32);
 
     akStealthOut = aks;
     return 0;
 };
 
-int CHDWallet::NewStealthKeyFromAccount(std::string &sLabel, CEKAStealthKey &akStealthOut, uint32_t nPrefixBits, const char *pPrefix)
+int CHDWallet::NewStealthKeyFromAccount(std::string &sLabel, CEKAStealthKey &akStealthOut, uint32_t nPrefixBits, const char *pPrefix, bool fBech32)
 {
     {
         LOCK(cs_wallet);
@@ -6848,7 +6858,7 @@ int CHDWallet::NewStealthKeyFromAccount(std::string &sLabel, CEKAStealthKey &akS
         if (!wdb.TxnBegin())
             return errorN(1, "%s TxnBegin failed.", __func__);
 
-        if (0 != NewStealthKeyFromAccount(&wdb, idDefaultAccount, sLabel, akStealthOut, nPrefixBits, pPrefix))
+        if (0 != NewStealthKeyFromAccount(&wdb, idDefaultAccount, sLabel, akStealthOut, nPrefixBits, pPrefix, fBech32))
         {
             wdb.TxnAbort();
             return 1;

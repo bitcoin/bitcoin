@@ -258,7 +258,7 @@ UniValue getnewaddress(const JSONRPCRequest& request)
                     throw JSONRPCError(RPC_WALLET_ERROR, _("No default account set."));
                 };
             }
-            if (0 != phdw->NewKeyFromAccount(newKey, false, fHardened, f256bit, strAccount.c_str()))
+            if (0 != phdw->NewKeyFromAccount(newKey, false, fHardened, f256bit, fBech32, strAccount.c_str()))
                 throw JSONRPCError(RPC_WALLET_ERROR, "NewKeyFromAccount failed.");
         }
 
@@ -1307,9 +1307,9 @@ UniValue addmultisigaddress(const JSONRPCRequest& request)
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() < 2 || request.params.size() > 3)
+    if (request.fHelp || request.params.size() < 2 || request.params.size() > 5)
     {
-        std::string msg = "addmultisigaddress nrequired [\"key\",...] ( \"account\" )\n"
+        std::string msg = "addmultisigaddress nrequired [\"key\",...] ( \"account\", bech32, 256bit)\n"
             "\nAdd a nrequired-to-sign multisignature address to the wallet.\n"
             "Each key is a Particl address or hex-encoded public key.\n"
             "If 'account' is specified (DEPRECATED), assign address to that account.\n"
@@ -1322,6 +1322,8 @@ UniValue addmultisigaddress(const JSONRPCRequest& request)
             "       ...,\n"
             "     ]\n"
             "3. \"account\"      (string, optional) DEPRECATED. An account to assign the addresses to.\n"
+            "4. bech32             (bool, optional) Use Bech32 encoding.\n"
+            "5. 256bit             (bool, optional) Use 256bit hash.\n"
 
             "\nResult:\n"
             "\"address\"         (string) A particl address associated with the keys.\n"
@@ -1343,11 +1345,22 @@ UniValue addmultisigaddress(const JSONRPCRequest& request)
 
     // Construct using pay-to-script-hash:
     CScript inner = _createmultisig_redeemScript(pwallet, request.params);
-    CScriptID innerID(inner);
     pwallet->AddCScript(inner);
 
-    pwallet->SetAddressBook(innerID, strAccount, "send");
-    return CBitcoinAddress(innerID).ToString();
+    bool fbech32 = request.params.size() > 3 ? request.params[3].get_bool() : false;
+    bool f256Hash = request.params.size() > 4 ? request.params[4].get_bool() : false;
+
+    if (f256Hash)
+    {
+        CScriptID256 innerID;
+        innerID.Set(inner);
+        pwallet->SetAddressBook(innerID, strAccount, "send", fbech32);
+        return CBitcoinAddress(innerID, fbech32).ToString();
+    };
+
+    CScriptID innerID(inner);
+    pwallet->SetAddressBook(innerID, strAccount, "send", fbech32);
+    return CBitcoinAddress(innerID, fbech32).ToString();
 }
 
 class Witnessifier : public boost::static_visitor<bool>
@@ -3412,6 +3425,15 @@ UniValue listunspent(const JSONRPCRequest& request)
                     entry.push_back(Pair("redeemScript", HexStr(redeemScript.begin(), redeemScript.end())));
                 }
             }
+            if (scriptPubKey->IsPayToScriptHash256()) {
+                const CScriptID256& hash = boost::get<CScriptID256>(address);
+                CScriptID scriptID;
+                scriptID.Set(hash);
+                CScript redeemScript;
+                if (pwallet->GetCScript(scriptID, redeemScript)) {
+                    entry.push_back(Pair("redeemScript", HexStr(redeemScript.begin(), redeemScript.end())));
+                }
+            }
         }
 
         if (HasIsCoinstakeOp(*scriptPubKey))
@@ -3830,7 +3852,7 @@ static const CRPCCommand commands[] =
     { "hidden",             "resendwallettransactions", &resendwallettransactions, true,   {} },
     { "wallet",             "abandontransaction",       &abandontransaction,       false,  {"txid"} },
     { "wallet",             "abortrescan",              &abortrescan,              false,  {} },
-    { "wallet",             "addmultisigaddress",       &addmultisigaddress,       true,   {"nrequired","keys","account"} },
+    { "wallet",             "addmultisigaddress",       &addmultisigaddress,       true,   {"nrequired","keys","account","bech32","256bit"} },
     //{ "wallet",             "addwitnessaddress",        &addwitnessaddress,        true,   {"address"} },
     { "wallet",             "backupwallet",             &backupwallet,             true,   {"destination"} },
     { "wallet",             "bumpfee",                  &bumpfee,                  true,   {"txid", "options"} },
@@ -3841,7 +3863,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "getaccount",               &getaccount,               true,   {"address"} },
     { "wallet",             "getaddressesbyaccount",    &getaddressesbyaccount,    true,   {"account"} },
     { "wallet",             "getbalance",               &getbalance,               false,  {"account","minconf","include_watchonly"} },
-    { "wallet",             "getnewaddress",            &getnewaddress,            true,   {"account", "bech32", "hardened", "256bit"} },
+    { "wallet",             "getnewaddress",            &getnewaddress,            true,   {"account","bech32","hardened","256bit"} },
     { "wallet",             "getrawchangeaddress",      &getrawchangeaddress,      true,   {} },
     { "wallet",             "getreceivedbyaccount",     &getreceivedbyaccount,     false,  {"account","minconf"} },
     { "wallet",             "getreceivedbyaddress",     &getreceivedbyaddress,     false,  {"address","minconf"} },

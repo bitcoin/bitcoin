@@ -46,7 +46,7 @@ isminetype IsMine(const CKeyStore &keystore, const CTxDestination& dest, bool& i
         const CStealthAddress &sxAddr = boost::get<CStealthAddress>(dest);
         return sxAddr.scan_secret.size() == EC_SECRET_SIZE ? ISMINE_SPENDABLE : ISMINE_NO; // TODO: watch only?
     };
-    
+
     CScript script = GetScriptForDestination(dest);
     return IsMine(keystore, script, isInvalid, sigversion);
 }
@@ -58,11 +58,11 @@ isminetype IsMine(const CKeyStore &keystore, const CScript& scriptPubKey, bool& 
         CScript scriptA, scriptB;
         if (!SplitConditionalCoinstakeScript(scriptPubKey, scriptA, scriptB))
             return ISMINE_NO;
-        
+
         isminetype typeB = IsMine(keystore, scriptB, isInvalid, sigversion);
         if (typeB & ISMINE_SPENDABLE)
             return typeB;
-        
+
         isminetype typeA = IsMine(keystore, scriptA, isInvalid, sigversion);
         if (typeA & ISMINE_SPENDABLE)
         {
@@ -71,10 +71,10 @@ isminetype IsMine(const CKeyStore &keystore, const CScript& scriptPubKey, bool& 
             ia |= ISMINE_WATCH_COLDSTAKE;
             typeA = (isminetype)ia;
         };
-        
+
         return (isminetype)((int)typeA | (int)typeB);
     };
-    
+
     std::vector<valtype> vSolutions;
     txnouttype whichType;
     if (!Solver(scriptPubKey, whichType, vSolutions)) {

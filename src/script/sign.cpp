@@ -192,13 +192,18 @@ bool ProduceSignature(const BaseSignatureCreator& creator, const CScript& fromPu
     CScript subscript;
     sigdata.scriptWitness.stack.clear();
 
-    if (solved && (whichType == TX_SCRIPTHASH || whichType == TX_TIMELOCKED_SCRIPTHASH))
+    bool fIsP2SH = creator.IsParticlVersion()
+        ? (whichType == TX_SCRIPTHASH || whichType == TX_SCRIPTHASH256 || whichType == TX_TIMELOCKED_SCRIPTHASH)
+        : whichType == TX_SCRIPTHASH;
+    if (solved && fIsP2SH)
     {
         // Solver returns the subscript that needs to be evaluated;
         // the final scriptSig is the signatures from that
         // and then the serialized subscript:
         script = subscript = CScript(result[0].begin(), result[0].end());
-        solved = solved && SignStep(creator, script, result, whichType, SIGVERSION_BASE) && whichType != TX_SCRIPTHASH;
+
+        solved = solved && SignStep(creator, script, result, whichType, SIGVERSION_BASE) && (whichType != TX_SCRIPTHASH
+            && (!creator.IsParticlVersion() || (whichType != TX_SCRIPTHASH256 && whichType == TX_TIMELOCKED_SCRIPTHASH)));
         P2SH = true;
     }
 
@@ -395,13 +400,12 @@ static Stacks CombineSignatures(const CScript& scriptPubKey, const BaseSignature
     txnouttype txHackType = txType;
     if (checker.IsParticlVersion())
     {
-        if (txHackType == TX_PUBKEY || txHackType == TX_PUBKEYHASH || txHackType == TX_TIMELOCKED_PUBKEYHASH)
+        if (txHackType == TX_PUBKEY || txHackType == TX_PUBKEYHASH || txHackType == TX_PUBKEYHASH256 || txHackType == TX_TIMELOCKED_PUBKEYHASH)
             txHackType = TX_WITNESS_V0_KEYHASH;
         else
-        if (txHackType == TX_SCRIPTHASH || txHackType == TX_TIMELOCKED_SCRIPTHASH)
+        if (txHackType == TX_SCRIPTHASH || txHackType == TX_SCRIPTHASH256 || txHackType == TX_TIMELOCKED_SCRIPTHASH)
             txHackType = TX_WITNESS_V0_SCRIPTHASH;
     };
-
 
     switch (txHackType)
     {

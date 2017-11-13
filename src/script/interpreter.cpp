@@ -1005,7 +1005,6 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
                     // Clean up stack of actual arguments
                     while (i-- > 1) {
                         // If the operation failed, we require that all signatures must be empty vector
-
                         if (!fSuccess && (flags & SCRIPT_VERIFY_NULLFAIL) && !ikey2 && stacktop(-1).size())
                             return set_error(serror, SCRIPT_ERR_SIG_NULLFAIL);
                         if (ikey2 > 0)
@@ -1459,12 +1458,10 @@ bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const C
     if (checker.IsParticlVersion())
     {
         assert(witness);
-
         if (scriptSig.size() != 0) {
             // The scriptSig must be _exactly_ CScript(), otherwise we reintroduce malleability.
             return set_error(serror, SCRIPT_ERR_WITNESS_MALLEATED);
         }
-
         stack = witness->stack;
     } else
     {
@@ -1504,10 +1501,10 @@ bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const C
         }
     }
 
-
+    bool fIsP2SH = checker.IsParticlVersion() ? scriptPubKey.IsPayToScriptHashAny() : scriptPubKey.IsPayToScriptHash();
     // Additional validation for spend-to-script-hash transactions:
     if ((flags & SCRIPT_VERIFY_P2SH)
-        && (scriptPubKey.IsPayToScriptHash() || scriptPubKey.IsPayToTimeLockedScriptHash()))
+        && fIsP2SH)
     {
         // scriptSig must be literals-only or validation fails
         if (!scriptSig.IsPushOnly())
@@ -1540,6 +1537,7 @@ bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const C
                 if (scriptSig != CScript() << std::vector<unsigned char>(pubKey2.begin(), pubKey2.end())) {
                     // The scriptSig must be _exactly_ a single push of the redeemScript. Otherwise we
                     // reintroduce malleability.
+
                     return set_error(serror, SCRIPT_ERR_WITNESS_MALLEATED_P2SH);
                 }
                 if (!VerifyWitnessProgram(*witness, witnessversion, witnessprogram, flags, checker, serror)) {

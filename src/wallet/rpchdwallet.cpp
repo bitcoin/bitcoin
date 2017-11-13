@@ -1862,9 +1862,9 @@ UniValue getnewstealthaddress(const JSONRPCRequest &request)
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
         return NullUniValue;
 
-    if (request.fHelp || request.params.size() > 3)
+    if (request.fHelp || request.params.size() > 4)
         throw std::runtime_error(
-            "getnewstealthaddress [label] [num_prefix_bits] [prefix_num]\n"
+            "getnewstealthaddress [label] [num_prefix_bits] [prefix_num] [bech32]\n"
             "Returns a new Particl stealth address for receiving payments."
             "If num_prefix_bits is specified and > 0, the stealth address is created with a prefix.\n"
             "If prefix_num is not specified the prefix will be selected deterministically.\n"
@@ -1900,16 +1900,17 @@ UniValue getnewstealthaddress(const JSONRPCRequest &request)
     if (request.params.size() > 2)
         sPrefix_num = request.params[2].get_str();
 
+    bool fbech32 = request.params.size() > 3 ? request.params[3].get_bool() : false;
+
     CEKAStealthKey akStealth;
     std::string sError;
-
-    if (0 != pwallet->NewStealthKeyFromAccount(sLabel, akStealth, num_prefix_bits, sPrefix_num.empty() ? nullptr : sPrefix_num.c_str()))
+    if (0 != pwallet->NewStealthKeyFromAccount(sLabel, akStealth, num_prefix_bits, sPrefix_num.empty() ? nullptr : sPrefix_num.c_str(), fbech32))
         throw JSONRPCError(RPC_WALLET_ERROR, _("NewStealthKeyFromAccount failed."));
 
     CStealthAddress sxAddr;
     akStealth.SetSxAddr(sxAddr);
 
-    return sxAddr.ToString();
+    return sxAddr.ToString(fbech32);
 }
 
 UniValue importstealthaddress(const JSONRPCRequest &request)
@@ -3403,7 +3404,6 @@ UniValue filteraddresses(const JSONRPCRequest &request)
     if (sMatch != "")
         nMatchMode = 1;
 
-
     if (request.params.size() > 4)
     {
         std::string s = request.params[4].get_str();
@@ -3420,9 +3420,7 @@ UniValue filteraddresses(const JSONRPCRequest &request)
         nShowPath = !fTemp ? 0 : nShowPath;
     };
 
-
     UniValue result(UniValue::VARR);
-
     {
         LOCK(pwallet->cs_wallet);
 
@@ -3464,7 +3462,7 @@ UniValue filteraddresses(const JSONRPCRequest &request)
             auto &item = *vit;
             UniValue entry(UniValue::VOBJ);
 
-            CBitcoinAddress address(item->first);
+            CBitcoinAddress address(item->first, item->second.fBech32);
             entry.pushKV("address", address.ToString());
             entry.pushKV("label", item->second.name);
             entry.pushKV("owned", item->second.nOwned == 1 ? "true" : "false");
@@ -4098,6 +4096,14 @@ UniValue listunspentblind(const JSONRPCRequest &request)
                 if (pwallet->GetCScript(hash, redeemScript))
                     entry.pushKV("redeemScript", HexStr(redeemScript.begin(), redeemScript.end()));
             }
+            if (scriptPubKey->IsPayToScriptHash256()) {
+                const CScriptID256& hash = boost::get<CScriptID256>(address);
+                CScriptID scriptID;
+                scriptID.Set(hash);
+                CScript redeemScript;
+                if (pwallet->GetCScript(scriptID, redeemScript))
+                    entry.pushKV("redeemScript", HexStr(redeemScript.begin(), redeemScript.end()));
+            }
         }
 
         entry.pushKV("scriptPubKey", HexStr(scriptPubKey->begin(), scriptPubKey->end()));
@@ -4201,7 +4207,6 @@ static UniValue SendToInner(const JSONRPCRequest &request, OutputTypes typeIn, O
     std::vector<CTempRecipient> vecSend;
     std::string sError;
 
-
     size_t nCommentOfs = 2;
     size_t nRingSizeOfs = 6;
     size_t nTestFeeOfs = 99;
@@ -4254,7 +4259,6 @@ static UniValue SendToInner(const JSONRPCRequest &request, OutputTypes typeIn, O
             if (0 != AddOutput(typeOut, vecSend, address.Get(), nAmount, fSubtractFeeFromAmount, sNarr, sError))
                 throw JSONRPCError(RPC_MISC_ERROR, strprintf("AddOutput failed: %s.", sError));
 
-
             if (obj.exists("script"))
             {
                 CTempRecipient &r = vecSend.back();
@@ -4270,7 +4274,6 @@ static UniValue SendToInner(const JSONRPCRequest &request, OutputTypes typeIn, O
                 if (typeOut != OUTPUT_STANDARD)
                     throw std::runtime_error("In progress, setting script only works for standard outputs.");
             };
-
         };
         nCommentOfs = 1;
         nRingSizeOfs = 3;
@@ -5564,21 +5567,21 @@ static const CRPCCommand commands[] =
 { //  category              name                        actor (function)           okSafeMode
   //  --------------------- ------------------------    -----------------------    ----------
     { "wallet",             "extkey",                   &extkey,                   false,  {} },
-    { "wallet",             "extkeyimportmaster",       &extkeyimportmaster,       false,  {} }, // import, set as master, derive account, set default account, force users to run mnemonic new first make them copy the key
-    { "wallet",             "extkeygenesisimport",      &extkeygenesisimport,      false,  {} },
-    { "wallet",             "keyinfo",                  &keyinfo,                  false,  {} },
-    { "wallet",             "extkeyaltversion",         &extkeyaltversion,         false,  {} },
-    { "wallet",             "getnewextaddress",         &getnewextaddress,         false,  {} },
-    { "wallet",             "getnewstealthaddress",     &getnewstealthaddress,     false,  {} },
-    { "wallet",             "importstealthaddress",     &importstealthaddress,     false,  {} },
-    { "wallet",             "liststealthaddresses",     &liststealthaddresses,     false,  {} },
+    { "wallet",             "extkeyimportmaster",       &extkeyimportmaster,       false,  {"source","passphrase","save_bip44_root","master_label","account_label"} }, // import, set as master, derive account, set default account, force users to run mnemonic new first make them copy the key
+    { "wallet",             "extkeygenesisimport",      &extkeygenesisimport,      false,  {"source","passphrase","save_bip44_root","master_label","account_label"} },
+    { "wallet",             "keyinfo",                  &keyinfo,                  false,  {"key","show_secret"} },
+    { "wallet",             "extkeyaltversion",         &extkeyaltversion,         false,  {"ext_key"} },
+    { "wallet",             "getnewextaddress",         &getnewextaddress,         false,  {"label","childNo"} },
+    { "wallet",             "getnewstealthaddress",     &getnewstealthaddress,     false,  {"label","num_prefix_bits","prefix_num","bech32"} },
+    { "wallet",             "importstealthaddress",     &importstealthaddress,     false,  {"scan_secret","spend_secret","label","num_prefix_bits","prefix_num"} },
+    { "wallet",             "liststealthaddresses",     &liststealthaddresses,     false,  {"show_secrets"} },
 
-    { "wallet",             "scanchain",                &scanchain,                false,  {} },
+    { "wallet",             "scanchain",                &scanchain,                false,  {"fromHeight"} },
     { "wallet",             "reservebalance",           &reservebalance,           false,  {"enabled","amount"} },
     { "wallet",             "deriverangekeys",          &deriverangekeys,          false,  {"start", "end", "key/id", "hardened", "save", "add_to_addressbook", "256bithash"} },
-    { "wallet",             "clearwallettransactions",  &clearwallettransactions,  false,  {} },
+    { "wallet",             "clearwallettransactions",  &clearwallettransactions,  false,  {"remove_all"} },
 
-    { "wallet",             "filtertransactions",       &filtertransactions,       false,  {"offset","count","sort_code"} },
+    { "wallet",             "filtertransactions",       &filtertransactions,       false,  {"options"} },
     { "wallet",             "filteraddresses",          &filteraddresses,          false,  {"offset","count","sort_code"} },
     { "wallet",             "manageaddressbook",        &manageaddressbook,        true,   {"action","address","label","purpose"} },
 
@@ -5609,7 +5612,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "debugwallet",              &debugwallet,              false,  {"attempt_repair"} },
     { "wallet",             "rewindchain",              &rewindchain,              false,  {"height"} },
 
-    { "wallet",             "walletsettings",           &walletsettings,           true,   {} },
+    { "wallet",             "walletsettings",           &walletsettings,           true,   {"setting","json"} },
 
 
     { "governance",         "setvote",                  &setvote,                  false,  {"proposal","option","height_start","height_end"} },

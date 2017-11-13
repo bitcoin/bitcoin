@@ -77,6 +77,8 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "sendmany", 6 , "conf_target" },
     { "addmultisigaddress", 0, "nrequired" },
     { "addmultisigaddress", 1, "keys" },
+    { "addmultisigaddress", 3, "bech32" },
+    { "addmultisigaddress", 4, "256bit" },
     { "createmultisig", 0, "nrequired" },
     { "createmultisig", 1, "keys" },
     { "listunspent", 0, "minconf" },
@@ -190,6 +192,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "walletsettings", 1, "json" },
 
     { "getnewextaddress", 1, "childno" },
+    { "getnewstealthaddress", 3, "bech32" },
 
     { "listunspentanon", 0, "minconf" },
     { "listunspentanon", 1, "maxconf" },

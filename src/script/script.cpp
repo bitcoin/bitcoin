@@ -179,7 +179,7 @@ unsigned int CScript::GetSigOpCount(bool fAccurate) const
 
 unsigned int CScript::GetSigOpCount(const CScript& scriptSig) const
 {
-    if (!IsPayToScriptHash())
+    if (!IsPayToScriptHashAny())
         return GetSigOpCount(true);
 
     // This is a pay-to-script-hash scriptPubKey;

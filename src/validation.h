@@ -433,8 +433,6 @@ private:
     bool cacheStore;
     ScriptError error;
     PrecomputedTransactionData *txdata;
-    //secp256k1_pedersen_commitment valueCommitment;
-
 public:
     CScriptCheck(): amount(0), ptxTo(0), nIn(0), nFlags(0), cacheStore(false), error(SCRIPT_ERR_UNKNOWN_ERROR) {}
 

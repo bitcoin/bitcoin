@@ -441,7 +441,7 @@ class TestHandler:
                     proc.send_signal(signal.SIGINT)
                 if proc.poll() is not None:
                     log_out.seek(0), log_err.seek(0)
-                    [stdout, stderr] = [l.read().decode('utf-8') for l in (log_out, log_err)]
+                    [stdout, stderr] = [l.read().decode('utf-8',errors='replace') for l in (log_out, log_err)]
                     log_out.close(), log_err.close()
                     if proc.returncode == TEST_EXIT_PASSED and stderr == "":
                         status = "Passed"

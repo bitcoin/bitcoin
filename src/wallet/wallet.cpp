@@ -1559,7 +1559,7 @@ void CWalletTx::GetAmounts(
     {
         CAmount nValueOut = tx->GetValueOut();
         nFee = nDebit - nValueOut;
-    }
+    };
 
     // staked
     if (tx->IsCoinStake())
@@ -1607,6 +1607,7 @@ void CWalletTx::GetAmounts(
     // Sent/received.
     if (tx->IsParticlVersion())
     {
+        bool fFoundChange = false;
         for (unsigned int i = 0; i < tx->vpout.size(); ++i)
         {
             const CTxOutBase *txout = tx->vpout[i].get();
@@ -1621,8 +1622,12 @@ void CWalletTx::GetAmounts(
             if (nDebit > 0)
             {
                 // Don't report 'change' txouts
-                if (pwallet->IsChange(txout))
+                // Only hide one change output per txn
+                if (!fFoundChange && pwallet->IsChange(txout))
+                {
+                    fFoundChange = true;
                     continue;
+                };
             } else
             if (!(fIsMine & filter))
                 continue;
@@ -1651,6 +1656,7 @@ void CWalletTx::GetAmounts(
             // If we are debited by the transaction, add the output as a "sent" entry
             if (nDebit > 0)
                 listSent.push_back(output);
+
 
             // If we are receiving the output, add it as a "received" entry
             if (fIsMine & filter)
@@ -3354,7 +3360,7 @@ DBErrors CWallet::ZapWalletTx(std::vector<CWalletTx>& vWtx)
 }
 
 
-bool CWallet::SetAddressBook(const CTxDestination& address, const std::string& strName, const std::string& strPurpose)
+bool CWallet::SetAddressBook(const CTxDestination& address, const std::string& strName, const std::string& strPurpose, bool fBech32)
 {
     bool fUpdated = false;
     {

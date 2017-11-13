@@ -26,6 +26,12 @@ bool CScriptID::Set(const uint256& in)
     return true;
 };
 
+bool CScriptID256::Set(const CScript& in)
+{
+    *this = HashSha256(in.begin(), in.end());
+    return true;
+};
+
 const char* GetTxnOutputType(txnouttype t)
 {
     switch (t)

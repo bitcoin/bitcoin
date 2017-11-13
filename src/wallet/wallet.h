@@ -144,17 +144,12 @@ class CAddressBookData
 {
 public:
     std::string name;
-    std::string purpose;
+    std::string purpose = "unknown";
+    bool fBech32 = false;
 
     std::vector<uint32_t> vPath; // index to m is stored in first entry
 
-    mutable uint8_t nOwned; // 0 unknown, 1 yes, 2 no
-
-    CAddressBookData()
-    {
-        nOwned = 0;
-        purpose = "unknown";
-    }
+    mutable uint8_t nOwned = 0; // 0 unknown, 1 yes, 2 no
 
     ADD_SERIALIZE_METHODS;
     template <typename Stream, typename Operation>
@@ -164,6 +159,10 @@ public:
         READWRITE(purpose);
         READWRITE(vPath);
         READWRITE(destdata);
+
+        try { READWRITE(fBech32); } catch(std::exception &e) {
+            // old format
+        }
     }
 
     typedef std::map<std::string, std::string> StringMap;
@@ -1099,7 +1098,7 @@ public:
     DBErrors ZapWalletTx(std::vector<CWalletTx>& vWtx);
     DBErrors ZapSelectTx(std::vector<uint256>& vHashIn, std::vector<uint256>& vHashOut);
 
-    virtual bool SetAddressBook(const CTxDestination& address, const std::string& strName, const std::string& purpose);
+    virtual bool SetAddressBook(const CTxDestination& address, const std::string& strName, const std::string& purpose, bool fBech32=false);
 
     virtual bool DelAddressBook(const CTxDestination& address);
 
