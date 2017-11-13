@@ -189,13 +189,13 @@ void populateRPCTypeInfo(CMPTransaction& mp_obj, UniValue& txobj, uint32_t txTyp
             populateRPCTypeAcceptOffer(mp_obj, txobj);
             break;
         case MSC_TYPE_CREATE_PROPERTY_FIXED:
-            populateRPCTypeCreatePropertyFixed(mp_obj, txobj);
+            populateRPCTypeCreatePropertyFixed(mp_obj, txobj, confirmations);
             break;
         case MSC_TYPE_CREATE_PROPERTY_VARIABLE:
-            populateRPCTypeCreatePropertyVariable(mp_obj, txobj);
+            populateRPCTypeCreatePropertyVariable(mp_obj, txobj, confirmations);
             break;
         case MSC_TYPE_CREATE_PROPERTY_MANUAL:
-            populateRPCTypeCreatePropertyManual(mp_obj, txobj);
+            populateRPCTypeCreatePropertyManual(mp_obj, txobj, confirmations);
             break;
         case MSC_TYPE_CLOSE_CROWDSALE:
             populateRPCTypeCloseCrowdsale(mp_obj, txobj);
@@ -404,13 +404,16 @@ void populateRPCTypeAcceptOffer(CMPTransaction& omniObj, UniValue& txobj)
     txobj.push_back(Pair("amount", FormatMP(propertyId, amount)));
 }
 
-void populateRPCTypeCreatePropertyFixed(CMPTransaction& omniObj, UniValue& txobj)
+void populateRPCTypeCreatePropertyFixed(CMPTransaction& omniObj, UniValue& txobj, int confirmations)
 {
     LOCK(cs_tally);
-    uint32_t propertyId = _my_sps->findSPByTX(omniObj.getHash());
-    if (propertyId > 0) txobj.push_back(Pair("propertyid", (uint64_t) propertyId));
-    if (propertyId > 0) txobj.push_back(Pair("divisible", isPropertyDivisible(propertyId)));
-
+    if (confirmations > 0) {
+        uint32_t propertyId = _my_sps->findSPByTX(omniObj.getHash());
+        if (propertyId > 0) {
+            txobj.push_back(Pair("propertyid", (uint64_t) propertyId));
+            txobj.push_back(Pair("divisible", isPropertyDivisible(propertyId)));
+        }
+    }
     txobj.push_back(Pair("ecosystem", strEcosystem(omniObj.getEcosystem())));
     txobj.push_back(Pair("propertytype", strPropertyType(omniObj.getPropertyType())));
     txobj.push_back(Pair("category", omniObj.getSPCategory()));
@@ -422,13 +425,16 @@ void populateRPCTypeCreatePropertyFixed(CMPTransaction& omniObj, UniValue& txobj
     txobj.push_back(Pair("amount", strAmount));
 }
 
-void populateRPCTypeCreatePropertyVariable(CMPTransaction& omniObj, UniValue& txobj)
+void populateRPCTypeCreatePropertyVariable(CMPTransaction& omniObj, UniValue& txobj, int confirmations)
 {
     LOCK(cs_tally);
-    uint32_t propertyId = _my_sps->findSPByTX(omniObj.getHash());
-    if (propertyId > 0) txobj.push_back(Pair("propertyid", (uint64_t) propertyId));
-    if (propertyId > 0) txobj.push_back(Pair("divisible", isPropertyDivisible(propertyId)));
-
+    if (confirmations > 0) {
+        uint32_t propertyId = _my_sps->findSPByTX(omniObj.getHash());
+        if (propertyId > 0) {
+            txobj.push_back(Pair("propertyid", (uint64_t) propertyId));
+            txobj.push_back(Pair("divisible", isPropertyDivisible(propertyId)));
+        }
+    }
     txobj.push_back(Pair("propertytype", strPropertyType(omniObj.getPropertyType())));
     txobj.push_back(Pair("ecosystem", strEcosystem(omniObj.getEcosystem())));
     txobj.push_back(Pair("category", omniObj.getSPCategory()));
@@ -446,13 +452,16 @@ void populateRPCTypeCreatePropertyVariable(CMPTransaction& omniObj, UniValue& tx
     txobj.push_back(Pair("amount", strAmount)); // crowdsale token creations don't issue tokens with the create tx
 }
 
-void populateRPCTypeCreatePropertyManual(CMPTransaction& omniObj, UniValue& txobj)
+void populateRPCTypeCreatePropertyManual(CMPTransaction& omniObj, UniValue& txobj, int confirmations)
 {
     LOCK(cs_tally);
-    uint32_t propertyId = _my_sps->findSPByTX(omniObj.getHash());
-    if (propertyId > 0) txobj.push_back(Pair("propertyid", (uint64_t) propertyId));
-    if (propertyId > 0) txobj.push_back(Pair("divisible", isPropertyDivisible(propertyId)));
-
+    if (confirmations > 0) {
+        uint32_t propertyId = _my_sps->findSPByTX(omniObj.getHash());
+        if (propertyId > 0) {
+            txobj.push_back(Pair("propertyid", (uint64_t) propertyId));
+            txobj.push_back(Pair("divisible", isPropertyDivisible(propertyId)));
+        }
+    }
     txobj.push_back(Pair("propertytype", strPropertyType(omniObj.getPropertyType())));
     txobj.push_back(Pair("ecosystem", strEcosystem(omniObj.getEcosystem())));
     txobj.push_back(Pair("category", omniObj.getSPCategory()));
