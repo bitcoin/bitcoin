@@ -11,14 +11,15 @@ from test_framework.address import *
 import json
 
 class FilterTransactionsTest(ParticlTestFramework):
-    def __init__(self):
-        super().__init__()
+    def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 3
         self.extra_args = [ [ '-debug' ] for i in range(self.num_nodes) ]
 
     def setup_network(self, split=False):
-        self.nodes = self.start_nodes(self.num_nodes, self.options.tmpdir, self.extra_args)
+        self.add_nodes(self.num_nodes, extra_args=self.extra_args)
+        self.start_nodes()
+
         connect_nodes_bi(self.nodes, 0, 1)
         connect_nodes_bi(self.nodes, 0, 2)
         connect_nodes_bi(self.nodes, 1, 2)

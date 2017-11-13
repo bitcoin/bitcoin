@@ -15,21 +15,22 @@ from test_framework.mininode import *
 import binascii
 
 class SpentIndexTest(ParticlTestFramework):
-
-    def __init__(self):
-        super().__init__()
+    def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 4
         self.extra_args = [ ['-debug',] for i in range(self.num_nodes)]
+        self.extra_args = [
+            # Nodes 0/1 are "wallet" nodes
+            ['-debug',],
+            ['-debug','-spentindex'],
+            # Nodes 2/3 are used for testing
+            ['-debug','-spentindex'],
+            ['-debug','-spentindex', '-txindex'],]
 
     def setup_network(self):
-        self.nodes = []
-        # Nodes 0/1 are "wallet" nodes
-        self.nodes.append(self.start_node(0, self.options.tmpdir, ["-debug"]))
-        self.nodes.append(self.start_node(1, self.options.tmpdir, ["-debug", "-spentindex"]))
-        # Nodes 2/3 are used for testing
-        self.nodes.append(self.start_node(2, self.options.tmpdir, ["-debug", "-spentindex"]))
-        self.nodes.append(self.start_node(3, self.options.tmpdir, ["-debug", "-spentindex", "-txindex"]))
+        self.add_nodes(self.num_nodes, extra_args=self.extra_args)
+        self.start_nodes()
+
         connect_nodes(self.nodes[0], 1)
         connect_nodes(self.nodes[0], 2)
         connect_nodes(self.nodes[0], 3)

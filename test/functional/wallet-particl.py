@@ -4,7 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 from test_framework.test_particl import ParticlTestFramework
-from test_framework.test_framework import BITCOIND_PROC_WAIT_TIMEOUT
+from test_framework.test_node import BITCOIND_PROC_WAIT_TIMEOUT
 from test_framework.util import *
 
 
@@ -33,16 +33,14 @@ def read_dump(file_name):
 
 
 class WalletParticlTest(ParticlTestFramework):
-
-    def __init__(self):
-        super().__init__()
+    def set_test_params(self):
         self.setup_clean_chain = True   # don't copy from cache
         self.num_nodes = 3
         self.extra_args = [ ['-debug',] for i in range(self.num_nodes)]
 
     def setup_network(self, split=False):
-
-        self.nodes = self.start_nodes(self.num_nodes, self.options.tmpdir, self.extra_args)
+        self.add_nodes(self.num_nodes, extra_args=self.extra_args)
+        self.start_nodes()
 
     def run_test (self):
         tmpdir = self.options.tmpdir
@@ -172,7 +170,7 @@ class WalletParticlTest(ParticlTestFramework):
 
         # restart node
         self.stop_node(0)
-        nodes[0] = self.start_node(0, self.options.tmpdir, self.extra_args[0])
+        self.start_node(0, self.extra_args[0])
 
 
         ro = nodes[0].getwalletinfo()
@@ -238,8 +236,8 @@ class WalletParticlTest(ParticlTestFramework):
         assert('wallet encrypted' in ro)
 
         # restart node
-        self.bitcoind_processes[1].wait(timeout=BITCOIND_PROC_WAIT_TIMEOUT) # wait until encryptwallet has shut down node
-        nodes[1] = self.start_node(1, self.options.tmpdir, self.extra_args[1])
+        self.nodes[1].process.wait(timeout=BITCOIND_PROC_WAIT_TIMEOUT) # wait until encryptwallet has shut down node
+        self.start_node(1, self.extra_args[1])
 
         try:
             ro = nodes[1].extkeyimportmaster('abandon baby cabbage dad eager fabric gadget habit ice kangaroo lab absorb')
@@ -313,7 +311,7 @@ class WalletParticlTest(ParticlTestFramework):
 
         # Restart node
         self.stop_node(1)
-        nodes[1] = self.start_node(1, self.options.tmpdir, self.extra_args[1])
+        self.start_node(1, self.extra_args[1])
 
         ro = nodes[1].walletpassphrase('changedPass', 300)
 
@@ -516,7 +514,7 @@ class WalletParticlTest(ParticlTestFramework):
 
         # Restart node
         self.stop_node(0)
-        nodes[0] = self.start_node(0, self.options.tmpdir, self.extra_args[0])
+        self.start_node(0, self.extra_args[0])
 
         ro = nodes[0].filteraddresses(0, 100)
         assert(nOrigLen-1 == len(ro))

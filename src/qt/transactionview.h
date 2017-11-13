@@ -114,8 +114,8 @@ public Q_SLOTS:
     void chooseDate(int idx);
     void chooseType(int idx);
     void chooseWatchonly(int idx);
-    void changedPrefix(const QString &prefix);
-    void changedAmount(const QString &amount);
+    void changedAmount();
+    void changedPrefix();
     void exportClicked();
     void focusTransaction(const QModelIndex&);
 

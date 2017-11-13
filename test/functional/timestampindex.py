@@ -14,21 +14,21 @@ from test_framework.util import *
 
 
 class TimestampIndexTest(ParticlTestFramework):
-
-    def __init__(self):
-        super().__init__()
+    def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 4
-        self.extra_args = [ ['-debug',] for i in range(self.num_nodes)]
+        self.extra_args = [
+            # Nodes 0/1 are "wallet" nodes
+            ['-debug',],
+            ['-debug','-timestampindex'],
+            # Nodes 2/3 are used for testing
+            ['-debug',],
+            ['-debug','-timestampindex'],]
 
     def setup_network(self):
-        self.nodes = []
-        # Nodes 0/1 are "wallet" nodes
-        self.nodes.append(self.start_node(0, self.options.tmpdir, ["-debug"]))
-        self.nodes.append(self.start_node(1, self.options.tmpdir, ["-debug", "-timestampindex"]))
-        # Nodes 2/3 are used for testing
-        self.nodes.append(self.start_node(2, self.options.tmpdir, ["-debug"]))
-        self.nodes.append(self.start_node(3, self.options.tmpdir, ["-debug", "-timestampindex"]))
+        self.add_nodes(self.num_nodes, extra_args=self.extra_args)
+        self.start_nodes()
+
         connect_nodes(self.nodes[0], 1)
         connect_nodes(self.nodes[0], 2)
         connect_nodes(self.nodes[0], 3)
@@ -37,44 +37,44 @@ class TimestampIndexTest(ParticlTestFramework):
         self.sync_all()
 
     def run_test(self):
-        
+
         nodes = self.nodes
-        
+
         # Stop staking
         ro = nodes[0].reservebalance(True, 10000000)
         ro = nodes[1].reservebalance(True, 10000000)
         ro = nodes[2].reservebalance(True, 10000000)
         ro = nodes[3].reservebalance(True, 10000000)
-        
+
         ro = nodes[0].extkeyimportmaster("abandon baby cabbage dad eager fabric gadget habit ice kangaroo lab absorb")
         assert(ro['account_id'] == 'aaaZf2qnNr5T7PWRmqgmusuu5ACnBcX2ev')
-        
+
         ro = nodes[0].getinfo()
         assert(ro['total_balance'] == 100000)
-        
+
         blockhashes = []
         self.stakeToHeight(1, False)
         blockhashes.append(nodes[0].getblockhash(1))
         time.sleep(3)
-        
+
         self.stakeToHeight(2, False)
         blockhashes.append(nodes[0].getblockhash(2))
         time.sleep(3)
-        
+
         self.stakeToHeight(3, False)
         blockhashes.append(nodes[0].getblockhash(3))
         self.sync_all()
-        
+
         low = self.nodes[1].getblock(blockhashes[0])["time"]
         high = low + 76
-        
+
         print("Checking timestamp index...")
         hashes = self.nodes[1].getblockhashes(high, low)
 
         assert_equal(len(hashes), len(blockhashes))
-        
+
         assert_equal(hashes, blockhashes)
-        
+
         print("Passed\n")
 
 

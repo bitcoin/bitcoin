@@ -48,9 +48,7 @@ def create_transaction(node, coinbase, to_address, amount):
     return tx
 
 class BIP66Test(BitcoinTestFramework):
-
-    def __init__(self):
-        super().__init__()
+    def set_test_params(self):
         self.num_nodes = 1
         self.extra_args = [['-promiscuousmempoolflags=1', '-whitelist=127.0.0.1']]
         self.setup_clean_chain = True
@@ -98,7 +96,7 @@ class BIP66Test(BitcoinTestFramework):
         node0.send_and_ping(msg_block(block))
         assert_equal(int(self.nodes[0].getbestblockhash(), 16), tip)
 
-        assert wait_until(lambda: "reject" in node0.last_message.keys())
+        wait_until(lambda: "reject" in node0.last_message.keys(), lock=mininode_lock)
         with mininode_lock:
             assert_equal(node0.last_message["reject"].code, REJECT_OBSOLETE)
             assert_equal(node0.last_message["reject"].reason, b'bad-version(0x00000002)')
@@ -128,7 +126,7 @@ class BIP66Test(BitcoinTestFramework):
         node0.send_and_ping(msg_block(block))
         assert_equal(int(self.nodes[0].getbestblockhash(), 16), tip)
 
-        assert wait_until (lambda: "reject" in node0.last_message.keys())
+        wait_until(lambda: "reject" in node0.last_message.keys(), lock=mininode_lock)
         with mininode_lock:
             # We can receive different reject messages depending on whether
             # bitcoind is running with multiple script check threads. If script

@@ -9,8 +9,7 @@ from test_framework.util import *
 
 
 class SignRawTransactionsTest(BitcoinTestFramework):
-    def __init__(self):
-        super().__init__()
+    def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
 
@@ -83,7 +82,7 @@ class SignRawTransactionsTest(BitcoinTestFramework):
             assert_equal(decodedRawTx["vin"][i]["vout"], inp["vout"])
 
         # Make sure decoderawtransaction throws if there is extra data
-        assert_raises(JSONRPCException, self.nodes[0].decoderawtransaction, rawTx + "00")
+        assert_raises_rpc_error(-22, "TX decode failed", self.nodes[0].decoderawtransaction, rawTx + "00")
 
         rawTxSigned = self.nodes[0].signrawtransaction(rawTx, scripts, privKeys)
 

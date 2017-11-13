@@ -7,15 +7,15 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 
 class MnemonicTest (BitcoinTestFramework):
-
-    def __init__(self):
-        super().__init__()
+    def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
         self.extra_args = [ ['-debug',] for i in range(self.num_nodes)]
 
     def setup_network(self, split=False):
-        self.nodes = self.start_nodes(self.num_nodes, self.options.tmpdir, self.extra_args)
+        self.add_nodes(self.num_nodes, extra_args=self.extra_args)
+        self.start_nodes()
+
         self.is_network_split = False
         self.sync_all()
 

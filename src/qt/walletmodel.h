@@ -58,7 +58,7 @@ public:
     CAmount amount;
     // If from a payment request, this is used for storing the memo
     QString message;
-    
+
     QString narration;
 
     // If from a payment request, paymentRequest.IsInitialized() will be true
@@ -202,6 +202,7 @@ public:
     bool getPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const;
     bool havePrivKey(const CKeyID &address) const;
     bool ownAddress(const CBitcoinAddress &address) const;
+    bool IsSpendable(const CTxDestination& dest) const;
     bool getPrivKey(const CKeyID &address, CKey& vchPrivKeyOut) const;
     void getOutputs(const std::vector<COutPoint>& vOutpoints, std::vector<COutput>& vOutputs);
     bool isSpent(const COutPoint& outpoint) const;
@@ -226,13 +227,13 @@ public:
     bool hdEnabled() const;
 
     int getDefaultConfirmTarget() const;
-    
+
     void lockWallet();
     CHDWallet *getParticlWallet() const;
     CAmount getReserveBalance();
 
     void checkBalanceChanged();
-    
+
     bool tryCallRpc(const QString &sCommand, UniValue &rv) const;
     void warningBox(QString heading, QString msg) const;
 
@@ -306,9 +307,9 @@ public Q_SLOTS:
     void updateWatchOnlyFlag(bool fHaveWatchonly);
     /* Current, immature or unconfirmed balance might have changed - emit 'balanceChanged' if so */
     void pollBalanceChanged();
-    
+
     void reserveBalanceChanged(CAmount nReserveBalanceNew);
-    
+
 };
 
 #endif // BITCOIN_QT_WALLETMODEL_H

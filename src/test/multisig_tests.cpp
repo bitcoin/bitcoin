@@ -18,8 +18,6 @@
 
 #include <boost/test/unit_test.hpp>
 
-typedef std::vector<unsigned char> valtype;
-
 BOOST_FIXTURE_TEST_SUITE(multisig_tests, BasicTestingSetup)
 
 CScript
@@ -179,6 +177,7 @@ BOOST_AUTO_TEST_CASE(multisig_IsStandard)
     for (int i = 0; i < 6; i++)
         BOOST_CHECK(!::IsStandard(malformed[i], whichType));
 }
+
 
 BOOST_AUTO_TEST_CASE(multisig_Solver1)
 {

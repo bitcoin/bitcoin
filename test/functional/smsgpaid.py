@@ -9,17 +9,14 @@ from test_framework.util import *
 
 
 class SmsgDevTest(ParticlTestFramework):
-
-    def __init__(self):
-        super().__init__()
+    def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 2
         self.extra_args = [ ['-debug','-noacceptnonstdtxn'] for i in range(self.num_nodes) ]
 
     def setup_network(self, split=False):
-        self.nodes = []
-        self.nodes.append(self.start_node(0, self.options.tmpdir, self.extra_args[0]))
-        self.nodes.append(self.start_node(1, self.options.tmpdir, self.extra_args[1]))
+        self.add_nodes(self.num_nodes, extra_args=self.extra_args)
+        self.start_nodes()
         connect_nodes(self.nodes[0], 1)
 
         self.is_network_split = False

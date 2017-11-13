@@ -5,19 +5,18 @@
 
 from test_framework.test_particl import ParticlTestFramework
 from test_framework.test_particl import isclose
-from test_framework.test_framework import BITCOIND_PROC_WAIT_TIMEOUT
+from test_framework.test_node import BITCOIND_PROC_WAIT_TIMEOUT
 from test_framework.util import *
 
 class StealthTest(ParticlTestFramework):
-
-    def __init__(self):
-        super().__init__()
+    def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 3
         self.extra_args = [ ['-debug','-noacceptnonstdtxn'] for i in range(self.num_nodes)]
 
     def setup_network(self, split=False):
-        self.nodes = self.start_nodes(self.num_nodes, self.options.tmpdir, self.extra_args)
+        self.add_nodes(self.num_nodes, extra_args=self.extra_args)
+        self.start_nodes()
 
         connect_nodes_bi(self.nodes, 0, 1)
         connect_nodes_bi(self.nodes, 0, 2)
@@ -119,9 +118,9 @@ class StealthTest(ParticlTestFramework):
         ro = node2.encryptwallet("qwerty234")
         assert("wallet encrypted" in ro)
 
-        self.bitcoind_processes[2].wait(timeout=BITCOIND_PROC_WAIT_TIMEOUT) # wait until encryptwallet has shut down node
+        self.nodes[2].process.wait(timeout=BITCOIND_PROC_WAIT_TIMEOUT) # wait until encryptwallet has shut down node
         # Restart node 2
-        self.nodes[2] = self.start_node(2, self.options.tmpdir, self.extra_args[2])
+        self.start_node(2, self.extra_args[2])
         node2 = self.nodes[2]
         ro = node2.walletpassphrase("qwerty234", 300)
         ro = node2.reservebalance(True, 10000000)

@@ -17,9 +17,24 @@ class ParticlTestFramework(BitcoinTestFramework):
     def __init__(self):
         super().__init__()
 
-    def start_node(self, i, dirname, extra_args=None, rpchost=None, timewait=None, binary=None, stderr=None):
-        return super().start_node(i, dirname, extra_args, rpchost, timewait, binary, stderr, False)
+    def start_node(self, i, extra_args=None, stderr=None):
+        return super().start_node(i, extra_args, stderr, False)
 
+    def start_nodes(self, extra_args=None):
+        """Start multiple bitcoinds"""
+
+        if extra_args is None:
+            extra_args = [None] * self.num_nodes
+        assert_equal(len(extra_args), self.num_nodes)
+        try:
+            for i, node in enumerate(self.nodes):
+                node.start(extra_args[i], legacymode=False)
+            for node in self.nodes:
+                node.wait_for_rpc_connection()
+        except:
+            # If one node failed to start, stop the others
+            self.stop_nodes()
+            raise
 
     def wait_for_height(self, node, nHeight, nTries=500):
         for i in range(nTries):
