@@ -23,28 +23,18 @@ userClosed(false),
 platformStyle(_platformStyle)
 {
     ui->setupUi(this); 
-
-    QSettings settings; 
-    bool darkTheme = (settings.value("theme").toString() == "dark"); 
-    if(darkTheme) 
-    { 
-        QString darkGray = "rgb(31,31,31)";
-        QString medGray = "rgb(45,45,45)";
-        QString lightGray = "rgb(62,62,62)";
-        QString fontGray = "rgb(204,204,204)";
-        QString slightHover = "rgb(67,67,67)";
-        setStyleSheet( 
-        "#contentWidget { background: rgba(45,45,45); border-radius: 6px; }" 
-        "QPushButton { background-color: " + lightGray + "; color: " + fontGray + "; border-color: " + darkGray + "; border-width: 1px; padding: 6px; border-style: outset; border-radius: 0px ;}"
-        "QPushButton:hover { background-color: " + darkGray + ";}"
-        "#warningIcon { border: none }");
+    if(GUIUtil::customThemeIsSet()) {
+        QString appstyle = "fusion";
+        QApplication::setStyle(appstyle);
+        setStyleSheet(GUIUtil::getThemeStyleSheet()); 
         
         if (platformStyle->getImagesOnButtons()) { 
             QIcon icon = platformStyle->SingleColorIcon(":/icons/warning"); 
             icon.addPixmap(icon.pixmap(QSize(64,64), QIcon::Normal), QIcon::Disabled); 
             ui->warningIcon->setIcon(icon); 
-        }  
-    }else{ 
+        }
+
+    } else { 
         setStyleSheet( 
         "#contentWidget { background: rgba(255,255,255,240); border-radius: 6px; }" 
         "QLabel { color: rgb(40,40,40); }"); 

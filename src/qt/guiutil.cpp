@@ -973,4 +973,119 @@ void ClickableProgressBar::mouseReleaseEvent(QMouseEvent *event)
     Q_EMIT clicked(event->pos());
 }
 
+bool customThemeIsSet(){
+    QSettings settings;
+    return (settings.value("theme").toString() != "default");
+}
+
+QString getThemeStyleSheet(){
+    QSettings settings;
+    QString theme = settings.value("theme").toString();
+
+    QString backgroundColor, accentOne, accentTwo, buttonHover, fontColor;
+    bool validTheme = false;
+
+    if(theme == "dark"){
+        accentOne = "rgb(31,31,31)";
+        accentTwo = "rgb(62,62,62)";
+        buttonHover = accentTwo;
+        backgroundColor = "rgb(45,45,45)";
+        fontColor = "rgb(204,204,204)";
+        validTheme = true;
+    }
+
+     if(theme == "light"){
+        accentOne = "rgb(204,204,204)";
+        accentTwo = accentOne;
+        buttonHover = "rgb(134,134,134)";
+        backgroundColor = "rgb(240,240,240)";
+        fontColor = "rgb(31,31,31)";
+        validTheme = true;
+    }
+
+    if(!validTheme)
+        return "";
+
+    return (
+        //General
+        "QFrame { background-color: " + accentOne + "; alternate-background-color: " + accentOne + "; border: none;}"
+        "QWidget {background: " + backgroundColor + "; color: " + fontColor + ";}"
+
+        //QLineEdit
+        "QLineEdit { background: " + accentOne + "; border-style: solid; border-width: 1px;  border-color: " + accentTwo + ";}"
+
+        //Checkbox
+        "QCheckBox {padding: 5px;}"
+
+        //Table view
+        "QHeaderView { background: " + accentOne + ";} "
+        "QTableView { border: 1px solid " + accentTwo + "; selection-background-color: " + accentTwo + "; selection-color: "+ fontColor + "; alternate-background: " + accentOne + ";}"
+        "QTableView::item { border-right: 1px solid " + accentTwo + "; border-bottom: 1px solid " + accentTwo + ";}"                    
+        //"RecentRequestsTableModel::item { selection-background: " + accentTwo + "; selection-color: "+ fontColor + "; alternate-background: " + accentOne + "; }"
+
+        //Spinbox
+        "QAbstractSpinBox { background: " + accentOne + "; border-style: solid; border-width: 1px;  border-color: " + accentTwo + ";}"
+        "QAbstractSpinBox::up-button {min-height: 7px; border: 1px outset " + accentTwo + "}"
+        "QAbstractSpinBox::down-button { min-height: 7px; border: 1px outset " + accentTwo + "}"
+        "QAbstractSpinBox::up-button:off { min-height: 7px; border: 1px outset " + accentTwo + "}"
+        "QAbstractSpinBox::down-button:off {min-height: 7px; border: 1px outset " + accentTwo + "}"
+        "QAbstractSpinBox::up-arrow { image: url(:/icons/up_arrow) 1;}"
+        "QAbstractSpinBox::down-arrow { image: url(:/icons/down_arrow) 1;}"                    
+        "QAbstractSpinBox::up-arrow:off { image: url(:/icons/up_arrow_off) 1;}"                    
+        "QAbstractSpinBox::down-arrow:off { image: url(:/icons/down_arrow_off) 1;}"                   
+        
+
+        //Combobox
+        "QComboBox { background: " + accentOne + "; border-style: outset; border-width: 1px;  border-color: " + accentTwo + ";}"
+        "QComboBox QAbstractItemView { border-style: solid; border-width: 1px;  border-color: " + accentTwo + ";}"
+        "QComboBox::drop-down { border: 1px outset " + accentTwo + "}"
+        "QComboBox::down-arrow { image: url(:/icons/down_arrow) 1;}"
+
+        //Menu
+        "QMenu:item:selected { background: " + buttonHover + ";}"
+        "QMenuBar { background-color: " + accentTwo + "; border: solid 1px " + accentOne + ";}"
+        "QMenuBar:item { padding: 5px; spacing: 0px;}"
+        "QMenuBar:item:selected { background: " + buttonHover + ";}"
+
+        //Toolbar
+        "#toolbar {background: " + accentTwo + "; border-left: none; border-right:none; border-top: none; border-bottom: 3px solid " + backgroundColor + "; padding-top: 0px;}"
+        "#toolbar > QToolButton { background: " + accentTwo + "; border-color: " + accentTwo + "; border-style: solid; border-width: 1px; border-radius: 0px; padding: 6px; padding-left: 9px; padding-right: 9px; margin-bottom: 1px;}"
+        "#toolbar > QToolButton:hover { background: " + backgroundColor + "; border-color: " + accentTwo + "; border-top-color: " + backgroundColor + ";  border-style: solid; border-width: 1px; border-top-left-radius: 5px; border-top-right-radius: 5px;}"                    
+        "#toolbar > QToolButton:checked { background: " + backgroundColor + "; border-color: " + backgroundColor + "; border-style: solid; border-width: 1px; border-radius: 0px; border-top-left-radius: 5px; border-top-right-radius: 5px;}"
+        
+        //Scrollbar
+        "QScrollBar {border: 2px solid " + accentTwo + "; background: " + accentOne + "; margin: 0px 20px 0px 20px;}"
+        "QScrollBar::handle { background: " + buttonHover + ";}"
+        
+        //Progress Bar
+        "QProgressBar {color: " + accentOne + "; background: " + accentTwo + ";  border: 1px outset " + accentOne + "; border-radius: 0px; padding: 1px; text-align: center;}" 
+        "QProgressBar::chunk {color: " + accentOne + "; background: qlineargradient(x1:0, y1:0, x2: 0.5, y2: 0, x3: 1, y3: 0, stop: 0 rgb(108,200,239), stop: 1 rgb(102,204,204), stop: 2 rgb(12,175,165)); border-radius: 7px; margin: 0px;}"
+        
+        //Balance seperator line
+        "#line { border-top: none; border-left: none; border-right: none; border-bottom: 1px; border-style: solid; border-color: " + fontColor + ";}"
+
+        
+        //Buttons (and Icons)
+        "QPushButton { background-color: " + accentTwo + "; color: " + fontColor + "; border-color: " + accentOne + "; border-width: 1px; padding: 6px; border-style: outset; border-radius: 0px ;}"
+        "QPushButton:hover { background-color: " + buttonHover + ";}"
+        "#warningIcon {background: transparent;}"
+
+        //Disturbing borders
+        "#labelWalletStatus { border: none;}"
+        "#labelTransactionsStatus { border: none;}"
+        "#lineWatchBalance { border: none;}"
+        "#widgetCoinControl { border: none;}"
+        "#frameFeeSelection {border: none;}"
+        "#warningIcon { border: none }"
+
+        //Optional Borders
+        "#frame { border: none;}"       //balances frame
+        "#frame_2 {border: none;}"      //recent transactions
+        "#SendCoins {border: none;}"    //sendcoins top frame
+        "#frameFee {border: none;}"     //sendcoins lower frame
+        "#frame2 {border: none;}"       //receive coins
+    );
+}
+
+
 } // namespace GUIUtil

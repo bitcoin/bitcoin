@@ -59,8 +59,6 @@ SplashScreen::SplashScreen(Qt::WindowFlags f, const NetworkStyle *networkStyle) 
     pixmap.setDevicePixelRatio(devicePixelRatio);
 #endif
 
-    //setStyleSheet("color: rgb(12,175,165)");
-
     QPainter pixPaint(&pixmap);
     pixPaint.setPen(QColor(204,204,204));
 

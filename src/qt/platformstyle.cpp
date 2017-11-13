@@ -5,6 +5,7 @@
 #include "platformstyle.h"
 
 #include "guiconstants.h"
+#include "guiutil.h"
 
 #include <QApplication>
 #include <QColor>
@@ -35,8 +36,7 @@ namespace {
 
 void MakeSingleColorImage(QImage& img, const QColor& colorbase)
 {   
-    QSettings settings;
-    if(settings.value("theme").toString() == "dark") 
+    if(GUIUtil::customThemeIsSet()) 
     { 
         QColor colorLeft = QColor(108,200,239);
         QColor colorMid = QColor(102,204,204);
@@ -116,9 +116,9 @@ PlatformStyle::PlatformStyle(const QString &_name, bool _imagesOnButtons, bool _
     singleColor(0,0,0),
     textColor(0,0,0)
 {
-    QSettings settings; 
-    if(settings.value("theme").toString() == "dark") 
-    { 
+    if(GUIUtil::customThemeIsSet()) 
+    {   
+        //TODO: may be obsolete
         //dark theme
         imagesOnButtons = true;
         colorizeIcons = true;

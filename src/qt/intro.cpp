@@ -121,10 +121,10 @@ Intro::Intro(QWidget *parent) :
     thread(0),
     signalled(false)
 {
-    QSettings settings; 
-    if(settings.value("theme").toString() == "dark") 
-    {   
-        setStyleSheet("QWidget { background: rgb(45,45,45); color: rgb(204,204,204); }"); 
+    if(GUIUtil::customThemeIsSet()) {
+        QString appstyle = "fusion";
+        QApplication::setStyle(appstyle);
+        setStyleSheet(GUIUtil::getThemeStyleSheet());
     } 
     ui->setupUi(this);
     ui->welcomeLabel->setText(ui->welcomeLabel->text().arg(tr(PACKAGE_NAME)));

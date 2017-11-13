@@ -434,20 +434,11 @@ RPCConsole::RPCConsole(const PlatformStyle *_platformStyle, QWidget *parent) :
         // Restore failed (perhaps missing setting), center the window
         move(QApplication::desktop()->availableGeometry().center() - frameGeometry().center());
     }
-    if(settings.value("theme").toString() == "dark") 
-    {   
-        QString darkGray = "rgb(31,31,31)";
-        QString medGray = "rgb(45,45,45)";
-        QString lightGray = "rgb(62,62,62)";
-        QString fontGray = "rgb(204,204,204)";
-        QString slightHover = "rgb(67,67,67)";
-        setStyleSheet( 
-            "QWidget { background: rgba(45,45,45); color: rgb(204,204,204); }" 
-            "QHeaderView { background: " + darkGray + ";} "
-        "QTableView { border: 1px solid " + lightGray + "; selection-background-color: " + lightGray + "; selection-color: "+ fontGray + "; alternate-background: " + darkGray + ";}"
-        "QTableView::item { border-right: 1px solid " + lightGray + "; border-bottom: 1px solid " + lightGray + ";}"  
-        ); 
-    } 
+    if(GUIUtil::customThemeIsSet()) {
+        QString appstyle = "fusion";
+        QApplication::setStyle(appstyle);
+        setStyleSheet(GUIUtil::getThemeStyleSheet());
+    }
     ui->openDebugLogfileButton->setToolTip(ui->openDebugLogfileButton->toolTip().arg(tr(PACKAGE_NAME)));
 
     if (platformStyle->getImagesOnButtons()) {

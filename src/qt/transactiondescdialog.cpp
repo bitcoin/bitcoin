@@ -6,6 +6,7 @@
 #include "ui_transactiondescdialog.h"
 
 #include "transactiontablemodel.h"
+#include "guiutil.h"
 
 #include <QModelIndex>
 #include <QSettings>
@@ -15,13 +16,11 @@ TransactionDescDialog::TransactionDescDialog(const QModelIndex &idx, QWidget *pa
     ui(new Ui::TransactionDescDialog)
 {
     ui->setupUi(this);
-    QSettings settings;
-    if(settings.value("theme").toString() == "dark") 
-    {   
-        QString fontGray = "rgb(204,204,204)";
-        QString medGray = "rgb(45,45,45)";
-        setStyleSheet("QWidget {background: " + medGray + "; color: " + fontGray + ";}"); 
-    } 
+    if(GUIUtil::customThemeIsSet()) {
+        QString appstyle = "fusion";
+        QApplication::setStyle(appstyle);
+        setStyleSheet(GUIUtil::getThemeStyleSheet());
+    }
     setWindowTitle(tr("Details for %1").arg(idx.data(TransactionTableModel::TxIDRole).toString()));
     QString desc = idx.data(TransactionTableModel::LongDescriptionRole).toString();
     ui->detailText->setHtml(desc);
