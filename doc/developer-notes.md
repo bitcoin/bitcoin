@@ -168,6 +168,21 @@ can be very difficult to track down. Compiling with -DDEBUG_LOCKORDER (configure
 CXXFLAGS="-DDEBUG_LOCKORDER -g") inserts run-time checks to keep track of which locks
 are held, and adds warnings to the debug.log file if inconsistencies are detected.
 
+**Valgrind suppressions file**
+
+Valgrind is a programming tool for memory debugging, memory leak detection, and
+profiling. The repo contains a Valgrind suppressions file
+([`valgrind.supp`](https://github.com/bitcoin/bitcoin/blob/master/contrib/valgrind.supp))
+which includes known Valgrind warnings in our dependencies that cannot be fixed
+in-tree. Example use:
+
+```shell
+$ valgrind --suppressions=contrib/valgrind.supp src/test/test_bitcoin
+$ valgrind --suppressions=contrib/valgrind.supp --leak-check=full \
+      --show-leak-kinds=all src/test/test_bitcoin --log_level=test_suite
+$ valgrind -v --leak-check=full src/bitcoind -printtoconsole
+```
+
 Locking/mutex usage notes
 -------------------------
 
