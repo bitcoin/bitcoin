@@ -124,7 +124,7 @@ Intro::Intro(QWidget *parent) :
     QSettings settings; 
     if(settings.value("theme").toString() == "dark") 
     {   
-        setStyleSheet("QWidget { background: rgba(45,45,45); color: rgb(12,175,165); }"); 
+        setStyleSheet("QWidget { background: rgb(45,45,45); color: rgb(204,204,204); }"); 
     } 
     ui->setupUi(this);
     ui->welcomeLabel->setText(ui->welcomeLabel->text().arg(tr(PACKAGE_NAME)));

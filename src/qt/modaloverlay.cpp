@@ -28,10 +28,15 @@ platformStyle(_platformStyle)
     bool darkTheme = (settings.value("theme").toString() == "dark"); 
     if(darkTheme) 
     { 
+        QString darkGray = "rgb(31,31,31)";
+        QString medGray = "rgb(45,45,45)";
+        QString lightGray = "rgb(62,62,62)";
+        QString fontGray = "rgb(204,204,204)";
+        QString slightHover = "rgb(67,67,67)";
         setStyleSheet( 
         "#contentWidget { background: rgba(45,45,45); border-radius: 6px; }" 
-        "QPushButton { background-color: rgb(45,45,45); color: rgb(12,175,165); border-width: 1px; padding: 6px; border-style: outset; border-radius: 5px ; border-color: rgb(12,175,165); }" 
-        "QPushButton:hover { background: rgb(31,31,31); }"
+        "QPushButton { background-color: " + lightGray + "; color: " + fontGray + "; border-color: " + darkGray + "; border-width: 1px; padding: 6px; border-style: outset; border-radius: 0px ;}"
+        "QPushButton:hover { background-color: " + darkGray + ";}"
         "#warningIcon { border: none }");
         
         if (platformStyle->getImagesOnButtons()) { 
