@@ -93,7 +93,7 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
     ui->theme->addItem(QString("SYS-light"), QVariant("light"));
     ui->theme->addItem(QString("SYS-light-hires"), QVariant("light-hires"));
     ui->theme->addItem(QString("SYS-blue"), QVariant("drkblue"));
-    ui->theme->addItem(QString("SYS-Crownium"), QVariant("crownium"));
+    ui->theme->addItem(QString("SYS-crownium"), QVariant("crownium"));
     ui->theme->addItem(QString("SYS-traditional"), QVariant("trad"));
     
     /* Language selector */
