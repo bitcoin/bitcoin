@@ -143,7 +143,7 @@ Footnotes
 causes two of the bitcoin executables to crash shortly after start up. The bug is related to the
 -fstack-protector-all g++ compiler flag which is used to mitigate buffer overflows.
 Installing the mingw-w64 packages from the Ubuntu 17 distribution solves the issue, however, this is not
-an officially supported approach and it's only recommended if you are prepared to reinstall WSL/Ubutntu should
+an officially supported approach and it's only recommended if you are prepared to reinstall WSL/Ubuntu should
 something break.
 
 <a name="footnote2">2</a>: Starting from Ubuntu Xenial 16.04 both the 32 and 64 bit mingw-w64 packages install two different
