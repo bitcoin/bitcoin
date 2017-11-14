@@ -125,8 +125,7 @@ class P2PLeakTest(BitcoinTestFramework):
         assert not unsupported_service_bit5_node.connected
         assert not unsupported_service_bit7_node.connected
 
-        for _ in range(5):
-            self.nodes[0].disconnect_p2p()
+        self.nodes[0].disconnect_p2ps()
 
         # Wait until all connections are closed
         wait_until(lambda: len(self.nodes[0].getpeerinfo()) == 0)
