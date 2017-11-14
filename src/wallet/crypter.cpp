@@ -230,10 +230,7 @@ bool CCryptoKeyStore::AddKeyPubKey(const CKey& key, const CPubKey &pubkey)
         return false;
     }
 
-    if (!AddCryptedKey(pubkey, vchCryptedSecret)) {
-        return false;
-    }
-    return true;
+    return AddCryptedKey(pubkey, vchCryptedSecret);
 }
 
 
