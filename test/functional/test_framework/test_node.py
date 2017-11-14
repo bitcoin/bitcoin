@@ -173,7 +173,7 @@ class TestNode():
         if 'dstaddr' not in kwargs:
             kwargs['dstaddr'] = '127.0.0.1'
         self.p2ps.append(p2p_conn)
-        kwargs.update({'rpc': self.rpc, 'callback': p2p_conn})
+        kwargs.update({'callback': p2p_conn})
         p2p_conn.add_connection(NodeConn(**kwargs))
 
         return p2p_conn

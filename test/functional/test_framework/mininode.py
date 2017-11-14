@@ -1555,7 +1555,6 @@ class NodeConnCB():
     def on_islock(self, conn, message): pass
 
     def on_verack(self, conn, message):
-        conn.ver_recv = conn.ver_send
         self.verack_received = True
 
     def on_version(self, conn, message):
@@ -1673,7 +1672,7 @@ class NodeConn(asyncore.dispatcher):
         "devnet": b"\xe2\xca\xff\xce",    # devnet
     }
 
-    def __init__(self, dstaddr, dstport, rpc, callback, net="regtest", services=NODE_NETWORK, send_version=True):
+    def __init__(self, dstaddr, dstport, callback, net="regtest", services=NODE_NETWORK, send_version=True):
         asyncore.dispatcher.__init__(self, map=mininode_socket_map)
         self.dstaddr = dstaddr
         self.dstport = dstport
@@ -1681,8 +1680,6 @@ class NodeConn(asyncore.dispatcher):
         self.socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
         self.sendbuf = b""
         self.recvbuf = b""
-        self.ver_send = 209
-        self.ver_recv = 209
         self.last_sent = 0
         self.state = "connecting"
         self.network = net
@@ -1706,7 +1703,6 @@ class NodeConn(asyncore.dispatcher):
             self.connect((dstaddr, dstport))
         except:
             self.handle_close()
-        self.rpc = rpc
 
     def handle_connect(self):
         if self.state != "connected":
