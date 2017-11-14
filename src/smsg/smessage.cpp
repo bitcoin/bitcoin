@@ -2000,6 +2000,7 @@ int SecureMsgManageLocalKey(CKeyID &keyId, ChangeType mode)
 
         switch(mode)
         {
+            case CT_REPLACE:
             case CT_NEW:
                 if (itFound == smsgAddresses.end())
                 {

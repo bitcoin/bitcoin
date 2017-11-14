@@ -7738,6 +7738,11 @@ bool CHDWallet::ProcessLockedBlindedOutputs()
     LogPrint(BCLog::HDWALLET, "%s\n", __func__);
     AssertLockHeld(cs_wallet);
 
+    size_t nProcessed = 0; // incl any failed attempts
+    size_t nExpanded = 0;
+    std::set<uint256> setChanged;
+
+    {
     CHDWalletDB wdb(*dbw);
 
     if (!wdb.TxnBegin())
@@ -7753,8 +7758,6 @@ bool CHDWallet::ProcessLockedBlindedOutputs()
     std::string strType;
 
     CStoredTransaction stx;
-    size_t nProcessed = 0; // incl any failed attempts
-    size_t nExpanded = 0;
     unsigned int fFlags = DB_SET_RANGE;
     ssKey << std::string("lao");
     while (wdb.ReadKeyAtCursor(pcursor, ssKey, fFlags) == 0)
@@ -7813,7 +7816,6 @@ bool CHDWallet::ProcessLockedBlindedOutputs()
                     && !fHave)
                 {
                     fUpdated = true;
-                    pout->nFlags &= ~ORF_LOCKED;
                     rtx.InsertOutput(*pout);
                 };
                 break;
@@ -7822,7 +7824,6 @@ bool CHDWallet::ProcessLockedBlindedOutputs()
                     && !fHave)
                 {
                     fUpdated = true;
-                    pout->nFlags &= ~ORF_LOCKED;
                     rtx.InsertOutput(*pout);
                 };
                 break;
@@ -7842,6 +7843,8 @@ bool CHDWallet::ProcessLockedBlindedOutputs()
             if (!wdb.WriteTxRecord(op.hash, rtx)
                 || !wdb.WriteStoredTx(op.hash, stx))
                 return false;
+
+            setChanged.insert(op.hash);
         };
 
         nExpanded++;
@@ -7850,6 +7853,13 @@ bool CHDWallet::ProcessLockedBlindedOutputs()
     pcursor->close();
 
     wdb.TxnCommit();
+    }
+    // Notify UI of updated transaction
+    for (const auto &hash : setChanged)
+    {
+        NotifyTransactionChanged(this, hash, CT_REPLACE);
+    };
+
 
     LogPrint(BCLog::HDWALLET, "%s: Expanded %u/%u output%s.\n", __func__, nExpanded, nProcessed, nProcessed == 1 ? "" : "s");
 
@@ -8548,6 +8558,7 @@ int CHDWallet::OwnStandardOut(const CTxOutStandard *pout, const CTxOutData *pdat
 
     rout.nValue = pout->nValue;
     rout.scriptPubKey = pout->scriptPubKey;
+    rout.nFlags &= ~ORF_LOCKED;
 
     return 1;
 };
@@ -8590,18 +8601,16 @@ int CHDWallet::OwnBlindOut(CHDWalletDB *pwdb, const uint256 &txhash, const CTxOu
 
     if (IsLocked())
     {
-        rout.nFlags |= ORF_LOCKED;
-        rout.nValue = 0;
-
         COutPoint op(txhash, rout.n);
-        if (!pwdb->HaveLockedAnonOut(op))
+        if ((rout.nFlags & ORF_LOCKED)
+            && !pwdb->HaveLockedAnonOut(op))
         {
+            rout.nValue = 0;
+            fUpdated = true;
             if (LogAcceptCategory(BCLog::HDWALLET)) LogPrintf("%s: Adding locked output %s, %d.\n", __func__, txhash.ToString(), rout.n);
             if (!pwdb->WriteLockedAnonOut(op))
                 LogPrintf("Error: %s - WriteLockedAnonOut failed.\n");
         };
-
-        fUpdated = true;
         return 1;
     };
 
@@ -8642,6 +8651,7 @@ int CHDWallet::OwnBlindOut(CHDWalletDB *pwdb, const uint256 &txhash, const CTxOu
 
     rout.nValue = amountOut;
     rout.scriptPubKey = pout->scriptPubKey;
+    rout.nFlags &= ~ORF_LOCKED;
 
     stx.InsertBlind(rout.n, blindOut);
     fUpdated = true;
@@ -8657,6 +8667,9 @@ int CHDWallet::OwnAnonOut(CHDWalletDB *pwdb, const uint256 &txhash, const CTxOut
     CKeyID idStealth;
     CEKAKey ak;
     CExtKeyAccount *pa = nullptr;
+
+    rout.nType = OUTPUT_RINGCT;
+
     if (IsLocked())
     {
         if (!HaveKey(idk, ak, pa))
@@ -8664,14 +8677,13 @@ int CHDWallet::OwnAnonOut(CHDWalletDB *pwdb, const uint256 &txhash, const CTxOut
         if (pa && pa->nActiveInternal == ak.nParent)
             rout.nFlags |= ORF_CHANGE | ORF_FROM;
 
-        rout.nType = OUTPUT_RINGCT;
         rout.nFlags |= ORF_OWNED;
-        rout.nFlags |= ORF_LOCKED;
-        rout.nValue = 0;
 
         COutPoint op(txhash, rout.n);
-        if (!pwdb->HaveLockedAnonOut(op))
+        if ((rout.nFlags & ORF_LOCKED)
+            && !pwdb->HaveLockedAnonOut(op))
         {
+            rout.nValue = 0;
             if (LogAcceptCategory(BCLog::HDWALLET)) LogPrintf("%s: Adding locked output %s, %d\n.", __func__, txhash.ToString(), rout.n);
             if (!pwdb->WriteLockedAnonOut(op))
                 LogPrintf("Error: %s - WriteLockedAnonOut failed.\n");
@@ -8717,7 +8729,6 @@ int CHDWallet::OwnAnonOut(CHDWalletDB *pwdb, const uint256 &txhash, const CTxOut
     if (nNarr > 0)
         rout.sNarration.assign((const char*)msg, nNarr);
 
-    rout.nType = OUTPUT_RINGCT;
     rout.nFlags |= ORF_OWNED;
     rout.nValue = amountOut;
 
@@ -8749,7 +8760,7 @@ int CHDWallet::OwnAnonOut(CHDWalletDB *pwdb, const uint256 &txhash, const CTxOut
     if (!pwdb->WriteAnonKeyImage(ki, op))
         LogPrintf("Error: %s - WriteAnonKeyImage failed.\n", __func__);
 
-
+    rout.nFlags &= ~ORF_LOCKED;
     stx.InsertBlind(rout.n, blindOut);
     fUpdated = true;
 
@@ -8969,6 +8980,7 @@ bool CHDWallet::AddToRecord(CTransactionRecord &rtxIn, const CTransaction &tx,
         } else
         {
             pout = &rout;
+            pout->nFlags |= ORF_LOCKED; // mark new output as locked
         };
 
         pout->n = i;

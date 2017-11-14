@@ -1938,7 +1938,7 @@ void ListRecord(CHDWallet *phdw, const uint256 &hash, const CTransactionRecord &
         };
 
         if (r.nFlags & ORF_LOCKED)
-            entry.push_back(Pair("require_unlock", "true"));
+            entry.push_back(Pair("requires_unlock", "true"));
 
         if (dest.type() == typeid(CNoDestination))
             entry.push_back(Pair("address", "none"));
@@ -2381,6 +2381,21 @@ UniValue listsinceblock(const JSONRPCRequest& request)
         }
     }
 
+    if (IsHDWallet(pwallet))
+    {
+        CHDWallet *phdw = GetHDWallet(pwallet);
+
+        for (const auto &ri : phdw->mapRecords)
+        {
+            const uint256 &txhash = ri.first;
+            const CTransactionRecord &rtx = ri.second;
+            if (depth == -1 || phdw->GetDepthInMainChain(rtx.blockHash, rtx.nIndex) < depth) {
+                ListRecord(phdw, txhash, rtx, "*", 0, true, transactions, filter);
+            };
+        };
+    };
+
+
     // when a reorg'd block is requested, we also list any relevant transactions
     // in the blocks of the chain that was detached
     UniValue removed(UniValue::VARR);
@@ -2394,7 +2409,16 @@ UniValue listsinceblock(const JSONRPCRequest& request)
                 // We want all transactions regardless of confirmation count to appear here,
                 // even negative confirmation ones, hence the big negative.
                 ListTransactions(pwallet, pwallet->mapWallet[tx->GetHash()], "*", -100000000, true, removed, filter);
-            }
+            } else
+            if (IsHDWallet(pwallet)) {
+                CHDWallet *phdw = GetHDWallet(pwallet);
+                const uint256 &txhash = tx->GetHash();
+                MapRecords_t::const_iterator mri = phdw->mapRecords.find(txhash);
+                if (mri != phdw->mapRecords.end()) {
+                    const CTransactionRecord &rtx = mri->second;
+                    ListRecord(phdw, txhash, rtx, "*", -100000000, true, removed, filter);
+                };
+            };
         }
         paltindex = paltindex->pprev;
     }

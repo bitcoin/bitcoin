@@ -2899,10 +2899,8 @@ static void ParseRecords(
         push(entry, "walletconflicts", conflicts);
     }
     PushTime(entry, "time", rtx.nTimeReceived);
-    if (rtx.nFlags & ORF_LOCKED) {
-        push(entry, "require_unlock", "true");
-    }
 
+    size_t nLockedOutputs = 0;
     for (auto &record : rtx.vout) {
 
         UniValue output(UniValue::VOBJ);
@@ -2918,6 +2916,9 @@ static void ParseRecords(
         }
         if (record.nFlags & ORF_OWN_WATCH) {
             nWatchOnly++;
+        }
+        if (record.nFlags & ORF_LOCKED) {
+            nLockedOutputs++;
         }
 
         CBitcoinAddress addr;
@@ -3000,6 +3001,9 @@ static void ParseRecords(
         push(entry, "category", "send");
     };
 
+    if (nLockedOutputs) {
+        push(entry, "requires_unlock", "true");
+    }
     if (nWatchOnly) {
         push(entry, "involvesWatchonly", "true");
     }

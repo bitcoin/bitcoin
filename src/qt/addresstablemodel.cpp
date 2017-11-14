@@ -118,6 +118,7 @@ public:
 
         switch(status)
         {
+        case CT_REPLACE:
         case CT_NEW:
             if(inModel)
             {
@@ -374,7 +375,7 @@ QString AddressTableModel::addRow(const QString &type, const QString &label, con
     else if(type == Receive)
     {
         // Generate a new address to associate with given label
-        
+
         QString sCommand;
         switch (addrType)
         {
@@ -385,16 +386,16 @@ QString AddressTableModel::addRow(const QString &type, const QString &label, con
             default:
                 sCommand = "getnewaddress ";            break;
         };
-        
+
         sCommand += "\""+label+ "\"";
-        
+
         if (addrType == ADDR_STANDARD256)
             sCommand += " false false true"; // "account", "bech32", "hardened", "256bit"
-        
+
         UniValue rv;
         if (!walletModel->tryCallRpc(sCommand, rv))
             return QString();
-        
+
         return QString::fromStdString(rv.get_str());
     }
     else

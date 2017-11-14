@@ -106,12 +106,8 @@ BITCOIN_TESTS += \
   wallet/test/hdwallet_test_fixture.cpp \
   wallet/test/hdwallet_test_fixture.h \
   wallet/test/hdwallet_tests.cpp \
-  wallet/test/rpc_hdwallet_tests.cpp
-
-if ENABLE_STAKE_TEST
-  BITCOIN_TESTS += \
+  wallet/test/rpc_hdwallet_tests.cpp \
   wallet/test/stake_tests.cpp
-endif
 endif
 
 
