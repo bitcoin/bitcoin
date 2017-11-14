@@ -113,8 +113,7 @@ class P2PLeakTest(BitcoinTestFramework):
         #This node should have been banned
         assert not no_version_bannode.connected
 
-        for _ in range(5):
-            self.nodes[0].disconnect_p2p()
+        self.nodes[0].disconnect_p2ps()
 
         # Make sure no unexpected messages came in
         assert(no_version_bannode.unexpected_msg == False)

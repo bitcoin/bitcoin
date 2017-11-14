@@ -59,7 +59,7 @@ class MaxUploadTest(BitcoinTestFramework):
         # p2p_conns[2] will test resetting the counters
         p2p_conns = []
 
-        for i in range(3):
+        for _ in range(3):
             p2p_conns.append(self.nodes[0].add_p2p_connection(TestNode()))
 
         NetworkThread().start() # Start up network handling in another thread
@@ -144,8 +144,7 @@ class MaxUploadTest(BitcoinTestFramework):
 
         self.log.info("Peer 2 able to download old block")
 
-        for i in range(3):
-            self.nodes[0].disconnect_p2p()
+        self.nodes[0].disconnect_p2ps()
 
         #stop and start node 0 with 1MB maxuploadtarget, whitelist 127.0.0.1
         self.log.info("Restarting nodes with -whitelist=127.0.0.1")
