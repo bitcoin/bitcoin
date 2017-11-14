@@ -159,13 +159,13 @@ public:
         nSendBufferMaxSize = connOptions.nSendBufferMaxSize;
         nReceiveFloodSize = connOptions.nReceiveFloodSize;
         {
-            LOCK(cs_totalBytesSent);
+            LOCK(cs_totalBytesSent); // writing variable 'nMaxOutboundTimeframe'/'nMaxOutboundLimit' require holding mutex 'cs_totalBytesSent' exclusively
             nMaxOutboundTimeframe = connOptions.nMaxOutboundTimeframe;
             nMaxOutboundLimit = connOptions.nMaxOutboundLimit;
         }
         vWhitelistedRange = connOptions.vWhitelistedRange;
         {
-            LOCK(cs_vAddedNodes);
+            LOCK(cs_vAddedNodes); // writing variable 'vAddedNodes' requires holding mutex 'cs_vAddedNodes' exclusively
             vAddedNodes = connOptions.m_added_nodes;
         }
     }

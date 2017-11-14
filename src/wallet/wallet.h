@@ -792,7 +792,7 @@ public:
     void SetNull()
     {
         {
-            LOCK(cs_wallet);
+            LOCK(cs_wallet); // writing variable 'nWalletVersion'/'nWalletMaxVersion'/'nOrderPosNext'/'nTimeFirstKey' requires holding mutex 'cs_wallet' exclusively
             nWalletVersion = FEATURE_BASE;
             nWalletMaxVersion = FEATURE_BASE;
             nOrderPosNext = 0;

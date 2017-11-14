@@ -1892,9 +1892,9 @@ CAmount CWalletTx::GetAvailableWatchOnlyCredit(const bool& fUseCache) const EXCL
         return nAvailableWatchCreditCached;
 
     CAmount nCredit = 0;
+    LOCK(pwallet->cs_wallet); // calling function 'IsSpent' requires holding mutex 'pwallet->cs_wallet' exclusively
     for (unsigned int i = 0; i < tx->vout.size(); i++)
     {
-        LOCK(pwallet->cs_wallet);
         if (!pwallet->IsSpent(GetHash(), i))
         {
             const CTxOut &txout = tx->vout[i];

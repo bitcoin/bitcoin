@@ -863,7 +863,8 @@ void PeerLogicValidation::NewPoWValidBlock(const CBlockIndex *pindex, const std:
         // TODO: Avoid the repeated-serialization here
         if (pnode->nVersion < INVALID_CB_NO_BAN_VERSION || pnode->fDisconnect)
             return;
-        LOCK(cs_main);
+        AssertLockHeld(cs_main);
+        LOCK(cs_main); // [remove lock when https://github.com/bitcoin/bitcoin/pull/11604 has been merged] repeat lock inside lambda to please clang -Wthread-safety
         ProcessBlockAvailability(pnode->GetId());
         CNodeState &state = *State(pnode->GetId());
         // If the peer has, or we announced to them the previous block already,
@@ -3032,7 +3033,7 @@ void PeerLogicValidation::EvictExtraOutboundPeers(int64_t time_in_seconds)
 
         connman->ForEachNode([&](CNode* pnode) {
             AssertLockHeld(cs_main);
-            LOCK(cs_main); // repeat lock in inside lambda to please clang -Wthread-safety
+            LOCK(cs_main); // [remove lock when https://github.com/bitcoin/bitcoin/pull/11604 has been merged] repeat lock inside lambda to please clang -Wthread-safety
             // Ignore non-outbound peers, or nodes marked for disconnect already
             if (!IsOutboundDisconnectionCandidate(pnode) || pnode->fDisconnect) return;
             CNodeState *state = State(pnode->GetId());
@@ -3047,7 +3048,7 @@ void PeerLogicValidation::EvictExtraOutboundPeers(int64_t time_in_seconds)
         if (worst_peer != -1) {
             bool disconnected = connman->ForNode(worst_peer, [&](CNode *pnode) {
                 AssertLockHeld(cs_main);
-                LOCK(cs_main); // repeat lock inside lambda to please clang -Wthread-safety
+                LOCK(cs_main); // [remove lock when https://github.com/bitcoin/bitcoin/pull/11604 has been merged] repeat lock inside lambda to please clang -Wthread-safety
                 // Only disconnect a peer that has been connected to us for
                 // some reasonable fraction of our check-frequency, to give
                 // it time for new information to have arrived.
