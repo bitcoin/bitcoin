@@ -16,7 +16,6 @@ class MultiWalletTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 2
-        self.extra_args = [['-wallet=w1', '-wallet=w2', '-wallet=w3', '-wallet=w'], []]
         self.supports_cli = True
 
     def run_test(self):
@@ -26,9 +25,28 @@ class MultiWalletTest(BitcoinTestFramework):
         wallet_dir = lambda *p: data_dir('wallets', *p)
         wallet = lambda name: node.get_wallet_rpc(name)
 
-        assert_equal(set(node.listwallets()), {"w1", "w2", "w3", "w"})
-
+        # check wallet.dat is created
         self.stop_nodes()
+        assert_equal(os.path.isfile(wallet_dir('wallet.dat')), True)
+
+        # restart node with a mix of wallet names:
+        #   w1, w2, w3 - to verify new wallets created when non-existing paths specified
+        #   w          - to verify wallet name matching works when one wallet path is prefix of another
+        #   sub/w5     - to verify relative wallet path is created correctly
+        #   extern/w6  - to verify absolute wallet path is created correctly
+        #   wallet.dat - to verify existing wallet file is loaded correctly
+        wallet_names = ['w1', 'w2', 'w3', 'w', 'sub/w5', os.path.join(self.options.tmpdir, 'extern/w6'), 'wallet.dat']
+        extra_args = ['-wallet={}'.format(n) for n in wallet_names]
+        self.start_node(0, extra_args)
+        assert_equal(set(node.listwallets()), set(wallet_names))
+
+        # check that all requested wallets were created
+        self.stop_node(0)
+        for wallet_name in wallet_names:
+            assert_equal(os.path.isfile(wallet_dir(wallet_name)), True)
+
+        # should not initialize if wallet path can't be created
+        self.assert_start_raises_init_error(0, ['-wallet=wallet.dat/bad'], 'File exists')
 
         self.assert_start_raises_init_error(0, ['-walletdir=wallets'], 'Error: Specified -walletdir "wallets" does not exist')
         self.assert_start_raises_init_error(0, ['-walletdir=wallets'], 'Error: Specified -walletdir "wallets" is a relative path', cwd=data_dir())
@@ -77,15 +95,17 @@ class MultiWalletTest(BitcoinTestFramework):
         self.restart_node(0, ['-walletdir='+competing_wallet_dir])
         self.assert_start_raises_init_error(1, ['-walletdir='+competing_wallet_dir], 'Error initializing wallet database environment')
 
-        self.restart_node(0, self.extra_args[0])
+        self.restart_node(0, extra_args)
 
-        w1 = wallet("w1")
-        w2 = wallet("w2")
-        w3 = wallet("w3")
-        w4 = wallet("w")
+        wallets = [wallet(w) for w in wallet_names]
         wallet_bad = wallet("bad")
 
-        w1.generate(1)
+        # check wallet names and balances
+        wallets[0].generate(1)
+        for wallet_name, wallet in zip(wallet_names, wallets):
+            info = wallet.getwalletinfo()
+            assert_equal(info['immature_balance'], 50 if wallet is wallets[0] else 0)
+            assert_equal(info['walletname'], wallet_name)
 
         # accessing invalid wallet fails
         assert_raises_rpc_error(-18, "Requested wallet does not exist or is not loaded", wallet_bad.getwalletinfo)
@@ -93,24 +113,7 @@ class MultiWalletTest(BitcoinTestFramework):
         # accessing wallet RPC without using wallet endpoint fails
         assert_raises_rpc_error(-19, "Wallet file not specified", node.getwalletinfo)
 
-        # check w1 wallet balance
-        w1_info = w1.getwalletinfo()
-        assert_equal(w1_info['immature_balance'], 50)
-        w1_name = w1_info['walletname']
-        assert_equal(w1_name, "w1")
-
-        # check w2 wallet balance
-        w2_info = w2.getwalletinfo()
-        assert_equal(w2_info['immature_balance'], 0)
-        w2_name = w2_info['walletname']
-        assert_equal(w2_name, "w2")
-
-        w3_name = w3.getwalletinfo()['walletname']
-        assert_equal(w3_name, "w3")
-
-        w4_name = w4.getwalletinfo()['walletname']
-        assert_equal(w4_name, "w")
-
+        w1, w2, w3, w4, *_ = wallets
         w1.generate(101)
         assert_equal(w1.getbalance(), 100)
         assert_equal(w2.getbalance(), 0)
