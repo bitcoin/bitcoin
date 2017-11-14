@@ -1400,6 +1400,9 @@ void EscrowFeedback(const string& node, const string& userfrom, const string& es
 	UniValue r, ret;
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowinfo " + escrowguid));
 	string offerguid = find_value(r.get_obj(), "offer").get_str();
+	string buyer = find_value(r.get_obj(), "buyer").get_str();
+	string seller = find_value(r.get_obj(), "seller").get_str();
+	string arbiter = find_value(r.get_obj(), "arbiter").get_str();
 
 	string escrowfeedbackstr = "escrowfeedback " + escrowguid + " " + userfrom + " " + feedback + " " + rating + " " + userto + " " + witness;
 
@@ -1441,8 +1444,9 @@ void EscrowFeedback(const string& node, const string& userfrom, const string& es
 	UniValue ret1;
 	BOOST_CHECK(ret1.read(txHistoryResult[0].get_str()));
 	const UniValue &historyResultObj = ret1.get_obj();
-	BOOST_CHECK_EQUAL(find_value(historyResultObj, "user1").get_str(), userfrom);
-	BOOST_CHECK_EQUAL(find_value(historyResultObj, "user2").get_str(), userto);
+	BOOST_CHECK_EQUAL(find_value(historyResultObj, "user1").get_str(), buyer);
+	BOOST_CHECK_EQUAL(find_value(historyResultObj, "user2").get_str(), seller);
+	BOOST_CHECK_EQUAL(find_value(historyResultObj, "user3").get_str(), arbiter);
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "_id").get_str(), txid);
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "guid").get_str(), escrowguid);
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "type").get_str(), "Escrow Feedback");
