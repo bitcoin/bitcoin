@@ -373,7 +373,6 @@ BOOST_AUTO_TEST_CASE (generate_alias_offerexpiry_resync)
 
 	// node 3 doesn't download the offer since it expired while node 3 was offline
 	BOOST_CHECK_THROW(r = CallRPC("node3", "offerinfo " + offerguid), runtime_error);
-	BOOST_CHECK_EQUAL(OfferFilter("node3", offerguid), false);
 
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "offerinfo " + offerguid));
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), true);	
@@ -903,6 +902,8 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	GenerateBlocks(5, "node3");
 	GenerateBlocks(50);
 	AliasNew("node1", "aliasexpire2", "pubdata");
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo aliasexpire2"));
+	int64_t expires_on = find_value(r.get_obj(), "expires_on").get_int64();  
 	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress aliasexpirednode2 3000"), runtime_error);
 	GenerateBlocks(10);	
 	const string &escrowguid = EscrowNewBuyItNow("node2", "node1", "aliasexpirednode2", offerguid, "1", "aliasexpire3");
@@ -982,8 +983,9 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	BOOST_CHECK_NO_THROW(CallRPC("node2", "escrowinfo " + escrowguid));
 	// this will recreate the alias and give it a new pubkey.. we need to use the old pubkey to sign the multisig, the escrow rpc call must check for the right pubkey
 	BOOST_CHECK(aliasexpirenode2address != AliasNew("node2", "aliasexpirednode2", "somedata"));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "certinfo " + certgoodguid));
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expires_on").get_int64(), expires_on);
 
-	CertUpdate("node1", certgoodguid, "pubdata");
 	// able to release and claim release on escrow with non-expired aliases with new pubkeys
 	EscrowRelease("node2", "buyer", escrowguid);	 
 	EscrowClaimRelease("node1", escrowguid); 
