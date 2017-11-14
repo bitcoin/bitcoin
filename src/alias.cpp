@@ -2526,8 +2526,6 @@ bool BuildAliasJson(const CAliasIndex& alias, UniValue& oName)
 bool BuildAliasIndexerHistoryJson(const CAliasIndex& alias, UniValue& oName)
 {
 	oName.push_back(Pair("_id", alias.txHash.GetHex()));
-	oName.push_back(Pair("encryption_privatekey", HexStr(alias.vchEncryptionPrivateKey)));
-	oName.push_back(Pair("encryption_publickey", HexStr(alias.vchEncryptionPublicKey)));
 	oName.push_back(Pair("publicvalue", stringFromVch(alias.vchPublicValue)));
 	oName.push_back(Pair("alias", stringFromVch(alias.vchAlias)));
 	int64_t nTime = 0;

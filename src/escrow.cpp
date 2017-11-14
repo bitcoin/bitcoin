@@ -1481,10 +1481,6 @@ UniValue escrowbid(const UniValue& params, bool fHelp) {
 
 	if (!GetEscrow(vchEscrow, theEscrow))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4513 - " + _("Could not find an escrow with this identifier"));
-	CScriptID innerID(CScript(theEscrow.vchRedeemScript.begin(), theEscrow.vchRedeemScript.end()));
-	CSyscoinAddress address(innerID);
-
-	CScript scriptPubKey = GetScriptForDestination(address.Get());
 
 	CWalletTx wtx;
 	vector<CRecipient> vecSend;
