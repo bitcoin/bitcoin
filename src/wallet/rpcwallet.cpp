@@ -1883,7 +1883,7 @@ void ListRecord(CHDWallet *phdw, const uint256 &hash, const CTransactionRecord &
         if (r.nFlags & ORF_CHANGE)
             continue;
 
-        if (!(r.nFlags & ORF_OWNED) && !(filter & ISMINE_WATCH_ONLY))
+        if (!(r.nFlags & ORF_FROM) && !(r.nFlags & ORF_OWNED) && !(filter & ISMINE_WATCH_ONLY))
             continue;
 
         std::string account;

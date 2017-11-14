@@ -45,95 +45,102 @@ class BlindTest(ParticlTestFramework):
         assert(sxAddrTo1_1 == 'TetbYTGv5LiqyFiUD3a5HHbpSinQ9KiRYDGAMvRzPfz4RnHMbKGAwDr1fjLGJ5Eqg1XDwpeGyqWMiwdK3qM3zKWjzHNpaatdoHVzzA')
 
         txnHash = nodes[0].sendparttoblind(sxAddrTo1_1, 3.4, '', '', False, 'node0 -> node1 p->b')
-        print("txnHash ", txnHash)
         txnHashes.append(txnHash)
 
 
-
         ro = nodes[0].listtransactions()
-        print("0 listtransactions " + json.dumps(ro, indent=4, default=self.jsonDecimal))
+        assert(len(ro) == 10)
 
         ro = nodes[0].getwalletinfo()
-        print("0 getwalletinfo " + json.dumps(ro, indent=4, default=self.jsonDecimal))
         assert(isclose(ro['total_balance'], 99996.594196))
-
-
         assert(self.wait_for_mempool(nodes[1], txnHash))
 
         ro = nodes[1].getwalletinfo()
-        print("1 getwalletinfo ", json.dumps(ro, indent=4, default=self.jsonDecimal))
+        assert(isclose(ro['unconfirmed_blind'], 3.4))
 
         ro = nodes[1].listtransactions()
-        print("1 listtransactions ", json.dumps(ro, indent=4, default=self.jsonDecimal))
-
-
+        assert(len(ro) == 2)
 
         self.stakeBlocks(2)
-
 
         mnemonic2 = nodes[2].mnemonic("new");
         ro = nodes[2].extkeyimportmaster(mnemonic2["master"])
         sxAddrTo2_1 = nodes[2].getnewstealthaddress()
 
         txnHash3 = nodes[1].sendblindtoblind(sxAddrTo2_1, 0.2, '', '', False, 'node1 -> node2 b->b')
-        print("txnHash3 ", txnHash3)
 
         ro = nodes[1].getwalletinfo()
-        print("1 getwalletinfo ", json.dumps(ro, indent=4, default=self.jsonDecimal))
+        assert(ro['blind_balance'] < 3.2 and ro['blind_balance'] > 3.1)
 
         ro = nodes[1].listtransactions()
-        print("1 listtransactions ", json.dumps(ro, indent=4, default=self.jsonDecimal))
+        assert(len(ro) == 3)
+        fFound = False
+        for e in ro:
+            if e['category'] == 'send':
+                assert(e['type'] == 'blind')
+                assert(isclose(e['amount'], -0.2))
+                fFound = True
+        assert(fFound)
 
         assert(self.wait_for_mempool(nodes[2], txnHash3))
 
 
         ro = nodes[2].getwalletinfo()
-        print("2 getwalletinfo ", json.dumps(ro, indent=4, default=self.jsonDecimal))
+        assert(isclose(ro['unconfirmed_blind'], 0.2))
 
         ro = nodes[2].listtransactions()
-        print("2 listtransactions ", json.dumps(ro, indent=4, default=self.jsonDecimal))
+        assert(len(ro) == 1)
+        e = ro[0]
+        assert(e['category'] == 'receive')
+        assert(e['type'] == 'blind')
+        assert(isclose(e['amount'], 0.2))
+        assert(e['stealth_address'] == sxAddrTo2_1)
 
 
-        # TODO: Depending on the random split there may not be enough funds in the unspent output here
         sxAddrTo2_2 = nodes[2].getnewextaddress();
         txnHash4 = nodes[1].sendblindtopart(sxAddrTo2_1, 0.5, '', '', False, 'node1 -> node2 b->p')
-        #txnHash4 = nodes[1].sendblindtopart(sxAddrTo2_2, 0.5, '', '', False, 'node1 -> node2 b->p')
-        print("txnHash4 ", txnHash4)
-
 
         ro = nodes[1].getwalletinfo()
-        print("1 getwalletinfo ", json.dumps(ro, indent=4, default=self.jsonDecimal))
+        assert(ro['blind_balance'] < 2.7 and ro['blind_balance'] > 2.69)
 
         ro = nodes[1].listtransactions()
-        print("1 listtransactions ", json.dumps(ro, indent=4, default=self.jsonDecimal))
-
+        assert(len(ro) == 4)
+        fFound = False
+        for e in ro:
+            if e['category'] == 'send' and e['type'] == 'standard':
+                assert(isclose(e['amount'], -0.5))
+                fFound = True
+        assert(fFound)
 
         assert(self.wait_for_mempool(nodes[2], txnHash4))
 
         ro = nodes[2].getwalletinfo()
-        print("2 getwalletinfo ", json.dumps(ro, indent=4, default=self.jsonDecimal))
+        assert(isclose(ro['unconfirmed_balance'], 0.5))
+        assert(isclose(ro['unconfirmed_blind'], 0.2))
 
         ro = nodes[2].listtransactions()
-        print("2 listtransactions ", json.dumps(ro, indent=4, default=self.jsonDecimal))
+        assert(len(ro) == 2)
 
 
 
         sxAddrTo2_3 = nodes[2].getnewstealthaddress("n2 sx+prefix", "4", "0xaaaa");
-        print("sxAddrTo2_3 ", sxAddrTo2_3)
-        #assert(sxAddrTo2_3 == "32eETczfqSdXkByymvCGrwtkUUkwVfiSosd82tu1K4H7MKzFze6L5pyQL6R29qGzBxuUhLaeg1pEaAhvqicVeWScsdN19kH83JYPC1Tn")
+        ro = nodes[2].validateaddress(sxAddrTo2_3);
+        assert(ro['isvalid'] == True)
+        assert(ro['isstealthaddress'] == True)
+        assert(ro['prefix_num_bits'] == 4)
+        assert(ro['prefix_bitfield'] == '0x000a')
+
+
 
         txnHash5 = nodes[0].sendparttoblind(sxAddrTo2_3, 0.5, '', '', False, 'node0 -> node2 p->b')
-        print("txnHash5 ", txnHash5)
 
         assert(self.wait_for_mempool(nodes[2], txnHash5))
 
         ro = nodes[2].listtransactions()
-        #print("2 listtransactions ", json.dumps(ro, indent=4, default=self.jsonDecimal))
         assert(ro[-1]["txid"] == txnHash5)
 
 
         ro = nodes[0].getwalletinfo()
-        #print("0 getwalletinfo " + json.dumps(ro, indent=4, default=self.jsonDecimal))
         # Some of the balance will have staked
         assert(isclose(ro['balance'] + ro['staked_balance'], 99996.09498274))
         availableBalance = ro['balance'];
@@ -146,8 +153,28 @@ class BlindTest(ParticlTestFramework):
         txnHashes.append(txnHash2)
 
         ro = nodes[0].getwalletinfo()
-        #print("0 getwalletinfo " + json.dumps(ro, indent=4, default=self.jsonDecimal))
         assert(isclose(ro['total_balance'], 99996.09294874))
+
+
+
+        ro = nodes[1].getwalletinfo()
+        assert(isclose(ro['blind_balance'], 2.691068))
+
+        outputs = [{'address':sxAddrTo2_3, 'amount':2.691068, 'subfee':True},]
+        ro = nodes[1].sendtypeto('blind', 'part', outputs, 'comment_to', 'comment_from', 4, 64, True)
+        feePerKB = (1000.0 / ro['bytes']) * float(ro['fee'])
+        assert(feePerKB > 0.001 and feePerKB < 0.004)
+
+        ro = nodes[1].sendtypeto('blind', 'blind', outputs, 'comment_to', 'comment_from', 4, 64, True)
+        feePerKB = (1000.0 / ro['bytes']) * float(ro['fee'])
+        assert(feePerKB > 0.001 and feePerKB < 0.004)
+
+        ro = nodes[1].sendtypeto('blind', 'part', outputs)
+
+        try:
+            ro = nodes[1].sendtypeto('blind', 'blind', outputs)
+        except JSONRPCException as e:
+            assert('Insufficient blinded funds' in e.error['message'])
 
 
         #assert(False)

@@ -3085,6 +3085,7 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
 
         CFeeRate discard_rate = GetDiscardRate(::feeEstimator);
         nFeeRet = 0;
+        size_t nSubFeeTries = 100;
         bool pick_new_inputs = true;
         CAmount nValueIn = 0;
         // Start with no fee and loop until there is enough fee
@@ -3328,7 +3329,10 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                 // fee to pay for the new output and still meet nFeeNeeded
                 // Or we should have just subtracted fee from recipients and
                 // nFeeNeeded should not have changed
-                return errorN(1, sError, __func__, _("Transaction fee and change calculation failed.").c_str());
+
+                if (!nSubtractFeeFromAmount || !(--nSubFeeTries)) // rangeproofs can change size per iteration
+                    return errorN(1, sError, __func__, _("Transaction fee and change calculation failed.").c_str());
+                LogPrint(BCLog::HDWALLET, "%s: nSubFeeTries %d\n", __func__, nSubFeeTries);
             }
 
             // Try to reduce change to include necessary fee
@@ -3552,6 +3556,7 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
         int nChangePosInOut = -1;
 
         nFeeRet = 0;
+        size_t nSubFeeTries = 100;
         bool pick_new_inputs = true;
         CAmount nValueIn = 0;
         // Start with no fee and loop until there is enough fee
@@ -3564,7 +3569,6 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
             CAmount nValueToSelect = nValue;
             if (nSubtractFeeFromAmount == 0)
                 nValueToSelect += nFeeRet;
-
 
             // Choose coins to use
             if (pick_new_inputs) {
@@ -3595,10 +3599,8 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                 r.nType = OUTPUT_CT;
                 r.fChange = true;
 
-
                 if (!SetChangeDest(coinControl, r, sError))
                     return errorN(1, sError, __func__, ("SetChangeDest failed: " + sError).c_str());
-
 
                 if (nChange > ::minRelayTxFee.GetFee(2048)) // TODO: better output size estimate
                 {
@@ -3691,7 +3693,6 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
 
             nFeeNeeded = GetMinimumFee(nBytes, *coinControl, ::mempool, ::feeEstimator, &feeCalc);
 
-
             // If we made it here and we aren't even able to meet the relay fee on the next pass, give up
             // because we must be at the maximum allowed fee.
             if (nFeeNeeded < ::minRelayTxFee.GetFee(nBytes))
@@ -3703,7 +3704,6 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                 // prevents potential overpayment in fees if the coins
                 // selected to meet nFeeNeeded result in a transaction that
                 // requires less fee than the prior iteration.
-
                 if (nFeeRet > nFeeNeeded && nChangePosInOut != -1
                     && nSubtractFeeFromAmount == 0)
                 {
@@ -3721,7 +3721,10 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                 // fee to pay for the new output and still meet nFeeNeeded
                 // Or we should have just subtracted fee from recipients and
                 // nFeeNeeded should not have changed
-                return errorN(1, sError, __func__, _("Transaction fee and change calculation failed.").c_str());
+
+                if (!nSubtractFeeFromAmount || !(--nSubFeeTries)) // rangeproofs can change size per iteration
+                    return errorN(1, sError, __func__, _("Transaction fee and change calculation failed.").c_str());
+                LogPrint(BCLog::HDWALLET, "%s: nSubFeeTries %d\n", __func__, nSubFeeTries);
             }
 
             // Try to reduce change to include necessary fee
@@ -3739,12 +3742,6 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                     break; // Done, able to increase fee from change
                 };
             };
-
-            // If subtracting fee from recipients, we now know what fee we
-            // need to subtract, we have no reason to reselect inputs
-            if (nSubtractFeeFromAmount > 0) {
-                pick_new_inputs = false;
-            }
 
             // If subtracting fee from recipients, we now know what fee we
             // need to subtract, we have no reason to reselect inputs
@@ -4134,6 +4131,7 @@ int CHDWallet::AddAnonInputs(CWalletTx &wtx, CTransactionRecord &rtx,
         std::vector<std::vector<uint8_t> > vInputBlinds;
         std::vector<size_t> vSecretColumns;
 
+        size_t nSubFeeTries = 100;
         bool pick_new_inputs = true;
         CAmount nValueIn = 0;
         // Start with no fee and loop until there is enough fee
@@ -4342,7 +4340,10 @@ int CHDWallet::AddAnonInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                 // fee to pay for the new output and still meet nFeeNeeded
                 // Or we should have just subtracted fee from recipients and
                 // nFeeNeeded should not have changed
-                return errorN(1, sError, __func__, _("Transaction fee and change calculation failed.").c_str());
+
+                if (!nSubtractFeeFromAmount || !(--nSubFeeTries)) // rangeproofs can change size per iteration
+                    return errorN(1, sError, __func__, _("Transaction fee and change calculation failed.").c_str());
+                LogPrint(BCLog::HDWALLET, "%s: nSubFeeTries %d\n", __func__, nSubFeeTries);
             }
 
             // Try to reduce change to include necessary fee

@@ -62,15 +62,14 @@ class AnonTest(ParticlTestFramework):
         txnHashes.append(txnHash)
 
         for k in range(6):
-                txnHash = nodes[0].sendparttoanon(sxAddrTo1_1, 10, '', '', False, 'node0 -> node1 p->a')
-                print("txnHash ", txnHash)
-                txnHashes.append(txnHash)
+            txnHash = nodes[0].sendparttoanon(sxAddrTo1_1, 10, '', '', False, 'node0 -> node1 p->a')
+            txnHashes.append(txnHash)
 
         assert(self.wait_for_mempool(nodes[1], txnHash))
 
 
         ro = nodes[1].listtransactions()
-        #print("1 listtransactions ", json.dumps(ro, indent=4, default=self.jsonDecimal))
+        assert(len(ro) == 10)
 
         ro = nodes[0].walletsettings('stakelimit', {'height':1})
         ro = nodes[0].reservebalance(False)
@@ -86,7 +85,6 @@ class AnonTest(ParticlTestFramework):
 
 
         txnHash = nodes[1].sendanontoanon(sxAddrTo0_1, 1, '', '', False, 'node1 -> node0 a->a')
-        print("1 sendanontoanon ", json.dumps(txnHash, indent=4, default=self.jsonDecimal))
         txnHashes = [txnHash,]
 
         assert(self.wait_for_mempool(nodes[0], txnHash))
@@ -107,19 +105,29 @@ class AnonTest(ParticlTestFramework):
             assert(txnHash in ro['tx'])
 
         ro = nodes[1].anonoutput()
-        print(ro)
+        assert(ro['lastindex'] == 20)
 
         txnHash = nodes[1].sendanontoanon(sxAddrTo0_1, 101, '', '', False, 'node1 -> node0 a->a', 5, 1)
-        print("1 sendanontoanon ", json.dumps(txnHash, indent=4, default=self.jsonDecimal))
         txnHashes = [txnHash,]
 
         assert(self.wait_for_mempool(nodes[0], txnHash))
 
         txnHash = nodes[1].sendanontoanon(sxAddrTo0_1, 0.1, '', '', False, '', 5, 2)
-        print("1 sendanontoanon ", json.dumps(txnHash, indent=4, default=self.jsonDecimal))
         txnHashes = [txnHash,]
 
         assert(self.wait_for_mempool(nodes[0], txnHash))
+
+
+        ro = nodes[1].getwalletinfo()
+        assert(ro['anon_balance'] > 10)
+
+        outputs = [{'address':sxAddrTo0_1, 'amount':10, 'subfee':True},]
+        ro = nodes[1].sendtypeto('anon', 'part', outputs, 'comment_to', 'comment_from', 4, 64, True)
+        assert(ro['bytes'] > 0)
+
+        txnHash = nodes[1].sendtypeto('anon', 'part', outputs);
+        txnHashes = [txnHash,]
+
 
         #assert(False)
         #print(json.dumps(ro, indent=4, default=self.jsonDecimal))
