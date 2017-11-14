@@ -634,7 +634,7 @@ void ThreadImport(std::vector<fs::path> vImportFiles) EXCLUSIVE_LOCKS_REQUIRED(c
             nFile++;
         }
         {
-            LOCK(cs_main); // reading the value pointed to by 'pblocktree' requires holding mutex 'cs_main'
+            LOCK(cs_main); // WIP: lock submitted in https://github.com/bitcoin/bitcoin/pull/11652/files
             pblocktree->WriteReindexing(false);
         }
         fReindex = false;
@@ -1422,7 +1422,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
 
                 if (fReset) {
                     {
-                        LOCK(cs_main); // reading the value pointed to by 'pblocktree' requires holding mutex 'cs_main'
+                        LOCK(cs_main); // WIP: lock submitted in https://github.com/bitcoin/bitcoin/pull/11652/files
                         pblocktree->WriteReindexing(true);
                     }
                     //If we're reindexing in prune mode, wipe away unusable block files and all undo data files
@@ -1445,7 +1445,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
                 // If the loaded chain has a wrong genesis, bail out immediately
                 // (we're likely using a testnet datadir, or the other way around).
                 {
-                    LOCK(cs_main);
+                    LOCK(cs_main); // WIP: lock submitted in https://github.com/bitcoin/bitcoin/pull/11652/files
                     if (!mapBlockIndex.empty() && mapBlockIndex.count(chainparams.GetConsensus().hashGenesisBlock) == 0)
                         return InitError(_("Incorrect or no genesis block found. Wrong datadir for network?"));
                 }
@@ -1481,7 +1481,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
                 // If necessary, upgrade from older database format.
                 // This is a no-op if we cleared the coinsviewdb with -reindex or -reindex-chainstate
                 {
-                    LOCK(cs_main); // reading the value pointed to by 'pcoinsdbview' requires holding mutex 'cs_main'
+                    LOCK(cs_main); // WIP: lock submitted in https://github.com/bitcoin/bitcoin/pull/11652/files
                     if (!pcoinsdbview->Upgrade()) {
                         strLoadError = _("Error upgrading chainstate database");
                         break;
@@ -1499,7 +1499,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
 
                 bool is_coinsview_empty;
                 {
-                    LOCK(cs_main); // reading the value pointed to by 'pcoinsTip' requires holding mutex 'cs_main'
+                    LOCK(cs_main); // WIP: lock submitted in https://github.com/bitcoin/bitcoin/pull/11652/files
                     is_coinsview_empty = fReset || fReindexChainState || pcoinsTip->GetBestBlock().IsNull();
                 }
                 if (!is_coinsview_empty) {
@@ -1508,7 +1508,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
                         strLoadError = _("Error initializing block database");
                         break;
                     }
-                    LOCK(cs_main);
+                    LOCK(cs_main); // WIP: lock submitted in https://github.com/bitcoin/bitcoin/pull/11652/files
                     assert(chainActive.Tip() != nullptr);
                 }
 
@@ -1533,7 +1533,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
                     {
                         CBlockIndex* tip;
                         {
-                            LOCK(cs_main);
+                            LOCK(cs_main); // WIP: lock submitted in https://github.com/bitcoin/bitcoin/pull/11652/files
                             tip = chainActive.Tip();
                         }
                         RPCNotifyBlockChange(true, tip);
@@ -1636,7 +1636,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     // Either install a handler to notify us when genesis activates, or set fHaveGenesis directly.
     {
-        LOCK(cs_main);
+        LOCK(cs_main); // WIP: lock submitted in https://github.com/bitcoin/bitcoin/pull/11652/files
         if (chainActive.Tip() == nullptr) {
             uiInterface.NotifyBlockTip.connect(BlockNotifyGenesisWait);
         } else {

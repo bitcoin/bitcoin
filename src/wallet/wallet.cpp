@@ -1848,9 +1848,9 @@ CAmount CWalletTx::GetAvailableCredit(bool fUseCache) const EXCLUSIVE_LOCKS_REQU
 
     CAmount nCredit = 0;
     uint256 hashTx = GetHash();
+    LOCK(pwallet->cs_wallet); // WIP: lock submitted in https://github.com/bitcoin/bitcoin/pull/11634/files
     for (unsigned int i = 0; i < tx->vout.size(); i++)
     {
-        LOCK(pwallet->cs_wallet);
         if (!pwallet->IsSpent(hashTx, i))
         {
             const CTxOut &txout = tx->vout[i];
@@ -2691,7 +2691,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
     // now we ensure code won't be written that makes assumptions about
     // nLockTime that preclude a fix later.
     {
-        LOCK(cs_main);
+        LOCK(cs_main); // WIP: lock submitted in https://github.com/bitcoin/bitcoin/pull/11596/files
         txNew.nLockTime = chainActive.Height();
     }
     // Secondly occasionally randomly pick a nLockTime even further back, so
@@ -3092,7 +3092,7 @@ DBErrors CWallet::LoadWallet(bool& fFirstRunRet)
 
     // This wallet is in its first run if all of these are empty
     {
-        LOCK(cs_KeyStore);
+        LOCK(cs_KeyStore); // WIP: lock submitted in https://github.com/bitcoin/bitcoin/pull/11634/files
         fFirstRunRet = mapKeys.empty() && mapCryptedKeys.empty() && mapWatchKeys.empty() && setWatchOnly.empty() && mapScripts.empty();
     }
 
@@ -3996,7 +3996,7 @@ CWallet* CWallet::CreateWalletFromFile(const std::string walletFile) EXCLUSIVE_L
         // No need to read and scan block if block was created before
         // our wallet birthday (as adjusted for block time variability)
         {
-            LOCK(walletInstance->cs_wallet);
+            LOCK(walletInstance->cs_wallet); // WIP: lock submitted in https://github.com/bitcoin/bitcoin/pull/11634/files
             while (pindexRescan && walletInstance->nTimeFirstKey && (pindexRescan->GetBlockTime() < (walletInstance->nTimeFirstKey - TIMESTAMP_WINDOW))) {
                 pindexRescan = chainActive.Next(pindexRescan);
             }
@@ -4011,12 +4011,12 @@ CWallet* CWallet::CreateWalletFromFile(const std::string walletFile) EXCLUSIVE_L
         // Restore wallet transaction metadata after -zapwallettxes=1
         if (gArgs.GetBoolArg("-zapwallettxes", false) && gArgs.GetArg("-zapwallettxes", "1") != "2")
         {
+            LOCK(walletInstance->cs_wallet); // WIP: lock submitted in https://github.com/bitcoin/bitcoin/pull/11634/files
             CWalletDB walletdb(*walletInstance->dbw);
 
             for (const CWalletTx& wtxOld : vWtx)
             {
                 uint256 hash = wtxOld.GetHash();
-                LOCK(walletInstance->cs_wallet);
                 std::map<uint256, CWalletTx>::iterator mi = walletInstance->mapWallet.find(hash);
                 if (mi != walletInstance->mapWallet.end())
                 {

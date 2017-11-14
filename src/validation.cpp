@@ -1252,7 +1252,7 @@ void InitScriptExecutionCache() {
     size_t nMaxCacheSize = std::min(std::max((int64_t)0, gArgs.GetArg("-maxsigcachesize", DEFAULT_MAX_SIG_CACHE_SIZE) / 2), MAX_MAX_SIG_CACHE_SIZE) * ((size_t) 1 << 20);
     size_t nElems;
     {
-        LOCK(cs_main);
+        LOCK(cs_main); // WIP: lock submitted in https://github.com/bitcoin/bitcoin/pull/11652/files
         nElems = scriptExecutionCache.setup_bytes(nMaxCacheSize);
     }
     LogPrintf("Using %zu MiB out of %zu/2 requested for script execution cache, able to store %zu elements\n",
@@ -2032,7 +2032,7 @@ void FlushStateToDisk() {
 void PruneAndFlush() {
     CValidationState state;
     {
-        LOCK(cs_LastBlockFile);
+        LOCK(cs_LastBlockFile); // WIP: lock submitted in https://github.com/bitcoin/bitcoin/pull/11652/files
         fCheckForPruning = true;
     }
     const CChainParams& chainparams = Params();
@@ -3265,9 +3265,8 @@ static bool AcceptBlock(const std::shared_ptr<const CBlock>& pblock, CValidation
         return AbortNode(state, std::string("System error: ") + e.what());
     }
 
-    LOCK(cs_LastBlockFile);
-    if (fCheckForPruning)
-        FlushStateToDisk(chainparams, state, FLUSH_STATE_NONE); // we just allocated more disk space for block files
+    // WIP: lock submitted in https://github.com/bitcoin/bitcoin/pull/11617/files
+    FlushStateToDisk(chainparams, state, FLUSH_STATE_NONE); // we just allocated more disk space for block files
 
     return true;
 }
@@ -3548,7 +3547,7 @@ CBlockIndex * InsertBlockIndex(uint256 hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 
 bool static LoadBlockIndexDB(const CChainParams& chainparams)
 {
-    LOCK(cs_main);
+    LOCK(cs_main); // WIP: lock submitted in https://github.com/bitcoin/bitcoin/pull/11652/files
     if (!pblocktree->LoadBlockIndexGuts(chainparams.GetConsensus(), InsertBlockIndex))
         return false;
 
@@ -3596,7 +3595,7 @@ bool static LoadBlockIndexDB(const CChainParams& chainparams)
             pindexBestHeader = pindex;
     }
 
-    LOCK(cs_LastBlockFile);
+    LOCK(cs_LastBlockFile); // WIP: lock submitted in https://github.com/bitcoin/bitcoin/pull/11652/files
     // Load block file info
     pblocktree->ReadLastBlockFile(nLastBlockFile);
     vinfoBlockFile.resize(nLastBlockFile + 1);
@@ -3651,7 +3650,7 @@ bool static LoadBlockIndexDB(const CChainParams& chainparams)
 
 bool LoadChainTip(const CChainParams& chainparams)
 {
-    LOCK(cs_main);
+    LOCK(cs_main); // WIP: lock submitted in https://github.com/bitcoin/bitcoin/pull/11652/files
     if (chainActive.Tip() && chainActive.Tip()->GetBlockHash() == pcoinsTip->GetBestBlock()) return true;
 
     if (pcoinsTip->GetBestBlock().IsNull() && mapBlockIndex.size() == 1) {
@@ -3976,11 +3975,11 @@ void UnloadBlockIndex()
     mapBlocksUnlinked.clear();
     vinfoBlockFile.clear();
     {
-        LOCK(cs_LastBlockFile);
+        LOCK(cs_LastBlockFile); // WIP: lock submitted in https://github.com/bitcoin/bitcoin/pull/11652/files
         nLastBlockFile = 0;
     }
     {
-        LOCK(cs_nBlockSequenceId);
+        LOCK(cs_nBlockSequenceId); // WIP: lock submitted in https://github.com/bitcoin/bitcoin/pull/11652/files
         nBlockSequenceId = 1;
     }
     setDirtyBlockIndex.clear();
