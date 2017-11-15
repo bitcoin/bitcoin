@@ -12,8 +12,6 @@
 #include "script/standard.h"
 #include "sync.h"
 
-#include <boost/signals2/signal.hpp>
-
 /** A virtual base class for key stores */
 class CKeyStore
 {

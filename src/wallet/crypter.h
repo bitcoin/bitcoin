@@ -9,6 +9,8 @@
 #include "serialize.h"
 #include "support/allocators/secure.h"
 
+#include <boost/signals2/signal.hpp>
+
 #include <atomic>
 
 const unsigned int WALLET_CRYPTO_KEY_SIZE = 32;
