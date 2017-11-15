@@ -372,8 +372,6 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
             + HelpExampleRpc("getblocktemplate", "")
          );
 
-    LOCK(cs_main);
-
     std::string strMode = "template";
     UniValue lpval = NullUniValue;
     std::set<std::string> setClientRules;
@@ -403,6 +401,7 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
                 throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Block decode failed");
 
             uint256 hash = block.GetHash();
+            LOCK(cs_main);
             BlockMap::iterator mi = mapBlockIndex.find(hash);
             if (mi != mapBlockIndex.end()) {
                 CBlockIndex *pindex = mi->second;
@@ -468,18 +467,23 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
         }
         else
         {
+            LOCK(cs_main);
             // NOTE: Spec does not specify behaviour for non-string longpollid, but this makes testing easier
             hashWatchedChain = chainActive.Tip()->GetBlockHash();
             nTransactionsUpdatedLastLP = nTransactionsUpdatedLast;
         }
 
         // Release the wallet and main lock while waiting
-        LEAVE_CRITICAL_SECTION(cs_main);
         {
             checktxtime = std::chrono::steady_clock::now() + std::chrono::minutes(1);
 
             WaitableLock lock(csBestBlock);
-            while (chainActive.Tip()->GetBlockHash() == hashWatchedChain && IsRPCRunning())
+            bool keepRunning;
+            {
+                LOCK(cs_main);
+                keepRunning = chainActive.Tip()->GetBlockHash() == hashWatchedChain && IsRPCRunning();
+            }
+            while (keepRunning)
             {
                 if (cvBlockChange.wait_until(lock, checktxtime) == std::cv_status::timeout)
                 {
@@ -488,9 +492,10 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
                         break;
                     checktxtime += std::chrono::seconds(10);
                 }
+                LOCK(cs_main);
+                keepRunning = chainActive.Tip()->GetBlockHash() == hashWatchedChain && IsRPCRunning();
             }
         }
-        ENTER_CRITICAL_SECTION(cs_main);
 
         if (!IsRPCRunning())
             throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, "Shutting down");
@@ -504,6 +509,7 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
     bool fSupportsSegwit = setClientRules.find(segwit_info.name) != setClientRules.end();
 
     // Update block
+    LOCK(cs_main);
     static CBlockIndex* pindexPrev;
     static int64_t nStart;
     static std::unique_ptr<CBlockTemplate> pblocktemplate;

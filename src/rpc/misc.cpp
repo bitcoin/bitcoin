@@ -158,11 +158,8 @@ UniValue validateaddress(const JSONRPCRequest& request)
 
 #ifdef ENABLE_WALLET
     CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
-
-    LOCK2(cs_main, pwallet ? &pwallet->cs_wallet : nullptr);
-#else
-    LOCK(cs_main);
 #endif
+    LOCK(cs_main);
 
     CTxDestination dest = DecodeDestination(request.params[0].get_str());
     bool isValid = IsValidDestination(dest);
@@ -183,17 +180,17 @@ UniValue validateaddress(const JSONRPCRequest& request)
         ret.push_back(Pair("iswatchonly", bool(mine & ISMINE_WATCH_ONLY)));
         UniValue detail = boost::apply_visitor(DescribeAddressVisitor(pwallet), dest);
         ret.pushKVs(detail);
-        if (pwallet && pwallet->mapAddressBook.count(dest)) {
-            ret.push_back(Pair("account", pwallet->mapAddressBook[dest].name));
-        }
         if (pwallet) {
-            const auto& meta = pwallet->mapKeyMetadata;
-            const CKeyID *keyID = boost::get<CKeyID>(&dest);
-            auto it = keyID ? meta.find(*keyID) : meta.end();
-            if (it == meta.end()) {
-                it = meta.find(CScriptID(scriptPubKey));
+            LOCK(pwallet->cs_wallet);
+            if (pwallet->mapAddressBook.count(dest)) {
+                ret.push_back(Pair("account", pwallet->mapAddressBook[dest].name));
             }
-            if (it != meta.end()) {
+            const CKeyID *keyID = boost::get<CKeyID>(&dest);
+            auto it = keyID ? pwallet->mapKeyMetadata.find(*keyID) : pwallet->mapKeyMetadata.end();
+            if (it == pwallet->mapKeyMetadata.end()) {
+                it = pwallet->mapKeyMetadata.find(CScriptID(scriptPubKey));
+            }
+            if (it != pwallet->mapKeyMetadata.end()) {
                 ret.push_back(Pair("timestamp", it->second.nCreateTime));
                 if (!it->second.hdKeypath.empty()) {
                     ret.push_back(Pair("hdkeypath", it->second.hdKeypath));
