@@ -5565,8 +5565,6 @@ UniValue tallyvotes(const JSONRPCRequest &request)
 };
 
 
-
-
 static const CRPCCommand commands[] =
 { //  category              name                        actor (function)           okSafeMode
   //  --------------------- ------------------------    -----------------------    ----------
@@ -5622,6 +5620,8 @@ static const CRPCCommand commands[] =
     { "governance",         "setvote",                  &setvote,                  false,  {"proposal","option","height_start","height_end"} },
     { "governance",         "votehistory",              &votehistory,              false,  {"current_only"} },
     { "governance",         "tallyvotes",               &tallyvotes,               false,  {"proposal","height_start","height_end"} },
+
+
 };
 
 void RegisterHDWalletRPCCommands(CRPCTable &t)

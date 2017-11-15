@@ -20,7 +20,7 @@ enum eBlockFlags
     BLOCK_PROOF_OF_STAKE            = (1 << 0), // is proof-of-stake block
     BLOCK_STAKE_ENTROPY             = (1 << 1), // entropy bit for stake modifier
     BLOCK_STAKE_MODIFIER            = (1 << 2), // regenerated stake modifier
-    
+
     BLOCK_FAILED_DUPLICATE_STAKE    = (1 << 3),
 };
 
@@ -130,7 +130,6 @@ struct CDiskBlockPos
     {
         return strprintf("CBlockDiskPos(nFile=%i, nPos=%i)", nFile, nPos);
     }
-
 };
 
 enum BlockStatus: uint32_t {
@@ -213,8 +212,8 @@ public:
     //! This value will be non-zero only if and only if transactions for this block and all its parents are available.
     //! Change to 64-bit type when necessary; won't happen before 2030
     unsigned int nChainTx;
-    
-    
+
+
     // proof-of-stake specific fields
     unsigned int nFlags;  // pos: block index flags
     uint256 bnStakeModifier; // hash modifier for proof-of-stake
@@ -254,12 +253,12 @@ public:
         nStatus = 0;
         nSequenceId = 0;
         nTimeMax = 0;
-        
+
         nFlags = 0;
         bnStakeModifier = uint256();
         prevoutStake.SetNull();
         //hashProof = uint256();
-        
+
         nMoneySupply = 0;
 
         nVersion                = 0;
@@ -333,12 +332,12 @@ public:
     {
         return (int64_t)nTimeMax;
     }
-    
+
     int64_t GetPastTimeLimit() const
     {
         return GetBlockTime();
     }
-    
+
     bool IsProofOfWork() const
     {
         return !(nFlags & BLOCK_PROOF_OF_STAKE);
@@ -366,7 +365,6 @@ public:
         nFlags |= (nEntropyBit? BLOCK_STAKE_ENTROPY : 0);
         return true;
     }
-    
 
     enum { nMedianTimeSpan=11 };
 
@@ -461,15 +459,15 @@ public:
             READWRITE(VARINT(nDataPos));
         if (nStatus & BLOCK_HAVE_UNDO)
             READWRITE(VARINT(nUndoPos));
-        
-        
+
+
         READWRITE(nFlags);
         READWRITE(bnStakeModifier);
         READWRITE(prevoutStake);
         //READWRITE(nStakeTime);
         //READWRITE(hashProof);
         READWRITE(nMoneySupply);
-        
+
 
         // block header
         READWRITE(this->nVersion);
@@ -554,7 +552,7 @@ public:
     int Height() const {
         return vChain.size() - 1;
     }
-    
+
     int64_t Time() const {
         return vChain.size() > 0 ? vChain[vChain.size() - 1]->nTime : 0;
     }

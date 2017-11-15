@@ -187,7 +187,7 @@ public:
         // Read
         Dbt datValue;
         datValue.set_flags(DB_DBT_MALLOC);
-        
+
         int ret = pdb->get(activeTxn, &datKey, &datValue, nFlags);
         memory_cleanse(datKey.get_data(), datKey.get_size());
         bool success = false;

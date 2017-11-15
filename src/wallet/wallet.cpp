@@ -4252,6 +4252,7 @@ CWallet* CWallet::CreateWalletFromFile(const std::string walletFile, CWallet *wa
         if (walletdb.ReadBestBlock(locator))
             pindexRescan = FindForkInGlobalIndex(chainActive, locator);
     }
+    if (!fParticlMode) // Must rescan after hdwallet is loaded
     if (chainActive.Tip() && chainActive.Tip() != pindexRescan)
     {
         //We can't rescan beyond non-pruned blocks, stop and throw an error

@@ -210,6 +210,47 @@ bool CHDWallet::InitLoadWallet()
             pwallet->LoadVoteTokens(&wdb);
         }
 
+        CBlockIndex *pindexRescan = chainActive.Genesis();
+        if (!gArgs.GetBoolArg("-rescan", false))
+        {
+            CBlockLocator locator;
+            CHDWalletDB walletdb(*pwallet->dbw);
+            if (walletdb.ReadBestBlock(locator))
+                pindexRescan = FindForkInGlobalIndex(chainActive, locator);
+        }
+        if (chainActive.Tip() && chainActive.Tip() != pindexRescan)
+        {
+            //We can't rescan beyond non-pruned blocks, stop and throw an error
+            //this might happen if a user uses an old wallet within a pruned node
+            // or if he ran -disablewallet for a longer time, then decided to re-enable
+            if (fPruneMode)
+            {
+                CBlockIndex *block = chainActive.Tip();
+                while (block && block->pprev && (block->pprev->nStatus & BLOCK_HAVE_DATA) && block->pprev->nTx > 0 && pindexRescan != block)
+                    block = block->pprev;
+
+                if (pindexRescan != block) {
+                    return InitError(_("Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of pruned node)"));
+                }
+            }
+
+            uiInterface.InitMessage(_("Rescanning..."));
+            LogPrintf("Rescanning last %i blocks (from block %i)...\n", chainActive.Height() - pindexRescan->nHeight, pindexRescan->nHeight);
+
+            // No need to read and scan block if block was created before
+            // our wallet birthday (as adjusted for block time variability)
+            while (pindexRescan && pwallet->nTimeFirstKey && (pindexRescan->GetBlockTime() < (pwallet->nTimeFirstKey - TIMESTAMP_WINDOW))) {
+                pindexRescan = chainActive.Next(pindexRescan);
+            }
+
+            int64_t nStart = GetTimeMillis();
+            pwallet->ScanForWalletTransactions(pindexRescan, true);
+            LogPrintf(" rescan      %15dms\n", GetTimeMillis() - nStart);
+            pwallet->SetBestChain(chainActive.GetLocator());
+            pwallet->dbw->IncrementUpdateCounter();
+        }
+
+
         vpwallets.push_back(pwallet);
     };
 
@@ -5844,7 +5885,7 @@ int CHDWallet::ExtKeyCreateInitial(CHDWalletDB *pwdb)
 
 int CHDWallet::ExtKeyLoadMaster()
 {
-    LogPrintf("Loading master ext key.\n");
+    LogPrintf("Loading master ext key %s.\n", GetName());
 
     LOCK(cs_wallet);
 
@@ -5908,7 +5949,7 @@ int CHDWallet::ExtKeyLoadMaster()
 
 int CHDWallet::ExtKeyLoadAccounts()
 {
-    LogPrintf("Loading ext accounts.\n");
+    LogPrintf("Loading ext accounts %s.\n", GetName());
 
     LOCK(cs_wallet);
 
@@ -6083,7 +6124,7 @@ int CHDWallet::ExtKeyRemoveAccountFromMapsAndFree(CExtKeyAccount *sea)
 
 int CHDWallet::ExtKeyLoadAccountPacks()
 {
-    LogPrintf("Loading ext account packs.\n");
+    LogPrintf("Loading ext account packs %s.\n", GetName());
 
     LOCK(cs_wallet);
 
@@ -8404,7 +8445,7 @@ bool CHDWallet::AddToWalletIfInvolvingMe(const CTransactionRef& ptx, const CBloc
             if (mir != mapRecords.end())
             {
                 const COutputRecord *r = mir->second.GetOutput(txin.prevout.n);
-                if (r && r->nFlags & ORF_OWNED)
+                if (r && r->nFlags & ORF_OWN_ANY)
                 {
                     fIsFromMe = true;
                     break; // only need one match
