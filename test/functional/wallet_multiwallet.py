@@ -29,13 +29,24 @@ class MultiWalletTest(BitcoinTestFramework):
         self.stop_nodes()
         assert_equal(os.path.isfile(wallet_dir('wallet.dat')), True)
 
+        # create symlink to verify wallet directory path can be referenced
+        # through symlink
+        os.mkdir(wallet_dir('w7'))
+        os.symlink('w7', wallet_dir('w7_symlink'))
+
+        # rename wallet.dat to make sure plain wallet file paths (as opposed to
+        # directory paths) can be loaded
+        os.rename(wallet_dir("wallet.dat"), wallet_dir("w8"))
+
         # restart node with a mix of wallet names:
         #   w1, w2, w3 - to verify new wallets created when non-existing paths specified
         #   w          - to verify wallet name matching works when one wallet path is prefix of another
         #   sub/w5     - to verify relative wallet path is created correctly
         #   extern/w6  - to verify absolute wallet path is created correctly
-        #   wallet.dat - to verify existing wallet file is loaded correctly
-        wallet_names = ['w1', 'w2', 'w3', 'w', 'sub/w5', os.path.join(self.options.tmpdir, 'extern/w6'), 'wallet.dat']
+        #   w7_symlink - to verify symlinked wallet path is initialized correctly
+        #   w8         - to verify existing wallet file is loaded correctly
+        #   ''         - to verify default wallet file is created correctly
+        wallet_names = ['w1', 'w2', 'w3', 'w', 'sub/w5', os.path.join(self.options.tmpdir, 'extern/w6'), 'w7_symlink', 'w8', '']
         extra_args = ['-wallet={}'.format(n) for n in wallet_names]
         self.start_node(0, extra_args)
         assert_equal(set(node.listwallets()), set(wallet_names))
@@ -43,10 +54,13 @@ class MultiWalletTest(BitcoinTestFramework):
         # check that all requested wallets were created
         self.stop_node(0)
         for wallet_name in wallet_names:
-            assert_equal(os.path.isfile(wallet_dir(wallet_name)), True)
+            if os.path.isdir(wallet_dir(wallet_name)):
+                assert_equal(os.path.isfile(wallet_dir(wallet_name, "wallet.dat")), True)
+            else:
+                assert_equal(os.path.isfile(wallet_dir(wallet_name)), True)
 
         # should not initialize if wallet path can't be created
-        self.assert_start_raises_init_error(0, ['-wallet=wallet.dat/bad'], 'File exists')
+        self.assert_start_raises_init_error(0, ['-wallet=wallet.dat/bad'], 'Not a directory')
 
         self.assert_start_raises_init_error(0, ['-walletdir=wallets'], 'Error: Specified -walletdir "wallets" does not exist')
         self.assert_start_raises_init_error(0, ['-walletdir=wallets'], 'Error: Specified -walletdir "wallets" is a relative path', cwd=data_dir())
@@ -55,17 +69,13 @@ class MultiWalletTest(BitcoinTestFramework):
         # should not initialize if there are duplicate wallets
         self.assert_start_raises_init_error(0, ['-wallet=w1', '-wallet=w1'], 'Error loading wallet w1. Duplicate -wallet filename specified.')
 
-        # should not initialize if wallet file is a directory
-        os.mkdir(wallet_dir('w11'))
-        self.assert_start_raises_init_error(0, ['-wallet=w11'], 'Error loading wallet w11. -wallet filename must be a regular file.')
-
         # should not initialize if one wallet is a copy of another
-        shutil.copyfile(wallet_dir('w2'), wallet_dir('w22'))
-        self.assert_start_raises_init_error(0, ['-wallet=w2', '-wallet=w22'], 'duplicates fileid')
+        shutil.copyfile(wallet_dir('w8'), wallet_dir('w8_copy'))
+        self.assert_start_raises_init_error(0, ['-wallet=w8', '-wallet=w8_copy'], 'duplicates fileid')
 
         # should not initialize if wallet file is a symlink
-        os.symlink(wallet_dir('w1'), wallet_dir('w12'))
-        self.assert_start_raises_init_error(0, ['-wallet=w12'], 'Error loading wallet w12. -wallet filename must be a regular file.')
+        os.symlink('w8', wallet_dir('w8_symlink'))
+        self.assert_start_raises_init_error(0, ['-wallet=w8_symlink'], 'Invalid -wallet path')
 
         # should not initialize if the specified walletdir does not exist
         self.assert_start_raises_init_error(0, ['-walletdir=bad'], 'Error: Specified -walletdir "bad" does not exist')
