@@ -183,6 +183,22 @@ $ valgrind --suppressions=contrib/valgrind.supp --leak-check=full \
 $ valgrind -v --leak-check=full src/bitcoind -printtoconsole
 ```
 
+**compiling for test coverage**
+
+LCOV can be used to generate a test coverage report based upon `make check`
+execution. LCOV must be installed on your system (e.g. the `lcov` package
+on Debian/Ubuntu).
+
+To enable LCOV report generation during test runs:
+
+```shell
+./configure --enable-lcov
+make
+make cov
+
+# A coverage report will now be accessible at `./test_bitcoin.coverage/index.html`.
+```
+
 Locking/mutex usage notes
 -------------------------
 
