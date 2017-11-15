@@ -337,18 +337,19 @@ public:
 
         vFixedSeeds.clear();
         vSeeds.clear();
-        // nodes with support for servicebits filtering should be at the top
+// nodes with support for servicebits filtering should be at the top
+
 #ifdef BITCOIN_CASH
         // Bitcoin ABC seeder
         vSeeds.push_back(CDNSSeedData("bitcoinabc.org", "testnet-seed.bitcoinabc.org", true));
         // bitcoinforks seeders
-        vSeeds.push_back(CDNSSeedData( "bitcoinforks.org", "testnet-seed-abc.bitcoinforks.org", true));
+        vSeeds.push_back(CDNSSeedData("bitcoinforks.org", "testnet-seed-abc.bitcoinforks.org", true));
         // BU seeder
         vSeeds.push_back(CDNSSeedData("bitcoinunlimited.info", "testnet-seed.bitcoinunlimited.info", true));
         // Bitprim
-        vSeeds.push_back( CDNSSeedData("bitprim.org", "testnet-seed.bitprim.org", true));
+        vSeeds.push_back(CDNSSeedData("bitprim.org", "testnet-seed.bitprim.org", true));
         // Amaury SÉCHET
-        vSeeds.push_back( CDNSSeedData("deadalnix.me", "testnet-seed.deadalnix.me", true));
+        vSeeds.push_back(CDNSSeedData("deadalnix.me", "testnet-seed.deadalnix.me", true));
         // criptolayer.net
         vSeeds.push_back(CDNSSeedData("criptolayer.net", "testnet-seeder.criptolayer.net", true));
 #else
@@ -376,9 +377,9 @@ public:
         fTestnetToBeDeprecatedFieldRPC = true;
 
         checkpointData =
-            (CCheckpointData){boost::assign::map_list_of(
-                                  546, uint256S("000000002a936ca763904c3c35fce2f3556c559c0214345d31b1bcebf76acb70"))(
-                                  1155876, uint256S("00000000000e38fef93ed9582a7df43815d5c2ba9fd37ef70c9a0ea4a285b8f5")),
+            (CCheckpointData){boost::assign::map_list_of(546,
+                                  uint256S("000000002a936ca763904c3c35fce2f3556c559c0214345d31b1bcebf76acb70"))(1155876,
+                                  uint256S("00000000000e38fef93ed9582a7df43815d5c2ba9fd37ef70c9a0ea4a285b8f5")),
                 1501616524, 1488, 300};
     }
 };
