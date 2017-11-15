@@ -616,11 +616,16 @@ void CBlockPolicyEstimator::MempoolUpdatedForBlockConnect(const std::vector<CTra
     }
 
     if ((unsigned int)nBlockHeight <= nBestSeenHeight) {
-        // Ignore side chains and re-orgs; assuming they are random
-        // they don't affect the estimate.
-        // And if an attacker can re-org the chain at will, then
-        // you've got much bigger problems than "attacker can influence
-        // transaction fees."
+        // In most cases reorgs contain nearly the same transactions
+        // as the block that was disconnected.
+        // Ideally, especially for 1-block reorgs, we'd find the
+        // transactions which are newly-confirmed and mark them as
+        // such, but if nothing else removing as not in block
+        // prevents them from continuing to skew our unconfirmed
+        // counts, so we do that here.
+        for (const CTransactionRef& tx : txn_removed_in_block) {
+            removeTxNotInBlock(tx->GetHash());
+        }
         return;
     }
 
