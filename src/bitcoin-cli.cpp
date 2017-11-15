@@ -339,8 +339,8 @@ static UniValue CallRPC(BaseRequestHandler *rh, const std::string& strMethod, co
 
     // check if we should use a special wallet endpoint
     std::string endpoint = "/";
-    std::string walletName = gArgs.GetArg("-rpcwallet", "");
-    if (!walletName.empty()) {
+    if (!gArgs.GetArgs("-rpcwallet").empty()) {
+        std::string walletName = gArgs.GetArg("-rpcwallet", "");
         char *encodedURI = evhttp_uriencode(walletName.c_str(), walletName.size(), false);
         if (encodedURI) {
             endpoint = "/wallet/"+ std::string(encodedURI);
