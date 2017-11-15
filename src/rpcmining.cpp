@@ -166,7 +166,7 @@ Value getwork(const Array& params, bool fHelp)
             // Create new block
             pblocktemplate = CreateNewBlock(*pMiningKey, pwalletMain);
             if (!pblocktemplate)
-                throw JSONRPCError(RPC_OUT_OF_MEMORY, "Out of memory");
+                throw JSONRPCError(RPC_MISC_ERROR, "Failed to create block");
             vNewBlockTemplate.push_back(pblocktemplate);
 
             // Need to update only after we know CreateNewBlock succeeded
