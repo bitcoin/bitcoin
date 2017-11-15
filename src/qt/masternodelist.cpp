@@ -466,7 +466,10 @@ void MasternodeList::updateVoteList(bool reset)
 
                 // populate list
                 QTableWidgetItem *nameItem = new QTableWidgetItem(QString::fromStdString(pbudgetProposal->GetName()));
-                QTableWidgetItem *urlItem = new QTableWidgetItem(QString::fromStdString(pbudgetProposal->GetURL()));
+                QLabel *urlItem = new QLabel("<a href=\"" + QString::fromStdString(pbudgetProposal->GetURL()) + "\">" + 
+                                             QString::fromStdString(pbudgetProposal->GetURL()) + "</a>");
+                urlItem->setOpenExternalLinks(true);
+                urlItem->setStyleSheet("background-color: transparent;");
                 QTableWidgetItem *hashItem = new QTableWidgetItem(QString::fromStdString(pbudgetProposal->GetHash().ToString()));
                 QTableWidgetItem *blockStartItem = new QTableWidgetItem(QString::number((int64_t)pbudgetProposal->GetBlockStart()));
                 QTableWidgetItem *blockEndItem = new QTableWidgetItem(QString::number((int64_t)pbudgetProposal->GetBlockEnd()));
@@ -481,7 +484,7 @@ void MasternodeList::updateVoteList(bool reset)
 
                 ui->tableWidgetVoting->insertRow(0);
                 ui->tableWidgetVoting->setItem(0, 0, nameItem);
-                ui->tableWidgetVoting->setItem(0, 1, urlItem);
+                ui->tableWidgetVoting->setCellWidget(0, 1, urlItem);
                 ui->tableWidgetVoting->setItem(0, 2, hashItem);
                 ui->tableWidgetVoting->setItem(0, 3, blockStartItem);
                 ui->tableWidgetVoting->setItem(0, 4, blockEndItem);
