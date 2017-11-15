@@ -594,8 +594,8 @@ Address: %4
 <context>
     <name>ClientModel</name>
     <message>
-        <source>Total: %1 (DS compatible: %2 / Enabled: %3)</source>
-        <translation>总量:%1 (匿名发送兼容: %2 / 可用: %3)</translation>
+        <source>Total: %1 (Enabled: %2)</source>
+        <translation>总量:%1 (可用: %2)</translation>
     </message>
     <message>
         <source>Network Alert</source>

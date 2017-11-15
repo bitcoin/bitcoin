@@ -594,8 +594,8 @@ Osoite: %4
 <context>
     <name>ClientModel</name>
     <message>
-        <source>Total: %1 (DS compatible: %2 / Enabled: %3)</source>
-        <translation>Yhteensä: %1 (DS yht.sopivia: %2 / Käytössä: %3)</translation>
+        <source>Total: %1 (Enabled: %2)</source>
+        <translation>Yhteensä: %1 (Käytössä: %2)</translation>
     </message>
     <message>
         <source>Network Alert</source>

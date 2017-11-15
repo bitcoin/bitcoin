@@ -594,8 +594,8 @@ Kiểu: %3
 <context>
     <name>ClientModel</name>
     <message>
-        <source>Total: %1 (DS compatible: %2 / Enabled: %3)</source>
-        <translation>Tổng số: %1 (Tương thích với DS: %2 / Sẵn sàng: %3)</translation>
+        <source>Total: %1 (Enabled: %2)</source>
+        <translation>Tổng số: %1 (Sẵn sàng: %2)</translation>
     </message>
     <message>
         <source>Network Alert</source>

@@ -593,8 +593,8 @@ Adresa: %4</translation>
 <context>
     <name>ClientModel</name>
     <message>
-        <source>Total: %1 (DS compatible: %2 / Enabled: %3)</source>
-        <translation>Celkovo: %1 (Kompatibilní s DS: %2 / Zapnuto: %3)</translation>
+        <source>Total: %1 (Enabled: %2)</source>
+        <translation>Celkovo: %1 (Zapnuto: %2)</translation>
     </message>
     <message>
         <source>Network Alert</source>
