@@ -171,30 +171,27 @@ class BaseNode(NodeConnCB):
         """Test whether the last announcement received had the right header or the right inv.
 
         inv and headers should be lists of block hashes."""
-        expect_headers = headers if headers is not None else []
-        expect_inv = inv if inv is not None else []
+
         test_function = lambda: self.block_announced
         wait_until(test_function, timeout=60, lock=mininode_lock)
+
         with mininode_lock:
             self.block_announced = False
 
-            success = True
             compare_inv = []
             if "inv" in self.last_message:
                 compare_inv = [x.hash for x in self.last_message["inv"].inv]
-            if compare_inv != expect_inv:
-                success = False
+            if inv is not None:
+                assert_equal(compare_inv, inv)
 
-            hash_headers = []
+            compare_headers = []
             if "headers" in self.last_message:
-                # treat headers as a list of block hashes
-                hash_headers = [x.sha256 for x in self.last_message["headers"].headers]
-            if hash_headers != expect_headers:
-                success = False
+                compare_headers = [x.sha256 for x in self.last_message["headers"].headers]
+            if headers is not None:
+                assert_equal(compare_headers, headers)
 
             self.last_message.pop("inv", None)
             self.last_message.pop("headers", None)
-        return success
 
 class SendHeadersTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -256,7 +253,7 @@ class SendHeadersTest(BitcoinTestFramework):
         self.log.info("Verify getheaders with null locator and valid hashstop returns headers.")
         test_node.clear_last_announcement()
         test_node.send_get_headers(locator=[], hashstop=tip_hash)
-        assert_equal(test_node.check_last_announcement(headers=[tip_hash]), True)
+        test_node.check_last_announcement(headers=[tip_hash])
 
         self.log.info("Verify getheaders with null locator and invalid hashstop does not return headers.")
         block = create_block(int(tip["hash"], 16), create_coinbase(tip["height"] + 1), tip["mediantime"] + 1)
@@ -277,8 +274,8 @@ class SendHeadersTest(BitcoinTestFramework):
         for i in range(4):
             old_tip = tip
             tip = self.mine_blocks(1)
-            assert_equal(inv_node.check_last_announcement(inv=[tip]), True)
-            assert_equal(test_node.check_last_announcement(inv=[tip]), True)
+            inv_node.check_last_announcement(inv=[tip], headers=[])
+            test_node.check_last_announcement(inv=[tip], headers=[])
             # Try a few different responses; none should affect next announcement
             if i == 0:
                 # first request the block
@@ -316,8 +313,8 @@ class SendHeadersTest(BitcoinTestFramework):
 
         # Now that we've synced headers, headers announcements should work
         tip = self.mine_blocks(1)
-        assert_equal(inv_node.check_last_announcement(inv=[tip]), True)
-        assert_equal(test_node.check_last_announcement(headers=[tip]), True)
+        inv_node.check_last_announcement(inv=[tip], headers=[])
+        test_node.check_last_announcement(headers=[tip])
 
         height = self.nodes[0].getblockcount() + 1
         block_time += 10  # Advance far enough ahead
@@ -361,8 +358,8 @@ class SendHeadersTest(BitcoinTestFramework):
                 assert "inv" not in inv_node.last_message
                 assert "headers" not in inv_node.last_message
                 tip = self.mine_blocks(1)
-                assert_equal(inv_node.check_last_announcement(inv=[tip]), True)
-                assert_equal(test_node.check_last_announcement(headers=[tip]), True)
+                inv_node.check_last_announcement(inv=[tip], headers=[])
+                test_node.check_last_announcement(headers=[tip])
                 height += 1
                 block_time += 1
 
@@ -376,16 +373,16 @@ class SendHeadersTest(BitcoinTestFramework):
             # First try mining a reorg that can propagate with header announcement
             new_block_hashes = self.mine_reorg(length=7)
             tip = new_block_hashes[-1]
-            assert_equal(inv_node.check_last_announcement(inv=[tip]), True)
-            assert_equal(test_node.check_last_announcement(headers=new_block_hashes), True)
+            inv_node.check_last_announcement(inv=[tip], headers=[])
+            test_node.check_last_announcement(headers=new_block_hashes)
 
             block_time += 8
 
             # Mine a too-large reorg, which should be announced with a single inv
             new_block_hashes = self.mine_reorg(length=8)
             tip = new_block_hashes[-1]
-            assert_equal(inv_node.check_last_announcement(inv=[tip]), True)
-            assert_equal(test_node.check_last_announcement(inv=[tip]), True)
+            inv_node.check_last_announcement(inv=[tip], headers=[])
+            test_node.check_last_announcement(inv=[tip], headers=[])
 
             block_time += 9
 
@@ -394,15 +391,15 @@ class SendHeadersTest(BitcoinTestFramework):
 
             # Use getblocks/getdata
             test_node.send_getblocks(locator=[fork_point])
-            assert_equal(test_node.check_last_announcement(inv=new_block_hashes), True)
+            test_node.check_last_announcement(inv=new_block_hashes, headers=[])
             test_node.send_get_data(new_block_hashes)
             test_node.wait_for_block(new_block_hashes[-1])
 
             for i in range(3):
                 # Mine another block, still should get only an inv
                 tip = self.mine_blocks(1)
-                assert_equal(inv_node.check_last_announcement(inv=[tip]), True)
-                assert_equal(test_node.check_last_announcement(inv=[tip]), True)
+                inv_node.check_last_announcement(inv=[tip], headers=[])
+                test_node.check_last_announcement(inv=[tip], headers=[])
                 if i == 0:
                     # Just get the data -- shouldn't cause headers announcements to resume
                     test_node.send_get_data([tip])
@@ -427,8 +424,8 @@ class SendHeadersTest(BitcoinTestFramework):
                         test_node.sync_with_ping()
             # New blocks should now be announced with header
             tip = self.mine_blocks(1)
-            assert_equal(inv_node.check_last_announcement(inv=[tip]), True)
-            assert_equal(test_node.check_last_announcement(headers=[tip]), True)
+            inv_node.check_last_announcement(inv=[tip], headers=[])
+            test_node.check_last_announcement(headers=[tip])
 
         self.log.info("Part 3: success!")
 
