@@ -55,7 +55,7 @@
         </size>
        </property>
        <property name="pixmap">
-        <pixmap resource="../iop.qrc">:/icons/iop_transparent</pixmap>
+        <pixmap resource="../iop.qrc">:/icons/iop</pixmap>
        </property>
        <property name="scaledContents">
         <bool>true</bool>

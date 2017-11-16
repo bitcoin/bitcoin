@@ -59,10 +59,8 @@ SplashScreen::SplashScreen(Qt::WindowFlags f, const NetworkStyle *networkStyle) 
     pixmap.setDevicePixelRatio(devicePixelRatio);
 #endif
 
-    setStyleSheet("color: rgb(12,175,165)");
-
     QPainter pixPaint(&pixmap);
-    pixPaint.setPen(QColor(12,175,165));
+    pixPaint.setPen(QColor(204,204,204));
 
     // draw the iop header.
     QRect rectHeader(QPoint(0,0), QSize(480,320));
@@ -221,7 +219,7 @@ void SplashScreen::paintEvent(QPaintEvent *event)
     QPainter painter(this);
     painter.drawPixmap(0, 0, pixmap);
     QRect r = rect().adjusted(5, 5, -5, -5);
-    painter.setPen(QColor(12,175,165));
+    painter.setPen(QColor(204,204,204));
     painter.drawText(r, curAlignment, curMessage);
 }
 

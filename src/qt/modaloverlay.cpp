@@ -23,23 +23,18 @@ userClosed(false),
 platformStyle(_platformStyle)
 {
     ui->setupUi(this); 
-
-    QSettings settings; 
-    bool darkTheme = (settings.value("theme").toString() == "dark"); 
-    if(darkTheme) 
-    { 
-        setStyleSheet( 
-        "#contentWidget { background: rgba(45,45,45); border-radius: 6px; }" 
-        "QPushButton { background-color: rgb(45,45,45); color: rgb(12,175,165); border-width: 1px; padding: 6px; border-style: outset; border-radius: 5px ; border-color: rgb(12,175,165); }" 
-        "QPushButton:hover { background: rgb(31,31,31); }"
-        "#warningIcon { border: none }");
+    if(GUIUtil::customThemeIsSet()) {
+        QString appstyle = "fusion";
+        QApplication::setStyle(appstyle);
+        setStyleSheet(GUIUtil::getThemeStyleSheet()); 
         
         if (platformStyle->getImagesOnButtons()) { 
             QIcon icon = platformStyle->SingleColorIcon(":/icons/warning"); 
             icon.addPixmap(icon.pixmap(QSize(64,64), QIcon::Normal), QIcon::Disabled); 
             ui->warningIcon->setIcon(icon); 
-        }  
-    }else{ 
+        }
+
+    } else { 
         setStyleSheet( 
         "#contentWidget { background: rgba(255,255,255,240); border-radius: 6px; }" 
         "QLabel { color: rgb(40,40,40); }"); 

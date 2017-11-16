@@ -5,6 +5,7 @@
 #include "platformstyle.h"
 
 #include "guiconstants.h"
+#include "guiutil.h"
 
 #include <QApplication>
 #include <QColor>
@@ -34,14 +35,48 @@ namespace {
 /* Local functions for colorizing single-color images */
 
 void MakeSingleColorImage(QImage& img, const QColor& colorbase)
-{
-    img = img.convertToFormat(QImage::Format_ARGB32);
-    for (int x = img.width(); x--; )
-    {
-        for (int y = img.height(); y--; )
+{   
+    if(GUIUtil::customThemeIsSet()) 
+    { 
+        QColor colorLeft = QColor(108,200,239);
+        QColor colorMid = QColor(102,204,204);
+        QColor colorRight = QColor(12,175,165);
+        
+        img = img.convertToFormat(QImage::Format_ARGB32);
+        for (int x = img.width(); x--; )
         {
-            const QRgb rgb = img.pixel(x, y);
-            img.setPixel(x, y, qRgba(colorbase.red(), colorbase.green(), colorbase.blue(), qAlpha(rgb)));
+            for (int y = img.height(); y--; )
+            {
+                const QRgb rgb = img.pixel(x, y);
+                QColor col;
+                float r;
+                if(y < x) {
+                    r = (x*1.0/img.width()-y*1.0/img.height())*1.25;
+                    col = QColor(
+                        colorMid.red()* (1-r) + colorRight.red()*r,
+                        colorMid.green()* (1-r) + colorRight.green()*r,
+                        colorMid.blue()* (1-r) + colorRight.blue()*r,
+                        255);
+                } else {
+                    r = (y*1.0/img.height()-x*1.0/img.width())*1.25;
+                    col = QColor(
+                        colorMid.red()* (1-r) + colorLeft.red()*r,
+                        colorMid.green()* (1-r) + colorLeft.green()*r,
+                        colorMid.blue()* (1-r) + colorLeft.blue()*r,
+                        255);
+                }
+                img.setPixel(x, y, qRgba(col.red(), col.green(), col.blue(), qAlpha(rgb)));
+            }
+        }
+    } else {
+        img = img.convertToFormat(QImage::Format_ARGB32);
+        for (int x = img.width(); x--; )
+        {
+            for (int y = img.height(); y--; )
+            {
+                const QRgb rgb = img.pixel(x, y);
+                img.setPixel(x, y, qRgba(colorbase.red(), colorbase.green(), colorbase.blue(), qAlpha(rgb)));
+            }
         }
     }
 }
@@ -81,10 +116,12 @@ PlatformStyle::PlatformStyle(const QString &_name, bool _imagesOnButtons, bool _
     singleColor(0,0,0),
     textColor(0,0,0)
 {
-    QSettings settings; 
-    if(settings.value("theme").toString() == "dark") 
-    { 
+    if(GUIUtil::customThemeIsSet()) 
+    {   
+        //TODO: may be obsolete
         //dark theme
+        imagesOnButtons = true;
+        colorizeIcons = true;
         singleColor = QColor(12,175,165); 
         textColor = QColor(12,175,165);         
     } else {
