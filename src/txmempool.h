@@ -412,7 +412,7 @@ public:
 class CTxMemPool
 {
 private:
-    uint32_t nCheckFrequency; //!< Value n means that n times in 2^32 we check.
+    uint32_t nCheckFrequency GUARDED_BY(cs_txMemPool); //!< Value n means that n times in 2^32 we check.
     unsigned int nTransactionsUpdated GUARDED_BY(cs_txMemPool); //!< Used by getblocktemplate to trigger CreateNewBlock() invocation
     CBlockPolicyEstimator* minerPolicyEstimator PT_GUARDED_BY(cs_txMemPool);
 
@@ -507,7 +507,7 @@ public:
      * check does nothing.
      */
     void check(const CCoinsViewCache *pcoins) const;
-    void setSanityCheck(double dFrequency = 1.0) { nCheckFrequency = static_cast<uint32_t>(dFrequency * 4294967295.0); }
+    void setSanityCheck(double dFrequency = 1.0) { LOCK(cs_txMemPool); nCheckFrequency = static_cast<uint32_t>(dFrequency * 4294967295.0); }
 
     // addUnchecked must updated state for all ancestors of a given transaction,
     // to track size/count of descendant transactions.  First version of
