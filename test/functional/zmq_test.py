@@ -6,6 +6,7 @@
 import configparser
 import os
 import struct
+import json
 
 from test_framework.test_framework import BitcoinTestFramework, SkipTest
 from test_framework.mininode import CTransaction
@@ -26,6 +27,7 @@ class ZMQSubscriber:
 
     def receive(self):
         topic, body, seq = self.socket.recv_multipart()
+
         # Topic should match the subscriber topic.
         assert_equal(topic, self.topic)
         # Sequence should be incremental.
@@ -70,8 +72,9 @@ class ZMQTest (BitcoinTestFramework):
         self.hashtx = ZMQSubscriber(socket, b"hashtx")
         self.rawblock = ZMQSubscriber(socket, b"rawblock")
         self.rawtx = ZMQSubscriber(socket, b"rawtx")
+        self.decodedtx = ZMQSubscriber(socket, b"decodedtx")
 
-        self.extra_args = [["-zmqpub%s=%s" % (sub.topic.decode(), address) for sub in [self.hashblock, self.hashtx, self.rawblock, self.rawtx]], []]
+        self.extra_args = [["-zmqpub%s=%s" % (sub.topic.decode(), address) for sub in [self.hashblock, self.hashtx, self.rawblock, self.rawtx, self.decodedtx]], []]
         self.add_nodes(self.num_nodes, self.extra_args)
         self.start_nodes()
 
@@ -90,8 +93,12 @@ class ZMQTest (BitcoinTestFramework):
         self.sync_all()
 
         for x in range(num_blocks):
+            # Should receive the json decoded transaction.
+            decodedtx = self.decodedtx.receive()
+
             # Should receive the coinbase txid.
             txid = self.hashtx.receive()
+            assert_equal(bytes_to_hex_str(txid), json.loads(decodedtx.decode('utf-8'))['txid'])
 
             # Should receive the coinbase raw transaction.
             hex = self.rawtx.receive()
@@ -113,6 +120,10 @@ class ZMQTest (BitcoinTestFramework):
         self.log.info("Wait for tx from second node")
         payment_txid = self.nodes[1].sendtoaddress(self.nodes[0].getnewaddress(), 1.0)
         self.sync_all()
+
+        # Should receive the json decoded transaction.
+        decodedtx = self.decodedtx.receive()
+        assert_equal(payment_txid, json.loads(decodedtx.decode('utf-8'))['txid'])
 
         # Should receive the broadcasted txid.
         txid = self.hashtx.receive()

@@ -4,14 +4,17 @@
 
 #include "chain.h"
 #include "chainparams.h"
-#include "streams.h"
-#include "zmqpublishnotifier.h"
-#include "validation.h"
-#include "util.h"
+#include "core_io.h"
 #include "rpc/server.h"
+#include "streams.h"
+#include <univalue.h>
+#include "util.h"
+#include "validation.h"
+#include "zmqpublishnotifier.h"
 
 static std::multimap<std::string, CZMQAbstractPublishNotifier*> mapPublishNotifiers;
 
+static const char *MSG_DECODEDTX = "decodedtx";
 static const char *MSG_HASHBLOCK = "hashblock";
 static const char *MSG_HASHTX    = "hashtx";
 static const char *MSG_RAWBLOCK  = "rawblock";
@@ -194,4 +197,15 @@ bool CZMQPublishRawTransactionNotifier::NotifyTransaction(const CTransaction &tr
     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION | RPCSerializationFlags());
     ss << transaction;
     return SendMessage(MSG_RAWTX, &(*ss.begin()), ss.size());
+}
+
+bool CZMQPublishDecodedTransactionNotifier::NotifyTransaction(const CTransaction &transaction)
+{
+    uint256 hash = transaction.GetHash();
+    LogPrint(BCLog::ZMQ, "zmq: Publish decodedtx %s\n", hash.GetHex());
+    UniValue result(UniValue::VOBJ);
+    TxToUniv(transaction, uint256(), result, false);
+    std::string jsontx = result.write();
+    const char *output = jsontx.c_str();
+    return SendMessage(MSG_DECODEDTX, &(*output), strlen(output));
 }
