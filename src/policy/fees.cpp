@@ -683,6 +683,7 @@ CFeeRate CBlockPolicyEstimator::estimateFee(int confTarget) const
 
 CFeeRate CBlockPolicyEstimator::estimateRawFee(int confTarget, double successThreshold, FeeEstimateHorizon horizon, EstimationResult* result) const
 {
+    LOCK(cs_feeEstimator);
     TxConfirmStats* stats;
     double sufficientTxs = SUFFICIENT_FEETXS;
     switch (horizon) {
@@ -704,7 +705,6 @@ CFeeRate CBlockPolicyEstimator::estimateRawFee(int confTarget, double successThr
     }
     }
 
-    LOCK(cs_feeEstimator);
     // Return failure if trying to analyze a target we're not tracking
     if (confTarget <= 0 || (unsigned int)confTarget > stats->GetMaxConfirms())
         return CFeeRate(0);

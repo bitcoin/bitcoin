@@ -189,7 +189,7 @@ extern uint256 hashAssumeValid;
 extern arith_uint256 nMinimumChainWork;
 
 /** Best header we've seen so far (used for getheaders queries' starting points). */
-extern CBlockIndex *pindexBestHeader PT_GUARDED_BY(cs_main);
+extern CBlockIndex *pindexBestHeader GUARDED_BY(cs_main);
 
 /** Minimum disk space required - used in CheckDiskSpace() */
 static const uint64_t nMinDiskSpace = 52428800;
@@ -447,13 +447,13 @@ bool ResetBlockFailureFlags(CBlockIndex *pindex) EXCLUSIVE_LOCKS_REQUIRED(cs_mai
 extern CChain chainActive GUARDED_BY(cs_main);
 
 /** Global variable that points to the coins database (protected by cs_main) */
-extern std::unique_ptr<CCoinsViewDB> pcoinsdbview PT_GUARDED_BY(cs_main);
+extern std::unique_ptr<CCoinsViewDB> pcoinsdbview GUARDED_BY(cs_main);
 
 /** Global variable that points to the active CCoinsView (protected by cs_main) */
-extern std::unique_ptr<CCoinsViewCache> pcoinsTip PT_GUARDED_BY(cs_main);
+extern std::unique_ptr<CCoinsViewCache> pcoinsTip GUARDED_BY(cs_main);
 
 /** Global variable that points to the active block tree (protected by cs_main) */
-extern std::unique_ptr<CBlockTreeDB> pblocktree PT_GUARDED_BY(cs_main);
+extern std::unique_ptr<CBlockTreeDB> pblocktree GUARDED_BY(cs_main);
 
 /**
  * Return the spend height, which is one more than the inputs.GetBestBlock().

@@ -120,6 +120,7 @@ void ValidateCheckInputsForAllFlags(CMutableTransaction &tx, uint32_t failing_fl
             // WITNESS requires P2SH
             test_flags |= SCRIPT_VERIFY_P2SH;
         }
+        LOCK(cs_main);
         bool ret = CheckInputs(tx, state, pcoinsTip.get(), true, test_flags, true, add_to_cache, txdata, nullptr);
         // CheckInputs should succeed iff test_flags doesn't intersect with
         // failing_flags
