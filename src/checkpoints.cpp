@@ -8,7 +8,6 @@
 #include <chainparams.h>
 #include <reverse_iterator.h>
 #include <validation.h>
-#include <uint256.h>
 
 #include <stdint.h>
 

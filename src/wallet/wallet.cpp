@@ -24,12 +24,10 @@
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <reverse_iterator.h>
-#include <scheduler.h>
 #include <script/script.h>
-#include <script/sign.h>
+#include <scheduler.h>
 #include <timedata.h>
 #include <txmempool.h>
-#include <ui_interface.h>
 #include <util.h>
 #include <utilmoneystr.h>
 #include <validation.h>

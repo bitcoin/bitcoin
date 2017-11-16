@@ -10,7 +10,6 @@
 #include <qt/qvalidatedlineedit.h>
 #include <qt/walletmodel.h>
 
-#include <fs.h>
 #include <primitives/transaction.h>
 #include <init.h>
 #include <policy/policy.h>

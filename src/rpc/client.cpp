@@ -12,8 +12,6 @@
 #include <set>
 #include <stdint.h>
 
-#include <univalue.h>
-
 class CRPCConvertParam
 {
 public:

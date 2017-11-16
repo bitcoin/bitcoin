@@ -14,9 +14,8 @@
 #include <init.h>
 #include <validation.h>
 #include <merkleblock.h>
-#include <net.h>
-#include <netbase.h>
 #include <netmessagemaker.h>
+#include <netbase.h>
 #include <policy/fees.h>
 #include <policy/policy.h>
 #include <primitives/block.h>
@@ -30,7 +29,6 @@
 #include <util.h>
 #include <utilmoneystr.h>
 #include <utilstrencodings.h>
-#include <validationinterface.h>
 
 #include <governance.h>
 #include <instantx.h>

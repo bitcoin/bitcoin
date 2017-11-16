@@ -15,8 +15,6 @@
 #include <qt/optionsmodel.h>
 #include <qt/platformstyle.h>
 #include <qt/sendcoinsentry.h>
-#include <util.h>
-#include <qt/walletmodel.h>
 
 #include <base58.h>
 #include <wallet/coincontrol.h>
@@ -29,11 +27,9 @@
 #include <privatesend.h>
 
 #include <QFontMetrics>
-#include <QMessageBox>
 #include <QScrollBar>
 #include <QSettings>
 #include <QTextDocument>
-#include <QTimer>
 
 static const std::array<int, 9> confTargets = { {2, 4, 6, 12, 24, 48, 144, 504, 1008} };
 int getConfTargetForIndex(int index) {
