@@ -6,12 +6,12 @@
 #define BITCOIN_NETBASE_H
 
 #if defined(HAVE_CONFIG_H)
-#include "config/bitcoin-config.h"
+#include <config/bitcoin-config.h>
 #endif
 
-#include "compat.h"
-#include "netaddress.h"
-#include "serialize.h"
+#include <compat.h>
+#include <netaddress.h>
+#include <serialize.h>
 
 #include <stdint.h>
 #include <string>

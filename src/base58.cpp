@@ -2,13 +2,13 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "base58.h"
+#include <base58.h>
 
-#include "bech32.h"
-#include "hash.h"
-#include "script/script.h"
-#include "uint256.h"
-#include "utilstrencodings.h"
+#include <bech32.h>
+#include <hash.h>
+#include <script/script.h>
+#include <uint256.h>
+#include <utilstrencodings.h>
 
 #include <boost/variant/apply_visitor.hpp>
 #include <boost/variant/static_visitor.hpp>
