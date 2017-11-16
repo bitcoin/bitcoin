@@ -2903,17 +2903,17 @@ UniValue listunspent(const JSONRPCRequest& request)
             "\nResult\n"
             "[                   (array of json object)\n"
             "  {\n"
-            "    \"txid\" : \"txid\",          (string) the transaction id \n"
-            "    \"vout\" : n,               (numeric) the vout value\n"
-            "    \"address\" : \"address\",    (string) the bitcoin address\n"
-            "    \"account\" : \"account\",    (string) DEPRECATED. The associated account, or \"\" for the default account\n"
-            "    \"scriptPubKey\" : \"key\",   (string) the script key\n"
-            "    \"amount\" : x.xxx,         (numeric) the transaction output amount in " + CURRENCY_UNIT + "\n"
-            "    \"confirmations\" : n,      (numeric) The number of confirmations\n"
-            "    \"redeemScript\" : n        (string) The redeemScript if scriptPubKey is P2SH\n"
-            "    \"spendable\" : xxx,        (bool) Whether we have the private keys to spend this output\n"
-            "    \"solvable\" : xxx,         (bool) Whether we know how to spend this output, ignoring the lack of keys\n"
-            "    \"safe\" : xxx              (bool) Whether this output is considered safe to spend. Unconfirmed transactions\n"
+            "    \"txid\" : \"txid\",            (string) the transaction id \n"
+            "    \"vout\" : n,                 (numeric) the vout value\n"
+            "    \"address\" : \"address\",      (string) the bitcoin address\n"
+            "    \"account\" : \"account\",      (string) DEPRECATED. The associated account, or \"\" for the default account\n"
+            "    \"scriptPubKey\" : \"key\",     (string) the script key\n"
+            "    \"amount\" : x.xxx,           (numeric) the transaction output amount in " + CURRENCY_UNIT + "\n"
+            "    \"confirmations\" : n,        (numeric) The number of confirmations\n"
+            "    \"redeemScript\" : \"script\" | [\"script\", ... ],  (string or array) The redeemScript as a string for P2SH/P2WSH, or the redeemScript and witnessScript as an array if using P2SH-P2WSH. Unset in other cases\n"
+            "    \"spendable\" : xxx,          (bool) Whether we have the private keys to spend this output\n"
+            "    \"solvable\" : xxx,           (bool) Whether we know how to spend this output, ignoring the lack of keys\n"
+            "    \"safe\" : xxx                (bool) Whether this output is considered safe to spend. Unconfirmed transactions\n"
             "                              from outside keys and unconfirmed replacement transactions are considered unsafe\n"
             "                              and are not eligible for spending by fundrawtransaction and sendtoaddress.\n"
             "  }\n"
@@ -3017,7 +3017,34 @@ UniValue listunspent(const JSONRPCRequest& request)
                 const CScriptID& hash = boost::get<CScriptID>(address);
                 CScript redeemScript;
                 if (pwallet->GetCScript(hash, redeemScript)) {
-                    entry.pushKV("redeemScript", HexStr(redeemScript.begin(), redeemScript.end()));
+                    CTxDestination witness_destination;
+                    if (redeemScript.IsPayToWitnessScriptHash() && ExtractDestination(redeemScript, witness_destination)) {
+                        const WitnessV0ScriptHash& whash = boost::get<WitnessV0ScriptHash>(witness_destination);
+                        CScriptID id;
+                        CRIPEMD160().Write(whash.begin(), whash.size()).Finalize(id.begin());
+                        CScript witnessScript;
+                        // For compatibility with signrawtransaction, if we have both a witnessScript
+                        // and redeemScript, return them in an array
+                        UniValue scripts(UniValue::VARR);
+                        scripts.push_back(HexStr(redeemScript.begin(), redeemScript.end()));
+                        if (pwallet->GetCScript(id, witnessScript)) {
+                            scripts.push_back(HexStr(witnessScript.begin(), witnessScript.end()));
+                        }
+                        entry.push_back(Pair("redeemScript", scripts));
+                    } else {
+                        entry.push_back(Pair("redeemScript", HexStr(redeemScript.begin(), redeemScript.end())));
+                    }
+                }
+            }
+
+            if (scriptPubKey.IsPayToWitnessScriptHash()) {
+                const WitnessV0ScriptHash& whash = boost::get<WitnessV0ScriptHash>(address);
+                CScriptID id;
+                CRIPEMD160().Write(whash.begin(), whash.size()).Finalize(id.begin());
+                CScript witnessScript;
+                // The witnessScript should always be present, so this should be always true
+                if (pwallet->GetCScript(id, witnessScript)) {
+                    entry.push_back(Pair("redeemScript", HexStr(witnessScript.begin(), witnessScript.end())));
                 }
             }
         }
