@@ -61,7 +61,7 @@ public:
     const CMessageHeader::MessageStartChars& MessageStart() const { return pchMessageStart; }
     int GetDefaultPort() const { return nDefaultPort; }
 
-    bool MiningRequiresPeers() const {return true; }
+    bool MiningRequiresPeers() const {return fMiningRequiresPeers; }
     const CBlock& GenesisBlock() const { return genesis; }
     /** Default value for -checkmempool and -checkblockindex argument */
     bool DefaultConsistencyChecks() const { return fDefaultConsistencyChecks; }
@@ -95,6 +95,7 @@ protected:
     bool fDefaultConsistencyChecks;
     bool fRequireStandard;
     bool fMineBlocksOnDemand;
+    bool fMiningRequiresPeers;
     CCheckpointData checkpointData;
     ChainTxData chainTxData;
 };

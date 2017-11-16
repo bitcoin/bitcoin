@@ -3198,8 +3198,7 @@ UniValue generate(const JSONRPCRequest& request)
     }
 
     std::shared_ptr<CReserveScript> coinbase_script;
-    //TODO: Tyler volunteered to fix this
-    //pwallet->GetScriptForMining(coinbase_script);
+    pwallet->GetScriptForMining(coinbase_script);
 
     // If the keypool is exhausted, no script is returned at all.  Catch this.
     if (!coinbase_script) {
