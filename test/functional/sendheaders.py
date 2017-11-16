@@ -243,12 +243,15 @@ class SendHeadersTest(BitcoinTestFramework):
         inv_node.sync_with_ping()
         test_node.sync_with_ping()
 
-        self.test_null_locators(test_node)
+        self.test_null_locators(test_node, inv_node)
         self.test_nonnull_locators(test_node, inv_node)
 
-    def test_null_locators(self, test_node):
+    def test_null_locators(self, test_node, inv_node):
         tip = self.nodes[0].getblockheader(self.nodes[0].generate(1)[0])
         tip_hash = int(tip["hash"], 16)
+
+        inv_node.check_last_announcement(inv=[tip_hash], headers=[])
+        test_node.check_last_announcement(inv=[tip_hash], headers=[])
 
         self.log.info("Verify getheaders with null locator and valid hashstop returns headers.")
         test_node.clear_last_announcement()
@@ -263,7 +266,10 @@ class SendHeadersTest(BitcoinTestFramework):
         test_node.send_get_headers(locator=[], hashstop=int(block.hash, 16))
         test_node.sync_with_ping()
         assert_equal(test_node.block_announced, False)
+        inv_node.clear_last_announcement()
         test_node.send_message(msg_block(block))
+        inv_node.check_last_announcement(inv=[int(block.hash, 16)], headers=[])
+        inv_node.clear_last_announcement()
 
     def test_nonnull_locators(self, test_node, inv_node):
         tip = int(self.nodes[0].getbestblockhash(), 16)
