@@ -573,7 +573,7 @@ UniValue sendtoaddress(const JSONRPCRequest& request)
             "                            The recipient will receive less " + CURRENCY_UNIT + " than you enter in the amount field.\n"
             "6. \"narration\"   (string, optional) Up to 24 characters sent with the transaction.\n"
             "                            The narration is stored in the blockchain and is sent encrypted when destination is a stealth address and unencrypted otherwise.\n"
-            "                             The recipient will receive less bitcoins than you enter in the amount field.\n"
+            "                            The recipient will receive less bitcoins than you enter in the amount field.\n"
             "7. replaceable            (boolean, optional) Allow this transaction to be replaced by a transaction with higher fees via BIP 125\n"
             "8. conf_target            (numeric, optional) Confirmation target (in blocks)\n"
             "9. \"estimate_mode\"      (string, optional, default=UNSET) The fee estimate mode, must be one of:\n"
@@ -664,7 +664,6 @@ UniValue sendtoaddress(const JSONRPCRequest& request)
             params.push_back(uvBool); // test_fee
 
             UniValue uvCoinControl(UniValue::VOBJ);
-
             uvCoinControl.pushKV("replaceable", coin_control.signalRbf);
             unsigned int target = coin_control.m_confirm_target ? *coin_control.m_confirm_target : ::nTxConfirmTarget;
             uvCoinControl.pushKV("conf_target", (int)target);

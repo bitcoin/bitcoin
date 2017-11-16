@@ -371,7 +371,6 @@ public:
 
         pEKMaster = nullptr;
 
-        fUnlockForStakingOnly = false;
         nRCTOutSelectionGroup1 = 2400;
         nRCTOutSelectionGroup2 = 24000;
     };
@@ -732,7 +731,7 @@ public:
     int nWalletDevFundCedePercent;
 
 
-    bool fUnlockForStakingOnly; // Use coldstaking instead
+    bool fUnlockForStakingOnly = false; // Use coldstaking instead
 
     int64_t nRCTOutSelectionGroup1;
     int64_t nRCTOutSelectionGroup2;

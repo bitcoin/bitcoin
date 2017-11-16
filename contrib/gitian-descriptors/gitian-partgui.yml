@@ -1,0 +1,79 @@
+---
+name: "partgui"
+enable_cache: true
+suites:
+- "trusty"
+architectures:
+- "amd64"
+packages:
+- "curl"
+- "python-software-properties"
+- "build-essential"
+- "libcairo2-dev"
+- "git-core"
+- "pkg-config"
+- "autoconf"
+- "libtool"
+- "automake"
+- "faketime"
+- "bsdmainutils"
+- "ca-certificates"
+- "python"
+remotes:
+- "url": "https://github.com/particl/partgui"
+  "dir": "partgui"
+files: []
+script: |
+
+  WRAP_DIR=$HOME/wrapped
+  FAKETIME_HOST_PROGS=""
+  FAKETIME_PROGS="date ar ranlib nm npm"
+
+  export GZIP="-9n"
+  export TAR_OPTIONS="--mtime="$REFERENCE_DATE\\\ $REFERENCE_TIME""
+  export TZ="UTC"
+  export BUILD_DIR=`pwd`
+
+  mkdir -p ${WRAP_DIR}
+  if test -n "$GBUILD_CACHE_ENABLED"; then
+    export SOURCES_PATH=${GBUILD_COMMON_CACHE}
+    export BASE_CACHE=${GBUILD_PACKAGE_CACHE}
+    mkdir -p ${BASE_CACHE} ${SOURCES_PATH}
+  fi
+
+  function create_global_faketime_wrappers {
+  for prog in ${FAKETIME_PROGS}; do
+    echo '#!/bin/bash' > ${WRAP_DIR}/${prog}
+    echo "REAL=\`which -a ${prog} | grep -v ${WRAP_DIR}/${prog} | head -1\`" >> ${WRAP_DIR}/${prog}
+    echo 'export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1' >> ${WRAP_DIR}/${prog}
+    echo "export FAKETIME=\"$1\"" >> ${WRAP_DIR}/${prog}
+    echo "\$REAL \$@" >> $WRAP_DIR/${prog}
+    chmod +x ${WRAP_DIR}/${prog}
+  done
+  }
+
+  # Faketime for depends so intermediate results are comparable
+  export PATH_orig=${PATH}
+  create_global_faketime_wrappers "2000-01-01 12:00:00"
+  export PATH=${WRAP_DIR}:${PATH}
+
+  EXTRA_INCLUDES_BASE=$WRAP_DIR/extra_includes
+  mkdir -p $EXTRA_INCLUDES_BASE
+
+  curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.6/install.sh | bash
+  export NVM_DIR="$HOME/.nvm"
+  [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+  [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+  source /home/ubuntu/.bashrc
+  nvm install 6.11.5
+  nvm use 6.11.5
+
+  cd partgui
+  npm install
+
+  npm run package:linux
+  npm run package:win
+  npm run package:osx
+
+  mkdir -p $OUTDIR
+  mv packages $OUTDIR

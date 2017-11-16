@@ -925,7 +925,7 @@ bool WalletModel::isWalletEnabled()
 
 bool WalletModel::hdEnabled() const
 {
-    return wallet->IsHDEnabled();
+    return wallet && wallet->IsHDEnabled();
 }
 
 int WalletModel::getDefaultConfirmTarget() const

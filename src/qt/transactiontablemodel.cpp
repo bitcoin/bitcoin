@@ -134,21 +134,28 @@ public:
 
         switch(status)
         {
-        case CT_NEW:
         case CT_REPLACE:
             if(inModel)
             {
+            // remove entire transaction from table
+                parent->beginRemoveRows(QModelIndex(), lowerIndex, upperIndex-1);
+                cachedWallet.erase(lower, upper);
+                parent->endRemoveRows();
+
+                lower = qLowerBound(
+                    cachedWallet.begin(), cachedWallet.end(), hash, TxLessThan());
+                upper = qUpperBound(
+                    cachedWallet.begin(), cachedWallet.end(), hash, TxLessThan());
+                lowerIndex = (lower - cachedWallet.begin());
+                upperIndex = (upper - cachedWallet.begin());
+                inModel = (lower != upper);
+            }
+            // drop through
+        case CT_NEW:
+            if(inModel)
+            {
                 qWarning() << "TransactionTablePriv::updateWallet: Warning: Got CT_NEW, but transaction is already in model";
-                if (status == CT_REPLACE)
-                {
-                    // Removed -- remove entire transaction from table
-                    parent->beginRemoveRows(QModelIndex(), lowerIndex, upperIndex-1);
-                    cachedWallet.erase(lower, upper);
-                    parent->endRemoveRows();
-                } else
-                {
-                    break;
-                };
+                break;
             }
             if(showTransaction)
             {

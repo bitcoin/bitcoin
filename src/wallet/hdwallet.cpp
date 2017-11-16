@@ -218,7 +218,8 @@ bool CHDWallet::InitLoadWallet()
             if (walletdb.ReadBestBlock(locator))
                 pindexRescan = FindForkInGlobalIndex(chainActive, locator);
         }
-        if (chainActive.Tip() && chainActive.Tip() != pindexRescan)
+        if ((pwallet->mapExtAccounts.size() > 0 || pwallet->CountKeys() > 0) // Don't scan an empty wallet
+            && chainActive.Tip() && chainActive.Tip() != pindexRescan)
         {
             //We can't rescan beyond non-pruned blocks, stop and throw an error
             //this might happen if a user uses an old wallet within a pruned node

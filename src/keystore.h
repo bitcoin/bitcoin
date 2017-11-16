@@ -43,6 +43,8 @@ public:
     virtual bool RemoveWatchOnly(const CScript &dest) =0;
     virtual bool HaveWatchOnly(const CScript &dest) const =0;
     virtual bool HaveWatchOnly() const =0;
+
+    virtual size_t CountKeys() const =0;
 };
 
 typedef std::map<CKeyID, CKey> KeyMap;
@@ -105,6 +107,12 @@ public:
     virtual bool RemoveWatchOnly(const CScript &dest) override;
     virtual bool HaveWatchOnly(const CScript &dest) const override;
     virtual bool HaveWatchOnly() const override;
+
+    virtual size_t CountKeys() const override
+    {
+        LOCK(cs_KeyStore);
+        return mapKeys.size();
+    };
 };
 
 typedef std::vector<unsigned char, secure_allocator<unsigned char> > CKeyingMaterial;
