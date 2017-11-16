@@ -5,9 +5,7 @@
 #ifndef BITCOIN_CLIENTVERSION_H
 #define BITCOIN_CLIENTVERSION_H
 
-#if defined(HAVE_CONFIG_H)
-#include "config/bitcoin-config.h"
-#endif //HAVE_CONFIG_H
+#include "config/bitcoin-config-if-present.h"
 
 // Check that required client information is defined
 #if !defined(CLIENT_VERSION_MAJOR) || !defined(CLIENT_VERSION_MINOR) || !defined(CLIENT_VERSION_REVISION) || !defined(CLIENT_VERSION_BUILD) || !defined(CLIENT_VERSION_IS_RELEASE) || !defined(COPYRIGHT_YEAR)

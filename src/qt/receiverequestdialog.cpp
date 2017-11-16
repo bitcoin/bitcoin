@@ -21,9 +21,7 @@
 #include <QUrl>
 #endif
 
-#if defined(HAVE_CONFIG_H)
-#include "config/bitcoin-config.h" /* for USE_QRCODE */
-#endif
+#include "config/bitcoin-config-if-present.h" /* for USE_QRCODE */
 
 #ifdef USE_QRCODE
 #include <qrencode.h>
