@@ -11,7 +11,6 @@
 #include <qt/bitcoinunits.h>
 #include <qt/guiutil.h>
 
-#include <amount.h>
 #include <init.h>
 #include <validation.h> // For DEFAULT_SCRIPTCHECK_THREADS
 #include <net.h>
