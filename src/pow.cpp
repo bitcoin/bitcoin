@@ -21,7 +21,7 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
 unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nFirstBlockTime, const Consensus::Params& params)
 {
 
-	/* current difficulty formula, dash - DarkGravity v3, written by Evan Duffield - evan@dashpay.io */
+	/* current difficulty formula, syscoin - DarkGravity v3, written by Evan Duffield - evan@dashpay.io */
 	// Genesis block
 
 	const arith_uint256 nProofOfWorkLimit = UintToArith256(params.powLimit);
