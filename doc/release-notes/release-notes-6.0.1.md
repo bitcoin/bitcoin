@@ -4,10 +4,11 @@ Fixes
 ======
 This minor release fixes a bug that might cause a client to get stuck on the shorter chain during a soft fork. 
 The log output during mining has been significantly reduced.
+This version also implements the newest upstream changes from Bitcoin Core 0.15.1.
 
 
-General Information
-===================
+General Information on 6.x.x
+============================
 
 This is a new major version release, including new features, various bugfixes
 and performance improvements, as well as updated translations. See below for more information.

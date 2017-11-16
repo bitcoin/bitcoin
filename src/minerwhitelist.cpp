@@ -134,15 +134,20 @@ bool CMinerWhitelistDB::Init(bool fWipe){
         batch.Write(DB_HEIGHT, 0);
         unsigned int numberMiners = 0;
         for (std::set<std::string>::iterator it = Params().GetConsensus().minerWhiteListAdminAddress.begin(); it != Params().GetConsensus().minerWhiteListAdminAddress.end(); it++){
+            LogPrintf("Adding admin address %s", *it);
             batch.Write(MinerEntry(*it), MinerDetails(true,true));
             numberMiners += 1;
         }
         
         // At the beginning there was another admin key hardcoded into the client. 
         // also add that address, but allow for later removal.
-        std::string third = "pGNcLNCavQLGXwXkVDwoHPCuQUBoXzJtPh";
-        batch.Write(MinerEntry(third), MinerDetails(true,false)); 
-        numberMiners += 1;
+        if (Params().NetworkIDString() == "main") {
+            std::string third = "pGNcLNCavQLGXwXkVDwoHPCuQUBoXzJtPh";
+            LogPrintf("Adding admin address %s", third);
+            batch.Write(MinerEntry(third), MinerDetails(true,false)); 
+            numberMiners += 1;
+        }
+        
         batch.Write(WL_NUMBER_MINERS, numberMiners);
         LogPrintf("MinerDatabase: Added admin keys.\n");
 
@@ -221,7 +226,7 @@ unsigned int CMinerWhitelistDB::GetNumberOfWhitelistedMiners() {
     // On block 34342, the third admin key was finaly blacklisted. 
     // Up to that point substract one from the number of miners to accomodate the 
     // three admins.
-    if (chainActive.Height() < 34342) {
+    if (chainActive.Height() < 34342 && Params().NetworkIDString() == "main") {
         number -= 1;
     }
 
@@ -475,6 +480,9 @@ bool CMinerWhitelistDB::MineBlock(unsigned int newHeight, std::string address) {
     Read(DB_HEIGHT, currHeight);
     if (newHeight!=currHeight+1 ) {
         LogPrintf("WARNING: Miner Whitelist database is corrupted. Please resync the blockchain by using `-reindex`");
+        
+        LogPrintf("WARNING: Miner Whitelist database is corrupted. Please resync the blockchain by using `-reindex`\n");
+        LogPrintf("New Height: %i, Current Height: %i\n", newHeight, currHeight);
         return false;
     }
 
@@ -484,11 +492,14 @@ bool CMinerWhitelistDB::MineBlock(unsigned int newHeight, std::string address) {
     /* SPECIAL STUFF for block no 617. The first implementation of the whitelist took
     whitelist transactions from mempool into account. Block 617 contained the transaction that whitelisted
     miner of block 617. Add this miner on block 616 instead. */
-    if (newHeight==616) 
+    if (newHeight==616 && Params().NetworkIDString() == "main") 
         WhitelistMiner("pQAqAHfaJaCDQKedbgSXvDkJHhSsTmKGV9");
-    if (newHeight==9912)
+    if (newHeight==9912 && Params().NetworkIDString() == "main")
         WhitelistMiner("pDqhZSLQGfz2JGq1MNdYpp5M2QLjdujeAF");
-
+    if (newHeight==750 && Params().NetworkIDString() == "test")
+        WhitelistMiner("uQNQ5CUnrH57Mr9FRGZPk99pK9whnKJdjH");
+    if (newHeight==1861 && Params().NetworkIDString() == "test")
+        WhitelistMiner("uey4mzGT2Cb1fgm9XAoFFvDzV3Wx1LEqJR");
 
 
     // First make entry for the new Block
@@ -549,8 +560,7 @@ bool CMinerWhitelistDB::MineBlock(unsigned int newHeight, std::string address) {
         // if we are at the minercapsystemchangeheight=40320, the block dropping out is 
         // 40320-2016=38304, but block 38304 was not counted in windowBlocks 
         // so we can start dropping blocks 
-        
-        if (blockDroppingOut > 38304) { // There is!
+        if (blockDroppingOut > Params().GetConsensus().minerCapSystemChangeHeight-2016) { // There is!
             BlockDetails dropDets = BlockDetails();
             if (!Exists(BlockEntry(blockDroppingOut)))
                 return false;
@@ -584,7 +594,7 @@ bool CMinerWhitelistDB::RewindBlock(unsigned int index) {
     unsigned int currHeight;
     Read(DB_HEIGHT, currHeight);
     if (currHeight!=index) {
-        LogPrintf("WARNING: Miner Whitelist database is corrupted. Please resync the blockchain by using `-reindex`");
+        LogPrintf("WARNING: Miner Whitelist database is corrupted. Please resync the blockchain by using `-reindex`\n");
         return false;
     }
 
@@ -677,7 +687,7 @@ bool CMinerWhitelistDB::RewindBlock(unsigned int index) {
         // 40320-2016=38304, but block 38304 was not counted in windowBlocks 
         // so we can start dropping blocks 
         
-        if (blockMovingIn > 38304) { // There is!
+        if (blockMovingIn > Params().GetConsensus().minerCapSystemChangeHeight-2016) { // There is!
             BlockDetails dropDets = BlockDetails();
             if (!Exists(BlockEntry(blockMovingIn)))
                 return false;
@@ -705,7 +715,7 @@ bool CMinerWhitelistDB::RewindBlock(unsigned int index) {
 }
 
 bool CMinerWhitelistDB::hasExceededCap(std::string address) {
-    if (Params().GetConsensus().minerWhiteListAdminAddress.count(address) || (chainActive.Height() < 38304 && address == "pGNcLNCavQLGXwXkVDwoHPCuQUBoXzJtPh"))
+    if (Params().GetConsensus().minerWhiteListAdminAddress.count(address) || (Params().NetworkIDString() == "main" && chainActive.Height() < 38304 && address == "pGNcLNCavQLGXwXkVDwoHPCuQUBoXzJtPh"))
         return false;
     
     
