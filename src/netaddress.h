@@ -12,6 +12,7 @@
 #include "compat.h"
 #include "serialize.h"
 
+#include <array>
 #include <stdint.h>
 #include <string>
 #include <vector>
@@ -31,20 +32,20 @@ enum Network
 class CNetAddr
 {
     protected:
-        unsigned char ip[16]; // in network byte order
+        std::array<unsigned char, 16> ip; // in network byte order
         uint32_t scopeId; // for scoped/link-local ipv6 addresses
 
     public:
         CNetAddr();
         explicit CNetAddr(const struct in_addr& ipv4Addr);
         void Init();
-        void SetIP(const CNetAddr& ip);
+        void SetIP(CNetAddr ip);
 
         /**
          * Set raw IPv4 or IPv6 address (in network byte order)
-         * @note Only NET_IPV4 and NET_IPV6 are allowed for network.
          */
-        void SetRaw(Network network, const uint8_t *data);
+        void SetRawIPv4(const std::array<unsigned char, 4>&);
+        void SetRawIPv6(const std::array<unsigned char, 16>&);
 
         /**
           * Transform an arbitrary string into a non-routable ipv6 address.
@@ -76,7 +77,7 @@ class CNetAddr
         enum Network GetNetwork() const;
         std::string ToString() const;
         std::string ToStringIP() const;
-        unsigned int GetByte(int n) const;
+        unsigned int GetByte(unsigned int n) const;
         uint64_t GetHash() const;
         bool GetInAddr(struct in_addr* pipv4Addr) const;
         std::vector<unsigned char> GetGroup() const;
@@ -105,7 +106,7 @@ class CSubNet
         /// Network (base) address
         CNetAddr network;
         /// Netmask, in network byte order
-        uint8_t netmask[16];
+        std::array<unsigned char, 16> netmask;
         /// Is this value valid? (only used to signal parse errors)
         bool valid;
 
