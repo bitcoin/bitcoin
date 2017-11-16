@@ -114,20 +114,14 @@ class BaseNode(NodeConnCB):
         self.block_announced = False
         self.last_blockhash_announced = None
 
-    def clear_last_announcement(self):
-        with mininode_lock:
-            self.block_announced = False
-            self.last_message.pop("inv", None)
-            self.last_message.pop("headers", None)
-
-    # Request data for a list of block hashes
-    def get_data(self, block_hashes):
+    def send_get_data(self, block_hashes):
+        """Request data for a list of block hashes."""
         msg = msg_getdata()
         for x in block_hashes:
             msg.inv.append(CInv(2, x))
         self.connection.send_message(msg)
 
-    def get_headers(self, locator, hashstop):
+    def send_get_headers(self, locator, hashstop):
         msg = msg_getheaders()
         msg.locator.vHave = locator
         msg.hashstop = hashstop
@@ -137,6 +131,25 @@ class BaseNode(NodeConnCB):
         msg = msg_inv()
         msg.inv = [CInv(2, blockhash)]
         self.connection.send_message(msg)
+
+    def send_header_for_blocks(self, new_blocks):
+        headers_message = msg_headers()
+        headers_message.headers = [CBlockHeader(b) for b in new_blocks]
+        self.send_message(headers_message)
+
+    def send_getblocks(self, locator):
+        getblocks_message = msg_getblocks()
+        getblocks_message.locator.vHave = locator
+        self.send_message(getblocks_message)
+
+    def wait_for_getdata(self, hash_list, timeout=60):
+        if hash_list != []:
+            test_function = lambda: "getdata" in self.last_message and [x.hash for x in self.last_message["getdata"].inv] == hash_list
+            wait_until(test_function, timeout=timeout, lock=mininode_lock)
+
+    def wait_for_block_announcement(self, block_hash, timeout=60):
+        test_function = lambda: self.last_blockhash_announced == block_hash
+        wait_until(test_function, timeout=timeout, lock=mininode_lock)
 
     def on_inv(self, conn, message):
         self.block_announced = True
@@ -148,10 +161,16 @@ class BaseNode(NodeConnCB):
             message.headers[-1].calc_sha256()
             self.last_blockhash_announced = message.headers[-1].sha256
 
-    # Test whether the last announcement we received had the
-    # right header or the right inv
-    # inv and headers should be lists of block hashes
+    def clear_last_announcement(self):
+        with mininode_lock:
+            self.block_announced = False
+            self.last_message.pop("inv", None)
+            self.last_message.pop("headers", None)
+
     def check_last_announcement(self, headers=None, inv=None):
+        """Test whether the last announcement received had the right header or the right inv.
+
+        inv and headers should be lists of block hashes."""
         expect_headers = headers if headers is not None else []
         expect_inv = inv if inv is not None else []
         test_function = lambda: self.block_announced
@@ -177,47 +196,26 @@ class BaseNode(NodeConnCB):
             self.last_message.pop("headers", None)
         return success
 
-    def wait_for_getdata(self, hash_list, timeout=60):
-        if hash_list == []:
-            return
-
-        test_function = lambda: "getdata" in self.last_message and [x.hash for x in self.last_message["getdata"].inv] == hash_list
-        wait_until(test_function, timeout=timeout, lock=mininode_lock)
-        return
-
-    def wait_for_block_announcement(self, block_hash, timeout=60):
-        test_function = lambda: self.last_blockhash_announced == block_hash
-        wait_until(test_function, timeout=timeout, lock=mininode_lock)
-        return
-
-    def send_header_for_blocks(self, new_blocks):
-        headers_message = msg_headers()
-        headers_message.headers = [CBlockHeader(b) for b in new_blocks]
-        self.send_message(headers_message)
-
-    def send_getblocks(self, locator):
-        getblocks_message = msg_getblocks()
-        getblocks_message.locator.vHave = locator
-        self.send_message(getblocks_message)
-
 class SendHeadersTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 2
 
-    # mine count blocks and return the new tip
     def mine_blocks(self, count):
+        """Mine count blocks and return the new tip."""
+
         # Clear out last block announcement from each p2p listener
         [x.clear_last_announcement() for x in self.nodes[0].p2ps]
         self.nodes[0].generate(count)
         return int(self.nodes[0].getbestblockhash(), 16)
 
-    # mine a reorg that invalidates length blocks (replacing them with
-    # length+1 blocks).
-    # Note: we clear the state of our p2p connections after the
-    # to-be-reorged-out blocks are mined, so that we don't break later tests.
-    # return the list of block hashes newly mined
     def mine_reorg(self, length):
+        """Mine a reorg that invalidates length blocks (replacing them with # length+1 blocks).
+
+        Note: we clear the state of our p2p connections after the
+        to-be-reorged-out blocks are mined, so that we don't break later tests.
+        return the list of block hashes newly mined."""
+
         self.nodes[0].generate(length)  # make sure all invalidated blocks are node0's
         sync_blocks(self.nodes, wait=0.1)
         for x in self.nodes[0].p2ps:
@@ -257,7 +255,7 @@ class SendHeadersTest(BitcoinTestFramework):
 
         self.log.info("Verify getheaders with null locator and valid hashstop returns headers.")
         test_node.clear_last_announcement()
-        test_node.get_headers(locator=[], hashstop=tip_hash)
+        test_node.send_get_headers(locator=[], hashstop=tip_hash)
         assert_equal(test_node.check_last_announcement(headers=[tip_hash]), True)
 
         self.log.info("Verify getheaders with null locator and invalid hashstop does not return headers.")
@@ -265,7 +263,7 @@ class SendHeadersTest(BitcoinTestFramework):
         block.solve()
         test_node.send_header_for_blocks([block])
         test_node.clear_last_announcement()
-        test_node.get_headers(locator=[], hashstop=int(block.hash, 16))
+        test_node.send_get_headers(locator=[], hashstop=int(block.hash, 16))
         test_node.sync_with_ping()
         assert_equal(test_node.block_announced, False)
         test_node.send_message(msg_block(block))
@@ -284,12 +282,12 @@ class SendHeadersTest(BitcoinTestFramework):
             # Try a few different responses; none should affect next announcement
             if i == 0:
                 # first request the block
-                test_node.get_data([tip])
+                test_node.send_get_data([tip])
                 test_node.wait_for_block(tip)
             elif i == 1:
                 # next try requesting header and block
-                test_node.get_headers(locator=[old_tip], hashstop=tip)
-                test_node.get_data([tip])
+                test_node.send_get_headers(locator=[old_tip], hashstop=tip)
+                test_node.send_get_data([tip])
                 test_node.wait_for_block(tip)
                 test_node.clear_last_announcement()  # since we requested headers...
             elif i == 2:
@@ -313,7 +311,7 @@ class SendHeadersTest(BitcoinTestFramework):
         # commence and keep working.
         test_node.send_message(msg_sendheaders())
         prev_tip = int(self.nodes[0].getbestblockhash(), 16)
-        test_node.get_headers(locator=[prev_tip], hashstop=0)
+        test_node.send_get_headers(locator=[prev_tip], hashstop=0)
         test_node.sync_with_ping()
 
         # Now that we've synced headers, headers announcements should work
@@ -397,7 +395,7 @@ class SendHeadersTest(BitcoinTestFramework):
             # Use getblocks/getdata
             test_node.send_getblocks(locator=[fork_point])
             assert_equal(test_node.check_last_announcement(inv=new_block_hashes), True)
-            test_node.get_data(new_block_hashes)
+            test_node.send_get_data(new_block_hashes)
             test_node.wait_for_block(new_block_hashes[-1])
 
             for i in range(3):
@@ -407,22 +405,22 @@ class SendHeadersTest(BitcoinTestFramework):
                 assert_equal(test_node.check_last_announcement(inv=[tip]), True)
                 if i == 0:
                     # Just get the data -- shouldn't cause headers announcements to resume
-                    test_node.get_data([tip])
+                    test_node.send_get_data([tip])
                     test_node.wait_for_block(tip)
                 elif i == 1:
                     # Send a getheaders message that shouldn't trigger headers announcements
                     # to resume (best header sent will be too old)
-                    test_node.get_headers(locator=[fork_point], hashstop=new_block_hashes[1])
-                    test_node.get_data([tip])
+                    test_node.send_get_headers(locator=[fork_point], hashstop=new_block_hashes[1])
+                    test_node.send_get_data([tip])
                     test_node.wait_for_block(tip)
                 elif i == 2:
-                    test_node.get_data([tip])
+                    test_node.send_get_data([tip])
                     test_node.wait_for_block(tip)
                     # This time, try sending either a getheaders to trigger resumption
                     # of headers announcements, or mine a new block and inv it, also
                     # triggering resumption of headers announcements.
                     if j == 0:
-                        test_node.get_headers(locator=[tip], hashstop=0)
+                        test_node.send_get_headers(locator=[tip], hashstop=0)
                         test_node.sync_with_ping()
                     else:
                         test_node.send_block_inv(tip)
