@@ -6,10 +6,10 @@
 #ifndef BITCOIN_POLICY_POLICY_H
 #define BITCOIN_POLICY_POLICY_H
 
-#include "consensus/consensus.h"
-#include "feerate.h"
-#include "script/interpreter.h"
-#include "script/standard.h"
+#include <consensus/consensus.h>
+#include <policy/feerate.h>
+#include <script/interpreter.h>
+#include <script/standard.h>
 
 #include <string>
 

@@ -3,27 +3,27 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "base58.h"
-#include "chain.h"
-#include "clientversion.h"
-#include "core_io.h"
-#include "crypto/ripemd160.h"
-#include "init.h"
-#include "validation.h"
-#include "httpserver.h"
-#include "net.h"
-#include "netbase.h"
-#include "rpc/blockchain.h"
-#include "rpc/server.h"
-#include "timedata.h"
-#include "util.h"
-#include "utilstrencodings.h"
+#include <base58.h>
+#include <chain.h>
+#include <clientversion.h>
+#include <core_io.h>
+#include <crypto/ripemd160.h>
+#include <init.h>
+#include <validation.h>
+#include <httpserver.h>
+#include <net.h>
+#include <netbase.h>
+#include <rpc/blockchain.h>
+#include <rpc/server.h>
+#include <timedata.h>
+#include <util.h>
+#include <utilstrencodings.h>
 #ifdef ENABLE_WALLET
-#include "wallet/rpcwallet.h"
-#include "wallet/wallet.h"
-#include "wallet/walletdb.h"
+#include <wallet/rpcwallet.h>
+#include <wallet/wallet.h>
+#include <wallet/walletdb.h>
 #endif
-#include "warnings.h"
+#include <warnings.h>
 
 #include <stdint.h>
 #ifdef HAVE_MALLOC_INFO

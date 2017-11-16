@@ -5,7 +5,7 @@
 #ifndef BITCOIN_CHECKQUEUE_H
 #define BITCOIN_CHECKQUEUE_H
 
-#include "sync.h"
+#include <sync.h>
 
 #include <algorithm>
 #include <vector>
