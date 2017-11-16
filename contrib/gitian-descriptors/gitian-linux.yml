@@ -1,5 +1,5 @@
 ---
-name: "iop-core-linux-6.0.1"
+name: "iop-core-linux-6.0.2"
 enable_cache: true
 suites:
 - "trusty"
