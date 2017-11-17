@@ -1674,6 +1674,7 @@ UniValue omni_gettransaction(const UniValue& params, bool fHelp)
             "  \"fee\" : \"n.nnnnnnnn\",             (string) the transaction fee in bitcoins\n"
             "  \"blocktime\" : nnnnnnnnnn,         (number) the timestamp of the block that contains the transaction\n"
             "  \"valid\" : true|false,             (boolean) whether the transaction is valid\n"
+            "  \"invalidreason\" : \"reason\",     (string) if a transaction is invalid, the reason \n"
             "  \"version\" : n,                    (number) the transaction version\n"
             "  \"type_int\" : n,                   (number) the transaction type as number\n"
             "  \"type\" : \"type\",                  (string) the transaction type as string\n"
