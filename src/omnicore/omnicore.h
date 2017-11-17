@@ -180,6 +180,7 @@ public:
     void RecordTransaction(const uint256& txid, uint32_t posInBlock, int processingResult);
     std::vector<std::string> FetchTransactionDetails(const uint256& txid);
     uint32_t FetchTransactionPosition(const uint256& txid);
+    std::string FetchInvalidReason(const uint256& txid);
 };
 
 /** LevelDB based storage for STO recipients.

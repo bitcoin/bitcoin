@@ -2502,6 +2502,18 @@ uint32_t COmniTransactionDB::FetchTransactionPosition(const uint256& txid)
     return posInBlock;
 }
 
+std::string COmniTransactionDB::FetchInvalidReason(const uint256& txid)
+{
+    int processingResult = -999999;
+
+    std::vector<std::string> vTransactionDetails = FetchTransactionDetails(txid);
+    if (vTransactionDetails.size() == 2) {
+        processingResult = boost::lexical_cast<int>(vTransactionDetails[1]);
+    }
+
+    return error_str(processingResult);
+}
+
 std::set<int> CMPTxList::GetSeedBlocks(int startHeight, int endHeight)
 {
     std::set<int> setSeedBlocks;
