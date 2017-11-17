@@ -64,7 +64,7 @@ class TestNode(NodeConnCB):
         super().__init__()
         self.getdataset = set()
 
-    def on_getdata(self, conn, message):
+    def on_getdata(self, message):
         for inv in message.inv:
             self.getdataset.add(inv.hash)
 
@@ -148,7 +148,7 @@ class SegWitTest(BitcoinTestFramework):
     ''' Individual tests '''
     def test_witness_services(self):
         self.log.info("Verifying NODE_WITNESS service bit")
-        assert((self.test_node.connection.nServices & NODE_WITNESS) != 0)
+        assert((self.test_node.nServices & NODE_WITNESS) != 0)
 
 
     # See if sending a regular transaction works, and create a utxo
@@ -1876,11 +1876,11 @@ class SegWitTest(BitcoinTestFramework):
     def run_test(self):
         # Setup the p2p connections and start up the network thread.
         # self.test_node sets NODE_WITNESS|NODE_NETWORK
-        self.test_node = self.nodes[0].add_p2p_connection(p2p_conn=TestNode(), services=NODE_NETWORK|NODE_WITNESS)
+        self.test_node = self.nodes[0].add_p2p_connection(TestNode(), services=NODE_NETWORK|NODE_WITNESS)
         # self.old_node sets only NODE_NETWORK
-        self.old_node = self.nodes[0].add_p2p_connection(p2p_conn=TestNode(), services=NODE_NETWORK)
+        self.old_node = self.nodes[0].add_p2p_connection(TestNode(), services=NODE_NETWORK)
         # self.std_node is for testing node1 (fRequireStandard=true)
-        self.std_node = self.nodes[1].add_p2p_connection(p2p_conn=TestNode(), services=NODE_NETWORK|NODE_WITNESS)
+        self.std_node = self.nodes[1].add_p2p_connection(TestNode(), services=NODE_NETWORK|NODE_WITNESS)
 
         NetworkThread().start() # Start up network handling in another thread
 
