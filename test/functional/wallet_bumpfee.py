@@ -17,13 +17,11 @@ make assumptions about execution order.
 from test_framework.blocktools import send_to_witness
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework import blocktools
+from test_framework.messages import BIP125_SEQUENCE_NUMBER
 from test_framework.mininode import CTransaction
 from test_framework.util import *
 
 import io
-
-# Sequence number that is BIP 125 opt-in and BIP 68-compliant
-BIP125_SEQUENCE_NUMBER = 0xfffffffd
 
 WALLET_PASSPHRASE = "test"
 WALLET_PASSPHRASE_TIMEOUT = 3600

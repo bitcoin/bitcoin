@@ -55,7 +55,7 @@ TEST_EXIT_SKIPPED = 77
 # 20 minutes represented in seconds
 TRAVIS_TIMEOUT_DURATION = 20 * 60
 
-BASE_SCRIPTS= [
+BASE_SCRIPTS = [
     # Scripts that are run by the travis build process.
     # Longest test should go first, to favor running tests in parallel
     'wallet_hd.py',
@@ -118,6 +118,7 @@ BASE_SCRIPTS= [
     'wallet_importprunedfunds.py',
     'rpc_signmessage.py',
     'feature_nulldummy.py',
+    'mempool_accept.py',
     'wallet_import_rescan.py',
     'mining_basic.py',
     'wallet_bumpfee.py',

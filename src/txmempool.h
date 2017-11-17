@@ -600,7 +600,7 @@ public:
     /** Populate setDescendants with all in-mempool descendants of hash.
      *  Assumes that setDescendants includes all in-mempool descendants of anything
      *  already in it.  */
-    void CalculateDescendants(txiter it, setEntries &setDescendants);
+    void CalculateDescendants(txiter it, setEntries& setDescendants) const;
 
     /** The minimum fee to get into the mempool, which may itself not be enough
       *  for larger-sized transactions.
