@@ -559,8 +559,13 @@ bool CMinerWhitelistDB::MineBlock(unsigned int newHeight, std::string address) {
         // we should only let a block drop out if it counted toward the windowBlocks. 
         // if we are at the minercapsystemchangeheight=40320, the block dropping out is 
         // 40320-2016=38304, but block 38304 was not counted in windowBlocks 
-        // so we can start dropping blocks 
-        if (blockDroppingOut > Params().GetConsensus().minerCapSystemChangeHeight-2016) { // There is!
+        // in testnet the system changes on block 7800, the corresponding window of the 
+        // old system started on height 6048, we should only count blocks dropping out
+        // from 6049 forward. The following formula achieves exactly that.
+
+        unsigned int changeHeight = Params().GetConsensus().minerCapSystemChangeHeight;
+        if (blockDroppingOut >= changeHeight - ( (changeHeight-1) % 2016) ) { // There is!
+        //if (Params().NetworkIDString() == "main" && blockDroppingOut > 38304 && Params().NetworkIDString() == "test" && blockDroppingOut > 6048 || Params().NetworkIDString() == "regtest" && blockDroppingOut > 4032) {
             BlockDetails dropDets = BlockDetails();
             if (!Exists(BlockEntry(blockDroppingOut)))
                 return false;
@@ -684,10 +689,14 @@ bool CMinerWhitelistDB::RewindBlock(unsigned int index) {
         
         // we should only let a block drop out if it counted toward the windowBlocks. 
         // if we are at the minercapsystemchangeheight=40320, the block dropping out is 
-        // 40320-2016=38304, but block 38304 was not counted in windowBlocks 
-        // so we can start dropping blocks 
-        
-        if (blockMovingIn > Params().GetConsensus().minerCapSystemChangeHeight-2016) { // There is!
+        // 40320-2016=38304, but block 38304 was not counted in windowBlocks
+        // in testnet the system changes on block 7800, the corresponding window of the 
+        // old system started on height 6048, so we should only count blocks dropping out
+        // from 6049 forward. The following formula achieves exactly that.
+
+        unsigned int changeHeight = Params().GetConsensus().minerCapSystemChangeHeight;
+        if (blockMovingIn >= changeHeight - ( (changeHeight-1) % 2016) ) { // There is!
+        //if (Params().NetworkIDString() == "main" && blockDroppingOut > 38304 && Params().NetworkIDString() == "test" && blockDroppingOut > 6048 || Params().NetworkIDString() == "regtest" && blockDroppingOut > 4032) {
             BlockDetails dropDets = BlockDetails();
             if (!Exists(BlockEntry(blockMovingIn)))
                 return false;
