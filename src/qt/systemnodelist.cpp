@@ -27,8 +27,6 @@ SystemnodeList::SystemnodeList(QWidget *parent) :
     ui->setupUi(this);
 
     ui->startButton->setEnabled(false);
-    ui->voteManyYesButton->setEnabled(false);
-    ui->voteManyNoButton->setEnabled(false);
 
     int columnAliasWidth = 100;
     int columnAddressWidth = 200;
