@@ -22,10 +22,10 @@ class TestNode(NodeConnCB):
         super().__init__()
         self.block_receive_map = defaultdict(int)
 
-    def on_inv(self, conn, message):
+    def on_inv(self, message):
         pass
 
-    def on_block(self, conn, message):
+    def on_block(self, message):
         message.block.calc_sha256()
         self.block_receive_map[message.block.sha256] += 1
 
