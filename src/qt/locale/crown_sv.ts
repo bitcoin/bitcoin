@@ -758,16 +758,16 @@ Adress: %4
         <translation>Vänligen välj en integritetsnivå.</translation>
     </message>
     <message>
-        <source>Use 2 separate thrones to mix funds up to 10000 CRW</source>
-        <translation>Använd 2 enskilda throner för att mixa medel upp till 10000 CRW</translation>
+        <source>Use 2 separate masternodes to mix funds up to 10000 CRW</source>
+        <translation>Använd 2 enskilda masternoder för att mixa medel upp till 10000 CRW</translation>
     </message>
     <message>
-        <source>Use 8 separate thrones to mix funds up to 10000 CRW</source>
-        <translation>Använd 8 enskilda throner för att mixa medel upp till 10000 CRW.</translation>
+        <source>Use 8 separate masternodes to mix funds up to 10000 CRW</source>
+        <translation>Använd 8 enskilda masternoder för att mixa medel upp till 10000 CRW.</translation>
     </message>
     <message>
-        <source>Use 16 separate thrones</source>
-        <translation>Använd 16 enskilda throner</translation>
+        <source>Use 16 separate masternodes</source>
+        <translation>Använd 16 enskilda masternoder</translation>
     </message>
     <message>
         <source>This option is the quickest and will cost about ~0.025 CRW to anonymize 10000 CRW</source>
@@ -2746,8 +2746,8 @@ https://www.transifex.com/projects/p/crown/</translation>
         <translation>Varning: wallet.dat är korrumperad, data räddad! Den ursprungliga wallet.dat är sparad som wallet.{timestamp}.bak i %s; om ditt saldo eller transaktioner är felaktiga kanske du måste återställa från en säkerhetskopia.</translation>
     </message>
     <message>
-        <source>You must specify a throneprivkey in the configuration. Please see documentation for help.</source>
-        <translation>Du måste specificera en thronepriv-nyckel i konfigurationen. Vänligen se dokumentationen för hjälp.</translation>
+        <source>You must specify a masternodeprivkey in the configuration. Please see documentation for help.</source>
+        <translation>Du måste specificera en masternodepriv-nyckel i konfigurationen. Vänligen se dokumentationen för hjälp.</translation>
     </message>
     <message>
         <source>(default: 1)</source>
@@ -2974,8 +2974,8 @@ https://www.transifex.com/projects/p/crown/</translation>
         <translation>Ogiltig mängd för -paytxfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
-        <source>Invalid throneprivkey. Please see documenation.</source>
-        <translation>Ogiltig thronepriv-nyckel. Vänligen se dokumentationen.</translation>
+        <source>Invalid masternodeprivkey. Please see documenation.</source>
+        <translation>Ogiltig masternodepriv-nyckel. Vänligen se dokumentationen.</translation>
     </message>
     <message>
         <source>Invalid private key.</source>
@@ -3010,16 +3010,16 @@ https://www.transifex.com/projects/p/crown/</translation>
         <translation>Laddar plånbok...</translation>
     </message>
     <message>
-        <source>Throne options:</source>
-        <translation>Throne-alternativ:</translation>
+        <source>Masternode options:</source>
+        <translation>Masternode-alternativ:</translation>
     </message>
     <message>
-        <source>Throne queue is full.</source>
-        <translation>Throne-kön är uppfylld.</translation>
+        <source>Masternode queue is full.</source>
+        <translation>Masternode-kön är uppfylld.</translation>
     </message>
     <message>
-        <source>Throne:</source>
-        <translation>Throne:</translation>
+        <source>Masternode:</source>
+        <translation>Masternode:</translation>
     </message>
     <message>
         <source>Missing input transaction information.</source>
@@ -3098,7 +3098,7 @@ https://www.transifex.com/projects/p/crown/</translation>
         <translation>Ställ in maximal blockstorlek i bytes (standardvärde: %d)</translation>
     </message>
     <message>
-        <source>Set the throne private key</source>
+        <source>Set the masternode private key</source>
         <translation>Ställ in masternodprivatnyckeln</translation>
     </message>
     <message>

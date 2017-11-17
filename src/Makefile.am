@@ -70,7 +70,8 @@ endif
 .PHONY: FORCE
 # crown core #
 BITCOIN_CORE_H = \
-  activethrone.h \
+  activemasternode.h \
+  activesystemnode.h \
   addrman.h \
   alert.h \
   amount.h \
@@ -90,9 +91,9 @@ BITCOIN_CORE_H = \
   compat.h \
   compressor.h \
   core_io.h \
+  core_memusage.h \
   crypter.h \
-  darksend.h \
-  darksend-relay.h \
+  legacysigner.h \
   db.h \
   hash.h \
   init.h \
@@ -110,6 +111,7 @@ BITCOIN_CORE_H = \
   net.h \
   noui.h \
   pow.h \
+  prevector.h \
   primitives/block.h \
   primitives/pureheader.h \
   primitives/transaction.h \
@@ -133,12 +135,17 @@ BITCOIN_CORE_H = \
   support/pagelocker.h \
   support/cleanse.h \
   sync.h \
-  throne.h \
-  throne-payments.h \
-  throne-budget.h \
-  throne-sync.h \
-  throneman.h \
-  throneconfig.h \
+  masternode.h \
+  masternode-payments.h \
+  masternode-budget.h \
+  masternode-sync.h \
+  masternodeman.h \
+  masternodeconfig.h \
+  systemnode.h \
+  systemnode-payments.h \
+  systemnode-sync.h \
+  systemnodeman.h \
+  systemnodeconfig.h \
   threadsafety.h \
   timedata.h \
   tinyformat.h \
@@ -195,8 +202,9 @@ libbitcoin_server_a_SOURCES = \
   rest.cpp \
   rpcblockchain.cpp \
   rpcservice.cpp \
-  rpcthrone.cpp \
-  rpcthrone-budget.cpp \
+  rpcmasternode.cpp \
+  rpcmasternode-budget.cpp \
+  rpcsystemnode.cpp \
   rpcmining.cpp \
   rpcmisc.cpp \
   rpcnet.cpp \
@@ -213,18 +221,23 @@ libbitcoin_server_a_SOURCES = \
 # when wallet enabled
 libbitcoin_wallet_a_CPPFLAGS = $(BITCOIN_INCLUDES)
 libbitcoin_wallet_a_SOURCES = \
-  activethrone.cpp \
-  darksend.cpp \
-  darksend-relay.cpp \
+  activemasternode.cpp \
+  activesystemnode.cpp \
+  legacysigner.cpp \
   db.cpp \
   crypter.cpp \
   instantx.cpp \
-  throne.cpp \
-  throne-budget.cpp \
-  throne-payments.cpp \
-  throne-sync.cpp \
-  throneconfig.cpp \
-  throneman.cpp \
+  masternode.cpp \
+  masternode-budget.cpp \
+  masternode-payments.cpp \
+  masternode-sync.cpp \
+  masternodeconfig.cpp \
+  masternodeman.cpp \
+  systemnode-sync.cpp \
+  systemnode.cpp \
+  systemnode-payments.cpp \
+  systemnodeconfig.cpp \
+  systemnodeman.cpp \
   rpcdump.cpp \
   rpcwallet.cpp \
   wallet.cpp \

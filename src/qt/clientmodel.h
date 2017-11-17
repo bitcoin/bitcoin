@@ -48,7 +48,8 @@ public:
 
     //! Return number of connections, default is in- and outbound (total)
     int getNumConnections(unsigned int flags = CONNECTIONS_ALL) const;
-    QString getThroneCountString() const;
+    QString getMasternodeCountString() const;
+    QString getSystemnodeCountString() const;
     int getNumBlocks() const;
     int getNumBlocksAtStartup();
 
@@ -76,7 +77,8 @@ private:
     PeerTableModel *peerTableModel;
 
     int cachedNumBlocks;
-    QString cachedThroneCountString;
+    QString cachedMasternodeCountString;
+    QString cachedSystemnodeCountString;
     bool cachedReindexing;
     bool cachedImporting;
 
@@ -84,6 +86,7 @@ private:
 
     QTimer *pollTimer;
     QTimer *pollMnTimer;
+    QTimer *pollSnTimer;
 
     void subscribeToCoreSignals();
     void unsubscribeFromCoreSignals();
@@ -91,7 +94,8 @@ private:
 signals:
     void numConnectionsChanged(int count);
     void numBlocksChanged(int count);
-    void strThronesChanged(const QString &strThrones);
+    void strMasternodesChanged(const QString &strMasternodes);
+    void strSystemnodesChanged(const QString &strSystemnodes);
     void alertsChanged(const QString &warnings);
     void bytesChanged(quint64 totalBytesIn, quint64 totalBytesOut);
 
@@ -104,6 +108,7 @@ signals:
 public slots:
     void updateTimer();
     void updateMnTimer();
+    void updateSnTimer();
     void updateNumConnections(int numConnections);
     void updateAlert(const QString &hash, int status);
 };

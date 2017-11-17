@@ -79,8 +79,9 @@ public:
     virtual const Checkpoints::CCheckpointData& Checkpoints() const = 0;
     int PoolMaxTransactions() const { return nPoolMaxTransactions; }
     std::string SporkKey() const { return strSporkKey; }
-    std::string DarksendPoolDummyAddress() const { return strDarksendPoolDummyAddress; }
-    int64_t StartThronePayments() const { return nStartThronePayments; }
+    std::string LegacySignerDummyAddress() const { return strLegacySignerDummyAddress; }
+    std::string DevfundAddress() const { return strDevfundAddress; }
+    int64_t StartMasternodePayments() const { return nStartMasternodePayments; }
     CBaseChainParams::Network NetworkID() const { return networkID; }
     /* Return the auxpow chain ID.  */
     inline int32_t AuxpowChainId () const { return 20; }
@@ -123,8 +124,9 @@ protected:
     bool fTestnetToBeDeprecatedFieldRPC;
     int nPoolMaxTransactions;
     std::string strSporkKey;
-    std::string strDarksendPoolDummyAddress;
-    int64_t nStartThronePayments;
+    std::string strLegacySignerDummyAddress;
+    std::string strDevfundAddress;
+    int64_t nStartMasternodePayments;
 };
 
 /** 

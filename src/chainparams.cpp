@@ -186,8 +186,9 @@ public:
 
         nPoolMaxTransactions = 3;
         strSporkKey = "0440409BDACDCE03BFB6D5F16E2D414953038996B49BEE6697CFA400A0001D0837C885C5B57DAD10E5CAAAE36EE975005CC6CBD7001A2A8DE76FF12185904A9BB1";
-        strDarksendPoolDummyAddress = "18WTcWvwrNnfqeQAn6th9QQ2EpnXMq5Th8";
-        nStartThronePayments = 1403728576; //Wed, 25 Jun 2014 20:36:16 GMT
+        strDevfundAddress = "16tg5tuZrPKoBwfbmj2tmiEPhVPzyn3gtP";
+        strLegacySignerDummyAddress = "18WTcWvwrNnfqeQAn6th9QQ2EpnXMq5Th8";
+        nStartMasternodePayments = 1403728576; //Wed, 25 Jun 2014 20:36:16 GMT
     }
 
     const Checkpoints::CCheckpointData& Checkpoints() const 
@@ -272,8 +273,15 @@ public:
         vFixedSeeds.clear();
         vSeeds.clear();
 
-        vSeeds.push_back(CDNSSeedData("crown.tech", "testnet-seed.crown.tech"));
-        vSeeds.push_back(CDNSSeedData("infernopool.com", "crwtestnet.infernopool.com"));
+        vSeeds.push_back(CDNSSeedData("fra-testnet-crwdns", "fra-testnet-crwdns.infernopool.com"));
+        vSeeds.push_back(CDNSSeedData("blr-testnet-crwdns", "blr-testnet-crwdns.infernopool.com"));
+        vSeeds.push_back(CDNSSeedData("sgp-testnet-crwdns", "sgp-testnet-crwdns.infernopool.com"));
+        vSeeds.push_back(CDNSSeedData("lon-testnet-crwdns", "lon-testnet-crwdns.infernopool.com"));
+        vSeeds.push_back(CDNSSeedData("nyc-testnet-crwdns", "nyc-testnet-crwdns.infernopool.com"));
+        vSeeds.push_back(CDNSSeedData("tor-testnet-crwdns", "tor-testnet-crwdns.infernopool.com"));
+        vSeeds.push_back(CDNSSeedData("sfo-testnet-crwdns", "sfo-testnet-crwdns.infernopool.com"));
+        vSeeds.push_back(CDNSSeedData("ams-testnet-crwdns", "ams-testnet-crwdns.infernopool.com"));
+        vSeeds.push_back(CDNSSeedData("crw-testnet", "crw-testnet.infernopool.com"));
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,111);                    // Testnet crown addresses start with 'x' or 'y'
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,196);                    // Testnet crown script addresses start with '8' or '9'
@@ -293,9 +301,10 @@ public:
         fTestnetToBeDeprecatedFieldRPC = true;
 
         nPoolMaxTransactions = 2;
-        strSporkKey = "0440409BDACDCE03BFB6D5F16E2D414953038996B49BEE6697CFA400A0001D0837C885C5B57DAD10E5CAAAE36EE975005CC6CBD7001A2A8DE76FF12185904A9BB1";
-        strDarksendPoolDummyAddress = "y1EZuxhhNMAUofTBEeLqGE1bJrpC2TWRNp";
-        nStartThronePayments = 1420837558; //Fri, 09 Jan 2015 21:05:58 GMT
+        strSporkKey = "04EA9AF53E4F12CE41F78B666EBDBE96C966ABDD8832979228BD3299E13089F117936EF97B7B9D4644B8B9D2BC7A30029BD7FDDCAC36E40AAC0E03891E493CF197";
+        strDevfundAddress = "mr59c3aniaN3qHXej5L8UBsssRZbiUUMnz";
+        strLegacySignerDummyAddress = "mr59c3aniaN3qHXej5L8UBsssRZbiUUMnz";
+        nStartMasternodePayments = 1420837558; //Fri, 09 Jan 2015 21:05:58 GMT
     }
     const Checkpoints::CCheckpointData& Checkpoints() const 
     {

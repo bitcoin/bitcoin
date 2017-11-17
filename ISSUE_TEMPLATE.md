@@ -21,7 +21,7 @@ Please answer the following questions.
 
 ```
 
-### Please add your throne.conf if necessary.
+### Please add your masternode.conf if necessary.
 #### (be sure to exclude or anonymize private data (tokens/passwords))
 ```
 

@@ -6,7 +6,8 @@
 #define BITCOIN_QT_WALLETVIEW_H
 
 #include "amount.h"
-#include "thronelist.h"
+#include "masternodelist.h"
+#include "systemnodelist.h"
 #include "multisigdialog.h"
 
 #include <QStackedWidget>
@@ -64,7 +65,8 @@ private:
     QWidget *transactionsPage;
     ReceiveCoinsDialog *receiveCoinsPage;
     SendCoinsDialog *sendCoinsPage;
-    ThroneList *throneListPage;
+    MasternodeList *masternodeListPage;
+    SystemnodeList *systemnodeListPage;
     MultisigDialog *multisigPage;
 
     TransactionView *transactionView;
@@ -81,8 +83,10 @@ public slots:
     void gotoReceiveCoinsPage();
     /** Switch to send coins page */
     void gotoSendCoinsPage(QString addr = "");
-    /** Switch to throne page */
-    void gotoThronePage();
+    /** Switch to masternode page */
+    void gotoMasternodePage();
+    /** Switch to systemnode page */
+    void gotoSystemnodePage();
     /** Switch to multisig page*/
     void gotoMultisigTab();
 

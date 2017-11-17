@@ -10,11 +10,11 @@ There are many ways to setup a wallet to support start-many. This guide will wal
 
 This is the way to go if you are consolidating multiple wallets into one that supports start-many. 
 
-### From your single-instance ThroNe Wallet
+### From your single-instance MasterNode Wallet
 
 Open your QT Wallet and go to console (from the menu select Tools => Debug Console)
 
-Dump the private key from your ThroNe's pulic key.
+Dump the private key from your MasterNode's pulic key.
 
 ```
 walletpassphrase [your_wallet_passphrase] 600
@@ -23,7 +23,7 @@ dumpprivkey [mn_public_key]
 
 Copy the resulting priviate key. You'll use it in the next step.
 
-### From your multi-instance ThroNe Wallet
+### From your multi-instance MasterNode Wallet
 
 Open your QT Wallet and go to console (from the menu select Tools => Debug Console)
 
@@ -36,11 +36,11 @@ importprivkey [single_instance_private_key]
 
 The wallet will re-scan and you will see your available balance increase by the amount that was in the imported wallet.
 
-[Skip Option 2. and go to Create throne.conf file](#throneconf)
+[Skip Option 2. and go to Create masternode.conf file](#masternodeconf)
 
 ## <a name="option2"></a>Option 2. Starting with a new wallet
 
-[If you used Option 1 above, then you can skip down to Create throne.conf file.](#throneconf)
+[If you used Option 1 above, then you can skip down to Create masternode.conf file.](#masternodeconf)
 
 ### Create New Wallet Addresses
 
@@ -52,7 +52,7 @@ The wallet will re-scan and you will see your available balance increase by the 
     * Click *Request payment*
 5. Click the *Copy Address* button
 
-Create a new wallet address for each ThroNe.
+Create a new wallet address for each MasterNode.
 
 Close your QT Wallet.
 
@@ -60,29 +60,29 @@ Close your QT Wallet.
 
 Just like setting up a standard MN. Send exactly 1,000 CRW to each new address created above.
 
-### Create New Throne Private Keys
+### Create New Masternode Private Keys
 
 Open your QT Wallet and go to console (from the menu select Tools => Debug Console)
 
 Issue the following:
 
-```throne genkey```
+```masternode genkey```
 
-*Note: A throne private key will need to be created for each ThroNe you run. You should not use the same throne private key for multiple ThroNes.*
+*Note: A masternode private key will need to be created for each MasterNode you run. You should not use the same masternode private key for multiple MasterNodes.*
 
 Close your QT Wallet.
 
-## <a name="throneconf"></a>Create throne.conf file
+## <a name="masternodeconf"></a>Create masternode.conf file
 
 Remember... this is local. Make sure your QT is not running.
 
-Create the throne.conf file in the same directory as your wallet.dat.
+Create the masternode.conf file in the same directory as your wallet.dat.
 
-Copy the throne private key and correspondig collateral output transaction that holds the 1K CRW.
+Copy the masternode private key and correspondig collateral output transaction that holds the 1K CRW.
 
-The throne private key may be an existing key from [Option 1](#option1), or a newly generated key from [Option 2](#option2). 
+The masternode private key may be an existing key from [Option 1](#option1), or a newly generated key from [Option 2](#option2). 
 
-*Please note, the throne priviate key is not the same as a wallet private key. Never put your wallet private key in the throne.conf file. That is equivalent to putting your 1,000 CRW on the remote server and defeats the purpose of a hot/cold setup.*
+*Please note, the masternode priviate key is not the same as a wallet private key. Never put your wallet private key in the masternode.conf file. That is equivalent to putting your 1,000 CRW on the remote server and defeats the purpose of a hot/cold setup.*
 
 ### Get the collateral output
 
@@ -90,17 +90,17 @@ Open your QT Wallet and go to console (from the menu select Tools => Debug Conso
 
 Issue the following:
 
-```throne outputs```
+```masternode outputs```
 
 Make note of the hash (which is your collaterla_output) and index.
 
-### Enter your Throne details into your throne.conf file
-[From the crown github repo](https://github.com/infernoman/bitcoin/blob/master/doc/throne_conf.md)
+### Enter your Masternode details into your masternode.conf file
+[From the crown github repo](https://github.com/infernoman/bitcoin/blob/master/doc/masternode_conf.md)
 
-The new throne.conf format consists of a space seperated text file. Each line consisting of an alias, IP address followed by port, throne private key, collateral output transaction id and collateral output index, donation address and donation percentage (the latter two are optional and should be in format "address:percentage").
+The new masternode.conf format consists of a space seperated text file. Each line consisting of an alias, IP address followed by port, masternode private key, collateral output transaction id and collateral output index, donation address and donation percentage (the latter two are optional and should be in format "address:percentage").
 
 ```
-alias ipaddress:port throne_private_key collateral_output collateral_output_index donationin_address:donation_percentage
+alias ipaddress:port masternode_private_key collateral_output collateral_output_index donationin_address:donation_percentage
 ```
 
 
@@ -114,20 +114,20 @@ mn02 127.0.0.2:9340 93WaAb3htPJEV8E9aQcN23Jt97bPex7YvWfgMDTUdWJvzmrMqey aa9f1034
 
 ## What about the crown.conf file?
 
-If you are using a throne.conf file you no longer need the crown.conf file. The exception is if you need custom settings (thanks oblox). 
+If you are using a masternode.conf file you no longer need the crown.conf file. The exception is if you need custom settings (thanks oblox). 
 
 ## Update crown.conf on server
 
-If you generated a new throne private key, you will need to update the remote crown.conf files.
+If you generated a new masternode private key, you will need to update the remote crown.conf files.
 
 Shut down the daemon and then edit the file.
 
 ```sudo nano .crown/crown.conf```
 
-### Edit the throneprivkey
-If you generated a new throne private key, you will need to update the throneprivkey value in your remote crown.conf file.
+### Edit the masternodeprivkey
+If you generated a new masternode private key, you will need to update the masternodeprivkey value in your remote crown.conf file.
 
-## Start your ThroNes
+## Start your MasterNodes
 
 ### Remote
 
@@ -147,11 +147,11 @@ Finally... time to start from local.
 
 From the menu select Tools => Debug Console
 
-If you want to review your throne.conf setting before starting the ThroNes, issue the following in the Debug Console:
+If you want to review your masternode.conf setting before starting the MasterNodes, issue the following in the Debug Console:
 
-```throne list-conf```
+```masternode list-conf```
 
 Give it the eye-ball test. If satisfied, you can start your nodes one of two ways.
 
-1. throne start-alias [alias_from_throne.conf]. Example ```throne start-alias mn01```
-2. throne start-many
+1. masternode start-alias [alias_from_masternode.conf]. Example ```masternode start-alias mn01```
+2. masternode start-many

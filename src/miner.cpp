@@ -19,7 +19,8 @@
 #ifdef ENABLE_WALLET
 #include "wallet.h"
 #endif
-#include "throne-payments.h"
+#include "masternode-payments.h"
+#include "systemnode-payments.h"
 
 #include <boost/thread.hpp>
 #include <boost/tuple/tuple.hpp>
@@ -323,12 +324,17 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
             }
         }
 
-        // Throne and general budget payments
+        // Masternode and general budget payments
         FillBlockPayee(txNew, nFees);
+        SNFillBlockPayee(txNew, nFees);
 
         // Make payee
 	    if(txNew.vout.size() > 1){
             pblock->payee = txNew.vout[1].scriptPubKey;
+        }
+        // Make SNpayee
+	    if(txNew.vout.size() > 2){
+            pblock->payeeSN = txNew.vout[2].scriptPubKey;
         }
 
         nLastBlockTx = nBlockTx;

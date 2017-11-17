@@ -25,11 +25,15 @@
 #include "txdb.h"
 #include "ui_interface.h"
 #include "util.h"
-#include "activethrone.h"
-#include "throne-budget.h"
-#include "throne-payments.h"
-#include "throneman.h"
-#include "throneconfig.h"
+#include "activemasternode.h"
+#include "activesystemnode.h"
+#include "masternode-budget.h"
+#include "masternode-payments.h"
+#include "masternodeman.h"
+#include "masternodeconfig.h"
+#include "systemnodeman.h"
+#include "systemnode-payments.h"
+#include "systemnodeconfig.h"
 #include "spork.h"
 #include "utilmoneystr.h"
 #ifdef ENABLE_WALLET
@@ -172,9 +176,11 @@ void PrepareShutdown()
     GenerateBitcoins(false, NULL, 0);
 #endif
     StopNode();
-    DumpThrones();
+    DumpMasternodes();
     DumpBudgets();
-    DumpThronePayments();
+    DumpMasternodePayments();
+    DumpSystemnodes();
+    DumpSystemnodePayments();
     UnregisterNodeSignals(GetNodeSignals());
 
     if (fFeeEstimatesInitialized)
@@ -379,7 +385,7 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += "                         " + _("If <category> is not supplied, output all debugging information.") + "\n";
     strUsage += "                         " + _("<category> can be:\n");
     strUsage += "                           addrman, alert, bench, coindb, db, lock, rand, rpc, selectcoins, mempool, net,\n"; // Don't translate these and qt below
-    strUsage += "                           crown (or specifically: instantx, throne, mnpayments, mnbudget)"; // Don't translate these and qt below
+    strUsage += "                           crown (or specifically: instantx, masternode, mnpayments, mnbudget)"; // Don't translate these and qt below
     if (mode == HMM_BITCOIN_QT)
         strUsage += ", qt";
     strUsage += ".\n";
@@ -408,15 +414,22 @@ std::string HelpMessage(HelpMessageMode mode)
     }
     strUsage += "  -shrinkdebugfile       " + _("Shrink debug.log file on client startup (default: 1 when no -debug)") + "\n";
     strUsage += "  -testnet               " + _("Use the test network") + "\n";
-    strUsage += "  -litemode=<n>          " + strprintf(_("Disable all Crown specific functionality (Thrones, Darksend, InstantX, Budgeting) (0-1, default: %u)"), 0) + "\n";
+    strUsage += "  -litemode=<n>          " + strprintf(_("Disable all Crown specific functionality (Masternodes, InstantX, Budgeting) (0-1, default: %u)"), 0) + "\n";
 
-    strUsage += "\n" + _("Throne options:") + "\n";
-    strUsage += "  -throne=<n>            " + strprintf(_("Enable the client to act as a throne (0-1, default: %u)"), 0) + "\n";
-    strUsage += "  -mnconf=<file>             " + strprintf(_("Specify throne configuration file (default: %s)"), "throne.conf") + "\n";
-    strUsage += "  -mnconflock=<n>            " + strprintf(_("Lock thrones from throne configuration file (default: %u)"), 1) + "\n";
-    strUsage += "  -throneprivkey=<n>     " + _("Set the throne private key") + "\n";
-    strUsage += "  -throneaddr=<n>        " + strprintf(_("Set external address:port to get to this throne (example: %s)"), "128.127.106.235:9340") + "\n";
+    strUsage += "\n" + _("Masternode options:") + "\n";
+    strUsage += "  -masternode=<n>            " + strprintf(_("Enable the client to act as a masternode (0-1, default: %u)"), 0) + "\n";
+    strUsage += "  -mnconf=<file>             " + strprintf(_("Specify masternode configuration file (default: %s)"), "masternode.conf") + "\n";
+    strUsage += "  -mnconflock=<n>            " + strprintf(_("Lock masternodes from masternode configuration file (default: %u)"), 1) + "\n";
+    strUsage += "  -masternodeprivkey=<n>     " + _("Set the masternode private key") + "\n";
+    strUsage += "  -masternodeaddr=<n>        " + strprintf(_("Set external address:port to get to this masternode (example: %s)"), "128.127.106.235:9340") + "\n";
     strUsage += "  -budgetvotemode=<mode>     " + _("Change automatic finalized budget voting behavior. mode=auto: Vote for only exact finalized budget match to my generated budget. (string, default: auto)") + "\n";
+
+    strUsage += "\n" + _("Systemnode options:") + "\n";
+    strUsage += "  -systemnode=<n>            " + strprintf(_("Enable the client to act as a systemnode (0-1, default: %u)"), 0) + "\n";
+    strUsage += "  -snconf=<file>             " + strprintf(_("Specify systemnode configuration file (default: %s)"), "systemnode.conf") + "\n";
+    strUsage += "  -snconflock=<n>            " + strprintf(_("Lock systemnodes from systemnode configuration file (default: %u)"), 1) + "\n";
+    strUsage += "  -systemnodeprivkey=<n>     " + _("Set the systemnode private key") + "\n";
+    strUsage += "  -systemnodeaddr=<n>        " + strprintf(_("Set external address:port to get to this systemnode (example: %s)"), "128.127.106.235:9340") + "\n";
 
     strUsage += "\n" + _("InstantX options:") + "\n";
     strUsage += "  -enableinstantx=<n>    " + strprintf(_("Enable instantx, show confirmations for locked transactions (bool, default: %s)"), "true") + "\n";
@@ -1139,18 +1152,21 @@ bool AppInit2(boost::thread_group& threadGroup)
     }
 
     // cache size calculations
-    size_t nTotalCache = (GetArg("-dbcache", nDefaultDbCache) << 20);
-    if (nTotalCache < (nMinDbCache << 20))
-        nTotalCache = (nMinDbCache << 20); // total cache cannot be less than nMinDbCache
-    else if (nTotalCache > (nMaxDbCache << 20))
-        nTotalCache = (nMaxDbCache << 20); // total cache cannot be greater than nMaxDbCache
-    size_t nBlockTreeDBCache = nTotalCache / 8;
-    if (nBlockTreeDBCache > (1 << 21) && !GetBoolArg("-txindex", true))
-        nBlockTreeDBCache = (1 << 21); // block tree db cache shouldn't be larger than 2 MiB
+    int64_t nTotalCache = (GetArg("-dbcache", nDefaultDbCache) << 20);
+    nTotalCache = std::max(nTotalCache, nMinDbCache << 20); // total cache cannot be less than nMinDbCache
+    nTotalCache = std::min(nTotalCache, nMaxDbCache << 20); // total cache cannot be greated than nMaxDbcache
+    int64_t nBlockTreeDBCache = nTotalCache / 8;
+    nBlockTreeDBCache = std::min(nBlockTreeDBCache, (GetBoolArg("-txindex", true) ? nMaxBlockDBAndTxIndexCache : nMaxBlockDBCache) << 20);
     nTotalCache -= nBlockTreeDBCache;
-    size_t nCoinDBCache = nTotalCache / 2; // use half of the remaining cache for coindb cache
+    int64_t nCoinDBCache = std::min(nTotalCache / 2, (nTotalCache / 4) + (1 << 23)); // use 25%-50% of the remainder for disk cache
+    nCoinDBCache = std::min(nCoinDBCache, nMaxCoinsDBCache << 20); // cap total coins db cache
     nTotalCache -= nCoinDBCache;
-    nCoinCacheSize = nTotalCache / 300; // coins in memory require around 300 bytes
+    nCoinCacheUsage = nTotalCache; // the rest goes to in-memory cache
+    int64_t nMempoolSizeMax = GetArg("-maxmempool", 300) * 1000000;
+    LogPrintf("Cache configuration:\n");
+    LogPrintf("* Using %.1fMiB for block index database\n", nBlockTreeDBCache * (1.0 / 1024 / 1024));
+    LogPrintf("* Using %.1fMiB for chain state database\n", nCoinDBCache * (1.0 / 1024 / 1024));
+    LogPrintf("* Using %.1fMiB for in-memory UTXO set (plus up to %.1fMiB of unused mempool space)\n", nCoinCacheUsage * (1.0 / 1024 / 1024), nMempoolSizeMax * (1.0 / 1024 / 1024));
 
     bool fLoaded = false;
     while (!fLoaded) {
@@ -1409,22 +1425,38 @@ bool AppInit2(boost::thread_group& threadGroup)
             MilliSleep(10);
     }
 
-    // ********************************************************* Step 10: setup DarkSend
+    // ********************************************************* Step 10: setup Budgets
 
-    uiInterface.InitMessage(_("Loading throne cache..."));
+    uiInterface.InitMessage(_("Loading masternode cache..."));
 
-    CThroneDB mndb;
-    CThroneDB::ReadResult readResult = mndb.Read(mnodeman);
-    if (readResult == CThroneDB::FileError)
-        LogPrintf("Missing throne cache file - mncache.dat, will try to recreate\n");
-    else if (readResult != CThroneDB::Ok)
+    CMasternodeDB mndb;
+    CMasternodeDB::ReadResult readResult = mndb.Read(mnodeman);
+    if (readResult == CMasternodeDB::FileError)
+        LogPrintf("Missing masternode cache file - mncache.dat, will try to recreate\n");
+    else if (readResult != CMasternodeDB::Ok)
     {
         LogPrintf("Error reading mncache.dat: ");
-        if(readResult == CThroneDB::IncorrectFormat)
+        if(readResult == CMasternodeDB::IncorrectFormat)
             LogPrintf("magic is ok but data has invalid format, will try to recreate\n");
         else
             LogPrintf("file format is unknown or invalid, please fix it manually\n");
     }
+
+    uiInterface.InitMessage(_("Loading systemnode cache..."));
+
+    CSystemnodeDB sndb;
+    CSystemnodeDB::ReadResult readResultS = sndb.Read(snodeman);
+    if (readResultS == CSystemnodeDB::FileError)
+        LogPrintf("Missing systemnode cache file - sncache.dat, will try to recreate\n");
+    else if (readResultS != CSystemnodeDB::Ok)
+    {
+        LogPrintf("Error reading sncache.dat: ");
+        if(readResultS == CSystemnodeDB::IncorrectFormat)
+            LogPrintf("magic is ok but data has invalid format, will try to recreate\n");
+        else
+            LogPrintf("file format is unknown or invalid, please fix it manually\n");
+    }
+
 
     uiInterface.InitMessage(_("Loading budget cache..."));
 
@@ -1447,69 +1479,122 @@ bool AppInit2(boost::thread_group& threadGroup)
     budget.ClearSeen();
 
 
-    uiInterface.InitMessage(_("Loading throne payment cache..."));
+    uiInterface.InitMessage(_("Loading masternode payment cache..."));
 
-    CThronePaymentDB mnpayments;
-    CThronePaymentDB::ReadResult readResult3 = mnpayments.Read(thronePayments);
+    CMasternodePaymentDB mnpayments;
+    CMasternodePaymentDB::ReadResult readResult3 = mnpayments.Read(masternodePayments);
     
-    if (readResult3 == CThronePaymentDB::FileError)
-        LogPrintf("Missing throne payment cache - mnpayments.dat, will try to recreate\n");
-    else if (readResult3 != CThronePaymentDB::Ok)
+    if (readResult3 == CMasternodePaymentDB::FileError)
+        LogPrintf("Missing masternode payment cache - mnpayments.dat, will try to recreate\n");
+    else if (readResult3 != CMasternodePaymentDB::Ok)
     {
         LogPrintf("Error reading mnpayments.dat: ");
-        if(readResult3 == CThronePaymentDB::IncorrectFormat)
+        if(readResult3 == CMasternodePaymentDB::IncorrectFormat)
             LogPrintf("magic is ok but data has invalid format, will try to recreate\n");
         else
             LogPrintf("file format is unknown or invalid, please fix it manually\n");
     }
 
-    fThroNe = GetBoolArg("-throne", false);
+    uiInterface.InitMessage(_("Loading systemnode payment cache..."));
 
-    if((fThroNe || throneConfig.getCount() > -1) && fTxIndex == false) {
-        return InitError("Enabling Throne support requires turning on transaction indexing."
+    CSystemnodePaymentDB snpayments;
+    CSystemnodePaymentDB::ReadResult readResult4 = snpayments.Read(systemnodePayments);
+    
+    if (readResult4 == CSystemnodePaymentDB::FileError)
+        LogPrintf("Missing systemnode payment cache - snpayments.dat, will try to recreate\n");
+    else if (readResult4 != CSystemnodePaymentDB::Ok)
+    {
+        LogPrintf("Error reading snpayments.dat: ");
+        if(readResult4 == CSystemnodePaymentDB::IncorrectFormat)
+            LogPrintf("magic is ok but data has invalid format, will try to recreate\n");
+        else
+            LogPrintf("file format is unknown or invalid, please fix it manually\n");
+    }
+
+    fMasterNode = GetBoolArg("-masternode", false);
+    fSystemNode = GetBoolArg("-systemnode", false);
+
+    if (fMasterNode && fSystemNode) {
+        return InitError("Masternode and Systemnode cannot run together");
+    }
+
+    if((fMasterNode || masternodeConfig.getCount() > -1) && fTxIndex == false) {
+        return InitError("Enabling Masternode support requires turning on transaction indexing."
                   "Please add txindex=1 to your configuration and start with -reindex");
     }
 
-    if(fThroNe) {
-        LogPrintf("IS DARKSEND MASTER NODE\n");
-        strThroNeAddr = GetArg("-throneaddr", "");
+    if(fMasterNode) {
+        LogPrintf("IS MASTERNODE\n");
+        strMasterNodeAddr = GetArg("-masternodeaddr", "");
 
-        LogPrintf(" addr %s\n", strThroNeAddr.c_str());
+        LogPrintf(" addr %s\n", strMasterNodeAddr.c_str());
 
-        if(!strThroNeAddr.empty()){
-            CService addrTest = CService(strThroNeAddr);
+        if(!strMasterNodeAddr.empty()){
+            CService addrTest = CService(strMasterNodeAddr);
             if (!addrTest.IsValid()) {
-                return InitError("Invalid -throneaddr address: " + strThroNeAddr);
+                return InitError("Invalid -masternodeaddr address: " + strMasterNodeAddr);
             }
         }
 
-        strThroNePrivKey = GetArg("-throneprivkey", "");
-        if(!strThroNePrivKey.empty()){
+        strMasterNodePrivKey = GetArg("-masternodeprivkey", "");
+        if(!strMasterNodePrivKey.empty()){
             std::string errorMessage;
 
             CKey key;
             CPubKey pubkey;
 
-            if(!darkSendSigner.SetKey(strThroNePrivKey, errorMessage, key, pubkey))
+            if(!legacySigner.SetKey(strMasterNodePrivKey, errorMessage, key, pubkey))
             {
-                return InitError(_("Invalid throneprivkey. Please see documenation."));
+                return InitError(_("Invalid masternodeprivkey. Please see documenation."));
             }
 
-            activeThrone.pubKeyThrone = pubkey;
+            activeMasternode.pubKeyMasternode = pubkey;
 
         } else {
-            return InitError(_("You must specify a throneprivkey in the configuration. Please see documentation for help."));
+            return InitError(_("You must specify a masternodeprivkey in the configuration. Please see documentation for help."));
         }
     }
-    
+
+    if(fSystemNode) {
+        LogPrintf("IS SYSTEMNODE\n");
+        strSystemNodeAddr = GetArg("-systemnodeaddr", "");
+
+        LogPrintf(" addr %s\n", strSystemNodeAddr.c_str());
+
+        if(!strSystemNodeAddr.empty()){
+            CService addrTest = CService(strSystemNodeAddr);
+            if (!addrTest.IsValid()) {
+                return InitError("Invalid -systemnodeaddr address: " + strSystemNodeAddr);
+            }
+        }
+
+        strSystemNodePrivKey = GetArg("-systemnodeprivkey", "");
+        if(!strSystemNodePrivKey.empty()){
+            std::string errorMessage;
+
+            CKey key;
+            CPubKey pubkey;
+
+            if(!legacySigner.SetKey(strSystemNodePrivKey, errorMessage, key, pubkey))
+            {
+                return InitError(_("Invalid systemnodeprivkey. Please see documenation."));
+            }
+
+            activeSystemnode.pubKeySystemnode = pubkey;
+
+        } else {
+            return InitError(_("You must specify a systemnodeprivkey in the configuration. Please see documentation for help."));
+        }
+    }
+
     //get the mode of budget voting for this throne
     strBudgetMode = GetArg("-budgetvotemode", "auto");
 
     if(GetBoolArg("-mnconflock", true) && pwalletMain) {
         LOCK(pwalletMain->cs_wallet);
-        LogPrintf("Locking Thrones:\n");
+        LogPrintf("Locking Masternodes:\n");
         uint256 mnTxHash;
-        BOOST_FOREACH(CThroneConfig::CThroneEntry mne, throneConfig.getEntries()) {
+        BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry mne, masternodeConfig.getEntries()) {
             LogPrintf("  %s %s\n", mne.getTxHash(), mne.getOutputIndex());
             mnTxHash.SetHex(mne.getTxHash());
             COutPoint outpoint = COutPoint(mnTxHash, boost::lexical_cast<unsigned int>(mne.getOutputIndex()));
@@ -1517,61 +1602,39 @@ bool AppInit2(boost::thread_group& threadGroup)
         }
     }
 
-    fEnableDarksend = GetBoolArg("-enabledarksend", false);
-
-    nDarksendRounds = GetArg("-darksendrounds", 2);
-    if(nDarksendRounds > 16) nDarksendRounds = 16;
-    if(nDarksendRounds < 1) nDarksendRounds = 1;
-
-    nLiquidityProvider = GetArg("-liquidityprovider", 0); //0-100
-    if(nLiquidityProvider != 0) {
-        darkSendPool.SetMinBlockSpacing(std::min(nLiquidityProvider,100)*15);
-        fEnableDarksend = true;
-        nDarksendRounds = 93409;
+    if(GetBoolArg("-snconflock", true) && pwalletMain) {
+        LOCK(pwalletMain->cs_wallet);
+        LogPrintf("Locking Systemnodes:\n");
+        uint256 mnTxHash;
+        BOOST_FOREACH(CSystemnodeConfig::CSystemnodeEntry sne, systemnodeConfig.getEntries()) {
+            LogPrintf("  %s %s\n", sne.getTxHash(), sne.getOutputIndex());
+            mnTxHash.SetHex(sne.getTxHash());
+            COutPoint outpoint = COutPoint(mnTxHash, boost::lexical_cast<unsigned int>(sne.getOutputIndex()));
+            pwalletMain->LockCoin(outpoint);
+        }
     }
 
-    nAnonymizeCrownAmount = GetArg("-anonymizecrownamount", 0);
-    if(nAnonymizeCrownAmount > 934099) nAnonymizeCrownAmount = 934099;
-    if(nAnonymizeCrownAmount < 2) nAnonymizeCrownAmount = 2;
 
     fEnableInstantX = GetBoolArg("-enableinstantx", fEnableInstantX);
     nInstantXDepth = GetArg("-instantxdepth", nInstantXDepth);
     nInstantXDepth = std::min(std::max(nInstantXDepth, 0), 60);
 
-    //lite mode disables all Throne and Darksend related functionality
+    //lite mode disables all Masternode related functionality
     fLiteMode = GetBoolArg("-litemode", false);
-    if(fThroNe && fLiteMode){
-        return InitError("You can not start a throne in litemode");
+    if(fMasterNode && fLiteMode){
+        return InitError("You can not start a masternode in litemode");
+    }
+    if(fSystemNode && fLiteMode){
+        return InitError("You can not start a servicenode in litemode");
     }
 
     LogPrintf("fLiteMode %d\n", fLiteMode);
     LogPrintf("nInstantXDepth %d\n", nInstantXDepth);
-    LogPrintf("Darksend rounds %d\n", nDarksendRounds);
-    LogPrintf("Anonymize Crown Amount %d\n", nAnonymizeCrownAmount);
     LogPrintf("Budget Mode %s\n", strBudgetMode.c_str());
 
-    /* Denominations
+    legacySigner.InitCollateralAddress();
 
-       A note about convertability. Within Darksend pools, each denomination
-       is convertable to another.
-
-       For example:
-       1 CRW+1000 == (.1 CRW+100)*10
-       10 CRW+10000 == (1 CRW+1000)*10
-    */
-    darkSendDenominations.push_back( (1000      * COIN)+1000000 );
-    darkSendDenominations.push_back( (100      * COIN)+100000 );
-    darkSendDenominations.push_back( (10       * COIN)+10000 );
-    darkSendDenominations.push_back( (1        * COIN)+1000 );
-    darkSendDenominations.push_back( (.1       * COIN)+100 );
-    /* Disabled till we need them
-    darkSendDenominations.push_back( (.01      * COIN)+10 );
-    darkSendDenominations.push_back( (.001     * COIN)+1 );
-    */
-
-    darkSendPool.InitCollateralAddress();
-
-    threadGroup.create_thread(boost::bind(&ThreadCheckDarkSendPool));
+    threadGroup.create_thread(boost::bind(&ThreadCheckLegacySigner));
 
     // ********************************************************* Step 11: start node
 
