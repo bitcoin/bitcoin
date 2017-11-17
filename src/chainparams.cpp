@@ -276,10 +276,17 @@ public:
         nDefaultPort = 18767;
         nPruneAfterHeight = 1000;
 
-        genesis = CreateGenesisBlock(1296688602, 414098458, 0x1d00ffff, 1, 5000 * COIN);
+        //genesis = CreateGenesisBlock(1296688602, 414098458, 0x1d00ffff, 1, 5000 * COIN);
+        genesis = CreateGenesisBlock(1509740671, 13173510, 0x1e00ffff, 4, 5000 * COIN); 
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0x000000000933ea01ad0ee984209779baaec3ced90fa3f408719526f8d77f4943"));
-        assert(genesis.hashMerkleRoot == uint256S("0x4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"));
+
+        std::cout << "HGB: " << consensus.hashGenesisBlock.GetHex() << std::endl;        
+        assert(consensus.hashGenesisBlock == uint256S("0x00000013dd11f2bd679ee383ecd15b7b093400f38f547b2299007d5166ac981d"));
+
+
+        std::cout << "HMR: " << genesis.hashMerkleRoot.GetHex() << std::endl;        
+        assert(genesis.hashMerkleRoot == uint256S("0xa4c84e05d4f74f0df5e69a8c2e85524f9776555980a60312ab0fd524cd9b1474"));
+
 
         vFixedSeeds.clear();
         vSeeds.clear();
@@ -325,10 +332,6 @@ public:
     CRegTestParams() {
         strNetworkID = "regtest";
         consensus.nSubsidyHalvingInterval = 240;
-        // consensus.BIP34Height = 100000000; // BIP34 has not activated on regtest (far in the future so block v1 are not rejected in tests)
-        // consensus.BIP34Hash = uint256();
-        // consensus.BIP65Height = 1351; // BIP65 activated on regtest (Used in rpc activation tests)
-        // consensus.BIP66Height = 1251; // BIP66 activated on regtest (Used in rpc activation tests)
         consensus.powLimit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.nPowTargetTimespan = 2016 * 60; // 1.4 days
         consensus.nPowTargetSpacing = 1 * 60;
@@ -339,12 +342,6 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = 0;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = 999999999999ULL;
-        // consensus.vDeployments[Consensus::DEPLOYMENT_CSV].bit = 0;
-        // consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nStartTime = 0;
-        // consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nTimeout = 999999999999ULL;
-        // consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].bit = 1;
-        // consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nStartTime = 0;
-        // consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nTimeout = 999999999999ULL;
 
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x00");
@@ -362,6 +359,8 @@ public:
         genesis = CreateGenesisBlock(1296688602, 2, 0x207fffff, 1, 5000 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
 
+
+        std::cout << "HGB: " << consensus.hashGenesisBlock.GetHex() << std::endl;        
         assert(consensus.hashGenesisBlock == uint256S("0x2a0efe5c2db9d0b506bee0789958756dca089d3bebcbd67b355acace2df64535"));
         assert(genesis.hashMerkleRoot == uint256S("0xa4c84e05d4f74f0df5e69a8c2e85524f9776555980a60312ab0fd524cd9b1474"));
 
@@ -403,6 +402,8 @@ const CChainParams &Params() {
 
 std::unique_ptr<CChainParams> CreateChainParams(const std::string& chain)
 {
+    std::cout << "CreateChainParams: " << chain << std::endl;
+
     if (chain == CBaseChainParams::MAIN)
         return std::unique_ptr<CChainParams>(new CMainParams());
     else if (chain == CBaseChainParams::TESTNET)

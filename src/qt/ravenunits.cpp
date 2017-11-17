@@ -17,9 +17,9 @@ RavenUnits::RavenUnits(QObject *parent):
 QList<RavenUnits::Unit> RavenUnits::availableUnits()
 {
     QList<RavenUnits::Unit> unitlist;
-    unitlist.append(BTC);
-    unitlist.append(mBTC);
-    unitlist.append(uBTC);
+    unitlist.append(RVN);
+    unitlist.append(mRVN);
+    unitlist.append(uRVN);
     return unitlist;
 }
 
@@ -27,9 +27,9 @@ bool RavenUnits::valid(int unit)
 {
     switch(unit)
     {
-    case BTC:
-    case mBTC:
-    case uBTC:
+    case RVN:
+    case mRVN:
+    case uRVN:
         return true;
     default:
         return false;
@@ -40,9 +40,9 @@ QString RavenUnits::name(int unit)
 {
     switch(unit)
     {
-    case BTC: return QString("BTC");
-    case mBTC: return QString("mBTC");
-    case uBTC: return QString::fromUtf8("μBTC");
+    case RVN: return QString("RVN");
+    case mRVN: return QString("mRVN");
+    case uRVN: return QString::fromUtf8("μRVN");
     default: return QString("???");
     }
 }
@@ -51,9 +51,9 @@ QString RavenUnits::description(int unit)
 {
     switch(unit)
     {
-    case BTC: return QString("Ravens");
-    case mBTC: return QString("Milli-Ravens (1 / 1" THIN_SP_UTF8 "000)");
-    case uBTC: return QString("Micro-Ravens (1 / 1" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
+    case RVN: return QString("Ravens");
+    case mRVN: return QString("Milli-Ravens (1 / 1" THIN_SP_UTF8 "000)");
+    case uRVN: return QString("Micro-Ravens (1 / 1" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
     default: return QString("???");
     }
 }
@@ -62,9 +62,9 @@ qint64 RavenUnits::factor(int unit)
 {
     switch(unit)
     {
-    case BTC:  return 100000000;
-    case mBTC: return 100000;
-    case uBTC: return 100;
+    case RVN:  return 100000000;
+    case mRVN: return 100000;
+    case uRVN: return 100;
     default:   return 100000000;
     }
 }
@@ -73,9 +73,9 @@ int RavenUnits::decimals(int unit)
 {
     switch(unit)
     {
-    case BTC: return 8;
-    case mBTC: return 5;
-    case uBTC: return 2;
+    case RVN: return 8;
+    case mRVN: return 5;
+    case uRVN: return 2;
     default: return 0;
     }
 }

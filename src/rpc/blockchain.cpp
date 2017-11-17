@@ -1203,8 +1203,9 @@ UniValue getblockchaininfo(const JSONRPCRequest& request)
         }
     }
 
-    const Consensus::Params& consensusParams = Params().GetConsensus();
-    CBlockIndex* tip = chainActive.Tip();
+    //const Consensus::Params& consensusParams = Params().GetConsensus();
+    //CBlockIndex* tip = chainActive.Tip();
+    
     UniValue softforks(UniValue::VARR);
     UniValue bip9_softforks(UniValue::VOBJ);
     // softforks.push_back(SoftForkDesc("bip34", 2, tip, consensusParams));

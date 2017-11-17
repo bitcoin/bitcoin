@@ -325,7 +325,7 @@ Low-level RPC changes
 - #8384 `e317c0d` Add witness data output to TxInError messages (instagibbs)
 - #9571 `4677151` RPC: getblockchaininfo returns BIP signaling statistics  (pinheadmz)
 - #10450 `ef2d062` Fix bumpfee rpc "errors" return value (ryanofsky)
-- #10475 `39039b1` [RPC] getmempoolinfo mempoolminfee is a BTC/KB feerate (instagibbs)
+- #10475 `39039b1` [RPC] getmempoolinfo mempoolminfee is a RVN/KB feerate (instagibbs)
 - #10478 `296928e` rpc: Add listen address to incoming connections in `getpeerinfo` (laanwj)
 - #10403 `08d0390` Fix importmulti failure to return rescan errors (ryanofsky)
 - #9740 `9fec4da` Add friendly output to dumpwallet (aideca)
