@@ -177,7 +177,8 @@ public:
      *
      * and so on...
      */
-    void RecordTransaction(const uint256& txid, uint32_t posInBlock);
+    void RecordTransaction(const uint256& txid, uint32_t posInBlock, int processingResult);
+    std::vector<std::string> FetchTransactionDetails(const uint256& txid);
     uint32_t FetchTransactionPosition(const uint256& txid);
 };
 
