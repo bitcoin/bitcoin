@@ -368,16 +368,17 @@ void CMasternodePayments::ProcessMessage(CNode* pfrom, std::string& strCommand, 
             return;
         }
 
-        if(!CanVote(vote.vinMasternode.prevout, vote.nBlockHeight)) {
-            LogPrintf("MASTERNODEPAYMENTVOTE -- masternode already voted, masternode=%s\n", vote.vinMasternode.prevout.ToStringShort());
-            return;
-        }
+		// SYSCOIN
+		masternode_info_t mnInfo;
+		if (!mnodeman.GetMasternodeInfo(vote.vinMasternode.prevout, mnInfo)) {
+			// mn was not found, so we can't check vote, some info is probably missing
+			LogPrintf("MASTERNODEPAYMENTVOTE -- masternode is missing %s\n", vote.vinMasternode.prevout.ToStringShort());
+			mnodeman.AskForMN(pfrom, vote.vinMasternode.prevout, connman);
+			return;
+		}
 
-        masternode_info_t mnInfo;
-        if(!mnodeman.GetMasternodeInfo(vote.vinMasternode.prevout, mnInfo)) {
-            // mn was not found, so we can't check vote, some info is probably missing
-            LogPrintf("MASTERNODEPAYMENTVOTE -- masternode is missing %s\n", vote.vinMasternode.prevout.ToStringShort());
-            mnodeman.AskForMN(pfrom, vote.vinMasternode.prevout, connman);
+		if(!CanVote(vote.vinMasternode.prevout, vote.nBlockHeight)) {
+            LogPrintf("MASTERNODEPAYMENTVOTE -- masternode already voted, masternode=%s\n", vote.vinMasternode.prevout.ToStringShort());
             return;
         }
 
