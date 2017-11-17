@@ -141,11 +141,12 @@ public:
         assert(genesis.hashMerkleRoot == uint256S("0x951bc46d2da95047fb4a2c0f9b7d6e45591c3ffb49ab2fdffb8e96ef2b8f2be1"));
 
         vSeeds.push_back(CDNSSeedData("Mainnet Explorer", "mainnet.iop.cash"));
-        vSeeds.push_back(CDNSSeedData("Seed server 1", "main1.iop.cash"));
-        vSeeds.push_back(CDNSSeedData("Seed server 2", "main2.iop.cash"));
-        vSeeds.push_back(CDNSSeedData("Seed server 3", "main3.iop.cash"));
-        vSeeds.push_back(CDNSSeedData("Seed server 4", "main4.iop.cash"));
-        vSeeds.push_back(CDNSSeedData("Seed server 5", "main5.iop.cash"));
+        vSeeds.push_back(CDNSSeedData("Mainnet Seed 1", "main1.iop.cash"));
+        vSeeds.push_back(CDNSSeedData("Mainnet Seed 2", "main2.iop.cash"));
+        vSeeds.push_back(CDNSSeedData("Mainnet Seed 3", "main3.iop.cash"));
+        vSeeds.push_back(CDNSSeedData("Mainnet Seed 4", "main4.iop.cash"));
+        vSeeds.push_back(CDNSSeedData("Mainnet Seed 5", "main5.iop.cash"));
+        vSeeds.push_back(CDNSSeedData("Mainnet Seed 6", "main6.iop.cash"));
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,117);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,174);
@@ -246,9 +247,8 @@ public:
         vFixedSeeds.clear(); 
         vSeeds.clear();
         vSeeds.push_back(CDNSSeedData("Testnet Explorer", "testnet.iop.cash"));
-        vSeeds.push_back(CDNSSeedData("Seed server 6", "test1.iop.cash"));
-        vSeeds.push_back(CDNSSeedData("Seed server 7", "test2.iop.cash"));
-        vSeeds.push_back(CDNSSeedData("Seed server 8", "test3.iop.cash"));
+        vSeeds.push_back(CDNSSeedData("Testnet Seed 1", "test1.iop.cash"));
+        vSeeds.push_back(CDNSSeedData("Testnet Seed 2", "test2.iop.cash"));
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,130);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,49);
         base58Prefixes[SECRET_KEY] =     std::vector<unsigned char>(1,76);
