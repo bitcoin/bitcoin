@@ -23,6 +23,7 @@ import sys
 from threading import RLock, Thread
 
 from test_framework.messages import *
+from test_framework.util import wait_until
 
 logger = logging.getLogger("TestFramework.mininode")
 
@@ -57,12 +58,24 @@ MAGIC_BYTES = {
 }
 
 class NodeConn(asyncore.dispatcher):
-    """The actual NodeConn class
+    """A low-level connection object to a node's P2P interface.
 
-    This class provides an interface for a p2p connection to a specified node."""
+    This class is responsible for:
 
-    def __init__(self, dstaddr, dstport, callback, net="regtest", services=NODE_NETWORK|NODE_WITNESS, send_version=True):
-        asyncore.dispatcher.__init__(self, map=mininode_socket_map)
+    - opening and closing the TCP connection to the node
+    - reading bytes from and writing bytes to the socket
+    - deserializing and serializing the P2P message header
+    - logging messages as they are sent and received
+
+    This class contains no logic for handing the P2P message payloads. It must be
+    sub-classed and the on_message() callback overridden.
+
+    TODO: rename this class P2PConnection."""
+
+    def __init__(self):
+        super().__init__(map=mininode_socket_map)
+
+    def peer_connect(self, dstaddr, dstport, net="regtest", services=NODE_NETWORK|NODE_WITNESS, send_version=True):
         self.dstaddr = dstaddr
         self.dstport = dstport
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -71,9 +84,7 @@ class NodeConn(asyncore.dispatcher):
         self.recvbuf = b""
         self.state = "connecting"
         self.network = net
-        self.cb = callback
         self.disconnect = False
-        self.nServices = 0
 
         if send_version:
             # stuff version msg into sendbuf
@@ -92,6 +103,11 @@ class NodeConn(asyncore.dispatcher):
         except:
             self.handle_close()
 
+    def peer_disconnect(self):
+        # Connection could have already been closed by other end.
+        if self.state == "connected":
+            self.disconnect_node()
+
     # Connection and disconnection methods
 
     def handle_connect(self):
@@ -99,7 +115,7 @@ class NodeConn(asyncore.dispatcher):
         if self.state != "connected":
             logger.debug("Connected & Listening: %s:%d" % (self.dstaddr, self.dstport))
             self.state = "connected"
-            self.cb.on_open(self)
+            self.on_open()
 
     def handle_close(self):
         """asyncore callback when a connection is closed."""
@@ -111,7 +127,7 @@ class NodeConn(asyncore.dispatcher):
             self.close()
         except:
             pass
-        self.cb.on_close(self)
+        self.on_close()
 
     def disconnect_node(self):
         """Disconnect the p2p connection.
@@ -166,8 +182,8 @@ class NodeConn(asyncore.dispatcher):
             raise
 
     def on_message(self, message):
-        """Callback for processing a P2P payload. Calls into NodeConnCB."""
-        self.cb.on_message(self, message)
+        """Callback for processing a P2P payload. Must be overridden by derived class."""
+        raise NotImplementedError
 
     # Socket write methods
 
@@ -238,15 +254,19 @@ class NodeConn(asyncore.dispatcher):
         logger.debug(log_message)
 
 
-class NodeConnCB():
-    """Callback and helper functions for P2P connection to a bitcoind node.
+class NodeConnCB(NodeConn):
+    """A high-level P2P interface class for communicating with a Bitcoin node.
+
+    This class provides high-level callbacks for processing P2P message
+    payloads, as well as convenience methods for interacting with the
+    node over P2P.
 
     Individual testcases should subclass this and override the on_* methods
-    if they want to alter message handling behaviour."""
+    if they want to alter message handling behaviour.
+
+    TODO: rename this class P2PInterface"""
     def __init__(self):
-        # Track whether we have a P2P connection open to the node
-        self.connected = False
-        self.connection = None
+        super().__init__()
 
         # Track number of messages of each type received and the most recent
         # message of each type
@@ -256,9 +276,12 @@ class NodeConnCB():
         # A count of the number of ping messages we've sent to the node
         self.ping_counter = 1
 
+        # The network services received from the peer
+        self.nServices = 0
+
     # Message receiving methods
 
-    def on_message(self, conn, message):
+    def on_message(self, message):
         """Receive message and dispatch message to appropriate callback.
 
         We keep a count of how many of each message type has been received
@@ -268,66 +291,61 @@ class NodeConnCB():
                 command = message.command.decode('ascii')
                 self.message_count[command] += 1
                 self.last_message[command] = message
-                getattr(self, 'on_' + command)(conn, message)
+                getattr(self, 'on_' + command)(message)
             except:
-                print("ERROR delivering %s (%s)" % (repr(message),
-                                                    sys.exc_info()[0]))
+                print("ERROR delivering %s (%s)" % (repr(message), sys.exc_info()[0]))
                 raise
 
     # Callback methods. Can be overridden by subclasses in individual test
     # cases to provide custom message handling behaviour.
 
-    def on_open(self, conn):
-        self.connected = True
+    def on_open(self):
+        pass
 
-    def on_close(self, conn):
-        self.connected = False
-        self.connection = None
+    def on_close(self):
+        pass
 
-    def on_addr(self, conn, message): pass
-    def on_block(self, conn, message): pass
-    def on_blocktxn(self, conn, message): pass
-    def on_cmpctblock(self, conn, message): pass
-    def on_feefilter(self, conn, message): pass
-    def on_getaddr(self, conn, message): pass
-    def on_getblocks(self, conn, message): pass
-    def on_getblocktxn(self, conn, message): pass
-    def on_getdata(self, conn, message): pass
-    def on_getheaders(self, conn, message): pass
-    def on_headers(self, conn, message): pass
-    def on_mempool(self, conn): pass
-    def on_pong(self, conn, message): pass
-    def on_reject(self, conn, message): pass
-    def on_sendcmpct(self, conn, message): pass
-    def on_sendheaders(self, conn, message): pass
-    def on_tx(self, conn, message): pass
+    def on_addr(self, message): pass
+    def on_block(self, message): pass
+    def on_blocktxn(self, message): pass
+    def on_cmpctblock(self, message): pass
+    def on_feefilter(self, message): pass
+    def on_getaddr(self, message): pass
+    def on_getblocks(self, message): pass
+    def on_getblocktxn(self, message): pass
+    def on_getdata(self, message): pass
+    def on_getheaders(self, message): pass
+    def on_headers(self, message): pass
+    def on_mempool(self, message): pass
+    def on_pong(self, message): pass
+    def on_reject(self, message): pass
+    def on_sendcmpct(self, message): pass
+    def on_sendheaders(self, message): pass
+    def on_tx(self, message): pass
 
-    def on_inv(self, conn, message):
+    def on_inv(self, message):
         want = msg_getdata()
         for i in message.inv:
             if i.type != 0:
                 want.inv.append(i)
         if len(want.inv):
-            conn.send_message(want)
+            self.send_message(want)
 
-    def on_ping(self, conn, message):
-        conn.send_message(msg_pong(message.nonce))
+    def on_ping(self, message):
+        self.send_message(msg_pong(message.nonce))
 
-    def on_verack(self, conn, message):
+    def on_verack(self, message):
         self.verack_received = True
 
-    def on_version(self, conn, message):
+    def on_version(self, message):
         assert message.nVersion >= MIN_VERSION_SUPPORTED, "Version {} received. Test framework only supports versions greater than {}".format(message.nVersion, MIN_VERSION_SUPPORTED)
-        conn.send_message(msg_verack())
-        conn.nServices = message.nServices
+        self.send_message(msg_verack())
+        self.nServices = message.nServices
 
     # Connection helper methods
 
-    def add_connection(self, conn):
-        self.connection = conn
-
     def wait_for_disconnect(self, timeout=60):
-        test_function = lambda: not self.connected
+        test_function = lambda: self.state != "connected"
         wait_until(test_function, timeout=timeout, lock=mininode_lock)
 
     # Message receiving helper methods
@@ -358,12 +376,6 @@ class NodeConnCB():
         wait_until(test_function, timeout=timeout, lock=mininode_lock)
 
     # Message sending helper functions
-
-    def send_message(self, message):
-        if self.connection:
-            self.connection.send_message(message)
-        else:
-            logger.error("Cannot send message. No connection to node!")
 
     def send_and_ping(self, message):
         self.send_message(message)

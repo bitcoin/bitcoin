@@ -28,7 +28,7 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 
 class TestNode(NodeConnCB):
-    def on_version(self, conn, message):
+    def on_version(self, message):
         # Don't send a verack in response
         pass
 
