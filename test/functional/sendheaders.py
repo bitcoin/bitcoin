@@ -6,9 +6,11 @@
 
 Setup:
 
-- Two nodes, two p2p connections to node0. One p2p connection should only ever
-  receive inv's (omitted from testing description below, this is our control).
-  Second node is used for creating reorgs.
+- Two nodes:
+    - node0 is the node-under-test. We create two p2p connections to it. The
+      first p2p connection is a control and should only ever receive inv's. The
+      second p2p connection tests the headers sending logic.
+    - node1 is used to create reorgs.
 
 test_null_locators
 ==================
@@ -143,9 +145,11 @@ class BaseNode(NodeConnCB):
         self.send_message(getblocks_message)
 
     def wait_for_getdata(self, hash_list, timeout=60):
-        if hash_list != []:
-            test_function = lambda: "getdata" in self.last_message and [x.hash for x in self.last_message["getdata"].inv] == hash_list
-            wait_until(test_function, timeout=timeout, lock=mininode_lock)
+        if hash_list == []:
+            return
+
+        test_function = lambda: "getdata" in self.last_message and [x.hash for x in self.last_message["getdata"].inv] == hash_list
+        wait_until(test_function, timeout=timeout, lock=mininode_lock)
 
     def wait_for_block_announcement(self, block_hash, timeout=60):
         test_function = lambda: self.last_blockhash_announced == block_hash
@@ -229,8 +233,8 @@ class SendHeadersTest(BitcoinTestFramework):
     def run_test(self):
         # Setup the p2p connections and start up the network thread.
         inv_node = self.nodes[0].add_p2p_connection(BaseNode())
-        # Set nServices to 0 for test_node, so no block download will occur outside of
-        # direct fetching
+        # Make sure NODE_NETWORK is not set for test_node, so no block download
+        # will occur outside of direct fetching
         test_node = self.nodes[0].add_p2p_connection(BaseNode(), services=NODE_WITNESS)
 
         NetworkThread().start()  # Start up network handling in another thread
@@ -269,7 +273,6 @@ class SendHeadersTest(BitcoinTestFramework):
         inv_node.clear_last_announcement()
         test_node.send_message(msg_block(block))
         inv_node.check_last_announcement(inv=[int(block.hash, 16)], headers=[])
-        inv_node.clear_last_announcement()
 
     def test_nonnull_locators(self, test_node, inv_node):
         tip = int(self.nodes[0].getbestblockhash(), 16)
