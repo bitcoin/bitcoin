@@ -6,12 +6,13 @@
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
+from test_framework.script import CScript, OP_0, OP_1, OP_CHECKMULTISIG
 
 
 class SignRawTransactionsTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
-        self.num_nodes = 1
+        self.num_nodes = 2
 
     def successful_signing_test(self):
         """Create and sign a valid raw transaction with one input.
@@ -137,6 +138,34 @@ class SignRawTransactionsTest(BitcoinTestFramework):
     def run_test(self):
         self.successful_signing_test()
         self.script_verification_error_test()
+
+        # Now test signing transaction to P2SH-P2WSH addresses without wallet
+        # Create a new P2SH-P2WSH 1-of-1 multisig address:
+        embedded_address = self.nodes[1].getnewaddress()
+        embedded_pubkey = self.nodes[1].validateaddress(embedded_address)["pubkey"]
+        embedded_privkey = self.nodes[1].dumpprivkey(embedded_address)
+        p2sh_p2wsh_address = self.nodes[1].addmultisigaddress(1, [embedded_pubkey], "", "p2sh-segwit")['address']
+        witness_script = CScript([OP_1, hex_str_to_bytes(embedded_pubkey), OP_1, OP_CHECKMULTISIG])
+
+        # send transaction to P2SH-P2WSH 1-of-1 multisig address
+        self.nodes[0].generate(101)
+        tx_to_witness = self.nodes[0].createrawtransaction([self.nodes[0].listunspent()[0]], {p2sh_p2wsh_address: Decimal("49.999")})
+        signed_tx_to_witness = self.nodes[0].signrawtransaction(tx_to_witness)
+        assert ("errors" not in signed_tx_to_witness or len(["errors"]) == 0)
+        self.nodes[0].sendrawtransaction(signed_tx_to_witness["hex"])
+        self.nodes[0].generate(1)
+        self.sync_all()
+
+        # Find the UTXO for the transaction node[1] should have received, check witnessScript matches
+        unspent_output = self.nodes[1].listunspent(0, 999999, [p2sh_p2wsh_address])[0]
+        assert_equal(unspent_output["redeemScript"][1], bytes_to_hex_str(witness_script))
+
+        # Now create and sign a transaction spending that transaction on node[0], which doesn't know the scripts or keys
+        spending_tx = self.nodes[0].createrawtransaction([unspent_output], {self.nodes[1].getnewaddress(): Decimal("49.998")})
+        spending_tx_signed = self.nodes[0].signrawtransaction(spending_tx, [unspent_output], [embedded_privkey])
+        # Check the signing completed successfully
+        assert 'complete' in spending_tx_signed
+        assert_equal(spending_tx_signed['complete'], True)
 
 
 if __name__ == '__main__':
