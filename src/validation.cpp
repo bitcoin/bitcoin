@@ -1332,11 +1332,8 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
 	if (nHeight == 1)
 	{
 		std::string chain = ChainNameFromCommandLine();
-		if (chain == CBaseChainParams::MAIN || chain == CBaseChainParams::REGTEST)
-		{
-			// SYSCOIN 2.1 snapshot
-			return 521460000 * COIN;
-		}
+		// SYSCOIN 2.1 snapshot
+		return 521460000 * COIN;
 	}
 	CAmount nSubsidy = 38.5 * COIN;
 	int reductions = nHeight / consensusParams.nSubsidyHalvingInterval;
