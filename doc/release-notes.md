@@ -20,7 +20,7 @@ How to Upgrade
 ==============
 
 If you are running an older version, shut it down. Wait until it has completely
-shut down (which might take a few minutes for older versions), then run the 
+shut down (which might take a few minutes for older versions), then run the
 installer (on Windows) or just copy over `/Applications/Bitcoin-Qt` (on Mac)
 or `bitcoind`/`bitcoin-qt` (on Linux).
 
@@ -61,6 +61,20 @@ HD-wallets by default
 Due to a backward-incompatible change in the wallet database, wallets created
 with version 0.16.0 will be rejected by previous versions. Also, version 0.16.0
 will only create hierarchical deterministic (HD) wallets.
+
+Custom wallet directories
+---------------------
+The ability to specify a directory other than the default data directory in which to store
+wallets has been added. An existing directory can be specified using the `-walletdir=<dir>`
+argument. Wallets loaded via `-wallet` arguments must be in this wallet directory. Care should be taken
+when choosing a wallet directory location, as if  it becomes unavailable during operation,
+funds may be lost.
+
+Default wallet directory change
+--------------------------
+On new installations (if the data directory doesn't exist), wallets will now be stored in a
+new `wallets/` subdirectory inside the data directory. If this `wallets/` subdirectory
+doesn't exist (i.e. on existing nodes), the current datadir root is used instead, as it was.
 
 Low-level RPC changes
 ----------------------
