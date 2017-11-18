@@ -305,8 +305,6 @@ int CMasternodePayments::GetMinMasternodePaymentsProto() {
 
 void CMasternodePayments::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv, CConnman& connman)
 {
-    // Ignore any payments messages until masternode list is synced
-    if(!masternodeSync.IsMasternodeListSynced()) return;
 
     if(fLiteMode) return; // disable all Syscoin specific functionality
 
@@ -341,7 +339,8 @@ void CMasternodePayments::ProcessMessage(CNode* pfrom, std::string& strCommand, 
         uint256 nHash = vote.GetHash();
 
         pfrom->setAskFor.erase(nHash);
-
+		// SYSCOIN Ignore any payments messages until masternode list is synced
+		if (!masternodeSync.IsMasternodeListSynced()) return;
         {
             LOCK(cs_mapMasternodePaymentVotes);
             if(mapMasternodePaymentVotes.count(nHash)) {

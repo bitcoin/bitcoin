@@ -771,7 +771,6 @@ std::pair<CService, std::set<uint256> > CMasternodeMan::PopScheduledMnbRequestCo
 void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv, CConnman& connman)
 {
     if(fLiteMode) return; // disable all Syscoin specific functionality
-    if(!masternodeSync.IsBlockchainSynced()) return;
 
     if (strCommand == NetMsgType::MNANNOUNCE) { //Masternode Broadcast
 
@@ -779,7 +778,8 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         vRecv >> mnb;
 
         pfrom->setAskFor.erase(mnb.GetHash());
-
+		// SYSCOIN
+		if (!masternodeSync.IsBlockchainSynced()) return;
         LogPrint("masternode", "MNANNOUNCE -- Masternode announce, masternode=%s\n", mnb.vin.prevout.ToStringShort());
 
         int nDos = 0;
@@ -802,6 +802,8 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         uint256 nHash = mnp.GetHash();
 
         pfrom->setAskFor.erase(nHash);
+		// SYSCOIN
+		if (!masternodeSync.IsBlockchainSynced()) return;
 
         LogPrint("masternode", "MNPING -- Masternode ping, masternode=%s\n", mnp.vin.prevout.ToStringShort());
 

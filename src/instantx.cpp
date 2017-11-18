@@ -45,8 +45,6 @@ void CInstantSend::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataSt
     if(fLiteMode) return; // disable all Syscoin specific functionality
     if(!sporkManager.IsSporkActive(SPORK_2_INSTANTSEND_ENABLED)) return;
 
-    // Ignore any InstantSend messages until masternode list is synced
-    if(!masternodeSync.IsMasternodeListSynced()) return;
 
     // NOTE: NetMsgType::TXLOCKREQUEST is handled via ProcessMessage() in main.cpp
 
@@ -67,6 +65,9 @@ void CInstantSend::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataSt
         uint256 nVoteHash = vote.GetHash();
 
         pfrom->setAskFor.erase(nVoteHash);
+
+		// SYSCOIN Ignore any InstantSend messages until masternode list is synced
+		if (!masternodeSync.IsMasternodeListSynced()) return;
 
         if(mapTxLockVotes.count(nVoteHash)) return;
         mapTxLockVotes.insert(std::make_pair(nVoteHash, vote));

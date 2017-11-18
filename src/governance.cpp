@@ -148,12 +148,6 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, std::string& strCommand, C
     {
         // MAKE SURE WE HAVE A VALID REFERENCE TO THE TIP BEFORE CONTINUING
 
-
-        if(!masternodeSync.IsMasternodeListSynced()) {
-            LogPrint("gobject", "MNGOVERNANCEOBJECT -- masternode list not synced\n");
-            return;
-        }
-
         CGovernanceObject govobj;
         vRecv >> govobj;
 
@@ -161,6 +155,12 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, std::string& strCommand, C
         std::string strHash = nHash.ToString();
 
         pfrom->setAskFor.erase(nHash);
+
+		// SYSCOIN
+		if (!masternodeSync.IsMasternodeListSynced()) {
+			LogPrint("gobject", "MNGOVERNANCEOBJECT -- masternode list not synced\n");
+			return;
+		}
 
         LogPrint("gobject", "MNGOVERNANCEOBJECT -- Received object: %s\n", strHash);
 
@@ -232,11 +232,6 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, std::string& strCommand, C
     // A NEW GOVERNANCE OBJECT VOTE HAS ARRIVED
     else if (strCommand == NetMsgType::MNGOVERNANCEOBJECTVOTE)
     {
-        // Ignore such messages until masternode list is synced
-        if(!masternodeSync.IsMasternodeListSynced()) {
-            LogPrint("gobject", "MNGOVERNANCEOBJECTVOTE -- masternode list not synced\n");
-            return;
-        }
 
         CGovernanceVote vote;
         vRecv >> vote;
@@ -247,6 +242,12 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, std::string& strCommand, C
         std::string strHash = nHash.ToString();
 
         pfrom->setAskFor.erase(nHash);
+
+		// SYSCOIN Ignore such messages until masternode list is synced
+		if (!masternodeSync.IsMasternodeListSynced()) {
+			LogPrint("gobject", "MNGOVERNANCEOBJECTVOTE -- masternode list not synced\n");
+			return;
+		}
 
         if(!AcceptVoteMessage(nHash)) {
             LogPrint("gobject", "MNGOVERNANCEOBJECTVOTE -- Received unrequested vote object: %s, hash: %s, peer = %d\n",
