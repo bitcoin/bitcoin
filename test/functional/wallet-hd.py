@@ -73,7 +73,7 @@ class WalletHDTest(BitcoinTestFramework):
         # otherwise node1 would auto-recover all funds in flag the keypool keys as used
         shutil.rmtree(os.path.join(tmpdir, "node1/regtest/blocks"))
         shutil.rmtree(os.path.join(tmpdir, "node1/regtest/chainstate"))
-        shutil.copyfile(os.path.join(tmpdir, "hd.bak"), os.path.join(tmpdir, "node1/regtest/wallet.dat"))
+        shutil.copyfile(os.path.join(tmpdir, "hd.bak"), os.path.join(tmpdir, "node1/regtest/wallets/wallet.dat"))
         self.start_node(1)
 
         # Assert that derivation is deterministic
