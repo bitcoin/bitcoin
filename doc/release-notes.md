@@ -63,6 +63,14 @@ RPC changes
 
 - The `fundrawtransaction` rpc will reject the previously deprecated `reserveChangeKey` option.
 
+- The `redeemScript` for each of the `prevtxs` given to `signrawtransaction` can now optionally be an array
+  of scripts, so both the redeemScript and witnessScript for P2SH-P2WSH addresses can be passed in.
+
+- The `listunspent` output will now return an array of scripts as the `redeemScript` in the case of P2SH-P2WSH,
+  for compatibility with the `signrawtransaction` change above. In other cases, `listunspent` will continue to return
+  the only `redeemScript` as a string, as before.
+
+
 Credits
 =======
 
