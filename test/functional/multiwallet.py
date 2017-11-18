@@ -40,7 +40,11 @@ class MultiWalletTest(BitcoinTestFramework):
         self.assert_start_raises_init_error(0, ['-wallet=w12'], 'Error loading wallet w12. -wallet filename must be a regular file.')
 
         # should not initialize if the specified walletdir does not exist
-        self.assert_start_raises_init_error(0, ['-walletdir=bad'], 'Error: Specified wallet directory "bad" does not exist.')
+        self.assert_start_raises_init_error(0, ['-walletdir=bad'], 'Error: Specified -walletdir "bad" does not exist')
+        # should not initialize if the specified walletdir is not a directory
+        not_a_dir = os.path.join(wallet_dir, 'notadir')
+        open(not_a_dir, 'a').close()
+        self.assert_start_raises_init_error(0, ['-walletdir='+not_a_dir], 'Error: Specified -walletdir "' + not_a_dir + '" is not a directory')
 
         # if wallets/ doesn't exist, datadir should be the default wallet dir
         wallet_dir2 = os.path.join(self.options.tmpdir, 'node0', 'regtest', 'walletdir')

@@ -67,7 +67,7 @@ Custom wallet directories
 The ability to specify a directory other than the default data directory in which to store
 wallets has been added. An existing directory can be specified using the `-walletdir=<dir>`
 argument. Wallets loaded via `-wallet` arguments must be in this wallet directory. Care should be taken
-when choosing a wallet directory location, as if  it becomes unavailable during operation,
+when choosing a wallet directory location, as if it becomes unavailable during operation,
 funds may be lost.
 
 Default wallet directory change
