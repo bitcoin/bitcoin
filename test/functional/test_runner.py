@@ -332,7 +332,11 @@ def run_tests(*, test_list, src_dir, build_dir, exeext, tmpdir, jobs=1, enable_c
 
     if len(test_list) > 1 and jobs > 1:
         # Populate cache
-        subprocess.check_output([tests_dir + 'create_cache.py'] + flags + ["--tmpdir=%s/cache" % tmpdir])
+        try:
+            subprocess.check_output([tests_dir + 'create_cache.py'] + flags + ["--tmpdir=%s/cache" % tmpdir])
+        except Exception as e:
+            print(e.output)
+            raise e
 
     #Run Tests
     job_queue = TestHandler(

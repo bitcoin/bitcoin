@@ -849,14 +849,14 @@ bool CWalletDB::RecoverKeysOnlyFilter(void *callbackData, CDataStream ssKey, CDa
     return true;
 }
 
-bool CWalletDB::VerifyEnvironment(const std::string& walletFile, const fs::path& dataDir, std::string& errorStr)
+bool CWalletDB::VerifyEnvironment(const std::string& walletFile, const fs::path& walletDir, std::string& errorStr)
 {
-    return CDB::VerifyEnvironment(walletFile, dataDir, errorStr);
+    return CDB::VerifyEnvironment(walletFile, walletDir, errorStr);
 }
 
-bool CWalletDB::VerifyDatabaseFile(const std::string& walletFile, const fs::path& dataDir, std::string& warningStr, std::string& errorStr)
+bool CWalletDB::VerifyDatabaseFile(const std::string& walletFile, const fs::path& walletDir, std::string& warningStr, std::string& errorStr)
 {
-    return CDB::VerifyDatabaseFile(walletFile, dataDir, warningStr, errorStr, CWalletDB::Recover);
+    return CDB::VerifyDatabaseFile(walletFile, walletDir, warningStr, errorStr, CWalletDB::Recover);
 }
 
 bool CWalletDB::WriteDestData(const std::string &address, const std::string &key, const std::string &value)
