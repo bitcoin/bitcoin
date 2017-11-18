@@ -355,6 +355,7 @@ inline int GetHashSelection(const uint256 PrevBlockHash, int index) {
 extern double algoHashTotal[16];
 extern int algoHashHits[16];
 
+
 template<typename T1>
 inline uint256 HashX16R(const T1 pbegin, const T1 pend, const uint256 PrevBlockHash)
 {
@@ -488,12 +489,12 @@ inline uint256 HashX16R(const T1 pbegin, const T1 pend, const uint256 PrevBlockH
 
 
     //Just to watch it hash every X hashes
-    static long count;
-    count++;
-    if (count % 32000  == 0) {
-        uint256 shortened_hash = hash[15].trim256();
-        std::cout << "Hashing " << shortened_hash.GetHex() <<  " " << count << "\n";
-    }
+    // static long count;
+    // count++;
+    // if (count % 32000  == 0) {
+    //     uint256 shortened_hash = hash[15].trim256();
+    //     std::cout << "Hashing " << shortened_hash.GetHex() <<  " " << count << "\n";
+    // }
     /////////////////////////////////////
 
     return hash[15].trim256();

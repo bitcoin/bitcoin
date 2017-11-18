@@ -51,6 +51,10 @@ extern std::vector<CWalletRef> vpwallets;
 
 uint64_t nLastBlockTx = 0;
 uint64_t nLastBlockWeight = 0;
+uint64_t nMiningTimeStart = 0;
+uint64_t nHashesPerSec = 0;
+uint64_t nHashesDone = 0;
+
 
 int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev)
 {
@@ -494,7 +498,7 @@ static bool ProcessBlockFound(const CBlock* pblock, const CChainParams& chainpar
 
 CWallet *GetFirstWallet() {
     while(vpwallets.size() == 0){
-        std::cout << "Wallet size: " << vpwallets.size() << std::endl;
+        //std::cout << "Wallet size: " << vpwallets.size() << std::endl;
         MilliSleep(100);
 
     }
@@ -506,12 +510,10 @@ CWallet *GetFirstWallet() {
 // ***TODO*** that part changed in bitcoin, we are using a mix with old one here for now
 void static RavenMiner(const CChainParams& chainparams)
 {
-    std::cout << "In Raven Miner" << std::endl;
+    //std::cout << "In Raven Miner" << std::endl;
     LogPrintf("RavenMiner -- started\n");
     SetThreadPriority(THREAD_PRIORITY_LOWEST);
     RenameThread("raven-miner");
-
-    std::cout << "After thread rename" << std::endl;
 
     unsigned int nExtraNonce = 0;
 
@@ -522,44 +524,33 @@ void static RavenMiner(const CChainParams& chainparams)
         LogPrintf("RavenMiner -- Wallet not available\n");
     }
 
-    std::cout << "After EnsureWalletIsAvailable" << std::endl;
-
-
     if (pWallet == NULL)
-        std::cout << "pWallet is NULL" << std::endl;
+        LogPrintf("pWallet is NULL\n");
 
 
     std::shared_ptr<CReserveScript> coinbaseScript;
 
     pWallet->GetScriptForMining(coinbaseScript);
 
-    std::cout << "After pWallet->GetScriptForMining" << std::endl;
-
     //GetMainSignals().ScriptForMining(coinbaseScript);
 
     if (!coinbaseScript)
-        std::cout << "coinbaseScript is NULL" << std::endl;
+        LogPrintf("coinbaseScript is NULL\n");
 
     if (coinbaseScript->reserveScript.empty())
-        std::cout << "coinbaseScript is empty" << std::endl;
-
-    std::cout << "Before try in miner" << std::endl;
+        LogPrintf("coinbaseScript is empty\n");
 
     try {
         // Throw an error if no script was provided.  This can happen
         // due to some internal error but also if the keypool is empty.
         // In the latter case, already the pointer is NULL.
-        std::cout << "Before coinbase script" << std::endl;
         if (!coinbaseScript || coinbaseScript->reserveScript.empty())
         {
-            std::cout << "Throwing no coinbase script" << std::endl;
             throw std::runtime_error("No coinbase script available (mining requires a wallet)");
         }
 
-        std::cout << "After coinbase script" << std::endl;
 
         while (true) {
-            std::cout << "Top of mining loop" << std::endl;
 
             if (chainparams.MiningRequiresPeers()) {
                 // Busy-wait for the network to come online so we don't waste time mining
@@ -568,14 +559,14 @@ void static RavenMiner(const CChainParams& chainparams)
                     if ((g_connman->GetNodeCount(CConnman::CONNECTIONS_ALL) > 0) && !IsInitialBlockDownload()) {
                         break;
                     }
-                    std::cout << "Waiting for peers to mine.  Peers: " << (g_connman->GetNodeCount(CConnman::CONNECTIONS_ALL)) << std::endl;
-                    std::cout << "IsInitialBlockDownload: " << IsInitialBlockDownload() << std::endl;
+                    //std::cout << "Waiting for peers to mine.  Peers: " << (g_connman->GetNodeCount(CConnman::CONNECTIONS_ALL)) << std::endl;
+                    //std::cout << "IsInitialBlockDownload: " << IsInitialBlockDownload() << std::endl;
 
                     MilliSleep(1000);
                 } while (true);
             }
 
-            std::cout << "Before creating block to mine" << std::endl;
+            //std::cout << "Before creating block to mine" << std::endl;
 
             //
             // Create new block
@@ -607,7 +598,6 @@ void static RavenMiner(const CChainParams& chainparams)
             arith_uint256 hashTarget = arith_uint256().SetCompact(pblock->nBits);
             while (true)
             {
-                unsigned int nHashesDone = 0;
 
                 uint256 hash;
                 while (true)
@@ -631,6 +621,14 @@ void static RavenMiner(const CChainParams& chainparams)
                     }
                     pblock->nNonce += 1;
                     nHashesDone += 1;
+                    if (nHashesDone % 500000 == 0) {   //Calculate hashing speed
+                        //std::cout << GetTimeMicros() << std::endl;
+                        //std::cout << nHashesDone << std::endl;
+                        //std::cout << nMiningTimeStart << std::endl;
+                        //std::cout << (GetTimeMicros() - nMiningTimeStart) / 1000000 << std::endl;
+                        nHashesPerSec = nHashesDone / (((GetTimeMicros() - nMiningTimeStart) / 1000000) + 1);
+                        //std::cout << nHashesPerSec << std::endl;
+                    } 
                     if ((pblock->nNonce & 0xFF) == 0)
                         break;
                 }
@@ -673,9 +671,9 @@ void static RavenMiner(const CChainParams& chainparams)
 
 void GenerateRavens(bool fGenerate, int nThreads, const CChainParams& chainparams)
 {
-    std::cout << "In GenerateRavens" << std::endl;
-    std::cout << "fGenerate: " << fGenerate << std::endl;
-    std::cout << "nThreads: " << nThreads << std::endl;
+    // std::cout << "In GenerateRavens" << std::endl;
+    // std::cout << "fGenerate: " << fGenerate << std::endl;
+    // std::cout << "nThreads: " << nThreads << std::endl;
 
     static boost::thread_group* minerThreads = NULL;
 
@@ -693,8 +691,14 @@ void GenerateRavens(bool fGenerate, int nThreads, const CChainParams& chainparam
         return;
 
     minerThreads = new boost::thread_group();
+    
+    //Reset metrics
+    nMiningTimeStart = GetTimeMicros();
+    nHashesDone = 0;
+    nHashesPerSec = 0;
+
     for (int i = 0; i < nThreads; i++){
-        std::cout << "Starting mining thread: " << i << std::endl;        
+        //std::cout << "Starting mining thread: " << i << std::endl;        
         minerThreads->create_thread(boost::bind(&RavenMiner, boost::cref(chainparams)));
     }
 }
