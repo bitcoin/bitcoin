@@ -410,7 +410,7 @@ void SendCoinsDialog::send(QList<SendCoinsRecipient> recipients, QString strFee,
     if (ui->optInRBF->isChecked())
     {
         questionString.append("<hr /><span>");
-        questionString.append(tr("This transaction signals replaceability (optin-RBF)."));
+        questionString.append(tr("You can increase the fee later (signals Replace-By-Fee)."));
         questionString.append("</span>");
     }
     SendConfirmationDialog confirmationDialog(tr("Confirm send coins"),
