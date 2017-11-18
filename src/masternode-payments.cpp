@@ -362,12 +362,6 @@ void CMasternodePayments::ProcessMessage(CNode* pfrom, std::string& strCommand, 
             return;
         }
 
-        std::string strError = "";
-        if(!vote.IsValid(pfrom, nCachedBlockHeight, strError, connman)) {
-            LogPrint("mnpayments", "MASTERNODEPAYMENTVOTE -- invalid message, error: %s\n", strError);
-            return;
-        }
-
 		// SYSCOIN
 		masternode_info_t mnInfo;
 		if (!mnodeman.GetMasternodeInfo(vote.vinMasternode.prevout, mnInfo)) {
@@ -377,7 +371,13 @@ void CMasternodePayments::ProcessMessage(CNode* pfrom, std::string& strCommand, 
 			return;
 		}
 
-		if(!CanVote(vote.vinMasternode.prevout, vote.nBlockHeight)) {
+        std::string strError = "";
+        if(!vote.IsValid(pfrom, nCachedBlockHeight, strError, connman)) {
+            LogPrint("mnpayments", "MASTERNODEPAYMENTVOTE -- invalid message, error: %s\n", strError);
+            return;
+        }
+
+        if(!CanVote(vote.vinMasternode.prevout, vote.nBlockHeight)) {
             LogPrintf("MASTERNODEPAYMENTVOTE -- masternode already voted, masternode=%s\n", vote.vinMasternode.prevout.ToStringShort());
             return;
         }
