@@ -1106,6 +1106,9 @@ public:
     /* Set the HD chain model (chain child index counters) */
     bool SetHDChain(const CHDChain& chain, bool memonly);
     const CHDChain& GetHDChain() const { return hdChain; }
+    
+    /* Delete the HD chain model */
+    bool DeleteHDChain(bool memonly);
 
     /* Returns true if HD is enabled */
     bool IsHDEnabled() const;

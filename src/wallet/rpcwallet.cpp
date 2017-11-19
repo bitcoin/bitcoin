@@ -30,6 +30,7 @@
 
 #include <init.h>  // For StartShutdown
 
+#include <regex>
 #include <stdint.h>
 
 #include <univalue.h>
@@ -3306,6 +3307,68 @@ UniValue bumpfee(const JSONRPCRequest& request)
     return result;
 }
 
+UniValue downgradewallet(const JSONRPCRequest& request)
+{
+    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
+        return NullUniValue;
+    }
+
+    if (request.fHelp || request.params.size() != 1) {
+        std::string msg = "downgradewallet \"version\"\n"
+            "\nDowngrades wallet for compatibilty with earlier versions. Requires a new wallet backup.\n"
+
+            "\nArguments:\n"
+            "1. \"version\"       (string, required) A previous version of Bitcoin Core\n"
+            
+            "\nSupported versions:\n"
+            "0.12 Removes HD seed. Generated addresses are preserved.\n"
+            "     Note that non-HD wallets currently can't be upgraded to HD.\n"
+        ;
+        throw std::runtime_error(msg);
+    }
+
+    // Check version argument
+    
+    uint32_t version;
+    std::string version_s = request.params[0].get_str(); 
+    std::smatch match;
+    const std::regex regex("^(\\d+)\\.(\\d+)$");
+    if (std::regex_match (version_s, match, regex)) {
+        uint32_t version_major = std::stoi(match[1]);
+        uint32_t version_minor = std::stoi(match[2]);
+        version = 1000000 * version_major + 10000 * version_minor;
+    } else {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid version format, use e.g. 0.12");
+    }
+    
+    // Check against array of supported downgrade versions
+    const std::array<uint32_t, 1> supported_versions = {{120000}};
+    
+    bool supported_version = std::any_of(supported_versions.begin(), supported_versions.end(), [&](uint32_t i) 
+    {
+        return i == version;
+    });
+    
+    if (!supported_version) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Wallet downgrade to " + version_s + " not supported");
+    }
+    
+    // Future code to downgrade to versions above 0.12 goes here.
+
+    if (version <= 120000) { // Downgrade to 0.12 (remove HD)
+        // Check if HD seed exists
+        if(pwallet->IsHDEnabled()) {
+            // Delete hd key
+            pwallet->DeleteHDChain(false);
+        }
+    }
+    
+    // Future code to downgrade to versions below 0.12 goes here.
+
+    return NullUniValue;
+}
+
 UniValue generate(const JSONRPCRequest& request)
 {
     CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
@@ -3449,6 +3512,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "addwitnessaddress",        &addwitnessaddress,        {"address","p2sh"} },
     { "wallet",             "backupwallet",             &backupwallet,             {"destination"} },
     { "wallet",             "bumpfee",                  &bumpfee,                  {"txid", "options"} },
+    { "wallet",             "downgradewallet",          &downgradewallet,          {"version"} },
     { "wallet",             "dumpprivkey",              &dumpprivkey,              {"address"}  },
     { "wallet",             "dumpwallet",               &dumpwallet,               {"filename"} },
     { "wallet",             "encryptwallet",            &encryptwallet,            {"passphrase"} },
