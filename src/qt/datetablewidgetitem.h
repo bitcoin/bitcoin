@@ -2,6 +2,7 @@
 #define DATE_TABLE_WIDGET_ITEM_H
 
 #include <QTableWidgetItem>
+#include <stdint.h>
 
 class DateTableWidgetItem : public QTableWidgetItem
 {
