@@ -153,6 +153,7 @@ BITCOIN_QT_H = \
   qt/splashscreen.h \
   qt/masternodelist.h \
   qt/systemnodelist.h \
+  qt/datetablewidgetitem.h \
   qt/trafficgraphwidget.h \
   qt/transactiondesc.h \
   qt/transactiondescdialog.h \
@@ -277,6 +278,7 @@ BITCOIN_QT_CPP += \
   qt/signverifymessagedialog.cpp \
   qt/masternodelist.cpp \
   qt/systemnodelist.cpp \
+  qt/datetablewidgetitem.cpp \
   qt/transactiondesc.cpp \
   qt/transactiondescdialog.cpp \
   qt/transactionfilterproxy.cpp \
