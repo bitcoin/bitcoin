@@ -1493,6 +1493,18 @@ bool CWallet::SetHDChain(const CHDChain& chain, bool memonly)
     return true;
 }
 
+bool CWallet::DeleteHDChain(bool memonly)
+{
+    LOCK(cs_wallet);
+    
+    hdChain.SetNull();
+
+    if (!memonly && !CWalletDB(*dbw).WriteHDChain(hdChain))
+        throw std::runtime_error(std::string(__func__) + ": deleting chain failed");
+
+    return true;
+}
+
 bool CWallet::IsHDEnabled() const
 {
     return !hdChain.masterKeyID.IsNull();
