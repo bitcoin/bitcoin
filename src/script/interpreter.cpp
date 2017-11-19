@@ -756,8 +756,8 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
                     case OP_1SUB:       bn -= bnOne; break;
                     case OP_NEGATE:     bn = -bn; break;
                     case OP_ABS:        if (bn < bnZero) bn = -bn; break;
-                    case OP_NOT:        bn = (bn == bnZero); break;
-                    case OP_0NOTEQUAL:  bn = (bn != bnZero); break;
+                    case OP_NOT:        bn = static_cast<CScriptNum>(bn == bnZero); break;
+                    case OP_0NOTEQUAL:  bn = static_cast<CScriptNum>(bn != bnZero); break;
                     default:            assert(!"invalid opcode"); break;
                     }
                     popstack(stack);
@@ -795,15 +795,15 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
                         bn = bn1 - bn2;
                         break;
 
-                    case OP_BOOLAND:             bn = (bn1 != bnZero && bn2 != bnZero); break;
-                    case OP_BOOLOR:              bn = (bn1 != bnZero || bn2 != bnZero); break;
-                    case OP_NUMEQUAL:            bn = (bn1 == bn2); break;
-                    case OP_NUMEQUALVERIFY:      bn = (bn1 == bn2); break;
-                    case OP_NUMNOTEQUAL:         bn = (bn1 != bn2); break;
-                    case OP_LESSTHAN:            bn = (bn1 < bn2); break;
-                    case OP_GREATERTHAN:         bn = (bn1 > bn2); break;
-                    case OP_LESSTHANOREQUAL:     bn = (bn1 <= bn2); break;
-                    case OP_GREATERTHANOREQUAL:  bn = (bn1 >= bn2); break;
+                    case OP_BOOLAND:             bn = static_cast<CScriptNum>(bn1 != bnZero && bn2 != bnZero); break;
+                    case OP_BOOLOR:              bn = static_cast<CScriptNum>(bn1 != bnZero || bn2 != bnZero); break;
+                    case OP_NUMEQUAL:            bn = static_cast<CScriptNum>(bn1 == bn2); break;
+                    case OP_NUMEQUALVERIFY:      bn = static_cast<CScriptNum>(bn1 == bn2); break;
+                    case OP_NUMNOTEQUAL:         bn = static_cast<CScriptNum>(bn1 != bn2); break;
+                    case OP_LESSTHAN:            bn = static_cast<CScriptNum>(bn1 < bn2); break;
+                    case OP_GREATERTHAN:         bn = static_cast<CScriptNum>(bn1 > bn2); break;
+                    case OP_LESSTHANOREQUAL:     bn = static_cast<CScriptNum>(bn1 <= bn2); break;
+                    case OP_GREATERTHANOREQUAL:  bn = static_cast<CScriptNum>(bn1 >= bn2); break;
                     case OP_MIN:                 bn = (bn1 < bn2 ? bn1 : bn2); break;
                     case OP_MAX:                 bn = (bn1 > bn2 ? bn1 : bn2); break;
                     default:                     assert(!"invalid opcode"); break;
