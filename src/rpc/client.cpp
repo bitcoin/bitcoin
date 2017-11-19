@@ -135,6 +135,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "omni_getfeetrigger", 0 },
     { "omni_getfeedistribution", 0 },
     { "omni_getfeedistributions", 0 },
+    { "omni_getbalanceshash", 0 },
 
     /* Omni Core - transaction calls */
     { "omni_send", 2 },
