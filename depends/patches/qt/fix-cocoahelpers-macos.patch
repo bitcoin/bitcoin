@@ -66,5 +66,5 @@ index cd73148..3f8429e 100644
  }
  
  Qt::MouseButton cocoaButton2QtButton(NSInteger buttonNum)
---
+-- 
 2.7.4
