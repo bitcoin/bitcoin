@@ -517,8 +517,8 @@ bool CMasternodeMan::GetNextMasternodeInQueueForPayment(int nBlockHeight, bool f
         //it's in the list (up to 8 entries ahead of current block to allow propagation) -- so let's skip it
         if(mnpayments.IsScheduled(mnpair.second, nBlockHeight)) continue;
 
-        //it's too new, wait for a cycle
-        if(fFilterSigTime && mnpair.second.sigTime + (nMnCount*2.6*60) > GetAdjustedTime()) continue;
+        //SYSCOIN it's too new, wait for a cycle
+        if(fFilterSigTime && mnpair.second.sigTime + (nMnCount*60) > GetAdjustedTime()) continue;
 
         //make sure it has at least as many confirmations as there are masternodes
         if(GetUTXOConfirmations(mnpair.first) < nMnCount) continue;
