@@ -138,7 +138,7 @@ namespace {
      */
     std::multimap<CBlockIndex*, CBlockIndex*> mapBlocksUnlinked;
 
-    std::vector<CBlockFileInfo> vinfoBlockFile;
+    std::vector<CBlockFileInfo> vinfoBlockFile GUARDED_BY(cs_LastBlockFile);
     int nLastBlockFile GUARDED_BY(cs_LastBlockFile) = 0;
     /** Global flag to indicate we should check to see if there are
      *  block/undo files that should be deleted.  Set on startup
@@ -3973,10 +3973,10 @@ void UnloadBlockIndex()
     pindexBestHeader = nullptr;
     mempool.clear();
     mapBlocksUnlinked.clear();
-    vinfoBlockFile.clear();
     {
         LOCK(cs_LastBlockFile); // WIP: lock submitted in https://github.com/bitcoin/bitcoin/pull/11652/files
         nLastBlockFile = 0;
+        vinfoBlockFile.clear();
     }
     {
         LOCK(cs_nBlockSequenceId); // WIP: lock submitted in https://github.com/bitcoin/bitcoin/pull/11652/files
