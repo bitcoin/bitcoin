@@ -797,6 +797,7 @@ public:
             nWalletMaxVersion = FEATURE_BASE;
             nOrderPosNext = 0;
             nTimeFirstKey = 0;
+            nRelockTime = 0;
         }
         nMasterKeyMaxID = 0;
         pwalletdbEncryption = nullptr;
@@ -805,7 +806,6 @@ public:
         nLastResend = 0;
         m_max_keypool_index = 0;
         fBroadcastTransactions = false;
-        nRelockTime = 0;
         fAbortRescan = false;
         fScanningWallet = false;
     }
@@ -909,7 +909,7 @@ public:
     bool LoadWatchOnly(const CScript &dest);
 
     //! Holds a timestamp at which point the wallet is scheduled (externally) to be relocked. Caller must arrange for actual relocking to occur via Lock().
-    int64_t nRelockTime;
+    int64_t nRelockTime GUARDED_BY(cs_wallet);
 
     bool Unlock(const SecureString& strWalletPassphrase);
     bool ChangeWalletPassphrase(const SecureString& strOldWalletPassphrase, const SecureString& strNewWalletPassphrase);
