@@ -389,6 +389,10 @@ static void MutateTxAddOutMultiSig(CMutableTransaction& tx, const std::string& s
         scriptPubKey = GetScriptForWitness(scriptPubKey);
     }
     if (bScriptHash) {
+        if (scriptPubKey.size() > MAX_SCRIPT_ELEMENT_SIZE) {
+            throw std::runtime_error(strprintf(
+                        "redeemScript exceeds size limit: %d > %d", scriptPubKey.size(), MAX_SCRIPT_ELEMENT_SIZE));
+        }
         // Get the address for the redeem script, then call
         // GetScriptForDestination() to construct a P2SH scriptPubKey.
         CBitcoinAddress addr(scriptPubKey);
@@ -451,10 +455,19 @@ static void MutateTxAddOutScript(CMutableTransaction& tx, const std::string& str
         bScriptHash = (flags.find("S") != std::string::npos);
     }
 
+    if (scriptPubKey.size() > MAX_SCRIPT_SIZE) {
+        throw std::runtime_error(strprintf(
+                    "script exceeds size limit: %d > %d", scriptPubKey.size(), MAX_SCRIPT_SIZE));
+    }
+
     if (bSegWit) {
       scriptPubKey = GetScriptForWitness(scriptPubKey);
     }
     if (bScriptHash) {
+        if (scriptPubKey.size() > MAX_SCRIPT_ELEMENT_SIZE) {
+            throw std::runtime_error(strprintf(
+                        "redeemScript exceeds size limit: %d > %d", scriptPubKey.size(), MAX_SCRIPT_ELEMENT_SIZE));
+        }
       CBitcoinAddress addr(scriptPubKey);
       scriptPubKey = GetScriptForDestination(addr.Get());
     }
