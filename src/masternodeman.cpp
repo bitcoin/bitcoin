@@ -803,7 +803,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
 
         pfrom->setAskFor.erase(nHash);
 		// SYSCOIN
-		if (!masternodeSync.IsBlockchainSynced()) return;
+		if (!masternodeSync.IsMasternodeListSynced()) return;
 
         LogPrint("masternode", "MNPING -- Masternode ping, masternode=%s\n", mnp.vin.prevout.ToStringShort());
 
@@ -910,7 +910,8 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
 
         CMasternodeVerification mnv;
         vRecv >> mnv;
-
+		pfrom->setAskFor.erase(mnv.GetHash());
+		if (!masternodeSync.IsMasternodeListSynced()) return;
         if(mnv.vchSig1.empty()) {
             // CASE 1: someone asked me to verify myself /IP we are using/
             SendVerifyReply(pfrom, mnv, connman);
