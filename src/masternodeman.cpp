@@ -802,8 +802,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         uint256 nHash = mnp.GetHash();
 
         pfrom->setAskFor.erase(nHash);
-		// SYSCOIN
-		if (!masternodeSync.IsMasternodeListSynced()) return;
+		if (!masternodeSync.IsBlockchainSynced()) return;
 
         LogPrint("masternode", "MNPING -- Masternode ping, masternode=%s\n", mnp.vin.prevout.ToStringShort());
 
