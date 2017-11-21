@@ -4599,7 +4599,7 @@ static std::string SendHelp(CHDWallet *pwallet, OutputTypes typeIn, OutputTypes 
 
     std::string cmd = std::string("send") + TypeToWord(typeIn) + "to" + TypeToWord(typeOut);
 
-    rv = cmd + "\"address\" amount ( \"comment\" \"comment-to\" subtractfeefromamount \"narration\"";
+    rv = cmd + " \"address\" amount ( \"comment\" \"comment-to\" subtractfeefromamount \"narration\"";
     if (typeIn == OUTPUT_RINGCT)
         rv += " ringsize inputs_per_sig";
     rv += ")\n";
