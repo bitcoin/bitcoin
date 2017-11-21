@@ -1,5 +1,6 @@
 #!/usr/bin/env python
-# Copyright (c) 2013-2016 The Raven Core developers
+# Copyright (c) 2013-2016 The Bitcoin Core developers
+// Copyright (c) 2017 The Raven Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 from __future__ import division,print_function,unicode_literals
