@@ -4806,7 +4806,10 @@ CBlockTemplate* CreateNewBlock(CReserveKey& reservekey, CWallet* pwallet, bool f
     // Create new block
     auto_ptr<CBlockTemplate> pblocktemplate(new CBlockTemplate());
     if(!pblocktemplate.get())
+    {
+        error("CreateNewBlock() : Out of memory");
         return NULL;
+    }
     CBlock *pblock = &pblocktemplate->block; // pointer for convenience
 
     // Create coinbase tx
@@ -5094,7 +5097,10 @@ CBlockTemplate* CreateNewBlock(CReserveKey& reservekey, CWallet* pwallet, bool f
         CCoinsViewCache viewNew(*pcoinsTip, true);
         CValidationState state;
         if (!pblock->ConnectBlock(state, &indexDummy, viewNew, true))
-            throw std::runtime_error("CreateNewBlock() : ConnectBlock failed");
+        {
+            error("CreateNewBlock() : ConnectBlock failed");
+            return NULL;
+        }
     }
 
     return pblocktemplate.release();
@@ -5219,6 +5225,7 @@ void BitcoinMiner(CWallet *pwallet, bool fProofOfStake)
 
     string strMintMessage = _("Info: Minting suspended due to locked wallet.");
     string strMintDisabledMessage = _("Info: Minting disabled by 'nominting' option.");
+    string strMintBlockMessage = _("Info: Minting suspended due to block creation failure.");
 
     try { loop {
         if (GetBoolArg("-nominting"))
@@ -5245,7 +5252,12 @@ void BitcoinMiner(CWallet *pwallet, bool fProofOfStake)
 
         auto_ptr<CBlockTemplate> pblocktemplate(CreateNewBlock(reservekey, pwallet, fProofOfStake));
         if (!pblocktemplate.get())
-            return;
+        {
+            strMintWarning = strMintBlockMessage;
+            MilliSleep(1000);
+            continue;
+        }
+
         CBlock *pblock = &pblocktemplate->block;
         IncrementExtraNonce(pblock, pindexPrev, nExtraNonce);
 
