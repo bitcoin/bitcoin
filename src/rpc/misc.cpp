@@ -183,17 +183,22 @@ UniValue validateaddress(const JSONRPCRequest& request)
         ret.push_back(Pair("iswatchonly", bool(mine & ISMINE_WATCH_ONLY)));
         UniValue detail = boost::apply_visitor(DescribeAddressVisitor(pwallet), dest);
         ret.pushKVs(detail);
-        if (pwallet && pwallet->mapAddressBook.count(dest)) {
-            ret.push_back(Pair("account", pwallet->mapAddressBook[dest].name));
-        }
         if (pwallet) {
-            const auto& meta = pwallet->mapKeyMetadata;
-            const CKeyID *keyID = boost::get<CKeyID>(&dest);
-            auto it = keyID ? meta.find(*keyID) : meta.end();
-            if (it == meta.end()) {
-                it = meta.find(CScriptID(scriptPubKey));
+            // Re-acquiring already held recursive lock to work around a Clang
+            // thread safety analysis quirk. This lock is technically redundant.
+            AssertLockHeld(pwallet->cs_wallet);
+            LOCK(pwallet->cs_wallet);
+
+            auto i = pwallet->mapAddressBook.find(dest);
+            if (i != pwallet->mapAddressBook.end()) {
+                ret.push_back(Pair("account", i->second.name));
             }
-            if (it != meta.end()) {
+            const CKeyID *keyID = boost::get<CKeyID>(&dest);
+            auto it = keyID ? pwallet->mapKeyMetadata.find(*keyID) : pwallet->mapKeyMetadata.end();
+            if (it == pwallet->mapKeyMetadata.end()) {
+                it = pwallet->mapKeyMetadata.find(CScriptID(scriptPubKey));
+            }
+            if (it != pwallet->mapKeyMetadata.end()) {
                 ret.push_back(Pair("timestamp", it->second.nCreateTime));
                 if (!it->second.hdKeypath.empty()) {
                     ret.push_back(Pair("hdkeypath", it->second.hdKeypath));
