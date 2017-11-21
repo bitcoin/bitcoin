@@ -3255,7 +3255,6 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
             vBlindPlain.resize(32);
             memset(&vBlindPlain[0], 0, 32);
             vpBlinds.push_back(&vBlindPlain[0]);
-            LogPrintf("nValueIn %d\n", nValueIn);
             if (nValueIn > 0
                 && !secp256k1_pedersen_commit(secp256k1_ctx_blind, &plainInputCommitment, &vBlindPlain[0], (uint64_t) nValueIn, secp256k1_generator_h))
                 return errorN(1, sError, __func__, "secp256k1_pedersen_commit failed for plain in.");
@@ -3644,7 +3643,8 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                 if (!SetChangeDest(coinControl, r, sError))
                     return errorN(1, sError, __func__, ("SetChangeDest failed: " + sError).c_str());
 
-                if (nChange > ::minRelayTxFee.GetFee(2048)) // TODO: better output size estimate
+                if (fOnlyStandardOutputs // Need at least 1 blinded output
+                    || nChange > ::minRelayTxFee.GetFee(2048)) // TODO: better output size estimate
                 {
                     r.SetAmount(nChange);
                 } else
@@ -3756,6 +3756,39 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                     r.nAmount += extraFeePaid;
                     nFeeRet -= extraFeePaid;
                 };
+
+                if (nSubtractFeeFromAmount)
+                {
+                    if (nValueOutPlain + nFeeRet == nValueIn)
+                    {
+                        // blinded input value == plain output value
+                        // blinding factor will be 0 for change
+                        // an observer could see sum blinded inputs must match plain outputs, avoid by forcing a 1sat change output
+
+                        bool fFound = false;
+                        for (auto &r : vecSend)
+                        {
+                            if (r.nType == OUTPUT_STANDARD
+                                && r.nAmountSelected > 0
+                                && r.fSubtractFeeFromAmount
+                                && !r.fChange)
+                            {
+                                LogPrint(BCLog::HDWALLET, "%s: Reducing plain output %d by 1sat to force non 0 change.\n", __func__, r.n);
+                                r.SetAmount(r.nAmountSelected-1);
+                                fFound = true;
+                                nValue -= 1;
+                                break;
+                            }
+                        }
+
+                        if (!fFound || !(--nSubFeeTries))
+                            return errorN(1, sError, __func__, _("Unable to reduce plain output to add blind change.").c_str());
+
+                        pick_new_inputs = false;
+                        continue;
+                    };
+                };
+
                 break; // Done, enough fee included.
             } else
             if (!pick_new_inputs) {

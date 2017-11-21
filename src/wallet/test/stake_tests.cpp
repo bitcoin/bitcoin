@@ -254,7 +254,6 @@ BOOST_AUTO_TEST_CASE(stake_test)
         BOOST_REQUIRE(DISCONNECT_OK == DisconnectBlock(block, pindexDelete, view));
         BOOST_REQUIRE(FlushView(&view, state, true));
         BOOST_REQUIRE(FlushStateToDisk(chainparams, state, FLUSH_STATE_IF_NEEDED));
-
         UpdateTip(pindexDelete->pprev, chainparams);
 
 

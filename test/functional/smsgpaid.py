@@ -23,28 +23,6 @@ class SmsgDevTest(ParticlTestFramework):
         self.sync_all()
 
 
-    def waitForExchange(self, nMessages, nodeA, nodeB):
-        nodes = self.nodes
-
-        fPass = False
-        for i in range(20):
-            time.sleep(0.5)
-            ro = nodes[nodeA].smsgbuckets()
-            if ro['total']['messages'] == str(nMessages):
-                fPass = True
-                break
-        assert(fPass)
-
-        fPass = False
-        for i in range(20):
-            time.sleep(0.5)
-            ro = nodes[nodeB].smsgbuckets()
-            if ro['total']['messages'] == str(nMessages):
-                fPass = True
-                break
-        assert(fPass)
-
-
     def run_test (self):
         tmpdir = self.options.tmpdir
         nodes = self.nodes
@@ -87,7 +65,7 @@ class SmsgDevTest(ParticlTestFramework):
 
         self.stakeBlocks(1, nStakeNode=1)
 
-        self.waitForExchange(1, 1, 0)
+        self.waitForSmsgExchange(1, 1, 0)
 
         ro = nodes[0].smsginbox()
         print(json.dumps(ro, indent=4, default=self.jsonDecimal))

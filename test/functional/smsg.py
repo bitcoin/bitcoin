@@ -18,29 +18,6 @@ class SmsgTest(ParticlTestFramework):
         self.start_nodes()
         connect_nodes_bi(self.nodes,0,1)
 
-
-    def waitForExchange(self, nMessages, nodeA, nodeB):
-        nodes = self.nodes
-
-        fPass = False
-        for i in range(20):
-            time.sleep(0.5)
-            ro = nodes[nodeA].smsgbuckets()
-            if ro['total']['messages'] == str(nMessages):
-                fPass = True
-                break
-        assert(fPass)
-
-        fPass = False
-        for i in range(20):
-            time.sleep(0.5)
-            ro = nodes[nodeB].smsgbuckets()
-            if ro['total']['messages'] == str(nMessages):
-                fPass = True
-                break
-        assert(fPass)
-
-
     def run_test (self):
         tmpdir = self.options.tmpdir
         nodes = self.nodes
@@ -69,7 +46,7 @@ class SmsgTest(ParticlTestFramework):
         ro = nodes[1].smsgsend(address1, address0, "Test 1->0.")
         assert(ro['result'] == 'Sent.')
 
-        self.waitForExchange(1, 1, 0)
+        self.waitForSmsgExchange(1, 1, 0)
 
         ro = nodes[0].smsginbox()
         assert(len(ro['messages']) == 1)
@@ -81,7 +58,7 @@ class SmsgTest(ParticlTestFramework):
         ro = nodes[0].smsgsend(address0, address1, "Reply 0->1.")
         assert(ro['result'] == 'Sent.')
 
-        self.waitForExchange(2, 0, 1)
+        self.waitForSmsgExchange(2, 0, 1)
 
         ro = nodes[1].smsginbox()
         assert(ro['messages'][0]['to'] == address1)
@@ -107,7 +84,7 @@ class SmsgTest(ParticlTestFramework):
         ro = nodes[1].smsgsend(address1, address0, "Test 1->0. 2")
         assert(ro['result'] == 'Sent.')
 
-        self.waitForExchange(3, 1, 0)
+        self.waitForSmsgExchange(3, 1, 0)
 
         ro = nodes[0].smsginbox()
         assert(len(ro['messages']) == 1)

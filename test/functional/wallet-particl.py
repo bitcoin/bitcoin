@@ -4,7 +4,6 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 from test_framework.test_particl import ParticlTestFramework
-from test_framework.test_node import BITCOIND_PROC_WAIT_TIMEOUT
 from test_framework.util import *
 
 
@@ -236,7 +235,7 @@ class WalletParticlTest(ParticlTestFramework):
         assert('wallet encrypted' in ro)
 
         # restart node
-        self.nodes[1].process.wait(timeout=BITCOIND_PROC_WAIT_TIMEOUT) # wait until encryptwallet has shut down node
+        self.nodes[1].wait_until_stopped() # wait until encryptwallet has shut down node
         self.start_node(1, self.extra_args[1])
 
         try:

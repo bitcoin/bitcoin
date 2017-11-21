@@ -16,23 +16,23 @@
 static void Blind(benchmark::State& state)
 {
     ECC_Start_Blinding();
-    
+
     secp256k1_pedersen_commitment commitment;
     std::vector<uint8_t> vchRangeproof;
     uint64_t min_value = 0;
     int ct_exponent = 2;
     int ct_bits = 32;
-    
+
     CKey ephemeral_key;
     ephemeral_key.MakeNewKey(true);
-    
+
     CAmount nValue = 1 * COIN;
-    
+
     std::vector<uint8_t> vBlind(32);
     GetStrongRandBytes(&vBlind[0], 32);
-    
+
     assert(secp256k1_pedersen_commit(secp256k1_ctx_blind, &commitment, &vBlind[0], (uint64_t)nValue, secp256k1_generator_h));
-    
+
     // Create range proof
     size_t nRangeProofLen = 5134;
     vchRangeproof.resize(nRangeProofLen);
@@ -40,23 +40,23 @@ static void Blind(benchmark::State& state)
         &vchRangeproof[0], &nRangeProofLen,
         min_value, &commitment,
         &vBlind[0], ephemeral_key.begin(),
-        ct_exponent, ct_bits, 
+        ct_exponent, ct_bits,
         nValue,
         nullptr, 0,
         nullptr, 0,
         secp256k1_generator_h));
-    
+
     vchRangeproof.resize(nRangeProofLen);
-    
+
     uint64_t max_value = 0;
-    
+
     while (state.KeepRunning())
     {
         assert(1 == secp256k1_rangeproof_verify(secp256k1_ctx_blind, &min_value, &max_value,
             &commitment, vchRangeproof.data(), vchRangeproof.size(),
             nullptr, 0, secp256k1_generator_h));
     };
-    
+
     ECC_Stop_Blinding();
 }
 

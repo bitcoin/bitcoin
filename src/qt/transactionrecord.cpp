@@ -440,8 +440,6 @@ void TransactionRecord::updateStatus(CHDWallet *phdw, const CTransactionRecord &
             status.status = TransactionStatus::Confirmed;
         }
     }
-
-
 };
 
 bool TransactionRecord::statusUpdateNeeded()

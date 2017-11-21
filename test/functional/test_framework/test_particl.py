@@ -56,6 +56,27 @@ class ParticlTestFramework(BitcoinTestFramework):
                 continue
         return False
 
+    def waitForSmsgExchange(self, nMessages, nodeA, nodeB):
+        nodes = self.nodes
+
+        fPass = False
+        for i in range(30):
+            time.sleep(0.5)
+            ro = nodes[nodeA].smsgbuckets()
+            if ro['total']['messages'] == str(nMessages):
+                fPass = True
+                break
+        assert(fPass)
+
+        fPass = False
+        for i in range(30):
+            time.sleep(0.5)
+            ro = nodes[nodeB].smsgbuckets()
+            if ro['total']['messages'] == str(nMessages):
+                fPass = True
+                break
+        assert(fPass)
+
     def stakeToHeight(self, height, fSync=True, nStakeNode=0, nSyncCheckNode=1):
         ro = self.nodes[nStakeNode].walletsettings('stakelimit', {'height':height})
         ro = self.nodes[nStakeNode].reservebalance(False)

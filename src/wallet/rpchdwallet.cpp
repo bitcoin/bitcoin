@@ -5031,10 +5031,7 @@ UniValue debugwallet(const JSONRPCRequest &request)
                 // TODO: Check hardened keys, must detect stealth key chain
             };
         };
-
     }
-
-
 
     return result;
 };
@@ -5058,7 +5055,7 @@ UniValue rewindchain(const JSONRPCRequest &request)
 
     UniValue result(UniValue::VOBJ);
 
-    CCoinsViewCache view(pcoinsdbview);
+    CCoinsViewCache view(pcoinsTip);
     CBlockIndex* pindexState = chainActive.Tip();
     CValidationState state;
 
@@ -5077,8 +5074,6 @@ UniValue rewindchain(const JSONRPCRequest &request)
     std::set<CCmpPubKey> setKi; // unused
     if (!RollBackRCTIndex(nLastRCTOutput, setKi))
         throw JSONRPCError(RPC_MISC_ERROR, "RollBackRCTIndex failed.");
-
-
 
     for (CBlockIndex *pindex = chainActive.Tip(); pindex && pindex->pprev; pindex = pindex->pprev)
     {

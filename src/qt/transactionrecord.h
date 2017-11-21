@@ -122,11 +122,11 @@ public:
     std::string address;
     CAmount debit;
     CAmount credit;
-    
+
     char typeIn;
     char typeOut;
-    
-    
+
+
     /**@}*/
 
     /** Subtransaction index, for sort key */
@@ -147,9 +147,9 @@ public:
     /** Update status from core wallet tx.
      */
     void updateStatus(const CWalletTx &wtx);
-    
+
     void updateStatus(CHDWallet *phdw, const CTransactionRecord &rtx);
-    
+
 
     /** Return whether a status update is needed.
      */

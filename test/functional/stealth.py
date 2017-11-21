@@ -5,7 +5,6 @@
 
 from test_framework.test_particl import ParticlTestFramework
 from test_framework.test_particl import isclose
-from test_framework.test_node import BITCOIND_PROC_WAIT_TIMEOUT
 from test_framework.util import *
 
 class StealthTest(ParticlTestFramework):
@@ -118,7 +117,7 @@ class StealthTest(ParticlTestFramework):
         ro = node2.encryptwallet("qwerty234")
         assert("wallet encrypted" in ro)
 
-        self.nodes[2].process.wait(timeout=BITCOIND_PROC_WAIT_TIMEOUT) # wait until encryptwallet has shut down node
+        self.nodes[2].wait_until_stopped() # wait until encryptwallet has shut down node
         # Restart node 2
         self.start_node(2, self.extra_args[2])
         node2 = self.nodes[2]
