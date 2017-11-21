@@ -1674,7 +1674,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     //// debug print
     {
-        LOCK(cs_main); // reading variables 'mapBlockIndex' and 'chainActive' require holding mutex 'cs_main'
+        LOCK(cs_main);
         LogPrintf("mapBlockIndex.size() = %u\n", mapBlockIndex.size());
         chain_active_height = chainActive.Height();
     }
