@@ -2271,11 +2271,11 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
     Init(connOptions);
 
     {
-        LOCK(cs_totalBytesRecv); // writing variable 'nTotalBytesRecv' requires holding mutex 'cs_totalBytesRecv' exclusively
+        LOCK(cs_totalBytesRecv); // WIP: lock submitted in https://github.com/bitcoin/bitcoin/pull/11744/files
         nTotalBytesRecv = 0;
     }
     {
-        LOCK(cs_totalBytesSent); // writing variables 'nTotalBytesSent'/'nMaxOutboundTotalBytesSentInCycle'/'nMaxOutboundCycleStartTime' require holding mutex 'cs_totalBytesSent' exclusively
+        LOCK(cs_totalBytesSent); // WIP: lock submitted in https://github.com/bitcoin/bitcoin/pull/11744/files
         nTotalBytesSent = 0;
         nMaxOutboundTotalBytesSentInCycle = 0;
         nMaxOutboundCycleStartTime = 0;

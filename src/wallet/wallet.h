@@ -792,7 +792,7 @@ public:
     void SetNull()
     {
         {
-            LOCK(cs_wallet); // writing variable 'nWalletVersion'/'nWalletMaxVersion'/'nOrderPosNext'/'nTimeFirstKey' requires holding mutex 'cs_wallet' exclusively
+            LOCK(cs_wallet); // WIP: lock submitted in https://github.com/bitcoin/bitcoin/pull/11634/files
             nWalletVersion = FEATURE_BASE;
             nWalletMaxVersion = FEATURE_BASE;
             nOrderPosNext = 0;
