@@ -88,12 +88,12 @@ class CCoinsViewDBCursor: public CCoinsViewCursor
 public:
     ~CCoinsViewDBCursor() {}
 
-    bool GetKey(COutPoint &key) const;
-    bool GetValue(Coin &coin) const;
-    unsigned int GetValueSize() const;
+    bool GetKey(COutPoint &key) const override;
+    bool GetValue(Coin &coin) const override;
+    unsigned int GetValueSize() const override;
 
-    bool Valid() const;
-    void Next();
+    bool Valid() const override;
+    void Next() override;
 
 private:
     CCoinsViewDBCursor(CDBIterator* pcursorIn, const uint256 &hashBlockIn):
