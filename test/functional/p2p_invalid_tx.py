@@ -4,21 +4,17 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test node responses to invalid transactions.
 
-In this test we connect to one node over p2p, and test tx requests.
-"""
-
-from test_framework.test_framework import ComparisonTestFramework
-from test_framework.comptool import TestManager, TestInstance, RejectResult
-from test_framework.blocktools import *
+In this test we connect to one node over p2p, and test tx requests."""
 import time
 
+from test_framework.blocktools import create_block, create_coinbase, create_transaction
+from test_framework.comptool import RejectResult, TestInstance, TestManager
+from test_framework.messages import COIN
+from test_framework.mininode import network_thread_start
+from test_framework.test_framework import ComparisonTestFramework
 
-
-# Use the ComparisonTestFramework with 1 node: only use --testbinary.
 class InvalidTxRequestTest(ComparisonTestFramework):
 
-    ''' Can either run this test as 1 node with expected answers, or two and compare them. 
-        Change the "outcome" variable from each TestInstance object to only do the comparison. '''
     def set_test_params(self):
         self.num_nodes = 1
         self.setup_clean_chain = True
@@ -32,13 +28,10 @@ class InvalidTxRequestTest(ComparisonTestFramework):
         test.run()
 
     def get_tests(self):
-        if self.tip is None:
-            self.tip = int("0x" + self.nodes[0].getbestblockhash(), 0)
-        self.block_time = int(time.time())+1
+        self.tip = int("0x" + self.nodes[0].getbestblockhash(), 0)
+        self.block_time = int(time.time()) + 1
 
-        '''
-        Create a new block with an anyone-can-spend coinbase
-        '''
+        self.log.info("Create a new block with an anyone-can-spend coinbase.")
         height = 1
         block = create_block(self.tip, create_coinbase(height), self.block_time)
         self.block_time += 1
@@ -49,9 +42,7 @@ class InvalidTxRequestTest(ComparisonTestFramework):
         height += 1
         yield TestInstance([[block, True]])
 
-        '''
-        Now we need that block to mature so we can spend the coinbase.
-        '''
+        self.log.info("Mature the block.")
         test = TestInstance(sync_every_block=False)
         for i in range(100):
             block = create_block(self.tip, create_coinbase(height), self.block_time)
