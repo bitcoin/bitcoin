@@ -11,56 +11,49 @@ In this test we connect to one node over p2p, and test block requests:
 re-requested.
 """
 import copy
-import time
 
 from test_framework.blocktools import create_block, create_coinbase, create_transaction
-from test_framework.comptool import RejectResult, TestInstance, TestManager
 from test_framework.messages import COIN
-from test_framework.mininode import network_thread_start
-from test_framework.test_framework import ComparisonTestFramework
+from test_framework.mininode import network_thread_start, P2PDataStore
+from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal
 
-class InvalidBlockRequestTest(ComparisonTestFramework):
+class InvalidBlockRequestTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.setup_clean_chain = True
+        self.extra_args = [["-whitelist=127.0.0.1"]]
 
     def run_test(self):
-        test = TestManager(self, self.options.tmpdir)
-        test.add_all_connections(self.nodes)
-        self.tip = None
-        self.block_time = None
-        network_thread_start()
-        test.run()
+        # Add p2p connection to node0
+        node = self.nodes[0]  # convenience reference to the node
+        node.add_p2p_connection(P2PDataStore())
 
-    def get_tests(self):
-        if self.tip is None:
-            self.tip = int("0x" + self.nodes[0].getbestblockhash(), 0)
-        self.block_time = int(time.time()) + 1
+        network_thread_start()
+        node.p2p.wait_for_verack()
+
+        best_block = node.getblock(node.getbestblockhash())
+        tip = int(node.getbestblockhash(), 16)
+        height = best_block["height"] + 1
+        block_time = best_block["time"] + 1
 
         self.log.info("Create a new block with an anyone-can-spend coinbase")
 
         height = 1
-        block = create_block(self.tip, create_coinbase(height), self.block_time)
-        self.block_time += 1
+        block = create_block(tip, create_coinbase(height), block_time)
         block.solve()
         # Save the coinbase for later
-        self.block1 = block
-        self.tip = block.sha256
-        height += 1
-        yield TestInstance([[block, True]])
+        block1 = block
+        tip = block.sha256
+        node.p2p.send_blocks_and_test([block1], node, True)
 
         self.log.info("Mature the block.")
+        node.generate(100)
 
-        test = TestInstance(sync_every_block=False)
-        for i in range(100):
-            block = create_block(self.tip, create_coinbase(height), self.block_time)
-            block.solve()
-            self.tip = block.sha256
-            self.block_time += 1
-            test.blocks_and_transactions.append([block, True])
-            height += 1
-        yield test
+        best_block = node.getblock(node.getbestblockhash())
+        tip = int(node.getbestblockhash(), 16)
+        height = best_block["height"] + 1
+        block_time = best_block["time"] + 1
 
         # Use merkle-root malleability to generate an invalid block with
         # same blockheader.
@@ -68,11 +61,12 @@ class InvalidBlockRequestTest(ComparisonTestFramework):
         # coinbase, spend of that spend).  Duplicate the 3rd transaction to
         # leave merkle root and blockheader unchanged but invalidate the block.
         self.log.info("Test merkle root malleability.")
-        block2 = create_block(self.tip, create_coinbase(height), self.block_time)
-        self.block_time += 1
+
+        block2 = create_block(tip, create_coinbase(height), block_time)
+        block_time += 1
 
         # b'0x51' is OP_TRUE
-        tx1 = create_transaction(self.block1.vtx[0], 0, b'\x51', 50 * COIN)
+        tx1 = create_transaction(block1.vtx[0], 0, b'\x51', 50 * COIN)
         tx2 = create_transaction(tx1, 0, b'\x51', 50 * COIN)
 
         block2.vtx.extend([tx1, tx2])
@@ -88,14 +82,12 @@ class InvalidBlockRequestTest(ComparisonTestFramework):
         assert_equal(orig_hash, block2.rehash())
         assert(block2_orig.vtx != block2.vtx)
 
-        self.tip = block2.sha256
-        yield TestInstance([[block2, RejectResult(16, b'bad-txns-duplicate')], [block2_orig, True]])
-        height += 1
+        node.p2p.send_blocks_and_test([block2], node, False, False, 16, b'bad-txns-duplicate')
 
         self.log.info("Test very broken block.")
 
-        block3 = create_block(self.tip, create_coinbase(height), self.block_time)
-        self.block_time += 1
+        block3 = create_block(tip, create_coinbase(height), block_time)
+        block_time += 1
         block3.vtx[0].vout[0].nValue = 100 * COIN  # Too high!
         block3.vtx[0].sha256 = None
         block3.vtx[0].calc_sha256()
@@ -103,8 +95,7 @@ class InvalidBlockRequestTest(ComparisonTestFramework):
         block3.rehash()
         block3.solve()
 
-        yield TestInstance([[block3, RejectResult(16, b'bad-cb-amount')]])
-
+        node.p2p.send_blocks_and_test([block3], node, False, False, 16, b'bad-cb-amount')
 
 if __name__ == '__main__':
     InvalidBlockRequestTest().main()
