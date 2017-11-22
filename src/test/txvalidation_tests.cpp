@@ -48,7 +48,7 @@ BOOST_FIXTURE_TEST_CASE(tx_mempool_reject_coinbase, TestChain100Setup)
     // Check that the transaction hasn't been added to mempool.
     BOOST_CHECK_EQUAL(mempool.size(), initialPoolSize);
 
-    // Check that the validation state reflects the unsuccesful attempt.
+    // Check that the validation state reflects the unsuccessful attempt.
     BOOST_CHECK(state.IsInvalid());
     BOOST_CHECK_EQUAL(state.GetRejectReason(), "coinbase");
 
