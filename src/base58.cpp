@@ -425,7 +425,7 @@ CKey CSyscoinSecret::GetKey()
 bool CSyscoinSecret::IsValid() const
 {
 	bool fExpectedFormat = vchData.size() == 32 || (vchData.size() == 33 && vchData[32] == 1);
-	bool fCorrectVersion = vchVersion == Params().Base58Prefix(CChainParams::SECRET_KEY_SYS);
+	bool fCorrectVersion = vchVersion == Params().Base58Prefix(CChainParams::SECRET_KEY_SYS) || vchVersion == Params().Base58Prefix(CChainParams::SECRET_KEY_BTC);
 	return fExpectedFormat && fCorrectVersion;
 }
 

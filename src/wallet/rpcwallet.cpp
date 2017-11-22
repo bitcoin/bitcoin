@@ -193,9 +193,6 @@ UniValue getzaddress(const UniValue& params, bool fHelp)
 
 	string strAddress = params[0].get_str();
 	CSyscoinAddress sysAddress(strAddress);
-
-	if (!sysAddress.isAlias)
-		throw JSONRPCError(RPC_INVALID_PARAMS, "Error: Please provide an alias or an address belonging to an alias");
 	CSyscoinAddress zecAddress;
 	zecAddress.Set(sysAddress.Get(), CChainParams::ADDRESS_ZEC);
 	return zecAddress.ToString();
@@ -221,9 +218,6 @@ UniValue getbtcaddress(const UniValue& params, bool fHelp)
 
 	string strAddress = params[0].get_str();
 	CSyscoinAddress sysAddress(strAddress);
-
-	if (!sysAddress.isAlias)
-		throw JSONRPCError(RPC_INVALID_PARAMS, "Error: Please provide an alias or an address belonging to an alias");
 	CSyscoinAddress btcAddress;
 	btcAddress.Set(sysAddress.Get(), CChainParams::ADDRESS_BTC);
 	return btcAddress.ToString();

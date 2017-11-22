@@ -311,19 +311,18 @@ UniValue validateaddress(const UniValue& params, bool fHelp)
     if (isValid)
     {
 		CTxDestination dest = address.Get();
-		address.Set(dest, CChainParams::ADDRESS_SYS);
-		string currentAddress = address.ToString();
-		ret.push_back(Pair("address", currentAddress));
+		address = CSyscoinAddress(address.ToString());
+		ret.push_back(Pair("address", address.ToString()));
+
 		CSyscoinAddress zaddr;
 		zaddr.Set(dest, CChainParams::ADDRESS_ZEC);
 		ret.push_back(Pair("zaddress", zaddr.ToString()));
 
 		CSyscoinAddress btcaddr;
-		zaddr.Set(dest, CChainParams::ADDRESS_BTC);
+		btcaddr.Set(dest, CChainParams::ADDRESS_BTC);
 		ret.push_back(Pair("btcaddress", btcaddr.ToString()));
 
 		// SYSCOIN alias from address
-		address = CSyscoinAddress(address.ToString());
 		ret.push_back(Pair("alias", address.aliasName));
 
 		CScript scriptPubKey = GetScriptForDestination(dest);
