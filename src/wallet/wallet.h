@@ -31,6 +31,7 @@
 
 typedef CWallet* CWalletRef;
 extern std::vector<CWalletRef> vpwallets;
+extern CCriticalSection cs_main;
 
 /**
  * Settings
@@ -803,6 +804,10 @@ public:
         nRelockTime = 0;
         fAbortRescan = false;
         fScanningWallet = false;
+        {
+            LOCK(cs_main);
+            m_last_block_processed = nullptr;
+        }
     }
 
     std::map<uint256, CWalletTx> mapWallet;
