@@ -16,7 +16,7 @@ SYSCOIN_WIN_INSTALLER=$(PACKAGE)-$(PACKAGE_VERSION)-win$(WINDOWS_BITS)-setup$(EX
 
 OSX_APP=Syscoin-Qt.app
 OSX_DMG=Syscoin-Core.dmg
-OSX_BACKGROUND_IMAGE=background.tiff
+OSX_BACKGROUND_IMAGE=background.png
 OSX_DEPLOY_SCRIPT=$(top_srcdir)/contrib/macdeploy/macdeployqtplus
 OSX_FANCY_PLIST=$(top_srcdir)/contrib/macdeploy/fancy.plist
 OSX_BASE_LPROJ_DIR=$(top_srcdir)/contrib/macdeploy/Base.lproj/InfoPlist.strings
