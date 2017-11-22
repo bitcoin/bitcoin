@@ -50,7 +50,6 @@ extern int GetSyscoinTxVersion();
 extern bool IsSyscoinScript(const CScript& scriptPubKey, int &op, vector<vector<unsigned char> > &vvchArgs);
 extern bool DecodeAndParseSyscoinTx(const CTransaction& tx, int& op, int& nOut, vector<vector<unsigned char> >& vvch);
 extern int aliasselectpaymentcoins(const vector<unsigned char> &vchAlias, const CAmount &nAmount, vector<COutPoint>& outPoints, bool& bIsFunded, CAmount &nRequiredAmount, bool bSelectFeePlacement, bool bSelectAll, bool bNoAliasRecipient);
-extern string GetSyscoinTransactionDescription(const int op, const vector<vector<unsigned char> > &vvchArgs, const CTransaction &tx, string& responseEnglish, string& responseGUID);
 int64_t nWalletUnlockTime;
 static CCriticalSection cs_nWalletUnlockTime;
 
@@ -172,63 +171,6 @@ UniValue getnewaddress(const UniValue& params, bool fHelp)
 
     return CSyscoinAddress(keyID).ToString();
 }
-UniValue getzaddress(const UniValue& params, bool fHelp)
-{
-	if (!EnsureWalletIsAvailable(fHelp))
-		return NullUniValue;
-
-	if (fHelp || params.size() != 1)
-		throw runtime_error(
-			"getzaddress ( \"address\" )\n"
-			"\nReturns a new ZCash address for receiving payments in ZCash transaparent tokens.\n"
-			"so payments received with the address will be credited to 'account'.\n"
-			"\nArguments:\n"
-			"1. \"address\"        (string) Syscoin alias or address to convert to ZCash address.\n"
-			"\nResult:\n"
-			"\"zaddress\"    (string) The new zcash address\n"
-			"\nExamples:\n"
-			+ HelpExampleCli("getzaddress", "\"myalias\"")
-			+ HelpExampleRpc("getzaddress", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\"")
-		);
-
-	string strAddress = params[0].get_str();
-	CSyscoinAddress sysAddress(strAddress);
-
-	if (!sysAddress.isAlias)
-		throw JSONRPCError(RPC_INVALID_PARAMS, "Error: Please provide an alias or an address belonging to an alias");
-	CSyscoinAddress zecAddress;
-	zecAddress.Set(sysAddress.Get(), CChainParams::ADDRESS_ZEC);
-	return zecAddress.ToString();
-}
-UniValue getbtcaddress(const UniValue& params, bool fHelp)
-{
-	if (!EnsureWalletIsAvailable(fHelp))
-		return NullUniValue;
-
-	if (fHelp || params.size() != 1)
-		throw runtime_error(
-			"getbtcaddress ( \"address\" )\n"
-			"\nReturns a new BTC address for receiving payments in BTC tokens.\n"
-			"so payments received with the address will be credited to 'account'.\n"
-			"\nArguments:\n"
-			"1. \"address\"        (string) Syscoin alias or address to convert to BTC address.\n"
-			"\nResult:\n"
-			"\"btcaddress\"    (string) The new zcash address\n"
-			"\nExamples:\n"
-			+ HelpExampleCli("getzaddress", "\"myalias\"")
-			+ HelpExampleRpc("getzaddress", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\"")
-		);
-
-	string strAddress = params[0].get_str();
-	CSyscoinAddress sysAddress(strAddress);
-
-	if (!sysAddress.isAlias)
-		throw JSONRPCError(RPC_INVALID_PARAMS, "Error: Please provide an alias or an address belonging to an alias");
-	CSyscoinAddress btcAddress;
-	btcAddress.Set(sysAddress.Get(), CChainParams::ADDRESS_BTC);
-	return btcAddress.ToString();
-}
-
 CSyscoinAddress GetAccountAddress(string strAccount, bool bForceNew=false)
 {
     CWalletDB walletdb(pwalletMain->strWalletFile);
@@ -1775,19 +1717,6 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
             if (fLong)
                 WalletTxToJSON(wtx, entry);
             entry.push_back(Pair("abandoned", wtx.isAbandoned()));
-			// SYSCOIN
-			if (wtx.nVersion == GetSyscoinTxVersion() && (IsSyscoinScript(wtx.vout[s.vout].scriptPubKey, op, vvchArgs) || (wtx.vout[s.vout].scriptPubKey[0] == OP_RETURN && DecodeAndParseSyscoinTx(wtx, op, nOut, vvchArgs))))
-			{
-				if (mapSysTx[wtx.GetHash()])
-					continue;
-				mapSysTx[wtx.GetHash()] = true;
-				string strResponseEnglish = "";
-				string strResponseGUID = "";
-				strResponse = GetSyscoinTransactionDescription(op, vvchArgs, wtx, strResponseEnglish, strResponseGUID);
-				entry.push_back(Pair("systx", strResponse));
-				entry.push_back(Pair("systype", strResponseEnglish));
-				entry.push_back(Pair("sysguid", strResponseGUID));
-			}
             ret.push_back(entry);
         }
     }
@@ -1826,19 +1755,6 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
                 entry.push_back(Pair("vout", r.vout));
                 if (fLong)
                     WalletTxToJSON(wtx, entry);
-				// SYSCOIN
-				if (wtx.nVersion == GetSyscoinTxVersion() && (IsSyscoinScript(wtx.vout[r.vout].scriptPubKey, op, vvchArgs) || (wtx.vout[r.vout].scriptPubKey[0] == OP_RETURN && DecodeAndParseSyscoinTx(wtx, op, nOut, vvchArgs))))
-				{
-					if (mapSysTx[wtx.GetHash()])
-						continue;
-					mapSysTx[wtx.GetHash()] = true;
-					string strResponseEnglish = "";
-					string strResponseGUID = "";
-					strResponse = GetSyscoinTransactionDescription(op, vvchArgs, wtx, strResponseEnglish, strResponseGUID);
-					entry.push_back(Pair("systx", strResponse));
-					entry.push_back(Pair("systype", strResponseEnglish));
-					entry.push_back(Pair("sysguid", strResponseGUID));
-				}
                 ret.push_back(entry);
             }
         }
