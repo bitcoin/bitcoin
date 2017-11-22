@@ -1,6 +1,5 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2016 The Bitcoin Core developers
-// Copyright (c) 2017 The Raven Core developers
+// Copyright (c) 2009-2016 The Raven Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -198,8 +197,7 @@ public:
         assert(consensus.hashGenesisBlock == uint256S("0x00000013dd11f2bd679ee383ecd15b7b093400f38f547b2299007d5166ac981d"));
         assert(genesis.hashMerkleRoot == uint256S("0xa4c84e05d4f74f0df5e69a8c2e85524f9776555980a60312ab0fd524cd9b1474"));
 
-        vSeeds.emplace_back("seed-raven.ravencoin.org", true); 
-        vSeeds.emplace_back("seed-raven.bitactivate.com", true); 
+        vSeeds.emplace_back("seed.raven.mediciventures.com", true); 
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,60);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,122);
@@ -293,8 +291,7 @@ public:
         vFixedSeeds.clear();
         vSeeds.clear();
         // nodes with support for servicebits filtering should be at the top
-        vSeeds.emplace_back("seed-testnet-raven.ravencoin.org", true); 
-        vSeeds.emplace_back("seed-testnet-raven.bitactivate.com", true); 
+        vSeeds.emplace_back("testnet-seed.raven.mediciventures.com", true);
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,111);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,196);
@@ -359,12 +356,13 @@ public:
         nDefaultPort = 18444;
         nPruneAfterHeight = 1000;
 
-        genesis = CreateGenesisBlock(1296688602, 2, 0x207fffff, 1, 5000 * COIN);
+        genesis = CreateGenesisBlock(1510082300, 5, 0x207fffff, 4, 5000 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
 
+        std::cout << "HGB: " << consensus.hashGenesisBlock.GetHex() << std::endl;
+        std::cout << "HGR: " << genesis.hashMerkleRoot.GetHex() << std::endl;
 
-        std::cout << "HGB: " << consensus.hashGenesisBlock.GetHex() << std::endl;        
-        assert(consensus.hashGenesisBlock == uint256S("0x2a0efe5c2db9d0b506bee0789958756dca089d3bebcbd67b355acace2df64535"));
+        assert(consensus.hashGenesisBlock == uint256S("0x48218f3664485e3e9798a09b24250625791c51d94ad2d278933ba8ce8b5a2a9b"));
         assert(genesis.hashMerkleRoot == uint256S("0xa4c84e05d4f74f0df5e69a8c2e85524f9776555980a60312ab0fd524cd9b1474"));
 
         vFixedSeeds.clear(); //!< Regtest mode doesn't have any fixed seeds.
@@ -373,7 +371,6 @@ public:
         fDefaultConsistencyChecks = true;
         fRequireStandard = false;
         fMineBlocksOnDemand = true;
-        fMiningRequiresPeers = false;
 
         checkpointData = (CCheckpointData) {
             {
