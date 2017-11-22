@@ -145,6 +145,7 @@ class FullBlockTest(ComparisonTestFramework):
         #                      \-> b3 (1)
         #
         # Nothing should happen at this point. We saw b2 first so it takes priority.
+        self.log.info("Don't reorg to a chain of the same length")
         self.move_tip(1)
         b3 = self.next_block(3, spend=out[1])
         txout_b3 = PreviousSpendableOutput(b3.vtx[1], 0)
@@ -154,6 +155,7 @@ class FullBlockTest(ComparisonTestFramework):
         #
         #     genesis -> b1 (0) -> b2 (1)
         #                      \-> b3 (1) -> b4 (2)
+        self.log.info("Reorg to a longer chain")
         self.next_block(4, spend=out[2])
         yield self.accepted()
 
@@ -165,6 +167,7 @@ class FullBlockTest(ComparisonTestFramework):
         self.save_spendable_output()
         yield self.rejected()
 
+        self.log.info("Reorg back to the original chain")
         self.next_block(6, spend=out[3])
         yield self.accepted()
 
@@ -172,6 +175,7 @@ class FullBlockTest(ComparisonTestFramework):
         #     genesis -> b1 (0) -> b2 (1) -> b5 (2) -> b6 (3)
         #                                          \-> b7 (2) -> b8 (4)
         #                      \-> b3 (1) -> b4 (2)
+        self.log.info("Reject a chain with a double spend, even if it is longer")
         self.move_tip(5)
         self.next_block(7, spend=out[2])
         yield self.rejected()
@@ -183,6 +187,7 @@ class FullBlockTest(ComparisonTestFramework):
         #     genesis -> b1 (0) -> b2 (1) -> b5 (2) -> b6 (3)
         #                                                    \-> b9 (4)
         #                      \-> b3 (1) -> b4 (2)
+        self.log.info("Reject a block where the miner creates too much coinbase reward")
         self.move_tip(6)
         self.next_block(9, spend=out[4], additional_coinbase_value=1)
         yield self.rejected(RejectResult(16, b'bad-cb-amount'))
@@ -191,6 +196,7 @@ class FullBlockTest(ComparisonTestFramework):
         #     genesis -> b1 (0) -> b2 (1) -> b5 (2) -> b6  (3)
         #                                          \-> b10 (3) -> b11 (4)
         #                      \-> b3 (1) -> b4 (2)
+        self.log.info("Reject a chain where the miner creates too much coinbase reward, even if the chain is longer")
         self.move_tip(5)
         self.next_block(10, spend=out[3])
         yield self.rejected()
@@ -203,6 +209,7 @@ class FullBlockTest(ComparisonTestFramework):
         #                                          \-> b12 (3) -> b13 (4) -> b14 (5)
         #                                              (b12 added last)
         #                      \-> b3 (1) -> b4 (2)
+        self.log.info("Reject a chain where the miner creates too much coinbase reward, even if the chain is longer (on a forked chain)")
         self.move_tip(5)
         b12 = self.next_block(12, spend=out[3])
         self.save_spendable_output()
@@ -223,15 +230,14 @@ class FullBlockTest(ComparisonTestFramework):
         #     genesis -> b1 (0) -> b2 (1) -> b5 (2) -> b6  (3)
         #                                          \-> b12 (3) -> b13 (4) -> b15 (5) -> b16 (6)
         #                      \-> b3 (1) -> b4 (2)
-
-        # Test that a block with a lot of checksigs is okay
+        self.log.info("Accept a block with lots of checksigs")
         lots_of_checksigs = CScript([OP_CHECKSIG] * (MAX_BLOCK_SIGOPS - 1))
         self.move_tip(13)
         self.next_block(15, spend=out[5], script=lots_of_checksigs)
         yield self.accepted()
         self.save_spendable_output()
 
-        # Test that a block with too many checksigs is rejected
+        self.log.info("Reject a block with too many checksigs")
         too_many_checksigs = CScript([OP_CHECKSIG] * (MAX_BLOCK_SIGOPS))
         self.next_block(16, spend=out[6], script=too_many_checksigs)
         yield self.rejected(RejectResult(16, b'bad-blk-sigops'))
@@ -240,6 +246,7 @@ class FullBlockTest(ComparisonTestFramework):
         #     genesis -> b1 (0) -> b2 (1) -> b5 (2) -> b6  (3)
         #                                          \-> b12 (3) -> b13 (4) -> b15 (5) -> b17 (b3.vtx[1])
         #                      \-> b3 (1) -> b4 (2)
+        self.log.info("Reject a block with a spend from a re-org'ed out tx")
         self.move_tip(15)
         self.next_block(17, spend=txout_b3)
         yield self.rejected(RejectResult(16, b'bad-txns-inputs-missingorspent'))
@@ -249,6 +256,7 @@ class FullBlockTest(ComparisonTestFramework):
         #                                          \-> b12 (3) -> b13 (4) -> b15 (5)
         #                                                                \-> b18 (b3.vtx[1]) -> b19 (6)
         #                      \-> b3 (1) -> b4 (2)
+        self.log.info("Reject a block with a spend from a re-org'ed out tx (on a forked chain)")
         self.move_tip(13)
         self.next_block(18, spend=txout_b3)
         yield self.rejected()
@@ -260,6 +268,7 @@ class FullBlockTest(ComparisonTestFramework):
         #     genesis -> b1 (0) -> b2 (1) -> b5 (2) -> b6  (3)
         #                                          \-> b12 (3) -> b13 (4) -> b15 (5) -> b20 (7)
         #                      \-> b3 (1) -> b4 (2)
+        self.log.info("Reject a block spending an immature coinbase.")
         self.move_tip(15)
         self.next_block(20, spend=out[7])
         yield self.rejected(RejectResult(16, b'bad-txns-premature-spend-of-coinbase'))
@@ -269,6 +278,7 @@ class FullBlockTest(ComparisonTestFramework):
         #                                          \-> b12 (3) -> b13 (4) -> b15 (5)
         #                                                                \-> b21 (6) -> b22 (5)
         #                      \-> b3 (1) -> b4 (2)
+        self.log.info("Reject a block spending an immature coinbase (on a forked chain)")
         self.move_tip(13)
         self.next_block(21, spend=out[6])
         yield self.rejected()
@@ -281,6 +291,7 @@ class FullBlockTest(ComparisonTestFramework):
         #                                          \-> b12 (3) -> b13 (4) -> b15 (5) -> b23 (6)
         #                                                                           \-> b24 (6) -> b25 (7)
         #                      \-> b3 (1) -> b4 (2)
+        self.log.info("Accept a block of size MAX_BLOCK_BASE_SIZE")
         self.move_tip(15)
         b23 = self.next_block(23, spend=out[6])
         tx = CTransaction()
@@ -294,7 +305,7 @@ class FullBlockTest(ComparisonTestFramework):
         yield self.accepted()
         self.save_spendable_output()
 
-        # Make the next block one byte bigger and check that it fails
+        self.log.info("Reject a block of size MAX_BLOCK_BASE_SIZE + 1")
         self.move_tip(15)
         b24 = self.next_block(24, spend=out[6])
         script_length = MAX_BLOCK_BASE_SIZE - len(b24.serialize()) - 69
@@ -312,6 +323,7 @@ class FullBlockTest(ComparisonTestFramework):
         #                                          \-> b12 (3) -> b13 (4) -> b15 (5) -> b23 (6) -> b30 (7)
         #                                                                           \-> ... (6) -> ... (7)
         #                      \-> b3 (1) -> b4 (2)
+        self.log.info("Reject a block with coinbase input script size out of range")
         self.move_tip(15)
         b26 = self.next_block(26, spend=out[6])
         b26.vtx[0].vin[0].scriptSig = b'\x00'
@@ -355,6 +367,7 @@ class FullBlockTest(ComparisonTestFramework):
         #
 
         # MULTISIG: each op code counts as 20 sigops.  To create the edge case, pack another 19 sigops at the end.
+        self.log.info("Accept a block with the max number of OP_CHECKMULTISIG sigops")
         lots_of_multisigs = CScript([OP_CHECKMULTISIG] * ((MAX_BLOCK_SIGOPS - 1) // 20) + [OP_CHECKSIG] * 19)
         b31 = self.next_block(31, spend=out[8], script=lots_of_multisigs)
         assert_equal(get_legacy_sigopcount_block(b31), MAX_BLOCK_SIGOPS)
@@ -362,29 +375,34 @@ class FullBlockTest(ComparisonTestFramework):
         self.save_spendable_output()
 
         # this goes over the limit because the coinbase has one sigop
+        self.log.info("Reject a block with too many OP_CHECKMULTISIG sigops")
         too_many_multisigs = CScript([OP_CHECKMULTISIG] * (MAX_BLOCK_SIGOPS // 20))
         b32 = self.next_block(32, spend=out[9], script=too_many_multisigs)
         assert_equal(get_legacy_sigopcount_block(b32), MAX_BLOCK_SIGOPS + 1)
         yield self.rejected(RejectResult(16, b'bad-blk-sigops'))
 
         # CHECKMULTISIGVERIFY
+        self.log.info("Accept a block with the max number of OP_CHECKMULTISIGVERIFY sigops")
         self.move_tip(31)
         lots_of_multisigs = CScript([OP_CHECKMULTISIGVERIFY] * ((MAX_BLOCK_SIGOPS - 1) // 20) + [OP_CHECKSIG] * 19)
         self.next_block(33, spend=out[9], script=lots_of_multisigs)
         yield self.accepted()
         self.save_spendable_output()
 
+        self.log.info("Reject a block with too many OP_CHECKMULTISIGVERIFY sigops")
         too_many_multisigs = CScript([OP_CHECKMULTISIGVERIFY] * (MAX_BLOCK_SIGOPS // 20))
         self.next_block(34, spend=out[10], script=too_many_multisigs)
         yield self.rejected(RejectResult(16, b'bad-blk-sigops'))
 
         # CHECKSIGVERIFY
+        self.log.info("Accept a block with the max number of OP_CHECKSIGVERIFY sigops")
         self.move_tip(33)
         lots_of_checksigs = CScript([OP_CHECKSIGVERIFY] * (MAX_BLOCK_SIGOPS - 1))
         b35 = self.next_block(35, spend=out[10], script=lots_of_checksigs)
         yield self.accepted()
         self.save_spendable_output()
 
+        self.log.info("Reject a block with too many OP_CHECKSIGVERIFY sigops")
         too_many_checksigs = CScript([OP_CHECKSIGVERIFY] * (MAX_BLOCK_SIGOPS))
         self.next_block(36, spend=out[11], script=too_many_checksigs)
         yield self.rejected(RejectResult(16, b'bad-blk-sigops'))
@@ -398,6 +416,7 @@ class FullBlockTest(ComparisonTestFramework):
         #
 
         # save 37's spendable output, but then double-spend out11 to invalidate the block
+        self.log.info("Reject a block spending transaction from a block which failed to connect")
         self.move_tip(35)
         b37 = self.next_block(37, spend=out[11])
         txout_b37 = PreviousSpendableOutput(b37.vtx[1], 0)
@@ -421,6 +440,7 @@ class FullBlockTest(ComparisonTestFramework):
         #           redeem_script = COINBASE_PUBKEY, (OP_2DUP+OP_CHECKSIGVERIFY) * 5, OP_CHECKSIG
         #           p2sh_script = OP_HASH160, ripemd160(sha256(script)), OP_EQUAL
         #
+        self.log.info("Check P2SH SIGOPS are correctly counted")
         self.move_tip(35)
         b39 = self.next_block(39)
         b39_outputs = 0
@@ -467,6 +487,7 @@ class FullBlockTest(ComparisonTestFramework):
         #
         # b41 does the same, less one, so it has the maximum sigops permitted.
         #
+        self.log.info("Reject a block with too many P2SH sigops")
         self.move_tip(39)
         b40 = self.next_block(40, spend=out[12])
         sigops = get_legacy_sigopcount_block(b40)
@@ -501,6 +522,7 @@ class FullBlockTest(ComparisonTestFramework):
         yield self.rejected(RejectResult(16, b'bad-blk-sigops'))
 
         # same as b40, but one less sigop
+        self.log.info("Accept a block with the max number of P2SH sigops")
         self.move_tip(39)
         self.next_block(41, spend=None)
         self.update_block(41, b40.vtx[1:-1])
@@ -533,6 +555,7 @@ class FullBlockTest(ComparisonTestFramework):
 
         # The next few blocks are going to be created "by hand" since they'll do funky things, such as having
         # the first transaction be non-coinbase, etc.  The purpose of b44 is to make sure this works.
+        self.log.info("Build block 44 manually")
         height = self.block_heights[self.tip.sha256] + 1
         coinbase = create_coinbase(height, self.coinbase_pubkey)
         b44 = CBlock()
@@ -547,7 +570,7 @@ class FullBlockTest(ComparisonTestFramework):
         self.blocks[44] = b44
         yield self.accepted()
 
-        # A block with a non-coinbase as the first tx
+        self.log.info("Reject a block with a non-coinbase as the first tx")
         non_coinbase = self.create_tx(out[15].tx, out[15].n, 1)
         b45 = CBlock()
         b45.nTime = self.tip.nTime + 1
@@ -562,7 +585,7 @@ class FullBlockTest(ComparisonTestFramework):
         self.blocks[45] = b45
         yield self.rejected(RejectResult(16, b'bad-cb-missing'))
 
-        # A block with no txns
+        self.log.info("Reject a block with no transactions")
         self.move_tip(44)
         b46 = CBlock()
         b46.nTime = b44.nTime + 1
@@ -577,7 +600,7 @@ class FullBlockTest(ComparisonTestFramework):
         self.blocks[46] = b46
         yield self.rejected(RejectResult(16, b'bad-blk-length'))
 
-        # A block with invalid work
+        self.log.info("Reject a block with invalid work")
         self.move_tip(44)
         b47 = self.next_block(47, solve=False)
         target = uint256_from_compact(b47.nBits)
@@ -586,35 +609,35 @@ class FullBlockTest(ComparisonTestFramework):
             b47.rehash()
         yield self.rejected(RejectResult(16, b'high-hash'))
 
-        # A block with timestamp > 2 hrs in the future
+        self.log.info("Reject a block with a timestamp >2 hours in the future")
         self.move_tip(44)
         b48 = self.next_block(48, solve=False)
         b48.nTime = int(time.time()) + 60 * 60 * 3
         b48.solve()
         yield self.rejected(RejectResult(16, b'time-too-new'))
 
-        # A block with an invalid merkle hash
+        self.log.info("Reject a block with invalid merkle hash")
         self.move_tip(44)
         b49 = self.next_block(49)
         b49.hashMerkleRoot += 1
         b49.solve()
         yield self.rejected(RejectResult(16, b'bad-txnmrklroot'))
 
-        # A block with an incorrect POW limit
+        self.log.info("Reject a block with incorrect POW limit")
         self.move_tip(44)
         b50 = self.next_block(50)
         b50.nBits = b50.nBits - 1
         b50.solve()
         yield self.rejected(RejectResult(16, b'bad-diffbits'))
 
-        # A block with two coinbase txns
+        self.log.info("Reject a block with two coinbase transactions")
         self.move_tip(44)
         self.next_block(51)
         cb2 = create_coinbase(51, self.coinbase_pubkey)
         self.update_block(51, [cb2])
         yield self.rejected(RejectResult(16, b'bad-cb-multiple'))
 
-        # A block w/ duplicate txns
+        self.log.info("Reject a block with duplicate transactions")
         # Note: txns have to be in the right position in the merkle tree to trigger this error
         self.move_tip(44)
         b52 = self.next_block(52, spend=out[15])
@@ -631,7 +654,7 @@ class FullBlockTest(ComparisonTestFramework):
         yield self.rejected()  # rejected since b44 is at same height
         self.save_spendable_output()
 
-        # invalid timestamp (b35 is 5 blocks back, so its time is MedianTimePast)
+        self.log.info("Reject a block with timestamp before MedianTimePast")
         b54 = self.next_block(54, spend=out[15])
         b54.nTime = b35.nTime - 1
         b54.solve()
@@ -680,6 +703,7 @@ class FullBlockTest(ComparisonTestFramework):
         b57 = self.update_block(57, [tx, tx1])
 
         # b56 - copy b57, add a duplicate tx
+        self.log.info("Reject a block with a duplicate transaction in the Merkle Tree (but with a valid Merkle Root)")
         self.move_tip(55)
         b56 = copy.deepcopy(b57)
         self.blocks[56] = b56
@@ -699,6 +723,7 @@ class FullBlockTest(ComparisonTestFramework):
         b57p2 = self.update_block("57p2", [tx, tx1, tx2, tx3, tx4])
 
         # b56p2 - copy b57p2, duplicate two non-consecutive tx's
+        self.log.info("Reject a block with two duplicate transactions in the Merkle Tree (but with a valid Merkle Root)")
         self.move_tip(55)
         b56p2 = copy.deepcopy(b57p2)
         self.blocks["b56p2"] = b56p2
@@ -721,6 +746,7 @@ class FullBlockTest(ComparisonTestFramework):
         #
 
         # tx with prevout.n out of range
+        self.log.info("Reject a block with a transaction with prevout.n out of range")
         self.move_tip(57)
         self.next_block(58, spend=out[17])
         tx = CTransaction()
@@ -732,6 +758,7 @@ class FullBlockTest(ComparisonTestFramework):
         yield self.rejected(RejectResult(16, b'bad-txns-inputs-missingorspent'))
 
         # tx with output value > input value out of range
+        self.log.info("Reject a block with a transaction with outputs > inputs")
         self.move_tip(57)
         self.next_block(59)
         tx = self.create_and_sign_transaction(out[17].tx, out[17].n, 51 * COIN)
@@ -753,6 +780,7 @@ class FullBlockTest(ComparisonTestFramework):
         # not-fully-spent transaction in the same chain. To test, make identical coinbases;
         # the second one should be rejected.
         #
+        self.log.info("Reject a block with a transaction with a duplicate hash of a previous transaction (BIP30)")
         self.move_tip(60)
         b61 = self.next_block(61, spend=out[18])
         b61.vtx[0].vin[0].scriptSig = b60.vtx[0].vin[0].scriptSig  # equalize the coinbases
@@ -766,6 +794,7 @@ class FullBlockTest(ComparisonTestFramework):
         #   -> b39 (11) -> b42 (12) -> b43 (13) -> b53 (14) -> b55 (15) -> b57 (16) -> b60 (17)
         #                                                                                     \-> b62 (18)
         #
+        self.log.info("Reject a block with a transaction with a nonfinal locktime")
         self.move_tip(60)
         self.next_block(62)
         tx = CTransaction()
@@ -783,6 +812,7 @@ class FullBlockTest(ComparisonTestFramework):
         #   -> b39 (11) -> b42 (12) -> b43 (13) -> b53 (14) -> b55 (15) -> b57 (16) -> b60 (17)
         #                                                                                     \-> b63 (-)
         #
+        self.log.info("Reject a block with a coinbase transaction with a nonfinal locktime")
         self.move_tip(60)
         b63 = self.next_block(63)
         b63.vtx[0].nLockTime = 0xffffffff
@@ -805,6 +835,7 @@ class FullBlockTest(ComparisonTestFramework):
         #  b64a is a bloated block (non-canonical varint)
         #  b64 is a good block (same as b64 but w/ canonical varint)
         #
+        self.log.info("Accept a valid block even if a bloated version of the block has previously been sent")
         self.move_tip(60)
         regular_block = self.next_block("64a", spend=out[18])
 
@@ -841,6 +872,7 @@ class FullBlockTest(ComparisonTestFramework):
         #
         # -> b42 (12) -> b43 (13) -> b53 (14) -> b55 (15) -> b57 (16) -> b60 (17) -> b64 (18) -> b65 (19)
         #
+        self.log.info("Accept a block with a transaction spending an output created in the same block")
         self.move_tip(64)
         self.next_block(65)
         tx1 = self.create_and_sign_transaction(out[19].tx, out[19].n, out[19].tx.vout[0].nValue)
@@ -853,6 +885,7 @@ class FullBlockTest(ComparisonTestFramework):
         #
         # -> b43 (13) -> b53 (14) -> b55 (15) -> b57 (16) -> b60 (17) -> b64 (18) -> b65 (19)
         #                                                                                    \-> b66 (20)
+        self.log.info("Reject a block with a transaction spending an output created later in the same block")
         self.move_tip(65)
         self.next_block(66)
         tx1 = self.create_and_sign_transaction(out[20].tx, out[20].n, out[20].tx.vout[0].nValue)
@@ -866,6 +899,7 @@ class FullBlockTest(ComparisonTestFramework):
         #                                                                                    \-> b67 (20)
         #
         #
+        self.log.info("Reject a block with a transaction double spending a transaction creted in the same block")
         self.move_tip(65)
         self.next_block(67)
         tx1 = self.create_and_sign_transaction(out[20].tx, out[20].n, out[20].tx.vout[0].nValue)
@@ -886,12 +920,14 @@ class FullBlockTest(ComparisonTestFramework):
         # b69 - coinbase with extra 10 satoshis, and a tx that gives a 10 satoshi fee
         #       this succeeds
         #
+        self.log.info("Reject a block trying to claim too much subsidy in the coinbase transaction")
         self.move_tip(65)
         self.next_block(68, additional_coinbase_value=10)
         tx = self.create_and_sign_transaction(out[20].tx, out[20].n, out[20].tx.vout[0].nValue - 9)
         self.update_block(68, [tx])
         yield self.rejected(RejectResult(16, b'bad-cb-amount'))
 
+        self.log.info("Accept a block claiming the correct subsidy in the coinbase transaction")
         self.move_tip(65)
         b69 = self.next_block(69, additional_coinbase_value=10)
         tx = self.create_and_sign_transaction(out[20].tx, out[20].n, out[20].tx.vout[0].nValue - 10)
@@ -904,6 +940,7 @@ class FullBlockTest(ComparisonTestFramework):
         # -> b53 (14) -> b55 (15) -> b57 (16) -> b60 (17) -> b64 (18) -> b65 (19) -> b69 (20)
         #                                                                                    \-> b70 (21)
         #
+        self.log.info("Reject a block containing a transaction spending from a non-existent input")
         self.move_tip(69)
         self.next_block(70, spend=out[21])
         bogus_tx = CTransaction()
@@ -921,7 +958,7 @@ class FullBlockTest(ComparisonTestFramework):
         #
         # b72 is a good block.
         # b71 is a copy of 72, but re-adds one of its transactions.  However, it has the same hash as b71.
-        #
+        self.log.info("Reject a block containing a duplicate transaction but with the same Merkle root (Merkle tree malleability")
         self.move_tip(69)
         b72 = self.next_block(72)
         tx1 = self.create_and_sign_transaction(out[21].tx, out[21].n, 2)
@@ -958,7 +995,7 @@ class FullBlockTest(ComparisonTestFramework):
         #       bytearray[20,000-20,003]: 521  (max_script_element_size+1, in little-endian format)
         #       bytearray[20,004-20,525]: unread data (script_element)
         #       bytearray[20,526]       : OP_CHECKSIG (this puts us over the limit)
-        #
+        self.log.info("Reject a block containing too many sigops after a large script element")
         self.move_tip(72)
         b73 = self.next_block(73)
         size = MAX_BLOCK_SIGOPS - 1 + MAX_SCRIPT_ELEMENT_SIZE + 1 + 5 + 1
@@ -986,8 +1023,7 @@ class FullBlockTest(ComparisonTestFramework):
         #
         #       b74 fails because we put MAX_BLOCK_SIGOPS+1 before the element
         #       b75 succeeds because we put MAX_BLOCK_SIGOPS before the element
-        #
-        #
+        self.log.info("Check sigops are counted correctly after an invalid script element")
         self.move_tip(72)
         self.next_block(74)
         size = MAX_BLOCK_SIGOPS - 1 + MAX_SCRIPT_ELEMENT_SIZE + 42  # total = 20,561
@@ -1043,7 +1079,7 @@ class FullBlockTest(ComparisonTestFramework):
         #    To get around this issue, we construct transactions which are not signed and which
         #    spend to OP_TRUE.  If the standard-ness rules change, this test would need to be
         #    updated.  (Perhaps to spend to a P2SH OP_TRUE script)
-        #
+        self.log.info("Test transaction resurrection during a re-org")
         self.move_tip(76)
         self.next_block(77)
         tx77 = self.create_and_sign_transaction(out[24].tx, out[24].n, 10 * COIN)
@@ -1087,6 +1123,7 @@ class FullBlockTest(ComparisonTestFramework):
         #
         #  -> b81 (26) -> b82 (27) -> b83 (28)
         #
+        self.log.info("Accept a block with invalid opcodes in dead execution paths")
         self.next_block(83)
         op_codes = [OP_IF, OP_INVALIDOPCODE, OP_ELSE, OP_TRUE, OP_ENDIF]
         script = CScript(op_codes)
@@ -1105,7 +1142,7 @@ class FullBlockTest(ComparisonTestFramework):
         #  -> b81 (26) -> b82 (27) -> b83 (28) -> b84 (29) -> b87 (30) -> b88 (31)
         #                                    \-> b85 (29) -> b86 (30)            \-> b89a (32)
         #
-        #
+        self.log.info("Test re-orging blocks with OP_RETURN in them")
         self.next_block(84)
         tx1 = self.create_tx(out[29].tx, out[29].n, 0, CScript([OP_RETURN]))
         tx1.vout.append(CTxOut(0, CScript([OP_TRUE])))
@@ -1148,6 +1185,8 @@ class FullBlockTest(ComparisonTestFramework):
         tx = self.create_tx(tx1, 0, 0, CScript([OP_TRUE]))
         self.update_block("89a", [tx])
         yield self.rejected()
+
+        self.log.info("Test a re-org of one week's worth of blocks (1088 blocks)")
 
         self.move_tip(88)
         LARGE_REORG_SIZE = 1088
