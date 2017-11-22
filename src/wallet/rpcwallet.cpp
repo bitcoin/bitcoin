@@ -171,57 +171,6 @@ UniValue getnewaddress(const UniValue& params, bool fHelp)
 
     return CSyscoinAddress(keyID).ToString();
 }
-UniValue getzaddress(const UniValue& params, bool fHelp)
-{
-	if (!EnsureWalletIsAvailable(fHelp))
-		return NullUniValue;
-
-	if (fHelp || params.size() != 1)
-		throw runtime_error(
-			"getzaddress ( \"address\" )\n"
-			"\nReturns a new ZCash address for receiving payments in ZCash transaparent tokens.\n"
-			"so payments received with the address will be credited to 'account'.\n"
-			"\nArguments:\n"
-			"1. \"address\"        (string) Syscoin alias or address to convert to ZCash address.\n"
-			"\nResult:\n"
-			"\"zaddress\"    (string) The new zcash address\n"
-			"\nExamples:\n"
-			+ HelpExampleCli("getzaddress", "\"myalias\"")
-			+ HelpExampleRpc("getzaddress", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\"")
-		);
-
-	string strAddress = params[0].get_str();
-	CSyscoinAddress sysAddress(strAddress);
-	CSyscoinAddress zecAddress;
-	zecAddress.Set(sysAddress.Get(), CChainParams::ADDRESS_ZEC);
-	return zecAddress.ToString();
-}
-UniValue getbtcaddress(const UniValue& params, bool fHelp)
-{
-	if (!EnsureWalletIsAvailable(fHelp))
-		return NullUniValue;
-
-	if (fHelp || params.size() != 1)
-		throw runtime_error(
-			"getbtcaddress ( \"address\" )\n"
-			"\nReturns a new BTC address for receiving payments in BTC tokens.\n"
-			"so payments received with the address will be credited to 'account'.\n"
-			"\nArguments:\n"
-			"1. \"address\"        (string) Syscoin alias or address to convert to BTC address.\n"
-			"\nResult:\n"
-			"\"btcaddress\"    (string) The new zcash address\n"
-			"\nExamples:\n"
-			+ HelpExampleCli("getzaddress", "\"myalias\"")
-			+ HelpExampleRpc("getzaddress", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\"")
-		);
-
-	string strAddress = params[0].get_str();
-	CSyscoinAddress sysAddress(strAddress);
-	CSyscoinAddress btcAddress;
-	btcAddress.Set(sysAddress.Get(), CChainParams::ADDRESS_BTC);
-	return btcAddress.ToString();
-}
-
 CSyscoinAddress GetAccountAddress(string strAccount, bool bForceNew=false)
 {
     CWalletDB walletdb(pwalletMain->strWalletFile);

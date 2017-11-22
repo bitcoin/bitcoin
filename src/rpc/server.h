@@ -301,8 +301,6 @@ extern UniValue getspentinfo(const UniValue& params, bool fHelp);
 extern UniValue sentinelping(const UniValue& params, bool fHelp);
 // SYSCOIN service rpc functions
 extern UniValue getauxblock(const UniValue& params, bool fHelp);
-extern UniValue getzaddress(const UniValue& params, bool fHelp);
-extern UniValue getbtcaddress(const UniValue& params, bool fHelp);
 extern UniValue aliasnew(const UniValue& params, bool fHelp);
 extern UniValue aliasupdate(const UniValue& params, bool fHelp);
 extern UniValue aliasinfo(const UniValue& params, bool fHelp);
