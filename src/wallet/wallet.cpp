@@ -1272,10 +1272,7 @@ void CWallet::BlockUntilSyncedToCurrentChain() {
     {
         // Skip the queue-draining stuff if we know we're caught up with
         // chainActive.Tip()...
-        // We could also take cs_wallet here, and call m_last_block_processed
-        // protected by cs_wallet instead of cs_main, but as long as we need
-        // cs_main here anyway, its easier to just call it cs_main-protected.
-        LOCK(cs_main);
+        LOCK2(cs_main, cs_wallet);
         const CBlockIndex* initialChainTip = chainActive.Tip();
 
         if (m_last_block_processed->GetAncestor(initialChainTip->nHeight) == initialChainTip) {
@@ -3966,7 +3963,10 @@ CWallet* CWallet::CreateWalletFromFile(const std::string walletFile)
             pindexRescan = FindForkInGlobalIndex(chainActive, locator);
     }
 
-    walletInstance->m_last_block_processed = chainActive.Tip();
+    {
+        LOCK(walletInstance->cs_wallet);
+        walletInstance->m_last_block_processed = chainActive.Tip();
+    }
     RegisterValidationInterface(walletInstance);
 
     if (chainActive.Tip() && chainActive.Tip() != pindexRescan)
