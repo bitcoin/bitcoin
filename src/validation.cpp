@@ -1325,7 +1325,7 @@ double ConvertBitsToDouble(unsigned int nBits)
 	return dDiff;
 }
 
-CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
+CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams, bool fSuperblockPartOnly)
 {
 	if (nHeight == 0)
 		return 8.88*COIN;
