@@ -56,6 +56,11 @@ frequently tested on them.
 Notable changes
 ===============
 
+GCC 4.8.x
+--------------
+The minimum version of GCC required to compile Bitcoin Core is now 4.8. No effort will be
+made to support older versions of GCC. See discussion in issue #11732 for more information.
+
 HD-wallets by default
 ---------------------
 Due to a backward-incompatible change in the wallet database, wallets created
