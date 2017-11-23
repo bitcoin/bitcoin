@@ -2157,6 +2157,47 @@ UniValue omni_getmetadexhash(const UniValue& params, bool fHelp)
     return response;
 }
 
+UniValue omni_getbalanceshash(const UniValue& params, bool fHelp)
+{
+    if (fHelp || params.size() != 1)
+        throw runtime_error(
+            "omni_getbalanceshash propertyid\n"
+            "\nReturns a hash of the balances for the property.\n"
+            "\nArguments:\n"
+            "1. propertyid                  (number, required) the property to hash balances for\n"
+            "\nResult:\n"
+            "{\n"
+            "  \"block\" : nnnnnn,          (number) the index of the block this hash applies to\n"
+            "  \"blockhash\" : \"hash\",    (string) the hash of the corresponding block\n"
+            "  \"propertyid\" : nnnnnn,     (number) the property id of the hashed balances\n"
+            "  \"balanceshash\" : \"hash\"  (string) the hash for the balances\n"
+            "}\n"
+
+            "\nExamples:\n"
+            + HelpExampleCli("omni_getbalanceshash", "31")
+            + HelpExampleRpc("omni_getbalanceshash", "31")
+        );
+
+    LOCK(cs_main);
+
+    uint32_t propertyId = ParsePropertyId(params[0]);
+    RequireExistingProperty(propertyId);
+
+    int block = GetHeight();
+    CBlockIndex* pblockindex = chainActive[block];
+    uint256 blockHash = pblockindex->GetBlockHash();
+
+    uint256 balancesHash = GetBalancesHash(propertyId);
+
+    UniValue response(UniValue::VOBJ);
+    response.push_back(Pair("block", block));
+    response.push_back(Pair("blockhash", blockHash.GetHex()));
+    response.push_back(Pair("propertyid", (uint64_t)propertyId));
+    response.push_back(Pair("balanceshash", balancesHash.GetHex()));
+
+    return response;
+}
+
 static const CRPCCommand commands[] =
 { //  category                             name                            actor (function)               okSafeMode
   //  ------------------------------------ ------------------------------- ------------------------------ ----------
@@ -2187,6 +2228,7 @@ static const CRPCCommand commands[] =
     { "omni layer (data retrieval)", "omni_getfeetrigger",             &omni_getfeetrigger,              false },
     { "omni layer (data retrieval)", "omni_getfeedistribution",        &omni_getfeedistribution,         false },
     { "omni layer (data retrieval)", "omni_getfeedistributions",       &omni_getfeedistributions,        false },
+    { "omni layer (data retrieval)", "omni_getbalanceshash",           &omni_getbalanceshash,            false },
 #ifdef ENABLE_WALLET
     { "omni layer (data retrieval)", "omni_listtransactions",          &omni_listtransactions,           false },
     { "omni layer (data retrieval)", "omni_getfeeshare",               &omni_getfeeshare,                false },
