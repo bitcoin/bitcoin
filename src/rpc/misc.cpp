@@ -53,6 +53,7 @@ UniValue getinfo(const UniValue& params, bool fHelp)
             "\nResult:\n"
             "{\n"
             "  \"version\": xxxxx,           (numeric) the server version\n"
+			"  \"dashversion\": xxxxx,       (numeric) the server dashpay version\n"
             "  \"protocolversion\": xxxxx,   (numeric) the protocol version\n"
             "  \"walletversion\": xxxxx,     (numeric) the wallet version\n"
             "  \"balance\": xxxxxxx,         (numeric) the total syscoin balance of the wallet\n"
@@ -85,9 +86,9 @@ UniValue getinfo(const UniValue& params, bool fHelp)
     GetProxy(NET_IPV4, proxy);
 
     UniValue obj(UniValue::VOBJ);
-    obj.push_back(Pair("version", CLIENT_VERSION));
+    obj.push_back(Pair("version", SYSCOIN_CLIENT_VERSION));
 	// SYSCOIN
-	obj.push_back(Pair("sysversion", SYSCOIN_CLIENT_VERSION));
+	obj.push_back(Pair("dashversion", CLIENT_VERSION));
     obj.push_back(Pair("protocolversion", PROTOCOL_VERSION));
 #ifdef ENABLE_WALLET
     if (pwalletMain) {
