@@ -43,14 +43,14 @@ public:
     std::string operator()(const WitnessV0KeyHash& id) const
     {
         std::vector<unsigned char> data = {0};
-        ConvertBits<8, 5, true>(data, id.begin(), id.end());
+        ConvertBits<8, 5, true>([&](unsigned char c) { data.push_back(c); }, id.begin(), id.end());
         return bech32::Encode(m_params.Bech32HRP(), data);
     }
 
     std::string operator()(const WitnessV0ScriptHash& id) const
     {
         std::vector<unsigned char> data = {0};
-        ConvertBits<8, 5, true>(data, id.begin(), id.end());
+        ConvertBits<8, 5, true>([&](unsigned char c) { data.push_back(c); }, id.begin(), id.end());
         return bech32::Encode(m_params.Bech32HRP(), data);
     }
 
@@ -60,7 +60,7 @@ public:
             return {};
         }
         std::vector<unsigned char> data = {(unsigned char)id.version};
-        ConvertBits<8, 5, true>(data, id.program, id.program + id.length);
+        ConvertBits<8, 5, true>([&](unsigned char c) { data.push_back(c); }, id.program, id.program + id.length);
         return bech32::Encode(m_params.Bech32HRP(), data);
     }
 
@@ -94,7 +94,7 @@ CTxDestination DecodeDestination(const std::string& str, const CChainParams& par
         // Bech32 decoding
         int version = bech.second[0]; // The first 5 bit symbol is the witness version (0-16)
         // The rest of the symbols are converted witness program bytes.
-        if (ConvertBits<5, 8, false>(data, bech.second.begin() + 1, bech.second.end())) {
+        if (ConvertBits<5, 8, false>([&](unsigned char c) { data.push_back(c); }, bech.second.begin() + 1, bech.second.end())) {
             if (version == 0) {
                 {
                     WitnessV0KeyHash keyid;
