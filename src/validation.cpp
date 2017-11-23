@@ -1345,7 +1345,7 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams, b
 		nSubsidy -= nSubsidy / 20;
 	}
 	// Reduce the block reward by 10 extra percent (allowing budget/superblocks)
-	CAmount nSuperblockPart = (nPrevHeight > consensusParams.nBudgetPaymentsStartBlock) ? nSubsidy / 10 : 0;
+	CAmount nSuperblockPart = nSubsidy / 10;
 
 	return fSuperblockPartOnly ? nSuperblockPart : nSubsidy - nSuperblockPart;
 }
