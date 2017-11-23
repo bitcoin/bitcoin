@@ -1344,7 +1344,10 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
 	for (int i = 0; i < reductions; i++) {
 		nSubsidy -= nSubsidy / 20;
 	}
-	return nSubsidy;
+	// Reduce the block reward by 10 extra percent (allowing budget/superblocks)
+	CAmount nSuperblockPart = (nPrevHeight > consensusParams.nBudgetPaymentsStartBlock) ? nSubsidy / 10 : 0;
+
+	return fSuperblockPartOnly ? nSuperblockPart : nSubsidy - nSuperblockPart;
 }
 
 CAmount GetMasternodePayment(int nHeight, CAmount blockValue)
