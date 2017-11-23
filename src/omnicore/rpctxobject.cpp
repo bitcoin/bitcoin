@@ -143,6 +143,9 @@ int populateRPCTransactionObject(const CTransaction& tx, const uint256& blockHas
     // state and chain related information
     if (confirmations != 0 && !blockHash.IsNull()) {
         txobj.push_back(Pair("valid", valid));
+        if (!valid) {
+            txobj.push_back(Pair("invalidreason", p_OmniTXDB->FetchInvalidReason(txid)));
+        }
         txobj.push_back(Pair("blockhash", blockHash.GetHex()));
         txobj.push_back(Pair("blocktime", blockTime));
         txobj.push_back(Pair("positioninblock", positionInBlock));
