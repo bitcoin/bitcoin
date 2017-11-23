@@ -56,144 +56,6 @@ MAGIC_BYTES = {
     "regtest": b"\xfa\xbf\xb5\xda",   # regtest
 }
 
-class NodeConnCB():
-    """Callback and helper functions for P2P connection to a bitcoind node.
-
-    Individual testcases should subclass this and override the on_* methods
-    if they want to alter message handling behaviour."""
-    def __init__(self):
-        # Track whether we have a P2P connection open to the node
-        self.connected = False
-        self.connection = None
-
-        # Track number of messages of each type received and the most recent
-        # message of each type
-        self.message_count = defaultdict(int)
-        self.last_message = {}
-
-        # A count of the number of ping messages we've sent to the node
-        self.ping_counter = 1
-
-    # Message receiving methods
-
-    def on_message(self, conn, message):
-        """Receive message and dispatch message to appropriate callback.
-
-        We keep a count of how many of each message type has been received
-        and the most recent message of each type."""
-        with mininode_lock:
-            try:
-                command = message.command.decode('ascii')
-                self.message_count[command] += 1
-                self.last_message[command] = message
-                getattr(self, 'on_' + command)(conn, message)
-            except:
-                print("ERROR delivering %s (%s)" % (repr(message),
-                                                    sys.exc_info()[0]))
-                raise
-
-    # Callback methods. Can be overridden by subclasses in individual test
-    # cases to provide custom message handling behaviour.
-
-    def on_open(self, conn):
-        self.connected = True
-
-    def on_close(self, conn):
-        self.connected = False
-        self.connection = None
-
-    def on_addr(self, conn, message): pass
-    def on_block(self, conn, message): pass
-    def on_blocktxn(self, conn, message): pass
-    def on_cmpctblock(self, conn, message): pass
-    def on_feefilter(self, conn, message): pass
-    def on_getaddr(self, conn, message): pass
-    def on_getblocks(self, conn, message): pass
-    def on_getblocktxn(self, conn, message): pass
-    def on_getdata(self, conn, message): pass
-    def on_getheaders(self, conn, message): pass
-    def on_headers(self, conn, message): pass
-    def on_mempool(self, conn): pass
-    def on_pong(self, conn, message): pass
-    def on_reject(self, conn, message): pass
-    def on_sendcmpct(self, conn, message): pass
-    def on_sendheaders(self, conn, message): pass
-    def on_tx(self, conn, message): pass
-
-    def on_inv(self, conn, message):
-        want = msg_getdata()
-        for i in message.inv:
-            if i.type != 0:
-                want.inv.append(i)
-        if len(want.inv):
-            conn.send_message(want)
-
-    def on_ping(self, conn, message):
-        conn.send_message(msg_pong(message.nonce))
-
-    def on_verack(self, conn, message):
-        self.verack_received = True
-
-    def on_version(self, conn, message):
-        assert message.nVersion >= MIN_VERSION_SUPPORTED, "Version {} received. Test framework only supports versions greater than {}".format(message.nVersion, MIN_VERSION_SUPPORTED)
-        conn.send_message(msg_verack())
-        conn.nServices = message.nServices
-
-    # Connection helper methods
-
-    def add_connection(self, conn):
-        self.connection = conn
-
-    def wait_for_disconnect(self, timeout=60):
-        test_function = lambda: not self.connected
-        wait_until(test_function, timeout=timeout, lock=mininode_lock)
-
-    # Message receiving helper methods
-
-    def wait_for_block(self, blockhash, timeout=60):
-        test_function = lambda: self.last_message.get("block") and self.last_message["block"].block.rehash() == blockhash
-        wait_until(test_function, timeout=timeout, lock=mininode_lock)
-
-    def wait_for_getdata(self, timeout=60):
-        test_function = lambda: self.last_message.get("getdata")
-        wait_until(test_function, timeout=timeout, lock=mininode_lock)
-
-    def wait_for_getheaders(self, timeout=60):
-        test_function = lambda: self.last_message.get("getheaders")
-        wait_until(test_function, timeout=timeout, lock=mininode_lock)
-
-    def wait_for_inv(self, expected_inv, timeout=60):
-        """Waits for an INV message and checks that the first inv object in the message was as expected."""
-        if len(expected_inv) > 1:
-            raise NotImplementedError("wait_for_inv() will only verify the first inv object")
-        test_function = lambda: self.last_message.get("inv") and \
-                                self.last_message["inv"].inv[0].type == expected_inv[0].type and \
-                                self.last_message["inv"].inv[0].hash == expected_inv[0].hash
-        wait_until(test_function, timeout=timeout, lock=mininode_lock)
-
-    def wait_for_verack(self, timeout=60):
-        test_function = lambda: self.message_count["verack"]
-        wait_until(test_function, timeout=timeout, lock=mininode_lock)
-
-    # Message sending helper functions
-
-    def send_message(self, message):
-        if self.connection:
-            self.connection.send_message(message)
-        else:
-            logger.error("Cannot send message. No connection to node!")
-
-    def send_and_ping(self, message):
-        self.send_message(message)
-        self.sync_with_ping()
-
-    # Sync up with the node
-    def sync_with_ping(self, timeout=60):
-        self.send_message(msg_ping(nonce=self.ping_counter))
-        test_function = lambda: self.last_message.get("pong") and self.last_message["pong"].nonce == self.ping_counter
-        wait_until(test_function, timeout=timeout, lock=mininode_lock)
-        self.ping_counter += 1
-
 class NodeConn(asyncore.dispatcher):
     """The actual NodeConn class
 
@@ -374,6 +236,145 @@ class NodeConn(asyncore.dispatcher):
         if len(log_message) > 500:
             log_message += "... (msg truncated)"
         logger.debug(log_message)
+
+
+class NodeConnCB():
+    """Callback and helper functions for P2P connection to a bitcoind node.
+
+    Individual testcases should subclass this and override the on_* methods
+    if they want to alter message handling behaviour."""
+    def __init__(self):
+        # Track whether we have a P2P connection open to the node
+        self.connected = False
+        self.connection = None
+
+        # Track number of messages of each type received and the most recent
+        # message of each type
+        self.message_count = defaultdict(int)
+        self.last_message = {}
+
+        # A count of the number of ping messages we've sent to the node
+        self.ping_counter = 1
+
+    # Message receiving methods
+
+    def on_message(self, conn, message):
+        """Receive message and dispatch message to appropriate callback.
+
+        We keep a count of how many of each message type has been received
+        and the most recent message of each type."""
+        with mininode_lock:
+            try:
+                command = message.command.decode('ascii')
+                self.message_count[command] += 1
+                self.last_message[command] = message
+                getattr(self, 'on_' + command)(conn, message)
+            except:
+                print("ERROR delivering %s (%s)" % (repr(message),
+                                                    sys.exc_info()[0]))
+                raise
+
+    # Callback methods. Can be overridden by subclasses in individual test
+    # cases to provide custom message handling behaviour.
+
+    def on_open(self, conn):
+        self.connected = True
+
+    def on_close(self, conn):
+        self.connected = False
+        self.connection = None
+
+    def on_addr(self, conn, message): pass
+    def on_block(self, conn, message): pass
+    def on_blocktxn(self, conn, message): pass
+    def on_cmpctblock(self, conn, message): pass
+    def on_feefilter(self, conn, message): pass
+    def on_getaddr(self, conn, message): pass
+    def on_getblocks(self, conn, message): pass
+    def on_getblocktxn(self, conn, message): pass
+    def on_getdata(self, conn, message): pass
+    def on_getheaders(self, conn, message): pass
+    def on_headers(self, conn, message): pass
+    def on_mempool(self, conn): pass
+    def on_pong(self, conn, message): pass
+    def on_reject(self, conn, message): pass
+    def on_sendcmpct(self, conn, message): pass
+    def on_sendheaders(self, conn, message): pass
+    def on_tx(self, conn, message): pass
+
+    def on_inv(self, conn, message):
+        want = msg_getdata()
+        for i in message.inv:
+            if i.type != 0:
+                want.inv.append(i)
+        if len(want.inv):
+            conn.send_message(want)
+
+    def on_ping(self, conn, message):
+        conn.send_message(msg_pong(message.nonce))
+
+    def on_verack(self, conn, message):
+        self.verack_received = True
+
+    def on_version(self, conn, message):
+        assert message.nVersion >= MIN_VERSION_SUPPORTED, "Version {} received. Test framework only supports versions greater than {}".format(message.nVersion, MIN_VERSION_SUPPORTED)
+        conn.send_message(msg_verack())
+        conn.nServices = message.nServices
+
+    # Connection helper methods
+
+    def add_connection(self, conn):
+        self.connection = conn
+
+    def wait_for_disconnect(self, timeout=60):
+        test_function = lambda: not self.connected
+        wait_until(test_function, timeout=timeout, lock=mininode_lock)
+
+    # Message receiving helper methods
+
+    def wait_for_block(self, blockhash, timeout=60):
+        test_function = lambda: self.last_message.get("block") and self.last_message["block"].block.rehash() == blockhash
+        wait_until(test_function, timeout=timeout, lock=mininode_lock)
+
+    def wait_for_getdata(self, timeout=60):
+        test_function = lambda: self.last_message.get("getdata")
+        wait_until(test_function, timeout=timeout, lock=mininode_lock)
+
+    def wait_for_getheaders(self, timeout=60):
+        test_function = lambda: self.last_message.get("getheaders")
+        wait_until(test_function, timeout=timeout, lock=mininode_lock)
+
+    def wait_for_inv(self, expected_inv, timeout=60):
+        """Waits for an INV message and checks that the first inv object in the message was as expected."""
+        if len(expected_inv) > 1:
+            raise NotImplementedError("wait_for_inv() will only verify the first inv object")
+        test_function = lambda: self.last_message.get("inv") and \
+                                self.last_message["inv"].inv[0].type == expected_inv[0].type and \
+                                self.last_message["inv"].inv[0].hash == expected_inv[0].hash
+        wait_until(test_function, timeout=timeout, lock=mininode_lock)
+
+    def wait_for_verack(self, timeout=60):
+        test_function = lambda: self.message_count["verack"]
+        wait_until(test_function, timeout=timeout, lock=mininode_lock)
+
+    # Message sending helper functions
+
+    def send_message(self, message):
+        if self.connection:
+            self.connection.send_message(message)
+        else:
+            logger.error("Cannot send message. No connection to node!")
+
+    def send_and_ping(self, message):
+        self.send_message(message)
+        self.sync_with_ping()
+
+    # Sync up with the node
+    def sync_with_ping(self, timeout=60):
+        self.send_message(msg_ping(nonce=self.ping_counter))
+        test_function = lambda: self.last_message.get("pong") and self.last_message["pong"].nonce == self.ping_counter
+        wait_until(test_function, timeout=timeout, lock=mininode_lock)
+        self.ping_counter += 1
 
 
 # Keep our own socket map for asyncore, so that we can track disconnects
