@@ -192,7 +192,7 @@ bool GetTimeToPrune(const CScript& scriptPubKey, uint64_t &nTime)
 }
 bool IsSysServiceExpired(const uint64_t &nTime)
 {
-	if(!chainActive.Tip() || fTxIndex)
+	if(!chainActive.Tip())
 		return false;
 	return (chainActive.Tip()->GetMedianTimePast() >= nTime);
 
