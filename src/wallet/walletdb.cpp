@@ -522,13 +522,13 @@ bool CWalletDB::IsKeyType(const std::string& strType)
             strType == "mkey" || strType == "ckey");
 }
 
-DBErrors CWalletDB::LoadWallet(CWallet* pwallet)
+DBErrors CWalletDB::LoadWallet(CWallet* pwallet) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)
 {
     CWalletScanState wss;
     bool fNoncriticalErrors = false;
     DBErrors result = DB_LOAD_OK;
 
-    LOCK(pwallet->cs_wallet);
+    AssertLockHeld(pwallet->cs_wallet);
     try {
         int nMinVersion = 0;
         if (batch.Read((std::string)"minversion", nMinVersion))

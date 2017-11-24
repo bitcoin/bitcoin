@@ -24,9 +24,9 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
 BOOST_AUTO_TEST_SUITE(tx_validationcache_tests)
 
 static bool
-ToMemPool(CMutableTransaction& tx)
+ToMemPool(CMutableTransaction& tx) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
-    LOCK(cs_main);
+    AssertLockHeld(cs_main);
 
     CValidationState state;
     return AcceptToMemoryPool(mempool, state, MakeTransactionRef(tx), nullptr /* pfMissingInputs */,

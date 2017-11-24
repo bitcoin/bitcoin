@@ -539,10 +539,10 @@ void CTxMemPool::removeForReorg(const CCoinsViewCache *pcoins, unsigned int nMem
     RemoveStaged(setAllRemoves, false, MemPoolRemovalReason::REORG);
 }
 
-void CTxMemPool::removeConflicts(const CTransaction &tx)
+void CTxMemPool::removeConflicts(const CTransaction &tx) EXCLUSIVE_LOCKS_REQUIRED(cs_txMemPool)
 {
     // Remove transactions which depend on inputs of tx, recursively
-    LOCK(cs_txMemPool);
+    AssertLockHeld(cs_txMemPool);
     for (const CTxIn &txin : tx.vin) {
         auto it = mapNextTx.find(txin.prevout);
         if (it != mapNextTx.end()) {
