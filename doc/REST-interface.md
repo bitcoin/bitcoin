@@ -31,6 +31,11 @@ With the /notxdetails/ option JSON response will only contain the transaction ha
 
 Given a block hash: returns <COUNT> amount of blockheaders in upward direction.
 
+#### Block hash
+`GET /rest/blockhash/<HEIGHT>.<bin|hex|json>`
+
+Given a block height: returns the hash of the block at <HEIGHT> in the active chain, in binary, hex-encoded binary or JSON formats.
+
 #### Chaininfos
 `GET /rest/chaininfo.json`
 

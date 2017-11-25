@@ -223,6 +223,56 @@ class RESTTest (BitcoinTestFramework):
         self.nodes[0].generate(1) #generate block to not affect upcoming tests
         self.sync_all()
 
+
+        ####################
+        # /rest/blockhash/ #
+        ####################
+
+        # check json block hash against bb_hash
+        response_hash_json = http_get_call(url.hostname, url.port, '/rest/blockhash/'+str(chainHeight)+self.FORMAT_SEPARATOR+'json', True)
+        assert_equal(response_hash_json.status, 200)
+        response_hash_json_str = response_hash_json.read().decode('utf-8')
+        hash_json_obj = json.loads(response_hash_json_str)
+        assert_equal(hash_json_obj['hash'], bb_hash)
+
+        # check binary block hash against bb_hash
+        response_hash = http_get_call(url.hostname, url.port, '/rest/blockhash/'+str(chainHeight)+self.FORMAT_SEPARATOR+'bin', True)
+        assert_equal(response_hash.status, 200)
+        assert_equal(int(response_hash.getheader('content-length')), 32)
+        response_hash_str = response_hash.read()
+        output = BytesIO()
+        output.write(response_hash_str)
+        output.seek(0)
+        hashFromBinResponse = hex(deser_uint256(output))[2:].zfill(64)
+        assert_equal(hashFromBinResponse, bb_hash)
+
+        # check hex block hash against bb_hash
+        response_hash_hex = http_get_call(url.hostname, url.port, '/rest/blockhash/'+str(chainHeight)+self.FORMAT_SEPARATOR+'hex', True)
+        assert_equal(response_hash_hex.status, 200)
+        assert_equal(int(response_hash_hex.getheader('content-length')), 65)
+        response_hash_hex_str = response_hash_hex.read()
+        assert_equal(encode(response_hash_str, "hex_codec")[0:64], response_hash_hex_str[0:64])
+
+        # check invalid requests
+        response = http_get_call(url.hostname, url.port, '/rest/blockhash', True)
+        assert_equal(response.status, 404) # must be a 404 because it's missing the trailing slash and height parameter
+
+        response = http_get_call(url.hostname, url.port, '/rest/blockhash/'+self.FORMAT_SEPARATOR+'json', True)
+        assert_equal(response.status, 400) # must be a 400 because no height parameter was passed
+
+        response = http_get_call(url.hostname, url.port, '/rest/blockhash/0', True)
+        assert_equal(response.status, 404) # must be a 404 because no output format was passed
+
+        response = http_get_call(url.hostname, url.port, '/rest/blockhash/a0'+self.FORMAT_SEPARATOR+'json', True)
+        assert_equal(response.status, 400) # must be a 400 because a non-numeric height parameter was passed
+
+        response = http_get_call(url.hostname, url.port, '/rest/blockhash/-1'+self.FORMAT_SEPARATOR+'json', True)
+        assert_equal(response.status, 400) # must be a 400 because a negative height parameter was passed
+
+        response = http_get_call(url.hostname, url.port, '/rest/blockhash/1000'+self.FORMAT_SEPARATOR+'json', True)
+        assert_equal(response.status, 400) # must be a 400 because the height parameter is greater than the chain height
+
+
         ################
         # /rest/block/ #
         ################
@@ -259,6 +309,7 @@ class RESTTest (BitcoinTestFramework):
         block_json_string = http_get_call(url.hostname, url.port, '/rest/block/'+bb_hash+self.FORMAT_SEPARATOR+'json')
         block_json_obj = json.loads(block_json_string)
         assert_equal(block_json_obj['hash'], bb_hash)
+        assert_equal(block_json_obj['hash'], hash_json_obj['hash'])
 
         # compare with json block header
         response_header_json = http_get_call(url.hostname, url.port, '/rest/headers/1/'+bb_hash+self.FORMAT_SEPARATOR+"json", True)
@@ -267,6 +318,7 @@ class RESTTest (BitcoinTestFramework):
         json_obj = json.loads(response_header_json_str, parse_float=Decimal)
         assert_equal(len(json_obj), 1) #ensure that there is one header in the json response
         assert_equal(json_obj[0]['hash'], bb_hash) #request/response hash should be the same
+        assert_equal(json_obj[0]['hash'], hash_json_obj['hash'])
 
         #compare with normal RPC block response
         rpc_block_json = self.nodes[0].getblock(bb_hash)

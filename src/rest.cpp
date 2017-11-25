@@ -269,6 +269,56 @@ static bool rest_block_notxdetails(HTTPRequest* req, const std::string& strURIPa
     return rest_block(req, strURIPart, false);
 }
 
+static bool rest_blockhash(HTTPRequest* req, const std::string& strURIPart)
+{
+    if (!CheckWarmup(req))
+        return false;
+    std::string strHeight;
+    const RetFormat rf = ParseDataFormat(strHeight, strURIPart);
+
+    int32_t nHeight;
+    if (!ParseInt32(strHeight, &nHeight))
+        return RESTERR(req, HTTP_BAD_REQUEST, "Parse error");
+
+    LOCK(cs_main);
+    if (nHeight < 0 || nHeight > chainActive.Height())
+        return RESTERR(req, HTTP_BAD_REQUEST, "Block height out of range: " + strHeight);
+
+    const CBlockIndex *pindex = chainActive[nHeight];
+
+    switch (rf) {
+    case RetFormat::BINARY: {
+        CDataStream ssGetBlockHashResponse(SER_NETWORK, PROTOCOL_VERSION);
+        ssGetBlockHashResponse << pindex->GetBlockHash();
+        std::string binaryHash = ssGetBlockHashResponse.str();
+
+        req->WriteHeader("Content-Type", "application/octet-stream");
+        req->WriteReply(HTTP_OK, binaryHash);
+        return true;
+    }
+    case RetFormat::HEX: {
+        CDataStream ssGetBlockHashResponse(SER_NETWORK, PROTOCOL_VERSION);
+        ssGetBlockHashResponse << pindex->GetBlockHash();
+        std::string strHex = HexStr(ssGetBlockHashResponse.begin(), ssGetBlockHashResponse.end()) + "\n";
+
+        req->WriteHeader("Content-Type", "text/plain");
+        req->WriteReply(HTTP_OK, strHex);
+        return true;
+    }
+    case RetFormat::JSON: {
+        UniValue blockHashObject = UniValue(UniValue::VOBJ);
+        blockHashObject.push_back(Pair("hash", pindex->GetBlockHash().GetHex()));
+        std::string strJSON = blockHashObject.write() + "\n";
+        req->WriteHeader("Content-Type", "application/json");
+        req->WriteReply(HTTP_OK, strJSON);
+        return true;
+    }
+    default: {
+        return RESTERR(req, HTTP_NOT_FOUND, "output format not found (available: " + AvailableDataFormatsString() + ")");
+    }
+    }
+}
+
 // A bit of a hack - dependency on a function defined in rpc/blockchain.cpp
 UniValue getblockchaininfo(const JSONRPCRequest& request);
 
@@ -579,6 +629,7 @@ static const struct {
       {"/rest/tx/", rest_tx},
       {"/rest/block/notxdetails/", rest_block_notxdetails},
       {"/rest/block/", rest_block_extended},
+      {"/rest/blockhash/", rest_blockhash},
       {"/rest/chaininfo", rest_chaininfo},
       {"/rest/mempool/info", rest_mempool_info},
       {"/rest/mempool/contents", rest_mempool_contents},
