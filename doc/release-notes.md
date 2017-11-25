@@ -16,7 +16,7 @@ be converted to a new format, which will take anywhere from a few minutes to
 half an hour, depending on the speed of your machine.
 
 The file format of `fee_estimates.dat` changed in version 0.15.0. Hence, a
-downgrade from version 0.15.0 or upgrade to version 0.15.0 will cause all fee
+downgrade from version 0.15 or upgrade to version 0.15 will cause all fee
 estimates to be discarded.
 
 Note that the block database format also changed in version 0.8.0 and there is no
@@ -44,26 +44,19 @@ the Linux kernel, macOS 10.8+, and Windows Vista and later. Windows XP is not su
 IoP Core should also work on most other Unix-like systems but is not
 frequently tested on them.
 
+
 Notable changes
 ===============
 
-
-
-0.15.1 Change log
+0.15.x Change log
 =================
 
-- `dumpwallet` no longer allows overwriting files. This is a security measure
-  as well as prevents dangerous user mistakes.
-
-- `listsinceblock` will now throw an error if an unknown `blockhash` argument
-  value is passed, instead of returning a list of all wallet transactions since
-  the genesis block.
 
 Credits
 =======
 
 Thanks to everyone who directly contributed to this release:
 
-(fill this in)
+(todo)
 
 As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/iop/).

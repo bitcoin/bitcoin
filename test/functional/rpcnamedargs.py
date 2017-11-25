@@ -7,7 +7,7 @@
 from test_framework.test_framework import IoPTestFramework
 from test_framework.util import (
     assert_equal,
-    assert_raises_jsonrpc,
+    assert_raises_rpc_error,
 )
 
 class NamedArgumentTest(IoPTestFramework):
@@ -19,7 +19,7 @@ class NamedArgumentTest(IoPTestFramework):
         h = node.help(command='getinfo')
         assert(h.startswith('getinfo\n'))
 
-        assert_raises_jsonrpc(-8, 'Unknown named parameter', node.help, random='getinfo')
+        assert_raises_rpc_error(-8, 'Unknown named parameter', node.help, random='getinfo')
 
         h = node.getblockhash(height=0)
         node.getblock(blockhash=h)

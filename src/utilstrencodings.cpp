@@ -65,6 +65,19 @@ bool IsHex(const std::string& str)
     return (str.size() > 0) && (str.size()%2 == 0);
 }
 
+bool IsHexNumber(const std::string& str)
+{
+    size_t starting_location = 0;
+    if (str.size() > 2 && *str.begin() == '0' && *(str.begin()+1) == 'x') {
+        starting_location = 2;
+    }
+    for (auto c : str.substr(starting_location)) {
+        if (HexDigit(c) < 0) return false;
+    }
+    // Return false for empty string or "0x".
+    return (str.size() > starting_location);
+}
+
 std::vector<unsigned char> ParseHex(const char* psz)
 {
     // convert hex dump to vector
