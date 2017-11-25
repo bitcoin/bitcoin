@@ -157,14 +157,15 @@ public:
         assert(hashGenesisBlock == uint256S("0x0000000085370d5e122f64f4ab19c68614ff3df78c8d13cb814fd7e69a1dc6da"));
         assert(genesis.hashMerkleRoot == uint256S("0x80ad356118a9ab8db192db66ef77146cc36d958f959251feace550e4ca3d1446"));
 
-        vSeeds.push_back(CDNSSeedData("fra-crwdns", "fra-crwdns.crowndns.info"));
-        vSeeds.push_back(CDNSSeedData("blr-crwdns", "blr-crwdns.crowndns.info"));
-        vSeeds.push_back(CDNSSeedData("sgp-crwdns", "sgp-crwdns.crowndns.info"));
-        vSeeds.push_back(CDNSSeedData("lon-crwdns", "lon-crwdns.crowndns.info"));
-        vSeeds.push_back(CDNSSeedData("nyc-crwdns", "nyc-crwdns.crowndns.info"));
-        vSeeds.push_back(CDNSSeedData("tor-crwdns", "tor-crwdns.crowndns.info"));
-        vSeeds.push_back(CDNSSeedData("sfo-crwdns", "sfo-crwdns.crowndns.info"));
-        vSeeds.push_back(CDNSSeedData("ams-crwdns", "ams-crwdns.crowndns.info"));
+        vSeeds.push_back(CDNSSeedData("fra-crwdns", "fra-crwdns.infernopool.com"));
+        vSeeds.push_back(CDNSSeedData("blr-crwdns", "blr-crwdns.infernopool.com"));
+        vSeeds.push_back(CDNSSeedData("sgp-crwdns", "sgp-crwdns.infernopool.com"));
+        vSeeds.push_back(CDNSSeedData("lon-crwdns", "lon-crwdns.infernopool.com"));
+        vSeeds.push_back(CDNSSeedData("nyc-crwdns", "nyc-crwdns.infernopool.com"));
+        vSeeds.push_back(CDNSSeedData("tor-crwdns", "tor-crwdns.infernopool.com"));
+        vSeeds.push_back(CDNSSeedData("sfo-crwdns", "sfo-crwdns.infernopool.com"));
+        vSeeds.push_back(CDNSSeedData("ams-crwdns", "ams-crwdns.infernopool.com"));
+        vSeeds.push_back(CDNSSeedData("crw", "crw.infernopool.com"));
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,0);                    // Crown addresses start with '1'
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,28);                   // Crown script addresses start with 'C'
@@ -272,14 +273,15 @@ public:
         vFixedSeeds.clear();
         vSeeds.clear();
 
-        vSeeds.push_back(CDNSSeedData("fra-testnet-crwdns", "fra-testnet-crwdns.crowndns.info"));
-        vSeeds.push_back(CDNSSeedData("blr-testnet-crwdns", "blr-testnet-crwdns.crowndns.info"));
-        vSeeds.push_back(CDNSSeedData("sgp-testnet-crwdns", "sgp-testnet-crwdns.crowndns.info"));
-        vSeeds.push_back(CDNSSeedData("lon-testnet-crwdns", "lon-testnet-crwdns.crowndns.info"));
-        vSeeds.push_back(CDNSSeedData("nyc-testnet-crwdns", "nyc-testnet-crwdns.crowndns.info"));
-        vSeeds.push_back(CDNSSeedData("tor-testnet-crwdns", "tor-testnet-crwdns.crowndns.info"));
-        vSeeds.push_back(CDNSSeedData("sfo-testnet-crwdns", "sfo-testnet-crwdns.crowndns.info"));
-        vSeeds.push_back(CDNSSeedData("ams-testnet-crwdns", "ams-testnet-crwdns.crowndns.info"));
+        vSeeds.push_back(CDNSSeedData("fra-testnet-crwdns", "fra-testnet-crwdns.infernopool.com"));
+        vSeeds.push_back(CDNSSeedData("blr-testnet-crwdns", "blr-testnet-crwdns.infernopool.com"));
+        vSeeds.push_back(CDNSSeedData("sgp-testnet-crwdns", "sgp-testnet-crwdns.infernopool.com"));
+        vSeeds.push_back(CDNSSeedData("lon-testnet-crwdns", "lon-testnet-crwdns.infernopool.com"));
+        vSeeds.push_back(CDNSSeedData("nyc-testnet-crwdns", "nyc-testnet-crwdns.infernopool.com"));
+        vSeeds.push_back(CDNSSeedData("tor-testnet-crwdns", "tor-testnet-crwdns.infernopool.com"));
+        vSeeds.push_back(CDNSSeedData("sfo-testnet-crwdns", "sfo-testnet-crwdns.infernopool.com"));
+        vSeeds.push_back(CDNSSeedData("ams-testnet-crwdns", "ams-testnet-crwdns.infernopool.com"));
+        vSeeds.push_back(CDNSSeedData("crw-testnet", "crw-testnet.infernopool.com"));
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,111);                    // Testnet crown addresses start with 'x' or 'y'
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,196);                    // Testnet crown script addresses start with '8' or '9'
