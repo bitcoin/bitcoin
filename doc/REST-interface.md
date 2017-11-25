@@ -111,6 +111,11 @@ Only supports JSON as output format.
 Returns transactions in the TX mempool.
 Only supports JSON as output format.
 
+#### Fees
+`GET /rest/fee/<MODE>/<TARGET>.json`
+
+Returns fee and blocknumber where estimation was found. `<MODE>` should be one of `<unset|conservative|economical>`.
+`<TARGET>` is the desired confirmation time (in block height).
 Risks
 -------------
 Running a web browser on the same node with a REST enabled bitcoind can be a risk. Accessing prepared XSS websites could read out tx/block data of your node by placing links like `<script src="http://127.0.0.1:8332/rest/tx/1234567890.json">` which might break the nodes privacy.

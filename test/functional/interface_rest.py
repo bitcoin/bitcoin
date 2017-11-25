@@ -326,5 +326,17 @@ class RESTTest (BitcoinTestFramework):
         json_obj = self.test_rest_request("/chaininfo")
         assert_equal(json_obj['bestblockhash'], bb_hash)
 
+        # Prepare for Fee estimation
+        for i in range(18):
+            self.nodes[0].sendtoaddress(self.nodes[1].getnewaddress(), 0.1)
+            self.sync_all()
+            self.nodes[1].generatetoaddress(1, not_related_address)
+        self.sync_all()
+
+        json_obj = self.test_rest_request("/fee/conservative/1")
+        assert_greater_than(float(json_obj["feerate"]), 0)
+        assert_greater_than(int(json_obj["blocks"]), 0)
+
+
 if __name__ == '__main__':
     RESTTest().main()
