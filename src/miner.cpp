@@ -524,7 +524,7 @@ CMutableTransaction SignCoinbaseTransactionForWhiteList(CMutableTransaction coin
 	return coinbaseTx;
 }
 
-void IncrementExtraNonce(CBlock* pblock, const CBlockIndex* pindexPrev, unsigned int& nExtraNonce, const std::string privateKey = "", uint8_t threadId = 0)
+void IncrementExtraNonce(CBlock* pblock, const CBlockIndex* pindexPrev, unsigned int& nExtraNonce, const std::string privateKey, uint8_t threadId)
 {
     // Update nExtraNonce
     static uint256 hashPrevBlock;
