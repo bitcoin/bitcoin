@@ -29,6 +29,7 @@
 #include <QTextTable>
 #include <QTextCursor>
 #include <QVBoxLayout>
+#include <QSettings>
 
 /** "Help message" or "About" dialog box */
 HelpMessageDialog::HelpMessageDialog(QWidget *parent, bool about) :
@@ -164,6 +165,13 @@ void HelpMessageDialog::on_okButton_accepted()
 ShutdownWindow::ShutdownWindow(QWidget *parent, Qt::WindowFlags f):
     QWidget(parent, f)
 {
+    QSettings settings; 
+    if(settings.value("theme").toString() == "dark") 
+    {   
+        QString fontGray = "rgb(204,204,204)";
+        QString medGray = "rgb(45,45,45)";
+        setStyleSheet("QWidget {background: " + medGray + "; color: " + fontGray + ";}"); 
+    } 
     QVBoxLayout *layout = new QVBoxLayout();
     layout->addWidget(new QLabel(
         tr("%1 is shutting down...").arg(tr(PACKAGE_NAME)) + "<br /><br />" +

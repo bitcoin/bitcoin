@@ -181,6 +181,107 @@
        </item>
       </layout>
      </widget>
+     <widget class="QWidget" name="tabMining">
+      <attribute name="title">
+       <string>M&amp;ining</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_Mining">
+       <item>
+        <widget class="QGroupBox" name="groupBox1">
+         <property name="title">
+          <string>iop.conf</string>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_3">
+          <item>
+           <widget class="QCheckBox" name="mineCheckbox">
+            <property name="toolTip">
+             <string>Whether the client should mine or not.</string>
+            </property>
+            <property name="text">
+             <string>Enable mi&amp;ning</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_1_Mining">
+            <item>
+                <widget class="QLabel" name="mineWhiteListAddrLabel">
+                <property name="text">
+                    <string>Whitelisted miner a&amp;dress:</string>
+                </property>
+                <property name="textFormat">
+                    <enum>Qt::PlainText</enum>
+                </property>
+                <property name="buddy">
+                    <cstring>mineWhiteListAddr</cstring>
+                </property>
+                </widget>
+            </item>
+            <item>
+                <widget class="QValidatedLineEdit" name="mineWhiteListAddr">
+                    <property name="toolTip">
+                        <string>The whitelisted miner adress</string>
+                    </property>
+                </widget>
+            </item>
+            
+          </layout>
+          </item>
+          <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_2_Mining">
+            <item>
+            <widget class="QLabel" name="mineThreadsLabel">
+            <property name="text">
+                <string>Number of mining &amp;threads</string>
+            </property>
+            <property name="textFormat">
+                <enum>Qt::PlainText</enum>
+            </property>
+            <property name="buddy">
+                <cstring>mineThreads</cstring>
+            </property>
+            </widget>
+            </item>
+            <item>
+            <widget class="QSpinBox" name="mineThreads">
+            <property name="toolTip">
+                <string>Threads to mine.</string>
+            </property>
+            </widget>
+            </item>
+            <item>
+            <spacer name="horizontalSpacer_2_Mining">
+            <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+                <size>
+                <width>40</width>
+                <height>20</height>
+                </size>
+            </property>
+            </spacer>
+            </item>
+           </layout>
+           </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <spacer name="verticalSpacer_Mining">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
      <widget class="QWidget" name="tabNetwork">
       <attribute name="title">
        <string>&amp;Network</string>
@@ -626,6 +727,30 @@
          </item>
         </layout>
        </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_4_Display">
+         <item>
+          <widget class="QLabel" name="ThemeLabel">
+           <property name="text">
+            <string>&amp;Theme:</string>
+           </property>
+           <property name="textFormat">
+            <enum>Qt::PlainText</enum>
+           </property>
+           <property name="buddy">
+            <cstring>theme</cstring>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QValueComboBox" name="theme">
+           <property name="toolTip">
+            <string>Choose the color theme to use.</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+    </item>
        <item>
         <spacer name="verticalSpacer_Display">
          <property name="orientation">

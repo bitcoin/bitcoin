@@ -407,9 +407,60 @@
         </widget>
        </item>
        <item>
+        <layout class="QHBoxLayout" name="logoLayout">
+          <property name="spacing">
+             <number>0</number>
+          </property>
+          <property name="margin">
+             <number>0</number>
+          </property>
+          <property name="alignment">
+               <set>Qt::AlignLeft|Qt::AlignTop</set>
+          </property>
+          <item>
+          <widget class="QPushButton" name="iopLogo">
+           <property name="enabled">
+              <bool>true</bool>
+            </property>
+            <!--<property name="sizePolicy">
+               <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
+                <horstretch>1</horstretch>
+                <verstretch>1</verstretch>
+               </sizepolicy>
+              </property>-->
+            <property name="styleSheet">
+              <string notr="true">QPushButton {background: transparent; width: 187; height: 165; margin: 0px; padding: 10; border: none; textalign:left; image: url(:/icons/iop) }
+                                  QPushButton:hover {padding-left: 11; padding-right:9; padding-top:11; padding-bottom:9 }</string>
+            </property>
+            <property name="toolTip">
+               <string>http://iop.global</string>
+              </property>
+            <property name="text">
+              <string/>
+            </property>
+            <property name="size" stdset="0">
+              <size>
+                <width>256</width>
+                <height>256</height>
+              </size>
+            </property>
+            <property name="flat">
+              <bool>true</bool>
+            </property>
+          </widget>
+          </item>
+        </layout>
+      </item>
+       <item>
         <spacer name="verticalSpacer">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizePolicy">
+               <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                <horstretch>1</horstretch>
+                <verstretch>1</verstretch>
+               </sizepolicy>
          </property>
          <property name="sizeHint" stdset="0">
           <size>

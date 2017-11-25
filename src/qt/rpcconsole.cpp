@@ -434,7 +434,11 @@ RPCConsole::RPCConsole(const PlatformStyle *_platformStyle, QWidget *parent) :
         // Restore failed (perhaps missing setting), center the window
         move(QApplication::desktop()->availableGeometry().center() - frameGeometry().center());
     }
-
+    if(GUIUtil::customThemeIsSet()) {
+        QString appstyle = "fusion";
+        QApplication::setStyle(appstyle);
+        setStyleSheet(GUIUtil::getThemeStyleSheet());
+    }
     ui->openDebugLogfileButton->setToolTip(ui->openDebugLogfileButton->toolTip().arg(tr(PACKAGE_NAME)));
 
     if (platformStyle->getImagesOnButtons()) {

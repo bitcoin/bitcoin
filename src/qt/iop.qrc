@@ -53,6 +53,12 @@
         <file alias="hd_enabled">res/icons/hd_enabled.png</file>
         <file alias="hd_disabled">res/icons/hd_disabled.png</file>
         <file alias="network_disabled">res/icons/network_disabled.png</file>
+        <file alias="iop">res/icons/iop.png</file>
+        <file alias="iop_header">res/icons/iop_header.png</file>
+        <file alias="up_arrow">res/icons/up_arrow.png</file>
+        <file alias="down_arrow">res/icons/down_arrow.png</file>
+        <file alias="up_arrow-off">res/icons/up_arrow_off.png</file>
+        <file alias="down_arrow_off">res/icons/down_arrow_off.png</file>
     </qresource>
     <qresource prefix="/movies">
         <file alias="spinner-000">res/movies/spinner-000.png</file>

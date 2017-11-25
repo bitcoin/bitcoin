@@ -11,16 +11,35 @@
 
 #include <QResizeEvent>
 #include <QPropertyAnimation>
+#include <QSettings>
 
-ModalOverlay::ModalOverlay(QWidget *parent) :
+ModalOverlay::ModalOverlay(const PlatformStyle *_platformStyle, QWidget *parent) :
 QWidget(parent),
 ui(new Ui::ModalOverlay),
 bestHeaderHeight(0),
 bestHeaderDate(QDateTime()),
 layerIsVisible(false),
-userClosed(false)
+userClosed(false),
+platformStyle(_platformStyle)
 {
-    ui->setupUi(this);
+    ui->setupUi(this); 
+    if(GUIUtil::customThemeIsSet()) {
+        QString appstyle = "fusion";
+        QApplication::setStyle(appstyle);
+        setStyleSheet(GUIUtil::getThemeStyleSheet()); 
+        
+        if (platformStyle->getImagesOnButtons()) { 
+            QIcon icon = platformStyle->SingleColorIcon(":/icons/warning"); 
+            icon.addPixmap(icon.pixmap(QSize(64,64), QIcon::Normal), QIcon::Disabled); 
+            ui->warningIcon->setIcon(icon); 
+        }
+
+    } else { 
+        setStyleSheet( 
+        "#contentWidget { background: rgba(255,255,255,240); border-radius: 6px; }" 
+        "QLabel { color: rgb(40,40,40); }"); 
+    }
+
     connect(ui->closeButton, SIGNAL(clicked()), this, SLOT(closeClicked()));
     if (parent) {
         parent->installEventFilter(this);

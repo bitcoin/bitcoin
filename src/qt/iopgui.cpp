@@ -129,6 +129,12 @@ IoPGUI::IoPGUI(const PlatformStyle *_platformStyle, const NetworkStyle *networkS
         move(QApplication::desktop()->availableGeometry().center() - frameGeometry().center());
     }
 
+    if(GUIUtil::customThemeIsSet()) {
+        QString appstyle = "fusion";
+        QApplication::setStyle(appstyle);
+        setStyleSheet(GUIUtil::getThemeStyleSheet());
+    }
+
     QString windowTitle = tr(PACKAGE_NAME) + " - ";
 #ifdef ENABLE_WALLET
     enableWallet = WalletModel::isWalletEnabled();
@@ -197,6 +203,7 @@ IoPGUI::IoPGUI(const PlatformStyle *_platformStyle, const NetworkStyle *networkS
     QFrame *frameBlocks = new QFrame();
     frameBlocks->setContentsMargins(0,0,0,0);
     frameBlocks->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Preferred);
+    frameBlocks->setStyleSheet("border: none");
     QHBoxLayout *frameBlocksLayout = new QHBoxLayout(frameBlocks);
     frameBlocksLayout->setContentsMargins(3,0,3,0);
     frameBlocksLayout->setSpacing(3);
@@ -250,7 +257,7 @@ IoPGUI::IoPGUI(const PlatformStyle *_platformStyle, const NetworkStyle *networkS
 
     connect(connectionsControl, SIGNAL(clicked(QPoint)), this, SLOT(toggleNetworkActive()));
 
-    modalOverlay = new ModalOverlay(this->centralWidget());
+    modalOverlay = new ModalOverlay(platformStyle, this->centralWidget());
 #ifdef ENABLE_WALLET
     if(enableWallet) {
         connect(walletFrame, SIGNAL(requestedSyncWarningInfo()), this, SLOT(showModalOverlay()));
@@ -280,7 +287,6 @@ IoPGUI::~IoPGUI()
 void IoPGUI::createActions()
 {
     QActionGroup *tabGroup = new QActionGroup(this);
-
     overviewAction = new QAction(platformStyle->SingleColorIcon(":/icons/overview"), tr("&Overview"), this);
     overviewAction->setStatusTip(tr("Show general overview of wallet"));
     overviewAction->setToolTip(overviewAction->statusTip());
@@ -459,6 +465,7 @@ void IoPGUI::createToolBars()
     if(walletFrame)
     {
         QToolBar *toolbar = addToolBar(tr("Tabs toolbar"));
+        toolbar->setObjectName("toolbar");
         toolbar->setMovable(false);
         toolbar->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
         toolbar->addAction(overviewAction);
