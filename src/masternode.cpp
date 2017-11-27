@@ -255,18 +255,24 @@ void CMasternode::Check(bool fForce)
     }
 }
 
-bool CMasternode::IsInputAssociatedWithPubkey()
+bool CMasternode::IsInputAssociatedWithPubkey(int& height)
 {
-    CScript payee;
-    payee = GetScriptForDestination(pubKeyCollateralAddress.GetID());
+	CSyscoinAddress collateralAddress(pubKeyCollateralAddress.GetID());
+	uint160 hashBytes;
+	int type = 0;
+	if (!collateralAddress.GetIndexKey(hashBytes, type)) {
+		return false;
+	}
+	std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue> > unspentOutputs;
+	if (!GetAddressUnspent(hashBytes, type, unspentOutputs))
+		return false;
 
-    CTransaction tx;
-    uint256 hash;
-    if(GetTransaction(vin.prevout.hash, tx, Params().GetConsensus(), hash, true)) {
-        BOOST_FOREACH(CTxOut out, tx.vout)
-            if(out.nValue == 100000*COIN && out.scriptPubKey == payee) return true;
-    }
-
+	for (std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue> >::const_iterator it = unspentOutputs.begin(); it != unspentOutputs.end(); it++) {
+		if (it->second.satoshis == 100000 * COIN && it->first.txhash == vin.prevout.hash) {
+			height = it->second.blockHeight;
+			return true;
+		}
+	}
     return false;
 }
 
@@ -589,7 +595,8 @@ bool CMasternodeBroadcast::CheckOutpoint(int& nDos)
 
     // make sure the input that was signed in masternode broadcast message is related to the transaction
     // that spawned the Masternode - this is expensive, so it's only done once per Masternode
-    if(!IsInputAssociatedWithPubkey()) {
+	int masterNodeCollateralHeight = 0;
+    if(!IsInputAssociatedWithPubkey(masterNodeCollateralHeight)) {
         LogPrintf("CMasternodeMan::CheckOutpoint -- Got mismatched pubKeyCollateralAddress and vin\n");
         nDos = 33;
         return false;
@@ -597,22 +604,17 @@ bool CMasternodeBroadcast::CheckOutpoint(int& nDos)
 
     // verify that sig time is legit in past
     // should be at least not earlier than block when 100000 SYS tx got nMasternodeMinimumConfirmations
-    uint256 hashBlock = uint256();
-    CTransaction tx2;
-    GetTransaction(vin.prevout.hash, tx2, Params().GetConsensus(), hashBlock, true);
-    {
-        LOCK(cs_main);
-        BlockMap::iterator mi = mapBlockIndex.find(hashBlock);
-        if (mi != mapBlockIndex.end() && (*mi).second) {
-            CBlockIndex* pMNIndex = (*mi).second; // block for 100000 SYS tx -> 1 confirmation
-            CBlockIndex* pConfIndex = chainActive[pMNIndex->nHeight + Params().GetConsensus().nMasternodeMinimumConfirmations - 1]; // block where tx got nMasternodeMinimumConfirmations
-            if(pConfIndex->GetBlockTime() > sigTime) {
-                LogPrintf("CMasternodeBroadcast::CheckOutpoint -- Bad sigTime %d (%d conf block is at %d) for Masternode %s %s\n",
-                          sigTime, Params().GetConsensus().nMasternodeMinimumConfirmations, pConfIndex->GetBlockTime(), vin.prevout.ToStringShort(), addr.ToString());
-                return false;
-            }
-        }
-    }
+	if (chainActive.Height() < masterNodeCollateralHeight + Params().GetConsensus().nMasternodeMinimumConfirmations - 1) {
+		LogPrintf("CMasternodeMan::CheckOutpoint -- Broadcast too early\n");
+		nDos = 33;
+		return false;
+	}
+	CBlockIndex* pConfIndex = chainActive[masterNodeCollateralHeight + Params().GetConsensus().nMasternodeMinimumConfirmations - 1]; // block where tx got nMasternodeMinimumConfirmations
+	if (pConfIndex->GetBlockTime() > sigTime) {
+		LogPrintf("CMasternodeBroadcast::CheckOutpoint -- Bad sigTime %d (%d conf block is at %d) for Masternode %s %s\n",
+			sigTime, Params().GetConsensus().nMasternodeMinimumConfirmations, pConfIndex->GetBlockTime(), vin.prevout.ToStringShort(), addr.ToString());
+		return false;
+	}
 
     return true;
 }
