@@ -119,11 +119,11 @@ public:
         consensus.nSubsidyHalvingInterval = 525600;
         consensus.nInstantSendKeepLock = 24;
         consensus.nBudgetPaymentsStartBlock = 0; // actual historical value
-        consensus.nBudgetPaymentsCycleBlocks = 43200; // ~(60*24*30), actual number of blocks per month
+        consensus.nBudgetPaymentsCycleBlocks = 43800; // actual number of blocks per month
         consensus.nBudgetPaymentsWindowBlocks = 100;
         consensus.nBudgetProposalEstablishingTime = 60*60*24;
         consensus.nSuperblockStartBlock = 1;
-        consensus.nSuperblockCycle = 43200; // ~(60*24*30), actual number of blocks per month
+        consensus.nSuperblockCycle = 43800; // actual number of blocks per month
         consensus.nGovernanceMinQuorum = 10;
         consensus.nGovernanceFilterElements = 20000;
         consensus.nMasternodeMinimumConfirmations = 15;
