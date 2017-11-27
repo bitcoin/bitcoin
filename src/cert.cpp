@@ -898,14 +898,6 @@ UniValue certinfo(const UniValue& params, bool fHelp) {
 	if (!GetCert(CNameTXIDTuple(vchCert, txid), txPos))
 		throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 5535 - " + _("Failed to read from cert DB"));
 
-	CTransaction tx;
-	if (!GetSyscoinTransaction(txPos.nHeight, txPos.txHash, tx, Params().GetConsensus()))
-		throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 4604 - " + _("Failed to read from cert tx"));
-	vector<vector<unsigned char> > vvch;
-	int op, nOut;
-	if (!DecodeCertTx(tx, op, nOut, vvch))
-		throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 4604 - " + _("Failed to decode cert"));
-
 	if(!BuildCertJson(txPos, oCert))
 		oCert.clear();
     return oCert;

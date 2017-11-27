@@ -1439,14 +1439,6 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 	if (!pofferdb->ReadOffer(CNameTXIDTuple(vchOffer, txid), txPos))
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR: ERRCODE: 5536 - " + _("Failed to read from offer DB"));
 
-	CTransaction tx;
-	if (!GetSyscoinTransaction(txPos.nHeight, txPos.txHash, tx, Params().GetConsensus()))
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR: ERRCODE: 4604 - " + _("Failed to read offer tx"));
-	vector<vector<unsigned char> > vvch;
-	int op, nOut;
-	if (!DecodeOfferTx(tx, op, nOut, vvch))
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR: ERRCODE: 4604 - " + _("Failed to decode offer"));
-
 	if(!BuildOfferJson(txPos, oOffer))
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1593 - " + _("Could not find this offer"));
 

@@ -2481,14 +2481,6 @@ UniValue aliasinfo(const UniValue& params, bool fHelp) {
 	if (!paliasdb->ReadAlias(CNameTXIDTuple(vchAlias, txid), txPos))
 		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5535 - " + _("Failed to read from alias DB"));
 
-	CTransaction tx;
-	if (!GetSyscoinTransaction(txPos.nHeight, txPos.txHash, tx, Params().GetConsensus()))
-		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 4604 - " + _("Failed to read from alias tx"));
-	vector<vector<unsigned char> > vvch;
-	int op, nOut;
-	if (!DecodeAliasTx(tx, op, nOut, vvch))
-		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 4604 - " + _("Failed to decode alias"));
-
 	UniValue oName(UniValue::VOBJ);
 	if(!BuildAliasJson(txPos, oName))
 		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5536 - " + _("Could not find this alias"));

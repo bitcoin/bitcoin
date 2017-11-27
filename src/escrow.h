@@ -231,7 +231,7 @@ public:
 
 bool GetEscrow(const CNameTXIDTuple &escrowTuple, CEscrow& txPos);
 bool GetEscrow(const std::vector<unsigned char> &vchEscrow, CEscrow& txPos);
-bool BuildEscrowJson(const CEscrow &escrow, const std::vector<std::vector<unsigned char> > &vvch, UniValue& oEscrow);
+bool BuildEscrowJson(const CEscrow &escrow, UniValue& oEscrow);
 bool BuildEscrowIndexerJson(const CEscrow &escrow, UniValue& oEscrow);
 void BuildEscrowBidJson(const CEscrow& escrow, const std::string& status, UniValue& oBid);
 void BuildFeedbackJson(const CEscrow& escrow, UniValue& oFeedback);

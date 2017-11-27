@@ -2824,15 +2824,7 @@ UniValue escrowinfo(const UniValue& params, bool fHelp) {
 	if (!pescrowdb->ReadEscrow(CNameTXIDTuple(vchEscrow, txid), txPos))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 5535 - " + _("Failed to read from escrow DB"));
 
-	CTransaction tx;
-	if (!GetSyscoinTransaction(txPos.nHeight, txPos.txHash, tx, Params().GetConsensus()))
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4604 - " + _("Failed to read from escrow tx"));
-	vector<vector<unsigned char> > vvch;
-	int op, nOut;
-	if (!DecodeEscrowTx(tx, op, nOut, vvch))
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4604 - " + _("Failed to decode escrow"));
-
-	if(!BuildEscrowJson(txPos, vvch, oEscrow))
+	if(!BuildEscrowJson(txPos, oEscrow))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4605 - " + _("Could not find this escrow"));
     return oEscrow;
 }
@@ -2868,7 +2860,7 @@ void BuildEscrowBidJson(const CEscrow& escrow, const string& status, UniValue& o
 	oBid.push_back(Pair("witness", stringFromVch(escrow.vchWitness)));
 	oBid.push_back(Pair("status", status));
 }
-bool BuildEscrowJson(const CEscrow &escrow, const std::vector<std::vector<unsigned char> > &vvch, UniValue& oEscrow)
+bool BuildEscrowJson(const CEscrow &escrow, UniValue& oEscrow)
 {
 	COffer theOffer;
 	if (!GetOffer(escrow.offerTuple, theOffer))
@@ -2927,21 +2919,15 @@ bool BuildEscrowJson(const CEscrow &escrow, const std::vector<std::vector<unsign
 	string status = "unknown";
 	if(escrow.op == OP_ESCROW_ACTIVATE)
 		status = "in escrow";
-	else if(escrow.op == OP_ESCROW_RELEASE && vvch[1] == vchFromString("0"))
+	else if(escrow.op == OP_ESCROW_RELEASE)
 		status = "escrow released";
-	else if(escrow.op == OP_ESCROW_RELEASE && vvch[1] == vchFromString("1"))
-		status = "escrow release complete";
-	else if(escrow.op == OP_ESCROW_REFUND && vvch[1] == vchFromString("0"))
+	else if(escrow.op == OP_ESCROW_REFUND)
 		status = "escrow refunded";
-	else if(escrow.op == OP_ESCROW_REFUND && vvch[1] == vchFromString("1"))
-		status = "escrow refund complete";
 	else if(escrow.op == OP_ESCROW_COMPLETE)
 		status = "escrow complete";
-	if(escrow.bPaymentAck)
-		status += " (acknowledged)";
-	else if (!escrow.feedback.IsNull())
-		status += " (feedback)";
+
 	oEscrow.push_back(Pair("expired", expired));
+	oEscrow.push_back(Pair("acknowledged", escrow.bPaymentAck));
 	oEscrow.push_back(Pair("status", status));
 	return true;
 }
