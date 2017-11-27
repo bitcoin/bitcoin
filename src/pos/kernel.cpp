@@ -166,7 +166,7 @@ bool CheckProofOfStake(const CBlockIndex *pindexPrev, const CTransaction &tx, in
     // Kernel (input 0) must match the stake hash target per coin age (nBits)
     const CTxIn &txin = tx.vin[0];
 
-    CBlockIndex *pindex = NULL;
+    uint32_t nBlockFromTime;
     int nDepth;
     CScript kernelPubKey;
     CAmount amount;
@@ -176,7 +176,8 @@ bool CheckProofOfStake(const CBlockIndex *pindexPrev, const CTransaction &tx, in
     {
         // Must find the prevout in the txdb / blocks
 
-        if (!GetTransaction(txin.prevout.hash, txPrev, Params().GetConsensus(), hashBlock, true)
+        CBlock blockKernel; // block containing stake kernel, GetTransaction should only fill the header.
+        if (!GetTransaction(txin.prevout.hash, txPrev, Params().GetConsensus(), blockKernel, true)
             || txin.prevout.n >= txPrev->vpout.size())
             return state.DoS(1, error("%s: prevout-not-in-chain", __func__), REJECT_INVALID, "prevout-not-in-chain");
 
@@ -190,12 +191,13 @@ bool CheckProofOfStake(const CBlockIndex *pindexPrev, const CTransaction &tx, in
 
         kernelPubKey = *outPrev->GetPScriptPubKey();
         amount = outPrev->GetValue();
+        nBlockFromTime = blockKernel.nTime;
     } else
     {
         if (coin.nType != OUTPUT_STANDARD)
             return state.DoS(100, error("%s: invalid-prevout", __func__), REJECT_INVALID, "invalid-prevout");
 
-        pindex = chainActive[coin.nHeight];
+        CBlockIndex *pindex = chainActive[coin.nHeight];
         if (!pindex)
             return state.DoS(100, error("%s: invalid-prevout", __func__), REJECT_INVALID, "invalid-prevout");
 
@@ -206,6 +208,7 @@ bool CheckProofOfStake(const CBlockIndex *pindexPrev, const CTransaction &tx, in
 
         kernelPubKey = coin.out.scriptPubKey;
         amount = coin.out.nValue;
+        nBlockFromTime = pindex->GetBlockTime();
     };
 
     const CScript &scriptSig = txin.scriptSig;
@@ -218,7 +221,6 @@ bool CheckProofOfStake(const CBlockIndex *pindexPrev, const CTransaction &tx, in
         return state.DoS(100, error("%s: verify-script-failed, txn %s, reason %s", __func__, tx.GetHash().ToString(), ScriptErrorString(serror)),
             REJECT_INVALID, "verify-script-failed");
 
-    uint32_t nBlockFromTime = pindex->GetBlockTime();
 
 
     if (!CheckStakeKernelHash(pindexPrev, nBits, nBlockFromTime,

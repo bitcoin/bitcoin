@@ -2412,6 +2412,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 
                     if (fSpentIndex)
                     {
+                        CAmount nValue = coin.nType == OUTPUT_CT ? -1 : coin.out.nValue;
                         // add the spent index to determine the txid and input that spent an output
                         // and to find the amount and address from an input
                         view.spentIndex.push_back(std::make_pair(CSpentIndexKey(input.prevout.hash, input.prevout.n), CSpentIndexValue(txhash, j, pindex->nHeight, nValue, scriptType, hashAddress)));

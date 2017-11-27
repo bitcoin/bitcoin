@@ -73,12 +73,10 @@ void TxToJSONExpanded(const CTransaction& tx, const uint256 hashBlock, UniValue&
             CSpentIndexValue spentInfo;
             CSpentIndexKey spentKey(txin.prevout.hash, txin.prevout.n);
             if (GetSpentIndex(spentKey, spentInfo)) {
+                in.push_back(Pair("type", spentInfo.satoshis == -1 ? "blind" : "standard"));
                 in.push_back(Pair("value", ValueFromAmount(spentInfo.satoshis)));
                 in.push_back(Pair("valueSat", spentInfo.satoshis));
-                if (spentInfo.satoshis == -1)
-                {
-                    in.push_back(Pair("type", "blind"));
-                }
+
                 if (spentInfo.addressType == ADDR_INDT_PUBKEY_ADDRESS) {
                     in.push_back(Pair("address", CBitcoinAddress(CKeyID(*((uint160*)&spentInfo.addressHash))).ToString()));
                 } else if (spentInfo.addressType == ADDR_INDT_SCRIPT_ADDRESS)  {
@@ -88,7 +86,6 @@ void TxToJSONExpanded(const CTransaction& tx, const uint256 hashBlock, UniValue&
                 } else if (spentInfo.addressType == ADDR_INDT_SCRIPT_ADDRESS_256)  {
                     in.push_back(Pair("address", CBitcoinAddress(CScriptID256(spentInfo.addressHash)).ToString()));
                 }
-
             }
         };
 

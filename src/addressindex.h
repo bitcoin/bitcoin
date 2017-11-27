@@ -11,12 +11,12 @@
 #include "script/script.h"
 
 enum AddressIndexType {
-        ADDR_INDT_UNKNOWN                = 0,
-        ADDR_INDT_PUBKEY_ADDRESS         = 1,
-        ADDR_INDT_SCRIPT_ADDRESS         = 2,
-        ADDR_INDT_PUBKEY_ADDRESS_256     = 3,
-        ADDR_INDT_SCRIPT_ADDRESS_256     = 4,
-    };
+    ADDR_INDT_UNKNOWN                = 0,
+    ADDR_INDT_PUBKEY_ADDRESS         = 1,
+    ADDR_INDT_SCRIPT_ADDRESS         = 2,
+    ADDR_INDT_PUBKEY_ADDRESS_256     = 3,
+    ADDR_INDT_SCRIPT_ADDRESS_256     = 4,
+};
 
 struct CAddressUnspentKey {
     unsigned int type;
@@ -25,7 +25,7 @@ struct CAddressUnspentKey {
     size_t index;
 
     size_t GetSerializeSize() const {
-        return 57;
+        return 1  + 32 + 32 + 4;
     }
     template<typename Stream>
     void Serialize(Stream& s) const {

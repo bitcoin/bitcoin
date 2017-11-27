@@ -48,7 +48,7 @@ bool ExtractIndexInfo(const CTxOutBase *out, int &scriptType, std::vector<uint8_
         return false;
     };
 
-    nValue = out->IsType(OUTPUT_STANDARD) ? out->GetValue() : -1;
+    nValue = out->IsType(OUTPUT_STANDARD) ? out->GetValue() : 0;
 
     ExtractIndexInfo(pScript, scriptType, hashBytes);
 
