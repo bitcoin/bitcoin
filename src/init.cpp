@@ -1626,6 +1626,12 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
 					strLoadError = _("You need to rebuild the database using -reindex-chainstate to change -txindex");
 					break;
 				}
+
+				// SYSCOIN Check for changed -addressindex state
+				if (fAddressIndex != GetBoolArg("-addressindex", DEFAULT_TXINDEX)) {
+					strLoadError = _("You need to rebuild the database using -reindex-chainstate to change -addressindex");
+					break;
+				}
 				// Check for changed -prune state.  What we are concerned about is a user who has pruned blocks
 				// in the past, but is now trying to run unpruned.
 				if (fHavePruned && !fPruneMode) {
@@ -1924,9 +1930,10 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
 	// ********************************************************* Step 11a: setup PrivateSend
 	fMasterNode = GetBoolArg("-masternode", false);
 
-	if ((fMasterNode || masternodeConfig.getCount() > 0) && fTxIndex == false) {
-		return InitError("Enabling Masternode support requires turning on transaction indexing."
-			"Please add txindex=1 to your configuration and start with -reindex");
+	// SYSCOIN
+	if ((fMasterNode || masternodeConfig.getCount() > 0) && GetBoolArg("-addressindex", DEFAULT_ADDRESSINDEX)) {
+		return InitError("Enabling Masternode support requires turning on address indexing."
+			"Please add addressindex=1 to your configuration and start with -reindex");
 	}
 
 	if (fMasterNode) {
