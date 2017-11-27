@@ -7,6 +7,7 @@
 
 #include <amount.h>
 #include <policy/feerate.h>
+#include <primitives/transaction.h>
 #include <uint256.h>
 #include <random.h>
 #include <sync.h>
@@ -186,6 +187,16 @@ private:
      */
     static constexpr double FEE_SPACING = 1.05;
 
+    struct TxStatsInfo
+    {
+        unsigned int blockHeight;
+        CAmount m_fee_per_k;
+        TxStatsInfo() : blockHeight(0), m_fee_per_k(0) {}
+    };
+
+    /** Remove a transaction from the mempool tracking stats*/
+    void removeTx(std::map<uint256, TxStatsInfo>::iterator pos, bool inBlock);
+
 public:
     /** Create new BlockPolicyEstimator and initialize stats tracking classes with default values */
     CBlockPolicyEstimator();
@@ -193,13 +204,13 @@ public:
 
     /** Process all the transactions that have been included in a block */
     void processBlock(unsigned int nBlockHeight,
-                      std::vector<const CTxMemPoolEntry*>& entries);
+                      const std::vector<CTransactionRef>& txn_removed_in_block);
 
     /** Process a transaction accepted to the mempool*/
     void processTransaction(const CTxMemPoolEntry& entry, bool validFeeEstimate);
 
     /** Remove a transaction from the mempool tracking stats*/
-    bool removeTx(uint256 hash, bool inBlock);
+    bool removeTx(uint256 hash);
 
     /** DEPRECATED. Return a feerate estimate */
     CFeeRate estimateFee(int confTarget) const;
@@ -235,13 +246,6 @@ private:
     unsigned int historicalFirst;
     unsigned int historicalBest;
 
-    struct TxStatsInfo
-    {
-        unsigned int blockHeight;
-        unsigned int bucketIndex;
-        TxStatsInfo() : blockHeight(0), bucketIndex(0) {}
-    };
-
     // map of txids to information about that transaction
     std::map<uint256, TxStatsInfo> mapMemPoolTxs;
 
@@ -259,7 +263,7 @@ private:
     mutable CCriticalSection cs_feeEstimator;
 
     /** Process a transaction confirmed in a block*/
-    bool processBlockTx(unsigned int nBlockHeight, const CTxMemPoolEntry* entry);
+    bool processBlockTx(unsigned int nBlockHeight, const uint256& hash);
 
     /** Helper for estimateSmartFee */
     double estimateCombinedFee(unsigned int confTarget, double successThreshold, bool checkShorterHorizon, EstimationResult *result) const;

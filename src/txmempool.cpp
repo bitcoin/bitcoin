@@ -408,7 +408,7 @@ bool CTxMemPool::addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry,
 
     nTransactionsUpdated++;
     totalTxSize += entry.GetTxSize();
-    if (minerPolicyEstimator) {minerPolicyEstimator->processTransaction(entry, validFeeEstimate);}
+    if (minerPolicyEstimator) minerPolicyEstimator->processTransaction(entry, validFeeEstimate);
 
     vTxHashes.emplace_back(tx.GetWitnessHash(), newit);
     newit->vTxHashesIdx = vTxHashes.size() - 1;
@@ -443,7 +443,8 @@ void CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason)
     mapLinks.erase(it);
     mapTx.erase(it);
     nTransactionsUpdated++;
-    if (minerPolicyEstimator) {minerPolicyEstimator->removeTx(hash, false);}
+    if (reason != MemPoolRemovalReason::BLOCK && minerPolicyEstimator) {
+        minerPolicyEstimator->removeTx(hash);}
 }
 
 // Calculates descendants of entry that are not already in setDescendants, and adds to
@@ -574,17 +575,6 @@ void CTxMemPool::removeConflicts(const CTransaction &tx, std::vector<CTransactio
 void CTxMemPool::removeForBlock(const std::vector<CTransactionRef>& vtx, unsigned int nBlockHeight)
 {
     LOCK(cs);
-    std::vector<const CTxMemPoolEntry*> entries;
-    for (const auto& tx : vtx)
-    {
-        uint256 hash = tx->GetHash();
-
-        indexed_transaction_set::iterator i = mapTx.find(hash);
-        if (i != mapTx.end())
-            entries.push_back(&*i);
-    }
-    // Before the txs in the new block have been removed from the mempool, update policy estimates
-    if (minerPolicyEstimator) {minerPolicyEstimator->processBlock(nBlockHeight, entries);}
     std::vector<CTransactionRef> txn_conflicts, txn_removed_in_block;
     txn_removed_in_block.reserve(vtx.size());
     for (const auto& tx : vtx)
@@ -599,6 +589,7 @@ void CTxMemPool::removeForBlock(const std::vector<CTransactionRef>& vtx, unsigne
         removeConflicts(*tx, txn_conflicts);
         ClearPrioritisation(tx->GetHash());
     }
+    if (minerPolicyEstimator) {minerPolicyEstimator->processBlock(nBlockHeight, txn_removed_in_block);}
     GetMainSignals().MempoolUpdatedForBlockConnect(std::move(txn_removed_in_block), std::move(txn_conflicts), nBlockHeight);
     lastRollingFeeUpdate = GetTime();
     blockSinceLastRollingFeeBump = true;

@@ -70,6 +70,28 @@ void SyncWithValidationInterfaceQueue();
  * called on the thread generating the callbacks.
  */
 class MempoolInterface {
+public:
+    /**
+     * Information about a newly-added-to-mempool transaction.
+     */
+    struct NewMempoolTransactionInfo {
+        //! A shared pointer to the transaction which was added.
+        CTransactionRef m_tx;
+        //! The fee the added transaction paid
+        CAmount m_fee;
+        /**
+         * The virtual transaction size.
+         *
+         * This is a policy field which considers the sigop cost of the
+         * transaction as well as its weight, and reinterprets it as bytes.
+         *
+         * It is the primary metric by which the mining algorithm selects
+         * transactions.
+         */
+        int64_t m_virtual_transaction_size;
+        //! Whether this transaction should be considered for fee estimation
+        bool m_valid_for_estimation; // TODO: Move this logic to CBlockPolicyEstimator
+    };
 protected:
     /**
      * Protected destructor so that instances can only be deleted by derived classes.
@@ -81,7 +103,7 @@ protected:
      *
      * Called on a background thread.
      */
-    virtual void TransactionAddedToMempool(const CTransactionRef &ptxn, const std::vector<CTransactionRef>& txn_replaced) {}
+    virtual void TransactionAddedToMempool(const NewMempoolTransactionInfo& info, const std::vector<CTransactionRef>& txn_replaced) {}
     /**
      * Notifies listeners of a transaction leaving mempool.
      *
@@ -230,7 +252,7 @@ public:
     size_t CallbacksPending();
 
     void UpdatedBlockTip(const CBlockIndex *, const CBlockIndex *, bool fInitialDownload);
-    void TransactionAddedToMempool(const CTransactionRef &, const std::shared_ptr<std::vector<CTransactionRef>>& txn_replaced);
+    void TransactionAddedToMempool(const MempoolInterface::NewMempoolTransactionInfo &, const std::shared_ptr<std::vector<CTransactionRef>>& txn_replaced);
     void MempoolUpdatedForBlockConnect(std::vector<CTransactionRef>&& tx_removed_in_block, std::vector<CTransactionRef>&& tx_removed_conflicted, int block_height);
     void MempoolEntryRemoved(CTransactionRef tx, MemPoolRemovalReason reason);
     void BlockConnected(const std::shared_ptr<const CBlock> &, const CBlockIndex *pindex);

@@ -61,7 +61,7 @@ public:
     /**
      * Overridden from MempoolInterface.
      */
-    void TransactionAddedToMempool(const CTransactionRef& ptx, const std::vector<CTransactionRef>& txn_replaced) override;
+    void TransactionAddedToMempool(const NewMempoolTransactionInfo& info, const std::vector<CTransactionRef>& txn_replaced) override;
 
     /** Initialize a peer by adding it to mapNodeState and pushing a message requesting its version */
     void InitializeNode(CNode* pnode) override;

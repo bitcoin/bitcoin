@@ -984,7 +984,7 @@ void PeerLogicValidation::BlockChecked(const CBlock& block, const CValidationSta
 }
 
 
-void PeerLogicValidation::TransactionAddedToMempool(const CTransactionRef& ptx, const std::vector<CTransactionRef>& txn_replaced) {
+void PeerLogicValidation::TransactionAddedToMempool(const NewMempoolTransactionInfo& info, const std::vector<CTransactionRef>& txn_replaced) {
     LOCK(g_cs_orphans);
 
     for (const CTransactionRef& tx : txn_replaced) {

@@ -165,8 +165,9 @@ void CZMQNotificationInterface::NotifyTransaction(const CTransactionRef& ptx)
     }
 }
 
-void CZMQNotificationInterface::TransactionAddedToMempool(const CTransactionRef& ptx, const std::vector<CTransactionRef>& txn_replaced) {
-    NotifyTransaction(ptx);
+void CZMQNotificationInterface::TransactionAddedToMempool(const NewMempoolTransactionInfo& info, const std::vector<CTransactionRef>& txn_replaced) {
+    // We only notify for new data, not data that was removed, so ignore txn_replaced.
+    NotifyTransaction(info.m_tx);
 }
 
 void CZMQNotificationInterface::BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexConnected)

@@ -25,7 +25,7 @@ protected:
     void Shutdown();
 
     // CValidationInterface
-    void TransactionAddedToMempool(const CTransactionRef& tx, const std::vector<CTransactionRef>& txn_replaced) override;
+    void TransactionAddedToMempool(const NewMempoolTransactionInfo& tx, const std::vector<CTransactionRef>& txn_replaced) override;
     void BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexConnected) override;
     void BlockDisconnected(const std::shared_ptr<const CBlock>& pblock) override;
     void UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) override;

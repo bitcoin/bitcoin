@@ -1228,14 +1228,14 @@ void CWallet::SyncTransaction(const CTransactionRef& ptx, const CBlockIndex *pin
     }
 }
 
-void CWallet::TransactionAddedToMempool(const CTransactionRef& ptx, const std::vector<CTransactionRef>& txn_replaced) {
+void CWallet::TransactionAddedToMempool(const NewMempoolTransactionInfo& info, const std::vector<CTransactionRef>& txn_replaced) {
     LOCK2(cs_main, cs_wallet);
 
     for (const CTransactionRef& txit : txn_replaced) TransactionRemovedFromMempool(txit, MemPoolRemovalReason::REPLACED);
 
-    SyncTransaction(ptx);
+    SyncTransaction(info.m_tx);
 
-    auto it = mapWallet.find(ptx->GetHash());
+    auto it = mapWallet.find(info.m_tx->GetHash());
     if (it != mapWallet.end()) {
         it->second.fInMempool = true;
     }

@@ -21,7 +21,7 @@
 
 struct MainSignalsInstance {
     boost::signals2::signal<void (const CBlockIndex *, const CBlockIndex *, bool fInitialDownload)> UpdatedBlockTip;
-    boost::signals2::signal<void (const CTransactionRef &, const std::vector<CTransactionRef> &)> TransactionAddedToMempool;
+    boost::signals2::signal<void (const MempoolInterface::NewMempoolTransactionInfo &, const std::vector<CTransactionRef> &)> TransactionAddedToMempool;
     boost::signals2::signal<void (const std::vector<CTransactionRef> &, const std::vector<CTransactionRef> &, int)> MempoolUpdatedForBlockConnect;
     boost::signals2::signal<void (const std::shared_ptr<const CBlock> &, const CBlockIndex *pindex)> BlockConnected;
     boost::signals2::signal<void (const std::shared_ptr<const CBlock> &)> BlockDisconnected;
@@ -156,9 +156,9 @@ void CMainSignals::UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockInd
     });
 }
 
-void CMainSignals::TransactionAddedToMempool(const CTransactionRef &ptx, const std::shared_ptr<std::vector<CTransactionRef>>& txn_replaced) {
-    m_internals->m_schedulerClient.AddToProcessQueue([ptx, txn_replaced, this] {
-        m_internals->TransactionAddedToMempool(ptx, *txn_replaced);
+void CMainSignals::TransactionAddedToMempool(const MempoolInterface::NewMempoolTransactionInfo &info, const std::shared_ptr<std::vector<CTransactionRef>>& txn_replaced) {
+    m_internals->m_schedulerClient.AddToProcessQueue([info, txn_replaced, this] {
+        m_internals->TransactionAddedToMempool(info, *txn_replaced);
     });
 }
 

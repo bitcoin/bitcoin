@@ -978,7 +978,7 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
             return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "mempool full");
     }
 
-    GetMainSignals().TransactionAddedToMempool(ptx, txn_replaced);
+    GetMainSignals().TransactionAddedToMempool({ptx, nFees, nSize, validForFeeEstimation}, txn_replaced);
 
     return true;
 }
