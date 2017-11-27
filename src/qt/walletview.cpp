@@ -18,6 +18,8 @@
 #include "signverifymessagedialog.h"
 #include "transactiontablemodel.h"
 #include "transactionview.h"
+#include "transactionrecord.h"
+
 #include "walletmodel.h"
 
 #include "ui_interface.h"
@@ -193,6 +195,53 @@ void WalletView::processNewTransaction(const QModelIndex& parent, int start, int
     QString type = ttm->index(start, TransactionTableModel::Type, parent).data().toString();
     QString address = ttm->index(start, TransactionTableModel::ToAddress, parent).data().toString();
 
+    // If payment is 500 or 10000 CRW ask to create a Systemnode/Masternode
+    qint64 credit = ttm->index(start, TransactionTableModel::AmountCredit, parent).data(Qt::EditRole).toULongLong();
+    int typeEnum = ttm->index(start, TransactionTableModel::TypeEnum, parent).data(Qt::EditRole).toInt();
+
+    if (typeEnum == TransactionRecord::SendToSelf)
+    {
+        AvailableCoinsType coin_type = ONLY_500;
+        QString title = tr("Payment to yourself - ") + 
+            BitcoinUnits::formatWithUnit(walletModel->getOptionsModel()->getDisplayUnit(), credit);
+        QString body = tr("Do you wat to create a new ");
+        if (credit == SYSTEMNODE_COLLATERAL * COIN)
+        {
+            body += "Systemnode?";
+        }
+        else if (credit == MASTERNODE_COLLATERAL * COIN)
+        {
+            body += "Masternode?";
+            coin_type = ONLY_10000;
+        }
+
+        // Display message box
+        QMessageBox::StandardButton retval = QMessageBox::question(this, title, body,
+                QMessageBox::Yes | QMessageBox::Cancel,
+                QMessageBox::Cancel);
+
+        if(retval == QMessageBox::Yes)
+        {
+            QString hash = ttm->index(start, 0, parent).data(TransactionTableModel::TxHashRole).toString();
+            std::vector<COutput> vPossibleCoins;
+            pwalletMain->AvailableCoins(vPossibleCoins, true, NULL, coin_type);
+            BOOST_FOREACH(COutput& out, vPossibleCoins) {
+                if (out.tx->GetHash().ToString() == hash.toStdString())
+                {
+                    COutPoint outpoint = COutPoint(out.tx->GetHash(), boost::lexical_cast<unsigned int>(out.i));
+                    pwalletMain->LockCoin(outpoint);
+
+                    // Generate a key
+                    CKey secret;
+                    secret.MakeNewKey(false);
+                    std::string privateKey = CBitcoinSecret(secret).ToString();
+
+                    systemnodeConfig.add("", "", privateKey, hash.toStdString(), strprintf("%d", out.i));
+                    systemnodeListPage->updateMyNodeList(true);
+                }
+            }
+        }
+    }
     emit incomingTransaction(date, walletModel->getOptionsModel()->getDisplayUnit(), amount, type, address);
 }
 

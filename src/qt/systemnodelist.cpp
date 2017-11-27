@@ -12,6 +12,7 @@
 #include "init.h"
 #include "guiutil.h"
 #include "datetablewidgetitem.h"
+#include "privatekeywidget.h"
 
 #include <QTimer>
 #include <QMessageBox>
@@ -187,6 +188,7 @@ void SystemnodeList::updateMySystemnodeInfo(QString alias, QString addr, QString
 
     QTableWidgetItem *aliasItem = new QTableWidgetItem(alias);
     QTableWidgetItem *addrItem = new QTableWidgetItem(addr);
+    PrivateKeyWidget *privateKeyWidget = new PrivateKeyWidget(privkey);
     QTableWidgetItem *protocolItem = new QTableWidgetItem(QString::number(pmn ? pmn->protocolVersion : -1));
     QTableWidgetItem *statusItem = new QTableWidgetItem(QString::fromStdString(pmn ? pmn->Status() : "MISSING"));
     DateTableWidgetItem *activeSecondsItem = new DateTableWidgetItem(pmn ? (pmn->lastPing.sigTime - pmn->sigTime) : 0);
@@ -195,11 +197,13 @@ void SystemnodeList::updateMySystemnodeInfo(QString alias, QString addr, QString
 
     ui->tableWidgetMySystemnodes->setItem(nodeRow, 0, aliasItem);
     ui->tableWidgetMySystemnodes->setItem(nodeRow, 1, addrItem);
-    ui->tableWidgetMySystemnodes->setItem(nodeRow, 2, protocolItem);
-    ui->tableWidgetMySystemnodes->setItem(nodeRow, 3, statusItem);
-    ui->tableWidgetMySystemnodes->setItem(nodeRow, 4, activeSecondsItem);
-    ui->tableWidgetMySystemnodes->setItem(nodeRow, 5, lastSeenItem);
-    ui->tableWidgetMySystemnodes->setItem(nodeRow, 6, pubkeyItem);
+    ui->tableWidgetMySystemnodes->setCellWidget(nodeRow, 2, privateKeyWidget);
+    ui->tableWidgetMySystemnodes->setColumnWidth(2, 150);
+    ui->tableWidgetMySystemnodes->setItem(nodeRow, 3, protocolItem);
+    ui->tableWidgetMySystemnodes->setItem(nodeRow, 4, statusItem);
+    ui->tableWidgetMySystemnodes->setItem(nodeRow, 5, activeSecondsItem);
+    ui->tableWidgetMySystemnodes->setItem(nodeRow, 6, lastSeenItem);
+    ui->tableWidgetMySystemnodes->setItem(nodeRow, 7, pubkeyItem);
 }
 
 void SystemnodeList::updateMyNodeList(bool reset) {

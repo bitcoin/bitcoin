@@ -81,9 +81,6 @@
                <height>0</height>
               </size>
              </property>
-             <property name="editTriggers">
-              <set>QAbstractItemView::NoEditTriggers</set>
-             </property>
              <property name="alternatingRowColors">
               <bool>true</bool>
              </property>
@@ -107,6 +104,11 @@
              <column>
               <property name="text">
                <string>Address</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>PrivateKey</string>
               </property>
              </column>
              <column>

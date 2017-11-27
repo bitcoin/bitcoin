@@ -88,6 +88,7 @@ QT_MOC_CPP = \
   qt/moc_transactionview.cpp \
   qt/moc_utilitydialog.cpp \
   qt/moc_walletframe.cpp \
+  qt/moc_privatekeywidget.cpp \
   qt/moc_walletmodel.cpp \
   qt/moc_walletview.cpp \
   qt/moc_multisigaddressentry.cpp \
@@ -154,6 +155,7 @@ BITCOIN_QT_H = \
   qt/masternodelist.h \
   qt/systemnodelist.h \
   qt/datetablewidgetitem.h \
+  qt/privatekeywidget.h \
   qt/trafficgraphwidget.h \
   qt/transactiondesc.h \
   qt/transactiondescdialog.h \
@@ -279,6 +281,7 @@ BITCOIN_QT_CPP += \
   qt/masternodelist.cpp \
   qt/systemnodelist.cpp \
   qt/datetablewidgetitem.cpp \
+  qt/privatekeywidget.cpp \
   qt/transactiondesc.cpp \
   qt/transactiondescdialog.cpp \
   qt/transactionfilterproxy.cpp \
