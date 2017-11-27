@@ -252,7 +252,7 @@ public:
     }
 
     /// Is the input associated with collateral public key? (and there is 100000 SYS - checking if valid masternode)
-    bool IsInputAssociatedWithPubkey();
+    bool IsInputAssociatedWithPubkey(int& height);
 
     bool IsValidNetAddr();
     static bool IsValidNetAddr(CService addrIn);
