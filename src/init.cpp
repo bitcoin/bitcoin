@@ -1931,7 +1931,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
 	fMasterNode = GetBoolArg("-masternode", false);
 
 	// SYSCOIN
-	if ((fMasterNode || masternodeConfig.getCount() > 0) && GetBoolArg("-addressindex", DEFAULT_ADDRESSINDEX)) {
+	if ((fMasterNode || masternodeConfig.getCount() > 0) && fAddressIndex == false) {
 		return InitError("Enabling Masternode support requires turning on address indexing."
 			"Please add addressindex=1 to your configuration and start with -reindex");
 	}
