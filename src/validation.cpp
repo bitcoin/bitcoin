@@ -1344,15 +1344,16 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams, b
 	for (int i = 0; i < reductions; i++) {
 		nSubsidy -= nSubsidy / 20;
 	}
-	// Reduce the block reward by 20 extra percent (allowing budget/superblocks)
-	CAmount nSuperblockPart = nSubsidy / 5;
+	// Reduce the block reward of miners(which get 25% of the total block reward) by 20 extra percent (allowing budget/superblocks)
+	const CAmount &nSuperblockPart = (nSubsidy*0.25) * 0.2;
 
 	return fSuperblockPartOnly ? nSuperblockPart : nSubsidy - nSuperblockPart;
 }
 
 CAmount GetMasternodePayment(int nHeight, CAmount blockValue)
 {
-	return (blockValue + (blockValue/5))*0.75;
+	const CAmount &nTotalBlock = (blockValue / 0.25) / 0.2;
+	return nTotalBlock*0.75;
 }
 
 bool IsInitialBlockDownload()
