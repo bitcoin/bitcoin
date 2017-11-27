@@ -1628,7 +1628,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
 				}
 
 				// SYSCOIN Check for changed -addressindex state
-				if (fAddressIndex != GetBoolArg("-addressindex", DEFAULT_TXINDEX)) {
+				if (fAddressIndex != GetBoolArg("-addressindex", DEFAULT_ADDRESSINDEX)) {
 					strLoadError = _("You need to rebuild the database using -reindex-chainstate to change -addressindex");
 					break;
 				}
