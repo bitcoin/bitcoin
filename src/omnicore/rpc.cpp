@@ -899,6 +899,7 @@ UniValue omni_getproperty(const UniValue& params, bool fHelp)
             "  \"issuer\" : \"address\",            (string) the Bitcoin address of the issuer on record\n"
             "  \"creationtxid\" : \"hash\",         (string) the hex-encoded creation transaction hash\n"
             "  \"fixedissuance\" : true|false,    (boolean) whether the token supply is fixed\n"
+            "  \"managedissuance\" : true|false,    (boolean) whether the token supply is managed\n"
             "  \"totaltokens\" : \"n.nnnnnnnn\"     (string) the total number of tokens in existence\n"
             "}\n"
             "\nExamples:\n"
@@ -927,6 +928,7 @@ UniValue omni_getproperty(const UniValue& params, bool fHelp)
     response.push_back(Pair("issuer", sp.issuer));
     response.push_back(Pair("creationtxid", strCreationHash));
     response.push_back(Pair("fixedissuance", sp.fixed));
+    response.push_back(Pair("managedissuance", sp.manual));
     response.push_back(Pair("totaltokens", strTotalTokens));
 
     return response;
