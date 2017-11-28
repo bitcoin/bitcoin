@@ -119,6 +119,7 @@ private:
     bool interpret_GrantTokens();
     bool interpret_RevokeTokens();
     bool interpret_ChangeIssuer();
+    bool interpret_ChangeFreezeSetting();
     bool interpret_Activation();
     bool interpret_Deactivation();
     bool interpret_Alert();
@@ -142,6 +143,7 @@ private:
     int logicMath_GrantTokens();
     int logicMath_RevokeTokens();
     int logicMath_ChangeIssuer();
+    int logicMath_ChangeFreezeSetting();
     int logicMath_Activation();
     int logicMath_Deactivation();
     int logicMath_Alert();

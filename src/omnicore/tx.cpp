@@ -152,6 +152,9 @@ bool CMPTransaction::interpret_Transaction()
         case MSC_TYPE_CHANGE_ISSUER_ADDRESS:
             return interpret_ChangeIssuer();
 
+        case MSC_TYPE_CHANGE_FREEZE_SETTING:
+            return interpret_ChangeFreezeSetting();
+
         case OMNICORE_MESSAGE_TYPE_DEACTIVATION:
             return interpret_Deactivation();
 
@@ -634,6 +637,24 @@ bool CMPTransaction::interpret_ChangeIssuer()
     return true;
 }
 
+/** Tx 71 */
+bool CMPTransaction::interpret_ChangeFreezeSetting()
+{
+    if (pkt_size < 9) {
+        return false;
+    }
+    memcpy(&property, &pkt[4], 4);
+    swapByteOrder32(property);
+    memcpy(&action, &pkt[8], 1);
+
+    if ((!rpcOnly && msc_debug_packets) || msc_debug_packets_readonly) {
+        PrintToLog("\t        property: %d (%s)\n", property, strMPProperty(property));
+        PrintToLog("\t           state: %d\n", action);
+    }
+
+    return true;
+}
+
 /** Tx 65533 */
 bool CMPTransaction::interpret_Deactivation()
 {
@@ -771,6 +792,9 @@ int CMPTransaction::interpretPacket()
 
         case MSC_TYPE_CHANGE_ISSUER_ADDRESS:
             return logicMath_ChangeIssuer();
+
+        case MSC_TYPE_CHANGE_FREEZE_SETTING:
+            return logicMath_ChangeFreezeSetting();
 
         case OMNICORE_MESSAGE_TYPE_DEACTIVATION:
             return logicMath_Deactivation();
@@ -1946,6 +1970,61 @@ int CMPTransaction::logicMath_ChangeIssuer()
     sp.update_block = blockHash;
 
     assert(_my_sps->updateSP(property, sp));
+
+    return 0;
+}
+
+/** Tx 71 */
+int CMPTransaction::logicMath_ChangeFreezeSetting()
+{
+    uint256 blockHash;
+    {
+        LOCK(cs_main);
+
+        CBlockIndex* pindex = chainActive[block];
+        if (pindex == NULL) {
+            PrintToLog("%s(): ERROR: block %d not in the active chain\n", __func__, block);
+            return (PKT_ERROR_TOKENS -20);
+        }
+        blockHash = pindex->GetBlockHash();
+    }
+
+    if (!IsTransactionTypeAllowed(block, property, type, version)) {
+        PrintToLog("%s(): rejected: type %d or version %d not permitted for property %d at block %d\n",
+                __func__,
+                type,
+                version,
+                property,
+                block);
+        return (PKT_ERROR_TOKENS -22);
+    }
+
+    if (!IsPropertyIdValid(property)) {
+        PrintToLog("%s(): rejected: property %d does not exist\n", __func__, property);
+        return (PKT_ERROR_TOKENS -24);
+    }
+
+    CMPSPInfo::Entry sp;
+    assert(_my_sps->getSP(property, sp));
+
+    if (!sp.manual) {
+        PrintToLog("%s(): rejected: property %d is not managed\n", __func__, property);
+        return (PKT_ERROR_TOKENS -42);
+    }
+
+    if (sender != sp.issuer) {
+        PrintToLog("%s(): rejected: sender %s is not issuer of property %d [issuer=%s]\n", __func__, sender, property, sp.issuer);
+        return (PKT_ERROR_TOKENS -43);
+    }
+
+    if (action == 0) {
+        disableFreezing(property);
+    } else if (action == 1) {
+        enableFreezing(property, block);
+    } else {
+        PrintToLog("%s(): rejected: state value %d is not 0 or 1\n", __func__, action);
+        return (PKT_ERROR_TOKENS -49);
+    }
 
     return 0;
 }
