@@ -2,6 +2,8 @@ add_definitions(-DLEVELDB_PLATFORM_POSIX=1)
 
 add_subdirectory(leveldb)
 
+# LIBCROWN-SERVER
+
 add_library(libcrown_server 
   addrman.cpp 
   alert.cpp 
@@ -142,3 +144,130 @@ target_include_directories(libcrown_server PRIVATE . PRIVATE leveldb/helpers/mem
 
 target_link_libraries(libcrown_server leveldb)
 
+
+#LIBCROWN-COMMON
+
+add_library(libcrown_common
+  arith_uint256.cpp 
+  amount.cpp 
+  auxpow.cpp 
+  base58.cpp 
+  chainparams.cpp 
+  coins.cpp 
+  compressor.cpp 
+  primitives/block.cpp 
+  primitives/pureheader.cpp 
+  primitives/transaction.cpp 
+  core_read.cpp 
+  core_write.cpp 
+  hash.cpp 
+  key.cpp 
+  keystore.cpp 
+  netbase.cpp 
+  protocol.cpp 
+  pubkey.cpp 
+  script/interpreter.cpp 
+  script/script.cpp 
+  script/sign.cpp 
+  script/standard.cpp 
+  script/script_error.cpp 
+  spork.cpp 
+
+  activemasternode.h 
+  activesystemnode.h 
+  addrman.h 
+  alert.h 
+  amount.h 
+  auxpow.h 
+  arith_uint256.h 
+  base58.h 
+  bloom.h 
+  chain.h 
+  chainparamsbase.h 
+  chainparams.h 
+  chainparamsseeds.h 
+  checkpoints.h 
+  checkqueue.h 
+  clientversion.h 
+  coincontrol.h 
+  coins.h 
+  compat.h 
+  compressor.h 
+  core_io.h 
+  core_memusage.h 
+  crypter.h 
+  legacysigner.h 
+  db.h 
+  hash.h 
+  init.h 
+  instantx.h 
+  key.h 
+  keystore.h 
+  leveldbwrapper.h 
+  limitedmap.h 
+  main.h 
+  memusage.h 
+  merkleblock.h 
+  miner.h 
+  mruset.h 
+  netbase.h 
+  net.h 
+  noui.h 
+  pow.h 
+  prevector.h 
+  primitives/block.h 
+  primitives/pureheader.h 
+  primitives/transaction.h 
+  protocol.h 
+  pubkey.h 
+  random.h 
+  rpcclient.h 
+  rpcprotocol.h 
+  rpcserver.h 
+  script/interpreter.h 
+  script/script_error.h 
+  script/script.h 
+  script/sigcache.h 
+  script/sign.h 
+  script/standard.h 
+  serialize.h 
+  spork.h 
+  streams.h 
+  support/allocators/secure.h 
+  support/allocators/zeroafterfree.h 
+  support/pagelocker.h 
+  support/cleanse.h 
+  sync.h 
+  masternode.h 
+  masternode-payments.h 
+  masternode-budget.h 
+  masternode-sync.h 
+  masternodeman.h 
+  masternodeconfig.h 
+  systemnode.h 
+  systemnode-payments.h 
+  systemnode-sync.h 
+  systemnodeman.h 
+  systemnodeconfig.h 
+  threadsafety.h 
+  timedata.h 
+  tinyformat.h 
+  txdb.h 
+  txmempool.h 
+  ui_interface.h 
+  uint256.h 
+  undo.h 
+  util.h 
+  utilmoneystr.h 
+  utilstrencodings.h 
+  utiltime.h 
+  version.h 
+  walletdb.h 
+  wallet.h 
+  wallet_ismine.h 
+  compat/byteswap.h 
+  compat/endian.h 
+  compat/sanity.h
+)
+
+target_include_directories(libcrown_common PRIVATE . PRIVATE leveldb/helpers/memenv PRIVATE secp256k1/include)
