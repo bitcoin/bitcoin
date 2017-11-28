@@ -15,5 +15,6 @@ add_definitions(-DHAVE_DECL_BE64TOH=1)
 add_definitions(-DHAVE_DECL_LE64TOH=1)
 add_definitions(-DHAVE_WORKING_BOOST_SLEEP_FOR=1)
 
+add_subdirectory(src/univalue)
 add_subdirectory(src)
 

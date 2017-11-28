@@ -2,6 +2,23 @@ add_definitions(-DLEVELDB_PLATFORM_POSIX=1)
 
 add_subdirectory(leveldb)
 
+add_library(libcrown_crypto
+  crypto/sha1.cpp
+  crypto/sha256.cpp
+  crypto/sha512.cpp
+  crypto/hmac_sha256.cpp
+  crypto/hmac_sha512.cpp
+  crypto/ripemd160.cpp
+  crypto/common.h
+  crypto/sha256.h
+  crypto/sha512.h
+  crypto/hmac_sha256.h
+  crypto/hmac_sha512.h
+  crypto/sha1.h
+  crypto/ripemd160.h
+)
+target_include_directories(libcrown_crypto PRIVATE .)
+
 # LIBCROWN-SERVER
 
 add_library(libcrown_server 
