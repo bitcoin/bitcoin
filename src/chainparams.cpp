@@ -117,6 +117,8 @@ public:
     CMainParams() {
         strNetworkID = "main";
         consensus.nSubsidyHalvingInterval = 525600;
+		consensus.nSeniorityInterval = 43800 * 4; // seniority increases every 4 months (quarter year)
+		consensus.nTotalSeniorityIntervals = 9;
         consensus.nInstantSendKeepLock = 24;
         consensus.nBudgetPaymentsStartBlock = 0; // actual historical value
         consensus.nBudgetPaymentsCycleBlocks = 43800; // actual number of blocks per month
@@ -262,6 +264,8 @@ public:
     CTestNetParams() {
         strNetworkID = "test";
         consensus.nSubsidyHalvingInterval = 525600;
+		consensus.nSeniorityInterval = 60*24; // seniority increases every day
+		consensus.nTotalSeniorityIntervals = 9;
         consensus.nInstantSendKeepLock = 6;
         consensus.nBudgetPaymentsStartBlock = 0;
         consensus.nBudgetPaymentsCycleBlocks = 60;
@@ -369,6 +373,8 @@ class CRegTestParams : public CChainParams {
 public:
     CRegTestParams() {
         strNetworkID = "regtest";
+		consensus.nSeniorityInterval = 60; // seniority increases every hour
+		consensus.nTotalSeniorityIntervals = 9;
         consensus.nSubsidyHalvingInterval = 150;
         consensus.nInstantSendKeepLock = 6;
         consensus.nBudgetPaymentsStartBlock = 0;

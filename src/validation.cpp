@@ -1325,7 +1325,7 @@ double ConvertBitsToDouble(unsigned int nBits)
 	return dDiff;
 }
 
-CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams, bool fSuperblockPartOnly, bool fMasternodePartOnly, unsigned int nTime)
+CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams, bool fSuperblockPartOnly, bool fMasternodePartOnly, unsigned int nStartTime)
 {
 	if (nHeight == 0)
 		return 8.88*COIN;
@@ -1335,7 +1335,7 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams, b
 		// SYSCOIN 2.1 snapshot
 		return 521460000 * COIN;
 	}
-	CAmount nSubsidy = 38.5 * COIN;
+	CAmount nSubsidy = 38.5f * COIN;
 	int reductions = nHeight / consensusParams.nSubsidyHalvingInterval;
 	if (reductions >= 50)
 		return 0;
@@ -1345,13 +1345,29 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams, b
 		nSubsidy -= nSubsidy / 20;
 	}
 	// Reduce the block reward of miners (allowing budget/superblocks)
-	const CAmount &nSuperblockPart = (nSubsidy*0.1);
+	const CAmount &nSuperblockPart = (nSubsidy*0.1f);
 
 	if (fSuperblockPartOnly)
 		return nSuperblockPart;
 	nSubsidy -= nSuperblockPart;
-	if (fMasternodePartOnly)
-		return nSubsidy*0.75;
+	if (fMasternodePartOnly) {
+		nSubsidy *= 0.75f;
+		if (nHeight > 0) {
+			const unsigned int &nCurrentTime = chainActive[nHeight - 1]->nTime;
+			if (nCurrentTime < nStartTime)
+				nCurrentTime = nStartTime;
+			const unsigned int &nDifferenceInBlocks = (nCurrentTime - nStartTime) / 60;
+			// the first three intervals should discount rewards to incentivize bonding over longer terms (we add 10% premium every interval)
+			float fSubsidyAdjustmentPercentage = -0.3f;
+			for (int i = 0; i < consensusParams.nTotalSeniorityIntervals; i++) {
+				const int &nTotalSeniorityBlocks = i*consensusParams.nSeniorityInterval;
+				if (nDifferenceInBlocks <= nTotalSeniorityBlocks)
+					break;
+				fSubsidyAdjustmentPercentage += 0.1f;
+			}
+			nSubsidy *= fSubsidyAdjustmentPercentage;
+		}
+	}
 
 	return nSubsidy;
 
