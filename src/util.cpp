@@ -89,6 +89,7 @@ const int64_t nStartupTime = GetTime();
 
 const char * const BITCOIN_CONF_FILENAME = "bitcoin.conf";
 const char * const BITCOIN_PID_FILENAME = "bitcoind.pid";
+const char * const DEFAULT_DEBUGLOGFILE = "debug.log";
 
 ArgsManager gArgs;
 bool fPrintToConsole = false;
@@ -189,26 +190,40 @@ static void DebugPrintInit()
     vMsgsBeforeOpenLog = new std::list<std::string>;
 }
 
-void OpenDebugLog()
+fs::path GetDebugLogPath()
+{
+    fs::path logfile(gArgs.GetArg("-debuglogfile", DEFAULT_DEBUGLOGFILE));
+    if (logfile.is_absolute()) {
+        return logfile;
+    } else {
+        return GetDataDir() / logfile;
+    }
+}
+
+bool OpenDebugLog()
 {
     boost::call_once(&DebugPrintInit, debugPrintInitFlag);
     boost::mutex::scoped_lock scoped_lock(*mutexDebugLog);
 
     assert(fileout == nullptr);
     assert(vMsgsBeforeOpenLog);
-    fs::path pathDebug = GetDataDir() / "debug.log";
+    fs::path pathDebug = GetDebugLogPath();
+
     fileout = fsbridge::fopen(pathDebug, "a");
-    if (fileout) {
-        setbuf(fileout, nullptr); // unbuffered
-        // dump buffered messages from before we opened the log
-        while (!vMsgsBeforeOpenLog->empty()) {
-            FileWriteStr(vMsgsBeforeOpenLog->front(), fileout);
-            vMsgsBeforeOpenLog->pop_front();
-        }
+    if (!fileout) {
+        return false;
+    }
+
+    setbuf(fileout, nullptr); // unbuffered
+    // dump buffered messages from before we opened the log
+    while (!vMsgsBeforeOpenLog->empty()) {
+        FileWriteStr(vMsgsBeforeOpenLog->front(), fileout);
+        vMsgsBeforeOpenLog->pop_front();
     }
 
     delete vMsgsBeforeOpenLog;
     vMsgsBeforeOpenLog = nullptr;
+    return true;
 }
 
 struct CLogCategoryDesc
@@ -355,7 +370,7 @@ int LogPrintStr(const std::string &str)
             // reopen the log file, if requested
             if (fReopenDebugLog) {
                 fReopenDebugLog = false;
-                fs::path pathDebug = GetDataDir() / "debug.log";
+                fs::path pathDebug = GetDebugLogPath();
                 if (fsbridge::freopen(pathDebug,"a",fileout) != nullptr)
                     setbuf(fileout, nullptr); // unbuffered
             }
@@ -774,7 +789,7 @@ void ShrinkDebugFile()
     // Amount of debug.log to save at end when shrinking (must fit in memory)
     constexpr size_t RECENT_DEBUG_HISTORY_SIZE = 10 * 1000000;
     // Scroll debug.log if it's getting too big
-    fs::path pathLog = GetDataDir() / "debug.log";
+    fs::path pathLog = GetDebugLogPath();
     FILE* file = fsbridge::fopen(pathLog, "r");
     // If debug.log file is more than 10% bigger the RECENT_DEBUG_HISTORY_SIZE
     // trim it down by saving only the last RECENT_DEBUG_HISTORY_SIZE bytes
