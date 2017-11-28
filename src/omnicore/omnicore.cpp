@@ -317,6 +317,32 @@ void mastercore::enableFreezing(uint32_t propertyId, int block)
     }
 }
 
+void mastercore::disableFreezing(uint32_t propertyId)
+{
+    int liveBlock = 0;
+    for (std::set<std::pair<uint32_t,int> >::iterator it = setFreezingEnabledProperties.begin(); it != setFreezingEnabledProperties.end(); it++) {
+        if (propertyId == (*it).first) {
+            liveBlock = (*it).second;
+        }
+    }
+    if (liveBlock == 0) {
+        PrintToLog("ERROR: Failed to determine live block to disable freezing for property %d!\n", propertyId);
+    } else {
+        setFreezingEnabledProperties.erase(std::make_pair(propertyId, liveBlock));
+        PrintToLog("Freezing for property %d has been disabled.\n", propertyId);
+    }
+
+    // When disabling freezing for a property, all frozen addresses for that property will be unfrozen!
+    for (std::set<std::pair<std::string,uint32_t> >::iterator it = setFrozenAddresses.begin(); it != setFrozenAddresses.end(); ) {
+        if ((*it).second == propertyId) {
+            PrintToLog("Address %s has been unfrozen for property %d.\n", (*it).first, propertyId);
+            it = setFrozenAddresses.erase(it);
+        } else {
+            it++;
+        }
+    }
+}
+
 void mastercore::freezeAddress(const std::string& address, uint32_t propertyId)
 {
     setFrozenAddresses.insert(std::make_pair(address, propertyId));

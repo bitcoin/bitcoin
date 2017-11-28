@@ -374,8 +374,9 @@ void unfreezeAddress(const std::string& address, uint32_t propertyId);
 bool isAddressFrozen(const std::string& address, uint32_t propertyId);
 /** Adds a property to the freezingEnabledMap **/
 void enableFreezing(uint32_t propertyId, int block);
+/** Removes a property from the freezingEnabledMap **/
+void disableFreezing(uint32_t propertyId);
 
 }
-
 
 #endif // OMNICORE_OMNICORE_H
