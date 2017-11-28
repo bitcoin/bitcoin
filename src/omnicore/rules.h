@@ -34,6 +34,8 @@ const uint16_t FEATURE_TRADEALLPAIRS = 8;
 const uint16_t FEATURE_FEES = 9;
 //! Feature identifier to enable cross property (v1) Send To Owners
 const uint16_t FEATURE_STOV1 = 10;
+//! Feature identifier to activate the waiting period for enabling managed property address freezing
+const uint16_t FEATURE_FREEZENOTICE = 14;
 
 //! When (propertyTotalTokens / OMNI_FEE_THRESHOLD) is reached fee distribution will occur
 const int64_t OMNI_FEE_THRESHOLD = 100000; // 0.001%
@@ -86,6 +88,9 @@ public:
     //! Maximum number of blocks to use for notice rules on activation
     int MAX_ACTIVATION_BLOCKS;
 
+    //! Waiting period after enabling freezing before addresses may be frozen
+    int OMNI_FREEZE_WAIT_PERIOD;
+
     //! Block to enable pay-to-pubkey-hash support
     int PUBKEYHASH_BLOCK;
     //! Block to enable pay-to-script-hash support
@@ -126,6 +131,8 @@ public:
     int TRADEALLPAIRS_FEATURE_BLOCK;
     //! Block to enable the fee system & 0.05% fee for trading non-Omni pairs
     int FEES_FEATURE_BLOCK;
+    //! Block to activate the waiting period for enabling managed property address freezing
+    int FREEZENOTICE_FEATURE_BLOCK;
 
     /** Returns a mapping of transaction types, and the blocks at which they are enabled. */
     virtual std::vector<TransactionRestriction> GetRestrictions() const;
