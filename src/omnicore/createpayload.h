@@ -21,6 +21,7 @@ std::vector<unsigned char> CreatePayload_CloseCrowdsale(uint32_t propertyId);
 std::vector<unsigned char> CreatePayload_Grant(uint32_t propertyId, uint64_t amount, std::string memo);
 std::vector<unsigned char> CreatePayload_Revoke(uint32_t propertyId, uint64_t amount, std::string memo);
 std::vector<unsigned char> CreatePayload_ChangeIssuer(uint32_t propertyId);
+std::vector<unsigned char> CreatePayload_ChangeFreezeSetting(uint32_t propertyId, bool state);
 std::vector<unsigned char> CreatePayload_MetaDExTrade(uint32_t propertyIdForSale, uint64_t amountForSale, uint32_t propertyIdDesired, uint64_t amountDesired);
 std::vector<unsigned char> CreatePayload_MetaDExCancelPrice(uint32_t propertyIdForSale, uint64_t amountForSale, uint32_t propertyIdDesired, uint64_t amountDesired);
 std::vector<unsigned char> CreatePayload_MetaDExCancelPair(uint32_t propertyIdForSale, uint32_t propertyIdDesired);

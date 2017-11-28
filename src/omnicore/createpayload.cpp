@@ -3,6 +3,7 @@
 #include "omnicore/createpayload.h"
 
 #include "omnicore/convert.h"
+#include "omnicore/utils.h"
 
 #include "tinyformat.h"
 
@@ -312,6 +313,24 @@ std::vector<unsigned char> CreatePayload_ChangeIssuer(uint32_t propertyId)
     PUSH_BACK_BYTES(payload, messageVer);
     PUSH_BACK_BYTES(payload, messageType);
     PUSH_BACK_BYTES(payload, propertyId);
+
+    return payload;
+}
+
+std::vector<unsigned char> CreatePayload_ChangeFreezeSetting(uint32_t propertyId, bool state)
+{
+    std::vector<unsigned char> payload;
+    uint16_t messageType = 71;
+    uint16_t messageVer = 0;
+    mastercore::swapByteOrder16(messageType);
+    mastercore::swapByteOrder16(messageVer);
+    mastercore::swapByteOrder32(propertyId);
+    unsigned char freezeState = (state) ? 1 : 0;
+
+    PUSH_BACK_BYTES(payload, messageVer);
+    PUSH_BACK_BYTES(payload, messageType);
+    PUSH_BACK_BYTES(payload, propertyId);
+    PUSH_BACK_BYTES(payload, freezeState);
 
     return payload;
 }
