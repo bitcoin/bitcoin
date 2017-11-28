@@ -26,11 +26,11 @@ $(LIBLEVELDB) $(LIBMEMENV):
 endif
 
 noinst_LIBRARIES = \
-  libppcoin_server.a \
-  libppcoin_common.a \
-  libppcoin_cli.a
+  libpeercoin_server.a \
+  libpeercoin_common.a \
+  libpeercoin_cli.a
 if ENABLE_WALLET
-noinst_LIBRARIES += libppcoin_wallet.a
+noinst_LIBRARIES += libpeercoin_wallet.a
 endif
 
 bin_PROGRAMS =
@@ -104,7 +104,7 @@ obj/build.h: FORCE
 	  $(abs_top_srcdir)
 version.o: obj/build.h
 
-libppcoin_server_a_SOURCES = \
+libpeercoin_server_a_SOURCES = \
   addrman.cpp \
   alert.cpp \
   rpcserver.cpp \
@@ -127,7 +127,7 @@ libppcoin_server_a_SOURCES = \
   $(JSON_H) \
   $(BITCOIN_CORE_H)
 
-libppcoin_wallet_a_SOURCES = \
+libpeercoin_wallet_a_SOURCES = \
   db.cpp \
   rpcdump.cpp \
   rpcmining.cpp \
@@ -139,7 +139,7 @@ libppcoin_wallet_a_SOURCES = \
   rpcwallet.cpp \
   $(BITCOIN_CORE_H)
 
-libppcoin_common_a_SOURCES = \
+libpeercoin_common_a_SOURCES = \
   hash.cpp \
   key.cpp \
   netbase.cpp \
@@ -150,23 +150,23 @@ libppcoin_common_a_SOURCES = \
   version.cpp \
   $(BITCOIN_CORE_H)
 
-libppcoin_cli_a_SOURCES = \
+libpeercoin_cli_a_SOURCES = \
   rpcclient.cpp \
   $(BITCOIN_CORE_H)
 
-nodist_libppcoin_common_a_SOURCES = $(top_srcdir)/src/obj/build.h
+nodist_libpeercoin_common_a_SOURCES = $(top_srcdir)/src/obj/build.h
 #
 
 # peercoind binary #
 peercoind_LDADD = \
-  libppcoin_server.a \
-  libppcoin_cli.a \
-  libppcoin_common.a \
+  libpeercoin_server.a \
+  libpeercoin_cli.a \
+  libpeercoin_common.a \
   $(LIBLEVELDB) \
   $(LIBMEMENV) \
   $(BOOST_LIBS)
 if ENABLE_WALLET
-peercoind_LDADD += libppcoin_wallet.a
+peercoind_LDADD += libpeercoin_wallet.a
 endif
 peercoind_SOURCES = bitcoind.cpp
 peercoind_LDFLAGS = $(AM_LDFLAGS)
@@ -179,7 +179,7 @@ AM_CPPFLAGS += $(BDB_CPPFLAGS)
 peercoind_LDADD += $(BDB_LIBS)
 
 # bitcoin-cli binary #
-peercoin_cli_LDADD = libppcoin_cli.a libppcoin_common.a $(BOOST_LIBS)
+peercoin_cli_LDADD = libpeercoin_cli.a libpeercoin_common.a $(BOOST_LIBS)
 peercoin_cli_SOURCES = bitcoin-cli.cpp
 peercoin_cli_LDFLAGS = $(AM_LDFLAGS)
 
@@ -205,11 +205,11 @@ clean-local:
 	$(OBJC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	  $(CPPFLAGS) $(AM_CXXFLAGS) $(QT_INCLUDES) $(CXXFLAGS)  -c -o $@ $<
 
-LIBPPCOIN_SERVER=libppcoin_server.a
-LIBPPCOIN_WALLET=libppcoin_wallet.a
-LIBPPCOIN_COMMON=libppcoin_common.a
-LIBPPCOIN_CLI=libppcoin_cli.a
-LIBPPCOINQT=qt/libppcoinqt.a
+LIBPEERCOIN_SERVER=libpeercoin_server.a
+LIBPEERCOIN_WALLET=libpeercoin_wallet.a
+LIBPEERCOIN_COMMON=libpeercoin_common.a
+LIBPEERCOIN_CLI=libpeercoin_cli.a
+LIBPEERCOINQT=qt/libpeercoinqt.a
 
 if ENABLE_TESTS
 include Makefile.test.include
