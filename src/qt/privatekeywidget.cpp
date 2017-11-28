@@ -1,4 +1,3 @@
-#include <QtWidgets>
 #include "privatekeywidget.h"
 
 PrivateKeyWidget::PrivateKeyWidget(QString privKey, QWidget *parent) 

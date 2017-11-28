@@ -2,6 +2,12 @@
 #define PRIVATEKEYWIDGET_H
 
 #include <QWidget>
+#include <QHBoxLayout>
+#include <QLineEdit>
+#include <QPushButton>
+#include <QApplication>
+#include <QClipboard>
+#include <QToolTip>
 
 class QHBoxLayout;
 class QLineEdit;

@@ -87,3 +87,14 @@ bool CSystemnodeConfig::read(std::string& strErr) {
     streamConfig.close();
     return true;
 }
+
+bool CSystemnodeConfig::write(std::string& strErr)
+{
+    boost::filesystem::path pathSystemnodeConfigFile = GetSystemnodeConfigFile();
+    boost::filesystem::ofstream streamConfig(pathSystemnodeConfigFile, std::ofstream::out);
+    BOOST_FOREACH(CSystemnodeConfig::CSystemnodeEntry sne, systemnodeConfig.getEntries()) {
+        streamConfig << sne.getAlias() << " " << sne.getIp() << " " << sne.getPrivKey() << " " << sne.getTxHash() << " " << sne.getOutputIndex() << "\n";
+    }
+    streamConfig.close();
+    return true;
+}
