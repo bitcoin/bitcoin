@@ -269,7 +269,7 @@ bool CMasternode::IsInputAssociatedWithPubkey(int& height)
 
 	// SYSCOIN first txid of this address should be the collateral
 	if (unspentOutputs.size() > 0 && unspentOutputs[0].second.satoshis == 100000 * COIN && unspentOutputs[0].first.txhash == vin.prevout.hash) {
-		height = it->second.blockHeight;
+		height = unspentOutputs[0].second.blockHeight;
 		return true;
 	}
     return false;
