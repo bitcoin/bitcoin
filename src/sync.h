@@ -8,8 +8,6 @@
 
 #include <threadsafety.h>
 
-#include <boost/thread/condition_variable.hpp>
-#include <boost/thread/mutex.hpp>
 #include <condition_variable>
 #include <thread>
 #include <mutex>
@@ -196,8 +194,8 @@ public:
 class CSemaphore
 {
 private:
-    boost::condition_variable condition;
-    boost::mutex mutex;
+    std::condition_variable condition;
+    std::mutex mutex;
     int value;
 
 public:
@@ -205,16 +203,14 @@ public:
 
     void wait()
     {
-        boost::unique_lock<boost::mutex> lock(mutex);
-        while (value < 1) {
-            condition.wait(lock);
-        }
+        std::unique_lock<std::mutex> lock(mutex);
+        condition.wait(lock, [&]() { return value >= 1; });
         value--;
     }
 
     bool try_wait()
     {
-        boost::unique_lock<boost::mutex> lock(mutex);
+        std::lock_guard<std::mutex> lock(mutex);
         if (value < 1)
             return false;
         value--;
@@ -224,7 +220,7 @@ public:
     void post()
     {
         {
-            boost::unique_lock<boost::mutex> lock(mutex);
+            std::lock_guard<std::mutex> lock(mutex);
             value++;
         }
         condition.notify_one();
