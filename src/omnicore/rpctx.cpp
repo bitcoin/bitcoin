@@ -1098,6 +1098,57 @@ UniValue omni_sendchangeissuer(const UniValue& params, bool fHelp)
     }
 }
 
+UniValue omni_sendchangefreezesetting(const UniValue& params, bool fHelp)
+{
+    if (fHelp || params.size() != 3)
+        throw runtime_error(
+            "omni_sendchangefreezesetting \"fromaddress\" propertyid state\n"
+
+            "\nEnables or disables address freezing for a centrally managed property.\n"
+            "\nIMPORTANT NOTE:  Disabling freezing for a property will UNFREEZE all frozen addresses for that property!"
+
+            "\nArguments:\n"
+            "1. fromaddress          (string,  required) the issuer of the tokens\n"
+            "2. propertyid           (number,  required) the identifier of the tokens\n"
+            "3. state                (boolean, required) the state of address freezing\n"
+
+            "\nResult:\n"
+            "\"hash\"                  (string) the hex-encoded transaction hash\n"
+
+            "\nExamples:\n"
+            + HelpExampleCli("omni_sendchangefreezesetting", "\"3HTHRxu3aSDV4deakjC7VmsiUp7c6dfbvs\" 3 false")
+            + HelpExampleRpc("omni_sendchangefreezesetting", "\"3HTHRxu3aSDV4deakjC7VmsiUp7c6dfbvs\", 3, false")
+        );
+
+    // obtain parameters & info
+    std::string fromAddress = ParseAddress(params[0]);
+    uint32_t propertyId = ParsePropertyId(params[1]);
+    bool state = params[2].get_bool();
+
+    // perform checks
+    RequireExistingProperty(propertyId);
+    RequireTokenIssuer(fromAddress, propertyId);
+
+    // create a payload for the transaction
+    std::vector<unsigned char> payload = CreatePayload_ChangeFreezeSetting(propertyId, state);
+
+    // request the wallet build the transaction (and if needed commit it)
+    uint256 txid;
+    std::string rawHex;
+    int result = WalletTxBuilder(fromAddress, "", "", 0, payload, txid, rawHex, autoCommit);
+
+    // check error and return the txid (or raw hex depending on autocommit)
+    if (result != 0) {
+        throw JSONRPCError(result, error_str(result));
+    } else {
+        if (!autoCommit) {
+            return rawHex;
+        } else {
+            return txid.GetHex();
+        }
+    }
+}
+
 UniValue omni_sendactivation(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 4)
@@ -1258,6 +1309,7 @@ static const CRPCCommand commands[] =
     { "omni layer (transaction creation)", "omni_sendclosecrowdsale",      &omni_sendclosecrowdsale,      false },
     { "omni layer (transaction creation)", "omni_sendchangeissuer",        &omni_sendchangeissuer,        false },
     { "omni layer (transaction creation)", "omni_sendall",                 &omni_sendall,                 false },
+    { "omni layer (transaction creation)", "omni_sendchangefreezesetting", &omni_sendchangefreezesetting, false },
     { "hidden",                            "omni_senddeactivation",        &omni_senddeactivation,        true  },
     { "hidden",                            "omni_sendactivation",          &omni_sendactivation,          false },
     { "hidden",                            "omni_sendalert",               &omni_sendalert,               true  },
