@@ -304,6 +304,18 @@ bool mastercore::isMainEcosystemProperty(uint32_t propertyId)
     return false;
 }
 
+void mastercore::freezeAddress(const std::string& address, uint32_t propertyId)
+{
+    setFrozenAddresses.insert(std::make_pair(address, propertyId));
+    PrintToLog("Address %s has been frozen for property %d.\n", address, propertyId);
+}
+
+void mastercore::unfreezeAddress(const std::string& address, uint32_t propertyId)
+{
+    setFrozenAddresses.erase(std::make_pair(address, propertyId));
+    PrintToLog("Address %s has been unfrozen for property %d.\n", address, propertyId);
+}
+
 std::string mastercore::getTokenLabel(uint32_t propertyId)
 {
     std::string tokenStr;

@@ -361,6 +361,15 @@ bool getValidMPTX(const uint256 &txid, int *block = NULL, unsigned int *type = N
 bool update_tally_map(const std::string& who, uint32_t propertyId, int64_t amount, TallyType ttype);
 
 std::string getTokenLabel(uint32_t propertyId);
+
+/**
+    NOTE: The following functions are only permitted for properties
+          managed by a central issuer that have enabled freezing.
+ **/
+/** Adds an address and property to the frozenMap **/
+void freezeAddress(const std::string& address, uint32_t propertyId);
+/** Removes an address and property from the frozenMap **/
+void unfreezeAddress(const std::string& address, uint32_t propertyId);
 }
 
 
