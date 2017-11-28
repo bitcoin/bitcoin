@@ -158,6 +158,9 @@ bool CMPTransaction::interpret_Transaction()
         case MSC_TYPE_FREEZE_PROPERTY_TOKENS:
             return interpret_FreezeTokens();
 
+        case MSC_TYPE_UNFREEZE_PROPERTY_TOKENS:
+            return interpret_UnfreezeTokens();
+
         case OMNICORE_MESSAGE_TYPE_DEACTIVATION:
             return interpret_Deactivation();
 
@@ -693,6 +696,41 @@ bool CMPTransaction::interpret_FreezeTokens()
     return true;
 }
 
+/** Tx 186 */
+bool CMPTransaction::interpret_UnfreezeTokens()
+{
+    if (pkt_size < 37) {
+        return false;
+    }
+    memcpy(&property, &pkt[4], 4);
+    swapByteOrder32(property);
+    memcpy(&nValue, &pkt[8], 8);
+    swapByteOrder64(nValue);
+    nNewValue = nValue;
+
+    /**
+        Note, TX186 virtual reference transaction type.
+              With virtual reference transactions a hash160 in the payload sets the receiver.
+              Reference outputs are ignored.
+    **/
+    unsigned char address_version;
+    uint160 address_hash160;
+    memcpy(&address_version, &pkt[16], 1);
+    memcpy(&address_hash160, &pkt[17], 20);
+    receiver = HashToAddress(address_version, address_hash160);
+    if (receiver.empty()) {
+        return false;
+    }
+
+    if ((!rpcOnly && msc_debug_packets) || msc_debug_packets_readonly) {
+        PrintToLog("\t        property: %d (%s)\n", property, strMPProperty(property));
+        PrintToLog("\t  value (unused): %s\n", FormatMP(property, nValue));
+        PrintToLog("\t         address: %s\n", receiver);
+    }
+
+    return true;
+}
+
 /** Tx 65533 */
 bool CMPTransaction::interpret_Deactivation()
 {
@@ -836,6 +874,9 @@ int CMPTransaction::interpretPacket()
 
         case MSC_TYPE_FREEZE_PROPERTY_TOKENS:
             return logicMath_FreezeTokens();
+
+        case MSC_TYPE_UNFREEZE_PROPERTY_TOKENS:
+            return logicMath_UnfreezeTokens();
 
         case OMNICORE_MESSAGE_TYPE_DEACTIVATION:
             return logicMath_Deactivation();
@@ -2124,6 +2165,64 @@ int CMPTransaction::logicMath_FreezeTokens()
     }
 
     freezeAddress(receiver, property);
+
+    return 0;
+}
+
+/** Tx 186 */
+int CMPTransaction::logicMath_UnfreezeTokens()
+{
+    uint256 blockHash;
+    {
+        LOCK(cs_main);
+
+        CBlockIndex* pindex = chainActive[block];
+        if (pindex == NULL) {
+            PrintToLog("%s(): ERROR: block %d not in the active chain\n", __func__, block);
+            return (PKT_ERROR_TOKENS -20);
+        }
+        blockHash = pindex->GetBlockHash();
+    }
+
+    if (!IsTransactionTypeAllowed(block, property, type, version)) {
+        PrintToLog("%s(): rejected: type %d or version %d not permitted for property %d at block %d\n",
+                __func__,
+                type,
+                version,
+                property,
+                block);
+        return (PKT_ERROR_TOKENS -22);
+    }
+
+    if (!IsPropertyIdValid(property)) {
+        PrintToLog("%s(): rejected: property %d does not exist\n", __func__, property);
+        return (PKT_ERROR_TOKENS -24);
+    }
+
+    CMPSPInfo::Entry sp;
+    assert(_my_sps->getSP(property, sp));
+
+    if (!sp.manual) {
+        PrintToLog("%s(): rejected: property %d is not managed\n", __func__, property);
+        return (PKT_ERROR_TOKENS -42);
+    }
+
+    if (sender != sp.issuer) {
+        PrintToLog("%s(): rejected: sender %s is not issuer of property %d [issuer=%s]\n", __func__, sender, property, sp.issuer);
+        return (PKT_ERROR_TOKENS -43);
+    }
+
+    if (!isFreezingEnabled(property, block)) {
+        PrintToLog("%s(): rejected: freezing is not enabled for property %d\n", __func__, property);
+        return (PKT_ERROR_TOKENS -47);
+    }
+
+    if (!isAddressFrozen(receiver, property)) {
+        PrintToLog("%s(): rejected: address %s is not frozen for property %d\n", __func__, receiver, property);
+        return (PKT_ERROR_TOKENS -48);
+    }
+
+    unfreezeAddress(receiver, property);
 
     return 0;
 }

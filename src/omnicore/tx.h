@@ -121,6 +121,7 @@ private:
     bool interpret_ChangeIssuer();
     bool interpret_ChangeFreezeSetting();
     bool interpret_FreezeTokens();
+    bool interpret_UnfreezeTokens();
     bool interpret_Activation();
     bool interpret_Deactivation();
     bool interpret_Alert();
@@ -146,6 +147,7 @@ private:
     int logicMath_ChangeIssuer();
     int logicMath_ChangeFreezeSetting();
     int logicMath_FreezeTokens();
+    int logicMath_UnfreezeTokens();
     int logicMath_Activation();
     int logicMath_Deactivation();
     int logicMath_Alert();
