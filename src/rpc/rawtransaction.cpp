@@ -179,7 +179,7 @@ UniValue getrawtransaction(const JSONRPCRequest& request)
               ? "No such mempool or blockchain transaction"
               : "No such mempool transaction. Use -txindex to enable blockchain transaction queries";
         }
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, errmsg + ". Use gettransaction for wallet transactions.");
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, errmsg + ". Use gettransaction for wallet transactions, if wallet is enabled.");
     }
 
     if (!fVerbose) {
