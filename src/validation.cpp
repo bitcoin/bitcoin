@@ -1353,7 +1353,7 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams, b
 	if (fMasternodePartOnly) {
 		nSubsidy *= 0.75f;
 		if (nHeight > 0) {
-			const unsigned int &nCurrentTime = chainActive[nHeight - 1]->nTime;
+			unsigned int nCurrentTime = chainActive[nHeight - 1]->nTime;
 			if (nCurrentTime < nStartTime)
 				nCurrentTime = nStartTime;
 			const unsigned int &nDifferenceInBlocks = (nCurrentTime - nStartTime) / 60;
