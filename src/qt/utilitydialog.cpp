@@ -14,7 +14,9 @@
 #include <qt/clientmodel.h>
 #include <qt/guiconstants.h>
 #include <qt/intro.h>
+#ifdef ENABLE_BIP70
 #include <qt/paymentrequestplus.h>
+#endif
 #include <qt/guiutil.h>
 
 #include <clientversion.h>
@@ -80,9 +82,11 @@ HelpMessageDialog::HelpMessageDialog(QWidget *parent, bool about) :
         std::string strUsage = HelpMessage(HMM_BITCOIN_QT);
         const bool showDebug = gArgs.GetBoolArg("-help-debug", false);
         strUsage += HelpMessageGroup(tr("UI Options:").toStdString());
+#ifdef ENABLE_BIP70
         if (showDebug) {
             strUsage += HelpMessageOpt("-allowselfsignedrootcertificates", strprintf("Allow self signed root certificates (default: %u)", DEFAULT_SELFSIGNED_ROOTCERTS));
         }
+#endif
         strUsage += HelpMessageOpt("-choosedatadir", strprintf(tr("Choose data directory on startup (default: %u)").toStdString(), DEFAULT_CHOOSE_DATADIR));
         strUsage += HelpMessageOpt("-lang=<lang>", tr("Set language, for example \"de_DE\" (default: system locale)").toStdString());
         strUsage += HelpMessageOpt("-min", tr("Start minimized").toStdString());

@@ -9,6 +9,8 @@
 #include <qt/qvalidatedlineedit.h>
 #include <qt/walletmodel.h>
 
+#include <base58.h>
+#include <chainparams.h>
 #include <fs.h>
 #include <primitives/transaction.h>
 #include <init.h>

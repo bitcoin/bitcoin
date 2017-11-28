@@ -1,5 +1,6 @@
 #include <qt/test/wallettests.h>
 
+#include <base58.h>
 #include <qt/bitcoinamountfield.h>
 #include <qt/callback.h>
 #include <qt/optionsmodel.h>
