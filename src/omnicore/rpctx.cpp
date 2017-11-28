@@ -1199,6 +1199,56 @@ UniValue omni_sendfreeze(const UniValue& params, bool fHelp)
     }
 }
 
+UniValue omni_sendunfreeze(const UniValue& params, bool fHelp)
+{
+    if (fHelp || params.size() != 4)
+        throw runtime_error(
+            "omni_sendunfreeze \"fromaddress\" \"toaddress\" propertyid amount \n"
+            "\nUnfreezes an address for a centrally managed token.\n"
+            "\nNote: Only the issuer may unfreeze tokens.\n"
+            "\nArguments:\n"
+            "1. fromaddress          (string, required) the address to send from (must be the issuer of the property)\n"
+            "2. toaddress            (string, required) the address to unfreeze tokens for\n"
+            "3. propertyid           (number, required) the property to unfreeze tokens for (must be managed type and have freezing option enabled)\n"
+            "4. amount               (number, required) the amount of tokens to unfreeze (note: this is unused - once frozen an address cannot send any transactions for the property)\n"
+            "\nResult:\n"
+            "\"hash\"                  (string) the hex-encoded transaction hash\n"
+            "\nExamples:\n"
+            + HelpExampleCli("omni_sendunfreeze", "\"1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P\" \"3HTHRxu3aSDV4deakjC7VmsiUp7c6dfbvs\" 1 0")
+            + HelpExampleRpc("omni_sendunfreeze", "\"1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P\", \"3HTHRxu3aSDV4deakjC7VmsiUp7c6dfbvs\", 1, 0")
+        );
+
+    // obtain parameters & info
+    std::string fromAddress = ParseAddress(params[0]);
+    std::string refAddress = ParseAddress(params[1]);
+    uint32_t propertyId = ParsePropertyId(params[2]);
+    int64_t amount = ParseAmount(params[3], isPropertyDivisible(propertyId));
+
+    // perform checks
+    RequireExistingProperty(propertyId);
+    RequireTokenIssuer(fromAddress, propertyId);
+
+    // create a payload for the transaction
+    std::vector<unsigned char> payload = CreatePayload_UnfreezeTokens(propertyId, amount, refAddress);
+
+    // request the wallet build the transaction (and if needed commit it)
+    // Note: no ref address is sent to WalletTxBuilder as the ref address is contained within the payload
+    uint256 txid;
+    std::string rawHex;
+    int result = WalletTxBuilder(fromAddress, "", "", 0, payload, txid, rawHex, autoCommit);
+
+    // check error and return the txid (or raw hex depending on autocommit)
+    if (result != 0) {
+        throw JSONRPCError(result, error_str(result));
+    } else {
+        if (!autoCommit) {
+            return rawHex;
+        } else {
+            return txid.GetHex();
+        }
+    }
+}
+
 UniValue omni_sendactivation(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 4)
@@ -1361,6 +1411,7 @@ static const CRPCCommand commands[] =
     { "omni layer (transaction creation)", "omni_sendall",                 &omni_sendall,                 false },
     { "omni layer (transaction creation)", "omni_sendchangefreezesetting", &omni_sendchangefreezesetting, false },
     { "omni layer (transaction creation)", "omni_sendfreeze",              &omni_sendfreeze,              false },
+    { "omni layer (transaction creation)", "omni_sendunfreeze",            &omni_sendunfreeze,            false },
     { "hidden",                            "omni_senddeactivation",        &omni_senddeactivation,        true  },
     { "hidden",                            "omni_sendactivation",          &omni_sendactivation,          false },
     { "hidden",                            "omni_sendalert",               &omni_sendalert,               true  },

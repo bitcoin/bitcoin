@@ -174,6 +174,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "omni_sendchangefreezesetting", 1 },
     { "omni_sendchangefreezesetting", 2 },
     { "omni_sendfreeze", 2 },
+    { "omni_sendunfreeze", 2 },
     { "omni_senddeactivation", 1 },
     { "omni_sendactivation", 1 },
     { "omni_sendactivation", 2 },
