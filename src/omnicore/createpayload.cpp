@@ -355,6 +355,26 @@ std::vector<unsigned char> CreatePayload_FreezeTokens(uint32_t propertyId, uint6
     return payload;
 }
 
+std::vector<unsigned char> CreatePayload_UnfreezeTokens(uint32_t propertyId, uint64_t amount, const std::string& address)
+{
+    std::vector<unsigned char> payload;
+    uint16_t messageType = 186;
+    uint16_t messageVer = 0;
+    mastercore::swapByteOrder16(messageType);
+    mastercore::swapByteOrder16(messageVer);
+    mastercore::swapByteOrder32(propertyId);
+    mastercore::swapByteOrder64(amount);
+    std::vector<unsigned char> addressBytes = AddressToBytes(address);
+
+    PUSH_BACK_BYTES(payload, messageVer);
+    PUSH_BACK_BYTES(payload, messageType);
+    PUSH_BACK_BYTES(payload, propertyId);
+    PUSH_BACK_BYTES(payload, amount);
+    payload.insert(payload.end(), addressBytes.begin(), addressBytes.end());
+
+    return payload;
+}
+
 std::vector<unsigned char> CreatePayload_MetaDExTrade(uint32_t propertyIdForSale, uint64_t amountForSale, uint32_t propertyIdDesired, uint64_t amountDesired)
 {
     std::vector<unsigned char> payload;
