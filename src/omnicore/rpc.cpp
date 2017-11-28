@@ -929,6 +929,11 @@ UniValue omni_getproperty(const UniValue& params, bool fHelp)
     response.push_back(Pair("creationtxid", strCreationHash));
     response.push_back(Pair("fixedissuance", sp.fixed));
     response.push_back(Pair("managedissuance", sp.manual));
+    if (sp.manual) {
+        LOCK(cs_tally);
+        int currentBlock = GetHeight();
+        response.push_back(Pair("freezingenabled", isFreezingEnabled(propertyId, currentBlock)));
+    }
     response.push_back(Pair("totaltokens", strTotalTokens));
 
     return response;
