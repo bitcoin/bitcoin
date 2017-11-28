@@ -328,18 +328,18 @@ void CMasternode::UpdateLastPaid()
 	uint160 hashBytes;
 	int type = 0;
 	if (!collateralAddress.GetIndexKey(hashBytes, type)) {
-		return false;
+		return;
 	}
 	std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue> > unspentOutputs;
 	if (!GetAddressUnspent(hashBytes, type, unspentOutputs))
-		return false;
+		return;
 	const CScript &mnpayee = GetScriptForDestination(pubKeyCollateralAddress.GetID());
 	for (std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue> >::const_iterator it = unspentOutputs.end(); it != unspentOutputs.begin(); it--) {
 		if (mnpayments.mapMasternodeBlocks.count(it->second.blockHeight) &&
 			mnpayments.mapMasternodeBlocks[it->second.blockHeight].HasPayeeWithVotes(mnpayee, 2))
 		{
 			unsigned int nStartTime = chainActive[unspentOutputs[0].second.blockHeight]->nTime;
-			const Consensus::Params& consensusParams = Params().GetConsensus();
+
 			const CAmount& nMasternodePayment = GetBlockSubsidy(it->second.blockHeight, Params().GetConsensus(), false, true, nStartTime);
 			
 			if (it->second.satoshis == nMasternodePayment) {
