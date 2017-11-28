@@ -281,6 +281,7 @@ public:
     std::set<int> GetSeedBlocks(int startHeight, int endHeight);
     void LoadAlerts(int blockHeight);
     void LoadActivations(int blockHeight);
+    bool LoadFreezeState(int blockHeight);
 
     void printStats();
     void printAll();

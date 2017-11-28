@@ -2304,6 +2304,15 @@ int mastercore_init()
     // load all alerts from levelDB (and immediately expire old ones)
     p_txlistdb->LoadAlerts(nWaterlineBlock);
 
+    // load the state of any freeable properties and frozen addresses from levelDB
+    if (!p_txlistdb->LoadFreezeState(nWaterlineBlock)) {
+        std::string strShutdownReason = "Failed to load freeze state from levelDB.  It is unsafe to continue.\n";
+        PrintToLog(strShutdownReason);
+        if (!GetBoolArg("-overrideforcedshutdown", false)) {
+            AbortNode(strShutdownReason, strShutdownReason);
+        }
+    }
+
     // initial scan
     msc_initial_scan(nWaterlineBlock);
 
@@ -2616,6 +2625,72 @@ std::set<int> CMPTxList::GetSeedBlocks(int startHeight, int endHeight)
     delete it;
 
     return setSeedBlocks;
+}
+
+bool CMPTxList::LoadFreezeState(int blockHeight)
+{
+    assert(pdb);
+    std::vector<std::pair<int64_t, uint256> > loadOrder;
+    Iterator* it = NewIterator();
+    PrintToLog("Loading freeze state from levelDB\n");
+
+    for (it->SeekToFirst(); it->Valid(); it->Next()) {
+        std::string itData = it->value().ToString();
+        std::vector<std::string> vstr;
+        boost::split(vstr, itData, boost::is_any_of(":"), token_compress_on);
+        if (4 != vstr.size()) continue;
+        if (atoi(vstr[2]) != MSC_TYPE_FREEZE_PROPERTY_TOKENS && atoi(vstr[2]) != MSC_TYPE_CHANGE_FREEZE_SETTING) continue;
+        if (atoi(vstr[0]) != 1) continue;
+        uint256 txid = uint256S(it->key().ToString());;
+        loadOrder.push_back(std::make_pair(atoi(vstr[1]), txid));
+    }
+
+    std::sort (loadOrder.begin(), loadOrder.end());
+
+    for (std::vector<std::pair<int64_t, uint256> >::iterator it = loadOrder.begin(); it != loadOrder.end(); ++it) {
+        uint256 hash = (*it).second;
+        uint256 blockHash;
+        CTransaction wtx;
+        CMPTransaction mp_obj;
+        if (!GetTransaction(hash, wtx, Params().GetConsensus(), blockHash, true)) {
+            PrintToLog("ERROR: While loading freeze transaction %s: tx in levelDB but does not exist.\n", hash.GetHex());
+            return false;
+        }
+        if (blockHash.IsNull() || (NULL == GetBlockIndex(blockHash))) {
+            PrintToLog("ERROR: While loading freeze transaction %s: failed to retrieve block hash.\n", hash.GetHex());
+            return false;
+        }
+        CBlockIndex* pBlockIndex = GetBlockIndex(blockHash);
+        if (NULL == pBlockIndex) {
+            PrintToLog("ERROR: While loading freeze transaction %s: failed to retrieve block index.\n", hash.GetHex());
+            return false;
+        }
+        int txBlockHeight = pBlockIndex->nHeight;
+        if (txBlockHeight > blockHeight) {
+            PrintToLog("ERROR: While loading freeze transaction %s: transaction is in the future.\n", hash.GetHex());
+            return false;
+        }
+        if (0 != ParseTransaction(wtx, txBlockHeight, 0, mp_obj)) {
+            PrintToLog("ERROR: While loading freeze transaction %s: failed ParseTransaction.\n", hash.GetHex());
+            return false;
+        }
+        if (!mp_obj.interpret_Transaction()) {
+            PrintToLog("ERROR: While loading freeze transaction %s: failed interpret_Transaction.\n", hash.GetHex());
+            return false;
+        }
+        if (MSC_TYPE_FREEZE_PROPERTY_TOKENS != mp_obj.getType() && MSC_TYPE_CHANGE_FREEZE_SETTING != mp_obj.getType()) {
+            PrintToLog("ERROR: While loading freeze transaction %s: levelDB type mismatch, not a freeze transaction.\n", hash.GetHex());
+            return false;
+        }
+        mp_obj.unlockLogic();
+        if (0 != mp_obj.interpretPacket()) {
+            PrintToLog("ERROR: While loading freeze transaction %s: non-zero return from interpretPacket\n", hash.GetHex());
+            return false;
+        }
+    }
+    delete it;
+
+    return true;
 }
 
 void CMPTxList::LoadActivations(int blockHeight)
