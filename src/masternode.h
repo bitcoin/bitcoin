@@ -121,6 +121,7 @@ struct masternode_info_t
     int64_t nTimeLastChecked = 0;
     int64_t nTimeLastPaid = 0;
     int64_t nTimeLastPing = 0; //* not in CMN
+	int64_t nTimeCollateralDeposited = 0;
     bool fInfoValid = false; //* not in CMN
 };
 
@@ -187,6 +188,7 @@ public:
         READWRITE(nTimeLastChecked);
         READWRITE(nTimeLastPaid);
         READWRITE(nTimeLastWatchdogVote);
+		READWRITE(nTimeCollateralDeposited);
         READWRITE(nActiveState);
         READWRITE(nCollateralMinConfBlockHash);
         READWRITE(nBlockLastPaid);
@@ -269,7 +271,8 @@ public:
 
     int GetLastPaidTime() { return nTimeLastPaid; }
     int GetLastPaidBlock() { return nBlockLastPaid; }
-    void UpdateLastPaid(const CBlockIndex *pindex, int nMaxBlocksToScanBack);
+	int GetCollateralDepositTime() { return nTimeCollateralDeposited; }
+    void UpdateLastPaid();
 
     // KEEP TRACK OF EACH GOVERNANCE ITEM INCASE THIS NODE GOES OFFLINE, SO WE CAN RECALC THEIR STATUS
     void AddGovernanceVote(uint256 nGovernanceObjectHash);

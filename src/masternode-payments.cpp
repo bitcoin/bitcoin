@@ -267,22 +267,22 @@ void CMasternodePayments::FillBlockPayee(CMutableTransaction& txNew, int nBlockH
     txoutMasternodeRet = CTxOut();
 
     CScript payee;
-
-    if(!mnpayments.GetBlockPayee(nBlockHeight, payee)) {
-        // no masternode detected...
-        int nCount = 0;
-        masternode_info_t mnInfo;
-        if(!mnodeman.GetNextMasternodeInQueueForPayment(nBlockHeight, true, nCount, mnInfo)) {
-            // ...and we can't calculate it on our own
-            LogPrintf("CMasternodePayments::FillBlockPayee -- Failed to detect masternode to pay\n");
-            return;
-        }
-        // fill payee with locally calculated winner and hope for the best
-        payee = GetScriptForDestination(mnInfo.pubKeyCollateralAddress.GetID());
-    }
-
+	masternode_info_t mnInfo;
+	if (!mnpayments.GetBlockPayee(nBlockHeight, payee)) {
+		// no masternode detected...
+		int nCount = 0;
+		if (!mnodeman.GetNextMasternodeInQueueForPayment(nBlockHeight, true, nCount, mnInfo)) {
+			// ...and we can't calculate it on our own
+			LogPrintf("CMasternodePayments::FillBlockPayee -- Failed to detect masternode to pay\n");
+			return;
+		}
+		// fill payee with locally calculated winner and hope for the best
+		payee = GetScriptForDestination(mnInfo.pubKeyCollateralAddress.GetID());
+	}
+	else
+		mnodeman.GetMasternodeInfo(payee, mnInfo);
     // GET MASTERNODE PAYMENT VARIABLES SETUP
-	blockReward = GetBlockSubsidy(nBlockHeight, Params().GetConsensus(), false, true, nStartTime)
+	blockReward = GetBlockSubsidy(nBlockHeight, Params().GetConsensus(), false, true, mnInfo.nTimeCollateralDeposited)
 
     // split reward between miner ...
     txNew.vout[0].nValue -= blockReward;
@@ -545,7 +545,7 @@ bool CMasternodeBlockPayees::IsTransactionValid(const CTransaction& txNew)
 
     int nMaxSignatures = 0;
     std::string strPayeesPossible = "";
-	const CAmount &nMasternodePayment = GetBlockSubsidy(nBlockHeight, Params().GetConsensus(), false, true, nStartTime)
+	
 
     //require at least MNPAYMENTS_SIGNATURES_REQUIRED signatures
 
@@ -560,6 +560,9 @@ bool CMasternodeBlockPayees::IsTransactionValid(const CTransaction& txNew)
 
     BOOST_FOREACH(CMasternodePayee& payee, vecPayees) {
         if (payee.GetVoteCount() >= MNPAYMENTS_SIGNATURES_REQUIRED) {
+			masternode_info_t mnInfo;
+			mnodeman.GetMasternodeInfo(txout.scriptPubKey, mnInfo);
+			const CAmount &nMasternodePayment = GetBlockSubsidy(nBlockHeight, Params().GetConsensus(), false, true, mnInfo.nTimeCollateralDeposited);
             BOOST_FOREACH(CTxOut txout, txNew.vout) {
                 if (payee.GetPayee() == txout.scriptPubKey && nMasternodePayment == txout.nValue) {
                     LogPrint("mnpayments", "CMasternodeBlockPayees::IsTransactionValid -- Found required payment\n");

@@ -345,6 +345,7 @@ void CMasternode::UpdateLastPaid()
 			if (it->second.satoshis == nMasternodePayment) {
 				nBlockLastPaid = it->second.blockHeight;
 				nTimeLastPaid = chainActive[nBlockLastPaid]->nTime;
+				nTimeCollateralDeposited = nStartTime;
 				LogPrint("masternode", "CMasternode::UpdateLastPaidBlock -- searching for block with payment to %s -- found new %d\n", vin.prevout.ToStringShort(), nBlockLastPaid);
 				break;
 			}
