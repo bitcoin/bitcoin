@@ -370,6 +370,8 @@ std::string getTokenLabel(uint32_t propertyId);
 void freezeAddress(const std::string& address, uint32_t propertyId);
 /** Removes an address and property from the frozenMap **/
 void unfreezeAddress(const std::string& address, uint32_t propertyId);
+/** Checks whether an address and property are frozen **/
+bool isAddressFrozen(const std::string& address, uint32_t propertyId);
 }
 
 
