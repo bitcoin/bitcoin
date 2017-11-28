@@ -13,6 +13,7 @@ add_definitions(-DHAVE_DECL_HTOBE64=1)
 add_definitions(-DHAVE_DECL_HTOLE64=1)
 add_definitions(-DHAVE_DECL_BE64TOH=1)
 add_definitions(-DHAVE_DECL_LE64TOH=1)
+add_definitions(-DHAVE_WORKING_BOOST_SLEEP_FOR=1)
 
 add_subdirectory(src)
 

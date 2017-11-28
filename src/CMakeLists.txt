@@ -271,3 +271,26 @@ add_library(libcrown_common
 )
 
 target_include_directories(libcrown_common PRIVATE . PRIVATE leveldb/helpers/memenv PRIVATE secp256k1/include)
+
+# LIBCROWN-UTIL
+
+add_library(libcrown_util
+  support/pagelocker.cpp 
+  chainparamsbase.cpp 
+  clientversion.cpp 
+  compat/glibc_sanity.cpp 
+  compat/glibcxx_sanity.cpp 
+  compat/strnlen.cpp 
+  random.cpp 
+  rpcprotocol.cpp 
+  support/cleanse.cpp 
+  sync.cpp 
+  uint256.cpp 
+  util.cpp 
+  utilmoneystr.cpp 
+  utilstrencodings.cpp 
+  utiltime.cpp 
+)
+
+target_include_directories(libcrown_util PRIVATE .)
+ 
