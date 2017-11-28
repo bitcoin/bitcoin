@@ -85,6 +85,9 @@ inline std::string error_str(int ec) {
       case PKT_ERROR -2:
           ec_str = "Failed to interpret transaction";
           break;
+      case PKT_ERROR -3:
+          ec_str = "Sender is frozen for the property";
+          break;
       case PKT_ERROR -22:
           ec_str = "Transaction type or version not permitted";
           break;
@@ -320,6 +323,18 @@ inline std::string error_str(int ec) {
           break;
       case PKT_ERROR_TOKENS -46:
           ec_str = "Receiver has an active crowdsale";
+          break;
+      case PKT_ERROR_TOKENS -47:
+          ec_str = "Freezing is not enabled for the property";
+          break;
+      case PKT_ERROR_TOKENS -48:
+          ec_str = "Address is not frozen";
+          break;
+      case PKT_ERROR_TOKENS -49:
+          ec_str = "State value is not 0 or 1";
+          break;
+      case PKT_ERROR_TOKENS -50:
+          ec_str = "Address is already frozen";
           break;
 
       default:
