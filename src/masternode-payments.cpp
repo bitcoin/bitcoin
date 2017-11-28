@@ -261,7 +261,7 @@ bool CMasternodePayments::CanVote(COutPoint outMasternode, int nBlockHeight)
 *   Fill Masternode ONLY payment block
 */
 
-void CMasternodePayments::FillBlockPayee(CMutableTransaction& txNew, int nBlockHeight, CAmount blockReward, CTxOut& txoutMasternodeRet)
+void CMasternodePayments::FillBlockPayee(CMutableTransaction& txNew, int nBlockHeight, CAmount &blockReward, CTxOut& txoutMasternodeRet)
 {
     // make sure it's not filled yet
     txoutMasternodeRet = CTxOut();
@@ -282,12 +282,12 @@ void CMasternodePayments::FillBlockPayee(CMutableTransaction& txNew, int nBlockH
     }
 
     // GET MASTERNODE PAYMENT VARIABLES SETUP
-    CAmount masternodePayment = GetMasternodePayment(nBlockHeight, blockReward);
+	blockReward = GetBlockSubsidy(nBlockHeight, Params().GetConsensus(), false, true, nStartTime)
 
     // split reward between miner ...
-    txNew.vout[0].nValue -= masternodePayment;
+    txNew.vout[0].nValue -= blockReward;
     // ... and masternode
-    txoutMasternodeRet = CTxOut(masternodePayment, payee);
+    txoutMasternodeRet = CTxOut(blockReward, payee);
     txNew.vout.push_back(txoutMasternodeRet);
 
     CTxDestination address1;
@@ -545,8 +545,7 @@ bool CMasternodeBlockPayees::IsTransactionValid(const CTransaction& txNew)
 
     int nMaxSignatures = 0;
     std::string strPayeesPossible = "";
-
-    CAmount nMasternodePayment = GetMasternodePayment(nBlockHeight, txNew.GetValueOut());
+	const CAmount &nMasternodePayment = GetBlockSubsidy(nBlockHeight, Params().GetConsensus(), false, true, nStartTime)
 
     //require at least MNPAYMENTS_SIGNATURES_REQUIRED signatures
 

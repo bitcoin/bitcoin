@@ -1325,7 +1325,7 @@ double ConvertBitsToDouble(unsigned int nBits)
 	return dDiff;
 }
 
-CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams, bool fSuperblockPartOnly)
+CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams, bool fSuperblockPartOnly, bool fMasternodePartOnly, unsigned int nTime)
 {
 	if (nHeight == 0)
 		return 8.88*COIN;
@@ -1347,19 +1347,14 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams, b
 	// Reduce the block reward of miners (allowing budget/superblocks)
 	const CAmount &nSuperblockPart = (nSubsidy*0.1);
 
-	return fSuperblockPartOnly ? nSuperblockPart : nSubsidy - nSuperblockPart;
-}
+	if (fSuperblockPartOnly)
+		return nSuperblockPart;
+	nSubsidy -= nSuperblockPart;
+	if (fMasternodePartOnly)
+		return nSubsidy*0.75;
 
-CAmount GetMasternodePayment(int nHeight, CAmount blockValue)
-{
-	CAmount nSubsidy = 38.5 * COIN;
-	int reductions = nHeight / consensusParams.nSubsidyHalvingInterval;
-	if (reductions >= 50)
-		return 0;
-	for (int i = 0; i < reductions; i++) {
-		nSubsidy -= nSubsidy / 20;
-	}
-	return nSubsidy*0.75;
+	return nSubsidy;
+
 }
 
 bool IsInitialBlockDownload()

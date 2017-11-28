@@ -267,11 +267,10 @@ bool CMasternode::IsInputAssociatedWithPubkey(int& height)
 	if (!GetAddressUnspent(hashBytes, type, unspentOutputs))
 		return false;
 
-	for (std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue> >::const_iterator it = unspentOutputs.begin(); it != unspentOutputs.end(); it++) {
-		if (it->second.satoshis == 100000 * COIN && it->first.txhash == vin.prevout.hash) {
-			height = it->second.blockHeight;
-			return true;
-		}
+	// SYSCOIN first txid of this address should be the collateral
+	if (unspentOutputs.size() > 0 && unspentOutputs[0].second.satoshis == 100000 * COIN && unspentOutputs[0].first.txhash == vin.prevout.hash) {
+		height = it->second.blockHeight;
+		return true;
 	}
     return false;
 }
@@ -323,43 +322,34 @@ std::string CMasternode::GetStatus() const
     return GetStateString();
 }
 
-void CMasternode::UpdateLastPaid(const CBlockIndex *pindex, int nMaxBlocksToScanBack)
+void CMasternode::UpdateLastPaid()
 {
-    if(!pindex) return;
+   	CSyscoinAddress collateralAddress(pubKeyCollateralAddress.GetID());
+	uint160 hashBytes;
+	int type = 0;
+	if (!collateralAddress.GetIndexKey(hashBytes, type)) {
+		return false;
+	}
+	std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue> > unspentOutputs;
+	if (!GetAddressUnspent(hashBytes, type, unspentOutputs))
+		return false;
 
-    const CBlockIndex *BlockReading = pindex;
-
-    CScript mnpayee = GetScriptForDestination(pubKeyCollateralAddress.GetID());
-    // LogPrint("masternode", "CMasternode::UpdateLastPaidBlock -- searching for block with payment to %s\n", vin.prevout.ToStringShort());
-
-    LOCK(cs_mapMasternodeBlocks);
-
-    for (int i = 0; BlockReading && BlockReading->nHeight > nBlockLastPaid && i < nMaxBlocksToScanBack; i++) {
-        if(mnpayments.mapMasternodeBlocks.count(BlockReading->nHeight) &&
-            mnpayments.mapMasternodeBlocks[BlockReading->nHeight].HasPayeeWithVotes(mnpayee, 2))
-        {
-            CBlock block;
-            if(!ReadBlockFromDisk(block, BlockReading, Params().GetConsensus())) // shouldn't really happen
-                continue;
-
-            CAmount nMasternodePayment = GetMasternodePayment(BlockReading->nHeight, block.vtx[0].GetValueOut());
-
-            BOOST_FOREACH(CTxOut txout, block.vtx[0].vout)
-                if(mnpayee == txout.scriptPubKey && nMasternodePayment == txout.nValue) {
-                    nBlockLastPaid = BlockReading->nHeight;
-                    nTimeLastPaid = BlockReading->nTime;
-                    LogPrint("masternode", "CMasternode::UpdateLastPaidBlock -- searching for block with payment to %s -- found new %d\n", vin.prevout.ToStringShort(), nBlockLastPaid);
-                    return;
-                }
-        }
-
-        if (BlockReading->pprev == NULL) { assert(BlockReading); break; }
-        BlockReading = BlockReading->pprev;
-    }
-
-    // Last payment for this masternode wasn't found in latest mnpayments blocks
-    // or it was found in mnpayments blocks but wasn't found in the blockchain.
-    // LogPrint("masternode", "CMasternode::UpdateLastPaidBlock -- searching for block with payment to %s -- keeping old %d\n", vin.prevout.ToStringShort(), nBlockLastPaid);
+	for (std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue> >::const_iterator it = unspentOutputs.end(); it != unspentOutputs.begin(); it--) {
+		if (mnpayments.mapMasternodeBlocks.count(it->second.blockHeight) &&
+			mnpayments.mapMasternodeBlocks[it->second.blockHeight].HasPayeeWithVotes(mnpayee, 2))
+		{
+			unsigned int nStartTime = chainActive[unspentOutputs[0].second.blockHeight]->nTime;
+			const Consensus::Params& consensusParams = Params().GetConsensus();
+			const CAmount& nMasternodePayment = GetBlockSubsidy(it->second.blockHeight, Params().GetConsensus(), false, true, nStartTime);
+			
+			if (it->second.satoshis == nMasternodePayment) {
+				nBlockLastPaid = it->second.blockHeight;
+				nTimeLastPaid = chainActive[nBlockLastPaid]->nTime;
+				LogPrint("masternode", "CMasternode::UpdateLastPaidBlock -- searching for block with payment to %s -- found new %d\n", vin.prevout.ToStringShort(), nBlockLastPaid);
+				break;
+			}
+		}
+	}
 }
 
 bool CMasternodeBroadcast::Create(std::string strService, std::string strKeyMasternode, std::string strTxHash, std::string strOutputIndex, std::string& strErrorRet, CMasternodeBroadcast &mnbRet, bool fOffline)
