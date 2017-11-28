@@ -968,6 +968,16 @@ static void MaybePushAddress(Object & entry, const CTxDestination &dest)
         entry.push_back(Pair("address", addr.ToString()));
 }
 
+static void PushCoinStakeCategory(Object & entry, const CWalletTx &wtx)
+{
+    if (wtx.GetDepthInMainChain() < 1)
+        entry.push_back(Pair("category", "stake-orphan"));
+    else if (wtx.GetBlocksToMaturity() > 0)
+        entry.push_back(Pair("category", "stake"));
+    else
+        entry.push_back(Pair("category", "stake-mint"));
+}
+
 void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDepth, bool fLong, Array& ret)
 {
     int64 nFee;
@@ -987,7 +997,10 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
             Object entry;
             entry.push_back(Pair("account", strSentAccount));
             MaybePushAddress(entry, s.first);
-            entry.push_back(Pair("category", "send"));
+            if (wtx.IsCoinStake())
+                PushCoinStakeCategory(entry, wtx);
+            else
+                entry.push_back(Pair("category", "send"));
             entry.push_back(Pair("amount", ValueFromAmount(-s.second)));
             entry.push_back(Pair("fee", ValueFromAmount(-nFee)));
             if (fLong)
@@ -1020,12 +1033,7 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
                 }
                 else if (wtx.IsCoinStake())
                 {
-                    if (wtx.GetDepthInMainChain() < 1)
-                        entry.push_back(Pair("category", "stake-orphan"));
-                    else if (wtx.GetBlocksToMaturity() > 0)
-                        entry.push_back(Pair("category", "stake"));
-                    else
-                        entry.push_back(Pair("category", "stake-mint"));
+                    PushCoinStakeCategory(entry, wtx);
                 }
                 else
                     entry.push_back(Pair("category", "receive"));
