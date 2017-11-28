@@ -13,6 +13,7 @@
 #include "omnicore/rules.h"
 #include "omnicore/sp.h"
 #include "omnicore/sto.h"
+#include "omnicore/utils.h"
 
 #include "amount.h"
 #include "main.h"
@@ -816,6 +817,11 @@ int CMPTransaction::interpretPacket()
 
     if (!interpret_Transaction()) {
         return (PKT_ERROR -2);
+    }
+
+    if (isAddressFrozen(sender, property)) {
+        PrintToLog("%s(): REJECTED: address %s is frozen for property %d\n", __func__, sender, property);
+        return (PKT_ERROR -3);
     }
 
     LOCK(cs_tally);
