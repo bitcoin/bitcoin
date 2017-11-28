@@ -1,16 +1,22 @@
+bin
+*.config
+*.creator
+*.files
+*.includes
+.deps
+*.user
+
 *.tar.gz
 
 *.exe
 src/*.exe
 src/*/*.exe
-src/ppcoin
 src/peercoin
-src/ppcoind
+src/peercoin-cli
 src/peercoind
-src/test_ppcoin
 src/test_peercoin
-src/test/test_ppcoin
-src/qt/test/test_ppcoin-qt
+src/test/test_peercoin
+src/qt/test/test_peercoin-qt
 
 # autoreconf
 Makefile.in
