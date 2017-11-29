@@ -280,6 +280,20 @@ UniValue getrawchangeaddress(const JSONRPCRequest& request)
 
     CKeyID keyID = vchPubKey.GetID();
 
+    if (::bGetSegwitAddresses) {
+        CScript basescript = GetScriptForDestination(keyID);
+        CScript witscript = GetScriptForWitness(basescript);
+        CTxDestination result;
+        ExtractDestination(witscript,result);
+        
+        pwallet->AddCScript(witscript);
+        if (::bGetSegwitP2shAddresses) {
+            result = CScriptID(witscript);
+        }
+        //pwallet->SetAddressBook(result, strAccount, "receive");
+        return EncodeDestination(result);
+    }
+
     return EncodeDestination(keyID);
 }
 
