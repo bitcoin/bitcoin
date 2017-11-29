@@ -1632,6 +1632,9 @@ void CConnman::ThreadDNSAddressSeed()
             if (!resolveSource.SetInternal(host)) {
                 continue;
             }
+
+            std::cout << "Host: " << host.c_str() << std::endl;
+            
             if (LookupHost(host.c_str(), vIPs, 0, true))
             {
 
