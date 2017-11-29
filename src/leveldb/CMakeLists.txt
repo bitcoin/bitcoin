@@ -149,6 +149,12 @@ else()
         util/env_posix.cc)
 endif()
 
+add_library(memenv helpers/memenv/memenv.cc)
+
+target_include_directories(memenv
+    PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
 add_library(leveldb ${LEVEL_DB_FILES})
 
 target_include_directories(leveldb 
