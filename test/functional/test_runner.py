@@ -299,7 +299,7 @@ def run_tests(test_list, src_dir, build_dir, exeext, tmpdir, jobs=1, enable_cove
         coverage = None
 
     if len(test_list) > 1 and jobs > 1:
-        # Populate cache
+        # Need to pre-populate cache when running multiple tests in parallel
         try:
             subprocess.check_output([tests_dir + 'create_cache.py'] + flags + ["--tmpdir=%s/cache" % tmpdir])
         except Exception as e:
@@ -337,6 +337,18 @@ def run_tests(test_list, src_dir, build_dir, exeext, tmpdir, jobs=1, enable_cove
     # Clear up the temp directory if all subdirectories are gone
     if not os.listdir(tmpdir):
         os.rmdir(tmpdir)
+    elif os.getenv("TRAVIS", "") == "true":
+        # Print the logs on travis, so they are preserved when the vm is disposed
+        LINES_PRINT_TRAVIS = 4000
+        print('\n{}Combine the logs and print the last {} lines ...\n{}'.format(BOLD[1], LINES_PRINT_TRAVIS, BOLD[0]))
+        from combine_logs import combine_logs
+        for entry in os.listdir(tmpdir):
+            entry = os.path.join(tmpdir, entry)
+            if os.path.isdir(entry):
+                print('\n============')
+                print('{}Combined log for {}:{}'.format(BOLD[1], entry, BOLD[0]))
+                print('============\n')
+                combine_logs(dir_test=entry, use_color=True, max_lines_to_print=LINES_PRINT_TRAVIS)
 
     all_passed = all(map(lambda test_result: test_result.was_successful, test_results))
 
