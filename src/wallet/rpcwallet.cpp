@@ -169,6 +169,19 @@ UniValue getnewaddress(const JSONRPCRequest& request)
     }
     CKeyID keyID = newKey.GetID();
 
+    if (::bGetSegwitAddresses) {
+        CScript basescript = GetScriptForDestination(keyID);
+        CScript witscript = GetScriptForWitness(basescript);
+        CTxDestination result;
+        ExtractDestination(witscript,result);
+        pwallet->AddCScript(witscript);
+        if (::bGetSegwitP2shAddresses) {
+            result = CScriptID(witscript);
+        }
+        pwallet->SetAddressBook(result, strAccount, "receive");
+        return EncodeDestination(result);
+    }
+    
     pwallet->SetAddressBook(keyID, strAccount, "receive");
 
     return EncodeDestination(keyID);
