@@ -169,6 +169,19 @@ UniValue getnewaddress(const JSONRPCRequest& request)
     }
     CKeyID keyID = newKey.GetID();
 
+    if (::bGetSegwitAddresses) {
+        CScript basescript = GetScriptForDestination(keyID);
+        CScript witscript = GetScriptForWitness(basescript);
+        CTxDestination result;
+        ExtractDestination(witscript,result);
+        pwallet->AddCScript(witscript);
+        if (::bGetSegwitP2shAddresses) {
+            result = CScriptID(witscript);
+        }
+        pwallet->SetAddressBook(result, strAccount, "receive");
+        return EncodeDestination(result);
+    }
+    
     pwallet->SetAddressBook(keyID, strAccount, "receive");
 
     return EncodeDestination(keyID);
@@ -214,6 +227,20 @@ UniValue getaccountaddress(const JSONRPCRequest& request)
 
     UniValue ret(UniValue::VSTR);
 
+    if (::bGetSegwitAddresses) {
+        CTxDestination keyID = GetAccountAddress(pwallet, strAccount);
+        CScript basescript = GetScriptForDestination(keyID);
+        CScript witscript = GetScriptForWitness(basescript);
+        CTxDestination result;
+        ExtractDestination(witscript,result);
+        
+        pwallet->AddCScript(witscript);
+        if (::bGetSegwitP2shAddresses) {
+            result = CScriptID(witscript);
+        }
+        pwallet->SetAddressBook(result, strAccount, "receive");
+        return EncodeDestination(result);
+    }
     ret = EncodeDestination(GetAccountAddress(pwallet, strAccount));
     return ret;
 }
@@ -252,6 +279,20 @@ UniValue getrawchangeaddress(const JSONRPCRequest& request)
     reservekey.KeepKey();
 
     CKeyID keyID = vchPubKey.GetID();
+
+    if (::bGetSegwitAddresses) {
+        CScript basescript = GetScriptForDestination(keyID);
+        CScript witscript = GetScriptForWitness(basescript);
+        CTxDestination result;
+        ExtractDestination(witscript,result);
+        
+        pwallet->AddCScript(witscript);
+        if (::bGetSegwitP2shAddresses) {
+            result = CScriptID(witscript);
+        }
+        //pwallet->SetAddressBook(result, strAccount, "receive");
+        return EncodeDestination(result);
+    }
 
     return EncodeDestination(keyID);
 }

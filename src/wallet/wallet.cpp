@@ -43,6 +43,9 @@ std::vector<CWalletRef> vpwallets;
 CFeeRate payTxFee(DEFAULT_TRANSACTION_FEE);
 unsigned int nTxConfirmTarget = DEFAULT_TX_CONFIRM_TARGET;
 bool bSpendZeroConfChange = DEFAULT_SPEND_ZEROCONF_CHANGE;
+bool bGetSegwitAddresses = DEFAULT_GET_SEGWIT_ADDRESSES;
+bool bGetSegwitChangeAddresses = DEFAULT_GET_SEGWIT_CHANGE_ADDRESSES;
+bool bGetSegwitP2shAddresses = DEFAULT_GET_SEGWIT_P2SH_ADDRESSES;
 bool fWalletRbf = DEFAULT_WALLET_RBF;
 
 const char * DEFAULT_WALLET_DAT = "wallet.dat";
@@ -828,11 +831,13 @@ bool CWallet::GetAccountPubkey(CPubKey &pubKey, std::string strAccount, bool bFo
         else {
             // Check if the current key has been used
             CScript scriptPubKey = GetScriptForDestination(account.vchPubKey.GetID());
+            CScript scriptWitness = GetScriptForWitness(scriptPubKey);
+            CScript scriptWitnessP2sh = GetScriptForDestination(scriptWitness);
             for (std::map<uint256, CWalletTx>::iterator it = mapWallet.begin();
                  it != mapWallet.end() && account.vchPubKey.IsValid();
                  ++it)
                 for (const CTxOut& txout : (*it).second.tx->vout)
-                    if (txout.scriptPubKey == scriptPubKey) {
+                    if (txout.scriptPubKey == scriptPubKey || txout.scriptPubKey == scriptWitness || txout.scriptPubKey == scriptWitnessP2sh) {
                         bForceNew = true;
                         break;
                     }
@@ -2737,6 +2742,14 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
                 }
 
                 scriptChange = GetScriptForDestination(vchPubKey.GetID());
+                if (::bGetSegwitChangeAddresses) {
+                    CScript witnessScript = GetScriptForWitness(scriptChange);
+                    this->AddCScript(witnessScript);
+                    scriptChange = witnessScript;
+                    if (::bGetSegwitP2shAddresses) {
+                        scriptChange = GetScriptForDestination(scriptChange);
+                    }
+                }
             }
             CTxOut change_prototype_txout(0, scriptChange);
             size_t change_prototype_size = GetSerializeSize(change_prototype_txout, SER_DISK, 0);
