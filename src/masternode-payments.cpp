@@ -288,7 +288,8 @@ void CMasternodePayments::FillBlockPayee(CMutableTransaction& txNew, int nBlockH
     // ... and masternode
     txoutMasternodeRet = CTxOut(blockReward, payee);
     txNew.vout.push_back(txoutMasternodeRet);
-	txNew.vout.push_back(CTxOut(nFee / 2, payee));
+	if(nFee > 0)
+		txNew.vout.push_back(CTxOut(nFee / 2, payee));
 
     CTxDestination address1;
     ExtractDestination(payee, address1);
@@ -569,7 +570,7 @@ bool CMasternodeBlockPayees::IsTransactionValid(const CTransaction& txNew, const
                     LogPrint("mnpayments", "CMasternodeBlockPayees::IsTransactionValid -- Found required payment\n");
 					bFoundPayment = true;
                 }
-				if (payee.GetPayee() == txout.scriptPubKey && ((nFee / 2) == txout.nValue)) {
+				if (nFee <= 0 || (payee.GetPayee() == txout.scriptPubKey && ((nFee / 2) == txout.nValue))) {
 					LogPrint("mnpayments", "CMasternodeBlockPayees::IsTransactionValid -- Found required fee\n");
 					bFoundFee = true;
 				}
