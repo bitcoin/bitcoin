@@ -281,11 +281,14 @@ void CMasternodePayments::FillBlockPayee(CMutableTransaction& txNew, int nBlockH
 	}
 	else
 		mnodeman.GetMasternodeInfo(payee, mnInfo);
+	// miner takes 25% of the reward and half fees
 	txNew.vout[0].nValue = (blockReward*0.25) + (nFee/2);
-	blockReward = GetBlockSubsidy(nBlockHeight, Params().GetConsensus(), false, true, mnInfo.nTimeCollateralDeposited) + (nFee/2);
+	// masternode takes 75% of reward, add/remove some reward depending on seniority and half fees.
+	blockReward = GetBlockSubsidy(nBlockHeight, Params().GetConsensus(), false, true, mnInfo.nTimeCollateralDeposited);
     // ... and masternode
     txoutMasternodeRet = CTxOut(blockReward, payee);
     txNew.vout.push_back(txoutMasternodeRet);
+	txNew.vout.push_back(CTxOut(nFee / 2, payee));
 
     CTxDestination address1;
     ExtractDestination(payee, address1);
@@ -558,12 +561,20 @@ bool CMasternodeBlockPayees::IsTransactionValid(const CTransaction& txNew, const
     BOOST_FOREACH(CMasternodePayee& payee, vecPayees) {
         if (payee.GetVoteCount() >= MNPAYMENTS_SIGNATURES_REQUIRED) {
 			mnodeman.GetMasternodeInfo(payee.GetPayee(), mnInfo);
-			const CAmount &nMasternodePayment = GetBlockSubsidy(nBlockHeight, Params().GetConsensus(), false, true, mnInfo.nTimeCollateralDeposited) + nFee/2;
+			const CAmount &nMasternodePayment = GetBlockSubsidy(nBlockHeight, Params().GetConsensus(), false, true, mnInfo.nTimeCollateralDeposited);
+			bool bFoundPayment = false;
+			bool bFoundFee = false;
             BOOST_FOREACH(CTxOut txout, txNew.vout) {
                 if (payee.GetPayee() == txout.scriptPubKey && nMasternodePayment == txout.nValue) {
                     LogPrint("mnpayments", "CMasternodeBlockPayees::IsTransactionValid -- Found required payment\n");
-                    return true;
+					bFoundPayment = true;
                 }
+				if (payee.GetPayee() == txout.scriptPubKey && ((nFee / 2) == txout.nValue)) {
+					LogPrint("mnpayments", "CMasternodeBlockPayees::IsTransactionValid -- Found required fee\n");
+					bFoundFee = true;
+				}
+				if (bFoundFee && bFoundPayment)
+					return true;
             }
 
             CTxDestination address1;

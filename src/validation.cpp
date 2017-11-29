@@ -1351,7 +1351,7 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams, b
 		return nSuperblockPart;
 	nSubsidy -= nSuperblockPart;
 	if (fMasternodePartOnly) {
-		nSubsidy *= 0.75f;
+		nSubsidy *= 0.75;
 		if (nHeight > 0 && nStartTime > 0) {
 			unsigned int nCurrentTime = chainActive[nHeight - 1]->nTime;
 			if (nCurrentTime < nStartTime)

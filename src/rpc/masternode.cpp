@@ -212,6 +212,7 @@ UniValue masternode(const UniValue& params, bool fHelp)
         obj.push_back(Pair("payee",         CSyscoinAddress(mnInfo.pubKeyCollateralAddress.GetID()).ToString()));
         obj.push_back(Pair("lastseen",      mnInfo.nTimeLastPing));
         obj.push_back(Pair("activeseconds", mnInfo.nTimeLastPing - mnInfo.sigTime));
+		obj.push_back(Pair("starttime",		mnInfo.nTimeCollateralDeposited));
         return obj;
     }
 
@@ -483,6 +484,7 @@ UniValue masternodelist(const UniValue& params, bool fHelp)
                 "  lastpaidblock  - Print the last block height a node was paid on the network\n"
                 "  lastpaidtime   - Print the last time a node was paid on the network\n"
                 "  lastseen       - Print timestamp of when a masternode was last seen on the network\n"
+				"  starttime      - Print timestamp of when a masternode paid its collateral\n"
                 "  payee          - Print Syscoin address associated with a masternode (can be additionally filtered,\n"
                 "                   partial match)\n"
                 "  protocol       - Print protocol of a masternode (can be additionally filtered, exact match))\n"
@@ -493,7 +495,7 @@ UniValue masternodelist(const UniValue& params, bool fHelp)
                 );
     }
 
-    if (strMode == "full" || strMode == "lastpaidtime" || strMode == "lastpaidblock") {
+    if (strMode == "full" || strMode == "lastpaidtime" || strMode == "lastpaidblock" || strMode == "starttime") {
         mnodeman.UpdateLastPaid();
     }
 
@@ -558,7 +560,10 @@ UniValue masternodelist(const UniValue& params, bool fHelp)
             } else if (strMode == "lastseen") {
                 if (strFilter !="" && strOutpoint.find(strFilter) == std::string::npos) continue;
                 obj.push_back(Pair(strOutpoint, (int64_t)mn.lastPing.sigTime));
-            } else if (strMode == "payee") {
+            } else if (strMode == "starttime") {
+				if (strFilter != "" && strOutpoint.find(strFilter) == std::string::npos) continue;
+				obj.push_back(Pair(strOutpoint, mn.GetCollateralDepositTime()));
+			} else if (strMode == "payee") {
                 CSyscoinAddress address(mn.pubKeyCollateralAddress.GetID());
                 std::string strPayee = address.ToString();
                 if (strFilter !="" && strPayee.find(strFilter) == std::string::npos &&
