@@ -43,6 +43,9 @@ std::vector<CWalletRef> vpwallets;
 CFeeRate payTxFee(DEFAULT_TRANSACTION_FEE);
 unsigned int nTxConfirmTarget = DEFAULT_TX_CONFIRM_TARGET;
 bool bSpendZeroConfChange = DEFAULT_SPEND_ZEROCONF_CHANGE;
+bool bGetSegwitAddresses = DEFAULT_GET_SEGWIT_ADDRESSES;
+bool bGetSegwitChangeAddresses = DEFAULT_GET_SEGWIT_CHANGE_ADDRESSES;
+bool bGetSegwitP2shAddresses = DEFAULT_GET_SEGWIT_P2SH_ADDRESSES;
 bool fWalletRbf = DEFAULT_WALLET_RBF;
 
 const char * DEFAULT_WALLET_DAT = "wallet.dat";

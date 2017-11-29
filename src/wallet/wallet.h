@@ -38,6 +38,9 @@ extern std::vector<CWalletRef> vpwallets;
 extern CFeeRate payTxFee;
 extern unsigned int nTxConfirmTarget;
 extern bool bSpendZeroConfChange;
+extern bool bGetSegwitAddresses;
+extern bool bGetSegwitChangeAddresses;
+extern bool bGetSegwitP2shAddresses;
 extern bool fWalletRbf;
 
 static const unsigned int DEFAULT_KEYPOOL_SIZE = 1000;
@@ -57,6 +60,12 @@ static const CAmount MIN_CHANGE = CENT;
 static const CAmount MIN_FINAL_CHANGE = MIN_CHANGE/2;
 //! Default for -spendzeroconfchange
 static const bool DEFAULT_SPEND_ZEROCONF_CHANGE = true;
+//! Default for -segwitaddresses
+static const bool DEFAULT_GET_SEGWIT_ADDRESSES = false;
+//! Default for -segwitchangeaddresses
+static const bool DEFAULT_GET_SEGWIT_CHANGE_ADDRESSES = false;
+//! Default for -segwitp2shddresses
+static const bool DEFAULT_GET_SEGWIT_P2SH_ADDRESSES = false;
 //! Default for -walletrejectlongchains
 static const bool DEFAULT_WALLET_REJECT_LONG_CHAINS = false;
 //! -txconfirmtarget default

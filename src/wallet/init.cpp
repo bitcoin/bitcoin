@@ -30,6 +30,9 @@ std::string GetWalletHelpString(bool showDebug)
     strUsage += HelpMessageOpt("-rescan", _("Rescan the block chain for missing wallet transactions on startup"));
     strUsage += HelpMessageOpt("-salvagewallet", _("Attempt to recover private keys from a corrupt wallet on startup"));
     strUsage += HelpMessageOpt("-spendzeroconfchange", strprintf(_("Spend unconfirmed change when sending transactions (default: %u)"), DEFAULT_SPEND_ZEROCONF_CHANGE));
+    strUsage += HelpMessageOpt("-segwitaddresses", strprintf(_("Return SegWit addresses in RPC requests and UI (default: %u)"), DEFAULT_GET_SEGWIT_ADDRESSES));
+    strUsage += HelpMessageOpt("-segwitchangeaddresses", strprintf(_("Create transactions with SegWit change addresses (default: %u)"), DEFAULT_GET_SEGWIT_CHANGE_ADDRESSES));
+    strUsage += HelpMessageOpt("-segwitp2shaddresses", strprintf(_("Wrap SegWit addresses in P2SH (default: %u)"), DEFAULT_GET_SEGWIT_P2SH_ADDRESSES));
     strUsage += HelpMessageOpt("-txconfirmtarget=<n>", strprintf(_("If paytxfee is not set, include enough fee so transactions begin confirmation on average within n blocks (default: %u)"), DEFAULT_TX_CONFIRM_TARGET));
     strUsage += HelpMessageOpt("-walletrbf", strprintf(_("Send transactions with full-RBF opt-in enabled (default: %u)"), DEFAULT_WALLET_RBF));
     strUsage += HelpMessageOpt("-upgradewallet", _("Upgrade wallet to latest format on startup"));
@@ -173,6 +176,9 @@ bool WalletParameterInteraction()
     }
     nTxConfirmTarget = gArgs.GetArg("-txconfirmtarget", DEFAULT_TX_CONFIRM_TARGET);
     bSpendZeroConfChange = gArgs.GetBoolArg("-spendzeroconfchange", DEFAULT_SPEND_ZEROCONF_CHANGE);
+    bGetSegwitAddresses = gArgs.GetBoolArg("-segwitaddresses", DEFAULT_GET_SEGWIT_ADDRESSES);
+    bGetSegwitChangeAddresses = gArgs.GetBoolArg("-segwitchangeaddresses", DEFAULT_GET_SEGWIT_CHANGE_ADDRESSES);
+    bGetSegwitP2shAddresses = gArgs.GetBoolArg("-segwitp2shaddresses", DEFAULT_GET_SEGWIT_P2SH_ADDRESSES);
     fWalletRbf = gArgs.GetBoolArg("-walletrbf", DEFAULT_WALLET_RBF);
 
     return true;
