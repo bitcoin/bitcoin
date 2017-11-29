@@ -1619,9 +1619,11 @@ void CConnman::ThreadDNSAddressSeed()
         if (interruptNet) {
             return;
         }
+
         if (HaveNameProxy()) {
             AddOneShot(seed.host);
         } else {
+
             std::vector<CNetAddr> vIPs;
             std::vector<CAddress> vAdd;
             ServiceFlags requiredServiceBits = GetDesirableServiceFlags(NODE_NONE);
@@ -1632,6 +1634,7 @@ void CConnman::ThreadDNSAddressSeed()
             }
             if (LookupHost(host.c_str(), vIPs, 0, true))
             {
+
                 for (const CNetAddr& ip : vIPs)
                 {
                     int nOneDay = 24*3600;
