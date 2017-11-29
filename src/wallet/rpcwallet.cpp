@@ -227,6 +227,20 @@ UniValue getaccountaddress(const JSONRPCRequest& request)
 
     UniValue ret(UniValue::VSTR);
 
+    if (::bGetSegwitAddresses) {
+        CTxDestination keyID = GetAccountAddress(pwallet, strAccount);
+        CScript basescript = GetScriptForDestination(keyID);
+        CScript witscript = GetScriptForWitness(basescript);
+        CTxDestination result;
+        ExtractDestination(witscript,result);
+        
+        pwallet->AddCScript(witscript);
+        if (::bGetSegwitP2shAddresses) {
+            result = CScriptID(witscript);
+        }
+        pwallet->SetAddressBook(result, strAccount, "receive");
+        return EncodeDestination(result);
+    }
     ret = EncodeDestination(GetAccountAddress(pwallet, strAccount));
     return ret;
 }

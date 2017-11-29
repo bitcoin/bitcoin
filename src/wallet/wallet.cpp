@@ -831,11 +831,13 @@ bool CWallet::GetAccountPubkey(CPubKey &pubKey, std::string strAccount, bool bFo
         else {
             // Check if the current key has been used
             CScript scriptPubKey = GetScriptForDestination(account.vchPubKey.GetID());
+            CScript scriptWitness = GetScriptForWitness(scriptPubKey);
+            CScript scriptWitnessP2sh = GetScriptForDestination(scriptWitness);
             for (std::map<uint256, CWalletTx>::iterator it = mapWallet.begin();
                  it != mapWallet.end() && account.vchPubKey.IsValid();
                  ++it)
                 for (const CTxOut& txout : (*it).second.tx->vout)
-                    if (txout.scriptPubKey == scriptPubKey) {
+                    if (txout.scriptPubKey == scriptPubKey || txout.scriptPubKey == scriptWitness || txout.scriptPubKey == scriptWitnessP2sh) {
                         bForceNew = true;
                         break;
                     }
