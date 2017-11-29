@@ -644,7 +644,7 @@
          <item>
           <widget class="QValueComboBox" name="theme">
            <property name="toolTip">
-            <string>theme</string>
+            <string>Choose the color theme to use.</string>
            </property>
           </widget>
          </item>

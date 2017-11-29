@@ -89,16 +89,18 @@ namespace {
 
     struct MinerDetails {
         bool whitelisted;
+        int wlcount;
         bool isAdmin;
         unsigned int totalBlocks;
         unsigned int windowBlocks;
         std::vector<unsigned int> blockVector;
-        MinerDetails() : whitelisted(false), isAdmin(false), totalBlocks(0), windowBlocks(0) {}
-        MinerDetails(bool wlisted, bool isAdmin) : whitelisted(wlisted), isAdmin(isAdmin), totalBlocks(0), windowBlocks(0) {}
+        MinerDetails() : whitelisted(false), wlcount(0), isAdmin(false), totalBlocks(0), windowBlocks(0) {}
+        MinerDetails(bool wlisted, bool isAdmin) : whitelisted(wlisted), wlcount(1), isAdmin(isAdmin), totalBlocks(0), windowBlocks(0) {}
 
         template<typename Stream>
         void Serialize(Stream &s) const {
             s << whitelisted;
+            s << wlcount;
             s << totalBlocks;
             s << windowBlocks;
             s << blockVector;
@@ -107,6 +109,7 @@ namespace {
         template<typename Stream>
         void Unserialize(Stream& s) {
             s >> whitelisted;
+            s >> wlcount;
             s >> totalBlocks;
             s >> windowBlocks;
             s >> blockVector;
@@ -131,15 +134,20 @@ bool CMinerWhitelistDB::Init(bool fWipe){
         batch.Write(DB_HEIGHT, 0);
         unsigned int numberMiners = 0;
         for (std::set<std::string>::iterator it = Params().GetConsensus().minerWhiteListAdminAddress.begin(); it != Params().GetConsensus().minerWhiteListAdminAddress.end(); it++){
+            LogPrintf("Adding admin address %s", *it);
             batch.Write(MinerEntry(*it), MinerDetails(true,true));
             numberMiners += 1;
         }
         
         // At the beginning there was another admin key hardcoded into the client. 
         // also add that address, but allow for later removal.
-        std::string third = "pGNcLNCavQLGXwXkVDwoHPCuQUBoXzJtPh";
-        batch.Write(MinerEntry(third), MinerDetails(true,false)); 
-        numberMiners += 1;
+        if (Params().NetworkIDString() == "main") {
+            std::string third = "pGNcLNCavQLGXwXkVDwoHPCuQUBoXzJtPh";
+            LogPrintf("Adding admin address %s", third);
+            batch.Write(MinerEntry(third), MinerDetails(true,false)); 
+            numberMiners += 1;
+        }
+        
         batch.Write(WL_NUMBER_MINERS, numberMiners);
         LogPrintf("MinerDatabase: Added admin keys.\n");
 
@@ -218,7 +226,7 @@ unsigned int CMinerWhitelistDB::GetNumberOfWhitelistedMiners() {
     // On block 34342, the third admin key was finaly blacklisted. 
     // Up to that point substract one from the number of miners to accomodate the 
     // three admins.
-    if (chainActive.Height() < 34342) {
+    if (chainActive.Height() < 34342 && Params().NetworkIDString() == "main") {
         number -= 1;
     }
 
@@ -258,10 +266,14 @@ bool CMinerWhitelistDB::WhitelistMiner(std::string address) {
         if (!mDetails.whitelisted) {
             LogPrintf("MinerDatabase: Adding Miner back to whitelist. %s\n", address);
             mDetails.whitelisted = true;
+            mDetails.wlcount = 1;
             batch.Write(mEntry, mDetails);
             batch.Write(WL_NUMBER_MINERS, number+1);
+        } else {
+            LogPrintf("MinerDatabase: Miner already whitelisted. %s\n", address);
+            mDetails.wlcount += 1;
+            batch.Write(mEntry, mDetails);
         }
-        LogPrintf("MinerDatabase: Miner already whitelisted. %s\n", address);
     } 
     else {
         LogPrintf("MinerDatabase: Whitelisting previously unknown Miner %s\n", address);
@@ -282,20 +294,93 @@ bool CMinerWhitelistDB::BlacklistMiner(std::string address) {
     Read(WL_NUMBER_MINERS, number);
 
     if (Read(mEntry, mDetails)) {
-        // if (mDetails.isAdmin) { // don't remove admins, but no error.
-        // LogPrintf("MinerDatabase: NOT Blacklisting admin %s\n", address);
-        //     return true;
-        // }
         if (mDetails.whitelisted) {
             LogPrintf("MinerDatabase: Blacklisting Miner %s\n", address);
+            mDetails.wlcount = 0;
             mDetails.whitelisted = false;
             batch.Write(mEntry, mDetails);
             batch.Write(WL_NUMBER_MINERS, number-1);
+        } else {
+            LogPrintf("MinerDatabase: Miner already blacklisted. %s\n", address);
+            mDetails.wlcount -= 1;
+            batch.Write(mEntry, mDetails);
         }
     }
     else {
         LogPrintf("MinerDatabase: Blacklisting previously unknown Miner %s\n", address);
         batch.Write(mEntry, MinerDetails(false,false));
+    }
+
+    return WriteBatch(batch);
+}
+
+bool CMinerWhitelistDB::RevertWhitelistMiner(std::string address) { 
+    // This is different from blacklisting.
+    // Blacklisting immediately removes miner from list,
+    // This routine only does so if miner was only added to whitelist once
+    
+    MinerEntry mEntry(address);
+    MinerDetails mDetails = MinerDetails();
+    CDBBatch batch(*this);
+
+    unsigned int number;
+    Read(WL_NUMBER_MINERS, number);
+
+    if (Read(mEntry, mDetails)) {
+        if (mDetails.whitelisted) {
+            LogPrintf("MinerDatabase: Reverting Whitelisting of Miner %s\n", address);
+            mDetails.wlcount -= 1;
+            if (mDetails.wlcount == 0) {
+                LogPrintf("MinerDatabase: Blacklisting Miner %s\n", address);
+                mDetails.whitelisted = false;
+                batch.Write(WL_NUMBER_MINERS, number-1);
+            } else {
+                LogPrintf("MinerDatabase: Miner %s is still whitelisted because of a previous transaction.\n", address);
+            }
+            batch.Write(mEntry, mDetails);
+        } else {
+            LogPrintf("Trying to revert whitelisting for a miner on the blacklist. Database is corrupted.");
+            return false;
+        }
+    } else {
+        LogPrintf("Trying to revert unknown whitelisting. Database is corrupted.");
+        return false;
+    }
+
+    return WriteBatch(batch);
+}
+
+bool CMinerWhitelistDB::RevertBlacklistMiner(std::string address) { 
+    // This is different from whitelisting.
+    // Whitelisting immediately adds miner to whitelist,
+    // This routine only does so if miner was only blacklisted once
+    
+    MinerEntry mEntry(address);
+    MinerDetails mDetails = MinerDetails();
+    CDBBatch batch(*this);
+
+    unsigned int number;
+    Read(WL_NUMBER_MINERS, number);
+
+    if (Read(mEntry, mDetails)) {
+        if (!mDetails.whitelisted) {
+            LogPrintf("MinerDatabase: Reverting Blacklisting of Miner %s\n", address);
+            mDetails.wlcount += 1;
+            if (mDetails.wlcount == 1) {
+                LogPrintf("MinerDatabase: Whitelisting Miner %s\n", address);
+                mDetails.whitelisted = true;
+                batch.Write(WL_NUMBER_MINERS, number+1);
+            } else {
+                LogPrintf("MinerDatabase: Miner %s is still blacklisted because of a previous transaction.\n", address);
+            }
+            batch.Write(mEntry, mDetails);
+        } else {
+            LogPrintf("Trying to revert blacklisting for a miner on the whitelist. Database is corrupted.");
+            return false;
+        }
+    } else {
+        LogPrintf("MinerDatabase: Trying to revert unknown blacklisting. Database is corrupted.");
+        return false;
     }
 
     return WriteBatch(batch);
@@ -365,12 +450,12 @@ bool CMinerWhitelistDB::DumpWindowStats(std::vector< std::pair< std::string, uin
             break; // we are done with the addresses.
         }
     } 
-    for (const auto &item : *MinerVector) { LogPrintf("ap:%x a:%s d:%d\n", item.first, item.first, item.second); }
+    // for (const auto &item : *MinerVector) { LogPrintf("addr:%x blc:%d\n", item.first, item.second); }
     return true;
 }
 
 bool CMinerWhitelistDB::DumpStatsForMiner(std::string address, bool *wlisted, unsigned int *windowBlocks, unsigned int *totalBlocks, unsigned int *lastBlock) {
-    LogPrintf("MinerDatabase: Dumping stats for miner %s.\n", address);
+    //LogPrintf("MinerDatabase: Dumping stats for miner %s.\n", address);
     
     MinerEntry entry = MinerEntry(address);
     if(!Exists(entry))
@@ -395,6 +480,9 @@ bool CMinerWhitelistDB::MineBlock(unsigned int newHeight, std::string address) {
     Read(DB_HEIGHT, currHeight);
     if (newHeight!=currHeight+1 ) {
         LogPrintf("WARNING: Miner Whitelist database is corrupted. Please resync the blockchain by using `-reindex`");
+        
+        LogPrintf("WARNING: Miner Whitelist database is corrupted. Please resync the blockchain by using `-reindex`\n");
+        LogPrintf("New Height: %i, Current Height: %i\n", newHeight, currHeight);
         return false;
     }
 
@@ -402,13 +490,16 @@ bool CMinerWhitelistDB::MineBlock(unsigned int newHeight, std::string address) {
     
 
     /* SPECIAL STUFF for block no 617. The first implementation of the whitelist took
-    whitelist transactions into account. Block 617 contained the transaction that whitelisted
+    whitelist transactions from mempool into account. Block 617 contained the transaction that whitelisted
     miner of block 617. Add this miner on block 616 instead. */
-    if (newHeight==616) 
+    if (newHeight==616 && Params().NetworkIDString() == "main") 
         WhitelistMiner("pQAqAHfaJaCDQKedbgSXvDkJHhSsTmKGV9");
-    if (newHeight==9912)
+    if (newHeight==9912 && Params().NetworkIDString() == "main")
         WhitelistMiner("pDqhZSLQGfz2JGq1MNdYpp5M2QLjdujeAF");
-
+    if (newHeight==750 && Params().NetworkIDString() == "test")
+        WhitelistMiner("uQNQ5CUnrH57Mr9FRGZPk99pK9whnKJdjH");
+    if (newHeight==1861 && Params().NetworkIDString() == "test")
+        WhitelistMiner("uey4mzGT2Cb1fgm9XAoFFvDzV3Wx1LEqJR");
 
 
     // First make entry for the new Block
@@ -468,9 +559,8 @@ bool CMinerWhitelistDB::MineBlock(unsigned int newHeight, std::string address) {
         // we should only let a block drop out if it counted toward the windowBlocks. 
         // if we are at the minercapsystemchangeheight=40320, the block dropping out is 
         // 40320-2016=38304, but block 38304 was not counted in windowBlocks 
-        // so we can start dropping blocks if 
-        
-        if (blockDroppingOut > 38304) { // There is!
+        // so we can start dropping blocks 
+        if (blockDroppingOut > Params().GetConsensus().minerCapSystemChangeHeight-2016) { // There is!
             BlockDetails dropDets = BlockDetails();
             if (!Exists(BlockEntry(blockDroppingOut)))
                 return false;
@@ -504,7 +594,7 @@ bool CMinerWhitelistDB::RewindBlock(unsigned int index) {
     unsigned int currHeight;
     Read(DB_HEIGHT, currHeight);
     if (currHeight!=index) {
-        LogPrintf("WARNING: Miner Whitelist database is corrupted. Please resync the blockchain by using `-reindex`");
+        LogPrintf("WARNING: Miner Whitelist database is corrupted. Please resync the blockchain by using `-reindex`\n");
         return false;
     }
 
@@ -592,7 +682,12 @@ bool CMinerWhitelistDB::RewindBlock(unsigned int index) {
         // Check if there is a block moving back into the window
         unsigned int blockMovingIn = GetWindowStart(index)-1;
         
-        if (blockMovingIn) { // There is!
+        // we should only let a block drop out if it counted toward the windowBlocks. 
+        // if we are at the minercapsystemchangeheight=40320, the block dropping out is 
+        // 40320-2016=38304, but block 38304 was not counted in windowBlocks 
+        // so we can start dropping blocks 
+        
+        if (blockMovingIn > Params().GetConsensus().minerCapSystemChangeHeight-2016) { // There is!
             BlockDetails dropDets = BlockDetails();
             if (!Exists(BlockEntry(blockMovingIn)))
                 return false;
@@ -620,7 +715,7 @@ bool CMinerWhitelistDB::RewindBlock(unsigned int index) {
 }
 
 bool CMinerWhitelistDB::hasExceededCap(std::string address) {
-    if (Params().GetConsensus().minerWhiteListAdminAddress.count(address) || (chainActive.Height() < 38304 && address == "pGNcLNCavQLGXwXkVDwoHPCuQUBoXzJtPh"))
+    if (Params().GetConsensus().minerWhiteListAdminAddress.count(address) || (Params().NetworkIDString() == "main" && chainActive.Height() < 38304 && address == "pGNcLNCavQLGXwXkVDwoHPCuQUBoXzJtPh"))
         return false;
     
     
