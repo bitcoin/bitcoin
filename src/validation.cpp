@@ -1335,7 +1335,7 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams, b
 		// SYSCOIN 2.1 snapshot
 		return 521460000 * COIN;
 	}
-	CAmount nSubsidy = 38.5f * COIN;
+	CAmount nSubsidy = 38.5 * COIN;
 	int reductions = nHeight / consensusParams.nSubsidyHalvingInterval;
 	if (reductions >= 50)
 		return 0;
@@ -1345,7 +1345,7 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams, b
 		nSubsidy -= nSubsidy / 20;
 	}
 	// Reduce the block reward of miners (allowing budget/superblocks)
-	const CAmount &nSuperblockPart = (nSubsidy*0.1f);
+	const CAmount &nSuperblockPart = (nSubsidy*0.1);
 
 	if (fSuperblockPartOnly)
 		return nSuperblockPart;
@@ -1358,12 +1358,12 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams, b
 				nCurrentTime = nStartTime;
 			const unsigned int &nDifferenceInBlocks = (nCurrentTime - nStartTime) / 60;
 			// the first three intervals should discount rewards to incentivize bonding over longer terms (we add 10% premium every interval)
-			float fSubsidyAdjustmentPercentage = -0.3f;
+			double fSubsidyAdjustmentPercentage = -0.3;
 			for (int i = 0; i < consensusParams.nTotalSeniorityIntervals; i++) {
 				const int &nTotalSeniorityBlocks = i*consensusParams.nSeniorityInterval;
 				if (nDifferenceInBlocks <= nTotalSeniorityBlocks)
 					break;
-				fSubsidyAdjustmentPercentage += 0.1f;
+				fSubsidyAdjustmentPercentage += 0.1;
 			}
 			nSubsidy += nSubsidy*fSubsidyAdjustmentPercentage;
 		}
