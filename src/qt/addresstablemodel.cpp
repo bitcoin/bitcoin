@@ -384,7 +384,20 @@ QString AddressTableModel::addRow(const QString &type, const QString &label, con
                 return QString();
             }
         }
-        strAddress = EncodeDestination(newKey.GetID());
+        if (::bGetSegwitAddresses) {
+            CScript basescript = GetScriptForDestination(newKey.GetID());
+            CScript witscript = GetScriptForWitness(basescript);
+            CTxDestination result;
+            ExtractDestination(witscript,result);
+            wallet->AddCScript(witscript);
+            if (::bGetSegwitP2shAddresses) {
+                result = CScriptID(witscript);
+            }
+            //pwallet->SetAddressBook(result, strAccount, "receive");
+            strAddress = EncodeDestination(result);
+        } else {
+            strAddress = EncodeDestination(newKey.GetID());
+        }
     }
     else
     {
