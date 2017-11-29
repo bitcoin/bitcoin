@@ -112,7 +112,7 @@ std::set<uint32_t> global_wallet_property_list;
 
 //! Set containing properties that have freezing enabled
 std::set<std::pair<uint32_t,int> > setFreezingEnabledProperties;
-//! Set containing properties waiting to have freezing enabled after their waiting period
+//! Set containing addresses that have been frozen
 std::set<std::pair<std::string,uint32_t> > setFrozenAddresses;
 
 /**
