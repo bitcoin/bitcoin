@@ -713,8 +713,8 @@ bool TruncateFile(FILE *file, unsigned int length) {
 }
 
 /**
- * this function tries to raise the file descriptor limit to the requested number.
- * It returns the actual file descriptor limit (which may be more or less than nMinFD)
+ * this function tries to raise the file descriptor limit to the most that we can support.
+ * It returns the actual file descriptor limit (which may be more or less than nMinFD).
  */
 int RaiseFileDescriptorLimit(int nMinFD) {
 #if defined(WIN32)
@@ -722,16 +722,31 @@ int RaiseFileDescriptorLimit(int nMinFD) {
 #else
     struct rlimit limitFD;
     if (getrlimit(RLIMIT_NOFILE, &limitFD) != -1) {
+        // first request at least the amount passed in
         if (limitFD.rlim_cur < (rlim_t)nMinFD) {
             limitFD.rlim_cur = nMinFD;
             if (limitFD.rlim_cur > limitFD.rlim_max)
                 limitFD.rlim_cur = limitFD.rlim_max;
             setrlimit(RLIMIT_NOFILE, &limitFD);
-            getrlimit(RLIMIT_NOFILE, &limitFD);
         }
-        return limitFD.rlim_cur;
+        // then try to raise to the max we can
+        if (limitFD.rlim_cur < limitFD.rlim_max) {
+            limitFD.rlim_cur = limitFD.rlim_max;
+            setrlimit(RLIMIT_NOFILE, &limitFD);
+        }
+
+        if (getrlimit(RLIMIT_NOFILE, &limitFD) != -1) {
+            if (limitFD.rlim_cur < (rlim_t)nMinFD) {
+                LogPrintf("RaiseFileDescriptorLimit: could not raise limit to %lu fds, only %lu\n",
+                          (unsigned long)nMinFD,
+                          (unsigned long)limitFD.rlim_cur);
+            }
+            return limitFD.rlim_cur;
+        }
     }
-    return nMinFD; // getrlimit failed, assume it's fine
+    LogPrintf("RaiseFileDescriptorLimit error: getrlimit(RLIMIT_NOFILE) returned %s\n", strerror(errno));
+
+    return nMinFD; // getrlimit failed, try to proceed
 #endif
 }
 
