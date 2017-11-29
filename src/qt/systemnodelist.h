@@ -65,6 +65,7 @@ private Q_SLOTS:
     void on_startMissingButton_clicked();
     void on_tableWidgetMySystemnodes_itemSelectionChanged();
     void on_UpdateButton_clicked();
+    void on_CreateNewSystemnode_clicked();
     
 };
 #endif // SYSTEMNODELIST_H

@@ -13,6 +13,7 @@
 #include "guiutil.h"
 #include "datetablewidgetitem.h"
 #include "privatekeywidget.h"
+#include "createsystemnodedialog.h"
 
 #include <QTimer>
 #include <QMessageBox>
@@ -418,4 +419,16 @@ void SystemnodeList::on_tableWidgetMySystemnodes_itemSelectionChanged()
 void SystemnodeList::on_UpdateButton_clicked()
 {
     updateMyNodeList(true);
+}
+
+void SystemnodeList::on_CreateNewSystemnode_clicked()
+{
+    CreateSystemnodeDialog *dialog = new CreateSystemnodeDialog();
+    dialog->setWindowModality(Qt::ApplicationModal);
+    if (dialog->exec())
+    {
+        // Pressed OK
+    } else {
+        // Pressed Cancel
+    }
 }

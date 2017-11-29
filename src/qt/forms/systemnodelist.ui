@@ -172,6 +172,13 @@
               </widget>
              </item>
              <item>
+              <widget class="QPushButton" name="CreateNewSystemnode">
+               <property name="text">
+                <string>&amp;New Systemnode</string>
+               </property>
+              </widget>
+             </item>
+             <item>
               <widget class="QLabel" name="autoupdate_label">
                <property name="text">
                 <string>Status will be updated automatically in (sec):</string>
