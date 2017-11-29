@@ -209,6 +209,7 @@ class BIP68_112_113Test(ComparisonTestFramework):
         return txs
 
     def get_tests(self):
+        self.log.info("Generate blocks in the past for coinbase outputs.")
         long_past_time = int(time.time()) - 600 * 1000  # enough to build up to 1000 blocks 10 minutes apart without worrying about getting into the future
         self.nodes[0].setmocktime(long_past_time - 100)  # enough so that the generated blocks will still all be before long_past_time
         self.coinbase_blocks = self.nodes[0].generate(1 + 16 + 2 * 32 + 1)  # 82 blocks generated for inputs
@@ -218,22 +219,27 @@ class BIP68_112_113Test(ComparisonTestFramework):
         self.tip = int(self.nodes[0].getbestblockhash(), 16)
         self.nodeaddress = self.nodes[0].getnewaddress()
 
+        self.log.info("Test that the csv softfork is DEFINED")
         assert_equal(get_bip9_status(self.nodes[0], 'csv')['status'], 'defined')
         test_blocks = self.generate_blocks(61, 4)
         yield TestInstance(test_blocks, sync_every_block=False)
-        # Advanced from DEFINED to STARTED, height = 143
+
+        self.log.info("Advance from DEFINED to STARTED, height = 143")
         assert_equal(get_bip9_status(self.nodes[0], 'csv')['status'], 'started')
 
-        # Fail to achieve LOCKED_IN 100 out of 144 signal bit 0
-        # using a variety of bits to simulate multiple parallel softforks
+        self.log.info("Fail to achieve LOCKED_IN")
+        # 100 out of 144 signal bit 0. Use a variety of bits to simulate multiple parallel softforks
+
         test_blocks = self.generate_blocks(50, 536870913)  # 0x20000001 (signalling ready)
         test_blocks = self.generate_blocks(20, 4, test_blocks)  # 0x00000004 (signalling not)
         test_blocks = self.generate_blocks(50, 536871169, test_blocks)  # 0x20000101 (signalling ready)
         test_blocks = self.generate_blocks(24, 536936448, test_blocks)  # 0x20010000 (signalling not)
         yield TestInstance(test_blocks, sync_every_block=False)
-        # Failed to advance past STARTED, height = 287
+
+        self.log.info("Failed to advance past STARTED, height = 287")
         assert_equal(get_bip9_status(self.nodes[0], 'csv')['status'], 'started')
 
+        self.log.info("Generate blocks to achieve LOCK-IN")
         # 108 out of 144 signal bit 0 to achieve lock-in
         # using a variety of bits to simulate multiple parallel softforks
         test_blocks = self.generate_blocks(58, 536870913)  # 0x20000001 (signalling ready)
@@ -241,10 +247,11 @@ class BIP68_112_113Test(ComparisonTestFramework):
         test_blocks = self.generate_blocks(50, 536871169, test_blocks)  # 0x20000101 (signalling ready)
         test_blocks = self.generate_blocks(10, 536936448, test_blocks)  # 0x20010000 (signalling not)
         yield TestInstance(test_blocks, sync_every_block=False)
-        # Advanced from STARTED to LOCKED_IN, height = 431
+
+        self.log.info("Advanced from STARTED to LOCKED_IN, height = 431")
         assert_equal(get_bip9_status(self.nodes[0], 'csv')['status'], 'locked_in')
 
-        # 140 more version 4 blocks
+        # Generate 140 more version 4 blocks
         test_blocks = self.generate_blocks(140, 4)
         yield TestInstance(test_blocks, sync_every_block=False)
 
@@ -256,6 +263,7 @@ class BIP68_112_113Test(ComparisonTestFramework):
         bip68inputs = []
         for i in range(16):
             bip68inputs.append(self.send_generic_input_tx(self.nodes[0], self.coinbase_blocks))
+
         # 2 sets of 16 inputs with 10 OP_CSV OP_DROP (actually will be prepended to spending scriptSig)
         bip112basicinputs = []
         for j in range(2):
@@ -263,6 +271,7 @@ class BIP68_112_113Test(ComparisonTestFramework):
             for i in range(16):
                 inputs.append(self.send_generic_input_tx(self.nodes[0], self.coinbase_blocks))
             bip112basicinputs.append(inputs)
+
         # 2 sets of 16 varied inputs with (relative_lock_time) OP_CSV OP_DROP (actually will be prepended to spending scriptSig)
         bip112diverseinputs = []
         for j in range(2):
@@ -270,8 +279,10 @@ class BIP68_112_113Test(ComparisonTestFramework):
             for i in range(16):
                 inputs.append(self.send_generic_input_tx(self.nodes[0], self.coinbase_blocks))
             bip112diverseinputs.append(inputs)
+
         # 1 special input with -1 OP_CSV OP_DROP (actually will be prepended to spending scriptSig)
         bip112specialinput = self.send_generic_input_tx(self.nodes[0], self.coinbase_blocks)
+
         # 1 normal input
         bip113input = self.send_generic_input_tx(self.nodes[0], self.coinbase_blocks)
 
@@ -286,7 +297,8 @@ class BIP68_112_113Test(ComparisonTestFramework):
         # 2 more version 4 blocks
         test_blocks = self.generate_blocks(2, 4)
         yield TestInstance(test_blocks, sync_every_block=False)
-        # Not yet advanced to ACTIVE, height = 574 (will activate for block 576, not 575)
+
+        self.log.info("Not yet advanced to ACTIVE, height = 574 (will activate for block 576, not 575)")
         assert_equal(get_bip9_status(self.nodes[0], 'csv')['status'], 'locked_in')
 
         # Test both version 1 and version 2 transactions for all tests
@@ -319,13 +331,11 @@ class BIP68_112_113Test(ComparisonTestFramework):
         bip112tx_special_v1 = self.create_bip112special(bip112specialinput, 1)
         bip112tx_special_v2 = self.create_bip112special(bip112specialinput, 2)
 
+        self.log.info("TESTING")
 
-        ### TESTING ###
-        ##################################
-        ### Before Soft Forks Activate ###
-        ##################################
-        # All txs should pass
-        ### Version 1 txs ###
+        self.log.info("Pre-Soft Fork Tests. All txs should pass.")
+        self.log.info("Test version 1 txs")
+
         success_txs = []
         # add BIP113 tx and -1 CSV tx
         bip113tx_v1.nLockTime = self.last_block_time - 600 * 5  # = MTP of prior block (not <) but < time put on current block
@@ -343,7 +353,8 @@ class BIP68_112_113Test(ComparisonTestFramework):
         yield TestInstance([[self.create_test_block(success_txs), True]])
         self.nodes[0].invalidateblock(self.nodes[0].getbestblockhash())
 
-        ### Version 2 txs ###
+        self.log.info("Test version 2 txs")
+
         success_txs = []
         # add BIP113 tx and -1 CSV tx
         bip113tx_v2.nLockTime = self.last_block_time - 600 * 5  # = MTP of prior block (not <) but < time put on current block
@@ -366,10 +377,9 @@ class BIP68_112_113Test(ComparisonTestFramework):
         yield TestInstance(test_blocks, sync_every_block=False)
         assert_equal(get_bip9_status(self.nodes[0], 'csv')['status'], 'active')
 
-        #################################
-        ### After Soft Forks Activate ###
-        #################################
-        ### BIP 113 ###
+        self.log.info("Post-Soft Fork Tests.")
+
+        self.log.info("BIP 113 tests")
         # BIP 113 tests should now fail regardless of version number if nLockTime isn't satisfied by new rules
         bip113tx_v1.nLockTime = self.last_block_time - 600 * 5  # = MTP of prior block (not <) but < time put on current block
         bip113signed1 = self.sign_transaction(self.nodes[0], bip113tx_v1)
@@ -390,15 +400,16 @@ class BIP68_112_113Test(ComparisonTestFramework):
         test_blocks = self.generate_blocks(4, 1234)
         yield TestInstance(test_blocks, sync_every_block=False)
 
-        ### BIP 68 ###
-        ### Version 1 txs ###
-        # All still pass
+        self.log.info("BIP 68 tests")
+        self.log.info("Test version 1 txs - all should still pass")
+
         success_txs = []
         success_txs.extend(all_rlt_txs(bip68txs_v1))
         yield TestInstance([[self.create_test_block(success_txs), True]])
         self.nodes[0].invalidateblock(self.nodes[0].getbestblockhash())
 
-        ### Version 2 txs ###
+        self.log.info("Test version 2 txs")
+
         bip68success_txs = []
         # All txs with SEQUENCE_LOCKTIME_DISABLE_FLAG set pass
         for b25 in range(2):
@@ -441,8 +452,9 @@ class BIP68_112_113Test(ComparisonTestFramework):
         yield TestInstance([[self.create_test_block(bip68success_txs), True]])
         self.nodes[0].invalidateblock(self.nodes[0].getbestblockhash())
 
-        ### BIP 112 ###
-        ### Version 1 txs ###
+        self.log.info("BIP 112 tests")
+        self.log.info("Test version 1 txs")
+
         # -1 OP_CSV tx should fail
         yield TestInstance([[self.create_test_block([bip112tx_special_v1]), False]])
         # If SEQUENCE_LOCKTIME_DISABLE_FLAG is set in argument to OP_CSV, version 1 txs should still pass
@@ -468,7 +480,8 @@ class BIP68_112_113Test(ComparisonTestFramework):
         for tx in fail_txs:
             yield TestInstance([[self.create_test_block([tx]), False]])
 
-        ### Version 2 txs ###
+        self.log.info("Version 2 txs")
+
         # -1 OP_CSV tx should fail
         yield TestInstance([[self.create_test_block([bip112tx_special_v2]), False]])
 
