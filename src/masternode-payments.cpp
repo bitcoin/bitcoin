@@ -281,7 +281,7 @@ void CMasternodePayments::FillBlockPayee(CMutableTransaction& txNew, int nBlockH
 	}
 	else
 		mnodeman.GetMasternodeInfo(payee, mnInfo);
-	txNew.vout[0].nValue = (blockReward*0.25) + (nFees/2);
+	txNew.vout[0].nValue = (blockReward*0.25) + (nFee/2);
 	blockReward = GetBlockSubsidy(nBlockHeight, Params().GetConsensus(), false, true, mnInfo.nTimeCollateralDeposited) + (nFee/2);
     // ... and masternode
     txoutMasternodeRet = CTxOut(blockReward, payee);
