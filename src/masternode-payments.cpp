@@ -261,7 +261,7 @@ bool CMasternodePayments::CanVote(COutPoint outMasternode, int nBlockHeight)
 *   Fill Masternode ONLY payment block
 */
 
-void CMasternodePayments::FillBlockPayee(CMutableTransaction& txNew, int nBlockHeight, CAmount nFee, CAmount &blockReward, CTxOut& txoutMasternodeRet)
+void CMasternodePayments::FillBlockPayee(CMutableTransaction& txNew, int nBlockHeight, const CAmount &nFee, CAmount &blockReward, CTxOut& txoutMasternodeRet)
 {
     // make sure it's not filled yet
     txoutMasternodeRet = CTxOut();
@@ -281,7 +281,8 @@ void CMasternodePayments::FillBlockPayee(CMutableTransaction& txNew, int nBlockH
 	}
 	else
 		mnodeman.GetMasternodeInfo(payee, mnInfo);
-	blockReward = GetBlockSubsidy(nBlockHeight, Params().GetConsensus(), false, true, mnInfo.nTimeCollateralDeposited) + nFee/2;
+	txNew.vout[0].nValue = (blockReward*0.25) + (nFees/2);
+	blockReward = GetBlockSubsidy(nBlockHeight, Params().GetConsensus(), false, true, mnInfo.nTimeCollateralDeposited) + (nFee/2);
     // ... and masternode
     txoutMasternodeRet = CTxOut(blockReward, payee);
     txNew.vout.push_back(txoutMasternodeRet);

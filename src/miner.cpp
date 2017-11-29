@@ -289,7 +289,7 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
 		CAmount blockReward = GetBlockSubsidy(nHeight, Params().GetConsensus());
 
         // Compute regular coinbase transaction.
-        txNew.vout[0].nValue = (blockReward*0.25) + (nFees / 2);
+        txNew.vout[0].nValue = blockReward + nFees;
         txNew.vin[0].scriptSig = CScript() << nHeight << OP_0;
 
         // Update coinbase transaction with additional info about masternode and governance payments,
