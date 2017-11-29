@@ -310,4 +310,33 @@ add_library(libcrown_util
 )
 
 target_include_directories(libcrown_util PRIVATE .)
- 
+
+add_executable(crownd
+  crownd.cpp
+)
+target_include_directories(crownd
+  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+target_link_libraries(crownd
+  libcrown_server
+  libcrown_common
+  libcrown_univalue
+  libcrown_util
+  libcrown_crypto
+  leveldb
+  memenv
+  libsecp256k1
+  Boost::boost
+)  
+message("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX ${CMAKE_CURRENT_SOURCE_DIR}")
+
+#if ENABLE_WALLET
+#crownd_LDADD += libbitcoin_wallet.a
+#endif
+
+#if TARGET_WINDOWS
+#crownd_SOURCES += crownd-res.rc
+#endif
+
+#crownd_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS)

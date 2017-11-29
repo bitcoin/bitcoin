@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.0)
 
+find_package(Boost REQUIRED)
+
 add_definitions(-DHAVE_ENDIAN_H=1)
 add_definitions(-DHAVE_DECL_HTOBE16=1)
 add_definitions(-DHAVE_DECL_HTOLE16=1)
