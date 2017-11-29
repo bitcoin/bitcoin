@@ -448,14 +448,14 @@ void CSuperblockManager::CreateSuperblock(CMutableTransaction& txNewRet, int nBl
     DBG( cout << "CSuperblockManager::CreateSuperblock End" << endl; );
 }
 
-bool CSuperblockManager::IsValid(const CTransaction& txNew, int nBlockHeight, CAmount blockReward)
+bool CSuperblockManager::IsValid(const CTransaction& txNew, int nBlockHeight, const CAmount &nFee, const CAmount &blockReward)
 {
     // GET BEST SUPERBLOCK, SHOULD MATCH
     LOCK(governance.cs);
 
     CSuperblock_sptr pSuperblock;
     if(CSuperblockManager::GetBestSuperblock(pSuperblock, nBlockHeight)) {
-        return pSuperblock->IsValid(txNew, nBlockHeight, blockReward);
+        return pSuperblock->IsValid(txNew, nBlockHeight, nFee, blockReward);
     }
 
     return false;
