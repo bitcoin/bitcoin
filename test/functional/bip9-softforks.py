@@ -246,7 +246,7 @@ class BIP9SoftForksTest(ComparisonTestFramework):
         self.setup_network()
         self.test.add_all_connections(self.nodes)
         NetworkThread().start()
-        self.test.test_nodes[0].wait_for_verack()
+        self.test.p2p_connections[0].wait_for_verack()
 
     def get_tests(self):
         for test in itertools.chain(
