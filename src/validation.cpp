@@ -1365,7 +1365,7 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams, b
 					break;
 				fSubsidyAdjustmentPercentage += 0.1f;
 			}
-			nSubsidy *= fSubsidyAdjustmentPercentage;
+			nSubsidy += nSubsidy*fSubsidyAdjustmentPercentage;
 		}
 	}
 
