@@ -2365,16 +2365,18 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 	LogPrint("bench", "      - Connect %u transactions: %.2fms (%.3fms/tx, %.3fms/txin) [%.2fs]\n", (unsigned)block.vtx.size(), 0.001 * (nTime3 - nTime2), 0.001 * (nTime3 - nTime2) / block.vtx.size(), nInputs <= 1 ? 0 : 0.001 * (nTime3 - nTime2) / (nInputs - 1), nTimeConnect * 0.000001);
 
 	// SYSCOIN
-	CAmount blockReward = nFees + GetBlockSubsidy(pindex->nHeight, chainparams.GetConsensus());
-	std::string strError = "";
-	if (!IsBlockValueValid(block, pindex->nHeight, blockReward, strError)) {
-		return state.DoS(0, error("ConnectBlock(SYS): %s", strError), REJECT_INVALID, "bad-cb-amount");
-	}
-
-	if (!IsBlockPayeeValid(block.vtx[0], pindex->nHeight, blockReward)) {
+	CAmount blockReward = GetBlockSubsidy(pindex->nHeight, chainparams.GetConsensus());
+	masternode_info_t mnInfo;
+	if (!IsBlockPayeeValid(block.vtx[0], pindex->nHeight, nFees, blockReward, mnInfo)) {
 		mapRejectedBlocks.insert(make_pair(block.GetHash(), GetTime()));
 		return state.DoS(0, error("ConnectBlock(SYS): couldn't find masternode or superblock payments"),
 			REJECT_INVALID, "bad-cb-payee");
+	}
+	std::string strError = "";
+	if(mnInfo.nTimeCollateralDeposited > 0)
+		blockReward = GetBlockSubsidy(pindex->nHeight, chainparams.GetConsensus(), false, true, mnInfo.nTimeCollateralDeposited);
+	if (!IsBlockValueValid(block, pindex->nHeight, nFees, blockReward, strError)) {
+		return state.DoS(0, error("ConnectBlock(SYS): %s", strError), REJECT_INVALID, "bad-cb-amount");
 	}
 	// END SYS
 

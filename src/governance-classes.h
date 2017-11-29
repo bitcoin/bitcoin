@@ -203,7 +203,7 @@ public:
     bool GetPayment(int nPaymentIndex, CGovernancePayment& paymentRet);
     CAmount GetPaymentsTotalAmount();
 
-    bool IsValid(const CTransaction& txNew, int nBlockHeight, CAmount blockReward);
+    bool IsValid(const CTransaction& txNew, int nBlockHeight, const CAmount& nFee, const CAmount &blockReward);
 };
 
 #endif

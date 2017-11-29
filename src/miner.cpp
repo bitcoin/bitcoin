@@ -286,15 +286,15 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
         }
 
 		// SYSCOIN
-		CAmount blockReward = nFees + GetBlockSubsidy(nHeight, Params().GetConsensus());
+		CAmount blockReward = GetBlockSubsidy(nHeight, Params().GetConsensus());
 
         // Compute regular coinbase transaction.
-        txNew.vout[0].nValue = blockReward;
+        txNew.vout[0].nValue = (blockReward*0.25) + (nFees / 2);
         txNew.vin[0].scriptSig = CScript() << nHeight << OP_0;
 
         // Update coinbase transaction with additional info about masternode and governance payments,
         // get some info back to pass to getblocktemplate
-        FillBlockPayments(txNew, nHeight, blockReward, pblock->txoutMasternode, pblock->voutSuperblock);
+        FillBlockPayments(txNew, nHeight, nFees, blockReward, pblock->txoutMasternode, pblock->voutSuperblock);
         // LogPrintf("CreateNewBlock -- nBlockHeight %d blockReward %lld txoutMasternode %s txNew %s",
         //             nHeight, blockReward, pblock->txoutMasternode.ToString(), txNew.ToString());
 
