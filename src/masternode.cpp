@@ -335,17 +335,18 @@ void CMasternode::UpdateLastPaid()
 		return;
 	const CScript &mnpayee = GetScriptForDestination(pubKeyCollateralAddress.GetID());
 	for (std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue> >::const_iterator it = unspentOutputs.end(); it != unspentOutputs.begin(); it--) {
+		const unsigned int nStartTime = chainActive[unspentOutputs[0].second.blockHeight]->nTime;
+		const CAmount& nMasternodePayment = GetBlockSubsidy(it->second.blockHeight, Params().GetConsensus(), false, true, nStartTime);
+		if (it->second.satoshis == nMasternodePayment) {
+			nTimeCollateralDeposited = nStartTime;
+			LogPrint("masternode", "CMasternode::UpdateLastPaidBlock -- searching for block for collateral %s -- found new start time %d\n", vin.prevout.ToStringShort(), nStartTime);
+		}
 		if (mnpayments.mapMasternodeBlocks.count(it->second.blockHeight) &&
 			mnpayments.mapMasternodeBlocks[it->second.blockHeight].HasPayeeWithVotes(mnpayee, 2))
 		{
-			unsigned int nStartTime = chainActive[unspentOutputs[0].second.blockHeight]->nTime;
-
-			const CAmount& nMasternodePayment = GetBlockSubsidy(it->second.blockHeight, Params().GetConsensus(), false, true, nStartTime);
-			
 			if (it->second.satoshis == nMasternodePayment) {
 				nBlockLastPaid = it->second.blockHeight;
 				nTimeLastPaid = chainActive[nBlockLastPaid]->nTime;
-				nTimeCollateralDeposited = nStartTime;
 				LogPrint("masternode", "CMasternode::UpdateLastPaidBlock -- searching for block with payment to %s -- found new %d\n", vin.prevout.ToStringShort(), nBlockLastPaid);
 				break;
 			}
