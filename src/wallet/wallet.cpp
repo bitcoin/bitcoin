@@ -2742,6 +2742,14 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
                 }
 
                 scriptChange = GetScriptForDestination(vchPubKey.GetID());
+                if (::bGetSegwitChangeAddresses) {
+                    CScript witnessScript = GetScriptForWitness(scriptChange);
+                    this->AddCScript(witnessScript);
+                    scriptChange = witnessScript;
+                    if (::bGetSegwitP2shAddresses) {
+                        scriptChange = GetScriptForDestination(scriptChange);
+                    }
+                }
             }
             CTxOut change_prototype_txout(0, scriptChange);
             size_t change_prototype_size = GetSerializeSize(change_prototype_txout, SER_DISK, 0);
