@@ -15,6 +15,7 @@ For a description of arguments recognized by test scripts, see
 """
 
 import argparse
+from collections import deque
 import configparser
 import datetime
 import os
@@ -314,7 +315,7 @@ def run_tests(test_list, src_dir, build_dir, exeext, tmpdir, jobs=1, enable_cove
     max_len_name = len(max(test_list, key=len))
 
     for _ in range(len(test_list)):
-        test_result, stdout, stderr = job_queue.get_next()
+        test_result, testdir, stdout, stderr = job_queue.get_next()
         test_results.append(test_result)
 
         if test_result.status == "Passed":
@@ -325,6 +326,14 @@ def run_tests(test_list, src_dir, build_dir, exeext, tmpdir, jobs=1, enable_cove
             print("\n%s%s%s failed, Duration: %s s\n" % (BOLD[1], test_result.name, BOLD[0], test_result.time))
             print(BOLD[1] + 'stdout:\n' + BOLD[0] + stdout + '\n')
             print(BOLD[1] + 'stderr:\n' + BOLD[0] + stderr + '\n')
+            if os.getenv("PYTHON_DEBUG", "") and os.path.isdir(testdir):
+                # Print the logs on travis, so they are preserved when the vm is disposed
+                print('{}Combine the logs and print the last {} lines ...{}'.format(BOLD[1], 4000, BOLD[0]))
+                print('\n============')
+                print('{}Combined log for {}:{}'.format(BOLD[1], testdir, BOLD[0]))
+                print('============\n')
+                combined_logs, _ = subprocess.Popen([os.path.join(tests_dir, 'combine_logs.py'), '-c', testdir], universal_newlines=True, stdout=subprocess.PIPE).communicate()
+                print("\n".join(deque(combined_logs.splitlines(), 4000)))
 
     print_results(test_results, max_len_name, (int(time.time() - time0)))
 
@@ -389,13 +398,15 @@ class TestHandler:
             log_stdout = tempfile.SpooledTemporaryFile(max_size=2**16)
             log_stderr = tempfile.SpooledTemporaryFile(max_size=2**16)
             test_argv = t.split()
-            tmpdir = ["--tmpdir=%s/%s_%s" % (self.tmpdir, re.sub(".py$", "", test_argv[0]), portseed)]
+            testdir = "{}/{}_{}".format(self.tmpdir, re.sub(".py$", "", test_argv[0]), portseed)
+            tmpdir_arg = ["--tmpdir={}".format(testdir)]
             self.jobs.append((t,
                               time.time(),
-                              subprocess.Popen([self.tests_dir + test_argv[0]] + test_argv[1:] + self.flags + portseed_arg + tmpdir,
+                              subprocess.Popen([self.tests_dir + test_argv[0]] + test_argv[1:] + self.flags + portseed_arg + tmpdir_arg,
                                                universal_newlines=True,
                                                stdout=log_stdout,
                                                stderr=log_stderr),
+                              testdir,
                               log_stdout,
                               log_stderr))
         if not self.jobs:
@@ -404,7 +415,7 @@ class TestHandler:
             # Return first proc that finishes
             time.sleep(.5)
             for j in self.jobs:
-                (name, time0, proc, log_out, log_err) = j
+                (name, time0, proc, testdir, log_out, log_err) = j
                 if os.getenv('TRAVIS') == 'true' and int(time.time() - time0) > 20 * 60:
                     # In travis, timeout individual tests after 20 minutes (to stop tests hanging and not
                     # providing useful output.
@@ -422,7 +433,7 @@ class TestHandler:
                     self.num_running -= 1
                     self.jobs.remove(j)
 
-                    return TestResult(name, status, int(time.time() - time0)), stdout, stderr
+                    return TestResult(name, status, int(time.time() - time0)), testdir, stdout, stderr
             print('.', end='', flush=True)
 
 class TestResult():
