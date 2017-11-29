@@ -14,7 +14,13 @@ add_definitions(-DHAVE_DECL_HTOLE64=1)
 add_definitions(-DHAVE_DECL_BE64TOH=1)
 add_definitions(-DHAVE_DECL_LE64TOH=1)
 add_definitions(-DHAVE_WORKING_BOOST_SLEEP_FOR=1)
+add_definitions(-DUSE_NUM_NONE=1)
+add_definitions(-DUSE_FIELD_10X26=1)
+add_definitions(-DUSE_FIELD_INV_BUILTIN=1)
+add_definitions(-DUSE_SCALAR_8X32=1)
+add_definitions(-DUSE_SCALAR_INV_BUILTIN=1)
 
 add_subdirectory(src/univalue)
+add_subdirectory(src/secp256k1)
 add_subdirectory(src)
 
