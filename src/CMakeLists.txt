@@ -1,8 +1,9 @@
 add_definitions(-DLEVELDB_PLATFORM_POSIX=1)
 
 add_subdirectory(leveldb)
+add_subdirectory(json)
 
-add_library(libcrown_crypto
+add_library(crown_crypto
   crypto/sha1.cpp
   crypto/sha256.cpp
   crypto/sha512.cpp
@@ -17,40 +18,10 @@ add_library(libcrown_crypto
   crypto/sha1.h
   crypto/ripemd160.h
 )
-target_include_directories(libcrown_crypto PRIVATE .)
+target_include_directories(crown_crypto PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
-# LIBCROWN-SERVER
-
-add_library(libcrown_server 
-  addrman.cpp 
-  alert.cpp 
-  bloom.cpp 
-  chain.cpp 
-  checkpoints.cpp 
-  init.cpp 
-  leveldbwrapper.cpp 
-  main.cpp 
-  merkleblock.cpp 
-  miner.cpp 
-  net.cpp 
-  noui.cpp 
-  pow.cpp 
-  rest.cpp 
-  rpcblockchain.cpp 
-  rpcservice.cpp 
-  rpcmasternode.cpp 
-  rpcmasternode-budget.cpp 
-  rpcsystemnode.cpp 
-  rpcmining.cpp 
-  rpcmisc.cpp 
-  rpcnet.cpp 
-  rpcrawtransaction.cpp 
-  rpcserver.cpp 
-  script/sigcache.cpp 
-  timedata.cpp 
-  txdb.cpp 
-  txmempool.cpp 
-
+add_library(crown_core INTERFACE
+#[[
   activemasternode.h 
   activesystemnode.h 
   addrman.h 
@@ -146,25 +117,52 @@ add_library(libcrown_server
   compat/byteswap.h 
   compat/endian.h 
   compat/sanity.h
-  json/json_spirit.h 
-  json/json_spirit_error_position.h 
-  json/json_spirit_reader.h 
-  json/json_spirit_reader_template.h 
-  json/json_spirit_stream_reader.h 
-  json/json_spirit_utils.h 
-  json/json_spirit_value.h 
-  json/json_spirit_writer.h 
-  json/json_spirit_writer_template.h
+]]
+)
+target_include_directories(crown_core INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
+
+
+# LIBCROWN-SERVER
+
+add_library(crown_server 
+  addrman.cpp 
+  alert.cpp 
+  bloom.cpp 
+  chain.cpp 
+  checkpoints.cpp 
+  init.cpp 
+  leveldbwrapper.cpp 
+  main.cpp 
+  merkleblock.cpp 
+  miner.cpp 
+  net.cpp 
+  noui.cpp 
+  pow.cpp 
+  rest.cpp 
+  rpcblockchain.cpp 
+  rpcservice.cpp 
+  rpcmasternode.cpp 
+  rpcmasternode-budget.cpp 
+  rpcsystemnode.cpp 
+  rpcmining.cpp 
+  rpcmisc.cpp 
+  rpcnet.cpp 
+  rpcrawtransaction.cpp 
+  rpcserver.cpp 
+  script/sigcache.cpp 
+  timedata.cpp 
+  txdb.cpp 
+  txmempool.cpp 
 )
 
-target_include_directories(libcrown_server PRIVATE . PRIVATE leveldb/helpers/memenv)
+target_include_directories(crown_server PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} PRIVATE leveldb/helpers/memenv)
 
-target_link_libraries(libcrown_server leveldb)
+target_link_libraries(crown_server leveldb crown_core json)
 
 
 #LIBCROWN-COMMON
 
-add_library(libcrown_common
+add_library(crown_common
   arith_uint256.cpp 
   amount.cpp 
   auxpow.cpp 
@@ -287,11 +285,12 @@ add_library(libcrown_common
   compat/sanity.h
 )
 
-target_include_directories(libcrown_common PRIVATE . PRIVATE leveldb/helpers/memenv PRIVATE secp256k1/include)
+target_include_directories(crown_common PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} PRIVATE leveldb/helpers/memenv PRIVATE secp256k1/include)
+target_link_libraries(crown_common crown_core)
 
 # LIBCROWN-UTIL
 
-add_library(libcrown_util
+add_library(crown_util
   support/pagelocker.cpp 
   chainparamsbase.cpp 
   clientversion.cpp 
@@ -309,9 +308,10 @@ add_library(libcrown_util
   utiltime.cpp 
 )
 
-target_include_directories(libcrown_util PRIVATE .)
+target_include_directories(crown_util PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(crown_util crown_core)
 
-add_library(libcrown_wallet
+add_library(crown_wallet
   activemasternode.cpp 
   activesystemnode.cpp 
   legacysigner.cpp 
@@ -335,7 +335,7 @@ add_library(libcrown_wallet
   wallet_ismine.cpp 
   walletdb.cpp 
 )
-target_include_directories(libcrown_wallet
+target_include_directories(crown_wallet
   PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
@@ -348,12 +348,13 @@ target_include_directories(crownd
 )
 
 target_link_libraries(crownd
-  libcrown_server
-  libcrown_common
-  libcrown_wallet
-  libcrown_univalue
-  libcrown_util
-  libcrown_crypto
+  crown_core
+  crown_server
+  crown_common
+  crown_wallet
+  crown_univalue
+  crown_util
+  crown_crypto
   leveldb
   memenv
   secp256k1
@@ -365,12 +366,7 @@ target_link_libraries(crownd
   BDB::bdb
 )  
 
-#if ENABLE_WALLET
-#crownd_LDADD += libbitcoin_wallet.a
-#endif
-
 #if TARGET_WINDOWS
 #crownd_SOURCES += crownd-res.rc
 #endif
 
-#crownd_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS)

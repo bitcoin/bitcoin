@@ -1,4 +1,4 @@
-add_library(libcrown_univalue
+add_library(crown_univalue
   univalue.cpp
   univalue_read.cpp
   univalue_write.cpp
