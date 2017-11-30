@@ -7,7 +7,7 @@
 Setup: two nodes, node0+node1, not connected to each other. Node1 will have
 nMinimumChainWork set to 0x10, so it won't process low-work unrequested blocks.
 
-We have one NodeConn connection to node0 called test_node, and one to node1
+We have one P2PInterface connection to node0 called test_node, and one to node1
 called min_work_node.
 
 The test:
@@ -79,9 +79,9 @@ class AcceptBlockTest(BitcoinTestFramework):
     def run_test(self):
         # Setup the p2p connections and start up the network thread.
         # test_node connects to node0 (not whitelisted)
-        test_node = self.nodes[0].add_p2p_connection(NodeConnCB())
-        # min_work_node connects to node1
-        min_work_node = self.nodes[1].add_p2p_connection(NodeConnCB())
+        test_node = self.nodes[0].add_p2p_connection(P2PInterface())
+        # min_work_node connects to node1 (whitelisted)
+        min_work_node = self.nodes[1].add_p2p_connection(P2PInterface())
 
         network_thread_start()
 
@@ -210,7 +210,7 @@ class AcceptBlockTest(BitcoinTestFramework):
         self.nodes[1].disconnect_p2ps()
         network_thread_join()
 
-        test_node = self.nodes[0].add_p2p_connection(NodeConnCB())
+        test_node = self.nodes[0].add_p2p_connection(P2PInterface())
         network_thread_start()
         test_node.wait_for_verack()
 
@@ -296,7 +296,7 @@ class AcceptBlockTest(BitcoinTestFramework):
             test_node.wait_for_disconnect()
 
             self.nodes[0].disconnect_p2ps()
-            test_node = self.nodes[0].add_p2p_connection(NodeConnCB())
+            test_node = self.nodes[0].add_p2p_connection(P2PInterface())
 
             network_thread_start()
             test_node.wait_for_verack()

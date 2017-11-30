@@ -9,9 +9,8 @@
 This python code was modified from ArtForz' public domain  half-a-node, as
 found in the mini-node branch of http://github.com/jgarzik/pynode.
 
-NodeConn: an object which manages p2p connectivity to a bitcoin node
-NodeConnCB: a base class that describes the interface for receiving
-            callbacks with network messages from a NodeConn
+P2PConnection: A low-level connection object to a node's P2P interface
+P2PInterface: A high-level interface object for communicating to a node over P2P
 P2PDataStore: A p2p interface class that keeps a store of transactions and blocks
               and can respond correctly to getdata and getheaders messages
 """
@@ -75,7 +74,7 @@ MAGIC_BYTES = {
     "devnet": b"\xe2\xca\xff\xce",    # devnet
 }
 
-class NodeConn(asyncore.dispatcher):
+class P2PConnection(asyncore.dispatcher):
     """A low-level connection object to a node's P2P interface.
 
     This class is responsible for:
@@ -86,9 +85,7 @@ class NodeConn(asyncore.dispatcher):
     - logging messages as they are sent and received
 
     This class contains no logic for handing the P2P message payloads. It must be
-    sub-classed and the on_message() callback overridden.
-
-    TODO: rename this class P2PConnection."""
+    sub-classed and the on_message() callback overridden."""
 
     def __init__(self):
         super().__init__(map=mininode_socket_map)
@@ -266,7 +263,7 @@ class NodeConn(asyncore.dispatcher):
         logger.debug(log_message)
 
 
-class NodeConnCB(NodeConn):
+class P2PInterface(P2PConnection):
     """A high-level P2P interface class for communicating with a Bitcoin node.
 
     This class provides high-level callbacks for processing P2P message
@@ -274,9 +271,7 @@ class NodeConnCB(NodeConn):
     node over P2P.
 
     Individual testcases should subclass this and override the on_* methods
-    if they want to alter message handling behaviour.
-
-    TODO: rename this class P2PInterface"""
+    if they want to alter message handling behaviour."""
     def __init__(self):
         super().__init__()
 
@@ -439,10 +434,10 @@ mininode_socket_map = dict()
 
 # One lock for synchronizing all data access between the networking thread (see
 # NetworkThread below) and the thread running the test logic.  For simplicity,
-# NodeConn acquires this lock whenever delivering a message to a NodeConnCB,
+# P2PConnection acquires this lock whenever delivering a message to a P2PInterface,
 # and whenever adding anything to the send buffer (in send_message()).  This
 # lock should be acquired in the thread running the test logic to synchronize
-# access to any data shared with the NodeConnCB or NodeConn.
+# access to any data shared with the P2PInterface or P2PConnection.
 mininode_lock = threading.RLock()
 
 class NetworkThread(threading.Thread):

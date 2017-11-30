@@ -90,7 +90,7 @@ from test_framework.mininode import (
     CBlockHeader,
     CInv,
     network_thread_start,
-    NodeConnCB,
+    P2PInterface,
     mininode_lock,
     msg_block,
     msg_getblocks,
@@ -109,7 +109,7 @@ from test_framework.util import (
 
 DIRECT_FETCH_RESPONSE_TIME = 0.05
 
-class BaseNode(NodeConnCB):
+class BaseNode(P2PInterface):
     def __init__(self):
         super().__init__()
 

@@ -55,7 +55,7 @@ class BIP66Test(BitcoinTestFramework):
         self.setup_clean_chain = True
 
     def run_test(self):
-        self.nodes[0].add_p2p_connection(NodeConnCB())
+        self.nodes[0].add_p2p_connection(P2PInterface())
 
         network_thread_start()
 
