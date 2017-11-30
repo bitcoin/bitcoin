@@ -1353,10 +1353,8 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams, b
 	if (fMasternodePartOnly) {
 		nSubsidy *= 0.75;
 		if (nHeight > 0 && nStartHeight > 0) {
-			const unsigned int nDifferenceInBlocks;
-			if (nStartHeight > nHeight)
-				nDifferenceInBlocks = 0;
-			else
+			unsigned int nDifferenceInBlocks = 0;
+			if (nStartHeight < nHeight)
 				nDifferenceInBlocks = (nHeight - nStartHeight);
 			// the first three intervals should discount rewards to incentivize bonding over longer terms (we add 10% premium every interval)
 			double fSubsidyAdjustmentPercentage = -0.3;
