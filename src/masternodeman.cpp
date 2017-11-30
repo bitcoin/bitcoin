@@ -1602,11 +1602,11 @@ unsigned int CMasternodeMan::GetStartTime(const masternode_info_t& mnInfo) {
 	uint160 hashBytes;
 	int type = 0;
 	if (!collateralAddress.GetIndexKey(hashBytes, type)) {
-		return;
+		return 0;
 	}
 	std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue> > unspentOutputs;
 	if (!GetAddressUnspent(hashBytes, type, unspentOutputs))
-		return;
+		return 0;
 	if (unspentOutputs.size() > 0)
 		return chainActive[unspentOutputs[0].second.blockHeight]->nTime;
 	return 0;
