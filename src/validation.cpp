@@ -1353,7 +1353,7 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams, b
 	if (fMasternodePartOnly) {
 		nSubsidy *= 0.75;
 		if (nHeight > 0 && nStartHeight > 0) {
-			const unsigned int &nDifferenceInBlocks;
+			const unsigned int nDifferenceInBlocks;
 			if (nStartHeight > nHeight)
 				nDifferenceInBlocks = 0;
 			else
