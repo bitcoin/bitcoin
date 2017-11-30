@@ -2371,7 +2371,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 	}
 	std::string strError = "";
 	const unsigned int &nStartHeight = mnodeman.GetStartHeight(mnInfo);
-	if(nStartTime > 0)
+	if(nStartHeight > 0)
 		blockReward = GetBlockSubsidy(pindex->nHeight, chainparams.GetConsensus(), false, true, nStartHeight);
 	if (!IsBlockValueValid(block, pindex->nHeight, nFees, blockReward, strError)) {
 		return state.DoS(0, error("ConnectBlock(SYS): %s", strError), REJECT_INVALID, "bad-cb-amount");
