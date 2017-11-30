@@ -39,7 +39,7 @@ don't have test cases for.
     - `wallet` for tests for wallet features, eg `wallet_keypool.py`
 - use an underscore to separate words
     - exception: for tests for specific RPCs or command line options which don't include underscores, name the test after the exact RPC or argument name, eg `rpc_decodescript.py`, not `rpc_decode_script.py`
-- Don't use the redundant work `test` in the name, eg `interface_zmq.py`, not `interface_zmq_test.py`
+- Don't use the redundant word `test` in the name, eg `interface_zmq.py`, not `interface_zmq_test.py`
 
 #### General test-writing advice
 
@@ -87,7 +87,7 @@ start the networking thread.  (Continue with the test logic in your existing
 thread.)
 
 - Can be used to write tests where specific P2P protocol behavior is tested.
-Examples tests are `p2p-accept-block.py`, `p2p-compactblocks.py`.
+Examples tests are `p2p-acceptblock.py`, `p2p-compactblocks.py`.
 
 #### Comptool
 
