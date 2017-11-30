@@ -407,9 +407,9 @@ int CAddrMan::Check_()
     if (vRandom.size() != (size_t)(nTried + nNew))
         return -7;
 
-    for (std::map<int, CAddrInfo>::iterator it = mapInfo.begin(); it != mapInfo.end(); it++) {
-        int n = (*it).first;
-        CAddrInfo& info = (*it).second;
+    for (const auto& entry : mapInfo) {
+        int n = entry.first;
+        const CAddrInfo& info = entry.second;
         if (info.fInTried) {
             if (!info.nLastSuccess)
                 return -1;
