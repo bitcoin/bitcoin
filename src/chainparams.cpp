@@ -375,7 +375,7 @@ public:
         strNetworkID = "regtest";
 		consensus.nSeniorityInterval = 60; // seniority increases every hour
 		consensus.nTotalSeniorityIntervals = 9;
-        consensus.nSubsidyHalvingInterval = 150;
+        consensus.nSubsidyHalvingInterval = 1500;
         consensus.nInstantSendKeepLock = 6;
         consensus.nBudgetPaymentsStartBlock = 0;
         consensus.nBudgetPaymentsCycleBlocks = 50;
