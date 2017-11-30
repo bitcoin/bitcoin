@@ -13,7 +13,7 @@
 #include "util.h"
 
 #include <boost/lexical_cast.hpp>
-
+extern bool heightSort(std::pair<CAddressUnspentKey, CAddressUnspentValue> a, std::pair<CAddressUnspentKey, CAddressUnspentValue> b);
 
 CMasternode::CMasternode() :
     masternode_info_t{ MASTERNODE_ENABLED, PROTOCOL_VERSION, GetAdjustedTime()},
@@ -268,9 +268,13 @@ bool CMasternode::IsInputAssociatedWithPubkey(int& height)
 		return false;
 
 	// SYSCOIN first txid of this address should be the collateral
-	if (unspentOutputs.size() > 0 && unspentOutputs[0].second.satoshis == 100000 * COIN && unspentOutputs[0].first.txhash == vin.prevout.hash) {
-		height = unspentOutputs[0].second.blockHeight;
-		return true;
+	if (unspentOutputs.size() > 0)
+	{
+		std::sort(unspentOutputs.begin(), unspentOutputs.end(), heightSort);
+		if (unspentOutputs[0].second.satoshis == 100000 * COIN && unspentOutputs[0].first.txhash == vin.prevout.hash) {
+			height = unspentOutputs[0].second.blockHeight;
+			return true;
+		}
 	}
     return false;
 }
@@ -332,6 +336,8 @@ void CMasternode::UpdateLastPaid()
 	std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue> > unspentOutputs;
 	if (!GetAddressUnspent(hashBytes, type, unspentOutputs))
 		return;
+	if(unspentOutputs.size()) > 0)
+		std::sort(unspentOutputs.begin(), unspentOutputs.end(), heightSort);
 	const CScript &mnpayee = GetScriptForDestination(pubKeyCollateralAddress.GetID());
 	for (std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue> >::const_iterator it = unspentOutputs.end(); it != unspentOutputs.begin(); it--) {
 		if (mnpayments.mapMasternodeBlocks.count(it->second.blockHeight) &&

@@ -12,7 +12,7 @@
 #include "netfulfilledman.h"
 #include "privatesend-client.h"
 #include "util.h"
-
+extern extern bool heightSort(std::pair<CAddressUnspentKey, CAddressUnspentValue> a, std::pair<CAddressUnspentKey, CAddressUnspentValue> b);
 /** Masternode manager */
 CMasternodeMan mnodeman;
 
@@ -1607,7 +1607,9 @@ unsigned int CMasternodeMan::GetStartHeight(const masternode_info_t& mnInfo) {
 	std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue> > unspentOutputs;
 	if (!GetAddressUnspent(hashBytes, type, unspentOutputs))
 		return 0;
-	if (unspentOutputs.size() > 0)
+	if (unspentOutputs.size() > 0) {
+		std::sort(unspentOutputs.begin(), unspentOutputs.end(), heightSort);
 		return unspentOutputs[0].second.blockHeight;
+	}
 	return 0;
 }
