@@ -63,12 +63,12 @@ wrappers for them, `msg_block`, `msg_tx`, etc).
 with the bitcoind(s) being tested (using python's asyncore package); the other
 implements the test logic.
 
-- `NodeConn` is the class used to connect to a bitcoind.  If you implement
-a callback class that derives from `NodeConnCB` and pass that to the
-`NodeConn` object, your code will receive the appropriate callbacks when
-events of interest arrive.
+- `P2PConnection` is the class used to connect to a bitcoind.  `P2PInterface`
+contains the higher level logic for processing P2P payloads and connecting to
+the Bitcoin Core node application logic. For custom behaviour, subclass the
+P2PInterface object and override the callback methods.
 
-- Call `NetworkThread.start()` after all `NodeConn` objects are created to
+- Call `NetworkThread.start()` after all `P2PInterface` objects are created to
 start the networking thread.  (Continue with the test logic in your existing
 thread.)
 
