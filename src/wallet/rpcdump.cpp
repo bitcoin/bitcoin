@@ -833,7 +833,10 @@ UniValue dumpwallet(const JSONRPCRequest& request)
             } else {
                 file << "change=1";
             }
-            file << strprintf(" # addr=%s%s\n", strAddr, (meta.has_key_origin ? (" hdkeypath=" + WriteHDKeypath(meta.key_origin.path)) : ""));
+            if (meta.has_key_origin) {
+                file << " hdkeypath=" + WriteHDKeypath(meta.key_origin.path);
+            }
+            file << strprintf(" # addr=%s\n", strAddr);
         }
     }
     file << "\n";
