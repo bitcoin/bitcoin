@@ -1325,7 +1325,7 @@ double ConvertBitsToDouble(unsigned int nBits)
 	return dDiff;
 }
 
-CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams, CAmount &nTotalRewardWithMasternodes, bool fSuperblockPartOnly, bool fMasternodePartOnly, unsigned int nStartHeight, CAmount & nTotalRewardWithMasternodes)
+CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams, CAmount &nTotalRewardWithMasternodes, bool fSuperblockPartOnly, bool fMasternodePartOnly, unsigned int nStartHeight)
 {
 	if (nHeight == 0)
 		return 8.88*COIN;
@@ -2373,7 +2373,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 	BOOST_FOREACH(CTxOut txout, block.vtx[0].vout) {
 		masternode_info_t mnInfo;
 		mnodeman.GetMasternodeInfo(txout.scriptPubKey, mnInfo);
-		if (!mnInfo.pubKeyCollateralAddress.IsNull()) {
+		if (!mnInfo.pubKeyCollateralAddress.IsValid()) {
 			const unsigned int &nStartHeight = mnodeman.GetStartHeight(mnInfo);
 			if (nStartHeight > 0) {
 				masternodeReward = GetBlockSubsidy(pindex->nHeight, chainparams.GetConsensus(), nTotalRewardWithMasternodes, false, true, nStartHeight);
