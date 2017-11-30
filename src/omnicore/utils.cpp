@@ -13,6 +13,7 @@
 // TODO: use crypto/sha256 instead of openssl
 #include "openssl/sha.h"
 
+#include "omnicore/log.h"
 #include "omnicore/script.h"
 
 #include <boost/algorithm/string.hpp>
@@ -78,21 +79,14 @@ std::string HashToAddress(unsigned char version, uint160 hash)
 std::vector<unsigned char> AddressToBytes(const std::string& address)
 {
     std::vector<unsigned char> addressBytes;
-
-    txnouttype whichType;
-    CScript scriptPubKey = GetScriptForDestination(CBitcoinAddress(address).Get());
-    if (!GetOutputType(scriptPubKey, whichType)) {
-        return addressBytes;
+    bool success = DecodeBase58(address, addressBytes);
+    if (!success) {
+        PrintToLog("ERROR: failed to decode address %s.\n", address);
     }
-
-    if (scriptPubKey.size() > 23) {
-        if (whichType == TX_PUBKEYHASH) {
-            addressBytes.assign(scriptPubKey.begin()+3, scriptPubKey.begin()+23); //uggh - todo - get hash160 bytes in a cleaner way
-            addressBytes.insert(addressBytes.begin(), Params().Base58Prefix(CChainParams::PUBKEY_ADDRESS)[0]); // insert version byte at the beginning
-        } else if (whichType == TX_SCRIPTHASH) {
-            addressBytes.assign(scriptPubKey.begin()+2, scriptPubKey.begin()+22);
-            addressBytes.insert(addressBytes.begin(), Params().Base58Prefix(CChainParams::SCRIPT_ADDRESS)[0]);
-        }
+    if (addressBytes.size() == 24) {
+        addressBytes.resize(20); // truncate checksum
+    } else {
+        PrintToLog("ERROR: unexpected size from DecodeBase58 when decoding address %s.\n", address);
     }
 
     return addressBytes;
