@@ -1325,7 +1325,7 @@ double ConvertBitsToDouble(unsigned int nBits)
 	return dDiff;
 }
 
-CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams, bool fSuperblockPartOnly, bool fMasternodePartOnly, unsigned int nStartHeight, CAmount & nTotalRewardWithMasternodes)
+CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams, CAmount &nTotalRewardWithMasternodes, bool fSuperblockPartOnly, bool fMasternodePartOnly, unsigned int nStartHeight, CAmount & nTotalRewardWithMasternodes)
 {
 	if (nHeight == 0)
 		return 8.88*COIN;
@@ -2367,7 +2367,8 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 	LogPrint("bench", "      - Connect %u transactions: %.2fms (%.3fms/tx, %.3fms/txin) [%.2fs]\n", (unsigned)block.vtx.size(), 0.001 * (nTime3 - nTime2), 0.001 * (nTime3 - nTime2) / block.vtx.size(), nInputs <= 1 ? 0 : 0.001 * (nTime3 - nTime2) / (nInputs - 1), nTimeConnect * 0.000001);
 
 	// SYSCOIN
-	CAmount blockReward = GetBlockSubsidy(pindex->nHeight, chainparams.GetConsensus());
+	CAmount nTotalRewardWithMasternodes;
+	CAmount blockReward = GetBlockSubsidy(pindex->nHeight, chainparams.GetConsensus(), nTotalRewardWithMasternodes);
 	CAmount masternodeReward;
 	BOOST_FOREACH(CTxOut txout, block.vtx[0].vout) {
 		masternode_info_t mnInfo;
@@ -2375,7 +2376,8 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 		if (!mnInfo.pubKeyCollateralAddress.IsNull()) {
 			const unsigned int &nStartHeight = mnodeman.GetStartHeight(mnInfo);
 			if (nStartHeight > 0) {
-				masternodeReward = GetBlockSubsidy(pindex->nHeight, chainparams.GetConsensus(), false, true, nStartHeight, blockReward);
+				masternodeReward = GetBlockSubsidy(pindex->nHeight, chainparams.GetConsensus(), nTotalRewardWithMasternodes, false, true, nStartHeight);
+				blockReward = nTotalRewardWithMasternodes;
 				break;
 			}
 		}

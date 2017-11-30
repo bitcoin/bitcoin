@@ -267,7 +267,7 @@ bool GetTransaction(const uint256 &hash, CTransaction &tx, const Consensus::Para
 bool ActivateBestChain(CValidationState& state, const CChainParams& chainparams, const CBlock* pblock = NULL);
 
 double ConvertBitsToDouble(unsigned int nBits);
-CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams, bool fSuperblockPartOnly = false, bool fMasternodePartOnly = false, unsigned int nStartHeight=0, CAmount & nTotalRewardWithMasternodes=CAmount(0));
+CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams, CAmount & nTotalRewardWithMasternodes, bool fSuperblockPartOnly = false, bool fMasternodePartOnly = false, unsigned int nStartHeight=0);
 
 /**
  * Prune block and undo files (blk???.dat and undo???.dat) so that the disk space used is less than a user-defined target.

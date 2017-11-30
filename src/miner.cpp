@@ -286,7 +286,8 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
         }
 
 		// SYSCOIN
-		CAmount blockReward = GetBlockSubsidy(nHeight, Params().GetConsensus());
+		CAmount nTotalRewardWithMasternodes;
+		CAmount blockReward = GetBlockSubsidy(nHeight, Params().GetConsensus(), nTotalRewardWithMasternodes);
 
         // Compute regular coinbase transaction.
         txNew.vout[0].nValue = blockReward + nFees;

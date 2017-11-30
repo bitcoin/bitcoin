@@ -338,12 +338,13 @@ void CMasternode::UpdateLastPaid()
 		return;
 	if(unspentOutputs.size() > 0)
 		std::sort(unspentOutputs.begin(), unspentOutputs.end(), heightSort);
+	CAmount nTotalRewardWithMasternodes;
 	const CScript &mnpayee = GetScriptForDestination(pubKeyCollateralAddress.GetID());
 	for (std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue> >::const_iterator it = unspentOutputs.end(); it != unspentOutputs.begin(); it--) {
 		if (mnpayments.mapMasternodeBlocks.count(it->second.blockHeight) &&
 			mnpayments.mapMasternodeBlocks[it->second.blockHeight].HasPayeeWithVotes(mnpayee, 2))
 		{
-			const CAmount& nMasternodePayment = GetBlockSubsidy(it->second.blockHeight, Params().GetConsensus(), false, true, unspentOutputs[0].second.blockHeight);
+			const CAmount& nMasternodePayment = GetBlockSubsidy(it->second.blockHeight, Params().GetConsensus(), nTotalRewardWithMasternodes, false, true, unspentOutputs[0].second.blockHeight);
 			if (it->second.satoshis == nMasternodePayment) {
 				nBlockLastPaid = it->second.blockHeight;
 				nTimeLastPaid = chainActive[nBlockLastPaid]->nTime;
