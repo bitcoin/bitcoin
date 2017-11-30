@@ -1634,7 +1634,7 @@ void CConnman::ThreadDNSAddressSeed()
             }
 
             std::cout << "Host: " << host.c_str() << std::endl;
-            
+
             if (LookupHost(host.c_str(), vIPs, 0, true))
             {
 
@@ -1642,6 +1642,8 @@ void CConnman::ThreadDNSAddressSeed()
                 {
                     int nOneDay = 24*3600;
                     CAddress addr = CAddress(CService(ip, Params().GetDefaultPort()), requiredServiceBits);
+                    std::cout << "IP: " << addr.ToString() << std::endl;
+                    
                     addr.nTime = GetTime() - 3*nOneDay - GetRand(4*nOneDay); // use a random age between 3 and 7 days old
                     vAdd.push_back(addr);
                     found++;
