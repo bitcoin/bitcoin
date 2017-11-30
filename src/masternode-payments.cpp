@@ -531,6 +531,7 @@ bool CMasternodeBlockPayees::IsTransactionValid(const CTransaction& txNew, const
 
     BOOST_FOREACH(CMasternodePayee& payee, vecPayees) {
         if (payee.GetVoteCount() >= MNPAYMENTS_SIGNATURES_REQUIRED) {
+			const CScript& payeeScript = payee.GetPayee();
 			bool bFoundPayment = false;
 			bool bFoundFee = false;
             BOOST_FOREACH(CTxOut txout, txNew.vout) {
