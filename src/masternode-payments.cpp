@@ -36,7 +36,7 @@ bool IsBlockValueValid(const CBlock& block, int nBlockHeight, const CAmount &nFe
 {
     strErrorRet = "";
 
-    bool isBlockRewardValueMet = (block.vtx[0].GetValueOut() != blockReward+nFee);
+    bool isBlockRewardValueMet = (block.vtx[0].GetValueOut() == blockReward+nFee);
     if(fDebug) LogPrintf("block.vtx[0].GetValueOut() %lld != blockReward %lld\n", block.vtx[0].GetValueOut(), blockReward+nFee);
 
     // we are still using budgets, but we have no data about them anymore,
