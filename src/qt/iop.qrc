@@ -59,6 +59,8 @@
         <file alias="down_arrow">res/icons/down_arrow.png</file>
         <file alias="up_arrow-off">res/icons/up_arrow_off.png</file>
         <file alias="down_arrow_off">res/icons/down_arrow_off.png</file>
+        <file alias="left_arrow">res/icons/left_arrow.png</file>
+        <file alias="right_arrow">res/icons/right_arrow.png</file>
     </qresource>
     <qresource prefix="/movies">
         <file alias="spinner-000">res/movies/spinner-000.png</file>
