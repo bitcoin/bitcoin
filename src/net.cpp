@@ -110,13 +110,13 @@ bool GetLocal(CService& addr, const CNetAddr *paddrPeer)
     int nBestReachability = -1;
     {
         LOCK(cs_mapLocalHost);
-        for (std::map<CNetAddr, LocalServiceInfo>::iterator it = mapLocalHost.begin(); it != mapLocalHost.end(); it++)
+        for (const auto& entry : mapLocalHost)
         {
-            int nScore = (*it).second.nScore;
-            int nReachability = (*it).first.GetReachabilityFrom(paddrPeer);
+            int nScore = entry.second.nScore;
+            int nReachability = entry.first.GetReachabilityFrom(paddrPeer);
             if (nReachability > nBestReachability || (nReachability == nBestReachability && nScore > nBestScore))
             {
-                addr = CService((*it).first, (*it).second.nPort);
+                addr = CService(entry.first, entry.second.nPort);
                 nBestReachability = nReachability;
                 nBestScore = nScore;
             }
