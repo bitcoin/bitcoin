@@ -3586,6 +3586,20 @@ void CWallet::ListLockedCoins(std::vector<COutPoint>& vOutpts) const
 
 /** @} */ // end of Actions
 
+bool CWallet::IsKeyDerived(const CTxDestination& txdest) const {
+    AssertLockHeld(cs_wallet); // mapKeyMetadata
+
+    const auto it = mapKeyMetadata.find(txdest);
+    if (it == mapKeyMetadata.end()) {
+        return false;
+    }
+    const CKeyMetadata& meta = it->second;
+    if (meta.hdKeypath.empty() || meta.hdKeypath == "m") {
+        return false;
+    }
+    return true;
+}
+
 void CWallet::GetKeyBirthTimes(std::map<CTxDestination, int64_t> &mapKeyBirth) const {
     AssertLockHeld(cs_wallet); // mapKeyMetadata
     mapKeyBirth.clear();
