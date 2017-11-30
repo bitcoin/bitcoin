@@ -199,12 +199,12 @@ void WalletView::processNewTransaction(const QModelIndex& parent, int start, int
     qint64 credit = ttm->index(start, TransactionTableModel::AmountCredit, parent).data(Qt::EditRole).toULongLong();
     int typeEnum = ttm->index(start, TransactionTableModel::TypeEnum, parent).data(Qt::EditRole).toInt();
 
-    if (typeEnum == TransactionRecord::SendToSelf)
+    if (typeEnum == TransactionRecord::SendToSelf && (credit == SYSTEMNODE_COLLATERAL * COIN || credit == MASTERNODE_COLLATERAL * COIN))
     {
         AvailableCoinsType coin_type = ONLY_500;
         QString title = tr("Payment to yourself - ") + 
             BitcoinUnits::formatWithUnit(walletModel->getOptionsModel()->getDisplayUnit(), credit);
-        QString body = tr("Do you wat to create a new ");
+        QString body = tr("Do you want to create a new ");
         if (credit == SYSTEMNODE_COLLATERAL * COIN)
         {
             body += "Systemnode?";
