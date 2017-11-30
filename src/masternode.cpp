@@ -337,8 +337,7 @@ void CMasternode::UpdateLastPaid()
 		if (mnpayments.mapMasternodeBlocks.count(it->second.blockHeight) &&
 			mnpayments.mapMasternodeBlocks[it->second.blockHeight].HasPayeeWithVotes(mnpayee, 2))
 		{
-			const unsigned int nStartTime = chainActive[unspentOutputs[0].second.blockHeight]->nTime;
-			const CAmount& nMasternodePayment = GetBlockSubsidy(it->second.blockHeight, Params().GetConsensus(), false, true, nStartTime);
+			const CAmount& nMasternodePayment = GetBlockSubsidy(it->second.blockHeight, Params().GetConsensus(), false, true, unspentOutputs[0].second.blockHeight);
 			if (it->second.satoshis == nMasternodePayment) {
 				nBlockLastPaid = it->second.blockHeight;
 				nTimeLastPaid = chainActive[nBlockLastPaid]->nTime;

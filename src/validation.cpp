@@ -1325,7 +1325,7 @@ double ConvertBitsToDouble(unsigned int nBits)
 	return dDiff;
 }
 
-CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams, bool fSuperblockPartOnly, bool fMasternodePartOnly, unsigned int nStartTime)
+CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams, bool fSuperblockPartOnly, bool fMasternodePartOnly, unsigned int nStartHeight)
 {
 	if (nHeight == 0)
 		return 8.88*COIN;
@@ -1352,11 +1352,8 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams, b
 	nSubsidy -= nSuperblockPart;
 	if (fMasternodePartOnly) {
 		nSubsidy *= 0.75;
-		if (nHeight > 0 && nStartTime > 0) {
-			unsigned int nCurrentTime = chainActive[nHeight - 1]->nTime;
-			if (nCurrentTime < nStartTime)
-				nCurrentTime = nStartTime;
-			const unsigned int &nDifferenceInBlocks = (nCurrentTime - nStartTime) / 60;
+		if (nHeight > 0 && nStartHeight > 0) {
+			const unsigned int &nDifferenceInBlocks = (nHeight - nStartHeight);
 			// the first three intervals should discount rewards to incentivize bonding over longer terms (we add 10% premium every interval)
 			double fSubsidyAdjustmentPercentage = -0.3;
 			for (int i = 0; i < consensusParams.nTotalSeniorityIntervals; i++) {
@@ -2373,9 +2370,9 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 			REJECT_INVALID, "bad-cb-payee");
 	}
 	std::string strError = "";
-	const unsigned int &nStartTime = mnodeman.GetStartTime(mnInfo);
+	const unsigned int &nStartHeight = mnodeman.GetStartHeight(mnInfo);
 	if(nStartTime > 0)
-		blockReward = GetBlockSubsidy(pindex->nHeight, chainparams.GetConsensus(), false, true, nStartTime);
+		blockReward = GetBlockSubsidy(pindex->nHeight, chainparams.GetConsensus(), false, true, nStartHeight);
 	if (!IsBlockValueValid(block, pindex->nHeight, nFees, blockReward, strError)) {
 		return state.DoS(0, error("ConnectBlock(SYS): %s", strError), REJECT_INVALID, "bad-cb-amount");
 	}
