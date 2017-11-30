@@ -1265,7 +1265,7 @@ void CWallet::BlockDisconnected(const std::shared_ptr<const CBlock>& pblock) {
 
 
 
-void CWallet::BlockUntilSyncedToCurrentChain() {
+void CWallet::BlockUntilSyncedToCurrentChain() LOCKS_EXCLUDED(cs_main, cs_wallet) {
     AssertLockNotHeld(cs_main);
     AssertLockNotHeld(cs_wallet);
 
