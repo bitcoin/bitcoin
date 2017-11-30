@@ -1325,7 +1325,7 @@ double ConvertBitsToDouble(unsigned int nBits)
 	return dDiff;
 }
 
-CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams, bool fSuperblockPartOnly)
+CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams, CAmount &nTotalRewardWithMasternodes, bool fSuperblockPartOnly, bool fMasternodePartOnly, unsigned int nStartHeight)
 {
 	if (nHeight == 0)
 		return 8.88*COIN;
@@ -1347,19 +1347,32 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams, b
 	// Reduce the block reward of miners (allowing budget/superblocks)
 	const CAmount &nSuperblockPart = (nSubsidy*0.1);
 
-	return fSuperblockPartOnly ? nSuperblockPart : nSubsidy - nSuperblockPart;
-}
-
-CAmount GetMasternodePayment(int nHeight, CAmount blockValue)
-{
-	CAmount nSubsidy = 38.5 * COIN;
-	int reductions = nHeight / consensusParams.nSubsidyHalvingInterval;
-	if (reductions >= 50)
-		return 0;
-	for (int i = 0; i < reductions; i++) {
-		nSubsidy -= nSubsidy / 20;
+	if (fSuperblockPartOnly)
+		return nSuperblockPart;
+	nSubsidy -= nSuperblockPart;
+	nTotalRewardWithMasternodes = nSubsidy;
+	if (fMasternodePartOnly) {
+		nSubsidy *= 0.75;
+		if (nHeight > 0 && nStartHeight > 0) {
+			unsigned int nDifferenceInBlocks = 0;
+			if (nStartHeight < nHeight)
+				nDifferenceInBlocks = (nHeight - nStartHeight);
+			// the first three intervals should discount rewards to incentivize bonding over longer terms (we add 10% premium every interval)
+			double fSubsidyAdjustmentPercentage = -0.3;
+			for (int i = 1; i <= consensusParams.nTotalSeniorityIntervals; i++) {
+				const int &nTotalSeniorityBlocks = i*consensusParams.nSeniorityInterval;
+				if (nDifferenceInBlocks <= nTotalSeniorityBlocks)
+					break;
+				fSubsidyAdjustmentPercentage += 0.1;
+			}
+			const CAmount &nChange = nSubsidy*fSubsidyAdjustmentPercentage;
+			nSubsidy += nChange;
+			nTotalRewardWithMasternodes += nChange;
+		}
 	}
-	return nSubsidy*0.75;
+
+	return nSubsidy;
+
 }
 
 bool IsInitialBlockDownload()
@@ -2354,16 +2367,30 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 	LogPrint("bench", "      - Connect %u transactions: %.2fms (%.3fms/tx, %.3fms/txin) [%.2fs]\n", (unsigned)block.vtx.size(), 0.001 * (nTime3 - nTime2), 0.001 * (nTime3 - nTime2) / block.vtx.size(), nInputs <= 1 ? 0 : 0.001 * (nTime3 - nTime2) / (nInputs - 1), nTimeConnect * 0.000001);
 
 	// SYSCOIN
-	CAmount blockReward = nFees + GetBlockSubsidy(pindex->nHeight, chainparams.GetConsensus());
-	std::string strError = "";
-	if (!IsBlockValueValid(block, pindex->nHeight, blockReward, strError)) {
-		return state.DoS(0, error("ConnectBlock(SYS): %s", strError), REJECT_INVALID, "bad-cb-amount");
+	CAmount nTotalRewardWithMasternodes;
+	CAmount blockReward = GetBlockSubsidy(pindex->nHeight, chainparams.GetConsensus(), nTotalRewardWithMasternodes);
+	CAmount masternodeReward;
+	BOOST_FOREACH(CTxOut txout, block.vtx[0].vout) {
+		masternode_info_t mnInfo;
+		mnodeman.GetMasternodeInfo(txout.scriptPubKey, mnInfo);
+		if (mnInfo.pubKeyCollateralAddress.IsValid()) {
+			const unsigned int &nStartHeight = mnodeman.GetStartHeight(mnInfo);
+			if (nStartHeight > 0) {
+				masternodeReward = GetBlockSubsidy(pindex->nHeight, chainparams.GetConsensus(), nTotalRewardWithMasternodes, false, true, nStartHeight);
+				blockReward = nTotalRewardWithMasternodes;
+				break;
+			}
+		}
 	}
 
-	if (!IsBlockPayeeValid(block.vtx[0], pindex->nHeight, blockReward)) {
+	if (!IsBlockPayeeValid(block.vtx[0], pindex->nHeight, nFees, blockReward, masternodeReward)) {
 		mapRejectedBlocks.insert(make_pair(block.GetHash(), GetTime()));
 		return state.DoS(0, error("ConnectBlock(SYS): couldn't find masternode or superblock payments"),
 			REJECT_INVALID, "bad-cb-payee");
+	}
+	std::string strError = "";
+	if (!IsBlockValueValid(block, pindex->nHeight, nFees, blockReward, strError)) {
+		return state.DoS(0, error("ConnectBlock(SYS): %s", strError), REJECT_INVALID, "bad-cb-amount");
 	}
 	// END SYS
 

@@ -202,7 +202,7 @@ public:
     bool CheckMnbAndUpdateMasternodeList(CNode* pfrom, CMasternodeBroadcast mnb, int& nDos, CConnman& connman);
     bool IsMnbRecoveryRequested(const uint256& hash) { return mMnbRecoveryRequests.count(hash); }
 
-    void UpdateLastPaid(const CBlockIndex* pindex);
+    void UpdateLastPaid();
 
     void AddDirtyGovernanceObjectHash(const uint256& nHash)
     {
@@ -235,6 +235,7 @@ public:
      * Must be called while not holding the CMasternodeMan::cs mutex
      */
     void NotifyMasternodeUpdates(CConnman& connman);
+	unsigned int GetStartHeight(const masternode_info_t& mnInfo);
 
 };
 

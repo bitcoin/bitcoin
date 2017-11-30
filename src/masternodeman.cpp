@@ -12,7 +12,7 @@
 #include "netfulfilledman.h"
 #include "privatesend-client.h"
 #include "util.h"
-
+extern bool heightSort(std::pair<CAddressUnspentKey, CAddressUnspentValue> a, std::pair<CAddressUnspentKey, CAddressUnspentValue> b);
 /** Masternode manager */
 CMasternodeMan mnodeman;
 
@@ -1462,7 +1462,7 @@ bool CMasternodeMan::CheckMnbAndUpdateMasternodeList(CNode* pfrom, CMasternodeBr
     return true;
 }
 
-void CMasternodeMan::UpdateLastPaid(const CBlockIndex* pindex)
+void CMasternodeMan::UpdateLastPaid()
 {
     LOCK(cs);
 
@@ -1471,13 +1471,13 @@ void CMasternodeMan::UpdateLastPaid(const CBlockIndex* pindex)
     static bool IsFirstRun = true;
     // Do full scan on first run or if we are not a masternode
     // (MNs should update this info on every block, so limited scan should be enough for them)
-    int nMaxBlocksToScanBack = (IsFirstRun || !fMasterNode) ? mnpayments.GetStorageLimit() : LAST_PAID_SCAN_BLOCKS;
+
 
     // LogPrint("mnpayments", "CMasternodeMan::UpdateLastPaid -- nHeight=%d, nMaxBlocksToScanBack=%d, IsFirstRun=%s\n",
     //                         nCachedBlockHeight, nMaxBlocksToScanBack, IsFirstRun ? "true" : "false");
 
     for (auto& mnpair: mapMasternodes) {
-        mnpair.second.UpdateLastPaid(pindex, nMaxBlocksToScanBack);
+        mnpair.second.UpdateLastPaid();
     }
 
     IsFirstRun = false;
@@ -1570,7 +1570,7 @@ void CMasternodeMan::UpdatedBlockTip(const CBlockIndex *pindex)
 
     if(fMasterNode) {
         // normal wallet does not need to update this every block, doing update on rpc call should be enough
-        UpdateLastPaid(pindex);
+        UpdateLastPaid();
     }
 }
 
@@ -1596,4 +1596,20 @@ void CMasternodeMan::NotifyMasternodeUpdates(CConnman& connman)
     LOCK(cs);
     fMasternodesAdded = false;
     fMasternodesRemoved = false;
+}
+unsigned int CMasternodeMan::GetStartHeight(const masternode_info_t& mnInfo) {
+	CSyscoinAddress collateralAddress(mnInfo.pubKeyCollateralAddress.GetID());
+	uint160 hashBytes;
+	int type = 0;
+	if (!collateralAddress.GetIndexKey(hashBytes, type)) {
+		return 0;
+	}
+	std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue> > unspentOutputs;
+	if (!GetAddressUnspent(hashBytes, type, unspentOutputs))
+		return 0;
+	if (unspentOutputs.size() > 0) {
+		std::sort(unspentOutputs.begin(), unspentOutputs.end(), heightSort);
+		return unspentOutputs[0].second.blockHeight;
+	}
+	return 0;
 }
