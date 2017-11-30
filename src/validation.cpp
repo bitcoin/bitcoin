@@ -2373,7 +2373,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 	BOOST_FOREACH(CTxOut txout, block.vtx[0].vout) {
 		masternode_info_t mnInfo;
 		mnodeman.GetMasternodeInfo(txout.scriptPubKey, mnInfo);
-		if (!mnInfo.pubKeyCollateralAddress.IsValid()) {
+		if (mnInfo.pubKeyCollateralAddress.IsValid()) {
 			const unsigned int &nStartHeight = mnodeman.GetStartHeight(mnInfo);
 			if (nStartHeight > 0) {
 				masternodeReward = GetBlockSubsidy(pindex->nHeight, chainparams.GetConsensus(), nTotalRewardWithMasternodes, false, true, nStartHeight);
