@@ -281,10 +281,12 @@ void CMasternodePayments::FillBlockPayee(CMutableTransaction& txNew, int nBlockH
 	}
 	else
 		mnodeman.GetMasternodeInfo(payee, mnInfo);
+
+	const unsigned int &nStartTime = mnodeman.GetStartTime(mnInfo);
 	// miner takes 25% of the reward and half fees
 	txNew.vout[0].nValue = (blockReward*0.25) + (nFee/2);
 	// masternode takes 75% of reward, add/remove some reward depending on seniority and half fees.
-	blockReward = GetBlockSubsidy(nBlockHeight, Params().GetConsensus(), false, true, mnInfo.nTimeCollateralDeposited);
+	blockReward = GetBlockSubsidy(nBlockHeight, Params().GetConsensus(), false, true, nStartTime);
     // ... and masternode
     txoutMasternodeRet = CTxOut(blockReward, payee);
     txNew.vout.push_back(txoutMasternodeRet);
@@ -562,7 +564,8 @@ bool CMasternodeBlockPayees::IsTransactionValid(const CTransaction& txNew, const
     BOOST_FOREACH(CMasternodePayee& payee, vecPayees) {
         if (payee.GetVoteCount() >= MNPAYMENTS_SIGNATURES_REQUIRED) {
 			mnodeman.GetMasternodeInfo(payee.GetPayee(), mnInfo);
-			const CAmount &nMasternodePayment = GetBlockSubsidy(nBlockHeight, Params().GetConsensus(), false, true, mnInfo.nTimeCollateralDeposited);
+			const unsigned int &nStartTime = mnodeman.GetStartTime(mnInfo);
+			const CAmount &nMasternodePayment = GetBlockSubsidy(nBlockHeight, Params().GetConsensus(), false, true, nStartTime);
 			bool bFoundPayment = false;
 			bool bFoundFee = false;
             BOOST_FOREACH(CTxOut txout, txNew.vout) {

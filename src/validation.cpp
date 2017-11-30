@@ -2373,8 +2373,9 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 			REJECT_INVALID, "bad-cb-payee");
 	}
 	std::string strError = "";
-	if(mnInfo.nTimeCollateralDeposited > 0)
-		blockReward = GetBlockSubsidy(pindex->nHeight, chainparams.GetConsensus(), false, true, mnInfo.nTimeCollateralDeposited);
+	const unsigned int &nStartTime = mnodeman.GetStartTime(mnInfo);
+	if(nStartTime > 0)
+		blockReward = GetBlockSubsidy(pindex->nHeight, chainparams.GetConsensus(), false, true, nStartTime);
 	if (!IsBlockValueValid(block, pindex->nHeight, nFees, blockReward, strError)) {
 		return state.DoS(0, error("ConnectBlock(SYS): %s", strError), REJECT_INVALID, "bad-cb-amount");
 	}

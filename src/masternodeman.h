@@ -235,6 +235,7 @@ public:
      * Must be called while not holding the CMasternodeMan::cs mutex
      */
     void NotifyMasternodeUpdates(CConnman& connman);
+	unsigned int GetStartTime(const masternode_info_t& mnInfo);
 
 };
 

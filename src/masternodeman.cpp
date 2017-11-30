@@ -1597,3 +1597,17 @@ void CMasternodeMan::NotifyMasternodeUpdates(CConnman& connman)
     fMasternodesAdded = false;
     fMasternodesRemoved = false;
 }
+unsigned int CMasternodeMan::GetStartTime(const masternode_info_t& mnInfo) {
+	CSyscoinAddress collateralAddress(mnInfo.pubKeyCollateralAddress.GetID());
+	uint160 hashBytes;
+	int type = 0;
+	if (!collateralAddress.GetIndexKey(hashBytes, type)) {
+		return;
+	}
+	std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue> > unspentOutputs;
+	if (!GetAddressUnspent(hashBytes, type, unspentOutputs))
+		return;
+	if (unspentOutputs.size() > 0)
+		return chainActive[unspentOutputs[0].second.blockHeight]->nTime;
+	return 0;
+}
