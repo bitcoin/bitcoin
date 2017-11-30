@@ -336,7 +336,7 @@ void CMasternode::UpdateLastPaid()
 	std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue> > unspentOutputs;
 	if (!GetAddressUnspent(hashBytes, type, unspentOutputs))
 		return;
-	if(unspentOutputs.size()) > 0)
+	if(unspentOutputs.size() > 0)
 		std::sort(unspentOutputs.begin(), unspentOutputs.end(), heightSort);
 	const CScript &mnpayee = GetScriptForDestination(pubKeyCollateralAddress.GetID());
 	for (std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue> >::const_iterator it = unspentOutputs.end(); it != unspentOutputs.begin(); it--) {

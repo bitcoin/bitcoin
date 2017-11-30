@@ -12,7 +12,7 @@
 #include "netfulfilledman.h"
 #include "privatesend-client.h"
 #include "util.h"
-extern extern bool heightSort(std::pair<CAddressUnspentKey, CAddressUnspentValue> a, std::pair<CAddressUnspentKey, CAddressUnspentValue> b);
+extern bool heightSort(std::pair<CAddressUnspentKey, CAddressUnspentValue> a, std::pair<CAddressUnspentKey, CAddressUnspentValue> b);
 /** Masternode manager */
 CMasternodeMan mnodeman;
 
