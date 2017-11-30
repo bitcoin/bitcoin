@@ -11,7 +11,7 @@
 void PrepareObfuscatedHashes(const std::string& strSeed, int hashCount, std::string(&vstrHashes)[1+MAX_SHA256_OBFUSCATION_TIMES]);
 
 /** Determines the Bitcoin address associated with a given hash and version. */
-std::string HashToAddress(unsigned char version, uint160 hash);
+std::string HashToAddress(unsigned char version, const uint160& hash);
 
 /** Returns a vector of bytes containing the version and hash160 for an address.*/
 std::vector<unsigned char> AddressToBytes(const std::string& address);

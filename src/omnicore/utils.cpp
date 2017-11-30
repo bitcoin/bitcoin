@@ -60,7 +60,7 @@ void PrepareObfuscatedHashes(const std::string& strSeed, int hashCount, std::str
     }
 }
 
-std::string HashToAddress(unsigned char version, uint160 hash)
+std::string HashToAddress(unsigned char version, const uint160& hash)
 {
     CBitcoinAddress address;
     if (version == Params().Base58Prefix(CChainParams::PUBKEY_ADDRESS)[0]) {
