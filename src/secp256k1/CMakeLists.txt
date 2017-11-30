@@ -1,4 +1,4 @@
-add_library(libsecp256k1
+add_library(secp256k1 STATIC
   src/scalar.h
   src/scalar_4x64.h
   src/scalar_8x32.h
@@ -43,5 +43,5 @@ add_library(libsecp256k1
   src/secp256k1.c
 )
 
-target_include_directories(libsecp256k1 PRIVATE . PUBLIC include)
+target_include_directories(secp256k1 PRIVATE . PUBLIC include)
 

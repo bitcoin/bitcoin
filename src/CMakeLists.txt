@@ -311,6 +311,35 @@ add_library(libcrown_util
 
 target_include_directories(libcrown_util PRIVATE .)
 
+add_library(libcrown_wallet
+  activemasternode.cpp 
+  activesystemnode.cpp 
+  legacysigner.cpp 
+  db.cpp 
+  crypter.cpp 
+  instantx.cpp 
+  masternode.cpp 
+  masternode-budget.cpp 
+  masternode-payments.cpp 
+  masternode-sync.cpp 
+  masternodeconfig.cpp 
+  masternodeman.cpp 
+  systemnode-sync.cpp 
+  systemnode.cpp 
+  systemnode-payments.cpp 
+  systemnodeconfig.cpp 
+  systemnodeman.cpp 
+  rpcdump.cpp 
+  rpcwallet.cpp 
+  wallet.cpp 
+  wallet_ismine.cpp 
+  walletdb.cpp 
+)
+target_include_directories(libcrown_wallet
+  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+
 add_executable(crownd
   crownd.cpp
 )
@@ -321,15 +350,20 @@ target_include_directories(crownd
 target_link_libraries(crownd
   libcrown_server
   libcrown_common
+  libcrown_wallet
   libcrown_univalue
   libcrown_util
   libcrown_crypto
   leveldb
   memenv
-  libsecp256k1
+  secp256k1
   Boost::boost
+  Boost::thread
+  Boost::program_options
+  OpenSSL::Crypto
+  OpenSSL::SSL
+  BDB::bdb
 )  
-message("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX ${CMAKE_CURRENT_SOURCE_DIR}")
 
 #if ENABLE_WALLET
 #crownd_LDADD += libbitcoin_wallet.a
