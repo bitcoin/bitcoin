@@ -85,6 +85,70 @@ def relative_locktime(sdf, srhb, stf, srlb):
 def all_rlt_txs(txs):
     return [tx['tx'] for tx in txs]
 
+def create_transaction(node, txid, to_address, amount):
+    inputs = [{"txid": txid, "vout": 0}]
+    outputs = {to_address: amount}
+    rawtx = node.createrawtransaction(inputs, outputs)
+    tx = CTransaction()
+    f = BytesIO(hex_str_to_bytes(rawtx))
+    tx.deserialize(f)
+    return tx
+
+def sign_transaction(node, unsignedtx):
+    rawtx = ToHex(unsignedtx)
+    signresult = node.signrawtransactionwithwallet(rawtx)
+    tx = CTransaction()
+    f = BytesIO(hex_str_to_bytes(signresult['hex']))
+    tx.deserialize(f)
+    return tx
+
+def create_bip112special(node, input, txversion, address):
+    tx = create_transaction(node, input, address, Decimal("49.98"))
+    tx.nVersion = txversion
+    signtx = sign_transaction(node, tx)
+    signtx.vin[0].scriptSig = CScript([-1, OP_CHECKSEQUENCEVERIFY, OP_DROP] + list(CScript(signtx.vin[0].scriptSig)))
+    return signtx
+
+def send_generic_input_tx(node, coinbases, address):
+    amount = Decimal("49.99")
+    return node.sendrawtransaction(ToHex(sign_transaction(node, create_transaction(node, node.getblock(coinbases.pop())['tx'][0], address, amount))))
+
+def create_bip68txs(node, bip68inputs, txversion, address, locktime_delta=0):
+    """Returns a list of bip68 transactions with different bits set."""
+    txs = []
+    assert(len(bip68inputs) >= 16)
+    for i, (sdf, srhb, stf, srlb) in enumerate(product(*[[True, False]] * 4)):
+        locktime = relative_locktime(sdf, srhb, stf, srlb)
+        tx = create_transaction(node, bip68inputs[i], address, Decimal("49.98"))
+        tx.nVersion = txversion
+        tx.vin[0].nSequence = locktime + locktime_delta
+        tx = sign_transaction(node, tx)
+        tx.rehash()
+        txs.append({'tx': tx, 'sdf': sdf, 'stf': stf})
+
+    return txs
+
+def create_bip112txs(node, bip112inputs, varyOP_CSV, txversion, address, locktime_delta=0):
+    """Returns a list of bip68 transactions with different bits set."""
+    txs = []
+    assert(len(bip112inputs) >= 16)
+    for i, (sdf, srhb, stf, srlb) in enumerate(product(*[[True, False]] * 4)):
+        locktime = relative_locktime(sdf, srhb, stf, srlb)
+        tx = create_transaction(node, bip112inputs[i], address, Decimal("49.98"))
+        if (varyOP_CSV):  # if varying OP_CSV, nSequence is fixed
+            tx.vin[0].nSequence = BASE_RELATIVE_LOCKTIME + locktime_delta
+        else:  # vary nSequence instead, OP_CSV is fixed
+            tx.vin[0].nSequence = locktime + locktime_delta
+        tx.nVersion = txversion
+        signtx = sign_transaction(node, tx)
+        if (varyOP_CSV):
+            signtx.vin[0].scriptSig = CScript([locktime, OP_CHECKSEQUENCEVERIFY, OP_DROP] + list(CScript(signtx.vin[0].scriptSig)))
+        else:
+            signtx.vin[0].scriptSig = CScript([BASE_RELATIVE_LOCKTIME, OP_CHECKSEQUENCEVERIFY, OP_DROP] + list(CScript(signtx.vin[0].scriptSig)))
+        tx.rehash()
+        txs.append({'tx': signtx, 'sdf': sdf, 'stf': stf})
+    return txs
+
 class BIP68_112_113Test(ComparisonTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
@@ -96,27 +160,6 @@ class BIP68_112_113Test(ComparisonTestFramework):
         test.add_all_connections(self.nodes)
         network_thread_start()
         test.run()
-
-    def send_generic_input_tx(self, node, coinbases):
-        amount = Decimal("49.99")
-        return node.sendrawtransaction(ToHex(self.sign_transaction(node, self.create_transaction(node, node.getblock(coinbases.pop())['tx'][0], self.nodeaddress, amount))))
-
-    def create_transaction(self, node, txid, to_address, amount):
-        inputs = [{"txid": txid, "vout": 0}]
-        outputs = {to_address: amount}
-        rawtx = node.createrawtransaction(inputs, outputs)
-        tx = CTransaction()
-        f = BytesIO(hex_str_to_bytes(rawtx))
-        tx.deserialize(f)
-        return tx
-
-    def sign_transaction(self, node, unsignedtx):
-        rawtx = ToHex(unsignedtx)
-        signresult = node.signrawtransactionwithwallet(rawtx)
-        tx = CTransaction()
-        f = BytesIO(hex_str_to_bytes(signresult['hex']))
-        tx.deserialize(f)
-        return tx
 
     def generate_blocks(self, number, version, test_blocks=[]):
         for i in range(number):
@@ -135,49 +178,6 @@ class BIP68_112_113Test(ComparisonTestFramework):
         block.rehash()
         block.solve()
         return block
-
-    def create_bip68txs(self, bip68inputs, txversion, locktime_delta=0):
-        """Returns a list of bip68 transactions with different bits set."""
-        txs = []
-        assert(len(bip68inputs) >= 16)
-        for i, (sdf, srhb, stf, srlb) in enumerate(product(*[[True, False]] * 4)):
-            locktime = relative_locktime(sdf, srhb, stf, srlb)
-            tx = self.create_transaction(self.nodes[0], bip68inputs[i], self.nodeaddress, Decimal("49.98"))
-            tx.nVersion = txversion
-            tx.vin[0].nSequence = locktime + locktime_delta
-            tx = self.sign_transaction(self.nodes[0], tx)
-            tx.rehash()
-            txs.append({'tx': tx, 'sdf': sdf, 'stf': stf})
-
-        return txs
-
-    def create_bip112special(self, input, txversion):
-        tx = self.create_transaction(self.nodes[0], input, self.nodeaddress, Decimal("49.98"))
-        tx.nVersion = txversion
-        signtx = self.sign_transaction(self.nodes[0], tx)
-        signtx.vin[0].scriptSig = CScript([-1, OP_CHECKSEQUENCEVERIFY, OP_DROP] + list(CScript(signtx.vin[0].scriptSig)))
-        return signtx
-
-    def create_bip112txs(self, bip112inputs, varyOP_CSV, txversion, locktime_delta=0):
-        """Returns a list of bip68 transactions with different bits set."""
-        txs = []
-        assert(len(bip112inputs) >= 16)
-        for i, (sdf, srhb, stf, srlb) in enumerate(product(*[[True, False]] * 4)):
-            locktime = relative_locktime(sdf, srhb, stf, srlb)
-            tx = self.create_transaction(self.nodes[0], bip112inputs[i], self.nodeaddress, Decimal("49.98"))
-            if (varyOP_CSV):  # if varying OP_CSV, nSequence is fixed
-                tx.vin[0].nSequence = BASE_RELATIVE_LOCKTIME + locktime_delta
-            else:  # vary nSequence instead, OP_CSV is fixed
-                tx.vin[0].nSequence = locktime + locktime_delta
-            tx.nVersion = txversion
-            signtx = self.sign_transaction(self.nodes[0], tx)
-            if (varyOP_CSV):
-                signtx.vin[0].scriptSig = CScript([locktime, OP_CHECKSEQUENCEVERIFY, OP_DROP] + list(CScript(signtx.vin[0].scriptSig)))
-            else:
-                signtx.vin[0].scriptSig = CScript([BASE_RELATIVE_LOCKTIME, OP_CHECKSEQUENCEVERIFY, OP_DROP] + list(CScript(signtx.vin[0].scriptSig)))
-            tx.rehash()
-            txs.append({'tx': signtx, 'sdf': sdf, 'stf': stf})
-        return txs
 
     def get_tests(self):
         self.log.info("Generate blocks in the past for coinbase outputs.")
@@ -233,14 +233,14 @@ class BIP68_112_113Test(ComparisonTestFramework):
         # 16 normal inputs
         bip68inputs = []
         for i in range(16):
-            bip68inputs.append(self.send_generic_input_tx(self.nodes[0], self.coinbase_blocks))
+            bip68inputs.append(send_generic_input_tx(self.nodes[0], self.coinbase_blocks, self.nodeaddress))
 
         # 2 sets of 16 inputs with 10 OP_CSV OP_DROP (actually will be prepended to spending scriptSig)
         bip112basicinputs = []
         for j in range(2):
             inputs = []
             for i in range(16):
-                inputs.append(self.send_generic_input_tx(self.nodes[0], self.coinbase_blocks))
+                inputs.append(send_generic_input_tx(self.nodes[0], self.coinbase_blocks, self.nodeaddress))
             bip112basicinputs.append(inputs)
 
         # 2 sets of 16 varied inputs with (relative_lock_time) OP_CSV OP_DROP (actually will be prepended to spending scriptSig)
@@ -248,14 +248,14 @@ class BIP68_112_113Test(ComparisonTestFramework):
         for j in range(2):
             inputs = []
             for i in range(16):
-                inputs.append(self.send_generic_input_tx(self.nodes[0], self.coinbase_blocks))
+                inputs.append(send_generic_input_tx(self.nodes[0], self.coinbase_blocks, self.nodeaddress))
             bip112diverseinputs.append(inputs)
 
         # 1 special input with -1 OP_CSV OP_DROP (actually will be prepended to spending scriptSig)
-        bip112specialinput = self.send_generic_input_tx(self.nodes[0], self.coinbase_blocks)
+        bip112specialinput = send_generic_input_tx(self.nodes[0], self.coinbase_blocks, self.nodeaddress)
 
         # 1 normal input
-        bip113input = self.send_generic_input_tx(self.nodes[0], self.coinbase_blocks)
+        bip113input = send_generic_input_tx(self.nodes[0], self.coinbase_blocks, self.nodeaddress)
 
         self.nodes[0].setmocktime(self.last_block_time + 600)
         inputblockhash = self.nodes[0].generate(1)[0]  # 1 block generated for inputs to be in chain at height 572
@@ -274,33 +274,33 @@ class BIP68_112_113Test(ComparisonTestFramework):
 
         # Test both version 1 and version 2 transactions for all tests
         # BIP113 test transaction will be modified before each use to put in appropriate block time
-        bip113tx_v1 = self.create_transaction(self.nodes[0], bip113input, self.nodeaddress, Decimal("49.98"))
+        bip113tx_v1 = create_transaction(self.nodes[0], bip113input, self.nodeaddress, Decimal("49.98"))
         bip113tx_v1.vin[0].nSequence = 0xFFFFFFFE
         bip113tx_v1.nVersion = 1
-        bip113tx_v2 = self.create_transaction(self.nodes[0], bip113input, self.nodeaddress, Decimal("49.98"))
+        bip113tx_v2 = create_transaction(self.nodes[0], bip113input, self.nodeaddress, Decimal("49.98"))
         bip113tx_v2.vin[0].nSequence = 0xFFFFFFFE
         bip113tx_v2.nVersion = 2
 
         # For BIP68 test all 16 relative sequence locktimes
-        bip68txs_v1 = self.create_bip68txs(bip68inputs, 1)
-        bip68txs_v2 = self.create_bip68txs(bip68inputs, 2)
+        bip68txs_v1 = create_bip68txs(self.nodes[0], bip68inputs, 1, self.nodeaddress)
+        bip68txs_v2 = create_bip68txs(self.nodes[0], bip68inputs, 2, self.nodeaddress)
 
         # For BIP112 test:
         # 16 relative sequence locktimes of 10 against 10 OP_CSV OP_DROP inputs
-        bip112txs_vary_nSequence_v1 = self.create_bip112txs(bip112basicinputs[0], False, 1)
-        bip112txs_vary_nSequence_v2 = self.create_bip112txs(bip112basicinputs[0], False, 2)
+        bip112txs_vary_nSequence_v1 = create_bip112txs(self.nodes[0], bip112basicinputs[0], False, 1, self.nodeaddress)
+        bip112txs_vary_nSequence_v2 = create_bip112txs(self.nodes[0], bip112basicinputs[0], False, 2, self.nodeaddress)
         # 16 relative sequence locktimes of 9 against 10 OP_CSV OP_DROP inputs
-        bip112txs_vary_nSequence_9_v1 = self.create_bip112txs(bip112basicinputs[1], False, 1, -1)
-        bip112txs_vary_nSequence_9_v2 = self.create_bip112txs(bip112basicinputs[1], False, 2, -1)
+        bip112txs_vary_nSequence_9_v1 = create_bip112txs(self.nodes[0], bip112basicinputs[1], False, 1, self.nodeaddress, -1)
+        bip112txs_vary_nSequence_9_v2 = create_bip112txs(self.nodes[0], bip112basicinputs[1], False, 2, self.nodeaddress, -1)
         # sequence lock time of 10 against 16 (relative_lock_time) OP_CSV OP_DROP inputs
-        bip112txs_vary_OP_CSV_v1 = self.create_bip112txs(bip112diverseinputs[0], True, 1)
-        bip112txs_vary_OP_CSV_v2 = self.create_bip112txs(bip112diverseinputs[0], True, 2)
+        bip112txs_vary_OP_CSV_v1 = create_bip112txs(self.nodes[0], bip112diverseinputs[0], True, 1, self.nodeaddress)
+        bip112txs_vary_OP_CSV_v2 = create_bip112txs(self.nodes[0], bip112diverseinputs[0], True, 2, self.nodeaddress)
         # sequence lock time of 9 against 16 (relative_lock_time) OP_CSV OP_DROP inputs
-        bip112txs_vary_OP_CSV_9_v1 = self.create_bip112txs(bip112diverseinputs[1], True, 1, -1)
-        bip112txs_vary_OP_CSV_9_v2 = self.create_bip112txs(bip112diverseinputs[1], True, 2, -1)
+        bip112txs_vary_OP_CSV_9_v1 = create_bip112txs(self.nodes[0], bip112diverseinputs[1], True, 1, self.nodeaddress, -1)
+        bip112txs_vary_OP_CSV_9_v2 = create_bip112txs(self.nodes[0], bip112diverseinputs[1], True, 2, self.nodeaddress, -1)
         # -1 OP_CSV OP_DROP input
-        bip112tx_special_v1 = self.create_bip112special(bip112specialinput, 1)
-        bip112tx_special_v2 = self.create_bip112special(bip112specialinput, 2)
+        bip112tx_special_v1 = create_bip112special(self.nodes[0], bip112specialinput, 1, self.nodeaddress)
+        bip112tx_special_v2 = create_bip112special(self.nodes[0], bip112specialinput, 2, self.nodeaddress)
 
         self.log.info("TESTING")
 
@@ -310,7 +310,7 @@ class BIP68_112_113Test(ComparisonTestFramework):
         success_txs = []
         # add BIP113 tx and -1 CSV tx
         bip113tx_v1.nLockTime = self.last_block_time - 600 * 5  # = MTP of prior block (not <) but < time put on current block
-        bip113signed1 = self.sign_transaction(self.nodes[0], bip113tx_v1)
+        bip113signed1 = sign_transaction(self.nodes[0], bip113tx_v1)
         success_txs.append(bip113signed1)
         success_txs.append(bip112tx_special_v1)
         # add BIP 68 txs
@@ -329,7 +329,7 @@ class BIP68_112_113Test(ComparisonTestFramework):
         success_txs = []
         # add BIP113 tx and -1 CSV tx
         bip113tx_v2.nLockTime = self.last_block_time - 600 * 5  # = MTP of prior block (not <) but < time put on current block
-        bip113signed2 = self.sign_transaction(self.nodes[0], bip113tx_v2)
+        bip113signed2 = sign_transaction(self.nodes[0], bip113tx_v2)
         success_txs.append(bip113signed2)
         success_txs.append(bip112tx_special_v2)
         # add BIP 68 txs
@@ -353,16 +353,16 @@ class BIP68_112_113Test(ComparisonTestFramework):
         self.log.info("BIP 113 tests")
         # BIP 113 tests should now fail regardless of version number if nLockTime isn't satisfied by new rules
         bip113tx_v1.nLockTime = self.last_block_time - 600 * 5  # = MTP of prior block (not <) but < time put on current block
-        bip113signed1 = self.sign_transaction(self.nodes[0], bip113tx_v1)
+        bip113signed1 = sign_transaction(self.nodes[0], bip113tx_v1)
         bip113tx_v2.nLockTime = self.last_block_time - 600 * 5  # = MTP of prior block (not <) but < time put on current block
-        bip113signed2 = self.sign_transaction(self.nodes[0], bip113tx_v2)
+        bip113signed2 = sign_transaction(self.nodes[0], bip113tx_v2)
         for bip113tx in [bip113signed1, bip113signed2]:
             yield TestInstance([[self.create_test_block([bip113tx]), False]])
         # BIP 113 tests should now pass if the locktime is < MTP
         bip113tx_v1.nLockTime = self.last_block_time - 600 * 5 - 1  # < MTP of prior block
-        bip113signed1 = self.sign_transaction(self.nodes[0], bip113tx_v1)
+        bip113signed1 = sign_transaction(self.nodes[0], bip113tx_v1)
         bip113tx_v2.nLockTime = self.last_block_time - 600 * 5 - 1  # < MTP of prior block
-        bip113signed2 = self.sign_transaction(self.nodes[0], bip113tx_v2)
+        bip113signed2 = sign_transaction(self.nodes[0], bip113tx_v2)
         for bip113tx in [bip113signed1, bip113signed2]:
             yield TestInstance([[self.create_test_block([bip113tx]), True]])
             self.nodes[0].invalidateblock(self.nodes[0].getbestblockhash())
@@ -476,7 +476,7 @@ class BIP68_112_113Test(ComparisonTestFramework):
         time_txs = []
         for tx in [tx['tx'] for tx in bip112txs_vary_OP_CSV_v2 if not tx['sdf'] and tx['stf']]:
             tx.vin[0].nSequence = BASE_RELATIVE_LOCKTIME | SEQ_TYPE_FLAG
-            signtx = self.sign_transaction(self.nodes[0], tx)
+            signtx = sign_transaction(self.nodes[0], tx)
             time_txs.append(signtx)
 
         yield TestInstance([[self.create_test_block(time_txs), True]])
