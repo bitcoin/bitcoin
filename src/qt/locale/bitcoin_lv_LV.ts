@@ -818,6 +818,11 @@ Adrese: %4
         <translation>Automātiski sākt Peercoin pēc pieteikšanās sistēmā.</translation>
     </message>
     <message>
+        <location line="+46"/>
+        <source>Check this box to follow the centrally issued checkpoints.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
         <location line="+3"/>
         <source>&amp;Start Peercoin on system login</source>
         <translation>&amp;Sākt Peercoin reizē ar sistēmu</translation>

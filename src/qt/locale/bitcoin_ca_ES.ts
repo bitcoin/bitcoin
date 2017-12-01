@@ -814,6 +814,11 @@ Address: %4
         <translation>Iniciar automàticament Peercoin després de l&apos;inici de sessió del sistema.</translation>
     </message>
     <message>
+        <location line="+46"/>
+        <source>Check this box to follow the centrally issued checkpoints.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
         <location line="+3"/>
         <source>&amp;Start Peercoin on system login</source>
         <translation>&amp;Iniciar Peercoin al inici de sessió del sistema.</translation>

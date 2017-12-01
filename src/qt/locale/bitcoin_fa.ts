@@ -818,6 +818,11 @@ Address: %4
         <translation>در زمان ورود به سیستم به صورت خودکار peercoin را اجرا کن</translation>
     </message>
     <message>
+        <location line="+46"/>
+        <source>Check this box to follow the centrally issued checkpoints.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
         <location line="+3"/>
         <source>&amp;Start Peercoin on system login</source>
         <translation>اجرای peercoin در زمان ورود به سیستم</translation>
