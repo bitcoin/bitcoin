@@ -303,6 +303,29 @@ if [ $RESULT == "true," ]
     printf "                                       FAIL (result:%s)\n" $RESULT
     FAIL=$((FAIL+1))
 fi
+printf "   * Testing a Send All from the test address (now frozen))\n"
+TXID=$($SRCDIR/omnicore-cli --regtest omni_sendall $FADDR $ADDR 1)
+$SRCDIR/omnicore-cli --regtest generate 1 >$NUL
+printf "        - Checking the 'Send All' transaction was INVALID... "
+RESULT=$($SRCDIR/omnicore-cli --regtest omni_gettransaction $TXID | grep "valid" | grep -v "invalid" | cut -c12-)
+if [ $RESULT == "false," ]
+  then
+    printf "                                   PASS\n"
+    PASS=$((PASS+1))
+  else
+    printf "                                   FAIL (result:%s)\n" $RESULT
+    FAIL=$((FAIL+1))
+fi
+printf "        - Checking the test address balance has not changed... "
+BALANCE=$($SRCDIR/omnicore-cli --regtest omni_getbalance $FADDR 3 | grep balance | cut -d '"' -f4)
+if [ $BALANCE == "920" ]
+  then
+    printf "                                 PASS\n"
+    PASS=$((PASS+1))
+  else
+    printf "                                 FAIL (result:%s)\n" $BALANCE
+    FAIL=$((FAIL+1))
+fi
 
 
 printf "\n"

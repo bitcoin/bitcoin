@@ -1192,6 +1192,12 @@ int CMPTransaction::logicMath_SendAll()
             continue;
         }
 
+        // do not transfer tokens from a frozen property
+        if (isAddressFrozen(sender, propertyId)) {
+            PrintToLog("%s(): sender %s is frozen for property %d - the property will not be included in processing.\n", __func__, sender, propertyId);
+            continue;
+        }
+
         int64_t moneyAvailable = ptally->getMoney(propertyId, BALANCE);
         if (moneyAvailable > 0) {
             ++numberOfPropertiesSent;
