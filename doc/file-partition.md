@@ -4,14 +4,14 @@ Since the blockchain is around ~140GB, storage of large files on an external dri
 | Original Location       | New Location | Capacity Needs | i/o Frequency  |
 | ----------------------- | ------------ | -------------- | -------------- |
 | ${datadir}/blocks/index | ${datadir}   | low            | high           |
-| ${datadir}/blocks       | ${EXTERAL}   | high           | low            |
+| ${datadir}/blocks       | ${EXTERNAL}  | high           | low            |
 | ${datadir}/chainstate   | n/a          | low            | high           |
 
 Note: the chainstate folder will not move if these instructions are followed closely.  Like the index folder, chainstate contains very high frequency LevelDB files and must remain on a fast (internal) disk if reasonable syncronization time is to be expected.
 
 Change "coinadm" in the following as appropriate for your Bitcoin administrative account.
 
-1) Start bitcoind with --datadir pointing to your internal drive:
+1) Start bitcoind with -datadir pointing to your internal drive:
 
         bitcoind -daemon -conf=macos-bitcoin.conf -datadir=/Users/coinadm/local/bitcoin/data
 
@@ -25,7 +25,7 @@ Let it run for a few minutes, or long enough that it has started syncho-
 
        bitcoin-cli stop
 
-3) Move the "index" folder up one level (so that it may remain on the internal drive). Like the 
+3) Move the "index" folder up one level, so that it may remain on the internal drive: 
       
           mv -f /Users/coinadm/local/bitcoin/data/blocks/index /Users/coinadm/local/bitcoin/data/
 
@@ -39,7 +39,7 @@ Finally, set up soft links to restore the original folder structure:
 | Folder Name              | Link Name           |
 | ------------------------ | ------------------- |
 | ${EXTERNAL}/blocks/index | ${datadir}/../index |
-| ${datadir}/blocks        | ${EXTERAL}/blocks   |
+| ${datadir}/blocks        | ${EXTERNAL}/blocks  |
 
 5) Replace the original index folder location with a soft link:
       
