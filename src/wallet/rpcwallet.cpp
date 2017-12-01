@@ -1307,7 +1307,7 @@ UniValue addwitnessaddress(const JSONRPCRequest& request)
             throw JSONRPCError(RPC_WALLET_ERROR, "Cannot convert between witness address types");
         }
     } else {
-        pwallet->AddCScript(witprogram);
+        pwallet->AddCScript(witprogram); // Implicit for single-key now, but necessary for multisig and for compatibility with older software
         pwallet->SetAddressBook(w.result, "", "receive");
     }
 
