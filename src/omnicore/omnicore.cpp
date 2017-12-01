@@ -327,6 +327,7 @@ void mastercore::disableFreezing(uint32_t propertyId)
     }
     if (liveBlock == 0) {
         PrintToLog("ERROR: Failed to determine live block to disable freezing for property %d!\n", propertyId);
+        return;
     } else {
         setFreezingEnabledProperties.erase(std::make_pair(propertyId, liveBlock));
         PrintToLog("Freezing for property %d has been disabled.\n", propertyId);
