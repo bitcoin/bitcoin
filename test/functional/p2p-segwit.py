@@ -25,7 +25,7 @@ MAX_SIGOP_COST = 80000
 # Calculate the virtual size of a witness block:
 # (base + witness/4)
 def get_virtual_size(witness_block):
-    base_size = len(witness_block.serialize())
+    base_size = len(witness_block.serialize(with_witness=False))
     total_size = len(witness_block.serialize(with_witness=True))
     # the "+3" is so we round up
     vsize = int((3*base_size + total_size + 3)/4)

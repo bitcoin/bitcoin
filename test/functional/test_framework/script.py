@@ -641,7 +641,7 @@ def SignatureHash(script, txTo, inIdx, hashtype):
         txtmp.vin = []
         txtmp.vin.append(tmp)
 
-    s = txtmp.serialize()
+    s = txtmp.serialize_without_witness()
     s += struct.pack(b"<I", hashtype)
 
     hash = hash256(s)
