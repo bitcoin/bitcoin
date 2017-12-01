@@ -13,6 +13,7 @@ class SignMessagesTest(BitcoinTestFramework):
         super().__init__()
         self.setup_clean_chain = True
         self.num_nodes = 1
+        self.extra_args = [["-addresstype=legacy"]]
 
     def run_test(self):
         message = 'This is just a test message'
