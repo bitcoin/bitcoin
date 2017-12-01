@@ -1127,6 +1127,7 @@ UniValue omni_sendchangefreezesetting(const UniValue& params, bool fHelp)
 
     // perform checks
     RequireExistingProperty(propertyId);
+    RequireManagedProperty(propertyId);
     RequireTokenIssuer(fromAddress, propertyId);
 
     // create a payload for the transaction
@@ -1176,6 +1177,7 @@ UniValue omni_sendfreeze(const UniValue& params, bool fHelp)
 
     // perform checks
     RequireExistingProperty(propertyId);
+    RequireManagedProperty(propertyId);
     RequireTokenIssuer(fromAddress, propertyId);
 
     // create a payload for the transaction
@@ -1226,6 +1228,7 @@ UniValue omni_sendunfreeze(const UniValue& params, bool fHelp)
 
     // perform checks
     RequireExistingProperty(propertyId);
+    RequireManagedProperty(propertyId);
     RequireTokenIssuer(fromAddress, propertyId);
 
     // create a payload for the transaction
