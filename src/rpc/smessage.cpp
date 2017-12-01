@@ -700,7 +700,7 @@ UniValue smsginbox(const JSONRPCRequest &request)
         char cbuf[256];
 
         std::string sPrefix("im");
-        unsigned char chKey[18];
+        uint8_t chKey[30];
 
         if (mode == "clear")
         {
@@ -767,7 +767,6 @@ UniValue smsginbox(const JSONRPCRequest &request)
 
             result.pushKV("messages", messageList);
             result.pushKV("result", strprintf("%u", nMessages));
-
         } else
         {
             result.pushKV("result", "Unknown Mode.");
@@ -802,12 +801,11 @@ UniValue smsgoutbox(const JSONRPCRequest &request)
         mode = request.params[0].get_str();
     };
 
-
     UniValue result(UniValue::VOBJ);
 
     std::string sPrefix("sm");
-    unsigned char chKey[18];
-    memset(&chKey[0], 0, 18);
+    uint8_t chKey[30];
+    memset(&chKey[0], 0, sizeof(chKey));
 
     {
         LOCK(cs_smsgDB);
@@ -832,7 +830,6 @@ UniValue smsgoutbox(const JSONRPCRequest &request)
             };
             delete it;
             dbOutbox.TxnCommit();
-
 
             result.pushKV("result", strprintf("Deleted %u messages.", nMessages));
         } else
@@ -936,8 +933,6 @@ UniValue smsgbuckets(const JSONRPCRequest &request)
                 objM.pushKV("last changed", part::GetTimeString(it->second.timeChanged, cbuf, sizeof(cbuf)));
 
                 boost::filesystem::path fullPath = GetDataDir() / "smsgstore" / sFile;
-
-
                 if (!boost::filesystem::exists(fullPath))
                 {
                     // If there is a file for an empty bucket something is wrong.
@@ -962,7 +957,6 @@ UniValue smsgbuckets(const JSONRPCRequest &request)
                 result.pushKV("bucket", objM);
             };
         }; // cs_smsg
-
 
         std::string snBuckets = std::to_string(nBuckets);
         std::string snMessages = std::to_string(nMessages);
@@ -1005,7 +999,6 @@ UniValue smsgbuckets(const JSONRPCRequest &request)
         result.pushKV("expected", "[stats|dump].");
     };
 
-
     return result;
 };
 
@@ -1028,28 +1021,17 @@ static int64_t strToEpoch(const char *input)
     struct tm tm;
     memset(&tm, 0, sizeof(tm));
 
-    if (n > 0
-        && year >= 1970 && year <= 9999)
+    if (n > 0 && year >= 1970 && year <= 9999)
         tm.tm_year = year - 1900;
-
-    if (n > 1
-        && month > 0 && month < 13)
+    if (n > 1 && month > 0 && month < 13)
         tm.tm_mon = month - 1;
-
-    if (n > 2
-        && day > 0 && day < 32)
+    if (n > 2 && day > 0 && day < 32)
         tm.tm_mday = day;
-
-    if (n > 3
-        && hours >= 0 && hours < 24)
+    if (n > 3 && hours >= 0 && hours < 24)
         tm.tm_hour = hours;
-
-    if (n > 4
-        && minutes >= 0 && minutes < 60)
+    if (n > 4 && minutes >= 0 && minutes < 60)
         tm.tm_min = minutes;
-
-    if (n > 5
-        && seconds >= 0 && seconds < 60)
+    if (n > 5 && seconds >= 0 && seconds < 60)
         tm.tm_sec = seconds;
 
     return (int64_t) mktime(&tm);
@@ -1194,7 +1176,7 @@ UniValue smsgview(const JSONRPCRequest &request)
     vPrefixes.push_back("im");
     vPrefixes.push_back("sm");
 
-    unsigned char chKey[18];
+    uint8_t chKey[30];
     size_t nMessages = 0;
     UniValue messageList(UniValue::VARR);
 
@@ -1240,7 +1222,6 @@ UniValue smsgview(const JSONRPCRequest &request)
                     CBitcoinAddress addrFrom(msg.sFromAddress);
                     if (addrFrom.IsValid())
                         addrFrom.GetKeyID(kiFrom);
-
 
                     if (!fMatchAll)
                     {

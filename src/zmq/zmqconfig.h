@@ -18,6 +18,7 @@
 
 #include "primitives/block.h"
 #include "primitives/transaction.h"
+#include "smsg/smessage.h"
 
 void zmqError(const char *str);
 

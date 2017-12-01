@@ -179,7 +179,7 @@ bool CheckProofOfStake(const CBlockIndex *pindexPrev, const CTransaction &tx, in
         CBlock blockKernel; // block containing stake kernel, GetTransaction should only fill the header.
         if (!GetTransaction(txin.prevout.hash, txPrev, Params().GetConsensus(), blockKernel, true)
             || txin.prevout.n >= txPrev->vpout.size())
-            return state.DoS(1, error("%s: prevout-not-in-chain", __func__), REJECT_INVALID, "prevout-not-in-chain");
+            return state.DoS(10, error("%s: prevout-not-in-chain", __func__), REJECT_INVALID, "prevout-not-in-chain");
 
         const CTxOutBase *outPrev = txPrev->vpout[txin.prevout.n].get();
         if (!outPrev->IsStandardOutput())

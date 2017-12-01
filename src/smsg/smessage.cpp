@@ -289,7 +289,7 @@ void ThreadSecureMsgPow()
     SecMsgStored smsgStored;
 
     std::string sPrefix("qm");
-    uint8_t chKey[18];
+    uint8_t chKey[30];
 
     while (fSecMsgEnabled)
     {
@@ -2270,11 +2270,15 @@ int SecureMsgScanMessage(uint8_t *pHeader, uint8_t *pPayload, uint32_t nPayload,
     {
         // Save to inbox
         SecureMessage *psmsg = (SecureMessage*) pHeader;
+
+        uint160 hash;
+        SecureMsgHash(*psmsg, pPayload, nPayload, hash);
+
         std::string sPrefix("im");
-        uint8_t chKey[18];
+        uint8_t chKey[30];
         memcpy(&chKey[0],  sPrefix.data(),    2);
         memcpy(&chKey[2],  &psmsg->timestamp, 8);
-        memcpy(&chKey[10], pPayload,          8);
+        memcpy(&chKey[10],  hash.begin(),     20);
 
         SecMsgStored smsgInbox;
         smsgInbox.timeReceived  = GetTime();
@@ -2325,7 +2329,7 @@ int SecureMsgScanMessage(uint8_t *pHeader, uint8_t *pPayload, uint32_t nPayload,
             };
 
             // TODO: zmq
-            GetMainSignals().NewSecureMessage();
+            GetMainSignals().NewSecureMessage(hash);
         }
     };
 #endif
@@ -3322,11 +3326,14 @@ int SecureMsgSend(CKeyID &addressFrom, CKeyID &addressTo, std::string &message, 
     };
 
     // Place message in send queue, proof of work will happen in a thread.
+    uint160 msgId;
+    SecureMsgHash(smsg, smsg.pPayload, smsg.nPayload-(fPaid ? 32 : 0), msgId);
+
     std::string sPrefix("qm");
-    uint8_t chKey[18];
+    uint8_t chKey[30];
     memcpy(&chKey[0],  sPrefix.data(),  2);
     memcpy(&chKey[2],  &smsg.timestamp, 8);
-    memcpy(&chKey[10], &smsg.pPayload,  8);
+    memcpy(&chKey[10], msgId.begin(),   20);
 
     SecMsgStored smsgSQ;
     smsgSQ.timeReceived  = GetTime();
@@ -3401,10 +3408,10 @@ int SecureMsgSend(CKeyID &addressFrom, CKeyID &addressTo, std::string &message, 
 
             // Save sent message to db
             std::string sPrefix("sm");
-            uint8_t chKey[18];
+            uint8_t chKey[30];
             memcpy(&chKey[0],  sPrefix.data(),           2);
             memcpy(&chKey[2],  &smsgForOutbox.timestamp, 8);
-            memcpy(&chKey[10], &smsgForOutbox.pPayload,  8);   // sample
+            memcpy(&chKey[10], msgId.begin(),            20);
 
             SecMsgStored smsgOutbox;
 
@@ -3446,7 +3453,6 @@ int SecureMsgHash(const SecureMessage &smsg, const uint8_t *pPayload, uint32_t n
 {
     if (smsg.nPayload < nPayload)
         return errorN(SMSG_GENERAL_ERROR, "%s: Data length mismatch.\n", __func__);
-
 
     CRIPEMD160()
         .Write(smsg.data(), SMSG_HDR_LEN)

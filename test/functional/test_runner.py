@@ -168,6 +168,7 @@ PARTICL_SCRIPTS = [
     'coldstaking.py',
     'filtertransactions.py',
     'vote.py',
+    'part_zmq_test.py',
 ]
 
 INSIGHT_SCRIPTS = [

@@ -44,7 +44,7 @@ class SmsgDevTest(ParticlTestFramework):
         assert(len(ro['keys']) == 0)
 
         ro = nodes[0].smsgaddlocaladdress(address0)
-        print(json.dumps(ro, indent=4, default=self.jsonDecimal))
+        assert('Receiving messages enabled for address' in ro['result'])
 
         ro = nodes[0].smsglocalkeys()
         assert(len(ro['keys']) == 1)
@@ -54,21 +54,17 @@ class SmsgDevTest(ParticlTestFramework):
         assert(ro['result'] == 'Public key added to db.')
 
         ro = nodes[1].smsgsend(address1, address0, "['data':'test','value':1]", True, 4, True)
-        print(json.dumps(ro, indent=4, default=self.jsonDecimal))
         assert(ro['result'] == 'Not Sent.')
         assert(isclose(ro['fee'], 0.00085800))
 
 
-
         ro = nodes[1].smsgsend(address1, address0, "['data':'test','value':1]", True, 4)
-        print(json.dumps(ro, indent=4, default=self.jsonDecimal))
+        assert(ro['result'] == 'Sent.')
 
         self.stakeBlocks(1, nStakeNode=1)
-
         self.waitForSmsgExchange(1, 1, 0)
 
         ro = nodes[0].smsginbox()
-        print(json.dumps(ro, indent=4, default=self.jsonDecimal))
         assert(len(ro['messages']) == 1)
 
         #assert(False)

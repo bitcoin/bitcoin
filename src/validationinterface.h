@@ -64,7 +64,7 @@ protected:
     friend void ::UnregisterValidationInterface(CValidationInterface*);
     friend void ::UnregisterAllValidationInterfaces();
 
-    virtual void NewSecureMessage() {};
+    virtual void NewSecureMessage(const uint160 &hash) {};
 };
 
 struct MainSignalsInstance;
@@ -94,7 +94,7 @@ public:
     void BlockChecked(const CBlock&, const CValidationState&);
     void NewPoWValidBlock(const CBlockIndex *, const std::shared_ptr<const CBlock>&);
 
-    void NewSecureMessage();
+    void NewSecureMessage(const uint160 &hash);
 };
 
 CMainSignals& GetMainSignals();

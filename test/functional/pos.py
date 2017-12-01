@@ -30,11 +30,8 @@ class PosTest(ParticlTestFramework):
         # stop staking
         ro = node.reservebalance(True, 10000000)
 
-        ro = node.extkeyimportmaster("abandon baby cabbage dad eager fabric gadget habit ice kangaroo lab absorb")
+        ro = node.extkeyimportmaster('abandon baby cabbage dad eager fabric gadget habit ice kangaroo lab absorb')
         assert(ro['account_id'] == 'aaaZf2qnNr5T7PWRmqgmusuu5ACnBcX2ev')
-
-        #ro = node.extkey("list", "true")
-        #print(json.dumps(ro, indent=4))
 
         ro = node.getinfo()
         assert(ro['total_balance'] == 100000)
@@ -64,37 +61,26 @@ class PosTest(ParticlTestFramework):
         ro = node.reservebalance(True, 10000000)
 
         oRoot1 = node1.mnemonic("new")
-        #print(oRoot1['master'])
-
         ro = node1.extkeyimportmaster(oRoot1['master'])
-        #print(ro)
 
         addrTo = node1.getnewaddress()
-        #print(addrTo)
 
         txnHash = node.sendtoaddress(addrTo, 10)
-        print(txnHash)
-
         ro = node.getmempoolentry(txnHash)
-        #print("getmempoolentry",ro)
         assert(ro['height'] == 1)
 
         ro = node.listtransactions()
-        #print("listtransactions",ro)
-        #print(json.dumps(ro, indent=4))
-
         fPass = False
         for txl in ro:
-            #print(txl['address'], txl['amount'])
             if txl['address'] == addrTo and txl['amount'] == -10 and txl['category'] == 'send':
                 fPass = True
+                break
         assert(fPass), "node0, listtransactions failed."
 
 
         assert(self.wait_for_mempool(node1, txnHash))
 
         ro = node1.listtransactions()
-        #print("node1 listtransactions",ro)
         assert(len(ro) == 1)
         assert(ro[0]['address'] == addrTo)
         assert(ro[0]['amount'] == 10)

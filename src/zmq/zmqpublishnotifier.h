@@ -52,4 +52,11 @@ public:
     bool NotifyTransaction(const CTransaction &transaction) override;
 };
 
+class CZMQPublishSMSGNotifier : public CZMQAbstractPublishNotifier
+{
+public:
+    bool NotifySecureMessage(const uint160 &hash) override;
+};
+
+
 #endif // BITCOIN_ZMQ_ZMQPUBLISHNOTIFIER_H

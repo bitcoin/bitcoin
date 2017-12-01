@@ -5131,8 +5131,14 @@ UniValue walletsettings(const JSONRPCRequest &request)
             "   - \"foundationdonationpercent\": .\n"
             "\nstakelimit {\"height\":int}.\n"
             "   Don't stake above height, used in functional testing.\n"
-            "\nEmpty json object will clear the setting.\n"
+            "\nUse an empty json object to clear the setting."
             "\nstakelimit {}.\n"
+
+            "\nExamples\n"
+            "Set coldstaking changeaddress extended public key:\n"
+            + HelpExampleCli("walletsettings", "changeaddress \"{\\\"coldstakingaddress\\\":\\\"extpubkey\\\"}\"") + "\n"
+            "Clear changeaddress settings\n"
+            + HelpExampleCli("walletsettings", "changeaddress \"{}\"") + "\n"
         );
 
     EnsureWalletIsUnlocked(pwallet);
