@@ -53,7 +53,7 @@ class WalletAccountsTest(RavenTestFramework):
         common_address = "msf4WtN1YQKXvNtvdFYt9JBnUD2FB41kjr"
         txid = node.sendmany(
             fromaccount="",
-            amounts={common_address: 100},
+            amounts={common_address: 10000},
             subtractfeefrom=[common_address],
             minconf=1,
         )
@@ -104,13 +104,13 @@ class WalletAccountsTest(RavenTestFramework):
 
         node.generate(101)
         
-        expected_account_balances = {"": 5200}
+        expected_account_balances = {"": 520000}
         for account in accounts:
             expected_account_balances[account] = 0
         
         assert_equal(node.listaccounts(), expected_account_balances)
         
-        assert_equal(node.getbalance(""), 5200)
+        assert_equal(node.getbalance(""), 520000)
         
         for account in accounts:
             address = node.getaccountaddress("")
