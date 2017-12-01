@@ -86,6 +86,7 @@ BASE_SCRIPTS= [
     'mempool_resurrect_test.py',
     'txn_doublespend.py --mineblock',
     'txn_clone.py',
+    'txn_clone.py --segwit',
     'getchaintips.py',
     'rest.py',
     'mempool_spendcoinbase.py',

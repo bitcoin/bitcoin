@@ -362,9 +362,10 @@ class BIP68Test(BitcoinTestFramework):
         block.vtx.extend([tx1, tx2, tx3])
         block.hashMerkleRoot = block.calc_merkle_root()
         block.rehash()
+        add_witness_commitment(block)
         block.solve()
 
-        self.nodes[0].submitblock(ToHex(block))
+        self.nodes[0].submitblock(bytes_to_hex_str(block.serialize(True)))
         assert_equal(self.nodes[0].getbestblockhash(), block.hash)
 
     def activateCSV(self):
