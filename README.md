@@ -1,7 +1,7 @@
 Dash Core staging tree 0.12.1
 ===============================
 
-`master:` [![Build Status](https://travis-ci.org/dashpay/dash.svg?branch=master)](https://travis-ci.org/dashpay/dash) `v0.12.0.x:` [![Build Status](https://travis-ci.org/dashpay/dash.svg?branch=v0.12.0.x)](https://travis-ci.org/dashpay/dash/branches) `v0.12.1.x:` [![Build Status](https://travis-ci.org/dashpay/dash.svg?branch=v0.12.1.x)](https://travis-ci.org/dashpay/dash/branches)
+`master:` [![Build Status](https://travis-ci.org/dashpay/dash.svg?branch=master)](https://travis-ci.org/dashpay/dash) `develop:` [![Build Status](https://travis-ci.org/dashpay/dash.svg?branch=develop)](https://travis-ci.org/dashpay/dash/branches)
 
 https://www.dash.org
 
