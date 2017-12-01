@@ -451,6 +451,10 @@ bool mastercore::update_tally_map(const std::string& who, uint32_t propertyId, i
 
     LOCK(cs_tally);
 
+    if (ttype != PENDING && amount < 0) {
+        assert(!isAddressFrozen(who, propertyId)); // for safety, this should never fail if everything else is working properly.
+    }
+
     before = getMPbalance(who, propertyId, ttype);
 
     std::unordered_map<std::string, CMPTally>::iterator my_it = mp_tally_map.find(who);
