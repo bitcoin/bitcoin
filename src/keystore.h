@@ -59,6 +59,8 @@ protected:
     ScriptMap mapScripts;
     WatchOnlySet setWatchOnly;
 
+    void ImplicitlyLearnRelatedKeyScripts(const CPubKey& pubkey);
+
 public:
     bool AddKeyPubKey(const CKey& key, const CPubKey &pubkey) override;
     bool GetPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const override;
