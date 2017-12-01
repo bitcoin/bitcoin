@@ -14,6 +14,8 @@
 #include "datetablewidgetitem.h"
 #include "privatekeywidget.h"
 #include "createsystemnodedialog.h"
+#include "addresstablemodel.h"
+#include "transactiontablemodel.h"
 
 #include <QTimer>
 #include <QMessageBox>
@@ -427,8 +429,15 @@ void SystemnodeList::on_CreateNewSystemnode_clicked()
     dialog->setWindowModality(Qt::ApplicationModal);
     if (dialog->exec())
     {
-        // Pressed OK
+        // OK Pressed
+        QString label = "";
+        QString address = walletModel->getAddressTableModel()->addRow(AddressTableModel::Receive, label, "");
+        SendCoinsRecipient recipient(address, "", SYSTEMNODE_COLLATERAL * COIN, "");
+        SendCollateralDialog *sendDialog = new SendCollateralDialog();
+        sendDialog->setModel(walletModel);
+        QList<SendCoinsRecipient> recipients;
+        recipients.append(recipient);
     } else {
-        // Pressed Cancel
+        // Cancel Pressed
     }
 }

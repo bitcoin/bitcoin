@@ -54,13 +54,18 @@ public slots:
     void setBalance(const CAmount& balance, const CAmount& unconfirmedBalance, const CAmount& immatureBalance,
                     const CAmount& watchOnlyBalance, const CAmount& watchUnconfBalance, const CAmount& watchImmatureBalance);
 
+protected:
+    QStringList constructConfirmationMessage(QList<SendCoinsRecipient> &recipients);
+    void checkAndSend(const QList<SendCoinsRecipient> &recipients, QStringList formatted);
+
 private:
     Ui::SendCoinsDialog *ui;
     ClientModel *clientModel;
     WalletModel *model;
     bool fNewRecipientAllowed;
-    void send(QList<SendCoinsRecipient> recipients, QString strFee, QStringList formatted);
+    void send(const QList<SendCoinsRecipient> &recipients, QStringList formatted);
     bool fFeeMinimized;
+    virtual bool instantXChecked();
 
     // Process WalletModel::SendCoinsReturn and generate a pair consisting
     // of a message and message flags for use in emit message().

@@ -4,6 +4,7 @@
 #include "systemnode.h"
 #include "sync.h"
 #include "util.h"
+#include "sendcoinsdialog.h"
 
 #include <QMenu>
 #include <QTimer>
@@ -67,5 +68,20 @@ private Q_SLOTS:
     void on_UpdateButton_clicked();
     void on_CreateNewSystemnode_clicked();
     
+};
+
+class SendCollateralDialog : public SendCoinsDialog
+{
+public:
+    void send(QList<SendCoinsRecipient> &recipients)
+    {
+        QStringList formatted = constructConfirmationMessage(recipients);
+        checkAndSend(recipients, formatted);
+    }
+private:
+    bool instantXChecked()
+    {
+        return false;
+    }
 };
 #endif // SYSTEMNODELIST_H

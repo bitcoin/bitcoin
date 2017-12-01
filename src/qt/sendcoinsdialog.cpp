@@ -204,49 +204,26 @@ SendCoinsDialog::~SendCoinsDialog()
     delete ui;
 }
 
-void SendCoinsDialog::on_sendButton_clicked()
+bool SendCoinsDialog::instantXChecked()
 {
-    if(!model || !model->getOptionsModel())
-        return;
+    return ui->checkInstantX->isChecked();
+}
 
-    QList<SendCoinsRecipient> recipients;
-    bool valid = true;
-
-    for(int i = 0; i < ui->entries->count(); ++i)
-    {
-        SendCoinsEntry *entry = qobject_cast<SendCoinsEntry*>(ui->entries->itemAt(i)->widget());
-        if(entry)
-        {
-            if(entry->validate())
-            {
-                recipients.append(entry->getValue());
-            }
-            else
-            {
-                valid = false;
-            }
-        }
-    }
-
-    if(!valid || recipients.isEmpty())
-    {
-        return;
-    }
-
+QStringList SendCoinsDialog::constructConfirmationMessage(QList<SendCoinsRecipient> &recipients)
+{
     QString strFunds = "";
     QString strFee = "";
 
     recipients[0].inputType = ALL_COINS;
     strFunds = tr("using") + " <b>" + tr("any available funds (not recommended)") + "</b>";
 
-    if(ui->checkInstantX->isChecked()) {
+    if(instantXChecked()) {
         recipients[0].useInstantX = true;
         strFunds += " ";
         strFunds += tr("and InstantX");
     } else {
         recipients[0].useInstantX = false;
     }
-
 
     // Format confirmation message
     QStringList formatted;
@@ -285,7 +262,44 @@ void SendCoinsDialog::on_sendButton_clicked()
 
         formatted.append(recipientElement);
     }
+    return formatted;
+}
 
+void SendCoinsDialog::on_sendButton_clicked()
+{
+    if(!model || !model->getOptionsModel())
+        return;
+
+    QList<SendCoinsRecipient> recipients;
+    bool valid = true;
+
+    for(int i = 0; i < ui->entries->count(); ++i)
+    {
+        SendCoinsEntry *entry = qobject_cast<SendCoinsEntry*>(ui->entries->itemAt(i)->widget());
+        if(entry)
+        {
+            if(entry->validate())
+            {
+                recipients.append(entry->getValue());
+            }
+            else
+            {
+                valid = false;
+            }
+        }
+    }
+
+    if(!valid || recipients.isEmpty())
+    {
+        return;
+    }
+
+    QStringList formatted = constructConfirmationMessage(recipients);
+    checkAndSend(recipients, formatted);
+}
+
+void SendCoinsDialog::checkAndSend(const QList<SendCoinsRecipient> &recipients, QStringList formatted)
+{
     fNewRecipientAllowed = false;
 
     // request unlock only if was locked or unlocked for mixing:
@@ -302,15 +316,16 @@ void SendCoinsDialog::on_sendButton_clicked()
             fNewRecipientAllowed = true;
             return;
         }
-        send(recipients, strFee, formatted);
+        send(recipients, formatted);
         return;
     }
     // already unlocked or not encrypted at all
-    send(recipients, strFee, formatted);
+    send(recipients, formatted);
 }
 
-void SendCoinsDialog::send(QList<SendCoinsRecipient> recipients, QString strFee, QStringList formatted)
+void SendCoinsDialog::send(const QList<SendCoinsRecipient> &recipients, QStringList formatted)
 {
+    QString strFee = "";
     // prepare transaction for getting txFee earlier
     WalletModelTransaction currentTransaction(recipients);
     WalletModel::SendCoinsReturn prepareStatus;
