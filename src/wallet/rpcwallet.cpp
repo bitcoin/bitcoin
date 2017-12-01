@@ -1204,12 +1204,7 @@ public:
         if (pwallet) {
             CScript basescript = GetScriptForDestination(keyID);
             CScript witscript = GetScriptForWitness(basescript);
-            SignatureData sigs;
-            // This check is to make sure that the script we created can actually be solved for and signed by us
-            // if we were to have the private keys. This is just to make sure that the script is valid and that,
-            // if found in a transaction, we would still accept and relay that transaction.
-            if (!ProduceSignature(DummySignatureCreator(pwallet), witscript, sigs) ||
-                !VerifyScript(sigs.scriptSig, witscript, &sigs.scriptWitness, MANDATORY_SCRIPT_VERIFY_FLAGS | SCRIPT_VERIFY_WITNESS_PUBKEYTYPE, DummySignatureCreator(pwallet).Checker())) {
+            if (!IsSolvable(*pwallet, witscript)) {
                 return false;
             }
             return ExtractDestination(witscript, result);
@@ -1228,12 +1223,7 @@ public:
                 return true;
             }
             CScript witscript = GetScriptForWitness(subscript);
-            SignatureData sigs;
-            // This check is to make sure that the script we created can actually be solved for and signed by us
-            // if we were to have the private keys. This is just to make sure that the script is valid and that,
-            // if found in a transaction, we would still accept and relay that transaction.
-            if (!ProduceSignature(DummySignatureCreator(pwallet), witscript, sigs) ||
-                !VerifyScript(sigs.scriptSig, witscript, &sigs.scriptWitness, MANDATORY_SCRIPT_VERIFY_FLAGS | SCRIPT_VERIFY_WITNESS_PUBKEYTYPE, DummySignatureCreator(pwallet).Checker())) {
+            if (!IsSolvable(*pwallet, witscript)) {
                 return false;
             }
             return ExtractDestination(witscript, result);
