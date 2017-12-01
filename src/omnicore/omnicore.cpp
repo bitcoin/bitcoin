@@ -369,12 +369,8 @@ void mastercore::unfreezeAddress(const std::string& address, uint32_t propertyId
 
 bool mastercore::isAddressFrozen(const std::string& address, uint32_t propertyId)
 {
-    for (std::set<std::pair<std::string,uint32_t> >::iterator it = setFrozenAddresses.begin(); it != setFrozenAddresses.end(); it++) {
-        std::string itemAddress = (*it).first;
-        uint32_t itemPropertyId = (*it).second;
-        if (address == itemAddress && propertyId == itemPropertyId) {
-            return true;
-        }
+    if (setFrozenAddresses.find(std::make_pair(address, propertyId)) != setFrozenAddresses.end()) {
+        return true;
     }
     return false;
 }
