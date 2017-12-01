@@ -2642,6 +2642,8 @@ bool CMPTxList::LoadFreezeState(int blockHeight)
         loadOrder.push_back(std::make_pair(atoi(vstr[1]), txid));
     }
 
+    delete it;
+
     std::sort (loadOrder.begin(), loadOrder.end());
 
     for (std::vector<std::pair<int64_t, uint256> >::iterator it = loadOrder.begin(); it != loadOrder.end(); ++it) {
@@ -2685,7 +2687,6 @@ bool CMPTxList::LoadFreezeState(int blockHeight)
             return false;
         }
     }
-    delete it;
 
     return true;
 }
