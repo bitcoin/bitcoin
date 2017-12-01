@@ -819,12 +819,12 @@ int CMPTransaction::interpretPacket()
         return (PKT_ERROR -2);
     }
 
+    LOCK(cs_tally);
+
     if (isAddressFrozen(sender, property)) {
         PrintToLog("%s(): REJECTED: address %s is frozen for property %d\n", __func__, sender, property);
         return (PKT_ERROR -3);
     }
-
-    LOCK(cs_tally);
 
     switch (type) {
         case MSC_TYPE_SIMPLE_SEND:
