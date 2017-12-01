@@ -27,6 +27,9 @@
 #include "utilstrencodings.h"
 #include "validationinterface.h"
 
+#include "masternode-payments.h"
+#include "governance-classes.h"
+
 #include <stdint.h>
 
 #include <boost/assign/list_of.hpp>
