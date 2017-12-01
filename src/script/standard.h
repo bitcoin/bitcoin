@@ -73,8 +73,19 @@ public:
     friend bool operator<(const CNoDestination &a, const CNoDestination &b) { return true; }
 };
 
-struct WitnessV0ScriptHash : public uint256 {};
-struct WitnessV0KeyHash : public uint160 {};
+struct WitnessV0ScriptHash : public uint256
+{
+    WitnessV0ScriptHash() : uint256() {}
+    explicit WitnessV0ScriptHash(const uint256& hash) : uint256(hash) {}
+    using uint256::uint256;
+};
+
+struct WitnessV0KeyHash : public uint160
+{
+    WitnessV0KeyHash() : uint160() {}
+    explicit WitnessV0KeyHash(const uint160& hash) : uint160(hash) {}
+    using uint160::uint160;
+};
 
 //! CTxDestination subtype to encode any future Witness version
 struct WitnessUnknown
@@ -164,6 +175,9 @@ CScript GetScriptForMultisig(int nRequired, const std::vector<CPubKey>& keys);
  * Generate a pay-to-witness script for the given redeem script. If the redeem
  * script is P2PK or P2PKH, this returns a P2WPKH script, otherwise it returns a
  * P2WSH script.
+ *
+ * TODO: replace calls to GetScriptForWitness with GetScriptForDestination using
+ * the various witness-specific CTxDestination subtypes.
  */
 CScript GetScriptForWitness(const CScript& redeemscript);
 
