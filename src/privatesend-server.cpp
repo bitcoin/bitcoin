@@ -9,6 +9,7 @@
 #include "init.h"
 #include "masternode-sync.h"
 #include "masternodeman.h"
+#include "script/interpreter.h"
 #include "txmempool.h"
 #include "util.h"
 #include "utilmoneystr.h"

@@ -10,7 +10,10 @@
 #include "masternodeman.h"
 #include "messagesigner.h"
 #include "netfulfilledman.h"
+#ifdef ENABLE_WALLET
 #include "privatesend-client.h"
+#endif // ENABLE_WALLET
+#include "script/standard.h"
 #include "util.h"
 
 /** Masternode manager */
@@ -732,8 +735,10 @@ void CMasternodeMan::ProcessMasternodeConnections(CConnman& connman)
 
     connman.ForEachNode(CConnman::AllNodes, [](CNode* pnode) {
         if(pnode->fMasternode) {
-            if(privateSendClient.infoMixingMasternode.fInfoValid && pnode->addr == privateSendClient.infoMixingMasternode.addr)
+#ifdef ENABLE_WALLET
+           if(privateSendClient.infoMixingMasternode.fInfoValid && pnode->addr == privateSendClient.infoMixingMasternode.addr)
                 return;
+#endif // ENABLE_WALLET
             LogPrintf("Closing Masternode connection: peer=%d, addr=%s\n", pnode->id, pnode->addr.ToString());
             pnode->fDisconnect = true;
         }

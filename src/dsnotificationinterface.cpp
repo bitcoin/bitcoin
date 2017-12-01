@@ -2,13 +2,17 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "chainparams.h"
 #include "dsnotificationinterface.h"
 #include "instantx.h"
 #include "governance.h"
 #include "masternodeman.h"
 #include "masternode-payments.h"
 #include "masternode-sync.h"
+#include "privatesend.h"
+#ifdef ENABLE_WALLET
 #include "privatesend-client.h"
+#endif // ENABLE_WALLET
 #include "txmempool.h"
 
 void CDSNotificationInterface::InitializeCurrentBlockTip()
@@ -47,19 +51,23 @@ void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, con
             ::minRelayTxFee = CFeeRate(fDIP0001ActiveAtTip ? DEFAULT_DIP0001_MIN_RELAY_TX_FEE : DEFAULT_LEGACY_MIN_RELAY_TX_FEE);
             mempool.UpdateMinFee(::minRelayTxFee);
         }
+#ifdef ENABLE_WALLET
         if (!mapArgs.count("-mintxfee")) {
             CWallet::minTxFee = CFeeRate(fDIP0001ActiveAtTip ? DEFAULT_DIP0001_TRANSACTION_MINFEE : DEFAULT_LEGACY_TRANSACTION_MINFEE);
         }
         if (!mapArgs.count("-fallbackfee")) {
             CWallet::fallbackFee = CFeeRate(fDIP0001ActiveAtTip ? DEFAULT_DIP0001_FALLBACK_FEE : DEFAULT_LEGACY_FALLBACK_FEE);
         }
+#endif // ENABLE_WALLET
     }
 
     if (fInitialDownload)
         return;
 
     mnodeman.UpdatedBlockTip(pindexNew);
+#ifdef ENABLE_WALLET
     privateSendClient.UpdatedBlockTip(pindexNew);
+#endif // ENABLE_WALLET
     instantsend.UpdatedBlockTip(pindexNew);
     mnpayments.UpdatedBlockTip(pindexNew, connman);
     governance.UpdatedBlockTip(pindexNew, connman);

@@ -7,20 +7,21 @@
 #include "base58.h"
 #include "clientversion.h"
 #include "init.h"
-#include "validation.h"
 #include "net.h"
 #include "netbase.h"
 #include "rpc/server.h"
 #include "timedata.h"
 #include "txmempool.h"
 #include "util.h"
-#include "spork.h"
 #include "utilstrencodings.h"
+#include "validation.h"
 #ifdef ENABLE_WALLET
-#include "masternode-sync.h"
 #include "wallet/wallet.h"
 #include "wallet/walletdb.h"
 #endif
+
+#include "masternode-sync.h"
+#include "spork.h"
 
 #include <stdint.h>
 
@@ -238,7 +239,9 @@ UniValue spork(const UniValue& params, bool fHelp)
                 ret.push_back(Pair(sporkManager.GetSporkNameByID(nSporkID), sporkManager.IsSporkActive(nSporkID)));
         }
         return ret;
-    } else if (params.size() == 2){
+    }
+#ifdef ENABLE_WALLET
+    else if (params.size() == 2){
         int nSporkID = sporkManager.GetSporkIDByName(params[0].get_str());
         if(nSporkID == -1){
             return "Invalid spork name";
@@ -262,9 +265,15 @@ UniValue spork(const UniValue& params, bool fHelp)
 
     throw runtime_error(
         "spork <name> [<value>]\n"
-        "<name> is the corresponding spork name, or 'show' to show all current spork settings, active to show which sporks are active"
-        "<value> is a epoch datetime to enable or disable spork"
+        "<name> is the corresponding spork name, or 'show' to show all current spork settings, active to show which sporks are active\n"
+        "<value> is a epoch datetime to enable or disable spork\n"
         + HelpRequiringPassphrase());
+#else // ENABLE_WALLET
+    throw runtime_error(
+        "spork <name>\n"
+        "<name> is the corresponding spork name, or 'show' to show all current spork settings, active to show which sporks are active\n");
+#endif // ENABLE_WALLET
+
 }
 
 UniValue validateaddress(const UniValue& params, bool fHelp)

@@ -163,6 +163,9 @@ extern CFeeRate minRelayTxFee;
 extern bool fAlerts;
 extern bool fEnableReplacement;
 
+extern bool fLargeWorkForkFound;
+extern bool fLargeWorkInvalidChainFound;
+
 extern std::map<uint256, int64_t> mapRejectedBlocks;
 
 static const int DIP0001_PROTOCOL_VERSION = 70208;

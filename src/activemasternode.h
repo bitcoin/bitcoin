@@ -5,9 +5,10 @@
 #ifndef ACTIVEMASTERNODE_H
 #define ACTIVEMASTERNODE_H
 
-#include "net.h"
+#include "chainparams.h"
 #include "key.h"
-#include "wallet/wallet.h"
+#include "net.h"
+#include "primitives/transaction.h"
 
 class CActiveMasternode;
 

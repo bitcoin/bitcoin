@@ -21,14 +21,12 @@
 #include "spork.h"
 #include "txmempool.h"
 #include "util.h"
-#ifdef ENABLE_WALLET
-#include "masternode-sync.h"
-#endif
 #include "utilstrencodings.h"
 #include "validationinterface.h"
 
-#include "masternode-payments.h"
 #include "governance-classes.h"
+#include "masternode-payments.h"
+#include "masternode-sync.h"
 
 #include <stdint.h>
 

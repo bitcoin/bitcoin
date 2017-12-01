@@ -8,8 +8,6 @@
 #include "masternodeman.h"
 #include "protocol.h"
 
-extern CWallet* pwalletMain;
-
 // Keep track of the active Masternode
 CActiveMasternode activeMasternode;
 
