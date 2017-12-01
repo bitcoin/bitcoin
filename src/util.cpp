@@ -189,6 +189,19 @@ static void DebugPrintInit()
     vMsgsBeforeOpenLog = new std::list<std::string>;
 }
 
+/** Get the directory for log files (currently just debug.log) */
+static fs::path GetLogDir()
+{
+  if (gArgs.IsArgSet("-logdir")) {
+    fs::path logdirPath = fs::system_complete(gArgs.GetArg("-logdir", ""));
+    if (!logdirPath.empty()) {
+      fs::create_directories(logdirPath);
+      return logdirPath;
+    }
+  }
+  return GetDataDir();
+}
+
 void OpenDebugLog()
 {
     boost::call_once(&DebugPrintInit, debugPrintInitFlag);
@@ -196,7 +209,7 @@ void OpenDebugLog()
 
     assert(fileout == nullptr);
     assert(vMsgsBeforeOpenLog);
-    fs::path pathDebug = GetDataDir() / "debug.log";
+    fs::path pathDebug = GetLogDir() / "debug.log";
     fileout = fsbridge::fopen(pathDebug, "a");
     if (fileout) {
         setbuf(fileout, nullptr); // unbuffered
