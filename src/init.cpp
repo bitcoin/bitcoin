@@ -476,7 +476,11 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += HelpMessageOpt("-zmqpubhashtx=<address>", _("Enable publish hash transaction in <address>"));
     strUsage += HelpMessageOpt("-zmqpubrawblock=<address>", _("Enable publish raw block in <address>"));
     strUsage += HelpMessageOpt("-zmqpubrawtx=<address>", _("Enable publish raw transaction in <address>"));
+    strUsage += HelpMessageOpt("-zmqpubhashwtx=<address>", _("Enable publish hash transaction received by wallets in <address>"));
     strUsage += HelpMessageOpt("-zmqpubsmsg=<address>", _("Enable publish secure message in <address>"));
+    strUsage += HelpMessageOpt("-serverkeyzmq=<secret_key>", _("Base64 encoded string of the z85 encoded secret key for CurveZMQ."));
+    strUsage += HelpMessageOpt("-newserverkeypairzmq", _("Generate new key pair for CurveZMQ, print and exit."));
+
 #endif
 
     strUsage += HelpMessageGroup(_("Debugging/Testing options:"));

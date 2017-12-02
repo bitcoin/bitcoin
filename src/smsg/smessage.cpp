@@ -2328,7 +2328,6 @@ int SecureMsgScanMessage(uint8_t *pHeader, uint8_t *pPayload, uint32_t nPayload,
                 boost::thread t(runCommand, strCmd); // thread runs free
             };
 
-            // TODO: zmq
             GetMainSignals().NewSecureMessage(hash);
         }
     };

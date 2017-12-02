@@ -19,6 +19,9 @@
 #include "httpserver.h"
 #include "httprpc.h"
 #include "utilstrencodings.h"
+#if ENABLE_ZMQ
+#include <zmq.h>
+#endif
 
 #include <boost/thread.hpp>
 
@@ -93,6 +96,22 @@ bool AppInit(int argc, char* argv[])
         fprintf(stdout, "%s", strUsage.c_str());
         return true;
     }
+
+#if ENABLE_ZMQ
+    if (gArgs.IsArgSet("-newserverkeypairzmq"))
+    {
+        std::string sOut;
+
+        char server_public_key[41], server_secret_key[41];
+        zmq_curve_keypair(server_public_key, server_secret_key);
+        sOut = "Server Public key:      " + std::string(server_public_key) + "\n"
+             + "Server Secret key:      " + std::string(server_secret_key) + "\n"
+             + "Server Secret key b64:  " + EncodeBase64((uint8_t*)server_secret_key, 40) + "\n";
+
+        fprintf(stdout, "%s", sOut.c_str());
+        return true;
+    }
+#endif
 
     try
     {

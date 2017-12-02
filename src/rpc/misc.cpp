@@ -26,6 +26,10 @@
 #endif
 #include "warnings.h"
 
+#if ENABLE_ZMQ
+#include <zmq.h>
+#endif
+
 #include <stdint.h>
 #ifdef HAVE_MALLOC_INFO
 #include <malloc.h>
@@ -1274,6 +1278,28 @@ UniValue getspentinfo(const JSONRPCRequest& request)
     return obj;
 }
 
+#if ENABLE_ZMQ
+UniValue getnewzmqserverkeypair(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() != 0)
+        throw std::runtime_error(
+            "getnewzmqserverkeypair\n"
+            "\nReturns a newly generated server keypair for use with zmq.\n");
+
+    char server_public_key[41], server_secret_key[41];
+    zmq_curve_keypair(server_public_key, server_secret_key);
+
+    UniValue obj(UniValue::VOBJ);
+    obj.pushKV("server_secret_key", server_secret_key);
+    obj.pushKV("server_public_key", server_public_key);
+
+    std::string sBase64 = EncodeBase64((uint8_t*)server_secret_key, 40);
+    obj.pushKV("server_secret_key_b64", sBase64);
+
+    return obj;
+}
+#endif
+
 static const CRPCCommand commands[] =
 { //  category              name                      actor (function)         okSafeMode
   //  --------------------- ------------------------  -----------------------  ----------
@@ -1293,6 +1319,11 @@ static const CRPCCommand commands[] =
 
     /* Blockchain */
     { "blockchain",         "getspentinfo",           &getspentinfo,           false, {} },
+
+    #if ENABLE_ZMQ
+    /* ZMQ */
+    { "zmq",                "getnewzmqserverkeypair", &getnewzmqserverkeypair, false, {} },
+    #endif
 
     /* Not shown in help */
     { "hidden",             "setmocktime",            &setmocktime,            true,  {"timestamp"}},

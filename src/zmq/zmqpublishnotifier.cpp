@@ -8,6 +8,7 @@
 #include "zmqpublishnotifier.h"
 #include "validation.h"
 #include "util.h"
+#include "utilstrencodings.h"
 #include "rpc/server.h"
 
 static std::multimap<std::string, CZMQAbstractPublishNotifier*> mapPublishNotifiers;
@@ -16,6 +17,7 @@ static const char *MSG_HASHBLOCK = "hashblock";
 static const char *MSG_HASHTX    = "hashtx";
 static const char *MSG_RAWBLOCK  = "rawblock";
 static const char *MSG_RAWTX     = "rawtx";
+static const char *MSG_HASHWTX   = "hashwtx";
 static const char *MSG_SMSG      = "smsg";
 
 // Internal function to send multipart message
@@ -77,6 +79,24 @@ bool CZMQAbstractPublishNotifier::Initialize(void *pcontext)
             zmqError("Failed to create socket");
             return false;
         }
+
+        std::string sServerKey64 = gArgs.GetArg("-serverkeyzmq", "");
+        if (sServerKey64.length() > 1)
+        {
+            LogPrint(BCLog::ZMQ, "zmq: Setting ZMQ_CURVE_SECRETKEY.\n");
+            std::vector<uint8_t> vServerKey = DecodeBase64(sServerKey64.c_str());
+
+            if (vServerKey.size() != 40)
+            {
+                zmqError("Failed to decode server key");
+                zmq_close(psocket);
+                return false;
+            };
+
+            const int curve_server_enable = 1;
+            zmq_setsockopt(psocket, ZMQ_CURVE_SERVER, &curve_server_enable, sizeof(curve_server_enable));
+            zmq_setsockopt(psocket, ZMQ_CURVE_SECRETKEY, vServerKey.data(), 40);
+        };
 
         int rc = zmq_bind(psocket, address.c_str());
         if (rc!=0)
@@ -196,6 +216,21 @@ bool CZMQPublishRawTransactionNotifier::NotifyTransaction(const CTransaction &tr
     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION | RPCSerializationFlags());
     ss << transaction;
     return SendMessage(MSG_RAWTX, &(*ss.begin()), ss.size());
+}
+
+bool CZMQPublishHashWalletTransactionNotifier::NotifyTransaction(const std::string &sWalletName, const CTransaction &transaction)
+{
+    uint256 hash = transaction.GetHash();
+    LogPrint(BCLog::ZMQ, "zmq: Publish hashwtx %s, %s\n", sWalletName, hash.GetHex());
+    char data[128];
+    for (unsigned int i = 0; i < 32; i++)
+        data[31 - i] = hash.begin()[i];
+
+    size_t nName = sWalletName.length();
+    if (nName > sizeof(data) - 32)
+        nName = 0;
+    memcpy(&data[32], sWalletName.c_str(), nName);
+    return SendMessage(MSG_HASHWTX, data, 32 + nName);
 }
 
 bool CZMQPublishSMSGNotifier::NotifySecureMessage(const uint160 &hash)

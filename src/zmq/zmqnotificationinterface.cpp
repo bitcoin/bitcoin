@@ -40,6 +40,7 @@ CZMQNotificationInterface* CZMQNotificationInterface::Create()
     factories["pubrawblock"] = CZMQAbstractNotifier::Create<CZMQPublishRawBlockNotifier>;
     factories["pubrawtx"] = CZMQAbstractNotifier::Create<CZMQPublishRawTransactionNotifier>;
 
+    factories["pubhashwtx"] = CZMQAbstractNotifier::Create<CZMQPublishHashWalletTransactionNotifier>;
     factories["pubsmsg"] = CZMQAbstractNotifier::Create<CZMQPublishSMSGNotifier>;
 
     for (std::map<std::string, CZMQNotifierFactory>::const_iterator i=factories.begin(); i!=factories.end(); ++i)
@@ -182,6 +183,23 @@ void CZMQNotificationInterface::BlockDisconnected(const std::shared_ptr<const CB
         TransactionAddedToMempool(ptx);
     }
 }
+
+void CZMQNotificationInterface::TransactionAddedToWallet(const std::string &sWalletName, const CTransactionRef& ptx)
+{
+    const CTransaction& tx = *ptx;
+    for (auto i = notifiers.begin(); i!=notifiers.end(); )
+    {
+        CZMQAbstractNotifier *notifier = *i;
+        if (notifier->NotifyTransaction(sWalletName, tx))
+        {
+            i++;
+        } else
+        {
+            notifier->Shutdown();
+            i = notifiers.erase(i);
+        }
+    }
+};
 
 void CZMQNotificationInterface::NewSecureMessage(const uint160 &hash)
 {

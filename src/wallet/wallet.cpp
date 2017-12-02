@@ -1026,6 +1026,9 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFlushOnClose)
         boost::thread t(runCommand, strCmd); // thread runs free
     }
 
+    std::string sName = GetName();
+    GetMainSignals().TransactionAddedToWallet(sName, wtxIn.tx);
+
     return true;
 }
 

@@ -64,6 +64,7 @@ protected:
     friend void ::UnregisterValidationInterface(CValidationInterface*);
     friend void ::UnregisterAllValidationInterfaces();
 
+    virtual void TransactionAddedToWallet(const std::string &sWalletName, const CTransactionRef& tx) {};
     virtual void NewSecureMessage(const uint160 &hash) {};
 };
 
@@ -94,6 +95,7 @@ public:
     void BlockChecked(const CBlock&, const CValidationState&);
     void NewPoWValidBlock(const CBlockIndex *, const std::shared_ptr<const CBlock>&);
 
+    void TransactionAddedToWallet(const std::string &sWalletName, const CTransactionRef& tx);
     void NewSecureMessage(const uint160 &hash);
 };
 

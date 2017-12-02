@@ -30,6 +30,7 @@ protected:
     void BlockDisconnected(const std::shared_ptr<const CBlock>& pblock) override;
     void UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) override;
 
+    void TransactionAddedToWallet(const std::string &sWalletName, const CTransactionRef& tx) override;
     void NewSecureMessage(const uint160 &hash) override;
 
 private:

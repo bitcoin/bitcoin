@@ -7,6 +7,7 @@ import configparser
 import os
 import struct
 import time
+import base64
 
 from test_framework.test_particl import ParticlTestFramework
 from test_framework.test_framework import SkipTest
@@ -40,17 +41,30 @@ class ZMQTest (ParticlTestFramework):
         self.zmq = zmq
         self.zmqContext = zmq.Context()
         self.zmqSubSocket = self.zmqContext.socket(zmq.SUB)
+
         self.zmqSubSocket.set(zmq.RCVTIMEO, 60000)
         self.zmqSubSocket.setsockopt(zmq.SUBSCRIBE, b"hashblock")
         self.zmqSubSocket.setsockopt(zmq.SUBSCRIBE, b"hashtx")
         self.zmqSubSocket.setsockopt(zmq.SUBSCRIBE, b"rawblock")
         self.zmqSubSocket.setsockopt(zmq.SUBSCRIBE, b"rawtx")
+        self.zmqSubSocket.setsockopt(zmq.SUBSCRIBE, b"hashwtx")
         self.zmqSubSocket.setsockopt(zmq.SUBSCRIBE, b"smsg")
+
+        public_key, secret_key = self.zmq.curve_keypair()
+        self.zmqSubSocket.setsockopt(zmq.CURVE_PUBLICKEY, public_key)
+        self.zmqSubSocket.setsockopt(zmq.CURVE_SECRETKEY, secret_key)
+        self.zmqSubSocket.setsockopt(zmq.CURVE_SERVERKEY, b"hn%V}2&Z$vWw!ugnb@[#)Lzfsiz(IY+U(EOTl#n&")
+
         ip_address = "tcp://127.0.0.1:28332"
         self.zmqSubSocket.connect(ip_address)
-        self.extra_args = [['-zmqpubhashblock=%s' % ip_address, '-zmqpubhashtx=%s' % ip_address,
-                       '-zmqpubrawblock=%s' % ip_address, '-zmqpubrawtx=%s' % ip_address,
-                       '-zmqpubsmsg=%s' % ip_address],
+
+        server_secret = base64.b64encode(b"p%ymQKFW%l[45CJa}+y&<B%R]Q(MZ4G!lH3^H+y2").decode("utf-8")
+        self.extra_args = [[
+                        '-serverkeyzmq=%s' % server_secret,
+                        '-zmqpubhashblock=%s' % ip_address, '-zmqpubhashtx=%s' % ip_address,
+                        '-zmqpubrawblock=%s' % ip_address, '-zmqpubrawtx=%s' % ip_address,
+                        '-zmqpubsmsg=%s' % ip_address,
+                        '-zmqpubhashwtx=%s' % ip_address],
                        []]
         self.add_nodes(self.num_nodes, self.extra_args)
         self.start_nodes()
@@ -80,7 +94,9 @@ class ZMQTest (ParticlTestFramework):
 
         self.log.info("Wait for tx")
         fFound = False
-        for count in range(0, 200):
+        fFoundWtx = False
+        fFoundRawTx = False
+        for count in range(0, 100):
             try:
                 msg = self.zmqSubSocket.recv_multipart(self.zmq.NOBLOCK)
             except self.zmq.ZMQError:
@@ -93,23 +109,30 @@ class ZMQTest (ParticlTestFramework):
                 fFound = True
                 zmqhash = bytes_to_hex_str(msg[1])
                 assert(zmqhash == txnHash)
+            elif topic == 'rawtx' and msgSequence == 1:
+                fFoundRawTx = True
+                body = msg[1]
+                # Check that the rawtx hashes to the hashtx
+                #assert_equal(hash256(body), txnHash)
+                #CTransaction.deserialize
+            elif topic == 'hashwtx' and msgSequence == 0:
+                fFoundWtx = True
+                zmqhash = bytes_to_hex_str(msg[1][0:32])
+                assert(zmqhash == txnHash)
+                walletName = msg[1][32:].decode('utf-8')
+                assert(walletName == 'wallet.dat')
+
+            if fFound and fFoundRawTx and fFoundWtx:
                 break
+
         assert(fFound)
-
-        msg = self.zmqSubSocket.recv_multipart()
-        topic = msg[0]
-        assert_equal(topic, b"rawtx")
-        body = msg[1]
-        msgSequence = struct.unpack('<I', msg[-1])[-1]
-
-        # Check that the rawtx hashes to the hashtx
-        #assert_equal(hash256(body), txnHash)
-        #CTransaction.deserialize
+        assert(fFoundRawTx)
+        assert(fFoundWtx)
 
         self.stakeBlocks(1, nStakeNode=1)
         self.log.info("Wait for block")
         fFound = False
-        for count in range(0, 200):
+        for count in range(0, 100):
             try:
                 msg = self.zmqSubSocket.recv_multipart(self.zmq.NOBLOCK)
             except self.zmq.ZMQError:
@@ -150,7 +173,7 @@ class ZMQTest (ParticlTestFramework):
         self.waitForSmsgExchange(1, 1, 0)
 
         fFound = False
-        for count in range(0, 200):
+        for count in range(0, 100):
             try:
                 msg = self.zmqSubSocket.recv_multipart(self.zmq.NOBLOCK)
             except self.zmq.ZMQError:

@@ -52,6 +52,12 @@ public:
     bool NotifyTransaction(const CTransaction &transaction) override;
 };
 
+class CZMQPublishHashWalletTransactionNotifier : public CZMQAbstractPublishNotifier
+{
+public:
+    bool NotifyTransaction(const std::string &sWalletName, const CTransaction &transaction) override;
+};
+
 class CZMQPublishSMSGNotifier : public CZMQAbstractPublishNotifier
 {
 public:

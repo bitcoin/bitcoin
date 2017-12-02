@@ -251,7 +251,6 @@ bool CHDWallet::InitLoadWallet()
             pwallet->dbw->IncrementUpdateCounter();
         }
 
-
         vpwallets.push_back(pwallet);
     };
 
@@ -9132,6 +9131,9 @@ bool CHDWallet::AddToRecord(CTransactionRecord &rtxIn, const CTransaction &tx,
         boost::replace_all(strCmd, "%s", txhash.GetHex());
         boost::thread t(runCommand, strCmd); // thread runs free
     }
+
+    std::string sName = GetName();
+    GetMainSignals().TransactionAddedToWallet(sName, MakeTransactionRef(tx));
 
     return true;
 };
