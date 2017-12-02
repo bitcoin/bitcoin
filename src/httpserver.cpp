@@ -26,6 +26,7 @@
 #include <event2/buffer.h>
 #include <event2/bufferevent.h>
 #include <event2/util.h>
+#include <event2/listener.h>
 #include <event2/keyvalq_struct.h>
 
 #include <support/events.h>
@@ -39,6 +40,55 @@
 
 /** Maximum size of http request (request line + headers) */
 static const size_t MAX_HEADERS_SIZE = 8192;
+
+class ConnectionLimiter
+{
+public:
+    ConnectionLimiter(std::vector<evconnlistener*> listeners, unsigned int limit) : m_limit(limit), m_listeners(std::move(listeners))
+    {
+        assert(m_limit > 0);
+    }
+    void AddConnection(evutil_socket_t fd)
+    {
+        // Disable socket accepting if adding this connection puts us equal to the limit
+        if (!Interrupted() && m_sockets.insert(fd).second && m_sockets.size() == m_limit) {
+            LogPrint(BCLog::HTTP, "Suspending new connections");
+            for (const auto& listener : m_listeners) {
+                evconnlistener_disable(listener);
+            }
+        }
+    }
+    void RemoveConnection(evutil_socket_t fd)
+    {
+        // Re-enable socket accepting if removing this connection brings us
+        // back down under the limit
+        if (m_sockets.erase(fd) && m_sockets.size() + 1 == m_limit && !Interrupted()) {
+            LogPrint(BCLog::HTTP, "Resuming new connections\n");
+            for (const auto& listener : m_listeners) {
+                evconnlistener_enable(listener);
+            }
+        }
+    }
+    bool IsReady() const
+    {
+        return m_sockets.size() < m_limit && !Interrupted();
+    }
+    void Interrupt()
+    {
+        m_interrupted.store(true, std::memory_order_release);
+    }
+private:
+
+    inline bool Interrupted() const
+    {
+        return m_interrupted.load(std::memory_order_acquire);
+    }
+
+    const unsigned int m_limit;
+    std::vector<evconnlistener*> m_listeners;
+    std::set<evutil_socket_t> m_sockets;
+    std::atomic<bool> m_interrupted{false};
+};
 
 /** HTTP request work item */
 class HTTPWorkItem final : public HTTPClosure
@@ -237,13 +287,43 @@ static std::string RequestMethodString(HTTPRequest::RequestMethod m)
     }
 }
 
+std::unique_ptr<ConnectionLimiter> g_limiter;
+
+static void connection_close_cb(evhttp_connection* conn, void *arg)
+{
+    ConnectionLimiter* limiter = static_cast<ConnectionLimiter*>(arg);
+    assert(limiter);
+    auto* bev = evhttp_connection_get_bufferevent(conn);
+    if (bev) {
+        evutil_socket_t fd = bufferevent_getfd(bev);
+        limiter->RemoveConnection(fd);
+    }
+}
+
 /** HTTP request callback */
 static void http_request_cb(struct evhttp_request* req, void* arg)
 {
     std::unique_ptr<HTTPRequest> hreq(new HTTPRequest(req));
-
     LogPrint(BCLog::HTTP, "Received a %s request for %s from %s\n",
              RequestMethodString(hreq->GetRequestMethod()), hreq->GetURI(), hreq->GetPeer().ToString());
+
+    bufferevent* bev = nullptr;
+    evhttp_connection* conn = evhttp_request_get_connection(req);
+    if (conn) {
+        bev = evhttp_connection_get_bufferevent(conn);
+    }
+    if (!bev) {
+        hreq->WriteReplyImmediate(HTTP_INTERNAL, "Unknown error\n");
+        return;
+    }
+    ConnectionLimiter* limiter = static_cast<ConnectionLimiter*>(arg);
+    assert(limiter);
+    evhttp_connection_set_closecb(conn, connection_close_cb, limiter);
+    limiter->AddConnection(bufferevent_getfd(bev));
+    if (!limiter->IsReady()) {
+        hreq->WriteReplyImmediate(HTTP_SERVUNAVAIL, "No connection slots available\n");
+        return;
+    }
 
     // Early address-based allow check
     if (!ClientAllowed(hreq->GetPeer())) {
@@ -281,13 +361,7 @@ static void http_request_cb(struct evhttp_request* req, void* arg)
         if (workQueue->Enqueue(item.get())) {
             // Disable reading to work around a libevent bug, fixed in 2.2.0.
             if (event_get_version_number() >= 0x02010600 && event_get_version_number() < 0x02020001) {
-                evhttp_connection* conn = evhttp_request_get_connection(req);
-                if (conn) {
-                    bufferevent* bev = evhttp_connection_get_bufferevent(conn);
-                    if (bev) {
-                        bufferevent_disable(bev, EV_READ);
-                    }
-                }
+                bufferevent_disable(bev, EV_READ);
             }
             item.release(); /* if true, queue took ownership */
         } else {
@@ -416,7 +490,6 @@ bool InitHTTPServer()
     evhttp_set_timeout(http, gArgs.GetArg("-rpcservertimeout", DEFAULT_HTTP_SERVER_TIMEOUT));
     evhttp_set_max_headers_size(http, MAX_HEADERS_SIZE);
     evhttp_set_max_body_size(http, MAX_SIZE);
-    evhttp_set_gencb(http, http_request_cb, nullptr);
 
     boundSockets = HTTPBindAddresses(http);
     if (boundSockets.empty()) {
@@ -427,6 +500,14 @@ bool InitHTTPServer()
     LogPrint(BCLog::HTTP, "Initialized HTTP server\n");
     int workQueueDepth = std::max((long)gArgs.GetArg("-rpcworkqueue", DEFAULT_HTTP_WORKQUEUE), 1L);
     LogPrintf("HTTP: creating work queue of depth %d\n", workQueueDepth);
+
+    std::vector<evconnlistener*> listeners;
+    for (const auto& bind_handle : boundSockets) {
+        evconnlistener* listener = evhttp_bound_socket_get_listener(bind_handle);
+        listeners.push_back(listener);
+    }
+    g_limiter = MakeUnique<ConnectionLimiter>(std::move(listeners), workQueueDepth * 2);
+    evhttp_set_gencb(http, http_request_cb, g_limiter.get());
 
     workQueue = new WorkQueue<HTTPClosure>(workQueueDepth);
     // transfer ownership to eventBase/HTTP via .release()
@@ -473,6 +554,9 @@ void InterruptHTTPServer()
     LogPrint(BCLog::HTTP, "Interrupting HTTP server\n");
     if (eventHTTP) {
         // Unlisten sockets
+        if (g_limiter) {
+            g_limiter->Interrupt();
+        }
         for (evhttp_bound_socket *socket : boundSockets) {
             evhttp_del_accept_socket(eventHTTP, socket);
         }
@@ -512,6 +596,7 @@ void StopHTTPServer()
         evhttp_free(eventHTTP);
         eventHTTP = nullptr;
     }
+    g_limiter.reset();
     if (eventBase) {
         event_base_free(eventBase);
         eventBase = nullptr;
