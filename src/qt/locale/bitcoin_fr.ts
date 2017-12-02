@@ -823,6 +823,11 @@ Adresse : %4
         <translation>Démarrer Peercoin automatiquement lors de l&apos;ouverture une session sur l&apos;ordinateur.</translation>
     </message>
     <message>
+        <location line="+46"/>
+        <source>Check this box to follow the centrally issued checkpoints.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
         <location line="+3"/>
         <source>&amp;Start Peercoin on system login</source>
         <translation>&amp;Démarrer Peercoin lors de l&apos;ouverture d&apos;une session</translation>

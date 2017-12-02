@@ -824,6 +824,11 @@ Address: %4
         <translation>登录系统后自动开启比特币客户端</translation>
     </message>
     <message>
+        <location line="+46"/>
+        <source>Check this box to follow the centrally issued checkpoints.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
         <location line="+3"/>
         <source>&amp;Start Peercoin on system login</source>
         <translation>启动时&amp;运行</translation>

@@ -826,6 +826,11 @@ Dirección: %4
         <translation>Iniciar Peercoin automáticamente al encender el sistema.</translation>
     </message>
     <message>
+        <location line="+46"/>
+        <source>Check this box to follow the centrally issued checkpoints.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
         <location line="+3"/>
         <source>&amp;Start Peercoin on system login</source>
         <translation>&amp;Iniciar Peercoin al iniciar el sistema</translation>

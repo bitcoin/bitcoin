@@ -824,6 +824,11 @@ Adresse: %4
         <translation>Start Peercoin automatisk etter innlogging.</translation>
     </message>
     <message>
+        <location line="+46"/>
+        <source>Check this box to follow the centrally issued checkpoints.</source>
+        <translation>Merk av i denne boksen for å følge de sentralt utstedte kontrollpunktene.</translation>
+    </message>
+    <message>
         <location line="+3"/>
         <source>&amp;Start Peercoin on system login</source>
         <translation>&amp;Start Peercoin ved systeminnlogging</translation>

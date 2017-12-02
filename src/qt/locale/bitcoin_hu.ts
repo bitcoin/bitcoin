@@ -823,6 +823,11 @@ Cím: %4
         <translation>Induljon el a Peercoin a számítógép bekapcsolásakor</translation>
     </message>
     <message>
+        <location line="+46"/>
+        <source>Check this box to follow the centrally issued checkpoints.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
         <location line="+3"/>
         <source>&amp;Start Peercoin on system login</source>
         <translation>&amp;Induljon el a számítógép bekapcsolásakor</translation>
