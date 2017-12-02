@@ -1357,13 +1357,13 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams, C
 			unsigned int nDifferenceInBlocks = 0;
 			if (nStartHeight < nHeight)
 				nDifferenceInBlocks = (nHeight - nStartHeight);
-			// the first three intervals should discount rewards to incentivize bonding over longer terms (we add 10% premium every interval)
-			double fSubsidyAdjustmentPercentage = -0.3;
+			// the first three intervals should discount rewards to incentivize bonding over longer terms (we add 3% premium every interval)
+			double fSubsidyAdjustmentPercentage = 0;
 			for (int i = 1; i <= consensusParams.nTotalSeniorityIntervals; i++) {
 				const int &nTotalSeniorityBlocks = i*consensusParams.nSeniorityInterval;
 				if (nDifferenceInBlocks <= nTotalSeniorityBlocks)
 					break;
-				fSubsidyAdjustmentPercentage += 0.1;
+				fSubsidyAdjustmentPercentage += 0.03;
 			}
 			const CAmount &nChange = nSubsidy*fSubsidyAdjustmentPercentage;
 			nSubsidy += nChange;
