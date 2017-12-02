@@ -318,7 +318,7 @@ static bool ThreadHTTP(struct event_base* base, struct evhttp* http)
 }
 
 /** Bind HTTP server to specified addresses */
-static bool HTTPBindAddresses(struct evhttp* http)
+static std::vector<evhttp_bound_socket*> HTTPBindAddresses(struct evhttp* http)
 {
     int defaultPort = gArgs.GetArg("-rpcport", BaseParams().RPCPort());
     std::vector<std::pair<std::string, uint16_t> > endpoints;
@@ -342,17 +342,18 @@ static bool HTTPBindAddresses(struct evhttp* http)
         endpoints.push_back(std::make_pair("0.0.0.0", defaultPort));
     }
 
+    std::vector<evhttp_bound_socket*> bound_sockets;
     // Bind addresses
     for (std::vector<std::pair<std::string, uint16_t> >::iterator i = endpoints.begin(); i != endpoints.end(); ++i) {
         LogPrint(BCLog::HTTP, "Binding RPC on address %s port %i\n", i->first, i->second);
         evhttp_bound_socket *bind_handle = evhttp_bind_socket_with_handle(http, i->first.empty() ? nullptr : i->first.c_str(), i->second);
         if (bind_handle) {
-            boundSockets.push_back(bind_handle);
+            bound_sockets.push_back(bind_handle);
         } else {
             LogPrintf("Binding RPC on address %s port %i failed.\n", i->first, i->second);
         }
     }
-    return !boundSockets.empty();
+    return bound_sockets;
 }
 
 /** Simple wrapper to set thread name and run work queue */
@@ -417,7 +418,8 @@ bool InitHTTPServer()
     evhttp_set_max_body_size(http, MAX_SIZE);
     evhttp_set_gencb(http, http_request_cb, nullptr);
 
-    if (!HTTPBindAddresses(http)) {
+    boundSockets = HTTPBindAddresses(http);
+    if (boundSockets.empty()) {
         LogPrintf("Unable to bind any endpoint for RPC server\n");
         return false;
     }
