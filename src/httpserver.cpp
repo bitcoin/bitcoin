@@ -507,6 +507,8 @@ bool InitHTTPServer()
     std::vector<evconnlistener*> listeners;
     for (const auto& bind_handle : boundSockets) {
         evconnlistener* listener = evhttp_bound_socket_get_listener(bind_handle);
+        evutil_socket_t sock = evhttp_bound_socket_get_fd(bind_handle);
+        SetListenSocketDeferred(sock);
         listeners.push_back(listener);
     }
     g_limiter = MakeUnique<ConnectionLimiter>(std::move(listeners), workQueueDepth * 2);
