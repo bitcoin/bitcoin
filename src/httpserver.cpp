@@ -313,6 +313,7 @@ static void http_request_cb(struct evhttp_request* req, void* arg)
         bev = evhttp_connection_get_bufferevent(conn);
     }
     if (!bev) {
+        hreq->WriteHeader("Connection", "close");
         hreq->WriteReplyImmediate(HTTP_INTERNAL, "Unknown error\n");
         return;
     }
@@ -321,6 +322,7 @@ static void http_request_cb(struct evhttp_request* req, void* arg)
     evhttp_connection_set_closecb(conn, connection_close_cb, limiter);
     limiter->AddConnection(bufferevent_getfd(bev));
     if (!limiter->IsReady()) {
+        hreq->WriteHeader("Connection", "close");
         hreq->WriteReplyImmediate(HTTP_SERVUNAVAIL, "No connection slots available\n");
         return;
     }
@@ -366,6 +368,7 @@ static void http_request_cb(struct evhttp_request* req, void* arg)
             item.release(); /* if true, queue took ownership */
         } else {
             LogPrintf("WARNING: request rejected because http work queue depth exceeded, it can be increased with the -rpcworkqueue= setting\n");
+            item->req->WriteHeader("Connection", "close");
             item->req->WriteReplyImmediate(HTTP_INTERNAL, "Work queue depth exceeded");
         }
     } else {
