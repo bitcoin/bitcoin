@@ -6,9 +6,12 @@
 #define BITCOIN_ZMQ_ZMQNOTIFICATIONINTERFACE_H
 
 #include "validationinterface.h"
+#include "netaddress.h"
 #include <string>
 #include <map>
 #include <list>
+#include <thread>
+#include <atomic>
 
 class CBlockIndex;
 class CZMQAbstractNotifier;
@@ -38,6 +41,12 @@ private:
 
     void *pcontext;
     std::list<CZMQAbstractNotifier*> notifiers;
+
+    bool IsWhitelistedRange(const CNetAddr &addr);
+    void ThreadZAP();
+    std::thread threadZAP;
+    std::atomic_bool zapActive;
+    std::vector<CSubNet> vWhitelistedRange;
 };
 
 #endif // BITCOIN_ZMQ_ZMQNOTIFICATIONINTERFACE_H

@@ -29,6 +29,7 @@ class PosTest(ParticlTestFramework):
 
         # stop staking
         ro = node.reservebalance(True, 10000000)
+        ro = node1.reservebalance(True, 10000000)
 
         ro = node.extkeyimportmaster('abandon baby cabbage dad eager fabric gadget habit ice kangaroo lab absorb')
         assert(ro['account_id'] == 'aaaZf2qnNr5T7PWRmqgmusuu5ACnBcX2ev')
@@ -56,8 +57,6 @@ class PosTest(ParticlTestFramework):
         assert(ro['reserve'] == 0)
 
         assert(self.wait_for_height(node, 1))
-
-        # stop staking
         ro = node.reservebalance(True, 10000000)
 
         oRoot1 = node1.mnemonic("new")
@@ -86,23 +85,43 @@ class PosTest(ParticlTestFramework):
         assert(ro[0]['amount'] == 10)
         assert(ro[0]['category'] == 'receive')
 
-
-        # start staking
-        ro = node.walletsettings('stakelimit', {'height':2})
-        ro = node.reservebalance(False)
-
-        assert(self.wait_for_height(node, 2))
-
-        # stop staking
-        ro = node.reservebalance(True, 10000000)
-
+        self.stakeBlocks(1)
         block2_hash = node.getblockhash(2)
-
         ro = node.getblock(block2_hash)
         assert(txnHash in ro['tx'])
 
+
+        addrReward = node.getnewaddress()
+        print('addrReward', addrReward)
+
+        ro = node.walletsettings('stakingoptions', {'rewardaddress':addrReward})
+        assert(ro['stakingoptions']['rewardaddress'] == addrReward)
+
+        self.stakeBlocks(1)
+        block3_hash = node.getblockhash(3)
+        ro = node.getblock(block3_hash)
+        print(json.dumps(ro, indent=4, default=self.jsonDecimal))
+
+        coinstakehash = ro['tx'][0]
+        ro = node.getrawtransaction(coinstakehash, True)
+        print(json.dumps(ro, indent=4, default=self.jsonDecimal))
+
+        fFound = False
+
+        for vout in ro["vout"]:
+            try:
+                addr0 = vout['scriptPubKey']['addresses'][0]
+            except:
+                continue
+            if addr0 == addrReward:
+                fFound = True
+                assert(vout['valueSat'] == 39637)
+                break
+        assert(fFound)
+
+
         #assert(False)
-        #print(json.dumps(ro, indent=4))
+        #print(json.dumps(ro, indent=4, default=self.jsonDecimal))
 
 
 if __name__ == '__main__':

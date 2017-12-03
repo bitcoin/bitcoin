@@ -480,7 +480,7 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += HelpMessageOpt("-zmqpubsmsg=<address>", _("Enable publish secure message in <address>"));
     strUsage += HelpMessageOpt("-serverkeyzmq=<secret_key>", _("Base64 encoded string of the z85 encoded secret key for CurveZMQ."));
     strUsage += HelpMessageOpt("-newserverkeypairzmq", _("Generate new key pair for CurveZMQ, print and exit."));
-
+    strUsage += HelpMessageOpt("-whitelistzmq=<IP address or network>", _("Whitelist peers connecting from the given IP address (e.g. 1.2.3.4) or CIDR notated network (e.g. 1.2.3.0/24). Can be specified multiple times."));
 #endif
 
     strUsage += HelpMessageGroup(_("Debugging/Testing options:"));
@@ -1891,7 +1891,6 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
                 t->sName = strprintf("miner%d", i);
                 t->thread = std::thread(&TraceThread<std::function<void()> >, t->sName.c_str(), std::function<void()>(std::bind(&ThreadStakeMiner, i, vpwallets, nStart, nEnd)));
             };
-            //threadStakeMiner = std::thread(&TraceThread<std::function<void()> >, "miner", std::function<void()>(std::bind(&ThreadStakeMiner, vpwallets, nStart, nEnd)));
         }
     };
     #endif

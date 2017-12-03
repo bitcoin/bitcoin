@@ -292,6 +292,14 @@ bool CHDWallet::ProcessStakingSettings(std::string &sError)
                 sError = "foundationdonationpercent not integer.";
             };
         };
+
+        if (json["rewardaddress"].isStr())
+        {
+            try { rewardAddress = CBitcoinAddress(json["rewardaddress"].get_str());
+            } catch (std::exception &e) {
+                sError = "Setting rewardaddress failed.";
+            };
+        };
     };
 
     if (nStakeCombineThreshold < 100 * COIN || nStakeCombineThreshold > 5000 * COIN)
@@ -10332,6 +10340,38 @@ bool CHDWallet::EraseSetting(const std::string &setting)
     return true;
 };
 
+bool CHDWallet::GetScriptForAddress(CScript &script, const CBitcoinAddress &addr, bool fUpdate)
+{
+    LOCK(cs_wallet);
+
+    CTxDestination dest = addr.Get();
+    if (dest.type() == typeid(CExtKeyPair))
+    {
+        CExtKeyPair ek = boost::get<CExtKeyPair>(dest);
+        uint32_t nChildKey;
+
+        CPubKey pkTemp;
+        if (0 != ExtKeyGetDestination(ek, pkTemp, nChildKey))
+            return error("%s: ExtKeyGetDestination failed.", __func__);
+
+        nChildKey++;
+        if (fUpdate)
+            ExtKeyUpdateLooseKey(ek, nChildKey, false);
+
+        script = GetScriptForDestination(pkTemp.GetID());
+    } else
+    if (dest.type() == typeid(CKeyID))
+    {
+        CKeyID idk = boost::get<CKeyID>(dest);
+        script = GetScriptForDestination(idk);
+    } else
+    {
+        return error("%s: Unknown destination type.", __func__);
+    };
+
+    return true;
+};
+
 bool CHDWallet::SetReserveBalance(CAmount nNewReserveBalance)
 {
     LogPrintf("SetReserveBalance %d\n", nReserveBalance);
@@ -10497,7 +10537,6 @@ void CHDWallet::AvailableCoinsForStaking(std::vector<COutput> &vCoins, int64_t n
                 };
             };
         };
-
     }
 
     random_shuffle(vCoins.begin(), vCoins.end(), GetRandInt);
@@ -10643,31 +10682,9 @@ bool CHDWallet::CreateCoinStake(unsigned int nBits, int64_t nTime, int nBlockHei
                     LogPrint(BCLog::POS, "%s: Sending output to coldstakingscript %s.\n", __func__, sAddress);
 
                     CBitcoinAddress addrColdStaking(sAddress);
-                    CTxDestination destColdStaking = addrColdStaking.Get();
-
                     CScript scriptStaking;
-                    if (destColdStaking.type() == typeid(CExtKeyPair))
-                    {
-                        CExtKeyPair ek = boost::get<CExtKeyPair>(destColdStaking);
-                        uint32_t nChildKey;
-
-                        CPubKey pkTemp;
-                        if (0 != ExtKeyGetDestination(ek, pkTemp, nChildKey))
-                            return error("%s: ExtKeyGetDestination failed.", __func__);
-
-                        nChildKey++;
-                        ExtKeyUpdateLooseKey(ek, nChildKey, false);
-
-                        scriptStaking = GetScriptForDestination(pkTemp.GetID());
-                    } else
-                    if (destColdStaking.type() == typeid(CKeyID))
-                    {
-                        CKeyID idk = boost::get<CKeyID>(destColdStaking);
-                        scriptStaking = GetScriptForDestination(idk);
-                    } else
-                    {
-                        return error("%s: Unknown coldstakingaddress type.", __func__);
-                    };
+                    if (!GetScriptForAddress(scriptStaking, addrColdStaking, true))
+                        return error("%s: GetScriptForAddress failed.", __func__);
 
                     // Get new key from the active internal chain
                     CPubKey pkSpend;
@@ -10783,20 +10800,23 @@ bool CHDWallet::CreateCoinStake(unsigned int nBits, int64_t nTime, int nBlockHei
         setCoins.erase(itc);
     };
 
+    // Get block reward
     CAmount nReward = Params().GetProofOfStakeReward(pindexPrev, nFees);
     if (nReward < 0)
         return false;
 
+    // Process development fund
+    CAmount nRewardOut;
     const DevFundSettings *pDevFundSettings = Params().GetDevFundSettings(nTime);
     if (!pDevFundSettings || pDevFundSettings->nMinDevStakePercent <= 0)
     {
-        nCredit += nReward;
+        nRewardOut = nReward;
     } else
     {
         int64_t nStakeSplit = std::max(pDevFundSettings->nMinDevStakePercent, nWalletDevFundCedePercent);
 
         CAmount nDevPart = (nReward * nStakeSplit) / 100;
-        nCredit += nReward - nDevPart;
+        nRewardOut = nReward - nDevPart;
 
         CAmount nDevBfwd = 0;
         if (nBlockHeight > 1) // genesis block is pow
@@ -10812,6 +10832,7 @@ bool CHDWallet::CreateCoinStake(unsigned int nBits, int64_t nTime, int nBlockHei
         CAmount nDevCfwd = nDevBfwd + nDevPart;
         if (nBlockHeight % pDevFundSettings->nDevOutputPeriod == 0)
         {
+            // Place dev fund output
             std::shared_ptr<CTxOutStandard> outDevSplit = MAKE_OUTPUT<CTxOutStandard>();
             outDevSplit->nValue = nDevCfwd;
 
@@ -10835,9 +10856,12 @@ bool CHDWallet::CreateCoinStake(unsigned int nBits, int64_t nTime, int nBlockHei
         };
 
         LogPrint(BCLog::POS, "%s: Coinstake reward split %d%%, foundation %s, reward %s.\n",
-            __func__, nStakeSplit, part::AmountToString(nDevPart), part::AmountToString(nReward - nDevPart));
+            __func__, nStakeSplit, part::AmountToString(nDevPart), part::AmountToString(nRewardOut));
     };
 
+
+    if (!rewardAddress.IsValid())
+        nCredit += nRewardOut;
 
     // Set output amount, split outputs if > nStakeSplitThreshold
     if (nCredit >= nStakeSplitThreshold)
@@ -10853,6 +10877,19 @@ bool CHDWallet::CreateCoinStake(unsigned int nBits, int64_t nTime, int nBlockHei
     {
         txNew.vpout.back()->SetValue(nCredit);
     };
+
+    // Create output for reward
+    if (rewardAddress.IsValid())
+    {
+        CScript scriptReward;
+        if (!GetScriptForAddress(scriptReward, rewardAddress, true))
+            return error("%s: Could not get script for reward address.", __func__);
+        std::shared_ptr<CTxOutStandard> outReward = MAKE_OUTPUT<CTxOutStandard>();
+        outReward->nValue = nRewardOut;
+        outReward->scriptPubKey = scriptReward;
+        txNew.vpout.push_back(outReward);
+    };
+
 
     // Sign
     int nIn = 0;

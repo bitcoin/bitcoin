@@ -84,8 +84,14 @@ bool CZMQAbstractPublishNotifier::Initialize(void *pcontext)
         if (sServerKey64.length() > 1)
         {
             LogPrint(BCLog::ZMQ, "zmq: Setting ZMQ_CURVE_SECRETKEY.\n");
-            std::vector<uint8_t> vServerKey = DecodeBase64(sServerKey64.c_str());
+            if (!zmq_has("curve"))
+            {
+                zmqError("No curve support.");
+                zmq_close(psocket);
+                return false;
+            };
 
+            std::vector<uint8_t> vServerKey = DecodeBase64(sServerKey64.c_str());
             if (vServerKey.size() != 40)
             {
                 zmqError("Failed to decode server key");

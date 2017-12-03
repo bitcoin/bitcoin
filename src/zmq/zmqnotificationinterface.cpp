@@ -9,10 +9,87 @@
 #include "validation.h"
 #include "streams.h"
 #include "util.h"
+#include "netbase.h"
 
 void zmqError(const char *str)
 {
     LogPrint(BCLog::ZMQ, "zmq: Error: %s, errno=%s\n", str, zmq_strerror(errno));
+}
+
+bool CZMQNotificationInterface::IsWhitelistedRange(const CNetAddr &addr) {
+    for (const CSubNet& subnet : vWhitelistedRange) {
+        if (subnet.Match(addr))
+            return true;
+    }
+    return false;
+}
+
+void CZMQNotificationInterface::ThreadZAP()
+{
+    /*
+    https://rfc.zeromq.org/spec:27/ZAP/
+    The version frame, which SHALL contain the three octets "1.0".
+    The request id, which MAY contain an opaque binary blob.
+    The domain, which SHALL contain a (non-empty) string.
+    The address, the origin network IP address.
+    The identity, the connection Identity, if any.
+    The mechanism, which SHALL contain a string.
+    The credentials, which SHALL be zero or more opaque frames.
+    */
+    assert(pcontext);
+    void *sock = zmq_socket(pcontext, ZMQ_REP);
+    zmq_bind(sock, "inproc://zeromq.zap.01");
+    zapActive = true;
+
+    uint8_t buf[10][1024];
+    size_t nb[10];
+    while (zapActive)
+    {
+        zmq_pollitem_t poll_items[] = { sock, 0, ZMQ_POLLIN, 0 };
+        int rc = zmq_poll(poll_items, 1, 500);
+        if (!(rc > 0 && poll_items[0].revents & ZMQ_POLLIN))
+            continue;
+
+        size_t nParts = 0;
+        int more;
+        size_t size = sizeof(int);
+        do {
+            size_t b = nParts <= 9 ? nParts : 9; // read any extra messages into last chunk
+            nb[b] = zmq_recv(sock, buf[b], sizeof(buf[b]), 0);
+            zmq_getsockopt(sock, ZMQ_RCVMORE, &more, &size);
+            nParts++;
+        } while (more);
+
+        if (nParts < 5) // too few parts to be valid
+            continue;
+
+        if (nb[0] != 3 || memcmp(buf[0], "1.0", 3) != 0)
+            continue;
+
+        std::string address((char*)buf[3], nb[3]);
+
+        bool fAccept = true;
+
+        if (vWhitelistedRange.size() > 0)
+        {
+            CNetAddr addr;
+            if (!LookupHost(address.c_str(), addr, false))
+                fAccept = false;
+            else
+                fAccept = IsWhitelistedRange(addr);
+        };
+
+        LogPrint(BCLog::ZMQ, "zmq: Connection request from %s %s.\n", address, fAccept ? "accepted" : "denied");
+
+        zmq_send(sock, buf[0], nb[0], ZMQ_SNDMORE);                 // version "1.0"
+        zmq_send(sock, buf[1], nb[1], ZMQ_SNDMORE);                 // request id
+        zmq_send(sock, fAccept ? "200" : "400", 3, ZMQ_SNDMORE);    // status code
+        zmq_send(sock, NULL, 0, ZMQ_SNDMORE);                       // status text
+        zmq_send(sock, NULL, 0, ZMQ_SNDMORE);                       // user id
+        zmq_send(sock, NULL, 0, 0);                                 // metadata
+    };
+
+    zmq_close(sock);
 }
 
 CZMQNotificationInterface::CZMQNotificationInterface() : pcontext(nullptr)
@@ -86,6 +163,34 @@ bool CZMQNotificationInterface::Initialize()
         return false;
     }
 
+
+    for (const auto& net : gArgs.GetArgs("-whitelistzmq")) {
+        CSubNet subnet;
+        LookupSubNet(net.c_str(), subnet);
+        if (!subnet.IsValid())
+            LogPrintf("Invalid netmask specified in -whitelistzmq: '%s'\n", net);
+        else
+            vWhitelistedRange.push_back(subnet);
+    }
+
+    if (vWhitelistedRange.size() > 0)
+    {
+        zapActive = false;
+        threadZAP = std::thread(&TraceThread<std::function<void()> >, "zap", std::function<void()>(std::bind(&CZMQNotificationInterface::ThreadZAP, this)));
+
+        for (size_t nTries = 1000; nTries > 0; nTries--)
+        {
+            if (zapActive)
+                break;
+            MilliSleep(100);
+        };
+        if (!zapActive)
+        {
+            zmqError("Unable to start zap thread");
+            return false;
+        };
+    };
+
     std::list<CZMQAbstractNotifier*>::iterator i=notifiers.begin();
     for (; i!=notifiers.end(); ++i)
     {
@@ -113,6 +218,13 @@ bool CZMQNotificationInterface::Initialize()
 void CZMQNotificationInterface::Shutdown()
 {
     LogPrint(BCLog::ZMQ, "zmq: Shutdown notification interface\n");
+
+    if (threadZAP.joinable())
+    {
+        zapActive = false;
+        threadZAP.join();
+    };
+
     if (pcontext)
     {
         for (std::list<CZMQAbstractNotifier*>::iterator i=notifiers.begin(); i!=notifiers.end(); ++i)

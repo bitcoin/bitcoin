@@ -687,6 +687,9 @@ public:
     bool SetSetting(const std::string &setting, const UniValue &json);
     bool EraseSetting(const std::string &setting);
 
+    /* Return a script for a simple address type (normal/extended) */
+    bool GetScriptForAddress(CScript &script, const CBitcoinAddress &addr, bool fUpdate = false);
+
     bool SetReserveBalance(CAmount nNewReserveBalance);
     uint64_t GetStakeWeight() const;
     void AvailableCoinsForStaking(std::vector<COutput> &vCoins, int64_t nTime, int nHeight) const;
@@ -729,13 +732,13 @@ public:
     CAmount nStakeSplitThreshold;
     size_t nMaxStakeCombine = 3;
     int nWalletDevFundCedePercent;
+    CBitcoinAddress rewardAddress;
 
 
     bool fUnlockForStakingOnly = false; // Use coldstaking instead
 
     int64_t nRCTOutSelectionGroup1;
     int64_t nRCTOutSelectionGroup2;
-
 };
 
 int ToStealthRecipient(CStealthAddress &sx, CAmount nValue, bool fSubtractFeeFromAmount,

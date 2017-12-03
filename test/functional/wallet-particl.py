@@ -6,7 +6,6 @@
 from test_framework.test_particl import ParticlTestFramework
 from test_framework.util import *
 
-
 def read_dump(file_name):
     nLines = 0
     sJson = ''
@@ -14,14 +13,12 @@ def read_dump(file_name):
     with open(file_name, encoding='utf8') as inputfile:
         for line in inputfile:
             # only read non comment lines
-
             if line.startswith('# --- Begin JSON ---'):
                 isJson = True
             elif line.startswith('# --- End JSON ---'):
                 isJson = False
             if line[0] == "#":
                 continue
-            #print("line", line)
 
             if isJson:
                 sJson += line
@@ -33,7 +30,7 @@ def read_dump(file_name):
 
 class WalletParticlTest(ParticlTestFramework):
     def set_test_params(self):
-        self.setup_clean_chain = True   # don't copy from cache
+        self.setup_clean_chain = True
         self.num_nodes = 3
         self.extra_args = [ ['-debug',] for i in range(self.num_nodes)]
 
@@ -623,7 +620,6 @@ class WalletParticlTest(ParticlTestFramework):
                 fFound = True
                 break
         assert(fFound)
-
 
         ro = nodes[1].walletpassphrasechange('changedPass', 'changedPass2')
 

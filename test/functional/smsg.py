@@ -91,7 +91,7 @@ class SmsgTest(ParticlTestFramework):
         assert(ro['messages'][0]['from'] == address1)
         assert(ro['messages'][0]['text'] == 'Test 1->0. 2')
 
-
+        #assert(False)
         #print(json.dumps(ro, indent=4, default=self.jsonDecimal))
 
 if __name__ == '__main__':

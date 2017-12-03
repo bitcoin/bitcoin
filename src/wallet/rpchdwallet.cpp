@@ -5125,7 +5125,7 @@ UniValue walletsettings(const JSONRPCRequest &request)
             "\nchangeaddress {\"address_standard\":,\"coldstakingaddress\":}.\n"
             "   - \"address_standard\": Change address for standard inputs.\n"
             "   - \"coldstakingaddress\": Cold staking address for standard inputs.\n"
-            "\nstakingoptions {\"stakecombinethreshold\":str,\"stakesplitthreshold\":str,\"foundationdonationpercent\":int}.\n"
+            "\nstakingoptions {\"stakecombinethreshold\":str,\"stakesplitthreshold\":str,\"foundationdonationpercent\":int,\"rewardaddress\":str}.\n"
             "   - \"stakecombinethreshold\": Join outputs below this value.\n"
             "   - \"stakesplitthreshold\": Split outputs above this value.\n"
             "   - \"foundationdonationpercent\": .\n"
@@ -5185,7 +5185,6 @@ UniValue walletsettings(const JSONRPCRequest &request)
                         throw JSONRPCError(RPC_INVALID_PARAMETER, _("address_standard must be a string."));
 
                     std::string sAddress = json["address_standard"].get_str();
-
                     CBitcoinAddress addr(sAddress);
                     if (!addr.IsValid())
                         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid address_standard.");
@@ -5196,11 +5195,9 @@ UniValue walletsettings(const JSONRPCRequest &request)
                         throw JSONRPCError(RPC_INVALID_PARAMETER, _("coldstakingaddress must be a string."));
 
                     std::string sAddress = json["coldstakingaddress"].get_str();
-
                     CBitcoinAddress addr(sAddress);
                     if (!addr.IsValid())
                         throw JSONRPCError(RPC_INVALID_PARAMETER, _("Invalid coldstakingaddress."));
-
                     if (addr.IsValidStealthAddress())
                         throw JSONRPCError(RPC_INVALID_PARAMETER, _("coldstakingaddress can't be a stealthaddress."));
 
@@ -5277,6 +5274,17 @@ UniValue walletsettings(const JSONRPCRequest &request)
                 {
                     if (!json["foundationdonationpercent"].isNum())
                         throw JSONRPCError(RPC_INVALID_PARAMETER, _("foundationdonationpercent must be a number."));
+                } else
+                if (sKey == "rewardaddress")
+                {
+                    if (!json["rewardaddress"].isStr())
+                        throw JSONRPCError(RPC_INVALID_PARAMETER, _("rewardaddress must be a string."));
+
+                    CBitcoinAddress addr(json["rewardaddress"].get_str());
+                    if (!addr.IsValid())
+                        throw JSONRPCError(RPC_INVALID_PARAMETER, _("Invalid rewardaddress."));
+                    if (addr.IsValidStealthAddress())
+                        throw JSONRPCError(RPC_INVALID_PARAMETER, _("rewardaddress can't be a stealthaddress."));
                 } else
                 {
                     warnings.push_back("Unknown key " + sKey);

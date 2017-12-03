@@ -229,12 +229,13 @@ bool CheckProofOfStake(const CBlockIndex *pindexPrev, const CTransaction &tx, in
             error("%s: INFO: check kernel failed on coinstake %s, hashProof=%s", __func__, tx.GetHash().ToString(), hashProofOfStake.ToString()),
             REJECT_INVALID, "check-kernel-failed");
 
-    // Check that the output assigns at least the same value as the input to outputs with scripts matching the prevout script.
+    // Ensure the input scripts all match and that the total output value to the input script is not less than the total input value.
     // The foundation fund split is user selectable, making it difficult to check the blockreward here.
     // Leaving a window for compromised staking nodes to reassign the blockreward to an attacker's address.
-    // If Coin owners detect this, they can move their coin to a new address.
+    // If coin owners detect this, they can move their coin to a new address.
     if (HasIsCoinstakeOp(kernelPubKey))
     {
+        // Sum value from any extra inputs
         for (size_t k = 1; k < tx.vin.size(); ++k)
         {
             const CTxIn &txin = tx.vin[k];
