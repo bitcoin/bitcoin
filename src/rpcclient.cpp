@@ -130,8 +130,6 @@ Array RPCConvertValues(const std::string &strMethod, const std::vector<std::stri
     if (strMethod == "getaddednodeinfo"       && n > 0) ConvertTo<bool>(params[0]);
     if (strMethod == "setgenerate"            && n > 0) ConvertTo<bool>(params[0]);
     if (strMethod == "setgenerate"            && n > 1) ConvertTo<boost::int64_t>(params[1]);
-    if (strMethod == "getnetworkhashps"       && n > 0) ConvertTo<boost::int64_t>(params[0]);
-    if (strMethod == "getnetworkhashps"       && n > 1) ConvertTo<boost::int64_t>(params[1]);
     if (strMethod == "sendtoaddress"          && n > 1) ConvertTo<double>(params[1]);
     if (strMethod == "settxfee"               && n > 0) ConvertTo<double>(params[0]);
     if (strMethod == "getreceivedbyaddress"   && n > 1) ConvertTo<boost::int64_t>(params[1]);
@@ -163,6 +161,15 @@ Array RPCConvertValues(const std::string &strMethod, const std::vector<std::stri
     if (strMethod == "listunspent"            && n > 1) ConvertTo<boost::int64_t>(params[1]);
     if (strMethod == "listunspent"            && n > 2) ConvertTo<Array>(params[2]);
     if (strMethod == "getblock"               && n > 1) ConvertTo<bool>(params[1]);
+    if (strMethod == "getblock"               && n > 2) ConvertTo<bool>(params[2]);
+    if (strMethod == "sendalert"              && n > 2) ConvertTo<boost::int64_t>(params[2]);
+    if (strMethod == "sendalert"              && n > 3) ConvertTo<boost::int64_t>(params[3]);
+    if (strMethod == "sendalert"              && n > 4) ConvertTo<boost::int64_t>(params[4]);
+    if (strMethod == "sendalert"              && n > 5) ConvertTo<boost::int64_t>(params[5]);
+    if (strMethod == "sendalert"              && n > 6) ConvertTo<boost::int64_t>(params[6]);
+    if (strMethod == "enforcecheckpoint"      && n > 0) ConvertTo<bool>(params[0]);
+    if (strMethod == "reservebalance"         && n > 0) ConvertTo<bool>(params[0]);
+    if (strMethod == "reservebalance"         && n > 1) ConvertTo<double>(params[1]);
     if (strMethod == "getrawtransaction"      && n > 1) ConvertTo<boost::int64_t>(params[1]);
     if (strMethod == "createrawtransaction"   && n > 0) ConvertTo<Array>(params[0]);
     if (strMethod == "createrawtransaction"   && n > 1) ConvertTo<Object>(params[1]);
@@ -176,10 +183,9 @@ Array RPCConvertValues(const std::string &strMethod, const std::vector<std::stri
     if (strMethod == "importprivkey"          && n > 2) ConvertTo<bool>(params[2]);
     if (strMethod == "listminting"            && n > 0) ConvertTo<boost::int64_t>(params[0]);
     if (strMethod == "listminting"            && n > 1) ConvertTo<boost::int64_t>(params[1]);
-    if (strMethod == "verifychain"            && n > 0) ConvertTo<boost::int64_t>(params[0]);
-    if (strMethod == "verifychain"            && n > 1) ConvertTo<boost::int64_t>(params[1]);
-    if (strMethod == "keypoolrefill"          && n > 0) ConvertTo<boost::int64_t>(params[0]);
-
+#ifdef TESTING
+    if (strMethod == "timetravel"             && n > 0) ConvertTo<boost::int64_t>(params[0]);
+#endif
     return params;
 }
 
