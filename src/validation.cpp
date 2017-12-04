@@ -39,7 +39,7 @@
 #include "instantx.h"
 #include "masternodeman.h"
 #include "masternode-payments.h"
-
+#include "masternode-sync.h"
 #include <sstream>
 
 #include <boost/algorithm/string/replace.hpp>
