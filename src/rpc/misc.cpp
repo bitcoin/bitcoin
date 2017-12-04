@@ -77,58 +77,6 @@ UniValue mnsync(const JSONRPCRequest& request)
 }
 
 #ifdef ENABLE_WALLET
-class DescribeAddressVisitor : public boost::static_visitor<UniValue>
-{
-public:
-    explicit DescribeAddressVisitor() {}
-
-    UniValue operator()(const CNoDestination &dest) const { return UniValue(UniValue::VOBJ); }
-
-    UniValue operator()(const CKeyID &keyID) const {
-        UniValue obj(UniValue::VOBJ);
-        obj.pushKV("isscript", false);
-        obj.pushKV("iswitness", false);
-        return obj;
-    }
-
-    UniValue operator()(const CScriptID &scriptID) const {
-        UniValue obj(UniValue::VOBJ);
-        obj.pushKV("isscript", true);
-        obj.pushKV("iswitness", false);
-        return obj;
-    }
-
-    UniValue operator()(const WitnessV0KeyHash& id) const
-    {
-        UniValue obj(UniValue::VOBJ);
-        obj.pushKV("isscript", false);
-        obj.pushKV("iswitness", true);
-        obj.pushKV("witness_version", 0);
-        obj.pushKV("witness_program", HexStr(id.begin(), id.end()));
-        return obj;
-    }
-
-    UniValue operator()(const WitnessV0ScriptHash& id) const
-    {
-        UniValue obj(UniValue::VOBJ);
-        obj.pushKV("isscript", true);
-        obj.pushKV("iswitness", true);
-        obj.pushKV("witness_version", 0);
-        obj.pushKV("witness_program", HexStr(id.begin(), id.end()));
-        return obj;
-    }
-
-    UniValue operator()(const WitnessUnknown& id) const
-    {
-        UniValue obj(UniValue::VOBJ);
-        obj.pushKV("iswitness", true);
-        obj.pushKV("witness_version", (int)id.version);
-        obj.pushKV("witness_program", HexStr(id.program, id.program + id.length));
-        return obj;
-    }
-};
-
-#ifdef ENABLE_WALLET
 class DescribeWalletAddressVisitor : public boost::static_visitor<UniValue>
 {
 public:
@@ -307,10 +255,8 @@ UniValue validateaddress(const JSONRPCRequest& request)
         isminetype mine = pwallet ? IsMine(*pwallet, dest) : ISMINE_NO;
         ret.pushKV("ismine", bool(mine & ISMINE_SPENDABLE));
         ret.pushKV("iswatchonly", bool(mine & ISMINE_WATCH_ONLY));
-        UniValue detail = boost::apply_visitor(DescribeAddressVisitor(), dest);
+        UniValue detail = DescribeWalletAddress(pwallet, dest);
         ret.pushKVs(detail);
-        UniValue wallet_detail = boost::apply_visitor(DescribeWalletAddressVisitor(pwallet), dest);
-        ret.pushKVs(wallet_detail);
         if (pwallet && pwallet->mapAddressBook.count(dest)) {
             ret.pushKV("account", pwallet->mapAddressBook[dest].name);
         }
