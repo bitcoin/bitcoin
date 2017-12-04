@@ -131,6 +131,8 @@ public:
     /** Call any remaining callbacks on the calling thread */
     void FlushBackgroundCallbacks();
 
+    size_t CallbacksPending();
+
     /** Register with mempool to call TransactionRemovedFromMempool callbacks */
     void RegisterWithMempoolSignals(CTxMemPool& pool);
     /** Unregister with mempool */
