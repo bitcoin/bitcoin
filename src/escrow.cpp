@@ -1458,8 +1458,8 @@ UniValue escrowbid(const UniValue& params, bool fHelp) {
 
 	vector<unsigned char> vchAlias = vchFromValue(params[0]);
 	vector<unsigned char> vchEscrow = vchFromValue(params[1]);
-	CAmount nBid = AmountFromValue(params[2]);
-	float fBid = boost::lexical_cast<float>(params[3].get_str());
+	CAmount nBid = AmountFromValue(params[2].get_real());
+	float fBid = params[3].get_real();
 	uint64_t nHeight = chainActive.Tip()->nHeight;
 	// check for alias existence in DB
 	CAliasIndex bidalias;
@@ -1537,14 +1537,14 @@ UniValue escrowbid(const UniValue& params, bool fHelp) {
 UniValue escrowaddshipping(const UniValue& params, bool fHelp) {
 	if (fHelp || params.size() != 3)
 		throw runtime_error(
-			"escrowbid [escrow] [shipping amount] [witness]\n"
+			"escrowaddshipping [escrow] [shipping amount] [witness]\n"
 			"<escrow> Escrow GUID to add shipping to.\n"
 			"<shipping amount> Amount to add to shipping for merchant. Amount is in payment option currency. Example: If merchant requests 0.1 BTC for shipping and escrow is paid in BTC, enter 0.1 here.\n"
 			"<witness> Witness alias name that will sign for web-of-trust notarization of this transaction.\n"
 			+ HelpRequiringPassphrase());
 
 	vector<unsigned char> vchEscrow = vchFromValue(params[0]);
-	CAmount nShipping = AmountFromValue(params[1]);
+	CAmount nShipping = AmountFromValue(params[1].get_real());
 	uint64_t nHeight = chainActive.Tip()->nHeight;
 
 	vector<unsigned char> vchWitness;
@@ -1652,7 +1652,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 
 	nQty = params[4].get_int();
 	bool bBuyNow = params[5].get_bool();
-	CAmount nPricePerUnit = AmountFromValue(params[6]);
+	CAmount nPricePerUnit = AmountFromValue(params[6].get_real());
 	
 	uint64_t nHeight = chainActive.Tip()->nHeight;
 	boost::algorithm::to_lower(strArbiter);
@@ -2597,7 +2597,7 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 	int nRating = 0;
 	vector<unsigned char> vchFeedback;
 	vchFeedback = vchFromValue(params[2]);
-	nRating = boost::lexical_cast<int>(params[3].get_str());
+	nRating = params[3].get_int();
 	string userto = params[4].get_str();
 	vector<unsigned char> vchWitness;
 	vchWitness = vchFromValue(params[5]);
