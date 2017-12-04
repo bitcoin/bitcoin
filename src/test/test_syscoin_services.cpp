@@ -686,7 +686,7 @@ string AliasTransfer(const string& node, const string& aliasname, const string& 
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "type").get_str(), "Alias Updated");
 
 	BOOST_CHECK(balanceAfter >= (balanceBefore-COIN));
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str() , pubdata != "\"\""? pubdata: oldvalue);
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str() , newpubdata);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "encryption_publickey").get_str() , encryptionkey);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "encryption_privatekey").get_str() , encryptionprivkey);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "address").get_str() , aliasAddress.ToString());
@@ -696,7 +696,7 @@ string AliasTransfer(const string& node, const string& aliasname, const string& 
 	balanceAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
 	BOOST_CHECK_NO_THROW(r = CallRPC(tonode, "aliasinfo " + aliasname));
 	BOOST_CHECK(balanceAfter >= (balanceBefore-COIN));
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str() , pubdata != "\"\""? pubdata: oldvalue);
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str() , newpubdata);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "encryption_publickey").get_str() , encryptionkey);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "encryption_privatekey").get_str() , encryptionprivkey);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "address").get_str() , aliasAddress.ToString());
@@ -745,12 +745,12 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasbalance " + aliasname));
 	CAmount balanceAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasinfo " + aliasname));
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "address").get_str() , addressStr != "\"\""? addressStr: oldAddressStr);
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "address").get_str() , newAddressStr);
 	
 	BOOST_CHECK(abs(balanceBefore-balanceAfter) < COIN);
 	BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == aliasname);
 
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str() , pubdata != "\"\""? pubdata: oldvalue);
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str() , newpubdata);
 	
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "encryption_publickey").get_str() , encryptionkey);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "encryption_privatekey").get_str() , encryptionprivkey);
@@ -770,14 +770,14 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode1, "aliasbalance " + aliasname));
 		balanceAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
 		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode1, "aliasinfo " + aliasname));
-		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "address").get_str() , addressStr != "\"\""? addressStr: oldAddressStr);
+		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "address").get_str() , newAddressStr);
 		
 		BOOST_CHECK(abs(balanceBefore-balanceAfter) < COIN);	
 		BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == aliasname);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), false);
 
 		
-		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str() , pubdata != "\"\""? pubdata: oldvalue);
+		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str() , newpubdata);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "encryption_publickey").get_str() , encryptionkey);
 
 	}
@@ -786,13 +786,13 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode2, "aliasbalance " + aliasname));
 		balanceAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
 		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode2, "aliasinfo " + aliasname));
-		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "address").get_str() , addressStr != "\"\""? addressStr: oldAddressStr);
+		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "address").get_str() , newAddressStr);
 		
 		BOOST_CHECK(abs(balanceBefore-balanceAfter) < COIN);
 		BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == aliasname);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), false);
 
-		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str() , pubdata != "\"\""? pubdata: oldvalue);
+		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str() , newpubdata);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "encryption_publickey").get_str() , encryptionkey);
 	}
 	return "";
