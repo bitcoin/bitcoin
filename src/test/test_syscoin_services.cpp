@@ -719,8 +719,8 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasbalance " + aliasname));
 	CAmount balanceBefore = AmountFromValue(find_value(r.get_obj(), "balance"));
 
-	string newpubdata = pubdata == "''" ? oldvalue : pubdata;
-	string newAddressStr = addressStr == "''" ? oldAddressStr : addressStr;
+	string newpubdata = pubdata == "''" || pubdata == "\"\"" ? oldvalue : pubdata;
+	string newAddressStr = addressStr == "''" || addressStr == "\"\"" ? oldAddressStr : addressStr;
 	string acceptTransfers = bAcceptTransfers ? "true" : "false";
 	// "aliasupdate <aliasname> [public value]  [address] [accept_transfers=true] [expire_timestamp] [encryption_privatekey] [encryption_publickey] [witness]\n"
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasupdate " + aliasname + " " + newpubdata + " " + newAddressStr + " " + acceptTransfers + " " + expires + " " + encryptionprivkey + " " + encryptionkey + " " + witness));
@@ -986,8 +986,8 @@ void CertUpdate(const string& node, const string& guid, const string& title, con
 	string oldpubdata = find_value(r.get_obj(), "publicvalue").get_str();
 	string oldtitle = find_value(r.get_obj(), "title").get_str();
 
-	string newpubdata = pubdata == "''" ? oldpubdata : pubdata;
-	string newtitle = title == "''" ? oldtitle : title;
+	string newpubdata = pubdata == "''" || pubdata == "\"\"" ? oldpubdata : pubdata;
+	string newtitle = title == "''" || title == "\"\"" ? oldtitle : title;
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasinfo " + oldalias));
 
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "certupdate " + guid + " " + newtitle + " " + newpubdata + " certificates " + witness));
