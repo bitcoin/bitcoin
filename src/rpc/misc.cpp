@@ -190,6 +190,15 @@ public:
         return obj;
     }
 };
+
+UniValue DescribeWalletAddress(CWallet* pwallet, const CTxDestination& dest)
+{
+    UniValue ret(UniValue::VOBJ);
+    UniValue detail = DescribeAddress(dest);
+    ret.pushKVs(detail);
+    ret.pushKVs(boost::apply_visitor(DescribeWalletAddressVisitor(pwallet), dest));
+    return ret;
+}
 #endif
 
 UniValue validateaddress(const JSONRPCRequest& request)
@@ -262,7 +271,7 @@ UniValue validateaddress(const JSONRPCRequest& request)
         isminetype mine = pwallet ? IsMine(*pwallet, dest) : ISMINE_NO;
         ret.pushKV("ismine", bool(mine & ISMINE_SPENDABLE));
         ret.pushKV("iswatchonly", bool(mine & ISMINE_WATCH_ONLY));
-        UniValue detail = boost::apply_visitor(DescribeAddressVisitor(pwallet), dest);
+        UniValue detail = DescribeWalletAddress(pwallet, dest);
         ret.pushKVs(detail);
         if (pwallet && pwallet->mapAddressBook.count(dest)) {
             ret.pushKV("account", pwallet->mapAddressBook[dest].name);
@@ -290,6 +299,8 @@ UniValue validateaddress(const JSONRPCRequest& request)
                 }
             }
         }
+#else
+        ret.pushKvs = DescribeAddress(dest);
 #endif
     }
     return ret;
