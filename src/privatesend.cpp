@@ -19,15 +19,6 @@
 
 #include <boost/lexical_cast.hpp>
 
-CDarkSendEntry::CDarkSendEntry(const std::vector<CTxIn>& vecTxIn, const std::vector<CTxOut>& vecTxOut, const CTransaction& txCollateral) :
-    txCollateral(txCollateral), addr(CService())
-{
-    BOOST_FOREACH(CTxIn txin, vecTxIn)
-        vecTxDSIn.push_back(txin);
-    BOOST_FOREACH(CTxOut txout, vecTxOut)
-        vecTxDSOut.push_back(txout);
-}
-
 bool CDarkSendEntry::AddScriptSig(const CTxIn& txin)
 {
     BOOST_FOREACH(CTxDSIn& txdsin, vecTxDSIn) {
@@ -35,7 +26,6 @@ bool CDarkSendEntry::AddScriptSig(const CTxIn& txin)
             if(txdsin.fHasSig) return false;
 
             txdsin.scriptSig = txin.scriptSig;
-            txdsin.prevPubKey = txin.prevPubKey;
             txdsin.fHasSig = true;
 
             return true;
@@ -128,6 +118,21 @@ void CPrivateSendBase::SetNull()
     nTimeLastSuccessfulStep = GetTimeMillis();
 }
 
+void CPrivateSendBase::CheckQueue()
+{
+    TRY_LOCK(cs_darksend, lockDS);
+    if(!lockDS) return; // it's ok to fail here, we run this quite frequently
+
+    // check mixing queue objects for timeouts
+    std::vector<CDarksendQueue>::iterator it = vecDarksendQueue.begin();
+    while(it != vecDarksendQueue.end()) {
+        if((*it).IsExpired()) {
+            LogPrint("privatesend", "CPrivateSendBase::%s -- Removing expired queue (%s)\n", __func__, (*it).ToString());
+            it = vecDarksendQueue.erase(it);
+        } else ++it;
+    }
+}
+
 std::string CPrivateSendBase::GetStateString() const
 {
     switch(nState) {
@@ -217,6 +222,14 @@ bool CPrivateSend::IsCollateralValid(const CTransaction& txCollateral)
     return true;
 }
 
+bool CPrivateSend::IsCollateralAmount(CAmount nInputAmount)
+{
+    // collateral inputs should always be a 2x..4x of mixing collateral
+    return  nInputAmount >  GetCollateralAmount() &&
+            nInputAmount <= GetMaxCollateralAmount() &&
+            nInputAmount %  GetCollateralAmount() == 0;
+}
+
 /*  Create a nice string to show the denominations
     Function returns as follows (for 4 denominations):
         ( bit on if present )
@@ -247,16 +260,6 @@ std::string CPrivateSend::GetDenominationsToString(int nDenom)
     }
 
     return strDenom;
-}
-
-int CPrivateSend::GetDenominations(const std::vector<CTxDSOut>& vecTxDSOut)
-{
-    std::vector<CTxOut> vecTxOut;
-
-    BOOST_FOREACH(CTxDSOut out, vecTxDSOut)
-        vecTxOut.push_back(out);
-
-    return GetDenominations(vecTxOut);
 }
 
 /*  Return a bitshifted integer representing the denominations in this list
@@ -334,6 +337,14 @@ int CPrivateSend::GetDenominationsByAmounts(const std::vector<CAmount>& vecAmoun
     }
 
     return GetDenominations(vecTxOut, true);
+}
+
+bool CPrivateSend::IsDenominatedAmount(CAmount nInputAmount)
+{
+    for (const auto& nDenomValue : vecStandardDenominations)
+        if(nInputAmount == nDenomValue)
+            return true;
+    return false;
 }
 
 std::string CPrivateSend::GetMessageByID(PoolMessage nMessageID)

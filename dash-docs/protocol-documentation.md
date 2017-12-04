@@ -172,7 +172,7 @@ When queue is ready user is expected to send his entry to start actual mixing
 | ? | vecTxDSIn | CTxDSIn[] | vector of users inputs (CTxDSIn serialization is equal to [CTxIn](#ctxin) serialization)
 | 8 | nAmount | int64_t | depreciated since 12.1, it's used for backwards compatibility only and can be removed with future protocol bump
 | ? | txCollateral | [CTransaction](#ctransaction) | Collateral transaction which is used to prevent misbehavior and also to charge fees randomly
-| ? | vecTxDSOut | CTxDSOut[] | vector of user outputs (CTxDSOut serialization is equal to [CTxOut](#ctxout) serialization)
+| ? | vecTxOut | CTxOut[] | vector of user outputs
 
 ### DSSIGNFINALTX - "dss"
 

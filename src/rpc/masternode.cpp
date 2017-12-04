@@ -75,18 +75,19 @@ UniValue getpoolinfo(const UniValue& params, bool fHelp)
             "Returns an object containing mixing pool related information.\n");
 
 #ifdef ENABLE_WALLET
-    CPrivateSendBase privateSend = fMasterNode ? (CPrivateSendBase)privateSendServer : (CPrivateSendBase)privateSendClient;
+    CPrivateSendBase* pprivateSendBase = fMasterNode ? (CPrivateSendBase*)&privateSendServer : (CPrivateSendBase*)&privateSendClient;
 
     UniValue obj(UniValue::VOBJ);
-    obj.push_back(Pair("state",             privateSend.GetStateString()));
+    obj.push_back(Pair("state",             pprivateSendBase->GetStateString()));
     obj.push_back(Pair("mixing_mode",       (!fMasterNode && privateSendClient.fPrivateSendMultiSession) ? "multi-session" : "normal"));
-    obj.push_back(Pair("queue",             privateSend.GetQueueSize()));
-    obj.push_back(Pair("entries",           privateSend.GetEntriesCount()));
+    obj.push_back(Pair("queue",             pprivateSendBase->GetQueueSize()));
+    obj.push_back(Pair("entries",           pprivateSendBase->GetEntriesCount()));
     obj.push_back(Pair("status",            privateSendClient.GetStatus()));
 
-    if (privateSendClient.infoMixingMasternode.fInfoValid) {
-        obj.push_back(Pair("outpoint",      privateSendClient.infoMixingMasternode.vin.prevout.ToStringShort()));
-        obj.push_back(Pair("addr",          privateSendClient.infoMixingMasternode.addr.ToString()));
+    masternode_info_t mnInfo;
+    if (privateSendClient.GetMixingMasternodeInfo(mnInfo)) {
+        obj.push_back(Pair("outpoint",      mnInfo.vin.prevout.ToStringShort()));
+        obj.push_back(Pair("addr",          mnInfo.addr.ToString()));
     }
 
     if (pwalletMain) {
