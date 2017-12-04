@@ -1908,7 +1908,7 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 		newAlias.vchEncryptionPrivateKey = ParseHex(strEncryptionPrivateKey);
 	newAlias.vchPublicValue = vchPublicValue;
 	newAlias.nExpireTime = nTime;
-	newAlias.acceptCertTransfers = strAcceptCertTransfers == "true"? true: false;
+	newAlias.acceptCertTransfers = bAcceptCertTransfers;
 	if(strAddress.empty())
 	{
 		// generate new address in this wallet if not passed in
@@ -2045,9 +2045,9 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	theAlias.nHeight = chainActive.Tip()->nHeight;
 	if(strPublicValue != stringFromVch(copyAlias.vchPublicValue))
 		theAlias.vchPublicValue = vchFromString(strPublicValue);
-	if(strEncryptionPrivateKey != ParseHex(copyAlias.vchEncryptionPrivateKey))
+	if(strEncryptionPrivateKey != HexStr(copyAlias.vchEncryptionPrivateKey))
 		theAlias.vchEncryptionPrivateKey = ParseHex(strEncryptionPrivateKey);
-	if(!strEncryptionPublicKey != ParseHex(copyAlias.vchEncryptionPublicKey))
+	if(strEncryptionPublicKey != HexStr(copyAlias.vchEncryptionPublicKey))
 		theAlias.vchEncryptionPublicKey = ParseHex(strEncryptionPublicKey);
 
 	if(strAddress != EncodeBase58(copyAlias.vchAddress))
