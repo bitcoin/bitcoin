@@ -44,6 +44,8 @@ public:
         DatabaseCache,          // int
         SpendZeroConfChange,    // bool
         Listen,                 // bool
+        EnableSystemnodes,      // bool
+        EnableMasternodes,      // bool
         OptionIDRowCount,
     };
 
@@ -63,6 +65,8 @@ public:
     QString getThirdPartyTxUrls() { return strThirdPartyTxUrls; }
     bool getProxySettings(QNetworkProxy& proxy) const;
     bool getCoinControlFeatures() { return fCoinControlFeatures; }
+    bool getSystemnodesEnabled() { return fEnableSystemnodes; }
+    bool getMasternodesEnabled() { return fEnableMasternodes; }
     const QString& getOverriddenByCommandLine() { return strOverriddenByCommandLine; }
 
     /* Restart flag helper */
@@ -78,6 +82,8 @@ private:
     int nDisplayUnit;
     QString strThirdPartyTxUrls;
     bool fCoinControlFeatures;
+    bool fEnableSystemnodes;
+    bool fEnableMasternodes;
     /* settings that were overriden by command-line */
     QString strOverriddenByCommandLine;
 
@@ -87,6 +93,8 @@ private:
 signals:
     void displayUnitChanged(int unit);
     void coinControlFeaturesChanged(bool);
+    void enableSystemnodesChanged(bool);
+    void enableMasternodesChanged(bool);
 };
 
 #endif // BITCOIN_QT_OPTIONSMODEL_H

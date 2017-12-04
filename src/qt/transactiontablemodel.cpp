@@ -539,8 +539,6 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
             return rec->time;
         case Type:
             return formatTxType(rec);
-        case TypeEnum:
-            return rec->type;
         case Watchonly:
             return (rec->involvesWatchAddress ? 1 : 0);
         case ToAddress:

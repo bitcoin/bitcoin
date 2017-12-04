@@ -430,13 +430,48 @@ void SystemnodeList::on_CreateNewSystemnode_clicked()
     if (dialog->exec())
     {
         // OK Pressed
-        QString label = "";
+        QString label = dialog->getLabel();
         QString address = walletModel->getAddressTableModel()->addRow(AddressTableModel::Receive, label, "");
-        SendCoinsRecipient recipient(address, "", SYSTEMNODE_COLLATERAL * COIN, "");
+        SendCoinsRecipient recipient(address, label, SYSTEMNODE_COLLATERAL * COIN, "");
         SendCollateralDialog *sendDialog = new SendCollateralDialog();
         sendDialog->setModel(walletModel);
         QList<SendCoinsRecipient> recipients;
         recipients.append(recipient);
+
+        // Get outputs before and after transaction
+        std::vector<COutput> vPossibleCoinsBefore;
+        pwalletMain->AvailableCoins(vPossibleCoinsBefore, true, NULL, ONLY_500);
+
+        sendDialog->send(recipients);
+
+        std::vector<COutput> vPossibleCoinsAfter;
+        pwalletMain->AvailableCoins(vPossibleCoinsAfter, true, NULL, ONLY_500);
+
+        bool found = false;
+        BOOST_FOREACH(COutput& out, vPossibleCoinsAfter) {
+            std::vector<COutput>::iterator it = std::find(vPossibleCoinsBefore.begin(), vPossibleCoinsBefore.end(), out);
+            if (it == vPossibleCoinsBefore.end()) {
+                // Not found so this is a new element
+                found = true;
+
+                COutPoint outpoint = COutPoint(out.tx->GetHash(), boost::lexical_cast<unsigned int>(out.i));
+                pwalletMain->LockCoin(outpoint);
+
+                // Generate a key
+                CKey secret;
+                secret.MakeNewKey(false);
+                std::string privateKey = CBitcoinSecret(secret).ToString();
+                std::string port = "9340";
+                if (Params().NetworkID() == CBaseChainParams::TESTNET) {
+                    port = "19340";
+                }
+
+                systemnodeConfig.add(dialog->getAlias().toStdString(), dialog->getIP().toStdString() + ":" + port, 
+                        privateKey, out.tx->GetHash().ToString(), strprintf("%d", out.i));
+                systemnodeConfig.write();
+                updateMyNodeList(true);
+            }
+        }
     } else {
         // Cancel Pressed
     }

@@ -89,6 +89,8 @@ private:
     QProgressDialog *progressDialog;
 
     QMenuBar *appMenuBar;
+    QToolBar *toolbar;
+    QActionGroup *tabGroup;
     QAction *overviewAction;
     QAction *historyAction;
     QAction *masternodeAction;
@@ -175,6 +177,8 @@ public slots:
        @param[in] ret       pointer to a bool that will be modified to whether Ok was clicked (modal only)
     */
     void message(const QString &title, const QString &message, unsigned int style, bool *ret = NULL);
+    void guiEnableSystemnodesChanged(bool);
+    void guiEnableMasternodesChanged(bool);
 
 #ifdef ENABLE_WALLET
     /** Set the encryption status as shown in the UI.
@@ -188,6 +192,10 @@ public slots:
     /** Show incoming transaction notification for new transactions. */
     void incomingTransaction(const QString& date, int unit, const CAmount& amount, const QString& type, const QString& address);
 #endif // ENABLE_WALLET
+
+private:
+    void enableSystemnodes(bool);
+    void enableMasternodes(bool);
 
 private slots:
 #ifdef ENABLE_WALLET

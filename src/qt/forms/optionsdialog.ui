@@ -163,6 +163,26 @@
             </property>
            </widget>
           </item>
+          <item>
+           <widget class="QCheckBox" name="enableSystemnodes">
+            <property name="toolTip">
+             <string>Show systemnodes tab</string>
+            </property>
+            <property name="text">
+             <string>&amp;Enable Systemnodes</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="enableMasternodes">
+            <property name="toolTip">
+             <string>Show masternodes tab</string>
+            </property>
+            <property name="text">
+             <string>&amp;Enable Masternodes</string>
+            </property>
+           </widget>
+          </item>
          </layout>
         </widget>
        </item>

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>251</width>
-    <height>192</height>
+    <width>250</width>
+    <height>282</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -16,9 +16,9 @@
   <widget class="QDialogButtonBox" name="buttonBox">
    <property name="geometry">
     <rect>
-     <x>30</x>
-     <y>140</y>
-     <width>181</width>
+     <x>34</x>
+     <y>220</y>
+     <width>180</width>
      <height>32</height>
     </rect>
    </property>
@@ -33,7 +33,7 @@
    <property name="geometry">
     <rect>
      <x>40</x>
-     <y>30</y>
+     <y>60</y>
      <width>171</width>
      <height>27</height>
     </rect>
@@ -43,7 +43,7 @@
    <property name="geometry">
     <rect>
      <x>40</x>
-     <y>90</y>
+     <y>120</y>
      <width>171</width>
      <height>27</height>
     </rect>
@@ -53,26 +53,80 @@
    <property name="geometry">
     <rect>
      <x>40</x>
-     <y>10</y>
+     <y>40</y>
      <width>67</width>
      <height>17</height>
     </rect>
    </property>
    <property name="text">
-    <string>Alias</string>
+    <string>Alias*</string>
    </property>
   </widget>
   <widget class="QLabel" name="ipLabel">
    <property name="geometry">
     <rect>
      <x>40</x>
-     <y>70</y>
+     <y>100</y>
      <width>181</width>
      <height>17</height>
     </rect>
    </property>
    <property name="text">
-    <string>IP Address (without port)</string>
+    <string>IP Address (without port)*</string>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="labelEdit">
+   <property name="geometry">
+    <rect>
+     <x>40</x>
+     <y>180</y>
+     <width>171</width>
+     <height>27</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label">
+   <property name="geometry">
+    <rect>
+     <x>40</x>
+     <y>160</y>
+     <width>67</width>
+     <height>17</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Label</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="errorLabel">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>10</y>
+     <width>231</width>
+     <height>17</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_2">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>260</y>
+     <width>221</width>
+     <height>17</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>8</pointsize>
+    </font>
+   </property>
+   <property name="text">
+    <string>*This action will send 500 tCRW to yourself</string>
    </property>
   </widget>
  </widget>

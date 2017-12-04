@@ -126,6 +126,9 @@ void WalletView::setBitcoinGUI(BitcoinGUI *gui)
 
         // Pass through transaction notifications
         connect(this, SIGNAL(incomingTransaction(QString,int,CAmount,QString,QString)), gui, SLOT(incomingTransaction(QString,int,CAmount,QString,QString)));
+
+        connect(this, SIGNAL(guiEnableSystemnodesChanged(bool)), gui, SLOT(guiEnableSystemnodesChanged(bool)));
+        connect(this, SIGNAL(guiEnableMasternodesChanged(bool)), gui, SLOT(guiEnableMasternodesChanged(bool)));
     }
 }
 
@@ -177,6 +180,12 @@ void WalletView::setWalletModel(WalletModel *walletModel)
 
         // Show progress dialog
         connect(walletModel, SIGNAL(showProgress(QString,int)), this, SLOT(showProgress(QString,int)));
+
+        // Enable systemnodes tab 
+        connect(walletModel->getOptionsModel(), SIGNAL(enableSystemnodesChanged(bool)), this, SLOT(enableSystemnodesChanged(bool)));
+        
+        // Enable masternodes tab 
+        connect(walletModel->getOptionsModel(), SIGNAL(enableMasternodesChanged(bool)), this, SLOT(enableMasternodesChanged(bool)));
     }
 }
 
@@ -197,51 +206,52 @@ void WalletView::processNewTransaction(const QModelIndex& parent, int start, int
 
     // If payment is 500 or 10000 CRW ask to create a Systemnode/Masternode
     qint64 credit = ttm->index(start, TransactionTableModel::AmountCredit, parent).data(Qt::EditRole).toULongLong();
-    int typeEnum = ttm->index(start, TransactionTableModel::TypeEnum, parent).data(Qt::EditRole).toInt();
+    int typeEnum = ttm->index(start, 0, parent).data(TransactionTableModel::TypeRole).toInt();
 
-    if (typeEnum == TransactionRecord::SendToSelf && (credit == SYSTEMNODE_COLLATERAL * COIN || credit == MASTERNODE_COLLATERAL * COIN))
-    {
-        AvailableCoinsType coin_type = ONLY_500;
-        QString title = tr("Payment to yourself - ") + 
-            BitcoinUnits::formatWithUnit(walletModel->getOptionsModel()->getDisplayUnit(), credit);
-        QString body = tr("Do you want to create a new ");
-        if (credit == SYSTEMNODE_COLLATERAL * COIN)
-        {
-            body += "Systemnode?";
-        }
-        else if (credit == MASTERNODE_COLLATERAL * COIN)
-        {
-            body += "Masternode?";
-            coin_type = ONLY_10000;
-        }
+    // Payment to yourself, SN or MN
+    //if (typeEnum == TransactionRecord::SendToSelf && (credit == SYSTEMNODE_COLLATERAL * COIN || credit == MASTERNODE_COLLATERAL * COIN))
+    //{
+    //    AvailableCoinsType coin_type = ONLY_500;
+    //    QString title = tr("Payment to yourself - ") + 
+    //        BitcoinUnits::formatWithUnit(walletModel->getOptionsModel()->getDisplayUnit(), credit);
+    //    QString body = tr("Do you want to create a new ");
+    //    if (credit == SYSTEMNODE_COLLATERAL * COIN)
+    //    {
+    //        body += "Systemnode?";
+    //    }
+    //    else if (credit == MASTERNODE_COLLATERAL * COIN)
+    //    {
+    //        body += "Masternode?";
+    //        coin_type = ONLY_10000;
+    //    }
 
-        // Display message box
-        QMessageBox::StandardButton retval = QMessageBox::question(this, title, body,
-                QMessageBox::Yes | QMessageBox::Cancel,
-                QMessageBox::Cancel);
+    //    // Display message box
+    //    QMessageBox::StandardButton retval = QMessageBox::question(this, title, body,
+    //            QMessageBox::Yes | QMessageBox::Cancel,
+    //            QMessageBox::Cancel);
 
-        if(retval == QMessageBox::Yes)
-        {
-            QString hash = ttm->index(start, 0, parent).data(TransactionTableModel::TxHashRole).toString();
-            std::vector<COutput> vPossibleCoins;
-            pwalletMain->AvailableCoins(vPossibleCoins, true, NULL, coin_type);
-            BOOST_FOREACH(COutput& out, vPossibleCoins) {
-                if (out.tx->GetHash().ToString() == hash.toStdString())
-                {
-                    COutPoint outpoint = COutPoint(out.tx->GetHash(), boost::lexical_cast<unsigned int>(out.i));
-                    pwalletMain->LockCoin(outpoint);
+    //    if(retval == QMessageBox::Yes)
+    //    {
+    //        QString hash = ttm->index(start, 0, parent).data(TransactionTableModel::TxHashRole).toString();
+    //        std::vector<COutput> vPossibleCoins;
+    //        pwalletMain->AvailableCoins(vPossibleCoins, true, NULL, coin_type);
+    //        BOOST_FOREACH(COutput& out, vPossibleCoins) {
+    //            if (out.tx->GetHash().ToString() == hash.toStdString())
+    //            {
+    //                COutPoint outpoint = COutPoint(out.tx->GetHash(), boost::lexical_cast<unsigned int>(out.i));
+    //                pwalletMain->LockCoin(outpoint);
 
-                    // Generate a key
-                    CKey secret;
-                    secret.MakeNewKey(false);
-                    std::string privateKey = CBitcoinSecret(secret).ToString();
+    //                // Generate a key
+    //                CKey secret;
+    //                secret.MakeNewKey(false);
+    //                std::string privateKey = CBitcoinSecret(secret).ToString();
 
-                    systemnodeConfig.add("", "", privateKey, hash.toStdString(), strprintf("%d", out.i));
-                    systemnodeListPage->updateMyNodeList(true);
-                }
-            }
-        }
-    }
+    //                systemnodeConfig.add("", "", privateKey, hash.toStdString(), strprintf("%d", out.i));
+    //                systemnodeListPage->updateMyNodeList(true);
+    //            }
+    //        }
+    //    }
+    //}
     emit incomingTransaction(date, walletModel->getOptionsModel()->getDisplayUnit(), amount, type, address);
 }
 
@@ -270,14 +280,14 @@ void WalletView::gotoSendCoinsPage(QString addr)
 
 void WalletView::gotoMasternodePage()
 {
-    if (masternodeConfig.getCount() >= 0) {
+    if (masternodeConfig.getCount() >= 0 || walletModel->getOptionsModel()->getMasternodesEnabled()) {
         setCurrentWidget(masternodeListPage);
     }
 }
 
 void WalletView::gotoSystemnodePage()
 {
-    if (systemnodeConfig.getCount() >= 0) {
+    if (systemnodeConfig.getCount() >= 0 || walletModel->getOptionsModel()->getSystemnodesEnabled()) {
         setCurrentWidget(systemnodeListPage);
     }
 }
@@ -436,4 +446,30 @@ void WalletView::showProgress(const QString &title, int nProgress)
 void WalletView::trxAmount(QString amount)
 {
     transactionSum->setText(amount);
+}
+
+/** Enable systemnodes tab */
+void WalletView::enableSystemnodesChanged(bool enabled)
+{
+    if (enabled && systemnodeListPage == NULL)
+    {
+        systemnodeListPage = new SystemnodeList();
+        addWidget(systemnodeListPage);
+        systemnodeListPage->setClientModel(clientModel);
+        systemnodeListPage->setWalletModel(walletModel);
+    }
+    emit guiEnableSystemnodesChanged(enabled);
+}
+
+/** Enabled masternodes tab */
+void WalletView::enableMasternodesChanged(bool enabled)
+{
+    if (enabled && masternodeListPage == NULL)
+    {
+        masternodeListPage = new MasternodeList();
+        addWidget(masternodeListPage);
+        masternodeListPage->setClientModel(clientModel);
+        masternodeListPage->setWalletModel(walletModel);
+    }
+    emit guiEnableMasternodesChanged(enabled);
 }

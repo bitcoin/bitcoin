@@ -33,8 +33,7 @@ public:
         Type = 3,
         ToAddress = 4,
         Amount = 5,
-        AmountCredit = 6,
-        TypeEnum = 7
+        AmountCredit = 6
     };
 
     /** Roles to get specific information from a transaction row.

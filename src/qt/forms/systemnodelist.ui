@@ -144,6 +144,13 @@
               <number>0</number>
              </property>
              <item>
+              <widget class="QPushButton" name="CreateNewSystemnode">
+               <property name="text">
+                <string>&amp;New Systemnode</string>
+               </property>
+              </widget>
+             </item>
+             <item>
               <widget class="QPushButton" name="startButton">
                <property name="text">
                 <string>S&amp;tart alias</string>
@@ -168,13 +175,6 @@
               <widget class="QPushButton" name="UpdateButton">
                <property name="text">
                 <string>&amp;Update status</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QPushButton" name="CreateNewSystemnode">
-               <property name="text">
-                <string>&amp;New Systemnode</string>
                </property>
               </widget>
              </item>

@@ -71,6 +71,14 @@ void OptionsModel::Init()
         settings.setValue("fCoinControlFeatures", false);
     fCoinControlFeatures = settings.value("fCoinControlFeatures", false).toBool();
 
+    if (!settings.contains("fEnableSystemnodes"))
+        settings.setValue("fEnableSystemnodes", false);
+    fEnableSystemnodes = settings.value("fEnableSystemnodes", false).toBool();
+
+    if (!settings.contains("fEnableMasternodes"))
+        settings.setValue("fEnableMasternodes", false);
+    fEnableMasternodes = settings.value("fEnableMasternodes", false).toBool();
+
     // These are shared with the core or have a command-line parameter
     // and we want command-line parameters to overwrite the GUI settings.
     //
@@ -201,6 +209,10 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
             return settings.value("language");
         case CoinControlFeatures:
             return fCoinControlFeatures;
+        case EnableSystemnodes:
+            return fEnableSystemnodes;
+        case EnableMasternodes:
+            return fEnableMasternodes;
         case DatabaseCache:
             return settings.value("nDatabaseCache");
         case ThreadsScriptVerif:
@@ -310,6 +322,16 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
             fCoinControlFeatures = value.toBool();
             settings.setValue("fCoinControlFeatures", fCoinControlFeatures);
             emit coinControlFeaturesChanged(fCoinControlFeatures);
+            break;
+        case EnableSystemnodes:
+            fEnableSystemnodes = value.toBool();
+            settings.setValue("fEnableSystemnodes", fEnableSystemnodes);
+            emit enableSystemnodesChanged(fEnableSystemnodes);
+            break;
+        case EnableMasternodes:
+            fEnableMasternodes = value.toBool();
+            settings.setValue("fEnableMasternodes", fEnableMasternodes);
+            emit enableMasternodesChanged(fEnableMasternodes);
             break;
         case DatabaseCache:
             if (settings.value("nDatabaseCache") != value) {

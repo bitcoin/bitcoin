@@ -125,6 +125,12 @@ public slots:
     /** Update selected CRW amount from transactionview */
     void trxAmount(QString amount);
 
+    /** Enable systemnodes tab */
+    void enableSystemnodesChanged(bool);
+
+    /** Enabled masternodes tab */
+    void enableMasternodesChanged(bool);
+
 signals:
     /** Signal that we want to show the main window */
     void showNormalIfMinimized();
@@ -134,6 +140,8 @@ signals:
     void encryptionStatusChanged(int status);
     /** Notify that a new transaction appeared */
     void incomingTransaction(const QString& date, int unit, const CAmount& amount, const QString& type, const QString& address);
+    void guiEnableSystemnodesChanged(bool);
+    void guiEnableMasternodesChanged(bool);
 };
 
 #endif // BITCOIN_QT_WALLETVIEW_H

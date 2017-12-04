@@ -18,6 +18,8 @@ public:
 public:
     QString getAlias();
     QString getIP();
+    QString getLabel();
+    void done(int);
 
 private:
     Ui::CreateSystemnodeDialog *ui;
