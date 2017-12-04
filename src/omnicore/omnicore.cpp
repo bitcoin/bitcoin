@@ -290,6 +290,17 @@ int64_t getUserAvailableMPbalance(const std::string& address, uint32_t propertyI
     return money;
 }
 
+int64_t getUserFrozenMPbalance(const std::string& address, uint32_t propertyId)
+{
+    int64_t frozen = 0;
+
+    if (isAddressFrozen(address, propertyId)) {
+        frozen = getMPbalance(address, propertyId, BALANCE);
+    }
+
+    return frozen;
+}
+
 bool mastercore::isTestEcosystemProperty(uint32_t propertyId)
 {
     if ((OMNI_PROPERTY_TMSC == propertyId) || (TEST_ECO_PROPERTY_1 <= propertyId)) return true;

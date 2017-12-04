@@ -298,6 +298,7 @@ extern std::set<uint32_t> global_wallet_property_list;
 
 int64_t getMPbalance(const std::string& address, uint32_t propertyId, TallyType ttype);
 int64_t getUserAvailableMPbalance(const std::string& address, uint32_t propertyId);
+int64_t getUserFrozenMPbalance(const std::string& address, uint32_t propertyId);
 
 /** Global handler to initialize Omni Core. */
 int mastercore_init();
