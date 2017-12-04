@@ -986,9 +986,11 @@ void CertUpdate(const string& node, const string& guid, const string& title, con
 	string oldpubdata = find_value(r.get_obj(), "publicvalue").get_str();
 	string oldtitle = find_value(r.get_obj(), "title").get_str();
 
+	string newpubdata = pubdata == "''" ? oldpubdata : pubdata;
+	string newtitle = title == "''" ? oldtitle : title;
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasinfo " + oldalias));
 
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "certupdate " + guid + " " + title + " " + pubdata + " certificates " + witness));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "certupdate " + guid + " " + newtitle + " " + newpubdata + " certificates " + witness));
 	UniValue arr = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + arr[0].get_str()));
 	string hex_str = find_value(r.get_obj(), "hex").get_str();
@@ -1012,15 +1014,15 @@ void CertUpdate(const string& node, const string& guid, const string& title, con
 
 	BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == guid);
 	BOOST_CHECK(find_value(r.get_obj(), "alias").get_str() == oldalias);
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "title").get_str(), title != "\"\""? title: oldtitle);
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "title").get_str(), newtitle);
 
 	if(!otherNode1.empty())
 	{
 		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode1, "certinfo " + guid));
 		BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == guid);
 		BOOST_CHECK(find_value(r.get_obj(), "alias").get_str() == oldalias);
-		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str() , pubdata != "\"\""? pubdata: oldpubdata);
-		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "title").get_str(), title != "\"\""? title: oldtitle);
+		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str() , newpubdata);
+		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "title").get_str(), newtitle);
 
 	}
 	if(!otherNode2.empty())
@@ -1028,8 +1030,8 @@ void CertUpdate(const string& node, const string& guid, const string& title, con
 		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode2, "certinfo " + guid));
 		BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == guid);
 		BOOST_CHECK(find_value(r.get_obj(), "alias").get_str() == oldalias);
-		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str() , pubdata != "\"\""? pubdata: oldpubdata);
-		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "title").get_str(), title != "\"\""? title: oldtitle);
+		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str() , newpubdata);
+		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "title").get_str(), newtitle);
 
 	}
 }
