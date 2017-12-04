@@ -66,7 +66,7 @@ void OptionsModel::Init()
     if (!language.isEmpty())
         SoftSetArg("-lang", language.toStdString());
     if (settings.contains("fCheckpointEnforce"))
-        SoftSetBoolArg("-checkpointenforce", settings.value("fCheckpointEnforce").toBool());
+        SoftSetBoolArg("-enforcecheckpoint", settings.value("fCheckpointEnforce").toBool());
 }
 
 void OptionsModel::Reset()
