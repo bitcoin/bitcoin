@@ -35,6 +35,11 @@ CCriticalSection cs_mapMasternodePaymentVotes;
 bool IsBlockValueValid(const CBlock& block, int nBlockHeight, const CAmount &nFee, const CAmount &blockReward, std::string &strErrorRet)
 {
     strErrorRet = "";
+	if (!masternodeSync.IsSynced()) {
+		//there is no budget data to use to check anything, let's just accept the longest chain
+		if (fDebug) LogPrintf("IsBlockValueValid -- WARNING: Client not synced, skipping block value checks\n");
+		return true;
+	}
 
     bool isBlockRewardValueMet = (block.vtx[0].GetValueOut() <= blockReward+nFee);
     if(fDebug) LogPrintf("block.vtx[0].GetValueOut() %lld <= blockReward %lld\n", block.vtx[0].GetValueOut(), blockReward+nFee);
