@@ -90,6 +90,9 @@ Low-level RPC changes
   * `getmininginfo`
 - The wallet RPC `getreceivedbyaddress` will return an error if called with an address not in the wallet.
 
+Changed command-line options
+-----------------------------
+- `-debuglogfile=<file>` can be used to specify an alternative debug logging file.
 
 Credits
 =======
