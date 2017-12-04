@@ -3179,7 +3179,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
             BOOST_FOREACH(const CTxIn& txin, tx.vin) {
                 uint256 hashLocked;
                 if(instantsend.GetLockedOutPointTxHash(txin.prevout, hashLocked) && hashLocked != tx.GetHash()) {
-                    // The node which relayed this will have to swtich later,
+                    // The node which relayed this will have to switch later,
                     // relaying instantsend data won't help it.
                     LOCK(cs_main);
                     mapRejectedBlocks.insert(make_pair(block.GetHash(), GetTime()));
