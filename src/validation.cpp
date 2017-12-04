@@ -45,7 +45,7 @@
 #include <masternodeman.h>
 #include <masternode-payments.h>
 
-#include <atomic>
+#include <future>
 #include <sstream>
 
 #include <boost/algorithm/string/replace.hpp>
@@ -2703,6 +2703,18 @@ bool CChainState::ActivateBestChain(CValidationState &state, const CChainParams&
     int nStopAtHeight = gArgs.GetArg("-stopatheight", DEFAULT_STOPATHEIGHT);
     do {
         boost::this_thread::interruption_point();
+
+        if (GetMainSignals().CallbacksPending() > 10) {
+            // Block until the validation queue drains. This should largely
+            // never happen in normal operation, however may happen during
+            // reindex, causing memory blowup  if we run too far ahead.
+            std::promise<void> promise;
+            CallFunctionInValidationInterfaceQueue([&promise] {
+                promise.set_value();
+            });
+            promise.get_future().wait();
+        }
+
         if (ShutdownRequested())
             break;
 
