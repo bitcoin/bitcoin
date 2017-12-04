@@ -45,7 +45,7 @@ Finally, set up soft links to restore the original folder structure:
       
           ln -s /Users/coinadm/local/bitcoin/index /Volumes/WD-Passport-Mac/bitcoin/blocks/index 
 
-6) Replace the original index folder location with a soft link:
+6) Replace the original blocks folder location with a soft link:
       
           ln -s /Volumes/WD-Passport-Mac/bitcoin/blocks /Users/coinadm/local/bitcoin/data/blocks
 
