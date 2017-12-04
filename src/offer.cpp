@@ -734,9 +734,9 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	return true;
 }
 UniValue offernew(const UniValue& params, bool fHelp) {
-	if (fHelp || params.size() < 7 || params.size() > 17)
+	if (fHelp || params.size() != 17)
 		throw runtime_error(
-			"offernew <alias> <category> <title> <quantity> <price> <description> <currency> [cert. guid] [payment options=SYS] [private=false] [units] [offertype=BUYNOW] [auction_expires] [auction_reserve] [auction_require_witness] [auction_deposit] [witness]\n"
+			"offernew [alias] [category] [title] [quantity] [price] [description] [currency] [cert. guid] [payment options=SYS] [private=false] [units] [offertype=BUYNOW] [auction_expires] [auction_reserve] [auction_require_witness] [auction_deposit] [witness]\n"
 						"<alias> An alias you own.\n"
 						"<category> category, 256 characters max.\n"
 						"<title> title, 256 characters max.\n"
@@ -747,7 +747,7 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 						"<cert. guid> Set this to the guid of a certificate you wish to sell\n"
 						"<paymentOptions> 'SYS' to accept SYS only, 'BTC' for BTC only, 'ZEC' for zcash only, or a |-delimited string to accept multiple currencies (e.g. 'BTC|SYS' to accept BTC or SYS). Leave empty for default. Defaults to 'SYS'.\n"		
 						"<private> set to Yes if this offer should be private not be searchable. Defaults to No.\n"
-						"<units> Units that 1 qty represents. For example if selling 1 BTC.\n"
+						"<units> Units that 1 qty represents. For example if selling 1 BTC. Default is 1.\n"
 						"<offertype> Options of how an offer is sold. 'BUYNOW' for regular Buy It Now offer, 'AUCTION' to auction this offer while providing auction_expires/auction_reserve/auction_require_witness parameters, 'COIN' for offers selling cryptocurrency, or a | -delimited string to create an offer with multiple options(e.g. 'BUYNOW|AUCTION' to create an offer that is sold through an auction but has Buy It Now enabled as well).Leave empty for default. Defaults to 'BUYNOW'.\n"
 						"<auction_expires> If offerType is AUCTION, Datetime of expiration of an auction. Once merchant creates an offer as an auction, the expiry must be non-zero. The auction parameters will not be updateable until an auction expires.\n"
 						"<auction_reserve> If offerType is AUCTION, Reserve price of an offer publicly. Bids must be of higher price than the reserve price. Any bid below the reserve price will be rejected by consensus checks in escrow. Default is 0.\n"
@@ -768,23 +768,17 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 	vector<unsigned char> vchCert;
 
 	int nQty;
+	nQty =  params[3].get_int();
 
-	try {
-		nQty =  boost::lexical_cast<int>(params[3].get_str());
-	} catch (std::exception &e) {
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1503 - " + _("Invalid quantity value, must be less than 4294967296 and greater than or equal to -1"));
-	}
-	fPrice = boost::lexical_cast<float>(params[4].get_str());
+	fPrice = params[4].get_real();
 	vector<unsigned char> vchDescription = vchFromValue(params[5]);
 	vector<unsigned char> vchCurrency = vchFromValue(params[6]);
 	CScript scriptPubKeyOrig;
 	CScript scriptPubKey;
-	if(CheckParam(params, 7))
-		vchCert = vchFromValue(params[7]);
+	vchCert = vchFromValue(params[7]);
 	// payment options - get payment options string if specified otherwise default to SYS
 	string paymentOptions = "SYS";
-	if(CheckParam(params, 8))
-		paymentOptions = params[8].get_str();		
+	paymentOptions = params[8].get_str();		
 	boost::algorithm::to_upper(paymentOptions);
 	// payment options - validate payment options string
 	if(!ValidatePaymentOptionsString(paymentOptions))
@@ -795,20 +789,11 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 	// payment options - and convert payment options string to a bitmask for the txn
 	uint64_t paymentOptionsMask = GetPaymentOptionsMaskFromString(paymentOptions);
 	bool bPrivate = false;
-	if(CheckParam(params, 9))
-		bPrivate = params[9].get_str() == "true"? true: false;
-	float fUnits=1.0f;
-	if(CheckParam(params, 10))
-	{
-		try {
-			fUnits =  boost::lexical_cast<float>(params[10].get_str());
-		} catch (std::exception &e) {
-			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1503 - " + _("Invalid units value"));
-		}
-	}
+	bPrivate = params[9].get_bool();
+	float fUnits;
+	fUnits = params[10].get_real();
 	string offerType = "BUYNOW";
-	if(CheckParam(params, 11))
-		offerType = params[11].get_str();
+	offerType = params[11].get_str();
 
 	boost::algorithm::to_upper(offerType);
 	if (!ValidateOfferTypeString(offerType))
@@ -819,41 +804,20 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 	uint32_t offerTypeMask = GetOfferTypeMaskFromString(offerType);
 
 	uint64_t nExpireTime = chainActive.Tip()->GetMedianTimePast() + 3600;
-	if (CheckParam(params, 12))
-		nExpireTime = boost::lexical_cast<uint64_t>(params[12].get_str());
+	nExpireTime = params[12].get_int64();
 
 	float fReservePrice = 0;
-	if (CheckParam(params, 13))
-	{
-		try {
-			fReservePrice = boost::lexical_cast<float>(params[13].get_str());
-		}
-		catch (std::exception &e) {
-			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1503 - " + _("Invalid reserve price"));
-		}
-	}
+	fReservePrice = params[13].get_real();
 
 	bool bRequireWitness = false;
-	if (CheckParam(params, 14))
-	{
-		bRequireWitness = params[14].get_str() == "true" ? true : false;
-	}
+	bRequireWitness = params[14].get_bool();
+	
 
 	float fAuctionDeposit = 0;
-	if (CheckParam(params, 15))
-	{
-		try {
-			fAuctionDeposit = boost::lexical_cast<float>(params[15].get_str());
-		}
-		catch (std::exception &e) {
-			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1503 - " + _("Invalid auction deposit"));
-		}
-	}
-
+	fAuctionDeposit = params[15].get_real();
 
 	vector<unsigned char> vchWitness;
-	if(CheckParam(params, 16))
-		vchWitness = vchFromValue(params[16]);
+	vchWitness = vchFromValue(params[16]);
 
 	// if we are selling a cert ensure it exists and pubkey's match (to ensure it doesnt get transferred prior to accepting by user)
 	CCert theCert;
@@ -948,9 +912,9 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 }
 
 UniValue offerlink(const UniValue& params, bool fHelp) {
-	if (fHelp || params.size() < 3 || params.size() > 5)
+	if (fHelp || params.size() != 5)
 		throw runtime_error(
-		"offerlink <alias> <guid> <commission> [description] [witness]\n"
+			"offerlink [alias] [guid] [commission] [description] [witness]\n"
 						"<alias> An alias you own.\n"
 						"<guid> offer guid that you are linking to\n"
 						"<commission> percentage of profit desired over original offer price, > 0, ie: 5 for 5%\n"
@@ -972,23 +936,15 @@ UniValue offerlink(const UniValue& params, bool fHelp) {
 	if (!GetAlias(linkOffer.aliasTuple.first, linkAlias))
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1513 - " + _("Could not find an alias associated with this offer"));
 
-	int commissionInteger = boost::lexical_cast<int>(params[2].get_str());
-	if(CheckParam(params, 3))
-	{
-
-		vchDescription = vchFromValue(params[3]);
-		if(vchDescription.empty())
-		{
-			vchDescription = linkOffer.sDescription;
-		}
-	}
-	else
+	int commissionInteger = params[2].get_int();
+	vchDescription = vchFromValue(params[3]);
+	if(vchDescription.empty())
 	{
 		vchDescription = linkOffer.sDescription;
 	}
+	
 	vector<unsigned char> vchWitness;
-	if(CheckParam(params, 4))
-		vchWitness = vchFromValue(params[4]);
+	vchWitness = vchFromValue(params[4]);
 	
 	CScript scriptPubKeyOrig;
 	CScript scriptPubKey;
@@ -1057,65 +1013,32 @@ UniValue offerlink(const UniValue& params, bool fHelp) {
 	return res;
 }
 UniValue offerupdate(const UniValue& params, bool fHelp) {
-	if (fHelp || params.size() < 2 || params.size() > 18)
+	if (fHelp || params.size() != 18)
 		throw runtime_error(
-		"offerupdate <alias> <guid> [category] [title] [quantity] [price] [description] [currency] [private=false] [cert. guid] [commission] [paymentOptions] [offerType=BUYNOW] [auction_expires] [auction_reserve] [auction_require_witness] [auction_deposit] [witness]\n"
+			"offerupdate [alias] [guid] [category] [title] [quantity] [price] [description] [currency] [private=false] [cert. guid] [commission] [paymentOptions] [offerType=BUYNOW] [auction_expires] [auction_reserve] [auction_require_witness] [auction_deposit] [witness]\n"
 						"Perform an update on an offer you control.\n"
 						+ HelpRequiringPassphrase());
 	// gather & validate inputs
 	vector<unsigned char> vchAlias = vchFromValue(params[0]);
 	vector<unsigned char> vchOffer = vchFromValue(params[1]);
-	string strPrivate = "";
-	string strQty = "";
-	string strPrice = "";
-	string strCommission = "";
 	string strCategory = "";
 	string strDescription = "";
 	string strTitle = "";
 	string strCert = "";
 	string strCurrency = "";
 	string paymentOptions = "";
-	if(CheckParam(params, 2))
-		strCategory = params[2].get_str();
-	if(CheckParam(params, 3))
-		strTitle = params[3].get_str();
-	if(CheckParam(params, 4))
-	{
-		strQty = params[4].get_str();
-		try {
-			int nQty = boost::lexical_cast<int>(strQty);
-
-		} catch (std::exception &e) {
-			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1533 - " + _("Invalid quantity value. Quantity must be less than 4294967296 and greater than or equal to -1"));
-		}
-	}
-	if(CheckParam(params, 5))
-	{
-		strPrice = params[5].get_str();
-		try {
-			float fPrice = boost::lexical_cast<float>(strPrice);
-
-		} catch (std::exception &e) {
-			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1533 - " + _("Invalid price value"));
-		}
-	}
-	if(CheckParam(params, 6))
-		strDescription = params[6].get_str();
-
-	if(CheckParam(params, 7))
-		strCurrency = params[7].get_str();
-
-	if(CheckParam(params, 8))
-		strPrivate = params[8].get_str();
-	if(CheckParam(params, 9))
-		strCert = params[9].get_str();
-	if(CheckParam(params, 10))
-		strCommission = params[10].get_str();
-	if(CheckParam(params, 11))
-	{
-		paymentOptions = params[11].get_str();	
-		boost::algorithm::to_upper(paymentOptions);
-	}
+	strCategory = params[2].get_str();
+	strTitle = params[3].get_str();
+	int nQty = params[4].get_int();
+	float fPrice = params[5].get_real();
+	strDescription = params[6].get_str();
+	strCurrency = params[7].get_str();
+	bool bPrivate = params[8].get_bool();
+	strCert = params[9].get_str();
+	int nCommission = params[10].get_int();
+	paymentOptions = params[11].get_str();	
+	boost::algorithm::to_upper(paymentOptions);
+	
 	
 	if(!paymentOptions.empty() && !ValidatePaymentOptionsString(paymentOptions))
 	{
@@ -1124,8 +1047,7 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	uint64_t paymentOptionsMask = GetPaymentOptionsMaskFromString(paymentOptions);
 
 	string strOfferType = "";
-	if (CheckParam(params, 12))
-		strOfferType = params[12].get_str();
+	strOfferType = params[12].get_str();
 
 	boost::algorithm::to_upper(strOfferType);
 	if (!strOfferType.empty() && !ValidateOfferTypeString(strOfferType))
@@ -1134,48 +1056,16 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 		throw runtime_error(err.c_str());
 	}
 	uint32_t offerTypeMask = GetOfferTypeMaskFromString(strOfferType);
-
-	bool bAuctionParamChanged = false;
 	uint64_t nExpireTime = 0;
-	if (CheckParam(params, 13)) {
-		nExpireTime = boost::lexical_cast<uint64_t>(params[13].get_str());
-		bAuctionParamChanged = true;
-	}
-
+	nExpireTime = params[13].get_int64();
 	float fReservePrice = 0;
-	if (CheckParam(params, 14))
-	{
-		try {
-			fReservePrice = boost::lexical_cast<float>(params[14].get_str());
-		}
-		catch (std::exception &e) {
-			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1503 - " + _("Invalid reserve price"));
-		}
-		bAuctionParamChanged = true;
-	}
-
+	fReservePrice = params[14].get_real();
 	bool bRequireWitness = false;
-	if (CheckParam(params, 15))
-	{
-		bRequireWitness = params[15].get_str() == "true" ? true : false;
-		bAuctionParamChanged = true;
-	}
-
+	bRequireWitness = params[15].get_bool();
 	float fAuctionDeposit = 0;
-	if (CheckParam(params, 16))
-	{
-		try {
-			fAuctionDeposit = boost::lexical_cast<float>(params[16].get_str());
-		}
-		catch (std::exception &e) {
-			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1503 - " + _("Invalid auction deposit"));
-		}
-		bAuctionParamChanged = true;
-	}
-
+	fAuctionDeposit = params[16].get_real();
 	vector<unsigned char> vchWitness;
-	if(CheckParam(params, 17))
-		vchWitness = vchFromValue(params[17]);
+	vchWitness = vchFromValue(params[17]);
 
 	CAliasIndex alias, linkAlias;
 
@@ -1242,56 +1132,38 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	theOffer.ClearOffer();
 	theOffer.nHeight = chainActive.Tip()->nHeight;
 
-	if(!strCurrency.empty())
+	if(strCurrency != stringFromVch(offerCopy.sCurrencyCode))
 		theOffer.sCurrencyCode = vchFromString(strCurrency);
-	if(!strTitle.empty())
+	if(strTitle != stringFromVch(offerCopy.sTitle))
 		theOffer.sTitle = vchFromString(strTitle);
-	if(!strCategory.empty())
+	if(strCategory != stringFromVch(offerCopy.sCategory))
 		theOffer.sCategory = vchFromString(strCategory);
-	if(!strDescription.empty())
+	if(strDescription != stringFromVch(offerCopy.sDescription))
 		theOffer.sDescription = vchFromString(strDescription);
 	float fPrice = 1;
 	// linked offers can't change these settings, they are overrided by parent info
-	if(!strPrice.empty() && offerCopy.linkOfferTuple.first.empty())
+	if(offerCopy.linkOfferTuple.first.empty())
 	{
-		fPrice = boost::lexical_cast<float>(strPrice);
 		if(!strCert.empty())
 			theOffer.certTuple = CNameTXIDTuple(theCert.vchCert, theCert.txHash);
 
 		theOffer.fPrice = fPrice;
 	}
 
-	if(strCommission.empty())
-		theOffer.nCommission = offerCopy.nCommission;
-	else
-		theOffer.nCommission = boost::lexical_cast<int>(strCommission);
-	if(paymentOptions.empty())
-		theOffer.paymentOptions = offerCopy.paymentOptions;
-	else
-		theOffer.paymentOptions = paymentOptionsMask;
+	theOffer.nCommission = nCommission;
+	theOffer.paymentOptions = paymentOptionsMask;
 
 	if(!vchAlias.empty() && vchAlias != alias.vchAlias)
 		theOffer.linkAliasTuple = CNameTXIDTuple(linkAlias.vchAlias, linkAlias.txHash, linkAlias.vchGUID);
-	if(strQty.empty())
-		theOffer.nQty = offerCopy.nQty;
-	else
-		theOffer.nQty = boost::lexical_cast<int>(strQty);
-	if(strPrivate.empty())
-		theOffer.bPrivate = offerCopy.bPrivate;
-	else
-		theOffer.bPrivate = strPrivate == "true"? true: false;
+	
+	theOffer.nQty = nQty;
+	theOffer.bPrivate = bPrivate;
+	theOffer.offerType = offerTypeMask;
 
-	if (strOfferType.empty())
-		theOffer.offerType = offerCopy.offerType;
-	else
-		theOffer.offerType = offerTypeMask;
-
-	if (bAuctionParamChanged) {
-		theOffer.auctionOffer.bRequireWitness = bRequireWitness;
-		theOffer.auctionOffer.fReservePrice = fReservePrice;
-		theOffer.auctionOffer.nExpireTime = nExpireTime;
-		theOffer.auctionOffer.fDepositPercentage = fAuctionDeposit;
-	}
+	theOffer.auctionOffer.bRequireWitness = bRequireWitness;
+	theOffer.auctionOffer.fReservePrice = fReservePrice;
+	theOffer.auctionOffer.nExpireTime = nExpireTime;
+	theOffer.auctionOffer.fDepositPercentage = fAuctionDeposit;
 
 	theOffer.nHeight = chainActive.Tip()->nHeight;
 

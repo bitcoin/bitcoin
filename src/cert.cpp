@@ -599,9 +599,9 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 
 
 UniValue certnew(const UniValue& params, bool fHelp) {
-    if (fHelp || params.size() < 3 || params.size() > 5)
+    if (fHelp || params.size() != 5)
         throw runtime_error(
-		"certnew <alias> <title> <public> [category=certificates] [witness]\n"
+			"certnew [alias] [title] [public] [category=certificates] [witness]\n"
 						"<alias> An alias you own.\n"
 						"<title> title, 256 characters max.\n"
                         "<public> public data, 256 characters max.\n"
@@ -612,11 +612,9 @@ UniValue certnew(const UniValue& params, bool fHelp) {
     vector<unsigned char> vchTitle = vchFromString(params[1].get_str());
 	vector<unsigned char> vchPubData = vchFromString(params[2].get_str());
 	string strCategory = "certificates";
-	if(CheckParam(params, 3))
-		strCategory = params[3].get_str();
+	strCategory = params[3].get_str();
 	vector<unsigned char> vchWitness;
-	if(CheckParam(params, 4))
-		vchWitness = vchFromValue(params[4]);
+	vchWitness = vchFromValue(params[4]);
 	// check for alias existence in DB
 	CAliasIndex theAlias;
 
@@ -686,9 +684,9 @@ UniValue certnew(const UniValue& params, bool fHelp) {
 }
 
 UniValue certupdate(const UniValue& params, bool fHelp) {
-    if (fHelp || params.size() < 1 || params.size() > 5)
+    if (fHelp || params.size() != 5)
         throw runtime_error(
-		"certupdate <guid> [title] [public] [category=certificates] [witness]\n"
+			"certupdate [guid] [title] [public] [category=certificates] [witness]\n"
 						"Perform an update on an certificate you control.\n"
 						"<guid> Certificate guidkey.\n"
 						"<title> Certificate title, 256 characters max.\n"
@@ -702,16 +700,12 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
 	string strTitle = "";
 	string strPubData = "";
 	string strCategory = "";
-	if(CheckParam(params, 1))
-		strTitle = params[1].get_str();
-	if(CheckParam(params, 2))
-		strPubData = params[2].get_str();
-	if(CheckParam(params, 3))
-		strCategory = params[3].get_str();
+	strTitle = params[1].get_str();
+	strPubData = params[2].get_str();
+	strCategory = params[3].get_str();
 
 	vector<unsigned char> vchWitness;
-	if(CheckParam(params, 4))
-		vchWitness = vchFromValue(params[4]);
+	vchWitness = vchFromValue(params[4]);
 
     // this is a syscoind txn
     CWalletTx wtx;
@@ -734,11 +728,11 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
     // create CERTUPDATE txn keys
     CScript scriptPubKey;
 
-	if(!strPubData.empty())
+	if(strPubData != stringFromVch(theCert.vchPubData))
 		theCert.vchPubData = vchFromString(strPubData);
-	if(!strCategory.empty())
+	if(strCategory != stringFromVch(theCert.sCategory))
 		theCert.sCategory = vchFromString(strCategory);
-	if(!strTitle.empty())
+	if(strTitle != stringFromVch(theCert.vchTitle))
 		theCert.vchTitle = vchFromString(strTitle);
 	theCert.nHeight = chainActive.Tip()->nHeight;
 	vector<unsigned char> data;
@@ -779,14 +773,14 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
 
 
 UniValue certtransfer(const UniValue& params, bool fHelp) {
- if (fHelp || params.size() < 2 || params.size() > 5)
+ if (fHelp || params.size() != 5)
         throw runtime_error(
-		"certtransfer <guid> <alias> [public] [accessflags=2] [witness]\n"
+			"certtransfer [guid] [alias] [public] [accessflags=2] [witness]\n"
 						"Transfer a certificate you own to another alias.\n"
 						"<guid> certificate guidkey.\n"
 						"<alias> alias to transfer to.\n"
                         "<public> public data, 256 characters max.\n"	
-						"<accessflags> Set new access flags for new owner for this certificate, 0 for read-only, 1 for edit, 2 for edit and transfer access.\n"
+						"<accessflags> Set new access flags for new owner for this certificate, 0 for read-only, 1 for edit, 2 for edit and transfer access. Default is 2.\n"
 						"<witness> Witness alias name that will sign for web-of-trust notarization of this transaction.\n"	
 						+ HelpRequiringPassphrase());
 
@@ -795,14 +789,11 @@ UniValue certtransfer(const UniValue& params, bool fHelp) {
 	vector<unsigned char> vchAlias = vchFromValue(params[1]);
 
 	string strPubData = "";
-	string strAccessFlags = "";
-	if(CheckParam(params, 2))
-		strPubData = params[2].get_str();
-	if(CheckParam(params, 3))
-		strAccessFlags = params[3].get_str();
+	int nAccessFlags = 2;
+	strPubData = params[2].get_str();
+	nAccessFlags = params[3].get_int();
 	vector<unsigned char> vchWitness;
-	if(CheckParam(params, 4))
-		vchWitness = vchFromValue(params[4]);
+	vchWitness = vchFromValue(params[4]);
 	// check for alias existence in DB
 	CAliasIndex toAlias;
 	if (!GetAlias(vchAlias, toAlias))
@@ -834,15 +825,10 @@ UniValue certtransfer(const UniValue& params, bool fHelp) {
 	theCert.aliasTuple = CNameTXIDTuple(fromAlias.vchAlias, fromAlias.txHash, fromAlias.vchGUID);
 	theCert.linkAliasTuple = CNameTXIDTuple(toAlias.vchAlias, toAlias.txHash, toAlias.vchGUID);
 
-	if(!strPubData.empty())
+	if(strPubData != stringFromVch(theCert.vchPubData))
 		theCert.vchPubData = vchFromString(strPubData);
 
-
-
-	if(strAccessFlags.empty())
-		theCert.nAccessFlags = copyCert.nAccessFlags;
-	else
-		theCert.nAccessFlags = boost::lexical_cast<unsigned char>(params[7].get_str());
+	theCert.nAccessFlags = params[7].get_int());
 
 	vector<unsigned char> data;
 	theCert.Serialize(data);

@@ -1744,7 +1744,7 @@ UniValue syscoinquery(const UniValue& params, bool fHelp) {
 			"syscoinquery <collection> <query> [options]\n"
 			"<collection> Collection name, either: 'alias', 'aliashistory', 'aliastxhistory', 'cert', 'certhistory', 'offer', 'offerhistory', 'feedback', 'escrow', 'escrowbid'.\n"
 			"<query> JSON query on the collection to retrieve a set of documents.\n"
-			"<options> JSON option arguments into the query. Based on mongoc_collection_find_with_opts.\n"
+			"<options> Optional. JSON option arguments into the query. Based on mongoc_collection_find_with_opts.\n"
 			+ HelpRequiringPassphrase());
 	string collection = params[0].get_str();
 	mongoc_collection_t *selectedCollection;
@@ -1821,13 +1821,13 @@ UniValue syscoinquery(const UniValue& params, bool fHelp) {
 	return res;
 }
 UniValue aliasnew(const UniValue& params, bool fHelp) {
-	if (fHelp || 1 > params.size() || 8 < params.size())
+	if (fHelp || 8 != params.size())
 		throw runtime_error(
-			"aliasnew <aliasname> [public value] [accept transfers=true] [expire_timestamp] [address] [encryption_privatekey] [encryption_publickey] [witness]\n"
+			"aliasnew [aliasname] [public value] [accept transfers=true] [expire_timestamp] [address] [encryption_privatekey] [encryption_publickey] [witness]\n"
 						"<aliasname> alias name.\n"
 						"<public value> alias public profile data, 256 characters max.\n"
 						"<accept transfers> set to false if this alias should not allow a certificate to be transferred to it. Defaults to true.\n"	
-						"<expire_timestamp> String. Time in seconds. Future time when to expire alias. It is exponentially more expensive per year, calculation is FEERATE*(2.88^years). FEERATE is the dynamic satoshi per byte fee set in the rate peg alias used for this alias. Defaults to 1 year.\n"	
+						"<expire_timestamp> Time in seconds. Future time when to expire alias. It is exponentially more expensive per year, calculation is FEERATE*(2.88^years). FEERATE is the dynamic satoshi per byte fee set in the rate peg alias used for this alias. Defaults to 1 hour.\n"	
 						"<address> Address for this alias.\n"		
 						"<encryption_privatekey> Encrypted private key used for encryption/decryption of private data related to this alias. Should be encrypted to publickey.\n"
 						"<encryption_publickey> Public key used for encryption/decryption of private data related to this alias.\n"						
@@ -1867,33 +1867,26 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 
 	vector<unsigned char> vchPublicValue;
 	string strPublicValue = "";
-	if (CheckParam(params, 1))
-		strPublicValue = params[1].get_str();
+	strPublicValue = params[1].get_str();
 	vchPublicValue = vchFromString(strPublicValue);
 
-	string strAcceptCertTransfers = "true";
-	if(CheckParam(params, 2))
-		strAcceptCertTransfers = params[2].get_str();
-	uint64_t nTime = chainActive.Tip()->GetMedianTimePast()+ONE_YEAR_IN_SECONDS;
-	if(CheckParam(params, 3))
-		nTime = boost::lexical_cast<uint64_t>(params[3].get_str());
+	bool bAcceptCertTransfers = true;
+	bAcceptCertTransfers = params[2].get_bool();
+	uint64_t nTime = 0;
+	nTime = params[3].get_int64();
 	// sanity check set to 1 hr
 	if(nTime < chainActive.Tip()->GetMedianTimePast() +3600)
 		nTime = chainActive.Tip()->GetMedianTimePast() +3600;
 
 	string strAddress = "";
-	if(CheckParam(params, 4))
-		strAddress = params[4].get_str();
+	strAddress = params[4].get_str();
 	
 	string strEncryptionPrivateKey = "";
-	if(CheckParam(params, 5))
-		strEncryptionPrivateKey = params[5].get_str();
+	strEncryptionPrivateKey = params[5].get_str();
 	string strEncryptionPublicKey = "";
-	if(CheckParam(params, 6))
-		strEncryptionPublicKey = params[6].get_str();
+	strEncryptionPublicKey = params[6].get_str();
 	vector<unsigned char> vchWitness;
-	if(CheckParam(params, 7))
-		vchWitness = vchFromValue(params[7]);
+	vchWitness = vchFromValue(params[7]);
 
 	CWalletTx wtx;
 
@@ -2000,15 +1993,15 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	return res;
 }
 UniValue aliasupdate(const UniValue& params, bool fHelp) {
-	if (fHelp || 1 > params.size() || 8 < params.size())
+	if (fHelp || 8 != params.size())
 		throw runtime_error(
-		"aliasupdate <aliasname> [public value] [address] [accept_transfers=true] [expire_timestamp] [encryption_privatekey] [encryption_publickey] [witness]\n"
+			"aliasupdate [aliasname] [public value] [address] [accept_transfers=true] [expire_timestamp] [encryption_privatekey] [encryption_publickey] [witness]\n"
 						"Update and possibly transfer an alias.\n"
 						"<aliasname> alias name.\n"
 						"<public_value> alias public profile data, 256 characters max.\n"			
 						"<address> Address of alias.\n"		
 						"<accept_transfers> set to false if this alias should not allow a certificate to be transferred to it. Defaults to true.\n"		
-						"<expire_timestamp> String. Time in seconds. Future time when to expire alias. It is exponentially more expensive per year, calculation is 2.88^years. FEERATE is the dynamic satoshi per byte fee set in the rate peg alias used for this alias. Defaults to 1 year.\n"		
+						"<expire_timestamp> Time in seconds. Future time when to expire alias. It is exponentially more expensive per year, calculation is 2.88^years. FEERATE is the dynamic satoshi per byte fee set in the rate peg alias used for this alias. Defaults to 1 hour. Set to 0 if not changing expiration.\n"		
 						"<encryption_privatekey> Encrypted private key used for encryption/decryption of private data related to this alias. If transferring, the key should be encrypted to alias_pubkey.\n"
 						"<encryption_publickey> Public key used for encryption/decryption of private data related to this alias. Useful if you are changing pub/priv keypair for encryption on this alias.\n"						
 						"<witness> Witness alias name that will sign for web-of-trust notarization of this transaction.\n"	
@@ -2016,41 +2009,31 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	vector<unsigned char> vchAlias = vchFromString(params[0].get_str());
 	string strPrivateValue = "";
 	string strPublicValue = "";
-	if(CheckParam(params, 1))
-		strPublicValue = params[1].get_str();
+	strPublicValue = params[1].get_str();
 	
 	CWalletTx wtx;
 	CAliasIndex updateAlias;
 	string strAddress = "";
-	if(CheckParam(params,2))
-		strAddress = params[2].get_str();
+	strAddress = params[2].get_str();
 	
-	string strAcceptCertTransfers = "";
-	if(CheckParam(params, 3))
-		strAcceptCertTransfers = params[3].get_str();
+	bool bAcceptCertTransfers = params[3].get_bool();
 	
 	uint64_t nTime = chainActive.Tip()->GetMedianTimePast() +ONE_YEAR_IN_SECONDS;
-	bool timeSet = false;
-	if(CheckParam(params, 4))
-	{
-		nTime = boost::lexical_cast<uint64_t>(params[4].get_str());
-		timeSet = true;
-	}
+	nTime = params[4].get_int64();
+
+	
 	// sanity check set to 1 hr
 	if(nTime < chainActive.Tip()->GetMedianTimePast() +3600)
 		nTime = chainActive.Tip()->GetMedianTimePast() +3600;
 
 	string strEncryptionPrivateKey = "";
-	if(CheckParam(params, 5))
-		strEncryptionPrivateKey = params[5].get_str();
+	strEncryptionPrivateKey = params[5].get_str();
 	
 	string strEncryptionPublicKey = "";
-	if(CheckParam(params, 6))
-		strEncryptionPublicKey = params[6].get_str();
+	strEncryptionPublicKey = params[6].get_str();
 	
 	vector<unsigned char> vchWitness;
-	if(CheckParam(params, 7))
-		vchWitness = vchFromValue(params[7]);
+	vchWitness = vchFromValue(params[7]);
 
 	CAliasIndex theAlias;
 	if (!GetAlias(vchAlias, theAlias))
@@ -2060,24 +2043,18 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	CAliasIndex copyAlias = theAlias;
 	theAlias.ClearAlias();
 	theAlias.nHeight = chainActive.Tip()->nHeight;
-	if(!strPublicValue.empty())
+	if(strPublicValue != stringFromVch(copyAlias.vchPublicValue))
 		theAlias.vchPublicValue = vchFromString(strPublicValue);
-	if(!strEncryptionPrivateKey.empty())
+	if(strEncryptionPrivateKey != ParseHex(copyAlias.vchEncryptionPrivateKey))
 		theAlias.vchEncryptionPrivateKey = ParseHex(strEncryptionPrivateKey);
-	if(!strEncryptionPublicKey.empty())
+	if(!strEncryptionPublicKey != ParseHex(copyAlias.vchEncryptionPublicKey))
 		theAlias.vchEncryptionPublicKey = ParseHex(strEncryptionPublicKey);
 
-	if(!strAddress.empty())
+	if(strAddress != EncodeBase58(copyAlias.vchAddress))
 		DecodeBase58(strAddress, theAlias.vchAddress);
-	if(timeSet || copyAlias.nExpireTime <= chainActive.Tip()->GetMedianTimePast())
-		theAlias.nExpireTime = nTime;
-	else
-		theAlias.nExpireTime = 0;
+	theAlias.nExpireTime = nTime;
 	theAlias.nAccessFlags = copyAlias.nAccessFlags;
-	if(strAcceptCertTransfers.empty())
-		theAlias.acceptCertTransfers = copyAlias.acceptCertTransfers;
-	else
-		theAlias.acceptCertTransfers = strAcceptCertTransfers == "true"? true: false;
+	theAlias.acceptCertTransfers = bAcceptCertTransfers;
 	
 	CSyscoinAddress newAddress;
 	CScript scriptPubKeyOrig;
@@ -2104,7 +2081,7 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	scriptData << OP_RETURN << data;
 	CRecipient fee;
 	CreateFeeRecipient(scriptData, data, fee);
-	if (timeSet) {
+	if (nTime > 0) {
 		// calculate a fee if renewal is larger than default.. based on how many years you extend for it will be exponentially more expensive
 		uint64_t nTimeExpiry = nTime - chainActive.Tip()->GetMedianTimePast();
 		if (nTimeExpiry < 3600)
@@ -2644,9 +2621,9 @@ UniValue aliasaddscript(const UniValue& params, bool fHelp) {
 	return res;
 }
 UniValue aliasupdatewhitelist(const UniValue& params, bool fHelp) {
-	if (fHelp || params.size() < 2 || params.size() > 3)
+	if (fHelp || params.size() != 3)
 		throw runtime_error(
-			"aliasupdatewhitelist <owner alias> [{\"alias\":\"aliasname\",\"discount_percentage\":n},...] [witness]\n"
+			"aliasupdatewhitelist [owner alias] [{\"alias\":\"aliasname\",\"discount_percentage\":n},...] [witness]\n"
 			"Update to the whitelist(controls who can resell). Array of whitelist entries in parameter 1.\n"
 			"To add to list, include a new alias/discount percentage that does not exist in the whitelist.\n"
 			"To update entry, change the discount percentage of an existing whitelist entry.\n"
@@ -2665,8 +2642,7 @@ UniValue aliasupdatewhitelist(const UniValue& params, bool fHelp) {
 	vector<unsigned char> vchOwnerAlias = vchFromValue(params[0]);
 	UniValue whitelistEntries = params[1].get_array();
 	vector<unsigned char> vchWitness;
-	if (CheckParam(params, 2))
-		vchWitness = vchFromValue(params[2]);
+	vchWitness = vchFromValue(params[2]);
 	CWalletTx wtx;
 
 	// this is a syscoin txn
@@ -2732,16 +2708,15 @@ UniValue aliasupdatewhitelist(const UniValue& params, bool fHelp) {
 	return res;
 }
 UniValue aliasclearwhitelist(const UniValue& params, bool fHelp) {
-	if (fHelp || params.size() < 1 || params.size() > 2)
+	if (fHelp || params.size() != 2)
 		throw runtime_error(
-			"aliasclearwhitelist <owner alias> [witness]\n"
+			"aliasclearwhitelist [owner alias] [witness]\n"
 			"Clear your whitelist(controls who can resell).\n"
 			+ HelpRequiringPassphrase());
 	// gather & validate inputs
 	vector<unsigned char> vchAlias = vchFromValue(params[0]);
 	vector<unsigned char> vchWitness;
-	if (CheckParam(params, 1))
-		vchWitness = vchFromValue(params[1]);
+	vchWitness = vchFromValue(params[1]);
 	// this is a syscoind txn
 	CWalletTx wtx;
 	CScript scriptPubKeyOrig;
@@ -2794,14 +2769,11 @@ UniValue aliasclearwhitelist(const UniValue& params, bool fHelp) {
 }
 
 UniValue aliaswhitelist(const UniValue& params, bool fHelp) {
-	if (fHelp || params.size() < 1 || params.size() > 2)
-		throw runtime_error("aliaswhitelist <alias> [witness]\n"
+	if (fHelp || params.size() != 1)
+		throw runtime_error("aliaswhitelist <alias>\n"
 			"List all affiliates for this alias.\n");
 	UniValue oRes(UniValue::VARR);
 	vector<unsigned char> vchAlias = vchFromValue(params[0]);
-	vector<unsigned char> vchWitness;
-	if (CheckParam(params, 1))
-		vchWitness = vchFromValue(params[1]);
 
 	CAliasIndex theAlias;
 

@@ -566,10 +566,8 @@ string AliasNew(const string& node, const string& aliasname, const string& pubda
 	BOOST_CHECK_NO_THROW(CallRPC(node, "importprivkey " + CSyscoinSecret(privEncryptionKey).ToString() + " \"\" false", true, false));
 
 	string strEncryptionPrivateKeyHex = HexStr(vchPrivEncryptionKey);
-	string expires = "\"\"";
-	string aliases = "\"\"";
-	string acceptTransfers = "\"\"";
-	string expireTime = "\"\"";
+	string acceptTransfers = "false";
+	string expireTime = "0";
 
 	UniValue r;
 	// registration
@@ -579,7 +577,7 @@ string AliasNew(const string& node, const string& aliasname, const string& pubda
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
 	GenerateBlocks(5, node);
 	// activation
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasnew " + aliasname + " \"\""));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasnew " + aliasname + " " + pubdata + " " + acceptTransfers + " " + expireTime + " " + aliasAddress.ToString() + " " + strEncryptionPrivateKeyHex + " " + HexStr(vchPubEncryptionKey) + " " + witness));
 	UniValue varray1 = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + varray1[0].get_str()));
 	string hex_str = find_value(r.get_obj(), "hex").get_str();
@@ -633,7 +631,8 @@ string AliasTransfer(const string& node, const string& aliasname, const string& 
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasinfo " + aliasname));
 
 	string oldvalue = find_value(r.get_obj(), "publicvalue").get_str();
-
+	bool bAcceptTransfers = find_value(r.get_obj(), "acceptcerttransfers").get_bool();
+	string expires = boost::lexical_cast<string>(find_value(r.get_obj(), "expires_on").get_int64());
 	string encryptionkey = find_value(r.get_obj(), "encryption_publickey").get_str();
 	string encryptionprivkey = find_value(r.get_obj(), "encryption_privatekey").get_str();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasbalance " + aliasname));
@@ -649,13 +648,10 @@ string AliasTransfer(const string& node, const string& aliasname, const string& 
 	BOOST_CHECK(pubKey.IsFullyValid());
 	BOOST_CHECK_NO_THROW(CallRPC(tonode, "importprivkey " + CSyscoinSecret(privKey).ToString() + " \"\" false", true, false));	
 
-	string acceptTransfers = "\"\"";
-	string expires = "\"\"";
+	string acceptTransfers = bAcceptTransfers? "true": "false";
 	string address = aliasAddress.ToString();
-	string password = "\"\"";
-	string encryptionpubkey = "\"\"";
-
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasupdate " + aliasname + " " + pubdata + " " + address + " " + acceptTransfers + " " + expires + " " + encryptionpubkey + " " + encryptionpubkey + " " + witness));
+	string newpubdata = pubdata == "''" ? oldvalue : pubdata;
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasupdate " + aliasname + " " + newpubdata + " " + address + " " + acceptTransfers + " " + expires + " " + encryptionprivkey + " " + encryptionkey + " " + witness));
 	UniValue varray = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + varray[0].get_str()));
 	string hex_str;
@@ -718,16 +714,16 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 	string oldAddressStr = find_value(r.get_obj(), "address").get_str();
 	string encryptionkey = find_value(r.get_obj(), "encryption_publickey").get_str();
 	string encryptionprivkey = find_value(r.get_obj(), "encryption_privatekey").get_str();
-	
+	string expires = boost::lexical_cast<string>(find_value(r.get_obj(), "expires_on").get_int64());
+	bool bAcceptTransfers = find_value(r.get_obj(), "acceptcerttransfers").get_bool();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasbalance " + aliasname));
 	CAmount balanceBefore = AmountFromValue(find_value(r.get_obj(), "balance"));
 
-
-	string acceptTransfers = "\"\"";
-	string expires = "\"\"";
-	string encryptionpubkey = "\"\"";
+	string newpubdata = pubdata == "''" ? oldvalue : pubdata;
+	string newAddressStr = addressStr == "''" ? oldAddressStr : addressStr;
+	string acceptTransfers = bAcceptTransfers ? "true" : "false";
 	// "aliasupdate <aliasname> [public value]  [address] [accept_transfers=true] [expire_timestamp] [encryption_privatekey] [encryption_publickey] [witness]\n"
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasupdate " + aliasname + " " + pubdata + " " + addressStr + " " + acceptTransfers + " " + expires + " " + encryptionpubkey + " " + encryptionpubkey + " " + witness));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasupdate " + aliasname + " " + newpubdata + " " + newAddressStr + " " + acceptTransfers + " " + expires + " " + encryptionprivkey + " " + encryptionkey + " " + witness));
 	UniValue varray = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + varray[0].get_str()));
 	string hex_str;
@@ -1141,8 +1137,8 @@ const string OfferNew(const string& node, const string& aliasname, const string&
 	string otherNode1, otherNode2;
 	UniValue r;
 	GetOtherNodes(node, otherNode1, otherNode2);
-	string pvt = "\"\"";
-	string units = "\"\"";
+	string pvt = "false";
+	string units = "1";
 	int qty = atoi(qtyStr.c_str());
 	
 	//						"offernew <alias> <category> <title> <quantity> <price> <description> <currency> [cert. guid] [payment options=SYS] [private=false] [units] [offerType=BUYNOW] [auction_expires] [auction_reserve] [auction_require_witness] [auction_deposit] [witness]\n"
@@ -1580,9 +1576,9 @@ const string EscrowNewAuction(const string& node, const string& sellernode, cons
 	if (markup > 0)
 		nCommissionCompare = nTotalOfferPrice*(markup/100);
 	
-	string exttxid = "\"\"";
-	string paymentoptions = "\"\"";
-	string redeemscript = "\"\"";
+	string exttxid = "''";
+	string paymentoptions = "SYS";
+	string redeemscript = "''";
 	string buyNowStr = "false";
 	string strTotalInPaymentOption = ValueFromAmount(offerprice).write();
 
@@ -1708,12 +1704,12 @@ const string EscrowNewBuyItNow(const string& node, const string& sellernode, con
 	if (markup > 0)
 		nCommissionCompare = nTotalOfferPrice*(markup / 100);
 
-	string exttxid = "\"\"";
-	string paymentoptions = "\"\"";
+	string exttxid = "''";
+	string paymentoptions = "SYS";
 	string buyNowStr = "true";
-	string strBidInOfferCurrency = "\"\"";
-	string strBidInPaymentOption = "\"\"";
-	string strDeposit = "\"\"";
+	string strBidInOfferCurrency = "0";
+	string strBidInPaymentOption = "0";
+	string strDeposit = "0";
 	string strTotalInPaymentOption = ValueFromAmount(offerprice).write();
 	float fPaymentCurrency = find_value(r.get_obj(), "price").get_real();
 	const string &bid_in_offer_currency = strprintf("%.*f", 8, fPaymentCurrency);

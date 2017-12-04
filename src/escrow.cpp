@@ -1446,9 +1446,9 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
     return true;
 }
 UniValue escrowbid(const UniValue& params, bool fHelp) {
-	if (fHelp || params.size() < 4 || params.size() > 5)
+	if (fHelp || params.size() != 5)
 		throw runtime_error(
-			"escrowbid <alias> <escrow> <bid_in_payment_option> <bid_in_offer_currency> [witness]\n"
+			"escrowbid [alias] [escrow] [bid_in_payment_option] [bid_in_offer_currency] [witness]\n"
 			"<alias> An alias you own.\n"
 			"<escrow> Escrow GUID to place bid on.\n"
 			"<bid_in_payment_option> Amount to bid on offer through escrow. Bid is in payment option currency. Example: If offer is paid in SYS and you have deposited 10 SYS in escrow and would like to increase your total bid to 14 SYS enter 14 here. It is per unit of purchase.\n"
@@ -1467,8 +1467,7 @@ UniValue escrowbid(const UniValue& params, bool fHelp) {
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4509 - " + _("Failed to read alias from DB"));
 
 	vector<unsigned char> vchWitness;
-	if (CheckParam(params, 4))
-		vchWitness = vchFromValue(params[4]);
+	vchWitness = vchFromValue(params[4]);
 
 	CAliasIndex bidderalias;
 	if (!GetAlias(vchAlias, bidderalias))
@@ -1536,9 +1535,9 @@ UniValue escrowbid(const UniValue& params, bool fHelp) {
 	return res;
 }
 UniValue escrowaddshipping(const UniValue& params, bool fHelp) {
-	if (fHelp || params.size() < 2 || params.size() > 3)
+	if (fHelp || params.size() != 3)
 		throw runtime_error(
-			"escrowbid <escrow> <shipping amount> [witness]\n"
+			"escrowbid [escrow] [shipping amount] [witness]\n"
 			"<escrow> Escrow GUID to add shipping to.\n"
 			"<shipping amount> Amount to add to shipping for merchant. Amount is in payment option currency. Example: If merchant requests 0.1 BTC for shipping and escrow is paid in BTC, enter 0.1 here.\n"
 			"<witness> Witness alias name that will sign for web-of-trust notarization of this transaction.\n"
@@ -1549,8 +1548,7 @@ UniValue escrowaddshipping(const UniValue& params, bool fHelp) {
 	uint64_t nHeight = chainActive.Tip()->nHeight;
 
 	vector<unsigned char> vchWitness;
-	if (CheckParam(params, 2))
-		vchWitness = vchFromValue(params[2]);
+	vchWitness = vchFromValue(params[2]);
 
 	CScript scriptPubKeyAliasOrig, scriptPubKeyAlias;
 	CEscrow theEscrow;
@@ -1626,9 +1624,9 @@ UniValue escrowaddshipping(const UniValue& params, bool fHelp) {
 	return res;
 }
 UniValue escrownew(const UniValue& params, bool fHelp) {
-    if (fHelp || params.size() < 7 ||  params.size() > 17)
+    if (fHelp || params.size() != 17)
         throw runtime_error(
-			"escrownew <getamountandaddress> <alias> <arbiter alias> <offer> <quantity> <buynow> <total_in_payment_option> [shipping amount] [network fee] [arbiter fee] [witness fee] [extTx] [payment option] [bid_in_payment_option] [bid_in_offer_currency] [witness]\n"
+			"escrownew [getamountandaddress] [alias] [arbiter alias] [offer] [quantity] [buynow] [total_in_payment_option] [shipping amount] [network fee] [arbiter fee] [witness fee] [extTx] [payment option] [bid_in_payment_option] [bid_in_offer_currency] [witness]\n"
 				"<getamountandaddress> True or false. Get deposit and total escrow amount aswell as escrow address for funding. If buynow is false pass bid amount in bid_in_payment_option to get total needed to complete escrow. If buynow is true amount is calculated based on offer price and quantity.\n"
 				"<alias> An alias you own.\n"
 				"<arbiter alias> Alias of Arbiter.\n"
@@ -1646,18 +1644,14 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 				"<bid_in_offer_currency> Converted value of bid_in_payment_option from paymentOption currency to offer currency. For example: offer is priced in USD and purchased in BTC, this field will be the BTC/USD value. If buynow is set to true, this value is disregarded.\n"
                 "<witness> Witness alias name that will sign for web-of-trust notarization of this transaction.\n"	
 				+ HelpRequiringPassphrase());
-	bool bGetAmountAndAddress = params[0].get_str() == "true" ? true : false;
+	bool bGetAmountAndAddress = params[0].get_bool();
 	vector<unsigned char> vchAlias = vchFromValue(params[1]);
 	string strArbiter = params[2].get_str();
 	vector<unsigned char> vchOffer = vchFromValue(params[3]);
 	unsigned int nQty = 1;
 
-	try {
-		nQty = boost::lexical_cast<unsigned int>(params[4].get_str());
-	} catch (std::exception &e) {
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4511 - " + _("Invalid quantity value. Quantity must be less than 4294967296."));
-	}
-	bool bBuyNow = params[5].get_str() == "true"? true: false;
+	nQty = params[4].get_int();
+	bool bBuyNow = params[5].get_bool();
 	CAmount nPricePerUnit = AmountFromValue(params[6]);
 	
 	uint64_t nHeight = chainActive.Tip()->nHeight;
@@ -1668,39 +1662,26 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4509 - " + _("Failed to read arbiter alias from DB"));
 
 	CAmount nShipping = 0;
-	if (CheckParam(params, 7))
-	{
-		nShipping = AmountFromValue(params[7].get_str());
-	}
+	nShipping = AmountFromValue(params[7].get_real());
+	
 
 	int nNetworkFee = 0;
 	float fEscrowFee = getEscrowFee();
 
 	float fWitnessFee = 0;
-	if (CheckParam(params, 8))
-	{
-		nNetworkFee = boost::lexical_cast<int>(params[8].get_str());
-	}
-	if (CheckParam(params, 9))
-	{
-		fEscrowFee = boost::lexical_cast<float>(params[9].get_str());
-	}
-	if (CheckParam(params, 10))
-	{
-		fWitnessFee = boost::lexical_cast<float>(params[10].get_str());
-	}
+	nNetworkFee = params[8].get_int();
+	
+	fEscrowFee = params[9].get_real();
+	fWitnessFee = params[10].get_real();
 
 	string extTxIdStr = "";
-	if (CheckParam(params, 11))
-		extTxIdStr = params[11].get_str();
+	extTxIdStr = params[11].get_str();
 
 	// payment options - get payment options string if specified otherwise default to SYS
 	string paymentOption = "SYS";
-	if (CheckParam(params, 12))
-	{
-		paymentOption = params[12].get_str();
-		boost::algorithm::to_upper(paymentOption);
-	}
+	paymentOption = params[12].get_str();
+	boost::algorithm::to_upper(paymentOption);
+	
 	// payment options - validate payment options string
 	if (!ValidatePaymentOptionsString(paymentOption))
 	{
@@ -1713,17 +1694,13 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 		nNetworkFee = getFeePerByte(paymentOptionMask);
 
 	CAmount nBidPerUnit = 0;
-	if (CheckParam(params, 13))
-	{
-		nBidPerUnit = AmountFromValue(params[13]);
-	}
+		nBidPerUnit = AmountFromValue(params[13].get_real());
+	
 	float fBidPerUnit = 0;
-	if (CheckParam(params, 14))
-		fBidPerUnit = boost::lexical_cast<float>(params[14].get_str());
+	fBidPerUnit = params[14].get_real();
 
 	vector<unsigned char> vchWitness;
-	if(CheckParam(params, 15))
-		vchWitness = vchFromValue(params[15]);
+	vchWitness = vchFromValue(params[15]);
 
 	CAliasIndex buyeralias;
 	if (!GetAlias(vchAlias, buyeralias))
@@ -1925,16 +1902,15 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	return res;
 }
 UniValue escrowacknowledge(const UniValue& params, bool fHelp) {
-	if (fHelp || params.size() < 1 || params.size() > 2)
+	if (fHelp || params.size() != 2)
 		throw runtime_error(
-			"escrowacknowledge <escrow guid> [witness]\n"
+			"escrowacknowledge [escrow guid] [witness]\n"
 			"Acknowledge escrow payment as seller of offer.\n"
 			+ HelpRequiringPassphrase());
 	// gather & validate inputs
 	vector<unsigned char> vchEscrow = vchFromValue(params[0]);
 	vector<unsigned char> vchWitness;
-	if (CheckParam(params, 1))
-		vchWitness = vchFromValue(params[1]);
+	vchWitness = vchFromValue(params[1]);
 
 
 
@@ -2017,9 +1993,9 @@ UniValue escrowacknowledge(const UniValue& params, bool fHelp) {
 
 }
 UniValue escrowcreaterawtransaction(const UniValue& params, bool fHelp) {
-	if (fHelp || params.size() < 3 || params.size() > 4)
+	if (fHelp || params.size() != 4)
 		throw runtime_error(
-			"escrowcreaterawtransaction <type> <escrow guid> <[{\"txid\":\"id\",\"vout\":n, \"satoshis\":n},...]> [user role]\n"
+			"escrowcreaterawtransaction [type] [escrow guid] [{\"txid\":\"id\",\"vout\":n, \"satoshis\":n},...] [user role]\n"
 			"Creates raw transaction for escrow refund or release, sign the output raw transaction and pass it via the rawtx parameter to escrowrelease. Type is 'refund' or 'release'. Third parameter is array of input (txid, vout, amount) pairs to be used to fund escrow payment. User role represents either 'seller', 'buyer' or 'arbiter', represents who signed for the payment of the escrow. 'seller' or 'arbiter' is valid for type 'refund', while 'buyer' or 'arbiter' is valid for type 'release'. You only need to provide this parameter when calling escrowrelease or escrowrefund. \n"
 			+ HelpRequiringPassphrase());
 	// gather & validate inputs
@@ -2027,8 +2003,7 @@ UniValue escrowcreaterawtransaction(const UniValue& params, bool fHelp) {
 	vector<unsigned char> vchEscrow = vchFromValue(params[1]);
 	const UniValue &inputs = params[2].get_array();
 	string role = "";
-	if (CheckParam(params, 3))
-		role = params[3].get_str();
+	role = params[3].get_str();
 
 	// this is a syscoin transaction
 	CWalletTx wtx;
@@ -2178,9 +2153,9 @@ UniValue escrowcreaterawtransaction(const UniValue& params, bool fHelp) {
 	return res;
 }
 UniValue escrowrelease(const UniValue& params, bool fHelp) {
-    if (fHelp || params.size() > 4 || params.size() < 3)
+    if (fHelp || params.size() != 4)
         throw runtime_error(
-			"escrowrelease <escrow guid> <user role> <rawtx> [witness]\n"
+			"escrowrelease [escrow guid] [user role] [rawtx] [witness]\n"
 			"Releases escrow funds to seller. User role represents either 'buyer' or 'arbiter'. Third parameter (rawtx) is the signed response from escrowcreaterawtransaction. You must sign this transaction externally prior to passing in.\n"
                         + HelpRequiringPassphrase());
     // gather & validate inputs
@@ -2188,8 +2163,7 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	string role = params[1].get_str();
 	string rawtx = params[2].get_str();
 	vector<unsigned char> vchWitness;
-	if(CheckParam(params, 3))
-		vchWitness = vchFromValue(params[3]);
+	vchWitness = vchFromValue(params[3]);
     // this is a syscoin transaction
     CWalletTx wtx;
 
@@ -2299,9 +2273,9 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 }
 
 UniValue escrowcompleterelease(const UniValue& params, bool fHelp) {
-    if (fHelp || params.size() < 2 || params.size() > 3)
+    if (fHelp || params.size() != 3)
         throw runtime_error(
-		"escrowcompleterelease <escrow guid> <rawtx> [witness]\n"
+			"escrowcompleterelease [escrow guid] [rawtx] [witness]\n"
                          "Completes an escrow release by creating the escrow complete release transaction on syscoin blockchain.\n"
 						 "<rawtx> Raw fully signed syscoin escrow transaction. It is the signed response from escrowcreaterawtransaction. You must sign this transaction externally prior to passing in.\n"
                          "<witness> Witness alias name that will sign for web-of-trust notarization of this transaction.\n"	
@@ -2312,8 +2286,7 @@ UniValue escrowcompleterelease(const UniValue& params, bool fHelp) {
 	CTransaction myRawTx;
 	DecodeHexTx(myRawTx,rawTx);
 	vector<unsigned char> vchWitness;
-	if(CheckParam(params, 2))
-		vchWitness = vchFromValue(params[2]);
+	vchWitness = vchFromValue(params[2]);
     // this is a syscoin transaction
     CWalletTx wtx;
 
@@ -2396,9 +2369,9 @@ UniValue escrowcompleterelease(const UniValue& params, bool fHelp) {
 	return res;
 }
 UniValue escrowrefund(const UniValue& params, bool fHelp) {
-	if (fHelp || params.size() > 4 || params.size() < 3)
+	if (fHelp || params.size() != 4)
 		throw runtime_error(
-			"escrowrefund <escrow guid> <user role> <rawtx> [witness]\n"
+			"escrowrefund [escrow guid] [user role] [rawtx] [witness]\n"
 			"Refunds escrow funds to buyer. User role represents either 'seller' or 'arbiter'. Third parameter (rawtx) is the signed response from escrowreleasecreaterawtransaction. You must sign this transaction externally prior to passing in.\n"
 			+ HelpRequiringPassphrase());
 	// gather & validate inputs
@@ -2406,8 +2379,7 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 	string role = params[1].get_str();
 	string rawtx = params[2].get_str();
 	vector<unsigned char> vchWitness;
-	if (CheckParam(params, 3))
-		vchWitness = vchFromValue(params[3]);
+	vchWitness = vchFromValue(params[3]);
 	// this is a syscoin transaction
 	CWalletTx wtx;
 
@@ -2515,9 +2487,9 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 }
 
 UniValue escrowcompleterefund(const UniValue& params, bool fHelp) {
-	if (fHelp || params.size() < 2 || params.size() > 3)
+	if (fHelp || params.size() != 3)
 		throw runtime_error(
-			"escrowcompleterefund <escrow guid> <rawtx> [witness]\n"
+			"escrowcompleterefund [escrow guid] [rawtx] [witness]\n"
 			"Completes an escrow refund by creating the escrow complete refund transaction on syscoin blockchain.\n"
 			"<rawtx> Raw fully signed syscoin escrow transaction. It is the signed response from escrowcreaterawtransaction. You must sign this transaction externally prior to passing in.\n"
 			"<witness> Witness alias name that will sign for web-of-trust notarization of this transaction.\n"
@@ -2528,8 +2500,7 @@ UniValue escrowcompleterefund(const UniValue& params, bool fHelp) {
 	CTransaction myRawTx;
 	DecodeHexTx(myRawTx, rawTx);
 	vector<unsigned char> vchWitness;
-	if (CheckParam(params, 2))
-		vchWitness = vchFromValue(params[2]);
+	vchWitness = vchFromValue(params[2]);
 	// this is a syscoin transaction
 	CWalletTx wtx;
 
@@ -2615,9 +2586,9 @@ UniValue escrowcompleterefund(const UniValue& params, bool fHelp) {
 	return res;
 }
 UniValue escrowfeedback(const UniValue& params, bool fHelp) {
-    if (fHelp || params.size() < 5 || params.size() > 6)
+    if (fHelp || params.size() != 6)
         throw runtime_error(
-			"escrowfeedback <escrow guid> <userfrom> <feedback> <rating> <userto> [witness]\n"
+			"escrowfeedback [escrow guid] [userfrom] [feedback] [rating] [userto] [witness]\n"
                         "Send feedback for primary and secondary users in escrow, depending on who you are. Ratings are numbers from 1 to 5. User From and User To is either 'buyer', 'seller', 'reseller', or 'arbiter'.\n"
                         + HelpRequiringPassphrase());
    // gather & validate inputs
@@ -2629,8 +2600,7 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 	nRating = boost::lexical_cast<int>(params[3].get_str());
 	string userto = params[4].get_str();
 	vector<unsigned char> vchWitness;
-	if(CheckParam(params, 5))
-		vchWitness = vchFromValue(params[5]);
+	vchWitness = vchFromValue(params[5]);
     // this is a syscoin transaction
     CWalletTx wtx;
 	CEscrow escrow;
