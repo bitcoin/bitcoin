@@ -7,6 +7,7 @@
 #include "base58.h"
 #include "chainparams.h"
 #include <boost/test/unit_test.hpp>
+#include <boost/lexical_cast.hpp>
 BOOST_GLOBAL_FIXTURE( SyscoinTestingSetup );
 
 BOOST_FIXTURE_TEST_SUITE (syscoin_alias_tests, BasicSyscoinTestingSetup)
@@ -127,7 +128,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasmultiupdate)
 	hex_str = AliasTransfer("node1", "jagmultiupdate", "node2", "changeddata2");
 	BOOST_CHECK(hex_str.empty());
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo jagmultiupdate"));
-	string oldAddressStr = find_value(r.get_obj(), "address").get_str();
+	oldAddressStr = find_value(r.get_obj(), "address").get_str();
 	// after transfer it can't update alias even though there are utxo's available from old owner
 	hex_str = AliasUpdate("node1", "jagmultiupdate", "changedata3");
 	BOOST_CHECK(!hex_str.empty());
@@ -163,7 +164,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasmultiupdate)
 	hex_str = AliasTransfer("node2", "jagmultiupdate", "node1", "changedata8");
 	BOOST_CHECK(!hex_str.empty());
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo jagmultiupdate"));
-	string oldAddressStr = find_value(r.get_obj(), "address").get_str();
+	oldAddressStr = find_value(r.get_obj(), "address").get_str();
 	for (unsigned int i = 0; i < MAX_ALIAS_UPDATES_PER_BLOCK; i++)
 	{
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasupdate jagmultiupdate changedata9 " + oldAddressStr + " false " + expires + " " + encryptionprivkey + " " + encryptionkey + "''"));
@@ -310,7 +311,7 @@ BOOST_AUTO_TEST_CASE (generate_aliaspay)
 		BOOST_CHECK_NO_THROW(r = CallRPC("node2", "signrawtransaction " + varray[0].get_str()));
 		BOOST_CHECK_NO_THROW(CallRPC("node2", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
 	}
-	BOOST_CHECK_THROW(r = CallRPC("node2", "aliasupdate alias2.aliaspay.tld changedata2 " + oldAddressStr2 + " false " + expires21 + " " + encryptionprivkey2 + " " + encryptionkey2 + "''"), runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC("node2", "aliasupdate alias2.aliaspay.tld changedata2 " + oldAddressStr2 + " false " + expires2 + " " + encryptionprivkey2 + " " + encryptionkey2 + "''"), runtime_error);
 
 	for (unsigned int i = 0; i < MAX_ALIAS_UPDATES_PER_BLOCK; i++)
 	{
