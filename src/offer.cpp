@@ -1140,7 +1140,6 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 		theOffer.sCategory = vchFromString(strCategory);
 	if(strDescription != stringFromVch(offerCopy.sDescription))
 		theOffer.sDescription = vchFromString(strDescription);
-	float fPrice = 1;
 	// linked offers can't change these settings, they are overrided by parent info
 	if(offerCopy.linkOfferTuple.first.empty())
 	{
