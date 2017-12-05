@@ -1108,10 +1108,10 @@
            <item>
             <widget class="QCheckBox" name="optInRBF">
              <property name="text">
-              <string>Request Replace-By-Fee</string>
+              <string>Allow increasing fee</string>
              </property>
              <property name="toolTip">
-              <string>Indicates that the sender may wish to replace this transaction with a new one paying higher fees (prior to being confirmed).</string>
+              <string>This allows you to increase the fee later if the transaction takes a long time to confirm. This will also cause the recommended fee to be lower. ("Replace-By-Fee", BIP 125)</string>
              </property>
             </widget>
            </item>
