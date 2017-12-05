@@ -21,7 +21,10 @@
 #include <mp/type-context.h>
 #include <mp/type-data.h>
 #include <mp/type-decay.h>
+#include <mp/type-exception.h>
+#include <mp/type-function.h>
 #include <mp/type-interface.h>
+#include <mp/type-map.h>
 #include <mp/type-message.h>
 #include <mp/type-number.h>
 #include <mp/type-optional.h>
@@ -29,7 +32,9 @@
 #include <mp/type-string.h>
 #include <mp/type-struct.h>
 #include <mp/type-threadmap.h>
+#include <mp/type-unordered-set.h>
 #include <mp/type-vector.h>
+#include <mp/type-void.h>
 #include <stdexcept>
 #include <type_traits>
 #include <utility>
