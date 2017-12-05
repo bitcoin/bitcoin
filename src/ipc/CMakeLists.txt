@@ -6,6 +6,7 @@ add_library(bitcoin_ipc STATIC EXCLUDE_FROM_ALL
   capnp/chain.cpp
   capnp/common.cpp
   capnp/mining.cpp
+  capnp/node.cpp
   capnp/protocol.cpp
   capnp/wallet.cpp
   interfaces.cpp
@@ -19,6 +20,7 @@ target_capnp_sources(bitcoin_ipc ${PROJECT_SOURCE_DIR}
   capnp/handler.capnp
   capnp/init.capnp
   capnp/mining.capnp
+  capnp/node.capnp
   capnp/wallet.capnp
 )
 
