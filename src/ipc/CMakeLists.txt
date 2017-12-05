@@ -25,6 +25,8 @@ target_link_libraries(bitcoin_ipc
     core_interface
     univalue
     Boost::headers
+  PUBLIC
+    bitcoin_common
 )
 
 if(BUILD_TESTS)
