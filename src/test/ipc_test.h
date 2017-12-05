@@ -15,6 +15,7 @@ public:
     int add(int a, int b) { return a + b; }
     COutPoint passOutPoint(COutPoint o) { return o; }
     UniValue passUniValue(UniValue v) { return v; }
+    CTransactionRef passTransaction(CTransactionRef t) { return t; }
 };
 
 void IpcPipeTest();

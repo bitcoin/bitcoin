@@ -15,4 +15,5 @@ interface FooInterface $Proxy.wrap("FooImplementation") {
     add @0 (a :Int32, b :Int32) -> (result :Int32);
     passOutPoint @1 (arg :Data) -> (result :Data);
     passUniValue @2 (arg :Text) -> (result :Text);
+    passTransaction @3 (arg :Data) -> (result :Data);
 }
