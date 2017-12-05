@@ -3744,6 +3744,75 @@ UniValue getstakinginfo(const JSONRPCRequest &request)
     return obj;
 };
 
+UniValue getcoldstakinginfo(const JSONRPCRequest &request)
+{
+    CHDWallet *pwallet = GetHDWalletForJSONRPCRequest(request);
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
+        return NullUniValue;
+
+    if (request.fHelp || request.params.size() != 0)
+        throw std::runtime_error(
+            "getcoldstakinginfo\n"
+            "Returns an object containing coldstaking-related information.");
+
+    UniValue obj(UniValue::VOBJ);
+
+    LOCK2(cs_main, pwallet->cs_wallet);
+    std::vector<COutput> vecOutputs;
+
+    bool include_unsafe = false;
+    bool fIncludeImmature = true;
+    CAmount nMinimumAmount = 0;
+    CAmount nMaximumAmount = MAX_MONEY;
+    CAmount nMinimumSumAmount = MAX_MONEY;
+    uint64_t nMaximumCount = 0;
+    int nMinDepth = 0;
+    int nMaxDepth = 0x7FFFFFFF;
+
+    int nHeight = chainActive.Tip()->nHeight;
+    int nRequiredDepth = std::min((int)(Params().GetStakeMinConfirmations()-1), (int)(nHeight / 2));
+
+    pwallet->AvailableCoins(vecOutputs, !include_unsafe, nullptr, nMinimumAmount, nMaximumAmount, nMinimumSumAmount, nMaximumCount, nMinDepth, nMaxDepth, fIncludeImmature);
+
+    CAmount nStakeable = 0;
+    CAmount nColdStakeable = 0;
+    CAmount nWalletStaking = 0;
+
+    CScript coinstakePath;
+    for (const auto &out : vecOutputs)
+    {
+        const CScript *scriptPubKey = out.tx->tx->vpout[out.i]->GetPScriptPubKey();
+        CAmount nValue = out.tx->tx->vpout[out.i]->GetValue();
+
+        if (scriptPubKey->IsPayToPublicKeyHash() || scriptPubKey->IsPayToPublicKeyHash256())
+        {
+            nStakeable += nValue;
+        } else
+        if (scriptPubKey->IsPayToPublicKeyHash256_CS() || scriptPubKey->IsPayToScriptHash256_CS() || scriptPubKey->IsPayToScriptHash_CS())
+        {
+            nColdStakeable += nValue;
+        } else
+        {
+            continue;
+        };
+
+        if (out.nDepth < nRequiredDepth)
+            continue;
+
+        CKeyID keyID;
+        if (!ExtractStakingKeyID(*scriptPubKey, keyID))
+            continue;
+        if (pwallet->HaveKey(keyID))
+            nWalletStaking += nValue;
+    };
+
+    obj.pushKV("coin_in_stakeable_script", ValueFromAmount(nStakeable));
+    obj.pushKV("coin_in_coldstakeable_script", ValueFromAmount(nColdStakeable));
+    obj.pushKV("coin_staking_in_wallet", ValueFromAmount(nWalletStaking));
+
+    return obj;
+};
+
 
 UniValue listunspentanon(const JSONRPCRequest &request)
 {
@@ -5597,6 +5666,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "manageaddressbook",        &manageaddressbook,        true,   {"action","address","label","purpose"} },
 
     { "wallet",             "getstakinginfo",           &getstakinginfo,           true,   {} },
+    { "wallet",             "getcoldstakinginfo",       &getcoldstakinginfo,       true,   {} },
 
     //{ "wallet",             "gettransactionsummary",    &gettransactionsummary,    true,  {} },
 
@@ -5629,8 +5699,6 @@ static const CRPCCommand commands[] =
     { "governance",         "setvote",                  &setvote,                  false,  {"proposal","option","height_start","height_end"} },
     { "governance",         "votehistory",              &votehistory,              false,  {"current_only"} },
     { "governance",         "tallyvotes",               &tallyvotes,               false,  {"proposal","height_start","height_end"} },
-
-
 };
 
 void RegisterHDWalletRPCCommands(CRPCTable &t)

@@ -24,51 +24,55 @@ class PosTest(ParticlTestFramework):
         self.sync_all()
 
     def run_test(self):
-        node = self.nodes[0]
-        node1 = self.nodes[1]
+        nodes = self.nodes
 
         # stop staking
-        ro = node.reservebalance(True, 10000000)
-        ro = node1.reservebalance(True, 10000000)
+        ro = nodes[0].reservebalance(True, 10000000)
+        ro = nodes[1].reservebalance(True, 10000000)
+        ro = nodes[2].reservebalance(True, 10000000)
 
-        ro = node.extkeyimportmaster('abandon baby cabbage dad eager fabric gadget habit ice kangaroo lab absorb')
+        ro = nodes[0].extkeyimportmaster('abandon baby cabbage dad eager fabric gadget habit ice kangaroo lab absorb')
         assert(ro['account_id'] == 'aaaZf2qnNr5T7PWRmqgmusuu5ACnBcX2ev')
-
-        ro = node.getinfo()
+        ro = nodes[0].getinfo()
         assert(ro['total_balance'] == 100000)
-        ro = node.walletsettings('stakelimit', {'height':1})
+
+        ro = nodes[1].extkeyimportmaster(nodes[1].mnemonic("new")['master'])
+        ro = nodes[2].extkeyimportmaster('sección grito médula hecho pauta posada nueve ebrio bruto buceo baúl mitad')
+
+
+        addrTo256 = nodes[2].getnewaddress('256 test', 'True', 'False', 'True')
+        assert(addrTo256 == 'tpl16a6gjrpfwkqrf8fveajkek07l6a0pxgaayk4y6gyq9zlkxxk2hqqmld6tr')
+        [nodes[0].sendtoaddress(addrTo256, 1000) for i in range(4)]
+
 
         # test reserve balance
-        ro = node.getwalletinfo()
+        ro = nodes[0].walletsettings('stakelimit', {'height':1})
+        ro = nodes[0].getwalletinfo()
         assert(isclose(ro['reserve'], 10000000.0))
 
-        ro = node.reservebalance(True, 100)
+        ro = nodes[0].reservebalance(True, 100)
         assert(ro['reserve'] == True)
         assert(isclose(ro['amount'], 100.0))
 
-        ro = node.getwalletinfo()
+        ro = nodes[0].getwalletinfo()
         assert(ro['reserve'] == 100)
 
-        ro = node.reservebalance(False)
+        ro = nodes[0].reservebalance(False)
         assert(ro['reserve'] == False)
         assert(ro['amount'] == 0)
 
-        ro = node.getwalletinfo()
+        ro = nodes[0].getwalletinfo()
         assert(ro['reserve'] == 0)
 
-        assert(self.wait_for_height(node, 1))
-        ro = node.reservebalance(True, 10000000)
+        assert(self.wait_for_height(nodes[0], 1))
+        ro = nodes[0].reservebalance(True, 10000000)
 
-        oRoot1 = node1.mnemonic("new")
-        ro = node1.extkeyimportmaster(oRoot1['master'])
-
-        addrTo = node1.getnewaddress()
-
-        txnHash = node.sendtoaddress(addrTo, 10)
-        ro = node.getmempoolentry(txnHash)
+        addrTo = nodes[1].getnewaddress()
+        txnHash = nodes[0].sendtoaddress(addrTo, 10)
+        ro = nodes[0].getmempoolentry(txnHash)
         assert(ro['height'] == 1)
 
-        ro = node.listtransactions()
+        ro = nodes[0].listtransactions()
         fPass = False
         for txl in ro:
             if txl['address'] == addrTo and txl['amount'] == -10 and txl['category'] == 'send':
@@ -77,37 +81,32 @@ class PosTest(ParticlTestFramework):
         assert(fPass), "node0, listtransactions failed."
 
 
-        assert(self.wait_for_mempool(node1, txnHash))
+        assert(self.wait_for_mempool(nodes[1], txnHash))
 
-        ro = node1.listtransactions()
+        ro = nodes[1].listtransactions()
         assert(len(ro) == 1)
         assert(ro[0]['address'] == addrTo)
         assert(ro[0]['amount'] == 10)
         assert(ro[0]['category'] == 'receive')
 
         self.stakeBlocks(1)
-        block2_hash = node.getblockhash(2)
-        ro = node.getblock(block2_hash)
+        block2_hash = nodes[0].getblockhash(2)
+        ro = nodes[0].getblock(block2_hash)
         assert(txnHash in ro['tx'])
 
 
-        addrReward = node.getnewaddress()
-        print('addrReward', addrReward)
-
-        ro = node.walletsettings('stakingoptions', {'rewardaddress':addrReward})
+        addrReward = nodes[0].getnewaddress()
+        ro = nodes[0].walletsettings('stakingoptions', {'rewardaddress':addrReward})
         assert(ro['stakingoptions']['rewardaddress'] == addrReward)
 
         self.stakeBlocks(1)
-        block3_hash = node.getblockhash(3)
-        ro = node.getblock(block3_hash)
-        print(json.dumps(ro, indent=4, default=self.jsonDecimal))
+        block3_hash = nodes[0].getblockhash(3)
+        ro = nodes[0].getblock(block3_hash)
 
         coinstakehash = ro['tx'][0]
-        ro = node.getrawtransaction(coinstakehash, True)
-        print(json.dumps(ro, indent=4, default=self.jsonDecimal))
+        ro = nodes[0].getrawtransaction(coinstakehash, True)
 
         fFound = False
-
         for vout in ro["vout"]:
             try:
                 addr0 = vout['scriptPubKey']['addresses'][0]
@@ -118,6 +117,14 @@ class PosTest(ParticlTestFramework):
                 assert(vout['valueSat'] == 39637)
                 break
         assert(fFound)
+
+        # Test staking pkh256 outputs
+        ro = nodes[2].walletsettings('stakelimit', {'height':1})
+        ro = nodes[2].reservebalance(False)
+        ro = nodes[2].getstakinginfo()
+        assert(ro['weight'] == 400000000000)
+
+        self.stakeBlocks(1, nStakeNode=2)
 
 
         #assert(False)

@@ -396,6 +396,32 @@ bool ExtractDestinations(const CScript& scriptPubKey, txnouttype& typeRet, std::
     return true;
 }
 
+bool ExtractStakingKeyID(const CScript &scriptPubKey, CKeyID &keyID)
+{
+    if (scriptPubKey.IsPayToPublicKeyHash())
+    {
+        keyID = uint160(&scriptPubKey[3], 20);
+        return true;
+    };
+
+    if (scriptPubKey.IsPayToPublicKeyHash256())
+    {
+        keyID = uint256(&scriptPubKey[3], 32);
+        return true;
+    };
+
+    if (scriptPubKey.IsPayToPublicKeyHash256_CS()
+        || scriptPubKey.IsPayToScriptHash256_CS()
+        || scriptPubKey.IsPayToScriptHash_CS()
+        )
+    {
+        keyID = uint160(&scriptPubKey[5], 20);
+        return true;
+    };
+
+    return false;
+};
+
 namespace
 {
 class CScriptVisitor : public boost::static_visitor<bool>

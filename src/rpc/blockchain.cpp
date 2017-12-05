@@ -1212,6 +1212,101 @@ UniValue gettxoutsetinfo(const JSONRPCRequest& request)
     return ret;
 }
 
+UniValue gettxoutsetinfobyscript(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() != 0)
+        throw std::runtime_error(
+            "gettxoutsetinfobyscript\n"
+            "\nReturns statistics about the unspent transaction output set per script type.\n"
+            "Note this call may take some time.\n"
+            "\nResult:\n"
+            "{\n"
+            "  \"height\":n,     (numeric) The current block height (index)\n"
+            "  \"bestblock\": \"hex\",   (string) the best block hash hex\n"
+            "}\n"
+            "\nExamples:\n"
+            + HelpExampleCli("gettxoutsetinfobyscript", "")
+            + HelpExampleRpc("gettxoutsetinfobyscript", "")
+        );
+
+    UniValue ret(UniValue::VOBJ);
+
+    int nHeight;
+    uint256 hashBlock;
+
+    FlushStateToDisk();
+    std::unique_ptr<CCoinsViewCursor> pcursor(pcoinsdbview->Cursor());
+
+    hashBlock = pcursor->GetBestBlock();
+    {
+        LOCK(cs_main);
+        nHeight = mapBlockIndex.find(hashBlock)->second->nHeight;
+    }
+
+    class PerScriptTypeStats {
+    public:
+        int64_t nPlain = 0;
+        int64_t nBlinded = 0;
+        int64_t nPlainValue = 0;
+
+        UniValue ToUV()
+        {
+            UniValue ret(UniValue::VOBJ);
+            ret.pushKV("num_plain", nPlain);
+            ret.pushKV("num_blinded", nBlinded);
+            ret.pushKV("total_amount", ValueFromAmount(nPlainValue));
+            return ret;
+        }
+    };
+
+    PerScriptTypeStats statsPKH;
+    PerScriptTypeStats statsSH;
+    PerScriptTypeStats statsCSPKH;
+    PerScriptTypeStats statsCSSH;
+    PerScriptTypeStats statsOther;
+
+    uint256 prevkey;
+    while (pcursor->Valid()) {
+        boost::this_thread::interruption_point();
+        COutPoint key;
+        Coin coin;
+        if (pcursor->GetKey(key) && pcursor->GetValue(coin)) {
+            PerScriptTypeStats *ps = &statsOther;
+            if (coin.out.scriptPubKey.IsPayToPublicKeyHash())
+                ps = &statsPKH;
+            else if (coin.out.scriptPubKey.IsPayToScriptHash())
+                ps = &statsSH;
+            else if (coin.out.scriptPubKey.IsPayToPublicKeyHash256_CS())
+                ps = &statsCSPKH;
+            else if (coin.out.scriptPubKey.IsPayToScriptHash256_CS() || coin.out.scriptPubKey.IsPayToScriptHash_CS() )
+                ps = &statsCSSH;
+
+            if (coin.nType == OUTPUT_STANDARD)
+            {
+                ps->nPlain++;
+                ps->nPlainValue += coin.out.nValue;
+            } else
+            if (coin.nType == OUTPUT_CT)
+            {
+                ps->nBlinded++;
+            };
+        } else {
+            throw JSONRPCError(RPC_INTERNAL_ERROR, "Unable to read UTXO set");
+        }
+        pcursor->Next();
+    }
+
+    ret.pushKV("height", (int64_t)nHeight);
+    ret.pushKV("bestblock", hashBlock.GetHex());
+    ret.pushKV("paytopubkeyhash", statsPKH.ToUV());
+    ret.pushKV("paytoscripthash", statsSH.ToUV());
+    ret.pushKV("coldstake_paytopubkeyhash", statsCSPKH.ToUV());
+    ret.pushKV("coldstake_paytoscripthash", statsCSSH.ToUV());
+    ret.pushKV("other", statsOther.ToUV());
+
+    return ret;
+}
+
 UniValue gettxout(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 2 || request.params.size() > 3)
@@ -1828,6 +1923,8 @@ static const CRPCCommand commands[] =
     { "blockchain",         "getrawmempool",          &getrawmempool,          true,  {"verbose"} },
     { "blockchain",         "gettxout",               &gettxout,               true,  {"txid","n","include_mempool"} },
     { "blockchain",         "gettxoutsetinfo",        &gettxoutsetinfo,        true,  {} },
+    { "blockchain",         "gettxoutsetinfobyscript",&gettxoutsetinfobyscript,true,  {} },
+
     { "blockchain",         "pruneblockchain",        &pruneblockchain,        true,  {"height"} },
     { "blockchain",         "verifychain",            &verifychain,            true,  {"checklevel","nblocks"} },
     { "blockchain",         "preciousblock",          &preciousblock,          true,  {"blockhash"} },

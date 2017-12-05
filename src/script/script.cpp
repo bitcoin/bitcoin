@@ -221,10 +221,19 @@ bool CScript::IsPayToScriptHash() const
             (*this)[22] == OP_EQUAL);
 }
 
-bool CScript::IsPayToPublicKeyHash(size_t ofs) const
+bool CScript::MatchPayToScriptHash(size_t ofs) const
 {
     // Extra-fast test for pay-to-script-hash CScripts:
-    return (this->size() - ofs >= 26 && // +1 for OP_END
+    return (this->size() - ofs >= 23 &&
+        (*this)[ofs+0] == OP_HASH160 &&
+        (*this)[ofs+1] == 0x14 &&
+        (*this)[ofs+22] == OP_EQUAL);
+}
+
+bool CScript::MatchPayToPublicKeyHash(size_t ofs) const
+{
+    // Extra-fast test for pay-to-script-hash CScripts:
+    return (this->size() - ofs >= 25 &&
             (*this)[ofs + 0] == OP_DUP &&
             (*this)[ofs + 1] == OP_HASH160 &&
             (*this)[ofs + 2] == 0x14 &&
@@ -235,21 +244,33 @@ bool CScript::IsPayToPublicKeyHash(size_t ofs) const
 bool CScript::IsPayToPublicKeyHash256() const
 {
     // Extra-fast test for pay-to-pubkey-hash CScripts:
-    return (this->size() == 37 &&
-        (*this)[0] == OP_DUP &&
-        (*this)[1] == OP_SHA256 &&
-        (*this)[2] == 0x20 &&
-        (*this)[35] == OP_EQUALVERIFY &&
-        (*this)[36] == OP_CHECKSIG);
+    return (this->size() == 37 && MatchPayToPublicKeyHash256(0));
+}
+
+bool CScript::MatchPayToPublicKeyHash256(size_t ofs) const
+{
+    // Extra-fast test for pay-to-pubkey-hash CScripts:
+    return (this->size() - ofs >= 37 &&
+        (*this)[ofs+0] == OP_DUP &&
+        (*this)[ofs+1] == OP_SHA256 &&
+        (*this)[ofs+2] == 0x20 &&
+        (*this)[ofs+35] == OP_EQUALVERIFY &&
+        (*this)[ofs+36] == OP_CHECKSIG);
 }
 
 bool CScript::IsPayToScriptHash256() const
 {
     // Extra-fast test for pay-to-script-hash CScripts:
-    return (this->size() == 35 &&
-            (*this)[0] == OP_SHA256 &&
-            (*this)[1] == 0x20 &&
-            (*this)[34] == OP_EQUAL);
+    return (this->size() == 35 && MatchPayToScriptHash256(0));
+}
+
+bool CScript::MatchPayToScriptHash256(size_t ofs) const
+{
+    // Extra-fast test for pay-to-script-hash CScripts:
+    return (this->size() - ofs >= 35 &&
+        (*this)[ofs+0] == OP_SHA256 &&
+        (*this)[ofs+1] == 0x20 &&
+        (*this)[ofs+34] == OP_EQUAL);
 }
 
 bool CScript::IsPayToTimeLockedScriptHash() const
@@ -287,6 +308,42 @@ bool CScript::IsWitnessProgram(int& version, std::vector<unsigned char>& program
     }
     return false;
 }
+
+bool CScript::IsPayToPublicKeyHash256_CS() const
+{
+    return this->size() == 25 + 37 + 4
+        && (*this)[0] == OP_ISCOINSTAKE
+        && (*this)[1] == OP_IF
+        && MatchPayToPublicKeyHash(2)
+        && (*this)[27] == OP_ELSE
+        && MatchPayToPublicKeyHash256(28)
+        && (*this)[65] == OP_ENDIF;
+};
+
+bool CScript::IsPayToScriptHash256_CS() const
+{
+    return this->size() == 25 + 35 + 4
+        && (*this)[0] == OP_ISCOINSTAKE
+        && (*this)[1] == OP_IF
+        && MatchPayToPublicKeyHash(2)
+        && (*this)[27] == OP_ELSE
+        && MatchPayToScriptHash256(28)
+        && (*this)[63] == OP_ENDIF;
+};
+
+bool CScript::IsPayToScriptHash_CS() const
+{
+    return this->size() == 25 + 23 + 4
+        && (*this)[0] == OP_ISCOINSTAKE
+        && (*this)[1] == OP_IF
+        && MatchPayToPublicKeyHash(2)
+        && (*this)[27] == OP_ELSE
+        && MatchPayToScriptHash(28)
+        && (*this)[51] == OP_ENDIF;
+};
+
+
+
 
 bool CScript::IsPushOnly(const_iterator pc) const
 {

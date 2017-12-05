@@ -26,16 +26,7 @@ bool CZMQNotificationInterface::IsWhitelistedRange(const CNetAddr &addr) {
 
 void CZMQNotificationInterface::ThreadZAP()
 {
-    /*
-    https://rfc.zeromq.org/spec:27/ZAP/
-    The version frame, which SHALL contain the three octets "1.0".
-    The request id, which MAY contain an opaque binary blob.
-    The domain, which SHALL contain a (non-empty) string.
-    The address, the origin network IP address.
-    The identity, the connection Identity, if any.
-    The mechanism, which SHALL contain a string.
-    The credentials, which SHALL be zero or more opaque frames.
-    */
+    // https://rfc.zeromq.org/spec:27/ZAP/
     assert(pcontext);
     void *sock = zmq_socket(pcontext, ZMQ_REP);
     zmq_bind(sock, "inproc://zeromq.zap.01");
@@ -69,7 +60,6 @@ void CZMQNotificationInterface::ThreadZAP()
         std::string address((char*)buf[3], nb[3]);
 
         bool fAccept = true;
-
         if (vWhitelistedRange.size() > 0)
         {
             CNetAddr addr;

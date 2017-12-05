@@ -67,7 +67,7 @@ QValidator::State BitcoinAddressEntryValidator::validate(QString &input, int &po
         if (((ch >= '0' && ch<='9') ||
             (ch >= 'a' && ch<='z') ||
             (ch >= 'A' && ch<='Z')) &&
-            ch != 'l' && ch != 'I' && ch != '0' && ch != 'O')
+            ch != 'I' && ch != 'O') //  ch != 'l' && ch != '0' // allow l and 0 for bech32
         {
             // Alphanumeric and not a 'forbidden' character
         }

@@ -1663,7 +1663,7 @@ bool IsSpendScriptP2PKH(const CScript &script)
             && opcode == OP_ELSE)
         {
             size_t ofs = pc - script.begin();
-            return script.IsPayToPublicKeyHash(ofs);
+            return script.MatchPayToPublicKeyHash(ofs);
         };
     };
 

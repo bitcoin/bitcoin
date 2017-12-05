@@ -444,6 +444,16 @@ bool ArgsManager::IsArgSet(const std::string& strArg)
 
 namespace part
 {
+static bool icompare_pred(unsigned char a, unsigned char b)
+{
+    return std::tolower(a) == std::tolower(b);
+};
+static bool icompare_str(const std::string &a, const std::string &b)
+{
+    return a.length() == b.length()
+        && std::equal(b.begin(), b.end(), a.begin(), icompare_pred);
+};
+
 void *memrchr(const void *s, int c, size_t n)
 {
     if (n < 1)
@@ -485,12 +495,12 @@ void ReplaceStrInPlace(std::string &subject, const std::string search, const std
 
 bool IsStringBoolPositive(const std::string &value)
 {
-    return (value == "+" || value == "on"  || value == "true"  || value == "1" || value == "yes");
+    return (value == "+" || value == "1" || icompare_str(value, "on")  || icompare_str(value, "true") || icompare_str(value, "yes") || icompare_str(value, "y"));
 };
 
 bool IsStringBoolNegative(const std::string &value)
 {
-    return (value == "-" || value == "off" || value == "false" || value == "0" || value == "no" || value == "n");
+    return (value == "-" || value == "0" || icompare_str(value, "off") || icompare_str(value, "false") || icompare_str(value, "no") || icompare_str(value, "n"));
 };
 
 bool GetStringBool(const std::string &value, bool &fOut)
@@ -539,10 +549,6 @@ std::string BytesReadable(uint64_t nBytes)
     return strprintf("%d B", nBytes);
 };
 
-static bool icompare_pred(unsigned char a, unsigned char b)
-{
-    return std::tolower(a) == std::tolower(b);
-};
 bool stringsMatchI(const std::string &sString, const std::string &sFind, int type)
 {
     // case insensitive

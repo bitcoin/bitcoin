@@ -104,12 +104,12 @@ namespace BCLog {
         COINDB      = (1 << 18),
         QT          = (1 << 19),
         LEVELDB     = (1 << 20),
-        
+
         SMSG        = (1 << 27),
         RINGCT      = (1 << 28),
         POS         = (1 << 29),
         HDWALLET    = (1 << 30),
-        
+
         ALL         = ~(uint32_t)0,
     };
 }
@@ -221,9 +221,9 @@ inline bool IsSwitchChar(char c)
 namespace part
 {
     void *memrchr(const void *s, int c, size_t n);
-    
+
     int memcmp_nta(const void *cs, const void *ct, size_t count);
-    
+
     void ReplaceStrInPlace(std::string &subject, const std::string search, const std::string replace);
     bool IsStringBoolPositive(const std::string &value);
     bool IsStringBoolNegative(const std::string &value);

@@ -10456,23 +10456,11 @@ void CHDWallet::AvailableCoinsForStaking(std::vector<COutput> &vCoins, int64_t n
                      || IsSpent(wtxid, i))
                     continue;
 
-                std::vector<std::vector<uint8_t> > vSolutionsRet;
-                txnouttype typeRet;
-
                 const CScript *pscriptPubKey = txout->GetPScriptPubKey();
-                CScript coinstakePath;
-                if ((HasIsCoinstakeOp(*pscriptPubKey)))
-                {
-                    if (!GetCoinstakeScriptPath(*pscriptPubKey, coinstakePath))
-                        continue;
-                    pscriptPubKey = &coinstakePath;
-                };
-
-                if (!Solver(*pscriptPubKey, typeRet, vSolutionsRet)
-                    || typeRet != TX_PUBKEYHASH)
+                CKeyID keyID;
+                if (!ExtractStakingKeyID(*pscriptPubKey, keyID))
                     continue;
 
-                CKeyID keyID = CKeyID(uint160(vSolutionsRet[0]));
                 if (HaveKey(keyID))
                     vCoins.push_back(COutput(pcoin, i, nDepth, true, true, true));
             };
@@ -10648,13 +10636,20 @@ bool CHDWallet::CreateCoinStake(unsigned int nBits, int64_t nTime, int nBlockHei
             };
 
             LogPrint(BCLog::POS, "%s: Parsed kernel type=%d.\n", __func__, whichType);
-            if (whichType != TX_PUBKEYHASH)
+            CKeyID spendId;
+            if (whichType == TX_PUBKEYHASH)
+            {
+                spendId = uint160(vSolutions[0]);
+            } else
+            if (whichType == TX_PUBKEYHASH256)
+            {
+                spendId = uint256(vSolutions[0]);
+            } else
             {
                 LogPrint(BCLog::POS, "%s: No support for kernel type=%d.\n", __func__, whichType);
                 break;  // only support pay to address (pay to pubkey hash)
             };
 
-            CKeyID spendId = uint160(vSolutions[0]);
             if (!GetKey(spendId, key))
             {
                 LogPrint(BCLog::POS, "%s: Failed to get key for kernel type=%d.\n", __func__, whichType);

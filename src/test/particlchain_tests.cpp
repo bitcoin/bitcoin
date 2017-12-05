@@ -161,8 +161,8 @@ BOOST_AUTO_TEST_CASE(opiscoinstake_test)
         << OP_DUP << OP_SHA256 << ToByteVector(idB) << OP_EQUALVERIFY << OP_CHECKSIG
         << OP_ENDIF;
 
-
     BOOST_CHECK(HasIsCoinstakeOp(script));
+    BOOST_CHECK(script.IsPayToPublicKeyHash256_CS());
 
     BOOST_CHECK(!IsSpendScriptP2PKH(script));
 
@@ -250,6 +250,24 @@ BOOST_AUTO_TEST_CASE(opiscoinstake_test)
 
     BOOST_CHECK(VerifyScript(scriptSig, script, &sigdataB.scriptWitness, nFlags, TransactionSignatureChecker(&txnConst2, 0, vchAmount), &serror));
 
+
+
+    CScript script_h160 = CScript()
+        << OP_ISCOINSTAKE << OP_IF
+        << OP_DUP << OP_HASH160 << ToByteVector(idA) << OP_EQUALVERIFY << OP_CHECKSIG
+        << OP_ELSE
+        << OP_HASH160 << ToByteVector(idA) << OP_EQUAL
+        << OP_ENDIF;
+    BOOST_CHECK(script_h160.IsPayToScriptHash_CS());
+
+
+    CScript script_h256 = CScript()
+        << OP_ISCOINSTAKE << OP_IF
+        << OP_DUP << OP_HASH160 << ToByteVector(idA) << OP_EQUALVERIFY << OP_CHECKSIG
+        << OP_ELSE
+        << OP_SHA256 << ToByteVector(idB) << OP_EQUAL
+        << OP_ENDIF;
+    BOOST_CHECK(script_h256.IsPayToScriptHash256_CS());
 }
 
 
