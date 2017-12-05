@@ -62,6 +62,10 @@ def main():
         colors["node1"] = "\033[0;32m"  # GREEN
         colors["node2"] = "\033[0;31m"  # RED
         colors["node3"] = "\033[0;33m"  # YELLOW
+        colors["wall0"] = "\033[0;34;1m"  # BLUE
+        colors["wall1"] = "\033[0;32;1m"  # GREEN
+        colors["wall2"] = "\033[0;31;1m"  # RED
+        colors["wall3"] = "\033[0;33;1m"  # YELLOW
         colors["reset"] = "\033[0m"  # Reset font color
 
     log_events = read_logs(testdir)
