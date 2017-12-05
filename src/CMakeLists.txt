@@ -165,6 +165,7 @@ add_library(bitcoin_common STATIC EXCLUDE_FROM_ALL
   net_types.cpp
   netaddress.cpp
   netbase.cpp
+  node/interface_ui.cpp
   outputtype.cpp
   policy/feerate.cpp
   policy/policy.cpp
@@ -263,7 +264,6 @@ add_library(bitcoin_node STATIC EXCLUDE_FROM_ALL
   node/context.cpp
   node/database_args.cpp
   node/eviction.cpp
-  node/interface_ui.cpp
   node/interfaces.cpp
   node/kernel_notifications.cpp
   node/mempool_args.cpp
