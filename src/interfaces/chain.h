@@ -280,6 +280,12 @@ public:
 
     //! Shut down client.
     virtual void stop() = 0;
+
+    //! Set mock time.
+    virtual void setMockTime(int64_t time) = 0;
+
+    //! Return interfaces for accessing wallets (if any).
+    virtual std::vector<std::unique_ptr<Wallet>> getWallets() = 0;
 };
 
 //! Return implementation of Chain interface.
