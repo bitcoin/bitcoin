@@ -53,6 +53,37 @@ class IPCInterfaceTest(BitcoinTestFramework):
             echo.destroy(ctx)
         asyncio.run(capnp.run(async_routine()))
 
+    def run_chain_test(self):
+        self.log.info("Running chain test")
+        node = self.nodes[0]
+        tip_hash = node.getbestblockhash()
+        tip_height = node.getblockcount()
+        tip_time = node.getblockheader(tip_hash)["time"]
+
+        async def async_routine():
+            ctx, init = await make_capnp_init_ctx(self)
+            chain_capnp = self.capnp_modules['chain']
+            want = chain_capnp.FoundBlockParam(wantHeight=True, wantTime=True)
+
+            self.log.debug("Call a method on the stable Chain interface")
+            chain = init.makeChain(ctx).result
+            result = await chain.findBlock(ctx, bytes.fromhex(tip_hash)[::-1], want)
+            assert result.result
+            assert_equal(result.block.height, tip_height)
+            assert_equal(result.block.time, tip_time)
+            await chain.destroy(ctx)
+
+            self.log.debug("Call methods on the UnstableChain interface, including one inherited from Chain")
+            unstable_chain = init.makeUnstableChain(ctx).result
+            result = await unstable_chain.getHeight(ctx)
+            assert result.hasResult
+            assert_equal(result.result, tip_height)
+            result = await unstable_chain.findAncestorByHeight(ctx, bytes.fromhex(tip_hash)[::-1], 0, want)
+            assert result.result
+            assert_equal(result.ancestor.height, 0)
+            await unstable_chain.destroy(ctx)
+        asyncio.run(capnp.run(async_routine()))
+
     def run_rpc_invalid_json_test(self):
         self.log.info("Running RPC invalid JSON test")
         async def async_routine():
@@ -181,6 +212,7 @@ class IPCInterfaceTest(BitcoinTestFramework):
 
     def run_test(self):
         self.run_echo_test()
+        self.run_chain_test()
         self.run_rpc_invalid_json_test()
         self.run_mining_test()
         self.run_deprecated_mining_test()
