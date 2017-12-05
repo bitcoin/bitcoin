@@ -157,7 +157,7 @@ add_library(crown_server
 
 target_include_directories(crown_server PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} PRIVATE leveldb/helpers/memenv)
 
-target_link_libraries(crown_server leveldb crown_core json)
+target_link_libraries(crown_server PRIVATE leveldb PRIVATE crown_core PUBLIC json PRIVATE crown_util PRIVATE crown_common PRIVATE crown_wallet PRIVATE OpenSSL::SSL PRIVATE leveldb PRIVATE memenv)
 
 
 #LIBCROWN-COMMON
@@ -283,10 +283,10 @@ add_library(crown_common
   compat/byteswap.h 
   compat/endian.h 
   compat/sanity.h
-)
+        test/governance.cpp)
 
 target_include_directories(crown_common PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} PRIVATE leveldb/helpers/memenv PRIVATE secp256k1/include)
-target_link_libraries(crown_common crown_core)
+target_link_libraries(crown_common PUBLIC crown_core PUBLIC crown_crypto PRIVATE secp256k1 PRIVATE crown_util PRIVATE crown_univalue)
 
 # LIBCROWN-UTIL
 
@@ -309,7 +309,7 @@ add_library(crown_util
 )
 
 target_include_directories(crown_util PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(crown_util crown_core)
+target_link_libraries(crown_util PUBLIC crown_core PRIVATE Boost::program_options)
 
 add_library(crown_wallet
   activemasternode.cpp 
@@ -336,8 +336,16 @@ add_library(crown_wallet
   walletdb.cpp 
 )
 target_include_directories(crown_wallet
-  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
+  PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}
 )
+
+target_link_libraries(crown_wallet
+  PUBLIC Boost::thread
+  PUBLIC crown_util
+  PUBLIC crown_common
+  PUBLIC crown_server
+  PUBLIC BDB::bdb
+  PRIVATE OpenSSL::Crypto)
 
 
 add_executable(crownd
