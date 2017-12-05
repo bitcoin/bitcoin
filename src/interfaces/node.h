@@ -124,10 +124,10 @@ public:
     virtual bool unban(const CSubNet& ip) = 0;
 
     //! Disconnect node by address.
-    virtual bool disconnect(const CNetAddr& net_addr) = 0;
+    virtual bool disconnectByAddress(const CNetAddr& net_addr) = 0;
 
     //! Disconnect node by id.
-    virtual bool disconnect(NodeId id) = 0;
+    virtual bool disconnectById(NodeId id) = 0;
 
     //! Get total bytes recv.
     virtual int64_t getTotalBytesRecv() = 0;
