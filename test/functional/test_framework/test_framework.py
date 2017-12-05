@@ -13,7 +13,6 @@ import shutil
 import sys
 import tempfile
 import time
-import traceback
 
 from .authproxy import JSONRPCException
 from . import coverage
