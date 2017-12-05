@@ -74,7 +74,7 @@ There are few new RPC commands also:
 Command-line options
 --------------------
 
-New: `assumevalid`, `blocksonly, `reindex-chainstate`
+New: `assumevalid`, `blocksonly`, `reindex-chainstate`
 
 Experimental: `usehd`, `mnemonic`, `mnemonicpassphrase`, `hdseed`
 
