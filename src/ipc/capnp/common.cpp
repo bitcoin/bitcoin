@@ -44,6 +44,8 @@ void ReadGlobalArgs(mp::InvokeContext& invoke_context, const messages::GlobalArg
     });
     gArgs.SetConfigFilePath(fs::PathFromString(ipc::capnp::ToString(reader.getConfigPath())));
     SelectParams(gArgs.GetChainType());
+    Context& ipc_context = *static_cast<Context*>(invoke_context.connection.m_loop.m_context);
+    ipc_context.init_process();
 }
 } // namespace capnp
 } // namespace ipc
