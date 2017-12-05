@@ -114,12 +114,12 @@ BOOST_AUTO_TEST_CASE (generate_aliasmultiupdate)
 	for (unsigned int i = 0; i < MAX_ALIAS_UPDATES_PER_BLOCK; i++)
 	{
 		// "aliasupdate <aliasname> [public value]  [address] [accept_transfers=true] [expire_timestamp] [encryption_privatekey] [encryption_publickey] [witness]\n"
-		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasupdate jagmultiupdate changedata1 " + oldAddressStr + " false " + expires + " " + encryptionprivkey + " " + encryptionkey + " ''"));
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasupdate jagmultiupdate changedata " + oldAddressStr + " false " + expires + " " + encryptionprivkey + " " + encryptionkey + " ''"));
 		UniValue varray = r.get_array();
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + varray[0].get_str()));
 		BOOST_CHECK_NO_THROW(CallRPC("node1", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
 	}
-	BOOST_CHECK_THROW(r = CallRPC("node1", "aliasupdate jagmultiupdate changedata1 " + oldAddressStr + " false " + expires + " " + encryptionprivkey + " " + encryptionkey + " ''"), runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC("node1", "aliasupdate jagmultiupdate changedata " + oldAddressStr + " false " + expires + " " + encryptionprivkey + " " + encryptionkey + " ''"), runtime_error);
 
 
 	GenerateBlocks(10, "node1");
@@ -136,20 +136,20 @@ BOOST_AUTO_TEST_CASE (generate_aliasmultiupdate)
 	// new owner can update
 	for (unsigned int i = 0; i < MAX_ALIAS_UPDATES_PER_BLOCK; i++)
 	{
-		BOOST_CHECK_NO_THROW(r = CallRPC("node2", "aliasupdate jagmultiupdate changedata4 " + oldAddressStr + " false " + expires + " " + encryptionprivkey + " " + encryptionkey + " ''"));
+		BOOST_CHECK_NO_THROW(r = CallRPC("node2", "aliasupdate jagmultiupdate changedata3 " + oldAddressStr + " false " + expires + " " + encryptionprivkey + " " + encryptionkey + " ''"));
 		UniValue varray = r.get_array();
 		BOOST_CHECK_NO_THROW(r = CallRPC("node2", "signrawtransaction " + varray[0].get_str()));
 		BOOST_CHECK_NO_THROW(CallRPC("node2", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
 	}
 
-	BOOST_CHECK_THROW(r = CallRPC("node2", "aliasupdate jagmultiupdate changedata4 " + oldAddressStr + " false " + expires + " " + encryptionprivkey + " " + encryptionkey + " ''"), runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC("node2", "aliasupdate jagmultiupdate changedata3 " + oldAddressStr + " false " + expires + " " + encryptionprivkey + " " + encryptionkey + " ''"), runtime_error);
 
 	// after generation MAX_ALIAS_UPDATES_PER_BLOCK utxo's should be available
 	GenerateBlocks(10, "node2");
 	GenerateBlocks(10, "node2");
 	for (unsigned int i = 0; i < MAX_ALIAS_UPDATES_PER_BLOCK+1; i++)
 	{
-		BOOST_CHECK_NO_THROW(r = CallRPC("node2", "aliasupdate jagmultiupdate changedata5 " + oldAddressStr + " false " + expires + " " + encryptionprivkey + " " + encryptionkey + " ''"));
+		BOOST_CHECK_NO_THROW(r = CallRPC("node2", "aliasupdate jagmultiupdate changedata3 " + oldAddressStr + " false " + expires + " " + encryptionprivkey + " " + encryptionkey + " ''"));
 		UniValue varray = r.get_array();
 		BOOST_CHECK_NO_THROW(r = CallRPC("node2", "signrawtransaction " + varray[0].get_str()));
 		BOOST_CHECK_NO_THROW(CallRPC("node2", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
@@ -167,13 +167,13 @@ BOOST_AUTO_TEST_CASE (generate_aliasmultiupdate)
 	oldAddressStr = find_value(r.get_obj(), "address").get_str();
 	for (unsigned int i = 0; i < MAX_ALIAS_UPDATES_PER_BLOCK; i++)
 	{
-		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasupdate jagmultiupdate changedata9 " + oldAddressStr + " false " + expires + " " + encryptionprivkey + " " + encryptionkey + " ''"));
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasupdate jagmultiupdate changedata8 " + oldAddressStr + " false " + expires + " " + encryptionprivkey + " " + encryptionkey + " ''"));
 		UniValue varray = r.get_array();
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + varray[0].get_str()));
 		BOOST_CHECK_NO_THROW(CallRPC("node1", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
 	}
 	
-	BOOST_CHECK_THROW(r = CallRPC("node1", "aliasupdate jagmultiupdate changedata9 " + oldAddressStr + " false " + expires + " " + encryptionprivkey + " " + encryptionkey + " ''"), runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC("node1", "aliasupdate jagmultiupdate changedata8 " + oldAddressStr + " false " + expires + " " + encryptionprivkey + " " + encryptionkey + " ''"), runtime_error);
 
 	GenerateBlocks(10, "node1");
 	GenerateBlocks(10, "node1");
