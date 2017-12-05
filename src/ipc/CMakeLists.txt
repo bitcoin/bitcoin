@@ -5,6 +5,7 @@
 add_library(bitcoin_ipc STATIC EXCLUDE_FROM_ALL
   capnp/chain.cpp
   capnp/common.cpp
+  capnp/init.cpp
   capnp/mining.cpp
   capnp/node.cpp
   capnp/protocol.cpp
@@ -38,6 +39,9 @@ target_link_libraries(bitcoin_ipc
   PUBLIC
     bitcoin_common
 )
+if(ENABLE_WALLET)
+  target_link_libraries(bitcoin_ipc PUBLIC bitcoin_wallet)
+endif()
 
 if(BUILD_TESTS)
   # bitcoin_ipc_test library target is defined here in src/ipc/CMakeLists.txt
