@@ -28,7 +28,7 @@ qt_test_test_bitcoin_qt_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(BITCOIN_
   $(QT_INCLUDES) $(QT_TEST_INCLUDES)
 
 qt_test_test_bitcoin_qt_SOURCES = \
-  init/bitcoind.cpp \
+  init/bitcoin-qt.cpp \
   qt/test/apptests.cpp \
   qt/test/rpcnestedtests.cpp \
   qt/test/test_main.cpp \
