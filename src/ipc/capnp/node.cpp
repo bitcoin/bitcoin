@@ -35,6 +35,15 @@ struct CNodeStateStats;
 
 namespace ipc {
 namespace capnp {
+void SetupNodeClient(ipc::Context& context)
+{
+    static_cast<Context&>(context).make_node_client = mp::MakeProxyClient<messages::Node, interfaces::Node>;
+}
+
+void SetupNodeServer(ipc::Context& context)
+{
+    static_cast<Context&>(context).make_node_server = mp::MakeProxyServer<messages::Node, interfaces::Node>;
+}
 } // namespace capnp
 } // namespace ipc
 
