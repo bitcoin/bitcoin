@@ -4,6 +4,7 @@
 
 add_library(bitcoin_ipc STATIC EXCLUDE_FROM_ALL
   capnp/chain.cpp
+  capnp/common.cpp
   capnp/mining.cpp
   capnp/protocol.cpp
   interfaces.cpp
