@@ -664,8 +664,9 @@ static RPCHelpMan echoipc()
         RPCExamples{HelpExampleCli("echo", "\"Hello world\"") +
                     HelpExampleRpc("echo", "\"Hello world\"")},
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
+            interfaces::Init& local_init = *EnsureAnyNodeContext(request.context).init;
             std::unique_ptr<interfaces::Echo> echo;
-            if (interfaces::Ipc* ipc = Assert(EnsureAnyNodeContext(request.context).init)->ipc()) {
+            if (interfaces::Ipc* ipc = local_init.ipc()) {
                 // Spawn a new bitcoin-node process and call makeEcho to get a
                 // client pointer to a interfaces::Echo instance running in
                 // that process. This is just for testing. A slightly more
@@ -683,7 +684,7 @@ static RPCHelpMan echoipc()
                 // interfaces::Echo object and return it so the `echoipc` RPC
                 // method will work, and the python test calling `echoipc`
                 // can expect the same result.
-                echo = interfaces::MakeEcho();
+                echo = local_init.makeEcho();
             }
             return echo->echo(request.params[0].get_str());
         },
