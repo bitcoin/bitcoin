@@ -24,7 +24,7 @@ template <typename Value, typename FnR, typename... FnParams, typename Output>
 void CustomBuildField(TypeList<std::function<FnR(FnParams...)>>,
     Priority<1>,
     InvokeContext& invoke_context,
-    Value& value,
+    Value&& value,
     Output&& output)
 {
     if (value) {

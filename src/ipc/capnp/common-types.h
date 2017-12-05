@@ -21,7 +21,10 @@
 #include <mp/type-context.h>
 #include <mp/type-data.h>
 #include <mp/type-decay.h>
+#include <mp/type-exception.h>
+#include <mp/type-function.h>
 #include <mp/type-interface.h>
+#include <mp/type-map.h>
 #include <mp/type-message.h>
 #include <mp/type-number.h>
 #include <mp/type-optional.h>
@@ -30,6 +33,7 @@
 #include <mp/type-struct.h>
 #include <mp/type-threadmap.h>
 #include <mp/type-vector.h>
+#include <mp/type-void.h>
 #include <type_traits>
 #include <unordered_set>
 #include <utility>
@@ -221,6 +225,39 @@ decltype(auto) CustomReadField(TypeList<util::Result<LocalType>>, Priority<1>, I
         } else {
             read_dest.construct();
         }
+    }
+}
+
+// libmultiprocess only provides read/build functions for std::set, not
+// std::unordered_set, so copy and paste those functions here.
+// TODO: Move these to libmultiprocess and dedup std::set, std::unordered_set,
+// and std::vector implementations.
+template <typename LocalType, typename Hash, typename Input, typename ReadDest>
+decltype(auto) CustomReadField(TypeList<std::unordered_set<LocalType, Hash>>, Priority<1>,
+                               InvokeContext& invoke_context, Input&& input, ReadDest&& read_dest)
+{
+    return read_dest.update([&](auto& value) {
+        auto data = input.get();
+        value.clear();
+        for (auto item : data) {
+            ReadField(TypeList<LocalType>(), invoke_context, Make<ValueField>(item),
+                      ReadDestEmplace(
+                          TypeList<const LocalType>(), [&](auto&&... args) -> auto& {
+                              return *value.emplace(std::forward<decltype(args)>(args)...).first;
+                          }));
+        }
+    });
+}
+
+template <typename LocalType, typename Hash, typename Value, typename Output>
+void CustomBuildField(TypeList<std::unordered_set<LocalType, Hash>>, Priority<1>, InvokeContext& invoke_context,
+                      Value&& value, Output&& output)
+{
+    auto list = output.init(value.size());
+    size_t i = 0;
+    for (const auto& elem : value) {
+        BuildField(TypeList<LocalType>(), invoke_context, ListOutput<typename decltype(list)::Builds>(list, i), elem);
+        ++i;
     }
 }
 } // namespace mp
