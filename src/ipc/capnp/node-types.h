@@ -38,6 +38,30 @@ struct mp::ProxyServerMethodTraits<ipc::capnp::messages::Node::RpcUnsetTimerInte
 };
 
 namespace mp {
+//! Specialization of MakeProxyClient for Node to that constructs a client
+//! object through a function pointer so client object code relying on
+//! net_processing types doesn't need to get linked into the bitcoin-wallet
+//! executable.
+template <>
+inline std::unique_ptr<interfaces::Node> CustomMakeProxyClient<ipc::capnp::messages::Node, interfaces::Node>(
+    InvokeContext& context, ipc::capnp::messages::Node::Client&& client)
+{
+    ipc::capnp::Context& ipc_context = *static_cast<ipc::capnp::Context*>(context.connection.m_loop.m_context);
+    return ipc_context.make_node_client(context, kj::mv(client));
+}
+
+//! Specialization of MakeProxyServer for Node to that constructs a server
+//! object through a function pointer so server object code relying on
+//! net_processing types doesn't need to get linked into the bitcoin-wallet
+//! executable.
+template <>
+inline kj::Own<ipc::capnp::messages::Node::Server> CustomMakeProxyServer<ipc::capnp::messages::Node, interfaces::Node>(
+    InvokeContext& context, std::shared_ptr<interfaces::Node>&& impl)
+{
+    ipc::capnp::Context& ipc_context = *static_cast<ipc::capnp::Context*>(context.connection.m_loop.m_context);
+    return ipc_context.make_node_server(context, std::move(impl));
+}
+
 //! RPCTimerInterface* server-side argument handling. Skips argument so it can
 //! be handled by ProxyServerCustom code.
 template <typename Accessor, typename ServerContext, typename Fn, typename... Args>
