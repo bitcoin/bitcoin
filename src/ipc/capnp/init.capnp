@@ -12,11 +12,13 @@ $Proxy.include("interfaces/chain.h");
 $Proxy.include("interfaces/echo.h");
 $Proxy.include("interfaces/init.h");
 $Proxy.include("interfaces/mining.h");
+$Proxy.include("interfaces/node.h");
 $Proxy.includeTypes("ipc/capnp/init-types.h");
 
 using Chain = import "chain.capnp";
 using Echo = import "echo.capnp";
 using Mining = import "mining.capnp";
+using Node = import "node.capnp";
 using Rpc = import "rpc.capnp";
 
 interface Init $Proxy.wrap("interfaces::Init") {
@@ -29,6 +31,7 @@ interface Init $Proxy.wrap("interfaces::Init") {
     # renumbered whenever UnstableChain changes incompatibly, so old clients
     # get an error instead of calling the wrong methods.
     makeUnstableChain @6 (context :Proxy.Context) -> (result :Chain.UnstableChain) $Proxy.name("makeChain");
+    makeNode @7 (context :Proxy.Context) -> (result :Node.Node);
 
     # DEPRECATED: no longer supported; server returns an error.
     makeMiningOld2 @2 () -> ();
