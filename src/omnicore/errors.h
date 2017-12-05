@@ -331,7 +331,7 @@ inline std::string error_str(int ec) {
           ec_str = "Address is not frozen";
           break;
       case PKT_ERROR_TOKENS -49:
-          ec_str = "State value is not 0 or 1";
+          ec_str = "Freezing is already enabled for the property";
           break;
       case PKT_ERROR_TOKENS -50:
           ec_str = "Address is already frozen";

@@ -317,7 +317,7 @@ std::vector<unsigned char> CreatePayload_ChangeIssuer(uint32_t propertyId)
     return payload;
 }
 
-std::vector<unsigned char> CreatePayload_ChangeFreezeSetting(uint32_t propertyId, bool state)
+std::vector<unsigned char> CreatePayload_EnableFreezing(uint32_t propertyId)
 {
     std::vector<unsigned char> payload;
     uint16_t messageType = 71;
@@ -325,12 +325,26 @@ std::vector<unsigned char> CreatePayload_ChangeFreezeSetting(uint32_t propertyId
     mastercore::swapByteOrder16(messageType);
     mastercore::swapByteOrder16(messageVer);
     mastercore::swapByteOrder32(propertyId);
-    unsigned char freezeState = (state) ? 1 : 0;
 
     PUSH_BACK_BYTES(payload, messageVer);
     PUSH_BACK_BYTES(payload, messageType);
     PUSH_BACK_BYTES(payload, propertyId);
-    PUSH_BACK_BYTES(payload, freezeState);
+
+    return payload;
+}
+
+std::vector<unsigned char> CreatePayload_DisableFreezing(uint32_t propertyId)
+{
+    std::vector<unsigned char> payload;
+    uint16_t messageType = 72;
+    uint16_t messageVer = 0;
+    mastercore::swapByteOrder16(messageType);
+    mastercore::swapByteOrder16(messageVer);
+    mastercore::swapByteOrder32(propertyId);
+
+    PUSH_BACK_BYTES(payload, messageVer);
+    PUSH_BACK_BYTES(payload, messageType);
+    PUSH_BACK_BYTES(payload, propertyId);
 
     return payload;
 }

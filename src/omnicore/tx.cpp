@@ -60,7 +60,8 @@ std::string mastercore::strTransactionType(uint16_t txType)
         case MSC_TYPE_GRANT_PROPERTY_TOKENS: return "Grant Property Tokens";
         case MSC_TYPE_REVOKE_PROPERTY_TOKENS: return "Revoke Property Tokens";
         case MSC_TYPE_CHANGE_ISSUER_ADDRESS: return "Change Issuer Address";
-        case MSC_TYPE_CHANGE_FREEZE_SETTING: return "Change Freeze Setting";
+        case MSC_TYPE_ENABLE_FREEZING: return "Enable Freezing";
+        case MSC_TYPE_DISABLE_FREEZING: return "Disable Freezing";
         case MSC_TYPE_FREEZE_PROPERTY_TOKENS: return "Freeze Property Tokens";
         case MSC_TYPE_UNFREEZE_PROPERTY_TOKENS: return "Unfreeze Property Tokens";
         case MSC_TYPE_NOTIFICATION: return "Notification";
@@ -153,8 +154,11 @@ bool CMPTransaction::interpret_Transaction()
         case MSC_TYPE_CHANGE_ISSUER_ADDRESS:
             return interpret_ChangeIssuer();
 
-        case MSC_TYPE_CHANGE_FREEZE_SETTING:
-            return interpret_ChangeFreezeSetting();
+        case MSC_TYPE_ENABLE_FREEZING:
+            return interpret_EnableFreezing();
+
+        case MSC_TYPE_DISABLE_FREEZING:
+            return interpret_DisableFreezing();
 
         case MSC_TYPE_FREEZE_PROPERTY_TOKENS:
             return interpret_FreezeTokens();
@@ -645,18 +649,32 @@ bool CMPTransaction::interpret_ChangeIssuer()
 }
 
 /** Tx 71 */
-bool CMPTransaction::interpret_ChangeFreezeSetting()
+bool CMPTransaction::interpret_EnableFreezing()
 {
-    if (pkt_size < 9) {
+    if (pkt_size < 8) {
         return false;
     }
     memcpy(&property, &pkt[4], 4);
     swapByteOrder32(property);
-    memcpy(&action, &pkt[8], 1);
 
     if ((!rpcOnly && msc_debug_packets) || msc_debug_packets_readonly) {
         PrintToLog("\t        property: %d (%s)\n", property, strMPProperty(property));
-        PrintToLog("\t           state: %d\n", action);
+    }
+
+    return true;
+}
+
+/** Tx 72 */
+bool CMPTransaction::interpret_DisableFreezing()
+{
+    if (pkt_size < 8) {
+        return false;
+    }
+    memcpy(&property, &pkt[4], 4);
+    swapByteOrder32(property);
+
+    if ((!rpcOnly && msc_debug_packets) || msc_debug_packets_readonly) {
+        PrintToLog("\t        property: %d (%s)\n", property, strMPProperty(property));
     }
 
     return true;
@@ -875,8 +893,11 @@ int CMPTransaction::interpretPacket()
         case MSC_TYPE_CHANGE_ISSUER_ADDRESS:
             return logicMath_ChangeIssuer();
 
-        case MSC_TYPE_CHANGE_FREEZE_SETTING:
-            return logicMath_ChangeFreezeSetting();
+        case MSC_TYPE_ENABLE_FREEZING:
+            return logicMath_EnableFreezing();
+
+        case MSC_TYPE_DISABLE_FREEZING:
+            return logicMath_DisableFreezing();
 
         case MSC_TYPE_FREEZE_PROPERTY_TOKENS:
             return logicMath_FreezeTokens();
@@ -2069,7 +2090,7 @@ int CMPTransaction::logicMath_ChangeIssuer()
 }
 
 /** Tx 71 */
-int CMPTransaction::logicMath_ChangeFreezeSetting()
+int CMPTransaction::logicMath_EnableFreezing()
 {
     uint256 blockHash;
     {
@@ -2111,14 +2132,65 @@ int CMPTransaction::logicMath_ChangeFreezeSetting()
         return (PKT_ERROR_TOKENS -43);
     }
 
-    if (action == 0) {
-        disableFreezing(property);
-    } else if (action == 1) {
-        enableFreezing(property, block);
-    } else {
-        PrintToLog("%s(): rejected: state value %d is not 0 or 1\n", __func__, action);
+    if (isFreezingEnabled(property, block)) {
+        PrintToLog("%s(): rejected: freezing is already enabled for property %d\n", __func__, property);
         return (PKT_ERROR_TOKENS -49);
     }
+
+    enableFreezing(property, block);
+
+    return 0;
+}
+
+/** Tx 72 */
+int CMPTransaction::logicMath_DisableFreezing()
+{
+    uint256 blockHash;
+    {
+        LOCK(cs_main);
+
+        CBlockIndex* pindex = chainActive[block];
+        if (pindex == NULL) {
+            PrintToLog("%s(): ERROR: block %d not in the active chain\n", __func__, block);
+            return (PKT_ERROR_TOKENS -20);
+        }
+        blockHash = pindex->GetBlockHash();
+    }
+
+    if (!IsTransactionTypeAllowed(block, property, type, version)) {
+        PrintToLog("%s(): rejected: type %d or version %d not permitted for property %d at block %d\n",
+                __func__,
+                type,
+                version,
+                property,
+                block);
+        return (PKT_ERROR_TOKENS -22);
+    }
+
+    if (!IsPropertyIdValid(property)) {
+        PrintToLog("%s(): rejected: property %d does not exist\n", __func__, property);
+        return (PKT_ERROR_TOKENS -24);
+    }
+
+    CMPSPInfo::Entry sp;
+    assert(_my_sps->getSP(property, sp));
+
+    if (!sp.manual) {
+        PrintToLog("%s(): rejected: property %d is not managed\n", __func__, property);
+        return (PKT_ERROR_TOKENS -42);
+    }
+
+    if (sender != sp.issuer) {
+        PrintToLog("%s(): rejected: sender %s is not issuer of property %d [issuer=%s]\n", __func__, sender, property, sp.issuer);
+        return (PKT_ERROR_TOKENS -43);
+    }
+
+    if (!isFreezingEnabled(property, block)) {
+        PrintToLog("%s(): rejected: freezing is not enabled for property %d\n", __func__, property);
+        return (PKT_ERROR_TOKENS -47);
+    }
+
+    disableFreezing(property);
 
     return 0;
 }
