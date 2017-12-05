@@ -112,6 +112,33 @@ decltype(auto) CustomReadField(TypeList<UniValue>, Priority<1>, InvokeContext& i
         value.read(std::string_view{data.begin(), data.size()});
     });
 }
+
+//! Generic ::capnp::Data field builder for any C++ type that can be converted
+//! to a span of bytes, like std::vector<char> or std::array<uint8_t>, or custom
+//! blob types like uint256 or PKHash with data() and size() methods pointing to
+//! bytes.
+//!
+//! Note: it might make sense to move this function into libmultiprocess, since
+//! it is fairly generic. However this would require decreasing its priority so
+//! it can be overridden, which would require more changes inside
+//! libmultiprocess to avoid conflicting with the Priority<1> CustomBuildField
+//! function it already provides for std::vector. Also, it might make sense to
+//! provide a CustomReadField counterpart to this function, which could be
+//! called to read C++ types that can be constructed from spans of bytes from
+//! ::capnp::Data fields. But so far there hasn't been a need for this.
+template <typename LocalType, typename Value, typename Output>
+void CustomBuildField(TypeList<LocalType>, Priority<2>, InvokeContext& invoke_context, Value&& value, Output&& output)
+requires
+    (std::is_same_v<decltype(output.get()), ::capnp::Data::Builder>) &&
+    (std::convertible_to<Value, std::span<const std::byte>> ||
+     std::convertible_to<Value, std::span<const char>> ||
+     std::convertible_to<Value, std::span<const unsigned char>> ||
+     std::convertible_to<Value, std::span<const signed char>>)
+{
+    auto data = std::span{value};
+    auto result = output.init(data.size());
+    memcpy(result.begin(), data.data(), data.size());
+}
 } // namespace mp
 
 #endif // BITCOIN_IPC_CAPNP_COMMON_TYPES_H
