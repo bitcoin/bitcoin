@@ -49,17 +49,17 @@ if [ $RESULT == "false," ]
     printf "                                      FAIL (result:%s)\n" $RESULT
     FAIL=$((FAIL+1))
 fi
-printf "   * Sending a 'change freeze setting' transaction to ENABLE freezing\n"
-TXID=$($SRCDIR/omnicore-cli --regtest omni_sendchangefreezesetting $ADDR 3 true)
+printf "   * Sending a 'enable freezing' transaction to ENABLE freezing\n"
+TXID=$($SRCDIR/omnicore-cli --regtest omni_sendenablefreezing $ADDR 3)
 $SRCDIR/omnicore-cli --regtest generate 1 >$NUL
-printf "        - Checking the 'change freeze setting' transaction was VALID... "
+printf "        - Checking the 'enable freezing' transaction was VALID... "
 RESULT=$($SRCDIR/omnicore-cli --regtest omni_gettransaction $TXID | grep "valid" | grep -v "invalid" | cut -c12-)
 if [ $RESULT == "true," ]
   then
-    printf "                        PASS\n"
+    printf "                              PASS\n"
     PASS=$((PASS+1))
   else
-    printf "                        FAIL (result:%s)\n" $RESULT
+    printf "                              FAIL (result:%s)\n" $RESULT
     FAIL=$((FAIL+1))
 fi
 printf "        - Checking that freezing is now enabled... "
@@ -157,17 +157,17 @@ if [ $RESULT == "true," ]
     printf "                                   FAIL (result:%s)\n" $RESULT
     FAIL=$((FAIL+1))
 fi
-printf "   * Sending a 'change freeze setting' transaction to DISABLE freezing\n"
-TXID=$($SRCDIR/omnicore-cli --regtest omni_sendchangefreezesetting $ADDR 3 false)
+printf "   * Sending a 'disable freezing' transaction to DISABLE freezing\n"
+TXID=$($SRCDIR/omnicore-cli --regtest omni_senddisablefreezing $ADDR 3)
 $SRCDIR/omnicore-cli --regtest generate 1 >$NUL
-printf "        - Checking the 'change freeze setting' transaction was VALID... "
+printf "        - Checking the 'disable freezing' transaction was VALID... "
 RESULT=$($SRCDIR/omnicore-cli --regtest omni_gettransaction $TXID | grep "valid" | grep -v "invalid" | cut -c12-)
 if [ $RESULT == "true," ]
   then
-    printf "                        PASS\n"
+    printf "                             PASS\n"
     PASS=$((PASS+1))
   else
-    printf "                        FAIL (result:%s)\n" $RESULT
+    printf "                             FAIL (result:%s)\n" $RESULT
     FAIL=$((FAIL+1))
 fi
 printf "        - Checking that freezing is now disabled... "
@@ -242,17 +242,17 @@ if [ $FEATUREID == "14" ]
     printf "                                     FAIL (result:%s)\n" $FEATUREID
     FAIL=$((FAIL+1))
 fi
-printf "   * Sending a 'change freeze setting' transaction to ENABLE freezing\n"
-TXID=$($SRCDIR/omnicore-cli --regtest omni_sendchangefreezesetting $ADDR 3 true)
+printf "   * Sending a 'enable freezing' transaction to ENABLE freezing\n"
+TXID=$($SRCDIR/omnicore-cli --regtest omni_sendenablefreezing $ADDR 3)
 $SRCDIR/omnicore-cli --regtest generate 1 >$NUL
-printf "        - Checking the 'change freeze setting' transaction was VALID... "
+printf "        - Checking the 'enable freezing' transaction was VALID... "
 RESULT=$($SRCDIR/omnicore-cli --regtest omni_gettransaction $TXID | grep "valid" | grep -v "invalid" | cut -c12-)
 if [ $RESULT == "true," ]
   then
-    printf "                        PASS\n"
+    printf "                              PASS\n"
     PASS=$((PASS+1))
   else
-    printf "                        FAIL (result:%s)\n" $RESULT
+    printf "                              FAIL (result:%s)\n" $RESULT
     FAIL=$((FAIL+1))
 fi
 printf "        - Checking that freezing is still disabled (due to wait period)... "
