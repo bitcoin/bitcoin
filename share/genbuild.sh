@@ -1,5 +1,7 @@
 #!/bin/sh
-
+if [ $# -gt 1 ]; then
+    cd "$2"
+fi
 if [ $# -gt 0 ]; then
     FILE="$1"
     shift
@@ -7,11 +9,11 @@ if [ $# -gt 0 ]; then
         INFO="$(head -n 1 "$FILE")"
     fi
 else
-    echo "Usage: $0 <filename>"
+    echo "Usage: $0 <filename> <srcroot>"
     exit 1
 fi
 
-if [ -e "$(which git)" ]; then
+if [ -e "$(which git)" -a -d ".git" ]; then
     # clean 'dirty' status of touched files that haven't been modified
     git diff >/dev/null 2>/dev/null 
 

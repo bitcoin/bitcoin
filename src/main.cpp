@@ -2685,7 +2685,12 @@ bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBl
                 // Limited duplicity on stake: prevents block flood attack
                 // Duplicate stake allowed only when there is orphan child block
                 if (setStakeSeenOrphan.count(pblock2->GetProofOfStake()) && !mapOrphanBlocksByPrev.count(hash) && !WantedByPendingSyncCheckpoint(hash))
-                    return error("ProcessBlock() : duplicate proof-of-stake (%s, %d) for orphan block %s", pblock2->GetProofOfStake().first.ToString().c_str(), pblock2->GetProofOfStake().second, hash.ToString().c_str());
+                {
+                    error("ProcessBlock() : duplicate proof-of-stake (%s, %d) for orphan block %s", pblock2->GetProofOfStake().first.ToString().c_str(), pblock2->GetProofOfStake().second, hash.ToString().c_str());
+                    //pblock2 will not be needed, free it
+                    delete pblock2;
+                    return false;
+                }
                 else
                     setStakeSeenOrphan.insert(pblock2->GetProofOfStake());
             }
@@ -4801,7 +4806,10 @@ CBlockTemplate* CreateNewBlock(CReserveKey& reservekey, CWallet* pwallet, bool f
     // Create new block
     auto_ptr<CBlockTemplate> pblocktemplate(new CBlockTemplate());
     if(!pblocktemplate.get())
+    {
+        error("CreateNewBlock() : Out of memory");
         return NULL;
+    }
     CBlock *pblock = &pblocktemplate->block; // pointer for convenience
 
     // Create coinbase tx
@@ -4922,6 +4930,17 @@ CBlockTemplate* CreateNewBlock(CReserveKey& reservekey, CWallet* pwallet, bool f
                     continue;
                 }
                 const CCoins &coins = view.GetCoins(txin.prevout.hash);
+
+                if (txin.prevout.n >= coins.vout.size())
+                {
+                    // This should never happen unless the memory pool is invalid
+                    printf("ERROR: mempool transaction invalid input %s:%d\n", txin.prevout.hash.ToString().c_str(), txin.prevout.n);
+                    if (fDebug) assert("mempool transaction invalid input" == 0);
+                    fMissingInputs = true;
+                    if (porphan)
+                        vOrphan.pop_back();
+                    break;
+                }
 
                 int64 nValueIn = coins.vout[txin.prevout.n].nValue;
                 nTotalIn += nValueIn;
@@ -5078,7 +5097,10 @@ CBlockTemplate* CreateNewBlock(CReserveKey& reservekey, CWallet* pwallet, bool f
         CCoinsViewCache viewNew(*pcoinsTip, true);
         CValidationState state;
         if (!pblock->ConnectBlock(state, &indexDummy, viewNew, true))
-            throw std::runtime_error("CreateNewBlock() : ConnectBlock failed");
+        {
+            error("CreateNewBlock() : ConnectBlock failed");
+            return NULL;
+        }
     }
 
     return pblocktemplate.release();
@@ -5203,6 +5225,7 @@ void BitcoinMiner(CWallet *pwallet, bool fProofOfStake)
 
     string strMintMessage = _("Info: Minting suspended due to locked wallet.");
     string strMintDisabledMessage = _("Info: Minting disabled by 'nominting' option.");
+    string strMintBlockMessage = _("Info: Minting suspended due to block creation failure.");
 
     try { loop {
         if (GetBoolArg("-nominting"))
@@ -5229,7 +5252,12 @@ void BitcoinMiner(CWallet *pwallet, bool fProofOfStake)
 
         auto_ptr<CBlockTemplate> pblocktemplate(CreateNewBlock(reservekey, pwallet, fProofOfStake));
         if (!pblocktemplate.get())
-            return;
+        {
+            strMintWarning = strMintBlockMessage;
+            MilliSleep(1000);
+            continue;
+        }
+
         CBlock *pblock = &pblocktemplate->block;
         IncrementExtraNonce(pblock, pindexPrev, nExtraNonce);
 

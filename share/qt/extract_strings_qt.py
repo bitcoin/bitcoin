@@ -52,7 +52,7 @@ files = glob.glob('src/*.cpp') + glob.glob('src/*.h')
 child = Popen(['xgettext','--output=-','-n','--keyword=_'] + files, stdout=PIPE)
 (out, err) = child.communicate()
 
-messages = parse_po(out) 
+messages = parse_po(str(out))
 
 f = open(OUT_CPP, 'w')
 f.write("""#include <QtGlobal>

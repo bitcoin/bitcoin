@@ -1324,6 +1324,11 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.</sourc
         <translation>Automatically start Peercoin after logging in to the system.</translation>
     </message>
     <message>
+        <location line="+46"/>
+        <source>Check this box to follow the centrally issued checkpoints.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
         <location line="+3"/>
         <source>&amp;Start Peercoin on system login</source>
         <translation>&amp;Start Peercoin on system login</translation>

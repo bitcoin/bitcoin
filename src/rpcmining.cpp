@@ -4,10 +4,9 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "main.h"
+#include "rpcserver.h"
 #include "db.h"
 #include "init.h"
-#include "bitcoinrpc.h"
 
 using namespace json_spirit;
 using namespace std;
@@ -167,7 +166,7 @@ Value getwork(const Array& params, bool fHelp)
             // Create new block
             pblocktemplate = CreateNewBlock(*pMiningKey, pwalletMain);
             if (!pblocktemplate)
-                throw JSONRPCError(RPC_OUT_OF_MEMORY, "Out of memory");
+                throw JSONRPCError(RPC_MISC_ERROR, "Failed to create block");
             vNewBlockTemplate.push_back(pblocktemplate);
 
             // Need to update only after we know CreateNewBlock succeeded

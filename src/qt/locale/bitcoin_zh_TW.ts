@@ -823,6 +823,11 @@ Address: %4
         <translation>在登入系統後自動啓動位元幣.</translation>
     </message>
     <message>
+        <location line="+46"/>
+        <source>Check this box to follow the centrally issued checkpoints.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
         <location line="+3"/>
         <source>&amp;Start Peercoin on system login</source>
         <translation>系統登入時啟動位元幣</translation>

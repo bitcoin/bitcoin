@@ -5,7 +5,7 @@ file COPYING or http://www.opensource.org/licenses/mit-license.php.
 This product includes software developed by the OpenSSL Project for use in the [OpenSSL Toolkit](http://www.openssl.org/). This product includes
 cryptographic software written by Eric Young ([eay@cryptsoft.com](mailto:eay@cryptsoft.com)), and UPnP software written by Thomas Bernard.
 
-UNIX BUILD NOTES FOR PEERCOIN
+UNIX BUILD NOTES FOR PEERCOIN-QT
 ====================
 
 To Build in Terminal on Debian based Linux
@@ -18,8 +18,26 @@ To Build in Terminal on Debian based Linux
 	echo "rpcpassword=`head -c 32 /dev/urandom | base64`" >>~/.peercoin/peercoin.conf
 	git clone https://github.com/peercoin/peercoin
 	cd peercoin
-	git checkout v0.6.0ppc
+	git checkout v0.6.1ppc
 	qmake -qt=qt5 && make
+
+
+UNIX BUILD NOTES FOR PEERCOIND
+====================
+
+To Build in Terminal on Debian based Linux
+---------------------
+
+	sudo apt-get -y install build-essential libqt4-dev qt5-qmake cmake qttools5-dev libqt5webkit5-dev qttools5-dev-tools qt5-default python-sphinx texlive-latex-base inotify-tools libboost-dev libboost-system-dev libboost-filesystem-dev libboost-program-options-dev libboost-thread-dev openssl libssl-dev libdb++-dev libminiupnpc-dev git sqlite3 libsqlite3-dev g++ libpng-dev	
+	sudo apt-get -y update && sudo apt-get -y upgrade
+	mkdir -p ~/.peercoin
+	echo "rpcuser=username" >>~/.peercoin/peercoin.conf
+	echo "rpcpassword=`head -c 32 /dev/urandom | base64`" >>~/.peercoin/peercoin.conf
+	git clone https://github.com/peercoin/peercoin
+	cd peercoin
+	git checkout v0.6.1ppc
+	cd src
+	make -f makefile.unix -j4
 
 
 UNIX BUILD NOTES FOR BITCOIN
@@ -28,10 +46,12 @@ UNIX BUILD NOTES FOR BITCOIN
 To Build
 ---------------------
 
-	cd src/
-	make -f makefile.unix		# Headless bitcoin
+	./autogen.sh
+	./configure
+	make
 
-See readme-qt.rst for instructions on building Bitcoin-Qt, the graphical user interface.
+This will build Peercoin-Qt as well if the dependencies are met.
+See [readme-qt.md](readme-qt.md) for more information.
 
 Dependencies
 ---------------------
@@ -45,15 +65,15 @@ Dependencies
 
 [miniupnpc](http://miniupnp.free.fr/) may be used for UPnP port mapping.  It can be downloaded from [here](
 http://miniupnp.tuxfamily.org/files/).  UPnP support is compiled in and
-turned off by default.  Set USE_UPNP to a different value to control this:
+turned off by default.  See the configure options for upnp behavior desired:
 
-	USE_UPNP=     No UPnP support miniupnp not required
-	USE_UPNP=0    (the default) UPnP support turned off by default at runtime
-	USE_UPNP=1    UPnP support turned on by default at runtime
+	--with-miniupnpc         No UPnP support miniupnp not required
+	--disable-upnp-default   (the default) UPnP support turned off by default at runtime
+	--enable-upnp-default    UPnP support turned on by default at runtime
 
 IPv6 support may be disabled by setting:
 
-	USE_IPV6=0    Disable IPv6 support
+	--disable-ipv6           Disable IPv6 support
 
 Licenses of statically linked libraries:
  Berkeley DB   New BSD license with additional requirement that linked
@@ -93,7 +113,7 @@ for other Ubuntu & Debian:
 
 Optional:
 
-	sudo apt-get install libminiupnpc-dev (see USE_UPNP compile flag)
+	sudo apt-get install libminiupnpc-dev (see --with-miniupnpc and --enable-upnp-default)
 
 
 Dependency Build Instructions: Gentoo
@@ -106,9 +126,11 @@ Note: Currently, there is no peercoin ebuild available in overlay
 Note: If you like to have UPnP support, you need to install net-libs/miniupnpc.
  
 Take the following steps to build (no UPnP support):
-	cd ${PEERCOIN_DIR}/src
-	make -f makefile.unix USE_UPNP= USE_IPV6=1 BDB_INCLUDE_PATH='/usr/include/db4.8'
-	strip peercoind
+
+	cd ${PEERCOIN_DIR}
+	./autogen.sh
+	./configure --without-miniupnpc CXXFLAGS="-i/usr/include/db4.8"
+	strip src/peercoind
 
 
 Notes
@@ -146,7 +168,13 @@ If you need to build Boost yourself:
 Security
 --------
 To help make your bitcoin installation more secure by making certain attacks impossible to
-exploit even if a vulnerability is found, you can take the following measures:
+exploit even if a vulnerability is found, binaries are hardened by default.
+This can be disabled with:
+
+./configure --enable-hardening
+
+
+Hardening enables the following features:
 
 * Position Independent Executable
     Build position independent code to take advantage of Address Space Layout Randomization
@@ -157,10 +185,6 @@ exploit even if a vulnerability is found, you can take the following measures:
 
     On an Amd64 processor where a library was not compiled with -fPIC, this will cause an error
     such as: "relocation R_X86_64_32 against `......' can not be used when making a shared object;"
-
-    To build with PIE, use:
-
-    	make -f makefile.unix ... -e PIE=1
 
     To test that you have built PIE executable, install scanelf, part of paxutils, and use:
 

@@ -40,11 +40,11 @@
 // be manually entered by operator via the 'sendcheckpoint' command. The manual
 // mode is also the default mode (default value -1 for checkpointdepth).
 //
-// Command 'enforcecheckpoint' and configuration parameter 'checkpointenforce'
-// are for the users to explicitly consent to enforce the checkpoints issued
+// Command and configuration parameter 'enforcecheckpoint'
+// is for the users to explicitly consent to enforce the checkpoints issued
 // from checkpoint master. To enforce checkpoint, user needs to either issue
 // command 'enforcecheckpoint true', or set configuration parameter
-// checkpointenforce=1. The current enforcement setting can be queried via
+// enforcecheckpoint=1. The current enforcement setting can be queried via
 // command 'getcheckpoint', where 'subscribemode' displays either 'enforce'
 // or 'advisory'. The 'enforce' mode of subscribemode means checkpoints are
 // enforced. The 'advisory' mode of subscribemode means checkpoints are not
@@ -58,7 +58,8 @@
 #include "checkpointsync.h"
 
 #include "base58.h"
-#include "bitcoinrpc.h"
+#include "rpcserver.h"
+#include "rpcclient.h"
 #include "main.h"
 #include "txdb.h"
 #include "uint256.h"
@@ -151,14 +152,14 @@ bool WriteSyncCheckpoint(const uint256& hashCheckpoint)
 
 bool IsSyncCheckpointEnforced()
 {
-    return (GetBoolArg("-checkpointenforce", true) || mapArgs.count("-checkpointkey")); // checkpoint master node is always enforced
+    return (GetBoolArg("-enforcecheckpoint", true) || mapArgs.count("-checkpointkey")); // checkpoint master node is always enforced
 }
 
 void SetCheckpointEnforce(bool fEnforce)
 {
     if (fEnforce)
         strCheckpointWarning = "";
-    mapArgs["-checkpointenforce"] = (fEnforce ? "1" : "0");
+    mapArgs["-enforcecheckpoint"] = (fEnforce ? "1" : "0");
 }
 
 bool AcceptPendingSyncCheckpoint()

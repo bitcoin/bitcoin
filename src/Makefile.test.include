@@ -1,0 +1,94 @@
+AM_CPPFLAGS +=  -I$(top_srcdir)/src/test/
+
+TESTS += test/test_peercoin
+bin_PROGRAMS += test/test_peercoin
+TEST_SRCDIR = test
+TEST_BINARY=test/test_peercoin$(EXEEXT)
+
+TEST_DATA_DIR=$(top_srcdir)/src/test/data
+
+TEST_DATA_FILES = \
+  $(TEST_DATA_DIR)/alertTests \
+  $(TEST_DATA_DIR)/base58_encode_decode.json \
+  $(TEST_DATA_DIR)/base58_keys_invalid.json \
+  $(TEST_DATA_DIR)/base58_keys_valid.json \
+  $(TEST_DATA_DIR)/script_invalid.json \
+  $(TEST_DATA_DIR)/script_valid.json \
+  $(TEST_DATA_DIR)/sig_canonical.json \
+  $(TEST_DATA_DIR)/sig_noncanonical.json \
+  $(TEST_DATA_DIR)/tx_invalid.json \
+  $(TEST_DATA_DIR)/tx_valid.json
+
+test_test_peercoin_SOURCES = \
+  test/allocator_tests.cpp \
+  test/base32_tests.cpp \
+  test/base58_tests.cpp \
+  test/base64_tests.cpp \
+  test/bignum_tests.cpp \
+  test/canonical_tests.cpp \
+  test/checkblock_tests.cpp \
+  test/Checkpoints_tests.cpp \
+  test/compress_tests.cpp \
+  test/DoS_tests.cpp \
+  test/getarg_tests.cpp \
+  test/key_tests.cpp \
+  test/mruset_tests.cpp \
+  test/multisig_tests.cpp \
+  test/netbase_tests.cpp \
+  test/pmt_tests.cpp \
+  test/rpc_tests.cpp \
+  test/script_P2SH_tests.cpp \
+  test/script_tests.cpp \
+  test/serialize_tests.cpp \
+  test/sigopcount_tests.cpp \
+  test/test_bitcoin.cpp \
+  test/transaction_tests.cpp \
+  test/uint160_tests.cpp \
+  test/uint256_tests.cpp \
+  test/util_tests.cpp \
+  $(TEST_DATA_FILES)
+
+if ENABLE_WALLET
+test_test_peercoin_SOURCES += \
+  test/accounting_tests.cpp \
+  test/wallet_tests.cpp
+endif
+
+# test_peercoin binary #
+test_test_peercoin_CPPFLAGS = $(AM_CPPFLAGS) $(TESTDEFS) \
+  -DTEST_DATA_DIR=$(TEST_DATA_DIR)
+test_test_peercoin_LDADD = $(LIBPEERCOIN_SERVER) $(LIBPEERCOIN_CLI) $(LIBPEERCOIN_COMMON) $(LIBLEVELDB) $(LIBMEMENV) \
+  $(BOOST_LIBS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB)
+if ENABLE_WALLET
+test_test_peercoin_LDADD += $(LIBPEERCOIN_WALLET)
+endif
+test_test_peercoin_LDADD += $(BDB_LIBS)
+test_test_peercoin_LDFLAGS = $(AM_LDFLAGS)
+
+nodist_test_test_peercoin_SOURCES = $(TEST_DATA_FILES)
+
+CLEANFILES += *.gcda *.gcno
+
+peercoin_test: $(TEST_BINARY)
+
+peercoin_test_check: $(TEST_BINARY) FORCE
+	$(MAKE) check-TESTS TESTS=$^
+
+peercoin_test_clean : FORCE
+	rm -f $(CLEANFILES) $(test_test_peercoin_OBJECTS) $(TEST_BINARY)
+
+%.json.h: %.json
+	@$(MKDIR_P) $(@D)
+	@echo "namespace json_tests{" > $@
+	@echo "static unsigned const char $(*F)[] = {" >> $@
+	@$(HEXDUMP) -v -e '8/1 "0x%02x, "' -e '"\n"' $< | $(SED) -e 's/0x  ,//g' >> $@
+	@echo "};};" >> $@
+	@echo "Generated $@"
+
+%.raw.h: %.raw
+	@$(MKDIR_P) $(@D)
+	@echo "namespace alert_tests{" > $@
+	@echo "static unsigned const char $(*F)[] = {" >> $@
+	@$(HEXDUMP) -v -e '8/1 "0x%02x, "' -e '"\n"' $< | $(SED) -e 's/0x  ,//g' >> $@
+	@echo "};};" >> $@
+	@echo "Generated $@"

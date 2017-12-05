@@ -4,13 +4,19 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <boost/assign/list_of.hpp>
-
+#include "base58.h"
+#include "rpcserver.h"
+#include "init.h"
+#include "net.h"
+#include "netbase.h"
+#include "util.h"
 #include "wallet.h"
 #include "walletdb.h"
-#include "bitcoinrpc.h"
 #include "init.h"
 #include "base58.h"
+#include "checkpointsync.h"
+
+#include <boost/assign/list_of.hpp>
 
 using namespace std;
 using namespace boost;
@@ -90,8 +96,9 @@ Value getinfo(const Array& params, bool fHelp)
     obj.push_back(Pair("keypoololdest", (boost::int64_t)pwalletMain->GetOldestKeyPoolTime()));
     obj.push_back(Pair("keypoolsize",   pwalletMain->GetKeyPoolSize()));
     obj.push_back(Pair("paytxfee",      ValueFromAmount(nTransactionFee)));
+    obj.push_back(Pair("checkpoints",   IsSyncCheckpointEnforced()));
     if (pwalletMain->IsCrypted())
-        obj.push_back(Pair("unlocked_until", (boost::int64_t)nWalletUnlockTime / 1000));
+        obj.push_back(Pair("unlocked_until", (boost::int64_t)nWalletUnlockTime));
     obj.push_back(Pair("errors",        GetWarnings("statusbar")));
 #ifdef TESTING
     obj.push_back(Pair("time",          DateTimeStrFormat(GetAdjustedTime())));
@@ -954,6 +961,23 @@ Value listreceivedbyaccount(const Array& params, bool fHelp)
     return ListReceived(params, true);
 }
 
+static void MaybePushAddress(Object & entry, const CTxDestination &dest)
+{
+    CBitcoinAddress addr;
+    if (addr.Set(dest))
+        entry.push_back(Pair("address", addr.ToString()));
+}
+
+static void PushCoinStakeCategory(Object & entry, const CWalletTx &wtx)
+{
+    if (wtx.GetDepthInMainChain() < 1)
+        entry.push_back(Pair("category", "stake-orphan"));
+    else if (wtx.GetBlocksToMaturity() > 0)
+        entry.push_back(Pair("category", "stake"));
+    else
+        entry.push_back(Pair("category", "stake-mint"));
+}
+
 void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDepth, bool fLong, Array& ret)
 {
     int64 nFee;
@@ -972,8 +996,11 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
         {
             Object entry;
             entry.push_back(Pair("account", strSentAccount));
-            entry.push_back(Pair("address", CBitcoinAddress(s.first).ToString()));
-            entry.push_back(Pair("category", "send"));
+            MaybePushAddress(entry, s.first);
+            if (wtx.IsCoinStake())
+                PushCoinStakeCategory(entry, wtx);
+            else
+                entry.push_back(Pair("category", "send"));
             entry.push_back(Pair("amount", ValueFromAmount(-s.second)));
             entry.push_back(Pair("fee", ValueFromAmount(-nFee)));
             if (fLong)
@@ -994,7 +1021,7 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
             {
                 Object entry;
                 entry.push_back(Pair("account", account));
-                entry.push_back(Pair("address", CBitcoinAddress(r.first).ToString()));
+                MaybePushAddress(entry, r.first);
                 if (wtx.IsCoinBase())
                 {
                     if (wtx.GetDepthInMainChain() < 1)
@@ -1006,12 +1033,7 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
                 }
                 else if (wtx.IsCoinStake())
                 {
-                    if (wtx.GetDepthInMainChain() < 1)
-                        entry.push_back(Pair("category", "stake-orphan"));
-                    else if (wtx.GetBlocksToMaturity() > 0)
-                        entry.push_back(Pair("category", "stake"));
-                    else
-                        entry.push_back(Pair("category", "stake-mint"));
+                    PushCoinStakeCategory(entry, wtx);
                 }
                 else
                     entry.push_back(Pair("category", "receive"));
@@ -1278,7 +1300,6 @@ Value keypoolrefill(const Array& params, bool fHelp)
 
     return Value::null;
 }
-
 
 void ThreadTopUpKeyPool(void* parg)
 {
