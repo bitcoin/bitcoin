@@ -2021,11 +2021,6 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	uint64_t nTime = chainActive.Tip()->GetMedianTimePast() +ONE_YEAR_IN_SECONDS;
 	nTime = params[4].get_int64();
 
-	
-	// sanity check set to 1 hr
-	if(nTime < chainActive.Tip()->GetMedianTimePast() +3600)
-		nTime = chainActive.Tip()->GetMedianTimePast() +3600;
-
 	string strEncryptionPrivateKey = "";
 	strEncryptionPrivateKey = params[5].get_str();
 	
