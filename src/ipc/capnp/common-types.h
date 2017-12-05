@@ -5,8 +5,14 @@
 #ifndef BITCOIN_IPC_CAPNP_COMMON_TYPES_H
 #define BITCOIN_IPC_CAPNP_COMMON_TYPES_H
 
+#include <chainparams.h>
 #include <clientversion.h>
+#include <consensus/validation.h>
 #include <interfaces/types.h>
+#include <ipc/capnp/common.capnp.proxy.h>
+#include <netbase.h>
+#include <net_processing.h>
+#include <net_types.h>
 #include <primitives/transaction.h>
 #include <protocol.h>
 #include <serialize.h>
@@ -14,6 +20,8 @@
 #include <univalue.h>
 #include <util/result.h>
 #include <util/translation.h>
+#include <validation.h>
+#include <wallet/coincontrol.h>
 
 #include <cstddef>
 #include <mp/proxy-types.h>
@@ -40,6 +48,15 @@
 
 namespace ipc {
 namespace capnp {
+//! Convert kj::StringPtr to std::string.
+inline std::string ToString(const kj::StringPtr& str) { return {str.cStr(), str.size()}; }
+
+//! Convert kj::ArrayPtr to std::string.
+inline std::string ToString(const kj::ArrayPtr<const kj::byte>& array)
+{
+    return {reinterpret_cast<const char*>(array.begin()), array.size()};
+}
+
 //! Convert kj::ArrayPtr to base_blob or similar types constructible from bytes.
 template <typename T>
 inline T ToBlob(const kj::ArrayPtr<const kj::byte>& array)
@@ -150,6 +167,41 @@ requires ipc::capnp::Deserializable<LocalType>
     return read_dest.construct(::deserialize, wrapper);
 }
 
+template <typename Value, typename Output>
+void CustomBuildField(TypeList<fs::path>, Priority<1>, InvokeContext& invoke_context, Value&& path, Output&& output)
+{
+    std::string str = fs::PathToString(path);
+    auto result = output.init(str.size());
+    memcpy(result.begin(), str.data(), str.size());
+}
+
+template <typename Input, typename ReadDest>
+decltype(auto) CustomReadField(TypeList<fs::path>, Priority<1>, InvokeContext& invoke_context, Input&& input,
+                               ReadDest&& read_dest)
+{
+    auto data = input.get();
+    return read_dest.construct(fs::PathFromString({CharCast(data.begin()), data.size()}));
+}
+
+template <typename Value, typename Output>
+void CustomBuildField(TypeList<SecureString>, Priority<1>, InvokeContext& invoke_context, Value&& str, Output&& output)
+{
+    auto result = output.init(str.size());
+    // Copy SecureString into output. Caller needs to be responsible for calling
+    // memory_cleanse later on the output after it is sent.
+    memcpy(result.begin(), str.data(), str.size());
+}
+
+template <typename Input, typename ReadDest>
+decltype(auto) CustomReadField(TypeList<SecureString>, Priority<1>, InvokeContext& invoke_context, Input&& input,
+                               ReadDest&& read_dest)
+{
+    auto data = input.get();
+    // Copy input into SecureString. Caller needs to be responsible for calling
+    // memory_cleanse on the input.
+    return read_dest.construct(CharCast(data.begin()), data.size());
+}
+
 //! Overload CustomBuildField and CustomReadField to serialize UniValue
 //! parameters and return values as JSON strings.
 template <typename Value, typename Output>
@@ -184,6 +236,24 @@ decltype(auto) CustomReadField(TypeList<UniValue::type_error>, Priority<1>, Invo
                                Input&& input, ReadDest&& read_dest)
 {
     read_dest.construct(ReadField(TypeList<std::string>(), invoke_context, input, mp::ReadDestTemp<std::string>()));
+}
+
+template <typename Output>
+void CustomBuildField(
+    TypeList<>, Priority<1>, InvokeContext& invoke_context, Output&& output,
+    typename std::enable_if<std::is_same<decltype(output.get()),
+                                         ipc::capnp::messages::GlobalArgs::Builder>::value>::type* enable = nullptr)
+{
+    ipc::capnp::BuildGlobalArgs(invoke_context, output.init());
+}
+
+template <typename Accessor, typename ServerContext, typename Fn, typename... Args>
+auto CustomPassField(TypeList<>, ServerContext& server_context, const Fn& fn, Args&&... args) ->
+    typename std::enable_if<std::is_same<decltype(Accessor::get(server_context.call_context.getParams())),
+                                         ipc::capnp::messages::GlobalArgs::Reader>::value>::type
+{
+    ipc::capnp::ReadGlobalArgs(server_context, Accessor::get(server_context.call_context.getParams()));
+    return fn.invoke(server_context, std::forward<Args>(args)...);
 }
 
 //! Overload CustomBuildField and CustomReadField to serialize util::Result
