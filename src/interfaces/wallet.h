@@ -193,11 +193,11 @@ public:
         int& num_blocks) = 0;
 
     //! Fill PSBT.
-    virtual TransactionError fillPSBT(PartiallySignedTransaction& psbtx,
-        bool& complete,
-        int sighash_type = 1 /* SIGHASH_ALL */,
-        bool sign = true,
-        bool bip32derivs = false) const = 0;
+    virtual TransactionError fillPSBT(int sighash_type,
+        bool sign,
+        bool bip32derivs,
+        PartiallySignedTransaction& psbtx,
+        bool& complete) = 0;
 
     //! Get balances.
     virtual WalletBalances getBalances() = 0;

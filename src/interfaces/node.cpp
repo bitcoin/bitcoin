@@ -262,12 +262,11 @@ public:
     {
         return MakeWallet(LoadWallet(*m_context.chain, name, error, warnings));
     }
-    WalletCreationStatus createWallet(const SecureString& passphrase, uint64_t wallet_creation_flags, const std::string& name, std::string& error, std::vector<std::string>& warnings, std::unique_ptr<Wallet>& result) override
+    std::unique_ptr<Wallet> createWallet(const SecureString& passphrase, uint64_t wallet_creation_flags, const std::string& name, std::string& error, std::vector<std::string>& warnings, WalletCreationStatus& status) override
     {
         std::shared_ptr<CWallet> wallet;
-        WalletCreationStatus status = CreateWallet(*m_context.chain, passphrase, wallet_creation_flags, name, error, warnings, wallet);
-        result = MakeWallet(wallet);
-        return status;
+        status = CreateWallet(*m_context.chain, passphrase, wallet_creation_flags, name, error, warnings, wallet);
+        return MakeWallet(wallet);
     }
     std::unique_ptr<Handler> handleInitMessage(InitMessageFn fn) override
     {
