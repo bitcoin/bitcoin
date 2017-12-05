@@ -148,9 +148,9 @@ Asks users to sign final mixing tx message.
 | ---------- | ----------- | --------- | -------- |
 | 4 | nDenom | int | Which denomination is allowed in this mixing session
 | 41 | vin | [CTxIn](#ctxin) | unspend output from masternode which is hosting this session
-| 4 | nTime | int | the time this DSQ was created
-| 4 | fReady | int | if the mixing pool is ready to be executed
-| 71-73 | vchSig | char[] | Signature of this message by masternode (verifiable via pubKeyMasternode)
+| 8 | nTime | int64_t | the time this DSQ was created
+| 1 | fReady | bool | if the mixing pool is ready to be executed
+| 66 | vchSig | char[] | Signature of this message by masternode (verifiable via pubKeyMasternode)
 
 ### DSACCEPT - "dsa"
 

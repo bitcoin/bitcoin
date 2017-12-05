@@ -474,7 +474,7 @@ UniValue masternodelist(const UniValue& params, bool fHelp)
                 "  lastseen       - Print timestamp of when a masternode was last seen on the network\n"
                 "  payee          - Print Dash address associated with a masternode (can be additionally filtered,\n"
                 "                   partial match)\n"
-                "  protocol       - Print protocol of a masternode (can be additionally filtered, exact match))\n"
+                "  protocol       - Print protocol of a masternode (can be additionally filtered, exact match)\n"
                 "  pubkey         - Print the masternode (not collateral) public key\n"
                 "  rank           - Print rank of a masternode based on current block\n"
                 "  status         - Print masternode status: PRE_ENABLED / ENABLED / EXPIRED / WATCHDOG_EXPIRED / NEW_START_REQUIRED /\n"
