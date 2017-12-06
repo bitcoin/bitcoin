@@ -55,7 +55,6 @@
 #include "alias.h"
 #include "escrow.h"
 #include "base58.h"
-extern std::vector<unsigned char> vchFromString(const std::string &str);
 using namespace std;
 
 #if defined(NDEBUG)

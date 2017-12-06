@@ -13,7 +13,8 @@
 #include "util.h"
 
 #include <boost/lexical_cast.hpp>
-
+// SYSCOIN
+extern std::vector<unsigned char> vchFromString(const std::string &str);
 /** Object for who's going to get paid on which blocks */
 CMasternodePayments mnpayments;
 
