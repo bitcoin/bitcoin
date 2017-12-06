@@ -57,20 +57,26 @@ class MempoolPersistTest(BitcoinTestFramework):
         self.log.debug("Send 5 transactions from node2 (to its own address)")
         for i in range(5):
             self.nodes[2].sendtoaddress(self.nodes[2].getnewaddress(), Decimal("10"))
+        node2_balance = self.nodes[2].getbalance()
         self.sync_all()
 
         self.log.debug("Verify that node0 and node1 have 5 transactions in their mempools")
         assert_equal(len(self.nodes[0].getrawmempool()), 5)
         assert_equal(len(self.nodes[1].getrawmempool()), 5)
 
-        self.log.debug("Stop-start node0 and node1. Verify that node0 has the transactions in its mempool and node1 does not.")
+        self.log.debug("Stop-start the nodes. Verify that node0 has the transactions in its mempool and node1 does not. Verify that node2 calculates its balance correctly after loading wallet transactions.")
         self.stop_nodes()
         self.start_node(0)
         self.start_node(1)
+        self.start_node(2)
         # Give bitcoind a second to reload the mempool
         time.sleep(1)
         wait_until(lambda: len(self.nodes[0].getrawmempool()) == 5)
+        wait_until(lambda: len(self.nodes[2].getrawmempool()) == 5)
         assert_equal(len(self.nodes[1].getrawmempool()), 0)
+
+        # Verify accounting of mempool transactions after restart is correct
+        assert_equal(node2_balance, self.nodes[2].getbalance())
 
         self.log.debug("Stop-start node0 with -persistmempool=0. Verify that it doesn't load its mempool.dat file.")
         self.stop_nodes()
