@@ -1286,7 +1286,7 @@ void OfferUpdate(const string& node, const string& aliasname, const string& offe
 	string newdescription = description == "''" || description == "\"\"" ? olddescription : description;
 	string newcurrency = currency == "''" || currency == "\"\"" ? oldcurrency : currency;
 	string newisprivate = isprivateStr == "''" || isprivateStr == "\"\"" ? oldprivateStr : isprivateStr;
-	string newcertguid = certguid == "''" || certguid == "\"\"" ? oldcert : certguid;
+	string newcertguid = certguid == "''" || certguid == "\"\"" ? "''" : certguid;
 	string newcommission = commissionStr == "''" || commissionStr == "\"\"" ? boost::lexical_cast<string>(oldcommission) : commissionStr;
 	string newpaymentoptions = paymentoptions == "''" || paymentoptions == "\"\"" ? oldpaymentoptions : paymentoptions;
 	string newoffertype = offerType == "''" || offerType == "\"\"" ? oldoffertype : offerType;
