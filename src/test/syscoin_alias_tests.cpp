@@ -956,7 +956,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	// should fail: alias transfer from expired alias
 	BOOST_CHECK_THROW(CallRPC("node2", "aliasupdate aliasexpirednode2 changedata1 " + aliasAddress.ToString() + " true 0 '' '' ''"), runtime_error);
 	// should fail: alias transfer to another non-expired alias address
-	BOOST_CHECK_THROW(CallRPC("node1", "aliasupdate aliasexpire2 changedata1 " + aliasexpire1address + " true 0 '' '' ''), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "aliasupdate aliasexpire2 changedata1 " + aliasexpire1address + " true 0 '' '' ''"), runtime_error);
 
 	// should fail: link to an expired alias in offer
 	BOOST_CHECK_THROW(CallRPC("node2", "offerlink aliasexpirednode2 " + offerguid + " 5 newdetails"), runtime_error);
@@ -1005,7 +1005,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 
 	AliasNew("node2", "aliasexpire2", "somedata");
 	// should fail: alias update by old owner shouldn't work after renewal by someone else
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasupdate aliasexpire2 changedata1 " + aliasexpire2node2address + " true 0 '' '' ''));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasupdate aliasexpire2 changedata1 " + aliasexpire2node2address + " true 0 '' '' ''"));
 	UniValue arr3 = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + arr3[0].get_str()));
 	BOOST_CHECK(!find_value(r.get_obj(), "complete").get_bool());
@@ -1014,7 +1014,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str(), "somedata");
 
 	// should pass: alias transfer to another expired alias address
-	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "aliasupdate aliasexpire2 changedata1 " + aliasexpire2node2address + " true 0 '' '' ''));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "aliasupdate aliasexpire2 changedata1 " + aliasexpire2node2address + " true 0 '' '' ''"));
 	UniValue arr4 = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "signrawtransaction " + arr4[0].get_str()));
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
