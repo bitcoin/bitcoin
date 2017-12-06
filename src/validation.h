@@ -167,7 +167,7 @@ extern bool fEnableReplacement;
 
 extern std::map<uint256, int64_t> mapRejectedBlocks;
 
-static const int DIP0001_PROTOCOL_VERSION = 70210;
+static const int DIP0001_PROTOCOL_VERSION = 70211;
 extern std::atomic<bool> fDIP0001WasLockedIn;
 extern std::atomic<bool> fDIP0001ActiveAtTip;
 
