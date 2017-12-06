@@ -105,6 +105,30 @@ class RawTransactionsTest(BitcoinTestFramework):
         # This will raise an exception since there are missing inputs
         assert_raises_rpc_error(-25, "Missing inputs", self.nodes[2].sendrawtransaction, rawtx['hex'])
 
+        #####################################
+        # getrawtransaction with block hash #
+        #####################################
+
+        # make a tx by sending then generate 2 blocks; block1 has the tx in it
+        tx = self.nodes[2].sendtoaddress(self.nodes[1].getnewaddress(), 1)
+        block1, block2 = self.nodes[2].generate(2)
+        self.sync_all()
+        # We should be able to get the raw transaction by providing the correct block
+        gottx = self.nodes[0].getrawtransaction(tx, True, block1)
+        assert_equal(gottx['txid'], tx)
+        assert_equal(gottx['in_active_chain'], True)
+        # We should not have the 'in_active_chain' flag when we don't provide a block
+        gottx = self.nodes[0].getrawtransaction(tx, True)
+        assert_equal(gottx['txid'], tx)
+        assert 'in_active_chain' not in gottx
+        # We should not get the tx if we provide an unrelated block
+        assert_raises_rpc_error(-5, "No such transaction found", self.nodes[0].getrawtransaction, tx, True, block2)
+        # An invalid block hash should raise the correct errors
+        assert_raises_rpc_error(-8, "parameter 3 must be hexadecimal", self.nodes[0].getrawtransaction, tx, True, True)
+        assert_raises_rpc_error(-8, "parameter 3 must be hexadecimal", self.nodes[0].getrawtransaction, tx, True, "foobar")
+        assert_raises_rpc_error(-8, "parameter 3 must be of length 64", self.nodes[0].getrawtransaction, tx, True, "abcd1234")
+        assert_raises_rpc_error(-5, "Block hash not found", self.nodes[0].getrawtransaction, tx, True, "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+
         #########################
         # RAW TX MULTISIG TESTS #
         #########################
@@ -243,13 +267,13 @@ class RawTransactionsTest(BitcoinTestFramework):
         assert_equal(self.nodes[0].getrawtransaction(txHash, True)["hex"], rawTxSigned['hex'])
 
         # 6. invalid parameters - supply txid and string "Flase"
-        assert_raises_rpc_error(-3,"Invalid type", self.nodes[0].getrawtransaction, txHash, "Flase")
+        assert_raises_rpc_error(-1,"not a boolean", self.nodes[0].getrawtransaction, txHash, "Flase")
 
         # 7. invalid parameters - supply txid and empty array
-        assert_raises_rpc_error(-3,"Invalid type", self.nodes[0].getrawtransaction, txHash, [])
+        assert_raises_rpc_error(-1,"not a boolean", self.nodes[0].getrawtransaction, txHash, [])
 
         # 8. invalid parameters - supply txid and empty dict
-        assert_raises_rpc_error(-3,"Invalid type", self.nodes[0].getrawtransaction, txHash, {})
+        assert_raises_rpc_error(-1,"not a boolean", self.nodes[0].getrawtransaction, txHash, {})
 
         inputs  = [ {'txid' : "1d1d4e24ed99057e84c3f80fd8fbec79ed9e1acee37da269356ecea000000000", 'vout' : 1, 'sequence' : 1000}]
         outputs = { self.nodes[0].getnewaddress() : 1 }
