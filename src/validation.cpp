@@ -2389,6 +2389,11 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 				nStartHeight = 0;
 			}
 			if (nStartHeight != 0) {
+				masternode_info_t mnInfo;
+				mnodeman.GetMasternodeInfo(payeeScript, mnInfo);
+				if (mnInfo.pubKeyCollateralAddress.IsValid() && mnodeman.GetStartHeight(mnInfo) != nStartHeight)
+					return state.DoS(0, error("ConnectBlock(SYS): Masternode height and provided coinbase height mismatch"),
+						REJECT_INVALID, "bad-cb-payee");
 				masternodeReward = GetBlockSubsidy(pindex->nHeight, chainparams.GetConsensus(), nTotalRewardWithMasternodes, false, true, nStartHeight);
 				blockReward = nTotalRewardWithMasternodes;
 				break;
