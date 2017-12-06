@@ -194,8 +194,10 @@ public slots:
 #endif // ENABLE_WALLET
 
 private:
-    void enableSystemnodes(bool);
-    void enableMasternodes(bool);
+    void enableSystemnodes();
+    void disableSystemnodes();
+    void enableMasternodes();
+    void disableMasternodes();
 
 private slots:
 #ifdef ENABLE_WALLET

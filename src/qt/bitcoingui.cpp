@@ -313,36 +313,6 @@ void BitcoinGUI::createActions(const NetworkStyle *networkStyle)
 #endif
     tabGroup->addAction(historyAction);
 
-    if (masternodeConfig.getCount() >= 0) {
-        masternodeAction = new QAction(QIcon(":/icons/masternode"), tr("&Masternodes"), this);
-        masternodeAction->setStatusTip(tr("Browse masternodes"));
-        masternodeAction->setToolTip(masternodeAction->statusTip());
-        masternodeAction->setCheckable(true);
-#ifdef Q_OS_MAC
-        masternodeAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_5));
-#else
-        masternodeAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_5));
-#endif
-        tabGroup->addAction(masternodeAction);
-        connect(masternodeAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
-        connect(masternodeAction, SIGNAL(triggered()), this, SLOT(gotoMasternodePage()));
-    }
-
-    if (systemnodeConfig.getCount() >= 0) {
-        systemnodeAction = new QAction(QIcon(":/icons/systemnode"), tr("&Systemnodes"), this);
-        systemnodeAction->setStatusTip(tr("Browse systemnodes"));
-        systemnodeAction->setToolTip(systemnodeAction->statusTip());
-        systemnodeAction->setCheckable(true);
-#ifdef Q_OS_MAC
-        systemnodeAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_6));
-#else
-        systemnodeAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_6));
-#endif
-        tabGroup->addAction(systemnodeAction);
-        connect(systemnodeAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
-        connect(systemnodeAction, SIGNAL(triggered()), this, SLOT(gotoSystemnodePage()));
-    }
-
 #ifdef Q_OS_MAC
     receiveCoinsAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_5));
 #else
@@ -542,14 +512,6 @@ void BitcoinGUI::createToolBars()
         toolbar->addAction(sendCoinsAction);
         toolbar->addAction(receiveCoinsAction);
         toolbar->addAction(historyAction);
-        if (masternodeConfig.getCount() >= 0)
-        {
-            toolbar->addAction(masternodeAction);
-        }
-        if (systemnodeConfig.getCount() >= 0)
-        {
-            toolbar->addAction(systemnodeAction);
-        }
         toolbar->setMovable(false); // remove unused icon in upper left corner
         overviewAction->setChecked(true);
 
@@ -614,6 +576,14 @@ bool BitcoinGUI::addWallet(const QString& name, WalletModel *walletModel)
 {
     if(!walletFrame)
         return false;
+    if (walletModel->getOptionsModel()->getSystemnodesEnabled())
+    {
+        enableSystemnodes();
+    }
+    if (walletModel->getOptionsModel()->getMasternodesEnabled())
+    {
+        enableMasternodes();
+    }
     setWalletActionsEnabled(true);
     return walletFrame->addWallet(name, walletModel);
 }
@@ -640,10 +610,10 @@ void BitcoinGUI::setWalletActionsEnabled(bool enabled)
     sendCoinsAction->setEnabled(enabled);
     receiveCoinsAction->setEnabled(enabled);
     historyAction->setEnabled(enabled);
-    if (masternodeConfig.getCount() >= 0) {
+    if (masternodeAction != NULL) {
         masternodeAction->setEnabled(enabled);
     }
-    if (systemnodeConfig.getCount() >= 0) {
+    if (systemnodeAction != NULL) {
         systemnodeAction->setEnabled(enabled);
     }
     encryptWalletAction->setEnabled(enabled);
@@ -774,7 +744,7 @@ void BitcoinGUI::gotoHistoryPage()
 
 void BitcoinGUI::gotoMasternodePage()
 {
-    if (masternodeConfig.getCount() >= 0 || clientModel->getOptionsModel()->getMasternodesEnabled()) {
+    if (clientModel->getOptionsModel()->getMasternodesEnabled()) {
         masternodeAction->setChecked(true);
         if (walletFrame) walletFrame->gotoMasternodePage();
     }
@@ -782,7 +752,7 @@ void BitcoinGUI::gotoMasternodePage()
 
 void BitcoinGUI::gotoSystemnodePage()
 {
-    if (systemnodeConfig.getCount() >= 0 || clientModel->getOptionsModel()->getSystemnodesEnabled()) {
+    if (clientModel->getOptionsModel()->getSystemnodesEnabled()) {
         systemnodeAction->setChecked(true);
         if (walletFrame) walletFrame->gotoSystemnodePage();
     }
@@ -1086,7 +1056,7 @@ void BitcoinGUI::incomingTransaction(const QString& date, int unit, const CAmoun
 }
 #endif // ENABLE_WALLET
 
-void BitcoinGUI::enableSystemnodes(bool enabled)
+void BitcoinGUI::enableSystemnodes()
 {
     if (systemnodeAction == NULL)
     {
@@ -1102,13 +1072,16 @@ void BitcoinGUI::enableSystemnodes(bool enabled)
         tabGroup->addAction(systemnodeAction);
         connect(systemnodeAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
         connect(systemnodeAction, SIGNAL(triggered()), this, SLOT(gotoSystemnodePage()));
-
-        toolbar->addAction(systemnodeAction);
-        systemnodeAction->setEnabled(enabled);
     }
+    toolbar->addAction(systemnodeAction);
 }
 
-void BitcoinGUI::enableMasternodes(bool enabled)
+void BitcoinGUI::disableSystemnodes()
+{
+    toolbar->removeAction(systemnodeAction);
+}
+
+void BitcoinGUI::enableMasternodes()
 {
     if (masternodeAction == NULL)
     {
@@ -1124,22 +1097,23 @@ void BitcoinGUI::enableMasternodes(bool enabled)
         tabGroup->addAction(masternodeAction);
         connect(masternodeAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
         connect(masternodeAction, SIGNAL(triggered()), this, SLOT(gotoMasternodePage()));
-
-        toolbar->addAction(masternodeAction);
-        masternodeAction->setEnabled(enabled);
     }
+    toolbar->addAction(masternodeAction);
+}
+
+void BitcoinGUI::disableMasternodes()
+{
+    toolbar->removeAction(masternodeAction);
 }
 
 void BitcoinGUI::guiEnableSystemnodesChanged(bool enabled)
 {
-    if (enabled)
-        enableSystemnodes(enabled);
+    enabled ? enableSystemnodes() : disableSystemnodes();
 }
 
 void BitcoinGUI::guiEnableMasternodesChanged(bool enabled)
 {
-    if (enabled)
-        enableMasternodes(enabled);
+    enabled ? enableMasternodes() : disableMasternodes();
 }
 
 void BitcoinGUI::dragEnterEvent(QDragEnterEvent *event)

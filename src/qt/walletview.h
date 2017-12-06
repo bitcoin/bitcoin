@@ -57,6 +57,9 @@ public:
 
     void showOutOfSyncWarning(bool fShow);
 
+    void enableSystemnodes();
+    void enableMasternodes();
+
 private:
     ClientModel *clientModel;
     WalletModel *walletModel;

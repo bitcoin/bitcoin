@@ -36,7 +36,9 @@
 WalletView::WalletView(QWidget *parent):
     QStackedWidget(parent),
     clientModel(0),
-    walletModel(0)
+    walletModel(0),
+    systemnodeListPage(0),
+    masternodeListPage(0)
 {
     // Create tabs
     overviewPage = new OverviewPage();
@@ -71,23 +73,10 @@ WalletView::WalletView(QWidget *parent):
 
     receiveCoinsPage = new ReceiveCoinsDialog();
     sendCoinsPage = new SendCoinsDialog();
-    if (masternodeConfig.getCount() >= 0) {
-        masternodeListPage = new MasternodeList();
-    }
-    if (systemnodeConfig.getCount() >= 0) {
-        systemnodeListPage = new SystemnodeList();
-    }
-
     addWidget(overviewPage);
     addWidget(transactionsPage);
     addWidget(receiveCoinsPage);
     addWidget(sendCoinsPage);
-    if (masternodeConfig.getCount() >= 0) {
-        addWidget(masternodeListPage);
-    }
-    if (systemnodeConfig.getCount() >= 0) {
-        addWidget(systemnodeListPage);
-    }
 
     // Clicking on a transaction on the overview pre-selects the transaction on the transaction history page
     connect(overviewPage, SIGNAL(transactionClicked(QModelIndex)), transactionView, SLOT(focusTransaction(QModelIndex)));
@@ -138,11 +127,17 @@ void WalletView::setClientModel(ClientModel *clientModel)
 
     overviewPage->setClientModel(clientModel);
     sendCoinsPage->setClientModel(clientModel);
-    if (masternodeConfig.getCount() >= 0) {
-        masternodeListPage->setClientModel(clientModel);
-    }
-    if (systemnodeConfig.getCount() >= 0) {
+    
+    if (clientModel->getOptionsModel()->getSystemnodesEnabled())
+    {
+        enableSystemnodes();
         systemnodeListPage->setClientModel(clientModel);
+    }
+
+    if (clientModel->getOptionsModel()->getMasternodesEnabled())
+    {
+        enableMasternodes();
+        masternodeListPage->setClientModel(clientModel);
     }
 }
 
@@ -155,11 +150,17 @@ void WalletView::setWalletModel(WalletModel *walletModel)
     overviewPage->setWalletModel(walletModel);
     receiveCoinsPage->setModel(walletModel);
     sendCoinsPage->setModel(walletModel);
-    if (masternodeConfig.getCount() >= 0) {
-        masternodeListPage->setWalletModel(walletModel);
-    }
-    if (systemnodeConfig.getCount() >= 0) {
+
+    if (walletModel->getOptionsModel()->getSystemnodesEnabled())
+    {
+        enableSystemnodes();
         systemnodeListPage->setWalletModel(walletModel);
+    }
+
+    if (walletModel->getOptionsModel()->getMasternodesEnabled())
+    {
+        enableMasternodes();
+        masternodeListPage->setWalletModel(walletModel);
     }
 
     if (walletModel)
@@ -280,14 +281,14 @@ void WalletView::gotoSendCoinsPage(QString addr)
 
 void WalletView::gotoMasternodePage()
 {
-    if (masternodeConfig.getCount() >= 0 || walletModel->getOptionsModel()->getMasternodesEnabled()) {
+    if (walletModel->getOptionsModel()->getMasternodesEnabled()) {
         setCurrentWidget(masternodeListPage);
     }
 }
 
 void WalletView::gotoSystemnodePage()
 {
-    if (systemnodeConfig.getCount() >= 0 || walletModel->getOptionsModel()->getSystemnodesEnabled()) {
+    if (walletModel->getOptionsModel()->getSystemnodesEnabled()) {
         setCurrentWidget(systemnodeListPage);
     }
 }
@@ -448,15 +449,30 @@ void WalletView::trxAmount(QString amount)
     transactionSum->setText(amount);
 }
 
-/** Enable systemnodes tab */
-void WalletView::enableSystemnodesChanged(bool enabled)
+void WalletView::enableSystemnodes()
 {
-    if (enabled && systemnodeListPage == NULL)
+    if (systemnodeListPage == NULL)
     {
         systemnodeListPage = new SystemnodeList();
         addWidget(systemnodeListPage);
-        systemnodeListPage->setClientModel(clientModel);
-        systemnodeListPage->setWalletModel(walletModel);
+    }
+}
+
+void WalletView::enableMasternodes()
+{
+    if (masternodeListPage == NULL)
+    {
+        masternodeListPage = new MasternodeList();
+        addWidget(masternodeListPage);
+    }
+}
+
+/** Enable systemnodes tab */
+void WalletView::enableSystemnodesChanged(bool enabled)
+{
+    if (enabled)
+    {
+        enableSystemnodes();
     }
     emit guiEnableSystemnodesChanged(enabled);
 }
@@ -464,12 +480,9 @@ void WalletView::enableSystemnodesChanged(bool enabled)
 /** Enabled masternodes tab */
 void WalletView::enableMasternodesChanged(bool enabled)
 {
-    if (enabled && masternodeListPage == NULL)
+    if (enabled)
     {
-        masternodeListPage = new MasternodeList();
-        addWidget(masternodeListPage);
-        masternodeListPage->setClientModel(clientModel);
-        masternodeListPage->setWalletModel(walletModel);
+        enableMasternodes();
     }
     emit guiEnableMasternodesChanged(enabled);
 }
