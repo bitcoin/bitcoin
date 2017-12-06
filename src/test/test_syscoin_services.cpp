@@ -1335,7 +1335,7 @@ void OfferUpdate(const string& node, const string& aliasname, const string& offe
 		BOOST_CHECK(abs(find_value(r.get_obj(), "price").get_real() - compareprice) < 0.001);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "commission").get_int() , commissionStr != "\"\"" ? commission : oldcommission);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "paymentoptions").get_str() , newpaymentoptions);
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "private").get_bool() , isprivateStr != "''": ? isprivate : oldprivate);
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "private").get_bool() , isprivateStr != "''" ? isprivate : oldprivate);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "description").get_str(), newdescription);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "title").get_str(), newtitle);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "category").get_str(), newcategory);
@@ -1366,7 +1366,7 @@ void OfferUpdate(const string& node, const string& aliasname, const string& offe
 			BOOST_CHECK(abs(find_value(r.get_obj(), "price").get_real() - compareprice) < 0.001);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "commission").get_int(), commissionStr != "\"\"" ? commission : oldcommission);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "paymentoptions").get_str(), newpaymentoptions);
-		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "private").get_bool(), isprivateStr != "''": ? isprivate : oldprivate);
+		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "private").get_bool(), isprivateStr != "''" ? isprivate : oldprivate);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "description").get_str(), newdescription);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "title").get_str(), newtitle);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "category").get_str(), newcategory);
@@ -1398,7 +1398,7 @@ void OfferUpdate(const string& node, const string& aliasname, const string& offe
 			BOOST_CHECK(abs(find_value(r.get_obj(), "price").get_real() - compareprice) < 0.001);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "commission").get_int(), commissionStr != "\"\"" ? commission : oldcommission);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "paymentoptions").get_str(), newpaymentoptions);
-		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "private").get_bool(), isprivateStr != "''": ? isprivate : oldprivate);
+		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "private").get_bool(), isprivateStr != "''" ? isprivate : oldprivate);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "description").get_str(), newdescription);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "title").get_str(), newtitle);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "category").get_str(), newcategory);
