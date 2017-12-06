@@ -685,7 +685,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpiredbuyback)
 	
 	AliasNew("node1", "aliasexpirebuyback", "somedata");
 	// can't renew aliases that aren't expired
-	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew aliasexpirebuyback data"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew aliasexpirebuyback data false 0 TTVgyEvCfgZFiVL32kD7jMRaBKtGCHqwbD '' '' ''"), runtime_error);
 	ExpireAlias("aliasexpirebuyback");
 	// expired aliases are searchable since you haven't deleted from indexer yet
 	BOOST_CHECK_EQUAL(AliasFilter("node1", "aliasexpirebuyback"), true);
@@ -761,7 +761,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpiredbuyback)
 	hex_str = AliasUpdate("node2", "aliasexpirebuyback", "changedata4");
 	BOOST_CHECK(hex_str.empty());
 	GenerateBlocks(5,"node2");
-	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew aliasexpirebuyback data2"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew aliasexpirebuyback data2 false 0 TTVgyEvCfgZFiVL32kD7jMRaBKtGCHqwbD '' '' ''"), runtime_error);
 }
 
 BOOST_AUTO_TEST_CASE (generate_aliaspruning)
@@ -943,7 +943,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	AliasNew("node1", "aliasexpire0", "pubdata");
 	string aliasexpire1address =  AliasNew("node2", "aliasexpire1", "pubdata");
 	// should already exist and not be expired so you can't create it again
-	BOOST_CHECK_THROW(r = CallRPC("node1", "aliasnew aliasexpire2"), runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC("node1", "aliasnew aliasexpire2 data false 0 TTVgyEvCfgZFiVL32kD7jMRaBKtGCHqwbD '' '' ''"), runtime_error);
 	CKey privKey;
 	privKey.MakeNewKey(true);
 	CPubKey pubKey = privKey.GetPubKey();
@@ -952,52 +952,34 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	BOOST_CHECK(pubKey.IsFullyValid());
 	CSyscoinAddress aliasAddress(pubKey.GetID());
 	// should fail: alias update on expired alias
-	BOOST_CHECK_THROW(CallRPC("node2", "aliasupdate aliasexpirednode2 newdata1"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node2", "aliasupdate aliasexpirednode2 newdata1 TTVgyEvCfgZFiVL32kD7jMRaBKtGCHqwbD true 0 '' '' ''"), runtime_error);
 	// should fail: alias transfer from expired alias
-	BOOST_CHECK_THROW(CallRPC("node2", "aliasupdate aliasexpirednode2 changedata1 " + aliasAddress.ToString()), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node2", "aliasupdate aliasexpirednode2 changedata1 " + aliasAddress.ToString() + " true 0 '' '' ''), runtime_error);
 	// should fail: alias transfer to another non-expired alias address
-	BOOST_CHECK_THROW(CallRPC("node1", "aliasupdate aliasexpire2 changedata1 " + aliasexpire1address), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "aliasupdate aliasexpire2 changedata1 " + aliasexpire1address + " true 0 '' '' ''), runtime_error);
 
 	// should fail: link to an expired alias in offer
 	BOOST_CHECK_THROW(CallRPC("node2", "offerlink aliasexpirednode2 " + offerguid + " 5 newdetails"), runtime_error);
 	// should fail: generate an offer using expired alias
-	BOOST_CHECK_THROW(CallRPC("node2", "offernew aliasexpirednode2 category title 1 0.05 description USD"), runtime_error);
+	
+	BOOST_CHECK_THROW(CallRPC("node2", "offernew aliasexpirednode2 category title 1 0.05 description USD '' SYS false 1 BUYNOW 0 0 false 0 ''"), runtime_error);
 	// should fail: new escrow with expired arbiter alias
-	BOOST_CHECK_THROW(CallRPC("node2", "escrownew false aliasexpire2node2 aliasexpirednode2 " + offerguid + " 1 " + " true 0"), runtime_error);
+
+	BOOST_CHECK_THROW(CallRPC("node2", "escrownew false aliasexpire2node2 aliasexpirednode2 " + offerguid + " 1 true 0 0 25 0.005 0 '' SYS 0 0 ''"), runtime_error);
 	// should fail: new escrow with expired alias
-	BOOST_CHECK_THROW(CallRPC("node2", "escrownew false aliasexpirednode2 aliasexpire " + offerguid + " 1 " + " true 0"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node2", "escrownew false aliasexpirednode2 aliasexpire " + offerguid + " 1 " + " true 0 0 25 0.005 0 '' SYS 0 0 ''"), runtime_error);
 
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasupdate aliasexpire newdata1"));
-	UniValue arr = r.get_array();
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + arr[0].get_str()));
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasupdate aliasexpire2 newdata1"));
-	UniValue arr1 = r.get_array();
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + arr1[0].get_str()));
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
-	GenerateBlocks(5, "node1");
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasupdate aliasexpire2 newdata12"));
-	UniValue arr1a = r.get_array();
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + arr1a[0].get_str()));
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
-	GenerateBlocks(5, "node1");
 
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "certupdate " + certgoodguid + " titlenew pubdata"));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "certupdate " + certgoodguid + " titlenew pubdata certificates ''"));
 	UniValue arr2 = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + arr2[0].get_str()));
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
 	GenerateBlocks(5, "node1");
-
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasupdate aliasexpire2 newdata13"));
-	UniValue arr1b = r.get_array();
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + arr1b[0].get_str()));
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
-	GenerateBlocks(5, "node1");
 	// should fail: offer alias expired and was renewed
-	BOOST_CHECK_THROW(CallRPC("node1", "offerupdate aliasexpire0 " + offerguid + " category title 100 0.05 description"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "offerupdate aliasexpire0 " + offerguid + " category title 100 0.05 description USD false '' 0 SYS BUYNOW 0 0 false 0 ''"), runtime_error);
 	GenerateBlocks(5, "node1");
 	// cannot update cert because it expired and was renewed
-	BOOST_CHECK_THROW(CallRPC("node1", "certupdate " + certguid + " aliasexpire pubdata"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "certupdate " + certguid + " aliasexpire pubdata certificates ''"), runtime_error);
 	GenerateBlocks(5, "node1");
 
 	StartNode("node3");	
@@ -1023,7 +1005,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 
 	AliasNew("node2", "aliasexpire2", "somedata");
 	// should fail: alias update by old owner shouldn't work after renewal by someone else
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasupdate aliasexpire2 changedata1 " + aliasexpire2node2address));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasupdate aliasexpire2 changedata1 " + aliasexpire2node2address + " true 0 '' '' ''));
 	UniValue arr3 = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + arr3[0].get_str()));
 	BOOST_CHECK(!find_value(r.get_obj(), "complete").get_bool());
@@ -1032,7 +1014,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str(), "somedata");
 
 	// should pass: alias transfer to another expired alias address
-	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "aliasupdate aliasexpire2 changedata1 " + aliasexpire2node2address));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "aliasupdate aliasexpire2 changedata1 " + aliasexpire2node2address + " true 0 '' '' ''));
 	UniValue arr4 = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "signrawtransaction " + arr4[0].get_str()));
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
@@ -1040,7 +1022,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	BOOST_CHECK(aliasexpirenode2address != AliasNew("node2", "aliasexpirednode2", "somedata"));
 
 	// should fail: cert alias was expired and renewed(aliasexpire2)
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "certtransfer " + certgoodguid + " aliasexpirednode2"));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "certtransfer " + certgoodguid + " aliasexpirednode2 '' ''"));
 	UniValue arr5 = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + arr5[0].get_str()));
 	BOOST_CHECK(!find_value(r.get_obj(), "complete").get_bool());
@@ -1050,11 +1032,11 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 
 	ExpireAlias("aliasexpire2");
 	// should fail: update cert with expired alias
-	BOOST_CHECK_THROW(CallRPC("node1", "certupdate " + certgoodguid + " title pubdata"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "certupdate " + certgoodguid + " title pubdata certificates ''"), runtime_error);
 	// should fail: xfer an cert with expired alias
-	BOOST_CHECK_THROW(CallRPC("node1", "certtransfer " + certgoodguid + " aliasexpire2"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "certtransfer " + certgoodguid + " aliasexpire2 '' ''"), runtime_error);
 	// should fail: xfer an cert to an expired alias even though transferring cert is good
-	BOOST_CHECK_THROW(CallRPC("node1", "certtransfer " + certguid + " aliasexpire2"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "certtransfer " + certguid + " aliasexpire2 '' ''"), runtime_error);
 
 	AliasNew("node2", "aliasexpire2", "somedata");
 
@@ -1069,7 +1051,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 
 	ExpireAlias("aliasexpire2");
 	// should fail: generate a cert using expired alias
-	BOOST_CHECK_THROW(CallRPC("node1", "certnew aliasexpire2 jag1 pubdata"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "certnew aliasexpire2 jag1 pubdata certificates ''"), runtime_error);
 	// renew alias after expiry
 	AliasNew("node2", "aliasexpirednode2", "somedata");
 }
