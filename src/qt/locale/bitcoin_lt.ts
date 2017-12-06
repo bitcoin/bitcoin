@@ -831,6 +831,11 @@ Adresas: %4</translation>
         <translation>&amp;Paleisti Peercoin programą su window sistemos paleidimu</translation>
     </message>
     <message>
+        <location line="+7"/>
+        <source>Enforce checkpoints</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location line="+35"/>
         <source>Reset all client options to default.</source>
         <translation type="unfinished"/>

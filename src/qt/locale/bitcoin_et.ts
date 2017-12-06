@@ -832,6 +832,11 @@ Aadress: %4⏎</translation>
         <translation>&amp;Start Peercoin sisselogimisel</translation>
     </message>
     <message>
+        <location line="+7"/>
+        <source>Enforce checkpoints</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location line="+35"/>
         <source>Reset all client options to default.</source>
         <translation>Taasta kõik klientprogrammi seadete vaikeväärtused.</translation>

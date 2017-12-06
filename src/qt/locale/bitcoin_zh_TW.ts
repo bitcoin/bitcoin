@@ -833,6 +833,11 @@ Address: %4
         <translation>系統登入時啟動位元幣</translation>
     </message>
     <message>
+        <location line="+7"/>
+        <source>Enforce checkpoints</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location line="+35"/>
         <source>Reset all client options to default.</source>
         <translation>回復所有客戶端軟體選項成預設值.</translation>
