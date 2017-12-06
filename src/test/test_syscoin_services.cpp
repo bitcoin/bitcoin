@@ -1176,7 +1176,7 @@ const string OfferNew(const string& node, const string& aliasname, const string&
 	BOOST_CHECK(find_value(r.get_obj(), "quantity").get_int() == qty);
 	BOOST_CHECK(find_value(r.get_obj(), "currency").get_str() == currency);
 	float compareprice = 0;
-	if (price != "''"")
+	if (price != "''")
 		compareprice = boost::lexical_cast<float>(price);
 
 	BOOST_CHECK(abs(find_value(r.get_obj(), "price").get_real() - compareprice) < 0.001);
@@ -1274,20 +1274,20 @@ void OfferUpdate(const string& node, const string& aliasname, const string& offe
 	string oldtitle = find_value(r.get_obj(), "title").get_str();
 	string oldcategory = find_value(r.get_obj(), "category").get_str();
 	string oldoffertype = find_value(r.get_obj(), "offertype").get_str();
-	string oldauctionexpires = string(itoa(find_value(r.get_obj(), "auction_expires_on").get_int64()));
-	string oldauctionreserve = string(ftoa(find_value(r.get_obj(), "auction_reserve_price").get_real()));
+	string oldauctionexpires = boost::lexical_cast<string>(find_value(r.get_obj(), "auction_expires_on").get_int64());
+	string oldauctionreserve = boost::lexical_cast<string>(find_value(r.get_obj(), "auction_reserve_price").get_real());
 	string oldauctionrequirewitness = find_value(r.get_obj(), "auction_require_witness").get_bool()? "true":"false";
-	string oldauctiondeposit = string(ftoa(find_value(r.get_obj(), "auction_deposit").get_real()));
+	string oldauctiondeposit = boost::lexical_cast<string>(find_value(r.get_obj(), "auction_deposit").get_real());
 
 	string newcategory = category == "''" || category == "\"\"" ? oldcategory : category;
 	string newtitle = title == "''" || title == "\"\"" ? oldtitle : title;
-	string newqty = qtyStr == "''" || qtyStr == "\"\"" ? string(itoa(oldqty)) : qtyStr;
-	string newprice = price == "''" || price == "\"\"" ? string(ftoa(oldprice)) : price;
+	string newqty = qtyStr == "''" || qtyStr == "\"\"" ? boost::lexical_cast<string>(oldqty) : qtyStr;
+	string newprice = price == "''" || price == "\"\"" ? boost::lexical_cast<string>(oldprice) : price;
 	string newdescription = description == "''" || description == "\"\"" ? olddescription : description;
 	string newcurrency = currency == "''" || currency == "\"\"" ? oldcurrency : currency;
 	string newisprivate = isprivateStr == "''" || isprivateStr == "\"\"" ? oldprivateStr : isprivateStr;
 	string newcertguid = certguid == "''" || certguid == "\"\"" ? oldcert : certguid;
-	string newcommission = commissionStr == "''" || commissionStr == "\"\"" ? string(itoa(oldcommission)) : commissionStr;
+	string newcommission = commissionStr == "''" || commissionStr == "\"\"" ? boost::lexical_cast<string>(oldcommission) : commissionStr;
 	string newpaymentoptions = paymentoptions == "''" || paymentoptions == "\"\"" ? oldpaymentoptions : paymentoptions;
 	string newoffertype = offerType == "''" || offerType == "\"\"" ? oldoffertype : offerType;
 	string newauction_expires = auction_expires == "''" || auction_expires == "\"\"" ? oldauctionexpires : auction_expires;
