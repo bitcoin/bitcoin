@@ -749,8 +749,8 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpiredbuyback)
 	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew aliasexpirebuyback data false 0 TTVgyEvCfgZFiVL32kD7jMRaBKtGCHqwbD '' '' ''"), runtime_error);
 	string hex_str = AliasUpdate("node2", "aliasexpirebuyback", "changedata1");
 	BOOST_CHECK(hex_str.empty());
-	BOOST_CHECK_THROW(CallRPC("node2", "aliasnew aliasexpirebuyback false 0 TTVgyEvCfgZFiVL32kD7jMRaBKtGCHqwbD '' '' ''"), runtime_error);
-	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew aliasexpirebuyback false 0 TTVgyEvCfgZFiVL32kD7jMRaBKtGCHqwbD '' '' ''"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node2", "aliasnew aliasexpirebuyback data false 0 TTVgyEvCfgZFiVL32kD7jMRaBKtGCHqwbD '' '' ''"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew aliasexpirebuyback data false 0 TTVgyEvCfgZFiVL32kD7jMRaBKtGCHqwbD '' '' ''"), runtime_error);
 	// this time steal the alias and try to recreate at the same time
 	ExpireAlias("aliasexpirebuyback");
 	AliasNew("node1", "aliasexpirebuyback", "somedata");
@@ -813,7 +813,7 @@ BOOST_AUTO_TEST_CASE (generate_aliaspruning)
 	BOOST_CHECK_EQUAL(AliasFilter("node2", "aliasprune1"), true);
 	ExpireAlias("aliasprune1");
 	// now it should be expired
-	BOOST_CHECK_THROW(CallRPC("node2", "aliasupdate aliasprune1 newdata2"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node2", "aliasupdate aliasprune1 newdata2 TTVgyEvCfgZFiVL32kD7jMRaBKtGCHqwbD true 0 '' '' ''"), runtime_error);
 
 	BOOST_CHECK_EQUAL(AliasFilter("node1", "aliasprune1"), true);
 	BOOST_CHECK_EQUAL(AliasFilter("node2", "aliasprune1"), true);
