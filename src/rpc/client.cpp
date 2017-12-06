@@ -158,7 +158,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
 	{ "offerupdate", 5 },
 	{ "offerupdate", 8 },
 	{ "offerupdate", 10 },
-	{ "offerupdate", 11 },
+	{ "offerupdate", 13 },
 	{ "offerupdate", 14 },
 	{ "offerupdate", 15 },
 	{ "offerupdate", 16 },
