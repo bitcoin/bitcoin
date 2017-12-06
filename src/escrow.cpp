@@ -1694,7 +1694,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 		nNetworkFee = getFeePerByte(paymentOptionMask);
 
 	CAmount nBidPerUnit = 0;
-		nBidPerUnit = AmountFromValue(params[13].get_real());
+	nBidPerUnit = AmountFromValue(params[13].get_real());
 	
 	float fBidPerUnit = 0;
 	fBidPerUnit = params[14].get_real();

@@ -166,7 +166,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
 	{ "escrowbid", 2 },
 	{ "escrowbid", 3 },
 	{ "escrowaddshipping", 1 },
-	{ "escrownew", 1 },
+	{ "escrownew", 0 },
 	{ "escrownew", 4 },
 	{ "escrownew", 5 },
 	{ "escrownew", 6 },
