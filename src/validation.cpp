@@ -2369,7 +2369,6 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 	CAmount nTotalRewardWithMasternodes;
 	CAmount blockReward = GetBlockSubsidy(pindex->nHeight, chainparams.GetConsensus(), nTotalRewardWithMasternodes);
 	CAmount masternodeReward = 0;
-	CAmount txOutHeightValue = 0;
 	BOOST_FOREACH(CTxOut txout, block.vtx[0].vout) {
 		if (txout.scriptPubKey.IsUnspendable()) {
 			vector<unsigned char> vchData;
@@ -2392,19 +2391,18 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 			if (nStartHeight != 0) {
 				masternodeReward = GetBlockSubsidy(pindex->nHeight, chainparams.GetConsensus(), nTotalRewardWithMasternodes, false, true, nStartHeight);
 				blockReward = nTotalRewardWithMasternodes;
-				txOutHeightValue = txout.nValue;
 				break;
 			}
 		}
 	}
 
-	if (!IsBlockPayeeValid(block.vtx[0], pindex->nHeight, nFees-txOutHeightValue, blockReward, masternodeReward)) {
+	if (!IsBlockPayeeValid(block.vtx[0], pindex->nHeight, nFees, blockReward, masternodeReward)) {
 		mapRejectedBlocks.insert(make_pair(block.GetHash(), GetTime()));
 		return state.DoS(0, error("ConnectBlock(SYS): couldn't find masternode or superblock payments"),
 			REJECT_INVALID, "bad-cb-payee");
 	}
 	std::string strError = "";
-	if (!IsBlockValueValid(block, pindex->nHeight, nFees-txOutHeightValue, blockReward, strError)) {
+	if (!IsBlockValueValid(block, pindex->nHeight, nFees, blockReward, strError)) {
 		return state.DoS(0, error("ConnectBlock(SYS): %s", strError), REJECT_INVALID, "bad-cb-amount");
 	}
 	// END SYS

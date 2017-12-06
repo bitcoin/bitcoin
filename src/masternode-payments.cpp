@@ -259,13 +259,10 @@ void CMasternodePayments::FillBlockPayee(CMutableTransaction& txNew, int nBlockH
 
 	CScript scriptData;
 	scriptData << OP_RETURN << vchFromString(boost::lexical_cast<string>(nStartHeight));
-	CTxOut txOutHeight(0, scriptData);
-	size_t nSize = txOutHeight.GetSerializeSize(SER_DISK, 0) + 148u;
-	txOutHeight.nValue = 3 * minRelayTxFee.GetFee(nSize);
-	txNew.vout.push_back(txOutHeight);
+	txNew.vout.push_back(CTxOut(0, scriptData));
 
 	// miner takes 25% of the reward and half fees
-	txNew.vout[0].nValue = ((blockReward*0.25) + (nFee/2)) - txOutHeight.nValue;
+	txNew.vout[0].nValue = ((blockReward*0.25) + (nFee/2));
 	// masternode takes 75% of reward, add/remove some reward depending on seniority and half fees.
 	CAmount nTotalReward;
 	blockReward = GetBlockSubsidy(nBlockHeight, Params().GetConsensus(), nTotalReward, false, true, nStartHeight);
