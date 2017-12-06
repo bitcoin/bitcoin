@@ -2642,7 +2642,7 @@ std::set<int> CMPTxList::GetSeedBlocks(int startHeight, int endHeight)
 bool CMPTxList::LoadFreezeState(int blockHeight)
 {
     assert(pdb);
-    std::vector<std::pair<int64_t, uint256> > loadOrder;
+    std::vector<std::pair<std::string, uint256> > loadOrder;
     Iterator* it = NewIterator();
     PrintToLog("Loading freeze state from levelDB\n");
 
@@ -2654,15 +2654,17 @@ bool CMPTxList::LoadFreezeState(int blockHeight)
         uint16_t txtype = atoi(vstr[2]);
         if (txtype != MSC_TYPE_FREEZE_PROPERTY_TOKENS && txtype != MSC_TYPE_ENABLE_FREEZING && txtype != MSC_TYPE_DISABLE_FREEZING) continue;
         if (atoi(vstr[0]) != 1) continue;
-        uint256 txid = uint256S(it->key().ToString());;
-        loadOrder.push_back(std::make_pair(atoi(vstr[1]), txid));
+        uint256 txid = uint256S(it->key().ToString());
+        int txPosition = p_OmniTXDB->FetchTransactionPosition(txid);
+        std::string sortKey = strprintf("%06d%010d", atoi(vstr[1]), txPosition);
+        loadOrder.push_back(std::make_pair(sortKey, txid));
     }
 
     delete it;
 
     std::sort (loadOrder.begin(), loadOrder.end());
 
-    for (std::vector<std::pair<int64_t, uint256> >::iterator it = loadOrder.begin(); it != loadOrder.end(); ++it) {
+    for (std::vector<std::pair<std::string, uint256> >::iterator it = loadOrder.begin(); it != loadOrder.end(); ++it) {
         uint256 hash = (*it).second;
         uint256 blockHash;
         CTransaction wtx;
