@@ -79,6 +79,13 @@ CAddrInfo* CAddrMan::Find(const CNetAddr& addr, int* pnId)
     return nullptr;
 }
 
+CAddrInfo* CAddrMan::ById(unsigned long nId) 
+{
+    if ((mapInfo.count(nId) == 0) || (nId < mapInfo.count(nId) - 1))
+        return(nullptr);
+    return &mapInfo[nId];
+}
+
 CAddrInfo* CAddrMan::Create(const CAddress& addr, const CNetAddr& addrSource, int* pnId)
 {
     int nId = nIdCount++;

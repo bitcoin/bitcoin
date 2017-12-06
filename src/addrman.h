@@ -521,6 +521,8 @@ public:
         return fRet;
     }
 
+    CAddrInfo* ById(unsigned long nId);
+
     //! Add multiple addresses.
     bool Add(const std::vector<CAddress> &vAddr, const CNetAddr& source, int64_t nTimePenalty = 0)
     {
