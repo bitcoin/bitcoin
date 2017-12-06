@@ -94,6 +94,12 @@ Changed command-line options
 -----------------------------
 - `-debuglogfile=<file>` can be used to specify an alternative debug logging file.
 
+Renamed script for creating JSON-RPC credentials
+-----------------------------
+The `share/rpcuser/rpcuser.py` script was renamed to `share/rpcauth/rpcauth.py`. This script can be
+used to create `rpcauth` credentials for a JSON-RPC user.
+
+
 Credits
 =======
 
