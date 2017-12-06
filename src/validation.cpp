@@ -2386,7 +2386,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 			try {
 				nStartHeight = boost::lexical_cast<unsigned int>(stringFromVch(vchData));
 			}
-			catch (bad_lexical_cast &)
+			catch (boost::bad_lexical_cast &)
 			{
 				nStartHeight = 0;
 			}
