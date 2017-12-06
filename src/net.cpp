@@ -1736,7 +1736,6 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
 
     // Minimum time before next feeler connection (in microseconds).
     int64_t nNextFeeler = PoissonNextSend(nStart*1000*1000, FEELER_INTERVAL);
-    LogPrintf("FixedSeeds: Before interruptNet check\n");
 
     while (!interruptNet)
     {
@@ -1749,27 +1748,9 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
         if (interruptNet)
             return;
 
-        // DEBUG ////////////////////
-        LogPrintf("FixedSeeds: Checking\n");
-
-        LogPrintf("Addrman size %d\n", addrman.size());
-
-        if (addrman.size()) {
-            CAddrInfo *addrInfo;
-            for(size_t ai=0;ai < addrman.size(); ai++) {
-                addrInfo = addrman.ById(ai);
-                if (addrInfo != nullptr)
-                    LogPrintf("Address %s\n", addrInfo->ToString());                
-            }
-        }
-        //////////////////////////////////
-
-
-        //LogPrintf("Addrman value %s\n", str.c_str());
         // Add seed nodes if DNS seeds are all down (an infrastructure attack?).
         if (addrman.size() == 0 && (GetTime() - nStart > 60)) {
             static bool done = false;
-            LogPrintf("FixedSeeds: Passed\n");
 
             if (!done) {
                 LogPrintf("Adding fixed seed nodes as DNS doesn't seem to be available.\n");
@@ -1833,9 +1814,6 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
         {
             CAddrInfo addr = addrman.Select(fFeeler);
 
-            //DEBUG
-            LogPrintf("DEBUG Feeler: %s\n", addr.ToString());
-
             // if we selected an invalid address, restart
             if (!addr.IsValid() || setConnected.count(addr.GetGroup()) || IsLocal(addr))
                 break;
@@ -1849,13 +1827,11 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
 
             if (IsLimited(addr))
             {
-                LogPrintf("DEBUG: Limited\n");
                 continue;
             }
 
             // only consider very recently tried nodes after 30 failed attempts
             if (nANow - addr.nLastTry < 600 && nTries < 30) {
-                LogPrintf("DEBUG: Only recent\n");
                 continue;
             }
 
@@ -1863,16 +1839,13 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
             // for feelers, only require they be a full node (only because most
             // SPV clients don't have a good address DB available)
             if (!fFeeler && !HasAllDesirableServiceFlags(addr.nServices)) {
-                LogPrintf("DEBUG: Not all services\n");
                 continue;
             } else if (fFeeler && !MayHaveUsefulAddressDB(addr.nServices)) {
-                LogPrintf("DEBUG: Not useful DB\n");
                 continue;
             }
 
             // do not allow non-default ports, unless after 50 invalid addresses selected already
             if (addr.GetPort() != Params().GetDefaultPort() && nTries < 50) {
-                LogPrintf("DEBUG: Not default port\n");
                 continue;
             }
 
@@ -1880,10 +1853,8 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
             break;
         }
 
-        LogPrintf("DEBUG: Checking IsValid\n");
 
         if (addrConnect.IsValid()) {
-            LogPrintf("DEBUG: IsValid\n");
 
             if (fFeeler) {
                 // Add small amount of random noise before connection to avoid synchronization.
