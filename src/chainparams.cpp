@@ -117,7 +117,7 @@ public:
     CMainParams() {
         strNetworkID = "main";
         consensus.nSubsidyHalvingInterval = 525600;
-		consensus.nSeniorityInterval = 43800 * 4; // seniority increases every 4 months (quarter year)
+		consensus.nSeniorityInterval = 43800 * 3; // seniority increases every 3 months (quarter year)
 		consensus.nTotalSeniorityIntervals = 9;
         consensus.nInstantSendKeepLock = 24;
         consensus.nBudgetPaymentsStartBlock = 0; // actual historical value
