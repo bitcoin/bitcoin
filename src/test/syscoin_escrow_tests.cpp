@@ -264,7 +264,7 @@ BOOST_AUTO_TEST_CASE(generate_escrowrefund_invalid)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "escrowcreaterawtransaction refund " + guid + " " + inputStr + " buyer"));
 	const UniValue &arr = r.get_array();
 	string rawtx = arr[0].get_str();
-	BOOST_CHECK_THROW(CallRPC("node1", "escrowrefund " + guid + " buyer " + rawtx), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "escrowrefund " + guid + " buyer " + rawtx + " ''"), runtime_error);
 
 	// arbiter can resend claim refund to buyer
 	EscrowRefund("node2", "seller", guid);
@@ -277,7 +277,7 @@ BOOST_AUTO_TEST_CASE(generate_escrowrefund_invalid)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "escrowcreaterawtransaction refund " + guid + " " + inputStr + "  seller"));
 	const UniValue &arr2 = r.get_array();
 	rawtx = arr2[0].get_str();
-	BOOST_CHECK_THROW(CallRPC("node2", "escrowrefund " + guid + " seller " + rawtx), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node2", "escrowrefund " + guid + " seller " + rawtx + " ''"), runtime_error);
 }
 BOOST_AUTO_TEST_CASE(generate_escrowrelease_invalid)
 {
@@ -312,7 +312,7 @@ BOOST_AUTO_TEST_CASE(generate_escrowrelease_invalid)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "escrowcreaterawtransaction release " + guid + " " + inputStr + " seller"));
 	const UniValue &arr = r.get_array();
 	string rawtx = arr[0].get_str();
-	BOOST_CHECK_THROW(CallRPC("node2", "escrowrelease " + guid + " seller " + rawtx), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node2", "escrowrelease " + guid + " seller " + rawtx + " ''", runtime_error);
 	EscrowRelease("node1", "buyer", guid);
 	// cant release already released escrow
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "escrowcreaterawtransaction release " + guid + " " + inputStr + " buyer"));
