@@ -1387,7 +1387,7 @@ void OfferUpdate(const string& node, const string& aliasname, const string& offe
 	{
 		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode2, "offerinfo " + offerguid));
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "_id").get_str() , offerguid);
-		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "cert").get_str(), newcertguid);
+		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "cert").get_str(), certguid != "''" ? certguid : oldcert);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "quantity").get_int(), qtyStr != "''"? qty : oldqty);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "currency").get_str(), newcurrency);
 		float compareprice = 0;
