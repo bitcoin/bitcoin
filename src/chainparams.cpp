@@ -197,8 +197,8 @@ public:
         assert(consensus.hashGenesisBlock == uint256S("0x00000013dd11f2bd679ee383ecd15b7b093400f38f547b2299007d5166ac981d"));
         assert(genesis.hashMerkleRoot == uint256S("0xa4c84e05d4f74f0df5e69a8c2e85524f9776555980a60312ab0fd524cd9b1474"));
 
-        vSeeds.emplace_back("seed-raven.ravencoin-na.org", false); 
-        vSeeds.emplace_back("seed-raven.bitactivate-na.com", false); 
+        vSeeds.emplace_back("seed-raven.ravencoin.org", false); 
+        vSeeds.emplace_back("seed-raven.bitactivate.com", false); 
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,60);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,122);
