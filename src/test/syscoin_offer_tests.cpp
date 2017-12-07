@@ -507,7 +507,7 @@ BOOST_AUTO_TEST_CASE (generate_offerexpired)
 	ExpireAlias("buyeralias4");
 
 	// should fail: perform an accept on expired offer
-	BOOST_CHECK_THROW(r = CallRPC("node2", "escrownew false buyeralias4 arbiteralias4 " + offerguid + " 1 true 0 25 0.005 0 '' SYS 0 0 ''""), runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC("node2", "escrownew false buyeralias4 arbiteralias4 " + offerguid + " 1 true 0 25 0.005 0 '' SYS 0 0 ''"), runtime_error);
 
 	// should fail: offer update on an expired offer
 	BOOST_CHECK_THROW(r = CallRPC("node1", "offerupdate selleralias4 " + offerguid + " category title 90 0.15 description USD false '' 0 SYS BUYNOW 0 0 false 0 ''"), runtime_error);
