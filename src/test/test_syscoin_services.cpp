@@ -2108,7 +2108,7 @@ void EscrowClaimRefund(const string& node, const string& guid)
 		balanceWitnessBefore = AmountFromValue(find_value(r.get_obj(), "balance"));
 	}
 	// "escrowcreaterawtransaction <type> <escrow guid> <[{\"txid\":\"id\",\"vout\":n, \"satoshis\":n},...]> [user role]\n"
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowcreaterawtransaction refund " + guid + " " + inputStr));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowcreaterawtransaction refund " + guid + " " + inputStr + " ''"));
 	const UniValue &arr = r.get_array();
 	string rawtx = arr[0].get_str();
 	BOOST_CHECK(AmountFromValue(arr[1]) >= 0);
@@ -2298,7 +2298,7 @@ void EscrowClaimRelease(const string& node, const string& guid)
 		balanceWitnessBefore = AmountFromValue(find_value(r.get_obj(), "balance"));
 	}
 	// "escrowcreaterawtransaction <type> <escrow guid> <[{\"txid\":\"id\",\"vout\":n, \"satoshis\":n},...]> [user role]\n"
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowcreaterawtransaction release " + guid + " " + inputStr));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowcreaterawtransaction release " + guid + " " + inputStr + " ''"));
 	const UniValue &arr = r.get_array();
 	string rawtx = arr[0].get_str();
 	BOOST_CHECK(AmountFromValue(arr[1]) >= 0);
