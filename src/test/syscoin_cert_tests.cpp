@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE (generate_certtransfer)
 	CertTransfer("node1", "node3", pvtguid, "jagcert3");
 
 	// xfer an cert that isn't yours
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "certtransfer " + guid + " jagcert2"));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "certtransfer " + guid + " jagcert2 '' 2 ''"));
 	UniValue arr = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + arr[0].get_str()));
 	BOOST_CHECK(!find_value(r.get_obj(), "complete").get_bool());

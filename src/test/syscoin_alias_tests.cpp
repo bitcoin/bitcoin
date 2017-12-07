@@ -894,7 +894,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasprunewithcert)
 	AliasNew("node1", "aliasprunewithcert", "pubdata");
 	AliasNew("node2", "aliasprunewithcert2", "pubdata");
 	string certguid = CertNew("node1", "aliasprunewithcert", "jag1", "pubdata");
-	CertUpdate("node1", certguid, "\"\"", "newdata");
+	CertUpdate("node1", certguid, "''", "newdata");
 	CertTransfer("node1", "node2", certguid, "aliasprunewithcert2");
 	GenerateBlocks(5, "node1");
 	ExpireAlias("aliasprunewithcert2");
@@ -1022,7 +1022,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	BOOST_CHECK(aliasexpirenode2address != AliasNew("node2", "aliasexpirednode2", "somedata"));
 
 	// should fail: cert alias was expired and renewed(aliasexpire2)
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "certtransfer " + certgoodguid + " aliasexpirednode2 '' ''"));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "certtransfer " + certgoodguid + " aliasexpirednode2 '' 2 ''"));
 	UniValue arr5 = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + arr5[0].get_str()));
 	BOOST_CHECK(!find_value(r.get_obj(), "complete").get_bool());
@@ -1034,9 +1034,9 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	// should fail: update cert with expired alias
 	BOOST_CHECK_THROW(CallRPC("node1", "certupdate " + certgoodguid + " title pubdata certificates ''"), runtime_error);
 	// should fail: xfer an cert with expired alias
-	BOOST_CHECK_THROW(CallRPC("node1", "certtransfer " + certgoodguid + " aliasexpire2 '' ''"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "certtransfer " + certgoodguid + " aliasexpire2 '' 2 ''"), runtime_error);
 	// should fail: xfer an cert to an expired alias even though transferring cert is good
-	BOOST_CHECK_THROW(CallRPC("node1", "certtransfer " + certguid + " aliasexpire2 '' ''"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "certtransfer " + certguid + " aliasexpire2 '' 2 ''"), runtime_error);
 
 	AliasNew("node2", "aliasexpire2", "somedata");
 

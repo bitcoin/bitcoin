@@ -1046,7 +1046,7 @@ void CertTransfer(const string& node, const string &tonode, const string& guid, 
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasinfo " + toalias));
 
 
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "certtransfer " + guid + " " + toalias + " " + pubdata + " " + witness));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "certtransfer " + guid + " " + toalias + " " + pubdata + " 2 " + witness));
 	UniValue arr = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + arr[0].get_str()));
 	string hex_str = find_value(r.get_obj(), "hex").get_str();
