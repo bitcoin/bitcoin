@@ -403,6 +403,13 @@ void CPrivateSend::CheckDSTXes(int nHeight)
     LogPrint("privatesend", "CPrivateSend::CheckDSTXes -- mapDSTX.size()=%llu\n", mapDSTX.size());
 }
 
+void CPrivateSend::UpdatedBlockTip(const CBlockIndex *pindex)
+{
+    if(pindex && !fLiteMode && masternodeSync.IsMasternodeListSynced()) {
+        CheckDSTXes(pindex->nHeight);
+    }
+}
+
 void CPrivateSend::SyncTransaction(const CTransaction& tx, const CBlock* pblock)
 {
     if (tx.IsCoinBase()) return;

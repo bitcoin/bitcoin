@@ -65,6 +65,7 @@ void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, con
         return;
 
     mnodeman.UpdatedBlockTip(pindexNew);
+    CPrivateSend::UpdatedBlockTip(pindexNew);
 #ifdef ENABLE_WALLET
     privateSendClient.UpdatedBlockTip(pindexNew);
 #endif // ENABLE_WALLET

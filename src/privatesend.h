@@ -5,6 +5,7 @@
 #ifndef PRIVATESEND_H
 #define PRIVATESEND_H
 
+#include "chain.h"
 #include "chainparams.h"
 #include "primitives/transaction.h"
 #include "pubkey.h"
@@ -317,6 +318,8 @@ private:
 
     static CCriticalSection cs_mapdstx;
 
+    static void CheckDSTXes(int nHeight);
+
 public:
     static void InitStandardDenominations();
     static std::vector<CAmount> GetStandardDenominations() { return vecStandardDenominations; }
@@ -348,8 +351,8 @@ public:
 
     static void AddDSTX(const CDarksendBroadcastTx& dstx);
     static CDarksendBroadcastTx GetDSTX(const uint256& hash);
-    static void CheckDSTXes(int nHeight);
 
+    static void UpdatedBlockTip(const CBlockIndex *pindex);
     static void SyncTransaction(const CTransaction& tx, const CBlock* pblock);
 };
 
