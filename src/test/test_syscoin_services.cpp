@@ -566,7 +566,7 @@ string AliasNew(const string& node, const string& aliasname, const string& pubda
 	BOOST_CHECK_NO_THROW(CallRPC(node, "importprivkey " + CSyscoinSecret(privEncryptionKey).ToString() + " \"\" false", true, false));
 
 	string strEncryptionPrivateKeyHex = HexStr(vchPrivEncryptionKey);
-	string acceptTransfers = "false";
+	string acceptTransfers = "true";
 	string expireTime = "0";
 
 	UniValue r;
