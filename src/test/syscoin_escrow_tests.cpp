@@ -91,12 +91,9 @@ BOOST_AUTO_TEST_CASE(generate_auction_regular)
 
 	EscrowRelease("node1", "buyer", guid);
 	EscrowClaimRelease("node2", guid);
-	// after expiry can update
+	// after expiry cant update
 	SetSysMocktime(mediantime + 1);
-	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "offerupdate sellerauction " + offerguid + " category title 90 0.15 description USD false '' 0 SYS BUYNOW 0 0 true 0 ''"));
-	UniValue arr = r.get_array();
-	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "signrawtransaction " + arr[0].get_str()));
-	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
+	BOOST_CHECK_THROW(r = CallRPC("node2", "offerupdate sellerauction " + offerguid + " category title 90 0.15 description USD false '' 0 SYS BUYNOW 0 0 true 0 ''"), runtime_error);
 }
 BOOST_AUTO_TEST_CASE(generate_auction_reserve)
 {
