@@ -1584,7 +1584,7 @@ const string EscrowNewAuction(const string& node, const string& sellernode, cons
 	CAmount nWitnessFee = GetEscrowWitnessFee(nTotalOfferPrice, boost::lexical_cast<float>(witnessFee));
 	CAmount nNetworkFee = getFeePerByte(PAYMENTOPTION_SYS) * 400;
 	if (networkFee != "''")
-		nNetworkFee = boost::lexical_cast<int>(networkFee) * 400 * COIN;
+		nNetworkFee = boost::lexical_cast<int>(networkFee) * 400;
 	CAmount nShipping = AmountFromValue(shipping);
 	string sellerlink_alias = find_value(r.get_obj(), "offerlink_seller").get_str();
 	int discount = 0;
@@ -1712,7 +1712,7 @@ const string EscrowNewBuyItNow(const string& node, const string& sellernode, con
 	CAmount nWitnessFee = GetEscrowWitnessFee(nTotalOfferPrice, boost::lexical_cast<float>(witnessFee));
 	CAmount nNetworkFee = getFeePerByte(PAYMENTOPTION_SYS)*400;
 	if (networkFee != "''")
-		nNetworkFee = boost::lexical_cast<int>(networkFee)*400*COIN;
+		nNetworkFee = boost::lexical_cast<int>(networkFee)*400;
 	CAmount nShipping = AmountFromValue(shipping);
 	string sellerlink_alias = find_value(r.get_obj(), "offerlink_seller").get_str();
 	int discount = 0;
@@ -1811,16 +1811,16 @@ const string EscrowNewBuyItNow(const string& node, const string& sellernode, con
 	}
 	
 
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowacknowledge " + guid));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowacknowledge " + guid + " ''"));
 	UniValue varray = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + varray[0].get_str()));
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "complete").get_bool(), false);
-	BOOST_CHECK_NO_THROW(r = CallRPC(sellernode, "escrowacknowledge " + guid));
+	BOOST_CHECK_NO_THROW(r = CallRPC(sellernode, "escrowacknowledge " + guid + " ''"));
 	UniValue arrres = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(sellernode, "signrawtransaction " + arrres[0].get_str()));
 	BOOST_CHECK_NO_THROW(r = CallRPC(sellernode, "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
 	GenerateBlocks(10, sellernode);
-	BOOST_CHECK_THROW(r = CallRPC(sellernode, "escrowacknowledge " + guid), runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC(sellernode, "escrowacknowledge " + guid + " ''"), runtime_error);
 	BOOST_CHECK_NO_THROW(r = CallRPC(sellernode, "offerinfo " + offerguid));
 	nQtyAfter = find_value(r.get_obj(), "quantity").get_int();
 	BOOST_CHECK_EQUAL(nQtyAfter, nQtyBefore-qty);
