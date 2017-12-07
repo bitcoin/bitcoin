@@ -828,7 +828,7 @@ UniValue certtransfer(const UniValue& params, bool fHelp) {
 	if(strPubData != stringFromVch(theCert.vchPubData))
 		theCert.vchPubData = vchFromString(strPubData);
 
-	theCert.nAccessFlags = params[7].get_int();
+	theCert.nAccessFlags = nAccessFlags;
 
 	vector<unsigned char> data;
 	theCert.Serialize(data);
