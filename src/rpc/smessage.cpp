@@ -1012,31 +1012,6 @@ static bool sortMsgDesc(const std::pair<int64_t, UniValue> &a, const std::pair<i
     return a.first > b.first;
 };
 
-static int64_t strToEpoch(const char *input)
-{
-    int year, month, day, hours, minutes, seconds;
-    int n = sscanf(input, "%d-%d-%dT%d:%d:%d",
-        &year, &month, &day, &hours, &minutes, &seconds);
-
-    struct tm tm;
-    memset(&tm, 0, sizeof(tm));
-
-    if (n > 0 && year >= 1970 && year <= 9999)
-        tm.tm_year = year - 1900;
-    if (n > 1 && month > 0 && month < 13)
-        tm.tm_mon = month - 1;
-    if (n > 2 && day > 0 && day < 32)
-        tm.tm_mday = day;
-    if (n > 3 && hours >= 0 && hours < 24)
-        tm.tm_hour = hours;
-    if (n > 4 && minutes >= 0 && minutes < 60)
-        tm.tm_min = minutes;
-    if (n > 5 && seconds >= 0 && seconds < 60)
-        tm.tm_sec = seconds;
-
-    return (int64_t) mktime(&tm);
-};
-
 UniValue smsgview(const JSONRPCRequest &request)
 {
     if (request.fHelp || request.params.size() > 6)
@@ -1135,7 +1110,7 @@ UniValue smsgview(const JSONRPCRequest &request)
                 throw std::runtime_error("Argument required for: " + sTemp);
             i++;
             sTemp = request.params[i].get_str();
-            tFrom = strToEpoch(sTemp.c_str());
+            tFrom = part::strToEpoch(sTemp.c_str());
             if (tFrom < 0)
                 throw std::runtime_error("from format error: " + std::string(strerror(errno)));
         } else
@@ -1145,7 +1120,7 @@ UniValue smsgview(const JSONRPCRequest &request)
                 throw std::runtime_error("Argument required for: " + sTemp);
             i++;
             sTemp = request.params[i].get_str();
-            tTo = strToEpoch(sTemp.c_str());
+            tTo = part::strToEpoch(sTemp.c_str());
             if (tTo < 0)
                 throw std::runtime_error("to format error: " + std::string(strerror(errno)));
         } else

@@ -3072,6 +3072,9 @@ UniValue filtertransactions(const JSONRPCRequest &request)
             "                \"category\":          'all',\n"
             "                \"type\":              'all',\n"
             "                \"sort\":              'time'\n"
+            "                \"from\":              '0'\n"
+            "                \"to\":                '9999'\n"
+            "                \"collate\":           false\n"
             "        }\n"
             "\n"
             "        Expected values are as follows:\n"
@@ -3100,6 +3103,9 @@ UniValue filtertransactions(const JSONRPCRequest &request)
             "                                   amount        biggest first\n"
             "                                   confirmations most confirmations first\n"
             "                                   txid          alphabetical\n"
+            "                from:              unix timestamp or string \"yyyy-mm-ddThh:mm:ss\"\n"
+            "                to:                unix timestamp or string \"yyyy-mm-ddThh:mm:ss\"\n"
+            "                collate:           display number of records and sum of amount fields\n"
             "\n"
             "        Examples:\n"
             "            List only when category is 'stake'\n"
@@ -3119,6 +3125,10 @@ UniValue filtertransactions(const JSONRPCRequest &request)
     std::string  category  = "all";
     std::string  type      = "all";
     std::string  sort      = "time";
+
+    int64_t timeFrom = 0;
+    int64_t timeTo = 0x3AFDE8DE00; // 9999
+    bool fCollate = false;
 
     if (!request.params[0].isNull()) {
         const UniValue & options = request.params[0].get_obj();
@@ -3207,6 +3217,19 @@ UniValue filtertransactions(const JSONRPCRequest &request)
                     strprintf("Invalid sort: %s.", sort));
             }
         }
+
+        if (options["from"].isStr())
+            timeFrom = part::strToEpoch(options["from"].get_str().c_str());
+        else
+        if (options["from"].isNum())
+            timeFrom = options["from"].get_int64();
+        if (options["to"].isStr())
+            timeTo = part::strToEpoch(options["to"].get_str().c_str(), true);
+        else
+        if (options["to"].isNum())
+            timeTo = options["to"].get_int64();
+        if (options["collate"].isBool())
+            fCollate = options["collate"].get_bool();
     }
 
     // for transactions and records
@@ -3217,6 +3240,9 @@ UniValue filtertransactions(const JSONRPCRequest &request)
     CWallet::TxItems::const_reverse_iterator tit = txOrdered.rbegin();
     while (tit != txOrdered.rend()) {
         CWalletTx* const pwtx = tit->second.first;
+        int64_t txTime = pwtx->GetTxTime();
+        if (txTime < timeFrom) break;
+        if (txTime <= timeTo)
         ParseOutputs(
             transactions,
             *pwtx,
@@ -3233,6 +3259,9 @@ UniValue filtertransactions(const JSONRPCRequest &request)
     while (rit != rtxOrdered.rend()) {
         const uint256 &hash = rit->second->first;
         const CTransactionRecord &rtx = rit->second->second;
+        int64_t txTime = rtx.GetTxTime();
+        if (txTime < timeFrom) break;
+        if (txTime <= timeTo)
         ParseRecords(
             transactions,
             hash,
@@ -3268,6 +3297,7 @@ UniValue filtertransactions(const JSONRPCRequest &request)
         );
     });
 
+    CAmount nTotalAmount = 0;
     // filter, skip and count
     UniValue result(UniValue::VARR);
     // for every value while count is positive
@@ -3290,8 +3320,20 @@ UniValue filtertransactions(const JSONRPCRequest &request)
             if (skip-- <= 0) {
                 result.push_back(values[i]);
                 count--;
+
+                if (fCollate) {
+                    if (!values[i]["amount"].isNull())
+                        nTotalAmount += AmountFromValue(values[i]["amount"]);
+                };
             }
         }
+    }
+
+    if (fCollate) {
+        UniValue stats(UniValue::VOBJ);
+        stats.pushKV("records", (int)result.size());
+        stats.pushKV("total_amount", ValueFromAmount(nTotalAmount));
+        result.push_back(stats);
     }
 
     return result;
@@ -3808,7 +3850,10 @@ UniValue getcoldstakinginfo(const JSONRPCRequest &request)
 
     obj.pushKV("coin_in_stakeable_script", ValueFromAmount(nStakeable));
     obj.pushKV("coin_in_coldstakeable_script", ValueFromAmount(nColdStakeable));
-    obj.pushKV("coin_staking_in_wallet", ValueFromAmount(nWalletStaking));
+    CAmount nTotal = nColdStakeable + nStakeable;
+    obj.pushKV("percent_in_coldstakeable_script",
+        UniValue(UniValue::VNUM, strprintf("%.2f", nTotal == 0 ? 0.0 : (nColdStakeable * 10000 / nTotal) / 100.0)));
+    obj.pushKV("currently_staking", ValueFromAmount(nWalletStaking));
 
     return obj;
 };

@@ -595,6 +595,35 @@ std::string &TrimQuotes(std::string &s)
     return s;
 };
 
+static int daysInMonth(int year, int month)
+{
+    return month == 2 ? (year % 4 ? 28 : (year % 100 ? 29 : (year % 400 ? 28 : 29))) : ((month - 1) % 7 % 2 ? 30 : 31);
+}
+int64_t strToEpoch(const char *input, bool fFillMax)
+{
+    int year, month, day, hours, minutes, seconds;
+    int n = sscanf(input, "%d-%d-%dT%d:%d:%d",
+        &year, &month, &day, &hours, &minutes, &seconds);
+
+    struct tm tm;
+    memset(&tm, 0, sizeof(tm));
+
+    if (n > 0 && year >= 1970 && year <= 9999)
+        tm.tm_year = year - 1900;
+    if (n > 1 && month > 0 && month < 13)
+        tm.tm_mon = month - 1;          else if (fFillMax) { tm.tm_mon = 11; month = 12; }
+    if (n > 2 && day > 0 && day < 32)
+        tm.tm_mday = day;               else tm.tm_mday = fFillMax ? daysInMonth(year, month) : 1;
+    if (n > 3 && hours >= 0 && hours < 24)
+        tm.tm_hour = hours;             else if (fFillMax) tm.tm_hour = 23;
+    if (n > 4 && minutes >= 0 && minutes < 60)
+        tm.tm_min = minutes;            else if (fFillMax) tm.tm_min = 59;
+    if (n > 5 && seconds >= 0 && seconds < 60)
+        tm.tm_sec = seconds;            else if (fFillMax) tm.tm_sec = 59;
+
+    return (int64_t) mktime(&tm);
+};
+
 } // namespace part
 
 
