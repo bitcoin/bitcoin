@@ -46,30 +46,6 @@ LEAVE_CRITICAL_SECTION(mutex); // no RAII
 //                           //
 ///////////////////////////////
 
-/**
- * Template mixin that adds -Wthread-safety locking
- * annotations to a subset of the mutex API.
- */
-template <typename PARENT>
-class LOCKABLE AnnotatedMixin : public PARENT
-{
-public:
-    void lock() EXCLUSIVE_LOCK_FUNCTION()
-    {
-        PARENT::lock();
-    }
-
-    void unlock() UNLOCK_FUNCTION()
-    {
-        PARENT::unlock();
-    }
-
-    bool try_lock() EXCLUSIVE_TRYLOCK_FUNCTION(true)
-    {
-        return PARENT::try_lock();
-    }
-};
-
 #ifdef DEBUG_LOCKORDER
 void EnterCritical(const char* pszName, const char* pszFile, int nLine, void* cs, bool fTry = false);
 void LeaveCritical();
@@ -93,6 +69,30 @@ void static inline DeleteLock(void* cs) {}
 #endif
 #define AssertLockHeld(cs) AssertLockHeldInternal(#cs, __FILE__, __LINE__, &cs)
 #define AssertLockNotHeld(cs) AssertLockNotHeldInternal(#cs, __FILE__, __LINE__, &cs)
+
+/**
+ * Template mixin that adds -Wthread-safety locking
+ * annotations to a subset of the mutex API.
+ */
+template <typename PARENT>
+class LOCKABLE AnnotatedMixin : public PARENT
+{
+public:
+    void lock() EXCLUSIVE_LOCK_FUNCTION()
+    {
+        PARENT::lock();
+    }
+
+    void unlock() UNLOCK_FUNCTION()
+    {
+        PARENT::unlock();
+    }
+
+    bool try_lock() EXCLUSIVE_TRYLOCK_FUNCTION(true)
+    {
+        return PARENT::try_lock();
+    }
+};
 
 /**
  * Wrapped mutex: supports recursive locking, but no waiting
