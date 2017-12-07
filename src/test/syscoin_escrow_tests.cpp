@@ -34,7 +34,7 @@ BOOST_AUTO_TEST_CASE(generate_auction_regular)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "getblockchaininfo"));
 	uint64_t mediantime = find_value(r.get_obj(), "mediantime").get_int64() + 3600;
 	string expiry = boost::lexical_cast<string>(mediantime);
-	string offerguid = OfferNew("node2", "sellerauction", "category", "title", "100", "0.05", "description", "USD", "\"\"" /*certguid*/, "\"\"" /*paymentoptions*/, "BUYNOW+AUCTION", expiry);
+	string offerguid = OfferNew("node2", "sellerauction", "category", "title", "100", "0.05", "description", "USD", "''" /*certguid*/, "SYS" /*paymentoptions*/, "BUYNOW+AUCTION", expiry);
 	// can't update offer auction settings until auction expires
 	//						"offerupdate <alias> <guid> [category] [title] [quantity] [price] [description] [currency] [private=false] [cert. guid] [commission] [paymentOptions] [offerType=BUYNOW] [auction_expires] [auction_reserve] [auction_require_witness] [auction_deposit] [witness]\n"
 	BOOST_CHECK_THROW(r = CallRPC("node2", "offerupdate sellerauction " + offerguid + " category title 90 0.15 description USD false '' 0 SYS BUYNOW 0 0 true 0 ''"), runtime_error);
@@ -115,7 +115,7 @@ BOOST_AUTO_TEST_CASE(generate_auction_reserve)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "getblockchaininfo"));
 	int64_t mediantime = find_value(r.get_obj(), "mediantime").get_int64() + 3600;
 	string expiry = boost::lexical_cast<string>(mediantime);
-	string offerguid = OfferNew("node2", "sellerauction1", "category", "title", "100", "0.05", "description", "USD", "\"\"" /*certguid*/, "\"\"" /*paymentoptions*/, "BUYNOW+AUCTION", expiry, "0.011");
+	string offerguid = OfferNew("node2", "sellerauction1", "category", "title", "100", "0.05", "description", "USD", "''" /*certguid*/, "SYS" /*paymentoptions*/, "BUYNOW+AUCTION", expiry, "0.011");
 	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress buyerauction1 1000"), runtime_error);
 	GenerateBlocks(10);
 	string exttxid = "''";
@@ -380,8 +380,8 @@ BOOST_AUTO_TEST_CASE(generate_escrow_linked_release2)
 	BOOST_CHECK(abs(nTotal - AmountFromValue(2 * 0.05*1.03*2695.2)) <= 0.1*COIN);
 	EscrowClaimRelease("node2", guid);
 
-	OfferUpdate("node3", "reselleralias33", offerlinkguid, "newcategory", "titlenew", "\"\"", "\"\"", "descriptionnew", "\"\"", "\"\"", "\"\"", "6");
-	OfferUpdate("node2", "selleralias33", offerguid, "\"\"", "\"\"", "\"\"", "0.07");
+	OfferUpdate("node3", "reselleralias33", offerlinkguid, "newcategory", "titlenew", "''", "''", "descriptionnew", "''", "''", "''", "6");
+	OfferUpdate("node2", "selleralias33", offerguid, "''", "''", "''", "0.07");
 	guid = EscrowNewBuyItNow("node1", "node2", "buyeralias33", offerlinkguid, "4", "arbiteralias33");
 	EscrowRelease("node1", "buyer", guid);
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "escrowinfo " + guid));

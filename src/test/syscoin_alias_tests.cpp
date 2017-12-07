@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE (generate_aliaswitness)
 	UniValue r;
 	AliasNew("node1", "witness1", "pub");
 	AliasNew("node2", "witness2", "pub");
-	string hex_str = AliasUpdate("node1", "witness1", "newpubdata", "\"\"", "witness2");
+	string hex_str = AliasUpdate("node1", "witness1", "newpubdata", "''", "witness2");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo witness1"));
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str(), "pub");
 	BOOST_CHECK(!hex_str.empty());
@@ -589,7 +589,7 @@ BOOST_AUTO_TEST_CASE (generate_multisigalias)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo jagnodemultisig1"));
 	BOOST_CHECK(abs(balanceBefore - balanceAfter) < COIN);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "address").get_str(), addressStr);
-	hex_str = AliasUpdate("node2", "jagnodemultisig1", "\"\"", addressStr);
+	hex_str = AliasUpdate("node2", "jagnodemultisig1", "''", addressStr);
 	BOOST_CHECK(hex_str != "");
 
 	// create 1 of 2
@@ -632,7 +632,7 @@ BOOST_AUTO_TEST_CASE (generate_multisigalias)
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "address").get_str(), addressStr);
 	// 2 sigs needed, remove redeemScript to make it a normal alias
 	BOOST_CHECK_NO_THROW(CallRPC("node3", "aliasaddscript " + redeemScript));
-	hex_str = AliasUpdate("node3", "jagnodemultisig1", "\"\"", oldAddressStr);
+	hex_str = AliasUpdate("node3", "jagnodemultisig1", "''", oldAddressStr);
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasaddscript " + redeemScript));
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + hex_str));
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));

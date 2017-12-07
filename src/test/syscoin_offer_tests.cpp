@@ -92,13 +92,13 @@ BOOST_AUTO_TEST_CASE (generate_certoffer)
 	BOOST_CHECK_THROW(r = CallRPC("node1", "offerupdate node1alias " + offerguidnoncert + " certificates>music title 1 0.15 description USD false '' 0 SYS BUYNOW 0 0 false 0 ''"), runtime_error);
 
 	// update cert category to sub category of certificates
-	OfferUpdate("node1", "node1alias", offerguid, "certificates-music", "titlenew", "1", "0.15", "descriptionnew", "USD", "\"\"", certguid1);
+	OfferUpdate("node1", "node1alias", offerguid, "certificates-music", "titlenew", "1", "0.15", "descriptionnew", "USD", "''", certguid1);
 
 	// should fail: try to change non cert offer to cert offer without cert category
 	BOOST_CHECK_THROW(r = CallRPC("node1", "offerupdate node1alias " + offerguidnoncert + " category title 1 0.15 description USD false " + certguid1 + " 0 SYS BUYNOW 0 0 false 0 ''"), runtime_error);
 
 	// change non cert offer to cert offer
-	OfferUpdate("node1", "node1alias", offerguidnoncert, "certificates", "titlenew", "1", "0.15", "descriptionnew", "USD", "\"\"", certguid1);
+	OfferUpdate("node1", "node1alias", offerguidnoncert, "certificates", "titlenew", "1", "0.15", "descriptionnew", "USD", "''", certguid1);
 
 
 	// generate a cert offer if accepting only BTC
