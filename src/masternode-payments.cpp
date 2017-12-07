@@ -702,10 +702,7 @@ bool CMasternodePaymentVote::IsValid(CNode* pnode, int nValidationHeight, std::s
         if(nRank > MNPAYMENTS_SIGNATURES_TOTAL*2 && nBlockHeight > nValidationHeight) {
             strError = strprintf("Masternode is not in the top %d (%d)", MNPAYMENTS_SIGNATURES_TOTAL*2, nRank);
             LogPrintf("CMasternodePaymentVote::IsValid -- Error: %s\n", strError);
-            // do not ban nodes before DIP0001 is locked in to avoid banning majority of (old) masternodes
-            if (fDIP0001WasLockedIn) {
-                Misbehaving(pnode->GetId(), 20);
-            }
+            Misbehaving(pnode->GetId(), 20);
         }
         // Still invalid however
         return false;
@@ -846,8 +843,7 @@ void CMasternodePaymentVote::Relay(CConnman& connman)
     // do not relay until synced
     if (!masternodeSync.IsWinnersListSynced()) return;
     CInv inv(MSG_MASTERNODE_PAYMENT_VOTE, GetHash());
-    // relay votes only strictly to new nodes until DIP0001 is locked in to avoid being banned by majority of (old) masternodes
-    connman.RelayInv(inv, fDIP0001WasLockedIn ? mnpayments.GetMinMasternodePaymentsProto() : MIN_MASTERNODE_PAYMENT_PROTO_VERSION_2);
+    connman.RelayInv(inv);
 }
 
 bool CMasternodePaymentVote::CheckSignature(const CPubKey& pubKeyMasternode, int nValidationHeight, int &nDos)

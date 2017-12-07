@@ -15,11 +15,11 @@ BOOST_FIXTURE_TEST_SUITE(policyestimator_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
 {
-    CTxMemPool mpool(CFeeRate(10000)); // we have 10x higher fee
+    CTxMemPool mpool(CFeeRate(1000));
     TestMemPoolEntryHelper entry;
-    CAmount basefee(20000); // we have 10x higher fee
+    CAmount basefee(2000);
     double basepri = 1e6;
-    CAmount deltaFee(1000); // we have 10x higher fee
+    CAmount deltaFee(100);
     double deltaPri=5e5;
     std::vector<CAmount> feeV[2];
     std::vector<double> priV[2];

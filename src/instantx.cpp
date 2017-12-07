@@ -981,7 +981,7 @@ bool CTxLockRequest::IsValid() const
 
 CAmount CTxLockRequest::GetMinFee() const
 {
-    CAmount nMinFee = fDIP0001ActiveAtTip ? MIN_FEE / 10 : MIN_FEE;
+    CAmount nMinFee = MIN_FEE;
     return std::max(nMinFee, CAmount(vin.size() * nMinFee));
 }
 

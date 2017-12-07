@@ -95,27 +95,10 @@ bool CMasternode::UpdateFromNewBroadcast(CMasternodeBroadcast& mnb, CConnman& co
 //
 arith_uint256 CMasternode::CalculateScore(const uint256& blockHash)
 {
-    if (fDIP0001WasLockedIn) {
-        // Deterministically calculate a "score" for a Masternode based on any given (block)hash
-        CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
-        ss << vin.prevout << nCollateralMinConfBlockHash << blockHash;
-        return UintToArith256(ss.GetHash());
-    }
-
-    // TODO: remove calculations below after migration to 12.2
-
-    uint256 aux = ArithToUint256(UintToArith256(vin.prevout.hash) + vin.prevout.n);
-
+    // Deterministically calculate a "score" for a Masternode based on any given (block)hash
     CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
-    ss << blockHash;
-    arith_uint256 hash2 = UintToArith256(ss.GetHash());
-
-    CHashWriter ss2(SER_GETHASH, PROTOCOL_VERSION);
-    ss2 << blockHash;
-    ss2 << aux;
-    arith_uint256 hash3 = UintToArith256(ss2.GetHash());
-
-    return (hash3 > hash2 ? hash3 - hash2 : hash2 - hash3);
+    ss << vin.prevout << nCollateralMinConfBlockHash << blockHash;
+    return UintToArith256(ss.GetHash());
 }
 
 CMasternode::CollateralStatus CMasternode::CheckCollateral(const COutPoint& outpoint)

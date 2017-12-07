@@ -54,13 +54,8 @@ static const bool DEFAULT_ALERTS = true;
 static const bool DEFAULT_WHITELISTRELAY = true;
 /** Default for DEFAULT_WHITELISTFORCERELAY. */
 static const bool DEFAULT_WHITELISTFORCERELAY = true;
-/** Default for -minrelaytxfee, minimum relay fee for transactions
- * We are ~100 times smaller then bitcoin now (2016-03-01), set minRelayTxFee only 10 times higher
- * so it's still 10 times lower comparing to bitcoin.
- * 2017-07: we are 10x smaller now, let's lower defaults 10x via the same BIP9 bit as DIP0001
- */
-static const unsigned int DEFAULT_LEGACY_MIN_RELAY_TX_FEE = 10000; // was 1000
-static const unsigned int DEFAULT_DIP0001_MIN_RELAY_TX_FEE = 1000;
+/** Default for -minrelaytxfee, minimum relay fee for transactions */
+static const unsigned int DEFAULT_MIN_RELAY_TX_FEE = 1000;
 /** Default for -maxorphantx, maximum number of orphan transactions kept in memory */
 static const unsigned int DEFAULT_MAX_ORPHAN_TRANSACTIONS = 100;
 /** Default for -limitancestorcount, max number of in-mempool ancestors */
@@ -168,7 +163,6 @@ extern bool fLargeWorkInvalidChainFound;
 
 extern std::map<uint256, int64_t> mapRejectedBlocks;
 
-static const int DIP0001_PROTOCOL_VERSION = 70208;
 extern std::atomic<bool> fDIP0001WasLockedIn;
 extern std::atomic<bool> fDIP0001ActiveAtTip;
 
