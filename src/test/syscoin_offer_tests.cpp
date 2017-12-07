@@ -134,9 +134,9 @@ BOOST_AUTO_TEST_CASE(generate_offerwhitelists)
 	// remove from whitelist
 	AliasRemoveWhitelist("node1", "sellerwhitelistalias", "selleraddwhitelistalias", "5");
 	string whiteListArray = "\"[{\\\"alias\\\":\\\"selleraddwhitelistalias\\\",\\\"discount_percentage\\\":100}]\"";
-	BOOST_CHECK_THROW(CallRPC("node1", "aliasupdatewhitelist sellerwhitelistalias " + whiteListArray), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "aliasupdatewhitelist sellerwhitelistalias " + whiteListArray + " ''"), runtime_error);
 	whiteListArray = "\"[{\\\"alias\\\":\\\"selleraddwhitelistalias\\\",\\\"discount_percentage\\\":-1}]\"";
-	BOOST_CHECK_THROW(CallRPC("node1", "aliasupdatewhitelist sellerwhitelistalias " + whiteListArray), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "aliasupdatewhitelist sellerwhitelistalias " + whiteListArray + " ''"), runtime_error);
 
 	string hex_str = AliasUpdate("node1", "sellerwhitelistalias", "changeddata2");
 	BOOST_CHECK(hex_str.empty());
@@ -148,7 +148,7 @@ BOOST_AUTO_TEST_CASE(generate_offerwhitelists)
 	// add to whitelist
 	AliasAddWhitelist("node1", "sellerwhitelistalias", "selleraddwhitelistalias", "4");
 	AliasClearWhitelist("node1", "sellerwhitelistalias");
-	BOOST_CHECK_THROW(CallRPC("node1", "aliasclearwhitelist sellerwhitelistalias"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "aliasclearwhitelist sellerwhitelistalias ''"), runtime_error);
 
 	AliasAddWhitelist("node1", "sellerwhitelistalias", "selleraddwhitelistalias", "6");
 
@@ -538,9 +538,9 @@ BOOST_AUTO_TEST_CASE (generate_offerexpiredexmode)
 
 	// should fail: remove whitelist item from expired offer
 	string whiteListArray = "\"{\\\"aliases\\\":[{\\\"alias\\\":\\\"selleralias11\\\",\\\"discount_percentage\\\":10}]}\"";
-	BOOST_CHECK_THROW(CallRPC("node1", "aliasupdatewhitelist selleralias10 " + whiteListArray), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "aliasupdatewhitelist selleralias10 " + whiteListArray + " ''"), runtime_error);
 	// should fail: clear whitelist from expired offer
-	BOOST_CHECK_THROW(r = CallRPC("node1", "aliasclearwhitelist selleralias10"), runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC("node1", "aliasclearwhitelist selleralias10 ''"), runtime_error);
 }
 
 BOOST_AUTO_TEST_CASE (generate_certofferexpired)

@@ -719,8 +719,8 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasbalance " + aliasname));
 	CAmount balanceBefore = AmountFromValue(find_value(r.get_obj(), "balance"));
 
-	string newpubdata = pubdata == "''" || pubdata == "\"\"" ? oldvalue : pubdata;
-	string newAddressStr = addressStr == "''" || addressStr == "\"\"" ? oldAddressStr : addressStr;
+	string newpubdata = pubdata == "''" ? oldvalue : pubdata;
+	string newAddressStr = addressStr == "''" ? oldAddressStr : addressStr;
 	string acceptTransfers = bAcceptTransfers ? "true" : "false";
 	// "aliasupdate <aliasname> [public value]  [address] [accept_transfers=true] [expire_timestamp] [encryption_privatekey] [encryption_publickey] [witness]\n"
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasupdate " + aliasname + " " + newpubdata + " " + newAddressStr + " " + acceptTransfers + " " + expires + " " + encryptionprivkey + " " + encryptionkey + " " + witness));
@@ -986,8 +986,8 @@ void CertUpdate(const string& node, const string& guid, const string& title, con
 	string oldpubdata = find_value(r.get_obj(), "publicvalue").get_str();
 	string oldtitle = find_value(r.get_obj(), "title").get_str();
 
-	string newpubdata = pubdata == "''" || pubdata == "\"\"" ? oldpubdata : pubdata;
-	string newtitle = title == "''" || title == "\"\"" ? oldtitle : title;
+	string newpubdata = pubdata == "''" ? oldpubdata : pubdata;
+	string newtitle = title == "''" ? oldtitle : title;
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasinfo " + oldalias));
 
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "certupdate " + guid + " " + newtitle + " " + newpubdata + " certificates " + witness));
@@ -1280,21 +1280,21 @@ void OfferUpdate(const string& node, const string& aliasname, const string& offe
 	string oldauctionrequirewitness = find_value(r.get_obj(), "auction_require_witness").get_bool()? "true":"false";
 	string oldauctiondeposit = boost::lexical_cast<string>(find_value(r.get_obj(), "auction_deposit").get_real());
 
-	string newcategory = category == "''" || category == "\"\"" ? oldcategory : category;
-	string newtitle = title == "''" || title == "\"\"" ? oldtitle : title;
-	string newqty = qtyStr == "''" || qtyStr == "\"\"" ? boost::lexical_cast<string>(oldqty) : qtyStr;
-	string newprice = price == "''" || price == "\"\"" ? boost::lexical_cast<string>(oldprice) : price;
-	string newdescription = description == "''" || description == "\"\"" ? olddescription : description;
-	string newcurrency = currency == "''" || currency == "\"\"" ? oldcurrency : currency;
-	string newisprivate = isprivateStr == "''" || isprivateStr == "\"\"" ? oldprivateStr : isprivateStr;
-	string newcertguid = certguid == "''" || certguid == "\"\"" ? "''" : certguid;
-	string newcommission = commissionStr == "''" || commissionStr == "\"\"" ? boost::lexical_cast<string>(oldcommission) : commissionStr;
-	string newpaymentoptions = paymentoptions == "''" || paymentoptions == "\"\"" ? oldpaymentoptions : paymentoptions;
-	string newoffertype = offerType == "''" || offerType == "\"\"" ? oldoffertype : offerType;
-	string newauction_expires = auction_expires == "''" || auction_expires == "\"\"" ? oldauctionexpires : auction_expires;
-	string newauction_reserve = auction_reserve == "''" || auction_reserve == "\"\"" ? oldauctionreserve : auction_reserve;
-	string newauction_require_witness = auction_require_witness == "''" || auction_require_witness == "\"\"" ? oldauctionrequirewitness : auction_require_witness;
-	string newauction_deposit = auction_deposit == "''" || auction_deposit == "\"\"" ? oldauctiondeposit : auction_deposit;
+	string newcategory = category == "''" ? oldcategory : category;
+	string newtitle = title == "''" ? oldtitle : title;
+	string newqty = qtyStr == "''" ? boost::lexical_cast<string>(oldqty) : qtyStr;
+	string newprice = price == "''" ? boost::lexical_cast<string>(oldprice) : price;
+	string newdescription = description == "''" ? olddescription : description;
+	string newcurrency = currency == "''" ? oldcurrency : currency;
+	string newisprivate = isprivateStr == "''" ? oldprivateStr : isprivateStr;
+	string newcertguid = certguid == "''" ? "''" : certguid;
+	string newcommission = commissionStr == "''" ? boost::lexical_cast<string>(oldcommission) : commissionStr;
+	string newpaymentoptions = paymentoptions == "''" ? oldpaymentoptions : paymentoptions;
+	string newoffertype = offerType == "''"? oldoffertype : offerType;
+	string newauction_expires = auction_expires == "''" ? oldauctionexpires : auction_expires;
+	string newauction_reserve = auction_reserve == "''" ? oldauctionreserve : auction_reserve;
+	string newauction_require_witness = auction_require_witness == "''"? oldauctionrequirewitness : auction_require_witness;
+	string newauction_deposit = auction_deposit == "''" ? oldauctiondeposit : auction_deposit;
 	//						"offerupdate <alias> <guid> [category] [title] [quantity] [price] [description] [currency] [private=false] [cert. guid] [commission] [paymentOptions] [offerType=BUYNOW] [auction_expires] [auction_reserve] [auction_require_witness] [auction_deposit] [witness]\n"
 	string offerupdatestr = "offerupdate " + aliasname + " " + offerguid + " " + newcategory + " " + newtitle + " " + newqty + " " + newprice + " " + newdescription + " " + newcurrency + " " + newisprivate + " " + newcertguid + " " + newcommission + " " + newpaymentoptions + " " + newoffertype + " " + newauction_expires + " " + newauction_reserve + " " + newauction_require_witness + " " + newauction_deposit + " " + witness;
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, offerupdatestr));
@@ -1324,8 +1324,8 @@ void OfferUpdate(const string& node, const string& aliasname, const string& offe
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "type").get_str(), "Offer Updated");
 
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "_id").get_str() , offerguid);
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "cert").get_str() , certguid != "''" && certguid != "\"\"" ? certguid : oldcert);
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "quantity").get_int() ,qtyStr != "''" && qtyStr != "\"\"" ? qty : oldqty);
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "cert").get_str() , certguid != "''" ? certguid : oldcert);
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "quantity").get_int() ,qtyStr != "''" ? qty : oldqty);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "currency").get_str() , newcurrency);
 	float compareprice = 0;
 	if (price != "''")
@@ -1334,9 +1334,9 @@ void OfferUpdate(const string& node, const string& aliasname, const string& offe
 		compareprice = oldprice;
 	if(commissionStr == "''")
 		BOOST_CHECK(abs(find_value(r.get_obj(), "price").get_real() - compareprice) < 0.001);
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "commission").get_int() , commissionStr != "''" && commissionStr != "\"\"" ? commission : oldcommission);
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "commission").get_int() , commissionStr != "''" ? commission : oldcommission);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "paymentoptions").get_str() , newpaymentoptions);
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "private").get_bool() , isprivateStr != "''" && isprivateStr != "\"\"" ? isprivate : oldprivate);
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "private").get_bool() , isprivateStr != "''" ? isprivate : oldprivate);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "description").get_str(), newdescription);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "title").get_str(), newtitle);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "category").get_str(), newcategory);
@@ -1355,8 +1355,8 @@ void OfferUpdate(const string& node, const string& aliasname, const string& offe
 	{
 		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode1, "offerinfo " + offerguid));
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "_id").get_str() , offerguid);
-		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "cert").get_str() , certguid != "''" && certguid != "\"\"" ? certguid : oldcert);
-		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "quantity").get_int() , qtyStr != "''" && qtyStr != "\"\"" ? qty : oldqty);
+		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "cert").get_str() , certguid != "''" ? certguid : oldcert);
+		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "quantity").get_int() , qtyStr != "''" ? qty : oldqty);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "currency").get_str() , newcurrency);
 		float compareprice = 0;
 		if (price != "''")
@@ -1365,9 +1365,9 @@ void OfferUpdate(const string& node, const string& aliasname, const string& offe
 			compareprice = oldprice;
 		if (commissionStr == "''")
 			BOOST_CHECK(abs(find_value(r.get_obj(), "price").get_real() - compareprice) < 0.001);
-		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "commission").get_int(), commissionStr != "''" && commissionStr != "\"\"" ? commission : oldcommission);
+		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "commission").get_int(), commissionStr != "''" ? commission : oldcommission);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "paymentoptions").get_str(), newpaymentoptions);
-		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "private").get_bool(), isprivateStr != "''" && isprivateStr != "\"\"" ? isprivate : oldprivate);
+		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "private").get_bool(), isprivateStr != "''" ? isprivate : oldprivate);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "description").get_str(), newdescription);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "title").get_str(), newtitle);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "category").get_str(), newcategory);
@@ -1388,7 +1388,7 @@ void OfferUpdate(const string& node, const string& aliasname, const string& offe
 		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode2, "offerinfo " + offerguid));
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "_id").get_str() , offerguid);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "cert").get_str(), newcertguid);
-		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "quantity").get_int(), qtyStr != "''" && qtyStr != "\"\"" ? qty : oldqty);
+		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "quantity").get_int(), qtyStr != "''"? qty : oldqty);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "currency").get_str(), newcurrency);
 		float compareprice = 0;
 		if (price != "''")
@@ -1397,9 +1397,9 @@ void OfferUpdate(const string& node, const string& aliasname, const string& offe
 			compareprice = oldprice;
 		if (commissionStr == "''")
 			BOOST_CHECK(abs(find_value(r.get_obj(), "price").get_real() - compareprice) < 0.001);
-		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "commission").get_int(), commissionStr != "''" && commissionStr != "\"\"" ? commission : oldcommission);
+		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "commission").get_int(), commissionStr != "''" ? commission : oldcommission);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "paymentoptions").get_str(), newpaymentoptions);
-		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "private").get_bool(), isprivateStr != "''" && isprivateStr != "\"\"" ? isprivate : oldprivate);
+		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "private").get_bool(), isprivateStr != "''" ? isprivate : oldprivate);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "description").get_str(), newdescription);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "title").get_str(), newtitle);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "category").get_str(), newcategory);
