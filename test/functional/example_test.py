@@ -21,6 +21,7 @@ from test_framework.mininode import (
     mininode_lock,
     msg_block,
     msg_getdata,
+    network_thread_join,
     network_thread_start,
 )
 from test_framework.test_framework import BitcoinTestFramework
@@ -131,7 +132,7 @@ class ExampleTest(BitcoinTestFramework):
     def run_test(self):
         """Main test logic"""
 
-        # Create a P2P connection to one of the nodes
+        # Create P2P connections to two of the nodes
         self.nodes[0].add_p2p_connection(BaseNode())
 
         # Start up network handling in another thread. This needs to be called
@@ -188,7 +189,14 @@ class ExampleTest(BitcoinTestFramework):
         connect_nodes(self.nodes[1], 2)
 
         self.log.info("Add P2P connection to node2")
+        # We can't add additional P2P connections once the network thread has started. Disconnect the connection
+        # to node0, wait for the network thread to terminate, then connect to node2. This is specific to
+        # the current implementation of the network thread and may be improved in future.
+        self.nodes[0].disconnect_p2ps()
+        network_thread_join()
+
         self.nodes[2].add_p2p_connection(BaseNode())
+        network_thread_start()
         self.nodes[2].p2p.wait_for_verack()
 
         self.log.info("Wait for node2 reach current tip. Test that it has propagated all the blocks to us")
