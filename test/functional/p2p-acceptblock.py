@@ -207,9 +207,13 @@ class AcceptBlockTest(BitcoinTestFramework):
         # disconnect/reconnect first
 
         self.nodes[0].disconnect_p2ps()
-        test_node = self.nodes[0].add_p2p_connection(P2PInterface())
+        self.nodes[1].disconnect_p2ps()
+        network_thread_join()
 
+        test_node = self.nodes[0].add_p2p_connection(P2PInterface())
+        network_thread_start()
         test_node.wait_for_verack()
+
         test_node.send_message(msg_block(block_h1f))
 
         test_node.sync_with_ping()

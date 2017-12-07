@@ -126,8 +126,9 @@ class P2PLeakTest(BitcoinTestFramework):
 
         self.nodes[0].disconnect_p2ps()
 
-        # Wait until all connections are closed
+        # Wait until all connections are closed and the network thread has terminated
         wait_until(lambda: len(self.nodes[0].getpeerinfo()) == 0)
+        network_thread_join()
 
         # Make sure no unexpected messages came in
         assert(no_version_bannode.unexpected_msg == False)

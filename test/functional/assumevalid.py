@@ -38,10 +38,11 @@ from test_framework.mininode import (CBlockHeader,
                                      CTransaction,
                                      CTxIn,
                                      CTxOut,
+                                     network_thread_join,
+                                     network_thread_start,
                                      P2PInterface,
                                      msg_block,
-                                     msg_headers,
-                                     network_thread_start)
+                                     msg_headers)
 from test_framework.script import (CScript, OP_TRUE)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal
@@ -159,13 +160,22 @@ class AssumeValidTest(BitcoinTestFramework):
             self.block_time += 1
             height += 1
 
+        # We're adding new connections so terminate the network thread
+        self.nodes[0].disconnect_p2ps()
+        network_thread_join()
+
         # Start node1 and node2 with assumevalid so they accept a block with a bad signature.
         self.start_node(1, extra_args=["-assumevalid=" + hex(block102.sha256)])
-        p2p1 = self.nodes[1].add_p2p_connection(BaseNode())
-        p2p1.wait_for_verack()
-
         self.start_node(2, extra_args=["-assumevalid=" + hex(block102.sha256)])
+
+        p2p0 = self.nodes[0].add_p2p_connection(BaseNode())
+        p2p1 = self.nodes[1].add_p2p_connection(BaseNode())
         p2p2 = self.nodes[2].add_p2p_connection(BaseNode())
+
+        network_thread_start()
+
+        p2p0.wait_for_verack()
+        p2p1.wait_for_verack()
         p2p2.wait_for_verack()
 
         # send header lists to all three nodes
