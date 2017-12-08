@@ -381,6 +381,8 @@ void enableFreezing(uint32_t propertyId, int block);
 void disableFreezing(uint32_t propertyId);
 /** Checks whether a property has freezing enabled **/
 bool isFreezingEnabled(uint32_t propertyId, int block);
+/** Clears the freeze state in the event of a reorg **/
+void ClearFreezeState();
 
 }
 

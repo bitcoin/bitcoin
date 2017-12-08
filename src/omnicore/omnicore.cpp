@@ -315,6 +315,13 @@ bool mastercore::isMainEcosystemProperty(uint32_t propertyId)
     return false;
 }
 
+void mastercore::ClearFreezeState()
+{
+    // Should only ever be called in the event of a reorg
+    setFreezingEnabledProperties.clear();
+    setFrozenAddresses.clear();
+}
+
 void mastercore::enableFreezing(uint32_t propertyId, int block)
 {
     if (!IsFeatureActivated(FEATURE_FREEZENOTICE, block)) {
@@ -2178,6 +2185,7 @@ void clear_all_state()
     ResetConsensusParams();
     ClearActivations();
     ClearAlerts();
+    ClearFreezeState();
 
     // LevelDB based storage
     _my_sps->Clear();
