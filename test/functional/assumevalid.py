@@ -38,10 +38,10 @@ from test_framework.mininode import (CBlockHeader,
                                      CTransaction,
                                      CTxIn,
                                      CTxOut,
-                                     NetworkThread,
                                      P2PInterface,
                                      msg_block,
-                                     msg_headers)
+                                     msg_headers,
+                                     network_thread_start)
 from test_framework.script import (CScript, OP_TRUE)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal
@@ -98,7 +98,7 @@ class AssumeValidTest(BitcoinTestFramework):
         # Connect to node0
         p2p0 = self.nodes[0].add_p2p_connection(BaseNode())
 
-        NetworkThread().start()  # Start up network handling in another thread
+        network_thread_start()
         self.nodes[0].p2p.wait_for_verack()
 
         # Build the blockchain

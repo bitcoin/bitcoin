@@ -792,7 +792,7 @@ class CompactBlocksTest(BitcoinTestFramework):
         self.segwit_node = self.nodes[1].add_p2p_connection(TestNode(), services=NODE_NETWORK|NODE_WITNESS)
         self.old_node = self.nodes[1].add_p2p_connection(TestNode(), services=NODE_NETWORK)
 
-        NetworkThread().start()  # Start up network handling in another thread
+        network_thread_start()
 
         self.test_node.wait_for_verack()
 
