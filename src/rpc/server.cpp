@@ -36,6 +36,7 @@ static struct CRPCSignals
 {
     boost::signals2::signal<void ()> Started;
     boost::signals2::signal<void ()> Stopped;
+    boost::signals2::signal<void ()> Interrupted;
     boost::signals2::signal<void (const CRPCCommand&)> PreCommand;
 } g_rpcSignals;
 
@@ -48,6 +49,19 @@ void RPCServer::OnStopped(std::function<void ()> slot)
 {
     g_rpcSignals.Stopped.connect(slot);
 }
+
+namespace RPCServer {
+    struct InterruptedListenerInternals {
+        boost::signals2::scoped_connection connection;
+    };
+} // namespace RPCServer
+
+RPCServer::InterruptedListener::InterruptedListener(std::function<void ()> callback)
+{
+    m_internals.reset(new InterruptedListenerInternals());
+    m_internals->connection = g_rpcSignals.Interrupted.connect(callback);
+}
+RPCServer::InterruptedListener::~InterruptedListener() {}
 
 void RPCTypeCheck(const UniValue& params,
                   const std::list<UniValue::VType>& typesExpected,
@@ -315,6 +329,7 @@ void InterruptRPC()
     LogPrint(BCLog::RPC, "Interrupting RPC\n");
     // Interrupt e.g. running longpolls
     fRPCRunning = false;
+    g_rpcSignals.Interrupted();
 }
 
 void StopRPC()

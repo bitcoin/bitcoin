@@ -25,6 +25,18 @@ namespace RPCServer
 {
     void OnStarted(std::function<void ()> slot);
     void OnStopped(std::function<void ()> slot);
+
+    struct InterruptedListenerInternals;
+    /** A scoped listener for when RPC is interrupted (ie IsRPCRunning moves
+     * from true to false immediately prior to the invocation of this callback).
+     */
+    class InterruptedListener {
+    private:
+        std::unique_ptr<InterruptedListenerInternals> m_internals;
+    public:
+        InterruptedListener(std::function<void ()> callback);
+        ~InterruptedListener();
+    };
 }
 
 /** Wrapper for UniValue::VType, which includes typeAny:
