@@ -284,11 +284,19 @@ bool CWallet::AddCryptedKey(const CPubKey &vchPubKey,
     }
 }
 
-bool CWallet::LoadKeyMetadata(const CTxDestination& keyID, const CKeyMetadata &meta)
+bool CWallet::LoadKeyMetadata(const CKeyID& keyID, const CKeyMetadata &meta)
 {
     AssertLockHeld(cs_wallet); // mapKeyMetadata
     UpdateTimeFirstKey(meta.nCreateTime);
     mapKeyMetadata[keyID] = meta;
+    return true;
+}
+
+bool CWallet::LoadScriptMetadata(const CScriptID& script_id, const CKeyMetadata &meta)
+{
+    AssertLockHeld(cs_wallet); // m_script_metadata
+    UpdateTimeFirstKey(meta.nCreateTime);
+    m_script_metadata[script_id] = meta;
     return true;
 }
 
@@ -340,7 +348,7 @@ bool CWallet::AddWatchOnly(const CScript& dest)
 {
     if (!CCryptoKeyStore::AddWatchOnly(dest))
         return false;
-    const CKeyMetadata& meta = mapKeyMetadata[CScriptID(dest)];
+    const CKeyMetadata& meta = m_script_metadata[CScriptID(dest)];
     UpdateTimeFirstKey(meta.nCreateTime);
     NotifyWatchonlyChanged(true);
     return CWalletDB(*dbw).WriteWatchOnly(dest, meta);
@@ -348,7 +356,7 @@ bool CWallet::AddWatchOnly(const CScript& dest)
 
 bool CWallet::AddWatchOnly(const CScript& dest, int64_t nCreateTime)
 {
-    mapKeyMetadata[CScriptID(dest)].nCreateTime = nCreateTime;
+    m_script_metadata[CScriptID(dest)].nCreateTime = nCreateTime;
     return AddWatchOnly(dest);
 }
 
