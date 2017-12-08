@@ -2411,6 +2411,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 				}
 			}
 		}
+	}
 
 	if (!IsBlockPayeeValid(block.vtx[0], pindex->nHeight, nFees, blockReward, masternodeReward)) {
 		mapRejectedBlocks.insert(make_pair(block.GetHash(), GetTime()));
