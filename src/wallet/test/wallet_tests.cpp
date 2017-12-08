@@ -4,6 +4,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "wallet/wallet.h"
+#include "chainparams.h"
 
 #include <set>
 #include <stdint.h>
@@ -19,7 +20,9 @@
 
 #include <boost/test/unit_test.hpp>
 #include <univalue.h>
+#include "util.h"
 
+extern bool fPrintToConsole;
 extern CWallet* pwalletMain;
 
 extern UniValue importmulti(const JSONRPCRequest& request);
@@ -230,7 +233,7 @@ BOOST_AUTO_TEST_CASE(coin_selection_tests)
         // they tried to consolidate 10 50k coins into one 500k coin, and ended up with 50k in change
         empty_wallet();
         for (int j = 0; j < 20; j++)
-            add_coin(5000 * COIN);
+            add_coin(50000 * COIN);
 
         BOOST_CHECK( testWallet.SelectCoinsMinConf(500000 * COIN, 1, 1, 0, vCoins, setCoinsRet, nValueRet));
         BOOST_CHECK_EQUAL(nValueRet, 500000 * COIN); // we should get the exact amount
@@ -303,8 +306,8 @@ BOOST_AUTO_TEST_CASE(coin_selection_tests)
 
             // picking 50 from 100 coins doesn't depend on the shuffle,
             // but does depend on randomness in the stochastic approximation code
-            BOOST_CHECK(testWallet.SelectCoinsMinConf(50000 * COIN, 1, 6, 0, vCoins, setCoinsRet , nValueRet));
-            BOOST_CHECK(testWallet.SelectCoinsMinConf(50000 * COIN, 1, 6, 0, vCoins, setCoinsRet2, nValueRet));
+            BOOST_CHECK(testWallet.SelectCoinsMinConf(50 * COIN, 1, 6, 0, vCoins, setCoinsRet , nValueRet));
+            BOOST_CHECK(testWallet.SelectCoinsMinConf(50 * COIN, 1, 6, 0, vCoins, setCoinsRet2, nValueRet));
             BOOST_CHECK(!equal_sets(setCoinsRet, setCoinsRet2));
 
             int fails = 0;
@@ -388,7 +391,7 @@ BOOST_FIXTURE_TEST_CASE(rescan, TestChain100Setup)
         CWallet wallet;
         AddKey(wallet, coinbaseKey);
         BOOST_CHECK_EQUAL(nullBlock, wallet.ScanForWalletTransactions(oldTip, nullptr));
-        BOOST_CHECK_EQUAL(wallet.GetImmatureBalance(), 100 * COIN);
+        BOOST_CHECK_EQUAL(wallet.GetImmatureBalance(), 10000 * COIN);
     }
 
     // Prune the older block file.
@@ -401,7 +404,7 @@ BOOST_FIXTURE_TEST_CASE(rescan, TestChain100Setup)
         CWallet wallet;
         AddKey(wallet, coinbaseKey);
         BOOST_CHECK_EQUAL(oldTip, wallet.ScanForWalletTransactions(oldTip, nullptr));
-        BOOST_CHECK_EQUAL(wallet.GetImmatureBalance(), 50000 * COIN);
+        BOOST_CHECK_EQUAL(wallet.GetImmatureBalance(), 5000 * COIN);
     }
 
     // Verify importmulti RPC returns failure for a key whose creation time is
@@ -525,7 +528,7 @@ BOOST_FIXTURE_TEST_CASE(coin_mark_dirty_immature_credit, TestChain100Setup)
     // credit amount is calculated.
     wtx.MarkDirty();
     wallet.AddKeyPubKey(coinbaseKey, coinbaseKey.GetPubKey());
-    BOOST_CHECK_EQUAL(wtx.GetImmatureCredit(), 50*COIN);
+    BOOST_CHECK_EQUAL(wtx.GetImmatureCredit(), 5000*COIN);
 }
 
 static int64_t AddTx(CWallet& wallet, uint32_t lockTime, int64_t mockTime, int64_t blockTime)
@@ -638,6 +641,9 @@ public:
 
 BOOST_FIXTURE_TEST_CASE(ListCoins, ListCoinsTestingSetup)
 {
+	TurnOffSegwit();
+
+	fPrintToConsole = true;
     std::string coinbaseAddress = coinbaseKey.GetPubKey().GetID().ToString();
     LOCK2(cs_main, wallet->cs_wallet);
 
@@ -649,7 +655,7 @@ BOOST_FIXTURE_TEST_CASE(ListCoins, ListCoinsTestingSetup)
     BOOST_CHECK_EQUAL(list.begin()->second.size(), 1L);
 
     // Check initial balance from one mature coinbase transaction.
-    BOOST_CHECK_EQUAL(50000 * COIN, wallet->GetAvailableBalance());
+    BOOST_CHECK_EQUAL(5000 * COIN, wallet->GetAvailableBalance());
 
     // Add a transaction creating a change address, and confirm ListCoins still
     // returns the coin associated with the change address underneath the
@@ -659,6 +665,8 @@ BOOST_FIXTURE_TEST_CASE(ListCoins, ListCoinsTestingSetup)
     list = wallet->ListCoins();
     BOOST_CHECK_EQUAL(list.size(), 1L);
     BOOST_CHECK_EQUAL(boost::get<CKeyID>(list.begin()->first).ToString(), coinbaseAddress);
+    auto output = list.begin()->second[0].ToString();
+    std::cout << "OUTPUT:" << output << std::endl;
     BOOST_CHECK_EQUAL(list.begin()->second.size(), 2L);
 
     // Lock both coins. Confirm number of available coins drops to 0.

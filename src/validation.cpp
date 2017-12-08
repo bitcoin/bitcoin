@@ -61,6 +61,7 @@
  * Global state
  */
 
+
 CCriticalSection cs_main;
 
 BlockMap mapBlockIndex;
@@ -1057,24 +1058,24 @@ bool IsInitialBlockDownload()
         return false;
     if (fImporting || fReindex)
     {
-        std::cout << "IsInitialBlockDownload (importing or reindex)" << std::endl;
+//        std::cout << "IsInitialBlockDownload (importing or reindex)" << std::endl;
         return true;
     }
     if (chainActive.Tip() == nullptr)
     {
-        std::cout << "IsInitialBlockDownload (tip is null)" << std::endl;
+//        std::cout << "IsInitialBlockDownload (tip is null)" << std::endl;
         return true;
     }
     if (chainActive.Tip()->nChainWork < nMinimumChainWork)
     {
-        std::cout << "IsInitialBlockDownload (min chain work)" << std::endl;
-        std::cout << "Work found: " << chainActive.Tip()->nChainWork.GetHex() << std::endl;
-        std::cout << "Work needed: " << nMinimumChainWork.GetHex() << std::endl;
+//        std::cout << "IsInitialBlockDownload (min chain work)" << std::endl;
+//        std::cout << "Work found: " << chainActive.Tip()->nChainWork.GetHex() << std::endl;
+//        std::cout << "Work needed: " << nMinimumChainWork.GetHex() << std::endl;
         return true;
     }
     if (chainActive.Tip()->GetBlockTime() < (GetTime() - nMaxTipAge))
     {
-        std::cout << "IsInitialBlockDownload (tip age)" << std::endl;
+//        std::cout << "IsInitialBlockDownload (tip age)" << std::endl;
         return true;
     }
     LogPrintf("Leaving InitialBlockDownload (latching to false)\n");
@@ -1611,18 +1612,26 @@ static unsigned int GetBlockScriptFlags(const CBlockIndex* pindex, const Consens
 
     unsigned int flags = fStrictPayToScriptHash ? SCRIPT_VERIFY_P2SH : SCRIPT_VERIFY_NONE;
 
+    if(consensusparams.nBIP66Enabled) {
     // Start enforcing the DERSIG (BIP66) rule
-    flags |= SCRIPT_VERIFY_DERSIG;
+    		flags |= SCRIPT_VERIFY_DERSIG;
+    }
 
+    if(consensusparams.nBIP65Enabled) {
     // Start enforcing CHECKLOCKTIMEVERIFY (BIP65) rule
-    flags |= SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY;
+    		flags |= SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY;
+    }
 
-    // Start enforcing BIP68 (sequence locks) and BIP112 (CHECKSEQUENCEVERIFY) using versionbits logic.
-    flags |= SCRIPT_VERIFY_CHECKSEQUENCEVERIFY;
+    if(consensusparams.nCSVEnabled) {
+    		// Start enforcing BIP68 (sequence locks) and BIP112 (CHECKSEQUENCEVERIFY) using versionbits logic.
+    		flags |= SCRIPT_VERIFY_CHECKSEQUENCEVERIFY;
+    }
 
     // Start enforcing WITNESS rules using versionbits logic.
-    flags |= SCRIPT_VERIFY_WITNESS;
-    flags |= SCRIPT_VERIFY_NULLDUMMY;
+    if (IsWitnessEnabled(pindex->pprev, consensusparams)) {
+    		flags |= SCRIPT_VERIFY_WITNESS;
+    		flags |= SCRIPT_VERIFY_NULLDUMMY;
+    }
 
     return flags;
 }
@@ -1738,7 +1747,9 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
 
     // Start enforcing BIP68 (sequence locks) and BIP112 (CHECKSEQUENCEVERIFY) using versionbits logic.
     int nLockTimeFlags = 0;
-    nLockTimeFlags |= LOCKTIME_VERIFY_SEQUENCE;
+    if(chainparams.CSVEnabled()) {
+    		nLockTimeFlags |= LOCKTIME_VERIFY_SEQUENCE;
+    }
 
     // Get the script flags for this block
     unsigned int flags = GetBlockScriptFlags(pindex, chainparams.GetConsensus());
@@ -2787,7 +2798,7 @@ static bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state,
     // Check proof of work matches claimed amount
     if (fCheckPOW && !CheckProofOfWork(block.GetHash(), block.nBits, consensusParams))
         return state.DoS(50, false, REJECT_INVALID, "high-hash", false, "proof of work failed");
-
+//    std::cout << "YEAH passed proof of work" << std::endl;
     return true;
 }
 
@@ -2802,6 +2813,9 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
     // redundant with the call in AcceptBlockHeader.
     if (!CheckBlockHeader(block, state, consensusParams, fCheckPOW))
         return false;
+//    std::cout << "nonce is found!" << std::endl;
+    auto successNonce = block.nNonce;
+//    std::cout << "Success nonce Checkblock: " << std::hex << successNonce << std::endl;
 
     // Check the merkle root.
     if (fCheckMerkleRoot) {
@@ -2851,14 +2865,18 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
     if (fCheckPOW && fCheckMerkleRoot)
         block.fChecked = true;
 
+//    std::cout << "check block passed" << std::endl;
     return true;
 }
 
 bool IsWitnessEnabled(const CBlockIndex* pindexPrev, const Consensus::Params& params)
 {
-    return true;
+    return params.nSegwitEnabled;
 }
 
+bool IsWitnessEnabled(const Consensus::Params& params) {
+	return params.nSegwitEnabled;
+}
 // Compute at which vout of the block's coinbase transaction the witness
 // commitment occurs, or -1 if not found.
 static int GetWitnessCommitmentIndex(const CBlock& block)
@@ -2891,25 +2909,27 @@ std::vector<unsigned char> GenerateCoinbaseCommitment(CBlock& block, const CBloc
     std::vector<unsigned char> commitment;
     int commitpos = GetWitnessCommitmentIndex(block);
     std::vector<unsigned char> ret(32, 0x00);
-    if (commitpos == -1) {
-        uint256 witnessroot = BlockWitnessMerkleRoot(block, nullptr);
-        CHash256().Write(witnessroot.begin(), 32).Write(ret.data(), 32).Finalize(witnessroot.begin());
-        CTxOut out;
-        out.nValue = 0;
-        out.scriptPubKey.resize(38);
-        out.scriptPubKey[0] = OP_RETURN;
-        out.scriptPubKey[1] = 0x24;
-        out.scriptPubKey[2] = 0xaa;
-        out.scriptPubKey[3] = 0x21;
-        out.scriptPubKey[4] = 0xa9;
-        out.scriptPubKey[5] = 0xed;
-        memcpy(&out.scriptPubKey[6], witnessroot.begin(), 32);
-        commitment = std::vector<unsigned char>(out.scriptPubKey.begin(), out.scriptPubKey.end());
-        CMutableTransaction tx(*block.vtx[0]);
-        tx.vout.push_back(out);
-        block.vtx[0] = MakeTransactionRef(std::move(tx));
+    if(consensusParams.nSegwitEnabled) { // if (consensusParams.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nTimeout != 0) {
+		if (commitpos == -1) {
+			uint256 witnessroot = BlockWitnessMerkleRoot(block, nullptr);
+			CHash256().Write(witnessroot.begin(), 32).Write(ret.data(), 32).Finalize(witnessroot.begin());
+			CTxOut out;
+			out.nValue = 0;
+			out.scriptPubKey.resize(38);
+			out.scriptPubKey[0] = OP_RETURN;
+			out.scriptPubKey[1] = 0x24;
+			out.scriptPubKey[2] = 0xaa;
+			out.scriptPubKey[3] = 0x21;
+			out.scriptPubKey[4] = 0xa9;
+			out.scriptPubKey[5] = 0xed;
+			memcpy(&out.scriptPubKey[6], witnessroot.begin(), 32);
+			commitment = std::vector<unsigned char>(out.scriptPubKey.begin(), out.scriptPubKey.end());
+			CMutableTransaction tx(*block.vtx[0]);
+			tx.vout.push_back(out);
+			block.vtx[0] = MakeTransactionRef(std::move(tx));
+		}
     }
-    UpdateUncommittedBlockStructures(block, pindexPrev, consensusParams);
+	UpdateUncommittedBlockStructures(block, pindexPrev, consensusParams);
     return commitment;
 }
 
@@ -2961,7 +2981,9 @@ static bool ContextualCheckBlock(const CBlock& block, CValidationState& state, c
 
     // Start enforcing BIP113 (Median Time Past) using versionbits logic.
     int nLockTimeFlags = 0;
-    nLockTimeFlags |= LOCKTIME_MEDIAN_TIME_PAST;
+    if(consensusParams.nCSVEnabled == true) {
+    		nLockTimeFlags |= LOCKTIME_MEDIAN_TIME_PAST;
+    }
 
     int64_t nLockTimeCutoff = (nLockTimeFlags & LOCKTIME_MEDIAN_TIME_PAST)
                               ? pindexPrev->GetMedianTimePast()
@@ -2976,11 +2998,26 @@ static bool ContextualCheckBlock(const CBlock& block, CValidationState& state, c
 
     // Enforce rule that the coinbase starts with serialized block height
     CScript expect = CScript() << nHeight;
-    if (block.vtx[0]->vin[0].scriptSig.size() < expect.size() ||
-        !std::equal(expect.begin(), expect.end(), block.vtx[0]->vin[0].scriptSig.begin())) {
-        return state.DoS(100, false, REJECT_INVALID, "bad-cb-height", false, "block height mismatch in coinbase");
-    }
+//    std::cout << "nHeight height is " << nHeight << std::endl;
+//    std::cout << "expect size is " << expect.size() << std::endl;
+    auto scriptHeight = block.vtx[0]->vin[0].scriptSig.size();
+//    std::cout << "script Height is " << scriptHeight << std::endl;
 
+//    for(prevector<28, unsigned char>::iterator it = expect.begin(); it != expect.end(); it++)    {
+//        std::cout << "Expect iteration " << *it << std::endl;
+//    }
+//
+//    for(prevector<28, unsigned char>::const_iterator scriptIt = block.vtx[0]->vin[0].scriptSig.begin(); scriptIt != block.vtx[0]->vin[0].scriptSig.end(); scriptIt++) {
+//    		std::cout << "Script iteration" << *scriptIt << std::endl;
+//    }
+
+    if (consensusParams.nBIP34Enabled)
+    {
+		if (block.vtx[0]->vin[0].scriptSig.size() < expect.size() ||
+			!std::equal(expect.begin(), expect.end(), block.vtx[0]->vin[0].scriptSig.begin())) {
+			return state.DoS(100, false, REJECT_INVALID, "bad-cb-height", false, "block height mismatch in coinbase");
+		}
+    }
     // Validation for witness commitments.
     // * We compute the witness hash (which is the hash including witnesses) of all the block's transactions, except the
     //   coinbase (where 0x0000....0000 is used instead).
@@ -2990,23 +3027,26 @@ static bool ContextualCheckBlock(const CBlock& block, CValidationState& state, c
     //   {0xaa, 0x21, 0xa9, 0xed}, and the following 32 bytes are SHA256^2(witness root, witness nonce). In case there are
     //   multiple, the last one is used.
     bool fHaveWitness = false;
-    int commitpos = GetWitnessCommitmentIndex(block);
-    if (commitpos != -1) {
-        bool malleated = false;
-        uint256 hashWitness = BlockWitnessMerkleRoot(block, &malleated);
-        // The malleation check is ignored; as the transaction tree itself
-        // already does not permit it, it is impossible to trigger in the
-        // witness tree.
-        if (block.vtx[0]->vin[0].scriptWitness.stack.size() != 1 || block.vtx[0]->vin[0].scriptWitness.stack[0].size() != 32) {
-            return state.DoS(100, false, REJECT_INVALID, "bad-witness-nonce-size", true, strprintf("%s : invalid witness nonce size", __func__));
-        }
-        CHash256().Write(hashWitness.begin(), 32).Write(&block.vtx[0]->vin[0].scriptWitness.stack[0][0], 32).Finalize(hashWitness.begin());
-        if (memcmp(hashWitness.begin(), &block.vtx[0]->vout[commitpos].scriptPubKey[6], 32)) {
-            return state.DoS(100, false, REJECT_INVALID, "bad-witness-merkle-match", true, strprintf("%s : witness merkle commitment mismatch", __func__));
-        }
-        fHaveWitness = true;
+    if(IsWitnessEnabled(consensusParams)) {
+		int commitpos = GetWitnessCommitmentIndex(block);
+		if (commitpos != -1) {
+			bool malleated = false;
+			uint256 hashWitness = BlockWitnessMerkleRoot(block, &malleated);
+			// The malleation check is ignored; as the transaction tree itself
+			// already does not permit it, it is impossible to trigger in the
+			// witness tree.
+//			std::cout << "Block scriptWitness size " << block.vtx[0]->vin[0].scriptWitness.stack.size() << std::endl;
+//			std::cout << "Block scriptWitness stack size " << block.vtx[0]->vin[0].scriptWitness.stack[0].size() << std::endl;
+			if (block.vtx[0]->vin[0].scriptWitness.stack.size() != 1 || block.vtx[0]->vin[0].scriptWitness.stack[0].size() != 32) {
+				return state.DoS(100, false, REJECT_INVALID, "bad-witness-nonce-size", true, strprintf("%s : invalid witness nonce size", __func__));
+			}
+			CHash256().Write(hashWitness.begin(), 32).Write(&block.vtx[0]->vin[0].scriptWitness.stack[0][0], 32).Finalize(hashWitness.begin());
+			if (memcmp(hashWitness.begin(), &block.vtx[0]->vout[commitpos].scriptPubKey[6], 32)) {
+				return state.DoS(100, false, REJECT_INVALID, "bad-witness-merkle-match", true, strprintf("%s : witness merkle commitment mismatch", __func__));
+			}
+			fHaveWitness = true;
+		}
     }
-
     // No witness data is allowed in blocks that don't commit to witness data, as this would otherwise leave room for spam
     if (!fHaveWitness) {
       for (const auto& tx : block.vtx) {
@@ -3200,13 +3240,15 @@ bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<cons
             return error("%s: AcceptBlock FAILED (%s)", __func__, state.GetDebugMessage());
         }
     }
-
+//    std::cout << "Process block 3" << std::endl;
     NotifyHeaderTip();
 
     CValidationState state; // Only used to report errors, not invalidity - ignore it
     if (!ActivateBestChain(state, chainparams, pblock))
         return error("%s: ActivateBestChain failed", __func__);
-
+//    std::cout << "Process block 4" << std::endl;
+    auto successNonce = pblock->nNonce;
+    std::cout << "Success nonce ProcessBlock: " << std::hex << successNonce << std::endl;
     return true;
 }
 
