@@ -17,11 +17,11 @@ from collections import defaultdict
 from test_framework.blocktools import (create_block, create_coinbase)
 from test_framework.mininode import (
     CInv,
-    NetworkThread,
     P2PInterface,
     mininode_lock,
     msg_block,
     msg_getdata,
+    network_thread_start,
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -136,7 +136,7 @@ class ExampleTest(BitcoinTestFramework):
 
         # Start up network handling in another thread. This needs to be called
         # after the P2P connections have been created.
-        NetworkThread().start()
+        network_thread_start()
         # wait_for_verack ensures that the P2P connection is fully up.
         self.nodes[0].p2p.wait_for_verack()
 

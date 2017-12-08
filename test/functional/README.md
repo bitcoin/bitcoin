@@ -68,7 +68,7 @@ contains the higher level logic for processing P2P payloads and connecting to
 the Bitcoin Core node application logic. For custom behaviour, subclass the
 P2PInterface object and override the callback methods.
 
-- Call `NetworkThread.start()` after all `P2PInterface` objects are created to
+- Call `network_thread_start()` after all `P2PInterface` objects are created to
 start the networking thread.  (Continue with the test logic in your existing
 thread.)
 
