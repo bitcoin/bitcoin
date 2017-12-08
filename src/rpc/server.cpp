@@ -13,6 +13,7 @@
 #include <ui_interface.h>
 #include <util.h>
 #include <utilstrencodings.h>
+#include <validation.h>
 
 #include <boost/bind.hpp>
 #include <boost/signals2/signal.hpp>
@@ -62,6 +63,34 @@ RPCServer::InterruptedListener::InterruptedListener(std::function<void ()> callb
     m_internals->connection = g_rpcSignals.Interrupted.connect(callback);
 }
 RPCServer::InterruptedListener::~InterruptedListener() {}
+
+
+RPCServer::BlockChangeBlocker::BlockChangeBlocker() : m_interrupted_listener([this] {
+            m_cv.notify_all();
+        })
+{
+    {
+        LOCK(cs_main);
+        m_last_block_hash = chainActive.Tip()->GetBlockHash();
+        m_last_block_height = chainActive.Tip()->nHeight;
+    }
+    RegisterValidationInterface(this);
+}
+
+RPCServer::BlockChangeBlocker::~BlockChangeBlocker()
+{
+    UnregisterValidationInterface(this);
+}
+
+void RPCServer::BlockChangeBlocker::UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload)
+{
+    {
+        WaitableLock lock(m_cs);
+        m_last_block_hash = pindexNew->GetBlockHash();
+        m_last_block_height = pindexNew->nHeight;
+    }
+    m_cv.notify_all();
+}
 
 void RPCTypeCheck(const UniValue& params,
                   const std::list<UniValue::VType>& typesExpected,
