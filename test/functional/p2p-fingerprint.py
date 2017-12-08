@@ -13,12 +13,12 @@ import time
 from test_framework.blocktools import (create_block, create_coinbase)
 from test_framework.mininode import (
     CInv,
-    NetworkThread,
     P2PInterface,
     msg_headers,
     msg_block,
     msg_getdata,
     msg_getheaders,
+    network_thread_start,
     wait_until,
 )
 from test_framework.test_framework import BitcoinTestFramework
@@ -77,7 +77,7 @@ class P2PFingerprintTest(BitcoinTestFramework):
     def run_test(self):
         node0 = self.nodes[0].add_p2p_connection(P2PInterface())
 
-        NetworkThread().start()
+        network_thread_start()
         node0.wait_for_verack()
 
         # Set node time to 60 days ago

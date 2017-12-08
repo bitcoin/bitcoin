@@ -90,7 +90,7 @@ from test_framework.mininode import (
     CBlockHeader,
     CInv,
     NODE_WITNESS,
-    NetworkThread,
+    network_thread_start,
     P2PInterface,
     mininode_lock,
     msg_block,
@@ -238,7 +238,7 @@ class SendHeadersTest(BitcoinTestFramework):
         # will occur outside of direct fetching
         test_node = self.nodes[0].add_p2p_connection(BaseNode(), services=NODE_WITNESS)
 
-        NetworkThread().start()  # Start up network handling in another thread
+        network_thread_start()
 
         # Test logic begins here
         inv_node.wait_for_verack()
