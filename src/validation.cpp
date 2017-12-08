@@ -2608,11 +2608,6 @@ bool CChainState::ActivateBestChain(CValidationState &state, const CChainParams&
         // Notify external listeners about the new tip.
         GetMainSignals().UpdatedBlockTip(pindexNewTip, pindexFork, fInitialDownload);
 
-        // Always notify the UI if a new block tip was connected
-        if (pindexFork != pindexNewTip) {
-            uiInterface.NotifyBlockTip(fInitialDownload, pindexNewTip);
-        }
-
         if (nStopAtHeight && pindexNewTip && pindexNewTip->nHeight >= nStopAtHeight) StartShutdown();
     } while (pindexNewTip != pindexMostWork);
     CheckBlockIndex(chainparams.GetConsensus());
@@ -2716,7 +2711,6 @@ bool CChainState::InvalidateBlock(CValidationState& state, const CChainParams& c
     }
 
     InvalidChainFound(pindex);
-    uiInterface.NotifyBlockTip(IsInitialBlockDownload(), pindex->pprev);
     GetMainSignals().UpdatedBlockTip(chainActive.Tip(), chainActive.Tip(), IsInitialBlockDownload());
     return true;
 }

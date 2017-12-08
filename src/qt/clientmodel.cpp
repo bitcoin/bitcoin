@@ -313,6 +313,20 @@ static void BlockTipChanged(ClientModel *clientmodel, bool initialSync, const CB
     }
 }
 
+namespace {
+class ValidationListener : public CValidationInterface {
+    ClientModel *m_clientmodel;
+public:
+    ValidationListener(ClientModel *clientmodel) : m_clientmodel(clientmodel) {}
+    ValidationListener() : m_clientmodel(nullptr) {}
+
+    void UpdatedBlockTip(const CBlockIndex *pIndex, const CBlockIndex *, bool initialSync) override {
+        BlockTipChanged(m_clientmodel, initialSync, pIndex, false);
+    }
+};
+ValidationListener g_validationlistener;
+} // anonymous namespace
+
 void ClientModel::subscribeToCoreSignals()
 {
     // Connect signals to client
@@ -321,8 +335,10 @@ void ClientModel::subscribeToCoreSignals()
     uiInterface.NotifyNetworkActiveChanged.connect(boost::bind(NotifyNetworkActiveChanged, this, _1));
     uiInterface.NotifyAlertChanged.connect(boost::bind(NotifyAlertChanged, this));
     uiInterface.BannedListChanged.connect(boost::bind(BannedListChanged, this));
-    uiInterface.NotifyBlockTip.connect(boost::bind(BlockTipChanged, this, _1, _2, false));
     uiInterface.NotifyHeaderTip.connect(boost::bind(BlockTipChanged, this, _1, _2, true));
+
+    g_validationlistener = ValidationListener(this);
+    RegisterValidationInterface(&g_validationlistener);
 }
 
 void ClientModel::unsubscribeFromCoreSignals()
@@ -333,6 +349,6 @@ void ClientModel::unsubscribeFromCoreSignals()
     uiInterface.NotifyNetworkActiveChanged.disconnect(boost::bind(NotifyNetworkActiveChanged, this, _1));
     uiInterface.NotifyAlertChanged.disconnect(boost::bind(NotifyAlertChanged, this));
     uiInterface.BannedListChanged.disconnect(boost::bind(BannedListChanged, this));
-    uiInterface.NotifyBlockTip.disconnect(boost::bind(BlockTipChanged, this, _1, _2, false));
     uiInterface.NotifyHeaderTip.disconnect(boost::bind(BlockTipChanged, this, _1, _2, true));
+    UnregisterValidationInterface(&g_validationlistener);
 }
