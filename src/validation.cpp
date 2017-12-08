@@ -3248,7 +3248,7 @@ bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<cons
         return error("%s: ActivateBestChain failed", __func__);
 //    std::cout << "Process block 4" << std::endl;
     auto successNonce = pblock->nNonce;
-    std::cout << "Success nonce ProcessBlock: " << std::hex << successNonce << std::endl;
+//    std::cout << "Success nonce ProcessBlock: " << std::hex << successNonce << std::endl;
     return true;
 }
 
