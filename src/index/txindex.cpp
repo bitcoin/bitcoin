@@ -228,6 +228,30 @@ void TxIndex::SetBestChain(const CBlockLocator& locator)
     }
 }
 
+bool TxIndex::BlockUntilSyncedToCurrentChain()
+{
+    AssertLockNotHeld(cs_main);
+
+    if (!m_synced) {
+        return false;
+    }
+
+    {
+        // Skip the queue-draining stuff if we know we're caught up with
+        // chainActive.Tip().
+        LOCK(cs_main);
+        const CBlockIndex* chain_tip = chainActive.Tip();
+        const CBlockIndex* best_block_index = m_best_block_index.load();
+        if (best_block_index->GetAncestor(chain_tip->nHeight) == chain_tip) {
+            return true;
+        }
+    }
+
+    LogPrintf("%s: txindex is catching up on block notifications\n", __func__);
+    SyncWithValidationInterfaceQueue();
+    return true;
+}
+
 bool TxIndex::FindTx(const uint256& txid, CDiskTxPos& pos) const
 {
     return m_db->ReadTxPos(txid, pos);
