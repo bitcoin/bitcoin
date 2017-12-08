@@ -1,5 +1,5 @@
 ---
-name: "particl-osx-0.15.1.0"
+name: "particl-osx-0.15.1.1"
 enable_cache: true
 suites:
 - "trusty"
@@ -39,7 +39,6 @@ script: |
   FAKETIME_HOST_PROGS=""
   FAKETIME_PROGS="ar ranlib date dmg genisoimage"
 
-  #export NO_QT=1
   export QT_RCC_TEST=1
   export GZIP="-9n"
   export TAR_OPTIONS="--mtime="$REFERENCE_DATE\\\ $REFERENCE_TIME""

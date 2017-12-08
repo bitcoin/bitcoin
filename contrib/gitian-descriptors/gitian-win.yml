@@ -1,5 +1,5 @@
 ---
-name: "particl-win-0.15.1.0"
+name: "particl-win-0.15.1.1"
 enable_cache: true
 suites:
 - "trusty"
@@ -94,15 +94,25 @@ script: |
   done
   }
 
+  rm -r ${WRAP_DIR}
+  mkdir -p ${WRAP_DIR}
+
   # Faketime for depends so intermediate results are comparable
   export PATH_orig=${PATH}
   create_global_faketime_wrappers "2000-01-01 12:00:00"
   create_per-host_faketime_wrappers "2000-01-01 12:00:00"
-  create_per-host_linker_wrapper "2000-01-01 12:00:00"
+  #create_per-host_linker_wrapper "2000-01-01 12:00:00"
   export PATH=${WRAP_DIR}:${PATH}
 
   cd particl-core
   BASEPREFIX=`pwd`/depends
+
+  for i in $HOSTS; do
+    make ${MAKEOPTS} -C ${BASEPREFIX} HOST="${i}" libsodium
+  done
+
+  create_per-host_linker_wrapper "2000-01-01 12:00:00"
+
   # Build dependencies for each host
   for i in $HOSTS; do
     make ${MAKEOPTS} -C ${BASEPREFIX} HOST="${i}"

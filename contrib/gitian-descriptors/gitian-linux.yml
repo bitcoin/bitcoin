@@ -1,6 +1,7 @@
 ---
-name: "particl-linux-0.15.1.0"
+name: "particl-linux-0.15.1.1"
 enable_cache: true
+sudo: true
 suites:
 - "trusty"
 architectures:
@@ -32,6 +33,9 @@ remotes:
   "dir": "particl-core"
 files: []
 script: |
+  # prepare
+  sudo ln -sf /usr/include/asm-generic /usr/include/asm
+  sudo ln -sf /usr/include/x86_64-linux-gnu/asm/byteorder.h /usr/include/asm/byteorder.h
 
   WRAP_DIR=$HOME/wrapped
   HOSTS="i686-pc-linux-gnu x86_64-linux-gnu arm-linux-gnueabihf aarch64-linux-gnu"
@@ -42,7 +46,6 @@ script: |
   HOST_CXXFLAGS="-O2 -g"
   HOST_LDFLAGS=-static-libstdc++
 
-  #export NO_QT=1
   export QT_RCC_TEST=1
   export GZIP="-9n"
   export TAR_OPTIONS="--mtime="$REFERENCE_DATE\\\ $REFERENCE_TIME""
@@ -88,32 +91,6 @@ script: |
 
   EXTRA_INCLUDES_BASE=$WRAP_DIR/extra_includes
   mkdir -p $EXTRA_INCLUDES_BASE
-
-  # x86 needs /usr/include/i386-linux-gnu/asm pointed to /usr/include/x86_64-linux-gnu/asm,
-  # but we can't write there. Instead, create a link here and force it to be included in the
-  # search paths by wrapping gcc/g++.
-
-  mkdir -p $EXTRA_INCLUDES_BASE/i686-pc-linux-gnu
-  rm -f $WRAP_DIR/extra_includes/i686-pc-linux-gnu/asm
-  ln -s /usr/include/x86_64-linux-gnu/asm $EXTRA_INCLUDES_BASE/i686-pc-linux-gnu/asm
-
-  for prog in gcc g++; do
-  rm -f ${WRAP_DIR}/${prog}
-  cat << EOF > ${WRAP_DIR}/${prog}
-  #!/bin/bash
-  REAL="`which -a ${prog} | grep -v ${WRAP_DIR}/${prog} | head -1`"
-  for var in "\$@"
-  do
-    if [ "\$var" = "-m32" ]; then
-      export C_INCLUDE_PATH="$EXTRA_INCLUDES_BASE/i686-pc-linux-gnu"
-      export CPLUS_INCLUDE_PATH="$EXTRA_INCLUDES_BASE/i686-pc-linux-gnu"
-      break
-    fi
-  done
-  \$REAL \$@
-  EOF
-  chmod +x ${WRAP_DIR}/${prog}
-  done
 
   cd particl-core
   BASEPREFIX=`pwd`/depends

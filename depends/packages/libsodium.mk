@@ -11,7 +11,7 @@ define $(package)_set_vars
 endef
 
 define $(package)_preprocess_cmds
-  ./autogen.sh
+  cd $($(package)_build_subdir); ./autogen.sh
 endef
 
 define $(package)_config_cmds
