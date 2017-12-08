@@ -40,6 +40,7 @@
 #include "masternodeman.h"
 #include "masternode-payments.h"
 #include "masternode-sync.h"
+#include "governance-classes.h"
 #include <sstream>
 
 #include <boost/algorithm/string/replace.hpp>
