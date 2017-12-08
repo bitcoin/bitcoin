@@ -35,16 +35,6 @@
 #include <mutex>
 #include <condition_variable>
 
-struct CUpdatedBlock
-{
-    uint256 hash;
-    int height;
-};
-
-static std::mutex cs_blockchange;
-static std::condition_variable cond_blockchange;
-static CUpdatedBlock latestblock;
-
 extern void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry);
 
 double GetDifficulty(const CBlockIndex* blockindex)
@@ -184,14 +174,23 @@ UniValue getbestblockhash(const JSONRPCRequest& request)
     return chainActive.Tip()->GetBlockHash().GetHex();
 }
 
-void RPCNotifyBlockChange(bool ibd, const CBlockIndex * pindex)
+template<typename T>
+static UniValue AwaitBlockChangeCondition(int timeout, const T& term_condition)
 {
-    if(pindex) {
-        std::lock_guard<std::mutex> lock(cs_blockchange);
-        latestblock.hash = pindex->GetBlockHash();
-        latestblock.height = pindex->nHeight;
-    }
-    cond_blockchange.notify_all();
+    RPCServer::BlockChangeBlocker block_waiter;
+    WaitableLock lock(block_waiter.m_cs);
+
+    auto term = [&block_waiter, &term_condition]{ return term_condition(block_waiter) || !IsRPCRunning(); };
+
+    if(timeout)
+        block_waiter.m_cv.wait_for(lock, std::chrono::milliseconds(timeout), std::move(term));
+    else
+        block_waiter.m_cv.wait(lock, std::move(term));
+
+    UniValue ret(UniValue::VOBJ);
+    ret.push_back(Pair("hash", block_waiter.m_last_block_hash.GetHex()));
+    ret.push_back(Pair("height", block_waiter.m_last_block_height));
+    return ret;
 }
 
 UniValue waitfornewblock(const JSONRPCRequest& request)
@@ -216,20 +215,18 @@ UniValue waitfornewblock(const JSONRPCRequest& request)
     if (!request.params[0].isNull())
         timeout = request.params[0].get_int();
 
-    CUpdatedBlock block;
+    int start_height;
+    uint256 start_hash;
     {
-        std::unique_lock<std::mutex> lock(cs_blockchange);
-        block = latestblock;
-        if(timeout)
-            cond_blockchange.wait_for(lock, std::chrono::milliseconds(timeout), [&block]{return latestblock.height != block.height || latestblock.hash != block.hash || !IsRPCRunning(); });
-        else
-            cond_blockchange.wait(lock, [&block]{return latestblock.height != block.height || latestblock.hash != block.hash || !IsRPCRunning(); });
-        block = latestblock;
+        LOCK(cs_main);
+        start_height = chainActive.Tip()->nHeight;
+        start_hash = chainActive.Tip()->GetBlockHash();
     }
-    UniValue ret(UniValue::VOBJ);
-    ret.push_back(Pair("hash", block.hash.GetHex()));
-    ret.push_back(Pair("height", block.height));
-    return ret;
+
+    auto term_condition = [start_height, &start_hash](RPCServer::BlockChangeBlocker& block_waiter)
+        {return block_waiter.m_last_block_height != start_height || block_waiter.m_last_block_hash != start_hash; };
+
+    return AwaitBlockChangeCondition(timeout, term_condition);
 }
 
 UniValue waitforblock(const JSONRPCRequest& request)
@@ -258,20 +255,8 @@ UniValue waitforblock(const JSONRPCRequest& request)
     if (!request.params[1].isNull())
         timeout = request.params[1].get_int();
 
-    CUpdatedBlock block;
-    {
-        std::unique_lock<std::mutex> lock(cs_blockchange);
-        if(timeout)
-            cond_blockchange.wait_for(lock, std::chrono::milliseconds(timeout), [&hash]{return latestblock.hash == hash || !IsRPCRunning();});
-        else
-            cond_blockchange.wait(lock, [&hash]{return latestblock.hash == hash || !IsRPCRunning(); });
-        block = latestblock;
-    }
-
-    UniValue ret(UniValue::VOBJ);
-    ret.push_back(Pair("hash", block.hash.GetHex()));
-    ret.push_back(Pair("height", block.height));
-    return ret;
+    auto term_condition = [&hash](RPCServer::BlockChangeBlocker& block_waiter){return block_waiter.m_last_block_hash == hash; };
+    return AwaitBlockChangeCondition(timeout, term_condition);
 }
 
 UniValue waitforblockheight(const JSONRPCRequest& request)
@@ -301,19 +286,8 @@ UniValue waitforblockheight(const JSONRPCRequest& request)
     if (!request.params[1].isNull())
         timeout = request.params[1].get_int();
 
-    CUpdatedBlock block;
-    {
-        std::unique_lock<std::mutex> lock(cs_blockchange);
-        if(timeout)
-            cond_blockchange.wait_for(lock, std::chrono::milliseconds(timeout), [&height]{return latestblock.height >= height || !IsRPCRunning();});
-        else
-            cond_blockchange.wait(lock, [&height]{return latestblock.height >= height || !IsRPCRunning(); });
-        block = latestblock;
-    }
-    UniValue ret(UniValue::VOBJ);
-    ret.push_back(Pair("hash", block.hash.GetHex()));
-    ret.push_back(Pair("height", block.height));
-    return ret;
+    auto term_condition = [&height](RPCServer::BlockChangeBlocker& block_waiter){return block_waiter.m_last_block_height >= height; };
+    return AwaitBlockChangeCondition(timeout, term_condition);
 }
 
 UniValue getdifficulty(const JSONRPCRequest& request)
