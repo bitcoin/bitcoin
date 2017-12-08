@@ -20,16 +20,13 @@
 /**
  * Overview of wallet database classes:
  *
- * - BerkeleyEnvironment is an environment in which the database exists (has no analog in dbwrapper.h)
- * - WalletDatabase represents a wallet database (similar to CDBWrapper in dbwrapper.h)
- * - BerkeleyBatch is a low-level database transaction (similar to CDBBatch in dbwrapper.h)
- * - WalletBatch is a modifier object for the wallet, and encapsulates a database
- *   transaction as well as methods to act on the database (no analog in
- *   dbwrapper.h)
+ * - WalletBatch is an abstract modifier object for the wallet database, and encapsulates a database
+ *   batch update as well as methods to act on the database. It should be agnostic to the database implementation.
  *
- * The latter two are named confusingly, in contrast to what the names BerkeleyBatch
- * and WalletBatch suggest they are transient transaction objects and don't
- * represent the database itself.
+ * The following classes are implementation specific:
+ * - BerkeleyEnvironment is an environment in which the database exists.
+ * - BerkeleyDatabase represents a wallet database.
+ * - BerkeleyBatch is a low-level database batch update.
  */
 
 static const bool DEFAULT_FLUSHWALLET = true;
@@ -137,7 +134,7 @@ public:
 };
 
 /** Access to the wallet database.
- * This should really be named CWalletDBBatch, as it represents a single transaction at the
+ * This represents a single transaction at the
  * database. It will be committed when the object goes out of scope.
  * Optionally (on by default) it will flush to disk as well.
  */
