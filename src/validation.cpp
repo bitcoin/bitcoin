@@ -2717,6 +2717,7 @@ bool CChainState::InvalidateBlock(CValidationState& state, const CChainParams& c
 
     InvalidChainFound(pindex);
     uiInterface.NotifyBlockTip(IsInitialBlockDownload(), pindex->pprev);
+    GetMainSignals().UpdatedBlockTip(chainActive.Tip(), chainActive.Tip(), IsInitialBlockDownload());
     return true;
 }
 bool InvalidateBlock(CValidationState& state, const CChainParams& chainparams, CBlockIndex *pindex) {

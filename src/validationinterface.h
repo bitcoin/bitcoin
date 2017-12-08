@@ -55,6 +55,9 @@ protected:
      * forward-progress, only to trigger again soon thereafter.
      * (TODO: remove this edge case)
      *
+     * In case of manual block invalidation, this event may trigger with
+     * pindexNew == pindexFork both before the previous best tip.
+     *
      * Called on a background thread.
      */
     virtual void UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) {}
