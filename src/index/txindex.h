@@ -6,6 +6,7 @@
 #define BITCOIN_INDEX_TXINDEX_H
 
 #include <primitives/block.h>
+#include <threadinterrupt.h>
 #include <txdb.h>
 #include <uint256.h>
 #include <validationinterface.h>
@@ -31,14 +32,16 @@ private:
     std::atomic<const CBlockIndex*> m_best_block_index;
 
     std::thread m_thread_sync;
+    CThreadInterrupt m_interrupt;
 
     /// Initialize internal state from the database and block index.
     bool Init();
 
     /// Sync the tx index with the block index starting from the current best
-    /// block. Intended to be run in its own thread, m_thread_sync. Once the
-    /// txindex gets in sync, the m_synced flag is set and the BlockConnected
-    /// ValidationInterface callback takes over and the sync thread exits.
+    /// block. Intended to be run in its own thread, m_thread_sync, and can be
+    /// interrupted with m_interrupt. Once the txindex gets in sync, the
+    /// m_synced flag is set and the BlockConnected ValidationInterface callback
+    /// takes over and the sync thread exits.
     void ThreadSync();
 
     /// Write update index entries for a newly connected block.
@@ -57,8 +60,13 @@ public:
     /// Constructs the TxIndex, which becomes available to be queried.
     explicit TxIndex(std::unique_ptr<TxIndexDB> db);
 
+    /// Destructor interrupts sync thread if running and blocks until it exits.
+    ~TxIndex();
+
     /// Look up the on-disk location of a transaction by hash.
     bool FindTx(const uint256& txid, CDiskTxPos& pos) const;
+
+    void Interrupt();
 
     /// Start initializes the sync state and registers the instance as a
     /// ValidationInterface so that it stays in sync with blockchain updates.
