@@ -29,6 +29,12 @@ TxIndex::TxIndex(std::unique_ptr<TxIndexDB> db) :
     m_db(std::move(db)), m_synced(false), m_best_block_index(nullptr)
 {}
 
+TxIndex::~TxIndex()
+{
+    Interrupt();
+    Stop();
+}
+
 bool TxIndex::Init()
 {
     LOCK(cs_main);
@@ -75,6 +81,10 @@ void TxIndex::ThreadSync()
 
         int64_t last_log_time = 0;
         while (true) {
+            if (m_interrupt) {
+                return;
+            }
+
             {
                 LOCK(cs_main);
                 const CBlockIndex* pindex_next = NextSyncBlock(pindex);
@@ -207,6 +217,11 @@ void TxIndex::SetBestChain(const CBlockLocator& locator)
 bool TxIndex::FindTx(const uint256& txid, CDiskTxPos& pos) const
 {
     return m_db->ReadTxPos(txid, pos);
+}
+
+void TxIndex::Interrupt()
+{
+    m_interrupt();
 }
 
 void TxIndex::Start()
