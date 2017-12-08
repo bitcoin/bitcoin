@@ -30,11 +30,22 @@ private:
     /// The last block in the chain that the TxIndex is in sync with.
     std::atomic<const CBlockIndex*> m_best_block_index;
 
+    std::thread m_thread_sync;
+
     /// Initialize internal state from the database and block index.
     bool Init();
 
+    /// Sync the tx index with the block index starting from the current best
+    /// block. Intended to be run in its own thread, m_thread_sync. Once the
+    /// txindex gets in sync, the m_synced flag is set and the BlockConnected
+    /// ValidationInterface callback takes over and the sync thread exits.
+    void ThreadSync();
+
     /// Write update index entries for a newly connected block.
     bool WriteBlock(const CBlock& block, const CBlockIndex* pindex);
+
+    /// Write the current chain block locator to the DB.
+    bool WriteBestBlock(const CBlockIndex* block_index);
 
 protected:
     void BlockConnected(const std::shared_ptr<const CBlock>& block, const CBlockIndex* pindex,

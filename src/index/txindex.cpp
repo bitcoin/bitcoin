@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <chainparams.h>
 #include <index/txindex.h>
 #include <init.h>
 #include <tinyformat.h>
@@ -9,6 +10,9 @@
 #include <util.h>
 #include <validation.h>
 #include <warnings.h>
+
+constexpr int64_t SYNC_LOG_INTERVAL = 30; // seconds
+constexpr int64_t SYNC_LOCATOR_WRITE_INTERVAL = 30; // seconds
 
 template<typename... Args>
 static void FatalError(const char* fmt, const Args&... args)
@@ -47,6 +51,75 @@ bool TxIndex::Init()
     return true;
 }
 
+static const CBlockIndex* NextSyncBlock(const CBlockIndex* pindex_prev)
+{
+    AssertLockHeld(cs_main);
+
+    if (!pindex_prev) {
+        return chainActive.Genesis();
+    }
+
+    const CBlockIndex* pindex = chainActive.Next(pindex_prev);
+    if (pindex) {
+        return pindex;
+    }
+
+    return chainActive.Next(chainActive.FindFork(pindex_prev));
+}
+
+void TxIndex::ThreadSync()
+{
+    const CBlockIndex* pindex = m_best_block_index.load();
+    if (!m_synced) {
+        auto& consensus_params = Params().GetConsensus();
+
+        int64_t last_log_time = 0;
+        int64_t last_locator_write_time = 0;
+        while (true) {
+            {
+                LOCK(cs_main);
+                const CBlockIndex* pindex_next = NextSyncBlock(pindex);
+                if (!pindex_next) {
+                    WriteBestBlock(pindex);
+                    m_best_block_index = pindex;
+                    m_synced = true;
+                    break;
+                }
+                pindex = pindex_next;
+            }
+
+            int64_t current_time = GetTime();
+            if (last_log_time + SYNC_LOG_INTERVAL < current_time) {
+                LogPrintf("Syncing txindex with block chain from height %d\n", pindex->nHeight);
+                last_log_time = current_time;
+            }
+
+            if (last_locator_write_time + SYNC_LOCATOR_WRITE_INTERVAL < current_time) {
+                WriteBestBlock(pindex);
+                last_locator_write_time = current_time;
+            }
+
+            CBlock block;
+            if (!ReadBlockFromDisk(block, pindex, consensus_params)) {
+                FatalError("%s: Failed to read block %s from disk",
+                           __func__, pindex->GetBlockHash().ToString());
+                return;
+            }
+            if (!WriteBlock(block, pindex)) {
+                FatalError("%s: Failed to write block %s to tx index database",
+                           __func__, pindex->GetBlockHash().ToString());
+                return;
+            }
+        }
+    }
+
+    if (pindex) {
+        LogPrintf("txindex is enabled at height %d\n", pindex->nHeight);
+    } else {
+        LogPrintf("txindex is enabled\n");
+    }
+}
+
 bool TxIndex::WriteBlock(const CBlock& block, const CBlockIndex* pindex)
 {
     CDiskTxPos pos(pindex->GetBlockPos(), GetSizeOfCompactSize(block.vtx.size()));
@@ -57,6 +130,15 @@ bool TxIndex::WriteBlock(const CBlock& block, const CBlockIndex* pindex)
         pos.nTxOffset += ::GetSerializeSize(*tx, SER_DISK, CLIENT_VERSION);
     }
     return m_db->WriteTxs(vPos);
+}
+
+bool TxIndex::WriteBestBlock(const CBlockIndex* block_index)
+{
+    LOCK(cs_main);
+    if (!m_db->WriteBestBlock(chainActive.GetLocator(block_index))) {
+        return error("%s: Failed to write locator to disk", __func__);
+    }
+    return true;
 }
 
 void TxIndex::BlockConnected(const std::shared_ptr<const CBlock>& block, const CBlockIndex* pindex,
@@ -149,9 +231,16 @@ void TxIndex::Start()
         FatalError("%s: txindex failed to initialize", __func__);
         return;
     }
+
+    m_thread_sync = std::thread(&TraceThread<std::function<void()>>, "txindex",
+                                std::bind(&TxIndex::ThreadSync, this));
 }
 
 void TxIndex::Stop()
 {
     UnregisterValidationInterface(this);
+
+    if (m_thread_sync.joinable()) {
+        m_thread_sync.join();
+    }
 }
