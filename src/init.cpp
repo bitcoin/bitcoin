@@ -522,17 +522,23 @@ std::string LicenseInfo()
            "\n";
 }
 
-static void BlockNotifyCallback(bool initialSync, const CBlockIndex *pBlockIndex)
+namespace {
+class BlockNotifyCaller : public CValidationInterface
 {
-    if (initialSync || !pBlockIndex)
-        return;
+public:
+    void UpdatedBlockTip(const CBlockIndex *pBlockIndex, const CBlockIndex *, bool initialSync) override
+    {
+        if (initialSync || !pBlockIndex)
+            return;
 
-    std::string strCmd = gArgs.GetArg("-blocknotify", "");
-    if (!strCmd.empty()) {
-        boost::replace_all(strCmd, "%s", pBlockIndex->GetBlockHash().GetHex());
-        boost::thread t(runCommand, strCmd); // thread runs free
+        std::string strCmd = gArgs.GetArg("-blocknotify", "");
+        if (!strCmd.empty()) {
+            boost::replace_all(strCmd, "%s", pBlockIndex->GetBlockHash().GetHex());
+            boost::thread t(runCommand, strCmd); // thread runs free
+        }
     }
-}
+} g_blocknotify_caller;
+} // anonymous namespace
 
 static bool fHaveGenesis = false;
 static CWaitableCriticalSection cs_GenesisWait;
@@ -1614,7 +1620,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     }
 
     if (gArgs.IsArgSet("-blocknotify"))
-        uiInterface.NotifyBlockTip.connect(BlockNotifyCallback);
+        RegisterValidationInterface(&g_blocknotify_caller);
 
     std::vector<fs::path> vImportFiles;
     for (const std::string& strFile : gArgs.GetArgs("-loadblock")) {
