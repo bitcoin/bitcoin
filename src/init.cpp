@@ -538,22 +538,37 @@ public:
         }
     }
 } g_blocknotify_caller;
-} // anonymous namespace
 
-static bool fHaveGenesis = false;
-static CWaitableCriticalSection cs_GenesisWait;
-static CConditionVariable condvar_GenesisWait;
-
-static void BlockNotifyGenesisWait(bool, const CBlockIndex *pBlockIndex)
+class GenesisWaiter : public CValidationInterface
 {
-    if (pBlockIndex != nullptr) {
-        {
-            WaitableLock lock_GenesisWait(cs_GenesisWait);
-            fHaveGenesis = true;
-        }
-        condvar_GenesisWait.notify_all();
+    bool m_have_genesis;
+    CWaitableCriticalSection m_cs;
+    CConditionVariable m_cv;
+public:
+    GenesisWaiter()
+    {
+        LOCK(cs_main);
+        m_have_genesis = chainActive.Tip() != nullptr;
     }
-}
+
+    void AwaitGenesisBlock()
+    {
+        WaitableLock lock(m_cs);
+        m_cv.wait(lock, [this] { return m_have_genesis; });
+    }
+
+    void UpdatedBlockTip(const CBlockIndex *pBlockIndex, const CBlockIndex *, bool) override
+    {
+        if (pBlockIndex != nullptr) {
+            {
+                WaitableLock lock_GenesisWait(m_cs);
+                m_have_genesis = true;
+            }
+            m_cv.notify_all();
+        }
+    }
+};
+} // anonymous namespace
 
 struct CImportingNow
 {
@@ -1613,11 +1628,8 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     // Either install a handler to notify us when genesis activates, or set fHaveGenesis directly.
     // No locking, as this happens before any background thread is started.
-    if (chainActive.Tip() == nullptr) {
-        uiInterface.NotifyBlockTip.connect(BlockNotifyGenesisWait);
-    } else {
-        fHaveGenesis = true;
-    }
+    GenesisWaiter genesis_waiter;
+    RegisterValidationInterface(&genesis_waiter);
 
     if (gArgs.IsArgSet("-blocknotify"))
         RegisterValidationInterface(&g_blocknotify_caller);
@@ -1630,13 +1642,8 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     threadGroup.create_thread(boost::bind(&ThreadImport, vImportFiles));
 
     // Wait for genesis block to be processed
-    {
-        WaitableLock lock(cs_GenesisWait);
-        while (!fHaveGenesis) {
-            condvar_GenesisWait.wait(lock);
-        }
-        uiInterface.NotifyBlockTip.disconnect(BlockNotifyGenesisWait);
-    }
+    genesis_waiter.AwaitGenesisBlock();
+    UnregisterValidationInterface(&genesis_waiter);
 
     // ********************************************************* Step 11: start node
 
