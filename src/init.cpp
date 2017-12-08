@@ -296,12 +296,6 @@ static void registerSignalHandler(int signal, void(*handler)(int))
 }
 #endif
 
-void OnRPCStopped()
-{
-    cvBlockChange.notify_all();
-    LogPrint(BCLog::RPC, "RPC stopped.\n");
-}
-
 std::string HelpMessage(HelpMessageMode mode)
 {
     const auto defaultBaseParams = CreateBaseChainParams(CBaseChainParams::MAIN);
@@ -721,7 +715,6 @@ bool InitSanityCheck(void)
 
 bool AppInitServers(boost::thread_group& threadGroup)
 {
-    RPCServer::OnStopped(&OnRPCStopped);
     if (!InitHTTPServer())
         return false;
     if (!StartRPC())

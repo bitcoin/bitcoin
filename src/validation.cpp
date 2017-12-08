@@ -201,8 +201,6 @@ CCriticalSection cs_main;
 BlockMap& mapBlockIndex = g_chainstate.mapBlockIndex;
 CChain& chainActive = g_chainstate.chainActive;
 CBlockIndex *pindexBestHeader = nullptr;
-CWaitableCriticalSection csBestBlock;
-CConditionVariable cvBlockChange;
 int nScriptCheckThreads = 0;
 std::atomic_bool fImporting(false);
 std::atomic_bool fReindex(false);
@@ -2137,8 +2135,6 @@ static void DoWarning(const std::string& strWarning)
 void static UpdateTip(const CBlockIndex *pindexNew, const CChainParams& chainParams) {
     // New best block
     mempool.AddTransactionsUpdated(1);
-
-    cvBlockChange.notify_all();
 
     std::vector<std::string> warningMessages;
     if (!IsInitialBlockDownload())

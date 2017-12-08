@@ -26,6 +26,7 @@
 #include <validationinterface.h>
 #include <warnings.h>
 
+#include <future>
 #include <memory>
 #include <stdint.h>
 
@@ -370,8 +371,6 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
             + HelpExampleRpc("getblocktemplate", "")
          );
 
-    LOCK(cs_main);
-
     std::string strMode = "template";
     UniValue lpval = NullUniValue;
     std::set<std::string> setClientRules;
@@ -400,6 +399,7 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
             if (!DecodeHexBlk(block, dataval.get_str()))
                 throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Block decode failed");
 
+            LOCK(cs_main);
             uint256 hash = block.GetHash();
             BlockMap::iterator mi = mapBlockIndex.find(hash);
             if (mi != mapBlockIndex.end()) {
@@ -447,6 +447,19 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
     if (IsInitialBlockDownload())
         throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Bitcoin is downloading blocks...");
 
+    if (!lpval.isNull()) {
+        // Make sure the validation interface is drained to avoid spurious wakeups.
+        // Without this, someone may begin a longpoll immediately after having
+        // received a block, only to find it immediately waking up!
+        std::promise<void> promise;
+        CallFunctionInValidationInterfaceQueue([&promise] {
+            promise.set_value();
+        });
+        promise.get_future().wait();
+    }
+
+    LOCK(cs_main);
+
     static unsigned int nTransactionsUpdatedLast;
 
     if (!lpval.isNull())
@@ -471,15 +484,17 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
             nTransactionsUpdatedLastLP = nTransactionsUpdatedLast;
         }
 
+        RPCServer::BlockChangeBlocker block_waiter;
+
         // Release the wallet and main lock while waiting
         LEAVE_CRITICAL_SECTION(cs_main);
         {
             checktxtime = std::chrono::steady_clock::now() + std::chrono::minutes(1);
 
-            WaitableLock lock(csBestBlock);
-            while (chainActive.Tip()->GetBlockHash() == hashWatchedChain && IsRPCRunning())
+            WaitableLock lock(block_waiter.m_cs);
+            while (block_waiter.m_last_block_hash == hashWatchedChain && IsRPCRunning())
             {
-                if (cvBlockChange.wait_until(lock, checktxtime) == std::cv_status::timeout)
+                if (block_waiter.m_cv.wait_until(lock, checktxtime) == std::cv_status::timeout)
                 {
                     // Timeout: Check transactions for update
                     if (mempool.GetTransactionsUpdated() != nTransactionsUpdatedLastLP)
