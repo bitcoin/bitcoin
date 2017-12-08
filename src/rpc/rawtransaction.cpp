@@ -9,6 +9,7 @@
 #include <coins.h>
 #include <consensus/validation.h>
 #include <core_io.h>
+#include <index/txindex.h>
 #include <init.h>
 #include <keystore.h>
 #include <validation.h>
@@ -178,10 +179,10 @@ UniValue getrawtransaction(const JSONRPCRequest& request)
                 throw JSONRPCError(RPC_MISC_ERROR, "Block not available");
             }
             errmsg = "No such transaction found in the provided block";
+        } else if (!g_txindex) {
+            errmsg = "No such mempool transaction. Use -txindex to enable blockchain transaction queries";
         } else {
-            errmsg = fTxIndex
-              ? "No such mempool or blockchain transaction"
-              : "No such mempool transaction. Use -txindex to enable blockchain transaction queries";
+            errmsg = "No such mempool or blockchain transaction";
         }
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, errmsg + ". Use gettransaction for wallet transactions.");
     }
