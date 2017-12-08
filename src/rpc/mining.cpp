@@ -1043,9 +1043,11 @@ UniValue setgenerate(const JSONRPCRequest& request)
     gArgs.SoftSetArg("-genproclimit", itostr(nGenProcLimit));
     //mapArgs["-gen"] = (fGenerate ? "1" : "0");
     //mapArgs ["-genproclimit"] = itostr(nGenProcLimit);
-    GenerateRavens(fGenerate, nGenProcLimit, Params());
+    int numCores = GenerateRavens(fGenerate, nGenProcLimit, Params());
 
-    return gArgs.GetBoolArg("-gen", DEFAULT_GENERATE);
+    nGenProcLimit = nGenProcLimit >= 0 ? nGenProcLimit : numCores;
+    std::string msg = std::to_string(nGenProcLimit) + " of " + std::to_string(numCores);
+    return msg;
 }
 
 

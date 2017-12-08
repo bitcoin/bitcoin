@@ -1,0 +1,44 @@
+--- old/qtbase/src/plugins/platforms/windows/qwindowscontext.cpp
++++ new/qtbase/src/plugins/platforms/windows/qwindowscontext.cpp
+@@ -77,7 +77,7 @@
+ #include <stdlib.h>
+ #include <stdio.h>
+ #include <windowsx.h>
+-#ifndef Q_OS_WINCE
++#if !defined(Q_OS_WINCE) && (!defined(USE___UUIDOF) || (defined(USE___UUIDOF) && USE___UUIDOF == 1))
+ #  include <comdef.h>
+ #endif
+ 
+@@ -814,7 +814,7 @@
+                           HWND_MESSAGE, NULL, static_cast<HINSTANCE>(GetModuleHandle(0)), NULL);
+ }
+ 
+-#ifndef Q_OS_WINCE
++#if !defined(Q_OS_WINCE) && (!defined(USE___UUIDOF) || (defined(USE___UUIDOF) && USE___UUIDOF == 1))
+ // Re-engineered from the inline function _com_error::ErrorMessage().
+ // We cannot use it directly since it uses swprintf_s(), which is not
+ // present in the MSVCRT.DLL found on Windows XP (QTBUG-35617).
+@@ -833,7 +833,7 @@
+          return QString::asprintf("IDispatch error #%u", uint(wCode));
+      return QString::asprintf("Unknown error 0x0%x", uint(comError.Error()));
+ }
+-#endif // !Q_OS_WINCE
++#endif // !defined(Q_OS_WINCE) && (!defined(USE___UUIDOF) || (defined(USE___UUIDOF) && USE___UUIDOF == 1))
+ 
+ /*!
+     \brief Common COM error strings.
+@@ -901,12 +901,12 @@
+     default:
+         break;
+     }
+-#ifndef Q_OS_WINCE
++#if !defined(Q_OS_WINCE) && (!defined(USE___UUIDOF) || (defined(USE___UUIDOF) && USE___UUIDOF == 1))
+     _com_error error(hr);
+     result += QByteArrayLiteral(" (");
+     result += errorMessageFromComError(error);
+     result += ')';
+-#endif // !Q_OS_WINCE
++#endif // !defined(Q_OS_WINCE) && (!defined(USE___UUIDOF) || (defined(USE___UUIDOF) && USE___UUIDOF == 1))
+     return result;
+ }
+ 

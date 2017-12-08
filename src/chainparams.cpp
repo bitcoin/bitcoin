@@ -229,13 +229,14 @@ public:
         genesis = CreateGenesisBlock(1509740671, 13173510, 0x1e00ffff, 4, 5000 * COIN); 
 
         consensus.hashGenesisBlock = genesis.GetHash();        
-        std::cout << consensus.hashGenesisBlock.GetHex() << "\n";
-        std::cout << "Merkle: " << genesis.hashMerkleRoot.GetHex() << "\n";
+        // std::cout << consensus.hashGenesisBlock.GetHex() << "\n";
+        // std::cout << "Merkle: " << genesis.hashMerkleRoot.GetHex() << "\n";
 
         assert(consensus.hashGenesisBlock == uint256S("0x00000013dd11f2bd679ee383ecd15b7b093400f38f547b2299007d5166ac981d"));
         assert(genesis.hashMerkleRoot == uint256S("0xa4c84e05d4f74f0df5e69a8c2e85524f9776555980a60312ab0fd524cd9b1474"));
 
-        vSeeds.emplace_back("seed.raven.mediciventures.com", true); 
+        vSeeds.emplace_back("seed-raven.ravencoin.org", false); 
+        vSeeds.emplace_back("seed-raven.bitactivate.com", false); 
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,60);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,122);
@@ -314,10 +315,10 @@ public:
         // By default assume that the signatures in ancestors of this block are valid.
         consensus.defaultAssumeValid = uint256S("0x0000000002e9e7b00e1f6dc5123a04aad68dd0f0968d8c7aa45f6640795c37b1"); //1135275
 
-        pchMessageStart[0] = 0x0a;
-        pchMessageStart[1] = 0x10;
-        pchMessageStart[2] = 0x08;
-        pchMessageStart[3] = 0x06;
+        pchMessageStart[0] = 0x45;
+        pchMessageStart[1] = 0x50;
+        pchMessageStart[2] = 0x4F;
+        pchMessageStart[3] = 0x45;
         nDefaultPort = 18767;
         nPruneAfterHeight = 1000;
 
@@ -335,8 +336,9 @@ public:
 
         vFixedSeeds.clear();
         vSeeds.clear();
-        // nodes with support for servicebits filtering should be at the top
-        vSeeds.emplace_back("testnet-seed.raven.mediciventures.com", true);
+
+        vSeeds.emplace_back("seed-testnet-raven.ravencoin.org", false); 
+        vSeeds.emplace_back("seed-testnet-raven.bitactivate.com", false); 
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,111);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,196);
@@ -399,10 +401,10 @@ public:
         // By default assume that the signatures in ancestors of this block are valid.
         consensus.defaultAssumeValid = uint256S("0x00");
 
-        pchMessageStart[0] = 0xf9;
-        pchMessageStart[1] = 0xbe;
-        pchMessageStart[2] = 0xb4;
-        pchMessageStart[3] = 0xd9;
+        pchMessageStart[0] = 0x43;
+        pchMessageStart[1] = 0x52;
+        pchMessageStart[2] = 0x4F;
+        pchMessageStart[3] = 0x57;
         nDefaultPort = 18444;
         nPruneAfterHeight = 1000;
 
@@ -452,8 +454,6 @@ const CChainParams &Params() {
 
 std::unique_ptr<CChainParams> CreateChainParams(const std::string& chain)
 {
-    std::cout << "CreateChainParams: " << chain << std::endl;
-
     if (chain == CBaseChainParams::MAIN)
         return std::unique_ptr<CChainParams>(new CMainParams());
     else if (chain == CBaseChainParams::TESTNET)

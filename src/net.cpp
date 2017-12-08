@@ -39,6 +39,10 @@
 
 #include <math.h>
 
+#include <string>       // std::string
+#include <iostream>     // std::cout
+#include <sstream>
+
 // Dump addresses to peers.dat and banlist.dat every 15 minutes (900s)
 #define DUMP_ADDRESSES_INTERVAL 900
 
@@ -1619,9 +1623,11 @@ void CConnman::ThreadDNSAddressSeed()
         if (interruptNet) {
             return;
         }
+
         if (HaveNameProxy()) {
             AddOneShot(seed.host);
         } else {
+
             std::vector<CNetAddr> vIPs;
             std::vector<CAddress> vAdd;
             ServiceFlags requiredServiceBits = GetDesirableServiceFlags(NODE_NONE);
@@ -1630,12 +1636,20 @@ void CConnman::ThreadDNSAddressSeed()
             if (!resolveSource.SetInternal(host)) {
                 continue;
             }
+
+            //std::cout << "Host: " << host.c_str() << std::endl;
+            LogPrintf("IP: %s\n", host.c_str());
+
             if (LookupHost(host.c_str(), vIPs, 0, true))
             {
+
                 for (const CNetAddr& ip : vIPs)
                 {
                     int nOneDay = 24*3600;
                     CAddress addr = CAddress(CService(ip, Params().GetDefaultPort()), requiredServiceBits);
+                    LogPrintf("IP: %s\n", addr.ToString());
+                    //std::cout << "IP: " << addr.ToString() << std::endl;
+                    
                     addr.nTime = GetTime() - 3*nOneDay - GetRand(4*nOneDay); // use a random age between 3 and 7 days old
                     vAdd.push_back(addr);
                     found++;
@@ -1722,6 +1736,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
 
     // Minimum time before next feeler connection (in microseconds).
     int64_t nNextFeeler = PoissonNextSend(nStart*1000*1000, FEELER_INTERVAL);
+
     while (!interruptNet)
     {
         ProcessOneShot();
@@ -1736,6 +1751,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
         // Add seed nodes if DNS seeds are all down (an infrastructure attack?).
         if (addrman.size() == 0 && (GetTime() - nStart > 60)) {
             static bool done = false;
+
             if (!done) {
                 LogPrintf("Adding fixed seed nodes as DNS doesn't seem to be available.\n");
                 CNetAddr local;
@@ -1810,11 +1826,14 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
                 break;
 
             if (IsLimited(addr))
+            {
                 continue;
+            }
 
             // only consider very recently tried nodes after 30 failed attempts
-            if (nANow - addr.nLastTry < 600 && nTries < 30)
+            if (nANow - addr.nLastTry < 600 && nTries < 30) {
                 continue;
+            }
 
             // for non-feelers, require all the services we'll want,
             // for feelers, only require they be a full node (only because most
@@ -1826,12 +1845,14 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
             }
 
             // do not allow non-default ports, unless after 50 invalid addresses selected already
-            if (addr.GetPort() != Params().GetDefaultPort() && nTries < 50)
+            if (addr.GetPort() != Params().GetDefaultPort() && nTries < 50) {
                 continue;
+            }
 
             addrConnect = addr;
             break;
         }
+
 
         if (addrConnect.IsValid()) {
 
@@ -2255,6 +2276,8 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
     nMaxOutboundTotalBytesSentInCycle = 0;
     nMaxOutboundCycleStartTime = 0;
 
+    LogPrintf("Connection Manager: Start");
+
     if (fListen && !InitBinds(connOptions.vBinds, connOptions.vWhiteBinds)) {
         if (clientInterface) {
             clientInterface->ThreadSafeMessageBox(
@@ -2264,7 +2287,11 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
         return false;
     }
 
+    LogPrintf("Connection Manager: Adding Seed Nodes\n");
+
     for (const auto& strDest : connOptions.vSeedNodes) {
+        LogPrintf("Connection Manager: Adding Seed Node: %s\n", strDest);
+
         AddOneShot(strDest);
     }
 

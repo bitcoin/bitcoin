@@ -1058,24 +1058,24 @@ bool IsInitialBlockDownload()
         return false;
     if (fImporting || fReindex)
     {
-//        std::cout << "IsInitialBlockDownload (importing or reindex)" << std::endl;
+        LogPrintf("IsInitialBlockDownload (importing or reindex)");
         return true;
     }
     if (chainActive.Tip() == nullptr)
     {
-//        std::cout << "IsInitialBlockDownload (tip is null)" << std::endl;
+        LogPrintf("IsInitialBlockDownload (tip is null)");
         return true;
     }
     if (chainActive.Tip()->nChainWork < nMinimumChainWork)
     {
-//        std::cout << "IsInitialBlockDownload (min chain work)" << std::endl;
-//        std::cout << "Work found: " << chainActive.Tip()->nChainWork.GetHex() << std::endl;
-//        std::cout << "Work needed: " << nMinimumChainWork.GetHex() << std::endl;
+    		LogPrintf("IsInitialBlockDownload (min chain work)");
+    		LogPrintf("Work found: %s", chainActive.Tip()->nChainWork.GetHex());
+    		LogPrintf("Work needed: %s", nMinimumChainWork.GetHex());
         return true;
     }
     if (chainActive.Tip()->GetBlockTime() < (GetTime() - nMaxTipAge))
     {
-//        std::cout << "IsInitialBlockDownload (tip age)" << std::endl;
+        LogPrintf("IsInitialBlockDownload (tip age)");
         return true;
     }
     LogPrintf("Leaving InitialBlockDownload (latching to false)\n");

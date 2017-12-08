@@ -670,7 +670,7 @@ void static RavenMiner(const CChainParams& chainparams)
     }
 }
 
-void GenerateRavens(bool fGenerate, int nThreads, const CChainParams& chainparams)
+int GenerateRavens(bool fGenerate, int nThreads, const CChainParams& chainparams)
 {
     // std::cout << "In GenerateRavens" << std::endl;
     // std::cout << "fGenerate: " << fGenerate << std::endl;
@@ -678,8 +678,9 @@ void GenerateRavens(bool fGenerate, int nThreads, const CChainParams& chainparam
 
     static boost::thread_group* minerThreads = NULL;
 
+    int numCores = GetNumCores();
     if (nThreads < 0)
-        nThreads = GetNumCores();
+        nThreads = numCores;
 
     if (minerThreads != NULL)
     {
@@ -689,7 +690,7 @@ void GenerateRavens(bool fGenerate, int nThreads, const CChainParams& chainparam
     }
 
     if (nThreads == 0 || !fGenerate)
-        return;
+        return numCores;
 
     minerThreads = new boost::thread_group();
     
@@ -702,4 +703,6 @@ void GenerateRavens(bool fGenerate, int nThreads, const CChainParams& chainparam
         //std::cout << "Starting mining thread: " << i << std::endl;        
         minerThreads->create_thread(boost::bind(&RavenMiner, boost::cref(chainparams)));
     }
+
+    return(numCores);
 }

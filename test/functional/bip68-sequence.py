@@ -28,21 +28,6 @@ class BIP68Test(RavenTestFramework):
         # Generate some coins
         self.nodes[0].generate(110)
 
-        self.log.info("Running test disable flag")
-        self.test_disable_flag()
-
-        self.log.info("Running test sequence-lock-confirmed-inputs")
-        self.test_sequence_lock_confirmed_inputs()
-
-        self.log.info("Running test sequence-lock-unconfirmed-inputs")
-        self.test_sequence_lock_unconfirmed_inputs()
-
-        self.log.info("Running test BIP68 not consensus before versionbits activation")
-        self.test_bip68_not_consensus()
-
-        self.log.info("Activating BIP68 (and 112/113)")
-        self.activateCSV()
-
         self.log.info("Verifying nVersion=2 transactions are standard.")
         self.log.info("Note that nVersion=2 transactions are always standard (independent of BIP68 activation status).")
         self.test_version2_relay()
