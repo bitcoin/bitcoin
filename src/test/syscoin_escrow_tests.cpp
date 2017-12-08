@@ -359,7 +359,7 @@ BOOST_AUTO_TEST_CASE(generate_escrow_linked_release2)
 	string commission = "3";
 	string description = "newdescription";
 	string offerlinkguid = OfferLink("node3", "reselleralias33", offerguid, commission, description);
-	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress buyeralias33 40000"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress buyeralias33 5000"), runtime_error);
 	GenerateBlocks(10);
 	string guid = EscrowNewBuyItNow("node1", "node2", "buyeralias33", offerlinkguid, qty, "arbiteralias33");
 	EscrowRelease("node1", "buyer", guid);
