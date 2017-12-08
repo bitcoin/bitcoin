@@ -2370,6 +2370,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 	CAmount nTotalRewardWithMasternodes;
 	CAmount blockReward = GetBlockSubsidy(pindex->nHeight, chainparams.GetConsensus(), nTotalRewardWithMasternodes);
 	CAmount masternodeReward = 0;
+	unsigned int nStartHeight = 0;
 	BOOST_FOREACH(CTxOut txout, block.vtx[0].vout) {
 		if (txout.scriptPubKey.IsUnspendable()) {
 			vector<unsigned char> vchData;
@@ -2381,7 +2382,6 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 				continue;
 			if (!txout.scriptPubKey.GetOp(pc, opcode, vchData) || vchData.size() <= 0)
 				continue;
-			unsigned int nStartHeight = 0;
 			try {
 				nStartHeight = boost::lexical_cast<unsigned int>(stringFromVch(vchData));
 			}
@@ -2397,15 +2397,13 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 		}
 	}
 	// if opreturn was put in with height, then validate it
-	unsigned int nStoredStartHeight = 0;
 	if (masternodeSync.IsSynced() && nStartHeight != 0) {
 		BOOST_FOREACH(CTxOut txout, block.vtx[0].vout) {
 			if (!txout.scriptPubKey.IsUnspendable()) {
 				masternode_info_t mnInfo;
 				mnodeman.GetMasternodeInfo(txout.scriptPubKey, mnInfo);
 				if (mnInfo.pubKeyCollateralAddress.IsValid()) {
-					nStoredStartHeight = mnodeman.GetStartHeight(mnInfo);
-					if (nStoredStartHeight != 0 && nStoredStartHeight != nStartHeight)
+					if (mnodeman.GetStartHeight(mnInfo) != nStartHeight)
 						return state.DoS(0, error("ConnectBlock(SYS): Masternode height and provided coinbase height mismatch"),
 							REJECT_INVALID, "bad-cb-payee");
 				}
