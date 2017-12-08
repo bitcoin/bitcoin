@@ -69,6 +69,10 @@ class P2PConnection(asyncore.dispatcher):
     sub-classed and the on_message() callback overridden."""
 
     def __init__(self):
+        # All P2PConnections must be created before starting the NetworkThread.
+        # assert that the network thread is not running.
+        assert not network_thread_running()
+
         super().__init__(map=mininode_socket_map)
 
     def peer_connect(self, dstaddr, dstport, net="regtest"):
@@ -418,6 +422,9 @@ class NetworkThread(threading.Thread):
 
 def network_thread_start():
     """Start the network thread."""
+    # Only one network thread may run at a time
+    assert not network_thread_running()
+
     NetworkThread().start()
 
 def network_thread_running():
