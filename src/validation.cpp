@@ -2370,45 +2370,44 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 	CAmount nTotalRewardWithMasternodes;
 	CAmount blockReward = GetBlockSubsidy(pindex->nHeight, chainparams.GetConsensus(), nTotalRewardWithMasternodes);
 	CAmount masternodeReward = 0;
-	if (!CSuperblock::IsValidBlockHeight(pindex->nHeight)) {
-		unsigned int nStoredStartHeight = 0;
-		if (masternodeSync.IsSynced()) {
-			BOOST_FOREACH(CTxOut txout, block.vtx[0].vout) {
-				if (!txout.scriptPubKey.IsUnspendable()) {
-					masternode_info_t mnInfo;
-					mnodeman.GetMasternodeInfo(txout.scriptPubKey, mnInfo);
-					if (mnInfo.pubKeyCollateralAddress.IsValid()) {
-						nStoredStartHeight = mnodeman.GetStartHeight(mnInfo);
-					}
-				}
+	BOOST_FOREACH(CTxOut txout, block.vtx[0].vout) {
+		if (txout.scriptPubKey.IsUnspendable()) {
+			vector<unsigned char> vchData;
+			CScript::const_iterator pc = txout.scriptPubKey.begin();
+			opcodetype opcode;
+			if (!txout.scriptPubKey.GetOp(pc, opcode))
+				continue;
+			if (opcode != OP_RETURN)
+				continue;
+			if (!txout.scriptPubKey.GetOp(pc, opcode, vchData) || vchData.size() <= 0)
+				continue;
+			unsigned int nStartHeight = 0;
+			try {
+				nStartHeight = boost::lexical_cast<unsigned int>(stringFromVch(vchData));
+			}
+			catch (boost::bad_lexical_cast &)
+			{
+				nStartHeight = 0;
+			}
+			if (nStartHeight != 0) {
+				masternodeReward = GetBlockSubsidy(pindex->nHeight, chainparams.GetConsensus(), nTotalRewardWithMasternodes, false, true, nStartHeight);
+				blockReward = nTotalRewardWithMasternodes;
+				break;
 			}
 		}
+	}
+	// if opreturn was put in with height, then validate it
+	unsigned int nStoredStartHeight = 0;
+	if (masternodeSync.IsSynced() && nStartHeight != 0) {
 		BOOST_FOREACH(CTxOut txout, block.vtx[0].vout) {
-			if (txout.scriptPubKey.IsUnspendable()) {
-				vector<unsigned char> vchData;
-				CScript::const_iterator pc = txout.scriptPubKey.begin();
-				opcodetype opcode;
-				if (!txout.scriptPubKey.GetOp(pc, opcode))
-					continue;
-				if (opcode != OP_RETURN)
-					continue;
-				if (!txout.scriptPubKey.GetOp(pc, opcode, vchData) || vchData.size() <= 0)
-					continue;
-				unsigned int nStartHeight = 0;
-				try {
-					nStartHeight = boost::lexical_cast<unsigned int>(stringFromVch(vchData));
-				}
-				catch (boost::bad_lexical_cast &)
-				{
-					nStartHeight = 0;
-				}
-				if (nStartHeight != 0) {
+			if (!txout.scriptPubKey.IsUnspendable()) {
+				masternode_info_t mnInfo;
+				mnodeman.GetMasternodeInfo(txout.scriptPubKey, mnInfo);
+				if (mnInfo.pubKeyCollateralAddress.IsValid()) {
+					nStoredStartHeight = mnodeman.GetStartHeight(mnInfo);
 					if (nStoredStartHeight != 0 && nStoredStartHeight != nStartHeight)
 						return state.DoS(0, error("ConnectBlock(SYS): Masternode height and provided coinbase height mismatch"),
 							REJECT_INVALID, "bad-cb-payee");
-					masternodeReward = GetBlockSubsidy(pindex->nHeight, chainparams.GetConsensus(), nTotalRewardWithMasternodes, false, true, nStartHeight);
-					blockReward = nTotalRewardWithMasternodes;
-					break;
 				}
 			}
 		}
