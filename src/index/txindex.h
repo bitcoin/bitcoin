@@ -82,4 +82,7 @@ public:
     void Stop();
 };
 
+/// The global transaction index, used in GetTransaction. May be null.
+extern std::unique_ptr<TxIndex> g_txindex;
+
 #endif // BITCOIN_INDEX_TXINDEX_H

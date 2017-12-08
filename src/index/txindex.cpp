@@ -14,6 +14,8 @@
 constexpr int64_t SYNC_LOG_INTERVAL = 30; // seconds
 constexpr int64_t SYNC_LOCATOR_WRITE_INTERVAL = 30; // seconds
 
+std::unique_ptr<TxIndex> g_txindex;
+
 template<typename... Args>
 static void FatalError(const char* fmt, const Args&... args)
 {
