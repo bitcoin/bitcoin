@@ -83,8 +83,8 @@ std::vector<unsigned char> AddressToBytes(const std::string& address)
     if (!success) {
         PrintToLog("ERROR: failed to decode address %s.\n", address);
     }
-    if (addressBytes.size() == 24) {
-        addressBytes.resize(20); // truncate checksum
+    if (addressBytes.size() == 25) {
+        addressBytes.resize(21); // truncate checksum
     } else {
         PrintToLog("ERROR: unexpected size from DecodeBase58 when decoding address %s.\n", address);
     }
