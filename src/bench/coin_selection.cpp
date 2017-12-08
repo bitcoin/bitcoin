@@ -33,7 +33,7 @@ static void addCoin(const CAmount& nValue, const CWallet& wallet, std::vector<CO
 // (https://github.com/bitcoin/bitcoin/issues/7883#issuecomment-224807484)
 static void CoinSelection(benchmark::State& state)
 {
-    const CWallet wallet("dummy", CWalletDBWrapper::CreateDummy());
+    const CWallet wallet("dummy", WalletDatabase::CreateDummy());
     std::vector<COutput> vCoins;
     LOCK(wallet.cs_wallet);
 

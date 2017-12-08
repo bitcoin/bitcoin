@@ -158,7 +158,7 @@ void TestGUI()
     for (int i = 0; i < 5; ++i) {
         test.CreateAndProcessBlock({}, GetScriptForRawPubKey(test.coinbaseKey.GetPubKey()));
     }
-    CWallet wallet("mock", CWalletDBWrapper::CreateMock());
+    CWallet wallet("mock", WalletDatabase::CreateMock());
     bool firstRun;
     wallet.LoadWallet(firstRun);
     {
