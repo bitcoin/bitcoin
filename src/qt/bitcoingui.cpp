@@ -937,7 +937,6 @@ void BitcoinGUI::message(const QString &title, const QString &message, unsigned 
 
 void BitcoinGUI::changeEvent(QEvent *e)
 {
-    QMainWindow::changeEvent(e);
 #ifndef Q_OS_MAC // Ignored on Mac
     if(e->type() == QEvent::WindowStateChange)
     {
@@ -946,12 +945,25 @@ void BitcoinGUI::changeEvent(QEvent *e)
             QWindowStateChangeEvent *wsevt = static_cast<QWindowStateChangeEvent*>(e);
             if(!(wsevt->oldState() & Qt::WindowMinimized) && isMinimized())
             {
+                if (wsevt->oldState() & Qt::WindowMaximized)
+                {
+                    QTimer::singleShot(0, this, SLOT(showMaximized()));
+                }
+                else if (wsevt->oldState() & Qt::WindowFullScreen)
+                {
+                    QTimer::singleShot(0, this, SLOT(showFullScreen()));
+                }
+                else
+                {
+                    QTimer::singleShot(0, this, SLOT(showNormal()));
+                }
                 QTimer::singleShot(0, this, SLOT(hide()));
                 e->ignore();
             }
         }
     }
 #endif
+    QMainWindow::changeEvent(e);
 }
 
 void BitcoinGUI::closeEvent(QCloseEvent *event)
