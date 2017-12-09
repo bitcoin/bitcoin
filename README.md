@@ -1,23 +1,23 @@
-[![42orig256.png](https://s13.postimg.org/u4nl71wxj/42orig256.png/)](https://tr.im/42coin)
+[![42-256.png](https://s18.postimg.org/ijc11b8kp/42-256.png/)](https://tr.im/42coin)
 
 
-42-coin - a PoS/PoW based cryptocurrency.
+42-coin - a PoW/PoS based cryptocurrency.
 		
 Specifications
 --------------
 
 - Max money: 42 coins
-- Transaction confirmation method: PoS+PoW
-- Transaction type: public & anonymous
+- Transaction confirmation method: PoW+POS
+- Transaction type: public & private
 - Number of transaction confirmation: 7
 - Number of block confirmation: 42
+- PoW algo type: Scrypt
+- PoW reward: 0 coin + tx fees
+- PoW target spacing: 21 minutes
 - PoS reward: 0 coin
 - Min stake age: 42 hours
 - Max stake age: unlimited
 - PoS target spacing: 7 minutes
-- PoW algo type: Scrypt
-- PoW reward: 0 coin + tx fees
-- PoW target spacing: 21 minutes
 - Default Listen Port: 4242 (42420 for testnet)
 - JSON-RPC Port: 2121 (21210 for testnet)
 
