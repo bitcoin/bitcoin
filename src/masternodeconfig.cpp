@@ -87,3 +87,33 @@ bool CMasternodeConfig::read(std::string& strErr) {
     streamConfig.close();
     return true;
 }
+
+bool CMasternodeConfig::aliasExists(const std::string& alias)
+{
+    BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry mne, masternodeConfig.getEntries()) {
+        if (mne.getAlias() == alias)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool CMasternodeConfig::write()
+{
+    boost::filesystem::path pathMasternodeConfigFile = GetMasternodeConfigFile();
+    boost::filesystem::ofstream streamConfig(pathMasternodeConfigFile, std::ofstream::out);
+    std::string port = "9340";
+    if (Params().NetworkID() == CBaseChainParams::TESTNET) {
+        port = "19340";
+    }
+    std::string strHeader = "# Masternode config file\n"
+        "# Format: alias IP:port masternodeprivkey collateral_output_txid collateral_output_index\n"
+        "# Example: sn1 127.0.0.2:" + port + " 93HaYBVUCYjEMeeH1Y4sBGLALQZE1Yc1K64xiqgX37tGBDQL8Xg 2bcd3c84c84f87eaa86e4e56834c92927a07f9e18718810b92e0d0324456a67c 0\n";
+    streamConfig << strHeader << "\n";
+    BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry sne, masternodeConfig.getEntries()) {
+        streamConfig << sne.getAlias() << " " << sne.getIp() << " " << sne.getPrivKey() << " " << sne.getTxHash() << " " << sne.getOutputIndex() << "\n";
+    }
+    streamConfig.close();
+    return true;
+}

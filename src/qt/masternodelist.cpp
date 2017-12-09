@@ -13,6 +13,11 @@
 #include "init.h"
 #include "guiutil.h"
 #include "datetablewidgetitem.h"
+#include "privatekeywidget.h"
+#include "createsystemnodedialog.h"
+#include "addresstablemodel.h"
+#include "transactiontablemodel.h"
+#include "optionsmodel.h"
 
 #include <QTimer>
 #include <QMessageBox>
@@ -54,10 +59,13 @@ MasternodeList::MasternodeList(QWidget *parent) :
     ui->tableWidgetMyMasternodes->setContextMenuPolicy(Qt::CustomContextMenu);
 
     QAction *startAliasAction = new QAction(tr("Start alias"), this);
+    QAction *editAction = new QAction(tr("Edit"), this);
     contextMenu = new QMenu();
     contextMenu->addAction(startAliasAction);
+    contextMenu->addAction(editAction);
     connect(ui->tableWidgetMyMasternodes, SIGNAL(customContextMenuRequested(const QPoint&)), this, SLOT(showContextMenu(const QPoint&)));
     connect(startAliasAction, SIGNAL(triggered()), this, SLOT(on_startButton_clicked()));
+    connect(editAction, SIGNAL(triggered()), this, SLOT(on_editButton_clicked()));
 
     timer = new QTimer(this);
     connect(timer, SIGNAL(timeout()), this, SLOT(updateNodeList()));
@@ -71,6 +79,7 @@ MasternodeList::MasternodeList(QWidget *parent) :
     CBlockIndex* pindexPrev = chainActive.Tip();
     int nNext = pindexPrev->nHeight - pindexPrev->nHeight % GetBudgetPaymentCycleBlocks() + GetBudgetPaymentCycleBlocks();
     ui->superblockLabel->setText(QString::number(nNext));
+    sendDialog = new SendCollateralDialog();
 }
 
 MasternodeList::~MasternodeList()
@@ -80,17 +89,23 @@ MasternodeList::~MasternodeList()
 
 void MasternodeList::setClientModel(ClientModel *model)
 {
-    this->clientModel = model;
-    if(model)
+    if (this->clientModel == NULL)
     {
-        // try to update list when masternode count changes
-        connect(clientModel, SIGNAL(strMasternodesChanged(QString)), this, SLOT(updateNodeList()));
+        this->clientModel = model;
+        if(model)
+        {
+            // try to update list when masternode count changes
+            connect(clientModel, SIGNAL(strMasternodesChanged(QString)), this, SLOT(updateNodeList()));
+        }
     }
 }
 
 void MasternodeList::setWalletModel(WalletModel *model)
 {
-    this->walletModel = model;
+    if (this->walletModel == NULL)
+    {
+        this->walletModel = model;
+    }
 }
 
 void MasternodeList::showContextMenu(const QPoint &point)
@@ -339,6 +354,51 @@ void MasternodeList::on_startButton_clicked()
     }
 
     StartAlias(strAlias);
+}
+
+void MasternodeList::on_editButton_clicked()
+{
+    CreateSystemnodeDialog *dialog = new CreateSystemnodeDialog();
+    dialog->setWindowModality(Qt::ApplicationModal);
+    dialog->setEditMode();
+    dialog->setWindowTitle("Edit Masternode");
+    
+    QItemSelectionModel* selectionModel = ui->tableWidgetMyMasternodes->selectionModel();
+    QModelIndexList selected = selectionModel->selectedRows();
+    if(selected.count() == 0)
+        return;
+
+    QModelIndex index = selected.at(0);
+    int r = index.row();
+    QString strAlias = ui->tableWidgetMyMasternodes->item(r, 0)->text();
+    QString strIP = ui->tableWidgetMyMasternodes->item(r, 1)->text();
+    strIP.replace(QRegExp(":+\\d*"), "");
+
+    dialog->setAlias(strAlias);
+    dialog->setIP(strIP);
+    if (dialog->exec())
+    {
+        // OK pressed
+        std::string port = "9340";
+        if (Params().NetworkID() == CBaseChainParams::TESTNET) {
+            port = "19340";
+        }
+        BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry &mne, masternodeConfig.getEntries()) {
+            if (mne.getAlias() == strAlias.toStdString())
+            {
+                mne.setAlias(dialog->getAlias().toStdString());
+                mne.setIp(dialog->getIP().toStdString() + ":" + port);
+                masternodeConfig.write();
+                ui->tableWidgetMyMasternodes->removeRow(r);
+                updateMyNodeList(true);
+            }
+        }
+
+    }
+    else
+    {
+        // Cancel pressed
+    }
 }
 
 void MasternodeList::on_startAllButton_clicked()
@@ -688,5 +748,62 @@ void MasternodeList::on_tableWidgetVoting_itemSelectionChanged()
     {
         ui->voteManyYesButton->setEnabled(true);
         ui->voteManyNoButton->setEnabled(true);
+    }
+}
+
+void MasternodeList::on_CreateNewMasternode_clicked()
+{
+    CreateSystemnodeDialog *dialog = new CreateSystemnodeDialog();
+    dialog->setWindowModality(Qt::ApplicationModal);
+    dialog->setWindowTitle("Create a New Masternode");
+    QString formattedAmount = BitcoinUnits::formatWithUnit(walletModel->getOptionsModel()->getDisplayUnit(), 
+                                                           MASTERNODE_COLLATERAL * COIN);
+    dialog->setNoteLabel("*This action will send " + formattedAmount + " to yourself");
+    if (dialog->exec())
+    {
+        // OK Pressed
+        QString label = dialog->getLabel();
+        QString address = walletModel->getAddressTableModel()->addRow(AddressTableModel::Receive, label, "");
+        SendCoinsRecipient recipient(address, label, MASTERNODE_COLLATERAL * COIN, "");
+        QList<SendCoinsRecipient> recipients;
+        recipients.append(recipient);
+
+        // Get outputs before and after transaction
+        std::vector<COutput> vPossibleCoinsBefore;
+        pwalletMain->AvailableCoins(vPossibleCoinsBefore, true, NULL, ONLY_10000);
+
+        sendDialog->setModel(walletModel);
+        sendDialog->send(recipients);
+
+        std::vector<COutput> vPossibleCoinsAfter;
+        pwalletMain->AvailableCoins(vPossibleCoinsAfter, true, NULL, ONLY_10000);
+
+        bool found = false;
+        BOOST_FOREACH(COutput& out, vPossibleCoinsAfter) {
+            std::vector<COutput>::iterator it = std::find(vPossibleCoinsBefore.begin(), vPossibleCoinsBefore.end(), out);
+            if (it == vPossibleCoinsBefore.end()) {
+                // Not found so this is a new element
+                found = true;
+
+                COutPoint outpoint = COutPoint(out.tx->GetHash(), boost::lexical_cast<unsigned int>(out.i));
+                pwalletMain->LockCoin(outpoint);
+
+                // Generate a key
+                CKey secret;
+                secret.MakeNewKey(false);
+                std::string privateKey = CBitcoinSecret(secret).ToString();
+                std::string port = "9340";
+                if (Params().NetworkID() == CBaseChainParams::TESTNET) {
+                    port = "19340";
+                }
+
+                masternodeConfig.add(dialog->getAlias().toStdString(), dialog->getIP().toStdString() + ":" + port, 
+                        privateKey, out.tx->GetHash().ToString(), strprintf("%d", out.i));
+                masternodeConfig.write();
+                updateMyNodeList(true);
+            }
+        }
+    } else {
+        // Cancel Pressed
     }
 }

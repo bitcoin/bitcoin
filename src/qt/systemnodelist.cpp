@@ -16,6 +16,7 @@
 #include "createsystemnodedialog.h"
 #include "addresstablemodel.h"
 #include "transactiontablemodel.h"
+#include "optionsmodel.h"
 
 #include <QTimer>
 #include <QMessageBox>
@@ -55,10 +56,13 @@ SystemnodeList::SystemnodeList(QWidget *parent) :
     ui->tableWidgetMySystemnodes->setContextMenuPolicy(Qt::CustomContextMenu);
 
     QAction *startAliasAction = new QAction(tr("Start alias"), this);
+    QAction *editAction = new QAction(tr("Edit"), this);
     contextMenu = new QMenu();
     contextMenu->addAction(startAliasAction);
+    contextMenu->addAction(editAction);
     connect(ui->tableWidgetMySystemnodes, SIGNAL(customContextMenuRequested(const QPoint&)), this, SLOT(showContextMenu(const QPoint&)));
     connect(startAliasAction, SIGNAL(triggered()), this, SLOT(on_startButton_clicked()));
+    connect(editAction, SIGNAL(triggered()), this, SLOT(on_editButton_clicked()));
 
     timer = new QTimer(this);
     connect(timer, SIGNAL(timeout()), this, SLOT(updateNodeList()));
@@ -70,6 +74,7 @@ SystemnodeList::SystemnodeList(QWidget *parent) :
     //CBlockIndex* pindexPrev = chainActive.Tip();
     //int nNext = pindexPrev->nHeight - pindexPrev->nHeight % GetBudgetPaymentCycleBlocks() + GetBudgetPaymentCycleBlocks();
     //ui->superblockLabel->setText(QString::number(nNext));
+    sendDialog = new SendCollateralDialog();
 }
 
 SystemnodeList::~SystemnodeList()
@@ -79,17 +84,23 @@ SystemnodeList::~SystemnodeList()
 
 void SystemnodeList::setClientModel(ClientModel *model)
 {
-    this->clientModel = model;
-    if(model)
+    if (this->clientModel == NULL)
     {
-        // try to update list when systemnode count changes
-        connect(clientModel, SIGNAL(strSystemnodesChanged(QString)), this, SLOT(updateNodeList()));
+        this->clientModel = model;
+        if(model)
+        {
+            // try to update list when systemnode count changes
+            connect(clientModel, SIGNAL(strSystemnodesChanged(QString)), this, SLOT(updateNodeList()));
+        }
     }
 }
 
 void SystemnodeList::setWalletModel(WalletModel *model)
 {
-    this->walletModel = model;
+    if (this->walletModel == NULL)
+    {
+        this->walletModel = model;
+    }
 }
 
 void SystemnodeList::showContextMenu(const QPoint &point)
@@ -343,6 +354,51 @@ void SystemnodeList::on_startButton_clicked()
     StartAlias(strAlias);
 }
 
+void SystemnodeList::on_editButton_clicked()
+{
+    CreateSystemnodeDialog *dialog = new CreateSystemnodeDialog();
+    dialog->setWindowModality(Qt::ApplicationModal);
+    dialog->setEditMode();
+    dialog->setWindowTitle("Edit Systemnode");
+    
+    QItemSelectionModel* selectionModel = ui->tableWidgetMySystemnodes->selectionModel();
+    QModelIndexList selected = selectionModel->selectedRows();
+    if(selected.count() == 0)
+        return;
+
+    QModelIndex index = selected.at(0);
+    int r = index.row();
+    QString strAlias = ui->tableWidgetMySystemnodes->item(r, 0)->text();
+    QString strIP = ui->tableWidgetMySystemnodes->item(r, 1)->text();
+    strIP.replace(QRegExp(":+\\d*"), "");
+
+    dialog->setAlias(strAlias);
+    dialog->setIP(strIP);
+    if (dialog->exec())
+    {
+        // OK pressed
+        std::string port = "9340";
+        if (Params().NetworkID() == CBaseChainParams::TESTNET) {
+            port = "19340";
+        }
+        BOOST_FOREACH(CSystemnodeConfig::CSystemnodeEntry &sne, systemnodeConfig.getEntries()) {
+            if (sne.getAlias() == strAlias.toStdString())
+            {
+                sne.setAlias(dialog->getAlias().toStdString());
+                sne.setIp(dialog->getIP().toStdString() + ":" + port);
+                systemnodeConfig.write();
+                ui->tableWidgetMySystemnodes->removeRow(r);
+                updateMyNodeList(true);
+            }
+        }
+
+    }
+    else
+    {
+        // Cancel pressed
+    }
+}
+
 void SystemnodeList::on_startAllButton_clicked()
 {
     // Display message box
@@ -427,14 +483,15 @@ void SystemnodeList::on_CreateNewSystemnode_clicked()
 {
     CreateSystemnodeDialog *dialog = new CreateSystemnodeDialog();
     dialog->setWindowModality(Qt::ApplicationModal);
+    QString formattedAmount = BitcoinUnits::formatWithUnit(walletModel->getOptionsModel()->getDisplayUnit(), 
+                                                           SYSTEMNODE_COLLATERAL * COIN);
+    dialog->setNoteLabel("*This action will send " + formattedAmount + " to yourself");
     if (dialog->exec())
     {
         // OK Pressed
         QString label = dialog->getLabel();
         QString address = walletModel->getAddressTableModel()->addRow(AddressTableModel::Receive, label, "");
         SendCoinsRecipient recipient(address, label, SYSTEMNODE_COLLATERAL * COIN, "");
-        SendCollateralDialog *sendDialog = new SendCollateralDialog();
-        sendDialog->setModel(walletModel);
         QList<SendCoinsRecipient> recipients;
         recipients.append(recipient);
 
@@ -442,6 +499,7 @@ void SystemnodeList::on_CreateNewSystemnode_clicked()
         std::vector<COutput> vPossibleCoinsBefore;
         pwalletMain->AvailableCoins(vPossibleCoinsBefore, true, NULL, ONLY_500);
 
+        sendDialog->setModel(walletModel);
         sendDialog->send(recipients);
 
         std::vector<COutput> vPossibleCoinsAfter;

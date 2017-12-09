@@ -88,6 +88,17 @@ bool CSystemnodeConfig::read(std::string& strErr) {
     return true;
 }
 
+bool CSystemnodeConfig::aliasExists(const std::string& alias)
+{
+    BOOST_FOREACH(CSystemnodeConfig::CSystemnodeEntry sne, systemnodeConfig.getEntries()) {
+        if (sne.getAlias() == alias)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
 bool CSystemnodeConfig::write()
 {
     boost::filesystem::path pathSystemnodeConfigFile = GetSystemnodeConfigFile();

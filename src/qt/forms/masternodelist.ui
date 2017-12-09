@@ -142,6 +142,13 @@
               <number>0</number>
              </property>
              <item>
+              <widget class="QPushButton" name="CreateNewMasternode">
+               <property name="text">
+                <string>&amp;New Masternode</string>
+               </property>
+              </widget>
+             </item>
+             <item>
               <widget class="QPushButton" name="startButton">
                <property name="text">
                 <string>S&amp;tart alias</string>

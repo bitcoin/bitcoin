@@ -17,7 +17,7 @@
    <property name="geometry">
     <rect>
      <x>34</x>
-     <y>220</y>
+     <y>213</y>
      <width>180</width>
      <height>32</height>
     </rect>
@@ -33,7 +33,7 @@
    <property name="geometry">
     <rect>
      <x>40</x>
-     <y>60</y>
+     <y>53</y>
      <width>171</width>
      <height>27</height>
     </rect>
@@ -43,7 +43,7 @@
    <property name="geometry">
     <rect>
      <x>40</x>
-     <y>120</y>
+     <y>113</y>
      <width>171</width>
      <height>27</height>
     </rect>
@@ -53,7 +53,7 @@
    <property name="geometry">
     <rect>
      <x>40</x>
-     <y>40</y>
+     <y>33</y>
      <width>67</width>
      <height>17</height>
     </rect>
@@ -66,7 +66,7 @@
    <property name="geometry">
     <rect>
      <x>40</x>
-     <y>100</y>
+     <y>93</y>
      <width>181</width>
      <height>17</height>
     </rect>
@@ -79,7 +79,7 @@
    <property name="geometry">
     <rect>
      <x>40</x>
-     <y>180</y>
+     <y>173</y>
      <width>171</width>
      <height>27</height>
     </rect>
@@ -89,7 +89,7 @@
    <property name="geometry">
     <rect>
      <x>40</x>
-     <y>160</y>
+     <y>153</y>
      <width>67</width>
      <height>17</height>
     </rect>
@@ -111,13 +111,13 @@
     <string/>
    </property>
   </widget>
-  <widget class="QLabel" name="label_2">
+  <widget class="QLabel" name="noteLabel">
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>260</y>
+     <y>250</y>
      <width>221</width>
-     <height>17</height>
+     <height>25</height>
     </rect>
    </property>
    <property name="font">
@@ -126,7 +126,10 @@
     </font>
    </property>
    <property name="text">
-    <string>*This action will send 500 tCRW to yourself</string>
+    <string/>
+   </property>
+   <property name="wordWrap">
+    <bool>true</bool>
    </property>
   </widget>
  </widget>

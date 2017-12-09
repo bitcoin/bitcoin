@@ -37,8 +37,8 @@ WalletView::WalletView(QWidget *parent):
     QStackedWidget(parent),
     clientModel(0),
     walletModel(0),
-    systemnodeListPage(0),
-    masternodeListPage(0)
+    masternodeListPage(0),
+    systemnodeListPage(0)
 {
     // Create tabs
     overviewPage = new OverviewPage();
@@ -206,8 +206,8 @@ void WalletView::processNewTransaction(const QModelIndex& parent, int start, int
     QString address = ttm->index(start, TransactionTableModel::ToAddress, parent).data().toString();
 
     // If payment is 500 or 10000 CRW ask to create a Systemnode/Masternode
-    qint64 credit = ttm->index(start, TransactionTableModel::AmountCredit, parent).data(Qt::EditRole).toULongLong();
-    int typeEnum = ttm->index(start, 0, parent).data(TransactionTableModel::TypeRole).toInt();
+    //qint64 credit = ttm->index(start, TransactionTableModel::AmountCredit, parent).data(Qt::EditRole).toULongLong();
+    //int typeEnum = ttm->index(start, 0, parent).data(TransactionTableModel::TypeRole).toInt();
 
     // Payment to yourself, SN or MN
     //if (typeEnum == TransactionRecord::SendToSelf && (credit == SYSTEMNODE_COLLATERAL * COIN || credit == MASTERNODE_COLLATERAL * COIN))
@@ -454,6 +454,8 @@ void WalletView::enableSystemnodes()
     if (systemnodeListPage == NULL)
     {
         systemnodeListPage = new SystemnodeList();
+        connect(systemnodeListPage->getSendCollateralDialog(), SIGNAL(message(QString,QString,unsigned int)), 
+                this, SIGNAL(message(QString,QString,unsigned int)));
         addWidget(systemnodeListPage);
     }
 }
@@ -463,6 +465,8 @@ void WalletView::enableMasternodes()
     if (masternodeListPage == NULL)
     {
         masternodeListPage = new MasternodeList();
+        connect(masternodeListPage->getSendCollateralDialog(), SIGNAL(message(QString,QString,unsigned int)), 
+                this, SIGNAL(message(QString,QString,unsigned int)));
         addWidget(masternodeListPage);
     }
 }
@@ -473,6 +477,8 @@ void WalletView::enableSystemnodesChanged(bool enabled)
     if (enabled)
     {
         enableSystemnodes();
+        systemnodeListPage->setWalletModel(walletModel);
+        systemnodeListPage->setClientModel(clientModel);
     }
     emit guiEnableSystemnodesChanged(enabled);
 }
@@ -483,6 +489,8 @@ void WalletView::enableMasternodesChanged(bool enabled)
     if (enabled)
     {
         enableMasternodes();
+        masternodeListPage->setWalletModel(walletModel);
+        masternodeListPage->setClientModel(clientModel);
     }
     emit guiEnableMasternodesChanged(enabled);
 }

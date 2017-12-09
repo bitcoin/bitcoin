@@ -56,6 +56,9 @@
         <file alias="drkblue_remove">res/icons/drkblue_remove.png</file>
         <file alias="masternode">res/icons/masternode.png</file>
         <file alias="systemnode">res/icons/systemnode.png</file>
+        <file alias="show">res/icons/show.png</file>
+        <file alias="hide">res/icons/hide.png</file>
+        <file alias="copy">res/icons/copy.png</file>
         <file alias="browse">res/icons/browse.png</file>
         <file alias="toolbar">res/icons/toolbar.png</file>
     </qresource>

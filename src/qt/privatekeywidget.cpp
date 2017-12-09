@@ -18,11 +18,11 @@ PrivateKeyWidget::PrivateKeyWidget(QString privKey, QWidget *parent)
     show->setToolTip("Show");
     copy->setToolTip("Copy To Clipboard");
 
-    show->setIcon(QIcon("/home/ashot/Desktop/res/hide.png"));
+    show->setIcon(QIcon(":/icons/hide"));
     show->setIconSize(QSize(20, 20));
     show->setStyleSheet("border: none;");
 
-    copy->setIcon(QIcon("/home/ashot/Desktop/res/copy.png"));
+    copy->setIcon(QIcon(":/icons/copy"));
     copy->setIconSize(QSize(20, 20));
     copy->setStyleSheet("border: none;");
 
@@ -39,12 +39,12 @@ void PrivateKeyWidget::showClicked(bool show_hide)
 {
     if (show_hide)
     {
-        show->setIcon(QIcon("/home/ashot/Desktop/res/show.png"));
+        show->setIcon(QIcon(":/icons/show"));
         lineEdit->setEchoMode(QLineEdit::Normal);
         lineEdit->setReadOnly(false);
         show->setToolTip("Hide");
     } else {
-        show->setIcon(QIcon("/home/ashot/Desktop/res/hide.png"));
+        show->setIcon(QIcon(":/icons/hide"));
         lineEdit->setEchoMode(QLineEdit::Password);
         lineEdit->setReadOnly(true);
         show->setToolTip("Show");

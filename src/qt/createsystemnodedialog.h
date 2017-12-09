@@ -19,9 +19,15 @@ public:
     QString getAlias();
     QString getIP();
     QString getLabel();
+    void setAlias(QString alias);
+    void setIP(QString ip);
+    void setNoteLabel(QString text);
     void done(int);
+    void setEditMode();
 
 private:
+    bool editMode;
+    QString startAlias;
     Ui::CreateSystemnodeDialog *ui;
 };
 
