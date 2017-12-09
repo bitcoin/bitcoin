@@ -8,6 +8,7 @@ class CCoinsViewCache;
 class CTransaction;
 
 #include "omnicore/dbbase.h"
+#include "omnicore/dbtransaction.h"
 #include "omnicore/log.h"
 #include "omnicore/tally.h"
 
@@ -155,37 +156,6 @@ extern bool autoCommit;
 
 //! Global lock for state objects
 extern CCriticalSection cs_tally;
-
-/** LevelDB based storage for storing Omni transaction data.  This will become the new master database, holding serialized Omni transactions.
- *  Note, intention is to consolidate and clean up data storage
- */
-class COmniTransactionDB : public CDBBase
-{
-public:
-    COmniTransactionDB(const boost::filesystem::path& path, bool fWipe)
-    {
-        leveldb::Status status = Open(path, fWipe);
-        PrintToConsole("Loading master transactions database: %s\n", status.ToString());
-    }
-
-    virtual ~COmniTransactionDB()
-    {
-        if (msc_debug_persistence) PrintToLog("COmniTransactionDB closed\n");
-    }
-
-    /* These functions would be expanded upon to store a serialized version of the transaction and associated state data
-     *
-     * void RecordTransaction(const uint256& txid, uint32_t posInBlock, various, other, data);
-     * int FetchTransactionPosition(const uint256& txid);
-     * bool FetchTransactionValidity(const uint256& txid);
-     *
-     * and so on...
-     */
-    void RecordTransaction(const uint256& txid, uint32_t posInBlock, int processingResult);
-    std::vector<std::string> FetchTransactionDetails(const uint256& txid);
-    uint32_t FetchTransactionPosition(const uint256& txid);
-    std::string FetchInvalidReason(const uint256& txid);
-};
 
 /** LevelDB based storage for STO recipients.
  */

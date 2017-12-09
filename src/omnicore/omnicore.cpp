@@ -10,6 +10,7 @@
 #include "omnicore/consensushash.h"
 #include "omnicore/convert.h"
 #include "omnicore/dbbase.h"
+#include "omnicore/dbtransaction.h"
 #include "omnicore/dex.h"
 #include "omnicore/encoding.h"
 #include "omnicore/errors.h"
@@ -2571,64 +2572,6 @@ int mastercore::WalletTxBuilder(const std::string& senderAddress, const std::str
     return MP_ERR_WALLET_ACCESS;
 #endif
 
-}
-
-void COmniTransactionDB::RecordTransaction(const uint256& txid, uint32_t posInBlock, int processingResult)
-{
-    assert(pdb);
-
-    const std::string key = txid.ToString();
-    const std::string value = strprintf("%d:%d", posInBlock, processingResult);
-
-    Status status = pdb->Put(writeoptions, key, value);
-    ++nWritten;
-}
-
-std::vector<std::string> COmniTransactionDB::FetchTransactionDetails(const uint256& txid)
-{
-    assert(pdb);
-    std::string strValue;
-    std::vector<std::string> vTransactionDetails;
-
-    Status status = pdb->Get(readoptions, txid.ToString(), &strValue);
-    if (status.ok()) {
-        std::vector<std::string> vStr;
-        boost::split(vStr, strValue, boost::is_any_of(":"), boost::token_compress_on);
-        if (vStr.size() == 2) {
-            vTransactionDetails.push_back(vStr[0]);
-            vTransactionDetails.push_back(vStr[1]);
-        } else {
-            PrintToLog("ERROR: Entry (%s) found in OmniTXDB with unexpected number of attributes!\n", txid.GetHex());
-        }
-    } else {
-        PrintToLog("ERROR: Entry (%s) could not be loaded from OmniTXDB!\n", txid.GetHex());
-    }
-
-    return vTransactionDetails;
-}
-
-uint32_t COmniTransactionDB::FetchTransactionPosition(const uint256& txid)
-{
-    uint32_t posInBlock = 999999; // setting an initial arbitrarily high value will ensure transaction is always "last" in event of bug/exploit
-
-    std::vector<std::string> vTransactionDetails = FetchTransactionDetails(txid);
-    if (vTransactionDetails.size() == 2) {
-        posInBlock = boost::lexical_cast<uint32_t>(vTransactionDetails[0]);
-    }
-
-    return posInBlock;
-}
-
-std::string COmniTransactionDB::FetchInvalidReason(const uint256& txid)
-{
-    int processingResult = -999999;
-
-    std::vector<std::string> vTransactionDetails = FetchTransactionDetails(txid);
-    if (vTransactionDetails.size() == 2) {
-        processingResult = boost::lexical_cast<int>(vTransactionDetails[1]);
-    }
-
-    return error_str(processingResult);
 }
 
 std::set<int> CMPTxList::GetSeedBlocks(int startHeight, int endHeight)

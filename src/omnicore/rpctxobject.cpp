@@ -6,6 +6,7 @@
 
 #include "omnicore/rpctxobject.h"
 
+#include "omnicore/dbtransaction.h"
 #include "omnicore/dex.h"
 #include "omnicore/errors.h"
 #include "omnicore/mdex.h"
