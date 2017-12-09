@@ -334,17 +334,10 @@ void mastercore::PrintFreezeState()
     }
 }
 
-void mastercore::enableFreezing(uint32_t propertyId, int block)
+void mastercore::enableFreezing(uint32_t propertyId, int liveBlock)
 {
-    if (!IsFeatureActivated(FEATURE_FREEZENOTICE, block)) {
-        setFreezingEnabledProperties.insert(std::make_pair(propertyId, block));
-        PrintToLog("Freezing for property %d has been enabled.\n", propertyId);
-    } else {
-        const CConsensusParams& params = ConsensusParams();
-        int liveBlock = params.OMNI_FREEZE_WAIT_PERIOD + block;
-        setFreezingEnabledProperties.insert(std::make_pair(propertyId, liveBlock));
-        PrintToLog("Freezing for property %d will be enabled at block %d.\n", propertyId, liveBlock);
-    }
+    setFreezingEnabledProperties.insert(std::make_pair(propertyId, liveBlock));
+    PrintToLog("Freezing for property %d will be enabled at block %d.\n", propertyId, liveBlock);
 }
 
 void mastercore::disableFreezing(uint32_t propertyId)
