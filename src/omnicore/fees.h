@@ -3,8 +3,8 @@
 
 #include "leveldb/db.h"
 
+#include "omnicore/dbbase.h"
 #include "omnicore/log.h"
-#include "omnicore/persistence.h"
 
 #include <set>
 #include <stdint.h>

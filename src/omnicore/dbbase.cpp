@@ -1,4 +1,4 @@
-#include "omnicore/persistence.h"
+#include "omnicore/dbbase.h"
 
 #include "omnicore/log.h"
 

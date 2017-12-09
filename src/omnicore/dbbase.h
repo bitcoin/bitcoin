@@ -1,5 +1,5 @@
-#ifndef OMNICORE_PERSISTENCE_H
-#define OMNICORE_PERSISTENCE_H
+#ifndef OMNICORE_DBBASE_H
+#define OMNICORE_DBBASE_H
 
 #include "leveldb/db.h"
 
@@ -94,4 +94,4 @@ public:
 };
 
 
-#endif // OMNICORE_PERSISTENCE_H
+#endif // OMNICORE_DBBASE_H

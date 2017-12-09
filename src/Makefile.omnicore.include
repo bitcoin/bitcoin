@@ -4,6 +4,7 @@ OMNICORE_H = \
   omnicore/convert.h \
   omnicore/createpayload.h \
   omnicore/createtx.h \
+  omnicore/dbbase.h \
   omnicore/dex.h \
   omnicore/encoding.h \
   omnicore/errors.h \
@@ -16,7 +17,6 @@ OMNICORE_H = \
   omnicore/omnicore.h \
   omnicore/parse_string.h \
   omnicore/pending.h \
-  omnicore/persistence.h \
   omnicore/rpc.h \
   omnicore/rpcpayload.h \
   omnicore/rpcrawtx.h \
@@ -44,6 +44,7 @@ OMNICORE_CPP = \
   omnicore/convert.cpp \
   omnicore/createpayload.cpp \
   omnicore/createtx.cpp \
+  omnicore/dbbase.cpp \
   omnicore/dex.cpp \
   omnicore/encoding.cpp \
   omnicore/fees.cpp \
@@ -55,7 +56,6 @@ OMNICORE_CPP = \
   omnicore/omnicore.cpp \
   omnicore/parse_string.cpp \
   omnicore/pending.cpp \
-  omnicore/persistence.cpp \
   omnicore/rpc.cpp \
   omnicore/rpcpayload.cpp \
   omnicore/rpcrawtx.cpp \

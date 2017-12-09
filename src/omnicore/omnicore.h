@@ -7,8 +7,8 @@ class CCoinsView;
 class CCoinsViewCache;
 class CTransaction;
 
+#include "omnicore/dbbase.h"
 #include "omnicore/log.h"
-#include "omnicore/persistence.h"
 #include "omnicore/tally.h"
 
 #include "sync.h"

@@ -1,9 +1,9 @@
 #ifndef OMNICORE_SP_H
 #define OMNICORE_SP_H
 
+#include "omnicore/dbbase.h"
 #include "omnicore/log.h"
 #include "omnicore/omnicore.h"
-#include "omnicore/persistence.h"
 
 class CBlockIndex;
 class uint256;
