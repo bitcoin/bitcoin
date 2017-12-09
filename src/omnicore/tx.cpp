@@ -4,6 +4,7 @@
 
 #include "omnicore/activation.h"
 #include "omnicore/convert.h"
+#include "omnicore/dbstolist.h"
 #include "omnicore/dex.h"
 #include "omnicore/fees.h"
 #include "omnicore/log.h"

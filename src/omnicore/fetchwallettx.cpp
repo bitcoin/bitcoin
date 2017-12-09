@@ -7,6 +7,7 @@
 
 #include "omnicore/fetchwallettx.h"
 
+#include "omnicore/dbstolist.h"
 #include "omnicore/log.h"
 #include "omnicore/omnicore.h"
 #include "omnicore/pending.h"

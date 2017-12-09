@@ -8,6 +8,7 @@ class CCoinsViewCache;
 class CTransaction;
 
 #include "omnicore/dbbase.h"
+#include "omnicore/dbstolist.h"
 #include "omnicore/dbtransaction.h"
 #include "omnicore/log.h"
 #include "omnicore/tally.h"
@@ -156,31 +157,6 @@ extern bool autoCommit;
 
 //! Global lock for state objects
 extern CCriticalSection cs_tally;
-
-/** LevelDB based storage for STO recipients.
- */
-class CMPSTOList : public CDBBase
-{
-public:
-    CMPSTOList(const boost::filesystem::path& path, bool fWipe)
-    {
-        leveldb::Status status = Open(path, fWipe);
-        PrintToConsole("Loading send-to-owners database: %s\n", status.ToString());
-    }
-
-    virtual ~CMPSTOList()
-    {
-        if (msc_debug_persistence) PrintToLog("CMPSTOList closed\n");
-    }
-
-    void getRecipients(const uint256 txid, string filterAddress, UniValue *recipientArray, uint64_t *total, uint64_t *numRecipients);
-    std::string getMySTOReceipts(string filterAddress);
-    int deleteAboveBlock(int blockNum);
-    void printStats();
-    void printAll();
-    bool exists(string address);
-    void recordSTOReceive(std::string, const uint256&, int, unsigned int, uint64_t);
-};
 
 /** LevelDB based storage for the trade history. Trades are listed with key "txid1+txid2".
  */
