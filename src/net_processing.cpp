@@ -1182,7 +1182,17 @@ void static ProcessGetBlockData(CNode* pfrom, const Consensus::Params& consensus
         pfrom->fDisconnect = true;
         send = false;
     }
-    // Pruned nodes may have deleted the block, so check whether
+    // Avoid leaking prune-height by never sending blocks below the NODE_NETWORK_LIMITED threshold
+                if (send && !pfrom->fWhitelisted && (
+                        (((pfrom->GetLocalServices() & NODE_NETWORK_LIMITED) == NODE_NETWORK_LIMITED) && ((pfrom->GetLocalServices() & NODE_NETWORK) != NODE_NETWORK) && (chainActive.Tip()->nHeight - mi->second->nHeight > (int)NODE_NETWORK_LIMITED_MIN_BLOCKS + 2 /* add two blocks buffer extension for possible races */) )
+                   )) {
+                    LogPrint(BCLog::NET, "Ignore block request below NODE_NETWORK_LIMITED threshold from peer=%d\n", pfrom->GetId());
+
+                    //disconnect node and prevent it from stalling (would otherwise wait for the missing block)
+                    pfrom->fDisconnect = true;
+                    send = false;
+                }
+                // Pruned nodes may have deleted the block, so check whether
     // it's available before trying to send.
     if (send && (mi->second->nStatus & BLOCK_HAVE_DATA))
     {
