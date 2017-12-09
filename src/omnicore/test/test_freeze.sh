@@ -8,23 +8,28 @@ clear
 printf "Preparing a test environment...\n"
 printf "   * Starting a fresh regtest daemon\n"
 rm -r ~/.bitcoin/regtest
-$SRCDIR/omnicored --regtest --server --daemon --omniactivationallowsender=any >$NUL
+$SRCDIR/omnicored --regtest --server --daemon --omniactivationallowsender=any --omnidebug=verbose >$NUL
+printf "NOTE: verbose is on, log in datadir/regtest/ should show before and after states for any changes via stateDB\n"
 sleep 10
 printf "   * Preparing some mature testnet BTC\n"
-$SRCDIR/omnicore-cli --regtest generate 102 >$NUL
+$SRCDIR/omnicore-cli --regtest generate 105 >$NUL
 printf "   * Obtaining addresses to work with\n"
 ADDR=$($SRCDIR/omnicore-cli --regtest getnewaddress OMNIAccount)
 FADDR=$($SRCDIR/omnicore-cli --regtest getnewaddress)
+printf "   * Master address is %s\n" $ADDR
 printf "   * Funding the addresses with some testnet BTC for fees\n"
-JSON="{\""$ADDR"\":4,\""$FADDR"\":4}"
+JSON="{\""$ADDR"\":5,\""$FADDR"\":4}"
 $SRCDIR/omnicore-cli --regtest sendmany "" $JSON >$NUL
+$SRCDIR/omnicore-cli --regtest sendtoaddress $ADDR 6 >$NUL
+$SRCDIR/omnicore-cli --regtest sendtoaddress $ADDR 7 >$NUL
+$SRCDIR/omnicore-cli --regtest sendtoaddress $ADDR 8 >$NUL
+$SRCDIR/omnicore-cli --regtest sendtoaddress $ADDR 9 >$NUL
 $SRCDIR/omnicore-cli --regtest generate 1 >$NUL
 printf "   * Creating a test (managed) property and granting 1000 tokens to the test address\n"
 $SRCDIR/omnicore-cli --regtest omni_sendissuancemanaged $ADDR 1 1 0 "TestCat" "TestSubCat" "TestProperty" "TestURL" "TestData" >$NUL
 $SRCDIR/omnicore-cli --regtest generate 1 >$NUL
 $SRCDIR/omnicore-cli --regtest omni_sendgrant $ADDR $FADDR 3 1000 >$NUL
 $SRCDIR/omnicore-cli --regtest generate 1 >$NUL
-
 printf "\nRunning the test scenario...\n"
 printf "   * Sending a 'freeze' tranasction for the test address prior to enabling freezing\n"
 TXID=$($SRCDIR/omnicore-cli --regtest omni_sendfreeze $ADDR $FADDR 3 1234)
@@ -326,7 +331,285 @@ if [ $BALANCE == "920" ]
     printf "                                 FAIL (result:%s)\n" $BALANCE
     FAIL=$((FAIL+1))
 fi
-
+printf "   * Sending an 'unfreeze' tranasction for the test address\n"
+TXID=$($SRCDIR/omnicore-cli --regtest omni_sendunfreeze $ADDR $FADDR 3 1234)
+$SRCDIR/omnicore-cli --regtest generate 1 >$NUL
+printf "        - Checking the 'unfreeze' transaction was VALID... "
+RESULT=$($SRCDIR/omnicore-cli --regtest omni_gettransaction $TXID | grep "valid" | grep -v "invalid" | cut -c12-)
+if [ $RESULT == "true," ]
+  then
+    printf "                                     PASS\n"
+    PASS=$((PASS+1))
+  else
+    printf "                                     FAIL (result:%s)\n" $RESULT
+    FAIL=$((FAIL+1))
+fi
+printf "\nRunning reorg test scenarios\n"
+printf "   * Rolling back the chain to test reversing the last UNFREEZE tx\n"
+BLOCK=$($SRCDIR/omnicore-cli --regtest getblockcount)
+BLOCKHASH=$($SRCDIR/omnicore-cli --regtest getblockhash $(($BLOCK)))
+$SRCDIR/omnicore-cli --regtest invalidateblock $BLOCKHASH >$NUL
+PREVBLOCK=$($SRCDIR/omnicore-cli --regtest getblockcount)
+$SRCDIR/omnicore-cli --regtest clearmempool >$NUL
+$SRCDIR/omnicore-cli --regtest generate 1 >$NUL
+NEWBLOCK=$($SRCDIR/omnicore-cli --regtest getblockcount)
+NEWBLOCKHASH=$($SRCDIR/omnicore-cli --regtest getblockhash $(($BLOCK)))
+printf "        - Checking the block count is the same as before the rollback...                        "
+if [ $BLOCK == $NEWBLOCK ]
+  then
+    printf "PASS\n"
+    PASS=$((PASS+1))
+  else
+    printf "FAIL (result:%s)\n" $NEWBLOCK
+    FAIL=$((FAIL+1))
+fi
+printf "        - Checking the block hash is different from before the rollback...                      "
+if [ $BLOCKHASH == $NEWBLOCKHASH ]
+  then
+    printf "FAIL (result:%s)\n" $NEWBLOCKHASH
+    FAIL=$((FAIL+1))
+  else
+    printf "PASS\n"
+    PASS=$((PASS+1))
+fi
+printf "   * Testing a send from the test address (should now be frozen again as the block that unfroze the address was dc'd)\n"
+TXID=$($SRCDIR/omnicore-cli --regtest omni_send $FADDR $ADDR 3 30)
+$SRCDIR/omnicore-cli --regtest generate 1 >$NUL
+printf "        - Checking the 'send' transaction was INVALID... "
+RESULT=$($SRCDIR/omnicore-cli --regtest omni_gettransaction $TXID | grep "valid" | grep -v "invalid" | cut -c12-)
+if [ $RESULT == "false," ]
+  then
+    printf "                                       PASS\n"
+    PASS=$((PASS+1))
+  else
+    printf "                                       FAIL (result:%s)\n" $RESULT
+    FAIL=$((FAIL+1))
+fi
+printf "   * Sending an 'unfreeze' tranasction for the test address\n"
+TXID=$($SRCDIR/omnicore-cli --regtest omni_sendunfreeze $ADDR $FADDR 3 1234)
+$SRCDIR/omnicore-cli --regtest generate 1 >$NUL
+printf "        - Checking the 'unfreeze' transaction was VALID... "
+RESULT=$($SRCDIR/omnicore-cli --regtest omni_gettransaction $TXID | grep "valid" | grep -v "invalid" | cut -c12-)
+if [ $RESULT == "true," ]
+  then
+    printf "                                     PASS\n"
+    PASS=$((PASS+1))
+  else
+    printf "                                     FAIL (result:%s)\n" $RESULT
+    FAIL=$((FAIL+1))
+fi
+$SRCDIR/omnicore-cli --regtest generate 3 >$NUL
+printf "   * Sending an 'freeze' tranasction for the test address\n"
+TXID=$($SRCDIR/omnicore-cli --regtest omni_sendfreeze $ADDR $FADDR 3 1234)
+$SRCDIR/omnicore-cli --regtest generate 1 >$NUL
+printf "        - Checking the 'freeze' transaction was VALID... "
+RESULT=$($SRCDIR/omnicore-cli --regtest omni_gettransaction $TXID | grep "valid" | grep -v "invalid" | cut -c12-)
+if [ $RESULT == "true," ]
+  then
+    printf "                                       PASS\n"
+    PASS=$((PASS+1))
+  else
+    printf "                                       FAIL (result:%s)\n" $RESULT
+    FAIL=$((FAIL+1))
+fi
+printf "   * Rolling back the chain to test reversing the last FREEZE tx\n"
+BLOCK=$($SRCDIR/omnicore-cli --regtest getblockcount)
+BLOCKHASH=$($SRCDIR/omnicore-cli --regtest getblockhash $(($BLOCK)))
+$SRCDIR/omnicore-cli --regtest invalidateblock $BLOCKHASH >$NUL
+PREVBLOCK=$($SRCDIR/omnicore-cli --regtest getblockcount)
+$SRCDIR/omnicore-cli --regtest clearmempool >$NUL
+$SRCDIR/omnicore-cli --regtest generate 1 >$NUL
+NEWBLOCK=$($SRCDIR/omnicore-cli --regtest getblockcount)
+NEWBLOCKHASH=$($SRCDIR/omnicore-cli --regtest getblockhash $(($BLOCK)))
+printf "        - Checking the block count is the same as before the rollback...                        "
+if [ $BLOCK == $NEWBLOCK ]
+  then
+    printf "PASS\n"
+    PASS=$((PASS+1))
+  else
+    printf "FAIL (result:%s)\n" $NEWBLOCK
+    FAIL=$((FAIL+1))
+fi
+printf "        - Checking the block hash is different from before the rollback...                      "
+if [ $BLOCKHASH == $NEWBLOCKHASH ]
+  then
+    printf "FAIL (result:%s)\n" $NEWBLOCKHASH
+    FAIL=$((FAIL+1))
+  else
+    printf "PASS\n"
+    PASS=$((PASS+1))
+fi
+printf "   * Testing a send from the test address (should now be unfrozen again as the block that froze the address was dc'd)\n"
+TXID=$($SRCDIR/omnicore-cli --regtest omni_send $FADDR $ADDR 3 30)
+$SRCDIR/omnicore-cli --regtest generate 1 >$NUL
+printf "        - Checking the 'send' transaction was VALID... "
+RESULT=$($SRCDIR/omnicore-cli --regtest omni_gettransaction $TXID | grep "valid" | grep -v "invalid" | cut -c12-)
+if [ $RESULT == "true," ]
+  then
+    printf "                                         PASS\n"
+    PASS=$((PASS+1))
+  else
+    printf "                                         FAIL (result:%s)\n" $RESULT
+    FAIL=$((FAIL+1))
+fi
+printf "   * Sending a 'freeze' tranasction for the test address\n"
+TXID=$($SRCDIR/omnicore-cli --regtest omni_sendfreeze $ADDR $FADDR 3 1234)
+$SRCDIR/omnicore-cli --regtest generate 1 >$NUL
+printf "        - Checking the 'freeze' transaction was VALID... "
+RESULT=$($SRCDIR/omnicore-cli --regtest omni_gettransaction $TXID | grep "valid" | grep -v "invalid" | cut -c12-)
+if [ $RESULT == "true," ]
+  then
+    printf "                                       PASS\n"
+    PASS=$((PASS+1))
+  else
+    printf "                                       FAIL (result:%s)\n" $RESULT
+    FAIL=$((FAIL+1))
+fi
+printf "   * Sending a 'disable freezing' transaction to DISABLE freezing\n"
+TXID=$($SRCDIR/omnicore-cli --regtest omni_senddisablefreezing $ADDR 3)
+$SRCDIR/omnicore-cli --regtest generate 1 >$NUL
+printf "        - Checking the 'disable freezing' transaction was VALID... "
+RESULT=$($SRCDIR/omnicore-cli --regtest omni_gettransaction $TXID | grep "valid" | grep -v "invalid" | cut -c12-)
+if [ $RESULT == "true," ]
+  then
+    printf "                             PASS\n"
+    PASS=$((PASS+1))
+  else
+    printf "                             FAIL (result:%s)\n" $RESULT
+    FAIL=$((FAIL+1))
+fi
+printf "        - Checking that freezing is now disabled... "
+RESULT=$($SRCDIR/omnicore-cli --regtest omni_getproperty 3 | grep "freezingenabled" | cut -c21-)
+if [ $RESULT == "false," ]
+  then
+    printf "                                            PASS\n"
+    PASS=$((PASS+1))
+  else
+    printf "                                            FAIL (result:%s)\n" $RESULT
+    FAIL=$((FAIL+1))
+fi
+printf "   * Rolling back the chain to test reversing the last DISABLE FREEZEING tx\n"
+BLOCK=$($SRCDIR/omnicore-cli --regtest getblockcount)
+BLOCKHASH=$($SRCDIR/omnicore-cli --regtest getblockhash $(($BLOCK)))
+$SRCDIR/omnicore-cli --regtest invalidateblock $BLOCKHASH >$NUL
+PREVBLOCK=$($SRCDIR/omnicore-cli --regtest getblockcount)
+$SRCDIR/omnicore-cli --regtest clearmempool >$NUL
+$SRCDIR/omnicore-cli --regtest generate 1 >$NUL
+NEWBLOCK=$($SRCDIR/omnicore-cli --regtest getblockcount)
+NEWBLOCKHASH=$($SRCDIR/omnicore-cli --regtest getblockhash $(($BLOCK)))
+printf "        - Checking the block count is the same as before the rollback...                        "
+if [ $BLOCK == $NEWBLOCK ]
+  then
+    printf "PASS\n"
+    PASS=$((PASS+1))
+  else
+    printf "FAIL (result:%s)\n" $NEWBLOCK
+    FAIL=$((FAIL+1))
+fi
+printf "        - Checking the block hash is different from before the rollback...                      "
+if [ $BLOCKHASH == $NEWBLOCKHASH ]
+  then
+    printf "FAIL (result:%s)\n" $NEWBLOCKHASH
+    FAIL=$((FAIL+1))
+  else
+    printf "PASS\n"
+    PASS=$((PASS+1))
+fi
+printf "        - Checking that freezing is now enabled (as the block that disabled it was dc'd)...  "
+RESULT=$($SRCDIR/omnicore-cli --regtest omni_getproperty 3 | grep "freezingenabled" | cut -c21-)
+if [ $RESULT == "true," ]
+  then
+    printf "   PASS\n"
+    PASS=$((PASS+1))
+  else
+    printf "   FAIL (result:%s)\n" $RESULT
+    FAIL=$((FAIL+1))
+fi
+printf "   * Sending a 'disable freezing' transaction to DISABLE freezing\n"
+TXID=$($SRCDIR/omnicore-cli --regtest omni_senddisablefreezing $ADDR 3)
+$SRCDIR/omnicore-cli --regtest generate 1 >$NUL
+printf "        - Checking the 'disable freezing' transaction was VALID... "
+RESULT=$($SRCDIR/omnicore-cli --regtest omni_gettransaction $TXID | grep "valid" | grep -v "invalid" | cut -c12-)
+if [ $RESULT == "true," ]
+  then
+    printf "                             PASS\n"
+    PASS=$((PASS+1))
+  else
+    printf "                             FAIL (result:%s)\n" $RESULT
+    FAIL=$((FAIL+1))
+fi
+printf "        - Checking that freezing is now disabled... "
+RESULT=$($SRCDIR/omnicore-cli --regtest omni_getproperty 3 | grep "freezingenabled" | cut -c21-)
+if [ $RESULT == "false," ]
+  then
+    printf "                                            PASS\n"
+    PASS=$((PASS+1))
+  else
+    printf "                                            FAIL (result:%s)\n" $RESULT
+    FAIL=$((FAIL+1))
+fi
+$SRCDIR/omnicore-cli --regtest generate 3 >$NUL
+printf "   * Sending a 'enable freezing' transaction to ENABLE freezing\n"
+TXID=$($SRCDIR/omnicore-cli --regtest omni_sendenablefreezing $ADDR 3)
+$SRCDIR/omnicore-cli --regtest generate 1 >$NUL
+printf "        - Checking the 'enable freezing' transaction was VALID...  "
+RESULT=$($SRCDIR/omnicore-cli --regtest omni_gettransaction $TXID | grep "valid" | grep -v "invalid" | cut -c12-)
+if [ $RESULT == "true," ]
+  then
+    printf "                             PASS\n"
+    PASS=$((PASS+1))
+  else
+    printf "                             FAIL (result:%s)\n" $RESULT
+    FAIL=$((FAIL+1))
+fi
+printf "        - Checking that freezing is still disabled (due to waiting period)...       "
+RESULT=$($SRCDIR/omnicore-cli --regtest omni_getproperty 3 | grep "freezingenabled" | cut -c21-)
+if [ $RESULT == "false," ]
+  then
+    printf "            PASS\n"
+    PASS=$((PASS+1))
+  else
+    printf "            FAIL (result:%s)\n" $RESULT
+    FAIL=$((FAIL+1))
+fi
+printf "   * Rolling back the chain to test reversing the last ENABLE FREEZEING tx\n"
+BLOCK=$($SRCDIR/omnicore-cli --regtest getblockcount)
+BLOCKHASH=$($SRCDIR/omnicore-cli --regtest getblockhash $(($BLOCK)))
+$SRCDIR/omnicore-cli --regtest invalidateblock $BLOCKHASH >$NUL
+PREVBLOCK=$($SRCDIR/omnicore-cli --regtest getblockcount)
+$SRCDIR/omnicore-cli --regtest clearmempool >$NUL
+$SRCDIR/omnicore-cli --regtest generate 1 >$NUL
+NEWBLOCK=$($SRCDIR/omnicore-cli --regtest getblockcount)
+NEWBLOCKHASH=$($SRCDIR/omnicore-cli --regtest getblockhash $(($BLOCK)))
+printf "        - Checking the block count is the same as before the rollback...                        "
+if [ $BLOCK == $NEWBLOCK ]
+  then
+    printf "PASS\n"
+    PASS=$((PASS+1))
+  else
+    printf "FAIL (result:%s)\n" $NEWBLOCK
+    FAIL=$((FAIL+1))
+fi
+printf "        - Checking the block hash is different from before the rollback...                      "
+if [ $BLOCKHASH == $NEWBLOCKHASH ]
+  then
+    printf "FAIL (result:%s)\n" $NEWBLOCKHASH
+    FAIL=$((FAIL+1))
+  else
+    printf "PASS\n"
+    PASS=$((PASS+1))
+fi
+printf "        - Mining past prior activation period and checking that freezing is still disabled...   "
+$SRCDIR/omnicore-cli --regtest generate 20 >$NUL
+RESULT=$($SRCDIR/omnicore-cli --regtest omni_getproperty 3 | grep "freezingenabled" | cut -c21-)
+if [ $RESULT == "false," ]
+  then
+    printf "PASS\n"
+    PASS=$((PASS+1))
+  else
+    printf "FAIL (result:%s)\n" $RESULT
+    FAIL=$((FAIL+1))
+fi
 
 printf "\n"
 printf "####################\n"
