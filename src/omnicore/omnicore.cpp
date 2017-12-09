@@ -322,6 +322,18 @@ void mastercore::ClearFreezeState()
     setFrozenAddresses.clear();
 }
 
+void mastercore::PrintFreezeState()
+{
+    PrintToLog("setFrozenAddresses state:\n");
+    for (std::set<std::pair<std::string,uint32_t> >::iterator it = setFrozenAddresses.begin(); it != setFrozenAddresses.end(); it++) {
+        PrintToLog("  %s:%d\n", (*it).first, (*it).second);
+    }
+    PrintToLog("setFreezingEnabledProperties state:\n");
+    for (std::set<std::pair<uint32_t,int> >::iterator it = setFreezingEnabledProperties.begin(); it != setFreezingEnabledProperties.end(); it++) {
+        PrintToLog("  %d:%d\n", (*it).first, (*it).second);
+    }
+}
+
 void mastercore::enableFreezing(uint32_t propertyId, int block)
 {
     if (!IsFeatureActivated(FEATURE_FREEZENOTICE, block)) {
