@@ -289,7 +289,7 @@ bool DecodeOfferScript(const CScript& script, int& op,
 	if (opcode < OP_1 || opcode > OP_16)
 		return false;
 	op = CScript::DecodeOP_N(opcode);
-	if (!IsCertOp(op))
+	if (!IsOfferOp(op))
 		return false;
 
 	bool found = false;
