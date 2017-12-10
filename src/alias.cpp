@@ -1081,8 +1081,8 @@ bool DecodeAliasScript(const CScript& script, int& op,
 	vvch.clear();
 	if (!script.GetOp(pc, opcode))
 		return false;
-	opcode = CScript::DecodeOP_N(opcode);
-	if (opcode != OP_SYSCOIN_ALIAS)
+	op = CScript::DecodeOP_N(opcode);
+	if (op != OP_SYSCOIN_ALIAS)
 		return false;
 	if (!script.GetOp(pc, opcode))
 		return false;
