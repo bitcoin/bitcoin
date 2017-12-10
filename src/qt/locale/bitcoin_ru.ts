@@ -833,6 +833,11 @@ Address: %4
         <translation>&amp;Запускать Peercoin при входе в систему</translation>
     </message>
     <message>
+        <location line="+7"/>
+        <source>Enforce checkpoints</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location line="+35"/>
         <source>Reset all client options to default.</source>
         <translation>Сбросить все опции клиента на значения по умолчанию.</translation>
