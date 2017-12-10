@@ -7,6 +7,7 @@
 
 #include "guiutil.h"
 
+#include "omnicore/dbspinfo.h"
 #include "omnicore/omnicore.h"
 #include "omnicore/sp.h"
 

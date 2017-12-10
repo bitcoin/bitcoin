@@ -9,6 +9,7 @@
 #include "omnicore/activation.h"
 #include "omnicore/consensushash.h"
 #include "omnicore/convert.h"
+#include "omnicore/dbspinfo.h"
 #include "omnicore/dbstolist.h"
 #include "omnicore/dex.h"
 #include "omnicore/errors.h"

@@ -6,6 +6,7 @@
 
 #include "omnicore/rpctxobject.h"
 
+#include "omnicore/dbspinfo.h"
 #include "omnicore/dbstolist.h"
 #include "omnicore/dbtransaction.h"
 #include "omnicore/dex.h"

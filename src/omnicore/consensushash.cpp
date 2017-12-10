@@ -5,6 +5,7 @@
  */
 
 #include "omnicore/consensushash.h"
+#include "omnicore/dbspinfo.h"
 #include "omnicore/dex.h"
 #include "omnicore/mdex.h"
 #include "omnicore/log.h"

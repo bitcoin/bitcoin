@@ -5,6 +5,7 @@ OMNICORE_H = \
   omnicore/createpayload.h \
   omnicore/createtx.h \
   omnicore/dbbase.h \
+  omnicore/dbspinfo.h \
   omnicore/dbstolist.h \
   omnicore/dbtransaction.h \
   omnicore/dex.h \
@@ -47,6 +48,7 @@ OMNICORE_CPP = \
   omnicore/createpayload.cpp \
   omnicore/createtx.cpp \
   omnicore/dbbase.cpp \
+  omnicore/dbspinfo.cpp \
   omnicore/dbstolist.cpp \
   omnicore/dbtransaction.cpp \
   omnicore/dex.cpp \

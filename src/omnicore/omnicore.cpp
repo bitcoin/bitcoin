@@ -10,6 +10,7 @@
 #include "omnicore/consensushash.h"
 #include "omnicore/convert.h"
 #include "omnicore/dbbase.h"
+#include "omnicore/dbspinfo.h"
 #include "omnicore/dbstolist.h"
 #include "omnicore/dbtransaction.h"
 #include "omnicore/dex.h"

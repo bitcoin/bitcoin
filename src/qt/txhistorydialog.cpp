@@ -12,6 +12,8 @@
 #include "walletmodel.h"
 #include "platformstyle.h"
 
+#include "omnicore/dbspinfo.h"
+#include "omnicore/dbstolist.h"
 #include "omnicore/fetchwallettx.h"
 #include "omnicore/omnicore.h"
 #include "omnicore/pending.h"

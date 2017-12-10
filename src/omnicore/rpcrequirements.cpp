@@ -1,5 +1,6 @@
 #include "omnicore/rpcrequirements.h"
 
+#include "omnicore/dbspinfo.h"
 #include "omnicore/dex.h"
 #include "omnicore/omnicore.h"
 #include "omnicore/sp.h"
