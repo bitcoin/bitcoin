@@ -2579,6 +2579,10 @@ int SecureMsgReceive(CNode *pfrom, std::vector<uint8_t> &vchData)
             {
                 Misbehaving(pfrom->GetId(), 10);
             } else
+            if (rv == SMSG_FUND_FAILED) // bad funding tx
+            {
+                Misbehaving(pfrom->GetId(), 10);
+            } else
             {
                 Misbehaving(pfrom->GetId(), 1);
             };
@@ -2813,7 +2817,7 @@ int SecureMsgValidate(uint8_t *pHeader, uint8_t *pPayload, uint32_t nPayload)
     if (psmsg->version[0] == 3)
     {
 
-        if (Params().NetworkID() == "main")
+        if (Params().GetConsensus().nPaidSmsgTime > now)
         {
             LogPrintf("%s: Paid SMSG not yet active on mainnet.\n", __func__);
             return SMSG_GENERAL_ERROR;
@@ -2852,6 +2856,9 @@ int SecureMsgValidate(uint8_t *pHeader, uint8_t *pPayload, uint32_t nPayload)
             if (!GetTransaction(txid, txOut, Params().GetConsensus(), hashBlock) || hashBlock.IsNull())
                 return errorN(SMSG_GENERAL_ERROR, "%s: Transaction %s not found for message %s.\n", __func__, txid.ToString(), msgId.ToString());
 
+            if (txOut->IsCoinStake())
+                return errorN(SMSG_GENERAL_ERROR, "%s: Transaction %s for message %s, is coinstake.\n", __func__, txid.ToString(), msgId.ToString());
+
             int blockDepth = -1;
             BlockMap::iterator mi = mapBlockIndex.find(hashBlock);
             if (mi != mapBlockIndex.end())
@@ -2887,7 +2894,6 @@ int SecureMsgValidate(uint8_t *pHeader, uint8_t *pPayload, uint32_t nPayload)
                 };
                 if (!v->IsType(OUTPUT_DATA))
                     continue;
-
                 CTxOutData *txd = (CTxOutData*) v.get();
                 if (txd->vData.size() < 25 || txd->vData[0] != DO_FUND_MSG)
                     continue;
@@ -2905,7 +2911,7 @@ int SecureMsgValidate(uint8_t *pHeader, uint8_t *pPayload, uint32_t nPayload)
                         if (*nAmount < nExpectFee)
                         {
                             LogPrintf("%s: Transaction %s underfunded message %s, expected %d paid %d.\n", __func__, txid.ToString(), msgId.ToString(), nExpectFee, *nAmount);
-                            return SMSG_GENERAL_ERROR;
+                            return SMSG_FUND_FAILED;
                         };
                         fFound = true;
                     };
@@ -2913,67 +2919,9 @@ int SecureMsgValidate(uint8_t *pHeader, uint8_t *pPayload, uint32_t nPayload)
             };
 
             if (!fFound)
-                return errorN(SMSG_GENERAL_ERROR, "%s: Transaction %s does not fund message %s.\n", __func__, txid.ToString(), msgId.ToString());
+                return errorN(SMSG_FUND_FAILED, "%s: Transaction %s does not fund message %s.\n", __func__, txid.ToString(), msgId.ToString());
 
-
-            if (nCt > 0 || nRingCT > 0)
-            {
-                if (!txOut->GetCTFee(nTxFee))
-                    return errorN(SMSG_GENERAL_ERROR, "%s: Transaction %s for message %s is malformed.\n", __func__, txid.ToString(), msgId.ToString());
-            } else
-            {
-                for (const auto &input : txOut->vin)
-                {
-                    if (input.IsAnonInput())
-                    {
-                        nRingCT++;
-                        break;
-                    };
-                    CTransactionRef txIn;
-                    uint256 hashBlock;
-                    if (!GetTransaction(input.prevout.hash, txIn, Params().GetConsensus(), hashBlock)
-                        || txIn->vpout.size() <= input.prevout.n)
-                    {
-                        return errorN(SMSG_GENERAL_ERROR, "%s: Transaction %s for message %s is malformed.\n", __func__, txid.ToString(), msgId.ToString());
-                    };
-                    const auto &v = txIn->vpout[input.prevout.n];
-                    if (v->IsType(OUTPUT_CT))
-                    {
-                        nCt++;
-                        break;
-                    };
-                    if (v->IsType(OUTPUT_RINGCT))
-                    {
-                        nRingCT++;
-                        break;
-                    };
-                    if (v->IsType(OUTPUT_STANDARD))
-                    {
-                        nTotalIn += v->GetValue();
-                        continue;
-                    } else
-                    {
-                        return errorN(SMSG_GENERAL_ERROR, "%s: Transaction %s for message %s is malformed.\n", __func__, txid.ToString(), msgId.ToString());
-                    };
-                };
-
-                if (nCt > 0 || nRingCT > 0)
-                {
-                    if (!txOut->GetCTFee(nTxFee))
-                        return errorN(SMSG_GENERAL_ERROR, "%s: Transaction %s for message %s is malformed.\n", __func__, txid.ToString(), msgId.ToString());
-                } else
-                {
-                    nTxFee = nTotalIn - nTotalOut;
-                }
-            };
         } // cs_main
-
-        size_t nTxBytes = GetVirtualTransactionSize(*txOut);
-        CFeeRate fundingTxnFeeRate = CFeeRate(nFundingTxnFeePerK);
-        CAmount nTotalExpectedFees = nTotalMsgFees + fundingTxnFeeRate.GetFee(nTxBytes);
-
-        if (nTotalExpectedFees < nTxFee)
-            LogPrintf("%s: Transaction %s for message %s is underfunded %d expected %d.\n", __func__, txid.ToString(), msgId.ToString(), nTxFee, nTotalExpectedFees);
 
         return SMSG_NO_ERROR; // smsg is valid and funded
     };

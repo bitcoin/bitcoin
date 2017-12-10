@@ -3127,7 +3127,7 @@ UniValue filtertransactions(const JSONRPCRequest &request)
     std::string  sort      = "time";
 
     int64_t timeFrom = 0;
-    int64_t timeTo = 0x3AFDE8DE00; // 9999
+    int64_t timeTo = 0x3AFE130E00; // 9999
     bool fCollate = false;
 
     if (!request.params[0].isNull()) {

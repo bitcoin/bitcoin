@@ -8,7 +8,7 @@ from test_framework.test_particl import isclose
 from test_framework.util import *
 
 
-class SmsgDevTest(ParticlTestFramework):
+class SmsgPaidTest(ParticlTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 2
@@ -71,4 +71,4 @@ class SmsgDevTest(ParticlTestFramework):
         #print(json.dumps(ro, indent=4, default=self.jsonDecimal))
 
 if __name__ == '__main__':
-    SmsgDevTest().main()
+    SmsgPaidTest().main()

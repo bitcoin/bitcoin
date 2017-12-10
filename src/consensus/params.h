@@ -38,7 +38,7 @@ struct BIP9Deployment {
  */
 struct Params {
     uint256 hashGenesisBlock;
-    
+
     int nSubsidyHalvingInterval;
     /** Block height and hash at which BIP34 becomes active */
     int BIP34Height;
@@ -50,7 +50,8 @@ struct Params {
     /** Time at which OP_ISCOINSTAKE becomes active */
     int64_t OpIsCoinstakeTime;
     bool fAllowOpIsCoinstakeWithP2PKH;
-    
+    int64_t nPaidSmsgTime;
+
     /**
      * Minimum blocks including miner confirmation of the total of 2016 blocks in a retargeting period,
      * (nPowTargetTimespan / nPowTargetSpacing) which is also used for BIP9 deployments.
@@ -68,7 +69,7 @@ struct Params {
     int64_t DifficultyAdjustmentInterval() const { return nPowTargetTimespan / nPowTargetSpacing; }
     uint256 nMinimumChainWork;
     uint256 defaultAssumeValid;
-    
+
     int nMinRCTOutputDepth;
 };
 } // namespace Consensus

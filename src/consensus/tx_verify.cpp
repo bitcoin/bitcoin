@@ -22,6 +22,10 @@
 #include "utilmoneystr.h"
 
 
+#include "policy/policy.h"
+#include "smsg/smessage.h"
+
+
 extern bool fBusyImporting;
 extern bool fSkipRangeproof;
 
@@ -487,6 +491,39 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
             nFees += nTxFee;
             if (!MoneyRange(nFees))
                 return state.DoS(100, false, REJECT_INVALID, "bad-txns-fee-outofrange");
+
+            // Enforce smsg fees
+            CAmount nTotalMsgFees = 0;
+            for (const auto &v : tx.vpout)
+            {
+                if (!v->IsType(OUTPUT_DATA))
+                    continue;
+                CTxOutData *txd = (CTxOutData*) v.get();
+                if (txd->vData.size() < 25 || txd->vData[0] != DO_FUND_MSG)
+                    continue;
+                size_t n = (txd->vData.size()-1) / 24;
+                for (size_t k = 0; k < n; ++k)
+                {
+                    uint160 *pMsgIdTx = (uint160*)&txd->vData[1+k*24];
+                    uint32_t *nAmount = (uint32_t*)&txd->vData[1+k*24+20];
+                    nTotalMsgFees += *nAmount;
+                };
+            };
+            if (nTotalMsgFees > 0)
+            {
+                size_t nTxBytes = GetVirtualTransactionSize(tx);
+                CFeeRate fundingTxnFeeRate = CFeeRate(nFundingTxnFeePerK);
+                CAmount nTotalExpectedFees = nTotalMsgFees + fundingTxnFeeRate.GetFee(nTxBytes);
+
+                if (nTxFee < nTotalExpectedFees)
+                {
+                    if (state.fEnforceSmsgFees)
+                        return state.DoS(100, false, REJECT_INVALID, "bad-txns-fee-smsg", false,
+                            strprintf("fees (%s) < expected (%s)", FormatMoney(nTxFee), FormatMoney(nTotalExpectedFees)));
+                    else
+                        LogPrintf("%s: bad-txns-fee-smsg, %d expected %d, not enforcing.\n", nTxFee, nTotalExpectedFees);
+                };
+            };
         };
     } else
     {

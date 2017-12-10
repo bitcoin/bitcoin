@@ -595,7 +595,7 @@ UniValue smsgsend(const JSONRPCRequest &request)
     bool fTestFee = request.params[5].isNull() ? false : request.params[5].get_bool();
     CAmount nFee;
 
-    if (fPaid && Params().NetworkID() == "main")
+    if (fPaid && Params().GetConsensus().nPaidSmsgTime > GetTime())
         throw std::runtime_error("Paid SMSG not yet active on mainnet.");
 
     CKeyID kiFrom, kiTo;
