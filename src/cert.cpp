@@ -279,6 +279,15 @@ bool DecodeCertScript(const CScript& script, int& op,
     if (!script.GetOp(pc, opcode)) return false;
     if (opcode < OP_1 || opcode > OP_16) return false;
     op = CScript::DecodeOP_N(opcode);
+	if (op != OP_SYSCOIN_CERT)
+		return false;
+	if (!script.GetOp(pc, opcode))
+		return false;
+	if (opcode < OP_1 || opcode > OP_16)
+		return false;
+	op = CScript::DecodeOP_N(opcode);
+	if (!IsCertOp(op))
+		return false;
 
 	bool found = false;
 	for (;;) {
@@ -302,7 +311,7 @@ bool DecodeCertScript(const CScript& script, int& op,
 	}
 
 	pc--;
-	return found && IsCertOp(op);
+	return found;
 }
 bool DecodeCertScript(const CScript& script, int& op,
         vector<vector<unsigned char> > &vvch) {
@@ -650,9 +659,9 @@ UniValue certnew(const UniValue& params, bool fHelp) {
  	
     vector<unsigned char> vchHashCert = vchFromValue(hash.GetHex());
 
-    scriptPubKey << CScript::EncodeOP_N(OP_CERT_ACTIVATE) << vchCert << vchHashCert << OP_2DROP << OP_DROP;
+    scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_CERT) << CScript::EncodeOP_N(OP_CERT_ACTIVATE) << vchCert << vchHashCert << OP_2DROP << OP_2DROP;
     scriptPubKey += scriptPubKeyOrig;
-	scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << theAlias.vchAlias << theAlias.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_DROP;
+	scriptPubKeyAlias << CScript::EncodeOP_N(OP_SYSCOIN_CERT) << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << theAlias.vchAlias << theAlias.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
 	scriptPubKeyAlias += scriptPubKeyOrig;
 
 	// use the script pub key to create the vecsend which sendmoney takes and puts it into vout
@@ -740,7 +749,7 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
     uint256 hash = Hash(data.begin(), data.end());
  	
     vector<unsigned char> vchHashCert = vchFromValue(hash.GetHex());
-    scriptPubKey << CScript::EncodeOP_N(OP_CERT_UPDATE) << vchCert << vchHashCert << OP_2DROP << OP_DROP;
+    scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_CERT) << CScript::EncodeOP_N(OP_CERT_UPDATE) << vchCert << vchHashCert << OP_2DROP << OP_2DROP;
     scriptPubKey += scriptPubKeyOrig;
 
 	vector<CRecipient> vecSend;
@@ -748,7 +757,7 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
 	CreateRecipient(scriptPubKey, recipient);
 	vecSend.push_back(recipient);
 	CScript scriptPubKeyAlias;
-	scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << theAlias.vchAlias << theAlias.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_DROP;
+	scriptPubKeyAlias << CScript::EncodeOP_N(OP_SYSCOIN_CERT) << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << theAlias.vchAlias << theAlias.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
 	scriptPubKeyAlias += scriptPubKeyOrig;
 	CRecipient aliasRecipient;
 	CreateRecipient(scriptPubKeyAlias, aliasRecipient);
@@ -835,7 +844,7 @@ UniValue certtransfer(const UniValue& params, bool fHelp) {
     uint256 hash = Hash(data.begin(), data.end());
  	
     vector<unsigned char> vchHashCert = vchFromValue(hash.GetHex());
-    scriptPubKey << CScript::EncodeOP_N(OP_CERT_TRANSFER) << vchCert << vchHashCert << OP_2DROP << OP_DROP;
+    scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_CERT) << CScript::EncodeOP_N(OP_CERT_TRANSFER) << vchCert << vchHashCert << OP_2DROP << OP_2DROP;
 	scriptPubKey += scriptPubKeyOrig;
     // send the cert pay txn
 	vector<CRecipient> vecSend;
@@ -844,7 +853,7 @@ UniValue certtransfer(const UniValue& params, bool fHelp) {
 	vecSend.push_back(recipient);
 
 	CScript scriptPubKeyAlias;
-	scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << fromAlias.vchAlias << fromAlias.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_DROP;
+	scriptPubKeyAlias << CScript::EncodeOP_N(OP_SYSCOIN_CERT) << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << fromAlias.vchAlias << fromAlias.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
 	scriptPubKeyAlias += scriptPubKeyFromOrig;
 	CRecipient aliasRecipient;
 	CreateRecipient(scriptPubKeyAlias, aliasRecipient);

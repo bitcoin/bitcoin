@@ -437,6 +437,16 @@ bool DecodeEscrowScript(const CScript& script, int& op,
 	if (!script.GetOp(pc, opcode)) return false;
 	if (opcode < OP_1 || opcode > OP_16) return false;
     op = CScript::DecodeOP_N(opcode);
+	if (op != OP_SYSCOIN_ESCROW)
+		return false;
+	if (!script.GetOp(pc, opcode))
+		return false;
+	if (opcode < OP_1 || opcode > OP_16)
+		return false;
+	op = CScript::DecodeOP_N(opcode);
+	if (!IsEscrowOp(op))
+		return false;
+
 	bool found = false;
 	for (;;) {
 		vector<unsigned char> vch;
@@ -459,7 +469,7 @@ bool DecodeEscrowScript(const CScript& script, int& op,
 	}
 
 	pc--;
-	return found && IsEscrowOp(op);
+	return found;
 }
 bool DecodeEscrowScript(const CScript& script, int& op,
         vector<vector<unsigned char> > &vvch) {
@@ -1484,7 +1494,7 @@ UniValue escrowbid(const UniValue& params, bool fHelp) {
 	CWalletTx wtx;
 	vector<CRecipient> vecSend;
 
-	scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << bidderalias.vchAlias << bidderalias.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_DROP;
+	scriptPubKeyAlias << CScript::EncodeOP_N(OP_SYSCOIN_ESCROW) << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << bidderalias.vchAlias << bidderalias.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
 	scriptPubKeyAlias += scriptPubKeyAliasOrig;
 	theEscrow.ClearEscrow();
 	theEscrow.op = OP_ESCROW_ACTIVATE;
@@ -1500,7 +1510,7 @@ UniValue escrowbid(const UniValue& params, bool fHelp) {
 	vector<unsigned char> vchHashEscrow = vchFromValue(hash.GetHex());
 
 	CScript scriptPubKeyOrigBuyer;
-	scriptPubKeyOrigBuyer << CScript::EncodeOP_N(OP_ESCROW_BID) << vchEscrow << vchFromString("0") << vchHashEscrow << OP_2DROP << OP_DROP;
+	scriptPubKeyOrigBuyer << CScript::EncodeOP_N(OP_SYSCOIN_ESCROW) << CScript::EncodeOP_N(OP_ESCROW_BID) << vchEscrow << vchFromString("0") << vchHashEscrow << OP_2DROP << OP_2DROP;
 	scriptPubKeyOrigBuyer += scriptPubKeyAliasOrig;
 
 	CRecipient recipientBuyer;
@@ -1573,7 +1583,7 @@ UniValue escrowaddshipping(const UniValue& params, bool fHelp) {
 	CSyscoinAddress buyerAddress;
 	GetAddress(bidderalias, &buyerAddress, scriptPubKeyAliasOrig);
 
-	scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << bidderalias.vchAlias << bidderalias.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_DROP;
+	scriptPubKeyAlias << CScript::EncodeOP_N(OP_SYSCOIN_ESCROW) << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << bidderalias.vchAlias << bidderalias.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
 	scriptPubKeyAlias += scriptPubKeyAliasOrig;
 
 	theEscrow.ClearEscrow();
@@ -1588,7 +1598,7 @@ UniValue escrowaddshipping(const UniValue& params, bool fHelp) {
 	vector<unsigned char> vchHashEscrow = vchFromValue(hash.GetHex());
 
 	CScript scriptPubKeyOrigBuyer;
-	scriptPubKeyOrigBuyer << CScript::EncodeOP_N(OP_ESCROW_ADD_SHIPPING) << vchEscrow << vchFromString("0") << vchHashEscrow << OP_2DROP << OP_DROP;
+	scriptPubKeyOrigBuyer << CScript::EncodeOP_N(OP_SYSCOIN_ESCROW) << CScript::EncodeOP_N(OP_ESCROW_ADD_SHIPPING) << vchEscrow << vchFromString("0") << vchHashEscrow << OP_2DROP << OP_2DROP;
 	scriptPubKeyOrigBuyer += scriptPubKeyAliasOrig;
 
 
@@ -1753,7 +1763,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	CSyscoinAddress buyerAddress;
 	GetAddress(buyeralias, &buyerAddress, scriptPubKeyAliasOrig);
 
-	scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << buyeralias.vchAlias  << buyeralias.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_DROP;
+	scriptPubKeyAlias << CScript::EncodeOP_N(OP_SYSCOIN_ESCROW) << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << buyeralias.vchAlias  << buyeralias.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
 	scriptPubKeyAlias += scriptPubKeyAliasOrig;
 
 
@@ -1867,7 +1877,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	}
 
     vector<unsigned char> vchHashEscrow = vchFromValue(hash.GetHex());
-	scriptPubKeyBuyer << CScript::EncodeOP_N(OP_ESCROW_ACTIVATE) << vchEscrow << vchFromString("0") << vchHashEscrow << OP_2DROP << OP_2DROP;
+	scriptPubKeyBuyer << CScript::EncodeOP_N(OP_SYSCOIN_ESCROW) << CScript::EncodeOP_N(OP_ESCROW_ACTIVATE) << vchEscrow << vchFromString("0") << vchHashEscrow << OP_2DROP << OP_2DROP << OP_DROP;
 	scriptPubKeyBuyer += scriptPubKeyAliasOrig;
 
 
@@ -1945,7 +1955,7 @@ UniValue escrowacknowledge(const UniValue& params, bool fHelp) {
 
 
 
-	CScript scriptPubKeyAlias = CScript() << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << sellerAliasLatest.vchAlias << sellerAliasLatest.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_DROP;
+	CScript scriptPubKeyAlias = CScript() << CScript::EncodeOP_N(OP_SYSCOIN_ESCROW) << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << sellerAliasLatest.vchAlias << sellerAliasLatest.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
 	scriptPubKeyAlias += sellerScript;
 
 	escrow.ClearEscrow();
@@ -1961,7 +1971,7 @@ UniValue escrowacknowledge(const UniValue& params, bool fHelp) {
 
 	CScript scriptPubKeyOrigBuyer;
 
-	scriptPubKeyOrigBuyer << CScript::EncodeOP_N(OP_ESCROW_ACKNOWLEDGE) << vchEscrow << vchFromString("0") << vchHashEscrow << OP_2DROP << OP_2DROP;
+	scriptPubKeyOrigBuyer << CScript::EncodeOP_N(OP_SYSCOIN_ESCROW) << CScript::EncodeOP_N(OP_ESCROW_ACKNOWLEDGE) << vchEscrow << vchFromString("0") << vchHashEscrow << OP_2DROP << OP_2DROP << OP_DROP;
 	scriptPubKeyOrigBuyer += buyerScript;
 
 	vector<CRecipient> vecSend;
@@ -2196,14 +2206,14 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	if(role == "arbiter")
 	{
 		scriptPubKeyAliasOrig = arbiterScript;
-		scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << arbiterAliasLatest.vchAlias << arbiterAliasLatest.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_DROP;
+		scriptPubKeyAlias << CScript::EncodeOP_N(OP_SYSCOIN_ESCROW) << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << arbiterAliasLatest.vchAlias << arbiterAliasLatest.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
 		scriptPubKeyAlias += scriptPubKeyAliasOrig;
 		theAlias = arbiterAliasLatest;
 	}
 	else if(role == "buyer")
 	{
 		scriptPubKeyAliasOrig = buyerScript;
-		scriptPubKeyAlias = CScript() << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << buyerAliasLatest.vchAlias << buyerAliasLatest.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_DROP;
+		scriptPubKeyAlias = CScript() << CScript::EncodeOP_N(OP_SYSCOIN_ESCROW) << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << buyerAliasLatest.vchAlias << buyerAliasLatest.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
 		scriptPubKeyAlias += scriptPubKeyAliasOrig;
 		theAlias = buyerAliasLatest;
 	}
@@ -2236,7 +2246,7 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 
     CScript scriptPubKeyOrigSeller;
 
-    scriptPubKeyOrigSeller << CScript::EncodeOP_N(OP_ESCROW_RELEASE) << vchEscrow << vchFromString("0") << vchHashEscrow << OP_2DROP << OP_2DROP;
+    scriptPubKeyOrigSeller << CScript::EncodeOP_N(OP_SYSCOIN_ESCROW) << CScript::EncodeOP_N(OP_ESCROW_RELEASE) << vchEscrow << vchFromString("0") << vchHashEscrow << OP_2DROP << OP_2DROP << OP_DROP;
     scriptPubKeyOrigSeller += buyerScript;
 
 
@@ -2311,7 +2321,7 @@ UniValue escrowcompleterelease(const UniValue& params, bool fHelp) {
 
 	CScript scriptPubKeyAlias;
 	
-	scriptPubKeyAlias = CScript() << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << sellerAliasLatest.vchAlias << sellerAliasLatest.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_DROP;
+	scriptPubKeyAlias = CScript() << CScript::EncodeOP_N(OP_SYSCOIN_ESCROW) << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << sellerAliasLatest.vchAlias << sellerAliasLatest.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
 	scriptPubKeyAlias += sellerScript;
 
 	escrow.ClearEscrow();
@@ -2327,7 +2337,7 @@ UniValue escrowcompleterelease(const UniValue& params, bool fHelp) {
     uint256 hash = Hash(data.begin(), data.end());
 
     vector<unsigned char> vchHashEscrow = vchFromValue(hash.GetHex());
-    scriptPubKeyBuyer << CScript::EncodeOP_N(OP_ESCROW_RELEASE) << vchEscrow << vchFromString("1") << vchHashEscrow << OP_2DROP << OP_2DROP;
+    scriptPubKeyBuyer << CScript::EncodeOP_N(OP_SYSCOIN_ESCROW) << CScript::EncodeOP_N(OP_ESCROW_RELEASE) << vchEscrow << vchFromString("1") << vchHashEscrow << OP_2DROP << OP_2DROP << OP_DROP;
     scriptPubKeyBuyer += sellerScript;
 	vector<CRecipient> vecSend;
 	CRecipient recipientBuyer, recipientArbiter;
@@ -2412,14 +2422,14 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 	if (role == "arbiter")
 	{
 		scriptPubKeyAliasOrig = arbiterScript;
-		scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << arbiterAliasLatest.vchAlias << arbiterAliasLatest.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_DROP;
+		scriptPubKeyAlias << CScript::EncodeOP_N(OP_SYSCOIN_ESCROW) << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << arbiterAliasLatest.vchAlias << arbiterAliasLatest.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
 		scriptPubKeyAlias += scriptPubKeyAliasOrig;
 		theAlias = arbiterAliasLatest;
 	}
 	else if (role == "seller")
 	{
 		scriptPubKeyAliasOrig = sellerScript;
-		scriptPubKeyAlias = CScript() << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << sellerAliasLatest.vchAlias << sellerAliasLatest.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_DROP;
+		scriptPubKeyAlias = CScript() << CScript::EncodeOP_N(OP_SYSCOIN_ESCROW) << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << sellerAliasLatest.vchAlias << sellerAliasLatest.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
 		scriptPubKeyAlias += scriptPubKeyAliasOrig;
 		theAlias = sellerAliasLatest;
 	}
@@ -2450,7 +2460,7 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 
 	CScript scriptPubKeyOrigSeller;
 
-	scriptPubKeyOrigSeller << CScript::EncodeOP_N(OP_ESCROW_REFUND) << vchEscrow << vchFromString("0") << vchHashEscrow << OP_2DROP << OP_2DROP;
+	scriptPubKeyOrigSeller << CScript::EncodeOP_N(OP_SYSCOIN_ESCROW) << CScript::EncodeOP_N(OP_ESCROW_REFUND) << vchEscrow << vchFromString("0") << vchHashEscrow << OP_2DROP << OP_2DROP << OP_DROP;
 	scriptPubKeyOrigSeller += sellerScript;
 
 
@@ -2526,7 +2536,7 @@ UniValue escrowcompleterefund(const UniValue& params, bool fHelp) {
 
 	CScript scriptPubKeyAlias;
 
-	scriptPubKeyAlias = CScript() << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << buyerAliasLatest.vchAlias << buyerAliasLatest.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_DROP;
+	scriptPubKeyAlias = CScript() << CScript::EncodeOP_N(OP_SYSCOIN_ESCROW) << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << buyerAliasLatest.vchAlias << buyerAliasLatest.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
 	scriptPubKeyAlias += buyerScript;
 
 
@@ -2544,7 +2554,7 @@ UniValue escrowcompleterefund(const UniValue& params, bool fHelp) {
 	uint256 hash = Hash(data.begin(), data.end());
 
 	vector<unsigned char> vchHashEscrow = vchFromValue(hash.GetHex());
-	scriptPubKeyBuyer << CScript::EncodeOP_N(OP_ESCROW_REFUND) << vchEscrow << vchFromString("1") << vchHashEscrow << OP_2DROP << OP_2DROP;
+	scriptPubKeyBuyer << CScript::EncodeOP_N(OP_SYSCOIN_ESCROW) << CScript::EncodeOP_N(OP_ESCROW_REFUND) << vchEscrow << vchFromString("1") << vchHashEscrow << OP_2DROP << OP_2DROP << OP_DROP;
 	scriptPubKeyBuyer += buyerScript;
 	vector<CRecipient> vecSend;
 	CRecipient recipientBuyer;
@@ -2643,7 +2653,7 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 	if(userfrom == "buyer")
 	{
 			
-		scriptPubKeyAlias = CScript() << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << buyerAliasLatest.vchAlias << buyerAliasLatest.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_DROP;
+		scriptPubKeyAlias = CScript() << CScript::EncodeOP_N(OP_SYSCOIN_ESCROW) << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << buyerAliasLatest.vchAlias << buyerAliasLatest.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
 		scriptPubKeyAlias += buyerScript;
 		scriptPubKeyAliasOrig = buyerScript;
 		vchLinkAlias = buyerAliasLatest.vchAlias;
@@ -2651,7 +2661,7 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 	}
 	else if(userfrom == "seller")
 	{	
-		scriptPubKeyAlias = CScript() << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << sellerAliasLatest.vchAlias << sellerAliasLatest.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_DROP;
+		scriptPubKeyAlias = CScript() << CScript::EncodeOP_N(OP_SYSCOIN_ESCROW) << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << sellerAliasLatest.vchAlias << sellerAliasLatest.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
 		scriptPubKeyAlias += sellerScript;
 		scriptPubKeyAliasOrig = sellerScript;
 		vchLinkAlias = sellerAliasLatest.vchAlias;
@@ -2659,7 +2669,7 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 	}
 	else if(userfrom == "reseller")
 	{
-		scriptPubKeyAlias = CScript() << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << resellerAliasLatest.vchAlias << resellerAliasLatest.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_DROP;
+		scriptPubKeyAlias = CScript() << CScript::EncodeOP_N(OP_SYSCOIN_ESCROW) << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << resellerAliasLatest.vchAlias << resellerAliasLatest.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
 		scriptPubKeyAlias += resellerScript;
 		scriptPubKeyAliasOrig = resellerScript;
 		vchLinkAlias = resellerAliasLatest.vchAlias;
@@ -2667,7 +2677,7 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 	}
 	else if(userfrom == "arbiter")
 	{		
-		scriptPubKeyAlias  = CScript() << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << arbiterAliasLatest.vchAlias << arbiterAliasLatest.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_DROP;
+		scriptPubKeyAlias  = CScript() << CScript::EncodeOP_N(OP_SYSCOIN_ESCROW) << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << arbiterAliasLatest.vchAlias << arbiterAliasLatest.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
 		scriptPubKeyAlias += arbiterScript;
 		scriptPubKeyAliasOrig = arbiterScript;
 		vchLinkAlias = arbiterAliasLatest.vchAlias;
@@ -2734,11 +2744,11 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 	CScript scriptPubKeyBuyer, scriptPubKeySeller,scriptPubKeyArbiter;
 	vector<CRecipient> vecSend;
 	CRecipient recipientBuyer, recipientSeller, recipientArbiter;
-	scriptPubKeyBuyer << CScript::EncodeOP_N(OP_ESCROW_COMPLETE) << vchEscrow << vchFromString("1") << vchHashEscrow << OP_2DROP << OP_2DROP;
+	scriptPubKeyBuyer << CScript::EncodeOP_N(OP_SYSCOIN_ESCROW) << CScript::EncodeOP_N(OP_ESCROW_COMPLETE) << vchEscrow << vchFromString("1") << vchHashEscrow << OP_2DROP << OP_2DROP << OP_DROP;
 	scriptPubKeyBuyer += buyerScript;
-	scriptPubKeyArbiter << CScript::EncodeOP_N(OP_ESCROW_COMPLETE) << vchEscrow << vchFromString("1") << vchHashEscrow << OP_2DROP << OP_2DROP;
+	scriptPubKeyArbiter << CScript::EncodeOP_N(OP_SYSCOIN_ESCROW) << CScript::EncodeOP_N(OP_ESCROW_COMPLETE) << vchEscrow << vchFromString("1") << vchHashEscrow << OP_2DROP << OP_2DROP << OP_DROP;
 	scriptPubKeyArbiter += arbiterScript;
-	scriptPubKeySeller << CScript::EncodeOP_N(OP_ESCROW_COMPLETE) << vchEscrow << vchFromString("1") << vchHashEscrow << OP_2DROP << OP_2DROP;
+	scriptPubKeySeller << CScript::EncodeOP_N(OP_SYSCOIN_ESCROW) << CScript::EncodeOP_N(OP_ESCROW_COMPLETE) << vchEscrow << vchFromString("1") << vchHashEscrow << OP_2DROP << OP_2DROP << OP_DROP;
 	scriptPubKeySeller += sellerScript;
 	CreateRecipient(scriptPubKeySeller, recipientSeller);
 	CreateRecipient(scriptPubKeyBuyer, recipientBuyer);
