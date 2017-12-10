@@ -2137,7 +2137,7 @@ UniValue syscoindecoderawtransaction(const UniValue& params, bool fHelp) {
 	
 	return output;
 }
-void SysTxToJSON(const int op, const vector<unsigned char> &vchData, const vector<unsigned char> &vchHash, UniValue &entry, char& type)
+void SysTxToJSON(const int op, const vector<unsigned char> &vchData, const vector<unsigned char> &vchHash, UniValue &entry, const char& type)
 {
 	if(type == ALIAS)
 		AliasTxToJSON(op, vchData, vchHash, entry);
