@@ -2652,6 +2652,30 @@ std::set<int> CMPTxList::GetSeedBlocks(int startHeight, int endHeight)
     return setSeedBlocks;
 }
 
+bool CMPTxList::CheckForFreezeTxs(int blockHeight)
+{
+    assert(pdb);
+    Iterator* it = NewIterator();
+
+    for (it->SeekToFirst(); it->Valid(); it->Next()) {
+        std::string itData = it->value().ToString();
+        std::vector<std::string> vstr;
+        boost::split(vstr, itData, boost::is_any_of(":"), token_compress_on);
+        if (4 != vstr.size()) continue;
+        int block = atoi(vstr[1]);
+        if (block < blockHeight) continue;
+        uint16_t txtype = atoi(vstr[2]);
+        if (txtype == MSC_TYPE_FREEZE_PROPERTY_TOKENS || txtype == MSC_TYPE_UNFREEZE_PROPERTY_TOKENS ||
+            txtype == MSC_TYPE_ENABLE_FREEZING || txtype == MSC_TYPE_DISABLE_FREEZING) {
+            delete it;
+            return true;
+        }
+    }
+
+    delete it;
+    return false;
+}
+
 bool CMPTxList::LoadFreezeState(int blockHeight)
 {
     assert(pdb);
@@ -3902,6 +3926,9 @@ int mastercore_handler_block_begin(int nBlockPrev, CBlockIndex const * pBlockInd
     if (reorgRecoveryMode > 0) {
         reorgRecoveryMode = 0; // clear reorgRecovery here as this is likely re-entrant
 
+        // Check if any freeze related transactions would be rolled back - if so wipe the state and startclean
+        bool reorgContainsFreeze = p_txlistdb->CheckForFreezeTxs(pBlockIndex->nHeight);
+
         // NOTE: The blockNum parameter is inclusive, so deleteAboveBlock(1000) will delete records in block 1000 and above.
         p_txlistdb->isMPinBlockRange(pBlockIndex->nHeight, reorgRecoveryMaxHeight, true);
         t_tradelistdb->deleteAboveBlock(pBlockIndex->nHeight);
@@ -3912,12 +3939,17 @@ int mastercore_handler_block_begin(int nBlockPrev, CBlockIndex const * pBlockInd
 
         nWaterlineBlock = ConsensusParams().GENESIS_BLOCK - 1;
 
-        int best_state_block = load_most_relevant_state();
-        if (best_state_block < 0) {
-            // unable to recover easily, remove stale stale state bits and reparse from the beginning.
-            clear_all_state();
+        if (reorgContainsFreeze) {
+           PrintToLog("Reorganization containing freeze related transactions detected, forcing a reparse...\n");
+           clear_all_state(); // unable to reorg freezes safely, clear state and reparse
         } else {
-            nWaterlineBlock = best_state_block;
+            int best_state_block = load_most_relevant_state();
+            if (best_state_block < 0) {
+                // unable to recover easily, remove stale stale state bits and reparse from the beginning.
+                clear_all_state();
+            } else {
+                nWaterlineBlock = best_state_block;
+            }
         }
 
         // clear the global wallet property list, perform a forced wallet update and tell the UI that state is no longer valid, and UI views need to be reinit

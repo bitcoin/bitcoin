@@ -9,7 +9,6 @@ printf "Preparing a test environment...\n"
 printf "   * Starting a fresh regtest daemon\n"
 rm -r ~/.bitcoin/regtest
 $SRCDIR/omnicored --regtest --server --daemon --omniactivationallowsender=any --omnidebug=verbose >$NUL
-printf "NOTE: verbose is on, log in datadir/regtest/ should show before and after states for any changes via stateDB\n"
 sleep 10
 printf "   * Preparing some mature testnet BTC\n"
 $SRCDIR/omnicore-cli --regtest generate 105 >$NUL

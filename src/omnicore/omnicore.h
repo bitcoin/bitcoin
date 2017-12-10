@@ -283,6 +283,7 @@ public:
     void LoadAlerts(int blockHeight);
     void LoadActivations(int blockHeight);
     bool LoadFreezeState(int blockHeight);
+    bool CheckForFreezeTxs(int blockHeight);
 
     void printStats();
     void printAll();
