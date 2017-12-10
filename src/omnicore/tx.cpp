@@ -16,6 +16,7 @@
 #include "omnicore/utils.h"
 
 #include "amount.h"
+#include "base58.h"
 #include "main.h"
 #include "sync.h"
 #include "utiltime.h"
@@ -705,6 +706,10 @@ bool CMPTransaction::interpret_FreezeTokens()
     if (receiver.empty()) {
         return false;
     }
+    CBitcoinAddress recAddress(receiver);
+    if (!recAddress.IsValid()) {
+        return false;
+    }
 
     if ((!rpcOnly && msc_debug_packets) || msc_debug_packets_readonly) {
         PrintToLog("\t        property: %d (%s)\n", property, strMPProperty(property));
@@ -738,6 +743,10 @@ bool CMPTransaction::interpret_UnfreezeTokens()
     memcpy(&address_hash160, &pkt[17], 20);
     receiver = HashToAddress(address_version, address_hash160);
     if (receiver.empty()) {
+        return false;
+    }
+    CBitcoinAddress recAddress(receiver);
+    if (!recAddress.IsValid()) {
         return false;
     }
 
