@@ -474,7 +474,7 @@ bool mastercore::update_tally_map(const std::string& who, uint32_t propertyId, i
 
     LOCK(cs_tally);
 
-    if (ttype != PENDING && amount < 0) {
+    if (ttype == BALANCE && amount < 0) {
         assert(!isAddressFrozen(who, propertyId)); // for safety, this should never fail if everything else is working properly.
     }
 
