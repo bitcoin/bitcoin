@@ -895,7 +895,7 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 	scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_OFFER) << CScript::EncodeOP_N(OP_OFFER_ACTIVATE) << vchOffer << vchHashOffer << OP_2DROP << OP_2DROP;
 	scriptPubKey += scriptPubKeyOrig;
 	CScript scriptPubKeyAlias;
-	scriptPubKeyAlias << CScript::EncodeOP_N(OP_SYSCOIN_OFFER) << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << alias.vchAlias << alias.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
+	scriptPubKeyAlias << CScript::EncodeOP_N(OP_SYSCOIN_ALIAS) << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << alias.vchAlias << alias.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
 	scriptPubKeyAlias += scriptPubKeyOrig;
 
 	vector<CRecipient> vecSend;
@@ -993,7 +993,7 @@ UniValue offerlink(const UniValue& params, bool fHelp) {
 	scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_OFFER) << CScript::EncodeOP_N(OP_OFFER_ACTIVATE) << vchOffer << vchHashOffer << OP_2DROP << OP_2DROP;
 	scriptPubKey += scriptPubKeyOrig;
 	CScript scriptPubKeyAlias;
-	scriptPubKeyAlias << CScript::EncodeOP_N(OP_SYSCOIN_OFFER) << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << alias.vchAlias << alias.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
+	scriptPubKeyAlias << CScript::EncodeOP_N(OP_SYSCOIN_ALIAS) << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << alias.vchAlias << alias.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
 	scriptPubKeyAlias += scriptPubKeyOrig;
 
 
@@ -1192,7 +1192,7 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	CreateRecipient(scriptPubKey, recipient);
 	vecSend.push_back(recipient);
 	CScript scriptPubKeyAlias;
-	scriptPubKeyAlias << CScript::EncodeOP_N(OP_SYSCOIN_OFFER) << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << alias.vchAlias << alias.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
+	scriptPubKeyAlias << CScript::EncodeOP_N(OP_SYSCOIN_ALIAS) << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << alias.vchAlias << alias.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
 	scriptPubKeyAlias += scriptPubKeyOrig;
 	CRecipient aliasRecipient;
 	CreateRecipient(scriptPubKeyAlias, aliasRecipient);
