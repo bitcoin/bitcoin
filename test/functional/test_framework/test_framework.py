@@ -15,7 +15,6 @@ import shutil
 import sys
 import tempfile
 import time
-import traceback
 from concurrent.futures import ThreadPoolExecutor
 
 from .authproxy import JSONRPCException
