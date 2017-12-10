@@ -701,30 +701,31 @@ theAlias = dbAlias;
 		if (!dontaddtodb) {
 			int nOutHistory;
 			int opHistory;
+			char type;
 			vector<vector<unsigned char> > vvchHistory;
-			if (DecodeAndParseSyscoinTx(tx, opHistory, nOutHistory, vvchHistory)) {
+			if (DecodeAndParseSyscoinTx(tx, opHistory, nOutHistory, vvchHistory, type)) {
 				string strResponseEnglish = "";
 				string strResponseGUID = "";
-				string strResponse = GetSyscoinTransactionDescription(opHistory, vvchHistory, tx, strResponseEnglish, strResponseGUID);
+				string strResponse = GetSyscoinTransactionDescription(opHistory, vvchHistory, tx, strResponseEnglish, strResponseGUID, type);
 				if (strResponse != "") {
 					string user1 = stringFromVch(vvchArgs[0]);
 					string user2 = "";
 					string user3 = "";
-					if (opHistory == OP_ALIAS_UPDATE) {
+					if (type == ALIAS && opHistory == OP_ALIAS_UPDATE) {
 						if (!newAddress.empty())
 							user2 = newAddress;
 					}
-					else if (opHistory == OP_CERT_TRANSFER) {
+					else if (type == CERT && opHistory == OP_CERT_TRANSFER) {
 						CCert cert(tx);
 						user2 = stringFromVch(cert.linkAliasTuple.first);
 					}
-					else if (opHistory == OP_OFFER_UPDATE)
+					else if (type == OFFER && opHistory == OP_OFFER_UPDATE)
 					{
 						COffer offer(tx);
 						if (!offer.linkAliasTuple.IsNull())
 							user2 = stringFromVch(offer.linkAliasTuple.first);
 					}
-					else if (IsEscrowOp(opHistory)) {
+					else if (type == ESCROW && IsEscrowOp(opHistory)) {
 						CEscrow escrow(tx);
 						const string &buyer = stringFromVch(escrow.buyerAliasTuple.first);
 						const string &seller = stringFromVch(escrow.sellerAliasTuple.first);
@@ -1032,23 +1033,26 @@ bool GetAliasOfTx(const CTransaction& tx, vector<unsigned char>& name) {
 	return false;
 }
 bool DecodeAndParseSyscoinTx(const CTransaction& tx, int& op, int& nOut,
-		vector<vector<unsigned char> >& vvch)
+		vector<vector<unsigned char> >& vvch, char& type)
 {
 	return  
-		DecodeAndParseCertTx(tx, op, nOut, vvch)
-		|| DecodeAndParseOfferTx(tx, op, nOut, vvch)
-		|| DecodeAndParseEscrowTx(tx, op, nOut, vvch)
-		|| DecodeAndParseAliasTx(tx, op, nOut, vvch);
+		DecodeAndParseCertTx(tx, op, nOut, vvch, type)
+		|| DecodeAndParseOfferTx(tx, op, nOut, vvch, type)
+		|| DecodeAndParseEscrowTx(tx, op, nOut, vvch, type)
+		|| DecodeAndParseAliasTx(tx, op, nOut, vvch, type);
 }
 bool DecodeAndParseAliasTx(const CTransaction& tx, int& op, int& nOut,
-		vector<vector<unsigned char> >& vvch)
+		vector<vector<unsigned char> >& vvch, char &type)
 {
 	CAliasIndex alias;
 	bool decode = DecodeAliasTx(tx, op, nOut, vvch);
 	if(decode)
 	{
 		bool parse = alias.UnserializeFromTx(tx);
-		return decode && parse;
+		if (decode && parse) {
+			type = ALIAS;
+			return true;
+		} 
 	}
 	return false;
 }
@@ -2127,20 +2131,21 @@ UniValue syscoindecoderawtransaction(const UniValue& params, bool fHelp) {
 	vector<unsigned char> vchHash;
 	GetSyscoinData(rawTx, vchData, vchHash, nOut);	
 	UniValue output(UniValue::VOBJ);
-	if(DecodeAndParseSyscoinTx(rawTx, op, nOut, vvch))
-		SysTxToJSON(op, vchData, vchHash, output);
+	char type;
+	if(DecodeAndParseSyscoinTx(rawTx, op, nOut, vvch, type))
+		SysTxToJSON(op, vchData, vchHash, output, type);
 	
 	return output;
 }
-void SysTxToJSON(const int op, const vector<unsigned char> &vchData, const vector<unsigned char> &vchHash, UniValue &entry)
+void SysTxToJSON(const int op, const vector<unsigned char> &vchData, const vector<unsigned char> &vchHash, UniValue &entry, char& type)
 {
-	if(IsAliasOp(op))
+	if(type == ALIAS)
 		AliasTxToJSON(op, vchData, vchHash, entry);
-	if(IsCertOp(op))
+	else if(type == CERT)
 		CertTxToJSON(op, vchData, vchHash, entry);
-	if(IsEscrowOp(op))
+	else if(type == ESCROW)
 		EscrowTxToJSON(op, vchData, vchHash, entry);
-	if(IsOfferOp(op))
+	else if(type == OFFER)
 		OfferTxToJSON(op, vchData, vchHash, entry);
 }
 void AliasTxToJSON(const int op, const vector<unsigned char> &vchData, const vector<unsigned char> &vchHash, UniValue &entry)
@@ -2806,96 +2811,102 @@ bool COfferLinkWhitelist::GetLinkEntryByHash(const std::vector<unsigned char> &a
 	}
 	return false;
 }
-string GetSyscoinTransactionDescription(const int op, const vector<vector<unsigned char> > &vvchArgs, const CTransaction &tx, string& responseEnglish, string& responseGUID)
+string GetSyscoinTransactionDescription(const int op, const vector<vector<unsigned char> > &vvchArgs, const CTransaction &tx, string& responseEnglish, string& responseGUID, const char &type)
 {
 	responseGUID = stringFromVch(vvchArgs[0]);
 	string strResponse = "";
 	COffer offer;
 	CEscrow escrow;
-	switch (op)
-	{
-	case OP_ALIAS_ACTIVATE:
-		strResponse = _("Alias Activated");
-		responseEnglish = "Alias Activated";
-		break;
-	case OP_ALIAS_UPDATE:
-		strResponse = _("Alias Updated");
-		responseEnglish = "Alias Updated";
-		break;
-	case OP_OFFER_ACTIVATE:
-		strResponse = _("Offer Activated");
-		responseEnglish = "Offer Activated";
-		break;
-	case OP_OFFER_UPDATE:
-		strResponse = _("Offer Updated");
-		responseEnglish = "Offer Updated";
-		break;
-	case OP_CERT_ACTIVATE:
-		strResponse = _("Certificate Activated");
-		responseEnglish = "Certificate Activated";
-		break;
-	case OP_CERT_UPDATE:
-		strResponse = _("Certificate Updated");
-		responseEnglish = "Certificate Updated";
-		break;
-	case OP_CERT_TRANSFER:
-		strResponse = _("Certificate Transferred");
-		responseEnglish = "Certificate Transferred";
-		break;
-	case OP_ESCROW_ACTIVATE:
-		escrow = CEscrow(tx);
-		if (escrow.bPaymentAck)
-		{
-			strResponse = _("Escrow Acknowledged");
-			responseEnglish = "Escrow Acknowledged";
+	if (type == ALIAS) {
+		if (op == OP_ALIAS_ACTIVATE) {
+			strResponse = _("Alias Activated");
+			responseEnglish = "Alias Activated";
 		}
-		else
-		{
-			strResponse = _("Escrow Activated");
-			responseEnglish = "Escrow Activated";
+		else if (op == OP_ALIAS_UPDATE) {
+			strResponse = _("Alias Updated");
+			responseEnglish = "Alias Updated";
 		}
-		break;
-	case OP_ESCROW_RELEASE:
-		if (vvchArgs[1] == vchFromString("1"))
-		{
-			strResponse = _("Escrow Release Complete");
-			responseEnglish = "Escrow Release Complete";
+	}
+	else if (type == OFFER) {
+		if (op == OP_OFFER_ACTIVATE) {
+			strResponse = _("Offer Activated");
+			responseEnglish = "Offer Activated";
 		}
-		else
-		{
-			strResponse = _("Escrow Released");
-			responseEnglish = "Escrow Released";
+		else if (op == OP_OFFER_UPDATE) {
+			strResponse = _("Offer Updated");
+			responseEnglish = "Offer Updated";
 		}
-		break;
-	case OP_ESCROW_COMPLETE:
-		strResponse = _("Escrow Feedback");
-		responseEnglish = "Escrow Feedback";
-		break;
-	case OP_ESCROW_BID:
-		strResponse = _("Escrow Bid");
-		responseEnglish = "Escrow Bid";
-		break;
-	case OP_ESCROW_ACKNOWLEDGE:
-		strResponse = _("Escrow Acknowledge");
-		responseEnglish = "Escrow Acknowledge";
-		break;
-	case OP_ESCROW_ADD_SHIPPING:
-		strResponse = _("Escrow Add Shipping");
-		responseEnglish = "Escrow Add Shipping";
-		break;
-	case OP_ESCROW_REFUND:
-		if (vvchArgs[1] == vchFromString("1"))
-		{
-			strResponse = _("Escrow Refund Complete");
-			responseEnglish = "Escrow Refund Complete";
+	}
+	else if (type == CERT) {
+		if (op == OP_CERT_ACTIVATE) {
+			strResponse = _("Certificate Activated");
+			responseEnglish = "Certificate Activated";
 		}
-		else
-		{
-			strResponse = _("Escrow Refunded");
-			responseEnglish = "Escrow Refunded";
+		else if (op == OP_CERT_UPDATE) {
+			strResponse = _("Certificate Updated");
+			responseEnglish = "Certificate Updated";
 		}
-		break;
-	default:
+		else if (op == OP_CERT_TRANSFER) {
+			strResponse = _("Certificate Transferred");
+			responseEnglish = "Certificate Transferred";
+		}
+	}
+	else if (type == ESCROW) {
+		if (op == OP_ESCROW_ACTIVATE) {
+			escrow = CEscrow(tx);
+			if (escrow.bPaymentAck)
+			{
+				strResponse = _("Escrow Acknowledged");
+				responseEnglish = "Escrow Acknowledged";
+			}
+			else
+			{
+				strResponse = _("Escrow Activated");
+				responseEnglish = "Escrow Activated";
+			}
+		}
+		else if (op == OP_ESCROW_RELEASE) {
+			if (vvchArgs[1] == vchFromString("1"))
+			{
+				strResponse = _("Escrow Release Complete");
+				responseEnglish = "Escrow Release Complete";
+			}
+			else
+			{
+				strResponse = _("Escrow Released");
+				responseEnglish = "Escrow Released";
+			}
+		}
+		else if (op == OP_ESCROW_COMPLETE) {
+			strResponse = _("Escrow Feedback");
+			responseEnglish = "Escrow Feedback";
+		}
+		else if (op == OP_ESCROW_BID) {
+			strResponse = _("Escrow Bid");
+			responseEnglish = "Escrow Bid";
+		}
+		else if (op == OP_ESCROW_ACKNOWLEDGE) {
+			strResponse = _("Escrow Acknowledge");
+			responseEnglish = "Escrow Acknowledge";
+		}
+		else if (op == OP_ESCROW_ADD_SHIPPING) {
+			strResponse = _("Escrow Add Shipping");
+			responseEnglish = "Escrow Add Shipping";
+		}
+		else if (op == OP_ESCROW_REFUND) {
+			if (vvchArgs[1] == vchFromString("1"))
+			{
+				strResponse = _("Escrow Refund Complete");
+				responseEnglish = "Escrow Refund Complete";
+			}
+			else
+			{
+				strResponse = _("Escrow Refunded");
+				responseEnglish = "Escrow Refunded";
+			}
+		}
+	}
+	else{
 		return "";
 	}
 	return strResponse;

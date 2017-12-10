@@ -246,12 +246,16 @@ bool GetCert(const vector<unsigned char> &vchCert,
     return true;
 }
 bool DecodeAndParseCertTx(const CTransaction& tx, int& op, int& nOut,
-		vector<vector<unsigned char> >& vvch)
+		vector<vector<unsigned char> >& vvch, char &type)
 {
 	CCert cert;
 	bool decode = DecodeCertTx(tx, op, nOut, vvch);
 	bool parse = cert.UnserializeFromTx(tx);
-	return decode && parse;
+	if (decode&&parse) {
+		type = CERT;
+		return true;
+	}
+	return false;
 }
 bool DecodeCertTx(const CTransaction& tx, int& op, int& nOut,
         vector<vector<unsigned char> >& vvch) {

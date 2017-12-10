@@ -405,12 +405,16 @@ bool GetEscrow(const vector<unsigned char> &vchEscrow,
     return true;
 }
 bool DecodeAndParseEscrowTx(const CTransaction& tx, int& op, int& nOut,
-		vector<vector<unsigned char> >& vvch)
+	vector<vector<unsigned char> >& vvch, char& type)
 {
 	CEscrow escrow;
 	bool decode = DecodeEscrowTx(tx, op, nOut, vvch);
 	bool parse = escrow.UnserializeFromTx(tx);
-	return decode && parse;
+	if (decode && parse) {
+		type = ESCROW;
+		return true;
+	}
+	return false;
 }
 bool DecodeEscrowTx(const CTransaction& tx, int& op, int& nOut,
         vector<vector<unsigned char> >& vvch) {

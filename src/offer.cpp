@@ -248,12 +248,16 @@ bool GetOffer(const vector<unsigned char> &vchOffer,
 	return true;
 }
 bool DecodeAndParseOfferTx(const CTransaction& tx, int& op, int& nOut,
-		vector<vector<unsigned char> >& vvch)
+		vector<vector<unsigned char> >& vvch, char &type)
 {
 	COffer offer;
 	bool decode = DecodeOfferTx(tx, op, nOut, vvch);
 	bool parse = offer.UnserializeFromTx(tx);
-	return decode && parse;
+	if (decode && parse) {
+		type = OFFER;
+		return true;
+	}
+	return false;
 }
 bool DecodeOfferTx(const CTransaction& tx, int& op, int& nOut,
 		vector<vector<unsigned char> >& vvch) {
