@@ -1081,11 +1081,12 @@ bool DecodeAliasScript(const CScript& script, int& op,
 	vvch.clear();
 	if (!script.GetOp(pc, opcode))
 		return false;
-	if (opcode != OP_SYSCOIN_EXTENDED)
+	opcode = CScript::DecodeOP_N(opcode);
+	if (opcode != OP_SYSCOIN_ALIAS)
 		return false;
 	if (!script.GetOp(pc, opcode))
 		return false;
-	op = opcode;
+	op = CScript::DecodeOP_N(opcode);
 	if (!IsAliasOp(op))
 		return false;
 	bool found = false;
@@ -1098,6 +1099,8 @@ bool DecodeAliasScript(const CScript& script, int& op,
 			found = true;
 			break;
 		}
+		if (!(opcode >= 0 && opcode <= OP_PUSHDATA4))
+			return false;
 		vvch.push_back(vch);
 	}
 
@@ -1951,9 +1954,9 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	
 	CScript scriptPubKey;
 	if(bActivation)
-		scriptPubKey << OP_SYSCOIN_EXTENDED << OP_ALIAS_ACTIVATE << vchAlias << newAlias.vchGUID << vchHashAlias << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
+		scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_ALIAS) << CScript::EncodeOP_N(OP_ALIAS_ACTIVATE) << vchAlias << newAlias.vchGUID << vchHashAlias << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
 	else
-		scriptPubKey << OP_SYSCOIN_EXTENDED << OP_ALIAS_ACTIVATE << vchHashAlias << OP_2DROP << OP_DROP;
+		scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_ALIAS) << CScript::EncodeOP_N(OP_ALIAS_ACTIVATE) << vchHashAlias << OP_2DROP << OP_DROP;
 
 	CSyscoinAddress newAddress;
 	GetAddress(newAlias, &newAddress, scriptPubKeyOrig);
@@ -2065,7 +2068,7 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
     vector<unsigned char> vchHashAlias = vchFromValue(hash.GetHex());
 
 	CScript scriptPubKey;
-	scriptPubKey << OP_SYSCOIN_EXTENDED << OP_ALIAS_UPDATE << copyAlias.vchAlias << copyAlias.vchGUID << vchHashAlias << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
+	scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_ALIAS) << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << copyAlias.vchAlias << copyAlias.vchGUID << vchHashAlias << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
 	scriptPubKey += scriptPubKeyOrig;
 
     vector<CRecipient> vecSend;
@@ -2679,7 +2682,7 @@ UniValue aliasupdatewhitelist(const UniValue& params, bool fHelp) {
 	vector<unsigned char> vchHashAlias = vchFromValue(hash.GetHex());
 
 	CScript scriptPubKey;
-	scriptPubKey << OP_SYSCOIN_EXTENDED << OP_ALIAS_UPDATE << copyAlias.vchAlias << copyAlias.vchGUID << vchHashAlias << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
+	scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_ALIAS) << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << copyAlias.vchAlias << copyAlias.vchGUID << vchHashAlias << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
 	scriptPubKey += scriptPubKeyOrig;
 
 	vector<CRecipient> vecSend;
@@ -2739,7 +2742,7 @@ UniValue aliasclearwhitelist(const UniValue& params, bool fHelp) {
 	vector<unsigned char> vchHashAlias = vchFromValue(hash.GetHex());
 
 	CScript scriptPubKey;
-	scriptPubKey << OP_SYSCOIN_EXTENDED << OP_ALIAS_UPDATE << copyAlias.vchAlias << copyAlias.vchGUID << vchHashAlias << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
+	scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_ALIAS) << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << copyAlias.vchAlias << copyAlias.vchGUID << vchHashAlias << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
 	scriptPubKey += scriptPubKeyOrig;
 
 	vector<CRecipient> vecSend;

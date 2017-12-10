@@ -43,8 +43,8 @@ enum opcodetype
     // push value
     OP_0 = 0x00,
 	// SYSCOIN aliases
-	OP_ALIAS_ACTIVATE = 0x02,
-	OP_ALIAS_UPDATE = 0x03,
+	OP_ALIAS_ACTIVATE = 0x01,
+	OP_ALIAS_UPDATE = 0x02,
 
 	// distributed exchange
 	OP_OFFER_ACTIVATE = 0x04,
@@ -65,7 +65,7 @@ enum opcodetype
 	OP_ESCROW_ADD_SHIPPING = 0x0f,
 
 	// syscoin extended reserved 
-	OP_SYSCOIN_EXTENDED = 0x10,
+	OP_SYSCOIN_ALIAS = 0x01,
     OP_FALSE = OP_0,
     OP_PUSHDATA1 = 0x4c,
     OP_PUSHDATA2 = 0x4d,
