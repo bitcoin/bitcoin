@@ -22,7 +22,6 @@ from test_framework.mininode import (
     mininode_lock,
     msg_block,
     msg_getdata,
-    NODE_NETWORK,
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
