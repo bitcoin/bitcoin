@@ -14,6 +14,8 @@
 #include "main.h"
 #include "ui_interface.h"
 
+#include <boost/filesystem.hpp>
+
 #include <stdint.h>
 #include <string>
 #include <vector>
@@ -89,6 +91,8 @@ void CheckLiveActivations(int blockHeight)
             PrintToLog(msgText);
             PrintToConsole(msgText);
             if (!GetBoolArg("-overrideforcedshutdown", false)) {
+                boost::filesystem::path persistPath = GetDataDir() / "MP_persist";
+                if (boost::filesystem::exists(persistPath)) boost::filesystem::remove_all(persistPath); // prevent the node being restarted without a reparse after forced shutdown
                 AbortNode(msgText, msgText);
             }
         }

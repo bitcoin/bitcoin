@@ -102,7 +102,11 @@ void COmniFeeCache::AddFee(const uint32_t &propertyId, int block, const int64_t 
         // overflow - there is no way the fee cache should exceed the maximum possible number of tokens, not safe to continue
         const std::string& msg = strprintf("Shutting down due to fee cache overflow (block %d property %d current %d amount %d)\n", block, propertyId, currentCachedAmount, amount);
         PrintToLog(msg);
-        if (!GetBoolArg("-overrideforcedshutdown", false)) AbortNode(msg, msg);
+        if (!GetBoolArg("-overrideforcedshutdown", false)) {
+            boost::filesystem::path persistPath = GetDataDir() / "MP_persist";
+            if (boost::filesystem::exists(persistPath)) boost::filesystem::remove_all(persistPath); // prevent the node being restarted without a reparse after forced shutdown
+            AbortNode(msg, msg);
+        }
     }
     int64_t newCachedAmount = currentCachedAmount + amount;
 

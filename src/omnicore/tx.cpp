@@ -13,6 +13,8 @@
 #include "omnicore/rules.h"
 #include "omnicore/sp.h"
 #include "omnicore/sto.h"
+#include "omnicore/utilsbitcoin.h"
+#include "omnicore/version.h"
 
 #include "amount.h"
 #include "main.h"
@@ -2047,6 +2049,20 @@ int CMPTransaction::logicMath_Alert()
     if (!authorized) {
         PrintToLog("%s(): rejected: sender %s is not authorized for alerts\n", __func__, sender);
         return (PKT_ERROR -51);
+    }
+
+    if (alert_type == ALERT_CLIENT_VERSION_EXPIRY && OMNICORE_VERSION < alert_expiry) {
+        // regular alert keys CANNOT be used to force a client upgrade on mainnet - at least 3 signatures from board/devs are required
+        if (sender == "34kwkVRSvFVEoUwcQSgpQ4ZUasuZ54DJLD" || isNonMainNet()) {
+            std::string msgText = "Client upgrade is required!  Shutting down due to unsupported consensus state!";
+            PrintToLog(msgText);
+            PrintToConsole(msgText);
+            if (!GetBoolArg("-overrideforcedshutdown", false)) {
+                boost::filesystem::path persistPath = GetDataDir() / "MP_persist";
+                if (boost::filesystem::exists(persistPath)) boost::filesystem::remove_all(persistPath); // prevent the node being restarted without a reparse after forced shutdown
+                AbortNode(msgText, msgText);
+            }
+        }
     }
 
     if (alert_type == 65535) { // set alert type to FFFF to clear previously sent alerts
