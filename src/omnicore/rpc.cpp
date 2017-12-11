@@ -134,12 +134,16 @@ bool BalanceToJSON(const std::string& address, uint32_t property, UniValue& bala
     nReserved += getMPbalance(address, property, METADEX_RESERVE);
     nReserved += getMPbalance(address, property, SELLOFFER_RESERVE);
 
+    int64_t nFrozen = getUserFrozenMPbalance(address, property);
+
     if (divisible) {
         balance_obj.push_back(Pair("balance", FormatDivisibleMP(nAvailable)));
         balance_obj.push_back(Pair("reserved", FormatDivisibleMP(nReserved)));
+        if (nFrozen != 0) balance_obj.push_back(Pair("frozen", FormatDivisibleMP(nFrozen)));
     } else {
         balance_obj.push_back(Pair("balance", FormatIndivisibleMP(nAvailable)));
         balance_obj.push_back(Pair("reserved", FormatIndivisibleMP(nReserved)));
+        if (nFrozen != 0) balance_obj.push_back(Pair("frozen", FormatIndivisibleMP(nFrozen)));
     }
 
     if (nAvailable == 0 && nReserved == 0) {
@@ -899,6 +903,7 @@ UniValue omni_getproperty(const UniValue& params, bool fHelp)
             "  \"issuer\" : \"address\",            (string) the Bitcoin address of the issuer on record\n"
             "  \"creationtxid\" : \"hash\",         (string) the hex-encoded creation transaction hash\n"
             "  \"fixedissuance\" : true|false,    (boolean) whether the token supply is fixed\n"
+            "  \"managedissuance\" : true|false,    (boolean) whether the token supply is managed\n"
             "  \"totaltokens\" : \"n.nnnnnnnn\"     (string) the total number of tokens in existence\n"
             "}\n"
             "\nExamples:\n"
@@ -927,6 +932,12 @@ UniValue omni_getproperty(const UniValue& params, bool fHelp)
     response.push_back(Pair("issuer", sp.issuer));
     response.push_back(Pair("creationtxid", strCreationHash));
     response.push_back(Pair("fixedissuance", sp.fixed));
+    response.push_back(Pair("managedissuance", sp.manual));
+    if (sp.manual) {
+        int currentBlock = GetHeight();
+        LOCK(cs_tally);
+        response.push_back(Pair("freezingenabled", isFreezingEnabled(propertyId, currentBlock)));
+    }
     response.push_back(Pair("totaltokens", strTotalTokens));
 
     return response;

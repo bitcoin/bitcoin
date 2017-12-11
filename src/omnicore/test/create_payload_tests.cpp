@@ -383,6 +383,48 @@ BOOST_AUTO_TEST_CASE(payload_change_property_manager)
     BOOST_CHECK_EQUAL(HexStr(vch), "000000460000000d");
 }
 
+BOOST_AUTO_TEST_CASE(payload_enable_freezing)
+{
+    // Enable freezing [type 71, version 0]
+    std::vector<unsigned char> vch = CreatePayload_EnableFreezing(
+        static_cast<uint32_t>(4));                 // property: SP #4
+
+    BOOST_CHECK_EQUAL(HexStr(vch), "0000004700000004");
+}
+
+BOOST_AUTO_TEST_CASE(payload_disable_freezing)
+{
+    // Disable freezing [type 72, version 0]
+    std::vector<unsigned char> vch = CreatePayload_DisableFreezing(
+        static_cast<uint32_t>(4));                 // property: SP #4
+
+    BOOST_CHECK_EQUAL(HexStr(vch), "0000004800000004");
+}
+
+BOOST_AUTO_TEST_CASE(payload_freeze_tokens)
+{
+    // Freeze tokens [type 185, version 0]
+    std::vector<unsigned char> vch = CreatePayload_FreezeTokens(
+        static_cast<uint32_t>(4),                                   // property: SP #4
+        static_cast<int64_t>(1000),                                 // amount to freeze (unused)
+        std::string("1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P"));         // reference address
+
+    BOOST_CHECK_EQUAL(HexStr(vch),
+        "000000b90000000400000000000003e800946cb2e08075bcbaf157e47bcb67eb2b2339d242");
+}
+
+BOOST_AUTO_TEST_CASE(payload_unfreeze_tokens)
+{
+    // Freeze tokens [type 186, version 0]
+    std::vector<unsigned char> vch = CreatePayload_UnfreezeTokens(
+        static_cast<uint32_t>(4),                                   // property: SP #4
+        static_cast<int64_t>(1000),                                 // amount to freeze (unused)
+        std::string("1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P"));         // reference address
+
+    BOOST_CHECK_EQUAL(HexStr(vch),
+        "000000ba0000000400000000000003e800946cb2e08075bcbaf157e47bcb67eb2b2339d242");
+}
+
 BOOST_AUTO_TEST_CASE(payload_feature_deactivation)
 {
     // Omni Core feature activation [type 65533, version 65535]

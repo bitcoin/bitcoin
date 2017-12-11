@@ -110,6 +110,11 @@ std::map<uint32_t, int64_t> global_balance_reserved;
 //! Vector containing a list of properties relative to the wallet
 std::set<uint32_t> global_wallet_property_list;
 
+//! Set containing properties that have freezing enabled
+std::set<std::pair<uint32_t,int> > setFreezingEnabledProperties;
+//! Set containing addresses that have been frozen
+std::set<std::pair<std::string,uint32_t> > setFrozenAddresses;
+
 /**
  * Used to indicate, whether to automatically commit created transactions.
  *
@@ -285,6 +290,17 @@ int64_t getUserAvailableMPbalance(const std::string& address, uint32_t propertyI
     return money;
 }
 
+int64_t getUserFrozenMPbalance(const std::string& address, uint32_t propertyId)
+{
+    int64_t frozen = 0;
+
+    if (isAddressFrozen(address, propertyId)) {
+        frozen = getMPbalance(address, propertyId, BALANCE);
+    }
+
+    return frozen;
+}
+
 bool mastercore::isTestEcosystemProperty(uint32_t propertyId)
 {
     if ((OMNI_PROPERTY_TMSC == propertyId) || (TEST_ECO_PROPERTY_1 <= propertyId)) return true;
@@ -296,6 +312,93 @@ bool mastercore::isMainEcosystemProperty(uint32_t propertyId)
 {
     if ((OMNI_PROPERTY_BTC != propertyId) && !isTestEcosystemProperty(propertyId)) return true;
 
+    return false;
+}
+
+void mastercore::ClearFreezeState()
+{
+    // Should only ever be called in the event of a reorg
+    setFreezingEnabledProperties.clear();
+    setFrozenAddresses.clear();
+}
+
+void mastercore::PrintFreezeState()
+{
+    PrintToLog("setFrozenAddresses state:\n");
+    for (std::set<std::pair<std::string,uint32_t> >::iterator it = setFrozenAddresses.begin(); it != setFrozenAddresses.end(); it++) {
+        PrintToLog("  %s:%d\n", (*it).first, (*it).second);
+    }
+    PrintToLog("setFreezingEnabledProperties state:\n");
+    for (std::set<std::pair<uint32_t,int> >::iterator it = setFreezingEnabledProperties.begin(); it != setFreezingEnabledProperties.end(); it++) {
+        PrintToLog("  %d:%d\n", (*it).first, (*it).second);
+    }
+}
+
+void mastercore::enableFreezing(uint32_t propertyId, int liveBlock)
+{
+    setFreezingEnabledProperties.insert(std::make_pair(propertyId, liveBlock));
+    assert(isFreezingEnabled(propertyId, liveBlock));
+    PrintToLog("Freezing for property %d will be enabled at block %d.\n", propertyId, liveBlock);
+}
+
+void mastercore::disableFreezing(uint32_t propertyId)
+{
+    int liveBlock = 0;
+    for (std::set<std::pair<uint32_t,int> >::iterator it = setFreezingEnabledProperties.begin(); it != setFreezingEnabledProperties.end(); it++) {
+        if (propertyId == (*it).first) {
+            liveBlock = (*it).second;
+        }
+    }
+    assert(liveBlock > 0);
+
+    setFreezingEnabledProperties.erase(std::make_pair(propertyId, liveBlock));
+    PrintToLog("Freezing for property %d has been disabled.\n", propertyId);
+
+    // When disabling freezing for a property, all frozen addresses for that property will be unfrozen!
+    for (std::set<std::pair<std::string,uint32_t> >::iterator it = setFrozenAddresses.begin(); it != setFrozenAddresses.end(); ) {
+        if ((*it).second == propertyId) {
+            PrintToLog("Address %s has been unfrozen for property %d.\n", (*it).first, propertyId);
+            it = setFrozenAddresses.erase(it);
+            assert(!isAddressFrozen((*it).first, (*it).second));
+        } else {
+            it++;
+        }
+    }
+
+    assert(!isFreezingEnabled(propertyId, liveBlock));
+}
+
+bool mastercore::isFreezingEnabled(uint32_t propertyId, int block)
+{
+    for (std::set<std::pair<uint32_t,int> >::iterator it = setFreezingEnabledProperties.begin(); it != setFreezingEnabledProperties.end(); it++) {
+        uint32_t itemPropertyId = (*it).first;
+        int itemBlock = (*it).second;
+        if (propertyId == itemPropertyId && block >= itemBlock) {
+            return true;
+        }
+    }
+    return false;
+}
+
+void mastercore::freezeAddress(const std::string& address, uint32_t propertyId)
+{
+    setFrozenAddresses.insert(std::make_pair(address, propertyId));
+    assert(isAddressFrozen(address, propertyId));
+    PrintToLog("Address %s has been frozen for property %d.\n", address, propertyId);
+}
+
+void mastercore::unfreezeAddress(const std::string& address, uint32_t propertyId)
+{
+    setFrozenAddresses.erase(std::make_pair(address, propertyId));
+    assert(!isAddressFrozen(address, propertyId));
+    PrintToLog("Address %s has been unfrozen for property %d.\n", address, propertyId);
+}
+
+bool mastercore::isAddressFrozen(const std::string& address, uint32_t propertyId)
+{
+    if (setFrozenAddresses.find(std::make_pair(address, propertyId)) != setFrozenAddresses.end()) {
+        return true;
+    }
     return false;
 }
 
@@ -373,6 +476,10 @@ bool mastercore::update_tally_map(const std::string& who, uint32_t propertyId, i
     int64_t after = 0;
 
     LOCK(cs_tally);
+
+    if (ttype == BALANCE && amount < 0) {
+        assert(!isAddressFrozen(who, propertyId)); // for safety, this should never fail if everything else is working properly.
+    }
 
     before = getMPbalance(who, propertyId, ttype);
 
@@ -2086,6 +2193,7 @@ void clear_all_state()
     ResetConsensusParams();
     ClearActivations();
     ClearAlerts();
+    ClearFreezeState();
 
     // LevelDB based storage
     _my_sps->Clear();
@@ -2223,6 +2331,15 @@ int mastercore_init()
 
     // load all alerts from levelDB (and immediately expire old ones)
     p_txlistdb->LoadAlerts(nWaterlineBlock);
+
+    // load the state of any freeable properties and frozen addresses from levelDB
+    if (!p_txlistdb->LoadFreezeState(nWaterlineBlock)) {
+        std::string strShutdownReason = "Failed to load freeze state from levelDB.  It is unsafe to continue.\n";
+        PrintToLog(strShutdownReason);
+        if (!GetBoolArg("-overrideforcedshutdown", false)) {
+            AbortNode(strShutdownReason, strShutdownReason);
+        }
+    }
 
     // initial scan
     msc_initial_scan(nWaterlineBlock);
@@ -2536,6 +2653,108 @@ std::set<int> CMPTxList::GetSeedBlocks(int startHeight, int endHeight)
     delete it;
 
     return setSeedBlocks;
+}
+
+bool CMPTxList::CheckForFreezeTxs(int blockHeight)
+{
+    assert(pdb);
+    Iterator* it = NewIterator();
+
+    for (it->SeekToFirst(); it->Valid(); it->Next()) {
+        std::string itData = it->value().ToString();
+        std::vector<std::string> vstr;
+        boost::split(vstr, itData, boost::is_any_of(":"), token_compress_on);
+        if (4 != vstr.size()) continue;
+        int block = atoi(vstr[1]);
+        if (block < blockHeight) continue;
+        uint16_t txtype = atoi(vstr[2]);
+        if (txtype == MSC_TYPE_FREEZE_PROPERTY_TOKENS || txtype == MSC_TYPE_UNFREEZE_PROPERTY_TOKENS ||
+            txtype == MSC_TYPE_ENABLE_FREEZING || txtype == MSC_TYPE_DISABLE_FREEZING) {
+            delete it;
+            return true;
+        }
+    }
+
+    delete it;
+    return false;
+}
+
+bool CMPTxList::LoadFreezeState(int blockHeight)
+{
+    assert(pdb);
+    std::vector<std::pair<std::string, uint256> > loadOrder;
+    int txnsLoaded = 0;
+    Iterator* it = NewIterator();
+    PrintToLog("Loading freeze state from levelDB\n");
+
+    for (it->SeekToFirst(); it->Valid(); it->Next()) {
+        std::string itData = it->value().ToString();
+        std::vector<std::string> vstr;
+        boost::split(vstr, itData, boost::is_any_of(":"), token_compress_on);
+        if (4 != vstr.size()) continue;
+        uint16_t txtype = atoi(vstr[2]);
+        if (txtype != MSC_TYPE_FREEZE_PROPERTY_TOKENS && txtype != MSC_TYPE_UNFREEZE_PROPERTY_TOKENS &&
+            txtype != MSC_TYPE_ENABLE_FREEZING && txtype != MSC_TYPE_DISABLE_FREEZING) continue;
+        if (atoi(vstr[0]) != 1) continue; // invalid, ignore
+        uint256 txid = uint256S(it->key().ToString());
+        int txPosition = p_OmniTXDB->FetchTransactionPosition(txid);
+        std::string sortKey = strprintf("%06d%010d", atoi(vstr[1]), txPosition);
+        loadOrder.push_back(std::make_pair(sortKey, txid));
+    }
+
+    delete it;
+
+    std::sort (loadOrder.begin(), loadOrder.end());
+
+    for (std::vector<std::pair<std::string, uint256> >::iterator it = loadOrder.begin(); it != loadOrder.end(); ++it) {
+        uint256 hash = (*it).second;
+        uint256 blockHash;
+        CTransaction wtx;
+        CMPTransaction mp_obj;
+        if (!GetTransaction(hash, wtx, Params().GetConsensus(), blockHash, true)) {
+            PrintToLog("ERROR: While loading freeze transaction %s: tx in levelDB but does not exist.\n", hash.GetHex());
+            return false;
+        }
+        if (blockHash.IsNull() || (NULL == GetBlockIndex(blockHash))) {
+            PrintToLog("ERROR: While loading freeze transaction %s: failed to retrieve block hash.\n", hash.GetHex());
+            return false;
+        }
+        CBlockIndex* pBlockIndex = GetBlockIndex(blockHash);
+        if (NULL == pBlockIndex) {
+            PrintToLog("ERROR: While loading freeze transaction %s: failed to retrieve block index.\n", hash.GetHex());
+            return false;
+        }
+        int txBlockHeight = pBlockIndex->nHeight;
+        if (txBlockHeight > blockHeight) {
+            PrintToLog("ERROR: While loading freeze transaction %s: transaction is in the future.\n", hash.GetHex());
+            return false;
+        }
+        if (0 != ParseTransaction(wtx, txBlockHeight, 0, mp_obj)) {
+            PrintToLog("ERROR: While loading freeze transaction %s: failed ParseTransaction.\n", hash.GetHex());
+            return false;
+        }
+        if (!mp_obj.interpret_Transaction()) {
+            PrintToLog("ERROR: While loading freeze transaction %s: failed interpret_Transaction.\n", hash.GetHex());
+            return false;
+        }
+        if (MSC_TYPE_FREEZE_PROPERTY_TOKENS != mp_obj.getType() && MSC_TYPE_UNFREEZE_PROPERTY_TOKENS != mp_obj.getType() &&
+            MSC_TYPE_ENABLE_FREEZING != mp_obj.getType() && MSC_TYPE_DISABLE_FREEZING != mp_obj.getType()) {
+            PrintToLog("ERROR: While loading freeze transaction %s: levelDB type mismatch, not a freeze transaction.\n", hash.GetHex());
+            return false;
+        }
+        mp_obj.unlockLogic();
+        if (0 != mp_obj.interpretPacket()) {
+            PrintToLog("ERROR: While loading freeze transaction %s: non-zero return from interpretPacket\n", hash.GetHex());
+            return false;
+        }
+        txnsLoaded++;
+    }
+
+    if (blockHeight > 497000 && !isNonMainNet()) {
+        assert(txnsLoaded >= 2); // sanity check against a failure to properly load the freeze state
+    }
+
+    return true;
 }
 
 void CMPTxList::LoadActivations(int blockHeight)
@@ -3716,6 +3935,9 @@ int mastercore_handler_block_begin(int nBlockPrev, CBlockIndex const * pBlockInd
     if (reorgRecoveryMode > 0) {
         reorgRecoveryMode = 0; // clear reorgRecovery here as this is likely re-entrant
 
+        // Check if any freeze related transactions would be rolled back - if so wipe the state and startclean
+        bool reorgContainsFreeze = p_txlistdb->CheckForFreezeTxs(pBlockIndex->nHeight);
+
         // NOTE: The blockNum parameter is inclusive, so deleteAboveBlock(1000) will delete records in block 1000 and above.
         p_txlistdb->isMPinBlockRange(pBlockIndex->nHeight, reorgRecoveryMaxHeight, true);
         t_tradelistdb->deleteAboveBlock(pBlockIndex->nHeight);
@@ -3726,12 +3948,17 @@ int mastercore_handler_block_begin(int nBlockPrev, CBlockIndex const * pBlockInd
 
         nWaterlineBlock = ConsensusParams().GENESIS_BLOCK - 1;
 
-        int best_state_block = load_most_relevant_state();
-        if (best_state_block < 0) {
-            // unable to recover easily, remove stale stale state bits and reparse from the beginning.
-            clear_all_state();
+        if (reorgContainsFreeze) {
+           PrintToLog("Reorganization containing freeze related transactions detected, forcing a reparse...\n");
+           clear_all_state(); // unable to reorg freezes safely, clear state and reparse
         } else {
-            nWaterlineBlock = best_state_block;
+            int best_state_block = load_most_relevant_state();
+            if (best_state_block < 0) {
+                // unable to recover easily, remove stale stale state bits and reparse from the beginning.
+                clear_all_state();
+            } else {
+                nWaterlineBlock = best_state_block;
+            }
         }
 
         // clear the global wallet property list, perform a forced wallet update and tell the UI that state is no longer valid, and UI views need to be reinit

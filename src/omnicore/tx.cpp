@@ -13,10 +13,12 @@
 #include "omnicore/rules.h"
 #include "omnicore/sp.h"
 #include "omnicore/sto.h"
+#include "omnicore/utils.h"
 #include "omnicore/utilsbitcoin.h"
 #include "omnicore/version.h"
 
 #include "amount.h"
+#include "base58.h"
 #include "main.h"
 #include "sync.h"
 #include "utiltime.h"
@@ -61,6 +63,10 @@ std::string mastercore::strTransactionType(uint16_t txType)
         case MSC_TYPE_GRANT_PROPERTY_TOKENS: return "Grant Property Tokens";
         case MSC_TYPE_REVOKE_PROPERTY_TOKENS: return "Revoke Property Tokens";
         case MSC_TYPE_CHANGE_ISSUER_ADDRESS: return "Change Issuer Address";
+        case MSC_TYPE_ENABLE_FREEZING: return "Enable Freezing";
+        case MSC_TYPE_DISABLE_FREEZING: return "Disable Freezing";
+        case MSC_TYPE_FREEZE_PROPERTY_TOKENS: return "Freeze Property Tokens";
+        case MSC_TYPE_UNFREEZE_PROPERTY_TOKENS: return "Unfreeze Property Tokens";
         case MSC_TYPE_NOTIFICATION: return "Notification";
         case OMNICORE_MESSAGE_TYPE_ALERT: return "ALERT";
         case OMNICORE_MESSAGE_TYPE_DEACTIVATION: return "Feature Deactivation";
@@ -150,6 +156,18 @@ bool CMPTransaction::interpret_Transaction()
 
         case MSC_TYPE_CHANGE_ISSUER_ADDRESS:
             return interpret_ChangeIssuer();
+
+        case MSC_TYPE_ENABLE_FREEZING:
+            return interpret_EnableFreezing();
+
+        case MSC_TYPE_DISABLE_FREEZING:
+            return interpret_DisableFreezing();
+
+        case MSC_TYPE_FREEZE_PROPERTY_TOKENS:
+            return interpret_FreezeTokens();
+
+        case MSC_TYPE_UNFREEZE_PROPERTY_TOKENS:
+            return interpret_UnfreezeTokens();
 
         case OMNICORE_MESSAGE_TYPE_DEACTIVATION:
             return interpret_Deactivation();
@@ -633,6 +651,116 @@ bool CMPTransaction::interpret_ChangeIssuer()
     return true;
 }
 
+/** Tx 71 */
+bool CMPTransaction::interpret_EnableFreezing()
+{
+    if (pkt_size < 8) {
+        return false;
+    }
+    memcpy(&property, &pkt[4], 4);
+    swapByteOrder32(property);
+
+    if ((!rpcOnly && msc_debug_packets) || msc_debug_packets_readonly) {
+        PrintToLog("\t        property: %d (%s)\n", property, strMPProperty(property));
+    }
+
+    return true;
+}
+
+/** Tx 72 */
+bool CMPTransaction::interpret_DisableFreezing()
+{
+    if (pkt_size < 8) {
+        return false;
+    }
+    memcpy(&property, &pkt[4], 4);
+    swapByteOrder32(property);
+
+    if ((!rpcOnly && msc_debug_packets) || msc_debug_packets_readonly) {
+        PrintToLog("\t        property: %d (%s)\n", property, strMPProperty(property));
+    }
+
+    return true;
+}
+
+/** Tx 185 */
+bool CMPTransaction::interpret_FreezeTokens()
+{
+    if (pkt_size < 37) {
+        return false;
+    }
+    memcpy(&property, &pkt[4], 4);
+    swapByteOrder32(property);
+    memcpy(&nValue, &pkt[8], 8);
+    swapByteOrder64(nValue);
+    nNewValue = nValue;
+
+    /**
+        Note, TX185 is a virtual reference transaction type.
+              With virtual reference transactions a hash160 in the payload sets the receiver.
+              Reference outputs are ignored.
+    **/
+    unsigned char address_version;
+    uint160 address_hash160;
+    memcpy(&address_version, &pkt[16], 1);
+    memcpy(&address_hash160, &pkt[17], 20);
+    receiver = HashToAddress(address_version, address_hash160);
+    if (receiver.empty()) {
+        return false;
+    }
+    CBitcoinAddress recAddress(receiver);
+    if (!recAddress.IsValid()) {
+        return false;
+    }
+
+    if ((!rpcOnly && msc_debug_packets) || msc_debug_packets_readonly) {
+        PrintToLog("\t        property: %d (%s)\n", property, strMPProperty(property));
+        PrintToLog("\t  value (unused): %s\n", FormatMP(property, nValue));
+        PrintToLog("\t         address: %s\n", receiver);
+    }
+
+    return true;
+}
+
+/** Tx 186 */
+bool CMPTransaction::interpret_UnfreezeTokens()
+{
+    if (pkt_size < 37) {
+        return false;
+    }
+    memcpy(&property, &pkt[4], 4);
+    swapByteOrder32(property);
+    memcpy(&nValue, &pkt[8], 8);
+    swapByteOrder64(nValue);
+    nNewValue = nValue;
+
+    /**
+        Note, TX186 virtual reference transaction type.
+              With virtual reference transactions a hash160 in the payload sets the receiver.
+              Reference outputs are ignored.
+    **/
+    unsigned char address_version;
+    uint160 address_hash160;
+    memcpy(&address_version, &pkt[16], 1);
+    memcpy(&address_hash160, &pkt[17], 20);
+    receiver = HashToAddress(address_version, address_hash160);
+    if (receiver.empty()) {
+        return false;
+    }
+    CBitcoinAddress recAddress(receiver);
+    if (!recAddress.IsValid()) {
+        return false;
+    }
+
+    if ((!rpcOnly && msc_debug_packets) || msc_debug_packets_readonly) {
+        PrintToLog("\t        property: %d (%s)\n", property, strMPProperty(property));
+        PrintToLog("\t  value (unused): %s\n", FormatMP(property, nValue));
+        PrintToLog("\t         address: %s\n", receiver);
+    }
+
+    return true;
+}
+
 /** Tx 65533 */
 bool CMPTransaction::interpret_Deactivation()
 {
@@ -722,6 +850,11 @@ int CMPTransaction::interpretPacket()
 
     LOCK(cs_tally);
 
+    if (isAddressFrozen(sender, property)) {
+        PrintToLog("%s(): REJECTED: address %s is frozen for property %d\n", __func__, sender, property);
+        return (PKT_ERROR -3);
+    }
+
     switch (type) {
         case MSC_TYPE_SIMPLE_SEND:
             return logicMath_SimpleSend();
@@ -770,6 +903,18 @@ int CMPTransaction::interpretPacket()
 
         case MSC_TYPE_CHANGE_ISSUER_ADDRESS:
             return logicMath_ChangeIssuer();
+
+        case MSC_TYPE_ENABLE_FREEZING:
+            return logicMath_EnableFreezing();
+
+        case MSC_TYPE_DISABLE_FREEZING:
+            return logicMath_DisableFreezing();
+
+        case MSC_TYPE_FREEZE_PROPERTY_TOKENS:
+            return logicMath_FreezeTokens();
+
+        case MSC_TYPE_UNFREEZE_PROPERTY_TOKENS:
+            return logicMath_UnfreezeTokens();
 
         case OMNICORE_MESSAGE_TYPE_DEACTIVATION:
             return logicMath_Deactivation();
@@ -1076,6 +1221,12 @@ int CMPTransaction::logicMath_SendAll()
             continue;
         }
         if (ecosystem == OMNI_PROPERTY_TMSC && isMainEcosystemProperty(propertyId)) {
+            continue;
+        }
+
+        // do not transfer tokens from a frozen property
+        if (isAddressFrozen(sender, propertyId)) {
+            PrintToLog("%s(): sender %s is frozen for property %d - the property will not be included in processing.\n", __func__, sender, propertyId);
             continue;
         }
 
@@ -1945,6 +2096,236 @@ int CMPTransaction::logicMath_ChangeIssuer()
     sp.update_block = blockHash;
 
     assert(_my_sps->updateSP(property, sp));
+
+    return 0;
+}
+
+/** Tx 71 */
+int CMPTransaction::logicMath_EnableFreezing()
+{
+    uint256 blockHash;
+    {
+        LOCK(cs_main);
+
+        CBlockIndex* pindex = chainActive[block];
+        if (pindex == NULL) {
+            PrintToLog("%s(): ERROR: block %d not in the active chain\n", __func__, block);
+            return (PKT_ERROR_TOKENS -20);
+        }
+        blockHash = pindex->GetBlockHash();
+    }
+
+    if (!IsTransactionTypeAllowed(block, property, type, version)) {
+        PrintToLog("%s(): rejected: type %d or version %d not permitted for property %d at block %d\n",
+                __func__,
+                type,
+                version,
+                property,
+                block);
+        return (PKT_ERROR_TOKENS -22);
+    }
+
+    if (!IsPropertyIdValid(property)) {
+        PrintToLog("%s(): rejected: property %d does not exist\n", __func__, property);
+        return (PKT_ERROR_TOKENS -24);
+    }
+
+    CMPSPInfo::Entry sp;
+    assert(_my_sps->getSP(property, sp));
+
+    if (!sp.manual) {
+        PrintToLog("%s(): rejected: property %d is not managed\n", __func__, property);
+        return (PKT_ERROR_TOKENS -42);
+    }
+
+    if (sender != sp.issuer) {
+        PrintToLog("%s(): rejected: sender %s is not issuer of property %d [issuer=%s]\n", __func__, sender, property, sp.issuer);
+        return (PKT_ERROR_TOKENS -43);
+    }
+
+    if (isFreezingEnabled(property, block)) {
+        PrintToLog("%s(): rejected: freezing is already enabled for property %d\n", __func__, property);
+        return (PKT_ERROR_TOKENS -49);
+    }
+
+    int liveBlock = 0;
+    if (!IsFeatureActivated(FEATURE_FREEZENOTICE, block)) {
+        liveBlock = block;
+    } else {
+        const CConsensusParams& params = ConsensusParams();
+        liveBlock = params.OMNI_FREEZE_WAIT_PERIOD + block;
+    }
+
+    enableFreezing(property, liveBlock);
+
+    return 0;
+}
+
+/** Tx 72 */
+int CMPTransaction::logicMath_DisableFreezing()
+{
+    uint256 blockHash;
+    {
+        LOCK(cs_main);
+
+        CBlockIndex* pindex = chainActive[block];
+        if (pindex == NULL) {
+            PrintToLog("%s(): ERROR: block %d not in the active chain\n", __func__, block);
+            return (PKT_ERROR_TOKENS -20);
+        }
+        blockHash = pindex->GetBlockHash();
+    }
+
+    if (!IsTransactionTypeAllowed(block, property, type, version)) {
+        PrintToLog("%s(): rejected: type %d or version %d not permitted for property %d at block %d\n",
+                __func__,
+                type,
+                version,
+                property,
+                block);
+        return (PKT_ERROR_TOKENS -22);
+    }
+
+    if (!IsPropertyIdValid(property)) {
+        PrintToLog("%s(): rejected: property %d does not exist\n", __func__, property);
+        return (PKT_ERROR_TOKENS -24);
+    }
+
+    CMPSPInfo::Entry sp;
+    assert(_my_sps->getSP(property, sp));
+
+    if (!sp.manual) {
+        PrintToLog("%s(): rejected: property %d is not managed\n", __func__, property);
+        return (PKT_ERROR_TOKENS -42);
+    }
+
+    if (sender != sp.issuer) {
+        PrintToLog("%s(): rejected: sender %s is not issuer of property %d [issuer=%s]\n", __func__, sender, property, sp.issuer);
+        return (PKT_ERROR_TOKENS -43);
+    }
+
+    if (!isFreezingEnabled(property, block)) {
+        PrintToLog("%s(): rejected: freezing is not enabled for property %d\n", __func__, property);
+        return (PKT_ERROR_TOKENS -47);
+    }
+
+    disableFreezing(property);
+
+    return 0;
+}
+
+/** Tx 185 */
+int CMPTransaction::logicMath_FreezeTokens()
+{
+    uint256 blockHash;
+    {
+        LOCK(cs_main);
+
+        CBlockIndex* pindex = chainActive[block];
+        if (pindex == NULL) {
+            PrintToLog("%s(): ERROR: block %d not in the active chain\n", __func__, block);
+            return (PKT_ERROR_TOKENS -20);
+        }
+        blockHash = pindex->GetBlockHash();
+    }
+
+    if (!IsTransactionTypeAllowed(block, property, type, version)) {
+        PrintToLog("%s(): rejected: type %d or version %d not permitted for property %d at block %d\n",
+                __func__,
+                type,
+                version,
+                property,
+                block);
+        return (PKT_ERROR_TOKENS -22);
+    }
+
+    if (!IsPropertyIdValid(property)) {
+        PrintToLog("%s(): rejected: property %d does not exist\n", __func__, property);
+        return (PKT_ERROR_TOKENS -24);
+    }
+
+    CMPSPInfo::Entry sp;
+    assert(_my_sps->getSP(property, sp));
+
+    if (!sp.manual) {
+        PrintToLog("%s(): rejected: property %d is not managed\n", __func__, property);
+        return (PKT_ERROR_TOKENS -42);
+    }
+
+    if (sender != sp.issuer) {
+        PrintToLog("%s(): rejected: sender %s is not issuer of property %d [issuer=%s]\n", __func__, sender, property, sp.issuer);
+        return (PKT_ERROR_TOKENS -43);
+    }
+
+    if (!isFreezingEnabled(property, block)) {
+        PrintToLog("%s(): rejected: freezing is not enabled for property %d\n", __func__, property);
+        return (PKT_ERROR_TOKENS -47);
+    }
+
+    if (isAddressFrozen(receiver, property)) {
+        PrintToLog("%s(): rejected: address %s is already frozen for property %d\n", __func__, receiver, property);
+        return (PKT_ERROR_TOKENS -50);
+    }
+
+    freezeAddress(receiver, property);
+
+    return 0;
+}
+
+/** Tx 186 */
+int CMPTransaction::logicMath_UnfreezeTokens()
+{
+    uint256 blockHash;
+    {
+        LOCK(cs_main);
+
+        CBlockIndex* pindex = chainActive[block];
+        if (pindex == NULL) {
+            PrintToLog("%s(): ERROR: block %d not in the active chain\n", __func__, block);
+            return (PKT_ERROR_TOKENS -20);
+        }
+        blockHash = pindex->GetBlockHash();
+    }
+
+    if (!IsTransactionTypeAllowed(block, property, type, version)) {
+        PrintToLog("%s(): rejected: type %d or version %d not permitted for property %d at block %d\n",
+                __func__,
+                type,
+                version,
+                property,
+                block);
+        return (PKT_ERROR_TOKENS -22);
+    }
+
+    if (!IsPropertyIdValid(property)) {
+        PrintToLog("%s(): rejected: property %d does not exist\n", __func__, property);
+        return (PKT_ERROR_TOKENS -24);
+    }
+
+    CMPSPInfo::Entry sp;
+    assert(_my_sps->getSP(property, sp));
+
+    if (!sp.manual) {
+        PrintToLog("%s(): rejected: property %d is not managed\n", __func__, property);
+        return (PKT_ERROR_TOKENS -42);
+    }
+
+    if (sender != sp.issuer) {
+        PrintToLog("%s(): rejected: sender %s is not issuer of property %d [issuer=%s]\n", __func__, sender, property, sp.issuer);
+        return (PKT_ERROR_TOKENS -43);
+    }
+
+    if (!isFreezingEnabled(property, block)) {
+        PrintToLog("%s(): rejected: freezing is not enabled for property %d\n", __func__, property);
+        return (PKT_ERROR_TOKENS -47);
+    }
+
+    if (!isAddressFrozen(receiver, property)) {
+        PrintToLog("%s(): rejected: address %s is not frozen for property %d\n", __func__, receiver, property);
+        return (PKT_ERROR_TOKENS -48);
+    }
+
+    unfreezeAddress(receiver, property);
 
     return 0;
 }

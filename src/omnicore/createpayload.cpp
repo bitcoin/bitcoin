@@ -3,6 +3,7 @@
 #include "omnicore/createpayload.h"
 
 #include "omnicore/convert.h"
+#include "omnicore/utils.h"
 
 #include "tinyformat.h"
 
@@ -312,6 +313,78 @@ std::vector<unsigned char> CreatePayload_ChangeIssuer(uint32_t propertyId)
     PUSH_BACK_BYTES(payload, messageVer);
     PUSH_BACK_BYTES(payload, messageType);
     PUSH_BACK_BYTES(payload, propertyId);
+
+    return payload;
+}
+
+std::vector<unsigned char> CreatePayload_EnableFreezing(uint32_t propertyId)
+{
+    std::vector<unsigned char> payload;
+    uint16_t messageType = 71;
+    uint16_t messageVer = 0;
+    mastercore::swapByteOrder16(messageType);
+    mastercore::swapByteOrder16(messageVer);
+    mastercore::swapByteOrder32(propertyId);
+
+    PUSH_BACK_BYTES(payload, messageVer);
+    PUSH_BACK_BYTES(payload, messageType);
+    PUSH_BACK_BYTES(payload, propertyId);
+
+    return payload;
+}
+
+std::vector<unsigned char> CreatePayload_DisableFreezing(uint32_t propertyId)
+{
+    std::vector<unsigned char> payload;
+    uint16_t messageType = 72;
+    uint16_t messageVer = 0;
+    mastercore::swapByteOrder16(messageType);
+    mastercore::swapByteOrder16(messageVer);
+    mastercore::swapByteOrder32(propertyId);
+
+    PUSH_BACK_BYTES(payload, messageVer);
+    PUSH_BACK_BYTES(payload, messageType);
+    PUSH_BACK_BYTES(payload, propertyId);
+
+    return payload;
+}
+
+std::vector<unsigned char> CreatePayload_FreezeTokens(uint32_t propertyId, uint64_t amount, const std::string& address)
+{
+    std::vector<unsigned char> payload;
+    uint16_t messageType = 185;
+    uint16_t messageVer = 0;
+    mastercore::swapByteOrder16(messageType);
+    mastercore::swapByteOrder16(messageVer);
+    mastercore::swapByteOrder32(propertyId);
+    mastercore::swapByteOrder64(amount);
+    std::vector<unsigned char> addressBytes = AddressToBytes(address);
+
+    PUSH_BACK_BYTES(payload, messageVer);
+    PUSH_BACK_BYTES(payload, messageType);
+    PUSH_BACK_BYTES(payload, propertyId);
+    PUSH_BACK_BYTES(payload, amount);
+    payload.insert(payload.end(), addressBytes.begin(), addressBytes.end());
+
+    return payload;
+}
+
+std::vector<unsigned char> CreatePayload_UnfreezeTokens(uint32_t propertyId, uint64_t amount, const std::string& address)
+{
+    std::vector<unsigned char> payload;
+    uint16_t messageType = 186;
+    uint16_t messageVer = 0;
+    mastercore::swapByteOrder16(messageType);
+    mastercore::swapByteOrder16(messageVer);
+    mastercore::swapByteOrder32(propertyId);
+    mastercore::swapByteOrder64(amount);
+    std::vector<unsigned char> addressBytes = AddressToBytes(address);
+
+    PUSH_BACK_BYTES(payload, messageVer);
+    PUSH_BACK_BYTES(payload, messageType);
+    PUSH_BACK_BYTES(payload, propertyId);
+    PUSH_BACK_BYTES(payload, amount);
+    payload.insert(payload.end(), addressBytes.begin(), addressBytes.end());
 
     return payload;
 }

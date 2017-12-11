@@ -564,6 +564,129 @@ UniValue omni_createpayload_cancelalltrades(const UniValue& params, bool fHelp)
     return HexStr(payload.begin(), payload.end());
 }
 
+UniValue omni_createpayload_enablefreezing(const UniValue& params, bool fHelp)
+{
+    if (fHelp || params.size() != 1)
+        throw runtime_error(
+            "omni_createpayload_enablefreezing propertyid\n"
+
+            "\nCreates the payload to enable address freezing for a centrally managed property.\n"
+
+            "\nArguments:\n"
+            "1. propertyid           (number, required) the identifier of the tokens\n"
+
+            "\nResult:\n"
+            "\"payload\"             (string) the hex-encoded payload\n"
+
+            "\nExamples:\n"
+            + HelpExampleCli("omni_createpayload_enablefreezing", "3")
+            + HelpExampleRpc("omni_createpayload_enablefreezing", "3")
+        );
+
+    uint32_t propertyId = ParsePropertyId(params[0]);
+    RequireExistingProperty(propertyId);
+    RequireManagedProperty(propertyId);
+
+    std::vector<unsigned char> payload = CreatePayload_EnableFreezing(propertyId);
+
+    return HexStr(payload.begin(), payload.end());
+}
+
+UniValue omni_createpayload_disablefreezing(const UniValue& params, bool fHelp)
+{
+    if (fHelp || params.size() != 1)
+        throw runtime_error(
+            "omni_createpayload_disablefreezing propertyid\n"
+
+            "\nCreates the payload to disable address freezing for a centrally managed property.\n"
+            "\nIMPORTANT NOTE:  Disabling freezing for a property will UNFREEZE all frozen addresses for that property!"
+
+            "\nArguments:\n"
+            "1. propertyid           (number, required) the identifier of the tokens\n"
+
+            "\nResult:\n"
+            "\"payload\"             (string) the hex-encoded payload\n"
+
+            "\nExamples:\n"
+            + HelpExampleCli("omni_createpayload_disablefreezing", "3")
+            + HelpExampleRpc("omni_createpayload_disablefreezing", "3")
+        );
+
+    uint32_t propertyId = ParsePropertyId(params[0]);
+    RequireExistingProperty(propertyId);
+    RequireManagedProperty(propertyId);
+
+    std::vector<unsigned char> payload = CreatePayload_DisableFreezing(propertyId);
+
+    return HexStr(payload.begin(), payload.end());
+}
+
+UniValue omni_createpayload_freeze(const UniValue& params, bool fHelp)
+{
+    if (fHelp || params.size() != 3)
+        throw runtime_error(
+            "omni_createpayload_freeze \"toaddress\" propertyid amount \n"
+
+            "\nCreates the payload to freeze an address for a centrally managed token.\n"
+
+            "\nArguments:\n"
+            "1. toaddress            (string, required) the address to freeze tokens for\n"
+            "2. propertyid           (number, required) the property to freeze tokens for (must be managed type and have freezing option enabled)\n"
+            "3. amount               (number, required) the amount of tokens to freeze (note: this is unused - once frozen an address cannot send any transactions)\n"
+
+            "\nResult:\n"
+            "\"payload\"             (string) the hex-encoded payload\n"
+
+            "\nExamples:\n"
+            + HelpExampleCli("omni_createpayload_freeze", "\"3HTHRxu3aSDV4deakjC7VmsiUp7c6dfbvs\" 1 0")
+            + HelpExampleRpc("omni_createpayload_freeze", "\"3HTHRxu3aSDV4deakjC7VmsiUp7c6dfbvs\", 1, 0")
+        );
+
+    std::string refAddress = ParseAddress(params[0]);
+    uint32_t propertyId = ParsePropertyId(params[1]);
+    int64_t amount = ParseAmount(params[2], isPropertyDivisible(propertyId));
+
+    RequireExistingProperty(propertyId);
+    RequireManagedProperty(propertyId);
+
+    std::vector<unsigned char> payload = CreatePayload_FreezeTokens(propertyId, amount, refAddress);
+
+    return HexStr(payload.begin(), payload.end());
+}
+
+UniValue omni_createpayload_unfreeze(const UniValue& params, bool fHelp)
+{
+    if (fHelp || params.size() != 3)
+        throw runtime_error(
+            "omni_createpayload_unfreeze \"toaddress\" propertyid amount \n"
+
+            "\nCreates the payload to unfreeze an address for a centrally managed token.\n"
+
+            "\nArguments:\n"
+            "1. toaddress            (string, required) the address to unfreeze tokens for\n"
+            "2. propertyid           (number, required) the property to unfreeze tokens for (must be managed type and have freezing option enabled)\n"
+            "3. amount               (number, required) the amount of tokens to unfreeze (note: this is unused)\n"
+
+            "\nResult:\n"
+            "\"payload\"             (string) the hex-encoded payload\n"
+
+            "\nExamples:\n"
+            + HelpExampleCli("omni_createpayload_unfreeze", "\"3HTHRxu3aSDV4deakjC7VmsiUp7c6dfbvs\" 1 0")
+            + HelpExampleRpc("omni_createpayload_unfreeze", "\"3HTHRxu3aSDV4deakjC7VmsiUp7c6dfbvs\", 1, 0")
+        );
+
+    std::string refAddress = ParseAddress(params[0]);
+    uint32_t propertyId = ParsePropertyId(params[1]);
+    int64_t amount = ParseAmount(params[2], isPropertyDivisible(propertyId));
+
+    RequireExistingProperty(propertyId);
+    RequireManagedProperty(propertyId);
+
+    std::vector<unsigned char> payload = CreatePayload_UnfreezeTokens(propertyId, amount, refAddress);
+
+    return HexStr(payload.begin(), payload.end());
+}
+
 static const CRPCCommand commands[] =
 { //  category                         name                                      actor (function)                         okSafeMode
   //  -------------------------------- ----------------------------------------- ---------------------------------------- ----------
@@ -583,6 +706,10 @@ static const CRPCCommand commands[] =
     { "omni layer (payload creation)", "omni_createpayload_canceltradesbyprice", &omni_createpayload_canceltradesbyprice, true },
     { "omni layer (payload creation)", "omni_createpayload_canceltradesbypair",  &omni_createpayload_canceltradesbypair,  true },
     { "omni layer (payload creation)", "omni_createpayload_cancelalltrades",     &omni_createpayload_cancelalltrades,     true },
+    { "omni layer (payload creation)", "omni_createpayload_enablefreezing",      &omni_createpayload_enablefreezing,      true },
+    { "omni layer (payload creation)", "omni_createpayload_disablefreezing",     &omni_createpayload_disablefreezing,     true },
+    { "omni layer (payload creation)", "omni_createpayload_freeze",              &omni_createpayload_freeze,              true },
+    { "omni layer (payload creation)", "omni_createpayload_unfreeze",            &omni_createpayload_unfreeze,            true },
 };
 
 void RegisterOmniPayloadCreationRPCCommands(CRPCTable &tableRPC)
