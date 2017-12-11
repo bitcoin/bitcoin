@@ -257,26 +257,17 @@ void CMasternode::Check(bool fForce)
 
 bool CMasternode::IsInputAssociatedWithPubkey(int& height)
 {
-	CSyscoinAddress collateralAddress(pubKeyCollateralAddress.GetID());
-	uint160 hashBytes;
-	int type = 0;
-	if (!collateralAddress.GetIndexKey(hashBytes, type)) {
-		return false;
-	}
-	std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue> > unspentOutputs;
-	if (!GetAddressUnspent(hashBytes, type, unspentOutputs))
-		return false;
-
-	// SYSCOIN first txid of this address should be the collateral
-	if (unspentOutputs.size() > 0)
+	// SYSCOIN refactor
+	CCoins coins;
+	if (GetUTXOCoins(vin.prevout, coins))
 	{
-		std::sort(unspentOutputs.begin(), unspentOutputs.end(), heightSort);
-		if (unspentOutputs[0].second.satoshis == 100000 * COIN && unspentOutputs[0].first.txhash == vin.prevout.hash) {
-			height = unspentOutputs[0].second.blockHeight;
+		if (coins.vout[vin.prevout.n].nValue == 100000 * COIN)
+		{
+			height = coins.nHeight;
 			return true;
 		}
 	}
-    return false;
+	return false;
 }
 
 bool CMasternode::IsValidNetAddr()
