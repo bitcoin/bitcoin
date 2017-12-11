@@ -2683,6 +2683,7 @@ bool CMPTxList::LoadFreezeState(int blockHeight)
 {
     assert(pdb);
     std::vector<std::pair<std::string, uint256> > loadOrder;
+    int txnsLoaded = 0;
     Iterator* it = NewIterator();
     PrintToLog("Loading freeze state from levelDB\n");
 
@@ -2746,6 +2747,11 @@ bool CMPTxList::LoadFreezeState(int blockHeight)
             PrintToLog("ERROR: While loading freeze transaction %s: non-zero return from interpretPacket\n", hash.GetHex());
             return false;
         }
+        txnsLoaded++;
+    }
+
+    if (blockHeight > 497000 && !isNonMainNet()) {
+        assert(txnsLoaded >= 2); // sanity check against a failure to properly load the freeze state
     }
 
     return true;
