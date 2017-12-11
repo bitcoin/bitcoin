@@ -2853,31 +2853,22 @@ string GetSyscoinTransactionDescription(const int op, const vector<vector<unsign
 	}
 	else if (type == ESCROW) {
 		if (op == OP_ESCROW_ACTIVATE) {
-			escrow = CEscrow(tx);
-			if (escrow.bPaymentAck)
-			{
-				strResponse = _("Escrow Acknowledged");
-				responseEnglish = "Escrow Acknowledged";
-			}
-			else
-			{
-				strResponse = _("Escrow Activated");
-				responseEnglish = "Escrow Activated";
-			}
+			strResponse = _("Escrow Activated");
+			responseEnglish = "Escrow Activated";
+		}
+		if (op == OP_ESCROW_ACKNOWLEDGE) {
+			strResponse = _("Escrow Acknowledged");
+			responseEnglish = "Escrow Acknowledged";
 		}
 		else if (op == OP_ESCROW_RELEASE) {
-			if (vvchArgs[1] == vchFromString("1"))
-			{
-				strResponse = _("Escrow Release Complete");
-				responseEnglish = "Escrow Release Complete";
-			}
-			else
-			{
-				strResponse = _("Escrow Released");
-				responseEnglish = "Escrow Released";
-			}
+			strResponse = _("Escrow Released");
+			responseEnglish = "Escrow Released";
 		}
-		else if (op == OP_ESCROW_COMPLETE) {
+		else if (op == OP_ESCROW_RELEASE_COMPLETE) {
+			strResponse = _("Escrow Release Complete");
+			responseEnglish = "Escrow Release Complete";
+		}
+		else if (op == OP_ESCROW_FEEDBACK) {
 			strResponse = _("Escrow Feedback");
 			responseEnglish = "Escrow Feedback";
 		}
@@ -2885,25 +2876,17 @@ string GetSyscoinTransactionDescription(const int op, const vector<vector<unsign
 			strResponse = _("Escrow Bid");
 			responseEnglish = "Escrow Bid";
 		}
-		else if (op == OP_ESCROW_ACKNOWLEDGE) {
-			strResponse = _("Escrow Acknowledge");
-			responseEnglish = "Escrow Acknowledge";
-		}
 		else if (op == OP_ESCROW_ADD_SHIPPING) {
 			strResponse = _("Escrow Add Shipping");
 			responseEnglish = "Escrow Add Shipping";
 		}
 		else if (op == OP_ESCROW_REFUND) {
-			if (vvchArgs[1] == vchFromString("1"))
-			{
-				strResponse = _("Escrow Refund Complete");
-				responseEnglish = "Escrow Refund Complete";
-			}
-			else
-			{
-				strResponse = _("Escrow Refunded");
-				responseEnglish = "Escrow Refunded";
-			}
+			strResponse = _("Escrow Refunded");
+			responseEnglish = "Escrow Refunded";
+		}
+		else if (op == OP_ESCROW_REFUND_COMPLETE) {
+			strResponse = _("Escrow Refund Complete");
+			responseEnglish = "Escrow Refund Complete";
 		}
 	}
 	else{
