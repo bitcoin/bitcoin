@@ -2223,8 +2223,14 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 			// BIP68 lock checks (as opposed to nLockTime checks) must
 			// be in ConnectBlock because they require the UTXO set
 			prevheights.resize(tx.vin.size());
+			// SYSCOIN
+			bool instanttx = false;
+			uint256 hashLocked;
 			for (size_t j = 0; j < tx.vin.size(); j++) {
 				prevheights[j] = view.AccessCoins(tx.vin[j].prevout.hash)->nHeight;
+				// SYSCOIN
+				if (!instanttx && instantsend.GetLockedOutPointTxHash(tx.vin[j].prevout, hashLocked)
+					instanttx = true;
 			}
 
 			if (!SequenceLocks(tx, nLockTimeFlags, &prevheights, *pindex)) {
@@ -2304,7 +2310,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 				return error("ConnectBlock(): CheckInputs on %s failed with %s",
 					tx.GetHash().ToString(), FormatStateMessage(state));
 			// SYSCOIN
-			if (!CheckSyscoinInputs(tx, fJustCheck, pindex->nHeight))
+			if (!instanttx && !CheckSyscoinInputs(tx, fJustCheck, pindex->nHeight))
 				return error("ConnectBlock(): CheckSyscoinInputs on %s failed", tx.GetHash().ToString());
 			control.Add(vChecks);
 		}
