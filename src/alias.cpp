@@ -352,7 +352,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		}					
 		
 	}
-	CCoins* pprevCoins = NULL;
+	CCoins pprevCoins;
 	int prevOutputIndex = 0;
 	if(fJustCheck || op != OP_ALIAS_ACTIVATE)
 	{
@@ -369,7 +369,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			if (IsAliasOp(pop) && (op == OP_ALIAS_ACTIVATE || (vvchArgs.size() > 1 && vvchArgs[0] == vvch[0] && vvchArgs[1] == vvch[1]))) {
 				prevOp = pop;
 				vvchPrevArgs = vvch;
-				pprevCoins = &prevCoins;
+				pprevCoins = prevCoins;
 				prevOutputIndex = tx.vin[i].prevout.n;
 				break;
 			}
@@ -533,7 +533,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			if (!dbAliasNull)
 			{
 				CTxDestination aliasDest;
-				if (vvchPrevArgs.size() <= 0 || vvchPrevArgs[0] != vvchArgs[0] || !pprevCoins || !ExtractDestination(pprevCoins->vout[prevOutputIndex].scriptPubKey, aliasDest))
+				if (vvchPrevArgs.size() <= 0 || vvchPrevArgs[0] != vvchArgs[0] || !pprevCoins.IsAvailable(prevOutputIndex) || !ExtractDestination(pprevCoins.vout[prevOutputIndex].scriptPubKey, aliasDest))
 				{
 					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5020 - " + _("Cannot extract destination of alias input");
 					if(!theAliasNull)
