@@ -303,7 +303,7 @@ bool IsSyscoinTxMine(const CTransaction& tx, const string &type) {
 		return false;
 	return myNout >= 0;
 }
-bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, string &errorMessage, bool dontaddtodb) {
+bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, string &errorMessage, bool dontaddtodb) {
 	if (tx.IsCoinBase() && !fJustCheck && !dontaddtodb)
 	{
 		LogPrintf("*Trying to add alias in coinbase transaction, skipping...");
@@ -314,8 +314,6 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		return true;
 	if (fDebug && !dontaddtodb)
 		LogPrintf("*** ALIAS %d %d op=%s %s nOut=%d %s\n", nHeight, chainActive.Tip()->nHeight, aliasFromOp(op).c_str(), tx.GetHash().ToString().c_str(), nOut, fJustCheck ? "JUSTCHECK" : "BLOCK");
-	const COutPoint *prevOutput = NULL;
-	const CCoins *prevCoins;
 	int prevOp = 0;
 	vector<vector<unsigned char> > vvchPrevArgs;
 	// Make sure alias outputs are not spent by a regular transaction, or the alias would be lost
@@ -360,16 +358,10 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		for (unsigned int i = 0; i < tx.vin.size(); i++) {
 			vector<vector<unsigned char> > vvch;
 			int pop;
-			prevOutput = &tx.vin[i].prevout;
-			if(!prevOutput)
-				continue;
+			CCoins prevCoins;
 			// ensure inputs are unspent when doing consensus check to add to block
-			prevCoins = inputs.AccessCoins(prevOutput->hash);
-			if(prevCoins == NULL)
-				continue;
-			if(!prevCoins->IsAvailable(prevOutput->n) || !IsSyscoinScript(prevCoins->vout[prevOutput->n].scriptPubKey, pop, vvch))
+			if(!GetUTXOCoins(tx.vin[i].prevout, prevCoins) || !IsSyscoinScript(prevCoins.vout[tx.vin[i].prevout.n].scriptPubKey, pop, vvch))
 			{
-				prevCoins = NULL;
 				continue;
 			}
 			if (IsAliasOp(pop) && (op == OP_ALIAS_ACTIVATE || (vvchArgs.size() > 1 && vvchArgs[0] == vvch[0] && vvchArgs[1] == vvch[1]))) {
@@ -384,14 +376,8 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			for (unsigned int i = 0; i < tx.vin.size(); i++) {
 				vector<vector<unsigned char> > vvch;
 				int pop;
-				const COutPoint* prevOutputWitness = &tx.vin[i].prevout;
-				if(!prevOutputWitness)
-					continue;
-				// ensure inputs are unspent when doing consensus check to add to block
-				const CCoins* prevCoinsWitness = inputs.AccessCoins(prevOutputWitness->hash);
-				if(prevCoinsWitness == NULL)
-					continue;
-				if(!prevCoinsWitness->IsAvailable(prevOutputWitness->n) || !IsSyscoinScript(prevCoinsWitness->vout[prevOutputWitness->n].scriptPubKey, pop, vvch))
+				CCoins prevCoins;
+				if!GetUTXOCoins(tx.vin[i].prevout, prevCoins) || !IsSyscoinScript(prevCoins.vout[tx.vin[i].prevout.n].scriptPubKey, pop, vvch))
 				{
 					continue;
 				}

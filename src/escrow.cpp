@@ -521,14 +521,12 @@ bool ValidateExternalPayment(const CEscrow& theEscrow, const bool &dontaddtodb, 
 	}
 	return true;
 }
-bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, string &errorMessage, bool dontaddtodb) {
+bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, string &errorMessage, bool dontaddtodb) {
 	if (tx.IsCoinBase() && !fJustCheck && !dontaddtodb)
 	{
 		LogPrintf("*Trying to add escrow in coinbase transaction, skipping...");
 		return true;
 	}
-	const COutPoint *prevOutput = NULL;
-	const CCoins *prevCoins;
 	int prevAliasOp = 0;
 	bool foundAlias = false;
 	bool foundWitnessAlias = false;
@@ -576,15 +574,12 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 		for (unsigned int i = 0; i < tx.vin.size(); i++) {
 			vector<vector<unsigned char> > vvch;
 			int pop;
-			prevOutput = &tx.vin[i].prevout;
-			if(!prevOutput)
-				continue;
+			CCoins prevCoins;
 			// ensure inputs are unspent when doing consensus check to add to block
-			prevCoins = inputs.AccessCoins(prevOutput->hash);
-			if(prevCoins == NULL)
+			if (!GetUTXOCoins(tx.vin[i].prevout, prevCoins) || !IsSyscoinScript(prevCoins.vout[tx.vin[i].prevout.n].scriptPubKey, pop, vvch))
+			{
 				continue;
-			if(!prevCoins->IsAvailable(prevOutput->n) || !IsSyscoinScript(prevCoins->vout[prevOutput->n].scriptPubKey, pop, vvch))
-				continue;
+			}
 			if(foundAlias)
 				break;
 

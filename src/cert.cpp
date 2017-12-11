@@ -334,7 +334,7 @@ bool RemoveCertScriptPrefix(const CScript& scriptIn, CScript& scriptOut) {
 }
 
 bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs,
-        const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, string &errorMessage, bool dontaddtodb) {
+        bool fJustCheck, int nHeight, string &errorMessage, bool dontaddtodb) {
 	if (tx.IsCoinBase() && !fJustCheck && !dontaddtodb)
 	{
 		LogPrintf("*Trying to add cert in coinbase transaction, skipping...");
@@ -345,9 +345,6 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 			chainActive.Tip()->nHeight, tx.GetHash().ToString().c_str(),
 			fJustCheck ? "JUSTCHECK" : "BLOCK");
 	bool foundAlias = false;
-    const COutPoint *prevOutput = NULL;
-    const CCoins *prevCoins;
-
 	int prevAliasOp = 0;
     // Make sure cert outputs are not spent by a regular transaction, or the cert would be lost
 	if (tx.nVersion != SYSCOIN_TX_VERSION) 
@@ -386,15 +383,12 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 		for (unsigned int i = 0; i < tx.vin.size(); i++) {
 			vector<vector<unsigned char> > vvch;
 			int pop;
-			prevOutput = &tx.vin[i].prevout;
-			if(!prevOutput)
-				continue;
+			CCoins prevCoins;
 			// ensure inputs are unspent when doing consensus check to add to block
-			prevCoins = inputs.AccessCoins(prevOutput->hash);
-			if(prevCoins == NULL)
+			if (!GetUTXOCoins(tx.vin[i].prevout, prevCoins) || !IsSyscoinScript(prevCoins.vout[tx.vin[i].prevout.n].scriptPubKey, pop, vvch))
+			{
 				continue;
-			if(!prevCoins->IsAvailable(prevOutput->n) || !IsSyscoinScript(prevCoins->vout[prevOutput->n].scriptPubKey, pop, vvch))
-				continue;
+			}
 			if(foundAlias)
 				break;
 			else if (!foundAlias && IsAliasOp(pop) && vvch.size() >= 2 && theCert.aliasTuple.first == vvch[0] && theCert.aliasTuple.third == vvch[1])

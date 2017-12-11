@@ -541,7 +541,7 @@ std::string FormatStateMessage(const CValidationState &state)
 		state.GetRejectCode());
 }
 // SYSCOIN
-bool CheckSyscoinInputs(const CTransaction& tx, const CCoinsViewCache& inputs, bool fJustCheck, int nHeight = 0)
+bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight = 0)
 {
 	vector<vector<unsigned char> > vvchArgs;
 	int op;
@@ -555,7 +555,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, const CCoinsViewCache& inputs, b
 		if (DecodeAliasTx(tx, op, nOut, vvchArgs))
 		{
 			errorMessage.clear();
-			good = CheckAliasInputs(tx, op, nOut, vvchArgs, inputs, fJustCheck, nHeight, errorMessage);
+			good = CheckAliasInputs(tx, op, nOut, vvchArgs, fJustCheck, nHeight, errorMessage);
 			if (fDebug && !errorMessage.empty())
 				LogPrintf("%s\n", errorMessage.c_str());
 		}
@@ -564,21 +564,21 @@ bool CheckSyscoinInputs(const CTransaction& tx, const CCoinsViewCache& inputs, b
 			if (DecodeCertTx(tx, op, nOut, vvchArgs))
 			{
 				errorMessage.clear();
-				good = CheckCertInputs(tx, op, nOut, vvchArgs, inputs, fJustCheck, nHeight, errorMessage);
+				good = CheckCertInputs(tx, op, nOut, vvchArgs, fJustCheck, nHeight, errorMessage);
 				if (fDebug && !errorMessage.empty())
 					LogPrintf("%s\n", errorMessage.c_str());
 			}
 			else if (DecodeEscrowTx(tx, op, nOut, vvchArgs))
 			{
 				errorMessage.clear();
-				good = CheckEscrowInputs(tx, op, nOut, vvchArgs, inputs, fJustCheck, nHeight, errorMessage);
+				good = CheckEscrowInputs(tx, op, nOut, vvchArgs, fJustCheck, nHeight, errorMessage);
 				if (fDebug && !errorMessage.empty())
 					LogPrintf("%s\n", errorMessage.c_str());
 			}
 			else if (DecodeOfferTx(tx, op, nOut, vvchArgs))
 			{
 				errorMessage.clear();
-				good = CheckOfferInputs(tx, op, nOut, vvchArgs, inputs, fJustCheck, nHeight, errorMessage);
+				good = CheckOfferInputs(tx, op, nOut, vvchArgs, fJustCheck, nHeight, errorMessage);
 				if (fDebug && !errorMessage.empty())
 					LogPrintf("%s\n", errorMessage.c_str());
 			}
@@ -1024,7 +1024,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 		}
 
 		// SYSCOIN
-		if (!CheckSyscoinInputs(tx, view, true))
+		if (!CheckSyscoinInputs(tx, true))
 			return false;
 
 		// Remove conflicting transactions from the mempool
@@ -2304,7 +2304,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 				return error("ConnectBlock(): CheckInputs on %s failed with %s",
 					tx.GetHash().ToString(), FormatStateMessage(state));
 			// SYSCOIN
-			if (!CheckSyscoinInputs(tx, view, fJustCheck, pindex->nHeight))
+			if (!CheckSyscoinInputs(tx, fJustCheck, pindex->nHeight))
 				return error("ConnectBlock(): CheckSyscoinInputs on %s failed", tx.GetHash().ToString());
 			control.Add(vChecks);
 		}

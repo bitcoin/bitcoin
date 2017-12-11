@@ -332,7 +332,7 @@ bool RemoveOfferScriptPrefix(const CScript& scriptIn, CScript& scriptOut) {
 	return true;
 }
 
-bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, string &errorMessage, bool dontaddtodb) {
+bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, string &errorMessage, bool dontaddtodb) {
 	if (tx.IsCoinBase() && !fJustCheck && !dontaddtodb)
 	{
 		LogPrintf("*Trying to add offer in coinbase transaction, skipping...");
@@ -344,8 +344,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			chainActive.Tip()->nHeight, tx.GetHash().ToString().c_str(),
 			fJustCheck ? "JUSTCHECK" : "BLOCK", " VVCH SIZE: ", vvchArgs.size());
 	bool foundAlias = false;
-	const COutPoint *prevOutput = NULL;
-	const CCoins *prevCoins;
 	int prevAliasOp = 0;
 	vector<vector<unsigned char> > vvchPrevAliasArgs;
 	// unserialize msg from txn, check for valid
@@ -386,15 +384,12 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		for (unsigned int i = 0; i < tx.vin.size(); i++) {
 			vector<vector<unsigned char> > vvch;
 			int pop;
-			prevOutput = &tx.vin[i].prevout;
-			if(!prevOutput)
-				continue;
+			CCoins prevCoins;
 			// ensure inputs are unspent when doing consensus check to add to block
-			prevCoins = inputs.AccessCoins(prevOutput->hash);
-			if(prevCoins == NULL)
+			if (!GetUTXOCoins(tx.vin[i].prevout, prevCoins) || !IsSyscoinScript(prevCoins.vout[tx.vin[i].prevout.n].scriptPubKey, pop, vvch))
+			{
 				continue;
-			if(!prevCoins->IsAvailable(prevOutput->n) || !IsSyscoinScript(prevCoins->vout[prevOutput->n].scriptPubKey, pop, vvch))
-				continue;
+			}
 			if(foundAlias)
 				break;
 			if (!foundAlias && IsAliasOp(pop) && vvch.size() >= 2 && theOffer.aliasTuple.first == vvch[0] && theOffer.aliasTuple.third == vvch[1])
