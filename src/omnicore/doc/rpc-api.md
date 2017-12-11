@@ -470,6 +470,112 @@ $ omnicore-cli "omni_sendall" "3M9qvHKtgARhqcMtM5cRT9VaiDJ5PSfQGY" "37FaKponF7zq
 
 ---
 
+### omni_sendenablefreezing
+
+Enables address freezing for a centrally managed property.
+
+**Arguments:**
+
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `fromaddress`       | string  | required | the address to send from (must be issuer of a managed property)                              |
+| `propertyid`        | number  | required | the identifier of the tokens                                                                 |
+
+**Result:**
+```js
+"hash"  // (string) the hex-encoded transaction hash
+```
+
+**Example:**
+
+```bash
+$ omnicore-cli "omni_sendenablefreezing" "3M9qvHKtgARhqcMtM5cRT9VaiDJ5PSfQGY" 2
+```
+
+---
+
+### omni_senddisablefreezing
+
+Disables address freezing for a centrally managed property.
+
+IMPORTANT NOTE:  Disabling freezing for a property will UNFREEZE all frozen addresses for that property!
+
+**Arguments:**
+
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `fromaddress`       | string  | required | the address to send from (must be issuer of a managed property)                              |
+| `propertyid`        | number  | required | the identifier of the tokens                                                                 |
+
+**Result:**
+```js
+"hash"  // (string) the hex-encoded transaction hash
+```
+
+**Example:**
+
+```bash
+$ omnicore-cli "omni_senddisablefreezing" "3M9qvHKtgARhqcMtM5cRT9VaiDJ5PSfQGY" 2
+```
+
+---
+
+### omni_sendfreeze
+
+Freeze an address for a centrally managed token.
+
+Note: Only the issuer may freeze tokens, and only if the token is of the managed type with the freezing option enabled.
+
+**Arguments:**
+
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `fromaddress`       | string  | required | the address to send from (must be issuer of a managed property with freezing enabled         |
+| `toaddress`         | string  | required | the address to freeze                                                                        |
+| `propertyid`        | number  | required | the identifier of the tokens to freeze                                                       |
+| `amount`            | string  | required | the amount to freeze (note: currently unused, frozen addresses cannot transact the property) |
+
+**Result:**
+```js
+"hash"  // (string) the hex-encoded transaction hash
+```
+
+**Example:**
+
+```bash
+$ omnicore-cli "omni_sendfreeze" "3M9qvHKtgARhqcMtM5cRT9VaiDJ5PSfQGY" "3HTHRxu3aSDV4deakjC7VmsiUp7c6dfbvs" 2 1000
+```
+
+---
+
+### omni_sendunfreeze
+
+Unfreeze an address for a centrally managed token.
+
+Note: Only the issuer may unfreeze tokens
+
+**Arguments:**
+
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `fromaddress`       | string  | required | the address to send from (must be issuer of a managed property with freezing enabled         |
+| `toaddress`         | string  | required | the address to unfreeze                                                                      |
+| `propertyid`        | number  | required | the identifier of the tokens to unfreeze                                                     |
+| `amount`            | string  | required | the amount to unfreeze (note: currently unused                                               |
+
+**Result:**
+```js
+"hash"  // (string) the hex-encoded transaction hash
+```
+
+**Example:**
+
+```bash
+$ omnicore-cli "omni_sendunfreeze" "3M9qvHKtgARhqcMtM5cRT9VaiDJ5PSfQGY" "3HTHRxu3aSDV4deakjC7VmsiUp7c6dfbvs" 2 1000
+```
+
+---
+
 ### omni_sendrawtx
 
 Broadcasts a raw Omni Layer transaction.
@@ -560,7 +666,8 @@ Returns the token balance for a given address and property.
 ```js
 {
   "balance" : "n.nnnnnnnn",  // (string) the available balance of the address
-  "reserved" : "n.nnnnnnnn"  // (string) the amount reserved by sell offers and accepts
+  "reserved" : "n.nnnnnnnn", // (string) the amount reserved by sell offers and accepts
+  "frozen" : "n.nnnnnnnn"    // (string) the amount frozen by the issuer (applies to managed properties only)
 }
 ```
 
@@ -878,6 +985,8 @@ Returns details for about the tokens or smart property to lookup.
   "issuer" : "address",           // (string) the Bitcoin address of the issuer on record
   "creationtxid" : "hash",        // (string) the hex-encoded creation transaction hash
   "fixedissuance" : true|false,   // (boolean) whether the token supply is fixed
+  "managedissuance" : true|false, // (boolean) whether the token supply is managed by the issuer
+  "freezingenabled" : true|false, // (boolean) whether freezing is enabled for the property (managed properties only)
   "totaltokens" : "n.nnnnnnnn"    // (string) the total number of tokens in existence
 }
 ```
