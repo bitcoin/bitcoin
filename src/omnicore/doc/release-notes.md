@@ -89,6 +89,7 @@ The following list includes relevant pull requests merged into this release:
 - #511 Travis CI: move back to the minimal image
 - #512 Reintroduce forced client upgrade
 - #514 Enable freezing for centrally managed tokens
+- #515 Bump version to Omni Core 0.3.0
 ```
 
 Credits
