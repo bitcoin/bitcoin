@@ -61,7 +61,8 @@ RPC changes
 
 ### Low-level changes
 
-- The `fundrawtransaction` rpc will reject the previously deprecated `reserveChangeKey` option.
+- The `createrawtransaction` RPC will now accept an array or dictionary (kept for compatibility) for the `outputs` parameter. This means the order of transaction outputs can be specified by the client.
+- The `fundrawtransaction` RPC will reject the previously deprecated `reserveChangeKey` option.
 
 Credits
 =======
