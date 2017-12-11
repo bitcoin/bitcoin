@@ -2926,7 +2926,7 @@ bool BuildEscrowJson(const CEscrow &escrow, UniValue& oEscrow)
 		expired = true;
 	}
 	string status = "unknown";
-	if(escrow.op == OP_ESCROW_ACTIVATE || escrow.op == OP_ESCROW_ADD_SHIPPING || || escrow.op == OP_ESCROW_BID)
+	if(escrow.op == OP_ESCROW_ACTIVATE || escrow.op == OP_ESCROW_ADD_SHIPPING || escrow.op == OP_ESCROW_BID)
 		status = "in escrow";
 	else if(escrow.op == OP_ESCROW_RELEASE)
 		status = "escrow released";
