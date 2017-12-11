@@ -14,6 +14,8 @@
 #include "omnicore/sp.h"
 #include "omnicore/sto.h"
 #include "omnicore/utils.h"
+#include "omnicore/utilsbitcoin.h"
+#include "omnicore/version.h"
 
 #include "amount.h"
 #include "base58.h"
