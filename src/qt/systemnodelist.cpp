@@ -505,12 +505,10 @@ void SystemnodeList::on_CreateNewSystemnode_clicked()
         std::vector<COutput> vPossibleCoinsAfter;
         pwalletMain->AvailableCoins(vPossibleCoinsAfter, true, NULL, ONLY_500);
 
-        bool found = false;
         BOOST_FOREACH(COutput& out, vPossibleCoinsAfter) {
             std::vector<COutput>::iterator it = std::find(vPossibleCoinsBefore.begin(), vPossibleCoinsBefore.end(), out);
             if (it == vPossibleCoinsBefore.end()) {
                 // Not found so this is a new element
-                found = true;
 
                 COutPoint outpoint = COutPoint(out.tx->GetHash(), boost::lexical_cast<unsigned int>(out.i));
                 pwalletMain->LockCoin(outpoint);

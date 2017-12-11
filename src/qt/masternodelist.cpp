@@ -14,7 +14,7 @@
 #include "guiutil.h"
 #include "datetablewidgetitem.h"
 #include "privatekeywidget.h"
-#include "createsystemnodedialog.h"
+#include "createmasternodedialog.h"
 #include "addresstablemodel.h"
 #include "transactiontablemodel.h"
 #include "optionsmodel.h"
@@ -358,7 +358,7 @@ void MasternodeList::on_startButton_clicked()
 
 void MasternodeList::on_editButton_clicked()
 {
-    CreateSystemnodeDialog *dialog = new CreateSystemnodeDialog();
+    CreateMasternodeDialog *dialog = new CreateMasternodeDialog();
     dialog->setWindowModality(Qt::ApplicationModal);
     dialog->setEditMode();
     dialog->setWindowTitle("Edit Masternode");
@@ -753,7 +753,7 @@ void MasternodeList::on_tableWidgetVoting_itemSelectionChanged()
 
 void MasternodeList::on_CreateNewMasternode_clicked()
 {
-    CreateSystemnodeDialog *dialog = new CreateSystemnodeDialog();
+    CreateMasternodeDialog *dialog = new CreateMasternodeDialog();
     dialog->setWindowModality(Qt::ApplicationModal);
     dialog->setWindowTitle("Create a New Masternode");
     QString formattedAmount = BitcoinUnits::formatWithUnit(walletModel->getOptionsModel()->getDisplayUnit(), 
@@ -778,12 +778,10 @@ void MasternodeList::on_CreateNewMasternode_clicked()
         std::vector<COutput> vPossibleCoinsAfter;
         pwalletMain->AvailableCoins(vPossibleCoinsAfter, true, NULL, ONLY_10000);
 
-        bool found = false;
         BOOST_FOREACH(COutput& out, vPossibleCoinsAfter) {
             std::vector<COutput>::iterator it = std::find(vPossibleCoinsBefore.begin(), vPossibleCoinsBefore.end(), out);
             if (it == vPossibleCoinsBefore.end()) {
                 // Not found so this is a new element
-                found = true;
 
                 COutPoint outpoint = COutPoint(out.tx->GetHash(), boost::lexical_cast<unsigned int>(out.i));
                 pwalletMain->LockCoin(outpoint);
