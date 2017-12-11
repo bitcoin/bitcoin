@@ -557,14 +557,14 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 	vector<vector<unsigned char> > vvchPrevAliasArgs;
 	if(fJustCheck)
 	{
-		if(vvchArgs.size() != 3)
+		if(vvchArgs.size() != 2)
 		{
 			errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4002 - " + _("Escrow arguments incorrect size");
 			return error(errorMessage.c_str());
 		}
 		if(!theEscrow.IsNull())
 		{
-			if(vvchArgs.size() <= 2 || vchHash != vvchArgs[2])
+			if(vchHash != vvchArgs[1])
 			{
 				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4003 - " + _("Hash provided doesn't match the calculated hash of the data");
 				return true;
@@ -1539,7 +1539,7 @@ UniValue escrowbid(const UniValue& params, bool fHelp) {
 	vector<unsigned char> vchHashEscrow = vchFromValue(hash.GetHex());
 
 	CScript scriptPubKeyOrigBuyer;
-	scriptPubKeyOrigBuyer << CScript::EncodeOP_N(OP_SYSCOIN_ESCROW) << CScript::EncodeOP_N(OP_ESCROW_BID) << vchEscrow << vchFromString("0") << vchHashEscrow << OP_2DROP << OP_2DROP;
+	scriptPubKeyOrigBuyer << CScript::EncodeOP_N(OP_SYSCOIN_ESCROW) << CScript::EncodeOP_N(OP_ESCROW_BID) << vchEscrow << vchHashEscrow << OP_2DROP << OP_2DROP;
 	scriptPubKeyOrigBuyer += scriptPubKeyAliasOrig;
 
 	CRecipient recipientBuyer;
@@ -1627,7 +1627,7 @@ UniValue escrowaddshipping(const UniValue& params, bool fHelp) {
 	vector<unsigned char> vchHashEscrow = vchFromValue(hash.GetHex());
 
 	CScript scriptPubKeyOrigBuyer;
-	scriptPubKeyOrigBuyer << CScript::EncodeOP_N(OP_SYSCOIN_ESCROW) << CScript::EncodeOP_N(OP_ESCROW_ADD_SHIPPING) << vchEscrow << vchFromString("0") << vchHashEscrow << OP_2DROP << OP_2DROP;
+	scriptPubKeyOrigBuyer << CScript::EncodeOP_N(OP_SYSCOIN_ESCROW) << CScript::EncodeOP_N(OP_ESCROW_ADD_SHIPPING) << vchEscrow << vchHashEscrow << OP_2DROP << OP_2DROP;
 	scriptPubKeyOrigBuyer += scriptPubKeyAliasOrig;
 
 
@@ -1906,7 +1906,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	}
 
     vector<unsigned char> vchHashEscrow = vchFromValue(hash.GetHex());
-	scriptPubKeyBuyer << CScript::EncodeOP_N(OP_SYSCOIN_ESCROW) << CScript::EncodeOP_N(OP_ESCROW_ACTIVATE) << vchEscrow << vchFromString("0") << vchHashEscrow << OP_2DROP << OP_2DROP << OP_DROP;
+	scriptPubKeyBuyer << CScript::EncodeOP_N(OP_SYSCOIN_ESCROW) << CScript::EncodeOP_N(OP_ESCROW_ACTIVATE) << vchEscrow << vchHashEscrow << OP_2DROP << OP_2DROP << OP_DROP;
 	scriptPubKeyBuyer += scriptPubKeyAliasOrig;
 
 
@@ -2000,7 +2000,7 @@ UniValue escrowacknowledge(const UniValue& params, bool fHelp) {
 
 	CScript scriptPubKeyOrigBuyer;
 
-	scriptPubKeyOrigBuyer << CScript::EncodeOP_N(OP_SYSCOIN_ESCROW) << CScript::EncodeOP_N(OP_ESCROW_ACKNOWLEDGE) << vchEscrow << vchFromString("0") << vchHashEscrow << OP_2DROP << OP_2DROP << OP_DROP;
+	scriptPubKeyOrigBuyer << CScript::EncodeOP_N(OP_SYSCOIN_ESCROW) << CScript::EncodeOP_N(OP_ESCROW_ACKNOWLEDGE) << vchEscrow << vchHashEscrow << OP_2DROP << OP_2DROP << OP_DROP;
 	scriptPubKeyOrigBuyer += buyerScript;
 
 	vector<CRecipient> vecSend;
@@ -2914,7 +2914,7 @@ bool BuildEscrowJson(const CEscrow &escrow, UniValue& oEscrow)
 		expired = true;
 	}
 	string status = "unknown";
-	if(escrow.op == OP_ESCROW_ACTIVATE || escrow.op == OP_ESCROW_ADD_SHIPPING || escrow.op == OP_ESCROW_BID)
+	if(escrow.op == OP_ESCROW_ACTIVATE || escrow.op == OP_ESCROW_ADD_SHIPPING)
 		status = "in escrow";
 	else if(escrow.op == OP_ESCROW_RELEASE)
 		status = "escrow released";
