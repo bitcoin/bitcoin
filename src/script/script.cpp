@@ -218,7 +218,7 @@ bool CScript::IsNormalPaymentScript() const
     int i = 0;
     while (pc < scriptOut.end())
     {
-        GetOp(pc, opcode);
+		scriptOut.GetOp(pc, opcode);
 
         if(     i == 0 && opcode != OP_DUP) return false;
         else if(i == 1 && opcode != OP_HASH160) return false;
