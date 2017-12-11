@@ -154,6 +154,7 @@ BITCOIN_QT_H = \
   qt/rpcconsole.h \
   qt/sendcoinsdialog.h \
   qt/sendcoinsentry.h \
+  qt/sendcollateraldialog.h \
   qt/signverifymessagedialog.h \
   qt/splashscreen.h \
   qt/masternodelist.h \
