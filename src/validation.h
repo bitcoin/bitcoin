@@ -309,6 +309,9 @@ int GetUTXOConfirmations(const COutPoint& outpoint);
 /** Convert CValidationState to a human-readable message for logging */
 std::string FormatStateMessage(const CValidationState &state);
 
+// SYSCOIN
+bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight = 0);
+
 /** Get the BIP9 state for a given deployment at the current tip. */
 ThresholdState VersionBitsTipState(const Consensus::Params& params, Consensus::DeploymentPos pos);
 
