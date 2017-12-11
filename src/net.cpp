@@ -1102,7 +1102,7 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
 
     if (IsBanned(addr) && !whitelisted)
     {
-        LogPrintf("connection from %s dropped (banned)\n", addr.ToString());
+        LogPrint(BCLog::NET, "connection from %s dropped (banned)\n", addr.ToString());
         CloseSocket(hSocket);
         return;
     }
