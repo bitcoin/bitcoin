@@ -2,15 +2,15 @@
 # Copyright (c) 2017 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-from test_framework.messages import CInv, msg_getdata, msg_verack
+from test_framework.messages import CInv, msg_getdata
 from test_framework.mininode import NODE_BLOOM, NODE_NETWORK_LIMITED, NODE_WITNESS, NetworkThread, P2PInterface
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal
 
-class BaseNode(P2PInterface):
-    nServices = 0
-    def on_version(self, message):
-        self.nServices = message.nServices
+class P2PIgnoreInv(P2PInterface):
+    def on_inv(self, message):
+        # The node will send us invs for other blocks. Ignore them.
+        pass
 
 class NodeNetworkLimitedTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -19,7 +19,7 @@ class NodeNetworkLimitedTest(BitcoinTestFramework):
         self.extra_args = [['-prune=550']]
 
     def get_signalled_service_flags(self):
-        node = self.nodes[0].add_p2p_connection(BaseNode())
+        node = self.nodes[0].add_p2p_connection(P2PIgnoreInv())
         NetworkThread().start()
         node.wait_for_verack()
         services = node.nServices
@@ -28,10 +28,9 @@ class NodeNetworkLimitedTest(BitcoinTestFramework):
         return services
 
     def try_get_block_via_getdata(self, blockhash, must_disconnect):
-        node = self.nodes[0].add_p2p_connection(BaseNode())
+        node = self.nodes[0].add_p2p_connection(P2PIgnoreInv())
         NetworkThread().start()
         node.wait_for_verack()
-        node.send_message(msg_verack())
         getdata_request = msg_getdata()
         getdata_request.inv.append(CInv(2, int(blockhash, 16)))
         node.send_message(getdata_request)
