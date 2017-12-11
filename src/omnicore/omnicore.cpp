@@ -337,6 +337,7 @@ void mastercore::PrintFreezeState()
 void mastercore::enableFreezing(uint32_t propertyId, int liveBlock)
 {
     setFreezingEnabledProperties.insert(std::make_pair(propertyId, liveBlock));
+    assert(isFreezingEnabled(propertyId, liveBlock));
     PrintToLog("Freezing for property %d will be enabled at block %d.\n", propertyId, liveBlock);
 }
 
@@ -348,23 +349,23 @@ void mastercore::disableFreezing(uint32_t propertyId)
             liveBlock = (*it).second;
         }
     }
-    if (liveBlock == 0) {
-        PrintToLog("ERROR: Failed to determine live block to disable freezing for property %d!\n", propertyId);
-        return;
-    } else {
-        setFreezingEnabledProperties.erase(std::make_pair(propertyId, liveBlock));
-        PrintToLog("Freezing for property %d has been disabled.\n", propertyId);
-    }
+    assert(liveBlock > 0);
+
+    setFreezingEnabledProperties.erase(std::make_pair(propertyId, liveBlock));
+    PrintToLog("Freezing for property %d has been disabled.\n", propertyId);
 
     // When disabling freezing for a property, all frozen addresses for that property will be unfrozen!
     for (std::set<std::pair<std::string,uint32_t> >::iterator it = setFrozenAddresses.begin(); it != setFrozenAddresses.end(); ) {
         if ((*it).second == propertyId) {
             PrintToLog("Address %s has been unfrozen for property %d.\n", (*it).first, propertyId);
             it = setFrozenAddresses.erase(it);
+            assert(!isAddressFrozen((*it).first, (*it).second));
         } else {
             it++;
         }
     }
+
+    assert(!isFreezingEnabled(propertyId, liveBlock));
 }
 
 bool mastercore::isFreezingEnabled(uint32_t propertyId, int block)
@@ -382,12 +383,14 @@ bool mastercore::isFreezingEnabled(uint32_t propertyId, int block)
 void mastercore::freezeAddress(const std::string& address, uint32_t propertyId)
 {
     setFrozenAddresses.insert(std::make_pair(address, propertyId));
+    assert(isAddressFrozen(address, propertyId));
     PrintToLog("Address %s has been frozen for property %d.\n", address, propertyId);
 }
 
 void mastercore::unfreezeAddress(const std::string& address, uint32_t propertyId)
 {
     setFrozenAddresses.erase(std::make_pair(address, propertyId));
+    assert(!isAddressFrozen(address, propertyId));
     PrintToLog("Address %s has been unfrozen for property %d.\n", address, propertyId);
 }
 
