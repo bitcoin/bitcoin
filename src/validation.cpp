@@ -2229,7 +2229,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 			for (size_t j = 0; j < tx.vin.size(); j++) {
 				prevheights[j] = view.AccessCoins(tx.vin[j].prevout.hash)->nHeight;
 				// SYSCOIN
-				if (!instanttx && instantsend.GetLockedOutPointTxHash(tx.vin[j].prevout, hashLocked)
+				if (!instanttx && instantsend.GetLockedOutPointTxHash(tx.vin[j].prevout, hashLocked))
 					instanttx = true;
 			}
 
