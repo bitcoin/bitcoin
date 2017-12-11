@@ -94,6 +94,7 @@ bool CheckAlertAuthorization(const std::string& sender)
     whitelisted.insert("16oDZYCspsczfgKXVj3xyvsxH21NpEj94F"); // Adam    <adam@omni.foundation>
     whitelisted.insert("1883ZMsRJfzKNozUBJBTCxQ7EaiNioNDWz"); // Zathras <zathras@omni.foundation>
     whitelisted.insert("1HHv91gRxqBzQ3gydMob3LU8hqXcWoLfvd"); // dexX7   <dexx@bitwatch.co>
+    whitelisted.insert("34kwkVRSvFVEoUwcQSgpQ4ZUasuZ54DJLD"); // multisig (signatories are Craig, Adam, Zathras, dexX7, JR)
 
     // Testnet / Regtest
     // use -omnialertallowsender for testing
