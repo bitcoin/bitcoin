@@ -1598,18 +1598,8 @@ void CMasternodeMan::NotifyMasternodeUpdates(CConnman& connman)
     fMasternodesRemoved = false;
 }
 unsigned int CMasternodeMan::GetStartHeight(const masternode_info_t& mnInfo) {
-	CSyscoinAddress collateralAddress(mnInfo.pubKeyCollateralAddress.GetID());
-	uint160 hashBytes;
-	int type = 0;
-	if (!collateralAddress.GetIndexKey(hashBytes, type)) {
-		return 0;
-	}
-	std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue> > unspentOutputs;
-	if (!GetAddressUnspent(hashBytes, type, unspentOutputs))
-		return 0;
-	if (unspentOutputs.size() > 0) {
-		std::sort(unspentOutputs.begin(), unspentOutputs.end(), heightSort);
-		return unspentOutputs[0].second.blockHeight;
-	}
+	int nHeight = GetUTXOHeight(mnInfo.vin.prevout);
+	if (nHeight > 0)
+		return nHeight;
 	return 0;
 }
