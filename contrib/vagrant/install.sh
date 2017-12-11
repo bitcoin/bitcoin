@@ -24,8 +24,8 @@ pushd /vagrant
 git checkout v0.6.1ppc
 
 pushd src
-qmake -qt=qt5 && make -j8
-make -f makefile.unix -j8	
+qmake -qt=qt5 && make -j$(nproc)
+make -f makefile.unix -j$(nproc)
 
 #install berkleydb 4.8
 #pushd contrib
