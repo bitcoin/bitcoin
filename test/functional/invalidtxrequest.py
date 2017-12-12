@@ -26,7 +26,7 @@ class InvalidTxRequestTest(ComparisonTestFramework):
         test.add_all_connections(self.nodes)
         self.tip = None
         self.block_time = None
-        NetworkThread().start() # Start up network handling in another thread
+        network_thread_start()
         test.run()
 
     def get_tests(self):

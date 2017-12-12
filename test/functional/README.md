@@ -68,7 +68,7 @@ a callback class that derives from `NodeConnCB` and pass that to the
 `NodeConn` object, your code will receive the appropriate callbacks when
 events of interest arrive.
 
-- Call `NetworkThread.start()` after all `NodeConn` objects are created to
+- Call `network_thread_start()` after all `NodeConn` objects are created to
 start the networking thread.  (Continue with the test logic in your existing
 thread.)
 

@@ -66,7 +66,7 @@ class VersionBitsWarningTest(BitcoinTestFramework):
         # Setup the p2p connection and start up the network thread.
         self.nodes[0].add_p2p_connection(TestNode())
 
-        NetworkThread().start() # Start up network handling in another thread
+        network_thread_start()
 
         # Test logic begins here
         self.nodes[0].p2p.wait_for_verack()

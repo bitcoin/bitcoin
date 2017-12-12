@@ -38,7 +38,8 @@ from test_framework.mininode import (CBlockHeader,
                                      CTransaction,
                                      CTxIn,
                                      CTxOut,
-                                     NetworkThread,
+                                     network_thread_join,
+                                     network_thread_start,
                                      NodeConnCB,
                                      msg_block,
                                      msg_headers)
@@ -103,7 +104,7 @@ class AssumeValidTest(BitcoinTestFramework):
         # Connect to node0
         p2p0 = self.nodes[0].add_p2p_connection(BaseNode())
 
-        NetworkThread().start()  # Start up network handling in another thread
+        network_thread_start()
         self.nodes[0].p2p.wait_for_verack()
 
         # Build the blockchain
@@ -164,13 +165,22 @@ class AssumeValidTest(BitcoinTestFramework):
             self.block_time += 1
             height += 1
 
+        # We're adding new connections so terminate the network thread
+        self.nodes[0].disconnect_p2ps()
+        network_thread_join()
+
         # Start node1 and node2 with assumevalid so they accept a block with a bad signature.
         self.start_node(1, extra_args=self.extra_args + ["-assumevalid=" + hex(block102.sha256)])
-        p2p1 = self.nodes[1].add_p2p_connection(BaseNode())
-        p2p1.wait_for_verack()
-
         self.start_node(2, extra_args=self.extra_args + ["-assumevalid=" + hex(block102.sha256)])
+
+        p2p0 = self.nodes[0].add_p2p_connection(BaseNode())
+        p2p1 = self.nodes[1].add_p2p_connection(BaseNode())
         p2p2 = self.nodes[2].add_p2p_connection(BaseNode())
+
+        network_thread_start()
+
+        p2p0.wait_for_verack()
+        p2p1.wait_for_verack()
         p2p2.wait_for_verack()
 
         # Make sure nodes actually accept the many headers

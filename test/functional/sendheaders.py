@@ -222,7 +222,7 @@ class SendHeadersTest(BitcoinTestFramework):
         # direct fetching
         test_node = self.nodes[0].add_p2p_connection(TestNode(), services=0)
 
-        NetworkThread().start() # Start up network handling in another thread
+        network_thread_start()
 
         # Test logic begins here
         inv_node.wait_for_verack()

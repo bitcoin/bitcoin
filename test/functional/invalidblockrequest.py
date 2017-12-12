@@ -15,6 +15,7 @@ from test_framework.test_framework import ComparisonTestFramework
 from test_framework.util import *
 from test_framework.comptool import TestManager, TestInstance, RejectResult
 from test_framework.blocktools import *
+from test_framework.mininode import network_thread_start
 import copy
 
 # Use the ComparisonTestFramework with 1 node: only use --testbinary.
@@ -31,7 +32,7 @@ class InvalidBlockRequestTest(ComparisonTestFramework):
         test.add_all_connections(self.nodes)
         self.tip = None
         self.block_time = None
-        NetworkThread().start() # Start up network handling in another thread
+        network_thread_start()
         sync_masternodes(self.nodes, True)
         test.run()
 
