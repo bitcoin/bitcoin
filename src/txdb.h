@@ -151,6 +151,10 @@ public:
 
     /// Write block locator of the chain that the txindex is in sync with.
     bool WriteBestBlock(const CBlockLocator& locator);
+
+    /// Migrate txindex data from the block tree DB, where it may be for older nodes that have not
+    /// been upgraded yet to the new database.
+    bool MigrateData(CBlockTreeDB& block_tree_db, const CBlockLocator& best_locator);
 };
 
 #endif // BITCOIN_TXDB_H
