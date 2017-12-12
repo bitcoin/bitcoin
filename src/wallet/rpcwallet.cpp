@@ -2746,12 +2746,13 @@ UniValue listwallets(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() != 0)
         throw std::runtime_error(
             "listwallets\n"
-            "Returns a list of currently loaded wallets.\n"
-            "For full information on the wallet, use \"getwalletinfo\"\n"
+            "Returns a list of currently loaded wallets, and a list of potential wallet files in the wallet directory.\n"
+            "For full information about a loaded wallet, use \"getwalletinfo\"\n"
             "\nResult:\n"
             "{\n"
             "  \"loaded\":     [ \"walletname\" ... ] (json array of strings) Names of loaded wallets\n"
-            "  \"available\":  [ \"walletname\" ... ] (json array of strings) Names of BDB files in wallet directory (may not always actually be wallets)\n"
+            "  \"available\":  [ \"walletname\" ... ] (json array of strings) Names of BDB files in wallet directory"
+            "           (may not always actually be wallets, e.g. other files from pre-0.8, or may include duplicate wallets which cannot be opened simultaneously)\n"
             "}\n"
             "\nExamples:\n"
             + HelpExampleCli("listwallets", "")
