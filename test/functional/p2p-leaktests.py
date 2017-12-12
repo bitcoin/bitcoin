@@ -103,7 +103,7 @@ class P2PLeakTest(BitcoinTestFramework):
         unsupported_service_bit5_node = self.nodes[0].add_p2p_connection(CLazyNode(), services=NODE_NETWORK|NODE_UNSUPPORTED_SERVICE_BIT_5)
         unsupported_service_bit7_node = self.nodes[0].add_p2p_connection(CLazyNode(), services=NODE_NETWORK|NODE_UNSUPPORTED_SERVICE_BIT_7)
 
-        NetworkThread().start()  # Start up network handling in another thread
+        network_thread_start()
 
         wait_until(lambda: no_version_bannode.ever_connected, timeout=10, lock=mininode_lock)
         wait_until(lambda: no_version_idlenode.ever_connected, timeout=10, lock=mininode_lock)
@@ -126,8 +126,9 @@ class P2PLeakTest(BitcoinTestFramework):
 
         self.nodes[0].disconnect_p2ps()
 
-        # Wait until all connections are closed
+        # Wait until all connections are closed and the network thread has terminated
         wait_until(lambda: len(self.nodes[0].getpeerinfo()) == 0)
+        network_thread_join()
 
         # Make sure no unexpected messages came in
         assert(no_version_bannode.unexpected_msg == False)
@@ -142,7 +143,8 @@ class P2PLeakTest(BitcoinTestFramework):
         allowed_service_bit5_node = self.nodes[0].add_p2p_connection(P2PInterface(), services=NODE_NETWORK|NODE_UNSUPPORTED_SERVICE_BIT_5)
         allowed_service_bit7_node = self.nodes[0].add_p2p_connection(P2PInterface(), services=NODE_NETWORK|NODE_UNSUPPORTED_SERVICE_BIT_7)
 
-        NetworkThread().start()  # Network thread stopped when all previous P2PInterfaces disconnected. Restart it
+        # Network thread stopped when all previous P2PInterfaces disconnected. Restart it
+        network_thread_start()
 
         wait_until(lambda: allowed_service_bit5_node.message_count["verack"], lock=mininode_lock)
         wait_until(lambda: allowed_service_bit7_node.message_count["verack"], lock=mininode_lock)
