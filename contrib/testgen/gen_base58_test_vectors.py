@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 # Copyright (c) 2012-2017 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -8,6 +8,8 @@ Generate valid and invalid base58 address and private key test vectors.
 Usage: 
     gen_base58_test_vectors.py valid 50 > ../../src/test/data/base58_keys_valid.json
     gen_base58_test_vectors.py invalid 50 > ../../src/test/data/base58_keys_invalid.json
+
+Note that this script is Python2 only, and will fail in Python3
 '''
 # 2012 Wladimir J. van der Laan
 # Released under MIT License
