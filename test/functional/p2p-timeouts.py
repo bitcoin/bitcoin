@@ -43,7 +43,7 @@ class TimeoutsTest(BitcoinTestFramework):
         no_version_node = self.nodes[0].add_p2p_connection(TestNode(), send_version=False)
         no_send_node = self.nodes[0].add_p2p_connection(TestNode(), send_version=False)
 
-        NetworkThread().start()  # Start up network handling in another thread
+        network_thread_start()
 
         sleep(1)
 
