@@ -121,7 +121,7 @@ BOOST_AUTO_TEST_CASE(util_ParseParameters)
     testArgs.ParseParameters(1, (char**)argv_test);
     BOOST_CHECK(testArgs.GetMapArgs().empty() && testArgs.GetMapMultiArgs().empty());
 
-    testArgs.ParseParameters(5, (char**)argv_test);
+    testArgs.ParseParameters(7, (char**)argv_test);
     // expectation: -ignored is ignored (program name argument),
     // -a, -b and -ccc end up in map, -d ignored because it is after
     // a non-option argument (non-GNU option parsing)
