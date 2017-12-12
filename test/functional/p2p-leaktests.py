@@ -104,7 +104,6 @@ class P2PLeakTest(RavenTestFramework):
         unsupported_service_bit5_node = CLazyNode()
         unsupported_service_bit7_node = CLazyNode()
 
-        self.nodes[0].setmocktime(1501545600)  # August 1st 2017
         connections = []
         connections.append(NodeConn('127.0.0.1', p2p_port(0), self.nodes[0], no_version_bannode, send_version=False))
         connections.append(NodeConn('127.0.0.1', p2p_port(0), self.nodes[0], no_version_idlenode, send_version=False))
