@@ -927,6 +927,18 @@ void InitParameterInteraction()
         LogPrintf("%s: parameter interaction: can't use -hdseed and -mnemonic/-mnemonicpassphrase together, will prefer -seed\n", __func__);
     }
 #endif // ENABLE_WALLET
+
+    // Make sure additional indexes are recalculated correctly in VerifyDB
+    // (we must reconnect blocks whenever we disconnect them for these indexes to work)
+    bool fAdditionalIndexes =
+        GetBoolArg("-addressindex", DEFAULT_ADDRESSINDEX) ||
+        GetBoolArg("-spentindex", DEFAULT_SPENTINDEX) ||
+        GetBoolArg("-timestampindex", DEFAULT_TIMESTAMPINDEX);
+
+    if (fAdditionalIndexes && GetArg("-checklevel", DEFAULT_CHECKLEVEL) < 4) {
+        mapArgs["-checklevel"] = "4";
+        LogPrintf("%s: parameter interaction: additional indexes -> setting -checklevel=4\n", __func__);
+    }
 }
 
 void InitLogging()
