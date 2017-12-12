@@ -2158,5 +2158,5 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
         pwalletMain->postInitProcess(scheduler);
 #endif
 
-    return !fRequestShutdown;
+    return true;
 }
