@@ -6,7 +6,6 @@
 
 #include <tinyformat.h>
 
-#include <string>
 
 /**
  * Name of client reported in the 'version' message. Report the same name

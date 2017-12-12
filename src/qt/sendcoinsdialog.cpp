@@ -14,7 +14,6 @@
 #include <qt/optionsmodel.h>
 #include <qt/platformstyle.h>
 #include <qt/sendcoinsentry.h>
-#include <qt/walletmodel.h>
 
 #include <base58.h>
 #include <wallet/coincontrol.h>
@@ -28,11 +27,9 @@
 #include <privatesend/privatesend-client.h>
 
 #include <QFontMetrics>
-#include <QMessageBox>
 #include <QScrollBar>
 #include <QSettings>
 #include <QTextDocument>
-#include <QTimer>
 
 #define SEND_CONFIRM_DELAY   3
 

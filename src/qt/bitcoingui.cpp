@@ -3,10 +3,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#if defined(HAVE_CONFIG_H)
-#include <config/dash-config.h>
-#endif
-
 #include <qt/bitcoingui.h>
 
 #include <qt/bitcoinunits.h>

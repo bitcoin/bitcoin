@@ -5,8 +5,6 @@
 
 #include <keystore.h>
 
-#include <key.h>
-#include <pubkey.h>
 #include <util.h>
 
 bool CKeyStore::AddKey(const CKey &key) {
