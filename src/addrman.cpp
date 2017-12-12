@@ -65,7 +65,7 @@ double CAddrInfo::GetChance(int64_t nNow) const
     return fChance;
 }
 
-CAddrInfo* CAddrMan::Find(const CNetAddr& addr, int* pnId)
+CAddrInfo* CAddrMan::Find(const CNetAddr& addr, int* pnId) EXCLUSIVE_LOCKS_REQUIRED(cs_addrMan)
 {
     std::map<CNetAddr, int>::iterator it = mapAddr.find(addr);
     if (it == mapAddr.end())
@@ -78,7 +78,7 @@ CAddrInfo* CAddrMan::Find(const CNetAddr& addr, int* pnId)
     return nullptr;
 }
 
-CAddrInfo* CAddrMan::Create(const CAddress& addr, const CNetAddr& addrSource, int* pnId)
+CAddrInfo* CAddrMan::Create(const CAddress& addr, const CNetAddr& addrSource, int* pnId) EXCLUSIVE_LOCKS_REQUIRED(cs_addrMan)
 {
     int nId = nIdCount++;
     mapInfo[nId] = CAddrInfo(addr, addrSource);
@@ -90,7 +90,7 @@ CAddrInfo* CAddrMan::Create(const CAddress& addr, const CNetAddr& addrSource, in
     return &mapInfo[nId];
 }
 
-void CAddrMan::SwapRandom(unsigned int nRndPos1, unsigned int nRndPos2)
+void CAddrMan::SwapRandom(unsigned int nRndPos1, unsigned int nRndPos2) EXCLUSIVE_LOCKS_REQUIRED(cs_addrMan)
 {
     if (nRndPos1 == nRndPos2)
         return;
@@ -110,7 +110,7 @@ void CAddrMan::SwapRandom(unsigned int nRndPos1, unsigned int nRndPos2)
     vRandom[nRndPos2] = nId1;
 }
 
-void CAddrMan::Delete(int nId)
+void CAddrMan::Delete(int nId) EXCLUSIVE_LOCKS_REQUIRED(cs_addrMan)
 {
     assert(mapInfo.count(nId) != 0);
     CAddrInfo& info = mapInfo[nId];
@@ -124,7 +124,7 @@ void CAddrMan::Delete(int nId)
     nNew--;
 }
 
-void CAddrMan::ClearNew(int nUBucket, int nUBucketPos)
+void CAddrMan::ClearNew(int nUBucket, int nUBucketPos) EXCLUSIVE_LOCKS_REQUIRED(cs_addrMan)
 {
     // if there is an entry in the specified bucket, delete it.
     if (vvNew[nUBucket][nUBucketPos] != -1) {
@@ -139,7 +139,7 @@ void CAddrMan::ClearNew(int nUBucket, int nUBucketPos)
     }
 }
 
-void CAddrMan::MakeTried(CAddrInfo& info, int nId)
+void CAddrMan::MakeTried(CAddrInfo& info, int nId) EXCLUSIVE_LOCKS_REQUIRED(cs_addrMan)
 {
     // remove the entry from all new buckets
     for (int bucket = 0; bucket < ADDRMAN_NEW_BUCKET_COUNT; bucket++) {
@@ -187,7 +187,7 @@ void CAddrMan::MakeTried(CAddrInfo& info, int nId)
     info.fInTried = true;
 }
 
-void CAddrMan::Good_(const CService& addr, int64_t nTime)
+void CAddrMan::Good_(const CService& addr, int64_t nTime) EXCLUSIVE_LOCKS_REQUIRED(cs_addrMan)
 {
     int nId;
 
@@ -239,7 +239,7 @@ void CAddrMan::Good_(const CService& addr, int64_t nTime)
     MakeTried(info, nId);
 }
 
-bool CAddrMan::Add_(const CAddress& addr, const CNetAddr& source, int64_t nTimePenalty)
+bool CAddrMan::Add_(const CAddress& addr, const CNetAddr& source, int64_t nTimePenalty) EXCLUSIVE_LOCKS_REQUIRED(cs_addrMan)
 {
     if (!addr.IsRoutable())
         return false;
@@ -312,7 +312,7 @@ bool CAddrMan::Add_(const CAddress& addr, const CNetAddr& source, int64_t nTimeP
     return fNew;
 }
 
-void CAddrMan::Attempt_(const CService& addr, bool fCountFailure, int64_t nTime)
+void CAddrMan::Attempt_(const CService& addr, bool fCountFailure, int64_t nTime) EXCLUSIVE_LOCKS_REQUIRED(cs_addrMan)
 {
     CAddrInfo* pinfo = Find(addr);
 
@@ -334,7 +334,7 @@ void CAddrMan::Attempt_(const CService& addr, bool fCountFailure, int64_t nTime)
     }
 }
 
-CAddrInfo CAddrMan::Select_(bool newOnly)
+CAddrInfo CAddrMan::Select_(bool newOnly) EXCLUSIVE_LOCKS_REQUIRED(cs_addrMan)
 {
     if (size() == 0)
         return CAddrInfo();
@@ -382,7 +382,7 @@ CAddrInfo CAddrMan::Select_(bool newOnly)
 }
 
 #ifdef DEBUG_ADDRMAN
-int CAddrMan::Check_()
+int CAddrMan::Check_() EXCLUSIVE_LOCKS_REQUIRED(cs_addrMan)
 {
     std::set<int> setTried;
     std::map<int, int> mapNew;
@@ -459,7 +459,7 @@ int CAddrMan::Check_()
 }
 #endif
 
-void CAddrMan::GetAddr_(std::vector<CAddress>& vAddr)
+void CAddrMan::GetAddr_(std::vector<CAddress>& vAddr) EXCLUSIVE_LOCKS_REQUIRED(cs_addrMan)
 {
     unsigned int nNodes = ADDRMAN_GETADDR_MAX_PCT * vRandom.size() / 100;
     if (nNodes > ADDRMAN_GETADDR_MAX)
@@ -480,7 +480,7 @@ void CAddrMan::GetAddr_(std::vector<CAddress>& vAddr)
     }
 }
 
-void CAddrMan::Connected_(const CService& addr, int64_t nTime)
+void CAddrMan::Connected_(const CService& addr, int64_t nTime) EXCLUSIVE_LOCKS_REQUIRED(cs_addrMan)
 {
     CAddrInfo* pinfo = Find(addr);
 
@@ -500,7 +500,7 @@ void CAddrMan::Connected_(const CService& addr, int64_t nTime)
         info.nTime = nTime;
 }
 
-void CAddrMan::SetServices_(const CService& addr, ServiceFlags nServices)
+void CAddrMan::SetServices_(const CService& addr, ServiceFlags nServices) EXCLUSIVE_LOCKS_REQUIRED(cs_addrMan)
 {
     CAddrInfo* pinfo = Find(addr);
 

@@ -5,12 +5,14 @@
 #ifndef BITCOIN_CHECKPOINTS_H
 #define BITCOIN_CHECKPOINTS_H
 
+#include <sync.h>
 #include <uint256.h>
 
 #include <map>
 
 class CBlockIndex;
 struct CCheckpointData;
+extern CCriticalSection cs_main;
 
 /**
  * Block-chain checkpoints are compiled-in sanity checks.
@@ -20,7 +22,7 @@ namespace Checkpoints
 {
 
 //! Returns last CBlockIndex* in mapBlockIndex that is a checkpoint
-CBlockIndex* GetLastCheckpoint(const CCheckpointData& data);
+CBlockIndex* GetLastCheckpoint(const CCheckpointData& data) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 } //namespace Checkpoints
 

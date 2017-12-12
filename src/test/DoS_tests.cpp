@@ -29,7 +29,7 @@ struct COrphanTx {
     NodeId fromPeer;
     int64_t nTimeExpire;
 };
-extern std::map<uint256, COrphanTx> mapOrphanTransactions;
+extern std::map<uint256, COrphanTx> mapOrphanTransactions GUARDED_BY(cs_main);
 
 CService ip(uint32_t i)
 {

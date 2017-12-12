@@ -183,34 +183,34 @@ class CAddrMan
 {
 private:
     //! critical section to protect the inner data structures
-    mutable CCriticalSection cs;
+    mutable CCriticalSection cs_addrMan;
 
     //! last used nId
-    int nIdCount;
+    int nIdCount GUARDED_BY(cs_addrMan);
 
     //! table with information about all nIds
-    std::map<int, CAddrInfo> mapInfo;
+    std::map<int, CAddrInfo> mapInfo GUARDED_BY(cs_addrMan);
 
     //! find an nId based on its network address
-    std::map<CNetAddr, int> mapAddr;
+    std::map<CNetAddr, int> mapAddr GUARDED_BY(cs_addrMan);
 
     //! randomly-ordered vector of all nIds
-    std::vector<int> vRandom;
+    std::vector<int> vRandom GUARDED_BY(cs_addrMan);
 
     // number of "tried" entries
-    int nTried;
+    int nTried GUARDED_BY(cs_addrMan);
 
     //! list of "tried" buckets
-    int vvTried[ADDRMAN_TRIED_BUCKET_COUNT][ADDRMAN_BUCKET_SIZE];
+    int vvTried[ADDRMAN_TRIED_BUCKET_COUNT][ADDRMAN_BUCKET_SIZE] GUARDED_BY(cs_addrMan);
 
     //! number of (unique) "new" entries
-    int nNew;
+    int nNew GUARDED_BY(cs_addrMan);
 
     //! list of "new" buckets
-    int vvNew[ADDRMAN_NEW_BUCKET_COUNT][ADDRMAN_BUCKET_SIZE];
+    int vvNew[ADDRMAN_NEW_BUCKET_COUNT][ADDRMAN_BUCKET_SIZE] GUARDED_BY(cs_addrMan);
 
     //! last time Good was called (memory only)
-    int64_t nLastGood;
+    int64_t nLastGood GUARDED_BY(cs_addrMan);
 
 protected:
     //! secret key to randomize bucket select with
@@ -220,52 +220,52 @@ protected:
     FastRandomContext insecure_rand;
 
     //! Find an entry.
-    CAddrInfo* Find(const CNetAddr& addr, int *pnId = nullptr);
+    CAddrInfo* Find(const CNetAddr& addr, int *pnId = nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs_addrMan);
 
     //! find an entry, creating it if necessary.
     //! nTime and nServices of the found node are updated, if necessary.
-    CAddrInfo* Create(const CAddress &addr, const CNetAddr &addrSource, int *pnId = nullptr);
+    CAddrInfo* Create(const CAddress &addr, const CNetAddr &addrSource, int *pnId = nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs_addrMan);
 
     //! Swap two elements in vRandom.
-    void SwapRandom(unsigned int nRandomPos1, unsigned int nRandomPos2);
+    void SwapRandom(unsigned int nRandomPos1, unsigned int nRandomPos2) EXCLUSIVE_LOCKS_REQUIRED(cs_addrMan);
 
     //! Move an entry from the "new" table(s) to the "tried" table
-    void MakeTried(CAddrInfo& info, int nId);
+    void MakeTried(CAddrInfo& info, int nId) EXCLUSIVE_LOCKS_REQUIRED(cs_addrMan);
 
     //! Delete an entry. It must not be in tried, and have refcount 0.
-    void Delete(int nId);
+    void Delete(int nId) EXCLUSIVE_LOCKS_REQUIRED(cs_addrMan);
 
     //! Clear a position in a "new" table. This is the only place where entries are actually deleted.
-    void ClearNew(int nUBucket, int nUBucketPos);
+    void ClearNew(int nUBucket, int nUBucketPos) EXCLUSIVE_LOCKS_REQUIRED(cs_addrMan);
 
     //! Mark an entry "good", possibly moving it from "new" to "tried".
-    void Good_(const CService &addr, int64_t nTime);
+    void Good_(const CService &addr, int64_t nTime) EXCLUSIVE_LOCKS_REQUIRED(cs_addrMan);
 
     //! Add an entry to the "new" table.
-    bool Add_(const CAddress &addr, const CNetAddr& source, int64_t nTimePenalty);
+    bool Add_(const CAddress &addr, const CNetAddr& source, int64_t nTimePenalty) EXCLUSIVE_LOCKS_REQUIRED(cs_addrMan);
 
     //! Mark an entry as attempted to connect.
-    void Attempt_(const CService &addr, bool fCountFailure, int64_t nTime);
+    void Attempt_(const CService &addr, bool fCountFailure, int64_t nTime) EXCLUSIVE_LOCKS_REQUIRED(cs_addrMan);
 
     //! Select an address to connect to, if newOnly is set to true, only the new table is selected from.
-    CAddrInfo Select_(bool newOnly);
+    CAddrInfo Select_(bool newOnly) EXCLUSIVE_LOCKS_REQUIRED(cs_addrMan);
 
     //! Wraps GetRandInt to allow tests to override RandomInt and make it determinismistic.
     virtual int RandomInt(int nMax);
 
 #ifdef DEBUG_ADDRMAN
     //! Perform consistency check. Returns an error code or zero.
-    int Check_();
+    int Check_() EXCLUSIVE_LOCKS_REQUIRED(cs_addrMan);
 #endif
 
     //! Select several addresses at once.
-    void GetAddr_(std::vector<CAddress> &vAddr);
+    void GetAddr_(std::vector<CAddress> &vAddr) EXCLUSIVE_LOCKS_REQUIRED(cs_addrMan);
 
     //! Mark an entry as currently-connected-to.
-    void Connected_(const CService &addr, int64_t nTime);
+    void Connected_(const CService &addr, int64_t nTime) EXCLUSIVE_LOCKS_REQUIRED(cs_addrMan);
 
     //! Update an entry's service bits.
-    void SetServices_(const CService &addr, ServiceFlags nServices);
+    void SetServices_(const CService &addr, ServiceFlags nServices) EXCLUSIVE_LOCKS_REQUIRED(cs_addrMan);
 
 public:
     /**
@@ -300,7 +300,7 @@ public:
     template<typename Stream>
     void Serialize(Stream &s) const
     {
-        LOCK(cs);
+        LOCK(cs_addrMan);
 
         unsigned char nVersion = 1;
         s << nVersion;
@@ -350,7 +350,7 @@ public:
     template<typename Stream>
     void Unserialize(Stream& s)
     {
-        LOCK(cs);
+        LOCK(cs_addrMan);
 
         Clear();
 
@@ -455,7 +455,7 @@ public:
 
     void Clear()
     {
-        LOCK(cs);
+        LOCK(cs_addrMan);
         std::vector<int>().swap(vRandom);
         nKey = GetRandHash();
         for (size_t bucket = 0; bucket < ADDRMAN_NEW_BUCKET_COUNT; bucket++) {
@@ -490,7 +490,7 @@ public:
     //! Return the number of (unique) addresses in all tables.
     size_t size() const
     {
-        LOCK(cs); // TODO: Cache this in an atomic to avoid this overhead
+        LOCK(cs_addrMan); // TODO: Cache this in an atomic to avoid this overhead
         return vRandom.size();
     }
 
@@ -499,7 +499,7 @@ public:
     {
 #ifdef DEBUG_ADDRMAN
         {
-            LOCK(cs);
+            LOCK(cs_addrMan);
             int err;
             if ((err=Check_()))
                 LogPrintf("ADDRMAN CONSISTENCY CHECK FAILED!!! err=%i\n", err);
@@ -510,7 +510,7 @@ public:
     //! Add a single address.
     bool Add(const CAddress &addr, const CNetAddr& source, int64_t nTimePenalty = 0)
     {
-        LOCK(cs);
+        LOCK(cs_addrMan);
         bool fRet = false;
         Check();
         fRet |= Add_(addr, source, nTimePenalty);
@@ -524,7 +524,7 @@ public:
     //! Add multiple addresses.
     bool Add(const std::vector<CAddress> &vAddr, const CNetAddr& source, int64_t nTimePenalty = 0)
     {
-        LOCK(cs);
+        LOCK(cs_addrMan);
         int nAdd = 0;
         Check();
         for (std::vector<CAddress>::const_iterator it = vAddr.begin(); it != vAddr.end(); it++)
@@ -539,7 +539,7 @@ public:
     //! Mark an entry as accessible.
     void Good(const CService &addr, int64_t nTime = GetAdjustedTime())
     {
-        LOCK(cs);
+        LOCK(cs_addrMan);
         Check();
         Good_(addr, nTime);
         Check();
@@ -548,7 +548,7 @@ public:
     //! Mark an entry as connection attempted to.
     void Attempt(const CService &addr, bool fCountFailure, int64_t nTime = GetAdjustedTime())
     {
-        LOCK(cs);
+        LOCK(cs_addrMan);
         Check();
         Attempt_(addr, fCountFailure, nTime);
         Check();
@@ -561,7 +561,7 @@ public:
     {
         CAddrInfo addrRet;
         {
-            LOCK(cs);
+            LOCK(cs_addrMan);
             Check();
             addrRet = Select_(newOnly);
             Check();
@@ -575,7 +575,7 @@ public:
         Check();
         std::vector<CAddress> vAddr;
         {
-            LOCK(cs);
+            LOCK(cs_addrMan);
             GetAddr_(vAddr);
         }
         Check();
@@ -585,7 +585,7 @@ public:
     //! Mark an entry as currently-connected-to.
     void Connected(const CService &addr, int64_t nTime = GetAdjustedTime())
     {
-        LOCK(cs);
+        LOCK(cs_addrMan);
         Check();
         Connected_(addr, nTime);
         Check();
@@ -593,7 +593,7 @@ public:
 
     void SetServices(const CService &addr, ServiceFlags nServices)
     {
-        LOCK(cs);
+        LOCK(cs_addrMan);
         Check();
         SetServices_(addr, nServices);
         Check();

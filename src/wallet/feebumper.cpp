@@ -23,7 +23,7 @@
 // calculation, but we should be able to refactor after priority is removed).
 // NOTE: this requires that all inputs must be in mapWallet (eg the tx should
 // be IsAllFromMe).
-static int64_t CalculateMaximumSignedTxSize(const CTransaction &tx, const CWallet *wallet)
+static int64_t CalculateMaximumSignedTxSize(const CTransaction &tx, const CWallet *wallet) EXCLUSIVE_LOCKS_REQUIRED(wallet->cs_wallet)
 {
     CMutableTransaction txNew(tx);
     std::vector<CInputCoin> vCoins;
@@ -45,7 +45,7 @@ static int64_t CalculateMaximumSignedTxSize(const CTransaction &tx, const CWalle
 
 //! Check whether transaction has descendant in wallet or mempool, or has been
 //! mined, or conflicts with a mined transaction. Return a feebumper::Result.
-static feebumper::Result PreconditionChecks(const CWallet* wallet, const CWalletTx& wtx, std::vector<std::string>& errors)
+static feebumper::Result PreconditionChecks(const CWallet* wallet, const CWalletTx& wtx, std::vector<std::string>& errors) EXCLUSIVE_LOCKS_REQUIRED(cs_main, wallet->cs_wallet)
 {
     if (wallet->HasWalletSpend(wtx.GetHash())) {
         errors.push_back("Transaction has descendants in the wallet");
@@ -53,7 +53,7 @@ static feebumper::Result PreconditionChecks(const CWallet* wallet, const CWallet
     }
 
     {
-        LOCK(mempool.cs);
+        LOCK(mempool.cs_txMemPool);
         auto it_mp = mempool.mapTx.find(wtx.GetHash());
         if (it_mp != mempool.mapTx.end() && it_mp->GetCountWithDescendants() > 1) {
             errors.push_back("Transaction has descendants in the mempool");

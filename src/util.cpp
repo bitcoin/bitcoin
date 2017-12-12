@@ -106,6 +106,10 @@ std::atomic<uint32_t> logCategories(0);
 
 /** Init OpenSSL library multithreading support */
 static std::unique_ptr<CCriticalSection[]> ppmutexOpenSSL;
+
+// NO_THREAD_SAFETY_ANALYSIS: Intentionally silencing the following warnings:
+// * error: releasing mutex 'operator[](ppmutexOpenSSL, i)' that was not held [-Werror,-Wthread-safety-analysis]
+// * error: mutex 'operator[](ppmutexOpenSSL, i)' is not held on every path through here [-Werror,-Wthread-safety-analysis]
 void locking_callback(int mode, int i, const char* file, int line) NO_THREAD_SAFETY_ANALYSIS
 {
     if (mode & CRYPTO_LOCK) {
@@ -562,14 +566,14 @@ fs::path GetDefaultDataDir()
 #endif
 }
 
-static fs::path pathCached;
-static fs::path pathCachedNetSpecific;
-static CCriticalSection csPathCached;
+static CCriticalSection cs_pathCached;
+static fs::path pathCached GUARDED_BY(cs_pathCached);
+static fs::path pathCachedNetSpecific GUARDED_BY(cs_pathCached);
 
 const fs::path &GetDataDir(bool fNetSpecific)
 {
 
-    LOCK(csPathCached);
+    LOCK(cs_pathCached);
 
     fs::path &path = fNetSpecific ? pathCachedNetSpecific : pathCached;
 
@@ -600,7 +604,7 @@ const fs::path &GetDataDir(bool fNetSpecific)
 
 void ClearDatadirCache()
 {
-    LOCK(csPathCached);
+    LOCK(cs_pathCached);
 
     pathCached = fs::path();
     pathCachedNetSpecific = fs::path();

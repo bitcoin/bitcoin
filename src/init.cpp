@@ -216,8 +216,11 @@ void Shutdown()
     }
 
     // FlushStateToDisk generates a SetBestChain callback, which we should avoid missing
-    if (pcoinsTip != nullptr) {
-        FlushStateToDisk();
+    {
+        LOCK(cs_main);
+        if (pcoinsTip != nullptr) {
+            FlushStateToDisk();
+        }
     }
 
     // After there are no more peers/RPC left to give us new data which may generate
@@ -611,7 +614,7 @@ void CleanupBlockRevFiles()
     }
 }
 
-void ThreadImport(std::vector<fs::path> vImportFiles)
+void ThreadImport(std::vector<fs::path> vImportFiles) EXCLUSIVE_LOCKS_REQUIRED(cs_LastBlockFile)
 {
     const CChainParams& chainparams = Params();
     RenameThread("bitcoin-loadblk");
@@ -633,7 +636,10 @@ void ThreadImport(std::vector<fs::path> vImportFiles)
             LoadExternalBlockFile(chainparams, file, &pos);
             nFile++;
         }
-        pblocktree->WriteReindexing(false);
+        {
+            LOCK(cs_main); // WIP: lock submitted in https://github.com/bitcoin/bitcoin/pull/11652/files
+            pblocktree->WriteReindexing(false);
+        }
         fReindex = false;
         LogPrintf("Reindexing finished\n");
         // To avoid ending up in a situation without genesis block, re-try initializing (no-op if reindexing worked):
@@ -1412,13 +1418,19 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
         do {
             try {
                 UnloadBlockIndex();
-                pcoinsTip.reset();
-                pcoinsdbview.reset();
-                pcoinscatcher.reset();
-                pblocktree.reset(new CBlockTreeDB(nBlockTreeDBCache, false, fReset));
+                {
+                    LOCK(cs_main);
+                    pcoinsTip.reset();
+                    pcoinsdbview.reset();
+                    pcoinscatcher.reset();
+                    pblocktree.reset(new CBlockTreeDB(nBlockTreeDBCache, false, fReset));
+                }
 
                 if (fReset) {
-                    pblocktree->WriteReindexing(true);
+                    {
+                        LOCK(cs_main); // WIP: lock submitted in https://github.com/bitcoin/bitcoin/pull/11652/files
+                        pblocktree->WriteReindexing(true);
+                    }
                     //If we're reindexing in prune mode, wipe away unusable block files and all undo data files
                     if (fPruneMode)
                         CleanupBlockRevFiles();
@@ -1438,8 +1450,11 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
 
                 // If the loaded chain has a wrong genesis, bail out immediately
                 // (we're likely using a testnet datadir, or the other way around).
-                if (!mapBlockIndex.empty() && mapBlockIndex.count(chainparams.GetConsensus().hashGenesisBlock) == 0)
-                    return InitError(_("Incorrect or no genesis block found. Wrong datadir for network?"));
+                {
+                    LOCK(cs_main); // WIP: lock submitted in https://github.com/bitcoin/bitcoin/pull/11652/files
+                    if (!mapBlockIndex.empty() && mapBlockIndex.count(chainparams.GetConsensus().hashGenesisBlock) == 0)
+                        return InitError(_("Incorrect or no genesis block found. Wrong datadir for network?"));
+                }
 
                 // Check for changed -txindex state
                 if (fTxIndex != gArgs.GetBoolArg("-txindex", DEFAULT_TXINDEX)) {
@@ -1463,35 +1478,39 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
                     break;
                 }
 
-                // At this point we're either in reindex or we've loaded a useful
-                // block tree into mapBlockIndex!
+                bool is_coinsview_empty;
+                {
+                    LOCK(cs_main);
+                    // At this point we're either in reindex or we've loaded a useful
+                    // block tree into mapBlockIndex!
+                    pcoinsdbview.reset(new CCoinsViewDB(nCoinDBCache, false, fReset || fReindexChainState));
+                    pcoinscatcher.reset(new CCoinsViewErrorCatcher(pcoinsdbview.get()));
 
-                pcoinsdbview.reset(new CCoinsViewDB(nCoinDBCache, false, fReset || fReindexChainState));
-                pcoinscatcher.reset(new CCoinsViewErrorCatcher(pcoinsdbview.get()));
+                    // If necessary, upgrade from older database format.
+                    // This is a no-op if we cleared the coinsviewdb with -reindex or -reindex-chainstate
+                    if (!pcoinsdbview->Upgrade()) {
+                        strLoadError = _("Error upgrading chainstate database");
+                        break;
+                    }
 
-                // If necessary, upgrade from older database format.
-                // This is a no-op if we cleared the coinsviewdb with -reindex or -reindex-chainstate
-                if (!pcoinsdbview->Upgrade()) {
-                    strLoadError = _("Error upgrading chainstate database");
-                    break;
+                    // ReplayBlocks is a no-op if we cleared the coinsviewdb with -reindex or -reindex-chainstate
+                    if (!ReplayBlocks(chainparams, pcoinsdbview.get())) {
+                        strLoadError = _("Unable to replay blocks. You will need to rebuild the database using -reindex-chainstate.");
+                        break;
+                    }
+
+                    // The on-disk coinsdb is now in a good state, create the cache
+                    pcoinsTip.reset(new CCoinsViewCache(pcoinscatcher.get()));
+
+                    is_coinsview_empty = fReset || fReindexChainState || pcoinsTip->GetBestBlock().IsNull();
                 }
-
-                // ReplayBlocks is a no-op if we cleared the coinsviewdb with -reindex or -reindex-chainstate
-                if (!ReplayBlocks(chainparams, pcoinsdbview.get())) {
-                    strLoadError = _("Unable to replay blocks. You will need to rebuild the database using -reindex-chainstate.");
-                    break;
-                }
-
-                // The on-disk coinsdb is now in a good state, create the cache
-                pcoinsTip.reset(new CCoinsViewCache(pcoinscatcher.get()));
-
-                bool is_coinsview_empty = fReset || fReindexChainState || pcoinsTip->GetBestBlock().IsNull();
                 if (!is_coinsview_empty) {
                     // LoadChainTip sets chainActive based on pcoinsTip's best block
                     if (!LoadChainTip(chainparams)) {
                         strLoadError = _("Error initializing block database");
                         break;
                     }
+                    LOCK(cs_main); // WIP: lock submitted in https://github.com/bitcoin/bitcoin/pull/11652/files
                     assert(chainActive.Tip() != nullptr);
                 }
 
@@ -1514,8 +1533,11 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
                     }
 
                     {
-                        LOCK(cs_main);
-                        CBlockIndex* tip = chainActive.Tip();
+                        CBlockIndex* tip;
+                        {
+                            LOCK(cs_main); // WIP: lock submitted in https://github.com/bitcoin/bitcoin/pull/11652/files
+                            tip = chainActive.Tip();
+                        }
                         RPCNotifyBlockChange(true, tip);
                         if (tip && tip->nTime > GetAdjustedTime() + 2 * 60 * 60) {
                             strLoadError = _("The block database contains a block which appears to be from the future. "
@@ -1525,10 +1547,13 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
                         }
                     }
 
-                    if (!CVerifyDB().VerifyDB(chainparams, pcoinsdbview.get(), gArgs.GetArg("-checklevel", DEFAULT_CHECKLEVEL),
-                                  gArgs.GetArg("-checkblocks", DEFAULT_CHECKBLOCKS))) {
-                        strLoadError = _("Corrupted block database detected");
-                        break;
+                    {
+                        LOCK(cs_main);
+                        if (!CVerifyDB().VerifyDB(chainparams, pcoinsdbview.get(), gArgs.GetArg("-checklevel", DEFAULT_CHECKLEVEL),
+                                                  gArgs.GetArg("-checkblocks", DEFAULT_CHECKBLOCKS))) {
+                            strLoadError = _("Corrupted block database detected");
+                            break;
+                        }
                     }
                 }
             } catch (const std::exception& e) {
@@ -1615,11 +1640,13 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
         return false;
 
     // Either install a handler to notify us when genesis activates, or set fHaveGenesis directly.
-    // No locking, as this happens before any background thread is started.
-    if (chainActive.Tip() == nullptr) {
-        uiInterface.NotifyBlockTip.connect(BlockNotifyGenesisWait);
-    } else {
-        fHaveGenesis = true;
+    {
+        LOCK(cs_main); // WIP: lock submitted in https://github.com/bitcoin/bitcoin/pull/11652/files
+        if (chainActive.Tip() == nullptr) {
+            uiInterface.NotifyBlockTip.connect(BlockNotifyGenesisWait);
+        } else {
+            fHaveGenesis = true;
+        }
     }
 
     if (gArgs.IsArgSet("-blocknotify"))

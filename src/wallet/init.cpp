@@ -251,7 +251,7 @@ bool VerifyWallets()
     return true;
 }
 
-bool OpenWallets()
+bool OpenWallets() EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     if (gArgs.GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET)) {
         LogPrintf("Wallet disabled!\n");
@@ -269,7 +269,7 @@ bool OpenWallets()
     return true;
 }
 
-void StartWallets(CScheduler& scheduler) {
+void StartWallets(CScheduler& scheduler) EXCLUSIVE_LOCKS_REQUIRED(cs_main) {
     for (CWalletRef pwallet : vpwallets) {
         pwallet->postInitProcess(scheduler);
     }

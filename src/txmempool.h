@@ -412,18 +412,18 @@ public:
 class CTxMemPool
 {
 private:
-    uint32_t nCheckFrequency; //!< Value n means that n times in 2^32 we check.
-    unsigned int nTransactionsUpdated; //!< Used by getblocktemplate to trigger CreateNewBlock() invocation
-    CBlockPolicyEstimator* minerPolicyEstimator;
+    uint32_t nCheckFrequency GUARDED_BY(cs_txMemPool); //!< Value n means that n times in 2^32 we check.
+    unsigned int nTransactionsUpdated GUARDED_BY(cs_txMemPool); //!< Used by getblocktemplate to trigger CreateNewBlock() invocation
+    CBlockPolicyEstimator* minerPolicyEstimator GUARDED_BY(cs_txMemPool);
 
-    uint64_t totalTxSize;      //!< sum of all mempool tx's virtual sizes. Differs from serialized tx size since witness data is discounted. Defined in BIP 141.
-    uint64_t cachedInnerUsage; //!< sum of dynamic memory usage of all the map elements (NOT the maps themselves)
+    uint64_t totalTxSize GUARDED_BY(cs_txMemPool); //!< sum of all mempool tx's virtual sizes. Differs from serialized tx size since witness data is discounted. Defined in BIP 141.
+    uint64_t cachedInnerUsage GUARDED_BY(cs_txMemPool); //!< sum of dynamic memory usage of all the map elements (NOT the maps themselves)
 
-    mutable int64_t lastRollingFeeUpdate;
-    mutable bool blockSinceLastRollingFeeBump;
-    mutable double rollingMinimumFeeRate; //!< minimum fee to get into the pool, decreases exponentially
+    mutable int64_t lastRollingFeeUpdate GUARDED_BY(cs_txMemPool);
+    mutable bool blockSinceLastRollingFeeBump GUARDED_BY(cs_txMemPool);
+    mutable double rollingMinimumFeeRate GUARDED_BY(cs_txMemPool); //!< minimum fee to get into the pool, decreases exponentially
 
-    void trackPackageRemoved(const CFeeRate& rate);
+    void trackPackageRemoved(const CFeeRate& rate) EXCLUSIVE_LOCKS_REQUIRED(cs_txMemPool);
 
 public:
 
@@ -461,11 +461,11 @@ public:
         >
     > indexed_transaction_set;
 
-    mutable CCriticalSection cs;
-    indexed_transaction_set mapTx;
+    mutable CCriticalSection cs_txMemPool;
+    indexed_transaction_set mapTx GUARDED_BY(cs_txMemPool);
 
     typedef indexed_transaction_set::nth_index<0>::type::iterator txiter;
-    std::vector<std::pair<uint256, txiter> > vTxHashes; //!< All tx witness hashes/entries in mapTx, in random order
+    std::vector<std::pair<uint256, txiter>> vTxHashes GUARDED_BY(cs_txMemPool); //!< All tx witness hashes/entries in mapTx, in random order
 
     struct CompareIteratorByHash {
         bool operator()(const txiter &a, const txiter &b) const {
@@ -474,8 +474,8 @@ public:
     };
     typedef std::set<txiter, CompareIteratorByHash> setEntries;
 
-    const setEntries & GetMemPoolParents(txiter entry) const;
-    const setEntries & GetMemPoolChildren(txiter entry) const;
+    const setEntries & GetMemPoolParents(txiter entry) const EXCLUSIVE_LOCKS_REQUIRED(cs_txMemPool);
+    const setEntries & GetMemPoolChildren(txiter entry) const EXCLUSIVE_LOCKS_REQUIRED(cs_txMemPool);
 private:
     typedef std::map<txiter, setEntries, CompareIteratorByHash> cacheMap;
 
@@ -487,14 +487,14 @@ private:
     typedef std::map<txiter, TxLinks, CompareIteratorByHash> txlinksMap;
     txlinksMap mapLinks;
 
-    void UpdateParent(txiter entry, txiter parent, bool add);
-    void UpdateChild(txiter entry, txiter child, bool add);
+    void UpdateParent(txiter entry, txiter parent, bool add) EXCLUSIVE_LOCKS_REQUIRED(cs_txMemPool);
+    void UpdateChild(txiter entry, txiter child, bool add) EXCLUSIVE_LOCKS_REQUIRED(cs_txMemPool);
 
-    std::vector<indexed_transaction_set::const_iterator> GetSortedDepthAndScore() const;
+    std::vector<indexed_transaction_set::const_iterator> GetSortedDepthAndScore() const EXCLUSIVE_LOCKS_REQUIRED(cs_txMemPool);
 
 public:
-    indirectmap<COutPoint, const CTransaction*> mapNextTx;
-    std::map<uint256, CAmount> mapDeltas;
+    indirectmap<COutPoint, const CTransaction*> mapNextTx GUARDED_BY(cs_txMemPool);
+    std::map<uint256, CAmount> mapDeltas GUARDED_BY(cs_txMemPool);
 
     /** Create a new CTxMemPool.
      */
@@ -507,7 +507,7 @@ public:
      * check does nothing.
      */
     void check(const CCoinsViewCache *pcoins) const;
-    void setSanityCheck(double dFrequency = 1.0) { nCheckFrequency = static_cast<uint32_t>(dFrequency * 4294967295.0); }
+    void setSanityCheck(double dFrequency = 1.0) { LOCK(cs_txMemPool); nCheckFrequency = static_cast<uint32_t>(dFrequency * 4294967295.0); }
 
     // addUnchecked must updated state for all ancestors of a given transaction,
     // to track size/count of descendant transactions.  First version of
@@ -525,7 +525,7 @@ public:
     void removeForBlock(const std::vector<CTransactionRef>& vtx, unsigned int nBlockHeight);
 
     void clear();
-    void _clear(); //lock free
+    void _clear() EXCLUSIVE_LOCKS_REQUIRED(cs_txMemPool); //lock free
     bool CompareDepthAndScore(const uint256& hasha, const uint256& hashb);
     void queryHashes(std::vector<uint256>& vtxid);
     bool isSpent(const COutPoint& outpoint);
@@ -550,7 +550,7 @@ public:
      *  Set updateDescendants to true when removing a tx that was in a block, so
      *  that any in-mempool descendants have their ancestor state updated.
      */
-    void RemoveStaged(setEntries &stage, bool updateDescendants, MemPoolRemovalReason reason = MemPoolRemovalReason::UNKNOWN);
+    void RemoveStaged(setEntries &stage, bool updateDescendants, MemPoolRemovalReason reason = MemPoolRemovalReason::UNKNOWN) EXCLUSIVE_LOCKS_REQUIRED(cs_txMemPool);
 
     /** When adding transactions from a disconnected block back to the mempool,
      *  new mempool entries may have children in the mempool (which is generally
@@ -602,19 +602,19 @@ public:
 
     unsigned long size()
     {
-        LOCK(cs);
+        LOCK(cs_txMemPool);
         return mapTx.size();
     }
 
     uint64_t GetTotalTxSize() const
     {
-        LOCK(cs);
+        LOCK(cs_txMemPool);
         return totalTxSize;
     }
 
     bool exists(uint256 hash) const
     {
-        LOCK(cs);
+        LOCK(cs_txMemPool);
         return (mapTx.count(hash) != 0);
     }
 
@@ -643,15 +643,15 @@ private:
      */
     void UpdateForDescendants(txiter updateIt,
             cacheMap &cachedDescendants,
-            const std::set<uint256> &setExclude);
+            const std::set<uint256> &setExclude) EXCLUSIVE_LOCKS_REQUIRED(cs_txMemPool);
     /** Update ancestors of hash to add/remove it as a descendant transaction. */
-    void UpdateAncestorsOf(bool add, txiter hash, setEntries &setAncestors);
+    void UpdateAncestorsOf(bool add, txiter hash, setEntries &setAncestors) EXCLUSIVE_LOCKS_REQUIRED(cs_txMemPool);
     /** Set ancestor state for an entry */
-    void UpdateEntryForAncestors(txiter it, const setEntries &setAncestors);
+    void UpdateEntryForAncestors(txiter it, const setEntries &setAncestors) EXCLUSIVE_LOCKS_REQUIRED(cs_txMemPool);
     /** For each transaction being removed, update ancestors and any direct children.
       * If updateDescendants is true, then also update in-mempool descendants'
       * ancestor state. */
-    void UpdateForRemoveFromMempool(const setEntries &entriesToRemove, bool updateDescendants);
+    void UpdateForRemoveFromMempool(const setEntries &entriesToRemove, bool updateDescendants) EXCLUSIVE_LOCKS_REQUIRED(cs_txMemPool);
     /** Sever link between specified transaction and direct children. */
     void UpdateChildrenForRemoval(txiter entry);
 
@@ -663,7 +663,7 @@ private:
      *  transactions in a chain before we've updated all the state for the
      *  removal.
      */
-    void removeUnchecked(txiter entry, MemPoolRemovalReason reason = MemPoolRemovalReason::UNKNOWN);
+    void removeUnchecked(txiter entry, MemPoolRemovalReason reason = MemPoolRemovalReason::UNKNOWN) EXCLUSIVE_LOCKS_REQUIRED(cs_txMemPool);
 };
 
 /** 

@@ -14,9 +14,9 @@ bool SignalsOptInRBF(const CTransaction &tx)
     return false;
 }
 
-RBFTransactionState IsRBFOptIn(const CTransaction &tx, CTxMemPool &pool)
+RBFTransactionState IsRBFOptIn(const CTransaction &tx, CTxMemPool &pool) EXCLUSIVE_LOCKS_REQUIRED(pool.cs_txMemPool)
 {
-    AssertLockHeld(pool.cs);
+    AssertLockHeld(pool.cs_txMemPool);
 
     CTxMemPool::setEntries setAncestors;
 

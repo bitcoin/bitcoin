@@ -24,9 +24,9 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
 BOOST_AUTO_TEST_SUITE(tx_validationcache_tests)
 
 static bool
-ToMemPool(CMutableTransaction& tx)
+ToMemPool(CMutableTransaction& tx) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
-    LOCK(cs_main);
+    AssertLockHeld(cs_main);
 
     CValidationState state;
     return AcceptToMemoryPool(mempool, state, MakeTransactionRef(tx), nullptr /* pfMissingInputs */,
@@ -120,6 +120,7 @@ void ValidateCheckInputsForAllFlags(CMutableTransaction &tx, uint32_t failing_fl
             // WITNESS requires P2SH
             test_flags |= SCRIPT_VERIFY_P2SH;
         }
+        LOCK(cs_main);
         bool ret = CheckInputs(tx, state, pcoinsTip.get(), true, test_flags, true, add_to_cache, txdata, nullptr);
         // CheckInputs should succeed iff test_flags doesn't intersect with
         // failing_flags

@@ -45,9 +45,9 @@ static std::mutex cs_blockchange;
 static std::condition_variable cond_blockchange;
 static CUpdatedBlock latestblock;
 
-extern void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry);
+extern void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
-double GetDifficulty(const CBlockIndex* blockindex)
+double GetDifficulty(const CBlockIndex* blockindex) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     if (blockindex == nullptr)
     {
@@ -76,7 +76,7 @@ double GetDifficulty(const CBlockIndex* blockindex)
     return dDiff;
 }
 
-UniValue blockheaderToJSON(const CBlockIndex* blockindex)
+UniValue blockheaderToJSON(const CBlockIndex* blockindex) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     AssertLockHeld(cs_main);
     UniValue result(UniValue::VOBJ);
@@ -105,7 +105,7 @@ UniValue blockheaderToJSON(const CBlockIndex* blockindex)
     return result;
 }
 
-UniValue blockToJSON(const CBlock& block, const CBlockIndex* blockindex, bool txDetails)
+UniValue blockToJSON(const CBlock& block, const CBlockIndex* blockindex, bool txDetails) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     AssertLockHeld(cs_main);
     UniValue result(UniValue::VOBJ);
@@ -352,9 +352,9 @@ std::string EntryDescriptionString()
            "       ... ]\n";
 }
 
-void entryToJSON(UniValue &info, const CTxMemPoolEntry &e)
+void entryToJSON(UniValue &info, const CTxMemPoolEntry &e) EXCLUSIVE_LOCKS_REQUIRED(mempool.cs_txMemPool)
 {
-    AssertLockHeld(mempool.cs);
+    AssertLockHeld(mempool.cs_txMemPool);
 
     info.push_back(Pair("size", (int)e.GetTxSize()));
     info.push_back(Pair("fee", ValueFromAmount(e.GetFee())));
@@ -389,7 +389,7 @@ UniValue mempoolToJSON(bool fVerbose)
 {
     if (fVerbose)
     {
-        LOCK(mempool.cs);
+        LOCK(mempool.cs_txMemPool);
         UniValue o(UniValue::VOBJ);
         for (const CTxMemPoolEntry& e : mempool.mapTx)
         {
@@ -477,7 +477,7 @@ UniValue getmempoolancestors(const JSONRPCRequest& request)
 
     uint256 hash = ParseHashV(request.params[0], "parameter 1");
 
-    LOCK(mempool.cs);
+    LOCK(mempool.cs_txMemPool);
 
     CTxMemPool::txiter it = mempool.mapTx.find(hash);
     if (it == mempool.mapTx.end()) {
@@ -541,7 +541,7 @@ UniValue getmempooldescendants(const JSONRPCRequest& request)
 
     uint256 hash = ParseHashV(request.params[0], "parameter 1");
 
-    LOCK(mempool.cs);
+    LOCK(mempool.cs_txMemPool);
 
     CTxMemPool::txiter it = mempool.mapTx.find(hash);
     if (it == mempool.mapTx.end()) {
@@ -593,7 +593,7 @@ UniValue getmempoolentry(const JSONRPCRequest& request)
 
     uint256 hash = ParseHashV(request.params[0], "parameter 1");
 
-    LOCK(mempool.cs);
+    LOCK(mempool.cs_txMemPool);
 
     CTxMemPool::txiter it = mempool.mapTx.find(hash);
     if (it == mempool.mapTx.end()) {
@@ -928,6 +928,7 @@ UniValue gettxoutsetinfo(const JSONRPCRequest& request)
 
     CCoinsStats stats;
     FlushStateToDisk();
+    LOCK(cs_main);
     if (GetUTXOStats(pcoinsdbview.get(), stats)) {
         ret.push_back(Pair("height", (int64_t)stats.nHeight));
         ret.push_back(Pair("bestblock", stats.hashBlock.GetHex()));
@@ -995,7 +996,7 @@ UniValue gettxout(const JSONRPCRequest& request)
 
     Coin coin;
     if (fMempool) {
-        LOCK(mempool.cs);
+        LOCK(mempool.cs_txMemPool);
         CCoinsViewMemPool view(pcoinsTip.get(), mempool);
         if (!view.GetCoin(out, coin) || mempool.isSpent(out)) {
             return NullUniValue;

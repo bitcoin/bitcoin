@@ -9,9 +9,9 @@
 #include <warnings.h>
 
 CCriticalSection cs_warnings;
-std::string strMiscWarning;
-bool fLargeWorkForkFound = false;
-bool fLargeWorkInvalidChainFound = false;
+std::string strMiscWarning GUARDED_BY(cs_warnings);
+bool fLargeWorkForkFound GUARDED_BY(cs_warnings) = false;
+bool fLargeWorkInvalidChainFound GUARDED_BY(cs_warnings) = false;
 
 void SetMiscWarning(const std::string& strWarning)
 {

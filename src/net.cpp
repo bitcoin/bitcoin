@@ -83,8 +83,8 @@ bool fDiscover = true;
 bool fListen = true;
 bool fRelayTxes = true;
 CCriticalSection cs_mapLocalHost;
-std::map<CNetAddr, LocalServiceInfo> mapLocalHost;
-static bool vfLimited[NET_MAX] = {};
+std::map<CNetAddr, LocalServiceInfo> mapLocalHost GUARDED_BY(cs_mapLocalHost);
+static bool vfLimited[NET_MAX] GUARDED_BY(cs_mapLocalHost) = {};
 std::string strSubVersion;
 
 limitedmap<uint256, int64_t> mapAlreadyAskedFor(MAX_INV_SZ);
@@ -864,7 +864,7 @@ const uint256& CNetMessage::GetMessageHash() const
 
 
 // requires LOCK(cs_vSend)
-size_t CConnman::SocketSendData(CNode *pnode) const
+size_t CConnman::SocketSendData(CNode *pnode) const EXCLUSIVE_LOCKS_REQUIRED(pnode->cs_vSend)
 {
     auto it = pnode->vSendMsg.begin();
     size_t nSentSize = 0;
@@ -985,13 +985,14 @@ bool CConnman::AttemptToEvictConnection()
     {
         LOCK(cs_vNodes);
 
-        for (const CNode* node : vNodes) {
+        for (CNode* node : vNodes) {
             if (node->fWhitelisted)
                 continue;
             if (!node->fInbound)
                 continue;
             if (node->fDisconnect)
                 continue;
+            LOCK(node->cs_filter);
             NodeEvictionCandidate candidate = {node->GetId(), node->nTimeConnected, node->nMinPingUsecTime,
                                                node->nLastBlockTime, node->nLastTXTime,
                                                HasAllDesirableServiceFlags(node->nServices),
@@ -2270,11 +2271,11 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
     Init(connOptions);
 
     {
-        LOCK(cs_totalBytesRecv);
+        LOCK(cs_totalBytesRecv); // WIP: lock submitted in https://github.com/bitcoin/bitcoin/pull/11744/files
         nTotalBytesRecv = 0;
     }
     {
-        LOCK(cs_totalBytesSent);
+        LOCK(cs_totalBytesSent); // WIP: lock submitted in https://github.com/bitcoin/bitcoin/pull/11744/files
         nTotalBytesSent = 0;
         nMaxOutboundTotalBytesSentInCycle = 0;
         nMaxOutboundCycleStartTime = 0;
@@ -2423,7 +2424,7 @@ void CConnman::Interrupt()
     }
 }
 
-void CConnman::Stop()
+void CConnman::Stop() EXCLUSIVE_LOCKS_REQUIRED(cs_vNodes)
 {
     if (threadMessageHandler.joinable())
         threadMessageHandler.join();

@@ -38,17 +38,17 @@ public:
         return (unsigned int)(state % nMax);
     }
 
-    CAddrInfo* Find(const CNetAddr& addr, int* pnId = nullptr)
+    CAddrInfo* Find(const CNetAddr& addr, int* pnId = nullptr) NO_THREAD_SAFETY_ANALYSIS
     {
         return CAddrMan::Find(addr, pnId);
     }
 
-    CAddrInfo* Create(const CAddress& addr, const CNetAddr& addrSource, int* pnId = nullptr)
+    CAddrInfo* Create(const CAddress& addr, const CNetAddr& addrSource, int* pnId = nullptr) NO_THREAD_SAFETY_ANALYSIS
     {
         return CAddrMan::Create(addr, addrSource, pnId);
     }
 
-    void Delete(int nId)
+    void Delete(int nId) NO_THREAD_SAFETY_ANALYSIS
     {
         CAddrMan::Delete(nId);
     }

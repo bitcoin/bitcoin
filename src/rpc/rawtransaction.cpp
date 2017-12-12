@@ -37,7 +37,7 @@
 #include <univalue.h>
 
 
-void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry)
+void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     // Call into TxToUniv() in bitcoin-common to decode the transaction hex.
     //
@@ -621,7 +621,7 @@ UniValue combinerawtransaction(const JSONRPCRequest& request)
     CCoinsViewCache view(&viewDummy);
     {
         LOCK(cs_main);
-        LOCK(mempool.cs);
+        LOCK(mempool.cs_txMemPool);
         CCoinsViewCache &viewChain = *pcoinsTip;
         CCoinsViewMemPool viewMempool(&viewChain, mempool);
         view.SetBackend(viewMempool); // temporarily switch cache backend to db+mempool view
@@ -742,7 +742,7 @@ UniValue signrawtransaction(const JSONRPCRequest& request)
     CCoinsView viewDummy;
     CCoinsViewCache view(&viewDummy);
     {
-        LOCK(mempool.cs);
+        LOCK(mempool.cs_txMemPool);
         CCoinsViewCache &viewChain = *pcoinsTip;
         CCoinsViewMemPool viewMempool(&viewChain, mempool);
         view.SetBackend(viewMempool); // temporarily switch cache backend to db+mempool view
