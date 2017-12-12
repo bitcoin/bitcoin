@@ -518,7 +518,11 @@ deprecated in V0.15.1, and has now been removed. Miners should use the
 `-blockmaxweight` option if they want to limit the weight of their blocks'
 weights.
 
->>>>>>> 4757c04cb... [config] Remove blockmaxsize option
+Python Support
+--------------
+
+Support for Python 2 has been discontinued for all test files and tools.
+
 Credits
 =======
 

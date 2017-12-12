@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-from __future__ import division, print_function, unicode_literals
+#!/usr/bin/env python3
 #
 # Copyright (C) 2011  Patrick "p2k" Schneider <me@p2k-network.org>
 #
@@ -203,7 +202,7 @@ def getFrameworks(binaryPath, verbose):
     if verbose >= 3:
         print("Inspecting with otool: " + binaryPath)
     otoolbin=os.getenv("OTOOL", "otool")
-    otool = subprocess.Popen([otoolbin, "-L", binaryPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    otool = subprocess.Popen([otoolbin, "-L", binaryPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
     o_stdout, o_stderr = otool.communicate()
     if otool.returncode != 0:
         if verbose >= 1:
@@ -211,7 +210,7 @@ def getFrameworks(binaryPath, verbose):
             sys.stderr.flush()
             raise RuntimeError("otool failed with return code %d" % otool.returncode)
 
-    otoolLines = o_stdout.decode().split("\n")
+    otoolLines = o_stdout.split("\n")
     otoolLines.pop(0) # First line is the inspected binary
     if ".framework" in binaryPath or binaryPath.endswith(".dylib"):
         otoolLines.pop(0) # Frameworks and dylibs list themselves as a dependency.
@@ -714,22 +713,6 @@ elif config.sign:
 
 if config.dmg is not None:
 
-    #Patch in check_output for Python 2.6
-    if "check_output" not in dir( subprocess ):
-        def f(*popenargs, **kwargs):
-            if 'stdout' in kwargs:
-                raise ValueError('stdout argument not allowed, it will be overridden.')
-            process = subprocess.Popen(stdout=subprocess.PIPE, *popenargs, **kwargs)
-            output, unused_err = process.communicate()
-            retcode = process.poll()
-            if retcode:
-                cmd = kwargs.get("args")
-                if cmd is None:
-                    cmd = popenargs[0]
-                raise CalledProcessError(retcode, cmd)
-            return output
-        subprocess.check_output = f
-
     def runHDIUtil(verb, image_basename, **kwargs):
         hdiutil_args = ["hdiutil", verb, image_basename + ".dmg"]
         if "capture_stdout" in kwargs:
@@ -747,7 +730,7 @@ if config.dmg is not None:
             if not value is True:
                 hdiutil_args.append(str(value))
         
-        return run(hdiutil_args)
+        return run(hdiutil_args, universal_newlines=True)
     
     if verbose >= 2:
         if fancy is None:
@@ -789,7 +772,7 @@ if config.dmg is not None:
         except subprocess.CalledProcessError as e:
             sys.exit(e.returncode)
         
-        m = re.search("/Volumes/(.+$)", output.decode())
+        m = re.search("/Volumes/(.+$)", output)
         disk_root = m.group(0)
         disk_name = m.group(1)
         
