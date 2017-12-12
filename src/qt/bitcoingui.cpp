@@ -75,7 +75,7 @@ BitcoinGUI::BitcoinGUI(QWidget *parent) :
     restoreWindowGeometry();
     setWindowTitle(tr("Peercoin") + " - " + tr("Wallet"));
     
-    QFontDatabase::addApplicationFont(":/fonts/weblysleek");
+    QFontDatabase::addApplicationFont(":/fonts/notosans-regular");
     QFile styleFile(":/themes/default");
     styleFile.open(QFile::ReadOnly);
     QString styleSheet = QLatin1String(styleFile.readAll());
