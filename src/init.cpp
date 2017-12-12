@@ -1726,5 +1726,5 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     StartWallets(scheduler);
 #endif
 
-    return !fRequestShutdown;
+    return true;
 }
