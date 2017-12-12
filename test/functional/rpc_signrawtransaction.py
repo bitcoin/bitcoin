@@ -6,6 +6,7 @@
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
+from test_framework.mininode import sha256
 from test_framework.script import CScript, OP_0, OP_1, OP_CHECKMULTISIG
 
 
@@ -146,6 +147,7 @@ class SignRawTransactionsTest(BitcoinTestFramework):
         embedded_privkey = self.nodes[1].dumpprivkey(embedded_address)
         p2sh_p2wsh_address = self.nodes[1].addmultisigaddress(1, [embedded_pubkey], "", "p2sh-segwit")['address']
         witness_script = CScript([OP_1, hex_str_to_bytes(embedded_pubkey), OP_1, OP_CHECKMULTISIG])
+        redeem_script = CScript([OP_0, sha256(witness_script)])
 
         # send transaction to P2SH-P2WSH 1-of-1 multisig address
         self.nodes[0].generate(101)
@@ -158,6 +160,7 @@ class SignRawTransactionsTest(BitcoinTestFramework):
 
         # Find the UTXO for the transaction node[1] should have received, check witnessScript matches
         unspent_output = self.nodes[1].listunspent(0, 999999, [p2sh_p2wsh_address])[0]
+        assert_equal(unspent_output["redeemScript"][0], bytes_to_hex_str(redeem_script))
         assert_equal(unspent_output["redeemScript"][1], bytes_to_hex_str(witness_script))
 
         # Now create and sign a transaction spending that transaction on node[0], which doesn't know the scripts or keys
