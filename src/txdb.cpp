@@ -424,3 +424,35 @@ bool CCoinsViewDB::Upgrade() {
     LogPrintf("[%s].\n", ShutdownRequested() ? "CANCELLED" : "DONE");
     return !ShutdownRequested();
 }
+
+TxIndexDB::TxIndexDB(size_t n_cache_size, bool f_memory, bool f_wipe) :
+    CDBWrapper(GetDataDir() / "indexes" / "txindex", n_cache_size, f_memory, f_wipe)
+{}
+
+bool TxIndexDB::ReadTxPos(const uint256 &txid, CDiskTxPos& pos) const
+{
+    return Read(std::make_pair(DB_TXINDEX, txid), pos);
+}
+
+bool TxIndexDB::WriteTxs(const std::vector<std::pair<uint256, CDiskTxPos>>& v_pos)
+{
+    CDBBatch batch(*this);
+    for (const auto& tuple : v_pos) {
+        batch.Write(std::make_pair(DB_TXINDEX, tuple.first), tuple.second);
+    }
+    return WriteBatch(batch);
+}
+
+bool TxIndexDB::ReadBestBlock(CBlockLocator& locator) const
+{
+    bool success = Read(DB_BEST_BLOCK, locator);
+    if (!success) {
+        locator.SetNull();
+    }
+    return success;
+}
+
+bool TxIndexDB::WriteBestBlock(const CBlockLocator& locator)
+{
+    return Write(DB_BEST_BLOCK, locator);
+}
