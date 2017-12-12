@@ -169,7 +169,9 @@ void TestGUI()
     }
     {
         LOCK(cs_main);
-        wallet.ScanForWalletTransactions(chainActive.Genesis(), nullptr, true);
+        WalletRescanReserver reserver(&wallet);
+        reserver.reserve();
+        wallet.ScanForWalletTransactions(chainActive.Genesis(), nullptr, reserver, true);
     }
     wallet.SetBroadcastTransactions(true);
 

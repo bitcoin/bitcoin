@@ -101,6 +101,7 @@ UniValue importprivkey(const JSONRPCRequest& request)
         );
 
 
+    WalletRescanReserver reserver(pwallet);
     bool fRescan = true;
     {
         LOCK2(cs_main, pwallet->cs_wallet);
@@ -118,6 +119,10 @@ UniValue importprivkey(const JSONRPCRequest& request)
 
         if (fRescan && fPruneMode)
             throw JSONRPCError(RPC_WALLET_ERROR, "Rescan is disabled in pruned mode");
+
+        if (fRescan && !reserver.reserve()) {
+            throw JSONRPCError(RPC_WALLET_ERROR, "Wallet is currently rescanning. Abort existing rescan or wait.");
+        }
 
         CBitcoinSecret vchSecret;
         bool fGood = vchSecret.SetString(strSecret);
@@ -153,7 +158,7 @@ UniValue importprivkey(const JSONRPCRequest& request)
         }
     }
     if (fRescan) {
-        pwallet->RescanFromTime(TIMESTAMP_MIN, true /* update */);
+        pwallet->RescanFromTime(TIMESTAMP_MIN, reserver, true /* update */);
     }
 
     return NullUniValue;
@@ -290,7 +295,7 @@ UniValue importaddress(const JSONRPCRequest& request)
     }
     if (fRescan)
     {
-        pwallet->RescanFromTime(TIMESTAMP_MIN, true /* update */);
+        pwallet->RescanFromTime(TIMESTAMP_MIN, reserver, true /* update */);
         pwallet->ReacceptWalletTransactions();
     }
 
@@ -457,7 +462,7 @@ UniValue importpubkey(const JSONRPCRequest& request)
     }
     if (fRescan)
     {
-        pwallet->RescanFromTime(TIMESTAMP_MIN, true /* update */);
+        pwallet->RescanFromTime(TIMESTAMP_MIN, reserver, true /* update */);
         pwallet->ReacceptWalletTransactions();
     }
 
@@ -581,7 +586,7 @@ UniValue importwallet(const JSONRPCRequest& request)
         pwallet->ShowProgress("", 100); // hide progress dialog in GUI
         pwallet->UpdateTimeFirstKey(nTimeBegin);
     }
-    pwallet->RescanFromTime(nTimeBegin, false /* update */);
+    pwallet->RescanFromTime(nTimeBegin, reserver, false /* update */);
     pwallet->MarkDirty();
 
     if (!fGood)
@@ -1201,7 +1206,7 @@ UniValue importmulti(const JSONRPCRequest& mainRequest)
         }
     }
     if (fRescan && fRunScan && requests.size()) {
-        int64_t scannedTime = pwallet->RescanFromTime(nLowestTimestamp, true /* update */);
+        int64_t scannedTime = pwallet->RescanFromTime(nLowestTimestamp, reserver, true /* update */);
         pwallet->ReacceptWalletTransactions();
 
         if (scannedTime > nLowestTimestamp) {
