@@ -1,7 +1,7 @@
 Tcoin Core integration/staging tree
 =====================================
 
-[![Build Status](https://tcoin.org/]
+[Build Status](https://tcoin.org/]
 
 What is Tcoin?
 ----------------
