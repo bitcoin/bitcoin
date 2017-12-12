@@ -23,12 +23,10 @@
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <script/script.h>
-#include <script/sign.h>
 #include <scheduler.h>
 #include <timedata.h>
 #include <txmempool.h>
 #include <util.h>
-#include <ui_interface.h>
 #include <utilmoneystr.h>
 #include <wallet/fees.h>
 

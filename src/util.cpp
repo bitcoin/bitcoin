@@ -3,18 +3,12 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
-#endif
-
 #include <util.h>
 
 #include <chainparamsbase.h>
-#include <fs.h>
 #include <random.h>
 #include <serialize.h>
 #include <utilstrencodings.h>
-#include <utiltime.h>
 
 #include <stdarg.h>
 

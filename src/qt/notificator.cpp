@@ -6,7 +6,6 @@
 
 #include <QApplication>
 #include <QByteArray>
-#include <QIcon>
 #include <QImageWriter>
 #include <QMessageBox>
 #include <QMetaType>

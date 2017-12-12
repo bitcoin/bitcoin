@@ -8,7 +8,6 @@
 #include <qt/addressbookpage.h>
 #include <qt/addresstablemodel.h>
 #include <qt/bitcoinunits.h>
-#include <qt/guiutil.h>
 #include <qt/optionsmodel.h>
 #include <qt/platformstyle.h>
 #include <qt/receiverequestdialog.h>
@@ -17,7 +16,6 @@
 
 #include <QAction>
 #include <QCursor>
-#include <QItemSelection>
 #include <QMessageBox>
 #include <QScrollBar>
 #include <QTextDocument>
