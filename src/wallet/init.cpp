@@ -5,6 +5,7 @@
 
 #include <wallet/init.h>
 
+#include <chainparams.h>
 #include <net.h>
 #include <util.h>
 #include <utilmoneystr.h>
@@ -123,6 +124,8 @@ bool WalletParameterInteraction()
                         _("This is the minimum transaction fee you pay on every transaction."));
         CWallet::minTxFee = CFeeRate(n);
     }
+
+    g_wallet_allow_fallback_fee = Params().IsFallbackFeeEnabled();
     if (gArgs.IsArgSet("-fallbackfee"))
     {
         CAmount nFeePerK = 0;
@@ -132,6 +135,7 @@ bool WalletParameterInteraction()
             InitWarning(AmountHighWarn("-fallbackfee") + " " +
                         _("This is the transaction fee you may pay when fee estimates are not available."));
         CWallet::fallbackFee = CFeeRate(nFeePerK);
+        g_wallet_allow_fallback_fee = nFeePerK != 0; //disable fallback fee in case value was set to 0, enable if non-null value
     }
     if (gArgs.IsArgSet("-discardfee"))
     {
