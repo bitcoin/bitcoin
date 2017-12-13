@@ -20,7 +20,7 @@ EXCLUDE = [
     'src/secp256k1/*',
     # auto generated:
     'src/univalue/lib/univalue_escapes.h',
-    'src/qt/bitcoinstrings.cpp',
+    'src/qt/syscoinstrings.cpp',
     'src/chainparamsseeds.h',
     # other external copyrights:
     'src/tinyformat.h',
@@ -294,7 +294,7 @@ Usage:
     $ ./copyright_header.py report <base_directory> [verbose]
 
 Arguments:
-    <base_directory> - The base directory of a bitcoin source code repository.
+    <base_directory> - The base directory of a syscoin source code repository.
     [verbose] - Includes a list of every file of each subcategory in the report.
 """
 
@@ -425,24 +425,24 @@ def exec_update_header_year(base_directory):
 ################################################################################
 
 UPDATE_USAGE = """
-Updates all the copyright headers of "The Bitcoin Core developers" which were
+Updates all the copyright headers of "The Syscoin Core developers" which were
 changed in a year more recent than is listed. For example:
 
-// Copyright (c) <firstYear>-<lastYear> The Bitcoin Core developers
+// Copyright (c) <firstYear>-<lastYear> The Syscoin Core developers
 
 will be updated to:
 
-// Copyright (c) <firstYear>-<lastModifiedYear> The Bitcoin Core developers
+// Copyright (c) <firstYear>-<lastModifiedYear> The Syscoin Core developers
 
 where <lastModifiedYear> is obtained from the 'git log' history.
 
 This subcommand also handles copyright headers that have only a single year. In those cases:
 
-// Copyright (c) <year> The Bitcoin Core developers
+// Copyright (c) <year> The Syscoin Core developers
 
 will be updated to:
 
-// Copyright (c) <year>-<lastModifiedYear> The Bitcoin Core developers
+// Copyright (c) <year>-<lastModifiedYear> The Syscoin Core developers
 
 where the update is appropriate.
 
@@ -450,7 +450,7 @@ Usage:
     $ ./copyright_header.py update <base_directory>
 
 Arguments:
-    <base_directory> - The base directory of a bitcoin source code repository.
+    <base_directory> - The base directory of a syscoin source code repository.
 """
 
 def print_file_action_message(filename, action):
@@ -572,7 +572,7 @@ Usage:
     $ ./copyright_header.py insert <file>
 
 Arguments:
-    <file> - A source file in the bitcoin repository.
+    <file> - A source file in the syscoin repository.
 """
 
 def insert_cmd(argv):
