@@ -41,7 +41,7 @@ typedef map<vector<unsigned char>, COutPoint > mapAliasRegistrationsType;
 typedef map<vector<unsigned char>, vector<unsigned char> > mapAliasRegistrationsDataType;
 mapAliasRegistrationsType mapAliasRegistrations;
 mapAliasRegistrationsDataType mapAliasRegistrationData;
-extern void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsigned char> &vchWitness, const CRecipient &aliasRecipient, CRecipient &aliasPaymentRecipient, vector<CRecipient> &vecSend, CWalletTx& wtxNew, CCoinControl* coinControl, bool transferAlias=false);
+extern void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsigned char> &vchWitness, const CRecipient &aliasRecipient, CRecipient &aliasPaymentRecipient, vector<CRecipient> &vecSend, CWalletTx& wtxNew, CCoinControl* coinControl, bool fUseInstantSend, bool transferAlias=false);
 extern int nIndexPort;
 mongoc_client_t *client = NULL;
 mongoc_database_t *database = NULL;
@@ -1989,25 +1989,26 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	coinControl.fAllowOtherInputs = true;
 	coinControl.fAllowWatchOnly = true;
 
-	SendMoneySyscoin(vchAlias, vchWitness, recipient, recipientPayment, vecSend, wtx, &coinControl);
+	SendMoneySyscoin(vchAlias, vchWitness, recipient, recipientPayment, vecSend, wtx, &coinControl, false);
 	UniValue res(UniValue::VARR);
 	res.push_back(EncodeHexTx(wtx));
 	res.push_back(strAddress);
 	return res;
 }
 UniValue aliasupdate(const UniValue& params, bool fHelp) {
-	if (fHelp || 8 != params.size())
+	if (fHelp || 9 != params.size())
 		throw runtime_error(
-			"aliasupdate [aliasname] [public value] [address] [accept_transfers=true] [expire_timestamp] [encryption_privatekey] [encryption_publickey] [witness]\n"
+			"aliasupdate [aliasname] [public value] [address] [accept_transfers=true] [expire_timestamp] [encryption_privatekey] [encryption_publickey] [witness] [instantsend]\n"
 						"Update and possibly transfer an alias.\n"
 						"<aliasname> alias name.\n"
 						"<public_value> alias public profile data, 256 characters max.\n"			
 						"<address> Address of alias.\n"		
-						"<accept_transfers> set to false if this alias should not allow a certificate to be transferred to it. Defaults to true.\n"		
+						"<accept_transfers> Set to false if this alias should not allow a certificate to be transferred to it. Defaults to true.\n"		
 						"<expire_timestamp> Time in seconds. Future time when to expire alias. It is exponentially more expensive per year, calculation is 2.88^years. FEERATE is the dynamic satoshi per byte fee set in the rate peg alias used for this alias. Defaults to 1 hour. Set to 0 if not changing expiration.\n"		
 						"<encryption_privatekey> Encrypted private key used for encryption/decryption of private data related to this alias. If transferring, the key should be encrypted to alias_pubkey.\n"
 						"<encryption_publickey> Public key used for encryption/decryption of private data related to this alias. Useful if you are changing pub/priv keypair for encryption on this alias.\n"						
 						"<witness> Witness alias name that will sign for web-of-trust notarization of this transaction.\n"	
+						"<instantsend> Set to true to use InstantSend to send this transaction or false otherwise.\n"
 						+ HelpRequiringPassphrase());
 	vector<unsigned char> vchAlias = vchFromString(params[0].get_str());
 	string strPrivateValue = "";
@@ -2032,6 +2033,9 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	
 	vector<unsigned char> vchWitness;
 	vchWitness = vchFromValue(params[7]);
+
+	bool fUseInstantSend = false;
+	fUseInstantSend = params[8].get_bool();
 
 	CAliasIndex theAlias;
 	if (!GetAlias(vchAlias, theAlias))
@@ -2098,7 +2102,7 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	if(newAddress.ToString() != EncodeBase58(copyAlias.vchAddress))
 		transferAlias = true;
 	
-	SendMoneySyscoin(vchAlias, vchWitness, recipient, recipientPayment, vecSend, wtx, &coinControl, transferAlias);
+	SendMoneySyscoin(vchAlias, vchWitness, recipient, recipientPayment, vecSend, wtx, &coinControl, fUseInstantSend, transferAlias);
 	UniValue res(UniValue::VARR);
 	res.push_back(EncodeHexTx(wtx));
 	return res;
@@ -2188,17 +2192,6 @@ UniValue syscoinsendrawtransaction(const UniValue& params, bool fHelp) {
 	CTransaction tx;
 	if (!DecodeHexTx(tx, hexstring))
 		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5534 - " + _("Could not send raw transaction: Cannot decode transaction from hex string"));
-	// ensure that if we are creating an alias that it does not use instant send
-	vector<vector<unsigned char> > vvch;
-	int op;
-	for (unsigned int i = 0; i < tx.vout.size(); i++) {
-		const CTxOut& out = tx.vout[i];
-		if (DecodeAliasScript(out.scriptPubKey, op, vvch) && op == OP_ALIAS_ACTIVATE)
-		{
-			fInstantSend = false;
-			break;
-		}
-	}
 
 	UniValue arraySendParams(UniValue::VARR);
 	arraySendParams.push_back(hexstring);
@@ -2218,8 +2211,8 @@ UniValue syscoinsendrawtransaction(const UniValue& params, bool fHelp) {
 	UniValue res(UniValue::VOBJ);
 	res.push_back(Pair("txid", returnRes.get_str()));
 	// check for alias registration, if so save the info in this node for alias activation calls after a block confirmation
-	vvch.clear();
-	op = -1; 
+	vector<vector<unsigned char> > vvch;
+	int op;
 	for (unsigned int i = 0; i < tx.vout.size(); i++) {
 		const CTxOut& out = tx.vout[i];
 		if (DecodeAliasScript(out.scriptPubKey, op, vvch) && op == OP_ALIAS_ACTIVATE) 
@@ -2639,9 +2632,9 @@ UniValue aliasaddscript(const UniValue& params, bool fHelp) {
 	return res;
 }
 UniValue aliasupdatewhitelist(const UniValue& params, bool fHelp) {
-	if (fHelp || params.size() != 3)
+	if (fHelp || params.size() != 4)
 		throw runtime_error(
-			"aliasupdatewhitelist [owner alias] [{\"alias\":\"aliasname\",\"discount_percentage\":n},...] [witness]\n"
+			"aliasupdatewhitelist [owner alias] [{\"alias\":\"aliasname\",\"discount_percentage\":n},...] [witness] [instantsend]\n"
 			"Update to the whitelist(controls who can resell). Array of whitelist entries in parameter 1.\n"
 			"To add to list, include a new alias/discount percentage that does not exist in the whitelist.\n"
 			"To update entry, change the discount percentage of an existing whitelist entry.\n"
@@ -2654,6 +2647,7 @@ UniValue aliasupdatewhitelist(const UniValue& params, bool fHelp) {
 			"      ,...\n"
 			"    ]\n"
 			"<witness> Witness alias name that will sign for web-of-trust notarization of this transaction.\n"
+			"<instantsend> Set to true to use InstantSend to send this transaction or false otherwise.\n"
 			+ HelpRequiringPassphrase());
 
 	// gather & validate inputs
