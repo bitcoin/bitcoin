@@ -9,6 +9,7 @@ class CTransaction;
 
 #include "omnicore/dbbase.h"
 #include "omnicore/dbstolist.h"
+#include "omnicore/dbtradelist.h"
 #include "omnicore/dbtransaction.h"
 #include "omnicore/log.h"
 #include "omnicore/tally.h"
@@ -149,34 +150,6 @@ extern bool autoCommit;
 
 //! Global lock for state objects
 extern CCriticalSection cs_tally;
-
-/** LevelDB based storage for the trade history. Trades are listed with key "txid1+txid2".
- */
-class CMPTradeList : public CDBBase
-{
-public:
-    CMPTradeList(const boost::filesystem::path& path, bool fWipe)
-    {
-        leveldb::Status status = Open(path, fWipe);
-        PrintToConsole("Loading trades database: %s\n", status.ToString());
-    }
-
-    virtual ~CMPTradeList()
-    {
-        if (msc_debug_persistence) PrintToLog("CMPTradeList closed\n");
-    }
-
-    void recordMatchedTrade(const uint256 txid1, const uint256 txid2, string address1, string address2, unsigned int prop1, unsigned int prop2, uint64_t amount1, uint64_t amount2, int blockNum, int64_t fee);
-    void recordNewTrade(const uint256& txid, const std::string& address, uint32_t propertyIdForSale, uint32_t propertyIdDesired, int blockNum, int blockIndex);
-    int deleteAboveBlock(int blockNum);
-    bool exists(const uint256 &txid);
-    void printStats();
-    void printAll();
-    bool getMatchingTrades(const uint256& txid, uint32_t propertyId, UniValue& tradeArray, int64_t& totalSold, int64_t& totalBought);
-    void getTradesForAddress(std::string address, std::vector<uint256>& vecTransactions, uint32_t propertyIdFilter = 0);
-    void getTradesForPair(uint32_t propertyIdSideA, uint32_t propertyIdSideB, UniValue& response, uint64_t count);
-    int getMPTradeCountTotal();
-};
 
 /** LevelDB based storage for transactions, with txid as key and validity bit, and other data as value.
  */

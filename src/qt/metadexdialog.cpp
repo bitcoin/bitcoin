@@ -11,6 +11,7 @@
 #include "walletmodel.h"
 
 #include "omnicore/createpayload.h"
+#include "omnicore/dbtradelist.h"
 #include "omnicore/errors.h"
 #include "omnicore/mdex.h"
 #include "omnicore/omnicore.h"

@@ -7,6 +7,7 @@ OMNICORE_H = \
   omnicore/dbbase.h \
   omnicore/dbspinfo.h \
   omnicore/dbstolist.h \
+  omnicore/dbtradelist.h \
   omnicore/dbtransaction.h \
   omnicore/dex.h \
   omnicore/encoding.h \
@@ -51,6 +52,7 @@ OMNICORE_CPP = \
   omnicore/dbbase.cpp \
   omnicore/dbspinfo.cpp \
   omnicore/dbstolist.cpp \
+  omnicore/dbtradelist.cpp \
   omnicore/dbtransaction.cpp \
   omnicore/dex.cpp \
   omnicore/encoding.cpp \

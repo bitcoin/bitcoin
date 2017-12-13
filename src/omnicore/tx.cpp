@@ -5,6 +5,7 @@
 #include "omnicore/activation.h"
 #include "omnicore/dbspinfo.h"
 #include "omnicore/dbstolist.h"
+#include "omnicore/dbtradelist.h"
 #include "omnicore/dex.h"
 #include "omnicore/fees.h"
 #include "omnicore/log.h"

@@ -8,6 +8,7 @@
 
 #include "omnicore/dbspinfo.h"
 #include "omnicore/dbstolist.h"
+#include "omnicore/dbtradelist.h"
 #include "omnicore/dbtransaction.h"
 #include "omnicore/dex.h"
 #include "omnicore/errors.h"

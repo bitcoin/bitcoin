@@ -13,6 +13,7 @@
 #include "clientmodel.h"
 #include "platformstyle.h"
 
+#include "omnicore/dbtradelist.h"
 #include "omnicore/mdex.h"
 #include "omnicore/omnicore.h"
 #include "omnicore/parsing.h"

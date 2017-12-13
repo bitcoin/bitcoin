@@ -1,5 +1,6 @@
 #include "omnicore/mdex.h"
 
+#include "omnicore/dbtradelist.h"
 #include "omnicore/errors.h"
 #include "omnicore/fees.h"
 #include "omnicore/log.h"
