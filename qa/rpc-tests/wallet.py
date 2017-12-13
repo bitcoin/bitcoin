@@ -1,7 +1,7 @@
 #!/usr/bin/env python2
 # coding=utf-8
 # ^^^^^^^^^^^^ TODO remove when supporting only Python3
-# Copyright (c) 2014-2015 The Syscoin Core developers
+# Copyright (c) 2014-2015 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
