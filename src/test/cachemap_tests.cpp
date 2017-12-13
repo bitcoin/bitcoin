@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2017 The Syscoin Core developers
+// Copyright (c) 2014-2017 The Dash Core developers
 
 #include "cachemap.h"
 

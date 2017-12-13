@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2017 The Syscoin Core developers
+// Copyright (c) 2014-2017 The Dash Core developers
 // Distributed under the MIT software license, see the accompanying
 #ifndef SYS_HDCHAIN_H
 #define SYS_HDCHAIN_H
