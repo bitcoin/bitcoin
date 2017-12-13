@@ -829,7 +829,7 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 	vchWitness = vchFromValue(params[16]);
 
 	bool fUseInstantSend = false;
-	fUseInstantSend = params[5].get_bool();
+	fUseInstantSend = params[17].get_bool();
 
 	// if we are selling a cert ensure it exists and pubkey's match (to ensure it doesnt get transferred prior to accepting by user)
 	CCert theCert;

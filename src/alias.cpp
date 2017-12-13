@@ -2522,9 +2522,9 @@ bool BuildAliasIndexerHistoryJson(const CAliasIndex& alias, UniValue& oName)
 }
 UniValue aliaspay(const UniValue& params, bool fHelp) {
 
-    if (fHelp || params.size() < 3 || params.size() > 7)
+    if (fHelp || params.size() < 3 || params.size() > 5)
         throw runtime_error(
-            "aliaspay aliasfrom currency {\"address\":amount,...} ( minconf \"comment\" subtractfeefromamount instantsend)\n"
+            "aliaspay aliasfrom currency {\"address\":amount,...} (instantsend subtractfeefromamount)\n"
             "\nSend multiple times from an alias. Amounts are double-precision floating point numbers."
             + HelpRequiringPassphrase() + "\n"
             "\nArguments:\n"
@@ -2535,10 +2535,8 @@ UniValue aliaspay(const UniValue& params, bool fHelp) {
             "      \"address\":amount   (numeric or string) The syscoin alias is the key, the numeric amount (can be string) in SYS is the value\n"
             "      ,...\n"
             "    }\n"
-			"4. minconf                 (numeric, optional, default=1) Only use the balance confirmed at least this many times.\n"
-            "5. \"comment\"             (string, optional) A comment\n"
-			"6. subtractfeefromamount   (string, optional) A json array with addresses.\n"
-			"7. instantsend				(boolean, optional) Set to true to use InstantSend to send this transaction or false otherwise.\n"
+			"4. instantsend				(boolean, optional) Set to true to use InstantSend to send this transaction or false otherwise.\n"
+			"5. subtractfeefromamount   (string, optional) A json array with addresses.\n"
             "\nResult:\n"
 			"\"transaction hex\"          (string) The transaction hex (unsigned) for signing and sending. Only 1 transaction is created regardless of \n"
             "                                    the number of addresses.\n"
@@ -2558,19 +2556,14 @@ UniValue aliaspay(const UniValue& params, bool fHelp) {
 
     string strCurrency = params[1].get_str();
     UniValue sendTo = params[2].get_obj();
-    int nMinDepth = 1;
-    if(CheckParam(params, 3))
-        nMinDepth = params[3].get_int();
-    CWalletTx wtx;
-    if(CheckParam(params, 4))
-        wtx.mapValue["comment"] = params[4].get_str();
 
 	UniValue subtractFeeFromAmount(UniValue::VARR);
-	if (params.size() > 5)
-		subtractFeeFromAmount = params[5].get_array();
+	if (params.size() > 4)
+		subtractFeeFromAmount = params[3].get_array();
 
 	bool fUseInstantSend = false;
-	fUseInstantSend = params[6].get_bool();
+	if (params.size() > 5)
+		fUseInstantSend = params[4].get_bool();
 
     set<CSyscoinAddress> setAddress;
     vector<CRecipient> vecSend;
