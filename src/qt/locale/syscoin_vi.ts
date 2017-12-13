@@ -1,3 +1,4 @@
+<!DOCTYPE TS>
 <TS language="vi" version="2.0">
 <context>
     <name>AddressBookPage</name>
