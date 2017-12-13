@@ -80,6 +80,15 @@ public:
     const CCheckpointData& Checkpoints() const { return checkpointData; }
     const ChainTxData& TxData() const { return chainTxData; }
     void UpdateVersionBitsParameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout);
+    void TurnOffSegwit();
+    void TurnOffCSV();
+    void TurnOffBIP34();
+    void TurnOffBIP65();
+    void TurnOffBIP66();
+    bool BIP34();
+    bool BIP65();
+    bool BIP66();
+    bool CSVEnabled() const;
 protected:
     CChainParams() {}
 
@@ -124,5 +133,15 @@ void SelectParams(const std::string& chain);
  * Allows modifying the Version Bits regtest parameters.
  */
 void UpdateVersionBitsParameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout);
+
+void TurnOffSegwit();
+
+void TurnOffBIP34();
+
+void TurnOffBIP65();
+
+void TurnOffBIP66();
+
+void TurnOffCSV();
 
 #endif // RAVEN_CHAINPARAMS_H

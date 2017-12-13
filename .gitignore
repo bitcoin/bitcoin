@@ -47,6 +47,7 @@ src/qt/test/moc*.cpp
 .settings
 .cproject
 .project
+.vscode
 
 .deps
 .dirstamp

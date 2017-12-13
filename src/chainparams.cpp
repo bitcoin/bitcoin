@@ -65,6 +65,43 @@ void CChainParams::UpdateVersionBitsParameters(Consensus::DeploymentPos d, int64
     consensus.vDeployments[d].nTimeout = nTimeout;
 }
 
+void CChainParams::TurnOffSegwit() {
+	consensus.nSegwitEnabled = false;
+}
+
+void CChainParams::TurnOffCSV() {
+	consensus.nCSVEnabled = false;
+}
+
+void CChainParams::TurnOffBIP34() {
+	consensus.nBIP34Enabled = false;
+}
+
+void CChainParams::TurnOffBIP65() {
+	consensus.nBIP65Enabled = false;
+}
+
+void CChainParams::TurnOffBIP66() {
+	consensus.nBIP66Enabled = false;
+}
+
+bool CChainParams::BIP34() {
+	return consensus.nBIP34Enabled;
+}
+
+bool CChainParams::BIP65() {
+	return consensus.nBIP34Enabled;
+}
+
+bool CChainParams::BIP66() {
+	return consensus.nBIP34Enabled;
+}
+
+bool CChainParams::CSVEnabled() const{
+	return consensus.nCSVEnabled;
+}
+
+
 /**
  * Main network
  */
@@ -81,10 +118,11 @@ public:
     CMainParams() {
         strNetworkID = "main";
         consensus.nSubsidyHalvingInterval = 2100000;  //~ 4 yrs at 1 min block time
-        // consensus.BIP34Height = 227931;
-        // consensus.BIP34Hash = uint256S("0x000000000000024b89b42a942fe0d9fea3bb44ab7bd1b19115dd6a759c0808b8");
-        // consensus.BIP65Height = 388381; // 000000000000000004c2b624ed5d7756c508d90fd0da2c7c679febfa6c4735f0
-        // consensus.BIP66Height = 363725; // 00000000000000000379eaa19dce8c9b722d46ae6a57c2f1a988119488b50931
+        consensus.nBIP34Enabled = true;
+        consensus.nBIP65Enabled = true; // 000000000000000004c2b624ed5d7756c508d90fd0da2c7c679febfa6c4735f0
+        consensus.nBIP66Enabled = true;
+        consensus.nSegwitEnabled = true;
+        consensus.nCSVEnabled = true;
         consensus.powLimit = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.nPowTargetTimespan = 2016 * 60; // 1.4 days
         consensus.nPowTargetSpacing = 1 * 60;
@@ -102,9 +140,9 @@ public:
         // consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nTimeout = 1493596800; // May 1st, 2017
 
         // Deployment of SegWit (BIP141, BIP143, and BIP147)
-        // consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].bit = 1;
-        // consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nStartTime = 1479168000; // November 15th, 2016.
-        // consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nTimeout = 1510704000; // November 15th, 2017.
+//         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].bit = 1;
+//         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nStartTime = 1479168000; // November 15th, 2016.
+//         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nTimeout = 1510704000; // November 15th, 2017.
 
     
         // The best chain should have at least this much work.
@@ -239,6 +277,12 @@ public:
     CTestNetParams() {
         strNetworkID = "test";
         consensus.nSubsidyHalvingInterval = 2100000;  //~ 4 yrs at 1 min block time
+        consensus.nBIP34Enabled = true;
+        consensus.nBIP65Enabled = true; // 000000000000000004c2b624ed5d7756c508d90fd0da2c7c679febfa6c4735f0
+        consensus.nBIP66Enabled = true;
+        consensus.nSegwitEnabled = true;
+        consensus.nCSVEnabled = true;
+
         // consensus.BIP34Height = 21111;
         // consensus.BIP34Hash = uint256S("0x0000000023b3a96d3484e5abb3755c413e7d41500f8e2a5c3f0dd01299cd8ef8");
         // consensus.BIP65Height = 581885; // 00000000007f6655f22f98e72ed80d8b06dc761d5da09df0fa1dc4be4f861eb6
@@ -253,6 +297,7 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = 1199145601; // January 1, 2008
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = 1230767999; // December 31, 2008
+
 
         // Deployment of BIP68, BIP112, and BIP113.
         // consensus.vDeployments[Consensus::DEPLOYMENT_CSV].bit = 0;
@@ -333,7 +378,12 @@ class CRegTestParams : public CChainParams {
 public:
     CRegTestParams() {
         strNetworkID = "regtest";
-        consensus.nSubsidyHalvingInterval = 240;
+        consensus.nBIP34Enabled = true;
+        consensus.nBIP65Enabled = true; // 000000000000000004c2b624ed5d7756c508d90fd0da2c7c679febfa6c4735f0
+        consensus.nBIP66Enabled = true;
+        consensus.nSegwitEnabled = true;
+        consensus.nCSVEnabled = true;
+        consensus.nSubsidyHalvingInterval = 150;
         consensus.powLimit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.nPowTargetTimespan = 2016 * 60; // 1.4 days
         consensus.nPowTargetSpacing = 1 * 60;
@@ -423,3 +473,25 @@ void UpdateVersionBitsParameters(Consensus::DeploymentPos d, int64_t nStartTime,
 {
     globalChainParams->UpdateVersionBitsParameters(d, nStartTime, nTimeout);
 }
+
+void TurnOffSegwit(){
+	globalChainParams->TurnOffSegwit();
+}
+
+void TurnOffCSV() {
+	globalChainParams->TurnOffCSV();
+}
+
+void TurnOffBIP34() {
+	globalChainParams->TurnOffBIP34();
+}
+
+void TurnOffBIP65() {
+	globalChainParams->TurnOffBIP65();
+}
+
+void TurnOffBIP66() {
+	globalChainParams->TurnOffBIP66();
+}
+
+

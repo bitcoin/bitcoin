@@ -28,7 +28,7 @@ struct MainSignalsInstance {
     boost::signals2::signal<void (const CBlock&, const CValidationState&)> BlockChecked;
     boost::signals2::signal<void (const CBlockIndex *, const std::shared_ptr<const CBlock>&)> NewPoWValidBlock;
     boost::signals2::signal<void (const uint256 &)> BlockFound;
-    boost::signals2::signal<void (std::shared_ptr<CReserveScript>&)> ScriptForMining;
+//    boost::signals2::signal<void (std::shared_ptr<CReserveScript>&)> ScriptForMining;
     
     // We are not allowed to assume the scheduler only runs in one thread,
     // but must ensure all callbacks happen in-order, so we end up creating
@@ -69,7 +69,7 @@ void RegisterValidationInterface(CValidationInterface* pwalletIn) {
     g_signals.m_internals->BlockChecked.connect(boost::bind(&CValidationInterface::BlockChecked, pwalletIn, _1, _2));
     g_signals.m_internals->NewPoWValidBlock.connect(boost::bind(&CValidationInterface::NewPoWValidBlock, pwalletIn, _1, _2));
     g_signals.m_internals->BlockFound.connect(boost::bind(&CValidationInterface::BlockFound, pwalletIn, _1));
-    g_signals.m_internals->ScriptForMining.connect(boost::bind(&CValidationInterface::GetScriptForMining, pwalletIn, _1));
+//    g_signals.m_internals->ScriptForMining.connect(boost::bind(&CValidationInterface::GetScriptForMining, pwalletIn, _1));
 }
 
 void UnregisterValidationInterface(CValidationInterface* pwalletIn) {
@@ -83,7 +83,7 @@ void UnregisterValidationInterface(CValidationInterface* pwalletIn) {
     g_signals.m_internals->UpdatedBlockTip.disconnect(boost::bind(&CValidationInterface::UpdatedBlockTip, pwalletIn, _1, _2, _3));
     g_signals.m_internals->NewPoWValidBlock.disconnect(boost::bind(&CValidationInterface::NewPoWValidBlock, pwalletIn, _1, _2));
     g_signals.m_internals->BlockFound.disconnect(boost::bind(&CValidationInterface::BlockFound, pwalletIn, _1));
-    g_signals.m_internals->ScriptForMining.disconnect(boost::bind(&CValidationInterface::GetScriptForMining, pwalletIn, _1));
+//    g_signals.m_internals->ScriptForMining.disconnect(boost::bind(&CValidationInterface::GetScriptForMining, pwalletIn, _1));
 }
 
 void UnregisterAllValidationInterfaces() {
@@ -97,7 +97,7 @@ void UnregisterAllValidationInterfaces() {
     g_signals.m_internals->UpdatedBlockTip.disconnect_all_slots();
     g_signals.m_internals->NewPoWValidBlock.disconnect_all_slots();
     g_signals.m_internals->BlockFound.disconnect_all_slots();
-    g_signals.m_internals->ScriptForMining.disconnect_all_slots();
+//    g_signals.m_internals->ScriptForMining.disconnect_all_slots();
 }
 
 void CMainSignals::UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) {
@@ -140,9 +140,9 @@ void CMainSignals::BlockFound(const uint256 &hash) {
     m_internals->BlockFound(hash);
 }
 
-void CMainSignals::ScriptForMining(std::shared_ptr<CReserveScript> &preservescript) {
-    std::cout << "In CMainSignals::ScriptForMining" << std::endl;
-    m_internals->ScriptForMining(preservescript);
-    std::cout << "Out CMainSignals::ScriptForMining" << std::endl;
-
-}
+//void CMainSignals::ScriptForMining(std::shared_ptr<CReserveScript> &preservescript) {
+//    std::cout << "In CMainSignals::ScriptForMining" << std::endl;
+//    m_internals->ScriptForMining(preservescript);
+//    std::cout << "Out CMainSignals::ScriptForMining" << std::endl;
+//
+//}

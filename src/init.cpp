@@ -1605,8 +1605,9 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
         }
     }
 
-    nLocalServices = ServiceFlags(nLocalServices | NODE_WITNESS);
-
+    if(chainparams.GetConsensus().nSegwitEnabled) {
+    		nLocalServices = ServiceFlags(nLocalServices | NODE_WITNESS);
+    }
     // ********************************************************* Step 10: import blocks
 
     if (!CheckDiskSpace())

@@ -4,6 +4,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "consensus/validation.h"
+#include "chainparams.h"
 #include "key.h"
 #include "validation.h"
 #include "miner.h"
@@ -19,6 +20,10 @@
 #include "policy/policy.h"
 
 #include <boost/test/unit_test.hpp>
+
+#include "util.h"
+
+extern bool fPrintToConsole;
 
 bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &inputs, bool fScriptChecks, unsigned int flags, bool cacheSigStore, bool cacheFullScriptStore, PrecomputedTransactionData& txdata, std::vector<CScriptCheck> *pvChecks);
 
@@ -150,7 +155,15 @@ void ValidateCheckInputsForAllFlags(CMutableTransaction &tx, uint32_t failing_fl
 
 BOOST_FIXTURE_TEST_CASE(checkinputs_test, TestChain100Setup)
 {
-    // Test that passing CheckInputs with one set of script flags doesn't imply
+
+	TurnOffSegwit();
+	TurnOffCSV();
+	TurnOffBIP34();
+	TurnOffBIP65();
+	TurnOffBIP66();
+    fPrintToConsole = true;
+
+	// Test that passing CheckInputs with one set of script flags doesn't imply
     // that we would pass again with a different set of flags.
     InitScriptExecutionCache();
 

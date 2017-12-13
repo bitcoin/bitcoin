@@ -17,7 +17,7 @@ enum DeploymentPos
 {
     DEPLOYMENT_TESTDUMMY,
     // DEPLOYMENT_CSV, // Deployment of BIP68, BIP112, and BIP113.
-    // DEPLOYMENT_SEGWIT, // Deployment of BIP141, BIP143, and BIP147.
+//    DEPLOYMENT_SEGWIT, // Deployment of BIP141, BIP143, and BIP147.
     // NOTE: Also add new deployments to VersionBitsDeploymentInfo in versionbits.cpp
     MAX_VERSION_BITS_DEPLOYMENTS
 };
@@ -41,7 +41,9 @@ struct Params {
     uint256 hashGenesisBlock;
     int nSubsidyHalvingInterval;
     /** Block height and hash at which BIP34 becomes active */
-    // int BIP34Height;
+    bool nBIP34Enabled;
+    bool nBIP65Enabled;
+    bool nBIP66Enabled;
     // uint256 BIP34Hash;
     /** Block height at which BIP65 becomes active */
     // int BIP65Height;
@@ -64,6 +66,8 @@ struct Params {
     int64_t DifficultyAdjustmentInterval() const { return nPowTargetTimespan / nPowTargetSpacing; }
     uint256 nMinimumChainWork;
     uint256 defaultAssumeValid;
+    bool nSegwitEnabled;
+    bool nCSVEnabled;
 };
 } // namespace Consensus
 
