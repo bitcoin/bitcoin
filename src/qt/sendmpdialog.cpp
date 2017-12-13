@@ -20,6 +20,7 @@
 #include "omnicore/sp.h"
 #include "omnicore/tally.h"
 #include "omnicore/utilsbitcoin.h"
+#include "omnicore/wallettxbuilder.h"
 #include "omnicore/wallettxs.h"
 
 #include "amount.h"

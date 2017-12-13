@@ -280,9 +280,6 @@ int GetEncodingClass(const CTransaction& tx, int nBlock);
 /** Determines, whether it is valid to use a Class C transaction for a given payload size. */
 bool UseEncodingClassC(size_t nDataSize);
 
-int WalletTxBuilder(const std::string& senderAddress, const std::string& receiverAddress, const std::string& redemptionAddress,
-                 int64_t referenceAmount, const std::vector<unsigned char>& data, uint256& txid, std::string& rawHex, bool commit);
-
 bool isTestEcosystemProperty(uint32_t propertyId);
 bool isMainEcosystemProperty(uint32_t propertyId);
 uint32_t GetNextPropertyId(bool maineco); // maybe move into sp
