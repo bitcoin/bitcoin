@@ -24,7 +24,7 @@
 // otherwise.
 BOOST_FIXTURE_TEST_SUITE(checkqueue_tests, TestingSetup)
 
-static const int QUEUE_BATCH_SIZE = 128;
+static const unsigned int QUEUE_BATCH_SIZE = 128;
 
 struct FakeCheck {
     bool operator()()

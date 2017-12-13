@@ -41,6 +41,7 @@
 #include <mswsock.h>
 #include <windows.h>
 #include <ws2tcpip.h>
+#include <stdint.h>
 #else
 #include <fcntl.h>
 #include <sys/mman.h>
@@ -80,6 +81,15 @@ typedef unsigned int SOCKET;
 #endif
 #else
 #define MAX_PATH            1024
+#endif
+#ifdef _MSC_VER
+#if !defined(ssize_t)
+#ifdef _WIN64
+typedef int64_t ssize_t;
+#else
+typedef int32_t ssize_t;
+#endif
+#endif
 #endif
 
 #if HAVE_DECL_STRNLEN == 0
