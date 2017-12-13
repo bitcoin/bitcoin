@@ -210,7 +210,7 @@ std::string FormatDivisibleMP(int64_t n, bool fSign)
     return str;
 }
 
-std::string mastercore::FormatIndivisibleMP(int64_t n)
+std::string FormatIndivisibleMP(int64_t n)
 {
     return strprintf("%d", n);
 }

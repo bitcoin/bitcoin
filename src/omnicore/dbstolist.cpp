@@ -25,7 +25,6 @@
 #include <string>
 #include <vector>
 
-using mastercore::FormatIndivisibleMP;
 using mastercore::IsMyAddress;
 using mastercore::isPropertyDivisible;
 

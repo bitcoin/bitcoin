@@ -126,12 +126,14 @@ enum FILETYPES {
 #define OMNI_PROPERTY_MSC   1
 #define OMNI_PROPERTY_TMSC  2
 
-// forward declarations
+/** Number formating related functions. */
 std::string FormatDivisibleMP(int64_t amount, bool fSign = false);
 std::string FormatDivisibleShortMP(int64_t amount);
+std::string FormatIndivisibleMP(int64_t amount);
+std::string FormatByType(int64_t amount, uint16_t propertyType);
+// Note: require initialized state to get divisibility.
 std::string FormatMP(uint32_t propertyId, int64_t amount, bool fSign = false);
 std::string FormatShortMP(uint32_t propertyId, int64_t amount);
-std::string FormatByType(int64_t amount, uint16_t propertyType);
 
 /** Returns the Exodus address. */
 const CBitcoinAddress ExodusAddress();
@@ -244,18 +246,19 @@ int mastercore_init();
 /** Global handler to shut down Omni Core. */
 int mastercore_shutdown();
 
-/** Global handler to total wallet balances. */
-void CheckWalletUpdate(bool forceUpdate = false);
-
-/** Used to notify that the number of tokens for a property has changed. */
-void NotifyTotalTokensChanged(uint32_t propertyId, int block);
-
+/** Block and transaction handlers. */
 int mastercore_handler_disc_begin(int nBlockNow, CBlockIndex const * pBlockIndex);
 int mastercore_handler_disc_end(int nBlockNow, CBlockIndex const * pBlockIndex);
 int mastercore_handler_block_begin(int nBlockNow, CBlockIndex const * pBlockIndex);
 int mastercore_handler_block_end(int nBlockNow, CBlockIndex const * pBlockIndex, unsigned int);
 bool mastercore_handler_tx(const CTransaction& tx, int nBlock, unsigned int idx, const CBlockIndex* pBlockIndex);
 int mastercore_save_state( CBlockIndex const *pBlockIndex );
+
+/** Global handler to total wallet balances. */
+void CheckWalletUpdate(bool forceUpdate = false);
+
+/** Used to notify that the number of tokens for a property has changed. */
+void NotifyTotalTokensChanged(uint32_t propertyId, int block);
 
 namespace mastercore
 {
@@ -271,11 +274,11 @@ extern CCoinsViewCache view;
 //! Guards coins view cache
 extern CCriticalSection cs_tx_cache;
 
-std::string strMPProperty(uint32_t propertyId);
+/** Returns the encoding class, used to embed a payload. */
+int GetEncodingClass(const CTransaction& tx, int nBlock);
 
-bool isMPinBlockRange(int starting_block, int ending_block, bool bDeleteFound);
-
-std::string FormatIndivisibleMP(int64_t n);
+/** Determines, whether it is valid to use a Class C transaction for a given payload size. */
+bool UseEncodingClassC(size_t nDataSize);
 
 int WalletTxBuilder(const std::string& senderAddress, const std::string& receiverAddress, const std::string& redemptionAddress,
                  int64_t referenceAmount, const std::vector<unsigned char>& data, uint256& txid, std::string& rawHex, bool commit);
@@ -286,20 +289,16 @@ uint32_t GetNextPropertyId(bool maineco); // maybe move into sp
 
 CMPTally* getTally(const std::string& address);
 
+bool update_tally_map(const std::string& who, uint32_t propertyId, int64_t amount, TallyType ttype);
+
 int64_t getTotalTokens(uint32_t propertyId, int64_t* n_owners_total = NULL);
-
-std::string strTransactionType(uint16_t txType);
-
-/** Returns the encoding class, used to embed a payload. */
-int GetEncodingClass(const CTransaction& tx, int nBlock);
-
-/** Determines, whether it is valid to use a Class C transaction for a given payload size. */
-bool UseEncodingClassC(size_t nDataSize);
 
 bool getValidMPTX(const uint256 &txid, int *block = NULL, unsigned int *type = NULL, uint64_t *nAmended = NULL);
 
-bool update_tally_map(const std::string& who, uint32_t propertyId, int64_t amount, TallyType ttype);
+bool isMPinBlockRange(int starting_block, int ending_block, bool bDeleteFound);
 
+std::string strMPProperty(uint32_t propertyId);
+std::string strTransactionType(uint16_t txType);
 std::string getTokenLabel(uint32_t propertyId);
 
 /**
