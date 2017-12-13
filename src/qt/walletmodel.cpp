@@ -265,6 +265,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
         return AmountExceedsBalance;
     }
 
+    FeeCalculation feeCalc;
     {
         LOCK2(cs_main, wallet->cs_wallet);
 
@@ -276,7 +277,6 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
 
         CWalletTx *newTx = transaction.getTransaction();
         CReserveKey *keyChange = transaction.getPossibleKeyChange();
-        FeeCalculation feeCalc;
         bool fCreated = wallet->CreateTransaction(vecSend, *newTx, *keyChange, nFeeRequired, nChangePosRet, strFailReason, coinControl, feeCalc);
         transaction.setTransactionFee(nFeeRequired);
         if (fSubtractFeeFromAmount && fCreated)
@@ -286,7 +286,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
         {
             if(!fSubtractFeeFromAmount && (total + nFeeRequired) > nBalance)
             {
-                return SendCoinsReturn(AmountWithFeeExceedsBalance);
+                return SendCoinsReturn(AmountWithFeeExceedsBalance, "", feeCalc.reason == FeeReason::FALLBACK);
             }
             Q_EMIT message(tr("Send Coins"), QString::fromStdString(strFailReason),
                          CClientUIInterface::MSG_ERROR);
@@ -300,7 +300,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
             return AbsurdFee;
     }
 
-    return SendCoinsReturn(OK);
+    return SendCoinsReturn(OK, "", feeCalc.reason == FeeReason::FALLBACK);
 }
 
 WalletModel::SendCoinsReturn WalletModel::sendCoins(WalletModelTransaction &transaction)

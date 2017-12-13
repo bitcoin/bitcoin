@@ -144,13 +144,15 @@ public:
     // Return status record for SendCoins, contains error id + information
     struct SendCoinsReturn
     {
-        SendCoinsReturn(StatusCode _status = OK, QString _reasonCommitFailed = "")
+        SendCoinsReturn(StatusCode _status = OK, QString _reasonCommitFailed = "", bool fallback_fee_used = false)
             : status(_status),
-              reasonCommitFailed(_reasonCommitFailed)
+              reasonCommitFailed(_reasonCommitFailed),
+              m_fallback_fee_used(fallback_fee_used)
         {
         }
         StatusCode status;
         QString reasonCommitFailed;
+        bool m_fallback_fee_used;
     };
 
     // prepare transaction for getting txfee before sending coins

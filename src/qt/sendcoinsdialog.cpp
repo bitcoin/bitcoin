@@ -346,6 +346,13 @@ void SendCoinsDialog::on_sendButton_clicked()
         questionString.append("</span>");
     }
 
+    if (prepareStatus.m_fallback_fee_used) {
+        questionString.append("<hr /><span style='color:#aa0000;'>");
+        questionString.append(tr("WARNING")+":</span> <span>");
+        questionString.append(tr("A static fallback transaction fee has been used due to missing fee estimation. Please consider waiting a few blocks until fee estimation is ready. The transaction will very likely get stuck or overpay in fees."));
+        questionString.append("</span>");
+    }
+
     SendConfirmationDialog confirmationDialog(tr("Confirm send coins"),
         questionString.arg(formatted.join("<br />")), SEND_CONFIRM_DELAY, this);
     confirmationDialog.exec();
