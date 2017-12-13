@@ -189,6 +189,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
 	{ "escrowrefund", 4 },
 	{ "escrowacknowledge", 2 },
 	{ "escrowcompleterefund", 3 },
+	{ "escrowcompleterelease", 3 },
 	{ "escrowfeedback", 3 },
 	{ "escrowfeedback", 6 }
 };
