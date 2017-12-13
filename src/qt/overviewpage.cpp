@@ -24,7 +24,7 @@
 #include "omnicore/parsing.h"
 #include "omnicore/pending.h"
 #include "omnicore/utilsbitcoin.h"
-#include "omnicore/wallettxs.h"
+#include "omnicore/walletutils.h"
 
 #include "main.h"
 #include "sync.h"

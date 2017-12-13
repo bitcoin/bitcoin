@@ -23,7 +23,7 @@
 #include "omnicore/uint256_extensions.h"
 #include "omnicore/utilsbitcoin.h"
 #include "omnicore/wallettxbuilder.h"
-#include "omnicore/wallettxs.h"
+#include "omnicore/walletutils.h"
 
 #include "amount.h"
 #include "sync.h"

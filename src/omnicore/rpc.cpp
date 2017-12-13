@@ -31,7 +31,7 @@
 #include "omnicore/utilsbitcoin.h"
 #include "omnicore/version.h"
 #include "omnicore/walletfetchtxs.h"
-#include "omnicore/wallettxs.h"
+#include "omnicore/walletutils.h"
 
 #include "amount.h"
 #include "chainparams.h"

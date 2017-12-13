@@ -6,7 +6,7 @@
 #include "omnicore/omnicore.h"
 #include "omnicore/parsing.h"
 #include "omnicore/script.h"
-#include "omnicore/wallettxs.h"
+#include "omnicore/walletutils.h"
 
 #include "base58.h"
 #include "coincontrol.h"

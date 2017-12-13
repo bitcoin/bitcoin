@@ -20,7 +20,7 @@
 #include "omnicore/sto.h"
 #include "omnicore/tx.h"
 #include "omnicore/utilsbitcoin.h"
-#include "omnicore/wallettxs.h"
+#include "omnicore/walletutils.h"
 
 #include "chainparams.h"
 #include "main.h"
