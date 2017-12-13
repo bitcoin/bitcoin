@@ -31,6 +31,7 @@
 #include <boost/algorithm/string/find.hpp>
 #include <boost/assign/list_of.hpp>
 #include <mongoc.h>
+#include "instantx.h"
 using namespace std;
 CAliasDB *paliasdb = NULL;
 COfferDB *pofferdb = NULL;
