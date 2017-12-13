@@ -18,7 +18,7 @@
 #include <stdio.h>
 #include "utilstrencodings.h"
 
-#include "omnicore/mbstring.h" // SanitizeInvalidUTF8
+#include "omnicore/rpcmbstring.h" // SanitizeInvalidUTF8
 
 #include <boost/algorithm/string.hpp> // boost::trim
 #include <boost/foreach.hpp> //BOOST_FOREACH
