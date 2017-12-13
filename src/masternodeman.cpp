@@ -851,14 +851,15 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
 
             LogPrint("masternode", "DSEG -- Sending Masternode entry: masternode=%s  addr=%s\n", mnpair.first.ToStringShort(), mnpair.second.addr.ToString());
             CMasternodeBroadcast mnb = CMasternodeBroadcast(mnpair.second);
-            uint256 hash = mnb.GetHash();
-            pfrom->PushInventory(CInv(MSG_MASTERNODE_ANNOUNCE, hash));
-            pfrom->PushInventory(CInv(MSG_MASTERNODE_PING, mnpair.second.lastPing.GetHash()));
+            CMasternodePing mnp = mnpair.second.lastPing;
+            uint256 hashMNB = mnb.GetHash();
+            uint256 hashMNP = mnp.GetHash();
+            pfrom->PushInventory(CInv(MSG_MASTERNODE_ANNOUNCE, hashMNB));
+            pfrom->PushInventory(CInv(MSG_MASTERNODE_PING, hashMNP));
             nInvCount++;
 
-            if (!mapSeenMasternodeBroadcast.count(hash)) {
-                mapSeenMasternodeBroadcast.insert(std::make_pair(hash, std::make_pair(GetTime(), mnb)));
-            }
+            mapSeenMasternodeBroadcast.insert(std::make_pair(hashMNB, std::make_pair(GetTime(), mnb)));
+            mapSeenMasternodePing.insert(std::make_pair(hashMNP, mnp));
 
             if (vin.prevout == mnpair.first) {
                 LogPrintf("DSEG -- Sent 1 Masternode inv to peer %d\n", pfrom->id);
@@ -1178,6 +1179,7 @@ void CMasternodeMan::ProcessVerifyReply(CNode* pnode, CMasternodeVerification& m
                     }
 
                     mWeAskedForVerification[pnode->addr] = mnv;
+                    mapSeenMasternodeVerification.insert(std::make_pair(mnv.GetHash(), mnv));
                     mnv.Relay();
 
                 } else {
