@@ -2564,7 +2564,7 @@ UniValue aliaspay(const UniValue& params, bool fHelp) {
 	bool fUseInstantSend = false;
 	if (params.size() > 5)
 		fUseInstantSend = params[4].get_bool();
-
+	CWalletTx wtx;
     set<CSyscoinAddress> setAddress;
     vector<CRecipient> vecSend;
 
