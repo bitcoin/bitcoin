@@ -2187,6 +2187,18 @@ UniValue syscoinsendrawtransaction(const UniValue& params, bool fHelp) {
 	CTransaction tx;
 	if (!DecodeHexTx(tx, hexstring))
 		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5534 - " + _("Could not send raw transaction: Cannot decode transaction from hex string"));
+	// ensure that if we are creating an alias that it does not use instant send
+	vector<vector<unsigned char> > vvch;
+	int op;
+	for (unsigned int i = 0; i < tx.vout.size(); i++) {
+		const CTxOut& out = tx.vout[i];
+		if (DecodeAliasScript(out.scriptPubKey, op, vvch) && op == OP_ALIAS_ACTIVATE)
+		{
+			fInstantSend = false;
+			break;
+		}
+	}
+
 	UniValue arraySendParams(UniValue::VARR);
 	arraySendParams.push_back(hexstring);
 	arraySendParams.push_back(fOverrideFees);
@@ -2205,8 +2217,8 @@ UniValue syscoinsendrawtransaction(const UniValue& params, bool fHelp) {
 	UniValue res(UniValue::VOBJ);
 	res.push_back(Pair("txid", returnRes.get_str()));
 	// check for alias registration, if so save the info in this node for alias activation calls after a block confirmation
-	vector<vector<unsigned char> > vvch;
-	int op;
+	vvch.clear();
+	op = -1; 
 	for (unsigned int i = 0; i < tx.vout.size(); i++) {
 		const CTxOut& out = tx.vout[i];
 		if (DecodeAliasScript(out.scriptPubKey, op, vvch) && op == OP_ALIAS_ACTIVATE) 
@@ -2253,17 +2265,19 @@ UniValue aliasbalance(const UniValue& params, bool fHelp)
     if (fHelp || params.size() != 1)
         throw runtime_error(
             "aliasbalance \"alias\"\n"
-            "\nReturns the total amount received by the given alias in transactions with at least 1 confirmation.\n"
+            "\nReturns the total amount received by the given alias in transactions.\n"
             "\nArguments:\n"
             "1. \"alias\"  (string, required) The syscoin alias for transactions.\n"
        );
 	vector<unsigned char> vchAlias = vchFromValue(params[0]);
 	CAmount nAmount = 0;
+	CAmount nISAmount = 0;
 	CAliasIndex theAlias;
 	if (!GetAlias(vchAlias, theAlias))
 	{
 		UniValue res(UniValue::VOBJ);
 		res.push_back(Pair("balance", ValueFromAmount(nAmount)));
+		res.push_back(Pair("instantsend_balance", ValueFromAmount(nISAmount)));
 		return  res;
 	}
 
@@ -2282,6 +2296,7 @@ UniValue aliasbalance(const UniValue& params, bool fHelp)
 	{
 		UniValue res(UniValue::VOBJ);
 		res.push_back(Pair("balance", ValueFromAmount(nAmount)));
+		res.push_back(Pair("instantsend_balance", ValueFromAmount(nISAmount)));
 		return  res;
 	}
 
@@ -2295,6 +2310,7 @@ UniValue aliasbalance(const UniValue& params, bool fHelp)
 		const std::vector<unsigned char> &data(ParseHex(find_value(utxoObj, "script").get_str()));
 		const CScript& scriptPubKey = CScript(data.begin(), data.end());
 		const CAmount &nValue = AmountFromValue(find_value(utxoObj, "satoshis"));
+		const int& nHeight = find_value(utxoObj, "height").get_int();
 		if (DecodeAliasScript(scriptPubKey, op, vvch))
 			continue;
 		// some smaller sized outputs are reserved to pay for fees only using aliasselectpaymentcoins (with bSelectFeePlacement set to true)
@@ -2307,10 +2323,13 @@ UniValue aliasbalance(const UniValue& params, bool fHelp)
 				continue;
 		}
 		nAmount += nValue;
+		if ((chainActive.Height() - nHeight) >= INSTANTSEND_CONFIRMATIONS_REQUIRED)
+			nISAmount += nValue;
 		
     }
 	UniValue res(UniValue::VOBJ);
 	res.push_back(Pair("balance", ValueFromAmount(nAmount)));
+	res.push_back(Pair("instantsend_balance", ValueFromAmount(nISAmount)));
     return  res;
 }
 int aliasselectpaymentcoins(const vector<unsigned char> &vchAlias, const CAmount &nAmount, vector<COutPoint>& outPoints, bool& bIsFunded, CAmount &nRequiredAmount, bool bSelectFeePlacement, bool bSelectAll, bool bNoAliasRecipient)
@@ -2526,7 +2545,7 @@ UniValue aliaspay(const UniValue& params, bool fHelp) {
             "5. \"comment\"             (string, optional) A comment\n"
 			"6. subtractfeefromamount   (string, optional) A json array with addresses.\n"
             "\nResult:\n"
-            "\"transactionid\"          (string) The transaction id for the send. Only 1 transaction is created regardless of \n"
+			"\"transaction hex\"          (string) The transaction hex (unsigned) for signing and sending. Only 1 transaction is created regardless of \n"
             "                                    the number of addresses.\n"
             "\nExamples:\n"
             "\nSend two amounts to two different address or aliases, sends 0.01/0.02 SYS representing USD:\n"
