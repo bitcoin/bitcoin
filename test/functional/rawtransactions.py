@@ -15,6 +15,25 @@ Test the following RPCs:
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 
+
+class multidict(dict):
+    """Dictionary that allows duplicate keys.
+
+    Constructed with a list of (key, value) tuples. When dumped by the json module,
+    will output invalid json with repeated keys, eg:
+    >>> json.dumps(multidict([(1,2),(1,2)])
+    '{"1": 2, "1": 2}'
+
+    Used to test calls to rpc methods with repeated keys in the json object."""
+
+    def __init__(self, x):
+        dict.__init__(self, x)
+        self.x = x
+
+    def items(self):
+        return self.x
+
+
 # Create one-input, one-output, no-fee transaction:
 class RawTransactionsTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -38,6 +57,41 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.sync_all()
         self.nodes[0].generate(5)
         self.sync_all()
+
+        # Test `createrawtransaction` required parameters
+        assert_raises_rpc_error(-1, "createrawtransaction", self.nodes[0].createrawtransaction)
+        assert_raises_rpc_error(-1, "createrawtransaction", self.nodes[0].createrawtransaction, [])
+
+        # Test `createrawtransaction` invalid extra parameters
+        assert_raises_rpc_error(-1, "createrawtransaction", self.nodes[0].createrawtransaction, [], {}, 0, False, 'foo')
+
+        # Test `createrawtransaction` invalid `inputs`
+        txid = '1d1d4e24ed99057e84c3f80fd8fbec79ed9e1acee37da269356ecea000000000'
+        assert_raises_rpc_error(-3, "Expected type array", self.nodes[0].createrawtransaction, 'foo', {})
+        assert_raises_rpc_error(-1, "JSON value is not an object as expected", self.nodes[0].createrawtransaction, ['foo'], {})
+        assert_raises_rpc_error(-8, "txid must be hexadecimal string", self.nodes[0].createrawtransaction, [{}], {})
+        assert_raises_rpc_error(-8, "txid must be hexadecimal string", self.nodes[0].createrawtransaction, [{'txid': 'foo'}], {})
+        assert_raises_rpc_error(-8, "Invalid parameter, missing vout key", self.nodes[0].createrawtransaction, [{'txid': txid}], {})
+        assert_raises_rpc_error(-8, "Invalid parameter, missing vout key", self.nodes[0].createrawtransaction, [{'txid': txid, 'vout': 'foo'}], {})
+        assert_raises_rpc_error(-8, "Invalid parameter, vout must be positive", self.nodes[0].createrawtransaction, [{'txid': txid, 'vout': -1}], {})
+        assert_raises_rpc_error(-8, "Invalid parameter, sequence number is out of range", self.nodes[0].createrawtransaction, [{'txid': txid, 'vout': 0, 'sequence': -1}], {})
+
+        # Test `createrawtransaction` invalid `outputs`
+        address = self.nodes[0].getnewaddress()
+        assert_raises_rpc_error(-3, "Expected type object", self.nodes[0].createrawtransaction, [], 'foo')
+        assert_raises_rpc_error(-8, "Data must be hexadecimal string", self.nodes[0].createrawtransaction, [], {'data': 'foo'})
+        assert_raises_rpc_error(-5, "Invalid Bitcoin address", self.nodes[0].createrawtransaction, [], {'foo': 0})
+        assert_raises_rpc_error(-3, "Invalid amount", self.nodes[0].createrawtransaction, [], {address: 'foo'})
+        assert_raises_rpc_error(-3, "Amount out of range", self.nodes[0].createrawtransaction, [], {address: -1})
+        assert_raises_rpc_error(-8, "Invalid parameter, duplicated address: %s" % address, self.nodes[0].createrawtransaction, [], multidict([(address, 1), (address, 1)]))
+
+        # Test `createrawtransaction` invalid `locktime`
+        assert_raises_rpc_error(-3, "Expected type number", self.nodes[0].createrawtransaction, [], {}, 'foo')
+        assert_raises_rpc_error(-8, "Invalid parameter, locktime out of range", self.nodes[0].createrawtransaction, [], {}, -1)
+        assert_raises_rpc_error(-8, "Invalid parameter, locktime out of range", self.nodes[0].createrawtransaction, [], {}, 4294967296)
+
+        # Test `createrawtransaction` invalid `replaceable`
+        assert_raises_rpc_error(-3, "Expected type bool", self.nodes[0].createrawtransaction, [], {}, 0, 'foo')
 
         #########################################
         # sendrawtransaction with missing input #
