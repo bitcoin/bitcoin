@@ -173,6 +173,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
 	{ "offerupdate", 18 },
 	{ "escrowbid", 2 },
 	{ "escrowbid", 3 },
+	{ "escrowbid", 5 },
 	{ "escrowaddshipping", 1 },
 	{ "escrownew", 0 },
 	{ "escrownew", 4 },

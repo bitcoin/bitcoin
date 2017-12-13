@@ -2265,13 +2265,11 @@ UniValue aliasbalance(const UniValue& params, bool fHelp)
        );
 	vector<unsigned char> vchAlias = vchFromValue(params[0]);
 	CAmount nAmount = 0;
-	CAmount nISAmount = 0;
 	CAliasIndex theAlias;
 	if (!GetAlias(vchAlias, theAlias))
 	{
 		UniValue res(UniValue::VOBJ);
 		res.push_back(Pair("balance", ValueFromAmount(nAmount)));
-		res.push_back(Pair("instantsend_balance", ValueFromAmount(nISAmount)));
 		return  res;
 	}
 
@@ -2290,7 +2288,6 @@ UniValue aliasbalance(const UniValue& params, bool fHelp)
 	{
 		UniValue res(UniValue::VOBJ);
 		res.push_back(Pair("balance", ValueFromAmount(nAmount)));
-		res.push_back(Pair("instantsend_balance", ValueFromAmount(nISAmount)));
 		return  res;
 	}
 
@@ -2317,13 +2314,10 @@ UniValue aliasbalance(const UniValue& params, bool fHelp)
 				continue;
 		}
 		nAmount += nValue;
-		if ((chainActive.Height() - nHeight) >= INSTANTSEND_CONFIRMATIONS_REQUIRED)
-			nISAmount += nValue;
 		
     }
 	UniValue res(UniValue::VOBJ);
 	res.push_back(Pair("balance", ValueFromAmount(nAmount)));
-	res.push_back(Pair("instantsend_balance", ValueFromAmount(nISAmount)));
     return  res;
 }
 int aliasselectpaymentcoins(const vector<unsigned char> &vchAlias, const CAmount &nAmount, vector<COutPoint>& outPoints, bool& bIsFunded, CAmount &nRequiredAmount, bool bSelectFeePlacement, bool bSelectAll, bool bNoAliasRecipient)

@@ -45,11 +45,11 @@ BOOST_AUTO_TEST_CASE(generate_auction_regular)
 	EscrowBid("node1", "buyerauction", guid, "0.01");
 	EscrowBid("node1", "buyerauction", guid, "0.02");
 	// must bid higher
-	BOOST_CHECK_THROW(CallRPC("node1", "escrowbid buyerauction " + guid + " 0 0.03 ''"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "escrowbid buyerauction " + guid + " 0 0.03 '' false"), runtime_error);
 	// must bid higher
-	BOOST_CHECK_THROW(CallRPC("node1", "escrowbid buyerauction " + guid + " 9 0.02 ''"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "escrowbid buyerauction " + guid + " 9 0.02 '' false"), runtime_error);
 	// must bid higher
-	BOOST_CHECK_THROW(CallRPC("node1", "escrowbid buyerauction " + guid + " 9 0.01 ''"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "escrowbid buyerauction " + guid + " 9 0.01 '' false"), runtime_error);
 
 	EscrowBid("node1", "buyerauction", guid, "0.03");
 
@@ -135,9 +135,9 @@ BOOST_AUTO_TEST_CASE(generate_auction_reserve)
 	EscrowBid("node1", "buyerauction1", guid, "0.02");
 	EscrowBid("node1", "buyerauction1", guid, "0.03");
 	// must bid higher
-	BOOST_CHECK_THROW(CallRPC("node1", "escrowbid buyerauction1 " + guid + " 9.002 0.02 ''"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "escrowbid buyerauction1 " + guid + " 9.002 0.02 '' false"), runtime_error);
 	// must bid higher
-	BOOST_CHECK_THROW(CallRPC("node1", "escrowbid buyerauction1 " + guid + " 9.001 0.01 ''"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "escrowbid buyerauction1 " + guid + " 9.001 0.01 '' false"), runtime_error);
 
 	EscrowBid("node1", "buyerauction1", guid, "0.04");
 
