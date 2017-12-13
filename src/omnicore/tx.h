@@ -6,6 +6,7 @@ class CMPOffer;
 class CTransaction;
 
 #include "omnicore/omnicore.h"
+#include "omnicore/parsing.h"
 
 #include "uint256.h"
 #include "utilstrencodings.h"
@@ -305,9 +306,6 @@ public:
         return tx_idx > other.tx_idx;
     }
 };
-
-/** Parses a transaction and populates the CMPTransaction object. */
-int ParseTransaction(const CTransaction& tx, int nBlock, unsigned int idx, CMPTransaction& mptx, unsigned int nTime=0);
 
 
 #endif // OMNICORE_TX_H

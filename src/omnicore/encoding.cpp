@@ -2,7 +2,7 @@
 
 #include "omnicore/omnicore.h"
 #include "omnicore/script.h"
-#include "omnicore/utils.h"
+#include "omnicore/parsing.h"
 
 #include "base58.h"
 #include "pubkey.h"

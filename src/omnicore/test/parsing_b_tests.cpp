@@ -3,6 +3,7 @@
 #include "omnicore/createpayload.h"
 #include "omnicore/encoding.h"
 #include "omnicore/omnicore.h"
+#include "omnicore/parsing.h"
 #include "omnicore/script.h"
 #include "omnicore/tx.h"
 

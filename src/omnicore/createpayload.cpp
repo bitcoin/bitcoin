@@ -2,10 +2,10 @@
 
 #include "omnicore/createpayload.h"
 
-#include "omnicore/convert.h"
-#include "omnicore/utils.h"
+#include "omnicore/log.h"
+#include "omnicore/parsing.h"
 
-#include "tinyformat.h"
+#include "base58.h"
 
 #include <stdint.h>
 #include <string>
@@ -25,16 +25,34 @@
     vector.insert(vector.end(), reinterpret_cast<unsigned char *>((ptr)),\
     reinterpret_cast<unsigned char *>((ptr)) + (size));
 
+/**
+ * Returns a vector of bytes containing the version and hash160 for an address.
+ */
+static std::vector<unsigned char> AddressToBytes(const std::string& address)
+{
+    std::vector<unsigned char> addressBytes;
+    bool success = DecodeBase58(address, addressBytes);
+    if (!success) {
+        PrintToLog("ERROR: failed to decode address %s.\n", address);
+    }
+    if (addressBytes.size() == 25) {
+        addressBytes.resize(21); // truncate checksum
+    } else {
+        PrintToLog("ERROR: unexpected size from DecodeBase58 when decoding address %s.\n", address);
+    }
+
+    return addressBytes;
+}
 
 std::vector<unsigned char> CreatePayload_SimpleSend(uint32_t propertyId, uint64_t amount)
 {
     std::vector<unsigned char> payload;
     uint16_t messageType = 0;
     uint16_t messageVer = 0;
-    mastercore::swapByteOrder16(messageType);
-    mastercore::swapByteOrder16(messageVer);
-    mastercore::swapByteOrder32(propertyId);
-    mastercore::swapByteOrder64(amount);
+    SwapByteOrder16(messageType);
+    SwapByteOrder16(messageVer);
+    SwapByteOrder32(propertyId);
+    SwapByteOrder64(amount);
 
     PUSH_BACK_BYTES(payload, messageVer);
     PUSH_BACK_BYTES(payload, messageType);
@@ -49,8 +67,8 @@ std::vector<unsigned char> CreatePayload_SendAll(uint8_t ecosystem)
     std::vector<unsigned char> payload;
     uint16_t messageVer = 0;
     uint16_t messageType = 4;
-    mastercore::swapByteOrder16(messageVer);
-    mastercore::swapByteOrder16(messageType);
+    SwapByteOrder16(messageVer);
+    SwapByteOrder16(messageType);
 
     PUSH_BACK_BYTES(payload, messageVer);
     PUSH_BACK_BYTES(payload, messageType);
@@ -64,12 +82,12 @@ std::vector<unsigned char> CreatePayload_DExSell(uint32_t propertyId, uint64_t a
     std::vector<unsigned char> payload;
     uint16_t messageType = 20;
     uint16_t messageVer = 1;
-    mastercore::swapByteOrder16(messageType);
-    mastercore::swapByteOrder16(messageVer);
-    mastercore::swapByteOrder32(propertyId);
-    mastercore::swapByteOrder64(amountForSale);
-    mastercore::swapByteOrder64(amountDesired);
-    mastercore::swapByteOrder64(minFee);
+    SwapByteOrder16(messageType);
+    SwapByteOrder16(messageVer);
+    SwapByteOrder32(propertyId);
+    SwapByteOrder64(amountForSale);
+    SwapByteOrder64(amountDesired);
+    SwapByteOrder64(minFee);
 
     PUSH_BACK_BYTES(payload, messageVer);
     PUSH_BACK_BYTES(payload, messageType);
@@ -88,10 +106,10 @@ std::vector<unsigned char> CreatePayload_DExAccept(uint32_t propertyId, uint64_t
     std::vector<unsigned char> payload;
     uint16_t messageType = 22;
     uint16_t messageVer = 0;
-    mastercore::swapByteOrder16(messageType);
-    mastercore::swapByteOrder16(messageVer);
-    mastercore::swapByteOrder32(propertyId);
-    mastercore::swapByteOrder64(amount);
+    SwapByteOrder16(messageType);
+    SwapByteOrder16(messageVer);
+    SwapByteOrder32(propertyId);
+    SwapByteOrder64(amount);
 
     PUSH_BACK_BYTES(payload, messageVer);
     PUSH_BACK_BYTES(payload, messageType);
@@ -109,17 +127,17 @@ std::vector<unsigned char> CreatePayload_SendToOwners(uint32_t propertyId, uint6
 
     uint16_t messageType = 3;
     uint16_t messageVer = (v0) ? 0 : 1;
-    mastercore::swapByteOrder16(messageType);
-    mastercore::swapByteOrder16(messageVer);
-    mastercore::swapByteOrder32(propertyId);
-    mastercore::swapByteOrder64(amount);
+    SwapByteOrder16(messageType);
+    SwapByteOrder16(messageVer);
+    SwapByteOrder32(propertyId);
+    SwapByteOrder64(amount);
 
     PUSH_BACK_BYTES(payload, messageVer);
     PUSH_BACK_BYTES(payload, messageType);
     PUSH_BACK_BYTES(payload, propertyId);
     PUSH_BACK_BYTES(payload, amount);
     if (!v0) {
-        mastercore::swapByteOrder32(distributionProperty);
+        SwapByteOrder32(distributionProperty);
         PUSH_BACK_BYTES(payload, distributionProperty);
     }
 
@@ -132,11 +150,11 @@ std::vector<unsigned char> CreatePayload_IssuanceFixed(uint8_t ecosystem, uint16
     std::vector<unsigned char> payload;
     uint16_t messageType = 50;
     uint16_t messageVer = 0;
-    mastercore::swapByteOrder16(messageVer);
-    mastercore::swapByteOrder16(messageType);
-    mastercore::swapByteOrder16(propertyType);
-    mastercore::swapByteOrder32(previousPropertyId);
-    mastercore::swapByteOrder64(amount);
+    SwapByteOrder16(messageVer);
+    SwapByteOrder16(messageType);
+    SwapByteOrder16(propertyType);
+    SwapByteOrder32(previousPropertyId);
+    SwapByteOrder64(amount);
     if (category.size() > 255) category = category.substr(0,255);
     if (subcategory.size() > 255) subcategory = subcategory.substr(0,255);
     if (name.size() > 255) name = name.substr(0,255);
@@ -170,13 +188,13 @@ std::vector<unsigned char> CreatePayload_IssuanceVariable(uint8_t ecosystem, uin
     std::vector<unsigned char> payload;
     uint16_t messageType = 51;
     uint16_t messageVer = 0;
-    mastercore::swapByteOrder16(messageVer);
-    mastercore::swapByteOrder16(messageType);
-    mastercore::swapByteOrder16(propertyType);
-    mastercore::swapByteOrder32(previousPropertyId);
-    mastercore::swapByteOrder32(propertyIdDesired);
-    mastercore::swapByteOrder64(amountPerUnit);
-    mastercore::swapByteOrder64(deadline);
+    SwapByteOrder16(messageVer);
+    SwapByteOrder16(messageType);
+    SwapByteOrder16(propertyType);
+    SwapByteOrder32(previousPropertyId);
+    SwapByteOrder32(propertyIdDesired);
+    SwapByteOrder64(amountPerUnit);
+    SwapByteOrder64(deadline);
     if (category.size() > 255) category = category.substr(0,255);
     if (subcategory.size() > 255) subcategory = subcategory.substr(0,255);
     if (name.size() > 255) name = name.substr(0,255);
@@ -213,10 +231,10 @@ std::vector<unsigned char> CreatePayload_IssuanceManaged(uint8_t ecosystem, uint
     std::vector<unsigned char> payload;
     uint16_t messageType = 54;
     uint16_t messageVer = 0;
-    mastercore::swapByteOrder16(messageVer);
-    mastercore::swapByteOrder16(messageType);
-    mastercore::swapByteOrder16(propertyType);
-    mastercore::swapByteOrder32(previousPropertyId);
+    SwapByteOrder16(messageVer);
+    SwapByteOrder16(messageType);
+    SwapByteOrder16(propertyType);
+    SwapByteOrder32(previousPropertyId);
     if (category.size() > 255) category = category.substr(0,255);
     if (subcategory.size() > 255) subcategory = subcategory.substr(0,255);
     if (name.size() > 255) name = name.substr(0,255);
@@ -247,9 +265,9 @@ std::vector<unsigned char> CreatePayload_CloseCrowdsale(uint32_t propertyId)
     std::vector<unsigned char> payload;
     uint16_t messageType = 53;
     uint16_t messageVer = 0;
-    mastercore::swapByteOrder16(messageType);
-    mastercore::swapByteOrder16(messageVer);
-    mastercore::swapByteOrder32(propertyId);
+    SwapByteOrder16(messageType);
+    SwapByteOrder16(messageVer);
+    SwapByteOrder32(propertyId);
 
     PUSH_BACK_BYTES(payload, messageVer);
     PUSH_BACK_BYTES(payload, messageType);
@@ -263,10 +281,10 @@ std::vector<unsigned char> CreatePayload_Grant(uint32_t propertyId, uint64_t amo
     std::vector<unsigned char> payload;
     uint16_t messageType = 55;
     uint16_t messageVer = 0;
-    mastercore::swapByteOrder16(messageType);
-    mastercore::swapByteOrder16(messageVer);
-    mastercore::swapByteOrder32(propertyId);
-    mastercore::swapByteOrder64(amount);
+    SwapByteOrder16(messageType);
+    SwapByteOrder16(messageVer);
+    SwapByteOrder32(propertyId);
+    SwapByteOrder64(amount);
     if (memo.size() > 255) memo = memo.substr(0,255);
 
     PUSH_BACK_BYTES(payload, messageVer);
@@ -285,10 +303,10 @@ std::vector<unsigned char> CreatePayload_Revoke(uint32_t propertyId, uint64_t am
     std::vector<unsigned char> payload;
     uint16_t messageType = 56;
     uint16_t messageVer = 0;
-    mastercore::swapByteOrder16(messageType);
-    mastercore::swapByteOrder16(messageVer);
-    mastercore::swapByteOrder32(propertyId);
-    mastercore::swapByteOrder64(amount);
+    SwapByteOrder16(messageType);
+    SwapByteOrder16(messageVer);
+    SwapByteOrder32(propertyId);
+    SwapByteOrder64(amount);
     if (memo.size() > 255) memo = memo.substr(0,255);
 
     PUSH_BACK_BYTES(payload, messageVer);
@@ -306,9 +324,9 @@ std::vector<unsigned char> CreatePayload_ChangeIssuer(uint32_t propertyId)
     std::vector<unsigned char> payload;
     uint16_t messageType = 70;
     uint16_t messageVer = 0;
-    mastercore::swapByteOrder16(messageType);
-    mastercore::swapByteOrder16(messageVer);
-    mastercore::swapByteOrder32(propertyId);
+    SwapByteOrder16(messageType);
+    SwapByteOrder16(messageVer);
+    SwapByteOrder32(propertyId);
 
     PUSH_BACK_BYTES(payload, messageVer);
     PUSH_BACK_BYTES(payload, messageType);
@@ -322,9 +340,9 @@ std::vector<unsigned char> CreatePayload_EnableFreezing(uint32_t propertyId)
     std::vector<unsigned char> payload;
     uint16_t messageType = 71;
     uint16_t messageVer = 0;
-    mastercore::swapByteOrder16(messageType);
-    mastercore::swapByteOrder16(messageVer);
-    mastercore::swapByteOrder32(propertyId);
+    SwapByteOrder16(messageType);
+    SwapByteOrder16(messageVer);
+    SwapByteOrder32(propertyId);
 
     PUSH_BACK_BYTES(payload, messageVer);
     PUSH_BACK_BYTES(payload, messageType);
@@ -338,9 +356,9 @@ std::vector<unsigned char> CreatePayload_DisableFreezing(uint32_t propertyId)
     std::vector<unsigned char> payload;
     uint16_t messageType = 72;
     uint16_t messageVer = 0;
-    mastercore::swapByteOrder16(messageType);
-    mastercore::swapByteOrder16(messageVer);
-    mastercore::swapByteOrder32(propertyId);
+    SwapByteOrder16(messageType);
+    SwapByteOrder16(messageVer);
+    SwapByteOrder32(propertyId);
 
     PUSH_BACK_BYTES(payload, messageVer);
     PUSH_BACK_BYTES(payload, messageType);
@@ -354,10 +372,10 @@ std::vector<unsigned char> CreatePayload_FreezeTokens(uint32_t propertyId, uint6
     std::vector<unsigned char> payload;
     uint16_t messageType = 185;
     uint16_t messageVer = 0;
-    mastercore::swapByteOrder16(messageType);
-    mastercore::swapByteOrder16(messageVer);
-    mastercore::swapByteOrder32(propertyId);
-    mastercore::swapByteOrder64(amount);
+    SwapByteOrder16(messageType);
+    SwapByteOrder16(messageVer);
+    SwapByteOrder32(propertyId);
+    SwapByteOrder64(amount);
     std::vector<unsigned char> addressBytes = AddressToBytes(address);
 
     PUSH_BACK_BYTES(payload, messageVer);
@@ -374,10 +392,10 @@ std::vector<unsigned char> CreatePayload_UnfreezeTokens(uint32_t propertyId, uin
     std::vector<unsigned char> payload;
     uint16_t messageType = 186;
     uint16_t messageVer = 0;
-    mastercore::swapByteOrder16(messageType);
-    mastercore::swapByteOrder16(messageVer);
-    mastercore::swapByteOrder32(propertyId);
-    mastercore::swapByteOrder64(amount);
+    SwapByteOrder16(messageType);
+    SwapByteOrder16(messageVer);
+    SwapByteOrder32(propertyId);
+    SwapByteOrder64(amount);
     std::vector<unsigned char> addressBytes = AddressToBytes(address);
 
     PUSH_BACK_BYTES(payload, messageVer);
@@ -396,12 +414,12 @@ std::vector<unsigned char> CreatePayload_MetaDExTrade(uint32_t propertyIdForSale
     uint16_t messageType = 25;
     uint16_t messageVer = 0;
 
-    mastercore::swapByteOrder16(messageVer);
-    mastercore::swapByteOrder16(messageType);
-    mastercore::swapByteOrder32(propertyIdForSale);
-    mastercore::swapByteOrder64(amountForSale);
-    mastercore::swapByteOrder32(propertyIdDesired);
-    mastercore::swapByteOrder64(amountDesired);
+    SwapByteOrder16(messageVer);
+    SwapByteOrder16(messageType);
+    SwapByteOrder32(propertyIdForSale);
+    SwapByteOrder64(amountForSale);
+    SwapByteOrder32(propertyIdDesired);
+    SwapByteOrder64(amountDesired);
 
     PUSH_BACK_BYTES(payload, messageVer);
     PUSH_BACK_BYTES(payload, messageType);
@@ -420,12 +438,12 @@ std::vector<unsigned char> CreatePayload_MetaDExCancelPrice(uint32_t propertyIdF
     uint16_t messageType = 26;
     uint16_t messageVer = 0;
 
-    mastercore::swapByteOrder16(messageVer);
-    mastercore::swapByteOrder16(messageType);
-    mastercore::swapByteOrder32(propertyIdForSale);
-    mastercore::swapByteOrder64(amountForSale);
-    mastercore::swapByteOrder32(propertyIdDesired);
-    mastercore::swapByteOrder64(amountDesired);
+    SwapByteOrder16(messageVer);
+    SwapByteOrder16(messageType);
+    SwapByteOrder32(propertyIdForSale);
+    SwapByteOrder64(amountForSale);
+    SwapByteOrder32(propertyIdDesired);
+    SwapByteOrder64(amountDesired);
 
     PUSH_BACK_BYTES(payload, messageVer);
     PUSH_BACK_BYTES(payload, messageType);
@@ -444,10 +462,10 @@ std::vector<unsigned char> CreatePayload_MetaDExCancelPair(uint32_t propertyIdFo
     uint16_t messageType = 27;
     uint16_t messageVer = 0;
 
-    mastercore::swapByteOrder16(messageVer);
-    mastercore::swapByteOrder16(messageType);
-    mastercore::swapByteOrder32(propertyIdForSale);
-    mastercore::swapByteOrder32(propertyIdDesired);
+    SwapByteOrder16(messageVer);
+    SwapByteOrder16(messageType);
+    SwapByteOrder32(propertyIdForSale);
+    SwapByteOrder32(propertyIdDesired);
 
     PUSH_BACK_BYTES(payload, messageVer);
     PUSH_BACK_BYTES(payload, messageType);
@@ -464,8 +482,8 @@ std::vector<unsigned char> CreatePayload_MetaDExCancelEcosystem(uint8_t ecosyste
     uint16_t messageType = 28;
     uint16_t messageVer = 0;
 
-    mastercore::swapByteOrder16(messageVer);
-    mastercore::swapByteOrder16(messageType);
+    SwapByteOrder16(messageVer);
+    SwapByteOrder16(messageType);
 
     PUSH_BACK_BYTES(payload, messageVer);
     PUSH_BACK_BYTES(payload, messageType);
@@ -481,9 +499,9 @@ std::vector<unsigned char> CreatePayload_DeactivateFeature(uint16_t featureId)
     uint16_t messageVer = 65535;
     uint16_t messageType = 65533;
 
-    mastercore::swapByteOrder16(messageVer);
-    mastercore::swapByteOrder16(messageType);
-    mastercore::swapByteOrder16(featureId);
+    SwapByteOrder16(messageVer);
+    SwapByteOrder16(messageType);
+    SwapByteOrder16(featureId);
 
     PUSH_BACK_BYTES(payload, messageVer);
     PUSH_BACK_BYTES(payload, messageType);
@@ -499,11 +517,11 @@ std::vector<unsigned char> CreatePayload_ActivateFeature(uint16_t featureId, uin
     uint16_t messageVer = 65535;
     uint16_t messageType = 65534;
 
-    mastercore::swapByteOrder16(messageVer);
-    mastercore::swapByteOrder16(messageType);
-    mastercore::swapByteOrder16(featureId);
-    mastercore::swapByteOrder32(activationBlock);
-    mastercore::swapByteOrder32(minClientVersion);
+    SwapByteOrder16(messageVer);
+    SwapByteOrder16(messageType);
+    SwapByteOrder16(featureId);
+    SwapByteOrder32(activationBlock);
+    SwapByteOrder32(minClientVersion);
 
     PUSH_BACK_BYTES(payload, messageVer);
     PUSH_BACK_BYTES(payload, messageType);
@@ -520,10 +538,10 @@ std::vector<unsigned char> CreatePayload_OmniCoreAlert(uint16_t alertType, uint3
     uint16_t messageType = 65535;
     uint16_t messageVer = 65535;
 
-    mastercore::swapByteOrder16(messageVer);
-    mastercore::swapByteOrder16(messageType);
-    mastercore::swapByteOrder16(alertType);
-    mastercore::swapByteOrder32(expiryValue);
+    SwapByteOrder16(messageVer);
+    SwapByteOrder16(messageType);
+    SwapByteOrder16(alertType);
+    SwapByteOrder32(expiryValue);
 
     PUSH_BACK_BYTES(payload, messageVer);
     PUSH_BACK_BYTES(payload, messageType);

@@ -13,6 +13,7 @@
 #include "omnicore/errors.h"
 #include "omnicore/mdex.h"
 #include "omnicore/omnicore.h"
+#include "omnicore/parsing.h"
 #include "omnicore/pending.h"
 #include "omnicore/rpctxobject.h"
 #include "omnicore/sp.h"

@@ -21,6 +21,7 @@
 #include "omnicore/rules.h"
 #include "omnicore/sp.h"
 #include "omnicore/tx.h"
+#include "omnicore/parsing.h"
 #include "omnicore/pending.h"
 #include "omnicore/utilsbitcoin.h"
 #include "omnicore/wallettxs.h"

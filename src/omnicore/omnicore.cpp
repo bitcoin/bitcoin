@@ -27,7 +27,7 @@
 #include "omnicore/sp.h"
 #include "omnicore/tally.h"
 #include "omnicore/tx.h"
-#include "omnicore/utils.h"
+#include "omnicore/parsing.h"
 #include "omnicore/utilsbitcoin.h"
 #include "omnicore/version.h"
 #include "omnicore/walletcache.h"

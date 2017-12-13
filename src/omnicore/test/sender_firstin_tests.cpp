@@ -1,10 +1,11 @@
 #include "omnicore/test/utils_tx.h"
 
+#include "omnicore/createpayload.h"
+#include "omnicore/encoding.h"
 #include "omnicore/omnicore.h"
+#include "omnicore/parsing.h"
 #include "omnicore/script.h"
 #include "omnicore/tx.h"
-#include "omnicore/encoding.h"
-#include "omnicore/createpayload.h"
 
 #include "base58.h"
 #include "coins.h"

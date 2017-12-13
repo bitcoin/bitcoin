@@ -16,6 +16,7 @@
 #include "omnicore/fetchwallettx.h"
 #include "omnicore/mdex.h"
 #include "omnicore/omnicore.h"
+#include "omnicore/parsing.h"
 #include "omnicore/pending.h"
 #include "omnicore/rpc.h"
 #include "omnicore/rpctxobject.h"

@@ -19,6 +19,7 @@
 #include "omnicore/mdex.h"
 #include "omnicore/notifications.h"
 #include "omnicore/omnicore.h"
+#include "omnicore/parsing.h"
 #include "omnicore/rpcrequirements.h"
 #include "omnicore/rpctx.h"
 #include "omnicore/rpctxobject.h"
