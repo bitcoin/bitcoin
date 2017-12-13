@@ -109,7 +109,7 @@
         <file alias="default">res/themes/default.qss</file>
     </qresource>
     <qresource prefix="/fonts">
-        <file alias="weblysleek">res/fonts/WeblySleek.ttf</file>
+        <file alias="notosans-regular">res/fonts/NotoSans-Regular.ttf</file>
     </qresource>
     <qresource prefix="/controls">
         <file alias="caret-down">res/images/controls/caret-down.png</file>
