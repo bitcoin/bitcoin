@@ -14,7 +14,6 @@
 #include "omnicore/dex.h"
 #include "omnicore/errors.h"
 #include "omnicore/fees.h"
-#include "omnicore/fetchwallettx.h"
 #include "omnicore/log.h"
 #include "omnicore/mdex.h"
 #include "omnicore/notifications.h"
@@ -31,6 +30,7 @@
 #include "omnicore/tx.h"
 #include "omnicore/utilsbitcoin.h"
 #include "omnicore/version.h"
+#include "omnicore/walletfetchtxs.h"
 #include "omnicore/wallettxs.h"
 
 #include "amount.h"

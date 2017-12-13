@@ -12,7 +12,6 @@ OMNICORE_H = \
   omnicore/encoding.h \
   omnicore/errors.h \
   omnicore/fees.h \
-  omnicore/fetchwallettx.h \
   omnicore/log.h \
   omnicore/mbstring.h \
   omnicore/mdex.h \
@@ -39,6 +38,7 @@ OMNICORE_H = \
   omnicore/utilsbitcoin.h \
   omnicore/version.h \
   omnicore/walletcache.h \
+  omnicore/walletfetchtxs.h \
   omnicore/wallettxbuilder.h \
   omnicore/wallettxs.h
 
@@ -55,7 +55,6 @@ OMNICORE_CPP = \
   omnicore/dex.cpp \
   omnicore/encoding.cpp \
   omnicore/fees.cpp \
-  omnicore/fetchwallettx.cpp \
   omnicore/log.cpp \
   omnicore/mbstring.cpp \
   omnicore/mdex.cpp \
@@ -81,6 +80,7 @@ OMNICORE_CPP = \
   omnicore/utilsbitcoin.cpp \
   omnicore/version.cpp \
   omnicore/walletcache.cpp \
+  omnicore/walletfetchtxs.cpp \
   omnicore/wallettxbuilder.cpp \
   omnicore/wallettxs.cpp
 

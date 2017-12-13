@@ -13,7 +13,6 @@
 #include "clientmodel.h"
 #include "platformstyle.h"
 
-#include "omnicore/fetchwallettx.h"
 #include "omnicore/mdex.h"
 #include "omnicore/omnicore.h"
 #include "omnicore/parsing.h"
@@ -24,6 +23,7 @@
 #include "omnicore/tx.h"
 #include "omnicore/utilsbitcoin.h"
 #include "omnicore/walletcache.h"
+#include "omnicore/walletfetchtxs.h"
 #include "omnicore/wallettxs.h"
 
 #include "amount.h"

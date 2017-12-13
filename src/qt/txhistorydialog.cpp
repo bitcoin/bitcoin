@@ -14,7 +14,6 @@
 
 #include "omnicore/dbspinfo.h"
 #include "omnicore/dbstolist.h"
-#include "omnicore/fetchwallettx.h"
 #include "omnicore/omnicore.h"
 #include "omnicore/parsing.h"
 #include "omnicore/pending.h"
@@ -24,6 +23,7 @@
 #include "omnicore/tx.h"
 #include "omnicore/utilsbitcoin.h"
 #include "omnicore/walletcache.h"
+#include "omnicore/walletfetchtxs.h"
 #include "omnicore/wallettxs.h"
 
 #include "init.h"
