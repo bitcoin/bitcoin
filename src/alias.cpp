@@ -2713,9 +2713,9 @@ UniValue aliasupdatewhitelist(const UniValue& params, bool fHelp) {
 	return res;
 }
 UniValue aliasclearwhitelist(const UniValue& params, bool fHelp) {
-	if (fHelp || params.size() != 2)
+	if (fHelp || params.size() != 3)
 		throw runtime_error(
-			"aliasclearwhitelist [owner alias] [witness]\n"
+			"aliasclearwhitelist [owner alias] [witness] [instantsend]\n"
 			"Clear your whitelist(controls who can resell).\n"
 			+ HelpRequiringPassphrase());
 	// gather & validate inputs
