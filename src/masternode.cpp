@@ -115,7 +115,7 @@ CMasternode::CollateralStatus CMasternode::CheckCollateral(const COutPoint& outp
         return COLLATERAL_INVALID_AMOUNT;
     }
 
-	if (pubkey == CPubKey() || coin.out.scriptPubKey != GetScriptForDestination(pubkey.GetID())) {
+	if (pubkey == CPubKey() || coin.vout[outpoint.n].scriptPubKey != GetScriptForDestination(pubkey.GetID())) {
 		return COLLATERAL_INVALID_PUBKEY;
 	}
 
@@ -143,7 +143,7 @@ void CMasternode::Check(bool fForce)
         if(!lockMain) return;
 
 		CCoins coin;
-		if (!GetUTXOCoin(vin.prevout, coin)) {
+		if (!GetUTXOCoins(vin.prevout, coins)) {
             nActiveState = MASTERNODE_OUTPOINT_SPENT;
             LogPrint("masternode", "CMasternode::Check -- Failed to find Masternode UTXO, masternode=%s\n", vin.prevout.ToStringShort());
             return;
