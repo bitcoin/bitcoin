@@ -31,7 +31,7 @@ extern mongoc_collection_t *escrow_collection;
 extern mongoc_collection_t *escrowbid_collection;
 extern mongoc_collection_t *feedback_collection;
 extern CScript _createmultisig_redeemScript(const UniValue& params);
-extern void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsigned char> &vchWitness, const CRecipient &aliasRecipient, CRecipient &aliasPaymentRecipient, vector<CRecipient> &vecSend, CWalletTx& wtxNew, CCoinControl* coinControl, bool transferAlias=false);
+extern void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsigned char> &vchWitness, const CRecipient &aliasRecipient, CRecipient &aliasPaymentRecipient, vector<CRecipient> &vecSend, CWalletTx& wtxNew, CCoinControl* coinControl, bool fUseInstantSend, bool transferAlias=false);
 void PutToEscrowList(std::vector<CEscrow> &escrowList, CEscrow& index) {
 	int i = escrowList.size() - 1;
 	BOOST_REVERSE_FOREACH(CEscrow &o, escrowList) {
@@ -1479,20 +1479,23 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
     return true;
 }
 UniValue escrowbid(const UniValue& params, bool fHelp) {
-	if (fHelp || params.size() != 5)
+	if (fHelp || params.size() != 6)
 		throw runtime_error(
-			"escrowbid [alias] [escrow] [bid_in_payment_option] [bid_in_offer_currency] [witness]\n"
+			"escrowbid [alias] [escrow] [bid_in_payment_option] [bid_in_offer_currency] [witness] [instantsend]\n"
 			"<alias> An alias you own.\n"
 			"<escrow> Escrow GUID to place bid on.\n"
 			"<bid_in_payment_option> Amount to bid on offer through escrow. Bid is in payment option currency. Example: If offer is paid in SYS and you have deposited 10 SYS in escrow and would like to increase your total bid to 14 SYS enter 14 here. It is per unit of purchase.\n"
 			"<bid_in_offer_currency> Converted value of bid_in_payment_option from paymentOption currency to offer currency. For example: offer is priced in USD and purchased in BTC, this field will be the BTC/USD value. It is per unit of purchase.\n"
 			"<witness> Witness alias name that will sign for web-of-trust notarization of this transaction.\n"
+			"<instantsend> Set to true to use InstantSend to send this transaction or false otherwise.\n"
 			+ HelpRequiringPassphrase());
 
 	vector<unsigned char> vchAlias = vchFromValue(params[0]);
 	vector<unsigned char> vchEscrow = vchFromValue(params[1]);
 	CAmount nBid = AmountFromValue(params[2].get_real());
 	float fBid = params[3].get_real();
+	bool fUseInstantSend = false;
+	fUseInstantSend = params[4].get_bool();
 	uint64_t nHeight = chainActive.Tip()->nHeight;
 	// check for alias existence in DB
 	CAliasIndex bidalias;
@@ -1562,18 +1565,19 @@ UniValue escrowbid(const UniValue& params, bool fHelp) {
 	CCoinControl coinControl;
 	coinControl.fAllowOtherInputs = false;
 	coinControl.fAllowWatchOnly = false;
-	SendMoneySyscoin(vchAlias, vchWitness, aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
+	SendMoneySyscoin(vchAlias, vchWitness, aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl, fUseInstantSend);
 	UniValue res(UniValue::VARR);
 	res.push_back(EncodeHexTx(wtx));
 	return res;
 }
 UniValue escrowaddshipping(const UniValue& params, bool fHelp) {
-	if (fHelp || params.size() != 3)
+	if (fHelp || params.size() != 4)
 		throw runtime_error(
-			"escrowaddshipping [escrow] [shipping amount] [witness]\n"
+			"escrowaddshipping [escrow] [shipping amount] [witness] [instantsend]\n"
 			"<escrow> Escrow GUID to add shipping to.\n"
 			"<shipping amount> Amount to add to shipping for merchant. Amount is in payment option currency. Example: If merchant requests 0.1 BTC for shipping and escrow is paid in BTC, enter 0.1 here.\n"
 			"<witness> Witness alias name that will sign for web-of-trust notarization of this transaction.\n"
+			"<instantsend> Set to true to use InstantSend to send this transaction or false otherwise.\n"
 			+ HelpRequiringPassphrase());
 
 	vector<unsigned char> vchEscrow = vchFromValue(params[0]);
@@ -1582,7 +1586,8 @@ UniValue escrowaddshipping(const UniValue& params, bool fHelp) {
 
 	vector<unsigned char> vchWitness;
 	vchWitness = vchFromValue(params[2]);
-
+	bool fUseInstantSend = false;
+	fUseInstantSend = params[3].get_bool();
 	CScript scriptPubKeyAliasOrig, scriptPubKeyAlias;
 	CEscrow theEscrow;
 
@@ -1651,15 +1656,15 @@ UniValue escrowaddshipping(const UniValue& params, bool fHelp) {
 	CCoinControl coinControl;
 	coinControl.fAllowOtherInputs = false;
 	coinControl.fAllowWatchOnly = false;
-	SendMoneySyscoin(bidderalias.vchAlias, vchWitness, aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
+	SendMoneySyscoin(bidderalias.vchAlias, vchWitness, aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl, fUseInstantSend);
 	UniValue res(UniValue::VARR);
 	res.push_back(EncodeHexTx(wtx));
 	return res;
 }
 UniValue escrownew(const UniValue& params, bool fHelp) {
-    if (fHelp || params.size() != 16)
+    if (fHelp || params.size() != 17)
         throw runtime_error(
-			"escrownew [getamountandaddress] [alias] [arbiter alias] [offer] [quantity] [buynow] [total_in_payment_option] [shipping amount] [network fee] [arbiter fee] [witness fee] [extTx] [payment option] [bid_in_payment_option] [bid_in_offer_currency] [witness]\n"
+			"escrownew [getamountandaddress] [alias] [arbiter alias] [offer] [quantity] [buynow] [total_in_payment_option] [shipping amount] [network fee] [arbiter fee] [witness fee] [extTx] [payment option] [bid_in_payment_option] [bid_in_offer_currency] [witness] [instantsend]\n"
 				"<getamountandaddress> True or false. Get deposit and total escrow amount aswell as escrow address for funding. If buynow is false pass bid amount in bid_in_payment_option to get total needed to complete escrow. If buynow is true amount is calculated based on offer price and quantity.\n"
 				"<alias> An alias you own.\n"
 				"<arbiter alias> Alias of Arbiter.\n"
@@ -1676,6 +1681,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 				"<bid_in_payment_option> Initial bid amount you are willing to pay escrow for this offer. Amount is in paymentOption currency. It is per unit of purchase. If buynow is set to true, this value is disregarded.\n"
 				"<bid_in_offer_currency> Converted value of bid_in_payment_option from paymentOption currency to offer currency. For example: offer is priced in USD and purchased in BTC, this field will be the BTC/USD value. If buynow is set to true, this value is disregarded.\n"
                 "<witness> Witness alias name that will sign for web-of-trust notarization of this transaction.\n"	
+				"<instantsend> Set to true to use InstantSend to send this transaction or false otherwise.\n"
 				+ HelpRequiringPassphrase());
 	bool bGetAmountAndAddress = params[0].get_bool();
 	vector<unsigned char> vchAlias = vchFromValue(params[1]);
@@ -1734,6 +1740,9 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 
 	vector<unsigned char> vchWitness;
 	vchWitness = vchFromValue(params[15]);
+
+	bool fUseInstantSend = false;
+	fUseInstantSend = params[16].get_bool();
 
 	CAliasIndex buyeralias;
 	if (!GetAlias(vchAlias, buyeralias))
@@ -1928,23 +1937,25 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	CCoinControl coinControl;
 	coinControl.fAllowOtherInputs = false;
 	coinControl.fAllowWatchOnly = false;
-	SendMoneySyscoin(buyeralias.vchAlias, vchWitness, aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
+	SendMoneySyscoin(buyeralias.vchAlias, vchWitness, aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl, fUseInstantSend);
 	UniValue res(UniValue::VARR);
 	res.push_back(EncodeHexTx(wtx));
 	res.push_back(stringFromVch(vchEscrow));
 	return res;
 }
 UniValue escrowacknowledge(const UniValue& params, bool fHelp) {
-	if (fHelp || params.size() != 2)
+	if (fHelp || params.size() != 3)
 		throw runtime_error(
-			"escrowacknowledge [escrow guid] [witness]\n"
+			"escrowacknowledge [escrow guid] [witness] [instantsend]\n"
 			"Acknowledge escrow payment as seller of offer.\n"
+			"<instantsend> Set to true to use InstantSend to send this transaction or false otherwise.\n"
 			+ HelpRequiringPassphrase());
 	// gather & validate inputs
 	vector<unsigned char> vchEscrow = vchFromValue(params[0]);
 	vector<unsigned char> vchWitness;
 	vchWitness = vchFromValue(params[1]);
-
+	bool fUseInstantSend = false;
+	fUseInstantSend = params[2].get_bool();
 
 
 	// this is a syscoin transaction
@@ -2019,7 +2030,7 @@ UniValue escrowacknowledge(const UniValue& params, bool fHelp) {
 	CCoinControl coinControl;
 	coinControl.fAllowOtherInputs = false;
 	coinControl.fAllowWatchOnly = false;
-	SendMoneySyscoin(escrow.linkAliasTuple.first, vchWitness, aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
+	SendMoneySyscoin(escrow.linkAliasTuple.first, vchWitness, aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl, fUseInstantSend);
 	UniValue res(UniValue::VARR);
 	res.push_back(EncodeHexTx(wtx));
 	return res;
@@ -2186,9 +2197,9 @@ UniValue escrowcreaterawtransaction(const UniValue& params, bool fHelp) {
 	return res;
 }
 UniValue escrowrelease(const UniValue& params, bool fHelp) {
-    if (fHelp || params.size() != 4)
+    if (fHelp || params.size() != 5)
         throw runtime_error(
-			"escrowrelease [escrow guid] [user role] [rawtx] [witness]\n"
+			"escrowrelease [escrow guid] [user role] [rawtx] [witness] [instantsend]\n"
 			"Releases escrow funds to seller. User role represents either 'buyer' or 'arbiter'. Third parameter (rawtx) is the signed response from escrowcreaterawtransaction. You must sign this transaction externally prior to passing in.\n"
                         + HelpRequiringPassphrase());
     // gather & validate inputs
@@ -2197,6 +2208,8 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	string rawtx = params[2].get_str();
 	vector<unsigned char> vchWitness;
 	vchWitness = vchFromValue(params[3]);
+	bool fUseInstantSend = false;
+	fUseInstantSend = params[4].get_bool();
     // this is a syscoin transaction
     CWalletTx wtx;
 
@@ -2292,7 +2305,7 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	CCoinControl coinControl;
 	coinControl.fAllowOtherInputs = false;
 	coinControl.fAllowWatchOnly = false;
-	SendMoneySyscoin(escrow.linkAliasTuple.first, vchWitness, aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
+	SendMoneySyscoin(escrow.linkAliasTuple.first, vchWitness, aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl, fUseInstantSend);
 
 	UniValue res(UniValue::VARR);
 	res.push_back(EncodeHexTx(wtx));
@@ -2300,12 +2313,13 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 }
 
 UniValue escrowcompleterelease(const UniValue& params, bool fHelp) {
-    if (fHelp || params.size() != 3)
+    if (fHelp || params.size() != 4)
         throw runtime_error(
-			"escrowcompleterelease [escrow guid] [rawtx] [witness]\n"
+			"escrowcompleterelease [escrow guid] [rawtx] [witness] [instantsend]\n"
                          "Completes an escrow release by creating the escrow complete release transaction on syscoin blockchain.\n"
 						 "<rawtx> Raw fully signed syscoin escrow transaction. It is the signed response from escrowcreaterawtransaction. You must sign this transaction externally prior to passing in.\n"
                          "<witness> Witness alias name that will sign for web-of-trust notarization of this transaction.\n"	
+						 "<instantsend> Set to true to use InstantSend to send this transaction or false otherwise.\n"
 						 + HelpRequiringPassphrase());
     // gather & validate inputs
     vector<unsigned char> vchEscrow = vchFromValue(params[0]);
@@ -2314,6 +2328,8 @@ UniValue escrowcompleterelease(const UniValue& params, bool fHelp) {
 	DecodeHexTx(myRawTx,rawTx);
 	vector<unsigned char> vchWitness;
 	vchWitness = vchFromValue(params[2]);
+	bool fUseInstantSend = false;
+	fUseInstantSend = params[3].get_bool();
     // this is a syscoin transaction
     CWalletTx wtx;
 
@@ -2377,7 +2393,7 @@ UniValue escrowcompleterelease(const UniValue& params, bool fHelp) {
 	CCoinControl coinControl;
 	coinControl.fAllowOtherInputs = false;
 	coinControl.fAllowWatchOnly = false;
-	SendMoneySyscoin(escrow.linkAliasTuple.first, vchWitness, aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
+	SendMoneySyscoin(escrow.linkAliasTuple.first, vchWitness, aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl, fUseInstantSend);
 	UniValue returnRes;
 	UniValue sendParams(UniValue::VARR);
 	sendParams.push_back(rawTx);
@@ -2396,9 +2412,9 @@ UniValue escrowcompleterelease(const UniValue& params, bool fHelp) {
 	return res;
 }
 UniValue escrowrefund(const UniValue& params, bool fHelp) {
-	if (fHelp || params.size() != 4)
+	if (fHelp || params.size() != 5)
 		throw runtime_error(
-			"escrowrefund [escrow guid] [user role] [rawtx] [witness]\n"
+			"escrowrefund [escrow guid] [user role] [rawtx] [witness] [instantsend]\n"
 			"Refunds escrow funds to buyer. User role represents either 'seller' or 'arbiter'. Third parameter (rawtx) is the signed response from escrowreleasecreaterawtransaction. You must sign this transaction externally prior to passing in.\n"
 			+ HelpRequiringPassphrase());
 	// gather & validate inputs
@@ -2407,6 +2423,8 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 	string rawtx = params[2].get_str();
 	vector<unsigned char> vchWitness;
 	vchWitness = vchFromValue(params[3]);
+	bool fUseInstantSend = false;
+	fUseInstantSend = params[4].get_bool();
 	// this is a syscoin transaction
 	CWalletTx wtx;
 
@@ -2500,7 +2518,7 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 	CCoinControl coinControl;
 	coinControl.fAllowOtherInputs = false;
 	coinControl.fAllowWatchOnly = false;
-	SendMoneySyscoin(escrow.linkAliasTuple.first, vchWitness, aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
+	SendMoneySyscoin(escrow.linkAliasTuple.first, vchWitness, aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl, fUseInstantSend);
 
 	UniValue res(UniValue::VARR);
 	res.push_back(EncodeHexTx(wtx));
@@ -2508,12 +2526,13 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 }
 
 UniValue escrowcompleterefund(const UniValue& params, bool fHelp) {
-	if (fHelp || params.size() != 3)
+	if (fHelp || params.size() != 4)
 		throw runtime_error(
-			"escrowcompleterefund [escrow guid] [rawtx] [witness]\n"
+			"escrowcompleterefund [escrow guid] [rawtx] [witness] [instantsend]\n"
 			"Completes an escrow refund by creating the escrow complete refund transaction on syscoin blockchain.\n"
 			"<rawtx> Raw fully signed syscoin escrow transaction. It is the signed response from escrowcreaterawtransaction. You must sign this transaction externally prior to passing in.\n"
 			"<witness> Witness alias name that will sign for web-of-trust notarization of this transaction.\n"
+			"<instantsend> Set to true to use InstantSend to send this transaction or false otherwise.\n"
 			+ HelpRequiringPassphrase());
 	// gather & validate inputs
 	vector<unsigned char> vchEscrow = vchFromValue(params[0]);
@@ -2522,6 +2541,8 @@ UniValue escrowcompleterefund(const UniValue& params, bool fHelp) {
 	DecodeHexTx(myRawTx, rawTx);
 	vector<unsigned char> vchWitness;
 	vchWitness = vchFromValue(params[2]);
+	bool fUseInstantSend = false;
+	fUseInstantSend = params[3].get_bool();
 	// this is a syscoin transaction
 	CWalletTx wtx;
 
@@ -2588,7 +2609,7 @@ UniValue escrowcompleterefund(const UniValue& params, bool fHelp) {
 	CCoinControl coinControl;
 	coinControl.fAllowOtherInputs = false;
 	coinControl.fAllowWatchOnly = false;
-	SendMoneySyscoin(escrow.linkAliasTuple.first, vchWitness, aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
+	SendMoneySyscoin(escrow.linkAliasTuple.first, vchWitness, aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl, fUseInstantSend);
 	UniValue returnRes;
 	UniValue sendParams(UniValue::VARR);
 	sendParams.push_back(rawTx);
@@ -2607,9 +2628,9 @@ UniValue escrowcompleterefund(const UniValue& params, bool fHelp) {
 	return res;
 }
 UniValue escrowfeedback(const UniValue& params, bool fHelp) {
-    if (fHelp || params.size() != 6)
+    if (fHelp || params.size() != 7)
         throw runtime_error(
-			"escrowfeedback [escrow guid] [userfrom] [feedback] [rating] [userto] [witness]\n"
+			"escrowfeedback [escrow guid] [userfrom] [feedback] [rating] [userto] [witness] [instantsend]\n"
                         "Send feedback for primary and secondary users in escrow, depending on who you are. Ratings are numbers from 1 to 5. User From and User To is either 'buyer', 'seller', 'reseller', or 'arbiter'.\n"
                         + HelpRequiringPassphrase());
    // gather & validate inputs
@@ -2622,6 +2643,8 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 	string userto = params[4].get_str();
 	vector<unsigned char> vchWitness;
 	vchWitness = vchFromValue(params[5]);
+	bool fUseInstantSend = false;
+	fUseInstantSend = params[6].get_bool();
     // this is a syscoin transaction
     CWalletTx wtx;
 	CEscrow escrow;
@@ -2795,7 +2818,7 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 	CCoinControl coinControl;
 	coinControl.fAllowOtherInputs = false;
 	coinControl.fAllowWatchOnly = false;
-	SendMoneySyscoin(escrow.linkAliasTuple.first, vchWitness, aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
+	SendMoneySyscoin(escrow.linkAliasTuple.first, vchWitness, aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl, fUseInstantSend);
 	UniValue res(UniValue::VARR);
 	res.push_back(EncodeHexTx(wtx));
 	return res;

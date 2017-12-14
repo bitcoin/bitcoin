@@ -9,6 +9,7 @@
 #include "governance-object.h"
 #include "governance-vote.h"
 #include "instantx.h"
+#include "masternode-sync.h"
 #include "masternodeman.h"
 #include "messagesigner.h"
 #include "util.h"
@@ -419,74 +420,79 @@ bool CGovernanceObject::IsValidLocally(std::string& strError, bool fCheckCollate
 
 bool CGovernanceObject::IsValidLocally(std::string& strError, bool& fMissingMasternode, bool& fMissingConfirmations, bool fCheckCollateral)
 {
-    fMissingMasternode = false;
-    fMissingConfirmations = false;
+	fMissingMasternode = false;
+	fMissingConfirmations = false;
 
-    if(fUnparsable) {
-        strError = "Object data unparseable";
-        return false;
-    }
+	if (fUnparsable) {
+		strError = "Object data unparseable";
+		return false;
+	}
 
-    switch(nObjectType) {
-        case GOVERNANCE_OBJECT_PROPOSAL:
-        case GOVERNANCE_OBJECT_TRIGGER:
-        case GOVERNANCE_OBJECT_WATCHDOG:
-            break;
-        default:
-            strError = strprintf("Invalid object type %d", nObjectType);
-            return false;
-    }
+	switch (nObjectType) {
+	case GOVERNANCE_OBJECT_PROPOSAL:
+	case GOVERNANCE_OBJECT_TRIGGER:
+	case GOVERNANCE_OBJECT_WATCHDOG:
+		break;
+	default:
+		strError = strprintf("Invalid object type %d", nObjectType);
+		return false;
+	}
 
-    // IF ABSOLUTE NO COUNT (NO-YES VALID VOTES) IS MORE THAN 10% OF THE NETWORK MASTERNODES, OBJ IS INVALID
+	// IF ABSOLUTE NO COUNT (NO-YES VALID VOTES) IS MORE THAN 10% OF THE NETWORK MASTERNODES, OBJ IS INVALID
 
-    // CHECK COLLATERAL IF REQUIRED (HIGH CPU USAGE)
+	// CHECK COLLATERAL IF REQUIRED (HIGH CPU USAGE)
 
-    if(fCheckCollateral) { 
-        if((nObjectType == GOVERNANCE_OBJECT_TRIGGER) || (nObjectType == GOVERNANCE_OBJECT_WATCHDOG)) {
-            std::string strOutpoint = vinMasternode.prevout.ToStringShort();
-            masternode_info_t infoMn;
-            if(!mnodeman.GetMasternodeInfo(vinMasternode.prevout, infoMn)) {
+	if (fCheckCollateral) {
+		if ((nObjectType == GOVERNANCE_OBJECT_TRIGGER) || (nObjectType == GOVERNANCE_OBJECT_WATCHDOG)) {
+			std::string strOutpoint = vinMasternode.prevout.ToStringShort();
+			masternode_info_t infoMn;
+			if (!mnodeman.GetMasternodeInfo(vinMasternode.prevout, infoMn)) {
 
-                CMasternode::CollateralStatus err = CMasternode::CheckCollateral(vinMasternode.prevout);
-                if (err == CMasternode::COLLATERAL_OK) {
-                    fMissingMasternode = true;
-                    strError = "Masternode not found: " + strOutpoint;
-                } else if (err == CMasternode::COLLATERAL_UTXO_NOT_FOUND) {
-                    strError = "Failed to find Masternode UTXO, missing masternode=" + strOutpoint + "\n";
-                } else if (err == CMasternode::COLLATERAL_INVALID_AMOUNT) {
-                    strError = "Masternode UTXO should have 100000 SYS, missing masternode=" + strOutpoint + "\n";
-                }
+				CMasternode::CollateralStatus err = CMasternode::CheckCollateral(vinMasternode.prevout, CPubKey());
+				if (err == CMasternode::COLLATERAL_UTXO_NOT_FOUND) {
+					strError = "Failed to find Masternode UTXO, missing masternode=" + strOutpoint + "\n";
+				}
+				else if (err == CMasternode::COLLATERAL_INVALID_AMOUNT) {
+					strError = "Masternode UTXO should have 1000 DASH, missing masternode=" + strOutpoint + "\n";
+				}
+				else if (err == CMasternode::COLLATERAL_INVALID_PUBKEY) {
+					fMissingMasternode = true;
+					strError = "Masternode not found: " + strOutpoint;
+				}
+				else if (err == CMasternode::COLLATERAL_OK) {
+					// this should never happen with CPubKey() as a param
+					strError = "CheckCollateral critical failure! Masternode: " + strOutpoint;
+				}
 
-                return false;
-            }
+				return false;
+			}
 
-            // Check that we have a valid MN signature
-            if(!CheckSignature(infoMn.pubKeyMasternode)) {
-                strError = "Invalid masternode signature for: " + strOutpoint + ", pubkey id = " + infoMn.pubKeyMasternode.GetID().ToString();
-                return false;
-            }
+			// Check that we have a valid MN signature
+			if (!CheckSignature(infoMn.pubKeyMasternode)) {
+				strError = "Invalid masternode signature for: " + strOutpoint + ", pubkey id = " + infoMn.pubKeyMasternode.GetID().ToString();
+				return false;
+			}
 
-            return true;
-        }
+			return true;
+		}
 
-        if (!IsCollateralValid(strError, fMissingConfirmations))
-            return false;
-    }
+		if (!IsCollateralValid(strError, fMissingConfirmations))
+			return false;
+	}
 
-    /*
-        TODO
+	/*
+	TODO
+	- There might be an issue with multisig in the coinbase on mainnet, we will add support for it in a future release.
+	- Post 12.2+ (test multisig coinbase transaction)
+	*/
 
-        - There might be an issue with multisig in the coinbase on mainnet, we will add support for it in a future release.
-        - Post 12.2+ (test multisig coinbase transaction)
-    */
+	// 12.1 - todo - compile error
+	// if(address.IsPayToScriptHash()) {
+	//     strError = "Governance system - multisig is not currently supported";
+	//     return false;
+	// }
 
-    // 12.1 - todo - compile error
-    // if(address.IsPayToScriptHash()) {
-    //     strError = "Governance system - multisig is not currently supported";
-    //     return false;
-    // }
-
-    return true;
+	return true;
 }
 
 CAmount CGovernanceObject::GetMinCollateralFee()
@@ -652,6 +658,11 @@ bool CGovernanceObject::GetCurrentMNVotes(const COutPoint& mnCollateralOutpoint,
 
 void CGovernanceObject::Relay(CConnman& connman)
 {
+	// Do not relay until fully synced
+	if (!masternodeSync.IsSynced()) {
+		LogPrint("gobject", "CGovernanceObject::Relay -- won't relay until fully synced\n");
+		return;
+	}
     CInv inv(MSG_GOVERNANCE_OBJECT, GetHash());
     connman.RelayInv(inv, MIN_GOVERNANCE_PEER_PROTO_VERSION);
 }

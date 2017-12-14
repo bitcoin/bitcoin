@@ -26,10 +26,10 @@ extern CInstantSend instantsend;
     ### getting 5 of 10 signatures w/ 1000 nodes of 2900
     (1000/2900.0)**5 = 0.004875397277841433
 */
-static const int INSTANTSEND_CONFIRMATIONS_REQUIRED = 6;
+static const int INSTANTSEND_CONFIRMATIONS_REQUIRED = 1;
 static const int DEFAULT_INSTANTSEND_DEPTH          = 5;
 
-static const int MIN_INSTANTSEND_PROTO_VERSION      = 70212;
+static const int MIN_INSTANTSEND_PROTO_VERSION      = 70213;
 
 // For how long we are going to accept votes/locks
 // after we saw the first one for a specific transaction
@@ -122,7 +122,7 @@ public:
 class CTxLockRequest : public CTransaction
 {
 private:
-    static const CAmount MIN_FEE            = 0.001 * COIN;
+    static const CAmount MIN_FEE            = 0.0001 * COIN;
 
 public:
     static const int WARN_MANY_INPUTS       = 100;

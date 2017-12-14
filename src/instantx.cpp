@@ -67,7 +67,6 @@ void CInstantSend::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataSt
 
         pfrom->setAskFor.erase(nVoteHash);
 
-		// SYSCOIN Ignore any InstantSend messages until masternode list is synced
 		if (!masternodeSync.IsMasternodeListSynced()) return;
 
         if(mapTxLockVotes.count(nVoteHash)) return;
@@ -936,17 +935,6 @@ bool CTxLockRequest::IsValid() const
     }
 
     CAmount nValueIn = 0;
-    CAmount nValueOut = 0;
-
-    BOOST_FOREACH(const CTxOut& txout, vout) {
-        // InstantSend supports normal scripts and unspendable (i.e. data) scripts.
-        // TODO: Look into other script types that are normal and can be included
-        if(!txout.scriptPubKey.IsNormalPaymentScript() && !txout.scriptPubKey.IsUnspendable()) {
-            LogPrint("instantsend", "CTxLockRequest::IsValid -- Invalid Script %s", ToString());
-            return false;
-        }
-        nValueOut += txout.nValue;
-    }
 
     BOOST_FOREACH(const CTxIn& txin, vin) {
 
@@ -974,6 +962,7 @@ bool CTxLockRequest::IsValid() const
         LogPrint("instantsend", "CTxLockRequest::IsValid -- Transaction value too high: nValueIn=%d, tx=%s", nValueIn, ToString());
         return false;
     }
+	CAmount nValueOut = GetValueOut();
 
     if(nValueIn - nValueOut < GetMinFee()) {
         LogPrint("instantsend", "CTxLockRequest::IsValid -- did not include enough fees in transaction: fees=%d, tx=%s", nValueOut - nValueIn, ToString());

@@ -31,6 +31,7 @@
 #include <boost/algorithm/string/find.hpp>
 #include <boost/assign/list_of.hpp>
 #include <mongoc.h>
+#include "instantx.h"
 using namespace std;
 CAliasDB *paliasdb = NULL;
 COfferDB *pofferdb = NULL;
@@ -40,7 +41,7 @@ typedef map<vector<unsigned char>, COutPoint > mapAliasRegistrationsType;
 typedef map<vector<unsigned char>, vector<unsigned char> > mapAliasRegistrationsDataType;
 mapAliasRegistrationsType mapAliasRegistrations;
 mapAliasRegistrationsDataType mapAliasRegistrationData;
-extern void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsigned char> &vchWitness, const CRecipient &aliasRecipient, CRecipient &aliasPaymentRecipient, vector<CRecipient> &vecSend, CWalletTx& wtxNew, CCoinControl* coinControl, bool transferAlias=false);
+extern void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsigned char> &vchWitness, const CRecipient &aliasRecipient, CRecipient &aliasPaymentRecipient, vector<CRecipient> &vecSend, CWalletTx& wtxNew, CCoinControl* coinControl, bool fUseInstantSend, bool transferAlias=false);
 extern int nIndexPort;
 mongoc_client_t *client = NULL;
 mongoc_database_t *database = NULL;
@@ -1988,25 +1989,26 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	coinControl.fAllowOtherInputs = true;
 	coinControl.fAllowWatchOnly = true;
 
-	SendMoneySyscoin(vchAlias, vchWitness, recipient, recipientPayment, vecSend, wtx, &coinControl);
+	SendMoneySyscoin(vchAlias, vchWitness, recipient, recipientPayment, vecSend, wtx, &coinControl, false);
 	UniValue res(UniValue::VARR);
 	res.push_back(EncodeHexTx(wtx));
 	res.push_back(strAddress);
 	return res;
 }
 UniValue aliasupdate(const UniValue& params, bool fHelp) {
-	if (fHelp || 8 != params.size())
+	if (fHelp || 9 != params.size())
 		throw runtime_error(
-			"aliasupdate [aliasname] [public value] [address] [accept_transfers=true] [expire_timestamp] [encryption_privatekey] [encryption_publickey] [witness]\n"
+			"aliasupdate [aliasname] [public value] [address] [accept_transfers=true] [expire_timestamp] [encryption_privatekey] [encryption_publickey] [witness] [instantsend]\n"
 						"Update and possibly transfer an alias.\n"
 						"<aliasname> alias name.\n"
 						"<public_value> alias public profile data, 256 characters max.\n"			
 						"<address> Address of alias.\n"		
-						"<accept_transfers> set to false if this alias should not allow a certificate to be transferred to it. Defaults to true.\n"		
+						"<accept_transfers> Set to false if this alias should not allow a certificate to be transferred to it. Defaults to true.\n"		
 						"<expire_timestamp> Time in seconds. Future time when to expire alias. It is exponentially more expensive per year, calculation is 2.88^years. FEERATE is the dynamic satoshi per byte fee set in the rate peg alias used for this alias. Defaults to 1 hour. Set to 0 if not changing expiration.\n"		
 						"<encryption_privatekey> Encrypted private key used for encryption/decryption of private data related to this alias. If transferring, the key should be encrypted to alias_pubkey.\n"
 						"<encryption_publickey> Public key used for encryption/decryption of private data related to this alias. Useful if you are changing pub/priv keypair for encryption on this alias.\n"						
 						"<witness> Witness alias name that will sign for web-of-trust notarization of this transaction.\n"	
+						"<instantsend> Set to true to use InstantSend to send this transaction or false otherwise.\n"
 						+ HelpRequiringPassphrase());
 	vector<unsigned char> vchAlias = vchFromString(params[0].get_str());
 	string strPrivateValue = "";
@@ -2031,6 +2033,9 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	
 	vector<unsigned char> vchWitness;
 	vchWitness = vchFromValue(params[7]);
+
+	bool fUseInstantSend = false;
+	fUseInstantSend = params[8].get_bool();
 
 	CAliasIndex theAlias;
 	if (!GetAlias(vchAlias, theAlias))
@@ -2097,7 +2102,7 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	if(newAddress.ToString() != EncodeBase58(copyAlias.vchAddress))
 		transferAlias = true;
 	
-	SendMoneySyscoin(vchAlias, vchWitness, recipient, recipientPayment, vecSend, wtx, &coinControl, transferAlias);
+	SendMoneySyscoin(vchAlias, vchWitness, recipient, recipientPayment, vecSend, wtx, &coinControl, fUseInstantSend, transferAlias);
 	UniValue res(UniValue::VARR);
 	res.push_back(EncodeHexTx(wtx));
 	return res;
@@ -2187,6 +2192,7 @@ UniValue syscoinsendrawtransaction(const UniValue& params, bool fHelp) {
 	CTransaction tx;
 	if (!DecodeHexTx(tx, hexstring))
 		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5534 - " + _("Could not send raw transaction: Cannot decode transaction from hex string"));
+
 	UniValue arraySendParams(UniValue::VARR);
 	arraySendParams.push_back(hexstring);
 	arraySendParams.push_back(fOverrideFees);
@@ -2253,7 +2259,7 @@ UniValue aliasbalance(const UniValue& params, bool fHelp)
     if (fHelp || params.size() != 1)
         throw runtime_error(
             "aliasbalance \"alias\"\n"
-            "\nReturns the total amount received by the given alias in transactions with at least 1 confirmation.\n"
+            "\nReturns the total amount received by the given alias in transactions.\n"
             "\nArguments:\n"
             "1. \"alias\"  (string, required) The syscoin alias for transactions.\n"
        );
@@ -2295,6 +2301,7 @@ UniValue aliasbalance(const UniValue& params, bool fHelp)
 		const std::vector<unsigned char> &data(ParseHex(find_value(utxoObj, "script").get_str()));
 		const CScript& scriptPubKey = CScript(data.begin(), data.end());
 		const CAmount &nValue = AmountFromValue(find_value(utxoObj, "satoshis"));
+		const int& nHeight = find_value(utxoObj, "height").get_int();
 		if (DecodeAliasScript(scriptPubKey, op, vvch))
 			continue;
 		// some smaller sized outputs are reserved to pay for fees only using aliasselectpaymentcoins (with bSelectFeePlacement set to true)
@@ -2509,9 +2516,9 @@ bool BuildAliasIndexerHistoryJson(const CAliasIndex& alias, UniValue& oName)
 }
 UniValue aliaspay(const UniValue& params, bool fHelp) {
 
-    if (fHelp || params.size() < 3 || params.size() > 6)
+    if (fHelp || params.size() < 3 || params.size() > 5)
         throw runtime_error(
-            "aliaspay aliasfrom currency {\"address\":amount,...} ( minconf \"comment\" subtractfeefromamount)\n"
+            "aliaspay aliasfrom currency {\"address\":amount,...} (instantsend subtractfeefromamount)\n"
             "\nSend multiple times from an alias. Amounts are double-precision floating point numbers."
             + HelpRequiringPassphrase() + "\n"
             "\nArguments:\n"
@@ -2522,11 +2529,10 @@ UniValue aliaspay(const UniValue& params, bool fHelp) {
             "      \"address\":amount   (numeric or string) The syscoin alias is the key, the numeric amount (can be string) in SYS is the value\n"
             "      ,...\n"
             "    }\n"
-			"4. minconf                 (numeric, optional, default=1) Only use the balance confirmed at least this many times.\n"
-            "5. \"comment\"             (string, optional) A comment\n"
-			"6. subtractfeefromamount   (string, optional) A json array with addresses.\n"
+			"4. instantsend				(boolean, optional) Set to true to use InstantSend to send this transaction or false otherwise.\n"
+			"5. subtractfeefromamount   (string, optional) A json array with addresses.\n"
             "\nResult:\n"
-            "\"transactionid\"          (string) The transaction id for the send. Only 1 transaction is created regardless of \n"
+			"\"transaction hex\"          (string) The transaction hex (unsigned) for signing and sending. Only 1 transaction is created regardless of \n"
             "                                    the number of addresses.\n"
             "\nExamples:\n"
             "\nSend two amounts to two different address or aliases, sends 0.01/0.02 SYS representing USD:\n"
@@ -2544,17 +2550,15 @@ UniValue aliaspay(const UniValue& params, bool fHelp) {
 
     string strCurrency = params[1].get_str();
     UniValue sendTo = params[2].get_obj();
-    int nMinDepth = 1;
-    if(CheckParam(params, 3))
-        nMinDepth = params[3].get_int();
-    CWalletTx wtx;
-    if(CheckParam(params, 4))
-        wtx.mapValue["comment"] = params[4].get_str();
 
 	UniValue subtractFeeFromAmount(UniValue::VARR);
-	if (params.size() > 5)
-		subtractFeeFromAmount = params[5].get_array();
+	if (params.size() > 4)
+		subtractFeeFromAmount = params[3].get_array();
 
+	bool fUseInstantSend = false;
+	if (params.size() > 5)
+		fUseInstantSend = params[4].get_bool();
+	CWalletTx wtx;
     set<CSyscoinAddress> setAddress;
     vector<CRecipient> vecSend;
 
@@ -2601,7 +2605,7 @@ UniValue aliaspay(const UniValue& params, bool fHelp) {
 	CSyscoinAddress addressAlias;
 	GetAddress(theAlias, &addressAlias, scriptPubKeyOrig);
 	CreateAliasRecipient(scriptPubKeyOrig, recipientPayment);	
-	SendMoneySyscoin(theAlias.vchAlias, vchFromString(""), recipient, recipientPayment, vecSend, wtx, &coinControl);
+	SendMoneySyscoin(theAlias.vchAlias, vchFromString(""), recipient, recipientPayment, vecSend, wtx, &coinControl, fUseInstantSend);
 	
 	UniValue res(UniValue::VARR);
 	res.push_back(EncodeHexTx(wtx));
@@ -2619,9 +2623,9 @@ UniValue aliasaddscript(const UniValue& params, bool fHelp) {
 	return res;
 }
 UniValue aliasupdatewhitelist(const UniValue& params, bool fHelp) {
-	if (fHelp || params.size() != 3)
+	if (fHelp || params.size() != 4)
 		throw runtime_error(
-			"aliasupdatewhitelist [owner alias] [{\"alias\":\"aliasname\",\"discount_percentage\":n},...] [witness]\n"
+			"aliasupdatewhitelist [owner alias] [{\"alias\":\"aliasname\",\"discount_percentage\":n},...] [witness] [instantsend]\n"
 			"Update to the whitelist(controls who can resell). Array of whitelist entries in parameter 1.\n"
 			"To add to list, include a new alias/discount percentage that does not exist in the whitelist.\n"
 			"To update entry, change the discount percentage of an existing whitelist entry.\n"
@@ -2634,6 +2638,7 @@ UniValue aliasupdatewhitelist(const UniValue& params, bool fHelp) {
 			"      ,...\n"
 			"    ]\n"
 			"<witness> Witness alias name that will sign for web-of-trust notarization of this transaction.\n"
+			"<instantsend> Set to true to use InstantSend to send this transaction or false otherwise.\n"
 			+ HelpRequiringPassphrase());
 
 	// gather & validate inputs
@@ -2641,6 +2646,8 @@ UniValue aliasupdatewhitelist(const UniValue& params, bool fHelp) {
 	UniValue whitelistEntries = params[1].get_array();
 	vector<unsigned char> vchWitness;
 	vchWitness = vchFromValue(params[2]);
+	bool fUseInstantSend = false;
+	fUseInstantSend = params[3].get_bool();
 	CWalletTx wtx;
 
 	// this is a syscoin txn
@@ -2699,22 +2706,24 @@ UniValue aliasupdatewhitelist(const UniValue& params, bool fHelp) {
 	CCoinControl coinControl;
 	coinControl.fAllowOtherInputs = false;
 	coinControl.fAllowWatchOnly = false;
-	SendMoneySyscoin(copyAlias.vchAlias, vchWitness, recipient, recipientPayment, vecSend, wtx, &coinControl);
+	SendMoneySyscoin(copyAlias.vchAlias, vchWitness, recipient, recipientPayment, vecSend, wtx, &coinControl, fUseInstantSend);
 
 	UniValue res(UniValue::VARR);
 	res.push_back(EncodeHexTx(wtx));
 	return res;
 }
 UniValue aliasclearwhitelist(const UniValue& params, bool fHelp) {
-	if (fHelp || params.size() != 2)
+	if (fHelp || params.size() != 3)
 		throw runtime_error(
-			"aliasclearwhitelist [owner alias] [witness]\n"
+			"aliasclearwhitelist [owner alias] [witness] [instantsend]\n"
 			"Clear your whitelist(controls who can resell).\n"
 			+ HelpRequiringPassphrase());
 	// gather & validate inputs
 	vector<unsigned char> vchAlias = vchFromValue(params[0]);
 	vector<unsigned char> vchWitness;
 	vchWitness = vchFromValue(params[1]);
+	bool fUseInstantSend = false;
+	fUseInstantSend = params[2].get_bool();
 	// this is a syscoind txn
 	CWalletTx wtx;
 	CScript scriptPubKeyOrig;
@@ -2759,7 +2768,7 @@ UniValue aliasclearwhitelist(const UniValue& params, bool fHelp) {
 	CCoinControl coinControl;
 	coinControl.fAllowOtherInputs = false;
 	coinControl.fAllowWatchOnly = false;
-	SendMoneySyscoin(copyAlias.vchAlias, vchWitness, recipient, recipientPayment, vecSend, wtx, &coinControl);
+	SendMoneySyscoin(copyAlias.vchAlias, vchWitness, recipient, recipientPayment, vecSend, wtx, &coinControl, fUseInstantSend);
 
 	UniValue res(UniValue::VARR);
 	res.push_back(EncodeHexTx(wtx));

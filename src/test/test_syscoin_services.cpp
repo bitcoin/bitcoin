@@ -655,7 +655,7 @@ string AliasTransfer(const string& node, const string& aliasname, const string& 
 	string acceptTransfers = bAcceptTransfers? "true": "false";
 	string address = aliasAddress.ToString();
 	string newpubdata = pubdata == "''" ? oldvalue : pubdata;
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasupdate " + aliasname + " " + newpubdata + " " + address + " " + acceptTransfers + " " + expires + " " + encryptionprivkey + " " + encryptionkey + " " + witness));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasupdate " + aliasname + " " + newpubdata + " " + address + " " + acceptTransfers + " " + expires + " " + encryptionprivkey + " " + encryptionkey + " " + witness + " false"));
 	UniValue varray = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + varray[0].get_str()));
 	string hex_str;
@@ -727,7 +727,7 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 	string newAddressStr = addressStr == "''" ? oldAddressStr : addressStr;
 	string acceptTransfers = bAcceptTransfers ? "true" : "false";
 	// "aliasupdate <aliasname> [public value]  [address] [accept_transfers=true] [expire_timestamp] [encryption_privatekey] [encryption_publickey] [witness]\n"
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasupdate " + aliasname + " " + newpubdata + " " + newAddressStr + " " + acceptTransfers + " " + expires + " " + encryptionprivkey + " " + encryptionkey + " " + witness));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasupdate " + aliasname + " " + newpubdata + " " + newAddressStr + " " + acceptTransfers + " " + expires + " " + encryptionprivkey + " " + encryptionkey + " " + witness + " false"));
 	UniValue varray = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + varray[0].get_str()));
 	string hex_str;
@@ -807,7 +807,7 @@ void AliasAddWhitelist(const string& node, const string& owneralias, const strin
 	bool found = false;
 	UniValue r;
 	string whiteListArray = "\"[{\\\"alias\\\":\\\"" + aliasname + "\\\",\\\"discount_percentage\\\":" + discount + "}]\"";
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasupdatewhitelist " + owneralias + " " + whiteListArray + " " + witness));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasupdatewhitelist " + owneralias + " " + whiteListArray + " " + witness + " false"));
 	UniValue varray = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + varray[0].get_str()));
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
@@ -829,7 +829,7 @@ void AliasRemoveWhitelist(const string& node, const string& owneralias, const st
 {
 	UniValue r;
 	string whiteListArray = "\"[{\\\"alias\\\":\\\"" + aliasname + "\\\",\\\"discount_percentage\\\":" + discount + "}]\"";
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasupdatewhitelist " + owneralias + " " + whiteListArray + " " + witness));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasupdatewhitelist " + owneralias + " " + whiteListArray + " " + witness + " false"));
 	UniValue varray = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + varray[0].get_str()));
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
@@ -845,7 +845,7 @@ void AliasRemoveWhitelist(const string& node, const string& owneralias, const st
 void AliasClearWhitelist(const string& node, const string& owneralias, const string &witness)
 {
 	UniValue r;
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasclearwhitelist " + owneralias + " " + witness));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasclearwhitelist " + owneralias + " " + witness + " false"));
 	UniValue varray = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + varray[0].get_str()));
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
@@ -938,7 +938,7 @@ const string CertNew(const string& node, const string& alias, const string& titl
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasinfo " + alias));
 
 
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "certnew " + alias + " " + title + " " + pubdata + " " + " certificates " + witness));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "certnew " + alias + " " + title + " " + pubdata + " " + " certificates " + witness + " false"));
 	UniValue arr = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + arr[0].get_str()));
 	string hex_str = find_value(r.get_obj(), "hex").get_str();
@@ -994,7 +994,7 @@ void CertUpdate(const string& node, const string& guid, const string& title, con
 	string newtitle = title == "''" ? oldtitle : title;
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasinfo " + oldalias));
 
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "certupdate " + guid + " " + newtitle + " " + newpubdata + " certificates " + witness));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "certupdate " + guid + " " + newtitle + " " + newpubdata + " certificates " + witness + " false"));
 	UniValue arr = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + arr[0].get_str()));
 	string hex_str = find_value(r.get_obj(), "hex").get_str();
@@ -1051,7 +1051,7 @@ void CertTransfer(const string& node, const string &tonode, const string& guid, 
 
 	if (pubdata.empty())
 		pubdata = "''";
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "certtransfer " + guid + " " + toalias + " " + pubdata + " 2 " + witness));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "certtransfer " + guid + " " + toalias + " " + pubdata + " 2 " + witness + " false"));
 	UniValue arr = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + arr[0].get_str()));
 	string hex_str = find_value(r.get_obj(), "hex").get_str();
@@ -1089,7 +1089,7 @@ const string OfferLink(const string& node, const string& alias, const string& gu
 	GetOtherNodes(node, otherNode1, otherNode2);
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "offerinfo " + guid));
 	const string &olddetails = find_value(r.get_obj(), "description").get_str();
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "offerlink " + alias + " " + guid + " " + commissionStr + " " + newdetails + " " + witness));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "offerlink " + alias + " " + guid + " " + commissionStr + " " + newdetails + " " + witness + " false"));
 	UniValue arr = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + arr[0].get_str()));
 	string hex_str = find_value(r.get_obj(), "hex").get_str();
@@ -1149,7 +1149,7 @@ const string OfferNew(const string& node, const string& aliasname, const string&
 	int qty = atoi(qtyStr.c_str());
 	
 	//						"offernew <alias> <category> <title> <quantity> <price> <description> <currency> [cert. guid] [payment options=SYS] [private=false] [units] [offerType=BUYNOW] [auction_expires] [auction_reserve] [auction_require_witness] [auction_deposit] [witness]\n"
-	string offercreatestr = "offernew " + aliasname + " " + category + " " + title + " " + qtyStr + " " + price + " " + description + " " + currency  + " " + certguid + " " + paymentoptions + " " + pvt + " " + units + " " + offerType + " " + auction_expires + " " + auction_reserve + " " + auction_require_witness + " " + auction_deposit + " " + witness;
+	string offercreatestr = "offernew " + aliasname + " " + category + " " + title + " " + qtyStr + " " + price + " " + description + " " + currency  + " " + certguid + " " + paymentoptions + " " + pvt + " " + units + " " + offerType + " " + auction_expires + " " + auction_reserve + " " + auction_require_witness + " " + auction_deposit + " " + witness + " false";
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, offercreatestr));
 	UniValue arr = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + arr[0].get_str()));
@@ -1299,8 +1299,8 @@ void OfferUpdate(const string& node, const string& aliasname, const string& offe
 	string newauction_reserve = auction_reserve == "''" ? oldauctionreserve : auction_reserve;
 	string newauction_require_witness = auction_require_witness == "''"? oldauctionrequirewitness : auction_require_witness;
 	string newauction_deposit = auction_deposit == "''" ? oldauctiondeposit : auction_deposit;
-	//						"offerupdate <alias> <guid> [category] [title] [quantity] [price] [description] [currency] [private=false] [cert. guid] [commission] [paymentOptions] [offerType=BUYNOW] [auction_expires] [auction_reserve] [auction_require_witness] [auction_deposit] [witness]\n"
-	string offerupdatestr = "offerupdate " + aliasname + " " + offerguid + " " + newcategory + " " + newtitle + " " + newqty + " " + newprice + " " + newdescription + " " + newcurrency + " " + newisprivate + " " + newcertguid + " " + newcommission + " " + newpaymentoptions + " " + newoffertype + " " + newauction_expires + " " + newauction_reserve + " " + newauction_require_witness + " " + newauction_deposit + " " + witness;
+	//						"offerupdate <alias> <guid> [category] [title] [quantity] [price] [description] [currency] [private=false] [cert. guid] [commission] [paymentOptions] [offerType=BUYNOW] [auction_expires] [auction_reserve] [auction_require_witness] [auction_deposit] [witness] [instantsend]\n"
+	string offerupdatestr = "offerupdate " + aliasname + " " + offerguid + " " + newcategory + " " + newtitle + " " + newqty + " " + newprice + " " + newdescription + " " + newcurrency + " " + newisprivate + " " + newcertguid + " " + newcommission + " " + newpaymentoptions + " " + newoffertype + " " + newauction_expires + " " + newauction_reserve + " " + newauction_require_witness + " " + newauction_deposit + " " + witness + " false";
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, offerupdatestr));
 	UniValue arr = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + arr[0].get_str()));
@@ -1429,7 +1429,7 @@ void EscrowFeedback(const string& node, const string& userfrom, const string& es
 	string seller = find_value(r.get_obj(), "seller").get_str();
 	string arbiter = find_value(r.get_obj(), "arbiter").get_str();
 
-	string escrowfeedbackstr = "escrowfeedback " + escrowguid + " " + userfrom + " " + feedback + " " + rating + " " + userto + " " + witness;
+	string escrowfeedbackstr = "escrowfeedback " + escrowguid + " " + userfrom + " " + feedback + " " + rating + " " + userto + " " + witness + " false";
 
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, escrowfeedbackstr));
 	UniValue arr = r.get_array();
@@ -1503,7 +1503,7 @@ void EscrowBid(const string& node, const string& buyeralias, const string& escro
 	const string &bid_in_offer_currency1 = strprintf("%.*f", 8, fPaymentCurrency);
 	const string &bid_in_payment_option1 = strprintf("%.*f", 8, strprintf("%.*f", 8, pegRates[currency] * fPaymentCurrency));
 	//										"escrowbid <alias> <escrow> <bid_in_payment_option> <bid_in_offer_currency> [witness]\n"
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowbid " + buyeralias + " " + escrowguid + " " + bid_in_payment_option1 + " " + bid_in_offer_currency1 + " " + witness));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowbid " + buyeralias + " " + escrowguid + " " + bid_in_payment_option1 + " " + bid_in_offer_currency1 + " " + witness + " false"));
 	UniValue arr = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + arr[0].get_str()));
 	string finalsignedhex = find_value(r.get_obj(), "hex").get_str();
@@ -1617,7 +1617,7 @@ const string EscrowNewAuction(const string& node, const string& sellernode, cons
 
 
 	//										"escrownew <getamountandaddress> <alias> <arbiter alias> <offer> <quantity> <buynow> <total_in_payment_option> [shipping amount] [network fee] [arbiter fee] [witness fee] [extTx] [payment option] [bid_in_payment_option] [bid_in_offer_currency] [witness]\n"
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrownew false " + buyeralias + " " + arbiteralias + " " + offerguid + " " + qtyStr + " " + buyNowStr + " " + strTotalInPaymentOption + " " + shipping + " " + networkFee + " " + arbiterFee + " " + witnessFee + " " + exttxid + " " + paymentoptions + " " + bid_in_payment_option1 + " " + bid_in_offer_currency1 + " " + witness));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrownew false " + buyeralias + " " + arbiteralias + " " + offerguid + " " + qtyStr + " " + buyNowStr + " " + strTotalInPaymentOption + " " + shipping + " " + networkFee + " " + arbiterFee + " " + witnessFee + " " + exttxid + " " + paymentoptions + " " + bid_in_payment_option1 + " " + bid_in_offer_currency1 + " " + witness + " false"));
 	UniValue arr = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + arr[0].get_str()));
 	string hex_str = find_value(r.get_obj(), "hex").get_str();
@@ -1744,7 +1744,7 @@ const string EscrowNewBuyItNow(const string& node, const string& sellernode, con
 	const string &bid_in_offer_currency = strprintf("%.*f", 8, fPaymentCurrency);
 	const string &bid_in_payment_option = strprintf("%.*f", 8, strprintf("%.*f", 8, pegRates[currency] * fPaymentCurrency));
 	//										"escrownew <getamountandaddress> <alias> <arbiter alias> <offer> <quantity> <buynow> <total_in_payment_option> [shipping amount] [network fee] [arbiter fee] [witness fee] [extTx] [payment option] [bid_in_payment_option] [bid_in_offer_currency] [witness]\n"
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrownew false " + buyeralias + " " + arbiteralias + " " + offerguid + " " + qtyStr + " " + buyNowStr + " " + strTotalInPaymentOption + " " + shipping + " " + networkFee + " " + arbiterFee + " " + witnessFee + " " + exttxid + " " + paymentoptions + " " + bid_in_payment_option + " " + bid_in_offer_currency + " " + witness));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrownew false " + buyeralias + " " + arbiteralias + " " + offerguid + " " + qtyStr + " " + buyNowStr + " " + strTotalInPaymentOption + " " + shipping + " " + networkFee + " " + arbiterFee + " " + witnessFee + " " + exttxid + " " + paymentoptions + " " + bid_in_payment_option + " " + bid_in_offer_currency + " " + witness + " false"));
 	UniValue arr = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + arr[0].get_str()));
 	string hex_str = find_value(r.get_obj(), "hex").get_str();
@@ -1816,16 +1816,16 @@ const string EscrowNewBuyItNow(const string& node, const string& sellernode, con
 	}
 	
 
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowacknowledge " + guid + " ''"));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowacknowledge " + guid + " '' false"));
 	UniValue varray = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + varray[0].get_str()));
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "complete").get_bool(), false);
-	BOOST_CHECK_NO_THROW(r = CallRPC(sellernode, "escrowacknowledge " + guid + " ''"));
+	BOOST_CHECK_NO_THROW(r = CallRPC(sellernode, "escrowacknowledge " + guid + " '' false"));
 	UniValue arrres = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(sellernode, "signrawtransaction " + arrres[0].get_str()));
 	BOOST_CHECK_NO_THROW(r = CallRPC(sellernode, "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
 	GenerateBlocks(10, sellernode);
-	BOOST_CHECK_THROW(r = CallRPC(sellernode, "escrowacknowledge " + guid + " ''"), runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC(sellernode, "escrowacknowledge " + guid + " '' false"), runtime_error);
 	BOOST_CHECK_NO_THROW(r = CallRPC(sellernode, "offerinfo " + offerguid));
 	nQtyAfter = find_value(r.get_obj(), "quantity").get_int();
 	BOOST_CHECK_EQUAL(nQtyAfter, nQtyBefore-qty);
@@ -1912,7 +1912,7 @@ void EscrowRelease(const string& node, const string& role, const string& guid ,c
 	const UniValue& hex_value = find_value(r.get_obj(), "hex");
 	BOOST_CHECK(hex_value.get_str() != rawtx);
 	// "escrowrelease <escrow guid> <user role> <rawtx> [witness]\n"
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowrelease " + guid + " " + role + " " + hex_value.get_str() + " " + witness));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowrelease " + guid + " " + role + " " + hex_value.get_str() + " " + witness + " false"));
 	UniValue arr1 = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + arr1[0].get_str()));
 	string hex_str = find_value(r.get_obj(), "hex").get_str();
@@ -1999,7 +1999,7 @@ void EscrowRefund(const string& node, const string& role, const string& guid, co
 	const UniValue& hex_value = find_value(r.get_obj(), "hex");
 	BOOST_CHECK(hex_value.get_str() != rawtx);
 	// "escrowrefund <escrow guid> <user role> <rawtx> [witness]\n"
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowrefund " + guid + " " + role + " " + hex_value.get_str() + " " + witness));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowrefund " + guid + " " + role + " " + hex_value.get_str() + " " + witness + " false"));
 	UniValue arr1 = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + arr1[0].get_str()));
 	string hex_str = find_value(r.get_obj(), "hex").get_str();
@@ -2124,8 +2124,8 @@ void EscrowClaimRefund(const string& node, const string& guid)
 	BOOST_CHECK(hex_value.get_str() != rawtx);
 	BOOST_CHECK(complete_value.get_bool());
 	// ensure that you cannot refund with partially signed tx
-	BOOST_CHECK_THROW(CallRPC(node, "escrowcompleterefund " + guid + " " + rawtx + " ''"), runtime_error);
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowcompleterefund " + guid + " " + hex_value.get_str() + " ''"));
+	BOOST_CHECK_THROW(CallRPC(node, "escrowcompleterefund " + guid + " " + rawtx + " '' false"), runtime_error);
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowcompleterefund " + guid + " " + hex_value.get_str() + " '' false"));
 	UniValue arr1 = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + arr1[0].get_str()));
 	string hex_str = find_value(r.get_obj(), "hex").get_str();
@@ -2315,8 +2315,8 @@ void EscrowClaimRelease(const string& node, const string& guid)
 	BOOST_CHECK(hex_value.get_str() != rawtx);
 	BOOST_CHECK(complete_value.get_bool());
 	// ensure that you cannot release with partially signed tx
-	BOOST_CHECK_THROW(CallRPC(node, "escrowcompleterelease " + guid + " " + rawtx + " ''"), runtime_error);
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowcompleterelease " + guid + " " + hex_value.get_str() + " ''"));
+	BOOST_CHECK_THROW(CallRPC(node, "escrowcompleterelease " + guid + " " + rawtx + " '' false"), runtime_error);
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowcompleterelease " + guid + " " + hex_value.get_str() + " '' false"));
 	UniValue arr1 = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + arr1[0].get_str()));
 	string hex_str = find_value(r.get_obj(), "hex").get_str();

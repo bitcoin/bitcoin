@@ -1163,6 +1163,8 @@ bool GetTransaction(const uint256 &hash, CTransaction &txOut, const Consensus::P
 				return error("%s: txid mismatch", __func__);
 			return true;
 		}
+		// transaction not found in index, nothing more can be done
+		return false;
 	}
 
 	if (fAllowSlow) { // use coin database to locate block that contains transaction, and scan it
@@ -2054,7 +2056,7 @@ public:
 	{
 		return ((pindex->nVersion & VERSIONBITS_TOP_MASK) == VERSIONBITS_TOP_BITS) &&
 			((pindex->nVersion >> bit) & 1) != 0 &&
-			((ComputeBlockVersion(pindex->pprev, params) >> bit) & 1) == 0;
+			((ComputeBlockVersion(pindex->pprev, params, true) >> bit) & 1) == 0;
 	}
 };
 
