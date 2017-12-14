@@ -895,11 +895,22 @@ void RPCConsole::on_lineEdit_returnPressed()
         void *ppwallet_v = nullptr;
 #ifdef ENABLE_WALLET
         const int wallet_index = ui->WalletSelector->currentIndex();
+        std::string selected_wallet_name;
         if (wallet_index > 0) {
             CWalletRef *ppwallet = (CWalletRef*)ui->WalletSelector->itemData(wallet_index).value<void*>();
             // Copying the ref, expecting it to become more than just a simple pointer in the future
             ppwallet = new CWalletRef(*ppwallet);
             ppwallet_v = (void*)ppwallet;
+            selected_wallet_name = (*ppwallet)->GetName();
+        }
+
+        if (m_last_wallet != selected_wallet_name) {
+            if (selected_wallet_name.empty()) {
+                message(CMD_REQUEST, tr("Executing command without any wallet"));
+            } else {
+                message(CMD_REQUEST, tr("Executing command using \"%1\" wallet").arg(QString::fromStdString(selected_wallet_name)));
+            }
+            m_last_wallet = selected_wallet_name;
         }
 #endif
 

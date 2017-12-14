@@ -153,6 +153,7 @@ private:
     int consoleFontSize;
     QCompleter *autoCompleter;
     QThread thread;
+    std::string m_last_wallet;
 
     /** Update UI with latest network info from model. */
     void updateNetworkState();
