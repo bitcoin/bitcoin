@@ -90,27 +90,10 @@ bool CMasternode::UpdateFromNewBroadcast(CMasternodeBroadcast& mnb, CConnman& co
 //
 arith_uint256 CMasternode::CalculateScore(const uint256& blockHash)
 {
-    if (fDIP0001WasLockedIn) {
-        // Deterministically calculate a "score" for a Masternode based on any given (block)hash
-        CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
-        ss << vin.prevout << nCollateralMinConfBlockHash << blockHash;
-        return UintToArith256(ss.GetHash());
-    }
-
-    // TODO: remove calculations below after migration to 12.2
-
-    uint256 aux = ArithToUint256(UintToArith256(vin.prevout.hash) + vin.prevout.n);
-
-    CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
-    ss << blockHash;
-    arith_uint256 hash2 = UintToArith256(ss.GetHash());
-
-    CHashWriter ss2(SER_GETHASH, PROTOCOL_VERSION);
-    ss2 << blockHash;
-    ss2 << aux;
-    arith_uint256 hash3 = UintToArith256(ss2.GetHash());
-
-    return (hash3 > hash2 ? hash3 - hash2 : hash2 - hash3);
+	// Deterministically calculate a "score" for a Masternode based on any given (block)hash
+	CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
+	ss << vin.prevout << nCollateralMinConfBlockHash << blockHash;
+	return UintToArith256(ss.GetHash());
 }
 
 CMasternode::CollateralStatus CMasternode::CheckCollateral(const COutPoint& outpoint)
@@ -258,10 +241,12 @@ void CMasternode::Check(bool fForce)
 bool CMasternode::IsInputAssociatedWithPubkey(int& height)
 {
 	// SYSCOIN refactor
+	CScript payee;
+	payee = GetScriptForDestination(pubKeyCollateralAddress.GetID());
 	CCoins coins;
 	if (GetUTXOCoins(vin.prevout, coins))
 	{
-		if (coins.vout[vin.prevout.n].nValue == 100000 * COIN)
+		if (coins.vout[vin.prevout.n].nValue == 100000 * COIN && coins.vout[vin.prevout.n].scriptPubKey == payee)
 		{
 			height = coins.nHeight;
 			return true;
@@ -590,7 +575,6 @@ bool CMasternodeBroadcast::CheckOutpoint(int& nDos)
     // should be at least not earlier than block when 100000 SYS tx got nMasternodeMinimumConfirmations
 	if (chainActive.Height() < masterNodeCollateralHeight + Params().GetConsensus().nMasternodeMinimumConfirmations - 1) {
 		LogPrintf("CMasternodeMan::CheckOutpoint -- Broadcast too early\n");
-		nDos = 33;
 		return false;
 	}
 	CBlockIndex* pConfIndex = chainActive[masterNodeCollateralHeight + Params().GetConsensus().nMasternodeMinimumConfirmations - 1]; // block where tx got nMasternodeMinimumConfirmations
@@ -650,6 +634,11 @@ bool CMasternodeBroadcast::CheckSignature(int& nDos)
 
 void CMasternodeBroadcast::Relay(CConnman& connman)
 {
+	// Do not relay until fully synced
+	if (!masternodeSync.IsSynced()) {
+		LogPrint("masternode", "CMasternodeBroadcast::Relay -- won't relay until fully synced\n");
+		return;
+	}
     CInv inv(MSG_MASTERNODE_ANNOUNCE, GetHash());
     connman.RelayInv(inv);
 }
@@ -809,6 +798,11 @@ bool CMasternodePing::CheckAndUpdate(CMasternode* pmn, bool fFromNewBroadcast, i
 
 void CMasternodePing::Relay(CConnman& connman)
 {
+	// Do not relay until fully synced
+	if (!masternodeSync.IsSynced()) {
+		LogPrint("masternode", "CMasternodePing::Relay -- won't relay until fully synced\n");
+		return;
+	}
     CInv inv(MSG_MASTERNODE_PING, GetHash());
     connman.RelayInv(inv);
 }
