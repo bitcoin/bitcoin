@@ -241,10 +241,12 @@ void CMasternode::Check(bool fForce)
 bool CMasternode::IsInputAssociatedWithPubkey(int& height)
 {
 	// SYSCOIN refactor
+	CScript payee;
+	payee = GetScriptForDestination(pubKeyCollateralAddress.GetID());
 	CCoins coins;
 	if (GetUTXOCoins(vin.prevout, coins))
 	{
-		if (coins.vout[vin.prevout.n].nValue == 100000 * COIN)
+		if (coins.vout[vin.prevout.n].nValue == 100000 * COIN && coins.vout[vin.prevout.n].scriptPubKey == payee)
 		{
 			height = coins.nHeight;
 			return true;
@@ -573,7 +575,6 @@ bool CMasternodeBroadcast::CheckOutpoint(int& nDos)
     // should be at least not earlier than block when 100000 SYS tx got nMasternodeMinimumConfirmations
 	if (chainActive.Height() < masterNodeCollateralHeight + Params().GetConsensus().nMasternodeMinimumConfirmations - 1) {
 		LogPrintf("CMasternodeMan::CheckOutpoint -- Broadcast too early\n");
-		nDos = 33;
 		return false;
 	}
 	CBlockIndex* pConfIndex = chainActive[masterNodeCollateralHeight + Params().GetConsensus().nMasternodeMinimumConfirmations - 1]; // block where tx got nMasternodeMinimumConfirmations
