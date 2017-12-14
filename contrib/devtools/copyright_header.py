@@ -478,6 +478,7 @@ CPP_HEADER = '''
 // Copyright (c) %s The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
 '''
 
 def get_cpp_header_lines_to_insert(start_year, end_year):
@@ -487,6 +488,7 @@ PYTHON_HEADER = '''
 # Copyright (c) %s The Syscoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
 '''
 
 def get_python_header_lines_to_insert(start_year, end_year):
