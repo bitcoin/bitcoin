@@ -1,9 +1,9 @@
 Syscoin Core integration/staging tree
 =====================================
 
-[![Build Status](https://travis-ci.org/syscoin/syscoin.svg?branch=master)](https://travis-ci.org/syscoin/syscoin)
+`master:` [![Build Status](https://travis-ci.org/syscoin/syscoin2.svg?branch=master)](https://travis-ci.org/syscoin/syscoin) `dev-2.2:` [![Build Status](https://travis-ci.org/syscoin/syscoin2.svg?branch=dev-2.2)](https://travis-ci.org/syscoin/syscoin/branches)
 
-https://syscoincore.org
+http://www.syscoin.org
 
 What is Syscoin?
 ----------------
@@ -15,8 +15,8 @@ out collectively by the network. Syscoin Core is the name of open source
 software which enables the use of this currency.
 
 For more information, as well as an immediately useable, binary version of
-the Syscoin Core software, see https://syscoin.org/en/download, or read the
-[original whitepaper](https://syscoin.org/syscoin.pdf).
+the Syscoin Core software, see this [repository's releases tab](https://github.com/syscoin/syscoin2/releases), or read the
+[Syscoin whitepaper](http://whitepaper.syscoin.org/).
 
 License
 -------
@@ -32,12 +32,6 @@ completely stable. [Tags](https://github.com/syscoin/syscoin2/tags) are created
 regularly to indicate new official, stable release versions of Syscoin Core.
 
 The contribution workflow is described in [CONTRIBUTING.md](CONTRIBUTING.md).
-
-The developer [mailing list](https://lists.linuxfoundation.org/mailman/listinfo/syscoin-dev)
-should be used to discuss complicated or controversial changes before working
-on a patch set.
-
-Developer IRC can be found on Freenode at #syscoin-core-dev.
 
 Testing
 -------
@@ -77,5 +71,3 @@ Translations are periodically pulled from Transifex and merged into the git repo
 
 **Important**: We do not accept translation changes as GitHub pull requests because the next
 pull from Transifex would automatically overwrite them again.
-
-Translators should also subscribe to the [mailing list](https://groups.google.com/forum/#!forum/syscoin-translators).
