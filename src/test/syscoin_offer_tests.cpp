@@ -148,7 +148,7 @@ BOOST_AUTO_TEST_CASE(generate_offerwhitelists)
 	// add to whitelist
 	AliasAddWhitelist("node1", "sellerwhitelistalias", "selleraddwhitelistalias", "4");
 	AliasClearWhitelist("node1", "sellerwhitelistalias");
-	BOOST_CHECK_THROW(CallRPC("node1", "aliasclearwhitelist sellerwhitelistalias ''"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "aliasclearwhitelist sellerwhitelistalias '' false"), runtime_error);
 
 	AliasAddWhitelist("node1", "sellerwhitelistalias", "selleraddwhitelistalias", "6");
 
@@ -540,7 +540,7 @@ BOOST_AUTO_TEST_CASE (generate_offerexpiredexmode)
 	string whiteListArray = "\"{\\\"aliases\\\":[{\\\"alias\\\":\\\"selleralias11\\\",\\\"discount_percentage\\\":10}]}\"";
 	BOOST_CHECK_THROW(CallRPC("node1", "aliasupdatewhitelist selleralias10 " + whiteListArray + " '' false"), runtime_error);
 	// should fail: clear whitelist from expired offer
-	BOOST_CHECK_THROW(r = CallRPC("node1", "aliasclearwhitelist selleralias10 ''"), runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC("node1", "aliasclearwhitelist selleralias10 '' false"), runtime_error);
 }
 
 BOOST_AUTO_TEST_CASE (generate_certofferexpired)
