@@ -2548,16 +2548,17 @@ UniValue aliaspay(const UniValue& params, bool fHelp) {
 	if (!GetAlias(vchFromString(strFrom), theAlias))
 		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5509 - " + _("Invalid fromalias"));
 
-    string strCurrency = params[1].get_str();
-    UniValue sendTo = params[2].get_obj();
+    UniValue sendTo = params[1].get_obj();
+
+	bool fUseInstantSend = false;
+	if (params.size() > 3)
+		fUseInstantSend = params[2].get_bool();
 
 	UniValue subtractFeeFromAmount(UniValue::VARR);
 	if (params.size() > 4)
 		subtractFeeFromAmount = params[3].get_array();
 
-	bool fUseInstantSend = false;
-	if (params.size() > 5)
-		fUseInstantSend = params[4].get_bool();
+
 	CWalletTx wtx;
     set<CSyscoinAddress> setAddress;
     vector<CRecipient> vecSend;

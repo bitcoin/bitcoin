@@ -1001,7 +1001,7 @@ bool CTxLockVote::IsValid(CNode* pnode, CConnman& connman) const
         return false;
     }
 
-    int nLockInputHeight = coins.nHeight + 4;
+    int nLockInputHeight = coins.nHeight+1;
 
     int nRank;
     if(!mnodeman.GetMasternodeRank(outpointMasternode, nRank, nLockInputHeight, MIN_INSTANTSEND_PROTO_VERSION)) {
