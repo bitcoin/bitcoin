@@ -10,6 +10,7 @@
 #include "omnicore/dbstolist.h"
 #include "omnicore/dbtradelist.h"
 #include "omnicore/dbtransaction.h"
+#include "omnicore/dbtxlist.h"
 #include "omnicore/dex.h"
 #include "omnicore/errors.h"
 #include "omnicore/mdex.h"

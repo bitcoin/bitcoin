@@ -11,6 +11,7 @@ class CTransaction;
 #include "omnicore/dbstolist.h"
 #include "omnicore/dbtradelist.h"
 #include "omnicore/dbtransaction.h"
+#include "omnicore/dbtxlist.h"
 #include "omnicore/log.h"
 #include "omnicore/tally.h"
 
@@ -150,57 +151,6 @@ extern bool autoCommit;
 
 //! Global lock for state objects
 extern CCriticalSection cs_tally;
-
-/** LevelDB based storage for transactions, with txid as key and validity bit, and other data as value.
- */
-class CMPTxList : public CDBBase
-{
-public:
-    CMPTxList(const boost::filesystem::path& path, bool fWipe)
-    {
-        leveldb::Status status = Open(path, fWipe);
-        PrintToConsole("Loading tx meta-info database: %s\n", status.ToString());
-    }
-
-    virtual ~CMPTxList()
-    {
-        if (msc_debug_persistence) PrintToLog("CMPTxList closed\n");
-    }
-
-    void recordTX(const uint256 &txid, bool fValid, int nBlock, unsigned int type, uint64_t nValue);
-    void recordPaymentTX(const uint256 &txid, bool fValid, int nBlock, unsigned int vout, unsigned int propertyId, uint64_t nValue, string buyer, string seller);
-    void recordMetaDExCancelTX(const uint256 &txidMaster, const uint256 &txidSub, bool fValid, int nBlock, unsigned int propertyId, uint64_t nValue);
-    /** Records a "send all" sub record. */
-    void recordSendAllSubRecord(const uint256& txid, int subRecordNumber, uint32_t propertyId, int64_t nvalue);
-
-    string getKeyValue(string key);
-    uint256 findMetaDExCancel(const uint256 txid);
-    /** Returns the number of sub records. */
-    int getNumberOfSubRecords(const uint256& txid);
-    int getNumberOfMetaDExCancels(const uint256 txid);
-    bool getPurchaseDetails(const uint256 txid, int purchaseNumber, string *buyer, string *seller, uint64_t *vout, uint64_t *propertyId, uint64_t *nValue);
-    /** Retrieves details about a "send all" record. */
-    bool getSendAllDetails(const uint256& txid, int subSend, uint32_t& propertyId, int64_t& amount);
-    int getMPTransactionCountTotal();
-    int getMPTransactionCountBlock(int block);
-
-    int getDBVersion();
-    int setDBVersion();
-
-    bool exists(const uint256 &txid);
-    bool getTX(const uint256 &txid, string &value);
-
-    std::set<int> GetSeedBlocks(int startHeight, int endHeight);
-    void LoadAlerts(int blockHeight);
-    void LoadActivations(int blockHeight);
-    bool LoadFreezeState(int blockHeight);
-    bool CheckForFreezeTxs(int blockHeight);
-
-    void printStats();
-    void printAll();
-
-    bool isMPinBlockRange(int, int, bool);
-};
 
 //! Available balances of wallet properties
 extern std::map<uint32_t, int64_t> global_balance_money;

@@ -9,6 +9,7 @@ OMNICORE_H = \
   omnicore/dbstolist.h \
   omnicore/dbtradelist.h \
   omnicore/dbtransaction.h \
+  omnicore/dbtxlist.h \
   omnicore/dex.h \
   omnicore/encoding.h \
   omnicore/errors.h \
@@ -54,6 +55,7 @@ OMNICORE_CPP = \
   omnicore/dbstolist.cpp \
   omnicore/dbtradelist.cpp \
   omnicore/dbtransaction.cpp \
+  omnicore/dbtxlist.cpp \
   omnicore/dex.cpp \
   omnicore/encoding.cpp \
   omnicore/fees.cpp \

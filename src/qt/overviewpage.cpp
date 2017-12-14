@@ -16,6 +16,7 @@
 #include "walletmodel.h"
 
 #include "omnicore/activation.h"
+#include "omnicore/dbtxlist.h"
 #include "omnicore/notifications.h"
 #include "omnicore/omnicore.h"
 #include "omnicore/rules.h"

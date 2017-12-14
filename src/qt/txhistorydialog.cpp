@@ -14,6 +14,7 @@
 
 #include "omnicore/dbspinfo.h"
 #include "omnicore/dbstolist.h"
+#include "omnicore/dbtxlist.h"
 #include "omnicore/omnicore.h"
 #include "omnicore/parsing.h"
 #include "omnicore/pending.h"

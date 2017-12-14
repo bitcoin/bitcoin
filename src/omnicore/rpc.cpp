@@ -12,6 +12,7 @@
 #include "omnicore/dbtradelist.h"
 #include "omnicore/dbspinfo.h"
 #include "omnicore/dbstolist.h"
+#include "omnicore/dbtxlist.h"
 #include "omnicore/dex.h"
 #include "omnicore/errors.h"
 #include "omnicore/fees.h"

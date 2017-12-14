@@ -14,6 +14,7 @@
 #include "platformstyle.h"
 
 #include "omnicore/dbtradelist.h"
+#include "omnicore/dbtxlist.h"
 #include "omnicore/mdex.h"
 #include "omnicore/omnicore.h"
 #include "omnicore/parsing.h"
