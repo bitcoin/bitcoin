@@ -1,10 +1,10 @@
-Syscoin Core staging tree 0.12.1
-===============================
+Syscoin Core staging tree 
+=========================
 
-`master:` [![Build Status](https://travis-ci.org/syscoin/syscoin.svg?branch=master)](https://travis-ci.org/syscoin/syscoin) `v0.12.0.x:` [![Build Status](https://travis-ci.org/syscoin/syscoin.svg?branch=v0.12.0.x)](https://travis-ci.org/syscoin/syscoin/branches) `v0.12.1.x:` [![Build Status](https://travis-ci.org/syscoin/syscoin.svg?branch=v0.12.1.x)](https://travis-ci.org/syscoin/syscoin/branches)
+`master:` [![Build Status](https://travis-ci.org/syscoin/syscoin2.svg?branch=master)](https://travis-ci.org/syscoin/syscoin) `dev-2.2:` [![Build Status](https://travis-ci.org/syscoin/syscoin2.svg?branch=dev-2.2)](https://travis-ci.org/syscoin/syscoin/branches) 
 
-https://www.syscoin.org
-
+http://www.syscoin.org
+https://www.blockchainfoundry.co
 
 What is Syscoin?
 ----------------
@@ -16,7 +16,7 @@ are carried out collectively by the network. Syscoin Core is the name of the ope
 source software which enables the use of this currency.
 
 For more information, as well as an immediately useable, binary version of
-the Syscoin Core software, see https://www.syscoin.org/get-syscoin/.
+the Syscoin Core software, see http://www.syscoin.org.
 
 
 License
@@ -74,4 +74,3 @@ Translations are periodically pulled from Transifex and merged into the git repo
 **Important**: We do not accept translation changes as GitHub pull requests because the next
 pull from Transifex would automatically overwrite them again.
 
-Translators should also follow the [forum](https://www.syscoin.org/forum/topic/syscoin-worldwide-collaboration.88/).
