@@ -8,6 +8,7 @@
 #include "governance-object.h"
 #include "governance-vote.h"
 #include "instantx.h"
+#include "masternode-sync.h"
 #include "masternodeman.h"
 #include "messagesigner.h"
 #include "util.h"
@@ -651,6 +652,12 @@ bool CGovernanceObject::GetCurrentMNVotes(const COutPoint& mnCollateralOutpoint,
 
 void CGovernanceObject::Relay(CConnman& connman)
 {
+    // Do not relay until fully synced
+    if(!masternodeSync.IsSynced()) {
+        LogPrint("gobject", "CGovernanceObject::Relay -- won't relay until fully synced\n");
+        return;
+    }
+
     CInv inv(MSG_GOVERNANCE_OBJECT, GetHash());
     connman.RelayInv(inv, MIN_GOVERNANCE_PEER_PROTO_VERSION);
 }

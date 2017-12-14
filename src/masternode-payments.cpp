@@ -840,8 +840,12 @@ void CMasternodePayments::CheckPreviousBlockVotes(int nPrevBlockHeight)
 
 void CMasternodePaymentVote::Relay(CConnman& connman)
 {
-    // do not relay until synced
-    if (!masternodeSync.IsWinnersListSynced()) return;
+    // Do not relay until fully synced
+    if(!masternodeSync.IsSynced()) {
+        LogPrint("mnpayments", "CMasternodePayments::Relay -- won't relay until fully synced\n");
+        return;
+    }
+
     CInv inv(MSG_MASTERNODE_PAYMENT_VOTE, GetHash());
     connman.RelayInv(inv);
 }
