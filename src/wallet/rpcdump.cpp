@@ -930,8 +930,8 @@ UniValue ProcessImport(CWallet * const pwallet, const UniValue& data, const int6
         const std::string& strRedeemScript = data.exists("redeemscript") ? data["redeemscript"].get_str() : "";
         const UniValue& pubKeys = data.exists("pubkeys") ? data["pubkeys"].get_array() : UniValue();
         const UniValue& keys = data.exists("keys") ? data["keys"].get_array() : UniValue();
-        const bool& internal = data.exists("internal") ? data["internal"].get_bool() : false;
-        const bool& watchOnly = data.exists("watchonly") ? data["watchonly"].get_bool() : false;
+        const bool internal = data.exists("internal") ? data["internal"].get_bool() : false;
+        const bool watchOnly = data.exists("watchonly") ? data["watchonly"].get_bool() : false;
         const std::string& label = data.exists("label") && !internal ? data["label"].get_str() : "";
 
         bool isScript = scriptPubKey.getType() == UniValue::VSTR;
