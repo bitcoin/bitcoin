@@ -448,7 +448,7 @@ BOOST_AUTO_TEST_CASE(generate_escrowfeedback)
 	EscrowFeedback("node2", "buyer", guid, "feedbackarbiter", "1", "arbiter");
 
 	// leave another feedback and notice that you can't find it in the indexer (first feedback will be indexed only per user per guid+touser combination)
-	escrowfeedbackstr = "escrowfeedback " + guid + " buyer feedback 1 seller ''";
+	escrowfeedbackstr = "escrowfeedback " + guid + " buyer feedback 1 seller '' false";
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", escrowfeedbackstr));
 	UniValue arr1 = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "signrawtransaction " + arr1[0].get_str()));
