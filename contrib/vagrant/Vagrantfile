@@ -15,7 +15,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.synced_folder "../../", "/vagrant"
 
   config.vm.provider "virtualbox" do |vb|
-    vb.customize ["modifyvm", :id, "--memory", "2048"]
+    vb.customize ["modifyvm", :id, "--memory", "8092"]
+    vb.customize ["modifyvm", :id, "--cpus", "4"]
   end
 
   config.vm.provider "vmware" do |vmw|
