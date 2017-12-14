@@ -142,6 +142,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
 	{ "escrowcreaterawtransaction", 2 },
 	{ "aliasupdatewhitelist", 1 },
 	{ "aliasupdatewhitelist", 3 },
+	{ "aliasclearwhitelist", 2 },
 	{ "aliasnew", 2 },
 	{ "aliasnew", 3 },
 	{ "aliasupdate", 3 },
