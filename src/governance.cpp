@@ -156,7 +156,6 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, std::string& strCommand, C
 
         pfrom->setAskFor.erase(nHash);
 
-		// SYSCOIN
 		if (!masternodeSync.IsMasternodeListSynced()) {
 			LogPrint("gobject", "MNGOVERNANCEOBJECT -- masternode list not synced\n");
 			return;
@@ -243,7 +242,6 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, std::string& strCommand, C
 
         pfrom->setAskFor.erase(nHash);
 
-		// SYSCOIN Ignore such messages until masternode list is synced
 		if (!masternodeSync.IsMasternodeListSynced()) {
 			LogPrint("gobject", "MNGOVERNANCEOBJECTVOTE -- masternode list not synced\n");
 			return;
@@ -740,7 +738,7 @@ void CGovernanceManager::Sync(CNode* pfrom, const uint256& nProp, const CBloomFi
     */
 
     // do not provide any data until our node is synced
-    if(fMasterNode && !masternodeSync.IsSynced()) return;
+    if(!masternodeSync.IsSynced()) return;
 
     int nObjCount = 0;
     int nVoteCount = 0;
