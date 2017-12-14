@@ -1,3 +1,7 @@
+// Copyright (c) 2015-2017 The Syscoin Core developers
+// Distributed under the MIT software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
 #ifndef _SYSCOIN_PREVECTOR_H_
 #define _SYSCOIN_PREVECTOR_H_
 
