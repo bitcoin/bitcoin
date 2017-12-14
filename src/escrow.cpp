@@ -1494,8 +1494,6 @@ UniValue escrowbid(const UniValue& params, bool fHelp) {
 	vector<unsigned char> vchEscrow = vchFromValue(params[1]);
 	CAmount nBid = AmountFromValue(params[2].get_real());
 	float fBid = params[3].get_real();
-	bool fUseInstantSend = false;
-	fUseInstantSend = params[4].get_bool();
 	uint64_t nHeight = chainActive.Tip()->nHeight;
 	// check for alias existence in DB
 	CAliasIndex bidalias;
@@ -1504,7 +1502,8 @@ UniValue escrowbid(const UniValue& params, bool fHelp) {
 
 	vector<unsigned char> vchWitness;
 	vchWitness = vchFromValue(params[4]);
-
+	bool fUseInstantSend = false;
+	fUseInstantSend = params[5].get_bool();
 	CAliasIndex bidderalias;
 	if (!GetAlias(vchAlias, bidderalias))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4512 - " + _("Could not find alias with this name"));
