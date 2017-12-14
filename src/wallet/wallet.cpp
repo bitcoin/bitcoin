@@ -2605,6 +2605,10 @@ bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& nC
         coinControl.Select(txin.prevout);
     }
 
+    // Acquire the locks to prevent races to the new locked unspents between the
+    // CreateTransaction call and LockCoin calls (when lockUnspents is true).
+    LOCK2(cs_main, cs_wallet);
+
     CReserveKey reservekey(this);
     CWalletTx wtx;
     if (!CreateTransaction(vecSend, wtx, reservekey, nFeeRet, nChangePosInOut, strFailReason, coinControl, false)) {
@@ -2630,7 +2634,6 @@ bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& nC
             tx.vin.push_back(txin);
 
             if (lockUnspents) {
-                LOCK2(cs_main, cs_wallet);
                 LockCoin(txin.prevout);
             }
         }
