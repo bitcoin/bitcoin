@@ -893,6 +893,15 @@ void RPCConsole::on_lineEdit_returnPressed()
         if (wallet_index > 0) {
             walletID = (QString)ui->WalletSelector->itemData(wallet_index).value<QString>();
         }
+
+        if (m_last_wallet_id != walletID) {
+            if (walletID.isEmpty()) {
+                message(CMD_REQUEST, tr("Executing command without any wallet"));
+            } else {
+                message(CMD_REQUEST, tr("Executing command using \"%1\" wallet").arg(walletID));
+            }
+            m_last_wallet_id = walletID;
+        }
 #endif
 
         message(CMD_REQUEST, QString::fromStdString(strFilteredCmd));
