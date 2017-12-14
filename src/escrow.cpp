@@ -1475,7 +1475,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
     return true;
 }
 UniValue escrowbid(const UniValue& params, bool fHelp) {
-	if (fHelp || params.size() != 5)
+	if (fHelp || params.size() != 6)
 		throw runtime_error(
 			"escrowbid [alias] [escrow] [bid_in_payment_option] [bid_in_offer_currency] [witness] [instantsend]\n"
 			"<alias> An alias you own.\n"
