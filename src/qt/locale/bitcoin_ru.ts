@@ -5,12 +5,12 @@
     <message>
         <location filename="../forms/aboutdialog.ui" line="+14"/>
         <source>About Peercoin</source>
-        <translation>&amp;О Peercoin</translation>
+        <translation>&amp;О Пиркойн</translation>
     </message>
     <message>
         <location line="+39"/>
         <source>&lt;b&gt;Peercoin&lt;/b&gt; version</source>
-        <translation>&lt;b&gt;Peercoin&lt;/b&gt; версия</translation>
+        <translation>&lt;b&gt;Пиркойн&lt;/b&gt; версия</translation>
     </message>
     <message>
         <location line="+57"/>
@@ -35,7 +35,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+0"/>
         <source>The Peercoin developers</source>
-        <translation>Разработчики Peercoin</translation>
+        <translation>Разработчики Пиркойн</translation>
     </message>
 </context>
 <context>
@@ -83,7 +83,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+11"/>
         <source>Sign a message to prove you own a Peercoin address</source>
-        <translation>Подписать сообщение, чтобы доказать владение адресом Peercoin</translation>
+        <translation>Подписать сообщение, чтобы доказать владение адресом Пиркойн</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -108,7 +108,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="-44"/>
         <source>Verify a message to ensure it was signed with a specified Peercoin address</source>
-        <translation>Проверить сообщение, чтобы убедиться, что оно было подписано указанным адресом Peercoin</translation>
+        <translation>Проверить сообщение, чтобы убедиться, что оно было подписано указанным адресом Пиркойн</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -375,7 +375,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+4"/>
         <source>Show information about Peercoin</source>
-        <translation>Показать информацию о Peercoin&apos;е</translation>
+        <translation>Показать информацию о Пиркойн</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -420,12 +420,12 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="-347"/>
         <source>Send coins to a Peercoin address</source>
-        <translation>Отправить монеты на указанный адрес Peercoin</translation>
+        <translation>Отправить монеты на указанный адрес Пиркойн</translation>
     </message>
     <message>
         <location line="+49"/>
         <source>Modify configuration options for Peercoin</source>
-        <translation>Изменить параметры конфигурации Peercoin</translation>
+        <translation>Изменить параметры конфигурации Пиркойн</translation>
     </message>
     <message>
         <location line="+9"/>
@@ -456,7 +456,7 @@ This product includes software developed by the OpenSSL Project for use in the O
         <location line="-165"/>
         <location line="+530"/>
         <source>Peercoin</source>
-        <translation>Peercoin</translation>
+        <translation>Пиркойн</translation>
     </message>
     <message>
         <location line="-530"/>
@@ -481,7 +481,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+22"/>
         <source>&amp;About Peercoin</source>
-        <translation>&amp;О Peercoin</translation>
+        <translation>&amp;О Пиркойн</translation>
     </message>
     <message>
         <location line="+9"/>
@@ -501,12 +501,12 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+7"/>
         <source>Sign messages with your Peercoin addresses to prove you own them</source>
-        <translation>Подписать сообщения вашим адресом Peercoin, чтобы доказать, что вы им владеете</translation>
+        <translation>Подписать сообщения вашим адресом Пиркойн, чтобы доказать, что вы им владеете</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Verify messages to ensure they were signed with specified Peercoin addresses</source>
-        <translation>Проверить сообщения, чтобы удостовериться, что они были подписаны определённым адресом Peercoin</translation>
+        <translation>Проверить сообщения, чтобы удостовериться, что они были подписаны определённым адресом Пиркойн</translation>
     </message>
     <message>
         <location line="+28"/>
@@ -537,7 +537,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+47"/>
         <source>Peercoin client</source>
-        <translation>Peercoin клиент</translation>
+        <translation>Пиркойн клиент</translation>
     </message>
     <message numerus="yes">
         <location line="+141"/>
@@ -657,7 +657,7 @@ Address: %4
         <location line="-23"/>
         <location line="+23"/>
         <source>URI can not be parsed! This can be caused by an invalid Peercoin address or malformed URI parameters.</source>
-        <translation>Не удалось обработать URI! Это может быть связано с неверным адресом Peercoin или неправильными параметрами URI.</translation>
+        <translation>Не удалось обработать URI! Это может быть связано с неверным адресом Пиркойн или неправильными параметрами URI.</translation>
     </message>
     <message>
         <location line="+17"/>
@@ -672,7 +672,7 @@ Address: %4
     <message>
         <location filename="../bitcoin.cpp" line="+111"/>
         <source>A fatal error occurred. Peercoin can no longer continue safely and will quit.</source>
-        <translation>Произошла неисправимая ошибка. Peercoin не может безопасно продолжать работу и будет закрыт.</translation>
+        <translation>Произошла неисправимая ошибка. Пиркойн не может безопасно продолжать работу и будет закрыт.</translation>
     </message>
 </context>
 <context>
@@ -738,7 +738,7 @@ Address: %4
     <message>
         <location line="-5"/>
         <source>The entered address &quot;%1&quot; is not a valid Peercoin address.</source>
-        <translation>Введённый адрес &quot;%1&quot; не является правильным Peercoin-адресом.</translation>
+        <translation>Введённый адрес &quot;%1&quot; не является правильным Пиркойн-адресом.</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -820,7 +820,7 @@ Address: %4
     <message>
         <location line="+31"/>
         <source>Automatically start Peercoin after logging in to the system.</source>
-        <translation>Автоматически запускать Peercoin после входа в систему</translation>
+        <translation>Автоматически запускать Пиркойн после входа в систему</translation>
     </message>
     <message>
         <location line="+46"/>
@@ -830,7 +830,7 @@ Address: %4
     <message>
         <location line="+3"/>
         <source>&amp;Start Peercoin on system login</source>
-        <translation>&amp;Запускать Peercoin при входе в систему</translation>
+        <translation>&amp;Запускать Пиркойн при входе в систему</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -855,7 +855,7 @@ Address: %4
     <message>
         <location line="+6"/>
         <source>Automatically open the Peercoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>Автоматически открыть порт для Peercoin-клиента на роутере. Работает только если Ваш роутер поддерживает UPnP, и данная функция включена.</translation>
+        <translation>Автоматически открыть порт для Пиркойн-клиента на роутере. Работает только если Ваш роутер поддерживает UPnP, и данная функция включена.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -865,7 +865,7 @@ Address: %4
     <message>
         <location line="+7"/>
         <source>Connect to the Peercoin network through a SOCKS proxy (e.g. when connecting through Tor).</source>
-        <translation>Подключаться к сети Peercoin через прокси SOCKS (например, при подключении через Tor).</translation>
+        <translation>Подключаться к сети Пиркойн через прокси SOCKS (например, при подключении через Tor).</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -940,7 +940,7 @@ Address: %4
     <message>
         <location line="+13"/>
         <source>The user interface language can be set here. This setting will take effect after restarting Peercoin.</source>
-        <translation>Здесь можно выбрать язык интерфейса. Настройки вступят в силу после перезапуска Peercoin.</translation>
+        <translation>Здесь можно выбрать язык интерфейса. Настройки вступят в силу после перезапуска Пиркойн.</translation>
     </message>
     <message>
         <location line="+11"/>
@@ -955,7 +955,7 @@ Address: %4
     <message>
         <location line="+9"/>
         <source>Whether to show Peercoin addresses in the transaction list or not.</source>
-        <translation>Показывать ли адреса Peercoin в списке транзакций.</translation>
+        <translation>Показывать ли адреса Пиркойн в списке транзакций.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -1007,7 +1007,7 @@ Address: %4
         <location line="-9"/>
         <location line="+9"/>
         <source>This setting will take effect after restarting Peercoin.</source>
-        <translation>Эта настройка вступит в силу после перезапуска Peercoin</translation>
+        <translation>Эта настройка вступит в силу после перезапуска Пиркойн</translation>
     </message>
     <message>
         <location line="+29"/>
@@ -1026,7 +1026,7 @@ Address: %4
         <location line="+50"/>
         <location line="+166"/>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Peercoin network after a connection is established, but this process has not completed yet.</source>
-        <translation>Отображаемая информация может быть устаревшей. Ваш бумажник автоматически синхронизируется с сетью Peercoin после подключения, но этот процесс пока не завершён.</translation>
+        <translation>Отображаемая информация может быть устаревшей. Ваш бумажник автоматически синхронизируется с сетью Пиркойн после подключения, но этот процесс пока не завершён.</translation>
     </message>
     <message>
         <location line="-124"/>
@@ -1080,7 +1080,7 @@ Address: %4
     <message>
         <location filename="../paymentserver.cpp" line="+107"/>
         <source>Cannot start peercoin: click-to-pay handler</source>
-        <translation>Не удаётся запустить peercoin: обработчик click-to-pay</translation>
+        <translation>Не удаётся запустить Пиркойн: обработчик click-to-pay</translation>
     </message>
 </context>
 <context>
@@ -1250,12 +1250,12 @@ Address: %4
     <message>
         <location line="-104"/>
         <source>Peercoin - Debug window</source>
-        <translation>Peercoin - Окно отладки</translation>
+        <translation>Пиркойн - Окно отладки</translation>
     </message>
     <message>
         <location line="+25"/>
         <source>Peercoin Core</source>
-        <translation>Ядро Peercoin</translation>
+        <translation>Ядро Пиркойн</translation>
     </message>
     <message>
         <location line="+279"/>
@@ -1265,7 +1265,7 @@ Address: %4
     <message>
         <location line="+7"/>
         <source>Open the Peercoin debug log file from the current data directory. This can take a few seconds for large log files.</source>
-        <translation>Открыть отладочный лог-файл Peercoin из текущего каталога данных. Это может занять несколько секунд для больших лог-файлов.</translation>
+        <translation>Открыть отладочный лог-файл Пиркойн из текущего каталога данных. Это может занять несколько секунд для больших лог-файлов.</translation>
     </message>
     <message>
         <location line="+102"/>
@@ -1275,7 +1275,7 @@ Address: %4
     <message>
         <location filename="../rpcconsole.cpp" line="-30"/>
         <source>Welcome to the Peercoin RPC console.</source>
-        <translation>Добро пожаловать в RPC-консоль Peercoin.</translation>
+        <translation>Добро пожаловать в RPC-консоль Пиркойн.</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1459,7 +1459,7 @@ Address: %4
     <message>
         <location filename="../sendcoinsentry.cpp" line="+1"/>
         <source>Enter a Peercoin address</source>
-        <translation>Введите Peercoin-адрес (например 1LA5FtQhnnWnkK6zjFfutR7Stiit4wKd63)</translation>
+        <translation>Введите Пиркойн-адрес (например 1LA5FtQhnnWnkK6zjFfutR7Stiit4wKd63)</translation>
     </message>
 </context>
 <context>
@@ -1524,7 +1524,7 @@ Address: %4
     <message>
         <location line="+21"/>
         <source>Sign the message to prove you own this Peercoin address</source>
-        <translation>Подписать сообщение, чтобы доказать владение адресом Peercoin</translation>
+        <translation>Подписать сообщение, чтобы доказать владение адресом Пиркойн</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -1560,7 +1560,7 @@ Address: %4
     <message>
         <location line="+40"/>
         <source>Verify the message to ensure it was signed with the specified Peercoin address</source>
-        <translation>Проверить сообщение, чтобы убедиться, что оно было подписано указанным адресом Peercoin</translation>
+        <translation>Проверить сообщение, чтобы убедиться, что оно было подписано указанным адресом Пиркойн</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -1576,7 +1576,7 @@ Address: %4
         <location filename="../signverifymessagedialog.cpp" line="+27"/>
         <location line="+3"/>
         <source>Enter a Peercoin address</source>
-        <translation>Введите адрес Peercoin (напр. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
+        <translation>Введите адрес Пиркойн (напр. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>
         <location line="-2"/>
@@ -1586,7 +1586,7 @@ Address: %4
     <message>
         <location line="+3"/>
         <source>Enter Peercoin signature</source>
-        <translation>Введите подпись Peercoin</translation>
+        <translation>Введите подпись Пиркойн</translation>
     </message>
     <message>
         <location line="+82"/>
@@ -1660,7 +1660,7 @@ Address: %4
     <message>
         <location filename="../splashscreen.cpp" line="+22"/>
         <source>The Peercoin developers</source>
-        <translation>Разработчики Peercoin</translation>
+        <translation>Разработчики Пиркойн</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2344,7 +2344,7 @@ rpcpassword=%s
     <message>
         <location line="+3"/>
         <source>Cannot obtain a lock on data directory %s. Peercoin is probably already running.</source>
-        <translation>Не удаётся установить блокировку на каталог данных %s.  Возможно, Peercoin уже работает.</translation>
+        <translation>Не удаётся установить блокировку на каталог данных %s.  Возможно, Пиркойн уже работает.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -2389,7 +2389,7 @@ rpcpassword=%s
     <message>
         <location line="+3"/>
         <source>Warning: Please check that your computer&apos;s date and time are correct! If your clock is wrong Peercoin will not work properly.</source>
-        <translation>Внимание: убедитесь, что дата и время на Вашем компьютере выставлены верно. Если Ваши часы идут неправильно, Peercoin будет работать некорректно.</translation>
+        <translation>Внимание: убедитесь, что дата и время на Вашем компьютере выставлены верно. Если Ваши часы идут неправильно, Пиркойн будет работать некорректно.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -2830,12 +2830,12 @@ rpcpassword=%s
     <message>
         <location line="+1"/>
         <source>Error loading wallet.dat: Wallet requires newer version of Peercoin</source>
-        <translation>Ошибка загрузки wallet.dat: бумажник требует более новую версию Peercoin</translation>
+        <translation>Ошибка загрузки wallet.dat: бумажник требует более новую версию Пиркойн</translation>
     </message>
     <message>
         <location line="+93"/>
         <source>Wallet needed to be rewritten: restart Peercoin to complete</source>
-        <translation>Необходимо перезаписать бумажник, перезапустите Peercoin для завершения операции.</translation>
+        <translation>Необходимо перезаписать бумажник, перезапустите Пиркойн для завершения операции.</translation>
     </message>
     <message>
         <location line="-95"/>
@@ -2895,7 +2895,7 @@ rpcpassword=%s
     <message>
         <location line="-25"/>
         <source>Unable to bind to %s on this computer. Peercoin is probably already running.</source>
-        <translation>Невозможно привязаться к %s на этом компьютере.  Возможно, Peercoin уже работает.</translation>
+        <translation>Невозможно привязаться к %s на этом компьютере.  Возможно, Пиркойн уже работает.</translation>
     </message>
     <message>
         <location line="+64"/>
