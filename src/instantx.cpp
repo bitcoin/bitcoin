@@ -195,7 +195,7 @@ void CInstantSend::Vote(CTxLockCandidate& txLockCandidate, CConnman& connman)
             return;
         }
 
-        int nLockInputHeight = nPrevoutHeight + 4;
+        int nLockInputHeight = nPrevoutHeight + 1;
 
         int nRank;
         if(!mnodeman.GetMasternodeRank(activeMasternode.outpoint, nRank, nLockInputHeight, MIN_INSTANTSEND_PROTO_VERSION)) {
