@@ -97,6 +97,15 @@ bool GetSyscoinTransaction(int nHeight, const uint256 &hash, CTransaction &txOut
     }
 	return false;
 }
+uint64_t GetAliasExpiration(const CAliasIndex& alias) {
+	// dont prune by default, set nHeight to future time
+	uint64_t nTime = chainActive.Tip()->GetMedianTimePast() + 1;
+	CAliasUnprunable aliasUnprunable;
+	// if service alias exists in unprunable db (this should always exist for any alias that ever existed) then get the last expire height set for this alias and check against it for pruning
+	if (paliasdb && paliasdb->ReadAliasUnprunable(alias.vchAlias, aliasUnprunable) && !aliasUnprunable.IsNull())
+		nTime = aliasUnprunable.nExpireTime;
+	return nTime;
+}
 bool GetTimeToPrune(const CScript& scriptPubKey, uint64_t &nTime)
 {
 	vector<unsigned char> vchData;
@@ -686,6 +695,11 @@ theAlias = dbAlias;
 			if (!dbAlias.IsNull())
 			{
 				errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5028 - " + _("Trying to renew an alias that isn't expired");
+				return true;
+			}
+			if (paliasdb->ExistsAddress(theAlias.vchAddress) && chainActive.Tip()->GetMedianTimePast() < GetAliasExpiration(theAlias))
+			{
+				errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5028 - " + _("Trying to create an alias with an address of an alias that isn't expired");
 				return true;
 			}
 		}
