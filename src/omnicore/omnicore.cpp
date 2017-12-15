@@ -58,17 +58,12 @@
 #include "wallet/wallet.h"
 #endif
 
-#include <univalue.h>
-
 #include <boost/algorithm/string.hpp>
-#include <boost/exception/to_string.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
 
 #include <openssl/sha.h>
-
-#include "leveldb/db.h"
 
 #include <assert.h>
 #include <stdint.h>
@@ -80,13 +75,6 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
-
-using boost::algorithm::token_compress_on;
-using boost::to_string;
-
-using leveldb::Iterator;
-using leveldb::Slice;
-using leveldb::Status;
 
 using std::endl;
 using std::make_pair;
@@ -1589,7 +1577,7 @@ int input_mp_accepts_string(const string &s)
   int nBlock;
   unsigned char blocktimelimit;
   std::vector<std::string> vstr;
-  boost::split(vstr, s, boost::is_any_of(" ,="), token_compress_on);
+  boost::split(vstr, s, boost::is_any_of(" ,="), boost::token_compress_on);
   uint64_t amountRemaining, amountOriginal, offerOriginal, btcDesired;
   unsigned int prop;
   string sellerAddr, buyerAddr, txidStr;
@@ -1623,7 +1611,7 @@ int input_globals_state_string(const string &s)
   uint64_t exodusPrev;
   unsigned int nextSPID, nextTestSPID;
   std::vector<std::string> vstr;
-  boost::split(vstr, s, boost::is_any_of(" ,="), token_compress_on);
+  boost::split(vstr, s, boost::is_any_of(" ,="), boost::token_compress_on);
   if (3 != vstr.size()) return -1;
 
   int i = 0;
@@ -1881,7 +1869,7 @@ static int load_most_relevant_state()
 
     std::string fName = (*--dIter->path().end()).string();
     std::vector<std::string> vstr;
-    boost::split(vstr, fName, boost::is_any_of("-."), token_compress_on);
+    boost::split(vstr, fName, boost::is_any_of("-."), boost::token_compress_on);
     if (  vstr.size() == 3 &&
           boost::equals(vstr[2], "dat")) {
       uint256 blockHash;
@@ -1995,7 +1983,7 @@ static int write_mp_offers(ofstream &file, SHA256_CTX *shaCtx)
   for (iter = my_offers.begin(); iter != my_offers.end(); ++iter) {
     // decompose the key for address
     std::vector<std::string> vstr;
-    boost::split(vstr, (*iter).first, boost::is_any_of("-"), token_compress_on);
+    boost::split(vstr, (*iter).first, boost::is_any_of("-"), boost::token_compress_on);
     CMPOffer const &offer = (*iter).second;
     offer.saveOffer(file, shaCtx, vstr[0]);
   }
@@ -2029,7 +2017,7 @@ static int write_mp_accepts(ofstream &file, SHA256_CTX *shaCtx)
   for (iter = my_accepts.begin(); iter != my_accepts.end(); ++iter) {
     // decompose the key for address
     std::vector<std::string> vstr;
-    boost::split(vstr, (*iter).first, boost::is_any_of("-+"), token_compress_on);
+    boost::split(vstr, (*iter).first, boost::is_any_of("-+"), boost::token_compress_on);
     CMPAccept const &accept = (*iter).second;
     accept.saveAccept(file, shaCtx, vstr[0], vstr[1]);
   }
@@ -2144,7 +2132,7 @@ static void prune_state_files( CBlockIndex const *topIndex )
     }
 
     std::vector<std::string> vstr;
-    boost::split(vstr, fName, boost::is_any_of("-."), token_compress_on);
+    boost::split(vstr, fName, boost::is_any_of("-."), boost::token_compress_on);
     if (  vstr.size() == 3 &&
           is_state_prefix(vstr[0]) &&
           boost::equals(vstr[2], "dat")) {
@@ -2546,7 +2534,7 @@ int validity = 0;
 
   // parse the string returned, find the validity flag/bit & other parameters
   std::vector<std::string> vstr;
-  boost::split(vstr, result, boost::is_any_of(":"), token_compress_on);
+  boost::split(vstr, result, boost::is_any_of(":"), boost::token_compress_on);
 
   if (msc_debug_txdb) PrintToLog("%s() size=%lu : %s\n", __FUNCTION__, vstr.size(), result);
 
