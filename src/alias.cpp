@@ -2515,21 +2515,20 @@ bool BuildAliasIndexerHistoryJson(const CAliasIndex& alias, UniValue& oName)
 }
 UniValue aliaspay(const UniValue& params, bool fHelp) {
 
-    if (fHelp || params.size() < 3 || params.size() > 5)
+    if (fHelp || params.size() < 2 || params.size() > 4)
         throw runtime_error(
-            "aliaspay aliasfrom currency {\"address\":amount,...} (instantsend subtractfeefromamount)\n"
+            "aliaspay aliasfrom {\"address\":amount,...} (instantsend subtractfeefromamount)\n"
             "\nSend multiple times from an alias. Amounts are double-precision floating point numbers."
             + HelpRequiringPassphrase() + "\n"
             "\nArguments:\n"
 			"1. \"aliasfrom\"			(string, required) Alias to pay from\n"
-			"2. \"currency\"			(string, required) Currency to pay from\n"
-            "3. \"amounts\"             (string, required) A json object with aliases and amounts\n"
+            "2. \"amounts\"             (string, required) A json object with aliases and amounts\n"
             "    {\n"
             "      \"address\":amount   (numeric or string) The syscoin alias is the key, the numeric amount (can be string) in SYS is the value\n"
             "      ,...\n"
             "    }\n"
-			"4. instantsend				(boolean, optional) Set to true to use InstantSend to send this transaction or false otherwise.\n"
-			"5. subtractfeefromamount   (string, optional) A json array with addresses.\n"
+			"3. instantsend				(boolean, optional) Set to true to use InstantSend to send this transaction or false otherwise.\n"
+			"4. subtractfeefromamount   (string, optional) A json array with addresses.\n"
             "\nResult:\n"
 			"\"transaction hex\"          (string) The transaction hex (unsigned) for signing and sending. Only 1 transaction is created regardless of \n"
             "                                    the number of addresses.\n"
@@ -2550,11 +2549,11 @@ UniValue aliaspay(const UniValue& params, bool fHelp) {
     UniValue sendTo = params[1].get_obj();
 
 	bool fUseInstantSend = false;
-	if (params.size() > 3)
+	if (params.size() > 2)
 		fUseInstantSend = params[2].get_bool();
 
 	UniValue subtractFeeFromAmount(UniValue::VARR);
-	if (params.size() > 4)
+	if (params.size() > 3)
 		subtractFeeFromAmount = params[3].get_array();
 
 
