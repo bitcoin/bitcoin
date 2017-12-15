@@ -948,7 +948,7 @@ bool CTxLockRequest::IsValid() const
         int nTxAge = chainActive.Height() - coins.nHeight;
         if(nTxAge < INSTANTSEND_CONFIRMATIONS_REQUIRED) {
             LogPrint("instantsend", "CTxLockRequest::IsValid -- outpoint %s too new: nTxAge=%d, nConfirmationsRequired=%d, txid=%s\n",
-                    txin.prevout.ToStringShort(), nTxAge, nConfirmationsRequired, GetHash().ToString());
+                    txin.prevout.ToStringShort(), nTxAge, INSTANTSEND_CONFIRMATIONS_REQUIRED, GetHash().ToString());
             return false;
         }
 
