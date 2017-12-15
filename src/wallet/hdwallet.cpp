@@ -1787,6 +1787,46 @@ void CHDWallet::GetCredit(const CTransaction &tx, CAmount &nSpendable, CAmount &
             throw std::runtime_error(std::string(__func__) + ": value out of range");
 };
 
+CAmount CHDWallet::GetOutputValue(const COutPoint &op, bool fAllowTXIndex)
+{
+    MapWallet_t::iterator itw;
+    MapRecords_t::iterator itr;
+    if ((itw = mapWallet.find(op.hash)) != mapWallet.end())
+    {
+        CWalletTx *pcoin = &itw->second;
+        if (pcoin->tx->GetNumVOuts() > op.n)
+            return pcoin->tx->vpout[op.n]->GetValue();
+        return 0;
+    };
+
+    if ((itr = mapRecords.find(op.hash)) != mapRecords.end())
+    {
+        const COutputRecord *rec = itr->second.GetOutput(op.n);
+        if (rec)
+            return rec->nValue;
+        CStoredTransaction stx;
+        if (!CHDWalletDB(*dbw).ReadStoredTx(op.hash, stx)) // TODO: cache / use mapTempWallet
+        {
+            LogPrintf("%s: ReadStoredTx failed for %s.\n", __func__, op.hash.ToString());
+            return 0;
+        };
+        if (stx.tx->GetNumVOuts() > op.n)
+            return stx.tx->vpout[op.n]->GetValue();
+        return 0;
+    };
+
+    uint256 hashBlock;
+    CTransactionRef txOut;
+    if (GetTransaction(op.hash, txOut, Params().GetConsensus(), hashBlock, true))
+    {
+        if (txOut->GetNumVOuts() > op.n)
+            return txOut->vpout[op.n]->GetValue();
+        return 0;
+    };
+
+    return 0;
+};
+
 
 bool CHDWallet::InMempool(const uint256 &hash) const
 {

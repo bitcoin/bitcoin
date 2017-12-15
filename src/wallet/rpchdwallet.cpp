@@ -2692,7 +2692,9 @@ static void ParseOutputs(
     CWalletTx &          wtx,
     CHDWallet * const    pwallet,
     const isminefilter & watchonly,
-    std::string          search
+    std::string          search,
+    bool                 fWithReward,
+    std::vector<CScript> &vDevFundScripts
 ) {
     UniValue entry(UniValue::VOBJ);
 
@@ -2752,6 +2754,7 @@ static void ParseOutputs(
             output.push_back(Pair("amount", ValueFromAmount(s.amount)));
             outputs.push_back(output);
         }
+
         amount += -nFee;
     } else {
         // sent
@@ -2832,6 +2835,33 @@ static void ParseOutputs(
 
     entry.push_back(Pair("outputs", outputs));
     entry.push_back(Pair("amount", ValueFromAmount(amount)));
+
+    if (fWithReward && !listStaked.empty())
+    {
+        CAmount nOutput = wtx.tx->GetValueOut();
+        CAmount nInput = 0;
+
+        // Remove dev fund outputs
+        if (wtx.tx->vpout.size() > 2 && wtx.tx->vpout[1]->IsStandardOutput())
+        {
+            for (const auto &s : vDevFundScripts)
+            {
+                if (s == *wtx.tx->vpout[1]->GetPScriptPubKey())
+                {
+                    nOutput -= wtx.tx->vpout[1]->GetValue();
+                    break;
+                }
+            }
+        };
+
+        for (const auto &vin : wtx.tx->vin)
+        {
+            if (vin.IsAnonInput())
+                continue;
+            nInput += pwallet->GetOutputValue(vin.prevout, true);
+        };
+        entry.push_back(Pair("reward", ValueFromAmount(nOutput - nInput)));
+    };
 
     if (search != "") {
         // search in addresses
@@ -2999,7 +3029,9 @@ static void ParseRecords(
         push(entry, "category", "receive");
     } else if (nFrom) {
         push(entry, "category", "send");
-    };
+    } else {
+        push(entry, "category", "unknown");
+    }
 
     if (nLockedOutputs) {
         push(entry, "requires_unlock", "true");
@@ -3075,6 +3107,7 @@ UniValue filtertransactions(const JSONRPCRequest &request)
             "                \"from\":              '0'\n"
             "                \"to\":                '9999'\n"
             "                \"collate\":           false\n"
+            "                \"with_reward\":       false\n"
             "        }\n"
             "\n"
             "        Expected values are as follows:\n"
@@ -3106,6 +3139,7 @@ UniValue filtertransactions(const JSONRPCRequest &request)
             "                from:              unix timestamp or string \"yyyy-mm-ddThh:mm:ss\"\n"
             "                to:                unix timestamp or string \"yyyy-mm-ddThh:mm:ss\"\n"
             "                collate:           display number of records and sum of amount fields\n"
+            "                with_reward        calculate reward explicitly from txindex if necessary\n"
             "\n"
             "        Examples:\n"
             "            List only when category is 'stake'\n"
@@ -3129,6 +3163,7 @@ UniValue filtertransactions(const JSONRPCRequest &request)
     int64_t timeFrom = 0;
     int64_t timeTo = 0x3AFE130E00; // 9999
     bool fCollate = false;
+    bool fWithReward = false;
 
     if (!request.params[0].isNull()) {
         const UniValue & options = request.params[0].get_obj();
@@ -3230,7 +3265,25 @@ UniValue filtertransactions(const JSONRPCRequest &request)
             timeTo = options["to"].get_int64();
         if (options["collate"].isBool())
             fCollate = options["collate"].get_bool();
+        if (options["with_reward"].isBool())
+            fWithReward = options["with_reward"].get_bool();
     }
+
+
+    std::vector<CScript> vDevFundScripts;
+    if (fWithReward)
+    {
+        const auto v = Params().GetDevFundSettings();
+        for (const auto &s : v)
+        {
+            CTxDestination dfDest = CBitcoinAddress(s.second.sDevFundAddresses).Get();
+            if (dfDest.type() == typeid(CNoDestination))
+                continue;
+            CScript script = GetScriptForDestination(dfDest);
+            vDevFundScripts.push_back(script);
+        };
+    };
+
 
     // for transactions and records
     UniValue transactions(UniValue::VARR);
@@ -3248,7 +3301,9 @@ UniValue filtertransactions(const JSONRPCRequest &request)
             *pwtx,
             pwallet,
             watchonly,
-            search
+            search,
+            fWithReward,
+            vDevFundScripts
         );
         tit++;
     }
@@ -3297,7 +3352,7 @@ UniValue filtertransactions(const JSONRPCRequest &request)
         );
     });
 
-    CAmount nTotalAmount = 0;
+    CAmount nTotalAmount = 0, nTotalReward = 0;
     // filter, skip and count
     UniValue result(UniValue::VARR);
     // for every value while count is positive
@@ -3324,17 +3379,24 @@ UniValue filtertransactions(const JSONRPCRequest &request)
                 if (fCollate) {
                     if (!values[i]["amount"].isNull())
                         nTotalAmount += AmountFromValue(values[i]["amount"]);
+                    if (!values[i]["reward"].isNull())
+                        nTotalReward += AmountFromValue(values[i]["reward"]);
                 };
             }
         }
     }
 
     if (fCollate) {
+        UniValue retObj(UniValue::VOBJ);
         UniValue stats(UniValue::VOBJ);
         stats.pushKV("records", (int)result.size());
         stats.pushKV("total_amount", ValueFromAmount(nTotalAmount));
-        result.push_back(stats);
-    }
+        if (fWithReward)
+            stats.pushKV("total_reward", ValueFromAmount(nTotalReward));
+        retObj.pushKV("tx", result);
+        retObj.pushKV("collated", stats);
+        return retObj;
+    };
 
     return result;
 }

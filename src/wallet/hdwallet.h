@@ -132,7 +132,6 @@ public:
 
     COutputRecord *GetOutput(int n);
     const COutputRecord *GetOutput(int n) const;
-
     const COutputRecord *GetChangeOutput() const;
 
     void SetMerkleBranch(const uint256 &blockHash_, int posInBlock)
@@ -460,6 +459,8 @@ public:
     CAmount GetCredit(const CTransaction &tx, const isminefilter &filter) const override;
 
     void GetCredit(const CTransaction &tx, CAmount &nSpendable, CAmount &nWatchOnly) const;
+
+    CAmount GetOutputValue(const COutPoint &op, bool fAllowTXIndex);
 
     int GetDepthInMainChain(const uint256 &blockhash, int nIndex = 0) const;
     bool InMempool(const uint256 &hash) const;

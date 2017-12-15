@@ -99,6 +99,7 @@ public:
     int64_t GetCoinYearReward(int64_t nTime) const;
 
     const DevFundSettings *GetDevFundSettings(int64_t nTime) const;
+    const std::vector<std::pair<int64_t, DevFundSettings> > &GetDevFundSettings() const {return vDevFundSettings;};
 
     int64_t GetProofOfStakeReward(const CBlockIndex *pindexPrev, int64_t nFees) const;
 
