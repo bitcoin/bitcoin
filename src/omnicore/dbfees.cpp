@@ -1,30 +1,46 @@
 /**
- * @file fees.cpp
+ * @file dbfees.cpp
  *
  * This file contains code for handling Omni fees.
  */
 
-#include "omnicore/fees.h"
+#include "omnicore/dbfees.h"
 
-#include "omnicore/omnicore.h"
 #include "omnicore/log.h"
+#include "omnicore/omnicore.h"
 #include "omnicore/rules.h"
 #include "omnicore/sp.h"
 #include "omnicore/sto.h"
 
-#include "leveldb/db.h"
-
 #include "main.h"
 
-#include <limits.h>
-#include <stdint.h>
+#include "leveldb/db.h"
 
 #include <boost/algorithm/string.hpp>
+#include <boost/filesystem.hpp>
 #include <boost/lexical_cast.hpp>
+
+#include <stdint.h>
+
+#include <limits>
+#include <map>
+#include <string>
+#include <vector>
 
 using namespace mastercore;
 
 std::map<uint32_t, int64_t> distributionThresholds;
+
+COmniFeeCache::COmniFeeCache(const boost::filesystem::path& path, bool fWipe)
+{
+    leveldb::Status status = Open(path, fWipe);
+    PrintToConsole("Loading fee cache database: %s\n", status.ToString());
+}
+
+COmniFeeCache::~COmniFeeCache()
+{
+    if (msc_debug_fees) PrintToLog("COmniFeeCache closed\n");
+}
 
 // Returns the distribution threshold for a property
 int64_t COmniFeeCache::GetDistributionThreshold(const uint32_t &propertyId)
@@ -318,6 +334,17 @@ std::set<feeCacheItem> COmniFeeCache::GetCacheHistory(const uint32_t &propertyId
     return sCacheHistoryItems;
 }
 
+COmniFeeHistory::COmniFeeHistory(const boost::filesystem::path& path, bool fWipe)
+{
+    leveldb::Status status = Open(path, fWipe);
+    PrintToConsole("Loading fee history database: %s\n", status.ToString());
+}
+
+COmniFeeHistory::~COmniFeeHistory()
+{
+    if (msc_debug_fees) PrintToLog("COmniFeeHistory closed\n");
+}
+    
 // Show Fee History DB statistics
 void COmniFeeHistory::printStats()
 {

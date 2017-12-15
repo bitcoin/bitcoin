@@ -3,12 +3,12 @@
 #include "omnicore/tx.h"
 
 #include "omnicore/activation.h"
+#include "omnicore/dbfees.h"
 #include "omnicore/dbspinfo.h"
 #include "omnicore/dbstolist.h"
 #include "omnicore/dbtradelist.h"
 #include "omnicore/dbtxlist.h"
 #include "omnicore/dex.h"
-#include "omnicore/fees.h"
 #include "omnicore/log.h"
 #include "omnicore/mdex.h"
 #include "omnicore/notifications.h"

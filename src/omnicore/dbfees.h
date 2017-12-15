@@ -1,14 +1,15 @@
 #ifndef OMNICORE_FEES_H
 #define OMNICORE_FEES_H
 
-#include "leveldb/db.h"
-
 #include "omnicore/dbbase.h"
 #include "omnicore/log.h"
 
-#include <set>
-#include <stdint.h>
 #include <boost/filesystem.hpp>
+
+#include <stdint.h>
+#include <set>
+#include <string>
+#include <utility>
 
 typedef std::pair<int, int64_t> feeCacheItem;
 typedef std::pair<std::string, int64_t> feeHistoryItem;
@@ -18,16 +19,8 @@ typedef std::pair<std::string, int64_t> feeHistoryItem;
 class COmniFeeCache : public CDBBase
 {
 public:
-    COmniFeeCache(const boost::filesystem::path& path, bool fWipe)
-    {
-        leveldb::Status status = Open(path, fWipe);
-        PrintToConsole("Loading fee cache database: %s\n", status.ToString());
-    }
-
-    virtual ~COmniFeeCache()
-    {
-        if (msc_debug_fees) PrintToLog("COmniFeeCache closed\n");
-    }
+    COmniFeeCache(const boost::filesystem::path& path, bool fWipe);
+    virtual ~COmniFeeCache();
 
     /** Show Fee Cache DB statistics */
     void printStats();
@@ -61,16 +54,8 @@ public:
 class COmniFeeHistory : public CDBBase
 {
 public:
-    COmniFeeHistory(const boost::filesystem::path& path, bool fWipe)
-    {
-        leveldb::Status status = Open(path, fWipe);
-        PrintToConsole("Loading fee history database: %s\n", status.ToString());
-    }
-
-    virtual ~COmniFeeHistory()
-    {
-        if (msc_debug_fees) PrintToLog("COmniFeeHistory closed\n");
-    }
+    COmniFeeHistory(const boost::filesystem::path& path, bool fWipe);
+    virtual ~COmniFeeHistory();
 
     /** Show Fee History DB statistics */
     void printStats();
