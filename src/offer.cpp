@@ -245,8 +245,6 @@ bool GetOffer(const vector<unsigned char> &vchOffer,
 	{
 		txPos.SetNull();
 		string offer = stringFromVch(vchOffer);
-		if(fDebug)
-			LogPrintf("GetOffer(%s) : expired", offer.c_str());
 		return false;
 	}
 	return true;

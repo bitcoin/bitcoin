@@ -400,7 +400,6 @@ bool GetEscrow(const CNameTXIDTuple &escrowTuple,
 		return false;
 	if (chainActive.Tip()->GetMedianTimePast() >= GetEscrowExpiration(txPos)) {
 		string escrow = stringFromVch(escrowTuple.first);
-		LogPrintf("GetEscrow(%s) : expired", escrow.c_str());
 		return false;
 	}
 	return true;
@@ -415,7 +414,6 @@ bool GetEscrow(const vector<unsigned char> &vchEscrow,
    if (chainActive.Tip()->GetMedianTimePast() >= GetEscrowExpiration(txPos)) {
 	   txPos.SetNull();
         string escrow = stringFromVch(vchEscrow);
-        LogPrintf("GetEscrow(%s) : expired", escrow.c_str());
         return false;
     }
     return true;

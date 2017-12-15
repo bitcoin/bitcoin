@@ -945,7 +945,6 @@ bool GetAlias(const vector<unsigned char> &vchAlias,
 	if (chainActive.Tip()->GetMedianTimePast() >= txPos.nExpireTime) {
 		txPos.SetNull();
 		string alias = stringFromVch(vchAlias);
-		LogPrintf("GetAlias(%s) : expired", alias.c_str());
 		return false;
 	}
 	

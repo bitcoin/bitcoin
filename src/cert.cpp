@@ -243,7 +243,6 @@ bool GetCert(const vector<unsigned char> &vchCert,
     if (chainActive.Tip()->GetMedianTimePast() >= GetCertExpiration(txPos)) {
 		txPos.SetNull();
         string cert = stringFromVch(vchCert);
-        LogPrintf("GetCert(%s) : expired", cert.c_str());
         return false;
     }
 
