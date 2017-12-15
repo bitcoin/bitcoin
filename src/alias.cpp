@@ -2304,7 +2304,7 @@ UniValue aliasbalance(const UniValue& params, bool fHelp)
 		if (DecodeAliasScript(scriptPubKey, op, vvch))
 			continue;
 		// some smaller sized outputs are reserved to pay for fees only using aliasselectpaymentcoins (with bSelectFeePlacement set to true)
-		if (nValue <= CWallet::GetMinimumFee(1000, nTxConfirmTarget, mempool))
+		if (nValue <= std::max(CWallet::GetMinimumFee(1000, nTxConfirmTarget, mempool), CTxLockRequest().GetMinFee() * 2))
 			continue;
 		{
 			LOCK(mempool.cs);
@@ -2360,7 +2360,7 @@ int aliasselectpaymentcoins(const vector<unsigned char> &vchAlias, const CAmount
 			continue;  
 		if (!bSelectAll) {
 			// fee placement were ones that were smaller outputs used for subsequent updates
-			if (nValue <= CWallet::GetMinimumFee(1000, nTxConfirmTarget, mempool))
+			if (nValue <= std::max(CWallet::GetMinimumFee(1000, nTxConfirmTarget, mempool), CTxLockRequest().GetMinFee() * 2))
 			{
 				// alias pay doesn't include recipient, no utxo inputs used for aliaspay, for aliaspay we don't care about these small dust amounts
 				if (bNoAliasRecipient)

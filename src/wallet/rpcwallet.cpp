@@ -526,7 +526,8 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
 	{
 		// create utxo minimum 1kb worth of fees if alias is first activated
 		if ((op == OP_ALIAS_ACTIVATE && vvch.size() > 1) || op != OP_ALIAS_ACTIVATE) {
-			CAmount nMinFee = CWallet::GetMinimumFee(1000, nTxConfirmTarget, mempool);
+			// max between 1000 bytes of a normal tx or 2 input instant send
+			CAmount nMinFee = std::max(CWallet::GetMinimumFee(1000, nTxConfirmTarget, mempool), CTxLockRequest().GetMinFee()*2);
 			if (aliasFeePlaceholderRecipient.nAmount < nMinFee)
 				aliasFeePlaceholderRecipient.nAmount = nMinFee;
 		}
