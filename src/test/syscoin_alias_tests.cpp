@@ -245,7 +245,7 @@ BOOST_AUTO_TEST_CASE (generate_aliaspay)
 	CAmount balanceBeforeTo = AmountFromValue(find_value(r.get_obj(), "balance"));
 
 	//send amount
-	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "aliaspay alias2.aliaspay.tld USD \"{\\\"alias3.aliaspay.tld\\\":0.4}\""));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "aliaspay alias2.aliaspay.tld \"{\\\"alias3.aliaspay.tld\\\":0.4}\""));
 	UniValue varray = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "signrawtransaction " + varray[0].get_str()));
 	BOOST_CHECK_NO_THROW(CallRPC("node2", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
