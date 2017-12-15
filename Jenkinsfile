@@ -8,7 +8,7 @@ pipeline {
                     agent {
                         docker {
                             image 'repo.t0.com/medici/raven-build:v1.0'
-                            label 'mac'
+                            label 'linux'
                             args  '-v /Users/Shared/Jenkins/Home/raven_depends/build_artifacts:/root/raven'
                         }
                     }
@@ -32,7 +32,7 @@ pipeline {
                         docker {
                             image 'repo.t0.com/medici/raven-build:v0.4'
                             args  '-v /Users/Shared/Jenkins/Home/raven_depends/build_artifacts:/root/raven'
-                            label 'mac'
+                            label 'linux'
                         }
                     }
                     steps {
@@ -55,7 +55,7 @@ pipeline {
                         docker {
                             image 'repo.t0.com/medici/raven-ubuntu-17.04:v0.2'
                             args  '-v /Users/Shared/Jenkins/Home/raven_depends:/root/depends'
-                            label 'mac'
+                            label 'linux'
                         }
                     }
                     steps {
