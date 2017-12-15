@@ -47,13 +47,14 @@ struct {
     unsigned int nonce;
 } blockinfo[] = {
     {1, 0x10f40b5}, {4, 0x11cf77d}, {6, 0x14a8c0c}, {5, 0x105fcac},
-	{3, 0x130ba7e}, //{1, 0x10f40b5}, {1, 0x10f40b5}, {1, 0x10f40b5},
-//	{1, 0x10f40b5}, {1, 0x10f40b5}, {1, 0x10f40b5}, {1, 0x10f40b5},
-//	{1, 0x10f40b5}, {1, 0x10f40b5}, {1, 0x10f40b5}, {1, 0x10f40b5},
-//	{1, 0x10f40b5}, {1, 0x10f40b5}, {1, 0x10f40b5}, {1, 0x10f40b5},
-//	{1, 0x10f40b5}, {1, 0x10f40b5}, {1, 0x10f40b5}, {1, 0x10f40b5},
-//	{1, 0x10f40b5}, {1, 0x10f40b5}, {1, 0x10f40b5}, {1, 0x10f40b5},
-//	{1, 0x10f40b5}, {1, 0x10f40b5}, {1, 0x10f40b5}, {1, 0x10f40b5},
+	{3, 0x130ba7e}, {2, 0x14654e9}, {5, 0x13eac98}, {3, 0x1159b25},
+	{4, 0x1172319}, {4, 0x13e918b}, {5, 0x12c712c}, {3, 0x10dc92c},
+	{1, 0x1104a1a}, {6, 0x1189ff2}, {5, 0x175c3e},  {3, 0x1478a1e},
+	{6, 0x15af3d8}, {1, 0x106aaed}, {4, 0x15329cd}, {1, 0x11d2516},
+	{3, 0x104cf27}, {4, 0x10d449a}, {5, 0x10cd5b5}, {1, 0x1077a79},
+	{3, 0x12c3c68}, {2, 0x10c57d6}, {3, 0x10d75d3}, {5, 0x1091f8f},
+	{1, 0x13f9531}, {3, 0x1274763}, {4, 0x14dbf92}, {1, 0x1116fc0},
+	{3, 0x106d6cc}, {1, 0x1f06870}, {4, 0x10e3391}, //{1, 0x10f40b5},
 //	{1, 0x10f40b5}, {1, 0x10f40b5}, {1, 0x10f40b5}, {1, 0x10f40b5},
 //	{1, 0x10f40b5}, {1, 0x10f40b5}, {1, 0x10f40b5}, {1, 0x10f40b5},
 //	{1, 0x10f40b5}, {1, 0x10f40b5}, {1, 0x10f40b5}, {1, 0x10f40b5},
@@ -255,7 +256,34 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     // Therefore, load 100 blocks :)
     int baseheight = 0;
     std::vector<CTransactionRef> txFirst;
-//    while(true) {
+
+
+    for (unsigned int i = 0; i < sizeof(blockinfo)/sizeof(*blockinfo); ++i)
+    {
+        CBlock *pblock = &pblocktemplate->block; // pointer for convenience
+        pblock->nVersion = 1;
+        pblock->nTime = chainActive.Tip()->GetMedianTimePast()+1;
+        CMutableTransaction txCoinbase(*pblock->vtx[0]);
+        txCoinbase.nVersion = 1;
+        txCoinbase.vin[0].scriptSig = CScript();
+        txCoinbase.vin[0].scriptSig.push_back(blockinfo[i].extranonce);
+        txCoinbase.vin[0].scriptSig.push_back(chainActive.Height());
+        txCoinbase.vout.resize(1); // Ignore the (optional) segwit commitment added by CreateNewBlock (as the hardcoded nonces don't account for this)
+        txCoinbase.vout[0].scriptPubKey = CScript();
+        pblock->vtx[0] = MakeTransactionRef(std::move(txCoinbase));
+        if (txFirst.size() == 0)
+            baseheight = chainActive.Height();
+        if (txFirst.size() < 4)
+            txFirst.push_back(pblock->vtx[0]);
+        pblock->hashMerkleRoot = BlockMerkleRoot(*pblock);
+        pblock->nNonce = blockinfo[i].nonce;
+        std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(*pblock);
+        std::cout << "Before process block" << std::endl;
+        BOOST_CHECK(ProcessNewBlock(chainparams, shared_pblock, true, nullptr));
+        pblock->hashPrevBlock = pblock->GetHash();
+    }
+
+//   while(true) {
 //		CBlock *pblock = &pblocktemplate->block; // pointer for convenience
 //		pblock->nVersion = 1;
 //		pblock->nTime = chainActive.Tip()->GetMedianTimePast()+1;
@@ -290,7 +318,8 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
 //			processBlock = ProcessNewBlock(chainparams, shared_pblock, true, nullptr);
 //			//BOOST_CHECK(processBlock);
 //				if(processBlock) {
-//				    std::cout << "nounce is " << j << std::endl;
+//                    std::cout << "nounce is " << shared_pblock->nNonce << std::endl;
+//				    std::cout << "extra nounce is " << j << std::endl;
 //					break;
 //				}
 //		 }
@@ -299,33 +328,9 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
 //		  //  bool processBlock = ProcessNewBlock(chainparams, shared_pblock, true, nullptr);
 //		 //   BOOST_CHECK(ProcessNewBlock(chainparams, shared_pblock, true, nullptr));
 //			pblock->hashPrevBlock = pblock->GetHash();
-//		}
-//    }
+//	}
 
-    for (unsigned int i = 0; i < sizeof(blockinfo)/sizeof(*blockinfo); ++i)
-    {
-        CBlock *pblock = &pblocktemplate->block; // pointer for convenience
-        pblock->nVersion = 1;
-        pblock->nTime = chainActive.Tip()->GetMedianTimePast()+1;
-        CMutableTransaction txCoinbase(*pblock->vtx[0]);
-        txCoinbase.nVersion = 1;
-        txCoinbase.vin[0].scriptSig = CScript();
-        txCoinbase.vin[0].scriptSig.push_back(blockinfo[i].extranonce);
-        txCoinbase.vin[0].scriptSig.push_back(chainActive.Height());
-        txCoinbase.vout.resize(1); // Ignore the (optional) segwit commitment added by CreateNewBlock (as the hardcoded nonces don't account for this)
-        txCoinbase.vout[0].scriptPubKey = CScript();
-        pblock->vtx[0] = MakeTransactionRef(std::move(txCoinbase));
-        if (txFirst.size() == 0)
-            baseheight = chainActive.Height();
-        if (txFirst.size() < 4)
-            txFirst.push_back(pblock->vtx[0]);
-        pblock->hashMerkleRoot = BlockMerkleRoot(*pblock);
-        pblock->nNonce = blockinfo[i].nonce;
-        std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(*pblock);
-        std::cout << "Before process block" << std::endl;
-        BOOST_CHECK(ProcessNewBlock(chainparams, shared_pblock, true, nullptr));
-        pblock->hashPrevBlock = pblock->GetHash();
-    }
+
     return;
      //Just to make sure we can still make simple blocks
     BOOST_CHECK(pblocktemplate = AssemblerForTest(chainparams).CreateNewBlock(scriptPubKey));

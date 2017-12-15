@@ -8,6 +8,8 @@ src/raven-tx
 src/test/test_raven
 src/test/test_raven_fuzzy
 src/qt/test/test_raven-qt
+.vscode
+output.txt
 
 # autoreconf
 Makefile.in

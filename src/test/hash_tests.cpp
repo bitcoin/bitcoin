@@ -6,12 +6,16 @@
 #include "hash.h"
 #include "utilstrencodings.h"
 #include "test/test_raven.h"
+#include "consensus/merkle.h"
 
 #include <vector>
+#include<iostream>
 
 #include <boost/test/unit_test.hpp>
 
 BOOST_FIXTURE_TEST_SUITE(hash_tests, BasicTestingSetup)
+
+
 
 BOOST_AUTO_TEST_CASE(murmurhash3)
 {
@@ -76,6 +80,29 @@ uint64_t siphash_4_2_testvec[] = {
     0x0a8787bf8ecb74b2, 0x81b3e73d20b49b6f, 0x7fa8220ba3b2ecea, 0x245731c13ca42499,
     0xb78dbfaf3a8d83bd, 0xea1ad565322a1a0b, 0x60e61c23a3795013, 0x6606d7e446282b93,
     0x6ca4ecb15c5f91e1, 0x9f626da15c9625f3, 0xe51b38608ef25f57, 0x958a324ceb064572
+};
+
+BOOST_AUTO_TEST_CASE(hash16R)
+{
+	CBlock block;
+	block.nVersion = 42;
+	std::string hashHex = "19bcdaa780349350b210ca84d73dc1c08fbae659990b47a9d28655e7e9be3970";
+
+	//decimal order of hash16R is d28655e7e9be3970 hex converted to 13 2 8 6 5 5 14 7 14 9 11 14 3 9 7 0
+
+	int expectedPositions[16] = {13, 2, 8, 6, 5, 5, 14, 7, 14, 9, 11, 14, 3, 9, 7, 0};
+
+	uint256* hash = new uint256();
+	hash->SetHex(hashHex);
+    uint256 hash256 = hash[0];
+
+    BOOST_CHECK_EQUAL(hash256.GetHex(), hashHex);
+    for(int i=0; i<15; i++) {
+    		int pos = GetHashSelection(hash256, i);
+        std::cout << "pos" << i << " " << pos << std::endl;
+        BOOST_CHECK_EQUAL(expectedPositions[i], pos);
+    }
+
 };
 
 BOOST_AUTO_TEST_CASE(siphash)
