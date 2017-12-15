@@ -85,16 +85,6 @@ enum TransactionType {
 #define MSC_PROPERTY_TYPE_INDIVISIBLE_APPENDING   129
 #define MSC_PROPERTY_TYPE_DIVISIBLE_APPENDING     130
 
-enum FILETYPES {
-  FILETYPE_BALANCES = 0,
-  FILETYPE_OFFERS,
-  FILETYPE_ACCEPTS,
-  FILETYPE_GLOBALS,
-  FILETYPE_CROWDSALES,
-  FILETYPE_MDEXORDERS,
-  NUM_FILETYPES
-};
-
 #define PKT_RETURNED_OBJECT    (1000)
 
 #define PKT_ERROR             ( -9000)
@@ -164,7 +154,6 @@ int mastercore_handler_disc_end(int nBlockNow, CBlockIndex const * pBlockIndex);
 int mastercore_handler_block_begin(int nBlockNow, CBlockIndex const * pBlockIndex);
 int mastercore_handler_block_end(int nBlockNow, CBlockIndex const * pBlockIndex, unsigned int);
 bool mastercore_handler_tx(const CTransaction& tx, int nBlock, unsigned int idx, const CBlockIndex* pBlockIndex);
-int mastercore_save_state( CBlockIndex const *pBlockIndex );
 
 /** Global handler to total wallet balances. */
 void CheckWalletUpdate(bool forceUpdate = false);

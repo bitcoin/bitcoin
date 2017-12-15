@@ -21,6 +21,7 @@ OMNICORE_H = \
   omnicore/parse_string.h \
   omnicore/parsing.h \
   omnicore/pending.h \
+  omnicore/persistence.h \
   omnicore/rpc.h \
   omnicore/rpcmbstring.h \
   omnicore/rpcpayload.h \
@@ -66,6 +67,7 @@ OMNICORE_CPP = \
   omnicore/parse_string.cpp \
   omnicore/parsing.cpp \
   omnicore/pending.cpp \
+  omnicore/persistence.cpp \
   omnicore/rpc.cpp \
   omnicore/rpcmbstring.cpp \
   omnicore/rpcpayload.cpp \
