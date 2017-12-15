@@ -8,7 +8,8 @@ pipeline {
                     agent {
                         docker {
                             image 'repo.t0.com/medici/raven-build:v1.0'
-                            label 'linux'
+                            label 'mac'
+                            arg   '-v /Users/Shared/Jenkins/Home/raven_depends/build_artifacts:/root/raven'
                         }
                     }
                     steps {
@@ -16,11 +17,11 @@ pipeline {
                         ./configure --enable-cxx --disable-shared --with-pic --prefix=$BDB_PREFIX CXXFLAGS="-fPIC" CPPFLAGS="-fPIC"
                         make -j3
 
-                        mkdir -p build-linux/ubuntu17.04
-                        cp src/ravend build-linux/ubuntu17.04/
-                        cp src/raven-cli build-linux/ubuntu17.04/
-                        cp src/qt/raven-qt build-linux/ubuntu17.04/
-                        cd build-linux/ubuntu17.04
+                        mkdir -p /root/raven/build-linux/ubuntu17.04
+                        cp src/ravend /root/raven/build-linux/ubuntu17.04/
+                        cp src/raven-cli /root/raven/build-linux/ubuntu17.04/
+                        cp src/qt/raven-qt /root/raven/build-linux/ubuntu17.04/
+                        cd /root/raven/build-linux/ubuntu17.04
                         md5sum ravend raven-cli raven-qt > md5sum
                         sha256sum ravend raven-cli raven-qt > sha256sum
                         tar zcf raven-ubuntu-17.04.${BUILD_NUMBER}.tar.gz ravend raven-cli raven-qt md5sum sha256sum'''
@@ -30,7 +31,8 @@ pipeline {
                     agent {
                         docker {
                             image 'repo.t0.com/medici/raven-build:v0.4'
-                            label 'linux'
+                            arg   '-v /Users/Shared/Jenkins/Home/raven_depends/build_artifacts:/root/raven'
+                            label 'mac'
                         }
                     }
                     steps {
@@ -38,11 +40,11 @@ pipeline {
                         ./autogen.sh
                         ./configure --enable-cxx --disable-shared --with-pic --prefix=$BDB_PREFIX CXXFLAGS="-fPIC" CPPFLAGS="-fPIC"
                         make -j3
-                        mkdir -p build-linux/ubuntu16.04
-                        cp src/ravend build-linux/ubuntu16.04/
-                        cp src/raven-cli build-linux/ubuntu16.04/
-                        cp src/qt/raven-qt build-linux/ubuntu16.04/
-                        cd build-linux/ubuntu16.04
+                        mkdir -p /root/raven/build-linux/ubuntu16.04
+                        cp src/ravend /root/raven/build-linux/ubuntu16.04/
+                        cp src/raven-cli /root/raven/build-linux/ubuntu16.04/
+                        cp src/qt/raven-qt /root/raven/build-linux/ubuntu16.04/
+                        cd /root/raven/build-linux/ubuntu16.04
                         md5sum ravend raven-cli raven-qt > md5sum
                         sha256sum ravend raven-cli raven-qt > sha256sum
                         tar zcf raven-ubuntu-16.04.${BUILD_NUMBER}.tar.gz ravend raven-cli raven-qt md5sum sha256sum'''
@@ -58,23 +60,18 @@ pipeline {
                     }
                     steps {
                         sh '''
-                        echo $HOME
+                        mkdir /root/.ccache/tmp
+                        chmod -Rf 777 /root/.ccache
+                        rsync -av /root/depends/ $PWD/depends/
                         PATH=$(echo "$PATH" | sed -e "s/:\\/mnt.*//g")
-                        if [ ! -e /root/depends/x86_64-w64-mingw32 ]; then
-                            cd depends
-                            make -j3 HOST=x86_64-w64-mingw32
-                            cd ..
-                        else
-                            rsync -av /root/depends/ $PWD/depends/
-                        fi
 
                         ./autogen.sh
                         CONFIG_SITE=$PWD/depends/x86_64-w64-mingw32/share/config.site ./configure --prefix=/
 
                         make -j3
 
-                        mkdir /usr/src/raven/build-windows
-                        make install DESTDIR=/usr/src/raven/build-windows
+                        mkdir /root/depends/build_artifacts/build-windows
+                        make install DESTDIR=/root/depends/build_artifacts/build-windows
                         '''
                     }
                 }
@@ -87,7 +84,15 @@ pipeline {
                         ./autogen.sh
                         ./configure
                         make -j3
-                        make deploy'''
+                        make deploy
+
+                        mkdir /Users/Shared/Jenkins/Home/raven_depends/build_artifacts/build-osx
+                        cp -Rf Raven-Core.dmg /Users/Shared/Jenkins/Home/raven_depends/build_artifacts/build-osx/
+                        cp src/ravend /Users/Shared/Jenkins/Home/raven_depends/build_artifacts/build-osx/
+                        cp src/raven-cli /Users/Shared/Jenkins/Home/raven_depends/build_artifacts/build-osx/
+                        cd /Users/Shared/Jenkins/Home/raven_depends/build_artifacts/build-osx
+                        md5 ravend raven-cli Raven-Core.dmg > md5sum
+                        shasum -a 256 ravend raven-cli Raven-Core.dmg > sha256sum'''
                     }
                 }
             }
