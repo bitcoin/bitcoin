@@ -384,6 +384,10 @@ inline uint256 HashX16R(const T1 pbegin, const T1 pend, const uint256 PrevBlockH
 
     uint512 hash[16];
 
+    //DEBUG
+    std::cout << PrevBlockHash.GetHex() << std::endl;
+
+
     for (int i=0;i<16;i++) 
     {
         const void *toHash;
@@ -397,6 +401,9 @@ inline uint256 HashX16R(const T1 pbegin, const T1 pend, const uint256 PrevBlockH
         }
 
         hashSelection = GetHashSelection(PrevBlockHash, i);
+
+        //DEBUG
+        std::cout << hashSelection << " " << std::endl;
 
         algoHashHits[hashSelection]++;
         	auto begin = std::chrono::high_resolution_clock::now();
