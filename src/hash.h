@@ -398,9 +398,6 @@ inline uint256 HashX16R(const T1 pbegin, const T1 pend, const uint256 PrevBlockH
 
         hashSelection = GetHashSelection(PrevBlockHash, i);
 
-        algoHashHits[hashSelection]++;
-        	auto begin = std::chrono::high_resolution_clock::now();
-
         switch(hashSelection) {
             case 0:
                 sph_blake512_init(&ctx_blake);
@@ -483,20 +480,7 @@ inline uint256 HashX16R(const T1 pbegin, const T1 pend, const uint256 PrevBlockH
                 sph_sha512_close(&ctx_sha512, static_cast<void*>(&hash[i]));
                 break;
         }
-        auto end = std::chrono::high_resolution_clock::now();
-        	double elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin).count();
-        algoHashTotal[hashSelection] += elapsed;
     }
-
-
-    //Just to watch it hash every X hashes
-    // static long count;
-    // count++;
-    // if (count % 32000  == 0) {
-    //     uint256 shortened_hash = hash[15].trim256();
-    //     std::cout << "Hashing " << shortened_hash.GetHex() <<  " " << count << "\n";
-    // }
-    /////////////////////////////////////
 
     return hash[15].trim256();
 }
