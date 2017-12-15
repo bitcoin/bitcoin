@@ -123,7 +123,7 @@ int populateRPCTransactionObject(const CTransaction& tx, const uint256& blockHas
     bool valid = false;
     if (confirmations > 0) {
         LOCK(cs_tally);
-        valid = getValidMPTX(txid);
+        valid = p_txlistdb->getValidMPTX(txid);
         positionInBlock = p_OmniTXDB->FetchTransactionPosition(txid);
     }
 
@@ -320,7 +320,7 @@ void populateRPCTypeTradeOffer(CMPTransaction& omniObj, UniValue& txobj)
         unsigned int tmptype = 0;
         uint64_t amountNew = 0;
         LOCK(cs_tally);
-        bool tmpValid = getValidMPTX(omniObj.getHash(), &tmpblock, &tmptype, &amountNew);
+        bool tmpValid = p_txlistdb->getValidMPTX(omniObj.getHash(), &tmpblock, &tmptype, &amountNew);
         if (tmpValid && amountNew > 0) {
             amountDesired = calculateDesiredBTC(amountOffered, amountDesired, amountNew);
             amountOffered = amountNew;
@@ -405,7 +405,7 @@ void populateRPCTypeAcceptOffer(CMPTransaction& omniObj, UniValue& txobj)
     uint64_t amountNew = 0;
 
     LOCK(cs_tally);
-    bool tmpValid = getValidMPTX(omniObj.getHash(), &tmpblock, &tmptype, &amountNew);
+    bool tmpValid = p_txlistdb->getValidMPTX(omniObj.getHash(), &tmpblock, &tmptype, &amountNew);
     if (tmpValid && amountNew > 0) amount = amountNew;
 
     txobj.push_back(Pair("propertyid", (uint64_t)propertyId));

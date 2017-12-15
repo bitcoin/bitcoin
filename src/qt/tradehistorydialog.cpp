@@ -369,7 +369,7 @@ int TradeHistoryDialog::PopulateTradeHistoryMap()
         // parse the transaction
         if (0 != ParseTransaction(wtx, blockHeight, 0, mp_obj)) continue;
         if (mp_obj.interpret_Transaction()) {
-            valid = getValidMPTX(hash);
+            valid = p_txlistdb->getValidMPTX(hash);
             propertyIdForSale = mp_obj.getProperty();
             amountForSale = mp_obj.getAmount();
             divisibleForSale = isPropertyDivisible(propertyIdForSale);

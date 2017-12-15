@@ -396,6 +396,54 @@ bool CMPTxList::getTX(const uint256 &txid, std::string& value)
     return false;
 }
 
+// call it like so (variable # of parameters):
+// int block = 0;
+// ...
+// uint64_t nNew = 0;
+//
+// if (getValidMPTX(txid, &block, &type, &nNew)) // if true -- the TX is a valid MP TX
+//
+bool CMPTxList::getValidMPTX(const uint256& txid, int* block, unsigned int* type, uint64_t* nAmended)
+{
+    std::string result;
+    int validity = 0;
+
+    if (msc_debug_txdb) PrintToLog("%s()\n", __func__);
+
+    if (!pdb) return false;
+
+    if (!getTX(txid, result)) return false;
+
+    // parse the string returned, find the validity flag/bit & other parameters
+    std::vector<std::string> vstr;
+    boost::split(vstr, result, boost::is_any_of(":"), boost::token_compress_on);
+
+    if (msc_debug_txdb) PrintToLog("%s() size=%lu : %s\n", __func__, vstr.size(), result);
+
+    if (1 <= vstr.size()) validity = atoi(vstr[0]);
+
+    if (block) {
+        if (2 <= vstr.size()) *block = atoi(vstr[1]);
+        else *block = 0;
+    }
+
+    if (type) {
+        if (3 <= vstr.size()) *type = atoi(vstr[2]);
+        else *type = 0;
+    }
+
+    if (nAmended) {
+        if (4 <= vstr.size()) *nAmended = boost::lexical_cast<boost::uint64_t>(vstr[3]);
+        else nAmended = 0;
+    }
+
+    if (msc_debug_txdb) printStats();
+
+    if ((int) 0 == validity) return false;
+
+    return true;
+}
+
 std::set<int> CMPTxList::GetSeedBlocks(int startHeight, int endHeight)
 {
     std::set<int> setSeedBlocks;

@@ -193,7 +193,7 @@ public:
                                 }
                             } else if (0 == parseRC) {
                                 if (mp_obj.interpret_Transaction()) {
-                                    valid = getValidMPTX(hash);
+                                    valid = p_txlistdb->getValidMPTX(hash);
                                     uint32_t omniPropertyId = mp_obj.getProperty();
                                     int64_t omniAmount = mp_obj.getAmount();
                                     if (isPropertyDivisible(omniPropertyId)) {

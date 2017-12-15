@@ -42,6 +42,7 @@ public:
 
     bool exists(const uint256& txid);
     bool getTX(const uint256& txid, std::string& value);
+    bool getValidMPTX(const uint256& txid, int* block = NULL, unsigned int* type = NULL, uint64_t* nAmended = NULL);
 
     std::set<int> GetSeedBlocks(int startHeight, int endHeight);
     void LoadAlerts(int blockHeight);

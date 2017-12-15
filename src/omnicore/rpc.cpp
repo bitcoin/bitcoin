@@ -664,7 +664,7 @@ UniValue mscrpc(const UniValue& params, bool fHelp)
         case 5:
         {
             LOCK(cs_tally);
-            PrintToConsole("isMPinBlockRange(%d,%d)=%s\n", extra2, extra3, isMPinBlockRange(extra2, extra3, false) ? "YES" : "NO");
+            PrintToConsole("isMPinBlockRange(%d,%d)=%s\n", extra2, extra3, p_txlistdb->isMPinBlockRange(extra2, extra3, false) ? "YES" : "NO");
             break;
         }
         case 6:

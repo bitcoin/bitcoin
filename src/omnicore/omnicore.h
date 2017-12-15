@@ -183,14 +183,8 @@ bool isMainEcosystemProperty(uint32_t propertyId);
 uint32_t GetNextPropertyId(bool maineco); // maybe move into sp
 
 CMPTally* getTally(const std::string& address);
-
 bool update_tally_map(const std::string& who, uint32_t propertyId, int64_t amount, TallyType ttype);
-
 int64_t getTotalTokens(uint32_t propertyId, int64_t* n_owners_total = NULL);
-
-bool getValidMPTX(const uint256 &txid, int *block = NULL, unsigned int *type = NULL, uint64_t *nAmended = NULL);
-
-bool isMPinBlockRange(int starting_block, int ending_block, bool bDeleteFound);
 
 std::string strMPProperty(uint32_t propertyId);
 std::string strTransactionType(uint16_t txType);
