@@ -127,7 +127,8 @@ public:
 
     int GetNibble(int index) const 
     {
-        if (index % 2 == 0)
+        index = 63 - index;
+        if (index % 2 == 1)
             return(data[index / 2] >> 4);
         return(data[index / 2] & 0x0F); 
     }

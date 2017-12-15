@@ -26,7 +26,7 @@ static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesi
     txNew.nVersion = 1;
     txNew.vin.resize(1);
     txNew.vout.resize(1);
-    txNew.vin[0].scriptSig = CScript() << 486604799 << CScriptNum(4) << std::vector<unsigned char>((const unsigned char*)pszTimestamp, (const unsigned char*)pszTimestamp + strlen(pszTimestamp));
+    txNew.vin[0].scriptSig = CScript() << CScriptNum(0) << 486604799 << CScriptNum(4) << std::vector<unsigned char>((const unsigned char*)pszTimestamp, (const unsigned char*)pszTimestamp + strlen(pszTimestamp));
     txNew.vout[0].nValue = genesisReward;
     txNew.vout[0].scriptPubKey = genesisOutputScript;
 
@@ -220,20 +220,18 @@ public:
 
 
 
-
-
         /////////////////////////////////////////////////////////////////
 
 
 
-        genesis = CreateGenesisBlock(1509740671, 13173510, 0x1e00ffff, 4, 5000 * COIN); 
+        genesis = CreateGenesisBlock(1509740671, 2150250, 0x1e00ffff, 4, 5000 * COIN); 
 
         consensus.hashGenesisBlock = genesis.GetHash();        
-        // std::cout << consensus.hashGenesisBlock.GetHex() << "\n";
-        // std::cout << "Merkle: " << genesis.hashMerkleRoot.GetHex() << "\n";
+        std::cout << consensus.hashGenesisBlock.GetHex() << "\n";
+        std::cout << "Merkle: " << genesis.hashMerkleRoot.GetHex() << "\n";
 
-        assert(consensus.hashGenesisBlock == uint256S("0x00000013dd11f2bd679ee383ecd15b7b093400f38f547b2299007d5166ac981d"));
-        assert(genesis.hashMerkleRoot == uint256S("0xa4c84e05d4f74f0df5e69a8c2e85524f9776555980a60312ab0fd524cd9b1474"));
+        assert(consensus.hashGenesisBlock == uint256S("0x0000000c4abf7f6db6a19fd1208c426c604710997fa11187c2d8d9961d093b7f"));
+        assert(genesis.hashMerkleRoot == uint256S("0x9686ea5f254a7542381897095789b44282f5d8685cee089e94c4f373cec99128"));
 
         vSeeds.emplace_back("seed-raven.ravencoin.org", false); 
         vSeeds.emplace_back("seed-raven.bitactivate.com", false); 
@@ -383,7 +381,7 @@ public:
         consensus.nBIP66Enabled = true;
         consensus.nSegwitEnabled = true;
         consensus.nCSVEnabled = true;
-        consensus.nSubsidyHalvingInterval = 240;
+        consensus.nSubsidyHalvingInterval = 150;
         consensus.powLimit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.nPowTargetTimespan = 2016 * 60; // 1.4 days
         consensus.nPowTargetSpacing = 1 * 60;
@@ -408,14 +406,14 @@ public:
         nDefaultPort = 18444;
         nPruneAfterHeight = 1000;
 
-        genesis = CreateGenesisBlock(1510082300, 5, 0x207fffff, 4, 5000 * COIN);
+        genesis = CreateGenesisBlock(1510082300, 2, 0x207fffff, 4, 5000 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
 
         std::cout << "HGB: " << consensus.hashGenesisBlock.GetHex() << std::endl;
         std::cout << "HGR: " << genesis.hashMerkleRoot.GetHex() << std::endl;
 
-        assert(consensus.hashGenesisBlock == uint256S("0x48218f3664485e3e9798a09b24250625791c51d94ad2d278933ba8ce8b5a2a9b"));
-        assert(genesis.hashMerkleRoot == uint256S("0xa4c84e05d4f74f0df5e69a8c2e85524f9776555980a60312ab0fd524cd9b1474"));
+        assert(consensus.hashGenesisBlock == uint256S("0x0ae5a91dc8c60c02f68cf6579e153d428b2298f231c89e96cbeb609ecc00d9a0"));
+        assert(genesis.hashMerkleRoot == uint256S("0x9686ea5f254a7542381897095789b44282f5d8685cee089e94c4f373cec99128"));
 
         vFixedSeeds.clear(); //!< Regtest mode doesn't have any fixed seeds.
         vSeeds.clear();      //!< Regtest mode doesn't have any DNS seeds.
