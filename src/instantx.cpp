@@ -195,7 +195,7 @@ void CInstantSend::Vote(CTxLockCandidate& txLockCandidate, CConnman& connman)
             return;
         }
 
-        int nLockInputHeight = nPrevoutHeight + 1;
+        int nLockInputHeight = nPrevoutHeight;
 
         int nRank;
         if(!mnodeman.GetMasternodeRank(activeMasternode.outpoint, nRank, nLockInputHeight, MIN_INSTANTSEND_PROTO_VERSION)) {
@@ -944,12 +944,9 @@ bool CTxLockRequest::IsValid() const
             LogPrint("instantsend", "CTxLockRequest::IsValid -- Failed to find UTXO %s\n", txin.prevout.ToStringShort());
             return false;
         }
-
-        int nTxAge = chainActive.Height() - coins.nHeight + 1;
-        // 1 less than the "send IX" gui requires, in case of a block propagating the network at the time
-        int nConfirmationsRequired = INSTANTSEND_CONFIRMATIONS_REQUIRED - 1;
-
-        if(nTxAge < nConfirmationsRequired) {
+		// SYSCOIN
+        int nTxAge = chainActive.Height() - coins.nHeight;
+        if(nTxAge < INSTANTSEND_CONFIRMATIONS_REQUIRED) {
             LogPrint("instantsend", "CTxLockRequest::IsValid -- outpoint %s too new: nTxAge=%d, nConfirmationsRequired=%d, txid=%s\n",
                     txin.prevout.ToStringShort(), nTxAge, nConfirmationsRequired, GetHash().ToString());
             return false;
@@ -1001,7 +998,7 @@ bool CTxLockVote::IsValid(CNode* pnode, CConnman& connman) const
         return false;
     }
 
-    int nLockInputHeight = coins.nHeight+1;
+    int nLockInputHeight = coins.nHeight;
 
     int nRank;
     if(!mnodeman.GetMasternodeRank(outpointMasternode, nRank, nLockInputHeight, MIN_INSTANTSEND_PROTO_VERSION)) {
