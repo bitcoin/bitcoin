@@ -43,6 +43,7 @@ extern bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vec
 extern bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, string &errorMessage, bool dontaddtodb);
 extern bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, string &errorMessage, bool dontaddtodb);
 extern bool DecodeAliasScript(const CScript& script, int& op, vector<vector<unsigned char> > &vvch);
+extern bool DecodeAssetScript(const CScript& script, int& op, vector<vector<unsigned char> > &vvch);
 extern int aliasunspent(const vector<unsigned char> &vchAlias, COutPoint& outPoint);
 extern std::string stringFromVch(const std::vector<unsigned char> &vch);
 extern std::vector<unsigned char> vchFromString(const std::string &str);

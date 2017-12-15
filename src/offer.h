@@ -28,7 +28,6 @@ bool DecodeOfferTx(const CTransaction& tx, int& op, int& nOut, std::vector<std::
 bool DecodeAndParseOfferTx(const CTransaction& tx, int& op, int& nOut, std::vector<std::vector<unsigned char> >& vvch, char &type);
 bool DecodeOfferScript(const CScript& script, int& op, std::vector<std::vector<unsigned char> > &vvch);
 bool IsOfferOp(int op);
-int IndexOfOfferOutput(const CTransaction& tx);
 std::string offerFromOp(int op);
 void OfferTxToJSON(const int op, const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash, UniValue &entry);
 bool RemoveOfferScriptPrefix(const CScript& scriptIn, CScript& scriptOut);

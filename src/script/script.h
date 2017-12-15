@@ -67,6 +67,13 @@ enum opcodetype
 	OP_ESCROW_ADD_SHIPPING = 0x08,
 	OP_ESCROW_FEEDBACK = 0x09,
 
+	// distributed asset system
+	OP_ASSET_ACTIVATE = 0x01,
+	OP_ASSET_MINT = 0x02,
+	OP_ASSET_UPDATE = 0x03,
+	OP_ASSET_SEND = 0x04,
+	OP_ASSET_TRANSFER = 0x05,
+
 	// syscoin extended reserved 
 	OP_SYSCOIN_ALIAS = 0x01,
 	OP_SYSCOIN_CERT = 0x02,

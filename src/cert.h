@@ -20,7 +20,6 @@ bool DecodeCertTx(const CTransaction& tx, int& op, int& nOut, std::vector<std::v
 bool DecodeAndParseCertTx(const CTransaction& tx, int& op, int& nOut, std::vector<std::vector<unsigned char> >& vvch, char& type);
 bool DecodeCertScript(const CScript& script, int& op, std::vector<std::vector<unsigned char> > &vvch);
 bool IsCertOp(int op);
-int IndexOfCertOutput(const CTransaction& tx);
 void CertTxToJSON(const int op, const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash, UniValue &entry);
 std::string certFromOp(int op);
 bool RemoveCertScriptPrefix(const CScript& scriptIn, CScript& scriptOut);

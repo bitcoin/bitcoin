@@ -303,12 +303,10 @@ void CreateFeeRecipient(CScript& scriptPubKey, const std::vector<unsigned char>&
 void CreateAliasRecipient(const CScript& scriptPubKey, CRecipient& recipient);
 int aliasselectpaymentcoins(const std::vector<unsigned char> &vchAlias, const CAmount &nAmount, std::vector<COutPoint>& outPoints, bool& bIsFunded, CAmount &nRequiredAmount, bool bSelectFeePlacement, bool bSelectAll=false, bool bNoAliasRecipient=false);
 CAmount GetDataFee(const CScript& scriptPubKey);
-bool IsSyscoinTxMine(const CTransaction& tx,const std::string &type);
 bool IsAliasOp(int op);
 bool GetAlias(const CNameTXIDTuple& aliasTuple, CAliasIndex& alias);
 bool GetAlias(const std::vector<unsigned char> &vchAlias, CAliasIndex& alias);
 bool CheckParam(const UniValue& params, const unsigned int index);
-int IndexOfAliasOutput(const CTransaction& tx);
 bool GetAliasOfTx(const CTransaction& tx, std::vector<unsigned char>& name);
 bool DecodeAliasTx(const CTransaction& tx, int& op, int& nOut, std::vector<std::vector<unsigned char> >& vvch);
 bool DecodeAndParseAliasTx(const CTransaction& tx, int& op, int& nOut, std::vector<std::vector<unsigned char> >& vvch, char &type);

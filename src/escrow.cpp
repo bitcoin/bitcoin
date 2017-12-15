@@ -380,20 +380,6 @@ bool CEscrowDB::CleanupDatabase(int &servicesCleaned)
 	return true;
 }
 
-int IndexOfEscrowOutput(const CTransaction& tx) {
-	if (tx.nVersion != SYSCOIN_TX_VERSION)
-		return -1;
-    vector<vector<unsigned char> > vvch;
-	int op;
-	for (unsigned int i = 0; i < tx.vout.size(); i++) {
-		const CTxOut& out = tx.vout[i];
-		// find an output you own
-		if (pwalletMain->IsMine(out) && DecodeEscrowScript(out.scriptPubKey, op, vvch)) {
-			return i;
-		}
-	}
-	return -1;
-}
 bool GetEscrow(const CNameTXIDTuple &escrowTuple,
 	CEscrow& txPos) {
 	if (!pescrowdb || !pescrowdb->ReadEscrow(escrowTuple, txPos))

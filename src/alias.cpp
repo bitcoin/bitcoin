@@ -217,6 +217,8 @@ bool IsSyscoinScript(const CScript& scriptPubKey, int &op, vector<vector<unsigne
 		return true;
 	else if(DecodeEscrowScript(scriptPubKey, op, vvchArgs))
 		return true;
+	else if (DecodeAssetScript(scriptPubKey, op, vvchArgs))
+		return true;
 	return false;
 }
 bool RemoveSyscoinScript(const CScript& scriptPubKeyIn, CScript& scriptPubKeyOut)
@@ -225,7 +227,8 @@ bool RemoveSyscoinScript(const CScript& scriptPubKeyIn, CScript& scriptPubKeyOut
 		if (!RemoveOfferScriptPrefix(scriptPubKeyIn, scriptPubKeyOut))
 			if (!RemoveCertScriptPrefix(scriptPubKeyIn, scriptPubKeyOut))
 				if (!RemoveEscrowScriptPrefix(scriptPubKeyIn, scriptPubKeyOut))
-					return false;
+					if (!RemoveAssetScriptPrefix(scriptPubKeyIn, scriptPubKeyOut))
+						return false;
 	return true;
 					
 }
@@ -290,29 +293,6 @@ int GetSyscoinTxVersion()
 	return SYSCOIN_TX_VERSION;
 }
 
-/**
- * [IsSyscoinTxMine check if this transaction is mine or not, must contain a syscoin service vout]
- * @param  tx [syscoin based transaction]
- * @param  type [the type of syscoin service you expect in this transaction]
- * @return    [if syscoin transaction is yours based on type passed in]
- */
-bool IsSyscoinTxMine(const CTransaction& tx, const string &type) {
-	if (tx.nVersion != SYSCOIN_TX_VERSION)
-		return false;
-	int myNout;
-	vector<vector<unsigned char> > vvch;
-	if ((type == "alias" || type == "any"))
-		myNout = IndexOfAliasOutput(tx);
-	else if ((type == "offer" || type == "any"))
-		myNout = IndexOfOfferOutput(tx);
-	else if ((type == "cert" || type == "any"))
-		myNout = IndexOfCertOutput(tx);
-	else if ((type == "escrow" || type == "any"))
-		myNout = IndexOfEscrowOutput(tx);
-	else
-		return false;
-	return myNout >= 0;
-}
 bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, string &errorMessage, bool dontaddtodb) {
 	if (tx.IsCoinBase() && !fJustCheck && !dontaddtodb)
 	{
@@ -1002,20 +982,6 @@ bool GetAliasFromAddress(const std::string& strAddress, std::string& strAlias, s
 	vchPubKey = alias.vchEncryptionPublicKey;
 	return true;
 }
-int IndexOfAliasOutput(const CTransaction& tx) {
-	vector<vector<unsigned char> > vvch;
-	if (tx.nVersion != SYSCOIN_TX_VERSION)
-		return -1;
-	int op;
-	for (unsigned int i = 0; i < tx.vout.size(); i++) {
-		const CTxOut& out = tx.vout[i];
-		// find an output you own
-		if (pwalletMain->IsMine(out) && DecodeAliasScript(out.scriptPubKey, op, vvch)) {
-			return i;
-		}
-	}
-	return -1;
-}
 
 bool GetAliasOfTx(const CTransaction& tx, vector<unsigned char>& name) {
 	if (tx.nVersion != SYSCOIN_TX_VERSION)
@@ -1043,7 +1009,8 @@ bool DecodeAndParseSyscoinTx(const CTransaction& tx, int& op, int& nOut,
 		DecodeAndParseCertTx(tx, op, nOut, vvch, type)
 		|| DecodeAndParseOfferTx(tx, op, nOut, vvch, type)
 		|| DecodeAndParseEscrowTx(tx, op, nOut, vvch, type)
-		|| DecodeAndParseAliasTx(tx, op, nOut, vvch, type);
+		|| DecodeAndParseAliasTx(tx, op, nOut, vvch, type)
+		|| DecodeAndParseAssetTx(tx, op, nOut, vvch, type);
 }
 bool DecodeAndParseAliasTx(const CTransaction& tx, int& op, int& nOut,
 		vector<vector<unsigned char> >& vvch, char &type)
