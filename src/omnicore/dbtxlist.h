@@ -55,5 +55,11 @@ public:
     bool isMPinBlockRange(int, int, bool);
 };
 
+namespace mastercore
+{
+    //! LevelDB based storage for transactions, with txid as key and validity bit, and other data as value
+    extern CMPTxList* p_txlistdb;
+}
+
 
 #endif // OMNICORE_DBTXLIST_H

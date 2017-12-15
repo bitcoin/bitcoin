@@ -12,7 +12,7 @@
 #include <string>
 #include <vector>
 
-/** LevelDB based storage for storing Omni transaction data.
+/** LevelDB based storage for storing Omni transaction validation and position in block data.
  */
 class COmniTransactionDB : public CDBBase
 {
@@ -34,6 +34,11 @@ private:
     std::vector<std::string> FetchTransactionDetails(const uint256& txid);
 };
 
+namespace mastercore
+{
+    //! LevelDB based storage for storing Omni transaction validation and position in block data
+    extern COmniTransactionDB* p_OmniTXDB;
+}
 
 #endif // OMNICORE_DBTRANSACTION_H
 

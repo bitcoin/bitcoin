@@ -70,7 +70,9 @@ namespace mastercore
 {
 typedef std::map<std::string, CMPCrowd> CrowdMap;
 
+//! LevelDB based storage for currencies, smart properties and tokens
 extern CMPSPInfo* _my_sps;
+//! In-memory collection of active crowdsales
 extern CrowdMap my_crowds;
 
 std::string strPropertyType(uint16_t propertyType);

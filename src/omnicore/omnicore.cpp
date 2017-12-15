@@ -12,6 +12,7 @@
 #include "omnicore/dbbase.h"
 #include "omnicore/dbspinfo.h"
 #include "omnicore/dbstolist.h"
+#include "omnicore/dbtradelist.h"
 #include "omnicore/dbtransaction.h"
 #include "omnicore/dbtxlist.h"
 #include "omnicore/dex.h"
@@ -97,27 +98,20 @@ using std::vector;
 
 using namespace mastercore;
 
+//! Global lock for state objects
 CCriticalSection cs_tally;
 
-static string exodus_address = "1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P";
+//! Exodus address (changes based on network)
+static std::string exodus_address = "1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P";
 
-static const string exodus_mainnet = "1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P";
-static const string exodus_testnet = "mpexoDuSkGGqvqrkrjiFng38QPkJQVFyqv";
-static const string getmoney_testnet = "moneyqMan7uh8FqdCA2BV5yZ8qVrc9ikLP";
+//! Mainnet Exodus address
+static const std::string exodus_mainnet = "1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P";
+//! Testnet Exodus address
+static const std::string exodus_testnet = "mpexoDuSkGGqvqrkrjiFng38QPkJQVFyqv";
+//! Testnet Exodus crowdsale address
+static const std::string getmoney_testnet = "moneyqMan7uh8FqdCA2BV5yZ8qVrc9ikLP";
 
 static int nWaterlineBlock = 0;
-
-//! Available balances of wallet properties
-std::map<uint32_t, int64_t> global_balance_money;
-//! Reserved balances of wallet propertiess
-std::map<uint32_t, int64_t> global_balance_reserved;
-//! Vector containing a list of properties relative to the wallet
-std::set<uint32_t> global_wallet_property_list;
-
-//! Set containing properties that have freezing enabled
-std::set<std::pair<uint32_t,int> > setFreezingEnabledProperties;
-//! Set containing addresses that have been frozen
-std::set<std::pair<std::string,uint32_t> > setFrozenAddresses;
 
 /**
  * Used to indicate, whether to automatically commit created transactions.
@@ -126,22 +120,58 @@ std::set<std::pair<std::string,uint32_t> > setFrozenAddresses;
  */
 bool autoCommit = true;
 
-//! Number of "Dev MSC" of the last processed block
+//! Number of "Dev Omni" of the last processed block
 static int64_t exodus_prev = 0;
 
+//! Path for file based persistence
 static boost::filesystem::path MPPersistencePath;
 
+//! Flag to indicate whether Omni Core was initialized
 static int mastercoreInitialized = 0;
 
+//! Flag to indicate whether there was a block reorganisatzion
 static int reorgRecoveryMode = 0;
+//! Block height to recover from after a block reorganization
 static int reorgRecoveryMaxHeight = 0;
 
-CMPTxList *mastercore::p_txlistdb;
-CMPTradeList *mastercore::t_tradelistdb;
-CMPSTOList *mastercore::s_stolistdb;
-COmniTransactionDB *mastercore::p_OmniTXDB;
-COmniFeeCache *mastercore::p_feecache;
-COmniFeeHistory *mastercore::p_feehistory;
+//! LevelDB based storage for currencies, smart properties and tokens
+CMPSPInfo* mastercore::_my_sps;
+//! LevelDB based storage for transactions, with txid as key and validity bit, and other data as value
+CMPTxList* mastercore::p_txlistdb;
+//! LevelDB based storage for the MetaDEx trade history
+CMPTradeList* mastercore::t_tradelistdb;
+//! LevelDB based storage for STO recipients
+CMPSTOList* mastercore::s_stolistdb;
+//! LevelDB based storage for storing Omni transaction validation and position in block data
+COmniTransactionDB* mastercore::p_OmniTXDB;
+//! LevelDB based storage for the MetaDEx fee cache
+COmniFeeCache* mastercore::p_feecache;
+//! LevelDB based storage for the MetaDEx fee distributions
+COmniFeeHistory* mastercore::p_feehistory;
+
+//! In-memory collection of DEx offers
+OfferMap mastercore::my_offers;
+//! In-memory collection of DEx accepts
+AcceptMap mastercore::my_accepts;
+//! In-memory collection of active crowdsales
+CrowdMap mastercore::my_crowds;
+
+//! Set containing properties that have freezing enabled
+std::set<std::pair<uint32_t,int> > setFreezingEnabledProperties;
+//! Set containing addresses that have been frozen
+std::set<std::pair<std::string,uint32_t> > setFrozenAddresses;
+
+//! In-memory collection of all amounts for all addresses for all properties
+std::unordered_map<std::string, CMPTally> mastercore::mp_tally_map;
+
+// Only needed for GUI:
+
+//! Available balances of wallet properties
+std::map<uint32_t, int64_t> global_balance_money;
+//! Reserved balances of wallet propertiess
+std::map<uint32_t, int64_t> global_balance_reserved;
+//! Vector containing a list of properties relative to the wallet
+std::set<uint32_t> global_wallet_property_list;
 
 // indicate whether persistence is enabled at this point, or not
 // used to write/read files, for breakout mode, debugging, etc.
@@ -242,15 +272,6 @@ std::string FormatByType(int64_t amount, uint16_t propertyType)
         return FormatDivisibleMP(amount);
     }
 }
-
-OfferMap mastercore::my_offers;
-AcceptMap mastercore::my_accepts;
-
-CMPSPInfo *mastercore::_my_sps;
-CrowdMap mastercore::my_crowds;
-
-// this is the master list of all amounts for all addresses for all properties, map is unsorted
-std::unordered_map<std::string, CMPTally> mastercore::mp_tally_map;
 
 CMPTally* mastercore::getTally(const std::string& address)
 {

@@ -14,7 +14,7 @@
 #include <string>
 #include <vector>
 
-/** LevelDB based storage for the trade history. Trades are listed with key "txid1+txid2".
+/** LevelDB based storage for the MetaDEx trade history. Trades are listed with key "txid1+txid2".
  */
 class CMPTradeList : public CDBBase
 {
@@ -33,5 +33,11 @@ public:
     void getTradesForPair(uint32_t propertyIdSideA, uint32_t propertyIdSideB, UniValue& response, uint64_t count);
     int getMPTradeCountTotal();
 };
+
+namespace mastercore
+{
+    //! LevelDB based storage for the MetaDEx trade history
+    extern CMPTradeList* t_tradelistdb;
+}
 
 #endif // OMNICORE_DBTRADELIST_H

@@ -36,4 +36,10 @@ public:
     void recordSTOReceive(std::string, const uint256&, int, unsigned int, uint64_t);
 };
 
+namespace mastercore
+{
+    //! LevelDB based storage for STO recipients
+    extern CMPSTOList* s_stolistdb;
+}
+
 #endif // OMNICORE_DBSTOLIST_H

@@ -1,6 +1,7 @@
 #include "omnicore/dbtxlist.h"
 
 #include "omnicore/activation.h"
+#include "omnicore/dbtransaction.h"
 #include "omnicore/dex.h"
 #include "omnicore/log.h"
 #include "omnicore/notifications.h"

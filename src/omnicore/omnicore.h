@@ -7,11 +7,6 @@ class CCoinsView;
 class CCoinsViewCache;
 class CTransaction;
 
-#include "omnicore/dbbase.h"
-#include "omnicore/dbstolist.h"
-#include "omnicore/dbtradelist.h"
-#include "omnicore/dbtransaction.h"
-#include "omnicore/dbtxlist.h"
 #include "omnicore/log.h"
 #include "omnicore/tally.h"
 
@@ -21,10 +16,6 @@ class CTransaction;
 
 #include <univalue.h>
 
-#include <boost/filesystem/path.hpp>
-
-#include "leveldb/status.h"
-
 #include <stdint.h>
 
 #include <map>
@@ -32,8 +23,6 @@ class CTransaction;
 #include <vector>
 #include <set>
 #include <unordered_map>
-
-using std::string;
 
 int const MAX_STATE_HISTORY = 50;
 
@@ -185,11 +174,8 @@ void NotifyTotalTokensChanged(uint32_t propertyId, int block);
 
 namespace mastercore
 {
+//! In-memory collection of all amounts for all addresses for all properties
 extern std::unordered_map<std::string, CMPTally> mp_tally_map;
-extern CMPTxList *p_txlistdb;
-extern CMPTradeList *t_tradelistdb;
-extern CMPSTOList *s_stolistdb;
-extern COmniTransactionDB *p_OmniTXDB;
 
 // TODO: move, rename
 extern CCoinsView viewDummy;
