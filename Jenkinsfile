@@ -60,8 +60,9 @@ pipeline {
                     }
                     steps {
                         sh '''
-                        mkdir /root/.ccache/tmp
-                        chmod -Rf 777 /root/.ccache
+                        export HOME="/root/raven-test"
+                        mkdir /root/raven-test/.ccache/tmp
+                        chmod -Rf 777 /root/raven-test/.ccache
                         rsync -av /root/depends/ $PWD/depends/
                         PATH=$(echo "$PATH" | sed -e "s/:\\/mnt.*//g")
 
