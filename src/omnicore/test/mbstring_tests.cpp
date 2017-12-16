@@ -1,4 +1,4 @@
-#include "omnicore/mbstring.h"
+#include "omnicore/rpcmbstring.h"
 
 #include "test/test_bitcoin.h"
 

@@ -1,7 +1,9 @@
 #include "omnicore/mdex.h"
 
+#include "omnicore/dbfees.h"
+#include "omnicore/dbtradelist.h"
+#include "omnicore/dbtxlist.h"
 #include "omnicore/errors.h"
-#include "omnicore/fees.h"
 #include "omnicore/log.h"
 #include "omnicore/omnicore.h"
 #include "omnicore/rules.h"
@@ -785,7 +787,7 @@ int mastercore::MetaDEx_getStatus(const uint256& txid, uint32_t propertyIdForSal
     }
 
     // Return a "trade invalid" status if the trade was invalidated at parsing/interpretation (eg insufficient funds)
-    if (!getValidMPTX(txid)) return TRADE_INVALID;
+    if (!p_txlistdb->getValidMPTX(txid)) return TRADE_INVALID;
 
     // Calculate and return the status of the trade via the amount sold and open/closed attributes.
     if (MetaDEx_isOpen(txid, propertyIdForSale)) {

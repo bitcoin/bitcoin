@@ -16,14 +16,16 @@
 #include "walletmodel.h"
 
 #include "omnicore/activation.h"
+#include "omnicore/dbtxlist.h"
 #include "omnicore/notifications.h"
 #include "omnicore/omnicore.h"
 #include "omnicore/rules.h"
 #include "omnicore/sp.h"
 #include "omnicore/tx.h"
+#include "omnicore/parsing.h"
 #include "omnicore/pending.h"
 #include "omnicore/utilsbitcoin.h"
-#include "omnicore/wallettxs.h"
+#include "omnicore/walletutils.h"
 
 #include "main.h"
 #include "sync.h"
@@ -191,7 +193,7 @@ public:
                                 }
                             } else if (0 == parseRC) {
                                 if (mp_obj.interpret_Transaction()) {
-                                    valid = getValidMPTX(hash);
+                                    valid = p_txlistdb->getValidMPTX(hash);
                                     uint32_t omniPropertyId = mp_obj.getProperty();
                                     int64_t omniAmount = mp_obj.getAmount();
                                     if (isPropertyDivisible(omniPropertyId)) {

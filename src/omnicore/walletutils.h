@@ -1,5 +1,5 @@
-#ifndef OMNICORE_WALLETTXS_H
-#define OMNICORE_WALLETTXS_H
+#ifndef OMNICORE_WALLETUTILS_H
+#define OMNICORE_WALLETUTILS_H
 
 class CCoinControl;
 class CPubKey;
@@ -30,4 +30,4 @@ int IsMyAddress(const std::string& address);
 int64_t SelectCoins(const std::string& fromAddress, CCoinControl& coinControl, int64_t additional = 0);
 }
 
-#endif // OMNICORE_WALLETTXS_H
+#endif // OMNICORE_WALLETUTILS_H

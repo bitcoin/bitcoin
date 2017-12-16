@@ -222,7 +222,9 @@ namespace mastercore
 typedef std::map<std::string, CMPOffer> OfferMap;
 typedef std::map<std::string, CMPAccept> AcceptMap;
 
+//! In-memory collection of DEx offers
 extern OfferMap my_offers;
+//! In-memory collection of DEx accepts
 extern AcceptMap my_accepts;
 
 /** Determines the amount of bitcoins desired, in case it needs to be recalculated. TODO: don't expose! */

@@ -15,6 +15,7 @@
 #include "omnicore/rpcvalues.h"
 #include "omnicore/sp.h"
 #include "omnicore/tx.h"
+#include "omnicore/wallettxbuilder.h"
 
 #include "init.h"
 #include "main.h"

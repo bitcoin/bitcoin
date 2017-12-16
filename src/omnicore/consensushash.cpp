@@ -5,6 +5,7 @@
  */
 
 #include "omnicore/consensushash.h"
+#include "omnicore/dbspinfo.h"
 #include "omnicore/dex.h"
 #include "omnicore/mdex.h"
 #include "omnicore/log.h"
@@ -161,10 +162,10 @@ uint256 GetConsensusHash()
     // Placeholders:  "address|propertyid|balance|selloffer_reserve|accept_reserve|metadex_reserve"
     // Sort alphabetically first
     std::map<std::string, CMPTally> tallyMapSorted;
-    for (std::unordered_map<string, CMPTally>::iterator uoit = mp_tally_map.begin(); uoit != mp_tally_map.end(); ++uoit) {
+    for (std::unordered_map<std::string, CMPTally>::iterator uoit = mp_tally_map.begin(); uoit != mp_tally_map.end(); ++uoit) {
         tallyMapSorted.insert(std::make_pair(uoit->first,uoit->second));
     }
-    for (std::map<string, CMPTally>::iterator my_it = tallyMapSorted.begin(); my_it != tallyMapSorted.end(); ++my_it) {
+    for (std::map<std::string, CMPTally>::iterator my_it = tallyMapSorted.begin(); my_it != tallyMapSorted.end(); ++my_it) {
         const std::string& address = my_it->first;
         CMPTally& tally = my_it->second;
         tally.init();
@@ -319,10 +320,10 @@ uint256 GetBalancesHash(const uint32_t hashPropertyId)
     LOCK(cs_tally);
 
     std::map<std::string, CMPTally> tallyMapSorted;
-    for (std::unordered_map<string, CMPTally>::iterator uoit = mp_tally_map.begin(); uoit != mp_tally_map.end(); ++uoit) {
+    for (std::unordered_map<std::string, CMPTally>::iterator uoit = mp_tally_map.begin(); uoit != mp_tally_map.end(); ++uoit) {
         tallyMapSorted.insert(std::make_pair(uoit->first,uoit->second));
     }
-    for (std::map<string, CMPTally>::iterator my_it = tallyMapSorted.begin(); my_it != tallyMapSorted.end(); ++my_it) {
+    for (std::map<std::string, CMPTally>::iterator my_it = tallyMapSorted.begin(); my_it != tallyMapSorted.end(); ++my_it) {
         const std::string& address = my_it->first;
         CMPTally& tally = my_it->second;
         tally.init();

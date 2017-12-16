@@ -10,7 +10,7 @@
 #include "omnicore/log.h"
 #include "omnicore/omnicore.h"
 #include "omnicore/tally.h"
-#include "omnicore/wallettxs.h"
+#include "omnicore/walletutils.h"
 
 #include "init.h"
 #include "sync.h"
@@ -30,51 +30,8 @@
 
 namespace mastercore
 {
-//! Global vector of Omni transactions in the wallet
-std::vector<uint256> walletTXIDCache;
-
 //! Map of wallet balances
 static std::map<std::string, CMPTally> walletBalancesCache;
-
-/**
- * Adds a txid to the wallet txid cache, performing duplicate detection.
- */
-void WalletTXIDCacheAdd(const uint256& hash)
-{
-    if (msc_debug_walletcache) PrintToLog("WALLETTXIDCACHE: Adding tx to txid cache : %s\n", hash.GetHex());
-    if (std::find(walletTXIDCache.begin(), walletTXIDCache.end(), hash) != walletTXIDCache.end()) {
-        PrintToLog("ERROR: Wallet TXID Cache blocked duplicate insertion for %s\n", hash.GetHex());
-    } else {
-        walletTXIDCache.push_back(hash);
-    }
-}
-
-/**
- * Performs initial population of the wallet txid cache.
- */
-void WalletTXIDCacheInit()
-{
-    if (msc_debug_walletcache) PrintToLog("WALLETTXIDCACHE: WalletTXIDCacheInit requested\n");
-#ifdef ENABLE_WALLET
-    LOCK2(cs_tally, pwalletMain->cs_wallet);
-
-    std::list<CAccountingEntry> acentries;
-    CWallet::TxItems txOrdered = pwalletMain->wtxOrdered;
-
-    // Iterate through the wallet, checking if each transaction is Omni (via levelDB)
-    for (CWallet::TxItems::reverse_iterator it = txOrdered.rbegin(); it != txOrdered.rend(); ++it) {
-        const CWalletTx* pwtx = it->second.first;
-        if (pwtx != NULL) {
-            // get the hash of the transaction and check leveldb to see if this is an Omni tx, if so add to cache
-            const uint256& hash = pwtx->GetHash();
-            if (p_txlistdb->exists(hash)) {
-                walletTXIDCache.push_back(hash);
-                if (msc_debug_walletcache) PrintToLog("WALLETTXIDCACHE: Adding tx to txid cache : %s\n", hash.GetHex());
-            }
-        }
-    }
-#endif
-}
 
 /**
  * Updates the cache with the latest state, returning true if changes were made to wallet addresses (including watch only).
@@ -89,7 +46,7 @@ int WalletCacheUpdate()
 
     LOCK(cs_tally);
 
-    for (std::unordered_map<string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it) {
+    for (std::unordered_map<std::string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it) {
         const std::string& address = my_it->first;
 
         // determine if this address is in the wallet

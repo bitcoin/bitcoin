@@ -2,7 +2,7 @@
 
 #include "omnicore/createtx.h"
 #include "omnicore/parse_string.h"
-#include "omnicore/wallettxs.h"
+#include "omnicore/walletutils.h"
 
 #include "base58.h"
 #include "core_io.h"

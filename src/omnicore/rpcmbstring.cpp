@@ -5,7 +5,7 @@
  * UTF-8 encoded strings, including support for multibyte characters.
  */
 
-#include "omnicore/mbstring.h"
+#include "omnicore/rpcmbstring.h"
 
 #include <stddef.h>
 #include <string>

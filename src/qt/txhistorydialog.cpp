@@ -12,8 +12,11 @@
 #include "walletmodel.h"
 #include "platformstyle.h"
 
-#include "omnicore/fetchwallettx.h"
+#include "omnicore/dbspinfo.h"
+#include "omnicore/dbstolist.h"
+#include "omnicore/dbtxlist.h"
 #include "omnicore/omnicore.h"
+#include "omnicore/parsing.h"
 #include "omnicore/pending.h"
 #include "omnicore/rpc.h"
 #include "omnicore/rpctxobject.h"
@@ -21,7 +24,8 @@
 #include "omnicore/tx.h"
 #include "omnicore/utilsbitcoin.h"
 #include "omnicore/walletcache.h"
-#include "omnicore/wallettxs.h"
+#include "omnicore/walletfetchtxs.h"
+#include "omnicore/walletutils.h"
 
 #include "init.h"
 #include "main.h"
@@ -299,7 +303,7 @@ int TXHistoryDialog::PopulateHistoryMap()
         int tmpBlock = 0;
         uint32_t type = 0;
         uint64_t amountNew = 0;
-        htxo.valid = getValidMPTX(txHash, &tmpBlock, &type, &amountNew);
+        htxo.valid = p_txlistdb->getValidMPTX(txHash, &tmpBlock, &type, &amountNew);
         if (htxo.valid && type == MSC_TYPE_TRADE_OFFER && amountNew > 0) amount = amountNew; // override for when amount for sale has been auto-adjusted
         std::string displayAmount = FormatShortMP(mp_obj.getProperty(), amount) + getTokenLabel(mp_obj.getProperty());
         htxo.fundsMoved = true;

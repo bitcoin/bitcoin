@@ -1,4 +1,4 @@
-#include "omnicore/wallettxs.h"
+#include "omnicore/walletutils.h"
 
 #include "omnicore/log.h"
 #include "omnicore/omnicore.h"

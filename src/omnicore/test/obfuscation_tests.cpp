@@ -1,4 +1,4 @@
-#include "omnicore/utils.h"
+#include "omnicore/parsing.h"
 
 #include "test/test_bitcoin.h"
 

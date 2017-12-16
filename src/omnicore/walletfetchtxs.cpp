@@ -1,12 +1,14 @@
 /**
- * @file fetchwallettx.cpp
+ * @file walletfetchtxs.cpp
  *
  * The fetch functions provide a sorted list of transaction hashes ordered by block,
  * position in block and position in wallet including STO receipts.
  */
 
-#include "omnicore/fetchwallettx.h"
+#include "omnicore/walletfetchtxs.h"
 
+#include "omnicore/dbstolist.h"
+#include "omnicore/dbtxlist.h"
 #include "omnicore/log.h"
 #include "omnicore/omnicore.h"
 #include "omnicore/pending.h"
@@ -36,7 +38,7 @@ namespace mastercore
 /**
  * Gets the byte offset of a transaction from the transaction index.
  */
-unsigned int GetTransactionByteOffset(const uint256& txid)
+static unsigned int GetTransactionByteOffset(const uint256& txid)
 {
     LOCK(cs_main);
 

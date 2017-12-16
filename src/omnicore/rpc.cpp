@@ -9,14 +9,18 @@
 #include "omnicore/activation.h"
 #include "omnicore/consensushash.h"
 #include "omnicore/convert.h"
+#include "omnicore/dbfees.h"
+#include "omnicore/dbspinfo.h"
+#include "omnicore/dbstolist.h"
+#include "omnicore/dbtradelist.h"
+#include "omnicore/dbtxlist.h"
 #include "omnicore/dex.h"
 #include "omnicore/errors.h"
-#include "omnicore/fees.h"
-#include "omnicore/fetchwallettx.h"
 #include "omnicore/log.h"
 #include "omnicore/mdex.h"
 #include "omnicore/notifications.h"
 #include "omnicore/omnicore.h"
+#include "omnicore/parsing.h"
 #include "omnicore/rpcrequirements.h"
 #include "omnicore/rpctx.h"
 #include "omnicore/rpctxobject.h"
@@ -28,7 +32,8 @@
 #include "omnicore/tx.h"
 #include "omnicore/utilsbitcoin.h"
 #include "omnicore/version.h"
-#include "omnicore/wallettxs.h"
+#include "omnicore/walletfetchtxs.h"
+#include "omnicore/walletutils.h"
 
 #include "amount.h"
 #include "chainparams.h"
@@ -659,7 +664,7 @@ UniValue mscrpc(const UniValue& params, bool fHelp)
         case 5:
         {
             LOCK(cs_tally);
-            PrintToConsole("isMPinBlockRange(%d,%d)=%s\n", extra2, extra3, isMPinBlockRange(extra2, extra3, false) ? "YES" : "NO");
+            PrintToConsole("isMPinBlockRange(%d,%d)=%s\n", extra2, extra3, p_txlistdb->isMPinBlockRange(extra2, extra3, false) ? "YES" : "NO");
             break;
         }
         case 6:

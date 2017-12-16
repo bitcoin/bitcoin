@@ -7,6 +7,7 @@
 #include "omnicore/dex.h"
 
 #include "omnicore/convert.h"
+#include "omnicore/dbtxlist.h"
 #include "omnicore/errors.h"
 #include "omnicore/log.h"
 #include "omnicore/omnicore.h"
