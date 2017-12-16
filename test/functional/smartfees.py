@@ -143,6 +143,11 @@ def check_estimates(node, fees_seen, max_invalid, print_estimates = True):
 class EstimateFeeTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 3
+        self.extra_args = [
+            ["-maxorphantx=1000", "-whitelist=127.0.0.1"],
+            ["-blockmaxsize=17000", "-maxorphantx=1000", "-deprecatedrpc=estimatefee"],
+            ["-blockmaxsize=8000", "-maxorphantx=1000"]
+        ]
 
     def setup_network(self):
         """
@@ -150,9 +155,7 @@ class EstimateFeeTest(BitcoinTestFramework):
         But first we need to use one node to create a lot of outputs
         which we will use to generate our transactions.
         """
-        self.add_nodes(3, extra_args=[["-maxorphantx=1000", "-whitelist=127.0.0.1"],
-                                      ["-blockmaxsize=17000", "-maxorphantx=1000", "-deprecatedrpc=estimatefee"],
-                                      ["-blockmaxsize=8000", "-maxorphantx=1000"]])
+        self.add_nodes(3, self.extra_args)
         # Use node0 to mine blocks for input splitting
         # Node1 mines small blocks but that are bigger than the expected transaction rate.
         # NOTE: the CreateNewBlock code starts counting block size at 1,000 bytes,
@@ -194,6 +197,11 @@ class EstimateFeeTest(BitcoinTestFramework):
         # Make log handler available to helper functions
         global log
         log = self.log
+
+        # Check that no transaction can be created when smart fees are uninitialized and fallbackfee not set
+        self.start_node(0, extra_args=self.extra_args[0] + ['-fallbackfee='])  # Disable fallbackfee, which is set in the conf file
+        assert_raises_rpc_error(-4, 'No fee estimates available, fallbackfee not set', lambda: self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 1))
+        self.stop_node(0)
 
         # Start node0
         self.start_node(0)
