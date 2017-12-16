@@ -70,6 +70,7 @@ class BumpFeeTest(BitcoinTestFramework):
         test_dust_to_fee(rbf_node, dest_address)
         test_settxfee(rbf_node, dest_address)
         test_rebumping(rbf_node, dest_address)
+        test_no_fallbackfee(self, dest_address)
         test_rebumping_not_replaceable(rbf_node, dest_address)
         test_unconfirmed_not_spendable(rbf_node, rbf_node_address)
         test_bumpfee_metadata(rbf_node, dest_address)
@@ -207,6 +208,18 @@ def test_rebumping(rbf_node, dest_address):
     bumped = rbf_node.bumpfee(rbfid, {"totalFee": 2000})
     assert_raises_rpc_error(-4, "already bumped", rbf_node.bumpfee, rbfid, {"totalFee": 3000})
     rbf_node.bumpfee(bumped["txid"], {"totalFee": 3000})
+
+
+def test_no_fallbackfee(self, dest_address):
+    # check that bumping fails, when no fallback fee is set
+    rbf_node = self.nodes[1]
+    rbfid = spend_one_input(rbf_node, dest_address)
+    self.restart_node(1, extra_args=self.extra_args[1] + ['-fallbackfee='])
+    self.nodes[1].walletpassphrase(WALLET_PASSPHRASE, WALLET_PASSPHRASE_TIMEOUT)
+    assert_raises_rpc_error(-4, "No fee estimates available, fallbackfee not set", rbf_node.bumpfee, rbfid)
+    self.restart_node(1)
+    self.nodes[1].walletpassphrase(WALLET_PASSPHRASE, WALLET_PASSPHRASE_TIMEOUT)
+    rbf_node.bumpfee(rbfid, {"totalFee": 3000})
 
 
 def test_rebumping_not_replaceable(rbf_node, dest_address):

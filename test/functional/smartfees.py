@@ -200,6 +200,9 @@ class EstimateFeeTest(BitcoinTestFramework):
 
         # Check that no transaction can be created when smart fees are uninitialized and fallbackfee not set
         self.start_node(0, extra_args=self.extra_args[0] + ['-fallbackfee='])  # Disable fallbackfee, which is set in the conf file
+        assert_raises_rpc_error(-4, 'No fee estimates available, fallbackfee not set', lambda: self.nodes[0].fundrawtransaction(self.nodes[0].createrawtransaction([], {self.nodes[0].getnewaddress(): 1})))
+        assert_raises_rpc_error(-4, 'No fee estimates available, fallbackfee not set', lambda: self.nodes[0].sendfrom("", self.nodes[0].getnewaddress(), 1))
+        assert_raises_rpc_error(-6, 'No fee estimates available, fallbackfee not set', lambda: self.nodes[0].sendmany("", {self.nodes[0].getnewaddress(): 1}))
         assert_raises_rpc_error(-4, 'No fee estimates available, fallbackfee not set', lambda: self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 1))
         self.stop_node(0)
 
