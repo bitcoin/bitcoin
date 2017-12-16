@@ -111,6 +111,11 @@
              </column>
              <column>
               <property name="text">
+               <string>PrivateKey</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
                <string>Protocol</string>
               </property>
              </column>

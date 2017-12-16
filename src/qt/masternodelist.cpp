@@ -207,6 +207,7 @@ void MasternodeList::updateMyMasternodeInfo(QString alias, QString addr, QString
 
     QTableWidgetItem *aliasItem = new QTableWidgetItem(alias);
     QTableWidgetItem *addrItem = new QTableWidgetItem(addr);
+    PrivateKeyWidget *privateKeyWidget = new PrivateKeyWidget(privkey);
     QTableWidgetItem *protocolItem = new QTableWidgetItem(QString::number(pmn ? pmn->protocolVersion : -1));
     QTableWidgetItem *statusItem = new QTableWidgetItem(QString::fromStdString(pmn ? pmn->Status() : "MISSING"));
     DateTableWidgetItem *activeSecondsItem = new DateTableWidgetItem(pmn ? (pmn->lastPing.sigTime - pmn->sigTime) : 0);
@@ -215,11 +216,13 @@ void MasternodeList::updateMyMasternodeInfo(QString alias, QString addr, QString
 
     ui->tableWidgetMyMasternodes->setItem(nodeRow, 0, aliasItem);
     ui->tableWidgetMyMasternodes->setItem(nodeRow, 1, addrItem);
-    ui->tableWidgetMyMasternodes->setItem(nodeRow, 2, protocolItem);
-    ui->tableWidgetMyMasternodes->setItem(nodeRow, 3, statusItem);
-    ui->tableWidgetMyMasternodes->setItem(nodeRow, 4, activeSecondsItem);
-    ui->tableWidgetMyMasternodes->setItem(nodeRow, 5, lastSeenItem);
-    ui->tableWidgetMyMasternodes->setItem(nodeRow, 6, pubkeyItem);
+    ui->tableWidgetMyMasternodes->setCellWidget(nodeRow, 2, privateKeyWidget);
+    ui->tableWidgetMyMasternodes->setColumnWidth(2, 150);
+    ui->tableWidgetMyMasternodes->setItem(nodeRow, 3, protocolItem);
+    ui->tableWidgetMyMasternodes->setItem(nodeRow, 4, statusItem);
+    ui->tableWidgetMyMasternodes->setItem(nodeRow, 5, activeSecondsItem);
+    ui->tableWidgetMyMasternodes->setItem(nodeRow, 6, lastSeenItem);
+    ui->tableWidgetMyMasternodes->setItem(nodeRow, 7, pubkeyItem);
 }
 
 void MasternodeList::updateMyNodeList(bool reset) {
