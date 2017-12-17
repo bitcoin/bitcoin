@@ -124,3 +124,6 @@ qa/pull-tester/build-tests.sh
 
 !src/leveldb-*/Makefile
 peercoin-qt
+
+#db4/
+db4/
