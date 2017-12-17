@@ -287,7 +287,7 @@ extern CAliasDB *paliasdb;
 extern COfferDB *pofferdb;
 extern CCertDB *pcertdb;
 extern CEscrowDB *pescrowdb;
-
+extern CAssetDB *passetdb;
 
 
 std::string stringFromVch(const std::vector<unsigned char> &vch);

@@ -624,12 +624,18 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						return true;
 					}
 				}
+				if (dbOffer.aliasTuple != theOffer.aliasTuple)
+				{
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot edit this offer. Offer owner must sign off on this change.");
+					theOffer = dbOffer;
+				}
 				// non linked offers cant edit commission
 				if (theOffer.linkOfferTuple.first.empty())
 					theOffer.nCommission = 0;
 				if (!theOffer.linkAliasTuple.first.empty())
 					theOffer.aliasTuple = theOffer.linkAliasTuple;
 				theOffer.linkAliasTuple.first.clear();
+
 			}
 		}
 		else if(op == OP_OFFER_ACTIVATE)

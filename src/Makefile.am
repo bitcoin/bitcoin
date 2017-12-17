@@ -81,6 +81,7 @@ SYSCOIN_CORE_H = \
   alias.h \
   offer.h \
   cert.h \
+  asset.h \
   escrow.h \
   feedback.h \
   auxpow.h \
@@ -229,6 +230,7 @@ libsyscoin_server_a_SOURCES = \
   alias.cpp \
   offer.cpp \
   cert.cpp \
+  asset.cpp \
   escrow.cpp \
   auxpow.cpp \
   addrman.cpp \

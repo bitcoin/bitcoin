@@ -9,6 +9,7 @@
 #include "rpc/server.h"
 #include "feedback.h"
 #include "cert.h"
+#include "asset.h"
 #include "escrow.h"
 #include "offer.h"
 #include "alias.h"

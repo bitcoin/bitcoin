@@ -72,6 +72,7 @@
 #include "offer.h"
 #include "cert.h"
 #include "escrow.h"
+#include "asset.h"
 
 #ifndef WIN32
 #include <signal.h>
@@ -293,6 +294,13 @@ void PrepareShutdown()
 				LogPrintf("Failed to write to cert database!");
 			delete pcertdb;
 			pcertdb = NULL;
+		}
+		if (passetdb != NULL)
+		{
+			if (!passetdb->Flush())
+				LogPrintf("Failed to write to asset database!");
+			delete passetdb;
+			passetdb = NULL;
 		}
 		if (pescrowdb != NULL)
 		{
@@ -1604,6 +1612,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
 				delete paliasdb;
 				delete pofferdb;
 				delete pcertdb;
+				delete passetdb;
 				delete pescrowdb;
 
 				pblocktree = new CBlockTreeDB(nBlockTreeDBCache, false, fReindex);
@@ -1613,6 +1622,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
 				paliasdb = new CAliasDB(nCoinCacheUsage * 20, false, fReindex);
 				pofferdb = new COfferDB(nCoinCacheUsage * 2, false, fReindex);
 				pcertdb = new CCertDB(nCoinCacheUsage * 2, false, fReindex);
+				passetdb = new CAssetDB(nCoinCacheUsage * 2, false, fReindex);
 				pescrowdb = new CEscrowDB(nCoinCacheUsage * 2, false, fReindex);
 				startMongoDB();
 				if (fReindex) {

@@ -7,6 +7,7 @@
 #include "escrow.h"
 #include "cert.h"
 #include "offer.h"
+#include "asset.h"
 #include "init.h"
 #include "validation.h"
 #include "util.h"
@@ -523,7 +524,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			if (!dbAliasNull)
 			{
 				CTxDestination aliasDest;
-				if (vvchPrevArgs.size() <= 0 || vvchPrevArgs[0] != vvchArgs[0] || !pprevCoins.IsAvailable(prevOutputIndex) || !ExtractDestination(pprevCoins.vout[prevOutputIndex].scriptPubKey, aliasDest))
+				if (vvchPrevArgs.size() <= 0 || vvchPrevArgs[0] != vvchArgs[0] || vvchPrevArgs[1] != vvchArgs[1] || !pprevCoins.IsAvailable(prevOutputIndex) || !ExtractDestination(pprevCoins.vout[prevOutputIndex].scriptPubKey, aliasDest))
 				{
 					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5020 - " + _("Cannot extract destination of alias input");
 					if(!theAliasNull)
@@ -539,7 +540,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 							theAlias = dbAlias;
 					}
 				}
-				if (dbAlias.vchGUID != vvchArgs[1])
+				if (dbAlias.vchGUID != vvchArgs[1] || dbAlias.vchAlias != vvchArgs[0])
 				{
 					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5022 - " + _("Cannot edit this alias, guid mismatch");
 					if (!theAliasNull)
@@ -703,6 +704,10 @@ theAlias = dbAlias;
 					else if (type == CERT && opHistory == OP_CERT_TRANSFER) {
 						CCert cert(tx);
 						user2 = stringFromVch(cert.linkAliasTuple.first);
+					}
+					else if (type == CERT && opHistory == OP_ASSET_TRANSFER || opHistory == OP_ASSET_SEND) {
+						CAsset asset(tx);
+						user2 = stringFromVch(asset.linkAliasTuple.first);
 					}
 					else if (type == OFFER && opHistory == OP_OFFER_UPDATE)
 					{
@@ -898,6 +903,8 @@ void CleanupSyscoinServiceDatabases(int &numServicesCleaned)
 		pescrowdb->CleanupDatabase(numServicesCleaned);
 	if(pcertdb!= NULL)
 		pcertdb->CleanupDatabase(numServicesCleaned);
+	if (passetdb != NULL)
+		passetdb->CleanupDatabase(numServicesCleaned);
 	if (paliasdb != NULL) 
 		paliasdb->CleanupDatabase(numServicesCleaned);
 	
@@ -920,6 +927,11 @@ void CleanupSyscoinServiceDatabases(int &numServicesCleaned)
 	{
 		if (!pescrowdb->Flush())
 			LogPrintf("Failed to write to escrow database!");
+	}
+	if (passetdb != NULL)
+	{
+		if (!passetdb->Flush())
+			LogPrintf("Failed to write to asset database!");
 	}
 }
 bool GetAlias(const CNameTXIDTuple &aliasTuple,
@@ -1459,6 +1471,78 @@ void setupCertHistoryIndexes() {
 	bson_destroy(&reply);
 	bson_destroy(create_indexes);
 }
+void setupAssetIndexes() {
+	bson_t keys;
+	const char *collection_name = "asset";
+	char *index_name;
+	bson_t reply;
+	bson_error_t error;
+	bool r;
+	bson_t *create_indexes;
+
+	bson_init(&keys);
+	BSON_APPEND_INT32(&keys, "category", 1);
+	BSON_APPEND_INT32(&keys, "alias", 1);
+	BSON_APPEND_UTF8(&keys, "title", "text");
+	index_name = mongoc_collection_keys_to_index_string(&keys);
+	create_indexes = BCON_NEW("createIndexes",
+		BCON_UTF8(collection_name),
+		"indexes",
+		"[",
+		"{",
+		"key",
+		BCON_DOCUMENT(&keys),
+		"name",
+		BCON_UTF8(index_name),
+		"}",
+		"]");
+
+	r = mongoc_database_write_command_with_opts(
+		database, create_indexes, NULL /* opts */, &reply, &error);
+
+	if (!r) {
+		LogPrintf("Error in createIndexes: %s\n", error.message);
+	}
+	bson_destroy(&keys);
+	bson_free(index_name);
+	bson_destroy(&reply);
+	bson_destroy(create_indexes);
+}
+void setupAssetHistoryIndexes() {
+	bson_t keys;
+	const char *collection_name = "assethistory";
+	char *index_name;
+	bson_t reply;
+	bson_error_t error;
+	bool r;
+	bson_t *create_indexes;
+
+	bson_init(&keys);
+	BSON_APPEND_INT32(&keys, "asset", 1);
+	index_name = mongoc_collection_keys_to_index_string(&keys);
+	create_indexes = BCON_NEW("createIndexes",
+		BCON_UTF8(collection_name),
+		"indexes",
+		"[",
+		"{",
+		"key",
+		BCON_DOCUMENT(&keys),
+		"name",
+		BCON_UTF8(index_name),
+		"}",
+		"]");
+
+	r = mongoc_database_write_command_with_opts(
+		database, create_indexes, NULL /* opts */, &reply, &error);
+
+	if (!r) {
+		LogPrintf("Error in createIndexes: %s\n", error.message);
+	}
+	bson_destroy(&keys);
+	bson_free(index_name);
+	bson_destroy(&reply);
+	bson_destroy(create_indexes);
+}
 void setupFeedbackIndexes() {
 	bson_t keys;
 	const char *collection_name = "feedback";
@@ -1521,6 +1605,8 @@ void startMongoDB(){
 		cert_collection = mongoc_client_get_collection(client, "syscoindb", "cert");
 		certhistory_collection = mongoc_client_get_collection(client, "syscoindb", "certhistory");
 		feedback_collection = mongoc_client_get_collection(client, "syscoindb", "feedback");
+		asset_collection = mongoc_client_get_collection(client, "syscoindb", "asset");
+		assethistory_collection = mongoc_client_get_collection(client, "syscoindb", "assethistory");
 		BSON_ASSERT(alias_collection);
 		BSON_ASSERT(aliashistory_collection);
 		BSON_ASSERT(aliastxhistory_collection);
@@ -1531,6 +1617,8 @@ void startMongoDB(){
 		BSON_ASSERT(cert_collection);
 		BSON_ASSERT(certhistory_collection);
 		BSON_ASSERT(feedback_collection);
+		BSON_ASSERT(asset_collection);
+		BSON_ASSERT(assethistory_collection);
 		setupAliasHistoryIndexes();
 		setupOfferIndexes();
 		setupOfferHistoryIndexes();
@@ -1539,6 +1627,8 @@ void startMongoDB(){
 		setupCertIndexes();
 		setupCertHistoryIndexes();
 		setupFeedbackIndexes();
+		setupAssetIndexes();
+		setupAssetHistoryIndexes();
 		LogPrintf("Mongo c client loaded!\n");
 	}
 	else
@@ -1714,6 +1804,10 @@ void stopMongoDB() {
 		mongoc_collection_destroy(certhistory_collection);
 	if(feedback_collection)
 		mongoc_collection_destroy(feedback_collection);
+	if (asset_collection)
+		mongoc_collection_destroy(asset_collection);
+	if (assethistory_collection)
+		mongoc_collection_destroy(assethistory_collection);
 	if(database)
 		mongoc_database_destroy(database);
 	if (client) {
@@ -1725,7 +1819,7 @@ UniValue syscoinquery(const UniValue& params, bool fHelp) {
 	if (fHelp || 2 > params.size() || 3 < params.size())
 		throw runtime_error(
 			"syscoinquery <collection> <query> [options]\n"
-			"<collection> Collection name, either: 'alias', 'aliashistory', 'aliastxhistory', 'cert', 'certhistory', 'offer', 'offerhistory', 'feedback', 'escrow', 'escrowbid'.\n"
+			"<collection> Collection name, either: 'alias', 'aliashistory', 'aliastxhistory', 'cert', 'certhistory', 'asset', 'assethistory','offer', 'offerhistory', 'feedback', 'escrow', 'escrowbid'.\n"
 			"<query> JSON query on the collection to retrieve a set of documents.\n"
 			"<options> Optional. JSON option arguments into the query. Based on mongoc_collection_find_with_opts.\n"
 			+ HelpRequiringPassphrase());
@@ -1741,6 +1835,10 @@ UniValue syscoinquery(const UniValue& params, bool fHelp) {
 		selectedCollection = cert_collection;
 	else if (collection == "certhistory")
 		selectedCollection = certhistory_collection;
+	else if (collection == "asset")
+		selectedCollection = asset_collection;
+	else if (collection == "assethistory")
+		selectedCollection = assethistory_collection;
 	else if (collection == "offer")
 		selectedCollection = offer_collection;
 	else if (collection == "offerhistory")
@@ -2831,6 +2929,28 @@ string GetSyscoinTransactionDescription(const int op, const vector<vector<unsign
 		else if (op == OP_CERT_TRANSFER) {
 			strResponse = _("Certificate Transferred");
 			responseEnglish = "Certificate Transferred";
+		}
+	}
+	else if (type == ASSET) {
+		if (op == OP_ASSET_ACTIVATE) {
+			strResponse = _("Asset Activated");
+			responseEnglish = "Asset Activated";
+		}
+		if (op == OP_ASSET_MINT) {
+			strResponse = _("Asset Minted");
+			responseEnglish = "Asset Minted";
+		}
+		else if (op == OP_ASSET_UPDATE) {
+			strResponse = _("Asset Updated");
+			responseEnglish = "Asset Updated";
+		}
+		else if (op == OP_ASSET_SEND) {
+			strResponse = _("Asset Ownership Transferred");
+			responseEnglish = "Asset Ownership Transferred";
+		}
+		else if (op == OP_ASSET_TRANSFER) {
+			strResponse = _("Asset Transferred");
+			responseEnglish = "Asset Transferred";
 		}
 	}
 	else if (type == ESCROW) {
