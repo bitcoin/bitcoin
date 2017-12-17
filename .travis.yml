@@ -1,11 +1,18 @@
 language: cpp
 before_install:
   - sudo apt-get update -qq
-  - sudo apt-get install -qq libboost-all-dev
-  - sudo apt-get install -qq libdb++-dev
-  - sudo apt-get install -qq libminiupnpc-dev
+  - sudo apt-get install -y -qq autoconf build-essential pkg-config libssl-dev libboost-all-dev
+  - sudo apt-get install -y -qq miniupnpc libminiupnpc-dev
+  - sudo apt-get install -y -qq qtbase5-dev qttools5-dev-tools
+  - sudo apt-get install -y -qq libdb++-dev
+  - sudo apt-get install -y -qq gettext
 install: true
+sudo: required
 script:
-  - qmake BITCOIN_QT_TEST=1 && make && ./bitcoin-qt_test
-  - cd src && make -f makefile.unix test
+  - ./contrib/install_db4.sh `pwd`
+  - sudo ln -s `pwd`/db4/include /usr/local/include/bdb4.8
+  - sudo ln -s `pwd`/db4/lib/*.a /usr/local/lib
+  - ./autogen.sh
+  - ./configure --with-gui=qt5 
+  - make -j$(nproc)
 
