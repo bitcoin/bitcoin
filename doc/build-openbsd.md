@@ -44,7 +44,7 @@ If you have to build it yourself, you can use [the installation script included
 in contrib/](contrib/install_db4.sh) like so
 
 ```shell
-./contrib/install_db4.sh `pwd` CC=egcc CXX=eg++ CPP=ecpp
+CC=egcc CXX=eg++ CPP=ecpp ./contrib/install_db4.sh `pwd`
 ```
 
 from the root of the repository.
@@ -79,13 +79,14 @@ Make sure `BDB_PREFIX` is set to the appropriate path from the above steps.
 
 To configure with wallet:
 ```bash
-./configure --with-gui=no CC=egcc CXX=eg++ CPP=ecpp \
-    BDB_LIBS="-L${BDB_PREFIX}/lib -ldb_cxx-4.8" BDB_CFLAGS="-I${BDB_PREFIX}/include"
+CC=egcc CXX=eg++ CPP=ecpp \
+  BDB_LIBS="-L${BDB_PREFIX}/lib -ldb_cxx-4.8" BDB_CFLAGS="-I${BDB_PREFIX}/include"
+  ./configure --with-gui=no
 ```
 
 To configure without wallet:
 ```bash
-./configure --disable-wallet --with-gui=no CC=egcc CXX=eg++ CPP=ecpp
+CC=egcc CXX=eg++ CPP=ecpp ./configure --disable-wallet --with-gui=no
 ```
 
 Build and run the tests:
@@ -100,7 +101,7 @@ Clang
 ```bash
 pkg_add llvm
 
-./configure --disable-wallet --with-gui=no CC=clang CXX=clang++
+CC=clang CXX=clang++ ./configure --disable-wallet --with-gui=no
 gmake # use -jX here for parallelism
 gmake check
 ```
