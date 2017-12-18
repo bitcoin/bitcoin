@@ -1991,7 +1991,7 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 		newAlias.vchEncryptionPrivateKey = ParseHex(strEncryptionPrivateKey);
 	newAlias.vchPublicValue = vchPublicValue;
 	newAlias.nExpireTime = nTime;
-	newAlias.nAcceptTransfersFlags = nAcceptTransferFlags;
+	newAlias.nAcceptTransferFlags = nAcceptTransferFlags;
 	if(strAddress.empty())
 	{
 		// generate new address in this wallet if not passed in
