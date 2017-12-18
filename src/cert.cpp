@@ -528,7 +528,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 				else
 				{
 					theCert.aliasTuple = theCert.linkAliasTuple;		
-					if(!alias.acceptCertTransfers)
+					if(!(alias.nAcceptTransferFlags & ACCEPT_TRANSFER_CERTIFICATES))
 					{
 						errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("The alias you are transferring to does not accept certificate transfers");
 						theCert = dbCert;	

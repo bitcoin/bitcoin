@@ -36,11 +36,11 @@ BOOST_AUTO_TEST_CASE (generate_big_aliasdata)
 	string gooddata = "SfsddfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsDfdfddSfsddfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsDfdfdd";
 	string baddata = gooddata + "a";
 	AliasNew("node1", "jag1", gooddata);
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasnew jag2 " + baddata + " false 0 TPbBz99JatywT2BUTFzDYFHXBGWz5be3bw '' '' ''"));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasnew jag2 " + baddata + " 3 0 TPbBz99JatywT2BUTFzDYFHXBGWz5be3bw '' '' ''"));
 	UniValue varray = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + varray[0].get_str()));
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
-	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew jag2 pub false 0 TTVgyEvCfgZFiVL32kD7jMRaBKtGCHqwbD '' '' ''"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew jag2 pub 3 0 TTVgyEvCfgZFiVL32kD7jMRaBKtGCHqwbD '' '' ''"), runtime_error);
 	GenerateBlocks(5);	
 }
 BOOST_AUTO_TEST_CASE (generate_aliaswitness)
@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE (generate_big_aliasname)
 	// 65 bytes long
 	string badname =  "sfsdfdfsdsfsfsdfdfsdsfdsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdsfsddfda";
 	AliasNew("node1", goodname, gooddata);
-	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew " + badname + " 3d false 0 TWnXcTHMiKtZME84Y8YA5DwXtdYBAZ5SVc '' '' ''"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew " + badname + " 3d 3 0 TWnXcTHMiKtZME84Y8YA5DwXtdYBAZ5SVc '' '' ''"), runtime_error);
 }
 BOOST_AUTO_TEST_CASE (generate_aliasupdate)
 {
@@ -117,12 +117,12 @@ BOOST_AUTO_TEST_CASE (generate_aliasmultiupdate)
 	for (unsigned int i = 0; i < MAX_ALIAS_UPDATES_PER_BLOCK; i++)
 	{
 		// "aliasupdate <aliasname> [public value]  [address] [accept_transfers=true] [expire_timestamp] [encryption_privatekey] [encryption_publickey] [witness]\n"
-		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasupdate jagmultiupdate changeddata " + oldAddressStr + " false " + " 0 " + encryptionprivkey + " " + encryptionkey + " '' false"));
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasupdate jagmultiupdate changeddata " + oldAddressStr + " 3 " + " 0 " + encryptionprivkey + " " + encryptionkey + " '' false"));
 		UniValue varray = r.get_array();
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + varray[0].get_str()));
 		BOOST_CHECK_NO_THROW(CallRPC("node1", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
 	}
-	BOOST_CHECK_THROW(r = CallRPC("node1", "aliasupdate jagmultiupdate changeddata " + oldAddressStr + " false " + " 0 " + encryptionprivkey + " " + encryptionkey + " '' false"), runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC("node1", "aliasupdate jagmultiupdate changeddata " + oldAddressStr + " 3 " + " 0 " + encryptionprivkey + " " + encryptionkey + " '' false"), runtime_error);
 
 
 	GenerateBlocks(10, "node1");
@@ -139,20 +139,20 @@ BOOST_AUTO_TEST_CASE (generate_aliasmultiupdate)
 	// new owner can update
 	for (unsigned int i = 0; i < MAX_ALIAS_UPDATES_PER_BLOCK; i++)
 	{
-		BOOST_CHECK_NO_THROW(r = CallRPC("node2", "aliasupdate jagmultiupdate changeddata2 " + oldAddressStr + " false " + " 0 " + encryptionprivkey + " " + encryptionkey + " '' false"));
+		BOOST_CHECK_NO_THROW(r = CallRPC("node2", "aliasupdate jagmultiupdate changeddata2 " + oldAddressStr + " 3 " + " 0 " + encryptionprivkey + " " + encryptionkey + " '' false"));
 		UniValue varray = r.get_array();
 		BOOST_CHECK_NO_THROW(r = CallRPC("node2", "signrawtransaction " + varray[0].get_str()));
 		BOOST_CHECK_NO_THROW(CallRPC("node2", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
 	}
 
-	BOOST_CHECK_THROW(r = CallRPC("node2", "aliasupdate jagmultiupdate changeddata2 " + oldAddressStr + " false " + " 0 " + encryptionprivkey + " " + encryptionkey + " '' false"), runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC("node2", "aliasupdate jagmultiupdate changeddata2 " + oldAddressStr + " 3 " + " 0 " + encryptionprivkey + " " + encryptionkey + " '' false"), runtime_error);
 
 	// after generation MAX_ALIAS_UPDATES_PER_BLOCK utxo's should be available
 	GenerateBlocks(10, "node2");
 	GenerateBlocks(10, "node2");
 	for (unsigned int i = 0; i < MAX_ALIAS_UPDATES_PER_BLOCK+1; i++)
 	{
-		BOOST_CHECK_NO_THROW(r = CallRPC("node2", "aliasupdate jagmultiupdate changeddata2 " + oldAddressStr + " false " + " 0 " + encryptionprivkey + " " + encryptionkey + " '' false"));
+		BOOST_CHECK_NO_THROW(r = CallRPC("node2", "aliasupdate jagmultiupdate changeddata2 " + oldAddressStr + " 3 " + " 0 " + encryptionprivkey + " " + encryptionkey + " '' false"));
 		UniValue varray = r.get_array();
 		BOOST_CHECK_NO_THROW(r = CallRPC("node2", "signrawtransaction " + varray[0].get_str()));
 		BOOST_CHECK_NO_THROW(CallRPC("node2", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
@@ -170,13 +170,13 @@ BOOST_AUTO_TEST_CASE (generate_aliasmultiupdate)
 	oldAddressStr = find_value(r.get_obj(), "address").get_str();
 	for (unsigned int i = 0; i < MAX_ALIAS_UPDATES_PER_BLOCK; i++)
 	{
-		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasupdate jagmultiupdate changedata8 " + oldAddressStr + " false " +  " 0 " + encryptionprivkey + " " + encryptionkey + " '' false"));
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasupdate jagmultiupdate changedata8 " + oldAddressStr + " 3 " +  " 0 " + encryptionprivkey + " " + encryptionkey + " '' false"));
 		UniValue varray = r.get_array();
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + varray[0].get_str()));
 		BOOST_CHECK_NO_THROW(CallRPC("node1", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
 	}
 	
-	BOOST_CHECK_THROW(r = CallRPC("node1", "aliasupdate jagmultiupdate changedata8 " + oldAddressStr + " false " +  " 0 " + encryptionprivkey + " " + encryptionkey + " '' false"), runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC("node1", "aliasupdate jagmultiupdate changedata8 " + oldAddressStr + " 3 " +  " 0 " + encryptionprivkey + " " + encryptionkey + " '' false"), runtime_error);
 
 	GenerateBlocks(10, "node1");
 	GenerateBlocks(10, "node1");
@@ -294,33 +294,33 @@ BOOST_AUTO_TEST_CASE (generate_aliaspay)
 	// alias1 was only funded with 10 sys which gets used in the 5th update, 1 was used above in aliasupdate, while alias2/alias3 have more fund utxos so they can do more updates without a block
 	for (unsigned int i = 0; i < MAX_ALIAS_UPDATES_PER_BLOCK - 1; i++)
 	{
-		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasupdate alias1.aliaspay.tld changedata1 " + oldAddressStr1 + " false " + " 0 " + encryptionprivkey1 + " " + encryptionkey1 + " '' false"));
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasupdate alias1.aliaspay.tld changedata1 " + oldAddressStr1 + " 3 " + " 0 " + encryptionprivkey1 + " " + encryptionkey1 + " '' false"));
 		UniValue varray = r.get_array();
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + varray[0].get_str()));
 		BOOST_CHECK_NO_THROW(CallRPC("node1", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
 	}
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasupdate alias1.aliaspay.tld changedata1 " + oldAddressStr1 + " false " + " 0 " + encryptionprivkey1 + " " + encryptionkey1 + " '' false"));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasupdate alias1.aliaspay.tld changedata1 " + oldAddressStr1 + " 3 " + " 0 " + encryptionprivkey1 + " " + encryptionkey1 + " '' false"));
 	UniValue varray2 = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + varray2[0].get_str()));
 	BOOST_CHECK_THROW(CallRPC("node1", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()), runtime_error);
 
 	for (unsigned int i = 0; i < MAX_ALIAS_UPDATES_PER_BLOCK; i++)
 	{
-		BOOST_CHECK_NO_THROW(r = CallRPC("node2", "aliasupdate alias2.aliaspay.tld changedata2 " + oldAddressStr2 + " false " + " 0 " + encryptionprivkey2 + " " + encryptionkey2 + " '' false"));
+		BOOST_CHECK_NO_THROW(r = CallRPC("node2", "aliasupdate alias2.aliaspay.tld changedata2 " + oldAddressStr2 + " 3 " + " 0 " + encryptionprivkey2 + " " + encryptionkey2 + " '' false"));
 		UniValue varray = r.get_array();
 		BOOST_CHECK_NO_THROW(r = CallRPC("node2", "signrawtransaction " + varray[0].get_str()));
 		BOOST_CHECK_NO_THROW(CallRPC("node2", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
 	}
-	BOOST_CHECK_THROW(r = CallRPC("node2", "aliasupdate alias2.aliaspay.tld changedata2 " + oldAddressStr2 + " false " + " 0 " + encryptionprivkey2 + " " + encryptionkey2 + " '' false"), runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC("node2", "aliasupdate alias2.aliaspay.tld changedata2 " + oldAddressStr2 + " 3 " + " 0 " + encryptionprivkey2 + " " + encryptionkey2 + " '' false"), runtime_error);
 
 	for (unsigned int i = 0; i < MAX_ALIAS_UPDATES_PER_BLOCK; i++)
 	{
-		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "aliasupdate alias3.aliaspay.tld changedata3 " + oldAddressStr3 + " false " + " 0 " + encryptionprivkey3 + " " + encryptionkey3 + " '' false"));
+		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "aliasupdate alias3.aliaspay.tld changedata3 " + oldAddressStr3 + " 3 " + " 0 " + encryptionprivkey3 + " " + encryptionkey3 + " '' false"));
 		UniValue varray = r.get_array();
 		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "signrawtransaction " + varray[0].get_str()));
 		BOOST_CHECK_NO_THROW(CallRPC("node3", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
 	}
-	BOOST_CHECK_THROW(r = CallRPC("node3", "aliasupdate alias3.aliaspay.tld changedata3 " + oldAddressStr3 + " false " + " 0 " + encryptionprivkey3 + " " + encryptionkey3 + " '' false"), runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC("node3", "aliasupdate alias3.aliaspay.tld changedata3 " + oldAddressStr3 + " 3 " + " 0 " + encryptionprivkey3 + " " + encryptionkey3 + " '' false"), runtime_error);
 	GenerateBlocks(10, "node1");
 	GenerateBlocks(10, "node2");
 	GenerateBlocks(10, "node3");
@@ -689,7 +689,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpiredbuyback)
 	
 	AliasNew("node1", "aliasexpirebuyback", "somedata");
 	// can't renew aliases that aren't expired
-	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew aliasexpirebuyback data false 0 TTVgyEvCfgZFiVL32kD7jMRaBKtGCHqwbD '' '' ''"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew aliasexpirebuyback data 3 0 TTVgyEvCfgZFiVL32kD7jMRaBKtGCHqwbD '' '' ''"), runtime_error);
 	ExpireAlias("aliasexpirebuyback");
 	// expired aliases are searchable since you haven't deleted from indexer yet
 	BOOST_CHECK_EQUAL(AliasFilter("node1", "aliasexpirebuyback"), true);
@@ -749,12 +749,12 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpiredbuyback)
 	GenerateBlocks(10, "node1");
 	GenerateBlocks(10, "node2");
 	AliasNew("node2", "aliasexpirebuyback", "somedata");
-	BOOST_CHECK_THROW(CallRPC("node2", "aliasnew aliasexpirebuyback data false 0 TTVgyEvCfgZFiVL32kD7jMRaBKtGCHqwbD '' '' ''"), runtime_error);
-	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew aliasexpirebuyback data false 0 TTVgyEvCfgZFiVL32kD7jMRaBKtGCHqwbD '' '' ''"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node2", "aliasnew aliasexpirebuyback data 3 0 TTVgyEvCfgZFiVL32kD7jMRaBKtGCHqwbD '' '' ''"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew aliasexpirebuyback data 3 0 TTVgyEvCfgZFiVL32kD7jMRaBKtGCHqwbD '' '' ''"), runtime_error);
 	string hex_str = AliasUpdate("node2", "aliasexpirebuyback", "changedata1");
 	BOOST_CHECK(hex_str.empty());
-	BOOST_CHECK_THROW(CallRPC("node2", "aliasnew aliasexpirebuyback data false 0 TTVgyEvCfgZFiVL32kD7jMRaBKtGCHqwbD '' '' ''"), runtime_error);
-	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew aliasexpirebuyback data false 0 TTVgyEvCfgZFiVL32kD7jMRaBKtGCHqwbD '' '' ''"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node2", "aliasnew aliasexpirebuyback data 3 0 TTVgyEvCfgZFiVL32kD7jMRaBKtGCHqwbD '' '' ''"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew aliasexpirebuyback data 3 0 TTVgyEvCfgZFiVL32kD7jMRaBKtGCHqwbD '' '' ''"), runtime_error);
 	// this time steal the alias and try to recreate at the same time
 	ExpireAlias("aliasexpirebuyback");
 	AliasNew("node1", "aliasexpirebuyback", "somedata");
@@ -765,7 +765,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpiredbuyback)
 	hex_str = AliasUpdate("node2", "aliasexpirebuyback", "changedata4");
 	BOOST_CHECK(hex_str.empty());
 	GenerateBlocks(5,"node2");
-	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew aliasexpirebuyback data2 false 0 TTVgyEvCfgZFiVL32kD7jMRaBKtGCHqwbD '' '' ''"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew aliasexpirebuyback data2 3 0 TTVgyEvCfgZFiVL32kD7jMRaBKtGCHqwbD '' '' ''"), runtime_error);
 }
 
 BOOST_AUTO_TEST_CASE (generate_aliaspruning)
@@ -817,7 +817,7 @@ BOOST_AUTO_TEST_CASE (generate_aliaspruning)
 	BOOST_CHECK_EQUAL(AliasFilter("node2", "aliasprune1"), true);
 	ExpireAlias("aliasprune1");
 	// now it should be expired
-	BOOST_CHECK_THROW(CallRPC("node2", "aliasupdate aliasprune1 newdata2 TTVgyEvCfgZFiVL32kD7jMRaBKtGCHqwbD true 0 '' '' '' false"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node2", "aliasupdate aliasprune1 newdata2 TTVgyEvCfgZFiVL32kD7jMRaBKtGCHqwbD 3 0 '' '' '' false"), runtime_error);
 
 	BOOST_CHECK_EQUAL(AliasFilter("node1", "aliasprune1"), true);
 	BOOST_CHECK_EQUAL(AliasFilter("node2", "aliasprune1"), true);
@@ -947,7 +947,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	AliasNew("node1", "aliasexpire0", "pubdata");
 	string aliasexpire1address =  AliasNew("node2", "aliasexpire1", "pubdata");
 	// should already exist and not be expired so you can't create it again
-	BOOST_CHECK_THROW(r = CallRPC("node1", "aliasnew aliasexpire2 data false 0 TTVgyEvCfgZFiVL32kD7jMRaBKtGCHqwbD '' '' ''"), runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC("node1", "aliasnew aliasexpire2 data 3 0 TTVgyEvCfgZFiVL32kD7jMRaBKtGCHqwbD '' '' ''"), runtime_error);
 	CKey privKey;
 	privKey.MakeNewKey(true);
 	CPubKey pubKey = privKey.GetPubKey();
@@ -956,11 +956,11 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	BOOST_CHECK(pubKey.IsFullyValid());
 	CSyscoinAddress aliasAddress(pubKey.GetID());
 	// should fail: alias update on expired alias
-	BOOST_CHECK_THROW(CallRPC("node2", "aliasupdate aliasexpirednode2 newdata1 TTVgyEvCfgZFiVL32kD7jMRaBKtGCHqwbD true 0 '' '' '' false"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node2", "aliasupdate aliasexpirednode2 newdata1 TTVgyEvCfgZFiVL32kD7jMRaBKtGCHqwbD 3 0 '' '' '' false"), runtime_error);
 	// should fail: alias transfer from expired alias
-	BOOST_CHECK_THROW(CallRPC("node2", "aliasupdate aliasexpirednode2 changedata1 " + aliasAddress.ToString() + " true 0 '' '' '' false"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node2", "aliasupdate aliasexpirednode2 changedata1 " + aliasAddress.ToString() + " 3 0 '' '' '' false"), runtime_error);
 	// should fail: alias transfer to another non-expired alias address
-	BOOST_CHECK_THROW(CallRPC("node1", "aliasupdate aliasexpire2 changedata1 " + aliasexpire1address + " true 0 '' '' '' false"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "aliasupdate aliasexpire2 changedata1 " + aliasexpire1address + " 3 0 '' '' '' false"), runtime_error);
 
 	// should fail: link to an expired alias in offer
 	BOOST_CHECK_THROW(CallRPC("node2", "offerlink aliasexpirednode2 " + offerguid + " 5 newdetails '' false"), runtime_error);
@@ -1009,7 +1009,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 
 	AliasNew("node2", "aliasexpire2", "somedata");
 	// should fail: alias update by old owner shouldn't work after renewal by someone else
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasupdate aliasexpire2 changedata1 " + aliasexpire2node2address + " true 0 '' '' '' false"));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasupdate aliasexpire2 changedata1 " + aliasexpire2node2address + " 3 0 '' '' '' false"));
 	UniValue arr3 = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + arr3[0].get_str()));
 	BOOST_CHECK(!find_value(r.get_obj(), "complete").get_bool());
@@ -1018,7 +1018,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str(), "somedata");
 
 	// should pass: alias transfer to another expired alias address
-	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "aliasupdate aliasexpire2 changedata1 " + aliasexpire2node2address + " true 0 '' '' '' false"));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "aliasupdate aliasexpire2 changedata1 " + aliasexpire2node2address + " 3 0 '' '' '' false"));
 	UniValue arr4 = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "signrawtransaction " + arr4[0].get_str()));
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));

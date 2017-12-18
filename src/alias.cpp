@@ -1906,10 +1906,10 @@ UniValue syscoinquery(const UniValue& params, bool fHelp) {
 UniValue aliasnew(const UniValue& params, bool fHelp) {
 	if (fHelp || 8 != params.size())
 		throw runtime_error(
-			"aliasnew [aliasname] [public value] [accept transfers=true] [expire_timestamp] [address] [encryption_privatekey] [encryption_publickey] [witness]\n"
+			"aliasnew [aliasname] [public value] [accept_transfers_flags=3] [expire_timestamp] [address] [encryption_privatekey] [encryption_publickey] [witness]\n"
 						"<aliasname> alias name.\n"
 						"<public value> alias public profile data, 256 characters max.\n"
-						"<accept transfers> set to false if this alias should not allow a certificate to be transferred to it. Defaults to true.\n"	
+						"<accept_transfers_flags> 0 for none, 1 for accepting certificate transfers, 2 for accepting asset transfers and 3 for all. Default is 3.\n"	
 						"<expire_timestamp> Time in seconds. Future time when to expire alias. It is exponentially more expensive per year, calculation is FEERATE*(2.88^years). FEERATE is the dynamic satoshi per byte fee set in the rate peg alias used for this alias. Defaults to 1 hour.\n"	
 						"<address> Address for this alias.\n"		
 						"<encryption_privatekey> Encrypted private key used for encryption/decryption of private data related to this alias. Should be encrypted to publickey.\n"
@@ -1953,8 +1953,8 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	strPublicValue = params[1].get_str();
 	vchPublicValue = vchFromString(strPublicValue);
 
-	bool bAcceptCertTransfers = true;
-	bAcceptCertTransfers = params[2].get_bool();
+	unsigned char nAcceptTransferFlags = 3;
+	nAcceptTransferFlags = params[2].get_int();
 	uint64_t nTime = 0;
 	nTime = params[3].get_int64();
 	// sanity check set to 1 hr
@@ -1991,7 +1991,7 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 		newAlias.vchEncryptionPrivateKey = ParseHex(strEncryptionPrivateKey);
 	newAlias.vchPublicValue = vchPublicValue;
 	newAlias.nExpireTime = nTime;
-	newAlias.acceptCertTransfers = bAcceptCertTransfers;
+	newAlias.nAcceptTransfersFlags = nAcceptTransferFlags;
 	if(strAddress.empty())
 	{
 		// generate new address in this wallet if not passed in
@@ -2078,12 +2078,12 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	if (fHelp || 9 != params.size())
 		throw runtime_error(
-			"aliasupdate [aliasname] [public value] [address] [accept_transfers=true] [expire_timestamp] [encryption_privatekey] [encryption_publickey] [witness] [instantsend]\n"
+			"aliasupdate [aliasname] [public value] [address] [accept_transfers_flags=3] [expire_timestamp] [encryption_privatekey] [encryption_publickey] [witness] [instantsend]\n"
 						"Update and possibly transfer an alias.\n"
 						"<aliasname> alias name.\n"
 						"<public_value> alias public profile data, 256 characters max.\n"			
 						"<address> Address of alias.\n"		
-						"<accept_transfers> Set to false if this alias should not allow a certificate to be transferred to it. Defaults to true.\n"		
+						"<accept_transfers_flags> 0 for none, 1 for accepting certificate transfers, 2 for accepting asset transfers and 3 for all. Default is 3.\n"
 						"<expire_timestamp> Time in seconds. Future time when to expire alias. It is exponentially more expensive per year, calculation is 2.88^years. FEERATE is the dynamic satoshi per byte fee set in the rate peg alias used for this alias. Defaults to 1 hour. Set to 0 if not changing expiration.\n"		
 						"<encryption_privatekey> Encrypted private key used for encryption/decryption of private data related to this alias. If transferring, the key should be encrypted to alias_pubkey.\n"
 						"<encryption_publickey> Public key used for encryption/decryption of private data related to this alias. Useful if you are changing pub/priv keypair for encryption on this alias.\n"						
@@ -2100,7 +2100,7 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	string strAddress = "";
 	strAddress = params[2].get_str();
 	
-	bool bAcceptCertTransfers = params[3].get_bool();
+	unsigned char nAcceptTransferFlags = params[3].get_int();
 	
 	uint64_t nTime = chainActive.Tip()->GetMedianTimePast() +ONE_YEAR_IN_SECONDS;
 	nTime = params[4].get_int64();
@@ -2136,7 +2136,7 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 		DecodeBase58(strAddress, theAlias.vchAddress);
 	theAlias.nExpireTime = nTime;
 	theAlias.nAccessFlags = copyAlias.nAccessFlags;
-	theAlias.acceptCertTransfers = bAcceptCertTransfers;
+	theAlias.nAcceptTransferFlags = nAcceptTransferFlags;
 	
 	CSyscoinAddress newAddress;
 	CScript scriptPubKeyOrig;
@@ -2570,7 +2570,7 @@ bool BuildAliasJson(const CAliasIndex& alias, UniValue& oName)
 	}
 	oName.push_back(Pair("time", nTime));
 	oName.push_back(Pair("address", EncodeBase58(alias.vchAddress)));
-	oName.push_back(Pair("acceptcerttransfers", alias.acceptCertTransfers));
+	oName.push_back(Pair("accepttransferflags", alias.nAcceptTransferFlags));
 	expired_time = alias.nExpireTime;
 	if(expired_time <= chainActive.Tip()->GetMedianTimePast())
 	{
@@ -2594,7 +2594,7 @@ bool BuildAliasIndexerHistoryJson(const CAliasIndex& alias, UniValue& oName)
 	}
 	oName.push_back(Pair("time", nTime));
 	oName.push_back(Pair("address", EncodeBase58(alias.vchAddress)));
-	oName.push_back(Pair("acceptcerttransfers", alias.acceptCertTransfers));
+	oName.push_back(Pair("accepttransferflags", alias.nAcceptTransferFlags));
 	return true;
 }
 UniValue aliaspay(const UniValue& params, bool fHelp) {

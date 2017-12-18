@@ -527,7 +527,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					// change asset ownership
 					if (op == OP_ASSET_TRANSFER)
 						theAsset.ownerAliasTuple = theAsset.aliasTuple;
-					if(!alias.acceptAssetTransfers)
+					if (!(alias.nAcceptTransferFlags & ACCEPT_TRANSFER_ASSETS))
 					{
 						errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("The alias you are transferring to does not accept assets");
 						theAsset = dbAsset;	

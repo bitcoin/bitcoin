@@ -571,7 +571,7 @@ string AliasNew(const string& node, const string& aliasname, const string& pubda
 	BOOST_CHECK_NO_THROW(CallRPC(node, "importprivkey " + CSyscoinSecret(privEncryptionKey).ToString() + " \"\" false", true, false));
 
 	string strEncryptionPrivateKeyHex = HexStr(vchPrivEncryptionKey);
-	string acceptTransfers = "true";
+	string acceptTransfers = "3";
 	string expireTime = "0";
 
 	UniValue r;
@@ -636,7 +636,7 @@ string AliasTransfer(const string& node, const string& aliasname, const string& 
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasinfo " + aliasname));
 
 	string oldvalue = find_value(r.get_obj(), "publicvalue").get_str();
-	bool bAcceptTransfers = find_value(r.get_obj(), "acceptcerttransfers").get_bool();
+	unsigned char nAcceptTransferFlags = find_value(r.get_obj(), "accepttransferflags").get_int();
 	string expires = boost::lexical_cast<string>(find_value(r.get_obj(), "expires_on").get_int64());
 	string encryptionkey = find_value(r.get_obj(), "encryption_publickey").get_str();
 	string encryptionprivkey = find_value(r.get_obj(), "encryption_privatekey").get_str();
@@ -653,10 +653,9 @@ string AliasTransfer(const string& node, const string& aliasname, const string& 
 	BOOST_CHECK(pubKey.IsFullyValid());
 	BOOST_CHECK_NO_THROW(CallRPC(tonode, "importprivkey " + CSyscoinSecret(privKey).ToString() + " \"\" false", true, false));	
 
-	string acceptTransfers = bAcceptTransfers? "true": "false";
 	string address = aliasAddress.ToString();
 	string newpubdata = pubdata == "''" ? oldvalue : pubdata;
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasupdate " + aliasname + " " + newpubdata + " " + address + " " + acceptTransfers + " " + expires + " " + encryptionprivkey + " " + encryptionkey + " " + witness + " false"));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasupdate " + aliasname + " " + newpubdata + " " + address + " " + boost::lexical_cast<string>(nAcceptTransferFlags) + " " + expires + " " + encryptionprivkey + " " + encryptionkey + " " + witness + " false"));
 	UniValue varray = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + varray[0].get_str()));
 	string hex_str;
@@ -720,15 +719,14 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 	string encryptionkey = find_value(r.get_obj(), "encryption_publickey").get_str();
 	string encryptionprivkey = find_value(r.get_obj(), "encryption_privatekey").get_str();
 	string expires = boost::lexical_cast<string>(find_value(r.get_obj(), "expires_on").get_int64());
-	bool bAcceptTransfers = find_value(r.get_obj(), "acceptcerttransfers").get_bool();
+	unsigned char nAcceptTransferFlags = find_value(r.get_obj(), "accepttransferflags").get_int();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasbalance " + aliasname));
 	CAmount balanceBefore = AmountFromValue(find_value(r.get_obj(), "balance"));
 
 	string newpubdata = pubdata == "''" ? oldvalue : pubdata;
 	string newAddressStr = addressStr == "''" ? oldAddressStr : addressStr;
-	string acceptTransfers = bAcceptTransfers ? "true" : "false";
 	// "aliasupdate <aliasname> [public value]  [address] [accept_transfers=true] [expire_timestamp] [encryption_privatekey] [encryption_publickey] [witness]\n"
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasupdate " + aliasname + " " + newpubdata + " " + newAddressStr + " " + acceptTransfers + " " + expires + " " + encryptionprivkey + " " + encryptionkey + " " + witness + " false"));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasupdate " + aliasname + " " + newpubdata + " " + newAddressStr + " " + boost::lexical_cast<string>(nAcceptTransferFlags) + " " + expires + " " + encryptionprivkey + " " + encryptionkey + " " + witness + " false"));
 	UniValue varray = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + varray[0].get_str()));
 	string hex_str;
