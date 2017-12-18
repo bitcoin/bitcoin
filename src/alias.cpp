@@ -2272,9 +2272,9 @@ UniValue syscoinsendrawtransaction(const UniValue& params, bool fHelp) {
 	CTransaction tx;
 	if (!DecodeHexTx(tx, hexstring))
 		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5534 - " + _("Could not send raw transaction: Cannot decode transaction from hex string"));
-	if (tx.vin.size()) <= 0)
+	if (tx.vin.size() <= 0)
 		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5534 - " + _("Could not send raw transaction: Inputs are empty"));
-	if (tx.vout.size()) <= 0)
+	if (tx.vout.size() <= 0)
 		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5534 - " + _("Could not send raw transaction: Outputs are empty"));
 	UniValue arraySendParams(UniValue::VARR);
 	arraySendParams.push_back(hexstring);
