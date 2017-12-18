@@ -499,7 +499,6 @@ static bool ProcessBlockFound(const CBlock* pblock, const CChainParams& chainpar
 
 CWallet *GetFirstWallet() {
     while(vpwallets.size() == 0){
-        //std::cout << "Wallet size: " << vpwallets.size() << std::endl;
         MilliSleep(100);
 
     }
@@ -508,10 +507,8 @@ CWallet *GetFirstWallet() {
     return(vpwallets[0]);
 }
 
-// ***TODO*** that part changed in bitcoin, we are using a mix with old one here for now
 void static RavenMiner(const CChainParams& chainparams)
 {
-    //std::cout << "In Raven Miner" << std::endl;
     LogPrintf("RavenMiner -- started\n");
     SetThreadPriority(THREAD_PRIORITY_LOWEST);
     RenameThread("raven-miner");
@@ -560,14 +557,11 @@ void static RavenMiner(const CChainParams& chainparams)
                     if ((g_connman->GetNodeCount(CConnman::CONNECTIONS_ALL) > 0) && !IsInitialBlockDownload()) {
                         break;
                     }
-                    //std::cout << "Waiting for peers to mine.  Peers: " << (g_connman->GetNodeCount(CConnman::CONNECTIONS_ALL)) << std::endl;
-                    //std::cout << "IsInitialBlockDownload: " << IsInitialBlockDownload() << std::endl;
 
                     MilliSleep(1000);
                 } while (true);
             }
 
-            //std::cout << "Before creating block to mine" << std::endl;
 
             //
             // Create new block
@@ -578,7 +572,6 @@ void static RavenMiner(const CChainParams& chainparams)
 
 
 
-            //std::auto_ptr<CBlockTemplate> pblocktemplate(CreateNewBlock(chainparams, coinbaseScript->reserveScript));
             std::unique_ptr<CBlockTemplate> pblocktemplate(BlockAssembler(Params()).CreateNewBlock(coinbaseScript->reserveScript));
 
             if (!pblocktemplate.get())
@@ -623,12 +616,7 @@ void static RavenMiner(const CChainParams& chainparams)
                     pblock->nNonce += 1;
                     nHashesDone += 1;
                     if (nHashesDone % 500000 == 0) {   //Calculate hashing speed
-                        //std::cout << GetTimeMicros() << std::endl;
-                        //std::cout << nHashesDone << std::endl;
-                        //std::cout << nMiningTimeStart << std::endl;
-                        //std::cout << (GetTimeMicros() - nMiningTimeStart) / 1000000 << std::endl;
                         nHashesPerSec = nHashesDone / (((GetTimeMicros() - nMiningTimeStart) / 1000000) + 1);
-                        //std::cout << nHashesPerSec << std::endl;
                     } 
                     if ((pblock->nNonce & 0xFF) == 0)
                         break;
@@ -672,9 +660,6 @@ void static RavenMiner(const CChainParams& chainparams)
 
 int GenerateRavens(bool fGenerate, int nThreads, const CChainParams& chainparams)
 {
-    // std::cout << "In GenerateRavens" << std::endl;
-    // std::cout << "fGenerate: " << fGenerate << std::endl;
-    // std::cout << "nThreads: " << nThreads << std::endl;
 
     static boost::thread_group* minerThreads = NULL;
 
@@ -700,7 +685,6 @@ int GenerateRavens(bool fGenerate, int nThreads, const CChainParams& chainparams
     nHashesPerSec = 0;
 
     for (int i = 0; i < nThreads; i++){
-        //std::cout << "Starting mining thread: " << i << std::endl;        
         minerThreads->create_thread(boost::bind(&RavenMiner, boost::cref(chainparams)));
     }
 

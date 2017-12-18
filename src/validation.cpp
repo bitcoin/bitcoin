@@ -2798,7 +2798,6 @@ static bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state,
     // Check proof of work matches claimed amount
     if (fCheckPOW && !CheckProofOfWork(block.GetHash(), block.nBits, consensusParams))
         return state.DoS(50, false, REJECT_INVALID, "high-hash", false, "proof of work failed");
-//    std::cout << "YEAH passed proof of work" << std::endl;
     return true;
 }
 
@@ -2813,9 +2812,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
     // redundant with the call in AcceptBlockHeader.
     if (!CheckBlockHeader(block, state, consensusParams, fCheckPOW))
         return false;
-//    std::cout << "nonce is found!" << std::endl;
     auto successNonce = block.nNonce;
-//    std::cout << "Success nonce Checkblock: " << std::hex << successNonce << std::endl;
 
     // Check the merkle root.
     if (fCheckMerkleRoot) {
@@ -2865,7 +2862,6 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
     if (fCheckPOW && fCheckMerkleRoot)
         block.fChecked = true;
 
-//    std::cout << "check block passed" << std::endl;
     return true;
 }
 
@@ -2998,18 +2994,8 @@ static bool ContextualCheckBlock(const CBlock& block, CValidationState& state, c
 
     // Enforce rule that the coinbase starts with serialized block height
     CScript expect = CScript() << nHeight;
-//    std::cout << "nHeight height is " << nHeight << std::endl;
-//    std::cout << "expect size is " << expect.size() << std::endl;
     auto scriptHeight = block.vtx[0]->vin[0].scriptSig.size();
-//    std::cout << "script Height is " << scriptHeight << std::endl;
 
-//    for(prevector<28, unsigned char>::iterator it = expect.begin(); it != expect.end(); it++)    {
-//        std::cout << "Expect iteration " << *it << std::endl;
-//    }
-//
-//    for(prevector<28, unsigned char>::const_iterator scriptIt = block.vtx[0]->vin[0].scriptSig.begin(); scriptIt != block.vtx[0]->vin[0].scriptSig.end(); scriptIt++) {
-//    		std::cout << "Script iteration" << *scriptIt << std::endl;
-//    }
 
     if (consensusParams.nBIP34Enabled)
     {
@@ -3035,8 +3021,6 @@ static bool ContextualCheckBlock(const CBlock& block, CValidationState& state, c
 			// The malleation check is ignored; as the transaction tree itself
 			// already does not permit it, it is impossible to trigger in the
 			// witness tree.
-//			std::cout << "Block scriptWitness size " << block.vtx[0]->vin[0].scriptWitness.stack.size() << std::endl;
-//			std::cout << "Block scriptWitness stack size " << block.vtx[0]->vin[0].scriptWitness.stack[0].size() << std::endl;
 			if (block.vtx[0]->vin[0].scriptWitness.stack.size() != 1 || block.vtx[0]->vin[0].scriptWitness.stack[0].size() != 32) {
 				return state.DoS(100, false, REJECT_INVALID, "bad-witness-nonce-size", true, strprintf("%s : invalid witness nonce size", __func__));
 			}
@@ -3240,15 +3224,12 @@ bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<cons
             return error("%s: AcceptBlock FAILED (%s)", __func__, state.GetDebugMessage());
         }
     }
-//    std::cout << "Process block 3" << std::endl;
     NotifyHeaderTip();
 
     CValidationState state; // Only used to report errors, not invalidity - ignore it
     if (!ActivateBestChain(state, chainparams, pblock))
         return error("%s: ActivateBestChain failed", __func__);
-//    std::cout << "Process block 4" << std::endl;
     auto successNonce = pblock->nNonce;
-//    std::cout << "Success nonce ProcessBlock: " << std::hex << successNonce << std::endl;
     return true;
 }
 

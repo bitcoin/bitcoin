@@ -140,9 +140,3 @@ void CMainSignals::BlockFound(const uint256 &hash) {
     m_internals->BlockFound(hash);
 }
 
-//void CMainSignals::ScriptForMining(std::shared_ptr<CReserveScript> &preservescript) {
-//    std::cout << "In CMainSignals::ScriptForMining" << std::endl;
-//    m_internals->ScriptForMining(preservescript);
-//    std::cout << "Out CMainSignals::ScriptForMining" << std::endl;
-//
-//}
