@@ -2571,7 +2571,7 @@ bool BuildAliasJson(const CAliasIndex& alias, UniValue& oName)
 	}
 	oName.push_back(Pair("time", nTime));
 	oName.push_back(Pair("address", EncodeBase58(alias.vchAddress)));
-	oName.push_back(Pair("accepttransferflags", alias.nAcceptTransferFlags));
+	oName.push_back(Pair("accepttransferflags", (int)alias.nAcceptTransferFlags));
 	expired_time = alias.nExpireTime;
 	if(expired_time <= chainActive.Tip()->GetMedianTimePast())
 	{
@@ -2595,7 +2595,7 @@ bool BuildAliasIndexerHistoryJson(const CAliasIndex& alias, UniValue& oName)
 	}
 	oName.push_back(Pair("time", nTime));
 	oName.push_back(Pair("address", EncodeBase58(alias.vchAddress)));
-	oName.push_back(Pair("accepttransferflags", alias.nAcceptTransferFlags));
+	oName.push_back(Pair("accepttransferflags", (int)alias.nAcceptTransferFlags));
 	return true;
 }
 UniValue aliaspay(const UniValue& params, bool fHelp) {
