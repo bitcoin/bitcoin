@@ -112,6 +112,16 @@ class AuthServiceProxy():
                 return self._get_response()
             else:
                 raise
+        except OSError as e:
+            if e.errno == 42:
+                # EPROTOTYPE - OS X issue: a TCP send syscall while a socket is
+                # not yet connected or is in the process of being torn down.
+                print('errno 42 fix')
+                self.__conn.close()
+                self.__conn.request(method, path, postdata, headers)
+                return self._get_response()
+            else:
+                raise
         except (BrokenPipeError, ConnectionResetError):
             # Python 3.5+ raises BrokenPipeError instead of BadStatusLine when the connection was reset
             # ConnectionResetError happens on FreeBSD with Python 3.4
