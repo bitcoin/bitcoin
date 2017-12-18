@@ -21,7 +21,7 @@ CMasternode::CMasternode() :
     fAllowMixingTx(true)
 {}
 
-CMasternode::CMasternode(CService addr, COutPoint outpoint, CSyscoinAddress pubKeyCollateralAddress, CPubKey pubKeyMasternode, int nProtocolVersionIn) :
+CMasternode::CMasternode(CService addr, COutPoint outpoint, CPubKey pubKeyCollateralAddress, CPubKey pubKeyMasternode, int nProtocolVersionIn) :
     masternode_info_t{ MASTERNODE_ENABLED, nProtocolVersionIn, GetAdjustedTime(),
                        outpoint, addr, pubKeyCollateralAddress, pubKeyMasternode},
     fAllowMixingTx(true)
@@ -97,13 +97,13 @@ arith_uint256 CMasternode::CalculateScore(const uint256& blockHash)
 	return UintToArith256(ss.GetHash());
 }
 
-CMasternode::CollateralStatus CMasternode::CheckCollateral(const COutPoint& outpoint, const CSyscoinAddress& pubkey)
+CMasternode::CollateralStatus CMasternode::CheckCollateral(const COutPoint& outpoint, const CPubKey& pubkey)
 {
     int nHeight;
     return CheckCollateral(outpoint, pubkey, nHeight);
 }
 
-CMasternode::CollateralStatus CMasternode::CheckCollateral(const COutPoint& outpoint, const CSyscoinAddress& pubkey, int& nHeightRet)
+CMasternode::CollateralStatus CMasternode::CheckCollateral(const COutPoint& outpoint, const CPubKey& pubkey, int& nHeightRet)
 {
     AssertLockHeld(cs_main);
 
@@ -116,7 +116,7 @@ CMasternode::CollateralStatus CMasternode::CheckCollateral(const COutPoint& outp
         return COLLATERAL_INVALID_AMOUNT;
     }
 
-	if (pubkey == CPubKey() || coins.vout[outpoint.n].scriptPubKey != GetScriptForDestination(pubkey.Get())) {
+	if (pubkey == CPubKey() || coins.vout[outpoint.n].scriptPubKey != GetScriptForDestination(pubkey.GetID())) {
 		return COLLATERAL_INVALID_PUBKEY;
 	}
 
@@ -292,7 +292,7 @@ std::string CMasternode::GetStatus() const
 }
 void CMasternode::UpdateLastPaid()
 {
-   	CSyscoinAddress collateralAddress = pubKeyCollateralAddress;
+   	CSyscoinAddress collateralAddress(pubKeyCollateralAddress.GetID());
 	uint160 hashBytes;
 	int type = 0;
 	if (!collateralAddress.GetIndexKey(hashBytes, type)) {
@@ -304,7 +304,7 @@ void CMasternode::UpdateLastPaid()
 	if(unspentOutputs.size() > 0)
 		std::sort(unspentOutputs.begin(), unspentOutputs.end(), heightSort);
 	CAmount nTotalRewardWithMasternodes;
-	const CScript &mnpayee = GetScriptForDestination(pubKeyCollateralAddress.Get());
+	const CScript &mnpayee = GetScriptForDestination(pubKeyCollateralAddress.GetID());
 	for (std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue> >::const_iterator it = unspentOutputs.end(); it != unspentOutputs.begin(); it--) {
 		if (mnpayments.mapMasternodeBlocks.count(it->second.blockHeight) &&
 			mnpayments.mapMasternodeBlocks[it->second.blockHeight].HasPayeeWithVotes(mnpayee, 2))
@@ -379,7 +379,7 @@ bool CMasternodeBroadcast::Create(const COutPoint& outpoint, const CService& ser
     if (!mnp.Sign(keyMasternodeNew, pubKeyMasternodeNew))
         return Log(strprintf("Failed to sign ping, masternode=%s", outpoint.ToStringShort()));
 
-    mnbRet = CMasternodeBroadcast(service, outpoint, CSyscoinAddress(pubKeyCollateralAddressNew.GetID()), pubKeyMasternodeNew, PROTOCOL_VERSION);
+    mnbRet = CMasternodeBroadcast(service, outpoint, pubKeyCollateralAddressNew, pubKeyMasternodeNew, PROTOCOL_VERSION);
 
     if (!mnbRet.IsValidNetAddr())
         return Log(strprintf("Invalid IP address, masternode=%s", outpoint.ToStringShort()));
@@ -421,9 +421,9 @@ bool CMasternodeBroadcast::SimpleCheck(int& nDos)
     }
 
     CScript pubkeyScript;
-    pubkeyScript = GetScriptForDestination(pubKeyCollateralAddress.Get());
-	// SYSCOIN support multisig collateral p2sh
-    if(pubkeyScript.size() != 25 || pubkeyScript.size() != 23) {
+    pubkeyScript = GetScriptForDestination(pubKeyCollateralAddress.GetID());
+
+    if(pubkeyScript.size() != 25) {
         LogPrintf("CMasternodeBroadcast::SimpleCheck -- pubKeyCollateralAddress has the wrong size\n");
         nDos = 100;
         return false;
@@ -609,10 +609,10 @@ bool CMasternodeBroadcast::CheckSignature(int& nDos)
     nDos = 0;
 
     strMessage = addr.ToString(false) + boost::lexical_cast<std::string>(sigTime) +
-                    pubKeyCollateralAddress.ToString() + pubKeyMasternode.GetID().ToString() +
+                    pubKeyCollateralAddress.GetID().ToString() + pubKeyMasternode.GetID().ToString() +
                     boost::lexical_cast<std::string>(nProtocolVersion);
 
-    LogPrint("masternode", "CMasternodeBroadcast::CheckSignature -- strMessage: %s  pubKeyCollateralAddress address: %s  sig: %s\n", strMessage, pubKeyCollateralAddress.ToString(), EncodeBase64(&vchSig[0], vchSig.size()));
+    LogPrint("masternode", "CMasternodeBroadcast::CheckSignature -- strMessage: %s  pubKeyCollateralAddress address: %s  sig: %s\n", strMessage, CSyscoinAddress(pubKeyCollateralAddress.GetID()).ToString(), EncodeBase64(&vchSig[0], vchSig.size()));
 
     if(!CMessageSigner::VerifyMessage(pubKeyCollateralAddress, vchSig, strMessage, strError)){
         LogPrintf("CMasternodeBroadcast::CheckSignature -- Got bad Masternode announce signature, error: %s\n", strError);
