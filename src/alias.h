@@ -283,6 +283,7 @@ public:
 class COfferDB;
 class CCertDB;
 class CEscrowDB;
+class CAssetDB;
 extern CAliasDB *paliasdb;
 extern COfferDB *pofferdb;
 extern CCertDB *pcertdb;
