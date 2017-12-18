@@ -91,6 +91,7 @@ Ubuntu Xenial 16.04 and Windows Subsystem for Linux <sup>[1](#footnote1),[2](#fo
     sudo apt update
     sudo apt upgrade
     sudo update-alternatives --config x86_64-w64-mingw32-g++ # Set the default mingw32 g++ compiler option to posix.
+    sudo apt install protobuf-compiler
 
 Ubuntu Zesty 17.04 <sup>[2](#footnote2)</sup>:
 
