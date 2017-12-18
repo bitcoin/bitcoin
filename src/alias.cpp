@@ -55,6 +55,8 @@ mongoc_collection_t *escrow_collection = NULL;
 mongoc_collection_t *escrowbid_collection = NULL;
 mongoc_collection_t *cert_collection = NULL;
 mongoc_collection_t *certhistory_collection = NULL;
+mongoc_collection_t *asset_collection = NULL;
+mongoc_collection_t *assethistory_collection = NULL;
 mongoc_collection_t *feedback_collection = NULL;
 unsigned int MAX_ALIAS_UPDATES_PER_BLOCK = 5;
 bool GetSyscoinTransaction(int nHeight, const uint256 &hash, CTransaction &txOut, const Consensus::Params& consensusParams)
