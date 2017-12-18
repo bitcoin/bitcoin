@@ -168,7 +168,7 @@ public:
 	std::vector<unsigned char> vchEncryptionPublicKey;
 	std::vector<unsigned char> vchEncryptionPrivateKey;
 	// 1 accepts certs, 2 accepts assets, 3 accepts both (default)
-	unsigned char nAcceptTransfersFlags;
+	unsigned char nAcceptTransferFlags;
 	// 1 can edit, 2 can edit/transfer
 	unsigned char nAccessFlags;
 	std::vector<unsigned char> vchPublicValue;
@@ -201,13 +201,13 @@ public:
 		READWRITE(vchAlias);
 		READWRITE(vchGUID);
 		READWRITE(VARINT(nExpireTime));
-		READWRITE(VARINT(nAcceptTransfersFlags));
+		READWRITE(VARINT(nAcceptTransferFlags));
 		READWRITE(VARINT(nAccessFlags));
 		READWRITE(vchAddress);	
 		READWRITE(offerWhitelist);
 	}
     friend bool operator==(const CAliasIndex &a, const CAliasIndex &b) {
-		return (a.offerWhitelist == b.offerWhitelist && a.nAccessFlags == b.nAccessFlags && a.vchAddress == b.vchAddress && a.vchEncryptionPublicKey == b.vchEncryptionPublicKey && a.vchEncryptionPrivateKey == b.vchEncryptionPrivateKey && a.nAcceptTransfersFlags == b.nAcceptTransfersFlags && a.nExpireTime == b.nExpireTime && a.vchGUID == b.vchGUID && a.vchAlias == b.vchAlias && a.nHeight == b.nHeight && a.txHash == b.txHash && a.vchPublicValue == b.vchPublicValue);
+		return (a.offerWhitelist == b.offerWhitelist && a.nAccessFlags == b.nAccessFlags && a.vchAddress == b.vchAddress && a.vchEncryptionPublicKey == b.vchEncryptionPublicKey && a.vchEncryptionPrivateKey == b.vchEncryptionPrivateKey && a.nAcceptTransferFlags == b.nAcceptTransferFlags && a.nExpireTime == b.nExpireTime && a.vchGUID == b.vchGUID && a.vchAlias == b.vchAlias && a.nHeight == b.nHeight && a.txHash == b.txHash && a.vchPublicValue == b.vchPublicValue);
     }
 
     friend bool operator!=(const CAliasIndex &a, const CAliasIndex &b) {
@@ -221,15 +221,15 @@ public:
         nHeight = b.nHeight;
         vchPublicValue = b.vchPublicValue;
 		vchAddress = b.vchAddress;
-		nAcceptTransfersFlags = b.nAcceptTransfersFlags;
+		nAcceptTransferFlags = b.nAcceptTransferFlags;
 		vchEncryptionPrivateKey = b.vchEncryptionPrivateKey;
 		vchEncryptionPublicKey = b.vchEncryptionPublicKey;
 		nAccessFlags = b.nAccessFlags;
 		offerWhitelist = b.offerWhitelist;
         return *this;
     }   
-	void SetNull() { offerWhitelist.SetNull(); nAccessFlags = 2; vchAddress.clear(); vchEncryptionPublicKey.clear(); vchEncryptionPrivateKey.clear(); nAcceptTransfersFlags = 3; nExpireTime = 0; vchGUID.clear(); vchAlias.clear(); txHash.SetNull(); nHeight = 0; vchPublicValue.clear(); }
-    bool IsNull() const { return (offerWhitelist.IsNull() && nAccessFlags == 2 && vchAddress.empty() && vchEncryptionPublicKey.empty() && vchEncryptionPrivateKey.empty() && nAcceptTransfersFlags == 3 && nExpireTime == 0 && vchGUID.empty() && vchAlias.empty() && nHeight == 0 && txHash.IsNull() && vchPublicValue.empty()); }
+	void SetNull() { offerWhitelist.SetNull(); nAccessFlags = 2; vchAddress.clear(); vchEncryptionPublicKey.clear(); vchEncryptionPrivateKey.clear(); nAcceptTransferFlags = 3; nExpireTime = 0; vchGUID.clear(); vchAlias.clear(); txHash.SetNull(); nHeight = 0; vchPublicValue.clear(); }
+    bool IsNull() const { return (offerWhitelist.IsNull() && nAccessFlags == 2 && vchAddress.empty() && vchEncryptionPublicKey.empty() && vchEncryptionPrivateKey.empty() && nAcceptTransferFlags == 3 && nExpireTime == 0 && vchGUID.empty() && vchAlias.empty() && nHeight == 0 && txHash.IsNull() && vchPublicValue.empty()); }
 	bool UnserializeFromTx(const CTransaction &tx);
 	bool UnserializeFromData(const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash);
 	void Serialize(std::vector<unsigned char>& vchData);
