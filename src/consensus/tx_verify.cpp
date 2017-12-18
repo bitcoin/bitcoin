@@ -504,7 +504,6 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
                 size_t n = (txd->vData.size()-1) / 24;
                 for (size_t k = 0; k < n; ++k)
                 {
-                    uint160 *pMsgIdTx = (uint160*)&txd->vData[1+k*24];
                     uint32_t *nAmount = (uint32_t*)&txd->vData[1+k*24+20];
                     nTotalMsgFees += *nAmount;
                 };

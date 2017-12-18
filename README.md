@@ -14,6 +14,26 @@ built for global person to person eCommerce.
 For more information, as well as an immediately useable, binary version of
 the Particl Core software, see https://particl.io.
 
+
+Getting Started
+---------------
+
+A new Particl wallet will need an HD master key loaded and an initial account
+derived before it will be functional.
+
+The GUI programs will guide you through the initial setup.
+
+It is recommended to use a mnemonic passphrase.
+To generate a new passphrase see the mnemonic rpc command.
+Loading the new mnemonic with the extkeyimportmaster command will setup the
+master HD key and first account.
+
+To create an initial new HD master key and account from random data, start
+particld or particl-qt with the parameter: -createdefaultmasterkey.
+
+Remember to backup your passphrase and/or wallet.dat file!
+
+
 License
 -------
 

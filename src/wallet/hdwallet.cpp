@@ -145,6 +145,7 @@ std::string CHDWallet::GetWalletHelpString(bool showDebug)
     strUsage += HelpMessageGroup(_("Particl wallet options:"));
     strUsage += HelpMessageOpt("-defaultlookaheadsize=<n>", strprintf(_("Number of keys to load into the lookahead pool per chain. (default: %u)"), N_DEFAULT_LOOKAHEAD));
     strUsage += HelpMessageOpt("-extkeysaveancestors", strprintf(_("On saving a key from the lookahead pool, save all unsaved keys leading up to it too. (default: %s)"), "true"));
+    strUsage += HelpMessageOpt("-createdefaultmasterkey", strprintf(_("Generate a random master key and main account if no master key exists. (default: %s)"), "false"));
 
     strUsage += HelpMessageGroup(_("Wallet staking options:"));
     strUsage += HelpMessageOpt("-staking", _("Stake your coins to support network and gain reward (default: true)"));
@@ -250,6 +251,35 @@ bool CHDWallet::InitLoadWallet()
             pwallet->SetBestChain(chainActive.GetLocator());
             pwallet->dbw->IncrementUpdateCounter();
         }
+
+        if (!pwallet->pEKMaster)
+        {
+            if (gArgs.GetBoolArg("-createdefaultmasterkey", false))
+            {
+                std::string sMsg = "Generating random HD keys for wallet " + pwallet->GetName();
+                #ifndef ENABLE_QT
+                fprintf(stdout, "%s\n", sMsg.c_str());
+                #endif
+                LogPrintf("%s", sMsg);
+                if (pwallet->MakeDefaultAccount() != 0)
+                    fprintf(stdout, "Error: MakeDefaultAccount failed!\n");
+            } else
+            {
+                std::string sWarning = "Warning: Wallet " + pwallet->GetName() + " has no master HD key set, please view the readme.";
+                #ifndef ENABLE_QT
+                fprintf(stdout, "%s\n", sWarning.c_str());
+                #endif
+                LogPrintf("%s", sWarning);
+            }
+        } else
+        if (pwallet->idDefaultAccount.IsNull())
+        {
+            std::string sWarning = "Warning: Wallet " + pwallet->GetName() + " has no default account set, please view the readme.";
+            #ifndef ENABLE_QT
+            fprintf(stdout, "%s\n", sWarning.c_str());
+            #endif
+            LogPrintf("%s", sWarning);
+        };
 
         vpwallets.push_back(pwallet);
     };
@@ -5004,6 +5034,69 @@ int CHDWallet::GetDefaultConfidentialChain(CHDWalletDB *pwdb, CExtKeyAccount *&s
     pc = sekConfidential;
     return 0;
 };
+
+int CHDWallet::MakeDefaultAccount()
+{
+    LogPrintf("Generating initial master key and account from random data.\n");
+
+    LOCK(cs_wallet);
+    CHDWalletDB wdb(GetDBHandle(), "r+");
+    if (!wdb.TxnBegin())
+        return errorN(1, "TxnBegin failed.");
+
+    std::string sLblMaster = "Master Key";
+    std::string sLblAccount = "Default Account";
+    int rv;
+    CKeyID idNewMaster;
+    CExtKeyAccount *sea;
+    CExtKey ekMaster;
+
+    if (0 != ExtKeyNew32(ekMaster))
+    {
+        wdb.TxnAbort();
+        return 1;
+    };
+
+    CStoredExtKey sek;
+    sek.kp = ekMaster;
+    if (0 != (rv = ExtKeyImportLoose(&wdb, sek, idNewMaster, false, false)))
+    {
+        wdb.TxnAbort();
+        return errorN(1, "ExtKeyImportLoose failed, %s", ExtKeyGetString(rv));
+    };
+
+    idNewMaster = sek.GetID();
+    if (0 != (rv = ExtKeySetMaster(&wdb, idNewMaster)))
+    {
+        wdb.TxnAbort();
+        return errorN(1, "ExtKeySetMaster failed, %s.", ExtKeyGetString(rv));
+    };
+
+    sea = new CExtKeyAccount();
+    if (0 != (rv = ExtKeyDeriveNewAccount(&wdb, sea, sLblAccount)))
+    {
+        ExtKeyRemoveAccountFromMapsAndFree(sea);
+        wdb.TxnAbort();
+        return errorN(1, "ExtKeyDeriveNewAccount failed, %s.", ExtKeyGetString(rv));
+    };
+
+    CKeyID idNewDefaultAccount = sea->GetID();
+    CKeyID idOldDefault = idDefaultAccount;
+    if (0 != (rv = ExtKeySetDefaultAccount(&wdb, idNewDefaultAccount)))
+    {
+        ExtKeyRemoveAccountFromMapsAndFree(sea);
+        wdb.TxnAbort();
+        return errorN(1, "ExtKeySetDefaultAccount failed, %s.", ExtKeyGetString(rv));
+    };
+
+    if (!wdb.TxnCommit())
+    {
+        idDefaultAccount = idOldDefault;
+        ExtKeyRemoveAccountFromMapsAndFree(sea);
+        return errorN(1, "TxnCommit failed.");
+    };
+    return 0;
+}
 
 int CHDWallet::ExtKeyNew32(CExtKey &out)
 {
