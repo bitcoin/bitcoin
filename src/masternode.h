@@ -9,6 +9,7 @@
 #include "key.h"
 #include "validation.h"
 #include "spork.h"
+#include "base58.h"
 
 class CMasternode;
 class CMasternodeBroadcast;
@@ -101,7 +102,7 @@ struct masternode_info_t
 
     masternode_info_t(int activeState, int protoVer, int64_t sTime,
                       COutPoint const& outpoint, CService const& addr,
-                      CPubKey const& pkCollAddr, CPubKey const& pkMN,
+		CSyscoinAddress const& pkCollAddr, CPubKey const& pkMN,
                       int64_t tWatchdogV = 0) :
         nActiveState{activeState}, nProtocolVersion{protoVer}, sigTime{sTime},
         vin{outpoint}, addr{addr},
@@ -114,7 +115,7 @@ struct masternode_info_t
 
     CTxIn vin{};
     CService addr{};
-    CPubKey pubKeyCollateralAddress{};
+    CSyscoinAddress pubKeyCollateralAddress{};
     CPubKey pubKeyMasternode{};
     int64_t nTimeLastWatchdogVote = 0;
 
@@ -171,7 +172,7 @@ public:
     CMasternode();
     CMasternode(const CMasternode& other);
     CMasternode(const CMasternodeBroadcast& mnb);
-    CMasternode(CService addrNew, COutPoint outpointNew, CPubKey pubKeyCollateralAddressNew, CPubKey pubKeyMasternodeNew, int nProtocolVersionIn);
+    CMasternode(CService addrNew, COutPoint outpointNew, CSyscoinAddress pubKeyCollateralAddressNew, CPubKey pubKeyMasternodeNew, int nProtocolVersionIn);
 
     ADD_SERIALIZE_METHODS;
 
@@ -205,8 +206,8 @@ public:
 
     bool UpdateFromNewBroadcast(CMasternodeBroadcast& mnb, CConnman& connman);
 
-    static CollateralStatus CheckCollateral(const COutPoint& outpoint, const CPubKey& pubkey);
-    static CollateralStatus CheckCollateral(const COutPoint& outpoint, const CPubKey& pubkey, int& nHeightRet);
+    static CollateralStatus CheckCollateral(const COutPoint& outpoint, const CSyscoinAddress& pubkey);
+    static CollateralStatus CheckCollateral(const COutPoint& outpoint, const CSyscoinAddress& pubkey, int& nHeightRet);
     void Check(bool fForce = false);
 
     bool IsBroadcastedWithin(int nSeconds) { return GetAdjustedTime() - sigTime < nSeconds; }
@@ -317,7 +318,7 @@ public:
 
     CMasternodeBroadcast() : CMasternode(), fRecovery(false) {}
     CMasternodeBroadcast(const CMasternode& mn) : CMasternode(mn), fRecovery(false) {}
-    CMasternodeBroadcast(CService addrNew, COutPoint outpointNew, CPubKey pubKeyCollateralAddressNew, CPubKey pubKeyMasternodeNew, int nProtocolVersionIn) :
+    CMasternodeBroadcast(CService addrNew, COutPoint outpointNew, CSyscoinAddress pubKeyCollateralAddressNew, CPubKey pubKeyMasternodeNew, int nProtocolVersionIn) :
         CMasternode(addrNew, outpointNew, pubKeyCollateralAddressNew, pubKeyMasternodeNew, nProtocolVersionIn), fRecovery(false) {}
 
     ADD_SERIALIZE_METHODS;
