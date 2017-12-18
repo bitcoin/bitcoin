@@ -174,14 +174,14 @@ UniValue getnewaddress(const JSONRPCRequest& request)
 }
 
 
-CTxDestination GetAccountAddress(CWallet * const pwallet, std::string strAccount, bool bForceNew=false)
+CTxDestination GetAccountDestination(CWallet* const pwallet, std::string strAccount, bool bForceNew=false)
 {
-    CPubKey pubKey;
-    if (!pwallet->GetAccountPubkey(pubKey, strAccount, bForceNew)) {
+    CTxDestination dest;
+    if (!pwallet->GetAccountDestination(dest, strAccount, bForceNew)) {
         throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first");
     }
 
-    return pubKey.GetID();
+    return dest;
 }
 
 UniValue getaccountaddress(const JSONRPCRequest& request)
@@ -213,7 +213,7 @@ UniValue getaccountaddress(const JSONRPCRequest& request)
 
     UniValue ret(UniValue::VSTR);
 
-    ret = EncodeDestination(GetAccountAddress(pwallet, strAccount));
+    ret = EncodeDestination(GetAccountDestination(pwallet, strAccount));
     return ret;
 }
 
@@ -291,8 +291,8 @@ UniValue setaccount(const JSONRPCRequest& request)
         // Detect when changing the account of an address that is the 'unused current key' of another account:
         if (pwallet->mapAddressBook.count(dest)) {
             std::string strOldAccount = pwallet->mapAddressBook[dest].name;
-            if (dest == GetAccountAddress(pwallet, strOldAccount)) {
-                GetAccountAddress(pwallet, strOldAccount, true);
+            if (dest == GetAccountDestination(pwallet, strOldAccount)) {
+                GetAccountDestination(pwallet, strOldAccount, true);
             }
         }
         pwallet->SetAddressBook(dest, strAccount, "receive");
