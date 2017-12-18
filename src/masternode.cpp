@@ -322,11 +322,11 @@ void CMasternode::UpdateLastPaid()
 
 bool CMasternodeBroadcast::Create(std::string strService, std::string strKeyMasternode, std::string strTxHash, std::string strOutputIndex, std::string& strErrorRet, CMasternodeBroadcast &mnbRet, bool fOffline)
 {
-    COutPoint outpoint;
-    CPubKey pubKeyCollateralAddressNew;
+	COutPoint outpointtmp;
+	CPubKey pubKeyCollateralAddressNew;
     CKey keyCollateralAddressNew;
-    CPubKey pubKeyMasternodeNew;
     CKey keyMasternodeNew;
+	CSyscoinAddress pubKeyCollateralAddressNew;
 
     auto Log = [&strErrorRet](std::string sErr)->bool
     {
@@ -342,9 +342,24 @@ bool CMasternodeBroadcast::Create(std::string strService, std::string strKeyMast
     if (!CMessageSigner::GetKeysFromSecret(strKeyMasternode, keyMasternodeNew, pubKeyMasternodeNew))
         return Log(strprintf("Invalid masternode key %s", strKeyMasternode));
 
-    if (!pwalletMain->GetMasternodeOutpointAndKeys(outpoint, pubKeyCollateralAddressNew, keyCollateralAddressNew, strTxHash, strOutputIndex))
-        return Log(strprintf("Could not allocate outpoint %s:%s for masternode %s", strTxHash, strOutputIndex, strService));
 
+	pwalletMain->GetMasternodeOutpointAndKeys(outpointtmp, pubKeyCollateralAddressNew, keyCollateralAddressNew, strTxHash, strOutputIndex);
+
+	// SYSCOIN
+	uint256 txHash = uint256S(strTxHash);
+	int nOutputIndex = atoi(strOutputIndex.c_str());
+	COutPoint outpoint(txHash, nOutputIndex);
+	CCoins coins;
+	if (!GetUTXOCoins(outpoint, coins)) {
+		return Log(strprintf("Could not allocate outpoint %s:%s for masternode %s", strTxHash, strOutputIndex, strService));
+	}
+	CTxDestination address1;
+	if(!ExtractDestination(coins.vout[outpoint.n].scriptPubKey, address1))
+		return Log(strprintf("Could not extract destination from outpoint %s:%s for masternode %s", strTxHash, strOutputIndex, strService));
+
+	CSyscoinAddress collateralAddressNew(address1);
+
+   
     CService service;
     if (!Lookup(strService.c_str(), service, 0, false))
         return Log(strprintf("Invalid address %s for masternode.", strService));
@@ -355,16 +370,16 @@ bool CMasternodeBroadcast::Create(std::string strService, std::string strKeyMast
     } else if (service.GetPort() == mainnetDefaultPort)
         return Log(strprintf("Invalid port %u for masternode %s, %d is the only supported on mainnet.", service.GetPort(), strService, mainnetDefaultPort));
 
-    return Create(outpoint, service, keyCollateralAddressNew, pubKeyCollateralAddressNew, keyMasternodeNew, pubKeyMasternodeNew, strErrorRet, mnbRet);
+    return Create(outpoint, service, keyCollateralAddressNew, collateralAddressNew, keyMasternodeNew, pubKeyMasternodeNew, strErrorRet, mnbRet);
 }
 
-bool CMasternodeBroadcast::Create(const COutPoint& outpoint, const CService& service, const CKey& keyCollateralAddressNew, const CPubKey& pubKeyCollateralAddressNew, const CKey& keyMasternodeNew, const CPubKey& pubKeyMasternodeNew, std::string &strErrorRet, CMasternodeBroadcast &mnbRet)
+bool CMasternodeBroadcast::Create(const COutPoint& outpoint, const CService& service, const CKey& keyCollateralAddressNew, const CSyscoinAddress& collateralAddressNew, const CKey& keyMasternodeNew, const CPubKey& pubKeyMasternodeNew, std::string &strErrorRet, CMasternodeBroadcast &mnbRet)
 {
     // wait for reindex and/or import to finish
     if (fImporting || fReindex) return false;
 
-    LogPrint("masternode", "CMasternodeBroadcast::Create -- pubKeyCollateralAddressNew = %s, pubKeyMasternodeNew.GetID() = %s\n",
-             CSyscoinAddress(pubKeyCollateralAddressNew.GetID()).ToString(),
+    LogPrint("masternode", "CMasternodeBroadcast::Create -- collateralAddressNew = %s, pubKeyMasternodeNew.GetID() = %s\n",
+		collateralAddressNew.ToString(),
              pubKeyMasternodeNew.GetID().ToString());
 
     auto Log = [&strErrorRet,&mnbRet](std::string sErr)->bool
@@ -379,13 +394,13 @@ bool CMasternodeBroadcast::Create(const COutPoint& outpoint, const CService& ser
     if (!mnp.Sign(keyMasternodeNew, pubKeyMasternodeNew))
         return Log(strprintf("Failed to sign ping, masternode=%s", outpoint.ToStringShort()));
 
-    mnbRet = CMasternodeBroadcast(service, outpoint, CSyscoinAddress(pubKeyCollateralAddressNew.GetID()), pubKeyMasternodeNew, PROTOCOL_VERSION);
+    mnbRet = CMasternodeBroadcast(service, outpoint, collateralAddressNew, pubKeyMasternodeNew, PROTOCOL_VERSION);
 
     if (!mnbRet.IsValidNetAddr())
         return Log(strprintf("Invalid IP address, masternode=%s", outpoint.ToStringShort()));
 
     mnbRet.lastPing = mnp;
-    if (!mnbRet.Sign(keyCollateralAddressNew))
+    if (!collateralAddressNew.IsScript() && !mnbRet.Sign(keyCollateralAddressNew))
         return Log(strprintf("Failed to sign broadcast, masternode=%s", outpoint.ToStringShort()));
 
     return true;
@@ -586,7 +601,7 @@ bool CMasternodeBroadcast::Sign(const CKey& keyCollateralAddress)
     sigTime = GetAdjustedTime();
 
     strMessage = addr.ToString(false) + boost::lexical_cast<std::string>(sigTime) +
-                    pubKeyCollateralAddress.GetID().ToString() + pubKeyMasternode.GetID().ToString() +
+                    pubKeyCollateralAddress.ToString() + pubKeyMasternode.GetID().ToString() +
                     boost::lexical_cast<std::string>(nProtocolVersion);
 
     if(!CMessageSigner::SignMessage(strMessage, vchSig, keyCollateralAddress)) {
@@ -614,7 +629,7 @@ bool CMasternodeBroadcast::CheckSignature(int& nDos)
 
     LogPrint("masternode", "CMasternodeBroadcast::CheckSignature -- strMessage: %s  pubKeyCollateralAddress address: %s  sig: %s\n", strMessage, pubKeyCollateralAddress.ToString(), EncodeBase64(&vchSig[0], vchSig.size()));
 
-    if(!CMessageSigner::VerifyMessage(pubKeyCollateralAddress, vchSig, strMessage, strError)){
+    if(!pubKeyCollateralAddress.IsScript() && !CMessageSigner::VerifyMessage(pubKeyCollateralAddress, vchSig, strMessage, strError)){
         LogPrintf("CMasternodeBroadcast::CheckSignature -- Got bad Masternode announce signature, error: %s\n", strError);
         nDos = 100;
         return false;
