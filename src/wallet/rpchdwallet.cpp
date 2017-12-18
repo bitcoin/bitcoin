@@ -3882,6 +3882,7 @@ UniValue getcoldstakinginfo(const JSONRPCRequest &request)
     CAmount nColdStakeable = 0;
     CAmount nWalletStaking = 0;
 
+    CKeyID keyID;
     CScript coinstakePath;
     for (const auto &out : vecOutputs)
     {
@@ -3890,10 +3891,19 @@ UniValue getcoldstakinginfo(const JSONRPCRequest &request)
 
         if (scriptPubKey->IsPayToPublicKeyHash() || scriptPubKey->IsPayToPublicKeyHash256())
         {
+            if (!out.fSpendable)
+                continue;
             nStakeable += nValue;
         } else
         if (scriptPubKey->IsPayToPublicKeyHash256_CS() || scriptPubKey->IsPayToScriptHash256_CS() || scriptPubKey->IsPayToScriptHash_CS())
         {
+            // Show output on both the spending and staking wallets
+            if (!out.fSpendable)
+            {
+                if (!ExtractStakingKeyID(*scriptPubKey, keyID)
+                    || !pwallet->HaveKey(keyID))
+                    continue;
+            };
             nColdStakeable += nValue;
         } else
         {
@@ -3903,7 +3913,6 @@ UniValue getcoldstakinginfo(const JSONRPCRequest &request)
         if (out.nDepth < nRequiredDepth)
             continue;
 
-        CKeyID keyID;
         if (!ExtractStakingKeyID(*scriptPubKey, keyID))
             continue;
         if (pwallet->HaveKey(keyID))

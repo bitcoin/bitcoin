@@ -4975,7 +4975,6 @@ int CHDWallet::GetDefaultConfidentialChain(CHDWalletDB *pwdb, CExtKeyAccount *&s
     if (0 != sekAccount->DeriveNextKey(evConfidential, nChild, true))
         return errorN(1, "%s: %s.", __func__, _("DeriveNextKey failed"));
 
-
     CStoredExtKey *sekConfidential = new CStoredExtKey();
     sekConfidential->kp = evConfidential;
     vSubKeyPath = vAccountPath;
