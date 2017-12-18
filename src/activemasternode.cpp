@@ -216,11 +216,11 @@ void CActiveMasternode::ManageStateInitial(CConnman& connman)
         LogPrintf("CActiveMasternode::ManageStateInitial -- %s: Wallet is locked\n", GetStateString());
         return;
     }
-	// SYSCOIN
-    /*if(pwalletMain->GetBalance() < 100000*COIN) {
+
+    if(pwalletMain->GetBalance() < 100000*COIN) {
         LogPrintf("CActiveMasternode::ManageStateInitial -- %s: Wallet balance is < 100000 SYS\n", GetStateString());
         return;
-    }*/ 
+    }
 
     // Choose coins to use
     CPubKey pubKeyCollateral;
@@ -302,7 +302,7 @@ void CActiveMasternode::ManageStateLocal(CConnman& connman)
 
         CMasternodeBroadcast mnb;
         std::string strError;
-        if(!CMasternodeBroadcast::Create(outpoint, service, keyCollateral, CSyscoinAddress(pubKeyCollateral.GetID()), keyMasternode, pubKeyMasternode, strError, mnb)) {
+        if(!CMasternodeBroadcast::Create(outpoint, service, keyCollateral, pubKeyCollateral, keyMasternode, pubKeyMasternode, strError, mnb)) {
             nState = ACTIVE_MASTERNODE_NOT_CAPABLE;
             strNotCapableReason = "Error creating mastenode broadcast: " + strError;
             LogPrintf("CActiveMasternode::ManageStateLocal -- %s: %s\n", GetStateString(), strNotCapableReason);

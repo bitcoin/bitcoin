@@ -220,21 +220,12 @@ UniValue masternode(const UniValue& params, bool fHelp)
     {
         if(activeMasternode.nState != ACTIVE_MASTERNODE_INITIAL || !masternodeSync.IsBlockchainSynced())
             return activeMasternode.GetStatus();
-       
-		// SYSCOIN
+
+        COutPoint outpoint;
         CPubKey pubkey;
         CKey key;
 
-		CCoins coins;
-		if (!GetUTXOCoins(activeMasternode.outpoint, coins)) {
-			throw JSONRPCError(RPC_INVALID_PARAMETER, "Could not allocate outpoint"));
-		}
-		CTxDestination address1;
-		if (!ExtractDestination(coins.vout[activeMasternode.outpoint.n].scriptPubKey, address1))
-			throw JSONRPCError(RPC_INVALID_PARAMETER, "Could not extract destination from outpoint"));
-		CSyscoinAddress collateralAddressNew(address1);
-
-        if(!collateralAddressNew.IsScript() && (!pwalletMain || !pwalletMain->GetMasternodeOutpointAndKeys(activeMasternode.outpoint, pubkey, key)))
+        if(!pwalletMain || !pwalletMain->GetMasternodeOutpointAndKeys(outpoint, pubkey, key))
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Missing masternode input, please look at the documentation for instructions on masternode creation");
 
         return activeMasternode.GetStatus();
