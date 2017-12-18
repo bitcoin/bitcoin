@@ -36,10 +36,11 @@ phases:
        - cd ..
        - git clone https://medici-jenkins:5dbbfbe15d1d60dcd88461db8498d3ed0147d3df@github.com/OverstockMedici/RavenBinaries.git
        - cd RavenBinaries/pre-release/linux
-       - git checkout -b "code_build_$CODEBUILD_BUILD_ID"
+       - BUILD_ID=`echo $CODEBUILD_BUILD_ID | sed 's/:/_/g'`
+       - git checkout -b "code_build_$BUILD_ID"
        - cp -f ../../../ubuntu16.04/* ./
-       - git commit -a -m "Releasing build $CODEBUILD_BUILD_ID" --author "Code Build <ops@mediciventures.com>"
-       - git push origin "code_build_$CODEBUILD_BUILD_ID"
+       - git commit -a -m "Releasing build $BUILD_ID" --author "Code Build <ops@mediciventures.com>"
+       - git push origin "code_build_$BUILD_ID"
 artifacts:
   files:
      - ./build-linux/ubuntu16.04/ravend
