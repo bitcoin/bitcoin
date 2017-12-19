@@ -1,0 +1,60 @@
+version: 0.2
+
+#env:
+  #variables:
+     # key: "value"
+     # key: "value"
+  #parameter-store:
+     # key: "value"
+     # key: "value"
+
+phases:
+  #install:
+    #commands:
+      # - command
+      # - command
+  #pre_build:
+    #commands:
+      # - command
+      # - command
+  build:
+    commands:
+       - PATH=$(echo "$PATH" | sed -e "s/:\\/mnt.*//g")
+       - rsync -av /root/depends/ ./depends/
+       - ./autogen.sh
+       - CONFIG_SITE=$PWD/depends/x86_64-w64-mingw32/share/config.site ./configure --prefix=/
+       - make -j5
+  post_build:
+    commands:
+       - mkdir ./build-windows
+       - make install DESTDIR=$PWD/build-windows
+       - cd build-windows/bin
+       - md5sum ravend.exe raven-cli.exe raven-tx.exe raven-qt.exe > md5sum
+       - sha256sum ravend.exe raven-cli.exe raven-tx.exe raven-qt.exe > sha256sum
+       - cd ../..
+       - git clone https://medici-jenkins:5dbbfbe15d1d60dcd88461db8498d3ed0147d3df@github.com/OverstockMedici/RavenBinaries.git
+       - BUILD_ID=`echo $CODEBUILD_BUILD_ID | sed 's/:/_/g'`
+       - git checkout -b "code_build_$BUILD_ID"
+       - rsync -av build-windows/bin/ravend.exe RavenBinaries/pre-release/windows/
+       - rsync -av build-windows/bin/raven-cli.exe RavenBinaries/pre-release/windows/
+       - rsync -av build-windows/bin/raven-tx.exe RavenBinaries/pre-release/windows/
+       - rsync -av build-windows/bin/raven-qt.exe RavenBinaries/pre-release/windows/
+       - rsync -av build-windows/bin/md5sum RavenBinaries/pre-release/windows/
+       - rsync -av build-windows/bin/sha256sum RavenBinaries/pre-release/windows/
+       - chmod +x build-windows/bin/raven*
+       - cd RavenBinaries
+       - git checkout -b "code_build_$BUILD_ID"
+       - git add .
+       - git commit -m "Releasing build $BUILD_ID"
+       - git status
+       - git push origin "code_build_$BUILD_ID"
+artifacts:
+  files:
+     - ./build-windows/bin/ravend.exe
+     - ./build-windows/bin/raven-cli.exe
+     - ./build-windows/bin/raven-tx.exe
+     - ./build-windows/bin/raven-qt.exe
+     - ./build-windows/bin/md5sum
+     - ./build-windows/bin/sha256sum
+  discard-paths: yes
+  #base-directory: location
