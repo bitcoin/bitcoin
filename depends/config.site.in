@@ -67,7 +67,6 @@ CC="@CC@"
 CXX="@CXX@"
 OBJC="${CC}"
 OBJCXX="${CXX}"
-CCACHE=$prefix/native/bin/ccache
 CCACHE=$depends_prefix/native/bin/ccache
 PYTHONPATH=$depends_prefix/native/lib/python/dist-packages:$PYTHONPATH
 

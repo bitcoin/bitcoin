@@ -16,9 +16,6 @@
     <height>500</height>
    </size>
   </property>
-  <property name="windowTitle">
-   <string notr="true">Dash Core - Command-line options</string>
-  </property>
   <layout class="QHBoxLayout" name="horizontalLayout_2">
    <property name="spacing">
     <number>0</number>

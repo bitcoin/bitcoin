@@ -53,7 +53,7 @@ void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, con
     governance.UpdatedBlockTip(pindexNew, connman);
 }
 
-void CDSNotificationInterface::SyncTransaction(const CTransaction &tx, const CBlock *pblock)
+void CDSNotificationInterface::SyncTransaction(const CTransaction &tx, const CBlockIndex *pindex, const CBlock *pblock)
 {
     instantsend.SyncTransaction(tx, pblock);
     CPrivateSend::SyncTransaction(tx, pblock);
