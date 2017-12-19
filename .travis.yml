@@ -11,4 +11,5 @@ script:
   - ./autogen.sh
   - ./configure --with-gui=qt5 
   - make -j$(nproc)
+  - make check
 

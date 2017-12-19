@@ -19,6 +19,7 @@ sudo ln -sf `pwd`/db4/lib/*.a /usr/local/lib
 ./autogen.sh
 ./configure --with-gui=qt5
 make -j$(nproc)
+make check
 
 popd
 
