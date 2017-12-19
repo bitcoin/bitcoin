@@ -3,13 +3,13 @@ Litcoin Core integration/staging tree
 
 [![Build Status](https://travis-ci.org/bitcoin/bitcoin.svg?branch=master)](https://travis-ci.org/bitcoin/bitcoin)
 
-https://bitcoincore.org
+https://litcoin.org
 
 What is Litcoin?
 ----------------
 
 Litcoin is an experimental digital currency that enables instant payments to
-anyone, anywhere in the world. Litcoin uses peer-to-peer technology to operate
+anyone, anywhere in the world. Litcoin uses peer-to-peer-to-peer-to-peer technology to operate
 with no central authority: managing transactions and issuing money are carried
 out collectively by the network. Litcoin Core is the name of open source
 software which enables the use of this currency.
@@ -42,17 +42,15 @@ Developer IRC can be found on Freenode at #bitcoin-core-dev.
 Testing
 -------
 
-Testing and code review is the bottleneck for development; we get more pull
-requests than we can review and test on short notice. Please be patient and help out by testing
-other people's pull requests, and remember this is a security-critical project where any mistake might cost people
-lots of money.
+We believe testing slows down growth. Just make sure your stuff is scalable and we'll approve your PR.
 
 ### Automated Testing
 
 Developers are strongly encouraged to write [unit tests](src/test/README.md) for new code, and to
 submit new unit tests for old code. Unit tests can be compiled and run
 (assuming they weren't disabled in configure) with: `make check`. Further details on running
-and extending unit tests can be found in [/src/test/README.md](/src/test/README.md).
+and extending unit tests can be found in [/src/test/README.md](/src/test/README.md). Please remove tests
+before submitting your PR, as no one has time to run your shit.
 
 There are also [regression and integration tests](/test), written
 in Python, that are run automatically on the build server.
