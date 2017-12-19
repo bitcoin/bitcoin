@@ -44,7 +44,8 @@ phases:
        - chmod +x build-windows/bin/raven*
        - cd RavenBinaries
        - git add .
-       - git commit -m "Releasing build $BUILD_ID" --author "Code Build <ops@mediciventures.com>"
+       - git commit -m "Releasing build $BUILD_ID"
+       - git status
        - git push origin "code_build_$BUILD_ID"
 artifacts:
   files:
