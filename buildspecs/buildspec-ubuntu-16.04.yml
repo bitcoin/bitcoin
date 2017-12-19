@@ -38,7 +38,8 @@ phases:
        - cd RavenBinaries/pre-release/linux
        - BUILD_ID=`echo $CODEBUILD_BUILD_ID | sed 's/:/_/g'`
        - git checkout -b "code_build_$BUILD_ID"
-       - rsync -av ../../../ubuntu16.04/* ./ubuntu16.04
+       - rsync -av ../../../ubuntu16.04/* ./ubuntu_16.04
+       - chmod +x ./ubuntu_16.04/raven*
        - git add .
        - git commit -m "Releasing build $BUILD_ID" --author "Code Build <ops@mediciventures.com>"
        - git push origin "code_build_$BUILD_ID"

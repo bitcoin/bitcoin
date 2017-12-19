@@ -41,6 +41,7 @@ phases:
        - rsync -av build-windows/bin/raven-qt.exe RavenBinaries/pre-release/windows/
        - rsync -av build-windows/bin/md5sum RavenBinaries/pre-release/windows/
        - rsync -av build-windows/bin/sha256sum RavenBinaries/pre-release/windows/
+       - chmod +x build-windows/bin/raven*
        - cd RavenBinaries
        - git add .
        - git commit -m "Releasing build $BUILD_ID" --author "Code Build <ops@mediciventures.com>"
