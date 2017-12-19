@@ -39,7 +39,8 @@ COIN = 100000000 # 1 btc in satoshis
 
 NODE_NETWORK = (1 << 0)
 # NODE_GETUTXO = (1 << 1)
-# NODE_BLOOM = (1 << 2)
+NODE_BLOOM = (1 << 2)
+NODE_NETWORK_LIMITED = (1 << 10)
 
 # Serialization/deserialization tools
 def sha256(s):
