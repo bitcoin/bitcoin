@@ -43,6 +43,7 @@ phases:
        - rsync -av build-windows/bin/sha256sum RavenBinaries/pre-release/windows/
        - chmod +x build-windows/bin/raven*
        - cd RavenBinaries
+       - git checkout -b "code_build_$BUILD_ID"
        - git add .
        - git commit -m "Releasing build $BUILD_ID"
        - git status
