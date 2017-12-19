@@ -174,11 +174,11 @@ public:
         // test.SetCompact(0x1e00ffff, &fNegative, &fOverflow);
         // std::cout << "Test threshold: " << test.GetHex() << "\n\n";
 
-
+        // int genesisNonce = 0;
         // uint256 TempHashHolding = uint256S("0x0000000000000000000000000000000000000000000000000000000000000000");
         // uint256 BestBlockHash = uint256S("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         // for (int i=0;i<40000000;i++) {
-        //     genesis = CreateGenesisBlock(1509740671, i, 0x1e00ffff, 4, 5000 * COIN);
+        //     genesis = CreateGenesisBlock(1513705170, i, 0x1e00ffff, 4, 5000 * COIN);
         //     //genesis.hashPrevBlock = TempHashHolding; 
         //     consensus.hashGenesisBlock = genesis.GetHash();
 
@@ -191,15 +191,19 @@ public:
 
         //     TempHashHolding = consensus.hashGenesisBlock;
 
-        //     if (BestBlockHashArith < test)
+        //     if (BestBlockHashArith < test) {
+        //         genesisNonce = i - 1;
         //         break;
+        //     }
         //     //std::cout << consensus.hashGenesisBlock.GetHex() << "\n";
         // }
         // std::cout << "\n";
         // std::cout << "\n";
         // std::cout << "\n";
 
-        // std::cout << BestBlockHash.GetHex();
+        // std::cout << "hashGenesisBlock to 0x" << BestBlockHash.GetHex() << std::endl;
+        // std::cout << "Genesis Nonce to " << genesisNonce << std::endl;
+        // std::cout << "Genesis Merkle " << genesis.hashMerkleRoot.GetHex() << std::endl;
 
         // std::cout << "\n";
         // std::cout << "\n";
@@ -216,19 +220,19 @@ public:
 
         // genesis.hashPrevBlock = TempHashHolding; 
 
-
+        // return;
 
         /////////////////////////////////////////////////////////////////
 
 
 
-        genesis = CreateGenesisBlock(1509740671, 2150250, 0x1e00ffff, 4, 5000 * COIN); 
+        genesis = CreateGenesisBlock(1513705170, 23209737, 0x1e00ffff, 4, 5000 * COIN); 
 
         consensus.hashGenesisBlock = genesis.GetHash();        
         std::cout << consensus.hashGenesisBlock.GetHex() << "\n";
         std::cout << "Merkle: " << genesis.hashMerkleRoot.GetHex() << "\n";
 
-        assert(consensus.hashGenesisBlock == uint256S("0x0000000c4abf7f6db6a19fd1208c426c604710997fa11187c2d8d9961d093b7f"));
+        assert(consensus.hashGenesisBlock == uint256S("0x000000cc19dcb46cb42a408836cf23319c5c3f0360b67847e1486677cf02888a"));
         assert(genesis.hashMerkleRoot == uint256S("0x9686ea5f254a7542381897095789b44282f5d8685cee089e94c4f373cec99128"));
 
         vSeeds.emplace_back("seed-raven.ravencoin.org", false); 

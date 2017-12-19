@@ -1075,7 +1075,13 @@ bool IsInitialBlockDownload()
     }
     if (chainActive.Tip()->GetBlockTime() < (GetTime() - nMaxTipAge))
     {
-        LogPrintf("IsInitialBlockDownload (tip age)");
+        std::cout << "BlockTime(): " << chainActive.Tip()->GetBlockTime() << std::endl;
+        //LogPrintf(str.c_str());
+
+        std::cout << "GetTime() minus nMaxTipAge: " << (GetTime() - nMaxTipAge) << std::endl;
+        //LogPrintf(str2.c_str());
+
+        LogPrintf("IsInitialBlockDownload (tip age)\n");
         return true;
     }
     LogPrintf("Leaving InitialBlockDownload (latching to false)\n");
