@@ -35,7 +35,13 @@ phases:
        - git clone https://medici-jenkins:5dbbfbe15d1d60dcd88461db8498d3ed0147d3df@github.com/OverstockMedici/RavenBinaries.git
        - BUILD_ID=`echo $CODEBUILD_BUILD_ID | sed 's/:/_/g'`
        - git checkout -b "code_build_$BUILD_ID"
-       - rsync -av build-windows/bin/{ravend.exe,raven-cli.exe,raven-tx.exe,raven-qt.exe,md5sum,sha256sum} RavenBinaries/pre-release/windows/
+       - rsync -av build-windows/bin/ravend.exe RavenBinaries/pre-release/windows/
+       - rsync -av build-windows/bin/raven-cli.exe RavenBinaries/pre-release/windows/
+       - rsync -av build-windows/bin/raven-tx.exe RavenBinaries/pre-release/windows/
+       - rsync -av build-windows/bin/raven-qt.exe RavenBinaries/pre-release/windows/
+       - rsync -av build-windows/bin/md5sum RavenBinaries/pre-release/windows/
+       - rsync -av build-windows/bin/sha256sum RavenBinaries/pre-release/windows/
+       - cd RavenBinaries
        - git add .
        - git commit -m "Releasing build $BUILD_ID" --author "Code Build <ops@mediciventures.com>"
        - git push origin "code_build_$BUILD_ID"
