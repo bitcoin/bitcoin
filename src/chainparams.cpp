@@ -309,16 +309,17 @@ public:
         nDefaultPort = 18767;
         nPruneAfterHeight = 1000;
 
-        //genesis = CreateGenesisBlock(1296688602, 414098458, 0x1d00ffff, 1, 5000 * COIN);
-        genesis = CreateGenesisBlock(1509740671, 13173510, 0x1e00ffff, 4, 5000 * COIN); 
+        genesis = CreateGenesisBlock(1513705170, 23209737, 0x1e00ffff, 4, 5000 * COIN); 
         consensus.hashGenesisBlock = genesis.GetHash();
 
-        std::cout << "HGB: " << consensus.hashGenesisBlock.GetHex() << std::endl;        
-        assert(consensus.hashGenesisBlock == uint256S("0x00000013dd11f2bd679ee383ecd15b7b093400f38f547b2299007d5166ac981d"));
+        std::cout << "HGB: " << consensus.hashGenesisBlock.GetHex() << std::endl; 
+        LogPrintf("Testnet HGB: %s\n", consensus.hashGenesisBlock.GetHex());
+
+        assert(consensus.hashGenesisBlock == uint256S("0x000000cc19dcb46cb42a408836cf23319c5c3f0360b67847e1486677cf02888a"));
 
 
         std::cout << "HMR: " << genesis.hashMerkleRoot.GetHex() << std::endl;        
-        assert(genesis.hashMerkleRoot == uint256S("0xa4c84e05d4f74f0df5e69a8c2e85524f9776555980a60312ab0fd524cd9b1474"));
+        assert(genesis.hashMerkleRoot == uint256S("0x9686ea5f254a7542381897095789b44282f5d8685cee089e94c4f373cec99128"));
 
 
         vFixedSeeds.clear();
@@ -349,7 +350,7 @@ public:
 
         chainTxData = ChainTxData{
             // Update as we know more about the contents of the Raven chain
-            1509572692, // * UNIX timestamp of last known number of transactions
+            1513705170, // * UNIX timestamp of last known number of transactions
             1,          // * total number of transactions between genesis and that timestamp
                         //   (the tx=... number in the SetBestChain debug.log lines)
             3.1         // * estimated number of transactions per second after that timestamp
