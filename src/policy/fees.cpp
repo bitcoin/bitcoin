@@ -411,15 +411,13 @@ void TxConfirmStats::Read(CAutoFile& filein, int nFileVersion, size_t numBuckets
     size_t maxConfirms, maxPeriods;
 
     // The current version will store the decay with each individual TxConfirmStats and also keep a scale factor
-    if (nFileVersion >= 149900) {
-        filein >> decay;
-        if (decay <= 0 || decay >= 1) {
-            throw std::runtime_error("Corrupt estimates file. Decay must be between 0 and 1 (non-inclusive)");
-        }
-        filein >> scale;
-        if (scale == 0) {
-            throw std::runtime_error("Corrupt estimates file. Scale must be non-zero");
-        }
+    filein >> decay;
+    if (decay <= 0 || decay >= 1) {
+        throw std::runtime_error("Corrupt estimates file. Decay must be between 0 and 1 (non-inclusive)");
+    }
+    filein >> scale;
+    if (scale == 0) {
+        throw std::runtime_error("Corrupt estimates file. Scale must be non-zero");
     }
 
     filein >> avg;
@@ -443,20 +441,13 @@ void TxConfirmStats::Read(CAutoFile& filein, int nFileVersion, size_t numBuckets
         }
     }
 
-    if (nFileVersion >= 149900) {
-        filein >> failAvg;
-        if (maxPeriods != failAvg.size()) {
-            throw std::runtime_error("Corrupt estimates file. Mismatch in confirms tracked for failures");
-        }
-        for (unsigned int i = 0; i < maxPeriods; i++) {
-            if (failAvg[i].size() != numBuckets) {
-                throw std::runtime_error("Corrupt estimates file. Mismatch in one of failure average bucket counts");
-            }
-        }
-    } else {
-        failAvg.resize(confAvg.size());
-        for (unsigned int i = 0; i < failAvg.size(); i++) {
-            failAvg[i].resize(numBuckets);
+    filein >> failAvg;
+    if (maxPeriods != failAvg.size()) {
+        throw std::runtime_error("Corrupt estimates file. Mismatch in confirms tracked for failures");
+    }
+    for (unsigned int i = 0; i < maxPeriods; i++) {
+        if (failAvg[i].size() != numBuckets) {
+            throw std::runtime_error("Corrupt estimates file. Mismatch in one of failure average bucket counts");
         }
     }
 
@@ -563,7 +554,7 @@ void CBlockPolicyEstimator::processTransaction(const CTxMemPoolEntry& entry, boo
     if (mapMemPoolTxs.count(hash)) {
         LogPrint(BCLog::ESTIMATEFEE, "Blockpolicy error mempool tx %s already being tracked\n",
                  hash.ToString().c_str());
-	return;
+        return;
     }
 
     if (txHeight != nBestSeenHeight) {
