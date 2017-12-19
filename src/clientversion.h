@@ -16,11 +16,11 @@
 //! These need to be macros, as clientversion.cpp's and dash*-res.rc's voodoo requires it
 #define CLIENT_VERSION_MAJOR 0
 #define CLIENT_VERSION_MINOR 12
-#define CLIENT_VERSION_REVISION 2
-#define CLIENT_VERSION_BUILD 2
+#define CLIENT_VERSION_REVISION 3
+#define CLIENT_VERSION_BUILD 0
 
 //! Set to true for release, false for prerelease or test build
-#define CLIENT_VERSION_IS_RELEASE true
+#define CLIENT_VERSION_IS_RELEASE false
 
 /**
  * Copyright year (2009-this)
