@@ -689,7 +689,7 @@ theAlias = dbAlias;
 						CCert cert(tx);
 						user2 = stringFromVch(cert.linkAliasTuple.first);
 					}
-					else if (type == CERT && opHistory == OP_ASSET_TRANSFER || opHistory == OP_ASSET_SEND) {
+					else if (type == CERT && (opHistory == OP_ASSET_TRANSFER || opHistory == OP_ASSET_SEND)) {
 						CAsset asset(tx);
 						user2 = stringFromVch(asset.linkAliasTuple.first);
 					}

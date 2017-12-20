@@ -606,7 +606,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		}
         // set the asset's txn-dependent values
 		theAsset.nHeight = nHeight;
-		theAsset.txHash = tx.GetHash();
+		theAsset.prevOut = COutPoint(tx.GetHash(), nOut);
         // write asset  
 
         if (!dontaddtodb && (!passetdb->WriteAsset(theAsset, op) || (op == OP_ASSET_ACTIVATE && !passetdb->WriteAssetFirstTXID(vvchArgs[0], theAsset.txHash))))
@@ -1001,7 +1001,7 @@ UniValue assetinfo(const UniValue& params, bool fHelp) {
 bool BuildAssetJson(const CAsset& asset, UniValue& oAsset)
 {
     oAsset.push_back(Pair("_id", stringFromVch(asset.vchAsset)));
-    oAsset.push_back(Pair("txid", asset.txHash.GetHex()));
+    oAsset.push_back(Pair("txid", asset.prevOut.hash.GetHex()));
     oAsset.push_back(Pair("height", (int64_t)asset.nHeight));
 	int64_t nTime = 0;
 	if (chainActive.Height() >= asset.nHeight) {
@@ -1029,7 +1029,7 @@ bool BuildAssetJson(const CAsset& asset, UniValue& oAsset)
 }
 bool BuildAssetIndexerHistoryJson(const CAsset& asset, UniValue& oAsset)
 {
-	oAsset.push_back(Pair("_id", asset.txHash.GetHex()));
+	oAsset.push_back(Pair("_id", asset.prevOut.hash.GetHex()));
 	oAsset.push_back(Pair("asset", stringFromVch(asset.vchAsset)));
 	oAsset.push_back(Pair("height", (int64_t)asset.nHeight));
 	int64_t nTime = 0;
@@ -1063,7 +1063,7 @@ void AssetTxToJSON(const int op, const std::vector<unsigned char> &vchData, cons
 		return;
 
 	CAsset dbAsset;
-	GetAsset(CNameTXIDTuple(asset.vchAsset, asset.txHash), dbAsset);
+	GetAsset(CNameTXIDTuple(asset.vchAsset, asset.prevOut.hash), dbAsset);
 	
 
 	entry.push_back(Pair("txtype", opName));
