@@ -19,9 +19,10 @@
 #define BOOST_CHECK_THROW(stmt, excMatch) { \
         try { \
             (stmt); \
+            assert(0 && "No exception caught"); \
         } catch (excMatch & e) { \
 	} catch (...) { \
-	    assert(0); \
+	    assert(0 && "Wrong exception caught"); \
 	} \
     }
 #define BOOST_CHECK_NO_THROW(stmt) { \
