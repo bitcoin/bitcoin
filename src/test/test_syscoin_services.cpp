@@ -636,7 +636,7 @@ string AliasTransfer(const string& node, const string& aliasname, const string& 
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasinfo " + aliasname));
 
 	string oldvalue = find_value(r.get_obj(), "publicvalue").get_str();
-	unsigned char nAcceptTransferFlags = find_value(r.get_obj(), "accepttransferflags").get_int();
+	int nAcceptTransferFlags = find_value(r.get_obj(), "accepttransferflags").get_int();
 	string expires = boost::lexical_cast<string>(find_value(r.get_obj(), "expires_on").get_int64());
 	string encryptionkey = find_value(r.get_obj(), "encryption_publickey").get_str();
 	string encryptionprivkey = find_value(r.get_obj(), "encryption_privatekey").get_str();
@@ -719,7 +719,7 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 	string encryptionkey = find_value(r.get_obj(), "encryption_publickey").get_str();
 	string encryptionprivkey = find_value(r.get_obj(), "encryption_privatekey").get_str();
 	string expires = boost::lexical_cast<string>(find_value(r.get_obj(), "expires_on").get_int64());
-	unsigned char nAcceptTransferFlags = find_value(r.get_obj(), "accepttransferflags").get_int();
+	int nAcceptTransferFlags = find_value(r.get_obj(), "accepttransferflags").get_int();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasbalance " + aliasname));
 	CAmount balanceBefore = AmountFromValue(find_value(r.get_obj(), "balance"));
 

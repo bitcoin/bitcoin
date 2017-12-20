@@ -579,10 +579,13 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				// if custom allocations are sent with index numbers in an array
 					// loop through array of allocations that are sent along with request
 						// get qty of allocation
+						// get receiver asset allocation if exists through receiver alias/asset id tuple key
 						// check the sender has the allocation in senders allocation list, remove from senders allocation list
 						// add allocation to receivers allocation list
 						// deduct qty from sender and add to receiver
+						// commit receiver details to database using  through receiver alias/asset id tuple as key
 				// commit sender details to database
+				// return
 			}
 			if(op == OP_ASSET_UPDATE || op == OP_ASSET_TRANSFER)
 			{
