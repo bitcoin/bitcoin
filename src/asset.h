@@ -8,6 +8,7 @@
 #include "rpc/server.h"
 #include "dbwrapper.h"
 #include "feedback.h"
+#include "transaction.h"
 class CWalletTx;
 class CTransaction;
 class CReserveKey;
@@ -15,7 +16,7 @@ class CCoinsViewCache;
 class CCoins;
 class CBlock;
 class CAliasIndex;
-class COutPoint;
+
 bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const std::vector<std::vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, std::string &errorMessage, bool dontaddtodb=false);
 bool DecodeAssetTx(const CTransaction& tx, int& op, int& nOut, std::vector<std::vector<unsigned char> >& vvch);
 bool DecodeAndParseAssetTx(const CTransaction& tx, int& op, int& nOut, std::vector<std::vector<unsigned char> >& vvch, char& type);
