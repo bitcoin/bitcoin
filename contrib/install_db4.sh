@@ -31,7 +31,11 @@ sha256_check() {
   if check_exists sha256sum; then
     echo "${1}  ${2}" | sha256sum -c
   elif check_exists sha256; then
-    echo "${1}  ${2}" | sha256 -c
+    if [ "$(uname)" = "FreeBSD" ]; then
+      sha256 -c "${1}" "${2}"
+    else
+      echo "${1}  ${2}" | sha256 -c
+    fi
   else
     echo "${1}  ${2}" | shasum -a 256 -c
   fi
