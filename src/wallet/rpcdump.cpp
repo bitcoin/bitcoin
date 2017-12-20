@@ -545,6 +545,11 @@ UniValue importwallet(const JSONRPCRequest& request)
                fGood = false;
                continue;
            }
+           int64_t birth_time = DecodeDumpTime(vstr[1]);
+           if (birth_time > 0) {
+               pwallet->m_script_metadata[CScriptID(script)].nCreateTime = birth_time;
+               nTimeBegin = std::min(nTimeBegin, birth_time);
+           }
         }
     }
     file.close();
@@ -653,6 +658,7 @@ UniValue dumpwallet(const JSONRPCRequest& request)
     pwallet->GetKeyBirthTimes(mapKeyBirth);
 
     std::set<CScriptID> scripts = pwallet->GetCScripts();
+    // TODO: include scripts in GetKeyBirthTimes() output instead of separate
 
     // sort time/key pairs
     std::vector<std::pair<int64_t, CKeyID> > vKeyBirth;
@@ -710,9 +716,15 @@ UniValue dumpwallet(const JSONRPCRequest& request)
     file << "\n";
     for (const CScriptID &scriptid : scripts) {
         CScript script;
+        std::string create_time = "0";
         std::string address = EncodeDestination(scriptid);
+        // get birth times for scripts with metadata
+        auto it = pwallet->m_script_metadata.find(scriptid);
+        if (it != pwallet->m_script_metadata.end()) {
+            create_time = EncodeDumpTime(it->second.nCreateTime);
+        }
         if(pwallet->GetCScript(scriptid, script)) {
-            file << strprintf("%s 0 script=1", HexStr(script.begin(), script.end()));
+            file << strprintf("%s %s script=1", HexStr(script.begin(), script.end()), create_time);
             file << strprintf(" # addr=%s\n", address);
         }
     }
