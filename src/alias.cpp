@@ -360,7 +360,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			{
 				continue;
 			}
-			if (IsAliasOp(pop) && (op == OP_ALIAS_ACTIVATE || (vvchArgs.size() > 1 && theAlias.vchAlias == vvch[0] && theAlias.vchGUID == vvch[1] && vvchArgs[0] == vvch[0] && vvchArgs[1] == vvch[1]))) {
+			if (IsAliasOp(pop) && (op == OP_ALIAS_ACTIVATE || (vvchArgs.size() > 1 && theAlias.vchAlias == vvch[0] && vvchArgs[0] == vvch[0] && vvchArgs[1] == vvch[1]))) {
 				prevOp = pop;
 				vvchPrevArgs = vvch;
 				pprevCoins = prevCoins;
@@ -433,6 +433,11 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				if (vvchPrevArgs.size() <= 0 || vvchPrevArgs[0] != vchHash)
 				{
 					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5010 - " + _("Alias new and activate hash mismatch");
+					return error(errorMessage.c_str());
+				}
+				if (vvchArgs.size() <= 1 || theAlias.vchGUID != vvchArgs[1])
+				{
+					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5010 - " + _("Alias input guid mismatch");
 					return error(errorMessage.c_str());
 				}
 				if(theAlias.vchAddress.empty())
@@ -524,7 +529,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 							theAlias = dbAlias;
 					}
 				}
-				if (dbAlias.vchGUID != theAlias.vchGUID || dbAlias.vchAlias != theAlias.vchAlias)
+				if (dbAlias.vchGUID != vvchArgs[1] || dbAlias.vchAlias != vvchArgs[0])
 				{
 					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5022 - " + _("Cannot edit this alias, guid mismatch");
 					if (!theAliasNull)
