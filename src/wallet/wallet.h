@@ -43,8 +43,6 @@ extern bool fWalletRbf;
 static const unsigned int DEFAULT_KEYPOOL_SIZE = 1000;
 //! -paytxfee default
 static const CAmount DEFAULT_TRANSACTION_FEE = 0;
-//! -fallbackfee default
-static const CAmount DEFAULT_FALLBACK_FEE = 20000;
 //! -m_discard_rate default
 static const CAmount DEFAULT_DISCARD_FEE = 10000;
 //! -mintxfee default

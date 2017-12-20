@@ -53,6 +53,7 @@ CAmount GetMinimumFee(unsigned int nTxBytes, const CCoinControl& coin_control, c
             // if we don't have enough data for estimateSmartFee, then use fallbackFee
             fee_needed = CWallet::fallbackFee.GetFee(nTxBytes);
             if (feeCalc) feeCalc->reason = FeeReason::FALLBACK;
+            if (fee_needed == 0) return fee_needed; // fallbackFee is unset, must return
         }
         // Obey mempool min fee when using smart fee estimation
         CAmount min_mempool_fee = pool.GetMinFee(gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000).GetFee(nTxBytes);
