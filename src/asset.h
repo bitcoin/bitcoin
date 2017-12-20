@@ -8,7 +8,7 @@
 #include "rpc/server.h"
 #include "dbwrapper.h"
 #include "feedback.h"
-#include "transaction.h"
+#include "primitives/transaction.h"
 class CWalletTx;
 class CTransaction;
 class CReserveKey;
