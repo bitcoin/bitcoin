@@ -1189,6 +1189,18 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         if (pfrom->fInbound)
             PushNodeVersion(pfrom, connman, GetAdjustedTime());
 
+        if (Params().NetworkIDString() == CBaseChainParams::DEVNET) {
+            if (strSubVer.find(strprintf("devnet=%s", GetDevNetName())) == std::string::npos) {
+                LogPrintf("connected to wrong devnet. Reported version is %s, expected devnet name is %s\n", strSubVer, GetDevNetName());
+                if (!pfrom->fInbound)
+                    Misbehaving(pfrom->GetId(), 100); // don't try to connect again
+                else
+                    Misbehaving(pfrom->GetId(), 1); // whover connected, might just have made a mistake, don't ban him immediately
+                pfrom->fDisconnect = true;
+                return true;
+            }
+        }
+
         connman.PushMessageWithVersion(pfrom, INIT_PROTO_VERSION, NetMsgType::VERACK);
 
         pfrom->nServices = nServices;

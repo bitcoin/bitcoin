@@ -3114,6 +3114,14 @@ bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, bool f
     if (block.GetBlockTime() > GetAdjustedTime() + 2 * 60 * 60)
         return state.Invalid(false, REJECT_INVALID, "time-too-new", "block timestamp too far in the future");
 
+    // Check DevNet
+    if (Params().NetworkIDString() == CBaseChainParams::DEVNET &&
+            block.hashPrevBlock == Params().GetConsensus().hashGenesisBlock &&
+            block.GetHash() != Params().DevNetGenesisBlock().GetHash()) {
+        return state.DoS(100, error("CheckBlockHeader(): wrong devnet genesis"),
+                         REJECT_INVALID, "devnet-genesis");
+    }
+
     return true;
 }
 
@@ -3936,6 +3944,23 @@ bool LoadBlockIndex()
     return true;
 }
 
+static bool AddGenesisBlock(const CChainParams& chainparams, const CBlock& block, CValidationState& state)
+{
+    // Start new block file
+    unsigned int nBlockSize = ::GetSerializeSize(block, SER_DISK, CLIENT_VERSION);
+    CDiskBlockPos blockPos;
+    if (!FindBlockPos(state, blockPos, nBlockSize+8, 0, block.GetBlockTime()))
+        return error("%s: FindBlockPos failed", __func__);
+    if (!WriteBlockToDisk(block, blockPos, chainparams.MessageStart()))
+        return error("%s: writing genesis block to disk failed", __func__);
+    CBlockIndex *pindex = AddToBlockIndex(block);
+    if (!ReceivedBlockTransactions(block, state, pindex, blockPos))
+        return error("%s: genesis block not accepted", __func__);
+    if (!ActivateBestChain(state, chainparams, &block))
+        return error("%s: genesis block cannot be activated", __func__);
+    return true;
+}
+
 bool InitBlockIndex(const CChainParams& chainparams) 
 {
     LOCK(cs_main);
@@ -3964,20 +3989,16 @@ bool InitBlockIndex(const CChainParams& chainparams)
     // Only add the genesis block if not reindexing (in which case we reuse the one already on disk)
     if (!fReindex) {
         try {
-            CBlock &block = const_cast<CBlock&>(chainparams.GenesisBlock());
-            // Start new block file
-            unsigned int nBlockSize = ::GetSerializeSize(block, SER_DISK, CLIENT_VERSION);
-            CDiskBlockPos blockPos;
             CValidationState state;
-            if (!FindBlockPos(state, blockPos, nBlockSize+8, 0, block.GetBlockTime()))
-                return error("%s: FindBlockPos failed", __func__);
-            if (!WriteBlockToDisk(block, blockPos, chainparams.MessageStart()))
-                return error("%s: writing genesis block to disk failed", __func__);
-            CBlockIndex *pindex = AddToBlockIndex(block);
-            if (!ReceivedBlockTransactions(block, state, pindex, blockPos))
-                return error("%s: genesis block not accepted", __func__);
-            if (!ActivateBestChain(state, chainparams, &block))
-                return error("%s: genesis block cannot be activated", __func__);
+
+            if (!AddGenesisBlock(chainparams, chainparams.GenesisBlock(), state))
+                return false;
+
+            if (chainparams.NetworkIDString() == CBaseChainParams::DEVNET) {
+                if (!AddGenesisBlock(chainparams, chainparams.DevNetGenesisBlock(), state))
+                    return false;
+            }
+
             // Force a chainstate write so that when we VerifyDB in a moment, it doesn't check stale data
             return FlushStateToDisk(state, FLUSH_STATE_ALWAYS);
         } catch (const std::runtime_error& e) {

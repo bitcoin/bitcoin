@@ -1675,9 +1675,10 @@ void CConnman::ThreadOpenConnections()
 
         // Only connect out to one peer per network group (/16 for IPv4).
         // Do this here so we don't have to critsect vNodes inside mapAddresses critsect.
+        // This is only done for mainnet and testnet
         int nOutbound = 0;
         std::set<std::vector<unsigned char> > setConnected;
-        {
+        if (!Params().AllowMultipleAddressesFromGroup()) {
             LOCK(cs_vNodes);
             BOOST_FOREACH(CNode* pnode, vNodes) {
                 if (!pnode->fInbound && !pnode->fMasternode) {

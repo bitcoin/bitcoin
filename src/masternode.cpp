@@ -229,12 +229,16 @@ void CMasternode::Check(bool fForce)
         }
     }
 
-    if(lastPing.sigTime - sigTime < MASTERNODE_MIN_MNP_SECONDS) {
-        nActiveState = MASTERNODE_PRE_ENABLED;
-        if(nActiveStatePrev != nActiveState) {
-            LogPrint("masternode", "CMasternode::Check -- Masternode %s is in %s state now\n", vin.prevout.ToStringShort(), GetStateString());
+    // Allow MNs to become ENABLED immediately in regtest/devnet
+    // On mainnet/testnet, we require them to be in PRE_ENABLED state for some time before they get into ENABLED state
+    if (Params().NetworkIDString() != CBaseChainParams::REGTEST && Params().NetworkIDString() != CBaseChainParams::DEVNET) {
+        if (lastPing.sigTime - sigTime < MASTERNODE_MIN_MNP_SECONDS) {
+            nActiveState = MASTERNODE_PRE_ENABLED;
+            if (nActiveStatePrev != nActiveState) {
+                LogPrint("masternode", "CMasternode::Check -- Masternode %s is in %s state now\n", vin.prevout.ToStringShort(), GetStateString());
+            }
+            return;
         }
-        return;
     }
 
     nActiveState = MASTERNODE_ENABLED; // OK

@@ -16,6 +16,8 @@
 #include <string>
 #include <vector>
 
+extern bool fAllowPrivateNet;
+
 enum Network
 {
     NET_UNROUTABLE = 0,

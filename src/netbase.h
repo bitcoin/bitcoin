@@ -24,6 +24,7 @@ extern bool fNameLookup;
 static const int DEFAULT_CONNECT_TIMEOUT = 5000;
 //! -dns default
 static const int DEFAULT_NAME_LOOKUP = true;
+static const bool DEFAULT_ALLOWPRIVATENET = false;
 
 class proxyType
 {

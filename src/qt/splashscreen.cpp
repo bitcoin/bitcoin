@@ -56,6 +56,8 @@ SplashScreen::SplashScreen(Qt::WindowFlags f, const NetworkStyle *networkStyle) 
         splashScreenPath = ":/images/" + GUIUtil::getThemeName() + "/splash_testnet";
     if(GetBoolArg("-testnet", false))
         splashScreenPath = ":/images/" + GUIUtil::getThemeName() + "/splash_testnet";
+    if(mapArgs.count("-devnet"))
+        splashScreenPath = ":/images/" + GUIUtil::getThemeName() + "/splash_testnet";
 
     QString font = QApplication::font().toString();
 
