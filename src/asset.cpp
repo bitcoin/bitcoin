@@ -532,7 +532,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2022 - " + _("Failed to read from asset DB");
 				return true;
 			}
-			if(dbAsset.prevOut != assetPrevOut)
+			if(op == OP_ASSET_SEND && dbAsset.prevOut != theAsset.prevOut)
 			{
 				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2022 - " + _("Asset previous outpoint does not match provided outpoint");
 				return true;
@@ -609,7 +609,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		theAsset.prevOut = COutPoint(tx.GetHash(), nOut);
         // write asset  
 
-        if (!dontaddtodb && (!passetdb->WriteAsset(theAsset, op) || (op == OP_ASSET_ACTIVATE && !passetdb->WriteAssetFirstTXID(vvchArgs[0], theAsset.txHash))))
+        if (!dontaddtodb && (!passetdb->WriteAsset(theAsset, op) || (op == OP_ASSET_ACTIVATE && !passetdb->WriteAssetFirstTXID(vvchArgs[0], theAsset.prevOut.hash))))
 		{
 			errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to write to assetifcate DB");
             return error(errorMessage.c_str());
