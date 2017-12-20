@@ -4530,7 +4530,7 @@ bool CWallet::InitLoadWallet()
             walletInstance->GenerateNewHDChain();
 
             // ensure this wallet.dat can only be opened by clients supporting HD
-            pwalletMain->SetMinVersion(FEATURE_HD);
+            walletInstance->SetMinVersion(FEATURE_HD);
         }
 
         CPubKey newDefaultKey;

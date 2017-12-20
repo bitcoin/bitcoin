@@ -87,21 +87,21 @@ class ImportPrunedFundsTest(BitcoinTestFramework):
 
         assert('No addresses' in errorString)
 
-        balance1 = self.nodes[1].getbalance("", 0, True)
+        balance1 = self.nodes[1].getbalance("", 0, False, True)
         assert_equal(balance1, Decimal(0))
 
         #Import with affiliated address with no rescan
         self.nodes[1].importaddress(address2, "", False)
         result2 = self.nodes[1].importprunedfunds(rawtxn2, proof2, "")
-        balance2 = Decimal(self.nodes[1].getbalance("", 0, True))
+        balance2 = Decimal(self.nodes[1].getbalance("", 0, False, True))
         assert_equal(balance2, Decimal('0.05'))
 
         #Import with private key with no rescan
         self.nodes[1].importprivkey(address3_privkey, "", False)
         result3 = self.nodes[1].importprunedfunds(rawtxn3, proof3, "")
-        balance3 = Decimal(self.nodes[1].getbalance("", 0, False))
+        balance3 = Decimal(self.nodes[1].getbalance("", 0, False, False))
         assert_equal(balance3, Decimal('0.025'))
-        balance3 = Decimal(self.nodes[1].getbalance("", 0, True))
+        balance3 = Decimal(self.nodes[1].getbalance("", 0, False, True))
         assert_equal(balance3, Decimal('0.075'))
 
         #Addresses Test - after import
@@ -124,16 +124,16 @@ class ImportPrunedFundsTest(BitcoinTestFramework):
 
         assert('does not exist' in errorString)
 
-        balance1 = Decimal(self.nodes[1].getbalance("", 0, True))
+        balance1 = Decimal(self.nodes[1].getbalance("", 0, False, True))
         assert_equal(balance1, Decimal('0.075'))
 
 
         self.nodes[1].removeprunedfunds(txnid2)
-        balance2 = Decimal(self.nodes[1].getbalance("", 0, True))
+        balance2 = Decimal(self.nodes[1].getbalance("", 0, False, True))
         assert_equal(balance2, Decimal('0.025'))
 
         self.nodes[1].removeprunedfunds(txnid3)
-        balance3 = Decimal(self.nodes[1].getbalance("", 0, True))
+        balance3 = Decimal(self.nodes[1].getbalance("", 0, False, True))
         assert_equal(balance3, Decimal('0.0'))
 
 if __name__ == '__main__':

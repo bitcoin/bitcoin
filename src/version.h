@@ -38,9 +38,9 @@ static const int NO_BLOOM_VERSION = 70201;
 static const int SENDHEADERS_VERSION = 70201;
 
 //! "feefilter" tells peers to filter invs to you by fee starts with this version
-static const int FEEFILTER_VERSION = 70209;
+static const int FEEFILTER_VERSION = 99999; // disable for now (clarify deployment later)
 
 //! DIP0001 was activated in this version
-static const int DIP0001_PROTOCOL_VERSION = 99999; // disable for now (clarify deployment later)
+static const int DIP0001_PROTOCOL_VERSION = 70208;
 
 #endif // BITCOIN_VERSION_H
