@@ -10,6 +10,7 @@ import http.client
 import json
 import logging
 import os
+import re
 import subprocess
 import time
 
@@ -21,6 +22,9 @@ from .util import (
     wait_until,
     p2p_port,
 )
+
+# For Python 3.4 compatibility
+JSONDecodeError = getattr(json, "JSONDecodeError", ValueError)
 
 BITCOIND_PROC_WAIT_TIMEOUT = 60
 
@@ -222,6 +226,13 @@ class TestNodeCLI():
         cli_stdout, cli_stderr = process.communicate(input=self.input)
         returncode = process.poll()
         if returncode:
+            match = re.match(r'error code: ([-0-9]+)\nerror message:\n(.*)', cli_stderr)
+            if match:
+                code, message = match.groups()
+                raise JSONRPCException(dict(code=int(code), message=message))
             # Ignore cli_stdout, raise with cli_stderr
             raise subprocess.CalledProcessError(returncode, self.binary, output=cli_stderr)
-        return json.loads(cli_stdout, parse_float=decimal.Decimal)
+        try:
+            return json.loads(cli_stdout, parse_float=decimal.Decimal)
+        except JSONDecodeError:
+            return cli_stdout.rstrip("\n")
