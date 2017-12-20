@@ -1,0 +1,55 @@
+version: 0.2
+
+#env:
+  #variables:
+     # key: "value"
+     # key: "value"
+  #parameter-store:
+     # key: "value"
+     # key: "value"
+
+phases:
+  #install:
+    #commands:
+      # - command
+      # - command
+  #pre_build:
+    #commands:
+      # - command
+      # - command
+  build:
+    commands:
+       - echo "Building raven"
+       - ./autogen.sh
+       - ./configure --enable-cxx --disable-shared --with-pic --prefix=$BDB_PREFIX CXXFLAGS="-fPIC" CPPFLAGS="-fPIC"
+       - make -j3
+  post_build:
+    commands:
+       - mkdir -p ./build-linux/fedora
+       - cp src/ravend ./build-linux/fedora/
+       - cp src/raven-cli ./build-linux/fedora/
+       - cp src/qt/raven-qt ./build-linux/fedora/
+       - cp src/raven-tx ./build-linux/fedora/
+       - cd ./build-linux/fedora
+       - md5sum ravend raven-cli raven-qt raven-tx > md5sum
+       - sha256sum ravend raven-cli raven-qt raven-tx > sha256sum
+       - cd ..
+       - git clone https://medici-jenkins:5dbbfbe15d1d60dcd88461db8498d3ed0147d3df@github.com/OverstockMedici/RavenBinaries.git
+       - cd RavenBinaries/pre-release/linux
+       - BUILD_ID=`echo $CODEBUILD_BUILD_ID | sed 's/:/_/g'`
+       - git checkout -b "code_build_$BUILD_ID"
+       - rsync -av ../../../fedora/* ./fedora
+       - chmod +x ./fedora/raven*
+       - git add .
+       - git commit -m "Releasing build $BUILD_ID" --author "Code Build <ops@mediciventures.com>"
+       - git push origin "code_build_$BUILD_ID"
+artifacts:
+  files:
+     - ./build-linux/fedora/ravend
+     - ./build-linux/fedora/raven-cli
+     - ./build-linux/fedora/raven-tx
+     - ./build-linux/fedora/raven-qt
+     - ./build-linux/fedora/md5sum
+     - ./build-linux/fedora/sha256sum
+  discard-paths: yes
+  #base-directory: location
