@@ -29,6 +29,7 @@
 #include <init.h>
 #include <rpc/server.h>
 #include <scheduler.h>
+#include <stats/stats.h>
 #include <ui_interface.h>
 #include <util.h>
 #include <warnings.h>
@@ -695,6 +696,9 @@ int main(int argc, char *argv[])
 
     // Subscribe to global signals from core
     uiInterface.InitMessage.connect(InitMessage);
+
+    // enable mempool stats
+    CStats::m_stats_enabled = true;
 
     if (gArgs.GetBoolArg("-splash", DEFAULT_SPLASHSCREEN) && !gArgs.GetBoolArg("-min", false))
         app.createSplashScreen(networkStyle.data());
