@@ -213,7 +213,10 @@ bool VerifyWallets()
     }
 
     if (gArgs.IsArgSet("-walletdir") && !fs::is_directory(GetWalletDir())) {
-        return InitError(strprintf(_("Error: Specified wallet directory \"%s\" does not exist."), gArgs.GetArg("-walletdir", "").c_str()));
+        if (fs::exists(fs::system_complete(gArgs.GetArg("-walletdir", "")))) {
+            return InitError(strprintf(_("Specified -walletdir \"%s\" is not a directory"), gArgs.GetArg("-walletdir", "").c_str()));
+        }
+        return InitError(strprintf(_("Specified -walletdir \"%s\" does not exist"), gArgs.GetArg("-walletdir", "").c_str()));
     }
 
     LogPrintf("Using wallet directory %s\n", GetWalletDir().string());
