@@ -339,6 +339,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			chainActive.Tip()->nHeight, tx.GetHash().ToString().c_str(),
 			fJustCheck ? "JUSTCHECK" : "BLOCK");
 	bool foundAlias = false;
+	bool foundAsset = false;
 	int prevAliasOp = 0;
     // Make sure asset outputs are not spent by a regular transaction, or the asset would be lost
 	if (tx.nVersion != SYSCOIN_TX_VERSION) 
@@ -372,7 +373,6 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2003 - " + _("Hash provided doesn't match the calculated hash of the data");
 			return true;
 		}
-			
 		// Strict check - bug disallowed
 		for (unsigned int i = 0; i < tx.vin.size(); i++) {
 			vector<vector<unsigned char> > vvch;
@@ -383,17 +383,21 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			{
 				continue;
 			}
-			if(foundAlias)
+			if (foundAlias && foundAsset)
 				break;
 			else if (!foundAlias && IsAliasOp(pop) && vvch.size() >= 2 && theAsset.aliasTuple.first == vvch[0] && theAsset.aliasTuple.third == vvch[1])
 			{
-				foundAlias = true; 
+				foundAlias = true;
 				prevAliasOp = pop;
 				vvchPrevAliasArgs = vvch;
 			}
+			else if (!foundAsset && IsAssetOp(pop) && theAsset.vchAsset == vvch[0] && theAsset.prevOut.n == tx.vin[i].prevout.n && theAsset.prevOut.hash == tx.vin[i].prevout.hash)
+			{
+				foundAsset = true;
+			}
 		}
+			
 	}
-
 
 	
 	CAliasIndex alias;
@@ -465,6 +469,11 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2016 - " + _("Alias input mismatch");
 				return error(errorMessage.c_str());
 			}
+			if(!foundAsset)
+			{
+				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2016 - " + _("Asset input missing");
+				return error(errorMessage.c_str());
+			}
 			if(theAsset.sCategory.size() > 0 && !boost::algorithm::istarts_with(stringFromVch(theAsset.sCategory), "assets"))
 			{
 				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2017 - " + _("Must use a asset category");
@@ -483,10 +492,27 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2019 - " + _("Alias input mismatch");
 				return error(errorMessage.c_str());
 			}
-			if(theAsset.sCategory.size() > 0 && !boost::algorithm::istarts_with(stringFromVch(theAsset.sCategory), "assets"))
+			if (!foundAsset)
 			{
-				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2020 - " + _("Must use a asset category");
-				return true;
+				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2016 - " + _("Asset input missing");
+				return error(errorMessage.c_str());
+			}
+			break;
+		case OP_ASSET_SEND:
+			if (theAsset.vchAsset != vvchArgs[0])
+			{
+				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2018 - " + _("Asset guid mismatch");
+				return error(errorMessage.c_str());
+			}
+			if (!IsAliasOp(prevAliasOp) || vvchPrevAliasArgs.empty())
+			{
+				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2019 - " + _("Alias input mismatch");
+				return error(errorMessage.c_str());
+			}
+			if (!foundAsset)
+			{
+				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2016 - " + _("Asset input missing");
+				return error(errorMessage.c_str());
 			}
 			break;
 
@@ -506,40 +532,64 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2022 - " + _("Failed to read from asset DB");
 				return true;
 			}
+			if(dbAsset.prevOut != assetPrevOut)
+			{
+				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2022 - " + _("Asset previous outpoint does not match provided outpoint");
+				return true;
+			}
 			if(theAsset.vchPubData.empty())
 				theAsset.vchPubData = dbAsset.vchPubData;
 			theAsset.vchName = dbAsset.vchName;
 			if(theAsset.sCategory.empty())
 				theAsset.sCategory = dbAsset.sCategory;
 			
-			theAsset.vchAsset = dbAsset.vchAsset;
 			if(op == OP_ASSET_TRANSFER || op == OP_ASSET_SEND)
 			{
 				// check toalias
 				if(!GetAlias(theAsset.linkAliasTuple.first, alias))
 				{
-					errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2024 - " + _("Cannot find alias you are transferring to. It may be expired");		
+					errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2024 - " + _("Cannot find alias you are transferring to. It may be expired");
+					return true;
 				}
-				else
+				if (op == OP_ASSET_SEND && dbAsset.aliasTuple != theAsset.aliasTuple)
 				{
-					// set ownership of asset allocation  if not transfer
-					theAsset.aliasTuple = theAsset.linkAliasTuple;
-					// change asset ownership
-					if (op == OP_ASSET_TRANSFER)
-						theAsset.ownerAliasTuple = theAsset.aliasTuple;
-					if (!(alias.nAcceptTransferFlags & ACCEPT_TRANSFER_ASSETS))
-					{
-						errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("The alias you are transferring to does not accept assets");
-						theAsset = dbAsset;	
-					}
+					errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot send this asset. Asset allocation owner must sign off on this change.");
+					return true;
 				}
+				// set ownership of asset allocation if sending asset allocation
+				if(op == OP_ASSET_SEND)
+					theAsset.aliasTuple = theAsset.linkAliasTuple;
+				// change asset ownership
+				else if (op == OP_ASSET_TRANSFER)
+					theAsset.ownerAliasTuple = theAsset.aliasTuple;
+				if (!(alias.nAcceptTransferFlags & ACCEPT_TRANSFER_ASSETS))
+				{
+					errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("The alias you are transferring to does not accept assets");
+					return true;
+				}
+			}
+			else if (OP_ASSET_SEND) {
+				// get sender asset
+				// if no custom allocations are sent with request
+					// if sender asset has custom allocations, break as invalid assetsend request
+					// ensure sender balance >= balance being sent
+					// ensure balance being sent >= minimum divisible quantity
+						// if minimum divisible quantity is 0, ensure the balance being sent is a while quantity
+					// deduct balance from sender and add to receiver
+				// if custom allocations are sent with index numbers in an array
+					// loop through array of allocations that are sent along with request
+						// get qty of allocation
+						// check the sender has the allocation in senders allocation list, remove from senders allocation list
+						// add allocation to receivers allocation list
+						// deduct qty from sender and add to receiver
+				// commit sender details to database
 			}
 			if(op == OP_ASSET_UPDATE || op == OP_ASSET_TRANSFER)
 			{
 				if (dbAsset.ownerAliasTuple != theAsset.aliasTuple) 
 				{
 					errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot edit this asset. Asset owner must sign off on this change.");
-					theAsset = dbAsset;
+					return true;
 				}
 			}
 			theAsset.linkAliasTuple.first.clear();
@@ -751,7 +801,93 @@ UniValue assetupdate(const UniValue& params, bool fHelp) {
 	res.push_back(EncodeHexTx(wtx));
 	return res;
 }
+UniValue assetsend(const UniValue& params, bool fHelp) {
+	if (fHelp || params.size() != 4)
+		throw runtime_error(
+			"assetsend [guid] {\"alias\":amount,\"n\":number...} [witness] [instantsend]\n"
+			"Send an asset allocation you own to another alias.\n"
+			"<guid> asset guidkey.\n"
+			"<alias> alias to transfer to.\n"
+			"<witness> Witness alias name that will sign for web-of-trust notarization of this transaction.\n"
+			"<instantsend> Set to true to use InstantSend to send this transaction or false otherwise.\n"
+			+ HelpRequiringPassphrase());
 
+	// gather & validate inputs
+	vector<unsigned char> vchAsset = vchFromValue(params[0]);
+	vector<unsigned char> vchAlias = vchFromValue(params[1]);
+
+	vector<unsigned char> vchWitness;
+	vchWitness = vchFromValue(params[2]);
+	bool fUseInstantSend = false;
+	fUseInstantSend = params[3].get_bool();
+	// check for alias existence in DB
+	CAliasIndex toAlias;
+	if (!GetAlias(vchAlias, toAlias))
+		throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2509 - " + _("Failed to read transfer alias from DB"));
+
+	// this is a syscoin txn
+	CWalletTx wtx;
+	CScript scriptPubKeyOrig, scriptPubKeyFromOrig;
+
+	CAsset theAsset;
+	if (!GetAsset(vchAsset, theAsset))
+		throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2510 - " + _("Could not find a asset with this key"));
+
+	CAliasIndex fromAlias;
+	if (!GetAlias(theAsset.aliasTuple.first, fromAlias))
+	{
+		throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2511 - " + _("Could not find the asset alias"));
+	}
+
+	CSyscoinAddress sendAddr;
+	GetAddress(toAlias, &sendAddr, scriptPubKeyOrig);
+	CSyscoinAddress fromAddr;
+	GetAddress(fromAlias, &fromAddr, scriptPubKeyFromOrig);
+
+	CAsset copyAsset = theAsset;
+	theAsset.ClearAsset();
+	CScript scriptPubKey;
+	theAsset.nHeight = chainActive.Tip()->nHeight;
+	theAsset.aliasTuple = CNameTXIDTuple(fromAlias.vchAlias, fromAlias.txHash, fromAlias.vchGUID);
+	theAsset.linkAliasTuple = CNameTXIDTuple(toAlias.vchAlias, toAlias.txHash, toAlias.vchGUID);
+
+
+	vector<unsigned char> data;
+	theAsset.Serialize(data);
+	uint256 hash = Hash(data.begin(), data.end());
+
+	vector<unsigned char> vchHashAsset = vchFromValue(hash.GetHex());
+	scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_ASSET) << CScript::EncodeOP_N(OP_ASSET_SEND) << vchAsset << vchHashAsset << OP_2DROP << OP_2DROP;
+	scriptPubKey += scriptPubKeyOrig;
+	// send the asset pay txn
+	vector<CRecipient> vecSend;
+	CRecipient recipient;
+	CreateRecipient(scriptPubKey, recipient);
+	vecSend.push_back(recipient);
+
+	CScript scriptPubKeyAlias;
+	scriptPubKeyAlias << CScript::EncodeOP_N(OP_SYSCOIN_ALIAS) << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << fromAlias.vchAlias << fromAlias.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
+	scriptPubKeyAlias += scriptPubKeyFromOrig;
+	CRecipient aliasRecipient;
+	CreateRecipient(scriptPubKeyAlias, aliasRecipient);
+	CRecipient aliasPaymentRecipient;
+	CreateAliasRecipient(scriptPubKeyFromOrig, aliasPaymentRecipient);
+
+	CScript scriptData;
+	scriptData << OP_RETURN << data;
+	CRecipient fee;
+	CreateFeeRecipient(scriptData, data, fee);
+	vecSend.push_back(fee);
+
+
+	CCoinControl coinControl;
+	coinControl.fAllowOtherInputs = false;
+	coinControl.fAllowWatchOnly = false;
+	SendMoneySyscoin(fromAlias.vchAlias, vchWitness, aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl, fUseInstantSend);
+	UniValue res(UniValue::VARR);
+	res.push_back(EncodeHexTx(wtx));
+	return res;
+}
 
 UniValue assettransfer(const UniValue& params, bool fHelp) {
  if (fHelp || params.size() != 4)

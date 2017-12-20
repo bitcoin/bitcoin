@@ -500,45 +500,48 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2022 - " + _("Failed to read from certificate DB");
 				return true;
 			}
+			if (dbCert.aliasTuple != theCert.aliasTuple)
+			{
+				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot update this certificate. Certificate owner must sign off on this change.");
+				return true;
+			}
 			if(theCert.vchPubData.empty())
 				theCert.vchPubData = dbCert.vchPubData;
 			if(theCert.vchTitle.empty())
 				theCert.vchTitle = dbCert.vchTitle;
 			if(theCert.sCategory.empty())
 				theCert.sCategory = dbCert.sCategory;
-			
-			theCert.vchCert = dbCert.vchCert;
+
 			uint256 txid;
 			CCert firstCert;
 			if (!pcertdb->ReadCertFirstTXID(dbCert.vchCert, txid)) {
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("Cannot read first txid from cert DB");
-				theCert = dbCert;
+				return true;
 			}
 			if (!GetCert(CNameTXIDTuple(dbCert.vchCert, txid), firstCert)) {
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("Cannot read first cert from cert DB");
-				theCert = dbCert;
+				return true;
 			}
 			if(op == OP_CERT_TRANSFER)
 			{
 				// check toalias
 				if(!GetAlias(theCert.linkAliasTuple.first, alias))
 				{
-					errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2024 - " + _("Cannot find alias you are transferring to. It may be expired");		
+					errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2024 - " + _("Cannot find alias you are transferring to. It may be expired");	
+					return true;
 				}
-				else
+				theCert.aliasTuple = theCert.linkAliasTuple;		
+				if(!(alias.nAcceptTransferFlags & ACCEPT_TRANSFER_CERTIFICATES))
 				{
-					theCert.aliasTuple = theCert.linkAliasTuple;		
-					if(!(alias.nAcceptTransferFlags & ACCEPT_TRANSFER_CERTIFICATES))
-					{
-						errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("The alias you are transferring to does not accept certificate transfers");
-						theCert = dbCert;	
-					}
+					errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("The alias you are transferring to does not accept certificate transfers");
+					return true;
 				}
+				
 				// the original owner can modify certificate regardless of access flags, new owners must adhere to access flags
 				if(dbCert.nAccessFlags < 2 && dbCert.aliasTuple != firstCert.aliasTuple)
 				{
 					errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot transfer this certificate. Insufficient privileges.");
-					theCert = dbCert;
+					return true;
 				}
 			}
 			else if(op == OP_CERT_UPDATE)
@@ -546,13 +549,13 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 				if(dbCert.nAccessFlags < 1 && dbCert.aliasTuple != firstCert.aliasTuple)
 				{
 					errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot edit this certificate. It is view-only.");
-					theCert = dbCert;
+					return true;
 				}
 			}
 			if(theCert.nAccessFlags > dbCert.nAccessFlags && dbCert.aliasTuple != firstCert.aliasTuple)
 			{
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot modify for more lenient access. Only tighter access level can be granted.");
-				theCert = dbCert;
+				return true;
 			}
 			theCert.linkAliasTuple.first.clear();
 		}

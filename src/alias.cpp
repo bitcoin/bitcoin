@@ -360,7 +360,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			{
 				continue;
 			}
-			if (IsAliasOp(pop) && (op == OP_ALIAS_ACTIVATE || (vvchArgs.size() > 1 && vvchArgs[0] == vvch[0] && vvchArgs[1] == vvch[1]))) {
+			if (IsAliasOp(pop) && (op == OP_ALIAS_ACTIVATE || (vvchArgs.size() > 1 && theAlias.vchAlias == vvch[0] && theAlias.vchGUID == vvch[1] && vvchArgs[0] == vvch[0] && vvchArgs[1] == vvch[1]))) {
 				prevOp = pop;
 				vvchPrevArgs = vvch;
 				pprevCoins = prevCoins;
@@ -435,17 +435,6 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5010 - " + _("Alias new and activate hash mismatch");
 					return error(errorMessage.c_str());
 				}
-				// Check GUID
-				if (vvchArgs.size() <=  1 || theAlias.vchGUID != vvchArgs[1])
-				{
-					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5010 - " + _("Alias input guid mismatch");
-					return error(errorMessage.c_str());
-				}
-				if(theAlias.vchAlias != vvchArgs[0])
-				{
-					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5011 - " + _("Guid in data output doesn't match guid in tx");
-					return error(errorMessage.c_str());
-				}
 				if(theAlias.vchAddress.empty())
 				{
 					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5011 - " + _("Alias address cannot be empty");
@@ -457,14 +446,6 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				{
 					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5012 - " + _("Alias input to this transaction not found");
 					return error(errorMessage.c_str());
-				}
-				if(!theAlias.IsNull())
-				{
-					if(theAlias.vchAlias != vvchArgs[0])
-					{
-						errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5015 - " + _("Guid in data output doesn't match guid in transaction");
-						return error(errorMessage.c_str());
-					}
 				}
 				break;
 		default:
@@ -530,7 +511,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				if (vvchPrevArgs.size() <= 0 || vvchPrevArgs[0] != vvchArgs[0] || vvchPrevArgs[1] != vvchArgs[1] || !pprevCoins.IsAvailable(prevOutputIndex) || !ExtractDestination(pprevCoins.vout[prevOutputIndex].scriptPubKey, aliasDest))
 				{
 					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5020 - " + _("Cannot extract destination of alias input");
-					if(!theAliasNull)
+					if (!theAliasNull)
 						theAlias = dbAlias;
 				}
 				else
@@ -543,7 +524,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 							theAlias = dbAlias;
 					}
 				}
-				if (dbAlias.vchGUID != vvchArgs[1] || dbAlias.vchAlias != vvchArgs[0])
+				if (dbAlias.vchGUID != theAlias.vchGUID || dbAlias.vchAlias != theAlias.vchAlias)
 				{
 					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5022 - " + _("Cannot edit this alias, guid mismatch");
 					if (!theAliasNull)

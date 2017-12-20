@@ -569,74 +569,69 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 
 	if (!fJustCheck ) {
 		COffer dbOffer;
-		COffer serializedOffer;
 		if (op == OP_OFFER_UPDATE) {
-			// save serialized offer for later use
-			serializedOffer = theOffer;
 			// load the offer data from the DB
-			if (!GetOffer(vvchArgs[0], theOffer))
+			if (!GetOffer(vvchArgs[0], dbOffer))
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1048 - " + _("Failed to read from offer DB");
 				return true;
 			}
-			dbOffer = theOffer;
-			serializedOffer.linkOfferTuple = theOffer.linkOfferTuple;
-			serializedOffer.vchOffer = theOffer.vchOffer;
-			serializedOffer.nSold = theOffer.nSold;
-			theOffer = serializedOffer;
-			if (!dbOffer.IsNull())
+
+			if (dbOffer.aliasTuple != theOffer.aliasTuple)
 			{
-				// some fields are only updated if they are not empty to limit txn size, rpc sends em as empty if we arent changing them
-				if (serializedOffer.sCategory.empty())
-					theOffer.sCategory = dbOffer.sCategory;
-				if (serializedOffer.sTitle.empty())
-					theOffer.sTitle = dbOffer.sTitle;
-				if (serializedOffer.sDescription.empty())
-					theOffer.sDescription = dbOffer.sDescription;
-				if (serializedOffer.certTuple.first.empty())
-					theOffer.certTuple = dbOffer.certTuple;
-				if (serializedOffer.sCurrencyCode.empty())
-					theOffer.sCurrencyCode = dbOffer.sCurrencyCode;
-				if (serializedOffer.paymentOptions <= 0)
-					theOffer.paymentOptions = dbOffer.paymentOptions;
-
-
-				if (IsOfferTypeInMask(dbOffer.offerType, OFFERTYPE_AUCTION))
-				{
-					if (!IsOfferTypeInMask(theOffer.offerType, OFFERTYPE_AUCTION))
-					{
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1024 - " + _("Cannot change to this offer type until auction expires");
-						return true;
-					}
-					if (theOffer.auctionOffer.fReservePrice < 0)
-					{
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1024 - " + _("Reserve price must be greator or equal to 0");
-						return true;
-					}
-					if (theOffer.auctionOffer.fDepositPercentage < 0)
-					{
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1024 - " + _("Auction deposit percentage must be greator or equal to 0");
-						return true;
-					}
-					if (dbOffer.auctionOffer.nExpireTime > 0 && dbOffer.auctionOffer.nExpireTime >= nTime && dbOffer.auctionOffer != theOffer.auctionOffer)
-					{
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1024 - " + _("Cannot modify auction parameters while it is active. Please wait until auction has expired before updating.");
-						return true;
-					}
-				}
-				if (dbOffer.aliasTuple != theOffer.aliasTuple)
-				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot edit this offer. Offer owner must sign off on this change.");
-					theOffer = dbOffer;
-				}
-				// non linked offers cant edit commission
-				if (theOffer.linkOfferTuple.first.empty())
-					theOffer.nCommission = 0;
-				if (!theOffer.linkAliasTuple.first.empty())
-					theOffer.aliasTuple = theOffer.linkAliasTuple;
-				theOffer.linkAliasTuple.first.clear();
-
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot edit this offer. Offer owner must sign off on this change.");
+				return true;
 			}
+
+
+			// some fields are only updated if they are not empty to limit txn size, rpc sends em as empty if we arent changing them
+			if (theOffer.sCategory.empty())
+				theOffer.sCategory = dbOffer.sCategory;
+			if (theOffer.sTitle.empty())
+				theOffer.sTitle = dbOffer.sTitle;
+			if (theOffer.sDescription.empty())
+				theOffer.sDescription = dbOffer.sDescription;
+			if (theOffer.certTuple.first.empty())
+				theOffer.certTuple = dbOffer.certTuple;
+			if (theOffer.sCurrencyCode.empty())
+				theOffer.sCurrencyCode = dbOffer.sCurrencyCode;
+			if (theOffer.paymentOptions <= 0)
+				theOffer.paymentOptions = dbOffer.paymentOptions;
+
+			theOffer.linkOfferTuple = dbOffer.linkOfferTuple;
+
+
+			if (IsOfferTypeInMask(dbOffer.offerType, OFFERTYPE_AUCTION))
+			{
+				if (!IsOfferTypeInMask(theOffer.offerType, OFFERTYPE_AUCTION))
+				{
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1024 - " + _("Cannot change to this offer type until auction expires");
+					return true;
+				}
+				if (theOffer.auctionOffer.fReservePrice < 0)
+				{
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1024 - " + _("Reserve price must be greator or equal to 0");
+					return true;
+				}
+				if (theOffer.auctionOffer.fDepositPercentage < 0)
+				{
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1024 - " + _("Auction deposit percentage must be greator or equal to 0");
+					return true;
+				}
+				if (dbOffer.auctionOffer.nExpireTime > 0 && dbOffer.auctionOffer.nExpireTime >= nTime && dbOffer.auctionOffer != theOffer.auctionOffer)
+				{
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1024 - " + _("Cannot modify auction parameters while it is active. Please wait until auction has expired before updating.");
+					return true;
+				}
+			}
+			// non linked offers cant edit commission
+			if (theOffer.linkOfferTuple.first.empty())
+				theOffer.nCommission = 0;
+			if (!theOffer.linkAliasTuple.first.empty())
+				theOffer.aliasTuple = theOffer.linkAliasTuple;
+			theOffer.linkAliasTuple.first.clear();
+
+			
 		}
 		else if(op == OP_OFFER_ACTIVATE)
 		{
