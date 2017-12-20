@@ -1,82 +1,79 @@
-Bitcoin Core integration/staging tree
-=====================================
+### Jews and secret societies (((Bilderberg))) have taken over bitcoin!
+https://www.reddit.com/r/btc/comments/47zfzt/blockstream_is_now_controlled_by_the_bilderberg/
+http://www.bilderbergconspiracy.com/bilderberg-group-taking-over-bitcoin/
 
-[![Build Status](https://travis-ci.org/bitcoin/bitcoin.svg?branch=master)](https://travis-ci.org/bitcoin/bitcoin)
 
-https://bitcoincore.org
 
-What is Bitcoin?
-----------------
+https://duckduckgo.com/?q=%22axa+strategic+ventures%22+%22blockstream%22
 
-Bitcoin is an experimental digital currency that enables instant payments to
-anyone, anywhere in the world. Bitcoin uses peer-to-peer technology to operate
-with no central authority: managing transactions and issuing money are carried
-out collectively by the network. Bitcoin Core is the name of open source
-software which enables the use of this currency.
+https://duckduckgo.com/?q=%22axa+strategic+ventures%22+%22axa+group%22
 
-For more information, as well as an immediately useable, binary version of
-the Bitcoin Core software, see https://bitcoin.org/en/download, or read the
-[original whitepaper](https://bitcoincore.org/bitcoin.pdf).
+https://duckduckgo.com/?q=%22axa+group%22+bilderberg+castries
 
-License
--------
+http://www.wsj.com/articles/bitcoin-startup-blockstream-raises-55-million-in-funding-round-1454518655
 
-Bitcoin Core is released under the terms of the MIT license. See [COPYING](COPYING) for more
-information or see https://opensource.org/licenses/MIT.
+    Bitcoin Startup Blockstream Raises $55 Million in Funding Round
 
-Development Process
--------------------
+    Horizons Ventures and AXA Strategic Ventures are among the investors in the company, which is developing blockchain technology.
 
-The `master` branch is regularly built and tested, but is not guaranteed to be
-completely stable. [Tags](https://github.com/bitcoin/bitcoin/tags) are created
-regularly to indicate new official, stable release versions of Bitcoin Core.
+    Blockstream, a bitcoin-focused startup founded by some of the industry’s most high-profile developers, raised $55 million in one of the largest funding rounds in the history of the virtual currency.
 
-The contribution workflow is described in [CONTRIBUTING.md](CONTRIBUTING.md).
+    Investors including Horizons Ventures, Tokyo-based Digital Garage and AXA Strategic Ventures, the investment arm of insurance giant AXA SA, contributed to the funding. ...
 
-The developer [mailing list](https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev)
-should be used to discuss complicated or controversial changes before working
-on a patch set.
+http://finance.yahoo.com/news/blockstream-announces-55-million-series-140000240.html
 
-Developer IRC can be found on Freenode at #bitcoin-core-dev.
+    Blockstream Announces $55 Million Series A Investment Bringing Total Capital Raised to $76 Million
 
-Testing
--------
+    SILICON VALLEY, Calif., Feb. 3, 2016 / PRNewsWire
 
-Testing and code review is the bottleneck for development; we get more pull
-requests than we can review and test on short notice. Please be patient and help out by testing
-other people's pull requests, and remember this is a security-critical project where any mistake might cost people
-lots of money.
+    The round is being led by Horizons Ventures, AXA Strategic Ventures, and Digital Garage, with participation from existing investors including AME Cloud Ventures, Blockchain Capital, Future\Perfect Ventures, Khosla Ventures, Mosaic Ventures, and Seven Seas Venture Partners.
 
-### Automated Testing
+https://en.wikipedia.org/wiki/Bilderberg_Group
 
-Developers are strongly encouraged to write [unit tests](src/test/README.md) for new code, and to
-submit new unit tests for old code. Unit tests can be compiled and run
-(assuming they weren't disabled in configure) with: `make check`. Further details on running
-and extending unit tests can be found in [/src/test/README.md](/src/test/README.md).
+    Bilderberg Group - Chairman of the Steering Committee: Henri de Castries (since 2012)
 
-There are also [regression and integration tests](/test), written
-in Python, that are run automatically on the build server.
-These tests can be run (if the [test dependencies](/test) are installed) with: `test/functional/test_runner.py`
+https://en.wikipedia.org/wiki/Bilderberg_Group#Criticism
 
-The Travis CI system makes sure that every pull request is built for Windows, Linux, and OS X, and that unit/sanity tests are run automatically.
+    Partly because of its working methods to ensure strict privacy, the Bilderberg Group has been criticised for its lack of transparency and accountability.
 
-### Manual Quality Assurance (QA) Testing
+    Due to its privacy, Bilderberg has been accused of conspiracies.
 
-Changes should be tested by somebody other than the developer who wrote the
-code. This is especially important for large or high-risk changes. It is useful
-to add a test plan to the pull request description if testing the changes is
-not straightforward.
+    This outlook has been popular on both extremes of the political spectrum, even if they disagree about the exact nature of the group's intentions.
 
-Translations
-------------
+    Some on the left accuse the Bilderberg group of conspiring to impose capitalist domination, while some on the right have accused the group of conspiring to impose a world government and planned economy.
 
-Changes to translations as well as new translations can be submitted to
-[Bitcoin Core's Transifex page](https://www.transifex.com/projects/p/bitcoin/).
+https://en.wikipedia.org/wiki/2015_Bilderberg_Conference
 
-Translations are periodically pulled from Transifex and merged into the git repository. See the
-[translation process](doc/translation_process.md) for details on how this works.
+    Henri de Castries, Chairman, Bilderberg Meetings; Chairman and CEO, AXA Group
 
-**Important**: We do not accept translation changes as GitHub pull requests because the next
-pull from Transifex would automatically overwrite them again.
+https://en.wikipedia.org/wiki/Bilderberg_Group#Chairmen_of_the_steering_committee
 
-Translators should also subscribe to the [mailing list](https://groups.google.com/forum/#!forum/bitcoin-translators).
+    Chairmen of the steering committee
+
+        Prince Bernhard of Lippe-Biesterfeld (1954–75)
+
+        Alec Douglas-Home, Baron Home of the Hirsel (1977–80)
+
+        Walter Scheel (1981–85)
+
+        Eric Roll, Baron Roll of Ipsden (1986–89)
+
+        Peter Carington, 6th Baron Carrington (1990–98)
+
+        Étienne Davignon, Viscount Davignon (1999–2011)
+
+        Henri de Castries (since 2012)
+
+http://uk.businessinsider.com/list-of-ceos-and-politicians-invited-to-2015-bilderberg-conference-in-austria-2015-6
+
+    Here are all the CEOs and politicians going to the top secret Bilderberg Conference this week (Jun. 10, 2015)
+
+    Here's the full list:
+
+        Henri de Castries, AXA Group, Chairman and CEO
+
+        ...
+
+http://www.theguardian.com/business/2015/aug/07/axa-boss-henri-de-castries-on-coal-do-you-really-want-to-be-the-last-investor
+
+
