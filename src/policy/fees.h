@@ -286,4 +286,17 @@ private:
     CFeeRate feeLikely, feeUnlikely;
     double priLikely, priUnlikely;
 };
+
+class FeeFilterRounder
+{
+public:
+    /** Create new FeeFilterRounder */
+    FeeFilterRounder(const CFeeRate& minIncrementalFee);
+
+    /** Quantize a minimum fee for privacy purpose before broadcast **/
+    CAmount round(CAmount currentMinFee);
+
+private:
+    std::set<double> feeset;
+};
 #endif /*BITCOIN_POLICYESTIMATOR_H */

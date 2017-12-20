@@ -1031,6 +1031,23 @@ def wait_until(predicate, attempts=float('inf'), timeout=float('inf')):
 
     return False
 
+class msg_feefilter(object):
+    command = "feefilter"
+
+    def __init__(self, feerate=0L):
+        self.feerate = feerate
+
+    def deserialize(self, f):
+        self.feerate = struct.unpack("<Q", f.read(8))[0]
+
+    def serialize(self):
+        r = ""
+        r += struct.pack("<Q", self.feerate)
+        return r
+
+    def __repr__(self):
+        return "msg_feefilter(feerate=%08x)" % self.feerate
+
 # This is what a callback should look like for NodeConn
 # Reimplement the on_* functions to provide handling for events
 class NodeConnCB(object):
@@ -1106,6 +1123,7 @@ class NodeConnCB(object):
     def on_close(self, conn): pass
     def on_mempool(self, conn): pass
     def on_pong(self, conn, message): pass
+    def on_feefilter(self, conn, message): pass
 
 # More useful callbacks and functions for NodeConnCB's which have a single NodeConn
 class SingleNodeConnCB(NodeConnCB):
@@ -1154,6 +1172,7 @@ class NodeConn(asyncore.dispatcher):
         b"getheaders": msg_getheaders,
         b"reject": msg_reject,
         b"mempool": msg_mempool,
+        b"feefilter": msg_feefilter
     }
     MAGIC_BYTES = {
         "mainnet": b"\xbf\x0c\x6b\xbd",   # mainnet

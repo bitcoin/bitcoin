@@ -40,6 +40,15 @@ if 'ENABLE_UTILS' not in vars():
     ENABLE_UTILS=0
 if 'ENABLE_ZMQ' not in vars():
     ENABLE_ZMQ=0
+    
+# python-zmq may not be installed. Handle this gracefully and with some helpful info
+if ENABLE_ZMQ:
+    try:
+        import zmq
+    except ImportError:
+        print("WARNING: \"import zmq\" failed. Setting ENABLE_ZMQ=0. " \
+            "To run zmq tests, see dependency info in /qa/README.md.")
+        ENABLE_ZMQ=0
 
 ENABLE_COVERAGE=0
 
@@ -128,6 +137,7 @@ testScripts = [
     'invalidtxrequest.py', # NOTE: needs dash_hash to pass
     'abandonconflict.py',
     'p2p-versionbits-warning.py',
+    'importprunedfunds.py',
 ]
 if ENABLE_ZMQ:
     testScripts.append('zmq_test.py')
@@ -143,7 +153,6 @@ testScriptsExt = [
     'getblocktemplate_proposals.py',
     'txn_doublespend.py',
     'txn_clone.py --mineblock',
-    # 'pruning.py', # Prune mode is incompatible with -txindex.
     'forknotify.py',
     'invalidateblock.py',
 #    'rpcbind_test.py', #temporary, bug in libevent, see #6655
@@ -153,6 +162,8 @@ testScriptsExt = [
     'mempool_packages.py',
     'maxuploadtarget.py',
     # 'replace-by-fee.py', # RBF is disabled in Dash Core
+    'p2p-feefilter.py',
+    # 'pruning.py', # leave pruning last as it takes a REALLY long time #### Prune mode is incompatible with -txindex.
 ]
 
 def runtests():

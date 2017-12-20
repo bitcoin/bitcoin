@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # Copyright (c) 2016 Bitcoin Core Developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -19,6 +19,11 @@ import os,sys
 from sys import stdin,stdout,stderr
 import argparse
 import subprocess
+import json,codecs
+try:
+    from urllib.request import Request,urlopen
+except:
+    from urllib2 import Request,urlopen
 
 # External tools (can be overridden using environment)
 GIT = os.getenv('GIT','git')
@@ -38,38 +43,39 @@ def git_config_get(option, default=None):
     Get named configuration option from git repository.
     '''
     try:
-        return subprocess.check_output([GIT,'config','--get',option]).rstrip()
+        return subprocess.check_output([GIT,'config','--get',option]).rstrip().decode('utf-8')
     except subprocess.CalledProcessError as e:
         return default
 
-def retrieve_pr_title(repo,pull):
+def retrieve_pr_info(repo,pull):
     '''
-    Retrieve pull request title from github.
+    Retrieve pull request information from github.
     Return None if no title can be found, or an error happens.
     '''
-    import urllib2,json
     try:
-        req = urllib2.Request("https://api.github.com/repos/"+repo+"/pulls/"+pull)
-        result = urllib2.urlopen(req)
-        result = json.load(result)
-        return result['title']
+        req = Request("https://api.github.com/repos/"+repo+"/pulls/"+pull)
+        result = urlopen(req)
+        reader = codecs.getreader('utf-8')
+        obj = json.load(reader(result))
+        return obj
     except Exception as e:
-        print('Warning: unable to retrieve pull title from github: %s' % e)
+        print('Warning: unable to retrieve pull information from github: %s' % e)
         return None
 
 def ask_prompt(text):
     print(text,end=" ",file=stderr)
+    stderr.flush()
     reply = stdin.readline().rstrip()
     print("",file=stderr)
     return reply
 
-def parse_arguments(branch):
+def parse_arguments():
     epilog = '''
         In addition, you can set the following git configuration variables:
         githubmerge.repository (mandatory),
         user.signingkey (mandatory),
         githubmerge.host (default: git@github.com),
-        githubmerge.branch (default: master),
+        githubmerge.branch (no default),
         githubmerge.testcmd (default: none).
     '''
     parser = argparse.ArgumentParser(description='Utility to merge, sign and push github pull requests',
@@ -77,14 +83,14 @@ def parse_arguments(branch):
     parser.add_argument('pull', metavar='PULL', type=int, nargs=1,
         help='Pull request ID to merge')
     parser.add_argument('branch', metavar='BRANCH', type=str, nargs='?',
-        default=branch, help='Branch to merge against (default: '+branch+')')
+        default=None, help='Branch to merge against (default: githubmerge.branch setting, or base branch for pull, or \'master\')')
     return parser.parse_args()
 
 def main():
     # Extract settings from git repo
     repo = git_config_get('githubmerge.repository')
     host = git_config_get('githubmerge.host','git@github.com')
-    branch = git_config_get('githubmerge.branch','master')
+    opt_branch = git_config_get('githubmerge.branch',None)
     testcmd = git_config_get('githubmerge.testcmd')
     signingkey = git_config_get('user.signingkey')
     if repo is None:
@@ -99,9 +105,20 @@ def main():
     host_repo = host+":"+repo # shortcut for push/pull target
 
     # Extract settings from command line
-    args = parse_arguments(branch)
+    args = parse_arguments()
     pull = str(args.pull[0])
-    branch = args.branch
+
+    # Receive pull information from github
+    info = retrieve_pr_info(repo,pull)
+    if info is None:
+        exit(1)
+    title = info['title']
+    # precedence order for destination branch argument:
+    #   - command line argument
+    #   - githubmerge.branch setting
+    #   - base branch for pull (as retrieved from github)
+    #   - 'master'
+    branch = args.branch or opt_branch or info['base']['ref'] or 'master'
 
     # Initialize source branches
     head_branch = 'pull/'+pull+'/head'
@@ -141,7 +158,6 @@ def main():
 
     try:
         # Create unsigned merge commit.
-        title = retrieve_pr_title(repo,pull)
         if title:
             firstline = 'Merge #%s: %s' % (pull,title)
         else:
@@ -159,7 +175,7 @@ def main():
             print("ERROR: Creating merge failed (already merged?).",file=stderr)
             exit(4)
 
-        print('%s#%s%s %s' % (ATTR_RESET+ATTR_PR,pull,ATTR_RESET,title))
+        print('%s#%s%s %s %sinto %s%s' % (ATTR_RESET+ATTR_PR,pull,ATTR_RESET,title,ATTR_RESET+ATTR_PR,branch,ATTR_RESET))
         subprocess.check_call([GIT,'log','--graph','--topo-order','--pretty=format:'+COMMIT_FORMAT,base_branch+'..'+head_branch])
         print()
         # Run test command if configured.

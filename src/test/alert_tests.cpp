@@ -11,9 +11,9 @@
 #include "data/alertTests.raw.h"
 #include "serialize.h"
 #include "streams.h"
-#include "util.h"
 #include "utilstrencodings.h"
 
+#include "test/testutil.h"
 #include "test/test_dash.h"
 
 #include <fstream>

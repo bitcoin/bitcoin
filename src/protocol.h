@@ -218,6 +218,12 @@ extern const char *REJECT;
  * @see https://bitcoin.org/en/developer-reference#sendheaders
  */
 extern const char *SENDHEADERS;
+/**
+ * The feefilter message tells the receiving peer not to inv us any txs
+ * which do not meet the specified min fee rate.
+ * @since protocol version 70013 as described by BIP133
+ */
+extern const char *FEEFILTER;
 
 // Dash message types
 // NOTE: do NOT declare non-implmented here, we don't want them to be exposed to the outside

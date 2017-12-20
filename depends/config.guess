@@ -1,8 +1,8 @@
 #! /bin/sh
 # Attempt to guess a canonical system name.
-#   Copyright 1992-2015 Free Software Foundation, Inc.
+#   Copyright 1992-2016 Free Software Foundation, Inc.
 
-timestamp='2015-11-19'
+timestamp='2016-02-11'
 
 # This file is free software; you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@ timestamp='2015-11-19'
 # Originally written by Per Bothner; maintained since 2000 by Ben Elliston.
 #
 # You can get the latest version of this script from:
-# http://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.guess;hb=HEAD
+# http://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.guess
 #
 # Please send patches to <config-patches@gnu.org>.
 
@@ -50,7 +50,7 @@ version="\
 GNU config.guess ($timestamp)
 
 Originally written by Per Bothner.
-Copyright 1992-2015 Free Software Foundation, Inc.
+Copyright 1992-2016 Free Software Foundation, Inc.
 
 This is free software; see the source for copying conditions.  There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."
@@ -237,6 +237,10 @@ case "${UNAME_MACHINE}:${UNAME_SYSTEM}:${UNAME_RELEASE}:${UNAME_VERSION}" in
 	UNAME_MACHINE_ARCH=`arch | sed 's/OpenBSD.//'`
 	echo ${UNAME_MACHINE_ARCH}-unknown-openbsd${UNAME_RELEASE}
 	exit ;;
+    *:LibertyBSD:*:*)
+	UNAME_MACHINE_ARCH=`arch | sed 's/^.*BSD\.//'`
+	echo ${UNAME_MACHINE_ARCH}-unknown-libertybsd${UNAME_RELEASE}
+	exit ;;
     *:ekkoBSD:*:*)
 	echo ${UNAME_MACHINE}-unknown-ekkobsd${UNAME_RELEASE}
 	exit ;;
@@ -268,42 +272,42 @@ case "${UNAME_MACHINE}:${UNAME_SYSTEM}:${UNAME_RELEASE}:${UNAME_VERSION}" in
 	ALPHA_CPU_TYPE=`/usr/sbin/psrinfo -v | sed -n -e 's/^  The alpha \(.*\) processor.*$/\1/p' | head -n 1`
 	case "$ALPHA_CPU_TYPE" in
 	    "EV4 (21064)")
-		UNAME_MACHINE="alpha" ;;
+		UNAME_MACHINE=alpha ;;
 	    "EV4.5 (21064)")
-		UNAME_MACHINE="alpha" ;;
+		UNAME_MACHINE=alpha ;;
 	    "LCA4 (21066/21068)")
-		UNAME_MACHINE="alpha" ;;
+		UNAME_MACHINE=alpha ;;
 	    "EV5 (21164)")
-		UNAME_MACHINE="alphaev5" ;;
+		UNAME_MACHINE=alphaev5 ;;
 	    "EV5.6 (21164A)")
-		UNAME_MACHINE="alphaev56" ;;
+		UNAME_MACHINE=alphaev56 ;;
 	    "EV5.6 (21164PC)")
-		UNAME_MACHINE="alphapca56" ;;
+		UNAME_MACHINE=alphapca56 ;;
 	    "EV5.7 (21164PC)")
-		UNAME_MACHINE="alphapca57" ;;
+		UNAME_MACHINE=alphapca57 ;;
 	    "EV6 (21264)")
-		UNAME_MACHINE="alphaev6" ;;
+		UNAME_MACHINE=alphaev6 ;;
 	    "EV6.7 (21264A)")
-		UNAME_MACHINE="alphaev67" ;;
+		UNAME_MACHINE=alphaev67 ;;
 	    "EV6.8CB (21264C)")
-		UNAME_MACHINE="alphaev68" ;;
+		UNAME_MACHINE=alphaev68 ;;
 	    "EV6.8AL (21264B)")
-		UNAME_MACHINE="alphaev68" ;;
+		UNAME_MACHINE=alphaev68 ;;
 	    "EV6.8CX (21264D)")
-		UNAME_MACHINE="alphaev68" ;;
+		UNAME_MACHINE=alphaev68 ;;
 	    "EV6.9A (21264/EV69A)")
-		UNAME_MACHINE="alphaev69" ;;
+		UNAME_MACHINE=alphaev69 ;;
 	    "EV7 (21364)")
-		UNAME_MACHINE="alphaev7" ;;
+		UNAME_MACHINE=alphaev7 ;;
 	    "EV7.9 (21364A)")
-		UNAME_MACHINE="alphaev79" ;;
+		UNAME_MACHINE=alphaev79 ;;
 	esac
 	# A Pn.n version is a patched version.
 	# A Vn.n version is a released version.
 	# A Tn.n version is a released field test version.
 	# A Xn.n version is an unreleased experimental baselevel.
 	# 1.2 uses "1.2" for uname -r.
-	echo ${UNAME_MACHINE}-dec-osf`echo ${UNAME_RELEASE} | sed -e 's/^[PVTX]//' | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz'`
+	echo ${UNAME_MACHINE}-dec-osf`echo ${UNAME_RELEASE} | sed -e 's/^[PVTX]//' | tr ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz`
 	# Reset EXIT trap before exiting to avoid spurious non-zero exit code.
 	exitcode=$?
 	trap '' 0
@@ -376,16 +380,16 @@ case "${UNAME_MACHINE}:${UNAME_SYSTEM}:${UNAME_RELEASE}:${UNAME_VERSION}" in
 	exit ;;
     i86pc:SunOS:5.*:* | i86xen:SunOS:5.*:*)
 	eval $set_cc_for_build
-	SUN_ARCH="i386"
+	SUN_ARCH=i386
 	# If there is a compiler, see if it is configured for 64-bit objects.
 	# Note that the Sun cc does not turn __LP64__ into 1 like gcc does.
 	# This test works for both compilers.
-	if [ "$CC_FOR_BUILD" != 'no_compiler_found' ]; then
+	if [ "$CC_FOR_BUILD" != no_compiler_found ]; then
 	    if (echo '#ifdef __amd64'; echo IS_64BIT_ARCH; echo '#endif') | \
 		(CCOPTS= $CC_FOR_BUILD -E - 2>/dev/null) | \
 		grep IS_64BIT_ARCH >/dev/null
 	    then
-		SUN_ARCH="x86_64"
+		SUN_ARCH=x86_64
 	    fi
 	fi
 	echo ${SUN_ARCH}-pc-solaris2`echo ${UNAME_RELEASE}|sed -e 's/[^.]*//'`
@@ -410,7 +414,7 @@ case "${UNAME_MACHINE}:${UNAME_SYSTEM}:${UNAME_RELEASE}:${UNAME_VERSION}" in
 	exit ;;
     sun*:*:4.2BSD:*)
 	UNAME_RELEASE=`(sed 1q /etc/motd | awk '{print substr($5,1,3)}') 2>/dev/null`
-	test "x${UNAME_RELEASE}" = "x" && UNAME_RELEASE=3
+	test "x${UNAME_RELEASE}" = x && UNAME_RELEASE=3
 	case "`/bin/arch`" in
 	    sun3)
 		echo m68k-sun-sunos${UNAME_RELEASE}
@@ -635,13 +639,13 @@ EOF
 		    sc_cpu_version=`/usr/bin/getconf SC_CPU_VERSION 2>/dev/null`
 		    sc_kernel_bits=`/usr/bin/getconf SC_KERNEL_BITS 2>/dev/null`
 		    case "${sc_cpu_version}" in
-		      523) HP_ARCH="hppa1.0" ;; # CPU_PA_RISC1_0
-		      528) HP_ARCH="hppa1.1" ;; # CPU_PA_RISC1_1
+		      523) HP_ARCH=hppa1.0 ;; # CPU_PA_RISC1_0
+		      528) HP_ARCH=hppa1.1 ;; # CPU_PA_RISC1_1
 		      532)                      # CPU_PA_RISC2_0
 			case "${sc_kernel_bits}" in
-			  32) HP_ARCH="hppa2.0n" ;;
-			  64) HP_ARCH="hppa2.0w" ;;
-			  '') HP_ARCH="hppa2.0" ;;   # HP-UX 10.20
+			  32) HP_ARCH=hppa2.0n ;;
+			  64) HP_ARCH=hppa2.0w ;;
+			  '') HP_ARCH=hppa2.0 ;;   # HP-UX 10.20
 			esac ;;
 		    esac
 		fi
@@ -684,7 +688,7 @@ EOF
 		    test -z "$HP_ARCH" && HP_ARCH=hppa
 		fi ;;
 	esac
-	if [ ${HP_ARCH} = "hppa2.0w" ]
+	if [ ${HP_ARCH} = hppa2.0w ]
 	then
 	    eval $set_cc_for_build
 
@@ -700,9 +704,9 @@ EOF
 	    if echo __LP64__ | (CCOPTS= $CC_FOR_BUILD -E - 2>/dev/null) |
 		grep -q __LP64__
 	    then
-		HP_ARCH="hppa2.0w"
+		HP_ARCH=hppa2.0w
 	    else
-		HP_ARCH="hppa64"
+		HP_ARCH=hppa64
 	    fi
 	fi
 	echo ${HP_ARCH}-hp-hpux${HPUX_REV}
@@ -807,14 +811,14 @@ EOF
 	echo craynv-cray-unicosmp${UNAME_RELEASE} | sed -e 's/\.[^.]*$/.X/'
 	exit ;;
     F30[01]:UNIX_System_V:*:* | F700:UNIX_System_V:*:*)
-	FUJITSU_PROC=`uname -m | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz'`
-	FUJITSU_SYS=`uname -p | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz' | sed -e 's/\///'`
+	FUJITSU_PROC=`uname -m | tr ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz`
+	FUJITSU_SYS=`uname -p | tr ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz | sed -e 's/\///'`
 	FUJITSU_REL=`echo ${UNAME_RELEASE} | sed -e 's/ /_/'`
 	echo "${FUJITSU_PROC}-fujitsu-${FUJITSU_SYS}${FUJITSU_REL}"
 	exit ;;
     5000:UNIX_System_V:4.*:*)
-	FUJITSU_SYS=`uname -p | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz' | sed -e 's/\///'`
-	FUJITSU_REL=`echo ${UNAME_RELEASE} | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz' | sed -e 's/ /_/'`
+	FUJITSU_SYS=`uname -p | tr ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz | sed -e 's/\///'`
+	FUJITSU_REL=`echo ${UNAME_RELEASE} | tr ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz | sed -e 's/ /_/'`
 	echo "sparc-fujitsu-${FUJITSU_SYS}${FUJITSU_REL}"
 	exit ;;
     i*86:BSD/386:*:* | i*86:BSD/OS:*:* | *:Ascend\ Embedded/OS:*:*)
@@ -919,7 +923,7 @@ EOF
 	  EV68*) UNAME_MACHINE=alphaev68 ;;
 	esac
 	objdump --private-headers /bin/sh | grep -q ld.so.1
-	if test "$?" = 0 ; then LIBC="gnulibc1" ; fi
+	if test "$?" = 0 ; then LIBC=gnulibc1 ; fi
 	echo ${UNAME_MACHINE}-unknown-linux-${LIBC}
 	exit ;;
     arc:Linux:*:* | arceb:Linux:*:*)
@@ -1285,7 +1289,7 @@ EOF
 	    UNAME_PROCESSOR=powerpc
 	fi
 	if test `echo "$UNAME_RELEASE" | sed -e 's/\..*//'` -le 10 ; then
-	    if [ "$CC_FOR_BUILD" != 'no_compiler_found' ]; then
+	    if [ "$CC_FOR_BUILD" != no_compiler_found ]; then
 		if (echo '#ifdef __LP64__'; echo IS_64BIT_ARCH; echo '#endif') | \
 		    (CCOPTS= $CC_FOR_BUILD -E - 2>/dev/null) | \
 		    grep IS_64BIT_ARCH >/dev/null
@@ -1309,7 +1313,7 @@ EOF
 	exit ;;
     *:procnto*:*:* | *:QNX:[0123456789]*:*)
 	UNAME_PROCESSOR=`uname -p`
-	if test "$UNAME_PROCESSOR" = "x86"; then
+	if test "$UNAME_PROCESSOR" = x86; then
 		UNAME_PROCESSOR=i386
 		UNAME_MACHINE=pc
 	fi
@@ -1340,7 +1344,7 @@ EOF
 	# "uname -m" is not consistent, so use $cputype instead. 386
 	# is converted to i386 for consistency with other x86
 	# operating systems.
-	if test "$cputype" = "386"; then
+	if test "$cputype" = 386; then
 	    UNAME_MACHINE=i386
 	else
 	    UNAME_MACHINE="$cputype"
@@ -1394,7 +1398,7 @@ EOF
 	echo ${UNAME_MACHINE}-unknown-esx
 	exit ;;
     amd64:Isilon\ OneFS:*:*)
-        echo x86_64-unknown-onefs
+	echo x86_64-unknown-onefs
 	exit ;;
 esac
 
@@ -1405,9 +1409,9 @@ This script, last modified $timestamp, has failed to recognize
 the operating system you are using. It is advised that you
 download the most up to date version of the config scripts from
 
-  http://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.guess;hb=HEAD
+  http://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.guess
 and
-  http://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.sub;hb=HEAD
+  http://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.sub
 
 If the version you run ($0) is already up to date, please
 send the following data and any information you think might be

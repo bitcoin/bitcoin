@@ -11,6 +11,7 @@
 #include "test/test_dash.h"
 
 #include <boost/algorithm/string.hpp>
+#include <boost/assign/list_of.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include <univalue.h>
@@ -35,7 +36,7 @@ UniValue CallRPC(string args)
     string strMethod = vArgs[0];
     vArgs.erase(vArgs.begin());
     UniValue params = RPCConvertValues(strMethod, vArgs);
-
+    BOOST_CHECK(tableRPC[strMethod]);
     rpcfn_type method = tableRPC[strMethod]->actor;
     try {
         UniValue result = (*method)(params, false);
@@ -327,6 +328,29 @@ BOOST_AUTO_TEST_CASE(rpc_ban)
     o1 = ar[0].get_obj();
     adr = find_value(o1, "address");
     BOOST_CHECK_EQUAL(adr.get_str(), "2001:4d48:ac57:400:cacf:e9ff:fe1d:9c63/128");
+}
+
+BOOST_AUTO_TEST_CASE(rpc_convert_values_generatetoaddress)
+{
+    UniValue result;
+
+    BOOST_CHECK_NO_THROW(result = RPCConvertValues("generatetoaddress", boost::assign::list_of("101")("yhq7ifNCtTKEpY4Yu5XPCcztQco6Fh6JsZ")));
+    BOOST_CHECK_EQUAL(result[0].get_int(), 101);
+    BOOST_CHECK_EQUAL(result[1].get_str(), "yhq7ifNCtTKEpY4Yu5XPCcztQco6Fh6JsZ");
+
+    BOOST_CHECK_NO_THROW(result = RPCConvertValues("generatetoaddress", boost::assign::list_of("101")("yTretFTpoi3oQ3maZk5QadGaDWPiKnmDBc")));
+    BOOST_CHECK_EQUAL(result[0].get_int(), 101);
+    BOOST_CHECK_EQUAL(result[1].get_str(), "yTretFTpoi3oQ3maZk5QadGaDWPiKnmDBc");
+
+    BOOST_CHECK_NO_THROW(result = RPCConvertValues("generatetoaddress", boost::assign::list_of("1")("yNbNZyCiTYSFtDwEXt7jChV7tZVYX862ua")("9")));
+    BOOST_CHECK_EQUAL(result[0].get_int(), 1);
+    BOOST_CHECK_EQUAL(result[1].get_str(), "yNbNZyCiTYSFtDwEXt7jChV7tZVYX862ua");
+    BOOST_CHECK_EQUAL(result[2].get_int(), 9);
+
+    BOOST_CHECK_NO_THROW(result = RPCConvertValues("generatetoaddress", boost::assign::list_of("1")("yTG8jLL3MvteKXgbEcHyaN7JvTPCejQpSh")("9")));
+    BOOST_CHECK_EQUAL(result[0].get_int(), 1);
+    BOOST_CHECK_EQUAL(result[1].get_str(), "yTG8jLL3MvteKXgbEcHyaN7JvTPCejQpSh");
+    BOOST_CHECK_EQUAL(result[2].get_int(), 9);
 }
 
 BOOST_AUTO_TEST_CASE(rpc_sentinel_ping)
