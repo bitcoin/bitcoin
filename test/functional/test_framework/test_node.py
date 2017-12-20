@@ -203,9 +203,10 @@ class TestNodeCLI():
 
     def __call__(self, *args, input=None):
         # TestNodeCLI is callable with bitcoin-cli command-line args
-        self.args = [str(arg) for arg in args]
-        self.input = input
-        return self
+        cli = TestNodeCLI(self.binary, self.datadir)
+        cli.args = [str(arg) for arg in args]
+        cli.input = input
+        return cli
 
     def __getattr__(self, command):
         def dispatcher(*args, **kwargs):
