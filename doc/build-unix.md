@@ -312,17 +312,13 @@ You need to use GNU make (`gmake`) instead of `make`.
 
 For the wallet (optional):
 
-    pkg install db5
-
-This will give a warning "configure: WARNING: Found Berkeley DB other
-than 4.8; wallets opened by this build will not be portable!", but as FreeBSD never
-had a binary release, this may not matter. If backwards compatibility
-with 4.8-built Bitcoin Core is needed follow the steps under "Berkeley DB" above.
+    ./contrib/install_db4.sh `pwd`
+    setenv BDB_PREFIX $PWD/db4
 
 Then build using:
 
     ./autogen.sh
-    ./configure --with-incompatible-bdb BDB_CFLAGS="-I/usr/local/include/db5" BDB_LIBS="-L/usr/local/lib -ldb_cxx-5"
+    ./configure BDB_CFLAGS="-I${BDB_PREFIX}/include" BDB_LIBS="-L${BDB_PREFIX}/lib -ldb_cxx"
     gmake
 
 *Note on debugging*: The version of `gdb` installed by default is [ancient and considered harmful](https://wiki.freebsd.org/GdbRetirement).
