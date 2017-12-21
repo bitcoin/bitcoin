@@ -447,14 +447,17 @@ bool CGovernanceObject::IsValidLocally(std::string& strError, bool& fMissingMast
             masternode_info_t infoMn;
             if(!mnodeman.GetMasternodeInfo(vinMasternode.prevout, infoMn)) {
 
-                CMasternode::CollateralStatus err = CMasternode::CheckCollateral(vinMasternode.prevout);
-                if (err == CMasternode::COLLATERAL_OK) {
-                    fMissingMasternode = true;
-                    strError = "Masternode not found: " + strOutpoint;
-                } else if (err == CMasternode::COLLATERAL_UTXO_NOT_FOUND) {
+                CMasternode::CollateralStatus err = CMasternode::CheckCollateral(vinMasternode.prevout, CPubKey());
+                if (err == CMasternode::COLLATERAL_UTXO_NOT_FOUND) {
                     strError = "Failed to find Masternode UTXO, missing masternode=" + strOutpoint + "\n";
                 } else if (err == CMasternode::COLLATERAL_INVALID_AMOUNT) {
                     strError = "Masternode UTXO should have 1000 DASH, missing masternode=" + strOutpoint + "\n";
+                } else if (err == CMasternode::COLLATERAL_INVALID_PUBKEY) {
+                    fMissingMasternode = true;
+                    strError = "Masternode not found: " + strOutpoint;
+                } else if (err == CMasternode::COLLATERAL_OK) {
+                    // this should never happen with CPubKey() as a param
+                    strError = "CheckCollateral critical failure! Masternode: " + strOutpoint;
                 }
 
                 return false;
