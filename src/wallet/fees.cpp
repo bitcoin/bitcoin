@@ -59,6 +59,8 @@ CAmount GetMinimumFee(unsigned int nTxBytes, const CCoinControl& coin_control, c
         if (fee_needed < min_mempool_fee) {
             fee_needed = min_mempool_fee;
             if (feeCalc) feeCalc->reason = FeeReason::MEMPOOL_MIN;
+        } else {
+            LogPrintf("Minimum mempool fee(%d) not met", min_mempool_fee);
         }
     }
 
