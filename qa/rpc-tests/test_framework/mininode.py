@@ -1298,7 +1298,7 @@ class NodeConn(asyncore.dispatcher):
                     t.deserialize(f)
                     self.got_message(t)
                 else:
-                    self.show_debug_msg("Unknown command: '" + command + "' " +
+                    self.show_debug_msg("Unknown command: '" + str(command) + "' " +
                                         repr(msg))
         except Exception as e:
             print('got_data:', repr(e))
