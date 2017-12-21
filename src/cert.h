@@ -92,8 +92,8 @@ public:
     friend bool operator!=(const CCert &a, const CCert &b) {
         return !(a == b);
     }
-    void SetNull() { sCategory.clear(); vchTitle.clear(); nAccessFlags = 2; linkAliasTuple.first.clear(); vchCert.clear(); nHeight = 0; txHash.SetNull(); aliasTuple.first.clear(); vchPubData.clear();}
-    bool IsNull() const { return (sCategory.empty() && vchTitle.empty() && nAccessFlags == 2 && linkAliasTuple.first.empty() && vchCert.empty() && txHash.IsNull() &&  nHeight == 0 && vchPubData.empty() && aliasTuple.first.empty()); }
+    inline void SetNull() { sCategory.clear(); vchTitle.clear(); nAccessFlags = 2; linkAliasTuple.first.clear(); vchCert.clear(); nHeight = 0; txHash.SetNull(); aliasTuple.first.clear(); vchPubData.clear();}
+    inline bool IsNotNull() const { return (!sCategory.empty() || !vchTitle.empty() || nAccessFlags != 2 || !linkAliasTuple.first.empty() || !vchCert.empty() || !txHash.IsNull() || nHeight != 0 || !vchPubData.empty() || !aliasTuple.first.empty()); }
     bool UnserializeFromTx(const CTransaction &tx);
 	bool UnserializeFromData(const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash);
 	void Serialize(std::vector<unsigned char>& vchData);

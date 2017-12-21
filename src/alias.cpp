@@ -106,7 +106,7 @@ uint64_t GetAliasExpiration(const CAliasIndex& alias) {
 	uint64_t nTime = chainActive.Tip()->GetMedianTimePast() + 1;
 	CAliasUnprunable aliasUnprunable;
 	// if service alias exists in unprunable db (this should always exist for any alias that ever existed) then get the last expire height set for this alias and check against it for pruning
-	if (paliasdb && paliasdb->ReadAliasUnprunable(alias.vchAlias, aliasUnprunable) && !aliasUnprunable.IsNull())
+	if (paliasdb && paliasdb->ReadAliasUnprunable(alias.vchAlias, aliasUnprunable) && aliasUnprunable.IsNotNull())
 		nTime = aliasUnprunable.nExpireTime;
 	return nTime;
 }
@@ -130,7 +130,7 @@ bool GetTimeToPrune(const CScript& scriptPubKey, uint64_t &nTime)
 		// nHeight is set to the height at which data is pruned, if the tip is newer than nHeight it won't send data to other nodes
 		// we want to keep history of all of the old tx's related to aliases that were renewed, we can't delete its history otherwise we won't know 
 		// to tell nodes that aliases were renewed and to update their info pertaining to that alias.
-		if (paliasdb->ReadAliasUnprunable(alias.vchAlias, aliasUnprunable) && !aliasUnprunable.IsNull())
+		if (paliasdb->ReadAliasUnprunable(alias.vchAlias, aliasUnprunable) && aliasUnprunable.IsNotNull())
 		{
 			// if we are renewing alias then prune based on max of expiry of alias in tx vs the stored alias expiry time of latest alias tx
 			if (!alias.vchGUID.empty() && aliasUnprunable.vchGUID != alias.vchGUID)
@@ -336,7 +336,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			return error(errorMessage.c_str());
 		}
 		
-		if(!theAlias.IsNull())
+		if(theAlias.IsNotNull())
 		{
 			if(vvchArgs.size() <= 2 || vchHash != vvchArgs[2])
 			{
@@ -360,7 +360,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			{
 				continue;
 			}
-			if (IsAliasOp(pop) && (op == OP_ALIAS_ACTIVATE || (vvchArgs.size() > 1 && theAlias.vchAlias == vvch[0] && vvchArgs[0] == vvch[0] && vvchArgs[1] == vvch[1]))) {
+			if (IsAliasOp(pop) && (op == OP_ALIAS_ACTIVATE || (vvchArgs.size() > 1 && vvchArgs[0] == vvch[0] && vvchArgs[1] == vvch[1]))) {
 				prevOp = pop;
 				vvchPrevArgs = vvch;
 				pprevCoins = prevCoins;
@@ -452,6 +452,14 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5012 - " + _("Alias input to this transaction not found");
 					return error(errorMessage.c_str());
 				}
+				if (theAlias.IsNotNull())
+				{
+					if (theAlias.vchAlias != vvchArgs[0])
+					{
+						errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5015 - " + _("Guid in data output doesn't match guid in transaction");
+						return error(errorMessage.c_str());
+					}
+				}
 				break;
 		default:
 				errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5016 - " + _("Alias transaction has unknown op");
@@ -501,10 +509,10 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			}
 		}
 		string newAddress = "";
-		bool theAliasNull = theAlias.IsNull();
+		bool theAliasNull = !theAlias.IsNotNull();
 		if (op == OP_ALIAS_UPDATE)
 		{
-			bool dbAliasNull = dbAlias.IsNull();
+			bool dbAliasNull = !dbAlias.IsNotNull();
 			
 			if (dbAliasNull) {
 				theAlias.SetNull();
@@ -662,7 +670,7 @@ theAlias = dbAlias;
 		}
 		else if (op == OP_ALIAS_ACTIVATE)
 		{
-			if (!dbAlias.IsNull())
+			if (dbAlias.IsNotNull())
 			{
 				errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5028 - " + _("Trying to renew an alias that isn't expired");
 				return true;
@@ -701,7 +709,7 @@ theAlias = dbAlias;
 					else if (type == OFFER && opHistory == OP_OFFER_UPDATE)
 					{
 						COffer offer(tx);
-						if (!offer.linkAliasTuple.IsNull())
+						if (offer.linkAliasTuple.IsNotNull())
 							user2 = stringFromVch(offer.linkAliasTuple.first);
 					}
 					else if (type == ESCROW && IsEscrowOp(opHistory)) {
@@ -2221,7 +2229,7 @@ void AliasTxToJSON(const int op, const vector<unsigned char> &vchData, const vec
 
 	entry.push_back(Pair("txtype", opName));
 	entry.push_back(Pair("_id", stringFromVch(alias.vchAlias)));
-	if (!alias.offerWhitelist.IsNull())
+	if (alias.offerWhitelist.IsNotNull())
 	{
 		if (alias.offerWhitelist.entries.begin()->second.nDiscountPct == 127)
 			entry.push_back(Pair("whitelist", _("Whitelist was cleared")));

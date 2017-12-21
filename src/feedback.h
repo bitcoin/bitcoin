@@ -36,16 +36,16 @@ public:
 	CNameTXIDTuple() {
 		SetNull();
 	}
-	inline CNameTXIDTuple operator=(const CNameTXIDTuple& other) {
+	CNameTXIDTuple operator=(const CNameTXIDTuple& other) {
 		this->first = other.first;
 		this->second = other.second;
 		this->third = other.third;
 		return *this;
 	}
-	inline bool operator==(const CNameTXIDTuple& other) const {
+	bool operator==(const CNameTXIDTuple& other) const {
 		return this->first == other.first && this->second == other.second && this->third == other.third;
 	}
-	inline bool operator!=(const CNameTXIDTuple& other) const {
+	bool operator!=(const CNameTXIDTuple& other) const {
 		return (this->first != other.first || this->second != other.second || this->third != other.third);
 	}
 	inline void SetNull() {
@@ -53,8 +53,8 @@ public:
 		first.clear();
 		third.clear();
 	}
-	inline bool IsNull() {
-		return (first.empty() && second.IsNull() && third.empty());
+	inline bool IsNotNull() {
+		return (!first.empty() || !second.IsNull() || !third.empty());
 	}
 };
 class CFeedback {
@@ -76,7 +76,7 @@ public:
 		READWRITE(VARINT(nFeedbackUserTo));
 	}
 
-    friend bool operator==(const CFeedback &a, const CFeedback &b) {
+	friend bool operator==(const CFeedback &a, const CFeedback &b) {
         return (
         a.vchFeedback == b.vchFeedback
 		&& a.nRating == b.nRating
@@ -85,7 +85,7 @@ public:
         );
     }
 
-    CFeedback operator=(const CFeedback &b) {
+	CFeedback operator=(const CFeedback &b) {
         vchFeedback = b.vchFeedback;
 		nRating = b.nRating;
 		nFeedbackUserFrom = b.nFeedbackUserFrom;
@@ -93,7 +93,7 @@ public:
         return *this;
     }
 
-    friend bool operator!=(const CFeedback &a, const CFeedback &b) {
+	friend bool operator!=(const CFeedback &a, const CFeedback &b) {
         return !(a == b);
     }
 	static std::string FeedbackUserToString(const unsigned char nFeedbackUser) {
@@ -105,7 +105,7 @@ public:
 			default:                    return "";
 		}
 	}
-    void SetNull() {  nRating = 0; nFeedbackUserFrom = 0; nFeedbackUserTo = 0; vchFeedback.clear();}
-    bool IsNull() const { return (  nRating == 0 && nFeedbackUserFrom == 0 && nFeedbackUserTo == 0 && vchFeedback.empty()); }
+    inline void SetNull() {  nRating = 0; nFeedbackUserFrom = 0; nFeedbackUserTo = 0; vchFeedback.clear();}
+	inline bool IsNotNull() const { return (  nRating != 0 || nFeedbackUserFrom != 0 || nFeedbackUserTo != 0 || !vchFeedback.empty()); }
 };
 #endif // FEEDBACK_H

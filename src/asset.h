@@ -94,8 +94,8 @@ public:
     friend bool operator!=(const CAsset &a, const CAsset &b) {
         return !(a == b);
     }
-	void SetNull() { nAmount = 0; sCategory.clear(); vchName.clear(); linkAliasTuple.first.clear(); vchAsset.clear(); nHeight = 0; prevOut.SetNull(); aliasTuple.first.clear(); vchPubData.clear(); }
-    bool IsNull() const { return (nAmount == 0 && sCategory.empty() && vchName.empty() && linkAliasTuple.first.empty() && vchAsset.empty() && prevOut.IsNull() &&  nHeight == 0 && vchPubData.empty() && aliasTuple.first.empty()); }
+	inline void SetNull() { nAmount = 0; sCategory.clear(); vchName.clear(); linkAliasTuple.first.clear(); vchAsset.clear(); nHeight = 0; prevOut.SetNull(); aliasTuple.first.clear(); vchPubData.clear(); }
+    inline bool IsNull() const { return (nAmount == 0 && sCategory.empty() && vchName.empty() && linkAliasTuple.first.empty() && vchAsset.empty() && prevOut.IsNull() &&  nHeight == 0 && vchPubData.empty() && aliasTuple.first.empty()); }
     bool UnserializeFromTx(const CTransaction &tx);
 	bool UnserializeFromData(const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash);
 	void Serialize(std::vector<unsigned char>& vchData);
