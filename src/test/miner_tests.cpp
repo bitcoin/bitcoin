@@ -127,9 +127,9 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     delete pblocktemplate;
 
     const CAmount BLOCKSUBSIDY = 500*COIN;
-    const CAmount LOWFEE = 10*CENT;
-    const CAmount HIGHFEE = 10*COIN;
-    const CAmount HIGHERFEE = 40*COIN;
+    const CAmount LOWFEE = CENT;
+    const CAmount HIGHFEE = COIN;
+    const CAmount HIGHERFEE = 4*COIN;
 
     // block sigops > limit: 1000 CHECKMULTISIG + 1
     tx.vin.resize(1);
