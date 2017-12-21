@@ -1337,7 +1337,7 @@ void CheckForkWarningConditions()
             if(pindexBestForkBase->phashBlock){
                 std::string warning = std::string("'Warning: Large-work fork detected, forking after block ") +
                     pindexBestForkBase->phashBlock->ToString() + std::string("'");
-                CAlert::Notify(warning, true);
+                CAlert::Notify(warning);
             }
         }
         if (pindexBestForkTip && pindexBestForkBase)
@@ -2446,7 +2446,7 @@ void static UpdateTip(CBlockIndex *pindexNew, const CChainParams& chainParams) {
                 if (state == THRESHOLD_ACTIVE) {
                     strMiscWarning = strprintf(_("Warning: unknown new rules activated (versionbit %i)"), bit);
                     if (!fWarned) {
-                        CAlert::Notify(strMiscWarning, true);
+                        CAlert::Notify(strMiscWarning);
                         fWarned = true;
                     }
                 } else {
@@ -2468,7 +2468,7 @@ void static UpdateTip(CBlockIndex *pindexNew, const CChainParams& chainParams) {
             // strMiscWarning is read by GetWarnings(), called by Qt and the JSON-RPC code to warn the user:
             strMiscWarning = _("Warning: Unknown block versions being mined! It's possible unknown rules are in effect");
             if (!fWarned) {
-                CAlert::Notify(strMiscWarning, true);
+                CAlert::Notify(strMiscWarning);
                 fWarned = true;
             }
         }
