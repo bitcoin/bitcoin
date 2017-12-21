@@ -9,9 +9,9 @@ version: 0.2
      # key: "value"
 
 phases:
-  #install:
-    #commands:
-      # - command
+  install:
+    commands:
+       - chmod +x autogen.sh
       # - command
   #pre_build:
     #commands:
