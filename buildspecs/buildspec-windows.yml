@@ -37,15 +37,12 @@ phases:
        - BUILD_ID=`echo $CODEBUILD_BUILD_ID | sed 's/:/_/g'`
        - cd RavenBinaries
        - git checkout -b "code_build_$BUILD_ID"
-       - rsync -av build-windows/bin/ravend.exe RavenBinaries/pre-release/windows/
-       - rsync -av build-windows/bin/raven-cli.exe RavenBinaries/pre-release/windows/
-       - rsync -av build-windows/bin/raven-tx.exe RavenBinaries/pre-release/windows/
-       - rsync -av build-windows/bin/raven-qt.exe RavenBinaries/pre-release/windows/
-       - rsync -av build-windows/bin/md5sum RavenBinaries/pre-release/windows/
-       - rsync -av build-windows/bin/sha256sum RavenBinaries/pre-release/windows/
-       - chmod +x build-windows/bin/raven*
-       - cd RavenBinaries
-       - git checkout -b "code_build_$BUILD_ID"
+       - rsync -av ../build-windows/bin/ravend.exe RavenBinaries/pre-release/windows/
+       - rsync -av ../build-windows/bin/raven-cli.exe RavenBinaries/pre-release/windows/
+       - rsync -av ../build-windows/bin/raven-tx.exe RavenBinaries/pre-release/windows/
+       - rsync -av ../build-windows/bin/raven-qt.exe RavenBinaries/pre-release/windows/
+       - rsync -av ../build-windows/bin/md5sum RavenBinaries/pre-release/windows/
+       - rsync -av ../build-windows/bin/sha256sum RavenBinaries/pre-release/windows/
        - git add .
        - git commit -m "Releasing build $BUILD_ID"
        - git status
