@@ -229,7 +229,7 @@ public:
         return *this;
     }   
 	inline void SetNull() { offerWhitelist.SetNull(); nAccessFlags = 2; vchAddress.clear(); vchEncryptionPublicKey.clear(); vchEncryptionPrivateKey.clear(); nAcceptTransferFlags = 3; nExpireTime = 0; vchGUID.clear(); vchAlias.clear(); txHash.SetNull(); nHeight = 0; vchPublicValue.clear(); }
-    inline bool IsNotNull() const { return (!offerWhitelist.IsNull() || nAccessFlags != 2 || !vchAddress.empty() || !vchEncryptionPublicKey.empty() || !vchEncryptionPrivateKey.empty() || nAcceptTransferFlags != 3 || nExpireTime != 0 || !vchGUID.empty() || !vchAlias.empty() || nHeight != 0 || !txHash.IsNull() || !vchPublicValue.empty()); }
+    inline bool IsNotNull() const { return (!vchGUID.empty() || !vchAlias.empty() || nHeight != 0 || !txHash.IsNull() || !vchPublicValue.empty() || offerWhitelist.IsNotNull() || nAccessFlags != 2 || !vchAddress.empty() || !vchEncryptionPublicKey.empty() || !vchEncryptionPrivateKey.empty() || nAcceptTransferFlags != 3 || nExpireTime != 0); }
 	bool UnserializeFromTx(const CTransaction &tx);
 	bool UnserializeFromData(const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash);
 	void Serialize(std::vector<unsigned char>& vchData);

@@ -221,7 +221,7 @@ public:
     }
 
 	inline void SetNull() { auctionOffer.SetNull();  sCategory.clear(); sTitle.clear(); vchOffer.clear(); sDescription.clear(); offerType = 0; fPrice = 0; fUnits = 1; nHeight = nQty = nSold = paymentOptions = 0; txHash.SetNull(); bPrivate = false; linkOfferTuple.first.clear(); aliasTuple.first.clear(); sCurrencyCode.clear(); nCommission = 0; aliasTuple.first.clear(); certTuple.first.clear(); }
-    inline bool IsNotNull() const { return (!vchOffer.empty() || offerType != 0 || fUnits != 1 || !aliasTuple.first.empty() || !txHash.IsNull() || nHeight != 0 || paymentOptions != 0 || nQty != 0 || nSold != 0 || nCommission != 0 || bPrivate || paymentOptions != 0 || !sCurrencyCode.empty() || !linkOfferTuple.first.empty() || !linkAliasTuple.first.empty() || !certTuple.first.empty() || !auctionOffer.IsNull() || !sCategory.empty() || !sTitle.empty() || fPrice != 0 || !sDescription.empty()); }
+    inline bool IsNotNull() const { return (!vchOffer.empty() || offerType != 0 || fUnits != 1 || !aliasTuple.first.empty() || !txHash.IsNull() || nHeight != 0 || paymentOptions != 0 || nQty != 0 || nSold != 0 || nCommission != 0 || bPrivate || paymentOptions != 0 || !sCurrencyCode.empty() || !linkOfferTuple.first.empty() || !linkAliasTuple.first.empty() || !certTuple.first.empty() || auctionOffer.IsNotNull() || !sCategory.empty() || !sTitle.empty() || fPrice != 0 || !sDescription.empty()); }
 
     bool UnserializeFromTx(const CTransaction &tx);
 	bool UnserializeFromData(const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash);
