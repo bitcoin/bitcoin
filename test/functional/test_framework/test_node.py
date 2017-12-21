@@ -191,6 +191,16 @@ class TestNode():
             p.peer_disconnect()
         del self.p2ps[:]
 
+class TestNodeCLIAttr:
+    def __init__(self, cli, command):
+        self.cli = cli
+        self.command = command
+
+    def __call__(self, *args, **kwargs):
+        return self.cli.send_cli(self.command, *args, **kwargs)
+
+    def get_request(self, *args, **kwargs):
+        return lambda: self(*args, **kwargs)
 
 class TestNodeCLI():
     """Interface to bitcoin-cli for an individual node"""
@@ -209,9 +219,16 @@ class TestNodeCLI():
         return cli
 
     def __getattr__(self, command):
-        def dispatcher(*args, **kwargs):
-            return self.send_cli(command, *args, **kwargs)
-        return dispatcher
+        return TestNodeCLIAttr(self, command)
+
+    def batch(self, requests):
+        results = []
+        for request in requests:
+           try:
+               results.append(dict(result=request()))
+           except JSONRPCException as e:
+               results.append(dict(error=e))
+        return results
 
     def send_cli(self, command, *args, **kwargs):
         """Run bitcoin-cli command. Deserializes returned string as python object."""
