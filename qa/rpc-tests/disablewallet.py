@@ -33,7 +33,7 @@ class DisableWalletTest (BitcoinTestFramework):
         # Checking mining to an address without a wallet
         try:
             self.nodes[0].generatetoaddress(1, 'ycwedq2f3sz2Yf9JqZsBCQPxp18WU3Hp4J')
-        except JSONRPCException,e:
+        except JSONRPCException as e:
             assert("Invalid address" not in e.error['message'])
             assert("ProcessNewBlock, block not accepted" not in e.error['message'])
             assert("Couldn't create new block" not in e.error['message'])
@@ -41,7 +41,7 @@ class DisableWalletTest (BitcoinTestFramework):
         try:
             self.nodes[0].generatetoaddress(1, '7TSBtVu959hGEGPKyHjJz9k55RpWrPffXz')
             raise AssertionError("Must not mine to invalid address!")
-        except JSONRPCException,e:
+        except JSONRPCException as e:
             assert("Invalid address" in e.error['message'])
 
 if __name__ == '__main__':
