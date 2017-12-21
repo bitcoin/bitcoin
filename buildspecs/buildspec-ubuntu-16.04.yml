@@ -11,7 +11,7 @@ version: 0.2
 phases:
   install:
     commands:
-       - chmod -Rf +x *.sh
+       - chmod -Rf 777 *.sh
       # - command
   #pre_build:
     #commands:
