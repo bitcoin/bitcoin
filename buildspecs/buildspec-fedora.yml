@@ -11,7 +11,8 @@ version: 0.2
 phases:
   install:
     commands:
-       - chmod -Rf 777 *.sh
+       - chmod +x autogen.sh
+       - chmod +x share/genbuild.sh
       # - command
   #pre_build:
     #commands:
