@@ -106,6 +106,10 @@ Section -post SEC0001
     WriteRegStr HKCR "@PACKAGE_TARNAME@" "" "URL:Dash"
     WriteRegStr HKCR "@PACKAGE_TARNAME@\DefaultIcon" "" $INSTDIR\@BITCOIN_GUI_NAME@@EXEEXT@
     WriteRegStr HKCR "@PACKAGE_TARNAME@\shell\open\command" "" '"$INSTDIR\@BITCOIN_GUI_NAME@@EXEEXT@" "%1"'
+
+    # Delete old key (before we switched to PACKAGE_TARNAME, which is set to 'dashcore' now, we had 'dash' hardcoded)
+    # TODO remove this line sometime later
+    DeleteRegKey HKCR "dash"
 SectionEnd
 
 # Macro for selecting uninstaller sections
@@ -144,6 +148,9 @@ Section -un.post UNSEC0001
     DeleteRegKey /IfEmpty HKCU "${REGKEY}\Components"
     DeleteRegKey /IfEmpty HKCU "${REGKEY}"
     DeleteRegKey HKCR "@PACKAGE_TARNAME@"
+    # Delete old key (before we switched to PACKAGE_TARNAME, which is set to 'dashcore' now, we had 'dash' hardcoded)
+    # TODO remove this line sometime later
+    DeleteRegKey HKCR "dash"
     RmDir /REBOOTOK $SMPROGRAMS\$StartMenuGroup
     RmDir /REBOOTOK $INSTDIR
     Push $R0
