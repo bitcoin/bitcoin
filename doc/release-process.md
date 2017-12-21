@@ -115,7 +115,7 @@ The gbuild invocations below <b>DO NOT DO THIS</b> by default.
 
   Add other gitian builders keys to your gpg keyring
 
-	gpg --import ../dash/contrib/gitian-downloader/*.pgp
+	gpg --import ../dash/contrib/gitian-keys/*.pgp
 
   Verify the signatures
 

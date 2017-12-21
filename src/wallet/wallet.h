@@ -15,8 +15,8 @@
 #include "util.h"
 #include "utilstrencodings.h"
 #include "validationinterface.h"
+#include "script/ismine.h"
 #include "wallet/crypter.h"
-#include "wallet/wallet_ismine.h"
 #include "wallet/walletdb.h"
 #include "wallet/rpcwallet.h"
 
@@ -271,11 +271,11 @@ public:
     mapValue_t mapValue;
     std::vector<std::pair<std::string, std::string> > vOrderForm;
     unsigned int fTimeReceivedIsTxTime;
-    unsigned int nTimeReceived; //! time received by this node
+    unsigned int nTimeReceived; //!< time received by this node
     unsigned int nTimeSmart;
     char fFromMe;
     std::string strFromAccount;
-    int64_t nOrderPos; //! position in ordered transaction list
+    int64_t nOrderPos; //!< position in ordered transaction list
 
     // memory only
     mutable bool fDebitCached;
@@ -379,7 +379,7 @@ public:
         }
 
         READWRITE(*(CMerkleTx*)this);
-        std::vector<CMerkleTx> vUnused; //! Used to be vtxPrev
+        std::vector<CMerkleTx> vUnused; //!< Used to be vtxPrev
         READWRITE(vUnused);
         READWRITE(mapValue);
         READWRITE(vOrderForm);
@@ -531,7 +531,7 @@ public:
     std::string strOtherAccount;
     std::string strComment;
     mapValue_t mapValue;
-    int64_t nOrderPos;  //! position in ordered transaction list
+    int64_t nOrderPos; //!< position in ordered transaction list
     uint64_t nEntryNo;
 
     CAccountingEntry()
@@ -789,8 +789,8 @@ public:
     bool IsSpent(const uint256& hash, unsigned int n) const;
 
     bool IsLockedCoin(uint256 hash, unsigned int n) const;
-    void LockCoin(COutPoint& output);
-    void UnlockCoin(COutPoint& output);
+    void LockCoin(const COutPoint& output);
+    void UnlockCoin(const COutPoint& output);
     void UnlockAllCoins();
     void ListLockedCoins(std::vector<COutPoint>& vOutpts);
 
@@ -881,13 +881,14 @@ public:
      * Insert additional inputs into the transaction by
      * calling CreateTransaction();
      */
-    bool FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& nChangePosRet, std::string& strFailReason, bool includeWatching);
+    bool FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& nChangePosInOut, std::string& strFailReason, bool includeWatching, bool lockUnspents, const CTxDestination& destChange = CNoDestination());
 
     /**
      * Create a new transaction paying the recipients with a set of coins
      * selected by SelectCoins(); Also create the change output, when needed
+     * @note passing nChangePosInOut as -1 will result in setting a random position
      */
-    bool CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet, int& nChangePosRet,
+    bool CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet, int& nChangePosInOut,
                            std::string& strFailReason, const CCoinControl *coinControl = NULL, bool sign = true, AvailableCoinsType nCoinType=ALL_COINS, bool fUseInstantSend=false);
     bool CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey, CConnman* connman, std::string strCommand="tx");
 

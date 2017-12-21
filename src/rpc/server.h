@@ -70,7 +70,7 @@ void RPCTypeCheck(const UniValue& params,
   Use like: RPCTypeCheckObj(object, boost::assign::map_list_of("name", str_type)("value", int_type));
 */
 void RPCTypeCheckObj(const UniValue& o,
-                  const std::map<std::string, UniValue::VType>& typesExpected, bool fAllowNull=false);
+                  const std::map<std::string, UniValue::VType>& typesExpected, bool fAllowNull=false, bool fStrict=false);
 
 /** Opaque base class for timers returned by NewTimerFunc.
  * This provides no methods at the moment, but makes sure that delete

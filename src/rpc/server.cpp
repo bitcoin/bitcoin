@@ -90,7 +90,8 @@ void RPCTypeCheck(const UniValue& params,
 
 void RPCTypeCheckObj(const UniValue& o,
                   const map<string, UniValue::VType>& typesExpected,
-                  bool fAllowNull)
+                  bool fAllowNull,
+                  bool fStrict)
 {
     BOOST_FOREACH(const PAIRTYPE(string, UniValue::VType)& t, typesExpected)
     {
@@ -103,6 +104,18 @@ void RPCTypeCheckObj(const UniValue& o,
             string err = strprintf("Expected type %s for %s, got %s",
                                    uvTypeName(t.second), t.first, uvTypeName(v.type()));
             throw JSONRPCError(RPC_TYPE_ERROR, err);
+        }
+    }
+
+    if (fStrict)
+    {
+        BOOST_FOREACH(const string& k, o.getKeys())
+        {
+            if (typesExpected.count(k) == 0)
+            {
+                string err = strprintf("Unexpected key %s", k);
+                throw JSONRPCError(RPC_TYPE_ERROR, err);
+            }
         }
     }
 }

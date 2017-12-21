@@ -142,6 +142,9 @@ class BitcoinTestFramework(object):
         except AssertionError as e:
             print("Assertion failed: "+ str(e))
             traceback.print_tb(sys.exc_info()[2])
+        except KeyError as e:
+            print("key not found: "+ str(e))
+            traceback.print_tb(sys.exc_info()[2])
         except Exception as e:
             print("Unexpected exception caught during testing: " + repr(e))
             traceback.print_tb(sys.exc_info()[2])

@@ -14,6 +14,11 @@ AC_CONFIG_HEADERS([src/config/dash-config.h])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([build-aux/m4])
 
+BITCOIN_DAEMON_NAME=dashd
+BITCOIN_GUI_NAME=dash-qt
+BITCOIN_CLI_NAME=dash-cli
+BITCOIN_TX_NAME=dash-tx
+
 AC_CANONICAL_HOST
 
 AH_TOP([#ifndef DASH_CONFIG_H])
@@ -560,18 +565,6 @@ if test x$use_reduce_exports = xyes; then
   [AC_MSG_ERROR([Cannot set default symbol visibility. Use --disable-reduce-exports.])])
 fi
 
-dnl This can go away when we require c++11
-TEMP_CXXFLAGS="$CXXFLAGS"
-CXXFLAGS="$CXXFLAGS -std=c++0x"
-AC_MSG_CHECKING(for c++11 atomics)
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-  #include <atomic>
-  ]],[[]])],
-  [ AC_MSG_RESULT(yes); LEVELDB_ATOMIC_CPPFLAGS="-DLEVELDB_ATOMIC_PRESENT"; LEVELDB_ATOMIC_CXXFLAGS="-std=c++0x"],
-  [ AC_MSG_RESULT(no)]
-)
-CXXFLAGS="$TEMP_CXXFLAGS"
-
 LEVELDB_CPPFLAGS=
 LIBLEVELDB=
 LIBMEMENV=
@@ -1055,6 +1048,10 @@ AC_SUBST(COPYRIGHT_YEAR, _COPYRIGHT_YEAR)
 AC_SUBST(COPYRIGHT_HOLDERS, "_COPYRIGHT_HOLDERS")
 AC_SUBST(COPYRIGHT_HOLDERS_SUBSTITUTION, "_COPYRIGHT_HOLDERS_SUBSTITUTION")
 AC_SUBST(COPYRIGHT_HOLDERS_FINAL, "_COPYRIGHT_HOLDERS_FINAL")
+AC_SUBST(BITCOIN_DAEMON_NAME)
+AC_SUBST(BITCOIN_GUI_NAME)
+AC_SUBST(BITCOIN_CLI_NAME)
+AC_SUBST(BITCOIN_TX_NAME)
 
 AC_SUBST(RELDFLAGS)
 AC_SUBST(HARDENED_CXXFLAGS)
@@ -1070,8 +1067,6 @@ AC_SUBST(TESTDEFS)
 AC_SUBST(LEVELDB_TARGET_FLAGS)
 AC_SUBST(MINIUPNPC_CPPFLAGS)
 AC_SUBST(MINIUPNPC_LIBS)
-AC_SUBST(LEVELDB_ATOMIC_CPPFLAGS)
-AC_SUBST(LEVELDB_ATOMIC_CXXFLAGS)
 AC_CONFIG_FILES([Makefile src/Makefile share/setup.nsi share/qt/Info.plist src/test/buildenv.py])
 AC_CONFIG_FILES([qa/pull-tester/run-bitcoind-for-test.sh],[chmod +x qa/pull-tester/run-bitcoind-for-test.sh])
 AC_CONFIG_FILES([qa/pull-tester/tests_config.py],[chmod +x qa/pull-tester/tests_config.py])

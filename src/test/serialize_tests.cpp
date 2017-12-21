@@ -203,6 +203,27 @@ BOOST_AUTO_TEST_CASE(varints)
     }
 }
 
+BOOST_AUTO_TEST_CASE(varints_bitpatterns)
+{
+    CDataStream ss(SER_DISK, 0);
+    ss << VARINT(0); BOOST_CHECK_EQUAL(HexStr(ss), "00"); ss.clear();
+    ss << VARINT(0x7f); BOOST_CHECK_EQUAL(HexStr(ss), "7f"); ss.clear();
+    ss << VARINT((int8_t)0x7f); BOOST_CHECK_EQUAL(HexStr(ss), "7f"); ss.clear();
+    ss << VARINT(0x80); BOOST_CHECK_EQUAL(HexStr(ss), "8000"); ss.clear();
+    ss << VARINT((uint8_t)0x80); BOOST_CHECK_EQUAL(HexStr(ss), "8000"); ss.clear();
+    ss << VARINT(0x1234); BOOST_CHECK_EQUAL(HexStr(ss), "a334"); ss.clear();
+    ss << VARINT((int16_t)0x1234); BOOST_CHECK_EQUAL(HexStr(ss), "a334"); ss.clear();
+    ss << VARINT(0xffff); BOOST_CHECK_EQUAL(HexStr(ss), "82fe7f"); ss.clear();
+    ss << VARINT((uint16_t)0xffff); BOOST_CHECK_EQUAL(HexStr(ss), "82fe7f"); ss.clear();
+    ss << VARINT(0x123456); BOOST_CHECK_EQUAL(HexStr(ss), "c7e756"); ss.clear();
+    ss << VARINT((int32_t)0x123456); BOOST_CHECK_EQUAL(HexStr(ss), "c7e756"); ss.clear();
+    ss << VARINT(0x80123456U); BOOST_CHECK_EQUAL(HexStr(ss), "86ffc7e756"); ss.clear();
+    ss << VARINT((uint32_t)0x80123456U); BOOST_CHECK_EQUAL(HexStr(ss), "86ffc7e756"); ss.clear();
+    ss << VARINT(0xffffffff); BOOST_CHECK_EQUAL(HexStr(ss), "8efefefe7f"); ss.clear();
+    ss << VARINT(0x7fffffffffffffffLL); BOOST_CHECK_EQUAL(HexStr(ss), "fefefefefefefefe7f"); ss.clear();
+    ss << VARINT(0xffffffffffffffffULL); BOOST_CHECK_EQUAL(HexStr(ss), "80fefefefefefefefe7f"); ss.clear();
+}
+
 BOOST_AUTO_TEST_CASE(compactsize)
 {
     CDataStream ss(SER_DISK, 0);

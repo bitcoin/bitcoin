@@ -163,7 +163,8 @@ bool static LookupIntern(const char *pszName, std::vector<CNetAddr>& vIP, unsign
         if (aiTrav->ai_family == AF_INET6)
         {
             assert(aiTrav->ai_addrlen >= sizeof(sockaddr_in6));
-            vIP.push_back(CNetAddr(((struct sockaddr_in6*)(aiTrav->ai_addr))->sin6_addr));
+            struct sockaddr_in6* s6 = (struct sockaddr_in6*) aiTrav->ai_addr;
+            vIP.push_back(CNetAddr(s6->sin6_addr, s6->sin6_scope_id));
         }
 
         aiTrav = aiTrav->ai_next;

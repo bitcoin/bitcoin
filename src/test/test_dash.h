@@ -26,8 +26,7 @@ struct BasicTestingSetup {
 };
 
 /** Testing setup that configures a complete environment.
- * Included are data directory, coins database, script check threads
- * and wallet (if enabled) setup.
+ * Included are data directory, coins database, script check threads setup.
  */
 class CConnman;
 struct TestingSetup: public BasicTestingSetup {

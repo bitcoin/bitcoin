@@ -801,10 +801,9 @@ static UniValue SoftForkDesc(const std::string &name, int version, CBlockIndex* 
     return rv;
 }
 
-static UniValue BIP9SoftForkDesc(const std::string& name, const Consensus::Params& consensusParams, Consensus::DeploymentPos id)
+static UniValue BIP9SoftForkDesc(const Consensus::Params& consensusParams, Consensus::DeploymentPos id)
 {
     UniValue rv(UniValue::VOBJ);
-    rv.push_back(Pair("id", name));
     const ThresholdState thresholdState = VersionBitsTipState(consensusParams, id);
     switch (thresholdState) {
     case THRESHOLD_DEFINED: rv.push_back(Pair("status", "defined")); break;
@@ -853,15 +852,14 @@ UniValue getblockchaininfo(const UniValue& params, bool fHelp)
             "        \"reject\": { ... }      (object) progress toward rejecting pre-softfork blocks (same fields as \"enforce\")\n"
             "     }, ...\n"
             "  ],\n"
-            "  \"bip9_softforks\": [       (array) status of BIP9 softforks in progress\n"
-            "     {\n"
-            "        \"id\": \"xxxx\",        (string) name of the softfork\n"
+            "  \"bip9_softforks\": {          (object) status of BIP9 softforks in progress\n"
+            "     \"xxxx\" : {                (string) name of the softfork\n"
             "        \"status\": \"xxxx\",    (string) one of \"defined\", \"started\", \"lockedin\", \"active\", \"failed\"\n"
             "        \"bit\": xx,             (numeric) the bit, 0-28, in the block version field used to signal this soft fork\n"
             "        \"startTime\": xx,       (numeric) the minimum median time past of a block at which the bit gains its meaning\n"
             "        \"timeout\": xx          (numeric) the median time past of a block at which the deployment is considered failed if not yet locked in\n"
             "     }\n"
-            "  ]\n"
+            "  }\n"
             "}\n"
             "\nExamples:\n"
             + HelpExampleCli("getblockchaininfo", "")
@@ -884,12 +882,12 @@ UniValue getblockchaininfo(const UniValue& params, bool fHelp)
     const Consensus::Params& consensusParams = Params().GetConsensus();
     CBlockIndex* tip = chainActive.Tip();
     UniValue softforks(UniValue::VARR);
-    UniValue bip9_softforks(UniValue::VARR);
+    UniValue bip9_softforks(UniValue::VOBJ);
     softforks.push_back(SoftForkDesc("bip34", 2, tip, consensusParams));
     softforks.push_back(SoftForkDesc("bip66", 3, tip, consensusParams));
     softforks.push_back(SoftForkDesc("bip65", 4, tip, consensusParams));
-    bip9_softforks.push_back(BIP9SoftForkDesc("csv", consensusParams, Consensus::DEPLOYMENT_CSV));
-    bip9_softforks.push_back(BIP9SoftForkDesc("dip0001", consensusParams, Consensus::DEPLOYMENT_DIP0001));
+    bip9_softforks.push_back(Pair("csv", BIP9SoftForkDesc(consensusParams, Consensus::DEPLOYMENT_CSV)));
+    bip9_softforks.push_back(Pair("dip0001", BIP9SoftForkDesc(consensusParams, Consensus::DEPLOYMENT_DIP0001)));
     obj.push_back(Pair("softforks",             softforks));
     obj.push_back(Pair("bip9_softforks", bip9_softforks));
 
@@ -961,17 +959,30 @@ UniValue getchaintips(const UniValue& params, bool fHelp)
 
     LOCK(cs_main);
 
-    /* Build up a list of chain tips.  We start with the list of all
-       known blocks, and successively remove blocks that appear as pprev
-       of another block.  */
+    /*
+     * Idea:  the set of chain tips is chainActive.tip, plus orphan blocks which do not have another orphan building off of them. 
+     * Algorithm:
+     *  - Make one pass through mapBlockIndex, picking out the orphan blocks, and also storing a set of the orphan block's pprev pointers.
+     *  - Iterate through the orphan blocks. If the block isn't pointed to by another orphan, it is a chain tip.
+     *  - add chainActive.Tip()
+     */
     std::set<const CBlockIndex*, CompareBlocksByHeight> setTips;
-    BOOST_FOREACH(const PAIRTYPE(const uint256, CBlockIndex*)& item, mapBlockIndex)
-        setTips.insert(item.second);
+    std::set<const CBlockIndex*> setOrphans;
+    std::set<const CBlockIndex*> setPrevs;
+
     BOOST_FOREACH(const PAIRTYPE(const uint256, CBlockIndex*)& item, mapBlockIndex)
     {
-        const CBlockIndex* pprev = item.second->pprev;
-        if (pprev)
-            setTips.erase(pprev);
+        if (!chainActive.Contains(item.second)) {
+            setOrphans.insert(item.second);
+            setPrevs.insert(item.second->pprev);
+        }
+    }
+
+    for (std::set<const CBlockIndex*>::iterator it = setOrphans.begin(); it != setOrphans.end(); ++it)
+    {
+        if (setPrevs.erase(*it) == 0) {
+            setTips.insert(*it);
+        }
     }
 
     // Always report the currently active tip.
@@ -1089,7 +1100,7 @@ UniValue invalidateblock(const UniValue& params, bool fHelp)
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
 
         CBlockIndex* pblockindex = mapBlockIndex[hash];
-        InvalidateBlock(state, Params().GetConsensus(), pblockindex);
+        InvalidateBlock(state, Params(), pblockindex);
     }
 
     if (state.IsValid()) {
