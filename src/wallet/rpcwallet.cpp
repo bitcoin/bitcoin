@@ -2666,7 +2666,7 @@ UniValue fundrawtransaction(const UniValue& params, bool fHelp)
                             "1. \"hexstring\"           (string, required) The hex string of the raw transaction\n"
                             "2. options               (object, optional)\n"
                             "   {\n"
-                            "     \"changeAddress\"     (string, optional, default pool address) The bitcoin address to receive the change\n"
+                            "     \"changeAddress\"     (string, optional, default pool address) The dash address to receive the change\n"
                             "     \"changePosition\"    (numeric, optional, default random) The index of the change output\n"
                             "     \"includeWatching\"   (boolean, optional, default false) Also select inputs which are watch only\n"
                             "     \"lockUnspents\"      (boolean, optional, default false) Lock selected unspent outputs\n"
