@@ -501,40 +501,57 @@ UniValue importwallet(const JSONRPCRequest& request)
         if (vstr.size() < 2)
             continue;
         CBitcoinSecret vchSecret;
-        if (!vchSecret.SetString(vstr[0]))
-            continue;
-        CKey key = vchSecret.GetKey();
-        CPubKey pubkey = key.GetPubKey();
-        assert(key.VerifyPubKey(pubkey));
-        CKeyID keyid = pubkey.GetID();
-        if (pwallet->HaveKey(keyid)) {
-            LogPrintf("Skipping import of %s (key already present)\n", EncodeDestination(keyid));
-            continue;
-        }
-        int64_t nTime = DecodeDumpTime(vstr[1]);
-        std::string strLabel;
-        bool fLabel = true;
-        for (unsigned int nStr = 2; nStr < vstr.size(); nStr++) {
-            if (boost::algorithm::starts_with(vstr[nStr], "#"))
-                break;
-            if (vstr[nStr] == "change=1")
-                fLabel = false;
-            if (vstr[nStr] == "reserve=1")
-                fLabel = false;
-            if (boost::algorithm::starts_with(vstr[nStr], "label=")) {
-                strLabel = DecodeDumpString(vstr[nStr].substr(6));
-                fLabel = true;
+        if (vchSecret.SetString(vstr[0])) {
+            CKey key = vchSecret.GetKey();
+            CPubKey pubkey = key.GetPubKey();
+            assert(key.VerifyPubKey(pubkey));
+            CKeyID keyid = pubkey.GetID();
+            if (pwallet->HaveKey(keyid)) {
+                LogPrintf("Skipping import of %s (key already present)\n", EncodeDestination(keyid));
+                continue;
             }
+            int64_t nTime = DecodeDumpTime(vstr[1]);
+            std::string strLabel;
+            bool fLabel = true;
+            for (unsigned int nStr = 2; nStr < vstr.size(); nStr++) {
+                if (boost::algorithm::starts_with(vstr[nStr], "#"))
+                    break;
+                if (vstr[nStr] == "change=1")
+                    fLabel = false;
+                if (vstr[nStr] == "reserve=1")
+                    fLabel = false;
+                if (boost::algorithm::starts_with(vstr[nStr], "label=")) {
+                    strLabel = DecodeDumpString(vstr[nStr].substr(6));
+                    fLabel = true;
+                }
+            }
+            LogPrintf("Importing %s...\n", EncodeDestination(keyid));
+            if (!pwallet->AddKeyPubKey(key, pubkey)) {
+                fGood = false;
+                continue;
+            }
+            pwallet->mapKeyMetadata[keyid].nCreateTime = nTime;
+            if (fLabel)
+                pwallet->SetAddressBook(keyid, strLabel, "receive");
+            nTimeBegin = std::min(nTimeBegin, nTime);
+        } else if(IsHex(vstr[0])) {
+           std::vector<unsigned char> vData(ParseHex(vstr[0]));
+           CScript script = CScript(vData.begin(), vData.end());
+           if (pwallet->HaveCScript(script)) {
+               LogPrintf("Skipping import of %s (script already present)\n", vstr[0]);
+               continue;
+           }
+           if(!pwallet->AddCScript(script)) {
+               LogPrintf("Error importing script %s\n", vstr[0]);
+               fGood = false;
+               continue;
+           }
+           int64_t birth_time = DecodeDumpTime(vstr[1]);
+           if (birth_time > 0) {
+               pwallet->m_script_metadata[CScriptID(script)].nCreateTime = birth_time;
+               nTimeBegin = std::min(nTimeBegin, birth_time);
+           }
         }
-        LogPrintf("Importing %s...\n", EncodeDestination(keyid));
-        if (!pwallet->AddKeyPubKey(key, pubkey)) {
-            fGood = false;
-            continue;
-        }
-        pwallet->mapKeyMetadata[keyid].nCreateTime = nTime;
-        if (fLabel)
-            pwallet->SetAddressBook(keyid, strLabel, "receive");
-        nTimeBegin = std::min(nTimeBegin, nTime);
     }
     file.close();
     pwallet->ShowProgress("", 100); // hide progress dialog in GUI
@@ -544,7 +561,7 @@ UniValue importwallet(const JSONRPCRequest& request)
     pwallet->MarkDirty();
 
     if (!fGood)
-        throw JSONRPCError(RPC_WALLET_ERROR, "Error adding some keys to wallet");
+        throw JSONRPCError(RPC_WALLET_ERROR, "Error adding some keys/scripts to wallet");
 
     return NullUniValue;
 }
@@ -780,7 +797,7 @@ UniValue dumpwallet(const JSONRPCRequest& request)
         throw std::runtime_error(
             "dumpwallet \"filename\"\n"
             "\nDumps all wallet keys in a human-readable format to a server-side file. This does not allow overwriting existing files.\n"
-            "Imported scripts are not currently included in wallet dumps, these must be backed up separately.\n"
+            "Imported scripts are included in the dumpfile, but corresponding BIP173 addresses, etc. may not be added automatically by importwallet.\n"
             "Note that if your wallet contains keys which are not derived from your HD seed (e.g. imported keys), these are not covered by\n"
             "only backing up the seed itself, and must be backed up too (e.g. ensure you back up the whole dumpfile).\n"
             "\nArguments:\n"
@@ -814,6 +831,9 @@ UniValue dumpwallet(const JSONRPCRequest& request)
     std::map<CTxDestination, int64_t> mapKeyBirth;
     const std::map<CKeyID, int64_t>& mapKeyPool = pwallet->GetAllReserveKeys();
     pwallet->GetKeyBirthTimes(mapKeyBirth);
+
+    std::set<CScriptID> scripts = pwallet->GetCScripts();
+    // TODO: include scripts in GetKeyBirthTimes() output instead of separate
 
     // sort time/key pairs
     std::vector<std::pair<int64_t, CKeyID> > vKeyBirth;
@@ -898,6 +918,21 @@ UniValue dumpwallet(const JSONRPCRequest& request)
                 file << "change=1";
             }
             file << strprintf(" # addr=%s%s\n", strAddr, (pwallet->mapHdPubKeys.count(keyid) ? " hdkeypath="+pwallet->mapHdPubKeys[keyid].GetKeyPath() : ""));
+        }
+    }
+    file << "\n";
+    for (const CScriptID &scriptid : scripts) {
+        CScript script;
+        std::string create_time = "0";
+        std::string address = EncodeDestination(scriptid);
+        // get birth times for scripts with metadata
+        auto it = pwallet->m_script_metadata.find(scriptid);
+        if (it != pwallet->m_script_metadata.end()) {
+            create_time = EncodeDumpTime(it->second.nCreateTime);
+        }
+        if(pwallet->GetCScript(scriptid, script)) {
+            file << strprintf("%s %s script=1", HexStr(script.begin(), script.end()), create_time);
+            file << strprintf(" # addr=%s\n", address);
         }
     }
     file << "\n";
