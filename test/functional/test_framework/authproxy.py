@@ -41,6 +41,7 @@ import logging
 import socket
 import time
 import urllib.parse
+from errno import EPROTOTYPE
 
 HTTP_TIMEOUT = 30
 USER_AGENT = "AuthServiceProxy/0.1"
@@ -113,10 +114,10 @@ class AuthServiceProxy():
             else:
                 raise
         except OSError as e:
-            if e.errno == 42:
+            if e.errno == EPROTOTYPE:
                 # EPROTOTYPE - OS X issue: a TCP send syscall while a socket is
                 # not yet connected or is in the process of being torn down.
-                print('errno 42 fix')
+                print('errno EPROTOTYPE fix')
                 self.__conn.close()
                 self.__conn.request(method, path, postdata, headers)
                 return self._get_response()
