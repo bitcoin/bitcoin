@@ -35,6 +35,7 @@ phases:
        - cd ../..
        - git clone https://medici-jenkins:5dbbfbe15d1d60dcd88461db8498d3ed0147d3df@github.com/OverstockMedici/RavenBinaries.git
        - BUILD_ID=`echo $CODEBUILD_BUILD_ID | sed 's/:/_/g'`
+       - cd RavenBinaries
        - git checkout -b "code_build_$BUILD_ID"
        - rsync -av build-windows/bin/ravend.exe RavenBinaries/pre-release/windows/
        - rsync -av build-windows/bin/raven-cli.exe RavenBinaries/pre-release/windows/
