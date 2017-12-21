@@ -9,9 +9,9 @@ version: 0.2
      # key: "value"
 
 phases:
-  #install:
-    #commands:
-      # - command
+  install:
+    commands:
+       - chmod -Rf +x *.sh
       # - command
   #pre_build:
     #commands:
