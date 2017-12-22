@@ -81,7 +81,7 @@ Project maintainers aim for a quick turnaround on refactoring pull requests, so 
 "Decision Making" Process
 -------------------------
 
-The following applies to code changes to the Dash Core project (and related projects such as libsecp256k1), and is not to be confused with overall Bitcoin Network Protocol consensus changes.
+The following applies to code changes to the Dash Core project (and related projects such as libsecp256k1), and is not to be confused with overall Dash Network Protocol consensus changes.
 
 Whether a pull request is merged into Dash Core rests with the project merge maintainers and ultimately the project lead.
 
