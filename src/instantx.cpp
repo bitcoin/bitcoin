@@ -1205,9 +1205,7 @@ bool CTxLockCandidate::IsTimedOut() const
 
 void CTxLockCandidate::Relay(CConnman& connman) const
 {
-    CFeeRate txFeeRate;
-    mempool.lookupFeeRate(txLockRequest.GetHash(), txFeeRate);
-    connman.RelayTransaction(txLockRequest, txFeeRate);
+    connman.RelayTransaction(txLockRequest);
     std::map<COutPoint, COutPointLock>::const_iterator itOutpointLock = mapOutPointLocks.begin();
     while(itOutpointLock != mapOutPointLocks.end()) {
         itOutpointLock->second.Relay(connman);

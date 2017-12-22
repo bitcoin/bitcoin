@@ -1,10 +1,12 @@
+#!/usr/bin/env python3
+# Copyright (c) 2015-2016 The Bitcoin Core developers
+# Distributed under the MIT software license, see the accompanying
+# file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
 #
 # script.py
 #
 # This file is modified from python-bitcoinlib.
-#
-# Distributed under the MIT/X11 software license, see the accompanying
-# file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #
 
 """Scripts
@@ -12,7 +14,6 @@
 Functionality to build scripts, as well as SignatureHash().
 """
 
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 from .mininode import CTransaction, CTxOut, hash256
 from binascii import hexlify
@@ -658,7 +659,7 @@ class CScript(bytes):
                 other = bchr(CScriptOp(OP_0))
             else:
                 other = CScriptNum.encode(other)
-        elif isinstance(other, (int, long)):
+        elif isinstance(other, int):
             if 0 <= other <= 16:
                 other = bytes(bchr(CScriptOp.encode_op_n(other)))
             elif other == -1:

@@ -353,6 +353,14 @@ public:
             nUBuckets ^= (1 << 30);
         }
 
+        if (nNew > ADDRMAN_NEW_BUCKET_COUNT * ADDRMAN_BUCKET_SIZE) {
+            throw std::ios_base::failure("Corrupt CAddrMan serialization, nNew exceeds limit.");
+        }
+
+        if (nTried > ADDRMAN_TRIED_BUCKET_COUNT * ADDRMAN_BUCKET_SIZE) {
+            throw std::ios_base::failure("Corrupt CAddrMan serialization, nTried exceeds limit.");
+        }
+
         // Deserialize entries from the new table.
         for (int n = 0; n < nNew; n++) {
             CAddrInfo &info = mapInfo[n];

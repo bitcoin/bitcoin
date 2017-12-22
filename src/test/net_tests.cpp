@@ -136,7 +136,7 @@ BOOST_AUTO_TEST_CASE(caddrdb_read_corrupted)
     } catch (const std::exception& e) {
         exceptionThrown = true;
     }
-    // Even through de-serialization failed adddrman is not left in a clean state.
+    // Even through de-serialization failed addrman is not left in a clean state.
     BOOST_CHECK(addrman1.size() == 1);
     BOOST_CHECK(exceptionThrown);
 

@@ -40,14 +40,15 @@ namespace benchmark {
         std::string name;
         double maxElapsed;
         double beginTime;
-        double lastTime, minTime, maxTime;
+        double lastTime, minTime, maxTime, countMaskInv;
         int64_t count;
-        int64_t timeCheckCount;
+        int64_t countMask;
     public:
         State(std::string _name, double _maxElapsed) : name(_name), maxElapsed(_maxElapsed), count(0) {
             minTime = std::numeric_limits<double>::max();
             maxTime = std::numeric_limits<double>::min();
-            timeCheckCount = 1;
+            countMask = 1;
+            countMaskInv = 1./(countMask + 1);
         }
         bool KeepRunning();
     };

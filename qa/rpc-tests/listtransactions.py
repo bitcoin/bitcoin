@@ -1,5 +1,5 @@
-#!/usr/bin/env python2
-# Copyright (c) 2014-2015 The Bitcoin Core developers
+#!/usr/bin/env python3
+# Copyright (c) 2014-2016 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -17,11 +17,15 @@ def txFromHex(hexstring):
     return tx
 
 class ListTransactionsTest(BitcoinTestFramework):
+    def __init__(self):
+        super().__init__()
+        self.num_nodes = 4
+        self.setup_clean_chain = False
 
     def setup_nodes(self):
         #This test requires mocktime
         enable_mocktime()
-        return start_nodes(4, self.options.tmpdir)
+        return start_nodes(self.num_nodes, self.options.tmpdir)
 
     def run_test(self):
         # Simple send, 0 to 1:

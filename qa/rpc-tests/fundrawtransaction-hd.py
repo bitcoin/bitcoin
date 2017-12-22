@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # Copyright (c) 2014-2015 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -14,7 +14,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         initialize_chain_clean(self.options.tmpdir, 4)
 
     def setup_network(self, split=False):
-        self.nodes = start_nodes(4, self.options.tmpdir, [['-usehd=1'], ['-usehd=1'], ['-usehd=1'], ['-usehd=1']])
+        self.nodes = start_nodes(4, self.options.tmpdir, [['-usehd=1'], ['-usehd=1'], ['-usehd=1'], ['-usehd=1']], redirect_stderr=True)
 
         connect_nodes_bi(self.nodes,0,1)
         connect_nodes_bi(self.nodes,1,2)
@@ -25,7 +25,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.sync_all()
 
     def run_test(self):
-        print "Mining blocks..."
+        print("Mining blocks...")
 
         min_relay_tx_fee = self.nodes[0].getnetworkinfo()['relayfee']
         # This test is not meant to test fee estimation and we'd like
@@ -444,7 +444,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         stop_nodes(self.nodes)
         wait_bitcoinds()
 
-        self.nodes = start_nodes(4, self.options.tmpdir, [['-usehd=1'], ['-usehd=1'], ['-usehd=1'], ['-usehd=1']])
+        self.nodes = start_nodes(4, self.options.tmpdir, [['-usehd=1'], ['-usehd=1'], ['-usehd=1'], ['-usehd=1']], redirect_stderr=True)
         # This test is not meant to test fee estimation and we'd like
         # to be sure all txs are sent at a consistent desired feerate
         for node in self.nodes:

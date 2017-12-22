@@ -1,8 +1,7 @@
-#!/usr/bin/env python2
-# Copyright (c) 2015 The Bitcoin Core developers
-# Distributed under the MIT/X11 software license, see the accompanying
+#!/usr/bin/env python3
+# Copyright (c) 2015-2016 The Bitcoin Core developers
+# Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-#
 
 from test_framework.test_framework import ComparisonTestFramework
 from test_framework.util import *
@@ -30,6 +29,7 @@ class FullBlockTest(ComparisonTestFramework):
     ''' Can either run this test as 1 node with expected answers, or two and compare them. 
         Change the "outcome" variable from each TestInstance object to only do the comparison. '''
     def __init__(self):
+        super().__init__()
         self.num_nodes = 1
         self.block_heights = {}
         self.coinbase_key = CECKey()

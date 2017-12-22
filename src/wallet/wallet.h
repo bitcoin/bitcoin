@@ -67,6 +67,8 @@ extern const char * DEFAULT_WALLET_DAT;
 //! if set, all keys will be derived by using BIP39/BIP44
 static const bool DEFAULT_USE_HD_WALLET = false;
 
+bool AutoBackupWallet (CWallet* wallet, std::string strWalletFile, std::string& strBackupWarning, std::string& strBackupError);
+
 class CBlockIndex;
 class CCoinControl;
 class COutput;
@@ -455,8 +457,6 @@ public:
 
     bool InMempool() const;
     bool IsTrusted() const;
-
-    bool WriteToDisk(CWalletDB *pwalletdb);
 
     int64_t GetTxTime() const;
     int GetRequestCount() const;
@@ -924,6 +924,8 @@ public:
     std::set< std::set<CTxDestination> > GetAddressGroupings();
     std::map<CTxDestination, CAmount> GetAddressBalances();
 
+    CAmount GetAccountBalance(const std::string& strAccount, int nMinDepth, const isminefilter& filter, bool fAddLockConf);
+    CAmount GetAccountBalance(CWalletDB& walletdb, const std::string& strAccount, int nMinDepth, const isminefilter& filter, bool fAddLockConf);
     std::set<CTxDestination> GetAccountAddresses(const std::string& strAccount) const;
 
     isminetype IsMine(const CTxIn& txin) const;
@@ -1031,6 +1033,8 @@ public:
 
     /* Wallets parameter interaction */
     static bool ParameterInteraction();
+
+    bool BackupWallet(const std::string& strDest);
 
     /**
      * HD Wallet Functions

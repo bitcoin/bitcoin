@@ -1,8 +1,7 @@
-#!/usr/bin/env python2
-# Copyright (c) 2015 The Bitcoin Core developers
-# Distributed under the MIT/X11 software license, see the accompanying
+#!/usr/bin/env python3
+# Copyright (c) 2015-2016 The Bitcoin Core developers
+# Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-#
 
 from .mininode import *
 from .blockstore import BlockStore, TxStore
@@ -259,10 +258,10 @@ class TestManager(object):
                     if c.cb.bestblockhash == blockhash:
                         return False
                     if blockhash not in c.cb.block_reject_map:
-                        print 'Block not in reject map: %064x' % (blockhash)
+                        print('Block not in reject map: %064x' % (blockhash))
                         return False
                     if not outcome.match(c.cb.block_reject_map[blockhash]):
-                        print 'Block rejected with %s instead of expected %s: %064x' % (c.cb.block_reject_map[blockhash], outcome, blockhash)
+                        print('Block rejected with %s instead of expected %s: %064x' % (c.cb.block_reject_map[blockhash], outcome, blockhash))
                         return False
                 elif ((c.cb.bestblockhash == blockhash) != outcome):
                     # print c.cb.bestblockhash, blockhash, outcome
@@ -287,10 +286,10 @@ class TestManager(object):
                     if txhash in c.cb.lastInv:
                         return False
                     if txhash not in c.cb.tx_reject_map:
-                        print 'Tx not in reject map: %064x' % (txhash)
+                        print('Tx not in reject map: %064x' % (txhash))
                         return False
                     if not outcome.match(c.cb.tx_reject_map[txhash]):
-                        print 'Tx rejected with %s instead of expected %s: %064x' % (c.cb.tx_reject_map[txhash], outcome, txhash)
+                        print('Tx rejected with %s instead of expected %s: %064x' % (c.cb.tx_reject_map[txhash], outcome, txhash))
                         return False
                 elif ((txhash in c.cb.lastInv) != outcome):
                     # print c.rpc.getrawmempool(), c.cb.lastInv
@@ -393,7 +392,7 @@ class TestManager(object):
                 if (not self.check_mempool(tx.sha256, tx_outcome)):
                     raise AssertionError("Mempool test failed at test %d" % test_number)
 
-            print "Test %d: PASS" % test_number, [ c.rpc.getblockcount() for c in self.connections ]
+            print("Test %d: PASS" % test_number, [ c.rpc.getblockcount() for c in self.connections ])
             test_number += 1
 
         [ c.disconnect_node() for c in self.connections ]

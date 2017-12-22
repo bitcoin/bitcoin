@@ -135,20 +135,9 @@ private:
     int nEntriesPerGeneration;
     int nEntriesThisGeneration;
     int nGeneration;
-    std::vector<uint32_t> data;
+    std::vector<uint64_t> data;
     unsigned int nTweak;
     int nHashFuncs;
-
-    unsigned int Hash(unsigned int nHashNum, const std::vector<unsigned char>& vDataToHash) const;
-
-    inline int get(uint32_t position) const {
-        return (data[(position >> 4) % data.size()] >> (2 * (position & 0xF))) & 0x3;
-    }
-
-    inline void put(uint32_t position, uint32_t val) {
-        uint32_t& cell = data[(position >> 4) % data.size()];
-        cell = (cell & ~(((uint32_t)3) << (2 * (position & 0xF)))) | (val << (2 * (position & 0xF)));
-    }
 };
 
 #endif // BITCOIN_BLOOM_H

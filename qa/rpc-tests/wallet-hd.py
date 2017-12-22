@@ -1,6 +1,4 @@
-#!/usr/bin/env python2
-# coding=utf-8
-# ^^^^^^^^^^^^ TODO remove when supporting only Python3
+#!/usr/bin/env python3
 # Copyright (c) 2016 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -16,7 +14,7 @@ class WalletHDTest(BitcoinTestFramework):
         initialize_chain_clean(self.options.tmpdir, 2)
 
     def setup_network(self):
-        self.nodes = start_nodes(2, self.options.tmpdir, [['-usehd=0'], ['-usehd=1', '-keypool=0']])
+        self.nodes = start_nodes(2, self.options.tmpdir, [['-usehd=0'], ['-usehd=1', '-keypool=0']], redirect_stderr=True)
         self.is_network_split = False
         connect_nodes_bi(self.nodes, 0, 1)
         self.is_network_split=False
@@ -28,13 +26,13 @@ class WalletHDTest(BitcoinTestFramework):
         # Make sure can't switch off usehd after wallet creation
         stop_node(self.nodes[1],1)
         try:
-            start_node(1, self.options.tmpdir, ['-usehd=0'])
+            start_node(1, self.options.tmpdir, ['-usehd=0'], redirect_stderr=True)
             raise AssertionError("Must not allow to turn off HD on an already existing HD wallet")
         except Exception as e:
             assert("dashd exited with status 1 during initialization" in str(e))
         # assert_start_raises_init_error(1, self.options.tmpdir, ['-usehd=0'], 'already existing HD wallet')
         # self.nodes[1] = start_node(1, self.options.tmpdir, self.node_args[1])
-        self.nodes[1] = start_node(1, self.options.tmpdir, ['-usehd=1', '-keypool=0'])
+        self.nodes[1] = start_node(1, self.options.tmpdir, ['-usehd=1', '-keypool=0'], redirect_stderr=True)
         connect_nodes_bi(self.nodes, 0, 1)
 
         # Make sure we use hd, keep chainid
@@ -81,7 +79,7 @@ class WalletHDTest(BitcoinTestFramework):
         stop_node(self.nodes[1],1)
         os.remove(self.options.tmpdir + "/node1/regtest/wallet.dat")
         shutil.copyfile(tmpdir + "/hd.bak", tmpdir + "/node1/regtest/wallet.dat")
-        self.nodes[1] = start_node(1, self.options.tmpdir, ['-usehd=1', '-keypool=0'])
+        self.nodes[1] = start_node(1, self.options.tmpdir, ['-usehd=1', '-keypool=0'], redirect_stderr=True)
         #connect_nodes_bi(self.nodes, 0, 1)
 
         # Assert that derivation is deterministic
@@ -95,7 +93,7 @@ class WalletHDTest(BitcoinTestFramework):
 
         # Needs rescan
         stop_node(self.nodes[1],1)
-        self.nodes[1] = start_node(1, self.options.tmpdir, ['-usehd=1', '-keypool=0', '-rescan'])
+        self.nodes[1] = start_node(1, self.options.tmpdir, ['-usehd=1', '-keypool=0', '-rescan'], redirect_stderr=True)
         #connect_nodes_bi(self.nodes, 0, 1)
         assert_equal(self.nodes[1].getbalance(), num_hd_adds + 1)
 

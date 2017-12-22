@@ -195,7 +195,6 @@ BOOST_AUTO_TEST_CASE(sighash_from_data)
           nHashType = test[3].get_int();
           sigHashHex = test[4].get_str();
 
-          uint256 sh;
           CDataStream stream(ParseHex(raw_tx), SER_NETWORK, PROTOCOL_VERSION);
           stream >> tx;
 

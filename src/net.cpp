@@ -1919,7 +1919,6 @@ bool CConnman::OpenNetworkConnection(const CAddress& addrConnect, CSemaphoreGran
 
 void CConnman::ThreadMessageHandler()
 {
-    SetThreadPriority(THREAD_PRIORITY_BELOW_NORMAL);
     while (!flagInterruptMsgProc)
     {
         std::vector<CNode*> vNodesCopy = CopyNodeVector();
@@ -2475,7 +2474,7 @@ bool CConnman::DisconnectNode(NodeId id)
     return false;
 }
 
-void CConnman::RelayTransaction(const CTransaction& tx, CFeeRate feerate)
+void CConnman::RelayTransaction(const CTransaction& tx)
 {
     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
     ss.reserve(10000);
@@ -2489,10 +2488,10 @@ void CConnman::RelayTransaction(const CTransaction& tx, CFeeRate feerate)
     } else { // MSG_TX
         ss << tx;
     }
-    RelayTransaction(tx, feerate, ss);
+    RelayTransaction(tx, ss);
 }
 
-void CConnman::RelayTransaction(const CTransaction& tx, CFeeRate feerate, const CDataStream& ss)
+void CConnman::RelayTransaction(const CTransaction& tx, const CDataStream& ss)
 {
     uint256 hash = tx.GetHash();
     int nInv = static_cast<bool>(CPrivateSend::GetDSTX(hash)) ? MSG_DSTX :
@@ -2514,20 +2513,7 @@ void CConnman::RelayTransaction(const CTransaction& tx, CFeeRate feerate, const 
     LOCK(cs_vNodes);
     BOOST_FOREACH(CNode* pnode, vNodes)
     {
-        if(!pnode->fRelayTxes)
-            continue;
-        {
-            LOCK(pnode->cs_feeFilter);
-            if (feerate.GetFeePerK() < pnode->minFeeFilter)
-                continue;
-        }
-        LOCK(pnode->cs_filter);
-        if (pnode->pfilter)
-        {
-            if (pnode->pfilter->IsRelevantAndUpdate(tx))
-                pnode->PushInventory(inv);
-        } else
-            pnode->PushInventory(inv);
+        pnode->PushInventory(inv);
     }
 }
 
@@ -2703,6 +2689,7 @@ CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn
     hashContinue = uint256();
     nStartingHeight = -1;
     filterInventoryKnown.reset();
+    fSendMempool = false;
     fGetAddr = false;
     nNextLocalAddrSend = 0;
     nNextAddrSend = 0;
