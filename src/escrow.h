@@ -58,7 +58,7 @@ public:
 	float fBidPerUnit;
 	std::vector<unsigned char> vchRedeemScript;
 	unsigned char role;
-	void ClearEscrow()
+	inline void ClearEscrow()
 	{
 		feedback.SetNull();
 		linkSellerAliasTuple.first.clear();
@@ -110,7 +110,7 @@ public:
 		READWRITE(nAmountOrBidPerUnit);
 	}
 
-    friend bool operator==(const CEscrow &a, const CEscrow &b) {
+    inline friend bool operator==(const CEscrow &a, const CEscrow &b) {
 		return (
 			a.buyerAliasTuple == b.buyerAliasTuple
 			&& a.sellerAliasTuple == b.sellerAliasTuple
@@ -144,7 +144,7 @@ public:
         );
     }
 
-    CEscrow operator=(const CEscrow &b) {
+    inline CEscrow operator=(const CEscrow &b) {
         buyerAliasTuple = b.buyerAliasTuple;
 		sellerAliasTuple = b.sellerAliasTuple;
 		linkSellerAliasTuple = b.linkSellerAliasTuple;
@@ -176,11 +176,11 @@ public:
         return *this;
     }
 
-    friend bool operator!=(const CEscrow &a, const CEscrow &b) {
+    inline friend bool operator!=(const CEscrow &a, const CEscrow &b) {
         return !(a == b);
     }
-	void SetNull() { role = 0; nAmountOrBidPerUnit = 0; vchWitness.clear();  fBidPerUnit = 0;  nDeposit = nArbiterFee = nNetworkFee = nCommission = nShipping = nWitnessFee = 0; extTxId.SetNull(); op = 0; bPaymentAck = bBuyNow = false; redeemTxId.SetNull(); linkAliasTuple.first.clear(); feedback.SetNull(); linkSellerAliasTuple.first.clear(); vchEscrow.clear(); nHeight = nPaymentOption = 0; txHash.SetNull(); nQty = 0; buyerAliasTuple.first.clear(); arbiterAliasTuple.first.clear(); sellerAliasTuple.first.clear(); offerTuple.first.clear(); scriptSigs.clear(); vchRedeemScript.clear(); }
-	bool IsNull() const { return (role == 0 && nAmountOrBidPerUnit == 0 && vchWitness.empty() && fBidPerUnit == 0 && nDeposit == 0 && nArbiterFee == 0 && nShipping == 0 && nCommission == 0 && nNetworkFee == 0 && nWitnessFee == 0 && extTxId.IsNull() && !bBuyNow && !bPaymentAck && redeemTxId.IsNull() && linkSellerAliasTuple.first.empty() && linkAliasTuple.first.empty() && feedback.IsNull() && op == 0 && vchEscrow.empty() && txHash.IsNull() && nHeight == 0 && nPaymentOption == 0 && nQty == 0 && buyerAliasTuple.first.empty() && arbiterAliasTuple.first.empty() && sellerAliasTuple.first.empty() && offerTuple.first.empty() && scriptSigs.empty() && vchRedeemScript.empty()); }
+	inline void SetNull() { vchEscrow.clear();}
+	inline bool IsNull() const { return (vchEscrow.empty()); }
     bool UnserializeFromTx(const CTransaction &tx);
 	bool UnserializeFromData(const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash);
 	void Serialize(std::vector<unsigned char>& vchData);

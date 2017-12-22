@@ -74,8 +74,8 @@ class CAliasUnprunable
         return !(a == b);
     }
 
-    inline void SetNull() { vchGUID.clear(); nExpireTime=0;}
-    inline bool IsNull() const { return (vchGUID.empty() && nExpireTime == 0); }
+    inline void SetNull() { vchGUID.clear();}
+    inline bool IsNull() const { return (vchGUID.empty()); }
 };
 class COfferLinkWhitelistEntry {
 public:
@@ -109,8 +109,8 @@ public:
 		return !(a == b);
 	}
 
-	inline void SetNull() { aliasLinkVchRand.clear(); nDiscountPct = 0; }
-	inline bool IsNull() const { return (aliasLinkVchRand.empty() && nDiscountPct == 0); }
+	inline void SetNull() { aliasLinkVchRand.clear(); }
+	inline bool IsNull() const { return (aliasLinkVchRand.empty()); }
 
 };
 typedef std::map<std::vector<unsigned char>, COfferLinkWhitelistEntry> whitelistMap_t;
@@ -181,7 +181,7 @@ public:
         SetNull();
         UnserializeFromTx(tx);
     }
-	void ClearAlias()
+	inline void ClearAlias()
 	{
 		vchEncryptionPublicKey.clear();
 		vchEncryptionPrivateKey.clear();
@@ -206,14 +206,14 @@ public:
 		READWRITE(vchAddress);	
 		READWRITE(offerWhitelist);
 	}
-    friend bool operator==(const CAliasIndex &a, const CAliasIndex &b) {
+    inline friend bool operator==(const CAliasIndex &a, const CAliasIndex &b) {
 		return (a.offerWhitelist == b.offerWhitelist && a.nAccessFlags == b.nAccessFlags && a.vchAddress == b.vchAddress && a.vchEncryptionPublicKey == b.vchEncryptionPublicKey && a.vchEncryptionPrivateKey == b.vchEncryptionPrivateKey && a.nAcceptTransferFlags == b.nAcceptTransferFlags && a.nExpireTime == b.nExpireTime && a.vchGUID == b.vchGUID && a.vchAlias == b.vchAlias && a.nHeight == b.nHeight && a.txHash == b.txHash && a.vchPublicValue == b.vchPublicValue);
     }
 
-    friend bool operator!=(const CAliasIndex &a, const CAliasIndex &b) {
+    inline friend bool operator!=(const CAliasIndex &a, const CAliasIndex &b) {
         return !(a == b);
     }
-    CAliasIndex operator=(const CAliasIndex &b) {
+    inline CAliasIndex operator=(const CAliasIndex &b) {
 		vchGUID = b.vchGUID;
 		nExpireTime = b.nExpireTime;
 		vchAlias = b.vchAlias;
@@ -228,8 +228,8 @@ public:
 		offerWhitelist = b.offerWhitelist;
         return *this;
     }   
-	void SetNull() { offerWhitelist.SetNull(); nAccessFlags = 2; vchAddress.clear(); vchEncryptionPublicKey.clear(); vchEncryptionPrivateKey.clear(); nAcceptTransferFlags = 3; nExpireTime = 0; vchGUID.clear(); vchAlias.clear(); txHash.SetNull(); nHeight = 0; vchPublicValue.clear(); }
-    bool IsNull() const { return (offerWhitelist.IsNull() && nAccessFlags == 2 && vchAddress.empty() && vchEncryptionPublicKey.empty() && vchEncryptionPrivateKey.empty() && nAcceptTransferFlags == 3 && nExpireTime == 0 && vchGUID.empty() && vchAlias.empty() && nHeight == 0 && txHash.IsNull() && vchPublicValue.empty()); }
+	inline void SetNull() { vchAlias.clear();  }
+    inline bool IsNull() const { return (vchAlias.empty()); }
 	bool UnserializeFromTx(const CTransaction &tx);
 	bool UnserializeFromData(const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash);
 	void Serialize(std::vector<unsigned char>& vchData);

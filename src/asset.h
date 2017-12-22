@@ -45,7 +45,7 @@ public:
         SetNull();
         UnserializeFromTx(tx);
     }
-	void ClearAsset()
+	inline void ClearAsset()
 	{
 		vchPubData.clear();
 		vchName.clear();
@@ -64,7 +64,7 @@ public:
 		READWRITE(aliasTuple);
 		READWRITE(nAmount);
 	}
-    friend bool operator==(const CAsset &a, const CAsset &b) {
+    inline friend bool operator==(const CAsset &a, const CAsset &b) {
         return (
 		a.vchName == b.vchName
 		&& a.vchPubData == b.vchPubData
@@ -78,7 +78,7 @@ public:
         );
     }
 
-    CAsset operator=(const CAsset &b) {
+    inline CAsset operator=(const CAsset &b) {
 		vchName = b.vchName;
 		vchPubData = b.vchPubData;
 		prevOut = b.prevOut;
@@ -91,11 +91,11 @@ public:
         return *this;
     }
 
-    friend bool operator!=(const CAsset &a, const CAsset &b) {
+    inline friend bool operator!=(const CAsset &a, const CAsset &b) {
         return !(a == b);
     }
-	void SetNull() { nAmount = 0; sCategory.clear(); vchName.clear(); linkAliasTuple.first.clear(); vchAsset.clear(); nHeight = 0; prevOut.SetNull(); aliasTuple.first.clear(); vchPubData.clear(); }
-    bool IsNull() const { return (nAmount == 0 && sCategory.empty() && vchName.empty() && linkAliasTuple.first.empty() && vchAsset.empty() && prevOut.IsNull() &&  nHeight == 0 && vchPubData.empty() && aliasTuple.first.empty()); }
+	inline void SetNull() { vchAsset.clear(); }
+    inline bool IsNull() const { return (vchAsset.empty()); }
     bool UnserializeFromTx(const CTransaction &tx);
 	bool UnserializeFromData(const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash);
 	void Serialize(std::vector<unsigned char>& vchData);
