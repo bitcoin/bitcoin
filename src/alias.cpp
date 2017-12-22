@@ -695,7 +695,7 @@ theAlias = dbAlias;
 						CCert cert(tx);
 						user2 = stringFromVch(cert.linkAliasTuple.first);
 					}
-					else if (type == CERT && (opHistory == OP_ASSET_TRANSFER || opHistory == OP_ASSET_SEND)) {
+					else if (type == ASSET && (opHistory == OP_ASSET_TRANSFER || opHistory == OP_ASSET_SEND)) {
 						CAsset asset(tx);
 						user2 = stringFromVch(asset.linkAliasTuple.first);
 					}
@@ -2926,7 +2926,7 @@ string GetSyscoinTransactionDescription(const int op, const vector<vector<unsign
 			strResponse = _("Asset Activated");
 			responseEnglish = "Asset Activated";
 		}
-		if (op == OP_ASSET_MINT) {
+		else if (op == OP_ASSET_MINT) {
 			strResponse = _("Asset Minted");
 			responseEnglish = "Asset Minted";
 		}
@@ -2948,7 +2948,7 @@ string GetSyscoinTransactionDescription(const int op, const vector<vector<unsign
 			strResponse = _("Escrow Activated");
 			responseEnglish = "Escrow Activated";
 		}
-		if (op == OP_ESCROW_ACKNOWLEDGE) {
+		else if (op == OP_ESCROW_ACKNOWLEDGE) {
 			strResponse = _("Escrow Acknowledged");
 			responseEnglish = "Escrow Acknowledged";
 		}
