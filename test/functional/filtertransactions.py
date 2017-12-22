@@ -142,12 +142,6 @@ class FilterTransactionsTest(ParticlTestFramework):
         self.stakeBlocks(1)
         self.sync_all()
 
-        ro = nodes[0].filtertransactions({'count': 1, 'category': 'send'})
-        assert(len(ro) == 1)
-        ro = nodes[0].filtertransactions({'type': 'blind'})
-        assert(len(ro) == 0)
-
-
         #
         # general
         #

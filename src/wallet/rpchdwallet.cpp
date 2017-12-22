@@ -3169,16 +3169,16 @@ UniValue filtertransactions(const JSONRPCRequest &request)
         const UniValue & options = request.params[0].get_obj();
         RPCTypeCheckObj(options,
             {
-                {"count",               UniValueType(UniValue::VNUM)},
-                {"skip",                UniValueType(UniValue::VNUM)},
-                {"include_watchonly",   UniValueType(UniValue::VBOOL)},
-                {"search",              UniValueType(UniValue::VSTR)},
-                {"category",            UniValueType(UniValue::VSTR)},
-                {"type",                UniValueType(UniValue::VSTR)},
-                {"sort",                UniValueType(UniValue::VSTR)}
+                {"count",             UniValueType(UniValue::VNUM)},
+                {"skip",              UniValueType(UniValue::VNUM)},
+                {"include_watchonly", UniValueType(UniValue::VBOOL)},
+                {"search",            UniValueType(UniValue::VSTR)},
+                {"category",          UniValueType(UniValue::VSTR)},
+                {"type",              UniValueType(UniValue::VSTR)},
+                {"sort",              UniValueType(UniValue::VSTR)}
             },
-            true,             // allow null
-            false             // strict
+            true, // allow null
+            false // strict
         );
         if (options.exists("count")) {
             int _count = options["count"].get_int();
@@ -3296,15 +3296,15 @@ UniValue filtertransactions(const JSONRPCRequest &request)
         int64_t txTime = pwtx->GetTxTime();
         if (txTime < timeFrom) break;
         if (txTime <= timeTo)
-        ParseOutputs(
-            transactions,
-            *pwtx,
-            pwallet,
-            watchonly,
-            search,
-            fWithReward,
-            vDevFundScripts
-        );
+            ParseOutputs(
+                transactions,
+                *pwtx,
+                pwallet,
+                watchonly,
+                search,
+                fWithReward,
+                vDevFundScripts
+            );
         tit++;
     }
 
@@ -3317,28 +3317,28 @@ UniValue filtertransactions(const JSONRPCRequest &request)
         int64_t txTime = rtx.GetTxTime();
         if (txTime < timeFrom) break;
         if (txTime <= timeTo)
-        ParseRecords(
-            transactions,
-            hash,
-            rtx,
-            pwallet,
-            watchonly,
-            search
-        );
+            ParseRecords(
+                transactions,
+                hash,
+                rtx,
+                pwallet,
+                watchonly,
+                search
+            );
         rit++;
     }
 
     // sort
     std::vector<UniValue> values = transactions.getValues();
     std::sort(values.begin(), values.end(), [sort] (UniValue a, UniValue b) -> bool {
-        double a_amount = a["category"].get_str() == "send"
-            ? -(a["amount"].get_real())
-            :   a["amount"].get_real();
-        double b_amount = b["category"].get_str() == "send"
-            ? -(b["amount"].get_real())
-            :   b["amount"].get_real();
         std::string a_address = getAddress(a);
         std::string b_address = getAddress(b);
+        double a_amount =   a["category"].get_str() == "send"
+                        ? -(a["amount"  ].get_real())
+                        :   a["amount"  ].get_real();
+        double b_amount =   b["category"].get_str() == "send"
+                        ? -(b["amount"  ].get_real())
+                        :   b["amount"  ].get_real();
         return (
               sort == "address"
                 ? a_address < b_address
@@ -3352,8 +3352,8 @@ UniValue filtertransactions(const JSONRPCRequest &request)
         );
     });
 
+    // filter, skip, count and sum
     CAmount nTotalAmount = 0, nTotalReward = 0;
-    // filter, skip and count
     UniValue result(UniValue::VARR);
     if (count == 0) {
         count = values.size();
