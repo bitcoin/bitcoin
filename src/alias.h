@@ -74,7 +74,7 @@ class CAliasUnprunable
         return !(a == b);
     }
 
-    inline void SetNull() { vchGUID.clear();}
+	inline void SetNull() { vchGUID.clear(); nExpireTime = 0; }
     inline bool IsNull() const { return (vchGUID.empty()); }
 };
 class COfferLinkWhitelistEntry {
@@ -109,7 +109,10 @@ public:
 		return !(a == b);
 	}
 
-	inline void SetNull() { aliasLinkVchRand.clear(); }
+	inline void SetNull() {
+		aliasLinkVchRand.clear(); 
+		nDiscountPct = 0;
+	}
 	inline bool IsNull() const { return (aliasLinkVchRand.empty()); }
 
 };
@@ -228,7 +231,7 @@ public:
 		offerWhitelist = b.offerWhitelist;
         return *this;
     }   
-	inline void SetNull() { vchAlias.clear();  }
+	inline void SetNull() { offerWhitelist.SetNull(); nAccessFlags = 2; vchAddress.clear(); vchEncryptionPublicKey.clear(); vchEncryptionPrivateKey.clear(); nAcceptTransferFlags = 3; nExpireTime = 0; vchGUID.clear(); vchAlias.clear(); txHash.SetNull(); nHeight = 0; vchPublicValue.clear(); }
     inline bool IsNull() const { return (vchAlias.empty()); }
 	bool UnserializeFromTx(const CTransaction &tx);
 	bool UnserializeFromData(const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash);
