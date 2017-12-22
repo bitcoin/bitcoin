@@ -105,18 +105,18 @@ uint64_t GetEscrowExpiration(const CEscrow& escrow) {
 	CAliasUnprunable aliasBuyerPrunable,aliasSellerPrunable,aliasArbiterPrunable;
 	if(paliasdb)
 	{
-		if (paliasdb->ReadAliasUnprunable(escrow.buyerAliasTuple.first, aliasBuyerPrunable) && aliasBuyerPrunable.IsNotNull())
+		if (paliasdb->ReadAliasUnprunable(escrow.buyerAliasTuple.first, aliasBuyerPrunable) && !aliasBuyerPrunable.IsNull())
 			nTime = aliasBuyerPrunable.nExpireTime;
 		// buyer is expired try seller
 		if(nTime <= chainActive.Tip()->GetMedianTimePast())
 		{
-			if (paliasdb->ReadAliasUnprunable(escrow.sellerAliasTuple.first, aliasSellerPrunable) && aliasSellerPrunable.IsNotNull())
+			if (paliasdb->ReadAliasUnprunable(escrow.sellerAliasTuple.first, aliasSellerPrunable) && !aliasSellerPrunable.IsNull())
 			{
 				nTime = aliasSellerPrunable.nExpireTime;
 				// seller is expired try the arbiter
 				if(nTime <= chainActive.Tip()->GetMedianTimePast())
 				{
-					if (paliasdb->ReadAliasUnprunable(escrow.arbiterAliasTuple.first, aliasArbiterPrunable) && aliasArbiterPrunable.IsNotNull())
+					if (paliasdb->ReadAliasUnprunable(escrow.arbiterAliasTuple.first, aliasArbiterPrunable) && !aliasArbiterPrunable.IsNull())
 						nTime = aliasArbiterPrunable.nExpireTime;
 				}
 			}
@@ -548,7 +548,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 			errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4002 - " + _("Escrow arguments incorrect size");
 			return error(errorMessage.c_str());
 		}
-		if(theEscrow.IsNotNull())
+		if(!theEscrow.IsNull())
 		{
 			if(vchHash != vvchArgs[1])
 			{
@@ -663,7 +663,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4017 - " + _("External payment missing transaction ID");
 					return error(errorMessage.c_str());
 				}
-				if(theEscrow.feedback.IsNotNull())
+				if(!theEscrow.feedback.IsNull())
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4018 - " + _("Cannot leave feedback in escrow activation");
 					return error(errorMessage.c_str());
@@ -692,7 +692,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4014 - " + _("Escrow Guid mismatch");
 					return error(errorMessage.c_str());
 				}
-				if (theEscrow.feedback.IsNotNull())
+				if (!theEscrow.feedback.IsNull())
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4018 - " + _("Cannot leave feedback in escrow bid");
 					return error(errorMessage.c_str());
@@ -702,7 +702,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4010 - " + _("Escrow witness missing in bid");
 					return error(errorMessage.c_str());
 				}
-				if(!theEscrow.offerTuple.IsNotNull())
+				if(theEscrow.offerTuple.IsNull())
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4010 - " + _("Escrow offer information missing in bid");
 					return error(errorMessage.c_str());
@@ -726,14 +726,14 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4014 - " + _("Escrow Guid mismatch");
 					return error(errorMessage.c_str());
 				}
-				if (theEscrow.feedback.IsNotNull())
+				if (!theEscrow.feedback.IsNull())
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4018 - " + _("Cannot leave feedback in escrow bid");
 					return error(errorMessage.c_str());
 				}
 				break;
 			case OP_ESCROW_RELEASE:
-				if(theEscrow.feedback.IsNotNull())
+				if(!theEscrow.feedback.IsNull())
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4020 - " + _("Cannot leave feedback in escrow release");
 					return error(errorMessage.c_str());
@@ -755,7 +755,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				}
 				break;
 			case OP_ESCROW_RELEASE_COMPLETE:
-				if (theEscrow.feedback.IsNotNull())
+				if (!theEscrow.feedback.IsNull())
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4020 - " + _("Cannot leave feedback in escrow release");
 					return error(errorMessage.c_str());
@@ -778,7 +778,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4024 - " + _("Invalid op, should be escrow complete");
 					return error(errorMessage.c_str());
 				}
-				if(!theEscrow.feedback.IsNotNull())
+				if(theEscrow.feedback.IsNull())
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4025 - " + _("Feedback must leave a message");
 					return error(errorMessage.c_str());
@@ -819,7 +819,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				}
 				
 				// Check input
-				if(theEscrow.feedback.IsNotNull())
+				if(!theEscrow.feedback.IsNull())
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4032 - " + _("Cannot leave feedback in escrow refund");
 					return error(errorMessage.c_str());
@@ -846,7 +846,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				}
 				
 				// Check input
-				if (theEscrow.feedback.IsNotNull())
+				if (!theEscrow.feedback.IsNull())
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4032 - " + _("Cannot leave feedback in escrow refund");
 					return error(errorMessage.c_str());
@@ -1042,7 +1042,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 						}
 						if (theEscrow.extTxId.IsNull())
 							nQty -= theEscrow.nQty;
-						if (myLinkOffer.IsNotNull())
+						if (!myLinkOffer.IsNull())
 						{
 							myLinkOffer.nQty = nQty;
 							myLinkOffer.nSold++;
@@ -1139,7 +1139,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 						{
 							if (theEscrow.extTxId.IsNull())
 								nQty += theEscrow.nQty;
-							if (myLinkOffer.IsNotNull())
+							if (!myLinkOffer.IsNull())
 							{
 								myLinkOffer.nQty = nQty;
 								myLinkOffer.nSold--;
@@ -1280,7 +1280,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 							}
 							if (theEscrow.extTxId.IsNull())
 								nQty -= theEscrow.nQty;
-							if (myLinkOffer.IsNotNull())
+							if (!myLinkOffer.IsNull())
 							{
 								myLinkOffer.nQty = nQty;
 								myLinkOffer.nSold++;
@@ -2827,7 +2827,7 @@ UniValue escrowinfo(const UniValue& params, bool fHelp) {
 }
 void BuildFeedbackJson(const CEscrow& escrow, UniValue& oFeedback) {
 	string sFeedbackTime;
-	if (!escrow.feedback.IsNotNull())
+	if (escrow.feedback.IsNull())
 		return;
 	if (chainActive.Height() >= escrow.nHeight) {
 		CBlockIndex *pindex = chainActive[escrow.nHeight];
@@ -2958,7 +2958,7 @@ void EscrowTxToJSON(const int op, const std::vector<unsigned char> &vchData, con
 	string opName = escrowFromOp(escrow.op);
 	if(escrow.bPaymentAck)
 		opName += "("+_("acknowledged")+")";
-	else if(escrow.feedback.IsNotNull())
+	else if(!escrow.feedback.IsNull())
 		opName += "("+_("feedback")+")";
 	entry.push_back(Pair("txtype", opName));
 	entry.push_back(Pair("_id", stringFromVch(escrow.vchEscrow)));
@@ -2966,6 +2966,6 @@ void EscrowTxToJSON(const int op, const std::vector<unsigned char> &vchData, con
 	if(escrow.bPaymentAck && escrow.bPaymentAck != dbEscrow.bPaymentAck)
 		entry.push_back(Pair("paymentacknowledge", escrow.bPaymentAck));
 
-	if(escrow.feedback.IsNotNull())
+	if(!escrow.feedback.IsNull())
 		entry.push_back(Pair("feedback",_("Escrow feedback was given")));
 }
