@@ -1,4 +1,4 @@
-#!bin/bash -ev
+#!/bin/bash -ev
 
 export CFLAGS=-I`pwd`/db4/include
 pushd src
