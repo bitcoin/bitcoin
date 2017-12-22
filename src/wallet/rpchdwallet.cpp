@@ -3112,7 +3112,7 @@ UniValue filtertransactions(const JSONRPCRequest &request)
             "\n"
             "        Expected values are as follows:\n"
             "                count:             number of transactions to be displayed\n"
-            "                                   (integer > 0)\n"
+            "                                   (integer >= 0, use 0 for unlimited)\n"
             "                skip:              number of transactions to skip\n"
             "                                   (integer >= 0)\n"
             "                include_watchonly: whether to include watchOnly transactions\n"
@@ -3182,7 +3182,7 @@ UniValue filtertransactions(const JSONRPCRequest &request)
         );
         if (options.exists("count")) {
             int _count = options["count"].get_int();
-            if (_count < 1) {
+            if (_count < 0) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER,
                     strprintf("Invalid count: %i.", _count));
             }
@@ -3355,8 +3355,11 @@ UniValue filtertransactions(const JSONRPCRequest &request)
     CAmount nTotalAmount = 0, nTotalReward = 0;
     // filter, skip and count
     UniValue result(UniValue::VARR);
+    if (count == 0) {
+        count = values.size();
+    }
     // for every value while count is positive
-    for (unsigned int i = 0; i < values.size() && count > 0; i++) {
+    for (unsigned int i = 0; i < values.size() && count != 0; i++) {
         // if value's category is relevant
         if (values[i]["category"].get_str() == category || category == "all") {
             // if value's type is not relevant
