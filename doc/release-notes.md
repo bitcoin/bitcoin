@@ -67,6 +67,14 @@ Due to a backward-incompatible change in the wallet database, wallets created
 with version 0.16.0 will be rejected by previous versions. Also, version 0.16.0
 will only create hierarchical deterministic (HD) wallets.
 
+Replace-By-Fee by default in GUI
+--------------------------------
+The send screen now uses BIP-125 RBF by default, regardless of `-walletrbf`.
+There is a checkbox to mark the transaction as final.
+
+The RPC default remains unchanged: to use RBF, launch with `-walletrbf=1` or
+use the `replaceable` argument for individual transactions.
+
 Custom wallet directories
 ---------------------
 The ability to specify a directory other than the default data directory in which to store
