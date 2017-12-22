@@ -1045,11 +1045,11 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	ExpireAlias("aliasexpire2");
 	AliasNew("node2", "aliasexpirednode2", "somedataa");
 	AliasNew("node1", "aliasexpire2", "somedatab");
-	// should pass: confirm that the transferring cert is good by transferring to a good alias
-	CertTransfer("node1", "node2", certgoodguid, "aliasexpirednode2");
+	// should fail:  transferring to a good alias but owner alias has expired and recreated (all services on old alias are now expired as a result even though alias was recreated, this is due to network pruning of expired services)
+	BOOST_CHECK_THROW(CallRPC("node1", "certtransfer " + certguid + " aliasexpirednode2 '' 2 '' false"), runtime_error);
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "certinfo " + certgoodguid));
-	// ensure it got transferred
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "alias").get_str(), "aliasexpirednode2");
+	// alias hasn't changed
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "alias").get_str(), "aliasexpire2");
 
 	ExpireAlias("aliasexpire2");
 	// should fail: generate a cert using expired alias
