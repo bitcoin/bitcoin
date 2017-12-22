@@ -1,15 +1,17 @@
+sudo: false
 language: cpp
-before_install:
-  - ./contrib/vagrant/dependencies-ubuntu.sh
-install: true
-sudo: required
-script:
-  - ./contrib/install_db4.sh `pwd`
-#flags arent being picked up, so need to link
-  - sudo ln -s `pwd`/db4/include /usr/local/include/bdb4.8
-  - sudo ln -s `pwd`/db4/lib/*.a /usr/local/lib
-  - ./autogen.sh
-  - ./configure --with-gui=qt5 
-  - make -j$(nproc)
-  - make check
-
+matrix:
+  include:
+      - os: linux
+        sudo: required
+        before_install:
+          - ./scripts/dependencies-ubuntu.sh
+        install: true
+        sudo: required
+        script:
+          - ./scripts/install-ubuntu.sh
+      - os: osx
+        before_script:
+          - ./scripts/dependencies-osx.sh 
+        script:
+          - ./scripts/install-osx.sh
