@@ -69,7 +69,7 @@ Build Bitcoin Core
     as well as the GUI (if Qt is found).
     You can disable the GUI build by passing `--without-gui` to `./configure`,
     and you can disable the wallet with `--disable-wallet`.
-    The defaut `--prefix` is `/usr/local`.
+    The default `--prefix` is `/usr/local`.
     Check the other options with `./configure --help`.
 
         ./autogen.sh
@@ -82,11 +82,11 @@ Build Bitcoin Core
 
 4.  Install the compiled software:
 
-	sudo make install
+        sudo make install
 
 5.  You can also create a .dmg that contains the .app bundle (optional):
 
-	sudo port install librsvg
+        sudo port install librsvg
         make deploy
 
 Running
