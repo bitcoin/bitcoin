@@ -26,7 +26,7 @@ files: []
 script: |
   WRAP_DIR=$HOME/wrapped
   HOSTS="i686-pc-linux-gnu x86_64-unknown-linux-gnu"
-  CONFIGFLAGS="--enable-glibc-back-compat --enable-reduce-exports --disable-bench --disable-gui-tests LDFLAGS=-static-libstdc++"
+  CONFIGFLAGS="--enable-glibc-back-compat --enable-reduce-exports --disable-bench --disable-gui-tests"
   FAKETIME_HOST_PROGS=""
   FAKETIME_PROGS="date ar ranlib nm strip objcopy"
   HOST_CFLAGS="-O2 -g"
