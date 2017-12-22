@@ -194,16 +194,29 @@ private:
     T* item_ptr(difference_type pos) { return is_direct() ? direct_ptr(pos) : indirect_ptr(pos); }
     const T* item_ptr(difference_type pos) const { return is_direct() ? direct_ptr(pos) : indirect_ptr(pos); }
 
+    void fill(T* dst, size_type count, const T& value) {
+        for (size_type i = 0; i < count; ++i) {
+            new(static_cast<void*>(dst + i)) T(value);
+        }
+    }
+
+    template<typename InputIterator>
+    void fill(T* dst, InputIterator first, InputIterator last) {
+        while (first != last) {
+            new(static_cast<void*>(dst)) T(*first);
+            ++dst;
+            ++first;
+        }
+    }
+
 public:
     void assign(size_type n, const T& val) {
         clear();
         if (capacity() < n) {
             change_capacity(n);
         }
-        while (size() < n) {
-            _size++;
-            new(static_cast<void*>(item_ptr(size() - 1))) T(val);
-        }
+        _size += n;
+        fill(item_ptr(0), n, val);
     }
 
     template<typename InputIterator>
@@ -213,11 +226,8 @@ public:
         if (capacity() < n) {
             change_capacity(n);
         }
-        while (first != last) {
-            _size++;
-            new(static_cast<void*>(item_ptr(size() - 1))) T(*first);
-            ++first;
-        }
+        _size += n;
+        fill(item_ptr(0), first, last);
     }
 
     prevector() : _size(0), _union{{}} {}
@@ -228,31 +238,23 @@ public:
 
     explicit prevector(size_type n, const T& val = T()) : _size(0) {
         change_capacity(n);
-        while (size() < n) {
-            _size++;
-            new(static_cast<void*>(item_ptr(size() - 1))) T(val);
-        }
+        _size += n;
+        fill(item_ptr(0), n, val);
     }
 
     template<typename InputIterator>
     prevector(InputIterator first, InputIterator last) : _size(0) {
         size_type n = last - first;
         change_capacity(n);
-        while (first != last) {
-            _size++;
-            new(static_cast<void*>(item_ptr(size() - 1))) T(*first);
-            ++first;
-        }
+        _size += n;
+        fill(item_ptr(0), first, last);
     }
 
     prevector(const prevector<N, T, Size, Diff>& other) : _size(0) {
-        change_capacity(other.size());
-        const_iterator it = other.begin();
-        while (it != other.end()) {
-            _size++;
-            new(static_cast<void*>(item_ptr(size() - 1))) T(*it);
-            ++it;
-        }
+        size_type n = other.size();
+        change_capacity(n);
+        _size += n;
+        fill(item_ptr(0), other.begin(),  other.end());
     }
 
     prevector(prevector<N, T, Size, Diff>&& other) : _size(0) {
@@ -263,14 +265,7 @@ public:
         if (&other == this) {
             return *this;
         }
-        resize(0);
-        change_capacity(other.size());
-        const_iterator it = other.begin();
-        while (it != other.end()) {
-            _size++;
-            new(static_cast<void*>(item_ptr(size() - 1))) T(*it);
-            ++it;
-        }
+        assign(other.begin(), other.end());
         return *this;
     }
 
@@ -314,15 +309,16 @@ public:
     }
 
     void resize(size_type new_size) {
-        if (size() > new_size) {
+        size_type cur_size = size();
+        if (cur_size > new_size) {
             erase(item_ptr(new_size), end());
         }
         if (new_size > capacity()) {
             change_capacity(new_size);
         }
-        while (size() < new_size) {
+        for (T* p = item_ptr(0); cur_size < new_size; cur_size++) {
             _size++;
-            new(static_cast<void*>(item_ptr(size() - 1))) T();
+            new(static_cast<void*>(p + cur_size)) T();
         }
     }
 
@@ -346,10 +342,11 @@ public:
         if (capacity() < new_size) {
             change_capacity(new_size + (new_size >> 1));
         }
-        memmove(item_ptr(p + 1), item_ptr(p), (size() - p) * sizeof(T));
+        T* ptr = item_ptr(p);
+        memmove(ptr + 1, ptr, (size() - p) * sizeof(T));
         _size++;
-        new(static_cast<void*>(item_ptr(p))) T(value);
-        return iterator(item_ptr(p));
+        new(static_cast<void*>(ptr)) T(value);
+        return iterator(ptr);
     }
 
     void insert(iterator pos, size_type count, const T& value) {
@@ -358,11 +355,10 @@ public:
         if (capacity() < new_size) {
             change_capacity(new_size + (new_size >> 1));
         }
-        memmove(item_ptr(p + count), item_ptr(p), (size() - p) * sizeof(T));
+        T* ptr = item_ptr(p);
+        memmove(ptr + count, ptr, (size() - p) * sizeof(T));
         _size += count;
-        for (size_type i = 0; i < count; i++) {
-            new(static_cast<void*>(item_ptr(p + i))) T(value);
-        }
+        fill(item_ptr(p), count, value);
     }
 
     template<typename InputIterator>
@@ -373,13 +369,10 @@ public:
         if (capacity() < new_size) {
             change_capacity(new_size + (new_size >> 1));
         }
-        memmove(item_ptr(p + count), item_ptr(p), (size() - p) * sizeof(T));
+        T* ptr = item_ptr(p);
+        memmove(ptr + count, ptr, (size() - p) * sizeof(T));
         _size += count;
-        while (first != last) {
-            new(static_cast<void*>(item_ptr(p))) T(*first);
-            ++p;
-            ++first;
-        }
+        fill(ptr, first, last);
     }
 
     iterator erase(iterator pos) {
