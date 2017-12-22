@@ -323,7 +323,7 @@ def start_node(i, dirname, extra_args=None, rpchost=None, timewait=None, binary=
     # Otherwise the whole test would be considered to be failed in such cases
     stderr = None
     if redirect_stderr:
-        stderr = subprocess.STDOUT
+        stderr = sys.stdout
 
     bitcoind_processes[i] = subprocess.Popen(args, stderr=stderr)
     if os.getenv("PYTHON_DEBUG", ""):
