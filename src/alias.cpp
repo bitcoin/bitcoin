@@ -297,7 +297,7 @@ int GetSyscoinTxVersion()
 	return SYSCOIN_TX_VERSION;
 }
 
-bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, string &errorMessage, bool dontaddtodb) {
+bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, string &errorMessage, bool &bDestCheckFailed, bool dontaddtodb) {
 	if (tx.IsCoinBase() && !fJustCheck && !dontaddtodb)
 	{
 		LogPrintf("*Trying to add alias in coinbase transaction, skipping...");
@@ -504,160 +504,153 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		bool theAliasNull = theAlias.IsNull();
 		if (op == OP_ALIAS_UPDATE)
 		{
-			bool dbAliasNull = dbAlias.IsNull();
-			
-			if (dbAliasNull) {
-				theAlias.SetNull();
-				theAliasNull = true;
-			}
-			if (!dbAliasNull)
+			CTxDestination aliasDest;
+			if (vvchPrevArgs.size() <= 0 || vvchPrevArgs[0] != vvchArgs[0] || vvchPrevArgs[1] != vvchArgs[1] || !pprevCoins.IsAvailable(prevOutputIndex) || !ExtractDestination(pprevCoins.vout[prevOutputIndex].scriptPubKey, aliasDest))
 			{
-				CTxDestination aliasDest;
-				if (vvchPrevArgs.size() <= 0 || vvchPrevArgs[0] != vvchArgs[0] || vvchPrevArgs[1] != vvchArgs[1] || !pprevCoins.IsAvailable(prevOutputIndex) || !ExtractDestination(pprevCoins.vout[prevOutputIndex].scriptPubKey, aliasDest))
-				{
-					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5020 - " + _("Cannot extract destination of alias input");
-					if (!theAliasNull)
-						theAlias = dbAlias;
-				}
+				errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5020 - " + _("Cannot extract destination of alias input");
+				if (!theAliasNull)
+					theAlias = dbAlias;
 				else
-				{
-					CSyscoinAddress prevaddy(aliasDest);
-					if (EncodeBase58(dbAlias.vchAddress) != prevaddy.ToString())
-					{
-						errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5021 - " + _("You are not the owner of this alias");
-						if (!theAliasNull)
-							theAlias = dbAlias;
-					}
-				}
-				if (dbAlias.vchGUID != vvchArgs[1] || dbAlias.vchAlias != vvchArgs[0])
-				{
-					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5022 - " + _("Cannot edit this alias, guid mismatch");
-					if (!theAliasNull)
-						theAlias = dbAlias;
-				}
-				if (!theAliasNull) {
-					COfferLinkWhitelist whiteList;
-					// if updating whitelist, we dont allow updating any alias details
-					if (theAlias.offerWhitelist.entries.size() > 0)
-					{
-						whiteList = theAlias.offerWhitelist;
-						theAlias = dbAlias;
-					}
-					else
-					{
-						// can't edit whitelist through aliasupdate
-						theAlias.offerWhitelist = dbAlias.offerWhitelist;
-						if (theAlias.vchPublicValue.empty())
-							theAlias.vchPublicValue = dbAlias.vchPublicValue;
-						if (theAlias.vchEncryptionPrivateKey.empty())
-							theAlias.vchEncryptionPrivateKey = dbAlias.vchEncryptionPrivateKey;
-						if (theAlias.vchEncryptionPublicKey.empty())
-							theAlias.vchEncryptionPublicKey = dbAlias.vchEncryptionPublicKey;
-						if (theAlias.nExpireTime == 0)
-							theAlias.nExpireTime = dbAlias.nExpireTime;
-						if (theAlias.vchAddress.empty())
-							theAlias.vchAddress = dbAlias.vchAddress;
-						else
-							newAddress = EncodeBase58(theAlias.vchAddress);
-						theAlias.vchGUID = dbAlias.vchGUID;
-						theAlias.vchAlias = dbAlias.vchAlias;
-						// if transfer
-						if (dbAlias.vchAddress != theAlias.vchAddress)
-						{
-							// make sure xfer to pubkey doesn't point to an alias already, otherwise don't assign pubkey to alias
-							// we want to avoid aliases with duplicate addresses
-							if (paliasdb->ExistsAddress(theAlias.vchAddress))
-							{
-								vector<unsigned char> vchMyAlias;
-								if (paliasdb->ReadAddress(theAlias.vchAddress, vchMyAlias) && !vchMyAlias.empty() && vchMyAlias != dbAlias.vchAlias)
-								{
-									CAliasIndex dbReadAlias;
-									// ensure that you block transferring only if the recv address has an active alias associated with it
-									if (GetAlias(vchMyAlias, dbReadAlias)) {
-										errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5026 - " + _("An alias already exists with that address, try another public key");
-										theAlias = dbAlias;
-									}
-								}
-							}
-							if (dbAlias.nAccessFlags < 2)
-							{
-								errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5026 - " + _("Cannot edit this alias. Insufficient privileges.");
-								theAlias = dbAlias;
-							}
-							// let old address be re-occupied by a new alias
-							if (!dontaddtodb && errorMessage.empty())
-							{
-								paliasdb->EraseAddress(dbAlias.vchAddress);
-							}
-						}
-						else
-						{
-							if (dbAlias.nAccessFlags < 1)
-							{
-errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5026 - " + _("Cannot edit this alias. It is view-only.");
-theAlias = dbAlias;
-							}
-						}
-						if (theAlias.nAccessFlags > dbAlias.nAccessFlags)
-						{
-							errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot modify for more lenient access. Only tighter access level can be granted.");
-							theAlias = dbAlias;
-						}
-					}
-
-
-					// if the txn whitelist entry exists (meaning we want to remove or add)
-					if (whiteList.entries.size() >= 1)
-					{
-						if (whiteList.entries.size() > 20)
-						{
-							errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1094 -" + _("Too many affiliates for this whitelist, maximum 20 entries allowed");
-							theAlias.offerWhitelist.SetNull();
-						}
-						// special case we use to remove all entries
-						else if (whiteList.entries.size() == 1 && whiteList.entries.begin()->second.nDiscountPct == 127)
-						{
-							if (theAlias.offerWhitelist.entries.empty())
-							{
-								errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1093 - " + _("Whitelist is already empty");
-							}
-							else
-								theAlias.offerWhitelist.SetNull();
-						}
-						else
-						{
-							for (auto const &it : whiteList.entries)
-							{
-								COfferLinkWhitelistEntry entry;
-								const COfferLinkWhitelistEntry& newEntry = it.second;
-								if (newEntry.nDiscountPct > 99) {
-									errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1094 -" + _("Whitelist discount must be between 0 and 99");
-									continue;
-								}
-								// the stored whitelist has this entry (and its the same) then we want to remove this entry
-								if (theAlias.offerWhitelist.GetLinkEntryByHash(newEntry.aliasLinkVchRand, entry) && newEntry == entry)
-								{
-									theAlias.offerWhitelist.RemoveWhitelistEntry(newEntry.aliasLinkVchRand);
-								}
-								// we want to add it to the whitelist
-								else
-								{
-									if (theAlias.offerWhitelist.entries.size() < 20)
-										theAlias.offerWhitelist.PutWhitelistEntry(newEntry);
-									else
-									{
-										errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1094 -" + _("Too many affiliates for this whitelist, maximum 20 entries allowed");
-									}
-								}
-							}
-						}
-					}
-				}
+					bDestCheckFailed = true;
 			}
 			else
 			{
-				errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5027 -" + _("Alias not found when trying to update");
-				return true;
+				CSyscoinAddress prevaddy(aliasDest);
+				if (EncodeBase58(dbAlias.vchAddress) != prevaddy.ToString())
+				{
+					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5021 - " + _("You are not the owner of this alias");
+					if (!theAliasNull)
+						theAlias = dbAlias;
+					else
+						bDestCheckFailed = true;
+				}
+			}
+
+			if (dbAlias.vchGUID != vvchArgs[1] || dbAlias.vchAlias != vvchArgs[0])
+			{
+				errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5022 - " + _("Cannot edit this alias, guid mismatch");
+				if (!theAliasNull)
+					theAlias = dbAlias;
+				else
+					bDestCheckFailed = true;
+			}
+			if (!theAliasNull) {
+				COfferLinkWhitelist whiteList;
+				// if updating whitelist, we dont allow updating any alias details
+				if (theAlias.offerWhitelist.entries.size() > 0)
+				{
+					whiteList = theAlias.offerWhitelist;
+					theAlias = dbAlias;
+				}
+				else
+				{
+					// can't edit whitelist through aliasupdate
+					theAlias.offerWhitelist = dbAlias.offerWhitelist;
+					if (theAlias.vchPublicValue.empty())
+						theAlias.vchPublicValue = dbAlias.vchPublicValue;
+					if (theAlias.vchEncryptionPrivateKey.empty())
+						theAlias.vchEncryptionPrivateKey = dbAlias.vchEncryptionPrivateKey;
+					if (theAlias.vchEncryptionPublicKey.empty())
+						theAlias.vchEncryptionPublicKey = dbAlias.vchEncryptionPublicKey;
+					if (theAlias.nExpireTime == 0)
+						theAlias.nExpireTime = dbAlias.nExpireTime;
+					if (theAlias.vchAddress.empty())
+						theAlias.vchAddress = dbAlias.vchAddress;
+					else
+						newAddress = EncodeBase58(theAlias.vchAddress);
+					theAlias.vchGUID = dbAlias.vchGUID;
+					theAlias.vchAlias = dbAlias.vchAlias;
+					// if transfer
+					if (dbAlias.vchAddress != theAlias.vchAddress)
+					{
+						// make sure xfer to pubkey doesn't point to an alias already, otherwise don't assign pubkey to alias
+						// we want to avoid aliases with duplicate addresses
+						if (paliasdb->ExistsAddress(theAlias.vchAddress))
+						{
+							vector<unsigned char> vchMyAlias;
+							if (paliasdb->ReadAddress(theAlias.vchAddress, vchMyAlias) && !vchMyAlias.empty() && vchMyAlias != dbAlias.vchAlias)
+							{
+								CAliasIndex dbReadAlias;
+								// ensure that you block transferring only if the recv address has an active alias associated with it
+								if (GetAlias(vchMyAlias, dbReadAlias)) {
+									errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5026 - " + _("An alias already exists with that address, try another public key");
+									theAlias = dbAlias;
+								}
+							}
+						}
+						if (dbAlias.nAccessFlags < 2)
+						{
+							errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5026 - " + _("Cannot edit this alias. Insufficient privileges.");
+							theAlias = dbAlias;
+						}
+						// let old address be re-occupied by a new alias
+						if (!dontaddtodb && errorMessage.empty())
+						{
+							paliasdb->EraseAddress(dbAlias.vchAddress);
+						}
+					}
+					else
+					{
+						if (dbAlias.nAccessFlags < 1)
+						{
+errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5026 - " + _("Cannot edit this alias. It is view-only.");
+theAlias = dbAlias;
+						}
+					}
+					if (theAlias.nAccessFlags > dbAlias.nAccessFlags)
+					{
+						errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot modify for more lenient access. Only tighter access level can be granted.");
+						theAlias = dbAlias;
+					}
+				}
+
+
+				// if the txn whitelist entry exists (meaning we want to remove or add)
+				if (whiteList.entries.size() >= 1)
+				{
+					if (whiteList.entries.size() > 20)
+					{
+						errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1094 -" + _("Too many affiliates for this whitelist, maximum 20 entries allowed");
+						theAlias.offerWhitelist.SetNull();
+					}
+					// special case we use to remove all entries
+					else if (whiteList.entries.size() == 1 && whiteList.entries.begin()->second.nDiscountPct == 127)
+					{
+						if (theAlias.offerWhitelist.entries.empty())
+						{
+							errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1093 - " + _("Whitelist is already empty");
+						}
+						else
+							theAlias.offerWhitelist.SetNull();
+					}
+					else
+					{
+						for (auto const &it : whiteList.entries)
+						{
+							COfferLinkWhitelistEntry entry;
+							const COfferLinkWhitelistEntry& newEntry = it.second;
+							if (newEntry.nDiscountPct > 99) {
+								errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1094 -" + _("Whitelist discount must be between 0 and 99");
+								continue;
+							}
+							// the stored whitelist has this entry (and its the same) then we want to remove this entry
+							if (theAlias.offerWhitelist.GetLinkEntryByHash(newEntry.aliasLinkVchRand, entry) && newEntry == entry)
+							{
+								theAlias.offerWhitelist.RemoveWhitelistEntry(newEntry.aliasLinkVchRand);
+							}
+							// we want to add it to the whitelist
+							else
+							{
+								if (theAlias.offerWhitelist.entries.size() < 20)
+									theAlias.offerWhitelist.PutWhitelistEntry(newEntry);
+								else
+								{
+									errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1094 -" + _("Too many affiliates for this whitelist, maximum 20 entries allowed");
+								}
+							}
+						}
+					}
+				}
 			}
 		}
 		else if (op == OP_ALIAS_ACTIVATE)

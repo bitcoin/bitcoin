@@ -553,15 +553,16 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight)
 	string errorMessage;
 	if (tx.nVersion == GetSyscoinTxVersion())
 	{
+		bool bDestCheckFailed = false;
 		bool good = true;
 		if (DecodeAliasTx(tx, op, nOut, vvchArgs))
 		{
 			errorMessage.clear();
-			good = CheckAliasInputs(tx, op, nOut, vvchArgs, fJustCheck, nHeight, errorMessage);
+			good = CheckAliasInputs(tx, op, nOut, vvchArgs, fJustCheck, nHeight, errorMessage, bDestCheckFailed);
 			if (fDebug && !errorMessage.empty())
 				LogPrintf("%s\n", errorMessage.c_str());
 		}
-		if (good && errorMessage.empty())
+		if (!bDestCheckFailed && good && errorMessage.empty())
 		{
 			if (DecodeCertTx(tx, op, nOut, vvchArgs))
 			{
