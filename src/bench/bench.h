@@ -9,6 +9,7 @@
 #include <limits>
 #include <map>
 #include <string>
+#include <vector>
 #include <chrono>
 
 #include <boost/preprocessor/cat.hpp>
@@ -32,64 +33,110 @@ static void CODE_TO_TIME(benchmark::State& state)
     ... do any cleanup needed...
 }
 
-BENCHMARK(CODE_TO_TIME);
+// default to running benchmark for 5000 iterations
+BENCHMARK(CODE_TO_TIME, 5000);
 
  */
- 
+
 namespace benchmark {
-    // In case high_resolution_clock is steady, prefer that, otherwise use steady_clock.
-    struct best_clock {
-        using hi_res_clock = std::chrono::high_resolution_clock;
-        using steady_clock = std::chrono::steady_clock;
-        using type = std::conditional<hi_res_clock::is_steady, hi_res_clock, steady_clock>::type;
-    };
-    using clock = best_clock::type;
-    using time_point = clock::time_point;
-    using duration = clock::duration;
+// In case high_resolution_clock is steady, prefer that, otherwise use steady_clock.
+struct best_clock {
+    using hi_res_clock = std::chrono::high_resolution_clock;
+    using steady_clock = std::chrono::steady_clock;
+    using type = std::conditional<hi_res_clock::is_steady, hi_res_clock, steady_clock>::type;
+};
+using clock = best_clock::type;
+using time_point = clock::time_point;
+using duration = clock::duration;
 
-    class State {
-        std::string name;
-        duration maxElapsed;
-        time_point beginTime, lastTime;
-        duration minTime, maxTime;
-        uint64_t count;
-        uint64_t countMask;
-        uint64_t beginCycles;
-        uint64_t lastCycles;
-        uint64_t minCycles;
-        uint64_t maxCycles;
-    public:
-        State(std::string _name, duration _maxElapsed) :
-            name(_name),
-            maxElapsed(_maxElapsed),
-            minTime(duration::max()),
-            maxTime(duration::zero()),
-            count(0),
-            countMask(1),
-            beginCycles(0),
-            lastCycles(0),
-            minCycles(std::numeric_limits<uint64_t>::max()),
-            maxCycles(std::numeric_limits<uint64_t>::min()) {
-        }
-        bool KeepRunning();
-    };
+class Printer;
 
-    typedef std::function<void(State&)> BenchFunction;
+class State
+{
+public:
+    std::string m_name;
+    uint64_t m_num_iters_left;
+    const uint64_t m_num_iters;
+    const uint64_t m_num_evals;
+    std::vector<double> m_elapsed_results;
+    time_point m_start_time;
 
-    class BenchRunner
+    bool UpdateTimer(time_point finish_time);
+
+    State(std::string name, uint64_t num_evals, double num_iters, Printer& printer) : m_name(name), m_num_iters_left(0), m_num_iters(num_iters), m_num_evals(num_evals)
     {
-        typedef std::map<std::string, BenchFunction> BenchmarkMap;
-        static BenchmarkMap &benchmarks();
+    }
 
-    public:
-        BenchRunner(std::string name, BenchFunction func);
+    inline bool KeepRunning()
+    {
+        if (m_num_iters_left--) {
+            return true;
+        }
 
-        static void RunAll(duration elapsedTimeForOne = std::chrono::seconds(1));
+        bool result = UpdateTimer(clock::now());
+        // measure again so runtime of UpdateTimer is not included
+        m_start_time = clock::now();
+        return result;
+    }
+};
+
+typedef std::function<void(State&)> BenchFunction;
+
+class BenchRunner
+{
+    struct Bench {
+        BenchFunction func;
+        uint64_t num_iters_for_one_second;
     };
+    typedef std::map<std::string, Bench> BenchmarkMap;
+    static BenchmarkMap& benchmarks();
+
+public:
+    BenchRunner(std::string name, BenchFunction func, uint64_t num_iters_for_one_second);
+
+    static void RunAll(Printer& printer, uint64_t num_evals, double scaling, const std::string& filter, bool is_list_only);
+};
+
+// interface to output benchmark results.
+class Printer
+{
+public:
+    virtual ~Printer() {}
+    virtual void header() = 0;
+    virtual void result(const State& state) = 0;
+    virtual void footer() = 0;
+};
+
+// default printer to console, shows min, max, median.
+class ConsolePrinter : public Printer
+{
+public:
+    void header();
+    void result(const State& state);
+    void footer();
+};
+
+// creates box plot with plotly.js
+class PlotlyPrinter : public Printer
+{
+public:
+    PlotlyPrinter(std::string plotly_url, int64_t width, int64_t height);
+    void header();
+    void result(const State& state);
+    void footer();
+
+private:
+    std::string m_plotly_url;
+    int64_t m_width;
+    int64_t m_height;
+};
 }
 
-// BENCHMARK(foo) expands to:  benchmark::BenchRunner bench_11foo("foo", foo);
-#define BENCHMARK(n) \
-    benchmark::BenchRunner BOOST_PP_CAT(bench_, BOOST_PP_CAT(__LINE__, n))(BOOST_PP_STRINGIZE(n), n);
+
+// BENCHMARK(foo, num_iters_for_one_second) expands to:  benchmark::BenchRunner bench_11foo("foo", num_iterations);
+// Choose a num_iters_for_one_second that takes roughly 1 second. The goal is that all benchmarks should take approximately
+// the same time, and scaling factor can be used that the total time is appropriate for your system.
+#define BENCHMARK(n, num_iters_for_one_second) \
+    benchmark::BenchRunner BOOST_PP_CAT(bench_, BOOST_PP_CAT(__LINE__, n))(BOOST_PP_STRINGIZE(n), n, (num_iters_for_one_second));
 
 #endif // BITCOIN_BENCH_BENCH_H
