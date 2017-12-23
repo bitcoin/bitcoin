@@ -333,7 +333,7 @@ UniValue createrawtransaction(const JSONRPCRequest& request)
             "2. \"outputs\"               (object, required) a json object with outputs\n"
             "    {\n"
             "      \"address\": x.xxx,    (numeric or string, required) The key is the bitcoin address, the numeric value (can be string) is the " + CURRENCY_UNIT + " amount\n"
-            "      \"data\": \"hex\"      (string, required) The key is \"data\", the value is hex encoded data\n"
+            "      \"data\": \"hex\"      (string, optional) The key is \"data\", the value is hex encoded data\n"
             "      ,...\n"
             "    }\n"
             "3. locktime                  (numeric, optional, default=0) Raw locktime. Non-0 value also locktime-activates inputs\n"
