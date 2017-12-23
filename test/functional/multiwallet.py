@@ -71,7 +71,7 @@ class MultiWalletTest(BitcoinTestFramework):
         competing_wallet_dir = os.path.join(self.options.tmpdir, 'competing_walletdir')
         os.mkdir(competing_wallet_dir)
         self.restart_node(0, ['-walletdir='+competing_wallet_dir])
-        self.assert_start_raises_init_error(1, ['-walletdir='+competing_wallet_dir], 'Cannot obtain a lock on wallet directory')
+        self.assert_start_raises_init_error(1, ['-walletdir='+competing_wallet_dir], 'Error initializing wallet database environment')
 
         self.restart_node(0, self.extra_args[0])
 
