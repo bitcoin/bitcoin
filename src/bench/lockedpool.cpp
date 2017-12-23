@@ -43,5 +43,4 @@ static void BenchLockedPool(benchmark::State& state)
     addr.clear();
 }
 
-BENCHMARK(BenchLockedPool);
-
+BENCHMARK(BenchLockedPool, 530);
