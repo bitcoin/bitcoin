@@ -128,23 +128,29 @@ void CCertDB::WriteCertIndex(const CCert& cert, const int& op) {
 void CCertDB::WriteCertIndexHistory(const CCert& cert, const int &op) {
 	if (!certhistory_collection)
 		return;
+
 	bson_error_t error;
-	bson_t *insert = NULL;
+	bson_t *update = NULL;
+	bson_t *selector = NULL;
 	mongoc_write_concern_t* write_concern = NULL;
 	UniValue oName(UniValue::VOBJ);
+
+	mongoc_update_flags_t update_flags;
+	update_flags = (mongoc_update_flags_t)(MONGOC_UPDATE_NO_VALIDATE | MONGOC_UPDATE_UPSERT);
+	selector = BCON_NEW("_id", BCON_UTF8(stringFromVch(cert.txHash.GetHex()).c_str()));
 	write_concern = mongoc_write_concern_new();
 	mongoc_write_concern_set_w(write_concern, MONGOC_WRITE_CONCERN_W_UNACKNOWLEDGED);
-
 	if (BuildCertIndexerHistoryJson(cert, oName)) {
 		oName.push_back(Pair("op", certFromOp(op)));
-		insert = bson_new_from_json((unsigned char *)oName.write().c_str(), -1, &error);
-		if (!insert || !mongoc_collection_insert(certhistory_collection, (mongoc_insert_flags_t)MONGOC_INSERT_NO_VALIDATE, insert, write_concern, &error)) {
+		update = bson_new_from_json((unsigned char *)oName.write().c_str(), -1, &error);
+		if (!update || !mongoc_collection_update(certhistory_collection, update_flags, selector, update, write_concern, &error)) {
 			LogPrintf("MONGODB CERT HISTORY ERROR: %s\n", error.message);
 		}
 	}
-
-	if (insert)
-		bson_destroy(insert);
+	if (update)
+		bson_destroy(update);
+	if (selector)
+		bson_destroy(selector);
 	if (write_concern)
 		mongoc_write_concern_destroy(write_concern);
 }

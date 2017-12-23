@@ -1658,23 +1658,28 @@ void CAliasDB::WriteAliasIndexHistory(const CAliasIndex& alias, const int &op) {
 	if (!aliashistory_collection)
 		return;
 	bson_error_t error;
-	bson_t *insert = NULL;
+	bson_t *update = NULL;
+	bson_t *selector = NULL;
 	mongoc_write_concern_t* write_concern = NULL;
 	UniValue oName(UniValue::VOBJ);
-	
+	mongoc_update_flags_t update_flags;
+	update_flags = (mongoc_update_flags_t)(MONGOC_UPDATE_NO_VALIDATE | MONGOC_UPDATE_UPSERT);
+	selector = BCON_NEW("_id", BCON_UTF8(stringFromVch(alias.txHash.GetHex()).c_str()));
 	write_concern = mongoc_write_concern_new();
 	mongoc_write_concern_set_w(write_concern, MONGOC_WRITE_CONCERN_W_UNACKNOWLEDGED);
 	BuildAliasIndexerHistoryJson(alias, oName);
 	oName.push_back(Pair("op", aliasFromOp(op)));
-	insert = bson_new_from_json((unsigned char *)oName.write().c_str(), -1, &error);
-	if (!insert || !mongoc_collection_insert(aliashistory_collection, (mongoc_insert_flags_t)MONGOC_INSERT_NO_VALIDATE, insert, write_concern, &error)) {
+	update = bson_new_from_json((unsigned char *)oName.write().c_str(), -1, &error);
+	if (!update || !mongoc_collection_update(aliashistory_collection, update_flags, selector, update, write_concern, &error)) {
 		LogPrintf("MONGODB ALIAS HISTORY ERROR: %s\n", error.message);
 	}
-
-	if (insert)
-		bson_destroy(insert);
+	if (update)
+		bson_destroy(update);
+	if (selector)
+		bson_destroy(selector);
 	if (write_concern)
 		mongoc_write_concern_destroy(write_concern);
+
 }
 void CAliasDB::EraseAliasIndexHistory(const std::vector<unsigned char>& vchAlias, bool cleanup) {
 	bson_error_t error;
@@ -1735,19 +1740,24 @@ void CAliasDB::WriteAliasIndexTxHistory(const string &user1, const string &user2
 	if (!aliastxhistory_collection)
 		return;
 	bson_error_t error;
-	bson_t *insert = NULL;
+	bson_t *update = NULL;
+	bson_t *selector = NULL;
 	mongoc_write_concern_t* write_concern = NULL;
 	UniValue oName(UniValue::VOBJ);
 	write_concern = mongoc_write_concern_new();
+	selector = BCON_NEW("_id", BCON_UTF8(stringFromVch(txHash.GetHex()).c_str()));
 	mongoc_write_concern_set_w(write_concern, MONGOC_WRITE_CONCERN_W_UNACKNOWLEDGED);
+	mongoc_update_flags_t update_flags;
+	update_flags = (mongoc_update_flags_t)(MONGOC_UPDATE_NO_VALIDATE | MONGOC_UPDATE_UPSERT);
 	BuildAliasIndexerTxHistoryJson(user1, user2, user3, txHash, nHeight, type, guid, oName);
-	insert = bson_new_from_json((unsigned char *)oName.write().c_str(), -1, &error);
-	if (!insert || !mongoc_collection_insert(aliastxhistory_collection, (mongoc_insert_flags_t)MONGOC_INSERT_NO_VALIDATE, insert, write_concern, &error)) {
+	update = bson_new_from_json((unsigned char *)oName.write().c_str(), -1, &error);
+	if (!update || !mongoc_collection_update(aliastxhistory_collection, update_flags, selector, update, write_concern, &error)) {
 		LogPrintf("MONGODB ALIAS TX HISTORY ERROR: %s\n", error.message);
 	}
-
-	if (insert)
-		bson_destroy(insert);
+	if (selector)
+		bson_destroy(selector);
+	if (update)
+		bson_destroy(update);
 	if (write_concern)
 		mongoc_write_concern_destroy(write_concern);
 }

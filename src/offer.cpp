@@ -1234,34 +1234,32 @@ void COfferDB::WriteOfferIndex(const COffer& offer, const int &op) {
 	WriteOfferIndexHistory(offer, op);
 }
 void COfferDB::WriteOfferIndexHistory(const COffer& offer, const int &op) {
+
 	if (!offerhistory_collection)
 		return;
 	bson_error_t error;
-	bson_t *insert = NULL;
+	bson_t *update = NULL;
+	bson_t *selector = NULL;
 	mongoc_write_concern_t* write_concern = NULL;
 	UniValue oName(UniValue::VOBJ);
-	string serviceFromOp = "";
-	if (IsEscrowOp(op))
-		serviceFromOp = escrowFromOp(op);
-	else if (IsOfferOp(op))
-		serviceFromOp = offerFromOp(op);
-
-	
+	mongoc_update_flags_t update_flags;
+	update_flags = (mongoc_update_flags_t)(MONGOC_UPDATE_NO_VALIDATE | MONGOC_UPDATE_UPSERT);
+	selector = BCON_NEW("_id", BCON_UTF8(stringFromVch(offer.txHash.GetHex()).c_str()));
 	write_concern = mongoc_write_concern_new();
 	mongoc_write_concern_set_w(write_concern, MONGOC_WRITE_CONCERN_W_UNACKNOWLEDGED);
-
 	if (BuildOfferIndexerHistoryJson(offer, oName)) {
-		oName.push_back(Pair("op", serviceFromOp));
-		insert = bson_new_from_json((unsigned char *)oName.write().c_str(), -1, &error);
-		if (!insert || !mongoc_collection_insert(offerhistory_collection, (mongoc_insert_flags_t)MONGOC_INSERT_NO_VALIDATE, insert, write_concern, &error)) {
+		update = bson_new_from_json((unsigned char *)oName.write().c_str(), -1, &error);
+		if (!update || !mongoc_collection_update(offerhistory_collection, update_flags, selector, update, write_concern, &error)) {
 			LogPrintf("MONGODB OFFER HISTORY ERROR: %s\n", error.message);
 		}
 	}
-
-	if (insert)
-		bson_destroy(insert);
+	if (update)
+		bson_destroy(update);
+	if (selector)
+		bson_destroy(selector);
 	if (write_concern)
 		mongoc_write_concern_destroy(write_concern);
+
 }
 void COfferDB::EraseOfferIndexHistory(const std::vector<unsigned char>& vchOffer, bool cleanup) {
 	bson_error_t error;
