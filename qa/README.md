@@ -1,7 +1,7 @@
 The [pull-tester](/qa/pull-tester/) folder contains a script to call
 multiple tests from the [rpc-tests](/qa/rpc-tests/) folder.
 
-Every pull request to the bitcoin repository is built and run through
+Every pull request to the blockcash/blockcash repository is built and run through
 the regression test suite. You can also run all or only individual
 tests locally.
 
@@ -11,9 +11,10 @@ Before running the tests, the following must be installed.
 
 Unix
 ----
-The python3-zmq library is required. On Ubuntu or Debian it can be installed via:
+python3-zmq` and `litecoin_scrypt` are required. On Ubuntu or Debian they can be installed via:
 ```
 sudo apt-get install python3-zmq
+pip3 install litecoin_scrypt
 ```
 
 OS X
@@ -50,9 +51,9 @@ Possible options, which apply to each individual test run:
 
 ```
   -h, --help            show this help message and exit
-  --nocleanup           Leave bitcoinds and test.* datadir on exit or error
-  --noshutdown          Don't stop bitcoinds after the test execution
-  --srcdir=SRCDIR       Source directory containing bitcoind/bitcoin-cli
+  --nocleanup           Leave blockcashds and test.* datadir on exit or error
+  --noshutdown          Don't stop blockcashds after the test execution
+  --srcdir=SRCDIR       Source directory containing blockcashd/blockcash-cli
                         (default: ../../src)
   --tmpdir=TMPDIR       Root directory for datadirs
   --tracerpc            Print out all RPC calls as they are made
@@ -77,7 +78,7 @@ to recover with:
 
 ```bash
 rm -rf cache
-killall bitcoind
+killall blockcashd
 ```
 
 Writing tests

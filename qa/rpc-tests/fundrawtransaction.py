@@ -186,7 +186,12 @@ class RawTransactionsTest(BitcoinTestFramework):
         dec_tx  = self.nodes[2].decoderawtransaction(rawtx)
         assert_equal(utx['txid'], dec_tx['vin'][0]['txid'])
 
-        assert_raises_jsonrpc(-3, "Unexpected key foo", self.nodes[2].fundrawtransaction, rawtx, {'foo':'bar'})
+        try:
+            self.nodes[2].fundrawtransaction(rawtx, {'foo': 'bar'})
+            raise AssertionError("Accepted invalid option foo")
+        except JSONRPCException as e:
+            assert("Unexpected key foo" in e.error['message'])
+
 
         ############################################################
         # test a fundrawtransaction with an invalid change address #
@@ -199,7 +204,12 @@ class RawTransactionsTest(BitcoinTestFramework):
         dec_tx  = self.nodes[2].decoderawtransaction(rawtx)
         assert_equal(utx['txid'], dec_tx['vin'][0]['txid'])
 
-        assert_raises_jsonrpc(-5, "changeAddress must be a valid bitcoin address", self.nodes[2].fundrawtransaction, rawtx, {'changeAddress':'foobar'})
+        try:
+            self.nodes[2].fundrawtransaction(rawtx, {'changeAddress': 'foobar'})
+            raise AssertionError("Accepted invalid litecoin address")
+        except JSONRPCException as e:
+            assert("changeAddress must be a valid litecoin address" in e.error['message'])
+
 
         ############################################################
         # test a fundrawtransaction with a provided change address #
@@ -213,7 +223,12 @@ class RawTransactionsTest(BitcoinTestFramework):
         assert_equal(utx['txid'], dec_tx['vin'][0]['txid'])
 
         change = self.nodes[2].getnewaddress()
-        assert_raises_jsonrpc(-8, "changePosition out of bounds", self.nodes[2].fundrawtransaction, rawtx, {'changeAddress':change, 'changePosition':2})
+        try:
+            rawtxfund = self.nodes[2].fundrawtransaction(rawtx, {'changeAddress': change, 'changePosition': 2})
+        except JSONRPCException as e:
+            assert('changePosition out of bounds' == e.error['message'])
+        else:
+            assert(False)
         rawtxfund = self.nodes[2].fundrawtransaction(rawtx, {'changeAddress': change, 'changePosition': 0})
         dec_tx  = self.nodes[2].decoderawtransaction(rawtxfund['hex'])
         out = dec_tx['vout'][0]
@@ -322,7 +337,12 @@ class RawTransactionsTest(BitcoinTestFramework):
         rawtx   = self.nodes[2].createrawtransaction(inputs, outputs)
         dec_tx  = self.nodes[2].decoderawtransaction(rawtx)
 
-        assert_raises_jsonrpc(-4, "Insufficient funds", self.nodes[2].fundrawtransaction, rawtx)
+        try:
+            rawtxfund = self.nodes[2].fundrawtransaction(rawtx)
+            raise AssertionError("Spent more than available")
+        except JSONRPCException as e:
+            assert("Insufficient" in e.error['message'])
+
 
         ############################################################
         #compare fee of a standard pubkeyhash transaction
@@ -478,13 +498,21 @@ class RawTransactionsTest(BitcoinTestFramework):
         rawTx = self.nodes[1].createrawtransaction(inputs, outputs)
         # fund a transaction that requires a new key for the change output
         # creating the key must be impossible because the wallet is locked
-        assert_raises_jsonrpc(-4, "Insufficient funds", self.nodes[1].fundrawtransaction, rawtx)
+        try:
+            fundedTx = self.nodes[1].fundrawtransaction(rawTx)
+            raise AssertionError("Wallet unlocked without passphrase")
+        except JSONRPCException as e:
+            assert('Keypool ran out' in e.error['message'])
 
         #refill the keypool
         self.nodes[1].walletpassphrase("test", 100)
         self.nodes[1].walletlock()
 
-        assert_raises_jsonrpc(-13, "walletpassphrase", self.nodes[1].sendtoaddress, self.nodes[0].getnewaddress(), 1.2)
+        try:
+            self.nodes[1].sendtoaddress(self.nodes[0].getnewaddress(), 1.2)
+            raise AssertionError("Wallet unlocked without passphrase")
+        except JSONRPCException as e:
+            assert('walletpassphrase' in e.error['message'])
 
         oldBalance = self.nodes[0].getbalance()
 
