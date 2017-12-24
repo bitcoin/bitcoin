@@ -659,8 +659,8 @@ UniValue getblockheader(const JSONRPCRequest& request)
             "\nResult (for verbose=false):\n"
             "\"data\"             (string) A string that is serialized, hex-encoded data for block 'hash'.\n"
             "\nExamples:\n"
-            + HelpExampleCli("getblockheader", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\"")
-            + HelpExampleRpc("getblockheader", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\"")
+            + HelpExampleCli("getblockheader", "\"0\"")
+            + HelpExampleRpc("getblockheader", "\"0\"")
         );
 
     LOCK(cs_main);
@@ -725,8 +725,8 @@ UniValue getblock(const JSONRPCRequest& request)
             "\nResult (for verbose=false):\n"
             "\"data\"             (string) A string that is serialized, hex-encoded data for block 'hash'.\n"
             "\nExamples:\n"
-            + HelpExampleCli("getblock", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\"")
-            + HelpExampleRpc("getblock", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\"")
+            + HelpExampleCli("getblock", "\"0\"")
+            + HelpExampleRpc("getblock", "\"0\"")
         );
 
     LOCK(cs_main);
@@ -929,8 +929,8 @@ UniValue gettxout(const JSONRPCRequest& request)
             "     \"hex\" : \"hex\",        (string) \n"
             "     \"reqSigs\" : n,          (numeric) Number of required signatures\n"
             "     \"type\" : \"pubkeyhash\", (string) The type, eg pubkeyhash\n"
-            "     \"addresses\" : [          (array of string) array of bitcoin addresses\n"
-            "        \"address\"     (string) bitcoin address\n"
+            "     \"addresses\" : [          (array of string) array of blockcash addresses\n"
+            "        \"address\"     (string) blockcash address\n"
             "        ,...\n"
             "     ]\n"
             "  },\n"
