@@ -497,15 +497,25 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 	}
 
     if (!fJustCheck ) {
-		if(op != OP_CERT_ACTIVATE) 
+		// if not an certnew, load the cert data from the DB
+		CCert dbCert;
+		if (!GetCert(vvchArgs[0], dbCert))
 		{
-			// if not an certnew, load the cert data from the DB
-			CCert dbCert;
-			if(!GetCert(vvchArgs[0], dbCert))
-			{
+			if (op != OP_CERT_ACTIVATE) {
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2022 - " + _("Failed to read from certificate DB");
 				return true;
 			}
+		}
+		else
+		{
+			if (dbCert.nHeight >= nHeight)
+			{
+				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Certificate was already updated in this block.");
+				return true;
+			}
+		}
+		if(op != OP_CERT_ACTIVATE) 
+		{
 			if (dbCert.aliasTuple != theCert.aliasTuple)
 			{
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot update this certificate. Certificate owner must sign off on this change.");

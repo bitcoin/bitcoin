@@ -543,6 +543,11 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					bDestCheckFailed = true;
 			}
 			if (!theAliasNull) {
+				if (dbAlias.nHeight >= nHeight)
+				{
+					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Alias was already updated in this block.");
+					return true;
+				}
 				COfferLinkWhitelist whiteList;
 				// if updating whitelist, we dont allow updating any alias details
 				if (theAlias.offerWhitelist.entries.size() > 0)

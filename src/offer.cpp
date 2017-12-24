@@ -569,14 +569,23 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 
 	if (!fJustCheck ) {
 		COffer dbOffer;
-		if (op == OP_OFFER_UPDATE) {
-			// load the offer data from the DB
-			if (!GetOffer(vvchArgs[0], dbOffer))
-			{
+		// load the offer data from the DB
+		if (!GetOffer(vvchArgs[0], dbOffer))
+		{
+			if (op == OP_OFFER_UPDATE) {
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1048 - " + _("Failed to read from offer DB");
 				return true;
 			}
-
+		}
+		else
+		{
+			if (dbOffer.nHeight >= nHeight)
+			{
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Offer was already updated in this block.");
+				return true;
+			}
+		}
+		if (op == OP_OFFER_UPDATE) {
 			if (dbOffer.aliasTuple != theOffer.aliasTuple)
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot edit this offer. Offer owner must sign off on this change.");

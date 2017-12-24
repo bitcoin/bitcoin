@@ -901,16 +901,26 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				}
 			}
 		}
+		if (!GetEscrow(vvchArgs[0], theEscrow))
+		{
+			if (op != OP_ESCROW_ACTIVATE) {
+				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4037 - " + _("Failed to read from escrow DB");
+				return true;
+			}
+		}
+		else
+		{
+			if (theEscrow.nHeight >= nHeight)
+			{
+				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Escrow was already updated in this block.");
+				return true;
+			}
+		}
 		// make sure escrow settings don't change (besides scriptSigs/nTotal's) outside of activation
 		if (op != OP_ESCROW_ACTIVATE)
 		{
 			// save serialized escrow for later use
 			CEscrow serializedEscrow = theEscrow;
-			if (!GetEscrow(vvchArgs[0], theEscrow))
-			{
-				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4037 - " + _("Failed to read from escrow DB");
-				return true;
-			}
 			if (serializedEscrow.buyerAliasTuple != theEscrow.buyerAliasTuple ||
 				serializedEscrow.arbiterAliasTuple != theEscrow.arbiterAliasTuple ||
 				serializedEscrow.sellerAliasTuple != theEscrow.sellerAliasTuple)

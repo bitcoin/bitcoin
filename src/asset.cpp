@@ -529,15 +529,24 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	}
 
     if (!fJustCheck ) {
-		if(op != OP_ASSET_ACTIVATE) 
+		CAsset dbAsset;
+		if (!GetAsset(vvchArgs[0], dbAsset))
 		{
-			// if not an assetnew, load the asset data from the DB
-			CAsset dbAsset;
-			if(!GetAsset(vvchArgs[0], dbAsset))
-			{
+			if (op != OP_ASSET_ACTIVATE) {
 				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2022 - " + _("Failed to read from asset DB");
 				return true;
 			}
+		}
+		else
+		{
+			if (dbAsset.nHeight >= nHeight)
+			{
+				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Asset was already updated in this block.");
+				return true;
+			}
+		}
+		if(op != OP_ASSET_ACTIVATE) 
+		{
 			if(op == OP_ASSET_SEND && dbAsset.prevOut != theAsset.prevOut)
 			{
 				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2022 - " + _("Asset previous outpoint does not match provided outpoint");
