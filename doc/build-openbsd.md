@@ -56,7 +56,7 @@ This can be disabled with `./configure --disable-wallet`.
 Bitcoin Core requires Berkeley DB 4.8,
 but the OpenBSD ports only have version 4.6.
 To help you build 4.8 yourself, you can use
-[the installation script included in contrib/](contrib/install_db4.sh):
+[the installation script included in contrib/](../contrib/install_db4.sh):
 
 ```
 ./contrib/install_db4.sh `pwd` CC=egcc CXX=eg++ CPP=ecpp
