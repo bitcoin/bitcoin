@@ -1085,7 +1085,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 						{
 							dbOffer.nQty = nQty;
 							dbOffer.nSold++;
-							if (!dontaddtodb && !pofferdb->WriteOffer(dbOffer, dbOfferOriginal, op, bInstantSend)
+							if (!dontaddtodb && !pofferdb->WriteOffer(dbOffer, dbOfferOriginal, op, bInstantSend))
 							{
 								errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4076 - " + _("Failed to write to offer to DB");
 								return error(errorMessage.c_str());
