@@ -165,7 +165,7 @@ public:
     bool WriteAsset(const CAsset& asset, const CAsset& prevAsset, const int &op, const bool& bInstantSend) {
 		bool writeState = WriteAssetLastTXID(asset.vchAsset, asset.txHash) && Write(make_pair(std::string("asseti"), CNameTXIDTuple(asset.vchAsset, asset.txHash)), asset);
 		if (!bInstantSend && !prevAsset.IsNull())
-			writeState = writeState && Write(make_pair(std::string("assetp"), asset.vchAsset, prevAsset));
+			writeState = writeState && Write(make_pair(std::string("assetp"), asset.vchAsset, prevAsset)));
 		WriteAssetIndex(asset, op);
         return writeState;
     }
