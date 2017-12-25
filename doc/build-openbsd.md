@@ -1,13 +1,11 @@
-OpenBSD build guide
-===================
+#### OpenBSD build guide
 
 This guide describes how to build Bitcoin Core on OpenBSD.
 It has been tested on OpenBSD-current/amd64 as of Dec 25, 2017.
 
 ### Preparations
 
-The compiler
-------------
+## The compiler
 
 On some platforms, the system compiler that comes with OpenBSD is clang 5.0.0,
 which compiles C++11 just fine. On these system, `c++` is `clang++`
@@ -37,8 +35,7 @@ it gets installed as `egcc` and `eg++` in `/usr/local/bin`.
 Similarly, you can install clang with `pkg_add -i llvm`.
 
 /*
-Resource limits
----------------
+## Resource limits
 
 The ulimit restrictions in OpenBSD on some platfroms
 can be too restrictive to compile some `.cpp` files in the project,
@@ -49,8 +46,7 @@ Check the `datasize-cur` and `datasize-max` restrictions in `/etc/login.conf`
 for your login group. Note that you will need to re-login for the change to take effect.
 */
 
-Dependencies
-------------
+## Dependencies
 
 Run the following as root to install the dependencies:
 Note that the OpenBSD package of Berkeley DB is version 4.6,
@@ -64,8 +60,7 @@ while Bitcoin Core requires version 4.8 to build the wallet.
 # pkg_add git
 ```
 
-BerkeleyDB
-----------
+## BerkeleyDB
 
 BerkeleyDB is only needed for the wallet functionality.
 This can be disabled with `./configure --disable-wallet`.
@@ -79,8 +74,7 @@ If you have to build it yourself, you can use
 ./contrib/install_db4.sh `pwd` CC=egcc CXX=eg++ CPP=ecpp
 ```
 
-The source
-----------
+## The source
 
 Clone the Bitcoin Core github repository:
 
