@@ -334,7 +334,7 @@ bool RemoveAssetScriptPrefix(const CScript& scriptIn, CScript& scriptOut) {
 }
 
 bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs,
-        bool fJustCheck, int nHeight, string &errorMessage, bool dontaddtodb) {
+        bool fJustCheck, int nHeight, string &errorMessage, bool bInstantSend, bool dontaddtodb) {
 	if (tx.IsCoinBase() && !fJustCheck && !dontaddtodb)
 	{
 		LogPrintf("*Trying to add asset in coinbase transaction, skipping...");
@@ -598,9 +598,10 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
         // set the asset's txn-dependent values
 		theAsset.nHeight = nHeight;
 		theAsset.txHash = tx.GetHash();
+		theAsset.bInstantSendLocked = bInstantSend;
         // write asset  
 
-        if (!dontaddtodb && (!passetdb->WriteAsset(theAsset, op) || (op == OP_ASSET_ACTIVATE && !passetdb->WriteAssetFirstTXID(vvchArgs[0], theAsset.txHash))))
+        if (!dontaddtodb && (!passetdb->WriteAsset(theAsset, dbAsset, op, bInstantSend) || (op == OP_ASSET_ACTIVATE && !passetdb->WriteAssetFirstTXID(vvchArgs[0], theAsset.txHash))))
 		{
 			errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to write to assetifcate DB");
             return error(errorMessage.c_str());

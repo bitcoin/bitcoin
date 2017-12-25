@@ -14,7 +14,7 @@ class CReserveKey;
 class CCoinsViewCache;
 class CCoins;
 class CBlock;
-bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const std::vector<std::vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, std::string &errorMessage,  bool dontaddtodb=false);
+bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const std::vector<std::vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, std::string &errorMessage, bool bInstantSend = false,bool dontaddtodb=false);
 bool DecodeEscrowTx(const CTransaction& tx, int& op, int& nOut, std::vector<std::vector<unsigned char> >& vvch);
 bool DecodeAndParseEscrowTx(const CTransaction& tx, int& op, int& nOut, std::vector<std::vector<unsigned char> >& vvch, char &type);
 bool DecodeEscrowScript(const CScript& script, int& op, std::vector<std::vector<unsigned char> > &vvch);
@@ -165,8 +165,10 @@ class CEscrowDB : public CDBWrapper {
 public:
     CEscrowDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "escrow", nCacheSize, fMemory, fWipe) {}
 
-    bool WriteEscrow( const std::vector<std::vector<unsigned char> > &vvchArgs, const CEscrow& escrow) {
+    bool WriteEscrow( const std::vector<std::vector<unsigned char> > &vvchArgs, const CEscrow& escrow, const CEscrow& prevEscrow, const bool& bInstantSend) {
 		bool writeState = WriteEscrowLastTXID(escrow.vchEscrow, escrow.txHash) && Write(make_pair(std::string("escrowi"), CNameTXIDTuple(escrow.vchEscrow, escrow.txHash)), escrow);
+		if (!bInstantSend && !prevEscrow.IsNull())
+			writeState = writeState && Write(make_pair(std::string("escrowp"), make_pair(escrow.vchEscrow, prevEscrow));
 		WriteEscrowIndex(escrow, vvchArgs);
         return writeState;
     }
@@ -178,6 +180,7 @@ public:
 	}
     bool EraseEscrow(const CNameTXIDTuple& escrowTuple, bool cleanup = false) {
 		bool eraseState = Erase(make_pair(std::string("escrowi"), escrowTuple));
+		Erase(make_pair(std::string("escrowp"), escrowTuple.first));
 		EraseEscrowLastTXID(escrowTuple.first);
 		EraseEscrowIndex(escrowTuple.first, cleanup);
 		EraseEscrowFeedbackIndex(escrowTuple.first, cleanup);

@@ -17,7 +17,7 @@ class CCoins;
 class CBlock;
 class CAliasIndex;
 
-bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const std::vector<std::vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, std::string &errorMessage, bool dontaddtodb=false);
+bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const std::vector<std::vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, std::string &errorMessage, bool bInstantSend = false,bool dontaddtodb=false);
 bool DecodeAssetTx(const CTransaction& tx, int& op, int& nOut, std::vector<std::vector<unsigned char> >& vvch);
 bool DecodeAndParseAssetTx(const CTransaction& tx, int& op, int& nOut, std::vector<std::vector<unsigned char> >& vvch, char& type);
 bool DecodeAssetScript(const CScript& script, int& op, std::vector<std::vector<unsigned char> > &vvch);
@@ -162,14 +162,17 @@ class CAssetDB : public CDBWrapper {
 public:
     CAssetDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "assets", nCacheSize, fMemory, fWipe) {}
 
-    bool WriteAsset(const CAsset& asset, const int &op) {
+    bool WriteAsset(const CAsset& asset, const CAsset& prevAsset, const int &op, const bool& bInstantSend) {
 		bool writeState = WriteAssetLastTXID(asset.vchAsset, asset.txHash) && Write(make_pair(std::string("asseti"), CNameTXIDTuple(asset.vchAsset, asset.txHash)), asset);
+		if (!bInstantSend && !prevAsset.IsNull())
+			writeState = writeState && Write(make_pair(std::string("assetp"), make_pair(asset.vchAsset, prevAsset));
 		WriteAssetIndex(asset, op);
         return writeState;
     }
 
     bool EraseAsset(const CNameTXIDTuple& assetTuple, bool cleanup = false) {
 		bool eraseState = Erase(make_pair(std::string("asseti"), assetTuple));
+		Erase(make_pair(std::string("assetp"), assetTuple.first));
 		EraseAssetLastTXID(assetTuple.first);
 		EraseAssetFirstTXID(assetTuple.first);
 		EraseAssetIndex(assetTuple.first, cleanup);

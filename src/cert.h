@@ -15,7 +15,7 @@ class CCoinsViewCache;
 class CCoins;
 class CBlock;
 class CAliasIndex;
-bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const std::vector<std::vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, std::string &errorMessage, bool dontaddtodb=false);
+bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const std::vector<std::vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, std::string &errorMessage, bool bInstantSend = false,bool dontaddtodb=false);
 bool DecodeCertTx(const CTransaction& tx, int& op, int& nOut, std::vector<std::vector<unsigned char> >& vvch);
 bool DecodeAndParseCertTx(const CTransaction& tx, int& op, int& nOut, std::vector<std::vector<unsigned char> >& vvch, char& type);
 bool DecodeCertScript(const CScript& script, int& op, std::vector<std::vector<unsigned char> > &vvch);
@@ -98,14 +98,17 @@ class CCertDB : public CDBWrapper {
 public:
     CCertDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "certificates", nCacheSize, fMemory, fWipe) {}
 
-    bool WriteCert(const CCert& cert, const int &op) {
+    bool WriteCert(const CCert& cert, const CCert& prevCert, const int &op, const bool &bInstantSend) {
 		bool writeState = WriteCertLastTXID(cert.vchCert, cert.txHash) && Write(make_pair(std::string("certi"), CNameTXIDTuple(cert.vchCert, cert.txHash)), cert);
+		if (!bInstantSend && !prevCert.IsNull())
+			writeState = writeState && Write(make_pair(std::string("certp"), make_pair(cert.vchCert, prevCert));
 		WriteCertIndex(cert, op);
         return writeState;
     }
 
     bool EraseCert(const CNameTXIDTuple& certTuple, bool cleanup = false) {
 		bool eraseState = Erase(make_pair(std::string("certi"), certTuple));
+		Erase(make_pair(std::string("certp"), certTuple.first));
 		EraseCertLastTXID(certTuple.first);
 		EraseCertFirstTXID(certTuple.first);
 		EraseCertIndex(certTuple.first, cleanup);

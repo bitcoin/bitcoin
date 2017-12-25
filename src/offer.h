@@ -21,7 +21,7 @@ class CBlock;
 class CAliasIndex;
 class COfferLinkWhitelistEntry;
 
-bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const std::vector<std::vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, std::string &errorMessage, bool dontaddtodb=false);
+bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const std::vector<std::vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, std::string &errorMessage, bool bInstantSend = false,bool dontaddtodb=false);
 
 
 bool DecodeOfferTx(const CTransaction& tx, int& op, int& nOut, std::vector<std::vector<unsigned char> >& vvch);
@@ -215,14 +215,17 @@ class COfferDB : public CDBWrapper {
 public:
 	COfferDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "offers", nCacheSize, fMemory, fWipe) {}
 
-	bool WriteOffer(const COffer& offer, const int &op) {
+	bool WriteOffer(const COffer& offer, const COffer& prevOffer, const int &op, const bool& bInstantSend) {
 		bool writeState = WriteOfferLastTXID(offer.vchOffer, offer.txHash) && Write(make_pair(std::string("offeri"), CNameTXIDTuple(offer.vchOffer, offer.txHash)), offer);
+		if (!bInstantSend && !prevOffer.IsNull())
+			writeState = writeState && Write(make_pair(std::string("offerp"), make_pair(offer.vchOffer, prevOffer));
 		WriteOfferIndex(offer, op);
 		return writeState;
 	}
 
 	bool EraseOffer(const CNameTXIDTuple& offerTuple, bool cleanup = false) {
 		bool eraseState = Erase(make_pair(std::string("offeri"), offerTuple));
+		Erase(make_pair(std::string("offerp"), offerTuple.first));
 		EraseOfferLastTXID(offerTuple.first);
 		EraseOfferIndex(offerTuple.first, cleanup);
 	    return eraseState;

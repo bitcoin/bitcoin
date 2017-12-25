@@ -526,7 +526,7 @@ bool ValidateExternalPayment(const CEscrow& theEscrow, const bool &dontaddtodb, 
 	}
 	return true;
 }
-bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, string &errorMessage, bool dontaddtodb) {
+bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, string &errorMessage, bool bInstantSend,bool dontaddtodb) {
 	if (tx.IsCoinBase() && !fJustCheck && !dontaddtodb)
 	{
 		LogPrintf("*Trying to add escrow in coinbase transaction, skipping...");
@@ -1060,6 +1060,8 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 					{
 						nQty = myLinkOffer.nQty;
 					}
+					const COffer myLinkOfferOriginal = myLinkOffer;
+					const COffer dbOfferOriginal = dbOffer;
 					if (nQty != -1)
 					{
 						if (theEscrow.nQty > nQty)
@@ -1073,7 +1075,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 						{
 							myLinkOffer.nQty = nQty;
 							myLinkOffer.nSold++;
-							if (!dontaddtodb && !pofferdb->WriteOffer(myLinkOffer, op))
+							if (!dontaddtodb && !pofferdb->WriteOffer(myLinkOffer, myLinkOfferOriginal, op, bInstantSend))
 							{
 								errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4075 - " + _("Failed to write to offer link to DB");
 								return error(errorMessage.c_str());
@@ -1083,7 +1085,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 						{
 							dbOffer.nQty = nQty;
 							dbOffer.nSold++;
-							if (!dontaddtodb && !pofferdb->WriteOffer(dbOffer, op))
+							if (!dontaddtodb && !pofferdb->WriteOffer(dbOffer, dbOfferOriginal, op, bInstantSend)
 							{
 								errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4076 - " + _("Failed to write to offer to DB");
 								return error(errorMessage.c_str());
@@ -1161,7 +1163,8 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 						{
 							nQty = myLinkOffer.nQty;
 						}
-
+						const COffer myLinkOfferOriginal = myLinkOffer;
+						const COffer dbOfferOriginal = dbOffer;
 						if (nQty != -1)
 						{
 							if (theEscrow.extTxId.IsNull())
@@ -1170,7 +1173,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 							{
 								myLinkOffer.nQty = nQty;
 								myLinkOffer.nSold--;
-								if (!dontaddtodb && !pofferdb->WriteOffer(myLinkOffer, op))
+								if (!dontaddtodb && !pofferdb->WriteOffer(myLinkOffer, myLinkOfferOriginal, op, bInstantSend))
 								{
 									errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4048 - " + _("Failed to write to offer link to DB");
 									return error(errorMessage.c_str());
@@ -1180,7 +1183,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 							{
 								dbOffer.nQty = nQty;
 								dbOffer.nSold--;
-								if (!dontaddtodb && !pofferdb->WriteOffer(dbOffer, op))
+								if (!dontaddtodb && !pofferdb->WriteOffer(dbOffer, dbOfferOriginal, op, bInstantSend))
 								{
 									errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4049 - " + _("Failed to write to offer to DB");
 									return error(errorMessage.c_str());
@@ -1298,6 +1301,8 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 						{
 							nQty = myLinkOffer.nQty;
 						}
+						const COffer myLinkOfferOriginal = myLinkOffer;
+						const COffer dbOfferOriginal = dbOffer;
 						if (nQty != -1)
 						{
 							if (theEscrow.nQty > nQty)
@@ -1311,7 +1316,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 							{
 								myLinkOffer.nQty = nQty;
 								myLinkOffer.nSold++;
-								if (!dontaddtodb && !pofferdb->WriteOffer(myLinkOffer, op))
+								if (!dontaddtodb && !pofferdb->WriteOffer(myLinkOffer, myLinkOfferOriginal, op, bInstantSend))
 								{
 									errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4075 - " + _("Failed to write to offer link to DB");
 									return error(errorMessage.c_str());
@@ -1321,7 +1326,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 							{
 								dbOffer.nQty = nQty;
 								dbOffer.nSold++;
-								if (!dontaddtodb && !pofferdb->WriteOffer(dbOffer, op))
+								if (!dontaddtodb && !pofferdb->WriteOffer(dbOffer, dbOfferOriginal, op, bInstantSend))
 								{
 									errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4076 - " + _("Failed to write to offer to DB");
 									return error(errorMessage.c_str());
@@ -1474,6 +1479,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 		theEscrow.txHash = tx.GetHash();
 		theEscrow.nHeight = nHeight;
 		theEscrow.linkAliasTuple.SetNull();
+		theEscrow.bInstantSendLocked = bInstantSend;
         // write escrow
 		if (!dontaddtodb && !pescrowdb->WriteEscrow(vvchArgs, theEscrow))
 		{

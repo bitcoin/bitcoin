@@ -245,10 +245,12 @@ class CAliasDB : public CDBWrapper {
 public:
     CAliasDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "aliases", nCacheSize, fMemory, fWipe) {
     }
-	bool WriteAlias(const CAliasUnprunable &aliasUnprunable, const std::vector<unsigned char>& address, const CAliasIndex& alias, const int &op) {
+	bool WriteAlias(const CAliasUnprunable &aliasUnprunable, const std::vector<unsigned char>& address, const CAliasIndex& alias, const CAliasIndex& prevAlias, const int &op, const bool &bInstantSend) {
 		if(address.empty())
 			return false;	
 		bool writeState = WriteAliasLastTXID(alias.vchAlias, alias.txHash) && Write(make_pair(std::string("namei"), CNameTXIDTuple(alias.vchAlias, alias.txHash)), alias) && Write(make_pair(std::string("namea"), address), alias.vchAlias) && Write(make_pair(std::string("nameu"), alias.vchAlias), aliasUnprunable);
+		if (!bInstantSend && !prevAlias.IsNull())
+			writeState = writeState && Write(make_pair(std::string("namep"), make_pair(alias.vchAlias, prevAlias));
 		WriteAliasIndex(alias, op);
 		return writeState;
 	}
@@ -256,6 +258,7 @@ public:
 
 	bool EraseAlias(const CNameTXIDTuple& aliasTuple, bool cleanup = false) {
 		bool eraseState = Erase(make_pair(std::string("namei"), CNameTXIDTuple(aliasTuple.first, aliasTuple.second)));
+		Erase(make_pair(std::string("namep"), aliasTuple.first));
 		EraseAliasLastTXID(aliasTuple.first);
 		EraseAliasIndex(aliasTuple.first, cleanup);
 		return eraseState;
@@ -311,7 +314,7 @@ std::string stringFromValue(const UniValue& value);
 int GetSyscoinTxVersion();
 const int SYSCOIN_TX_VERSION = 0x7400;
 bool IsValidAliasName(const std::vector<unsigned char> &vchAlias);
-bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const std::vector<std::vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, std::string &errorMessage, bool & bDestCheckFailed,bool dontaddtodb=false);
+bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const std::vector<std::vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, std::string &errorMessage, bool & bDestCheckFailed,bool bInstantSend=false, bool dontaddtodb=false);
 void CreateRecipient(const CScript& scriptPubKey, CRecipient& recipient);
 void CreateFeeRecipient(CScript& scriptPubKey, const std::vector<unsigned char>& data, CRecipient& recipient);
 void CreateAliasRecipient(const CScript& scriptPubKey, CRecipient& recipient);

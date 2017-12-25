@@ -320,7 +320,7 @@ bool RemoveOfferScriptPrefix(const CScript& scriptIn, CScript& scriptOut) {
 	return true;
 }
 
-bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, string &errorMessage, bool dontaddtodb) {
+bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, string &errorMessage, bool bInstantSend, bool dontaddtodb) {
 	if (tx.IsCoinBase() && !fJustCheck && !dontaddtodb)
 	{
 		LogPrintf("*Trying to add offer in coinbase transaction, skipping...");
@@ -721,8 +721,9 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		}
 		theOffer.nHeight = nHeight;
 		theOffer.txHash = tx.GetHash();
+		theOffer.bInstantSendLocked = bInstantSend;
 		// write offer
-		if (!dontaddtodb && !pofferdb->WriteOffer(theOffer, op))
+		if (!dontaddtodb && !pofferdb->WriteOffer(theOffer, dbOffer, op, bInstantSend))
 		{
 			errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to write to offer DB");
 			return error(errorMessage.c_str());

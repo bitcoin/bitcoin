@@ -543,7 +543,7 @@ std::string FormatStateMessage(const CValidationState &state)
 		state.GetRejectCode());
 }
 // SYSCOIN
-bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight)
+bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight, bool bInstantSend)
 {
 	vector<vector<unsigned char> > vvchArgs;
 	int op;
@@ -558,7 +558,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight)
 		if (DecodeAliasTx(tx, op, nOut, vvchArgs))
 		{
 			errorMessage.clear();
-			good = CheckAliasInputs(tx, op, nOut, vvchArgs, fJustCheck, nHeight, errorMessage, bDestCheckFailed);
+			good = CheckAliasInputs(tx, op, nOut, vvchArgs, fJustCheck, nHeight, errorMessage, bDestCheckFailed, bInstantSend);
 			if (fDebug && !errorMessage.empty())
 				LogPrintf("%s\n", errorMessage.c_str());
 		}
@@ -567,28 +567,28 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight)
 			if (DecodeCertTx(tx, op, nOut, vvchArgs))
 			{
 				errorMessage.clear();
-				good = CheckCertInputs(tx, op, nOut, vvchArgs, fJustCheck, nHeight, errorMessage);
+				good = CheckCertInputs(tx, op, nOut, vvchArgs, fJustCheck, nHeight, errorMessage, bInstantSend);
 				if (fDebug && !errorMessage.empty())
 					LogPrintf("%s\n", errorMessage.c_str());
 			}
 			if (DecodeAssetTx(tx, op, nOut, vvchArgs))
 			{
 				errorMessage.clear();
-				good = CheckAssetInputs(tx, op, nOut, vvchArgs, fJustCheck, nHeight, errorMessage);
+				good = CheckAssetInputs(tx, op, nOut, vvchArgs, fJustCheck, nHeight, errorMessage, bInstantSend);
 				if (fDebug && !errorMessage.empty())
 					LogPrintf("%s\n", errorMessage.c_str());
 			}
 			else if (DecodeEscrowTx(tx, op, nOut, vvchArgs))
 			{
 				errorMessage.clear();
-				good = CheckEscrowInputs(tx, op, nOut, vvchArgs, fJustCheck, nHeight, errorMessage);
+				good = CheckEscrowInputs(tx, op, nOut, vvchArgs, fJustCheck, nHeight, errorMessage, bInstantSend);
 				if (fDebug && !errorMessage.empty())
 					LogPrintf("%s\n", errorMessage.c_str());
 			}
 			else if (DecodeOfferTx(tx, op, nOut, vvchArgs))
 			{
 				errorMessage.clear();
-				good = CheckOfferInputs(tx, op, nOut, vvchArgs, fJustCheck, nHeight, errorMessage);
+				good = CheckOfferInputs(tx, op, nOut, vvchArgs, fJustCheck, nHeight, errorMessage, bInstantSend);
 				if (fDebug && !errorMessage.empty())
 					LogPrintf("%s\n", errorMessage.c_str());
 			}

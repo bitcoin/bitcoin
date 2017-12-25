@@ -297,7 +297,7 @@ int GetSyscoinTxVersion()
 	return SYSCOIN_TX_VERSION;
 }
 
-bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, string &errorMessage, bool &bDestCheckFailed, bool dontaddtodb) {
+bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, string &errorMessage, bool &bDestCheckFailed, bool bInstantSend, bool dontaddtodb) {
 	if (tx.IsCoinBase() && !fJustCheck && !dontaddtodb)
 	{
 		LogPrintf("*Trying to add alias in coinbase transaction, skipping...");
@@ -728,11 +728,12 @@ theAlias = dbAlias;
 		{
 			theAlias.nHeight = nHeight;
 			theAlias.txHash = tx.GetHash();
+			theAlias.bInstantSendLocked = bInstantSend;
 
 			CAliasUnprunable aliasUnprunable;
 			aliasUnprunable.vchGUID = theAlias.vchGUID;
 			aliasUnprunable.nExpireTime = theAlias.nExpireTime;
-			if (!dontaddtodb && !paliasdb->WriteAlias(aliasUnprunable, theAlias.vchAddress, theAlias, op))
+			if (!dontaddtodb && !paliasdb->WriteAlias(aliasUnprunable, theAlias.vchAddress, theAlias, dbAlias, op, bInstantSend))
 			{
 				errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5034 - " + _("Failed to write to alias DB");
 				return error(errorMessage.c_str());

@@ -39,12 +39,12 @@ extern bool DecodeOfferTx(const CTransaction& tx, int& op, int& nOut, vector<vec
 extern bool DecodeCertTx(const CTransaction& tx, int& op, int& nOut, vector<vector<unsigned char> >& vvch);
 extern bool DecodeAssetTx(const CTransaction& tx, int& op, int& nOut, vector<vector<unsigned char> >& vvch);
 extern bool DecodeEscrowTx(const CTransaction& tx, int& op, int& nOut, vector<vector<unsigned char> >& vvch);
-extern bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, string &errorMessage, bool &bDestCheckFailed, bool dontaddtodb);
-extern bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, string &errorMessage, bool dontaddtodb);
-extern bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, string &errorMessage, bool dontaddtodb);
-extern bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, string &errorMessage, bool dontaddtodb);
+extern bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, string &errorMessage, bool &bDestCheckFailed, bool bInstantSend, bool dontaddtodb);
+extern bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, string &errorMessage, bool bInstantSend, bool dontaddtodb);
+extern bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, string &errorMessage, bool bInstantSend, bool dontaddtodb);
+extern bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, string &errorMessage, bool bInstantSend, bool dontaddtodb);
 extern bool DecodeAliasScript(const CScript& script, int& op, vector<vector<unsigned char> > &vvch);
-extern bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, string &errorMessage, bool dontaddtodb);
+extern bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, string &errorMessage, bool bInstantSend, bool dontaddtodb);
 extern int aliasunspent(const vector<unsigned char> &vchAlias, COutPoint& outPoint);
 extern std::string stringFromVch(const std::vector<unsigned char> &vch);
 extern std::vector<unsigned char> vchFromString(const std::string &str);
@@ -598,46 +598,46 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
 	bool bCheckDestError = false;
 	if (DecodeAliasTx(wtxNew, op, nOut, vvch))
 	{
-		CheckAliasInputs(wtxNew, op, nOut, vvch, fJustCheck, chainActive.Tip()->nHeight + 1, errorMessage, bCheckDestError, true);
+		CheckAliasInputs(wtxNew, op, nOut, vvch, fJustCheck, chainActive.Tip()->nHeight + 1, errorMessage, bCheckDestError, false, true);
 		if (!errorMessage.empty())
 			throw runtime_error(errorMessage.c_str());
-		CheckAliasInputs(wtxNew, op, nOut, vvch, !fJustCheck, chainActive.Tip()->nHeight + 1, errorMessage, bCheckDestError, true);
+		CheckAliasInputs(wtxNew, op, nOut, vvch, !fJustCheck, chainActive.Tip()->nHeight + 1, errorMessage, bCheckDestError, false, true);
 		if (!errorMessage.empty())
 			throw runtime_error(errorMessage.c_str());
 	}
 	if (DecodeCertTx(wtxNew, op, nOut, vvch))
 	{
-		CheckCertInputs(wtxNew, op, nOut, vvch, fJustCheck, chainActive.Tip()->nHeight + 1, errorMessage, true);
+		CheckCertInputs(wtxNew, op, nOut, vvch, fJustCheck, chainActive.Tip()->nHeight + 1, errorMessage, false, true);
 		if (!errorMessage.empty())
 			throw runtime_error(errorMessage.c_str());
-		CheckCertInputs(wtxNew, op, nOut, vvch, !fJustCheck, chainActive.Tip()->nHeight + 1, errorMessage, true);
+		CheckCertInputs(wtxNew, op, nOut, vvch, !fJustCheck, chainActive.Tip()->nHeight + 1, errorMessage, false, true);
 		if (!errorMessage.empty())
 			throw runtime_error(errorMessage.c_str());
 	}
 	if (DecodeAssetTx(wtxNew, op, nOut, vvch))
 	{
-		CheckAssetInputs(wtxNew, op, nOut, vvch, fJustCheck, chainActive.Tip()->nHeight + 1, errorMessage, true);
+		CheckAssetInputs(wtxNew, op, nOut, vvch, fJustCheck, chainActive.Tip()->nHeight + 1, errorMessage, false, true);
 		if (!errorMessage.empty())
 			throw runtime_error(errorMessage.c_str());
-		CheckAssetInputs(wtxNew, op, nOut, vvch, !fJustCheck, chainActive.Tip()->nHeight + 1, errorMessage, true);
+		CheckAssetInputs(wtxNew, op, nOut, vvch, !fJustCheck, chainActive.Tip()->nHeight + 1, errorMessage, false, true);
 		if (!errorMessage.empty())
 			throw runtime_error(errorMessage.c_str());
 	}
 	if (DecodeEscrowTx(wtxNew, op, nOut, vvch))
 	{
-		CheckEscrowInputs(wtxNew, op, nOut, vvch, fJustCheck, chainActive.Tip()->nHeight + 1, errorMessage, true);
+		CheckEscrowInputs(wtxNew, op, nOut, vvch, fJustCheck, chainActive.Tip()->nHeight + 1, errorMessage, false, true);
 		if (!errorMessage.empty())
 			throw runtime_error(errorMessage.c_str());
-		CheckEscrowInputs(wtxNew, op, nOut, vvch, !fJustCheck, chainActive.Tip()->nHeight + 1, errorMessage, true);
+		CheckEscrowInputs(wtxNew, op, nOut, vvch, !fJustCheck, chainActive.Tip()->nHeight + 1, errorMessage, false, true);
 		if (!errorMessage.empty())
 			throw runtime_error(errorMessage.c_str());
 	}
 	if (DecodeOfferTx(wtxNew, op, nOut, vvch))
 	{
-		CheckOfferInputs(wtxNew, op, nOut, vvch, fJustCheck, chainActive.Tip()->nHeight + 1, errorMessage, true);
+		CheckOfferInputs(wtxNew, op, nOut, vvch, fJustCheck, chainActive.Tip()->nHeight + 1, errorMessage, false, true);
 		if (!errorMessage.empty())
 			throw runtime_error(errorMessage.c_str());
-		CheckOfferInputs(wtxNew, op, nOut, vvch, !fJustCheck, chainActive.Tip()->nHeight + 1, errorMessage, true);
+		CheckOfferInputs(wtxNew, op, nOut, vvch, !fJustCheck, chainActive.Tip()->nHeight + 1, errorMessage, false, true);
 		if (!errorMessage.empty())
 			throw runtime_error(errorMessage.c_str());
 

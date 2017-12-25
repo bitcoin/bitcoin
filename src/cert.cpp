@@ -328,7 +328,7 @@ bool RemoveCertScriptPrefix(const CScript& scriptIn, CScript& scriptOut) {
 }
 
 bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs,
-        bool fJustCheck, int nHeight, string &errorMessage, bool dontaddtodb) {
+        bool fJustCheck, int nHeight, string &errorMessage, bool bInstantSend,bool dontaddtodb) {
 	if (tx.IsCoinBase() && !fJustCheck && !dontaddtodb)
 	{
 		LogPrintf("*Trying to add cert in coinbase transaction, skipping...");
@@ -587,9 +587,10 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
         // set the cert's txn-dependent values
 		theCert.nHeight = nHeight;
 		theCert.txHash = tx.GetHash();
+		theCert.bInstantSendLocked = bInstantSend;
         // write cert  
 
-        if (!dontaddtodb && (!pcertdb->WriteCert(theCert, op) || (op == OP_CERT_ACTIVATE && !pcertdb->WriteCertFirstTXID(vvchArgs[0], theCert.txHash))))
+        if (!dontaddtodb && (!pcertdb->WriteCert(theCert, dbCert, op, bInstantSend) || (op == OP_CERT_ACTIVATE && !pcertdb->WriteCertFirstTXID(vvchArgs[0], theCert.txHash))))
 		{
 			errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to write to certifcate DB");
             return error(errorMessage.c_str());
