@@ -1,11 +1,11 @@
-#### OpenBSD build guide
+# OpenBSD build guide
 
 This guide describes how to build Bitcoin Core on OpenBSD.
 It has been tested on OpenBSD-current/amd64 as of Dec 25, 2017.
 
-### Preparations
+## Preparations
 
-## The compiler
+### The compiler
 
 On some platforms, the system compiler that comes with OpenBSD is clang 5.0.0,
 which compiles C++11 just fine. On these system, `c++` is `clang++`
@@ -34,19 +34,7 @@ with `pkg_add -i g++`. This compiler does not overwrite the system compiler,
 it gets installed as `egcc` and `eg++` in `/usr/local/bin`.
 Similarly, you can install clang with `pkg_add -i llvm`.
 
-/*
-## Resource limits
-
-The ulimit restrictions in OpenBSD on some platfroms
-can be too restrictive to compile some `.cpp` files in the project,
-at least with GCC 4.9.4 (see issue
-[#6658](https://github.com/bitcoin/bitcoin/issues/6658)).
-
-Check the `datasize-cur` and `datasize-max` restrictions in `/etc/login.conf`
-for your login group. Note that you will need to re-login for the change to take effect.
-*/
-
-## Dependencies
+### Dependencies
 
 Run the following as root to install the dependencies:
 Note that the OpenBSD package of Berkeley DB is version 4.6,
@@ -60,7 +48,7 @@ while Bitcoin Core requires version 4.8 to build the wallet.
 # pkg_add git
 ```
 
-## BerkeleyDB
+### BerkeleyDB
 
 BerkeleyDB is only needed for the wallet functionality.
 This can be disabled with `./configure --disable-wallet`.
@@ -74,7 +62,7 @@ If you have to build it yourself, you can use
 ./contrib/install_db4.sh `pwd` CC=egcc CXX=eg++ CPP=ecpp
 ```
 
-## The source
+### The source
 
 Clone the Bitcoin Core github repository:
 
@@ -83,7 +71,7 @@ $ mkdir -p ~/src && cd ~/src
 $ git clone https://github.com/bitcoin/bitcoin.git
 ```
 
-### Configure Bitcoin Core
+## Configure Bitcoin Core
 
 As a start, this configures Bitcoin Core without the wallet and without GUI.
 Make sure to point `CXX` and friends to your C++11 capable compiler.
@@ -116,7 +104,7 @@ FIXME: doesn't configure pick the db package (4.6) anyway,
 if present in /usr/local, which comes first in both -I and -L?
 */
 
-### Build Bitcoin Core
+## Build Bitcoin Core
 
 The Makefiles used by Bitcoin Core need to be processed with GNU make,
 not with the standard BSD make. Make sure to use `gmake`, not `make`.
