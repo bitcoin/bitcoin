@@ -1253,7 +1253,7 @@ void COfferDB::WriteOfferIndexHistory(const COffer& offer, const int &op) {
 	UniValue oName(UniValue::VOBJ);
 	mongoc_update_flags_t update_flags;
 	update_flags = (mongoc_update_flags_t)(MONGOC_UPDATE_NO_VALIDATE | MONGOC_UPDATE_UPSERT);
-	selector = BCON_NEW("_id", BCON_UTF8(stringFromVch(offer.txHash.GetHex()).c_str()));
+	selector = BCON_NEW("_id", BCON_UTF8(offer.txHash.GetHex().c_str()));
 	write_concern = mongoc_write_concern_new();
 	mongoc_write_concern_set_w(write_concern, MONGOC_WRITE_CONCERN_W_UNACKNOWLEDGED);
 	if (BuildOfferIndexerHistoryJson(offer, oName)) {
