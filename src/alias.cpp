@@ -1669,7 +1669,7 @@ void CAliasDB::WriteAliasIndexHistory(const CAliasIndex& alias, const int &op) {
 	UniValue oName(UniValue::VOBJ);
 	mongoc_update_flags_t update_flags;
 	update_flags = (mongoc_update_flags_t)(MONGOC_UPDATE_NO_VALIDATE | MONGOC_UPDATE_UPSERT);
-	selector = BCON_NEW("_id", BCON_UTF8(stringFromVch(alias.txHash.GetHex()).c_str()));
+	selector = BCON_NEW("_id", BCON_UTF8(alias.txHash.GetHex().c_str()));
 	write_concern = mongoc_write_concern_new();
 	mongoc_write_concern_set_w(write_concern, MONGOC_WRITE_CONCERN_W_UNACKNOWLEDGED);
 	BuildAliasIndexerHistoryJson(alias, oName);
@@ -1750,7 +1750,7 @@ void CAliasDB::WriteAliasIndexTxHistory(const string &user1, const string &user2
 	mongoc_write_concern_t* write_concern = NULL;
 	UniValue oName(UniValue::VOBJ);
 	write_concern = mongoc_write_concern_new();
-	selector = BCON_NEW("_id", BCON_UTF8(stringFromVch(txHash.GetHex()).c_str()));
+	selector = BCON_NEW("_id", BCON_UTF8(txHash.GetHex().c_str()));
 	mongoc_write_concern_set_w(write_concern, MONGOC_WRITE_CONCERN_W_UNACKNOWLEDGED);
 	mongoc_update_flags_t update_flags;
 	update_flags = (mongoc_update_flags_t)(MONGOC_UPDATE_NO_VALIDATE | MONGOC_UPDATE_UPSERT);

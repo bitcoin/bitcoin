@@ -163,7 +163,7 @@ public:
     CAssetDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "assets", nCacheSize, fMemory, fWipe) {}
 
     bool WriteAsset(const CAsset& asset, const int &op) {
-		bool writeState = WriteAssetLastTXID(asset.vchAsset, asset.prevOut.hash) && Write(make_pair(std::string("asseti"), CNameTXIDTuple(asset.vchAsset, asset.prevOut.hash)), asset);
+		bool writeState = WriteAssetLastTXID(asset.vchAsset, asset.txHash) && Write(make_pair(std::string("asseti"), CNameTXIDTuple(asset.vchAsset, asset.txHash)), asset);
 		WriteAssetIndex(asset, op);
         return writeState;
     }
