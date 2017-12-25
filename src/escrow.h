@@ -168,7 +168,7 @@ public:
     bool WriteEscrow( const std::vector<std::vector<unsigned char> > &vvchArgs, const CEscrow& escrow, const CEscrow& prevEscrow, const bool& bInstantSend) {
 		bool writeState = WriteEscrowLastTXID(escrow.vchEscrow, escrow.txHash) && Write(make_pair(std::string("escrowi"), CNameTXIDTuple(escrow.vchEscrow, escrow.txHash)), escrow);
 		if (!bInstantSend && !prevEscrow.IsNull())
-			writeState = writeState && Write(make_pair(std::string("escrowp"), make_pair(escrow.vchEscrow, prevEscrow)));
+			writeState = writeState && Write(make_pair(std::string("escrowp"), escrow.vchEscrow, prevEscrow));
 		WriteEscrowIndex(escrow, vvchArgs);
         return writeState;
     }

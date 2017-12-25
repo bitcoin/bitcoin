@@ -101,7 +101,7 @@ public:
     bool WriteCert(const CCert& cert, const CCert& prevCert, const int &op, const bool &bInstantSend) {
 		bool writeState = WriteCertLastTXID(cert.vchCert, cert.txHash) && Write(make_pair(std::string("certi"), CNameTXIDTuple(cert.vchCert, cert.txHash)), cert);
 		if (!bInstantSend && !prevCert.IsNull())
-			writeState = writeState && Write(make_pair(std::string("certp"), make_pair(cert.vchCert, prevCert)));
+			writeState = writeState && Write(make_pair(std::string("certp"), cert.vchCert, prevCert));
 		WriteCertIndex(cert, op);
         return writeState;
     }
