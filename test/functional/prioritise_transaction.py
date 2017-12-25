@@ -9,10 +9,12 @@ from test_framework.util import *
 from test_framework.mininode import COIN, MAX_BLOCK_BASE_SIZE
 
 class PrioritiseTransactionTest(BitcoinTestFramework):
-    def set_test_params(self):
+
+    def __init__(self):
+        super().__init__()
         self.setup_clean_chain = True
         self.num_nodes = 2
-        self.extra_args = [["-printpriority=1"], ["-printpriority=1"]]
+        self.extra_args = [["-printpriority=1", "-maxmempool=10"], ["-printpriority=1", "-maxmempool=10"]]
 
     def run_test(self):
         self.txouts = gen_return_txouts()
@@ -101,7 +103,7 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
         tx_id = self.nodes[0].decoderawtransaction(tx_hex)["txid"]
 
         # This will raise an exception due to min relay fee not being met
-        assert_raises_rpc_error(-26, "66: min relay fee not met", self.nodes[0].sendrawtransaction, tx_hex)
+        assert_raises_jsonrpc(-26, "66: min relay fee not met", self.nodes[0].sendrawtransaction, tx_hex)
         assert(tx_id not in self.nodes[0].getrawmempool())
 
         # This is a less than 1000-byte transaction, so just set the fee

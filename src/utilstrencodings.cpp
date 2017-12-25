@@ -3,9 +3,9 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <utilstrencodings.h>
+#include "utilstrencodings.h"
 
-#include <tinyformat.h>
+#include "tinyformat.h"
 
 #include <cstdlib>
 #include <cstring>
@@ -63,19 +63,6 @@ bool IsHex(const std::string& str)
             return false;
     }
     return (str.size() > 0) && (str.size()%2 == 0);
-}
-
-bool IsHexNumber(const std::string& str)
-{
-    size_t starting_location = 0;
-    if (str.size() > 2 && *str.begin() == '0' && *(str.begin()+1) == 'x') {
-        starting_location = 2;
-    }
-    for (auto c : str.substr(starting_location)) {
-        if (HexDigit(c) < 0) return false;
-    }
-    // Return false for empty string or "0x".
-    return (str.size() > starting_location);
 }
 
 std::vector<unsigned char> ParseHex(const char* psz)

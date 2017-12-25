@@ -6,21 +6,21 @@
 #ifndef BITCOIN_NET_H
 #define BITCOIN_NET_H
 
-#include <addrdb.h>
-#include <addrman.h>
-#include <amount.h>
-#include <bloom.h>
-#include <compat.h>
-#include <hash.h>
-#include <limitedmap.h>
-#include <netaddress.h>
-#include <policy/feerate.h>
-#include <protocol.h>
-#include <random.h>
-#include <streams.h>
-#include <sync.h>
-#include <uint256.h>
-#include <threadinterrupt.h>
+#include "addrdb.h"
+#include "addrman.h"
+#include "amount.h"
+#include "bloom.h"
+#include "compat.h"
+#include "hash.h"
+#include "limitedmap.h"
+#include "netaddress.h"
+#include "policy/feerate.h"
+#include "protocol.h"
+#include "random.h"
+#include "streams.h"
+#include "sync.h"
+#include "uint256.h"
+#include "threadinterrupt.h"
 
 #include <atomic>
 #include <deque>
@@ -33,6 +33,7 @@
 #include <arpa/inet.h>
 #endif
 
+#include <boost/signals2/signal.hpp>
 
 class CScheduler;
 class CNode;
@@ -84,6 +85,8 @@ static const bool DEFAULT_FORCEDNSSEED = false;
 static const size_t DEFAULT_MAXRECEIVEBUFFER = 5 * 1000;
 static const size_t DEFAULT_MAXSENDBUFFER    = 1 * 1000;
 
+static const ServiceFlags REQUIRED_SERVICES = NODE_NETWORK;
+
 // NOTE: When adjusting this, update rpcnet:setban's help ("24h")
 static const unsigned int DEFAULT_MISBEHAVING_BANTIME = 60 * 60 * 24;  // Default 24-hour ban
 
@@ -113,7 +116,7 @@ struct CSerializedNetMsg
     std::string command;
 };
 
-class NetEventsInterface;
+
 class CConnman
 {
 public:
@@ -128,13 +131,13 @@ public:
     struct Options
     {
         ServiceFlags nLocalServices = NODE_NONE;
+        ServiceFlags nRelevantServices = NODE_NONE;
         int nMaxConnections = 0;
         int nMaxOutbound = 0;
         int nMaxAddnode = 0;
         int nMaxFeeler = 0;
         int nBestHeight = 0;
         CClientUIInterface* uiInterface = nullptr;
-        NetEventsInterface* m_msgproc = nullptr;
         unsigned int nSendBufferMaxSize = 0;
         unsigned int nReceiveFloodSize = 0;
         uint64_t nMaxOutboundTimeframe = 0;
@@ -142,32 +145,22 @@ public:
         std::vector<std::string> vSeedNodes;
         std::vector<CSubNet> vWhitelistedRange;
         std::vector<CService> vBinds, vWhiteBinds;
-        bool m_use_addrman_outgoing = true;
-        std::vector<std::string> m_specified_outgoing;
-        std::vector<std::string> m_added_nodes;
     };
 
     void Init(const Options& connOptions) {
         nLocalServices = connOptions.nLocalServices;
+        nRelevantServices = connOptions.nRelevantServices;
         nMaxConnections = connOptions.nMaxConnections;
         nMaxOutbound = std::min(connOptions.nMaxOutbound, connOptions.nMaxConnections);
         nMaxAddnode = connOptions.nMaxAddnode;
         nMaxFeeler = connOptions.nMaxFeeler;
         nBestHeight = connOptions.nBestHeight;
         clientInterface = connOptions.uiInterface;
-        m_msgproc = connOptions.m_msgproc;
         nSendBufferMaxSize = connOptions.nSendBufferMaxSize;
         nReceiveFloodSize = connOptions.nReceiveFloodSize;
-        {
-            LOCK(cs_totalBytesSent);
-            nMaxOutboundTimeframe = connOptions.nMaxOutboundTimeframe;
-            nMaxOutboundLimit = connOptions.nMaxOutboundLimit;
-        }
+        nMaxOutboundTimeframe = connOptions.nMaxOutboundTimeframe;
+        nMaxOutboundLimit = connOptions.nMaxOutboundLimit;
         vWhitelistedRange = connOptions.vWhitelistedRange;
-        {
-            LOCK(cs_vAddedNodes);
-            vAddedNodes = connOptions.m_added_nodes;
-        }
     }
 
     CConnman(uint64_t seed0, uint64_t seed1);
@@ -177,7 +170,7 @@ public:
     void Interrupt();
     bool GetNetworkActive() const { return fNetworkActive; };
     void SetNetworkActive(bool active);
-    bool OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant *grantOutbound = nullptr, const char *strDest = nullptr, bool fOneShot = false, bool fFeeler = false, bool manual_connection = false);
+    bool OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant *grantOutbound = nullptr, const char *strDest = nullptr, bool fOneShot = false, bool fFeeler = false, bool fAddnode = false);
     bool CheckIncomingNonce(uint64_t nonce);
 
     bool ForNode(NodeId id, std::function<bool(CNode* pnode)> func);
@@ -257,19 +250,6 @@ public:
     void GetBanned(banmap_t &banmap);
     void SetBanned(const banmap_t &banmap);
 
-    // This allows temporarily exceeding nMaxOutbound, with the goal of finding
-    // a peer that is better than all our current peers.
-    void SetTryNewOutboundPeer(bool flag);
-    bool GetTryNewOutboundPeer();
-
-    // Return the number of outbound peers we have in excess of our target (eg,
-    // if we previously called SetTryNewOutboundPeer(true), and have since set
-    // to false, we may have extra peers that we wish to disconnect). This may
-    // return a value less than (num_outbound_connections - num_outbound_slots)
-    // in cases where some outbound connections are not yet fully connected, or
-    // not yet fully disconnected.
-    int GetExtraOutboundCount();
-
     bool AddNode(const std::string& node);
     bool RemoveAddedNode(const std::string& node);
     std::vector<AddedNodeInfo> GetAddedNodeInfo();
@@ -328,7 +308,7 @@ private:
     void ThreadOpenAddedConnections();
     void AddOneShot(const std::string& strDest);
     void ProcessOneShot();
-    void ThreadOpenConnections(std::vector<std::string> connect);
+    void ThreadOpenConnections();
     void ThreadMessageHandler();
     void AcceptConnection(const ListenSocket& hListenSocket);
     void ThreadSocketHandler();
@@ -370,14 +350,14 @@ private:
     // Network usage totals
     CCriticalSection cs_totalBytesRecv;
     CCriticalSection cs_totalBytesSent;
-    uint64_t nTotalBytesRecv GUARDED_BY(cs_totalBytesRecv);
-    uint64_t nTotalBytesSent GUARDED_BY(cs_totalBytesSent);
+    uint64_t nTotalBytesRecv;
+    uint64_t nTotalBytesSent;
 
     // outbound limit & stats
-    uint64_t nMaxOutboundTotalBytesSentInCycle GUARDED_BY(cs_totalBytesSent);
-    uint64_t nMaxOutboundCycleStartTime GUARDED_BY(cs_totalBytesSent);
-    uint64_t nMaxOutboundLimit GUARDED_BY(cs_totalBytesSent);
-    uint64_t nMaxOutboundTimeframe GUARDED_BY(cs_totalBytesSent);
+    uint64_t nMaxOutboundTotalBytesSentInCycle;
+    uint64_t nMaxOutboundCycleStartTime;
+    uint64_t nMaxOutboundLimit;
+    uint64_t nMaxOutboundTimeframe;
 
     // Whitelisted ranges. Any node connecting from these is automatically
     // whitelisted (as well as those connecting to whitelisted binds).
@@ -395,7 +375,7 @@ private:
     CAddrMan addrman;
     std::deque<std::string> vOneShots;
     CCriticalSection cs_vOneShots;
-    std::vector<std::string> vAddedNodes GUARDED_BY(cs_vAddedNodes);
+    std::vector<std::string> vAddedNodes;
     CCriticalSection cs_vAddedNodes;
     std::vector<CNode*> vNodes;
     std::list<CNode*> vNodesDisconnected;
@@ -405,15 +385,17 @@ private:
     /** Services this instance offers */
     ServiceFlags nLocalServices;
 
-    std::unique_ptr<CSemaphore> semOutbound;
-    std::unique_ptr<CSemaphore> semAddnode;
+    /** Services this instance cares about */
+    ServiceFlags nRelevantServices;
+
+    CSemaphore *semOutbound;
+    CSemaphore *semAddnode;
     int nMaxConnections;
     int nMaxOutbound;
     int nMaxAddnode;
     int nMaxFeeler;
     std::atomic<int> nBestHeight;
     CClientUIInterface* clientInterface;
-    NetEventsInterface* m_msgproc;
 
     /** SipHasher seeds for deterministic randomness */
     const uint64_t nSeed0, nSeed1;
@@ -432,13 +414,6 @@ private:
     std::thread threadOpenAddedConnections;
     std::thread threadOpenConnections;
     std::thread threadMessageHandler;
-
-    /** flag for deciding to connect to an extra outbound peer,
-     *  in excess of nMaxOutbound
-     *  This takes the place of a feeler connection */
-    std::atomic_bool m_try_another_outbound_peer;
-
-    friend struct CConnmanTest;
 };
 extern std::unique_ptr<CConnman> g_connman;
 void Discover(boost::thread_group& threadGroup);
@@ -461,17 +436,18 @@ struct CombinerAll
     }
 };
 
-/**
- * Interface for message handling
- */
-class NetEventsInterface
+// Signals for message handling
+struct CNodeSignals
 {
-public:
-    virtual bool ProcessMessages(CNode* pnode, std::atomic<bool>& interrupt) = 0;
-    virtual bool SendMessages(CNode* pnode, std::atomic<bool>& interrupt) = 0;
-    virtual void InitializeNode(CNode* pnode) = 0;
-    virtual void FinalizeNode(NodeId id, bool& update_connection_time) = 0;
+    boost::signals2::signal<bool (CNode*, CConnman&, std::atomic<bool>&), CombinerAll> ProcessMessages;
+    boost::signals2::signal<bool (CNode*, CConnman&, std::atomic<bool>&), CombinerAll> SendMessages;
+    boost::signals2::signal<void (CNode*, CConnman&)> InitializeNode;
+    boost::signals2::signal<void (NodeId, bool&)> FinalizeNode;
 };
+
+
+CNodeSignals& GetNodeSignals();
+
 
 enum
 {
@@ -532,7 +508,7 @@ public:
     int nVersion;
     std::string cleanSubVer;
     bool fInbound;
-    bool m_manual_connection;
+    bool fAddnode;
     int nStartingHeight;
     uint64_t nSendBytes;
     mapMsgCmdSize mapSendBytesPerMsgCmd;
@@ -604,6 +580,7 @@ class CNode
 public:
     // socket
     std::atomic<ServiceFlags> nServices;
+    ServiceFlags nServicesExpected;
     SOCKET hSocket;
     size_t nSendSize; // total size of all vSendMsg entries
     size_t nSendOffset; // offset inside the first vSendMsg already sent
@@ -641,7 +618,7 @@ public:
     bool fWhitelisted; // This peer can bypass DoS banning.
     bool fFeeler; // If true this node is being used as a short lived feeler.
     bool fOneShot;
-    bool m_manual_connection;
+    bool fAddnode;
     bool fClient;
     const bool fInbound;
     std::atomic_bool fSuccessfullyConnected;
@@ -654,7 +631,7 @@ public:
     bool fSentAddr;
     CSemaphoreGrant grantOutbound;
     CCriticalSection cs_filter;
-    std::unique_ptr<CBloomFilter> pfilter;
+    CBloomFilter* pfilter;
     std::atomic<int> nRefCount;
 
     const uint64_t nKeyedNetGroup;
@@ -722,11 +699,13 @@ public:
 
     CNode(NodeId id, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn, SOCKET hSocketIn, const CAddress &addrIn, uint64_t nKeyedNetGroupIn, uint64_t nLocalHostNonceIn, const CAddress &addrBindIn, const std::string &addrNameIn = "", bool fInboundIn = false);
     ~CNode();
-    CNode(const CNode&) = delete;
-    CNode& operator=(const CNode&) = delete;
 
 private:
+    CNode(const CNode&);
+    void operator=(const CNode&);
     const NodeId id;
+
+
     const uint64_t nLocalHostNonce;
     // Services offered to this peer
     const ServiceFlags nLocalServices;

@@ -6,11 +6,11 @@
 #ifndef BITCOIN_CHAIN_H
 #define BITCOIN_CHAIN_H
 
-#include <arith_uint256.h>
-#include <primitives/block.h>
-#include <pow.h>
-#include <tinyformat.h>
-#include <uint256.h>
+#include "arith_uint256.h"
+#include "primitives/block.h"
+#include "pow.h"
+#include "tinyformat.h"
+#include "uint256.h"
 
 #include <vector>
 
@@ -204,19 +204,19 @@ public:
     unsigned int nChainTx;
 
     //! Verification status of this block. See enum BlockStatus
-    uint32_t nStatus;
+    unsigned int nStatus;
 
     //! block header
-    int32_t nVersion;
+    int nVersion;
     uint256 hashMerkleRoot;
-    uint32_t nTime;
-    uint32_t nBits;
-    uint32_t nNonce;
+    unsigned int nTime;
+    unsigned int nBits;
+    unsigned int nNonce;
 
     //! (memory only) Sequential id assigned to distinguish order in which blocks are received.
     int32_t nSequenceId;
 
-    //! (memory only) Maximum nTime in the chain up to and including this block.
+    //! (memory only) Maximum nTime in the chain upto and including this block.
     unsigned int nTimeMax;
 
     void SetNull()
@@ -247,7 +247,7 @@ public:
         SetNull();
     }
 
-    explicit CBlockIndex(const CBlockHeader& block)
+    CBlockIndex(const CBlockHeader& block)
     {
         SetNull();
 
@@ -294,6 +294,11 @@ public:
         return *phashBlock;
     }
 
+    uint256 GetBlockPoWHash() const
+    {
+        return GetBlockHeader().GetPoWHash();
+    }
+
     int64_t GetBlockTime() const
     {
         return (int64_t)nTime;
@@ -304,7 +309,7 @@ public:
         return (int64_t)nTimeMax;
     }
 
-    static constexpr int nMedianTimeSpan = 11;
+    enum { nMedianTimeSpan=11 };
 
     int64_t GetMedianTimePast() const
     {

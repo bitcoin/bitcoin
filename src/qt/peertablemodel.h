@@ -5,8 +5,8 @@
 #ifndef BITCOIN_QT_PEERTABLEMODEL_H
 #define BITCOIN_QT_PEERTABLEMODEL_H
 
-#include <net_processing.h> // For CNodeStateStats
-#include <net.h>
+#include "net_processing.h" // For CNodeStateStats
+#include "net.h"
 
 #include <QAbstractTableModel>
 #include <QStringList>
@@ -55,10 +55,8 @@ public:
     enum ColumnIndex {
         NetNodeId = 0,
         Address = 1,
-        Ping = 2,
-        Sent = 3,
-        Received = 4,
-        Subversion = 5
+        Subversion = 2,
+        Ping = 3
     };
 
     /** @name Methods overridden from QAbstractTableModel

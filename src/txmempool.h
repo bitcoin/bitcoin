@@ -13,18 +13,19 @@
 #include <utility>
 #include <string>
 
-#include <amount.h>
-#include <coins.h>
-#include <indirectmap.h>
-#include <policy/feerate.h>
-#include <primitives/transaction.h>
-#include <sync.h>
-#include <random.h>
+#include "amount.h"
+#include "coins.h"
+#include "indirectmap.h"
+#include "policy/feerate.h"
+#include "primitives/transaction.h"
+#include "sync.h"
+#include "random.h"
 
-#include <boost/multi_index_container.hpp>
-#include <boost/multi_index/hashed_index.hpp>
-#include <boost/multi_index/ordered_index.hpp>
+#include "boost/multi_index_container.hpp"
+#include "boost/multi_index/ordered_index.hpp"
+#include "boost/multi_index/hashed_index.hpp"
 #include <boost/multi_index/sequenced_index.hpp>
+
 #include <boost/signals2/signal.hpp>
 
 class CBlockIndex;
@@ -94,6 +95,8 @@ public:
                     bool spendsCoinbase,
                     int64_t nSigOpsCost, LockPoints lp);
 
+    CTxMemPoolEntry(const CTxMemPoolEntry& other);
+
     const CTransaction& GetTx() const { return *this->tx; }
     CTransactionRef GetSharedTx() const { return this->tx; }
     const CAmount& GetFee() const { return nFee; }
@@ -109,7 +112,7 @@ public:
     // Adjusts the descendant state.
     void UpdateDescendantState(int64_t modifySize, CAmount modifyFee, int64_t modifyCount);
     // Adjusts the ancestor state
-    void UpdateAncestorState(int64_t modifySize, CAmount modifyFee, int64_t modifyCount, int64_t modifySigOps);
+    void UpdateAncestorState(int64_t modifySize, CAmount modifyFee, int64_t modifyCount, int modifySigOps);
     // Updates the fee delta used for mining priority score, and the
     // modified fees with descendants.
     void UpdateFeeDelta(int64_t feeDelta);
@@ -164,7 +167,7 @@ struct update_ancestor_state
 
 struct update_fee_delta
 {
-    explicit update_fee_delta(int64_t _feeDelta) : feeDelta(_feeDelta) { }
+    update_fee_delta(int64_t _feeDelta) : feeDelta(_feeDelta) { }
 
     void operator() (CTxMemPoolEntry &e) { e.UpdateFeeDelta(feeDelta); }
 
@@ -174,7 +177,7 @@ private:
 
 struct update_lock_points
 {
-    explicit update_lock_points(const LockPoints& _lp) : lp(_lp) { }
+    update_lock_points(const LockPoints& _lp) : lp(_lp) { }
 
     void operator() (CTxMemPoolEntry &e) { e.UpdateLockPoints(lp); }
 
@@ -204,7 +207,7 @@ struct mempoolentry_txid
 class CompareTxMemPoolEntryByDescendantScore
 {
 public:
-    bool operator()(const CTxMemPoolEntry& a, const CTxMemPoolEntry& b) const
+    bool operator()(const CTxMemPoolEntry& a, const CTxMemPoolEntry& b)
     {
         bool fUseADescendants = UseDescendantScore(a);
         bool fUseBDescendants = UseDescendantScore(b);
@@ -226,7 +229,7 @@ public:
     }
 
     // Calculate which score to use for an entry (avoiding division).
-    bool UseDescendantScore(const CTxMemPoolEntry &a) const
+    bool UseDescendantScore(const CTxMemPoolEntry &a)
     {
         double f1 = (double)a.GetModifiedFee() * a.GetSizeWithDescendants();
         double f2 = (double)a.GetModFeesWithDescendants() * a.GetTxSize();
@@ -241,7 +244,7 @@ public:
 class CompareTxMemPoolEntryByScore
 {
 public:
-    bool operator()(const CTxMemPoolEntry& a, const CTxMemPoolEntry& b) const
+    bool operator()(const CTxMemPoolEntry& a, const CTxMemPoolEntry& b)
     {
         double f1 = (double)a.GetModifiedFee() * b.GetTxSize();
         double f2 = (double)b.GetModifiedFee() * a.GetTxSize();
@@ -255,7 +258,7 @@ public:
 class CompareTxMemPoolEntryByEntryTime
 {
 public:
-    bool operator()(const CTxMemPoolEntry& a, const CTxMemPoolEntry& b) const
+    bool operator()(const CTxMemPoolEntry& a, const CTxMemPoolEntry& b)
     {
         return a.GetTime() < b.GetTime();
     }
@@ -264,7 +267,7 @@ public:
 class CompareTxMemPoolEntryByAncestorFee
 {
 public:
-    bool operator()(const CTxMemPoolEntry& a, const CTxMemPoolEntry& b) const
+    bool operator()(const CTxMemPoolEntry& a, const CTxMemPoolEntry& b)
     {
         double aFees = a.GetModFeesWithAncestors();
         double aSize = a.GetSizeWithAncestors();
@@ -498,7 +501,7 @@ public:
 
     /** Create a new CTxMemPool.
      */
-    explicit CTxMemPool(CBlockPolicyEstimator* estimator = nullptr);
+    CTxMemPool(CBlockPolicyEstimator* estimator = nullptr);
 
     /**
      * If sanity-checking is turned on, check makes sure the pool is
@@ -507,15 +510,12 @@ public:
      * check does nothing.
      */
     void check(const CCoinsViewCache *pcoins) const;
-    void setSanityCheck(double dFrequency = 1.0) { nCheckFrequency = static_cast<uint32_t>(dFrequency * 4294967295.0); }
+    void setSanityCheck(double dFrequency = 1.0) { nCheckFrequency = dFrequency * 4294967295.0; }
 
     // addUnchecked must updated state for all ancestors of a given transaction,
     // to track size/count of descendant transactions.  First version of
     // addUnchecked can be used to have it call CalculateMemPoolAncestors(), and
     // then invoke the second version.
-    // Note that addUnchecked is ONLY called from ATMP outside of tests
-    // and any other callers may break wallet's in-mempool tracking (due to
-    // lack of CValidationInterface::TransactionAddedToMempool callbacks).
     bool addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry, bool validFeeEstimate = true);
     bool addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry, setEntries &setAncestors, bool validFeeEstimate = true);
 
@@ -606,7 +606,7 @@ public:
         return mapTx.size();
     }
 
-    uint64_t GetTotalTxSize() const
+    uint64_t GetTotalTxSize()
     {
         LOCK(cs);
         return totalTxSize;

@@ -8,8 +8,8 @@
 #include <QObject>
 #include <QTest>
 
-#include <txdb.h>
-#include <txmempool.h>
+#include "txdb.h"
+#include "txmempool.h"
 
 class RPCNestedTests : public QObject
 {
@@ -17,6 +17,9 @@ class RPCNestedTests : public QObject
 
     private Q_SLOTS:
     void rpcNestedTests();
+
+private:
+    CCoinsViewDB *pcoinsdbview;
 };
 
 #endif // BITCOIN_QT_TEST_RPC_NESTED_TESTS_H

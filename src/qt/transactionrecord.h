@@ -5,8 +5,8 @@
 #ifndef BITCOIN_QT_TRANSACTIONRECORD_H
 #define BITCOIN_QT_TRANSACTIONRECORD_H
 
-#include <amount.h>
-#include <uint256.h>
+#include "amount.h"
+#include "uint256.h"
 
 #include <QList>
 #include <QString>
@@ -140,7 +140,7 @@ public:
 
     /** Return whether a status update is needed.
      */
-    bool statusUpdateNeeded() const;
+    bool statusUpdateNeeded();
 };
 
 #endif // BITCOIN_QT_TRANSACTIONRECORD_H

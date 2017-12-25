@@ -87,7 +87,7 @@ def get_block_hashes(settings, max_blocks_per_call=10000):
 		for x,resp_obj in enumerate(reply):
 			if rpc.response_is_error(resp_obj):
 				print('JSON-RPC: error at height', height+x, ': ', resp_obj['error'], file=sys.stderr)
-				sys.exit(1)
+				exit(1)
 			assert(resp_obj['id'] == x) # assume replies are in-sequence
 			if settings['rev_hash_bytes'] == 'true':
 				resp_obj['result'] = hex_switchEndian(resp_obj['result'])
@@ -125,7 +125,7 @@ if __name__ == '__main__':
 	if 'host' not in settings:
 		settings['host'] = '127.0.0.1'
 	if 'port' not in settings:
-		settings['port'] = 8332
+		settings['port'] = 29252
 	if 'min_height' not in settings:
 		settings['min_height'] = 0
 	if 'max_height' not in settings:
@@ -140,7 +140,7 @@ if __name__ == '__main__':
 	if 'datadir' in settings and not use_userpass:
 		use_datadir = True
 	if not use_userpass and not use_datadir:
-		print("Missing datadir or username and/or password in cfg file", file=sys.stderr)
+		print("Missing datadir or username and/or password in cfg file", file=stderr)
 		sys.exit(1)
 
 	settings['port'] = int(settings['port'])

@@ -5,8 +5,8 @@
 #ifndef BITCOIN_QT_GUIUTIL_H
 #define BITCOIN_QT_GUIUTIL_H
 
-#include <amount.h>
-#include <fs.h>
+#include "amount.h"
+#include "fs.h"
 
 #include <QEvent>
 #include <QHeaderView>
@@ -179,6 +179,11 @@ namespace GUIUtil
     bool GetStartOnSystemStartup();
     bool SetStartOnSystemStartup(bool fAutoStart);
 
+    /** Save window size and position */
+    void saveWindowGeometry(const QString& strSetting, QWidget *parent);
+    /** Restore window size and position */
+    void restoreWindowGeometry(const QString& strSetting, const QSize &defaultSizeIn, QWidget *parent);
+
     /* Convert QString to OS specific boost path through UTF-8 */
     fs::path qstringToBoostPath(const QString &path);
 
@@ -198,8 +203,6 @@ namespace GUIUtil
     QString formatTimeOffset(int64_t nTimeOffset);
 
     QString formatNiceTimeOffset(qint64 secs);
-
-    QString formatBytes(uint64_t bytes);
 
     class ClickableLabel : public QLabel
     {

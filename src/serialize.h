@@ -6,7 +6,7 @@
 #ifndef BITCOIN_SERIALIZE_H
 #define BITCOIN_SERIALIZE_H
 
-#include <compat/endian.h>
+#include "compat/endian.h"
 
 #include <algorithm>
 #include <assert.h>
@@ -21,7 +21,7 @@
 #include <utility>
 #include <vector>
 
-#include <prevector.h>
+#include "prevector.h"
 
 static const unsigned int MAX_SIZE = 0x02000000;
 
@@ -402,7 +402,7 @@ class CVarInt
 protected:
     I &n;
 public:
-    explicit CVarInt(I& nIn) : n(nIn) { }
+    CVarInt(I& nIn) : n(nIn) { }
 
     template<typename Stream>
     void Serialize(Stream &s) const {
@@ -420,7 +420,7 @@ class CCompactSize
 protected:
     uint64_t &n;
 public:
-    explicit CCompactSize(uint64_t& nIn) : n(nIn) { }
+    CCompactSize(uint64_t& nIn) : n(nIn) { }
 
     template<typename Stream>
     void Serialize(Stream &s) const {
@@ -439,7 +439,7 @@ class LimitedString
 protected:
     std::string& string;
 public:
-    explicit LimitedString(std::string& _string) : string(_string) {}
+    LimitedString(std::string& _string) : string(_string) {}
 
     template<typename Stream>
     void Unserialize(Stream& s)
@@ -732,8 +732,8 @@ template<typename Stream, typename K, typename T, typename Pred, typename A>
 void Serialize(Stream& os, const std::map<K, T, Pred, A>& m)
 {
     WriteCompactSize(os, m.size());
-    for (const auto& entry : m)
-        Serialize(os, entry);
+    for (typename std::map<K, T, Pred, A>::const_iterator mi = m.begin(); mi != m.end(); ++mi)
+        Serialize(os, (*mi));
 }
 
 template<typename Stream, typename K, typename T, typename Pred, typename A>

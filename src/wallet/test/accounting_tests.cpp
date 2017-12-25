@@ -2,24 +2,26 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <wallet/wallet.h>
+#include "wallet/wallet.h"
 
-#include <wallet/test/wallet_test_fixture.h>
+#include "wallet/test/wallet_test_fixture.h"
 
 #include <stdint.h>
 
 #include <boost/test/unit_test.hpp>
 
+extern CWallet* pwalletMain;
+
 BOOST_FIXTURE_TEST_SUITE(accounting_tests, WalletTestingSetup)
 
 static void
-GetResults(CWallet *wallet, std::map<CAmount, CAccountingEntry>& results)
+GetResults(std::map<CAmount, CAccountingEntry>& results)
 {
     std::list<CAccountingEntry> aes;
 
     results.clear();
-    BOOST_CHECK(wallet->ReorderTransactions() == DB_LOAD_OK);
-    wallet->ListAccountCreditDebit("", aes);
+    BOOST_CHECK(pwalletMain->ReorderTransactions() == DB_LOAD_OK);
+    pwalletMain->ListAccountCreditDebit("", aes);
     for (CAccountingEntry& ae : aes)
     {
         results[ae.nOrderPos] = ae;
@@ -52,7 +54,7 @@ BOOST_AUTO_TEST_CASE(acc_orderupgrade)
     ae.strOtherAccount = "c";
     pwalletMain->AddAccountingEntry(ae);
 
-    GetResults(pwalletMain.get(), results);
+    GetResults(results);
 
     BOOST_CHECK(pwalletMain->nOrderPosNext == 3);
     BOOST_CHECK(2 == results.size());
@@ -68,7 +70,7 @@ BOOST_AUTO_TEST_CASE(acc_orderupgrade)
     ae.nOrderPos = pwalletMain->IncOrderPosNext();
     pwalletMain->AddAccountingEntry(ae);
 
-    GetResults(pwalletMain.get(), results);
+    GetResults(results);
 
     BOOST_CHECK(results.size() == 3);
     BOOST_CHECK(pwalletMain->nOrderPosNext == 4);
@@ -81,7 +83,7 @@ BOOST_AUTO_TEST_CASE(acc_orderupgrade)
 
     wtx.mapValue["comment"] = "y";
     {
-        CMutableTransaction tx(*wtx.tx);
+        CMutableTransaction tx(wtx);
         --tx.nLockTime;  // Just to change the hash :)
         wtx.SetTx(MakeTransactionRef(std::move(tx)));
     }
@@ -91,7 +93,7 @@ BOOST_AUTO_TEST_CASE(acc_orderupgrade)
 
     wtx.mapValue["comment"] = "x";
     {
-        CMutableTransaction tx(*wtx.tx);
+        CMutableTransaction tx(wtx);
         --tx.nLockTime;  // Just to change the hash :)
         wtx.SetTx(MakeTransactionRef(std::move(tx)));
     }
@@ -100,7 +102,7 @@ BOOST_AUTO_TEST_CASE(acc_orderupgrade)
     vpwtx[2]->nTimeReceived = (unsigned int)1333333329;
     vpwtx[2]->nOrderPos = -1;
 
-    GetResults(pwalletMain.get(), results);
+    GetResults(results);
 
     BOOST_CHECK(results.size() == 3);
     BOOST_CHECK(pwalletMain->nOrderPosNext == 6);
@@ -118,7 +120,7 @@ BOOST_AUTO_TEST_CASE(acc_orderupgrade)
     ae.nOrderPos = -1;
     pwalletMain->AddAccountingEntry(ae);
 
-    GetResults(pwalletMain.get(), results);
+    GetResults(results);
 
     BOOST_CHECK(results.size() == 4);
     BOOST_CHECK(pwalletMain->nOrderPosNext == 7);

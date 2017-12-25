@@ -2,14 +2,14 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <qt/bantablemodel.h>
+#include "bantablemodel.h"
 
-#include <qt/clientmodel.h>
-#include <qt/guiconstants.h>
-#include <qt/guiutil.h>
+#include "clientmodel.h"
+#include "guiconstants.h"
+#include "guiutil.h"
 
-#include <sync.h>
-#include <utiltime.h>
+#include "sync.h"
+#include "utiltime.h"
 
 #include <QDebug>
 #include <QList>
@@ -55,11 +55,11 @@ public:
 #if QT_VERSION >= 0x040700
         cachedBanlist.reserve(banMap.size());
 #endif
-        for (const auto& entry : banMap)
+        for (banmap_t::iterator it = banMap.begin(); it != banMap.end(); it++)
         {
             CCombinedBan banEntry;
-            banEntry.subnet = entry.first;
-            banEntry.banEntry = entry.second;
+            banEntry.subnet = (*it).first;
+            banEntry.banEntry = (*it).second;
             cachedBanlist.append(banEntry);
         }
 

@@ -5,10 +5,10 @@
 #ifndef BITCOIN_QT_RPCCONSOLE_H
 #define BITCOIN_QT_RPCCONSOLE_H
 
-#include <qt/guiutil.h>
-#include <qt/peertablemodel.h>
+#include "guiutil.h"
+#include "peertablemodel.h"
 
-#include <net.h>
+#include "net.h"
 
 #include <QWidget>
 #include <QCompleter>
@@ -123,6 +123,7 @@ Q_SIGNALS:
     void cmdRequest(const QString &command);
 
 private:
+    static QString FormatBytes(quint64 bytes);
     void startExecutor();
     void setTrafficGraphRange(int mins);
     /** show detailed information on ui about selected node */

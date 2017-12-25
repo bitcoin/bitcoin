@@ -61,7 +61,7 @@ private:
     bool replySent;
 
 public:
-    explicit HTTPRequest(struct evhttp_request* req);
+    HTTPRequest(struct evhttp_request* req);
     ~HTTPRequest();
 
     enum RequestMethod {

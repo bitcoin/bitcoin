@@ -10,7 +10,9 @@ from test_framework.mininode import *
 from io import BytesIO
 
 class DecodeScriptTest(BitcoinTestFramework):
-    def set_test_params(self):
+
+    def __init__(self):
+        super().__init__()
         self.setup_clean_chain = True
         self.num_nodes = 1
 

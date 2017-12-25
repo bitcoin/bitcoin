@@ -5,7 +5,7 @@
 #ifndef BITCOIN_QT_RECEIVECOINSDIALOG_H
 #define BITCOIN_QT_RECEIVECOINSDIALOG_H
 
-#include <qt/guiutil.h>
+#include "guiutil.h"
 
 #include <QDialog>
 #include <QHeaderView>

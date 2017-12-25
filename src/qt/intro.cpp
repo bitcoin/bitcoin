@@ -3,16 +3,16 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
+#include "config/bitcoin-config.h"
 #endif
 
-#include <fs.h>
-#include <qt/intro.h>
-#include <qt/forms/ui_intro.h>
+#include "fs.h"
+#include "intro.h"
+#include "ui_intro.h"
 
-#include <qt/guiutil.h>
+#include "guiutil.h"
 
-#include <util.h>
+#include "util.h"
 
 #include <QFileDialog>
 #include <QSettings>
@@ -22,7 +22,7 @@
 
 static const uint64_t GB_BYTES = 1000000000LL;
 /* Minimum free space (in GB) needed for data directory */
-static const uint64_t BLOCK_CHAIN_SIZE = 150;
+static const uint64_t BLOCK_CHAIN_SIZE = 9;
 /* Minimum free space (in GB) needed for data directory when pruned; Does not include prune target */
 static const uint64_t CHAIN_STATE_SIZE = 3;
 /* Total required space (in GB) depending on user choice (prune, not prune) */
@@ -43,7 +43,7 @@ class FreespaceChecker : public QObject
     Q_OBJECT
 
 public:
-    explicit FreespaceChecker(Intro *intro);
+    FreespaceChecker(Intro *intro);
 
     enum Status {
         ST_OK,
@@ -60,7 +60,7 @@ private:
     Intro *intro;
 };
 
-#include <qt/intro.moc>
+#include "intro.moc"
 
 FreespaceChecker::FreespaceChecker(Intro *_intro)
 {
@@ -214,10 +214,7 @@ bool Intro::pickDataDirectory()
             }
             dataDir = intro.getDataDirectory();
             try {
-                if (TryCreateDirectories(GUIUtil::qstringToBoostPath(dataDir))) {
-                    // If a new data directory has been created, make wallets subdirectory too
-                    TryCreateDirectories(GUIUtil::qstringToBoostPath(dataDir) / "wallets");
-                }
+                TryCreateDirectories(GUIUtil::qstringToBoostPath(dataDir));
                 break;
             } catch (const fs::filesystem_error&) {
                 QMessageBox::critical(0, tr(PACKAGE_NAME),

@@ -27,7 +27,7 @@ protected:
     size_type nMaxSize;
 
 public:
-    explicit limitedmap(size_type nMaxSizeIn)
+    limitedmap(size_type nMaxSizeIn)
     {
         assert(nMaxSizeIn > 0);
         nMaxSize = nMaxSizeIn;

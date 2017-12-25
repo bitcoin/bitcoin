@@ -2,13 +2,13 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <qt/transactionrecord.h>
+#include "transactionrecord.h"
 
-#include <base58.h>
-#include <consensus/consensus.h>
-#include <validation.h>
-#include <timedata.h>
-#include <wallet/wallet.h>
+#include "base58.h"
+#include "consensus/consensus.h"
+#include "validation.h"
+#include "timedata.h"
+#include "wallet/wallet.h"
 
 #include <stdint.h>
 
@@ -55,7 +55,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                 {
                     // Received by Bitcoin Address
                     sub.type = TransactionRecord::RecvWithAddress;
-                    sub.address = EncodeDestination(address);
+                    sub.address = CBitcoinAddress(address).ToString();
                 }
                 else
                 {
@@ -127,7 +127,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                 {
                     // Sent to Bitcoin Address
                     sub.type = TransactionRecord::SendToAddress;
-                    sub.address = EncodeDestination(address);
+                    sub.address = CBitcoinAddress(address).ToString();
                 }
                 else
                 {
@@ -182,7 +182,7 @@ void TransactionRecord::updateStatus(const CWalletTx &wtx)
     status.depth = wtx.GetDepthInMainChain();
     status.cur_num_blocks = chainActive.Height();
 
-    if (!CheckFinalTx(*wtx.tx))
+    if (!CheckFinalTx(wtx))
     {
         if (wtx.tx->nLockTime < LOCKTIME_THRESHOLD)
         {
@@ -248,7 +248,7 @@ void TransactionRecord::updateStatus(const CWalletTx &wtx)
     status.needsUpdate = false;
 }
 
-bool TransactionRecord::statusUpdateNeeded() const
+bool TransactionRecord::statusUpdateNeeded()
 {
     AssertLockHeld(cs_main);
     return status.cur_num_blocks != chainActive.Height() || status.needsUpdate;

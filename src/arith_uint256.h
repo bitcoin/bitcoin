@@ -25,7 +25,7 @@ template<unsigned int BITS>
 class base_uint
 {
 protected:
-    static constexpr int WIDTH = BITS / 32;
+    enum { WIDTH=BITS/32 };
     uint32_t pn[WIDTH];
 public:
 
@@ -250,7 +250,7 @@ public:
 
     uint64_t GetLow64() const
     {
-        static_assert(WIDTH >= 2, "Assertion WIDTH >= 2 failed (WIDTH = BITS / 32). BITS is a template parameter.");
+        assert(WIDTH >= 2);
         return pn[0] | (uint64_t)pn[1] << 32;
     }
 };

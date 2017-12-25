@@ -8,7 +8,9 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 
 class MempoolLimitTest(BitcoinTestFramework):
-    def set_test_params(self):
+
+    def __init__(self):
+        super().__init__()
         self.setup_clean_chain = True
         self.num_nodes = 1
         self.extra_args = [["-maxmempool=5", "-spendzeroconfchange=0"]]
@@ -23,7 +25,7 @@ class MempoolLimitTest(BitcoinTestFramework):
         #create a mempool tx that will be evicted
         us0 = utxos.pop()
         inputs = [{ "txid" : us0["txid"], "vout" : us0["vout"]}]
-        outputs = {self.nodes[0].getnewaddress() : 0.0001}
+        outputs = {self.nodes[0].getnewaddress() : 0.01}
         tx = self.nodes[0].createrawtransaction(inputs, outputs)
         self.nodes[0].settxfee(relayfee) # specifically fund this tx with low fee
         txF = self.nodes[0].fundrawtransaction(tx)

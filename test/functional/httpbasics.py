@@ -11,8 +11,10 @@ import http.client
 import urllib.parse
 
 class HTTPBasicsTest (BitcoinTestFramework):
-    def set_test_params(self):
+    def __init__(self):
+        super().__init__()
         self.num_nodes = 3
+        self.setup_clean_chain = False
 
     def setup_network(self):
         self.setup_nodes()

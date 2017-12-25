@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <bench/bench.h>
-#include <wallet/wallet.h>
+#include "bench.h"
+#include "wallet/wallet.h"
 
 #include <set>
 
@@ -56,4 +56,4 @@ static void CoinSelection(benchmark::State& state)
     }
 }
 
-BENCHMARK(CoinSelection, 650);
+BENCHMARK(CoinSelection);

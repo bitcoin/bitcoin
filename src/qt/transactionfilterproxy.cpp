@@ -2,12 +2,14 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <qt/transactionfilterproxy.h>
+#include "transactionfilterproxy.h"
 
-#include <qt/transactiontablemodel.h>
-#include <qt/transactionrecord.h>
+#include "transactiontablemodel.h"
+#include "transactionrecord.h"
 
 #include <cstdlib>
+
+#include <QDateTime>
 
 // Earliest date that can be represented (far in the past)
 const QDateTime TransactionFilterProxy::MIN_DATE = QDateTime::fromTime_t(0);
@@ -18,7 +20,7 @@ TransactionFilterProxy::TransactionFilterProxy(QObject *parent) :
     QSortFilterProxyModel(parent),
     dateFrom(MIN_DATE),
     dateTo(MAX_DATE),
-    m_search_string(),
+    addrPrefix(),
     typeFilter(ALL_TYPES),
     watchOnlyFilter(WatchOnlyFilter_All),
     minAmount(0),
@@ -36,7 +38,6 @@ bool TransactionFilterProxy::filterAcceptsRow(int sourceRow, const QModelIndex &
     bool involvesWatchAddress = index.data(TransactionTableModel::WatchonlyRole).toBool();
     QString address = index.data(TransactionTableModel::AddressRole).toString();
     QString label = index.data(TransactionTableModel::LabelRole).toString();
-    QString txid = index.data(TransactionTableModel::TxIDRole).toString();
     qint64 amount = llabs(index.data(TransactionTableModel::AmountRole).toLongLong());
     int status = index.data(TransactionTableModel::StatusRole).toInt();
 
@@ -50,11 +51,8 @@ bool TransactionFilterProxy::filterAcceptsRow(int sourceRow, const QModelIndex &
         return false;
     if(datetime < dateFrom || datetime > dateTo)
         return false;
-    if (!address.contains(m_search_string, Qt::CaseInsensitive) &&
-        !  label.contains(m_search_string, Qt::CaseInsensitive) &&
-        !   txid.contains(m_search_string, Qt::CaseInsensitive)) {
+    if (!address.contains(addrPrefix, Qt::CaseInsensitive) && !label.contains(addrPrefix, Qt::CaseInsensitive))
         return false;
-    }
     if(amount < minAmount)
         return false;
 
@@ -68,10 +66,9 @@ void TransactionFilterProxy::setDateRange(const QDateTime &from, const QDateTime
     invalidateFilter();
 }
 
-void TransactionFilterProxy::setSearchString(const QString &search_string)
+void TransactionFilterProxy::setAddressPrefix(const QString &_addrPrefix)
 {
-    if (m_search_string == search_string) return;
-    m_search_string = search_string;
+    this->addrPrefix = _addrPrefix;
     invalidateFilter();
 }
 

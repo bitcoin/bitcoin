@@ -7,19 +7,26 @@
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
-    assert_raises_rpc_error,
+    assert_raises_jsonrpc,
 )
 
+
 class NamedArgumentTest(BitcoinTestFramework):
-    def set_test_params(self):
+    """
+    Test named arguments on RPC calls.
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.setup_clean_chain = False
         self.num_nodes = 1
 
     def run_test(self):
         node = self.nodes[0]
-        h = node.help(command='getblockchaininfo')
-        assert(h.startswith('getblockchaininfo\n'))
+        h = node.help(command='getinfo')
+        assert(h.startswith('getinfo\n'))
 
-        assert_raises_rpc_error(-8, 'Unknown named parameter', node.help, random='getblockchaininfo')
+        assert_raises_jsonrpc(-8, 'Unknown named parameter', node.help, random='getinfo')
 
         h = node.getblockhash(height=0)
         node.getblock(blockhash=h)

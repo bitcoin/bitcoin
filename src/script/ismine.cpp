@@ -3,12 +3,13 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <script/ismine.h>
+#include "ismine.h"
 
-#include <key.h>
-#include <keystore.h>
-#include <script/script.h>
-#include <script/sign.h>
+#include "key.h"
+#include "keystore.h"
+#include "script/script.h"
+#include "script/standard.h"
+#include "script/sign.h"
 
 
 typedef std::vector<unsigned char> valtype;
@@ -45,8 +46,6 @@ isminetype IsMine(const CKeyStore &keystore, const CTxDestination& dest, bool& i
 
 isminetype IsMine(const CKeyStore &keystore, const CScript& scriptPubKey, bool& isInvalid, SigVersion sigversion)
 {
-    isInvalid = false;
-
     std::vector<valtype> vSolutions;
     txnouttype whichType;
     if (!Solver(scriptPubKey, whichType, vSolutions)) {
@@ -60,7 +59,6 @@ isminetype IsMine(const CKeyStore &keystore, const CScript& scriptPubKey, bool& 
     {
     case TX_NONSTANDARD:
     case TX_NULL_DATA:
-    case TX_WITNESS_UNKNOWN:
         break;
     case TX_PUBKEY:
         keyID = CPubKey(vSolutions[0]).GetID();

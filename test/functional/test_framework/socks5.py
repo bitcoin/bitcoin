@@ -31,7 +31,7 @@ def recvall(s, n):
     return rv
 
 ### Implementation classes
-class Socks5Configuration():
+class Socks5Configuration(object):
     """Proxy configuration."""
     def __init__(self):
         self.addr = None # Bind address (must be set)
@@ -39,7 +39,7 @@ class Socks5Configuration():
         self.unauth = False  # Support unauthenticated
         self.auth = False  # Support authentication
 
-class Socks5Command():
+class Socks5Command(object):
     """Information about an incoming socks5 command."""
     def __init__(self, cmd, atyp, addr, port, username, password):
         self.cmd = cmd # Command (one of Command.*)
@@ -51,7 +51,7 @@ class Socks5Command():
     def __repr__(self):
         return 'Socks5Command(%s,%s,%s,%s,%s,%s)' % (self.cmd, self.atyp, self.addr, self.port, self.username, self.password)
 
-class Socks5Connection():
+class Socks5Connection(object):
     def __init__(self, serv, conn, peer):
         self.serv = serv
         self.conn = conn
@@ -91,7 +91,7 @@ class Socks5Connection():
                 self.conn.sendall(bytearray([0x01, 0x00]))
 
             # Read connect request
-            ver, cmd, _, atyp = recvall(self.conn, 4)
+            (ver,cmd,rsv,atyp) = recvall(self.conn, 4)
             if ver != 0x05:
                 raise IOError('Invalid socks version %i in connect request' % ver)
             if cmd != Command.CONNECT:
@@ -122,7 +122,7 @@ class Socks5Connection():
         finally:
             self.conn.close()
 
-class Socks5Server():
+class Socks5Server(object):
     def __init__(self, conf):
         self.conf = conf
         self.s = socket.socket(conf.af)

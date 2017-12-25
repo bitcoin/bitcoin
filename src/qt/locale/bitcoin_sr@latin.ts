@@ -41,6 +41,38 @@
         <source>&amp;Delete</source>
         <translation>&amp;Izbrisati</translation>
     </message>
+    <message>
+        <source>Choose the address to send coins to</source>
+        <translation>Izaberite adresu za slanje novčića</translation>
+    </message>
+    <message>
+        <source>Choose the address to receive coins with</source>
+        <translation>Izaberite adresu za prijem novčića</translation>
+    </message>
+    <message>
+        <source>Sending addresses</source>
+        <translation>Adresa na koju se šalje</translation>
+    </message>
+    <message>
+        <source>Receiving addresses</source>
+        <translation>Adresa na koju se prima</translation>
+    </message>
+    <message>
+        <source>These are your Blockcash addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation>Ovo su Vaše Blockcash adrese na koju se vrše uplate. Uvek proverite iznos i prijemnu adresu pre slanja novčića</translation>
+    </message>
+    <message>
+        <source>These are your Blockcash addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
+        <translation>Ovo su Vaše Blockcash adrese za primanje uplata. Preporučuje se upotreba nove adrese za svaku transakciju.</translation>
+    </message>
+    <message>
+        <source>Copy &amp;Label</source>
+        <translation>Kopiranje &amp;Oznaka</translation>
+    </message>
+    <message>
+        <source>&amp;Edit</source>
+        <translation>&amp;Izmena</translation>
+    </message>
     </context>
 <context>
     <name>AddressTableModel</name>
@@ -100,7 +132,7 @@
         <translation>Potvrdite šifrovanje novčanika</translation>
     </message>
     <message>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BLOCKCASHS&lt;/b&gt;!</source>
         <translation>Upozorenje: Ako šifrujete svoj novčanik, i potom izgubite svoju pristupnu frazu &lt;b&gt;IZGUBIĆETE SVE SVOJE BITKOINE&lt;/b&gt;!</translation>
     </message>
     <message>
@@ -138,6 +170,14 @@
         <translation>Isključi aplikaciju</translation>
     </message>
     <message>
+        <source>&amp;About %1</source>
+        <translation>&amp;Otprilike %1</translation>
+    </message>
+    <message>
+        <source>Show information about %1</source>
+        <translation>Prikaži informacije za otprilike %1</translation>
+    </message>
+    <message>
         <source>&amp;Options...</source>
         <translation>&amp;Opcije...</translation>
     </message>
@@ -158,16 +198,16 @@
         <translation>Otvori &amp;URI...</translation>
     </message>
     <message>
-        <source>Send coins to a Bitcoin address</source>
-        <translation>Pošalji novčiće na Bitcoin adresu</translation>
+        <source>Send coins to a Blockcash address</source>
+        <translation>Pošalji novčiće na Blockcash adresu</translation>
     </message>
     <message>
         <source>&amp;Verify message...</source>
         <translation>&amp;Proveri poruku...</translation>
     </message>
     <message>
-        <source>Bitcoin</source>
-        <translation>Bitcoin</translation>
+        <source>Blockcash</source>
+        <translation>Blockcash</translation>
     </message>
     <message>
         <source>Wallet</source>
@@ -406,8 +446,8 @@
 <context>
     <name>bitcoin-core</name>
     <message>
-        <source>Bitcoin Core</source>
-        <translation>Bitcoin Core</translation>
+        <source>Blockcash Core</source>
+        <translation>Blockcash Core</translation>
     </message>
     <message>
         <source>Information</source>

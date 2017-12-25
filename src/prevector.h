@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_PREVECTOR_H
-#define BITCOIN_PREVECTOR_H
+#ifndef _BITCOIN_PREVECTOR_H_
+#define _BITCOIN_PREVECTOR_H_
 
 #include <assert.h>
 #include <stdlib.h>
@@ -514,4 +514,4 @@ public:
 };
 #pragma pack(pop)
 
-#endif // BITCOIN_PREVECTOR_H
+#endif

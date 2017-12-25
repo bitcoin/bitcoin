@@ -2,10 +2,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <qt/qvalidatedlineedit.h>
+#include "qvalidatedlineedit.h"
 
-#include <qt/bitcoinaddressvalidator.h>
-#include <qt/guiconstants.h>
+#include "bitcoinaddressvalidator.h"
+#include "guiconstants.h"
 
 QValidatedLineEdit::QValidatedLineEdit(QWidget *parent) :
     QLineEdit(parent),

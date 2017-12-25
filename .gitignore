@@ -1,13 +1,13 @@
 *.tar.gz
 
 *.exe
-src/bitcoin
-src/bitcoind
-src/bitcoin-cli
-src/bitcoin-tx
-src/test/test_bitcoin
-src/test/test_bitcoin_fuzzy
-src/qt/test/test_bitcoin-qt
+src/blockcash
+src/blockcashd
+src/blockcash-cli
+src/blockcash-tx
+src/test/test_blockcash
+src/test/test_blockcash_fuzzy
+src/qt/test/test_blockcash-qt
 
 # autoreconf
 Makefile.in
@@ -74,13 +74,12 @@ src/qt/test/moc*.cpp
 # Compilation and Qt preprocessor part
 *.qm
 Makefile
-bitcoin-qt
-Bitcoin-Qt.app
-background.tiff*
+blockcash-qt
+Blockcash-Qt.app
 
 # Unit-tests
 Makefile.test
-bitcoin-qt_test
+blockcash-qt_test
 
 # Resources cpp
 qrc_*.cpp
@@ -93,7 +92,7 @@ build
 *.gcno
 *.gcda
 /*.info
-test_bitcoin.coverage/
+test_blockcash.coverage/
 total.coverage/
 coverage_percent.txt
 

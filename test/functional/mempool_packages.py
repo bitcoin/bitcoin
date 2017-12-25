@@ -12,8 +12,10 @@ MAX_ANCESTORS = 25
 MAX_DESCENDANTS = 25
 
 class MempoolPackagesTest(BitcoinTestFramework):
-    def set_test_params(self):
+    def __init__(self):
+        super().__init__()
         self.num_nodes = 2
+        self.setup_clean_chain = False
         self.extra_args = [["-maxorphantx=1000"], ["-maxorphantx=1000", "-limitancestorcount=5"]]
 
     # Build a transaction that spends parent_txid:vout
@@ -115,7 +117,7 @@ class MempoolPackagesTest(BitcoinTestFramework):
             assert_equal(mempool[x]['descendantfees'], descendant_fees * COIN + 1000)
 
         # Adding one more transaction on to the chain should fail.
-        assert_raises_rpc_error(-26, "too-long-mempool-chain", self.chain_transaction, self.nodes[0], txid, vout, value, fee, 1)
+        assert_raises_jsonrpc(-26, "too-long-mempool-chain", self.chain_transaction, self.nodes[0], txid, vout, value, fee, 1)
 
         # Check that prioritising a tx before it's added to the mempool works
         # First clear the mempool by mining a block.
@@ -167,7 +169,7 @@ class MempoolPackagesTest(BitcoinTestFramework):
 
         # Sending one more chained transaction will fail
         utxo = transaction_package.pop(0)
-        assert_raises_rpc_error(-26, "too-long-mempool-chain", self.chain_transaction, self.nodes[0], utxo['txid'], utxo['vout'], utxo['amount'], fee, 10)
+        assert_raises_jsonrpc(-26, "too-long-mempool-chain", self.chain_transaction, self.nodes[0], utxo['txid'], utxo['vout'], utxo['amount'], fee, 10)
 
         # TODO: check that node1's mempool is as expected
 
@@ -211,7 +213,7 @@ class MempoolPackagesTest(BitcoinTestFramework):
         value = send_value
 
         # Create tx1
-        tx1_id, _ = self.chain_transaction(self.nodes[0], tx0_id, 0, value, fee, 1)
+        (tx1_id, tx1_value) = self.chain_transaction(self.nodes[0], tx0_id, 0, value, fee, 1)
 
         # Create tx2-7
         vout = 1

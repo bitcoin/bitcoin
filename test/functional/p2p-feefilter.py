@@ -22,12 +22,12 @@ def allInvsMatch(invsExpected, testnode):
         time.sleep(1)
     return False
 
-class TestNode(P2PInterface):
+class TestNode(NodeConnCB):
     def __init__(self):
         super().__init__()
         self.txinvs = []
 
-    def on_inv(self, message):
+    def on_inv(self, conn, message):
         for i in message.inv:
             if (i.type == 1):
                 self.txinvs.append(hashToHex(i.hash))
@@ -37,8 +37,11 @@ class TestNode(P2PInterface):
             self.txinvs = []
 
 class FeeFilterTest(BitcoinTestFramework):
-    def set_test_params(self):
+
+    def __init__(self):
+        super().__init__()
         self.num_nodes = 2
+        self.setup_clean_chain = False
 
     def run_test(self):
         node1 = self.nodes[1]
@@ -48,23 +51,25 @@ class FeeFilterTest(BitcoinTestFramework):
         sync_blocks(self.nodes)
 
         # Setup the p2p connections and start up the network thread.
-        self.nodes[0].add_p2p_connection(TestNode())
-        network_thread_start()
-        self.nodes[0].p2p.wait_for_verack()
+        test_node = TestNode()
+        connection = NodeConn('127.0.0.1', p2p_port(0), self.nodes[0], test_node)
+        test_node.add_connection(connection)
+        NetworkThread().start()
+        test_node.wait_for_verack()
 
         # Test that invs are received for all txs at feerate of 20 sat/byte
         node1.settxfee(Decimal("0.00020000"))
         txids = [node1.sendtoaddress(node1.getnewaddress(), 1) for x in range(3)]
-        assert(allInvsMatch(txids, self.nodes[0].p2p))
-        self.nodes[0].p2p.clear_invs()
+        assert(allInvsMatch(txids, test_node))
+        test_node.clear_invs()
 
         # Set a filter of 15 sat/byte
-        self.nodes[0].p2p.send_and_ping(msg_feefilter(15000))
+        test_node.send_and_ping(msg_feefilter(15000))
 
         # Test that txs are still being received (paying 20 sat/byte)
         txids = [node1.sendtoaddress(node1.getnewaddress(), 1) for x in range(3)]
-        assert(allInvsMatch(txids, self.nodes[0].p2p))
-        self.nodes[0].p2p.clear_invs()
+        assert(allInvsMatch(txids, test_node))
+        test_node.clear_invs()
 
         # Change tx fee rate to 10 sat/byte and test they are no longer received
         node1.settxfee(Decimal("0.00010000"))
@@ -80,14 +85,14 @@ class FeeFilterTest(BitcoinTestFramework):
         # as well.
         node0.settxfee(Decimal("0.00020000"))
         txids = [node0.sendtoaddress(node0.getnewaddress(), 1)]
-        assert(allInvsMatch(txids, self.nodes[0].p2p))
-        self.nodes[0].p2p.clear_invs()
+        assert(allInvsMatch(txids, test_node))
+        test_node.clear_invs()
 
         # Remove fee filter and check that txs are received again
-        self.nodes[0].p2p.send_and_ping(msg_feefilter(0))
+        test_node.send_and_ping(msg_feefilter(0))
         txids = [node1.sendtoaddress(node1.getnewaddress(), 1) for x in range(3)]
-        assert(allInvsMatch(txids, self.nodes[0].p2p))
-        self.nodes[0].p2p.clear_invs()
+        assert(allInvsMatch(txids, test_node))
+        test_node.clear_invs()
 
 if __name__ == '__main__':
     FeeFilterTest().main()
