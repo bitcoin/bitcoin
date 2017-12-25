@@ -218,7 +218,7 @@ public:
 	bool WriteOffer(const COffer& offer, const COffer& prevOffer, const int &op, const bool& bInstantSend) {
 		bool writeState = WriteOfferLastTXID(offer.vchOffer, offer.txHash) && Write(make_pair(std::string("offeri"), CNameTXIDTuple(offer.vchOffer, offer.txHash)), offer);
 		if (!bInstantSend && !prevOffer.IsNull())
-			writeState = writeState && Write(make_pair(std::string("offerp"), make_pair(offer.vchOffer, prevOffer));
+			writeState = writeState && Write(make_pair(std::string("offerp"), make_pair(offer.vchOffer, prevOffer)));
 		WriteOfferIndex(offer, op);
 		return writeState;
 	}
