@@ -250,7 +250,7 @@ public:
 			return false;	
 		bool writeState = WriteAliasLastTXID(alias.vchAlias, alias.txHash) && Write(make_pair(std::string("namei"), CNameTXIDTuple(alias.vchAlias, alias.txHash)), alias) && Write(make_pair(std::string("namea"), address), alias.vchAlias) && Write(make_pair(std::string("nameu"), alias.vchAlias), aliasUnprunable);
 		if (!bInstantSend && !prevAlias.IsNull())
-			writeState = writeState && Write(make_pair(std::string("namep"), alias.vchAlias, prevAlias));
+			writeState = writeState && Write(make_pair(std::string("namep"), alias.vchAlias), prevAlias);
 		WriteAliasIndex(alias, op);
 		return writeState;
 	}
