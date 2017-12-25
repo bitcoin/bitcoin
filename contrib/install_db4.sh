@@ -46,10 +46,12 @@ http_get() {
     echo "File ${2} already exists; not downloading again"
   elif check_exists curl; then
     curl --insecure "${1}" -o "${2}"
-  else
+  elif check_exists wget; then
     wget --no-check-certificate "${1}" -O "${2}"
+  elif check_exists ftp; then
+    ftp -o "${2}" "${1}"
   fi
-
+  test $? -eq 0 || err Cannot download ${1}
   sha256_check "${3}" "${2}"
 }
 
