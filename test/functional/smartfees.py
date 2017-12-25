@@ -141,8 +141,11 @@ def check_estimates(node, fees_seen, max_invalid, print_estimates = True):
 
 
 class EstimateFeeTest(BitcoinTestFramework):
-    def set_test_params(self):
+
+    def __init__(self):
+        super().__init__()
         self.num_nodes = 3
+        self.setup_clean_chain = False
 
     def setup_network(self):
         """
@@ -150,53 +153,13 @@ class EstimateFeeTest(BitcoinTestFramework):
         But first we need to use one node to create a lot of outputs
         which we will use to generate our transactions.
         """
-        self.add_nodes(3, extra_args=[["-maxorphantx=1000", "-whitelist=127.0.0.1"],
-                                      ["-blockmaxsize=17000", "-maxorphantx=1000", "-deprecatedrpc=estimatefee"],
-                                      ["-blockmaxsize=8000", "-maxorphantx=1000"]])
+        self.nodes = []
         # Use node0 to mine blocks for input splitting
-        # Node1 mines small blocks but that are bigger than the expected transaction rate.
-        # NOTE: the CreateNewBlock code starts counting block size at 1,000 bytes,
-        # (17k is room enough for 110 or so transactions)
-        # Node2 is a stingy miner, that
-        # produces too small blocks (room for only 55 or so transactions)
+        self.nodes.append(self.start_node(0, self.options.tmpdir, ["-maxorphantx=1000",
+                                                              "-whitelist=127.0.0.1"]))
 
-
-    def transact_and_mine(self, numblocks, mining_node):
-        min_fee = Decimal("0.00001")
-        # We will now mine numblocks blocks generating on average 100 transactions between each block
-        # We shuffle our confirmed txout set before each set of transactions
-        # small_txpuzzle_randfee will use the transactions that have inputs already in the chain when possible
-        # resorting to tx's that depend on the mempool when those run out
-        for i in range(numblocks):
-            random.shuffle(self.confutxo)
-            for j in range(random.randrange(100-50,100+50)):
-                from_index = random.randint(1,2)
-                (txhex, fee) = small_txpuzzle_randfee(self.nodes[from_index], self.confutxo,
-                                                      self.memutxo, Decimal("0.005"), min_fee, min_fee)
-                tx_kbytes = (len(txhex) // 2) / 1000.0
-                self.fees_per_kb.append(float(fee)/tx_kbytes)
-            sync_mempools(self.nodes[0:3], wait=.1)
-            mined = mining_node.getblock(mining_node.generate(1)[0],True)["tx"]
-            sync_blocks(self.nodes[0:3], wait=.1)
-            # update which txouts are confirmed
-            newmem = []
-            for utx in self.memutxo:
-                if utx["txid"] in mined:
-                    self.confutxo.append(utx)
-                else:
-                    newmem.append(utx)
-            self.memutxo = newmem
-
-    def run_test(self):
         self.log.info("This test is time consuming, please be patient")
         self.log.info("Splitting inputs so we can generate tx's")
-
-        # Make log handler available to helper functions
-        global log
-        log = self.log
-
-        # Start node0
-        self.start_node(0)
         self.txouts = []
         self.txouts2 = []
         # Split a coinbase into two transaction puzzle outputs
@@ -225,14 +188,53 @@ class EstimateFeeTest(BitcoinTestFramework):
 
         # Now we can connect the other nodes, didn't want to connect them earlier
         # so the estimates would not be affected by the splitting transactions
-        self.start_node(1)
-        self.start_node(2)
+        # Node1 mines small blocks but that are bigger than the expected transaction rate.
+        # NOTE: the CreateNewBlock code starts counting block size at 1,000 bytes,
+        # (17k is room enough for 110 or so transactions)
+        self.nodes.append(self.start_node(1, self.options.tmpdir,
+                                     ["-blockmaxsize=17000", "-maxorphantx=1000"]))
         connect_nodes(self.nodes[1], 0)
+
+        # Node2 is a stingy miner, that
+        # produces too small blocks (room for only 55 or so transactions)
+        node2args = ["-blockmaxsize=8000", "-maxorphantx=1000"]
+
+        self.nodes.append(self.start_node(2, self.options.tmpdir, node2args))
         connect_nodes(self.nodes[0], 2)
         connect_nodes(self.nodes[2], 1)
 
         self.sync_all()
 
+    def transact_and_mine(self, numblocks, mining_node):
+        min_fee = Decimal("0.00001")
+        # We will now mine numblocks blocks generating on average 100 transactions between each block
+        # We shuffle our confirmed txout set before each set of transactions
+        # small_txpuzzle_randfee will use the transactions that have inputs already in the chain when possible
+        # resorting to tx's that depend on the mempool when those run out
+        for i in range(numblocks):
+            random.shuffle(self.confutxo)
+            for j in range(random.randrange(100-50,100+50)):
+                from_index = random.randint(1,2)
+                (txhex, fee) = small_txpuzzle_randfee(self.nodes[from_index], self.confutxo,
+                                                      self.memutxo, Decimal("0.005"), min_fee, min_fee)
+                tx_kbytes = (len(txhex) // 2) / 1000.0
+                self.fees_per_kb.append(float(fee)/tx_kbytes)
+            sync_mempools(self.nodes[0:3], wait=.1)
+            mined = mining_node.getblock(mining_node.generate(1)[0],True)["tx"]
+            sync_blocks(self.nodes[0:3], wait=.1)
+            # update which txouts are confirmed
+            newmem = []
+            for utx in self.memutxo:
+                if utx["txid"] in mined:
+                    self.confutxo.append(utx)
+                else:
+                    newmem.append(utx)
+            self.memutxo = newmem
+
+    def run_test(self):
+        # Make log handler available to helper functions
+        global log
+        log = self.log
         self.fees_per_kb = []
         self.memutxo = []
         self.confutxo = self.txouts # Start with the set of confirmed txouts after splitting

@@ -127,7 +127,7 @@
   <customwidget>
    <class>QRImageWidget</class>
    <extends>QLabel</extends>
-   <header>qt/receiverequestdialog.h</header>
+   <header>receiverequestdialog.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

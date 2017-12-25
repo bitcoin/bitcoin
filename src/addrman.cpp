@@ -3,11 +3,11 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <addrman.h>
+#include "addrman.h"
 
-#include <hash.h>
-#include <serialize.h>
-#include <streams.h>
+#include "hash.h"
+#include "serialize.h"
+#include "streams.h"
 
 int CAddrInfo::GetTriedBucket(const uint256& nKey) const
 {
@@ -390,9 +390,9 @@ int CAddrMan::Check_()
     if (vRandom.size() != nTried + nNew)
         return -7;
 
-    for (const auto& entry : mapInfo) {
-        int n = entry.first;
-        const CAddrInfo& info = entry.second;
+    for (std::map<int, CAddrInfo>::iterator it = mapInfo.begin(); it != mapInfo.end(); it++) {
+        int n = (*it).first;
+        CAddrInfo& info = (*it).second;
         if (info.fInTried) {
             if (!info.nLastSuccess)
                 return -1;

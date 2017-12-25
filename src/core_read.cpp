@@ -2,17 +2,17 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <core_io.h>
+#include "core_io.h"
 
-#include <primitives/block.h>
-#include <primitives/transaction.h>
-#include <script/script.h>
-#include <serialize.h>
-#include <streams.h>
+#include "primitives/block.h"
+#include "primitives/transaction.h"
+#include "script/script.h"
+#include "serialize.h"
+#include "streams.h"
 #include <univalue.h>
-#include <util.h>
-#include <utilstrencodings.h>
-#include <version.h>
+#include "util.h"
+#include "utilstrencodings.h"
+#include "version.h"
 
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/predicate.hpp>
@@ -108,39 +108,39 @@ bool CheckTxScriptsSanity(const CMutableTransaction& tx)
     return true;
 }
 
-bool DecodeHexTx(CMutableTransaction& tx, const std::string& hex_tx, bool try_no_witness, bool try_witness)
+bool DecodeHexTx(CMutableTransaction& tx, const std::string& strHexTx, bool fTryNoWitness)
 {
-    if (!IsHex(hex_tx)) {
+    if (!IsHex(strHexTx)) {
         return false;
     }
 
-    std::vector<unsigned char> txData(ParseHex(hex_tx));
+    std::vector<unsigned char> txData(ParseHex(strHexTx));
 
-    if (try_no_witness) {
+    if (fTryNoWitness) {
         CDataStream ssData(txData, SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS);
         try {
             ssData >> tx;
-            if (ssData.eof() && (!try_witness || CheckTxScriptsSanity(tx))) {
+            if (ssData.eof() && CheckTxScriptsSanity(tx)) {
                 return true;
             }
-        } catch (const std::exception&) {
+        }
+        catch (const std::exception&) {
             // Fall through.
         }
     }
 
-    if (try_witness) {
-        CDataStream ssData(txData, SER_NETWORK, PROTOCOL_VERSION);
-        try {
-            ssData >> tx;
-            if (ssData.empty()) {
-                return true;
-            }
-        } catch (const std::exception&) {
-            // Fall through.
+    CDataStream ssData(txData, SER_NETWORK, PROTOCOL_VERSION);
+    try {
+        ssData >> tx;
+        if (!ssData.empty()) {
+            return false;
         }
     }
-    
-    return false;
+    catch (const std::exception&) {
+        return false;
+    }
+
+    return true;
 }
 
 bool DecodeHexBlk(CBlock& block, const std::string& strHexBlk)

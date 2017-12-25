@@ -3,38 +3,38 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
+#include "config/bitcoin-config.h"
 #endif
 
-#include <qt/bitcoingui.h>
+#include "bitcoingui.h"
 
-#include <chainparams.h>
-#include <qt/clientmodel.h>
-#include <fs.h>
-#include <qt/guiconstants.h>
-#include <qt/guiutil.h>
-#include <qt/intro.h>
-#include <qt/networkstyle.h>
-#include <qt/optionsmodel.h>
-#include <qt/platformstyle.h>
-#include <qt/splashscreen.h>
-#include <qt/utilitydialog.h>
-#include <qt/winshutdownmonitor.h>
+#include "chainparams.h"
+#include "clientmodel.h"
+#include "fs.h"
+#include "guiconstants.h"
+#include "guiutil.h"
+#include "intro.h"
+#include "networkstyle.h"
+#include "optionsmodel.h"
+#include "platformstyle.h"
+#include "splashscreen.h"
+#include "utilitydialog.h"
+#include "winshutdownmonitor.h"
 
 #ifdef ENABLE_WALLET
-#include <qt/paymentserver.h>
-#include <qt/walletmodel.h>
+#include "paymentserver.h"
+#include "walletmodel.h"
 #endif
 
-#include <init.h>
-#include <rpc/server.h>
-#include <scheduler.h>
-#include <ui_interface.h>
-#include <util.h>
-#include <warnings.h>
+#include "init.h"
+#include "rpc/server.h"
+#include "scheduler.h"
+#include "ui_interface.h"
+#include "util.h"
+#include "warnings.h"
 
 #ifdef ENABLE_WALLET
-#include <wallet/wallet.h>
+#include "wallet/wallet.h"
 #endif
 
 #include <stdint.h>
@@ -227,7 +227,7 @@ public:
     void requestShutdown();
 
     /// Get process return value
-    int getReturnValue() const { return returnValue; }
+    int getReturnValue() { return returnValue; }
 
     /// Get window identifier of QMainWindow (BitcoinGUI)
     WId getMainWinId() const;
@@ -261,7 +261,7 @@ private:
     void startThread();
 };
 
-#include <qt/bitcoin.moc>
+#include "bitcoin.moc"
 
 BitcoinCore::BitcoinCore():
     QObject()
@@ -531,7 +531,7 @@ void BitcoinApplication::shutdownResult()
 
 void BitcoinApplication::handleRunawayException(const QString &message)
 {
-    QMessageBox::critical(0, "Runaway exception", BitcoinGUI::tr("A fatal error occurred. Bitcoin can no longer continue safely and will quit.") + QString("\n\n") + message);
+    QMessageBox::critical(0, "Runaway exception", BitcoinGUI::tr("A fatal error occurred. Blockcash can no longer continue safely and will quit.") + QString("\n\n") + message);
     ::exit(EXIT_FAILURE);
 }
 

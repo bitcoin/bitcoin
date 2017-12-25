@@ -24,8 +24,8 @@ don't have test cases for.
 - Use a module-level docstring to describe what the test is testing, and how it
   is testing it.
 - When subclassing the BitcoinTestFramwork, place overrides for the
-  `set_test_params()`, `add_options()` and `setup_xxxx()` methods at the top of
-  the subclass, then locally-defined helper methods, then the `run_test()` method.
+  `__init__()`, and `setup_xxxx()` methods at the top of the subclass, then
+  locally-defined helper methods, then the `run_test()` method.
 
 #### General test-writing advice
 
@@ -36,7 +36,7 @@ don't have test cases for.
 - Avoid stop-starting the nodes multiple times during the test if possible. A
   stop-start takes several seconds, so doing it several times blows up the
   runtime of the test.
-- Set the `self.setup_clean_chain` variable in `set_test_params()` to control whether
+- Set the `self.setup_clean_chain` variable in `__init__()` to control whether
   or not to use the cached data directories. The cached data directories
   contain a 200-block pre-mined blockchain and wallets for four nodes. Each node
   has 25 mature blocks (25x50=1250 BTC) in its wallet.
@@ -63,12 +63,12 @@ wrappers for them, `msg_block`, `msg_tx`, etc).
 with the bitcoind(s) being tested (using python's asyncore package); the other
 implements the test logic.
 
-- `P2PConnection` is the class used to connect to a bitcoind.  `P2PInterface`
-contains the higher level logic for processing P2P payloads and connecting to
-the Bitcoin Core node application logic. For custom behaviour, subclass the
-P2PInterface object and override the callback methods.
+- `NodeConn` is the class used to connect to a bitcoind.  If you implement
+a callback class that derives from `NodeConnCB` and pass that to the
+`NodeConn` object, your code will receive the appropriate callbacks when
+events of interest arrive.
 
-- Call `network_thread_start()` after all `P2PInterface` objects are created to
+- Call `NetworkThread.start()` after all `NodeConn` objects are created to
 start the networking thread.  (Continue with the test logic in your existing
 thread.)
 

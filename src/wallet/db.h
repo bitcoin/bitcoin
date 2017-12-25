@@ -6,12 +6,12 @@
 #ifndef BITCOIN_WALLET_DB_H
 #define BITCOIN_WALLET_DB_H
 
-#include <clientversion.h>
-#include <fs.h>
-#include <serialize.h>
-#include <streams.h>
-#include <sync.h>
-#include <version.h>
+#include "clientversion.h"
+#include "fs.h"
+#include "serialize.h"
+#include "streams.h"
+#include "sync.h"
+#include "version.h"
 
 #include <atomic>
 #include <map>
@@ -36,7 +36,7 @@ private:
 
 public:
     mutable CCriticalSection cs_db;
-    std::unique_ptr<DbEnv> dbenv;
+    DbEnv *dbenv;
     std::map<std::string, int> mapFileUseCount;
     std::map<std::string, Db*> mapDb;
 
@@ -45,7 +45,7 @@ public:
     void Reset();
 
     void MakeMock();
-    bool IsMock() const { return fMockDb; }
+    bool IsMock() { return fMockDb; }
 
     /**
      * Verify that database file strFile is OK. If it is not,
@@ -156,9 +156,6 @@ public:
     explicit CDB(CWalletDBWrapper& dbw, const char* pszMode = "r+", bool fFlushOnCloseIn=true);
     ~CDB() { Close(); }
 
-    CDB(const CDB&) = delete;
-    CDB& operator=(const CDB&) = delete;
-
     void Flush();
     void Close();
     static bool Recover(const std::string& filename, void *callbackDataIn, bool (*recoverKVcallback)(void* callbackData, CDataStream ssKey, CDataStream ssValue), std::string& out_backup_filename);
@@ -167,9 +164,13 @@ public:
        ideal to be called periodically */
     static bool PeriodicFlush(CWalletDBWrapper& dbw);
     /* verifies the database environment */
-    static bool VerifyEnvironment(const std::string& walletFile, const fs::path& walletDir, std::string& errorStr);
+    static bool VerifyEnvironment(const std::string& walletFile, const fs::path& dataDir, std::string& errorStr);
     /* verifies the database file */
-    static bool VerifyDatabaseFile(const std::string& walletFile, const fs::path& walletDir, std::string& warningStr, std::string& errorStr, CDBEnv::recoverFunc_type recoverFunc);
+    static bool VerifyDatabaseFile(const std::string& walletFile, const fs::path& dataDir, std::string& warningStr, std::string& errorStr, CDBEnv::recoverFunc_type recoverFunc);
+
+private:
+    CDB(const CDB&);
+    void operator=(const CDB&);
 
 public:
     template <typename K, typename T>

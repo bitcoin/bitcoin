@@ -13,9 +13,7 @@ class uint256;
 class CCoinControl;
 enum class FeeEstimateMode;
 
-namespace feebumper {
-
-enum class Result
+enum class BumpFeeResult
 {
     OK,
     INVALID_ADDRESS_OR_KEY,
@@ -25,34 +23,39 @@ enum class Result
     MISC_ERROR,
 };
 
-//! Return whether transaction can be bumped.
-bool TransactionCanBeBumped(CWallet* wallet, const uint256& txid);
+class CFeeBumper
+{
+public:
+    CFeeBumper(const CWallet *pWalletIn, const uint256 txidIn, const CCoinControl& coin_control, CAmount totalFee);
+    BumpFeeResult getResult() const { return currentResult; }
+    const std::vector<std::string>& getErrors() const { return vErrors; }
+    CAmount getOldFee() const { return nOldFee; }
+    CAmount getNewFee() const { return nNewFee; }
+    uint256 getBumpedTxId() const { return bumpedTxid; }
 
-//! Create bumpfee transaction.
-Result CreateTransaction(const CWallet* wallet,
-                         const uint256& txid,
-                         const CCoinControl& coin_control,
-                         CAmount total_fee,
-                         std::vector<std::string>& errors,
-                         CAmount& old_fee,
-                         CAmount& new_fee,
-                         CMutableTransaction& mtx);
+    /* signs the new transaction,
+     * returns false if the tx couldn't be found or if it was
+     * impossible to create the signature(s)
+     */
+    bool signTransaction(CWallet *pWallet);
 
-//! Sign the new transaction,
-//! @return false if the tx couldn't be found or if it was
-//! impossible to create the signature(s)
-bool SignTransaction(CWallet* wallet, CMutableTransaction& mtx);
+    /* commits the fee bump,
+     * returns true, in case of CWallet::CommitTransaction was successful
+     * but, eventually sets vErrors if the tx could not be added to the mempool (will try later)
+     * or if the old transaction could not be marked as replaced
+     */
+    bool commit(CWallet *pWalletNonConst);
 
-//! Commit the bumpfee transaction.
-//! @return success in case of CWallet::CommitTransaction was successful,
-//! but sets errors if the tx could not be added to the mempool (will try later)
-//! or if the old transaction could not be marked as replaced.
-Result CommitTransaction(CWallet* wallet,
-                         const uint256& txid,
-                         CMutableTransaction&& mtx,
-                         std::vector<std::string>& errors,
-                         uint256& bumped_txid);
+private:
+    bool preconditionChecks(const CWallet *pWallet, const CWalletTx& wtx);
 
-} // namespace feebumper
+    const uint256 txid;
+    uint256 bumpedTxid;
+    CMutableTransaction mtx;
+    std::vector<std::string> vErrors;
+    BumpFeeResult currentResult;
+    CAmount nOldFee;
+    CAmount nNewFee;
+};
 
 #endif // BITCOIN_WALLET_FEEBUMPER_H

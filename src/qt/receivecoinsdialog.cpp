@@ -2,20 +2,22 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <qt/receivecoinsdialog.h>
-#include <qt/forms/ui_receivecoinsdialog.h>
+#include "receivecoinsdialog.h"
+#include "ui_receivecoinsdialog.h"
 
-#include <qt/addressbookpage.h>
-#include <qt/addresstablemodel.h>
-#include <qt/bitcoinunits.h>
-#include <qt/optionsmodel.h>
-#include <qt/platformstyle.h>
-#include <qt/receiverequestdialog.h>
-#include <qt/recentrequeststablemodel.h>
-#include <qt/walletmodel.h>
+#include "addressbookpage.h"
+#include "addresstablemodel.h"
+#include "bitcoinunits.h"
+#include "guiutil.h"
+#include "optionsmodel.h"
+#include "platformstyle.h"
+#include "receiverequestdialog.h"
+#include "recentrequeststablemodel.h"
+#include "walletmodel.h"
 
 #include <QAction>
 #include <QCursor>
+#include <QItemSelection>
 #include <QMessageBox>
 #include <QScrollBar>
 #include <QTextDocument>
@@ -104,6 +106,7 @@ void ReceiveCoinsDialog::clear()
     ui->reqAmount->clear();
     ui->reqLabel->setText("");
     ui->reqMessage->setText("");
+    ui->reuseAddress->setChecked(false);
     updateDisplayUnit();
 }
 
@@ -132,8 +135,25 @@ void ReceiveCoinsDialog::on_receiveButton_clicked()
 
     QString address;
     QString label = ui->reqLabel->text();
-    /* Generate new receiving address */
-    address = model->getAddressTableModel()->addRow(AddressTableModel::Receive, label, "");
+    if(ui->reuseAddress->isChecked())
+    {
+        /* Choose existing receiving address */
+        AddressBookPage dlg(platformStyle, AddressBookPage::ForSelection, AddressBookPage::ReceivingTab, this);
+        dlg.setModel(model->getAddressTableModel());
+        if(dlg.exec())
+        {
+            address = dlg.getReturnValue();
+            if(label.isEmpty()) /* If no label provided, use the previously used label */
+            {
+                label = model->getAddressTableModel()->labelForAddress(address);
+            }
+        } else {
+            return;
+        }
+    } else {
+        /* Generate new receiving address */
+        address = model->getAddressTableModel()->addRow(AddressTableModel::Receive, label, "");
+    }
     SendCoinsRecipient info(address, label,
         ui->reqAmount->value(), ui->reqMessage->text());
     ReceiveRequestDialog *dialog = new ReceiveRequestDialog(this);

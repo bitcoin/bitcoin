@@ -11,7 +11,7 @@
     </message>
     <message>
         <source>&amp;New</source>
-        <translation>नया</translation>
+        <translation>&amp;NEW</translation>
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
@@ -91,7 +91,7 @@
         <translation>पहचान शब्द/अक्षर जो वॉलेट एनक्रिपशन के लिए इस्तेमाल किया है उसे बदलिए!</translation>
     </message>
     <message>
-        <source>Bitcoin</source>
+        <source>Blockcash</source>
         <translation>बीटकोइन</translation>
     </message>
     <message>

@@ -14,7 +14,7 @@
 #include <boost/thread.hpp>
 #include <map>
 
-#include <sync.h>
+#include "sync.h"
 
 //
 // Simple class for background tasks that should be run
@@ -81,7 +81,7 @@ private:
     int nThreadsServicingQueue;
     bool stopRequested;
     bool stopWhenEmpty;
-    bool shouldStop() const { return stopRequested || (stopWhenEmpty && taskQueue.empty()); }
+    bool shouldStop() { return stopRequested || (stopWhenEmpty && taskQueue.empty()); }
 };
 
 /**
@@ -102,7 +102,7 @@ private:
     void ProcessQueue();
 
 public:
-    explicit SingleThreadedSchedulerClient(CScheduler *pschedulerIn) : m_pscheduler(pschedulerIn) {}
+    SingleThreadedSchedulerClient(CScheduler *pschedulerIn) : m_pscheduler(pschedulerIn) {}
     void AddToProcessQueue(std::function<void (void)> func);
 
     // Processes all remaining queue members on the calling thread, blocking until queue is empty

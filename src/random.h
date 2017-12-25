@@ -6,9 +6,9 @@
 #ifndef BITCOIN_RANDOM_H
 #define BITCOIN_RANDOM_H
 
-#include <crypto/chacha20.h>
-#include <crypto/common.h>
-#include <uint256.h>
+#include "crypto/chacha20.h"
+#include "crypto/common.h"
+#include "uint256.h"
 
 #include <stdint.h>
 
@@ -128,7 +128,7 @@ public:
  * sure that the underlying OS APIs for all platforms support the number.
  * (many cap out at 256 bytes).
  */
-static const int NUM_OS_RANDOM_BYTES = 32;
+static const ssize_t NUM_OS_RANDOM_BYTES = 32;
 
 /** Get 32 bytes of system entropy. Do not use this in application code: use
  * GetStrongRandBytes instead.

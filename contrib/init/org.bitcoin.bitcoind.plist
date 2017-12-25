@@ -7,6 +7,7 @@
 	<key>ProgramArguments</key>
 	<array>
 		<string>/usr/local/bin/bitcoind</string>
+		<string>-daemon</string>
 	</array>
 	<key>RunAtLoad</key>
 	<true/>

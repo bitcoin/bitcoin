@@ -19,16 +19,16 @@ class InvalidTxRequestTest(ComparisonTestFramework):
 
     ''' Can either run this test as 1 node with expected answers, or two and compare them. 
         Change the "outcome" variable from each TestInstance object to only do the comparison. '''
-    def set_test_params(self):
+    def __init__(self):
+        super().__init__()
         self.num_nodes = 1
-        self.setup_clean_chain = True
 
     def run_test(self):
         test = TestManager(self, self.options.tmpdir)
         test.add_all_connections(self.nodes)
         self.tip = None
         self.block_time = None
-        network_thread_start()
+        NetworkThread().start() # Start up network handling in another thread
         test.run()
 
     def get_tests(self):

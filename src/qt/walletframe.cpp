@@ -2,12 +2,11 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <qt/walletframe.h>
+#include "walletframe.h"
 
-#include <qt/bitcoingui.h>
-#include <qt/walletview.h>
+#include "bitcoingui.h"
+#include "walletview.h"
 
-#include <cassert>
 #include <cstdio>
 
 #include <QHBoxLayout>
@@ -70,7 +69,6 @@ bool WalletFrame::setCurrentWallet(const QString& name)
 
     WalletView *walletView = mapWalletViews.value(name);
     walletStack->setCurrentWidget(walletView);
-    assert(walletView);
     walletView->updateEncryptionStatus();
     return true;
 }

@@ -45,7 +45,7 @@ bip112tx_special - test negative argument to OP_CSV
 
 from test_framework.test_framework import ComparisonTestFramework
 from test_framework.util import *
-from test_framework.mininode import ToHex, CTransaction, network_thread_start
+from test_framework.mininode import ToHex, CTransaction, NetworkThread
 from test_framework.blocktools import create_coinbase, create_block
 from test_framework.comptool import TestInstance, TestManager
 from test_framework.script import *
@@ -92,15 +92,15 @@ def all_rlt_txs(txarray):
     return txs
 
 class BIP68_112_113Test(ComparisonTestFramework):
-    def set_test_params(self):
+    def __init__(self):
+        super().__init__()
         self.num_nodes = 1
-        self.setup_clean_chain = True
         self.extra_args = [['-whitelist=127.0.0.1', '-blockversion=4']]
 
     def run_test(self):
         test = TestManager(self, self.options.tmpdir)
         test.add_all_connections(self.nodes)
-        network_thread_start()
+        NetworkThread().start() # Start up network handling in another thread
         test.run()
 
     def send_generic_input_tx(self, node, coinbases):

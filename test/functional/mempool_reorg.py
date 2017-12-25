@@ -13,8 +13,10 @@ from test_framework.util import *
 
 # Create one-input, one-output, no-fee transaction:
 class MempoolCoinbaseTest(BitcoinTestFramework):
-    def set_test_params(self):
+    def __init__(self):
+        super().__init__()
         self.num_nodes = 2
+        self.setup_clean_chain = False
         self.extra_args = [["-checkmempool"]] * 2
 
     alert_filename = None  # Set by setup_network
@@ -50,14 +52,14 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         timelock_tx = timelock_tx[:-8] + hex(self.nodes[0].getblockcount() + 2)[2:] + "000000"
         timelock_tx = self.nodes[0].signrawtransaction(timelock_tx)["hex"]
         # This will raise an exception because the timelock transaction is too immature to spend
-        assert_raises_rpc_error(-26, "non-final", self.nodes[0].sendrawtransaction, timelock_tx)
+        assert_raises_jsonrpc(-26, "non-final", self.nodes[0].sendrawtransaction, timelock_tx)
 
         # Broadcast and mine spend_102 and 103:
         spend_102_id = self.nodes[0].sendrawtransaction(spend_102_raw)
         spend_103_id = self.nodes[0].sendrawtransaction(spend_103_raw)
         self.nodes[0].generate(1)
         # Time-locked transaction is still too immature to spend
-        assert_raises_rpc_error(-26,'non-final', self.nodes[0].sendrawtransaction, timelock_tx)
+        assert_raises_jsonrpc(-26,'non-final', self.nodes[0].sendrawtransaction, timelock_tx)
 
         # Create 102_1 and 103_1:
         spend_102_1_raw = create_tx(self.nodes[0], spend_102_id, node1_address, 49.98)

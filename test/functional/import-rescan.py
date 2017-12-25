@@ -19,8 +19,9 @@ importing nodes pick up the new transactions regardless of whether rescans
 happened previously.
 """
 
+from test_framework.authproxy import JSONRPCException
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import (assert_raises_rpc_error, connect_nodes, sync_blocks, assert_equal, set_node_times)
+from test_framework.util import (connect_nodes, sync_blocks, assert_equal, set_node_times)
 
 import collections
 import enum
@@ -34,26 +35,21 @@ Rescan = enum.Enum("Rescan", "no yes late_timestamp")
 class Variant(collections.namedtuple("Variant", "call data rescan prune")):
     """Helper for importing one key and verifying scanned transactions."""
 
-    def try_rpc(self, func, *args, **kwargs):
-        if self.expect_disabled:
-            assert_raises_rpc_error(-4, "Rescan is disabled in pruned mode", func, *args, **kwargs)
-        else:
-            return func(*args, **kwargs)
-
     def do_import(self, timestamp):
         """Call one key import RPC."""
 
         if self.call == Call.single:
             if self.data == Data.address:
-                response = self.try_rpc(self.node.importaddress, self.address["address"], self.label,
-                                               self.rescan == Rescan.yes)
+                response, error = try_rpc(self.node.importaddress, self.address["address"], self.label,
+                                          self.rescan == Rescan.yes)
             elif self.data == Data.pub:
-                response = self.try_rpc(self.node.importpubkey, self.address["pubkey"], self.label,
-                                               self.rescan == Rescan.yes)
+                response, error = try_rpc(self.node.importpubkey, self.address["pubkey"], self.label,
+                                          self.rescan == Rescan.yes)
             elif self.data == Data.priv:
-                response = self.try_rpc(self.node.importprivkey, self.key, self.label, self.rescan == Rescan.yes)
+                response, error = try_rpc(self.node.importprivkey, self.key, self.label, self.rescan == Rescan.yes)
             assert_equal(response, None)
-
+            assert_equal(error, {'message': 'Rescan is disabled in pruned mode',
+                                 'code': -4} if self.expect_disabled else None)
         elif self.call == Call.multi:
             response = self.node.importmulti([{
                 "scriptPubKey": {
@@ -115,7 +111,8 @@ TIMESTAMP_WINDOW = 2 * 60 * 60
 
 
 class ImportRescanTest(BitcoinTestFramework):
-    def set_test_params(self):
+    def __init__(self):
+        super().__init__()
         self.num_nodes = 2 + len(IMPORT_NODES)
 
     def setup_network(self):
@@ -124,8 +121,7 @@ class ImportRescanTest(BitcoinTestFramework):
             if import_node.prune:
                 extra_args[i] += ["-prune=1"]
 
-        self.add_nodes(self.num_nodes, extra_args)
-        self.start_nodes()
+        self.nodes = self.start_nodes(self.num_nodes, self.options.tmpdir, extra_args)
         for i in range(1, self.num_nodes):
             connect_nodes(self.nodes[i], 0)
 
@@ -165,6 +161,7 @@ class ImportRescanTest(BitcoinTestFramework):
                 variant.check()
 
         # Create new transactions sending to each address.
+        fee = self.nodes[0].getnetworkinfo()["relayfee"]
         for i, variant in enumerate(IMPORT_VARIANTS):
             variant.sent_amount = 10 - (2 * i + 1) / 8.0
             variant.sent_txid = self.nodes[0].sendtoaddress(variant.address["address"], variant.sent_amount)
@@ -182,6 +179,14 @@ class ImportRescanTest(BitcoinTestFramework):
                 variant.check(variant.sent_txid, variant.sent_amount, 1)
             else:
                 variant.check()
+
+
+def try_rpc(func, *args, **kwargs):
+    try:
+        return func(*args, **kwargs), None
+    except JSONRPCException as e:
+        return None, e.error
+
 
 if __name__ == "__main__":
     ImportRescanTest().main()

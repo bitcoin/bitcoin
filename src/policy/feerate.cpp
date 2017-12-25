@@ -3,11 +3,11 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <policy/feerate.h>
+#include "feerate.h"
 
-#include <tinyformat.h>
+#include "tinyformat.h"
 
-const std::string CURRENCY_UNIT = "BTC";
+const std::string CURRENCY_UNIT = "BSC";
 
 CFeeRate::CFeeRate(const CAmount& nFeePaid, size_t nBytes_)
 {

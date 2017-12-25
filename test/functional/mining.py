@@ -4,18 +4,16 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test mining RPCs
 
-- getmininginfo
 - getblocktemplate proposal mode
 - submitblock"""
 
-import copy
 from binascii import b2a_hex
-from decimal import Decimal
+import copy
 
 from test_framework.blocktools import create_coinbase
-from test_framework.mininode import CBlock
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal, assert_raises_rpc_error
+from test_framework.mininode import CBlock
+from test_framework.util import *
 
 def b2x(b):
     return b2a_hex(b).decode('ascii')
@@ -27,23 +25,14 @@ def assert_template(node, block, expect, rehash=True):
     assert_equal(rsp, expect)
 
 class MiningTest(BitcoinTestFramework):
-    def set_test_params(self):
+
+    def __init__(self):
+        super().__init__()
         self.num_nodes = 2
         self.setup_clean_chain = False
 
     def run_test(self):
         node = self.nodes[0]
-
-        self.log.info('getmininginfo')
-        mining_info = node.getmininginfo()
-        assert_equal(mining_info['blocks'], 200)
-        assert_equal(mining_info['chain'], 'regtest')
-        assert_equal(mining_info['currentblocktx'], 0)
-        assert_equal(mining_info['currentblockweight'], 0)
-        assert_equal(mining_info['difficulty'], Decimal('4.656542373906925E-10'))
-        assert_equal(mining_info['networkhashps'], Decimal('0.003333333333333334'))
-        assert_equal(mining_info['pooledtx'], 0)
-
         # Mine a block to leave initial block download
         node.generate(1)
         tmpl = node.getblocktemplate()
@@ -68,7 +57,7 @@ class MiningTest(BitcoinTestFramework):
         assert_template(node, block, None)
 
         self.log.info("submitblock: Test block decode failure")
-        assert_raises_rpc_error(-22, "Block decode failed", node.submitblock, b2x(block.serialize()[:-15]))
+        assert_raises_jsonrpc(-22, "Block decode failed", node.submitblock, b2x(block.serialize()[:-15]))
 
         self.log.info("getblocktemplate: Test bad input hash for coinbase transaction")
         bad_block = copy.deepcopy(block)
@@ -77,10 +66,10 @@ class MiningTest(BitcoinTestFramework):
         assert_template(node, bad_block, 'bad-cb-missing')
 
         self.log.info("submitblock: Test invalid coinbase transaction")
-        assert_raises_rpc_error(-22, "Block does not start with a coinbase", node.submitblock, b2x(bad_block.serialize()))
+        assert_raises_jsonrpc(-22, "Block does not start with a coinbase", node.submitblock, b2x(bad_block.serialize()))
 
         self.log.info("getblocktemplate: Test truncated final transaction")
-        assert_raises_rpc_error(-22, "Block decode failed", node.getblocktemplate, {'data': b2x(block.serialize()[:-1]), 'mode': 'proposal'})
+        assert_raises_jsonrpc(-22, "Block decode failed", node.getblocktemplate, {'data': b2x(block.serialize()[:-1]), 'mode': 'proposal'})
 
         self.log.info("getblocktemplate: Test duplicate transaction")
         bad_block = copy.deepcopy(block)
@@ -107,7 +96,7 @@ class MiningTest(BitcoinTestFramework):
         bad_block_sn = bytearray(block.serialize())
         assert_equal(bad_block_sn[TX_COUNT_OFFSET], 1)
         bad_block_sn[TX_COUNT_OFFSET] += 1
-        assert_raises_rpc_error(-22, "Block decode failed", node.getblocktemplate, {'data': b2x(bad_block_sn), 'mode': 'proposal'})
+        assert_raises_jsonrpc(-22, "Block decode failed", node.getblocktemplate, {'data': b2x(bad_block_sn), 'mode': 'proposal'})
 
         self.log.info("getblocktemplate: Test bad bits")
         bad_block = copy.deepcopy(block)

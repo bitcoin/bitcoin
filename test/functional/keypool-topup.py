@@ -20,10 +20,11 @@ from test_framework.util import (
 )
 
 class KeypoolRestoreTest(BitcoinTestFramework):
-    def set_test_params(self):
+    def __init__(self):
+        super().__init__()
         self.setup_clean_chain = True
         self.num_nodes = 2
-        self.extra_args = [[], ['-keypool=100', '-keypoolmin=20']]
+        self.extra_args = [['-usehd=0'], ['-usehd=1', '-keypool=100', '-keypoolmin=20']]
 
     def run_test(self):
         self.tmpdir = self.options.tmpdir
@@ -33,8 +34,8 @@ class KeypoolRestoreTest(BitcoinTestFramework):
 
         self.stop_node(1)
 
-        shutil.copyfile(self.tmpdir + "/node1/regtest/wallets/wallet.dat", self.tmpdir + "/wallet.bak")
-        self.start_node(1, self.extra_args[1])
+        shutil.copyfile(self.tmpdir + "/node1/regtest/wallet.dat", self.tmpdir + "/wallet.bak")
+        self.nodes[1] = self.start_node(1, self.tmpdir, self.extra_args[1])
         connect_nodes_bi(self.nodes, 0, 1)
 
         self.log.info("Generate keys for wallet")
@@ -56,11 +57,11 @@ class KeypoolRestoreTest(BitcoinTestFramework):
 
         self.stop_node(1)
 
-        shutil.copyfile(self.tmpdir + "/wallet.bak", self.tmpdir + "/node1/regtest/wallets/wallet.dat")
+        shutil.copyfile(self.tmpdir + "/wallet.bak", self.tmpdir + "/node1/regtest/wallet.dat")
 
         self.log.info("Verify keypool is restored and balance is correct")
 
-        self.start_node(1, self.extra_args[1])
+        self.nodes[1] = self.start_node(1, self.tmpdir, self.extra_args[1])
         connect_nodes_bi(self.nodes, 0, 1)
         self.sync_all()
 
@@ -68,7 +69,7 @@ class KeypoolRestoreTest(BitcoinTestFramework):
         assert_equal(self.nodes[1].listtransactions()[0]['category'], "receive")
 
         # Check that we have marked all keys up to the used keypool key as used
-        assert_equal(self.nodes[1].validateaddress(self.nodes[1].getnewaddress())['hdkeypath'], "m/0'/0'/110'")
+        assert_equal(self.nodes[1].validateaddress(self.nodes[1].getnewaddress())['hdkeypath'], "m/0'/0'/111'")
 
 if __name__ == '__main__':
     KeypoolRestoreTest().main()

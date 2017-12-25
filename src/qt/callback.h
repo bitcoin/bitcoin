@@ -16,7 +16,7 @@ class FunctionCallback : public Callback
     F f;
 
 public:
-    explicit FunctionCallback(F f_) : f(std::move(f_)) {}
+    FunctionCallback(F f_) : f(std::move(f_)) {}
     ~FunctionCallback() override {}
     void call() override { f(this); }
 };

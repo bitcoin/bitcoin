@@ -5,7 +5,7 @@
 #ifndef BITCOIN_ZMQ_ZMQABSTRACTNOTIFIER_H
 #define BITCOIN_ZMQ_ZMQABSTRACTNOTIFIER_H
 
-#include <zmq/zmqconfig.h>
+#include "zmqconfig.h"
 
 class CBlockIndex;
 class CZMQAbstractNotifier;
@@ -15,7 +15,7 @@ typedef CZMQAbstractNotifier* (*CZMQNotifierFactory)();
 class CZMQAbstractNotifier
 {
 public:
-    CZMQAbstractNotifier() : psocket(nullptr) { }
+    CZMQAbstractNotifier() : psocket(0) { }
     virtual ~CZMQAbstractNotifier();
 
     template <typename T>

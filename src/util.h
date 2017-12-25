@@ -11,14 +11,14 @@
 #define BITCOIN_UTIL_H
 
 #if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
+#include "config/bitcoin-config.h"
 #endif
 
-#include <compat.h>
-#include <fs.h>
-#include <sync.h>
-#include <tinyformat.h>
-#include <utiltime.h>
+#include "compat.h"
+#include "fs.h"
+#include "sync.h"
+#include "tinyformat.h"
+#include "utiltime.h"
 
 #include <atomic>
 #include <exception>
@@ -28,7 +28,6 @@
 #include <vector>
 
 #include <boost/signals2/signal.hpp>
-#include <boost/thread/condition_variable.hpp> // for boost::thread_interrupted
 
 // Application startup time (used for uptime calculation)
 int64_t GetStartupTime();
@@ -36,7 +35,6 @@ int64_t GetStartupTime();
 static const bool DEFAULT_LOGTIMEMICROS = false;
 static const bool DEFAULT_LOGIPS        = false;
 static const bool DEFAULT_LOGTIMESTAMPS = true;
-extern const char * const DEFAULT_DEBUGLOGFILE;
 
 /** Signals for translation. */
 class CTranslationInterface
@@ -134,10 +132,6 @@ template<typename T, typename... Args> static inline void MarkUsed(const T& t, c
     MarkUsed(args...);
 }
 
-// Be conservative when using LogPrintf/error or other things which
-// unconditionally log to debug.log! It should not be the case that an inbound
-// peer can fill up a users disk with debug.log entries.
-
 #ifdef USE_COVERAGE
 #define LogPrintf(...) do { MarkUsed(__VA_ARGS__); } while(0)
 #define LogPrint(category, ...) do { MarkUsed(__VA_ARGS__); } while(0)
@@ -185,8 +179,7 @@ void CreatePidFile(const fs::path &path, pid_t pid);
 #ifdef WIN32
 fs::path GetSpecialFolderPath(int nFolder, bool fCreate = true);
 #endif
-fs::path GetDebugLogPath();
-bool OpenDebugLog();
+void OpenDebugLog();
 void ShrinkDebugFile();
 void runCommand(const std::string& strCommand);
 
@@ -202,20 +195,13 @@ inline bool IsSwitchChar(char c)
 class ArgsManager
 {
 protected:
-    mutable CCriticalSection cs_args;
+    CCriticalSection cs_args;
     std::map<std::string, std::string> mapArgs;
-    std::map<std::string, std::vector<std::string>> mapMultiArgs;
+    std::map<std::string, std::vector<std::string> > mapMultiArgs;
 public:
     void ParseParameters(int argc, const char*const argv[]);
     void ReadConfigFile(const std::string& confPath);
-
-    /**
-     * Return a vector of strings of the given argument
-     *
-     * @param strArg Argument to get (e.g. "-foo")
-     * @return command-line arguments
-     */
-    std::vector<std::string> GetArgs(const std::string& strArg) const;
+    std::vector<std::string> GetArgs(const std::string& strArg);
 
     /**
      * Return true if the given argument has been manually set
@@ -223,7 +209,7 @@ public:
      * @param strArg Argument to get (e.g. "-foo")
      * @return true if the argument has been set
      */
-    bool IsArgSet(const std::string& strArg) const;
+    bool IsArgSet(const std::string& strArg);
 
     /**
      * Return string argument or default value
@@ -232,7 +218,7 @@ public:
      * @param strDefault (e.g. "1")
      * @return command-line argument or default value
      */
-    std::string GetArg(const std::string& strArg, const std::string& strDefault) const;
+    std::string GetArg(const std::string& strArg, const std::string& strDefault);
 
     /**
      * Return integer argument or default value
@@ -241,7 +227,7 @@ public:
      * @param nDefault (e.g. 1)
      * @return command-line argument (0 if invalid number) or default value
      */
-    int64_t GetArg(const std::string& strArg, int64_t nDefault) const;
+    int64_t GetArg(const std::string& strArg, int64_t nDefault);
 
     /**
      * Return boolean argument or default value
@@ -250,7 +236,7 @@ public:
      * @param fDefault (true or false)
      * @return command-line argument or default value
      */
-    bool GetBoolArg(const std::string& strArg, bool fDefault) const;
+    bool GetBoolArg(const std::string& strArg, bool fDefault);
 
     /**
      * Set an argument if it doesn't already have a value
@@ -332,12 +318,5 @@ template <typename Callable> void TraceThread(const char* name,  Callable func)
 }
 
 std::string CopyrightHolders(const std::string& strPrefix);
-
-//! Substitute for C++14 std::make_unique.
-template <typename T, typename... Args>
-std::unique_ptr<T> MakeUnique(Args&&... args)
-{
-    return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
-}
 
 #endif // BITCOIN_UTIL_H
