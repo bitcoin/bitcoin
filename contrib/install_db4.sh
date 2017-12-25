@@ -60,7 +60,7 @@ http_get() {
 
 mkdir -p "${BDB_PREFIX}"
 http_get "${BDB_URL}" "${BDB_VERSION}.tar.gz" "${BDB_HASH}"
-tar -xzvf ${BDB_VERSION}.tar.gz -C "$BDB_PREFIX"
+tar xzf ${BDB_VERSION}.tar.gz -C "$BDB_PREFIX"
 cd "${BDB_PREFIX}/${BDB_VERSION}/"
 
 # Apply a patch necessary when building with clang and c++11 (see https://community.oracle.com/thread/3952592)
@@ -71,16 +71,14 @@ patch -p2 < clang.patch
 
 cd build_unix/
 
-"${BDB_PREFIX}/${BDB_VERSION}/dist/configure" \
-  --enable-cxx --disable-shared --with-pic --prefix="${BDB_PREFIX}" \
-  "${@}"
+${BDB_PREFIX}/${BDB_VERSION}/dist/configure				\
+  --prefix=${BDB_PREFIX} --with-pic --enable-cxx --enable-smallbuild	\
+  --disable-shared --disable-java --disable-mingw --disable-tcl		\
+  ${@}
 
 make install
 
 echo
-echo "db4 build complete."
-echo
-echo 'When compiling bitcoind, run `./configure` in the following way:'
-echo
-echo "  export BDB_PREFIX='${BDB_PREFIX}'"
-echo '  ./configure LDFLAGS="-L${BDB_PREFIX}/lib/" CPPFLAGS="-I${BDB_PREFIX}/include/" ...'
+echo DB ${BDB_VERSION} build complete
+echo Add the following to ./configure when building bitcoin:
+echo LDFLAGS=-L${BDB_PREFIX}/lib/ CPPFLAGS=-I${BDB_PREFIX}/include/

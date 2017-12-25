@@ -50,12 +50,12 @@ while Bitcoin Core requires version 4.8 to build the wallet.
 
 ### BerkeleyDB
 
-BerkeleyDB is only needed for the wallet functionality.
+BerkeleyDB is needed for the wallet functionality.
 This can be disabled with `./configure --disable-wallet`.
 
-It is recommended to use Berkeley DB 4.8.
-As mentioned above, the OpenBSD ports only have version 4.6
-If you have to build it yourself, you can use
+Bitcoin Core requires Berkeley DB 4.8,
+but the OpenBSD ports only have version 4.6.
+To help you build 4.8 yourself, you can use
 [the installation script included in contrib/](contrib/install_db4.sh):
 
 ```
@@ -88,10 +88,13 @@ To configure with wallet, replace `--enable-wallet=no` with `--enable-wallet`
 and add the following to the `./configure` line:
 
 ```
-BDB_LIBS="-L${BDB_PREFIX}/lib -ldb_cxx-4.8" BDB_CFLAGS="-I${BDB_PREFIX}/include"
+LDFLAGS="-L${DB}/lib/db4/" CPPFLAGS="-I${DB}/include/db4/"
 ```
 
-Edit `BDB_PREFIX` to the path where your BDB 4.8 is installed.
+where `DB` is the path where your DB 4.8 is installed.
+The `contrib/install_db4.sh` helper script reports
+the appropriate `./configure` arguments after it is done.
+
 
 ## Build Bitcoin Core
 
