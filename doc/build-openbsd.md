@@ -84,12 +84,6 @@ env AUTOCONF_VERSION=2.69 AUTOMAKE_VERSION=1.15 ./autogen.sh
 ./configure --prefix=$HOME --with-mandir=$HOME/man --disable-ccache --disable-silent-rules --disable-upnp-default --enable-tests --disable-bench --disable-hardening --disable-reduce-exports --disable-glibc-back-compat --disable-experimental-asm --disable-zmq --enable-man --disable-debug --enable-werror --enable-largefile --without-miniupnpc --without-system-univalue --with-utils --with-libs --with-daemon --with-gui=no --disable-wallet CC=egcc CXX=eg++ CPP=ecpp
 ```
 
-/*
-FIXME muniupnpc, protobuf, and zmq do not seem to be required.
-We explictily disable --without-miniupnpc and --disable-zmq  for now.
-There is no --option for protobuf; it gets picked up when present.
-*/
-
 To configure with wallet, replace `--enable-wallet=no` with `--enable-wallet`
 and add the following to the `./configure` line:
 
@@ -98,11 +92,6 @@ BDB_LIBS="-L${BDB_PREFIX}/lib -ldb_cxx-4.8" BDB_CFLAGS="-I${BDB_PREFIX}/include"
 ```
 
 Edit `BDB_PREFIX` to the path where your BDB 4.8 is installed.
-
-/*
-FIXME: doesn't configure pick the db package (4.6) anyway,
-if present in /usr/local, which comes first in both -I and -L?
-*/
 
 ## Build Bitcoin Core
 
