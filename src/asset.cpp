@@ -143,7 +143,7 @@ void CAssetDB::WriteAssetIndexHistory(const CAsset& asset, const int &op) {
 
 	mongoc_update_flags_t update_flags;
 	update_flags = (mongoc_update_flags_t)(MONGOC_UPDATE_NO_VALIDATE | MONGOC_UPDATE_UPSERT);
-	selector = BCON_NEW("_id", BCON_UTF8(stringFromVch(asset.prevOut.hash.GetHex()).c_str()));
+	selector = BCON_NEW("_id", BCON_UTF8(stringFromVch(asset.txHash.GetHex()).c_str()));
 	write_concern = mongoc_write_concern_new();
 	mongoc_write_concern_set_w(write_concern, MONGOC_WRITE_CONCERN_W_UNACKNOWLEDGED);
 	if (BuildAssetIndexerHistoryJson(asset, oName)) {
@@ -344,8 +344,6 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		LogPrintf("*** ASSET %d %d %s %s\n", nHeight,
 			chainActive.Tip()->nHeight, tx.GetHash().ToString().c_str(),
 			fJustCheck ? "JUSTCHECK" : "BLOCK");
-	bool foundAlias = false;
-	bool foundAsset = false;
 	int prevAliasOp = 0;
     // Make sure asset outputs are not spent by a regular transaction, or the asset would be lost
 	if (tx.nVersion != SYSCOIN_TX_VERSION) 
@@ -389,17 +387,12 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			{
 				continue;
 			}
-			if (foundAlias && foundAsset)
-				break;
-			else if (!foundAlias && IsAliasOp(pop) && vvch.size() >= 2 && theAsset.aliasTuple.first == vvch[0] && theAsset.aliasTuple.third == vvch[1])
+
+			else if (IsAliasOp(pop) && vvch.size() >= 2 && theAsset.aliasTuple.first == vvch[0] && theAsset.aliasTuple.third == vvch[1])
 			{
-				foundAlias = true;
 				prevAliasOp = pop;
 				vvchPrevAliasArgs = vvch;
-			}
-			else if (!foundAsset && IsAssetOp(pop) && theAsset.vchAsset == vvch[0] && theAsset.prevOut.n == tx.vin[i].prevout.n && theAsset.prevOut.hash == tx.vin[i].prevout.hash)
-			{
-				foundAsset = true;
+				break;
 			}
 		}
 			
@@ -475,11 +468,6 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2016 - " + _("Alias input mismatch");
 				return error(errorMessage.c_str());
 			}
-			if(!foundAsset)
-			{
-				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2016 - " + _("Asset input missing");
-				return error(errorMessage.c_str());
-			}
 			if(theAsset.sCategory.size() > 0 && !boost::algorithm::istarts_with(stringFromVch(theAsset.sCategory), "assets"))
 			{
 				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2017 - " + _("Must use a asset category");
@@ -498,11 +486,6 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2019 - " + _("Alias input mismatch");
 				return error(errorMessage.c_str());
 			}
-			if (!foundAsset)
-			{
-				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2016 - " + _("Asset input missing");
-				return error(errorMessage.c_str());
-			}
 			break;
 		case OP_ASSET_SEND:
 			if (theAsset.vchAsset != vvchArgs[0])
@@ -513,11 +496,6 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			if (!IsAliasOp(prevAliasOp) || vvchPrevAliasArgs.empty())
 			{
 				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2019 - " + _("Alias input mismatch");
-				return error(errorMessage.c_str());
-			}
-			if (!foundAsset)
-			{
-				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2016 - " + _("Asset input missing");
 				return error(errorMessage.c_str());
 			}
 			break;
@@ -547,11 +525,6 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		}
 		if(op != OP_ASSET_ACTIVATE) 
 		{
-			if(op == OP_ASSET_SEND && dbAsset.prevOut != theAsset.prevOut)
-			{
-				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2022 - " + _("Asset previous outpoint does not match provided outpoint");
-				return true;
-			}
 			if(theAsset.vchPubData.empty())
 				theAsset.vchPubData = dbAsset.vchPubData;
 			theAsset.vchName = dbAsset.vchName;
@@ -624,10 +597,10 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		}
         // set the asset's txn-dependent values
 		theAsset.nHeight = nHeight;
-		theAsset.prevOut = COutPoint(tx.GetHash(), nOut);
+		theAsset.txHash = tx.GetHash();
         // write asset  
 
-        if (!dontaddtodb && (!passetdb->WriteAsset(theAsset, op) || (op == OP_ASSET_ACTIVATE && !passetdb->WriteAssetFirstTXID(vvchArgs[0], theAsset.prevOut.hash))))
+        if (!dontaddtodb && (!passetdb->WriteAsset(theAsset, op) || (op == OP_ASSET_ACTIVATE && !passetdb->WriteAssetFirstTXID(vvchArgs[0], theAsset.txHash))))
 		{
 			errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to write to assetifcate DB");
             return error(errorMessage.c_str());
@@ -1019,7 +992,7 @@ UniValue assetinfo(const UniValue& params, bool fHelp) {
 bool BuildAssetJson(const CAsset& asset, UniValue& oAsset)
 {
     oAsset.push_back(Pair("_id", stringFromVch(asset.vchAsset)));
-    oAsset.push_back(Pair("txid", asset.prevOut.hash.GetHex()));
+    oAsset.push_back(Pair("txid", asset.txHash.GetHex()));
     oAsset.push_back(Pair("height", (int64_t)asset.nHeight));
 	int64_t nTime = 0;
 	if (chainActive.Height() >= asset.nHeight) {
@@ -1047,7 +1020,7 @@ bool BuildAssetJson(const CAsset& asset, UniValue& oAsset)
 }
 bool BuildAssetIndexerHistoryJson(const CAsset& asset, UniValue& oAsset)
 {
-	oAsset.push_back(Pair("_id", asset.prevOut.hash.GetHex()));
+	oAsset.push_back(Pair("_id", asset.txHash.GetHex()));
 	oAsset.push_back(Pair("asset", stringFromVch(asset.vchAsset)));
 	oAsset.push_back(Pair("height", (int64_t)asset.nHeight));
 	int64_t nTime = 0;
@@ -1081,7 +1054,7 @@ void AssetTxToJSON(const int op, const std::vector<unsigned char> &vchData, cons
 		return;
 
 	CAsset dbAsset;
-	GetAsset(CNameTXIDTuple(asset.vchAsset, asset.prevOut.hash), dbAsset);
+	GetAsset(CNameTXIDTuple(asset.vchAsset, asset.txHash), dbAsset);
 	
 
 	entry.push_back(Pair("txtype", opName));

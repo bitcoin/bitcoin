@@ -121,6 +121,7 @@ public:
 	std::vector<unsigned char> sTitle;
 	std::vector<unsigned char> sDescription;
 	CAuctionOffer auctionOffer;
+	bool bInstantSendLocked;
 	COffer() {
         SetNull();
     }
@@ -165,30 +166,11 @@ public:
 			READWRITE(vchOffer);
 			READWRITE(linkAliasTuple);
 			READWRITE(auctionOffer);
+			READWRITE(bInstantSendLocked);
 	}
 	float GetPrice(const int commission=0) const;
     inline friend bool operator==(const COffer &a, const COffer &b) {
-		return (
-			a.sCategory == b.sCategory
-			&& a.sTitle == b.sTitle
-			&& a.sDescription == b.sDescription
-			&& a.fPrice == b.fPrice
-			&& a.nQty == b.nQty
-			&& a.fUnits == b.fUnits
-			&& a.nSold == b.nSold
-			&& a.txHash == b.txHash
-			&& a.nHeight == b.nHeight
-			&& a.linkOfferTuple == b.linkOfferTuple
-			&& a.linkAliasTuple == b.linkAliasTuple
-			&& a.sCurrencyCode == b.sCurrencyCode
-			&& a.nCommission == b.nCommission
-			&& a.aliasTuple == b.aliasTuple
-			&& a.certTuple == b.certTuple
-			&& a.bPrivate == b.bPrivate
-			&& a.offerType == b.offerType
-			&& a.paymentOptions == b.paymentOptions
-			&& a.vchOffer == b.vchOffer
-			&& a.auctionOffer == b.auctionOffer
+		return (a.vchOffer == b.vchOffer
         );
     }
 
@@ -213,6 +195,7 @@ public:
 		paymentOptions = b.paymentOptions;
 		vchOffer = b.vchOffer;
 		auctionOffer = b.auctionOffer;
+		bInstantSendLocked = b.bInstantSendLocked;
         return *this;
     }
 
@@ -220,7 +203,7 @@ public:
         return !(a == b);
     }
 
-	inline void SetNull() { auctionOffer.SetNull();  sCategory.clear(); sTitle.clear(); vchOffer.clear(); sDescription.clear(); offerType = 0; fPrice = 0; fUnits = 1; nHeight = nQty = nSold = paymentOptions = 0; txHash.SetNull(); bPrivate = false; linkOfferTuple.first.clear(); aliasTuple.first.clear(); sCurrencyCode.clear(); nCommission = 0; aliasTuple.first.clear(); certTuple.first.clear(); }
+	inline void SetNull() { bInstantSendLocked = false;  auctionOffer.SetNull();  sCategory.clear(); sTitle.clear(); vchOffer.clear(); sDescription.clear(); offerType = 0; fPrice = 0; fUnits = 1; nHeight = nQty = nSold = paymentOptions = 0; txHash.SetNull(); bPrivate = false; linkOfferTuple.first.clear(); aliasTuple.first.clear(); sCurrencyCode.clear(); nCommission = 0; aliasTuple.first.clear(); certTuple.first.clear(); }
     inline bool IsNull() const { return (vchOffer.empty()); }
 
     bool UnserializeFromTx(const CTransaction &tx);

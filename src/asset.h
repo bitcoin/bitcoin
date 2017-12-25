@@ -25,6 +25,68 @@ bool IsAssetOp(int op);
 void AssetTxToJSON(const int op, const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash, UniValue &entry);
 std::string assetFromOp(int op);
 bool RemoveAssetScriptPrefix(const CScript& scriptIn, CScript& scriptOut);
+/*class CAssetAllocation {
+public:
+	std::vector<unsigned char> vchAssetAllocation;
+	// current owner
+	CNameTXIDTuple aliasTuple;
+	// previous owner
+	CNameTXIDTuple linkAliasTuple;
+	uint256 txHash;
+	uint64_t nHeight;
+	std::vector<std::string> listReceivers;
+	CAmount nAmount;
+	bool bInstantSendLocked;
+	CAsset() {
+		SetNull();
+	}
+	CAsset(const CTransaction &tx) {
+		SetNull();
+		UnserializeFromTx(tx);
+	}
+	ADD_SERIALIZE_METHODS;
+	template <typename Stream, typename Operation>
+	inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+		READWRITE(vchName);
+		READWRITE(vchPubData);
+		READWRITE(txHash);
+		READWRITE(VARINT(nHeight));
+		READWRITE(linkAliasTuple);
+		READWRITE(vchAssetAllocation);
+		READWRITE(sCategory);
+		READWRITE(aliasTuple);
+		READWRITE(nAmount);
+		READWRITE(bInstantSendLocked);
+	}
+	inline friend bool operator==(const CAsset &a, const CAsset &b) {
+		return (a.vchAssetAllocation == b.vchAssetAllocation
+			);
+	}
+
+	inline CAsset operator=(const CAsset &b) {
+		vchName = b.vchName;
+		vchPubData = b.vchPubData;
+		txHash = b.txHash;
+		nHeight = b.nHeight;
+		aliasTuple = b.aliasTuple;
+		linkAliasTuple = b.linkAliasTuple;
+		vchAssetAllocation = b.vchAssetAllocation;
+		sCategory = b.sCategory;
+		nAmount = b.nAmount;
+		bInstantSendLocked = b.bInstantSendLocked;
+		return *this;
+	}
+
+	inline friend bool operator!=(const CAsset &a, const CAsset &b) {
+		return !(a == b);
+	}
+	inline void SetNull() { bInstantSendLocked = false; nAmount = 0; sCategory.clear(); vchName.clear(); linkAliasTuple.first.clear(); vchAssetAllocation.clear(); nHeight = 0; txHash.SetNull(); aliasTuple.first.clear(); vchPubData.clear(); }
+	inline bool IsNull() const { return (vchAssetAllocation.empty()); }
+	bool UnserializeFromTx(const CTransaction &tx);
+	bool UnserializeFromData(const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash);
+	void Serialize(std::vector<unsigned char>& vchData);
+};*/
+
 class CAsset {
 public:
 	std::vector<unsigned char> vchAsset;
@@ -32,12 +94,13 @@ public:
 	CNameTXIDTuple aliasTuple;
 	// to modify alias in assettransfer
 	CNameTXIDTuple linkAliasTuple;
-    COutPoint prevOut;
+    uint256 txHash;
     uint64_t nHeight;
 	std::vector<unsigned char> vchName;
 	std::vector<unsigned char> vchPubData;
 	std::vector<unsigned char> sCategory;
 	CAmount nAmount;
+	bool bInstantSendLocked;
     CAsset() {
         SetNull();
     }
@@ -56,32 +119,25 @@ public:
 	inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {		
 		READWRITE(vchName);
 		READWRITE(vchPubData);
-		READWRITE(prevOut);
+		READWRITE(txHash);
 		READWRITE(VARINT(nHeight));
 		READWRITE(linkAliasTuple);
 		READWRITE(vchAsset);
 		READWRITE(sCategory);
 		READWRITE(aliasTuple);
 		READWRITE(nAmount);
+		READWRITE(bInstantSendLocked);
 	}
     inline friend bool operator==(const CAsset &a, const CAsset &b) {
         return (
-		a.vchName == b.vchName
-		&& a.vchPubData == b.vchPubData
-        && a.prevOut == b.prevOut
-        && a.nHeight == b.nHeight
-		&& a.aliasTuple == b.aliasTuple
-		&& a.linkAliasTuple == b.linkAliasTuple
-		&& a.vchAsset == b.vchAsset
-		&& a.sCategory == b.sCategory
-		&& a.nAmount == b.nAmount
+		a.vchAsset == b.vchAsset
         );
     }
 
     inline CAsset operator=(const CAsset &b) {
 		vchName = b.vchName;
 		vchPubData = b.vchPubData;
-		prevOut = b.prevOut;
+		txHash = b.txHash;
         nHeight = b.nHeight;
 		aliasTuple = b.aliasTuple;
 		linkAliasTuple = b.linkAliasTuple;
@@ -94,7 +150,7 @@ public:
     inline friend bool operator!=(const CAsset &a, const CAsset &b) {
         return !(a == b);
     }
-	inline void SetNull() { nAmount = 0; sCategory.clear(); vchName.clear(); linkAliasTuple.first.clear(); vchAsset.clear(); nHeight = 0; prevOut.SetNull(); aliasTuple.first.clear(); vchPubData.clear(); }
+	inline void SetNull() { nAmount = 0; sCategory.clear(); vchName.clear(); linkAliasTuple.first.clear(); vchAsset.clear(); nHeight = 0; txHash.SetNull(); aliasTuple.first.clear(); vchPubData.clear(); }
     inline bool IsNull() const { return (vchAsset.empty()); }
     bool UnserializeFromTx(const CTransaction &tx);
 	bool UnserializeFromData(const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash);
@@ -104,7 +160,7 @@ public:
 
 class CAssetDB : public CDBWrapper {
 public:
-    CAssetDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "assetificates", nCacheSize, fMemory, fWipe) {}
+    CAssetDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "assets", nCacheSize, fMemory, fWipe) {}
 
     bool WriteAsset(const CAsset& asset, const int &op) {
 		bool writeState = WriteAssetLastTXID(asset.vchAsset, asset.prevOut.hash) && Write(make_pair(std::string("asseti"), CNameTXIDTuple(asset.vchAsset, asset.prevOut.hash)), asset);

@@ -177,6 +177,7 @@ public:
 	std::vector<unsigned char> vchPublicValue;
 	// to control reseller access + wholesaler discounts
 	COfferLinkWhitelist offerWhitelist;
+	bool bInstantSendLocked;
     CAliasIndex() { 
         SetNull();
     }
@@ -208,9 +209,10 @@ public:
 		READWRITE(VARINT(nAccessFlags));
 		READWRITE(vchAddress);	
 		READWRITE(offerWhitelist);
+		READWRITE(bInstantSendLocked);
 	}
     inline friend bool operator==(const CAliasIndex &a, const CAliasIndex &b) {
-		return (a.offerWhitelist == b.offerWhitelist && a.nAccessFlags == b.nAccessFlags && a.vchAddress == b.vchAddress && a.vchEncryptionPublicKey == b.vchEncryptionPublicKey && a.vchEncryptionPrivateKey == b.vchEncryptionPrivateKey && a.nAcceptTransferFlags == b.nAcceptTransferFlags && a.nExpireTime == b.nExpireTime && a.vchGUID == b.vchGUID && a.vchAlias == b.vchAlias && a.nHeight == b.nHeight && a.txHash == b.txHash && a.vchPublicValue == b.vchPublicValue);
+		return (a.vchGUID == b.vchGUID && a.vchAlias == b.vchAlias);
     }
 
     inline friend bool operator!=(const CAliasIndex &a, const CAliasIndex &b) {
@@ -229,9 +231,10 @@ public:
 		vchEncryptionPublicKey = b.vchEncryptionPublicKey;
 		nAccessFlags = b.nAccessFlags;
 		offerWhitelist = b.offerWhitelist;
+		bInstantSendLocked = b.bInstantSendLocked;
         return *this;
     }   
-	inline void SetNull() { offerWhitelist.SetNull(); nAccessFlags = 2; vchAddress.clear(); vchEncryptionPublicKey.clear(); vchEncryptionPrivateKey.clear(); nAcceptTransferFlags = 3; nExpireTime = 0; vchGUID.clear(); vchAlias.clear(); txHash.SetNull(); nHeight = 0; vchPublicValue.clear(); }
+	inline void SetNull() { bInstantSendLocked = false; offerWhitelist.SetNull(); nAccessFlags = 2; vchAddress.clear(); vchEncryptionPublicKey.clear(); vchEncryptionPrivateKey.clear(); nAcceptTransferFlags = 3; nExpireTime = 0; vchGUID.clear(); vchAlias.clear(); txHash.SetNull(); nHeight = 0; vchPublicValue.clear(); }
     inline bool IsNull() const { return (vchAlias.empty()); }
 	bool UnserializeFromTx(const CTransaction &tx);
 	bool UnserializeFromData(const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash);

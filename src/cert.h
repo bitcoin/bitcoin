@@ -36,6 +36,7 @@ public:
 	std::vector<unsigned char> vchTitle;
 	std::vector<unsigned char> vchPubData;
 	std::vector<unsigned char> sCategory;
+	bool bInstantSendLocked;
     CCert() {
         SetNull();
     }
@@ -61,18 +62,10 @@ public:
 		READWRITE(vchCert);
 		READWRITE(sCategory);
 		READWRITE(aliasTuple);
+		READWRITE(bInstantSendLocked);
 	}
     inline friend bool operator==(const CCert &a, const CCert &b) {
-        return (
-		a.vchTitle == b.vchTitle
-		&& a.vchPubData == b.vchPubData
-        && a.txHash == b.txHash
-        && a.nHeight == b.nHeight
-		&& a.aliasTuple == b.aliasTuple
-		&& a.linkAliasTuple == b.linkAliasTuple
-		&& a.nAccessFlags == b.nAccessFlags
-		&& a.vchCert == b.vchCert
-		&& a.sCategory == b.sCategory
+        return (a.vchCert == b.vchCert
         );
     }
 
@@ -86,13 +79,14 @@ public:
 		nAccessFlags = b.nAccessFlags;
 		vchCert = b.vchCert;
 		sCategory = b.sCategory;
+		bInstantSendLocked = b.bInstantSendLocked;
         return *this;
     }
 
     inline friend bool operator!=(const CCert &a, const CCert &b) {
         return !(a == b);
     }
-	inline void SetNull() { sCategory.clear(); vchTitle.clear(); nAccessFlags = 2; linkAliasTuple.first.clear(); vchCert.clear(); nHeight = 0; txHash.SetNull(); aliasTuple.first.clear(); vchPubData.clear(); }
+	inline void SetNull() { bInstantSendLocked = false; sCategory.clear(); vchTitle.clear(); nAccessFlags = 2; linkAliasTuple.first.clear(); vchCert.clear(); nHeight = 0; txHash.SetNull(); aliasTuple.first.clear(); vchPubData.clear(); }
     inline bool IsNull() const { return (vchCert.empty()); }
     bool UnserializeFromTx(const CTransaction &tx);
 	bool UnserializeFromData(const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash);
