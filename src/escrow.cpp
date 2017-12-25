@@ -547,7 +547,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 		return true;
 	}
 	 // unserialize escrow UniValue from txn, check for valid
-    CEscrow theEscrow;
+    CEscrow theEscrow, dbEscrow;
 	vector<unsigned char> vchData;
 	vector<unsigned char> vchHash;
 	int nDataOut;
@@ -916,6 +916,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				return true;
 			}
 		}
+		dbEscrow = theEscrow;
 		// make sure escrow settings don't change (besides scriptSigs/nTotal's) outside of activation
 		if (op != OP_ESCROW_ACTIVATE)
 		{
