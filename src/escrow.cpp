@@ -314,7 +314,7 @@ void CEscrowDB::WriteEscrowBidIndex(const CEscrow& escrow, const string& status)
 	selector = BCON_NEW("_id", BCON_UTF8(escrow.txHash.GetHex().c_str()));
 	write_concern = mongoc_write_concern_new();
 	mongoc_write_concern_set_w(write_concern, MONGOC_WRITE_CONCERN_W_UNACKNOWLEDGED);
-	BuildEscrowBidJson(escrow, oName);
+	BuildEscrowBidJson(escrow, status, oName);
 
 	update = bson_new_from_json((unsigned char *)oName.write().c_str(), -1, &error);
 	if (!update || !mongoc_collection_update(escrowbid_collection, update_flags, selector, update, write_concern, &error)) {
