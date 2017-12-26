@@ -234,7 +234,9 @@ public:
 	bool ReadOffer(const CNameTXIDTuple& offerTuple, COffer& offer) {
 		return Read(make_pair(std::string("offeri"), offerTuple), offer);
 	}
-
+	bool ReadLastOffer(const std::vector<unsigned char>& vchGuid, COffer& offer) {
+		return Read(make_pair(std::string("offerp"), vchGuid), offer);
+	}
 	bool WriteOfferLastTXID(const std::vector<unsigned char>& offer, const uint256& txid) {
 		return Write(make_pair(std::string("offerlt"), offer), txid);
 	}

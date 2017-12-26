@@ -551,6 +551,13 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Alias was already updated in this block.");
 						return true;
 					}
+					if (dbAlias.txHash != tx.GetHash())
+					{
+						if (op != OP_ALIAS_ACTIVATE && !GetLastAlias(vvchArgs[0], dbAlias)) {
+							errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1048 - " + _("Failed to read last alias from alias DB");
+							return true;
+						}
+					}
 				}
 				else if (dbAlias.nHeight >= nHeight) {
 					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Alias was already updated in this block.");

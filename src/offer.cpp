@@ -584,8 +584,15 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			if (!bInstantSend && dbOffer.bInstantSendLocked) {
 				if (dbOffer.nHeight > nHeight)
 				{
-					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Offer was already updated in this block.");
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Offer was already updated in this block.");
 					return true;
+				}
+				if (dbOffer.txHash != tx.GetHash())
+				{
+					if (op != OP_OFFER_ACTIVATE && !GetLastOffer(vvchArgs[0], dbOffer)) {
+						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1048 - " + _("Failed to read last offer from offer DB");
+						return true;
+					}
 				}
 			}
 			else if (dbOffer.nHeight >= nHeight)

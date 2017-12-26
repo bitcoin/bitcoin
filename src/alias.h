@@ -266,6 +266,9 @@ public:
 	bool ReadAlias(const CNameTXIDTuple& aliasTuple, CAliasIndex& alias) {
 		return Read(make_pair(std::string("namei"), CNameTXIDTuple(aliasTuple.first, aliasTuple.second)), alias);
 	}
+	bool ReadLastAlias(const std::vector<unsigned char>& vchGuid, CAliasIndex& alias) {
+		return Read(make_pair(std::string("namep"), vchGuid), alias);
+	}
 	bool ReadAddress(const std::vector<unsigned char>& address, std::vector<unsigned char>& name) {
 		return Read(make_pair(std::string("namea"), address), name);
 	}

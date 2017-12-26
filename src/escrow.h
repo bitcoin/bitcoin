@@ -190,6 +190,9 @@ public:
     bool ReadEscrow(const CNameTXIDTuple& escrowTuple, CEscrow& escrow) {
         return Read(make_pair(std::string("escrowi"), escrowTuple), escrow);
     }
+	bool ReadLastEscrow(const std::vector<unsigned char>& vchGuid, CEscrow& escrow) {
+		return Read(make_pair(std::string("escrowp"), vchGuid), escrow);
+	}
 	bool WriteEscrowLastTXID(const std::vector<unsigned char>& escrow, const uint256& txid) {
 		return Write(make_pair(std::string("escrowlt"), escrow), txid);
 	}

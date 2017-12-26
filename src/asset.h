@@ -182,6 +182,9 @@ public:
     bool ReadAsset(const CNameTXIDTuple& assetTuple, CAsset& asset) {
         return Read(make_pair(std::string("asseti"), assetTuple), asset);
     }
+	bool ReadLastAsset(const std::vector<unsigned char>& vchGuid, CAsset& asset) {
+		return Read(make_pair(std::string("assetp"), vchGuid), asset);
+	}
 	bool WriteAssetLastTXID(const std::vector<unsigned char>& asset, const uint256& txid) {
 		return Write(make_pair(std::string("assetlt"), asset), txid);
 	}

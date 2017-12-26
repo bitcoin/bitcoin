@@ -513,8 +513,15 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 			if (!bInstantSend && dbCert.bInstantSendLocked) {
 				if (dbCert.nHeight > nHeight)
 				{
-					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Certificate was already updated in this block.");
+					errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Certificate was already updated in this block.");
 					return true;
+				}
+				if (dbCert.txHash != tx.GetHash())
+				{
+					if (op != OP_CERT_ACTIVATE && !GetLastCert(vvchArgs[0], dbCert)) {
+						errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 1048 - " + _("Failed to read last certificate from certificate DB");
+						return true;
+					}
 				}
 			}
 			else if (dbCert.nHeight >= nHeight)

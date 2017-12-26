@@ -522,8 +522,15 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			if (!bInstantSend && dbAsset.bInstantSendLocked) {
 				if (dbAsset.nHeight > nHeight)
 				{
-					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Asset was already updated in this block.");
+					errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Asset was already updated in this block.");
 					return true;
+				}
+				if (dbAsset.txHash != tx.GetHash())
+				{
+					if (op != OP_ASSET_ACTIVATE && !GetLastAsset(vvchArgs[0], dbAsset)) {
+						errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 1048 - " + _("Failed to read last escrow from escrow DB");
+						return true;
+					}
 				}
 			}
 			else if (dbAsset.nHeight >= nHeight)

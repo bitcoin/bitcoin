@@ -118,6 +118,9 @@ public:
     bool ReadCert(const CNameTXIDTuple& certTuple, CCert& cert) {
         return Read(make_pair(std::string("certi"), certTuple), cert);
     }
+	bool ReadLastCert(const std::vector<unsigned char>& vchGuid, CCert& cert) {
+		return Read(make_pair(std::string("certp"), vchGuid), cert);
+	}
 	bool WriteCertLastTXID(const std::vector<unsigned char>& cert, const uint256& txid) {
 		return Write(make_pair(std::string("certlt"), cert), txid);
 	}
