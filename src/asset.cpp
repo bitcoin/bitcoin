@@ -517,9 +517,10 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		}
 		else
 		{
+			bool bInstantSendLocked = false;
 			// if it was instant locked and this is a pow block (not instant send) then check to ensure that height >= stored height instead of < stored height
 			// since instant send calls this function with chain height + 1
-			if (!bInstantSend && dbAsset.bInstantSendLocked) {
+			if (!bInstantSend && passetdb->ReadISLock(vvchArgs[0], bInstantSendLocked) && bInstantSendLocked) {
 				if (dbAsset.nHeight > nHeight)
 				{
 					errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Asset was already updated in this block.");
@@ -527,10 +528,19 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				}
 				if (dbAsset.txHash != tx.GetHash())
 				{
+					// recreate this asset tx from last known good position (last asset stored)
 					if (op != OP_ASSET_ACTIVATE && !GetLastAsset(vvchArgs[0], dbAsset)) {
 						errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 1048 - " + _("Failed to read last escrow from escrow DB");
 						return true;
 					}
+				}
+				else {
+					if (!dontaddtodb && !passetdb->EraseISLock(vvchArgs[0]))
+					{
+						errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from asset DB");
+						return error(errorMessage.c_str());
+					}
+					return true;
 				}
 			}
 			else if (dbAsset.nHeight >= nHeight)
@@ -614,7 +624,6 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
         // set the asset's txn-dependent values
 		theAsset.nHeight = nHeight;
 		theAsset.txHash = tx.GetHash();
-		theAsset.bInstantSendLocked = bInstantSend;
         // write asset  
 
         if (!dontaddtodb && (!passetdb->WriteAsset(theAsset, dbAsset, op, bInstantSend) || (op == OP_ASSET_ACTIVATE && !passetdb->WriteAssetFirstTXID(vvchArgs[0], theAsset.txHash))))

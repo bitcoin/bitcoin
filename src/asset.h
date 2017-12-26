@@ -36,7 +36,6 @@ public:
 	uint64_t nHeight;
 	std::vector<std::string> listReceivers;
 	CAmount nAmount;
-	bool bInstantSendLocked;
 	CAsset() {
 		SetNull();
 	}
@@ -56,7 +55,6 @@ public:
 		READWRITE(sCategory);
 		READWRITE(aliasTuple);
 		READWRITE(nAmount);
-		READWRITE(bInstantSendLocked);
 	}
 	inline friend bool operator==(const CAsset &a, const CAsset &b) {
 		return (a.vchAssetAllocation == b.vchAssetAllocation
@@ -73,14 +71,13 @@ public:
 		vchAssetAllocation = b.vchAssetAllocation;
 		sCategory = b.sCategory;
 		nAmount = b.nAmount;
-		bInstantSendLocked = b.bInstantSendLocked;
 		return *this;
 	}
 
 	inline friend bool operator!=(const CAsset &a, const CAsset &b) {
 		return !(a == b);
 	}
-	inline void SetNull() { bInstantSendLocked = false; nAmount = 0; sCategory.clear(); vchName.clear(); linkAliasTuple.first.clear(); vchAssetAllocation.clear(); nHeight = 0; txHash.SetNull(); aliasTuple.first.clear(); vchPubData.clear(); }
+	inline void SetNull() { nAmount = 0; sCategory.clear(); vchName.clear(); linkAliasTuple.first.clear(); vchAssetAllocation.clear(); nHeight = 0; txHash.SetNull(); aliasTuple.first.clear(); vchPubData.clear(); }
 	inline bool IsNull() const { return (vchAssetAllocation.empty()); }
 	bool UnserializeFromTx(const CTransaction &tx);
 	bool UnserializeFromData(const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash);
@@ -100,7 +97,6 @@ public:
 	std::vector<unsigned char> vchPubData;
 	std::vector<unsigned char> sCategory;
 	CAmount nAmount;
-	bool bInstantSendLocked;
     CAsset() {
         SetNull();
     }
@@ -126,7 +122,6 @@ public:
 		READWRITE(sCategory);
 		READWRITE(aliasTuple);
 		READWRITE(nAmount);
-		READWRITE(bInstantSendLocked);
 	}
     inline friend bool operator==(const CAsset &a, const CAsset &b) {
         return (
@@ -166,13 +161,15 @@ public:
 		bool writeState = WriteAssetLastTXID(asset.vchAsset, asset.txHash) && Write(make_pair(std::string("asseti"), CNameTXIDTuple(asset.vchAsset, asset.txHash)), asset);
 		if (!bInstantSend && !prevAsset.IsNull())
 			writeState = writeState && Write(make_pair(std::string("assetp"), asset.vchAsset), prevAsset);
+		else if (bInstantSend)
+			writeState = writeState && Write(make_pair(std::string("assetl"), asset.vchAsset), bInstantSend);
 		WriteAssetIndex(asset, op);
         return writeState;
     }
-
     bool EraseAsset(const CNameTXIDTuple& assetTuple, bool cleanup = false) {
 		bool eraseState = Erase(make_pair(std::string("asseti"), assetTuple));
 		Erase(make_pair(std::string("assetp"), assetTuple.first));
+		EraseISLock(assetTuple.first);
 		EraseAssetLastTXID(assetTuple.first);
 		EraseAssetFirstTXID(assetTuple.first);
 		EraseAssetIndex(assetTuple.first, cleanup);
@@ -184,6 +181,12 @@ public:
     }
 	bool ReadLastAsset(const std::vector<unsigned char>& vchGuid, CAsset& asset) {
 		return Read(make_pair(std::string("assetp"), vchGuid), asset);
+	}
+	bool ReadISLock(const std::vector<unsigned char>& vchGuid, bool& lock) {
+		return Read(make_pair(std::string("assetl"), vchGuid), lock);
+	}
+	bool EraseISLock(const std::vector<unsigned char>& vchGuid) {
+		return Erase(make_pair(std::string("assetl"), vchGuid));
 	}
 	bool WriteAssetLastTXID(const std::vector<unsigned char>& asset, const uint256& txid) {
 		return Write(make_pair(std::string("assetlt"), asset), txid);

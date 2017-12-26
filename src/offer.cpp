@@ -579,9 +579,10 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		}
 		else
 		{
+			bool bInstantSendLocked = false;
 			// if it was instant locked and this is a pow block (not instant send) then check to ensure that height >= stored height instead of < stored height
 			// since instant send calls this function with chain height + 1
-			if (!bInstantSend && dbOffer.bInstantSendLocked) {
+			if (!bInstantSend && pofferdb->ReadISLock(vvchArgs[0], bInstantSendLocked) && bInstantSendLocked) {
 				if (dbOffer.nHeight > nHeight)
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Offer was already updated in this block.");
@@ -593,6 +594,14 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1048 - " + _("Failed to read last offer from offer DB");
 						return true;
 					}
+				}
+				else {
+					if (!dontaddtodb && !pofferdb->EraseISLock(vvchArgs[0]))
+					{
+						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from offer DB");
+						return error(errorMessage.c_str());
+					}
+					return true;
 				}
 			}
 			else if (dbOffer.nHeight >= nHeight)
@@ -737,7 +746,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		}
 		theOffer.nHeight = nHeight;
 		theOffer.txHash = tx.GetHash();
-		theOffer.bInstantSendLocked = bInstantSend;
 		// write offer
 		if (!dontaddtodb && !pofferdb->WriteOffer(theOffer, dbOffer, op, bInstantSend))
 		{

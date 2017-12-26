@@ -121,7 +121,6 @@ public:
 	std::vector<unsigned char> sTitle;
 	std::vector<unsigned char> sDescription;
 	CAuctionOffer auctionOffer;
-	bool bInstantSendLocked;
 	COffer() {
         SetNull();
     }
@@ -166,7 +165,6 @@ public:
 			READWRITE(vchOffer);
 			READWRITE(linkAliasTuple);
 			READWRITE(auctionOffer);
-			READWRITE(bInstantSendLocked);
 	}
 	float GetPrice(const int commission=0) const;
     inline friend bool operator==(const COffer &a, const COffer &b) {
@@ -195,7 +193,6 @@ public:
 		paymentOptions = b.paymentOptions;
 		vchOffer = b.vchOffer;
 		auctionOffer = b.auctionOffer;
-		bInstantSendLocked = b.bInstantSendLocked;
         return *this;
     }
 
@@ -203,7 +200,7 @@ public:
         return !(a == b);
     }
 
-	inline void SetNull() { bInstantSendLocked = false;  auctionOffer.SetNull();  sCategory.clear(); sTitle.clear(); vchOffer.clear(); sDescription.clear(); offerType = 0; fPrice = 0; fUnits = 1; nHeight = nQty = nSold = paymentOptions = 0; txHash.SetNull(); bPrivate = false; linkOfferTuple.first.clear(); aliasTuple.first.clear(); sCurrencyCode.clear(); nCommission = 0; aliasTuple.first.clear(); certTuple.first.clear(); }
+	inline void SetNull() { auctionOffer.SetNull();  sCategory.clear(); sTitle.clear(); vchOffer.clear(); sDescription.clear(); offerType = 0; fPrice = 0; fUnits = 1; nHeight = nQty = nSold = paymentOptions = 0; txHash.SetNull(); bPrivate = false; linkOfferTuple.first.clear(); aliasTuple.first.clear(); sCurrencyCode.clear(); nCommission = 0; aliasTuple.first.clear(); certTuple.first.clear(); }
     inline bool IsNull() const { return (vchOffer.empty()); }
 
     bool UnserializeFromTx(const CTransaction &tx);
@@ -219,6 +216,8 @@ public:
 		bool writeState = WriteOfferLastTXID(offer.vchOffer, offer.txHash) && Write(make_pair(std::string("offeri"), CNameTXIDTuple(offer.vchOffer, offer.txHash)), offer);
 		if (!bInstantSend && !prevOffer.IsNull())
 			writeState = writeState && Write(make_pair(std::string("offerp"), offer.vchOffer), prevOffer);
+		else if (bInstantSend)
+			writeState = writeState && Write(make_pair(std::string("offerl"), offer.vchOffer), bInstantSend);
 		WriteOfferIndex(offer, op);
 		return writeState;
 	}
@@ -226,6 +225,7 @@ public:
 	bool EraseOffer(const CNameTXIDTuple& offerTuple, bool cleanup = false) {
 		bool eraseState = Erase(make_pair(std::string("offeri"), offerTuple));
 		Erase(make_pair(std::string("offerp"), offerTuple.first));
+		EraseISLock(offerTuple.first);
 		EraseOfferLastTXID(offerTuple.first);
 		EraseOfferIndex(offerTuple.first, cleanup);
 	    return eraseState;
@@ -236,6 +236,12 @@ public:
 	}
 	bool ReadLastOffer(const std::vector<unsigned char>& vchGuid, COffer& offer) {
 		return Read(make_pair(std::string("offerp"), vchGuid), offer);
+	}
+	bool ReadISLock(const std::vector<unsigned char>& vchGuid, bool& lock) {
+		return Read(make_pair(std::string("offerl"), vchGuid), lock);
+	}
+	bool EraseISLock(const std::vector<unsigned char>& vchGuid) {
+		return Erase(make_pair(std::string("offerl"), vchGuid));
 	}
 	bool WriteOfferLastTXID(const std::vector<unsigned char>& offer, const uint256& txid) {
 		return Write(make_pair(std::string("offerlt"), offer), txid);

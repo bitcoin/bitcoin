@@ -508,9 +508,10 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 		}
 		else
 		{
+			bool bInstantSendLocked = false;
 			// if it was instant locked and this is a pow block (not instant send) then check to ensure that height >= stored height instead of < stored height
 			// since instant send calls this function with chain height + 1
-			if (!bInstantSend && dbCert.bInstantSendLocked) {
+			if (!bInstantSend && pcertdb->ReadISLock(vvchArgs[0], bInstantSendLocked) && bInstantSendLocked) {
 				if (dbCert.nHeight > nHeight)
 				{
 					errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Certificate was already updated in this block.");
@@ -522,6 +523,14 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 						errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 1048 - " + _("Failed to read last certificate from certificate DB");
 						return true;
 					}
+				}
+				else {
+					if (!dontaddtodb && !pcertdb->EraseISLock(vvchArgs[0]))
+					{
+						errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from certificate DB");
+						return error(errorMessage.c_str());
+					}
+					return true;
 				}
 			}
 			else if (dbCert.nHeight >= nHeight)
@@ -603,9 +612,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
         // set the cert's txn-dependent values
 		theCert.nHeight = nHeight;
 		theCert.txHash = tx.GetHash();
-		theCert.bInstantSendLocked = bInstantSend;
         // write cert  
-
         if (!dontaddtodb && (!pcertdb->WriteCert(theCert, dbCert, op, bInstantSend) || (op == OP_CERT_ACTIVATE && !pcertdb->WriteCertFirstTXID(vvchArgs[0], theCert.txHash))))
 		{
 			errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to write to certifcate DB");

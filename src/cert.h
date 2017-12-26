@@ -36,7 +36,6 @@ public:
 	std::vector<unsigned char> vchTitle;
 	std::vector<unsigned char> vchPubData;
 	std::vector<unsigned char> sCategory;
-	bool bInstantSendLocked;
     CCert() {
         SetNull();
     }
@@ -62,7 +61,6 @@ public:
 		READWRITE(vchCert);
 		READWRITE(sCategory);
 		READWRITE(aliasTuple);
-		READWRITE(bInstantSendLocked);
 	}
     inline friend bool operator==(const CCert &a, const CCert &b) {
         return (a.vchCert == b.vchCert
@@ -79,14 +77,13 @@ public:
 		nAccessFlags = b.nAccessFlags;
 		vchCert = b.vchCert;
 		sCategory = b.sCategory;
-		bInstantSendLocked = b.bInstantSendLocked;
         return *this;
     }
 
     inline friend bool operator!=(const CCert &a, const CCert &b) {
         return !(a == b);
     }
-	inline void SetNull() { bInstantSendLocked = false; sCategory.clear(); vchTitle.clear(); nAccessFlags = 2; linkAliasTuple.first.clear(); vchCert.clear(); nHeight = 0; txHash.SetNull(); aliasTuple.first.clear(); vchPubData.clear(); }
+	inline void SetNull() { sCategory.clear(); vchTitle.clear(); nAccessFlags = 2; linkAliasTuple.first.clear(); vchCert.clear(); nHeight = 0; txHash.SetNull(); aliasTuple.first.clear(); vchPubData.clear(); }
     inline bool IsNull() const { return (vchCert.empty()); }
     bool UnserializeFromTx(const CTransaction &tx);
 	bool UnserializeFromData(const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash);
@@ -102,6 +99,8 @@ public:
 		bool writeState = WriteCertLastTXID(cert.vchCert, cert.txHash) && Write(make_pair(std::string("certi"), CNameTXIDTuple(cert.vchCert, cert.txHash)), cert);
 		if (!bInstantSend && !prevCert.IsNull())
 			writeState = writeState && Write(make_pair(std::string("certp"), cert.vchCert), prevCert);
+		else if (bInstantSend)
+			writeState = writeState && Write(make_pair(std::string("certl"), cert.vchCert), bInstantSend);
 		WriteCertIndex(cert, op);
         return writeState;
     }
@@ -109,6 +108,7 @@ public:
     bool EraseCert(const CNameTXIDTuple& certTuple, bool cleanup = false) {
 		bool eraseState = Erase(make_pair(std::string("certi"), certTuple));
 		Erase(make_pair(std::string("certp"), certTuple.first));
+		EraseISLock(certTuple.first);
 		EraseCertLastTXID(certTuple.first);
 		EraseCertFirstTXID(certTuple.first);
 		EraseCertIndex(certTuple.first, cleanup);
@@ -120,6 +120,12 @@ public:
     }
 	bool ReadLastCert(const std::vector<unsigned char>& vchGuid, CCert& cert) {
 		return Read(make_pair(std::string("certp"), vchGuid), cert);
+	}
+	bool ReadISLock(const std::vector<unsigned char>& vchGuid, bool& lock) {
+		return Read(make_pair(std::string("certl"), vchGuid), lock);
+	}
+	bool EraseISLock(const std::vector<unsigned char>& vchGuid) {
+		return Erase(make_pair(std::string("certl"), vchGuid));
 	}
 	bool WriteCertLastTXID(const std::vector<unsigned char>& cert, const uint256& txid) {
 		return Write(make_pair(std::string("certlt"), cert), txid);

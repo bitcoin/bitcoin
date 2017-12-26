@@ -58,7 +58,6 @@ public:
 	float fBidPerUnit;
 	std::vector<unsigned char> vchRedeemScript;
 	unsigned char role;
-	bool bInstantSendLocked;
 	inline void ClearEscrow()
 	{
 		feedback.SetNull();
@@ -109,7 +108,6 @@ public:
 		READWRITE(vchRedeemScript);
 		READWRITE(nShipping);
 		READWRITE(nAmountOrBidPerUnit);
-		READWRITE(bInstantSendLocked);
 	}
 
     inline friend bool operator==(const CEscrow &a, const CEscrow &b) {
@@ -146,14 +144,13 @@ public:
 		vchRedeemScript = b.vchRedeemScript;
 		nAmountOrBidPerUnit = b.nAmountOrBidPerUnit;
 		role = b.role;
-		bInstantSendLocked = b.bInstantSendLocked;
         return *this;
     }
 
     inline friend bool operator!=(const CEscrow &a, const CEscrow &b) {
         return !(a == b);
     }
-	inline void SetNull() { bInstantSendLocked = false;  role = 0; nAmountOrBidPerUnit = 0; vchWitness.clear();  fBidPerUnit = 0;  nDeposit = nArbiterFee = nNetworkFee = nCommission = nShipping = nWitnessFee = 0; extTxId.SetNull(); op = 0; bPaymentAck = bBuyNow = false; redeemTxId.SetNull(); linkAliasTuple.first.clear(); feedback.SetNull(); linkSellerAliasTuple.first.clear(); vchEscrow.clear(); nHeight = nPaymentOption = 0; txHash.SetNull(); nQty = 0; buyerAliasTuple.first.clear(); arbiterAliasTuple.first.clear(); sellerAliasTuple.first.clear(); offerTuple.first.clear(); scriptSigs.clear(); vchRedeemScript.clear(); }
+	inline void SetNull() { role = 0; nAmountOrBidPerUnit = 0; vchWitness.clear();  fBidPerUnit = 0;  nDeposit = nArbiterFee = nNetworkFee = nCommission = nShipping = nWitnessFee = 0; extTxId.SetNull(); op = 0; bPaymentAck = bBuyNow = false; redeemTxId.SetNull(); linkAliasTuple.first.clear(); feedback.SetNull(); linkSellerAliasTuple.first.clear(); vchEscrow.clear(); nHeight = nPaymentOption = 0; txHash.SetNull(); nQty = 0; buyerAliasTuple.first.clear(); arbiterAliasTuple.first.clear(); sellerAliasTuple.first.clear(); offerTuple.first.clear(); scriptSigs.clear(); vchRedeemScript.clear(); }
 	inline bool IsNull() const { return (vchEscrow.empty()); }
     bool UnserializeFromTx(const CTransaction &tx);
 	bool UnserializeFromData(const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash);
@@ -169,6 +166,8 @@ public:
 		bool writeState = WriteEscrowLastTXID(escrow.vchEscrow, escrow.txHash) && Write(make_pair(std::string("escrowi"), CNameTXIDTuple(escrow.vchEscrow, escrow.txHash)), escrow);
 		if (!bInstantSend && !prevEscrow.IsNull())
 			writeState = writeState && Write(make_pair(std::string("escrowp"), escrow.vchEscrow), prevEscrow);
+		else if (bInstantSend)
+			writeState = writeState && Write(make_pair(std::string("escrowl"), escrow.vchEscrow), bInstantSend);
 		WriteEscrowIndex(escrow, vvchArgs);
         return writeState;
     }
@@ -181,6 +180,7 @@ public:
     bool EraseEscrow(const CNameTXIDTuple& escrowTuple, bool cleanup = false) {
 		bool eraseState = Erase(make_pair(std::string("escrowi"), escrowTuple));
 		Erase(make_pair(std::string("escrowp"), escrowTuple.first));
+		EraseISLock(escrowTuple.first);
 		EraseEscrowLastTXID(escrowTuple.first);
 		EraseEscrowIndex(escrowTuple.first, cleanup);
 		EraseEscrowFeedbackIndex(escrowTuple.first, cleanup);
@@ -192,6 +192,12 @@ public:
     }
 	bool ReadLastEscrow(const std::vector<unsigned char>& vchGuid, CEscrow& escrow) {
 		return Read(make_pair(std::string("escrowp"), vchGuid), escrow);
+	}
+	bool ReadISLock(const std::vector<unsigned char>& vchGuid, bool& lock) {
+		return Read(make_pair(std::string("escrowl"), vchGuid), lock);
+	}
+	bool EraseISLock(const std::vector<unsigned char>& vchGuid) {
+		return Erase(make_pair(std::string("escrowl"), vchGuid));
 	}
 	bool WriteEscrowLastTXID(const std::vector<unsigned char>& escrow, const uint256& txid) {
 		return Write(make_pair(std::string("escrowlt"), escrow), txid);

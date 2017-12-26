@@ -910,9 +910,10 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 		}
 		else
 		{
+			bool bInstantSendLocked = false;
 			// if it was instant locked and this is a pow block (not instant send) then check to ensure that height >= stored height instead of < stored height
 			// since instant send calls this function with chain height + 1
-			if (!bInstantSend && theEscrow.bInstantSendLocked) {
+			if (!bInstantSend && pescrowdb->ReadISLock(vvchArgs[0], bInstantSendLocked) && bInstantSendLocked) {
 				if (theEscrow.nHeight > nHeight)
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Escrow was already updated in this block.");
@@ -924,6 +925,14 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 1048 - " + _("Failed to read last escrow from escrow DB");
 						return true;
 					}
+				}
+				else {
+					if (!dontaddtodb && !pescrowdb->EraseISLock(vvchArgs[0]))
+					{
+						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from escrow DB");
+						return error(errorMessage.c_str());
+					}
+					return true;
 				}
 			}
 			else if (theEscrow.nHeight >= nHeight)
@@ -1496,7 +1505,6 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 		theEscrow.txHash = tx.GetHash();
 		theEscrow.nHeight = nHeight;
 		theEscrow.linkAliasTuple.SetNull();
-		theEscrow.bInstantSendLocked = bInstantSend;
         // write escrow
 		if (!dontaddtodb && !pescrowdb->WriteEscrow(vvchArgs, theEscrow, dbEscrow, bInstantSend))
 		{

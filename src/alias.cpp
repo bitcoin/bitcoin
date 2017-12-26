@@ -543,9 +543,10 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					bDestCheckFailed = true;
 			}
 			if (!theAliasNull) {
+				bool bInstantSendLocked = false;
 				// if it was instant locked and this is a pow block (not instant send) then check to ensure that height >= stored height instead of < stored height
 				// since instant send calls this function with chain height + 1
-				if (!bInstantSend && dbAlias.bInstantSendLocked) {
+				if (!bInstantSend && paliasdb->ReadISLock(vvchArgs[0], bInstantSendLocked) && bInstantSendLocked) {
 					if (dbAlias.nHeight > nHeight)
 					{
 						errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Alias was already updated in this block.");
@@ -557,6 +558,14 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 							errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1048 - " + _("Failed to read last alias from alias DB");
 							return true;
 						}
+					}
+					else {
+						if (!dontaddtodb && !paliasdb->EraseISLock(vvchArgs[0]))
+						{
+							errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from alias DB");
+							return error(errorMessage.c_str());
+						}
+						return true;
 					}
 				}
 				else if (dbAlias.nHeight >= nHeight) {
@@ -743,7 +752,6 @@ theAlias = dbAlias;
 		{
 			theAlias.nHeight = nHeight;
 			theAlias.txHash = tx.GetHash();
-			theAlias.bInstantSendLocked = bInstantSend;
 
 			CAliasUnprunable aliasUnprunable;
 			aliasUnprunable.vchGUID = theAlias.vchGUID;

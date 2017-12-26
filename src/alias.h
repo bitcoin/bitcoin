@@ -177,7 +177,6 @@ public:
 	std::vector<unsigned char> vchPublicValue;
 	// to control reseller access + wholesaler discounts
 	COfferLinkWhitelist offerWhitelist;
-	bool bInstantSendLocked;
     CAliasIndex() { 
         SetNull();
     }
@@ -209,7 +208,6 @@ public:
 		READWRITE(VARINT(nAccessFlags));
 		READWRITE(vchAddress);	
 		READWRITE(offerWhitelist);
-		READWRITE(bInstantSendLocked);
 	}
     inline friend bool operator==(const CAliasIndex &a, const CAliasIndex &b) {
 		return (a.vchGUID == b.vchGUID && a.vchAlias == b.vchAlias);
@@ -231,10 +229,9 @@ public:
 		vchEncryptionPublicKey = b.vchEncryptionPublicKey;
 		nAccessFlags = b.nAccessFlags;
 		offerWhitelist = b.offerWhitelist;
-		bInstantSendLocked = b.bInstantSendLocked;
         return *this;
     }   
-	inline void SetNull() { bInstantSendLocked = false; offerWhitelist.SetNull(); nAccessFlags = 2; vchAddress.clear(); vchEncryptionPublicKey.clear(); vchEncryptionPrivateKey.clear(); nAcceptTransferFlags = 3; nExpireTime = 0; vchGUID.clear(); vchAlias.clear(); txHash.SetNull(); nHeight = 0; vchPublicValue.clear(); }
+	inline void SetNull() { offerWhitelist.SetNull(); nAccessFlags = 2; vchAddress.clear(); vchEncryptionPublicKey.clear(); vchEncryptionPrivateKey.clear(); nAcceptTransferFlags = 3; nExpireTime = 0; vchGUID.clear(); vchAlias.clear(); txHash.SetNull(); nHeight = 0; vchPublicValue.clear(); }
     inline bool IsNull() const { return (vchAlias.empty()); }
 	bool UnserializeFromTx(const CTransaction &tx);
 	bool UnserializeFromData(const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash);
@@ -251,14 +248,16 @@ public:
 		bool writeState = WriteAliasLastTXID(alias.vchAlias, alias.txHash) && Write(make_pair(std::string("namei"), CNameTXIDTuple(alias.vchAlias, alias.txHash)), alias) && Write(make_pair(std::string("namea"), address), alias.vchAlias) && Write(make_pair(std::string("nameu"), alias.vchAlias), aliasUnprunable);
 		if (!bInstantSend && !prevAlias.IsNull())
 			writeState = writeState && Write(make_pair(std::string("namep"), alias.vchAlias), prevAlias);
+		else if(bInstantSend)
+			writeState = writeState && Write(make_pair(std::string("namel"), alias.vchAlias), bInstantSend);
 		WriteAliasIndex(alias, op);
 		return writeState;
 	}
 
-
 	bool EraseAlias(const CNameTXIDTuple& aliasTuple, bool cleanup = false) {
 		bool eraseState = Erase(make_pair(std::string("namei"), CNameTXIDTuple(aliasTuple.first, aliasTuple.second)));
 		Erase(make_pair(std::string("namep"), aliasTuple.first));
+		EraseISLock(aliasTuple.first);
 		EraseAliasLastTXID(aliasTuple.first);
 		EraseAliasIndex(aliasTuple.first, cleanup);
 		return eraseState;
@@ -268,6 +267,12 @@ public:
 	}
 	bool ReadLastAlias(const std::vector<unsigned char>& vchGuid, CAliasIndex& alias) {
 		return Read(make_pair(std::string("namep"), vchGuid), alias);
+	}
+	bool ReadISLock(const std::vector<unsigned char>& vchGuid, bool& lock) {
+		return Read(make_pair(std::string("namel"), vchGuid), lock);
+	}
+	bool EraseISLock(const std::vector<unsigned char>& vchGuid) {
+		return Erase(make_pair(std::string("namel"), vchGuid));
 	}
 	bool ReadAddress(const std::vector<unsigned char>& address, std::vector<unsigned char>& name) {
 		return Read(make_pair(std::string("namea"), address), name);
