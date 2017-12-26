@@ -526,7 +526,7 @@ bool ValidateExternalPayment(const CEscrow& theEscrow, const bool &dontaddtodb, 
 	}
 	return true;
 }
-bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, string &errorMessage, bool bInstantSend,bool dontaddtodb) {
+bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, string &errorMessage, bool dontaddtodb) {
 	if (tx.IsCoinBase() && !fJustCheck && !dontaddtodb)
 	{
 		LogPrintf("*Trying to add escrow in coinbase transaction, skipping...");
@@ -913,7 +913,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 			bool bInstantSendLocked = false;
 			// if it was instant locked and this is a pow block (not instant send) then check to ensure that height >= stored height instead of < stored height
 			// since instant send calls this function with chain height + 1
-			if (!bInstantSend && pescrowdb->ReadISLock(vvchArgs[0], bInstantSendLocked) && bInstantSendLocked) {
+			if (!fJustCheck && pescrowdb->ReadISLock(vvchArgs[0], bInstantSendLocked) && bInstantSendLocked) {
 				if (theEscrow.nHeight > nHeight)
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Escrow was already updated in this block.");
@@ -1506,7 +1506,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 		theEscrow.nHeight = nHeight;
 		theEscrow.linkAliasTuple.SetNull();
         // write escrow
-		if (!dontaddtodb && !pescrowdb->WriteEscrow(vvchArgs, theEscrow, dbEscrow, bInstantSend))
+		if (!dontaddtodb && !pescrowdb->WriteEscrow(vvchArgs, theEscrow, dbEscrow, fJustCheck))
 		{
 			errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4080 - " + _("Failed to write to escrow DB");
 			return error(errorMessage.c_str());

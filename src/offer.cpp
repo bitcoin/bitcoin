@@ -320,7 +320,7 @@ bool RemoveOfferScriptPrefix(const CScript& scriptIn, CScript& scriptOut) {
 	return true;
 }
 
-bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, string &errorMessage, bool bInstantSend, bool dontaddtodb) {
+bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, string &errorMessage, bool dontaddtodb) {
 	if (tx.IsCoinBase() && !fJustCheck && !dontaddtodb)
 	{
 		LogPrintf("*Trying to add offer in coinbase transaction, skipping...");
@@ -582,7 +582,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			bool bInstantSendLocked = false;
 			// if it was instant locked and this is a pow block (not instant send) then check to ensure that height >= stored height instead of < stored height
 			// since instant send calls this function with chain height + 1
-			if (!bInstantSend && pofferdb->ReadISLock(vvchArgs[0], bInstantSendLocked) && bInstantSendLocked) {
+			if (!fJustCheck && pofferdb->ReadISLock(vvchArgs[0], bInstantSendLocked) && bInstantSendLocked) {
 				if (dbOffer.nHeight > nHeight)
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Offer was already updated in this block.");
@@ -747,7 +747,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		theOffer.nHeight = nHeight;
 		theOffer.txHash = tx.GetHash();
 		// write offer
-		if (!dontaddtodb && !pofferdb->WriteOffer(theOffer, dbOffer, op, bInstantSend))
+		if (!dontaddtodb && !pofferdb->WriteOffer(theOffer, dbOffer, op, fJustCheck))
 		{
 			errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to write to offer DB");
 			return error(errorMessage.c_str());

@@ -39,12 +39,12 @@ extern bool DecodeOfferTx(const CTransaction& tx, int& op, int& nOut, vector<vec
 extern bool DecodeCertTx(const CTransaction& tx, int& op, int& nOut, vector<vector<unsigned char> >& vvch);
 extern bool DecodeAssetTx(const CTransaction& tx, int& op, int& nOut, vector<vector<unsigned char> >& vvch);
 extern bool DecodeEscrowTx(const CTransaction& tx, int& op, int& nOut, vector<vector<unsigned char> >& vvch);
-extern bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, string &errorMessage, bool &bDestCheckFailed, bool bInstantSend, bool dontaddtodb);
-extern bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, string &errorMessage, bool bInstantSend, bool dontaddtodb);
-extern bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, string &errorMessage, bool bInstantSend, bool dontaddtodb);
-extern bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, string &errorMessage, bool bInstantSend, bool dontaddtodb);
+extern bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, string &errorMessage, bool &bDestCheckFailed, bool dontaddtodb);
+extern bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, string &errorMessage, bool dontaddtodb);
+extern bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, string &errorMessage, bool dontaddtodb);
+extern bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, string &errorMessage, bool dontaddtodb);
 extern bool DecodeAliasScript(const CScript& script, int& op, vector<vector<unsigned char> > &vvch);
-extern bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, string &errorMessage, bool bInstantSend, bool dontaddtodb);
+extern bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, string &errorMessage, bool dontaddtodb);
 extern int aliasunspent(const vector<unsigned char> &vchAlias, COutPoint& outPoint);
 extern std::string stringFromVch(const std::vector<unsigned char> &vch);
 extern std::vector<unsigned char> vchFromString(const std::string &str);
@@ -436,7 +436,7 @@ When to pay with this method:
 3b) use total amount + required amount from 2a (if non zero) to find outputs in alias balance, if not enough balance throw error
 3c) transaction completely funded
 4) if transaction completely funded, try to sign and send to network*/
-void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsigned char> &vchWitness, const CRecipient &aliasRecipient, CRecipient &aliasFeePlaceholderRecipient, vector<CRecipient> &vecSend, CWalletTx& wtxNew, CCoinControl* coinControl, bool fUseInstantSend, bool transferAlias = false)
+void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsigned char> &vchWitness, const CRecipient &aliasRecipient, CRecipient &aliasFeePlaceholderRecipient, vector<CRecipient> &vecSend, CWalletTx& wtxNew, CCoinControl* coinControl, bool transferAlias = false)
 {
 	int op;
 	vector<vector<unsigned char> > vvch;
@@ -484,7 +484,7 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
 	// get total output required
 	// if aliasRecipient.scriptPubKey.empty() then it is not a syscoin tx, so don't set tx flag for syscoin tx in createtransaction()
 	// this is because aliasRecipient means an alias utxo was used to create a transaction, common to every syscoin service transaction, aliaspay doesn't use an alias utxo it just sends money from address to address but uses alias outputs to fund it and sign externally using zero knowledge auth.
-	if (!pwalletMain->CreateTransaction(vecSend, wtxNew1, reservekey, nFeeRequired, nChangePosRet, strError, coinControl, false, !aliasRecipient.scriptPubKey.empty(), ALL_COINS, fUseInstantSend)) {
+	if (!pwalletMain->CreateTransaction(vecSend, wtxNew1, reservekey, nFeeRequired, nChangePosRet, strError, coinControl, false, !aliasRecipient.scriptPubKey.empty())) {
 		throw runtime_error(strError);
 	}
 
@@ -528,8 +528,7 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
 	{
 		// create utxo minimum 1kb worth of fees if alias is first activated
 		if ((op == OP_ALIAS_ACTIVATE && vvch.size() > 1) || op != OP_ALIAS_ACTIVATE) {
-			// max between 1000 bytes of a normal tx or 2 input instant send
-			CAmount nMinFee = std::max(CWallet::GetMinimumFee(1000, nTxConfirmTarget, mempool), CTxLockRequest().GetMinFee()*2);
+			CAmount nMinFee = CWallet::GetMinimumFee(1000, nTxConfirmTarget, mempool);
 			if (aliasFeePlaceholderRecipient.nAmount < nMinFee)
 				aliasFeePlaceholderRecipient.nAmount = nMinFee;
 		}
@@ -541,7 +540,7 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
 	if (nBalance > 0 && !bAliasRegistration)
 	{
 		// get total output required
-		if (!pwalletMain->CreateTransaction(vecSend, wtxNew2, reservekey, nFeeRequired, nChangePosRet, strError, coinControl, false, !aliasRecipient.scriptPubKey.empty(), ALL_COINS, fUseInstantSend)) {
+		if (!pwalletMain->CreateTransaction(vecSend, wtxNew2, reservekey, nFeeRequired, nChangePosRet, strError, coinControl, false, !aliasRecipient.scriptPubKey.empty())) {
 			throw runtime_error(strError);
 		}
 		CAmount nOutputTotal = 0;
@@ -588,7 +587,7 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
 	}
 	// now create the transaction and fake sign with enough funding from alias utxo's (if coinControl specified fAllowOtherInputs(true) then and only then are wallet inputs are allowed)
 	// actual signing happens in signrawtransaction outside of this function call after the wtxNew raw transaction is returned back to it
-	if (!pwalletMain->CreateTransaction(vecSend, wtxNew, reservekey, nFeeRequired, nChangePosRet, strError, coinControl, false, !aliasRecipient.scriptPubKey.empty(), ALL_COINS, fUseInstantSend)) {
+	if (!pwalletMain->CreateTransaction(vecSend, wtxNew, reservekey, nFeeRequired, nChangePosRet, strError, coinControl, false, !aliasRecipient.scriptPubKey.empty())) {
 		throw runtime_error(strError);
 	}
 	// run a check on the inputs without putting them into the db, just to ensure it will go into the mempool without issues
@@ -598,46 +597,46 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
 	bool bCheckDestError = false;
 	if (DecodeAliasTx(wtxNew, op, nOut, vvch))
 	{
-		CheckAliasInputs(wtxNew, op, nOut, vvch, fJustCheck, chainActive.Tip()->nHeight + 1, errorMessage, bCheckDestError, false, true);
+		CheckAliasInputs(wtxNew, op, nOut, vvch, fJustCheck, chainActive.Tip()->nHeight + 1, errorMessage, bCheckDestError, true);
 		if (!errorMessage.empty())
 			throw runtime_error(errorMessage.c_str());
-		CheckAliasInputs(wtxNew, op, nOut, vvch, !fJustCheck, chainActive.Tip()->nHeight + 1, errorMessage, bCheckDestError, false, true);
+		CheckAliasInputs(wtxNew, op, nOut, vvch, !fJustCheck, chainActive.Tip()->nHeight + 1, errorMessage, bCheckDestError, true);
 		if (!errorMessage.empty())
 			throw runtime_error(errorMessage.c_str());
 	}
 	if (DecodeCertTx(wtxNew, op, nOut, vvch))
 	{
-		CheckCertInputs(wtxNew, op, nOut, vvch, fJustCheck, chainActive.Tip()->nHeight + 1, errorMessage, false, true);
+		CheckCertInputs(wtxNew, op, nOut, vvch, fJustCheck, chainActive.Tip()->nHeight + 1, errorMessage, true);
 		if (!errorMessage.empty())
 			throw runtime_error(errorMessage.c_str());
-		CheckCertInputs(wtxNew, op, nOut, vvch, !fJustCheck, chainActive.Tip()->nHeight + 1, errorMessage, false, true);
+		CheckCertInputs(wtxNew, op, nOut, vvch, !fJustCheck, chainActive.Tip()->nHeight + 1, errorMessage, true);
 		if (!errorMessage.empty())
 			throw runtime_error(errorMessage.c_str());
 	}
 	if (DecodeAssetTx(wtxNew, op, nOut, vvch))
 	{
-		CheckAssetInputs(wtxNew, op, nOut, vvch, fJustCheck, chainActive.Tip()->nHeight + 1, errorMessage, false, true);
+		CheckAssetInputs(wtxNew, op, nOut, vvch, fJustCheck, chainActive.Tip()->nHeight + 1, errorMessage, true);
 		if (!errorMessage.empty())
 			throw runtime_error(errorMessage.c_str());
-		CheckAssetInputs(wtxNew, op, nOut, vvch, !fJustCheck, chainActive.Tip()->nHeight + 1, errorMessage, false, true);
+		CheckAssetInputs(wtxNew, op, nOut, vvch, !fJustCheck, chainActive.Tip()->nHeight + 1, errorMessage, true);
 		if (!errorMessage.empty())
 			throw runtime_error(errorMessage.c_str());
 	}
 	if (DecodeEscrowTx(wtxNew, op, nOut, vvch))
 	{
-		CheckEscrowInputs(wtxNew, op, nOut, vvch, fJustCheck, chainActive.Tip()->nHeight + 1, errorMessage, false, true);
+		CheckEscrowInputs(wtxNew, op, nOut, vvch, fJustCheck, chainActive.Tip()->nHeight + 1, errorMessage, true);
 		if (!errorMessage.empty())
 			throw runtime_error(errorMessage.c_str());
-		CheckEscrowInputs(wtxNew, op, nOut, vvch, !fJustCheck, chainActive.Tip()->nHeight + 1, errorMessage, false, true);
+		CheckEscrowInputs(wtxNew, op, nOut, vvch, !fJustCheck, chainActive.Tip()->nHeight + 1, errorMessage, true);
 		if (!errorMessage.empty())
 			throw runtime_error(errorMessage.c_str());
 	}
 	if (DecodeOfferTx(wtxNew, op, nOut, vvch))
 	{
-		CheckOfferInputs(wtxNew, op, nOut, vvch, fJustCheck, chainActive.Tip()->nHeight + 1, errorMessage, false, true);
+		CheckOfferInputs(wtxNew, op, nOut, vvch, fJustCheck, chainActive.Tip()->nHeight + 1, errorMessage, true);
 		if (!errorMessage.empty())
 			throw runtime_error(errorMessage.c_str());
-		CheckOfferInputs(wtxNew, op, nOut, vvch, !fJustCheck, chainActive.Tip()->nHeight + 1, errorMessage, false, true);
+		CheckOfferInputs(wtxNew, op, nOut, vvch, !fJustCheck, chainActive.Tip()->nHeight + 1, errorMessage, true);
 		if (!errorMessage.empty())
 			throw runtime_error(errorMessage.c_str());
 

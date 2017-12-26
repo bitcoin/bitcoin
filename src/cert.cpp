@@ -328,7 +328,7 @@ bool RemoveCertScriptPrefix(const CScript& scriptIn, CScript& scriptOut) {
 }
 
 bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs,
-        bool fJustCheck, int nHeight, string &errorMessage, bool bInstantSend,bool dontaddtodb) {
+        bool fJustCheck, int nHeight, string &errorMessage, bool dontaddtodb) {
 	if (tx.IsCoinBase() && !fJustCheck && !dontaddtodb)
 	{
 		LogPrintf("*Trying to add cert in coinbase transaction, skipping...");
@@ -511,7 +511,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 			bool bInstantSendLocked = false;
 			// if it was instant locked and this is a pow block (not instant send) then check to ensure that height >= stored height instead of < stored height
 			// since instant send calls this function with chain height + 1
-			if (!bInstantSend && pcertdb->ReadISLock(vvchArgs[0], bInstantSendLocked) && bInstantSendLocked) {
+			if (!fJustCheck && pcertdb->ReadISLock(vvchArgs[0], bInstantSendLocked) && bInstantSendLocked) {
 				if (dbCert.nHeight > nHeight)
 				{
 					errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Certificate was already updated in this block.");
@@ -613,7 +613,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 		theCert.nHeight = nHeight;
 		theCert.txHash = tx.GetHash();
         // write cert  
-        if (!dontaddtodb && (!pcertdb->WriteCert(theCert, dbCert, op, bInstantSend) || (op == OP_CERT_ACTIVATE && !pcertdb->WriteCertFirstTXID(vvchArgs[0], theCert.txHash))))
+        if (!dontaddtodb && (!pcertdb->WriteCert(theCert, dbCert, op, fJustCheck) || (op == OP_CERT_ACTIVATE && !pcertdb->WriteCertFirstTXID(vvchArgs[0], theCert.txHash))))
 		{
 			errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to write to certifcate DB");
             return error(errorMessage.c_str());

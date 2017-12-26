@@ -297,7 +297,7 @@ int GetSyscoinTxVersion()
 	return SYSCOIN_TX_VERSION;
 }
 
-bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, string &errorMessage, bool &bDestCheckFailed, bool bInstantSend, bool dontaddtodb) {
+bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, string &errorMessage, bool &bDestCheckFailed, bool dontaddtodb) {
 	if (tx.IsCoinBase() && !fJustCheck && !dontaddtodb)
 	{
 		LogPrintf("*Trying to add alias in coinbase transaction, skipping...");
@@ -546,7 +546,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				bool bInstantSendLocked = false;
 				// if it was instant locked and this is a pow block (not instant send) then check to ensure that height >= stored height instead of < stored height
 				// since instant send calls this function with chain height + 1
-				if (!bInstantSend && paliasdb->ReadISLock(vvchArgs[0], bInstantSendLocked) && bInstantSendLocked) {
+				if (!fJustCheck && paliasdb->ReadISLock(vvchArgs[0], bInstantSendLocked) && bInstantSendLocked) {
 					if (dbAlias.nHeight > nHeight)
 					{
 						errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Alias was already updated in this block.");
@@ -756,7 +756,7 @@ theAlias = dbAlias;
 			CAliasUnprunable aliasUnprunable;
 			aliasUnprunable.vchGUID = theAlias.vchGUID;
 			aliasUnprunable.nExpireTime = theAlias.nExpireTime;
-			if (!dontaddtodb && !paliasdb->WriteAlias(aliasUnprunable, theAlias.vchAddress, theAlias, dbAlias, op, bInstantSend))
+			if (!dontaddtodb && !paliasdb->WriteAlias(aliasUnprunable, theAlias.vchAddress, theAlias, dbAlias, op, fJustCheck))
 			{
 				errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5034 - " + _("Failed to write to alias DB");
 				return error(errorMessage.c_str());
@@ -2415,7 +2415,7 @@ UniValue aliasbalance(const UniValue& params, bool fHelp)
 		if (DecodeAliasScript(scriptPubKey, op, vvch))
 			continue;
 		// some smaller sized outputs are reserved to pay for fees only using aliasselectpaymentcoins (with bSelectFeePlacement set to true)
-		if (nValue <= std::max(CWallet::GetMinimumFee(1000, nTxConfirmTarget, mempool), CTxLockRequest().GetMinFee() * 2))
+		if (nValue <= CWallet::GetMinimumFee(1000, nTxConfirmTarget, mempool))
 			continue;
 		{
 			LOCK(mempool.cs);
@@ -2471,7 +2471,7 @@ int aliasselectpaymentcoins(const vector<unsigned char> &vchAlias, const CAmount
 			continue;  
 		if (!bSelectAll) {
 			// fee placement were ones that were smaller outputs used for subsequent updates
-			if (nValue <= std::max(CWallet::GetMinimumFee(1000, nTxConfirmTarget, mempool), CTxLockRequest().GetMinFee() * 2))
+			if (nValue <= CWallet::GetMinimumFee(1000, nTxConfirmTarget, mempool))
 			{
 				// alias pay doesn't include recipient, no utxo inputs used for aliaspay, for aliaspay we don't care about these small dust amounts
 				if (bNoAliasRecipient)

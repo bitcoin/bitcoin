@@ -334,7 +334,7 @@ bool RemoveAssetScriptPrefix(const CScript& scriptIn, CScript& scriptOut) {
 }
 
 bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs,
-        bool fJustCheck, int nHeight, string &errorMessage, bool bInstantSend, bool dontaddtodb) {
+        bool fJustCheck, int nHeight, string &errorMessage, bool dontaddtodb) {
 	if (tx.IsCoinBase() && !fJustCheck && !dontaddtodb)
 	{
 		LogPrintf("*Trying to add asset in coinbase transaction, skipping...");
@@ -520,7 +520,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			bool bInstantSendLocked = false;
 			// if it was instant locked and this is a pow block (not instant send) then check to ensure that height >= stored height instead of < stored height
 			// since instant send calls this function with chain height + 1
-			if (!bInstantSend && passetdb->ReadISLock(vvchArgs[0], bInstantSendLocked) && bInstantSendLocked) {
+			if (!fJustCheck && passetdb->ReadISLock(vvchArgs[0], bInstantSendLocked) && bInstantSendLocked) {
 				if (dbAsset.nHeight > nHeight)
 				{
 					errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Asset was already updated in this block.");
@@ -528,10 +528,15 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				}
 				if (dbAsset.txHash != tx.GetHash())
 				{
+					vector<string> lastReceiverList = dbAsset.listReceivers;
 					// recreate this asset tx from last known good position (last asset stored)
 					if (op != OP_ASSET_ACTIVATE && !passetdb->ReadLastAsset(vvchArgs[0], dbAsset)) {
 						errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 1048 - " + _("Failed to read last escrow from escrow DB");
 						return true;
+					}
+					// deal with asset send reverting
+					if (op == OP_ASSET_SEND) {
+
 					}
 				}
 				else {
@@ -626,7 +631,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		theAsset.txHash = tx.GetHash();
         // write asset  
 
-        if (!dontaddtodb && (!passetdb->WriteAsset(theAsset, dbAsset, op, bInstantSend) || (op == OP_ASSET_ACTIVATE && !passetdb->WriteAssetFirstTXID(vvchArgs[0], theAsset.txHash))))
+        if (!dontaddtodb && (!passetdb->WriteAsset(theAsset, dbAsset, op, fJustCheck) || (op == OP_ASSET_ACTIVATE && !passetdb->WriteAssetFirstTXID(vvchArgs[0], theAsset.txHash))))
 		{
 			errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to write to assetifcate DB");
             return error(errorMessage.c_str());

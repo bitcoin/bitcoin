@@ -543,7 +543,7 @@ std::string FormatStateMessage(const CValidationState &state)
 		state.GetRejectCode());
 }
 // SYSCOIN
-bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight, bool bInstantSend)
+bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight)
 {
 	vector<vector<unsigned char> > vvchArgs;
 	int op;
@@ -558,7 +558,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight, bo
 		if (DecodeAliasTx(tx, op, nOut, vvchArgs))
 		{
 			errorMessage.clear();
-			good = CheckAliasInputs(tx, op, nOut, vvchArgs, fJustCheck, nHeight, errorMessage, bDestCheckFailed, bInstantSend);
+			good = CheckAliasInputs(tx, op, nOut, vvchArgs, fJustCheck, nHeight, errorMessage, bDestCheckFailed);
 			if (fDebug && !errorMessage.empty())
 				LogPrintf("%s\n", errorMessage.c_str());
 		}
@@ -567,28 +567,28 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight, bo
 			if (DecodeCertTx(tx, op, nOut, vvchArgs))
 			{
 				errorMessage.clear();
-				good = CheckCertInputs(tx, op, nOut, vvchArgs, fJustCheck, nHeight, errorMessage, bInstantSend);
+				good = CheckCertInputs(tx, op, nOut, vvchArgs, fJustCheck, nHeight, errorMessage);
 				if (fDebug && !errorMessage.empty())
 					LogPrintf("%s\n", errorMessage.c_str());
 			}
 			if (DecodeAssetTx(tx, op, nOut, vvchArgs))
 			{
 				errorMessage.clear();
-				good = CheckAssetInputs(tx, op, nOut, vvchArgs, fJustCheck, nHeight, errorMessage, bInstantSend);
+				good = CheckAssetInputs(tx, op, nOut, vvchArgs, fJustCheck, nHeight, errorMessage);
 				if (fDebug && !errorMessage.empty())
 					LogPrintf("%s\n", errorMessage.c_str());
 			}
 			else if (DecodeEscrowTx(tx, op, nOut, vvchArgs))
 			{
 				errorMessage.clear();
-				good = CheckEscrowInputs(tx, op, nOut, vvchArgs, fJustCheck, nHeight, errorMessage, bInstantSend);
+				good = CheckEscrowInputs(tx, op, nOut, vvchArgs, fJustCheck, nHeight, errorMessage);
 				if (fDebug && !errorMessage.empty())
 					LogPrintf("%s\n", errorMessage.c_str());
 			}
 			else if (DecodeOfferTx(tx, op, nOut, vvchArgs))
 			{
 				errorMessage.clear();
-				good = CheckOfferInputs(tx, op, nOut, vvchArgs, fJustCheck, nHeight, errorMessage, bInstantSend);
+				good = CheckOfferInputs(tx, op, nOut, vvchArgs, fJustCheck, nHeight, errorMessage);
 				if (fDebug && !errorMessage.empty())
 					LogPrintf("%s\n", errorMessage.c_str());
 			}
@@ -2316,7 +2316,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 				return error("ConnectBlock(): CheckInputs on %s failed with %s",
 					tx.GetHash().ToString(), FormatStateMessage(state));
 			// SYSCOIN
-			if (!CheckSyscoinInputs(tx, fJustCheck, pindex->nHeight))
+			if (!fJustCheck && !CheckSyscoinInputs(tx, false, pindex->nHeight))
 				return error("ConnectBlock(): CheckSyscoinInputs on %s failed", tx.GetHash().ToString());
 			control.Add(vChecks);
 		}
