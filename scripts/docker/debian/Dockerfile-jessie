@@ -1,0 +1,10 @@
+FROM debian:jessie
+
+RUN apt-get -qq update && \
+    apt-get -qqy install \
+	git \
+	sudo
+RUN git clone https://github.com/linalouise9/peercoin --branch feature-osx --single-branch --depth 1 &&  cd peercoin && ./scripts/dependencies-ubuntu.sh && ./scripts/install-ubuntu.sh && \
+	apt-get purge git build-essential -qy && \
+	apt-get autoremove -qy && \
+	apt-get clean

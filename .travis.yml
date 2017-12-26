@@ -2,6 +2,9 @@ sudo: false
 language: cpp
 matrix:
   include:
+      - services: docker
+        scripts:
+          - docker build -f scripts/docker/debian/Dockerfile-stretch
       - os: linux
         sudo: required
         before_install:
