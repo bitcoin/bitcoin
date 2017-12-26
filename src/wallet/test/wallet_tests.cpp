@@ -569,13 +569,8 @@ BOOST_AUTO_TEST_CASE(ComputeTimeSmart)
     // New transaction should use block time if lower than clock time.
     BOOST_CHECK_EQUAL(AddTx(wallet, 3, 420, 400), 400);
 
-    // New transaction should use latest entry time if higher than
-    // min(block time, clock time).
-    BOOST_CHECK_EQUAL(AddTx(wallet, 4, 500, 390), 400);
-
-    // If there are future entries, new transaction should use time of the
-    // newest entry that is no more than 300 seconds ahead of the clock time.
-    BOOST_CHECK_EQUAL(AddTx(wallet, 5, 50, 600), 300);
+    // If there are future entries, new transaction should clock time
+    BOOST_CHECK_EQUAL(AddTx(wallet, 5, 50, 600), 50);
 
     // Reset mock time for other tests.
     SetMockTime(0);
