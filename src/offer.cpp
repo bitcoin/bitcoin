@@ -590,7 +590,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				}
 				if (dbOffer.txHash != tx.GetHash())
 				{
-					if (op != OP_OFFER_ACTIVATE && !GetLastOffer(vvchArgs[0], dbOffer)) {
+					if (op != OP_OFFER_ACTIVATE && !pofferdb->ReadLastOffer(vvchArgs[0], dbOffer)) {
 						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1048 - " + _("Failed to read last offer from offer DB");
 						return true;
 					}

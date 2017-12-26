@@ -529,7 +529,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				if (dbAsset.txHash != tx.GetHash())
 				{
 					// recreate this asset tx from last known good position (last asset stored)
-					if (op != OP_ASSET_ACTIVATE && !GetLastAsset(vvchArgs[0], dbAsset)) {
+					if (op != OP_ASSET_ACTIVATE && !passetdb->ReadLastAsset(vvchArgs[0], dbAsset)) {
 						errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 1048 - " + _("Failed to read last escrow from escrow DB");
 						return true;
 					}

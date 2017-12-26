@@ -921,7 +921,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				}
 				if (theEscrow.txHash != tx.GetHash())
 				{
-					if (op != OP_ESCROW_ACTIVATE && !GetLastEscrow(vvchArgs[0], theEscrow)) {
+					if (op != OP_ESCROW_ACTIVATE && !pescrowdb->ReadLastEscrow(vvchArgs[0], theEscrow)) {
 						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 1048 - " + _("Failed to read last escrow from escrow DB");
 						return true;
 					}

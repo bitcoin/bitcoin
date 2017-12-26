@@ -519,7 +519,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 				}
 				if (dbCert.txHash != tx.GetHash())
 				{
-					if (op != OP_CERT_ACTIVATE && !GetLastCert(vvchArgs[0], dbCert)) {
+					if (op != OP_CERT_ACTIVATE && !pcertdb->ReadLastCert(vvchArgs[0], dbCert)) {
 						errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 1048 - " + _("Failed to read last certificate from certificate DB");
 						return true;
 					}
