@@ -508,7 +508,16 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 		}
 		else
 		{
-			if (dbCert.nHeight >= nHeight)
+			// if it was instant locked and this is a pow block (not instant send) then check to ensure that height >= stored height instead of < stored height
+			// since instant send calls this function with chain height + 1
+			if (!bInstantSend && dbCert.bInstantSendLocked) {
+				if (dbCert.nHeight > nHeight)
+				{
+					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Certificate was already updated in this block.");
+					return true;
+				}
+			}
+			else if (dbCert.nHeight >= nHeight)
 			{
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Certificate was already updated in this block.");
 				return true;

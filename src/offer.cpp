@@ -579,7 +579,16 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		}
 		else
 		{
-			if (dbOffer.nHeight >= nHeight)
+			// if it was instant locked and this is a pow block (not instant send) then check to ensure that height >= stored height instead of < stored height
+			// since instant send calls this function with chain height + 1
+			if (!bInstantSend && dbOffer.bInstantSendLocked) {
+				if (dbOffer.nHeight > nHeight)
+				{
+					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Offer was already updated in this block.");
+					return true;
+				}
+			}
+			else if (dbOffer.nHeight >= nHeight)
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Offer was already updated in this block.");
 				return true;

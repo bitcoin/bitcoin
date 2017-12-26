@@ -505,7 +505,7 @@ void CInstantSend::UpdateLockedTransaction(const CTxLockCandidate& txLockCandida
 #endif
 
     GetMainSignals().NotifyTransactionLock(txLockCandidate.txLockRequest);
-	CheckSyscoinInputs(txLockCandidate.txLockRequest, false, 0, true);
+	CheckSyscoinInputs(txLockCandidate.txLockRequest, false, chainActive.Height()+1, true);
     LogPrint("instantsend", "CInstantSend::UpdateLockedTransaction -- done, txid=%s\n", txHash.ToString());
 }
 

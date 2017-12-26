@@ -910,7 +910,16 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 		}
 		else
 		{
-			if (theEscrow.nHeight >= nHeight)
+			// if it was instant locked and this is a pow block (not instant send) then check to ensure that height >= stored height instead of < stored height
+			// since instant send calls this function with chain height + 1
+			if (!bInstantSend && theEscrow.bInstantSendLocked) {
+				if (theEscrow.nHeight > nHeight)
+				{
+					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Escrow was already updated in this block.");
+					return true;
+				}
+			}
+			else if (theEscrow.nHeight >= nHeight)
 			{
 				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Escrow was already updated in this block.");
 				return true;
