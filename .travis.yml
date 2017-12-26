@@ -4,12 +4,12 @@ matrix:
   include:
       - os: linux
         services: docker
-        scripts:
-          - docker build -f scripts/docker/debian/Dockerfile-stretch
+        script:
+          - docker build -f scripts/docker/debian/Dockerfile-stretch .
       - os: linux
         services: docker
-        scripts:
-          - docker build -f scripts/docker/debian/Dockerfile-jessie
+        script:
+          - docker build -f scripts/docker/debian/Dockerfile-jessie .
       - os: linux
         sudo: required
         before_install:
