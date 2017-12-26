@@ -18,7 +18,6 @@
 #include <sys/stat.h>
 #endif
 
-#include <boost/interprocess/sync/file_lock.hpp>
 #include <boost/thread.hpp>
 
 namespace {
@@ -52,24 +51,6 @@ void CheckUniqueFileid(const CDBEnv& env, const std::string& filename, Db& db)
                 item_filename ? item_filename : "(unknown database)"));
         }
     }
-}
-
-bool LockEnvDirectory(const fs::path& env_path)
-{
-    // Make sure only a single Bitcoin process is using the wallet directory.
-    fs::path lock_file_path = env_path / ".walletlock";
-    FILE* file = fsbridge::fopen(lock_file_path, "a"); // empty lock file; created if it doesn't exist.
-    if (file) fclose(file);
-
-    try {
-        static boost::interprocess::file_lock lock(lock_file_path.string().c_str());
-        if (!lock.try_lock()) {
-            return false;
-        }
-    } catch (const boost::interprocess::interprocess_exception& e) {
-        return error("Error obtaining lock on wallet directory %s: %s.", env_path.string(), e.what());
-    }
-    return true;
 }
 } // namespace
 
@@ -122,7 +103,7 @@ bool CDBEnv::Open(const fs::path& pathIn, bool retry)
     boost::this_thread::interruption_point();
 
     strPath = pathIn.string();
-    if (!LockEnvDirectory(pathIn)) {
+    if (!LockDirectory(pathIn, ".walletlock")) {
         LogPrintf("Cannot obtain a lock on wallet directory %s. Another instance of bitcoin may be using it.\n", strPath);
         return false;
     }
