@@ -1101,7 +1101,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 						{
 							myLinkOffer.nQty = nQty;
 							myLinkOffer.nSold++;
-							if (!dontaddtodb && !pofferdb->WriteOffer(myLinkOffer, myLinkOfferOriginal, op, bInstantSend))
+							if (!dontaddtodb && !pofferdb->WriteOffer(myLinkOffer, myLinkOfferOriginal, op, fJustCheck))
 							{
 								errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4075 - " + _("Failed to write to offer link to DB");
 								return error(errorMessage.c_str());
@@ -1111,7 +1111,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 						{
 							dbOffer.nQty = nQty;
 							dbOffer.nSold++;
-							if (!dontaddtodb && !pofferdb->WriteOffer(dbOffer, dbOfferOriginal, op, bInstantSend))
+							if (!dontaddtodb && !pofferdb->WriteOffer(dbOffer, dbOfferOriginal, op, fJustCheck))
 							{
 								errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4076 - " + _("Failed to write to offer to DB");
 								return error(errorMessage.c_str());
@@ -1199,7 +1199,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 							{
 								myLinkOffer.nQty = nQty;
 								myLinkOffer.nSold--;
-								if (!dontaddtodb && !pofferdb->WriteOffer(myLinkOffer, myLinkOfferOriginal, op, bInstantSend))
+								if (!dontaddtodb && !pofferdb->WriteOffer(myLinkOffer, myLinkOfferOriginal, op, fJustCheck))
 								{
 									errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4048 - " + _("Failed to write to offer link to DB");
 									return error(errorMessage.c_str());
@@ -1209,7 +1209,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 							{
 								dbOffer.nQty = nQty;
 								dbOffer.nSold--;
-								if (!dontaddtodb && !pofferdb->WriteOffer(dbOffer, dbOfferOriginal, op, bInstantSend))
+								if (!dontaddtodb && !pofferdb->WriteOffer(dbOffer, dbOfferOriginal, op, fJustCheck))
 								{
 									errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4049 - " + _("Failed to write to offer to DB");
 									return error(errorMessage.c_str());
@@ -1342,7 +1342,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 							{
 								myLinkOffer.nQty = nQty;
 								myLinkOffer.nSold++;
-								if (!dontaddtodb && !pofferdb->WriteOffer(myLinkOffer, myLinkOfferOriginal, op, bInstantSend))
+								if (!dontaddtodb && !pofferdb->WriteOffer(myLinkOffer, myLinkOfferOriginal, op, fJustCheck))
 								{
 									errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4075 - " + _("Failed to write to offer link to DB");
 									return error(errorMessage.c_str());
@@ -1352,7 +1352,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 							{
 								dbOffer.nQty = nQty;
 								dbOffer.nSold++;
-								if (!dontaddtodb && !pofferdb->WriteOffer(dbOffer, dbOfferOriginal, op, bInstantSend))
+								if (!dontaddtodb && !pofferdb->WriteOffer(dbOffer, dbOfferOriginal, op, fJustCheck))
 								{
 									errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4076 - " + _("Failed to write to offer to DB");
 									return error(errorMessage.c_str());
