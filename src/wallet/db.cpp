@@ -57,7 +57,7 @@ void CheckUniqueFileid(const CDBEnv& env, const std::string& filename, Db& db)
 bool LockEnvDirectory(const fs::path& env_path)
 {
     // Make sure only a single Bitcoin process is using the wallet directory.
-    fs::path lock_file_path = env_path / ".lock";
+    fs::path lock_file_path = env_path / ".walletlock";
     FILE* file = fsbridge::fopen(lock_file_path, "a"); // empty lock file; created if it doesn't exist.
     if (file) fclose(file);
 
@@ -123,7 +123,7 @@ bool CDBEnv::Open(const fs::path& pathIn, bool retry)
 
     strPath = pathIn.string();
     if (!LockEnvDirectory(pathIn)) {
-        LogPrintf("Cannot obtain a lock on wallet directory %s. Another instance of bitcoin may be using it.", strPath);
+        LogPrintf("Cannot obtain a lock on wallet directory %s. Another instance of bitcoin may be using it.\n", strPath);
         return false;
     }
 
