@@ -190,7 +190,6 @@ BOOST_AUTO_TEST_CASE(coins_cache_simulation_test)
 
         // Once every 1000 iterations and at the end, verify the full cache.
         if (insecure_rand() % 1000 == 1 || i == NUM_SIMULATION_ITERATIONS - 1) {
-            BOOST_TEST_MESSAGE("coins_cache_simulation_test - verifying full cache");
             for (auto it = result.begin(); it != result.end(); it++) {
                 bool have = stack.back()->HaveCoin(it->first);
                 const Coin& coin = stack.back()->AccessCoin(it->first);
@@ -422,7 +421,6 @@ BOOST_AUTO_TEST_CASE(updatecoins_simulation_test)
 
         // Once every 1000 iterations and at the end, verify the full cache.
         if (insecure_rand() % 1000 == 1 || i == NUM_SIMULATION_ITERATIONS - 1) {
-            BOOST_TEST_MESSAGE("updatecoins_simulation_test - verifying full cache");
             for (auto it = result.begin(); it != result.end(); it++) {
                 bool have = stack.back()->HaveCoin(it->first);
                 const Coin& coin = stack.back()->AccessCoin(it->first);
