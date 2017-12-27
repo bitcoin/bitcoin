@@ -592,7 +592,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					const string &txHashHex = dbOffer.txHash.GetHex();
 					paliasdb->EraseAliasIndexTxHistory(txHashHex);
 					pofferdb->EraseOfferIndexHistory(txHashHex);
-					pofferdb->EraseExtTXID(txHashHex);
+					pofferdb->EraseExtTXID(dbOffer.txHash);
 				}
 				if (op != OP_OFFER_ACTIVATE && !pofferdb->ReadLastOffer(vvchArgs[0], dbOffer)) {
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1048 - " + _("Failed to read last offer from offer DB");
