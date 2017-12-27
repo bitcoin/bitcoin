@@ -20,6 +20,10 @@ public:
     bool fAllowWatchOnly;
     //! Minimum absolute fee (not per kilobyte)
     CAmount nMinimumTotalFee;
+    //! Override estimated feerate
+    bool fOverrideFeeRate;
+    //! Feerate to use if overrideFeeRate is true
+    CFeeRate nFeeRate;
 
     CCoinControl()
     {
@@ -35,6 +39,8 @@ public:
         fUseInstantSend = false;
         fUsePrivateSend = true;
         nMinimumTotalFee = 0;
+        nFeeRate = CFeeRate(0);
+        fOverrideFeeRate = false;
     }
 
     bool HasSelected() const

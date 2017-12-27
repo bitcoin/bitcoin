@@ -17,7 +17,9 @@ EXTRA_DIST += \
 	test/data/txcreate2.hex \
 	test/data/txcreatedata1.hex \
 	test/data/txcreatedata2.hex \
-	test/data/txcreatesign.hex
+	test/data/txcreatesign.hex \
+	test/data/txcreatedata_seq0.hex \
+	test/data/txcreatedata_seq1.hex
 
 JSON_TEST_FILES = \
   test/data/script_tests.json \
@@ -102,6 +104,7 @@ BITCOIN_TESTS += \
   wallet/test/wallet_test_fixture.h \
   wallet/test/accounting_tests.cpp \
   wallet/test/wallet_tests.cpp \
+  wallet/test/crypto_tests.cpp \
   wallet/test/rpc_wallet_tests.cpp
 endif
 
@@ -128,6 +131,9 @@ $(BITCOIN_TESTS): $(GENERATED_TEST_FILES)
 CLEAN_BITCOIN_TEST = test/*.gcda test/*.gcno $(GENERATED_TEST_FILES)
 
 CLEANFILES += $(CLEAN_BITCOIN_TEST)
+
+# This file is problematic for out-of-tree builds if it exists.
+DISTCLEANFILES += test/buildenv.pyc
 
 dash_test: $(TEST_BINARY)
 

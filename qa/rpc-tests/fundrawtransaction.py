@@ -58,7 +58,6 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 10)
         self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 50)
 
-        self.sync_all()
         self.nodes[0].generate(1)
         self.sync_all()
 
@@ -569,7 +568,6 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.nodes[1].walletpassphrase("test", 100)
         signedTx = self.nodes[1].signrawtransaction(fundedTx['hex'])
         txId = self.nodes[1].sendrawtransaction(signedTx['hex'])
-        self.sync_all()
         self.nodes[1].generate(1)
         self.sync_all()
 
@@ -588,7 +586,6 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         for i in range(0,20):
             self.nodes[0].sendtoaddress(self.nodes[1].getnewaddress(), 0.01)
-        self.sync_all()
         self.nodes[0].generate(1)
         self.sync_all()
 
@@ -619,7 +616,6 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         for i in range(0,20):
             self.nodes[0].sendtoaddress(self.nodes[1].getnewaddress(), 0.01)
-        self.sync_all()
         self.nodes[0].generate(1)
         self.sync_all()
 
@@ -693,7 +689,25 @@ class RawTransactionsTest(BitcoinTestFramework):
         signedtx = self.nodes[0].signrawtransaction(signedtx["hex"])
         assert(signedtx["complete"])
         self.nodes[0].sendrawtransaction(signedtx["hex"])
+        self.nodes[0].generate(1)
+        self.sync_all()
 
+        #######################
+        # Test feeRate option #
+        #######################
+
+        # Make sure there is exactly one input so coin selection can't skew the result
+        assert_equal(len(self.nodes[3].listunspent(1)), 1)
+
+        inputs = []
+        outputs = {self.nodes[2].getnewaddress() : 1}
+        rawtx = self.nodes[3].createrawtransaction(inputs, outputs)
+        result = self.nodes[3].fundrawtransaction(rawtx) # uses min_relay_tx_fee (set by settxfee)
+        result2 = self.nodes[3].fundrawtransaction(rawtx, {"feeRate": 2*min_relay_tx_fee})
+        result3 = self.nodes[3].fundrawtransaction(rawtx, {"feeRate": 10*min_relay_tx_fee})
+        result_fee_rate = result['fee'] * 1000 / count_bytes(result['hex'])
+        assert_fee_amount(result2['fee'], count_bytes(result2['hex']), 2 * result_fee_rate)
+        assert_fee_amount(result3['fee'], count_bytes(result3['hex']), 10 * result_fee_rate)
 
 if __name__ == '__main__':
     RawTransactionsTest().main()

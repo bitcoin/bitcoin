@@ -1,8 +1,8 @@
 package=freetype
-$(package)_version=2.5.3
-$(package)_download_path=http://downloads.sourceforge.net/$(package)
+$(package)_version=2.6.3
+$(package)_download_path=http://download.savannah.gnu.org/releases/$(package)
 $(package)_file_name=$(package)-$($(package)_version).tar.bz2
-$(package)_sha256_hash=c0848b29d52ef3ca27ad92e08351f023c5e24ce8cea7d8fe69fc96358e65f75e
+$(package)_sha256_hash=371e707aa522acf5b15ce93f11183c725b8ed1ee8546d7b3af549863045863a2
 
 define $(package)_set_vars
   $(package)_config_opts=--without-zlib --without-png --disable-static

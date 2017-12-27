@@ -1044,7 +1044,7 @@ bool CMasternodeMan::SendVerifyRequest(const CAddress& addr, const std::vector<C
         return false;
     }
 
-    CNode* pnode = connman.ConnectNode(addr, NULL, true);
+    CNode* pnode = connman.ConnectNode(addr, NULL, false, true);
     if(pnode == NULL) {
         LogPrintf("CMasternodeMan::SendVerifyRequest -- can't connect to node to verify it, addr=%s\n", addr.ToString());
         return false;

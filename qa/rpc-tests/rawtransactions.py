@@ -138,5 +138,11 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.sync_all()
         assert_equal(self.nodes[0].getbalance(), bal+Decimal('500.00000000')+Decimal('2.19000000')) #block reward + tx
 
+        inputs  = [ {'txid' : "1d1d4e24ed99057e84c3f80fd8fbec79ed9e1acee37da269356ecea000000000", 'vout' : 1, 'sequence' : 1000}]
+        outputs = { self.nodes[0].getnewaddress() : 1 }
+        rawtx   = self.nodes[0].createrawtransaction(inputs, outputs)
+        decrawtx= self.nodes[0].decoderawtransaction(rawtx)
+        assert_equal(decrawtx['vin'][0]['sequence'], 1000)
+
 if __name__ == '__main__':
     RawTransactionsTest().main()
