@@ -54,7 +54,7 @@ static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesi
  */
 static CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward)
 {
-    const char* pszTimestamp = "Doubting, dreaming dreams no mortals ever dared to dream before";
+    const char* pszTimestamp = "Grenfell Tower firm hands 9,000 homes back to council";
     const CScript genesisOutputScript = CScript() << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5f") << OP_CHECKSIG;
     return CreateGenesisBlock(pszTimestamp, genesisOutputScript, nTime, nNonce, nBits, nVersion, genesisReward);
 }
@@ -166,7 +166,7 @@ public:
                   
 
         /////////////////////////////////////////////////////////////////
-
+        // Genesis generating code
 
         // arith_uint256 test;
         // bool fNegative;
@@ -178,7 +178,7 @@ public:
         // uint256 TempHashHolding = uint256S("0x0000000000000000000000000000000000000000000000000000000000000000");
         // uint256 BestBlockHash = uint256S("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         // for (int i=0;i<40000000;i++) {
-        //     genesis = CreateGenesisBlock(1513705170, i, 0x1e00ffff, 4, 5000 * COIN);
+        //     genesis = CreateGenesisBlock(1514391173, i, 0x1e00ffff, 4, 5000 * COIN);
         //     //genesis.hashPrevBlock = TempHashHolding; 
         //     consensus.hashGenesisBlock = genesis.GetHash();
 
@@ -203,7 +203,7 @@ public:
 
         // std::cout << "hashGenesisBlock to 0x" << BestBlockHash.GetHex() << std::endl;
         // std::cout << "Genesis Nonce to " << genesisNonce << std::endl;
-        // std::cout << "Genesis Merkle " << genesis.hashMerkleRoot.GetHex() << std::endl;
+        // std::cout << "Genesis Merkle 0x" << genesis.hashMerkleRoot.GetHex() << std::endl;
 
         // std::cout << "\n";
         // std::cout << "\n";
@@ -226,14 +226,14 @@ public:
 
 
 
-        genesis = CreateGenesisBlock(1513705170, 23209737, 0x1e00ffff, 4, 5000 * COIN); 
+        genesis = CreateGenesisBlock(1514391173, 1399975, 0x1e00ffff, 4, 5000 * COIN); 
 
         consensus.hashGenesisBlock = genesis.GetHash();        
         std::cout << consensus.hashGenesisBlock.GetHex() << "\n";
         std::cout << "Merkle: " << genesis.hashMerkleRoot.GetHex() << "\n";
 
-        assert(consensus.hashGenesisBlock == uint256S("0x000000cc19dcb46cb42a408836cf23319c5c3f0360b67847e1486677cf02888a"));
-        assert(genesis.hashMerkleRoot == uint256S("0x9686ea5f254a7542381897095789b44282f5d8685cee089e94c4f373cec99128"));
+        assert(consensus.hashGenesisBlock == uint256S("0x000000613f9e306fc2f4906fe2b2fc0f4201f8976d6e9fb257f5a4e9912160cc"));
+        assert(genesis.hashMerkleRoot == uint256S("0x317c061e1d6de36eaabc9141b25eb0b3ad0e9f58357b9103d3a24a6a71c60b9a"));
 
         vSeeds.emplace_back("seed-raven.ravencoin.org", false); 
         vSeeds.emplace_back("seed-raven.bitactivate.com", false); 
