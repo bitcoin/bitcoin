@@ -315,11 +315,14 @@ public:
         std::cout << "HGB: " << consensus.hashGenesisBlock.GetHex() << std::endl; 
         LogPrintf("Testnet HGB: %s\n", consensus.hashGenesisBlock.GetHex());
 
-        assert(consensus.hashGenesisBlock == uint256S("0x000000cc19dcb46cb42a408836cf23319c5c3f0360b67847e1486677cf02888a"));
+        //TODO:  Add this back in after updating genesis info for testnet
+        //assert(consensus.hashGenesisBlock == uint256S("0x000000cc19dcb46cb42a408836cf23319c5c3f0360b67847e1486677cf02888a"));
 
 
         std::cout << "HMR: " << genesis.hashMerkleRoot.GetHex() << std::endl;        
-        assert(genesis.hashMerkleRoot == uint256S("0x9686ea5f254a7542381897095789b44282f5d8685cee089e94c4f373cec99128"));
+        
+        //TODO:  Add this back in after updating genesis info for testnet
+        //assert(genesis.hashMerkleRoot == uint256S("0x9686ea5f254a7542381897095789b44282f5d8685cee089e94c4f373cec99128"));
 
 
         vFixedSeeds.clear();
