@@ -171,7 +171,6 @@ public:
 		Erase(make_pair(std::string("assetp"), assetTuple.first));
 		EraseISLock(assetTuple.first);
 		EraseAssetLastTXID(assetTuple.first);
-		EraseAssetFirstTXID(assetTuple.first);
 		EraseAssetIndex(assetTuple.first, cleanup);
         return eraseState;
     }
