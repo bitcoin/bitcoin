@@ -538,7 +538,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			{
 				if (!dontaddtodb) {
 					const string &txHashHex = dbAsset.txHash.GetHex();
-					passetdb->EraseAliasIndexTxHistory(txHashHex);
+					paliasdb->EraseAliasIndexTxHistory(txHashHex);
 					passetdb->EraseAssetIndexHistory(txHashHex;
 				}
 				//vector<string> lastReceiverList = dbAsset.listReceivers;

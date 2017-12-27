@@ -590,7 +590,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			{
 				if (!dontaddtodb) {
 					const string &txHashHex = dbOffer.txHash.GetHex();
-					pofferdb->EraseAliasIndexTxHistory(txHashHex);
+					paliasdb->EraseAliasIndexTxHistory(txHashHex);
 					pofferdb->EraseOfferIndexHistory(txHashHex);
 					pofferdb->EraseExtTXID(txHashHex);
 				}

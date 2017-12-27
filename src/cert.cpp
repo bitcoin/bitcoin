@@ -532,7 +532,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 			{
 				if (!dontaddtodb) {
 					const string &txHashHex = dbCert.txHash.GetHex();
-					pcertdb->EraseAliasIndexTxHistory(txHashHex);
+					paliasdb->EraseAliasIndexTxHistory(txHashHex);
 					pcertdb->EraseCertIndexHistory(txHashHex);
 				}
 				if (op != OP_CERT_ACTIVATE && !pcertdb->ReadLastCert(vvchArgs[0], dbCert)) {

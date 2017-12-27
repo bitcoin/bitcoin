@@ -923,7 +923,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 			{
 				if (!dontaddtodb) {
 					const string &txHashHex = theEscrow.txHash.GetHex();
-					pescrowdb->EraseAliasIndexTxHistory(txHashHex);
+					paliasdb->EraseAliasIndexTxHistory(txHashHex);
 					pescrowdb->EraseEscrowBidIndex(txHashHex);
 				}
 				if (op != OP_ESCROW_ACTIVATE && !pescrowdb->ReadLastEscrow(vvchArgs[0], theEscrow)) {
