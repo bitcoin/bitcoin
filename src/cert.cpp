@@ -637,15 +637,14 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 
 
 UniValue certnew(const UniValue& params, bool fHelp) {
-    if (fHelp || params.size() != 6)
+    if (fHelp || params.size() != 5)
         throw runtime_error(
-			"certnew [alias] [title] [public] [category=certificates] [witness] [instantsend]\n"
+			"certnew [alias] [title] [public] [category=certificates] [witness]\n"
 						"<alias> An alias you own.\n"
 						"<title> title, 256 characters max.\n"
                         "<public> public data, 256 characters max.\n"
 						"<category> category, 256 characters max. Defaults to certificates\n"
 						"<witness> Witness alias name that will sign for web-of-trust notarization of this transaction.\n"
-						"<instantsend> Set to true to use InstantSend to send this transaction or false otherwise.\n"
 						+ HelpRequiringPassphrase());
 	vector<unsigned char> vchAlias = vchFromValue(params[0]);
     vector<unsigned char> vchTitle = vchFromString(params[1].get_str());
@@ -654,8 +653,7 @@ UniValue certnew(const UniValue& params, bool fHelp) {
 	strCategory = params[3].get_str();
 	vector<unsigned char> vchWitness;
 	vchWitness = vchFromValue(params[4]);
-	bool fUseInstantSend = false;
-	fUseInstantSend = params[5].get_bool();
+
 	// check for alias existence in DB
 	CAliasIndex theAlias;
 
@@ -717,7 +715,7 @@ UniValue certnew(const UniValue& params, bool fHelp) {
 	CCoinControl coinControl;
 	coinControl.fAllowOtherInputs = false;
 	coinControl.fAllowWatchOnly = false;	
-	SendMoneySyscoin(vchAlias, vchWitness, aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl, fUseInstantSend);
+	SendMoneySyscoin(vchAlias, vchWitness, aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
 	UniValue res(UniValue::VARR);
 	res.push_back(EncodeHexTx(wtx));
 	res.push_back(stringFromVch(vchCert));
@@ -725,16 +723,15 @@ UniValue certnew(const UniValue& params, bool fHelp) {
 }
 
 UniValue certupdate(const UniValue& params, bool fHelp) {
-    if (fHelp || params.size() != 6)
+    if (fHelp || params.size() != 5)
         throw runtime_error(
-			"certupdate [guid] [title] [public] [category=certificates] [witness] [instantsend]\n"
+			"certupdate [guid] [title] [public] [category=certificates] [witness]\n"
 						"Perform an update on an certificate you control.\n"
 						"<guid> Certificate guidkey.\n"
 						"<title> Certificate title, 256 characters max.\n"
                         "<public> Public data, 256 characters max.\n"                
 						"<category> Category, 256 characters max. Defaults to certificates\n"
 						"<witness> Witness alias name that will sign for web-of-trust notarization of this transaction.\n"
-						"<instantsend> Set to true to use InstantSend to send this transaction or false otherwise.\n"
 						+ HelpRequiringPassphrase());
 	vector<unsigned char> vchCert = vchFromValue(params[0]);
 
@@ -748,8 +745,6 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
 
 	vector<unsigned char> vchWitness;
 	vchWitness = vchFromValue(params[4]);
-	bool fUseInstantSend = false;
-	fUseInstantSend = params[5].get_bool();
     // this is a syscoind txn
     CWalletTx wtx;
     CScript scriptPubKeyOrig;
@@ -808,7 +803,7 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
 	CCoinControl coinControl;
 	coinControl.fAllowOtherInputs = false;
 	coinControl.fAllowWatchOnly = false;	
-	SendMoneySyscoin(theAlias.vchAlias, vchWitness, aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl, fUseInstantSend);
+	SendMoneySyscoin(theAlias.vchAlias, vchWitness, aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
  	UniValue res(UniValue::VARR);
 	res.push_back(EncodeHexTx(wtx));
 	return res;
@@ -816,16 +811,15 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
 
 
 UniValue certtransfer(const UniValue& params, bool fHelp) {
- if (fHelp || params.size() != 6)
+ if (fHelp || params.size() != 5)
         throw runtime_error(
-			"certtransfer [guid] [alias] [public] [accessflags=2] [witness] [instantsend]\n"
+			"certtransfer [guid] [alias] [public] [accessflags=2] [witness]\n"
 						"Transfer a certificate you own to another alias.\n"
 						"<guid> certificate guidkey.\n"
 						"<alias> alias to transfer to.\n"
                         "<public> public data, 256 characters max.\n"	
 						"<accessflags> Set new access flags for new owner for this certificate, 0 for read-only, 1 for edit, 2 for edit and transfer access. Default is 2.\n"
 						"<witness> Witness alias name that will sign for web-of-trust notarization of this transaction.\n"	
-						"<instantsend> Set to true to use InstantSend to send this transaction or false otherwise.\n"
 						+ HelpRequiringPassphrase());
 
     // gather & validate inputs
@@ -838,8 +832,7 @@ UniValue certtransfer(const UniValue& params, bool fHelp) {
 	nAccessFlags = params[3].get_int();
 	vector<unsigned char> vchWitness;
 	vchWitness = vchFromValue(params[4]);
-	bool fUseInstantSend = false;
-	fUseInstantSend = params[5].get_bool();
+
 	// check for alias existence in DB
 	CAliasIndex toAlias;
 	if (!GetAlias(vchAlias, toAlias))
@@ -907,7 +900,7 @@ UniValue certtransfer(const UniValue& params, bool fHelp) {
 	CCoinControl coinControl;
 	coinControl.fAllowOtherInputs = false;
 	coinControl.fAllowWatchOnly = false;
-	SendMoneySyscoin(fromAlias.vchAlias, vchWitness, aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl, fUseInstantSend);
+	SendMoneySyscoin(fromAlias.vchAlias, vchWitness, aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
 	UniValue res(UniValue::VARR);
 	res.push_back(EncodeHexTx(wtx));
 	return res;

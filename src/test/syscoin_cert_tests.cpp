@@ -21,9 +21,9 @@ BOOST_AUTO_TEST_CASE (generate_big_certdata)
 	// 513 bytes long
 	string baddata = gooddata + "a";
 	string guid = CertNew("node1", "jagcertbig1", "title", gooddata);
-	BOOST_CHECK_THROW(CallRPC("node1", "certnew jagcertbig1 title " + baddata + " certificates '' false"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "certnew jagcertbig1 title " + baddata + " certificates ''"), runtime_error);
 	// update cert with long pub data
-	BOOST_CHECK_THROW(CallRPC("node1", "certupdate " + guid + " title  " + baddata + " certificates '' false"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "certupdate " + guid + " title  " + baddata + " certificates ''"), runtime_error);
 
 }
 BOOST_AUTO_TEST_CASE (generate_big_certtitle)
@@ -38,7 +38,7 @@ BOOST_AUTO_TEST_CASE (generate_big_certtitle)
 	// 257 bytes long
 	string badtitle = goodtitle + "a";
 	CertNew("node1", "jagcertbig2", goodtitle, gooddata);
-	BOOST_CHECK_THROW(CallRPC("node1", "certnew jagcertbig2 " + badtitle + " pub certificates '' false"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "certnew jagcertbig2 " + badtitle + " pub certificates ''"), runtime_error);
 }
 BOOST_AUTO_TEST_CASE (generate_certupdate)
 {
@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_CASE (generate_certupdate)
 	string guid = CertNew("node1", "jagcertupdate", "title", "data");
 	// update an cert that isn't yours
 	UniValue r;
-	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "certupdate " + guid + " title pubdata certificates '' false"));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "certupdate " + guid + " title pubdata certificates ''"));
 	UniValue arr = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "signrawtransaction " + arr[0].get_str()));
 	BOOST_CHECK(!find_value(r.get_obj(), "complete").get_bool());
@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE (generate_certtransfer)
 	CertTransfer("node1", "node3", pvtguid, "jagcert3");
 
 	// xfer an cert that isn't yours
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "certtransfer " + guid + " jagcert2 '' 2 '' false"));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "certtransfer " + guid + " jagcert2 '' 2 ''"));
 	UniValue arr = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + arr[0].get_str()));
 	BOOST_CHECK(!find_value(r.get_obj(), "complete").get_bool());
@@ -119,7 +119,7 @@ BOOST_AUTO_TEST_CASE (generate_certpruning)
 	// stop node3
 	StopNode("node3");
 	// should fail: already expired alias
-	BOOST_CHECK_THROW(CallRPC("node1", "aliasupdate jagprune1 newdata TTVgyEvCfgZFiVL32kD7jMRaBKtGCHqwbD 3 0 '' '' '' false"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "aliasupdate jagprune1 newdata TTVgyEvCfgZFiVL32kD7jMRaBKtGCHqwbD 3 0 '' '' ''"), runtime_error);
 	GenerateBlocks(5, "node1");
 
 	// stop and start node1
@@ -144,7 +144,7 @@ BOOST_AUTO_TEST_CASE (generate_certpruning)
 	GenerateBlocks(5, "node1");
 	ExpireAlias("jagprune1");
 	// now it should be expired
-	BOOST_CHECK_THROW(CallRPC("node1",  "certupdate " + guid1 + " title pubdata3 certificates '' false"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1",  "certupdate " + guid1 + " title pubdata3 certificates ''"), runtime_error);
 	GenerateBlocks(5, "node1");
 	BOOST_CHECK_EQUAL(CertFilter("node1", guid1), true);
 	BOOST_CHECK_EQUAL(CertFilter("node2", guid1), true);

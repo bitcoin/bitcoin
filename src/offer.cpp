@@ -765,9 +765,9 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	return true;
 }
 UniValue offernew(const UniValue& params, bool fHelp) {
-	if (fHelp || params.size() != 18)
+	if (fHelp || params.size() != 17)
 		throw runtime_error(
-			"offernew [alias] [category] [title] [quantity] [price] [description] [currency] [cert. guid] [payment options=SYS] [private=false] [units] [offertype=BUYNOW] [auction_expires] [auction_reserve] [auction_require_witness] [auction_deposit] [witness] [instantsend]\n"
+			"offernew [alias] [category] [title] [quantity] [price] [description] [currency] [cert. guid] [payment options=SYS] [private=false] [units] [offertype=BUYNOW] [auction_expires] [auction_reserve] [auction_require_witness] [auction_deposit] [witness]\n"
 						"<alias> An alias you own.\n"
 						"<category> category, 256 characters max.\n"
 						"<title> title, 256 characters max.\n"
@@ -785,7 +785,6 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 						"<auction_require_witness> If offerType is AUCTION, Require a witness signature for bids of an offer, or release/refund of an escrow funds in an auction for the offer. Set to true if you wish to require witness signature. Default is false.\n"
 						"<auction_deposit> If offerType is AUCTION. If you require a deposit for each bidder to ensure stake to bidders set this to a percentage of the offer price required to place deposit when doing an initial bid. For Example: 1% of the offer price would be 0.01. Default is 0.\n"
 						"<witness> Witness alias name that will sign for web-of-trust notarization of this transaction.\n"	
-						"<instantsend> Set to true to use InstantSend to send this transaction or false otherwise.\n"
 						+ HelpRequiringPassphrase());
 	// gather inputs
 	float fPrice;
@@ -851,8 +850,6 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 	vector<unsigned char> vchWitness;
 	vchWitness = vchFromValue(params[16]);
 
-	bool fUseInstantSend = false;
-	fUseInstantSend = params[17].get_bool();
 
 	// if we are selling a cert ensure it exists and pubkey's match (to ensure it doesnt get transferred prior to accepting by user)
 	CCert theCert;
@@ -939,7 +936,7 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 	CCoinControl coinControl;
 	coinControl.fAllowOtherInputs = false;
 	coinControl.fAllowWatchOnly = false;
-	SendMoneySyscoin(vchAlias, vchWitness, aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl, fUseInstantSend);
+	SendMoneySyscoin(vchAlias, vchWitness, aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
 	UniValue res(UniValue::VARR);
 	res.push_back(EncodeHexTx(wtx));
 	res.push_back(stringFromVch(vchOffer));
@@ -947,14 +944,13 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 }
 
 UniValue offerlink(const UniValue& params, bool fHelp) {
-	if (fHelp || params.size() != 6)
+	if (fHelp || params.size() != 5)
 		throw runtime_error(
-			"offerlink [alias] [guid] [commission] [description] [witness] [instantsend]\n"
+			"offerlink [alias] [guid] [commission] [description] [witness]\n"
 						"<alias> An alias you own.\n"
 						"<guid> offer guid that you are linking to\n"
 						"<commission> percentage of profit desired over original offer price, > 0, ie: 5 for 5%\n"
 						"<description> description, 512 characters max.\n"
-						"<instantsend> Set to true to use InstantSend to send this transaction or false otherwise.\n"
 						+ HelpRequiringPassphrase());
 	vector<unsigned char> vchAlias = vchFromValue(params[0]);
 
@@ -981,8 +977,6 @@ UniValue offerlink(const UniValue& params, bool fHelp) {
 	
 	vector<unsigned char> vchWitness;
 	vchWitness = vchFromValue(params[4]);
-	bool fUseInstantSend = false;
-	fUseInstantSend = params[5].get_bool();
 	CScript scriptPubKeyOrig;
 	CScript scriptPubKey;
 
@@ -1042,7 +1036,7 @@ UniValue offerlink(const UniValue& params, bool fHelp) {
 	CCoinControl coinControl;
 	coinControl.fAllowOtherInputs = false;
 	coinControl.fAllowWatchOnly = false;
-	SendMoneySyscoin(vchAlias, vchWitness, aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl, fUseInstantSend);
+	SendMoneySyscoin(vchAlias, vchWitness, aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
 
 	UniValue res(UniValue::VARR);
 	res.push_back(EncodeHexTx(wtx));
@@ -1050,9 +1044,9 @@ UniValue offerlink(const UniValue& params, bool fHelp) {
 	return res;
 }
 UniValue offerupdate(const UniValue& params, bool fHelp) {
-	if (fHelp || params.size() != 19)
+	if (fHelp || params.size() != 18)
 		throw runtime_error(
-			"offerupdate [alias] [guid] [category] [title] [quantity] [price] [description] [currency] [private=false] [cert. guid] [commission] [paymentOptions] [offerType=BUYNOW] [auction_expires] [auction_reserve] [auction_require_witness] [auction_deposit] [witness] [instantsend]\n"
+			"offerupdate [alias] [guid] [category] [title] [quantity] [price] [description] [currency] [private=false] [cert. guid] [commission] [paymentOptions] [offerType=BUYNOW] [auction_expires] [auction_reserve] [auction_require_witness] [auction_deposit] [witness]\n"
 						"Perform an update on an offer you control.\n"
 						+ HelpRequiringPassphrase());
 	// gather & validate inputs
@@ -1103,8 +1097,7 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	fAuctionDeposit = params[16].get_real();
 	vector<unsigned char> vchWitness;
 	vchWitness = vchFromValue(params[17]);
-	bool fUseInstantSend = false;
-	fUseInstantSend = params[18].get_bool();
+
 	CAliasIndex alias, linkAlias;
 
 	// this is a syscoind txn
@@ -1234,7 +1227,7 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	coinControl.fAllowWatchOnly = false;
 
 
-	SendMoneySyscoin(alias.vchAlias, vchWitness, aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl, fUseInstantSend);
+	SendMoneySyscoin(alias.vchAlias, vchWitness, aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
 	UniValue res(UniValue::VARR);
 	res.push_back(EncodeHexTx(wtx));
 	return res;

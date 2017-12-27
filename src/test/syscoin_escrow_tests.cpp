@@ -41,7 +41,7 @@ BOOST_AUTO_TEST_CASE(generate_auction_regular)
 	string offerguid = OfferNew("node2", "sellerauction", "category", "title", "100", "0.05", "description", "USD", "''" /*certguid*/, "SYS" /*paymentoptions*/, "BUYNOW+AUCTION", expiry);
 	// can't update offer auction settings until auction expires
 	//						"offerupdate <alias> <guid> [category] [title] [quantity] [price] [description] [currency] [private=false] [cert. guid] [commission] [paymentOptions] [offerType=BUYNOW] [auction_expires] [auction_reserve] [auction_require_witness] [auction_deposit] [witness]\n"
-	BOOST_CHECK_THROW(r = CallRPC("node2", "offerupdate sellerauction " + offerguid + " category title 90 0.15 description USD false '' 0 SYS BUYNOW 0 0 true 0 '' false"), runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC("node2", "offerupdate sellerauction " + offerguid + " category title 90 0.15 description USD false '' 0 SYS BUYNOW 0 0 true 0 ''"), runtime_error);
 
 	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress buyerauction 1000"), runtime_error);
 	GenerateBlocks(10);
@@ -49,11 +49,11 @@ BOOST_AUTO_TEST_CASE(generate_auction_regular)
 	EscrowBid("node1", "buyerauction", guid, "0.01");
 	EscrowBid("node1", "buyerauction", guid, "0.02");
 	// must bid higher
-	BOOST_CHECK_THROW(CallRPC("node1", "escrowbid buyerauction " + guid + " 0 0.03 '' false"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "escrowbid buyerauction " + guid + " 0 0.03 ''"), runtime_error);
 	// must bid higher
-	BOOST_CHECK_THROW(CallRPC("node1", "escrowbid buyerauction " + guid + " 9 0.02 '' false"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "escrowbid buyerauction " + guid + " 9 0.02 ''"), runtime_error);
 	// must bid higher
-	BOOST_CHECK_THROW(CallRPC("node1", "escrowbid buyerauction " + guid + " 9 0.01 '' false"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "escrowbid buyerauction " + guid + " 9 0.01 ''"), runtime_error);
 
 	EscrowBid("node1", "buyerauction", guid, "0.03");
 
@@ -97,7 +97,7 @@ BOOST_AUTO_TEST_CASE(generate_auction_regular)
 	EscrowClaimRelease("node2", guid);
 	// after expiry cant update
 	SetSysMocktime(mediantime + 1);
-	BOOST_CHECK_THROW(r = CallRPC("node2", "offerupdate sellerauction " + offerguid + " category title 90 0.15 description USD false '' 0 SYS BUYNOW 0 0 true 0 '' false"), runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC("node2", "offerupdate sellerauction " + offerguid + " category title 90 0.15 description USD false '' 0 SYS BUYNOW 0 0 true 0 ''"), runtime_error);
 }
 BOOST_AUTO_TEST_CASE(generate_auction_reserve)
 {
@@ -139,9 +139,9 @@ BOOST_AUTO_TEST_CASE(generate_auction_reserve)
 	EscrowBid("node1", "buyerauction1", guid, "0.02");
 	EscrowBid("node1", "buyerauction1", guid, "0.03");
 	// must bid higher
-	BOOST_CHECK_THROW(CallRPC("node1", "escrowbid buyerauction1 " + guid + " 9.002 0.02 '' false"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "escrowbid buyerauction1 " + guid + " 9.002 0.02 ''"), runtime_error);
 	// must bid higher
-	BOOST_CHECK_THROW(CallRPC("node1", "escrowbid buyerauction1 " + guid + " 9.001 0.01 '' false"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "escrowbid buyerauction1 " + guid + " 9.001 0.01 ''"), runtime_error);
 
 	EscrowBid("node1", "buyerauction1", guid, "0.04");
 
@@ -265,7 +265,7 @@ BOOST_AUTO_TEST_CASE(generate_escrowrefund_invalid)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "escrowcreaterawtransaction refund " + guid + " " + inputStr + " buyer"));
 	const UniValue &arr = r.get_array();
 	string rawtx = arr[0].get_str();
-	BOOST_CHECK_THROW(CallRPC("node1", "escrowrefund " + guid + " buyer " + rawtx + " '' false"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "escrowrefund " + guid + " buyer " + rawtx + " ''"), runtime_error);
 
 	// arbiter can resend claim refund to buyer
 	EscrowRefund("node2", "seller", guid);
@@ -278,7 +278,7 @@ BOOST_AUTO_TEST_CASE(generate_escrowrefund_invalid)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "escrowcreaterawtransaction refund " + guid + " " + inputStr + "  seller"));
 	const UniValue &arr2 = r.get_array();
 	rawtx = arr2[0].get_str();
-	BOOST_CHECK_THROW(CallRPC("node2", "escrowrefund " + guid + " seller " + rawtx + " '' false"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node2", "escrowrefund " + guid + " seller " + rawtx + " ''"), runtime_error);
 }
 BOOST_AUTO_TEST_CASE(generate_escrowrelease_invalid)
 {
@@ -313,7 +313,7 @@ BOOST_AUTO_TEST_CASE(generate_escrowrelease_invalid)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "escrowcreaterawtransaction release " + guid + " " + inputStr + " seller"));
 	const UniValue &arr = r.get_array();
 	string rawtx = arr[0].get_str();
-	BOOST_CHECK_THROW(CallRPC("node2", "escrowrelease " + guid + " seller " + rawtx + " '' false"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node2", "escrowrelease " + guid + " seller " + rawtx + " ''"), runtime_error);
 	EscrowRelease("node1", "buyer", guid);
 	// cant release already released escrow
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "escrowcreaterawtransaction release " + guid + " " + inputStr + " buyer"));
@@ -327,7 +327,7 @@ BOOST_AUTO_TEST_CASE(generate_escrowrelease_invalid)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "escrowcreaterawtransaction release " + guid + " " + inputStr + " buyer"));
 	const UniValue &arr2 = r.get_array();
 	rawtx = arr2[0].get_str();
-	BOOST_CHECK_THROW(CallRPC("node1", "escrowrelease " + guid + " buyer " + rawtx + " '' false"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "escrowrelease " + guid + " buyer " + rawtx + " ''"), runtime_error);
 }
 BOOST_AUTO_TEST_CASE(generate_escrowrelease_arbiter)
 {
@@ -428,7 +428,7 @@ BOOST_AUTO_TEST_CASE(generate_escrowfeedback)
 	EscrowFeedback("node1", "seller", guid, "feedbackarbiter", "1", "arbiter");
 
 	// leave another feedback and notice that you can't find it in the indexer (first feedback will be indexed only per user per guid+touser combination)
-	string escrowfeedbackstr = "escrowfeedback " + guid + " seller feedback 1 buyer '' false";
+	string escrowfeedbackstr = "escrowfeedback " + guid + " seller feedback 1 buyer ''";
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", escrowfeedbackstr));
 	UniValue arr = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + arr[0].get_str()));
@@ -448,7 +448,7 @@ BOOST_AUTO_TEST_CASE(generate_escrowfeedback)
 	EscrowFeedback("node2", "buyer", guid, "feedbackarbiter", "1", "arbiter");
 
 	// leave another feedback and notice that you can't find it in the indexer (first feedback will be indexed only per user per guid+touser combination)
-	escrowfeedbackstr = "escrowfeedback " + guid + " buyer feedback 1 seller '' false";
+	escrowfeedbackstr = "escrowfeedback " + guid + " buyer feedback 1 seller ''";
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", escrowfeedbackstr));
 	UniValue arr1 = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "signrawtransaction " + arr1[0].get_str()));
@@ -468,7 +468,7 @@ BOOST_AUTO_TEST_CASE(generate_escrowfeedback)
 	EscrowFeedback("node3", "arbiter", guid, "feedbackseller", "4", "seller");
 
 	// leave another feedback and notice that you can't find it in the indexer (first feedback will be indexed only per user per guid+touser combination)
-	escrowfeedbackstr = "escrowfeedback " + guid + " arbiter feedback 1 buyer '' false";
+	escrowfeedbackstr = "escrowfeedback " + guid + " arbiter feedback 1 buyer ''";
 	BOOST_CHECK_NO_THROW(r = CallRPC("node3", escrowfeedbackstr));
 	UniValue arr2 = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC("node3", "signrawtransaction " + arr2[0].get_str()));
@@ -497,7 +497,7 @@ BOOST_AUTO_TEST_CASE(generate_escrow_linked_release)
 	string commission = "10";
 	string description = "newdescription";
 	// by default linking isn't allowed
-	BOOST_CHECK_THROW(CallRPC("node3", "offerlink arbiteralias2 " + offerguid + " " + commission + " " + description + " '' false"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node3", "offerlink arbiteralias2 " + offerguid + " " + commission + " " + description + " ''"), runtime_error);
 	offerguid = OfferNew("node2", "selleralias22", "category", "title", "100", "0.04", "description", "EUR");
 	AliasAddWhitelist("node2", "selleralias22", "arbiteralias2", "5");
 	string offerlinkguid = OfferLink("node3", "arbiteralias2", offerguid, commission, description);
@@ -562,7 +562,7 @@ BOOST_AUTO_TEST_CASE(generate_escrowpruning)
 	BOOST_CHECK_THROW(CallRPC("node3", "escrowinfo " + guid1), runtime_error);
 	BOOST_CHECK_EQUAL(EscrowFilter("node3", guid1), false);
 	// cannot leave feedback on expired escrow
-	BOOST_CHECK_THROW(CallRPC("node2", "escrowfeedback " + guid1 + " buyer feedback 2 seller '' false"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node2", "escrowfeedback " + guid1 + " buyer feedback 2 seller ''"), runtime_error);
 	ECC_Stop();
 }
 
