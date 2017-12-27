@@ -543,10 +543,8 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		}
 		if (!theAliasNull) {
 			bool bInstantSendLocked = false;
-			// if it was instant locked and this is a pow block (not instant send) then check to ensure that height >= stored height instead of < stored height
-			// since instant send calls this function with chain height + 1
 			if (!fJustCheck && paliasdb->ReadISLock(vvchArgs[0], bInstantSendLocked) && bInstantSendLocked) {
-				if (dbAlias.nHeight > nHeight)
+				if (dbAlias.nHeight >= nHeight)
 				{
 					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Alias was already updated in this block.");
 					return true;
@@ -573,7 +571,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					return true;
 				}
 			}
-			else if (dbAlias.nHeight >= nHeight) {
+			else if (dbAlias.nHeight > nHeight) {
 				errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Alias was already updated in this block.");
 				return true;
 			}

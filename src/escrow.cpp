@@ -911,10 +911,8 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 	else
 	{
 		bool bInstantSendLocked = false;
-		// if it was instant locked and this is a pow block (not instant send) then check to ensure that height >= stored height instead of < stored height
-		// since instant send calls this function with chain height + 1
 		if (!fJustCheck && pescrowdb->ReadISLock(vvchArgs[0], bInstantSendLocked) && bInstantSendLocked) {
-			if (theEscrow.nHeight > nHeight)
+			if (theEscrow.nHeight >= nHeight)
 			{
 				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Escrow was already updated in this block.");
 				return true;
@@ -945,7 +943,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				return true;
 			}
 		}
-		else if (theEscrow.nHeight >= nHeight)
+		else if (theEscrow.nHeight > nHeight)
 		{
 			errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Escrow was already updated in this block.");
 			return true;

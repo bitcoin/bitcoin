@@ -526,10 +526,8 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	else
 	{
 		bool bInstantSendLocked = false;
-		// if it was instant locked and this is a pow block (not instant send) then check to ensure that height >= stored height instead of < stored height
-		// since instant send calls this function with chain height + 1
 		if (!fJustCheck && passetdb->ReadISLock(vvchArgs[0], bInstantSendLocked) && bInstantSendLocked) {
-			if (dbAsset.nHeight > nHeight)
+			if (dbAsset.nHeight >= nHeight)
 			{
 				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Asset was already updated in this block.");
 				return true;
@@ -566,7 +564,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				return true;
 			}
 		}
-		else if (dbAsset.nHeight >= nHeight)
+		else if (dbAsset.nHeight > nHeight)
 		{
 			errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Asset was already updated in this block.");
 			return true;
