@@ -592,7 +592,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					const string &txHashHex = dbOffer.txHash.GetHex();
 					pofferdb->EraseAliasIndexTxHistory(txHashHex);
 					pofferdb->EraseOfferIndexHistory(txHashHex);
-					pofferdb->EraseExtTXID(txHashHex;
+					pofferdb->EraseExtTXID(txHashHex);
 				}
 				if (op != OP_OFFER_ACTIVATE && !pofferdb->ReadLastOffer(vvchArgs[0], dbOffer)) {
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1048 - " + _("Failed to read last offer from offer DB");
@@ -1338,7 +1338,7 @@ void COfferDB::EraseOfferIndexHistory(const string &id) {
 	selector = BCON_NEW("_id", BCON_UTF8(id.c_str()));
 	write_concern = mongoc_write_concern_new();
 	mongoc_write_concern_set_w(write_concern, MONGOC_WRITE_CONCERN_W_UNACKNOWLEDGED);
-	if (!mongoc_collection_remove(offerhistory_collection, remove_flags, selector, cleanup ? NULL : write_concern, &error)) {
+	if (!mongoc_collection_remove(offerhistory_collection, remove_flags, selector, write_concern, &error)) {
 		LogPrintf("MONGODB OFFER HISTORY REMOVE ERROR: %s\n", error.message);
 	}
 	if (selector)
