@@ -552,6 +552,11 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Alias was already updated in this block.");
 						return true;
 					}
+					if (!dontaddtodb && !paliasdb->EraseISLock(vvchArgs[0]))
+					{
+						errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from alias DB");
+						return error(errorMessage.c_str());
+					}
 					if (dbAlias.txHash != tx.GetHash())
 					{
 						if (!paliasdb->ReadLastAlias(vvchArgs[0], dbAlias)) {
@@ -560,11 +565,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						}
 					}
 					else {
-						if (!dontaddtodb && !paliasdb->EraseISLock(vvchArgs[0]))
-						{
-							errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from alias DB");
-							return error(errorMessage.c_str());
-						}
+
 						return true;
 					}
 				}

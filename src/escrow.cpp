@@ -919,6 +919,11 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Escrow was already updated in this block.");
 					return true;
 				}
+				if (!dontaddtodb && !pescrowdb->EraseISLock(vvchArgs[0]))
+				{
+					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from escrow DB");
+					return error(errorMessage.c_str());
+				}
 				if (theEscrow.txHash != tx.GetHash())
 				{
 					if (op != OP_ESCROW_ACTIVATE && !pescrowdb->ReadLastEscrow(vvchArgs[0], theEscrow)) {
@@ -927,11 +932,6 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 					}
 				}
 				else {
-					if (!dontaddtodb && !pescrowdb->EraseISLock(vvchArgs[0]))
-					{
-						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from escrow DB");
-						return error(errorMessage.c_str());
-					}
 					return true;
 				}
 			}

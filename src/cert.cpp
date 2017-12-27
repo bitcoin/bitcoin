@@ -517,6 +517,11 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 					errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Certificate was already updated in this block.");
 					return true;
 				}
+				if (!dontaddtodb && !pcertdb->EraseISLock(vvchArgs[0]))
+				{
+					errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from certificate DB");
+					return error(errorMessage.c_str());
+				}
 				if (dbCert.txHash != tx.GetHash())
 				{
 					if (op != OP_CERT_ACTIVATE && !pcertdb->ReadLastCert(vvchArgs[0], dbCert)) {
@@ -525,11 +530,6 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 					}
 				}
 				else {
-					if (!dontaddtodb && !pcertdb->EraseISLock(vvchArgs[0]))
-					{
-						errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from certificate DB");
-						return error(errorMessage.c_str());
-					}
 					return true;
 				}
 			}

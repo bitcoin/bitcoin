@@ -588,6 +588,11 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Offer was already updated in this block.");
 					return true;
 				}
+				if (!dontaddtodb && !pofferdb->EraseISLock(vvchArgs[0]))
+				{
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from offer DB");
+					return error(errorMessage.c_str());
+				}
 				if (dbOffer.txHash != tx.GetHash())
 				{
 					if (op != OP_OFFER_ACTIVATE && !pofferdb->ReadLastOffer(vvchArgs[0], dbOffer)) {
@@ -596,11 +601,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					}
 				}
 				else {
-					if (!dontaddtodb && !pofferdb->EraseISLock(vvchArgs[0]))
-					{
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from offer DB");
-						return error(errorMessage.c_str());
-					}
 					return true;
 				}
 			}
