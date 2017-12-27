@@ -559,8 +559,8 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				if (dbAlias.txHash != tx.GetHash())
 				{
 					if (!dontaddtodb) {
-						EraseAliasIndexHistory(dbAlias.txHash);
-						EraseAliasIndexTxHistory(dbAlias.txHash);
+						paliasdb->EraseAliasIndexHistory(dbAlias.txHash);
+						paliasdb->EraseAliasIndexTxHistory(dbAlias.txHash);
 					}
 					if (!paliasdb->ReadLastAlias(vvchArgs[0], dbAlias)) {
 						errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1048 - " + _("Failed to read last alias from alias DB");
