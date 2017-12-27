@@ -559,7 +559,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				if (dbAlias.txHash != tx.GetHash())
 				{
 					if (!dontaddtodb) {
-						const string &txHashHex = dbOffer.txHash.GetHex();
+						const string &txHashHex = dbAlias.txHash.GetHex();
 						paliasdb->EraseAliasIndexHistory(txHashHex);
 						paliasdb->EraseAliasIndexTxHistory(txHashHex);
 					}
