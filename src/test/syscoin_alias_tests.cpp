@@ -122,7 +122,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasmultiupdate)
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + varray[0].get_str()));
 		BOOST_CHECK_NO_THROW(CallRPC("node1", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
 	}
-	BOOST_CHECK_THROW(r = CallRPC("node1", "aliasupdate jagmultiupdate changeddata " + oldAddressStr + " 3 " + " 0 " + encryptionprivkey + " " + encryptionkey + " ''), runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC("node1", "aliasupdate jagmultiupdate changeddata " + oldAddressStr + " 3 " + " 0 " + encryptionprivkey + " " + encryptionkey + " ''"), runtime_error);
 
 
 	GenerateBlocks(10, "node1");
