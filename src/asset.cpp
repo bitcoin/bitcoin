@@ -537,8 +537,9 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			if (dbAsset.txHash != tx.GetHash())
 			{
 				if (!dontaddtodb) {
-					passetdb->EraseAliasIndexTxHistory(dbAsset.txHash);
-					passetdb->EraseAssetIndexHistory(dbAsset.txHash);
+					const string &txHashHex = dbAsset.txHash.GetHex();
+					passetdb->EraseAliasIndexTxHistory(txHashHex);
+					passetdb->EraseAssetIndexHistory(txHashHex;
 				}
 				//vector<string> lastReceiverList = dbAsset.listReceivers;
 				// recreate this asset tx from last known good position (last asset stored)
