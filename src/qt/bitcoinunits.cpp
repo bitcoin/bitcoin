@@ -41,7 +41,7 @@ bool BitcoinUnits::valid(int unit)
     }
 }
 
-QString BitcoinUnits::name(int unit)
+QString BitcoinUnits::longName(int unit)
 {
     if(Params().NetworkIDString() == CBaseChainParams::MAIN)
     {
@@ -49,7 +49,7 @@ QString BitcoinUnits::name(int unit)
         {
             case CHC: return QString("CHC");
             case mCHC: return QString("mCHC");
-            case uCHC: return QString::fromUtf8("μCHC");
+            case uCHC: return QString::fromUtf8("μCHC (bits)");
             case chuffs: return QString("chuffs");
             default: return QString("???");
         }
@@ -60,10 +60,19 @@ QString BitcoinUnits::name(int unit)
         {
             case CHC: return QString("tCHC");
             case mCHC: return QString("mtCHC");
-            case uCHC: return QString::fromUtf8("μtCHC");
+            case uCHC: return QString::fromUtf8("μtCHC (tbits)");
             case chuffs: return QString("tchuffs");
             default: return QString("???");
         }
+    }
+}
+
+QString BitcoinUnits::shortName(int unit)
+{
+    switch(unit)
+    {
+    case uCHC: return QString::fromUtf8("bits");
+    default:   return longName(unit);
     }
 }
 
@@ -75,7 +84,7 @@ QString BitcoinUnits::description(int unit)
         {
             case CHC: return QString("Chaincoin");
             case mCHC: return QString("Milli-Chaincoin (1 / 1" THIN_SP_UTF8 "000)");
-            case uCHC: return QString("Micro-Chaincoin (1 / 1" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
+            case uCHC: return QString("Micro-Chaincoin (bits) (1 / 1" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
             case chuffs: return QString("Ten Nano-Chaincoin (1 / 100" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
             default: return QString("???");
         }
@@ -86,7 +95,7 @@ QString BitcoinUnits::description(int unit)
         {
             case CHC: return QString("TestChaincoin");
             case mCHC: return QString("Milli-TestChaincoin (1 / 1" THIN_SP_UTF8 "000)");
-            case uCHC: return QString("Micro-TestChaincoin (1 / 1" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
+            case uCHC: return QString("Micro-TestChaincoin (bits) (1 / 1" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
             case chuffs: return QString("Ten Nano-TestChaincoin (1 / 100" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
             default: return QString("???");
         }
@@ -162,7 +171,7 @@ QString BitcoinUnits::format(int unit, const CAmount& nIn, bool fPlus, Separator
 
 QString BitcoinUnits::formatWithUnit(int unit, const CAmount& amount, bool plussign, SeparatorStyle separators)
 {
-    return format(unit, amount, plussign, separators) + QString(" ") + name(unit);
+    return format(unit, amount, plussign, separators) + QString(" ") + shortName(unit);
 }
 
 QString BitcoinUnits::formatHtmlWithUnit(int unit, const CAmount& amount, bool plussign, SeparatorStyle separators)
@@ -234,7 +243,7 @@ QString BitcoinUnits::getAmountColumnTitle(int unit)
     QString amountTitle = QObject::tr("Amount");
     if (BitcoinUnits::valid(unit))
     {
-        amountTitle += " ("+BitcoinUnits::name(unit) + ")";
+        amountTitle += " ("+BitcoinUnits::shortName(unit) + ")";
     }
     return amountTitle;
 }
@@ -255,7 +264,7 @@ QVariant BitcoinUnits::data(const QModelIndex &index, int role) const
         {
         case Qt::EditRole:
         case Qt::DisplayRole:
-            return QVariant(name(unit));
+            return QVariant(longName(unit));
         case Qt::ToolTipRole:
             return QVariant(description(unit));
         case UnitRole:
