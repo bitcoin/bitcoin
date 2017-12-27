@@ -78,6 +78,9 @@ bool TestSequenceLocks(const CTransaction &tx, int flags)
 // Note that this test assumes blockprioritysize is 0.
 void TestPackageSelection(const CChainParams& chainparams, CScript scriptPubKey, std::vector<CTransaction *>& txFirst)
 {
+    // Disable free transactions, otherwise TX selection is non-deterministic
+    SoftSetArg("-blockprioritysize", "0");
+
     // Test the ancestor feerate transaction selection.
     TestMemPoolEntryHelper entry;
 
