@@ -171,6 +171,23 @@ void CCertDB::EraseCertIndexHistory(const std::vector<unsigned char>& vchCert, b
 	if (write_concern)
 		mongoc_write_concern_destroy(write_concern);
 }
+void CCertDB::EraseCertIndexHistory(const string& id) {
+	bson_error_t error;
+	bson_t *selector = NULL;
+	mongoc_write_concern_t* write_concern = NULL;
+	mongoc_remove_flags_t remove_flags;
+	remove_flags = (mongoc_remove_flags_t)(MONGOC_REMOVE_NONE);
+	selector = BCON_NEW("_id", BCON_UTF8(id.c_str()));
+	write_concern = mongoc_write_concern_new();
+	mongoc_write_concern_set_w(write_concern, MONGOC_WRITE_CONCERN_W_UNACKNOWLEDGED);
+	if (!mongoc_collection_remove(certhistory_collection, remove_flags, selector, write_concern, &error)) {
+		LogPrintf("MONGODB CERT HISTORY REMOVE ERROR: %s\n", error.message);
+	}
+	if (selector)
+		bson_destroy(selector);
+	if (write_concern)
+		mongoc_write_concern_destroy(write_concern);
+}
 void CCertDB::EraseCertIndex(const std::vector<unsigned char>& vchCert, bool cleanup) {
 	if (!cert_collection)
 		return;
@@ -496,25 +513,34 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 		}
 	}
 
-    if (!fJustCheck ) {
-		// if not an certnew, load the cert data from the DB
-		CCert dbCert;
-		if (!GetCert(vvchArgs[0], dbCert))
-		{
-			if (op != OP_CERT_ACTIVATE) {
-				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2022 - " + _("Failed to read from certificate DB");
-				return true;
-			}
+	// if not an certnew, load the cert data from the DB
+	CCert dbCert;
+	if (!GetCert(vvchArgs[0], dbCert))
+	{
+		if (op != OP_CERT_ACTIVATE) {
+			errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2022 - " + _("Failed to read from certificate DB");
+			return true;
 		}
-		else
-		{
-			bool bInstantSendLocked = false;
-			// if it was instant locked and this is a pow block (not instant send) then check to ensure that height >= stored height instead of < stored height
-			// since instant send calls this function with chain height + 1
-			if (!fJustCheck && pcertdb->ReadISLock(vvchArgs[0], bInstantSendLocked) && bInstantSendLocked) {
-				if (dbCert.nHeight > nHeight)
-				{
-					errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Certificate was already updated in this block.");
+	}
+	else
+	{
+		bool bInstantSendLocked = false;
+		// if it was instant locked and this is a pow block (not instant send) then check to ensure that height >= stored height instead of < stored height
+		// since instant send calls this function with chain height + 1
+		if (!fJustCheck && pcertdb->ReadISLock(vvchArgs[0], bInstantSendLocked) && bInstantSendLocked) {
+			if (dbCert.nHeight > nHeight)
+			{
+				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Certificate was already updated in this block.");
+				return true;
+			} 
+			if (dbCert.txHash != tx.GetHash())
+			{
+				if (!dontaddtodb) {
+					EraseAliasIndexTxHistory(dbCert.txHash);
+					EraseCertIndexHistory(dbCert.txHash);
+				}
+				if (op != OP_CERT_ACTIVATE && !pcertdb->ReadLastCert(vvchArgs[0], dbCert)) {
+					errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 1048 - " + _("Failed to read last certificate from certificate DB");
 					return true;
 				}
 				if (!dontaddtodb && !pcertdb->EraseISLock(vvchArgs[0]))
@@ -522,113 +548,128 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 					errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from certificate DB");
 					return error(errorMessage.c_str());
 				}
-				if (dbCert.txHash != tx.GetHash())
-				{
-					if (op != OP_CERT_ACTIVATE && !pcertdb->ReadLastCert(vvchArgs[0], dbCert)) {
-						errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 1048 - " + _("Failed to read last certificate from certificate DB");
-						return true;
-					}
-				}
-				else {
-					return true;
-				}
 			}
-			else if (dbCert.nHeight >= nHeight)
-			{
-				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Certificate was already updated in this block.");
+			else {
+				if (!dontaddtodb && !pcertdb->EraseISLock(vvchArgs[0]))
+				{
+					errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from certificate DB");
+					return error(errorMessage.c_str());
+				}
 				return true;
 			}
 		}
-		if(op != OP_CERT_ACTIVATE) 
+		else if (dbCert.nHeight >= nHeight)
 		{
-			if (dbCert.aliasTuple != theCert.aliasTuple)
-			{
-				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot update this certificate. Certificate owner must sign off on this change.");
-				return true;
-			}
-			if(theCert.vchPubData.empty())
-				theCert.vchPubData = dbCert.vchPubData;
-			if(theCert.vchTitle.empty())
-				theCert.vchTitle = dbCert.vchTitle;
-			if(theCert.sCategory.empty())
-				theCert.sCategory = dbCert.sCategory;
+			errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Certificate was already updated in this block.");
+			return true;
+		}
+	}
+	if(op != OP_CERT_ACTIVATE) 
+	{
+		if (dbCert.aliasTuple != theCert.aliasTuple)
+		{
+			errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot update this certificate. Certificate owner must sign off on this change.");
+			return true;
+		}
+		if(theCert.vchPubData.empty())
+			theCert.vchPubData = dbCert.vchPubData;
+		if(theCert.vchTitle.empty())
+			theCert.vchTitle = dbCert.vchTitle;
+		if(theCert.sCategory.empty())
+			theCert.sCategory = dbCert.sCategory;
 
-			uint256 txid;
-			CCert firstCert;
-			if (!pcertdb->ReadCertFirstTXID(dbCert.vchCert, txid)) {
-				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("Cannot read first txid from cert DB");
-				return true;
-			}
-			if (!GetCert(CNameTXIDTuple(dbCert.vchCert, txid), firstCert)) {
-				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("Cannot read first cert from cert DB");
-				return true;
-			}
-			if(op == OP_CERT_TRANSFER)
+		uint256 txid;
+		CCert firstCert;
+		if (!pcertdb->ReadCertFirstTXID(dbCert.vchCert, txid)) {
+			errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("Cannot read first txid from cert DB");
+			return true;
+		}
+		if (!GetCert(CNameTXIDTuple(dbCert.vchCert, txid), firstCert)) {
+			errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("Cannot read first cert from cert DB");
+			return true;
+		}
+		if(op == OP_CERT_TRANSFER)
+		{
+			// check toalias
+			if(!GetAlias(theCert.linkAliasTuple.first, alias))
 			{
-				// check toalias
-				if(!GetAlias(theCert.linkAliasTuple.first, alias))
-				{
-					errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2024 - " + _("Cannot find alias you are transferring to. It may be expired");	
-					return true;
-				}
-				theCert.aliasTuple = theCert.linkAliasTuple;		
-				if(!(alias.nAcceptTransferFlags & ACCEPT_TRANSFER_CERTIFICATES))
-				{
-					errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("The alias you are transferring to does not accept certificate transfers");
-					return true;
-				}
+				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2024 - " + _("Cannot find alias you are transferring to. It may be expired");	
+				return true;
+			}
+			theCert.aliasTuple = theCert.linkAliasTuple;		
+			if(!(alias.nAcceptTransferFlags & ACCEPT_TRANSFER_CERTIFICATES))
+			{
+				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("The alias you are transferring to does not accept certificate transfers");
+				return true;
+			}
 				
-				// the original owner can modify certificate regardless of access flags, new owners must adhere to access flags
-				if(dbCert.nAccessFlags < 2 && dbCert.aliasTuple != firstCert.aliasTuple)
-				{
-					errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot transfer this certificate. Insufficient privileges.");
-					return true;
-				}
-			}
-			else if(op == OP_CERT_UPDATE)
+			// the original owner can modify certificate regardless of access flags, new owners must adhere to access flags
+			if(dbCert.nAccessFlags < 2 && dbCert.aliasTuple != firstCert.aliasTuple)
 			{
-				if(dbCert.nAccessFlags < 1 && dbCert.aliasTuple != firstCert.aliasTuple)
-				{
-					errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot edit this certificate. It is view-only.");
-					return true;
-				}
-			}
-			if(theCert.nAccessFlags > dbCert.nAccessFlags && dbCert.aliasTuple != firstCert.aliasTuple)
-			{
-				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot modify for more lenient access. Only tighter access level can be granted.");
-				return true;
-			}
-			theCert.linkAliasTuple.first.clear();
-		}
-		else
-		{
-			uint256 txid;
-			if (pcertdb->ReadCertLastTXID(vvchArgs[0], txid))
-			{
-				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2027 - " + _("Certificate already exists");
+				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot transfer this certificate. Insufficient privileges.");
 				return true;
 			}
 		}
-        // set the cert's txn-dependent values
-		theCert.nHeight = nHeight;
-		theCert.txHash = tx.GetHash();
-        // write cert  
-        if (!dontaddtodb && (!pcertdb->WriteCert(theCert, dbCert, op, fJustCheck) || (op == OP_CERT_ACTIVATE && !pcertdb->WriteCertFirstTXID(vvchArgs[0], theCert.txHash))))
+		else if(op == OP_CERT_UPDATE)
 		{
-			errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to write to certifcate DB");
-            return error(errorMessage.c_str());
+			if(dbCert.nAccessFlags < 1 && dbCert.aliasTuple != firstCert.aliasTuple)
+			{
+				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot edit this certificate. It is view-only.");
+				return true;
+			}
 		}
+		if(theCert.nAccessFlags > dbCert.nAccessFlags && dbCert.aliasTuple != firstCert.aliasTuple)
+		{
+			errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot modify for more lenient access. Only tighter access level can be granted.");
+			return true;
+		}
+	}
+	else
+	{
+		uint256 txid;
+		if (pcertdb->ReadCertLastTXID(vvchArgs[0], txid))
+		{
+			errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2027 - " + _("Certificate already exists");
+			return true;
+		}
+	}
+	if(!dontaddtodb) {
+		string strResponseEnglish = "";
+		string strResponseGUID = "";
+		string strResponse = GetSyscoinTransactionDescription(op, vvchArgs, strResponseEnglish, strResponseGUID, CERT);
+		if (strResponse != "") {
+			const string &user1 = stringFromVch(vvchArgs[0]);
+			string user2 = "";
+			string user3 = "";
+			if (op == OP_CERT_TRANSFER) {
+				if (!theCert.linkAliasTuple.IsNull())
+					user2 = stringFromVch(theCert.linkAliasTuple.first);
+			}
+			paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, strResponseGUID);
+		}
+	}
+	theCert.linkAliasTuple.first.clear();
+    // set the cert's txn-dependent values
+	theCert.nHeight = nHeight;
+	theCert.txHash = tx.GetHash();
+    // write cert  
+    if (!dontaddtodb && (!pcertdb->WriteCert(theCert, dbCert, op, fJustCheck) || (op == OP_CERT_ACTIVATE && !pcertdb->WriteCertFirstTXID(vvchArgs[0], theCert.txHash))))
+	{
+		errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to write to certifcate DB");
+        return error(errorMessage.c_str());
+	}
 		
 
       			
-        // debug
-		if(fDebug)
-			LogPrintf( "CONNECTED CERT: op=%s cert=%s hash=%s height=%d\n",
-                certFromOp(op).c_str(),
-                stringFromVch(vvchArgs[0]).c_str(),
-                tx.GetHash().ToString().c_str(),
-                nHeight);
-    }
+    // debug
+	if(fDebug)
+		LogPrintf( "CONNECTED CERT: op=%s cert=%s hash=%s height=%d fJustCheck=%d\n",
+            certFromOp(op).c_str(),
+            stringFromVch(vvchArgs[0]).c_str(),
+            tx.GetHash().ToString().c_str(),
+            nHeight,
+			fJustCheck?1:0);
+
     return true;
 }
 

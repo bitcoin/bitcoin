@@ -468,308 +468,280 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 
 	}
 	
-	if (!fJustCheck ) {
-		CAliasIndex dbAlias;
-		string strName = stringFromVch(vvchArgs[0]);
-		boost::algorithm::to_lower(strName);
-		vchAlias = vchFromString(strName);
-		// get the alias from the DB
-		if(!GetAlias(vchAlias, dbAlias))	
+	CAliasIndex dbAlias;
+	string strName = stringFromVch(vvchArgs[0]);
+	boost::algorithm::to_lower(strName);
+	vchAlias = vchFromString(strName);
+	// get the alias from the DB
+	if(!GetAlias(vchAlias, dbAlias))	
+	{
+		if(op == OP_ALIAS_UPDATE)
 		{
-			if(op == OP_ALIAS_UPDATE)
-			{
-				errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5018 - " + _("Failed to read from alias DB");
-				return true;
-			}
+			errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5018 - " + _("Failed to read from alias DB");
+			return true;
 		}
-		// whitelist alias updates don't update expiry date
-		if(!vchData.empty() && theAlias.offerWhitelist.entries.empty() && theAlias.nExpireTime > 0)
-		{
-			CAmount fee = GetDataFee(tx.vout[nDataOut].scriptPubKey);
-			float fYears;
-			//  get expire time and figure out if alias payload pays enough fees for expiry
-			int nHeightTmp = nHeight;
-			if(nHeightTmp > chainActive.Height())
-				nHeightTmp = chainActive.Height();
-			uint64_t nTimeExpiry = theAlias.nExpireTime - chainActive[nHeightTmp]->GetMedianTimePast();
-			// ensure aliases are good for atleast an hour
-			if (nTimeExpiry < 3600) {
-				nTimeExpiry = 3600;
-				theAlias.nExpireTime = chainActive[nHeightTmp]->GetMedianTimePast() + 3600;
-			}
-			fYears = nTimeExpiry / ONE_YEAR_IN_SECONDS;
-			if(fYears < 1)
-				fYears = 1;
-			fee *= powf(2.88,fYears);
+	}
+	// whitelist alias updates don't update expiry date
+	if(!vchData.empty() && theAlias.offerWhitelist.entries.empty() && theAlias.nExpireTime > 0)
+	{
+		CAmount fee = GetDataFee(tx.vout[nDataOut].scriptPubKey);
+		float fYears;
+		//  get expire time and figure out if alias payload pays enough fees for expiry
+		int nHeightTmp = nHeight;
+		if(nHeightTmp > chainActive.Height())
+			nHeightTmp = chainActive.Height();
+		uint64_t nTimeExpiry = theAlias.nExpireTime - chainActive[nHeightTmp]->GetMedianTimePast();
+		// ensure aliases are good for atleast an hour
+		if (nTimeExpiry < 3600) {
+			nTimeExpiry = 3600;
+			theAlias.nExpireTime = chainActive[nHeightTmp]->GetMedianTimePast() + 3600;
+		}
+		fYears = nTimeExpiry / ONE_YEAR_IN_SECONDS;
+		if(fYears < 1)
+			fYears = 1;
+		fee *= powf(2.88,fYears);
 			
-			if ((fee-10000) > tx.vout[nDataOut].nValue) 
+		if ((fee-10000) > tx.vout[nDataOut].nValue) 
+		{
+			errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5019 - " + _("Transaction does not pay enough fee: ") + ValueFromAmount(tx.vout[nDataOut].nValue).write() + "/" + ValueFromAmount(fee-10000).write() + "/" + boost::lexical_cast<string>(fYears) + " years.";
+			return true;
+		}
+	}
+	string newAddress = "";
+	bool theAliasNull = theAlias.IsNull();
+	if (op == OP_ALIAS_UPDATE)
+	{
+		CTxDestination aliasDest;
+		if (vvchPrevArgs.size() <= 0 || vvchPrevArgs[0] != vvchArgs[0] || vvchPrevArgs[1] != vvchArgs[1] || !pprevCoins.IsAvailable(prevOutputIndex) || !ExtractDestination(pprevCoins.vout[prevOutputIndex].scriptPubKey, aliasDest))
+		{
+			errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5020 - " + _("Cannot extract destination of alias input");
+			if (!theAliasNull)
+				theAlias = dbAlias;
+			else
+				bDestCheckFailed = true;
+		}
+		else
+		{
+			CSyscoinAddress prevaddy(aliasDest);
+			if (EncodeBase58(dbAlias.vchAddress) != prevaddy.ToString())
 			{
-				errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5019 - " + _("Transaction does not pay enough fee: ") + ValueFromAmount(tx.vout[nDataOut].nValue).write() + "/" + ValueFromAmount(fee-10000).write() + "/" + boost::lexical_cast<string>(fYears) + " years.";
-				return true;
+				errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5021 - " + _("You are not the owner of this alias");
+				if (!theAliasNull)
+					theAlias = dbAlias;
+				else
+					bDestCheckFailed = true;
 			}
 		}
-		string newAddress = "";
-		bool theAliasNull = theAlias.IsNull();
-		if (op == OP_ALIAS_UPDATE)
+
+		if (dbAlias.vchGUID != vvchArgs[1] || dbAlias.vchAlias != vvchArgs[0])
 		{
-			CTxDestination aliasDest;
-			if (vvchPrevArgs.size() <= 0 || vvchPrevArgs[0] != vvchArgs[0] || vvchPrevArgs[1] != vvchArgs[1] || !pprevCoins.IsAvailable(prevOutputIndex) || !ExtractDestination(pprevCoins.vout[prevOutputIndex].scriptPubKey, aliasDest))
-			{
-				errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5020 - " + _("Cannot extract destination of alias input");
-				if (!theAliasNull)
-					theAlias = dbAlias;
-				else
-					bDestCheckFailed = true;
-			}
+			errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5022 - " + _("Cannot edit this alias, guid mismatch");
+			if (!theAliasNull)
+				theAlias = dbAlias;
 			else
-			{
-				CSyscoinAddress prevaddy(aliasDest);
-				if (EncodeBase58(dbAlias.vchAddress) != prevaddy.ToString())
+				bDestCheckFailed = true;
+		}
+		if (!theAliasNull) {
+			bool bInstantSendLocked = false;
+			// if it was instant locked and this is a pow block (not instant send) then check to ensure that height >= stored height instead of < stored height
+			// since instant send calls this function with chain height + 1
+			if (!fJustCheck && paliasdb->ReadISLock(vvchArgs[0], bInstantSendLocked) && bInstantSendLocked) {
+				if (dbAlias.nHeight > nHeight)
 				{
-					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5021 - " + _("You are not the owner of this alias");
-					if (!theAliasNull)
-						theAlias = dbAlias;
-					else
-						bDestCheckFailed = true;
-				}
-			}
-
-			if (dbAlias.vchGUID != vvchArgs[1] || dbAlias.vchAlias != vvchArgs[0])
-			{
-				errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5022 - " + _("Cannot edit this alias, guid mismatch");
-				if (!theAliasNull)
-					theAlias = dbAlias;
-				else
-					bDestCheckFailed = true;
-			}
-			if (!theAliasNull) {
-				bool bInstantSendLocked = false;
-				// if it was instant locked and this is a pow block (not instant send) then check to ensure that height >= stored height instead of < stored height
-				// since instant send calls this function with chain height + 1
-				if (!fJustCheck && paliasdb->ReadISLock(vvchArgs[0], bInstantSendLocked) && bInstantSendLocked) {
-					if (dbAlias.nHeight > nHeight)
-					{
-						errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Alias was already updated in this block.");
-						return true;
-					}
-					if (!dontaddtodb && !paliasdb->EraseISLock(vvchArgs[0]))
-					{
-						errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from alias DB");
-						return error(errorMessage.c_str());
-					}
-					if (dbAlias.txHash != tx.GetHash())
-					{
-						if (!paliasdb->ReadLastAlias(vvchArgs[0], dbAlias)) {
-							errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1048 - " + _("Failed to read last alias from alias DB");
-							return true;
-						}
-					}
-					else {
-
-						return true;
-					}
-				}
-				else if (dbAlias.nHeight >= nHeight) {
 					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Alias was already updated in this block.");
 					return true;
 				}
-				COfferLinkWhitelist whiteList;
-				// if updating whitelist, we dont allow updating any alias details
-				if (theAlias.offerWhitelist.entries.size() > 0)
+				if (!dontaddtodb && !paliasdb->EraseISLock(vvchArgs[0]))
 				{
-					whiteList = theAlias.offerWhitelist;
-					theAlias = dbAlias;
+					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from alias DB");
+					return error(errorMessage.c_str());
+				}
+				if (dbAlias.txHash != tx.GetHash())
+				{
+					if (!dontaddtodb) {
+						EraseAliasIndexHistory(dbAlias.txHash);
+						EraseAliasIndexTxHistory(dbAlias.txHash);
+					}
+					if (!paliasdb->ReadLastAlias(vvchArgs[0], dbAlias)) {
+						errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1048 - " + _("Failed to read last alias from alias DB");
+						return true;
+					}
+				}
+				else {
+
+					return true;
+				}
+			}
+			else if (dbAlias.nHeight >= nHeight) {
+				errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Alias was already updated in this block.");
+				return true;
+			}
+			COfferLinkWhitelist whiteList;
+			// if updating whitelist, we dont allow updating any alias details
+			if (theAlias.offerWhitelist.entries.size() > 0)
+			{
+				whiteList = theAlias.offerWhitelist;
+				theAlias = dbAlias;
+			}
+			else
+			{
+				// can't edit whitelist through aliasupdate
+				theAlias.offerWhitelist = dbAlias.offerWhitelist;
+				if (theAlias.vchPublicValue.empty())
+					theAlias.vchPublicValue = dbAlias.vchPublicValue;
+				if (theAlias.vchEncryptionPrivateKey.empty())
+					theAlias.vchEncryptionPrivateKey = dbAlias.vchEncryptionPrivateKey;
+				if (theAlias.vchEncryptionPublicKey.empty())
+					theAlias.vchEncryptionPublicKey = dbAlias.vchEncryptionPublicKey;
+				if (theAlias.nExpireTime == 0)
+					theAlias.nExpireTime = dbAlias.nExpireTime;
+				if (theAlias.vchAddress.empty())
+					theAlias.vchAddress = dbAlias.vchAddress;
+				else
+					newAddress = EncodeBase58(theAlias.vchAddress);
+				theAlias.vchGUID = dbAlias.vchGUID;
+				theAlias.vchAlias = dbAlias.vchAlias;
+				// if transfer
+				if (dbAlias.vchAddress != theAlias.vchAddress)
+				{
+					// make sure xfer to pubkey doesn't point to an alias already, otherwise don't assign pubkey to alias
+					// we want to avoid aliases with duplicate addresses
+					if (paliasdb->ExistsAddress(theAlias.vchAddress))
+					{
+						vector<unsigned char> vchMyAlias;
+						if (paliasdb->ReadAddress(theAlias.vchAddress, vchMyAlias) && !vchMyAlias.empty() && vchMyAlias != dbAlias.vchAlias)
+						{
+							CAliasIndex dbReadAlias;
+							// ensure that you block transferring only if the recv address has an active alias associated with it
+							if (GetAlias(vchMyAlias, dbReadAlias)) {
+								errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5026 - " + _("An alias already exists with that address, try another public key");
+								theAlias = dbAlias;
+							}
+						}
+					}
+					if (dbAlias.nAccessFlags < 2)
+					{
+						errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5026 - " + _("Cannot edit this alias. Insufficient privileges.");
+						theAlias = dbAlias;
+					}
+					// let old address be re-occupied by a new alias
+					if (!dontaddtodb && errorMessage.empty())
+					{
+						paliasdb->EraseAddress(dbAlias.vchAddress);
+					}
 				}
 				else
 				{
-					// can't edit whitelist through aliasupdate
-					theAlias.offerWhitelist = dbAlias.offerWhitelist;
-					if (theAlias.vchPublicValue.empty())
-						theAlias.vchPublicValue = dbAlias.vchPublicValue;
-					if (theAlias.vchEncryptionPrivateKey.empty())
-						theAlias.vchEncryptionPrivateKey = dbAlias.vchEncryptionPrivateKey;
-					if (theAlias.vchEncryptionPublicKey.empty())
-						theAlias.vchEncryptionPublicKey = dbAlias.vchEncryptionPublicKey;
-					if (theAlias.nExpireTime == 0)
-						theAlias.nExpireTime = dbAlias.nExpireTime;
-					if (theAlias.vchAddress.empty())
-						theAlias.vchAddress = dbAlias.vchAddress;
-					else
-						newAddress = EncodeBase58(theAlias.vchAddress);
-					theAlias.vchGUID = dbAlias.vchGUID;
-					theAlias.vchAlias = dbAlias.vchAlias;
-					// if transfer
-					if (dbAlias.vchAddress != theAlias.vchAddress)
+					if (dbAlias.nAccessFlags < 1)
 					{
-						// make sure xfer to pubkey doesn't point to an alias already, otherwise don't assign pubkey to alias
-						// we want to avoid aliases with duplicate addresses
-						if (paliasdb->ExistsAddress(theAlias.vchAddress))
-						{
-							vector<unsigned char> vchMyAlias;
-							if (paliasdb->ReadAddress(theAlias.vchAddress, vchMyAlias) && !vchMyAlias.empty() && vchMyAlias != dbAlias.vchAlias)
-							{
-								CAliasIndex dbReadAlias;
-								// ensure that you block transferring only if the recv address has an active alias associated with it
-								if (GetAlias(vchMyAlias, dbReadAlias)) {
-									errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5026 - " + _("An alias already exists with that address, try another public key");
-									theAlias = dbAlias;
-								}
-							}
-						}
-						if (dbAlias.nAccessFlags < 2)
-						{
-							errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5026 - " + _("Cannot edit this alias. Insufficient privileges.");
-							theAlias = dbAlias;
-						}
-						// let old address be re-occupied by a new alias
-						if (!dontaddtodb && errorMessage.empty())
-						{
-							paliasdb->EraseAddress(dbAlias.vchAddress);
-						}
-					}
-					else
-					{
-						if (dbAlias.nAccessFlags < 1)
-						{
 errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5026 - " + _("Cannot edit this alias. It is view-only.");
 theAlias = dbAlias;
-						}
-					}
-					if (theAlias.nAccessFlags > dbAlias.nAccessFlags)
-					{
-						errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot modify for more lenient access. Only tighter access level can be granted.");
-						theAlias = dbAlias;
 					}
 				}
-
-
-				// if the txn whitelist entry exists (meaning we want to remove or add)
-				if (whiteList.entries.size() >= 1)
+				if (theAlias.nAccessFlags > dbAlias.nAccessFlags)
 				{
-					if (whiteList.entries.size() > 20)
+					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot modify for more lenient access. Only tighter access level can be granted.");
+					theAlias = dbAlias;
+				}
+			}
+
+
+			// if the txn whitelist entry exists (meaning we want to remove or add)
+			if (whiteList.entries.size() >= 1)
+			{
+				if (whiteList.entries.size() > 20)
+				{
+					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1094 -" + _("Too many affiliates for this whitelist, maximum 20 entries allowed");
+					theAlias.offerWhitelist.SetNull();
+				}
+				// special case we use to remove all entries
+				else if (whiteList.entries.size() == 1 && whiteList.entries.begin()->second.nDiscountPct == 127)
+				{
+					if (theAlias.offerWhitelist.entries.empty())
 					{
-						errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1094 -" + _("Too many affiliates for this whitelist, maximum 20 entries allowed");
-						theAlias.offerWhitelist.SetNull();
-					}
-					// special case we use to remove all entries
-					else if (whiteList.entries.size() == 1 && whiteList.entries.begin()->second.nDiscountPct == 127)
-					{
-						if (theAlias.offerWhitelist.entries.empty())
-						{
-							errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1093 - " + _("Whitelist is already empty");
-						}
-						else
-							theAlias.offerWhitelist.SetNull();
+						errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1093 - " + _("Whitelist is already empty");
 					}
 					else
+						theAlias.offerWhitelist.SetNull();
+				}
+				else
+				{
+					for (auto const &it : whiteList.entries)
 					{
-						for (auto const &it : whiteList.entries)
+						COfferLinkWhitelistEntry entry;
+						const COfferLinkWhitelistEntry& newEntry = it.second;
+						if (newEntry.nDiscountPct > 99) {
+							errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1094 -" + _("Whitelist discount must be between 0 and 99");
+							continue;
+						}
+						// the stored whitelist has this entry (and its the same) then we want to remove this entry
+						if (theAlias.offerWhitelist.GetLinkEntryByHash(newEntry.aliasLinkVchRand, entry) && newEntry == entry)
 						{
-							COfferLinkWhitelistEntry entry;
-							const COfferLinkWhitelistEntry& newEntry = it.second;
-							if (newEntry.nDiscountPct > 99) {
-								errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1094 -" + _("Whitelist discount must be between 0 and 99");
-								continue;
-							}
-							// the stored whitelist has this entry (and its the same) then we want to remove this entry
-							if (theAlias.offerWhitelist.GetLinkEntryByHash(newEntry.aliasLinkVchRand, entry) && newEntry == entry)
-							{
-								theAlias.offerWhitelist.RemoveWhitelistEntry(newEntry.aliasLinkVchRand);
-							}
-							// we want to add it to the whitelist
+							theAlias.offerWhitelist.RemoveWhitelistEntry(newEntry.aliasLinkVchRand);
+						}
+						// we want to add it to the whitelist
+						else
+						{
+							if (theAlias.offerWhitelist.entries.size() < 20)
+								theAlias.offerWhitelist.PutWhitelistEntry(newEntry);
 							else
 							{
-								if (theAlias.offerWhitelist.entries.size() < 20)
-									theAlias.offerWhitelist.PutWhitelistEntry(newEntry);
-								else
-								{
-									errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1094 -" + _("Too many affiliates for this whitelist, maximum 20 entries allowed");
-								}
+								errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1094 -" + _("Too many affiliates for this whitelist, maximum 20 entries allowed");
 							}
 						}
 					}
 				}
 			}
 		}
-		else if (op == OP_ALIAS_ACTIVATE)
+	}
+	else if (op == OP_ALIAS_ACTIVATE)
+	{
+		if (!dbAlias.IsNull())
 		{
-			if (!dbAlias.IsNull())
-			{
-				errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5028 - " + _("Trying to renew an alias that isn't expired");
-				return true;
-			}
-			if (paliasdb->ExistsAddress(theAlias.vchAddress) && chainActive.Tip()->GetMedianTimePast() < GetAliasExpiration(theAlias))
-			{
-				errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5028 - " + _("Trying to create an alias with an address of an alias that isn't expired");
-				return true;
-			}
+			errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5028 - " + _("Trying to renew an alias that isn't expired");
+			return true;
 		}
+		if (paliasdb->ExistsAddress(theAlias.vchAddress) && chainActive.Tip()->GetMedianTimePast() < GetAliasExpiration(theAlias))
+		{
+			errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5028 - " + _("Trying to create an alias with an address of an alias that isn't expired");
+			return true;
+		}
+	}
+	if (!theAliasNull)
+	{
 		if (!dontaddtodb) {
-			int nOutHistory;
-			int opHistory;
-			char type;
-			vector<vector<unsigned char> > vvchHistory;
-			if (DecodeAndParseSyscoinTx(tx, opHistory, nOutHistory, vvchHistory, type)) {
-				string strResponseEnglish = "";
-				string strResponseGUID = "";
-				string strResponse = GetSyscoinTransactionDescription(opHistory, vvchHistory, tx, strResponseEnglish, strResponseGUID, type);
-				if (strResponse != "") {
-					string user1 = stringFromVch(vvchArgs[0]);
-					string user2 = "";
-					string user3 = "";
-					if (type == ALIAS && opHistory == OP_ALIAS_UPDATE) {
-						if (!newAddress.empty())
-							user2 = newAddress;
-					}
-					else if (type == CERT && opHistory == OP_CERT_TRANSFER) {
-						CCert cert(tx);
-						user2 = stringFromVch(cert.linkAliasTuple.first);
-					}
-					else if (type == ASSET && (opHistory == OP_ASSET_TRANSFER || opHistory == OP_ASSET_SEND)) {
-						CAsset asset(tx);
-						user2 = stringFromVch(asset.linkAliasTuple.first);
-					}
-					else if (type == OFFER && opHistory == OP_OFFER_UPDATE)
-					{
-						COffer offer(tx);
-						if (!offer.linkAliasTuple.IsNull())
-							user2 = stringFromVch(offer.linkAliasTuple.first);
-					}
-					else if (type == ESCROW && IsEscrowOp(opHistory)) {
-						CEscrow escrow(tx);
-						const string &buyer = stringFromVch(escrow.buyerAliasTuple.first);
-						const string &seller = stringFromVch(escrow.sellerAliasTuple.first);
-						const string &arbiter = stringFromVch(escrow.arbiterAliasTuple.first);
-						user1 = buyer;
-						user2 = seller;
-						user3 = arbiter;
-					}
-					paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, strResponseGUID);
+			string strResponseEnglish = "";
+			string strResponseGUID = "";
+			string strResponse = GetSyscoinTransactionDescription(op, vvchArgs, strResponseEnglish, strResponseGUID, ALIAS);
+			if (strResponse != "") {
+				const string &user1 = stringFromVch(vvchArgs[0]);
+				string user2 = "";
+				string user3 = "";
+				if (op == OP_ALIAS_UPDATE) {
+					if (!newAddress.empty())
+						user2 = newAddress;
 				}
+				paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, strResponseGUID);
 			}
-
 		}
-		if (!theAliasNull)
+		theAlias.nHeight = nHeight;
+		theAlias.txHash = tx.GetHash();
+
+		CAliasUnprunable aliasUnprunable;
+		aliasUnprunable.vchGUID = theAlias.vchGUID;
+		aliasUnprunable.nExpireTime = theAlias.nExpireTime;
+		if (!dontaddtodb && !paliasdb->WriteAlias(aliasUnprunable, theAlias.vchAddress, theAlias, dbAlias, op, fJustCheck))
 		{
-			theAlias.nHeight = nHeight;
-			theAlias.txHash = tx.GetHash();
-
-			CAliasUnprunable aliasUnprunable;
-			aliasUnprunable.vchGUID = theAlias.vchGUID;
-			aliasUnprunable.nExpireTime = theAlias.nExpireTime;
-			if (!dontaddtodb && !paliasdb->WriteAlias(aliasUnprunable, theAlias.vchAddress, theAlias, dbAlias, op, fJustCheck))
-			{
-				errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5034 - " + _("Failed to write to alias DB");
-				return error(errorMessage.c_str());
-			}
-
-			if (fDebug)
-				LogPrintf(
-					"CONNECTED ALIAS: name=%s  op=%s  hash=%s  height=%d\n",
-					stringFromVch(vchAlias).c_str(),
-					aliasFromOp(op).c_str(),
-					tx.GetHash().ToString().c_str(), nHeight);
+			errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5034 - " + _("Failed to write to alias DB");
+			return error(errorMessage.c_str());
 		}
+
+		if (fDebug)
+			LogPrintf(
+				"CONNECTED ALIAS: name=%s  op=%s  hash=%s  height=%d fJustCheck=%d\n",
+				stringFromVch(vchAlias).c_str(),
+				aliasFromOp(op).c_str(),
+				tx.GetHash().ToString().c_str(), nHeight, fJustCheck?1:0);
 	}
 
 	return true;
@@ -1728,6 +1700,23 @@ void CAliasDB::EraseAliasIndexHistory(const std::vector<unsigned char>& vchAlias
 	if (write_concern)
 		mongoc_write_concern_destroy(write_concern);
 }
+void CAliasDB::EraseAliasIndexHistory(const string& id) {
+	bson_error_t error;
+	bson_t *selector = NULL;
+	mongoc_write_concern_t* write_concern = NULL;
+	mongoc_remove_flags_t remove_flags;
+	remove_flags = (mongoc_remove_flags_t)(MONGOC_REMOVE_NONE);
+	selector = BCON_NEW("_id", BCON_UTF8(id.c_str()));
+	write_concern = mongoc_write_concern_new();
+	mongoc_write_concern_set_w(write_concern, MONGOC_WRITE_CONCERN_W_UNACKNOWLEDGED);
+	if (!mongoc_collection_remove(aliashistory_collection, remove_flags, selector, write_concern, &error)) {
+		LogPrintf("MONGODB ALIAS HISTORY REMOVE ERROR: %s\n", error.message);
+	}
+	if (selector)
+		bson_destroy(selector);
+	if (write_concern)
+		mongoc_write_concern_destroy(write_concern);
+}
 void CAliasDB::EraseAliasIndex(const std::vector<unsigned char>& vchAlias, bool cleanup) {
 	bson_error_t error;
 	bson_t *selector = NULL;
@@ -1801,6 +1790,23 @@ void CAliasDB::EraseAliasIndexTxHistory(const std::vector<unsigned char>& vchAli
 	write_concern = mongoc_write_concern_new();
 	mongoc_write_concern_set_w(write_concern, MONGOC_WRITE_CONCERN_W_UNACKNOWLEDGED);
 	if (!mongoc_collection_remove(aliashistory_collection, remove_flags, selector, cleanup ? NULL : write_concern, &error)) {
+		LogPrintf("MONGODB ALIAS HISTORY REMOVE ERROR: %s\n", error.message);
+	}
+	if (selector)
+		bson_destroy(selector);
+	if (write_concern)
+		mongoc_write_concern_destroy(write_concern);
+}
+void CAliasDB::EraseAliasIndexTxHistory(const string& id) {
+	bson_error_t error;
+	bson_t *selector = NULL;
+	mongoc_write_concern_t* write_concern = NULL;
+	mongoc_remove_flags_t remove_flags;
+	remove_flags = (mongoc_remove_flags_t)(MONGOC_REMOVE_NONE);
+	selector = BCON_NEW("_id", BCON_UTF8(id.c_str()));
+	write_concern = mongoc_write_concern_new();
+	mongoc_write_concern_set_w(write_concern, MONGOC_WRITE_CONCERN_W_UNACKNOWLEDGED);
+	if (!mongoc_collection_remove(aliashistory_collection, remove_flags, selector, write_concern, &error)) {
 		LogPrintf("MONGODB ALIAS HISTORY REMOVE ERROR: %s\n", error.message);
 	}
 	if (selector)
@@ -2913,7 +2919,7 @@ bool COfferLinkWhitelist::GetLinkEntryByHash(const std::vector<unsigned char> &a
 	}
 	return false;
 }
-string GetSyscoinTransactionDescription(const int op, const vector<vector<unsigned char> > &vvchArgs, const CTransaction &tx, string& responseEnglish, string& responseGUID, const char &type)
+string GetSyscoinTransactionDescription(const int op, const vector<vector<unsigned char> > &vvchArgs, string& responseEnglish, string& responseGUID, const char &type)
 {
 	responseGUID = stringFromVch(vvchArgs[0]);
 	string strResponse = "";

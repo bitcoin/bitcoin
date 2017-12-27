@@ -566,26 +566,35 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		}
 	}
 
-
-	if (!fJustCheck ) {
-		COffer dbOffer;
-		// load the offer data from the DB
-		if (!GetOffer(vvchArgs[0], dbOffer))
-		{
-			if (op == OP_OFFER_UPDATE) {
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1048 - " + _("Failed to read from offer DB");
+	COffer dbOffer;
+	// load the offer data from the DB
+	if (!GetOffer(vvchArgs[0], dbOffer))
+	{
+		if (op == OP_OFFER_UPDATE) {
+			errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1048 - " + _("Failed to read from offer DB");
+			return true;
+		}
+	}
+	else
+	{
+		bool bInstantSendLocked = false;
+		// if it was instant locked and this is a pow block (not instant send) then check to ensure that height >= stored height instead of < stored height
+		// since instant send calls this function with chain height + 1
+		if (!fJustCheck && pofferdb->ReadISLock(vvchArgs[0], bInstantSendLocked) && bInstantSendLocked) {
+			if (dbOffer.nHeight > nHeight)
+			{
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Offer was already updated in this block.");
 				return true;
 			}
-		}
-		else
-		{
-			bool bInstantSendLocked = false;
-			// if it was instant locked and this is a pow block (not instant send) then check to ensure that height >= stored height instead of < stored height
-			// since instant send calls this function with chain height + 1
-			if (!fJustCheck && pofferdb->ReadISLock(vvchArgs[0], bInstantSendLocked) && bInstantSendLocked) {
-				if (dbOffer.nHeight > nHeight)
-				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Offer was already updated in this block.");
+			if (dbOffer.txHash != tx.GetHash())
+			{
+				if (!dontaddtodb) {
+					EraseAliasIndexTxHistory(dbOffer.txHash);
+					EraseOfferIndexHistory(dbOffer.txHash);
+					EraseExtTXID(dbOffer.txHash);
+				}
+				if (op != OP_OFFER_ACTIVATE && !pofferdb->ReadLastOffer(vvchArgs[0], dbOffer)) {
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1048 - " + _("Failed to read last offer from offer DB");
 					return true;
 				}
 				if (!dontaddtodb && !pofferdb->EraseISLock(vvchArgs[0]))
@@ -593,175 +602,187 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from offer DB");
 					return error(errorMessage.c_str());
 				}
-				if (dbOffer.txHash != tx.GetHash())
-				{
-					if (op != OP_OFFER_ACTIVATE && !pofferdb->ReadLastOffer(vvchArgs[0], dbOffer)) {
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1048 - " + _("Failed to read last offer from offer DB");
-						return true;
-					}
-				}
-				else {
-					return true;
-				}
 			}
-			else if (dbOffer.nHeight >= nHeight)
-			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Offer was already updated in this block.");
+			else {
+				if (!dontaddtodb && !pofferdb->EraseISLock(vvchArgs[0]))
+				{
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from offer DB");
+					return error(errorMessage.c_str());
+				}
 				return true;
 			}
 		}
-		if (op == OP_OFFER_UPDATE) {
-			if (dbOffer.aliasTuple != theOffer.aliasTuple)
-			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot edit this offer. Offer owner must sign off on this change.");
-				return true;
-			}
-
-
-			// some fields are only updated if they are not empty to limit txn size, rpc sends em as empty if we arent changing them
-			if (theOffer.sCategory.empty())
-				theOffer.sCategory = dbOffer.sCategory;
-			if (theOffer.sTitle.empty())
-				theOffer.sTitle = dbOffer.sTitle;
-			if (theOffer.sDescription.empty())
-				theOffer.sDescription = dbOffer.sDescription;
-			if (theOffer.certTuple.first.empty())
-				theOffer.certTuple = dbOffer.certTuple;
-			if (theOffer.sCurrencyCode.empty())
-				theOffer.sCurrencyCode = dbOffer.sCurrencyCode;
-			if (theOffer.paymentOptions <= 0)
-				theOffer.paymentOptions = dbOffer.paymentOptions;
-
-			theOffer.linkOfferTuple = dbOffer.linkOfferTuple;
-
-
-			if (IsOfferTypeInMask(dbOffer.offerType, OFFERTYPE_AUCTION))
-			{
-				if (!IsOfferTypeInMask(theOffer.offerType, OFFERTYPE_AUCTION))
-				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1024 - " + _("Cannot change to this offer type until auction expires");
-					return true;
-				}
-				if (theOffer.auctionOffer.fReservePrice < 0)
-				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1024 - " + _("Reserve price must be greator or equal to 0");
-					return true;
-				}
-				if (theOffer.auctionOffer.fDepositPercentage < 0)
-				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1024 - " + _("Auction deposit percentage must be greator or equal to 0");
-					return true;
-				}
-				if (dbOffer.auctionOffer.nExpireTime > 0 && dbOffer.auctionOffer.nExpireTime >= nTime && dbOffer.auctionOffer != theOffer.auctionOffer)
-				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1024 - " + _("Cannot modify auction parameters while it is active. Please wait until auction has expired before updating.");
-					return true;
-				}
-			}
-			// non linked offers cant edit commission
-			if (theOffer.linkOfferTuple.first.empty())
-				theOffer.nCommission = 0;
-			if (!theOffer.linkAliasTuple.first.empty())
-				theOffer.aliasTuple = theOffer.linkAliasTuple;
-			theOffer.linkAliasTuple.first.clear();
-
-			
-		}
-		else if(op == OP_OFFER_ACTIVATE)
+		else if (dbOffer.nHeight >= nHeight)
 		{
-			uint256 txid;
-			COfferLinkWhitelistEntry entry;
-			if (pofferdb->ReadOfferLastTXID(vvchArgs[0], txid))
-			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1050 - " + _("Offer already exists");
-				return true;
-			}
-
-			if (!theOffer.linkOfferTuple.first.empty())
-			{
-				if (!GetOffer(theOffer.linkOfferTuple.first, linkOffer))
-				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1051 - " + _("Linked offer not found. It may be expired");
-					return true;
-				}
-				if (!GetAlias(linkOffer.aliasTuple.first, theAlias))
-				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1051 - " + _("Linked offer alias not found. It may be expired");
-					return true;
-				}
-				if (theAlias.offerWhitelist.GetLinkEntryByHash(theOffer.aliasTuple.first, entry))
-				{
-					if (theOffer.nCommission <= -entry.nDiscountPct)
-					{
-						throw runtime_error("SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1514 - " + _("This resold offer must be of higher price than the original offer including any discount"));
-					}
-				}
-				// make sure alias exists in the root offer affiliate list
-				else
-				{
-					throw runtime_error("SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1515 - " + _("Cannot find this alias in the parent offer affiliate list"));
-				}
-
-				if (!linkOffer.linkOfferTuple.first.empty())
-				{
-					throw runtime_error("SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1516 - " + _("Cannot link to an offer that is already linked to another offer"));
-				}
-				else if (linkOffer.sCategory.size() > 0 && boost::algorithm::istarts_with(stringFromVch(linkOffer.sCategory), "wanted"))
-				{
-					throw runtime_error("SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1517 - " + _("Cannot link to a wanted offer"));
-				}
-				// if creating a linked offer we set some mandatory fields from the parent
-				theOffer.nQty = linkOffer.nQty;
-				theOffer.certTuple = linkOffer.certTuple;
-				theOffer.fPrice = linkOffer.fPrice;
-				theOffer.paymentOptions = linkOffer.paymentOptions;
-				theOffer.fUnits = linkOffer.fUnits;
-				theOffer.offerType = linkOffer.offerType;
-				theOffer.sCurrencyCode = linkOffer.sCurrencyCode;
-				theOffer.auctionOffer = linkOffer.auctionOffer;
-			}
-			// init sold to 0
- 			theOffer.nSold = 0;
+			errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Offer was already updated in this block.");
+			return true;
 		}
-
-		if(op == OP_OFFER_UPDATE)
-		{
-			// if this offer is linked to a parent update it with parent information
-			if(!theOffer.linkOfferTuple.first.empty())
-			{
-				if (!GetOffer(theOffer.linkOfferTuple.first, linkOffer))
-				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Linked offer not found. It may be expired");
-					return true;
-				}
-				theOffer.nQty = linkOffer.nQty;
-				theOffer.certTuple = linkOffer.certTuple;
-				theOffer.paymentOptions = linkOffer.paymentOptions;
-				theOffer.offerType = linkOffer.offerType;
-				theOffer.fUnits = linkOffer.fUnits;
-				theOffer.fPrice = linkOffer.fPrice;
-				theOffer.sCurrencyCode = linkOffer.sCurrencyCode;
-				theOffer.auctionOffer = linkOffer.auctionOffer;
-			}
-		}
-		theOffer.nHeight = nHeight;
-		theOffer.txHash = tx.GetHash();
-		// write offer
-		if (!dontaddtodb && !pofferdb->WriteOffer(theOffer, dbOffer, op, fJustCheck))
-		{
-			errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to write to offer DB");
-			return error(errorMessage.c_str());
-		}
-
-		// debug
-		if (fDebug)
-			LogPrintf( "CONNECTED OFFER: op=%s offer=%s qty=%u hash=%s height=%d\n",
-				offerFromOp(op).c_str(),
-				stringFromVch(vvchArgs[0]).c_str(),
-				theOffer.nQty,
-				tx.GetHash().ToString().c_str(),
-				nHeight);
 	}
+	if (op == OP_OFFER_UPDATE) {
+		if (dbOffer.aliasTuple != theOffer.aliasTuple)
+		{
+			errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot edit this offer. Offer owner must sign off on this change.");
+			return true;
+		}
+
+
+		// some fields are only updated if they are not empty to limit txn size, rpc sends em as empty if we arent changing them
+		if (theOffer.sCategory.empty())
+			theOffer.sCategory = dbOffer.sCategory;
+		if (theOffer.sTitle.empty())
+			theOffer.sTitle = dbOffer.sTitle;
+		if (theOffer.sDescription.empty())
+			theOffer.sDescription = dbOffer.sDescription;
+		if (theOffer.certTuple.first.empty())
+			theOffer.certTuple = dbOffer.certTuple;
+		if (theOffer.sCurrencyCode.empty())
+			theOffer.sCurrencyCode = dbOffer.sCurrencyCode;
+		if (theOffer.paymentOptions <= 0)
+			theOffer.paymentOptions = dbOffer.paymentOptions;
+
+		theOffer.linkOfferTuple = dbOffer.linkOfferTuple;
+
+
+		if (IsOfferTypeInMask(dbOffer.offerType, OFFERTYPE_AUCTION))
+		{
+			if (!IsOfferTypeInMask(theOffer.offerType, OFFERTYPE_AUCTION))
+			{
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1024 - " + _("Cannot change to this offer type until auction expires");
+				return true;
+			}
+			if (theOffer.auctionOffer.fReservePrice < 0)
+			{
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1024 - " + _("Reserve price must be greator or equal to 0");
+				return true;
+			}
+			if (theOffer.auctionOffer.fDepositPercentage < 0)
+			{
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1024 - " + _("Auction deposit percentage must be greator or equal to 0");
+				return true;
+			}
+			if (dbOffer.auctionOffer.nExpireTime > 0 && dbOffer.auctionOffer.nExpireTime >= nTime && dbOffer.auctionOffer != theOffer.auctionOffer)
+			{
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1024 - " + _("Cannot modify auction parameters while it is active. Please wait until auction has expired before updating.");
+				return true;
+			}
+		}
+		// non linked offers cant edit commission
+		if (theOffer.linkOfferTuple.first.empty())
+			theOffer.nCommission = 0;
+		if (!theOffer.linkAliasTuple.first.empty())
+			theOffer.aliasTuple = theOffer.linkAliasTuple;
+	}
+	else if(op == OP_OFFER_ACTIVATE)
+	{
+		uint256 txid;
+		COfferLinkWhitelistEntry entry;
+		if (pofferdb->ReadOfferLastTXID(vvchArgs[0], txid))
+		{
+			errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1050 - " + _("Offer already exists");
+			return true;
+		}
+
+		if (!theOffer.linkOfferTuple.first.empty())
+		{
+			if (!GetOffer(theOffer.linkOfferTuple.first, linkOffer))
+			{
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1051 - " + _("Linked offer not found. It may be expired");
+				return true;
+			}
+			if (!GetAlias(linkOffer.aliasTuple.first, theAlias))
+			{
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1051 - " + _("Linked offer alias not found. It may be expired");
+				return true;
+			}
+			if (theAlias.offerWhitelist.GetLinkEntryByHash(theOffer.aliasTuple.first, entry))
+			{
+				if (theOffer.nCommission <= -entry.nDiscountPct)
+				{
+					throw runtime_error("SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1514 - " + _("This resold offer must be of higher price than the original offer including any discount"));
+				}
+			}
+			// make sure alias exists in the root offer affiliate list
+			else
+			{
+				throw runtime_error("SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1515 - " + _("Cannot find this alias in the parent offer affiliate list"));
+			}
+
+			if (!linkOffer.linkOfferTuple.first.empty())
+			{
+				throw runtime_error("SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1516 - " + _("Cannot link to an offer that is already linked to another offer"));
+			}
+			else if (linkOffer.sCategory.size() > 0 && boost::algorithm::istarts_with(stringFromVch(linkOffer.sCategory), "wanted"))
+			{
+				throw runtime_error("SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1517 - " + _("Cannot link to a wanted offer"));
+			}
+			// if creating a linked offer we set some mandatory fields from the parent
+			theOffer.nQty = linkOffer.nQty;
+			theOffer.certTuple = linkOffer.certTuple;
+			theOffer.fPrice = linkOffer.fPrice;
+			theOffer.paymentOptions = linkOffer.paymentOptions;
+			theOffer.fUnits = linkOffer.fUnits;
+			theOffer.offerType = linkOffer.offerType;
+			theOffer.sCurrencyCode = linkOffer.sCurrencyCode;
+			theOffer.auctionOffer = linkOffer.auctionOffer;
+		}
+		// init sold to 0
+ 		theOffer.nSold = 0;
+	}
+
+	if(op == OP_OFFER_UPDATE)
+	{
+		// if this offer is linked to a parent update it with parent information
+		if(!theOffer.linkOfferTuple.first.empty())
+		{
+			if (!GetOffer(theOffer.linkOfferTuple.first, linkOffer))
+			{
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Linked offer not found. It may be expired");
+				return true;
+			}
+			theOffer.nQty = linkOffer.nQty;
+			theOffer.certTuple = linkOffer.certTuple;
+			theOffer.paymentOptions = linkOffer.paymentOptions;
+			theOffer.offerType = linkOffer.offerType;
+			theOffer.fUnits = linkOffer.fUnits;
+			theOffer.fPrice = linkOffer.fPrice;
+			theOffer.sCurrencyCode = linkOffer.sCurrencyCode;
+			theOffer.auctionOffer = linkOffer.auctionOffer;
+		}
+	}
+	if(!dontaddtodb) {
+		string strResponseEnglish = "";
+		string strResponseGUID = "";
+		string strResponse = GetSyscoinTransactionDescription(op, vvchArgs, strResponseEnglish, strResponseGUID, OFFER);
+		if (strResponse != "") {
+			const string &user1 = stringFromVch(vvchArgs[0]);
+			string user2 = "";
+			string user3 = "";
+			if (op == OP_OFFER_UPDATE) {
+				if (!theOffer.linkAliasTuple.IsNull())
+					user2 = stringFromVch(theOffer.linkAliasTuple.first);
+			}
+			paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, strResponseGUID);
+		}
+	}
+	theOffer.linkAliasTuple.first.clear();
+	theOffer.nHeight = nHeight;
+	theOffer.txHash = tx.GetHash();
+	// write offer
+	if (!dontaddtodb && !pofferdb->WriteOffer(theOffer, dbOffer, op, fJustCheck))
+	{
+		errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to write to offer DB");
+		return error(errorMessage.c_str());
+	}
+
+	// debug
+	if (fDebug)
+		LogPrintf( "CONNECTED OFFER: op=%s offer=%s qty=%u hash=%s height=%d fJustCheck=%d\n",
+			offerFromOp(op).c_str(),
+			stringFromVch(vvchArgs[0]).c_str(),
+			theOffer.nQty,
+			tx.GetHash().ToString().c_str(),
+			nHeight,
+			fJustCheck?1:0);
 	return true;
 }
 UniValue offernew(const UniValue& params, bool fHelp) {
@@ -1295,6 +1316,23 @@ void COfferDB::EraseOfferIndexHistory(const std::vector<unsigned char>& vchOffer
 	mongoc_remove_flags_t remove_flags;
 	remove_flags = (mongoc_remove_flags_t)(MONGOC_REMOVE_NONE);
 	selector = BCON_NEW("offer", BCON_UTF8(stringFromVch(vchOffer).c_str()));
+	write_concern = mongoc_write_concern_new();
+	mongoc_write_concern_set_w(write_concern, MONGOC_WRITE_CONCERN_W_UNACKNOWLEDGED);
+	if (!mongoc_collection_remove(offerhistory_collection, remove_flags, selector, cleanup ? NULL : write_concern, &error)) {
+		LogPrintf("MONGODB OFFER HISTORY REMOVE ERROR: %s\n", error.message);
+	}
+	if (selector)
+		bson_destroy(selector);
+	if (write_concern)
+		mongoc_write_concern_destroy(write_concern);
+}
+void COfferDB::EraseOfferIndexHistory(const string &id) {
+	bson_error_t error;
+	bson_t *selector = NULL;
+	mongoc_write_concern_t* write_concern = NULL;
+	mongoc_remove_flags_t remove_flags;
+	remove_flags = (mongoc_remove_flags_t)(MONGOC_REMOVE_NONE);
+	selector = BCON_NEW("_id", BCON_UTF8(id.c_str()));
 	write_concern = mongoc_write_concern_new();
 	mongoc_write_concern_set_w(write_concern, MONGOC_WRITE_CONCERN_W_UNACKNOWLEDGED);
 	if (!mongoc_collection_remove(offerhistory_collection, remove_flags, selector, cleanup ? NULL : write_concern, &error)) {

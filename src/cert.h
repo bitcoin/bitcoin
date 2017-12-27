@@ -150,6 +150,7 @@ public:
 	void EraseCertIndex(const std::vector<unsigned char>& vchCert, bool cleanup);
 	void WriteCertIndexHistory(const CCert& cert, const int &op);
 	void EraseCertIndexHistory(const std::vector<unsigned char>& vchCert, bool cleanup);
+	void EraseCertIndexHistory(const std::string& id);
 
 };
 bool GetCert(const CNameTXIDTuple& certTuple);

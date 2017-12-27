@@ -216,6 +216,7 @@ public:
 	void WriteEscrowBidIndex(const CEscrow& escrow, const std::string& status);
 	void RefundEscrowBidIndex(const std::vector<unsigned char>& vchEscrow, const std::string& status);
 	void EraseEscrowBidIndex(const std::vector<unsigned char>& vchEscrow, bool cleanup);
+	void EraseEscrowBidIndex(const std::string& id);
 };
 
 bool GetEscrow(const CNameTXIDTuple &escrowTuple, CEscrow& txPos);

@@ -197,20 +197,12 @@ public:
 	bool EraseAssetLastTXID(const std::vector<unsigned char>& asset) {
 		return Erase(make_pair(std::string("assetlt"), asset));
 	}
-	bool WriteAssetFirstTXID(const std::vector<unsigned char>& asset, const uint256& txid) {
-		return Write(make_pair(std::string("assetft"), asset), txid);
-	}
-	bool ReadAssetFirstTXID(const std::vector<unsigned char>& asset, uint256& txid) {
-		return Read(make_pair(std::string("assetft"), asset), txid);
-	}
-	bool EraseAssetFirstTXID(const std::vector<unsigned char>& asset) {
-		return Erase(make_pair(std::string("assetft"), asset));
-	}
 	bool CleanupDatabase(int &servicesCleaned);
 	void WriteAssetIndex(const CAsset& asset, const int &op);
 	void EraseAssetIndex(const std::vector<unsigned char>& vchAsset, bool cleanup);
 	void WriteAssetIndexHistory(const CAsset& asset, const int &op);
 	void EraseAssetIndexHistory(const std::vector<unsigned char>& vchAsset, bool cleanup);
+	void EraseAssetIndexHistory(const std::string& id);
 
 };
 bool GetAsset(const CNameTXIDTuple& assetTuple);

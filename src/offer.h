@@ -258,12 +258,15 @@ public:
 	bool ExistsExtTXID(const uint256& txid) {
 		return Exists(make_pair(std::string("offert"), txid));
 	}
-
+	bool EraseExtTXID(const uint256& txid) {
+		return Erase(make_pair(std::string("offert"), txid));
+	}
 	bool CleanupDatabase(int &servicesCleaned);
 	void WriteOfferIndex(const COffer& offer, const int &op);
 	void EraseOfferIndex(const std::vector<unsigned char>& vchOffer, bool cleanup);
 	void WriteOfferIndexHistory(const COffer& offer, const int &op);
 	void EraseOfferIndexHistory(const std::vector<unsigned char>& vchOffer, bool cleanup);
+	void EraseOfferIndexHistory(const std::string& id);
 
 };
 bool GetOffer(const CNameTXIDTuple& offerTuple, COffer& txPos);
