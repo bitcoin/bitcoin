@@ -21,12 +21,12 @@ NOTE: Building with Qt4 is still supported, however, doing so could result in a 
 Build Dash Core
 ------------------------
 
-1. Clone the bitcoin source code and cd into `dash`
+1. Clone the Dash Core source code and cd into `dash`
 
         git clone https://github.com/dashpay/dash
         cd dash
 
-2.  Build dash-core:
+2.  Build Dash Core:
 
     Configure and build the headless dash binaries as well as the GUI (if Qt is found).
 
