@@ -367,6 +367,6 @@ bool IsMyAlias(const CAliasIndex& alias);
 void GetAddress(const CAliasIndex &alias, CSyscoinAddress* address, CScript& script, const uint32_t nPaymentOption=1);
 void startMongoDB();
 void stopMongoDB();
-std::string GetSyscoinTransactionDescription(const int op, const std::vector<std::vector<unsigned char> > &vvchArgs, const CTransaction &tx, std::string& responseEnglish, std::string& responseGUID, const char &type);
+std::string GetSyscoinTransactionDescription(const int op, const std::vector<std::vector<unsigned char> > &vvchArgs, std::string& responseEnglish, std::string& responseGUID, const char &type);
 bool BuildAliasIndexerHistoryJson(const CAliasIndex& alias, UniValue& oName);
 #endif // ALIAS_H
