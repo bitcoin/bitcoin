@@ -42,7 +42,7 @@ while Bitcoin Core requires version 4.8 to build the wallet.
 
 ```shell
 # pkg_add -i autoconf automake libtool  # select highest version
-# pkg_add boost libevent                # required libraries
+# pkg_add boost libevent protobuf       # required libraries
 # pkg_add gmake python                  # required build tools
 # pkg_add qt5                           # needed for the GUI
 # pkg_add git
@@ -94,7 +94,6 @@ LDFLAGS="-L$HOME/db/lib/" CPPFLAGS="-I$HOME/db/include"
 if `$HOME/db` is the path where you installed DB (as above).
 The `contrib/install_db4.sh` helper script reports
 the appropriate `./configure` arguments after it is done.
-
 
 ## Build Bitcoin Core
 
