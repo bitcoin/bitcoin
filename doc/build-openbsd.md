@@ -59,7 +59,7 @@ To help you build 4.8 yourself, you can use
 [the installation script included in contrib/](../contrib/install_db4.sh):
 
 ```
-./contrib/install_db4.sh `pwd` CC=egcc CXX=eg++ CPP=ecpp
+./contrib/install_db4.sh $HOME/db CC=egcc CXX=eg++ CPP=ecpp
 ```
 
 ### The source
@@ -88,10 +88,10 @@ To configure with wallet, replace `--enable-wallet=no` with `--enable-wallet`
 and add the following to the `./configure` line:
 
 ```
-LDFLAGS="-L${DB}/lib/db4/" CPPFLAGS="-I${DB}/include/db4/"
+LDFLAGS="-L$HOME/db/lib/" CPPFLAGS="-I$HOME/db/include"
 ```
 
-where `DB` is the path where your DB 4.8 is installed.
+if `$HOME/db` is the path where you installed DB (as above).
 The `contrib/install_db4.sh` helper script reports
 the appropriate `./configure` arguments after it is done.
 
