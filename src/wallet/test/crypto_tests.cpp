@@ -86,6 +86,96 @@ bool OldDecrypt(const std::vector<unsigned char>& vchCiphertext, CKeyingMaterial
     return true;
 }
 
+// General secure AES 256 CBC encryption routine
+bool OldEncryptAES256(const SecureString& sKey, const SecureString& sPlaintext, const std::string& sIV, std::string& sCiphertext)
+{
+    // max ciphertext len for a n bytes of plaintext is
+    // n + AES_BLOCK_SIZE - 1 bytes
+    int nLen = sPlaintext.size();
+    int nCLen = nLen + AES_BLOCK_SIZE;
+    int nFLen = 0;
+
+    // Verify key sizes
+    if(sKey.size() != 32 || sIV.size() != AES_BLOCK_SIZE) {
+        LogPrintf("crypter EncryptAES256 - Invalid key or block size: Key: %d sIV:%d\n", sKey.size(), sIV.size());
+        return false;
+    }
+
+    // Prepare output buffer
+    sCiphertext.resize(nCLen);
+
+    // Perform the encryption
+    EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
+
+    if (!ctx) return false;
+
+    bool fOk = true;
+
+    EVP_CIPHER_CTX_init(ctx);
+    if (fOk) fOk = EVP_EncryptInit_ex(ctx, EVP_aes_256_cbc(), NULL, (const unsigned char*) &sKey[0], (const unsigned char*) &sIV[0]);
+    if (fOk) fOk = EVP_EncryptUpdate(ctx, (unsigned char*) &sCiphertext[0], &nCLen, (const unsigned char*) &sPlaintext[0], nLen);
+    if (fOk) fOk = EVP_EncryptFinal_ex(ctx, (unsigned char*) (&sCiphertext[0])+nCLen, &nFLen);
+    EVP_CIPHER_CTX_cleanup(ctx);
+
+    EVP_CIPHER_CTX_free(ctx);
+
+    if (!fOk) return false;
+
+    sCiphertext.resize(nCLen + nFLen);
+    return true;
+}
+
+bool OldDecryptAES256(const SecureString& sKey, const std::string& sCiphertext, const std::string& sIV, SecureString& sPlaintext)
+{
+    // plaintext will always be equal to or lesser than length of ciphertext
+    int nLen = sCiphertext.size();
+    int nPLen = nLen, nFLen = 0;
+
+    // Verify key sizes
+    if(sKey.size() != 32 || sIV.size() != AES_BLOCK_SIZE) {
+        LogPrintf("crypter DecryptAES256 - Invalid key or block size\n");
+        return false;
+    }
+
+    sPlaintext.resize(nPLen);
+
+    EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
+
+    if (!ctx) return false;
+
+    bool fOk = true;
+
+    EVP_CIPHER_CTX_init(ctx);
+    if (fOk) fOk = EVP_DecryptInit_ex(ctx, EVP_aes_256_cbc(), NULL, (const unsigned char*) &sKey[0], (const unsigned char*) &sIV[0]);
+    if (fOk) fOk = EVP_DecryptUpdate(ctx, (unsigned char *) &sPlaintext[0], &nPLen, (const unsigned char *) &sCiphertext[0], nLen);
+    if (fOk) fOk = EVP_DecryptFinal_ex(ctx, (unsigned char *) (&sPlaintext[0])+nPLen, &nFLen);
+    EVP_CIPHER_CTX_cleanup(ctx);
+
+    EVP_CIPHER_CTX_free(ctx);
+
+    if (!fOk) return false;
+
+    sPlaintext.resize(nPLen + nFLen);
+    return true;
+}
+
+void TestAES256CBC(const std::string &hexkey, const std::string &hexiv, const std::string &hexin, const std::string &hexout)
+{
+    std::vector<unsigned char> key = ParseHex(hexkey);
+    std::vector<unsigned char> iv = ParseHex(hexiv);
+    std::vector<unsigned char> in = ParseHex(hexin);
+    std::vector<unsigned char> correctout = ParseHex(hexout);
+
+    SecureString sKey(key.begin(), key.end()), sPlaintextIn(in.begin(), in.end()), sPlaintextOut, sPlaintextOutOld;
+    std::string sIv(iv.begin(), iv.end()), sCiphertextIn(correctout.begin(), correctout.end()), sCiphertextOut, sCiphertextOutOld;
+    BOOST_CHECK_MESSAGE(EncryptAES256(sKey, sPlaintextIn, sIv, sCiphertextOut), "EncryptAES256: " + HexStr(sCiphertextOut) + std::string(" != ") + hexout);
+    BOOST_CHECK_MESSAGE(OldEncryptAES256(sKey, sPlaintextIn, sIv, sCiphertextOutOld), "OldEncryptAES256: " + HexStr(sCiphertextOutOld) + std::string(" != ") + hexout);
+    BOOST_CHECK(sCiphertextOut == sCiphertextOutOld);
+    BOOST_CHECK_MESSAGE(DecryptAES256(sKey, sCiphertextIn, sIv, sPlaintextOut), "DecryptAES256: " + HexStr(sPlaintextOut) + std::string(" != ") + hexin);
+    BOOST_CHECK_MESSAGE(OldDecryptAES256(sKey, sCiphertextIn, sIv, sPlaintextOutOld), "OldDecryptAES256: " + HexStr(sPlaintextOutOld) + std::string(" != ") + hexin);
+    BOOST_CHECK(sPlaintextOut == sPlaintextOutOld);
+}
+
 class TestCrypter
 {
 public:
@@ -229,6 +319,22 @@ BOOST_AUTO_TEST_CASE(decrypt) {
         uint256 hash(GetRandHash());
         TestCrypter::TestDecrypt(crypt, std::vector<unsigned char>(hash.begin(), hash.end()));
     }
+}
+
+BOOST_AUTO_TEST_CASE(aes_256_cbc_testvectors) {
+    // NIST AES CBC 256-bit encryption test-vectors with padding enabled
+    TestAES256CBC("603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4", \
+                  "000102030405060708090A0B0C0D0E0F", "6bc1bee22e409f96e93d7e117393172a", \
+                  "f58c4c04d6e5f1ba779eabfb5f7bfbd6485a5c81519cf378fa36d42b8547edc0");
+    TestAES256CBC("603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4", \
+                  "F58C4C04D6E5F1BA779EABFB5F7BFBD6", "ae2d8a571e03ac9c9eb76fac45af8e51", \
+                  "9cfc4e967edb808d679f777bc6702c7d3a3aa5e0213db1a9901f9036cf5102d2");
+    TestAES256CBC("603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4", \
+                  "9CFC4E967EDB808D679F777BC6702C7D", "30c81c46a35ce411e5fbc1191a0a52ef",
+                  "39f23369a9d9bacfa530e263042314612f8da707643c90a6f732b3de1d3f5cee");
+    TestAES256CBC("603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4", \
+                  "39F23369A9D9BACFA530E26304231461", "f69f2445df4f9b17ad2b417be66c3710", \
+                  "b2eb05e2c39be9fcda6c19078c6a9d1b3f461796d6b0d6b2e0c2a72b4d80e644");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
