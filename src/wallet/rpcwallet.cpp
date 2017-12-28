@@ -2742,7 +2742,7 @@ UniValue getwalletinfo(const JSONRPCRequest& request)
     if (!masterKeyID.IsNull())
          obj.push_back(Pair("hdmasterkeyid", masterKeyID.GetHex()));
 
-    obj.push_back(Pair("hd", pwallet->IsHDEnabled()));
+    obj.push_back(Pair("hdenabled", pwallet->IsHDEnabled()));
 
     return obj;
 }
