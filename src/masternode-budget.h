@@ -54,7 +54,7 @@ class CBudgetDB
 {
 private:
     boost::filesystem::path pathDB;
-    std::string strMagicMessage;
+    std::string strMagicMessage{"MasternodeBudget"};
 public:
     enum ReadResult {
         Ok,
@@ -67,6 +67,8 @@ public:
     };
 
     CBudgetDB();
+    CBudgetDB(boost::filesystem::path pathDb);
+
     bool Write(const CBudgetManager &objToSave);
     ReadResult Read(CBudgetManager& objToLoad, bool fDryRun = false);
 };
@@ -556,10 +558,10 @@ public:
     CBudgetVote(CTxIn vin, uint256 nProposalHash, int nVoteIn);
 
     bool Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode);
-    bool SignatureValid(bool fSignatureCheck);
+    bool SignatureValid(bool fSignatureCheck) const;
     void Relay();
 
-    std::string GetVoteString() {
+    std::string GetVoteString() const {
         std::string ret = "ABSTAIN";
         if(nVote == VOTE_YES) ret = "YES";
         if(nVote == VOTE_NO) ret = "NO";

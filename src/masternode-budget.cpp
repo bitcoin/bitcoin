@@ -235,9 +235,14 @@ void CBudgetManager::SubmitFinalBudget()
 //
 
 CBudgetDB::CBudgetDB()
+    : CBudgetDB(GetDataDir() / "budget.dat")
 {
-    pathDB = GetDataDir() / "budget.dat";
-    strMagicMessage = "MasternodeBudget";
+}
+
+CBudgetDB::CBudgetDB(boost::filesystem::path dbPath)
+    : pathDB(std::move(dbPath))
+{
+
 }
 
 bool CBudgetDB::Write(const CBudgetManager& objToSave)
@@ -1612,7 +1617,7 @@ bool CBudgetVote::Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode)
     return true;
 }
 
-bool CBudgetVote::SignatureValid(bool fSignatureCheck)
+bool CBudgetVote::SignatureValid(bool fSignatureCheck) const
 {
     std::string errorMessage;
     std::string strMessage = vin.prevout.ToStringShort() + nProposalHash.ToString() + boost::lexical_cast<std::string>(nVote) + boost::lexical_cast<std::string>(nTime);
