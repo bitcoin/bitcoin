@@ -13,7 +13,7 @@
 #include <leveldb/filter_policy.h>
 #include <memenv.h>
 
-void HandleError(const leveldb::Status& status) throw(leveldb_error)
+void HandleError(const leveldb::Status& status) // throw(leveldb_error)
 {
     if (status.ok())
         return;
@@ -81,7 +81,7 @@ CLevelDBWrapper::~CLevelDBWrapper()
     options.env = NULL;
 }
 
-bool CLevelDBWrapper::WriteBatch(CLevelDBBatch& batch, bool fSync) throw(leveldb_error)
+bool CLevelDBWrapper::WriteBatch(CLevelDBBatch& batch, bool fSync) // throw(leveldb_error)
 {
     leveldb::Status status = pdb->Write(fSync ? syncoptions : writeoptions, &batch.batch);
     HandleError(status);
