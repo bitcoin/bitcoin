@@ -1,7 +1,7 @@
 Release Process
 ====================
 
-* Update translations (ping wumpus on IRC) see [translation_process.md](https://github.com/dashpay/dash/blob/master/doc/translation_process.md#synchronising-translations).
+* Update translations, see [translation_process.md](https://github.com/dashpay/dash/blob/master/doc/translation_process.md#synchronising-translations).
 * Update hardcoded [seeds](/contrib/seeds)
 
 * * *
