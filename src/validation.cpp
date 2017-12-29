@@ -1614,7 +1614,7 @@ namespace Consensus {
 	}
 }// namespace Consensus
 
-bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &inputs, bool fScriptChecks, unsigned int flags, bool cacheStore, std::vector<CScriptCheck> *pvChecks)
+bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &inputs, bool fScriptChecks, unsigned int flags, bool cacheStore, std::vector<CScriptCheck> *pvChecks, int nHeight)
 {
 	if (!tx.IsCoinBase())
 	{
@@ -1669,7 +1669,7 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
 				}
 			}
 			// SYSCOIN
-			if (flags == STANDARD_SCRIPT_VERIFY_FLAGS && !CheckSyscoinInputs(tx, cacheStore))
+			if (flags == STANDARD_SCRIPT_VERIFY_FLAGS && !CheckSyscoinInputs(tx, cacheStore, nHeight))
 				return false;
 		}
 	}
@@ -2311,7 +2311,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 
 			std::vector<CScriptCheck> vChecks;
 			bool fCacheResults = fJustCheck; /* Don't cache results if we're actually connecting blocks (still consult the cache, though) */
-			if (!CheckInputs(tx, state, view, fScriptChecks, flags, fCacheResults, nScriptCheckThreads ? &vChecks : NULL))
+			if (!CheckInputs(tx, state, view, fScriptChecks, flags, fCacheResults, nScriptCheckThreads ? &vChecks : NULL, pindex->nHeight))
 				return error("ConnectBlock(): CheckInputs on %s failed with %s",
 					tx.GetHash().ToString(), FormatStateMessage(state));
 			control.Add(vChecks);
