@@ -548,6 +548,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				{
 					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Block height of service request must be less than or equal to the stored service block height.");
 					return true;
+				}
 				if (dbAlias.txHash != tx.GetHash())
 				{
 					const string &txHashHex = dbAlias.txHash.GetHex();
