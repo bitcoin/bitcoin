@@ -1669,7 +1669,7 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
 				}
 			}
 			// SYSCOIN
-			if (flags != MANDATORY_SCRIPT_VERIFY_FLAGS && !CheckSyscoinInputs(tx, cacheStore))
+			if (flags == STANDARD_SCRIPT_VERIFY_FLAGS && !CheckSyscoinInputs(tx, cacheStore))
 				return false;
 		}
 	}
