@@ -142,12 +142,6 @@ class FilterTransactionsTest(ParticlTestFramework):
         self.stakeBlocks(1)
         self.sync_all()
 
-        ro = nodes[0].filtertransactions({'count': 1, 'category': 'send'})
-        assert(len(ro) == 1)
-        ro = nodes[0].filtertransactions({'type': 'blind'})
-        assert(len(ro) == 0)
-
-
         #
         # general
         #
@@ -167,19 +161,16 @@ class FilterTransactionsTest(ParticlTestFramework):
         # count
         #
 
-        # count: 0 => JSONRPCException
-        try:
-            nodes[0].filtertransactions({ 'count': 0 })
-            assert(False)
-        except JSONRPCException as e:
-            assert('Invalid count' in e.error['message'])
-
         # count: -1 => JSONRPCException
         try:
             nodes[0].filtertransactions({ 'count': -1 })
             assert(False)
         except JSONRPCException as e:
             assert('Invalid count' in e.error['message'])
+
+        # count: 0 => all transactions
+        ro = nodes[0].filtertransactions({ 'count': 0 })
+        assert(len(ro) == 11)
 
         # count: 1
         ro = nodes[0].filtertransactions({ 'count': 1 })
