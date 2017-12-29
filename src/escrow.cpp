@@ -2874,7 +2874,7 @@ UniValue escrowinfo(const UniValue& params, bool fHelp) {
 	CEscrow txPos;
 	uint256 txid;
 	if (!pescrowdb || !pescrowdb->ReadEscrowLastTXID(vchEscrow, txid))
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 5535 - " + _("Failed to read from escrow DB"));
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 5535 - " + _("Failed to read last txid from escrow DB"));
 	if (!pescrowdb->ReadEscrow(CNameTXIDTuple(vchEscrow, txid), txPos))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 5535 - " + _("Failed to read from escrow DB"));
 

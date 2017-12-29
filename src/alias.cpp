@@ -2575,7 +2575,7 @@ UniValue aliasinfo(const UniValue& params, bool fHelp) {
 	CAliasIndex txPos;
 	uint256 txid;
 	if (!paliasdb || !paliasdb->ReadAliasLastTXID(vchAlias, txid))
-		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5535 - " + _("Failed to read from alias DB"));
+		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5535 - " + _("Failed to read last txid from alias DB"));
 	if (!paliasdb->ReadAlias(CNameTXIDTuple(vchAlias, txid), txPos))
 		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5535 - " + _("Failed to read from alias DB"));
 

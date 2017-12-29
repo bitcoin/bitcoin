@@ -1029,7 +1029,7 @@ UniValue assetinfo(const UniValue& params, bool fHelp) {
 	CAsset txPos;
 	uint256 txid;
 	if (!passetdb || !passetdb->ReadAssetLastTXID(vchAsset, txid))
-		throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 5535 - " + _("Failed to read from asset DB"));
+		throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 5535 - " + _("Failed to read last txid from asset DB"));
 	if (!GetAsset(CNameTXIDTuple(vchAsset, txid), txPos))
 		throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 5535 - " + _("Failed to read from asset DB"));
 

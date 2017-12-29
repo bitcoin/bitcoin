@@ -960,7 +960,7 @@ UniValue certinfo(const UniValue& params, bool fHelp) {
 	CCert txPos;
 	uint256 txid;
 	if (!pcertdb || !pcertdb->ReadCertLastTXID(vchCert, txid))
-		throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 5535 - " + _("Failed to read from cert DB"));
+		throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 5535 - " + _("Failed to read last txid from cert DB"));
 	if (!GetCert(CNameTXIDTuple(vchCert, txid), txPos))
 		throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 5535 - " + _("Failed to read from cert DB"));
 

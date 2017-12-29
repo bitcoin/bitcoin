@@ -1376,7 +1376,7 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 	COffer txPos;
 	uint256 txid;
 	if (!pofferdb || !pofferdb->ReadOfferLastTXID(vchOffer, txid))
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR: ERRCODE: 5535 - " + _("Failed to read from offer DB"));
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR: ERRCODE: 5535 - " + _("Failed to read last txid from offer DB"));
 	if (!pofferdb->ReadOffer(CNameTXIDTuple(vchOffer, txid), txPos))
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR: ERRCODE: 5536 - " + _("Failed to read from offer DB"));
 
