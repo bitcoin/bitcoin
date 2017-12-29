@@ -523,7 +523,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 		if (!fJustCheck && pcertdb->ReadISLock(vvchArgs[0], bInstantSendLocked) && bInstantSendLocked) {
 			if (dbCert.nHeight >= nHeight)
 			{
-				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Certificate was already updated in this block.");
+				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Block height of service request must be less than or equal to the stored service block height.");
 				return true;
 			} 
 			if (dbCert.txHash != tx.GetHash())
@@ -554,7 +554,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 		}
 		else if (dbCert.nHeight > nHeight)
 		{
-			errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Certificate was already updated in this block.");
+			errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Block height of service request cannot be lower than stored service block height.");
 			return true;
 		}
 	}

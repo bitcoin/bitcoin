@@ -914,7 +914,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 		if (!fJustCheck && pescrowdb->ReadISLock(vvchArgs[0], bInstantSendLocked) && bInstantSendLocked) {
 			if (theEscrow.nHeight >= nHeight)
 			{
-				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Escrow was already updated in this block.");
+				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Block height of service request must be less than or equal to the stored service block height.");
 				return true;
 			}
 			if (theEscrow.txHash != tx.GetHash())
@@ -945,7 +945,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 		}
 		else if (theEscrow.nHeight > nHeight)
 		{
-			errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Escrow was already updated in this block.");
+			errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Block height of service request cannot be lower than stored service block height.");
 			return true;
 		}
 	}

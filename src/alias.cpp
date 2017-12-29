@@ -546,7 +546,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			if (!fJustCheck && paliasdb->ReadISLock(vvchArgs[0], bInstantSendLocked) && bInstantSendLocked) {
 				if (dbAlias.nHeight >= nHeight)
 				{
-					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Alias was already updated in this block.");
+					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Block height of service request must be less than or equal to the stored service block height.");
 					return true;
 				}
 				if (!dontaddtodb && !paliasdb->EraseISLock(vvchArgs[0]))
@@ -572,7 +572,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				}
 			}
 			else if (dbAlias.nHeight > nHeight) {
-				errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Alias was already updated in this block.");
+				errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Block height of service request cannot be lower than stored service block height.");
 				return true;
 			}
 			COfferLinkWhitelist whiteList;

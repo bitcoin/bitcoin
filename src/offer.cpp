@@ -581,7 +581,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		if (!fJustCheck && pofferdb->ReadISLock(vvchArgs[0], bInstantSendLocked) && bInstantSendLocked) {
 			if (dbOffer.nHeight >= nHeight)
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Offer was already updated in this block.");
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Block height of service request must be less than or equal to the stored service block height.");
 				return true;
 			}
 			if (dbOffer.txHash != tx.GetHash())
@@ -613,7 +613,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		}
 		else if (dbOffer.nHeight > nHeight)
 		{
-			errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Offer was already updated in this block.");
+			errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Block height of service request cannot be lower than stored service block height.");
 			return true;
 		}
 	}
