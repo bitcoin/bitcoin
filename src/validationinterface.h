@@ -42,6 +42,16 @@ void UnregisterAllValidationInterfaces();
  * will result in a deadlock (that DEBUG_LOCKORDER will miss).
  */
 void CallFunctionInValidationInterfaceQueue(std::function<void ()> func);
+/**
+ * This is a synonym for the following, which asserts certain locks are not
+ * held:
+ *     std::promise<void> promise;
+ *     CallFunctionInValidationInterfaceQueue([&promise] {
+ *         promise.set_value();
+ *     });
+ *     promise.get_future().wait();
+ */
+void SyncWithValidationInterfaceQueue();
 
 class CValidationInterface {
 protected:
@@ -130,6 +140,8 @@ public:
     void UnregisterBackgroundSignalScheduler();
     /** Call any remaining callbacks on the calling thread */
     void FlushBackgroundCallbacks();
+
+    size_t CallbacksPending();
 
     /** Register with mempool to call TransactionRemovedFromMempool callbacks */
     void RegisterWithMempoolSignals(CTxMemPool& pool);
