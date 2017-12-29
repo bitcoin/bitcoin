@@ -95,6 +95,10 @@ if `$HOME/db` is the path where you installed DB (as above).
 The `contrib/install_db4.sh` helper script reports
 the appropriate `./configure` arguments after it is done.
 
+To configure with GUI, replace `--with-gui=no` with `--with-gui=qt5`,
+add `-L/usr/X11R6/lib` to `./configure`'s `LDFLAGS` and
+add `-I/usr/X11R6/include` to `CPPFLAGS`.
+
 ## Build Bitcoin Core
 
 The Makefiles used by Bitcoin Core need to be processed with GNU make,
@@ -105,3 +109,6 @@ gmake		# build Bitcoin Core
 gmake check	# run the tests
 gmake install
 ```
+
+This will install `bitcoind`, `bitcoin-cli`, `bitcoin-tx`,
+and `bitcoin-qt` (if you have built the Qt GUI).
