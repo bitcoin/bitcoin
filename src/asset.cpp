@@ -661,23 +661,21 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	theAsset.nHeight = nHeight;
 	theAsset.txHash = tx.GetHash();
 	// write asset  
-
-	if (!dontaddtodb && !passetdb->WriteAsset(theAsset, dbAsset, op, fJustCheck))
-	{
-		errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to write to assetifcate DB");
-		return error(errorMessage.c_str());
+	if (!dontaddtodb) {
+		if (!passetdb->WriteAsset(theAsset, dbAsset, op, fJustCheck))
+		{
+			errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to write to assetifcate DB");
+			return error(errorMessage.c_str());
+		}
+		// debug
+		if (fDebug)
+			LogPrintf("CONNECTED ASSET: op=%s asset=%s hash=%s height=%d fJustCheck=%d\n",
+				assetFromOp(op).c_str(),
+				stringFromVch(vvchArgs[0]).c_str(),
+				tx.GetHash().ToString().c_str(),
+				nHeight,
+				fJustCheck ? 1 : 0);
 	}
-
-
-
-	// debug
-	if (fDebug && !dontaddtodb)
-		LogPrintf("CONNECTED ASSET: op=%s asset=%s hash=%s height=%d fJustCheck=%d\n",
-			assetFromOp(op).c_str(),
-			stringFromVch(vvchArgs[0]).c_str(),
-			tx.GetHash().ToString().c_str(),
-			nHeight,
-			fJustCheck?1:0);
     return true;
 }
 

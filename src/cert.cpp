@@ -647,22 +647,21 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 	theCert.nHeight = nHeight;
 	theCert.txHash = tx.GetHash();
     // write cert  
-    if (!dontaddtodb && (!pcertdb->WriteCert(theCert, dbCert, op, fJustCheck) || (op == OP_CERT_ACTIVATE && !pcertdb->WriteCertFirstTXID(vvchArgs[0], theCert.txHash))))
-	{
-		errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to write to certifcate DB");
-        return error(errorMessage.c_str());
+	if (!dontaddtodb) {
+		if (!pcertdb->WriteCert(theCert, dbCert, op, fJustCheck || (op == OP_CERT_ACTIVATE && !pcertdb->WriteCertFirstTXID(vvchArgs[0], theCert.txHash))))
+		{
+			errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to write to certifcate DB");
+			return error(errorMessage.c_str());
+		}
+		// debug
+		if (fDebug)
+			LogPrintf("CONNECTED CERT: op=%s cert=%s hash=%s height=%d fJustCheck=%d\n",
+				certFromOp(op).c_str(),
+				stringFromVch(vvchArgs[0]).c_str(),
+				tx.GetHash().ToString().c_str(),
+				nHeight,
+				fJustCheck ? 1 : 0);
 	}
-		
-
-      			
-    // debug
-	if(fDebug)
-		LogPrintf( "CONNECTED CERT: op=%s cert=%s hash=%s height=%d fJustCheck=%d\n",
-            certFromOp(op).c_str(),
-            stringFromVch(vvchArgs[0]).c_str(),
-            tx.GetHash().ToString().c_str(),
-            nHeight,
-			fJustCheck?1:0);
 
     return true;
 }

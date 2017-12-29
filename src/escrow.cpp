@@ -1524,18 +1524,20 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 	theEscrow.nHeight = nHeight;
 	theEscrow.linkAliasTuple.SetNull();
     // write escrow
-	if (!dontaddtodb && !pescrowdb->WriteEscrow(vvchArgs, theEscrow, dbEscrow, fJustCheck))
-	{
-		errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4080 - " + _("Failed to write to escrow DB");
-		return error(errorMessage.c_str());
+	if (!dontaddtodb) {
+		if (!pescrowdb->WriteEscrow(vvchArgs, theEscrow, dbEscrow, fJustCheck))
+		{
+			errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4080 - " + _("Failed to write to escrow DB");
+			return error(errorMessage.c_str());
+		}
+		if (fDebug)
+			LogPrintf("CONNECTED ESCROW: op=%s escrow=%s hash=%s height=%d fJustCheck=%d\n",
+				escrowFromOp(op).c_str(),
+				stringFromVch(vvchArgs[0]).c_str(),
+				tx.GetHash().ToString().c_str(),
+				nHeight,
+				fJustCheck ? 1 : 0);
 	}
-	if(fDebug)
-		LogPrintf( "CONNECTED ESCROW: op=%s escrow=%s hash=%s height=%d fJustCheck=%d\n",
-            escrowFromOp(op).c_str(),
-            stringFromVch(vvchArgs[0]).c_str(),
-            tx.GetHash().ToString().c_str(),
-            nHeight,
-			fJustCheck?1:0);
     return true;
 }
 UniValue escrowbid(const UniValue& params, bool fHelp) {

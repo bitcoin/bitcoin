@@ -767,21 +767,23 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	theOffer.nHeight = nHeight;
 	theOffer.txHash = tx.GetHash();
 	// write offer
-	if (!dontaddtodb && !pofferdb->WriteOffer(theOffer, dbOffer, op, fJustCheck))
-	{
-		errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to write to offer DB");
-		return error(errorMessage.c_str());
-	}
+	if (!dontaddtodb) {
+		if (!pofferdb->WriteOffer(theOffer, dbOffer, op, fJustCheck))
+		{
+			errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to write to offer DB");
+			return error(errorMessage.c_str());
+		}
 
-	// debug
-	if (fDebug)
-		LogPrintf( "CONNECTED OFFER: op=%s offer=%s qty=%u hash=%s height=%d fJustCheck=%d\n",
-			offerFromOp(op).c_str(),
-			stringFromVch(vvchArgs[0]).c_str(),
-			theOffer.nQty,
-			tx.GetHash().ToString().c_str(),
-			nHeight,
-			fJustCheck?1:0);
+		// debug
+		if (fDebug)
+			LogPrintf("CONNECTED OFFER: op=%s offer=%s qty=%u hash=%s height=%d fJustCheck=%d\n",
+				offerFromOp(op).c_str(),
+				stringFromVch(vvchArgs[0]).c_str(),
+				theOffer.nQty,
+				tx.GetHash().ToString().c_str(),
+				nHeight,
+				fJustCheck ? 1 : 0);
+	}
 	return true;
 }
 UniValue offernew(const UniValue& params, bool fHelp) {

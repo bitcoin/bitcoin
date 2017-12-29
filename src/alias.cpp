@@ -729,18 +729,20 @@ theAlias = dbAlias;
 		CAliasUnprunable aliasUnprunable;
 		aliasUnprunable.vchGUID = theAlias.vchGUID;
 		aliasUnprunable.nExpireTime = theAlias.nExpireTime;
-		if (!dontaddtodb && !paliasdb->WriteAlias(aliasUnprunable, theAlias.vchAddress, theAlias, dbAlias, op, fJustCheck))
-		{
-			errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5034 - " + _("Failed to write to alias DB");
-			return error(errorMessage.c_str());
-		}
+		if (!dontaddtodb) {
+			if (!paliasdb->WriteAlias(aliasUnprunable, theAlias.vchAddress, theAlias, dbAlias, op, fJustCheck))
+			{
+				errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5034 - " + _("Failed to write to alias DB");
+				return error(errorMessage.c_str());
+			}
 
-		if (fDebug)
-			LogPrintf(
-				"CONNECTED ALIAS: name=%s  op=%s  hash=%s  height=%d fJustCheck=%d\n",
-				stringFromVch(vchAlias).c_str(),
-				aliasFromOp(op).c_str(),
-				tx.GetHash().ToString().c_str(), nHeight, fJustCheck?1:0);
+			if (fDebug)
+				LogPrintf(
+					"CONNECTED ALIAS: name=%s  op=%s  hash=%s  height=%d fJustCheck=%d\n",
+					stringFromVch(vchAlias).c_str(),
+					aliasFromOp(op).c_str(),
+					tx.GetHash().ToString().c_str(), nHeight, fJustCheck ? 1 : 0);
+		}
 	}
 
 	return true;
