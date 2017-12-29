@@ -534,11 +534,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			}
 			if (dbAsset.txHash != tx.GetHash())
 			{
-				if (!dontaddtodb) {
-					const string &txHashHex = dbAsset.txHash.GetHex();
-					paliasdb->EraseAliasIndexTxHistory(txHashHex);
-					passetdb->EraseAssetIndexHistory(txHashHex);
-				}
+				const string &txHashHex = dbAsset.txHash.GetHex();
 				//vector<string> lastReceiverList = dbAsset.listReceivers;
 				// recreate this asset tx from last known good position (last asset stored)
 				if (op != OP_ASSET_ACTIVATE && !passetdb->ReadLastAsset(vvchArgs[0], dbAsset)) {
@@ -553,6 +549,10 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				{
 					errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from asset DB");
 					return error(errorMessage.c_str());
+				}
+				if (!dontaddtodb) {
+					paliasdb->EraseAliasIndexTxHistory(txHashHex);
+					passetdb->EraseAssetIndexHistory(txHashHex);
 				}
 			}
 			else {
