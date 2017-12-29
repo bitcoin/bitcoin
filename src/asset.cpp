@@ -525,8 +525,8 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	}
 	else
 	{
-		bool bInstantSendLocked = false;
-		if (!fJustCheck && passetdb->ReadISLock(vvchArgs[0], bInstantSendLocked) && bInstantSendLocked) {
+		bool bSendLocked = false;
+		if (!fJustCheck && passetdb->ReadISLock(vvchArgs[0], bSendLocked) && bSendLocked) {
 			if (dbAsset.nHeight >= nHeight)
 			{
 				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Block height of service request must be less than or equal to the stored service block height.");

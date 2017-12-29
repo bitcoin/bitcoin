@@ -519,8 +519,8 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 	}
 	else
 	{
-		bool bInstantSendLocked = false;
-		if (!fJustCheck && pcertdb->ReadISLock(vvchArgs[0], bInstantSendLocked) && bInstantSendLocked) {
+		bool bSendLocked = false;
+		if (!fJustCheck && pcertdb->ReadISLock(vvchArgs[0], bSendLocked) && bSendLocked) {
 			if (dbCert.nHeight >= nHeight)
 			{
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Block height of service request must be less than or equal to the stored service block height.");

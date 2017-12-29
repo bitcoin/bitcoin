@@ -157,12 +157,12 @@ class CAssetDB : public CDBWrapper {
 public:
     CAssetDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "assets", nCacheSize, fMemory, fWipe) {}
 
-    bool WriteAsset(const CAsset& asset, const CAsset& prevAsset, const int &op, const bool& bInstantSend) {
+    bool WriteAsset(const CAsset& asset, const CAsset& prevAsset, const int &op, const bool& fJustCheck) {
 		bool writeState = WriteAssetLastTXID(asset.vchAsset, asset.txHash) && Write(make_pair(std::string("asseti"), CNameTXIDTuple(asset.vchAsset, asset.txHash)), asset);
-		if (!bInstantSend && !prevAsset.IsNull())
+		if (!fJustCheck && !prevAsset.IsNull())
 			writeState = writeState && Write(make_pair(std::string("assetp"), asset.vchAsset), prevAsset);
-		else if (bInstantSend)
-			writeState = writeState && Write(make_pair(std::string("assetl"), asset.vchAsset), bInstantSend);
+		else if (fJustCheck)
+			writeState = writeState && Write(make_pair(std::string("assetl"), asset.vchAsset), fJustCheck);
 		WriteAssetIndex(asset, op);
         return writeState;
     }

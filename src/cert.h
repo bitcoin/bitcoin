@@ -95,12 +95,12 @@ class CCertDB : public CDBWrapper {
 public:
     CCertDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "certificates", nCacheSize, fMemory, fWipe) {}
 
-    bool WriteCert(const CCert& cert, const CCert& prevCert, const int &op, const bool &bInstantSend) {
+    bool WriteCert(const CCert& cert, const CCert& prevCert, const int &op, const bool &fJustCheck) {
 		bool writeState = WriteCertLastTXID(cert.vchCert, cert.txHash) && Write(make_pair(std::string("certi"), CNameTXIDTuple(cert.vchCert, cert.txHash)), cert);
-		if (!bInstantSend && !prevCert.IsNull())
+		if (!fJustCheck && !prevCert.IsNull())
 			writeState = writeState && Write(make_pair(std::string("certp"), cert.vchCert), prevCert);
-		else if (bInstantSend)
-			writeState = writeState && Write(make_pair(std::string("certl"), cert.vchCert), bInstantSend);
+		else if (fJustCheck)
+			writeState = writeState && Write(make_pair(std::string("certl"), cert.vchCert), fJustCheck);
 		WriteCertIndex(cert, op);
         return writeState;
     }

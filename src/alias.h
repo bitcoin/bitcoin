@@ -242,14 +242,14 @@ class CAliasDB : public CDBWrapper {
 public:
     CAliasDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "aliases", nCacheSize, fMemory, fWipe) {
     }
-	bool WriteAlias(const CAliasUnprunable &aliasUnprunable, const std::vector<unsigned char>& address, const CAliasIndex& alias, const CAliasIndex& prevAlias, const int &op, const bool &bInstantSend) {
+	bool WriteAlias(const CAliasUnprunable &aliasUnprunable, const std::vector<unsigned char>& address, const CAliasIndex& alias, const CAliasIndex& prevAlias, const int &op, const bool &fJustCheck) {
 		if(address.empty())
 			return false;	
 		bool writeState = WriteAliasLastTXID(alias.vchAlias, alias.txHash) && Write(make_pair(std::string("namei"), CNameTXIDTuple(alias.vchAlias, alias.txHash)), alias) && Write(make_pair(std::string("namea"), address), alias.vchAlias) && Write(make_pair(std::string("nameu"), alias.vchAlias), aliasUnprunable);
-		if (!bInstantSend && !prevAlias.IsNull())
+		if (!fJustCheck && !prevAlias.IsNull())
 			writeState = writeState && Write(make_pair(std::string("namep"), alias.vchAlias), prevAlias);
-		else if(bInstantSend)
-			writeState = writeState && Write(make_pair(std::string("namel"), alias.vchAlias), bInstantSend);
+		else if(fJustCheck)
+			writeState = writeState && Write(make_pair(std::string("namel"), alias.vchAlias), fJustCheck);
 		WriteAliasIndex(alias, op);
 		return writeState;
 	}

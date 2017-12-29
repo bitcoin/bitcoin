@@ -162,12 +162,12 @@ class CEscrowDB : public CDBWrapper {
 public:
     CEscrowDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "escrow", nCacheSize, fMemory, fWipe) {}
 
-    bool WriteEscrow( const std::vector<std::vector<unsigned char> > &vvchArgs, const CEscrow& escrow, const CEscrow& prevEscrow, const bool& bInstantSend) {
+    bool WriteEscrow( const std::vector<std::vector<unsigned char> > &vvchArgs, const CEscrow& escrow, const CEscrow& prevEscrow, const bool& fJustCheck) {
 		bool writeState = WriteEscrowLastTXID(escrow.vchEscrow, escrow.txHash) && Write(make_pair(std::string("escrowi"), CNameTXIDTuple(escrow.vchEscrow, escrow.txHash)), escrow);
-		if (!bInstantSend && !prevEscrow.IsNull())
+		if (!fJustCheck && !prevEscrow.IsNull())
 			writeState = writeState && Write(make_pair(std::string("escrowp"), escrow.vchEscrow), prevEscrow);
-		else if (bInstantSend)
-			writeState = writeState && Write(make_pair(std::string("escrowl"), escrow.vchEscrow), bInstantSend);
+		else if (fJustCheck)
+			writeState = writeState && Write(make_pair(std::string("escrowl"), escrow.vchEscrow), fJustCheck);
 		WriteEscrowIndex(escrow, vvchArgs);
         return writeState;
     }
