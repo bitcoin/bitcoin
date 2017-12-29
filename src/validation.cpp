@@ -1670,8 +1670,8 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
 			}
 			// SYSCOIN
 			// nheight is 0 during mempool inclusion and not 0 during connect block, so we want to ensure we only call checksyscoininputs on initial mempool inclusion with cacheStore true and on connect block with height being next block height (so not 0) and cacheStore false
-			if (nHeight != 0 && !cacheStore || nHeight == 0 && cacheStore) {
-				if (flags == STANDARD_SCRIPT_VERIFY_FLAGS && !CheckSyscoinInputs(tx, nHeight == 0, nHeight))
+			if ((nHeight != 0 && !cacheStore) || (nHeight == 0 && cacheStore && flags == STANDARD_SCRIPT_VERIFY_FLAGS)) {
+				if (!CheckSyscoinInputs(tx, nHeight == 0, nHeight))
 					return false;
 			}
 		}
