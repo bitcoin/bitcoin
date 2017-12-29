@@ -1033,10 +1033,6 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 				__func__, hash.ToString(), FormatStateMessage(state));
 		}
 
-		// SYSCOIN
-		if (!CheckSyscoinInputs(tx, true))
-			return false;
-
 		// Remove conflicting transactions from the mempool
 		BOOST_FOREACH(const CTxMemPool::txiter it, allConflicting)
 		{
@@ -1672,6 +1668,9 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
 					return state.DoS(100, false, REJECT_INVALID, strprintf("mandatory-script-verify-flag-failed (%s)", ScriptErrorString(check.GetScriptError())));
 				}
 			}
+			// SYSCOIN
+			if (flags != MANDATORY_SCRIPT_VERIFY_FLAGS && !CheckSyscoinInputs(tx, cacheStore))
+				return false;
 		}
 	}
 
@@ -2315,9 +2314,6 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 			if (!CheckInputs(tx, state, view, fScriptChecks, flags, fCacheResults, nScriptCheckThreads ? &vChecks : NULL))
 				return error("ConnectBlock(): CheckInputs on %s failed with %s",
 					tx.GetHash().ToString(), FormatStateMessage(state));
-			// SYSCOIN
-			if (!fJustCheck && !CheckSyscoinInputs(tx, false, pindex->nHeight))
-				return error("ConnectBlock(): CheckSyscoinInputs on %s failed", tx.GetHash().ToString());
 			control.Add(vChecks);
 		}
 
