@@ -10,6 +10,7 @@
 #include <map>
 #include <mutex>
 #include <memory>
+#include <unordered_map>
 
 /**
  * OS-dependent allocation and deallocation of locked/pinned memory pages.
@@ -88,11 +89,19 @@ public:
      */
     bool addressInArena(void *ptr) const { return ptr >= base && ptr < end; }
 private:
-    /** Map of chunk address to chunk information. This class makes use of the
-     * sorted order to merge previous and next chunks during deallocation.
-     */
-    std::map<char*, size_t> chunks_free;
-    std::map<char*, size_t> chunks_used;
+    typedef std::multimap<size_t, char*> SizeToChunkSortedMap;
+    /** Map to enable O(log(n)) best-fit allocation, as it's sorted by size */
+    SizeToChunkSortedMap size_to_free_chunk;
+
+    typedef std::unordered_map<char*, SizeToChunkSortedMap::const_iterator> ChunkToSizeMap;
+    /** Map from begin of free chunk to its node in size_to_free_chunk */
+    ChunkToSizeMap chunks_free;
+    /** Map from end of free chunk to its node in size_to_free_chunk */
+    ChunkToSizeMap chunks_free_end;
+
+    /** Map from begin of used chunk to its size */
+    std::unordered_map<char*, size_t> chunks_used;
+
     /** Base address of arena */
     char* base;
     /** End address of arena */
