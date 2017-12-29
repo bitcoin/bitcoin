@@ -216,7 +216,7 @@ void CPrivateSendServer::ProcessMessage(CNode* pfrom, std::string& strCommand, C
                 LOCK(cs_main);
                 CValidationState validationState;
                 mempool.PrioritiseTransaction(tx.GetHash(), tx.GetHash().ToString(), 1000, 0.1*COIN);
-                if(!AcceptToMemoryPool(mempool, validationState, CTransaction(tx), false, NULL, false, true, true)) {
+                if(!AcceptToMemoryPool(mempool, validationState, CTransaction(tx), false, NULL, false, maxTxFee, true)) {
                     LogPrintf("DSVIN -- transaction not valid! tx=%s", tx.ToString());
                     PushStatus(pfrom, STATUS_REJECTED, ERR_INVALID_TX, connman);
                     return;
@@ -343,7 +343,7 @@ void CPrivateSendServer::CommitFinalTransaction(CConnman& connman)
         TRY_LOCK(cs_main, lockMain);
         CValidationState validationState;
         mempool.PrioritiseTransaction(hashTx, hashTx.ToString(), 1000, 0.1*COIN);
-        if(!lockMain || !AcceptToMemoryPool(mempool, validationState, finalTransaction, false, NULL, false, true, true))
+        if(!lockMain || !AcceptToMemoryPool(mempool, validationState, finalTransaction, false, NULL, false, maxTxFee, true))
         {
             LogPrintf("CPrivateSendServer::CommitFinalTransaction -- AcceptToMemoryPool() error: Transaction not valid\n");
             SetNull();
@@ -446,7 +446,7 @@ void CPrivateSendServer::ChargeFees(CConnman& connman)
 
         CValidationState state;
         bool fMissingInputs;
-        if(!AcceptToMemoryPool(mempool, state, vecOffendersCollaterals[0], false, &fMissingInputs, false, true)) {
+        if(!AcceptToMemoryPool(mempool, state, vecOffendersCollaterals[0], false, &fMissingInputs, false, maxTxFee)) {
             // should never really happen
             LogPrintf("CPrivateSendServer::ChargeFees -- ERROR: AcceptToMemoryPool failed!\n");
         } else {
@@ -481,7 +481,7 @@ void CPrivateSendServer::ChargeRandomFees(CConnman& connman)
 
         CValidationState state;
         bool fMissingInputs;
-        if(!AcceptToMemoryPool(mempool, state, txCollateral, false, &fMissingInputs, false, true)) {
+        if(!AcceptToMemoryPool(mempool, state, txCollateral, false, &fMissingInputs, false, maxTxFee)) {
             // should never really happen
             LogPrintf("CPrivateSendServer::ChargeRandomFees -- ERROR: AcceptToMemoryPool failed!\n");
         } else {
