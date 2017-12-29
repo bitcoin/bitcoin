@@ -40,6 +40,7 @@
 #include <validationinterface.h>
 #include <warnings.h>
 
+#include <future>
 #include <sstream>
 
 #include <boost/algorithm/string/replace.hpp>
@@ -2559,12 +2560,21 @@ bool CChainState::ActivateBestChain(CValidationState &state, const CChainParams&
     // far from a guarantee. Things in the P2P/RPC will often end up calling
     // us in the middle of ProcessNewBlock - do not assume pblock is set
     // sanely for performance or correctness!
+    AssertLockNotHeld(cs_main);
 
     CBlockIndex *pindexMostWork = nullptr;
     CBlockIndex *pindexNewTip = nullptr;
     int nStopAtHeight = gArgs.GetArg("-stopatheight", DEFAULT_STOPATHEIGHT);
     do {
         boost::this_thread::interruption_point();
+
+        if (GetMainSignals().CallbacksPending() > 10) {
+            // Block until the validation queue drains. This should largely
+            // never happen in normal operation, however may happen during
+            // reindex, causing memory blowup  if we run too far ahead.
+            SyncWithValidationInterfaceQueue();
+        }
+
         if (ShutdownRequested())
             break;
 
@@ -3383,6 +3393,8 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, CVali
 
 bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<const CBlock> pblock, bool fForceProcessing, bool *fNewBlock)
 {
+    AssertLockNotHeld(cs_main);
+
     {
         CBlockIndex *pindex = nullptr;
         if (fNewBlock) *fNewBlock = false;

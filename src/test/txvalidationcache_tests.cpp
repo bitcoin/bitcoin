@@ -66,7 +66,6 @@ BOOST_FIXTURE_TEST_CASE(tx_mempool_block_doublespend, TestChain100Setup)
 
     // Test 1: block with both of those transactions should be rejected.
     block = CreateAndProcessBlock(spends, scriptPubKey);
-    LOCK(cs_main);
     BOOST_CHECK(chainActive.Tip()->GetBlockHash() != block.GetHash());
 
     // Test 2: ... and should be rejected if spend1 is in the memory pool
@@ -190,12 +189,12 @@ BOOST_FIXTURE_TEST_CASE(checkinputs_test, TestChain100Setup)
         spend_tx.vin[0].scriptSig << vchSig;
     }
 
-    LOCK(cs_main);
-
     // Test that invalidity under a set of flags doesn't preclude validity
     // under other (eg consensus) flags.
     // spend_tx is invalid according to DERSIG
     {
+        LOCK(cs_main);
+
         CValidationState state;
         PrecomputedTransactionData ptd_spend_tx(spend_tx);
 
@@ -213,15 +212,17 @@ BOOST_FIXTURE_TEST_CASE(checkinputs_test, TestChain100Setup)
         // test later that block validation works fine in the absence of cached
         // successes.
         ValidateCheckInputsForAllFlags(spend_tx, SCRIPT_VERIFY_DERSIG | SCRIPT_VERIFY_LOW_S | SCRIPT_VERIFY_STRICTENC, false);
-
-        // And if we produce a block with this tx, it should be valid (DERSIG not
-        // enabled yet), even though there's no cache entry.
-        CBlock block;
-
-        block = CreateAndProcessBlock({spend_tx}, p2pk_scriptPubKey);
-        BOOST_CHECK(chainActive.Tip()->GetBlockHash() == block.GetHash());
-        BOOST_CHECK(pcoinsTip->GetBestBlock() == block.GetHash());
     }
+
+    // And if we produce a block with this tx, it should be valid (DERSIG not
+    // enabled yet), even though there's no cache entry.
+    CBlock block;
+
+    block = CreateAndProcessBlock({spend_tx}, p2pk_scriptPubKey);
+    BOOST_CHECK(chainActive.Tip()->GetBlockHash() == block.GetHash());
+    BOOST_CHECK(pcoinsTip->GetBestBlock() == block.GetHash());
+
+    LOCK(cs_main);
 
     // Test P2SH: construct a transaction that is valid without P2SH, and
     // then test validity with P2SH.
