@@ -740,7 +740,8 @@ theAlias = dbAlias;
 		CAliasUnprunable aliasUnprunable;
 		aliasUnprunable.vchGUID = theAlias.vchGUID;
 		aliasUnprunable.nExpireTime = theAlias.nExpireTime;
-		if (!dontaddtodb) {
+		// only add alias activations on pow blocks and not on fJustCheck, we want to ensure aliases are pow validated before allowing for instant transactions
+		if (!dontaddtodb && ((op == OP_ALIAS_ACTIVATE && !fJustCheck) || op != OP_ALIAS_ACTIVATE)) {
 			if (!paliasdb->WriteAlias(aliasUnprunable, theAlias.vchAddress, theAlias, dbAlias, op, fJustCheck))
 			{
 				errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5034 - " + _("Failed to write to alias DB");
