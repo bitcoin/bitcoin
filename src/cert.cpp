@@ -507,7 +507,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 			return error(errorMessage.c_str());
 		}
 	}
-	const string &user1 = stringFromVch(theCert.aliasTuple.first)
+	const string &user1 = stringFromVch(theCert.aliasTuple.first);
 	string user2 = "";
 	string user3 = "";
 	if (op == OP_CERT_TRANSFER) {
