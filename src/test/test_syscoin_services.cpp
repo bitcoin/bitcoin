@@ -1814,7 +1814,10 @@ const string EscrowNewBuyItNow(const string& node, const string& sellernode, con
 	}
 	
 
-	BOOST_CHECK_THROW(r = CallRPC(node, "escrowacknowledge " + guid + " ''"), runtime_error);
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowacknowledge " + guid + " ''"));
+	UniValue varray = r.get_array();
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + varray[0].get_str()));
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "complete").get_bool(), false);
 	BOOST_CHECK_NO_THROW(r = CallRPC(sellernode, "escrowacknowledge " + guid + " ''"));
 	UniValue arrres = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(sellernode, "signrawtransaction " + arrres[0].get_str()));
