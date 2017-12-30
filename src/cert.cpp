@@ -507,7 +507,13 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 			return error(errorMessage.c_str());
 		}
 	}
-
+	const string &user1 = stringFromVch(theCert.aliasTuple.first)
+	string user2 = "";
+	string user3 = "";
+	if (op == OP_CERT_TRANSFER) {
+		if (!theCert.linkAliasTuple.IsNull())
+			user2 = stringFromVch(theCert.linkAliasTuple.first);
+	}
 	// if not an certnew, load the cert data from the DB
 	CCert dbCert;
 	if (!GetCert(vvchArgs[0], dbCert))
@@ -639,13 +645,6 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 		string strResponseGUID = "";
 		string strResponse = GetSyscoinTransactionDescription(op, vvchArgs, strResponseEnglish, strResponseGUID, CERT);
 		if (strResponse != "") {
-			const string &user1 = stringFromVch(vvchArgs[0]);
-			string user2 = "";
-			string user3 = "";
-			if (op == OP_CERT_TRANSFER) {
-				if (!theCert.linkAliasTuple.IsNull())
-					user2 = stringFromVch(theCert.linkAliasTuple.first);
-			}
 			paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, strResponseGUID);
 		}
 	}

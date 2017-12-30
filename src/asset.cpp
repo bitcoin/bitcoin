@@ -515,6 +515,13 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			return error(errorMessage.c_str());
 		}
 	}
+	const string &user1 = stringFromVch(theAsset.aliasTuple.first);
+	string user2 = "";
+	string user3 = "";
+	if (op == OP_ASSET_TRANSFER) {
+		if (!theAsset.linkAliasTuple.IsNull())
+			user2 = stringFromVch(theAsset.linkAliasTuple.first);
+	}
 	CAsset dbAsset;
 	if (!GetAsset(vvchArgs[0], dbAsset))
 	{
@@ -646,13 +653,6 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		string strResponseGUID = "";
 		string strResponse = GetSyscoinTransactionDescription(op, vvchArgs, strResponseEnglish, strResponseGUID, ASSET);
 		if (strResponse != "") {
-			const string &user1 = stringFromVch(vvchArgs[0]);
-			string user2 = "";
-			string user3 = "";
-			if (op == OP_ASSET_TRANSFER) {
-				if (!theAsset.linkAliasTuple.IsNull())
-					user2 = stringFromVch(theAsset.linkAliasTuple.first);
-			}
 			paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, strResponseGUID);
 		}
 	}

@@ -565,7 +565,13 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			return error(errorMessage.c_str());
 		}
 	}
-
+	const string &user1 = stringFromVch(theOffer.aliasTuple.first);
+	string user2 = "";
+	string user3 = "";
+	if (op == OP_OFFER_UPDATE) {
+		if (!theOffer.linkAliasTuple.IsNull())
+			user2 = stringFromVch(theOffer.linkAliasTuple.first);
+	}
 	COffer dbOffer;
 	// load the offer data from the DB
 	if (!GetOffer(vvchArgs[0], dbOffer))
@@ -753,13 +759,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		string strResponseGUID = "";
 		string strResponse = GetSyscoinTransactionDescription(op, vvchArgs, strResponseEnglish, strResponseGUID, OFFER);
 		if (strResponse != "") {
-			const string &user1 = stringFromVch(vvchArgs[0]);
-			string user2 = "";
-			string user3 = "";
-			if (op == OP_OFFER_UPDATE) {
-				if (!theOffer.linkAliasTuple.IsNull())
-					user2 = stringFromVch(theOffer.linkAliasTuple.first);
-			}
 			paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, strResponseGUID);
 		}
 	}
