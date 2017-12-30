@@ -48,7 +48,7 @@ def main():
 
 def bctester(testDir, input_basename, buildenv):
     """ Loads and parses the input file, runs all tests and reports results"""
-    input_filename = testDir + "/" + input_basename
+    input_filename = os.path.join(testDir, input_basename)
     raw_data = open(input_filename).read()
     input_data = json.loads(raw_data)
 
@@ -77,7 +77,7 @@ def bctest(testDir, testObj, buildenv):
     are not as expected. Error is caught by bctester() and reported.
     """
     # Get the exec names and arguments
-    execprog = buildenv["BUILDDIR"] + "/src/" + testObj['exec'] + buildenv["EXEEXT"]
+    execprog = os.path.join(buildenv["BUILDDIR"], "src", testObj["exec"] + buildenv["EXEEXT"])
     execargs = testObj['args']
     execrun = [execprog] + execargs
 
@@ -85,23 +85,27 @@ def bctest(testDir, testObj, buildenv):
     stdinCfg = None
     inputData = None
     if "input" in testObj:
-        filename = testDir + "/" + testObj['input']
+        filename = os.path.join(testDir, testObj["input"])
         inputData = open(filename).read()
         stdinCfg = subprocess.PIPE
 
     # Read the expected output data (if there is any)
     outputFn = None
     outputData = None
+    outputType = None
     if "output_cmp" in testObj:
         outputFn = testObj['output_cmp']
         outputType = os.path.splitext(outputFn)[1][1:]  # output type from file extension (determines how to compare)
         try:
-            outputData = open(testDir + "/" + outputFn).read()
+            outputData = open(os.path.join(testDir, outputFn)).read()
         except:
             logging.error("Output file " + outputFn + " can not be opened")
             raise
         if not outputData:
             logging.error("Output data missing for " + outputFn)
+            raise Exception
+        if not outputType:
+            logging.error("Output file %s does not have a file extension" % outputFn)
             raise Exception
 
     # Run the test
