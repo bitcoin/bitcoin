@@ -106,6 +106,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasmultiupdate)
 	UniValue r;
 	AliasNew("node1", "jagmultiupdate", "data");
 	string hex_str = AliasUpdate("node1", "jagmultiupdate", "changeddata");
+	string certguid = CertNew("node1", "jagmultiupdate", "jag1", "pubdata");
 	BOOST_CHECK(hex_str.empty());
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo jagmultiupdate"));
 
@@ -116,11 +117,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasmultiupdate)
 	// can do 5 free updates
 	for (unsigned int i = 0; i < MAX_ALIAS_UPDATES_PER_BLOCK; i++)
 	{
-		// "aliasupdate <aliasname> [public value]  [address] [accept_transfers=true] [expire_timestamp] [encryption_privatekey] [encryption_publickey] [witness]\n"
-		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasupdate jagmultiupdate changeddata " + oldAddressStr + " 3 " + " 0 " + encryptionprivkey + " " + encryptionkey + " ''"));
-		UniValue varray = r.get_array();
-		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + varray[0].get_str()));
-		BOOST_CHECK_NO_THROW(CallRPC("node1", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
+		CertUpdate("node1", certguid, "''", "newdata");
 	}
 	BOOST_CHECK_THROW(r = CallRPC("node1", "aliasupdate jagmultiupdate changeddata " + oldAddressStr + " 3 " + " 0 " + encryptionprivkey + " " + encryptionkey + " ''"), runtime_error);
 
@@ -139,10 +136,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasmultiupdate)
 	// new owner can update
 	for (unsigned int i = 0; i < MAX_ALIAS_UPDATES_PER_BLOCK; i++)
 	{
-		BOOST_CHECK_NO_THROW(r = CallRPC("node2", "aliasupdate jagmultiupdate changeddata2 " + oldAddressStr + " 3 " + " 0 " + encryptionprivkey + " " + encryptionkey + " ''"));
-		UniValue varray = r.get_array();
-		BOOST_CHECK_NO_THROW(r = CallRPC("node2", "signrawtransaction " + varray[0].get_str()));
-		BOOST_CHECK_NO_THROW(CallRPC("node2", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
+		CertUpdate("node2", certguid, "''", "newdata");
 	}
 
 	BOOST_CHECK_THROW(r = CallRPC("node2", "aliasupdate jagmultiupdate changeddata2 " + oldAddressStr + " 3 " + " 0 " + encryptionprivkey + " " + encryptionkey + " ''"), runtime_error);
@@ -152,10 +146,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasmultiupdate)
 	GenerateBlocks(10, "node2");
 	for (unsigned int i = 0; i < MAX_ALIAS_UPDATES_PER_BLOCK+1; i++)
 	{
-		BOOST_CHECK_NO_THROW(r = CallRPC("node2", "aliasupdate jagmultiupdate changeddata2 " + oldAddressStr + " 3 " + " 0 " + encryptionprivkey + " " + encryptionkey + " ''"));
-		UniValue varray = r.get_array();
-		BOOST_CHECK_NO_THROW(r = CallRPC("node2", "signrawtransaction " + varray[0].get_str()));
-		BOOST_CHECK_NO_THROW(CallRPC("node2", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
+		CertUpdate("node2", certguid, "''", "newdata");
 	}
 
 	GenerateBlocks(10, "node2");
@@ -170,10 +161,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasmultiupdate)
 	oldAddressStr = find_value(r.get_obj(), "address").get_str();
 	for (unsigned int i = 0; i < MAX_ALIAS_UPDATES_PER_BLOCK; i++)
 	{
-		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasupdate jagmultiupdate changedata8 " + oldAddressStr + " 3 " +  " 0 " + encryptionprivkey + " " + encryptionkey + " ''"));
-		UniValue varray = r.get_array();
-		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + varray[0].get_str()));
-		BOOST_CHECK_NO_THROW(CallRPC("node1", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
+		CertUpdate("node1", certguid, "''", "newdata");
 	}
 	
 	BOOST_CHECK_THROW(r = CallRPC("node1", "aliasupdate jagmultiupdate changedata8 " + oldAddressStr + " 3 " +  " 0 " + encryptionprivkey + " " + encryptionkey + " ''"), runtime_error);

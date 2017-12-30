@@ -721,7 +721,6 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 	string expires = boost::lexical_cast<string>(find_value(r.get_obj(), "expires_on").get_int64());
 	int nAcceptTransferFlags = find_value(r.get_obj(), "accepttransferflags").get_int();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasbalance " + aliasname));
-	CAmount balanceBefore = AmountFromValue(find_value(r.get_obj(), "balance"));
 
 	string newpubdata = pubdata == "''" ? oldvalue : pubdata;
 	string newAddressStr = addressStr == "''" ? oldAddressStr : addressStr;
@@ -743,14 +742,10 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 	BOOST_CHECK_NO_THROW(CallRPC(node, "syscoinsendrawtransaction " + hex_str));
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "decoderawtransaction " + hex_str));
 	string txid = find_value(r.get_obj(), "txid").get_str();
-	GenerateBlocks(5, node);
-	GenerateBlocks(5, node);
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasbalance " + aliasname));
-	CAmount balanceAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
+
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasinfo " + aliasname));
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "address").get_str() , newAddressStr);
 	
-	BOOST_CHECK(abs(balanceBefore-balanceAfter) < COIN);
 	BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == aliasname);
 
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str() , newpubdata);
@@ -774,8 +769,7 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 		balanceAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
 		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode1, "aliasinfo " + aliasname));
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "address").get_str() , newAddressStr);
-		
-		BOOST_CHECK(abs(balanceBefore-balanceAfter) < COIN);	
+			
 		BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == aliasname);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), false);
 
@@ -791,7 +785,6 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode2, "aliasinfo " + aliasname));
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "address").get_str() , newAddressStr);
 		
-		BOOST_CHECK(abs(balanceBefore-balanceAfter) < COIN);
 		BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == aliasname);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), false);
 
@@ -810,7 +803,7 @@ void AliasAddWhitelist(const string& node, const string& owneralias, const strin
 	UniValue varray = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + varray[0].get_str()));
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
-	GenerateBlocks(10, node);
+
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliaswhitelist " + owneralias));
 	const UniValue &arrayValue = r.get_array();
 	for (int i = 0; i<arrayValue.size(); i++)
@@ -832,7 +825,7 @@ void AliasRemoveWhitelist(const string& node, const string& owneralias, const st
 	UniValue varray = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + varray[0].get_str()));
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
-	GenerateBlocks(10, node);
+
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliaswhitelist " + owneralias));
 	const UniValue &arrayValue = r.get_array();
 	for (int i = 0; i<arrayValue.size(); i++)
@@ -848,7 +841,7 @@ void AliasClearWhitelist(const string& node, const string& owneralias, const str
 	UniValue varray = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + varray[0].get_str()));
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
-	GenerateBlocks(10, node);
+
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliaswhitelist " + owneralias));
 	const UniValue &arrayValue = r.get_array();
 	BOOST_CHECK(arrayValue.empty());
@@ -946,7 +939,7 @@ const string CertNew(const string& node, const string& alias, const string& titl
 	string txid = find_value(r.get_obj(), "txid").get_str();
 
 	string guid = arr[1].get_str();
-	GenerateBlocks(10, node);
+
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "certinfo " + guid));
 
 	const UniValue &txHistoryResult = AliasTxHistoryFilter(node, txid);
@@ -1001,7 +994,7 @@ void CertUpdate(const string& node, const string& guid, const string& title, con
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "decoderawtransaction " + hex_str));
 	string txid = find_value(r.get_obj(), "txid").get_str();
 
-	GenerateBlocks(10, node);
+
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "certinfo " + guid));
 
 	const UniValue &txHistoryResult = AliasTxHistoryFilter(node, txid);
@@ -1058,8 +1051,6 @@ void CertTransfer(const string& node, const string &tonode, const string& guid, 
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "decoderawtransaction " + hex_str));
 	string txid = find_value(r.get_obj(), "txid").get_str();
 
-	GenerateBlocks(5, node);
-	GenerateBlocks(5, tonode);
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "certinfo " + guid));
 
 	const UniValue &txHistoryResult = AliasTxHistoryFilter(node, txid);
@@ -1097,7 +1088,7 @@ const string OfferLink(const string& node, const string& alias, const string& gu
 	string txid = find_value(r.get_obj(), "txid").get_str();
 
 	string linkedguid = arr[1].get_str();
-	GenerateBlocks(10, node);
+	
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "offerinfo " + linkedguid));
 
 	const UniValue &txHistoryResult = AliasTxHistoryFilter(node, txid);
@@ -1158,7 +1149,7 @@ const string OfferNew(const string& node, const string& aliasname, const string&
 	string txid = find_value(r.get_obj(), "txid").get_str();
 
 	string guid = arr[1].get_str();
-	GenerateBlocks(10, node);
+	
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "offerinfo " + guid));
 
 	const UniValue &txHistoryResult = AliasTxHistoryFilter(node, txid);
@@ -1308,7 +1299,7 @@ void OfferUpdate(const string& node, const string& aliasname, const string& offe
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "decoderawtransaction " + hex_str));
 	string txid = find_value(r.get_obj(), "txid").get_str();
 
-	GenerateBlocks(10, node);
+
 	bool auctionreqwitness = (auction_require_witness == "true") ? true : false;
 
 		
@@ -1439,7 +1430,6 @@ void EscrowFeedback(const string& node, const string& userfrom, const string& es
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "decoderawtransaction " + finalsignedhex));
 	string txid = find_value(r.get_obj(), "txid").get_str();
 
-	GenerateBlocks(10, node);
 	unsigned char feedbackusertoenum;
 	if (userto == "buyer")
 		feedbackusertoenum = FEEDBACKBUYER;
@@ -1511,7 +1501,7 @@ void EscrowBid(const string& node, const string& buyeralias, const string& escro
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "decoderawtransaction " + finalsignedhex));
 	string txid = find_value(r.get_obj(), "txid").get_str();
 
-	GenerateBlocks(10, node);
+
 	const UniValue &escrowBid = EscrowBidFilter(node, txid);
 	BOOST_CHECK(!escrowBid.empty());
 	BOOST_CHECK(ret.read(escrowBid[0].get_str()));
@@ -1623,7 +1613,7 @@ const string EscrowNewAuction(const string& node, const string& sellernode, cons
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinsendrawtransaction " + hex_str));
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "decoderawtransaction " + hex_str));
 	string guid = arr[1].get_str();
-	GenerateBlocks(10, node);
+	
 
 	
 	string txid = find_value(r.get_obj(), "txid").get_str();
@@ -1917,8 +1907,7 @@ void EscrowRelease(const string& node, const string& role, const string& guid ,c
 	string hex_str = find_value(r.get_obj(), "hex").get_str();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinsendrawtransaction " + hex_str));
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "decoderawtransaction " + hex_str));
-	GenerateBlocks(10, node);
-	GenerateBlocks(10, node);
+
 
 	string txid = find_value(r.get_obj(), "txid").get_str();
 	const UniValue &txHistoryResult = AliasTxHistoryFilter(node, txid);
@@ -2004,8 +1993,7 @@ void EscrowRefund(const string& node, const string& role, const string& guid, co
 	string hex_str = find_value(r.get_obj(), "hex").get_str();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinsendrawtransaction " + hex_str));
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "decoderawtransaction " + hex_str));
-	GenerateBlocks(10, node);
-	GenerateBlocks(10, node);
+
 
 
 	string txid = find_value(r.get_obj(), "txid").get_str();
