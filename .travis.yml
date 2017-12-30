@@ -5,17 +5,16 @@ matrix:
       - os: linux
         services: docker
         script:
-          - docker build -f scripts/docker/debian/Dockerfile-stretch .
+          - docker build --build-arg BRANCH_NAME=$TRAVIS_BRANCH -f scripts/docker/debian/Dockerfile-stretch .
       - os: linux
         services: docker
         script:
-          - docker build -f scripts/docker/debian/Dockerfile-jessie .
+          - docker build --build-arg BRANCH_NAME=$TRAVIS_BRANCH -f scripts/docker/debian/Dockerfile-jessie .
       - os: linux
         sudo: required
         before_install:
           - ./scripts/dependencies-ubuntu.sh
         install: true
-        sudo: required
         script:
           - ./scripts/install-ubuntu.sh
       - os: osx
