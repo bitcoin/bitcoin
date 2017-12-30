@@ -2216,7 +2216,7 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	if(newAddress.ToString() != EncodeBase58(copyAlias.vchAddress))
 		transferAlias = true;
 	
-	SendMoneySyscoin(vchAlias, vchWitness, recipient, recipientPayment, vecSend, wtx, &coinControl, transferAlias);
+	SendMoneySyscoin(vchAlias, vchWitness, recipient, recipientPayment, vecSend, wtx, &coinControl, false, transferAlias);
 	UniValue res(UniValue::VARR);
 	res.push_back(EncodeHexTx(wtx));
 	return res;
