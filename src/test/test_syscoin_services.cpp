@@ -720,7 +720,6 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 	string encryptionprivkey = find_value(r.get_obj(), "encryption_privatekey").get_str();
 	string expires = boost::lexical_cast<string>(find_value(r.get_obj(), "expires_on").get_int64());
 	int nAcceptTransferFlags = find_value(r.get_obj(), "accepttransferflags").get_int();
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasbalance " + aliasname));
 
 	string newpubdata = pubdata == "''" ? oldvalue : pubdata;
 	string newAddressStr = addressStr == "''" ? oldAddressStr : addressStr;
@@ -765,8 +764,6 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 
 	if(!otherNode1.empty())
 	{
-		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode1, "aliasbalance " + aliasname));
-		balanceAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
 		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode1, "aliasinfo " + aliasname));
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "address").get_str() , newAddressStr);
 			
@@ -780,8 +777,6 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 	}
 	if(!otherNode2.empty())
 	{
-		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode2, "aliasbalance " + aliasname));
-		balanceAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
 		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode2, "aliasinfo " + aliasname));
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "address").get_str() , newAddressStr);
 		
