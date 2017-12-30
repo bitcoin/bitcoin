@@ -786,6 +786,7 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str() , newpubdata);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "encryption_publickey").get_str() , encryptionkey);
 	}
+	GenerateBlocks(5, node);
 	return "";
 
 }
@@ -811,6 +812,7 @@ void AliasAddWhitelist(const string& node, const string& owneralias, const strin
 		}
 	}
 	BOOST_CHECK(found);
+	GenerateBlocks(5, node);
 }
 void AliasRemoveWhitelist(const string& node, const string& owneralias, const string& aliasname, const string& discount, const string& witness)
 {
@@ -828,6 +830,7 @@ void AliasRemoveWhitelist(const string& node, const string& owneralias, const st
 		const string &aliasguid = find_value(arrayValue[i].get_obj(), "alias").get_str();
 		BOOST_CHECK(aliasguid != aliasname);
 	}
+	GenerateBlocks(5, node);
 }
 void AliasClearWhitelist(const string& node, const string& owneralias, const string &witness)
 {
@@ -840,7 +843,7 @@ void AliasClearWhitelist(const string& node, const string& owneralias, const str
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliaswhitelist " + owneralias));
 	const UniValue &arrayValue = r.get_array();
 	BOOST_CHECK(arrayValue.empty());
-
+	GenerateBlocks(5, node);
 }
 int FindAliasDiscount(const string& node, const string& owneralias, const string &aliasname) 
 {
@@ -965,6 +968,7 @@ const string CertNew(const string& node, const string& alias, const string& titl
 		BOOST_CHECK(find_value(r.get_obj(), "publicvalue").get_str() == pubdata);
 		BOOST_CHECK(find_value(r.get_obj(), "title").get_str() == title);
 	}
+	GenerateBlocks(5, node);
 	return guid;
 }
 void CertUpdate(const string& node, const string& guid, const string& title, const string& pubdata, const string& witness)
@@ -1025,6 +1029,7 @@ void CertUpdate(const string& node, const string& guid, const string& title, con
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "title").get_str(), newtitle);
 
 	}
+	GenerateBlocks(5, node);
 }
 void CertTransfer(const string& node, const string &tonode, const string& guid, const string& toalias, const string& witness)
 {
@@ -1065,7 +1070,7 @@ void CertTransfer(const string& node, const string &tonode, const string& guid, 
 	BOOST_CHECK_NO_THROW(r = CallRPC(tonode, "certinfo " + guid));
 	BOOST_CHECK(find_value(r.get_obj(), "alias").get_str() == toalias);
 	BOOST_CHECK(find_value(r.get_obj(), "publicvalue").get_str() == pubdata);
-
+	GenerateBlocks(5, node);
 }
 const string OfferLink(const string& node, const string& alias, const string& guid, const string& commissionStr, const string& newdetails, const string &witness)
 {
@@ -1122,6 +1127,7 @@ const string OfferLink(const string& node, const string& alias, const string& gu
 			BOOST_CHECK(find_value(r.get_obj(), "description").get_str() == olddetails);
 		BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == linkedguid);
 	}
+	GenerateBlocks(5, node);
 	return linkedguid;
 }
 const string OfferNew(const string& node, const string& aliasname, const string& category, const string& title, const string& qtyStr, const string& price, const string& description, const string& currency, const string& certguid, const string& paymentoptions, const string& offerType, const string& auction_expires, const string& auction_reserve, const string& auction_require_witness, const string &auction_deposit, const string& witness)
@@ -1240,6 +1246,7 @@ const string OfferNew(const string& node, const string& aliasname, const string&
 		if (auction_deposit != "''")
 			BOOST_CHECK_EQUAL(((int)(find_value(r.get_obj(), "auction_deposit").get_real() * 1000 + 0.5)), ((int)(boost::lexical_cast<float>(auction_deposit) * 1000)));
 	}
+	GenerateBlocks(5, node);
 	return guid;
 }
 
@@ -1403,6 +1410,7 @@ void OfferUpdate(const string& node, const string& aliasname, const string& offe
 		if (auction_deposit != "''")
 			BOOST_CHECK_EQUAL(((int)(find_value(r.get_obj(), "auction_deposit").get_real() * 1000 + 0.5)), ((int)(boost::lexical_cast<float>(auction_deposit) * 1000)));
 	}
+	GenerateBlocks(5, node);
 }
 
 void EscrowFeedback(const string& node, const string& userfrom, const string& escrowguid, const string& feedback, const string& rating,  const string& userto, const string& witness) {
@@ -1464,6 +1472,7 @@ void EscrowFeedback(const string& node, const string& userfrom, const string& es
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "feedback").get_str() , feedback);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "feedbackuserfrom").get_int() , feedbackuserfromenum);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "feedbackuserto").get_int() , feedbackusertoenum);
+	GenerateBlocks(5, node);
 }
 const string OfferAccept(const string& ownernode, const string& buyernode, const string& aliasname, const string& arbiter, const string& offerguid, const string& qty, const string& witness) {
 	const string &escrowguid = EscrowNewBuyItNow(buyernode, ownernode, aliasname, offerguid, qty, arbiter);
@@ -1550,6 +1559,7 @@ void EscrowBid(const string& node, const string& buyeralias, const string& escro
 		BOOST_CHECK_EQUAL(AmountFromValue(find_value(r.get_obj(), "total_or_bid_in_payment_option_per_unit")), bidPaymentOption);
 		BOOST_CHECK(find_value(r.get_obj(), "buyer").get_str() == buyeralias);
 	}
+	GenerateBlocks(5, node);
 }
 const string EscrowNewAuction(const string& node, const string& sellernode, const string& buyeralias, const string& offerguid, const string& qtyStr, const string& bid_in_offer_currency, const string& arbiteralias, const string& shipping, const string& networkFee, const string& arbiterFee, const string& witnessFee, const string &witness)
 {
@@ -1679,6 +1689,7 @@ const string EscrowNewAuction(const string& node, const string& sellernode, cons
 	BOOST_CHECK_NO_THROW(r = CallRPC(sellernode, "offerinfo " + offerguid));
 	int nQtyAfter = find_value(r.get_obj(), "quantity").get_int();
 	BOOST_CHECK_EQUAL(nQtyAfter, nQtyBefore);
+	GenerateBlocks(5, node);
 	return guid;
 }
 const string EscrowNewBuyItNow(const string& node, const string& sellernode, const string& buyeralias, const string& offerguid, const string& qtyStr, const string& arbiteralias, const string& shipping, const string& networkFee, const string& arbiterFee, const string& witnessFee, const string &witness)
@@ -1925,6 +1936,7 @@ void EscrowRelease(const string& node, const string& role, const string& guid ,c
 		const UniValue &escrowBidAfter = EscrowBidFilterFromGUID(node, guid);
 		BOOST_CHECK(!escrowBidAfter.empty());
 	}
+	GenerateBlocks(5, node);
 }
 void EscrowRefund(const string& node, const string& role, const string& guid, const string &witness)
 {
@@ -2013,6 +2025,7 @@ void EscrowRefund(const string& node, const string& role, const string& guid, co
 		const UniValue &escrowBidAfter = EscrowBidFilterFromGUID(node, guid);
 		BOOST_CHECK(escrowBidAfter.empty());
 	}
+	GenerateBlocks(5, node);
 }
 void EscrowClaimRefund(const string& node, const string& guid)
 {
