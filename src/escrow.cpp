@@ -901,7 +901,9 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 			}
 		}
 	}
-	CEscrow serializedEscrow = theEscrow;
+	CEscrow serializedEscrow;
+	if (op != OP_ESCROW_ACTIVATE)
+		serializedEscrow = theEscrow;
 	if (!GetEscrow(vvchArgs[0], theEscrow))
 	{
 		if (op != OP_ESCROW_ACTIVATE) {
@@ -950,7 +952,8 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 			return true;
 		}
 	}
-	dbEscrow = theEscrow;
+	if (op != OP_ESCROW_ACTIVATE)
+		dbEscrow = theEscrow;
 	// make sure escrow settings don't change (besides scriptSigs/nTotal's) outside of activation
 	if (op != OP_ESCROW_ACTIVATE)
 	{
