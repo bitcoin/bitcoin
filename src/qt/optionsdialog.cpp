@@ -65,6 +65,12 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
     ui->tabWidget->removeTab(ui->tabWidget->indexOf(ui->tabWindow));
 #endif
 
+#ifndef Q_OS_WIN
+    /* hide tray icon related stuff from Window tab */
+    ui->hideTrayIcon->hide();
+    ui->minimizeToTray->hide();
+#endif
+
     /* remove Wallet tab in case of -disablewallet */
     if (!enableWallet) {
         ui->tabWidget->removeTab(ui->tabWidget->indexOf(ui->tabWallet));
