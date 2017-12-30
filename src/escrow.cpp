@@ -901,6 +901,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 			}
 		}
 	}
+	CEscrow serializedEscrow = theEscrow;
 	if (!GetEscrow(vvchArgs[0], theEscrow))
 	{
 		if (op != OP_ESCROW_ACTIVATE) {
@@ -953,8 +954,6 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 	// make sure escrow settings don't change (besides scriptSigs/nTotal's) outside of activation
 	if (op != OP_ESCROW_ACTIVATE)
 	{
-		// save serialized escrow for later use
-		CEscrow serializedEscrow = theEscrow;
 		if (serializedEscrow.buyerAliasTuple != theEscrow.buyerAliasTuple ||
 			serializedEscrow.arbiterAliasTuple != theEscrow.arbiterAliasTuple ||
 			serializedEscrow.sellerAliasTuple != theEscrow.sellerAliasTuple)
