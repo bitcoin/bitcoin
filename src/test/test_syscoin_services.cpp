@@ -1067,10 +1067,12 @@ void CertTransfer(const string& node, const string &tonode, const string& guid, 
 	BOOST_CHECK(find_value(r.get_obj(), "publicvalue").get_str() == pubdata);
 	BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == guid);
 
+	GenerateBlocks(5, node);
+
 	BOOST_CHECK_NO_THROW(r = CallRPC(tonode, "certinfo " + guid));
 	BOOST_CHECK(find_value(r.get_obj(), "alias").get_str() == toalias);
 	BOOST_CHECK(find_value(r.get_obj(), "publicvalue").get_str() == pubdata);
-	GenerateBlocks(5, node);
+	
 }
 const string OfferLink(const string& node, const string& alias, const string& guid, const string& commissionStr, const string& newdetails, const string &witness)
 {
