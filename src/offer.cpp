@@ -796,7 +796,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				theOffer.nQty,
 				tx.GetHash().ToString().c_str(),
 				nHeight,
-				fJustCheck ? 1 : 0);
+				fJustCheck ? 1 : -1);
 	}
 	return true;
 }

@@ -1554,7 +1554,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				stringFromVch(vvchArgs[0]).c_str(),
 				tx.GetHash().ToString().c_str(),
 				nHeight,
-				fJustCheck ? 1 : 0);
+				fJustCheck ? 1 : -1);
 	}
     return true;
 }

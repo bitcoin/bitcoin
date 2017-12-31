@@ -760,7 +760,7 @@ theAlias = dbAlias;
 					"CONNECTED ALIAS: name=%s  op=%s  hash=%s  height=%d fJustCheck=%d\n",
 					stringFromVch(vchAlias).c_str(),
 					aliasFromOp(op).c_str(),
-					tx.GetHash().ToString().c_str(), nHeight, fJustCheck ? 1 : 0);
+					tx.GetHash().ToString().c_str(), nHeight, fJustCheck ? 1 : -1);
 		}
 	}
 
