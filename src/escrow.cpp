@@ -296,11 +296,9 @@ void CEscrowDB::EraseEscrowFeedbackIndex(const std::string& id) {
 		return;
 	bson_error_t error;
 	bson_t *selector = NULL;
-	string id;
 	mongoc_write_concern_t* write_concern = NULL;
 	mongoc_remove_flags_t remove_flags;
 	remove_flags = (mongoc_remove_flags_t)(MONGOC_REMOVE_NONE);
-	id = stringFromVch(vchEscrow);
 	selector = BCON_NEW("_id", BCON_UTF8(id.c_str()));
 	write_concern = mongoc_write_concern_new();
 	mongoc_write_concern_set_w(write_concern, MONGOC_WRITE_CONCERN_W_UNACKNOWLEDGED);
