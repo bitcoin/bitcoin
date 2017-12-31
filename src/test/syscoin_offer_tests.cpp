@@ -333,7 +333,7 @@ BOOST_AUTO_TEST_CASE (generate_offerupdate_editcurrency)
 	// 2690.1 SYS/USD
 	BOOST_CHECK(abs(nTotal - AmountFromValue(2 * 0.05*2690.1)) <= 0.0001*COIN);
 	// perform a valid update
-	OfferUpdate("node1", "selleraliascurrency", offerguid, "category", "titlenew", "90", "0.15", "descriptionnew", "CAD");
+	OfferUpdate("node1", "selleraliascurrency", offerguid, "category", "titlenew", "90", "0.15", "descriptionnew0", "CAD");
 	// accept and confirm payment is accurate with cad
 	escrowguid = OfferAccept("node1", "node2", "buyeraliascurrency", "arbiteraliascurrency", offerguid, "3");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "escrowinfo " + escrowguid));
@@ -347,7 +347,7 @@ BOOST_AUTO_TEST_CASE (generate_offerupdate_editcurrency)
 	BOOST_CHECK(hex_str.empty());
 
 
-	OfferUpdate("node1", "selleraliascurrency", offerguid, "category", "titlenew", "90", "1.00", "descriptionnew", "SYS");
+	OfferUpdate("node1", "selleraliascurrency", offerguid, "category", "titlenew", "90", "1.00", "descriptionnew1", "SYS");
 	// accept and confirm payment is accurate with sys
 	escrowguid = OfferAccept("node1", "node2", "buyeraliascurrency", "arbiteraliascurrency", offerguid, "3");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "escrowinfo " + escrowguid));
@@ -355,7 +355,7 @@ BOOST_AUTO_TEST_CASE (generate_offerupdate_editcurrency)
 	// 1 SYS/SYS
 	BOOST_CHECK(abs(nTotal - AmountFromValue(3)) <= 0.0001*COIN);
 
-	OfferUpdate("node1", "selleraliascurrency", offerguid, "category", "titlenew", "90", "0.00001000", "descriptionnew", "BTC");
+	OfferUpdate("node1", "selleraliascurrency", offerguid, "category", "titlenew", "90", "0.00001000", "descriptionnew2", "BTC");
 	// accept and confirm payment is accurate with btc
 	escrowguid = OfferAccept("node1", "node2", "buyeraliascurrency", "arbiteraliascurrency", offerguid, "4");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "escrowinfo " + escrowguid));
