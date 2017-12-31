@@ -1827,8 +1827,6 @@ const string EscrowNewBuyItNow(const string& node, const string& sellernode, con
 	GenerateBlocks(10, sellernode);
 	BOOST_CHECK_THROW(r = CallRPC(sellernode, "escrowacknowledge " + guid + " ''"), runtime_error);
 	BOOST_CHECK_NO_THROW(r = CallRPC(sellernode, "offerinfo " + offerguid));
-	nQtyAfter = find_value(r.get_obj(), "quantity").get_int();
-	BOOST_CHECK_EQUAL(nQtyAfter, nQtyBefore-qty);
 	return guid;
 }
 void EscrowRelease(const string& node, const string& role, const string& guid ,const string& witness)
@@ -2021,11 +2019,6 @@ void EscrowRefund(const string& node, const string& role, const string& guid, co
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "guid").get_str(), guid);
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "type").get_str(), "Escrow Refunded");
 
-
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "offerinfo " + offer));
-	int nQtyOfferAfter = find_value(r.get_obj(), "quantity").get_int();
-	// refund adds qty
-	BOOST_CHECK_EQUAL(nQtyOfferAfter, nQtyOfferBefore+nQty);
 	if (!bBuyNow) {
 		const UniValue &escrowBidAfter = EscrowBidFilterFromGUID(node, guid);
 		BOOST_CHECK(escrowBidAfter.empty());
@@ -2339,14 +2332,6 @@ void EscrowClaimRelease(const string& node, const string& guid)
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "guid").get_str(), guid);
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "type").get_str(), "Escrow Release Complete");
 
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "offerinfo " + offer));
-	int nQtyOfferAfter = find_value(r.get_obj(), "quantity").get_int();
-	// we have already changed qty as we ack the escrow when calling escrownew in this test suite unless its an auction(we are not acking auction bids or buynow purchases in our test suite)
-	if (offertype.find("AUCTION") == std::string::npos) {
-		BOOST_CHECK_EQUAL(nQtyOfferBefore, nQtyOfferAfter);
-	}
-	else
-		BOOST_CHECK_EQUAL(nQtyOfferBefore-nQty, nQtyOfferAfter);
 
 	// get balances after
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasbalance " + selleralias));

@@ -429,7 +429,7 @@ BOOST_AUTO_TEST_CASE (generate_offeraccept)
 	BOOST_CHECK_THROW(r = CallRPC("node2", "escrownew false buyeralias3 arbiteralias3 " + offerguid + " 0 true 0 0 25 0.005 0 '' SYS 0 0 ''"), runtime_error);
 
 	// perform an accept on more items than available
-	BOOST_CHECK_THROW(r = CallRPC("node2", "escrownew false buyeralias3 arbiteralias3 " + offerguid + " 100 true 0 0 25 0.005 0 '' SYS 0 0 ''"), runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC("node2", "escrownew false buyeralias3 arbiteralias3 " + offerguid + " 101 true 0 0 25 0.005 0 '' SYS 0 0 ''"), runtime_error);
 
 
 }
