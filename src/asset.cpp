@@ -545,6 +545,8 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			}
 			if (dbAsset.txHash != tx.GetHash())
 			{
+				if (fDebug)
+					LogPrintf("ASSET txid mismatch! Recreating...\n");
 				const string &txHashHex = dbAsset.txHash.GetHex();
 				//vector<string> lastReceiverList = dbAsset.listReceivers;
 				// recreate this asset tx from last known good position (last asset stored)
@@ -569,7 +571,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			else {
 				if (!dontaddtodb) {
 					if (fDebug)
-						LogPrintf("CONNECTED ASSET: op=%s asset=%s hash=%s height=%d fJustCheck=%d\n",
+						LogPrintf("CONNECTED ASSET: op=%s asset=%s hash=%s height=%d fJustCheck=%d POW IS\n",
 							assetFromOp(op).c_str(),
 							stringFromVch(vvchArgs[0]).c_str(),
 							tx.GetHash().ToString().c_str(),

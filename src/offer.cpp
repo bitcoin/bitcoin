@@ -592,6 +592,8 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			}
 			if (dbOffer.txHash != tx.GetHash())
 			{
+				if (fDebug)
+					LogPrintf("OFFER txid mismatch! Recreating...\n");
 				if (!dontaddtodb) {
 					const string &txHashHex = dbOffer.txHash.GetHex();
 					paliasdb->EraseAliasIndexTxHistory(txHashHex);
@@ -611,7 +613,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			else {
 				if (!dontaddtodb) {
 					if (fDebug)
-						LogPrintf("CONNECTED OFFER: op=%s offer=%s qty=%u hash=%s height=%d fJustCheck=%d\n",
+						LogPrintf("CONNECTED OFFER: op=%s offer=%s qty=%u hash=%s height=%d fJustCheck=%d POW IS\n",
 							offerFromOp(op).c_str(),
 							stringFromVch(vvchArgs[0]).c_str(),
 							theOffer.nQty,

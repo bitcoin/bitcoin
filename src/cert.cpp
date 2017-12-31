@@ -538,6 +538,8 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 			} 
 			if (dbCert.txHash != tx.GetHash())
 			{
+				if (fDebug)
+					LogPrintf("CERT txid mismatch! Recreating...\n");
 				const string &txHashHex = dbCert.txHash.GetHex();
 				if (op != OP_CERT_ACTIVATE && !pcertdb->ReadLastCert(vvchArgs[0], dbCert)) {
 					errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 1048 - " + _("Failed to read last certificate from certificate DB");
@@ -556,7 +558,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 			else {
 				if (!dontaddtodb) {
 					if (fDebug)
-						LogPrintf("CONNECTED CERT: op=%s cert=%s hash=%s height=%d fJustCheck=%d\n",
+						LogPrintf("CONNECTED CERT: op=%s cert=%s hash=%s height=%d fJustCheck=%d POW IS\n",
 							certFromOp(op).c_str(),
 							stringFromVch(vvchArgs[0]).c_str(),
 							tx.GetHash().ToString().c_str(),
