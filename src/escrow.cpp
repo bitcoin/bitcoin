@@ -1565,8 +1565,6 @@ UniValue escrowbid(const UniValue& params, bool fHelp) {
 
 	vector<unsigned char> vchWitness;
 	vchWitness = vchFromValue(params[4]);
-	bool fUseInstantSend = false;
-	fUseInstantSend = params[5].get_bool();
 	CAliasIndex bidderalias;
 	if (!GetAlias(vchAlias, bidderalias))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4512 - " + _("Could not find alias with this name"));
@@ -1627,7 +1625,7 @@ UniValue escrowbid(const UniValue& params, bool fHelp) {
 	CCoinControl coinControl;
 	coinControl.fAllowOtherInputs = false;
 	coinControl.fAllowWatchOnly = false;
-	SendMoneySyscoin(vchAlias, vchWitness, aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl, fUseInstantSend);
+	SendMoneySyscoin(vchAlias, vchWitness, aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
 	UniValue res(UniValue::VARR);
 	res.push_back(EncodeHexTx(wtx));
 	return res;
@@ -1647,8 +1645,6 @@ UniValue escrowaddshipping(const UniValue& params, bool fHelp) {
 
 	vector<unsigned char> vchWitness;
 	vchWitness = vchFromValue(params[2]);
-	bool fUseInstantSend = false;
-	fUseInstantSend = params[3].get_bool();
 	CScript scriptPubKeyAliasOrig, scriptPubKeyAlias;
 	CEscrow theEscrow;
 
