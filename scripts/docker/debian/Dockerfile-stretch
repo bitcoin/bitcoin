@@ -1,0 +1,15 @@
+FROM debian:stretch
+
+#Default repo is peercoin
+ARG REPO_NAME=peercoin
+#Default branch name develop
+ARG BRANCH_NAME=develop
+
+RUN apt-get -qq update && \
+    apt-get -qqy install \
+	git \
+	sudo
+RUN git clone https://github.com/$REPO_NAME/peercoin --branch $BRANCH_NAME --single-branch --depth 1 &&  cd peercoin && ./scripts/dependencies-ubuntu.sh && ./scripts/install-ubuntu.sh && \
+	apt-get purge git build-essential -qy && \
+	apt-get autoremove -qy && \
+	apt-get clean
