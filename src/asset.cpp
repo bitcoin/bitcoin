@@ -154,6 +154,8 @@ void CAssetDB::WriteAssetIndexHistory(const CAsset& asset, const int &op) {
 		mongoc_write_concern_destroy(write_concern);
 }
 void CAssetDB::EraseAssetIndexHistory(const std::vector<unsigned char>& vchAsset, bool cleanup) {
+	if (!assethistory_collection)
+		return;
 	bson_error_t error;
 	bson_t *selector = NULL;
 	mongoc_write_concern_t* write_concern = NULL;
@@ -171,6 +173,8 @@ void CAssetDB::EraseAssetIndexHistory(const std::vector<unsigned char>& vchAsset
 		mongoc_write_concern_destroy(write_concern);
 }
 void CAssetDB::EraseAssetIndexHistory(const std::string& id) {
+	if (!assethistory_collection)
+		return;
 	bson_error_t error;
 	bson_t *selector = NULL;
 	mongoc_write_concern_t* write_concern = NULL;

@@ -1327,6 +1327,8 @@ void COfferDB::WriteOfferIndexHistory(const COffer& offer, const int &op) {
 		mongoc_write_concern_destroy(write_concern);
 }
 void COfferDB::EraseOfferIndexHistory(const std::vector<unsigned char>& vchOffer, bool cleanup) {
+	if (!offerhistory_collection)
+		return;
 	bson_error_t error;
 	bson_t *selector = NULL;
 	mongoc_write_concern_t* write_concern = NULL;
@@ -1344,6 +1346,8 @@ void COfferDB::EraseOfferIndexHistory(const std::vector<unsigned char>& vchOffer
 		mongoc_write_concern_destroy(write_concern);
 }
 void COfferDB::EraseOfferIndexHistory(const string &id) {
+	if (!offerhistory_collection)
+		return;
 	bson_error_t error;
 	bson_t *selector = NULL;
 	mongoc_write_concern_t* write_concern = NULL;

@@ -1699,6 +1699,8 @@ void CAliasDB::WriteAliasIndexHistory(const CAliasIndex& alias, const int &op) {
 		mongoc_write_concern_destroy(write_concern);
 }
 void CAliasDB::EraseAliasIndexHistory(const std::vector<unsigned char>& vchAlias, bool cleanup) {
+	if (!aliashistory_collection)
+		return;
 	bson_error_t error;
 	bson_t *selector = NULL;
 	mongoc_write_concern_t* write_concern = NULL;
@@ -1716,6 +1718,8 @@ void CAliasDB::EraseAliasIndexHistory(const std::vector<unsigned char>& vchAlias
 		mongoc_write_concern_destroy(write_concern);
 }
 void CAliasDB::EraseAliasIndexHistory(const string& id) {
+	if (!aliashistory_collection)
+		return;
 	bson_error_t error;
 	bson_t *selector = NULL;
 	mongoc_write_concern_t* write_concern = NULL;
@@ -1733,6 +1737,8 @@ void CAliasDB::EraseAliasIndexHistory(const string& id) {
 		mongoc_write_concern_destroy(write_concern);
 }
 void CAliasDB::EraseAliasIndex(const std::vector<unsigned char>& vchAlias, bool cleanup) {
+	if (!alias_collection)
+		return;
 	bson_error_t error;
 	bson_t *selector = NULL;
 	mongoc_write_concern_t* write_concern = NULL;
@@ -1791,6 +1797,8 @@ void CAliasDB::WriteAliasIndexTxHistory(const string &user1, const string &user2
 		mongoc_write_concern_destroy(write_concern);
 }
 void CAliasDB::EraseAliasIndexTxHistory(const std::vector<unsigned char>& vchAlias, bool cleanup) {
+	if (!aliastxhistory_collection)
+		return;
 	bson_error_t error;
 	bson_t *selector = NULL;
 	mongoc_write_concern_t* write_concern = NULL;
@@ -1799,7 +1807,7 @@ void CAliasDB::EraseAliasIndexTxHistory(const std::vector<unsigned char>& vchAli
 	selector = BCON_NEW("alias", BCON_UTF8(stringFromVch(vchAlias).c_str()));
 	write_concern = mongoc_write_concern_new();
 	mongoc_write_concern_set_w(write_concern, MONGOC_WRITE_CONCERN_W_UNACKNOWLEDGED);
-	if (!mongoc_collection_remove(aliashistory_collection, remove_flags, selector, cleanup ? NULL : write_concern, &error)) {
+	if (!mongoc_collection_remove(aliastxhistory_collection, remove_flags, selector, cleanup ? NULL : write_concern, &error)) {
 		LogPrintf("MONGODB ALIAS HISTORY REMOVE ERROR: %s\n", error.message);
 	}
 	if (selector)
@@ -1808,6 +1816,8 @@ void CAliasDB::EraseAliasIndexTxHistory(const std::vector<unsigned char>& vchAli
 		mongoc_write_concern_destroy(write_concern);
 }
 void CAliasDB::EraseAliasIndexTxHistory(const string& id) {
+	if (!aliastxhistory_collection)
+		return;
 	bson_error_t error;
 	bson_t *selector = NULL;
 	mongoc_write_concern_t* write_concern = NULL;
@@ -1816,7 +1826,7 @@ void CAliasDB::EraseAliasIndexTxHistory(const string& id) {
 	selector = BCON_NEW("_id", BCON_UTF8(id.c_str()));
 	write_concern = mongoc_write_concern_new();
 	mongoc_write_concern_set_w(write_concern, MONGOC_WRITE_CONCERN_W_UNACKNOWLEDGED);
-	if (!mongoc_collection_remove(aliashistory_collection, remove_flags, selector, write_concern, &error)) {
+	if (!mongoc_collection_remove(aliastxhistory_collection, remove_flags, selector, write_concern, &error)) {
 		LogPrintf("MONGODB ALIAS HISTORY REMOVE ERROR: %s\n", error.message);
 	}
 	if (selector)
