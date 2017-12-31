@@ -541,7 +541,7 @@ BOOST_AUTO_TEST_CASE (generate_offerexpiredexmode)
 	ExpireAlias("selleralias10");
 
 	// should fail: remove whitelist item from expired offer
-	string whiteListArray = "\"{\\\"aliases\\\":[{\\\"alias\\\":\\\"selleralias11\\\",\\\"discount_percentage\\\":10}]}\"";
+	string whiteListArray = "\"[{\\\"alias\\\":\\\"selleralias11\\\",\\\"discount_percentage\\\":10}]\"";
 	BOOST_CHECK_THROW(CallRPC("node1", "aliasupdatewhitelist selleralias10 " + whiteListArray + " ''"), runtime_error);
 	// should fail: clear whitelist from expired offer
 	BOOST_CHECK_THROW(r = CallRPC("node1", "aliasclearwhitelist selleralias10 ''"), runtime_error);
