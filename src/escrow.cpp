@@ -902,8 +902,10 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 		}
 	}
 	CEscrow serializedEscrow;
-	if (op != OP_ESCROW_ACTIVATE)
+	if (op != OP_ESCROW_ACTIVATE) {
 		serializedEscrow = theEscrow;
+		escrowOp = serializedEscrow.op;
+	}
 	if (!GetEscrow(vvchArgs[0], theEscrow))
 	{
 		if (op != OP_ESCROW_ACTIVATE) {
@@ -938,10 +940,24 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				}
 			}
 			else {
-				if (!dontaddtodb && !pescrowdb->EraseISLock(vvchArgs[0]))
-				{
-					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from escrow DB");
-					return error(errorMessage.c_str());
+				if (!dontaddtodb) {
+					if (fDebug)
+						LogPrintf("CONNECTED ESCROW: op=%s escrow=%s hash=%s height=%d fJustCheck=%d\n",
+							escrowFromOp(op).c_str(),
+							stringFromVch(vvchArgs[0]).c_str(),
+							tx.GetHash().ToString().c_str(),
+							nHeight,
+							fJustCheck ? 1 : 0);
+					if (!pescrowdb->Write(make_pair(std::string("escrowp"), vvchArgs[0]), theEscrow))
+					{
+						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to write previous escrow to escrow DB");
+						return error(errorMessage.c_str());
+					}
+					if (!pescrowdb->EraseISLock(vvchArgs[0]))
+					{
+						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from escrow DB");
+						return error(errorMessage.c_str());
+					}
 				}
 				return true;
 			}
@@ -977,7 +993,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 		if (!serializedEscrow.scriptSigs.empty())
 			theEscrow.scriptSigs = serializedEscrow.scriptSigs;
 
-		escrowOp = serializedEscrow.op;
+		
 		if (op == OP_ESCROW_BID) {
 			if (theEscrow.op != OP_ESCROW_ACTIVATE)
 			{

@@ -567,17 +567,24 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					}
 				}
 				else {
-					if (fDebug)
-						LogPrintf(
-							"CONNECTED ALIAS: name=%s  op=%s  hash=%s  height=%d fJustCheck=%d\n",
-							stringFromVch(vchAlias).c_str(),
-							aliasFromOp(op).c_str(),
-							tx.GetHash().ToString().c_str(), nHeight, fJustCheck ? 1 : 0);
-				
-					if (!dontaddtodb && !paliasdb->EraseISLock(vvchArgs[0]))
-					{
-						errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from alias DB");
-						return error(errorMessage.c_str());
+					if (!dontaddtodb) {
+						if (fDebug)
+							LogPrintf(
+								"CONNECTED ALIAS: name=%s  op=%s  hash=%s  height=%d fJustCheck=%d\n",
+								stringFromVch(vchAlias).c_str(),
+								aliasFromOp(op).c_str(),
+								tx.GetHash().ToString().c_str(), nHeight, fJustCheck ? 1 : 0);
+
+						if (!paliasdb->Write(make_pair(std::string("aliasp"), vvchArgs[0]), dbAlias))
+						{
+							errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to write previous alias to alias DB");
+							return error(errorMessage.c_str());
+						}
+						if (!paliasdb->EraseISLock(vvchArgs[0]))
+						{
+							errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from alias DB");
+							return error(errorMessage.c_str());
+						}
 					}
 					return true;
 				}

@@ -563,10 +563,24 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				}
 			}
 			else {
-				if (!dontaddtodb && !passetdb->EraseISLock(vvchArgs[0]))
-				{
-					errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from asset DB");
-					return error(errorMessage.c_str());
+				if (!dontaddtodb) {
+					if (fDebug)
+						LogPrintf("CONNECTED ASSET: op=%s asset=%s hash=%s height=%d fJustCheck=%d\n",
+							assetFromOp(op).c_str(),
+							stringFromVch(vvchArgs[0]).c_str(),
+							tx.GetHash().ToString().c_str(),
+							nHeight,
+							fJustCheck ? 1 : 0);
+					if (!passetdb->Write(make_pair(std::string("assetp"), vvchArgs[0]), dbAsset))
+					{
+						errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to write previous asset to asset DB");
+						return error(errorMessage.c_str());
+					}
+					if (!passetdb->EraseISLock(vvchArgs[0]))
+					{
+						errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from asset DB");
+						return error(errorMessage.c_str());
+					}
 				}
 				return true;
 			}

@@ -609,10 +609,25 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				}
 			}
 			else {
-				if (!dontaddtodb && !pofferdb->EraseISLock(vvchArgs[0]))
-				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from offer DB");
-					return error(errorMessage.c_str());
+				if (!dontaddtodb) {
+					if (fDebug)
+						LogPrintf("CONNECTED OFFER: op=%s offer=%s qty=%u hash=%s height=%d fJustCheck=%d\n",
+							offerFromOp(op).c_str(),
+							stringFromVch(vvchArgs[0]).c_str(),
+							theOffer.nQty,
+							tx.GetHash().ToString().c_str(),
+							nHeight,
+							fJustCheck ? 1 : 0);
+					if (!pofferdb->Write(make_pair(std::string("offerp"), vvchArgs[0]), dbOffer))
+					{
+						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to write previous offer to offer DB");
+						return error(errorMessage.c_str());
+					}
+					if (!pofferdb->EraseISLock(vvchArgs[0]))
+					{
+						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from offer DB");
+						return error(errorMessage.c_str());
+					}
 				}
 				return true;
 			}

@@ -550,17 +550,24 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 				}
 			}
 			else {
-				if (fDebug)
-					LogPrintf("CONNECTED CERT: op=%s cert=%s hash=%s height=%d fJustCheck=%d\n",
-						certFromOp(op).c_str(),
-						stringFromVch(vvchArgs[0]).c_str(),
-						tx.GetHash().ToString().c_str(),
-						nHeight,
-						fJustCheck ? 1 : 0);
-				if (!dontaddtodb && !pcertdb->EraseISLock(vvchArgs[0]))
-				{
-					errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from certificate DB");
-					return error(errorMessage.c_str());
+				if (!dontaddtodb) {
+					if (fDebug)
+						LogPrintf("CONNECTED CERT: op=%s cert=%s hash=%s height=%d fJustCheck=%d\n",
+							certFromOp(op).c_str(),
+							stringFromVch(vvchArgs[0]).c_str(),
+							tx.GetHash().ToString().c_str(),
+							nHeight,
+							fJustCheck ? 1 : 0);
+					if (!pcertdb->Write(make_pair(std::string("certp"), vvchArgs[0]), dbCert))
+					{
+						errorMessage = "SYSCOIN_CERT_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to write previous cert to cert DB");
+						return error(errorMessage.c_str());
+					}
+					if (!pcertdb->EraseISLock(vvchArgs[0]))
+					{
+						errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from certificate DB");
+						return error(errorMessage.c_str());
+					}
 				}
 				return true;
 			}
