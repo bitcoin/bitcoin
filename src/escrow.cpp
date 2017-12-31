@@ -291,6 +291,27 @@ void CEscrowDB::EraseEscrowFeedbackIndex(const std::vector<unsigned char>& vchEs
 	if (write_concern)
 		mongoc_write_concern_destroy(write_concern);
 }
+void CEscrowDB::EraseEscrowFeedbackIndex(const std::string& id) {
+	if (!feedback_collection)
+		return;
+	bson_error_t error;
+	bson_t *selector = NULL;
+	string id;
+	mongoc_write_concern_t* write_concern = NULL;
+	mongoc_remove_flags_t remove_flags;
+	remove_flags = (mongoc_remove_flags_t)(MONGOC_REMOVE_NONE);
+	id = stringFromVch(vchEscrow);
+	selector = BCON_NEW("_id", BCON_UTF8(id.c_str()));
+	write_concern = mongoc_write_concern_new();
+	mongoc_write_concern_set_w(write_concern, MONGOC_WRITE_CONCERN_W_UNACKNOWLEDGED);
+	if (!mongoc_collection_remove(feedback_collection, remove_flags, selector, cleanup ? NULL : write_concern, &error)) {
+		LogPrintf("MONGODB ESCROW FEEDBACK REMOVE ERROR: %s\n", error.message);
+	}
+	if (selector)
+		bson_destroy(selector);
+	if (write_concern)
+		mongoc_write_concern_destroy(write_concern);
+}
 void CEscrowDB::WriteEscrowBidIndex(const CEscrow& escrow, const string& status) {
 	if (!escrowbid_collection || escrow.op != OP_ESCROW_ACTIVATE)
 		return;
@@ -939,6 +960,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				if (!dontaddtodb) {
 					paliasdb->EraseAliasIndexTxHistory(txHashHex);
 					pescrowdb->EraseEscrowBidIndex(txHashHex);
+					pescrowdb->EraseEscrowFeedbackIndex(txHashHex);
 				}
 			}
 			else {
@@ -1233,8 +1255,8 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 			{
 				if (dbOffer.auctionOffer.bRequireWitness && serializedEscrow.vchWitness.empty())
 				{
-				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4042 - " + _("Offer auction release requires a witness signature but none provided");
-				return true;
+					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4042 - " + _("Offer auction release requires a witness signature but none provided");
+					return true;
 				}
 			}
 
@@ -1325,7 +1347,6 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 			if (!dontaddtodb) {
 				pescrowdb->WriteEscrowFeedbackIndex(serializedEscrow);
 			}
-			return true;
 		}
 
 	}
