@@ -302,7 +302,7 @@ void CEscrowDB::EraseEscrowFeedbackIndex(const std::string& id) {
 	selector = BCON_NEW("_id", BCON_UTF8(id.c_str()));
 	write_concern = mongoc_write_concern_new();
 	mongoc_write_concern_set_w(write_concern, MONGOC_WRITE_CONCERN_W_UNACKNOWLEDGED);
-	if (!mongoc_collection_remove(feedback_collection, remove_flags, selector, cleanup ? NULL : write_concern, &error)) {
+	if (!mongoc_collection_remove(feedback_collection, remove_flags, selector, write_concern, &error)) {
 		LogPrintf("MONGODB ESCROW FEEDBACK REMOVE ERROR: %s\n", error.message);
 	}
 	if (selector)
