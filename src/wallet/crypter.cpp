@@ -144,7 +144,7 @@ static bool DecryptKey(const CKeyingMaterial& vMasterKey, const std::vector<unsi
 
 bool CCryptoKeyStore::SetCrypted()
 {
-    
+
     LOCK(cs_KeyStore);
     if (fUseCrypto)
         return true;
@@ -163,7 +163,7 @@ bool CCryptoKeyStore::Lock()
         LOCK(cs_KeyStore);
         vMasterKey.clear();
     }
-    
+
     NotifyStatusChanged(this);
     return true;
 }
@@ -176,17 +176,17 @@ bool CCryptoKeyStore::Unlock(const CKeyingMaterial& vMasterKeyIn)
             return false;
         bool keyPass = false;
         bool keyFail = false;
-        
+
         size_t nTries = 0;
         CryptedKeyMap::const_iterator mi = mapCryptedKeys.begin();
         for (; mi != mapCryptedKeys.end(); ++mi)
         {
             const CPubKey &vchPubKey = (*mi).second.first;
             const std::vector<unsigned char> &vchCryptedSecret = (*mi).second.second;
-            
+
             if (vchCryptedSecret.size() == 0) // unexpanded key received on stealth address
                 continue;
-            
+
             nTries++;
             CKey key;
             if (!DecryptKey(vMasterKeyIn, vchCryptedSecret, vchPubKey, key))
@@ -218,15 +218,15 @@ bool CCryptoKeyStore::AddKeyPubKey(const CKey& key, const CPubKey &pubkey)
         LOCK(cs_KeyStore);
         if (!IsCrypted())
             return CBasicKeyStore::AddKeyPubKey(key, pubkey);
-        
+
         if (IsLocked())
             return false;
-        
+
         std::vector<unsigned char> vchCryptedSecret;
         CKeyingMaterial vchSecret(key.begin(), key.end());
         if (!EncryptSecret(vMasterKey, vchSecret, pubkey.GetHash(), vchCryptedSecret))
             return false;
-        
+
         if (!AddCryptedKey(pubkey, vchCryptedSecret))
             return false;
     }
@@ -239,8 +239,8 @@ bool CCryptoKeyStore::AddCryptedKey(const CPubKey &vchPubKey, const std::vector<
         LOCK(cs_KeyStore);
         if (!SetCrypted())
             return false;
-        
-        
+
+
         mapCryptedKeys[vchPubKey.GetID()] = make_pair(vchPubKey, vchCryptedSecret);
     }
     return true;
