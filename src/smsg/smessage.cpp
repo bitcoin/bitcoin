@@ -2850,7 +2850,6 @@ int SecureMsgValidate(uint8_t *pHeader, uint8_t *pPayload, uint32_t nPayload)
 
         CTransactionRef txOut;
         uint256 hashBlock;
-        CAmount nTotalMsgFees = 0, nTotalOut = 0, nTotalIn = 0, nTxFee = 0;
         {
             LOCK(cs_main);
             if (!GetTransaction(txid, txOut, Params().GetConsensus(), hashBlock) || hashBlock.IsNull())
@@ -2872,26 +2871,10 @@ int SecureMsgValidate(uint8_t *pHeader, uint8_t *pPayload, uint32_t nPayload)
                 return errorN(SMSG_GENERAL_ERROR, "%s: Transaction %s for message %s, low depth %d.\n", __func__, txid.ToString(), msgId.ToString(), blockDepth);
 
             bool fFound = false;
-            size_t nCt = 0, nRingCT = 0;
             // Find all msg pairs
-            // TODO: Next hardfork enforce message funding fees at consensus level
+            // Message funding is enforced in tx_verify.cpp
             for (const auto &v : txOut->vpout)
             {
-                if (v->IsType(OUTPUT_CT))
-                {
-                    nCt++;
-                    continue;
-                };
-                if (v->IsType(OUTPUT_RINGCT))
-                {
-                    nRingCT++;
-                    continue;
-                };
-                if (v->IsType(OUTPUT_STANDARD))
-                {
-                    nTotalOut += v->GetValue();
-                    continue;
-                };
                 if (!v->IsType(OUTPUT_DATA))
                     continue;
                 CTxOutData *txd = (CTxOutData*) v.get();
@@ -2904,7 +2887,6 @@ int SecureMsgValidate(uint8_t *pHeader, uint8_t *pPayload, uint32_t nPayload)
                 {
                     uint160 *pMsgIdTx = (uint160*)&txd->vData[1+k*24];
                     uint32_t *nAmount = (uint32_t*)&txd->vData[1+k*24+20];
-                    nTotalMsgFees += *nAmount;
 
                     if (*pMsgIdTx == msgId)
                     {
