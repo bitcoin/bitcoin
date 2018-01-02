@@ -639,7 +639,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 	}
 	else
 	{
-		if (fJustCheck && ReadCert(vvchArgs[0], theCert))
+		if (fJustCheck && GetCert(vvchArgs[0], theCert))
 		{
 			errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2027 - " + _("Certificate already exists");
 			return true;
