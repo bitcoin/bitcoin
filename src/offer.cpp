@@ -319,9 +319,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		LogPrintf("*** OFFER %d %d %s %s %s %d\n", nHeight,
 			chainActive.Tip()->nHeight, tx.GetHash().ToString().c_str(),
 			fJustCheck ? "JUSTCHECK" : "BLOCK", " VVCH SIZE: ", vvchArgs.size());
-	bool foundAlias = false;
-	int prevAliasOp = 0;
-	vector<vector<unsigned char> > vvchPrevAliasArgs;
 	// unserialize msg from txn, check for valid
 	COffer theOffer;
 	vector<unsigned char> vchData;
@@ -352,33 +349,15 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1005 - " + _("Hash provided doesn't match the calculated hash of the data");
 			return true;
 		}
-		
-		
-
-
-		// Strict check - bug disallowed
-		for (unsigned int i = 0; i < tx.vin.size(); i++) {
-			vector<vector<unsigned char> > vvch;
-			int pop;
-			CCoins prevCoins;
-			// ensure inputs are unspent when doing consensus check to add to block
-			if (!GetUTXOCoins(tx.vin[i].prevout, prevCoins) || !IsSyscoinScript(prevCoins.vout[tx.vin[i].prevout.n].scriptPubKey, pop, vvch))
-			{
-				continue;
-			}
-			if(foundAlias)
-				break;
-			if (!foundAlias && IsAliasOp(pop) && vvch.size() >= 2 && vvchAliasArgs.size() >= 2 && theOffer.vchAlias == vvch[0] && vvchAliasArgs[1] == vvch[1])
-			{
-				foundAlias = true;
-				prevAliasOp = pop;
-				vvchPrevAliasArgs = vvch;
-			}
-		}
-
 	}
 
-
+	if (theOffer.vchAlias != vvchAliasArgs[0]) {
+		errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 4003 - " + _("Alias input mismatch");
+		if (fJustCheck)
+			return error(errorMessage.c_str());
+		else
+			return true;
+	}
 	// unserialize offer from txn, check for valid
 	COffer linkOffer;
 	COffer myOffer;
@@ -421,11 +400,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		}
 		switch (op) {
 		case OP_OFFER_ACTIVATE:
-			if(!IsAliasOp(prevAliasOp) || vvchPrevAliasArgs.empty())
-			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1015 - " + _("Alias input mismatch");
-				return error(errorMessage.c_str());
-			}
 			if(!ValidatePaymentOptionsMask(theOffer.paymentOptions))
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1016 - " + _("Invalid payment option");
@@ -495,12 +469,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				}
 			}
 			break;
-		case OP_OFFER_UPDATE:
-			if(!IsAliasOp(prevAliasOp) || vvchPrevAliasArgs.empty())
-			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1026 - " + _("Alias input mismatch");
-				return error(errorMessage.c_str());
-			}		
+		case OP_OFFER_UPDATE:		
 			if(theOffer.paymentOptions > 0 && !ValidatePaymentOptionsMask(theOffer.paymentOptions))
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1027 - " + _("Invalid payment option");
@@ -1009,7 +978,7 @@ UniValue offerlink(const UniValue& params, bool fHelp) {
     vector<unsigned char> vchHashOffer = vchFromValue(hash.GetHex());
 	CSyscoinAddress aliasAddress;
 	GetAddress(alias, &aliasAddress, scriptPubKeyOrig);
-	scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_OFFER) << CScript::EncodeOP_N(OP_OFFER_ACTIVATE) << vchOffer << vchHashOffer << OP_2DROP << OP_2DROP;
+	scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_OFFER) << CScript::EncodeOP_N(OP_OFFER_ACTIVATE) << vchHashOffer << OP_2DROP << OP_DROP;
 	scriptPubKey += scriptPubKeyOrig;
 	CScript scriptPubKeyAlias;
 	scriptPubKeyAlias << CScript::EncodeOP_N(OP_SYSCOIN_ALIAS) << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << alias.vchAlias << alias.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;

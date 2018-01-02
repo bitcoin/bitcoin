@@ -539,9 +539,6 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 		LogPrintf("*Trying to add escrow in coinbase transaction, skipping...");
 		return true;
 	}
-	int prevAliasOp = 0;
-	bool foundAlias = false;
-	bool foundWitnessAlias = false;
 	if (fDebug && !dontaddtodb)
 		LogPrintf("*** ESCROW %d %d %s %s\n", nHeight,
 			chainActive.Tip()->nHeight, tx.GetHash().ToString().c_str(),
@@ -564,7 +561,6 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 		return true;
 	}
 
-	vector<vector<unsigned char> > vvchPrevAliasArgs;
 	if(fJustCheck)
 	{
 		if(vvchArgs.size() != 1)
@@ -578,27 +574,13 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 			return true;
 		}
 		
-
-
-		// Strict check - bug disallowed
-		for (unsigned int i = 0; i < tx.vin.size(); i++) {
-			vector<vector<unsigned char> > vvch;
-			int pop;
-			CCoins prevCoins;
-			// ensure inputs are unspent when doing consensus check to add to block
-			if (!GetUTXOCoins(tx.vin[i].prevout, prevCoins) || !IsSyscoinScript(prevCoins.vout[tx.vin[i].prevout.n].scriptPubKey, pop, vvch))
-			{
-				continue;
-			}
-			if (foundAlias)
-				break;
-			else if (!foundAlias && IsAliasOp(pop) && vvch.size() >= 2 && vvchAliasArgs.size() >= 2 && theEscrow.vchLinkAlias == vvch[0] && vvchAliasArgs[1] == vvch[1])
-			{
-				foundAlias = true;
-				prevAliasOp = pop;
-				vvchPrevAliasArgs = vvch;
-			}
-		}
+	}
+	if (theEscrow.vchLinkAlias != vvchAliasArgs[0]) {
+		errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4003 - " + _("Alias input mismatch");
+		if(fJustCheck)
+			return error(errorMessage.c_str());
+		else
+			return true;
 	}
 
 	CAliasIndex buyerAlias, sellerAlias, arbiterAlias;
@@ -631,18 +613,8 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 		}
 		switch (op) {
 			case OP_ESCROW_ACKNOWLEDGE:
-				if (!IsAliasOp(prevAliasOp) || vvchPrevAliasArgs.empty() || theEscrow.vchLinkAlias != vvchPrevAliasArgs[0])
-				{
-					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4010 - " + _("Alias input mismatch");
-					return error(errorMessage.c_str());
-				}
 				break;
 			case OP_ESCROW_ACTIVATE:
-				if(!IsAliasOp(prevAliasOp) || vvchPrevAliasArgs.empty() || theEscrow.vchLinkAlias != vvchPrevAliasArgs[0])
-				{
-					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4011 - " + _("Alias input mismatch");
-					return error(errorMessage.c_str());
-				}
 				if(theEscrow.op != OP_ESCROW_ACTIVATE)
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4012 - " + _("Invalid op, should be escrow activate");
@@ -670,12 +642,6 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				}
 				break;
 			case OP_ESCROW_BID:
-				
-				if (!IsAliasOp(prevAliasOp) || vvchPrevAliasArgs.empty() || theEscrow.vchLinkAlias != vvchPrevAliasArgs[0])
-				{
-					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4011 - " + _("Alias input mismatch");
-					return error(errorMessage.c_str());
-				}
 				if (theEscrow.op != OP_ESCROW_ACTIVATE)
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4012 - " + _("Invalid op, should be escrow activate");
@@ -694,12 +660,6 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				}
 				break;
 			case OP_ESCROW_ADD_SHIPPING:
-
-				if (!IsAliasOp(prevAliasOp) || vvchPrevAliasArgs.empty() || theEscrow.vchLinkAlias != vvchPrevAliasArgs[0])
-				{
-					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4011 - " + _("Alias input mismatch");
-					return error(errorMessage.c_str());
-				}
 				if (theEscrow.op != OP_ESCROW_ADD_SHIPPING)
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4012 - " + _("Invalid op, should be escrow activate");
@@ -712,11 +672,6 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				}
 				break;
 			case OP_ESCROW_RELEASE:
-				if (!IsAliasOp(prevAliasOp) || vvchPrevAliasArgs.empty() || theEscrow.vchLinkAlias != vvchPrevAliasArgs[0])
-				{
-					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4011 - " + _("Alias input mismatch");
-					return error(errorMessage.c_str());
-				}
 				if(!theEscrow.feedback.IsNull())
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4020 - " + _("Cannot leave feedback in escrow release");
@@ -734,11 +689,6 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				}
 				break;
 			case OP_ESCROW_RELEASE_COMPLETE:
-				if (!IsAliasOp(prevAliasOp) || vvchPrevAliasArgs.empty() || theEscrow.vchLinkAlias != vvchPrevAliasArgs[0])
-				{
-					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4011 - " + _("Alias input mismatch");
-					return error(errorMessage.c_str());
-				}
 				if (!theEscrow.feedback.IsNull())
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4020 - " + _("Cannot leave feedback in escrow release");
@@ -752,11 +702,6 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				}
 				break;
 			case OP_ESCROW_FEEDBACK:
-				if (!IsAliasOp(prevAliasOp) || vvchPrevAliasArgs.empty() || theEscrow.vchLinkAlias != vvchPrevAliasArgs[0])
-				{
-					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4011 - " + _("Alias input mismatch");
-					return error(errorMessage.c_str());
-				}
 				if (theEscrow.op == OP_ESCROW_REFUND_COMPLETE || theEscrow.op == OP_ESCROW_RELEASE_COMPLETE)
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4024 - " + _("Invalid op, should be escrow complete");
@@ -775,12 +720,6 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				}
 				break;
 			case OP_ESCROW_REFUND:
-				if (!IsAliasOp(prevAliasOp) || vvchPrevAliasArgs.empty() || theEscrow.vchLinkAlias != vvchPrevAliasArgs[0])
-				{
-					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4011 - " + _("Alias input mismatch");
-					return error(errorMessage.c_str());
-				}
-
 				if(theEscrow.op != OP_ESCROW_REFUND)
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4031 - " + _("Invalid op, should be escrow refund");
@@ -802,12 +741,6 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 
 				break;
 			case OP_ESCROW_REFUND_COMPLETE:
-				if (!IsAliasOp(prevAliasOp) || vvchPrevAliasArgs.empty() || theEscrow.vchLinkAlias != vvchPrevAliasArgs[0])
-				{
-					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4011 - " + _("Alias input mismatch");
-					return error(errorMessage.c_str());
-				}
-		
 				if (theEscrow.op != OP_ESCROW_REFUND_COMPLETE)
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4030 - " + _("Invalid op, should be escrow complete");

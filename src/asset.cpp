@@ -341,14 +341,12 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		LogPrintf("*** ASSET %d %d %s %s\n", nHeight,
 			chainActive.Tip()->nHeight, tx.GetHash().ToString().c_str(),
 			fJustCheck ? "JUSTCHECK" : "BLOCK");
-	int prevAliasOp = 0;
     // Make sure asset outputs are not spent by a regular transaction, or the asset would be lost
 	if (tx.nVersion != SYSCOIN_TX_VERSION) 
 	{
 		errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2000 - " + _("Non-Syscoin transaction found");
 		return true;
 	}
-	vector<vector<unsigned char> > vvchPrevAliasArgs;
 	// unserialize asset from txn, check for valid
 	CAsset theAsset;
 	vector<unsigned char> vchData;
@@ -374,27 +372,15 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2003 - " + _("Hash provided doesn't match the calculated hash of the data");
 			return true;
 		}
-		// Strict check - bug disallowed
-		for (unsigned int i = 0; i < tx.vin.size(); i++) {
-			vector<vector<unsigned char> > vvch;
-			int pop;
-			CCoins prevCoins;
-			// ensure inputs are unspent when doing consensus check to add to block
-			if (!GetUTXOCoins(tx.vin[i].prevout, prevCoins) || !IsSyscoinScript(prevCoins.vout[tx.vin[i].prevout.n].scriptPubKey, pop, vvch))
-			{
-				continue;
-			}
-
-			else if (IsAliasOp(pop) && vvch.size() >= 2 && vvchAliasArgs.size() >= 2 && theAsset.vchAlias == vvch[0] && vvchAliasArgs[1] == vvch[1])
-			{
-				prevAliasOp = pop;
-				vvchPrevAliasArgs = vvch;
-				break;
-			}
-		}
 			
 	}
-
+	if (theAsset.vchAlias != vvchAliasArgs[0]) {
+		errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 4003 - " + _("Alias input mismatch");
+		if (fJustCheck)
+			return error(errorMessage.c_str());
+		else
+			return true;
+	}
 	
 	CAliasIndex alias;
 	string retError = "";
@@ -417,11 +403,6 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2010 - " + _("Asset linked alias not allowed in activate");
 				return error(errorMessage.c_str());
 			}
-			if(!IsAliasOp(prevAliasOp) || vvchPrevAliasArgs.empty())
-			{
-				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2011 - " + _("Alias input mismatch");
-				return error(errorMessage.c_str());
-			}
 			if((theAsset.vchName.size() > MAX_ID_LENGTH || theAsset.vchName.empty()))
 			{
 				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2012 - " + _("Asset title too big or is empty");
@@ -440,11 +421,6 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2015 - " + _("Asset name cannot be changed");
 				return error(errorMessage.c_str());
 			}
-			if(!IsAliasOp(prevAliasOp) || vvchPrevAliasArgs.empty())
-			{
-				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2016 - " + _("Alias input mismatch");
-				return error(errorMessage.c_str());
-			}
 			if(theAsset.sCategory.size() > 0 && !boost::algorithm::istarts_with(stringFromVch(theAsset.sCategory), "assets"))
 			{
 				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2017 - " + _("Must use a asset category");
@@ -453,11 +429,6 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			break;
 
 		case OP_ASSET_TRANSFER:
-			if(!IsAliasOp(prevAliasOp) || vvchPrevAliasArgs.empty())
-			{
-				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2019 - " + _("Alias input mismatch");
-				return error(errorMessage.c_str());
-			}
 			break;
 
 		default:

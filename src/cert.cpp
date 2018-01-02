@@ -353,15 +353,12 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 		LogPrintf("*** CERT %d %d %s %s\n", nHeight,
 			chainActive.Tip()->nHeight, tx.GetHash().ToString().c_str(),
 			fJustCheck ? "JUSTCHECK" : "BLOCK");
-	bool foundAlias = false;
-	int prevAliasOp = 0;
     // Make sure cert outputs are not spent by a regular transaction, or the cert would be lost
 	if (tx.nVersion != SYSCOIN_TX_VERSION) 
 	{
 		errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2000 - " + _("Non-Syscoin transaction found");
 		return true;
 	}
-	vector<vector<unsigned char> > vvchPrevAliasArgs;
 	// unserialize cert from txn, check for valid
 	CCert theCert;
 	vector<unsigned char> vchData;
@@ -379,36 +376,20 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 		{
 			errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2002 - " + _("Certificate arguments incorrect size");
 			return error(errorMessage.c_str());
-		}
-
-					
+		}			
 		if(vchHash != vvchArgs[0])
 		{
 			errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2003 - " + _("Hash provided doesn't match the calculated hash of the data");
 			return true;
-		}
-			
-		// Strict check - bug disallowed
-		for (unsigned int i = 0; i < tx.vin.size(); i++) {
-			vector<vector<unsigned char> > vvch;
-			int pop;
-			CCoins prevCoins;
-			// ensure inputs are unspent when doing consensus check to add to block
-			if (!GetUTXOCoins(tx.vin[i].prevout, prevCoins) || !IsSyscoinScript(prevCoins.vout[tx.vin[i].prevout.n].scriptPubKey, pop, vvch))
-			{
-				continue;
-			}
-			if(foundAlias)
-				break;
-			else if (!foundAlias && IsAliasOp(pop) && vvch.size() >= 2 && vvchAliasArgs.size() >= 2 && theCert.vchAlias == vvch[0] && vvchAliasArgs[1] == vvch[1])
-			{
-				foundAlias = true; 
-				prevAliasOp = pop;
-				vvchPrevAliasArgs = vvch;
-			}
-		}
+		}	
 	}
-
+	if (theCert.vchAlias != vvchAliasArgs[0]) {
+		errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 4003 - " + _("Alias input mismatch");
+		if (fJustCheck)
+			return error(errorMessage.c_str());
+		else
+			return true;
+	}
 
 	
 	CAliasIndex alias;
@@ -437,11 +418,6 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2010 - " + _("Certificate linked alias not allowed in activate");
 				return error(errorMessage.c_str());
 			}
-			if(!IsAliasOp(prevAliasOp) || vvchPrevAliasArgs.empty())
-			{
-				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2011 - " + _("Alias input mismatch");
-				return error(errorMessage.c_str());
-			}
 			if((theCert.vchTitle.size() > MAX_NAME_LENGTH || theCert.vchTitle.empty()))
 			{
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2012 - " + _("Certificate title too big or is empty");
@@ -460,11 +436,6 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2015 - " + _("Certificate title too big");
 				return error(errorMessage.c_str());
 			}
-			if(!IsAliasOp(prevAliasOp) || vvchPrevAliasArgs.empty())
-			{
-				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2016 - " + _("Alias input mismatch");
-				return error(errorMessage.c_str());
-			}
 			if(theCert.sCategory.size() > 0 && !boost::algorithm::istarts_with(stringFromVch(theCert.sCategory), "certificates"))
 			{
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2017 - " + _("Must use a certificate category");
@@ -473,11 +444,6 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 			break;
 
 		case OP_CERT_TRANSFER:
-			if(!IsAliasOp(prevAliasOp) || vvchPrevAliasArgs.empty())
-			{
-				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2019 - " + _("Alias input mismatch");
-				return error(errorMessage.c_str());
-			}
 			if(theCert.sCategory.size() > 0 && !boost::algorithm::istarts_with(stringFromVch(theCert.sCategory), "certificates"))
 			{
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2020 - " + _("Must use a certificate category");

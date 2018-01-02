@@ -271,14 +271,12 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 		LogPrintf("*** ASSET ALLOCATION %d %d %s %s\n", nHeight,
 			chainActive.Tip()->nHeight, tx.GetHash().ToString().c_str(),
 			fJustCheck ? "JUSTCHECK" : "BLOCK");
-	int prevAliasOp = 0;
     // Make sure assetallocation outputs are not spent by a regular transaction, or the assetallocation would be lost
 	if (tx.nVersion != SYSCOIN_TX_VERSION) 
 	{
 		errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2000 - " + _("Non-Syscoin transaction found");
 		return true;
 	}
-	vector<vector<unsigned char> > vvchPrevAliasArgs;
 	// unserialize assetallocation from txn, check for valid
 	CAssetAllocation theAssetAllocation;
 	vector<unsigned char> vchData;
@@ -301,40 +299,22 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 		{
 			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2003 - " + _("Hash provided doesn't match the calculated hash of the data");
 			return true;
-		}
-		// Strict check - bug disallowed
-		for (unsigned int i = 0; i < tx.vin.size(); i++) {
-			vector<vector<unsigned char> > vvch;
-			int pop;
-			CCoins prevCoins;
-			// ensure inputs are unspent when doing consensus check to add to block
-			if (!GetUTXOCoins(tx.vin[i].prevout, prevCoins) || !IsSyscoinScript(prevCoins.vout[tx.vin[i].prevout.n].scriptPubKey, pop, vvch))
-			{
-				continue;
-			}
-
-			else if (IsAliasOp(pop) && vvch.size() >= 2 && vvchAliasArgs.size() >= 2 && theAssetAllocation.vchLinkAlias == vvch[0] && vvchAliasArgs[1] == vvch[1])
-			{
-				prevAliasOp = pop;
-				vvchPrevAliasArgs = vvch;
-				break;
-			}
-		}
-			
+		}		
 	}
 
-	
+	if (theAssetAllocation.vchLinkAlias != vvchAliasArgs[0]) {
+		errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 4003 - " + _("Alias input mismatch");
+		if (fJustCheck)
+			return error(errorMessage.c_str());
+		else
+			return true;
+	}
 	CAliasIndex alias;
 	string retError = "";
 	if(fJustCheck)
 	{
 		switch (op) {
 		case OP_ASSET_ALLOCATION_SEND:
-			if (!IsAliasOp(prevAliasOp) || vvchPrevAliasArgs.empty())
-			{
-				errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2019 - " + _("Alias input mismatch");
-				return error(errorMessage.c_str());
-			}
 			break;
 
 		default:
