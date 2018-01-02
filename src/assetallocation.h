@@ -46,7 +46,7 @@ public:
 	CAssetAllocationTuple() {
 		SetNull();
 	}
-	inline CNameTXIDTuple operator=(const CAssetAllocationTuple& other) {
+	inline CAssetAllocationTuple operator=(const CAssetAllocationTuple& other) {
 		this->vchAsset = other.vchAsset;
 		this->vchAlias = other.vchAlias;
 		return *this;
@@ -115,7 +115,7 @@ public:
 		return !(a == b);
 	}
 	inline void SetNull() { listAllocations.clear();  nAmount = 0; vchAsset.clear(); vchLinkAlias.clear(); nHeight = 0; txHash.SetNull(); vchAlias.clear(); }
-	inline bool IsNull() const { return (vchAsset.first.empty()); }
+	inline bool IsNull() const { return (vchAsset.empty()); }
 	bool UnserializeFromTx(const CTransaction &tx);
 	bool UnserializeFromData(const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash);
 	void Serialize(std::vector<unsigned char>& vchData);
@@ -127,7 +127,7 @@ public:
 	CAssetAllocationDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "assetallocations", nCacheSize, fMemory, fWipe) {}
 
     bool WriteAssetAllocation(const CAssetAllocation& assetallocation, const CAssetAllocation& prevAssetAllocation, const int &op, const bool& fJustCheck) {
-		const CAssetAllocationTuple allocationTuple(assetallocation.vchAssetAllocation, assetallocation.vchAlias);
+		const CAssetAllocationTuple allocationTuple(assetallocation.vchAsset, assetallocation.vchAlias);
 		bool writeState = Write(make_pair(std::string("assetallocationi"), allocationTuple), assetallocation);
 		if (!fJustCheck && !prevAssetAllocation.IsNull())
 			writeState = writeState && Write(make_pair(std::string("assetallocationp"), allocationTuple), prevAssetAllocation);
