@@ -1128,8 +1128,6 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4046 - " + _("Only arbiter or seller can initiate an escrow refund");
 				return true;
 			}
-			if (!serializedEscrow.vchWitness.empty())
-				theEscrow.vchWitness = serializedEscrow.vchWitness;
 			theEscrow.role = serializedEscrow.role;
 			// if this escrow was actually a series of bids, set the bid status to 'refunded' in escrow bid collection
 			if (!dontaddtodb && !theEscrow.bBuyNow) {
