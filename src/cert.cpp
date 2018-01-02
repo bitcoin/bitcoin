@@ -514,7 +514,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 	string user2 = "";
 	string user3 = "";
 	if (op == OP_CERT_TRANSFER) {
-		if (!theCert.vchLinkAlias.IsNull())
+		if (!theCert.vchLinkAlias.empty())
 			user2 = stringFromVch(theCert.vchLinkAlias);
 	}
 	// if not an certnew, load the cert data from the DB

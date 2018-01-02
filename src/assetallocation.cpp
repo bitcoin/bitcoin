@@ -249,7 +249,7 @@ bool DecodeAssetAllocationScript(const CScript& script, int& op,
     CScript::const_iterator pc = script.begin();
     return DecodeAssetAllocationScript(script, op, vvch, pc);
 }
-bool RemoveAssetScriptPrefix(const CScript& scriptIn, CScript& scriptOut) {
+bool RemoveAssetAllocationScriptPrefix(const CScript& scriptIn, CScript& scriptOut) {
     int op;
     vector<vector<unsigned char> > vvch;
     CScript::const_iterator pc = scriptIn.begin();

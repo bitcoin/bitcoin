@@ -7,7 +7,8 @@
 
 #include "rpc/server.h"
 #include "dbwrapper.h"
-#include "feedback.h"
+#include "script/script.h"
+#include "serialize.h"
 #include "primitives/transaction.h"
 class CWalletTx;
 class CTransaction;
