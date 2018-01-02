@@ -100,7 +100,7 @@ public:
 			);
 	}
 
-	inline CAsset operator=(const CAssetAllocation &b) {
+	inline CAssetAllocation operator=(const CAssetAllocation &b) {
 		vchAsset = b.vchAsset;
 		txHash = b.txHash;
 		nHeight = b.nHeight;
