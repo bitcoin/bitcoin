@@ -3038,13 +3038,15 @@ string GetSyscoinTransactionDescription(const int op, string& responseEnglish, c
 			strResponse = _("Asset Updated");
 			responseEnglish = "Asset Updated";
 		}
-		else if (op == OP_ASSET_ALLOCATION_SEND) {
-			strResponse = _("Asset Allocation Sent");
-			responseEnglish = "Asset Allocation Sent";
-		}
 		else if (op == OP_ASSET_TRANSFER) {
 			strResponse = _("Asset Transferred");
 			responseEnglish = "Asset Transferred";
+		}
+	}
+	else if (type == ASSETALLOCATION) {
+		if (op == OP_ASSET_ALLOCATION_SEND) {
+			strResponse = _("Asset Allocation Sent");
+			responseEnglish = "Asset Allocation Sent";
 		}
 	}
 	else if (type == ESCROW) {
