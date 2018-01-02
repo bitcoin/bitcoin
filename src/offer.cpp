@@ -214,7 +214,7 @@ bool COfferDB::CleanupDatabase(int &servicesCleaned)
 
 bool GetOffer(const vector<unsigned char> &vchOffer,
 				  COffer& txPos) {
-	if (!pofferdb->ReadOffer(vchOffer, txPos))
+	if (!pofferdb || !pofferdb->ReadOffer(vchOffer, txPos))
 		return false;
 	if (chainActive.Tip()->GetMedianTimePast() >= GetOfferExpiration(txPos))
 	{
@@ -309,6 +309,8 @@ bool RemoveOfferScriptPrefix(const CScript& scriptIn, CScript& scriptOut) {
 }
 
 bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const std::vector<std::vector<unsigned char> > &vvchAliasArgs, bool fJustCheck, int nHeight, string &errorMessage, bool dontaddtodb) {
+	if (!pofferdb || !paliasdb)
+		return false;
 	if (tx.IsCoinBase() && !fJustCheck && !dontaddtodb)
 	{
 		LogPrintf("*Trying to add offer in coinbase transaction, skipping...");
@@ -1327,7 +1329,7 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 	vector<unsigned char> vchOffer = vchFromValue(params[0]);
 	COffer txPos;
 
-	if (!pofferdb->ReadOffer(vchOffer, txPos))
+	if (!pofferdb || !pofferdb->ReadOffer(vchOffer, txPos))
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR: ERRCODE: 5536 - " + _("Failed to read from offer DB"));
 
 	if(!BuildOfferJson(txPos, oOffer))

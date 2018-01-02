@@ -234,7 +234,7 @@ bool CCertDB::CleanupDatabase(int &servicesCleaned)
 bool GetCert(const vector<unsigned char> &vchCert,
         CCert& txPos) {
 	uint256 txid;
-    if (!pcertdb->ReadCert(vchCert, txPos))
+    if (!pcertdb || !pcertdb->ReadCert(vchCert, txPos))
         return false;
     if (chainActive.Tip()->GetMedianTimePast() >= GetCertExpiration(txPos)) {
 		txPos.SetNull();
@@ -245,7 +245,7 @@ bool GetCert(const vector<unsigned char> &vchCert,
 }
 bool GetFirstCert(const vector<unsigned char> &vchCert,
 	CCert& txPos) {
-	if (!pcertdb->ReadFirstCert(vchCert, txPos))
+	if (!pcertdb || !pcertdb->ReadFirstCert(vchCert, txPos))
 		return false;
 	if (chainActive.Tip()->GetMedianTimePast() >= GetCertExpiration(txPos)) {
 		txPos.SetNull();
@@ -344,6 +344,8 @@ bool RemoveCertScriptPrefix(const CScript& scriptIn, CScript& scriptOut) {
 
 bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const std::vector<std::vector<unsigned char> > &vvchAliasArgs,
         bool fJustCheck, int nHeight, string &errorMessage, bool dontaddtodb) {
+	if (!pcertdb || !paliasdb)
+		return false;
 	if (tx.IsCoinBase() && !fJustCheck && !dontaddtodb)
 	{
 		LogPrintf("*Trying to add cert in coinbase transaction, skipping...");
@@ -906,7 +908,7 @@ UniValue certinfo(const UniValue& params, bool fHelp) {
 	UniValue oCert(UniValue::VOBJ);
 
 	CCert txPos;
-	if (!pcertdb->ReadCert(vchCert, txPos))
+	if (!pcertdb || !pcertdb->ReadCert(vchCert, txPos))
 		throw runtime_error("SYSCOIN_CERT_RPC_ERROR: ERRCODE: 5536 - " + _("Failed to read from cert DB"));
 
 	if(!BuildCertJson(txPos, oCert))

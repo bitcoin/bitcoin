@@ -135,7 +135,7 @@ bool GetTimeToPrune(const CScript& scriptPubKey, uint64_t &nTime)
 		// nHeight is set to the height at which data is pruned, if the tip is newer than nHeight it won't send data to other nodes
 		// we want to keep history of all of the old tx's related to aliases that were renewed, we can't delete its history otherwise we won't know 
 		// to tell nodes that aliases were renewed and to update their info pertaining to that alias.
-		if (paliasdb->ReadAliasUnprunable(alias.vchAlias, aliasUnprunable) && !aliasUnprunable.IsNull())
+		if (paliasdb && paliasdb->ReadAliasUnprunable(alias.vchAlias, aliasUnprunable) && !aliasUnprunable.IsNull())
 		{
 			// if we are renewing alias then prune based on max of expiry of alias in tx vs the stored alias expiry time of latest alias tx
 			if (!alias.vchGUID.empty() && aliasUnprunable.vchGUID != alias.vchGUID)
@@ -155,7 +155,7 @@ bool GetTimeToPrune(const CScript& scriptPubKey, uint64_t &nTime)
 	}
 	else if(offer.UnserializeFromData(vchData, vchHash))
 	{
-		if (!pofferdb->ReadOffer(offer.vchOffer, offer))
+		if (!pofferdb || !pofferdb->ReadOffer(offer.vchOffer, offer))
 		{
 			// setting to the tip means we don't prune this data, we keep it
 			nTime = chainActive.Tip()->GetMedianTimePast() + 1;
@@ -166,7 +166,7 @@ bool GetTimeToPrune(const CScript& scriptPubKey, uint64_t &nTime)
 	}
 	else if(cert.UnserializeFromData(vchData, vchHash))
 	{
-		if (!pcertdb->ReadCert(cert.vchCert, cert))
+		if (!pcertdb || !pcertdb->ReadCert(cert.vchCert, cert))
 		{
 			// setting to the tip means we don't prune this data, we keep it
 			nTime = chainActive.Tip()->GetMedianTimePast() + 1;
@@ -177,7 +177,7 @@ bool GetTimeToPrune(const CScript& scriptPubKey, uint64_t &nTime)
 	}
 	else if(escrow.UnserializeFromData(vchData, vchHash))
 	{
-		if (!pescrowdb->ReadEscrow(escrow.vchEscrow, escrow))
+		if (!pescrowdb || !pescrowdb->ReadEscrow(escrow.vchEscrow, escrow))
 		{
 			// setting to the tip means we don't prune this data, we keep it
 			nTime = chainActive.Tip()->GetMedianTimePast() + 1;
@@ -188,7 +188,7 @@ bool GetTimeToPrune(const CScript& scriptPubKey, uint64_t &nTime)
 	}
 	else if (asset.UnserializeFromData(vchData, vchHash))
 	{
-		if (!passetdb->ReadAsset(asset.vchAsset, asset))
+		if (!passetdb || !passetdb->ReadAsset(asset.vchAsset, asset))
 		{
 			// setting to the tip means we don't prune this data, we keep it
 			nTime = chainActive.Tip()->GetMedianTimePast() + 1;
@@ -199,7 +199,7 @@ bool GetTimeToPrune(const CScript& scriptPubKey, uint64_t &nTime)
 	}
 	else if (assetallocation.UnserializeFromData(vchData, vchHash))
 	{
-		if (!passetallocationdb->ReadAssetAllocation(CAssetAllocationTuple(assetallocation.vchAsset, assetallocation.vchAlias), assetallocation))
+		if (!passetallocationdb || !passetallocationdb->ReadAssetAllocation(CAssetAllocationTuple(assetallocation.vchAsset, assetallocation.vchAlias), assetallocation))
 		{
 			// setting to the tip means we don't prune this data, we keep it
 			nTime = chainActive.Tip()->GetMedianTimePast() + 1;
@@ -307,6 +307,8 @@ int GetSyscoinTxVersion()
 }
 
 bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, string &errorMessage, bool &bDestCheckFailed, bool dontaddtodb) {
+	if (!paliasdb)
+		return false;
 	if (tx.IsCoinBase() && !fJustCheck && !dontaddtodb)
 	{
 		LogPrintf("*Trying to add alias in coinbase transaction, skipping...");
@@ -964,7 +966,7 @@ void CleanupSyscoinServiceDatabases(int &numServicesCleaned)
 }
 bool GetAlias(const vector<unsigned char> &vchAlias,
 	CAliasIndex& txPos) {
-	if (!paliasdb->ReadAlias(vchAlias, txPos))
+	if (!paliasdb || !paliasdb->ReadAlias(vchAlias, txPos))
 		return false;
 	
 	if (chainActive.Tip()->GetMedianTimePast() >= txPos.nExpireTime) {
@@ -2641,7 +2643,7 @@ UniValue aliasinfo(const UniValue& params, bool fHelp) {
 				"Show values of an alias.\n");
 	vector<unsigned char> vchAlias = vchFromValue(params[0]);
 	CAliasIndex txPos;
-	if (!paliasdb->ReadAlias(vchAlias, txPos))
+	if (!paliasdb || !paliasdb->ReadAlias(vchAlias, txPos))
 		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5535 - " + _("Failed to read from alias DB"));
 
 	UniValue oName(UniValue::VOBJ);

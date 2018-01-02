@@ -234,7 +234,7 @@ bool CAssetDB::CleanupDatabase(int &servicesCleaned)
 }
 bool GetAsset(const vector<unsigned char> &vchAsset,
         CAsset& txPos) {
-    if (!passetdb->ReadAsset(vchAsset, txPos))
+    if (!passetdb || !passetdb->ReadAsset(vchAsset, txPos))
         return false;
 	if (chainActive.Tip()->GetMedianTimePast() >= GetAssetExpiration(txPos)) {
 		txPos.SetNull();
@@ -332,6 +332,8 @@ bool RemoveAssetScriptPrefix(const CScript& scriptIn, CScript& scriptOut) {
 
 bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const std::vector<std::vector<unsigned char> > &vvchAliasArgs,
         bool fJustCheck, int nHeight, string &errorMessage, bool dontaddtodb) {
+	if (!paliasdb || !passetdb)
+		return false;
 	if (tx.IsCoinBase() && !fJustCheck && !dontaddtodb)
 	{
 		LogPrintf("*Trying to add asset in coinbase transaction, skipping...");
@@ -844,7 +846,7 @@ UniValue assetinfo(const UniValue& params, bool fHelp) {
 	UniValue oAsset(UniValue::VOBJ);
 
 	CAsset txPos;
-	if (!passetdb->ReadAsset(vchAsset, txPos))
+	if (!passetdb || !passetdb->ReadAsset(vchAsset, txPos))
 		throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 5536 - " + _("Failed to read from asset DB"));
 
 	if(!BuildAssetJson(txPos, oAsset))

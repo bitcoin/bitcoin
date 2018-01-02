@@ -420,7 +420,7 @@ bool CEscrowDB::CleanupDatabase(int &servicesCleaned)
 bool GetEscrow(const vector<unsigned char> &vchEscrow,
         CEscrow& txPos) {
 
-	if (!pescrowdb->ReadEscrow(vchEscrow, txPos))
+	if (!pescrowdb || !pescrowdb->ReadEscrow(vchEscrow, txPos))
 		return false;
    if (chainActive.Tip()->GetMedianTimePast() >= GetEscrowExpiration(txPos)) {
 		txPos.SetNull();
@@ -534,6 +534,8 @@ bool ValidateExternalPayment(const CEscrow& theEscrow, const bool &dontaddtodb, 
 	return true;
 }
 bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const std::vector<std::vector<unsigned char> > &vvchAliasArgs, bool fJustCheck, int nHeight, string &errorMessage, bool dontaddtodb) {
+	if (!pescrowdb || !paliasdb)
+		return false;
 	if (tx.IsCoinBase() && !fJustCheck && !dontaddtodb)
 	{
 		LogPrintf("*Trying to add escrow in coinbase transaction, skipping...");
@@ -2640,7 +2642,7 @@ UniValue escrowinfo(const UniValue& params, bool fHelp) {
 
     UniValue oEscrow(UniValue::VOBJ);
 	CEscrow txPos;
-	if (!pescrowdb->ReadEscrow(vchEscrow, txPos))
+	if (!pescrowdb || !pescrowdb->ReadEscrow(vchEscrow, txPos))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 5535 - " + _("Failed to read from escrow DB"));
 
 	if(!BuildEscrowJson(txPos, oEscrow))

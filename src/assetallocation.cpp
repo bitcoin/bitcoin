@@ -164,7 +164,7 @@ bool CAssetAllocationDB::CleanupDatabase(int &servicesCleaned)
 }
 bool GetAssetAllocation(const CAssetAllocationTuple &assetAllocationTuple,
         CAssetAllocation& txPos) {
-    if (!passetallocationdb->ReadAssetAllocation(assetAllocationTuple, txPos))
+    if (!passetallocationdb || !passetallocationdb->ReadAssetAllocation(assetAllocationTuple, txPos))
         return false;
 	if (chainActive.Tip()->GetMedianTimePast() >= GetAssetAllocationExpiration(txPos)) {
 		txPos.SetNull();
@@ -262,6 +262,8 @@ bool RemoveAssetAllocationScriptPrefix(const CScript& scriptIn, CScript& scriptO
 
 bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const std::vector<std::vector<unsigned char> > &vvchAliasArgs,
         bool fJustCheck, int nHeight, string &errorMessage, bool dontaddtodb) {
+	if (!paliasdb || !passetallocationdb)
+		return false;
 	if (tx.IsCoinBase() && !fJustCheck && !dontaddtodb)
 	{
 		LogPrintf("*Trying to add assetallocation in coinbase transaction, skipping...");
@@ -544,7 +546,7 @@ UniValue assetallocationinfo(const UniValue& params, bool fHelp) {
 	UniValue oAssetAllocation(UniValue::VOBJ);
 
 	CAssetAllocation txPos;
-	if (!passetallocationdb->ReadAssetAllocation(CAssetAllocationTuple(vchAsset, vchAlias), txPos))
+	if (!passetallocationdb || !passetallocationdb->ReadAssetAllocation(CAssetAllocationTuple(vchAsset, vchAlias), txPos))
 		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 5536 - " + _("Failed to read from assetallocation DB"));
 
 	if(!BuildAssetAllocationJson(txPos, oAssetAllocation))
