@@ -67,13 +67,11 @@ void OptionsModel::Init(bool resetSettings)
         settings.setValue("fMinimizeToTray", false);
     fMinimizeToTray = settings.value("fMinimizeToTray").toBool() && !fHideTrayIcon;
 #else
-    // On systems without tray icon functionality we set some default values
-    // and remove settings from previous versions of the software to not
-    // confuse people looking into the .config or .plist file.
+    // On systems without tray icon functionality we always hide the tray icon
+    // and we never minimize to tray. Therefore, these settings are not read
+    // from the configuration file/registry.
     fHideTrayIcon = true;
-    settings.remove("fHideTrayIcon");
     fMinimizeToTray = false;
-    settings.remove("fMinimizeToTray");
 #endif
 
     if (!settings.contains("fMinimizeOnClose"))
