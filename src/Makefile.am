@@ -232,6 +232,7 @@ libsyscoin_server_a_SOURCES = \
   offer.cpp \
   cert.cpp \
   asset.cpp \
+  assetallocation.cpp \
   escrow.cpp \
   auxpow.cpp \
   addrman.cpp \
