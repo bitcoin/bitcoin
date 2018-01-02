@@ -27,7 +27,7 @@ using namespace std;
 extern mongoc_collection_t *assetallocation_collection;
 extern void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsigned char> &vchWitness, const CRecipient &aliasRecipient, CRecipient &aliasPaymentRecipient, vector<CRecipient> &vecSend, CWalletTx& wtxNew, CCoinControl* coinControl, bool fUseInstantSend=false, bool transferAlias=false);
 bool IsAssetAllocationOp(int op) {
-    return op == OP_ASSET_ALLOCATION_SEND
+	return op == OP_ASSET_ALLOCATION_SEND;
 }
 
 uint64_t GetAssetAllocationExpiration(const CAssetAllocation& assetallocation) {
@@ -141,7 +141,7 @@ bool CAssetAllocationDB::CleanupDatabase(int &servicesCleaned)
 {
 	boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
 	pcursor->SeekToFirst();
-	CAsset txPos;
+	CAssetAllocation txPos;
 	pair<string, CAssetAllocationTuple > key;
 	while (pcursor->Valid()) {
 		boost::this_thread::interruption_point();
@@ -335,17 +335,8 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2004 - " + _("Asset hex guid too long");
 			return error(errorMessage.c_str());
 		}
-		if(theAssetAllocation.sCategory.size() > MAX_NAME_LENGTH)
-		{
-			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2005 - " + _("Asset category too big");
-			return error(errorMessage.c_str());
-		}
-		if(theAssetAllocation.vchPubData.size() > MAX_VALUE_LENGTH)
-		{
-			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2007 - " + _("Asset public data too big");
-			return error(errorMessage.c_str());
-		}
-		if(!theAssetAllocation.vchAsset.empty() && theAssetAllocation.vchAsset != vvchArgs[0])
+
+		if(theAssetAllocation.vchAsset != vvchArgs[0])
 		{
 			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2008 - " + _("Guid in data output doesn't match guid in transaction");
 			return error(errorMessage.c_str());
@@ -448,7 +439,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2024 - " + _("Cannot find asset related to this allocation.");
 			return true;
 		}
-		// if transfering from asset allocation
+		// if transfering from asset allocation or from asset
 		if (dbAssetAllocation.vchAlias != theAssetAllocation.vchLinkAlias && dbAsset.vchAlias != theAssetAllocation.vchLinkAlias)
 		{
 			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot send this assetallocation. Asset allocation owner must sign off on this change.");
