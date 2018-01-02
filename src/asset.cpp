@@ -844,7 +844,7 @@ UniValue assetinfo(const UniValue& params, bool fHelp) {
 	UniValue oAsset(UniValue::VOBJ);
 
 	CAsset txPos;
-	if (!passetdb->ReaAsset(vchAsset, txPos))
+	if (!passetdb->ReadAsset(vchAsset, txPos))
 		throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 5536 - " + _("Failed to read from asset DB"));
 
 	if(!BuildAssetJson(txPos, oAsset))
