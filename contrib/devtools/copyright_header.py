@@ -24,8 +24,10 @@ EXCLUDE = [
     'src/secp256k1/src/java/org_bitcoin_NativeSecp256k1.h',
     'src/secp256k1/src/java/org_bitcoin_Secp256k1Context.c',
     'src/secp256k1/src/java/org_bitcoin_Secp256k1Context.h',
-    # auto generated:
+    # univalue:
+    'src/univalue/test/object.cpp',
     'src/univalue/lib/univalue_escapes.h',
+    # auto generated:
     'src/qt/bitcoinstrings.cpp',
     'src/chainparamsseeds.h',
     # other external copyrights:
