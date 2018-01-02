@@ -341,13 +341,13 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	}
 	if(fJustCheck)
 	{
-		if(vvchArgs.size() != 2)
+		if(vvchArgs.size() != 1)
 		{
 			errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1002 - " + _("Offer arguments incorrect size");
 			return error(errorMessage.c_str());
 		}
 		
-		if(vvchArgs.size() <= 1 || vchHash != vvchArgs[1])
+		if(vchHash != vvchArgs[0])
 		{
 			errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1005 - " + _("Hash provided doesn't match the calculated hash of the data");
 			return true;
@@ -389,11 +389,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	// just check is for the memory pool inclusion, here we can stop bad transactions from entering before we get to include them in a block
 	if(fJustCheck)
 	{
-		if (vvchArgs.empty() || vvchArgs[0].size() > MAX_GUID_LENGTH)
-		{
-			errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1006 - " + _("Offer guid too long");
-			return error(errorMessage.c_str());
-		}
 		if(theOffer.sDescription.size() > MAX_VALUE_LENGTH)
 		{
 			errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1007 - " + _("Offer description too long");
@@ -426,11 +421,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		}
 		switch (op) {
 		case OP_OFFER_ACTIVATE:
-			if (!theOffer.vchOffer.empty() && theOffer.vchOffer != vvchArgs[0])
-			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1014 - " + _("Offer guid in the data output does not match the guid in the transaction");
-				return error(errorMessage.c_str());
-			}
 			if(!IsAliasOp(prevAliasOp) || vvchPrevAliasArgs.empty())
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1015 - " + _("Alias input mismatch");
@@ -446,7 +436,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1016 - " + _("Invalid offer type");
 				return error(errorMessage.c_str());
 			}
-			if ( theOffer.vchOffer != vvchArgs[0])
+			if ( theOffer.vchOffer != theOffer.vchOffer)
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1018 - " + _("Offer input and offer guid mismatch");
 				return error(errorMessage.c_str());
@@ -506,11 +496,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			}
 			break;
 		case OP_OFFER_UPDATE:
-			if (!theOffer.vchOffer.empty() && theOffer.vchOffer != vvchArgs[0])
-			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1014 - " + _("Offer guid in the data output does not match the guid in the transaction");
-				return error(errorMessage.c_str());
-			}
 			if(!IsAliasOp(prevAliasOp) || vvchPrevAliasArgs.empty())
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1026 - " + _("Alias input mismatch");
@@ -524,11 +509,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			if (!ValidateOfferTypeMask(theOffer.offerType))
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1027 - " + _("Invalid offer type");
-				return error(errorMessage.c_str());
-			}
-			if ( theOffer.vchOffer != vvchArgs[0])
-			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1029 - " + _("Offer input and offer guid mismatch");
 				return error(errorMessage.c_str());
 			}
 
@@ -562,7 +542,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	}
 	COffer dbOffer;
 	// load the offer data from the DB
-	if (!GetOffer(vvchArgs[0], dbOffer))
+	if (!GetOffer(theOffer.vchOffer, dbOffer))
 	{
 		if (op == OP_OFFER_UPDATE) {
 			errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1048 - " + _("Failed to read from offer DB");
@@ -572,7 +552,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	else
 	{
 		bool bSendLocked = false;
-		if (!fJustCheck && pofferdb->ReadISLock(vvchArgs[0], bSendLocked) && bSendLocked) {
+		if (!fJustCheck && pofferdb->ReadISLock(theOffer.vchOffer, bSendLocked) && bSendLocked) {
 			if (dbOffer.nHeight >= nHeight)
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Block height of service request must be less than or equal to the stored service block height.");
@@ -582,11 +562,11 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			{
 				if (fDebug)
 					LogPrintf("OFFER txid mismatch! Recreating...\n");
-				if (op != OP_OFFER_ACTIVATE && !pofferdb->ReadLastOffer(vvchArgs[0], dbOffer)) {
+				if (op != OP_OFFER_ACTIVATE && !pofferdb->ReadLastOffer(theOffer.vchOffer, dbOffer)) {
 					dbOffer.SetNull();
 				}
 				if (!dontaddtodb) {
-					if (!pofferdb->EraseISLock(vvchArgs[0]))
+					if (!pofferdb->EraseISLock(theOffer.vchOffer))
 					{
 						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from offer DB");
 						return error(errorMessage.c_str());
@@ -602,17 +582,17 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					if (fDebug)
 						LogPrintf("CONNECTED OFFER: op=%s offer=%s qty=%u hash=%s height=%d fJustCheck=%d POW IS\n",
 							offerFromOp(op).c_str(),
-							stringFromVch(vvchArgs[0]).c_str(),
+							stringFromVch(theOffer.vchOffer).c_str(),
 							theOffer.nQty,
 							tx.GetHash().ToString().c_str(),
 							nHeight,
 							fJustCheck ? 1 : 0);
-					if (!pofferdb->Write(make_pair(std::string("offerp"), vvchArgs[0]), dbOffer))
+					if (!pofferdb->Write(make_pair(std::string("offerp"), theOffer.vchOffer), dbOffer))
 					{
 						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to write previous offer to offer DB");
 						return error(errorMessage.c_str());
 					}
-					if (!pofferdb->EraseISLock(vvchArgs[0]))
+					if (!pofferdb->EraseISLock(theOffer.vchOffer))
 					{
 						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from offer DB");
 						return error(errorMessage.c_str());
@@ -684,7 +664,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	else if(op == OP_OFFER_ACTIVATE)
 	{
 		COfferLinkWhitelistEntry entry;
-		if (fJustCheck && GetOffer(vvchArgs[0], theOffer))
+		if (fJustCheck && GetOffer(theOffer.vchOffer, theOffer))
 		{
 			errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1050 - " + _("Offer already exists");
 			return true;
@@ -757,10 +737,9 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	}
 	if(!dontaddtodb) {
 		string strResponseEnglish = "";
-		string strResponseGUID = "";
-		string strResponse = GetSyscoinTransactionDescription(op, vvchArgs, strResponseEnglish, strResponseGUID, OFFER);
+		string strResponse = GetSyscoinTransactionDescription(op, strResponseEnglish, OFFER);
 		if (strResponse != "") {
-			paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, strResponseGUID);
+			paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, stringFromVch(theOffer.vchOffer));
 		}
 	}
 	theOffer.vchLinkAlias.clear();
@@ -778,7 +757,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		if (fDebug)
 			LogPrintf("CONNECTED OFFER: op=%s offer=%s qty=%u hash=%s height=%d fJustCheck=%d\n",
 				offerFromOp(op).c_str(),
-				stringFromVch(vvchArgs[0]).c_str(),
+				stringFromVch(theOffer.vchOffer).c_str(),
 				theOffer.nQty,
 				tx.GetHash().ToString().c_str(),
 				nHeight,
@@ -933,7 +912,7 @@ UniValue offernew(const UniValue& params, bool fHelp) {
     vector<unsigned char> vchHashOffer = vchFromValue(hash.GetHex());
 	CSyscoinAddress aliasAddress;
 	GetAddress(alias, &aliasAddress, scriptPubKeyOrig);
-	scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_OFFER) << CScript::EncodeOP_N(OP_OFFER_ACTIVATE) << vchOffer << vchHashOffer << OP_2DROP << OP_2DROP;
+	scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_OFFER) << CScript::EncodeOP_N(OP_OFFER_ACTIVATE) << vchHashOffer << OP_2DROP << OP_DROP;
 	scriptPubKey += scriptPubKeyOrig;
 	CScript scriptPubKeyAlias;
 	scriptPubKeyAlias << CScript::EncodeOP_N(OP_SYSCOIN_ALIAS) << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << alias.vchAlias << alias.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
@@ -1224,7 +1203,7 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
     uint256 hash = Hash(data.begin(), data.end());
 
     vector<unsigned char> vchHashOffer = vchFromValue(hash.GetHex());
-	scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_OFFER) << CScript::EncodeOP_N(OP_OFFER_UPDATE) << vchOffer << vchHashOffer << OP_2DROP << OP_2DROP;
+	scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_OFFER) << CScript::EncodeOP_N(OP_OFFER_UPDATE) << vchHashOffer << OP_2DROP << OP_DROP;
 	scriptPubKey += scriptPubKeyOrig;
 
 	vector<CRecipient> vecSend;

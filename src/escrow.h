@@ -30,7 +30,6 @@ enum EscrowRoles {
 class CEscrow {
 public:
 	std::vector<unsigned char> vchEscrow;
-	std::vector<unsigned char> vchWitness;
 	std::vector<unsigned char> vchSellerAlias;
 	std::vector<unsigned char> vchLinkSellerAlias;
 	std::vector<unsigned char> vchArbiterAlias;
@@ -65,7 +64,6 @@ public:
 		vchLinkAlias.clear();
 		vchOffer.clear();
 		scriptSigs.clear();
-		vchWitness.clear();
 		vchRedeemScript.clear();
 		vchSellerAlias.clear();
 		vchArbiterAlias.clear();
@@ -85,7 +83,6 @@ public:
 		READWRITE(vchSellerAlias);
 		READWRITE(vchLinkSellerAlias);
 		READWRITE(vchArbiterAlias);
-		READWRITE(vchWitness);
         READWRITE(vchOffer);
 		READWRITE(scriptSigs);
 		READWRITE(txHash);
@@ -143,7 +140,6 @@ public:
 		nCommission = b.nCommission;
 		nShipping = b.nShipping;
 		nWitnessFee = b.nWitnessFee;
-		vchWitness = b.vchWitness;
 		vchRedeemScript = b.vchRedeemScript;
 		nAmountOrBidPerUnit = b.nAmountOrBidPerUnit;
 		role = b.role;
@@ -153,7 +149,7 @@ public:
     inline friend bool operator!=(const CEscrow &a, const CEscrow &b) {
         return !(a == b);
     }
-	inline void SetNull() { role = 0; nAmountOrBidPerUnit = 0; vchWitness.clear();  fBidPerUnit = 0;  nDeposit = nArbiterFee = nNetworkFee = nCommission = nShipping = nWitnessFee = 0; extTxId.SetNull(); op = 0; bPaymentAck = bBuyNow = false; redeemTxId.SetNull(); vchLinkAlias.clear(); feedback.SetNull(); vchLinkSellerAlias.clear(); vchEscrow.clear(); nHeight = nPaymentOption = 0; txHash.SetNull(); nQty = 0; vchBuyerAlias.clear(); vchArbiterAlias.clear(); vchSellerAlias.clear(); vchOffer.clear(); scriptSigs.clear(); vchRedeemScript.clear(); }
+	inline void SetNull() { role = 0; nAmountOrBidPerUnit = 0; fBidPerUnit = 0;  nDeposit = nArbiterFee = nNetworkFee = nCommission = nShipping = nWitnessFee = 0; extTxId.SetNull(); op = 0; bPaymentAck = bBuyNow = false; redeemTxId.SetNull(); vchLinkAlias.clear(); feedback.SetNull(); vchLinkSellerAlias.clear(); vchEscrow.clear(); nHeight = nPaymentOption = 0; txHash.SetNull(); nQty = 0; vchBuyerAlias.clear(); vchArbiterAlias.clear(); vchSellerAlias.clear(); vchOffer.clear(); scriptSigs.clear(); vchRedeemScript.clear(); }
 	inline bool IsNull() const { return (vchEscrow.empty()); }
     bool UnserializeFromTx(const CTransaction &tx);
 	bool UnserializeFromData(const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash);

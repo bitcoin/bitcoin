@@ -362,14 +362,14 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 
 	if(fJustCheck)
 	{
-		if(vvchArgs.size() != 2)
+		if(vvchArgs.size() != 1)
 		{
 			errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2002 - " + _("Asset arguments incorrect size");
 			return error(errorMessage.c_str());
 		}
 
 					
-		if(vvchArgs.size() <= 1 || vchHash != vvchArgs[1])
+		if(vchHash != vvchArgs[0])
 		{
 			errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2003 - " + _("Hash provided doesn't match the calculated hash of the data");
 			return true;
@@ -400,11 +400,6 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	string retError = "";
 	if(fJustCheck)
 	{
-		if (vvchArgs.empty() ||  vvchArgs[0].size() > MAX_GUID_LENGTH)
-		{
-			errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2004 - " + _("Asset hex guid too long");
-			return error(errorMessage.c_str());
-		}
 		if(theAsset.sCategory.size() > MAX_NAME_LENGTH)
 		{
 			errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2005 - " + _("Asset category too big");
@@ -415,18 +410,8 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2007 - " + _("Asset public data too big");
 			return error(errorMessage.c_str());
 		}
-		if(!theAsset.vchAsset.empty() && theAsset.vchAsset != vvchArgs[0])
-		{
-			errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2008 - " + _("Guid in data output doesn't match guid in transaction");
-			return error(errorMessage.c_str());
-		}
 		switch (op) {
 		case OP_ASSET_ACTIVATE:
-			if (theAsset.vchAsset != vvchArgs[0])
-			{
-				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2009 - " + _("Asset guid mismatch");
-				return error(errorMessage.c_str());
-			}
 			if(!theAsset.vchLinkAlias.empty())
 			{
 				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2010 - " + _("Asset linked alias not allowed in activate");
@@ -450,11 +435,6 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			break;
 
 		case OP_ASSET_UPDATE:
-			if (theAsset.vchAsset != vvchArgs[0])
-			{
-				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2014 - " + _("Asset guid mismatch");
-				return error(errorMessage.c_str());
-			}
 			if(!theAsset.vchName.empty())
 			{
 				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2015 - " + _("Asset name cannot be changed");
@@ -473,11 +453,6 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			break;
 
 		case OP_ASSET_TRANSFER:
-			if (theAsset.vchAsset != vvchArgs[0])
-			{
-				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2018 - " + _("Asset guid mismatch");
-				return error(errorMessage.c_str());
-			}
 			if(!IsAliasOp(prevAliasOp) || vvchPrevAliasArgs.empty())
 			{
 				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2019 - " + _("Alias input mismatch");
@@ -498,7 +473,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			user2 = stringFromVch(theAsset.vchLinkAlias);
 	}
 	CAsset dbAsset;
-	if (!GetAsset(vvchArgs[0], dbAsset))
+	if (!GetAsset(theAsset.vchAsset, dbAsset))
 	{
 		if (op != OP_ASSET_ACTIVATE) {
 			errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2022 - " + _("Failed to read from asset DB");
@@ -508,7 +483,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	else
 	{
 		bool bSendLocked = false;
-		if (!fJustCheck && passetdb->ReadISLock(vvchArgs[0], bSendLocked) && bSendLocked) {
+		if (!fJustCheck && passetdb->ReadISLock(theAsset.vchAsset, bSendLocked) && bSendLocked) {
 			if (dbAsset.nHeight >= nHeight)
 			{
 				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Block height of service request must be less than or equal to the stored service block height.");
@@ -521,11 +496,11 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				const string &txHashHex = dbAsset.txHash.GetHex();
 				//vector<string> lastReceiverList = dbAsset.listReceivers;
 				// recreate this asset tx from last known good position (last asset stored)
-				if (op != OP_ASSET_ACTIVATE && !passetdb->ReadLastAsset(vvchArgs[0], dbAsset)) {
+				if (op != OP_ASSET_ACTIVATE && !passetdb->ReadLastAsset(theAsset.vchAsset, dbAsset)) {
 					dbAsset.SetNull();
 				}
 				if(!dontaddtodb){
-					if (!passetdb->EraseISLock(vvchArgs[0]))
+					if (!passetdb->EraseISLock(theAsset.vchAsset))
 					{
 						errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from asset DB");
 						return error(errorMessage.c_str());
@@ -539,16 +514,16 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					if (fDebug)
 						LogPrintf("CONNECTED ASSET: op=%s asset=%s hash=%s height=%d fJustCheck=%d POW IS\n",
 							assetFromOp(op).c_str(),
-							stringFromVch(vvchArgs[0]).c_str(),
+							stringFromVch(theAsset.vchAsset).c_str(),
 							tx.GetHash().ToString().c_str(),
 							nHeight,
 							fJustCheck ? 1 : 0);
-					if (!passetdb->Write(make_pair(std::string("assetp"), vvchArgs[0]), dbAsset))
+					if (!passetdb->Write(make_pair(std::string("assetp"), theAsset.vchAsset), dbAsset))
 					{
 						errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to write previous asset to asset DB");
 						return error(errorMessage.c_str());
 					}
-					if (!passetdb->EraseISLock(vvchArgs[0]))
+					if (!passetdb->EraseISLock(theAsset.vchAsset))
 					{
 						errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from asset DB");
 						return error(errorMessage.c_str());
@@ -599,7 +574,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	}
 	else
 	{
-		if (fJustCheck && GetAsset(vvchArgs[0], theAsset))
+		if (fJustCheck && GetAsset(theAsset.vchAsset, theAsset))
 		{
 			errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2027 - " + _("Asset already exists");
 			return true;
@@ -607,10 +582,9 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	}
 	if (!dontaddtodb) {
 		string strResponseEnglish = "";
-		string strResponseGUID = "";
-		string strResponse = GetSyscoinTransactionDescription(op, vvchArgs, strResponseEnglish, strResponseGUID, ASSET);
+		string strResponse = GetSyscoinTransactionDescription(op, strResponseEnglish, ASSET);
 		if (strResponse != "") {
-			paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, strResponseGUID);
+			paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, stringFromVch(theAsset.vchAsset));
 		}
 	}
 	theAsset.vchLinkAlias.clear();
@@ -628,7 +602,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		if (fDebug)
 			LogPrintf("CONNECTED ASSET: op=%s asset=%s hash=%s height=%d fJustCheck=%d\n",
 				assetFromOp(op).c_str(),
-				stringFromVch(vvchArgs[0]).c_str(),
+				stringFromVch(theAsset.vchAsset).c_str(),
 				tx.GetHash().ToString().c_str(),
 				nHeight,
 				fJustCheck ? 1 : 0);
@@ -688,7 +662,7 @@ UniValue assetnew(const UniValue& params, bool fHelp) {
  	
     vector<unsigned char> vchHashAsset = vchFromValue(hash.GetHex());
 
-    scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_ASSET) << CScript::EncodeOP_N(OP_ASSET_ACTIVATE) << vchAsset << vchHashAsset << OP_2DROP << OP_2DROP;
+    scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_ASSET) << CScript::EncodeOP_N(OP_ASSET_ACTIVATE) << vchHashAsset << OP_2DROP << OP_DROP;
     scriptPubKey += scriptPubKeyOrig;
 	scriptPubKeyAlias << CScript::EncodeOP_N(OP_SYSCOIN_ALIAS) << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << theAlias.vchAlias << theAlias.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
 	scriptPubKeyAlias += scriptPubKeyOrig;
@@ -773,7 +747,7 @@ UniValue assetupdate(const UniValue& params, bool fHelp) {
     uint256 hash = Hash(data.begin(), data.end());
  	
     vector<unsigned char> vchHashAsset = vchFromValue(hash.GetHex());
-    scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_ASSET) << CScript::EncodeOP_N(OP_ASSET_UPDATE) << vchAsset << vchHashAsset << OP_2DROP << OP_2DROP;
+    scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_ASSET) << CScript::EncodeOP_N(OP_ASSET_UPDATE) << vchHashAsset << OP_2DROP << OP_DROP;
     scriptPubKey += scriptPubKeyOrig;
 
 	vector<CRecipient> vecSend;
@@ -857,7 +831,7 @@ UniValue assettransfer(const UniValue& params, bool fHelp) {
     uint256 hash = Hash(data.begin(), data.end());
  	
     vector<unsigned char> vchHashAsset = vchFromValue(hash.GetHex());
-    scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_ASSET) << CScript::EncodeOP_N(OP_ASSET_TRANSFER) << vchAsset << vchHashAsset << OP_2DROP << OP_2DROP;
+    scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_ASSET) << CScript::EncodeOP_N(OP_ASSET_TRANSFER) << vchHashAsset << OP_2DROP << OP_DROP;
 	scriptPubKey += scriptPubKeyOrig;
     // send the asset pay txn
 	vector<CRecipient> vecSend;

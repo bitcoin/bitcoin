@@ -292,14 +292,12 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 
 	if(fJustCheck)
 	{
-		if(vvchArgs.size() != 2)
+		if(vvchArgs.size() != 1)
 		{
 			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2002 - " + _("Asset arguments incorrect size");
 			return error(errorMessage.c_str());
-		}
-
-					
-		if(vvchArgs.size() <= 1 || vchHash != vvchArgs[1])
+		}		
+		if(vchHash != vvchArgs[0])
 		{
 			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2003 - " + _("Hash provided doesn't match the calculated hash of the data");
 			return true;
@@ -330,24 +328,8 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 	string retError = "";
 	if(fJustCheck)
 	{
-		if (vvchArgs.empty() ||  vvchArgs[0].size() > MAX_GUID_LENGTH)
-		{
-			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2004 - " + _("Asset hex guid too long");
-			return error(errorMessage.c_str());
-		}
-
-		if(theAssetAllocation.vchAsset != vvchArgs[0])
-		{
-			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2008 - " + _("Guid in data output doesn't match guid in transaction");
-			return error(errorMessage.c_str());
-		}
 		switch (op) {
 		case OP_ASSET_ALLOCATION_SEND:
-			if (theAssetAllocation.vchAsset != vvchArgs[0])
-			{
-				errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2018 - " + _("Asset guid mismatch");
-				return error(errorMessage.c_str());
-			}
 			if (!IsAliasOp(prevAliasOp) || vvchPrevAliasArgs.empty())
 			{
 				errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2019 - " + _("Alias input mismatch");
@@ -362,11 +344,11 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 	}
 	const string &user2 = stringFromVch(theAssetAllocation.vchAlias);
 	const string &user1 = stringFromVch(theAssetAllocation.vchLinkAlias);
-	const CAssetAllocationTuple assetAllocationTuple(vvchArgs[0], theAssetAllocation.vchAlias);
+	const CAssetAllocationTuple assetAllocationTuple(theAssetAllocation.vchAsset, theAssetAllocation.vchAlias);
 	string user3 = "";
 	CAssetAllocation dbAssetAllocation;
 	CAsset dbAsset;
-	if (GetAssetAllocation(vvchArgs[0], dbAssetAllocation))
+	if (GetAssetAllocation(assetAllocationTuple, dbAssetAllocation))
 		bool bSendLocked = false;
 		if (!fJustCheck && passetallocationdb->ReadISLock(assetAllocationTuple, bSendLocked) && bSendLocked) {
 			if (dbAssetAllocation.nHeight >= nHeight)
@@ -470,10 +452,9 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 	}
 	if (!dontaddtodb) {
 		string strResponseEnglish = "";
-		string strResponseGUID = "";
-		string strResponse = GetSyscoinTransactionDescription(op, vvchArgs, strResponseEnglish, strResponseGUID, ASSET);
+		string strResponse = GetSyscoinTransactionDescription(op, strResponseEnglish, ASSET);
 		if (strResponse != "") {
-			paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, strResponseGUID);
+			paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, stringFromVch(theAssetAllocation.vchAsset));
 		}
 	}
 	// set the assetallocation's txn-dependent values
@@ -546,7 +527,7 @@ UniValue assetallocationsend(const UniValue& params, bool fHelp) {
 	uint256 hash = Hash(data.begin(), data.end());
 
 	vector<unsigned char> vchHashAsset = vchFromValue(hash.GetHex());
-	scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_ASSET_ALLOCATION) << CScript::EncodeOP_N(OP_ASSET_ALLOCATION_SEND) << vchAsset << vchHashAsset << OP_2DROP << OP_2DROP;
+	scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_ASSET_ALLOCATION) << CScript::EncodeOP_N(OP_ASSET_ALLOCATION_SEND) << vchHashAsset << OP_2DROP << OP_DROP;
 	scriptPubKey += scriptPubKeyOrig;
 	// send the asset pay txn
 	vector<CRecipient> vecSend;

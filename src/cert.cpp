@@ -375,14 +375,14 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 
 	if(fJustCheck)
 	{
-		if(vvchArgs.size() != 2)
+		if(vvchArgs.size() != 1)
 		{
 			errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2002 - " + _("Certificate arguments incorrect size");
 			return error(errorMessage.c_str());
 		}
 
 					
-		if(vvchArgs.size() <= 1 || vchHash != vvchArgs[1])
+		if(vchHash != vvchArgs[0])
 		{
 			errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2003 - " + _("Hash provided doesn't match the calculated hash of the data");
 			return true;
@@ -415,7 +415,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 	string retError = "";
 	if(fJustCheck)
 	{
-		if (vvchArgs.empty() ||  vvchArgs[0].size() > MAX_GUID_LENGTH)
+		if (vvchArgs.empty() ||  theCert.vchCert.size() > MAX_GUID_LENGTH)
 		{
 			errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2004 - " + _("Certificate hex guid too long");
 			return error(errorMessage.c_str());
@@ -430,18 +430,8 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 			errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2007 - " + _("Certificate public data too big");
 			return error(errorMessage.c_str());
 		}
-		if(!theCert.vchCert.empty() && theCert.vchCert != vvchArgs[0])
-		{
-			errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2008 - " + _("Guid in data output doesn't match guid in transaction");
-			return error(errorMessage.c_str());
-		}
 		switch (op) {
 		case OP_CERT_ACTIVATE:
-			if (theCert.vchCert != vvchArgs[0])
-			{
-				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2009 - " + _("Certificate guid mismatch");
-				return error(errorMessage.c_str());
-			}
 			if(!theCert.vchLinkAlias.empty())
 			{
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2010 - " + _("Certificate linked alias not allowed in activate");
@@ -465,11 +455,6 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 			break;
 
 		case OP_CERT_UPDATE:
-			if (theCert.vchCert != vvchArgs[0])
-			{
-				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2014 - " + _("Certificate guid mismatch");
-				return error(errorMessage.c_str());
-			}
 			if(theCert.vchTitle.size() > MAX_NAME_LENGTH)
 			{
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2015 - " + _("Certificate title too big");
@@ -488,11 +473,6 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 			break;
 
 		case OP_CERT_TRANSFER:
-			if (theCert.vchCert != vvchArgs[0])
-			{
-				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2018 - " + _("Certificate guid mismatch");
-				return error(errorMessage.c_str());
-			}
 			if(!IsAliasOp(prevAliasOp) || vvchPrevAliasArgs.empty())
 			{
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2019 - " + _("Alias input mismatch");
@@ -519,7 +499,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 	}
 	// if not an certnew, load the cert data from the DB
 	CCert dbCert;
-	if (!GetCert(vvchArgs[0], dbCert))
+	if (!GetCert(theCert.vchCert, dbCert))
 	{
 		if (op != OP_CERT_ACTIVATE) {
 			errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2022 - " + _("Failed to read from certificate DB");
@@ -529,7 +509,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 	else
 	{
 		bool bSendLocked = false;
-		if (!fJustCheck && pcertdb->ReadISLock(vvchArgs[0], bSendLocked) && bSendLocked) {
+		if (!fJustCheck && pcertdb->ReadISLock(theCert.vchCert, bSendLocked) && bSendLocked) {
 			if (dbCert.nHeight >= nHeight)
 			{
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Block height of service request must be less than or equal to the stored service block height.");
@@ -540,11 +520,11 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 				if (fDebug)
 					LogPrintf("CERT txid mismatch! Recreating...\n");
 				const string &txHashHex = dbCert.txHash.GetHex();
-				if (op != OP_CERT_ACTIVATE && !pcertdb->ReadLastCert(vvchArgs[0], dbCert)) {
+				if (op != OP_CERT_ACTIVATE && !pcertdb->ReadLastCert(theCert.vchCert, dbCert)) {
 					dbCert.SetNull();
 				}
 				if (!dontaddtodb) {
-					if (!pcertdb->EraseISLock(vvchArgs[0]))
+					if (!pcertdb->EraseISLock(theCert.vchCert))
 					{
 						errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from certificate DB");
 						return error(errorMessage.c_str());
@@ -558,16 +538,16 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 					if (fDebug)
 						LogPrintf("CONNECTED CERT: op=%s cert=%s hash=%s height=%d fJustCheck=%d POW IS\n",
 							certFromOp(op).c_str(),
-							stringFromVch(vvchArgs[0]).c_str(),
+							stringFromVch(theCert.vchCert).c_str(),
 							tx.GetHash().ToString().c_str(),
 							nHeight,
 							fJustCheck ? 1 : 0);
-					if (!pcertdb->Write(make_pair(std::string("certp"), vvchArgs[0]), dbCert))
+					if (!pcertdb->Write(make_pair(std::string("certp"), theCert.vchCert), dbCert))
 					{
 						errorMessage = "SYSCOIN_CERT_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to write previous cert to cert DB");
 						return error(errorMessage.c_str());
 					}
-					if (!pcertdb->EraseISLock(vvchArgs[0]))
+					if (!pcertdb->EraseISLock(theCert.vchCert))
 					{
 						errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from certificate DB");
 						return error(errorMessage.c_str());
@@ -639,7 +619,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 	}
 	else
 	{
-		if (fJustCheck && GetCert(vvchArgs[0], theCert))
+		if (fJustCheck && GetCert(theCert.vchCert, theCert))
 		{
 			errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2027 - " + _("Certificate already exists");
 			return true;
@@ -659,7 +639,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 	theCert.txHash = tx.GetHash();
     // write cert  
 	if (!dontaddtodb) {
-		if (!pcertdb->WriteCert(theCert, dbCert, op, fJustCheck) || (op == OP_CERT_ACTIVATE && !pcertdb->WriteFirstCert(vvchArgs[0], theCert)))
+		if (!pcertdb->WriteCert(theCert, dbCert, op, fJustCheck) || (op == OP_CERT_ACTIVATE && !pcertdb->WriteFirstCert(theCert.vchCert, theCert)))
 		{
 			errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to write to certifcate DB");
 			return error(errorMessage.c_str());
@@ -668,7 +648,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 		if (fDebug)
 			LogPrintf("CONNECTED CERT: op=%s cert=%s hash=%s height=%d fJustCheck=%d\n",
 				certFromOp(op).c_str(),
-				stringFromVch(vvchArgs[0]).c_str(),
+				stringFromVch(theCert.vchCert).c_str(),
 				tx.GetHash().ToString().c_str(),
 				nHeight,
 				fJustCheck ? 1 : -1);
@@ -734,7 +714,7 @@ UniValue certnew(const UniValue& params, bool fHelp) {
  	
     vector<unsigned char> vchHashCert = vchFromValue(hash.GetHex());
 
-    scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_CERT) << CScript::EncodeOP_N(OP_CERT_ACTIVATE) << vchCert << vchHashCert << OP_2DROP << OP_2DROP;
+    scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_CERT) << CScript::EncodeOP_N(OP_CERT_ACTIVATE) << vchHashCert << OP_2DROP << OP_DROP;
     scriptPubKey += scriptPubKeyOrig;
 	scriptPubKeyAlias << CScript::EncodeOP_N(OP_SYSCOIN_ALIAS) << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << theAlias.vchAlias << theAlias.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
 	scriptPubKeyAlias += scriptPubKeyOrig;
@@ -823,7 +803,7 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
     uint256 hash = Hash(data.begin(), data.end());
  	
     vector<unsigned char> vchHashCert = vchFromValue(hash.GetHex());
-    scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_CERT) << CScript::EncodeOP_N(OP_CERT_UPDATE) << vchCert << vchHashCert << OP_2DROP << OP_2DROP;
+    scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_CERT) << CScript::EncodeOP_N(OP_CERT_UPDATE) << vchHashCert << OP_2DROP << OP_DROP;
     scriptPubKey += scriptPubKeyOrig;
 
 	vector<CRecipient> vecSend;
@@ -919,7 +899,7 @@ UniValue certtransfer(const UniValue& params, bool fHelp) {
     uint256 hash = Hash(data.begin(), data.end());
  	
     vector<unsigned char> vchHashCert = vchFromValue(hash.GetHex());
-    scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_CERT) << CScript::EncodeOP_N(OP_CERT_TRANSFER) << vchCert << vchHashCert << OP_2DROP << OP_2DROP;
+    scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_CERT) << CScript::EncodeOP_N(OP_CERT_TRANSFER) << vchHashCert << OP_2DROP << OP_DROP;
 	scriptPubKey += scriptPubKeyOrig;
     // send the cert pay txn
 	vector<CRecipient> vecSend;
