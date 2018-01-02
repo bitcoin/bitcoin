@@ -924,7 +924,7 @@ void CleanupSyscoinServiceDatabases(int &numServicesCleaned)
 }
 bool GetAlias(const vector<unsigned char> &vchAlias,
 	CAliasIndex& txPos) {
-	if (!paliasdb->ReadAlias(vchAlia, txPos))
+	if (!paliasdb->ReadAlias(vchAlias, txPos))
 		return false;
 	
 	if (chainActive.Tip()->GetMedianTimePast() >= txPos.nExpireTime) {
