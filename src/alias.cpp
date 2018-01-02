@@ -1031,8 +1031,9 @@ bool DecodeAndParseSyscoinTx(const CTransaction& tx, int& op, int& nOut,
 		DecodeAndParseCertTx(tx, op, nOut, vvch, type)
 		|| DecodeAndParseOfferTx(tx, op, nOut, vvch, type)
 		|| DecodeAndParseEscrowTx(tx, op, nOut, vvch, type)
-		|| DecodeAndParseAliasTx(tx, op, nOut, vvch, type)
-		|| DecodeAndParseAssetTx(tx, op, nOut, vvch, type);
+		|| DecodeAndParseAssetTx(tx, op, nOut, vvch, type)
+		|| DecodeAndParseAssetAllocationTx(tx, op, nOut, vvch, type)
+		|| DecodeAndParseAliasTx(tx, op, nOut, vvch, type);
 }
 bool DecodeAndParseAliasTx(const CTransaction& tx, int& op, int& nOut,
 		vector<vector<unsigned char> >& vvch, char &type)
