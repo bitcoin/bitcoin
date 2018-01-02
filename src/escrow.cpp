@@ -1964,8 +1964,8 @@ UniValue escrowcreaterawtransaction(const UniValue& params, bool fHelp) {
 		fDepositPercentage = linkedOffer.auctionOffer.fDepositPercentage;
 	}
 
-	CAliasIndex sellerAliasLatest, buyerAliasLatest, arbiterAliasLatest, resellerAliasLatest, witnessAliasLatest;
-	CSyscoinAddress arbiterPaymentAddress, buyerPaymentAddress, sellerPaymentAddress, resellerPaymentAddress, witnessAddressPayment;
+	CAliasIndex sellerAliasLatest, buyerAliasLatest, arbiterAliasLatest, resellerAliasLatest;
+	CSyscoinAddress arbiterPaymentAddress, buyerPaymentAddress, sellerPaymentAddress, resellerPaymentAddress;
 	CScript arbiterScript;
 	if (GetAlias(escrow.vchArbiterAlias, arbiterAliasLatest))
 	{
@@ -1987,11 +1987,6 @@ UniValue escrowcreaterawtransaction(const UniValue& params, bool fHelp) {
 	if (GetAlias(escrow.vchLinkSellerAlias, resellerAliasLatest))
 	{
 		GetAddress(resellerAliasLatest, &resellerPaymentAddress, resellerScript, escrow.nPaymentOption);
-	}
-	if (GetAlias(escrow.vchWitness, witnessAliasLatest))
-	{
-		CScript script;
-		GetAddress(witnessAliasLatest, &witnessAddressPayment, script, escrow.nPaymentOption);
 	}
 	CScript scriptPubKeyAlias, scriptPubKeyAliasOrig;
 	CAmount nEscrowFees = escrow.nDeposit + escrow.nArbiterFee + escrow.nWitnessFee + escrow.nNetworkFee + escrow.nShipping;
@@ -2039,8 +2034,6 @@ UniValue escrowcreaterawtransaction(const UniValue& params, bool fHelp) {
 		{
 			createAddressUniValue.push_back(Pair(buyerPaymentAddress.ToString(), ValueFromAmount(escrow.nArbiterFee + escrow.nDeposit)));
 		}
-		if (escrow.nWitnessFee > 0)
-			createAddressUniValue.push_back(Pair(witnessAddressPayment.ToString(), ValueFromAmount(escrow.nWitnessFee)));
 		createAddressUniValue.push_back(Pair(sellerPaymentAddress.ToString(), ValueFromAmount(nBalanceTmp)));
 
 	}
