@@ -904,11 +904,10 @@ UniValue certinfo(const UniValue& params, bool fHelp) {
 
     vector<unsigned char> vchCert = vchFromValue(params[0]);
 	UniValue oCert(UniValue::VOBJ);
-    vector<unsigned char> vchValue;
 
 	CCert txPos;
-	if (!GetCert(vchCert, txPos))
-		throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 5535 - " + _("Failed to read from cert DB"));
+	if (!pcertdb->ReadCert(vchCert, txPos))
+		throw runtime_error("SYSCOIN_CERT_RPC_ERROR: ERRCODE: 5536 - " + _("Failed to read from cert DB"));
 
 	if(!BuildCertJson(txPos, oCert))
 		oCert.clear();

@@ -842,11 +842,10 @@ UniValue assetinfo(const UniValue& params, bool fHelp) {
 
     vector<unsigned char> vchAsset = vchFromValue(params[0]);
 	UniValue oAsset(UniValue::VOBJ);
-    vector<unsigned char> vchValue;
 
 	CAsset txPos;
-	if (!GetAsset(vchAsset, txPos))
-		throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 5535 - " + _("Failed to read from asset DB"));
+	if (!passetdb->ReaAsset(vchAsset, txPos))
+		throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 5536 - " + _("Failed to read from asset DB"));
 
 	if(!BuildAssetJson(txPos, oAsset))
 		oAsset.clear();

@@ -478,7 +478,7 @@ UniValue assetallocationsend(const UniValue& params, bool fHelp) {
 	// check for alias existence in DB
 	CAliasIndex fromAlias;
 	if (!GetAlias(vchAliasFrom, fromAlias))
-		throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2509 - " + _("Failed to read transfer alias from DB"));
+		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 2509 - " + _("Failed to read transfer alias from DB"));
 
 	// this is a syscoin txn
 	CWalletTx wtx;
@@ -486,7 +486,7 @@ UniValue assetallocationsend(const UniValue& params, bool fHelp) {
 
 	CAssetAllocation theAssetAllocation;
 	if (!GetAssetAllocation(CAssetAllocationTuple(vchAsset, vchAliasFrom), theAssetAllocation))
-		throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2510 - " + _("Could not find a asset with this key"));
+		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 2510 - " + _("Could not find a asset with this key"));
 
 
 	CSyscoinAddress fromAddr;
@@ -542,11 +542,10 @@ UniValue assetallocationinfo(const UniValue& params, bool fHelp) {
     vector<unsigned char> vchAsset = vchFromValue(params[0]);
 	vector<unsigned char> vchAlias = vchFromValue(params[1]);
 	UniValue oAssetAllocation(UniValue::VOBJ);
-    vector<unsigned char> vchValue;
 
 	CAssetAllocation txPos;
-	if (!GetAssetAllocation(CAssetAllocationTuple(vchAsset, vchAlias), txPos))
-		throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 5535 - " + _("Failed to read from assetallocation DB"));
+	if (!passetallocationdb->ReadAssetAllocation(CAssetAllocationTuple(vchAsset, vchAlias), txPos))
+		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 5536 - " + _("Failed to read from assetallocation DB"));
 
 	if(!BuildAssetAllocationJson(txPos, oAssetAllocation))
 		oAssetAllocation.clear();
