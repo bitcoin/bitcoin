@@ -306,7 +306,7 @@ extern COfferDB *pofferdb;
 extern CCertDB *pcertdb;
 extern CEscrowDB *pescrowdb;
 extern CAssetDB *passetdb;
-
+extern CAssetDB *passetallocationdb;
 
 std::string stringFromVch(const std::vector<unsigned char> &vch);
 std::vector<unsigned char> vchFromValue(const UniValue& value);

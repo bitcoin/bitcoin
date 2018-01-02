@@ -40,6 +40,7 @@ COfferDB *pofferdb = NULL;
 CCertDB *pcertdb = NULL;
 CEscrowDB *pescrowdb = NULL;
 CAssetDB *passetdb = NULL;
+CAssetDB *passetallocationdb = NULL;
 typedef map<vector<unsigned char>, COutPoint > mapAliasRegistrationsType;
 typedef map<vector<unsigned char>, vector<unsigned char> > mapAliasRegistrationsDataType;
 mapAliasRegistrationsType mapAliasRegistrations;
@@ -59,6 +60,7 @@ mongoc_collection_t *cert_collection = NULL;
 mongoc_collection_t *certhistory_collection = NULL;
 mongoc_collection_t *asset_collection = NULL;
 mongoc_collection_t *assethistory_collection = NULL;
+mongoc_collection_t *assetallocation_collection = NULL;
 mongoc_collection_t *feedback_collection = NULL;
 unsigned int MAX_ALIAS_UPDATES_PER_BLOCK = 5;
 bool GetSyscoinTransaction(int nHeight, const uint256 &hash, CTransaction &txOut, const Consensus::Params& consensusParams)
@@ -1559,6 +1561,43 @@ void setupAssetHistoryIndexes() {
 	bson_destroy(&reply);
 	bson_destroy(create_indexes);
 }
+void setupAssetAllocationIndexes() {
+	bson_t keys;
+	const char *collection_name = "assetallocation";
+	char *index_name;
+	bson_t reply;
+	bson_error_t error;
+	bool r;
+	bson_t *create_indexes;
+
+	bson_init(&keys);
+	BSON_APPEND_INT32(&keys, "asset", 1);
+	BSON_APPEND_INT32(&keys, "alias", 1);
+	BSON_APPEND_INT32(&keys, "height", 1);
+	index_name = mongoc_collection_keys_to_index_string(&keys);
+	create_indexes = BCON_NEW("createIndexes",
+		BCON_UTF8(collection_name),
+		"indexes",
+		"[",
+		"{",
+		"key",
+		BCON_DOCUMENT(&keys),
+		"name",
+		BCON_UTF8(index_name),
+		"}",
+		"]");
+
+	r = mongoc_database_write_command_with_opts(
+		database, create_indexes, NULL /* opts */, &reply, &error);
+
+	if (!r) {
+		LogPrintf("Error in createIndexes: %s\n", error.message);
+	}
+	bson_destroy(&keys);
+	bson_free(index_name);
+	bson_destroy(&reply);
+	bson_destroy(create_indexes);
+}
 void setupFeedbackIndexes() {
 	bson_t keys;
 	const char *collection_name = "feedback";
@@ -1623,6 +1662,7 @@ void startMongoDB(){
 		feedback_collection = mongoc_client_get_collection(client, "syscoindb", "feedback");
 		asset_collection = mongoc_client_get_collection(client, "syscoindb", "asset");
 		assethistory_collection = mongoc_client_get_collection(client, "syscoindb", "assethistory");
+		assetallocation_collection = mongoc_client_get_collection(client, "syscoindb", "assetallocation");
 		BSON_ASSERT(alias_collection);
 		BSON_ASSERT(aliashistory_collection);
 		BSON_ASSERT(aliastxhistory_collection);
@@ -1635,6 +1675,7 @@ void startMongoDB(){
 		BSON_ASSERT(feedback_collection);
 		BSON_ASSERT(asset_collection);
 		BSON_ASSERT(assethistory_collection);
+		BSON_ASSERT(assetallocation_collection);
 		setupAliasHistoryIndexes();
 		setupOfferIndexes();
 		setupOfferHistoryIndexes();
@@ -1645,6 +1686,7 @@ void startMongoDB(){
 		setupFeedbackIndexes();
 		setupAssetIndexes();
 		setupAssetHistoryIndexes();
+		setupAssetAllocationIndexes();
 		LogPrintf("Mongo c client loaded!\n");
 	}
 	else
@@ -1868,6 +1910,8 @@ void stopMongoDB() {
 		mongoc_collection_destroy(asset_collection);
 	if (assethistory_collection)
 		mongoc_collection_destroy(assethistory_collection);
+	if (assetallocation_collection)
+		mongoc_collection_destroy(assetallocation_collection);
 	if(database)
 		mongoc_database_destroy(database);
 	if (client) {
@@ -1879,7 +1923,7 @@ UniValue syscoinquery(const UniValue& params, bool fHelp) {
 	if (fHelp || 2 > params.size() || 3 < params.size())
 		throw runtime_error(
 			"syscoinquery <collection> <query> [options]\n"
-			"<collection> Collection name, either: 'alias', 'aliashistory', 'aliastxhistory', 'cert', 'certhistory', 'asset', 'assethistory','offer', 'offerhistory', 'feedback', 'escrow', 'escrowbid'.\n"
+			"<collection> Collection name, either: 'alias', 'aliashistory', 'aliastxhistory', 'cert', 'certhistory', 'asset', 'assethistory', 'assetallocation', 'offer', 'offerhistory', 'feedback', 'escrow', 'escrowbid'.\n"
 			"<query> JSON query on the collection to retrieve a set of documents.\n"
 			"<options> Optional. JSON option arguments into the query. Based on mongoc_collection_find_with_opts.\n"
 			+ HelpRequiringPassphrase());
@@ -1899,6 +1943,8 @@ UniValue syscoinquery(const UniValue& params, bool fHelp) {
 		selectedCollection = asset_collection;
 	else if (collection == "assethistory")
 		selectedCollection = assethistory_collection;
+	else if (collection == "assetallocation")
+		selectedCollection = assetallocation_collection;
 	else if (collection == "offer")
 		selectedCollection = offer_collection;
 	else if (collection == "offerhistory")

@@ -2856,7 +2856,7 @@ bool BuildEscrowJson(const CEscrow &escrow, UniValue& oEscrow)
 	oEscrow.push_back(Pair("redeem_txid", strRedeemTxId));
 	oEscrow.push_back(Pair("redeem_script", HexStr(escrow.vchRedeemScript)));
     oEscrow.push_back(Pair("txid", escrow.txHash.GetHex()));
-    oEscrow.push_back(Pair("height", (int64_t)escrow.nHeight));
+    oEscrow.push_back(Pair("height", (int)escrow.nHeight));
 	oEscrow.push_back(Pair("role", EscrowRoleToString(escrow.role)));
 	int64_t expired_time = GetEscrowExpiration(escrow);
 	bool expired = false;

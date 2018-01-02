@@ -140,7 +140,7 @@ public:
 		bool eraseState = Erase(make_pair(std::string("assetallocationi"), assetAllocationTuple));
 		Erase(make_pair(std::string("assetp"), assetAllocationTuple));
 		EraseISLock(assetAllocationTuple);
-		EraseAssetIndex(assetAllocationTuple, cleanup);
+		EraseAssetAllocationIndex(assetAllocationTuple, cleanup);
 		return eraseState;
 	}
 	bool CleanupDatabase(int &servicesCleaned);
@@ -156,12 +156,12 @@ public:
 	bool EraseISLock(const CAssetAllocationTuple& assetAllocationTuple) {
 		return Erase(make_pair(std::string("assetallocationl"), assetAllocationTuple));
 	}
-	void WriteAssetAllocationIndex(const CAssetAllocation& assetallocation, const int &op);
+	void WriteAssetAllocationIndex(const CAssetAllocation& assetAllocationTuple, const int &op);
+	void EraseAssetAllocationIndex(const CAssetAllocationTuple& assetAllocationTuple, bool cleanup);
 
 };
 bool GetAssetAllocation(const CAssetAllocationTuple& assetAllocationTuple,CAssetAllocation& txPos);
 bool BuildAssetAllocationJson(const CAssetAllocation& assetallocation, UniValue& oName);
 bool BuildAssetAllocationIndexerJson(const CAssetAllocation& assetallocation,UniValue& oName);
-bool BuildAssetAllocationIndexerHistoryJson(const CAssetAllocation& assetallocation, UniValue& oName);
 uint64_t GetAssetAllocationExpiration(const CAssetAllocation& assetallocation);
 #endif // ASSETALLOCATION_H

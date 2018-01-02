@@ -100,7 +100,8 @@ void CAssetAllocationDB::WriteAssetAllocationIndex(const CAssetAllocation& asset
 
 	mongoc_update_flags_t update_flags;
 	update_flags = (mongoc_update_flags_t)(MONGOC_UPDATE_NO_VALIDATE | MONGOC_UPDATE_UPSERT);
-	selector = BCON_NEW("_id", BCON_UTF8(stringFromVch(assetallocation.vchAssetAllocation).c_str()));
+	const string &id = stringFromVch(assetallocation.vchAsset) + stringFromVch(assetallocation.vchAlias);
+	selector = BCON_NEW("_id", BCON_UTF8(id.c_str()));
 	write_concern = mongoc_write_concern_new();
 	mongoc_write_concern_set_w(write_concern, MONGOC_WRITE_CONCERN_W_UNACKNOWLEDGED);
 	if (BuildAssetAllocationIndexerJson(assetallocation, oName)) {
@@ -116,6 +117,26 @@ void CAssetAllocationDB::WriteAssetAllocationIndex(const CAssetAllocation& asset
 	if (write_concern)
 		mongoc_write_concern_destroy(write_concern);
 }
+void CAssetAllocationDB::EraseAssetAllocationIndex(const CAssetAllocationTuple& assetAllocationTuple, bool cleanup) {
+	if (!assetallocation_collection)
+		return;
+	bson_error_t error;
+	bson_t *selector = NULL;
+	mongoc_write_concern_t* write_concern = NULL;
+	mongoc_remove_flags_t remove_flags;
+	remove_flags = (mongoc_remove_flags_t)(MONGOC_REMOVE_NONE);
+	const string &id = stringFromVch(assetAllocationTuple.vchAsset) + stringFromVch(assetAllocationTuple.vchAlias);
+	selector = BCON_NEW("_id", BCON_UTF8(id.c_str()));
+	write_concern = mongoc_write_concern_new();
+	mongoc_write_concern_set_w(write_concern, MONGOC_WRITE_CONCERN_W_UNACKNOWLEDGED);
+	if (!mongoc_collection_remove(assetallocation_collection, remove_flags, selector, cleanup ? NULL : write_concern, &error)) {
+		LogPrintf("MONGODB ASSET HISTORY REMOVE ERROR: %s\n", error.message);
+	}
+	if (selector)
+		bson_destroy(selector);
+	if (write_concern)
+		mongoc_write_concern_destroy(write_concern);
+}
 bool CAssetAllocationDB::CleanupDatabase(int &servicesCleaned)
 {
 	boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
@@ -125,11 +146,11 @@ bool CAssetAllocationDB::CleanupDatabase(int &servicesCleaned)
 	while (pcursor->Valid()) {
 		boost::this_thread::interruption_point();
 		try {
-			if (pcursor->GetKey(key) && key.first == "asseti") {
-				if (!GetAsset(key.second, txPos) || chainActive.Tip()->GetMedianTimePast() >= GetAssetAllocationExpiration(txPos))
+			if (pcursor->GetKey(key) && key.first == "assetallocationi") {
+				if (!GetAssetAllocation(key.second, txPos) || chainActive.Tip()->GetMedianTimePast() >= GetAssetAllocationExpiration(txPos))
 				{
 					servicesCleaned++;
-					EraseAsset(key.second, true);
+					EraseAssetAllocation(key.second, true);
 				}
 
 			}
@@ -324,14 +345,14 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2007 - " + _("Asset public data too big");
 			return error(errorMessage.c_str());
 		}
-		if(!theAssetAllocation.vchAssetAllocation.empty() && theAssetAllocation.vchAssetAllocation != vvchArgs[0])
+		if(!theAssetAllocation.vchAsset.empty() && theAssetAllocation.vchAsset != vvchArgs[0])
 		{
 			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2008 - " + _("Guid in data output doesn't match guid in transaction");
 			return error(errorMessage.c_str());
 		}
 		switch (op) {
 		case OP_ASSET_ALLOCATION_SEND:
-			if (theAssetAllocation.vchAssetAllocation != vvchArgs[0])
+			if (theAssetAllocation.vchAsset != vvchArgs[0])
 			{
 				errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2018 - " + _("Asset guid mismatch");
 				return error(errorMessage.c_str());
@@ -497,7 +518,7 @@ UniValue assetallocationsend(const UniValue& params, bool fHelp) {
 			+ HelpRequiringPassphrase());
 
 	// gather & validate inputs
-	vector<unsigned char> vchAssetAllocation = vchFromValue(params[0]);
+	vector<unsigned char> vchAsset = vchFromValue(params[0]);
 	vector<unsigned char> vchAliasFrom = vchFromValue(params[1]);
 
 	vector<unsigned char> vchWitness;
@@ -512,7 +533,7 @@ UniValue assetallocationsend(const UniValue& params, bool fHelp) {
 	CScript scriptPubKeyOrig, scriptPubKeyFromOrig;
 
 	CAssetAllocation theAssetAllocation;
-	if (!GetAssetAllocation(CAssetAllocationTuple(vchAssetAllocation, vchAliasFrom), theAssetAllocation))
+	if (!GetAssetAllocation(CAssetAllocationTuple(vchAsset, vchAliasFrom), theAssetAllocation))
 		throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2510 - " + _("Could not find a asset with this key"));
 
 
@@ -534,7 +555,7 @@ UniValue assetallocationsend(const UniValue& params, bool fHelp) {
 	uint256 hash = Hash(data.begin(), data.end());
 
 	vector<unsigned char> vchHashAsset = vchFromValue(hash.GetHex());
-	scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_ASSET_ALLOCATION) << CScript::EncodeOP_N(OP_ASSET_ALLOCATION_SEND) << vchAssetAllocation << vchHashAsset << OP_2DROP << OP_2DROP;
+	scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_ASSET_ALLOCATION) << CScript::EncodeOP_N(OP_ASSET_ALLOCATION_SEND) << vchAsset << vchHashAsset << OP_2DROP << OP_2DROP;
 	scriptPubKey += scriptPubKeyOrig;
 	// send the asset pay txn
 	vector<CRecipient> vecSend;
@@ -571,12 +592,12 @@ UniValue assetallocationinfo(const UniValue& params, bool fHelp) {
         throw runtime_error("assetallocationinfo <guid>\n"
                 "Show stored values of a single asset allocation.\n");
 
-    vector<unsigned char> vchAssetAllocation = vchFromValue(params[0]);
+    vector<unsigned char> vchAsset = vchFromValue(params[0]);
 	UniValue oAssetAllocation(UniValue::VOBJ);
     vector<unsigned char> vchValue;
 
 	CAssetAllocation txPos;
-	if (!GetAssetAllocation(vchAssetAllocation, txPos))
+	if (!GetAssetAllocation(vchAsset, txPos))
 		throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 5535 - " + _("Failed to read from assetallocation DB"));
 
 	if(!BuildAssetAllocationJson(txPos, oAssetAllocation))
@@ -585,9 +606,10 @@ UniValue assetallocationinfo(const UniValue& params, bool fHelp) {
 }
 bool BuildAssetAllocationJson(const CAssetAllocation& assetallocation, UniValue& oAssetAllocation)
 {
-    oAssetAllocation.push_back(Pair("_id", stringFromVch(assetallocation.vchAssetAllocation)));
+    oAssetAllocation.push_back(Pair("_id", stringFromVch(assetallocation.vchAsset) + stringFromVch(assetallocation.vchAlias)));
+	oAssetAllocation.push_back(Pair("asset", stringFromVch(assetallocation.vchAsset)));
     oAssetAllocation.push_back(Pair("txid", assetallocation.txHash.GetHex()));
-    oAssetAllocation.push_back(Pair("height", (int64_t)assetallocation.nHeight));
+    oAssetAllocation.push_back(Pair("height", (int)assetallocation.nHeight));
 	int64_t nTime = 0;
 	if (chainActive.Height() >= assetallocation.nHeight) {
 		CBlockIndex *pindex = chainActive[assetallocation.nHeight];
@@ -596,9 +618,6 @@ bool BuildAssetAllocationJson(const CAssetAllocation& assetallocation, UniValue&
 		}
 	}
 	oAssetAllocation.push_back(Pair("time", nTime));
-	oAssetAllocation.push_back(Pair("name", stringFromVch(assetallocation.vchName)));
-	oAssetAllocation.push_back(Pair("publicvalue", stringFromVch(assetallocation.vchPubData)));
-	oAssetAllocation.push_back(Pair("category", stringFromVch(assetallocation.sCategory)));
 	oAssetAllocation.push_back(Pair("alias", stringFromVch(assetallocation.vchAlias)));
 	int64_t expired_time = GetAssetAllocationExpiration(assetallocation);
 	bool expired = false;
@@ -612,31 +631,11 @@ bool BuildAssetAllocationJson(const CAssetAllocation& assetallocation, UniValue&
 	oAssetAllocation.push_back(Pair("expired", expired));
 	return true;
 }
-bool BuildAssetAllocationIndexerHistoryJson(const CAssetAllocation& assetallocation, UniValue& oAssetAllocation)
-{
-	oAssetAllocation.push_back(Pair("_id", assetallocation.txHash.GetHex()));
-	oAssetAllocation.push_back(Pair("asset", stringFromVch(assetallocation.vchAssetAllocation)));
-	oAssetAllocation.push_back(Pair("height", (int64_t)assetallocation.nHeight));
-	int64_t nTime = 0;
-	if (chainActive.Height() >= assetallocation.nHeight) {
-		CBlockIndex *pindex = chainActive[assetallocation.nHeight];
-		if (pindex) {
-			nTime = pindex->GetMedianTimePast();
-		}
-	}
-	oAssetAllocation.push_back(Pair("time", nTime));
-	oAssetAllocation.push_back(Pair("title", stringFromVch(assetallocation.vchName)));
-	oAssetAllocation.push_back(Pair("publicvalue", stringFromVch(assetallocation.vchPubData)));
-	oAssetAllocation.push_back(Pair("category", stringFromVch(assetallocation.sCategory)));
-	oAssetAllocation.push_back(Pair("alias", stringFromVch(assetallocation.vchAlias)));
-	return true;
-}
 bool BuildAssetAllocationIndexerJson(const CAssetAllocation& assetallocation, UniValue& oAssetAllocation)
 {
-	oAssetAllocation.push_back(Pair("_id", stringFromVch(assetallocation.vchAssetAllocation)));
-	oAssetAllocation.push_back(Pair("title", stringFromVch(assetallocation.vchName)));
+	oAssetAllocation.push_back(Pair("_id", stringFromVch(assetallocation.vchAsset) + stringFromVch(assetallocation.vchAlias)));
+	oAssetAllocation.push_back(Pair("asset", stringFromVch(assetallocation.vchAsset)));
 	oAssetAllocation.push_back(Pair("height", (int)assetallocation.nHeight));
-	oAssetAllocation.push_back(Pair("category", stringFromVch(assetallocation.sCategory)));
 	oAssetAllocation.push_back(Pair("alias", stringFromVch(assetallocation.vchAlias)));
 	return true;
 }
@@ -646,24 +645,11 @@ void AssetAllocationTxToJSON(const int op, const std::vector<unsigned char> &vch
 	CAssetAllocation assetallocation;
 	if(!assetallocation.UnserializeFromData(vchData, vchHash))
 		return;
-
-	CAssetAllocation dbAssetAllocation;
-	GetAssetAllocation(assetallocation.vchAssetAllocation, dbAssetAllocation);
-	
-
 	entry.push_back(Pair("txtype", opName));
-	entry.push_back(Pair("_id", stringFromVch(assetallocation.vchAssetAllocation)));
+	entry.push_back(Pair("_id", stringFromVch(assetallocation.vchAsset)+ stringFromVch(assetallocation.vchAlias)));
+	entry.push_back(Pair("asset", stringFromVch(assetallocation.vchAsset)));
+	entry.push_back(Pair("alias", stringFromVch(assetallocation.vchAlias)));
 
-	if(!assetallocation.vchName.empty() && assetallocation.vchName != dbAssetAllocation.vchName)
-		entry.push_back(Pair("title", stringFromVch(assetallocation.vchName)));
-
-	if(!assetallocation.vchPubData.empty() && assetallocation.vchPubData != dbAssetAllocation.vchPubData)
-		entry.push_back(Pair("publicdata", stringFromVch(assetallocation.vchPubData)));
-
-	if(!assetallocation.vchLinkAlias.empty() && assetallocation.vchLinkAlias != dbAssetAllocation.vchAlias)
-		entry.push_back(Pair("alias", stringFromVch(assetallocation.vchLinkAlias)));
-	else if(assetallocation.vchAlias != dbAssetAllocation.vchAlias)
-		entry.push_back(Pair("alias", stringFromVch(assetallocation.vchAlias)));
 
 }
 

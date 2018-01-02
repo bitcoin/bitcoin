@@ -1421,7 +1421,7 @@ bool BuildOfferJson(const COffer& theOffer, UniValue& oOffer)
 
 	oOffer.push_back(Pair("expires_on", expired_time));
 	oOffer.push_back(Pair("expired", expired));
-	oOffer.push_back(Pair("height", (int64_t)theOffer.nHeight));
+	oOffer.push_back(Pair("height", (int)theOffer.nHeight));
 	oOffer.push_back(Pair("category", stringFromVch(theOffer.sCategory)));
 	oOffer.push_back(Pair("title", stringFromVch(theOffer.sTitle)));
 	int nQty = theOffer.nQty;

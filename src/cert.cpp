@@ -973,7 +973,7 @@ bool BuildCertJson(const CCert& cert, UniValue& oCert)
 {
     oCert.push_back(Pair("_id", stringFromVch(cert.vchCert)));
     oCert.push_back(Pair("txid", cert.txHash.GetHex()));
-    oCert.push_back(Pair("height", (int64_t)cert.nHeight));
+    oCert.push_back(Pair("height", (int)cert.nHeight));
 	int64_t nTime = 0;
 	if (chainActive.Height() >= cert.nHeight) {
 		CBlockIndex *pindex = chainActive[cert.nHeight];
@@ -1003,7 +1003,7 @@ bool BuildCertIndexerHistoryJson(const CCert& cert, UniValue& oCert)
 {
 	oCert.push_back(Pair("_id", cert.txHash.GetHex()));
 	oCert.push_back(Pair("cert", stringFromVch(cert.vchCert)));
-	oCert.push_back(Pair("height", (int64_t)cert.nHeight));
+	oCert.push_back(Pair("height", (int)cert.nHeight));
 	int64_t nTime = 0;
 	if (chainActive.Height() >= cert.nHeight) {
 		CBlockIndex *pindex = chainActive[cert.nHeight];

@@ -911,7 +911,7 @@ bool BuildAssetJson(const CAsset& asset, UniValue& oAsset)
 {
     oAsset.push_back(Pair("_id", stringFromVch(asset.vchAsset)));
     oAsset.push_back(Pair("txid", asset.txHash.GetHex()));
-    oAsset.push_back(Pair("height", (int64_t)asset.nHeight));
+    oAsset.push_back(Pair("height", (int)asset.nHeight));
 	int64_t nTime = 0;
 	if (chainActive.Height() >= asset.nHeight) {
 		CBlockIndex *pindex = chainActive[asset.nHeight];
@@ -940,7 +940,7 @@ bool BuildAssetIndexerHistoryJson(const CAsset& asset, UniValue& oAsset)
 {
 	oAsset.push_back(Pair("_id", asset.txHash.GetHex()));
 	oAsset.push_back(Pair("asset", stringFromVch(asset.vchAsset)));
-	oAsset.push_back(Pair("height", (int64_t)asset.nHeight));
+	oAsset.push_back(Pair("height", (int)asset.nHeight));
 	int64_t nTime = 0;
 	if (chainActive.Height() >= asset.nHeight) {
 		CBlockIndex *pindex = chainActive[asset.nHeight];
