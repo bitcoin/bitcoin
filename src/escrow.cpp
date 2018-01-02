@@ -576,8 +576,9 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 		
 	}
 	bool inputMismatch = false;
-	if (op == OP_ESCROW_ACTIVATE)
+	if (op == OP_ESCROW_ACTIVATE) {
 		inputMismatch = theEscrow.vchBuyerAlias != vvchAliasArgs[0];
+	}
 	else
 		inputMismatch = theEscrow.vchLinkAlias != vvchAliasArgs[0];
 
@@ -790,6 +791,8 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 			}
 		}
 	}
+	if (vvchAliasArgs.size() >= 4 && !vvchAliasArgs[3].empty())
+		theEscrow.vchWitness = vvchAliasArgs[3];
 	CEscrow serializedEscrow = theEscrow;
 	escrowOp = serializedEscrow.op;
 	
@@ -912,7 +915,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4042 - " + _("Offer auction has expired, cannot place bid!");
 				return true;
 			}
-			if (dbOffer.auctionOffer.bRequireWitness && (vvchAliasArgs.size() < 4 || vvchAliasArgs[3].empty()))
+			if (dbOffer.auctionOffer.bRequireWitness && serializedEscrow.vchWitness.empty())
 			{
 				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4042 - " + _("Offer auction requires a witness signature for each bid but none provided");
 				return true;
@@ -939,7 +942,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4042 - " + _("Linked offer auction has expired, cannot place bid!");
 					return true;
 				}
-				if (myLinkOffer.auctionOffer.bRequireWitness && (vvchAliasArgs.size() < 4 || vvchAliasArgs[3].empty()))
+				if (myLinkOffer.auctionOffer.bRequireWitness && serializedEscrow.vchWitness.empty())
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4042 - " + _("Linked offer auction requires a witness signature for each bid but none provided");
 					return true;
@@ -1022,7 +1025,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				}
 				if (IsOfferTypeInMask(myLinkOffer.offerType, OFFERTYPE_AUCTION))
 				{
-					if (myLinkOffer.auctionOffer.bRequireWitness && (vvchAliasArgs.size() < 4 || vvchAliasArgs[3].empty()))
+					if (myLinkOffer.auctionOffer.bRequireWitness && serializedEscrow.vchWitness.empty())
 					{
 						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4042 - " + _("Offer auction refund requires a witness signature but none provided");
 						return true;
@@ -1031,7 +1034,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 			}
 			if (IsOfferTypeInMask(dbOffer.offerType, OFFERTYPE_AUCTION))
 			{
-				if (dbOffer.auctionOffer.bRequireWitness && (vvchAliasArgs.size() < 4 || vvchAliasArgs[3].empty()))
+				if (dbOffer.auctionOffer.bRequireWitness && serializedEscrow.vchWitness.empty())
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4042 - " + _("Offer auction refund requires a witness signature but none provided");
 					return true;
@@ -1102,7 +1105,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				}
 				if (IsOfferTypeInMask(myLinkOffer.offerType, OFFERTYPE_AUCTION))
 				{
-					if (myLinkOffer.auctionOffer.bRequireWitness && (vvchAliasArgs.size() < 4 || vvchAliasArgs[3].empty()))
+					if (myLinkOffer.auctionOffer.bRequireWitness && serializedEscrow.vchWitness.empty())
 					{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4042 - " + _("Offer auction release requires a witness signature but none provided");
 					return true;
@@ -1111,7 +1114,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 			}
 			if (IsOfferTypeInMask(dbOffer.offerType, OFFERTYPE_AUCTION))
 			{
-				if (dbOffer.auctionOffer.bRequireWitness && (vvchAliasArgs.size() < 4 || vvchAliasArgs[3].empty()))
+				if (dbOffer.auctionOffer.bRequireWitness && serializedEscrow.vchWitness.empty())
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4042 - " + _("Offer auction release requires a witness signature but none provided");
 					return true;
@@ -1899,8 +1902,8 @@ UniValue escrowcreaterawtransaction(const UniValue& params, bool fHelp) {
 		fDepositPercentage = linkedOffer.auctionOffer.fDepositPercentage;
 	}
 
-	CAliasIndex sellerAliasLatest, buyerAliasLatest, arbiterAliasLatest, resellerAliasLatest;
-	CSyscoinAddress arbiterPaymentAddress, buyerPaymentAddress, sellerPaymentAddress, resellerPaymentAddress;
+	CAliasIndex sellerAliasLatest, buyerAliasLatest, arbiterAliasLatest, resellerAliasLatest, witnessAliasLatest;
+	CSyscoinAddress arbiterPaymentAddress, buyerPaymentAddress, sellerPaymentAddress, resellerPaymentAddress, witnessAddressPayment;
 	CScript arbiterScript;
 	if (GetAlias(escrow.vchArbiterAlias, arbiterAliasLatest))
 	{
@@ -1922,6 +1925,11 @@ UniValue escrowcreaterawtransaction(const UniValue& params, bool fHelp) {
 	if (GetAlias(escrow.vchLinkSellerAlias, resellerAliasLatest))
 	{
 		GetAddress(resellerAliasLatest, &resellerPaymentAddress, resellerScript, escrow.nPaymentOption);
+	}
+	if (GetAlias(escrow.vchWitness, witnessAliasLatest))
+	{
+		CScript script;
+		GetAddress(witnessAliasLatest, &witnessAddressPayment, script, escrow.nPaymentOption);
 	}
 	CScript scriptPubKeyAlias, scriptPubKeyAliasOrig;
 	CAmount nEscrowFees = escrow.nDeposit + escrow.nArbiterFee + escrow.nWitnessFee + escrow.nNetworkFee + escrow.nShipping;
@@ -1969,6 +1977,8 @@ UniValue escrowcreaterawtransaction(const UniValue& params, bool fHelp) {
 		{
 			createAddressUniValue.push_back(Pair(buyerPaymentAddress.ToString(), ValueFromAmount(escrow.nArbiterFee + escrow.nDeposit)));
 		}
+		if (escrow.nWitnessFee > 0)
+			createAddressUniValue.push_back(Pair(witnessAddressPayment.ToString(), ValueFromAmount(escrow.nWitnessFee)));
 		createAddressUniValue.push_back(Pair(sellerPaymentAddress.ToString(), ValueFromAmount(nBalanceTmp)));
 
 	}
@@ -2666,6 +2676,7 @@ void BuildEscrowBidJson(const CEscrow& escrow, const string& status, UniValue& o
 	oBid.push_back(Pair("bidder", stringFromVch(escrow.vchLinkAlias)));
 	oBid.push_back(Pair("bid_in_offer_currency_per_unit", escrow.fBidPerUnit));
 	oBid.push_back(Pair("bid_in_payment_option_per_unit", ValueFromAmount(escrow.nAmountOrBidPerUnit)));
+	oBid.push_back(Pair("witness", stringFromVch(escrow.vchWitness)));
 	oBid.push_back(Pair("status", status));
 }
 bool BuildEscrowJson(const CEscrow &escrow, UniValue& oEscrow)
@@ -2685,6 +2696,7 @@ bool BuildEscrowJson(const CEscrow &escrow, UniValue& oEscrow)
 	oEscrow.push_back(Pair("seller", stringFromVch(escrow.vchSellerAlias)));
 	oEscrow.push_back(Pair("arbiter", stringFromVch(escrow.vchArbiterAlias)));
 	oEscrow.push_back(Pair("buyer", stringFromVch(escrow.vchBuyerAlias)));
+	oEscrow.push_back(Pair("witness", stringFromVch(escrow.vchWitness)));
 	oEscrow.push_back(Pair("offer", stringFromVch(escrow.vchOffer)));
 	oEscrow.push_back(Pair("offer_price", theOffer.GetPrice()));
 	oEscrow.push_back(Pair("reseller", stringFromVch(escrow.vchLinkSellerAlias)));
