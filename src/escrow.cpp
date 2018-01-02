@@ -920,9 +920,9 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4042 - " + _("Offer auction requires a witness signature for each bid but none provided");
 				return true;
 			}
-			if (!dbOffer.vchOffer.empty())
+			if (!dbOffer.vchLinkOffer.empty())
 			{
-				if (!GetOffer(dbOffer.vchOffer, myLinkOffer))
+				if (!GetOffer(dbOffer.vchLinkOffer, myLinkOffer))
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4078 - " + _("Cannot find linked offer for this escrow");
 					return true;
@@ -1016,9 +1016,9 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4042 - " + _("Cannot find escrow offer. It may be expired");
 				return true;
 			}
-			if (!dbOffer.vchOffer.empty())
+			if (!dbOffer.vchLinkOffer.empty())
 			{
-				if (!GetOffer(dbOffer.vchOffer, myLinkOffer))
+				if (!GetOffer(dbOffer.vchLinkOffer, myLinkOffer))
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4078 - " + _("Cannot find linked offer for this escrow");
 					return true;
@@ -1096,9 +1096,9 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4042 - " + _("Cannot find escrow offer. It may be expired");
 				return true;
 			}
-			if (!dbOffer.vchOffer.empty())
+			if (!dbOffer.vchLinkOffer.empty())
 			{
-				if (!GetOffer(dbOffer.vchOffer, myLinkOffer))
+				if (!GetOffer(dbOffer.vchLinkOffer, myLinkOffer))
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4078 - " + _("Cannot find linked offer for this escrow");
 					return true;
@@ -1259,9 +1259,9 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 			errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4077 - " + _("Cannot find offer for this escrow. It may be expired");
 			return true;
 		}
-		if (!dbOffer.vchOffer.empty())
+		if (!dbOffer.vchLinkOffer.empty())
 		{
-			if (!GetOffer(dbOffer.vchOffer, myLinkOffer))
+			if (!GetOffer(dbOffer.vchLinkOffer, myLinkOffer))
 			{
 				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4078 - " + _("Cannot find linked offer for this escrow");
 				return true;
@@ -1607,9 +1607,9 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	CAliasIndex theLinkedAlias, reselleralias;
 	
 	CAmount nCommission = 0;
-	if(!theOffer.vchOffer.empty())
+	if(!theOffer.vchLinkOffer.empty())
 	{
-		if (!GetOffer( theOffer.vchOffer, linkedOffer))
+		if (!GetOffer( theOffer.vchLinkOffer, linkedOffer))
 			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4516 - " + _("Trying to accept a linked offer but could not find parent offer"));
 
 		if (!GetAlias( linkedOffer.vchAlias, theLinkedAlias))
@@ -1894,10 +1894,10 @@ UniValue escrowcreaterawtransaction(const UniValue& params, bool fHelp) {
 	if (!GetOffer(escrow.vchOffer, theOffer))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4524 - " + _("Could not find offer related to this escrow"));
 	float fDepositPercentage = theOffer.auctionOffer.fDepositPercentage;
-	if (!theOffer.vchOffer.empty())
+	if (!theOffer.vchLinkOffer.empty())
 	{
 
-		if (!GetOffer(theOffer.vchOffer, linkedOffer))
+		if (!GetOffer(theOffer.vchLinkOffer, linkedOffer))
 			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4516 - " + _("Trying to accept a linked offer but could not find parent offer"));
 		fDepositPercentage = linkedOffer.auctionOffer.fDepositPercentage;
 	}
@@ -1961,7 +1961,7 @@ UniValue escrowcreaterawtransaction(const UniValue& params, bool fHelp) {
 		nBalanceTmp -= escrow.nDeposit;
 		nBalanceTmp -= escrow.nWitnessFee;
 		// if linked offer send commission to affiliate
-		if (!theOffer.vchOffer.empty())
+		if (!theOffer.vchLinkOffer.empty())
 		{
 			nBalanceTmp -= escrow.nCommission;
 			if (escrow.nCommission > 0)
