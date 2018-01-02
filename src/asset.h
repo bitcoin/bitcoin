@@ -110,7 +110,13 @@ public:
 		WriteAssetIndex(asset, op);
         return writeState;
     }
-
+	bool EraseAsset(const std::vector<unsigned char>& vchAsset, bool cleanup = false) {
+		bool eraseState = Erase(make_pair(std::string("asseti"), vchAsset));
+		Erase(make_pair(std::string("assetp"), vchAsset));
+		EraseISLock(vchAsset);
+		EraseAssetIndex(vchAsset, cleanup);
+		return eraseState;
+	}
     bool ReadAsset(const std::vector<unsigned char>& vchAsset, CAsset& asset) {
         return Read(make_pair(std::string("asseti"), vchAsset), asset);
     }
@@ -123,6 +129,7 @@ public:
 	bool EraseISLock(const std::vector<unsigned char>& vchGuid) {
 		return Erase(make_pair(std::string("assetl"), vchGuid));
 	}
+	bool CleanupDatabase(int &servicesCleaned);
 	void WriteAssetIndex(const CAsset& asset, const int &op);
 	void EraseAssetIndex(const std::vector<unsigned char>& vchAsset, bool cleanup);
 	void WriteAssetIndexHistory(const CAsset& asset, const int &op);
@@ -134,4 +141,5 @@ bool GetAsset(const std::vector<unsigned char> &vchAsset,CAsset& txPos);
 bool BuildAssetJson(const CAsset& asset, UniValue& oName);
 bool BuildAssetIndexerJson(const CAsset& asset,UniValue& oName);
 bool BuildAssetIndexerHistoryJson(const CAsset& asset, UniValue& oName);
+uint64_t GetAssetExpiration(const CAsset& asset);
 #endif // ASSET_H

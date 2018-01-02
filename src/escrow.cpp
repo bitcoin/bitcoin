@@ -423,8 +423,7 @@ bool GetEscrow(const vector<unsigned char> &vchEscrow,
 	if (!pescrowdb->ReadEscrow(vchEscrow, txPos))
 		return false;
    if (chainActive.Tip()->GetMedianTimePast() >= GetEscrowExpiration(txPos)) {
-	   txPos.SetNull();
-        string escrow = stringFromVch(vchEscrow);
+		txPos.SetNull();
         return false;
     }
     return true;

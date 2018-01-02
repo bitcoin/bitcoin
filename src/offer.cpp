@@ -219,7 +219,6 @@ bool GetOffer(const vector<unsigned char> &vchOffer,
 	if (chainActive.Tip()->GetMedianTimePast() >= GetOfferExpiration(txPos))
 	{
 		txPos.SetNull();
-		string offer = stringFromVch(vchOffer);
 		return false;
 	}
 	return true;
@@ -685,7 +684,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	else if(op == OP_OFFER_ACTIVATE)
 	{
 		COfferLinkWhitelistEntry entry;
-		if (fJustCheck && GetOffer(vvchArgs[0], theffer))
+		if (fJustCheck && GetOffer(vvchArgs[0], theOffer))
 		{
 			errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1050 - " + _("Offer already exists");
 			return true;

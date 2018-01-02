@@ -136,6 +136,14 @@ public:
 		WriteAssetAllocationIndex(assetallocation, op);
         return writeState;
     }
+	bool EraseAssetAllocation(const CAssetAllocationTuple& assetAllocationTuple, bool cleanup = false) {
+		bool eraseState = Erase(make_pair(std::string("assetallocationi"), assetAllocationTuple));
+		Erase(make_pair(std::string("assetp"), assetAllocationTuple));
+		EraseISLock(assetAllocationTuple);
+		EraseAssetIndex(assetAllocationTuple, cleanup);
+		return eraseState;
+	}
+	bool CleanupDatabase(int &servicesCleaned);
     bool ReadAssetAllocation(const CAssetAllocationTuple& assetAllocationTuple, CAssetAllocation& assetallocation) {
         return Read(make_pair(std::string("assetallocationi"), assetAllocationTuple), assetallocation);
     }

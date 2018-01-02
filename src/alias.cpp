@@ -123,6 +123,8 @@ bool GetTimeToPrune(const CScript& scriptPubKey, uint64_t &nTime)
 	COffer offer;
 	CEscrow escrow;
 	CCert cert;
+	CAssetAllocation assetallocation;
+	CAsset asset;
 	nTime = 0;
 	if(alias.UnserializeFromData(vchData, vchHash))
 	{
@@ -180,6 +182,28 @@ bool GetTimeToPrune(const CScript& scriptPubKey, uint64_t &nTime)
 			return true;
 		}
 		nTime = GetEscrowExpiration(escrow);
+		return true;
+	}
+	else if (asset.UnserializeFromData(vchData, vchHash))
+	{
+		if (!passetdb->ReadAsset(asset.vchAsset, asset))
+		{
+			// setting to the tip means we don't prune this data, we keep it
+			nTime = chainActive.Tip()->GetMedianTimePast() + 1;
+			return true;
+		}
+		nTime = GetAssetExpiration(asset);
+		return true;
+	}
+	else if (assetallocation.UnserializeFromData(vchData, vchHash))
+	{
+		if (!passetallocationdb->ReadAssetAllocation(CAssetAllocationTuple(asset.vchAsset, asset.vchAlias), assetallocation))
+		{
+			// setting to the tip means we don't prune this data, we keep it
+			nTime = chainActive.Tip()->GetMedianTimePast() + 1;
+			return true;
+		}
+		nTime = GetAssetAllocationExpiration(assetallocation);
 		return true;
 	}
 	return false;
@@ -898,6 +922,10 @@ void CleanupSyscoinServiceDatabases(int &numServicesCleaned)
 		pescrowdb->CleanupDatabase(numServicesCleaned);
 	if(pcertdb!= NULL)
 		pcertdb->CleanupDatabase(numServicesCleaned);
+	if (passetdb != NULL)
+		passetdb->CleanupDatabase(numServicesCleaned);
+	if (passetallocationdb != NULL)
+		passetallocationdb->CleanupDatabase(numServicesCleaned);
 	if (paliasdb != NULL) 
 		paliasdb->CleanupDatabase(numServicesCleaned);
 	
@@ -921,6 +949,16 @@ void CleanupSyscoinServiceDatabases(int &numServicesCleaned)
 		if (!pescrowdb->Flush())
 			LogPrintf("Failed to write to escrow database!");
 	}
+	if (passetdb != NULL)
+	{
+		if (!passetdb->Flush())
+			LogPrintf("Failed to write to asset database!");
+	}
+	if (passetallocationdb != NULL)
+	{
+		if (!passetallocationdb->Flush())
+			LogPrintf("Failed to write to asset allocation database!");
+	}
 }
 bool GetAlias(const vector<unsigned char> &vchAlias,
 	CAliasIndex& txPos) {
@@ -929,7 +967,6 @@ bool GetAlias(const vector<unsigned char> &vchAlias,
 	
 	if (chainActive.Tip()->GetMedianTimePast() >= txPos.nExpireTime) {
 		txPos.SetNull();
-		string alias = stringFromVch(vchAlias);
 		return false;
 	}
 	

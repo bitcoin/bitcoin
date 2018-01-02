@@ -30,7 +30,14 @@ bool IsAssetAllocationOp(int op) {
     return op == OP_ASSET_ALLOCATION_SEND
 }
 
+uint64_t GetAssetAllocationExpiration(const CAssetAllocation& assetallocation) {
+	uint64_t nTime = chainActive.Tip()->GetMedianTimePast() + 1;
+	CAliasUnprunable aliasUnprunable;
+	if (paliasdb && paliasdb->ReadAliasUnprunable(assetallocation.vchAlias, aliasUnprunable) && !aliasUnprunable.IsNull())
+		nTime = aliasUnprunable.nExpireTime;
 
+	return nTime;
+}
 
 string assetAllocationFromOp(int op) {
     switch (op) {
@@ -109,10 +116,39 @@ void CAssetAllocationDB::WriteAssetAllocationIndex(const CAssetAllocation& asset
 	if (write_concern)
 		mongoc_write_concern_destroy(write_concern);
 }
-bool GetAssetAllocation(const vector<unsigned char> &vchAssetAllocation,
+bool CAssetAllocationDB::CleanupDatabase(int &servicesCleaned)
+{
+	boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
+	pcursor->SeekToFirst();
+	CAsset txPos;
+	pair<string, CAssetAllocationTuple > key;
+	while (pcursor->Valid()) {
+		boost::this_thread::interruption_point();
+		try {
+			if (pcursor->GetKey(key) && key.first == "asseti") {
+				if (!GetAsset(key.second, txPos) || chainActive.Tip()->GetMedianTimePast() >= GetAssetAllocationExpiration(txPos))
+				{
+					servicesCleaned++;
+					EraseAsset(key.second, true);
+				}
+
+			}
+			pcursor->Next();
+		}
+		catch (std::exception &e) {
+			return error("%s() : deserialize error", __PRETTY_FUNCTION__);
+		}
+	}
+	return true;
+}
+bool GetAssetAllocation(const CAssetAllocationTuple &assetAllocationTuple,
         CAssetAllocation& txPos) {
-    if (!passetallocationdb->ReadAssetAllocation(vchAssetAllocation, txPos))
+    if (!passetallocationdb->ReadAssetAllocation(assetAllocationTuple, txPos))
         return false;
+	if (chainActive.Tip()->GetMedianTimePast() >= GetAssetAllocationExpiration(txPos)) {
+		txPos.SetNull();
+		return false;
+	}
     return true;
 }
 bool DecodeAndParseAssetAllocationTx(const CTransaction& tx, int& op, int& nOut,
@@ -536,22 +572,22 @@ UniValue assetallocationinfo(const UniValue& params, bool fHelp) {
                 "Show stored values of a single asset allocation.\n");
 
     vector<unsigned char> vchAssetAllocation = vchFromValue(params[0]);
-	UniValue oAsset(UniValue::VOBJ);
+	UniValue oAssetAllocation(UniValue::VOBJ);
     vector<unsigned char> vchValue;
 
 	CAssetAllocation txPos;
 	if (!GetAssetAllocation(vchAssetAllocation, txPos))
 		throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 5535 - " + _("Failed to read from assetallocation DB"));
 
-	if(!BuildAssetAllocationJson(txPos, oAsset))
-		oAsset.clear();
-    return oAsset;
+	if(!BuildAssetAllocationJson(txPos, oAssetAllocation))
+		oAssetAllocation.clear();
+    return oAssetAllocation;
 }
-bool BuildAssetAllocationJson(const CAssetAllocation& assetallocation, UniValue& oAsset)
+bool BuildAssetAllocationJson(const CAssetAllocation& assetallocation, UniValue& oAssetAllocation)
 {
-    oAsset.push_back(Pair("_id", stringFromVch(assetallocation.vchAssetAllocation)));
-    oAsset.push_back(Pair("txid", assetallocation.txHash.GetHex()));
-    oAsset.push_back(Pair("height", (int64_t)assetallocation.nHeight));
+    oAssetAllocation.push_back(Pair("_id", stringFromVch(assetallocation.vchAssetAllocation)));
+    oAssetAllocation.push_back(Pair("txid", assetallocation.txHash.GetHex()));
+    oAssetAllocation.push_back(Pair("height", (int64_t)assetallocation.nHeight));
 	int64_t nTime = 0;
 	if (chainActive.Height() >= assetallocation.nHeight) {
 		CBlockIndex *pindex = chainActive[assetallocation.nHeight];
@@ -559,18 +595,28 @@ bool BuildAssetAllocationJson(const CAssetAllocation& assetallocation, UniValue&
 			nTime = pindex->GetMedianTimePast();
 		}
 	}
-	oAsset.push_back(Pair("time", nTime));
-	oAsset.push_back(Pair("name", stringFromVch(assetallocation.vchName)));
-	oAsset.push_back(Pair("publicvalue", stringFromVch(assetallocation.vchPubData)));
-	oAsset.push_back(Pair("category", stringFromVch(assetallocation.sCategory)));
-	oAsset.push_back(Pair("alias", stringFromVch(assetallocation.vchAlias)));
+	oAssetAllocation.push_back(Pair("time", nTime));
+	oAssetAllocation.push_back(Pair("name", stringFromVch(assetallocation.vchName)));
+	oAssetAllocation.push_back(Pair("publicvalue", stringFromVch(assetallocation.vchPubData)));
+	oAssetAllocation.push_back(Pair("category", stringFromVch(assetallocation.sCategory)));
+	oAssetAllocation.push_back(Pair("alias", stringFromVch(assetallocation.vchAlias)));
+	int64_t expired_time = GetAssetAllocationExpiration(assetallocation);
+	bool expired = false;
+	if (expired_time <= chainActive.Tip()->GetMedianTimePast())
+	{
+		expired = true;
+	}
+
+
+	oAssetAllocation.push_back(Pair("expires_on", expired_time));
+	oAssetAllocation.push_back(Pair("expired", expired));
 	return true;
 }
-bool BuildAssetAllocationIndexerHistoryJson(const CAssetAllocation& assetallocation, UniValue& oAsset)
+bool BuildAssetAllocationIndexerHistoryJson(const CAssetAllocation& assetallocation, UniValue& oAssetAllocation)
 {
-	oAsset.push_back(Pair("_id", assetallocation.txHash.GetHex()));
-	oAsset.push_back(Pair("asset", stringFromVch(assetallocation.vchAssetAllocation)));
-	oAsset.push_back(Pair("height", (int64_t)assetallocation.nHeight));
+	oAssetAllocation.push_back(Pair("_id", assetallocation.txHash.GetHex()));
+	oAssetAllocation.push_back(Pair("asset", stringFromVch(assetallocation.vchAssetAllocation)));
+	oAssetAllocation.push_back(Pair("height", (int64_t)assetallocation.nHeight));
 	int64_t nTime = 0;
 	if (chainActive.Height() >= assetallocation.nHeight) {
 		CBlockIndex *pindex = chainActive[assetallocation.nHeight];
@@ -578,20 +624,20 @@ bool BuildAssetAllocationIndexerHistoryJson(const CAssetAllocation& assetallocat
 			nTime = pindex->GetMedianTimePast();
 		}
 	}
-	oAsset.push_back(Pair("time", nTime));
-	oAsset.push_back(Pair("title", stringFromVch(assetallocation.vchName)));
-	oAsset.push_back(Pair("publicvalue", stringFromVch(assetallocation.vchPubData)));
-	oAsset.push_back(Pair("category", stringFromVch(assetallocation.sCategory)));
-	oAsset.push_back(Pair("alias", stringFromVch(assetallocation.vchAlias)));
+	oAssetAllocation.push_back(Pair("time", nTime));
+	oAssetAllocation.push_back(Pair("title", stringFromVch(assetallocation.vchName)));
+	oAssetAllocation.push_back(Pair("publicvalue", stringFromVch(assetallocation.vchPubData)));
+	oAssetAllocation.push_back(Pair("category", stringFromVch(assetallocation.sCategory)));
+	oAssetAllocation.push_back(Pair("alias", stringFromVch(assetallocation.vchAlias)));
 	return true;
 }
-bool BuildAssetAllocationIndexerJson(const CAssetAllocation& assetallocation, UniValue& oAsset)
+bool BuildAssetAllocationIndexerJson(const CAssetAllocation& assetallocation, UniValue& oAssetAllocation)
 {
-	oAsset.push_back(Pair("_id", stringFromVch(assetallocation.vchAssetAllocation)));
-	oAsset.push_back(Pair("title", stringFromVch(assetallocation.vchName)));
-	oAsset.push_back(Pair("height", (int)assetallocation.nHeight));
-	oAsset.push_back(Pair("category", stringFromVch(assetallocation.sCategory)));
-	oAsset.push_back(Pair("alias", stringFromVch(assetallocation.vchAlias)));
+	oAssetAllocation.push_back(Pair("_id", stringFromVch(assetallocation.vchAssetAllocation)));
+	oAssetAllocation.push_back(Pair("title", stringFromVch(assetallocation.vchName)));
+	oAssetAllocation.push_back(Pair("height", (int)assetallocation.nHeight));
+	oAssetAllocation.push_back(Pair("category", stringFromVch(assetallocation.sCategory)));
+	oAssetAllocation.push_back(Pair("alias", stringFromVch(assetallocation.vchAlias)));
 	return true;
 }
 void AssetAllocationTxToJSON(const int op, const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash, UniValue &entry)

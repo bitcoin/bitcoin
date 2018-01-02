@@ -238,7 +238,6 @@ bool GetCert(const vector<unsigned char> &vchCert,
         return false;
     if (chainActive.Tip()->GetMedianTimePast() >= GetCertExpiration(txPos)) {
 		txPos.SetNull();
-        string cert = stringFromVch(vchCert);
         return false;
     }
 
@@ -250,7 +249,6 @@ bool GetFirstCert(const vector<unsigned char> &vchCert,
 		return false;
 	if (chainActive.Tip()->GetMedianTimePast() >= GetCertExpiration(txPos)) {
 		txPos.SetNull();
-		string cert = stringFromVch(vchCert);
 		return false;
 	}
 
