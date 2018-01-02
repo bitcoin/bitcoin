@@ -348,7 +348,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 	string user3 = "";
 	CAssetAllocation dbAssetAllocation;
 	CAsset dbAsset;
-	if (GetAssetAllocation(assetAllocationTuple, dbAssetAllocation))
+	if (GetAssetAllocation(assetAllocationTuple, dbAssetAllocation)){
 		bool bSendLocked = false;
 		if (!fJustCheck && passetallocationdb->ReadISLock(assetAllocationTuple, bSendLocked) && bSendLocked) {
 			if (dbAssetAllocation.nHeight >= nHeight)
