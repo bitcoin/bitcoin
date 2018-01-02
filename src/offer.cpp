@@ -1370,7 +1370,7 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 bool BuildOfferJson(const COffer& theOffer, UniValue& oOffer)
 {
 	CAliasIndex latestAlias;
-	if (GetAlias(theOffer.vchAlias, latestAlias))
+	if (!GetAlias(theOffer.vchAlias, latestAlias))
 		return false;
 	CTransaction linkTx;
 	COffer linkOffer;
