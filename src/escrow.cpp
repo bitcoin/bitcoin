@@ -1363,7 +1363,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 		
 	if(!dontaddtodb) {
 		string strResponseEnglish = "";
-		string strResponse = GetSyscoinTransactionDescription(op, vvchArgs, strResponseEnglish, ESCROW);
+		string strResponse = GetSyscoinTransactionDescription(op, strResponseEnglish, ESCROW);
 		if (strResponse != "") {
 			const string &user1 = stringFromVch(theEscrow.vchBuyerAlias);
 			const string &user2 = stringFromVch(theEscrow.vchSellerAlias);

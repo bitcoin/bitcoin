@@ -627,10 +627,9 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 	}
 	if(!dontaddtodb) {
 		string strResponseEnglish = "";
-		string strResponseGUID = "";
-		string strResponse = GetSyscoinTransactionDescription(op, vvchArgs, strResponseEnglish, strResponseGUID, CERT);
+		string strResponse = GetSyscoinTransactionDescription(op, strResponseEnglish, CERT);
 		if (strResponse != "") {
-			paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, strResponseGUID);
+			paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, stringFromVch(theCert.vchCert));
 		}
 	}
 	theCert.vchLinkAlias.clear();

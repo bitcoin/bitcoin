@@ -730,8 +730,7 @@ theAlias = dbAlias;
 	{
 		if (!dontaddtodb) {
 			string strResponseEnglish = "";
-			string strResponseGUID = "";
-			string strResponse = GetSyscoinTransactionDescription(op, vvchArgs, strResponseEnglish, strResponseGUID, ALIAS);
+			string strResponse = GetSyscoinTransactionDescription(op, strResponseEnglish, ALIAS);
 			if (strResponse != "") {
 				const string &user1 = stringFromVch(vvchArgs[0]);
 				string user2 = "";
@@ -740,7 +739,7 @@ theAlias = dbAlias;
 					if (!newAddress.empty())
 						user2 = newAddress;
 				}
-				paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, strResponseGUID);
+				paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, stringFromVch(vchAlias));
 			}
 		}
 		theAlias.nHeight = nHeight;
