@@ -512,8 +512,6 @@ UniValue assetallocationsend(const UniValue& params, bool fHelp) {
 	CSyscoinAddress fromAddr;
 	GetAddress(fromAlias, &fromAddr, scriptPubKeyFromOrig);
 
-	CAssetAllocation copyAsset = theAssetAllocation;
-	theAssetAllocation.ClearAssetAllocation();
 	CScript scriptPubKey;
 	theAssetAllocation.nHeight = chainActive.Tip()->nHeight;
 	theAssetAllocation.vchLinkAlias = fromAlias.vchAlias;
