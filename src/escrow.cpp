@@ -105,18 +105,18 @@ uint64_t GetEscrowExpiration(const CEscrow& escrow) {
 	CAliasUnprunable aliasBuyerPrunable,aliasSellerPrunable,aliasArbiterPrunable;
 	if(paliasdb)
 	{
-		if (paliasdb->ReadAliasUnprunable(escrow.buyerAliasTuple.first, aliasBuyerPrunable) && !aliasBuyerPrunable.IsNull())
+		if (paliasdb->ReadAliasUnprunable(escrow.vchBuyerAlias, aliasBuyerPrunable) && !aliasBuyerPrunable.IsNull())
 			nTime = aliasBuyerPrunable.nExpireTime;
 		// buyer is expired try seller
 		if(nTime <= chainActive.Tip()->GetMedianTimePast())
 		{
-			if (paliasdb->ReadAliasUnprunable(escrow.sellerAliasTuple.first, aliasSellerPrunable) && !aliasSellerPrunable.IsNull())
+			if (paliasdb->ReadAliasUnprunable(escrow.vchSellerAlias, aliasSellerPrunable) && !aliasSellerPrunable.IsNull())
 			{
 				nTime = aliasSellerPrunable.nExpireTime;
 				// seller is expired try the arbiter
 				if(nTime <= chainActive.Tip()->GetMedianTimePast())
 				{
-					if (paliasdb->ReadAliasUnprunable(escrow.arbiterAliasTuple.first, aliasArbiterPrunable) && !aliasArbiterPrunable.IsNull())
+					if (paliasdb->ReadAliasUnprunable(escrow.vchArbiterAlias, aliasArbiterPrunable) && !aliasArbiterPrunable.IsNull())
 						nTime = aliasArbiterPrunable.nExpireTime;
 				}
 			}
@@ -398,16 +398,15 @@ bool CEscrowDB::CleanupDatabase(int &servicesCleaned)
 	boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
 	pcursor->SeekToFirst();
 	CEscrow txPos;
-	pair<string, CNameTXIDTuple > key;
+	pair<string, vector<unsigned char> > key;
     while (pcursor->Valid()) {
         boost::this_thread::interruption_point();
         try {
 			if (pcursor->GetKey(key) && key.first == "escrowi") {
-				const CNameTXIDTuple &escrowTuple = key.second;
-  				if (!GetEscrow(escrowTuple.first, txPos) || chainActive.Tip()->GetMedianTimePast() >= GetEscrowExpiration(txPos))
+  				if (!GetEscrow(key.second, txPos) || chainActive.Tip()->GetMedianTimePast() >= GetEscrowExpiration(txPos))
 				{
 					servicesCleaned++;
-					EraseEscrow(escrowTuple, true);
+					EraseEscrow(key.second, true);
 				}
             }
             pcursor->Next();
@@ -418,22 +417,10 @@ bool CEscrowDB::CleanupDatabase(int &servicesCleaned)
 	return true;
 }
 
-bool GetEscrow(const CNameTXIDTuple &escrowTuple,
-	CEscrow& txPos) {
-	if (!pescrowdb || !pescrowdb->ReadEscrow(escrowTuple, txPos))
-		return false;
-	if (chainActive.Tip()->GetMedianTimePast() >= GetEscrowExpiration(txPos)) {
-		string escrow = stringFromVch(escrowTuple.first);
-		return false;
-	}
-	return true;
-}
 bool GetEscrow(const vector<unsigned char> &vchEscrow,
         CEscrow& txPos) {
-	uint256 txid;
-	if (!pescrowdb || !pescrowdb->ReadEscrowLastTXID(vchEscrow, txid))
-		return false;
-	if (!pescrowdb->ReadEscrow(CNameTXIDTuple(vchEscrow, txid), txPos))
+
+	if (!pescrowdb->ReadEscrow(vchEscrow, txPos))
 		return false;
    if (chainActive.Tip()->GetMedianTimePast() >= GetEscrowExpiration(txPos)) {
 	   txPos.SetNull();
@@ -652,7 +639,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 			errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4006 - " + _("Quantity of order must be greator than 0");
 			return error(errorMessage.c_str());
 		}
-		if(theEscrow.offerTuple.first.size() > MAX_ID_LENGTH)
+		if(theEscrow.vchOffer.size() > MAX_ID_LENGTH)
 		{
 			errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4008 - " + _("Escrow offer guid too long");
 			return error(errorMessage.c_str());
@@ -664,14 +651,14 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 		}
 		switch (op) {
 			case OP_ESCROW_ACKNOWLEDGE:
-				if (!IsAliasOp(prevAliasOp) || vvchPrevAliasArgs.empty() || theEscrow.linkAliasTuple.first != vvchPrevAliasArgs[0] || theEscrow.linkAliasTuple.third != vvchPrevAliasArgs[1])
+				if (!IsAliasOp(prevAliasOp) || vvchPrevAliasArgs.empty() || theEscrow.vchLinkAlias != vvchPrevAliasArgs[0] || theEscrow.vchLinkAlias.third != vvchPrevAliasArgs[1])
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4010 - " + _("Alias input mismatch");
 					return error(errorMessage.c_str());
 				}
 				break;
 			case OP_ESCROW_ACTIVATE:
-				if(!IsAliasOp(prevAliasOp) || vvchPrevAliasArgs.empty() || theEscrow.buyerAliasTuple.first != vvchPrevAliasArgs[0] || theEscrow.buyerAliasTuple.third != vvchPrevAliasArgs[1])
+				if(!IsAliasOp(prevAliasOp) || vvchPrevAliasArgs.empty() || theEscrow.vchBuyerAlias != vvchPrevAliasArgs[0] || theEscrow.vchBuyerAlias.third != vvchPrevAliasArgs[1])
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4011 - " + _("Alias input mismatch");
 					return error(errorMessage.c_str());
@@ -714,7 +701,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				break;
 			case OP_ESCROW_BID:
 				
-				if (!IsAliasOp(prevAliasOp) || vvchPrevAliasArgs.empty() || theEscrow.buyerAliasTuple.first != vvchPrevAliasArgs[0] || theEscrow.buyerAliasTuple.third != vvchPrevAliasArgs[1])
+				if (!IsAliasOp(prevAliasOp) || vvchPrevAliasArgs.empty() || theEscrow.vchBuyerAlias != vvchPrevAliasArgs[0] || theEscrow.vchBuyerAlias.third != vvchPrevAliasArgs[1])
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4011 - " + _("Alias input mismatch");
 					return error(errorMessage.c_str());
@@ -740,7 +727,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4010 - " + _("Escrow witness missing in bid");
 					return error(errorMessage.c_str());
 				}
-				if(theEscrow.offerTuple.IsNull())
+				if(theEscrow.vchOffer.IsNull())
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4010 - " + _("Escrow offer information missing in bid");
 					return error(errorMessage.c_str());
@@ -748,7 +735,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				break;
 			case OP_ESCROW_ADD_SHIPPING:
 
-				if (!IsAliasOp(prevAliasOp) || vvchPrevAliasArgs.empty() || theEscrow.buyerAliasTuple.first != vvchPrevAliasArgs[0] || theEscrow.buyerAliasTuple.third != vvchPrevAliasArgs[1])
+				if (!IsAliasOp(prevAliasOp) || vvchPrevAliasArgs.empty() || theEscrow.vchBuyerAlias != vvchPrevAliasArgs[0] || theEscrow.vchBuyerAlias.third != vvchPrevAliasArgs[1])
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4011 - " + _("Alias input mismatch");
 					return error(errorMessage.c_str());
@@ -806,7 +793,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				}
 				break;
 			case OP_ESCROW_FEEDBACK:
-				if(!IsAliasOp(prevAliasOp) || vvchPrevAliasArgs.empty() || theEscrow.linkAliasTuple.first != vvchPrevAliasArgs[0] || theEscrow.linkAliasTuple.third != vvchPrevAliasArgs[1])
+				if(!IsAliasOp(prevAliasOp) || vvchPrevAliasArgs.empty() || theEscrow.vchLinkAlias != vvchPrevAliasArgs[0] || theEscrow.vchLinkAlias.third != vvchPrevAliasArgs[1])
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4023 - " + _("Alias input mismatch");
 					return error(errorMessage.c_str());
@@ -829,7 +816,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				}
 				break;
 			case OP_ESCROW_REFUND:
-				if(!IsAliasOp(prevAliasOp) || vvchPrevAliasArgs.empty() || theEscrow.linkAliasTuple.first != vvchPrevAliasArgs[0]  || theEscrow.linkAliasTuple.third != vvchPrevAliasArgs[1])
+				if(!IsAliasOp(prevAliasOp) || vvchPrevAliasArgs.empty() || theEscrow.vchLinkAlias != vvchPrevAliasArgs[0]  || theEscrow.vchLinkAlias.third != vvchPrevAliasArgs[1])
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4027 - " + _("Alias input mismatch");
 					return error(errorMessage.c_str());
@@ -866,7 +853,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 
 				break;
 			case OP_ESCROW_REFUND_COMPLETE:
-				if (!IsAliasOp(prevAliasOp) || vvchPrevAliasArgs.empty() || theEscrow.linkAliasTuple.first != vvchPrevAliasArgs[0] || theEscrow.linkAliasTuple.third != vvchPrevAliasArgs[1])
+				if (!IsAliasOp(prevAliasOp) || vvchPrevAliasArgs.empty() || theEscrow.vchLinkAlias != vvchPrevAliasArgs[0] || theEscrow.vchLinkAlias.third != vvchPrevAliasArgs[1])
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4027 - " + _("Alias input mismatch");
 					return error(errorMessage.c_str());
@@ -903,17 +890,17 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 	{
 		if (!theEscrow.bPaymentAck)
 		{
-			if(!GetAlias(theEscrow.buyerAliasTuple.first, buyerAlias))
+			if(!GetAlias(theEscrow.vchBuyerAlias, buyerAlias))
 			{
 				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4034 - " + _("Cannot find buyer alias. It may be expired");
 				return true;
 			}
-			if(!GetAlias(theEscrow.arbiterAliasTuple.first, arbiterAlias))
+			if(!GetAlias(theEscrow.vchArbiterAlias, arbiterAlias))
 			{
 				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4035 - " + _("Cannot find arbiter alias. It may be expired");
 				return true;
 			}
-			if(!GetAlias(theEscrow.sellerAliasTuple.first, sellerAlias))
+			if(!GetAlias(theEscrow.vchSellerAlias, sellerAlias))
 			{
 				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4036 - " + _("Cannot find seller alias. It may be expired");
 				return true;
@@ -995,9 +982,9 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 	// make sure escrow settings don't change (besides scriptSigs/nTotal's) outside of activation
 	if (op != OP_ESCROW_ACTIVATE)
 	{
-		if (serializedEscrow.buyerAliasTuple != theEscrow.buyerAliasTuple ||
-			serializedEscrow.arbiterAliasTuple != theEscrow.arbiterAliasTuple ||
-			serializedEscrow.sellerAliasTuple != theEscrow.sellerAliasTuple)
+		if (serializedEscrow.vchBuyerAlias != theEscrow.vchBuyerAlias ||
+			serializedEscrow.vchArbiterAlias != theEscrow.vchArbiterAlias ||
+			serializedEscrow.vchSellerAlias != theEscrow.vchSellerAlias)
 		{
 			errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4038 - " + _("Invalid aliases used for escrow transaction");
 			return true;
@@ -1027,7 +1014,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4040 - " + _("Bid must be higher than the previous bid, please enter a higher amount");
 				return true;
 			}
-			if (!GetOffer(theEscrow.offerTuple, dbOffer))
+			if (!GetOffer(theEscrow.vchOffer, dbOffer))
 			{
 				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4042 - " + _("Cannot find escrow offer. It may be expired");
 				return true;
@@ -1057,9 +1044,9 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4042 - " + _("Offer auction requires a witness signature for each bid but none provided");
 				return true;
 			}
-			if (!dbOffer.linkOfferTuple.first.empty())
+			if (!dbOffer.linkvchOffer.empty())
 			{
-				if (!GetOffer(dbOffer.linkOfferTuple, myLinkOffer))
+				if (!GetOffer(dbOffer.linkvchOffer, myLinkOffer))
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4078 - " + _("Cannot find linked offer for this escrow");
 					return true;
@@ -1092,7 +1079,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 			theEscrow.op = escrowOp;
 			theEscrow.txHash = tx.GetHash();
 			theEscrow.nHeight = nHeight;
-			theEscrow.linkAliasTuple = serializedEscrow.linkAliasTuple;
+			theEscrow.vchLinkAlias = serializedEscrow.vchLinkAlias;
 			// write escrow bid
 			if (!dontaddtodb)
 			{
@@ -1119,7 +1106,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4050 - " + _("Can only acknowledge an active escrow");
 				return true;
 			}
-			if (serializedEscrow.linkAliasTuple.first != theEscrow.sellerAliasTuple.first)
+			if (serializedEscrow.vchLinkAlias != theEscrow.vchSellerAlias)
 			{
 				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4041 - " + _("Only seller can acknowledge an escrow payment");
 				return true;
@@ -1127,10 +1114,10 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 			else
 				theEscrow.bPaymentAck = true;
 
-			if (GetOffer(theEscrow.offerTuple.first, dbOffer)){
+			if (GetOffer(theEscrow.vchOffer, dbOffer)){
 				int nQty = dbOffer.nQty;
 				// if this is a linked offer we must update the linked offer qty
-				if (GetOffer(dbOffer.linkOfferTuple.first, myLinkOffer))
+				if (GetOffer(dbOffer.linkvchOffer, myLinkOffer))
 				{
 					nQty = myLinkOffer.nQty;
 				}
@@ -1146,14 +1133,14 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 		}
 		else if (op == OP_ESCROW_REFUND)
 		{
-			if (!GetOffer(theEscrow.offerTuple, dbOffer))
+			if (!GetOffer(theEscrow.vchOffer, dbOffer))
 			{
 				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4042 - " + _("Cannot find escrow offer. It may be expired");
 				return true;
 			}
-			if (!dbOffer.linkOfferTuple.first.empty())
+			if (!dbOffer.linkvchOffer.empty())
 			{
-				if (!GetOffer(dbOffer.linkOfferTuple, myLinkOffer))
+				if (!GetOffer(dbOffer.linkvchOffer, myLinkOffer))
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4078 - " + _("Cannot find linked offer for this escrow");
 					return true;
@@ -1177,12 +1164,12 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 			}
 
 			CAliasIndex alias;
-			if (!GetAlias(theEscrow.sellerAliasTuple.first, alias))
+			if (!GetAlias(theEscrow.vchSellerAlias, alias))
 			{
 				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4042 - " + _("Cannot find seller alias. It may be expired");
 				return true;
 			}
-			if (!GetAlias(theEscrow.arbiterAliasTuple.first, alias))
+			if (!GetAlias(theEscrow.vchArbiterAlias, alias))
 			{
 				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4043 - " + _("Cannot find arbiter alias. It may be expired");
 				return true;
@@ -1198,7 +1185,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4045 - " + _("Cannot refund an escrow that is already released");
 				return true;
 			}
-			else if (serializedEscrow.linkAliasTuple.first != theEscrow.sellerAliasTuple.first && serializedEscrow.linkAliasTuple.first != theEscrow.arbiterAliasTuple.first)
+			else if (serializedEscrow.vchLinkAlias != theEscrow.vchSellerAlias && serializedEscrow.vchLinkAlias != theEscrow.vchArbiterAlias)
 			{
 				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4046 - " + _("Only arbiter or seller can initiate an escrow refund");
 				return true;
@@ -1220,7 +1207,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 			}
 			else if (!serializedEscrow.redeemTxId.IsNull())
 				theEscrow.redeemTxId = serializedEscrow.redeemTxId;
-			else if (serializedEscrow.linkAliasTuple.first != theEscrow.buyerAliasTuple.first)
+			else if (serializedEscrow.vchLinkAlias != theEscrow.vchBuyerAlias)
 			{
 				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4051 - " + _("Only buyer can claim an escrow refund");
 				return true;
@@ -1228,14 +1215,14 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 		}
 		else if (op == OP_ESCROW_RELEASE)
 		{
-			if (!GetOffer(theEscrow.offerTuple, dbOffer))
+			if (!GetOffer(theEscrow.vchOffer, dbOffer))
 			{
 				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4042 - " + _("Cannot find escrow offer. It may be expired");
 				return true;
 			}
-			if (!dbOffer.linkOfferTuple.first.empty())
+			if (!dbOffer.linkvchOffer.empty())
 			{
-				if (!GetOffer(dbOffer.linkOfferTuple, myLinkOffer))
+				if (!GetOffer(dbOffer.linkvchOffer, myLinkOffer))
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4078 - " + _("Cannot find linked offer for this escrow");
 					return true;
@@ -1259,12 +1246,12 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 			}
 
 			CAliasIndex alias;
-			if (!GetAlias(theEscrow.buyerAliasTuple.first, alias))
+			if (!GetAlias(theEscrow.vchBuyerAlias, alias))
 			{
 				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4052 - " + _("Cannot find buyer alias. It may be expired");
 				return true;
 			}
-			if (!GetAlias(theEscrow.arbiterAliasTuple.first, alias))
+			if (!GetAlias(theEscrow.vchArbiterAlias, alias))
 			{
 				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4053 - " + _("Cannot find arbiter alias. It may be expired");
 				return true;
@@ -1279,7 +1266,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4055 - " + _("Cannot release an escrow that is already refunded");
 				return true;
 			}
-			else if (serializedEscrow.linkAliasTuple.first != theEscrow.buyerAliasTuple.first && serializedEscrow.linkAliasTuple.first != theEscrow.arbiterAliasTuple.first)
+			else if (serializedEscrow.vchLinkAlias != theEscrow.vchBuyerAlias && serializedEscrow.vchLinkAlias != theEscrow.vchArbiterAlias)
 			{
 				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4056 - " + _("Only arbiter or buyer can initiate an escrow release");
 				return true;
@@ -1297,7 +1284,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 			}
 			else if (!serializedEscrow.redeemTxId.IsNull())
 				theEscrow.redeemTxId = serializedEscrow.redeemTxId;
-			else if (serializedEscrow.linkAliasTuple.first != theEscrow.sellerAliasTuple.first)
+			else if (serializedEscrow.vchLinkAlias != theEscrow.vchSellerAlias)
 			{
 				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4059 - " + _("Only seller can claim an escrow release");
 				return true;
@@ -1305,9 +1292,9 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 		}
 		else if (op == OP_ESCROW_FEEDBACK)
 		{
-			vector<unsigned char> vchSellerAlias = theEscrow.sellerAliasTuple.first;
-			if (!theEscrow.linkSellerAliasTuple.first.empty())
-				vchSellerAlias = theEscrow.linkSellerAliasTuple.first;
+			vector<unsigned char> vchSellerAlias = theEscrow.vchSellerAlias;
+			if (!theEscrow.vchLinkSellerAlias.empty())
+				vchSellerAlias = theEscrow.vchLinkSellerAlias;
 
 			if (serializedEscrow.feedback.nFeedbackUserFrom == serializedEscrow.feedback.nFeedbackUserTo)
 			{
@@ -1319,17 +1306,17 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4063 - " + _("Invalid rating, must be less than or equal to 5 and greater than or equal to 0");
 				serializedEscrow = theEscrow;
 			}
-			else if (serializedEscrow.feedback.nFeedbackUserFrom == FEEDBACKBUYER && serializedEscrow.linkAliasTuple.first != theEscrow.buyerAliasTuple.first)
+			else if (serializedEscrow.feedback.nFeedbackUserFrom == FEEDBACKBUYER && serializedEscrow.vchLinkAlias != theEscrow.vchBuyerAlias)
 			{
 				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4064 - " + _("Only buyer can leave this feedback");
 				serializedEscrow = theEscrow;
 			}
-			else if (serializedEscrow.feedback.nFeedbackUserFrom == FEEDBACKSELLER && serializedEscrow.linkAliasTuple.first != vchSellerAlias)
+			else if (serializedEscrow.feedback.nFeedbackUserFrom == FEEDBACKSELLER && serializedEscrow.vchLinkAlias != vchSellerAlias)
 			{
 				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4065 - " + _("Only seller can leave this feedback");
 				serializedEscrow = theEscrow;
 			}
-			else if (serializedEscrow.feedback.nFeedbackUserFrom == FEEDBACKARBITER && serializedEscrow.linkAliasTuple.first != theEscrow.arbiterAliasTuple.first)
+			else if (serializedEscrow.feedback.nFeedbackUserFrom == FEEDBACKARBITER && serializedEscrow.vchLinkAlias != theEscrow.vchArbiterAlias)
 			{
 				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4066 - " + _("Only arbiter can leave this feedback");
 				serializedEscrow = theEscrow;
@@ -1341,7 +1328,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 			}
 			serializedEscrow.txHash = tx.GetHash();
 			serializedEscrow.nHeight = nHeight;
-			serializedEscrow.offerTuple = theEscrow.offerTuple;
+			serializedEscrow.vchOffer = theEscrow.vchOffer;
 			if (!dontaddtodb) {
 				pescrowdb->WriteEscrowFeedbackIndex(serializedEscrow);
 			}
@@ -1360,7 +1347,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 		if(theEscrow.nQty <= 0)
 			theEscrow.nQty = 1;
 
-		if (GetOffer( theEscrow.offerTuple.first, dbOffer))
+		if (GetOffer( theEscrow.vchOffer, dbOffer))
 		{
 			if(dbOffer.sCategory.size() > 0 && boost::algorithm::istarts_with(stringFromVch(dbOffer.sCategory), "wanted"))
 			{
@@ -1392,16 +1379,16 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 					return true;
 				}
 			}
-			theEscrow.offerTuple = CNameTXIDTuple(dbOffer.vchOffer, dbOffer.txHash);
+			theEscrow.vchOffer = dbOffer.vchOffer;
 		}
 		else
 		{
 			errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4077 - " + _("Cannot find offer for this escrow. It may be expired");
 			return true;
 		}
-		if (!dbOffer.linkOfferTuple.first.empty())
+		if (!dbOffer.linkvchOffer.empty())
 		{
-			if (!GetOffer(dbOffer.linkOfferTuple.first, myLinkOffer))
+			if (!GetOffer(dbOffer.linkvchOffer, myLinkOffer))
 			{
 				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4078 - " + _("Cannot find linked offer for this escrow");
 				return true;
@@ -1444,9 +1431,9 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 		string strResponseGUID = "";
 		string strResponse = GetSyscoinTransactionDescription(op, vvchArgs, strResponseEnglish, strResponseGUID, ESCROW);
 		if (strResponse != "") {
-			const string &user1 = stringFromVch(theEscrow.buyerAliasTuple.first);
-			const string &user2 = stringFromVch(theEscrow.sellerAliasTuple.first);
-			const string &user3 = stringFromVch(theEscrow.arbiterAliasTuple.first);
+			const string &user1 = stringFromVch(theEscrow.vchBuyerAlias);
+			const string &user2 = stringFromVch(theEscrow.vchSellerAlias);
+			const string &user3 = stringFromVch(theEscrow.vchArbiterAlias);
 			paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, strResponseGUID);
 		}
 	}
@@ -1454,7 +1441,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 	theEscrow.op = escrowOp;
 	theEscrow.txHash = tx.GetHash();
 	theEscrow.nHeight = nHeight;
-	theEscrow.linkAliasTuple.SetNull();
+	theEscrow.vchLinkAlias.SetNull();
     // write escrow
 	if (!dontaddtodb) {
 		if (!pescrowdb->WriteEscrow(vvchArgs, theEscrow, dbEscrow, fJustCheck))
@@ -1517,7 +1504,7 @@ UniValue escrowbid(const UniValue& params, bool fHelp) {
 	theEscrow.nAmountOrBidPerUnit = nBid;
 	theEscrow.fBidPerUnit = fBid;
 	theEscrow.nHeight = chainActive.Tip()->nHeight;
-	theEscrow.linkAliasTuple = CNameTXIDTuple(bidderalias.vchAlias, bidderalias.txHash, bidderalias.vchGUID);
+	theEscrow.vchLinkAlias = bidderalias.vchAlias;
 	theEscrow.vchWitness = vchWitness;
 	vector<unsigned char> data;
 	theEscrow.Serialize(data);
@@ -1582,7 +1569,7 @@ UniValue escrowaddshipping(const UniValue& params, bool fHelp) {
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4513 - " + _("Could not find an escrow with this identifier"));
 
 	CAliasIndex bidderalias;
-	if (!GetAlias(theEscrow.buyerAliasTuple.first, bidderalias))
+	if (!GetAlias(theEscrow.vchBuyerAlias, bidderalias))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4512 - " + _("Could not find alias with this name"));
 
 	CScriptID innerID(CScript(theEscrow.vchRedeemScript.begin(), theEscrow.vchRedeemScript.end()));
@@ -1604,7 +1591,7 @@ UniValue escrowaddshipping(const UniValue& params, bool fHelp) {
 	theEscrow.ClearEscrow();
 	theEscrow.op = OP_ESCROW_ADD_SHIPPING;
 	theEscrow.nShipping += nShipping;
-	theEscrow.linkAliasTuple = CNameTXIDTuple(bidderalias.vchAlias, bidderalias.txHash, bidderalias.vchGUID);
+	theEscrow.vchLinkAlias = bidderalias.vchAlias;
 	theEscrow.nHeight = chainActive.Tip()->nHeight;
 	vector<unsigned char> data;
 	theEscrow.Serialize(data);
@@ -1738,7 +1725,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4513 - " + _("Could not find an offer with this identifier"));
 	float fDepositPercentage = theOffer.auctionOffer.fDepositPercentage;
 	CAliasIndex selleralias;
-	if (!GetAlias( theOffer.aliasTuple.first, selleralias))
+	if (!GetAlias( theOffer.vchAlias, selleralias))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4514 - " + _("Could not find seller alias with this identifier"));
 
 	if(theOffer.sCategory.size() > 0 && boost::algorithm::istarts_with(stringFromVch(theOffer.sCategory), "wanted"))
@@ -1749,12 +1736,12 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	CAliasIndex theLinkedAlias, reselleralias;
 	
 	CAmount nCommission = 0;
-	if(!theOffer.linkOfferTuple.first.empty())
+	if(!theOffer.linkvchOffer.empty())
 	{
-		if (!GetOffer( theOffer.linkOfferTuple.first, linkedOffer))
+		if (!GetOffer( theOffer.linkvchOffer, linkedOffer))
 			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4516 - " + _("Trying to accept a linked offer but could not find parent offer"));
 
-		if (!GetAlias( linkedOffer.aliasTuple.first, theLinkedAlias))
+		if (!GetAlias( linkedOffer.vchAlias, theLinkedAlias))
 			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4517 - " + _("Could not find an alias with this identifier"));
 
 		if(linkedOffer.sCategory.size() > 0 && boost::algorithm::istarts_with(stringFromVch(linkedOffer.sCategory), "wanted"))
@@ -1764,7 +1751,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 		selleralias = theLinkedAlias;
 		fDepositPercentage = linkedOffer.auctionOffer.fDepositPercentage;
 		COfferLinkWhitelistEntry foundEntry;
-		theLinkedAlias.offerWhitelist.GetLinkEntryByHash(theOffer.aliasTuple.first, foundEntry);
+		theLinkedAlias.offerWhitelist.GetLinkEntryByHash(theOffer.vchAlias, foundEntry);
 		int discount = foundEntry.nDiscountPct;
 		int commission = theOffer.nCommission;
 		int markup = discount + commission;
@@ -1859,12 +1846,12 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
     CEscrow newEscrow;
 	newEscrow.op = OP_ESCROW_ACTIVATE;
 	newEscrow.vchEscrow = vchEscrow;
-	newEscrow.buyerAliasTuple = CNameTXIDTuple(buyeralias.vchAlias, buyeralias.txHash, buyeralias.vchGUID);
-	newEscrow.arbiterAliasTuple = CNameTXIDTuple(arbiteralias.vchAlias, arbiteralias.txHash, arbiteralias.vchGUID);
-	newEscrow.offerTuple = CNameTXIDTuple(theOffer.vchOffer, theOffer.txHash);
+	newEscrow.vchBuyerAlias = buyeralias.vchAlias;
+	newEscrow.vchArbiterAlias = arbiteralias.vchAlias;
+	newEscrow.vchOffer = theOffer.vchOffer;
 	newEscrow.extTxId = uint256S(extTxIdStr);
-	newEscrow.sellerAliasTuple = CNameTXIDTuple(selleralias.vchAlias, selleralias.txHash, selleralias.vchGUID);
-	newEscrow.linkSellerAliasTuple = CNameTXIDTuple(reselleralias.vchAlias, reselleralias.txHash, reselleralias.vchGUID);
+	newEscrow.vchSellerAlias = selleralias.vchAlias;
+	newEscrow.vchLinkSellerAlias = reselleralias.vchAlias;
 	newEscrow.nQty = nQty;
 	newEscrow.nPaymentOption = paymentOptionMask;
 	newEscrow.nHeight = chainActive.Tip()->nHeight;
@@ -1944,28 +1931,26 @@ UniValue escrowacknowledge(const UniValue& params, bool fHelp) {
 	if (!GetEscrow(vchEscrow, escrow))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4536 - " + _("Could not find a escrow with this key"));
 
-	CAliasIndex sellerAlias, sellerAliasLatest, buyerAlias, buyerAliasLatest, arbiterAlias, arbiterAliasLatest;
-	CSyscoinAddress arbiterAddressPayment, buyerAddressPayment, sellerAddressPayment;
+	CAliasIndex sellerAliasLatest, buyerAliasLatest, arbiterAliasLatest, resellerAliasLatest;
+	CSyscoinAddress arbiterPaymentAddress, buyerPaymentAddress, sellerPaymentAddress, resellerPaymentAddress;
 	CScript arbiterScript;
-	GetAlias(CNameTXIDTuple(escrow.arbiterAliasTuple.first, escrow.arbiterAliasTuple.second), arbiterAlias);
-	if (GetAlias(escrow.arbiterAliasTuple.first, arbiterAliasLatest))
+	if (GetAlias(escrow.vchArbiterAlias, arbiterAliasLatest))
 	{
-		GetAddress(arbiterAliasLatest, &arbiterAddressPayment, arbiterScript, escrow.nPaymentOption);
+		GetAddress(arbiterAliasLatest, &arbiterPaymentAddress, arbiterScript, escrow.nPaymentOption);
 	}
 
 	CScript buyerScript;
-	GetAlias(CNameTXIDTuple(escrow.buyerAliasTuple.first, escrow.buyerAliasTuple.second), buyerAlias);
-	if (GetAlias(escrow.buyerAliasTuple.first, buyerAliasLatest))
+	if (GetAlias(escrow.vchBuyerAlias, buyerAliasLatest))
 	{
-		GetAddress(buyerAliasLatest, &buyerAddressPayment, buyerScript, escrow.nPaymentOption);
+		GetAddress(buyerAliasLatest, &buyerPaymentAddress, buyerScript, escrow.nPaymentOption);
 	}
 
 	CScript sellerScript;
-	GetAlias(CNameTXIDTuple(escrow.sellerAliasTuple.first, escrow.sellerAliasTuple.second), sellerAlias);
-	if (GetAlias(escrow.sellerAliasTuple.first, sellerAliasLatest))
+	if (GetAlias(escrow.vchSellerAlias, sellerAliasLatest))
 	{
-		GetAddress(sellerAliasLatest, &sellerAddressPayment, sellerScript, escrow.nPaymentOption);
+		GetAddress(sellerAliasLatest, &sellerPaymentAddress, sellerScript, escrow.nPaymentOption);
 	}
+
 
 
 
@@ -1974,7 +1959,7 @@ UniValue escrowacknowledge(const UniValue& params, bool fHelp) {
 
 	escrow.ClearEscrow();
 	escrow.nHeight = chainActive.Tip()->nHeight;
-	escrow.linkAliasTuple = CNameTXIDTuple(sellerAliasLatest.vchAlias, sellerAliasLatest.txHash, sellerAliasLatest.vchGUID);
+	escrow.vchLinkAlias = sellerAliasLatest.vchAlias;
 	escrow.op = OP_ESCROW_ACKNOWLEDGE;
 
 	vector<unsigned char> data;
@@ -2010,7 +1995,7 @@ UniValue escrowacknowledge(const UniValue& params, bool fHelp) {
 	CCoinControl coinControl;
 	coinControl.fAllowOtherInputs = false;
 	coinControl.fAllowWatchOnly = false;
-	SendMoneySyscoin(escrow.linkAliasTuple.first, vchWitness, aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
+	SendMoneySyscoin(escrow.vchLinkAlias, vchWitness, aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
 	UniValue res(UniValue::VARR);
 	res.push_back(EncodeHexTx(wtx));
 	return res;
@@ -2036,43 +2021,40 @@ UniValue escrowcreaterawtransaction(const UniValue& params, bool fHelp) {
 	if (!GetEscrow(vchEscrow, escrow))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4524 - " + _("Could not find a escrow with this key"));
 	COffer theOffer, linkedOffer;
-	if (!GetOffer(escrow.offerTuple, theOffer))
+	if (!GetOffer(escrow.vchOffer, theOffer))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4524 - " + _("Could not find offer related to this escrow"));
 	float fDepositPercentage = theOffer.auctionOffer.fDepositPercentage;
-	if (!theOffer.linkOfferTuple.first.empty())
+	if (!theOffer.linkvchOffer.empty())
 	{
 
-		if (!GetOffer(theOffer.linkOfferTuple, linkedOffer))
+		if (!GetOffer(theOffer.linkvchOffer, linkedOffer))
 			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4516 - " + _("Trying to accept a linked offer but could not find parent offer"));
 		fDepositPercentage = linkedOffer.auctionOffer.fDepositPercentage;
 	}
 
-	CAliasIndex sellerAlias, sellerAliasLatest, buyerAlias, buyerAliasLatest, arbiterAlias, arbiterAliasLatest, linkSellerAliasLatest, witnessAliasLatest;
-	CSyscoinAddress arbiterAddressPayment, buyerAddressPayment, sellerAddressPayment, linkSellerAddress, witnessAddressPayment;
+	CAliasIndex sellerAliasLatest, buyerAliasLatest, arbiterAliasLatest, resellerAliasLatest, witnessAliasLatest;
+	CSyscoinAddress arbiterPaymentAddress, buyerPaymentAddress, sellerPaymentAddress, resellerPaymentAddress, witnessAddressPayment;
 	CScript arbiterScript;
-	GetAlias(CNameTXIDTuple(escrow.arbiterAliasTuple.first, escrow.arbiterAliasTuple.second), arbiterAlias);
-	if (GetAlias(escrow.arbiterAliasTuple.first, arbiterAliasLatest))
+	if (GetAlias(escrow.vchArbiterAlias, arbiterAliasLatest))
 	{
-		GetAddress(arbiterAliasLatest, &arbiterAddressPayment, arbiterScript, escrow.nPaymentOption);
+		GetAddress(arbiterAliasLatest, &arbiterPaymentAddress, arbiterScript, escrow.nPaymentOption);
 	}
 
 	CScript buyerScript;
-	GetAlias(CNameTXIDTuple(escrow.buyerAliasTuple.first, escrow.buyerAliasTuple.second), buyerAlias);
-	if (GetAlias(escrow.buyerAliasTuple.first, buyerAliasLatest))
+	if (GetAlias(escrow.vchBuyerAlias, buyerAliasLatest))
 	{
-		GetAddress(buyerAliasLatest, &buyerAddressPayment, buyerScript, escrow.nPaymentOption);
+		GetAddress(buyerAliasLatest, &buyerPaymentAddress, buyerScript, escrow.nPaymentOption);
 	}
 
 	CScript sellerScript;
-	GetAlias(CNameTXIDTuple(escrow.sellerAliasTuple.first, escrow.sellerAliasTuple.second), sellerAlias);
-	if (GetAlias(escrow.sellerAliasTuple.first, sellerAliasLatest))
+	if (GetAlias(escrow.vchSellerAlias, sellerAliasLatest))
 	{
-		GetAddress(sellerAliasLatest, &sellerAddressPayment, sellerScript, escrow.nPaymentOption);
+		GetAddress(sellerAliasLatest, &sellerPaymentAddress, sellerScript, escrow.nPaymentOption);
 	}
-	if (GetAlias(escrow.linkSellerAliasTuple.first, linkSellerAliasLatest))
+	CScript resellerScript;
+	if (GetAlias(escrow.vchLinkSellerAlias, resellerAliasLatest))
 	{
-		CScript script;
-		GetAddress(linkSellerAliasLatest, &linkSellerAddress, script, escrow.nPaymentOption);
+		GetAddress(resellerAliasLatest, &resellerPaymentAddress, resellerScript, escrow.nPaymentOption);
 	}
 	if (GetAlias(escrow.vchWitness, witnessAliasLatest))
 	{
@@ -2109,11 +2091,11 @@ UniValue escrowcreaterawtransaction(const UniValue& params, bool fHelp) {
 		nBalanceTmp -= escrow.nDeposit;
 		nBalanceTmp -= escrow.nWitnessFee;
 		// if linked offer send commission to affiliate
-		if (!theOffer.linkOfferTuple.first.empty())
+		if (!theOffer.linkvchOffer.empty())
 		{
 			nBalanceTmp -= escrow.nCommission;
 			if (escrow.nCommission > 0)
-				createAddressUniValue.push_back(Pair(linkSellerAddress.ToString(), ValueFromAmount(escrow.nCommission)));
+				createAddressUniValue.push_back(Pair(resellerPaymentAddress.ToString(), ValueFromAmount(escrow.nCommission)));
 		}
 		if (escrow.role == EscrowRoles::ARBITER || role == "arbiter")
 		{
@@ -2195,20 +2177,18 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
     if (!GetEscrow( vchEscrow,escrow))
         throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4524 - " + _("Could not find a escrow with this key"));
 	COffer theOffer;
-	if (!GetOffer(escrow.offerTuple, theOffer))
+	if (!GetOffer(escrow.vchOffer, theOffer))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4524 - " + _("Could not find offer related to this escrow"));
 
-	CAliasIndex buyerAlias, buyerAliasLatest, arbiterAlias, arbiterAliasLatest;
+	CAliasIndex buyerAliasLatest, arbiterAliasLatest;
 	CSyscoinAddress arbiterAddressPayment, buyerAddressPayment;
 	CScript arbiterScript;
-	GetAlias(CNameTXIDTuple(escrow.arbiterAliasTuple.first, escrow.arbiterAliasTuple.second), arbiterAlias);
-	if (GetAlias(escrow.arbiterAliasTuple.first, arbiterAliasLatest))
+	if (GetAlias(escrow.vchArbiterAlias, arbiterAliasLatest))
 	{
 		GetAddress(arbiterAliasLatest, &arbiterAddressPayment, arbiterScript, escrow.nPaymentOption);
 	}
 	CScript buyerScript;
-	GetAlias(CNameTXIDTuple(escrow.buyerAliasTuple.first, escrow.buyerAliasTuple.second), buyerAlias);
-	if (GetAlias(escrow.buyerAliasTuple.first, buyerAliasLatest))
+	if (GetAlias(escrow.vchBuyerAlias, buyerAliasLatest))
 	{
 		GetAddress(buyerAliasLatest, &buyerAddressPayment, buyerScript, escrow.nPaymentOption);
 	}
@@ -2244,7 +2224,7 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	}
 	escrow.nHeight = chainActive.Tip()->nHeight;
 	escrow.bPaymentAck = false;
-	escrow.linkAliasTuple = CNameTXIDTuple(theAlias.vchAlias, theAlias.txHash, theAlias.vchGUID);
+	escrow.vchLinkAlias = theAlias.vchAlias;
 	escrow.vchWitness = vchWitness;
 	vector<unsigned char> data;
 	unsigned char escrowrole = 0;
@@ -2283,7 +2263,7 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	CCoinControl coinControl;
 	coinControl.fAllowOtherInputs = false;
 	coinControl.fAllowWatchOnly = false;
-	SendMoneySyscoin(escrow.linkAliasTuple.first, vchWitness, aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
+	SendMoneySyscoin(escrow.vchLinkAlias, vchWitness, aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
 
 	UniValue res(UniValue::VARR);
 	res.push_back(EncodeHexTx(wtx));
@@ -2316,12 +2296,11 @@ UniValue escrowcompleterelease(const UniValue& params, bool fHelp) {
 	if (escrow.nPaymentOption != PAYMENTOPTION_SYS)
 		extPayment = true;
 
-	CAliasIndex sellerAliasLatest, sellerAlias;
+	CAliasIndex sellerAliasLatest;
 	CSyscoinAddress sellerPaymentAddress;
 
 	CScript sellerScript;
-	GetAlias(CNameTXIDTuple(escrow.sellerAliasTuple.first, escrow.sellerAliasTuple.second), sellerAlias);
-	if (GetAlias(escrow.sellerAliasTuple.first, sellerAliasLatest))
+	if (GetAlias(escrow.vchSellerAlias, sellerAliasLatest))
 	{
 		GetAddress(sellerAliasLatest, &sellerPaymentAddress, sellerScript, escrow.nPaymentOption);
 	}
@@ -2336,7 +2315,7 @@ UniValue escrowcompleterelease(const UniValue& params, bool fHelp) {
 	escrow.op = OP_ESCROW_RELEASE_COMPLETE;
 	escrow.bPaymentAck = false;
 	escrow.nHeight = chainActive.Tip()->nHeight;
-	escrow.linkAliasTuple = CNameTXIDTuple(sellerAliasLatest.vchAlias, sellerAliasLatest.txHash, sellerAliasLatest.vchGUID);
+	escrow.vchLinkAlias = sellerAliasLatest.vchAlias;
 	escrow.redeemTxId = myRawTx.GetHash();
     CScript scriptPubKeyBuyer, scriptPubKeySeller;
 
@@ -2368,7 +2347,7 @@ UniValue escrowcompleterelease(const UniValue& params, bool fHelp) {
 	CCoinControl coinControl;
 	coinControl.fAllowOtherInputs = false;
 	coinControl.fAllowWatchOnly = false;
-	SendMoneySyscoin(escrow.linkAliasTuple.first, vchWitness, aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
+	SendMoneySyscoin(escrow.vchLinkAlias, vchWitness, aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
 	UniValue returnRes;
 	UniValue sendParams(UniValue::VARR);
 	sendParams.push_back(rawTx);
@@ -2405,20 +2384,18 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 	if (!GetEscrow(vchEscrow, escrow))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4524 - " + _("Could not find a escrow with this key"));
 	COffer theOffer;
-	if (!GetOffer(escrow.offerTuple, theOffer))
+	if (!GetOffer(escrow.vchOffer, theOffer))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4524 - " + _("Could not find offer related to this escrow"));
 
-	CAliasIndex sellerAlias, sellerAliasLatest, arbiterAlias, arbiterAliasLatest;
+	CAliasIndex sellerAliasLatest, arbiterAliasLatest;
 	CSyscoinAddress arbiterAddressPayment, sellerAddressPayment;
 	CScript arbiterScript;
-	GetAlias(CNameTXIDTuple(escrow.arbiterAliasTuple.first, escrow.arbiterAliasTuple.second), arbiterAlias);
-	if (GetAlias(escrow.arbiterAliasTuple.first, arbiterAliasLatest))
+	if (GetAlias(escrow.vchArbiterAlias, arbiterAliasLatest))
 	{
 		GetAddress(arbiterAliasLatest, &arbiterAddressPayment, arbiterScript, escrow.nPaymentOption);
 	}
 	CScript sellerScript;
-	GetAlias(CNameTXIDTuple(escrow.sellerAliasTuple.first, escrow.sellerAliasTuple.second), sellerAlias);
-	if (GetAlias(escrow.sellerAliasTuple.first, sellerAliasLatest))
+	if (GetAlias(escrow.vchSellerAlias, sellerAliasLatest))
 	{
 		GetAddress(sellerAliasLatest, &sellerAddressPayment, sellerScript, escrow.nPaymentOption);
 	}
@@ -2452,7 +2429,7 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 	}
 	escrow.nHeight = chainActive.Tip()->nHeight;
 	escrow.bPaymentAck = false;
-	escrow.linkAliasTuple = CNameTXIDTuple(theAlias.vchAlias, theAlias.txHash, theAlias.vchGUID);
+	escrow.vchLinkAlias = theAlias.vchAlias;
 	escrow.vchWitness = vchWitness;
 	unsigned char escrowrole = 0;
 	if (role == "arbiter")
@@ -2491,7 +2468,7 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 	CCoinControl coinControl;
 	coinControl.fAllowOtherInputs = false;
 	coinControl.fAllowWatchOnly = false;
-	SendMoneySyscoin(escrow.linkAliasTuple.first, vchWitness, aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
+	SendMoneySyscoin(escrow.vchLinkAlias, vchWitness, aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
 
 	UniValue res(UniValue::VARR);
 	res.push_back(EncodeHexTx(wtx));
@@ -2526,12 +2503,11 @@ UniValue escrowcompleterefund(const UniValue& params, bool fHelp) {
 	if (escrow.nPaymentOption != PAYMENTOPTION_SYS)
 		extPayment = true;
 
-	CAliasIndex buyerAliasLatest, buyerAlias;
+	CAliasIndex buyerAliasLatest;
 	CSyscoinAddress buyerPaymentAddress;
 
 	CScript buyerScript;
-	GetAlias(CNameTXIDTuple(escrow.buyerAliasTuple.first, escrow.buyerAliasTuple.second), buyerAlias);
-	if (GetAlias(escrow.buyerAliasTuple.first, buyerAliasLatest))
+	if (GetAlias(escrow.vchBuyerAlias, buyerAliasLatest))
 	{
 		GetAddress(buyerAliasLatest, &buyerPaymentAddress, buyerScript, escrow.nPaymentOption);
 	}
@@ -2547,7 +2523,7 @@ UniValue escrowcompleterefund(const UniValue& params, bool fHelp) {
 	escrow.op = OP_ESCROW_REFUND_COMPLETE;
 	escrow.bPaymentAck = false;
 	escrow.nHeight = chainActive.Tip()->nHeight;
-	escrow.linkAliasTuple = CNameTXIDTuple(buyerAliasLatest.vchAlias, buyerAliasLatest.txHash, buyerAliasLatest.vchGUID);
+	escrow.vchLinkAlias = buyerAliasLatest.vchAlias;
 	escrow.redeemTxId = myRawTx.GetHash();
 	CScript scriptPubKeyBuyer, scriptPubKeySeller, scriptPubKeyArbiter;
 
@@ -2579,7 +2555,7 @@ UniValue escrowcompleterefund(const UniValue& params, bool fHelp) {
 	CCoinControl coinControl;
 	coinControl.fAllowOtherInputs = false;
 	coinControl.fAllowWatchOnly = false;
-	SendMoneySyscoin(escrow.linkAliasTuple.first, vchWitness, aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
+	SendMoneySyscoin(escrow.vchLinkAlias, vchWitness, aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
 	UniValue returnRes;
 	UniValue sendParams(UniValue::VARR);
 	sendParams.push_back(rawTx);
@@ -2619,31 +2595,27 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 	if (!GetEscrow(vchEscrow, escrow))
         throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4598 - " + _("Could not find a escrow with this key"));
 
-	CAliasIndex sellerAliasLatest, buyerAliasLatest, arbiterAliasLatest, resellerAliasLatest, buyerAlias, sellerAlias, arbiterAlias, resellerAlias;
+	CAliasIndex sellerAliasLatest, buyerAliasLatest, arbiterAliasLatest, resellerAliasLatest;
 	CSyscoinAddress arbiterPaymentAddress, buyerPaymentAddress, sellerPaymentAddress, resellerPaymentAddress;
 	CScript arbiterScript;
-	GetAlias(CNameTXIDTuple(escrow.arbiterAliasTuple.first, escrow.arbiterAliasTuple.second), arbiterAlias);
-	if (GetAlias(escrow.arbiterAliasTuple.first, arbiterAliasLatest))
+	if (GetAlias(escrow.vchArbiterAlias, arbiterAliasLatest))
 	{
 		GetAddress(arbiterAliasLatest, &arbiterPaymentAddress, arbiterScript, escrow.nPaymentOption);
 	}
 
 	CScript buyerScript;
-	GetAlias(CNameTXIDTuple(escrow.buyerAliasTuple.first, escrow.buyerAliasTuple.second), buyerAlias);
-	if (GetAlias(escrow.buyerAliasTuple.first, buyerAliasLatest))
+	if (GetAlias(escrow.vchBuyerAlias, buyerAliasLatest))
 	{
 		GetAddress(buyerAliasLatest, &buyerPaymentAddress, buyerScript, escrow.nPaymentOption);
 	}
 
 	CScript sellerScript;
-	GetAlias(CNameTXIDTuple(escrow.sellerAliasTuple.first, escrow.sellerAliasTuple.second), sellerAlias);
-	if (GetAlias(escrow.sellerAliasTuple.first, sellerAliasLatest))
+	if (GetAlias(escrow.vchSellerAlias, sellerAliasLatest))
 	{
 		GetAddress(sellerAliasLatest, &sellerPaymentAddress, sellerScript, escrow.nPaymentOption);
 	}
 	CScript resellerScript;
-	GetAlias(CNameTXIDTuple(escrow.linkSellerAliasTuple.first, escrow.linkSellerAliasTuple.second), resellerAlias);
-	if (GetAlias(escrow.linkSellerAliasTuple.first, resellerAliasLatest))
+	if (GetAlias(escrow.vchLinkSellerAlias, resellerAliasLatest))
 	{
 		GetAddress(resellerAliasLatest, &resellerPaymentAddress, resellerScript, escrow.nPaymentOption);
 	}
@@ -2690,7 +2662,7 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 	escrow.op = OP_ESCROW_FEEDBACK;
 	escrow.bPaymentAck = false;
 	escrow.nHeight = chainActive.Tip()->nHeight;
-	escrow.linkAliasTuple = CNameTXIDTuple(theAlias.vchAlias, theAlias.txHash, theAlias.vchGUID);
+	escrow.vchLinkAlias = theAlias.vchAlias;
 	// buyer
 	CFeedback feedback;
 	feedback.nRating = nRating;
@@ -2786,7 +2758,7 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 	CCoinControl coinControl;
 	coinControl.fAllowOtherInputs = false;
 	coinControl.fAllowWatchOnly = false;
-	SendMoneySyscoin(escrow.linkAliasTuple.first, vchWitness, aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
+	SendMoneySyscoin(escrow.vchLinkAlias, vchWitness, aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
 	UniValue res(UniValue::VARR);
 	res.push_back(EncodeHexTx(wtx));
 	return res;
@@ -2800,10 +2772,7 @@ UniValue escrowinfo(const UniValue& params, bool fHelp) {
 
     UniValue oEscrow(UniValue::VOBJ);
 	CEscrow txPos;
-	uint256 txid;
-	if (!pescrowdb || !pescrowdb->ReadEscrowLastTXID(vchEscrow, txid))
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 5535 - " + _("Failed to read last txid from escrow DB"));
-	if (!pescrowdb->ReadEscrow(CNameTXIDTuple(vchEscrow, txid), txPos))
+	if (!pescrowdb->ReadEscrow(vchEscrow, txPos))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 5535 - " + _("Failed to read from escrow DB"));
 
 	if(!BuildEscrowJson(txPos, oEscrow))
@@ -2822,7 +2791,7 @@ void BuildFeedbackJson(const CEscrow& escrow, UniValue& oFeedback) {
 	}
 	const string &id = stringFromVch(escrow.vchEscrow) + CFeedback::FeedbackUserToString(escrow.feedback.nFeedbackUserFrom) + CFeedback::FeedbackUserToString(escrow.feedback.nFeedbackUserTo);
 	oFeedback.push_back(Pair("_id", id));
-	oFeedback.push_back(Pair("offer", stringFromVch(escrow.offerTuple.first)));
+	oFeedback.push_back(Pair("offer", stringFromVch(escrow.vchOffer)));
 	oFeedback.push_back(Pair("escrow", stringFromVch(escrow.vchEscrow)));
 	oFeedback.push_back(Pair("txid", escrow.txHash.GetHex()));
 	oFeedback.push_back(Pair("time", sFeedbackTime));
@@ -2833,10 +2802,10 @@ void BuildFeedbackJson(const CEscrow& escrow, UniValue& oFeedback) {
 }
 void BuildEscrowBidJson(const CEscrow& escrow, const string& status, UniValue& oBid) {
 	oBid.push_back(Pair("_id", escrow.txHash.GetHex()));
-	oBid.push_back(Pair("offer", stringFromVch(escrow.offerTuple.first)));
+	oBid.push_back(Pair("offer", stringFromVch(escrow.vchOffer)));
 	oBid.push_back(Pair("escrow", stringFromVch(escrow.vchEscrow)));
 	oBid.push_back(Pair("height", (int)escrow.nHeight));
-	oBid.push_back(Pair("bidder", stringFromVch(escrow.linkAliasTuple.first)));
+	oBid.push_back(Pair("bidder", stringFromVch(escrow.vchLinkAlias)));
 	oBid.push_back(Pair("bid_in_offer_currency_per_unit", escrow.fBidPerUnit));
 	oBid.push_back(Pair("bid_in_payment_option_per_unit", ValueFromAmount(escrow.nAmountOrBidPerUnit)));
 	oBid.push_back(Pair("witness", stringFromVch(escrow.vchWitness)));
@@ -2845,7 +2814,7 @@ void BuildEscrowBidJson(const CEscrow& escrow, const string& status, UniValue& o
 bool BuildEscrowJson(const CEscrow &escrow, UniValue& oEscrow)
 {
 	COffer theOffer;
-	if (!GetOffer(escrow.offerTuple, theOffer))
+	if (!GetOffer(escrow.vchOffer, theOffer))
 		return false;
     oEscrow.push_back(Pair("_id", stringFromVch(escrow.vchEscrow)));
 	int64_t nTime = 0;
@@ -2856,13 +2825,13 @@ bool BuildEscrowJson(const CEscrow &escrow, UniValue& oEscrow)
 		}
 	}
 	oEscrow.push_back(Pair("time", nTime));
-	oEscrow.push_back(Pair("seller", stringFromVch(escrow.sellerAliasTuple.first)));
-	oEscrow.push_back(Pair("arbiter", stringFromVch(escrow.arbiterAliasTuple.first)));
-	oEscrow.push_back(Pair("buyer", stringFromVch(escrow.buyerAliasTuple.first)));
+	oEscrow.push_back(Pair("seller", stringFromVch(escrow.vchSellerAlias)));
+	oEscrow.push_back(Pair("arbiter", stringFromVch(escrow.vchArbiterAlias)));
+	oEscrow.push_back(Pair("buyer", stringFromVch(escrow.vchBuyerAlias)));
 	oEscrow.push_back(Pair("witness", stringFromVch(escrow.vchWitness)));
-	oEscrow.push_back(Pair("offer", stringFromVch(escrow.offerTuple.first)));
+	oEscrow.push_back(Pair("offer", stringFromVch(escrow.vchOffer)));
 	oEscrow.push_back(Pair("offer_price", theOffer.GetPrice()));
-	oEscrow.push_back(Pair("reseller", stringFromVch(escrow.linkSellerAliasTuple.first)));
+	oEscrow.push_back(Pair("reseller", stringFromVch(escrow.vchLinkSellerAlias)));
 	oEscrow.push_back(Pair("quantity", (int)escrow.nQty));
 	const CAmount &nEscrowFees = escrow.nDeposit + escrow.nArbiterFee + escrow.nWitnessFee + escrow.nNetworkFee + escrow.nShipping;
 	const CAmount &nTotalWithoutFee = escrow.nAmountOrBidPerUnit*escrow.nQty;
@@ -2922,11 +2891,11 @@ bool BuildEscrowJson(const CEscrow &escrow, UniValue& oEscrow)
 bool BuildEscrowIndexerJson(const CEscrow &escrow, UniValue& oEscrow)
 {
 	oEscrow.push_back(Pair("_id", stringFromVch(escrow.vchEscrow)));
-	oEscrow.push_back(Pair("offer", stringFromVch(escrow.offerTuple.first)));
+	oEscrow.push_back(Pair("offer", stringFromVch(escrow.vchOffer)));
 	oEscrow.push_back(Pair("height", (int)escrow.nHeight));
-	oEscrow.push_back(Pair("seller", stringFromVch(escrow.sellerAliasTuple.first)));
-	oEscrow.push_back(Pair("arbiter", stringFromVch(escrow.arbiterAliasTuple.first)));
-	oEscrow.push_back(Pair("buyer", stringFromVch(escrow.buyerAliasTuple.first)));
+	oEscrow.push_back(Pair("seller", stringFromVch(escrow.vchSellerAlias)));
+	oEscrow.push_back(Pair("arbiter", stringFromVch(escrow.vchArbiterAlias)));
+	oEscrow.push_back(Pair("buyer", stringFromVch(escrow.vchBuyerAlias)));
 	return true;
 }
 void EscrowTxToJSON(const int op, const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash, UniValue &entry)
@@ -2937,7 +2906,7 @@ void EscrowTxToJSON(const int op, const std::vector<unsigned char> &vchData, con
 		return;
 
 	CEscrow dbEscrow;
-	GetEscrow(CNameTXIDTuple(escrow.vchEscrow, escrow.txHash), dbEscrow);
+	GetEscrow(escrow.vchEscrow, dbEscrow);
 
 	string opName = escrowFromOp(escrow.op);
 	if(escrow.bPaymentAck)

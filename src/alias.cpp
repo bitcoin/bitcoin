@@ -8,6 +8,7 @@
 #include "cert.h"
 #include "offer.h"
 #include "asset.h"
+#include "assetallocation.h"
 #include "init.h"
 #include "validation.h"
 #include "util.h"
@@ -150,14 +151,7 @@ bool GetTimeToPrune(const CScript& scriptPubKey, uint64_t &nTime)
 	}
 	else if(offer.UnserializeFromData(vchData, vchHash))
 	{
-		uint256 txid;
-		if (!pofferdb || !pofferdb->ReadOfferLastTXID(offer.vchOffer, txid))
-		{			
-			// setting to the tip means we don't prune this data, we keep it
-			nTime = chainActive.Tip()->GetMedianTimePast() + 1;
-			return true;
-		}
-		if (!pofferdb->ReadOffer(CNameTXIDTuple(offer.vchOffer, txid), offer))
+		if (!pofferdb->ReadOffer(offer.vchOffer, offer))
 		{
 			// setting to the tip means we don't prune this data, we keep it
 			nTime = chainActive.Tip()->GetMedianTimePast() + 1;
@@ -168,14 +162,7 @@ bool GetTimeToPrune(const CScript& scriptPubKey, uint64_t &nTime)
 	}
 	else if(cert.UnserializeFromData(vchData, vchHash))
 	{
-		uint256 txid;
-		if (!pcertdb || !pcertdb->ReadCertLastTXID(cert.vchCert, txid))
-		{
-			// setting to the tip means we don't prune this data, we keep it
-			nTime = chainActive.Tip()->GetMedianTimePast() + 1;
-			return true;
-		}
-		if (!pcertdb->ReadCert(CNameTXIDTuple(cert.vchCert, txid), cert))
+		if (!pcertdb->ReadCert(cert.vchCert, cert))
 		{
 			// setting to the tip means we don't prune this data, we keep it
 			nTime = chainActive.Tip()->GetMedianTimePast() + 1;
@@ -186,14 +173,7 @@ bool GetTimeToPrune(const CScript& scriptPubKey, uint64_t &nTime)
 	}
 	else if(escrow.UnserializeFromData(vchData, vchHash))
 	{
-		uint256 txid;
-		if (!pescrowdb || !pescrowdb->ReadEscrowLastTXID(escrow.vchEscrow, txid))
-		{
-			// setting to the tip means we don't prune this data, we keep it
-			nTime = chainActive.Tip()->GetMedianTimePast() + 1;
-			return true;
-		}
-		if (!pescrowdb->ReadEscrow(CNameTXIDTuple(escrow.vchEscrow, txid), escrow))
+		if (!pescrowdb->ReadEscrow(escrow.vchEscrow, escrow))
 		{
 			// setting to the tip means we don't prune this data, we keep it
 			nTime = chainActive.Tip()->GetMedianTimePast() + 1;
@@ -223,6 +203,8 @@ bool IsSyscoinScript(const CScript& scriptPubKey, int &op, vector<vector<unsigne
 		return true;
 	else if (DecodeAssetScript(scriptPubKey, op, vvchArgs))
 		return true;
+	else if (DecodeAssetAllocationScript(scriptPubKey, op, vvchArgs))
+		return true;
 	return false;
 }
 bool RemoveSyscoinScript(const CScript& scriptPubKeyIn, CScript& scriptPubKeyOut)
@@ -232,7 +214,8 @@ bool RemoveSyscoinScript(const CScript& scriptPubKeyIn, CScript& scriptPubKeyOut
 			if (!RemoveCertScriptPrefix(scriptPubKeyIn, scriptPubKeyOut))
 				if (!RemoveEscrowScriptPrefix(scriptPubKeyIn, scriptPubKeyOut))
 					if (!RemoveAssetScriptPrefix(scriptPubKeyIn, scriptPubKeyOut))
-						return false;
+						if (!RemoveAssetAllocationScriptPrefix(scriptPubKeyIn, scriptPubKeyOut))
+							return false;
 	return true;
 					
 }
@@ -877,25 +860,24 @@ bool CAliasDB::CleanupDatabase(int &servicesCleaned)
 	boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
 	pcursor->SeekToFirst();
 	CAliasIndex txPos;
-	pair<string, CNameTXIDTuple > key;
+	pair<string, vector<unsigned char> > key;
     while (pcursor->Valid()) {
         boost::this_thread::interruption_point();
         try {
 			if (pcursor->GetKey(key) && key.first == "namei") {
-				const CNameTXIDTuple &aliasTuple = key.second;
 				pcursor->GetValue(txPos);
   				if (chainActive.Tip()->GetMedianTimePast() >= txPos.nExpireTime)
 				{
 					servicesCleaned++;
-					EraseAlias(aliasTuple, true);
+					EraseAlias(key.second, true);
 				} 
 				
             }
 			else if (pcursor->GetKey(key) && key.first == "namea") {
-				CNameTXIDTuple aliasTuple;
+				vector<unsigned char> value;
 				CAliasIndex alias;
-				pcursor->GetValue(aliasTuple);
-				if (GetAlias(aliasTuple.first, alias) && chainActive.Tip()->GetMedianTimePast() >= alias.nExpireTime)
+				pcursor->GetValue(value);
+				if (GetAlias(value, alias) && chainActive.Tip()->GetMedianTimePast() >= alias.nExpireTime)
 				{
 					servicesCleaned++;
 					EraseAddress(alias.vchAddress);
@@ -917,8 +899,6 @@ void CleanupSyscoinServiceDatabases(int &numServicesCleaned)
 		pescrowdb->CleanupDatabase(numServicesCleaned);
 	if(pcertdb!= NULL)
 		pcertdb->CleanupDatabase(numServicesCleaned);
-	if (passetdb != NULL)
-		passetdb->CleanupDatabase(numServicesCleaned);
 	if (paliasdb != NULL) 
 		paliasdb->CleanupDatabase(numServicesCleaned);
 	
@@ -942,24 +922,10 @@ void CleanupSyscoinServiceDatabases(int &numServicesCleaned)
 		if (!pescrowdb->Flush())
 			LogPrintf("Failed to write to escrow database!");
 	}
-	if (passetdb != NULL)
-	{
-		if (!passetdb->Flush())
-			LogPrintf("Failed to write to asset database!");
-	}
-}
-bool GetAlias(const CNameTXIDTuple &aliasTuple,
-	CAliasIndex& txPos) {
-	if (!paliasdb || !paliasdb->ReadAlias(CNameTXIDTuple(aliasTuple.first, aliasTuple.second), txPos))
-		return false;
-	return true;
 }
 bool GetAlias(const vector<unsigned char> &vchAlias,
 	CAliasIndex& txPos) {
-	uint256 txid;
-	if (!paliasdb || !paliasdb->ReadAliasLastTXID(vchAlias, txid))
-		return false;
-	if (!paliasdb->ReadAlias(CNameTXIDTuple(vchAlias, txid), txPos))
+	if (!paliasdb->ReadAlias(vchAlia, txPos))
 		return false;
 	
 	if (chainActive.Tip()->GetMedianTimePast() >= txPos.nExpireTime) {
@@ -2283,7 +2249,7 @@ void AliasTxToJSON(const int op, const vector<unsigned char> &vchData, const vec
 	if(!alias.UnserializeFromData(vchData, vchHash))
 		return;
 	CAliasIndex dbAlias;
-	GetAlias(CNameTXIDTuple(alias.vchAlias, alias.txHash), dbAlias);
+	GetAlias(alias.vchAlias, dbAlias);
 
 	entry.push_back(Pair("txtype", opName));
 	entry.push_back(Pair("_id", stringFromVch(alias.vchAlias)));
@@ -2593,10 +2559,7 @@ UniValue aliasinfo(const UniValue& params, bool fHelp) {
 				"Show values of an alias.\n");
 	vector<unsigned char> vchAlias = vchFromValue(params[0]);
 	CAliasIndex txPos;
-	uint256 txid;
-	if (!paliasdb || !paliasdb->ReadAliasLastTXID(vchAlias, txid))
-		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5535 - " + _("Failed to read last txid from alias DB"));
-	if (!paliasdb->ReadAlias(CNameTXIDTuple(vchAlias, txid), txPos))
+	if (!paliasdb->ReadAlias(vchAlias, txPos))
 		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5535 - " + _("Failed to read from alias DB"));
 
 	UniValue oName(UniValue::VOBJ);
@@ -2994,9 +2957,9 @@ string GetSyscoinTransactionDescription(const int op, const vector<vector<unsign
 			strResponse = _("Asset Updated");
 			responseEnglish = "Asset Updated";
 		}
-		else if (op == OP_ASSET_SEND) {
-			strResponse = _("Asset Ownership Transferred");
-			responseEnglish = "Asset Ownership Transferred";
+		else if (op == OP_ASSET_ALLOCATION_SEND) {
+			strResponse = _("Asset Allocation Sent");
+			responseEnglish = "Asset Allocation Sent";
 		}
 		else if (op == OP_ASSET_TRANSFER) {
 			strResponse = _("Asset Transferred");

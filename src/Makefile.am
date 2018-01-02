@@ -82,6 +82,7 @@ SYSCOIN_CORE_H = \
   offer.h \
   cert.h \
   asset.h \
+  assetallocation.h \
   escrow.h \
   feedback.h \
   auxpow.h \

@@ -33,7 +33,8 @@ enum {
 	OFFER, 
 	CERT,
 	ESCROW,
-	ASSET
+	ASSET,
+	ASSETALLOCATION
 };
 enum {
 	ACCEPT_TRANSFER_NONE=0,
@@ -245,7 +246,7 @@ public:
 	bool WriteAlias(const CAliasUnprunable &aliasUnprunable, const std::vector<unsigned char>& address, const CAliasIndex& alias, const CAliasIndex& prevAlias, const int &op, const bool &fJustCheck) {
 		if(address.empty())
 			return false;	
-		bool writeState = WriteAliasLastTXID(alias.vchAlias, alias.txHash) && Write(make_pair(std::string("namei"), CNameTXIDTuple(alias.vchAlias, alias.txHash)), alias) && Write(make_pair(std::string("namea"), address), alias.vchAlias) && Write(make_pair(std::string("nameu"), alias.vchAlias), aliasUnprunable);
+		bool writeState = Write(make_pair(std::string("namei"), alias.vchAlias), alias) && Write(make_pair(std::string("namea"), address), alias.vchAlias) && Write(make_pair(std::string("nameu"), alias.vchAlias), aliasUnprunable);
 		if (!fJustCheck && !prevAlias.IsNull())
 			writeState = writeState && Write(make_pair(std::string("namep"), alias.vchAlias), prevAlias);
 		else if(fJustCheck)
@@ -254,16 +255,15 @@ public:
 		return writeState;
 	}
 
-	bool EraseAlias(const CNameTXIDTuple& aliasTuple, bool cleanup = false) {
-		bool eraseState = Erase(make_pair(std::string("namei"), CNameTXIDTuple(aliasTuple.first, aliasTuple.second)));
-		Erase(make_pair(std::string("namep"), aliasTuple.first));
-		EraseISLock(aliasTuple.first);
-		EraseAliasLastTXID(aliasTuple.first);
-		EraseAliasIndex(aliasTuple.first, cleanup);
+	bool EraseAlias(const std::vector<unsigned char>& vchAlias, bool cleanup = false) {
+		bool eraseState = Erase(make_pair(std::string("namei"), vchAlias));
+		Erase(make_pair(std::string("namep"), vchAlias));
+		EraseISLock(vchAlias);
+		EraseAliasIndex(vchAlias, cleanup);
 		return eraseState;
 	}
-	bool ReadAlias(const CNameTXIDTuple& aliasTuple, CAliasIndex& alias) {
-		return Read(make_pair(std::string("namei"), CNameTXIDTuple(aliasTuple.first, aliasTuple.second)), alias);
+	bool ReadAlias(const std::vector<unsigned char>& vchAlias, CAliasIndex& alias) {
+		return Read(make_pair(std::string("namei"), vchAlias), alias);
 	}
 	bool ReadLastAlias(const std::vector<unsigned char>& vchGuid, CAliasIndex& alias) {
 		return Read(make_pair(std::string("namep"), vchGuid), alias);
@@ -285,15 +285,6 @@ public:
 	}
 	bool ExistsAddress(const std::vector<unsigned char>& address) {
 	    return Exists(make_pair(std::string("namea"), address));
-	}
-	bool WriteAliasLastTXID(const std::vector<unsigned char>& alias, const uint256& txid) {
-		return Write(make_pair(std::string("namelt"), alias), txid);
-	}
-	bool ReadAliasLastTXID(const std::vector<unsigned char>& alias, uint256& txid) {
-		return Read(make_pair(std::string("namelt"), alias), txid);
-	}
-	bool EraseAliasLastTXID(const std::vector<unsigned char>& alias) {
-		return Erase(make_pair(std::string("namelt"), alias));
 	}
 	bool CleanupDatabase(int &servicesCleaned);
 	void WriteAliasIndex(const CAliasIndex& alias, const int &op);
@@ -331,7 +322,6 @@ void CreateAliasRecipient(const CScript& scriptPubKey, CRecipient& recipient);
 int aliasselectpaymentcoins(const std::vector<unsigned char> &vchAlias, const CAmount &nAmount, std::vector<COutPoint>& outPoints, bool& bIsFunded, CAmount &nRequiredAmount, bool bSelectFeePlacement, bool bSelectAll=false, bool bNoAliasRecipient=false);
 CAmount GetDataFee(const CScript& scriptPubKey);
 bool IsAliasOp(int op);
-bool GetAlias(const CNameTXIDTuple& aliasTuple, CAliasIndex& alias);
 bool GetAlias(const std::vector<unsigned char> &vchAlias, CAliasIndex& alias);
 bool CheckParam(const UniValue& params, const unsigned int index);
 bool GetAliasOfTx(const CTransaction& tx, std::vector<unsigned char>& name);

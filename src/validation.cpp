@@ -56,6 +56,7 @@
 #include "cert.h"
 #include "alias.h"
 #include "asset.h"
+#include "assetallocation.h"
 #include "escrow.h"
 #include "base58.h"
 using namespace std;
@@ -575,6 +576,13 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight)
 			{
 				errorMessage.clear();
 				good = CheckAssetInputs(tx, op, nOut, vvchArgs, fJustCheck, nHeight, errorMessage);
+				if (fDebug && !errorMessage.empty())
+					LogPrintf("%s\n", errorMessage.c_str());
+			}
+			else if (DecodeAssetAllocationTx(tx, op, nOut, vvchArgs))
+			{
+				errorMessage.clear();
+				good = CheckAssetAllocationInputs(tx, op, nOut, vvchArgs, fJustCheck, nHeight, errorMessage);
 				if (fDebug && !errorMessage.empty())
 					LogPrintf("%s\n", errorMessage.c_str());
 			}

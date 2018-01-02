@@ -102,21 +102,20 @@ class COffer {
 public:
 
 	std::vector<unsigned char> vchOffer;
-	CNameTXIDTuple aliasTuple;
+	std::vector<unsigned char> vchAlias;
     uint256 txHash;
     uint64_t nHeight;
 	float fPrice;
 	float fUnits;
 	char nCommission;
 	int nQty;
-	CNameTXIDTuple linkOfferTuple;
-	CNameTXIDTuple linkAliasTuple;
+	std::vector<unsigned char> vchLinkOffer;
+	std::vector<unsigned char> vchLinkAlias;
 	std::vector<unsigned char> sCurrencyCode;
-	CNameTXIDTuple certTuple;
+	std::vector<unsigned char> vchCert;
 	bool bPrivate;
 	uint32_t offerType;
 	uint64_t paymentOptions;
-	unsigned int nSold;
 	std::vector<unsigned char> sCategory;
 	std::vector<unsigned char> sTitle;
 	std::vector<unsigned char> sDescription;
@@ -135,9 +134,9 @@ public:
 		sCategory.clear();
 		sTitle.clear();
 		sDescription.clear();
-		linkOfferTuple.first.clear();
-		linkAliasTuple.first.clear();
-		certTuple.first.clear();
+		vchLinkOffer.clear();
+		vchLinkAlias.clear();
+		vchCert.clear();
 		sCurrencyCode.clear();
 		auctionOffer.SetNull();
 	}
@@ -152,18 +151,17 @@ public:
 			READWRITE(VARINT(nHeight));
 			READWRITE(fPrice);
     		READWRITE(nQty);
-			READWRITE(VARINT(nSold));
 			READWRITE(fUnits);
-			READWRITE(linkOfferTuple);
+			READWRITE(vchLinkOffer);
 			READWRITE(sCurrencyCode);
 			READWRITE(nCommission);
-			READWRITE(aliasTuple);
-			READWRITE(certTuple);
+			READWRITE(vchAlias);
+			READWRITE(vchCert);
 			READWRITE(bPrivate);
 			READWRITE(VARINT(offerType));
 			READWRITE(VARINT(paymentOptions));
 			READWRITE(vchOffer);
-			READWRITE(linkAliasTuple);
+			READWRITE(vchLinkAlias);
 			READWRITE(auctionOffer);
 	}
 	float GetPrice(const int commission=0) const;
@@ -178,16 +176,15 @@ public:
         sDescription = b.sDescription;
 		fPrice = b.fPrice;
 		nQty = b.nQty;
-		nSold = b.nSold;
         fUnits = b.fUnits;
         txHash = b.txHash;
         nHeight = b.nHeight;
-		linkOfferTuple = b.linkOfferTuple;
-		linkAliasTuple = b.linkAliasTuple;
+		vchLinkOffer = b.vchLinkOffer;
+		vchLinkAlias = b.vchLinkAlias;
 		sCurrencyCode = b.sCurrencyCode;
 		nCommission = b.nCommission;
-		aliasTuple = b.aliasTuple;
-		certTuple = b.certTuple;
+		vchAlias = b.vchAlias;
+		vchCert = b.vchCert;
 		bPrivate = b.bPrivate;
 		offerType = b.offerType;
 		paymentOptions = b.paymentOptions;
@@ -200,7 +197,7 @@ public:
         return !(a == b);
     }
 
-	inline void SetNull() { auctionOffer.SetNull();  sCategory.clear(); sTitle.clear(); vchOffer.clear(); sDescription.clear(); offerType = 0; fPrice = 0; fUnits = 1; nHeight = nQty = nSold = paymentOptions = 0; txHash.SetNull(); bPrivate = false; linkOfferTuple.first.clear(); aliasTuple.first.clear(); sCurrencyCode.clear(); nCommission = 0; aliasTuple.first.clear(); certTuple.first.clear(); }
+	inline void SetNull() { auctionOffer.SetNull();  sCategory.clear(); sTitle.clear(); vchOffer.clear(); sDescription.clear(); offerType = 0; fPrice = 0; fUnits = 1; nHeight = nQty = paymentOptions = 0; txHash.SetNull(); bPrivate = false; vchLinkOffer.clear(); vchAlias.clear(); sCurrencyCode.clear(); nCommission = 0; vchAlias.clear(); vchCert.clear(); }
     inline bool IsNull() const { return (vchOffer.empty()); }
 
     bool UnserializeFromTx(const CTransaction &tx);
@@ -213,7 +210,7 @@ public:
 	COfferDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "offers", nCacheSize, fMemory, fWipe) {}
 
 	bool WriteOffer(const COffer& offer, const COffer& prevOffer, const int &op, const bool& fJustCheck) {
-		bool writeState = WriteOfferLastTXID(offer.vchOffer, offer.txHash) && Write(make_pair(std::string("offeri"), CNameTXIDTuple(offer.vchOffer, offer.txHash)), offer);
+		bool writeState = Write(make_pair(std::string("offeri"), offer.vchOffer), offer);
 		if (!fJustCheck && !prevOffer.IsNull())
 			writeState = writeState && Write(make_pair(std::string("offerp"), offer.vchOffer), prevOffer);
 		else if (fJustCheck)
@@ -222,17 +219,16 @@ public:
 		return writeState;
 	}
 
-	bool EraseOffer(const CNameTXIDTuple& offerTuple, bool cleanup = false) {
-		bool eraseState = Erase(make_pair(std::string("offeri"), offerTuple));
-		Erase(make_pair(std::string("offerp"), offerTuple.first));
-		EraseISLock(offerTuple.first);
-		EraseOfferLastTXID(offerTuple.first);
-		EraseOfferIndex(offerTuple.first, cleanup);
+	bool EraseOffer(const std::vector<unsigned char>& vchOffer, bool cleanup = false) {
+		bool eraseState = Erase(make_pair(std::string("offeri"), vchOffer));
+		Erase(make_pair(std::string("offerp"), vchOffer));
+		EraseISLock(vchOffer);
+		EraseOfferIndex(vchOffer, cleanup);
 	    return eraseState;
 	}
 
-	bool ReadOffer(const CNameTXIDTuple& offerTuple, COffer& offer) {
-		return Read(make_pair(std::string("offeri"), offerTuple), offer);
+	bool ReadOffer(const  std::vector<unsigned char>& vchOffer, COffer& offer) {
+		return Read(make_pair(std::string("offeri"), vchOffer), offer);
 	}
 	bool ReadLastOffer(const std::vector<unsigned char>& vchGuid, COffer& offer) {
 		return Read(make_pair(std::string("offerp"), vchGuid), offer);
@@ -242,15 +238,6 @@ public:
 	}
 	bool EraseISLock(const std::vector<unsigned char>& vchGuid) {
 		return Erase(make_pair(std::string("offerl"), vchGuid));
-	}
-	bool WriteOfferLastTXID(const std::vector<unsigned char>& offer, const uint256& txid) {
-		return Write(make_pair(std::string("offerlt"), offer), txid);
-	}
-	bool ReadOfferLastTXID(const std::vector<unsigned char>& offer, uint256& txid) {
-		return Read(make_pair(std::string("offerlt"), offer), txid);
-	}
-	bool EraseOfferLastTXID(const std::vector<unsigned char>& offer) {
-		return Erase(make_pair(std::string("offerlt"), offer));
 	}
 	bool WriteExtTXID(const uint256& txid) {
 		return Write(make_pair(std::string("offert"), txid), txid);
@@ -269,7 +256,6 @@ public:
 	void EraseOfferIndexHistory(const std::string& id);
 
 };
-bool GetOffer(const CNameTXIDTuple& offerTuple, COffer& txPos);
 bool GetOffer(const std::vector<unsigned char> &vchOffer, COffer& txPos);
 bool BuildOfferJson(const COffer& theOffer, UniValue& oOffer);
 bool BuildOfferIndexerJson(const COffer& theOffer, UniValue& oOffer);

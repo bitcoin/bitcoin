@@ -10,6 +10,7 @@
 #include "feedback.h"
 #include "cert.h"
 #include "asset.h"
+#include "assetallocation.h"
 #include "escrow.h"
 #include "offer.h"
 #include "alias.h"

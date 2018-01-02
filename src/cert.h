@@ -7,7 +7,6 @@
 
 #include "rpc/server.h"
 #include "dbwrapper.h"
-#include "feedback.h"
 class CWalletTx;
 class CTransaction;
 class CReserveKey;
@@ -26,9 +25,9 @@ bool RemoveCertScriptPrefix(const CScript& scriptIn, CScript& scriptOut);
 class CCert {
 public:
 	std::vector<unsigned char> vchCert;
-	CNameTXIDTuple aliasTuple;
+	std::vector<unsigned char> vchAlias;
 	// to modify alias in certtransfer
-	CNameTXIDTuple linkAliasTuple;
+	std::vector<unsigned char> vchLinkAlias;
     uint256 txHash;
     uint64_t nHeight;
 	// 1 can edit, 2 can edit/transfer
@@ -56,11 +55,11 @@ public:
 		READWRITE(vchPubData);
 		READWRITE(txHash);
 		READWRITE(VARINT(nHeight));
-		READWRITE(linkAliasTuple);
+		READWRITE(vchLinkAlias);
 		READWRITE(nAccessFlags);
 		READWRITE(vchCert);
 		READWRITE(sCategory);
-		READWRITE(aliasTuple);
+		READWRITE(vchAlias);
 	}
     inline friend bool operator==(const CCert &a, const CCert &b) {
         return (a.vchCert == b.vchCert
@@ -72,8 +71,8 @@ public:
 		vchPubData = b.vchPubData;
         txHash = b.txHash;
         nHeight = b.nHeight;
-		aliasTuple = b.aliasTuple;
-		linkAliasTuple = b.linkAliasTuple;
+		vchAlias = b.vchAlias;
+		vchLinkAlias = b.vchLinkAlias;
 		nAccessFlags = b.nAccessFlags;
 		vchCert = b.vchCert;
 		sCategory = b.sCategory;
@@ -83,7 +82,7 @@ public:
     inline friend bool operator!=(const CCert &a, const CCert &b) {
         return !(a == b);
     }
-	inline void SetNull() { sCategory.clear(); vchTitle.clear(); nAccessFlags = 2; linkAliasTuple.first.clear(); vchCert.clear(); nHeight = 0; txHash.SetNull(); aliasTuple.first.clear(); vchPubData.clear(); }
+	inline void SetNull() { sCategory.clear(); vchTitle.clear(); nAccessFlags = 2; vchLinkAlias.clear(); vchCert.clear(); nHeight = 0; txHash.SetNull(); vchAlias.clear(); vchPubData.clear(); }
     inline bool IsNull() const { return (vchCert.empty()); }
     bool UnserializeFromTx(const CTransaction &tx);
 	bool UnserializeFromData(const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash);
@@ -96,7 +95,7 @@ public:
     CCertDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "certificates", nCacheSize, fMemory, fWipe) {}
 
     bool WriteCert(const CCert& cert, const CCert& prevCert, const int &op, const bool &fJustCheck) {
-		bool writeState = WriteCertLastTXID(cert.vchCert, cert.txHash) && Write(make_pair(std::string("certi"), CNameTXIDTuple(cert.vchCert, cert.txHash)), cert);
+		bool writeState =  Write(make_pair(std::string("certi"), cert.vchCert), cert);
 		if (!fJustCheck && !prevCert.IsNull())
 			writeState = writeState && Write(make_pair(std::string("certp"), cert.vchCert), prevCert);
 		else if (fJustCheck)
@@ -105,19 +104,21 @@ public:
         return writeState;
     }
 
-    bool EraseCert(const CNameTXIDTuple& certTuple, bool cleanup = false) {
-		bool eraseState = Erase(make_pair(std::string("certi"), certTuple));
-		Erase(make_pair(std::string("certp"), certTuple.first));
-		EraseISLock(certTuple.first);
-		EraseCertLastTXID(certTuple.first);
-		EraseCertFirstTXID(certTuple.first);
-		EraseCertIndex(certTuple.first, cleanup);
+    bool EraseCert(const std::vector<unsigned char>& vchCert, bool cleanup = false) {
+		bool eraseState = Erase(make_pair(std::string("certi"), vchCert));
+		Erase(make_pair(std::string("certp"), vchCert));
+		Erase(make_pair(std::string("certf"), vchCert));
+		EraseISLock(vchCert);
+		EraseCertIndex(vchCert, cleanup);
         return eraseState;
     }
 
-    bool ReadCert(const CNameTXIDTuple& certTuple, CCert& cert) {
-        return Read(make_pair(std::string("certi"), certTuple), cert);
+    bool ReadCert(const std::vector<unsigned char>& vchCert, CCert& cert) {
+        return Read(make_pair(std::string("certi"), vchCert), cert);
     }
+	bool ReadFirstCert(const std::vector<unsigned char>& vchCert, CCert& cert) {
+		return Read(make_pair(std::string("certf"), vchCert), cert);
+	}
 	bool ReadLastCert(const std::vector<unsigned char>& vchGuid, CCert& cert) {
 		return Read(make_pair(std::string("certp"), vchGuid), cert);
 	}
@@ -127,23 +128,8 @@ public:
 	bool EraseISLock(const std::vector<unsigned char>& vchGuid) {
 		return Erase(make_pair(std::string("certl"), vchGuid));
 	}
-	bool WriteCertLastTXID(const std::vector<unsigned char>& cert, const uint256& txid) {
-		return Write(make_pair(std::string("certlt"), cert), txid);
-	}
-	bool ReadCertLastTXID(const std::vector<unsigned char>& cert, uint256& txid) {
-		return Read(make_pair(std::string("certlt"), cert), txid);
-	}
-	bool EraseCertLastTXID(const std::vector<unsigned char>& cert) {
-		return Erase(make_pair(std::string("certlt"), cert));
-	}
-	bool WriteCertFirstTXID(const std::vector<unsigned char>& cert, const uint256& txid) {
-		return Write(make_pair(std::string("certft"), cert), txid);
-	}
-	bool ReadCertFirstTXID(const std::vector<unsigned char>& cert, uint256& txid) {
-		return Read(make_pair(std::string("certft"), cert), txid);
-	}
-	bool EraseCertFirstTXID(const std::vector<unsigned char>& cert) {
-		return Erase(make_pair(std::string("certft"), cert));
+	bool WriteFirstCert(const std::vector<unsigned char>& vchCert, const CCert& cert) {
+		return Write(make_pair(std::string("certf"), vchCert), cert);
 	}
 	bool CleanupDatabase(int &servicesCleaned);
 	void WriteCertIndex(const CCert& cert, const int &op);
@@ -153,8 +139,8 @@ public:
 	void EraseCertIndexHistory(const std::string& id);
 
 };
-bool GetCert(const CNameTXIDTuple& certTuple);
 bool GetCert(const std::vector<unsigned char> &vchCert,CCert& txPos);
+bool GetFirstCert(const std::vector<unsigned char> &vchCert, CCert& txPos);
 bool BuildCertJson(const CCert& cert, UniValue& oName);
 bool BuildCertIndexerJson(const CCert& cert,UniValue& oName);
 bool BuildCertIndexerHistoryJson(const CCert& cert, UniValue& oName);

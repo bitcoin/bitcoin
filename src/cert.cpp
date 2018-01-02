@@ -4,7 +4,6 @@
 
 #include "cert.h"
 #include "alias.h"
-#include "offer.h"
 #include "init.h"
 #include "validation.h"
 #include "util.h"
@@ -36,7 +35,7 @@ bool IsCertOp(int op) {
 uint64_t GetCertExpiration(const CCert& cert) {
 	uint64_t nTime = chainActive.Tip()->GetMedianTimePast() + 1;
 	CAliasUnprunable aliasUnprunable;
-	if (paliasdb && paliasdb->ReadAliasUnprunable(cert.aliasTuple.first, aliasUnprunable) && !aliasUnprunable.IsNull())
+	if (paliasdb && paliasdb->ReadAliasUnprunable(cert.vchAlias, aliasUnprunable) && !aliasUnprunable.IsNull())
 		nTime = aliasUnprunable.nExpireTime;
 	
 	return nTime;
@@ -213,16 +212,15 @@ bool CCertDB::CleanupDatabase(int &servicesCleaned)
 	boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
 	pcursor->SeekToFirst();
 	CCert txPos;
-	pair<string, CNameTXIDTuple > key;
+	pair<string, vector<unsigned char> > key;
     while (pcursor->Valid()) {
         boost::this_thread::interruption_point();
         try {
 			if (pcursor->GetKey(key) && key.first == "certi") {
-				const CNameTXIDTuple &certTuple = key.second;
-  				if (!GetCert(certTuple.first, txPos) || chainActive.Tip()->GetMedianTimePast() >= GetCertExpiration(txPos))
+  				if (!GetCert(key.second, txPos) || chainActive.Tip()->GetMedianTimePast() >= GetCertExpiration(txPos))
 				{
 					servicesCleaned++;
-					EraseCert(certTuple, true);
+					EraseCert(key.second, true);
 				} 
 				
             }
@@ -233,19 +231,10 @@ bool CCertDB::CleanupDatabase(int &servicesCleaned)
     }
 	return true;
 }
-
-bool GetCert(const CNameTXIDTuple &certTuple,
-	CCert& txPos) {
-	if (!pcertdb || !pcertdb->ReadCert(certTuple, txPos))
-		return false;
-	return true;
-}
 bool GetCert(const vector<unsigned char> &vchCert,
         CCert& txPos) {
 	uint256 txid;
-	if (!pcertdb || !pcertdb->ReadCertLastTXID(vchCert, txid) )
-		return false;
-    if (!pcertdb->ReadCert(CNameTXIDTuple(vchCert, txid), txPos))
+    if (!pcertdb->ReadCert(vchCert, txPos))
         return false;
     if (chainActive.Tip()->GetMedianTimePast() >= GetCertExpiration(txPos)) {
 		txPos.SetNull();
@@ -254,6 +243,18 @@ bool GetCert(const vector<unsigned char> &vchCert,
     }
 
     return true;
+}
+bool GetFirstCert(const vector<unsigned char> &vchCert,
+	CCert& txPos) {
+	if (!pcertdb->ReadFirstCert(vchCert, txPos))
+		return false;
+	if (chainActive.Tip()->GetMedianTimePast() >= GetCertExpiration(txPos)) {
+		txPos.SetNull();
+		string cert = stringFromVch(vchCert);
+		return false;
+	}
+
+	return true;
 }
 bool DecodeAndParseCertTx(const CTransaction& tx, int& op, int& nOut,
 		vector<vector<unsigned char> >& vvch, char &type)
@@ -401,7 +402,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 			}
 			if(foundAlias)
 				break;
-			else if (!foundAlias && IsAliasOp(pop) && vvch.size() >= 2 && theCert.aliasTuple.first == vvch[0] && theCert.aliasTuple.third == vvch[1])
+			else if (!foundAlias && IsAliasOp(pop) && vvch.size() >= 2 && theCert.vchAlias == vvch[0])
 			{
 				foundAlias = true; 
 				prevAliasOp = pop;
@@ -443,7 +444,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2009 - " + _("Certificate guid mismatch");
 				return error(errorMessage.c_str());
 			}
-			if(!theCert.linkAliasTuple.first.empty())
+			if(!theCert.vchLinkAlias.empty())
 			{
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2010 - " + _("Certificate linked alias not allowed in activate");
 				return error(errorMessage.c_str());
@@ -511,12 +512,12 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 			return error(errorMessage.c_str());
 		}
 	}
-	const string &user1 = stringFromVch(theCert.aliasTuple.first);
+	const string &user1 = stringFromVch(theCert.vchAlias);
 	string user2 = "";
 	string user3 = "";
 	if (op == OP_CERT_TRANSFER) {
-		if (!theCert.linkAliasTuple.IsNull())
-			user2 = stringFromVch(theCert.linkAliasTuple.first);
+		if (!theCert.vchLinkAlias.IsNull())
+			user2 = stringFromVch(theCert.vchLinkAlias);
 	}
 	// if not an certnew, load the cert data from the DB
 	CCert dbCert;
@@ -586,7 +587,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 	}
 	if(op != OP_CERT_ACTIVATE) 
 	{
-		if (dbCert.aliasTuple != theCert.aliasTuple)
+		if (dbCert.vchAlias != theCert.vchAlias)
 		{
 			errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot update this certificate. Certificate owner must sign off on this change.");
 			return true;
@@ -598,25 +599,20 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 		if(theCert.sCategory.empty())
 			theCert.sCategory = dbCert.sCategory;
 
-		uint256 txid;
 		CCert firstCert;
-		if (!pcertdb->ReadCertFirstTXID(dbCert.vchCert, txid)) {
-			errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("Cannot read first txid from cert DB");
-			return true;
-		}
-		if (!GetCert(CNameTXIDTuple(dbCert.vchCert, txid), firstCert)) {
+		if (!GetFirstCert(dbCert.vchCert, firstCert)) {
 			errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("Cannot read first cert from cert DB");
 			return true;
 		}
 		if(op == OP_CERT_TRANSFER)
 		{
 			// check toalias
-			if(!GetAlias(theCert.linkAliasTuple.first, alias))
+			if(!GetAlias(theCert.vchLinkAlias, alias))
 			{
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2024 - " + _("Cannot find alias you are transferring to. It may be expired");	
 				return true;
 			}
-			theCert.aliasTuple = theCert.linkAliasTuple;		
+			theCert.vchAlias = theCert.vchLinkAlias;
 			if(!(alias.nAcceptTransferFlags & ACCEPT_TRANSFER_CERTIFICATES))
 			{
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("The alias you are transferring to does not accept certificate transfers");
@@ -624,7 +620,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 			}
 				
 			// the original owner can modify certificate regardless of access flags, new owners must adhere to access flags
-			if(dbCert.nAccessFlags < 2 && dbCert.aliasTuple != firstCert.aliasTuple)
+			if(dbCert.nAccessFlags < 2 && dbCert.vchAlias != firstCert.vchAlias)
 			{
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot transfer this certificate. Insufficient privileges.");
 				return true;
@@ -632,13 +628,13 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 		}
 		else if(op == OP_CERT_UPDATE)
 		{
-			if(dbCert.nAccessFlags < 1 && dbCert.aliasTuple != firstCert.aliasTuple)
+			if(dbCert.nAccessFlags < 1 && dbCert.vchAlias != firstCert.vchAlias)
 			{
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot edit this certificate. It is view-only.");
 				return true;
 			}
 		}
-		if(theCert.nAccessFlags > dbCert.nAccessFlags && dbCert.aliasTuple != firstCert.aliasTuple)
+		if(theCert.nAccessFlags > dbCert.nAccessFlags && dbCert.vchAlias != firstCert.vchAlias)
 		{
 			errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot modify for more lenient access. Only tighter access level can be granted.");
 			return true;
@@ -646,8 +642,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 	}
 	else
 	{
-		uint256 txid;
-		if (pcertdb->ReadCertLastTXID(vvchArgs[0], txid))
+		if (ReadCert(vvchArgs[0], theCert))
 		{
 			errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2027 - " + _("Certificate already exists");
 			return true;
@@ -661,13 +656,13 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 			paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, strResponseGUID);
 		}
 	}
-	theCert.linkAliasTuple.first.clear();
+	theCert.vchLinkAlias.clear();
     // set the cert's txn-dependent values
 	theCert.nHeight = nHeight;
 	theCert.txHash = tx.GetHash();
     // write cert  
 	if (!dontaddtodb) {
-		if (!pcertdb->WriteCert(theCert, dbCert, op, fJustCheck) || (op == OP_CERT_ACTIVATE && !pcertdb->WriteCertFirstTXID(vvchArgs[0], theCert.txHash)))
+		if (!pcertdb->WriteCert(theCert, dbCert, op, fJustCheck) || (op == OP_CERT_ACTIVATE && !pcertdb->WriteFirstCert(vvchArgs[0], theCert)))
 		{
 			errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to write to certifcate DB");
 			return error(errorMessage.c_str());
@@ -734,7 +729,7 @@ UniValue certnew(const UniValue& params, bool fHelp) {
 	newCert.vchTitle = vchTitle;
 	newCert.vchPubData = vchPubData;
 	newCert.nHeight = chainActive.Tip()->nHeight;
-	newCert.aliasTuple = CNameTXIDTuple(vchAlias, theAlias.txHash, theAlias.vchGUID);
+	newCert.vchAlias = vchAlias;
 
 	vector<unsigned char> data;
 	newCert.Serialize(data);
@@ -808,7 +803,7 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
 
 	CAliasIndex theAlias;
 
-	if (!GetAlias(theCert.aliasTuple.first, theAlias))
+	if (!GetAlias(theCert.vchAlias, theAlias))
 		throw runtime_error("SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2505 - " + _("Failed to read alias from alias DB"));
 
 	CCert copyCert = theCert;
@@ -900,7 +895,7 @@ UniValue certtransfer(const UniValue& params, bool fHelp) {
         throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2510 - " + _("Could not find a certificate with this key"));
 
 	CAliasIndex fromAlias;
-	if(!GetAlias(theCert.aliasTuple.first, fromAlias))
+	if(!GetAlias(theCert.vchAlias, fromAlias))
 	{
 		 throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2511 - " + _("Could not find the certificate alias"));
 	}
@@ -914,8 +909,8 @@ UniValue certtransfer(const UniValue& params, bool fHelp) {
 	theCert.ClearCert();
     CScript scriptPubKey;
 	theCert.nHeight = chainActive.Tip()->nHeight;
-	theCert.aliasTuple = CNameTXIDTuple(fromAlias.vchAlias, fromAlias.txHash, fromAlias.vchGUID);
-	theCert.linkAliasTuple = CNameTXIDTuple(toAlias.vchAlias, toAlias.txHash, toAlias.vchGUID);
+	theCert.vchAlias = fromAlias.vchAlias;
+	theCert.vchLinkAlias = toAlias.vchAlias;
 
 	if(strPubData != stringFromVch(theCert.vchPubData))
 		theCert.vchPubData = vchFromString(strPubData);
@@ -970,10 +965,7 @@ UniValue certinfo(const UniValue& params, bool fHelp) {
     vector<unsigned char> vchValue;
 
 	CCert txPos;
-	uint256 txid;
-	if (!pcertdb || !pcertdb->ReadCertLastTXID(vchCert, txid))
-		throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 5535 - " + _("Failed to read last txid from cert DB"));
-	if (!GetCert(CNameTXIDTuple(vchCert, txid), txPos))
+	if (!GetCert(vchCert, txPos))
 		throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 5535 - " + _("Failed to read from cert DB"));
 
 	if(!BuildCertJson(txPos, oCert))
@@ -996,7 +988,7 @@ bool BuildCertJson(const CCert& cert, UniValue& oCert)
 	oCert.push_back(Pair("title", stringFromVch(cert.vchTitle)));
 	oCert.push_back(Pair("publicvalue", stringFromVch(cert.vchPubData)));
 	oCert.push_back(Pair("category", stringFromVch(cert.sCategory)));
-	oCert.push_back(Pair("alias", stringFromVch(cert.aliasTuple.first)));
+	oCert.push_back(Pair("alias", stringFromVch(cert.vchAlias)));
 	oCert.push_back(Pair("access_flags", cert.nAccessFlags));
 	int64_t expired_time = GetCertExpiration(cert);
 	bool expired = false;
@@ -1026,7 +1018,7 @@ bool BuildCertIndexerHistoryJson(const CCert& cert, UniValue& oCert)
 	oCert.push_back(Pair("title", stringFromVch(cert.vchTitle)));
 	oCert.push_back(Pair("publicvalue", stringFromVch(cert.vchPubData)));
 	oCert.push_back(Pair("category", stringFromVch(cert.sCategory)));
-	oCert.push_back(Pair("alias", stringFromVch(cert.aliasTuple.first)));
+	oCert.push_back(Pair("alias", stringFromVch(cert.vchAlias)));
 	oCert.push_back(Pair("access_flags", cert.nAccessFlags));
 	return true;
 }
@@ -1036,7 +1028,7 @@ bool BuildCertIndexerJson(const CCert& cert, UniValue& oCert)
 	oCert.push_back(Pair("title", stringFromVch(cert.vchTitle)));
 	oCert.push_back(Pair("height", (int)cert.nHeight));
 	oCert.push_back(Pair("category", stringFromVch(cert.sCategory)));
-	oCert.push_back(Pair("alias", stringFromVch(cert.aliasTuple.first)));
+	oCert.push_back(Pair("alias", stringFromVch(cert.vchAlias)));
 	return true;
 }
 void CertTxToJSON(const int op, const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash, UniValue &entry)
@@ -1047,7 +1039,7 @@ void CertTxToJSON(const int op, const std::vector<unsigned char> &vchData, const
 		return;
 
 	CCert dbCert;
-	GetCert(CNameTXIDTuple(cert.vchCert, cert.txHash), dbCert);
+	GetCert(cert.vchCert, dbCert);
 	
 
 	entry.push_back(Pair("txtype", opName));
@@ -1059,10 +1051,8 @@ void CertTxToJSON(const int op, const std::vector<unsigned char> &vchData, const
 	if(!cert.vchPubData.empty() && cert.vchPubData != dbCert.vchPubData)
 		entry.push_back(Pair("publicdata", stringFromVch(cert.vchPubData)));
 
-	if(!cert.linkAliasTuple.first.empty() && cert.linkAliasTuple != dbCert.aliasTuple)
-		entry.push_back(Pair("alias", stringFromVch(cert.linkAliasTuple.first)));
-	else if(cert.aliasTuple.first != dbCert.aliasTuple.first)
-		entry.push_back(Pair("alias", stringFromVch(cert.aliasTuple.first)));
+	if(!cert.vchLinkAlias.empty() && cert.vchLinkAlias != dbCert.vchAlias)
+		entry.push_back(Pair("alias", stringFromVch(cert.vchLinkAlias)));
 
 	if(cert.nAccessFlags != dbCert.nAccessFlags)
 		entry.push_back(Pair("access_flags", cert.nAccessFlags));
