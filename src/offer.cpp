@@ -583,20 +583,19 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			{
 				if (fDebug)
 					LogPrintf("OFFER txid mismatch! Recreating...\n");
+				if (op != OP_OFFER_ACTIVATE && !pofferdb->ReadLastOffer(vvchArgs[0], dbOffer)) {
+					dbOffer.SetNull();
+				}
 				if (!dontaddtodb) {
+					if (!pofferdb->EraseISLock(vvchArgs[0]))
+					{
+						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from offer DB");
+						return error(errorMessage.c_str());
+					}
 					const string &txHashHex = dbOffer.txHash.GetHex();
 					paliasdb->EraseAliasIndexTxHistory(txHashHex);
 					pofferdb->EraseOfferIndexHistory(txHashHex);
 					pofferdb->EraseExtTXID(dbOffer.txHash);
-				}
-				if (op != OP_OFFER_ACTIVATE && !pofferdb->ReadLastOffer(vvchArgs[0], dbOffer)) {
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1048 - " + _("Failed to read last offer from offer DB");
-					return true;
-				}
-				if (!dontaddtodb && !pofferdb->EraseISLock(vvchArgs[0]))
-				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from offer DB");
-					return error(errorMessage.c_str());
 				}
 			}
 			else {
@@ -686,7 +685,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	else if(op == OP_OFFER_ACTIVATE)
 	{
 		COfferLinkWhitelistEntry entry;
-		if (GetOffer(vvchArgs[0], theffer))
+		if (fJustCheck && GetOffer(vvchArgs[0], theffer))
 		{
 			errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1050 - " + _("Offer already exists");
 			return true;

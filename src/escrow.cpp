@@ -934,15 +934,14 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 					LogPrintf("ESCROW txid mismatch! Recreating...\n");
 				const string &txHashHex = theEscrow.txHash.GetHex();
 				if (op != OP_ESCROW_ACTIVATE && !pescrowdb->ReadLastEscrow(vvchArgs[0], theEscrow)) {
-					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 1048 - " + _("Failed to read last escrow from escrow DB");
-					return true;
-				}
-				if (!dontaddtodb && !pescrowdb->EraseISLock(vvchArgs[0]))
-				{
-					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from escrow DB");
-					return error(errorMessage.c_str());
+					theEscrow.SetNull();
 				}
 				if (!dontaddtodb) {
+					if (!pescrowdb->EraseISLock(vvchArgs[0]))
+					{
+						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from escrow DB");
+						return error(errorMessage.c_str());
+					}
 					paliasdb->EraseAliasIndexTxHistory(txHashHex);
 					pescrowdb->EraseEscrowBidIndex(txHashHex);
 					pescrowdb->EraseEscrowFeedbackIndex(txHashHex);
@@ -1338,8 +1337,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 	else
 	{
 		COffer myLinkOffer;
-		uint256 lastTXID;
-		if (pescrowdb->ReadEscrowLastTXID(vvchArgs[0], lastTXID))
+		if (fJustCheck && GetEscrow(vvchArgs[0], theEscrow))
 		{
 			errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4071 - " + _("Escrow already exists");
 			return true;

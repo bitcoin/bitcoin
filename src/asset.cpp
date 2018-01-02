@@ -488,15 +488,14 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				//vector<string> lastReceiverList = dbAsset.listReceivers;
 				// recreate this asset tx from last known good position (last asset stored)
 				if (op != OP_ASSET_ACTIVATE && !passetdb->ReadLastAsset(vvchArgs[0], dbAsset)) {
-					errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 1048 - " + _("Failed to read last escrow from escrow DB");
-					return true;
+					dbAsset.SetNull();
 				}
-				if (!dontaddtodb && !passetdb->EraseISLock(vvchArgs[0]))
-				{
-					errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from asset DB");
-					return error(errorMessage.c_str());
-				}
-				if (!dontaddtodb) {
+				if(!dontaddtodb){
+					if (!passetdb->EraseISLock(vvchArgs[0]))
+					{
+						errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from asset DB");
+						return error(errorMessage.c_str());
+					}
 					paliasdb->EraseAliasIndexTxHistory(txHashHex);
 					passetdb->EraseAssetIndexHistory(txHashHex);
 				}
@@ -566,7 +565,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	}
 	else
 	{
-		if (GetAsset(vvchArgs[0], theAsset))
+		if (fJustCheck && GetAsset(vvchArgs[0], theAsset))
 		{
 			errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2027 - " + _("Asset already exists");
 			return true;

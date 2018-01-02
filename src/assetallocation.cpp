@@ -334,19 +334,18 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 				//vector<string> lastReceiverList = dbAssetAllocation.listReceivers;
 				// recreate this assetallocation tx from last known good position (last assetallocation stored)
 				if (!passetallocationdb->ReadLastAssetAllocation(assetAllocationTuple, theAssetAllocation)) {
-					errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1048 - " + _("Failed to read last escrow from escrow DB");
-					return true;
+					dbAssetAllocation.SetNull();
 				}
 				// deal with assetallocation send reverting
 				if (op == OP_ASSET_ALLOCATION_SEND) {
 
 				}
-				if (!dontaddtodb && !passetallocationdb->EraseISLock(assetAllocationTuple))
-				{
-					errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from assetallocation DB");
-					return error(errorMessage.c_str());
-				}
-				if (!dontaddtodb) {
+				if(!dontaddtodb){
+					if (!passetallocationdb->EraseISLock(assetAllocationTuple))
+					{
+						errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from assetallocation DB");
+						return error(errorMessage.c_str());
+					}
 					paliasdb->EraseAliasIndexTxHistory(txHashHex);
 				}
 			}

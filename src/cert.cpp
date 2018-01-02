@@ -543,15 +543,14 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 					LogPrintf("CERT txid mismatch! Recreating...\n");
 				const string &txHashHex = dbCert.txHash.GetHex();
 				if (op != OP_CERT_ACTIVATE && !pcertdb->ReadLastCert(vvchArgs[0], dbCert)) {
-					errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 1048 - " + _("Failed to read last certificate from certificate DB");
-					return true;
-				}
-				if (!dontaddtodb && !pcertdb->EraseISLock(vvchArgs[0]))
-				{
-					errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from certificate DB");
-					return error(errorMessage.c_str());
+					dbCert.SetNull();
 				}
 				if (!dontaddtodb) {
+					if (!pcertdb->EraseISLock(vvchArgs[0]))
+					{
+						errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from certificate DB");
+						return error(errorMessage.c_str());
+					}
 					paliasdb->EraseAliasIndexTxHistory(txHashHex);
 					pcertdb->EraseCertIndexHistory(txHashHex);
 				}
@@ -642,7 +641,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 	}
 	else
 	{
-		if (ReadCert(vvchArgs[0], theCert))
+		if (fJustCheck && ReadCert(vvchArgs[0], theCert))
 		{
 			errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2027 - " + _("Certificate already exists");
 			return true;

@@ -538,15 +538,14 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						LogPrintf("ALIAS txid mismatch! Recreating...\n");
 					const string &txHashHex = dbAlias.txHash.GetHex();
 					if (!paliasdb->ReadLastAlias(vvchArgs[0], dbAlias)) {
-						errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1048 - " + _("Failed to read last alias from alias DB");
-						return true;
-					}
-					if (!dontaddtodb && !paliasdb->EraseISLock(vvchArgs[0]))
-					{
-						errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from alias DB");
-						return error(errorMessage.c_str());
+						dbAlias.SetNull();
 					}
 					if (!dontaddtodb) {
+						if (!paliasdb->EraseISLock(vvchArgs[0]))
+						{
+							errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from alias DB");
+							return error(errorMessage.c_str());
+						}
 						paliasdb->EraseAliasIndexHistory(txHashHex);
 						paliasdb->EraseAliasIndexTxHistory(txHashHex);
 					}
