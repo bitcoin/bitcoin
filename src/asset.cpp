@@ -330,7 +330,7 @@ bool RemoveAssetScriptPrefix(const CScript& scriptIn, CScript& scriptOut) {
 	return true;
 }
 
-bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs,
+bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const std::vector<std::vector<unsigned char> > &vvchAliasArgs,
         bool fJustCheck, int nHeight, string &errorMessage, bool dontaddtodb) {
 	if (tx.IsCoinBase() && !fJustCheck && !dontaddtodb)
 	{
@@ -385,7 +385,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				continue;
 			}
 
-			else if (IsAliasOp(pop) && vvch.size() >= 2 && theAsset.vchAlias == vvch[0])
+			else if (IsAliasOp(pop) && vvch.size() >= 2 && vvchAliasArgs.size() >= 2 && theAsset.vchAlias == vvch[0] && vvchAliasArgs[1] == vvch[1])
 			{
 				prevAliasOp = pop;
 				vvchPrevAliasArgs = vvch;

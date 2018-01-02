@@ -308,7 +308,7 @@ bool RemoveOfferScriptPrefix(const CScript& scriptIn, CScript& scriptOut) {
 	return true;
 }
 
-bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, string &errorMessage, bool dontaddtodb) {
+bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const std::vector<std::vector<unsigned char> > &vvchAliasArgs, bool fJustCheck, int nHeight, string &errorMessage, bool dontaddtodb) {
 	if (tx.IsCoinBase() && !fJustCheck && !dontaddtodb)
 	{
 		LogPrintf("*Trying to add offer in coinbase transaction, skipping...");
@@ -368,7 +368,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			}
 			if(foundAlias)
 				break;
-			if (!foundAlias && IsAliasOp(pop) && vvch.size() >= 2 && theOffer.vchAlias == vvch[0])
+			if (!foundAlias && IsAliasOp(pop) && vvch.size() >= 2 && vvchAliasArgs.size() >= 2 && theOffer.vchAlias == vvch[0] && vvchAliasArgs[1] == vvch[1])
 			{
 				foundAlias = true;
 				prevAliasOp = pop;

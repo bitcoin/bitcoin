@@ -260,7 +260,7 @@ bool RemoveAssetAllocationScriptPrefix(const CScript& scriptIn, CScript& scriptO
 	return true;
 }
 
-bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs,
+bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const std::vector<std::vector<unsigned char> > &vvchAliasArgs,
         bool fJustCheck, int nHeight, string &errorMessage, bool dontaddtodb) {
 	if (tx.IsCoinBase() && !fJustCheck && !dontaddtodb)
 	{
@@ -315,7 +315,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 				continue;
 			}
 
-			else if (IsAliasOp(pop) && vvch.size() >= 2 && theAssetAllocation.vchLinkAlias == vvch[0])
+			else if (IsAliasOp(pop) && vvch.size() >= 2 && vvchAliasArgs.size() >= 2 && theAssetAllocation.vchLinkAlias == vvch[0] && vvchAliasArgs[1] == vvch[1])
 			{
 				prevAliasOp = pop;
 				vvchPrevAliasArgs = vvch;

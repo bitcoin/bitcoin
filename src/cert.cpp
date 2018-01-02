@@ -342,7 +342,7 @@ bool RemoveCertScriptPrefix(const CScript& scriptIn, CScript& scriptOut) {
 	return true;
 }
 
-bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs,
+bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const std::vector<std::vector<unsigned char> > &vvchAliasArgs,
         bool fJustCheck, int nHeight, string &errorMessage, bool dontaddtodb) {
 	if (tx.IsCoinBase() && !fJustCheck && !dontaddtodb)
 	{
@@ -400,7 +400,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 			}
 			if(foundAlias)
 				break;
-			else if (!foundAlias && IsAliasOp(pop) && vvch.size() >= 2 && theCert.vchAlias == vvch[0])
+			else if (!foundAlias && IsAliasOp(pop) && vvch.size() >= 2 && vvchAliasArgs.size() >= 2 && theCert.vchAlias == vvch[0] && vvchAliasArgs[1] == vvch[1])
 			{
 				foundAlias = true; 
 				prevAliasOp = pop;
