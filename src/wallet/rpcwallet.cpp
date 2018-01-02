@@ -644,10 +644,10 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
 	}
 	if (DecodeOfferTx(wtxNew, op, nOut, vvch))
 	{
-		CheckOfferInputs(wtxNew, op, nOut, vvch, fJustCheck, chainActive.Tip()->nHeight, errorMessage, true);
+		CheckOfferInputs(wtxNew, op, nOut, vvch, vvchAlias, fJustCheck, chainActive.Tip()->nHeight, errorMessage, true);
 		if (!errorMessage.empty())
 			throw runtime_error(errorMessage.c_str());
-		CheckOfferInputs(wtxNew, op, nOut, vvch, !fJustCheck, chainActive.Tip()->nHeight, errorMessage, true);
+		CheckOfferInputs(wtxNew, op, nOut, vvch, vvchAlias, !fJustCheck, chainActive.Tip()->nHeight, errorMessage, true);
 		if (!errorMessage.empty())
 			throw runtime_error(errorMessage.c_str());
 
