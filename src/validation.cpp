@@ -557,7 +557,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight)
 	{
 		bool bDestCheckFailed = false;
 		bool good = true;
-		if (DecodeAliasTx(tx, op, nOut, vvchArgs))
+		if (DecodeAliasTx(tx, op, nOut, vvchAliasArgs))
 		{
 			errorMessage.clear();
 			good = CheckAliasInputs(tx, op, nOut, vvchAliasArgs, fJustCheck, nHeight, errorMessage, bDestCheckFailed);

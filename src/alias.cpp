@@ -2174,7 +2174,7 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	coinControl.fAllowOtherInputs = true;
 	coinControl.fAllowWatchOnly = true;
 
-	SendMoneySyscoin(vchAlias, vchWitness, recipient, recipientPayment, vecSend, wtx, &coinControl, false);
+	SendMoneySyscoin(vchAlias, vchWitness, recipient, recipientPayment, vecSend, wtx, &coinControl);
 	UniValue res(UniValue::VARR);
 	res.push_back(EncodeHexTx(wtx));
 	res.push_back(strAddress);
