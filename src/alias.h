@@ -7,7 +7,6 @@
 
 #include "rpc/server.h"
 #include "dbwrapper.h"
-#include "feedback.h"
 #include "consensus/params.h"
 #include "sync.h" 
 class CWalletTx;
@@ -301,6 +300,7 @@ class COfferDB;
 class CCertDB;
 class CEscrowDB;
 class CAssetDB;
+class CAssetAllocationDB;
 extern CAliasDB *paliasdb;
 extern COfferDB *pofferdb;
 extern CCertDB *pcertdb;
