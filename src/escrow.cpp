@@ -650,14 +650,14 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 		}
 		switch (op) {
 			case OP_ESCROW_ACKNOWLEDGE:
-				if (!IsAliasOp(prevAliasOp) || vvchPrevAliasArgs.empty() || theEscrow.vchLinkAlias != vvchPrevAliasArgs[0] || theEscrow.vchLinkAlias.third != vvchPrevAliasArgs[1])
+				if (!IsAliasOp(prevAliasOp) || vvchPrevAliasArgs.empty() || theEscrow.vchLinkAlias != vvchPrevAliasArgs[0)
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4010 - " + _("Alias input mismatch");
 					return error(errorMessage.c_str());
 				}
 				break;
 			case OP_ESCROW_ACTIVATE:
-				if(!IsAliasOp(prevAliasOp) || vvchPrevAliasArgs.empty() || theEscrow.vchBuyerAlias != vvchPrevAliasArgs[0] || theEscrow.vchBuyerAlias.third != vvchPrevAliasArgs[1])
+				if(!IsAliasOp(prevAliasOp) || vvchPrevAliasArgs.empty() || theEscrow.vchBuyerAlias != vvchPrevAliasArgs[0])
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4011 - " + _("Alias input mismatch");
 					return error(errorMessage.c_str());
@@ -700,7 +700,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				break;
 			case OP_ESCROW_BID:
 				
-				if (!IsAliasOp(prevAliasOp) || vvchPrevAliasArgs.empty() || theEscrow.vchBuyerAlias != vvchPrevAliasArgs[0] || theEscrow.vchBuyerAlias.third != vvchPrevAliasArgs[1])
+				if (!IsAliasOp(prevAliasOp) || vvchPrevAliasArgs.empty() || theEscrow.vchBuyerAlias != vvchPrevAliasArgs[0])
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4011 - " + _("Alias input mismatch");
 					return error(errorMessage.c_str());
@@ -726,7 +726,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4010 - " + _("Escrow witness missing in bid");
 					return error(errorMessage.c_str());
 				}
-				if(theEscrow.vchOffer.IsNull())
+				if(theEscrow.vchOffer.empty())
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4010 - " + _("Escrow offer information missing in bid");
 					return error(errorMessage.c_str());
@@ -734,7 +734,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				break;
 			case OP_ESCROW_ADD_SHIPPING:
 
-				if (!IsAliasOp(prevAliasOp) || vvchPrevAliasArgs.empty() || theEscrow.vchBuyerAlias != vvchPrevAliasArgs[0] || theEscrow.vchBuyerAlias.third != vvchPrevAliasArgs[1])
+				if (!IsAliasOp(prevAliasOp) || vvchPrevAliasArgs.empty() || theEscrow.vchBuyerAlias != vvchPrevAliasArgs[0])
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4011 - " + _("Alias input mismatch");
 					return error(errorMessage.c_str());
@@ -792,7 +792,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				}
 				break;
 			case OP_ESCROW_FEEDBACK:
-				if(!IsAliasOp(prevAliasOp) || vvchPrevAliasArgs.empty() || theEscrow.vchLinkAlias != vvchPrevAliasArgs[0] || theEscrow.vchLinkAlias.third != vvchPrevAliasArgs[1])
+				if(!IsAliasOp(prevAliasOp) || vvchPrevAliasArgs.empty() || theEscrow.vchLinkAlias != vvchPrevAliasArgs[0])
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4023 - " + _("Alias input mismatch");
 					return error(errorMessage.c_str());
@@ -852,7 +852,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 
 				break;
 			case OP_ESCROW_REFUND_COMPLETE:
-				if (!IsAliasOp(prevAliasOp) || vvchPrevAliasArgs.empty() || theEscrow.vchLinkAlias != vvchPrevAliasArgs[0] || theEscrow.vchLinkAlias.third != vvchPrevAliasArgs[1])
+				if (!IsAliasOp(prevAliasOp) || vvchPrevAliasArgs.empty() || theEscrow.vchLinkAlias != vvchPrevAliasArgs[0])
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4027 - " + _("Alias input mismatch");
 					return error(errorMessage.c_str());
@@ -1042,9 +1042,9 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4042 - " + _("Offer auction requires a witness signature for each bid but none provided");
 				return true;
 			}
-			if (!dbOffer.linkvchOffer.empty())
+			if (!dbOffer.vchOffer.empty())
 			{
-				if (!GetOffer(dbOffer.linkvchOffer, myLinkOffer))
+				if (!GetOffer(dbOffer.vchOffer, myLinkOffer))
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4078 - " + _("Cannot find linked offer for this escrow");
 					return true;
@@ -1115,7 +1115,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 			if (GetOffer(theEscrow.vchOffer, dbOffer)){
 				int nQty = dbOffer.nQty;
 				// if this is a linked offer we must update the linked offer qty
-				if (GetOffer(dbOffer.linkvchOffer, myLinkOffer))
+				if (GetOffer(dbOffer.vchOffer, myLinkOffer))
 				{
 					nQty = myLinkOffer.nQty;
 				}
@@ -1136,9 +1136,9 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4042 - " + _("Cannot find escrow offer. It may be expired");
 				return true;
 			}
-			if (!dbOffer.linkvchOffer.empty())
+			if (!dbOffer.vchOffer.empty())
 			{
-				if (!GetOffer(dbOffer.linkvchOffer, myLinkOffer))
+				if (!GetOffer(dbOffer.vchOffer, myLinkOffer))
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4078 - " + _("Cannot find linked offer for this escrow");
 					return true;
@@ -1218,9 +1218,9 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4042 - " + _("Cannot find escrow offer. It may be expired");
 				return true;
 			}
-			if (!dbOffer.linkvchOffer.empty())
+			if (!dbOffer.vchOffer.empty())
 			{
-				if (!GetOffer(dbOffer.linkvchOffer, myLinkOffer))
+				if (!GetOffer(dbOffer.vchOffer, myLinkOffer))
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4078 - " + _("Cannot find linked offer for this escrow");
 					return true;
@@ -1383,9 +1383,9 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 			errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4077 - " + _("Cannot find offer for this escrow. It may be expired");
 			return true;
 		}
-		if (!dbOffer.linkvchOffer.empty())
+		if (!dbOffer.vchOffer.empty())
 		{
-			if (!GetOffer(dbOffer.linkvchOffer, myLinkOffer))
+			if (!GetOffer(dbOffer.vchOffer, myLinkOffer))
 			{
 				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4078 - " + _("Cannot find linked offer for this escrow");
 				return true;
@@ -1733,9 +1733,9 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	CAliasIndex theLinkedAlias, reselleralias;
 	
 	CAmount nCommission = 0;
-	if(!theOffer.linkvchOffer.empty())
+	if(!theOffer.vchOffer.empty())
 	{
-		if (!GetOffer( theOffer.linkvchOffer, linkedOffer))
+		if (!GetOffer( theOffer.vchOffer, linkedOffer))
 			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4516 - " + _("Trying to accept a linked offer but could not find parent offer"));
 
 		if (!GetAlias( linkedOffer.vchAlias, theLinkedAlias))
@@ -2021,10 +2021,10 @@ UniValue escrowcreaterawtransaction(const UniValue& params, bool fHelp) {
 	if (!GetOffer(escrow.vchOffer, theOffer))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4524 - " + _("Could not find offer related to this escrow"));
 	float fDepositPercentage = theOffer.auctionOffer.fDepositPercentage;
-	if (!theOffer.linkvchOffer.empty())
+	if (!theOffer.vchOffer.empty())
 	{
 
-		if (!GetOffer(theOffer.linkvchOffer, linkedOffer))
+		if (!GetOffer(theOffer.vchOffer, linkedOffer))
 			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4516 - " + _("Trying to accept a linked offer but could not find parent offer"));
 		fDepositPercentage = linkedOffer.auctionOffer.fDepositPercentage;
 	}
@@ -2078,9 +2078,9 @@ UniValue escrowcreaterawtransaction(const UniValue& params, bool fHelp) {
 		if (escrow.role == EscrowRoles::ARBITER || role == "arbiter")
 		{
 			nBalanceTmp -= escrow.nArbiterFee;
-			createAddressUniValue.push_back(Pair(arbiterAddressPayment.ToString(), ValueFromAmount(escrow.nArbiterFee)));
+			createAddressUniValue.push_back(Pair(arbiterPaymentAddress.ToString(), ValueFromAmount(escrow.nArbiterFee)));
 		}
-		createAddressUniValue.push_back(Pair(buyerAddressPayment.ToString(), ValueFromAmount(nBalanceTmp)));
+		createAddressUniValue.push_back(Pair(buyerPaymentAddress.ToString(), ValueFromAmount(nBalanceTmp)));
 	}
 	else if (type == "release") {
 		nBalanceTmp -= escrow.nNetworkFee;
@@ -2088,7 +2088,7 @@ UniValue escrowcreaterawtransaction(const UniValue& params, bool fHelp) {
 		nBalanceTmp -= escrow.nDeposit;
 		nBalanceTmp -= escrow.nWitnessFee;
 		// if linked offer send commission to affiliate
-		if (!theOffer.linkvchOffer.empty())
+		if (!theOffer.vchOffer.empty())
 		{
 			nBalanceTmp -= escrow.nCommission;
 			if (escrow.nCommission > 0)
@@ -2098,15 +2098,15 @@ UniValue escrowcreaterawtransaction(const UniValue& params, bool fHelp) {
 		{
 			createAddressUniValue.push_back(Pair(arbiterAddressPayment.ToString(), ValueFromAmount(escrow.nArbiterFee)));
 			if (escrow.nDeposit > 0)
-				createAddressUniValue.push_back(Pair(buyerAddressPayment.ToString(), ValueFromAmount(escrow.nDeposit)));
+				createAddressUniValue.push_back(Pair(buyerPaymentAddress.ToString(), ValueFromAmount(escrow.nDeposit)));
 		}
 		else if (escrow.role == EscrowRoles::BUYER || role == "buyer")
 		{
-			createAddressUniValue.push_back(Pair(buyerAddressPayment.ToString(), ValueFromAmount(escrow.nArbiterFee + escrow.nDeposit)));
+			createAddressUniValue.push_back(Pair(buyerPaymentAddress.ToString(), ValueFromAmount(escrow.nArbiterFee + escrow.nDeposit)));
 		}
 		if (escrow.nWitnessFee > 0)
 			createAddressUniValue.push_back(Pair(witnessAddressPayment.ToString(), ValueFromAmount(escrow.nWitnessFee)));
-		createAddressUniValue.push_back(Pair(sellerAddressPayment.ToString(), ValueFromAmount(nBalanceTmp)));
+		createAddressUniValue.push_back(Pair(sellerPaymentAddress.ToString(), ValueFromAmount(nBalanceTmp)));
 
 	}
 	if (!ValidateArbiterFee(escrow)) {

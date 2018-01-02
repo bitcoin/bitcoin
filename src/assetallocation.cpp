@@ -315,7 +315,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 				continue;
 			}
 
-			else if (IsAliasOp(pop) && vvch.size() >= 2 && theAssetAllocation.vchLinkAlias == vvch[0] && theAssetAllocation.vchLinkAlias.third == vvch[1])
+			else if (IsAliasOp(pop) && vvch.size() >= 2 && theAssetAllocation.vchLinkAlias == vvch[0])
 			{
 				prevAliasOp = pop;
 				vvchPrevAliasArgs = vvch;
