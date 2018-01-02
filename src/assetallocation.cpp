@@ -509,17 +509,14 @@ UniValue assetallocationsend(const UniValue& params, bool fHelp) {
 		throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2510 - " + _("Could not find a asset with this key"));
 
 
-	CSyscoinAddress sendAddr;
-	GetAddress(toAlias, &sendAddr, scriptPubKeyOrig);
 	CSyscoinAddress fromAddr;
 	GetAddress(fromAlias, &fromAddr, scriptPubKeyFromOrig);
 
 	CAssetAllocation copyAsset = theAssetAllocation;
-	theAssetAllocation.ClearAsset();
+	theAssetAllocation.ClearAssetAllocation();
 	CScript scriptPubKey;
 	theAssetAllocation.nHeight = chainActive.Tip()->nHeight;
 	theAssetAllocation.vchLinkAlias = fromAlias.vchAlias;
-	theAssetAllocation.vchAlias = toAlias.vchAlias;
 
 
 	vector<unsigned char> data;
@@ -560,16 +557,17 @@ UniValue assetallocationsend(const UniValue& params, bool fHelp) {
 }
 
 UniValue assetallocationinfo(const UniValue& params, bool fHelp) {
-    if (fHelp || 1 > params.size())
-        throw runtime_error("assetallocationinfo <guid>\n"
+    if (fHelp || 2 != params.size())
+        throw runtime_error("assetallocationinfo <guid> <alias>\n"
                 "Show stored values of a single asset allocation.\n");
 
     vector<unsigned char> vchAsset = vchFromValue(params[0]);
+	vector<unsigned char> vchAlias = vchFromValue(params[1]);
 	UniValue oAssetAllocation(UniValue::VOBJ);
     vector<unsigned char> vchValue;
 
 	CAssetAllocation txPos;
-	if (!GetAssetAllocation(vchAsset, txPos))
+	if (!GetAssetAllocation(CAssetAllocationTuple(vchAsset, vchAlias), txPos))
 		throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 5535 - " + _("Failed to read from assetallocation DB"));
 
 	if(!BuildAssetAllocationJson(txPos, oAssetAllocation))
