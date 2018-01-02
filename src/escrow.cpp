@@ -790,11 +790,9 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 			}
 		}
 	}
-	CEscrow serializedEscrow;
-	if (op != OP_ESCROW_ACTIVATE) {
-		serializedEscrow = theEscrow;
-		escrowOp = serializedEscrow.op;
-	}
+	CEscrow serializedEscrow = theEscrow;
+	escrowOp = serializedEscrow.op;
+	
 	if (!GetEscrow(serializedEscrow.vchEscrow, theEscrow))
 	{
 		if (op != OP_ESCROW_ACTIVATE) {
