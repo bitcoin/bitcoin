@@ -575,7 +575,13 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 		}
 		
 	}
-	if (theEscrow.vchLinkAlias != vvchAliasArgs[0]) {
+	bool inputMismatch = false;
+	if (op == OP_ESCROW_ACTIVATE)
+		inputMismatch = theEscrow.vchBuyerAlias != vvchAliasArgs[0];
+	else
+		inputMismatch = theEscrow.vchLinkAlias != vvchAliasArgs[0];
+
+	if (inputMismatch) {
 		errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4003 - " + _("Alias input mismatch");
 		if(fJustCheck)
 			return error(errorMessage.c_str());
