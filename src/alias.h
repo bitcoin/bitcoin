@@ -8,7 +8,9 @@
 #include "rpc/server.h"
 #include "dbwrapper.h"
 #include "consensus/params.h"
-#include "sync.h" 
+#include "sync.h"
+#include "script/script.h"
+#include "serialize.h"
 class CWalletTx;
 class CTransaction;
 class CTxOut;
