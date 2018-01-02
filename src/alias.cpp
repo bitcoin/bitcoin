@@ -199,7 +199,7 @@ bool GetTimeToPrune(const CScript& scriptPubKey, uint64_t &nTime)
 	}
 	else if (assetallocation.UnserializeFromData(vchData, vchHash))
 	{
-		if (!passetallocationdb->ReadAssetAllocation(CAssetAllocationTuple(asset.vchAsset, asset.vchAlias), assetallocation))
+		if (!passetallocationdb->ReadAssetAllocation(CAssetAllocationTuple(assetallocation.vchAsset, assetallocation.vchAlias), assetallocation))
 		{
 			// setting to the tip means we don't prune this data, we keep it
 			nTime = chainActive.Tip()->GetMedianTimePast() + 1;
@@ -2415,11 +2415,6 @@ UniValue syscoinsendrawtransaction(const UniValue& params, bool fHelp) {
 	}
 	
 	return res;
-}
-bool IsMyAlias(const CAliasIndex& alias)
-{
-	CSyscoinAddress address(EncodeBase58(alias.vchAddress));
-	return IsMine(*pwalletMain, address.Get());
 }
 string GenerateSyscoinGuid()
 {

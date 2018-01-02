@@ -194,7 +194,6 @@ public:
 		vchGUID.clear();
 		vchAddress.clear();
 		offerWhitelist.SetNull();
-		vchAlias.clear();
 	}
 	ADD_SERIALIZE_METHODS;
     template <typename Stream, typename Operation>
@@ -356,7 +355,6 @@ void AliasTxToJSON(const int op, const std::vector<unsigned char> &vchData, cons
 bool BuildAliasJson(const CAliasIndex& alias, UniValue& oName);
 void CleanupSyscoinServiceDatabases(int &servicesCleaned);
 int aliasunspent(const std::vector<unsigned char> &vchAlias, COutPoint& outPoint);
-bool IsMyAlias(const CAliasIndex& alias);
 void GetAddress(const CAliasIndex &alias, CSyscoinAddress* address, CScript& script, const uint32_t nPaymentOption=1);
 void startMongoDB();
 void stopMongoDB();
