@@ -643,7 +643,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 		}
 		switch (op) {
 			case OP_ESCROW_ACKNOWLEDGE:
-				if (!IsAliasOp(prevAliasOp) || vvchPrevAliasArgs.empty() || theEscrow.vchLinkAlias != vvchPrevAliasArgs[0]))
+				if (!IsAliasOp(prevAliasOp) || vvchPrevAliasArgs.empty() || theEscrow.vchLinkAlias != vvchPrevAliasArgs[0])
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4010 - " + _("Alias input mismatch");
 					return error(errorMessage.c_str());
@@ -2086,7 +2086,7 @@ UniValue escrowcreaterawtransaction(const UniValue& params, bool fHelp) {
 		}
 		if (escrow.role == EscrowRoles::ARBITER || role == "arbiter")
 		{
-			createAddressUniValue.push_back(Pair(arbiterAddressPayment.ToString(), ValueFromAmount(escrow.nArbiterFee)));
+			createAddressUniValue.push_back(Pair(arbiterPaymentAddress.ToString(), ValueFromAmount(escrow.nArbiterFee)));
 			if (escrow.nDeposit > 0)
 				createAddressUniValue.push_back(Pair(buyerPaymentAddress.ToString(), ValueFromAmount(escrow.nDeposit)));
 		}
