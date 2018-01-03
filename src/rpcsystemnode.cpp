@@ -43,7 +43,7 @@ Value systemnode(const Array& params, bool fHelp)
         (strCommand != "start" && strCommand != "start-alias" && strCommand != "start-many" && strCommand != "start-all" && 
          strCommand != "start-missing" && strCommand != "start-disabled" && strCommand != "list" && strCommand != "list-conf" && 
          strCommand != "count"  && strCommand != "enforce" && strCommand != "debug" && strCommand != "current" && 
-         strCommand != "winners" && strCommand != "genkey" && strCommand != "connect" && strCommand != "outputs" && 
+         strCommand != "winners" && strCommand != "connect" && strCommand != "outputs" && 
          strCommand != "status" && strCommand != "calcscore"))
         throw runtime_error(
                 "systemnode \"command\"... ( \"passphrase\" )\n"
@@ -55,7 +55,6 @@ Value systemnode(const Array& params, bool fHelp)
                 "  count        - Print number of all known systemnodes (optional: 'ds', 'enabled', 'all', 'qualify')\n"
                 "  current      - Print info on current systemnode winner\n"
                 "  debug        - Print systemnode status\n"
-                "  genkey       - Generate new systemnodeprivkey\n"
                 "  enforce      - Enforce systemnode payments\n"
                 "  outputs      - Print systemnode compatible outputs\n"
                 "  start        - Start systemnode configured in crown.conf\n"
@@ -228,14 +227,6 @@ Value systemnode(const Array& params, bool fHelp)
     {
 
         throw runtime_error("Not implemented yet, please look at the documentation for instructions on systemnode creation\n");
-    }
-
-    if (strCommand == "genkey")
-    {
-        CKey secret;
-        secret.MakeNewKey(false);
-
-        return CBitcoinSecret(secret).ToString();
     }
 
     if(strCommand == "list-conf")

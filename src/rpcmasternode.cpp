@@ -74,7 +74,7 @@ Value masternode(const Array& params, bool fHelp)
     if (fHelp  ||
         (strCommand != "start" && strCommand != "start-alias" && strCommand != "start-many" && strCommand != "start-all" && strCommand != "start-missing" &&
          strCommand != "start-disabled" && strCommand != "list" && strCommand != "list-conf" && strCommand != "count"  && strCommand != "enforce" &&
-        strCommand != "debug" && strCommand != "current" && strCommand != "winners" && strCommand != "genkey" && strCommand != "connect" &&
+        strCommand != "debug" && strCommand != "current" && strCommand != "winners" && strCommand != "connect" &&
         strCommand != "outputs" && strCommand != "status" && strCommand != "calcscore"))
         throw runtime_error(
                 "masternode \"command\"... ( \"passphrase\" )\n"
@@ -86,7 +86,6 @@ Value masternode(const Array& params, bool fHelp)
                 "  count        - Print number of all known masternodes (optional: 'ls', 'enabled', 'all', 'qualify')\n"
                 "  current      - Print info on current masternode winner\n"
                 "  debug        - Print masternode status\n"
-                "  genkey       - Generate new masternodeprivkey\n"
                 "  enforce      - Enforce masternode payments\n"
                 "  outputs      - Print masternode compatible outputs\n"
                 "  start        - Start masternode configured in crown.conf\n"
@@ -318,14 +317,6 @@ Value masternode(const Array& params, bool fHelp)
         throw runtime_error("Not implemented yet, please look at the documentation for instructions on masternode creation\n");
     }
 
-    if (strCommand == "genkey")
-    {
-        CKey secret;
-        secret.MakeNewKey(false);
-
-        return CBitcoinSecret(secret).ToString();
-    }
-
     if(strCommand == "list-conf")
     {
         std::vector<CMasternodeConfig::CMasternodeEntry> mnEntries;
@@ -428,6 +419,34 @@ Value masternode(const Array& params, bool fHelp)
         return obj;
     }
 
+    return Value::null;
+}
+
+Value node(const Array& params, bool fHelp)
+{
+    string strCommand;
+    if (params.size() >= 1)
+        strCommand = params[0].get_str();
+
+    if (fHelp  ||
+        (strCommand != "genkey"))
+        throw runtime_error(
+                "node \"command\"... ( \"passphrase\" )\n"
+                "Generate a new masternode/systemnode private key\n"
+                "\nArguments:\n"
+                "1. \"command\"        (string or set of strings, required) The command to execute\n"
+                "2. \"passphrase\"     (string, optional) The wallet passphrase\n"
+                "\nAvailable commands:\n"
+                "  genkey       - Generate a new masternode/systemnode privkey\n"
+                );
+
+    if (strCommand == "genkey")
+    {
+        CKey secret;
+        secret.MakeNewKey(false);
+
+        return CBitcoinSecret(secret).ToString();
+    }
     return Value::null;
 }
 

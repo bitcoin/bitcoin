@@ -322,6 +322,7 @@ static const CRPCCommand vRPCCommands[] =
     { "crown",               "systemnode",           &systemnode,            true,      true,       false },
     { "crown",               "systemnodelist",       &systemnodelist,        true,      true,       false },
     { "crown",               "systemnodebroadcast",  &systemnodebroadcast,   true,      true,       false },
+    { "crown",               "node",  &node,   true,      true,       false },
 
     /* API features */
     { "api",                 "service",               &service,                true,      true,       false },
