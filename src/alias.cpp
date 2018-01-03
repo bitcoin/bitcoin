@@ -515,6 +515,16 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		}
 	}
 	bool theAliasNull = theAlias.IsNull();
+	string strResponseEnglish = "";
+	string strResponse = GetSyscoinTransactionDescription(op, strResponseEnglish, ALIAS);
+	const string &user1 = stringFromVch(vvchArgs[0]);
+	string user2 = "";
+	string user3 = "";
+	if (!theAlias.vchAddress.empty())
+		user2 = EncodeBase58(theAlias.vchAddress);
+	int nLockStatus = NOLOCK_UNCONFIRMED_STATE;
+	if (!fJustCheck)
+		nLockStatus = NOLOCK_CONFIRMED_STATE;
 	if (op == OP_ALIAS_UPDATE)
 	{
 		CTxDestination aliasDest;
@@ -548,16 +558,6 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				bDestCheckFailed = true;
 		}
 		if (!theAliasNull) {
-			string strResponseEnglish = "";
-			string strResponse = GetSyscoinTransactionDescription(op, strResponseEnglish, ALIAS);
-			const string &user1 = stringFromVch(vvchArgs[0]);
-			string user2 = "";
-			string user3 = "";
-			if (!theAlias.vchAddress.empty())
-				user2 = EncodeBase58(theAlias.vchAddress);
-			int nLockStatus = NOLOCK_UNCONFIRMED_STATE;
-			if (!fJustCheck)
-				nLockStatus = NOLOCK_CONFIRMED_STATE;
 			bool bSendLocked = false;
 			if (!fJustCheck && paliasdb->ReadISLock(vvchArgs[0], bSendLocked) && bSendLocked) {
 				if (dbAlias.nHeight >= nHeight)
