@@ -786,7 +786,7 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 	
 	if (!otherNode1.empty())
 	{
-		txHistoryResult.SetNull();
+		txHistoryResult.clear();
 		// try for 5 seconds before giving up
 		int numtries = 100 * 5;
 		while (txHistoryResult.empty()) {
@@ -814,7 +814,7 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 	}
 	if (!otherNode2.empty())
 	{
-		txHistoryResult.SetNull();
+		txHistoryResult.clear();
 		// try for 5 seconds before giving up
 		int numtries = 100 * 5;
 		while (txHistoryResult.empty()) {
