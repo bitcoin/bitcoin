@@ -514,7 +514,6 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			return true;
 		}
 	}
-	string newAddress = "";
 	bool theAliasNull = theAlias.IsNull();
 	if (op == OP_ALIAS_UPDATE)
 	{
@@ -551,6 +550,11 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		if (!theAliasNull) {
 			string strResponseEnglish = "";
 			string strResponse = GetSyscoinTransactionDescription(op, strResponseEnglish, ALIAS);
+			const string &user1 = stringFromVch(vvchArgs[0]);
+			string user2 = "";
+			string user3 = "";
+			if (!theAlias.vchAddress.empty())
+				user2 = EncodeBase58(theAlias.vchAddress);
 			int nLockStatus = NOLOCK_UNCONFIRMED_STATE;
 			if (!fJustCheck)
 				nLockStatus = NOLOCK_CONFIRMED_STATE;
@@ -645,8 +649,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					theAlias.nExpireTime = dbAlias.nExpireTime;
 				if (theAlias.vchAddress.empty())
 					theAlias.vchAddress = dbAlias.vchAddress;
-				else
-					newAddress = EncodeBase58(theAlias.vchAddress);
+
 				theAlias.vchGUID = dbAlias.vchGUID;
 				theAlias.vchAlias = dbAlias.vchAlias;
 				// if transfer
@@ -759,13 +762,6 @@ theAlias = dbAlias;
 	{
 		if (!dontaddtodb) {
 			if (strResponse != "") {
-				const string &user1 = stringFromVch(vvchArgs[0]);
-				string user2 = "";
-				string user3 = "";
-				if (op == OP_ALIAS_UPDATE) {
-					if (!newAddress.empty())
-						user2 = newAddress;
-				}
 				paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, stringFromVch(vchAlias), nLockStatus);
 			}
 		}
