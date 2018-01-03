@@ -798,6 +798,7 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 				break;
 			}
 		}
+		printf("relay to node1 to took about %d MS\n", 10 * numTries);
 		BOOST_CHECK(ret.read(txHistoryResult[0].get_str()));
 		historyResultObj = ret.get_obj();
 		BOOST_CHECK_EQUAL(find_value(historyResultObj, "lock_status").get_int(), LOCK_NOCONFLICT_UNCONFIRMED_STATE);
@@ -825,6 +826,7 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 				break;
 			}
 		}
+		printf("relay to node2 to took about %d MS\n", 10 * numTries);
 		BOOST_CHECK(ret.read(txHistoryResult[0].get_str()));
 		historyResultObj = ret.get_obj();
 		BOOST_CHECK_EQUAL(find_value(historyResultObj, "lock_status").get_int(), LOCK_NOCONFLICT_UNCONFIRMED_STATE);
@@ -840,6 +842,15 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 
 	}
 	GenerateBlocks(5, node);
+	txHistoryResult = AliasTxHistoryFilter(node, txid);
+	BOOST_CHECK(!txHistoryResult.empty());
+	UniValue ret;
+	BOOST_CHECK(ret.read(txHistoryResult[0].get_str()));
+	historyResultObj = ret.get_obj();
+	BOOST_CHECK_EQUAL(find_value(historyResultObj, "user1").get_str(), aliasname);
+	BOOST_CHECK_EQUAL(find_value(historyResultObj, "_id").get_str(), txid);
+	BOOST_CHECK_EQUAL(find_value(historyResultObj, "type").get_str(), "Alias Updated");
+	BOOST_CHECK_EQUAL(find_value(historyResultObj, "lock_status").get_int(), LOCK_NOCONFLICT_CONFIRMED_STATE);
 	if(!otherNode1.empty())
 	{
 		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode1, "aliasinfo " + aliasname));

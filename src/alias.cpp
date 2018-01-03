@@ -604,6 +604,9 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 							errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from alias DB");
 							return error(errorMessage.c_str());
 						}
+						if (strResponse != "") {
+							paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, strName, nLockStatus);
+						}
 					}
 					return true;
 				}
