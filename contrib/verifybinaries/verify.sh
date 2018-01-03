@@ -24,7 +24,7 @@ TMPFILE="hashes.tmp"
 
 SIGNATUREFILENAME="SHA256SUMS.asc"
 RCSUBDIR="test"
-HOST1="https://ravencore.org"
+HOST1="https://ravencoin.org"
 HOST2="https://raven.org"
 BASEDIR="/bin/"
 VERSIONPREFIX="raven-core-"

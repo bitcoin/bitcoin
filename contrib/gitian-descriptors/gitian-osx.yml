@@ -28,7 +28,7 @@ packages:
 - "python-setuptools"
 - "fonts-tuffy"
 remotes:
-- "url": "https://github.com/raven/raven.git"
+- "url": "https://github.com/RavenProject/Ravencoin.git"
   "dir": "raven"
 files:
 - "MacOSX10.11.sdk.tar.gz"

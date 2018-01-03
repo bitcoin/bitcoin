@@ -36,7 +36,7 @@ raven (0.13.2-trusty1) trusty; urgency=medium
 
 raven (0.13.1-trusty2) trusty; urgency=medium
 
-  * Revert to Qt4, due to https://github.com/raven/raven/issues/9038
+  * Revert to Qt4, due to https://github.com/RavenProject/Ravencoin/issues/9038
 
  -- Matt Corallo (BlueMatt) <matt@mattcorallo.com>  Mon, 31 Oct 2016 11:16:00 -0400
 

@@ -3,7 +3,7 @@ Raven Core integration/staging tree
 
 [![Build Status](https://travis-ci.org/raven/raven.svg?branch=master)](https://travis-ci.org/raven/raven)
 
-https://ravencore.org
+https://ravencoin.org
 
 What is Raven?
 ----------------
@@ -16,7 +16,7 @@ software which enables the use of this currency.
 
 For more information, as well as an immediately useable, binary version of
 the Raven Core software, see https://raven.org/en/download, or read the
-[original whitepaper](https://ravencore.org/raven.pdf).
+[original whitepaper](https://ravencoin.org/raven.pdf).
 
 License
 -------
@@ -28,7 +28,7 @@ Development Process
 -------------------
 
 The `master` branch is regularly built and tested, but is not guaranteed to be
-completely stable. [Tags](https://github.com/raven/raven/tags) are created
+completely stable. [Tags](https://github.com/RavenProject/Ravencoin/tags) are created
 regularly to indicate new official, stable release versions of Raven Core.
 
 The contribution workflow is described in [CONTRIBUTING.md](CONTRIBUTING.md).

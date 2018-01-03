@@ -2,7 +2,7 @@ Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: Raven
 Upstream-Contact: Satoshi Nakamoto <satoshin@gmx.com>
  irc://#raven@freenode.net
-Source: https://github.com/raven/raven
+Source: https://github.com/RavenProject/Ravencoin
 
 Files: *
 Copyright: 2009-2017, Raven Core Developers

@@ -34,7 +34,7 @@ static const int64_t nMinDbCache = 4;
 static const int64_t nMaxBlockDBCache = 2;
 //! Max memory allocated to block tree DB specific cache, if -txindex (MiB)
 // Unlike for the UTXO database, for the txindex scenario the leveldb cache make
-// a meaningful difference: https://github.com/raven/raven/pull/8273#issuecomment-229601991
+// a meaningful difference: https://github.com/RavenProject/Ravencoin/pull/8273#issuecomment-229601991
 static const int64_t nMaxBlockDBAndTxIndexCache = 1024;
 //! Max memory allocated to coin DB specific cache (MiB)
 static const int64_t nMaxCoinsDBCache = 8;

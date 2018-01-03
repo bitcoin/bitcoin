@@ -31,7 +31,7 @@ Build Raven Core
 
 1. Clone the raven source code and cd into `raven`
 
-        git clone https://github.com/raven/raven
+        git clone https://github.com/RavenProject/Ravencoin
         cd raven
 
 2.  Build raven-core:
@@ -98,4 +98,4 @@ Notes
 
 * Tested on OS X 10.8 through 10.12 on 64-bit Intel processors only.
 
-* Building with downloaded Qt binaries is not officially supported. See the notes in [#7714](https://github.com/raven/raven/issues/7714)
+* Building with downloaded Qt binaries is not officially supported. See the notes in [#7714](https://github.com/RavenProject/Ravencoin/issues/7714)

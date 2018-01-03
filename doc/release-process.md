@@ -3,9 +3,9 @@ Release Process
 
 Before every release candidate:
 
-* Update translations (ping wumpus on IRC) see [translation_process.md](https://github.com/raven/raven/blob/master/doc/translation_process.md#synchronising-translations).
+* Update translations (ping wumpus on IRC) see [translation_process.md](https://github.com/RavenProject/Ravencoin/blob/master/doc/translation_process.md#synchronising-translations).
 
-* Update manpages, see [gen-manpages.sh](https://github.com/raven/raven/blob/master/contrib/devtools/README.md#gen-manpagessh).
+* Update manpages, see [gen-manpages.sh](https://github.com/RavenProject/Ravencoin/blob/master/contrib/devtools/README.md#gen-manpagessh).
 
 Before every minor and major release:
 
@@ -21,7 +21,7 @@ Before every minor and major release:
 
 Before every major release:
 
-* Update hardcoded [seeds](/contrib/seeds/README.md), see [this pull request](https://github.com/raven/raven/pull/7415) for an example.
+* Update hardcoded [seeds](/contrib/seeds/README.md), see [this pull request](https://github.com/RavenProject/Ravencoin/pull/7415) for an example.
 * Update [`BLOCK_CHAIN_SIZE`](/src/qt/intro.cpp) to the current size plus some overhead.
 * Update `src/chainparams.cpp` chainTxData with statistics about the transaction count and rate.
 * Update version of `contrib/gitian-descriptors/*.yml`: usually one'd want to do this on master after branching off the release - but be sure to at least do it before a new major release
@@ -36,7 +36,7 @@ Check out the source code in the following directory hierarchy.
     git clone https://github.com/raven-core/gitian.sigs.git
     git clone https://github.com/raven-core/raven-detached-sigs.git
     git clone https://github.com/devrandom/gitian-builder.git
-    git clone https://github.com/raven/raven.git
+    git clone https://github.com/RavenProject/Ravencoin.git
 
 ### Raven maintainers/release engineers, suggestion for writing release notes
 
@@ -84,7 +84,7 @@ Ensure gitian-builder is up-to-date:
 
     pushd ./gitian-builder
     mkdir -p inputs
-    wget -P inputs https://ravencore.org/cfields/osslsigncode-Backports-to-1.7.1.patch
+    wget -P inputs https://ravencoin.org/cfields/osslsigncode-Backports-to-1.7.1.patch
     wget -P inputs http://downloads.sourceforge.net/project/osslsigncode/osslsigncode/osslsigncode-1.7.1.tar.gz
     popd
 
@@ -292,7 +292,7 @@ raven.org (see below for raven.org update instructions).
 
   - raven-dev and raven-core-dev mailing list
 
-  - Raven Core announcements list https://ravencore.org/en/list/announcements/join/
+  - Raven Core announcements list https://ravencoin.org/en/list/announcements/join/
 
   - ravencore.org blog post
 
@@ -304,6 +304,6 @@ raven.org (see below for raven.org update instructions).
 
   - Archive release notes for the new version to `doc/release-notes/` (branch `master` and branch of the release)
 
-  - Create a [new GitHub release](https://github.com/raven/raven/releases/new) with a link to the archived release notes.
+  - Create a [new GitHub release](https://github.com/RavenProject/Ravencoin/releases/new) with a link to the archived release notes.
 
   - Celebrate

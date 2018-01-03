@@ -26,9 +26,9 @@ Build-Depends: debhelper,
  python,
  libzmq3-dev
 Standards-Version: 3.9.2
-Homepage: https://ravencore.org/
-Vcs-Git: git://github.com/raven/raven.git
-Vcs-Browser: https://github.com/raven/raven
+Homepage: https://ravencoin.org/
+Vcs-Git: git://github.com/RavenProject/Ravencoin.git
+Vcs-Browser: https://github.com/RavenProject/Ravencoin
 
 Package: ravend
 Architecture: any

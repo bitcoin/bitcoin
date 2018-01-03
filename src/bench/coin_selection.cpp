@@ -30,7 +30,7 @@ static void addCoin(const CAmount& nValue, const CWallet& wallet, std::vector<CO
 // the hardest, as you need a wider selection of scenarios, just testing the
 // same one over and over isn't too useful. Generating random isn't useful
 // either for measurements."
-// (https://github.com/raven/raven/issues/7883#issuecomment-224807484)
+// (https://github.com/RavenProject/Ravencoin/issues/7883#issuecomment-224807484)
 static void CoinSelection(benchmark::State& state)
 {
     const CWallet wallet;

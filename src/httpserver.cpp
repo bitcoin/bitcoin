@@ -489,7 +489,7 @@ void StopHTTPServer()
         // at least libevent 2.0.21 and always introduced a delay. In libevent
         // master that appears to be solved, so in the future that solution
         // could be used again (if desirable).
-        // (see discussion in https://github.com/raven/raven/pull/6990)
+        // (see discussion in https://github.com/RavenProject/Ravencoin/pull/6990)
         if (threadResult.valid() && threadResult.wait_for(std::chrono::milliseconds(2000)) == std::future_status::timeout) {
             LogPrintf("HTTP event loop did not exit within allotted time, sending loopbreak\n");
             event_base_loopbreak(eventBase);
