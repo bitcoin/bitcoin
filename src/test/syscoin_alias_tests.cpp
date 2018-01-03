@@ -979,11 +979,11 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + arr2[0].get_str()));
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
 	GenerateBlocks(5, "node1");
-	// should fail: offer alias expired and was renewed
-	BOOST_CHECK_THROW(CallRPC("node1", "offerupdate aliasexpire0 " + offerguid + " category title 100 0.05 description USD false '' 0 SYS BUYNOW 0 0 false 0 ''"), runtime_error);
+	// should pass: offer alias expired and was renewed
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "offerupdate aliasexpire0 " + offerguid + " category title 100 0.05 description USD false '' 0 SYS BUYNOW 0 0 false 0 ''"));
 	GenerateBlocks(5, "node1");
-	// cannot update cert because it expired and was renewed
-	BOOST_CHECK_THROW(CallRPC("node1", "certupdate " + certguid + " aliasexpire pubdata certificates ''"), runtime_error);
+	// update cert after alias was renewed
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "certupdate " + certguid + " aliasexpire pubdata certificates ''"));
 	GenerateBlocks(5, "node1");
 
 	StartNode("node3");	
@@ -1025,9 +1025,9 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	GenerateBlocks(5);
 	BOOST_CHECK(aliasexpirenode2address != AliasNew("node2", "aliasexpirednode2", "somedata"));
 
-	// should fail: cert alias was expired and renewed(aliasexpire2)
-	BOOST_CHECK_THROW(r = CallRPC("node1", "certtransfer " + certgoodguid + " aliasexpirednode2 '' 2 ''"), runtime_error);
-
+	// should pass: cert alias was expired and renewed(aliasexpire2)
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "certtransfer " + certgoodguid + " aliasexpirednode2 '' 2 ''"));
+	GenerateBlocks(5);
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "certinfo " + certgoodguid));
 	// alias hasn't changed
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "alias").get_str(), "aliasexpire2");
