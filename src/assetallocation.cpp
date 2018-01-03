@@ -323,6 +323,11 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 	const string &user1 = stringFromVch(theAssetAllocation.vchLinkAlias);
 	const CAssetAllocationTuple assetAllocationTuple(theAssetAllocation.vchAsset, theAssetAllocation.vchAlias);
 	string user3 = "";
+	string strResponseEnglish = "";
+	string strResponse = GetSyscoinTransactionDescription(op, strResponseEnglish, ASSETALLOCATION);
+	int nLockStatus = NOLOCK_UNCONFIRMED_STATE;
+	if (!fJustCheck)
+		nLockStatus = NOLOCK_CONFIRMED_STATE;
 	CAssetAllocation dbAssetAllocation;
 	CAsset dbAsset;
 	if (GetAssetAllocation(assetAllocationTuple, dbAssetAllocation)){
@@ -348,6 +353,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 
 				}
 				if(!dontaddtodb){
+					nLockStatus = LOCK_CONFLICT_CONFIRMED_STATE;
 					if (!passetallocationdb->EraseISLock(assetAllocationTuple))
 					{
 						errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from assetallocation DB");
@@ -358,6 +364,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 			}
 			else {
 				if (!dontaddtodb) {
+					nLockStatus = LOCK_NOCONFLICT_CONFIRMED_STATE;
 					if (fDebug)
 						LogPrintf("CONNECTED ASSET ALLOCATION: op=%s assetallocation=%s hash=%s height=%d fJustCheck=%d POW IS\n",
 							assetFromOp(op).c_str(),
@@ -374,10 +381,25 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 				return true;
 			}
 		}
-		else if (dbAssetAllocation.nHeight > nHeight)
+		else
 		{
-			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Block height of service request cannot be lower than stored service block height.");
-			return true;
+			if (fJustCheck && bSendLocked && dbAssetAllocation.nHeight >= nHeight && dbAssetAllocation.txHash != tx.GetHash())
+			{
+				if (!dontaddtodb) {
+					nLockStatus = LOCK_CONFLICT_UNCONFIRMED_STATE;
+					if (strResponse != "") {
+						paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, stringFromVch(theOffer.vchOffer), nLockStatus);
+					}
+				}
+				errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Block height of service request must be less than or equal to the stored service block height.");
+				return true;
+			}
+			if (dbAssetAllocation.nHeight > nHeight)
+			{
+				errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Block height of service request cannot be lower than stored service block height.");
+				return true;
+			}
+			nLockStatus = LOCK_NOCONFLICT_UNCONFIRMED_STATE;
 		}
 	}
 	if (op == OP_ASSET_ALLOCATION_SEND)
@@ -428,8 +450,6 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 		// return
 	}
 	if (!dontaddtodb) {
-		string strResponseEnglish = "";
-		string strResponse = GetSyscoinTransactionDescription(op, strResponseEnglish, ASSET);
 		if (strResponse != "") {
 			paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, stringFromVch(theAssetAllocation.vchAsset), nLockStatus);
 		}

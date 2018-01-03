@@ -440,6 +440,11 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		if (!theAsset.vchLinkAlias.empty())
 			user2 = stringFromVch(theAsset.vchLinkAlias);
 	}
+	string strResponseEnglish = "";
+	string strResponse = GetSyscoinTransactionDescription(op, strResponseEnglish, ASSET);
+	int nLockStatus = NOLOCK_UNCONFIRMED_STATE;
+	if (!fJustCheck)
+		nLockStatus = NOLOCK_CONFIRMED_STATE;
 	CAsset dbAsset;
 	if (!GetAsset(theAsset.vchAsset, dbAsset))
 	{
@@ -468,6 +473,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					dbAsset.SetNull();
 				}
 				if(!dontaddtodb){
+					nLockStatus = LOCK_CONFLICT_CONFIRMED_STATE;
 					if (!passetdb->EraseISLock(theAsset.vchAsset))
 					{
 						errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from asset DB");
@@ -479,6 +485,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			}
 			else {
 				if (!dontaddtodb) {
+					nLockStatus = LOCK_NOCONFLICT_CONFIRMED_STATE;
 					if (fDebug)
 						LogPrintf("CONNECTED ASSET: op=%s asset=%s hash=%s height=%d fJustCheck=%d POW IS\n",
 							assetFromOp(op).c_str(),
@@ -500,10 +507,25 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				return true;
 			}
 		}
-		else if (dbAsset.nHeight > nHeight)
+		else
 		{
-			errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Block height of service request cannot be lower than stored service block height.");
-			return true;
+			if (fJustCheck && bSendLocked && dbAsset.nHeight >= nHeight && dbAsset.txHash != tx.GetHash())
+			{
+				if (!dontaddtodb) {
+					nLockStatus = LOCK_CONFLICT_UNCONFIRMED_STATE;
+					if (strResponse != "") {
+						paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, stringFromVch(theAsset.vchAsset), nLockStatus);
+					}
+				}
+				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Block height of service request must be less than or equal to the stored service block height.");
+				return true;
+			}
+			if (dbAsset.nHeight > nHeight)
+			{
+				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Block height of service request cannot be lower than stored service block height.");
+				return true;
+			}
+			nLockStatus = LOCK_NOCONFLICT_UNCONFIRMED_STATE;
 		}
 	}
 	if (op != OP_ASSET_ACTIVATE)
@@ -549,8 +571,6 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		}
 	}
 	if (!dontaddtodb) {
-		string strResponseEnglish = "";
-		string strResponse = GetSyscoinTransactionDescription(op, strResponseEnglish, ASSET);
 		if (strResponse != "") {
 			paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, stringFromVch(theAsset.vchAsset), nLockStatus);
 		}

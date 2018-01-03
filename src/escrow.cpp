@@ -787,7 +787,11 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 		theEscrow.vchWitness = vvchAliasArgs[3];
 	CEscrow serializedEscrow = theEscrow;
 	escrowOp = serializedEscrow.op;
-	
+	string strResponseEnglish = "";
+	string strResponse = GetSyscoinTransactionDescription(op, strResponseEnglish, ESCROW);
+	int nLockStatus = NOLOCK_UNCONFIRMED_STATE;
+	if (!fJustCheck)
+		nLockStatus = NOLOCK_CONFIRMED_STATE;
 	if (!GetEscrow(serializedEscrow.vchEscrow, theEscrow))
 	{
 		if (op != OP_ESCROW_ACTIVATE) {
@@ -813,6 +817,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 					theEscrow.SetNull();
 				}
 				if (!dontaddtodb) {
+					nLockStatus = LOCK_CONFLICT_CONFIRMED_STATE;
 					if (!pescrowdb->EraseISLock(serializedEscrow.vchEscrow))
 					{
 						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from escrow DB");
@@ -825,6 +830,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 			}
 			else {
 				if (!dontaddtodb) {
+					nLockStatus = LOCK_NOCONFLICT_CONFIRMED_STATE;
 					if (fDebug)
 						LogPrintf("CONNECTED ESCROW: op=%s escrow=%s hash=%s height=%d fJustCheck=%d POW IS\n",
 							escrowFromOp(op).c_str(),
@@ -846,10 +852,25 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				return true;
 			}
 		}
-		else if (theEscrow.nHeight > nHeight)
+		else
 		{
-			errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Block height of service request cannot be lower than stored service block height.");
-			return true;
+			if (fJustCheck && bSendLocked && theEscrow.nHeight >= nHeight && theEscrow.txHash != tx.GetHash())
+			{
+				if (!dontaddtodb) {
+					nLockStatus = LOCK_CONFLICT_UNCONFIRMED_STATE;
+					if (strResponse != "") {
+						paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, stringFromVch(serializedEscrow.vchEscrow), nLockStatus);
+					}
+				}
+				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Block height of service request must be less than or equal to the stored service block height.");
+				return true;
+			}
+			if (theEscrow.nHeight > nHeight)
+			{
+				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Block height of service request cannot be lower than stored service block height.");
+				return true;
+			}
+			nLockStatus = LOCK_NOCONFLICT_UNCONFIRMED_STATE;
 		}
 	}
 	if (op != OP_ESCROW_ACTIVATE)
@@ -1292,8 +1313,6 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 	}
 		
 	if(!dontaddtodb) {
-		string strResponseEnglish = "";
-		string strResponse = GetSyscoinTransactionDescription(op, strResponseEnglish, ESCROW);
 		if (strResponse != "") {
 			const string &user1 = stringFromVch(theEscrow.vchBuyerAlias);
 			const string &user2 = stringFromVch(theEscrow.vchSellerAlias);

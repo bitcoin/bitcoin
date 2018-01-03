@@ -549,6 +549,11 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				bDestCheckFailed = true;
 		}
 		if (!theAliasNull) {
+			string strResponseEnglish = "";
+			string strResponse = GetSyscoinTransactionDescription(op, strResponseEnglish, ALIAS);
+			int nLockStatus = NOLOCK_UNCONFIRMED_STATE;
+			if (!fJustCheck)
+				nLockStatus = NOLOCK_CONFIRMED_STATE;
 			bool bSendLocked = false;
 			if (!fJustCheck && paliasdb->ReadISLock(vvchArgs[0], bSendLocked) && bSendLocked) {
 				if (dbAlias.nHeight >= nHeight)
@@ -565,6 +570,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						dbAlias.SetNull();
 					}
 					if (!dontaddtodb) {
+						nLockStatus = LOCK_CONFLICT_CONFIRMED_STATE;
 						if (!paliasdb->EraseISLock(vvchArgs[0]))
 						{
 							errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from alias DB");
@@ -576,6 +582,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				}
 				else {
 					if (!dontaddtodb) {
+						nLockStatus = LOCK_NOCONFLICT_CONFIRMED_STATE;
 						if (fDebug)
 							LogPrintf(
 								"CONNECTED ALIAS: name=%s  op=%s  hash=%s  height=%d fJustCheck=%d POW IS\n",
@@ -597,9 +604,25 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					return true;
 				}
 			}
-			else if (dbAlias.nHeight > nHeight) {
-				errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Block height of service request cannot be lower than stored service block height.");
-				return true;
+			else
+			{
+				if (fJustCheck && bSendLocked && dbAlias.nHeight >= nHeight && dbAlias.txHash != tx.GetHash())
+				{
+					if (!dontaddtodb) {
+						nLockStatus = LOCK_CONFLICT_UNCONFIRMED_STATE;
+						if (strResponse != "") {
+							paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, stringFromVch(vchAlias), nLockStatus);
+						}
+					}
+					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Block height of service request must be less than or equal to the stored service block height.");
+					return true;
+				}
+				if (dbAlias.nHeight > nHeight)
+				{
+					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Block height of service request cannot be lower than stored service block height.");
+					return true;
+				}
+				nLockStatus = LOCK_NOCONFLICT_UNCONFIRMED_STATE;
 			}
 			COfferLinkWhitelist whiteList;
 			// if updating whitelist, we dont allow updating any alias details
@@ -735,8 +758,6 @@ theAlias = dbAlias;
 	if (!theAliasNull)
 	{
 		if (!dontaddtodb) {
-			string strResponseEnglish = "";
-			string strResponse = GetSyscoinTransactionDescription(op, strResponseEnglish, ALIAS);
 			if (strResponse != "") {
 				const string &user1 = stringFromVch(vvchArgs[0]);
 				string user2 = "";
