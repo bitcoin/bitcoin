@@ -838,7 +838,7 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 		BOOST_CHECK(!txHistoryResult.empty());
 		BOOST_CHECK(ret.read(txHistoryResult[0].get_str()));
 		historyResultObj = ret.get_obj();
-		BOOST_CHECK_EQUAL(find_value(historyResultObj, "lock_status").get_int(), LOCK_NOCONFLICT_CONFIRMED_STATE);
+		BOOST_CHECK(find_value(historyResultObj, "lock_status").get_int() == LOCK_NOCONFLICT_CONFIRMED_STATE || find_value(historyResultObj, "lock_status").get_int() == NOLOCK_CONFIRMED_STATE);
 
 	}
 	if(!otherNode2.empty())
