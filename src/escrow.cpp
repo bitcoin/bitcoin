@@ -657,11 +657,6 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4018 - " + _("Cannot leave feedback in escrow bid");
 					return error(errorMessage.c_str());
 				}
-				if(theEscrow.vchOffer.empty())
-				{
-					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4010 - " + _("Escrow offer information missing in bid");
-					return error(errorMessage.c_str());
-				}
 				break;
 			case OP_ESCROW_ADD_SHIPPING:
 				if (theEscrow.op != OP_ESCROW_ADD_SHIPPING)
