@@ -1838,7 +1838,7 @@ bool BuildAliasIndexerTxHistoryJson(const string &user1, const string &user2, co
 	oName.push_back(Pair("lock_status", lockstatus));
 	return true;
 }
-void CAliasDB::WriteAliasIndexTxHistory(const string &user1, const string &user2, const string &user3, const uint256 &txHash, const uint64_t& nHeight, const string &type, const string &guid, const char lockstatus) {
+void CAliasDB::WriteAliasIndexTxHistory(const string &user1, const string &user2, const string &user3, const uint256 &txHash, const uint64_t& nHeight, const string &type, const string &guid, const char &lockstatus) {
 	if (!aliastxhistory_collection)
 		return;
 	bson_error_t error;
