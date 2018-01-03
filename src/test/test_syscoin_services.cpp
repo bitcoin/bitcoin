@@ -788,9 +788,9 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 	{
 		txHistoryResult.clear();
 		// try for 5 seconds before giving up
-		int numtries = 100 * 5;
+		int numtries = 10 * 5;
 		while (txHistoryResult.empty()) {
-			MilliSleep(10);
+			MilliSleep(100);
 			txHistoryResult = AliasTxHistoryFilter(otherNode1, txid);
 			numtries--;
 			BOOST_CHECK(numtries > 0);
@@ -798,7 +798,7 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 				break;
 			}
 		}
-		printf("relay to node1 to took about %d MS\n", 10 * (100 * 5 - numtries));
+		printf("relay to node1 to took about %d MS\n", 100 * (10 * 5 - numtries));
 		BOOST_CHECK(ret.read(txHistoryResult[0].get_str()));
 		historyResultObj = ret.get_obj();
 		BOOST_CHECK_EQUAL(find_value(historyResultObj, "lock_status").get_int(), LOCK_NOCONFLICT_UNCONFIRMED_STATE);
@@ -816,17 +816,17 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 	{
 		txHistoryResult.clear();
 		// try for 5 seconds before giving up
-		int numtries = 100 * 5;
+		int numtries = 10 * 5;
 		while (txHistoryResult.empty()) {
-			MilliSleep(10);
-			txHistoryResult = AliasTxHistoryFilter(otherNode1, txid);
+			MilliSleep(100);
+			txHistoryResult = AliasTxHistoryFilter(otherNode2, txid);
 			numtries--;
 			BOOST_CHECK(numtries > 0);
 			if (numtries <= 0) {
 				break;
 			}
 		}
-		printf("relay to node2 to took about %d MS\n", 10 * (100 * 5 - numtries));
+		printf("relay to node2 to took about %d MS\n", 100 * (10 * 5 - numtries));
 		BOOST_CHECK(ret.read(txHistoryResult[0].get_str()));
 		historyResultObj = ret.get_obj();
 		BOOST_CHECK_EQUAL(find_value(historyResultObj, "lock_status").get_int(), LOCK_NOCONFLICT_UNCONFIRMED_STATE);
