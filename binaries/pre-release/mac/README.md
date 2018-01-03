@@ -8,7 +8,7 @@
 
 4) Launch Raven Core
 
-Note: On Raven Core launch is you get this error
+Note: On Raven Core launch if you get this error
 
 ```
 Dyld Error Message:
@@ -16,5 +16,5 @@ Dyld Error Message:
   Referenced from: /Applications/Raven-Qt.app/Contents/Frameworks/libboost_thread-mt.dylib
   Reason: image not found
 ```
-You will need to copy libboost_system.dynlib to libboost_system-mt.dynlib in the /Applications/Raven-Qt.app/Contents/Frameworks folder  
+You will need to copy libboost_system.dylib to libboost_system-mt.dylib in the /Applications/Raven-Qt.app/Contents/Frameworks folder  
   
