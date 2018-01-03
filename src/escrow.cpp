@@ -1381,7 +1381,7 @@ UniValue escrowbid(const UniValue& params, bool fHelp) {
 	vector<unsigned char> vchHashEscrow = vchFromValue(hash.GetHex());
 
 	CScript scriptPubKeyOrigBuyer;
-	scriptPubKeyOrigBuyer << CScript::EncodeOP_N(OP_SYSCOIN_ESCROW) << CScript::EncodeOP_N(OP_ESCROW_BID) << vchEscrow << OP_2DROP << OP_DROP;
+	scriptPubKeyOrigBuyer << CScript::EncodeOP_N(OP_SYSCOIN_ESCROW) << CScript::EncodeOP_N(OP_ESCROW_BID) << vchHashEscrow << OP_2DROP << OP_DROP;
 	scriptPubKeyOrigBuyer += scriptPubKeyAliasOrig;
 
 	CRecipient recipientBuyer;
