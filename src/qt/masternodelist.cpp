@@ -408,7 +408,9 @@ void MasternodeList::on_startAllButton_clicked()
 {
     // Display message box
     QMessageBox::StandardButton retval = QMessageBox::question(this, tr("Confirm all masternodes start"),
-        tr("Are you sure you want to start ALL masternodes?"),
+        tr("Are you sure you want to start ALL masternodes?") + 
+            QString("<br>") + tr("<b>") + tr("Warning!") + 
+            tr("</b>") + tr(" This action will reset all active masternodes."),
         QMessageBox::Yes | QMessageBox::Cancel,
         QMessageBox::Cancel);
 

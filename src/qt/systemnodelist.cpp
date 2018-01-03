@@ -403,7 +403,9 @@ void SystemnodeList::on_startAllButton_clicked()
 {
     // Display message box
     QMessageBox::StandardButton retval = QMessageBox::question(this, tr("Confirm all systemnodes start"),
-        tr("Are you sure you want to start ALL systemnodes?"),
+        tr("Are you sure you want to start ALL systemnodes?") + 
+            QString("<br>") + tr("<b>") + tr("Warning!") + 
+            tr("</b>") + tr(" This action will reset all active systemnodes."),
         QMessageBox::Yes | QMessageBox::Cancel,
         QMessageBox::Cancel);
 
