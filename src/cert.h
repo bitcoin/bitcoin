@@ -29,8 +29,6 @@ class CCert {
 public:
 	std::vector<unsigned char> vchCert;
 	std::vector<unsigned char> vchAlias;
-	// to modify alias in certtransfer
-	std::vector<unsigned char> vchLinkAlias;
     uint256 txHash;
     uint64_t nHeight;
 	// 1 can edit, 2 can edit/transfer
@@ -50,6 +48,7 @@ public:
 		vchPubData.clear();
 		vchTitle.clear();
 		sCategory.clear();
+		vchAlias.clear();
 	}
 	ADD_SERIALIZE_METHODS;
     template <typename Stream, typename Operation>
@@ -58,7 +57,6 @@ public:
 		READWRITE(vchPubData);
 		READWRITE(txHash);
 		READWRITE(VARINT(nHeight));
-		READWRITE(vchLinkAlias);
 		READWRITE(nAccessFlags);
 		READWRITE(vchCert);
 		READWRITE(sCategory);
@@ -75,7 +73,6 @@ public:
         txHash = b.txHash;
         nHeight = b.nHeight;
 		vchAlias = b.vchAlias;
-		vchLinkAlias = b.vchLinkAlias;
 		nAccessFlags = b.nAccessFlags;
 		vchCert = b.vchCert;
 		sCategory = b.sCategory;
@@ -85,7 +82,7 @@ public:
     inline friend bool operator!=(const CCert &a, const CCert &b) {
         return !(a == b);
     }
-	inline void SetNull() { sCategory.clear(); vchTitle.clear(); nAccessFlags = 2; vchLinkAlias.clear(); vchCert.clear(); nHeight = 0; txHash.SetNull(); vchAlias.clear(); vchPubData.clear(); }
+	inline void SetNull() { sCategory.clear(); vchTitle.clear(); nAccessFlags = 2; vchCert.clear(); nHeight = 0; txHash.SetNull(); vchAlias.clear(); vchPubData.clear(); }
     inline bool IsNull() const { return (vchCert.empty()); }
     bool UnserializeFromTx(const CTransaction &tx);
 	bool UnserializeFromData(const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash);

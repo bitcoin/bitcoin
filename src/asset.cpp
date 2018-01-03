@@ -371,13 +371,6 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		}
 			
 	}
-	if (theAsset.vchAlias != vvchAliasArgs[0]) {
-		errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 4003 - " + _("Alias input mismatch");
-		if (fJustCheck)
-			return error(errorMessage.c_str());
-		else
-			return true;
-	}
 	
 	CAliasIndex alias;
 	string retError = "";
@@ -395,11 +388,6 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		}
 		switch (op) {
 		case OP_ASSET_ACTIVATE:
-			if(!theAsset.vchLinkAlias.empty())
-			{
-				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2010 - " + _("Asset linked alias not allowed in activate");
-				return error(errorMessage.c_str());
-			}
 			if((theAsset.vchName.size() > MAX_ID_LENGTH || theAsset.vchName.empty()))
 			{
 				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2012 - " + _("Asset title too big or is empty");
@@ -433,12 +421,11 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			return error(errorMessage.c_str());
 		}
 	}
-	const string &user1 = stringFromVch(theAsset.vchAlias);
+	const string &user1 = stringFromVch(vvchAliasArgs[0]);
 	string user2 = "";
 	string user3 = "";
 	if (op == OP_ASSET_TRANSFER) {
-		if (!theAsset.vchLinkAlias.empty())
-			user2 = stringFromVch(theAsset.vchLinkAlias);
+		user2 = stringFromVch(theAsset.vchAlias);
 	}
 	string strResponseEnglish = "";
 	string strResponse = GetSyscoinTransactionDescription(op, strResponseEnglish, ASSET);
@@ -543,14 +530,11 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		if (op == OP_ASSET_TRANSFER)
 		{
 			// check toalias
-			if (!GetAlias(theAsset.vchLinkAlias, alias))
+			if (!GetAlias(theAsset.vchAlias, alias))
 			{
 				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2024 - " + _("Cannot find alias you are transferring to.");
 				return true;
 			}
-			// change asset ownership
-			if (op == OP_ASSET_TRANSFER)
-				theAsset.vchAlias = theAsset.vchLinkAlias;
 			if (!(alias.nAcceptTransferFlags & ACCEPT_TRANSFER_ASSETS))
 			{
 				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("The alias you are transferring to does not accept assets");
@@ -559,7 +543,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		}
 		if (op == OP_ASSET_UPDATE || op == OP_ASSET_TRANSFER)
 		{
-			if (dbAsset.vchAlias != theAsset.vchAlias)
+			if (dbAsset.vchAlias != vvchAliasArgs[0])
 			{
 				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot edit this asset. Asset owner must sign off on this change.");
 				return true;
@@ -579,7 +563,6 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, stringFromVch(theAsset.vchAsset), nLockStatus);
 		}
 	}
-	theAsset.vchLinkAlias.clear();
 	// set the asset's txn-dependent values
 	theAsset.nHeight = nHeight;
 	theAsset.txHash = tx.GetHash();
@@ -814,8 +797,7 @@ UniValue assettransfer(const UniValue& params, bool fHelp) {
 	theAsset.ClearAsset();
     CScript scriptPubKey;
 	theAsset.nHeight = chainActive.Tip()->nHeight;
-	theAsset.vchAlias = fromAlias.vchAlias;
-	theAsset.vchLinkAlias = toAlias.vchAlias;
+	theAsset.vchAlias = toAlias.vchAlias;
 
 
 	vector<unsigned char> data;
@@ -949,8 +931,8 @@ void AssetTxToJSON(const int op, const std::vector<unsigned char> &vchData, cons
 	if(!asset.vchPubData.empty() && asset.vchPubData != dbAsset.vchPubData)
 		entry.push_back(Pair("publicdata", stringFromVch(asset.vchPubData)));
 
-	if(!asset.vchLinkAlias.empty() && asset.vchLinkAlias != dbAsset.vchAlias)
-		entry.push_back(Pair("alias", stringFromVch(asset.vchLinkAlias)));
+	if(!asset.vchAlias.empty() && asset.vchAlias != dbAsset.vchAlias)
+		entry.push_back(Pair("alias", stringFromVch(asset.vchAlias)));
 
 
 }

@@ -111,7 +111,6 @@ public:
 	char nCommission;
 	int nQty;
 	std::vector<unsigned char> vchLinkOffer;
-	std::vector<unsigned char> vchLinkAlias;
 	std::vector<unsigned char> sCurrencyCode;
 	std::vector<unsigned char> vchCert;
 	bool bPrivate;
@@ -136,7 +135,6 @@ public:
 		sTitle.clear();
 		sDescription.clear();
 		vchLinkOffer.clear();
-		vchLinkAlias.clear();
 		vchCert.clear();
 		sCurrencyCode.clear();
 		auctionOffer.SetNull();
@@ -162,7 +160,6 @@ public:
 			READWRITE(VARINT(offerType));
 			READWRITE(VARINT(paymentOptions));
 			READWRITE(vchOffer);
-			READWRITE(vchLinkAlias);
 			READWRITE(auctionOffer);
 	}
 	float GetPrice(const int commission=0) const;
@@ -181,7 +178,6 @@ public:
         txHash = b.txHash;
         nHeight = b.nHeight;
 		vchLinkOffer = b.vchLinkOffer;
-		vchLinkAlias = b.vchLinkAlias;
 		sCurrencyCode = b.sCurrencyCode;
 		nCommission = b.nCommission;
 		vchAlias = b.vchAlias;

@@ -300,13 +300,6 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 		}		
 	}
 
-	if (theAssetAllocation.vchLinkAlias != vvchAliasArgs[0]) {
-		errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 4003 - " + _("Alias input mismatch");
-		if (fJustCheck)
-			return error(errorMessage.c_str());
-		else
-			return true;
-	}
 	CAliasIndex alias;
 	string retError = "";
 	if(fJustCheck)
@@ -321,7 +314,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 		}
 	}
 	const string &user2 = stringFromVch(theAssetAllocation.vchAlias);
-	const string &user1 = stringFromVch(theAssetAllocation.vchLinkAlias);
+	const string &user1 = stringFromVch(vvchAliasArgs[0]);
 	const CAssetAllocationTuple assetAllocationTuple(theAssetAllocation.vchAsset, theAssetAllocation.vchAlias);
 	string user3 = "";
 	string strResponseEnglish = "";
@@ -426,7 +419,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 			return true;
 		}
 		// if transfering from asset allocation or from asset
-		if (dbAssetAllocation.vchAlias != theAssetAllocation.vchLinkAlias && dbAsset.vchAlias != theAssetAllocation.vchLinkAlias)
+		if (dbAssetAllocation.vchAlias != vvchAliasArgs[0] && dbAsset.vchAlias != vvchAliasArgs[0])
 		{
 			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot send this assetallocation. Asset allocation owner must sign off on this change.");
 			return true;
@@ -516,7 +509,6 @@ UniValue assetallocationsend(const UniValue& params, bool fHelp) {
 
 	CScript scriptPubKey;
 	theAssetAllocation.nHeight = chainActive.Tip()->nHeight;
-	theAssetAllocation.vchLinkAlias = fromAlias.vchAlias;
 
 
 	vector<unsigned char> data;

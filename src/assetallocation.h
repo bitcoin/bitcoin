@@ -69,10 +69,7 @@ public:
 class CAssetAllocation {
 public:
 	std::vector<unsigned char> vchAsset;
-	// current owner
 	std::vector<unsigned char> vchAlias;
-	// previous owner
-	std::vector<unsigned char> vchLinkAlias;
 	uint256 txHash;
 	uint64_t nHeight;
 	// if allocations are tracked by individual outputs
@@ -91,7 +88,6 @@ public:
 	inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
 		READWRITE(vchAsset);
 		READWRITE(vchAlias);
-		READWRITE(vchLinkAlias);
 		READWRITE(txHash);
 		READWRITE(VARINT(nHeight));
 		READWRITE(listAllocations);
@@ -107,7 +103,6 @@ public:
 		txHash = b.txHash;
 		nHeight = b.nHeight;
 		vchAlias = b.vchAlias;
-		vchLinkAlias = b.vchLinkAlias;
 		listAllocations = b.listAllocations;
 		nAmount = b.nAmount;
 		return *this;
@@ -116,7 +111,7 @@ public:
 	inline friend bool operator!=(const CAssetAllocation &a, const CAssetAllocation &b) {
 		return !(a == b);
 	}
-	inline void SetNull() { listAllocations.clear();  nAmount = 0; vchAsset.clear(); vchLinkAlias.clear(); nHeight = 0; txHash.SetNull(); vchAlias.clear(); }
+	inline void SetNull() { listAllocations.clear();  nAmount = 0; vchAsset.clear(); nHeight = 0; txHash.SetNull(); vchAlias.clear(); }
 	inline bool IsNull() const { return (vchAsset.empty()); }
 	bool UnserializeFromTx(const CTransaction &tx);
 	bool UnserializeFromData(const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash);

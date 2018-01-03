@@ -348,13 +348,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		}
 	}
 
-	if (theOffer.vchAlias != vvchAliasArgs[0]) {
-		errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 4003 - " + _("Alias input mismatch");
-		if (fJustCheck)
-			return error(errorMessage.c_str());
-		else
-			return true;
-	}
 	// unserialize offer from txn, check for valid
 	COffer linkOffer;
 	COffer myOffer;
@@ -503,8 +496,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	string user2 = "";
 	string user3 = "";
 	if (op == OP_OFFER_UPDATE) {
-		if (!theOffer.vchLinkAlias.empty())
-			user2 = stringFromVch(theOffer.vchLinkAlias);
+		user2 = stringFromVch(theOffer.vchAlias);
 	}
 	string strResponseEnglish = "";
 	string strResponse = GetSyscoinTransactionDescription(op, strResponseEnglish, OFFER);
@@ -650,8 +642,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		// non linked offers cant edit commission
 		if (theOffer.vchLinkOffer.empty())
 			theOffer.nCommission = 0;
-		if (!theOffer.vchLinkAlias.empty())
-			theOffer.vchAlias = theOffer.vchLinkAlias;
 	}
 	else if(op == OP_OFFER_ACTIVATE)
 	{
@@ -732,7 +722,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, stringFromVch(theOffer.vchOffer), nLockStatus);
 		}
 	}
-	theOffer.vchLinkAlias.clear();
 	theOffer.nHeight = nHeight;
 	theOffer.txHash = tx.GetHash();
 	// write offer
@@ -1175,7 +1164,7 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	theOffer.paymentOptions = paymentOptionsMask;
 
 	if(!vchAlias.empty() && vchAlias != alias.vchAlias)
-		theOffer.vchLinkAlias = linkAlias.vchAlias;
+		theOffer.vchAlias = linkAlias.vchAlias;
 	
 	theOffer.nQty = nQty;
 	theOffer.bPrivate = bPrivate;
@@ -1580,8 +1569,8 @@ void OfferTxToJSON(const int op, const std::vector<unsigned char> &vchData, cons
 	if(!offer.vchCert.empty() && offer.vchCert != dbOffer.vchCert)
 		entry.push_back(Pair("cert", stringFromVch(offer.vchCert)));
 
-	if(!offer.vchLinkAlias.empty() && offer.vchLinkAlias != dbOffer.vchAlias)
-		entry.push_back(Pair("alias", stringFromVch(offer.vchLinkAlias)));
+	if(!offer.vchAlias.empty() && offer.vchAlias != dbOffer.vchAlias)
+		entry.push_back(Pair("alias", stringFromVch(offer.vchAlias)));
 
 	if(!offer.vchLinkOffer.empty() && offer.vchLinkOffer != dbOffer.vchLinkOffer)
 		entry.push_back(Pair("offerlink", stringFromVch(offer.vchLinkOffer)));

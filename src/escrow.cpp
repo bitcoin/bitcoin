@@ -572,20 +572,6 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 		}
 		
 	}
-	bool inputMismatch = false;
-	if (op == OP_ESCROW_ACTIVATE) {
-		inputMismatch = theEscrow.vchBuyerAlias != vvchAliasArgs[0];
-	}
-	else
-		inputMismatch = theEscrow.vchLinkAlias != vvchAliasArgs[0];
-
-	if (inputMismatch) {
-		errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4003 - " + _("Alias input mismatch");
-		if(fJustCheck)
-			return error(errorMessage.c_str());
-		else
-			return true;
-	}
 
 	CAliasIndex buyerAlias, sellerAlias, arbiterAlias;
     COffer theOffer, myLinkOffer;
@@ -906,7 +892,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4050 - " + _("Can only bid on an active escrow");
 				return true;
 			}
-			if (serializedEscrow.vchLinkAlias != theEscrow.vchBuyerAlias)
+			if (vvchAliasArgs[0] != theEscrow.vchBuyerAlias)
 			{
 				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4041 - " + _("Only buyer can bid on escrow");
 				return true;
@@ -979,7 +965,6 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 			theEscrow.op = escrowOp;
 			theEscrow.txHash = tx.GetHash();
 			theEscrow.nHeight = nHeight;
-			theEscrow.vchLinkAlias = serializedEscrow.vchLinkAlias;
 			// write escrow bid
 			if (!dontaddtodb)
 			{
@@ -997,7 +982,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4040 - " + _("Shipping total was not increased");
 				return true;
 			}
-			if (serializedEscrow.vchLinkAlias != theEscrow.vchBuyerAlias)
+			if (vvchAliasArgs[0] != theEscrow.vchBuyerAlias)
 			{
 				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4041 - " + _("Only buyer can add shipping to an escrow");
 				return true;
@@ -1011,7 +996,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4050 - " + _("Can only acknowledge an active escrow");
 				return true;
 			}
-			if (serializedEscrow.vchLinkAlias != theEscrow.vchSellerAlias)
+			if (vvchAliasArgs[0] != theEscrow.vchSellerAlias)
 			{
 				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4041 - " + _("Only seller can acknowledge an escrow payment");
 				return true;
@@ -1089,7 +1074,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4045 - " + _("Cannot refund an escrow that is already released");
 				return true;
 			}
-			if (serializedEscrow.vchLinkAlias != theEscrow.vchSellerAlias && serializedEscrow.vchLinkAlias != theEscrow.vchArbiterAlias)
+			if (vvchAliasArgs[0] != theEscrow.vchSellerAlias && vvchAliasArgs[0] != theEscrow.vchArbiterAlias)
 			{
 				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4046 - " + _("Only arbiter or seller can initiate an escrow refund");
 				return true;
@@ -1109,7 +1094,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 			}
 			if (!serializedEscrow.redeemTxId.IsNull())
 				theEscrow.redeemTxId = serializedEscrow.redeemTxId;
-			if (serializedEscrow.vchLinkAlias != theEscrow.vchBuyerAlias)
+			if (vvchAliasArgs[0] != theEscrow.vchBuyerAlias)
 			{
 				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4051 - " + _("Only buyer can claim an escrow refund");
 				return true;
@@ -1168,7 +1153,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4055 - " + _("Cannot release an escrow that is already refunded");
 				return true;
 			}
-			if (serializedEscrow.vchLinkAlias != theEscrow.vchBuyerAlias && serializedEscrow.vchLinkAlias != theEscrow.vchArbiterAlias)
+			if (vvchAliasArgs[0] != theEscrow.vchBuyerAlias && vvchAliasArgs[0] != theEscrow.vchArbiterAlias)
 			{
 				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4056 - " + _("Only arbiter or buyer can initiate an escrow release");
 				return true;
@@ -1184,7 +1169,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 			}
 			if (!serializedEscrow.redeemTxId.IsNull())
 				theEscrow.redeemTxId = serializedEscrow.redeemTxId;
-			if (serializedEscrow.vchLinkAlias != theEscrow.vchSellerAlias)
+			if (vvchAliasArgs[0] != theEscrow.vchSellerAlias)
 			{
 				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4059 - " + _("Only seller can claim an escrow release");
 				return true;
@@ -1206,17 +1191,17 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4063 - " + _("Invalid rating, must be less than or equal to 5 and greater than or equal to 0");
 				return true;
 			}
-			if (serializedEscrow.feedback.nFeedbackUserFrom == FEEDBACKBUYER && serializedEscrow.vchLinkAlias != theEscrow.vchBuyerAlias)
+			if (serializedEscrow.feedback.nFeedbackUserFrom == FEEDBACKBUYER && vvchAliasArgs[0] != theEscrow.vchBuyerAlias)
 			{
 				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4064 - " + _("Only buyer can leave this feedback");
 				return true;
 			}
-			if (serializedEscrow.feedback.nFeedbackUserFrom == FEEDBACKSELLER && serializedEscrow.vchLinkAlias != vchSellerAlias)
+			if (serializedEscrow.feedback.nFeedbackUserFrom == FEEDBACKSELLER && vvchAliasArgs[0] != vchSellerAlias)
 			{
 				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4065 - " + _("Only seller can leave this feedback");
 				return true;
 			}
-			if (serializedEscrow.feedback.nFeedbackUserFrom == FEEDBACKARBITER && serializedEscrow.vchLinkAlias != theEscrow.vchArbiterAlias)
+			if (serializedEscrow.feedback.nFeedbackUserFrom == FEEDBACKARBITER && vvchAliasArgs[0] != theEscrow.vchArbiterAlias)
 			{
 				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4066 - " + _("Only arbiter can leave this feedback");
 				return true;
@@ -1337,7 +1322,6 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 	theEscrow.op = escrowOp;
 	theEscrow.txHash = tx.GetHash();
 	theEscrow.nHeight = nHeight;
-	theEscrow.vchLinkAlias.clear();
     // write escrow
 	if (!dontaddtodb) {
 		if (!pescrowdb->WriteEscrow(vvchArgs, theEscrow, dbEscrow, fJustCheck))
@@ -1400,7 +1384,6 @@ UniValue escrowbid(const UniValue& params, bool fHelp) {
 	theEscrow.nAmountOrBidPerUnit = nBid;
 	theEscrow.fBidPerUnit = fBid;
 	theEscrow.nHeight = chainActive.Tip()->nHeight;
-	theEscrow.vchLinkAlias = bidderalias.vchAlias;
 	vector<unsigned char> data;
 	theEscrow.Serialize(data);
 	uint256 hash = Hash(data.begin(), data.end());
@@ -1486,7 +1469,6 @@ UniValue escrowaddshipping(const UniValue& params, bool fHelp) {
 	theEscrow.ClearEscrow();
 	theEscrow.op = OP_ESCROW_ADD_SHIPPING;
 	theEscrow.nShipping += nShipping;
-	theEscrow.vchLinkAlias = bidderalias.vchAlias;
 	theEscrow.nHeight = chainActive.Tip()->nHeight;
 	vector<unsigned char> data;
 	theEscrow.Serialize(data);
@@ -1853,7 +1835,6 @@ UniValue escrowacknowledge(const UniValue& params, bool fHelp) {
 
 	escrow.ClearEscrow();
 	escrow.nHeight = chainActive.Tip()->nHeight;
-	escrow.vchLinkAlias = sellerAliasLatest.vchAlias;
 	escrow.op = OP_ESCROW_ACKNOWLEDGE;
 
 	vector<unsigned char> data;
@@ -1889,7 +1870,7 @@ UniValue escrowacknowledge(const UniValue& params, bool fHelp) {
 	CCoinControl coinControl;
 	coinControl.fAllowOtherInputs = false;
 	coinControl.fAllowWatchOnly = false;
-	SendMoneySyscoin(escrow.vchLinkAlias, vchWitness, aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
+	SendMoneySyscoin(sellerAliasLatest.vchAlias, vchWitness, aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
 	UniValue res(UniValue::VARR);
 	res.push_back(EncodeHexTx(wtx));
 	return res;
@@ -2118,7 +2099,6 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	}
 	escrow.nHeight = chainActive.Tip()->nHeight;
 	escrow.bPaymentAck = false;
-	escrow.vchLinkAlias = theAlias.vchAlias;
 	vector<unsigned char> data;
 	unsigned char escrowrole = 0;
 	if (role == "arbiter")
@@ -2156,7 +2136,7 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	CCoinControl coinControl;
 	coinControl.fAllowOtherInputs = false;
 	coinControl.fAllowWatchOnly = false;
-	SendMoneySyscoin(escrow.vchLinkAlias, vchWitness, aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
+	SendMoneySyscoin(theAlias.vchAlias, vchWitness, aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
 
 	UniValue res(UniValue::VARR);
 	res.push_back(EncodeHexTx(wtx));
@@ -2208,7 +2188,6 @@ UniValue escrowcompleterelease(const UniValue& params, bool fHelp) {
 	escrow.op = OP_ESCROW_RELEASE_COMPLETE;
 	escrow.bPaymentAck = false;
 	escrow.nHeight = chainActive.Tip()->nHeight;
-	escrow.vchLinkAlias = sellerAliasLatest.vchAlias;
 	escrow.redeemTxId = myRawTx.GetHash();
     CScript scriptPubKeyBuyer, scriptPubKeySeller;
 
@@ -2240,7 +2219,7 @@ UniValue escrowcompleterelease(const UniValue& params, bool fHelp) {
 	CCoinControl coinControl;
 	coinControl.fAllowOtherInputs = false;
 	coinControl.fAllowWatchOnly = false;
-	SendMoneySyscoin(escrow.vchLinkAlias, vchWitness, aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
+	SendMoneySyscoin(sellerAliasLatest.vchAlias, vchWitness, aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
 	UniValue returnRes;
 	UniValue sendParams(UniValue::VARR);
 	sendParams.push_back(rawTx);
@@ -2324,7 +2303,6 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 	}
 	escrow.nHeight = chainActive.Tip()->nHeight;
 	escrow.bPaymentAck = false;
-	escrow.vchLinkAlias = theAlias.vchAlias;
 	unsigned char escrowrole = 0;
 	if (role == "arbiter")
 		escrowrole = EscrowRoles::ARBITER;
@@ -2362,7 +2340,7 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 	CCoinControl coinControl;
 	coinControl.fAllowOtherInputs = false;
 	coinControl.fAllowWatchOnly = false;
-	SendMoneySyscoin(escrow.vchLinkAlias, vchWitness, aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
+	SendMoneySyscoin(sellerAliasLatest.vchAlias, vchWitness, aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
 
 	UniValue res(UniValue::VARR);
 	res.push_back(EncodeHexTx(wtx));
@@ -2417,7 +2395,6 @@ UniValue escrowcompleterefund(const UniValue& params, bool fHelp) {
 	escrow.op = OP_ESCROW_REFUND_COMPLETE;
 	escrow.bPaymentAck = false;
 	escrow.nHeight = chainActive.Tip()->nHeight;
-	escrow.vchLinkAlias = buyerAliasLatest.vchAlias;
 	escrow.redeemTxId = myRawTx.GetHash();
 	CScript scriptPubKeyBuyer, scriptPubKeySeller, scriptPubKeyArbiter;
 
@@ -2449,7 +2426,7 @@ UniValue escrowcompleterefund(const UniValue& params, bool fHelp) {
 	CCoinControl coinControl;
 	coinControl.fAllowOtherInputs = false;
 	coinControl.fAllowWatchOnly = false;
-	SendMoneySyscoin(escrow.vchLinkAlias, vchWitness, aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
+	SendMoneySyscoin(buyerAliasLatest.vchAlias, vchWitness, aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
 	UniValue returnRes;
 	UniValue sendParams(UniValue::VARR);
 	sendParams.push_back(rawTx);
@@ -2514,7 +2491,6 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 		GetAddress(resellerAliasLatest, &resellerPaymentAddress, resellerScript, escrow.nPaymentOption);
 	}
 
-	vector <unsigned char> vchLinkAlias;
 	CAliasIndex theAlias;
 	CScript scriptPubKeyAlias, scriptPubKeyAliasOrig;
 
@@ -2524,7 +2500,6 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 		scriptPubKeyAlias << CScript::EncodeOP_N(OP_SYSCOIN_ALIAS) << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << buyerAliasLatest.vchAlias << buyerAliasLatest.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
 		scriptPubKeyAlias += buyerScript;
 		scriptPubKeyAliasOrig = buyerScript;
-		vchLinkAlias = buyerAliasLatest.vchAlias;
 		theAlias = buyerAliasLatest;
 	}
 	else if(userfrom == "seller")
@@ -2532,7 +2507,6 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 		scriptPubKeyAlias << CScript::EncodeOP_N(OP_SYSCOIN_ALIAS) << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << sellerAliasLatest.vchAlias << sellerAliasLatest.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
 		scriptPubKeyAlias += sellerScript;
 		scriptPubKeyAliasOrig = sellerScript;
-		vchLinkAlias = sellerAliasLatest.vchAlias;
 		theAlias = sellerAliasLatest;
 	}
 	else if(userfrom == "reseller")
@@ -2540,7 +2514,6 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 		scriptPubKeyAlias << CScript::EncodeOP_N(OP_SYSCOIN_ALIAS) << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << resellerAliasLatest.vchAlias << resellerAliasLatest.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
 		scriptPubKeyAlias += resellerScript;
 		scriptPubKeyAliasOrig = resellerScript;
-		vchLinkAlias = resellerAliasLatest.vchAlias;
 		theAlias = resellerAliasLatest;
 	}
 	else if(userfrom == "arbiter")
@@ -2548,7 +2521,6 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 		scriptPubKeyAlias << CScript::EncodeOP_N(OP_SYSCOIN_ALIAS) << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << arbiterAliasLatest.vchAlias << arbiterAliasLatest.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
 		scriptPubKeyAlias += arbiterScript;
 		scriptPubKeyAliasOrig = arbiterScript;
-		vchLinkAlias = arbiterAliasLatest.vchAlias;
 		theAlias = arbiterAliasLatest;
 	}
 	escrow.ClearEscrow();
@@ -2556,7 +2528,6 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 	escrow.op = OP_ESCROW_FEEDBACK;
 	escrow.bPaymentAck = false;
 	escrow.nHeight = chainActive.Tip()->nHeight;
-	escrow.vchLinkAlias = theAlias.vchAlias;
 	// buyer
 	CFeedback feedback;
 	feedback.nRating = nRating;
@@ -2652,7 +2623,7 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 	CCoinControl coinControl;
 	coinControl.fAllowOtherInputs = false;
 	coinControl.fAllowWatchOnly = false;
-	SendMoneySyscoin(escrow.vchLinkAlias, vchWitness, aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
+	SendMoneySyscoin(theAlias.vchAlias, vchWitness, aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
 	UniValue res(UniValue::VARR);
 	res.push_back(EncodeHexTx(wtx));
 	return res;
@@ -2699,7 +2670,7 @@ void BuildEscrowBidJson(const CEscrow& escrow, const string& status, UniValue& o
 	oBid.push_back(Pair("offer", stringFromVch(escrow.vchOffer)));
 	oBid.push_back(Pair("escrow", stringFromVch(escrow.vchEscrow)));
 	oBid.push_back(Pair("height", (int)escrow.nHeight));
-	oBid.push_back(Pair("bidder", stringFromVch(escrow.vchLinkAlias)));
+	oBid.push_back(Pair("bidder", stringFromVch(escrow.vchBuyerAlias)));
 	oBid.push_back(Pair("bid_in_offer_currency_per_unit", escrow.fBidPerUnit));
 	oBid.push_back(Pair("bid_in_payment_option_per_unit", ValueFromAmount(escrow.nAmountOrBidPerUnit)));
 	oBid.push_back(Pair("witness", stringFromVch(escrow.vchWitness)));

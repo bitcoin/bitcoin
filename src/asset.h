@@ -32,8 +32,6 @@ class CAsset {
 public:
 	std::vector<unsigned char> vchAsset;
 	std::vector<unsigned char> vchAlias;
-	// to modify alias in assettransfer
-	std::vector<unsigned char> vchLinkAlias;
 	// if allocations are tracked by individual outputs
 	std::vector<std::string> listAllocations;
     uint256 txHash;
@@ -62,7 +60,6 @@ public:
 		READWRITE(vchPubData);
 		READWRITE(txHash);
 		READWRITE(VARINT(nHeight));
-		READWRITE(vchLinkAlias);
 		READWRITE(vchAsset);
 		READWRITE(sCategory);
 		READWRITE(vchAlias);
@@ -80,7 +77,6 @@ public:
 		txHash = b.txHash;
         nHeight = b.nHeight;
 		vchAlias = b.vchAlias;
-		vchLinkAlias = b.vchLinkAlias;
 		vchAsset = b.vchAsset;
 		sCategory = b.sCategory;
 		nAmount = b.nAmount;
@@ -90,7 +86,7 @@ public:
     inline friend bool operator!=(const CAsset &a, const CAsset &b) {
         return !(a == b);
     }
-	inline void SetNull() { nAmount = 0; sCategory.clear(); vchName.clear(); vchLinkAlias.clear(); vchAsset.clear(); nHeight = 0; txHash.SetNull(); vchAlias.clear(); vchPubData.clear(); }
+	inline void SetNull() { nAmount = 0; sCategory.clear(); vchName.clear(); vchAsset.clear(); nHeight = 0; txHash.SetNull(); vchAlias.clear(); vchPubData.clear(); }
     inline bool IsNull() const { return (vchAsset.empty()); }
     bool UnserializeFromTx(const CTransaction &tx);
 	bool UnserializeFromData(const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash);

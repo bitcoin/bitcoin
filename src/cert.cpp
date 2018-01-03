@@ -380,14 +380,6 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 			return true;
 		}	
 	}
-	if (theCert.vchAlias != vvchAliasArgs[0]) {
-		errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 4003 - " + _("Alias input mismatch");
-		if (fJustCheck)
-			return error(errorMessage.c_str());
-		else
-			return true;
-	}
-
 	
 	CAliasIndex alias;
 	string retError = "";
@@ -410,11 +402,6 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 		}
 		switch (op) {
 		case OP_CERT_ACTIVATE:
-			if(!theCert.vchLinkAlias.empty())
-			{
-				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2010 - " + _("Certificate linked alias not allowed in activate");
-				return error(errorMessage.c_str());
-			}
 			if((theCert.vchTitle.size() > MAX_NAME_LENGTH || theCert.vchTitle.empty()))
 			{
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2012 - " + _("Certificate title too big or is empty");
@@ -453,12 +440,11 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 			return error(errorMessage.c_str());
 		}
 	}
-	const string &user1 = stringFromVch(theCert.vchAlias);
+	const string &user1 = stringFromVch(vvchAliasArgs[0]);
 	string user2 = "";
 	string user3 = "";
 	if (op == OP_CERT_TRANSFER) {
-		if (!theCert.vchLinkAlias.empty())
-			user2 = stringFromVch(theCert.vchLinkAlias);
+		user2 = stringFromVch(theCert.vchAlias);
 	}
 	string strResponseEnglish = "";
 	string strResponse = GetSyscoinTransactionDescription(op, strResponseEnglish, CERT);
@@ -555,7 +541,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 	}
 	if(op != OP_CERT_ACTIVATE) 
 	{
-		if (dbCert.vchAlias != theCert.vchAlias)
+		if (dbCert.vchAlias != vvchAliasArgs[0])
 		{
 			errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot update this certificate. Certificate owner must sign off on this change.");
 			return true;
@@ -575,12 +561,11 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 		if(op == OP_CERT_TRANSFER)
 		{
 			// check toalias
-			if(!GetAlias(theCert.vchLinkAlias, alias))
+			if(!GetAlias(theCert.vchAlias, alias))
 			{
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2024 - " + _("Cannot find alias you are transferring to. It may be expired");	
 				return true;
 			}
-			theCert.vchAlias = theCert.vchLinkAlias;
 			if(!(alias.nAcceptTransferFlags & ACCEPT_TRANSFER_CERTIFICATES))
 			{
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("The alias you are transferring to does not accept certificate transfers");
@@ -621,7 +606,6 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 			paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, stringFromVch(theCert.vchCert), nLockStatus);
 		}
 	}
-	theCert.vchLinkAlias.clear();
     // set the cert's txn-dependent values
 	theCert.nHeight = nHeight;
 	theCert.txHash = tx.GetHash();
@@ -874,8 +858,7 @@ UniValue certtransfer(const UniValue& params, bool fHelp) {
 	theCert.ClearCert();
     CScript scriptPubKey;
 	theCert.nHeight = chainActive.Tip()->nHeight;
-	theCert.vchAlias = fromAlias.vchAlias;
-	theCert.vchLinkAlias = toAlias.vchAlias;
+	theCert.vchAlias = toAlias.vchAlias;
 
 	if(strPubData != stringFromVch(theCert.vchPubData))
 		theCert.vchPubData = vchFromString(strPubData);
@@ -1015,8 +998,8 @@ void CertTxToJSON(const int op, const std::vector<unsigned char> &vchData, const
 	if(!cert.vchPubData.empty() && cert.vchPubData != dbCert.vchPubData)
 		entry.push_back(Pair("publicdata", stringFromVch(cert.vchPubData)));
 
-	if(!cert.vchLinkAlias.empty() && cert.vchLinkAlias != dbCert.vchAlias)
-		entry.push_back(Pair("alias", stringFromVch(cert.vchLinkAlias)));
+	if(!cert.vchAlias.empty() && cert.vchAlias != dbCert.vchAlias)
+		entry.push_back(Pair("alias", stringFromVch(cert.vchAlias)));
 
 	if(cert.nAccessFlags != dbCert.nAccessFlags)
 		entry.push_back(Pair("access_flags", cert.nAccessFlags));
