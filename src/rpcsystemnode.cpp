@@ -349,7 +349,7 @@ Value systemnode(const Array& params, bool fHelp)
 
         for(int nHeight = chainActive.Tip()->nHeight-nLast; nHeight < chainActive.Tip()->nHeight+20; nHeight++)
         {
-            obj.push_back(Pair(strprintf("%d", nHeight), GetRequiredPaymentsString(nHeight)));
+            obj.push_back(Pair(strprintf("%d", nHeight), SNGetRequiredPaymentsString(nHeight)));
         }
 
         return obj;
