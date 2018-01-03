@@ -125,8 +125,7 @@ void CAssetAllocationDB::EraseAssetAllocationIndex(const CAssetAllocationTuple& 
 	mongoc_write_concern_t* write_concern = NULL;
 	mongoc_remove_flags_t remove_flags;
 	remove_flags = (mongoc_remove_flags_t)(MONGOC_REMOVE_NONE);
-	const string &id = stringFromVch(assetAllocationTuple.vchAsset) + stringFromVch(assetAllocationTuple.vchAlias);
-	selector = BCON_NEW("_id", BCON_UTF8(id.c_str()));
+	selector = BCON_NEW("_id", BCON_UTF8(assetAllocationTuple.ToString().c_str()));
 	write_concern = mongoc_write_concern_new();
 	mongoc_write_concern_set_w(write_concern, MONGOC_WRITE_CONCERN_W_UNACKNOWLEDGED);
 	if (!mongoc_collection_remove(assetallocation_collection, remove_flags, selector, cleanup ? NULL : write_concern, &error)) {
@@ -368,7 +367,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 					if (fDebug)
 						LogPrintf("CONNECTED ASSET ALLOCATION: op=%s assetallocation=%s hash=%s height=%d fJustCheck=%d POW IS\n",
 							assetFromOp(op).c_str(),
-							stringFromVch(vvchArgs[0]).c_str(),
+							assetAllocationTuple.ToString().c_str(),
 							tx.GetHash().ToString().c_str(),
 							nHeight,
 							fJustCheck ? 1 : 0);
@@ -388,7 +387,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 				if (!dontaddtodb) {
 					nLockStatus = LOCK_CONFLICT_UNCONFIRMED_STATE;
 					if (strResponse != "") {
-						paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, stringFromVch(theOffer.vchOffer), nLockStatus);
+						paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, assetAllocationTuple.ToString(), nLockStatus);
 					}
 				}
 				errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Block height of service request must be less than or equal to the stored service block height.");
@@ -451,7 +450,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 	}
 	if (!dontaddtodb) {
 		if (strResponse != "") {
-			paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, stringFromVch(theAssetAllocation.vchAsset), nLockStatus);
+			paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, assetAllocationTuple.ToString(), nLockStatus);
 		}
 	}
 	// set the assetallocation's txn-dependent values
@@ -468,7 +467,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 		if (fDebug)
 			LogPrintf("CONNECTED ASSET ALLOCATION: op=%s assetallocation=%s hash=%s height=%d fJustCheck=%d\n",
 				assetFromOp(op).c_str(),
-				stringFromVch(vvchArgs[0]).c_str(),
+				assetAllocationTuple.ToString().c_str(),
 				tx.GetHash().ToString().c_str(),
 				nHeight,
 				fJustCheck ? 1 : 0);
@@ -570,7 +569,7 @@ UniValue assetallocationinfo(const UniValue& params, bool fHelp) {
 }
 bool BuildAssetAllocationJson(const CAssetAllocation& assetallocation, UniValue& oAssetAllocation)
 {
-    oAssetAllocation.push_back(Pair("_id", stringFromVch(assetallocation.vchAsset) + stringFromVch(assetallocation.vchAlias)));
+    oAssetAllocation.push_back(Pair("_id", CAssetAllocationTuple(assetallocation.vchAlias, assetallocation.vchAlias).ToString()));
 	oAssetAllocation.push_back(Pair("asset", stringFromVch(assetallocation.vchAsset)));
     oAssetAllocation.push_back(Pair("txid", assetallocation.txHash.GetHex()));
     oAssetAllocation.push_back(Pair("height", (int)assetallocation.nHeight));
@@ -597,7 +596,7 @@ bool BuildAssetAllocationJson(const CAssetAllocation& assetallocation, UniValue&
 }
 bool BuildAssetAllocationIndexerJson(const CAssetAllocation& assetallocation, UniValue& oAssetAllocation)
 {
-	oAssetAllocation.push_back(Pair("_id", stringFromVch(assetallocation.vchAsset) + stringFromVch(assetallocation.vchAlias)));
+	oAssetAllocation.push_back(Pair("_id", CAssetAllocationTuple(assetallocation.vchAlias, assetallocation.vchAlias).ToString()));
 	oAssetAllocation.push_back(Pair("asset", stringFromVch(assetallocation.vchAsset)));
 	oAssetAllocation.push_back(Pair("height", (int)assetallocation.nHeight));
 	oAssetAllocation.push_back(Pair("alias", stringFromVch(assetallocation.vchAlias)));
@@ -610,7 +609,7 @@ void AssetAllocationTxToJSON(const int op, const std::vector<unsigned char> &vch
 	if(!assetallocation.UnserializeFromData(vchData, vchHash))
 		return;
 	entry.push_back(Pair("txtype", opName));
-	entry.push_back(Pair("_id", stringFromVch(assetallocation.vchAsset)+ stringFromVch(assetallocation.vchAlias)));
+	entry.push_back(Pair("_id", CAssetAllocationTuple(assetallocation.vchAlias, assetallocation.vchAlias).ToString()));
 	entry.push_back(Pair("asset", stringFromVch(assetallocation.vchAsset)));
 	entry.push_back(Pair("alias", stringFromVch(assetallocation.vchAlias)));
 
