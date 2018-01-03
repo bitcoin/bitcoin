@@ -687,11 +687,11 @@ string AliasTransfer(const string& node, const string& aliasname, const string& 
 
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasinfo " + aliasname));
 
-	const UniValue &txHistoryResult = AliasTxHistoryFilter(node, txid);
+	UniValue txHistoryResult = AliasTxHistoryFilter(node, txid);
 	BOOST_CHECK(!txHistoryResult.empty());
 	UniValue ret;
 	BOOST_CHECK(ret.read(txHistoryResult[0].get_str()));
-	const UniValue &historyResultObj = ret.get_obj();
+	UniValue historyResultObj = ret.get_obj();
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "user1").get_str(), aliasname);
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "user2").get_str(), address);
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "_id").get_str(), txid);
@@ -774,11 +774,11 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "encryption_privatekey").get_str() , encryptionprivkey);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), false);
 
-	const UniValue &txHistoryResult = AliasTxHistoryFilter(node, txid);
+	UniValue txHistoryResult = AliasTxHistoryFilter(node, txid);
 	BOOST_CHECK(!txHistoryResult.empty());
 	UniValue ret;
 	BOOST_CHECK(ret.read(txHistoryResult[0].get_str()));
-	const UniValue &historyResultObj = ret.get_obj();
+	UniValue historyResultObj = ret.get_obj();
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "user1").get_str(), aliasname);
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "_id").get_str(), txid);
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "type").get_str(), "Alias Updated");
