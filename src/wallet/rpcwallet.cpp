@@ -598,60 +598,62 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
 	bool fJustCheck = true;
 	string errorMessage = "";
 	bool bCheckDestError = false;
-	if (DecodeAliasTx(wtxNew, op, nOut, vvchAlias))
-	{
-		CheckAliasInputs(wtxNew, op, nOut, vvchAlias, fJustCheck, chainActive.Tip()->nHeight, errorMessage, bCheckDestError, true);
-		if (!errorMessage.empty())
-			throw runtime_error(errorMessage.c_str());
-		CheckAliasInputs(wtxNew, op, nOut, vvchAlias, !fJustCheck, chainActive.Tip()->nHeight, errorMessage, bCheckDestError, true);
-		if (!errorMessage.empty())
-			throw runtime_error(errorMessage.c_str());
-	}
-	if (DecodeCertTx(wtxNew, op, nOut, vvch))
-	{
-		CheckCertInputs(wtxNew, op, nOut, vvch, vvchAlias, fJustCheck, chainActive.Tip()->nHeight, errorMessage, true);
-		if (!errorMessage.empty())
-			throw runtime_error(errorMessage.c_str());
-		CheckCertInputs(wtxNew, op, nOut, vvch, vvchAlias, !fJustCheck, chainActive.Tip()->nHeight, errorMessage, true);
-		if (!errorMessage.empty())
-			throw runtime_error(errorMessage.c_str());
-	}
-	if (DecodeAssetTx(wtxNew, op, nOut, vvch))
-	{
-		CheckAssetInputs(wtxNew, op, nOut, vvch, vvchAlias, fJustCheck, chainActive.Tip()->nHeight, errorMessage, true);
-		if (!errorMessage.empty())
-			throw runtime_error(errorMessage.c_str());
-		CheckAssetInputs(wtxNew, op, nOut, vvch, vvchAlias, !fJustCheck, chainActive.Tip()->nHeight, errorMessage, true);
-		if (!errorMessage.empty())
-			throw runtime_error(errorMessage.c_str());
-	}
-	if (DecodeAssetAllocationTx(wtxNew, op, nOut, vvch))
-	{
-		CheckAssetAllocationInputs(wtxNew, op, nOut, vvch, vvchAlias, fJustCheck, chainActive.Tip()->nHeight, errorMessage, true);
-		if (!errorMessage.empty())
-			throw runtime_error(errorMessage.c_str());
-		CheckAssetAllocationInputs(wtxNew, op, nOut, vvch, vvchAlias, !fJustCheck, chainActive.Tip()->nHeight, errorMessage, true);
-		if (!errorMessage.empty())
-			throw runtime_error(errorMessage.c_str());
-	}
-	if (DecodeEscrowTx(wtxNew, op, nOut, vvch))
-	{
-		CheckEscrowInputs(wtxNew, op, nOut, vvch, vvchAlias, fJustCheck, chainActive.Tip()->nHeight, errorMessage, true);
-		if (!errorMessage.empty())
-			throw runtime_error(errorMessage.c_str());
-		CheckEscrowInputs(wtxNew, op, nOut, vvch, vvchAlias, !fJustCheck, chainActive.Tip()->nHeight, errorMessage, true);
-		if (!errorMessage.empty())
-			throw runtime_error(errorMessage.c_str());
-	}
-	if (DecodeOfferTx(wtxNew, op, nOut, vvch))
-	{
-		CheckOfferInputs(wtxNew, op, nOut, vvch, vvchAlias, fJustCheck, chainActive.Tip()->nHeight, errorMessage, true);
-		if (!errorMessage.empty())
-			throw runtime_error(errorMessage.c_str());
-		CheckOfferInputs(wtxNew, op, nOut, vvch, vvchAlias, !fJustCheck, chainActive.Tip()->nHeight, errorMessage, true);
-		if (!errorMessage.empty())
-			throw runtime_error(errorMessage.c_str());
+	if (wtxNew.nVersion == GetSyscoinTxVersion()) {
+		if (DecodeAliasTx(wtxNew, op, nOut, vvchAlias))
+		{
+			CheckAliasInputs(wtxNew, op, nOut, vvchAlias, fJustCheck, chainActive.Tip()->nHeight, errorMessage, bCheckDestError, true);
+			if (!errorMessage.empty())
+				throw runtime_error(errorMessage.c_str());
+			CheckAliasInputs(wtxNew, op, nOut, vvchAlias, !fJustCheck, chainActive.Tip()->nHeight, errorMessage, bCheckDestError, true);
+			if (!errorMessage.empty())
+				throw runtime_error(errorMessage.c_str());
+		}
+		if (DecodeCertTx(wtxNew, op, nOut, vvch))
+		{
+			CheckCertInputs(wtxNew, op, nOut, vvch, vvchAlias, fJustCheck, chainActive.Tip()->nHeight, errorMessage, true);
+			if (!errorMessage.empty())
+				throw runtime_error(errorMessage.c_str());
+			CheckCertInputs(wtxNew, op, nOut, vvch, vvchAlias, !fJustCheck, chainActive.Tip()->nHeight, errorMessage, true);
+			if (!errorMessage.empty())
+				throw runtime_error(errorMessage.c_str());
+		}
+		if (DecodeAssetTx(wtxNew, op, nOut, vvch))
+		{
+			CheckAssetInputs(wtxNew, op, nOut, vvch, vvchAlias, fJustCheck, chainActive.Tip()->nHeight, errorMessage, true);
+			if (!errorMessage.empty())
+				throw runtime_error(errorMessage.c_str());
+			CheckAssetInputs(wtxNew, op, nOut, vvch, vvchAlias, !fJustCheck, chainActive.Tip()->nHeight, errorMessage, true);
+			if (!errorMessage.empty())
+				throw runtime_error(errorMessage.c_str());
+		}
+		if (DecodeAssetAllocationTx(wtxNew, op, nOut, vvch))
+		{
+			CheckAssetAllocationInputs(wtxNew, op, nOut, vvch, vvchAlias, fJustCheck, chainActive.Tip()->nHeight, errorMessage, true);
+			if (!errorMessage.empty())
+				throw runtime_error(errorMessage.c_str());
+			CheckAssetAllocationInputs(wtxNew, op, nOut, vvch, vvchAlias, !fJustCheck, chainActive.Tip()->nHeight, errorMessage, true);
+			if (!errorMessage.empty())
+				throw runtime_error(errorMessage.c_str());
+		}
+		if (DecodeEscrowTx(wtxNew, op, nOut, vvch))
+		{
+			CheckEscrowInputs(wtxNew, op, nOut, vvch, vvchAlias, fJustCheck, chainActive.Tip()->nHeight, errorMessage, true);
+			if (!errorMessage.empty())
+				throw runtime_error(errorMessage.c_str());
+			CheckEscrowInputs(wtxNew, op, nOut, vvch, vvchAlias, !fJustCheck, chainActive.Tip()->nHeight, errorMessage, true);
+			if (!errorMessage.empty())
+				throw runtime_error(errorMessage.c_str());
+		}
+		if (DecodeOfferTx(wtxNew, op, nOut, vvch))
+		{
+			CheckOfferInputs(wtxNew, op, nOut, vvch, vvchAlias, fJustCheck, chainActive.Tip()->nHeight, errorMessage, true);
+			if (!errorMessage.empty())
+				throw runtime_error(errorMessage.c_str());
+			CheckOfferInputs(wtxNew, op, nOut, vvch, vvchAlias, !fJustCheck, chainActive.Tip()->nHeight, errorMessage, true);
+			if (!errorMessage.empty())
+				throw runtime_error(errorMessage.c_str());
 
+		}
 	}
 }
 static void SendMoney(const CTxDestination &address, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew, bool fUseInstantSend=false, bool fUsePrivateSend=false)
