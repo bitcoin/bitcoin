@@ -61,7 +61,7 @@ public:
 		vchAsset.clear();
 		vchAlias.clear();
 	}
-	inline std::string ToString() const { return stringFromVch(vchAsset) + "-" + stringFromVch(vchAlias); }
+	std::string ToString() const;
 	inline bool IsNull() {
 		return (vchAsset.empty() && vchAlias.empty());
 	}

@@ -29,7 +29,9 @@ extern void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector
 bool IsAssetAllocationOp(int op) {
 	return op == OP_ASSET_ALLOCATION_SEND;
 }
-
+string CAssetAllocationTuple::ToString() const {
+	return stringFromVch(vchAsset) + "-" + stringFromVch(vchAlias);
+}
 uint64_t GetAssetAllocationExpiration(const CAssetAllocation& assetallocation) {
 	uint64_t nTime = chainActive.Tip()->GetMedianTimePast() + 1;
 	CAliasUnprunable aliasUnprunable;
