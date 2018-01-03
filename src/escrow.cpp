@@ -852,6 +852,9 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 						return error(errorMessage.c_str());
 					}
 					if (strResponse != "") {
+						user1 = stringFromVch(theEscrow.vchBuyerAlias);
+						user2 = stringFromVch(theEscrow.vchSellerAlias);
+						user3 = stringFromVch(theEscrow.vchArbiterAlias);
 						paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, stringFromVch(serializedEscrow.vchEscrow), nLockStatus);
 					}
 				}
