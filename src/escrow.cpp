@@ -789,6 +789,9 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 	escrowOp = serializedEscrow.op;
 	string strResponseEnglish = "";
 	string strResponse = GetSyscoinTransactionDescription(op, strResponseEnglish, ESCROW);
+	string user1 = "";
+	string user2 = "";
+	string user3 = "";
 	char nLockStatus = NOLOCK_UNCONFIRMED_STATE;
 	if (!fJustCheck)
 		nLockStatus = NOLOCK_CONFIRMED_STATE;
@@ -859,6 +862,9 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				if (!dontaddtodb) {
 					nLockStatus = LOCK_CONFLICT_UNCONFIRMED_STATE;
 					if (strResponse != "") {
+						user1 = stringFromVch(theEscrow.vchBuyerAlias);
+						user2 = stringFromVch(theEscrow.vchSellerAlias);
+						user3 = stringFromVch(theEscrow.vchArbiterAlias);
 						paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, stringFromVch(serializedEscrow.vchEscrow), nLockStatus);
 					}
 				}
@@ -1314,9 +1320,9 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 		
 	if(!dontaddtodb) {
 		if (strResponse != "") {
-			const string &user1 = stringFromVch(theEscrow.vchBuyerAlias);
-			const string &user2 = stringFromVch(theEscrow.vchSellerAlias);
-			const string &user3 = stringFromVch(theEscrow.vchArbiterAlias);
+			user1 = stringFromVch(theEscrow.vchBuyerAlias);
+			user2 = stringFromVch(theEscrow.vchSellerAlias);
+			user3 = stringFromVch(theEscrow.vchArbiterAlias);
 			paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, stringFromVch(serializedEscrow.vchEscrow), nLockStatus);
 		}
 	}
