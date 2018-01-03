@@ -783,24 +783,54 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "_id").get_str(), txid);
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "type").get_str(), "Alias Updated");
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "lock_status").get_int(), LOCK_NOCONFLICT_UNCONFIRMED_STATE);
-	MilliSleep(100);
+	
 	if (!otherNode1.empty())
 	{
+		txHistoryResult.SetNull();
+		// try for 5 seconds before giving up
+		int numtries = 100 * 5;
+		while (txHistoryResult.empty()) {
+			MilliSleep(10);
+			txHistoryResult = AliasTxHistoryFilter(otherNode1, txid);
+			BOOST_CHECK(!txHistoryResult.empty());
+			numtries--;
+			BOOST_CHECK(numtries > 0);
+			if (numtries <= 0) {
+				break;
+			}
+		}
+		BOOST_CHECK(ret.read(txHistoryResult[0].get_str()));
+		historyResultObj = ret.get_obj();
+		BOOST_CHECK_EQUAL(find_value(historyResultObj, "lock_status").get_int(), LOCK_NOCONFLICT_UNCONFIRMED_STATE);
+
 		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode1, "aliasinfo " + aliasname));
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "address").get_str(), newAddressStr);
 		BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == aliasname);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), false);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str(), newpubdata);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "encryption_publickey").get_str(), encryptionkey);
-		txHistoryResult = AliasTxHistoryFilter(otherNode1, txid);
-		BOOST_CHECK(!txHistoryResult.empty());
-		BOOST_CHECK(ret.read(txHistoryResult[0].get_str()));
-		historyResultObj = ret.get_obj();
-		BOOST_CHECK_EQUAL(find_value(historyResultObj, "lock_status").get_int(), LOCK_NOCONFLICT_UNCONFIRMED_STATE);
+
 
 	}
 	if (!otherNode2.empty())
 	{
+		txHistoryResult.SetNull();
+		// try for 5 seconds before giving up
+		int numtries = 100 * 5;
+		while (txHistoryResult.empty()) {
+			MilliSleep(10);
+			txHistoryResult = AliasTxHistoryFilter(otherNode1, txid);
+			BOOST_CHECK(!txHistoryResult.empty());
+			numtries--;
+			BOOST_CHECK(numtries > 0);
+			if (numtries <= 0) {
+				break;
+			}
+		}
+		BOOST_CHECK(ret.read(txHistoryResult[0].get_str()));
+		historyResultObj = ret.get_obj();
+		BOOST_CHECK_EQUAL(find_value(historyResultObj, "lock_status").get_int(), LOCK_NOCONFLICT_UNCONFIRMED_STATE);
+
 		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode2, "aliasinfo " + aliasname));
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "address").get_str(), newAddressStr);
 
@@ -809,11 +839,7 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str(), newpubdata);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "encryption_publickey").get_str(), encryptionkey);
-		txHistoryResult = AliasTxHistoryFilter(otherNode2, txid);
-		BOOST_CHECK(!txHistoryResult.empty());
-		BOOST_CHECK(ret.read(txHistoryResult[0].get_str()));
-		historyResultObj = ret.get_obj();
-		BOOST_CHECK_EQUAL(find_value(historyResultObj, "lock_status").get_int(), LOCK_NOCONFLICT_UNCONFIRMED_STATE);
+
 	}
 	GenerateBlocks(5, node);
 	if(!otherNode1.empty())
