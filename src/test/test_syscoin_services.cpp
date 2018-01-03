@@ -792,7 +792,6 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 		while (txHistoryResult.empty()) {
 			MilliSleep(10);
 			txHistoryResult = AliasTxHistoryFilter(otherNode1, txid);
-			BOOST_CHECK(!txHistoryResult.empty());
 			numtries--;
 			BOOST_CHECK(numtries > 0);
 			if (numtries <= 0) {
@@ -820,7 +819,6 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 		while (txHistoryResult.empty()) {
 			MilliSleep(10);
 			txHistoryResult = AliasTxHistoryFilter(otherNode1, txid);
-			BOOST_CHECK(!txHistoryResult.empty());
 			numtries--;
 			BOOST_CHECK(numtries > 0);
 			if (numtries <= 0) {
