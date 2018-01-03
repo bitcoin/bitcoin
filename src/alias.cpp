@@ -615,7 +615,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					if (!dontaddtodb) {
 						nLockStatus = LOCK_CONFLICT_UNCONFIRMED_STATE;
 						if (strResponse != "") {
-							paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, stringFromVch(vchAlias), nLockStatus);
+							paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, strName, nLockStatus);
 						}
 					}
 					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Block height of service request must be less than or equal to the stored service block height.");
@@ -762,7 +762,7 @@ theAlias = dbAlias;
 	{
 		if (!dontaddtodb) {
 			if (strResponse != "") {
-				paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, stringFromVch(vchAlias), nLockStatus);
+				paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, strName, nLockStatus);
 			}
 		}
 		theAlias.nHeight = nHeight;
