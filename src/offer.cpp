@@ -352,7 +352,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	COffer linkOffer;
 	COffer myOffer;
 	CCert theCert;
-	CAliasIndex theAlias, alias, linkAlias;
+	CAliasIndex theAlias, alias;
 	vector<string> categories;
 	string retError = "";
 	// just check is for the memory pool inclusion, here we can stop bad transactions from entering before we get to include them in a block
@@ -944,9 +944,6 @@ UniValue offerlink(const UniValue& params, bool fHelp) {
 	COffer linkOffer;
 	if (vchLinkOffer.empty() || !GetOffer( vchLinkOffer, linkOffer))
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1513 - " + _("Could not find an offer with this guid"));
-	CAliasIndex linkAlias;
-	if (!GetAlias(linkOffer.vchAlias, linkAlias))
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1513 - " + _("Could not find an alias associated with this offer"));
 
 	int commissionInteger = params[2].get_int();
 	vchDescription = vchFromValue(params[3]);
@@ -1078,7 +1075,7 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	vector<unsigned char> vchWitness;
 	vchWitness = vchFromValue(params[17]);
 
-	CAliasIndex alias, linkAlias;
+	CAliasIndex alias, offerAlias;
 
 	// this is a syscoind txn
 	CWalletTx wtx;
@@ -1087,6 +1084,9 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	COffer theOffer, linkOffer;
 	if (!GetOffer( vchOffer, theOffer))
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1534 - " + _("Could not find an offer with this guid"));
+
+	if (!GetAlias(theOffer.vchAlias, offerAlias))
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1535 - " + _("Could not find an alias with this name"));
 
 	if (!GetAlias(vchAlias, alias))
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1536 - " + _("Could not find an alias with this name"));
@@ -1161,7 +1161,7 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	theOffer.nCommission = nCommission;
 	theOffer.paymentOptions = paymentOptionsMask;
 
-	if(!vchAlias.empty() && vchAlias != alias.vchAlias)
+	if(vchAlias != theOffer.vchAlias)
 		theOffer.vchAlias = vchAlias;
 	
 	theOffer.nQty = nQty;
@@ -1188,7 +1188,7 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	CreateRecipient(scriptPubKey, recipient);
 	vecSend.push_back(recipient);
 	CScript scriptPubKeyAlias;
-	scriptPubKeyAlias << CScript::EncodeOP_N(OP_SYSCOIN_ALIAS) << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << alias.vchAlias << alias.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
+	scriptPubKeyAlias << CScript::EncodeOP_N(OP_SYSCOIN_ALIAS) << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << offerAlias.vchAlias << offerAlias.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
 	scriptPubKeyAlias += scriptPubKeyOrig;
 	CRecipient aliasRecipient;
 	CreateRecipient(scriptPubKeyAlias, aliasRecipient);
@@ -1205,7 +1205,7 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	coinControl.fAllowWatchOnly = false;
 
 
-	SendMoneySyscoin(alias.vchAlias, vchWitness, aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
+	SendMoneySyscoin(offerAlias.vchAlias, vchWitness, aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
 	UniValue res(UniValue::VARR);
 	res.push_back(EncodeHexTx(wtx));
 	return res;
