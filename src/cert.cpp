@@ -460,6 +460,11 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 		if (!theCert.vchLinkAlias.empty())
 			user2 = stringFromVch(theCert.vchLinkAlias);
 	}
+	string strResponseEnglish = "";
+	string strResponse = GetSyscoinTransactionDescription(op, strResponseEnglish, CERT);
+	int nLockStatus = NOLOCK_UNCONFIRMED_STATE;
+	if(!fJustCheck)
+		nLockStatus = NOLOCK_CONFIRMED_STATE;
 	// if not an certnew, load the cert data from the DB
 	CCert dbCert;
 	if (!GetCert(theCert.vchCert, dbCert))
@@ -472,12 +477,14 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 	else
 	{
 		bool bSendLocked = false;
-		if (!fJustCheck && pcertdb->ReadISLock(theCert.vchCert, bSendLocked) && bSendLocked) {
+		pcertdb->ReadISLock(theCert.vchCert, bSendLocked);
+		if (!fJustCheck && bSendLocked) {
+			
 			if (dbCert.nHeight >= nHeight)
 			{
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Block height of service request must be less than or equal to the stored service block height.");
 				return true;
-			} 
+			}
 			if (dbCert.txHash != tx.GetHash())
 			{
 				if (fDebug)
@@ -487,6 +494,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 					dbCert.SetNull();
 				}
 				if (!dontaddtodb) {
+					nLockStatus = LOCK_CONFLICT_CONFIRMED_STATE;
 					if (!pcertdb->EraseISLock(theCert.vchCert))
 					{
 						errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from certificate DB");
@@ -498,6 +506,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 			}
 			else {
 				if (!dontaddtodb) {
+					nLockStatus = LOCK_NOCONFLICT_CONFIRMED_STATE;
 					if (fDebug)
 						LogPrintf("CONNECTED CERT: op=%s cert=%s hash=%s height=%d fJustCheck=%d POW IS\n",
 							certFromOp(op).c_str(),
@@ -515,14 +524,32 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 						errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from certificate DB");
 						return error(errorMessage.c_str());
 					}
+					if (strResponse != "") {
+						paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, stringFromVch(theCert.vchCert), nLockStatus);
+					}
 				}
 				return true;
 			}
 		}
-		else if (dbCert.nHeight > nHeight)
+		else
 		{
-			errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Block height of service request cannot be lower than stored service block height.");
-			return true;
+			if(fJustCheck && bSendLocked && dbCert.nHeight >= nHeight && dbCert.txHash != tx.GetHash())
+			{
+				if (!dontaddtodb) {
+					nLockStatus = LOCK_CONFLICT_UNCONFIRMED_STATE;
+					if (strResponse != "") {
+						paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, stringFromVch(theCert.vchCert), nLockStatus);
+					}
+				}
+				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Block height of service request must be less than or equal to the stored service block height.");
+				return true;
+			}
+			if (dbCert.nHeight > nHeight)
+			{
+				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Block height of service request cannot be lower than stored service block height.");
+				return true;
+			}
+			nLockStatus = LOCK_NOCONFLICT_UNCONFIRMED_STATE;
 		}
 	}
 	if(op != OP_CERT_ACTIVATE) 
@@ -589,10 +616,8 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 		}
 	}
 	if(!dontaddtodb) {
-		string strResponseEnglish = "";
-		string strResponse = GetSyscoinTransactionDescription(op, strResponseEnglish, CERT);
 		if (strResponse != "") {
-			paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, stringFromVch(theCert.vchCert));
+			paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, stringFromVch(theCert.vchCert), nLockStatus);
 		}
 	}
 	theCert.vchLinkAlias.clear();

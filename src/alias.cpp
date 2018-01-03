@@ -745,7 +745,7 @@ theAlias = dbAlias;
 					if (!newAddress.empty())
 						user2 = newAddress;
 				}
-				paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, stringFromVch(vchAlias));
+				paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, stringFromVch(vchAlias), nLockStatus);
 			}
 		}
 		theAlias.nHeight = nHeight;
@@ -1801,7 +1801,7 @@ void CAliasDB::EraseAliasIndex(const std::vector<unsigned char>& vchAlias, bool 
 	EraseAliasIndexHistory(vchAlias, cleanup);
 	EraseAliasIndexTxHistory(vchAlias, cleanup);
 }
-bool BuildAliasIndexerTxHistoryJson(const string &user1, const string &user2, const string &user3, const uint256 &txHash, const uint64_t& nHeight, const string &type, const string &guid, UniValue& oName)
+bool BuildAliasIndexerTxHistoryJson(const string &user1, const string &user2, const string &user3, const uint256 &txHash, const uint64_t& nHeight, const string &type, const string &guid, const int &lockstatus, UniValue& oName)
 {
 	oName.push_back(Pair("_id", txHash.GetHex()));
 	oName.push_back(Pair("user1", user1));
@@ -1818,9 +1818,10 @@ bool BuildAliasIndexerTxHistoryJson(const string &user1, const string &user2, co
 		}
 	}
 	oName.push_back(Pair("time", nTime));
+	oName.push_back(Pair("lock_status", lockstatus));
 	return true;
 }
-void CAliasDB::WriteAliasIndexTxHistory(const string &user1, const string &user2, const string &user3, const uint256 &txHash, const uint64_t& nHeight, const string &type, const string &guid) {
+void CAliasDB::WriteAliasIndexTxHistory(const string &user1, const string &user2, const string &user3, const uint256 &txHash, const uint64_t& nHeight, const string &type, const string &guid, const int &lockstatus) {
 	if (!aliastxhistory_collection)
 		return;
 	bson_error_t error;
@@ -1829,9 +1830,11 @@ void CAliasDB::WriteAliasIndexTxHistory(const string &user1, const string &user2
 	UniValue oName(UniValue::VOBJ);
 	write_concern = mongoc_write_concern_new();
 	mongoc_write_concern_set_w(write_concern, MONGOC_WRITE_CONCERN_W_UNACKNOWLEDGED);
-	BuildAliasIndexerTxHistoryJson(user1, user2, user3, txHash, nHeight, type, guid, oName);
+	mongoc_update_flags_t update_flags;
+	update_flags = (mongoc_update_flags_t)(MONGOC_UPDATE_NO_VALIDATE | MONGOC_UPDATE_UPSERT);
+	BuildAliasIndexerTxHistoryJson(user1, user2, user3, txHash, nHeight, type, guid, lockstatus, oName);
 	insert = bson_new_from_json((unsigned char *)oName.write().c_str(), -1, &error);
-	if (!insert || !mongoc_collection_insert(aliastxhistory_collection, (mongoc_insert_flags_t)MONGOC_INSERT_NO_VALIDATE, insert, write_concern, &error)) {
+	if (!insert || !mongoc_collection_update(aliastxhistory_collection, update_flags, insert, write_concern, &error)) {
 		LogPrintf("MONGODB ALIAS TX HISTORY ERROR: %s\n", error.message);
 	}
 

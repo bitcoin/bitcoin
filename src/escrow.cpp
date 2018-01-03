@@ -1298,7 +1298,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 			const string &user1 = stringFromVch(theEscrow.vchBuyerAlias);
 			const string &user2 = stringFromVch(theEscrow.vchSellerAlias);
 			const string &user3 = stringFromVch(theEscrow.vchArbiterAlias);
-			paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, stringFromVch(serializedEscrow.vchEscrow));
+			paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, stringFromVch(serializedEscrow.vchEscrow), nLockStatus);
 		}
 	}
     // set the escrow's txn-dependent values

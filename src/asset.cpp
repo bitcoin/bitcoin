@@ -552,7 +552,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		string strResponseEnglish = "";
 		string strResponse = GetSyscoinTransactionDescription(op, strResponseEnglish, ASSET);
 		if (strResponse != "") {
-			paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, stringFromVch(theAsset.vchAsset));
+			paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, stringFromVch(theAsset.vchAsset), nLockStatus);
 		}
 	}
 	theAsset.vchLinkAlias.clear();

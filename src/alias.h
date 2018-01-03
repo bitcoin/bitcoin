@@ -38,6 +38,14 @@ enum {
 	ASSETALLOCATION
 };
 enum {
+	NOLOCK_UNCONFIRMED_STATE = 0,
+	NOLOCK_CONFIRMED_STATE,
+	LOCK_NOCONFLICT_UNCONFIRMED_STATE,
+	LOCK_NOCONFLICT_CONFIRMED_STATE,
+	LOCK_CONFLICT_UNCONFIRMED_STATE,
+	LOCK_CONFLICT_CONFIRMED_STATE,
+};
+enum {
 	ACCEPT_TRANSFER_NONE=0,
 	ACCEPT_TRANSFER_CERTIFICATES,
 	ACCEPT_TRANSFER_ASSETS,
@@ -293,7 +301,7 @@ public:
 	void WriteAliasIndexHistory(const CAliasIndex& alias, const int &op);
 	void EraseAliasIndexHistory(const std::vector<unsigned char>& vchAlias, bool cleanup);
 	void EraseAliasIndexHistory(const std::string& id);
-	void WriteAliasIndexTxHistory(const std::string &user1, const std::string &user2, const std::string &user3, const uint256 &txHash, const uint64_t& nHeight, const std::string &type, const std::string &guid);
+	void WriteAliasIndexTxHistory(const std::string &user1, const std::string &user2, const std::string &user3, const uint256 &txHash, const uint64_t& nHeight, const std::string &type, const int &lockstatus, std::string &guid);
 	void EraseAliasIndexTxHistory(const std::vector<unsigned char>& vchAlias, bool cleanup);
 	void EraseAliasIndexTxHistory(const std::string& id);
 };
