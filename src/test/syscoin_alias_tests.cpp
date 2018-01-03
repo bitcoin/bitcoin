@@ -99,7 +99,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasupdate)
 
 }
 
-BOOST_AUTO_TEST_CASE (generate_aliasmultiupdate)
+/*BOOST_AUTO_TEST_CASE (generate_aliasmultiupdate)
 {
 	printf("Running generate_aliasmultiupdate...\n");
 	GenerateBlocks(1);
@@ -182,7 +182,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasmultiupdate)
 	GenerateBlocks(10, "node1");
 	hex_str = AliasUpdate("node1", "jagmultiupdate", "changeddata11");
 	BOOST_CHECK(hex_str.empty());
-}
+}*/
 
 BOOST_AUTO_TEST_CASE (generate_sendmoneytoalias)
 {
@@ -292,7 +292,7 @@ BOOST_AUTO_TEST_CASE (generate_aliaspay)
 
 	// update aliases afterwards, there should be MAX_ALIAS_UPDATES_PER_BLOCK UTXOs again after update
 	// alias1 was only funded with 10 sys which gets used in the 5th update, 1 was used above in aliasupdate, while alias2/alias3 have more fund utxos so they can do more updates without a block
-	for (unsigned int i = 0; i < MAX_ALIAS_UPDATES_PER_BLOCK - 1; i++)
+	/*for (unsigned int i = 0; i < MAX_ALIAS_UPDATES_PER_BLOCK - 1; i++)
 	{
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasupdate alias1.aliaspay.tld changedata1 " + oldAddressStr1 + " 3 " + " 0 " + encryptionprivkey1 + " " + encryptionkey1 + " ''"));
 		UniValue varray = r.get_array();
@@ -320,7 +320,7 @@ BOOST_AUTO_TEST_CASE (generate_aliaspay)
 		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "signrawtransaction " + varray[0].get_str()));
 		BOOST_CHECK_NO_THROW(CallRPC("node3", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
 	}
-	BOOST_CHECK_THROW(r = CallRPC("node3", "aliasupdate alias3.aliaspay.tld changedata3 " + oldAddressStr3 + " 3 " + " 0 " + encryptionprivkey3 + " " + encryptionkey3 + " ''"), runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC("node3", "aliasupdate alias3.aliaspay.tld changedata3 " + oldAddressStr3 + " 3 " + " 0 " + encryptionprivkey3 + " " + encryptionkey3 + " ''"), runtime_error);*/
 	GenerateBlocks(10, "node1");
 	GenerateBlocks(10, "node2");
 	GenerateBlocks(10, "node3");
