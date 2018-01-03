@@ -455,7 +455,7 @@ CSystemnode* CSystemnodeMan::GetNextSystemnodeInQueueForPayment(int nBlockHeight
         if(systemnodePayments.IsScheduled(sn, nBlockHeight)) continue;
 
         //it's too new, wait for a cycle
-        if(fFilterSigTime && sn.sigTime + (nSnCount*2.6*60) > GetAdjustedTime()) continue;
+        if(fFilterSigTime && sn.sigTime + (nSnCount*1*60) > GetAdjustedTime()) continue;
 
         //make sure it has as many confirmations as there are systemnodes
         if(sn.GetSystemnodeInputAge() < nSnCount) continue;
