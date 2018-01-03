@@ -1,6 +1,5 @@
 *.tar.gz
 
-*.exe
 src/bitcoin
 src/bitcoind
 src/bitcoin-cli
@@ -62,7 +61,6 @@ src/qt/test/moc*.cpp
 
 *.log
 *.trs
-*.dmg
 
 *.json.h
 *.raw.h
