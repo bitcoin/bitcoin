@@ -607,7 +607,7 @@ string AliasNew(const string& node, const string& aliasname, const string& pubda
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "user1").get_str(), aliasname);
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "_id").get_str(), txid);
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "type").get_str(), "Alias Activated");
-
+	BOOST_CHECK_EQUAL(find_value(historyResultObj, "lock_status").get_int(), NOLOCK_CONFIRMED_STATE);
 
 	BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == aliasname);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str(), pubdata);
@@ -620,6 +620,7 @@ string AliasNew(const string& node, const string& aliasname, const string& pubda
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str(), pubdata);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), false);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "address").get_str() , aliasAddress.ToString());
+		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "lock_status").get_int(), NOLOCK_CONFIRMED_STATE);
 	}
 	if(!otherNode2.empty())
 	{
@@ -628,6 +629,7 @@ string AliasNew(const string& node, const string& aliasname, const string& pubda
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str(), pubdata);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), false);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "address").get_str() , aliasAddress.ToString());
+		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "lock_status").get_int(), NOLOCK_CONFIRMED_STATE);
 	}
 	return aliasAddress.ToString();
 }
@@ -673,11 +675,8 @@ string AliasTransfer(const string& node, const string& aliasname, const string& 
 	BOOST_CHECK_NO_THROW(CallRPC(node, "syscoinsendrawtransaction " + hex_str));
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "decoderawtransaction " + hex_str));
 	string txid = find_value(r.get_obj(), "txid").get_str();
-	GenerateBlocks(5, tonode);
-	GenerateBlocks(5, node);
 
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasbalance " + aliasname));
-	CAmount balanceAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
+
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasinfo " + aliasname));
 
 	const UniValue &txHistoryResult = AliasTxHistoryFilter(node, txid);
@@ -689,12 +688,20 @@ string AliasTransfer(const string& node, const string& aliasname, const string& 
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "user2").get_str(), address);
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "_id").get_str(), txid);
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "type").get_str(), "Alias Updated");
+	BOOST_CHECK_EQUAL(find_value(historyResultObj, "lock_status").get_int(), LOCK_NOCONFLICT_UNCONFIRMED_STATE);
+
+	GenerateBlocks(5, tonode);
+	GenerateBlocks(5, node);
+
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasbalance " + aliasname));
+	CAmount balanceAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
 
 	BOOST_CHECK(balanceAfter >= (balanceBefore-COIN));
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str() , newpubdata);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "encryption_publickey").get_str() , encryptionkey);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "encryption_privatekey").get_str() , encryptionprivkey);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "address").get_str() , aliasAddress.ToString());
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "lock_status").get_int(), LOCK_NOCONFLICT_CONFIRMED_STATE);
 
 	// check xferred right person and data changed
 	BOOST_CHECK_NO_THROW(r = CallRPC(tonode, "aliasbalance " + aliasname));
@@ -705,6 +712,7 @@ string AliasTransfer(const string& node, const string& aliasname, const string& 
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "encryption_publickey").get_str() , encryptionkey);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "encryption_privatekey").get_str() , encryptionprivkey);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "address").get_str() , aliasAddress.ToString());
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "lock_status").get_int(), LOCK_NOCONFLICT_CONFIRMED_STATE);
 	return "";
 }
 string AliasUpdate(const string& node, const string& aliasname, const string& pubdata, string addressStr, string witness)
