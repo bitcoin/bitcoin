@@ -2279,6 +2279,8 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 		scriptPubKeyAlias += scriptPubKeyAliasOrig;
 		theAlias = sellerAliasLatest;
 	}
+	else
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4524 - " + _("Invalid role"));
 
 	CTransaction signedTx;
 	DecodeHexTx(signedTx, rawtx);
