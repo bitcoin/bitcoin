@@ -705,6 +705,7 @@ string AliasTransfer(const string& node, const string& aliasname, const string& 
 	CAmount balanceAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
 
 	BOOST_CHECK(balanceAfter >= (balanceBefore-COIN));
+	BOOST_CHECK_NO_THROW(r = CallRPC(tonode, "aliasinfo " + aliasname));
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str() , newpubdata);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "encryption_publickey").get_str() , encryptionkey);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "encryption_privatekey").get_str() , encryptionprivkey);
@@ -788,17 +789,19 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 	{
 		txHistoryResult.clear();
 		// try for 5 seconds before giving up
-		int numtries = 10 * 5;
+		int numtries =  5;
 		while (txHistoryResult.empty()) {
-			MilliSleep(100);
 			txHistoryResult = AliasTxHistoryFilter(otherNode1, txid);
+			if (!txHistoryResult.empty())
+				break;
 			numtries--;
 			BOOST_CHECK(numtries > 0);
 			if (numtries <= 0) {
 				break;
 			}
+			MilliSleep(1000);
 		}
-		printf("relay to node1 to took about %d MS\n", 100 * (10 * 5 - numtries));
+		printf("relay to node1 to took about %d Sec\n", (5 - numtries));
 		BOOST_CHECK(ret.read(txHistoryResult[0].get_str()));
 		historyResultObj = ret.get_obj();
 		BOOST_CHECK_EQUAL(find_value(historyResultObj, "lock_status").get_int(), LOCK_NOCONFLICT_UNCONFIRMED_STATE);
@@ -818,15 +821,17 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 		// try for 5 seconds before giving up
 		int numtries = 10 * 5;
 		while (txHistoryResult.empty()) {
-			MilliSleep(100);
 			txHistoryResult = AliasTxHistoryFilter(otherNode2, txid);
+			if (!txHistoryResult.empty())
+				break;
 			numtries--;
 			BOOST_CHECK(numtries > 0);
 			if (numtries <= 0) {
 				break;
 			}
+			MilliSleep(1000);
 		}
-		printf("relay to node2 to took about %d MS\n", 100 * (10 * 5 - numtries));
+		printf("relay to node2 to took about %d Sec\n", (5 - numtries));
 		BOOST_CHECK(ret.read(txHistoryResult[0].get_str()));
 		historyResultObj = ret.get_obj();
 		BOOST_CHECK_EQUAL(find_value(historyResultObj, "lock_status").get_int(), LOCK_NOCONFLICT_UNCONFIRMED_STATE);
