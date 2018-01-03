@@ -600,6 +600,8 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 
 
 		// some fields are only updated if they are not empty to limit txn size, rpc sends em as empty if we arent changing them
+		if (theOffer.vchAlias.empty())
+			theOffer.vchAlias = dbOffer.vchAlias;
 		if (theOffer.sCategory.empty())
 			theOffer.sCategory = dbOffer.sCategory;
 		if (theOffer.sTitle.empty())
@@ -614,7 +616,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			theOffer.paymentOptions = dbOffer.paymentOptions;
 
 		theOffer.vchLinkOffer = dbOffer.vchLinkOffer;
-
+		
 
 		if (IsOfferTypeInMask(dbOffer.offerType, OFFERTYPE_AUCTION))
 		{

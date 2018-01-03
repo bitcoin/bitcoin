@@ -521,6 +521,8 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	}
 	if (op != OP_ASSET_ACTIVATE)
 	{
+		if (theAsset.vchAlias.empty())
+			theAsset.vchAlias = theAsset.vchAlias;
 		if (theAsset.vchPubData.empty())
 			theAsset.vchPubData = dbAsset.vchPubData;
 		theAsset.vchName = dbAsset.vchName;

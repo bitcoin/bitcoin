@@ -546,6 +546,8 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 			errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot update this certificate. Certificate owner must sign off on this change.");
 			return true;
 		}
+		if (theCert.vchAlias.empty())
+			theCert.vchAlias = theCert.vchAlias;
 		if(theCert.vchPubData.empty())
 			theCert.vchPubData = dbCert.vchPubData;
 		if(theCert.vchTitle.empty())

@@ -138,6 +138,7 @@ public:
 		vchCert.clear();
 		sCurrencyCode.clear();
 		auctionOffer.SetNull();
+		vchAlias.clear();
 	}
 
  	ADD_SERIALIZE_METHODS;
