@@ -343,12 +343,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		LogPrintf("*** ASSET %d %d %s %s\n", nHeight,
 			chainActive.Tip()->nHeight, tx.GetHash().ToString().c_str(),
 			fJustCheck ? "JUSTCHECK" : "BLOCK");
-    // Make sure asset outputs are not spent by a regular transaction, or the asset would be lost
-	if (tx.nVersion != SYSCOIN_TX_VERSION) 
-	{
-		errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2000 - " + _("Non-Syscoin transaction found");
-		return true;
-	}
+
 	// unserialize asset from txn, check for valid
 	CAsset theAsset;
 	vector<unsigned char> vchData;

@@ -322,12 +322,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	
 	int prevOp = 0;
 	vector<vector<unsigned char> > vvchPrevArgs;
-	// Make sure alias outputs are not spent by a regular transaction, or the alias would be lost
-	if (tx.nVersion != SYSCOIN_TX_VERSION) 
-	{
-		errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5000 - " + _("Non-Syscoin transaction found");
-		return true;
-	}
+
 	// unserialize alias from txn, check for valid
 	CAliasIndex theAlias;
 	vector<unsigned char> vchData;

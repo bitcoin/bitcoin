@@ -546,12 +546,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 			chainActive.Tip()->nHeight, tx.GetHash().ToString().c_str(),
 			fJustCheck ? "JUSTCHECK" : "BLOCK");
 
-    // Make sure escrow outputs are not spent by a regular transaction, or the escrow would be lost
-    if (tx.nVersion != SYSCOIN_TX_VERSION)
-	{
-		errorMessage = "SYSCOIN_ESCROW_MESSAGE_ERROR: ERRCODE: 4000 - " + _("Non-Syscoin transaction found");
-		return true;
-	}
+
 	 // unserialize escrow UniValue from txn, check for valid
     CEscrow theEscrow, dbEscrow;
 	vector<unsigned char> vchData;

@@ -332,12 +332,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR ERRCODE: 1000 - " + _("Cannot unserialize data inside of this transaction relating to an offer");
 		return true;
 	}
-	// Make sure offer outputs are not spent by a regular transaction, or the offer would be lost
-	if (tx.nVersion != SYSCOIN_TX_VERSION)
-	{
-		errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1001 - " + _("Non-Syscoin transaction found");
-		return true;
-	}
+
 	if(fJustCheck)
 	{
 		if(vvchArgs.size() != 1)

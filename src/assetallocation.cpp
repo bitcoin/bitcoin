@@ -273,12 +273,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 		LogPrintf("*** ASSET ALLOCATION %d %d %s %s\n", nHeight,
 			chainActive.Tip()->nHeight, tx.GetHash().ToString().c_str(),
 			fJustCheck ? "JUSTCHECK" : "BLOCK");
-    // Make sure assetallocation outputs are not spent by a regular transaction, or the assetallocation would be lost
-	if (tx.nVersion != SYSCOIN_TX_VERSION) 
-	{
-		errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2000 - " + _("Non-Syscoin transaction found");
-		return true;
-	}
+
 	// unserialize assetallocation from txn, check for valid
 	CAssetAllocation theAssetAllocation;
 	vector<unsigned char> vchData;
