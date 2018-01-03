@@ -595,7 +595,8 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Block height of service request cannot be lower than stored service block height.");
 				return true;
 			}
-			nLockStatus = LOCK_NOCONFLICT_UNCONFIRMED_STATE;
+			if (fJustCheck)
+				nLockStatus = LOCK_NOCONFLICT_UNCONFIRMED_STATE;
 		}
 	}
 	if (op == OP_OFFER_UPDATE) {

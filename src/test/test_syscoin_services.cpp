@@ -710,7 +710,6 @@ string AliasTransfer(const string& node, const string& aliasname, const string& 
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "encryption_publickey").get_str() , encryptionkey);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "encryption_privatekey").get_str() , encryptionprivkey);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "address").get_str() , aliasAddress.ToString());
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "lock_status").get_int(), LOCK_NOCONFLICT_CONFIRMED_STATE);
 
 	// check xferred right person and data changed
 	BOOST_CHECK_NO_THROW(r = CallRPC(tonode, "aliasbalance " + aliasname));

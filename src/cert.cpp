@@ -549,7 +549,8 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Block height of service request cannot be lower than stored service block height.");
 				return true;
 			}
-			nLockStatus = LOCK_NOCONFLICT_UNCONFIRMED_STATE;
+			if (fJustCheck)
+				nLockStatus = LOCK_NOCONFLICT_UNCONFIRMED_STATE;
 		}
 	}
 	if(op != OP_CERT_ACTIVATE) 
