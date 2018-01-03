@@ -325,7 +325,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 	string user3 = "";
 	string strResponseEnglish = "";
 	string strResponse = GetSyscoinTransactionDescription(op, strResponseEnglish, ASSETALLOCATION);
-	int nLockStatus = NOLOCK_UNCONFIRMED_STATE;
+	char nLockStatus = NOLOCK_UNCONFIRMED_STATE;
 	if (!fJustCheck)
 		nLockStatus = NOLOCK_CONFIRMED_STATE;
 	CAssetAllocation dbAssetAllocation;

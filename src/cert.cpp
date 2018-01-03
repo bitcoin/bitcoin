@@ -462,7 +462,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 	}
 	string strResponseEnglish = "";
 	string strResponse = GetSyscoinTransactionDescription(op, strResponseEnglish, CERT);
-	int nLockStatus = NOLOCK_UNCONFIRMED_STATE;
+	char nLockStatus = NOLOCK_UNCONFIRMED_STATE;
 	if(!fJustCheck)
 		nLockStatus = NOLOCK_CONFIRMED_STATE;
 	// if not an certnew, load the cert data from the DB

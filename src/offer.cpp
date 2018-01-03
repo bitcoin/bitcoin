@@ -508,7 +508,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	}
 	string strResponseEnglish = "";
 	string strResponse = GetSyscoinTransactionDescription(op, strResponseEnglish, OFFER);
-	int nLockStatus = NOLOCK_UNCONFIRMED_STATE;
+	char nLockStatus = NOLOCK_UNCONFIRMED_STATE;
 	if (!fJustCheck)
 		nLockStatus = NOLOCK_CONFIRMED_STATE;
 	COffer dbOffer;

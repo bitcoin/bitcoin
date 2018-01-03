@@ -522,7 +522,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	string user3 = "";
 	if (!theAlias.vchAddress.empty())
 		user2 = EncodeBase58(theAlias.vchAddress);
-	int nLockStatus = NOLOCK_UNCONFIRMED_STATE;
+	char nLockStatus = NOLOCK_UNCONFIRMED_STATE;
 	if (!fJustCheck)
 		nLockStatus = NOLOCK_CONFIRMED_STATE;
 	if (op == OP_ALIAS_UPDATE)
@@ -590,7 +590,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						if (fDebug)
 							LogPrintf(
 								"CONNECTED ALIAS: name=%s  op=%s  hash=%s  height=%d fJustCheck=%d POW IS\n",
-								stringFromVch(vchAlias).c_str(),
+								strName.c_str(),
 								aliasFromOp(op).c_str(),
 								tx.GetHash().ToString().c_str(), nHeight, fJustCheck ? 1 : 0);
 
@@ -782,7 +782,7 @@ theAlias = dbAlias;
 			if (fDebug)
 				LogPrintf(
 					"CONNECTED ALIAS: name=%s  op=%s  hash=%s  height=%d fJustCheck=%d\n",
-					stringFromVch(vchAlias).c_str(),
+					strName.c_str(),
 					aliasFromOp(op).c_str(),
 					tx.GetHash().ToString().c_str(), nHeight, fJustCheck ? 1 : -1);
 		}
@@ -1838,7 +1838,7 @@ bool BuildAliasIndexerTxHistoryJson(const string &user1, const string &user2, co
 	oName.push_back(Pair("lock_status", lockstatus));
 	return true;
 }
-void CAliasDB::WriteAliasIndexTxHistory(const string &user1, const string &user2, const string &user3, const uint256 &txHash, const uint64_t& nHeight, const string &type, const string &guid, const int lockstatus) {
+void CAliasDB::WriteAliasIndexTxHistory(const string &user1, const string &user2, const string &user3, const uint256 &txHash, const uint64_t& nHeight, const string &type, const string &guid, const char lockstatus) {
 	if (!aliastxhistory_collection)
 		return;
 	bson_error_t error;

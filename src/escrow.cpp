@@ -789,7 +789,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 	escrowOp = serializedEscrow.op;
 	string strResponseEnglish = "";
 	string strResponse = GetSyscoinTransactionDescription(op, strResponseEnglish, ESCROW);
-	int nLockStatus = NOLOCK_UNCONFIRMED_STATE;
+	char nLockStatus = NOLOCK_UNCONFIRMED_STATE;
 	if (!fJustCheck)
 		nLockStatus = NOLOCK_CONFIRMED_STATE;
 	if (!GetEscrow(serializedEscrow.vchEscrow, theEscrow))
