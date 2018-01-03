@@ -418,17 +418,24 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2024 - " + _("Cannot find asset related to this allocation.");
 			return true;
 		}
-		// if transfering from asset allocation or from asset
-		if (dbAssetAllocation.vchAlias != vvchAliasArgs[0] && dbAsset.vchAlias != vvchAliasArgs[0])
-		{
-			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot send this assetallocation. Asset allocation owner must sign off on this change.");
-			return true;
-		}
 		if (!(alias.nAcceptTransferFlags & ACCEPT_TRANSFER_ASSETS))
 		{
 			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("The alias you are transferring to does not accept assets");
 			return true;
 		}
+		// sending allocation to allocation
+		if (dbAssetAllocation.vchAlias == vvchAliasArgs[0]) {
+
+		}
+		// sending asset to allocation
+		else if (dbAsset.vchAlias == vvchAliasArgs[0]) {
+
+		}
+		else {
+			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot send this assetallocation. Asset allocation owner must sign off on this change.");
+			return true;
+		}
+
 		// get sender assetallocation
 		// if no custom allocations are sent with request
 			// if sender assetallocation has custom allocations, break as invalid assetsend request

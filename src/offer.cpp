@@ -492,7 +492,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			return error(errorMessage.c_str());
 		}
 	}
-	const string &user1 = stringFromVch(theOffer.vchAlias);
+	const string &user1 = stringFromVch(vvchAliasArgs[0]);
 	string user2 = "";
 	string user3 = "";
 	if (op == OP_OFFER_UPDATE) {
@@ -592,7 +592,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		}
 	}
 	if (op == OP_OFFER_UPDATE) {
-		if (dbOffer.vchAlias != theOffer.vchAlias)
+		if (dbOffer.vchAlias != vvchAliasArgs[0])
 		{
 			errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot edit this offer. Offer owner must sign off on this change.");
 			return true;
@@ -664,7 +664,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1051 - " + _("Linked offer alias not found. It may be expired");
 				return true;
 			}
-			if (theAlias.offerWhitelist.GetLinkEntryByHash(theOffer.vchAlias, entry))
+			if (theAlias.offerWhitelist.GetLinkEntryByHash(vvchAliasArgs[0], entry))
 			{
 				if (theOffer.nCommission <= -entry.nDiscountPct)
 				{
@@ -1088,9 +1088,7 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	if (!GetOffer( vchOffer, theOffer))
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1534 - " + _("Could not find an offer with this guid"));
 
-	if (!GetAlias(theOffer.vchAlias, alias))
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1535 - " + _("Could not find an alias with this name"));
-	if (vchAlias != alias.vchAlias && !GetAlias(vchAlias, linkAlias))
+	if (!GetAlias(vchAlias, alias))
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1536 - " + _("Could not find an alias with this name"));
 
 	CCert theCert;
@@ -1164,7 +1162,7 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	theOffer.paymentOptions = paymentOptionsMask;
 
 	if(!vchAlias.empty() && vchAlias != alias.vchAlias)
-		theOffer.vchAlias = linkAlias.vchAlias;
+		theOffer.vchAlias = vchAlias;
 	
 	theOffer.nQty = nQty;
 	theOffer.bPrivate = bPrivate;
