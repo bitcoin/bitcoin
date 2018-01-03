@@ -1843,18 +1843,21 @@ void CAliasDB::WriteAliasIndexTxHistory(const string &user1, const string &user2
 		return;
 	bson_error_t error;
 	bson_t *insert = NULL;
+	bson_t *selector = NULL;
 	mongoc_write_concern_t* write_concern = NULL;
 	UniValue oName(UniValue::VOBJ);
 	write_concern = mongoc_write_concern_new();
 	mongoc_write_concern_set_w(write_concern, MONGOC_WRITE_CONCERN_W_UNACKNOWLEDGED);
+	selector = BCON_NEW("_id", BCON_UTF8(txHash.GetHex().c_str()));
 	mongoc_update_flags_t update_flags;
 	update_flags = (mongoc_update_flags_t)(MONGOC_UPDATE_NO_VALIDATE | MONGOC_UPDATE_UPSERT);
 	BuildAliasIndexerTxHistoryJson(user1, user2, user3, txHash, nHeight, type, guid, lockstatus, oName);
 	insert = bson_new_from_json((unsigned char *)oName.write().c_str(), -1, &error);
-	if (!insert || !mongoc_collection_update(aliastxhistory_collection, update_flags, insert, write_concern, &error)) {
+	if (!insert || !mongoc_collection_update(aliastxhistory_collection, update_flags, selector, insert, write_concern, &error)) {
 		LogPrintf("MONGODB ALIAS TX HISTORY ERROR: %s\n", error.message);
 	}
-
+	if (selector)
+		bson_destroy(selector);
 	if (insert)
 		bson_destroy(insert);
 	if (write_concern)
