@@ -15,10 +15,10 @@ void mergeRanges(const vector<CRange>& arr, vector<CRange>& output)
 		return;
 
 	// sort the ranges in increasing order of start index
-	sort(arr, arr + arr.size(), compareRange);
+	std::sort(arr.begin(), arr.end(), compareRange);
 
 	// push the first range to stack
-	output.push(arr[0]);
+	output.push_back(arr[0]);
 
 	// Start from the next range and merge if necessary
 	for (int i = 1; i < arr.size(); i++)
@@ -50,13 +50,13 @@ void subtractRanges(const vector<CRange> &arr, const vector<CRange> &del, vector
 		return;
 
 	// sort the ranges in increasing order of start index
-	sort(arr, arr + arr.size(), compareRange);
+	std::sort(arr.begin(), arr.end(), compareRange);
 
 	// Create an empty stack of ranges
 	vector<CRange> deletions;
 
 	// sort the deletions in increasing order of start index
-	sort(del, del + del.size(), compareRange);
+	sort(del.begin(), del.end(), compareRange);
 
 	// add the deletions to the stack, the first deletion is at the top
 	for (int i = del.size() - 1; i >= 0; i--) {
@@ -118,7 +118,7 @@ void subtractRanges(const vector<CRange> &arr, const vector<CRange> &del, vector
 		// after the deletion end, pop the deletion array, and reprocess
 		// this same element again with the next deletion range    
 		if (arr[i].start < deletion.start && arr[i].end > deletion.end) {
-			Range r = { arr[i].start, deletion.start - 1 };
+			CRange r(arr[i].start, deletion.start - 1);
 			arr[i].start = deletion.end + 1;
 			output.push_back(r);
 			i--;

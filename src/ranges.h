@@ -12,6 +12,10 @@ public:
 	CRange() {
 		SetNull();
 	}
+	CRange(const unsigned int s, const unsigned int e) {
+		start = s;
+		end = e;
+	}
 	ADD_SERIALIZE_METHODS;
 
 	template <typename Stream, typename Operation>
