@@ -74,7 +74,6 @@ public:
 	uint64_t nHeight;
 	// if allocations are tracked by individual outputs
 	std::vector<std::string> listAllocations;
-	CAmount nAmount;
 	CAssetAllocation() {
 		SetNull();
 	}
@@ -91,7 +90,6 @@ public:
 		READWRITE(txHash);
 		READWRITE(VARINT(nHeight));
 		READWRITE(listAllocations);
-		READWRITE(nAmount);
 	}
 	inline friend bool operator==(const CAssetAllocation &a, const CAssetAllocation &b) {
 		return (a.vchAsset == b.vchAsset && a.vchAlias == b.vchAlias
@@ -104,14 +102,13 @@ public:
 		nHeight = b.nHeight;
 		vchAlias = b.vchAlias;
 		listAllocations = b.listAllocations;
-		nAmount = b.nAmount;
 		return *this;
 	}
 
 	inline friend bool operator!=(const CAssetAllocation &a, const CAssetAllocation &b) {
 		return !(a == b);
 	}
-	inline void SetNull() { listAllocations.clear();  nAmount = 0; vchAsset.clear(); nHeight = 0; txHash.SetNull(); vchAlias.clear(); }
+	inline void SetNull() { listAllocations.clear(); vchAsset.clear(); nHeight = 0; txHash.SetNull(); vchAlias.clear(); }
 	inline bool IsNull() const { return (vchAsset.empty()); }
 	bool UnserializeFromTx(const CTransaction &tx);
 	bool UnserializeFromData(const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash);

@@ -306,6 +306,11 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 	{
 		switch (op) {
 		case OP_ASSET_ALLOCATION_SEND:
+			if (theAssetAllocation.listAllocations.empty())
+			{
+				errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2021 - " + _("Asset allocations cannot be empty");
+				return error(errorMessage.c_str());
+			}
 			break;
 
 		default:
@@ -402,18 +407,18 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 	}
 	if (op == OP_ASSET_ALLOCATION_SEND)
 	{
-		if (fJustCheck && GetAssetAllocation(assetAllocationTuple, theAssetAllocation))
+		if (fJustCheck && !dbAssetAllocation.IsNull())
 		{
 			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2027 - " + _("Asset allocation already exists");
 			return true;
 		}
 		// check toalias
-		if (!GetAlias(theAssetAllocation.vchAlias, alias))
+		if (!GetAlias(dbAssetAllocation.vchAlias, alias))
 		{
 			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2024 - " + _("Cannot find alias you are transferring to.");
 			return true;
 		}
-		if (!GetAsset(theAssetAllocation.vchAsset, dbAsset))
+		if (!GetAsset(dbAssetAllocation.vchAsset, dbAsset))
 		{
 			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2024 - " + _("Cannot find asset related to this allocation.");
 			return true;
@@ -421,18 +426,6 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 		if (!(alias.nAcceptTransferFlags & ACCEPT_TRANSFER_ASSETS))
 		{
 			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("The alias you are transferring to does not accept assets");
-			return true;
-		}
-		// sending allocation to allocation
-		if (dbAssetAllocation.vchAlias == vvchAliasArgs[0]) {
-
-		}
-		// sending asset to allocation
-		else if (dbAsset.vchAlias == vvchAliasArgs[0]) {
-
-		}
-		else {
-			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot send this assetallocation. Asset allocation owner must sign off on this change.");
 			return true;
 		}
 
@@ -452,7 +445,35 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 				// deduct qty from sender and add to receiver
 				// commit receiver details to database using  through receiver alias/assetallocation id tuple as key
 		// commit sender details to database
-		// return
+
+		// sending allocation to allocation
+		if (dbAssetAllocation.vchAlias == vvchAliasArgs[0]) {
+			if (theAssetAllocation.listAllocations[0].n == -1) {
+				if (!dbAssetAllocation.listAllocations.empty() && dbAssetAllocation.listAllocations[0].n != -1) {
+					errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("Invalid asset send, request not sending with inputs and sender uses inputs in its allocation list");
+					return true;
+				}
+				const CAmount& nBalanceBeingSent = GetAllocationAmount(theAssetAllocation.listAllocations);
+				const CAmount& nBalanceSender = GetAllocationAmount(dbAssetAllocation.listAllocations);
+				if (nBalanceSender < nBalanceBeingSent) {
+					errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("Sender balance is insufficient");
+					return true;
+				}
+				DeductBalance(dbAssetAllocation.listAllocations, theAssetAllocation.listAllocations);
+
+				AddBalance()
+			}
+
+		}
+		// sending asset to allocation
+		else if (dbAsset.vchAlias == vvchAliasArgs[0]) {
+
+		}
+		else {
+			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot send this assetallocation. Asset allocation owner must sign off on this change.");
+			return true;
+		}
+
 	}
 	if (!dontaddtodb) {
 		if (strResponse != "") {

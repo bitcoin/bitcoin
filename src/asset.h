@@ -39,7 +39,6 @@ public:
 	std::vector<unsigned char> vchName;
 	std::vector<unsigned char> vchPubData;
 	std::vector<unsigned char> sCategory;
-	CAmount nAmount;
     CAsset() {
         SetNull();
     }
@@ -64,7 +63,6 @@ public:
 		READWRITE(vchAsset);
 		READWRITE(sCategory);
 		READWRITE(vchAlias);
-		READWRITE(nAmount);
 	}
     inline friend bool operator==(const CAsset &a, const CAsset &b) {
         return (
@@ -80,14 +78,13 @@ public:
 		vchAlias = b.vchAlias;
 		vchAsset = b.vchAsset;
 		sCategory = b.sCategory;
-		nAmount = b.nAmount;
         return *this;
     }
 
     inline friend bool operator!=(const CAsset &a, const CAsset &b) {
         return !(a == b);
     }
-	inline void SetNull() { nAmount = 0; sCategory.clear(); vchName.clear(); vchAsset.clear(); nHeight = 0; txHash.SetNull(); vchAlias.clear(); vchPubData.clear(); }
+	inline void SetNull() { sCategory.clear(); vchName.clear(); vchAsset.clear(); nHeight = 0; txHash.SetNull(); vchAlias.clear(); vchPubData.clear(); }
     inline bool IsNull() const { return (vchAsset.empty()); }
     bool UnserializeFromTx(const CTransaction &tx);
 	bool UnserializeFromData(const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash);
