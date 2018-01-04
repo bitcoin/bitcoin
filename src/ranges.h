@@ -22,7 +22,7 @@ public:
 
 	friend bool operator==(const CRange &a, const CRange &b) {
 		return (
-			&& a.start == b.start
+			a.start == b.start
 			&& a.end == b.end
 			);
 	}
