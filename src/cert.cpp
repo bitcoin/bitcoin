@@ -547,7 +547,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 			return true;
 		}
 		if (theCert.vchAlias.empty())
-			theCert.vchAlias = theCert.vchAlias;
+			theCert.vchAlias = dbCert.vchAlias;
 		if(theCert.vchPubData.empty())
 			theCert.vchPubData = dbCert.vchPubData;
 		if(theCert.vchTitle.empty())
