@@ -40,6 +40,6 @@ public:
 	bool IsNull() const { return (start == 0 && end == 0); }
 };
 bool compareRange(const CRange &i1, const CRange &i2);
-void mergeRanges(const CRange &vector<arr>);
+void mergeRanges(const vector<CRange> &arr);
 void subtractRanges(const vector<CRange> &arr, const vector<CRange> &del);
 #endif // RANGES_H
