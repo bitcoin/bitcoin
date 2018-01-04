@@ -9,6 +9,7 @@
 #include "dbwrapper.h"
 #include "feedback.h"
 #include "primitives/transaction.h"
+#include "ranges.h"
 class CWalletTx;
 class CTransaction;
 class CReserveKey;
@@ -66,14 +67,17 @@ public:
 		return (vchAsset.empty() && vchAlias.empty());
 	}
 };
+typedef std::vector<std::pair<std::string, std::vector<CRange> > > RangeInputArrayTuples;
 class CAssetAllocation {
 public:
 	std::vector<unsigned char> vchAsset;
 	std::vector<unsigned char> vchAlias;
 	uint256 txHash;
 	uint64_t nHeight;
-	// if allocations are tracked by individual outputs
-	std::vector<std::string> listAllocations;
+	// if allocations are tracked by individual inputs
+	std::vector<CRange> listAllocationInputs;
+	RangeInputArrayTuples listSendingAllocationInputs;
+	CAmount nBalance;
 	CAssetAllocation() {
 		SetNull();
 	}
@@ -89,7 +93,9 @@ public:
 		READWRITE(vchAlias);
 		READWRITE(txHash);
 		READWRITE(VARINT(nHeight));
-		READWRITE(listAllocations);
+		READWRITE(listAllocationInputs);
+		READWRITE(listSendingAllocationInputs);
+		READWRITE(nBalance);
 	}
 	inline friend bool operator==(const CAssetAllocation &a, const CAssetAllocation &b) {
 		return (a.vchAsset == b.vchAsset && a.vchAlias == b.vchAlias
@@ -101,14 +107,16 @@ public:
 		txHash = b.txHash;
 		nHeight = b.nHeight;
 		vchAlias = b.vchAlias;
-		listAllocations = b.listAllocations;
+		listAllocationInputs = b.listAllocationInputs;
+		listSendingAllocationInputs = b.listSendingAllocationInputs;
+		nBalance = b.nBalance;
 		return *this;
 	}
 
 	inline friend bool operator!=(const CAssetAllocation &a, const CAssetAllocation &b) {
 		return !(a == b);
 	}
-	inline void SetNull() { listAllocations.clear(); vchAsset.clear(); nHeight = 0; txHash.SetNull(); vchAlias.clear(); }
+	inline void SetNull() { nBalance = 0;  listSendingAllocationInputs.clear(); listAllocationInputs.clear(); vchAsset.clear(); nHeight = 0; txHash.SetNull(); vchAlias.clear(); }
 	inline bool IsNull() const { return (vchAsset.empty()); }
 	bool UnserializeFromTx(const CTransaction &tx);
 	bool UnserializeFromData(const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash);

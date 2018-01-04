@@ -447,7 +447,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 		// commit sender details to database
 
 		// sending allocation to allocation
-		if (dbAssetAllocation.vchAlias == vvchAliasArgs[0]) {
+		/*if (dbAssetAllocation.vchAlias == vvchAliasArgs[0]) {
 			if (theAssetAllocation.listAllocations[0].n == -1) {
 				if (!dbAssetAllocation.listAllocations.empty() && dbAssetAllocation.listAllocations[0].n != -1) {
 					errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("Invalid asset send, request not sending with inputs and sender uses inputs in its allocation list");
@@ -468,7 +468,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 		// sending asset to allocation
 		else if (dbAsset.vchAlias == vvchAliasArgs[0]) {
 
-		}
+		}*/
 		else {
 			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot send this assetallocation. Asset allocation owner must sign off on this change.");
 			return true;

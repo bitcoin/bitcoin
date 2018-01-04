@@ -10,6 +10,7 @@
 #include "script/script.h"
 #include "serialize.h"
 #include "primitives/transaction.h"
+#include "ranges.h"
 class CWalletTx;
 class CTransaction;
 class CReserveKey;
@@ -32,13 +33,14 @@ class CAsset {
 public:
 	std::vector<unsigned char> vchAsset;
 	std::vector<unsigned char> vchAlias;
-	// if allocations are tracked by individual outputs
-	std::vector<std::string> listAllocations;
+	// if allocations are tracked by individual inputs
+	std::vector<CRange> listAllocationInputs;
     uint256 txHash;
     uint64_t nHeight;
 	std::vector<unsigned char> vchName;
 	std::vector<unsigned char> vchPubData;
 	std::vector<unsigned char> sCategory;
+	CAmount nBalance;
     CAsset() {
         SetNull();
     }
@@ -52,6 +54,8 @@ public:
 		vchName.clear();
 		sCategory.clear();
 		vchAlias.clear();
+		listAllocationInputs.clear();
+
 	}
 	ADD_SERIALIZE_METHODS;
     template <typename Stream, typename Operation>
@@ -63,6 +67,8 @@ public:
 		READWRITE(vchAsset);
 		READWRITE(sCategory);
 		READWRITE(vchAlias);
+		READWRITE(listAllocationInputs);
+		READWRITE(nBalance);
 	}
     inline friend bool operator==(const CAsset &a, const CAsset &b) {
         return (
@@ -78,13 +84,15 @@ public:
 		vchAlias = b.vchAlias;
 		vchAsset = b.vchAsset;
 		sCategory = b.sCategory;
+		listAllocationInputs = b.listAllocationInputs;
+		nBalance = b.nBalance;
         return *this;
     }
 
     inline friend bool operator!=(const CAsset &a, const CAsset &b) {
         return !(a == b);
     }
-	inline void SetNull() { sCategory.clear(); vchName.clear(); vchAsset.clear(); nHeight = 0; txHash.SetNull(); vchAlias.clear(); vchPubData.clear(); }
+	inline void SetNull() { nBalance = 0; listAllocationInputs.clear(); sCategory.clear(); vchName.clear(); vchAsset.clear(); nHeight = 0; txHash.SetNull(); vchAlias.clear(); vchPubData.clear(); }
     inline bool IsNull() const { return (vchAsset.empty()); }
     bool UnserializeFromTx(const CTransaction &tx);
 	bool UnserializeFromData(const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash);
