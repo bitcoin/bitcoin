@@ -1135,11 +1135,11 @@ public:
     /* Generates a new HD master key (will not be activated) */
     CPubKey GenerateNewHDMasterKey();
     
-    /* Set the current HD master key (will reset the chain child index counters)
-       Sets the master key's version based on the current wallet version (so the
+    /* Set the current HD seed key (will reset the chain child index counters)
+       Sets the hd chains version based on the current wallet version (so the
        caller must ensure the current wallet version is correct before calling
        this function). */
-    bool SetHDMasterKey(const CPubKey& key);
+    bool SetHDSeedKey(const CPubKey& key);
 
     /**
      * Blocks until the wallet state is up-to-date to /at least/ the current
