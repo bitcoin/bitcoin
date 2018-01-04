@@ -1451,8 +1451,8 @@ CPubKey CWallet::GenerateNewHDSeedKey()
     CPubKey pubkey = key.GetPubKey();
     assert(key.VerifyPubKey(pubkey));
 
-    // set the hd keypath to "m" -> Seed, refers the hdSeedKeyID to itself
-    metadata.hdKeypath     = "m";
+    // set the hd keypath to "s" -> Seed, refers the hdSeedKeyID to itself
+    metadata.hdKeypath     = "s";
     metadata.hdSeedKeyID = pubkey.GetID();
 
     {
