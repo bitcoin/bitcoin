@@ -17,7 +17,7 @@ don't have test cases for.
 
 #### Style guidelines
 
-- Where possible, try to adhere to [PEP-8 guidelines]([https://www.python.org/dev/peps/pep-0008/)
+- Where possible, try to adhere to [PEP-8 guidelines](https://www.python.org/dev/peps/pep-0008/)
 - Use a python linter like flake8 before submitting PRs to catch common style
   nits (eg trailing whitespace, unused imports, etc)
 - Avoid wildcard imports where possible
