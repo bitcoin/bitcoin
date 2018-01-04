@@ -678,7 +678,7 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
 
         // if we are using HD, replace the HD seed key with a new one
         if (IsHDEnabled()) {
-            if (!SetHDSeedKey(GenerateNewHDMasterKey())) {
+            if (!SetHDSeedKey(GenerateNewHDSeedKey())) {
                 return false;
             }
         }
@@ -1439,7 +1439,7 @@ CAmount CWallet::GetChange(const CTransaction& tx) const
     return nChange;
 }
 
-CPubKey CWallet::GenerateNewHDMasterKey()
+CPubKey CWallet::GenerateNewHDSeedKey()
 {
     CKey key;
     key.MakeNewKey(true);
@@ -1451,7 +1451,7 @@ CPubKey CWallet::GenerateNewHDMasterKey()
     CPubKey pubkey = key.GetPubKey();
     assert(key.VerifyPubKey(pubkey));
 
-    // set the hd keypath to "m" -> Master, refers the masterkeyid to itself
+    // set the hd keypath to "m" -> Seed, refers the hdSeedKeyID to itself
     metadata.hdKeypath     = "m";
     metadata.hdSeedKeyID = pubkey.GetID();
 
@@ -3986,7 +3986,7 @@ CWallet* CWallet::CreateWalletFromFile(const std::string walletFile)
         walletInstance->SetMinVersion(FEATURE_NO_DEFAULT_KEY);
 
         // generate a new HD seed key
-        CPubKey masterPubKey = walletInstance->GenerateNewHDMasterKey();
+        CPubKey masterPubKey = walletInstance->GenerateNewHDSeedKey();
         if (!walletInstance->SetHDSeedKey(masterPubKey))
             throw std::runtime_error(std::string(__func__) + ": Storing HD seed key failed");
 

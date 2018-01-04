@@ -1132,8 +1132,8 @@ public:
     /* Returns true if HD is enabled */
     bool IsHDEnabled() const;
 
-    /* Generates a new HD master key (will not be activated) */
-    CPubKey GenerateNewHDMasterKey();
+    /* Generates a new HD seed key (will not be activated) */
+    CPubKey GenerateNewHDSeedKey();
     
     /* Set the current HD seed key (will reset the chain child index counters)
        Sets the hd chains version based on the current wallet version (so the
