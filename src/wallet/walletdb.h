@@ -62,7 +62,7 @@ class CHDChain
 public:
     uint32_t nExternalChainCounter;
     uint32_t nInternalChainCounter;
-    CKeyID masterKeyID; //!< master key hash160
+    CKeyID seedKeyID; //!< seed key hash160
 
     static const int VERSION_HD_BASE        = 1;
     static const int VERSION_HD_CHAIN_SPLIT = 2;
@@ -76,7 +76,7 @@ public:
     {
         READWRITE(this->nVersion);
         READWRITE(nExternalChainCounter);
-        READWRITE(masterKeyID);
+        READWRITE(seedKeyID);
         if (this->nVersion >= VERSION_HD_CHAIN_SPLIT)
             READWRITE(nInternalChainCounter);
     }
@@ -86,7 +86,7 @@ public:
         nVersion = CHDChain::CURRENT_VERSION;
         nExternalChainCounter = 0;
         nInternalChainCounter = 0;
-        masterKeyID.SetNull();
+        seedKeyID.SetNull();
     }
 };
 

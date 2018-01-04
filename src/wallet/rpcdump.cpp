@@ -734,11 +734,11 @@ UniValue dumpwallet(const JSONRPCRequest& request)
     file << "\n";
 
     // add the base58check encoded extended master if the wallet uses HD
-    CKeyID masterKeyID = pwallet->GetHDChain().masterKeyID;
-    if (!masterKeyID.IsNull())
+    CKeyID seedKeyID = pwallet->GetHDChain().seedKeyID;
+    if (!seedKeyID.IsNull())
     {
         CKey key;
-        if (pwallet->GetKey(masterKeyID, key)) {
+        if (pwallet->GetKey(seedKeyID, key)) {
             CExtKey masterKey;
             masterKey.SetSeed(key.begin(), key.size());
 
@@ -758,7 +758,7 @@ UniValue dumpwallet(const JSONRPCRequest& request)
             file << strprintf("%s %s ", CBitcoinSecret(key).ToString(), strTime);
             if (GetWalletAddressesForKey(pwallet, keyid, strAddr, strLabel)) {
                file << strprintf("label=%s", strLabel);
-            } else if (keyid == masterKeyID) {
+            } else if (keyid == seedKeyID) {
                 file << "hdmaster=1";
             } else if (mapKeyPool.count(keyid)) {
                 file << "reserve=1";
