@@ -740,7 +740,7 @@ UniValue dumpwallet(const JSONRPCRequest& request)
         CKey key;
         if (pwallet->GetKey(masterKeyID, key)) {
             CExtKey masterKey;
-            masterKey.SetMaster(key.begin(), key.size());
+            masterKey.SetSeed(key.begin(), key.size());
 
             CBitcoinExtKey b58extkey;
             b58extkey.SetKey(masterKey);

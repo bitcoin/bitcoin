@@ -190,7 +190,7 @@ void CWallet::DeriveNewChildKey(CWalletDB &walletdb, CKeyMetadata& metadata, CKe
     if (!GetKey(hdChain.masterKeyID, key))
         throw std::runtime_error(std::string(__func__) + ": Master key not found");
 
-    masterKey.SetMaster(key.begin(), key.size());
+    masterKey.SetSeed(key.begin(), key.size());
 
     // derive m/0'
     // use hardened derivation (child keys >= 0x80000000 are hardened after bip32)
