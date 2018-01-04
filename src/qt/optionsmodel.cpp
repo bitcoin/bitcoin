@@ -56,6 +56,8 @@ void OptionsModel::Init(bool resetSettings)
     // These are Qt-only settings:
 
     // Window
+#ifdef Q_OS_WIN
+    // Tray icon functionality is only available on Windows.
     if (!settings.contains("fHideTrayIcon"))
         settings.setValue("fHideTrayIcon", false);
     fHideTrayIcon = settings.value("fHideTrayIcon").toBool();
@@ -64,6 +66,13 @@ void OptionsModel::Init(bool resetSettings)
     if (!settings.contains("fMinimizeToTray"))
         settings.setValue("fMinimizeToTray", false);
     fMinimizeToTray = settings.value("fMinimizeToTray").toBool() && !fHideTrayIcon;
+#else
+    // On systems without tray icon functionality we always hide the tray icon
+    // and we never minimize to tray. Therefore, these settings are not read
+    // from the configuration file/registry.
+    fHideTrayIcon = true;
+    fMinimizeToTray = false;
+#endif
 
     if (!settings.contains("fMinimizeOnClose"))
         settings.setValue("fMinimizeOnClose", false);
