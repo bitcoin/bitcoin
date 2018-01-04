@@ -21,7 +21,7 @@ void mergeRanges(vector<CRange>& arr, vector<CRange>& output)
 	output.push_back(arr[0]);
 
 	// Start from the next range and merge if necessary
-	for (int i = 1; i < arr.size(); i++)
+	for (unsigned int i = 1; i < arr.size(); i++)
 	{
 		// get range from stack top
 		CRange top = output.front();
@@ -65,7 +65,7 @@ void subtractRanges(vector<CRange> &arr, vector<CRange> &del, vector<CRange> &ou
 
 	// Start from the beginning of the main range array from which we'll
 	// delete another array of ranges
-	for (int i = 0; i < arr.size(); i++)
+	for (unsigned int i = 0; i < arr.size(); i++)
 	{
 		// find the first deletion range that comes on or after
 		// the current range element in the main array

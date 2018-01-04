@@ -306,9 +306,9 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 	{
 		switch (op) {
 		case OP_ASSET_ALLOCATION_SEND:
-			if (theAssetAllocation.listAllocations.empty())
+			if (theAssetAllocation.listSendingAllocationInputs.empty() && theAssetAllocation.nBalance == 0)
 			{
-				errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2021 - " + _("Asset allocations cannot be empty");
+				errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2021 - " + _("Asset send must send an input or transfer balance");
 				return error(errorMessage.c_str());
 			}
 			break;
