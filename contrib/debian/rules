@@ -11,7 +11,6 @@ override_dh_auto_clean:
 	if [ -f Makefile ]; then $(MAKE) distclean; fi
 	rm -rf Makefile.in Makefile.am pgk.m4 aclocal.m4 configure src/Makefile.in src/Makefile.qt.include src/Makefile.am src/Makefile.test.include src/Makefile.qttest.include src/bitcoin-config.h.in
 
-# Yea, autogen should be run on the source archive, but I like doing git archive
 override_dh_auto_configure:
 	./autogen.sh
 	./configure --with-gui=qt5 --with-incompatible-bdb
