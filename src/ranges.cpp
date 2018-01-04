@@ -9,7 +9,7 @@ bool compareRange(const CRange &i1, const CRange &i2)
 
 // The main function that takes a set of ranges, merges
 // overlapping ranges and prints the result
-void mergeRanges(const vector<CRange>& arr, vector<CRange>& output)
+void mergeRanges(vector<CRange>& arr, vector<CRange>& output)
 {
 	if (arr.empty())
 		return;
@@ -43,7 +43,7 @@ void mergeRanges(const vector<CRange>& arr, vector<CRange>& output)
 }
 
 
-void subtractRanges(const vector<CRange> &arr, const vector<CRange> &del, vector<CRange> output)
+void subtractRanges(vector<CRange> &arr, vector<CRange> &del, vector<CRange> &output)
 {
 	// Test if the given set has at least one range
 	if (arr.empty() || del.empty())

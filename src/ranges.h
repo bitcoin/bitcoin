@@ -44,6 +44,6 @@ public:
 	bool IsNull() const { return (start == 0 && end == 0); }
 };
 bool compareRange(const CRange &i1, const CRange &i2);
-void mergeRanges(const vector<CRange> &arr);
-void subtractRanges(const vector<CRange> &arr, const vector<CRange> &del);
+void mergeRanges(vector<CRange> &arr, vector<CRange> &output);
+void subtractRanges(vector<CRange> &arr, const vector<CRange> &del, vector<CRange> &output);
 #endif // RANGES_H
