@@ -759,11 +759,11 @@ UniValue dumpwallet(const JSONRPCRequest& request)
             if (GetWalletAddressesForKey(pwallet, keyid, strAddr, strLabel)) {
                file << strprintf("label=%s", strLabel);
             } else if (keyid == seedKeyID) {
-                file << "hdmaster=1";
+                file << "hdseed=1";
             } else if (mapKeyPool.count(keyid)) {
                 file << "reserve=1";
             } else if (pwallet->mapKeyMetadata[keyid].hdKeypath == "m") {
-                file << "inactivehdmaster=1";
+                file << "inactivehdseed=1";
             } else {
                 file << "change=1";
             }

@@ -27,9 +27,9 @@ class WalletHDTest(BitcoinTestFramework):
         self.start_node(1)
         connect_nodes_bi(self.nodes, 0, 1)
 
-        # Make sure we use hd, keep masterkeyid
-        masterkeyid = self.nodes[1].getwalletinfo()['hdmasterkeyid']
-        assert_equal(len(masterkeyid), 40)
+        # Make sure we use hd, keep seedkeyid
+        seedkeyid = self.nodes[1].getwalletinfo()['hdseedkeyid']
+        assert_equal(len(seedkeyid), 40)
 
         # create an internal key
         change_addr = self.nodes[1].getrawchangeaddress()
@@ -40,7 +40,7 @@ class WalletHDTest(BitcoinTestFramework):
         non_hd_add = self.nodes[0].getnewaddress()
         self.nodes[1].importprivkey(self.nodes[0].dumpprivkey(non_hd_add))
 
-        # This should be enough to keep the master key and the non-HD key
+        # This should be enough to keep the seed key and the non-HD key
         self.nodes[1].backupwallet(tmpdir + "/hd.bak")
         #self.nodes[1].dumpwallet(tmpdir + "/hd.dump")
 
@@ -53,7 +53,7 @@ class WalletHDTest(BitcoinTestFramework):
             hd_add = self.nodes[1].getnewaddress()
             hd_info = self.nodes[1].getaddressinfo(hd_add)
             assert_equal(hd_info["hdkeypath"], "m/0'/0'/"+str(i)+"'")
-            assert_equal(hd_info["hdmasterkeyid"], masterkeyid)
+            assert_equal(hd_info["hdseedkeyid"], seedkeyid)
             self.nodes[0].sendtoaddress(hd_add, 1)
             self.nodes[0].generate(1)
         self.nodes[0].sendtoaddress(non_hd_add, 1)
@@ -82,7 +82,7 @@ class WalletHDTest(BitcoinTestFramework):
             hd_add_2 = self.nodes[1].getnewaddress()
             hd_info_2 = self.nodes[1].getaddressinfo(hd_add_2)
             assert_equal(hd_info_2["hdkeypath"], "m/0'/0'/"+str(_)+"'")
-            assert_equal(hd_info_2["hdmasterkeyid"], masterkeyid)
+            assert_equal(hd_info_2["hdseedkeyid"], seedkeyid)
         assert_equal(hd_add, hd_add_2)
         connect_nodes_bi(self.nodes, 0, 1)
         self.sync_all()
