@@ -99,7 +99,7 @@ public:
     int nVersion;
     int64_t nCreateTime; // 0 means unknown
     std::string hdKeypath; //optional HD/bip32 keypath
-    CKeyID hdMasterKeyID; //id of the HD masterkey used to derive this key
+    CKeyID hdSeedKeyID; //id of the HD seed key used to derive this key
 
     CKeyMetadata()
     {
@@ -120,7 +120,7 @@ public:
         if (this->nVersion >= VERSION_WITH_HDDATA)
         {
             READWRITE(hdKeypath);
-            READWRITE(hdMasterKeyID);
+            READWRITE(hdSeedKeyID);
         }
     }
 
@@ -129,7 +129,7 @@ public:
         nVersion = CKeyMetadata::CURRENT_VERSION;
         nCreateTime = 0;
         hdKeypath.clear();
-        hdMasterKeyID.SetNull();
+        hdSeedKeyID.SetNull();
     }
 };
 

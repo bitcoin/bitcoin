@@ -217,7 +217,7 @@ void CWallet::DeriveNewChildKey(CWalletDB &walletdb, CKeyMetadata& metadata, CKe
         }
     } while (HaveKey(childKey.key.GetPubKey().GetID()));
     secret = childKey.key;
-    metadata.hdMasterKeyID = hdChain.seedKeyID;
+    metadata.hdSeedKeyID = hdChain.seedKeyID;
     // update the chain model in the database
     if (!walletdb.WriteHDChain(hdChain))
         throw std::runtime_error(std::string(__func__) + ": Writing HD chain model failed");
@@ -1453,7 +1453,7 @@ CPubKey CWallet::GenerateNewHDMasterKey()
 
     // set the hd keypath to "m" -> Master, refers the masterkeyid to itself
     metadata.hdKeypath     = "m";
-    metadata.hdMasterKeyID = pubkey.GetID();
+    metadata.hdSeedKeyID = pubkey.GetID();
 
     {
         LOCK(cs_wallet);
