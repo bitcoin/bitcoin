@@ -449,7 +449,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	if (!fJustCheck)
 		nLockStatus = NOLOCK_CONFIRMED_STATE;
 	CAsset dbAsset;
-	if (!GetAsset(theAsset.vchAsset, dbAsset))
+	if (!GetAsset(op == OP_ASSET_SEND? theAssetAllocation.vchAsset: theAsset.vchAsset, dbAsset))
 	{
 		if (op != OP_ASSET_ACTIVATE) {
 			errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2022 - " + _("Failed to read from asset DB");
