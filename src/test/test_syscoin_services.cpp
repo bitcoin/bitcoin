@@ -1164,14 +1164,13 @@ const string OfferLink(const string& node, const string& alias, const string& gu
 	
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "offerinfo " + linkedguid));
 
-	const UniValue &txHistoryResult = AliasTxHistoryFilter(node, txid + "-" + guid);
+	const UniValue &txHistoryResult = AliasTxHistoryFilter(node, txid + "-" + linkedguid);
 	BOOST_CHECK(!txHistoryResult.empty());
 	UniValue ret;
 	BOOST_CHECK(ret.read(txHistoryResult[0].get_str()));
 	const UniValue &historyResultObj = ret.get_obj();
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "user1").get_str(), alias);
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "_id").get_str(), txid + "-" + guid);
-	BOOST_CHECK_EQUAL(find_value(historyResultObj, "guid").get_str(), linkedguid);
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "type").get_str(), "Offer Activated");
 
 	if(!newdetails.empty())
@@ -1390,7 +1389,6 @@ void OfferUpdate(const string& node, const string& aliasname, const string& offe
 	if(oldalias != aliasname)
 		BOOST_CHECK_EQUAL(find_value(historyResultObj, "user2").get_str(), aliasname);
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "_id").get_str(), txid + "-" + offerguid);
-	BOOST_CHECK_EQUAL(find_value(historyResultObj, "guid").get_str(), offerguid);
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "type").get_str(), "Offer Updated");
 
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "_id").get_str() , offerguid);
@@ -1540,7 +1538,6 @@ void EscrowFeedback(const string& node, const string& userfrom, const string& es
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "user2").get_str(), seller);
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "user3").get_str(), arbiter);
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "_id").get_str(), txid + "-" + escrowguid);
-	BOOST_CHECK_EQUAL(find_value(historyResultObj, "guid").get_str(), escrowguid);
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "type").get_str(), "Escrow Feedback");
 
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "rating").get_int() , atoi(rating.c_str()));
@@ -1606,7 +1603,6 @@ void EscrowBid(const string& node, const string& buyeralias, const string& escro
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "user2").get_str(), selleralias);
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "user3").get_str(), arbiteralias);
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "_id").get_str(), txid + "-" + escrowguid);
-	BOOST_CHECK_EQUAL(find_value(historyResultObj, "guid").get_str(), escrowguid);
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "type").get_str(), "Escrow Bid");
 
 	int qty = find_value(r.get_obj(), "quantity").get_int();
