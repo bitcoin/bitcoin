@@ -421,6 +421,11 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2017 - " + _("Must use a asset category");
 				return true;
 			}
+			if (theAsset.nBalance < 0)
+			{
+				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2015 - " + _("Balance must be greator than or equal to 0");
+				return error(errorMessage.c_str());
+			}
 			break;
 
 		case OP_ASSET_TRANSFER:
@@ -525,12 +530,12 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						paliasdb->UpdateAliasIndexTxHistoryLockStatus(tx.GetHash().GetHex() + "-" + stringFromVch(theAsset.vchAsset), nLockStatus);
 					}
 				}
-				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Block height of service request must be less than or equal to the stored service block height.");
+				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Block height of service request must be less than or equal to the stored service block height");
 				return true;
 			}
 			if (dbAsset.nHeight > nHeight)
 			{
-				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Block height of service request cannot be lower than stored service block height.");
+				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Block height of service request cannot be lower than stored service block height");
 				return true;
 			}
 			if (fJustCheck)
@@ -541,7 +546,15 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	{
 		if (dbAsset.vchAlias != vvchAliasArgs[0])
 		{
-			errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot edit this asset. Asset owner must sign off on this change.");
+			errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot edit this asset. Asset owner must sign off on this change");
+			return true;
+		}
+	}
+	if (op == OP_ASSET_UPDATE) {
+		theAsset.nBalance = dbAsset.nBalance + theAsset.nBalance;
+		if(theAsset.nTotalSupply > 0 && theAsset.nBalance > theAsset.nTotalSupply)
+		{
+			errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Balance cannot exceed total supply");
 			return true;
 		}
 	}
@@ -554,13 +567,15 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		theAsset.vchName = dbAsset.vchName;
 		if (theAsset.sCategory.empty())
 			theAsset.sCategory = dbAsset.sCategory;
-		theAsset.nBalance = dbAsset.nBalance;
+
+		theAsset.nTotalSupply = dbAsset.nTotalSupply;
+
 		if (op == OP_ASSET_TRANSFER)
 		{
 			// check toalias
 			if (!GetAlias(theAsset.vchAlias, alias))
 			{
-				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2024 - " + _("Cannot find alias you are transferring to.");
+				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2024 - " + _("Cannot find alias you are transferring to");
 				return true;
 			}
 			if (!(alias.nAcceptTransferFlags & ACCEPT_TRANSFER_ASSETS))
@@ -672,9 +687,9 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 }
 
 UniValue assetnew(const UniValue& params, bool fHelp) {
-    if (fHelp || params.size() != 5)
+    if (fHelp || params.size() != 7)
         throw runtime_error(
-			"assetnew [alias] [name] [public] [category=assets] [witness]\n"
+			"assetnew [alias] [name] [public] [category=assets] [balance] [total_supply] [witness]\n"
 						"<alias> An alias you own.\n"
 						"<name> name, 20 characters max.\n"
                         "<public> public data, 256 characters max.\n"
@@ -687,7 +702,9 @@ UniValue assetnew(const UniValue& params, bool fHelp) {
 	string strCategory = "assets";
 	strCategory = params[3].get_str();
 	vector<unsigned char> vchWitness;
-	vchWitness = vchFromValue(params[4]);
+	CAmount nBalance = AmountFromValue(params[4]);
+	CAmount nTotalSupply = AmountFromValue(params[5]);
+	vchWitness = vchFromValue(params[6]);
 	// check for alias existence in DB
 	CAliasIndex theAlias;
 
@@ -715,6 +732,8 @@ UniValue assetnew(const UniValue& params, bool fHelp) {
 	newAsset.vchName = vchName;
 	newAsset.vchPubData = vchPubData;
 	newAsset.vchAlias = vchAlias;
+	newAsset.nBalance = nBalance;
+	newAsset.nTotalSupply = nTotalSupply;
 
 	vector<unsigned char> data;
 	newAsset.Serialize(data);
@@ -756,9 +775,9 @@ UniValue assetnew(const UniValue& params, bool fHelp) {
 }
 
 UniValue assetupdate(const UniValue& params, bool fHelp) {
-    if (fHelp || params.size() != 4)
+    if (fHelp || params.size() != 5)
         throw runtime_error(
-			"assetupdate [guid] [public] [category=assets] [witness]\n"
+			"assetupdate [guid] [public] [category=assets] [balance] [witness]\n"
 						"Perform an update on an asset you control.\n"
 						"<guid> Asset guidkey.\n"
                         "<public> Public data, 256 characters max.\n"                
@@ -772,9 +791,9 @@ UniValue assetupdate(const UniValue& params, bool fHelp) {
 	string strCategory = "";
 	strPubData = params[1].get_str();
 	strCategory = params[2].get_str();
-
+	CAmount nBalance = AmountFromValue(params[3]);
 	vector<unsigned char> vchWitness;
-	vchWitness = vchFromValue(params[3]);
+	vchWitness = vchFromValue(params[4]);
     // this is a syscoind txn
     CWalletTx wtx;
     CScript scriptPubKeyOrig;
@@ -800,6 +819,8 @@ UniValue assetupdate(const UniValue& params, bool fHelp) {
 		theAsset.vchPubData = vchFromString(strPubData);
 	if(strCategory != stringFromVch(theAsset.sCategory))
 		theAsset.sCategory = vchFromString(strCategory);
+
+	newAsset.nBalance = nBalance;
 
 	vector<unsigned char> data;
 	theAsset.Serialize(data);
