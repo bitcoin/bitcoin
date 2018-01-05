@@ -1,7 +1,7 @@
 RPM Spec File Notes
 -------------------
 
-The RPM spec file provided here is for Bitcoin-Core 0.12.0 and builds on CentOS
+The RPM spec file provided here is for Raven-Core 0.12.0 and builds on CentOS
 7 with either the CentOS provided OpenSSL library or with LibreSSL as packaged
 at [LibreLAMP.com](https://librelamp.com/). It should hopefully not be too
 difficult to port the RPM spec file to most RPM based Linux distributions.
@@ -15,15 +15,15 @@ It is considered good form for all sources to reference a URL where the source
 can be downloaded.
 
 Sources 0-9 should be reserved for source code tarballs. `Source0` should
-reference the release tarball available from https://bitcoin.org/bin/ and
+reference the release tarball available from https://raven.org/bin/ and
 `Source1` should reference the BerkeleyDB source.
 
 Sources 10-99 are for source files that are maintained in the
-[Bitcoin git repository](https://github.com/bitcoin/bitcoin) but are not part of
+[Raven git repository](https://github.com/RavenProject/Ravencoin) but are not part of
 the release tarball. Most of these will reside in the `contrib` sub-directory.
 
 Sources 10-19 should be reserved for miscellaneous configuration files.
-Currently only `Source10` is used, for the example `bitcoin.conf` file.
+Currently only `Source10` is used, for the example `raven.conf` file.
 
 Sources 20-29 should be reserved for man pages. Currently only `Source20`
 through `Source23` are used.
@@ -34,21 +34,21 @@ release, the full URL specified in the RPM spec file will not work. You can get
 them from the git repository where you retrieved this file.
 
 Sources 100+ are for files that are not source tarballs and are not maintained
-in the bitcoin git repository. At present only an SVG version of the Bitcoin
+in the raven git repository. At present only an SVG version of the Raven
 icon is used.
 
 ## Patches
 
 In general, patches should be avoided. When a packager feels a patch is
-necessary, the packager should bring the problem to the attention of the bitcoin
+necessary, the packager should bring the problem to the attention of the raven
 developers so that an official fix to the issue can make it into the next
 release.
 
-### Patch0 bitcoin-0.12.0-libressl.patch
+### Patch0 raven-0.12.0-libressl.patch
 
 This patch is only needed if building against LibreSSL. LibreSSL is not the
 standard TLS library on most Linux distributions. The patch will likely not be
-needed when 0.12.1 is released, a proper fix is already in the Bitcoin git
+needed when 0.12.1 is released, a proper fix is already in the Raven git
 master branch.
 
 ## BuildRequires
@@ -62,7 +62,7 @@ most likely to be the case with the Qt packages.
 
 The `build-unix.md` file recommends building against BerkeleyDB 4.8.30. Even if
 that is the version your Linux distribution ships with, it probably is a good
-idea to build Bitcoin Core against a static version of that library compiled
+idea to build Raven Core against a static version of that library compiled
 according to the instructions in the `build-unix.md` file so that any changes
 the distribution may make in the future will not result in a problem for users.
 
@@ -91,7 +91,7 @@ assigned to them in the `touch` command that specifies the timestamp.
 
 ## SVG, PNG, and XPM Icons
 
-The `bitcoin.svg` file is from the source listed as `Source100`. It is used as
+The `raven.svg` file is from the source listed as `Source100`. It is used as
 the source for the PNG and XPM files. The generated PNG and XPM files are given
 the same timestamp as the source SVG file as a means of indicating they are
 derived from it.
@@ -99,7 +99,7 @@ derived from it.
 ## Systemd
 
 This spec file assumes the target distribution uses systemd. That really only
-matters for the `bitcoin-server` package. At this point, most RPM based
+matters for the `raven-server` package. At this point, most RPM based
 distributions that still receive vendor updates do in fact use systemd.
 
 The files to control the service are created in the RPM spec file itself using
@@ -112,7 +112,7 @@ command that specifies the timestamp.
 
 ## SELinux
 
-The `bitcoin-server` package should have SELinux support. How to properly do
+The `raven-server` package should have SELinux support. How to properly do
 that *may* vary by distribution and version of distribution.
 
 The SELinux stuff in this RPM spec file *should* be correct for CentOS, RHEL,
@@ -137,7 +137,7 @@ want the OpenSSL development files.
 LibreSSL (and some newer builds of OpenSSL) do not have support for SSLv3. This
 can cause issues with the Boost package if the Boost package has not been
 patched accordingly. On those distributions, you will either need to build
-Bitcoin-Core against OpenSSL or use a patched version of Boost in the build
+Raven-Core against OpenSSL or use a patched version of Boost in the build
 system.
 
 As SSLv3 is no longer safe, distributions that have not patched Boost to work
@@ -156,8 +156,8 @@ developed on (CentOS 7).
 ## Legacy Credit
 
 This RPM spec file is largely based upon the work of Michael Hampton at
-[Ringing Liberty](https://www.ringingliberty.com/bitcoin/). He has been
-packaging Bitcoin for Fedora at least since 2012.
+[Ringing Liberty](https://www.ringingliberty.com/raven/). He has been
+packaging Raven for Fedora at least since 2012.
 
 Most of the differences between his packaging and this package are stylistic in
 nature. The major differences:
@@ -174,9 +174,9 @@ academic.
 specifying a build without the Qt GUI, or specifying which version of the Qt
 libraries to use.
 
-4. I renamed the `bitcoin` package that contains the Qt GUI to `bitcoin-core` as
+4. I renamed the `raven` package that contains the Qt GUI to `raven-core` as
 that appears to be how the general population refers to it, in contrast to
-`bitcoin-xt` or `bitcoin-classic`. I wanted to make sure the general population
+`raven-xt` or `raven-classic`. I wanted to make sure the general population
 knows what they are getting when installing the GUI package.
 
 As far as minor differences, I generally prefer to assign the file permissions

@@ -1,16 +1,16 @@
 #!/usr/bin/make -f
 # -*- mode: makefile; coding: utf-8 -*-
 
-#DEB_MAKE_CHECK_TARGET = test_bitcoin
-#build/bitcoind::
-#	$(if $(filter nocheck,$(DEB_BUILD_OPTIONS)),,src/test_bitcoin)
+#DEB_MAKE_CHECK_TARGET = test_raven
+#build/ravend::
+#	$(if $(filter nocheck,$(DEB_BUILD_OPTIONS)),,src/test_raven)
 
 %:
 	dh --with bash-completion $@
 
 override_dh_auto_clean:
 	if [ -f Makefile ]; then $(MAKE) distclean; fi
-	rm -rf Makefile.in aclocal.m4 configure src/Makefile.in src/bitcoin-config.h.in src/build-aux src/qt/Makefile.in src/qt/test/Makefile.in src/test/Makefile.in
+	rm -rf Makefile.in aclocal.m4 configure src/Makefile.in src/raven-config.h.in src/build-aux src/qt/Makefile.in src/qt/test/Makefile.in src/test/Makefile.in
 
 QT=$(shell dpkg-vendor --derives-from Ubuntu && echo qt4 || echo qt5)
 

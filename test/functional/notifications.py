@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 # Copyright (c) 2014-2016 The Bitcoin Core developers
+# Copyright (c) 2017 The Raven Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the -alertnotify, -blocknotify and -walletnotify options."""
 import os
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import RavenTestFramework
 from test_framework.util import assert_equal, wait_until, connect_nodes_bi
 
-class NotificationsTest(BitcoinTestFramework):
+class NotificationsTest(RavenTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
         self.setup_clean_chain = True
@@ -66,7 +67,7 @@ class NotificationsTest(BitcoinTestFramework):
         self.nodes[1].generate(41)
         self.sync_all()
 
-        # Give bitcoind 10 seconds to write the alert notification
+        # Give ravend 10 seconds to write the alert notification
         wait_until(lambda: os.path.isfile(self.alert_filename) and os.path.getsize(self.alert_filename), timeout=10)
 
         with open(self.alert_filename, 'r', encoding='utf8') as f:

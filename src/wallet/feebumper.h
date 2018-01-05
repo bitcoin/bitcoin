@@ -1,9 +1,10 @@
 // Copyright (c) 2017 The Bitcoin Core developers
+// Copyright (c) 2017 The Raven Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_WALLET_FEEBUMPER_H
-#define BITCOIN_WALLET_FEEBUMPER_H
+#ifndef RAVEN_WALLET_FEEBUMPER_H
+#define RAVEN_WALLET_FEEBUMPER_H
 
 #include <primitives/transaction.h>
 
@@ -58,4 +59,4 @@ private:
     CAmount nNewFee;
 };
 
-#endif // BITCOIN_WALLET_FEEBUMPER_H
+#endif // RAVEN_WALLET_FEEBUMPER_H

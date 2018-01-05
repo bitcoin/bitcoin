@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 # Copyright (c) 2014-2016 The Bitcoin Core developers
+# Copyright (c) 2017 The Raven Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test BIP68 implementation."""
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import RavenTestFramework
 from test_framework.util import *
 from test_framework.blocktools import *
 
@@ -16,7 +17,7 @@ SEQUENCE_LOCKTIME_MASK = 0x0000ffff
 # RPC error for non-BIP68 final transactions
 NOT_FINAL_ERROR = "64: non-BIP68-final"
 
-class BIP68Test(BitcoinTestFramework):
+class BIP68Test(RavenTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
         self.extra_args = [[], ["-acceptnonstdtxn=0"]]
@@ -26,21 +27,6 @@ class BIP68Test(BitcoinTestFramework):
 
         # Generate some coins
         self.nodes[0].generate(110)
-
-        self.log.info("Running test disable flag")
-        self.test_disable_flag()
-
-        self.log.info("Running test sequence-lock-confirmed-inputs")
-        self.test_sequence_lock_confirmed_inputs()
-
-        self.log.info("Running test sequence-lock-unconfirmed-inputs")
-        self.test_sequence_lock_unconfirmed_inputs()
-
-        self.log.info("Running test BIP68 not consensus before versionbits activation")
-        self.test_bip68_not_consensus()
-
-        self.log.info("Activating BIP68 (and 112/113)")
-        self.activateCSV()
 
         self.log.info("Verifying nVersion=2 transactions are standard.")
         self.log.info("Note that nVersion=2 transactions are always standard (independent of BIP68 activation status).")
@@ -53,7 +39,7 @@ class BIP68Test(BitcoinTestFramework):
     def test_disable_flag(self):
         # Create some unconfirmed inputs
         new_addr = self.nodes[0].getnewaddress()
-        self.nodes[0].sendtoaddress(new_addr, 2) # send 2 BTC
+        self.nodes[0].sendtoaddress(new_addr, 2) # send 2 RVN
 
         utxos = self.nodes[0].listunspent(0, 0)
         assert(len(utxos) > 0)

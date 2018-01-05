@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # Copyright (c) 2014-2016 The Bitcoin Core developers
+# Copyright (c) 2017 The Raven Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test mining RPCs
@@ -14,7 +15,7 @@ from decimal import Decimal
 
 from test_framework.blocktools import create_coinbase
 from test_framework.mininode import CBlock
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import RavenTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error
 
 def b2x(b):
@@ -26,7 +27,7 @@ def assert_template(node, block, expect, rehash=True):
     rsp = node.getblocktemplate({'data': b2x(block.serialize()), 'mode': 'proposal'})
     assert_equal(rsp, expect)
 
-class MiningTest(BitcoinTestFramework):
+class MiningTest(RavenTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
         self.setup_clean_chain = False
@@ -41,7 +42,7 @@ class MiningTest(BitcoinTestFramework):
         assert_equal(mining_info['currentblocktx'], 0)
         assert_equal(mining_info['currentblockweight'], 0)
         assert_equal(mining_info['difficulty'], Decimal('4.656542373906925E-10'))
-        assert_equal(mining_info['networkhashps'], Decimal('0.003333333333333334'))
+        assert_equal(mining_info['networkhashps'], Decimal('0.03333333333333333'))
         assert_equal(mining_info['pooledtx'], 0)
 
         # Mine a block to leave initial block download

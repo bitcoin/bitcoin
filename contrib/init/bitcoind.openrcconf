@@ -1,33 +1,33 @@
-# /etc/conf.d/bitcoind: config file for /etc/init.d/bitcoind
+# /etc/conf.d/ravend: config file for /etc/init.d/ravend
 
 # Config file location
-#BITCOIND_CONFIGFILE="/etc/bitcoin/bitcoin.conf"
+#RAVEND_CONFIGFILE="/etc/raven/raven.conf"
 
-# What directory to write pidfile to?  (created and owned by $BITCOIND_USER)
-#BITCOIND_PIDDIR="/var/run/bitcoind"
+# What directory to write pidfile to?  (created and owned by $RAVEND_USER)
+#RAVEND_PIDDIR="/var/run/ravend"
 
 # What filename to give the pidfile
-#BITCOIND_PIDFILE="${BITCOIND_PIDDIR}/bitcoind.pid"
+#RAVEND_PIDFILE="${RAVEND_PIDDIR}/ravend.pid"
 
-# Where to write bitcoind data (be mindful that the blockchain is large)
-#BITCOIND_DATADIR="/var/lib/bitcoind"
+# Where to write ravend data (be mindful that the blockchain is large)
+#RAVEND_DATADIR="/var/lib/ravend"
 
-# User and group to own bitcoind process
-#BITCOIND_USER="bitcoin"
-#BITCOIND_GROUP="bitcoin"
+# User and group to own ravend process
+#RAVEND_USER="raven"
+#RAVEND_GROUP="raven"
 
-# Path to bitcoind executable
-#BITCOIND_BIN="/usr/bin/bitcoind"
+# Path to ravend executable
+#RAVEND_BIN="/usr/bin/ravend"
 
-# Nice value to run bitcoind under
-#BITCOIND_NICE=0
+# Nice value to run ravend under
+#RAVEND_NICE=0
 
 # Additional options (avoid -conf and -datadir, use flags above)
-#BITCOIND_OPTS=""
+#RAVEND_OPTS=""
 
-# The timeout in seconds OpenRC will wait for bitcoind to terminate
+# The timeout in seconds OpenRC will wait for ravend to terminate
 # after a SIGTERM has been raised.
 # Note that this will be mapped as argument to start-stop-daemon's
 # '--retry' option, which means you can specify a retry schedule
 # here. For more information see man 8 start-stop-daemon.
-BITCOIND_SIGTERM_TIMEOUT=60
+RAVEND_SIGTERM_TIMEOUT=60

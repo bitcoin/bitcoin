@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # Copyright (c) 2017 The Bitcoin Core developers
+# Copyright (c) 2017 The Raven Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test various fingerprinting protections.
@@ -22,13 +23,13 @@ from test_framework.mininode import (
     msg_getheaders,
     wait_until,
 )
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import RavenTestFramework
 from test_framework.util import (
     assert_equal,
     p2p_port,
 )
 
-class P2PFingerprintTest(BitcoinTestFramework):
+class P2PFingerprintTest(RavenTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
@@ -87,7 +88,7 @@ class P2PFingerprintTest(BitcoinTestFramework):
         node0.wait_for_verack()
 
         # Set node time to 60 days ago
-        self.nodes[0].setmocktime(int(time.time()) - 60 * 24 * 60 * 60)
+        self.nodes[0].setmocktime(int(time.time()) - 60 * 24 * 60 * 6)
 
         # Generating a chain of 10 blocks
         block_hashes = self.nodes[0].generate(nblocks=10)

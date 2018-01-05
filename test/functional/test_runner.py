@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # Copyright (c) 2014-2016 The Bitcoin Core developers
+# Copyright (c) 2017 The Raven Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Run regression test suite.
@@ -10,7 +11,7 @@ forward all unrecognized arguments onto the individual test scripts.
 Functional tests are disabled on Windows by default. Use --force to run them anyway.
 
 For a description of arguments recognized by test scripts, see
-`test/functional/test_framework/test_framework.py:BitcoinTestFramework.main`.
+`test/functional/test_framework/test_framework.py:RavenTestFramework.main`.
 
 """
 
@@ -57,31 +58,31 @@ BASE_SCRIPTS= [
     'wallet-hd.py',
     'walletbackup.py',
     # vv Tests less than 5m vv
-    'p2p-fullblocktest.py',
+    #'p2p-fullblocktest.py', TODO - fix comptool.TestInstance timeout (
     'fundrawtransaction.py',
-    'p2p-compactblocks.py',
-    'segwit.py',
+    #'p2p-compactblocks.py' - TODO - refactor to assume segwit is always active
+    # 'segwit.py', TODO fix mininode rehash methods to use X16R
     # vv Tests less than 2m vv
     'wallet.py',
     'wallet-accounts.py',
-    'p2p-segwit.py',
+    # 'p2p-segwit.py',TODO - refactor to assume segwit is always active
     'wallet-dump.py',
     'listtransactions.py',
     # vv Tests less than 60s vv
-    'sendheaders.py',
+    # 'sendheaders.py', TODO fix mininode rehash methods to use X16R
     'zapwallettxes.py',
     'importmulti.py',
     'mempool_limit.py',
     'merkle_blocks.py',
     'receivedby.py',
     'abandonconflict.py',
-    'bip68-112-113-p2p.py',
+    #'bip68-112-113-p2p.py', - TODO - currently testing softfork activations, we need to test the features
     'rawtransactions.py',
     'reindex.py',
     # vv Tests less than 30s vv
     'keypool-topup.py',
     'zmq_test.py',
-    'bitcoin_cli.py',
+    'raven_cli.py',
     'mempool_resurrect_test.py',
     'txn_doublespend.py --mineblock',
     'txn_clone.py',
@@ -104,26 +105,26 @@ BASE_SCRIPTS= [
     'keypool.py',
     'p2p-mempool.py',
     'prioritise_transaction.py',
-    'invalidblockrequest.py',
-    'invalidtxrequest.py',
-    'p2p-versionbits-warning.py',
+    # 'invalidblockrequest.py', TODO fix mininode rehash methods to use X16R
+    # 'invalidtxrequest.py', TODO fix mininode rehash methods to use X16R
+    # 'p2p-versionbits-warning.py', TODO fix mininode rehash methods to use X16R
     'preciousblock.py',
     'importprunedfunds.py',
     'signmessages.py',
-    'nulldummy.py',
+    # 'nulldummy.py',  TODO fix mininode rehash methods to use X16R
     'import-rescan.py',
-    'mining.py',
-    'bumpfee.py',
+    # 'mining.py', TODO fix mininode rehash methods to use X16R
+    # 'bumpfee.py', TODO fix mininode rehash methods to use X16R
     'rpcnamedargs.py',
     'listsinceblock.py',
     'p2p-leaktests.py',
     'wallet-encryption.py',
-    'bipdersig-p2p.py',
-    'bip65-cltv-p2p.py',
+    # 'bipdersig-p2p.py', TODO fix mininode rehash methods to use X16R
+    # 'bip65-cltv-p2p.py', TODO fix mininode rehash methods to use X16R
     'uptime.py',
     'resendwallettransactions.py',
     'minchainwork.py',
-    'p2p-fingerprint.py',
+    # 'p2p-fingerprint.py', TODO fix mininode rehash methods to use X16R
     'uacomment.py',
 ]
 
@@ -134,25 +135,25 @@ EXTENDED_SCRIPTS = [
     # vv Tests less than 20m vv
     'smartfees.py',
     # vv Tests less than 5m vv
-    'maxuploadtarget.py',
+    # 'maxuploadtarget.py', TODO fix mininode rehash methods to use X16R
     'mempool_packages.py',
-    'dbcrash.py',
+    #'dbcrash.py',
     # vv Tests less than 2m vv
     'bip68-sequence.py',
     'getblocktemplate_longpoll.py',
     'p2p-timeouts.py',
     # vv Tests less than 60s vv
-    'bip9-softforks.py',
+    # use this for future soft fork testing --> 'bip9-softforks.py',
     'p2p-feefilter.py',
     'rpcbind_test.py',
     # vv Tests less than 30s vv
     'assumevalid.py',
-    'example_test.py',
+    #'example_test.py', TODO fix mininode rehash methods to use X16R
     'txn_doublespend.py',
     'txn_clone.py --mineblock',
     'notifications.py',
     'invalidateblock.py',
-    'p2p-acceptblock.py',
+    #'p2p-acceptblock.py',  TODO fix mininode rehash methods to use X16R
     'replace-by-fee.py',
 ]
 
@@ -177,6 +178,7 @@ def main():
     parser.add_argument('--coverage', action='store_true', help='generate a basic coverage report for the RPC interface')
     parser.add_argument('--exclude', '-x', help='specify a comma-separated-list of scripts to exclude.')
     parser.add_argument('--extended', action='store_true', help='run the extended test suite in addition to the basic tests')
+    parser.add_argument('--onlyextended', action='store_true', help='run only the extended test suite')
     parser.add_argument('--force', '-f', action='store_true', help='run tests even on platforms where they are disabled by default (e.g. windows).')
     parser.add_argument('--help', '-h', '-?', action='store_true', help='print help text and exit')
     parser.add_argument('--jobs', '-j', type=int, default=4, help='how many test scripts to run in parallel. Default=4.')
@@ -201,23 +203,23 @@ def main():
     logging.basicConfig(format='%(message)s', level=logging_level)
 
     # Create base test directory
-    tmpdir = "%s/bitcoin_test_runner_%s" % (args.tmpdirprefix, datetime.datetime.now().strftime("%Y%m%d_%H%M%S"))
+    tmpdir = "%s/raven_test_runner_%s" % (args.tmpdirprefix, datetime.datetime.now().strftime("%Y%m%d_%H%M%S"))
     os.makedirs(tmpdir)
 
     logging.debug("Temporary test directory at %s" % tmpdir)
 
     enable_wallet = config["components"].getboolean("ENABLE_WALLET")
     enable_utils = config["components"].getboolean("ENABLE_UTILS")
-    enable_bitcoind = config["components"].getboolean("ENABLE_BITCOIND")
+    enable_ravend = config["components"].getboolean("ENABLE_RAVEND")
 
     if config["environment"]["EXEEXT"] == ".exe" and not args.force:
-        # https://github.com/bitcoin/bitcoin/commit/d52802551752140cf41f0d9a225a43e84404d3e9
-        # https://github.com/bitcoin/bitcoin/pull/5677#issuecomment-136646964
+        # https://github.com/RavenProject/Ravencoin/commit/d52802551752140cf41f0d9a225a43e84404d3e9
+        # https://github.com/RavenProject/Ravencoin/pull/5677#issuecomment-136646964
         print("Tests currently disabled on Windows by default. Use --force option to enable")
         sys.exit(0)
 
-    if not (enable_wallet and enable_utils and enable_bitcoind):
-        print("No functional tests to run. Wallet, utils, and bitcoind must all be enabled")
+    if not (enable_wallet and enable_utils and enable_ravend):
+        print("No functional tests to run. Wallet, utils, and ravend must all be enabled")
         print("Rerun `configure` with -enable-wallet, -with-utils and -with-daemon and rerun make")
         sys.exit(0)
 
@@ -240,6 +242,8 @@ def main():
             # place the EXTENDED_SCRIPTS first since the three longest ones
             # are there and the list is shorter
             test_list = EXTENDED_SCRIPTS + test_list
+        elif args.onlyextended:
+            test_list = EXTENDED_SCRIPTS
 
     # Remove the test cases that the user has explicitly asked to exclude.
     if args.exclude:
@@ -269,10 +273,10 @@ def main():
     run_tests(test_list, config["environment"]["SRCDIR"], config["environment"]["BUILDDIR"], config["environment"]["EXEEXT"], tmpdir, args.jobs, args.coverage, passon_args)
 
 def run_tests(test_list, src_dir, build_dir, exeext, tmpdir, jobs=1, enable_coverage=False, args=[]):
-    # Warn if bitcoind is already running (unix only)
+    # Warn if ravend is already running (unix only)
     try:
-        if subprocess.check_output(["pidof", "bitcoind"]) is not None:
-            print("%sWARNING!%s There is already a bitcoind process running on this system. Tests may fail unexpectedly due to resource contention!" % (BOLD[1], BOLD[0]))
+        if subprocess.check_output(["pidof", "ravend"]) is not None:
+            print("%sWARNING!%s There is already a ravend process running on this system. Tests may fail unexpectedly due to resource contention!" % (BOLD[1], BOLD[0]))
     except (OSError, subprocess.SubprocessError):
         pass
 
@@ -282,9 +286,9 @@ def run_tests(test_list, src_dir, build_dir, exeext, tmpdir, jobs=1, enable_cove
         print("%sWARNING!%s There is a cache directory here: %s. If tests fail unexpectedly, try deleting the cache directory." % (BOLD[1], BOLD[0], cache_dir))
 
     #Set env vars
-    if "BITCOIND" not in os.environ:
-        os.environ["BITCOIND"] = build_dir + '/src/bitcoind' + exeext
-        os.environ["BITCOINCLI"] = build_dir + '/src/bitcoin-cli' + exeext
+    if "RAVEND" not in os.environ:
+        os.environ["RAVEND"] = build_dir + '/src/ravend' + exeext
+        os.environ["RAVENCLI"] = build_dir + '/src/raven-cli' + exeext
 
     tests_dir = src_dir + '/test/functional/'
 
@@ -312,15 +316,16 @@ def run_tests(test_list, src_dir, build_dir, exeext, tmpdir, jobs=1, enable_cove
     for _ in range(len(test_list)):
         test_result, stdout, stderr = job_queue.get_next()
         test_results.append(test_result)
-
         if test_result.status == "Passed":
             logging.debug("\n%s%s%s passed, Duration: %s s" % (BOLD[1], test_result.name, BOLD[0], test_result.time))
         elif test_result.status == "Skipped":
             logging.debug("\n%s%s%s skipped" % (BOLD[1], test_result.name, BOLD[0]))
         else:
+            logging.debug("\n%s%s%s failed, Duration: %s s\n" % (BOLD[1], test_result.name, BOLD[0], test_result.time))
             print("\n%s%s%s failed, Duration: %s s\n" % (BOLD[1], test_result.name, BOLD[0], test_result.time))
             print(BOLD[1] + 'stdout:\n' + BOLD[0] + stdout + '\n')
             print(BOLD[1] + 'stderr:\n' + BOLD[0] + stderr + '\n')
+        logging.debug("%s / %s tests ran" % (job_queue.num_finished, job_queue.num_jobs))
 
     print_results(test_results, max_len_name, (int(time.time() - time0)))
 
@@ -369,7 +374,9 @@ class TestHandler:
         self.test_list = test_list
         self.flags = flags
         self.num_running = 0
-        # In case there is a graveyard of zombie bitcoinds, we can apply a
+        self.num_finished = 0
+        self.num_jobs = len(test_list)
+        # In case there is a graveyard of zombie ravends, we can apply a
         # pseudorandom offset to hopefully jump over them.
         # (625 is PORT_RANGE/MAX_NODES)
         self.portseed_offset = int(time.time() * 1000) % 625
@@ -416,6 +423,7 @@ class TestHandler:
                     else:
                         status = "Failed"
                     self.num_running -= 1
+                    self.num_finished += 1
                     self.jobs.remove(j)
 
                     return TestResult(name, status, int(time.time() - time0)), stdout, stderr
@@ -467,7 +475,7 @@ class RPCCoverage():
     Coverage calculation works by having each test script subprocess write
     coverage files into a particular directory. These files contain the RPC
     commands invoked during testing, as well as a complete listing of RPC
-    commands per `bitcoin-cli help` (`rpc_interface.txt`).
+    commands per `raven-cli help` (`rpc_interface.txt`).
 
     After all tests complete, the commands run are combined and diff'd against
     the complete list to calculate uncovered RPC commands.

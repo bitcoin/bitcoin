@@ -2,41 +2,41 @@
 
 # backward compatibility for existing gentoo layout 
 #
-if [ -d "/var/lib/bitcoin/.bitcoin" ]; then
-	BITCOIND_DEFAULT_DATADIR="/var/lib/bitcoin/.bitcoin"
+if [ -d "/var/lib/raven/.raven" ]; then
+	RAVEND_DEFAULT_DATADIR="/var/lib/raven/.raven"
 else
-	BITCOIND_DEFAULT_DATADIR="/var/lib/bitcoind"
+	RAVEND_DEFAULT_DATADIR="/var/lib/ravend"
 fi
 
-BITCOIND_CONFIGFILE=${BITCOIND_CONFIGFILE:-/etc/bitcoin/bitcoin.conf}
-BITCOIND_PIDDIR=${BITCOIND_PIDDIR:-/var/run/bitcoind}
-BITCOIND_PIDFILE=${BITCOIND_PIDFILE:-${BITCOIND_PIDDIR}/bitcoind.pid}
-BITCOIND_DATADIR=${BITCOIND_DATADIR:-${BITCOIND_DEFAULT_DATADIR}}
-BITCOIND_USER=${BITCOIND_USER:-${BITCOIN_USER:-bitcoin}}
-BITCOIND_GROUP=${BITCOIND_GROUP:-bitcoin}
-BITCOIND_BIN=${BITCOIND_BIN:-/usr/bin/bitcoind}
-BITCOIND_NICE=${BITCOIND_NICE:-${NICELEVEL:-0}}
-BITCOIND_OPTS="${BITCOIND_OPTS:-${BITCOIN_OPTS}}"
+RAVEND_CONFIGFILE=${RAVEND_CONFIGFILE:-/etc/raven/raven.conf}
+RAVEND_PIDDIR=${RAVEND_PIDDIR:-/var/run/ravend}
+RAVEND_PIDFILE=${RAVEND_PIDFILE:-${RAVEND_PIDDIR}/ravend.pid}
+RAVEND_DATADIR=${RAVEND_DATADIR:-${RAVEND_DEFAULT_DATADIR}}
+RAVEND_USER=${RAVEND_USER:-${RAVEN_USER:-raven}}
+RAVEND_GROUP=${RAVEND_GROUP:-raven}
+RAVEND_BIN=${RAVEND_BIN:-/usr/bin/ravend}
+RAVEND_NICE=${RAVEND_NICE:-${NICELEVEL:-0}}
+RAVEND_OPTS="${RAVEND_OPTS:-${RAVEN_OPTS}}"
 
-name="Bitcoin Core Daemon"
-description="Bitcoin cryptocurrency P2P network daemon"
+name="Raven Core Daemon"
+description="Raven cryptocurrency P2P network daemon"
 
-command="/usr/bin/bitcoind"
-command_args="-pid=\"${BITCOIND_PIDFILE}\" \
-		-conf=\"${BITCOIND_CONFIGFILE}\" \
-		-datadir=\"${BITCOIND_DATADIR}\" \
+command="/usr/bin/ravend"
+command_args="-pid=\"${RAVEND_PIDFILE}\" \
+		-conf=\"${RAVEND_CONFIGFILE}\" \
+		-datadir=\"${RAVEND_DATADIR}\" \
 		-daemon \
-		${BITCOIND_OPTS}"
+		${RAVEND_OPTS}"
 
-required_files="${BITCOIND_CONFIGFILE}"
-start_stop_daemon_args="-u ${BITCOIND_USER} \
-			-N ${BITCOIND_NICE} -w 2000"
-pidfile="${BITCOIND_PIDFILE}"
+required_files="${RAVEND_CONFIGFILE}"
+start_stop_daemon_args="-u ${RAVEND_USER} \
+			-N ${RAVEND_NICE} -w 2000"
+pidfile="${RAVEND_PIDFILE}"
 
 # The retry schedule to use when stopping the daemon. Could be either
 # a timeout in seconds or multiple signal/timeout pairs (like
 # "SIGKILL/180 SIGTERM/300")
-retry="${BITCOIND_SIGTERM_TIMEOUT}"
+retry="${RAVEND_SIGTERM_TIMEOUT}"
 
 depend() {
 	need localmount net
@@ -50,29 +50,29 @@ start_pre() {
 	checkpath \
 	-d \
 	--mode 0750 \
-	--owner "${BITCOIND_USER}:${BITCOIND_GROUP}" \
-	"${BITCOIND_DATADIR}"
+	--owner "${RAVEND_USER}:${RAVEND_GROUP}" \
+	"${RAVEND_DATADIR}"
 
 	checkpath \
 	-d \
 	--mode 0755 \
-	--owner "${BITCOIND_USER}:${BITCOIND_GROUP}" \
-	"${BITCOIND_PIDDIR}"
+	--owner "${RAVEND_USER}:${RAVEND_GROUP}" \
+	"${RAVEND_PIDDIR}"
 
 	checkpath -f \
-	-o ${BITCOIND_USER}:${BITCOIND_GROUP} \
+	-o ${RAVEND_USER}:${RAVEND_GROUP} \
 	-m 0660 \
-	${BITCOIND_CONFIGFILE}
+	${RAVEND_CONFIGFILE}
 
 	checkconfig || return 1
 }
 
 checkconfig()
 {
-	if ! grep -qs '^rpcpassword=' "${BITCOIND_CONFIGFILE}" ; then
+	if ! grep -qs '^rpcpassword=' "${RAVEND_CONFIGFILE}" ; then
 		eerror ""
-		eerror "ERROR: You must set a secure rpcpassword to run bitcoind."
-		eerror "The setting must appear in ${BITCOIND_CONFIGFILE}"
+		eerror "ERROR: You must set a secure rpcpassword to run ravend."
+		eerror "The setting must appear in ${RAVEND_CONFIGFILE}"
 		eerror ""
 		eerror "This password is security critical to securing wallets "
 		eerror "and must not be the same as the rpcuser setting."
@@ -84,7 +84,7 @@ checkconfig()
 		eerror "It is recommended that you also set alertnotify so you are "
 		eerror "notified of problems:"
 		eerror ""
-		eerror "ie: alertnotify=echo %%s | mail -s \"Bitcoin Alert\"" \
+		eerror "ie: alertnotify=echo %%s | mail -s \"Raven Alert\"" \
 			"admin@foo.com"
 		eerror ""
 		return 1

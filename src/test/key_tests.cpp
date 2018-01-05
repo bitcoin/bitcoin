@@ -1,4 +1,5 @@
 // Copyright (c) 2012-2015 The Bitcoin Core developers
+// Copyright (c) 2017 The Raven Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,7 +10,7 @@
 #include "uint256.h"
 #include "util.h"
 #include "utilstrencodings.h"
-#include "test/test_bitcoin.h"
+#include "test/test_raven.h"
 
 #include <string>
 #include <vector>
@@ -20,10 +21,10 @@ static const std::string strSecret1 = "5HxWvvfubhXpYYpS3tJkw6fq9jE9j18THftkZjHHf
 static const std::string strSecret2 = "5KC4ejrDjv152FGwP386VD1i2NYc5KkfSMyv1nGy1VGDxGHqVY3";
 static const std::string strSecret1C = "Kwr371tjA9u2rFSMZjTNun2PXXP3WPZu2afRHTcta6KxEUdm1vEw";
 static const std::string strSecret2C = "L3Hq7a8FEQwJkW1M2GNKDW28546Vp5miewcCzSqUD9kCAXrJdS3g";
-static const std::string addr1 = "1QFqqMUD55ZV3PJEJZtaKCsQmjLT6JkjvJ";
-static const std::string addr2 = "1F5y5E5FMc5YzdJtB9hLaUe43GDxEKXENJ";
-static const std::string addr1C = "1NoJrossxPBKfCHuJXT4HadJrXRE9Fxiqs";
-static const std::string addr2C = "1CRj2HyM1CXWzHAXLQtiGLyggNT9WQqsDs";
+static const std::string addr1 = "RYY2usMVfuN47PfRmjshQjCcXzo3oPicoh"; //1QFqqMUD55ZV3PJEJZtaKCsQmjLT6JkjvJ";
+static const std::string addr2 = "RPNA9jxXxRt84dg5eKgTfzyFoXgYsXYrGu"; //1F5y5E5FMc5YzdJtB9hLaUe43GDxEKXENJ";
+static const std::string addr1C = "RX5VwKmAZCytjCf6mhSBP6xWcnspqFiSfK"; //1NoJrossxPBKfCHuJXT4HadJrXRE9Fxiqs";
+static const std::string addr2C = "RLhv6ordc2L64HXioasqMsJtSdukCn2Tcg"; //"1CRj2HyM1CXWzHAXLQtiGLyggNT9WQqsDs";
 
 static const std::string strAddressBad = "1HV9Lc3sNHZxwj4Zk6fB38tEmBryq2cBiF";
 
@@ -32,7 +33,7 @@ BOOST_FIXTURE_TEST_SUITE(key_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(key_test1)
 {
-    CBitcoinSecret bsecret1, bsecret2, bsecret1C, bsecret2C, baddress1;
+    CRavenSecret bsecret1, bsecret2, bsecret1C, bsecret2C, baddress1;
     BOOST_CHECK( bsecret1.SetString (strSecret1));
     BOOST_CHECK( bsecret2.SetString (strSecret2));
     BOOST_CHECK( bsecret1C.SetString(strSecret1C));
@@ -72,6 +73,11 @@ BOOST_AUTO_TEST_CASE(key_test1)
     BOOST_CHECK(!key2C.VerifyPubKey(pubkey1C));
     BOOST_CHECK(!key2C.VerifyPubKey(pubkey2));
     BOOST_CHECK(key2C.VerifyPubKey(pubkey2C));
+
+    std::string pubKey1Address = EncodeDestination(CTxDestination(pubkey1.GetID()));
+    std::string pubKey2Address = EncodeDestination(CTxDestination(pubkey2.GetID()));
+    std::string pubKey1CAddress = EncodeDestination(CTxDestination(pubkey1C.GetID()));
+    std::string pubKey2CAddress = EncodeDestination(CTxDestination(pubkey2C.GetID()));
 
     BOOST_CHECK(DecodeDestination(addr1)  == CTxDestination(pubkey1.GetID()));
     BOOST_CHECK(DecodeDestination(addr2)  == CTxDestination(pubkey2.GetID()));

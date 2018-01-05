@@ -1,9 +1,10 @@
 // Copyright (c) 2015-2016 The Bitcoin Core developers
+// Copyright (c) 2017 The Raven Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_REVERSELOCK_H
-#define BITCOIN_REVERSELOCK_H
+#ifndef RAVEN_REVERSELOCK_H
+#define RAVEN_REVERSELOCK_H
 
 /**
  * An RAII-style reverse lock. Unlocks on construction and locks on destruction.
@@ -31,4 +32,4 @@ private:
     Lock templock;
 };
 
-#endif // BITCOIN_REVERSELOCK_H
+#endif // RAVEN_REVERSELOCK_H
