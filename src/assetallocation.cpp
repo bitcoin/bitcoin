@@ -25,7 +25,7 @@
 #include <mongoc.h>
 using namespace std;
 extern mongoc_collection_t *assetallocation_collection;
-extern mongoc_collection_t *assetallocation_collection
+extern mongoc_collection_t *aliastxhistory_collection;
 extern void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsigned char> &vchWitness, const CRecipient &aliasRecipient, CRecipient &aliasPaymentRecipient, vector<CRecipient> &vecSend, CWalletTx& wtxNew, CCoinControl* coinControl, bool fUseInstantSend = false, bool transferAlias = false);
 bool IsAssetAllocationOp(int op) {
 	return op == OP_ASSET_ALLOCATION_SEND;
