@@ -896,7 +896,6 @@ UniValue extkey(const JSONRPCRequest &request)
             throw std::runtime_error(strprintf("Unknown prefix '%s'", sInKey.substr(0, 4)));
         };
 
-
         result.pushKV("key_info", keyInfo);
     } else
     if (mode == "list")
@@ -3922,6 +3921,35 @@ UniValue getcoldstakinginfo(const JSONRPCRequest &request)
             nWalletStaking += nValue;
     };
 
+
+
+    bool fEnabled = false;
+    UniValue jsonSettings;
+    if (pwallet->GetSetting("changeaddress", jsonSettings)
+        && jsonSettings["coldstakingaddress"].isStr())
+    {
+        std::string sAddress;
+        try { sAddress = jsonSettings["coldstakingaddress"].get_str();
+        } catch (std::exception &e) {
+            return error("%s: Get coldstakingaddress failed %s.", __func__, e.what());
+        };
+
+        CBitcoinAddress addr(sAddress);
+        if (addr.IsValid())
+            fEnabled = true;
+
+        if (addr.IsValid(CChainParams::EXT_PUBLIC_KEY))
+        {
+            CTxDestination dest = addr.Get();
+            CExtKeyPair kp = boost::get<CExtKeyPair>(dest);
+            CKeyID idk = kp.GetID();
+            CBitcoinAddress addr;
+            addr.Set(idk, CChainParams::EXT_KEY_HASH);
+            obj.pushKV("coldstaking_extkey_id", addr.ToString());
+        };
+    };
+
+    obj.push_back(Pair("coldstaking_enabled", fEnabled));
     obj.pushKV("coin_in_stakeable_script", ValueFromAmount(nStakeable));
     obj.pushKV("coin_in_coldstakeable_script", ValueFromAmount(nColdStakeable));
     CAmount nTotal = nColdStakeable + nStakeable;
