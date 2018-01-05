@@ -560,7 +560,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			return true;
 		}
 	}
-	else
+	else if(op != OP_ASSET_ACTIVATE)
 		theAsset.nBalance = dbAsset.nBalance;
 
 	if (op != OP_ASSET_ACTIVATE)
