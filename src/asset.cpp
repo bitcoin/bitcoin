@@ -871,7 +871,7 @@ bool BuildAssetJson(const CAsset& asset, UniValue& oAsset)
 	oAsset.push_back(Pair("publicvalue", stringFromVch(asset.vchPubData)));
 	oAsset.push_back(Pair("category", stringFromVch(asset.sCategory)));
 	oAsset.push_back(Pair("alias", stringFromVch(asset.vchAlias)));
-	oAsset.push_back(Pair("balance", ValueFromAmount(asset.nBalance));
+	oAsset.push_back(Pair("balance", ValueFromAmount(asset.nBalance)));
 	int64_t expired_time = GetAssetExpiration(asset);
 	bool expired = false;
 	if (expired_time <= chainActive.Tip()->GetMedianTimePast())

@@ -717,7 +717,7 @@ bool BuildAssetAllocationJson(const CAssetAllocation& assetallocation, UniValue&
 	}
 	oAssetAllocation.push_back(Pair("time", nTime));
 	oAssetAllocation.push_back(Pair("alias", stringFromVch(assetallocation.vchAlias)));
-	oAssetAllocation.push_back(Pair("balance", ValueFromAmount(assetallocation.nBalance));
+	oAssetAllocation.push_back(Pair("balance", ValueFromAmount(assetallocation.nBalance)));
 	int64_t expired_time = GetAssetAllocationExpiration(assetallocation);
 	bool expired = false;
 	if (expired_time <= chainActive.Tip()->GetMedianTimePast())
@@ -731,7 +731,7 @@ bool BuildAssetAllocationJson(const CAssetAllocation& assetallocation, UniValue&
 		for (auto& amountTuple : assetallocation.listSendingAllocationAmounts) {
 			UniValue oAssetAllocationReceiversObj(UniValue::VOBJ;
 			oAssetAllocationReceiversObj.push_back(Pair("alias", stringFromVch(amountTuple.first)));
-			oAssetAllocationReceiversObj.push_back(Pair("amount", stringFromVch(amountTuple.second)));
+			oAssetAllocationReceiversObj.push_back(Pair("amount", ValueFromAmount(amountTuple.second)));
 			oAssetAllocationReceiversArray.push_back(oAssetAllocationReceiversObj);
 		}
 		oAssetAllocation.push_back(Pair("allocation_amounts", oAssetAllocationReceiversArray));
