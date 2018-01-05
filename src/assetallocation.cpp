@@ -541,8 +541,10 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 
 
 				if (!dontaddtodb) {
-					if (receiverAllocation.vchAlias.empty())
+					if (receiverAllocation.IsNull()) {
 						receiverAllocation.vchAlias = receiverAllocationTuple.vchAlias;
+						receiverAllocation.vchAsset = receiverAllocationTuple.vchAsset;
+					}
 					receiverAllocation.nBalance += amountTuple.second;
 					receiverAllocation.nHeight = nHeight;
 					receiverAllocation.txHash = tx.GetHash();

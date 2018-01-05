@@ -400,11 +400,6 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2004 - " + _("asset hex guid too long");
 				return error(errorMessage.c_str());
 			}
-			if((theAsset.vchName.size() > MAX_ID_LENGTH || theAsset.vchName.empty()))
-			{
-				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2012 - " + _("Asset title too big or is empty");
-				return error(errorMessage.c_str());
-			}
 			if(!boost::algorithm::starts_with(stringFromVch(theAsset.sCategory), "assets"))
 			{
 				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2013 - " + _("Must use a asset category");
@@ -641,7 +636,6 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			theAsset.vchAlias = dbAsset.vchAlias;
 		if (theAsset.vchPubData.empty())
 			theAsset.vchPubData = dbAsset.vchPubData;
-		theAsset.vchName = dbAsset.vchName;
 		if (theAsset.sCategory.empty())
 			theAsset.sCategory = dbAsset.sCategory;
 
@@ -723,8 +717,6 @@ UniValue assetnew(const UniValue& params, bool fHelp) {
 		throw runtime_error("SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2500 - " + _("failed to read alias from alias DB"));
 
 	
-    // gather inputs
-	vector<unsigned char> vchAsset = vchFromString(GenerateSyscoinGuid());
     // this is a syscoin transaction
     CWalletTx wtx;
 
@@ -738,9 +730,8 @@ UniValue assetnew(const UniValue& params, bool fHelp) {
 	// calculate net
     // build asset object
     CAsset newAsset;
-	newAsset.vchAsset = vchAsset;
+	newAsset.vchAsset = vchName;
 	newAsset.sCategory = vchFromString(strCategory);
-	newAsset.vchName = vchName;
 	newAsset.vchPubData = vchPubData;
 	newAsset.vchAlias = vchAlias;
 	newAsset.nBalance = nBalance;
@@ -1055,7 +1046,6 @@ bool BuildAssetJson(const CAsset& asset, UniValue& oAsset)
 		}
 	}
 	oAsset.push_back(Pair("time", nTime));
-	oAsset.push_back(Pair("name", stringFromVch(asset.vchName)));
 	oAsset.push_back(Pair("publicvalue", stringFromVch(asset.vchPubData)));
 	oAsset.push_back(Pair("category", stringFromVch(asset.sCategory)));
 	oAsset.push_back(Pair("alias", stringFromVch(asset.vchAlias)));
@@ -1085,7 +1075,6 @@ bool BuildAssetIndexerHistoryJson(const CAsset& asset, UniValue& oAsset)
 		}
 	}
 	oAsset.push_back(Pair("time", nTime));
-	oAsset.push_back(Pair("title", stringFromVch(asset.vchName)));
 	oAsset.push_back(Pair("publicvalue", stringFromVch(asset.vchPubData)));
 	oAsset.push_back(Pair("category", stringFromVch(asset.sCategory)));
 	oAsset.push_back(Pair("alias", stringFromVch(asset.vchAlias)));
@@ -1094,7 +1083,6 @@ bool BuildAssetIndexerHistoryJson(const CAsset& asset, UniValue& oAsset)
 bool BuildAssetIndexerJson(const CAsset& asset, UniValue& oAsset)
 {
 	oAsset.push_back(Pair("_id", stringFromVch(asset.vchAsset)));
-	oAsset.push_back(Pair("title", stringFromVch(asset.vchName)));
 	oAsset.push_back(Pair("height", (int)asset.nHeight));
 	oAsset.push_back(Pair("category", stringFromVch(asset.sCategory)));
 	oAsset.push_back(Pair("alias", stringFromVch(asset.vchAlias)));
@@ -1113,9 +1101,6 @@ void AssetTxToJSON(const int op, const std::vector<unsigned char> &vchData, cons
 
 	entry.push_back(Pair("txtype", opName));
 	entry.push_back(Pair("_id", stringFromVch(asset.vchAsset)));
-
-	if(!asset.vchName.empty() && asset.vchName != dbAsset.vchName)
-		entry.push_back(Pair("title", stringFromVch(asset.vchName)));
 
 	if(!asset.vchPubData.empty() && asset.vchPubData != dbAsset.vchPubData)
 		entry.push_back(Pair("publicdata", stringFromVch(asset.vchPubData)));

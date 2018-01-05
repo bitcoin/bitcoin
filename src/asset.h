@@ -37,7 +37,6 @@ public:
 	std::vector<CRange> listAllocationInputs;
     uint256 txHash;
     uint64_t nHeight;
-	std::vector<unsigned char> vchName;
 	std::vector<unsigned char> vchPubData;
 	std::vector<unsigned char> sCategory;
 	CAmount nBalance;
@@ -52,7 +51,6 @@ public:
 	inline void ClearAsset()
 	{
 		vchPubData.clear();
-		vchName.clear();
 		sCategory.clear();
 		vchAlias.clear();
 		listAllocationInputs.clear();
@@ -61,7 +59,6 @@ public:
 	ADD_SERIALIZE_METHODS;
     template <typename Stream, typename Operation>
 	inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {		
-		READWRITE(vchName);
 		READWRITE(vchPubData);
 		READWRITE(txHash);
 		READWRITE(VARINT(nHeight));
@@ -79,7 +76,6 @@ public:
     }
 
     inline CAsset operator=(const CAsset &b) {
-		vchName = b.vchName;
 		vchPubData = b.vchPubData;
 		txHash = b.txHash;
         nHeight = b.nHeight;
@@ -95,7 +91,7 @@ public:
     inline friend bool operator!=(const CAsset &a, const CAsset &b) {
         return !(a == b);
     }
-	inline void SetNull() { nTotalSupply = 0; nBalance = 0; listAllocationInputs.clear(); sCategory.clear(); vchName.clear(); vchAsset.clear(); nHeight = 0; txHash.SetNull(); vchAlias.clear(); vchPubData.clear(); }
+	inline void SetNull() { nTotalSupply = 0; nBalance = 0; listAllocationInputs.clear(); sCategory.clear(); vchAsset.clear(); nHeight = 0; txHash.SetNull(); vchAlias.clear(); vchPubData.clear(); }
     inline bool IsNull() const { return (vchAsset.empty()); }
     bool UnserializeFromTx(const CTransaction &tx);
 	bool UnserializeFromData(const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash);
