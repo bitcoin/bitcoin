@@ -820,7 +820,7 @@ UniValue assetupdate(const UniValue& params, bool fHelp) {
 	if(strCategory != stringFromVch(theAsset.sCategory))
 		theAsset.sCategory = vchFromString(strCategory);
 
-	newAsset.nBalance = nBalance;
+	theAsset.nBalance = nBalance;
 
 	vector<unsigned char> data;
 	theAsset.Serialize(data);
