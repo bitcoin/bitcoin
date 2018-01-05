@@ -612,8 +612,8 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					continue;
 				}
 
-
-				if (!dontaddtodb) {
+				// only POW can actually adjust the receiver qty (fJustCheck == false) when sending from asset to asset allocation, from asset allocation to asset allocation 0-conf is allowed
+				if (!dontaddtodb && !fJustCheck) {
 					if (receiverAllocation.IsNull()) {
 						receiverAllocation.vchAlias = receiverAllocationTuple.vchAlias;
 						receiverAllocation.vchAsset = receiverAllocationTuple.vchAsset;
