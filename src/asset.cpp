@@ -595,9 +595,6 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			// adjust sender balance
 			theAsset.nBalance -= nTotal;
 			for (auto& amountTuple : theAssetAllocation.listSendingAllocationAmounts) {
-				CAssetAllocation receiverAllocation;
-				const CAssetAllocationTuple receiverAllocationTuple(theAssetAllocation.vchAsset, amountTuple.first);
-
 				// check receiver alias
 				if (!GetAlias(amountTuple.first, alias))
 				{
@@ -612,6 +609,9 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 
 				// only POW can actually adjust the receiver qty (fJustCheck == false) when sending from asset to asset allocation, from asset allocation to asset allocation 0-conf is allowed
 				if (!dontaddtodb && !fJustCheck) {
+					CAssetAllocation receiverAllocation;
+					const CAssetAllocationTuple receiverAllocationTuple(theAssetAllocation.vchAsset, amountTuple.first);
+
 					// don't need to check for existance of allocation because it may not exist, may be creating it here for the first time for receiver
 					GetAssetAllocation(receiverAllocationTuple, receiverAllocation);
 					if (receiverAllocation.IsNull()) {
