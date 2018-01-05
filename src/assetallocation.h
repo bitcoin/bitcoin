@@ -163,7 +163,7 @@ public:
 		return Erase(make_pair(std::string("assetallocationl"), assetAllocationTuple));
 	}
 	void WriteAssetAllocationIndex(const CAssetAllocation& assetAllocationTuple, const int &op);
-	void EraseAssetAllocationIndex(const CAssetAllocationTuple& assetAllocationTuple, bool cleanup);
+	void EraseAssetAllocationIndex(const CAssetAllocationTuple& assetAllocationTuple, bool cleanup=false);
 
 };
 bool GetAssetAllocation(const CAssetAllocationTuple& assetAllocationTuple,CAssetAllocation& txPos);
