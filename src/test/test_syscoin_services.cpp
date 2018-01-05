@@ -1017,7 +1017,7 @@ const string CertNew(const string& node, const string& alias, const string& titl
 	const UniValue &historyResultObj = ret.get_obj();
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "user1").get_str(), alias);
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "_id").get_str(), txid + "-" + guid);
-	BOOST_CHECK_EQUAL(find_value(historyResultObj, "guid").get_str(), guid);
+	
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "type").get_str(), "Certificate Activated");
 
 	BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == guid);
@@ -1074,7 +1074,7 @@ void CertUpdate(const string& node, const string& guid, const string& title, con
 	const UniValue &historyResultObj = ret.get_obj();
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "user1").get_str(), oldalias);
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "_id").get_str(), txid + "-" + guid);
-	BOOST_CHECK_EQUAL(find_value(historyResultObj, "guid").get_str(), guid);
+	
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "type").get_str(), "Certificate Updated");
 
 
@@ -1132,7 +1132,7 @@ void CertTransfer(const string& node, const string &tonode, const string& guid, 
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "user1").get_str(), oldalias);
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "user2").get_str(), toalias);
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "_id").get_str(), txid + "-" + guid);
-	BOOST_CHECK_EQUAL(find_value(historyResultObj, "guid").get_str(), guid);
+	
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "type").get_str(), "Certificate Transferred");
 
 	BOOST_CHECK(find_value(r.get_obj(), "publicvalue").get_str() == pubdata);
@@ -1234,7 +1234,7 @@ const string OfferNew(const string& node, const string& aliasname, const string&
 	const UniValue &historyResultObj = ret.get_obj();
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "user1").get_str(), aliasname);
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "_id").get_str(), txid + "-" + guid);
-	BOOST_CHECK_EQUAL(find_value(historyResultObj, "guid").get_str(), guid);
+	
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "type").get_str(), "Offer Activated");
 
 
@@ -1707,7 +1707,7 @@ const string EscrowNewAuction(const string& node, const string& sellernode, cons
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "user2").get_str(), selleralias);
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "user3").get_str(), arbiteralias);
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "_id").get_str(), txid + "-" + guid);
-	BOOST_CHECK_EQUAL(find_value(historyResultObj, "guid").get_str(), guid);
+	
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "type").get_str(), "Escrow Activated");
 
 
@@ -1834,7 +1834,7 @@ const string EscrowNewBuyItNow(const string& node, const string& sellernode, con
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "user2").get_str(), selleralias);
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "user3").get_str(), arbiteralias);
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "_id").get_str(), txid + "-" + guid);
-	BOOST_CHECK_EQUAL(find_value(historyResultObj, "guid").get_str(), guid);
+	
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "type").get_str(), "Escrow Activated");
 
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "offerinfo " + offerguid));
@@ -1999,7 +1999,7 @@ void EscrowRelease(const string& node, const string& role, const string& guid ,c
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "user2").get_str(), selleralias);
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "user3").get_str(), arbiteralias);
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "_id").get_str(), txid + "-" + guid);
-	BOOST_CHECK_EQUAL(find_value(historyResultObj, "guid").get_str(), guid);
+	
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "type").get_str(), "Escrow Released");
 
 
@@ -2087,7 +2087,7 @@ void EscrowRefund(const string& node, const string& role, const string& guid, co
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "user2").get_str(), selleralias);
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "user3").get_str(), arbiteralias);
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "_id").get_str(), txid + "-" + guid);
-	BOOST_CHECK_EQUAL(find_value(historyResultObj, "guid").get_str(), guid);
+	
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "type").get_str(), "Escrow Refunded");
 
 	if (!bBuyNow) {
@@ -2208,7 +2208,7 @@ void EscrowClaimRefund(const string& node, const string& guid)
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "user2").get_str(), selleralias);
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "user3").get_str(), arbiteralias);
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "_id").get_str(), txid + "-" + guid);
-	BOOST_CHECK_EQUAL(find_value(historyResultObj, "guid").get_str(), guid);
+	
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "type").get_str(), "Escrow Refund Complete");
 
 
@@ -2400,7 +2400,7 @@ void EscrowClaimRelease(const string& node, const string& guid)
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "user2").get_str(), selleralias);
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "user3").get_str(), arbiteralias);
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "_id").get_str(), txid + "-" + guid);
-	BOOST_CHECK_EQUAL(find_value(historyResultObj, "guid").get_str(), guid);
+	
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "type").get_str(), "Escrow Release Complete");
 
 
