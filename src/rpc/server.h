@@ -336,6 +336,14 @@ extern UniValue escrowcompleterefund(const UniValue& params, bool fHelp);
 extern UniValue escrowinfo(const UniValue& params, bool fHelp);
 extern UniValue escrowfeedback(const UniValue& params, bool fHelp);
 extern UniValue escrowacknowledge(const UniValue& params, bool fHelp);
+
+extern UniValue assetnew(const UniValue& params, bool fHelp);
+extern UniValue assetupdate(const UniValue& params, bool fHelp);
+extern UniValue assettransfer(const UniValue& params, bool fHelp);
+extern UniValue assetsend(const UniValue& params, bool fHelp);
+extern UniValue assetinfo(const UniValue& params, bool fHelp);
+extern UniValue assetallocationsend(const UniValue& params, bool fHelp);
+extern UniValue assetallocationinfo(const UniValue& params, bool fHelp);
 bool StartRPC();
 void InterruptRPC();
 void StopRPC();

@@ -445,6 +445,15 @@ static const CRPCCommand vRPCCommands[] =
 	{ "wallet", "escrowinfo",              &escrowinfo,          false },
 	{ "wallet", "escrowfeedback",      &escrowfeedback,  false },
 	{ "wallet", "escrowacknowledge",      &escrowacknowledge,  false },
+
+	// assets using the blockchain, coins/points/service backed tokens
+	{ "wallet", "assetnew",         &assetnew,     false },
+	{ "wallet", "assetupdate",         &assetupdate,     false },
+	{ "wallet", "assettransfer",      &assettransfer,  false },
+	{ "wallet", "assetsend",      &assetsend,  false },
+	{ "wallet", "assetinfo",      &assetinfo,  false },
+	{ "wallet", "assetallocationsend",          &assetallocationsend,      false },
+	{ "wallet", "assetallocationinfo",          &assetallocationinfo,      false }
 #endif // ENABLE_WALLET
 };
 
