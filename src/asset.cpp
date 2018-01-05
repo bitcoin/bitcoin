@@ -639,8 +639,11 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 
 
 				if (!dontaddtodb) {
-					if (receiverAllocation.vchAlias.empty())
+					if (receiverAllocation.IsNull()) {
 						receiverAllocation.vchAlias = receiverAllocationTuple.vchAlias;
+						receiverAllocation.vchAsset = receiverAllocationTuple.vchAsset;
+					}
+					
 					receiverAllocation.nBalance += amountTuple.second;
 					receiverAllocation.nHeight = nHeight;
 					receiverAllocation.txHash = tx.GetHash();
