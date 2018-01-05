@@ -729,7 +729,7 @@ bool BuildAssetAllocationJson(const CAssetAllocation& assetallocation, UniValue&
 	UniValue oAssetAllocationReceiversArray(UniValue::VARR);
 	if (!assetallocation.listSendingAllocationAmounts.empty()) {
 		for (auto& amountTuple : assetallocation.listSendingAllocationAmounts) {
-			UniValue oAssetAllocationReceiversObj(UniValue::VOBJ;
+			UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
 			oAssetAllocationReceiversObj.push_back(Pair("alias", stringFromVch(amountTuple.first)));
 			oAssetAllocationReceiversObj.push_back(Pair("amount", ValueFromAmount(amountTuple.second)));
 			oAssetAllocationReceiversArray.push_back(oAssetAllocationReceiversObj);
