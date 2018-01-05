@@ -443,7 +443,8 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	else
 	{
 		bool bSendLocked = false;
-		if (!fJustCheck && passetdb->ReadISLock(theAsset.vchAsset, bSendLocked) && bSendLocked) {
+		passetdb->ReadISLock(theAsset.vchAsset, bSendLocked);
+		if (!fJustCheck && bSendLocked) {
 			if (dbAsset.nHeight >= nHeight)
 			{
 				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Block height of service request must be less than or equal to the stored service block height.");
@@ -466,7 +467,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from asset DB");
 						return error(errorMessage.c_str());
 					}
-					paliasdb->EraseAliasIndexTxHistory(txHashHex);
+					paliasdb->EraseAliasIndexTxHistory(txHashHex+"-"+stringFromVch(theAsset.vchAsset));
 					passetdb->EraseAssetIndexHistory(txHashHex);
 				}
 			}
@@ -491,7 +492,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						return error(errorMessage.c_str());
 					}
 					if (strResponse != "") {
-						paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, stringFromVch(theAsset.vchAsset), nLockStatus);
+						paliasdb->UpdateAliasIndexTxHistoryLockStatus(tx.GetHash().GetHex() + "-" + stringFromVch(theAsset.vchAsset), nLockStatus);
 					}
 				}
 				return true;
@@ -504,7 +505,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				if (!dontaddtodb) {
 					nLockStatus = LOCK_CONFLICT_UNCONFIRMED_STATE;
 					if (strResponse != "") {
-						paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, stringFromVch(theAsset.vchAsset), nLockStatus);
+						paliasdb->UpdateAliasIndexTxHistoryLockStatus(tx.GetHash().GetHex() + "-" + stringFromVch(theAsset.vchAsset), nLockStatus);
 					}
 				}
 				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Block height of service request must be less than or equal to the stored service block height.");
@@ -570,7 +571,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	theAsset.txHash = tx.GetHash();
 	// write asset  
 	if (!dontaddtodb) {
-		if (!passetdb->WriteAsset(theAsset, dbAsset, op, fJustCheck))
+		if (!passetdb->WriteAsset(theAsset, op, fJustCheck))
 		{
 			errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to write to assetifcate DB");
 			return error(errorMessage.c_str());

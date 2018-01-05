@@ -161,10 +161,10 @@ class CEscrowDB : public CDBWrapper {
 public:
     CEscrowDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "escrow", nCacheSize, fMemory, fWipe) {}
 
-    bool WriteEscrow( const std::vector<std::vector<unsigned char> > &vvchArgs, const CEscrow& escrow, const CEscrow& prevEscrow, const bool& fJustCheck) {
+    bool WriteEscrow( const std::vector<std::vector<unsigned char> > &vvchArgs, const CEscrow& escrow, const bool& fJustCheck) {
 		bool writeState = Write(make_pair(std::string("escrowi"), escrow.vchEscrow), escrow);
-		if (!fJustCheck && !prevEscrow.IsNull())
-			writeState = writeState && Write(make_pair(std::string("escrowp"), escrow.vchEscrow), prevEscrow);
+		if (!fJustCheck)
+			writeState = writeState && Write(make_pair(std::string("escrowp"), escrow.vchEscrow), escrow);
 		else if (fJustCheck)
 			writeState = writeState && Write(make_pair(std::string("escrowl"), escrow.vchEscrow), fJustCheck);
 		WriteEscrowIndex(escrow, vvchArgs);

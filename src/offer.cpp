@@ -515,7 +515,8 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	else
 	{
 		bool bSendLocked = false;
-		if (!fJustCheck && pofferdb->ReadISLock(theOffer.vchOffer, bSendLocked) && bSendLocked) {
+		pofferdb->ReadISLock(theOffer.vchOffer, bSendLocked);
+		if (!fJustCheck && bSendLocked) {
 			if (dbOffer.nHeight >= nHeight)
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Block height of service request must be less than or equal to the stored service block height.");
@@ -536,7 +537,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						return error(errorMessage.c_str());
 					}
 					const string &txHashHex = dbOffer.txHash.GetHex();
-					paliasdb->EraseAliasIndexTxHistory(txHashHex);
+					paliasdb->EraseAliasIndexTxHistory(txHashHex+"-"+stringFromVch(theOffer.vchOffer));
 					pofferdb->EraseOfferIndexHistory(txHashHex);
 					pofferdb->EraseExtTXID(dbOffer.txHash);
 				}
@@ -563,7 +564,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						return error(errorMessage.c_str());
 					}
 					if (strResponse != "") {
-						paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, stringFromVch(theOffer.vchOffer), nLockStatus);
+						paliasdb->UpdateAliasIndexTxHistoryLockStatus(tx.GetHash().GetHex() + "-" + stringFromVch(theOffer.vchOffer), nLockStatus);
 					}
 				}
 				return true;
@@ -576,7 +577,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				if (!dontaddtodb) {
 					nLockStatus = LOCK_CONFLICT_UNCONFIRMED_STATE;
 					if (strResponse != "") {
-						paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, stringFromVch(theOffer.vchOffer), nLockStatus);
+						paliasdb->UpdateAliasIndexTxHistoryLockStatus(tx.GetHash().GetHex() + "-" + stringFromVch(theOffer.vchOffer), nLockStatus);
 					}
 				}
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Block height of service request must be less than or equal to the stored service block height.");
@@ -728,7 +729,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	theOffer.txHash = tx.GetHash();
 	// write offer
 	if (!dontaddtodb) {
-		if (!pofferdb->WriteOffer(theOffer, dbOffer, op, fJustCheck))
+		if (!pofferdb->WriteOffer(theOffer, op, fJustCheck))
 		{
 			errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to write to offer DB");
 			return error(errorMessage.c_str());

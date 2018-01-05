@@ -559,7 +559,8 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		}
 		if (!theAliasNull) {
 			bool bSendLocked = false;
-			if (!fJustCheck && paliasdb->ReadISLock(vvchArgs[0], bSendLocked) && bSendLocked) {
+			paliasdb->ReadISLock(vvchArgs[0], bSendLocked);
+			if (!fJustCheck &&  bSendLocked) {
 				if (dbAlias.nHeight >= nHeight)
 				{
 					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Block height of service request must be less than or equal to the stored service block height.");
@@ -581,7 +582,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 							return error(errorMessage.c_str());
 						}
 						paliasdb->EraseAliasIndexHistory(txHashHex);
-						paliasdb->EraseAliasIndexTxHistory(txHashHex);
+						paliasdb->EraseAliasIndexTxHistory(txHashHex+"-"+strName));
 					}
 				}
 				else {
@@ -605,7 +606,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 							return error(errorMessage.c_str());
 						}
 						if (strResponse != "") {
-							paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, strName, nLockStatus);
+							paliasdb->UpdateAliasIndexTxHistoryLockStatus(tx.GetHash().GetHex() + "-" + strName, nLockStatus);
 						}
 					}
 					return true;
@@ -618,7 +619,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					if (!dontaddtodb) {
 						nLockStatus = LOCK_CONFLICT_UNCONFIRMED_STATE;
 						if (strResponse != "") {
-							paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, strName, nLockStatus);
+							paliasdb->UpdateAliasIndexTxHistoryLockStatus(tx.GetHash().GetHex() + "-" + strName, nLockStatus);
 						}
 					}
 					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Block height of service request must be less than or equal to the stored service block height.");
@@ -1824,12 +1825,11 @@ void CAliasDB::EraseAliasIndex(const std::vector<unsigned char>& vchAlias, bool 
 }
 bool BuildAliasIndexerTxHistoryJson(const string &user1, const string &user2, const string &user3, const uint256 &txHash, const uint64_t& nHeight, const string &type, const string &guid, const int &lockstatus, UniValue& oName)
 {
-	oName.push_back(Pair("_id", txHash.GetHex()));
+	oName.push_back(Pair("_id", txHash.GetHex()+"-"+guid));
 	oName.push_back(Pair("user1", user1));
 	oName.push_back(Pair("user2", user2));
 	oName.push_back(Pair("user3", user3));
 	oName.push_back(Pair("type", type));
-	oName.push_back(Pair("guid", guid));
 	oName.push_back(Pair("height", nHeight));
 	int64_t nTime = 0;
 	if (chainActive.Height() >= nHeight) {
@@ -1852,7 +1852,8 @@ void CAliasDB::WriteAliasIndexTxHistory(const string &user1, const string &user2
 	UniValue oName(UniValue::VOBJ);
 	write_concern = mongoc_write_concern_new();
 	mongoc_write_concern_set_w(write_concern, MONGOC_WRITE_CONCERN_W_UNACKNOWLEDGED);
-	selector = BCON_NEW("_id", BCON_UTF8(txHash.GetHex().c_str()));
+	const string& id = txHash.GetHex() + "-" + guid;
+	selector = BCON_NEW("_id", BCON_UTF8(id));
 	mongoc_update_flags_t update_flags;
 	update_flags = (mongoc_update_flags_t)(MONGOC_UPDATE_NO_VALIDATE | MONGOC_UPDATE_UPSERT);
 	BuildAliasIndexerTxHistoryJson(user1, user2, user3, txHash, nHeight, type, guid, lockstatus, oName);
@@ -1864,6 +1865,31 @@ void CAliasDB::WriteAliasIndexTxHistory(const string &user1, const string &user2
 		bson_destroy(selector);
 	if (insert)
 		bson_destroy(insert);
+	if (write_concern)
+		mongoc_write_concern_destroy(write_concern);
+}
+void CAliasDB::UpdateAliasIndexTxHistoryLockStatus(const string &id, const char &lockstatus) {
+	if (!aliastxhistory_collection)
+		return;
+	bson_error_t error;
+	bson_t *selector = NULL;
+	mongoc_write_concern_t* write_concern = NULL;
+	UniValue oName(UniValue::VOBJ);
+	mongoc_update_flags_t update_flags;
+	update_flags = (mongoc_update_flags_t)(MONGOC_UPDATE_NO_VALIDATE);
+	selector = BCON_NEW("_id", BCON_UTF8(id.c_str()));
+	write_concern = mongoc_write_concern_new();
+	mongoc_write_concern_set_w(write_concern, MONGOC_WRITE_CONCERN_W_UNACKNOWLEDGED);
+	bson_t *update = BCON_NEW("$set", "{",
+		"lock_status", lockstatus,
+		"}");
+	if (!update || !mongoc_collection_update(aliastxhistory_collection, update_flags, selector, update, write_concern, &error)) {
+		LogPrintf("MONGODB ALIAS TX HISTORY LOCK STATUS ERROR: %s\n", error.message);
+	}
+	if (update)
+		bson_destroy(update);
+	if (selector)
+		bson_destroy(selector);
 	if (write_concern)
 		mongoc_write_concern_destroy(write_concern);
 }

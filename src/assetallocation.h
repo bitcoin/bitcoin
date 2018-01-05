@@ -67,7 +67,8 @@ public:
 		return (vchAsset.empty() && vchAlias.empty());
 	}
 };
-typedef std::vector<std::pair<std::string, std::vector<CRange> > > RangeInputArrayTuples;
+typedef std::vector<std::pair<std::vector<unsigned char>, std::vector<CRange> > > RangeInputArrayTuples;
+typedef std::vector<std::pair<std::vector<unsigned char>, CAmount > > RangeAmountTuples;
 class CAssetAllocation {
 public:
 	std::vector<unsigned char> vchAsset;
@@ -77,6 +78,7 @@ public:
 	// if allocations are tracked by individual inputs
 	std::vector<CRange> listAllocationInputs;
 	RangeInputArrayTuples listSendingAllocationInputs;
+	RangeAmountTuples listSendingAllocationAmounts;
 	CAmount nBalance;
 	CAssetAllocation() {
 		SetNull();
@@ -95,6 +97,7 @@ public:
 		READWRITE(VARINT(nHeight));
 		READWRITE(listAllocationInputs);
 		READWRITE(listSendingAllocationInputs);
+		READWRITE(listSendingAllocationAmounts);
 		READWRITE(nBalance);
 	}
 	inline friend bool operator==(const CAssetAllocation &a, const CAssetAllocation &b) {
@@ -109,6 +112,7 @@ public:
 		vchAlias = b.vchAlias;
 		listAllocationInputs = b.listAllocationInputs;
 		listSendingAllocationInputs = b.listSendingAllocationInputs;
+		listSendingAllocationAmounts = b.listSendingAllocationAmounts;
 		nBalance = b.nBalance;
 		return *this;
 	}
@@ -116,7 +120,7 @@ public:
 	inline friend bool operator!=(const CAssetAllocation &a, const CAssetAllocation &b) {
 		return !(a == b);
 	}
-	inline void SetNull() { nBalance = 0;  listSendingAllocationInputs.clear(); listAllocationInputs.clear(); vchAsset.clear(); nHeight = 0; txHash.SetNull(); vchAlias.clear(); }
+	inline void SetNull() { nBalance = 0;  listSendingAllocationAmounts.clear();  listSendingAllocationInputs.clear(); listAllocationInputs.clear(); vchAsset.clear(); nHeight = 0; txHash.SetNull(); vchAlias.clear(); }
 	inline bool IsNull() const { return (vchAsset.empty()); }
 	bool UnserializeFromTx(const CTransaction &tx);
 	bool UnserializeFromData(const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash);
@@ -128,11 +132,11 @@ class CAssetAllocationDB : public CDBWrapper {
 public:
 	CAssetAllocationDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "assetallocations", nCacheSize, fMemory, fWipe) {}
 
-    bool WriteAssetAllocation(const CAssetAllocation& assetallocation, const CAssetAllocation& prevAssetAllocation, const int &op, const bool& fJustCheck) {
+    bool WriteAssetAllocation(const CAssetAllocation& assetallocation, const int &op, const bool& fJustCheck) {
 		const CAssetAllocationTuple allocationTuple(assetallocation.vchAsset, assetallocation.vchAlias);
 		bool writeState = Write(make_pair(std::string("assetallocationi"), allocationTuple), assetallocation);
-		if (!fJustCheck && !prevAssetAllocation.IsNull())
-			writeState = writeState && Write(make_pair(std::string("assetallocationp"), allocationTuple), prevAssetAllocation);
+		if (!fJustCheck)
+			writeState = writeState && Write(make_pair(std::string("assetallocationp"), allocationTuple), assetallocation);
 		else if (fJustCheck)
 			writeState = writeState && Write(make_pair(std::string("assetallocationl"), allocationTuple), fJustCheck);
 		WriteAssetAllocationIndex(assetallocation, op);

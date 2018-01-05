@@ -486,7 +486,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 						errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from certificate DB");
 						return error(errorMessage.c_str());
 					}
-					paliasdb->EraseAliasIndexTxHistory(txHashHex);
+					paliasdb->EraseAliasIndexTxHistory(txHashHex+"-"+stringFromName(theCert.vchCert));
 					pcertdb->EraseCertIndexHistory(txHashHex);
 				}
 			}
@@ -511,7 +511,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 						return error(errorMessage.c_str());
 					}
 					if (strResponse != "") {
-						paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, stringFromVch(theCert.vchCert), nLockStatus);
+						paliasdb->UpdateAliasIndexTxHistoryLockStatus(tx.GetHash().GetHex() + "-" + stringFromVch(theCert.vchCert), nLockStatus);
 					}
 				}
 				return true;
@@ -524,7 +524,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 				if (!dontaddtodb) {
 					nLockStatus = LOCK_CONFLICT_UNCONFIRMED_STATE;
 					if (strResponse != "") {
-						paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, stringFromVch(theCert.vchCert), nLockStatus);
+						paliasdb->UpdateAliasIndexTxHistoryLockStatus(tx.GetHash().GetHex() + "-" + stringFromVch(theCert.vchCert), nLockStatus);
 					}
 				}
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Block height of service request must be less than or equal to the stored service block height.");
@@ -613,7 +613,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 	theCert.txHash = tx.GetHash();
     // write cert  
 	if (!dontaddtodb) {
-		if (!pcertdb->WriteCert(theCert, dbCert, op, fJustCheck) || (op == OP_CERT_ACTIVATE && !pcertdb->WriteFirstCert(theCert.vchCert, theCert)))
+		if (!pcertdb->WriteCert(theCert, op, fJustCheck) || (op == OP_CERT_ACTIVATE && !pcertdb->WriteFirstCert(theCert.vchCert, theCert)))
 		{
 			errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to write to certifcate DB");
 			return error(errorMessage.c_str());

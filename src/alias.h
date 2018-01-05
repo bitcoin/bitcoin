@@ -252,12 +252,12 @@ class CAliasDB : public CDBWrapper {
 public:
     CAliasDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "aliases", nCacheSize, fMemory, fWipe) {
     }
-	bool WriteAlias(const CAliasUnprunable &aliasUnprunable, const std::vector<unsigned char>& address, const CAliasIndex& alias, const CAliasIndex& prevAlias, const int &op, const bool &fJustCheck) {
+	bool WriteAlias(const CAliasUnprunable &aliasUnprunable, const std::vector<unsigned char>& address, const CAliasIndex& alias, const int &op, const bool &fJustCheck) {
 		if(address.empty())
 			return false;	
 		bool writeState = Write(make_pair(std::string("namei"), alias.vchAlias), alias) && Write(make_pair(std::string("namea"), address), alias.vchAlias) && Write(make_pair(std::string("nameu"), alias.vchAlias), aliasUnprunable);
-		if (!fJustCheck && !prevAlias.IsNull())
-			writeState = writeState && Write(make_pair(std::string("namep"), alias.vchAlias), prevAlias);
+		if (!fJustCheck)
+			writeState = writeState && Write(make_pair(std::string("namep"), alias.vchAlias), alias);
 		else if(fJustCheck)
 			writeState = writeState && Write(make_pair(std::string("namel"), alias.vchAlias), fJustCheck);
 		WriteAliasIndex(alias, op);
@@ -302,6 +302,7 @@ public:
 	void EraseAliasIndexHistory(const std::vector<unsigned char>& vchAlias, bool cleanup);
 	void EraseAliasIndexHistory(const std::string& id);
 	void WriteAliasIndexTxHistory(const std::string &user1, const std::string &user2, const std::string &user3, const uint256 &txHash, const uint64_t& nHeight, const std::string &type, const std::string &guid, const char &lockstatus);
+	void UpdateAliasIndexTxHistoryLockStatus(const std::string &id, const char &lockstatus);
 	void EraseAliasIndexTxHistory(const std::vector<unsigned char>& vchAlias, bool cleanup);
 	void EraseAliasIndexTxHistory(const std::string& id);
 };

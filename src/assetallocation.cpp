@@ -102,8 +102,7 @@ void CAssetAllocationDB::WriteAssetAllocationIndex(const CAssetAllocation& asset
 
 	mongoc_update_flags_t update_flags;
 	update_flags = (mongoc_update_flags_t)(MONGOC_UPDATE_NO_VALIDATE | MONGOC_UPDATE_UPSERT);
-	const string &id = stringFromVch(assetallocation.vchAsset) + stringFromVch(assetallocation.vchAlias);
-	selector = BCON_NEW("_id", BCON_UTF8(id.c_str()));
+	selector = BCON_NEW("_id", BCON_UTF8(CAssetAllocationTuple(assetallocation.vchAsset, assetallocation.vchAlias).ToString().c_str()));
 	write_concern = mongoc_write_concern_new();
 	mongoc_write_concern_set_w(write_concern, MONGOC_WRITE_CONCERN_W_UNACKNOWLEDGED);
 	if (BuildAssetAllocationIndexerJson(assetallocation, oName)) {
@@ -306,7 +305,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 	{
 		switch (op) {
 		case OP_ASSET_ALLOCATION_SEND:
-			if (theAssetAllocation.listSendingAllocationInputs.empty() && theAssetAllocation.nBalance == 0)
+			if (theAssetAllocation.listSendingAllocationInputs.empty() && theAssetAllocation.listSendingAllocationAmounts.empty())
 			{
 				errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2021 - " + _("Asset send must send an input or transfer balance");
 				return error(errorMessage.c_str());
@@ -318,10 +317,9 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 			return error(errorMessage.c_str());
 		}
 	}
-	const string &user2 = stringFromVch(theAssetAllocation.vchAlias);
-	const string &user1 = stringFromVch(vvchAliasArgs[0]);
 	const CAssetAllocationTuple assetAllocationTuple(theAssetAllocation.vchAsset, theAssetAllocation.vchAlias);
-	string user3 = "";
+	const string &user3 = "";
+	const string &user1 = stringFromVch(vvchAliasArgs[0]);
 	string strResponseEnglish = "";
 	string strResponse = GetSyscoinTransactionDescription(op, strResponseEnglish, ASSETALLOCATION);
 	char nLockStatus = NOLOCK_UNCONFIRMED_STATE;
@@ -331,7 +329,8 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 	CAsset dbAsset;
 	if (GetAssetAllocation(assetAllocationTuple, dbAssetAllocation)){
 		bool bSendLocked = false;
-		if (!fJustCheck && passetallocationdb->ReadISLock(assetAllocationTuple, bSendLocked) && bSendLocked) {
+		passetallocationdb->ReadISLock(assetAllocationTuple, bSendLocked);
+		if (!fJustCheck && bSendLocked) {
 			if (dbAssetAllocation.nHeight >= nHeight)
 			{
 				errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Block height of service request must be less than or equal to the stored service block height.");
@@ -339,26 +338,77 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 			}
 			if (dbAssetAllocation.txHash != tx.GetHash())
 			{
+				nLockStatus = LOCK_CONFLICT_CONFIRMED_STATE;
 				if (fDebug)
 					LogPrintf("ASSET ALLOCATION txid mismatch! Recreating...\n");
-				const string &txHashHex = dbAssetAllocation.txHash.GetHex();
-				//vector<string> lastReceiverList = dbAssetAllocation.listReceivers;
+
 				// recreate this assetallocation tx from last known good position (last assetallocation stored)
 				if (!passetallocationdb->ReadLastAssetAllocation(assetAllocationTuple, theAssetAllocation)) {
 					dbAssetAllocation.SetNull();
 				}
 				// deal with assetallocation send reverting
 				if (op == OP_ASSET_ALLOCATION_SEND) {
+					if (theAssetAllocation.vchAlias == vvchAliasArgs[0]) {
+						if (dbAssetAllocation.listSendingAllocationInputs.empty()) {
+							if (!theAssetAllocation.listAllocationInputs.empty()) {
+								errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("Invalid asset send, request not sending with inputs and sender uses inputs in its allocation list");
+								return true;
+							}
+							if (dbAssetAllocation.listSendingAllocationAmounts.empty()) {
+								errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("Invalid asset send, expected allocation amounts");
+								return true;
+							}
+							for (auto& amountTuple : dbAssetAllocation.listSendingAllocationAmounts) {
+								CAssetAllocation receiverAllocation;
+								const CAssetAllocationTuple receiverAllocationTuple(dbAssetAllocation.vchAsset, amountTuple.first);
+								// don't need to check for existance of allocation because it may not exist, may be creating it here for the first time for receiver
+								GetAssetAllocation(receiverAllocationTuple, receiverAllocation);
+
+								// check receiver alias
+								if (!GetAlias(amountTuple.first, alias))
+								{
+									errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2024 - " + _("Cannot find alias you are transferring to.");
+									continue;
+								}
+								if (!(alias.nAcceptTransferFlags & ACCEPT_TRANSFER_ASSETS))
+								{
+									errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("An alias you are transferring to does not accept asset transfers");
+									continue;
+								}
+								receiverAllocation.nBalance -= amountTuple.second;
+								if (!dontaddtodb) {
+									receiverAllocation.nHeight = nHeight;
+									receiverAllocation.txHash = tx.GetHash();
+									// we know the receiver update is not a double spend so we lock it in with false meaning we should store previous db entry with this one
+									if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, op, false))
+									{
+										errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to write to asset allocation DB");
+										continue;
+									}
+									if (strResponse != "") {
+										paliasdb->UpdateAliasIndexTxHistoryLockStatus(tx.GetHash().GetHex() + "-" + receiverAllocationTuple.ToString(), nLockStatus);
+									}
+								}
+
+							}
+
+						}
+
+					}
+					// sending asset to allocation
+					else if (dbAsset.vchAlias == vvchAliasArgs[0]) {
+
+					}
 
 				}
-				if(!dontaddtodb){
-					nLockStatus = LOCK_CONFLICT_CONFIRMED_STATE;
+				if (!dontaddtodb) {
 					if (!passetallocationdb->EraseISLock(assetAllocationTuple))
 					{
 						errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from assetallocation DB");
 						return error(errorMessage.c_str());
 					}
-					paliasdb->EraseAliasIndexTxHistory(txHashHex);
+					paliasdb->EraseAliasIndexTxHistory(txHashHex + assetAllocationTuple.ToString());
+					passetdb->EraseAssetAllocationIndex(assetAllocationTuple);
 				}
 			}
 			else {
@@ -376,8 +426,23 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 						errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from assetallocation DB");
 						return error(errorMessage.c_str());
 					}
-					if (strResponse != "") {
-						paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, assetAllocationTuple.ToString(), nLockStatus);
+					if (!dontaddtodb && strResponse != "" && aliastxhistory_collection) {
+						if (theAssetAllocation.vchAlias == vvchAliasArgs[0]) {
+							if (dbAssetAllocation.listSendingAllocationInputs.empty()) {
+								for (auto& amountTuple : dbAssetAllocation.listSendingAllocationAmounts) {
+									const CAssetAllocationTuple receiverAllocationTuple(dbAssetAllocation.vchAsset, amountTuple.first);
+									if (strResponse != "") {
+										paliasdb->UpdateAliasIndexTxHistoryLockStatus(tx.GetHash().GetHex() + "-" + receiverAllocationTuple.ToString(), nLockStatus);
+									}
+								}
+
+							}
+
+						}
+						// sending asset to allocation
+						else if (dbAsset.vchAlias == vvchAliasArgs[0]) {
+
+						}
 					}
 				}
 				return true;
@@ -389,8 +454,22 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 			{
 				if (!dontaddtodb) {
 					nLockStatus = LOCK_CONFLICT_UNCONFIRMED_STATE;
-					if (strResponse != "") {
-						paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, assetAllocationTuple.ToString(), nLockStatus);
+					if (!dontaddtodb && strResponse != "" && aliastxhistory_collection) {
+						if (theAssetAllocation.vchAlias == vvchAliasArgs[0]) {
+							if (dbAssetAllocation.listSendingAllocationInputs.empty()) {
+								for (auto& amountTuple : dbAssetAllocation.listSendingAllocationAmounts) {
+									const CAssetAllocationTuple receiverAllocationTuple(dbAssetAllocation.vchAsset, amountTuple.first);
+									if (strResponse != "") {
+										paliasdb->UpdateAliasIndexTxHistoryLockStatus(tx.GetHash().GetHex() + "-" + receiverAllocationTuple.ToString(), nLockStatus);
+									}
+								}
+							}
+
+						}
+						// sending asset to allocation
+						else if (dbAsset.vchAlias == vvchAliasArgs[0]) {
+
+						}
 					}
 				}
 				errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Block height of service request must be less than or equal to the stored service block height.");
@@ -412,20 +491,10 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2027 - " + _("Asset allocation already exists");
 			return true;
 		}
-		// check toalias
-		if (!GetAlias(dbAssetAllocation.vchAlias, alias))
-		{
-			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2024 - " + _("Cannot find alias you are transferring to.");
-			return true;
-		}
+
 		if (!GetAsset(dbAssetAllocation.vchAsset, dbAsset))
 		{
 			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2024 - " + _("Cannot find asset related to this allocation.");
-			return true;
-		}
-		if (!(alias.nAcceptTransferFlags & ACCEPT_TRANSFER_ASSETS))
-		{
-			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("The alias you are transferring to does not accept assets");
 			return true;
 		}
 
@@ -435,7 +504,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 			// ensure sender balance >= balance being sent
 			// ensure balance being sent >= minimum divisible quantity
 				// if minimum divisible quantity is 0, ensure the balance being sent is a while quantity
-			// deduct balance from sender and add to receiver
+			// deduct balance from sender and add to receiver(s) in loop
 		// if custom allocations are sent with index numbers in an array
 			// loop through array of allocations that are sent along with request
 				// get qty of allocation
@@ -447,47 +516,88 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 		// commit sender details to database
 
 		// sending allocation to allocation
-		/*if (dbAssetAllocation.vchAlias == vvchAliasArgs[0]) {
-			if (theAssetAllocation.listAllocations[0].n == -1) {
-				if (!dbAssetAllocation.listAllocations.empty() && dbAssetAllocation.listAllocations[0].n != -1) {
+		if (dbAssetAllocation.vchAlias == vvchAliasArgs[0]) {
+			if (theAssetAllocation.listSendingAllocationInputs.empty()) {
+				if (!dbAssetAllocation.listAllocationInputs.empty()) {
 					errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("Invalid asset send, request not sending with inputs and sender uses inputs in its allocation list");
 					return true;
 				}
-				const CAmount& nBalanceBeingSent = GetAllocationAmount(theAssetAllocation.listAllocations);
-				const CAmount& nBalanceSender = GetAllocationAmount(dbAssetAllocation.listAllocations);
-				if (nBalanceSender < nBalanceBeingSent) {
+				if (theAssetAllocation.listSendingAllocationAmounts.empty()) {
+					errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("Invalid asset send, expected allocation amounts");
+					return true;
+				}
+				// check balance is sufficient on sender
+				CAmount nTotal = 0;
+				for (auto& amountTuple : theAssetAllocation.listSendingAllocationAmounts) {
+					nTotal += amountTuple.second;
+					if(amountTuple.second <= 0)
+					{
+						errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("Receiving amount must be positive");
+						return true;
+					}
+				}
+				if (dbAssetAllocation.nBalance < nTotal) {
 					errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("Sender balance is insufficient");
 					return true;
 				}
-				DeductBalance(dbAssetAllocation.listAllocations, theAssetAllocation.listAllocations);
+				dbAssetAllocation.nBalance -= nTotal;
+				for (auto& amountTuple : theAssetAllocation.listSendingAllocationAmounts) {
+					CAssetAllocation receiverAllocation;
+					const CAssetAllocationTuple receiverAllocationTuple(theAssetAllocation.vchAsset, amountTuple.first);
+					// don't need to check for existance of allocation because it may not exist, may be creating it here for the first time for receiver
+					GetAssetAllocation(receiverAllocationTuple, receiverAllocation);
 
-				AddBalance()
+					// check receiver alias
+					if (!GetAlias(amountTuple.first, alias))
+					{
+						errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2024 - " + _("Cannot find alias you are transferring to.");
+						continue;
+					}
+					if (!(alias.nAcceptTransferFlags & ACCEPT_TRANSFER_ASSETS))
+					{
+						errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("An alias you are transferring to does not accept asset transfers");
+						continue;
+					}
+
+					receiverAllocation.nBalance += amountTuple.second;
+					if (!dontaddtodb) {
+						receiverAllocation.nHeight = nHeight;
+						receiverAllocation.txHash = tx.GetHash();
+						// we know the receiver update is not a double spend so we lock it in with false meaning we should store previous db entry with this one
+						if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, op, false))
+						{
+							errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to write to asset allocation DB");
+							continue;
+						}
+						if (strResponse != "") {
+							const string &user2recv = stringFromVch(receiverAllocation.vchAlias);
+							paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, receiverAllocationTuple.ToString(), nLockStatus);
+						}
+					}
+					
+				}
+
 			}
 
 		}
 		// sending asset to allocation
 		else if (dbAsset.vchAlias == vvchAliasArgs[0]) {
 
-		}*/
+		}
 		else {
 			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot send this assetallocation. Asset allocation owner must sign off on this change.");
 			return true;
 		}
 
 	}
-	if (!dontaddtodb) {
-		if (strResponse != "") {
-			paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, assetAllocationTuple.ToString(), nLockStatus);
-		}
-	}
 	// set the assetallocation's txn-dependent values
 	theAssetAllocation.nHeight = nHeight;
 	theAssetAllocation.txHash = tx.GetHash();
 	// write assetallocation  
 	if (!dontaddtodb) {
-		if (!passetallocationdb->WriteAssetAllocation(theAssetAllocation, dbAssetAllocation, op, fJustCheck))
+		if (!passetallocationdb->WriteAssetAllocation(theAssetAllocation, op, fJustCheck))
 		{
-			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to write to assetifcate DB");
+			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to write to asset allocation DB");
 			return error(errorMessage.c_str());
 		}
 		// debug

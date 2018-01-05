@@ -94,10 +94,10 @@ class CCertDB : public CDBWrapper {
 public:
     CCertDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "certificates", nCacheSize, fMemory, fWipe) {}
 
-    bool WriteCert(const CCert& cert, const CCert& prevCert, const int &op, const bool &fJustCheck) {
+    bool WriteCert(const CCert& cert, const int &op, const bool &fJustCheck) {
 		bool writeState =  Write(make_pair(std::string("certi"), cert.vchCert), cert);
-		if (!fJustCheck && !prevCert.IsNull())
-			writeState = writeState && Write(make_pair(std::string("certp"), cert.vchCert), prevCert);
+		if (!fJustChec)
+			writeState = writeState && Write(make_pair(std::string("certp"), cert.vchCert), cert);
 		else if (fJustCheck)
 			writeState = writeState && Write(make_pair(std::string("certl"), cert.vchCert), fJustCheck);
 		WriteCertIndex(cert, op);
