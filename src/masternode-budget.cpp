@@ -486,13 +486,13 @@ void CBudgetManager::FillBlockPayee(CMutableTransaction& txNew, CAmount nFees)
 
     CAmount blockValue = GetBlockValue(pindexPrev->nBits, pindexPrev->nHeight, nFees);
 
-    // Miners get the full amount on these blocks
+    //miners get the full amount on these blocks
     txNew.vout[0].nValue = blockValue;
 
     if(nHighestCount > 0){
         txNew.vout.resize(2);
 
-        // These are super blocks, so their value can be much larger than normal
+        //these are super blocks, so their value can be much larger than normal
         txNew.vout[1].scriptPubKey = payee;
         txNew.vout[1].nValue = nAmount;
 
@@ -501,22 +501,7 @@ void CBudgetManager::FillBlockPayee(CMutableTransaction& txNew, CAmount nFees)
         CBitcoinAddress address2(address1);
 
         LogPrintf("CBudgetManager::FillBlockPayee - Budget payment to %s for %lld\n", address2.ToString(), nAmount);
-    } else {
-        // Pay dev fund
-        txNew.vout.resize(2);
-
-        // These are super blocks, so their value can be much larger than normal
-        CTxDestination dest = CBitcoinAddress(Params().DevfundAddress()).Get();
-        txNew.vout[1].scriptPubKey = GetScriptForDestination(dest);
-        CAmount coins = 43200 * COIN;
-        if (Params().NetworkID() == CBaseChainParams::TESTNET) {
-            coins = 50 * COIN;
-        }
-        txNew.vout[1].nValue = coins;
-
-        LogPrintf("CBudgetManager::FillBlockPayee - Budget payment to Dev fund for %lld\n", nAmount);
-    }
-
+   }
 }
 
 CFinalizedBudget *CBudgetManager::FindFinalizedBudget(uint256 nHash)
@@ -576,10 +561,9 @@ bool CBudgetManager::IsBudgetPaymentBlock(int nBlockHeight)
     }
 
     /*
-        If budget doesn't have 5% of the network votes, then we should pay the dev fund instead
+        If budget doesn't have 5% of the network votes, then we should pay a masternode instead
     */
     if(nHighestCount > mnodeman.CountEnabled(MIN_BUDGET_PEER_PROTO_VERSION)/20) return true;
-    if (nBlockHeight % GetBudgetPaymentCycleBlocks() == 0) return true;
 
     return false;
 }
@@ -629,15 +613,12 @@ bool CBudgetManager::IsTransactionValid(const CTransaction& txNew, int nBlockHei
     }
 
     /*
-        If budget doesn't have 5% of the network votes, then we should the dev fund instead
+        If budget doesn't have 5% of the network votes, then we should pay a masternode instead
     */
-    if(nHighestCount < mnodeman.CountEnabled(MIN_BUDGET_PEER_PROTO_VERSION)/20) {
-        return false;
-    } else if (IsDevTransactionValid(txNew, nBlockHeight)) {
-        return true;
-    }
+    if(nHighestCount < mnodeman.CountEnabled(MIN_BUDGET_PEER_PROTO_VERSION)/20) return false;
 
-    // Check the highest finalized budgets (+/- 10% to assist in consensus)
+    // check the highest finalized budgets (+/- 10% to assist in consensus)
+
     it = mapFinalizedBudgets.begin();
     while(it != mapFinalizedBudgets.end())
     {
@@ -654,49 +635,8 @@ bool CBudgetManager::IsTransactionValid(const CTransaction& txNew, int nBlockHei
         ++it;
     }
 
-    // If budget has more than 5% of the votes but less than 10% pay the dev fund.
-    // If anything goes wrong above it will default to use IsDevTransactionValid.
-    if(nHighestCount < mnodeman.CountEnabled(MIN_BUDGET_PEER_PROTO_VERSION)/10)
-    {
-        // Check dev fund payment
-        if (IsDevTransactionValid(txNew, nBlockHeight)) {
-            return true;
-        }
-    }
-
-    // We looked through all of the known budgets
+    //we looked through all of the known budgets
     return false;
-}
-
-bool CBudgetManager::IsDevTransactionValid(const CTransaction& txNew, int nBlockHeight)
-{
-    int nCurrentBudgetPayment = nBlockHeight % GetBudgetPaymentCycleBlocks();
-    if(nCurrentBudgetPayment > 0) {
-        LogPrintf("CFinalizedBudget::IsTransactionValid - Invalid block - height: %d\n", nBlockHeight);
-        return false;
-    }
-
-    bool found = false;
-    CTxDestination dest = CBitcoinAddress(Params().DevfundAddress()).Get();
-    CScript devscript = GetScriptForDestination(dest);
-    BOOST_FOREACH(CTxOut out, txNew.vout)
-    {
-        CAmount coins = 43200 * COIN;
-        if (Params().NetworkID() == CBaseChainParams::TESTNET) {
-            coins = 50 * COIN;
-        }
-        if(devscript == out.scriptPubKey && coins == out.nValue)
-            found = true;
-    }
-    if(!found) {
-        CTxDestination address1;
-        ExtractDestination(devscript, address1);
-        CBitcoinAddress address2(address1);
-
-        LogPrintf("CFinalizedBudget::IsTransactionValid - Missing required payment - %s\n", address2.ToString());
-    }
-    
-    return found;
 }
 
 std::vector<CBudgetProposal*> CBudgetManager::GetAllProposals()
