@@ -25,6 +25,7 @@
 #include <mongoc.h>
 using namespace std;
 extern mongoc_collection_t *assetallocation_collection;
+extern mongoc_collection_t *assetallocation_collection
 extern void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsigned char> &vchWitness, const CRecipient &aliasRecipient, CRecipient &aliasPaymentRecipient, vector<CRecipient> &vecSend, CWalletTx& wtxNew, CCoinControl* coinControl, bool fUseInstantSend=false, bool transferAlias=false);
 bool IsAssetAllocationOp(int op) {
 	return op == OP_ASSET_ALLOCATION_SEND;
@@ -407,8 +408,8 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 						errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from assetallocation DB");
 						return error(errorMessage.c_str());
 					}
-					paliasdb->EraseAliasIndexTxHistory(txHashHex + assetAllocationTuple.ToString());
-					passetdb->EraseAssetAllocationIndex(assetAllocationTuple);
+					paliasdb->EraseAliasIndexTxHistory(tx.GetHash().GetHex()+"-"+assetAllocationTuple.ToString());
+					passetallocationdb->EraseAssetAllocationIndex(assetAllocationTuple);
 				}
 			}
 			else {
@@ -570,8 +571,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 							continue;
 						}
 						if (strResponse != "") {
-							const string &user2recv = stringFromVch(receiverAllocation.vchAlias);
-							paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, receiverAllocationTuple.ToString(), nLockStatus);
+							paliasdb->WriteAliasIndexTxHistory(user1, stringFromVch(receiverAllocation.vchAlias), user3, tx.GetHash(), nHeight, strResponseEnglish, receiverAllocationTuple.ToString(), nLockStatus);
 						}
 					}
 					
