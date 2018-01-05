@@ -647,7 +647,7 @@ UniValue assetallocationsend(const UniValue& params, bool fHelp) {
 
 	CScript scriptPubKey;
 	theAssetAllocation.nHeight = chainActive.Tip()->nHeight;
-	theAssetAllocation.listSendingAllocationAmounts.push_back(pair<vchAliasTo, AmountFromValue(params[3])>);
+	theAssetAllocation.listSendingAllocationAmounts.push_back(make_pair(vchAliasTo, AmountFromValue(params[3])));
 
 	vector<unsigned char> data;
 	theAssetAllocation.Serialize(data);
