@@ -563,34 +563,9 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	else if(op != OP_ASSET_ACTIVATE)
 		theAsset.nBalance = dbAsset.nBalance;
 
-	if (op != OP_ASSET_ACTIVATE)
-	{
-		if (theAsset.vchAlias.empty())
-			theAsset.vchAlias = dbAsset.vchAlias;
-		if (theAsset.vchPubData.empty())
-			theAsset.vchPubData = dbAsset.vchPubData;
-		theAsset.vchName = dbAsset.vchName;
-		if (theAsset.sCategory.empty())
-			theAsset.sCategory = dbAsset.sCategory;
-
-		theAsset.nTotalSupply = dbAsset.nTotalSupply;
-
-		if (op == OP_ASSET_TRANSFER)
-		{
-			// check toalias
-			if (!GetAlias(theAsset.vchAlias, alias))
-			{
-				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2024 - " + _("Cannot find alias you are transferring to");
-				return true;
-			}
-			if (!(alias.nAcceptTransferFlags & ACCEPT_TRANSFER_ASSETS))
-			{
-				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("The alias you are transferring to does not accept assets");
-				return true;
-			}
-		}
-	}
 	if (op == OP_ASSET_SEND) {
+		theAsset = dbAsset;
+
 		CAssetAllocation dbAssetAllocation;
 		const CAssetAllocationTuple allocationTuple(theAssetAllocation.vchAsset, vvchAliasArgs[0]);
 		GetAssetAllocation(allocationTuple, dbAssetAllocation);
@@ -660,6 +635,33 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			}
 		}
 	}
+	else if (op != OP_ASSET_ACTIVATE)
+	{
+		if (theAsset.vchAlias.empty())
+			theAsset.vchAlias = dbAsset.vchAlias;
+		if (theAsset.vchPubData.empty())
+			theAsset.vchPubData = dbAsset.vchPubData;
+		theAsset.vchName = dbAsset.vchName;
+		if (theAsset.sCategory.empty())
+			theAsset.sCategory = dbAsset.sCategory;
+
+		theAsset.nTotalSupply = dbAsset.nTotalSupply;
+
+		if (op == OP_ASSET_TRANSFER)
+		{
+			// check toalias
+			if (!GetAlias(theAsset.vchAlias, alias))
+			{
+				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2024 - " + _("Cannot find alias you are transferring to");
+				return true;
+			}
+			if (!(alias.nAcceptTransferFlags & ACCEPT_TRANSFER_ASSETS))
+			{
+				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("The alias you are transferring to does not accept assets");
+				return true;
+			}
+		}
+	}
 	if (op == OP_ASSET_ACTIVATE)
 	{
 		if (fJustCheck && GetAsset(theAsset.vchAsset, theAsset))
@@ -687,7 +689,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		if (fDebug)
 			LogPrintf("CONNECTED ASSET: op=%s asset=%s hash=%s height=%d fJustCheck=%d\n",
 				assetFromOp(op).c_str(),
-				stringFromVch(theAsset.vchAsset).c_str(),
+				stringFromVch(op == OP_ASSET_SEND? theAssetAllocation.vchAsset: theAsset.vchAsset).c_str(),
 				tx.GetHash().ToString().c_str(),
 				nHeight,
 				fJustCheck ? 1 : 0);
