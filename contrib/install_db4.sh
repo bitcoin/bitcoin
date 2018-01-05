@@ -72,7 +72,7 @@ patch -p2 < clang.patch
 cd build_unix/
 
 "${BDB_PREFIX}/${BDB_VERSION}/dist/configure" \
-  --enable-cxx --disable-shared --with-pic --prefix="${BDB_PREFIX}" \
+  --enable-cxx --disable-shared --disable-replication --with-pic --prefix="${BDB_PREFIX}" \
   "${@}"
 
 make install
