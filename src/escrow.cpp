@@ -1347,7 +1347,6 @@ UniValue escrowbid(const UniValue& params, bool fHelp) {
 	vector<unsigned char> vchEscrow = vchFromValue(params[1]);
 	CAmount nBid = AmountFromValue(params[2].get_real());
 	float fBid = params[3].get_real();
-	uint64_t nHeight = chainActive.Tip()->nHeight;
 	// check for alias existence in DB
 	CAliasIndex bidalias;
 	if (!GetAlias(vchAlias, bidalias))
@@ -1376,7 +1375,6 @@ UniValue escrowbid(const UniValue& params, bool fHelp) {
 	theEscrow.op = OP_ESCROW_ACTIVATE;
 	theEscrow.nAmountOrBidPerUnit = nBid;
 	theEscrow.fBidPerUnit = fBid;
-	theEscrow.nHeight = chainActive.Tip()->nHeight;
 	vector<unsigned char> data;
 	theEscrow.Serialize(data);
 	uint256 hash = Hash(data.begin(), data.end());
@@ -1429,7 +1427,6 @@ UniValue escrowaddshipping(const UniValue& params, bool fHelp) {
 
 	vector<unsigned char> vchEscrow = vchFromValue(params[0]);
 	CAmount nShipping = AmountFromValue(params[1].get_real());
-	uint64_t nHeight = chainActive.Tip()->nHeight;
 
 	vector<unsigned char> vchWitness;
 	vchWitness = vchFromValue(params[2]);
@@ -1462,7 +1459,6 @@ UniValue escrowaddshipping(const UniValue& params, bool fHelp) {
 	theEscrow.ClearEscrow();
 	theEscrow.op = OP_ESCROW_ADD_SHIPPING;
 	theEscrow.nShipping += nShipping;
-	theEscrow.nHeight = chainActive.Tip()->nHeight;
 	vector<unsigned char> data;
 	theEscrow.Serialize(data);
 	uint256 hash = Hash(data.begin(), data.end());
@@ -1536,7 +1532,6 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	bool bBuyNow = params[5].get_bool();
 	CAmount nPricePerUnit = AmountFromValue(params[6].get_real());
 	
-	uint64_t nHeight = chainActive.Tip()->nHeight;
 	boost::algorithm::to_lower(strArbiter);
 	// check for alias existence in DB
 	CAliasIndex arbiteralias;
@@ -1724,7 +1719,6 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	newEscrow.vchLinkSellerAlias = reselleralias.vchAlias;
 	newEscrow.nQty = nQty;
 	newEscrow.nPaymentOption = paymentOptionMask;
-	newEscrow.nHeight = chainActive.Tip()->nHeight;
 	newEscrow.nCommission = nCommission;
 	newEscrow.nNetworkFee = nNetworkFee;
 	newEscrow.nArbiterFee = nEscrowFee;
@@ -1827,7 +1821,6 @@ UniValue escrowacknowledge(const UniValue& params, bool fHelp) {
 	scriptPubKeyAlias += sellerScript;
 
 	escrow.ClearEscrow();
-	escrow.nHeight = chainActive.Tip()->nHeight;
 	escrow.op = OP_ESCROW_ACKNOWLEDGE;
 
 	vector<unsigned char> data;
@@ -2090,7 +2083,6 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 		if(!signedTx.vin[i].scriptSig.empty())
 			escrow.scriptSigs.push_back((CScriptBase)signedTx.vin[i].scriptSig);
 	}
-	escrow.nHeight = chainActive.Tip()->nHeight;
 	escrow.bPaymentAck = false;
 	vector<unsigned char> data;
 	unsigned char escrowrole = 0;
@@ -2180,7 +2172,6 @@ UniValue escrowcompleterelease(const UniValue& params, bool fHelp) {
 	escrow.ClearEscrow();
 	escrow.op = OP_ESCROW_RELEASE_COMPLETE;
 	escrow.bPaymentAck = false;
-	escrow.nHeight = chainActive.Tip()->nHeight;
 	escrow.redeemTxId = myRawTx.GetHash();
     CScript scriptPubKeyBuyer, scriptPubKeySeller;
 
@@ -2294,7 +2285,6 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 		if (!signedTx.vin[i].scriptSig.empty())
 			escrow.scriptSigs.push_back((CScriptBase)signedTx.vin[i].scriptSig);
 	}
-	escrow.nHeight = chainActive.Tip()->nHeight;
 	escrow.bPaymentAck = false;
 	unsigned char escrowrole = 0;
 	if (role == "arbiter")
@@ -2387,7 +2377,6 @@ UniValue escrowcompleterefund(const UniValue& params, bool fHelp) {
 	escrow.ClearEscrow();
 	escrow.op = OP_ESCROW_REFUND_COMPLETE;
 	escrow.bPaymentAck = false;
-	escrow.nHeight = chainActive.Tip()->nHeight;
 	escrow.redeemTxId = myRawTx.GetHash();
 	CScript scriptPubKeyBuyer, scriptPubKeySeller, scriptPubKeyArbiter;
 
@@ -2520,7 +2509,6 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 	escrow.vchEscrow = vchEscrow;
 	escrow.op = OP_ESCROW_FEEDBACK;
 	escrow.bPaymentAck = false;
-	escrow.nHeight = chainActive.Tip()->nHeight;
 	// buyer
 	CFeedback feedback;
 	feedback.nRating = nRating;

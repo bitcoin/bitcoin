@@ -873,7 +873,6 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 	newOffer.sTitle = vchTitle;
 	newOffer.sDescription = vchDescription;
 	newOffer.nQty = nQty;
-	newOffer.nHeight = chainActive.Tip()->nHeight;
 	if (!vchCert.empty())
 		newOffer.vchCert = theCert.vchCert;
 	newOffer.sCurrencyCode = vchCurrency;
@@ -976,7 +975,6 @@ UniValue offerlink(const UniValue& params, bool fHelp) {
 	newOffer.sDescription = vchDescription;
 	newOffer.nCommission = commissionInteger;
 	newOffer.vchLinkOffer = linkOffer.vchOffer;
-	newOffer.nHeight = chainActive.Tip()->nHeight;
 	newOffer.sCategory = linkOffer.sCategory;
 	newOffer.sTitle = linkOffer.sTitle;
 	//create offeractivate txn keys
@@ -1142,7 +1140,6 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 
 	COffer offerCopy = theOffer;
 	theOffer.ClearOffer();
-	theOffer.nHeight = chainActive.Tip()->nHeight;
 
 	if(strCurrency != stringFromVch(offerCopy.sCurrencyCode))
 		theOffer.sCurrencyCode = vchFromString(strCurrency);
@@ -1176,7 +1173,6 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	theOffer.auctionOffer.nExpireTime = nExpireTime;
 	theOffer.auctionOffer.fDepositPercentage = fAuctionDeposit;
 
-	theOffer.nHeight = chainActive.Tip()->nHeight;
 
 	vector<unsigned char> data;
 	theOffer.Serialize(data);

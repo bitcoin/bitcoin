@@ -413,12 +413,6 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5005 - " + _("Alias public value too big");
 			return error(errorMessage.c_str());
 		}
-
-		if(theAlias.nHeight > nHeight)
-		{
-			errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5009 - " + _("Bad alias height");
-			return error(errorMessage.c_str());
-		}
 		if(theAlias.vchEncryptionPrivateKey.size() > MAX_ENCRYPTED_GUID_LENGTH)
 		{
 			errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 3006 - " + _("Encryption private key too long");
@@ -2139,7 +2133,6 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
     CAliasIndex newAlias;
 	newAlias.vchGUID = vchRandAlias;
 	newAlias.vchAlias = vchAlias;
-	newAlias.nHeight = chainActive.Tip()->nHeight;
 	if(!strEncryptionPublicKey.empty())
 		newAlias.vchEncryptionPublicKey = ParseHex(strEncryptionPublicKey);
 	if(!strEncryptionPrivateKey.empty())
@@ -2276,7 +2269,6 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 
 	CAliasIndex copyAlias = theAlias;
 	theAlias.ClearAlias();
-	theAlias.nHeight = chainActive.Tip()->nHeight;
 	if(strPublicValue != stringFromVch(copyAlias.vchPublicValue))
 		theAlias.vchPublicValue = vchFromString(strPublicValue);
 	if(strEncryptionPrivateKey != HexStr(copyAlias.vchEncryptionPrivateKey))
@@ -2890,7 +2882,6 @@ UniValue aliasupdatewhitelist(const UniValue& params, bool fHelp) {
 	GetAddress(theAlias, &aliasAddress, scriptPubKeyOrig);
 	CAliasIndex copyAlias = theAlias;
 	theAlias.ClearAlias();
-	theAlias.nHeight = chainActive.Tip()->nHeight;
 
 	for (unsigned int idx = 0; idx < whitelistEntries.size(); idx++) {
 		const UniValue& p = whitelistEntries[idx];
@@ -2968,7 +2959,6 @@ UniValue aliasclearwhitelist(const UniValue& params, bool fHelp) {
 	entry.nDiscountPct = 127;
 	CAliasIndex copyAlias = theAlias;
 	theAlias.ClearAlias();
-	theAlias.nHeight = chainActive.Tip()->nHeight;
 	theAlias.offerWhitelist.PutWhitelistEntry(entry);
 	vector<unsigned char> data;
 	theAlias.Serialize(data);

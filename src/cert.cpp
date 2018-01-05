@@ -679,7 +679,6 @@ UniValue certnew(const UniValue& params, bool fHelp) {
 	newCert.sCategory = vchFromString(strCategory);
 	newCert.vchTitle = vchTitle;
 	newCert.vchPubData = vchPubData;
-	newCert.nHeight = chainActive.Tip()->nHeight;
 	newCert.vchAlias = vchAlias;
 
 	vector<unsigned char> data;
@@ -771,7 +770,6 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
 		theCert.sCategory = vchFromString(strCategory);
 	if(strTitle != stringFromVch(theCert.vchTitle))
 		theCert.vchTitle = vchFromString(strTitle);
-	theCert.nHeight = chainActive.Tip()->nHeight;
 	vector<unsigned char> data;
 	theCert.Serialize(data);
     uint256 hash = Hash(data.begin(), data.end());
@@ -859,7 +857,6 @@ UniValue certtransfer(const UniValue& params, bool fHelp) {
 	CCert copyCert = theCert;
 	theCert.ClearCert();
     CScript scriptPubKey;
-	theCert.nHeight = chainActive.Tip()->nHeight;
 	theCert.vchAlias = toAlias.vchAlias;
 
 	if(strPubData != stringFromVch(theCert.vchPubData))

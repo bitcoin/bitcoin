@@ -631,7 +631,6 @@ UniValue assetnew(const UniValue& params, bool fHelp) {
 	newAsset.sCategory = vchFromString(strCategory);
 	newAsset.vchName = vchName;
 	newAsset.vchPubData = vchPubData;
-	newAsset.nHeight = chainActive.Tip()->nHeight;
 	newAsset.vchAlias = vchAlias;
 
 	vector<unsigned char> data;
@@ -719,7 +718,6 @@ UniValue assetupdate(const UniValue& params, bool fHelp) {
 	if(strCategory != stringFromVch(theAsset.sCategory))
 		theAsset.sCategory = vchFromString(strCategory);
 
-	theAsset.nHeight = chainActive.Tip()->nHeight;
 	vector<unsigned char> data;
 	theAsset.Serialize(data);
     uint256 hash = Hash(data.begin(), data.end());
@@ -799,7 +797,6 @@ UniValue assettransfer(const UniValue& params, bool fHelp) {
 	CAsset copyAsset = theAsset;
 	theAsset.ClearAsset();
     CScript scriptPubKey;
-	theAsset.nHeight = chainActive.Tip()->nHeight;
 	theAsset.vchAlias = toAlias.vchAlias;
 
 
@@ -874,6 +871,7 @@ bool BuildAssetJson(const CAsset& asset, UniValue& oAsset)
 	oAsset.push_back(Pair("publicvalue", stringFromVch(asset.vchPubData)));
 	oAsset.push_back(Pair("category", stringFromVch(asset.sCategory)));
 	oAsset.push_back(Pair("alias", stringFromVch(asset.vchAlias)));
+	oAsset.push_back(Pair("balance", ValueFromAmount(asset.nBalance));
 	int64_t expired_time = GetAssetExpiration(asset);
 	bool expired = false;
 	if (expired_time <= chainActive.Tip()->GetMedianTimePast())
