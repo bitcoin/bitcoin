@@ -554,12 +554,15 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	}
 	if (op == OP_ASSET_UPDATE) {
 		theAsset.nBalance = dbAsset.nBalance + theAsset.nBalance;
-		if(theAsset.nTotalSupply > 0 && theAsset.nBalance > theAsset.nTotalSupply)
+		if (theAsset.nTotalSupply > 0 && theAsset.nBalance > theAsset.nTotalSupply)
 		{
 			errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Balance cannot exceed total supply");
 			return true;
 		}
 	}
+	else
+		theAsset.nBalance = dbAsset.nBalance;
+
 	if (op != OP_ASSET_ACTIVATE)
 	{
 		if (theAsset.vchAlias.empty())
@@ -588,9 +591,6 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		}
 	}
 	if (op == OP_ASSET_SEND) {
-		// start out with balance from db
-		theAsset.nBalance = dbAsset.nBalance;
-
 		CAssetAllocation dbAssetAllocation;
 		const CAssetAllocationTuple allocationTuple(theAssetAllocation.vchAsset, vvchAliasArgs[0]);
 		GetAssetAllocation(allocationTuple, dbAssetAllocation);
