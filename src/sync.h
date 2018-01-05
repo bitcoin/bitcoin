@@ -1,10 +1,11 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2016 The Bitcoin Core developers
+// Copyright (c) 2017 The Raven Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_SYNC_H
-#define BITCOIN_SYNC_H
+#ifndef RAVEN_SYNC_H
+#define RAVEN_SYNC_H
 
 #include "threadsafety.h"
 
@@ -196,7 +197,7 @@ private:
     int value;
 
 public:
-    CSemaphore(int init) : value(init) {}
+    explicit CSemaphore(int init) : value(init) {}
 
     void wait()
     {
@@ -265,9 +266,9 @@ public:
         fHaveGrant = false;
     }
 
-    CSemaphoreGrant() : sem(NULL), fHaveGrant(false) {}
+    CSemaphoreGrant() : sem(nullptr), fHaveGrant(false) {}
 
-    CSemaphoreGrant(CSemaphore& sema, bool fTry = false) : sem(&sema), fHaveGrant(false)
+    explicit CSemaphoreGrant(CSemaphore& sema, bool fTry = false) : sem(&sema), fHaveGrant(false)
     {
         if (fTry)
             TryAcquire();
@@ -280,10 +281,10 @@ public:
         Release();
     }
 
-    operator bool()
+    operator bool() const
     {
         return fHaveGrant;
     }
 };
 
-#endif // BITCOIN_SYNC_H
+#endif // RAVEN_SYNC_H

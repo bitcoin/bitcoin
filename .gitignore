@@ -1,12 +1,14 @@
 *.tar.gz
 
-src/bitcoin
-src/bitcoind
-src/bitcoin-cli
-src/bitcoin-tx
-src/test/test_bitcoin
-src/test/test_bitcoin_fuzzy
-src/qt/test/test_bitcoin-qt
+src/raven
+src/ravend
+src/raven-cli
+src/raven-tx
+src/test/test_raven
+src/test/test_raven_fuzzy
+src/qt/test/test_raven-qt
+.vscode
+output.txt
 
 # autoreconf
 Makefile.in
@@ -29,8 +31,8 @@ config.log
 config.status
 configure
 libtool
-src/config/bitcoin-config.h
-src/config/bitcoin-config.h.in
+src/config/raven-config.h
+src/config/raven-config.h.in
 src/config/stamp-h1
 share/setup.nsi
 share/qt/Info.plist
@@ -42,6 +44,11 @@ src/qt/moc_*.cpp
 src/qt/forms/ui_*.h
 
 src/qt/test/moc*.cpp
+
+.settings
+.cproject
+.project
+.vscode
 
 .deps
 .dirstamp
@@ -72,12 +79,12 @@ src/qt/test/moc*.cpp
 # Compilation and Qt preprocessor part
 *.qm
 Makefile
-bitcoin-qt
-Bitcoin-Qt.app
+raven-qt
+Raven-Qt.app
 
 # Unit-tests
 Makefile.test
-bitcoin-qt_test
+raven-qt_test
 
 # Resources cpp
 qrc_*.cpp
@@ -90,7 +97,7 @@ build
 *.gcno
 *.gcda
 /*.info
-test_bitcoin.coverage/
+test_raven.coverage/
 total.coverage/
 coverage_percent.txt
 
@@ -105,5 +112,5 @@ test/cache/*
 
 /doc/doxygen/
 
-libbitcoinconsensus.pc
+libravenconsensus.pc
 contrib/devtools/split-debug.sh

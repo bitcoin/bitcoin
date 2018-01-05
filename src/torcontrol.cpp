@@ -1,4 +1,5 @@
 // Copyright (c) 2015-2016 The Bitcoin Core developers
+// Copyright (c) 2017 The Raven Core developers
 // Copyright (c) 2017 The Zcash developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -76,7 +77,7 @@ public:
 
     /** Create a new TorControlConnection.
      */
-    TorControlConnection(struct event_base *base);
+    explicit TorControlConnection(struct event_base *base);
     ~TorControlConnection();
 
     /**
@@ -121,7 +122,7 @@ private:
 };
 
 TorControlConnection::TorControlConnection(struct event_base *_base):
-    base(_base), b_conn(0)
+    base(_base), b_conn(nullptr)
 {
 }
 
@@ -138,8 +139,8 @@ void TorControlConnection::readcb(struct bufferevent *bev, void *ctx)
     size_t n_read_out = 0;
     char *line;
     assert(input);
-    //  If there is not a whole line to read, evbuffer_readln returns NULL
-    while((line = evbuffer_readln(input, &n_read_out, EVBUFFER_EOL_CRLF)) != NULL)
+    //  If there is not a whole line to read, evbuffer_readln returns nullptr
+    while((line = evbuffer_readln(input, &n_read_out, EVBUFFER_EOL_CRLF)) != nullptr)
     {
         std::string s(line, n_read_out);
         free(line);
@@ -210,7 +211,7 @@ bool TorControlConnection::Connect(const std::string &target, const ConnectionCB
     b_conn = bufferevent_socket_new(base, -1, BEV_OPT_CLOSE_ON_FREE);
     if (!b_conn)
         return false;
-    bufferevent_setcb(b_conn, TorControlConnection::readcb, NULL, TorControlConnection::eventcb, this);
+    bufferevent_setcb(b_conn, TorControlConnection::readcb, nullptr, TorControlConnection::eventcb, this);
     bufferevent_enable(b_conn, EV_READ|EV_WRITE);
     this->connected = _connected;
     this->disconnected = _disconnected;
@@ -227,7 +228,7 @@ bool TorControlConnection::Disconnect()
 {
     if (b_conn)
         bufferevent_free(b_conn);
-    b_conn = 0;
+    b_conn = nullptr;
     return true;
 }
 
@@ -333,7 +334,7 @@ static std::map<std::string,std::string> ParseTorReplyMapping(const std::string 
                         if (j == 3 && value[i] > '3') {
                             j--;
                         }
-                        escaped_value.push_back(strtol(value.substr(i, j).c_str(), NULL, 8));
+                        escaped_value.push_back(strtol(value.substr(i, j).c_str(), nullptr, 8));
                         // Account for automatic incrementing at loop end
                         i += j - 1;
                     } else {
@@ -367,7 +368,7 @@ static std::map<std::string,std::string> ParseTorReplyMapping(const std::string 
 static std::pair<bool,std::string> ReadBinaryFile(const fs::path &filename, size_t maxsize=std::numeric_limits<size_t>::max())
 {
     FILE *f = fsbridge::fopen(filename, "rb");
-    if (f == NULL)
+    if (f == nullptr)
         return std::make_pair(false,"");
     std::string retval;
     char buffer[128];
@@ -393,7 +394,7 @@ static std::pair<bool,std::string> ReadBinaryFile(const fs::path &filename, size
 static bool WriteBinaryFile(const fs::path &filename, const std::string &data)
 {
     FILE *f = fsbridge::fopen(filename, "wb");
-    if (f == NULL)
+    if (f == nullptr)
         return false;
     if (fwrite(data.data(), 1, data.size(), f) != data.size()) {
         fclose(f);
@@ -403,7 +404,7 @@ static bool WriteBinaryFile(const fs::path &filename, const std::string &data)
     return true;
 }
 
-/****** Bitcoin specific TorController implementation ********/
+/****** Raven specific TorController implementation ********/
 
 /** Controller that connects to Tor control socket, authenticate, then create
  * and maintain an ephemeral hidden service.
@@ -476,7 +477,7 @@ TorController::~TorController()
 {
     if (reconnect_ev) {
         event_free(reconnect_ev);
-        reconnect_ev = 0;
+        reconnect_ev = nullptr;
     }
     if (service.IsValid()) {
         RemoveLocal(service);
@@ -525,7 +526,7 @@ void TorController::auth_cb(TorControlConnection& _conn, const TorControlReply& 
 
         // Now that we know Tor is running setup the proxy for onion addresses
         // if -onion isn't set to something else.
-        if (GetArg("-onion", "") == "") {
+        if (gArgs.GetArg("-onion", "") == "") {
             CService resolved(LookupNumeric("127.0.0.1", 9050));
             proxyType addrOnion = proxyType(resolved, true);
             SetProxy(NET_TOR, addrOnion);
@@ -642,7 +643,7 @@ void TorController::protocolinfo_cb(TorControlConnection& _conn, const TorContro
          *   cookie:   hex-encoded ~/.tor/control_auth_cookie
          *   password: "password"
          */
-        std::string torpassword = GetArg("-torpassword", "");
+        std::string torpassword = gArgs.GetArg("-torpassword", "");
         if (!torpassword.empty()) {
             if (methods.count("HASHEDPASSWORD")) {
                 LogPrint(BCLog::TOR, "tor: Using HASHEDPASSWORD authentication\n");
@@ -662,7 +663,7 @@ void TorController::protocolinfo_cb(TorControlConnection& _conn, const TorContro
                 // _conn.Command("AUTHENTICATE " + HexStr(status_cookie.second), boost::bind(&TorController::auth_cb, this, _1, _2));
                 cookie = std::vector<uint8_t>(status_cookie.second.begin(), status_cookie.second.end());
                 clientNonce = std::vector<uint8_t>(TOR_NONCE_SIZE, 0);
-                GetRandBytes(&clientNonce[0], TOR_NONCE_SIZE);
+                GetRandBytes(clientNonce.data(), TOR_NONCE_SIZE);
                 _conn.Command("AUTHCHALLENGE SAFECOOKIE " + HexStr(clientNonce), boost::bind(&TorController::authchallenge_cb, this, _1, _2));
             } else {
                 if (status_cookie.first) {
@@ -735,7 +736,7 @@ static boost::thread torControlThread;
 
 static void TorControlThread()
 {
-    TorController ctrl(gBase, GetArg("-torcontrol", DEFAULT_TOR_CONTROL));
+    TorController ctrl(gBase, gArgs.GetArg("-torcontrol", DEFAULT_TOR_CONTROL));
 
     event_base_dispatch(gBase);
 }
@@ -770,7 +771,7 @@ void StopTorControl()
     if (gBase) {
         torControlThread.join();
         event_base_free(gBase);
-        gBase = 0;
+        gBase = nullptr;
     }
 }
 

@@ -1,9 +1,10 @@
 // Copyright (c) 2011-2016 The Bitcoin Core developers
+// Copyright (c) 2017 The Raven Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_QT_PEERTABLEMODEL_H
-#define BITCOIN_QT_PEERTABLEMODEL_H
+#ifndef RAVEN_QT_PEERTABLEMODEL_H
+#define RAVEN_QT_PEERTABLEMODEL_H
 
 #include "net_processing.h" // For CNodeStateStats
 #include "net.h"
@@ -55,8 +56,10 @@ public:
     enum ColumnIndex {
         NetNodeId = 0,
         Address = 1,
-        Subversion = 2,
-        Ping = 3
+        Ping = 2,
+        Sent = 3,
+        Received = 4,
+        Subversion = 5
     };
 
     /** @name Methods overridden from QAbstractTableModel
@@ -80,4 +83,4 @@ private:
     QTimer *timer;
 };
 
-#endif // BITCOIN_QT_PEERTABLEMODEL_H
+#endif // RAVEN_QT_PEERTABLEMODEL_H

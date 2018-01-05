@@ -1,11 +1,12 @@
 // Copyright (c) 2012-2016 The Bitcoin Core developers
+// Copyright (c) 2017 The Raven Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "dbwrapper.h"
 #include "uint256.h"
 #include "random.h"
-#include "test/test_bitcoin.h"
+#include "test/test_raven.h"
 
 #include <boost/test/unit_test.hpp>
 
@@ -24,8 +25,7 @@ BOOST_FIXTURE_TEST_SUITE(dbwrapper_tests, BasicTestingSetup)
 BOOST_AUTO_TEST_CASE(dbwrapper)
 {
     // Perform tests both obfuscated and non-obfuscated.
-    for (int i = 0; i < 2; i++) {
-        bool obfuscate = (bool)i;
+    for (bool obfuscate : {false, true}) {
         fs::path ph = fs::temp_directory_path() / fs::unique_path();
         CDBWrapper dbw(ph, (1 << 20), true, false, obfuscate);
         char key = 'k';
@@ -45,8 +45,7 @@ BOOST_AUTO_TEST_CASE(dbwrapper)
 BOOST_AUTO_TEST_CASE(dbwrapper_batch)
 {
     // Perform tests both obfuscated and non-obfuscated.
-    for (int i = 0; i < 2; i++) {
-        bool obfuscate = (bool)i;
+    for (bool obfuscate : {false, true}) {
         fs::path ph = fs::temp_directory_path() / fs::unique_path();
         CDBWrapper dbw(ph, (1 << 20), true, false, obfuscate);
 
@@ -82,8 +81,7 @@ BOOST_AUTO_TEST_CASE(dbwrapper_batch)
 BOOST_AUTO_TEST_CASE(dbwrapper_iterator)
 {
     // Perform tests both obfuscated and non-obfuscated.
-    for (int i = 0; i < 2; i++) {
-        bool obfuscate = (bool)i;
+    for (bool obfuscate : {false, true}) {
         fs::path ph = fs::temp_directory_path() / fs::unique_path();
         CDBWrapper dbw(ph, (1 << 20), true, false, obfuscate);
 
@@ -95,7 +93,7 @@ BOOST_AUTO_TEST_CASE(dbwrapper_iterator)
         uint256 in2 = InsecureRand256();
         BOOST_CHECK(dbw.Write(key2, in2));
 
-        std::unique_ptr<CDBIterator> it(const_cast<CDBWrapper*>(&dbw)->NewIterator());
+        std::unique_ptr<CDBIterator> it(const_cast<CDBWrapper&>(dbw).NewIterator());
 
         // Be sure to seek past the obfuscation key (if it exists)
         it->Seek(key);
@@ -207,24 +205,31 @@ BOOST_AUTO_TEST_CASE(iterator_ordering)
     for (int x=0x00; x<256; ++x) {
         uint8_t key = x;
         uint32_t value = x*x;
-        BOOST_CHECK(dbw.Write(key, value));
+        if (!(x & 1)) BOOST_CHECK(dbw.Write(key, value));
     }
 
-    std::unique_ptr<CDBIterator> it(const_cast<CDBWrapper*>(&dbw)->NewIterator());
-    for (int c=0; c<2; ++c) {
-        int seek_start;
-        if (c == 0)
-            seek_start = 0x00;
-        else
-            seek_start = 0x80;
+    // Check that creating an iterator creates a snapshot
+    std::unique_ptr<CDBIterator> it(const_cast<CDBWrapper&>(dbw).NewIterator());
+
+    for (int x=0x00; x<256; ++x) {
+        uint8_t key = x;
+        uint32_t value = x*x;
+        if (x & 1) BOOST_CHECK(dbw.Write(key, value));
+    }
+
+    for (int seek_start : {0x00, 0x80}) {
         it->Seek((uint8_t)seek_start);
-        for (int x=seek_start; x<256; ++x) {
+        for (int x=seek_start; x<255; ++x) {
             uint8_t key;
             uint32_t value;
             BOOST_CHECK(it->Valid());
             if (!it->Valid()) // Avoid spurious errors about invalid iterator's key and value in case of failure
                 break;
             BOOST_CHECK(it->GetKey(key));
+            if (x & 1) {
+                BOOST_CHECK_EQUAL(key, x + 1);
+                continue;
+            }
             BOOST_CHECK(it->GetValue(value));
             BOOST_CHECK_EQUAL(key, x);
             BOOST_CHECK_EQUAL(value, x*x);
@@ -239,7 +244,7 @@ struct StringContentsSerializer {
     // This is a terrible idea
     std::string str;
     StringContentsSerializer() {}
-    StringContentsSerializer(const std::string& inp) : str(inp) {}
+    explicit StringContentsSerializer(const std::string& inp) : str(inp) {}
 
     StringContentsSerializer& operator+=(const std::string& s) {
         str += s;
@@ -286,13 +291,8 @@ BOOST_AUTO_TEST_CASE(iterator_string_ordering)
         }
     }
 
-    std::unique_ptr<CDBIterator> it(const_cast<CDBWrapper*>(&dbw)->NewIterator());
-    for (int c=0; c<2; ++c) {
-        int seek_start;
-        if (c == 0)
-            seek_start = 0;
-        else
-            seek_start = 5;
+    std::unique_ptr<CDBIterator> it(const_cast<CDBWrapper&>(dbw).NewIterator());
+    for (int seek_start : {0, 5}) {
         snprintf(buf, sizeof(buf), "%d", seek_start);
         StringContentsSerializer seek_key(buf);
         it->Seek(seek_key);

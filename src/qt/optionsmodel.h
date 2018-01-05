@@ -1,9 +1,10 @@
 // Copyright (c) 2011-2016 The Bitcoin Core developers
+// Copyright (c) 2017 The Raven Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_QT_OPTIONSMODEL_H
-#define BITCOIN_QT_OPTIONSMODEL_H
+#ifndef RAVEN_QT_OPTIONSMODEL_H
+#define RAVEN_QT_OPTIONSMODEL_H
 
 #include "amount.h"
 
@@ -13,7 +14,7 @@ QT_BEGIN_NAMESPACE
 class QNetworkProxy;
 QT_END_NAMESPACE
 
-/** Interface from Qt to configuration data structure for Bitcoin client.
+/** Interface from Qt to configuration data structure for Raven client.
    To Qt, the options are presented as a list with the different options
    laid out vertically.
    This can be changed to a tree once the settings become sufficiently
@@ -38,7 +39,7 @@ public:
         ProxyUseTor,            // bool
         ProxyIPTor,             // QString
         ProxyPortTor,           // int
-        DisplayUnit,            // BitcoinUnits::Unit
+        DisplayUnit,            // RavenUnits::Unit
         ThirdPartyTxUrls,       // QString
         Language,               // QString
         CoinControlFeatures,    // bool
@@ -59,18 +60,18 @@ public:
     void setDisplayUnit(const QVariant &value);
 
     /* Explicit getters */
-    bool getHideTrayIcon() { return fHideTrayIcon; }
-    bool getMinimizeToTray() { return fMinimizeToTray; }
-    bool getMinimizeOnClose() { return fMinimizeOnClose; }
-    int getDisplayUnit() { return nDisplayUnit; }
-    QString getThirdPartyTxUrls() { return strThirdPartyTxUrls; }
+    bool getHideTrayIcon() const { return fHideTrayIcon; }
+    bool getMinimizeToTray() const { return fMinimizeToTray; }
+    bool getMinimizeOnClose() const { return fMinimizeOnClose; }
+    int getDisplayUnit() const { return nDisplayUnit; }
+    QString getThirdPartyTxUrls() const { return strThirdPartyTxUrls; }
     bool getProxySettings(QNetworkProxy& proxy) const;
-    bool getCoinControlFeatures() { return fCoinControlFeatures; }
+    bool getCoinControlFeatures() const { return fCoinControlFeatures; }
     const QString& getOverriddenByCommandLine() { return strOverriddenByCommandLine; }
 
     /* Restart flag helper */
     void setRestartRequired(bool fRequired);
-    bool isRestartRequired();
+    bool isRestartRequired() const;
 
 private:
     /* Qt-only settings */
@@ -95,4 +96,4 @@ Q_SIGNALS:
     void hideTrayIconChanged(bool);
 };
 
-#endif // BITCOIN_QT_OPTIONSMODEL_H
+#endif // RAVEN_QT_OPTIONSMODEL_H

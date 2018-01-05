@@ -26,7 +26,7 @@ import xml.etree.ElementTree as ET
 # Name of transifex tool
 TX = 'tx'
 # Name of source language file
-SOURCE_LANG = 'bitcoin_en.ts'
+SOURCE_LANG = 'raven_en.ts'
 # Directory with locale files
 LOCALE_DIR = 'src/qt/locale'
 # Minimum number of messages for translation to be considered at all
@@ -36,12 +36,12 @@ def check_at_repository_root():
     if not os.path.exists('.git'):
         print('No .git directory found')
         print('Execute this script at the root of the repository', file=sys.stderr)
-        exit(1)
+        sys.exit(1)
 
 def fetch_all_translations():
     if subprocess.call([TX, 'pull', '-f', '-a']):
         print('Error while fetching translations', file=sys.stderr)
-        exit(1)
+        sys.exit(1)
 
 def find_format_specifiers(s):
     '''Find all format specifiers in a string.'''

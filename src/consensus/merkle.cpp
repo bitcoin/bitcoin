@@ -1,4 +1,5 @@
 // Copyright (c) 2015-2016 The Bitcoin Core developers
+// Copyright (c) 2017 The Raven Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -101,7 +102,7 @@ static void MerkleComputation(const std::vector<uint256>& leaves, uint256* proot
     bool matchh = matchlevel == level;
     while (count != (((uint32_t)1) << level)) {
         // If we reach this point, h is an inner value that is not the top.
-        // We combine it with itself (Bitcoin's special rule for odd levels in
+        // We combine it with itself (Raven's special rule for odd levels in
         // the tree) to produce a higher level one.
         if (pbranch && matchh) {
             pbranch->push_back(h);
@@ -132,13 +133,13 @@ static void MerkleComputation(const std::vector<uint256>& leaves, uint256* proot
 
 uint256 ComputeMerkleRoot(const std::vector<uint256>& leaves, bool* mutated) {
     uint256 hash;
-    MerkleComputation(leaves, &hash, mutated, -1, NULL);
+    MerkleComputation(leaves, &hash, mutated, -1, nullptr);
     return hash;
 }
 
 std::vector<uint256> ComputeMerkleBranch(const std::vector<uint256>& leaves, uint32_t position) {
     std::vector<uint256> ret;
-    MerkleComputation(leaves, NULL, NULL, position, &ret);
+    MerkleComputation(leaves, nullptr, nullptr, position, &ret);
     return ret;
 }
 

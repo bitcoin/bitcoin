@@ -1,9 +1,10 @@
 // Copyright (c) 2015-2016 The Bitcoin Core developers
+// Copyright (c) 2017 The Raven Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef _BITCOIN_PREVECTOR_H_
-#define _BITCOIN_PREVECTOR_H_
+#ifndef RAVEN_PREVECTOR_H
+#define RAVEN_PREVECTOR_H
 
 #include <assert.h>
 #include <stdlib.h>
@@ -220,7 +221,7 @@ public:
         }
     }
 
-    prevector() : _size(0) {}
+    prevector() : _size(0), _union{{}} {}
 
     explicit prevector(size_type n) : _size(0) {
         resize(n);
@@ -448,7 +449,7 @@ public:
         }
         if (!is_direct()) {
             free(_union.indirect);
-            _union.indirect = NULL;
+            _union.indirect = nullptr;
         }
     }
 
@@ -514,4 +515,4 @@ public:
 };
 #pragma pack(pop)
 
-#endif
+#endif // RAVEN_PREVECTOR_H

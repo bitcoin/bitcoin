@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # Copyright (c) 2015-2016 The Bitcoin Core developers
+# Copyright (c) 2017 The Raven Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test behavior of -maxuploadtarget.
@@ -14,7 +15,7 @@ from collections import defaultdict
 import time
 
 from test_framework.mininode import *
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import RavenTestFramework
 from test_framework.util import *
 
 class TestNode(NodeConnCB):
@@ -29,10 +30,9 @@ class TestNode(NodeConnCB):
         message.block.calc_sha256()
         self.block_receive_map[message.block.sha256] += 1
 
-class MaxUploadTest(BitcoinTestFramework):
+class MaxUploadTest(RavenTestFramework):
  
-    def __init__(self):
-        super().__init__()
+    def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
         self.extra_args = [["-maxuploadtarget=800", "-blockmaxsize=999000"]]
@@ -147,7 +147,7 @@ class MaxUploadTest(BitcoinTestFramework):
         #stop and start node 0 with 1MB maxuploadtarget, whitelist 127.0.0.1
         self.log.info("Restarting nodes with -whitelist=127.0.0.1")
         self.stop_node(0)
-        self.nodes[0] = self.start_node(0, self.options.tmpdir, ["-whitelist=127.0.0.1", "-maxuploadtarget=1", "-blockmaxsize=999000"])
+        self.start_node(0, ["-whitelist=127.0.0.1", "-maxuploadtarget=1", "-blockmaxsize=999000"])
 
         #recreate/reconnect a test node
         test_nodes = [TestNode()]

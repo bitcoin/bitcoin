@@ -1,5 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2016 The Bitcoin Core developers
+// Copyright (c) 2017 The Raven Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,11 +8,11 @@
  * Server/client environment: argument handling, config file parsing,
  * logging, thread wrappers, startup time
  */
-#ifndef BITCOIN_UTIL_H
-#define BITCOIN_UTIL_H
+#ifndef RAVEN_UTIL_H
+#define RAVEN_UTIL_H
 
 #if defined(HAVE_CONFIG_H)
-#include "config/bitcoin-config.h"
+#include "config/raven-config.h"
 #endif
 
 #include "compat.h"
@@ -53,8 +54,8 @@ extern bool fLogIPs;
 extern std::atomic<bool> fReopenDebugLog;
 extern CTranslationInterface translationInterface;
 
-extern const char * const BITCOIN_CONF_FILENAME;
-extern const char * const BITCOIN_PID_FILENAME;
+extern const char * const RAVEN_CONF_FILENAME;
+extern const char * const RAVEN_PID_FILENAME;
 
 extern std::atomic<uint32_t> logCategories;
 
@@ -195,13 +196,20 @@ inline bool IsSwitchChar(char c)
 class ArgsManager
 {
 protected:
-    CCriticalSection cs_args;
+    mutable CCriticalSection cs_args;
     std::map<std::string, std::string> mapArgs;
-    std::map<std::string, std::vector<std::string> > mapMultiArgs;
+    std::map<std::string, std::vector<std::string>> mapMultiArgs;
 public:
     void ParseParameters(int argc, const char*const argv[]);
     void ReadConfigFile(const std::string& confPath);
-    std::vector<std::string> GetArgs(const std::string& strArg);
+
+    /**
+     * Return a vector of strings of the given argument
+     *
+     * @param strArg Argument to get (e.g. "-foo")
+     * @return command-line arguments
+     */
+    std::vector<std::string> GetArgs(const std::string& strArg) const;
 
     /**
      * Return true if the given argument has been manually set
@@ -209,34 +217,34 @@ public:
      * @param strArg Argument to get (e.g. "-foo")
      * @return true if the argument has been set
      */
-    bool IsArgSet(const std::string& strArg);
+    bool IsArgSet(const std::string& strArg) const;
 
     /**
      * Return string argument or default value
      *
      * @param strArg Argument to get (e.g. "-foo")
-     * @param default (e.g. "1")
+     * @param strDefault (e.g. "1")
      * @return command-line argument or default value
      */
-    std::string GetArg(const std::string& strArg, const std::string& strDefault);
+    std::string GetArg(const std::string& strArg, const std::string& strDefault) const;
 
     /**
      * Return integer argument or default value
      *
      * @param strArg Argument to get (e.g. "-foo")
-     * @param default (e.g. 1)
+     * @param nDefault (e.g. 1)
      * @return command-line argument (0 if invalid number) or default value
      */
-    int64_t GetArg(const std::string& strArg, int64_t nDefault);
+    int64_t GetArg(const std::string& strArg, int64_t nDefault) const;
 
     /**
      * Return boolean argument or default value
      *
      * @param strArg Argument to get (e.g. "-foo")
-     * @param default (true or false)
+     * @param fDefault (true or false)
      * @return command-line argument or default value
      */
-    bool GetBoolArg(const std::string& strArg, bool fDefault);
+    bool GetBoolArg(const std::string& strArg, bool fDefault) const;
 
     /**
      * Set an argument if it doesn't already have a value
@@ -262,52 +270,6 @@ public:
 };
 
 extern ArgsManager gArgs;
-
-// wrappers using the global ArgsManager:
-static inline void ParseParameters(int argc, const char*const argv[])
-{
-    gArgs.ParseParameters(argc, argv);
-}
-
-static inline void ReadConfigFile(const std::string& confPath)
-{
-    gArgs.ReadConfigFile(confPath);
-}
-
-static inline bool SoftSetArg(const std::string& strArg, const std::string& strValue)
-{
-    return gArgs.SoftSetArg(strArg, strValue);
-}
-
-static inline void ForceSetArg(const std::string& strArg, const std::string& strValue)
-{
-    gArgs.ForceSetArg(strArg, strValue);
-}
-
-static inline bool IsArgSet(const std::string& strArg)
-{
-    return gArgs.IsArgSet(strArg);
-}
-
-static inline std::string GetArg(const std::string& strArg, const std::string& strDefault)
-{
-    return gArgs.GetArg(strArg, strDefault);
-}
-
-static inline int64_t GetArg(const std::string& strArg, int64_t nDefault)
-{
-    return gArgs.GetArg(strArg, nDefault);
-}
-
-static inline bool GetBoolArg(const std::string& strArg, bool fDefault)
-{
-    return gArgs.GetBoolArg(strArg, fDefault);
-}
-
-static inline bool SoftSetBoolArg(const std::string& strArg, bool fValue)
-{
-    return gArgs.SoftSetBoolArg(strArg, fValue);
-}
 
 /**
  * Format a string to be used as group of options in help messages
@@ -340,7 +302,7 @@ void RenameThread(const char* name);
  */
 template <typename Callable> void TraceThread(const char* name,  Callable func)
 {
-    std::string s = strprintf("bitcoin-%s", name);
+    std::string s = strprintf("raven-%s", name);
     RenameThread(s.c_str());
     try
     {
@@ -358,11 +320,13 @@ template <typename Callable> void TraceThread(const char* name,  Callable func)
         throw;
     }
     catch (...) {
-        PrintExceptionContinue(NULL, name);
+        PrintExceptionContinue(nullptr, name);
         throw;
     }
 }
 
 std::string CopyrightHolders(const std::string& strPrefix);
 
-#endif // BITCOIN_UTIL_H
+void SetThreadPriority(int nPriority);
+
+#endif // RAVEN_UTIL_H

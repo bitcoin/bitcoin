@@ -1,4 +1,5 @@
 // Copyright (c) 2012-2016 The Bitcoin Core developers
+// Copyright (c) 2017 The Raven Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -15,11 +16,11 @@
 #include <stdint.h>
 #include <algorithm>
 
-class CBitcoinLevelDBLogger : public leveldb::Logger {
+class CRavenLevelDBLogger : public leveldb::Logger {
 public:
     // This code is adapted from posix_logger.h, which is why it is using vsprintf.
     // Please do not do this in normal code
-    virtual void Logv(const char * format, va_list ap) override {
+    void Logv(const char * format, va_list ap) override {
             if (!LogAcceptCategory(BCLog::LEVELDB)) {
                 return;
             }
@@ -42,7 +43,7 @@ public:
                 if (p < limit) {
                     va_list backup_ap;
                     va_copy(backup_ap, ap);
-                    // Do not use vsnprintf elsewhere in bitcoin source code, see above.
+                    // Do not use vsnprintf elsewhere in raven source code, see above.
                     p += vsnprintf(p, limit - p, format, backup_ap);
                     va_end(backup_ap);
                 }
@@ -81,7 +82,7 @@ static leveldb::Options GetOptions(size_t nCacheSize)
     options.filter_policy = leveldb::NewBloomFilterPolicy(10);
     options.compression = leveldb::kNoCompression;
     options.max_open_files = 64;
-    options.info_log = new CBitcoinLevelDBLogger();
+    options.info_log = new CRavenLevelDBLogger();
     if (leveldb::kMajorVersion > 1 || (leveldb::kMajorVersion == 1 && leveldb::kMinorVersion >= 16)) {
         // LevelDB versions before 1.16 consider short writes to be corruption. Only trigger error
         // on corruption in later versions.
@@ -92,7 +93,7 @@ static leveldb::Options GetOptions(size_t nCacheSize)
 
 CDBWrapper::CDBWrapper(const fs::path& path, size_t nCacheSize, bool fMemory, bool fWipe, bool obfuscate)
 {
-    penv = NULL;
+    penv = nullptr;
     readoptions.verify_checksums = true;
     iteroptions.verify_checksums = true;
     iteroptions.fill_cache = false;
@@ -114,6 +115,12 @@ CDBWrapper::CDBWrapper(const fs::path& path, size_t nCacheSize, bool fMemory, bo
     leveldb::Status status = leveldb::DB::Open(options, path.string(), &pdb);
     dbwrapper_private::HandleError(status);
     LogPrintf("Opened LevelDB successfully\n");
+
+    if (gArgs.GetBoolArg("-forcecompactdb", false)) {
+        LogPrintf("Starting database compaction of %s\n", path.string());
+        pdb->CompactRange(nullptr, nullptr);
+        LogPrintf("Finished database compaction of %s\n", path.string());
+    }
 
     // The base-case obfuscation key, which is a noop.
     obfuscate_key = std::vector<unsigned char>(OBFUSCATE_KEY_NUM_BYTES, '\000');
@@ -138,15 +145,15 @@ CDBWrapper::CDBWrapper(const fs::path& path, size_t nCacheSize, bool fMemory, bo
 CDBWrapper::~CDBWrapper()
 {
     delete pdb;
-    pdb = NULL;
+    pdb = nullptr;
     delete options.filter_policy;
-    options.filter_policy = NULL;
+    options.filter_policy = nullptr;
     delete options.info_log;
-    options.info_log = NULL;
+    options.info_log = nullptr;
     delete options.block_cache;
-    options.block_cache = NULL;
+    options.block_cache = nullptr;
     delete penv;
-    options.env = NULL;
+    options.env = nullptr;
 }
 
 bool CDBWrapper::WriteBatch(CDBBatch& batch, bool fSync)
@@ -184,7 +191,7 @@ bool CDBWrapper::IsEmpty()
 }
 
 CDBIterator::~CDBIterator() { delete piter; }
-bool CDBIterator::Valid() { return piter->Valid(); }
+bool CDBIterator::Valid() const { return piter->Valid(); }
 void CDBIterator::SeekToFirst() { piter->SeekToFirst(); }
 void CDBIterator::Next() { piter->Next(); }
 

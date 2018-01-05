@@ -240,7 +240,7 @@
 ["0", "IF NOP10 ENDIF 1", "P2SH,STRICTENC,DISCOURAGE_UPGRADABLE_NOPS", "OK",
  "Discouraged NOPs are allowed if not executed"],
 
-["0", "IF 0xba ELSE 1 ENDIF", "P2SH,STRICTENC", "OK", "opcodes above NOP10 invalid if executed"],
+["0", "IF 0xba ELSE 1 ENDIF", "P2SH,STRICTENC", "OK", "opcodes above MAX_OPCODE invalid if executed"],
 ["0", "IF 0xbb ELSE 1 ENDIF", "P2SH,STRICTENC", "OK"],
 ["0", "IF 0xbc ELSE 1 ENDIF", "P2SH,STRICTENC", "OK"],
 ["0", "IF 0xbd ELSE 1 ENDIF", "P2SH,STRICTENC", "OK"],
@@ -878,7 +878,7 @@
  "P2SH,DISCOURAGE_UPGRADABLE_NOPS", "DISCOURAGE_UPGRADABLE_NOPS", "Discouraged NOP10 in redeemScript"],
 
 ["0x50","1", "P2SH,STRICTENC", "BAD_OPCODE", "opcode 0x50 is reserved"],
-["1", "IF 0xba ELSE 1 ENDIF", "P2SH,STRICTENC", "BAD_OPCODE", "opcodes above NOP10 invalid if executed"],
+["1", "IF 0xba ELSE 1 ENDIF", "P2SH,STRICTENC", "BAD_OPCODE", "opcodes above MAX_OPCODE invalid if executed"],
 ["1", "IF 0xbb ELSE 1 ENDIF", "P2SH,STRICTENC", "BAD_OPCODE"],
 ["1", "IF 0xbc ELSE 1 ENDIF", "P2SH,STRICTENC", "BAD_OPCODE"],
 ["1", "IF 0xbd ELSE 1 ENDIF", "P2SH,STRICTENC", "BAD_OPCODE"],
@@ -1001,7 +1001,7 @@
 ["1","RESERVED", "P2SH,STRICTENC", "BAD_OPCODE", "OP_RESERVED is reserved"],
 ["1","RESERVED1", "P2SH,STRICTENC", "BAD_OPCODE", "OP_RESERVED1 is reserved"],
 ["1","RESERVED2", "P2SH,STRICTENC", "BAD_OPCODE", "OP_RESERVED2 is reserved"],
-["1","0xba", "P2SH,STRICTENC", "BAD_OPCODE", "0xba == OP_NOP10 + 1"],
+["1","0xba", "P2SH,STRICTENC", "BAD_OPCODE", "0xba == MAX_OPCODE + 1"],
 
 ["2147483648", "1ADD 1", "P2SH,STRICTENC", "UNKNOWN_ERROR", "We cannot do math on 5-byte integers"],
 ["2147483648", "NEGATE 1", "P2SH,STRICTENC", "UNKNOWN_ERROR", "We cannot do math on 5-byte integers"],

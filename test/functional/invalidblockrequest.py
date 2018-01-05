@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # Copyright (c) 2015-2016 The Bitcoin Core developers
+# Copyright (c) 2017 The Raven Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test node responses to invalid blocks.
@@ -23,9 +24,9 @@ class InvalidBlockRequestTest(ComparisonTestFramework):
 
     ''' Can either run this test as 1 node with expected answers, or two and compare them. 
         Change the "outcome" variable from each TestInstance object to only do the comparison. '''
-    def __init__(self):
-        super().__init__()
+    def set_test_params(self):
         self.num_nodes = 1
+        self.setup_clean_chain = True
 
     def run_test(self):
         test = TestManager(self, self.options.tmpdir)
@@ -77,8 +78,8 @@ class InvalidBlockRequestTest(ComparisonTestFramework):
         self.block_time += 1
 
         # b'0x51' is OP_TRUE
-        tx1 = create_transaction(self.block1.vtx[0], 0, b'\x51', 50 * COIN)
-        tx2 = create_transaction(tx1, 0, b'\x51', 50 * COIN)
+        tx1 = create_transaction(self.block1.vtx[0], 0, b'\x51', 5000 * COIN)
+        tx2 = create_transaction(tx1, 0, b'\x51', 5000 * COIN)
 
         block2.vtx.extend([tx1, tx2])
         block2.hashMerkleRoot = block2.calc_merkle_root()

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # Copyright (c) 2017 The Bitcoin Core developers
+# Copyright (c) 2017 The Raven Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test RPC calls related to net.
@@ -9,18 +10,16 @@ Tests correspond to code in rpc/net.cpp.
 
 import time
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import RavenTestFramework
 from test_framework.util import (
     assert_equal,
-    assert_raises_jsonrpc,
+    assert_raises_rpc_error,
     connect_nodes_bi,
     p2p_port,
 )
 
-
-class NetTest(BitcoinTestFramework):
-    def __init__(self):
-        super().__init__()
+class NetTest(RavenTestFramework):
+    def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 2
 
@@ -85,8 +84,8 @@ class NetTest(BitcoinTestFramework):
         added_nodes = self.nodes[0].getaddednodeinfo(ip_port)
         assert_equal(len(added_nodes), 1)
         assert_equal(added_nodes[0]['addednode'], ip_port)
-        # check that a non-existant node returns an error
-        assert_raises_jsonrpc(-24, "Node has not been added",
+        # check that a non-existent node returns an error
+        assert_raises_rpc_error(-24, "Node has not been added",
                               self.nodes[0].getaddednodeinfo, '1.1.1.1')
 
     def _test_getpeerinfo(self):

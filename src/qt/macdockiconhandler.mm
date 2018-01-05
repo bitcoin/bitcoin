@@ -1,4 +1,5 @@
 // Copyright (c) 2011-2013 The Bitcoin Core developers
+// Copyright (c) 2017 The Raven Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -18,7 +19,7 @@
 extern void qt_mac_set_dock_menu(QMenu *);
 #endif
 
-static MacDockIconHandler *s_instance = NULL;
+static MacDockIconHandler *s_instance = nullptr;
 
 bool dockClickHandler(id self,SEL _cmd,...) {
     Q_UNUSED(self)
@@ -34,7 +35,7 @@ void setupDockClickHandler() {
     Class cls = objc_getClass("NSApplication");
     id appInst = objc_msgSend((id)cls, sel_registerName("sharedApplication"));
     
-    if (appInst != NULL) {
+    if (appInst != nullptr) {
         id delegate = objc_msgSend(appInst, sel_registerName("delegate"));
         Class delClass = (Class)objc_msgSend(delegate,  sel_registerName("class"));
         SEL shouldHandle = sel_registerName("applicationShouldHandleReopen:hasVisibleWindows:");
@@ -53,7 +54,7 @@ MacDockIconHandler::MacDockIconHandler() : QObject()
     setupDockClickHandler();
     this->m_dummyWidget = new QWidget();
     this->m_dockMenu = new QMenu(this->m_dummyWidget);
-    this->setMainWindow(NULL);
+    this->setMainWindow(nullptr);
 #if QT_VERSION < 0x050000
     qt_mac_set_dock_menu(this->m_dockMenu);
 #elif QT_VERSION >= 0x050200
@@ -69,7 +70,7 @@ void MacDockIconHandler::setMainWindow(QMainWindow *window) {
 MacDockIconHandler::~MacDockIconHandler()
 {
     delete this->m_dummyWidget;
-    this->setMainWindow(NULL);
+    this->setMainWindow(nullptr);
 }
 
 QMenu *MacDockIconHandler::dockMenu()

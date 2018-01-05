@@ -1,9 +1,10 @@
 // Copyright (c) 2016 The Bitcoin Core developers
+// Copyright (c) 2017 The Raven Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_SUPPORT_EVENTS_H
-#define BITCOIN_SUPPORT_EVENTS_H
+#ifndef RAVEN_SUPPORT_EVENTS_H
+#define RAVEN_SUPPORT_EVENTS_H
 
 #include <ios>
 #include <memory>
@@ -47,10 +48,10 @@ inline raii_evhttp_request obtain_evhttp_request(void(*cb)(struct evhttp_request
 }
 
 inline raii_evhttp_connection obtain_evhttp_connection_base(struct event_base* base, std::string host, uint16_t port) {
-    auto result = raii_evhttp_connection(evhttp_connection_base_new(base, NULL, host.c_str(), port));
+    auto result = raii_evhttp_connection(evhttp_connection_base_new(base, nullptr, host.c_str(), port));
     if (!result.get())
         throw std::runtime_error("create connection failed");
     return result;
 }
 
-#endif // BITCOIN_SUPPORT_EVENTS_H
+#endif // RAVEN_SUPPORT_EVENTS_H

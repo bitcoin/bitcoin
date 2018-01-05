@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # Copyright (c) 2016 The Bitcoin Core developers
+# Copyright (c) 2017 The Raven Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test compact blocks (BIP 152).
@@ -9,12 +10,12 @@ Version 2 compact blocks are post-segwit (wtxids)
 """
 
 from test_framework.mininode import *
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import RavenTestFramework
 from test_framework.util import *
 from test_framework.blocktools import create_block, create_coinbase, add_witness_commitment
 from test_framework.script import CScript, OP_TRUE
 
-# TestNode: A peer we use to send messages to bitcoind, and store responses.
+# TestNode: A peer we use to send messages to ravend, and store responses.
 class TestNode(NodeConnCB):
     def __init__(self):
         super().__init__()
@@ -70,7 +71,7 @@ class TestNode(NodeConnCB):
     def request_headers_and_sync(self, locator, hashstop=0):
         self.clear_block_announcement()
         self.get_headers(locator, hashstop)
-        assert wait_until(self.received_block_announcement, timeout=30)
+        wait_until(self.received_block_announcement, timeout=30, lock=mininode_lock)
         self.clear_block_announcement()
 
     # Block until a block announcement for a particular block hash is
@@ -78,7 +79,7 @@ class TestNode(NodeConnCB):
     def wait_for_block_announcement(self, block_hash, timeout=30):
         def received_hash():
             return (block_hash in self.announced_blockhashes)
-        return wait_until(received_hash, timeout=timeout)
+        wait_until(received_hash, timeout=timeout, lock=mininode_lock)
 
     def send_await_disconnect(self, message, timeout=30):
         """Sends a message to the node and wait for disconnect.
@@ -86,15 +87,10 @@ class TestNode(NodeConnCB):
         This is used when we want to send a message into the node that we expect
         will get us disconnected, eg an invalid block."""
         self.send_message(message)
-        success = wait_until(lambda: not self.connected, timeout=timeout)
-        if not success:
-            logger.error("send_await_disconnect failed!")
-            raise AssertionError("send_await_disconnect failed!")
-        return success
+        wait_until(lambda: not self.connected, timeout=timeout, lock=mininode_lock)
 
-class CompactBlocksTest(BitcoinTestFramework):
-    def __init__(self):
-        super().__init__()
+class CompactBlocksTest(RavenTestFramework):
+    def set_test_params(self):
         self.setup_clean_chain = True
         # Node0 = pre-segwit, node1 = segwit-aware
         self.num_nodes = 2
@@ -150,9 +146,7 @@ class CompactBlocksTest(BitcoinTestFramework):
         # Make sure we get a SENDCMPCT message from our peer
         def received_sendcmpct():
             return (len(test_node.last_sendcmpct) > 0)
-        got_message = wait_until(received_sendcmpct, timeout=30)
-        assert(received_sendcmpct())
-        assert(got_message)
+        wait_until(received_sendcmpct, timeout=30, lock=mininode_lock)
         with mininode_lock:
             # Check that the first version received is the preferred one
             assert_equal(test_node.last_sendcmpct[0].version, preferred_version)
@@ -167,7 +161,6 @@ class CompactBlocksTest(BitcoinTestFramework):
             block_hash = int(node.generate(1)[0], 16)
             peer.wait_for_block_announcement(block_hash, timeout=30)
             assert(peer.block_announced)
-            assert(got_message)
 
             with mininode_lock:
                 assert predicate(peer), (
@@ -240,7 +233,7 @@ class CompactBlocksTest(BitcoinTestFramework):
             old_node.request_headers_and_sync(locator=[tip])
             check_announcement_of_new_block(node, old_node, lambda p: "cmpctblock" in p.last_message)
 
-    # This test actually causes bitcoind to (reasonably!) disconnect us, so do this last.
+    # This test actually causes ravend to (reasonably!) disconnect us, so do this last.
     def test_invalid_cmpctblock_message(self):
         self.nodes[0].generate(101)
         block = self.build_block_on_tip(self.nodes[0])
@@ -255,7 +248,7 @@ class CompactBlocksTest(BitcoinTestFramework):
         assert_equal(int(self.nodes[0].getbestblockhash(), 16), block.hashPrevBlock)
 
     # Compare the generated shortids to what we expect based on BIP 152, given
-    # bitcoind's choice of nonce.
+    # ravend's choice of nonce.
     def test_compactblock_construction(self, node, test_node, version, use_witness_address):
         # Generate a bunch of transactions.
         node.generate(101)
@@ -282,7 +275,7 @@ class CompactBlocksTest(BitcoinTestFramework):
 
         # Wait until we've seen the block announcement for the resulting tip
         tip = int(node.getbestblockhash(), 16)
-        assert(test_node.wait_for_block_announcement(tip))
+        test_node.wait_for_block_announcement(tip)
 
         # Make sure we will receive a fast-announce compact block
         self.request_cb_announcements(test_node, node, version)
@@ -293,12 +286,12 @@ class CompactBlocksTest(BitcoinTestFramework):
 
         # Store the raw block in our internal format.
         block = FromHex(CBlock(), node.getblock("%02x" % block_hash, False))
-        [tx.calc_sha256() for tx in block.vtx]
+        for tx in block.vtx:
+            tx.calc_sha256()
         block.rehash()
 
         # Wait until the block was announced (via compact blocks)
-        wait_until(test_node.received_block_announcement, timeout=30)
-        assert(test_node.received_block_announcement())
+        wait_until(test_node.received_block_announcement, timeout=30, lock=mininode_lock)
 
         # Now fetch and check the compact block
         header_and_shortids = None
@@ -314,8 +307,7 @@ class CompactBlocksTest(BitcoinTestFramework):
             inv = CInv(4, block_hash)  # 4 == "CompactBlock"
             test_node.send_message(msg_getdata([inv]))
 
-        wait_until(test_node.received_block_announcement, timeout=30)
-        assert(test_node.received_block_announcement())
+        wait_until(test_node.received_block_announcement, timeout=30, lock=mininode_lock)
 
         # Now fetch and check the compact block
         header_and_shortids = None
@@ -370,7 +362,7 @@ class CompactBlocksTest(BitcoinTestFramework):
                 header_and_shortids.shortids.pop(0)
             index += 1
 
-    # Test that bitcoind requests compact blocks when we announce new blocks
+    # Test that ravend requests compact blocks when we announce new blocks
     # via header or inv, and that responding to getblocktxn causes the block
     # to be successfully reconstructed.
     # Post-segwit: upgraded nodes would only make this request of cb-version-2,
@@ -386,13 +378,11 @@ class CompactBlocksTest(BitcoinTestFramework):
 
             if announce == "inv":
                 test_node.send_message(msg_inv([CInv(2, block.sha256)]))
-                success = wait_until(lambda: "getheaders" in test_node.last_message, timeout=30)
-                assert(success)
+                wait_until(lambda: "getheaders" in test_node.last_message, timeout=30, lock=mininode_lock)
                 test_node.send_header_for_blocks([block])
             else:
                 test_node.send_header_for_blocks([block])
-            success = wait_until(lambda: "getdata" in test_node.last_message, timeout=30)
-            assert(success)
+            wait_until(lambda: "getdata" in test_node.last_message, timeout=30, lock=mininode_lock)
             assert_equal(len(test_node.last_message["getdata"].inv), 1)
             assert_equal(test_node.last_message["getdata"].inv[0].type, 4)
             assert_equal(test_node.last_message["getdata"].inv[0].hash, block.sha256)
@@ -554,7 +544,7 @@ class CompactBlocksTest(BitcoinTestFramework):
         assert_equal(absolute_indexes, [6, 7, 8, 9, 10])
 
         # Now give an incorrect response.
-        # Note that it's possible for bitcoind to be smart enough to know we're
+        # Note that it's possible for ravend to be smart enough to know we're
         # lying, since it could check to see if the shortid matches what we're
         # sending, and eg disconnect us for misbehavior.  If that behavior
         # change were made, we could just modify this test by having a
@@ -571,8 +561,7 @@ class CompactBlocksTest(BitcoinTestFramework):
         assert_equal(int(node.getbestblockhash(), 16), block.hashPrevBlock)
 
         # We should receive a getdata request
-        success = wait_until(lambda: "getdata" in test_node.last_message, timeout=10)
-        assert(success)
+        wait_until(lambda: "getdata" in test_node.last_message, timeout=10, lock=mininode_lock)
         assert_equal(len(test_node.last_message["getdata"].inv), 1)
         assert(test_node.last_message["getdata"].inv[0].type == 2 or test_node.last_message["getdata"].inv[0].type == 2|MSG_WITNESS_FLAG)
         assert_equal(test_node.last_message["getdata"].inv[0].hash, block.sha256)
@@ -585,7 +574,7 @@ class CompactBlocksTest(BitcoinTestFramework):
         assert_equal(int(node.getbestblockhash(), 16), block.sha256)
 
     def test_getblocktxn_handler(self, node, test_node, version):
-        # bitcoind will not send blocktxn responses for blocks whose height is
+        # ravend will not send blocktxn responses for blocks whose height is
         # more than 10 blocks deep.
         MAX_GETBLOCKTXN_DEPTH = 10
         chain_height = node.getblockcount()
@@ -599,8 +588,7 @@ class CompactBlocksTest(BitcoinTestFramework):
             num_to_request = random.randint(1, len(block.vtx))
             msg.block_txn_request.from_absolute(sorted(random.sample(range(len(block.vtx)), num_to_request)))
             test_node.send_message(msg)
-            success = wait_until(lambda: "blocktxn" in test_node.last_message, timeout=10)
-            assert(success)
+            wait_until(lambda: "blocktxn" in test_node.last_message, timeout=10, lock=mininode_lock)
 
             [tx.calc_sha256() for tx in block.vtx]
             with mininode_lock:
@@ -639,22 +627,20 @@ class CompactBlocksTest(BitcoinTestFramework):
         for i in range(MAX_CMPCTBLOCK_DEPTH + 1):
             test_node.clear_block_announcement()
             new_blocks.append(node.generate(1)[0])
-            wait_until(test_node.received_block_announcement, timeout=30)
+            wait_until(test_node.received_block_announcement, timeout=30, lock=mininode_lock)
 
         test_node.clear_block_announcement()
         test_node.send_message(msg_getdata([CInv(4, int(new_blocks[0], 16))]))
-        success = wait_until(lambda: "cmpctblock" in test_node.last_message, timeout=30)
-        assert(success)
+        wait_until(lambda: "cmpctblock" in test_node.last_message, timeout=30, lock=mininode_lock)
 
         test_node.clear_block_announcement()
         node.generate(1)
-        wait_until(test_node.received_block_announcement, timeout=30)
+        wait_until(test_node.received_block_announcement, timeout=30, lock=mininode_lock)
         test_node.clear_block_announcement()
         with mininode_lock:
             test_node.last_message.pop("block", None)
         test_node.send_message(msg_getdata([CInv(4, int(new_blocks[0], 16))]))
-        success = wait_until(lambda: "block" in test_node.last_message, timeout=30)
-        assert(success)
+        wait_until(lambda: "block" in test_node.last_message, timeout=30, lock=mininode_lock)
         with mininode_lock:
             test_node.last_message["block"].block.calc_sha256()
             assert_equal(test_node.last_message["block"].block.sha256, int(new_blocks[0], 16))
@@ -705,7 +691,7 @@ class CompactBlocksTest(BitcoinTestFramework):
         node.submitblock(ToHex(block))
 
         for l in listeners:
-            wait_until(lambda: l.received_block_announcement(), timeout=30)
+            wait_until(lambda: l.received_block_announcement(), timeout=30, lock=mininode_lock)
         with mininode_lock:
             for l in listeners:
                 assert "cmpctblock" in l.last_message

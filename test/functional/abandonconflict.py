@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # Copyright (c) 2014-2016 The Bitcoin Core developers
+# Copyright (c) 2017 The Raven Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the abandontransaction RPC.
@@ -10,14 +11,12 @@
  which are not included in a block and are not currently in the mempool. It has
  no effect on transactions which are already conflicted or abandoned.
 """
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import RavenTestFramework
 from test_framework.util import *
 
-class AbandonConflictTest(BitcoinTestFramework):
-    def __init__(self):
-        super().__init__()
+class AbandonConflictTest(RavenTestFramework):
+    def set_test_params(self):
         self.num_nodes = 2
-        self.setup_clean_chain = False
         self.extra_args = [["-minrelaytxfee=0.00001"], []]
 
     def run_test(self):
@@ -74,7 +73,7 @@ class AbandonConflictTest(BitcoinTestFramework):
         # Restart the node with a higher min relay fee so the parent tx is no longer in mempool
         # TODO: redo with eviction
         self.stop_node(0)
-        self.nodes[0] = self.start_node(0, self.options.tmpdir, ["-minrelaytxfee=0.0001"])
+        self.start_node(0, extra_args=["-minrelaytxfee=0.0001"])
 
         # Verify txs no longer in either node's mempool
         assert_equal(len(self.nodes[0].getrawmempool()), 0)
@@ -101,7 +100,7 @@ class AbandonConflictTest(BitcoinTestFramework):
 
         # Verify that even with a low min relay fee, the tx is not reaccepted from wallet on startup once abandoned
         self.stop_node(0)
-        self.nodes[0] = self.start_node(0, self.options.tmpdir, ["-minrelaytxfee=0.00001"])
+        self.start_node(0, extra_args=["-minrelaytxfee=0.00001"])
         assert_equal(len(self.nodes[0].getrawmempool()), 0)
         assert_equal(self.nodes[0].getbalance(), balance)
 
@@ -121,7 +120,7 @@ class AbandonConflictTest(BitcoinTestFramework):
 
         # Remove using high relay fee again
         self.stop_node(0)
-        self.nodes[0] = self.start_node(0, self.options.tmpdir, ["-minrelaytxfee=0.0001"])
+        self.start_node(0, extra_args=["-minrelaytxfee=0.0001"])
         assert_equal(len(self.nodes[0].getrawmempool()), 0)
         newbalance = self.nodes[0].getbalance()
         assert_equal(newbalance, balance - Decimal("24.9996"))
@@ -141,13 +140,13 @@ class AbandonConflictTest(BitcoinTestFramework):
         connect_nodes(self.nodes[0], 1)
         sync_blocks(self.nodes)
 
-        # Verify that B and C's 10 BTC outputs are available for spending again because AB1 is now conflicted
+        # Verify that B and C's 10 RVN outputs are available for spending again because AB1 is now conflicted
         newbalance = self.nodes[0].getbalance()
         assert_equal(newbalance, balance + Decimal("20"))
         balance = newbalance
 
         # There is currently a minor bug around this and so this test doesn't work.  See Issue #7315
-        # Invalidate the block with the double spend and B's 10 BTC output should no longer be available
+        # Invalidate the block with the double spend and B's 10 RVN output should no longer be available
         # Don't think C's should either
         self.nodes[0].invalidateblock(self.nodes[0].getbestblockhash())
         newbalance = self.nodes[0].getbalance()

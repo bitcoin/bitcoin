@@ -1,9 +1,11 @@
 #!/bin/bash
 # Copyright (c) 2016 The Bitcoin Core developers
+# Copyright (c) 2017 The Raven Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-###   This script attempts to download the signature file SHA256SUMS.asc from bitcoin.org
+###   This script attempts to download the signature file SHA256SUMS.asc from
+###   ravencore.org and raven.org and compares them.
 ###   It first checks if the signature passes, and then downloads the files specified in
 ###   the file, and checks if the hashes of these files match those that are specified
 ###   in the signature file.
@@ -17,13 +19,15 @@ function clean_up {
    done
 }
 
-WORKINGDIR="/tmp/bitcoin_verify_binaries"
+WORKINGDIR="/tmp/raven_verify_binaries"
 TMPFILE="hashes.tmp"
 
 SIGNATUREFILENAME="SHA256SUMS.asc"
 RCSUBDIR="test"
-BASEDIR="https://bitcoin.org/bin/"
-VERSIONPREFIX="bitcoin-core-"
+HOST1="https://ravencoin.org"
+HOST2="https://raven.org"
+BASEDIR="/bin/"
+VERSIONPREFIX="raven-core-"
 RCVERSIONSTRING="rc"
 
 if [ ! -d "$WORKINGDIR" ]; then
@@ -34,7 +38,7 @@ cd "$WORKINGDIR"
 
 #test if a version number has been passed as an argument
 if [ -n "$1" ]; then
-   #let's also check if the version number includes the prefix 'bitcoin-',
+   #let's also check if the version number includes the prefix 'raven-',
    #  and add this prefix if it doesn't
    if [[ $1 == "$VERSIONPREFIX"* ]]; then
       VERSION="$1"
@@ -81,7 +85,7 @@ else
 fi
 
 #first we fetch the file containing the signature
-WGETOUT=$(wget -N "$BASEDIR$SIGNATUREFILENAME" 2>&1)
+WGETOUT=$(wget -N "$HOST1$BASEDIR$SIGNATUREFILENAME" 2>&1)
 
 #and then see if wget completed successfully
 if [ $? -ne 0 ]; then
@@ -90,6 +94,22 @@ if [ $? -ne 0 ]; then
    echo "wget output:"
    echo "$WGETOUT"|sed 's/^/\t/g'
    exit 2
+fi
+
+WGETOUT=$(wget -N -O "$SIGNATUREFILENAME.2" "$HOST2$BASEDIR$SIGNATUREFILENAME" 2>&1)
+if [ $? -ne 0 ]; then
+   echo "raven.org failed to provide signature file, but ravencore.org did?"
+   echo "wget output:"
+   echo "$WGETOUT"|sed 's/^/\t/g'
+   clean_up $SIGNATUREFILENAME
+   exit 3
+fi
+
+SIGFILEDIFFS="$(diff $SIGNATUREFILENAME $SIGNATUREFILENAME.2)"
+if [ "$SIGFILEDIFFS" != "" ]; then
+   echo "raven.org and ravencore.org signature files were not equal?"
+   clean_up $SIGNATUREFILENAME $SIGNATUREFILENAME.2
+   exit 4
 fi
 
 #then we check it
@@ -106,12 +126,12 @@ if [ $RET -ne 0 ]; then
       echo "Bad signature."
    elif [ $RET -eq 2 ]; then
       #or if a gpg error has occurred
-      echo "gpg error. Do you have the Bitcoin Core binary release signing key installed?"
+      echo "gpg error. Do you have the Raven Core binary release signing key installed?"
    fi
 
    echo "gpg output:"
    echo "$GPGOUT"|sed 's/^/\t/g'
-   clean_up $SIGNATUREFILENAME $TMPFILE
+   clean_up $SIGNATUREFILENAME $SIGNATUREFILENAME.2 $TMPFILE
    exit "$RET"
 fi
 
@@ -131,7 +151,7 @@ FILES=$(awk '{print $2}' "$TMPFILE")
 for file in $FILES
 do
    echo "Downloading $file"
-   wget --quiet -N "$BASEDIR$file"
+   wget --quiet -N "$HOST1$BASEDIR$file"
 done
 
 #check hashes
@@ -149,7 +169,7 @@ fi
 
 if [ -n "$2" ]; then
    echo "Clean up the binaries"
-   clean_up $FILES $SIGNATUREFILENAME $TMPFILE
+   clean_up $FILES $SIGNATUREFILENAME $SIGNATUREFILENAME.2 $TMPFILE
 else
    echo "Keep the binaries in $WORKINGDIR"
    clean_up $TMPFILE

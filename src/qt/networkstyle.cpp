@@ -1,4 +1,5 @@
 // Copyright (c) 2014-2016 The Bitcoin Core developers
+// Copyright (c) 2017 The Raven Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -27,7 +28,7 @@ NetworkStyle::NetworkStyle(const QString &_appName, const int iconColorHueShift,
     titleAddText(qApp->translate("SplashScreen", _titleAddText))
 {
     // load pixmap
-    QPixmap pixmap(":/icons/bitcoin");
+    QPixmap pixmap(":/icons/raven");
 
     if(iconColorHueShift != 0 && iconColorSaturationReduction != 0)
     {
@@ -44,7 +45,7 @@ NetworkStyle::NetworkStyle(const QString &_appName, const int iconColorHueShift,
             // loop through pixels
             for(int x=0;x<img.width();x++)
             {
-                // preserve alpha because QColor::getHsl doesen't return the alpha value
+                // preserve alpha because QColor::getHsl doesn't return the alpha value
                 a = qAlpha(scL[x]);
                 QColor col(scL[x]);
 

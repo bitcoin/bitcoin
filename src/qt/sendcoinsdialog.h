@@ -1,9 +1,10 @@
 // Copyright (c) 2011-2016 The Bitcoin Core developers
+// Copyright (c) 2017 The Raven Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_QT_SENDCOINSDIALOG_H
-#define BITCOIN_QT_SENDCOINSDIALOG_H
+#ifndef RAVEN_QT_SENDCOINSDIALOG_H
+#define RAVEN_QT_SENDCOINSDIALOG_H
 
 #include "walletmodel.h"
 
@@ -25,7 +26,7 @@ QT_BEGIN_NAMESPACE
 class QUrl;
 QT_END_NAMESPACE
 
-/** Dialog for sending bitcoins */
+/** Dialog for sending ravens */
 class SendCoinsDialog : public QDialog
 {
     Q_OBJECT
@@ -68,6 +69,8 @@ private:
     void processSendCoinsReturn(const WalletModel::SendCoinsReturn &sendCoinsReturn, const QString &msgArg = QString());
     void minimizeFeeSection(bool fMinimize);
     void updateFeeMinimizedLabel();
+    // Update the passed in CCoinControl with state from the GUI
+    void updateCoinControlState(CCoinControl& ctrl);
 
 private Q_SLOTS:
     void on_sendButton_clicked();
@@ -91,7 +94,6 @@ private Q_SLOTS:
     void updateFeeSectionControls();
     void updateMinFeeLabel();
     void updateSmartFeeLabel();
-    void updateGlobalFeeVariables();
 
 Q_SIGNALS:
     // Fired when a message should be reported to the user
@@ -119,4 +121,4 @@ private:
     int secDelay;
 };
 
-#endif // BITCOIN_QT_SENDCOINSDIALOG_H
+#endif // RAVEN_QT_SENDCOINSDIALOG_H

@@ -1,4 +1,5 @@
 // Copyright (c) 2015 The Bitcoin Core developers
+// Copyright (c) 2017 The Raven Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -67,7 +68,7 @@ static void CCheckQueueSpeedPrevectorJob(benchmark::State& state)
         prevector<PREVECTOR_SIZE, uint8_t> p;
         PrevectorJob(){
         }
-        PrevectorJob(FastRandomContext& insecure_rand){
+        explicit PrevectorJob(FastRandomContext& insecure_rand){
             p.resize(insecure_rand.randrange(PREVECTOR_SIZE*2));
         }
         bool operator()()

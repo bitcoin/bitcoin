@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # Copyright (c) 2015-2016 The Bitcoin Core developers
+# Copyright (c) 2017 The Raven Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 '''
@@ -212,5 +213,5 @@ if __name__ == '__main__':
         except IOError:
             print('%s: cannot open' % filename)
             retval = 1
-    exit(retval)
+    sys.exit(retval)
 

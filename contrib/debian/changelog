@@ -1,364 +1,364 @@
-bitcoin (0.14.1-trusty4) trusty; urgency=medium
+raven (0.14.1-trusty4) trusty; urgency=medium
 
   * Re-enable UPnP support.
 
  -- Matt Corallo (BlueMatt) <matt@mattcorallo.com>  Fri, 05 May 2017 13:28:00 -0400
 
-bitcoin (0.14.1-trusty3) trusty; urgency=medium
+raven (0.14.1-trusty3) trusty; urgency=medium
 
   * Build with qt5 if we are on a non-Ubuntu (ie non-Unity) distro.
 
  -- Matt Corallo (BlueMatt) <matt@mattcorallo.com>  Thu, 04 May 2017 17:13:00 -0400
 
-bitcoin (0.14.1-trusty2) trusty; urgency=medium
+raven (0.14.1-trusty2) trusty; urgency=medium
 
   * Bump minimum boost version in deps.
 
  -- Matt Corallo (BlueMatt) <matt@mattcorallo.com>  Thu, 04 May 2017 17:12:00 -0400
 
-bitcoin (0.14.1-trusty1) trusty; urgency=medium
+raven (0.14.1-trusty1) trusty; urgency=medium
 
   * New upstream release.
 
  -- Matt Corallo (BlueMatt) <matt@mattcorallo.com>  Sat, 22 Apr 2017 17:10:00 -0400
 
-bitcoin (0.14.0-trusty1) trusty; urgency=medium
+raven (0.14.0-trusty1) trusty; urgency=medium
 
   * New upstream release.
 
  -- Matt Corallo (BlueMatt) <matt@mattcorallo.com>  Wed, 08 Mar 2017 10:30:00 -0500
 
-bitcoin (0.13.2-trusty1) trusty; urgency=medium
+raven (0.13.2-trusty1) trusty; urgency=medium
 
   * New upstream release.
 
  -- Matt Corallo (BlueMatt) <matt@mattcorallo.com>  Thu, 05 Jan 2017 09:59:00 -0500
 
-bitcoin (0.13.1-trusty2) trusty; urgency=medium
+raven (0.13.1-trusty2) trusty; urgency=medium
 
-  * Revert to Qt4, due to https://github.com/bitcoin/bitcoin/issues/9038
+  * Revert to Qt4, due to https://github.com/RavenProject/Ravencoin/issues/9038
 
  -- Matt Corallo (BlueMatt) <matt@mattcorallo.com>  Mon, 31 Oct 2016 11:16:00 -0400
 
-bitcoin (0.13.1-trusty1) trusty; urgency=medium
+raven (0.13.1-trusty1) trusty; urgency=medium
 
   * New upstream release.
-  * Backport updated bitcoin-qt.desktop from upstream master
+  * Backport updated raven-qt.desktop from upstream master
   * Add zmq dependency
   * Switch to Qt5 (breaks precise, but that was already broken by C++11)
 
  -- Matt Corallo (BlueMatt) <matt@mattcorallo.com>  Thu, 27 Oct 2016 17:32:00 -0400
 
-bitcoin (0.13.0-trusty1) trusty; urgency=medium
+raven (0.13.0-trusty1) trusty; urgency=medium
 
   * New upstream release.
 
  -- Matt Corallo (BlueMatt) <matt@mattcorallo.com>  Sun, 04 Sep 2016 22:09:00 -0400
 
-bitcoin (0.12.1-trusty1) trusty; urgency=medium
+raven (0.12.1-trusty1) trusty; urgency=medium
 
   * New upstream release.
 
  -- Matt Corallo (BlueMatt) <matt@mattcorallo.com>  Mon, 18 Apr 2016 14:26:00 -0700
 
-bitcoin (0.12.0-trusty6) trusty; urgency=medium
+raven (0.12.0-trusty6) trusty; urgency=medium
 
   * Fix program-options dep.
 
  -- Matt Corallo (BlueMatt) <matt@mattcorallo.com>  Fri, 25 Mar 2016 21:41:00 -0700
 
-bitcoin (0.12.0-trusty5) trusty; urgency=medium
+raven (0.12.0-trusty5) trusty; urgency=medium
 
   * Test explicit --with-gui
 
  -- Matt Corallo (BlueMatt) <matt@mattcorallo.com>  Tue, 23 Feb 2015 23:25:00 -0800
 
-bitcoin (0.12.0-trusty4) trusty; urgency=medium
+raven (0.12.0-trusty4) trusty; urgency=medium
 
   * Fix libevent-dev dep.
 
  -- Matt Corallo (BlueMatt) <matt@mattcorallo.com>  Tue, 23 Feb 2015 23:25:00 -0800
 
-bitcoin (0.12.0-trusty3) trusty; urgency=medium
+raven (0.12.0-trusty3) trusty; urgency=medium
 
   * Fix precise boost dep.
 
  -- Matt Corallo (BlueMatt) <matt@mattcorallo.com>  Tue, 23 Feb 2015 19:55:00 -0800
 
-bitcoin (0.12.0-trusty2) trusty; urgency=medium
+raven (0.12.0-trusty2) trusty; urgency=medium
 
   * Fix libevent dep.
 
  -- Matt Corallo (BlueMatt) <matt@mattcorallo.com>  Tue, 23 Feb 2015 19:53:00 -0800
 
-bitcoin (0.12.0-trusty1) trusty; urgency=medium
+raven (0.12.0-trusty1) trusty; urgency=medium
 
   * New upstream release
   * Various updates to contrib/debian were merged, a few were not
 
  -- Matt Corallo (BlueMatt) <matt@mattcorallo.com>  Tue, 23 Feb 2015 19:29:00 -0800
 
-bitcoin (0.11.2-trusty1) trusty; urgency=low
+raven (0.11.2-trusty1) trusty; urgency=low
 
   * New upstream release.
 
  -- Matt Corallo (BlueMatt) <matt@mattcorallo.com>  Fri, 13 Nov 2015 18:39:00 -0800
 
-bitcoin (0.11.1-trusty2) trusty; urgency=low
+raven (0.11.1-trusty2) trusty; urgency=low
 
   * Remove minupnpc builddep.
 
  -- Matt Corallo (BlueMatt) <matt@mattcorallo.com>  Wed, 14 Oct 2015 23:06:00 -1000
 
-bitcoin (0.11.1-trusty1) trusty; urgency=high
+raven (0.11.1-trusty1) trusty; urgency=high
 
   * New upstream release.
   * Disable all UPnP support.
 
  -- Matt Corallo (BlueMatt) <matt@mattcorallo.com>  Wed, 14 Oct 2015 13:57:00 -1000
 
-bitcoin (0.11.0-precise1) precise; urgency=medium
+raven (0.11.0-precise1) precise; urgency=medium
 
   * New upstream release.
 
  -- Matt Corallo (BlueMatt) <matt@mattcorallo.com>  Tue, 14 Jul 2015 14:39:00 -1000
 
-bitcoin (0.10.2-precise1) precise; urgency=medium
+raven (0.10.2-precise1) precise; urgency=medium
 
   * New upstream release.
 
  -- Matt Corallo (BlueMatt) <matt@mattcorallo.com>  Mon, 29 Jun 2015 17:33:00 -1000
 
-bitcoin (0.10.1-precise3) precise; urgency=medium
+raven (0.10.1-precise3) precise; urgency=medium
 
   * Fix build dep (include python).
 
  -- Matt Corallo (BlueMatt) <matt@mattcorallo.com>  Tue, 5 May 2015 09:28:00 -1000
 
-bitcoin (0.10.1-precise2) precise; urgency=medium
+raven (0.10.1-precise2) precise; urgency=medium
 
   * Fix miniupnpc dep.
 
  -- Matt Corallo (BlueMatt) <matt@mattcorallo.com>  Tue, 5 May 2015 00:33:00 -1000
 
-bitcoin (0.10.1-precise1) precise; urgency=medium
+raven (0.10.1-precise1) precise; urgency=medium
 
   * New upstream release.
 
  -- Matt Corallo (BlueMatt) <matt@mattcorallo.com>  Tue, 5 May 2015 00:07:00 -1000
 
-bitcoin (0.10.0-precise1) precise; urgency=medium
+raven (0.10.0-precise1) precise; urgency=medium
 
   * New upstream releases.
 
  -- Matt Corallo (BlueMatt) <matt@mattcorallo.com>  Wed, 18 Feb 2015 13:22:00 -1000
 
-bitcoin (0.9.4-precise1) precise; urgency=high
+raven (0.9.4-precise1) precise; urgency=high
 
   * New upstream releases.
 
  -- Matt Corallo (laptop - only while traveling) <matt@mattcorallo.com>  Mon, 12 Jan 2015 23:30:00 -1000
 
-bitcoin (0.9.3-precise1) precise; urgency=medium
+raven (0.9.3-precise1) precise; urgency=medium
 
   * New upstream releases.
 
  -- Matt Corallo (BlueMatt) <matt@mattcorallo.com>  Fri, 26 Sep 2014 12:01:00 -0700
 
-bitcoin (0.9.1-precise1) precise; urgency=medium
+raven (0.9.1-precise1) precise; urgency=medium
 
   * New upstream release.
   * Backport pull #4019
 
  -- Matt Corallo <matt@bluematt.me>  Sat, 19 Apr 2014 17:29:00 -0400
 
-bitcoin (0.9.0-precise1) precise; urgency=medium
+raven (0.9.0-precise1) precise; urgency=medium
 
   * New upstream release.
 
  -- Matt Corallo <matt@bluematt.me>  Thu, 20 Mar 2014 13:10:00 -0400
 
-bitcoin (0.8.6-precise1) precise; urgency=medium
+raven (0.8.6-precise1) precise; urgency=medium
 
   * New upstream release.
   * Make .desktop paths non-fixed (suggested by prusnak@github)
 
  -- Matt Corallo <matt@bluematt.me>  Fri, 13 Dec 2013 13:31:00 -0400
 
-bitcoin (0.8.5-precise1) precise; urgency=medium
+raven (0.8.5-precise1) precise; urgency=medium
 
   * New upstream release.
 
  -- Matt Corallo <matt@bluematt.me>  Sun, 15 Sep 2013 14:02:00 -0400
 
-bitcoin (0.8.4-precise1) precise; urgency=medium
+raven (0.8.4-precise1) precise; urgency=medium
 
   * New upstream release.
 
  -- Matt Corallo <matt@bluematt.me>  Wed, 4 Sep 2013 10:25:00 -0400
 
-bitcoin (0.8.3-natty1) natty; urgency=low
+raven (0.8.3-natty1) natty; urgency=low
 
   * New upstream release.
 
  -- Matt Corallo <matt@bluematt.me>  Wed, 26 Jun 2013 00:18:00 +0100
 
-bitcoin (0.8.2-natty1) natty; urgency=low
+raven (0.8.2-natty1) natty; urgency=low
 
   * New upstream release.
 
  -- Matt Corallo <matt@bluematt.me>  Wed, 29 Mar 2013 23:23:00 +0100
 
-bitcoin (0.8.1-natty3) natty; urgency=low
+raven (0.8.1-natty3) natty; urgency=low
 
   * New pixmaps
 
  -- Jonas Schnelli <jonas.schnelli@include7.ch>  Mon, 13 May 2013 16:14:00 +0100
 
-bitcoin (0.8.1-natty2) natty; urgency=low
+raven (0.8.1-natty2) natty; urgency=low
 
   * Remove dumb broken launcher script
 
  -- Matt Corallo <matt@bluematt.me>  Sun, 24 Mar 2013 20:01:00 -0400
 
-bitcoin (0.8.1-natty1) natty; urgency=low
+raven (0.8.1-natty1) natty; urgency=low
 
   * New upstream release.
 
  -- Matt Corallo <matt@bluematt.me>  Tue, 19 Mar 2013 13:03:00 -0400
 
-bitcoin (0.8.0-natty1) natty; urgency=low
+raven (0.8.0-natty1) natty; urgency=low
 
   * New upstream release.
 
  -- Matt Corallo <matt@bluematt.me>  Sat, 23 Feb 2013 16:01:00 -0500
 
-bitcoin (0.7.2-natty1) natty; urgency=low
+raven (0.7.2-natty1) natty; urgency=low
 
   * New upstream release.
 
  -- Matt Corallo <matt@bluematt.me>  Sat, 15 Dec 2012 10:59:00 -0400
 
-bitcoin (0.7.1-natty1) natty; urgency=low
+raven (0.7.1-natty1) natty; urgency=low
 
   * New upstream release.
 
  -- Matt Corallo <matt@bluematt.me>  Wed, 24 Oct 2012 15:06:00 -0400
 
-bitcoin (0.7.0-natty1) natty; urgency=low
+raven (0.7.0-natty1) natty; urgency=low
 
   * New upstream release.
 
  -- Matt Corallo <matt@bluematt.me>  Mon, 17 Sep 2012 13:45:00 +0200
 
-bitcoin (0.6.3-natty1) natty; urgency=low
+raven (0.6.3-natty1) natty; urgency=low
 
   * New upstream release.
 
  -- Matt Corallo <matt@bluematt.me>  Mon, 25 Jun 2012 23:47:00 +0200
 
-bitcoin (0.6.2-natty1) natty; urgency=low
+raven (0.6.2-natty1) natty; urgency=low
 
   * Update package description and launch scripts.
 
  -- Matt Corallo <matt@bluematt.me>  Sat, 2 Jun 2012 16:41:00 +0200
 
-bitcoin (0.6.2-natty0) natty; urgency=low
+raven (0.6.2-natty0) natty; urgency=low
 
   * New upstream release.
 
  -- Matt Corallo <matt@bluematt.me>  Tue, 8 May 2012 16:27:00 -0500
 
-bitcoin (0.6.1-natty0) natty; urgency=low
+raven (0.6.1-natty0) natty; urgency=low
 
   * New upstream release.
 
  -- Matt Corallo <matt@bluematt.me>  Sun, 6 May 2012 20:09:00 -0500
 
-bitcoin (0.6.0-natty0) natty; urgency=low
+raven (0.6.0-natty0) natty; urgency=low
 
   * New upstream release.
-  * Add GNOME/KDE support for bitcoin-qt's bitcoin: URI support.
+  * Add GNOME/KDE support for raven-qt's raven: URI support.
     Thanks to luke-jr for the KDE .protocol file.
 
  -- Matt Corallo <matt@bluematt.me>  Sat, 31 Mar 2012 15:35:00 -0500
 
-bitcoin (0.5.3-natty1) natty; urgency=low
+raven (0.5.3-natty1) natty; urgency=low
 
   * Mark for upload to PPA.
 
  -- Matt Corallo <matt@bluematt.me>  Wed, 14 Mar 2012 23:06:00 -0400
 
-bitcoin (0.5.3-natty0) natty; urgency=low
+raven (0.5.3-natty0) natty; urgency=low
 
   * New upstream release.
 
- -- Luke Dashjr <luke+bitcoin+deb@dashjr.org>  Tue, 10 Jan 2012 15:57:00 -0500
+ -- Luke Dashjr <luke+raven+deb@dashjr.org>  Tue, 10 Jan 2012 15:57:00 -0500
 
-bitcoin (0.5.2-natty1) natty; urgency=low
+raven (0.5.2-natty1) natty; urgency=low
 
   * Remove mentions on anonymity in package descriptions and manpage.
-    These should never have been there, bitcoin isnt anonymous without
+    These should never have been there, raven isnt anonymous without
     a ton of work that virtually no users will ever be willing and
     capable of doing
 
  -- Matt Corallo <matt@bluematt.me>  Sat, 7 Jan 2012 13:37:00 -0500
 
-bitcoin (0.5.2-natty0) natty; urgency=low
+raven (0.5.2-natty0) natty; urgency=low
 
   * New upstream release.
 
- -- Luke Dashjr <luke+bitcoin+deb@dashjr.org>  Fri, 16 Dec 2011 17:57:00 -0500
+ -- Luke Dashjr <luke+raven+deb@dashjr.org>  Fri, 16 Dec 2011 17:57:00 -0500
 
-bitcoin (0.5.1-natty0) natty; urgency=low
+raven (0.5.1-natty0) natty; urgency=low
 
   * New upstream release.
 
  -- Matt Corallo <matt@bluematt.me>  Fri, 16 Dec 2011 13:27:00 -0500
 
-bitcoin (0.5.0-natty0) natty; urgency=low
+raven (0.5.0-natty0) natty; urgency=low
 
   * New upstream release.
 
  -- Matt Corallo <matt@bluematt.me>  Mon, 21 Nov 2011 11:32:00 -0500
 
-bitcoin (0.5.0~rc7-natty0) natty; urgency=low
+raven (0.5.0~rc7-natty0) natty; urgency=low
 
   * New upstream release candidate.
 
  -- Matt Corallo <matt@bluematt.me>  Sun, 20 Nov 2011 17:08:00 -0500
 
-bitcoin (0.5.0~rc3-natty0) natty; urgency=low
+raven (0.5.0~rc3-natty0) natty; urgency=low
 
   * New upstream release candidate.
-  * Don't set rpcpassword for bitcoin-qt.
+  * Don't set rpcpassword for raven-qt.
 
  -- Matt Corallo <matt@bluematt.me>  Tue, 8 Nov 2011 11:56:00 -0400
 
-bitcoin (0.5.0~rc1-natty1) natty; urgency=low
+raven (0.5.0~rc1-natty1) natty; urgency=low
 
-  * Add test_bitcoin to build test
+  * Add test_raven to build test
   * Fix clean
   * Remove uneccessary build-dependancies
 
  -- Matt Corallo <matt@bluematt.me>  Wed, 26 Oct 2011 14:37:18 -0400
 
-bitcoin (0.5.0~rc1-natty0) natty; urgency=low
+raven (0.5.0~rc1-natty0) natty; urgency=low
 
   * Mark for natty
   * Fix broken build
   * Fix copyright listing
-  * Remove bitcoin: URL handler until bitcoin actually has support for it (Oops)
+  * Remove raven: URL handler until raven actually has support for it (Oops)
 
  -- Matt Corallo <matt@bluematt.me>  Wed, 26 Oct 2011 14:37:18 -0400
 
-bitcoin (0.5.0~rc1-2) experimental; urgency=low
+raven (0.5.0~rc1-2) experimental; urgency=low
 
-  * Add bitcoin-qt
+  * Add raven-qt
 
  -- Matt Corallo <matt@bluematt.me>  Tue, 25 Oct 2011 15:24:18 -0400
 
-bitcoin (0.5.0~rc1-1) experimental; urgency=low
+raven (0.5.0~rc1-1) experimental; urgency=low
 
   * New upstream prerelease.
   * Add Github as alternate upstream source in watch file.
@@ -369,7 +369,7 @@ bitcoin (0.5.0~rc1-1) experimental; urgency=low
 
  -- Jonas Smedegaard <dr@jones.dk>  Fri, 14 Oct 2011 00:16:18 +0200
 
-bitcoin (0.4.0-1) unstable; urgency=low
+raven (0.4.0-1) unstable; urgency=low
 
   * New upstream release.
   * Stop repackaging source tarballs: No DFSG-violating stripping left.
@@ -378,7 +378,7 @@ bitcoin (0.4.0-1) unstable; urgency=low
   * Drop dpkg-source local-options hint: Declared options are default
     since dpkg-source 1.16.1.
     + Add irc URL to Upstream-Contact.
-    + Add comment on Bitcoin Developers to catch-all Files section.
+    + Add comment on Raven Developers to catch-all Files section.
     + Add Files sections for newly readded src/cryptopp/* (new custom
       BSD-like license), and newly added doc/build-osx.txt and
       src/makefile.osx (Expat).
@@ -397,13 +397,13 @@ bitcoin (0.4.0-1) unstable; urgency=low
 
  -- Jonas Smedegaard <dr@jones.dk>  Wed, 05 Oct 2011 01:48:53 +0200
 
-bitcoin (0.3.24~dfsg-1) unstable; urgency=low
+raven (0.3.24~dfsg-1) unstable; urgency=low
 
   * New upstream release.
 
   [ Jonas Smedegaard ]
   * Improve various usage hints:
-    + Explicitly mention in long description that bitcoind contains
+    + Explicitly mention in long description that ravend contains
       daemon and command-line interface.
     + Extend README.Debian with section on lack of GUI, and add primary
       headline.
@@ -424,7 +424,7 @@ bitcoin (0.3.24~dfsg-1) unstable; urgency=low
 
  -- Jonas Smedegaard <dr@jones.dk>  Tue, 19 Jul 2011 15:08:54 +0200
 
-bitcoin (0.3.21~dfsg-2) unstable; urgency=low
+raven (0.3.21~dfsg-2) unstable; urgency=low
 
   * Enable UPNP support:
     + Drop patch 1006.
@@ -433,7 +433,7 @@ bitcoin (0.3.21~dfsg-2) unstable; urgency=low
 
  -- Jonas Smedegaard <dr@jones.dk>  Sat, 28 May 2011 15:52:44 +0200
 
-bitcoin (0.3.21~dfsg-1) unstable; urgency=low
+raven (0.3.21~dfsg-1) unstable; urgency=low
 
   * New upstream release.
   * Refresh patches.
@@ -446,7 +446,7 @@ bitcoin (0.3.21~dfsg-1) unstable; urgency=low
   * Bump policy compliance to standards-version 3.9.2.
   * Shorten Vcs-Browser paragraph in control file.
   * Fix mention daemon (not CLI tools) in short description.
-  * Stop conflicting with or replace bitcoin-cli: Only transitional, no
+  * Stop conflicting with or replace raven-cli: Only transitional, no
     longer needed.
   * Link against unversioned berkeleydb. Update NEWS and README.Debian
     accordingly (and improve wording while at it).
@@ -458,7 +458,7 @@ bitcoin (0.3.21~dfsg-1) unstable; urgency=low
 
  -- Jonas Smedegaard <dr@jones.dk>  Tue, 17 May 2011 15:31:24 +0200
 
-bitcoin (0.3.20.2~dfsg-2) unstable; urgency=medium
+raven (0.3.20.2~dfsg-2) unstable; urgency=medium
 
   * Fix have wrapper script execute real binary (not loop executing
     itself).
@@ -468,15 +468,15 @@ bitcoin (0.3.20.2~dfsg-2) unstable; urgency=medium
 
  -- Jonas Smedegaard <dr@jones.dk>  Wed, 16 Mar 2011 09:11:06 +0100
 
-bitcoin (0.3.20.2~dfsg-1) unstable; urgency=low
+raven (0.3.20.2~dfsg-1) unstable; urgency=low
 
   * New upstream release.
-  * Fix provide and replace former package name bitcoin-cli.
+  * Fix provide and replace former package name raven-cli.
     Closes: bug#618439. Thanks to Shane Wegner.
 
  -- Jonas Smedegaard <dr@jones.dk>  Tue, 15 Mar 2011 11:41:43 +0100
 
-bitcoin (0.3.20.01~dfsg-1) unstable; urgency=low
+raven (0.3.20.01~dfsg-1) unstable; urgency=low
 
   * New upstream release.
 
@@ -484,7 +484,7 @@ bitcoin (0.3.20.01~dfsg-1) unstable; urgency=low
   * Add myself as uploader.
 
   [ Jonas Smedegaard ]
-  * Add wrapper for bitcoind to ease initial startup.
+  * Add wrapper for ravend to ease initial startup.
   * Update patches:
     + Drop patch 2002: Applied upstream.
     + Add patch 1005 to add phtread linker option.
@@ -492,12 +492,12 @@ bitcoin (0.3.20.01~dfsg-1) unstable; urgency=low
     + Refresh patches.
   * Extend copyright years in rules file header.
   * Rewrite copyright file using draft svn166 of DEP5 format.
-  * Rename binary package to bitcoind (from bincoin-cli).
+  * Rename binary package to ravend (from bincoin-cli).
     Closes: bug#614025. Thanks to Luke-Jr.
 
  -- Jonas Smedegaard <dr@jones.dk>  Tue, 01 Mar 2011 15:55:04 +0100
 
-bitcoin (0.3.19~dfsg-6) unstable; urgency=low
+raven (0.3.19~dfsg-6) unstable; urgency=low
 
   * Fix override agressive optimizations.
   * Fix tighten build-dependencies to really fit backporting to Lenny:
@@ -508,7 +508,7 @@ bitcoin (0.3.19~dfsg-6) unstable; urgency=low
 
  -- Jonas Smedegaard <dr@jones.dk>  Mon, 17 Jan 2011 19:48:35 +0100
 
-bitcoin (0.3.19~dfsg-5) unstable; urgency=low
+raven (0.3.19~dfsg-5) unstable; urgency=low
 
   * Fix lower Boost fallback-build-dependencies to 1.35, really
     available in Lenny.
@@ -523,11 +523,11 @@ bitcoin (0.3.19~dfsg-5) unstable; urgency=low
 
  -- Jonas Smedegaard <dr@jones.dk>  Mon, 17 Jan 2011 16:04:48 +0100
 
-bitcoin (0.3.19~dfsg-4) unstable; urgency=low
+raven (0.3.19~dfsg-4) unstable; urgency=low
 
   [ Micah Anderson ]
-  * Provide example bitcoin.conf.
-  * Add bitcoind(1) and bitcoin.conf(5) man pages.
+  * Provide example raven.conf.
+  * Add ravend(1) and raven.conf(5) man pages.
 
   [ Jonas Smedegaard ]
   * Ease backporting:
@@ -539,7 +539,7 @@ bitcoin (0.3.19~dfsg-4) unstable; urgency=low
 
  -- Jonas Smedegaard <dr@jones.dk>  Mon, 17 Jan 2011 14:00:48 +0100
 
-bitcoin (0.3.19~dfsg-3) unstable; urgency=low
+raven (0.3.19~dfsg-3) unstable; urgency=low
 
   * Document in copyright file files excluded from repackaged source.
   * Update copyright file:
@@ -554,7 +554,7 @@ bitcoin (0.3.19~dfsg-3) unstable; urgency=low
 
  -- Jonas Smedegaard <dr@jones.dk>  Fri, 07 Jan 2011 22:50:57 +0100
 
-bitcoin (0.3.19~dfsg-2) unstable; urgency=low
+raven (0.3.19~dfsg-2) unstable; urgency=low
 
   * Adjust build options to use optimized miner only for amd64. Fixes
     FTBFS on i386 (and other archs, if compiling anywhere else at all).
@@ -569,7 +569,7 @@ bitcoin (0.3.19~dfsg-2) unstable; urgency=low
 
  -- Jonas Smedegaard <dr@jones.dk>  Wed, 29 Dec 2010 00:27:54 +0100
 
-bitcoin (0.3.19~dfsg-1) unstable; urgency=low
+raven (0.3.19~dfsg-1) unstable; urgency=low
 
   [ Jonas Smedegaard ]
   * Initial release.

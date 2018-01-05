@@ -1,4 +1,5 @@
 // Copyright (c) 2012-2017 The Bitcoin Core developers
+// Copyright (c) 2017 The Raven Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,7 +7,7 @@
 #include "utiltime.h"
 #include "validation.h"
 
-#include "test/test_bitcoin.h"
+#include "test/test_raven.h"
 #include "checkqueue.h"
 #include <boost/test/unit_test.hpp>
 #include <boost/thread.hpp>
@@ -38,7 +39,7 @@ struct FakeCheckCheckCompletion {
     static std::atomic<size_t> n_calls;
     bool operator()()
     {
-        ++n_calls;
+        n_calls.fetch_add(1, std::memory_order_relaxed);
         return true;
     }
     void swap(FakeCheckCheckCompletion& x){};
@@ -88,15 +89,15 @@ struct MemoryCheck {
         //
         // Really, copy constructor should be deletable, but CCheckQueue breaks
         // if it is deleted because of internal push_back.
-        fake_allocated_memory += b;
+        fake_allocated_memory.fetch_add(b, std::memory_order_relaxed);
     };
     MemoryCheck(bool b_) : b(b_)
     {
-        fake_allocated_memory += b;
+        fake_allocated_memory.fetch_add(b, std::memory_order_relaxed);
     };
-    ~MemoryCheck(){
-        fake_allocated_memory -= b;
-    
+    ~MemoryCheck()
+    {
+        fake_allocated_memory.fetch_sub(b, std::memory_order_relaxed);
     };
     void swap(MemoryCheck& x) { std::swap(b, x.b); };
 };
@@ -117,9 +118,9 @@ struct FrozenCleanupCheck {
     {
         if (should_freeze) {
             std::unique_lock<std::mutex> l(m);
-            nFrozen = 1;
+            nFrozen.store(1, std::memory_order_relaxed);
             cv.notify_one();
-            cv.wait(l, []{ return nFrozen == 0;});
+            cv.wait(l, []{ return nFrozen.load(std::memory_order_relaxed) == 0;});
         }
     }
     void swap(FrozenCleanupCheck& x){std::swap(should_freeze, x.should_freeze);};
@@ -262,7 +263,7 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_Recovers_From_Failure)
                 control.Add(vChecks);
             }
             bool r =control.Wait();
-            BOOST_REQUIRE(r || end_fails);
+            BOOST_REQUIRE(r != end_fails);
         }
     }
     tg.interrupt_all();
@@ -337,7 +338,7 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_Memory)
     tg.join_all();
 }
 
-// Test that a new verification cannot occur until all checks 
+// Test that a new verification cannot occur until all checks
 // have been destructed
 BOOST_AUTO_TEST_CASE(test_CheckQueue_FrozenCleanup)
 {
@@ -361,11 +362,14 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_FrozenCleanup)
         std::unique_lock<std::mutex> l(FrozenCleanupCheck::m);
         // Wait until the queue has finished all jobs and frozen
         FrozenCleanupCheck::cv.wait(l, [](){return FrozenCleanupCheck::nFrozen == 1;});
-        // Try to get control of the queue a bunch of times
-        for (auto x = 0; x < 100 && !fails; ++x) {
-            fails = queue->ControlMutex.try_lock();
-        }
-        // Unfreeze
+    }
+    // Try to get control of the queue a bunch of times
+    for (auto x = 0; x < 100 && !fails; ++x) {
+        fails = queue->ControlMutex.try_lock();
+    }
+    {
+        // Unfreeze (we need lock n case of spurious wakeup)
+        std::unique_lock<std::mutex> l(FrozenCleanupCheck::m);
         FrozenCleanupCheck::nFrozen = 0;
     }
     // Awaken frozen destructor

@@ -1,10 +1,11 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2016 The Bitcoin Core developers
+// Copyright (c) 2017 The Raven Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_SERIALIZE_H
-#define BITCOIN_SERIALIZE_H
+#ifndef RAVEN_SERIALIZE_H
+#define RAVEN_SERIALIZE_H
 
 #include "compat/endian.h"
 
@@ -402,7 +403,7 @@ class CVarInt
 protected:
     I &n;
 public:
-    CVarInt(I& nIn) : n(nIn) { }
+    explicit CVarInt(I& nIn) : n(nIn) { }
 
     template<typename Stream>
     void Serialize(Stream &s) const {
@@ -420,7 +421,7 @@ class CCompactSize
 protected:
     uint64_t &n;
 public:
-    CCompactSize(uint64_t& nIn) : n(nIn) { }
+    explicit CCompactSize(uint64_t& nIn) : n(nIn) { }
 
     template<typename Stream>
     void Serialize(Stream &s) const {
@@ -439,7 +440,7 @@ class LimitedString
 protected:
     std::string& string;
 public:
-    LimitedString(std::string& _string) : string(_string) {}
+    explicit LimitedString(std::string& _string) : string(_string) {}
 
     template<typename Stream>
     void Unserialize(Stream& s)
@@ -450,7 +451,7 @@ public:
         }
         string.resize(size);
         if (size != 0)
-            s.read((char*)&string[0], size);
+            s.read((char*)string.data(), size);
     }
 
     template<typename Stream>
@@ -458,7 +459,7 @@ public:
     {
         WriteCompactSize(s, string.size());
         if (!string.empty())
-            s.write((char*)&string[0], string.size());
+            s.write((char*)string.data(), string.size());
     }
 };
 
@@ -556,7 +557,7 @@ void Serialize(Stream& os, const std::basic_string<C>& str)
 {
     WriteCompactSize(os, str.size());
     if (!str.empty())
-        os.write((char*)&str[0], str.size() * sizeof(str[0]));
+        os.write((char*)str.data(), str.size() * sizeof(C));
 }
 
 template<typename Stream, typename C>
@@ -565,7 +566,7 @@ void Unserialize(Stream& is, std::basic_string<C>& str)
     unsigned int nSize = ReadCompactSize(is);
     str.resize(nSize);
     if (nSize != 0)
-        is.read((char*)&str[0], nSize * sizeof(str[0]));
+        is.read((char*)str.data(), nSize * sizeof(C));
 }
 
 
@@ -578,7 +579,7 @@ void Serialize_impl(Stream& os, const prevector<N, T>& v, const unsigned char&)
 {
     WriteCompactSize(os, v.size());
     if (!v.empty())
-        os.write((char*)&v[0], v.size() * sizeof(T));
+        os.write((char*)v.data(), v.size() * sizeof(T));
 }
 
 template<typename Stream, unsigned int N, typename T, typename V>
@@ -646,7 +647,7 @@ void Serialize_impl(Stream& os, const std::vector<T, A>& v, const unsigned char&
 {
     WriteCompactSize(os, v.size());
     if (!v.empty())
-        os.write((char*)&v[0], v.size() * sizeof(T));
+        os.write((char*)v.data(), v.size() * sizeof(T));
 }
 
 template<typename Stream, typename T, typename A, typename V>
@@ -963,4 +964,4 @@ size_t GetSerializeSize(const S& s, const T& t)
     return (CSizeComputer(s.GetType(), s.GetVersion()) << t).size();
 }
 
-#endif // BITCOIN_SERIALIZE_H
+#endif // RAVEN_SERIALIZE_H

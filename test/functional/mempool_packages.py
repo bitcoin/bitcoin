@@ -1,21 +1,20 @@
 #!/usr/bin/env python3
 # Copyright (c) 2014-2016 The Bitcoin Core developers
+# Copyright (c) 2017 The Raven Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test descendant package tracking code."""
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import RavenTestFramework
 from test_framework.util import *
 from test_framework.mininode import COIN
 
 MAX_ANCESTORS = 25
 MAX_DESCENDANTS = 25
 
-class MempoolPackagesTest(BitcoinTestFramework):
-    def __init__(self):
-        super().__init__()
+class MempoolPackagesTest(RavenTestFramework):
+    def set_test_params(self):
         self.num_nodes = 2
-        self.setup_clean_chain = False
         self.extra_args = [["-maxorphantx=1000"], ["-maxorphantx=1000", "-limitancestorcount=5"]]
 
     # Build a transaction that spends parent_txid:vout
@@ -117,7 +116,7 @@ class MempoolPackagesTest(BitcoinTestFramework):
             assert_equal(mempool[x]['descendantfees'], descendant_fees * COIN + 1000)
 
         # Adding one more transaction on to the chain should fail.
-        assert_raises_jsonrpc(-26, "too-long-mempool-chain", self.chain_transaction, self.nodes[0], txid, vout, value, fee, 1)
+        assert_raises_rpc_error(-26, "too-long-mempool-chain", self.chain_transaction, self.nodes[0], txid, vout, value, fee, 1)
 
         # Check that prioritising a tx before it's added to the mempool works
         # First clear the mempool by mining a block.
@@ -169,7 +168,7 @@ class MempoolPackagesTest(BitcoinTestFramework):
 
         # Sending one more chained transaction will fail
         utxo = transaction_package.pop(0)
-        assert_raises_jsonrpc(-26, "too-long-mempool-chain", self.chain_transaction, self.nodes[0], utxo['txid'], utxo['vout'], utxo['amount'], fee, 10)
+        assert_raises_rpc_error(-26, "too-long-mempool-chain", self.chain_transaction, self.nodes[0], utxo['txid'], utxo['vout'], utxo['amount'], fee, 10)
 
         # TODO: check that node1's mempool is as expected
 
@@ -213,7 +212,7 @@ class MempoolPackagesTest(BitcoinTestFramework):
         value = send_value
 
         # Create tx1
-        (tx1_id, tx1_value) = self.chain_transaction(self.nodes[0], tx0_id, 0, value, fee, 1)
+        tx1_id, _ = self.chain_transaction(self.nodes[0], tx0_id, 0, value, fee, 1)
 
         # Create tx2-7
         vout = 1

@@ -1,12 +1,13 @@
 // Copyright (c) 2011-2015 The Bitcoin Core developers
+// Copyright (c) 2017 The Raven Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_QT_NOTIFICATOR_H
-#define BITCOIN_QT_NOTIFICATOR_H
+#ifndef RAVEN_QT_NOTIFICATOR_H
+#define RAVEN_QT_NOTIFICATOR_H
 
 #if defined(HAVE_CONFIG_H)
-#include "config/bitcoin-config.h"
+#include "config/raven-config.h"
 #endif
 
 #include <QIcon>
@@ -58,8 +59,6 @@ private:
         None,                       /**< Ignore informational notifications, and show a modal pop-up dialog for Critical notifications. */
         Freedesktop,                /**< Use DBus org.freedesktop.Notifications */
         QSystemTray,                /**< Use QSystemTray::showMessage */
-        Growl12,                    /**< Use the Growl 1.2 notification system (Mac only) */
-        Growl13,                    /**< Use the Growl 1.3 notification system (Mac only) */
         UserNotificationCenter      /**< Use the 10.8+ User Notification Center (Mac only) */
     };
     QString programName;
@@ -72,9 +71,8 @@ private:
 #endif
     void notifySystray(Class cls, const QString &title, const QString &text, const QIcon &icon, int millisTimeout);
 #ifdef Q_OS_MAC
-    void notifyGrowl(Class cls, const QString &title, const QString &text, const QIcon &icon);
     void notifyMacUserNotificationCenter(Class cls, const QString &title, const QString &text, const QIcon &icon);
 #endif
 };
 
-#endif // BITCOIN_QT_NOTIFICATOR_H
+#endif // RAVEN_QT_NOTIFICATOR_H

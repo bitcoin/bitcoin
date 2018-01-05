@@ -1,10 +1,11 @@
 // Copyright (c) 2010 Satoshi Nakamoto
 // Copyright (c) 2012-2016 The Bitcoin Core developers
+// Copyright (c) 2017 The Raven Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_UI_INTERFACE_H
-#define BITCOIN_UI_INTERFACE_H
+#ifndef RAVEN_UI_INTERFACE_H
+#define RAVEN_UI_INTERFACE_H
 
 #include <stdint.h>
 #include <string>
@@ -94,11 +95,11 @@ public:
     /** A wallet has been loaded. */
     boost::signals2::signal<void (CWallet* wallet)> LoadWallet;
 
-    /** Show progress e.g. for verifychain */
-    boost::signals2::signal<void (const std::string &title, int nProgress)> ShowProgress;
-
-    /** Set progress break action (possible "cancel button" triggers that action) */
-    boost::signals2::signal<void (std::function<void(void)> action)> SetProgressBreakAction;
+    /**
+     * Show progress e.g. for verifychain.
+     * resume_possible indicates shutting down now will result in the current progress action resuming upon restart.
+     */
+    boost::signals2::signal<void (const std::string &title, int nProgress, bool resume_possible)> ShowProgress;
 
     /** New block has been accepted */
     boost::signals2::signal<void (bool, const CBlockIndex *)> NotifyBlockTip;
@@ -122,4 +123,4 @@ std::string AmountErrMsg(const char* const optname, const std::string& strValue)
 
 extern CClientUIInterface uiInterface;
 
-#endif // BITCOIN_UI_INTERFACE_H
+#endif // RAVEN_UI_INTERFACE_H

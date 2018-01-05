@@ -1,6 +1,6 @@
 [Protocol]
-exec=bitcoin-qt '%u'
-protocol=bitcoin
+exec=raven-qt '%u'
+protocol=raven
 input=none
 output=none
 helper=true

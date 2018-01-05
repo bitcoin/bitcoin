@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # Copyright (c) 2015-2016 The Bitcoin Core developers
+# Copyright (c) 2017 The Raven Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """BlockStore and TxStore helper classes."""
@@ -10,7 +11,7 @@ import dbm.dumb as dbmd
 
 logger = logging.getLogger("TestFramework.blockstore")
 
-class BlockStore(object):
+class BlockStore():
     """BlockStore helper class.
 
     BlockStore keeps a map of blocks and implements helper functions for
@@ -127,7 +128,7 @@ class BlockStore(object):
         locator.vHave = r
         return locator
 
-class TxStore(object):
+class TxStore():
     def __init__(self, datadir):
         self.txDB = dbmd.open(datadir + "/transactions", 'c')
 
@@ -142,16 +143,6 @@ class TxStore(object):
         except KeyError:
             return None
         return value
-
-    def get_transaction(self, txhash):
-        ret = None
-        serialized_tx = self.get(txhash)
-        if serialized_tx is not None:
-            f = BytesIO(serialized_tx)
-            ret = CTransaction()
-            ret.deserialize(f)
-            ret.calc_sha256()
-        return ret
 
     def add_transaction(self, tx):
         tx.calc_sha256()

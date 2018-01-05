@@ -1,9 +1,10 @@
 // Copyright (c) 2011-2016 The Bitcoin Core developers
+// Copyright (c) 2017 The Raven Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_QT_SPLASHSCREEN_H
-#define BITCOIN_QT_SPLASHSCREEN_H
+#ifndef RAVEN_QT_SPLASHSCREEN_H
+#define RAVEN_QT_SPLASHSCREEN_H
 
 #include <functional>
 #include <QSplashScreen>
@@ -13,7 +14,7 @@ class NetworkStyle;
 
 /** Class for the splashscreen with information of the running client.
  *
- * @note this is intentionally not a QSplashScreen. Bitcoin Core initialization
+ * @note this is intentionally not a QSplashScreen. Raven Core initialization
  * can take a long time, and in that case a progress window that cannot be
  * moved around and minimized has turned out to be frustrating to the user.
  */
@@ -36,8 +37,6 @@ public Q_SLOTS:
     /** Show message and progress */
     void showMessage(const QString &message, int alignment, const QColor &color);
 
-    /** Sets the break action */
-    void setBreakAction(const std::function<void(void)> &action);
 protected:
     bool eventFilter(QObject * obj, QEvent * ev);
 
@@ -55,8 +54,6 @@ private:
     int curAlignment;
 
     QList<CWallet*> connectedWallets;
-
-    std::function<void(void)> breakAction;
 };
 
-#endif // BITCOIN_QT_SPLASHSCREEN_H
+#endif // RAVEN_QT_SPLASHSCREEN_H

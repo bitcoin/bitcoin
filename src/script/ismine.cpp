@@ -1,5 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2016 The Bitcoin Core developers
+// Copyright (c) 2017 The Raven Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -46,6 +47,8 @@ isminetype IsMine(const CKeyStore &keystore, const CTxDestination& dest, bool& i
 
 isminetype IsMine(const CKeyStore &keystore, const CScript& scriptPubKey, bool& isInvalid, SigVersion sigversion)
 {
+    isInvalid = false;
+
     std::vector<valtype> vSolutions;
     txnouttype whichType;
     if (!Solver(scriptPubKey, whichType, vSolutions)) {
@@ -59,6 +62,7 @@ isminetype IsMine(const CKeyStore &keystore, const CScript& scriptPubKey, bool& 
     {
     case TX_NONSTANDARD:
     case TX_NULL_DATA:
+    case TX_WITNESS_UNKNOWN:
         break;
     case TX_PUBKEY:
         keyID = CPubKey(vSolutions[0]).GetID();

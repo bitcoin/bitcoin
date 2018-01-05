@@ -1,7 +1,7 @@
-Contributing to Bitcoin Core
+Contributing to Raven Core
 ============================
 
-The Bitcoin Core project operates an open contributor model where anyone is
+The Raven Core project operates an open contributor model where anyone is
 welcome to contribute towards development in the form of peer review, testing
 and patches. This document explains the practical process and guidelines for
 contributing.
@@ -57,12 +57,12 @@ the pull request affects. Valid areas as:
 
   - *Consensus* for changes to consensus critical code
   - *Docs* for changes to the documentation
-  - *Qt* for changes to bitcoin-qt
+  - *Qt* for changes to raven-qt
   - *Mining* for changes to the mining code
   - *Net* or *P2P* for changes to the peer-to-peer network code
   - *RPC/REST/ZMQ* for changes to the RPC, REST or ZMQ APIs
   - *Scripts and tools* for changes to the scripts and tools
-  - *Tests* for changes to the bitcoin unit tests or QA tests
+  - *Tests* for changes to the raven unit tests or QA tests
   - *Trivial* should **only** be used for PRs that do not change generated
     executable code. Notably, refactors (change of function arguments and code
     reorganization) and changes in behavior should **not** be marked as trivial.
@@ -80,6 +80,10 @@ Examples:
     Net: Automatically create hidden service, listen on Tor
     Qt: Add feed bump button
     Trivial: Fix typo in init.cpp
+
+Note that translations should not be submitted as pull requests, please see
+[Translation Process](https://github.com/RavenProject/Ravencoin/blob/master/doc/translation_process.md) 
+for more information on helping with translations.
 
 If a pull request is specifically not to be considered for merging (yet) please
 prefix the title with [WIP] or use [Tasks Lists](https://help.github.com/articles/basic-writing-and-formatting-syntax/#task-lists)
@@ -153,15 +157,23 @@ behaviour of code within the pull request (bugs must be preserved as is).
 Project maintainers aim for a quick turnaround on refactoring pull requests, so
 where possible keep them short, uncomplex and easy to verify.
 
+Pull requests that refactor the code should not be made by new contributors. It
+requires a certain level of experience to know where the code belongs to and to
+understand the full ramification (including rebase effort of open pull requests).
+
+Trivial pull requests or pull requests that refactor the code with no clear
+benefits may be immediately closed by the maintainers to reduce unnecessary
+workload on reviewing.
+
 
 "Decision Making" Process
 -------------------------
 
-The following applies to code changes to the Bitcoin Core project (and related
-projects such as libsecp256k1), and is not to be confused with overall Bitcoin
+The following applies to code changes to the Raven Core project (and related
+projects such as libsecp256k1), and is not to be confused with overall Raven
 Network Protocol consensus changes.
 
-Whether a pull request is merged into Bitcoin Core rests with the project merge
+Whether a pull request is merged into Raven Core rests with the project merge
 maintainers and ultimately the project lead.
 
 Maintainers will take into consideration if a patch is in line with the general
@@ -170,16 +182,16 @@ judge the general consensus of contributors.
 
 In general, all pull requests must:
 
-  - have a clear use case, fix a demonstrable bug or serve the greater good of
+  - Have a clear use case, fix a demonstrable bug or serve the greater good of
     the project (for example refactoring for modularisation);
-  - be well peer reviewed;
-  - have unit tests and functional tests where appropriate;
-  - follow code style guidelines;
-  - not break the existing test suite;
-  - where bugs are fixed, where possible, there should be unit tests
+  - Be well peer reviewed;
+  - Have unit tests and functional tests where appropriate;
+  - Follow code style guidelines;
+  - Not break the existing test suite;
+  - Where bugs are fixed, where possible, there should be unit tests
     demonstrating the bug and also proving the fix. This helps prevent regression.
 
-Patches that change Bitcoin consensus rules are considerably more involved than
+Patches that change Raven consensus rules are considerably more involved than
 normal because they affect the entire ecosystem and so must be preceded by
 extensive mailing list discussions and have a numbered BIP. While each case will
 be different, one should be prepared to expend more time and effort than for
@@ -220,7 +232,7 @@ higher in terms of discussion and peer review requirements, keeping in mind that
 mistakes could be very costly to the wider community. This includes refactoring
 of consensus critical code.
 
-Where a patch set proposes to change the Bitcoin consensus, it must have been
+Where a patch set proposes to change the Raven consensus, it must have been
 discussed extensively on the mailing list and IRC, be accompanied by a widely
 discussed BIP and have a generally widely perceived technical consensus of being
 a worthwhile change based on the judgement of the maintainers.
@@ -260,7 +272,7 @@ about:
 Release Policy
 --------------
 
-The project leader is the release manager for each Bitcoin Core release.
+The project leader is the release manager for each Raven Core release.
 
 Copyright
 ---------

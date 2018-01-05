@@ -1,4 +1,5 @@
 // Copyright (c) 2016 The Bitcoin Core developers
+// Copyright (c) 2017 The Raven Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,15 +10,11 @@ const struct VBDeploymentInfo VersionBitsDeploymentInfo[Consensus::MAX_VERSION_B
     {
         /*.name =*/ "testdummy",
         /*.gbt_force =*/ true,
-    },
-    {
-        /*.name =*/ "csv",
-        /*.gbt_force =*/ true,
-    },
-    {
-        /*.name =*/ "segwit",
-        /*.gbt_force =*/ true,
     }
+//	{
+//		/*.name =*/ "segwit",
+//		/*.gbt_force =*/ true,
+//	}
 };
 
 ThresholdState AbstractThresholdConditionChecker::GetStateFor(const CBlockIndex* pindexPrev, const Consensus::Params& params, ThresholdConditionCache& cache) const
@@ -28,14 +25,14 @@ ThresholdState AbstractThresholdConditionChecker::GetStateFor(const CBlockIndex*
     int64_t nTimeTimeout = EndTime(params);
 
     // A block's state is always the same as that of the first of its period, so it is computed based on a pindexPrev whose height equals a multiple of nPeriod - 1.
-    if (pindexPrev != NULL) {
+    if (pindexPrev != nullptr) {
         pindexPrev = pindexPrev->GetAncestor(pindexPrev->nHeight - ((pindexPrev->nHeight + 1) % nPeriod));
     }
 
     // Walk backwards in steps of nPeriod to find a pindexPrev whose information is known
     std::vector<const CBlockIndex*> vToCompute;
     while (cache.count(pindexPrev) == 0) {
-        if (pindexPrev == NULL) {
+        if (pindexPrev == nullptr) {
             // The genesis block is by definition defined.
             cache[pindexPrev] = THRESHOLD_DEFINED;
             break;
@@ -107,12 +104,12 @@ ThresholdState AbstractThresholdConditionChecker::GetStateFor(const CBlockIndex*
 // return the numerical statistics of blocks signalling the specified BIP9 condition in this current period
 BIP9Stats AbstractThresholdConditionChecker::GetStateStatisticsFor(const CBlockIndex* pindex, const Consensus::Params& params) const
 {
-    BIP9Stats stats;
+    BIP9Stats stats = {};
 
     stats.period = Period(params);
     stats.threshold = Threshold(params);
 
-    if (pindex == NULL)
+    if (pindex == nullptr)
         return stats;
 
     // Find beginning of period
@@ -150,12 +147,12 @@ int AbstractThresholdConditionChecker::GetStateSinceHeightFor(const CBlockIndex*
     // right now pindexPrev points to the block prior to the block that we are computing for, thus:
     // if we are computing for the last block of a period, then pindexPrev points to the second to last block of the period, and
     // if we are computing for the first block of a period, then pindexPrev points to the last block of the previous period.
-    // The parent of the genesis block is represented by NULL.
+    // The parent of the genesis block is represented by nullptr.
     pindexPrev = pindexPrev->GetAncestor(pindexPrev->nHeight - ((pindexPrev->nHeight + 1) % nPeriod));
 
     const CBlockIndex* previousPeriodParent = pindexPrev->GetAncestor(pindexPrev->nHeight - nPeriod);
 
-    while (previousPeriodParent != NULL && GetStateFor(previousPeriodParent, params, cache) == initialState) {
+    while (previousPeriodParent != nullptr && GetStateFor(previousPeriodParent, params, cache) == initialState) {
         pindexPrev = previousPeriodParent;
         previousPeriodParent = pindexPrev->GetAncestor(pindexPrev->nHeight - nPeriod);
     }
@@ -185,7 +182,7 @@ protected:
     }
 
 public:
-    VersionBitsConditionChecker(Consensus::DeploymentPos id_) : id(id_) {}
+    explicit VersionBitsConditionChecker(Consensus::DeploymentPos id_) : id(id_) {}
     uint32_t Mask(const Consensus::Params& params) const { return ((uint32_t)1) << params.vDeployments[id].bit; }
 };
 

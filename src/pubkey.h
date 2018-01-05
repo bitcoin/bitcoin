@@ -1,10 +1,11 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2016 The Bitcoin Core developers
+// Copyright (c) 2017 The Raven Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_PUBKEY_H
-#define BITCOIN_PUBKEY_H
+#ifndef RAVEN_PUBKEY_H
+#define RAVEN_PUBKEY_H
 
 #include "hash.h"
 #include "serialize.h"
@@ -30,7 +31,7 @@ class CKeyID : public uint160
 {
 public:
     CKeyID() : uint160() {}
-    CKeyID(const uint160& in) : uint160(in) {}
+    explicit CKeyID(const uint160& in) : uint160(in) {}
 };
 
 typedef uint256 ChainCode;
@@ -88,7 +89,7 @@ public:
     }
 
     //! Construct a public key from a byte vector.
-    CPubKey(const std::vector<unsigned char>& _vch)
+    explicit CPubKey(const std::vector<unsigned char>& _vch)
     {
         Set(_vch.begin(), _vch.end());
     }
@@ -247,4 +248,4 @@ public:
     ~ECCVerifyHandle();
 };
 
-#endif // BITCOIN_PUBKEY_H
+#endif // RAVEN_PUBKEY_H

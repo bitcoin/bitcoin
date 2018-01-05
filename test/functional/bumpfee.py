@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # Copyright (c) 2016 The Bitcoin Core developers
+# Copyright (c) 2017 The Raven Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the bumpfee RPC.
@@ -15,7 +16,7 @@ make assumptions about execution order.
 """
 
 from segwit import send_to_witness
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import RavenTestFramework
 from test_framework import blocktools
 from test_framework.mininode import CTransaction
 from test_framework.util import *
@@ -29,27 +30,22 @@ WALLET_PASSPHRASE = "test"
 WALLET_PASSPHRASE_TIMEOUT = 3600
 
 
-class BumpFeeTest(BitcoinTestFramework):
-    def __init__(self):
-        super().__init__()
+class BumpFeeTest(RavenTestFramework):
+    def set_test_params(self):
         self.num_nodes = 2
         self.setup_clean_chain = True
+        self.extra_args = [["-prematurewitness", "-walletprematurewitness", "-walletrbf={}".format(i)]
+                           for i in range(self.num_nodes)]
 
-    def setup_network(self, split=False):
-        extra_args = [["-prematurewitness", "-walletprematurewitness", "-walletrbf={}".format(i)]
-                      for i in range(self.num_nodes)]
-        self.nodes = self.start_nodes(self.num_nodes, self.options.tmpdir, extra_args)
-
+    def run_test(self):
         # Encrypt wallet for test_locked_wallet_fails test
-        self.nodes[1].encryptwallet(WALLET_PASSPHRASE)
-        self.bitcoind_processes[1].wait()
-        self.nodes[1] = self.start_node(1, self.options.tmpdir, extra_args[1])
+        self.nodes[1].node_encrypt_wallet(WALLET_PASSPHRASE)
+        self.start_node(1)
         self.nodes[1].walletpassphrase(WALLET_PASSPHRASE, WALLET_PASSPHRASE_TIMEOUT)
 
         connect_nodes_bi(self.nodes, 0, 1)
         self.sync_all()
 
-    def run_test(self):
         peer_node, rbf_node = self.nodes
         rbf_node_address = rbf_node.getnewaddress()
 
@@ -90,7 +86,7 @@ def test_simple_bumpfee_succeeds(rbf_node, peer_node, dest_address):
     bumped_tx = rbf_node.bumpfee(rbfid)
     assert_equal(bumped_tx["errors"], [])
     assert bumped_tx["fee"] - abs(rbftx["fee"]) > 0
-    # check that bumped_tx propogates, original tx was evicted and has a wallet conflict
+    # check that bumped_tx propagates, original tx was evicted and has a wallet conflict
     sync_mempools((rbf_node, peer_node))
     assert bumped_tx["txid"] in rbf_node.getrawmempool()
     assert bumped_tx["txid"] in peer_node.getrawmempool()
@@ -138,7 +134,7 @@ def test_segwit_bumpfee_succeeds(rbf_node, dest_address):
 def test_nonrbf_bumpfee_fails(peer_node, dest_address):
     # cannot replace a non RBF transaction (from node which did not enable RBF)
     not_rbfid = peer_node.sendtoaddress(dest_address, Decimal("0.00090000"))
-    assert_raises_jsonrpc(-4, "not BIP 125 replaceable", peer_node.bumpfee, not_rbfid)
+    assert_raises_rpc_error(-4, "not BIP 125 replaceable", peer_node.bumpfee, not_rbfid)
 
 
 def test_notmine_bumpfee_fails(rbf_node, peer_node, dest_address):
@@ -158,7 +154,7 @@ def test_notmine_bumpfee_fails(rbf_node, peer_node, dest_address):
     signedtx = rbf_node.signrawtransaction(rawtx)
     signedtx = peer_node.signrawtransaction(signedtx["hex"])
     rbfid = rbf_node.sendrawtransaction(signedtx["hex"])
-    assert_raises_jsonrpc(-4, "Transaction contains inputs that don't belong to this wallet",
+    assert_raises_rpc_error(-4, "Transaction contains inputs that don't belong to this wallet",
                           rbf_node.bumpfee, rbfid)
 
 
@@ -168,8 +164,8 @@ def test_bumpfee_with_descendant_fails(rbf_node, rbf_node_address, dest_address)
     parent_id = spend_one_input(rbf_node, rbf_node_address)
     tx = rbf_node.createrawtransaction([{"txid": parent_id, "vout": 0}], {dest_address: 0.00020000})
     tx = rbf_node.signrawtransaction(tx)
-    txid = rbf_node.sendrawtransaction(tx["hex"])
-    assert_raises_jsonrpc(-8, "Transaction has descendants in the wallet", rbf_node.bumpfee, parent_id)
+    rbf_node.sendrawtransaction(tx["hex"])
+    assert_raises_rpc_error(-8, "Transaction has descendants in the wallet", rbf_node.bumpfee, parent_id)
 
 
 def test_small_output_fails(rbf_node, dest_address):
@@ -178,7 +174,7 @@ def test_small_output_fails(rbf_node, dest_address):
     rbf_node.bumpfee(rbfid, {"totalFee": 50000})
 
     rbfid = spend_one_input(rbf_node, dest_address)
-    assert_raises_jsonrpc(-4, "Change output is too small", rbf_node.bumpfee, rbfid, {"totalFee": 50001})
+    assert_raises_rpc_error(-4, "Change output is too small", rbf_node.bumpfee, rbfid, {"totalFee": 50001})
 
 
 def test_dust_to_fee(rbf_node, dest_address):
@@ -210,7 +206,7 @@ def test_rebumping(rbf_node, dest_address):
     # check that re-bumping the original tx fails, but bumping the bumper succeeds
     rbfid = spend_one_input(rbf_node, dest_address)
     bumped = rbf_node.bumpfee(rbfid, {"totalFee": 2000})
-    assert_raises_jsonrpc(-4, "already bumped", rbf_node.bumpfee, rbfid, {"totalFee": 3000})
+    assert_raises_rpc_error(-4, "already bumped", rbf_node.bumpfee, rbfid, {"totalFee": 3000})
     rbf_node.bumpfee(bumped["txid"], {"totalFee": 3000})
 
 
@@ -218,7 +214,7 @@ def test_rebumping_not_replaceable(rbf_node, dest_address):
     # check that re-bumping a non-replaceable bump tx fails
     rbfid = spend_one_input(rbf_node, dest_address)
     bumped = rbf_node.bumpfee(rbfid, {"totalFee": 10000, "replaceable": False})
-    assert_raises_jsonrpc(-4, "Transaction is not BIP 125 replaceable", rbf_node.bumpfee, bumped["txid"],
+    assert_raises_rpc_error(-4, "Transaction is not BIP 125 replaceable", rbf_node.bumpfee, bumped["txid"],
                           {"totalFee": 20000})
 
 
@@ -269,7 +265,7 @@ def test_bumpfee_metadata(rbf_node, dest_address):
 def test_locked_wallet_fails(rbf_node, dest_address):
     rbfid = spend_one_input(rbf_node, dest_address)
     rbf_node.walletlock()
-    assert_raises_jsonrpc(-13, "Please enter the wallet passphrase with walletpassphrase first.",
+    assert_raises_rpc_error(-13, "Please enter the wallet passphrase with walletpassphrase first.",
                           rbf_node.bumpfee, rbfid)
 
 

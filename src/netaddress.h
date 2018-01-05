@@ -1,12 +1,13 @@
 // Copyright (c) 2009-2016 The Bitcoin Core developers
+// Copyright (c) 2017 The Raven Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_NETADDRESS_H
-#define BITCOIN_NETADDRESS_H
+#ifndef RAVEN_NETADDRESS_H
+#define RAVEN_NETADDRESS_H
 
 #if defined(HAVE_CONFIG_H)
-#include "config/bitcoin-config.h"
+#include "config/raven-config.h"
 #endif
 
 #include "compat.h"
@@ -36,7 +37,7 @@ class CNetAddr
 
     public:
         CNetAddr();
-        CNetAddr(const struct in_addr& ipv4Addr);
+        explicit CNetAddr(const struct in_addr& ipv4Addr);
         void Init();
         void SetIP(const CNetAddr& ip);
 
@@ -80,9 +81,9 @@ class CNetAddr
         uint64_t GetHash() const;
         bool GetInAddr(struct in_addr* pipv4Addr) const;
         std::vector<unsigned char> GetGroup() const;
-        int GetReachabilityFrom(const CNetAddr *paddrPartner = NULL) const;
+        int GetReachabilityFrom(const CNetAddr *paddrPartner = nullptr) const;
 
-        CNetAddr(const struct in6_addr& pipv6Addr, const uint32_t scope = 0);
+        explicit CNetAddr(const struct in6_addr& pipv6Addr, const uint32_t scope = 0);
         bool GetIn6Addr(struct in6_addr* pipv6Addr) const;
 
         friend bool operator==(const CNetAddr& a, const CNetAddr& b);
@@ -146,9 +147,8 @@ class CService : public CNetAddr
         CService();
         CService(const CNetAddr& ip, unsigned short port);
         CService(const struct in_addr& ipv4Addr, unsigned short port);
-        CService(const struct sockaddr_in& addr);
+        explicit CService(const struct sockaddr_in& addr);
         void Init();
-        void SetPort(unsigned short portIn);
         unsigned short GetPort() const;
         bool GetSockAddr(struct sockaddr* paddr, socklen_t *addrlen) const;
         bool SetSockAddr(const struct sockaddr* paddr);
@@ -161,7 +161,7 @@ class CService : public CNetAddr
         std::string ToStringIPPort() const;
 
         CService(const struct in6_addr& ipv6Addr, unsigned short port);
-        CService(const struct sockaddr_in6& addr);
+        explicit CService(const struct sockaddr_in6& addr);
 
         ADD_SERIALIZE_METHODS;
 
@@ -175,4 +175,4 @@ class CService : public CNetAddr
         }
 };
 
-#endif // BITCOIN_NETADDRESS_H
+#endif // RAVEN_NETADDRESS_H

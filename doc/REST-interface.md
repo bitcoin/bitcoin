@@ -3,19 +3,20 @@ Unauthenticated REST Interface
 
 The REST API can be enabled with the `-rest` option.
 
-The interface runs on the same port as the JSON-RPC interface, by default port 8332 for mainnet and port 18332 for testnet.
+The interface runs on the same port as the JSON-RPC interface, by default port 8766 for mainnet, port 18766 for testnet,
+and port 18443 for regtest.
 
 Supported API
 -------------
 
-####Transactions
+#### Transactions
 `GET /rest/tx/<TX-HASH>.<bin|hex|json>`
 
 Given a transaction hash: returns a transaction in binary, hex-encoded binary, or JSON formats.
 
 For full TX query capability, one must enable the transaction index via "txindex=1" command line / configuration option.
 
-####Blocks
+#### Blocks
 `GET /rest/block/<BLOCK-HASH>.<bin|hex|json>`
 `GET /rest/block/notxdetails/<BLOCK-HASH>.<bin|hex|json>`
 
@@ -25,12 +26,12 @@ The HTTP request and response are both handled entirely in-memory, thus making m
 
 With the /notxdetails/ option JSON response will only contain the transaction hash instead of the complete transaction details. The option only affects the JSON response.
 
-####Blockheaders
+#### Blockheaders
 `GET /rest/headers/<COUNT>/<BLOCK-HASH>.<bin|hex|json>`
 
 Given a block hash: returns <COUNT> amount of blockheaders in upward direction.
 
-####Chaininfos
+#### Chaininfos
 `GET /rest/chaininfo.json`
 
 Returns various state info regarding block chain processing.
@@ -48,16 +49,16 @@ Only supports JSON as output format.
 * softforks : (array) status of softforks in progress
 * bip9_softforks : (object) status of BIP9 softforks in progress
 
-####Query UTXO set
+#### Query UTXO set
 `GET /rest/getutxos/<checkmempool>/<txid>-<n>/<txid>-<n>/.../<txid>-<n>.<bin|hex|json>`
 
 The getutxo command allows querying of the UTXO set given a set of outpoints.
 See BIP64 for input and output serialisation:
-https://github.com/bitcoin/bips/blob/master/bip-0064.mediawiki
+https://github.com/raven/bips/blob/master/bip-0064.mediawiki
 
 Example:
 ```
-$ curl localhost:18332/rest/getutxos/checkmempool/b2cdfd7b89def827ff8af7cd9bff7627ff72e5e8b0f71210f92ea7a4000c5d75-0.json 2>/dev/null | json_pp
+$ curl localhost:18766/rest/getutxos/checkmempool/b2cdfd7b89def827ff8af7cd9bff7627ff72e5e8b0f71210f92ea7a4000c5d75-0.json 2>/dev/null | json_pp
 {
    "chainHeight" : 325347,
    "chaintipHash" : "00000000fb01a7f3745a717f8caebee056c484e6e0bfe4a9591c235bb70506fb",
@@ -81,7 +82,7 @@ $ curl localhost:18332/rest/getutxos/checkmempool/b2cdfd7b89def827ff8af7cd9bff76
 }
 ```
 
-####Memory pool
+#### Memory pool
 `GET /rest/mempool/info.json`
 
 Returns various information about the TX mempool.
@@ -90,7 +91,7 @@ Only supports JSON as output format.
 * bytes : (numeric) size of the TX mempool in bytes
 * usage : (numeric) total TX mempool memory usage
 * maxmempool : (numeric) maximum memory usage for the mempool in bytes
-* mempoolminfee : (numeric) minimum feerate (BTC per KB) for tx to be accepted
+* mempoolminfee : (numeric) minimum feerate (RVN per KB) for tx to be accepted
 
 `GET /rest/mempool/contents.json`
 
@@ -99,4 +100,4 @@ Only supports JSON as output format.
 
 Risks
 -------------
-Running a web browser on the same node with a REST enabled bitcoind can be a risk. Accessing prepared XSS websites could read out tx/block data of your node by placing links like `<script src="http://127.0.0.1:8332/rest/tx/1234567890.json">` which might break the nodes privacy.
+Running a web browser on the same node with a REST enabled ravend can be a risk. Accessing prepared XSS websites could read out tx/block data of your node by placing links like `<script src="http://127.0.0.1:8766/rest/tx/1234567890.json">` which might break the nodes privacy.

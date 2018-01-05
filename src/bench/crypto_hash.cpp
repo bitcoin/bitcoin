@@ -1,4 +1,5 @@
 // Copyright (c) 2016 The Bitcoin Core developers
+// Copyright (c) 2017 The Raven Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -47,7 +48,7 @@ static void SHA256_32b(benchmark::State& state)
     std::vector<uint8_t> in(32,0);
     while (state.KeepRunning()) {
         for (int i = 0; i < 1000000; i++) {
-            CSHA256().Write(in.data(), in.size()).Finalize(&in[0]);
+            CSHA256().Write(in.data(), in.size()).Finalize(in.data());
         }
     }
 }

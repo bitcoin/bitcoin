@@ -1,9 +1,10 @@
 // Copyright (c) 2011-2016 The Bitcoin Core developers
+// Copyright (c) 2017 The Raven Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_QT_RECEIVECOINSDIALOG_H
-#define BITCOIN_QT_RECEIVECOINSDIALOG_H
+#ifndef RAVEN_QT_RECEIVECOINSDIALOG_H
+#define RAVEN_QT_RECEIVECOINSDIALOG_H
 
 #include "guiutil.h"
 
@@ -26,7 +27,7 @@ QT_BEGIN_NAMESPACE
 class QModelIndex;
 QT_END_NAMESPACE
 
-/** Dialog for requesting payment of bitcoins */
+/** Dialog for requesting payment of ravens */
 class ReceiveCoinsDialog : public QDialog
 {
     Q_OBJECT
@@ -77,4 +78,4 @@ private Q_SLOTS:
     void copyAmount();
 };
 
-#endif // BITCOIN_QT_RECEIVECOINSDIALOG_H
+#endif // RAVEN_QT_RECEIVECOINSDIALOG_H

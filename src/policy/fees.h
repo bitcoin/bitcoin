@@ -1,9 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2016 The Bitcoin Core developers
+// Copyright (c) 2017 The Raven Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-#ifndef BITCOIN_POLICYESTIMATOR_H
-#define BITCOIN_POLICYESTIMATOR_H
+#ifndef RAVEN_POLICYESTIMATOR_H
+#define RAVEN_POLICYESTIMATOR_H
 
 #include "amount.h"
 #include "feerate.h"
@@ -74,6 +75,8 @@ enum FeeEstimateHorizon {
     LONG_HALFLIFE = 2
 };
 
+std::string StringForFeeEstimateHorizon(FeeEstimateHorizon horizon);
+
 /* Enumeration of reason for returned fee estimate */
 enum class FeeReason {
     NONE,
@@ -89,6 +92,15 @@ enum class FeeReason {
 };
 
 std::string StringForFeeReason(FeeReason reason);
+
+/* Used to determine type of fee estimation requested */
+enum class FeeEstimateMode {
+    UNSET,        //! Use default settings based on other criteria
+    ECONOMICAL,   //! Force estimateSmartFee to use non-conservative estimates
+    CONSERVATIVE, //! Force estimateSmartFee to use conservative estimates
+};
+
+bool FeeModeFromString(const std::string& mode_string, FeeEstimateMode& fee_estimate_mode);
 
 /* Used to return detailed information about a feerate bucket */
 struct EstimatorBucket
@@ -197,7 +209,7 @@ public:
      *  the closest target where one can be given.  'conservative' estimates are
      *  valid over longer time horizons also.
      */
-    CFeeRate estimateSmartFee(int confTarget, FeeCalculation *feeCalc, const CTxMemPool& pool, bool conservative = true) const;
+    CFeeRate estimateSmartFee(int confTarget, FeeCalculation *feeCalc, bool conservative) const;
 
     /** Return a specific fee estimate calculation with a given success
      * threshold and time horizon, and optionally return detailed data about
@@ -213,6 +225,9 @@ public:
 
     /** Empty mempool transactions on shutdown to record failure to confirm for txs still in mempool */
     void FlushUnconfirmed(CTxMemPool& pool);
+
+    /** Calculation of highest target that estimates are tracked for */
+    unsigned int HighestTargetTracked(FeeEstimateHorizon horizon) const;
 
 private:
     unsigned int nBestSeenHeight;
@@ -270,7 +285,7 @@ private:
 
 public:
     /** Create new FeeFilterRounder */
-    FeeFilterRounder(const CFeeRate& minIncrementalFee);
+    explicit FeeFilterRounder(const CFeeRate& minIncrementalFee);
 
     /** Quantize a minimum fee for privacy purpose before broadcast **/
     CAmount round(CAmount currentMinFee);
@@ -280,4 +295,4 @@ private:
     FastRandomContext insecure_rand;
 };
 
-#endif /*BITCOIN_POLICYESTIMATOR_H */
+#endif /*RAVEN_POLICYESTIMATOR_H */

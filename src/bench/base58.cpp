@@ -1,4 +1,5 @@
 // Copyright (c) 2016 The Bitcoin Core developers
+// Copyright (c) 2017 The Raven Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,34 +8,37 @@
 #include "validation.h"
 #include "base58.h"
 
+#include <array>
 #include <vector>
 #include <string>
 
 
 static void Base58Encode(benchmark::State& state)
 {
-    unsigned char buff[32] = {
-        17, 79, 8, 99, 150, 189, 208, 162, 22, 23, 203, 163, 36, 58, 147,
-        227, 139, 2, 215, 100, 91, 38, 11, 141, 253, 40, 117, 21, 16, 90,
-        200, 24
+    static const std::array<unsigned char, 32> buff = {
+        {
+            17, 79, 8, 99, 150, 189, 208, 162, 22, 23, 203, 163, 36, 58, 147,
+            227, 139, 2, 215, 100, 91, 38, 11, 141, 253, 40, 117, 21, 16, 90,
+            200, 24
+        }
     };
-    unsigned char* b = buff;
     while (state.KeepRunning()) {
-        EncodeBase58(b, b + 32);
+        EncodeBase58(buff.begin(), buff.end());
     }
 }
 
 
 static void Base58CheckEncode(benchmark::State& state)
 {
-    unsigned char buff[32] = {
-        17, 79, 8, 99, 150, 189, 208, 162, 22, 23, 203, 163, 36, 58, 147,
-        227, 139, 2, 215, 100, 91, 38, 11, 141, 253, 40, 117, 21, 16, 90,
-        200, 24
+    static const std::array<unsigned char, 32> buff = {
+        {
+            17, 79, 8, 99, 150, 189, 208, 162, 22, 23, 203, 163, 36, 58, 147,
+            227, 139, 2, 215, 100, 91, 38, 11, 141, 253, 40, 117, 21, 16, 90,
+            200, 24
+        }
     };
-    unsigned char* b = buff;
     std::vector<unsigned char> vch;
-    vch.assign(b, b + 32);
+    vch.assign(buff.begin(), buff.end());
     while (state.KeepRunning()) {
         EncodeBase58Check(vch);
     }

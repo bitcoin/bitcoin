@@ -1,10 +1,11 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2017 The Raven Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_SUPPORT_ALLOCATORS_ZEROAFTERFREE_H
-#define BITCOIN_SUPPORT_ALLOCATORS_ZEROAFTERFREE_H
+#ifndef RAVEN_SUPPORT_ALLOCATORS_ZEROAFTERFREE_H
+#define RAVEN_SUPPORT_ALLOCATORS_ZEROAFTERFREE_H
 
 #include "support/cleanse.h"
 
@@ -22,13 +23,13 @@ struct zero_after_free_allocator : public std::allocator<T> {
     typedef typename base::reference reference;
     typedef typename base::const_reference const_reference;
     typedef typename base::value_type value_type;
-    zero_after_free_allocator() throw() {}
-    zero_after_free_allocator(const zero_after_free_allocator& a) throw() : base(a) {}
+    zero_after_free_allocator() noexcept {}
+    zero_after_free_allocator(const zero_after_free_allocator& a) noexcept : base(a) {}
     template <typename U>
-    zero_after_free_allocator(const zero_after_free_allocator<U>& a) throw() : base(a)
+    zero_after_free_allocator(const zero_after_free_allocator<U>& a) noexcept : base(a)
     {
     }
-    ~zero_after_free_allocator() throw() {}
+    ~zero_after_free_allocator() noexcept {}
     template <typename _Other>
     struct rebind {
         typedef zero_after_free_allocator<_Other> other;
@@ -36,7 +37,7 @@ struct zero_after_free_allocator : public std::allocator<T> {
 
     void deallocate(T* p, std::size_t n)
     {
-        if (p != NULL)
+        if (p != nullptr)
             memory_cleanse(p, sizeof(T) * n);
         std::allocator<T>::deallocate(p, n);
     }
@@ -45,4 +46,4 @@ struct zero_after_free_allocator : public std::allocator<T> {
 // Byte-vector that clears its contents before deletion.
 typedef std::vector<char, zero_after_free_allocator<char> > CSerializeData;
 
-#endif // BITCOIN_SUPPORT_ALLOCATORS_ZEROAFTERFREE_H
+#endif // RAVEN_SUPPORT_ALLOCATORS_ZEROAFTERFREE_H

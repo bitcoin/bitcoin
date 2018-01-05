@@ -1,13 +1,13 @@
 [Desktop Entry]
 Encoding=UTF-8
-Name=Bitcoin Core
-Comment=Connect to the Bitcoin P2P Network
-Comment[de]=Verbinde mit dem Bitcoin peer-to-peer Netzwerk
-Comment[fr]=Bitcoin, monnaie virtuelle cryptographique pair à pair
-Comment[tr]=Bitcoin, eşten eşe kriptografik sanal para birimi
-Exec=bitcoin-qt %u
+Name=Raven Core
+Comment=Connect to the Raven P2P Network
+Comment[de]=Verbinde mit dem Raven peer-to-peer Netzwerk
+Comment[fr]=Raven, monnaie virtuelle cryptographique pair à pair
+Comment[tr]=Raven, eşten eşe kriptografik sanal para birimi
+Exec=raven-qt %u
 Terminal=false
 Type=Application
-Icon=bitcoin128
-MimeType=x-scheme-handler/bitcoin;
+Icon=raven128
+MimeType=x-scheme-handler/raven;
 Categories=Office;Finance;

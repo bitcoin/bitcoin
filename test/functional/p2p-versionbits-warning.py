@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # Copyright (c) 2016 The Bitcoin Core developers
+# Copyright (c) 2017 The Raven Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test version bits warning system.
@@ -9,7 +10,7 @@ soft-forks, and test that warning alerts are generated.
 """
 
 from test_framework.mininode import *
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import RavenTestFramework
 from test_framework.util import *
 import re
 from test_framework.blocktools import create_block, create_coinbase
@@ -27,9 +28,8 @@ class TestNode(NodeConnCB):
     def on_inv(self, conn, message):
         pass
 
-class VersionBitsWarningTest(BitcoinTestFramework):
-    def __init__(self):
-        super().__init__()
+class VersionBitsWarningTest(RavenTestFramework):
+    def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
 
@@ -88,8 +88,7 @@ class VersionBitsWarningTest(BitcoinTestFramework):
         self.nodes[0].generate(VB_PERIOD - VB_THRESHOLD + 1)
         # Check that we're not getting any versionbit-related errors in
         # get*info()
-        assert(not VB_PATTERN.match(self.nodes[0].getinfo()["errors"]))
-        assert(not VB_PATTERN.match(self.nodes[0].getmininginfo()["errors"]))
+        assert(not VB_PATTERN.match(self.nodes[0].getmininginfo()["warnings"]))
         assert(not VB_PATTERN.match(self.nodes[0].getnetworkinfo()["warnings"]))
 
         # 3. Now build one period of blocks with >= VB_THRESHOLD blocks signaling
@@ -100,8 +99,7 @@ class VersionBitsWarningTest(BitcoinTestFramework):
         # have gotten a different alert due to more than 51/100 blocks
         # being of unexpected version.
         # Check that get*info() shows some kind of error.
-        assert(WARN_UNKNOWN_RULES_MINED in self.nodes[0].getinfo()["errors"])
-        assert(WARN_UNKNOWN_RULES_MINED in self.nodes[0].getmininginfo()["errors"])
+        assert(WARN_UNKNOWN_RULES_MINED in self.nodes[0].getmininginfo()["warnings"])
         assert(WARN_UNKNOWN_RULES_MINED in self.nodes[0].getnetworkinfo()["warnings"])
 
         # Mine a period worth of expected blocks so the generic block-version warning
@@ -112,18 +110,17 @@ class VersionBitsWarningTest(BitcoinTestFramework):
         # Empty out the alert file
         with open(self.alert_filename, 'w', encoding='utf8') as _:
             pass
-        self.nodes = self.start_nodes(self.num_nodes, self.options.tmpdir, self.extra_args)
+        self.start_nodes()
 
         # Connecting one block should be enough to generate an error.
         self.nodes[0].generate(1)
-        assert(WARN_UNKNOWN_RULES_ACTIVE in self.nodes[0].getinfo()["errors"])
-        assert(WARN_UNKNOWN_RULES_ACTIVE in self.nodes[0].getmininginfo()["errors"])
+        assert(WARN_UNKNOWN_RULES_ACTIVE in self.nodes[0].getmininginfo()["warnings"])
         assert(WARN_UNKNOWN_RULES_ACTIVE in self.nodes[0].getnetworkinfo()["warnings"])
         self.stop_nodes()
         self.test_versionbits_in_alert_file()
 
         # Test framework expects the node to still be running...
-        self.nodes = self.start_nodes(self.num_nodes, self.options.tmpdir, self.extra_args)
+        self.start_nodes()
 
 if __name__ == '__main__':
     VersionBitsWarningTest().main()

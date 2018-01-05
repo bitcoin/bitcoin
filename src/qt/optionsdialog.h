@@ -1,9 +1,10 @@
 // Copyright (c) 2011-2016 The Bitcoin Core developers
+// Copyright (c) 2017 The Raven Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_QT_OPTIONSDIALOG_H
-#define BITCOIN_QT_OPTIONSDIALOG_H
+#ifndef RAVEN_QT_OPTIONSDIALOG_H
+#define RAVEN_QT_OPTIONSDIALOG_H
 
 #include <QDialog>
 #include <QValidator>
@@ -47,7 +48,7 @@ private Q_SLOTS:
     /* set OK button state (enabled / disabled) */
     void setOkButtonState(bool fState);
     void on_resetButton_clicked();
-    void on_openBitcoinConfButton_clicked();
+    void on_openRavenConfButton_clicked();
     void on_okButton_clicked();
     void on_cancelButton_clicked();
     
@@ -68,4 +69,4 @@ private:
     QDataWidgetMapper *mapper;
 };
 
-#endif // BITCOIN_QT_OPTIONSDIALOG_H
+#endif // RAVEN_QT_OPTIONSDIALOG_H

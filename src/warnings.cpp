@@ -1,5 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2016 The Bitcoin Core developers
+// Copyright (c) 2017 The Raven Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -37,12 +38,6 @@ void SetfLargeWorkInvalidChainFound(bool flag)
     fLargeWorkInvalidChainFound = flag;
 }
 
-bool GetfLargeWorkInvalidChainFound()
-{
-    LOCK(cs_warnings);
-    return fLargeWorkInvalidChainFound;
-}
-
 std::string GetWarnings(const std::string& strFor)
 {
     std::string strStatusBar;
@@ -57,7 +52,7 @@ std::string GetWarnings(const std::string& strFor)
         strGUI = _("This is a pre-release test build - use at your own risk - do not use for mining or merchant applications");
     }
 
-    if (GetBoolArg("-testsafemode", DEFAULT_TESTSAFEMODE))
+    if (gArgs.GetBoolArg("-testsafemode", DEFAULT_TESTSAFEMODE))
         strStatusBar = strRPC = strGUI = "testsafemode enabled";
 
     // Misc warnings like out of disk space and clock is wrong

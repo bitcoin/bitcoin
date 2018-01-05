@@ -1,10 +1,11 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2016 The Bitcoin Core developers
+// Copyright (c) 2017 The Raven Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_KEY_H
-#define BITCOIN_KEY_H
+#ifndef RAVEN_KEY_H
+#define RAVEN_KEY_H
 
 #include "pubkey.h"
 #include "serialize.h"
@@ -54,11 +55,6 @@ public:
     {
         // Important: vch must be 32 bytes in length to not break serialization
         keydata.resize(32);
-    }
-
-    //! Destructor (again necessary because of memlocking).
-    ~CKey()
-    {
     }
 
     friend bool operator==(const CKey& a, const CKey& b)
@@ -172,6 +168,8 @@ struct CExtKey {
     {
         unsigned int len = ::ReadCompactSize(s);
         unsigned char code[BIP32_EXTKEY_SIZE];
+        if (len != BIP32_EXTKEY_SIZE)
+            throw std::runtime_error("Invalid extended key size\n");
         s.read((char *)&code[0], len);
         Decode(code);
     }
@@ -186,4 +184,4 @@ void ECC_Stop(void);
 /** Check that required EC support is available at runtime. */
 bool ECC_InitSanityCheck(void);
 
-#endif // BITCOIN_KEY_H
+#endif // RAVEN_KEY_H

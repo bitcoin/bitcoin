@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 # Copyright (c) 2014-2016 The Bitcoin Core developers
+# Copyright (c) 2017 The Raven Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test BIP68 implementation."""
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import RavenTestFramework
 from test_framework.util import *
 from test_framework.blocktools import *
 
@@ -16,11 +17,9 @@ SEQUENCE_LOCKTIME_MASK = 0x0000ffff
 # RPC error for non-BIP68 final transactions
 NOT_FINAL_ERROR = "64: non-BIP68-final"
 
-class BIP68Test(BitcoinTestFramework):
-    def __init__(self):
-        super().__init__()
+class BIP68Test(RavenTestFramework):
+    def set_test_params(self):
         self.num_nodes = 2
-        self.setup_clean_chain = False
         self.extra_args = [[], ["-acceptnonstdtxn=0"]]
 
     def run_test(self):
@@ -28,21 +27,6 @@ class BIP68Test(BitcoinTestFramework):
 
         # Generate some coins
         self.nodes[0].generate(110)
-
-        self.log.info("Running test disable flag")
-        self.test_disable_flag()
-
-        self.log.info("Running test sequence-lock-confirmed-inputs")
-        self.test_sequence_lock_confirmed_inputs()
-
-        self.log.info("Running test sequence-lock-unconfirmed-inputs")
-        self.test_sequence_lock_unconfirmed_inputs()
-
-        self.log.info("Running test BIP68 not consensus before versionbits activation")
-        self.test_bip68_not_consensus()
-
-        self.log.info("Activating BIP68 (and 112/113)")
-        self.activateCSV()
 
         self.log.info("Verifying nVersion=2 transactions are standard.")
         self.log.info("Note that nVersion=2 transactions are always standard (independent of BIP68 activation status).")
@@ -55,7 +39,7 @@ class BIP68Test(BitcoinTestFramework):
     def test_disable_flag(self):
         # Create some unconfirmed inputs
         new_addr = self.nodes[0].getnewaddress()
-        self.nodes[0].sendtoaddress(new_addr, 2) # send 2 BTC
+        self.nodes[0].sendtoaddress(new_addr, 2) # send 2 RVN
 
         utxos = self.nodes[0].listunspent(0, 0)
         assert(len(utxos) > 0)
@@ -85,7 +69,7 @@ class BIP68Test(BitcoinTestFramework):
         tx2.vout = [CTxOut(int(value-self.relayfee*COIN), CScript([b'a']))]
         tx2.rehash()
 
-        assert_raises_jsonrpc(-26, NOT_FINAL_ERROR, self.nodes[0].sendrawtransaction, ToHex(tx2))
+        assert_raises_rpc_error(-26, NOT_FINAL_ERROR, self.nodes[0].sendrawtransaction, ToHex(tx2))
 
         # Setting the version back down to 1 should disable the sequence lock,
         # so this should be accepted.
@@ -182,7 +166,7 @@ class BIP68Test(BitcoinTestFramework):
 
             if (using_sequence_locks and not should_pass):
                 # This transaction should be rejected
-                assert_raises_jsonrpc(-26, NOT_FINAL_ERROR, self.nodes[0].sendrawtransaction, rawtx)
+                assert_raises_rpc_error(-26, NOT_FINAL_ERROR, self.nodes[0].sendrawtransaction, rawtx)
             else:
                 # This raw transaction should be accepted
                 self.nodes[0].sendrawtransaction(rawtx)
@@ -229,7 +213,7 @@ class BIP68Test(BitcoinTestFramework):
 
             if (orig_tx.hash in node.getrawmempool()):
                 # sendrawtransaction should fail if the tx is in the mempool
-                assert_raises_jsonrpc(-26, NOT_FINAL_ERROR, node.sendrawtransaction, ToHex(tx))
+                assert_raises_rpc_error(-26, NOT_FINAL_ERROR, node.sendrawtransaction, ToHex(tx))
             else:
                 # sendrawtransaction should succeed if the tx is not in the mempool
                 node.sendrawtransaction(ToHex(tx))
@@ -282,7 +266,7 @@ class BIP68Test(BitcoinTestFramework):
         tx5.vout[0].nValue += int(utxos[0]["amount"]*COIN)
         raw_tx5 = self.nodes[0].signrawtransaction(ToHex(tx5))["hex"]
 
-        assert_raises_jsonrpc(-26, NOT_FINAL_ERROR, self.nodes[0].sendrawtransaction, raw_tx5)
+        assert_raises_rpc_error(-26, NOT_FINAL_ERROR, self.nodes[0].sendrawtransaction, raw_tx5)
 
         # Test mempool-BIP68 consistency after reorg
         #
@@ -355,7 +339,7 @@ class BIP68Test(BitcoinTestFramework):
         tx3.vout = [CTxOut(int(tx2.vout[0].nValue - self.relayfee*COIN), CScript([b'a']))]
         tx3.rehash()
 
-        assert_raises_jsonrpc(-26, NOT_FINAL_ERROR, self.nodes[0].sendrawtransaction, ToHex(tx3))
+        assert_raises_rpc_error(-26, NOT_FINAL_ERROR, self.nodes[0].sendrawtransaction, ToHex(tx3))
 
         # make a block that violates bip68; ensure that the tip updates
         tip = int(self.nodes[0].getbestblockhash(), 16)
@@ -371,11 +355,14 @@ class BIP68Test(BitcoinTestFramework):
 
     def activateCSV(self):
         # activation should happen at block height 432 (3 periods)
+        # getblockchaininfo will show CSV as active at block 431 (144 * 3 -1) since it's returning whether CSV is active for the next block.
         min_activation_height = 432
         height = self.nodes[0].getblockcount()
-        assert(height < min_activation_height)
-        self.nodes[0].generate(min_activation_height-height)
-        assert(get_bip9_status(self.nodes[0], 'csv')['status'] == 'active')
+        assert_greater_than(min_activation_height - height, 2)
+        self.nodes[0].generate(min_activation_height - height - 2)
+        assert_equal(get_bip9_status(self.nodes[0], 'csv')['status'], "locked_in")
+        self.nodes[0].generate(1)
+        assert_equal(get_bip9_status(self.nodes[0], 'csv')['status'], "active")
         sync_blocks(self.nodes)
 
     # Use self.nodes[1] to test that version 2 transactions are standard.
@@ -387,7 +374,7 @@ class BIP68Test(BitcoinTestFramework):
         tx = FromHex(CTransaction(), rawtxfund)
         tx.nVersion = 2
         tx_signed = self.nodes[1].signrawtransaction(ToHex(tx))["hex"]
-        tx_id = self.nodes[1].sendrawtransaction(tx_signed)
+        self.nodes[1].sendrawtransaction(tx_signed)
 
 if __name__ == '__main__':
     BIP68Test().main()

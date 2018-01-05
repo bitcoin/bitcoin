@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 # Copyright (c) 2015-2016 The Bitcoin Core developers
+# Copyright (c) 2017 The Raven Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test block processing.
 
-This reimplements tests from the bitcoinj/FullBlockTestGenerator used
+This reimplements tests from the ravenj/FullBlockTestGenerator used
 by the pull-tester.
 
 We use the testing framework in which we expect a particular answer from
@@ -20,7 +21,7 @@ from test_framework.key import CECKey
 from test_framework.script import *
 import struct
 
-class PreviousSpendableOutput(object):
+class PreviousSpendableOutput():
     def __init__(self, tx = CTransaction(), n = -1):
         self.tx = tx
         self.n = n  # the output we're spending
@@ -49,12 +50,11 @@ class CBrokenBlock(CBlock):
         return r
 
 class FullBlockTest(ComparisonTestFramework):
-
     # Can either run this test as 1 node with expected answers, or two and compare them.
     # Change the "outcome" variable from each TestInstance object to only do the comparison.
-    def __init__(self):
-        super().__init__()
+    def set_test_params(self):
         self.num_nodes = 1
+        self.setup_clean_chain = True
         self.block_heights = {}
         self.coinbase_key = CECKey()
         self.coinbase_key.set_secretbytes(b"horsebattery")
@@ -396,8 +396,8 @@ class FullBlockTest(ComparisonTestFramework):
         b26 = update_block(26, [])
         yield rejected(RejectResult(16, b'bad-cb-length'))
 
-        # Extend the b26 chain to make sure bitcoind isn't accepting b26
-        b27 = block(27, spend=out[7])
+        # Extend the b26 chain to make sure ravend isn't accepting b26
+        block(27, spend=out[7])
         yield rejected(False)
 
         # Now try a too-large-coinbase script
@@ -408,8 +408,8 @@ class FullBlockTest(ComparisonTestFramework):
         b28 = update_block(28, [])
         yield rejected(RejectResult(16, b'bad-cb-length'))
 
-        # Extend the b28 chain to make sure bitcoind isn't accepting b28
-        b29 = block(29, spend=out[7])
+        # Extend the b28 chain to make sure ravend isn't accepting b28
+        block(29, spend=out[7])
         yield rejected(False)
 
         # b30 has a max-sized coinbase scriptSig.
@@ -581,7 +581,7 @@ class FullBlockTest(ComparisonTestFramework):
 
         # same as b40, but one less sigop
         tip(39)
-        b41 = block(41, spend=None)
+        block(41, spend=None)
         update_block(41, b40.vtx[1:-1])
         b41_sigops_to_fill = b40_sigops_to_fill - 1
         tx = CTransaction()
@@ -927,7 +927,7 @@ class FullBlockTest(ComparisonTestFramework):
         # -> b42 (12) -> b43 (13) -> b53 (14) -> b55 (15) -> b57 (16) -> b60 (17) -> b64 (18) -> b65 (19)
         #
         tip(64)
-        b65 = block(65)
+        block(65)
         tx1 = create_and_sign_tx(out[19].tx, out[19].n, out[19].tx.vout[0].nValue)
         tx2 = create_and_sign_tx(tx1, 0, 0)
         update_block(65, [tx1, tx2])
@@ -939,7 +939,7 @@ class FullBlockTest(ComparisonTestFramework):
         # -> b43 (13) -> b53 (14) -> b55 (15) -> b57 (16) -> b60 (17) -> b64 (18) -> b65 (19)
         #                                                                                    \-> b66 (20)
         tip(65)
-        b66 = block(66)
+        block(66)
         tx1 = create_and_sign_tx(out[20].tx, out[20].n, out[20].tx.vout[0].nValue)
         tx2 = create_and_sign_tx(tx1, 0, 1)
         update_block(66, [tx2, tx1])
@@ -952,7 +952,7 @@ class FullBlockTest(ComparisonTestFramework):
         #
         #
         tip(65)
-        b67 = block(67)
+        block(67)
         tx1 = create_and_sign_tx(out[20].tx, out[20].n, out[20].tx.vout[0].nValue)
         tx2 = create_and_sign_tx(tx1, 0, 1)
         tx3 = create_and_sign_tx(tx1, 0, 2)
@@ -972,7 +972,7 @@ class FullBlockTest(ComparisonTestFramework):
         #       this succeeds
         #
         tip(65)
-        b68 = block(68, additional_coinbase_value=10)
+        block(68, additional_coinbase_value=10)
         tx = create_and_sign_tx(out[20].tx, out[20].n, out[20].tx.vout[0].nValue-9)
         update_block(68, [tx])
         yield rejected(RejectResult(16, b'bad-cb-amount'))
@@ -1122,7 +1122,7 @@ class FullBlockTest(ComparisonTestFramework):
         #
         #    The tx'es must be unsigned and pass the node's mempool policy.  It is unsigned for the
         #    rather obscure reason that the Python signature code does not distinguish between
-        #    Low-S and High-S values (whereas the bitcoin code has custom code which does so);
+        #    Low-S and High-S values (whereas the raven code has custom code which does so);
         #    as a result of which, the odds are 50% that the python code will use the right
         #    value and the transaction will be accepted into the mempool. Until we modify the
         #    test framework to support low-S signing, we are out of luck.
@@ -1175,7 +1175,7 @@ class FullBlockTest(ComparisonTestFramework):
         #
         #  -> b81 (26) -> b82 (27) -> b83 (28)
         #
-        b83 = block(83)
+        block(83)
         op_codes = [OP_IF, OP_INVALIDOPCODE, OP_ELSE, OP_TRUE, OP_ENDIF]
         script = CScript(op_codes)
         tx1 = create_and_sign_tx(out[28].tx, out[28].n, out[28].tx.vout[0].nValue, script)
@@ -1195,7 +1195,7 @@ class FullBlockTest(ComparisonTestFramework):
         #                                    \-> b85 (29) -> b86 (30)            \-> b89a (32)
         #
         #
-        b84 = block(84)
+        block(84)
         tx1 = create_tx(out[29].tx, out[29].n, 0, CScript([OP_RETURN]))
         tx1.vout.append(CTxOut(0, CScript([OP_TRUE])))
         tx1.vout.append(CTxOut(0, CScript([OP_TRUE])))

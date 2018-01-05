@@ -1,4 +1,5 @@
 // Copyright (c) 2014-2016 The Bitcoin Core developers
+// Copyright (c) 2017 The Raven Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -12,15 +13,34 @@
 #include "crypto/hmac_sha512.h"
 #include "random.h"
 #include "utilstrencodings.h"
-#include "test/test_bitcoin.h"
+#include "test/test_raven.h"
 
 #include <vector>
 
 #include <boost/test/unit_test.hpp>
 #include <openssl/aes.h>
 #include <openssl/evp.h>
+#include <string>
+#include <iostream>
 
 BOOST_FIXTURE_TEST_SUITE(crypto_tests, BasicTestingSetup)
+
+//std::string hex_representation(const std::vector<unsigned char>& v) {
+//  std::stringstream stream;
+//  for (const auto num : v) {
+//	stream <<  std::hex << std::setw(2) << std::setfill('0') << (unsigned)num;
+//  }
+//  return stream.str();
+//}
+//
+//std::string string_representation(const std::__1::vector<unsigned char, std::__1::allocator<unsigned char>>& v) {
+//  std::stringstream stream;
+//  for (const auto num : v) {
+//	stream << (char)num;
+//  }
+//  return stream.str();
+//}
+
 
 template<typename Hasher, typename In, typename Out>
 void TestVector(const Hasher &h, const In &in, const Out &out) {
@@ -47,9 +67,31 @@ void TestVector(const Hasher &h, const In &in, const Out &out) {
             }
         }
         hasher.Finalize(&hash[0]);
+//        std::stringstream hashStream;
+//        std::copy(hash.begin(), hash.end(), std::ostream_iterator<int>(hashStream, " "));
+//        std::stringstream hashStream;
+//        for (const auto num : hash) {
+//        	hashStream << "0x" << std::hex << std::setw(2) << std::setfill('0') << num
+//      		   << ' ';
+//        }
+//
+//        auto hashString = hex_representation(hash);
+//
+//        std::stringstream outStream;
+//        for (const auto num : out) {
+//        	outStream << "0x" << std::hex << std::setw(2) << std::setfill('0') << num
+//      		   << ' ';
+//        }
+
+        //        std::copy(out.begin(), out.end(), std::ostream_iterator<int>(outStream, " "));
+//        auto outString = hex_representation(out);
+//        auto inString = string_representation(in);
+//        std::cout << "In: " << inString << std::endl;
+//        std::cout << "Failed: Hash is " << hashString << " but should be " << outString << std::endl;
         BOOST_CHECK(hash == out);
     }
 }
+
 
 void TestSHA1(const std::string &in, const std::string &hexout) { TestVector(CSHA1(), in, ParseHex(hexout));}
 void TestSHA256(const std::string &in, const std::string &hexout) { TestVector(CSHA256(), in, ParseHex(hexout));}
@@ -58,12 +100,12 @@ void TestRIPEMD160(const std::string &in, const std::string &hexout) { TestVecto
 
 void TestHMACSHA256(const std::string &hexkey, const std::string &hexin, const std::string &hexout) {
     std::vector<unsigned char> key = ParseHex(hexkey);
-    TestVector(CHMAC_SHA256(&key[0], key.size()), ParseHex(hexin), ParseHex(hexout));
+    TestVector(CHMAC_SHA256(key.data(), key.size()), ParseHex(hexin), ParseHex(hexout));
 }
 
 void TestHMACSHA512(const std::string &hexkey, const std::string &hexin, const std::string &hexout) {
     std::vector<unsigned char> key = ParseHex(hexkey);
-    TestVector(CHMAC_SHA512(&key[0], key.size()), ParseHex(hexin), ParseHex(hexout));
+    TestVector(CHMAC_SHA512(key.data(), key.size()), ParseHex(hexin), ParseHex(hexout));
 }
 
 void TestAES128(const std::string &hexkey, const std::string &hexin, const std::string &hexout)
@@ -76,13 +118,13 @@ void TestAES128(const std::string &hexkey, const std::string &hexin, const std::
     assert(key.size() == 16);
     assert(in.size() == 16);
     assert(correctout.size() == 16);
-    AES128Encrypt enc(&key[0]);
+    AES128Encrypt enc(key.data());
     buf.resize(correctout.size());
     buf2.resize(correctout.size());
-    enc.Encrypt(&buf[0], &in[0]);
+    enc.Encrypt(buf.data(), in.data());
     BOOST_CHECK_EQUAL(HexStr(buf), HexStr(correctout));
-    AES128Decrypt dec(&key[0]);
-    dec.Decrypt(&buf2[0], &buf[0]);
+    AES128Decrypt dec(key.data());
+    dec.Decrypt(buf2.data(), buf.data());
     BOOST_CHECK_EQUAL(HexStr(buf2), HexStr(in));
 }
 
@@ -96,12 +138,12 @@ void TestAES256(const std::string &hexkey, const std::string &hexin, const std::
     assert(key.size() == 32);
     assert(in.size() == 16);
     assert(correctout.size() == 16);
-    AES256Encrypt enc(&key[0]);
+    AES256Encrypt enc(key.data());
     buf.resize(correctout.size());
-    enc.Encrypt(&buf[0], &in[0]);
+    enc.Encrypt(buf.data(), in.data());
     BOOST_CHECK(buf == correctout);
-    AES256Decrypt dec(&key[0]);
-    dec.Decrypt(&buf[0], &buf[0]);
+    AES256Decrypt dec(key.data());
+    dec.Decrypt(buf.data(), buf.data());
     BOOST_CHECK(buf == in);
 }
 
@@ -114,16 +156,16 @@ void TestAES128CBC(const std::string &hexkey, const std::string &hexiv, bool pad
     std::vector<unsigned char> realout(in.size() + AES_BLOCKSIZE);
 
     // Encrypt the plaintext and verify that it equals the cipher
-    AES128CBCEncrypt enc(&key[0], &iv[0], pad);
-    int size = enc.Encrypt(&in[0], in.size(), &realout[0]);
+    AES128CBCEncrypt enc(key.data(), iv.data(), pad);
+    int size = enc.Encrypt(in.data(), in.size(), realout.data());
     realout.resize(size);
     BOOST_CHECK(realout.size() == correctout.size());
     BOOST_CHECK_MESSAGE(realout == correctout, HexStr(realout) + std::string(" != ") + hexout);
 
     // Decrypt the cipher and verify that it equals the plaintext
     std::vector<unsigned char> decrypted(correctout.size());
-    AES128CBCDecrypt dec(&key[0], &iv[0], pad);
-    size = dec.Decrypt(&correctout[0], correctout.size(), &decrypted[0]);
+    AES128CBCDecrypt dec(key.data(), iv.data(), pad);
+    size = dec.Decrypt(correctout.data(), correctout.size(), decrypted.data());
     decrypted.resize(size);
     BOOST_CHECK(decrypted.size() == in.size());
     BOOST_CHECK_MESSAGE(decrypted == in, HexStr(decrypted) + std::string(" != ") + hexin);
@@ -133,12 +175,12 @@ void TestAES128CBC(const std::string &hexkey, const std::string &hexiv, bool pad
     {
         std::vector<unsigned char> sub(i, in.end());
         std::vector<unsigned char> subout(sub.size() + AES_BLOCKSIZE);
-        int _size = enc.Encrypt(&sub[0], sub.size(), &subout[0]);
+        int _size = enc.Encrypt(sub.data(), sub.size(), subout.data());
         if (_size != 0)
         {
             subout.resize(_size);
             std::vector<unsigned char> subdecrypted(subout.size());
-            _size = dec.Decrypt(&subout[0], subout.size(), &subdecrypted[0]);
+            _size = dec.Decrypt(subout.data(), subout.size(), subdecrypted.data());
             subdecrypted.resize(_size);
             BOOST_CHECK(decrypted.size() == in.size());
             BOOST_CHECK_MESSAGE(subdecrypted == sub, HexStr(subdecrypted) + std::string(" != ") + HexStr(sub));
@@ -155,16 +197,16 @@ void TestAES256CBC(const std::string &hexkey, const std::string &hexiv, bool pad
     std::vector<unsigned char> realout(in.size() + AES_BLOCKSIZE);
 
     // Encrypt the plaintext and verify that it equals the cipher
-    AES256CBCEncrypt enc(&key[0], &iv[0], pad);
-    int size = enc.Encrypt(&in[0], in.size(), &realout[0]);
+    AES256CBCEncrypt enc(key.data(), iv.data(), pad);
+    int size = enc.Encrypt(in.data(), in.size(), realout.data());
     realout.resize(size);
     BOOST_CHECK(realout.size() == correctout.size());
     BOOST_CHECK_MESSAGE(realout == correctout, HexStr(realout) + std::string(" != ") + hexout);
 
     // Decrypt the cipher and verify that it equals the plaintext
     std::vector<unsigned char> decrypted(correctout.size());
-    AES256CBCDecrypt dec(&key[0], &iv[0], pad);
-    size = dec.Decrypt(&correctout[0], correctout.size(), &decrypted[0]);
+    AES256CBCDecrypt dec(key.data(), iv.data(), pad);
+    size = dec.Decrypt(correctout.data(), correctout.size(), decrypted.data());
     decrypted.resize(size);
     BOOST_CHECK(decrypted.size() == in.size());
     BOOST_CHECK_MESSAGE(decrypted == in, HexStr(decrypted) + std::string(" != ") + hexin);
@@ -174,12 +216,12 @@ void TestAES256CBC(const std::string &hexkey, const std::string &hexiv, bool pad
     {
         std::vector<unsigned char> sub(i, in.end());
         std::vector<unsigned char> subout(sub.size() + AES_BLOCKSIZE);
-        int _size = enc.Encrypt(&sub[0], sub.size(), &subout[0]);
+        int _size = enc.Encrypt(sub.data(), sub.size(), subout.data());
         if (_size != 0)
         {
             subout.resize(_size);
             std::vector<unsigned char> subdecrypted(subout.size());
-            _size = dec.Decrypt(&subout[0], subout.size(), &subdecrypted[0]);
+            _size = dec.Decrypt(subout.data(), subout.size(), subdecrypted.data());
             subdecrypted.resize(_size);
             BOOST_CHECK(decrypted.size() == in.size());
             BOOST_CHECK_MESSAGE(subdecrypted == sub, HexStr(subdecrypted) + std::string(" != ") + HexStr(sub));
@@ -261,8 +303,8 @@ BOOST_AUTO_TEST_CASE(sha256_testvectors) {
                "f08a78cbbaee082b052ae0708f32fa1e50c5c421aa772ba5dbb406a2ea6be342");
     TestSHA256("This is exactly 64 bytes long, not counting the terminating byte",
                "ab64eff7e88e2e46165e29f2bce41826bd4c7b3552f6b382a9e7d3af47c245f8");
-    TestSHA256("As Bitcoin relies on 80 byte header hashes, we want to have an example for that.",
-               "7406e8de7d6e4fffc573daef05aefb8806e7790f55eab5576f31349743cca743");
+    TestSHA256("As Raven relies on 80 byte header hashes, we want to have an example for that.",
+               "4890d7540fe4604653a5108c012bb0d4ec15580dcfda37d85755830ec1037f26");
     TestSHA256(std::string(1000000, 'a'),
                "cdc76e5c9914fb9281a1c7e284d73e67f1809a48a497200e046d39ccc7112cd0");
     TestSHA256(test1, "a316d55510b49662420f49d145d42fb83f31ef8dc016aa4e32df049991a91e26");

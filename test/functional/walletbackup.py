@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # Copyright (c) 2014-2016 The Bitcoin Core developers
+# Copyright (c) 2017 The Raven Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the wallet backup features.
@@ -33,15 +34,13 @@ and confirm again balances are correct.
 from random import randint
 import shutil
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import RavenTestFramework
 from test_framework.util import *
 
-class WalletBackupTest(BitcoinTestFramework):
-
-    def __init__(self):
-        super().__init__()
-        self.setup_clean_chain = True
+class WalletBackupTest(RavenTestFramework):
+    def set_test_params(self):
         self.num_nodes = 4
+        self.setup_clean_chain = True
         # nodes 1, 2,3 are spenders, let's give them a keypool=100
         self.extra_args = [["-keypool=100"], ["-keypool=100"], ["-keypool=100"], []]
 
@@ -78,9 +77,9 @@ class WalletBackupTest(BitcoinTestFramework):
 
     # As above, this mirrors the original bash test.
     def start_three(self):
-        self.nodes[0] = self.start_node(0, self.options.tmpdir)
-        self.nodes[1] = self.start_node(1, self.options.tmpdir)
-        self.nodes[2] = self.start_node(2, self.options.tmpdir)
+        self.start_node(0)
+        self.start_node(1)
+        self.start_node(2)
         connect_nodes(self.nodes[0], 3)
         connect_nodes(self.nodes[1], 3)
         connect_nodes(self.nodes[2], 3)
@@ -107,9 +106,9 @@ class WalletBackupTest(BitcoinTestFramework):
         self.nodes[3].generate(100)
         sync_blocks(self.nodes)
 
-        assert_equal(self.nodes[0].getbalance(), 50)
-        assert_equal(self.nodes[1].getbalance(), 50)
-        assert_equal(self.nodes[2].getbalance(), 50)
+        assert_equal(self.nodes[0].getbalance(), 5000)
+        assert_equal(self.nodes[1].getbalance(), 5000)
+        assert_equal(self.nodes[2].getbalance(), 5000)
         assert_equal(self.nodes[3].getbalance(), 0)
 
         self.log.info("Creating transactions")
@@ -142,7 +141,7 @@ class WalletBackupTest(BitcoinTestFramework):
 
         # At this point, there are 214 blocks (103 for setup, then 10 rounds, then 101.)
         # 114 are mature, so the sum of all wallets should be 114 * 50 = 5700.
-        assert_equal(total, 5700)
+        assert_equal(total, 570000)
 
         ##
         # Test restoring spender wallets from backups

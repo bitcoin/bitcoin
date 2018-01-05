@@ -1,17 +1,16 @@
 #!/usr/bin/env python3
 # Copyright (c) 2015-2016 The Bitcoin Core developers
+# Copyright (c) 2017 The Raven Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the prioritisetransaction mining RPC."""
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import RavenTestFramework
 from test_framework.util import *
 from test_framework.mininode import COIN, MAX_BLOCK_BASE_SIZE
 
-class PrioritiseTransactionTest(BitcoinTestFramework):
-
-    def __init__(self):
-        super().__init__()
+class PrioritiseTransactionTest(RavenTestFramework):
+    def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 2
         self.extra_args = [["-printpriority=1"], ["-printpriority=1"]]
@@ -103,7 +102,7 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
         tx_id = self.nodes[0].decoderawtransaction(tx_hex)["txid"]
 
         # This will raise an exception due to min relay fee not being met
-        assert_raises_jsonrpc(-26, "66: min relay fee not met", self.nodes[0].sendrawtransaction, tx_hex)
+        assert_raises_rpc_error(-26, "66: min relay fee not met", self.nodes[0].sendrawtransaction, tx_hex)
         assert(tx_id not in self.nodes[0].getrawmempool())
 
         # This is a less than 1000-byte transaction, so just set the fee

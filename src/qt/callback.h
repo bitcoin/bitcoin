@@ -1,5 +1,5 @@
-#ifndef BITCOIN_QT_CALLBACK_H
-#define BITCOIN_QT_CALLBACK_H
+#ifndef RAVEN_QT_CALLBACK_H
+#define RAVEN_QT_CALLBACK_H
 
 #include <QObject>
 
@@ -16,7 +16,7 @@ class FunctionCallback : public Callback
     F f;
 
 public:
-    FunctionCallback(F f_) : f(std::move(f_)) {}
+    explicit FunctionCallback(F f_) : f(std::move(f_)) {}
     ~FunctionCallback() override {}
     void call() override { f(this); }
 };
@@ -27,4 +27,4 @@ FunctionCallback<F>* makeCallback(F f)
     return new FunctionCallback<F>(std::move(f));
 }
 
-#endif // BITCOIN_QT_CALLBACK_H
+#endif // RAVEN_QT_CALLBACK_H

@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 # Copyright (c) 2015-2016 The Bitcoin Core developers
+# Copyright (c) 2017 The Raven Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-"""Compare two or more bitcoinds to each other.
+"""Compare two or more ravends to each other.
 
 To use, create a class that implements get_tests(), and pass it in
 as the test generator to TestManager.  get_tests() should be a python
@@ -19,7 +20,7 @@ TestNode behaves as follows:
 
 from .mininode import *
 from .blockstore import BlockStore, TxStore
-from .util import p2p_port
+from .util import p2p_port, wait_until
 
 import logging
 
@@ -27,7 +28,7 @@ logger=logging.getLogger("TestFramework.comptool")
 
 global mininode_lock
 
-class RejectResult(object):
+class RejectResult():
     """Outcome that expects rejection of a transaction or block."""
     def __init__(self, code, reason=b''):
         self.code = code
@@ -156,13 +157,13 @@ class TestNode(NodeConnCB):
 #    across all connections.  (If outcome of final tx is specified as true
 #    or false, then only the last tx is tested against outcome.)
 
-class TestInstance(object):
+class TestInstance():
     def __init__(self, objects=None, sync_every_block=True, sync_every_tx=False):
         self.blocks_and_transactions = objects if objects else []
         self.sync_every_block = sync_every_block
         self.sync_every_tx = sync_every_tx
 
-class TestManager(object):
+class TestManager():
 
     def __init__(self, testgen, datadir):
         self.test_generator = testgen
@@ -189,7 +190,7 @@ class TestManager(object):
     def wait_for_disconnections(self):
         def disconnected():
             return all(node.closed for node in self.test_nodes)
-        return wait_until(disconnected, timeout=10)
+        wait_until(disconnected, timeout=10, lock=mininode_lock)
 
     def wait_for_verack(self):
         return all(node.wait_for_verack() for node in self.test_nodes)
@@ -197,7 +198,7 @@ class TestManager(object):
     def wait_for_pings(self, counter):
         def received_pongs():
             return all(node.received_ping_response(counter) for node in self.test_nodes)
-        return wait_until(received_pongs)
+        wait_until(received_pongs, lock=mininode_lock)
 
     # sync_blocks: Wait for all connections to request the blockhash given
     # then send get_headers to find out the tip of each node, and synchronize
@@ -210,8 +211,7 @@ class TestManager(object):
             )
 
         # --> error if not requested
-        if not wait_until(blocks_requested, attempts=20*num_blocks):
-            raise AssertionError("Not all nodes requested block")
+        wait_until(blocks_requested, attempts=20*num_blocks, lock=mininode_lock)
 
         # Send getheaders message
         [ c.cb.send_getheaders() for c in self.connections ]
@@ -231,8 +231,7 @@ class TestManager(object):
             )
 
         # --> error if not requested
-        if not wait_until(transaction_requested, attempts=20*num_events):
-            raise AssertionError("Not all nodes requested transaction")
+        wait_until(transaction_requested, attempts=20*num_events, lock=mininode_lock)
 
         # Get the mempool
         [ c.cb.send_mempool() for c in self.connections ]

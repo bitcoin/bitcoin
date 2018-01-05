@@ -1,4 +1,5 @@
 // Copyright (c) 2009-2016 The Bitcoin Core developers
+// Copyright (c) 2017 The Raven Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -27,7 +28,7 @@ CScript ParseScript(const std::string& s)
 
     if (mapOpNames.empty())
     {
-        for (int op = 0; op <= OP_NOP10; op++)
+        for (unsigned int op = 0; op <= MAX_OPCODE; op++)
         {
             // Allow OP_RESERVED to get into mapOpNames
             if (op < OP_NOP && op != OP_RESERVED)

@@ -1,9 +1,10 @@
 // Copyright (c) 2015-2016 The Bitcoin Core developers
+// Copyright (c) 2017 The Raven Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_BENCH_BENCH_H
-#define BITCOIN_BENCH_BENCH_H
+#ifndef RAVEN_BENCH_BENCH_H
+#define RAVEN_BENCH_BENCH_H
 
 #include <functional>
 #include <limits>
@@ -41,7 +42,7 @@ namespace benchmark {
         std::string name;
         double maxElapsed;
         double beginTime;
-        double lastTime, minTime, maxTime, countMaskInv;
+        double lastTime, minTime, maxTime;
         uint64_t count;
         uint64_t countMask;
         uint64_t beginCycles;
@@ -55,7 +56,6 @@ namespace benchmark {
             minCycles = std::numeric_limits<uint64_t>::max();
             maxCycles = std::numeric_limits<uint64_t>::min();
             countMask = 1;
-            countMaskInv = 1./(countMask + 1);
         }
         bool KeepRunning();
     };
@@ -78,4 +78,4 @@ namespace benchmark {
 #define BENCHMARK(n) \
     benchmark::BenchRunner BOOST_PP_CAT(bench_, BOOST_PP_CAT(__LINE__, n))(BOOST_PP_STRINGIZE(n), n);
 
-#endif // BITCOIN_BENCH_BENCH_H
+#endif // RAVEN_BENCH_BENCH_H
