@@ -564,7 +564,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight)
 			if (fDebug && !errorMessage.empty())
 				LogPrintf("%s\n", errorMessage.c_str());
 		}
-		if (!bDestCheckFailed && good && errorMessage.empty())
+		if (!bDestCheckFailed && !vvchAliasArgs.empty() && good && errorMessage.empty())
 		{
 			if (DecodeCertTx(tx, op, nOut, vvchArgs))
 			{

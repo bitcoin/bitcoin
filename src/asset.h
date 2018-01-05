@@ -108,7 +108,7 @@ public:
 		bool writeState = Write(make_pair(std::string("asseti"), asset.vchAsset), asset);
 		if (!fJustCheck)
 			writeState = writeState && Write(make_pair(std::string("assetp"), asset.vchAsset), asset);
-		else if (fJustCheck)
+		else if (fJustCheck && op != OP_ASSET_ALLOCATION_SEND)
 			writeState = writeState && Write(make_pair(std::string("assetl"), asset.vchAsset), fJustCheck);
 		WriteAssetIndex(asset, op);
         return writeState;

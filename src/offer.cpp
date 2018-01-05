@@ -390,6 +390,11 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		}
 		switch (op) {
 		case OP_OFFER_ACTIVATE:
+			if (theOffer.vchEscrow.size() > MAX_GUID_LENGTH)
+			{
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 2004 - " + _("offer hex guid too long");
+				return error(errorMessage.c_str());
+			}
 			if(!ValidatePaymentOptionsMask(theOffer.paymentOptions))
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1016 - " + _("Invalid payment option");
@@ -398,11 +403,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			if (!ValidateOfferTypeMask(theOffer.offerType))
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1016 - " + _("Invalid offer type");
-				return error(errorMessage.c_str());
-			}
-			if ( theOffer.vchOffer != theOffer.vchOffer)
-			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1018 - " + _("Offer input and offer guid mismatch");
 				return error(errorMessage.c_str());
 			}
 			

@@ -385,11 +385,6 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 	string retError = "";
 	if(fJustCheck)
 	{
-		if (vvchArgs.empty() ||  theCert.vchCert.size() > MAX_GUID_LENGTH)
-		{
-			errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2004 - " + _("Certificate hex guid too long");
-			return error(errorMessage.c_str());
-		}
 		if(theCert.sCategory.size() > MAX_NAME_LENGTH)
 		{
 			errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2005 - " + _("Certificate category too big");
@@ -402,6 +397,11 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 		}
 		switch (op) {
 		case OP_CERT_ACTIVATE:
+			if (theCert.vchCert.size() > MAX_GUID_LENGTH)
+			{
+				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2004 - " + _("Certificate hex guid too long");
+				return error(errorMessage.c_str());
+			}
 			if((theCert.vchTitle.size() > MAX_NAME_LENGTH || theCert.vchTitle.empty()))
 			{
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2012 - " + _("Certificate title too big or is empty");

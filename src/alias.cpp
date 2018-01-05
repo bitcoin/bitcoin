@@ -403,7 +403,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	string retError = "";
 	if(fJustCheck)
 	{
-		if(vvchArgs.empty() || !IsValidAliasName(vvchArgs[0]))
+		if(!IsValidAliasName(vvchArgs[0]))
 		{
 			errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5004 - " + _("Alias name does not follow the domain name specification");
 			return error(errorMessage.c_str());
@@ -3081,6 +3081,10 @@ string GetSyscoinTransactionDescription(const int op, string& responseEnglish, c
 		else if (op == OP_ASSET_TRANSFER) {
 			strResponse = _("Asset Transferred");
 			responseEnglish = "Asset Transferred";
+		}
+		else if (op == OP_ASSET_SEND) {
+			strResponse = _("Asset Sent");
+			responseEnglish = "Asset Sent";
 		}
 	}
 	else if (type == ASSETALLOCATION) {

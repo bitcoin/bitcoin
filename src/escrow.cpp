@@ -605,6 +605,11 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 			case OP_ESCROW_ACKNOWLEDGE:
 				break;
 			case OP_ESCROW_ACTIVATE:
+				if (theAsset.vchEscrow.size() > MAX_GUID_LENGTH)
+				{
+					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 2004 - " + _("escrow hex guid too long");
+					return error(errorMessage.c_str());
+				}
 				if(theEscrow.op != OP_ESCROW_ACTIVATE)
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4012 - " + _("Invalid op, should be escrow activate");

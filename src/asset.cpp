@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "asset.h"
+#include "assetallocation.h"
 #include "alias.h"
 #include "init.h"
 #include "validation.h"
@@ -30,7 +31,8 @@ bool IsAssetOp(int op) {
     return op == OP_ASSET_ACTIVATE
 		|| op == OP_ASSET_MINT
         || op == OP_ASSET_UPDATE
-        || op == OP_ASSET_TRANSFER;
+        || op == OP_ASSET_TRANSFER
+		|| op == OP_ASSET_SEND;
 }
 
 uint64_t GetAssetExpiration(const CAsset& asset) {
@@ -346,10 +348,11 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 
 	// unserialize asset from txn, check for valid
 	CAsset theAsset;
+	CAssetAllocation theAssetAllocation;
 	vector<unsigned char> vchData;
 	vector<unsigned char> vchHash;
 	int nDataOut;
-	if(!GetSyscoinData(tx, vchData, vchHash, nDataOut) || !theAsset.UnserializeFromData(vchData, vchHash))
+	if(!GetSyscoinData(tx, vchData, vchHash, nDataOut) || (op != OP_ASSET_SEND &&!theAsset.UnserializeFromData(vchData, vchHash)) || (op == OP_ASSET_SEND && !theAssetAllocation.UnserializeFromData(vchData, vchHash)))
 	{
 		errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR ERRCODE: 2001 - " + _("Cannot unserialize data inside of this transaction relating to a asset");
 		return true;
@@ -376,18 +379,25 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	string retError = "";
 	if(fJustCheck)
 	{
-		if(theAsset.sCategory.size() > MAX_NAME_LENGTH)
-		{
-			errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2005 - " + _("Asset category too big");
-			return error(errorMessage.c_str());
-		}
-		if(theAsset.vchPubData.size() > MAX_VALUE_LENGTH)
-		{
-			errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2007 - " + _("Asset public data too big");
-			return error(errorMessage.c_str());
+		if (op != OP_ASSET_SEND) {
+			if (theAsset.sCategory.size() > MAX_NAME_LENGTH)
+			{
+				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2005 - " + _("Asset category too big");
+				return error(errorMessage.c_str());
+			}
+			if (theAsset.vchPubData.size() > MAX_VALUE_LENGTH)
+			{
+				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2007 - " + _("Asset public data too big");
+				return error(errorMessage.c_str());
+			}
 		}
 		switch (op) {
 		case OP_ASSET_ACTIVATE:
+			if (theAsset.vchAsset.size() > MAX_GUID_LENGTH)
+			{
+				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2004 - " + _("asset hex guid too long");
+				return error(errorMessage.c_str());
+			}
 			if((theAsset.vchName.size() > MAX_ID_LENGTH || theAsset.vchName.empty()))
 			{
 				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2012 - " + _("Asset title too big or is empty");
@@ -415,7 +425,13 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 
 		case OP_ASSET_TRANSFER:
 			break;
-
+		case OP_ASSET_SEND:
+			if (theAssetAllocation.listSendingAllocationInputs.empty() && theAssetAllocation.listSendingAllocationAmounts.empty())
+			{
+				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2021 - " + _("Asset send must send an input or transfer balance");
+				return error(errorMessage.c_str());
+			}
+			break;
 		default:
 			errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2021 - " + _("Asset transaction has unknown op");
 			return error(errorMessage.c_str());
@@ -440,7 +456,8 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			return true;
 		}
 	}
-	else
+	// allocation send from asset requires pow, no 0-conf
+	else if(op != OP_ASSET_SEND)
 	{
 		bool bSendLocked = false;
 		passetdb->ReadISLock(theAsset.vchAsset, bSendLocked);
@@ -455,7 +472,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				if (fDebug)
 					LogPrintf("ASSET txid mismatch! Recreating...\n");
 				const string &txHashHex = dbAsset.txHash.GetHex();
-				//vector<string> lastReceiverList = dbAsset.listReceivers;
+
 				// recreate this asset tx from last known good position (last asset stored)
 				if (op != OP_ASSET_ACTIVATE && !passetdb->ReadLastAsset(theAsset.vchAsset, dbAsset)) {
 					dbAsset.SetNull();
@@ -520,6 +537,14 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				nLockStatus = LOCK_NOCONFLICT_UNCONFIRMED_STATE;
 		}
 	}
+	if (op == OP_ASSET_UPDATE || op == OP_ASSET_TRANSFER || op == OP_ASSET_SEND)
+	{
+		if (dbAsset.vchAlias != vvchAliasArgs[0])
+		{
+			errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot edit this asset. Asset owner must sign off on this change.");
+			return true;
+		}
+	}
 	if (op != OP_ASSET_ACTIVATE)
 	{
 		if (theAsset.vchAlias.empty())
@@ -529,7 +554,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		theAsset.vchName = dbAsset.vchName;
 		if (theAsset.sCategory.empty())
 			theAsset.sCategory = dbAsset.sCategory;
-
+		theAsset.nBalance = dbAsset.nBalance;
 		if (op == OP_ASSET_TRANSFER)
 		{
 			// check toalias
@@ -544,16 +569,74 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				return true;
 			}
 		}
-		if (op == OP_ASSET_UPDATE || op == OP_ASSET_TRANSFER)
-		{
-			if (dbAsset.vchAlias != vvchAliasArgs[0])
-			{
-				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot edit this asset. Asset owner must sign off on this change.");
+	}
+	if (op == OP_ASSET_SEND) {
+		CAssetAllocation dbAssetAllocation;
+		const CAssetAllocationTuple allocationTuple(theAssetAllocation.vchAsset, vvchAliasArgs[0]);
+		GetAssetAllocation(allocationTuple, dbAssetAllocation);
+		if (theAssetAllocation.listSendingAllocationInputs.empty()) {
+			if (!dbAssetAllocation.listAllocationInputs.empty()) {
+				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("Invalid asset send, request not sending with inputs and sender uses inputs in its allocation list");
 				return true;
+			}
+			if (theAssetAllocation.listSendingAllocationAmounts.empty()) {
+				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("Invalid asset send, expected allocation amounts");
+				return true;
+			}
+			// check balance is sufficient on sender
+			CAmount nTotal = 0;
+			for (auto& amountTuple : theAssetAllocation.listSendingAllocationAmounts) {
+				nTotal += amountTuple.second;
+				if (amountTuple.second <= 0)
+				{
+					errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("Receiving amount must be positive");
+					return true;
+				}
+			}
+			if (theAsset.nBalance < nTotal) {
+				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("Sender balance is insufficient");
+				return true;
+			}
+			theAsset.nBalance -= nTotal;
+			for (auto& amountTuple : theAssetAllocation.listSendingAllocationAmounts) {
+				CAssetAllocation receiverAllocation;
+				const CAssetAllocationTuple receiverAllocationTuple(theAssetAllocation.vchAsset, amountTuple.first);
+				// don't need to check for existance of allocation because it may not exist, may be creating it here for the first time for receiver
+				GetAssetAllocation(receiverAllocationTuple, receiverAllocation);
+
+				// check receiver alias
+				if (!GetAlias(amountTuple.first, alias))
+				{
+					errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2024 - " + _("Cannot find alias you are transferring to.");
+					continue;
+				}
+				if (!(alias.nAcceptTransferFlags & ACCEPT_TRANSFER_ASSETS))
+				{
+					errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("An alias you are transferring to does not accept assets");
+					continue;
+				}
+
+
+				if (!dontaddtodb) {
+					if (receiverAllocation.vchAlias.empty())
+						receiverAllocation.vchAlias = receiverAllocationTuple.vchAlias;
+					receiverAllocation.nBalance += amountTuple.second;
+					receiverAllocation.nHeight = nHeight;
+					receiverAllocation.txHash = tx.GetHash();
+					// we know the receiver update is not a double spend so we lock it in with false meaning we should store previous db entry with this one
+					if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, op, fJustCheck))
+					{
+						errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to write to asset allocation DB");
+						continue;
+					}
+					if (strResponse != "") {
+						paliasdb->WriteAliasIndexTxHistory(user1, stringFromVch(receiverAllocation.vchAlias), user3, tx.GetHash(), nHeight, strResponseEnglish, receiverAllocationTuple.ToString(), nLockStatus);
+					}
+				}
 			}
 		}
 	}
-	else
+	if (op == OP_ASSET_ACTIVATE)
 	{
 		if (fJustCheck && GetAsset(theAsset.vchAsset, theAsset))
 		{
@@ -569,11 +652,11 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	// set the asset's txn-dependent values
 	theAsset.nHeight = nHeight;
 	theAsset.txHash = tx.GetHash();
-	// write asset  
-	if (!dontaddtodb) {
+	// write asset, if asset send, only write on pow since asset -> asset allocation is not 0-conf compatible
+	if (!dontaddtodb && (op != OP_ASSET_SEND || !fJustCheck)) {
 		if (!passetdb->WriteAsset(theAsset, op, fJustCheck))
 		{
-			errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to write to assetifcate DB");
+			errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to write to asset DB");
 			return error(errorMessage.c_str());
 		}
 		// debug
@@ -836,7 +919,80 @@ UniValue assettransfer(const UniValue& params, bool fHelp) {
 	res.push_back(EncodeHexTx(wtx));
 	return res;
 }
+UniValue assetsend(const UniValue& params, bool fHelp) {
+	if (fHelp || params.size() != 5)
+		throw runtime_error(
+			"assetallocationsend [guid] [alias] aliasto amount [witness]\n"
+			"Send an asset allocation you own to another alias.\n"
+			"<guid> asset guidkey.\n"
+			"<aliasfrom> alias to transfer from.\n"
+			"<aliasto> alias to transfer to.\n"
+			"<witness> Witness alias name that will sign for web-of-trust notarization of this transaction.\n"
+			+ HelpRequiringPassphrase());
 
+	// gather & validate inputs
+	vector<unsigned char> vchAsset = vchFromValue(params[0]);
+	vector<unsigned char> vchAliasFrom = vchFromValue(params[1]);
+	vector<unsigned char> vchAliasTo = vchFromValue(params[2]);
+	vector<unsigned char> vchWitness;
+	vchWitness = vchFromValue(params[4]);
+	// check for alias existence in DB
+	CAliasIndex fromAlias;
+	if (!GetAlias(vchAliasFrom, fromAlias))
+		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 2509 - " + _("Failed to read transfer alias from DB"));
+
+	// this is a syscoin txn
+	CWalletTx wtx;
+	CScript scriptPubKeyOrig, scriptPubKeyFromOrig;
+
+	CAsset theAsset;
+	if (!GetAsset(vchAsset, theAsset))
+		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 2510 - " + _("Could not find a asset with this key"));
+
+	CSyscoinAddress fromAddr;
+	GetAddress(fromAlias, &fromAddr, scriptPubKeyFromOrig);
+
+	CScript scriptPubKey;
+	CAssetAllocation theAssetAllocation;
+	theAssetAllocation.vchAsset = vchAsset;
+	theAssetAllocation.listSendingAllocationAmounts.push_back(make_pair(vchAliasTo, AmountFromValue(params[3])));
+
+	vector<unsigned char> data;
+	theAssetAllocation.Serialize(data);
+	uint256 hash = Hash(data.begin(), data.end());
+
+	vector<unsigned char> vchHashAsset = vchFromValue(hash.GetHex());
+	scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_ASSET) << CScript::EncodeOP_N(OP_ASSET_SEND) << vchHashAsset << OP_2DROP << OP_DROP;
+	scriptPubKey += scriptPubKeyOrig;
+	// send the asset pay txn
+	vector<CRecipient> vecSend;
+	CRecipient recipient;
+	CreateRecipient(scriptPubKey, recipient);
+	vecSend.push_back(recipient);
+
+	CScript scriptPubKeyAlias;
+	scriptPubKeyAlias << CScript::EncodeOP_N(OP_SYSCOIN_ALIAS) << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << fromAlias.vchAlias << fromAlias.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
+	scriptPubKeyAlias += scriptPubKeyFromOrig;
+	CRecipient aliasRecipient;
+	CreateRecipient(scriptPubKeyAlias, aliasRecipient);
+	CRecipient aliasPaymentRecipient;
+	CreateAliasRecipient(scriptPubKeyFromOrig, aliasPaymentRecipient);
+
+	CScript scriptData;
+	scriptData << OP_RETURN << data;
+	CRecipient fee;
+	CreateFeeRecipient(scriptData, data, fee);
+	vecSend.push_back(fee);
+
+
+	CCoinControl coinControl;
+	coinControl.fAllowOtherInputs = false;
+	coinControl.fAllowWatchOnly = false;
+	SendMoneySyscoin(fromAlias.vchAlias, vchWitness, aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
+	UniValue res(UniValue::VARR);
+	res.push_back(EncodeHexTx(wtx));
+	return res;
+}
 
 UniValue assetinfo(const UniValue& params, bool fHelp) {
     if (fHelp || 1 > params.size())
