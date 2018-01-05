@@ -390,7 +390,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		}
 		switch (op) {
 		case OP_OFFER_ACTIVATE:
-			if (theOffer.vchEscrow.size() > MAX_GUID_LENGTH)
+			if (theOffer.vchOffer.size() > MAX_GUID_LENGTH)
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 2004 - " + _("offer hex guid too long");
 				return error(errorMessage.c_str());
