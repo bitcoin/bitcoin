@@ -54,6 +54,8 @@ string assetFromOp(int op) {
 		return "assetmint";
     case OP_ASSET_TRANSFER:
         return "assettransfer";
+	case OP_ASSET_SEND:
+		return "assetsend";
     default:
         return "<unknown asset op>";
     }
