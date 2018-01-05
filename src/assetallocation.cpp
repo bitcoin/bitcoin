@@ -674,7 +674,7 @@ UniValue assetallocationinfo(const UniValue& params, bool fHelp) {
 }
 bool BuildAssetAllocationJson(const CAssetAllocation& assetallocation, UniValue& oAssetAllocation)
 {
-    oAssetAllocation.push_back(Pair("_id", CAssetAllocationTuple(assetallocation.vchAlias, assetallocation.vchAlias).ToString()));
+    oAssetAllocation.push_back(Pair("_id", CAssetAllocationTuple(assetallocation.vchAsset, assetallocation.vchAlias).ToString()));
 	oAssetAllocation.push_back(Pair("asset", stringFromVch(assetallocation.vchAsset)));
     oAssetAllocation.push_back(Pair("txid", assetallocation.txHash.GetHex()));
     oAssetAllocation.push_back(Pair("height", (int)assetallocation.nHeight));
@@ -704,16 +704,16 @@ bool BuildAssetAllocationJson(const CAssetAllocation& assetallocation, UniValue&
 			oAssetAllocationReceiversObj.push_back(Pair("amount", ValueFromAmount(amountTuple.second)));
 			oAssetAllocationReceiversArray.push_back(oAssetAllocationReceiversObj);
 		}
-		oAssetAllocation.push_back(Pair("allocation_amounts", oAssetAllocationReceiversArray));
 	}
 	else if (!assetallocation.listSendingAllocationInputs.empty()) {
 
 	}
+	oAssetAllocation.push_back(Pair("allocation_amounts", oAssetAllocationReceiversArray));
 	return true;
 }
 bool BuildAssetAllocationIndexerJson(const CAssetAllocation& assetallocation, UniValue& oAssetAllocation)
 {
-	oAssetAllocation.push_back(Pair("_id", CAssetAllocationTuple(assetallocation.vchAlias, assetallocation.vchAlias).ToString()));
+	oAssetAllocation.push_back(Pair("_id", CAssetAllocationTuple(assetallocation.vchAsset, assetallocation.vchAlias).ToString()));
 	oAssetAllocation.push_back(Pair("txid", assetallocation.txHash.GetHex()));
 	oAssetAllocation.push_back(Pair("asset", stringFromVch(assetallocation.vchAsset)));
 	oAssetAllocation.push_back(Pair("height", (int)assetallocation.nHeight));
@@ -728,7 +728,7 @@ void AssetAllocationTxToJSON(const int op, const std::vector<unsigned char> &vch
 	if(!assetallocation.UnserializeFromData(vchData, vchHash))
 		return;
 	entry.push_back(Pair("txtype", opName));
-	entry.push_back(Pair("_id", CAssetAllocationTuple(assetallocation.vchAlias, assetallocation.vchAlias).ToString()));
+	entry.push_back(Pair("_id", CAssetAllocationTuple(assetallocation.vchAsset, assetallocation.vchAlias).ToString()));
 	entry.push_back(Pair("asset", stringFromVch(assetallocation.vchAsset)));
 	entry.push_back(Pair("alias", stringFromVch(assetallocation.vchAlias)));
 	UniValue oAssetAllocationReceiversArray(UniValue::VARR);
@@ -739,11 +739,12 @@ void AssetAllocationTxToJSON(const int op, const std::vector<unsigned char> &vch
 			oAssetAllocationReceiversObj.push_back(Pair("amount", ValueFromAmount(amountTuple.second)));
 			oAssetAllocationReceiversArray.push_back(oAssetAllocationReceiversObj);
 		}
-		entry.push_back(Pair("allocation_amounts", oAssetAllocationReceiversArray));
+		
 	}
 	else if (!assetallocation.listSendingAllocationInputs.empty()) {
 
 	}
+	entry.push_back(Pair("allocation_amounts", oAssetAllocationReceiversArray));
 
 
 }
