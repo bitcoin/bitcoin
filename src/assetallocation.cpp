@@ -614,6 +614,7 @@ UniValue assetallocationsend(const UniValue& params, bool fHelp) {
 	GetAddress(fromAlias, &fromAddr, scriptPubKeyFromOrig);
 
 	CScript scriptPubKey;
+	CAssetAllocation theAssetAllocation;
 	theAssetAllocation.vchAsset = vchAsset;
 	theAssetAllocation.listSendingAllocationAmounts.push_back(make_pair(vchAliasTo, AmountFromValue(params[3])));
 
@@ -738,7 +739,7 @@ void AssetAllocationTxToJSON(const int op, const std::vector<unsigned char> &vch
 			oAssetAllocationReceiversObj.push_back(Pair("amount", ValueFromAmount(amountTuple.second)));
 			oAssetAllocationReceiversArray.push_back(oAssetAllocationReceiversObj);
 		}
-		oAssetAllocation.push_back(Pair("allocation_amounts", oAssetAllocationReceiversArray));
+		entry.push_back(Pair("allocation_amounts", oAssetAllocationReceiversArray));
 	}
 	else if (!assetallocation.listSendingAllocationInputs.empty()) {
 
