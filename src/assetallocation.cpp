@@ -612,9 +612,9 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
     return true;
 }
 UniValue assetallocationsend(const UniValue& params, bool fHelp) {
-	if (fHelp || params.size() != 3)
+	if (fHelp || params.size() != 5)
 		throw runtime_error(
-			"assetallocationsend [guid] [aliasfrom] {\"alias\":amount,\"n\":number...} [witness]\n"
+			"assetallocationsend [guid] [aliasfrom] aliasto amount [witness]\n"
 			"Send an asset allocation you own to another alias.\n"
 			"<guid> asset guidkey.\n"
 			"<aliasfrom> alias to transfer from.\n"
@@ -625,9 +625,9 @@ UniValue assetallocationsend(const UniValue& params, bool fHelp) {
 	// gather & validate inputs
 	vector<unsigned char> vchAsset = vchFromValue(params[0]);
 	vector<unsigned char> vchAliasFrom = vchFromValue(params[1]);
-
+	vector<unsigned char> vchAliasTo = vchFromValue(params[2]);
 	vector<unsigned char> vchWitness;
-	vchWitness = vchFromValue(params[2]);
+	vchWitness = vchFromValue(params[4]);
 	// check for alias existence in DB
 	CAliasIndex fromAlias;
 	if (!GetAlias(vchAliasFrom, fromAlias))
@@ -647,7 +647,7 @@ UniValue assetallocationsend(const UniValue& params, bool fHelp) {
 
 	CScript scriptPubKey;
 	theAssetAllocation.nHeight = chainActive.Tip()->nHeight;
-
+	theAssetAllocation.listSendingAllocationAmounts.push_back(pair<vchAliasTo, AmountFromValue(params[3])>);
 
 	vector<unsigned char> data;
 	theAssetAllocation.Serialize(data);

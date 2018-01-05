@@ -1881,7 +1881,7 @@ void CAliasDB::UpdateAliasIndexTxHistoryLockStatus(const string &id, const char 
 	write_concern = mongoc_write_concern_new();
 	mongoc_write_concern_set_w(write_concern, MONGOC_WRITE_CONCERN_W_UNACKNOWLEDGED);
 	bson_t *update = BCON_NEW("$set", "{",
-		"lock_status", lockstatus,
+		"lock_status", BCON_INT32(lockstatus),
 		"}");
 	if (!update || !mongoc_collection_update(aliastxhistory_collection, update_flags, selector, update, write_concern, &error)) {
 		LogPrintf("MONGODB ALIAS TX HISTORY LOCK STATUS ERROR: %s\n", error.message);
