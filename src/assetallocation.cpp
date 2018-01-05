@@ -131,7 +131,7 @@ void CAssetAllocationDB::EraseAssetAllocationIndex(const CAssetAllocationTuple& 
 	write_concern = mongoc_write_concern_new();
 	mongoc_write_concern_set_w(write_concern, MONGOC_WRITE_CONCERN_W_UNACKNOWLEDGED);
 	if (!mongoc_collection_remove(assetallocation_collection, remove_flags, selector, cleanup ? NULL : write_concern, &error)) {
-		LogPrintf("MONGODB ASSET HISTORY REMOVE ERROR: %s\n", error.message);
+		LogPrintf("MONGODB ASSET ALLOCATION REMOVE ERROR: %s\n", error.message);
 	}
 	if (selector)
 		bson_destroy(selector);
