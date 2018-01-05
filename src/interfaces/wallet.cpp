@@ -264,16 +264,17 @@ public:
     bool createBumpTransaction(const uint256& txid,
         const CCoinControl& coin_control,
         CAmount total_fee,
+        int32_t reduce_output,
         std::vector<std::string>& errors,
         CAmount& old_fee,
         CAmount& new_fee,
         CMutableTransaction& mtx) override
     {
         if (total_fee > 0) {
-            return feebumper::CreateTotalBumpTransaction(m_wallet.get(), txid, coin_control, total_fee, errors, old_fee, new_fee, mtx) ==
+            return feebumper::CreateTotalBumpTransaction(m_wallet.get(), txid, coin_control, total_fee, reduce_output, errors, old_fee, new_fee, mtx) ==
                 feebumper::Result::OK;
         } else {
-            return feebumper::CreateRateBumpTransaction(m_wallet.get(), txid, coin_control, errors, old_fee, new_fee, mtx) ==
+            return feebumper::CreateRateBumpTransaction(m_wallet.get(), txid, coin_control, reduce_output, errors, old_fee, new_fee, mtx) ==
                 feebumper::Result::OK;
         }
     }

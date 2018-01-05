@@ -152,6 +152,7 @@ public:
     virtual bool createBumpTransaction(const uint256& txid,
         const CCoinControl& coin_control,
         CAmount total_fee,
+        int32_t reduce_output,
         std::vector<std::string>& errors,
         CAmount& old_fee,
         CAmount& new_fee,

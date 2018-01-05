@@ -75,8 +75,9 @@ bool TransactionCanBeBumped(const CWallet* wallet, const uint256& txid)
     return res == feebumper::Result::OK;
 }
 
-Result CreateTotalBumpTransaction(const CWallet* wallet, const uint256& txid, const CCoinControl& coin_control, CAmount total_fee, std::vector<std::string>& errors,
-                                  CAmount& old_fee, CAmount& new_fee, CMutableTransaction& mtx)
+Result CreateTotalBumpTransaction(const CWallet* wallet, const uint256& txid, const CCoinControl& coin_control,
+                        CAmount total_fee, int32_t reduce_output, std::vector<std::string>& errors,
+                        CAmount& old_fee, CAmount& new_fee, CMutableTransaction& mtx)
 {
     new_fee = total_fee;
 
@@ -89,22 +90,28 @@ Result CreateTotalBumpTransaction(const CWallet* wallet, const uint256& txid, co
         return Result::INVALID_ADDRESS_OR_KEY;
     }
     const CWalletTx& wtx = it->second;
+    if (reduce_output < -1 || reduce_output >= int64_t(wtx.tx->vout.size())) {
+        errors.push_back(strprintf("Change output out of bounds [0..%zu]", wtx.tx->vout.size()-1));
+        return Result::INVALID_PARAMETER;
+    }
 
     Result result = PreconditionChecks(*locked_chain, wallet, wtx, errors);
     if (result != Result::OK) {
         return result;
     }
 
-    // figure out which output was change
-    // if there was no change output or multiple change outputs, fail
-    int nOutput = -1;
-    for (size_t i = 0; i < wtx.tx->vout.size(); ++i) {
-        if (wallet->IsChange(wtx.tx->vout[i])) {
-            if (nOutput != -1) {
-                errors.push_back("Transaction has multiple change outputs");
-                return Result::WALLET_ERROR;
+    int nOutput = reduce_output;
+    if (nOutput == -1) {
+        // figure out which output was change
+        // if there was no change output or multiple change outputs, fail
+        for (size_t i = 0; i < wtx.tx->vout.size(); ++i) {
+            if (wallet->IsChange(wtx.tx->vout[i])) {
+                if (nOutput != -1) {
+                    errors.push_back("Transaction has multiple change outputs");
+                    return Result::WALLET_ERROR;
+                }
+                nOutput = i;
             }
-            nOutput = i;
         }
     }
     if (nOutput == -1) {
@@ -146,12 +153,12 @@ Result CreateTotalBumpTransaction(const CWallet* wallet, const uint256& txid, co
     }
 
     // Check that in all cases the new fee doesn't violate maxTxFee
-     const CAmount max_tx_fee = wallet->chain().maxTxFee();
-     if (new_fee > max_tx_fee) {
-         errors.push_back(strprintf("Specified or calculated fee %s is too high (cannot be higher than maxTxFee %s)",
-                               FormatMoney(new_fee), FormatMoney(max_tx_fee)));
-         return Result::WALLET_ERROR;
-     }
+    const CAmount max_tx_fee = wallet->chain().maxTxFee();
+    if (new_fee > max_tx_fee) {
+        errors.push_back(strprintf("Specified or calculated fee %s is too high (cannot be higher than maxTxFee %s)",
+                            FormatMoney(new_fee), FormatMoney(max_tx_fee)));
+        return Result::WALLET_ERROR;
+    }
 
     // check that fee rate is higher than mempool's minimum fee
     // (no point in bumping fee if we know that the new tx won't be accepted to the mempool)
@@ -200,8 +207,8 @@ Result CreateTotalBumpTransaction(const CWallet* wallet, const uint256& txid, co
 }
 
 
-Result CreateRateBumpTransaction(CWallet* wallet, const uint256& txid, const CCoinControl& coin_control, std::vector<std::string>& errors,
-                                 CAmount& old_fee, CAmount& new_fee, CMutableTransaction& mtx)
+Result CreateRateBumpTransaction(CWallet* wallet, const uint256& txid, const CCoinControl& coin_control, int32_t reduce_output,
+                                std::vector<std::string>& errors, CAmount& old_fee, CAmount& new_fee, CMutableTransaction& mtx)
 {
     // We are going to modify coin control later, copy to re-use
     CCoinControl new_coin_control(coin_control);
@@ -215,6 +222,10 @@ Result CreateRateBumpTransaction(CWallet* wallet, const uint256& txid, const CCo
         return Result::INVALID_ADDRESS_OR_KEY;
     }
     const CWalletTx& wtx = it->second;
+    if (reduce_output < -1 || reduce_output >= int64_t(wtx.tx->vout.size())) {
+        errors.push_back(strprintf("Change output out of bounds [0..%zu]", wtx.tx->vout.size()-1));
+        return Result::INVALID_PARAMETER;
+    }
 
     Result result = PreconditionChecks(*locked_chain, wallet, wtx, errors);
     if (result != Result::OK) {
@@ -223,8 +234,9 @@ Result CreateRateBumpTransaction(CWallet* wallet, const uint256& txid, const CCo
 
     // Fill in recipients(and preserve a single change key if there is one)
     std::vector<CRecipient> recipients;
+    const auto* reduce_output_vout = reduce_output > -1 && (size_t)reduce_output < wtx.tx->vout.size() ? &wtx.tx->vout[reduce_output] : nullptr;
     for (const auto& output : wtx.tx->vout) {
-        if (!wallet->IsChange(output)) {
+        if (reduce_output_vout ? output != *reduce_output_vout : !wallet->IsChange(output)) {
             CRecipient recipient = {output.scriptPubKey, output.nValue, false};
             recipients.push_back(recipient);
         } else {
