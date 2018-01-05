@@ -486,7 +486,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 						errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from certificate DB");
 						return error(errorMessage.c_str());
 					}
-					paliasdb->EraseAliasIndexTxHistory(txHashHex+"-"+stringFromName(theCert.vchCert));
+					paliasdb->EraseAliasIndexTxHistory(txHashHex+"-"+stringFromVch(theCert.vchCert));
 					pcertdb->EraseCertIndexHistory(txHashHex);
 				}
 			}
