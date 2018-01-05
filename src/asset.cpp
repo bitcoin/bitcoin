@@ -586,6 +586,9 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		}
 	}
 	if (op == OP_ASSET_SEND) {
+		// start out with balance from db
+		theAsset.nBalance = dbAsset.nBalance;
+
 		CAssetAllocation dbAssetAllocation;
 		const CAssetAllocationTuple allocationTuple(theAssetAllocation.vchAsset, vvchAliasArgs[0]);
 		GetAssetAllocation(allocationTuple, dbAssetAllocation);
@@ -612,6 +615,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("Sender balance is insufficient");
 				return true;
 			}
+			// adjust sender balance
 			theAsset.nBalance -= nTotal;
 			for (auto& amountTuple : theAssetAllocation.listSendingAllocationAmounts) {
 				CAssetAllocation receiverAllocation;
