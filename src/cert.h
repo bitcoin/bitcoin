@@ -96,7 +96,7 @@ public:
 
     bool WriteCert(const CCert& cert, const int &op, const bool &fJustCheck) {
 		bool writeState =  Write(make_pair(std::string("certi"), cert.vchCert), cert);
-		if (!fJustChec)
+		if (!fJustCheck)
 			writeState = writeState && Write(make_pair(std::string("certp"), cert.vchCert), cert);
 		else if (fJustCheck)
 			writeState = writeState && Write(make_pair(std::string("certl"), cert.vchCert), fJustCheck);

@@ -582,7 +582,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 							return error(errorMessage.c_str());
 						}
 						paliasdb->EraseAliasIndexHistory(txHashHex);
-						paliasdb->EraseAliasIndexTxHistory(txHashHex+"-"+strName));
+						paliasdb->EraseAliasIndexTxHistory(txHashHex+"-"+strName);
 					}
 				}
 				else {
@@ -778,7 +778,7 @@ theAlias = dbAlias;
 		aliasUnprunable.nExpireTime = theAlias.nExpireTime;
 		// only add alias activations on pow blocks and not on fJustCheck, we want to ensure aliases are pow validated before allowing for instant transactions
 		if (!dontaddtodb && ((op == OP_ALIAS_ACTIVATE && !fJustCheck) || op != OP_ALIAS_ACTIVATE)) {
-			if (!paliasdb->WriteAlias(aliasUnprunable, theAlias.vchAddress, theAlias, dbAlias, op, fJustCheck))
+			if (!paliasdb->WriteAlias(aliasUnprunable, theAlias.vchAddress, theAlias, op, fJustCheck))
 			{
 				errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5034 - " + _("Failed to write to alias DB");
 				return error(errorMessage.c_str());
@@ -1853,7 +1853,7 @@ void CAliasDB::WriteAliasIndexTxHistory(const string &user1, const string &user2
 	write_concern = mongoc_write_concern_new();
 	mongoc_write_concern_set_w(write_concern, MONGOC_WRITE_CONCERN_W_UNACKNOWLEDGED);
 	const string& id = txHash.GetHex() + "-" + guid;
-	selector = BCON_NEW("_id", BCON_UTF8(id));
+	selector = BCON_NEW("_id", BCON_UTF8(id.c_str()));
 	mongoc_update_flags_t update_flags;
 	update_flags = (mongoc_update_flags_t)(MONGOC_UPDATE_NO_VALIDATE | MONGOC_UPDATE_UPSERT);
 	BuildAliasIndexerTxHistoryJson(user1, user2, user3, txHash, nHeight, type, guid, lockstatus, oName);
