@@ -2430,8 +2430,9 @@ UniValue walletpassphrase(const JSONRPCRequest& request)
             "\nStores the wallet decryption key in memory for 'timeout' seconds.\n"
             "This is needed prior to performing transactions related to private keys such as sending chaincoins\n"
             "\nArguments:\n"
-            "1. \"passphrase\"        (string, required) The wallet passphrase\n"
-            "2. timeout             (numeric, required) The time to keep the decryption key in seconds.\n"
+            "1. \"passphrase\"     (string, required) The wallet passphrase\n"
+            "2. timeout            (numeric, required) The time to keep the decryption key in seconds. Limited to at most 1073741824 (2^30) seconds.\n"
+            "                                          Any value greater than 1073741824 seconds will be set to 1073741824 seconds.\n"
             "3. mixingonly          (boolean, optional, default=false) If is true sending functions are disabled."
             "\nNote:\n"
             "Issuing the walletpassphrase command while the wallet is already unlocked will set a new unlock\n"
@@ -2476,13 +2477,26 @@ UniValue walletpassphrase(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_WALLET_ALREADY_UNLOCKED, "Error: Wallet is already fully unlocked.");
     }
 
-    if (!pwallet->Unlock(strWalletPass, fForMixingOnly)) {
-        throw JSONRPCError(RPC_WALLET_PASSPHRASE_INCORRECT, "Error: The wallet passphrase entered was incorrect.");
+    // Get the timeout
+    int64_t nSleepTime = request.params[1].get_int64();
+    // Timeout cannot be negative, otherwise it will relock immediately
+    if (nSleepTime < 0) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Timeout cannot be negative.");
+    }
+    // Clamp timeout to 2^30 seconds
+    if (nSleepTime > (int64_t)1 << 30) {
+        nSleepTime = (int64_t)1 << 30;
+    }
+
+    if (strWalletPass.length() > 0)
+    {
+        if (!pwallet->Unlock(strWalletPass)) {
+            throw JSONRPCError(RPC_WALLET_PASSPHRASE_INCORRECT, "Error: The wallet passphrase entered was incorrect.");
+        }
     }
 
     pwallet->TopUpKeyPool();
 
-    int64_t nSleepTime = request.params[1].get_int64();
     pwallet->nRelockTime = GetTime() + nSleepTime;
     RPCRunLater(strprintf("lockwallet(%s)", pwallet->GetName()), boost::bind(LockWallet, pwallet), nSleepTime);
 
