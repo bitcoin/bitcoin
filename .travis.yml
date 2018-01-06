@@ -6,11 +6,11 @@ matrix:
       - os: linux
         services: docker
         script:
-          - docker build --build-arg BRANCH_NAME=$TRAVIS_BRANCH -f scripts/docker/debian/Dockerfile-stretch .
+          - docker build --build-arg BRANCH_NAME=$TRAVIS_BRANCH --build-arg REPO_SLUG=$TRAVIS_REPO_SLUG -f scripts/docker/debian/Dockerfile-stretch .
       - os: linux
         services: docker
         script:
-          - docker build --build-arg BRANCH_NAME=$TRAVIS_BRANCH -f scripts/docker/debian/Dockerfile-jessie .
+          - docker build --build-arg BRANCH_NAME=$TRAVIS_BRANCH --build-arg REPO_SLUG=$TRAVIS_REPO_SLUG -f scripts/docker/debian/Dockerfile-jessie .
       - os: linux
         services: docker
         script:
