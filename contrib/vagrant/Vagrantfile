@@ -9,7 +9,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   #config.disksize.size = '20GB'
   $peercoininstall=<<-SCRIPT
       pushd /peercoin
-      contrib/vagrant/install.sh
+      ./contrib/vagrant/install.sh
       popd
   SCRIPT
   config.vm.provision "shell", inline: $peercoininstall, privileged: false
