@@ -15,6 +15,25 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
         self.extra_args = [["-printpriority=1"]] * 2
 
     def run_test(self):
+        # Test `prioritisetransaction` required parameters
+        assert_raises_rpc_error(-1, "prioritisetransaction", self.nodes[0].prioritisetransaction)
+        assert_raises_rpc_error(-1, "prioritisetransaction", self.nodes[0].prioritisetransaction, '')
+        assert_raises_rpc_error(-1, "prioritisetransaction", self.nodes[0].prioritisetransaction, '', 0)
+
+        # Test `prioritisetransaction` invalid extra parameters
+        assert_raises_rpc_error(-1, "prioritisetransaction", self.nodes[0].prioritisetransaction, '', 0, 0, 0)
+
+        # Test `prioritisetransaction` invalid `txid`
+        assert_raises_rpc_error(-1, "txid must be hexadecimal string", self.nodes[0].prioritisetransaction, txid='foo', fee_delta=0)
+
+        # Test `prioritisetransaction` invalid `dummy`
+        txid = '1d1d4e24ed99057e84c3f80fd8fbec79ed9e1acee37da269356ecea000000000'
+        assert_raises_rpc_error(-1, "JSON value is not a number as expected", self.nodes[0].prioritisetransaction, txid, 'foo', 0)
+        assert_raises_rpc_error(-8, "Priority is no longer supported, dummy argument to prioritisetransaction must be 0.", self.nodes[0].prioritisetransaction, txid, 1, 0)
+
+        # Test `prioritisetransaction` invalid `fee_delta`
+        assert_raises_rpc_error(-1, "JSON value is not an integer as expected", self.nodes[0].prioritisetransaction, txid=txid, fee_delta='foo')
+
         self.txouts = gen_return_txouts()
         self.relayfee = self.nodes[0].getnetworkinfo()['relayfee']
 
