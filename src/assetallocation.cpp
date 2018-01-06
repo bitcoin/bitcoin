@@ -381,8 +381,9 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 							if (!dontaddtodb) {
 								receiverAllocation.nBalance -= amountTuple.second;
 								theAssetAllocation.nBalance += amountTuple.second;
-								// we know the receiver update is not a double spend so we lock it in with false meaning we should store previous db entry with this one
-								if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, op, false))
+								receiverAllocation.nHeight = nHeight;
+								receiverAllocation.txHash = tx.GetHash();
+								if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, op, fJustCheck))
 								{
 									errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to write to asset allocation DB");
 									continue;
@@ -542,9 +543,9 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 					if (receiverAllocation.IsNull()) {
 						receiverAllocation.vchAlias = receiverAllocationTuple.vchAlias;
 						receiverAllocation.vchAsset = receiverAllocationTuple.vchAsset;
-						receiverAllocation.nHeight = nHeight;
-						receiverAllocation.txHash = tx.GetHash();
 					}
+					receiverAllocation.nHeight = nHeight;
+					receiverAllocation.txHash = tx.GetHash();
 					receiverAllocation.nBalance += amountTuple.second;
 					theAssetAllocation.nBalance -= amountTuple.second;
 					// we know the receiver update is not a double spend so we lock it in with false meaning we should store previous db entry with this one
@@ -697,19 +698,6 @@ bool BuildAssetAllocationJson(const CAssetAllocation& assetallocation, UniValue&
 	}
 	oAssetAllocation.push_back(Pair("expires_on", expired_time));
 	oAssetAllocation.push_back(Pair("expired", expired));
-	UniValue oAssetAllocationReceiversArray(UniValue::VARR);
-	if (!assetallocation.listSendingAllocationAmounts.empty()) {
-		for (auto& amountTuple : assetallocation.listSendingAllocationAmounts) {
-			UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
-			oAssetAllocationReceiversObj.push_back(Pair("alias", stringFromVch(amountTuple.first)));
-			oAssetAllocationReceiversObj.push_back(Pair("amount", ValueFromAmount(amountTuple.second)));
-			oAssetAllocationReceiversArray.push_back(oAssetAllocationReceiversObj);
-		}
-	}
-	else if (!assetallocation.listSendingAllocationInputs.empty()) {
-
-	}
-	oAssetAllocation.push_back(Pair("allocation_amounts", oAssetAllocationReceiversArray));
 	return true;
 }
 bool BuildAssetAllocationIndexerJson(const CAssetAllocation& assetallocation, UniValue& oAssetAllocation)
