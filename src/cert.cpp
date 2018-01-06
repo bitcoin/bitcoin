@@ -524,7 +524,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 				if (!dontaddtodb) {
 					nLockStatus = LOCK_CONFLICT_UNCONFIRMED_STATE;
 					if (strResponse != "") {
-						paliasdb->UpdateAliasIndexTxHistoryLockStatus(tx.GetHash().GetHex() + "-" + stringFromVch(theCert.vchCert), nLockStatus);
+						paliasdb->UpdateAliasIndexTxHistoryLockStatus(dbCert.txHash.GetHex() + "-" + stringFromVch(theCert.vchCert), nLockStatus);
 					}
 				}
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Block height of service request must be less than or equal to the stored service block height.");

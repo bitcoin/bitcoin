@@ -857,7 +857,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				if (!dontaddtodb) {
 					nLockStatus = LOCK_CONFLICT_UNCONFIRMED_STATE;
 					if (strResponse != "") {
-						paliasdb->UpdateAliasIndexTxHistoryLockStatus(tx.GetHash().GetHex() + "-" + stringFromVch(serializedEscrow.vchEscrow), nLockStatus);
+						paliasdb->UpdateAliasIndexTxHistoryLockStatus(theEscrow.txHash.GetHex() + "-" + stringFromVch(serializedEscrow.vchEscrow), nLockStatus);
 					}
 				}
 				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Block height of service request must be less than or equal to the stored service block height.");

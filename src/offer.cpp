@@ -577,7 +577,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				if (!dontaddtodb) {
 					nLockStatus = LOCK_CONFLICT_UNCONFIRMED_STATE;
 					if (strResponse != "") {
-						paliasdb->UpdateAliasIndexTxHistoryLockStatus(tx.GetHash().GetHex() + "-" + stringFromVch(theOffer.vchOffer), nLockStatus);
+						paliasdb->UpdateAliasIndexTxHistoryLockStatus(dbOffer.txHash.GetHex() + "-" + stringFromVch(theOffer.vchOffer), nLockStatus);
 					}
 				}
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Block height of service request must be less than or equal to the stored service block height.");

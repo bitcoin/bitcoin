@@ -388,9 +388,6 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 									errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to write to asset allocation DB");
 									continue;
 								}
-								if (strResponse != "") {
-									paliasdb->UpdateAliasIndexTxHistoryLockStatus(tx.GetHash().GetHex() + "-" + receiverAllocationTuple.ToString(), nLockStatus);
-								}
 							}
 
 						}
@@ -402,7 +399,6 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 						errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from assetallocation DB");
 						return error(errorMessage.c_str());
 					}
-					paliasdb->EraseAliasIndexTxHistory(tx.GetHash().GetHex()+"-"+assetAllocationTuple.ToString());
 					passetallocationdb->EraseAssetAllocationIndex(assetAllocationTuple);
 				}
 			}
@@ -450,7 +446,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 							for (auto& amountTuple : dbAssetAllocation.listSendingAllocationAmounts) {
 								const CAssetAllocationTuple receiverAllocationTuple(dbAssetAllocation.vchAsset, amountTuple.first);
 								if (strResponse != "") {
-									paliasdb->UpdateAliasIndexTxHistoryLockStatus(tx.GetHash().GetHex() + "-" + receiverAllocationTuple.ToString(), nLockStatus);
+									paliasdb->UpdateAliasIndexTxHistoryLockStatus(dbAssetAllocation.txHash.GetHex() + "-" + receiverAllocationTuple.ToString(), nLockStatus);
 								}
 							}
 						}
