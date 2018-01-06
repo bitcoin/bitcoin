@@ -564,7 +564,7 @@ UniValue gobject(const UniValue& params, bool fHelp)
             if(!fMnFound) {
                 nFailed++;
                 statusObj.push_back(Pair("result", "failed"));
-                statusObj.push_back(Pair("errorMessage", "Masternode must be publically available on network to vote. Masternode not found."));
+                statusObj.push_back(Pair("errorMessage", "Masternode must be publicly available on network to vote. Masternode not found."));
                 resultsObj.push_back(Pair(mne.getAlias(), statusObj));
                 continue;
             }
