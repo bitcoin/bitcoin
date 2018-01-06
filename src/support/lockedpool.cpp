@@ -69,24 +69,24 @@ void* Arena::alloc(size_t size)
     // This allocation strategy is best-fit. According to "Dynamic Storage Allocation: A Survey and Critical Review",
     // Wilson et. al. 1995, http://www.scs.stanford.edu/14wi-cs140/sched/readings/wilson.pdf, best-fit and first-fit
     // policies seem to work well in practice.
-    auto sizePtrIt = size_to_free_chunk.lower_bound(size);
-    if (sizePtrIt == size_to_free_chunk.end())
+    auto size_ptr_it = size_to_free_chunk.lower_bound(size);
+    if (size_ptr_it == size_to_free_chunk.end())
         return nullptr;
 
     // Create the used-chunk, taking its space from the end of the free-chunk
-    const size_t sizeRemaining = sizePtrIt->first - size;
-    auto alloced = chunks_used.emplace(sizePtrIt->second + sizeRemaining, size).first;
-    chunks_free_end.erase(sizePtrIt->second + sizePtrIt->first);
-    if (sizePtrIt->first == size) {
+    const size_t size_remaining = size_ptr_it->first - size;
+    auto alloced = chunks_used.emplace(size_ptr_it->second + size_remaining, size).first;
+    chunks_free_end.erase(size_ptr_it->second + size_ptr_it->first);
+    if (size_ptr_it->first == size) {
         // whole chunk is used up
-        chunks_free.erase(sizePtrIt->second);
+        chunks_free.erase(size_ptr_it->second);
     } else {
         // still some memory left in the chunk
-        auto itRemaining = size_to_free_chunk.emplace(sizeRemaining, sizePtrIt->second);
-        chunks_free[sizePtrIt->second] = itRemaining;
-        chunks_free_end.emplace(sizePtrIt->second + sizeRemaining, itRemaining);
+        auto it_remaining = size_to_free_chunk.emplace(size_remaining, size_ptr_it->second);
+        chunks_free[size_ptr_it->second] = it_remaining;
+        chunks_free_end.emplace(size_ptr_it->second + size_remaining, it_remaining);
     }
-    size_to_free_chunk.erase(sizePtrIt);
+    size_to_free_chunk.erase(size_ptr_it);
 
     return reinterpret_cast<void*>(alloced->first);
 }
@@ -106,7 +106,7 @@ void Arena::free(void *ptr)
     std::pair<char*, size_t> freed = *i;
     chunks_used.erase(i);
 
-    // Coalesc freed with previous chunk
+    // coalesce freed with previous chunk
     auto prev = chunks_free_end.find(freed.first);
     if (prev != chunks_free_end.end()) {
         freed.first -= prev->second->first;
@@ -115,7 +115,7 @@ void Arena::free(void *ptr)
         chunks_free_end.erase(prev);
     }
 
-    // Coalesc freed with chunk after freed
+    // coalesce freed with chunk after freed
     auto next = chunks_free.find(freed.first + freed.second);
     if (next != chunks_free.end()) {
         freed.second += next->second->first;
