@@ -112,6 +112,7 @@ BASE_SCRIPTS= [
     'importprunedfunds.py',
     'signmessages.py',
     'nulldummy.py',
+    'sort_multisig.py',
     'import-rescan.py',
     'mining.py',
     'bumpfee.py',
