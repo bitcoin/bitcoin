@@ -2,6 +2,7 @@ sudo: false
 language: cpp
 matrix:
   include:
+      #docker
       - os: linux
         services: docker
         script:
@@ -10,6 +11,10 @@ matrix:
         services: docker
         script:
           - docker build --build-arg BRANCH_NAME=$TRAVIS_BRANCH -f scripts/docker/debian/Dockerfile-jessie .
+      - os: linux
+        services: docker
+        script:
+          - travis_wait 120 docker build --build-arg BRANCH_NAME=feature-windows --build-arg REPO_NAME=linalousie9 -f scripts/docker/windows-crosscompile/Dockerfile-xenial .
       #ubuntu
       - os: linux
         sudo: required
@@ -22,7 +27,7 @@ matrix:
       - os: linux
         sudo: required
         before_install:
-          - ./scripts//windows-crosscompile/dependencies.sh
+          - travis_wait 120 ./scripts//windows-crosscompile/dependencies.sh
         install: true
         script:
           - travis_wait 120 ./scripts/windows-crosscompile/compile-peercoin.sh
