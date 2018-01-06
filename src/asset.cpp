@@ -582,8 +582,6 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("Sender balance is insufficient");
 				return true;
 			}
-			// adjust sender balance
-			theAsset.nBalance -= nTotal;
 			for (auto& amountTuple : theAssetAllocation.listSendingAllocationAmounts) {
 				// check receiver alias
 				if (!GetAlias(amountTuple.first, alias))
@@ -610,6 +608,8 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					}
 					
 					receiverAllocation.nBalance += amountTuple.second;
+					// adjust sender balance
+					theAsset.nBalance -= amountTuple.second;
 					receiverAllocation.nHeight = nHeight;
 					receiverAllocation.txHash = tx.GetHash();
 					// we know the receiver update is not a double spend so we lock it in with false meaning we should store previous db entry with this one

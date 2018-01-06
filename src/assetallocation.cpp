@@ -376,9 +376,10 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 							{
 								errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("An alias you are transferring to does not accept asset transfers");
 								continue;
-							}
-							receiverAllocation.nBalance -= amountTuple.second;
+							} 
 							if (!dontaddtodb) {
+								receiverAllocation.nBalance -= amountTuple.second;
+								theAssetAllocation.nBalance += amountTuple.second;
 								receiverAllocation.nHeight = nHeight;
 								receiverAllocation.txHash = tx.GetHash();
 								// we know the receiver update is not a double spend so we lock it in with false meaning we should store previous db entry with this one
@@ -520,7 +521,6 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 				errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("Sender balance is insufficient");
 				return true;
 			}
-			theAssetAllocation.nBalance -= nTotal;
 			for (auto& amountTuple : theAssetAllocation.listSendingAllocationAmounts) {
 				CAssetAllocation receiverAllocation;
 				const CAssetAllocationTuple receiverAllocationTuple(theAssetAllocation.vchAsset, amountTuple.first);
@@ -546,6 +546,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 						receiverAllocation.vchAsset = receiverAllocationTuple.vchAsset;
 					}
 					receiverAllocation.nBalance += amountTuple.second;
+					theAssetAllocation.nBalance -= amountTuple.second;
 					receiverAllocation.nHeight = nHeight;
 					receiverAllocation.txHash = tx.GetHash();
 					// we know the receiver update is not a double spend so we lock it in with false meaning we should store previous db entry with this one
