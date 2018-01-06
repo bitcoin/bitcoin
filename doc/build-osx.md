@@ -22,6 +22,10 @@ If you want to build the disk image with `make deploy` (.dmg / optional), you ne
 
     brew install librsvg
 
+If you want to build with ZeroMQ support
+    
+    brew install zeromq
+
 NOTE: Building with Qt4 is still supported, however, could result in a broken UI. Building with Qt5 is recommended.
 
 Build Litecoin Core
