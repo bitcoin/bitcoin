@@ -86,6 +86,7 @@ public:
     void ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv, CConnman& connman);
 
     bool ProcessTxLockRequest(const CTxLockRequest& txLockRequest, CConnman& connman);
+    void Vote(const uint256& txHash, CConnman& connman);
 
     bool AlreadyHave(const uint256& hash);
 
