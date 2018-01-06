@@ -3,13 +3,13 @@
 #https://github.com/peercoin/peercoin/wiki/Compiling-for-Windows-on-Debian-linux
 
 #dependencies
-sudo apt install -y p7zip-full autoconf automake autopoint bash bison bzip2 cmake flex gettext git g++ gperf intltool libffi-dev libtool libltdl-dev libssl-dev libxml-parser-perl make openssl patch perl pkg-config python ruby scons sed unzip wget xz-utils g++-multilib libc6-dev-i386
+sudo apt install -yqq  p7zip-full autoconf automake autopoint bash bison bzip2 cmake flex gettext git g++ gperf intltool libffi-dev libtool libltdl-dev libssl-dev libxml-parser-perl make openssl patch perl pkg-config python ruby scons sed unzip wget xz-utils g++-multilib libc6-dev-i386
 
 #Missing requirement: libtool
-sudo apt install -y libtool-bin
+sudo apt install -yqq libtool-bin
 
 #Missing requirement: gdk-pixbuf-csource
-sudo apt install -y libgtk2.0-dev
+sudo apt install -yqq libgtk2.0-dev
 
 #install mxe
 pushd /opt
@@ -29,7 +29,7 @@ popd
 wget -O miniupnpc-1.9.tar.gz http://miniupnp.free.fr/files/download.php?file=miniupnpc-1.9.tar.gz
 tar -xf miniupnpc-1.9.tar.gz -C /opt/mxe
 pushd /opt/mxe/miniupnpc-1.9
-#${OLDPWD}/compile-miniupnpc.sh 
+${OLDPWD}/compile-miniupnpc.sh 
 popd
 
 
