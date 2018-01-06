@@ -605,13 +605,13 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					if (receiverAllocation.IsNull()) {
 						receiverAllocation.vchAlias = receiverAllocationTuple.vchAlias;
 						receiverAllocation.vchAsset = receiverAllocationTuple.vchAsset;
+						receiverAllocation.nHeight = nHeight;
+						receiverAllocation.txHash = tx.GetHash();
 					}
 					
 					receiverAllocation.nBalance += amountTuple.second;
 					// adjust sender balance
 					theAsset.nBalance -= amountTuple.second;
-					receiverAllocation.nHeight = nHeight;
-					receiverAllocation.txHash = tx.GetHash();
 					// we know the receiver update is not a double spend so we lock it in with false meaning we should store previous db entry with this one
 					if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, op, fJustCheck))
 					{
