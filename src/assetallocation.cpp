@@ -329,6 +329,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 	CAssetAllocation dbAssetAllocation;
 	CAsset dbAsset;
 	if (GetAssetAllocation(assetAllocationTuple, dbAssetAllocation)){
+		theAssetAllocation.nBalance = dbAssetAllocation.nBalance;
 		bool bSendLocked = false;
 		passetallocationdb->ReadISLock(assetAllocationTuple, bSendLocked);
 		if (!fJustCheck && bSendLocked) {
@@ -466,7 +467,6 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 				nLockStatus = LOCK_NOCONFLICT_UNCONFIRMED_STATE;
 		}
 	}
-	theAssetAllocation.nBalance = dbAssetAllocation.nBalance;
 	theAssetAllocation.vchAlias = vvchAliasArgs[0];
 	if (op == OP_ASSET_ALLOCATION_SEND)
 	{
