@@ -43,7 +43,7 @@
 #include <cpuid.h>
 #endif
 #endif
-
+#ifndef __FreeBSD__
 static inline uint32_t be32dec(const void *pp)
 {
 	const uint8_t *p = (uint8_t const *)pp;
@@ -60,6 +60,7 @@ static inline void be32enc(void *pp, uint32_t x)
 	p[0] = (x >> 24) & 0xff;
 }
 
+#endif
 typedef struct HMAC_SHA256Context {
 	SHA256_CTX ictx;
 	SHA256_CTX octx;
