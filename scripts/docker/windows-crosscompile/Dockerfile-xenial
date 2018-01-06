@@ -12,8 +12,8 @@ RUN apt-get -qq update && \
     git \
     sudo
 RUN git clone ${REPO_URL} --branch $BRANCH_NAME --single-branch --depth 1
-RUN cd /peercoin/scripts/windows-crosscompile && ./dependencies.sh 
 #xenial
 #Missing requirement: libtool
 RUN apt install -yqq libtool-bin
+RUN cd /peercoin/scripts/windows-crosscompile && ./dependencies.sh
 RUN cd /peercoin && scripts/windows-crosscompile/compile-peercoin.sh
