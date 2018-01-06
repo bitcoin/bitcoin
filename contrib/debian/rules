@@ -9,7 +9,7 @@ DEB_INSTALL_MANPAGES_bitcoind += debian/manpages/*
 
 override_dh_auto_clean:
 	if [ -f Makefile ]; then $(MAKE) distclean; fi
-	rm -rf Makefile.in Makefile.am pgk.m4 aclocal.m4 configure src/Makefile.in src/Makefile.qt.include src/Makefile.am src/Makefile.test.include src/Makefile.qttest.include src/bitcoin-config.h.in
+	rm -rf Makefile.in Makefile.am aclocal.m4 configure src/Makefile.in src/Makefile.qt.include src/Makefile.am src/Makefile.test.include src/Makefile.qttest.include src/bitcoin-config.h.in
 
 override_dh_auto_configure:
 	./autogen.sh
