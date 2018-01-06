@@ -7,7 +7,12 @@ VAGRANTFILE_API_VERSION = "2"
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.box = "ubuntu/xenial64"
   #config.disksize.size = '20GB'
-  config.vm.provision :shell, :path => "install.sh", privileged: false
+  $peercoininstall=<<-SCRIPT
+      pushd /peercoin
+      contrib/vagrant/install.sh
+      popd
+  SCRIPT
+  config.vm.provision "shell", inline: $peercoininstall, privileged: false
 
   # Share an additional folder to the guest VM. The first argument is
   # the path on the host to the actual folder. The second argument is
