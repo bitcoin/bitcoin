@@ -26,11 +26,10 @@ matrix:
       #cross compile windows
       - os: linux
         sudo: required
-        #cache:
-        #  directories:
-        #  - /opt/mxe
+        cache:
+          directories:
+          - /opt/mxe
         before_install:
-          - while true; do sleep 60; echo -n ' '; done &
           - travis_wait 120 ./scripts//windows-crosscompile/dependencies.sh
         install: true
         script:

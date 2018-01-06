@@ -14,8 +14,14 @@ sudo apt install -yqq libgtk2.0-dev
 
 #install mxe
 pushd /opt
-test -e "/opt/mxe" || sudo chown -R `whoami` /opt
-test -e "/opt/mxe" || git clone https://github.com/mxe/mxe.git
+sudo chown -R `whoami` /opt
+pushd mxe
+git init || true
+git remote add origin https://github.com/mxe/mxe.git || true
+git fetch
+git reset origin/master
+git checkout -t origin/master || true
+popd
 popd
 
 #compile boost
