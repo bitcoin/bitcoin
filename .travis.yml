@@ -25,7 +25,7 @@ matrix:
           - ./scripts//windows-crosscompile/dependencies.sh
         install: true
         script:
-          - ./scripts/windows-crosscompile/compile-peercoin.sh
+          - travis_wait 120 ./scripts/windows-crosscompile/compile-peercoin.sh
       #osx     
       - os: osx
         osx_image: xcode9.2
