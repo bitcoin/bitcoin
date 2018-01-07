@@ -193,6 +193,8 @@ struct DecodeDetails {
 		nOut = details.nOut;
 		vvchArgs = details.vvchArgs;
 	}
+	DecodeDetails() {
+	}
 };
 struct AllocationSenderSort {
 	bool operator() (const vector<unsigned char>, int>& a, const vector<unsigned char>, int>& b) const {
