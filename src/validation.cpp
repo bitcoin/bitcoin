@@ -619,9 +619,8 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight,con
 			}
 		}
 		else if (!block.IsNull()) {
-			typedef unordered_map<vector<unsigned char>, int> aliasPositionType;
-			unordered_map<aliasPositionType> mapSenderOrderPosition;
-			unordered_map<vector<unsigned char>, unordered_set<vector<unsigned char> > mapReceiverVOutPosition;
+			unordered_map<vector<unsigned char>, int> mapSenderOrderPosition;
+			unordered_map<vector<unsigned char>, unordered_set<vector<unsigned char> > > mapReceiverVOutPosition;
 			unordered_map<vector<unsigned char>, DecodeDetails> mapSenderDetails;
 			for (unsigned int i = 0; i < block.vtx.size(); i++)
 			{
@@ -681,8 +680,9 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight,con
 					}
 				}
 			}
-			sort(mapSenderOrderPosition.begin(), mapSenderOrderPosition.end(), AllocationSenderSort);
-			for (auto& senderPosition : mapSenderOrderPosition) {
+			std::vector<std::pair<vector<unsigned char>, int> > elems(mapSenderOrderPosition.begin(), mapSenderOrderPosition.end());
+			std::sort(elems.begin(), elems.end(), AllocationSenderSort);
+			for (auto& senderPosition : elems) {
 				const DecodeDetails& details = mapSenderDetails[senderPosition.first].second;
 				errorMessage.clear();
 				good = CheckAssetAllocationInputs(tx, details.op, details.nOut, details.vvchArgs, senderPosition.first, fJustCheck, nHeight, errorMessage);
