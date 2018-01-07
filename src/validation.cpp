@@ -690,7 +690,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight,con
 			std::vector<std::pair<vector<unsigned char>, int> > elems(mapSenderOrderPosition.begin(), mapSenderOrderPosition.end());
 			std::sort(elems.begin(), elems.end(), AllocationSenderSort);
 			for (auto& senderPosition : elems) {
-				const DecodeDetails& details = mapSenderDetails[senderPosition.first].second;
+				const DecodeDetails& details = mapSenderDetails[senderPosition.first];
 				errorMessage.clear();
 				good = CheckAssetAllocationInputs(tx, details.op, details.nOut, details.vvchArgs, senderPosition.first, fJustCheck, nHeight, errorMessage);
 				if (fDebug && !errorMessage.empty())
