@@ -222,6 +222,7 @@ public:
 		Erase(make_pair(std::string("offerp"), vchOffer));
 		EraseISLock(vchOffer);
 		EraseOfferIndex(vchOffer, cleanup);
+		EraseOfferIndexHistory(vchOffer, cleanup);
 	    return eraseState;
 	}
 

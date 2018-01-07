@@ -110,6 +110,7 @@ public:
 		Erase(make_pair(std::string("certf"), vchCert));
 		EraseISLock(vchCert);
 		EraseCertIndex(vchCert, cleanup);
+		EraseCertIndexHistory(vchCert, cleanup);
         return eraseState;
     }
 

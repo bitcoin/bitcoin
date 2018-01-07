@@ -117,6 +117,7 @@ public:
 		Erase(make_pair(std::string("assetp"), vchAsset));
 		EraseISLock(vchAsset);
 		EraseAssetIndex(vchAsset, cleanup);
+		EraseAssetIndexHistory(vchAsset, cleanup);
 		return eraseState;
 	}
     bool ReadAsset(const std::vector<unsigned char>& vchAsset, CAsset& asset) {

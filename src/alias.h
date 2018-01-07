@@ -44,6 +44,7 @@ enum {
 	LOCK_NOCONFLICT_CONFIRMED_STATE,
 	LOCK_CONFLICT_UNCONFIRMED_STATE,
 	LOCK_CONFLICT_CONFIRMED_STATE,
+	UNKNOWN,
 };
 enum {
 	ACCEPT_TRANSFER_NONE=0,
@@ -269,6 +270,8 @@ public:
 		Erase(make_pair(std::string("namep"), vchAlias));
 		EraseISLock(vchAlias);
 		EraseAliasIndex(vchAlias, cleanup);
+		EraseAliasIndexHistory(vchAlias, cleanup);
+		EraseAliasIndexTxHistory(vchAlias, cleanup);
 		return eraseState;
 	}
 	bool ReadAlias(const std::vector<unsigned char>& vchAlias, CAliasIndex& alias) {

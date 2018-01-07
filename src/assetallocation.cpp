@@ -400,7 +400,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 						errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from assetallocation DB");
 						return error(errorMessage.c_str());
 					}
-					passetallocationdb->EraseAssetAllocationIndex(assetAllocationTuple);
+					paliasdb->EraseAliasIndexTxHistory(dbAssetAllocation.txHash.GetHex() + "-" + assetAllocationTuple.ToString());
 				}
 			}
 			else {
@@ -533,7 +533,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 					}
 					// only need to add this on mempool inclusion so receivers will be notified of a new asset send, then can check the validity of that via looking up in aliasindex tx history table the appropriate entries "up the chain"
 					if (strResponse != "" && fJustCheck) {
-						paliasdb->WriteAliasIndexTxHistory(user1, stringFromVch(receiverAllocation.vchAlias), user3, tx.GetHash(), nHeight, strResponseEnglish, receiverAllocationTuple.ToString(), nLockStatus);
+						paliasdb->WriteAliasIndexTxHistory(user1, stringFromVch(receiverAllocation.vchAlias), user3, tx.GetHash(), nHeight, strResponseEnglish, receiverAllocationTuple.ToString(), UNKNOWN);
 					}
 				}
 			}
