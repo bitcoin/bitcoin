@@ -311,7 +311,7 @@ int GetUTXOConfirmations(const COutPoint& outpoint);
 std::string FormatStateMessage(const CValidationState &state);
 
 // SYSCOIN
-bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight = 0);
+bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight, const CBlock& block);
 
 /** Get the BIP9 state for a given deployment at the current tip. */
 ThresholdState VersionBitsTipState(const Consensus::Params& params, Consensus::DeploymentPos pos);
@@ -638,7 +638,7 @@ unsigned int GetP2SHSigOpCount(const CTransaction& tx, const CCoinsViewCache& ma
  * instead of being performed inline.
  */
 bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &view, bool fScriptChecks,
-                 unsigned int flags, bool cacheStore, std::vector<CScriptCheck> *pvChecks = NULL, int nHeight=0);
+                 unsigned int flags, bool cacheStore, std::vector<CScriptCheck> *pvChecks = NULL);
 
 /** Apply the effects of this transaction on the UTXO set represented by view */
 void UpdateCoins(const CTransaction& tx, CValidationState &state, CCoinsViewCache &inputs, int nHeight);

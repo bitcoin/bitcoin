@@ -52,6 +52,8 @@
 #include <boost/thread.hpp>
 // SYSCOIN
 #include "auxpow.h"
+#include <unordered_map>
+#include <unordered_set>
 #include "offer.h"
 #include "cert.h"
 #include "alias.h"
@@ -177,7 +179,21 @@ namespace {
 	/** Dirty block file entries. */
 	set<int> setDirtyFileInfo;
 } // anon namespace
-
+struct DecodeDetails {
+	int op;
+	int nOut;
+	vector<vector<unsigned char> > vvchArgs;
+	DecodeDetails(int _op, int _nOut, const vector<vector<unsigned char> > & _vvchArgs) {
+		op = _op;
+		nOut = _nOut;
+		vvchArgs = _vvchArgs;
+	}
+};
+struct AllocationSenderSort {
+	bool operator() (const vector<unsigned char>, int>& a, const vector<unsigned char>, int>& b) const {
+		return a.second < b.second;
+	};
+};
 CBlockIndex* FindForkInGlobalIndex(const CChain& chain, const CBlockLocator& locator)
 {
 	// Find the first block the caller has in the main chain
@@ -544,7 +560,7 @@ std::string FormatStateMessage(const CValidationState &state)
 		state.GetRejectCode());
 }
 // SYSCOIN
-bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight)
+bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight,const CBlock& block)
 {
 	vector<vector<unsigned char> > vvchArgs;
 	vector<vector<unsigned char> > vvchAliasArgs;
@@ -553,7 +569,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight)
 	if (nHeight == 0)
 		nHeight = chainActive.Height();
 	string errorMessage;
-	if (tx.nVersion == GetSyscoinTxVersion())
+	if (block.IsNull() && tx.nVersion == GetSyscoinTxVersion())
 	{
 		bool bDestCheckFailed = false;
 		bool good = true;
@@ -602,6 +618,79 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight)
 					LogPrintf("%s\n", errorMessage.c_str());
 			}
 		}
+		else if (!block.IsNull()) {
+			typedef unordered_map<vector<unsigned char>, int> aliasPositionType;
+			unordered_map<aliasPositionType> mapSenderOrderPosition;
+			unordered_map<vector<unsigned char>, unordered_set<vector<unsigned char> > mapReceiverVOutPosition;
+			unordered_map<vector<unsigned char>, DecodeDetails> mapSenderDetails;
+			for (unsigned int i = 0; i < block.vtx.size(); i++)
+			{
+				const CTransaction &tx = block.vtx[i];
+				if (tx.nVersion == GetSyscoinTxVersion())
+				{
+					bool bDestCheckFailed = false;
+					bool good = true;
+					if (DecodeAliasTx(tx, op, nOut, vvchAliasArgs))
+					{
+						errorMessage.clear();
+						good = CheckAliasInputs(tx, op, nOut, vvchAliasArgs, fJustCheck, nHeight, errorMessage, bDestCheckFailed);
+						if (fDebug && !errorMessage.empty())
+							LogPrintf("%s\n", errorMessage.c_str());
+					}
+					if (!bDestCheckFailed && !vvchAliasArgs.empty() && good && errorMessage.empty())
+					{
+						if (DecodeCertTx(tx, op, nOut, vvchArgs))
+						{
+							errorMessage.clear();
+							good = CheckCertInputs(tx, op, nOut, vvchArgs, vvchAliasArgs, fJustCheck, nHeight, errorMessage);
+							if (fDebug && !errorMessage.empty())
+								LogPrintf("%s\n", errorMessage.c_str());
+						}
+						if (DecodeAssetTx(tx, op, nOut, vvchArgs))
+						{
+							errorMessage.clear();
+							good = CheckAssetInputs(tx, op, nOut, vvchArgs, vvchAliasArgs, fJustCheck, nHeight, errorMessage);
+							if (fDebug && !errorMessage.empty())
+								LogPrintf("%s\n", errorMessage.c_str());
+						}
+						else if (DecodeAssetAllocationTx(tx, op, nOut, vvchArgs))
+						{
+							mapSenderDetails[vvchAliasArgs[0]] = DecodeDetails(op, nOut, vvchArgs);
+							mapSenderOrderPosition[vvchAliasArgs[0]] = 0;
+							CAssetAllocation allocation(tx);
+							if (!allocation.listSendingAllocationAmounts.empty()) {
+								for (auto& allocation : allocation.listSendingAllocationAmounts) {
+									mapReceiverVOutPosition[vvchAliasArgs[0]].insert(allocation.first);
+								}
+							}
+						}
+						else if (DecodeEscrowTx(tx, op, nOut, vvchArgs))
+						{
+							errorMessage.clear();
+							good = CheckEscrowInputs(tx, op, nOut, vvchArgs, vvchAliasArgs, fJustCheck, nHeight, errorMessage);
+							if (fDebug && !errorMessage.empty())
+								LogPrintf("%s\n", errorMessage.c_str());
+						}
+						else if (DecodeOfferTx(tx, op, nOut, vvchArgs))
+						{
+							errorMessage.clear();
+							good = CheckOfferInputs(tx, op, nOut, vvchArgs, vvchAliasArgs, fJustCheck, nHeight, errorMessage);
+							if (fDebug && !errorMessage.empty())
+								LogPrintf("%s\n", errorMessage.c_str());
+						}
+					}
+				}
+			}
+			sort(mapSenderOrderPosition.begin(), mapSenderOrderPosition.end(), AllocationSenderSort);
+			for (auto& senderPosition : mapSenderOrderPosition) {
+				const DecodeDetails& details = mapSenderDetails[senderPosition.first].second;
+				errorMessage.clear();
+				good = CheckAssetAllocationInputs(tx, details.op, details.nOut, details.vvchArgs, senderPosition.first, fJustCheck, nHeight, errorMessage);
+				if (fDebug && !errorMessage.empty())
+					LogPrintf("%s\n", errorMessage.c_str());
+			}
+		}
+		
 		if (!good)
 		{
 			return false;
@@ -1041,7 +1130,8 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 			return error("%s: BUG! PLEASE REPORT THIS! ConnectInputs failed against MANDATORY but not STANDARD flags %s, %s",
 				__func__, hash.ToString(), FormatStateMessage(state));
 		}
-
+		if (!CheckSyscoinInputs(tx, true, nHeight, CBlock()))
+			return false;
 		// Remove conflicting transactions from the mempool
 		BOOST_FOREACH(const CTxMemPool::txiter it, allConflicting)
 		{
@@ -1623,7 +1713,7 @@ namespace Consensus {
 	}
 }// namespace Consensus
 
-bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &inputs, bool fScriptChecks, unsigned int flags, bool cacheStore, std::vector<CScriptCheck> *pvChecks, int nHeight)
+bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &inputs, bool fScriptChecks, unsigned int flags, bool cacheStore, std::vector<CScriptCheck> *pvChecks)
 {
 	if (!tx.IsCoinBase())
 	{
@@ -1676,12 +1766,6 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
 					// super-majority vote has passed.
 					return state.DoS(100, false, REJECT_INVALID, strprintf("mandatory-script-verify-flag-failed (%s)", ScriptErrorString(check.GetScriptError())));
 				}
-			}
-			// SYSCOIN
-			// nheight is 0 during mempool inclusion and not 0 during connect block, so we want to ensure we only call checksyscoininputs on initial mempool inclusion with cacheStore true and on connect block with height being next block height (so not 0) and cacheStore false
-			if ((nHeight != 0 && !cacheStore) || (nHeight == 0 && cacheStore && flags == STANDARD_SCRIPT_VERIFY_FLAGS)) {
-				if (!CheckSyscoinInputs(tx, nHeight == 0, nHeight))
-					return false;
 			}
 		}
 	}
@@ -2224,7 +2308,9 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 	std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue> > addressUnspentIndex;
 	std::vector<std::pair<CSpentIndexKey, CSpentIndexValue> > spentIndex;
 
-
+	if(!CheckSyscoinInputs(block.vtx[0], false, pindex->nHeight, block))
+		return error("ConnectBlock(): CheckSyscoinInputs on block %s failed",
+			block.GetHash().ToString());
 	for (unsigned int i = 0; i < block.vtx.size(); i++)
 	{
 		const CTransaction &tx = block.vtx[i];
@@ -2323,12 +2409,12 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 
 			std::vector<CScriptCheck> vChecks;
 			bool fCacheResults = fJustCheck; /* Don't cache results if we're actually connecting blocks (still consult the cache, though) */
-			if (!CheckInputs(tx, state, view, fScriptChecks, flags, fCacheResults, nScriptCheckThreads ? &vChecks : NULL, pindex->nHeight))
+			if (!CheckInputs(tx, state, view, fScriptChecks, flags, fCacheResults, nScriptCheckThreads ? &vChecks : NULL, pindex->nHeight, block))
 				return error("ConnectBlock(): CheckInputs on %s failed with %s",
 					tx.GetHash().ToString(), FormatStateMessage(state));
 			control.Add(vChecks);
 		}
-
+		
 		if (fAddressIndex) {
 			for (unsigned int k = 0; k < tx.vout.size(); k++) {
 				const CTxOut &out = tx.vout[k];
