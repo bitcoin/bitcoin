@@ -658,8 +658,8 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight,con
 							mapSenderOrderPosition[vvchAliasArgs[0]] = 0;
 							CAssetAllocation allocation(tx);
 							if (!allocation.listSendingAllocationAmounts.empty()) {
-								for (auto& allocation : allocation.listSendingAllocationAmounts) {
-									mapReceiverVOutPosition[vvchAliasArgs[0]].insert(allocation.first);
+								for (auto& allocationInstance : allocation.listSendingAllocationAmounts) {
+									mapReceiverVOutPosition[allocationInstance.first].insert(vvchAliasArgs[0]);
 								}
 							}
 						}
