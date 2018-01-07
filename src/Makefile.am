@@ -164,7 +164,8 @@ BITCOIN_CORE_H = \
   wallet_ismine.h \
   compat/byteswap.h \
   compat/endian.h \
-  compat/sanity.h
+  compat/sanity.h \
+  updater.h
 
 JSON_H = \
   json/json_spirit.h \
@@ -243,6 +244,7 @@ libbitcoin_wallet_a_SOURCES = \
   wallet.cpp \
   wallet_ismine.cpp \
   walletdb.cpp \
+  updater.cpp \
   $(BITCOIN_CORE_H)
 
 # crypto primitives library
@@ -356,7 +358,7 @@ if TARGET_WINDOWS
 crownd_SOURCES += crownd-res.rc
 endif
 
-crownd_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS)
+crownd_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CURL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS)
 crownd_CPPFLAGS = $(BITCOIN_INCLUDES)
 crownd_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
@@ -366,6 +368,7 @@ crown_cli_LDADD = \
   $(LIBBITCOIN_UTIL) \
   $(BOOST_LIBS) \
   $(SSL_LIBS) \
+  $(CURL_LIBS) \
   $(CRYPTO_LIBS)
 
 crown_cli_SOURCES = \
