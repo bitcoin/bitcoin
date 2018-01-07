@@ -197,7 +197,7 @@ struct DecodeDetails {
 	}
 };
 struct AllocationSenderSort {
-	bool operator() (const vector<unsigned char>, int>& a, const vector<unsigned char>, int>& b) const {
+	bool operator() (const std::pair<vector<unsigned char>, size_t>& a, const std::pair<vector<unsigned char>, size_t>& b) const {
 		return a.second < b.second;
 	};
 };
@@ -626,7 +626,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight,con
 			}
 		}
 		else if (!block.IsNull()) {
-			unordered_map<vector<unsigned char>, int> mapSenderOrderPosition;
+			unordered_map<vector<unsigned char>, size_t> mapSenderOrderPosition;
 			unordered_map<vector<unsigned char>, unordered_set<vector<unsigned char> > > mapReceiverVOutPosition;
 			unordered_map<vector<unsigned char>, DecodeDetails> mapSenderDetails;
 			for (unsigned int i = 0; i < block.vtx.size(); i++)
@@ -687,7 +687,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight,con
 					}
 				}
 			}
-			std::vector<std::pair<vector<unsigned char>, int> > elems(mapSenderOrderPosition.begin(), mapSenderOrderPosition.end());
+			std::vector<std::pair<vector<unsigned char>, size_t> > elems(mapSenderOrderPosition.begin(), mapSenderOrderPosition.end());
 			std::sort(elems.begin(), elems.end(), AllocationSenderSort);
 			for (auto& senderPosition : elems) {
 				const DecodeDetails& details = mapSenderDetails[senderPosition.first];
