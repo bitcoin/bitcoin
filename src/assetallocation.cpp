@@ -320,6 +320,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 	}
 	const CAssetAllocationTuple assetAllocationTuple(theAssetAllocation.vchAsset, vvchAliasArgs[0]);
 	const string &user3 = "";
+	const string &user2 = "";
 	const string &user1 = stringFromVch(vvchAliasArgs[0]);
 	string strResponseEnglish = "";
 	string strResponse = GetSyscoinTransactionDescription(op, strResponseEnglish, ASSETALLOCATION);
@@ -417,20 +418,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 						errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from assetallocation DB");
 						return error(errorMessage.c_str());
 					}
-					if (!dontaddtodb && strResponse != "" && aliastxhistory_collection) {
-						if (dbAssetAllocation.vchAlias == vvchAliasArgs[0]) {
-							if (dbAssetAllocation.listSendingAllocationInputs.empty()) {
-								for (auto& amountTuple : dbAssetAllocation.listSendingAllocationAmounts) {
-									const CAssetAllocationTuple receiverAllocationTuple(dbAssetAllocation.vchAsset, amountTuple.first);
-									if (strResponse != "") {
-										paliasdb->UpdateAliasIndexTxHistoryLockStatus(tx.GetHash().GetHex() + "-" + receiverAllocationTuple.ToString(), nLockStatus);
-									}
-								}
-
-							}
-
-						}
-					}
+					paliasdb->UpdateAliasIndexTxHistoryLockStatus(tx.GetHash().GetHex() + "-" + assetAllocationTuple.ToString(), nLockStatus);
 				}
 				return true;
 			}
@@ -441,15 +429,8 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 			{
 				if (!dontaddtodb) {
 					nLockStatus = LOCK_CONFLICT_UNCONFIRMED_STATE;
-					if (!dontaddtodb && strResponse != "" && aliastxhistory_collection) {
-						if (dbAssetAllocation.listSendingAllocationInputs.empty()) {
-							for (auto& amountTuple : dbAssetAllocation.listSendingAllocationAmounts) {
-								const CAssetAllocationTuple receiverAllocationTuple(dbAssetAllocation.vchAsset, amountTuple.first);
-								if (strResponse != "") {
-									paliasdb->UpdateAliasIndexTxHistoryLockStatus(dbAssetAllocation.txHash.GetHex() + "-" + receiverAllocationTuple.ToString(), nLockStatus);
-								}
-							}
-						}
+					if (strResponse != "") {
+						paliasdb->UpdateAliasIndexTxHistoryLockStatus(dbAssetAllocation.txHash.GetHex() + "-" + assetAllocationTuple.ToString(), nLockStatus);
 					}
 				}
 				errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Block height of service request must be less than or equal to the stored service block height.");
@@ -550,18 +531,23 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 						errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to write to asset allocation DB");
 						continue;
 					}
-					if (strResponse != "") {
+					// only need to add this on mempool inclusion so receivers will be notified of a new asset send, then can check the validity of that via looking up in aliasindex tx history table the appropriate entries "up the chain"
+					if (strResponse != "" && fJustCheck) {
 						paliasdb->WriteAliasIndexTxHistory(user1, stringFromVch(receiverAllocation.vchAlias), user3, tx.GetHash(), nHeight, strResponseEnglish, receiverAllocationTuple.ToString(), nLockStatus);
 					}
 				}
 			}
 		}
 	}
+
 	// set the assetallocation's txn-dependent values
 	theAssetAllocation.nHeight = nHeight;
 	theAssetAllocation.txHash = tx.GetHash();
 	// write assetallocation  
 	if (!dontaddtodb) {
+		if (strResponse != "") {
+			paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, assetAllocationTuple.ToString(), nLockStatus);
+		}
 		if (!passetallocationdb->WriteAssetAllocation(theAssetAllocation, op, fJustCheck))
 		{
 			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to write to asset allocation DB");
