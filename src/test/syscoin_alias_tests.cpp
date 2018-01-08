@@ -23,7 +23,6 @@ BOOST_AUTO_TEST_CASE(generate_graph_topological_sort) {
 	graph.Nodes.push_back(CGraphNode("C", "F"));
 	graph.Nodes.push_back(CGraphNode("C", "G"));
 	graph.Nodes.push_back(CGraphNode("C", "B"));
-	graph.Nodes.push_back(graphNode);
 
 	graph.Nodes.push_back(CGraphNode("A", "B"));
 
