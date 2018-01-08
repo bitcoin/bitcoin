@@ -196,11 +196,9 @@ struct DecodeDetails {
 	DecodeDetails() {
 	}
 };
-struct AllocationSenderSort {
-	bool operator() (const std::pair<string, size_t>& a, const std::pair<string, size_t>& b) const {
-		return a.second < b.second;
-	};
-};
+bool AllocationSenderSort(const std::pair<string, size_t>& a, const std::pair<string, size_t>& b) const {
+	return a.second < b.second;
+}
 CBlockIndex* FindForkInGlobalIndex(const CChain& chain, const CBlockLocator& locator)
 {
 	// Find the first block the caller has in the main chain
@@ -693,7 +691,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight,con
 			for (auto& senderPosition : elems) {
 				const DecodeDetails& details = mapSenderDetails[senderPosition.first];
 				errorMessage.clear();
-				good = CheckAssetAllocationInputs(tx, details.op, details.nOut, details.vvchArgs, senderPosition.first, fJustCheck, nHeight, errorMessage);
+				good = CheckAssetAllocationInputs(tx, details.op, details.nOut, details.vvchArgs, vchFromString(senderPosition.first), fJustCheck, nHeight, errorMessage);
 				if (fDebug && !errorMessage.empty())
 					LogPrintf("%s\n", errorMessage.c_str());
 			}
