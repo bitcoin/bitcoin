@@ -22,7 +22,7 @@
     #define PLATFORM_IS_LITTLE_ENDIAN false
   #endif
 #elif defined(OS_FREEBSD) || defined(OS_OPENBSD) ||\
-      defined(OS_NETBSD) || defined(__NetBSD__) || defined(OS_DRAGONFLYBSD)
+      defined(OS_NETBSD) || defined(OS_DRAGONFLYBSD)
   #include <sys/types.h>
   #include <sys/endian.h>
   #define PLATFORM_IS_LITTLE_ENDIAN (_BYTE_ORDER == _LITTLE_ENDIAN)
