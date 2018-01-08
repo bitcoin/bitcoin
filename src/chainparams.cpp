@@ -127,6 +127,7 @@ public:
         vSeeds.push_back(CDNSSeedData("europe.hodlcoin.com", "europe.hodlcoin.com")); //Europe
         vSeeds.push_back(CDNSSeedData("asia.hodlcoin.com", "asia.hodlcoin.com"));//Asia
         vSeeds.push_back(CDNSSeedData("seed.hodlcoin.oo.fi", "seed.hodlcoin.oo.fi"));//Canada, DNS seed
+	vSeeds.push_back(CDNSSeedData("seed.hodlcoin.dk", "seed.hodlcoin.dk"));//Denmark, DNS seed    
         vSeeds.push_back(CDNSSeedData("174.140.166.133","174.140.166.133"));//Hodl-lay-yee-hoo
         vSeeds.push_back(CDNSSeedData("54.201.171.55", "54.201.171.55"));
         vSeeds.push_back(CDNSSeedData("54.213.104.91", "54.213.104.91"));
