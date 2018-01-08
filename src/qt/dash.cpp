@@ -624,7 +624,7 @@ int main(int argc, char *argv[])
     /// 5. Now that settings and translations are available, ask user for data directory
     // User language is set up: pick a data directory
     if (!Intro::pickDataDirectory())
-        return 0;
+        return EXIT_SUCCESS;
 
     /// 6. Determine availability of data directory and parse dash.conf
     /// - Do not call GetDataDir(true) before this step finishes
