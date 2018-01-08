@@ -19,19 +19,17 @@ BOOST_FIXTURE_TEST_SUITE (syscoin_alias_tests, BasicSyscoinTestingSetup)
 const unsigned int MAX_ALIAS_UPDATES_PER_BLOCK = 5;
 BOOST_AUTO_TEST_CASE(generate_graph_topological_sort) {
 	CGraph graph;
-	CGraphNode graphNode = CGraphNode("B");
-	graphNode.Children.push_back(CGraphNode("C"));
-	graph.Nodes.push_back(graphNode);
-
-	graphNode = CGraphNode("E");
-	graphNode.Children.push_back(CGraphNode("C"));
+	CGraphNode graphNode = CGraphNode("C");
+	graphNode.Children.push_back(CGraphNode("E"));
+	graphNode.Children.push_back(CGraphNode("B"));
 	graph.Nodes.push_back(graphNode);
 
 	graphNode = CGraphNode("A");
 	graphNode.Children.push_back(CGraphNode("B"));
 	graph.Nodes.push_back(graphNode);
 
-	graphNode = CGraphNode("C");
+	graphNode = CGraphNode("B");
+	graphNode.Children.push_back(CGraphNode("C"));
 	graphNode.Children.push_back(CGraphNode("D"));
 	graph.Nodes.push_back(graphNode);
 
@@ -41,7 +39,7 @@ BOOST_AUTO_TEST_CASE(generate_graph_topological_sort) {
 	for (auto& r : results) {
 		printf("%s\n", r.c_str());
 	}
-	printf("END\n-----\n");
+	printf("END\n");
 
 }
 BOOST_AUTO_TEST_CASE (generate_big_aliasdata)
