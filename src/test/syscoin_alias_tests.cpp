@@ -12,10 +12,16 @@
 #include "chainparams.h"
 #include <boost/test/unit_test.hpp>
 #include <boost/lexical_cast.hpp>
+#include "graph.h"
 BOOST_GLOBAL_FIXTURE( SyscoinTestingSetup );
 
 BOOST_FIXTURE_TEST_SUITE (syscoin_alias_tests, BasicSyscoinTestingSetup)
 const unsigned int MAX_ALIAS_UPDATES_PER_BLOCK = 5;
+BOOST_AUTO_TEST_CASE(generate_graph_topological_sort) {
+	CGraphNode graphNode;
+	CGraph graph;
+
+}
 BOOST_AUTO_TEST_CASE (generate_big_aliasdata)
 {
 	UniValue r;
