@@ -334,7 +334,7 @@ bool RemoveAssetScriptPrefix(const CScript& scriptIn, CScript& scriptOut) {
 	return true;
 }
 
-bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const std::vector<std::vector<unsigned char> > &vvchAliasArgs,
+bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const std::vector<unsigned char> &vvchAlias,
         bool fJustCheck, int nHeight, string &errorMessage, bool dontaddtodb) {
 	if (!paliasdb || !passetdb)
 		return false;
@@ -434,7 +434,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			return error(errorMessage.c_str());
 		}
 	}
-	const string &user1 = stringFromVch(vvchAliasArgs[0]);
+	const string &user1 = stringFromVch(vvchAlias);
 	string user2 = "";
 	string user3 = "";
 	if (op == OP_ASSET_TRANSFER) {
@@ -536,7 +536,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	}
 	if (op == OP_ASSET_UPDATE || op == OP_ASSET_TRANSFER || op == OP_ASSET_SEND)
 	{
-		if (dbAsset.vchAlias != vvchAliasArgs[0])
+		if (dbAsset.vchAlias != vvchAlias)
 		{
 			errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot edit this asset. Asset owner must sign off on this change");
 			return true;
@@ -557,7 +557,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		theAsset = dbAsset;
 
 		CAssetAllocation dbAssetAllocation;
-		const CAssetAllocationTuple allocationTuple(theAssetAllocation.vchAsset, vvchAliasArgs[0]);
+		const CAssetAllocationTuple allocationTuple(theAssetAllocation.vchAsset, vvchAlias);
 		GetAssetAllocation(allocationTuple, dbAssetAllocation);
 		if (theAssetAllocation.listSendingAllocationInputs.empty()) {
 			if (!dbAssetAllocation.listAllocationInputs.empty()) {

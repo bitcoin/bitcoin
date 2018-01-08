@@ -261,7 +261,7 @@ bool RemoveAssetAllocationScriptPrefix(const CScript& scriptIn, CScript& scriptO
 	return true;
 }
 
-bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const std::vector<std::vector<unsigned char> > &vvchAliasArgs,
+bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const std::vector<unsigned char> &vvchAlias,
         bool fJustCheck, int nHeight, string &errorMessage, bool dontaddtodb) {
 	if (!paliasdb || !passetallocationdb)
 		return false;
@@ -318,10 +318,10 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 			return error(errorMessage.c_str());
 		}
 	}
-	const CAssetAllocationTuple assetAllocationTuple(theAssetAllocation.vchAsset, vvchAliasArgs[0]);
+	const CAssetAllocationTuple assetAllocationTuple(theAssetAllocation.vchAsset, vvchAlias);
 	const string &user3 = "";
 	const string &user2 = "";
-	const string &user1 = stringFromVch(vvchAliasArgs[0]);
+	const string &user1 = stringFromVch(vvchAlias);
 	string strResponseEnglish = "";
 	string strResponse = GetSyscoinTransactionDescription(op, strResponseEnglish, ASSETALLOCATION);
 	char nLockStatus = NOLOCK_UNCONFIRMED_STATE;
@@ -445,7 +445,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 				nLockStatus = LOCK_NOCONFLICT_UNCONFIRMED_STATE;
 		}
 	}
-	theAssetAllocation.vchAlias = vvchAliasArgs[0];
+	theAssetAllocation.vchAlias = vvchAlias;
 	if (op == OP_ASSET_ALLOCATION_SEND)
 	{
 		if (dbAssetAllocation.IsNull())
@@ -469,7 +469,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 				// deduct qty from sender and add to receiver
 				// commit receiver details to database using  through receiver alias/assetallocation id tuple as key
 		// commit sender details to database
-		if (dbAssetAllocation.vchAlias != vvchAliasArgs[0])
+		if (dbAssetAllocation.vchAlias != vvchAlias)
 		{
 			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot send this asset. Asset allocation owner must sign off on this change");
 			return true;

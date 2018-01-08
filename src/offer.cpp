@@ -308,7 +308,7 @@ bool RemoveOfferScriptPrefix(const CScript& scriptIn, CScript& scriptOut) {
 	return true;
 }
 
-bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const std::vector<std::vector<unsigned char> > &vvchAliasArgs, bool fJustCheck, int nHeight, string &errorMessage, bool dontaddtodb) {
+bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const std::vector<unsigned char> &vvchAlias, bool fJustCheck, int nHeight, string &errorMessage, bool dontaddtodb) {
 	if (!pofferdb || !paliasdb)
 		return false;
 	if (tx.IsCoinBase() && !fJustCheck && !dontaddtodb)
@@ -492,7 +492,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			return error(errorMessage.c_str());
 		}
 	}
-	const string &user1 = stringFromVch(vvchAliasArgs[0]);
+	const string &user1 = stringFromVch(vvchAlias);
 	string user2 = "";
 	string user3 = "";
 	if (op == OP_OFFER_UPDATE) {
@@ -593,7 +593,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		}
 	}
 	if (op == OP_OFFER_UPDATE) {
-		if (dbOffer.vchAlias != vvchAliasArgs[0])
+		if (dbOffer.vchAlias != vvchAlias)
 		{
 			errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot edit this offer. Offer owner must sign off on this change.");
 			return true;
@@ -667,7 +667,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1051 - " + _("Linked offer alias not found. It may be expired");
 				return true;
 			}
-			if (theAlias.offerWhitelist.GetLinkEntryByHash(vvchAliasArgs[0], entry))
+			if (theAlias.offerWhitelist.GetLinkEntryByHash(vvchAlias, entry))
 			{
 				if (theOffer.nCommission <= -entry.nDiscountPct)
 				{

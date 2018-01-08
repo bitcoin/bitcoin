@@ -342,7 +342,7 @@ bool RemoveCertScriptPrefix(const CScript& scriptIn, CScript& scriptOut) {
 	return true;
 }
 
-bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const std::vector<std::vector<unsigned char> > &vvchAliasArgs,
+bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const std::vector<unsigned char> &vvchAlias,
         bool fJustCheck, int nHeight, string &errorMessage, bool dontaddtodb) {
 	if (!pcertdb || !paliasdb)
 		return false;
@@ -440,7 +440,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 			return error(errorMessage.c_str());
 		}
 	}
-	const string &user1 = stringFromVch(vvchAliasArgs[0]);
+	const string &user1 = stringFromVch(vvchAlias);
 	string user2 = "";
 	string user3 = "";
 	if (op == OP_CERT_TRANSFER) {
@@ -541,7 +541,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 	}
 	if(op != OP_CERT_ACTIVATE) 
 	{
-		if (dbCert.vchAlias != vvchAliasArgs[0])
+		if (dbCert.vchAlias != vvchAlias)
 		{
 			errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot update this certificate. Certificate owner must sign off on this change.");
 			return true;
