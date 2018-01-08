@@ -14,6 +14,11 @@ struct CGraphNode
 	{
 		
 	}
+	CGraphNode(const string& _Data)
+	{
+		Data = _Data;
+		Children.clear();
+	}
 };
 
 // An range has start and end index

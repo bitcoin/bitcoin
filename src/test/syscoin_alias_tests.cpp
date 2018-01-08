@@ -20,6 +20,29 @@ const unsigned int MAX_ALIAS_UPDATES_PER_BLOCK = 5;
 BOOST_AUTO_TEST_CASE(generate_graph_topological_sort) {
 	CGraphNode graphNode;
 	CGraph graph;
+	graphNode = CGraphNode("B");
+	graphNode.Children.push_back(CGraphNode("C"));
+	graph.Nodes.push_back(graphNode);
+
+	graphNode = CGraphNode("E");
+	graphNode.Children.push_back(CGraphNode("C"));
+	graph.Nodes.push_back(graphNode);
+
+	graphNode.Data = "A":
+	graphNode.Children.push_back(CGraphNode("B"));
+	graph.Nodes.push_back(graphNode);
+
+	graphNode = CGraphNode("C");
+	graphNode.Children.push_back(CGraphNode("D"));
+	graph.Nodes.push_back(graphNode);
+
+	unordered_set<string> results;
+	graph.TopologicSort(results);
+	printf("BEGIN\n-----\n");
+	for (auto& r : results) {
+		printf("%s\n", r.Data.c_str());
+	}
+	printf("END\n-----\n");
 
 }
 BOOST_AUTO_TEST_CASE (generate_big_aliasdata)
