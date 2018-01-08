@@ -2,6 +2,7 @@
 #define GRAPH_H
 #include <unordered_set>
 #include <string.h>
+#include "util.h"
 using namespace std;
 struct CGraphNode
 {

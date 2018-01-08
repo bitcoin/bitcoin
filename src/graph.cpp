@@ -6,8 +6,6 @@ void CGraph::TopologicSort(unordered_set<string> &results)
 	unordered_set<string> pending;
 
 	Visit(Nodes, results, visited, pending);
-
-	return results;
 }
 
 void CGraph::Visit(unordered_set<CGraphNode> &graph, unordered_set<string> &results, unordered_set<string> &visited, unordered_set<string> &pending)
