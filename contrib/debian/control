@@ -25,7 +25,7 @@ Build-Depends: debhelper,
  python,
  libzmq3-dev
 
-Standards-Version: 3.9.2
+Standards-Version: 3.9.5
 Homepage: https://peercoin.net/
 Vcs-Git: git://github.com/peercoin/peercoin.git
 Vcs-Browser: https://github.com/peercoin/peercoin
