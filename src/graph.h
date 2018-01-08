@@ -14,11 +14,16 @@ struct CGraphNode
 	{
 		
 	}
-	CGraphNode(const string& _Data, const CGraphNode& child)
+	CGraphNode(const string& _Data)
 	{
 		Data = _Data;
 		Children.clear();
-		Children.push_back(child);
+	}
+	CGraphNode(const string& _Data, const string& child)
+	{
+		Data = _Data;
+		Children.clear();
+		Children.push_back(CGraphNode(child));
 	}
 };
 
