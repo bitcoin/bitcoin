@@ -3,7 +3,7 @@
  *
  * W.J. van der Laan 2011-2012
  * The Bitcoin developers 2011-2012
- * The Peercoin developers 2011-2017
+ * The Peercoin developers 2011-2018
  */
 
 #include <QApplication>
