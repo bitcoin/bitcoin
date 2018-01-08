@@ -39,7 +39,7 @@ BOOST_AUTO_TEST_CASE(generate_graph_topological_sort) {
 	graph.TopologicSort(results);
 	printf("BEGIN\n-----\n");
 	for (auto& r : results) {
-		printf("%s\n", r.Data.c_str());
+		printf("%s\n", r.c_str());
 	}
 	printf("END\n-----\n");
 
