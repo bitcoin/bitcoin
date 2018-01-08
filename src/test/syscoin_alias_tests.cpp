@@ -21,6 +21,8 @@ BOOST_AUTO_TEST_CASE(generate_graph_topological_sort) {
 	CGraph graph;
 	CGraphNode graphNode = CGraphNode("C");
 	graphNode.Children.push_back(CGraphNode("E"));
+	graphNode.Children.push_back(CGraphNode("F"));
+	graphNode.Children.push_back(CGraphNode("G"));
 	graphNode.Children.push_back(CGraphNode("B"));
 	graph.Nodes.push_back(graphNode);
 
@@ -31,6 +33,9 @@ BOOST_AUTO_TEST_CASE(generate_graph_topological_sort) {
 	graphNode = CGraphNode("B");
 	graphNode.Children.push_back(CGraphNode("C"));
 	graphNode.Children.push_back(CGraphNode("D"));
+	graphNode.Children.push_back(CGraphNode("H"));
+	graphNode.Children.push_back(CGraphNode("I"));
+	graphNode.Children.push_back(CGraphNode("J"));
 	graph.Nodes.push_back(graphNode);
 
 	unordered_set<string> results;
