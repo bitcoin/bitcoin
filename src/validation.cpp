@@ -197,7 +197,7 @@ struct DecodeDetails {
 	}
 };
 struct AllocationSenderSort {
-	bool operator() (const std::pair<const string, size_t>& a, const std::pair<const string, size_t>& b) const {
+	bool operator() (const std::pair<string, size_t>& a, const std::pair<string, size_t>& b) const {
 		return a.second < b.second;
 	};
 };
@@ -626,9 +626,9 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight,con
 			}
 		}
 		else if (!block.IsNull()) {
-			std::unordered_map<const string, size_t> mapSenderOrderPosition;
-			unordered_map<const string, unordered_set<const string> > mapReceiverVOutPosition;
-			unordered_map<const string, DecodeDetails> mapSenderDetails;
+			std::unordered_map<string, size_t> mapSenderOrderPosition;
+			unordered_map<string, unordered_set<string> > mapReceiverVOutPosition;
+			unordered_map<string, DecodeDetails> mapSenderDetails;
 			for (unsigned int i = 0; i < block.vtx.size(); i++)
 			{
 				const CTransaction &tx = block.vtx[i];
@@ -688,7 +688,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight,con
 					}
 				}
 			}
-			std::vector<std::pair<const string, size_t> > elems(mapSenderOrderPosition.begin(), mapSenderOrderPosition.end());
+			std::vector<std::pair<string, size_t> > elems(mapSenderOrderPosition.begin(), mapSenderOrderPosition.end());
 			std::sort(elems.begin(), elems.end(), AllocationSenderSort);
 			for (auto& senderPosition : elems) {
 				const DecodeDetails& details = mapSenderDetails[senderPosition.first];
@@ -2417,7 +2417,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 
 			std::vector<CScriptCheck> vChecks;
 			bool fCacheResults = fJustCheck; /* Don't cache results if we're actually connecting blocks (still consult the cache, though) */
-			if (!CheckInputs(tx, state, view, fScriptChecks, flags, fCacheResults, nScriptCheckThreads ? &vChecks : NULL, pindex->nHeight, block))
+			if (!CheckInputs(tx, state, view, fScriptChecks, flags, fCacheResults, nScriptCheckThreads ? &vChecks : NULL))
 				return error("ConnectBlock(): CheckInputs on %s failed with %s",
 					tx.GetHash().ToString(), FormatStateMessage(state));
 			control.Add(vChecks);
