@@ -7,12 +7,26 @@
 # Check for new lines in diff that introduce trailing whitespace.
 
 # We can't run this check unless we know the commit range for the PR.
+
+while getopts "?" opt; do
+  case $opt in
+    ?)
+      echo "Usage: .lint-whitespace.sh [N]"
+      echo "       TRAVIS_COMMIT_RANGE='<commit range>' .lint-whitespace.sh"
+      echo "       .lint-whitespace.sh -?"
+      echo "Checks unstaged changes, the previous N commits, or a commit range."
+      echo "TRAVIS_COMMIT_RANGE='47ba2c3...ee50c9e' .lint-whitespace.sh"
+      exit 0
+    ;;
+  esac
+done
+
 if [ -z "${TRAVIS_COMMIT_RANGE}" ]; then
-  echo "Cannot run lint-whitespace.sh without commit range. To run locally, use:"
-  echo "TRAVIS_COMMIT_RANGE='<commit range>' .lint-whitespace.sh"
-  echo "For example:"
-  echo "TRAVIS_COMMIT_RANGE='47ba2c3...ee50c9e' .lint-whitespace.sh"
-  exit 1
+  if [ "$1" ]; then
+    TRAVIS_COMMIT_RANGE="HEAD~$1...HEAD"
+  else
+    TRAVIS_COMMIT_RANGE="HEAD"
+  fi
 fi
 
 showdiff() {
