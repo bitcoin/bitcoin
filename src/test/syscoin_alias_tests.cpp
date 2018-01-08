@@ -18,12 +18,17 @@ BOOST_GLOBAL_FIXTURE( SyscoinTestingSetup );
 BOOST_FIXTURE_TEST_SUITE (syscoin_alias_tests, BasicSyscoinTestingSetup)
 const unsigned int MAX_ALIAS_UPDATES_PER_BLOCK = 5;
 BOOST_AUTO_TEST_CASE(generate_graph_topological_sort) {
-	Graph g1(5);
-	g1.addEdge(1, 0);
-	g1.addEdge(0, 2);
-	g1.addEdge(2, 1);
-	g1.addEdge(0, 3);
-	g1.addEdge(3, 4);
+	Graph g4(11);
+	g4.addEdge(0, 1); g4.addEdge(0, 3);
+	g4.addEdge(1, 2); g4.addEdge(1, 4);
+	g4.addEdge(2, 0); g4.addEdge(2, 6);
+	g4.addEdge(3, 2);
+	g4.addEdge(4, 5); g4.addEdge(4, 6);
+	g4.addEdge(5, 6); g4.addEdge(5, 7); g4.addEdge(5, 8); g4.addEdge(5, 9);
+	g4.addEdge(6, 4);
+	g4.addEdge(7, 9);
+	g4.addEdge(8, 9);
+	g4.addEdge(9, 8);
 	list<int> result;
 	g1.SCC(result);
 	printf("BEGIN\n-----\n");
