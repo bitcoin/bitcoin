@@ -25,23 +25,25 @@ python27
 
 Download the source code:
 ```
-git clone https://github.com/bitcoin/bitcoin.git
+git clone https://github.com/bitcoin/bitcoin
 ```
 
 See [dependencies.md](dependencies.md) for a complete overview.
 
 ### Building Bitcoin Core
 
-**Important**: use `gmake`, not `make`. The non-GNU `make` will exit with an error.
+**Important**: Use `gmake` (the non-GNU `make` will exit with an error).
 
-To configure with wallet:
+With wallet:
 ```
+./autogen.sh
 ./configure CPPFLAGS="-I/usr/pkg/include -DOS_NETBSD" LDFLAGS="-L/usr/pkg/lib" BOOST_CPPFLAGS="-I/usr/pkg/include" BOOST_LDFLAGS="-L/usr/pkg/lib"
 gmake
 ```
 
-To configure without wallet:
+Without wallet:
 ```
+./autogen.sh
 ./configure --disable-wallet CPPFLAGS="-I/usr/pkg/include -DOS_NETBSD" LDFLAGS="-L/usr/pkg/lib" BOOST_CPPFLAGS="-I/usr/pkg/include" BOOST_LDFLAGS="-L/usr/pkg/lib"
 gmake
 ```
