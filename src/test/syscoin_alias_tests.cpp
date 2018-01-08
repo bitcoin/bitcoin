@@ -18,9 +18,8 @@ BOOST_GLOBAL_FIXTURE( SyscoinTestingSetup );
 BOOST_FIXTURE_TEST_SUITE (syscoin_alias_tests, BasicSyscoinTestingSetup)
 const unsigned int MAX_ALIAS_UPDATES_PER_BLOCK = 5;
 BOOST_AUTO_TEST_CASE(generate_graph_topological_sort) {
-	CGraphNode graphNode;
 	CGraph graph;
-	graphNode = CGraphNode("B");
+	CGraphNode graphNode = CGraphNode("B");
 	graphNode.Children.push_back(CGraphNode("C"));
 	graph.Nodes.push_back(graphNode);
 
@@ -28,7 +27,7 @@ BOOST_AUTO_TEST_CASE(generate_graph_topological_sort) {
 	graphNode.Children.push_back(CGraphNode("C"));
 	graph.Nodes.push_back(graphNode);
 
-	graphNode.Data = "A":
+	graphNode = CGraphNode("A");
 	graphNode.Children.push_back(CGraphNode("B"));
 	graph.Nodes.push_back(graphNode);
 
