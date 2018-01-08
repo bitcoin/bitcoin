@@ -860,7 +860,7 @@ void CInstantSend::UpdatedBlockTip(const CBlockIndex *pindex)
     nCachedBlockHeight = pindex->nHeight;
 }
 
-void CInstantSend::SyncTransaction(const CTransaction& tx, const CBlock* pblock)
+void CInstantSend::SyncTransaction(const CTransaction& tx, const CBlockIndex *pindex, int posInBlock)
 {
     // Update lock candidates and votes if corresponding tx confirmed
     // or went from confirmed to 0-confirmed or conflicted.
@@ -871,19 +871,8 @@ void CInstantSend::SyncTransaction(const CTransaction& tx, const CBlock* pblock)
 
     uint256 txHash = tx.GetHash();
 
-    // When tx is 0-confirmed or conflicted, pblock is NULL and nHeightNew should be set to -1
-    CBlockIndex* pblockindex = NULL;
-    if(pblock) {
-        uint256 blockHash = pblock->GetHash();
-        BlockMap::iterator mi = mapBlockIndex.find(blockHash);
-        if(mi == mapBlockIndex.end() || !mi->second) {
-            // shouldn't happen
-            LogPrint("instantsend", "CTxLockRequest::SyncTransaction -- Failed to find block %s\n", blockHash.ToString());
-            return;
-        }
-        pblockindex = mi->second;
-    }
-    int nHeightNew = pblockindex ? pblockindex->nHeight : -1;
+    // When tx is 0-confirmed or conflicted, posInBlock is SYNC_TRANSACTION_NOT_IN_BLOCK and nHeightNew should be set to -1
+    int nHeightNew = posInBlock == CMainSignals::SYNC_TRANSACTION_NOT_IN_BLOCK ? -1 : pindex->nHeight;
 
     LogPrint("instantsend", "CInstantSend::SyncTransaction -- txid=%s nHeightNew=%d\n", txHash.ToString(), nHeightNew);
 
