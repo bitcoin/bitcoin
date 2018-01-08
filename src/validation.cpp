@@ -627,7 +627,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight,con
 		}
 		else if (!block.IsNull()) {
 			std::unordered_map<const string, size_t> mapSenderOrderPosition;
-			unordered_map<const string, unordered_set<vector<unsigned char> > > mapReceiverVOutPosition;
+			unordered_map<const string, unordered_set<const string> > mapReceiverVOutPosition;
 			unordered_map<const string, DecodeDetails> mapSenderDetails;
 			for (unsigned int i = 0; i < block.vtx.size(); i++)
 			{
