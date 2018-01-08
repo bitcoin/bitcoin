@@ -196,7 +196,7 @@ struct DecodeDetails {
 	DecodeDetails() {
 	}
 };
-bool AllocationSenderSort(const std::pair<string, size_t>& a, const std::pair<string, size_t>& b) const {
+bool AllocationSenderSort(const std::pair<string, size_t>& a, const std::pair<string, size_t>& b) {
 	return a.second < b.second;
 }
 CBlockIndex* FindForkInGlobalIndex(const CChain& chain, const CBlockLocator& locator)
