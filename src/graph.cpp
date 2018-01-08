@@ -8,7 +8,7 @@ void CGraph::TopologicSort(unordered_set<string> &results)
 	Visit(Nodes, results, visited, pending);
 }
 
-void CGraph::Visit(unordered_set<CGraphNode> &graph, unordered_set<string> &results, unordered_set<string> &visited, unordered_set<string> &pending)
+void CGraph::Visit(vector<CGraphNode> &graph, unordered_set<string> &results, unordered_set<string> &visited, unordered_set<string> &pending)
 {
 	// Foreach node in the graph
 	for (auto& n : graph) {
