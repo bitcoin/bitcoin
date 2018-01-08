@@ -1,43 +1,25 @@
 #ifndef GRAPH_H
 #define GRAPH_H
-#include <unordered_set>
-#include <vector>
-#include <string.h>
-#include "util.h"
+#include <list>
+#include <stack>
+#define NIL -1
 using namespace std;
-struct CGraphNode
+
+// A class that represents an directed graph
+class Graph
 {
-	string Data;
-	vector<CGraphNode> Children;
+	int V;    // No. of vertices
+	list<int> *adj;    // A dynamic array of adjacency lists
 
-	CGraphNode()
-	{
-		
-	}
-	CGraphNode(const string& _Data)
-	{
-		Data = _Data;
-		Children.clear();
-	}
-	CGraphNode(const string& _Data, const string& child)
-	{
-		Data = _Data;
-		Children.clear();
-		Children.push_back(CGraphNode(child));
-	}
-};
-
-// An range has start and end index
-class CGraph {
+					   // A Recursive DFS based function used by SCC()
+	void SCCUtil(int u, int disc[], int low[],
+		stack<int> *st, bool stackMember[], list<int>&);
 public:
-	CGraph() {
-	}
-	vector<CGraphNode> Nodes;
-	void TopologicSort(unordered_set<string> &results);
-
-private:
-	void Visit(vector<CGraphNode> &graph, unordered_set<string> &results, unordered_set<string> &visited, unordered_set<string> &pending);
-
+	Graph(int V);   // Constructor
+	~Graph();
+	void addEdge(int v, int w);   // function to add an edge to graph
+	void SCC();    // prints strongly connected components
 };
+
 
 #endif // GRAPH_H

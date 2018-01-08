@@ -18,29 +18,17 @@ BOOST_GLOBAL_FIXTURE( SyscoinTestingSetup );
 BOOST_FIXTURE_TEST_SUITE (syscoin_alias_tests, BasicSyscoinTestingSetup)
 const unsigned int MAX_ALIAS_UPDATES_PER_BLOCK = 5;
 BOOST_AUTO_TEST_CASE(generate_graph_topological_sort) {
-	CGraph graph;
-	graph.Nodes.push_back(CGraphNode("C", "E"));
-	graph.Nodes.push_back(CGraphNode("C", "F"));
-	graph.Nodes.push_back(CGraphNode("C", "G"));
-	graph.Nodes.push_back(CGraphNode("C", "B"));
-
-	graph.Nodes.push_back(CGraphNode("A", "B"));
-
-	graph.Nodes.push_back(CGraphNode("B", "C"));
-	graph.Nodes.push_back(CGraphNode("B", "D"));
-	graph.Nodes.push_back(CGraphNode("B", "H"));
-	graph.Nodes.push_back(CGraphNode("B", "I"));
-	graph.Nodes.push_back(CGraphNode("B", "J"));
-	
-	graph.Nodes.push_back(CGraphNode("J", "I"));
-	graph.Nodes.push_back(CGraphNode("I", "C"));
-	graph.Nodes.push_back(CGraphNode("I", "E"));
-
-	unordered_set<string> results;
-	graph.TopologicSort(results);
+	Graph g1(5);
+	g1.addEdge(1, 0);
+	g1.addEdge(0, 2);
+	g1.addEdge(2, 1);
+	g1.addEdge(0, 3);
+	g1.addEdge(3, 4);
+	list<int> result;
+	g1.SCC(result);
 	printf("BEGIN\n-----\n");
-	for (auto& r : results) {
-		printf("%s\n", r.c_str());
+	for (auto& r : result) {
+		printf("%d\n", r);
 	}
 	printf("END\n");
 
