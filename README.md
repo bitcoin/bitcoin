@@ -7,7 +7,7 @@ http://www.crown.tech
 
 Copyright (c) 2009-2015 Bitcoin Core Developers
 
-Copyright (c) 2014-2017 Crown Core Developers
+Copyright (c) 2014-2018 Crown Core Developers
 
 
 What is Crown?
