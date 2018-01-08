@@ -42,3 +42,4 @@ void CGraph::Visit(vector<CGraphNode> &graph, unordered_set<string> &results, un
 			}
 		}
 	}
+}
