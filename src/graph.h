@@ -21,7 +21,7 @@ class CGraph {
 public:
 	CGraph() {
 	}
-	public unordered_set<CGraphNode> Nodes;
+	unordered_set<CGraphNode> Nodes;
 	public void TopologicSort(unordered_set<string> &results);
 	private void Visit(unordered_set<CGraphNode> &graph, unordered_set<string> &results, unordered_set<string> &visited, unordered_set<string> &pending);
 

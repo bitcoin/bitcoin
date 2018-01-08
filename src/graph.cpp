@@ -31,7 +31,7 @@ void CGraph::Visit(unordered_set<CGraphNode> &graph, unordered_set<string> &resu
 
 				if (pending.count(n.Data))
 				{
-					pending.Remove(n.Data);
+					pending.erase(n.Data);
 				}
 
 				visited.insert(n.Data);
