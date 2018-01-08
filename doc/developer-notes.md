@@ -39,6 +39,7 @@ code.
   - `++i` is preferred over `i++`.
   - `nullptr` is preferred over `NULL` or `(void*)0`.
   - `static_assert` is preferred over `assert` where possible. Generally; compile-time checking is preferred over run-time checking.
+  - Only use `auto` if it saves significant typing/reading or if it is critical to the functionality of the code.
 
 Block style example:
 ```c++
