@@ -11,7 +11,8 @@ Preparation
 
 You will need the following modules, which can be installed via pkgsrc or pkgin:
 
-```autoconf
+```
+autoconf
 automake
 boost
 db4
@@ -23,7 +24,8 @@ python27
 ```
 
 Download the source code:
-```git clone https://github.com/bitcoin/bitcoin.git
+```
+git clone https://github.com/bitcoin/bitcoin.git
 ```
 
 See [dependencies.md](dependencies.md) for a complete overview.
@@ -33,11 +35,13 @@ See [dependencies.md](dependencies.md) for a complete overview.
 **Important**: use `gmake`, not `make`. The non-GNU `make` will exit with an error.
 
 To configure with wallet:
-```./configure CPPFLAGS="-I/usr/pkg/include" LDFLAGS="-L/usr/pkg/lib" BOOST_CPPFLAGS="-I/usr/pkg/include" BOOST_LDFLAGS="-L/usr/pkg/lib"
+```
+./configure CPPFLAGS="-I/usr/pkg/include -DOS_NETBSD" LDFLAGS="-L/usr/pkg/lib" BOOST_CPPFLAGS="-I/usr/pkg/include" BOOST_LDFLAGS="-L/usr/pkg/lib"
 gmake
 ```
 
 To configure without wallet:
-```./configure --disable-wallet  CPPFLAGS="-I/usr/pkg/include" LDFLAGS="-L/usr/pkg/lib" BOOST_CPPFLAGS="-I/usr/pkg/include" BOOST_LDFLAGS="-L/usr/pkg/lib"
+```
+./configure --disable-wallet CPPFLAGS="-I/usr/pkg/include -DOS_NETBSD" LDFLAGS="-L/usr/pkg/lib" BOOST_CPPFLAGS="-I/usr/pkg/include" BOOST_LDFLAGS="-L/usr/pkg/lib"
 gmake
 ```
