@@ -197,7 +197,7 @@ struct DecodeDetails {
 	}
 };
 struct AllocationSenderSort {
-	bool operator() (const std::pair<vector<unsigned char>, size_t>& a, const std::pair<vector<unsigned char>, size_t>& b) const {
+	bool operator() (const std::pair<const string, size_t>& a, const std::pair<const string, size_t>& b) const {
 		return a.second < b.second;
 	};
 };
@@ -626,9 +626,9 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight,con
 			}
 		}
 		else if (!block.IsNull()) {
-			unordered_map<vector<unsigned char>, size_t> mapSenderOrderPosition;
-			unordered_map<vector<unsigned char>, unordered_set<vector<unsigned char> > > mapReceiverVOutPosition;
-			unordered_map<vector<unsigned char>, DecodeDetails> mapSenderDetails;
+			std::unordered_map<const string, size_t> mapSenderOrderPosition;
+			unordered_map<const string, unordered_set<vector<unsigned char> > > mapReceiverVOutPosition;
+			unordered_map<const string, DecodeDetails> mapSenderDetails;
 			for (unsigned int i = 0; i < block.vtx.size(); i++)
 			{
 				const CTransaction &tx = block.vtx[i];
@@ -661,12 +661,13 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight,con
 						}
 						else if (DecodeAssetAllocationTx(tx, op, nOut, vvchArgs))
 						{
-							mapSenderDetails[vvchAliasArgs[0]] = DecodeDetails(op, nOut, vvchArgs);
-							mapSenderOrderPosition[vvchAliasArgs[0]] = 0;
+							const string& sender = vvchAliasArgs[0];
+							mapSenderDetails[sender] = DecodeDetails(op, nOut, vvchArgs);
+							mapSenderOrderPosition[sender] = 0;
 							CAssetAllocation allocation(tx);
 							if (!allocation.listSendingAllocationAmounts.empty()) {
 								for (auto& allocationInstance : allocation.listSendingAllocationAmounts) {
-									mapReceiverVOutPosition[allocationInstance.first].insert(vvchAliasArgs[0]);
+									mapReceiverVOutPosition[allocationInstance.first].insert(sender);
 								}
 							}
 						}
@@ -687,7 +688,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight,con
 					}
 				}
 			}
-			std::vector<std::pair<vector<unsigned char>, size_t> > elems(mapSenderOrderPosition.begin(), mapSenderOrderPosition.end());
+			std::vector<std::pair<const string, size_t> > elems(mapSenderOrderPosition.begin(), mapSenderOrderPosition.end());
 			std::sort(elems.begin(), elems.end(), AllocationSenderSort);
 			for (auto& senderPosition : elems) {
 				const DecodeDetails& details = mapSenderDetails[senderPosition.first];
@@ -1137,7 +1138,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 			return error("%s: BUG! PLEASE REPORT THIS! ConnectInputs failed against MANDATORY but not STANDARD flags %s, %s",
 				__func__, hash.ToString(), FormatStateMessage(state));
 		}
-		if (!CheckSyscoinInputs(tx, true, nHeight, CBlock()))
+		if (!CheckSyscoinInputs(tx, true, chainActive.Height(), CBlock()))
 			return false;
 		// Remove conflicting transactions from the mempool
 		BOOST_FOREACH(const CTxMemPool::txiter it, allConflicting)
