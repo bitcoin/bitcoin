@@ -19,24 +19,23 @@ BOOST_FIXTURE_TEST_SUITE (syscoin_alias_tests, BasicSyscoinTestingSetup)
 const unsigned int MAX_ALIAS_UPDATES_PER_BLOCK = 5;
 BOOST_AUTO_TEST_CASE(generate_graph_topological_sort) {
 	CGraph graph;
-	CGraphNode graphNode = CGraphNode("C");
-	graphNode.Children.push_back(CGraphNode("E"));
-	graphNode.Children.push_back(CGraphNode("F"));
-	graphNode.Children.push_back(CGraphNode("G"));
-	graphNode.Children.push_back(CGraphNode("B"));
+	graph.Nodes.push_back(CGraphNode("C", "E"));
+	graph.Nodes.push_back(CGraphNode("C", "F"));
+	graph.Nodes.push_back(CGraphNode("C", "G"));
+	graph.Nodes.push_back(CGraphNode("C", "B"));
 	graph.Nodes.push_back(graphNode);
 
-	graphNode = CGraphNode("A");
-	graphNode.Children.push_back(CGraphNode("B"));
-	graph.Nodes.push_back(graphNode);
+	graph.Nodes.push_back(CGraphNode("A", "B"));
 
-	graphNode = CGraphNode("B");
-	graphNode.Children.push_back(CGraphNode("C"));
-	graphNode.Children.push_back(CGraphNode("D"));
-	graphNode.Children.push_back(CGraphNode("H"));
-	graphNode.Children.push_back(CGraphNode("I"));
-	graphNode.Children.push_back(CGraphNode("J"));
-	graph.Nodes.push_back(graphNode);
+	graph.Nodes.push_back(CGraphNode("B", "C"));
+	graph.Nodes.push_back(CGraphNode("B", "D"));
+	graph.Nodes.push_back(CGraphNode("B", "H"));
+	graph.Nodes.push_back(CGraphNode("B", "I"));
+	graph.Nodes.push_back(CGraphNode("B", "J"));
+	
+	graph.Nodes.push_back(CGraphNode("J", "I"));
+	graph.Nodes.push_back(CGraphNode("I", "C"));
+	graph.Nodes.push_back(CGraphNode("I", "E"));
 
 	unordered_set<string> results;
 	graph.TopologicSort(results);
