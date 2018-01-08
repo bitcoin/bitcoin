@@ -18,7 +18,7 @@ public:
 	Graph(int V);   // Constructor
 	~Graph();
 	void addEdge(int v, int w);   // function to add an edge to graph
-	void SCC();    // prints strongly connected components
+	void SCC(list<int>&);    // prints strongly connected components
 };
 
 

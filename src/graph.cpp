@@ -45,7 +45,7 @@ void Graph::SCCUtil(int u, int disc[], int low[], stack<int> *st,
 					 // If v is not visited yet, then recur for it
 		if (disc[v] == -1)
 		{
-			SCCUtil(v, disc, low, st, stackMember);
+			SCCUtil(v, disc, low, st, stackMember, result);
 
 			// Check if the subtree rooted with 'v' has a
 			// connection to one of the ancestors of 'u'
