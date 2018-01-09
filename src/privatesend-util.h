@@ -30,7 +30,7 @@ private:
     mutable CCriticalSection cs_storage;
 
 public:
-    const CKeyHolder& AddKey(CWallet* pwalletIn);
+    CScript AddKey(CWallet* pwalletIn);
     void KeepAll();
     void ReturnAll();
 
