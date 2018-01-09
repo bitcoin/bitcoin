@@ -24,13 +24,6 @@ const unsigned int MAX_ALIAS_UPDATES_PER_BLOCK = 5;
 BOOST_AUTO_TEST_CASE(generate_graph_topological_sort) {
 	// Create a n adjacency list, add some vertices.
 	boost::adjacency_list<> g(7);
-	boost::add_vertex(0, g);
-	boost::add_vertex(1, g);
-	boost::add_vertex(2, g);
-	boost::add_vertex(3, g);
-	boost::add_vertex(4, g);
-	boost::add_vertex(5, g);
-	boost::add_vertex(6, g);
 
 	// Add edges between vertices.
 	boost::add_edge(0, 3, g);
@@ -50,7 +43,7 @@ BOOST_AUTO_TEST_CASE(generate_graph_topological_sort) {
 		i != topo_order.end();
 		++i)
 	{
-		LogPrintf(tasks[v]);
+		LogPrintf(i + " ");
 	}
 
 
