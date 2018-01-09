@@ -263,9 +263,9 @@ The project leader is the release manager for each Litecoin Core release.
 
 Copyright
 ---------
-Copyright 2017 The Litecoin Core Developers
+Copyright 2018 The Litecoin Core Developers
 
-- bitcoin: Copyright (c) 2009-2017 Bitcoin Core Developers (MIT License)
+- bitcoin: Copyright (c) 2009-2018 Bitcoin Core Developers (MIT License)
 
 By contributing to this repository, you agree to license your work under the 
 MIT license unless specified otherwise in `contrib/debian/copyright` or at 
