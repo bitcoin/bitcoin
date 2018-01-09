@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE(generate_graph_topological_sort) {
 	boost::directed_graph<> graph;
 	build_graph(graph);
 
-	OutputStream os;
+	ostringstream os;
 	cycle_printer<std::ostream> visitor(os);
 	boost::hawick_circuits(graph, visitor);
 
