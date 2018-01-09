@@ -79,7 +79,6 @@ src/qt/test/moc*.cpp
 # Compilation and Qt preprocessor part
 *.qm
 Makefile
-raven-qt
 Raven-Qt.app
 
 # Unit-tests
