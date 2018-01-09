@@ -23,7 +23,7 @@ bool Graph::isCyclicUtil(int v, bool visited[], bool *recStack)
 		recStack[v] = true;
 
 		// Recur for all the vertices adjacent to this vertex
-		for (auto& i : adj[v]) {
+		for (auto& i : adj[v])
 		{
 			if (!visited[i] && isCyclicUtil(i, visited, recStack))
 				return true;
