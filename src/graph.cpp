@@ -99,7 +99,7 @@ void Graph::SCC(list<int> &result)
 	for (int i = 0; i < V; i++)
 		if (disc[i] == NIL)
 			SCCUtil(i, disc, low, st, stackMember, result);
-
+	result.reverse();
 	delete[] disc;
 	delete[] stackMember;
 	delete[] low;
