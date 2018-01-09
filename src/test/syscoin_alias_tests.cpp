@@ -61,12 +61,12 @@ struct cycle_printer
 	}
 	OutputStream& os;
 };
-BOOST_AUTO_TEST_CASE(generate_graph_topological_sort) {
-
-	boost::directed_graph<> graph;
+template <typename Graph>
+void build_graph(Graph& graph) {
 	typedef boost::graph_traits<Graph> Traits;
 	typedef typename Traits::vertex_descriptor vertex_descriptor;
 	std::map<unsigned int, vertex_descriptor> vertices;
+
 	unsigned int nvertices = 5;
 	for (unsigned int i = 0; i < nvertices; ++i)
 		vertices[i] = add_vertex(graph);
@@ -82,6 +82,14 @@ BOOST_AUTO_TEST_CASE(generate_graph_topological_sort) {
 	boost::add_edge(vertices[3], vertices[4], graph);
 	boost::add_edge(vertices[4], vertices[0], graph);
 	boost::add_edge(vertices[4], vertices[1], graph);
+
+	BOOST_ASSERT(num_vertices(graph) == nvertices);
+}
+
+BOOST_AUTO_TEST_CASE(generate_graph_topological_sort) {
+
+	boost::directed_graph<> graph;
+	build_graph(graph);
 
 	OutputStream os;
 	cycle_printer<std::ostream> visitor(os);
