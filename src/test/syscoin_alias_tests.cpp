@@ -67,6 +67,7 @@ void build_graph(Graph& graph) {
 	typedef typename Traits::vertex_descriptor vertex_descriptor;
 	typedef typename std::vector< vertex_descriptor > container;
 	std::map<unsigned int, vertex_descriptor> vertices;
+	typedef typename boost::property_map<Graph, boost::vertex_index_t>::const_type IndexMap;
 
 	unsigned int nvertices = 5;
 	for (unsigned int i = 0; i < nvertices; ++i)
@@ -91,9 +92,8 @@ void build_graph(Graph& graph) {
 	boost::topological_sort(graph, std::back_inserter(c));
 
 	ostringstream topstream;
-	typedef typename boost::property_map<
-		Graph, boost::vertex_index_t
-	>::const_type IndexMap;
+	
+	const IndexMap &indices = get(boost::vertex_index, graph);
 	printf("A topological ordering: ");
 	for (auto& i: c) {
 		topstream << get(indices, i) << " ";
