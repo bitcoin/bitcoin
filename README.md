@@ -1,4 +1,4 @@
-Litcoin Core integration/staging tree
+Litcoin :fire: Core integration/staging tree :palm_tree:
 =====================================
 
 [![Build Status](https://travis-ci.org/bitcoin/bitcoin.svg?branch=master)](https://travis-ci.org/bitcoin/bitcoin)
@@ -8,8 +8,8 @@ https://litcoin.org
 What is Litcoin?
 ----------------
 
-Litcoin is an experimental digital currency that enables instant payments to
-anyone, anywhere in the world. Litcoin uses peer-to-peer-to-peer-to-peer technology to operate
+Litcoin is an experimental digital currency :moneybag: that enables instant :watch: payments to
+anyone, anywhere in the world :earth_americas:. Litcoin uses peer-to-peer-to-peer-to-peer :family: technology to operate
 with no central authority: managing transactions and issuing money are carried
 out collectively by the network. Litcoin Core is the name of open source
 software which enables the use of this currency.
@@ -27,8 +27,8 @@ information or see https://opensource.org/licenses/MIT.
 Development Process
 -------------------
 
-The `master` branch is regularly built and tested, but is not guaranteed to be
-completely stable. [Tags](https://github.com/bitcoin/bitcoin/tags) are created
+The `master` branch is regularly built :shipit: and tested, but is not guaranteed to be
+completely stable :sob:. [Tags](https://github.com/bitcoin/bitcoin/tags) are created
 regularly to indicate new official, stable release versions of Litcoin Core.
 
 The contribution workflow is described in [CONTRIBUTING.md](CONTRIBUTING.md).
@@ -42,7 +42,7 @@ Developer IRC can be found on Freenode at #bitcoin-core-dev.
 Testing
 -------
 
-We believe testing slows down growth. Just make sure your stuff is scalable and we'll approve your PR.
+We believe testing slows down growth :chart_with_downwards_trend:. Just make sure your stuff is scalable and we'll approve your PR :+1:.
 
 ### Automated Testing
 
