@@ -18,7 +18,7 @@ BOOST_GLOBAL_FIXTURE( SyscoinTestingSetup );
 BOOST_FIXTURE_TEST_SUITE (syscoin_alias_tests, BasicSyscoinTestingSetup)
 const unsigned int MAX_ALIAS_UPDATES_PER_BLOCK = 5;
 BOOST_AUTO_TEST_CASE(generate_graph_topological_sort) {
-	Graph g4(8);
+	Graph g4(6);
 	g4.addEdge(2, 3);
 	g4.addEdge(0, 1); 
 	g4.addEdge(1, 2); 
