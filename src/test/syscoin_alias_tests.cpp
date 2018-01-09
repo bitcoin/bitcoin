@@ -65,7 +65,7 @@ template <typename Graph>
 void build_graph(Graph& graph) {
 	typedef boost::graph_traits<Graph> Traits;
 	typedef typename Traits::vertex_descriptor vertex_descriptor;
-	typedef typename std::vector< Vertex > container;
+	typedef typename std::vector< vertex_descriptor > container;
 	std::map<unsigned int, vertex_descriptor> vertices;
 
 	unsigned int nvertices = 5;
