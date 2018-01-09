@@ -1,5 +1,7 @@
 // A C++ class for topological sorting of a directed graph for syscoin service sorting on POW
 #include "graph.h"
+#include <stack>
+#include <queue>
 Graph::Graph(int V)
 {
 	this->V = V;

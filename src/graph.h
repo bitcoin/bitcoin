@@ -2,7 +2,6 @@
 #define GRAPH_H
 #include <list>
 #include <vector>
-#include <stack>
 #define NIL -1
 using namespace std;
 
