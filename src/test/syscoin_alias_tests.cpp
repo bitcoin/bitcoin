@@ -15,30 +15,82 @@
 #include <deque>
 #include <iterator>
 
-#include <boost/graph/graph_traits.hpp>   
+#include <boost/graph/directed_graph.hpp>
+#include <boost/graph/graph_traits.hpp>
+#include <boost/graph/hawick_circuits.hpp>
+#include <boost/lexical_cast.hpp>
+#include <boost/next_prior.hpp>
+#include <boost/property_map/property_map.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/topological_sort.hpp>
+#include <iostream>
+#include <map>
 using namespace std;
 BOOST_GLOBAL_FIXTURE( SyscoinTestingSetup );
 
 BOOST_FIXTURE_TEST_SUITE (syscoin_alias_tests, BasicSyscoinTestingSetup)
 const unsigned int MAX_ALIAS_UPDATES_PER_BLOCK = 5;
-BOOST_AUTO_TEST_CASE(generate_graph_topological_sort) {
-	typedef boost::adjacency_list< boost::vecS, boost::vecS, boost::directedS > Graph;
-	typedef boost::graph_traits<Graph>::vertex_descriptor Vertex;
-	typedef pair<int, int> Pair;
-	Pair edge_array[11] = { Pair(0,1), Pair(0,2), Pair(0,3),
-		Pair(0,4), Pair(2,0), Pair(3,0),
-		Pair(2,4), Pair(3,1), Pair(3,4),
-		Pair(4,0), Pair(4,1) };
 
-	Graph G(5);
-	for (int i = 0; i < 11; i++)
-		boost:add_edge(edge_array[i].first, edge_array[i].second, G);
+template <typename OutputStream>
+struct cycle_printer
+{
+	cycle_printer(OutputStream& stream)
+		: os(stream)
+	{ }
+
+	template <typename Path, typename Graph>
+	void cycle(Path const& p, Graph const& g)
+	{
+		if (p.empty())
+			return;
+
+		// Get the property map containing the vertex indices
+		// so we can print them.
+		typedef typename boost::property_map<
+			Graph, boost::vertex_index_t
+		>::const_type IndexMap;
+
+		IndexMap indices = get(boost::vertex_index, g);
+
+		// Iterate over path printing each vertex that forms the cycle.
+		typename Path::const_iterator i, before_end = boost::prior(p.end());
+		for (i = p.begin(); i != before_end; ++i) {
+			os << get(indices, *i) << " ";
+		}
+		os << get(indices, *i) << '\n';
+	}
+	OutputStream& os;
+};
+BOOST_AUTO_TEST_CASE(generate_graph_topological_sort) {
+
+	boost::directed_graph<> graph;
+	typedef boost::graph_traits<Graph> Traits;
+	typedef typename Traits::vertex_descriptor vertex_descriptor;
+	std::map<unsigned int, vertex_descriptor> vertices;
+	unsigned int nvertices = 5;
+	for (unsigned int i = 0; i < nvertices; ++i)
+		vertices[i] = add_vertex(graph);
+
+	boost::add_edge(vertices[0], vertices[1], graph);
+	boost::add_edge(vertices[0], vertices[2], graph);
+	boost::add_edge(vertices[0], vertices[3], graph);
+	boost::add_edge(vertices[0], vertices[4], graph);
+	boost::add_edge(vertices[2], vertices[0], graph);
+	boost::add_edge(vertices[3], vertices[0], graph);
+	boost::add_edge(vertices[2], vertices[4], graph);
+	boost::add_edge(vertices[3], vertices[1], graph);
+	boost::add_edge(vertices[3], vertices[4], graph);
+	boost::add_edge(vertices[4], vertices[0], graph);
+	boost::add_edge(vertices[4], vertices[1], graph);
+
+	OutputStream os;
+	cycle_printer<std::ostream> visitor(os);
+	boost::hawick_circuits(graph, visitor);
+
 
 	typedef std::vector< Vertex > container;
 	container c;
-	boost::topological_sort(G, std::back_inserter(c));
+	boost::topological_sort(graph, std::back_inserter(c));
 
 
 	LogPrintf("A topological ordering: ");
