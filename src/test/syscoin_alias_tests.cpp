@@ -43,7 +43,7 @@ BOOST_AUTO_TEST_CASE(generate_graph_topological_sort) {
 		i != topo_order.end();
 		++i)
 	{
-		LogPrintf(i + " ");
+		LogPrintf("%d\n",i);
 	}
 
 
