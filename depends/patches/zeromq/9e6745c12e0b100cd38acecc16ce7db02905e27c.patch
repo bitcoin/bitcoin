@@ -1,0 +1,22 @@
+From 9e6745c12e0b100cd38acecc16ce7db02905e27c Mon Sep 17 00:00:00 2001
+From: David Millard <dmillard10@gmail.com>
+Date: Tue, 10 May 2016 13:53:53 -0700
+Subject: [PATCH] Fix autotools for static MinGW builds
+
+---
+ configure.ac | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/configure.ac b/configure.ac
+index 5a0fa14..def6ea7 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -259,7 +259,7 @@ case "${host_os}" in
+         libzmq_dso_visibility="no"
+
+         if test "x$enable_static" = "xyes"; then
+-            CPPFLAGS="-DZMQ_STATIC"
++            CPPFLAGS="-DZMQ_STATIC $CPPFLAGS"
+         fi
+
+ 	# Set FD_SETSIZE to 1024

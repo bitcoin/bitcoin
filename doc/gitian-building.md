@@ -55,7 +55,7 @@ In the VirtualBox GUI click "New" and choose the following parameters in the wiz
 
 ![](gitian-building/create_vm_memsize.png)
 
-- Memory Size: at least 1024MB, anything less will really slow down the build.
+- Memory Size: at least 3000MB, anything less and the build might not complete.
 
 ![](gitian-building/create_vm_hard_disk.png)
 

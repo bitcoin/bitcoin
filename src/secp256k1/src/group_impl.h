@@ -7,8 +7,6 @@
 #ifndef _SECP256K1_GROUP_IMPL_H_
 #define _SECP256K1_GROUP_IMPL_H_
 
-#include <string.h>
-
 #include "num.h"
 #include "field.h"
 #include "group.h"
@@ -165,7 +163,7 @@ static void secp256k1_ge_clear(secp256k1_ge *r) {
     secp256k1_fe_clear(&r->y);
 }
 
-static int secp256k1_ge_set_xquad_var(secp256k1_ge *r, const secp256k1_fe *x) {
+static int secp256k1_ge_set_xquad(secp256k1_ge *r, const secp256k1_fe *x) {
     secp256k1_fe x2, x3, c;
     r->x = *x;
     secp256k1_fe_sqr(&x2, x);
@@ -173,11 +171,11 @@ static int secp256k1_ge_set_xquad_var(secp256k1_ge *r, const secp256k1_fe *x) {
     r->infinity = 0;
     secp256k1_fe_set_int(&c, 7);
     secp256k1_fe_add(&c, &x3);
-    return secp256k1_fe_sqrt_var(&r->y, &c);
+    return secp256k1_fe_sqrt(&r->y, &c);
 }
 
 static int secp256k1_ge_set_xo_var(secp256k1_ge *r, const secp256k1_fe *x, int odd) {
-    if (!secp256k1_ge_set_xquad_var(r, x)) {
+    if (!secp256k1_ge_set_xquad(r, x)) {
         return 0;
     }
     secp256k1_fe_normalize_var(&r->y);
@@ -251,11 +249,23 @@ static int secp256k1_ge_is_valid_var(const secp256k1_ge *a) {
 }
 
 static void secp256k1_gej_double_var(secp256k1_gej *r, const secp256k1_gej *a, secp256k1_fe *rzr) {
-    /* Operations: 3 mul, 4 sqr, 0 normalize, 12 mul_int/add/negate */
+    /* Operations: 3 mul, 4 sqr, 0 normalize, 12 mul_int/add/negate.
+     *
+     * Note that there is an implementation described at
+     *     https://hyperelliptic.org/EFD/g1p/auto-shortw-jacobian-0.html#doubling-dbl-2009-l
+     * which trades a multiply for a square, but in practice this is actually slower,
+     * mainly because it requires more normalizations.
+     */
     secp256k1_fe t1,t2,t3,t4;
     /** For secp256k1, 2Q is infinity if and only if Q is infinity. This is because if 2Q = infinity,
      *  Q must equal -Q, or that Q.y == -(Q.y), or Q.y is 0. For a point on y^2 = x^3 + 7 to have
      *  y=0, x^3 must be -7 mod p. However, -7 has no cube root mod p.
+     *  
+     *  Having said this, if this function receives a point on a sextic twist, e.g. by
+     *  a fault attack, it is possible for y to be 0. This happens for y^2 = x^3 + 6,
+     *  since -6 does have a cube root mod p. For this point, this function will not set
+     *  the infinity flag even though the point doubles to infinity, and the result
+     *  point will be gibberish (z = 0 but infinity = 0).
      */
     r->infinity = a->infinity;
     if (r->infinity) {
@@ -622,5 +632,19 @@ static void secp256k1_ge_mul_lambda(secp256k1_ge *r, const secp256k1_ge *a) {
     secp256k1_fe_mul(&r->x, &r->x, &beta);
 }
 #endif
+
+static int secp256k1_gej_has_quad_y_var(const secp256k1_gej *a) {
+    secp256k1_fe yz;
+
+    if (a->infinity) {
+        return 0;
+    }
+
+    /* We rely on the fact that the Jacobi symbol of 1 / a->z^3 is the same as
+     * that of a->z. Thus a->y / a->z^3 is a quadratic residue iff a->y * a->z
+       is */
+    secp256k1_fe_mul(&yz, &a->y, &a->z);
+    return secp256k1_fe_is_quad_var(&yz);
+}
 
 #endif

@@ -28,7 +28,7 @@ import asyncore
 import time
 import sys
 import random
-from binascii import hexlify, unhexlify
+from .util import hex_str_to_bytes, bytes_to_hex_str
 from io import BytesIO
 from codecs import encode
 import hashlib
@@ -47,6 +47,10 @@ MAX_INV_SZ = 50000
 MAX_BLOCK_SIZE = 1000000
 
 COIN = 100000000 # 1 btc in satoshis
+
+NODE_NETWORK = (1 << 0)
+NODE_GETUTXO = (1 << 1)
+NODE_BLOOM = (1 << 2)
 
 # Keep our own socket map for asyncore, so that we can track disconnects
 # ourselves (to workaround an issue with closing an asyncore socket when 
@@ -243,12 +247,12 @@ def ser_int_vector(l):
 
 # Deserialize from a hex string representation (eg from RPC)
 def FromHex(obj, hex_string):
-    obj.deserialize(BytesIO(unhexlify(hex_string.encode('ascii'))))
+    obj.deserialize(BytesIO(hex_str_to_bytes(hex_string)))
     return obj
 
 # Convert a binary-serializable object to hex (eg for submission via RPC)
 def ToHex(obj):
-    return hexlify(obj.serialize()).decode('ascii')
+    return bytes_to_hex_str(obj.serialize())
 
 # Objects that map to dashd objects, which can be serialized/deserialized
 
@@ -366,7 +370,7 @@ class CTxIn(object):
 
     def __repr__(self):
         return "CTxIn(prevout=%s scriptSig=%s nSequence=%i)" \
-            % (repr(self.prevout), hexlify(self.scriptSig),
+            % (repr(self.prevout), bytes_to_hex_str(self.scriptSig),
                self.nSequence)
 
 
@@ -388,7 +392,7 @@ class CTxOut(object):
     def __repr__(self):
         return "CTxOut(nValue=%i.%08i scriptPubKey=%s)" \
             % (self.nValue // COIN, self.nValue % COIN,
-               hexlify(self.scriptPubKey))
+               bytes_to_hex_str(self.scriptPubKey))
 
 
 class CTransaction(object):
@@ -405,8 +409,8 @@ class CTransaction(object):
             self.vin = copy.deepcopy(tx.vin)
             self.vout = copy.deepcopy(tx.vout)
             self.nLockTime = tx.nLockTime
-            self.sha256 = None
-            self.hash = None
+            self.sha256 = tx.sha256
+            self.hash = tx.hash
 
     def deserialize(self, f):
         self.nVersion = struct.unpack("<i", f.read(4))[0]
@@ -528,11 +532,8 @@ class CBlock(CBlockHeader):
         r += ser_vector(self.vtx)
         return r
 
-    def calc_merkle_root(self):
-        hashes = []
-        for tx in self.vtx:
-            tx.calc_sha256()
-            hashes.append(ser_uint256(tx.sha256))
+    # Calculate the merkle root given a vector of transaction hashes
+    def get_merkle_root(self, hashes):
         while len(hashes) > 1:
             newhashes = []
             for i in range(0, len(hashes), 2):
@@ -540,6 +541,13 @@ class CBlock(CBlockHeader):
                 newhashes.append(hash256(hashes[i] + hashes[i2]))
             hashes = newhashes
         return uint256_from_str(hashes[0])
+
+    def calc_merkle_root(self):
+        hashes = []
+        for tx in self.vtx:
+            tx.calc_sha256()
+            hashes.append(ser_uint256(tx.sha256))
+        return self.get_merkle_root(hashes)
 
     def is_valid(self):
         self.calc_sha256()
@@ -951,6 +959,7 @@ class msg_sendheaders(object):
     def __repr__(self):
         return "msg_sendheaders()"
 
+
 # getheaders message has
 # number of entries
 # vector of hashes
@@ -1072,6 +1081,8 @@ class NodeConnCB(object):
         # tests; it causes message delivery to sleep for the specified time
         # before acquiring the global lock and delivering the next message.
         self.deliver_sleep_time = None
+        # Remember the services our peer has advertised
+        self.peer_services = None
 
     def set_deliver_sleep_time(self, value):
         with mininode_lock:
@@ -1109,6 +1120,7 @@ class NodeConnCB(object):
         conn.ver_send = min(MY_VERSION, message.nVersion)
         if message.nVersion < 209:
             conn.ver_recv = conn.ver_send
+        conn.nServices = message.nServices
 
     def on_verack(self, conn, message):
         conn.ver_recv = conn.ver_send
@@ -1139,6 +1151,7 @@ class NodeConnCB(object):
     def on_mempool(self, conn): pass
     def on_pong(self, conn, message): pass
     def on_feefilter(self, conn, message): pass
+    def on_sendheaders(self, conn, message): pass
 
 # More useful callbacks and functions for NodeConnCB's which have a single NodeConn
 class SingleNodeConnCB(NodeConnCB):
@@ -1187,15 +1200,16 @@ class NodeConn(asyncore.dispatcher):
         b"getheaders": msg_getheaders,
         b"reject": msg_reject,
         b"mempool": msg_mempool,
-        b"feefilter": msg_feefilter
+        b"feefilter": msg_feefilter,
+        b"sendheaders": msg_sendheaders
     }
     MAGIC_BYTES = {
         "mainnet": b"\xbf\x0c\x6b\xbd",   # mainnet
         "testnet3": b"\xce\xe2\xca\xff",  # testnet3
-        "regtest": b"\xfc\xc1\xb7\xdc"    # regtest
+        "regtest": b"\xfc\xc1\xb7\xdc",   # regtest
     }
 
-    def __init__(self, dstaddr, dstport, rpc, callback, net="regtest", services=1):
+    def __init__(self, dstaddr, dstport, rpc, callback, net="regtest", services=NODE_NETWORK):
         asyncore.dispatcher.__init__(self, map=mininode_socket_map)
         self.log = logging.getLogger("NodeConn(%s:%d)" % (dstaddr, dstport))
         self.dstaddr = dstaddr
@@ -1210,6 +1224,7 @@ class NodeConn(asyncore.dispatcher):
         self.network = net
         self.cb = callback
         self.disconnect = False
+        self.nServices = 0
 
         # stuff version msg into sendbuf
         vt = msg_version()

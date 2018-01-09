@@ -22,7 +22,7 @@ These tools inject timestamps by default, which produce non-deterministic
 binaries. The ZERO_AR_DATE environment variable is used to disable that.
 
 This version of cctools has been patched to use the current version of clang's
-headers and and its libLTO.so rather than those from llvmgcc, as it was
+headers and its libLTO.so rather than those from llvmgcc, as it was
 originally done in toolchain4.
 
 To complicate things further, all builds must target an Apple SDK. These SDKs
