@@ -91,9 +91,12 @@ void build_graph(Graph& graph) {
 	boost::topological_sort(graph, std::back_inserter(c));
 
 	ostringstream topstream;
+	typedef typename boost::property_map<
+		Graph, boost::vertex_index_t
+	>::const_type IndexMap;
 	printf("A topological ordering: ");
 	for (auto& i: c) {
-		topstream << i << " ";
+		topstream << get(indices, i) << " ";
 	}
 	printf(topstream.str().c_str());
 
