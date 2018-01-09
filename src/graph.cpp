@@ -7,7 +7,7 @@ Graph::Graph(int V)
 }
 Graph::~Graph()
 {
-	delete adj;
+	delete[] adj;
 }
 void Graph::addEdge(int v, int w)
 {
@@ -99,4 +99,9 @@ void Graph::SCC(list<int> &result)
 	for (int i = 0; i < V; i++)
 		if (disc[i] == NIL)
 			SCCUtil(i, disc, low, st, stackMember, result);
+
+	delete[] disc;
+	delete[] stackMember;
+	delete[] low;
+	delete st;
 }
