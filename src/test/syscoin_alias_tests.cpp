@@ -22,28 +22,21 @@ BOOST_GLOBAL_FIXTURE( SyscoinTestingSetup );
 BOOST_FIXTURE_TEST_SUITE (syscoin_alias_tests, BasicSyscoinTestingSetup)
 const unsigned int MAX_ALIAS_UPDATES_PER_BLOCK = 5;
 BOOST_AUTO_TEST_CASE(generate_graph_topological_sort) {
-	// Create a n adjacency list, add some vertices.
-	boost::adjacency_list<> g(7);
+	typedef adjacency_list< vecS, vecS, directedS, color_property<> > Graph;
+	typedef boost::graph_traits<Graph>::vertex_descriptor Vertex;
+	Pair edges[6] = { Pair(0,1), Pair(2,4),
+		Pair(2,5),
+		Pair(0,3), Pair(1,4),
+		Pair(4,3) };
+	Graph G(6, edges, edges + 6);
 
-	// Add edges between vertices.
-	boost::add_edge(0, 3, g);
-	boost::add_edge(1, 3, g);
-	boost::add_edge(1, 4, g);
-	boost::add_edge(2, 1, g);
-	boost::add_edge(3, 5, g);
-	boost::add_edge(4, 6, g);
-	boost::add_edge(5, 6, g);
+	typedef std::vector< Vertex > container;
+	container c;
+	topological_sort(G, std::back_inserter(c));
 
-	// Perform a topological sort.
-	std::deque<int> topo_order;
-	boost::topological_sort(g, std::front_inserter(topo_order));
-
-	// Print the results.
-	for (std::deque<int>::const_iterator i = topo_order.begin();
-		i != topo_order.end();
-		++i)
-	{
-		LogPrintf("%d\n",*i);
+	cout << "A topological ordering: ";
+	for (container::reverse_iterator ii = c.rbegin(); ii != c.rend(); ++ii)
+		LogPrintf("%d\n", index(*ii));
 	}
 
 
