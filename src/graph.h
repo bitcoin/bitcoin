@@ -12,8 +12,8 @@ class Graph
 	list<int> *adj;    // A dynamic array of adjacency lists
 
 					   // A Recursive DFS based function used by SCC()
-	void SCCUtil(int u, int disc[], int low[],
-		stack<int> *st, bool stackMember[], list<int>&);
+	void SCCUtil(const int &u, int &disc[], int &low[],
+		stack<int> *st, bool &stackMember[], list<int>&);
 public:
 	Graph(int V);   // Constructor
 	~Graph();

@@ -24,8 +24,8 @@ void Graph::addEdge(int v, int w)
 //           of SCC)
 // stackMember[] --> bit/index array for faster check whether
 //                  a node is in stack
-void Graph::SCCUtil(int u, int disc[], int low[], stack<int> *st,
-	bool stackMember[],list<int> &result)
+void Graph::SCCUtil(const int &u, int &disc[], int &low[], stack<int> *st,
+	bool &stackMember[],list<int> &result)
 {
 	// A static variable is used for simplicity, we can avoid use
 	// of static variable by passing a pointer.
