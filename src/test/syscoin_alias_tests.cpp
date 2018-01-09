@@ -28,8 +28,8 @@ BOOST_AUTO_TEST_CASE(generate_graph_topological_sort) {
 	g4.addEdge(4, 2);
 	g4.addEdge(4, 3);
 
-	list<int> result;
-	g4.SCC(result);
+	//list<int> result;
+	//g4.SCC(result);
 	printf("BEGIN\n-----\n");
 	for (auto& r : result) {
 		printf("%d\n", r);

@@ -13,95 +13,103 @@ void Graph::addEdge(int v, int w)
 {
 	adj[v].push_back(w);
 }
-// A recursive function that finds and prints strongly connected
-// components using DFS traversal
-// u --> The vertex to be visited next
-// disc[] --> Stores discovery times of visited vertices
-// low[] -- >> earliest visited vertex (the vertex with minimum
-//             discovery time) that can be reached from subtree
-//             rooted with current vertex
-// *st -- >> To store all the connected ancestors (could be part
-//           of SCC)
-// stackMember[] --> bit/index array for faster check whether
-//                  a node is in stack
-void Graph::SCCUtil(const int &u, int disc[], int low[], stack<int> *st,
-	bool stackMember[],list<int> &result)
+
+bool Graph::isCyclicUtil(int v, bool visited[], bool *recStack)
 {
-	// A static variable is used for simplicity, we can avoid use
-	// of static variable by passing a pointer.
-	static int time = 0;
-
-	// Initialize discovery time and low value
-	disc[u] = low[u] = ++time;
-	st->push(u);
-	stackMember[u] = true;
-
-	// Go through all vertices adjacent to this
-	list<int>::iterator i;
-	for (i = adj[u].begin(); i != adj[u].end(); ++i)
+	if (visited[v] == false)
 	{
-		int v = *i;  // v is current adjacent of 'u'
+		// Mark the current node as visited and part of recursion stack
+		visited[v] = true;
+		recStack[v] = true;
 
-					 // If v is not visited yet, then recur for it
-		if (disc[v] == -1)
+		// Recur for all the vertices adjacent to this vertex
+		for (auto& i : adj[v]) {
 		{
-			SCCUtil(v, disc, low, st, stackMember, result);
-
-			// Check if the subtree rooted with 'v' has a
-			// connection to one of the ancestors of 'u'
-			// Case 1 (per above discussion on Disc and Low value)
-			low[u] = min(low[u], low[v]);
+			if (!visited[i] && isCyclicUtil(i, visited, recStack))
+				return true;
+			else if (recStack[i]) {
+				i = NIL;
+				return true;
+			}
 		}
 
-		// Update low value of 'u' only of 'v' is still in stack
-		// (i.e. it's a back edge, not cross edge).
-		// Case 2 (per above discussion on Disc and Low value)
-		else if (stackMember[v] == true)
-			low[u] = min(low[u], disc[v]);
 	}
-
-	// head node found, pop the stack and print an SCC
-	int w = 0;  // To store stack extracted vertices
-	if (low[u] == disc[u])
-	{
-		while (st->top() != u)
-		{
-			w = (int)st->top();
-			result.push_back(w);
-			stackMember[w] = false;
-			st->pop();
-		}
-		w = (int)st->top();
-		result.push_back(w);
-		stackMember[w] = false;
-		st->pop();
-	}
+	recStack[v] = false;  // remove the vertex from recursion stack
+	return false;
 }
 
-// The function to do DFS traversal. It uses SCCUtil()
-void Graph::SCC(list<int> &result)
+// Returns true if the graph contains a cycle, else false.
+bool Graph::isCyclic()
 {
-	int *disc = new int[V];
-	int *low = new int[V];
-	bool *stackMember = new bool[V];
-	stack<int> *st = new stack<int>();
-
-	// Initialize disc and low, and stackMember arrays
+	// Mark all the vertices as not visited and not part of recursion
+	// stack
+	bool *visited = new bool[V];
+	bool *recStack = new bool[V];
 	for (int i = 0; i < V; i++)
 	{
-		disc[i] = NIL;
-		low[i] = NIL;
-		stackMember[i] = false;
+		visited[i] = false;
+		recStack[i] = false;
 	}
 
-	// Call the recursive helper function to find strongly
-	// connected components in DFS tree with vertex 'i'
+	// Call the recursive helper function to detect cycle in different
+	// DFS trees
 	for (int i = 0; i < V; i++)
-		if (disc[i] == NIL)
-			SCCUtil(i, disc, low, st, stackMember, result);
+		if (isCyclicUtil(i, visited, recStack))
+			return true;
 
-	delete[] disc;
-	delete[] stackMember;
-	delete[] low;
-	delete st;
+	return false;
+}
+bool Graph::topologicalSort(vector<int>& result)
+{
+	// Create a vector to store indegrees of all
+	// vertices. Initialize all indegrees as 0.
+	vector<int> in_degree(V, 0);
+
+	// Traverse adjacency lists to fill indegrees of
+	// vertices.  This step takes O(V+E) time
+	for (int u = 0; u<V; u++)
+	{
+		for (auto& i : adj[u])
+			in_degree[i]++;
+	}
+
+	// Create an queue and enqueue all vertices with
+	// indegree 0
+	queue<int> q;
+	for (int i = 0; i < V; i++)
+		if (in_degree[i] == 0)
+			q.push(i);
+
+	// Initialize count of visited vertices
+	int cnt = 0;
+
+
+	// One by one dequeue vertices from queue and enqueue
+	// adjacents if indegree of adjacent becomes 0
+	while (!q.empty())
+	{
+		// Extract front of queue (or perform dequeue)
+		// and add it to topological order
+		int u = q.front();
+		q.pop();
+		result.push_back(u);
+
+		// Iterate through all its neighbouring nodes
+		// of dequeued node u and decrease their in-degree
+		// by 1
+		for (auto& i : adj[u])
+
+			// If in-degree becomes zero, add it to queue
+			if (--in_degree[i] == 0)
+				q.push(i);
+
+		cnt++;
+	}
+
+	// Check if there was a cycle
+	if (cnt != V)
+	{
+		return false;
+	}
+
 }

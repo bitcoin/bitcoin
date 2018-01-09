@@ -1,6 +1,7 @@
 #ifndef GRAPH_H
 #define GRAPH_H
 #include <list>
+#include <vector>
 #include <stack>
 #define NIL -1
 using namespace std;
@@ -12,13 +13,13 @@ class Graph
 	list<int> *adj;    // A dynamic array of adjacency lists
 
 					   // A Recursive DFS based function used by SCC()
-	void SCCUtil(const int &u, int disc[], int low[],
-		stack<int> *st, bool stackMember[], list<int>&);
+	bool isCyclicUtil(int v, bool visited[], bool *recStack);
 public:
 	Graph(int V);   // Constructor
 	~Graph();
-	void addEdge(int v, int w);   // function to add an edge to graph
-	void SCC(list<int>&);    // prints strongly connected components
+	bool topologicalSort(vector<int>& result);
+	bool isCyclic();
+	
 };
 
 
