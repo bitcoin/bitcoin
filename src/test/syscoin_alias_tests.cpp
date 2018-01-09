@@ -24,22 +24,28 @@ BOOST_GLOBAL_FIXTURE( SyscoinTestingSetup );
 BOOST_FIXTURE_TEST_SUITE (syscoin_alias_tests, BasicSyscoinTestingSetup)
 const unsigned int MAX_ALIAS_UPDATES_PER_BLOCK = 5;
 BOOST_AUTO_TEST_CASE(generate_graph_topological_sort) {
-	typedef boost::adjacency_list< boost::vecS, boost::vecS, boost::directedS > Graph;
-//	typedef std::vector< Vertex > container;
-	//typedef boost::graph_traits<Graph>::vertex_descriptor Vertex;
+	typedef boost::adjacency_list< boost::listS, boost::listS, boost::directedS > Graph;
+	typedef boost::graph_traits<Graph>::vertex_descriptor Vertex;
+	typedef std::vector< Vertex > container;
+	
 
 	Graph G(6);
 	boost::add_edge(0, 1, G);
+	boost::add_edge(2, 4, G);
+	boost::add_edge(2, 5, G);
+	boost::add_edge(0, 3, G);
+	boost::add_edge(1, 4, G);
+	boost::add_edge(4, 3, G);
 
 	
-	//container c;
+	container c;
 	boost::topological_sort(G, std::back_inserter(c));
 
 
 	LogPrintf("A topological ordering: ");
-	//for (container::reverse_iterator ii = c.rbegin(); ii != c.rend(); ++ii){
+	for (container::reverse_iterator ii = c.rbegin(); ii != c.rend(); ++ii){
 	//	LogPrintf("%d\n", ii);
-	//}
+	}
 
 
 
