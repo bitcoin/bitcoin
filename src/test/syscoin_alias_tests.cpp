@@ -15,6 +15,7 @@
 #include <deque>
 #include <iterator>
 
+#include <boost/graph/graph_traits.hpp>   
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/topological_sort.hpp>
 using namespace std;
@@ -23,7 +24,7 @@ BOOST_GLOBAL_FIXTURE( SyscoinTestingSetup );
 BOOST_FIXTURE_TEST_SUITE (syscoin_alias_tests, BasicSyscoinTestingSetup)
 const unsigned int MAX_ALIAS_UPDATES_PER_BLOCK = 5;
 BOOST_AUTO_TEST_CASE(generate_graph_topological_sort) {
-	typedef adjacency_list< vecS, vecS, directedS > Graph;
+	typedef boost::adjacency_list< listS, listS, directedS > Graph;
 	typedef boost::graph_traits<Graph>::vertex_descriptor Vertex;
 	Pair edges[6] = { Pair(0,1), Pair(2,4),
 		Pair(2,5),
@@ -37,7 +38,7 @@ BOOST_AUTO_TEST_CASE(generate_graph_topological_sort) {
 
 	LogPrintf("A topological ordering: ");
 	for (container::reverse_iterator ii = c.rbegin(); ii != c.rend(); ++ii){
-		LogPrintf("%d\n", index(*ii));
+		LogPrintf("%d\n", boost::index(*ii));
 	}
 
 
