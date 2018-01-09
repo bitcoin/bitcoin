@@ -17,6 +17,8 @@
 
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/topological_sort.hpp>
+using namespace std;
+using namespace boost;
 BOOST_GLOBAL_FIXTURE( SyscoinTestingSetup );
 
 BOOST_FIXTURE_TEST_SUITE (syscoin_alias_tests, BasicSyscoinTestingSetup)
@@ -32,10 +34,10 @@ BOOST_AUTO_TEST_CASE(generate_graph_topological_sort) {
 
 	typedef std::vector< Vertex > container;
 	container c;
-	topological_sort(G, std::back_inserter(c));
+	boost::topological_sort(G, std::back_inserter(c));
 
-	cout << "A topological ordering: ";
-	for (container::reverse_iterator ii = c.rbegin(); ii != c.rend(); ++ii)
+	LogPrintf("A topological ordering: ");
+	for (container::reverse_iterator ii = c.rbegin(); ii != c.rend(); ++ii){
 		LogPrintf("%d\n", index(*ii));
 	}
 
