@@ -23,7 +23,7 @@ BOOST_FIXTURE_TEST_SUITE (syscoin_alias_tests, BasicSyscoinTestingSetup)
 const unsigned int MAX_ALIAS_UPDATES_PER_BLOCK = 5;
 BOOST_AUTO_TEST_CASE(generate_graph_topological_sort) {
 	// Create a n adjacency list, add some vertices.
-	boost::adjacency_list<> g(num tasks);
+	boost::adjacency_list<> g(7);
 	boost::add_vertex(0, g);
 	boost::add_vertex(1, g);
 	boost::add_vertex(2, g);
