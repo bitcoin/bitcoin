@@ -24,20 +24,17 @@ BOOST_GLOBAL_FIXTURE( SyscoinTestingSetup );
 BOOST_FIXTURE_TEST_SUITE (syscoin_alias_tests, BasicSyscoinTestingSetup)
 const unsigned int MAX_ALIAS_UPDATES_PER_BLOCK = 5;
 BOOST_AUTO_TEST_CASE(generate_graph_topological_sort) {
-	typedef boost::adjacency_list< boost::listS, boost::listS, boost::directedS > Graph;
+	typedef boost::adjacency_list< boost::vecS, boost::vecS, boost::directedS > Graph;
 	typedef boost::graph_traits<Graph>::vertex_descriptor Vertex;
+	typedef pair<int, int> Pair;
+	Pair edge_array[11] = { Pair(0,1), Pair(0,2), Pair(0,3),
+		Pair(0,4), Pair(2,0), Pair(3,0),
+		Pair(2,4), Pair(3,1), Pair(3,4),
+		Pair(4,0), Pair(4,1) };
+
+	Graph G(6, edges, edges + 6);
+
 	typedef std::vector< Vertex > container;
-	
-
-	Graph G(6);
-	boost::add_edge(0, 1, G);
-	boost::add_edge(2, 4, G);
-	boost::add_edge(2, 5, G);
-	boost::add_edge(0, 3, G);
-	boost::add_edge(1, 4, G);
-	boost::add_edge(4, 3, G);
-
-	
 	container c;
 	boost::topological_sort(G, std::back_inserter(c));
 
