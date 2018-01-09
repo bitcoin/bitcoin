@@ -32,7 +32,9 @@ BOOST_AUTO_TEST_CASE(generate_graph_topological_sort) {
 		Pair(2,4), Pair(3,1), Pair(3,4),
 		Pair(4,0), Pair(4,1) };
 
-	Graph G(6, edges, edges + 6);
+	Graph G(5);
+	for (int i = 0; i < 11; i++)
+		boost:add_edge(edge_array[i].first, edge_array[i].second, G);
 
 	typedef std::vector< Vertex > container;
 	container c;
