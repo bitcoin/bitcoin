@@ -4708,8 +4708,6 @@ int CHDWallet::AddAnonInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                             vSplitCommitBlindingKeys[l].begin_nc(), &vpAllBlinds[0],
                             vpAllBlinds.size(), vpOutBlinds.size()))
                             return errorN(1, sError, __func__, "secp256k1_pedersen_blind_sum failed.");
-
-
                     } else
                     {
                         vSplitCommitBlindingKeys[l].MakeNewKey(true);
@@ -9181,6 +9179,11 @@ bool CHDWallet::AddToRecord(CTransactionRecord &rtxIn, const CTransaction &tx,
     };
 
     CStoredTransaction stx;
+    if (!wdb.ReadStoredTx(txhash, stx))
+    {
+        stx.vBlinds.clear();
+    };
+
     for (size_t i = 0; i < tx.vpout.size(); ++i)
     {
         const auto &txout = tx.vpout[i];

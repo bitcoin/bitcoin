@@ -560,7 +560,7 @@ bool CDB::Rewrite(CWalletDBWrapper& dbw, const char* pszSkip)
                                 ssValue.clear();
                                 ssValue << CLIENT_VERSION;
                             }
-                            
+
                             Dbt datKey(ssKey.data(), ssKey.size());
                             Dbt datValue(ssValue.data(), ssValue.size());
                             int ret2 = pdbCopy->put(nullptr, &datKey, &datValue, DB_NOOVERWRITE);

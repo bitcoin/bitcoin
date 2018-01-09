@@ -3925,6 +3925,7 @@ UniValue getcoldstakinginfo(const JSONRPCRequest &request)
 
     bool fEnabled = false;
     UniValue jsonSettings;
+    CBitcoinAddress addrColdStaking;
     if (pwallet->GetSetting("changeaddress", jsonSettings)
         && jsonSettings["coldstakingaddress"].isStr())
     {
@@ -3934,22 +3935,21 @@ UniValue getcoldstakinginfo(const JSONRPCRequest &request)
             return error("%s: Get coldstakingaddress failed %s.", __func__, e.what());
         };
 
-        CBitcoinAddress addr(sAddress);
-        if (addr.IsValid())
+        addrColdStaking = sAddress;
+        if (addrColdStaking.IsValid())
             fEnabled = true;
-
-        if (addr.IsValid(CChainParams::EXT_PUBLIC_KEY))
-        {
-            CTxDestination dest = addr.Get();
-            CExtKeyPair kp = boost::get<CExtKeyPair>(dest);
-            CKeyID idk = kp.GetID();
-            CBitcoinAddress addr;
-            addr.Set(idk, CChainParams::EXT_KEY_HASH);
-            obj.pushKV("coldstaking_extkey_id", addr.ToString());
-        };
     };
 
-    obj.push_back(Pair("coldstaking_enabled", fEnabled));
+    obj.push_back(Pair("enabled", fEnabled));
+    if (addrColdStaking.IsValid(CChainParams::EXT_PUBLIC_KEY))
+    {
+        CTxDestination dest = addrColdStaking.Get();
+        CExtKeyPair kp = boost::get<CExtKeyPair>(dest);
+        CKeyID idk = kp.GetID();
+        CBitcoinAddress addr;
+        addr.Set(idk, CChainParams::EXT_KEY_HASH);
+        obj.pushKV("coldstaking_extkey_id", addr.ToString());
+    };
     obj.pushKV("coin_in_stakeable_script", ValueFromAmount(nStakeable));
     obj.pushKV("coin_in_coldstakeable_script", ValueFromAmount(nColdStakeable));
     CAmount nTotal = nColdStakeable + nStakeable;

@@ -32,7 +32,6 @@ bool VerifyMLSAG(const CTransaction &tx, CValidationState &state)
 
     nPlainValueOut += nTxFee;
 
-
     // Get commitment for unblinded amount
     uint8_t zeroBlind[32];
     memset(zeroBlind, 0, 32);
@@ -43,7 +42,6 @@ bool VerifyMLSAG(const CTransaction &tx, CValidationState &state)
             &plainCommitment, zeroBlind, (uint64_t) nPlainValueOut, secp256k1_generator_h))
             return state.DoS(100, false, REJECT_INVALID, "bad-plain-commitment");
     };
-
 
     std::vector<const uint8_t*> vpInputSplitCommits;
     if (fSplitCommitments)

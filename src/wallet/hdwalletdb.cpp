@@ -198,7 +198,7 @@ bool CHDWalletDB::ReadStoredTx(const uint256 &hash, CStoredTransaction &stx, uin
 
 bool CHDWalletDB::WriteStoredTx(const uint256 &hash, const CStoredTransaction &stx)
 {
-     return WriteIC(std::make_pair(std::string("stx"), hash), stx, true);
+    return WriteIC(std::make_pair(std::string("stx"), hash), stx, true);
 };
 
 bool CHDWalletDB::EraseStoredTx(const uint256 &hash)
