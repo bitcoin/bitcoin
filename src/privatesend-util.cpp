@@ -27,12 +27,14 @@ CScript CKeyHolder::GetScriptForDestination() const
 
 const CKeyHolder& CKeyHolderStorage::AddKey(CWallet* pwallet)
 {
+    LOCK(cs_storage);
     storage.emplace_back(std::unique_ptr<CKeyHolder>(new CKeyHolder(pwallet)));
     LogPrintf("CKeyHolderStorage::%s -- storage size %lld\n", __func__, storage.size());
     return *storage.back();
 }
 
 void CKeyHolderStorage::KeepAll(){
+    LOCK(cs_storage);
     if (storage.size() > 0) {
         for (auto &key : storage) {
             key->KeepKey();
@@ -44,6 +46,7 @@ void CKeyHolderStorage::KeepAll(){
 
 void CKeyHolderStorage::ReturnAll()
 {
+    LOCK(cs_storage);
     if (storage.size() > 0) {
         for (auto &key : storage) {
             key->ReturnKey();
