@@ -90,16 +90,16 @@ void build_graph(Graph& graph) {
 	container c;
 	boost::topological_sort(graph, std::back_inserter(c));
 
-
-	LogPrintf("A topological ordering: ");
-	for (typename container::reverse_iterator ii = c.rbegin(); ii != c.rend(); ++ii) {
-		//	LogPrintf("%d\n", ii);
+	ostringstream topstream;
+	printf("A topological ordering: ");
+	for (auto& i: c) {
+		topstream << i << " ";
 	}
+	printf(topstream.str().c_str());
 
 }
-
 BOOST_AUTO_TEST_CASE(generate_graph_topological_sort) {
-
+	printf("Running generate_graph_topological_sort...\n");
 	boost::directed_graph<> graph;
 	build_graph(graph);
 
@@ -140,6 +140,7 @@ BOOST_AUTO_TEST_CASE (generate_big_aliasdata)
 	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew jag2 pub 3 0 TTVgyEvCfgZFiVL32kD7jMRaBKtGCHqwbD '' '' ''"), runtime_error);
 	GenerateBlocks(5);	
 }
+
 BOOST_AUTO_TEST_CASE (generate_aliaswitness)
 {
 	printf("Running generate_aliaswitness...\n");
