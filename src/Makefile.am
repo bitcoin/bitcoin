@@ -159,7 +159,8 @@ BITCOIN_CORE_H = \
   wallet/db.h \
   wallet/wallet.h \
   wallet/wallet_ismine.h \
-  wallet/walletdb.h
+  wallet/walletdb.h \
+  aescache.h
 
 JSON_H = \
   json/json_spirit.h \
@@ -186,8 +187,7 @@ libbitcoin_server_a_SOURCES = \
   bloom.cpp \
   chain.cpp \
   checkpoints.cpp \
-  init.cpp \
-  leveldbwrapper.cpp \
+  init.cpp \ 
   main.cpp \
   merkleblock.cpp \
   miner.cpp \
@@ -205,7 +205,6 @@ libbitcoin_server_a_SOURCES = \
   rpcserver.cpp \
   script/sigcache.cpp \
   timedata.cpp \
-  txdb.cpp \
   txmempool.cpp \
   validationinterface.cpp \
   $(JSON_H) \
@@ -261,6 +260,9 @@ libbitcoin_common_a_SOURCES = \
   arith_uint256.cpp \
   base58.cpp \
   chainparams.cpp \
+  txdb.cpp \
+  leveldbwrapper.cpp \
+  aescache.cpp \
   coins.cpp \
   compressor.cpp \
   core_read.cpp \
@@ -359,7 +361,7 @@ hodlcoin_cli_LDADD = \
   $(LIBBITCOIN_CLI) \
   $(LIBBITCOIN_UTIL)
 
-hodlcoin_cli_LDADD += $(BOOST_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS)
+hodlcoin_cli_LDADD += $(LIBLEVELDB) $(LIBMEMENV) $(BOOST_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS)
 #
 
 # hodlcoin-tx binary #
@@ -379,7 +381,7 @@ hodlcoin_tx_LDADD = \
   $(LIBBITCOIN_CRYPTO_X86) \
   $(LIBSECP256K1)
 
-hodlcoin_tx_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
+hodlcoin_tx_LDADD += $(LIBLEVELDB) $(LIBMEMENV) $(BOOST_LIBS) $(CRYPTO_LIBS)
 #
 
 # bitcoinconsensus library #

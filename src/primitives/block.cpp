@@ -11,8 +11,28 @@
 #include "crypto/common.h"
 #include "arith_uint256.h"
 #include "patternsearch.h"
+#include "aescache.h"
+
+extern CBlockAesCache *aesCache;
 
 uint256 CBlockHeader::GetHash() const
+{
+    uint256 hash;
+
+    if (aesCache) {
+        uint256 orig_hash = SerializeHash(*this);
+        if (!aesCache->ReadHash(orig_hash, hash)) {
+            hash = GetHashNoCache();
+            aesCache->WriteHash(orig_hash, hash);
+        }
+    } else {
+        hash = GetHashNoCache();
+    }
+
+    return hash;
+}
+
+uint256 CBlockHeader::GetHashNoCache() const
 {
     uint256 midHash = GetMidHash();
     uint256 cacheBlockHash=Hash(BEGIN(nVersion), END(nFinalCalculation));

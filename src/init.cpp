@@ -180,6 +180,9 @@ void Shutdown()
         if (pcoinsTip != NULL) {
             FlushStateToDisk();
         }
+        if (aesCache)
+            aesCache->Flush();
+
         delete pcoinsTip;
         pcoinsTip = NULL;
         delete pcoinscatcher;
@@ -188,6 +191,8 @@ void Shutdown()
         pcoinsdbview = NULL;
         delete pblocktree;
         pblocktree = NULL;
+        delete aesCache; 
+        aesCache = NULL;
     }
 #ifdef ENABLE_WALLET
     if (pwalletMain)
@@ -1147,10 +1152,14 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     nTotalCache -= nBlockTreeDBCache;
     int64_t nCoinDBCache = std::min(nTotalCache / 2, (nTotalCache / 4) + (1 << 23)); // use 25%-50% of the remainder for disk cache
     nTotalCache -= nCoinDBCache;
+    size_t nBlockAesCache = nTotalCache / 2 ;
+    nTotalCache -= nBlockAesCache; // use 50% for the aes cache
     nCoinCacheUsage = nTotalCache; // the rest goes to in-memory cache
+
     LogPrintf("Cache configuration:\n");
     LogPrintf("* Using %.1fMiB for block index database\n", nBlockTreeDBCache * (1.0 / 1024 / 1024));
     LogPrintf("* Using %.1fMiB for chain state database\n", nCoinDBCache * (1.0 / 1024 / 1024));
+    LogPrintf("* Using %.1fMiB for aes cache database\n", nBlockAesCache * (1.0 / 1024 / 1024));
     LogPrintf("* Using %.1fMiB for in-memory UTXO set\n", nCoinCacheUsage * (1.0 / 1024 / 1024));
 
     bool fLoaded = false;
@@ -1168,6 +1177,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
                 delete pcoinsdbview;
                 delete pcoinscatcher;
                 delete pblocktree;
+                delete aesCache;
 
                 // Detect database obfuscation by future versions of the DBWrapper
                 bool chainstateScrambled;
@@ -1177,6 +1187,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
                 pcoinsdbview = new CCoinsViewDB(nCoinDBCache, chainstateScrambled, false, fReindex);
                 pcoinscatcher = new CCoinsViewErrorCatcher(pcoinsdbview);
                 pcoinsTip = new CCoinsViewCache(pcoinscatcher);
+                aesCache = new CBlockAesCache(nBlockAesCache, false, fReindex);
 
                 if (fReindex) {
                     pblocktree->WriteReindexing(true);

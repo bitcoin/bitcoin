@@ -71,6 +71,7 @@ public:
     }
 
     uint256 GetHash() const;
+    uint256 GetHashNoCache() const;
     uint256 GetMidHash() const;
     uint256 FindBestPatternHash(int& collisions,char *scratchpad,int nThreads,int* minerStopFlag);
 
