@@ -17,6 +17,7 @@ class Graph
 public:
 	Graph(int V);   // Constructor
 	~Graph();
+	void addEdge(int v, int w);   // function to add an edge to graph
 	bool topologicalSort(vector<int>& result);
 	bool isCyclic();
 	
