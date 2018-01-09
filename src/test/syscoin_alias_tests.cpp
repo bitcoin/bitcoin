@@ -30,22 +30,22 @@ BOOST_AUTO_TEST_CASE(generate_graph_topological_sort) {
 	Graph G(6);
 	u = vertex(0, G);
 	v = vertex(1, G);
-	add_edge(G, u, v);
+	boost::add_edge(u, v, G);
 	u = vertex(2, G);
 	v = vertex(4, G);
-	add_edge(G, u, v);
+	boost::add_edge(u, v, G);
 	u = vertex(2, G);
 	v = vertex(5, G);
-	add_edge(G, u, v);
+	boost::add_edge(u, v, G);
 	u = vertex(0, G);
 	v = vertex(3, G);
-	add_edge(G, u, v);
+	boost::add_edge(u, v, G);
 	u = vertex(1, G);
 	v = vertex(4, G);
-	add_edge(G, u, v);
+	boost::add_edge(u, v, G);
 	u = vertex(4, G);
 	v = vertex(3, G);
-	add_edge(G, u, v);
+	boost::add_edge(u, v, G);
 
 
 	typedef std::vector< Vertex > container;
@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(generate_graph_topological_sort) {
 
 	LogPrintf("A topological ordering: ");
 	for (container::reverse_iterator ii = c.rbegin(); ii != c.rend(); ++ii){
-		LogPrintf("%d\n", boost::index(*ii));
+	//	LogPrintf("%d\n", ii);
 	}
 
 
