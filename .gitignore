@@ -132,3 +132,5 @@ dash-cli
 dashd
 dash-qt
 make
+
+/docker/bin

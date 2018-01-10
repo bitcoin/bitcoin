@@ -13,6 +13,9 @@ group: deprecated-2017Q3
 os: linux
 language: generic
 
+services:
+  - docker
+
 cache:
   apt: true
   ccache: true
@@ -23,6 +26,10 @@ cache:
 
 env:
   global:
+    # DOCKER_HUB_USER
+    - secure: "J0T+zrRBBzBnxoioCD378cRSJUF8Vms32QMmrENVVfuJl03oBQv0QxSatLEiD4PtRPrN00mJ8/k/HdqFQ0SN1yg6a00duOZ6C9jk6t/fExBO1LNhp3Z7lcaMUrNEyRN6sgfVeznDVTGj9jBQU2HNlwHk0UD9BNp/k+Bjhrtw7Njp9JTLZKBgxrXk0WZmfk0d75Q+9DajA1j2tSfWVpwzv6HMGfqIH1wsVEakBY+tnaE6EO3IdzdWHhf/iV+Tx0tL0Qz/6mejgSuoGLTJLmeTrceTTmsDlN3B95y+XfcYDs6EP7gpzN8Ffg/mLV8xJ2Myj7+b1o+smMJZE5tLuPIeAu0YsfkPNa/tNLotOlDxF72per0kXyNYbRf+JrpxiOu9pLCtdtd40V2SsiNhpQqHVy+b+wkkqo2syTHT+9UNkqEi3WFm6TqFuOeQNtDm6R0hRl/Talw/ZEeKs68z1Cf6VyBrZG5LqtOurtWlKwXCe/Tr1i2g4BEAcbywphtCCcfgMK9YSGQnjKkGk6k9gVEa2bneYLZz1RSh2OpXnIsIJOX7X0hNd5xtQDLgbpSUlKwVcEriWeGe12GCszKNX9gdEo2bHeq4xAJ6BE+ot745z9dc+nC2BJ6Su+I5L6zBg4m2FWn0TWhPvz/6JR26t6ls/E7m+hkwJTCHnIUiFmmzpEw="
+    # DOCKER_HUB_PASSWORD
+    - secure: "RLzlMhfLqwSBrZqJOVOd61suXBn+HtUR3vOZfuFYF/Qmjjj5TE41+rObZmzc54hP/ZL+OH6blnibpvfDXlX+eN38ivFQfuxkJIGL68SJsEwNBRwW39Yw6Hl5RdI41MLCH7ByN15wifLp1JKBilHJ7XGMOUjI7P0yl7JjX8GBXUCtJbVLRugo80/yn+XQ1NdnlpbpYHNjMEQFWSODPa3pSK5McWvyQjDZDgS+IkdrZmIYJPMa7bmKH5I/edUPSmXQT905FgEwq9u8XR0SyBopli21EK9l6GkXIIvmDTYz5vT26Apvi2B4Aoazlklg+KNRUJuLGerpt6kbnU0gMSUChVkFfFhOk6GRSN3a/AUfD2FOudvMhet2QvlPHx+GYdEUr5XVo5HW42pHsqfD6eDtHd8VLTsHP0q4C8V85fNMv21lkkehy2ry8fx/RRy6x4O2wg2mua+79UkGKXp75gMKzWEcth34PCFCOu37l2F8R/ANnrQ52K/8vIQ88TtU2OpYX89fHjLojBxu+WKEBGZH2LRPsZBOUHeeO5C/xKDrhZU24ORnMW8wg66Qg5GIX1KI4a8yp73Mpues5hzpJ6wkMuRrQt40ymKndLCjv8KSd+5BfP6Or/KIrzDNYdZaasjk7JNi6rcZmm9d3fTAo+Ja/mjpUCIOo3SX14luzVCJIig="
     - MAKEJOBS=-j5
     - RUN_TESTS=false
     - CHECK_DOC=0
@@ -34,6 +41,7 @@ env:
     - SDK_URL=https://bitcoincore.org/depends-sources/sdks
     - PYTHON_DEBUG=1
     - WINEDEBUG=fixme-all
+    - DOCKER_BUILD=false
 
   matrix:
 # ARM
@@ -50,6 +58,8 @@ env:
     - HOST=x86_64-unknown-linux-gnu PPA="ppa:bitcoin/bitcoin" PACKAGES="python3" DEP_OPTS="NO_WALLET=1" RUN_TESTS=true GOAL="install" BITCOIN_CONFIG="--enable-glibc-back-compat --enable-reduce-exports"
 # Cross-Mac
     - HOST=x86_64-apple-darwin11 PPA="ppa:bitcoin/bitcoin" PACKAGES="cmake imagemagick libcap-dev librsvg2-bin libz-dev libbz2-dev libtiff-tools python3-dev" BITCOIN_CONFIG="--enable-gui --enable-reduce-exports" OSX_SDK=10.11 GOAL="deploy"
+# dashd release build (for docker)
+    - HOST=x86_64-unknown-linux-gnu PPA="ppa:bitcoin/bitcoin" PACKAGES="bc python3-zmq" DEP_OPTS="NO_QT=1 NO_UPNP=1" GOAL="install" BITCOIN_CONFIG="--enable-zmq --enable-glibc-back-compat --enable-reduce-exports" PYZMQ=true DOCKER_BUILD=true
 
 before_install:
     - git clone https://github.com/dashpay/dash_hash
@@ -66,6 +76,9 @@ install:
 before_script:
     - unset CC; unset CXX
     - unset DISPLAY
+    # Make sure stdout is in blocking mode. Otherwise builds will fail due to large writes to stdout
+    # See https://github.com/travis-ci/travis-ci/issues/4704. If this gets fixed, this line can also be removed.
+    - python3 -c 'import os,sys,fcntl; flags = fcntl.fcntl(sys.stdout, fcntl.F_GETFL); fcntl.fcntl(sys.stdout, fcntl.F_SETFL, flags&~os.O_NONBLOCK);'
     #- if [ "$CHECK_DOC" = 1 ]; then contrib/devtools/check-doc.py; fi TODO reenable after all Bitcoin PRs have been merged and docs fully fixed
     - mkdir -p depends/SDKs depends/sdk-sources
     - if [ -n "$OSX_SDK" -a ! -f depends/sdk-sources/MacOSX${OSX_SDK}.sdk.tar.gz ]; then curl --location --fail $SDK_URL/MacOSX${OSX_SDK}.sdk.tar.gz -o depends/sdk-sources/MacOSX${OSX_SDK}.sdk.tar.gz; fi
@@ -85,7 +98,10 @@ script:
     - if [ "$RUN_TESTS" = "true" -a "$WINE" != "true" ]; then travis_wait 30 make $MAKEJOBS check VERBOSE=1; fi
     - if [ "$RUN_TESTS" = "true" -a "$WINE" = "true" ]; then travis_wait 60 wine src/test/test_dash.exe; fi
     - if [ "$RUN_TESTS" = "true" ]; then qa/pull-tester/rpc-tests.py --coverage; fi
+    - cd ..
+    - if [ "$DOCKER_BUILD" = "true" ]; then BUILD_DIR=build ./docker/build-docker.sh; fi
 after_script:
     - echo $TRAVIS_COMMIT_RANGE
     - echo $TRAVIS_COMMIT_LOG
-    - if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then (echo "Upload goes here. Something like: scp -r $BASE_OUTDIR server" || echo "upload failed"); fi
+after_success:
+    - if [ "$TRAVIS_PULL_REQUEST" = "false" -a "$TRAVIS_BRANCH" = "develop" -a "$DOCKER_BUILD" = "true" ]; then docker login -u $DOCKER_HUB_USER -p $DOCKER_HUB_PASSWORD && ./docker/push-docker.sh; fi
