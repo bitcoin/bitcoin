@@ -30,10 +30,11 @@ BOOST_GLOBAL_FIXTURE( SyscoinTestingSetup );
 BOOST_FIXTURE_TEST_SUITE (syscoin_alias_tests, BasicSyscoinTestingSetup)
 const unsigned int MAX_ALIAS_UPDATES_PER_BLOCK = 5;
 
+template <typename ClearedVertices>
 struct cycle_visitor
 {
-	cycle_visitor()
-	{ }
+	cycle_visitor(ClearedVertices& vertices)
+		: cleared(vertices)
 
 	template <typename Path, typename Graph>
 	void cycle(Path const& p, Graph & g)
@@ -44,10 +45,11 @@ struct cycle_visitor
 		// Iterate over path printing each vertex that forms the cycle.
 		typename Path::const_iterator end = boost::prior(p.end());
 		typename Path::const_iterator before_end = boost::prior(end);
+		cleared++;
 		boost::clear_out_edges(*before_end, g);
 	
 	}
-	
+	ClearedVertices& cleared;
 };
 template <typename Graph>
 void build_graph(Graph& graph) {
@@ -74,9 +76,10 @@ void build_graph(Graph& graph) {
 	boost::add_edge(vertices[4], vertices[1], graph);
 
 	BOOST_ASSERT(num_vertices(graph) == nvertices);
-
-	circuit_visitor visitor;
+	int clearedVertices = 0;
+	circuit_visitor<int> visitor(clearedVertices);
 	boost::hawick_circuits(graph, visitor);
+	printf("Cleared %d circuits\n", clearedVertices);
 
 	container c;
 	boost::topological_sort(graph, std::back_inserter(c));
