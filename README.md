@@ -1,8 +1,6 @@
 Raven Core integration/staging tree
 =====================================
 
-[![Build Status](https://travis-ci.org/raven/raven.svg?branch=master)](https://travis-ci.org/raven/raven)
-
 https://ravencoin.org
 
 What is Raven?
@@ -15,8 +13,7 @@ out collectively by the network. Raven Core is the name of open source
 software which enables the use of this currency.
 
 For more information, as well as an immediately useable, binary version of
-the Raven Core software, see https://raven.org/en/download, or read the
-[original whitepaper](https://ravencoin.org/raven.pdf).
+the Raven Core software, see https://ravencoin.org
 
 License
 -------
@@ -58,7 +55,6 @@ There are also [regression and integration tests](/test), written
 in Python, that are run automatically on the build server.
 These tests can be run (if the [test dependencies](/test) are installed) with: `test/functional/test_runner.py`
 
-The Travis CI system makes sure that every pull request is built for Windows, Linux, and OS X, and that unit/sanity tests are run automatically.
 
 ### Manual Quality Assurance (QA) Testing
 
@@ -67,19 +63,6 @@ code. This is especially important for large or high-risk changes. It is useful
 to add a test plan to the pull request description if testing the changes is
 not straightforward.
 
-Translations
-------------
-
-Changes to translations as well as new translations can be submitted to
-[Raven Core's Transifex page](https://www.transifex.com/projects/p/raven/).
-
-Translations are periodically pulled from Transifex and merged into the git repository. See the
-[translation process](doc/translation_process.md) for details on how this works.
-
-**Important**: We do not accept translation changes as GitHub pull requests because the next
-pull from Transifex would automatically overwrite them again.
-
-Translators should also subscribe to the [mailing list](https://groups.google.com/forum/#!forum/raven-translators).
 
 About Ravencoin
 ----------------
