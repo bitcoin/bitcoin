@@ -40,6 +40,8 @@ struct cycle_visitor
 	template <typename Path, typename Graph>
 	void cycle(Path const& p, Graph & g)
 	{
+		typedef boost::graph_traits<Graph> Traits;
+		typedef typename Traits::vertex_descriptor vertex_descriptor;
 		if (p.empty())
 			return;
 
@@ -47,7 +49,7 @@ struct cycle_visitor
 		typename Path::const_iterator end = boost::prior(p.end());
 		typename Path::const_iterator before_end = boost::prior(end);
 		cleared++;
-		boost::clear_out_edges((boost::graph_traits<Graph>::vertex_descriptor)(*before_end), g);
+		boost::clear_out_edges((vertex_descriptor)(*before_end), g);
 	
 	}
 	ClearedVertices& cleared;
