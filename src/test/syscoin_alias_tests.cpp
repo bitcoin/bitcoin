@@ -40,16 +40,20 @@ struct cycle_visitor
 	template <typename Path, typename Graph>
 	void cycle(Path const& p, Graph & g)
 	{
-		typedef boost::graph_traits<Graph> Traits;
-		typedef typename Traits::vertex_descriptor vertex_descriptor;
+
 		if (p.empty())
 			return;
+		typedef typename boost::property_map<
+			Graph, boost::vertex_index_t
+		>::const_type IndexMap;
+
+		IndexMap indices = get(boost::vertex_index, g);
 
 		// Iterate over path printing each vertex that forms the cycle.
 		typename Path::const_iterator end = boost::prior(p.end());
 		typename Path::const_iterator before_end = boost::prior(end);
 		cleared++;
-		boost::clear_out_edges((vertex_descriptor)(*before_end), g);
+		boost::clear_out_edges(vertex(get(indices, *before_end),g), g);
 	
 	}
 	ClearedVertices& cleared;
