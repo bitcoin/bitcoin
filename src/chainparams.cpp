@@ -126,8 +126,10 @@ public:
         vSeeds.push_back(CDNSSeedData("eastcoast.hodlcoin.com", "eastcoast.hodlcoin.com"));//East Coast
         vSeeds.push_back(CDNSSeedData("europe.hodlcoin.com", "europe.hodlcoin.com")); //Europe
         vSeeds.push_back(CDNSSeedData("asia.hodlcoin.com", "asia.hodlcoin.com"));//Asia
-        vSeeds.push_back(CDNSSeedData("seed.hodlcoin.oo.fi", "seed.hodlcoin.oo.fi"));//Canada, DNS seed
-	vSeeds.push_back(CDNSSeedData("seed.hodlcoin.dk", "seed.hodlcoin.dk"));//Denmark, DNS seed    
+        
+        vSeeds.push_back(CDNSSeedData("hodlcoin.oo.fi", "seed.hodlcoin.oo.fi"));//Canada, DNS seed, Orava
+        vSeeds.push_back(CDNSSeedData("hodlcoin.dk", "seed.hodlcoin.dk"));//Denmark, DNS seed, SFL964    
+        vSeeds.push_back(CDNSSeedData("hodlcoin.com", "seed.hodlcoin.com"));//For Future allocation    
         vSeeds.push_back(CDNSSeedData("174.140.166.133","174.140.166.133"));//Hodl-lay-yee-hoo
         vSeeds.push_back(CDNSSeedData("54.201.171.55", "54.201.171.55"));
         vSeeds.push_back(CDNSSeedData("54.213.104.91", "54.213.104.91"));
@@ -258,9 +260,10 @@ public:
 
         checkpointData = (Checkpoints::CCheckpointData) {
             boost::assign::map_list_of
-            ( 0, uint256S("00d655aae75ceef9bc13fd8c6168177746ce85286d11ef56de959f4e9b6ff6af")),
-            1457163389,
-            0,
+            ( 0, uint256S("00d655aae75ceef9bc13fd8c6168177746ce85286d11ef56de959f4e9b6ff6af"))
+            ( 375491, uint256S("0000013e0f3d708a18f787f8b463b4adfebd40af43fa4674e1ac395de8d75e20")),
+            1515148272,
+            704236,
             10
         };
 
