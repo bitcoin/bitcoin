@@ -58,6 +58,8 @@ void build_graph(Graph& graph) {
 	typedef typename Traits::vertex_descriptor vertex_descriptor;
 	std::map<unsigned int, vertex_descriptor> vertices;
 
+	//allows_parallel_edges(graph);
+
 	unsigned int nvertices = 5;
 	for (unsigned int i = 0; i < nvertices; ++i)
 		vertices[i] = add_vertex(graph);
@@ -105,7 +107,7 @@ void sort_graph(Graph& graph) {
 }
 BOOST_AUTO_TEST_CASE(generate_graph_topological_sort) {
 	printf("Running generate_graph_topological_sort...\n");
-	boost::directed_graph<> graph;
+	typedef boost::adjacency_list< boost::listS, boost::listS, boost::directedS > graph;
 	build_graph(graph);
 	sort_graph(graph);
 	exit(0);
