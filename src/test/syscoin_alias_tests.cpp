@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE(generate_graph_topological_sort) {
 	build_graph(graph);
 
 	int clearedVertices = 0;
-	circuit_visitor<int> visitor(clearedVertices);
+	cycle_visitor<int> visitor(clearedVertices);
 	boost::hawick_circuits(graph, visitor);
 	printf("Cleared %d circuits\n", clearedVertices);
 
