@@ -1,0 +1,90 @@
+sudo: required
+dist: trusty
+os: linux
+language: generic
+cache:
+  directories:
+  - depends/built
+  - depends/sdk-sources
+  - $HOME/.ccache
+env:
+  global:
+    - MAKEJOBS=-j3
+    - BOOST_TEST_RANDOM=1$TRAVIS_BUILD_ID
+    - CCACHE_SIZE=100M
+    - CCACHE_TEMPDIR=/tmp/.ccache-temp
+    - CCACHE_COMPRESS=1
+    - BASE_OUTDIR=$TRAVIS_BUILD_DIR/out
+    - SDK_URL=https://bitcoincore.org/depends-sources/sdks
+    - WINEDEBUG=fixme-all
+  matrix:
+# ARM
+    - HOST=arm-linux-gnueabihf PACKAGES="g++-arm-linux-gnueabihf" DEP_OPTS="" GOAL="install" CROWN_CONFIG="--enable-glibc-back-compat --enable-reduce-exports"
+# Debug-linux64
+#    - HOST=x86_64-unknown-linux-gnu PACKAGES="bc" DEP_OPTS="USE_LINUX_STATIC_QT5=1 DEBUG=1" GOAL="install" CROWN_CONFIG="--enable-glibc-back-compat --enable-reduce-exports CPPFLAGS=-DDEBUG_LOCKORDER"
+# Win32
+    - HOST=i686-w64-mingw32 DPKG_ADD_ARCH="i386" DEP_OPTS="" PACKAGES="nsis g++-mingw-w64-i686 gcc-mingw-w64-i686 binutils-mingw-w64-i686 wine1.6 bc" GOAL="install" CROWN_CONFIG="--enable-reduce-exports"
+# Win64
+    - HOST=x86_64-w64-mingw32 DPKG_ADD_ARCH="i386" DEP_OPTS="" PACKAGES="nsis gcc-mingw-w64-x86-64 g++-mingw-w64-x86-64 binutils-mingw-w64-x86-64 wine1.6 bc" GOAL="install" CROWN_CONFIG="--enable-reduce-exports"
+# 32-bit + dash
+    - HOST=i686-pc-linux-gnu PACKAGES="g++-multilib bc" DEP_OPTS="USE_LINUX_STATIC_QT5=1" GOAL="install" CROWN_CONFIG="--enable-glibc-back-compat --enable-reduce-exports LDFLAGS=-static-libstdc++" USE_SHELL="/bin/dash"
+# 64-bit
+    - HOST=x86_64-unknown-linux-gnu PACKAGES="" DEP_OPTS="USE_LINUX_STATIC_QT5=1" GOAL="install" CROWN_CONFIG="--enable-glibc-back-compat --enable-reduce-exports"
+# Cross-Mac
+    - HOST=x86_64-apple-darwin11 PACKAGES="cmake gcc-multilib g++-multilib libcap-dev libbz2-dev" CROWN_CONFIG="--enable-gui --enable-reduce-exports" OSX_SDK=10.7 GOAL="install"
+
+install:
+    - if [ -n "$PPA" ]; then travis_retry sudo add-apt-repository "$PPA" -y; fi
+    - if [ -n "$DPKG_ADD_ARCH" ]; then sudo dpkg --add-architecture "$DPKG_ADD_ARCH" ; fi
+    - if [ -n "$PACKAGES" ]; then travis_retry sudo apt-get update; fi
+    - if [ -n "$PACKAGES" ]; then travis_retry sudo apt-get install --no-install-recommends --no-upgrade -qq $PACKAGES; fi
+before_script:
+    - unset CC; unset CXX
+    - mkdir -p depends/SDKs depends/sdk-sources
+    - if [ -n "$OSX_SDK" -a ! -f depends/sdk-sources/MacOSX${OSX_SDK}.sdk.tar.gz ]; then curl --location --fail $SDK_URL/MacOSX${OSX_SDK}.sdk.tar.gz -o depends/sdk-sources/MacOSX${OSX_SDK}.sdk.tar.gz; fi
+    - if [ -n "$OSX_SDK" -a -f depends/sdk-sources/MacOSX${OSX_SDK}.sdk.tar.gz ]; then tar -C depends/SDKs -xf depends/sdk-sources/MacOSX${OSX_SDK}.sdk.tar.gz; fi
+    - make $MAKEJOBS -C depends HOST=$HOST $DEP_OPTS
+script:
+    - export TRAVIS_COMMIT_LOG=`git log --format=fuller -1`
+    - if [ -n "$USE_SHELL" ]; then export CONFIG_SHELL="$USE_SHELL"; fi
+    - OUTDIR=$BASE_OUTDIR/$TRAVIS_PULL_REQUEST/$TRAVIS_JOB_NUMBER-$HOST
+    - CROWN_CONFIG_ALL="--disable-tests --disable-dependency-tracking --prefix=$TRAVIS_BUILD_DIR/depends/$HOST --bindir=$OUTDIR/bin --libdir=$OUTDIR/lib"
+    - depends/$HOST/native/bin/ccache --max-size=$CCACHE_SIZE
+    - test -n "$USE_SHELL" && eval '"$USE_SHELL" -c "./autogen.sh"' || ./autogen.sh
+    - mkdir build && cd build
+    - ../configure --cache-file=config.cache $CROWN_CONFIG_ALL $CROWN_CONFIG || ( cat config.log && false)
+    - make distdir VERSION=$HOST
+    - cd crown-$HOST
+    - ./configure --cache-file=../config.cache $CROWN_CONFIG_ALL $CROWN_CONFIG || ( cat config.log && false)
+    - make $MAKEJOBS $GOAL || ( echo "Build failure. Verbose build follows." && make $GOAL V=1 ; false )
+    - ls -la ${OUTDIR}/..
+    - ls -la ${OUTDIR}/
+    - ls -la ${OUTDIR}/bin
+    - export LD_LIBRARY_PATH=$TRAVIS_BUILD_DIR/depends/$HOST/lib
+after_script:
+    - echo $TRAVIS_COMMIT_RANGE
+    - echo $TRAVIS_COMMIT_LOG
+notifications:
+  irc: chat.freenode.net#crowncoin
+  slack:
+    secure: "NzXVEUtxrjkHYvPYJmy5NAlHcNmFO5cqM1STdmXOscFHsCfQse0F3ffgZO8id0B2xWpuLDZEYKK4Z6Z021JI5lKmwXZpfHvDAkD5FawkNHbzkw8XdZvTOjgMW0t5jy6ePH8WoieR15xH+f3SxxibqBhrXRXrVgDcl4AqDhJ8qrnGu1Kfc4Cvsll4BLVhobCn0ZRp3o2ELuWjTUdrTaRIIF6+HBxCIl1SwC+BJQlg1C1ItOSy5Oaf+hc6o9tS8n3F2CmtdtCKVZPhC9/7Q8NBiJFJg8KRcmk9zd4qjw4GsnSXpC148c7NHQ8PMnvRIfsedM1FtAADx+yJf2uOnJaSjPaRQK3vys7Pdn+T15uShVv2Mm96pVNPwx1TDCXFhTJbp8dIOUzL/A4TqGE0zJ5St3bSFPrOH7ATb96wEIofU9vC/EFx7cQHIJPBeeXP7bdisgU8hFidYRV3b8IlI8eAzyVbo9GJS6KnZYRm3UlG0TYrO7coShHhnhmqL2DzDfd2dyPQIBWAq2IsPhXFec6WhAgvA3ATj2XSaxdaQynof+6MzlIpDqY2i4WG8NDZnj/g+irmBpuGRWNpMEgzwHVoY7A85Q1mUCq7aE2AOf6oWhop4W7B/C8Qk8G15onDEA+wuLR+GyQ+/jpYzaNNANpIV+j9N0C2wjkNdwXedxpeG3I="
+before_deploy:
+  - if [ "$HOST" == "arm-linux-gnueabihf" ]; then HOST2="RaspberryPi";
+    else if [ "$HOST" == "i686-w64-mingw32" ]; then HOST2="Win32";
+    else if [ "$HOST" == "x86_64-w64-mingw32" ]; then HOST2="Win64";
+    else if [ "$HOST" == "i686-pc-linux-gnu" ]; then HOST2="Linux32";
+    else if [ "$HOST" == "x86_64-unknown-linux-gnu" ]; then HOST2="Linux64";
+    else if [ "$HOST" == "x86_64-apple-darwin11" ]; then HOST2="Osx";
+    fi; fi; fi; fi; fi; fi
+  - cd ${OUTDIR}/../ && zip -r Crown-$HOST2.zip $TRAVIS_JOB_NUMBER-$HOST
+deploy:
+  skip_cleanup: true
+  provider: releases
+  api_key:
+    secure: "FTdTDATd9lQjV2fm7Bz+Qp9kTdudwHmDLseGLoaIKhyK3avZew5LAZk4kqLWT7dQACdgkF3spVrCinAXKAg5t8sGTo08Zy1EP/MQyqBP8vp+ojhCaHP2R1DN9zN5ZI4vMDAvBg2yYQf5s10SsFLj6E2qSUCCrLuh+4O3qU4CGEfiy9NiBYr8DIrFa+lFwB2SqV4w7GCEK6OuJ+KmMA5x53KrfcTOJxVjMHSjIC8kdH+0p4wV/xxshq/s6Z2AUZuHxHTOY0j79WLyBLLOkaZQ8jMoVQh48uARRc4qRgjA9+X9wps3UwofIFlksa2V+hoLBPr0ToV9EHRh/jGPRb2gUPh51sqreJGTXYzawYTcgyPSisk3trOulsKjAiKElKJF2wfwwrs4SgZdPU3LnhAMrwLUN08z66kZab/4W2DYKIvYFBWBK3vgHHz/WevhxdB5l052Ydprcg5Ehk9Q1fWSM3pq7zV1tm+sPEhcPc1vA9CETldo2EOLOMx+aZ/syx17xBMiVSgxyl4XpTzaX+1aYRu7KaMUOH73HO4h4roJaQ4U75Pyp7a5kliKhMLYBIjtB8tU/tGLr1raO6JuuM/2wBHri4bLo7LGUyioPeFvvwJLYvPPRSLvwfPJT2pRcM5BNLx9jg0RrgQUll+YccJ0JDPI8NxWFydBEX/QlhnVMXk="
+  file:
+    - ${OUTDIR}/..//Crown-$HOST2.zip
+  on:
+    repo: Crowndev/crowncoin
+    tags: true
+    all_branches: true
