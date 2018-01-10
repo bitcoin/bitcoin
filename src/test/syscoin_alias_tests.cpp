@@ -107,7 +107,7 @@ void sort_graph(Graph& graph) {
 }
 BOOST_AUTO_TEST_CASE(generate_graph_topological_sort) {
 	printf("Running generate_graph_topological_sort...\n");
-	typedef boost::adjacency_list< boost::listS, boost::listS, boost::directedS > graph;
+	boost::adjacency_list< boost::vecS, boost::vecS, boost::directedS > graph;
 	build_graph(graph);
 	sort_graph(graph);
 	exit(0);
