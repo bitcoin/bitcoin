@@ -30,35 +30,24 @@ BOOST_GLOBAL_FIXTURE( SyscoinTestingSetup );
 BOOST_FIXTURE_TEST_SUITE (syscoin_alias_tests, BasicSyscoinTestingSetup)
 const unsigned int MAX_ALIAS_UPDATES_PER_BLOCK = 5;
 
-template <typename OutputStream>
-struct cycle_printer
+struct cycle_visitor
 {
-	cycle_printer(OutputStream& stream)
-		: os(stream)
+	cycle_visitor()
 	{ }
 
 	template <typename Path, typename Graph>
-	void cycle(Path const& p, Graph const& g)
+	void cycle(Path const& p, Graph & g)
 	{
 		if (p.empty())
 			return;
 
-		// Get the property map containing the vertex indices
-		// so we can print them.
-		typedef typename boost::property_map<
-			Graph, boost::vertex_index_t
-		>::const_type IndexMap;
-
-		IndexMap indices = get(boost::vertex_index, g);
-
 		// Iterate over path printing each vertex that forms the cycle.
-		typename Path::const_iterator i, before_end = boost::prior(p.end());
-		for (i = p.begin(); i != before_end; ++i) {
-			os << get(indices, *i) << " ";
-		}
-		os << get(indices, *i) << '\n';
+		typename Path::const_iterator end = boost::prior(p.end());
+		typename Path::const_iterator before_end = boost::prior(end);
+		boost::clear_out_edges(*before_end, graph);
+	
 	}
-	OutputStream& os;
+	
 };
 template <typename Graph>
 void build_graph(Graph& graph) {
@@ -86,7 +75,9 @@ void build_graph(Graph& graph) {
 
 	BOOST_ASSERT(num_vertices(graph) == nvertices);
 
-	
+	circuit_visitor visitor;
+	boost::hawick_circuits(graph, visitor);
+
 	container c;
 	boost::topological_sort(graph, std::back_inserter(c));
 
@@ -104,12 +95,6 @@ BOOST_AUTO_TEST_CASE(generate_graph_topological_sort) {
 	printf("Running generate_graph_topological_sort...\n");
 	boost::directed_graph<> graph;
 	build_graph(graph);
-
-	ostringstream os;
-	cycle_printer<std::ostream> visitor(os);
-	boost::hawick_circuits(graph, visitor);
-
-	printf("hawick output: %s\n", os.str().c_str());
 
 	exit(0);
 
