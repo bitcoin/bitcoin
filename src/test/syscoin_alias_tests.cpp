@@ -35,6 +35,7 @@ struct cycle_visitor
 {
 	cycle_visitor(ClearedVertices& vertices)
 		: cleared(vertices)
+	{}
 
 	template <typename Path, typename Graph>
 	void cycle(Path const& p, Graph & g)
@@ -55,9 +56,7 @@ template <typename Graph>
 void build_graph(Graph& graph) {
 	typedef boost::graph_traits<Graph> Traits;
 	typedef typename Traits::vertex_descriptor vertex_descriptor;
-	typedef typename std::vector< vertex_descriptor > container;
 	std::map<unsigned int, vertex_descriptor> vertices;
-	typedef typename boost::property_map<Graph, boost::vertex_index_t>::const_type IndexMap;
 
 	unsigned int nvertices = 5;
 	for (unsigned int i = 0; i < nvertices; ++i)
@@ -76,10 +75,14 @@ void build_graph(Graph& graph) {
 	boost::add_edge(vertices[4], vertices[1], graph);
 
 	BOOST_ASSERT(num_vertices(graph) == nvertices);
-	int clearedVertices = 0;
-	circuit_visitor<int> visitor(clearedVertices);
-	boost::hawick_circuits(graph, visitor);
-	printf("Cleared %d circuits\n", clearedVertices);
+
+}
+template <typename Graph>
+void sort_graph(Graph& graph) {
+	typedef boost::graph_traits<Graph> Traits;
+	typedef typename Traits::vertex_descriptor vertex_descriptor;
+	typedef typename std::vector< vertex_descriptor > container;
+	typedef typename boost::property_map<Graph, boost::vertex_index_t>::const_type IndexMap;
 
 	container c;
 	boost::topological_sort(graph, std::back_inserter(c));
@@ -88,7 +91,7 @@ void build_graph(Graph& graph) {
 	const IndexMap &indices = get(boost::vertex_index, (const Graph &)graph);
 	printf("A topological ordering: ");
 	std::reverse(c.begin(), c.end());
-	for (auto& i: c) {
+	for (auto& i : c) {
 		topstream << get(indices, i) << " ";
 	}
 	printf(topstream.str().c_str());
@@ -99,6 +102,12 @@ BOOST_AUTO_TEST_CASE(generate_graph_topological_sort) {
 	boost::directed_graph<> graph;
 	build_graph(graph);
 
+	int clearedVertices = 0;
+	circuit_visitor<int> visitor(clearedVertices);
+	boost::hawick_circuits(graph, visitor);
+	printf("Cleared %d circuits\n", clearedVertices);
+
+	sort_graph(graph);
 	exit(0);
 
 
