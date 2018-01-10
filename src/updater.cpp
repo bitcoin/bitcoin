@@ -14,7 +14,7 @@
 struct myprogress {
     double lastruntime;
     CURL *curl;
-    int(*progressFunction)(int, int);
+    void(*progressFunction)(int, int);
 };
 
 // Global updater instance
@@ -204,7 +204,7 @@ static int xferinfo(void *p,
     return updater.GetStopDownload();
 }
 
-void Updater::DownloadFile(std::string url, std::string fileName, int(progressFunction)(int, int))
+void Updater::DownloadFile(std::string url, std::string fileName, void(progressFunction)(int, int))
 {
     stopDownload = false;
     CURL *curl_handle;

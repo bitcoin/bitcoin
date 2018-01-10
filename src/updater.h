@@ -42,7 +42,7 @@ public:
     {
         return os;
     }
-    void DownloadFile(std::string url, std::string fileName, int(progressFunction)(int, int));
+    void DownloadFile(std::string url, std::string fileName, void(progressFunction)(int, int));
     void StopDownload();
     std::string GetDownloadUrl(Updater::OS version);
     bool GetStopDownload()
