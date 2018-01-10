@@ -109,9 +109,9 @@ BOOST_AUTO_TEST_CASE(generate_graph_topological_sort) {
 	cycle_printer<std::ostream> visitor(os);
 	boost::hawick_circuits(graph, visitor);
 
-	LogPrintf("hawick output: %s\n", os.str().c_str());
+	printf("hawick output: %s\n", os.str().c_str());
 
-
+	exit(0);
 
 
 }
