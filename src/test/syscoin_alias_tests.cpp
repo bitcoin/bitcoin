@@ -91,7 +91,7 @@ void build_graph(Graph& graph) {
 	boost::topological_sort(graph, std::back_inserter(c));
 
 	ostringstream topstream;
-	const IndexMap &indices = get(boost::vertex_index, boost::lexical_cast<const Graph>(graph));
+	const IndexMap &indices = get(boost::vertex_index, (const Graph &)graph);
 	printf("A topological ordering: ");
 	std::reverse(c.begin(), c.end());
 	for (auto& i: c) {
