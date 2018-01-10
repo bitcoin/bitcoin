@@ -52,8 +52,8 @@ struct cycle_visitor
 		// Iterate over path printing each vertex that forms the cycle.
 		typename Path::const_iterator end = boost::prior(p.end());
 		typename Path::const_iterator before_end = boost::prior(end);
-		cleared++;
-		boost::clear_out_edges(vertex(get(indices, *before_end),g), g);
+		cleared.push_back(*before_end);
+		
 	
 	}
 	ClearedVertices& cleared;
@@ -82,6 +82,12 @@ void build_graph(Graph& graph) {
 
 	BOOST_ASSERT(num_vertices(graph) == nvertices);
 
+	list<vertex_descriptor> clearedVertices;
+	cycle_visitor<list<vertex_descriptor>> visitor(clearedVertices);
+	boost::hawick_circuits(graph, visitor);
+	printf("Found %d circuits\n", clearedVertices.size());
+	for(auto &vert: clearedVertices)
+		boost::clear_out_edges(vert, graph);
 }
 template <typename Graph>
 void sort_graph(Graph& graph) {
@@ -107,12 +113,6 @@ BOOST_AUTO_TEST_CASE(generate_graph_topological_sort) {
 	printf("Running generate_graph_topological_sort...\n");
 	boost::directed_graph<> graph;
 	build_graph(graph);
-
-	int clearedVertices = 0;
-	cycle_visitor<int> visitor(clearedVertices);
-	boost::hawick_circuits(graph, visitor);
-	printf("Cleared %d circuits\n", clearedVertices);
-
 	sort_graph(graph);
 	exit(0);
 
