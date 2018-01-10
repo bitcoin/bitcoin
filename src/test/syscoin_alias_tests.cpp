@@ -44,7 +44,7 @@ struct cycle_visitor
 		// Iterate over path printing each vertex that forms the cycle.
 		typename Path::const_iterator end = boost::prior(p.end());
 		typename Path::const_iterator before_end = boost::prior(end);
-		boost::clear_out_edges(*before_end, graph);
+		boost::clear_out_edges(*before_end, g);
 	
 	}
 	
