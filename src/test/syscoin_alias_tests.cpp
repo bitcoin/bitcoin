@@ -17,6 +17,7 @@
 
 #include <boost/graph/directed_graph.hpp>
 #include <boost/graph/graph_traits.hpp>
+#include <boost/graph/hawick_circuits.hpp>
 #include <boost/next_prior.hpp>
 #include <boost/property_map/property_map.hpp>
 #include <boost/graph/adjacency_list.hpp>
