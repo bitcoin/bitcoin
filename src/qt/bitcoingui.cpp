@@ -20,6 +20,7 @@
 #include "masternodeconfig.h"
 #include "systemnodeconfig.h"
 #include "masternodelist.h"
+#include "updatedialog.h"
 
 #ifdef ENABLE_WALLET
 #include "walletframe.h"
@@ -249,6 +250,9 @@ BitcoinGUI::BitcoinGUI(const NetworkStyle *networkStyle, QWidget *parent) :
 
     // Subscribe to notifications from core
     subscribeToCoreSignals();
+
+    // Check update after 10 seconds
+    QTimer::singleShot(10000, this, SLOT(checkUpdate()));
 }
 
 BitcoinGUI::~BitcoinGUI()
@@ -1293,6 +1297,18 @@ void BitcoinGUI::handleRestart(QStringList args)
 {
     if (!ShutdownRequested())
         emit requestedRestart(args);
+}
+
+void BitcoinGUI::checkUpdate()
+{
+    if (updater.GetStatus())
+    {
+        UpdateDialog::GetInstance()->setCurrentVersion(QString::fromStdString(FormatVersion(CLIENT_VERSION)));
+        UpdateDialog::GetInstance()->setUpdateVersion(QString::fromStdString(FormatVersion(updater.GetVersion())));
+
+        UpdateDialog::GetInstance()->setOS(updater.GetOS());
+        UpdateDialog::GetInstance()->exec();
+    }
 }
 
 UnitDisplayStatusBarControl::UnitDisplayStatusBarControl() :

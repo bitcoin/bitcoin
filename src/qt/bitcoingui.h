@@ -223,6 +223,8 @@ private slots:
 
     /** Show open dialog */
     void openClicked();
+
+    void checkUpdate();
 #endif // ENABLE_WALLET
     /** Show configuration dialog */
     void optionsClicked();
