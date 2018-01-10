@@ -40,14 +40,8 @@ struct cycle_visitor
 	template <typename Path, typename Graph>
 	void cycle(Path const& p, Graph & g)
 	{
-
 		if (p.empty())
 			return;
-		typedef typename boost::property_map<
-			Graph, boost::vertex_index_t
-		>::const_type IndexMap;
-
-		IndexMap indices = get(boost::vertex_index, g);
 
 		// Iterate over path printing each vertex that forms the cycle.
 		typename Path::const_iterator end = boost::prior(p.end());
@@ -83,7 +77,7 @@ void build_graph(Graph& graph) {
 	BOOST_ASSERT(num_vertices(graph) == nvertices);
 
 	list<vertex_descriptor> clearedVertices;
-	cycle_visitor<list<vertex_descriptor>> visitor(clearedVertices);
+	cycle_visitor<list<vertex_descriptor> > visitor(clearedVertices);
 	boost::hawick_circuits(graph, visitor);
 	printf("Found %d circuits\n", clearedVertices.size());
 	for(auto &vert: clearedVertices)
