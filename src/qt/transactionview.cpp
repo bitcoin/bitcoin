@@ -404,6 +404,8 @@ void TransactionView::contextualMenu(const QPoint &point)
 {
     QModelIndex index = transactionView->indexAt(point);
     QModelIndexList selection = transactionView->selectionModel()->selectedRows(0);
+    if (selection.empty())
+        return;
 
     // check if transaction can be abandoned, disable context menu action in case it doesn't
     uint256 hash;

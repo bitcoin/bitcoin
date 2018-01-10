@@ -873,23 +873,19 @@ bool CPrivateSendClient::JoinExistingQueue(CAmount nBalanceNeedsAnonymized, CCon
 
         vecMasternodesUsed.push_back(dsq.vin.prevout);
 
-        CNode* pnodeFound = NULL;
-        bool fDisconnect = false;
-        connman.ForNode(infoMn.addr, CConnman::AllNodes, [&pnodeFound, &fDisconnect](CNode* pnode) {
-            pnodeFound = pnode;
-            if(pnodeFound->fDisconnect) {
-                fDisconnect = true;
-            } else {
-                pnodeFound->AddRef();
-            }
+        bool fSkip = false;
+        connman.ForNode(infoMn.addr, CConnman::AllNodes, [&fSkip](CNode* pnode) {
+            fSkip = pnode->fDisconnect || pnode->fMasternode;
             return true;
         });
-        if (fDisconnect)
+        if (fSkip) {
+            LogPrintf("CPrivateSendClient::JoinExistingQueue -- skipping masternode connection, addr=%s\n", infoMn.addr.ToString());
             continue;
+        }
 
         LogPrintf("CPrivateSendClient::JoinExistingQueue -- attempt to connect to masternode from queue, addr=%s\n", infoMn.addr.ToString());
         // connect to Masternode and submit the queue request
-        CNode* pnode = (pnodeFound && pnodeFound->fMasternode) ? pnodeFound : connman.ConnectNode(CAddress(infoMn.addr, NODE_NETWORK), NULL, true);
+        CNode* pnode = connman.ConnectNode(CAddress(infoMn.addr, NODE_NETWORK), NULL, true);
         if(pnode) {
             infoMixingMasternode = infoMn;
             nSessionDenom = dsq.nDenom;
@@ -900,9 +896,6 @@ bool CPrivateSendClient::JoinExistingQueue(CAmount nBalanceNeedsAnonymized, CCon
             strAutoDenomResult = _("Mixing in progress...");
             SetState(POOL_STATE_QUEUE);
             nTimeLastSuccessfulStep = GetTimeMillis();
-            if(pnodeFound) {
-                pnodeFound->Release();
-            }
             return true;
         } else {
             LogPrintf("CPrivateSendClient::JoinExistingQueue -- can't connect, addr=%s\n", infoMn.addr.ToString());
@@ -947,24 +940,19 @@ bool CPrivateSendClient::StartNewQueue(CAmount nValueMin, CAmount nBalanceNeedsA
             continue;
         }
 
-        CNode* pnodeFound = NULL;
-        bool fDisconnect = false;
-        connman.ForNode(infoMn.addr, CConnman::AllNodes, [&pnodeFound, &fDisconnect](CNode* pnode) {
-            pnodeFound = pnode;
-            if(pnodeFound->fDisconnect) {
-                fDisconnect = true;
-            } else {
-                pnodeFound->AddRef();
-            }
+        bool fSkip = false;
+        connman.ForNode(infoMn.addr, CConnman::AllNodes, [&fSkip](CNode* pnode) {
+            fSkip = pnode->fDisconnect || pnode->fMasternode;
             return true;
         });
-        if (fDisconnect) {
+        if (fSkip) {
+            LogPrintf("CPrivateSendClient::StartNewQueue -- skipping masternode connection, addr=%s\n", infoMn.addr.ToString());
             nTries++;
             continue;
         }
 
         LogPrintf("CPrivateSendClient::StartNewQueue -- attempt %d connection to Masternode %s\n", nTries, infoMn.addr.ToString());
-        CNode* pnode = (pnodeFound && pnodeFound->fMasternode) ? pnodeFound : connman.ConnectNode(CAddress(infoMn.addr, NODE_NETWORK), NULL, true);
+        CNode* pnode = connman.ConnectNode(CAddress(infoMn.addr, NODE_NETWORK), NULL, true);
         if(pnode) {
             LogPrintf("CPrivateSendClient::StartNewQueue -- connected, addr=%s\n", infoMn.addr.ToString());
             infoMixingMasternode = infoMn;
@@ -982,9 +970,6 @@ bool CPrivateSendClient::StartNewQueue(CAmount nValueMin, CAmount nBalanceNeedsA
             strAutoDenomResult = _("Mixing in progress...");
             SetState(POOL_STATE_QUEUE);
             nTimeLastSuccessfulStep = GetTimeMillis();
-            if(pnodeFound) {
-                pnodeFound->Release();
-            }
             return true;
         } else {
             LogPrintf("CPrivateSendClient::StartNewQueue -- can't connect, addr=%s\n", infoMn.addr.ToString());
@@ -1002,13 +987,24 @@ bool CPrivateSendClient::SubmitDenominate(CConnman& connman)
     std::vector<CTxOut> vecTxOutRet;
 
     // Submit transaction to the pool if we get here
-    // Try to use only inputs with the same number of rounds starting from the highest number of rounds possible
-    for(int i = nPrivateSendRounds; i > 0; i--) {
-        if(PrepareDenominate(i - 1, i, strError, vecTxDSInRet, vecTxOutRet)) {
-            LogPrintf("CPrivateSendClient::SubmitDenominate -- Running PrivateSend denominate for %d rounds, success\n", i);
-            return SendDenominate(vecTxDSInRet, vecTxOutRet, connman);
+    if (nLiquidityProvider) {
+        // Try to use only inputs with the same number of rounds starting from the lowest number of rounds possible
+        for(int i = 0; i< nPrivateSendRounds; i++) {
+            if(PrepareDenominate(i, i + 1, strError, vecTxDSInRet, vecTxOutRet)) {
+                LogPrintf("CPrivateSendClient::SubmitDenominate -- Running PrivateSend denominate for %d rounds, success\n", i);
+                return SendDenominate(vecTxDSInRet, vecTxOutRet, connman);
+            }
+            LogPrint("privatesend", "CPrivateSendClient::SubmitDenominate -- Running PrivateSend denominate for %d rounds, error: %s\n", i, strError);
         }
-        LogPrint("privatesend", "CPrivateSendClient::SubmitDenominate -- Running PrivateSend denominate for %d rounds, error: %s\n", i, strError);
+    } else {
+        // Try to use only inputs with the same number of rounds starting from the highest number of rounds possible
+        for(int i = nPrivateSendRounds; i > 0; i--) {
+            if(PrepareDenominate(i - 1, i, strError, vecTxDSInRet, vecTxOutRet)) {
+                LogPrintf("CPrivateSendClient::SubmitDenominate -- Running PrivateSend denominate for %d rounds, success\n", i);
+                return SendDenominate(vecTxDSInRet, vecTxOutRet, connman);
+            }
+            LogPrint("privatesend", "CPrivateSendClient::SubmitDenominate -- Running PrivateSend denominate for %d rounds, error: %s\n", i, strError);
+        }
     }
 
     // We failed? That's strange but let's just make final attempt and try to mix everything
@@ -1100,7 +1096,7 @@ bool CPrivateSendClient::PrepareDenominate(int nMinRounds, int nMaxRounds, std::
                     vecTxDSIn.erase(it);
                     vCoins.erase(it2);
 
-                    CScript scriptDenom = keyHolderStorage.AddKey(pwalletMain).GetScriptForDestination();
+                    CScript scriptDenom = keyHolderStorage.AddKey(pwalletMain);
 
                     // add new output
                     CTxOut txout(nValueDenom, scriptDenom);
@@ -1276,7 +1272,7 @@ bool CPrivateSendClient::CreateDenominated(const CompactTallyItem& tallyItem, bo
     // ****** Add an output for mixing collaterals ************ /
 
     if(fCreateMixingCollaterals) {
-        CScript scriptCollateral = keyHolderStorageDenom.AddKey(pwalletMain).GetScriptForDestination();
+        CScript scriptCollateral = keyHolderStorageDenom.AddKey(pwalletMain);
         vecSend.push_back((CRecipient){ scriptCollateral, CPrivateSend::GetMaxCollateralAmount(), false });
         nValueLeft -= CPrivateSend::GetMaxCollateralAmount();
     }
@@ -1311,7 +1307,7 @@ bool CPrivateSendClient::CreateDenominated(const CompactTallyItem& tallyItem, bo
 
             // add each output up to 11 times until it can't be added again
             while(nValueLeft - nDenomValue >= 0 && nOutputs <= 10) {
-                CScript scriptDenom = keyHolderStorageDenom.AddKey(pwalletMain).GetScriptForDestination();
+                CScript scriptDenom = keyHolderStorageDenom.AddKey(pwalletMain);
 
                 vecSend.push_back((CRecipient){ scriptDenom, nDenomValue, false });
 
