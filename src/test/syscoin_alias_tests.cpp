@@ -47,7 +47,7 @@ struct cycle_visitor
 		typename Path::const_iterator end = boost::prior(p.end());
 		typename Path::const_iterator before_end = boost::prior(end);
 		cleared++;
-		boost::clear_out_edges(*before_end, g);
+		boost::clear_out_edges((boost::graph_traits<Graph>::vertex_descriptor)(*before_end), g);
 	
 	}
 	ClearedVertices& cleared;
