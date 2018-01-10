@@ -80,7 +80,7 @@ void build_graph(Graph& graph) {
 	cycle_visitor<list<vertex_descriptor> > visitor(clearedVertices);
 	boost::hawick_circuits(graph, visitor);
 	printf("Found %d circuits\n", clearedVertices.size());
-	for(auto &vert: clearedVertices)
+	for(vertex_descriptor &vert: clearedVertices)
 		boost::clear_out_edges(vert, graph);
 }
 template <typename Graph>
