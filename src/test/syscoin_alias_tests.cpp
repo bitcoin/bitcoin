@@ -17,8 +17,6 @@
 
 #include <boost/graph/directed_graph.hpp>
 #include <boost/graph/graph_traits.hpp>
-#include <boost/graph/hawick_circuits.hpp>
-#include <boost/lexical_cast.hpp>
 #include <boost/next_prior.hpp>
 #include <boost/property_map/property_map.hpp>
 #include <boost/graph/adjacency_list.hpp>
@@ -92,9 +90,9 @@ void build_graph(Graph& graph) {
 	boost::topological_sort(graph, std::back_inserter(c));
 
 	ostringstream topstream;
-	
-	const IndexMap &indices = get(boost::vertex_index, graph);
+	const IndexMap &indices = get(boost::vertex_index, boost::lexical_cast<const Graph>(graph));
 	printf("A topological ordering: ");
+	std::reverse(c.begin(), c.end());
 	for (auto& i: c) {
 		topstream << get(indices, i) << " ";
 	}
