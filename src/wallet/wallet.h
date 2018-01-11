@@ -64,6 +64,9 @@ static const bool DEFAULT_WALLET_RBF = false;
 static const bool DEFAULT_WALLETBROADCAST = true;
 static const bool DEFAULT_DISABLE_WALLET = false;
 
+//! if set, addresses will be marked dirty once spent from, and will be excluded from future coin selects
+static const bool DEFAULT_AVOIDREUSE = false;
+
 static const int64_t TIMESTAMP_MIN = 0;
 
 class CBlockIndex;

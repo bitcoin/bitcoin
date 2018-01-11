@@ -928,6 +928,7 @@ void CWallet::SetDirtyState(const uint256& hash, unsigned int n, bool dirty)
     if (srctx) {
         CTxDestination dst;
         if (ExtractDestination(srctx->tx->vout[n].scriptPubKey, dst)) {
+            AssertLockHeld(cs_wallet);
             if (::IsMine(*this, dst)) {
                 if (dirty && !GetDestData(dst, "dirty", NULL)) {
                     AddDestData(dst, "dirty", "p"); // p for "present", opposite of absent (null)
@@ -945,6 +946,7 @@ bool CWallet::IsDirty(const uint256& hash, unsigned int n) const
     if (srctx) {
         CTxDestination dst;
         if (ExtractDestination(srctx->tx->vout[n].scriptPubKey, dst)) {
+            AssertLockHeld(cs_wallet);
             return ::IsMine(*this, dst) && GetDestData(dst, "dirty", NULL);
         }
     }
@@ -959,10 +961,12 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFlushOnClose)
 
     uint256 hash = wtxIn.GetHash();
 
-    // Mark used destinations as dirty
-    for (const CTxIn& txin : wtxIn.tx->vin) {
-        const COutPoint& op = txin.prevout;
-        SetDirtyState(op.hash, op.n, true);
+    if (gArgs.GetBoolArg("-avoidreuse", DEFAULT_AVOIDREUSE)) {
+        // Mark used destinations as dirty
+        for (const CTxIn& txin : wtxIn.tx->vin) {
+            const COutPoint& op = txin.prevout;
+            SetDirtyState(op.hash, op.n, true);
+        }
     }
 
     // Inserts only if not already there, returns tx inserted or tx found
@@ -2285,6 +2289,7 @@ void CWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, const
 
     vCoins.clear();
     CAmount nTotal = 0;
+    bool allow_dirty_addresses = !gArgs.GetBoolArg("-avoidreuse", DEFAULT_AVOIDREUSE) || (coinControl && coinControl->m_allow_dirty_addresses);
 
     for (const auto& entry : mapWallet)
     {
@@ -2365,7 +2370,7 @@ void CWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, const
                 continue;
             }
 
-            if ((!coinControl || !coinControl->allow_dirty_addresses) && IsDirty(wtxid, i)) {
+            if (!allow_dirty_addresses && IsDirty(wtxid, i)) {
                 continue;
             }
 
