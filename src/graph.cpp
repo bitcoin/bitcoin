@@ -5,6 +5,12 @@
 #include "asset.h"
 #include "assetallocation.h"
 using namespace boost;
+typedef adjacency_list< vecS, vecS, directedS > Graph;
+typedef graph_traits<Graph> Traits;
+typedef typename Traits::vertex_descriptor vertex_descriptor;
+typedef typename std::vector< vertex_descriptor > container;
+typedef typename property_map<Graph, vertex_index_t>::const_type IndexMap;
+
 template <typename ClearedVertices>
 struct cycle_visitor
 {
@@ -67,12 +73,7 @@ void CreateDAGFromBlock(const CBlock& pblock, Graph &graph, std::vector<unsigned
 unsigned int DAGRemoveCycles(CBlock & pblock, std::unique_ptr<CBlockTemplate> &pblocktemplate, uint64_t &nBlockTx, uint64_t &nBlockSize, unsigned int &nBlockSigOps, CAmount &nFees) {
 	LogPrintf("DAGRemoveCycles\n");
 	std::vector<CTransaction> newVtx;
-	typedef adjacency_list< vecS, vecS, directedS > Graph;
-	typedef graph_traits<Graph> Traits;
-	typedef typename Traits::vertex_descriptor vertex_descriptor;
 	std::vector<unsigned int, vertex_descriptor> vertices;
-	typedef typename std::vector< vertex_descriptor > container;
-	typedef typename property_map<Graph, vertex_index_t>::const_type IndexMap;
 	unordered_map<int, int> &mapTxIndex;
 	Graph graph;
 
@@ -112,16 +113,11 @@ unsigned int DAGRemoveCycles(CBlock & pblock, std::unique_ptr<CBlockTemplate> &p
 bool DAGTopologicalSort(CBlock & pblock) {
 	LogPrintf("DAGTopologicalSort\n");
 	std::vector<CTransaction> newVtx;
-	typedef adjacency_list< vecS, vecS, directedS > Graph;
-	typedef graph_traits<Graph> Traits;
-	typedef typename Traits::vertex_descriptor vertex_descriptor;
 	std::vector<unsigned int, vertex_descriptor> vertices;
-	typedef typename std::vector< vertex_descriptor > container;
-	typedef typename property_map<Graph, vertex_index_t>::const_type IndexMap;
 	unordered_map<int, int> &mapTxIndex;
 	Graph graph;
 
-	CreateDAGFromBlock(pblock, graph, mapTxIndex);
+	CreateDAGFromBlock(pblock, graph, vertices, mapTxIndex);
 
 	container c;
 	try
