@@ -394,6 +394,10 @@
         <source>Show the list of used receiving addresses and labels</source>
         <translation>نمایش لیست آدرس های دریافت و لیبل ها</translation>
     </message>
+    <message>
+        <source>&amp;Command-line options</source>
+        <translation>گزینه‌های خط‌فرمان</translation>
+    </message>
     <message numerus="yes">
         <source>%n active connection(s) to Zetacoin network</source>
         <translation><numerusform>%n ارتباط فعال با شبکهٔ بیت‌کوین</numerusform></translation>
@@ -767,6 +771,10 @@
         <translation>&amp;شبکه</translation>
     </message>
     <message>
+        <source>W&amp;allet</source>
+        <translation>کیف پول</translation>
+    </message>
+    <message>
         <source>Expert</source>
         <translation>استخراج</translation>
     </message>
@@ -973,6 +981,10 @@
         <translation>&amp;اطلاعات</translation>
     </message>
     <message>
+        <source>Debug window</source>
+        <translation>پنجرهٔ اشکالزدایی</translation>
+    </message>
+    <message>
         <source>Using OpenSSL version</source>
         <translation>نسخهٔ OpenSSL استفاده شده</translation>
     </message>
@@ -1064,8 +1076,16 @@
 <context>
     <name>ReceiveCoinsDialog</name>
     <message>
+        <source>&amp;Amount:</source>
+        <translation>مبلغ:</translation>
+    </message>
+    <message>
         <source>&amp;Label:</source>
         <translation>&amp;برچسب:</translation>
+    </message>
+    <message>
+        <source>&amp;Message:</source>
+        <translation>پیام:</translation>
     </message>
     <message>
         <source>Show</source>
@@ -1089,6 +1109,10 @@
     <message>
         <source>QR Code</source>
         <translation>کد QR</translation>
+    </message>
+    <message>
+        <source>Copy &amp;Address</source>
+        <translation>&amp;کپی نشانی</translation>
     </message>
     <message>
         <source>Address</source>
@@ -1145,6 +1169,10 @@
         <translation>ارسال سکه</translation>
     </message>
     <message>
+        <source>Insufficient funds!</source>
+        <translation>بود جه نا کافی </translation>
+    </message>
+    <message>
         <source>Quantity:</source>
         <translation>تعداد:</translation>
     </message>
@@ -1171,6 +1199,10 @@
     <message>
         <source>Change:</source>
         <translation>پول خورد:</translation>
+    </message>
+    <message>
+        <source>Transaction Fee:</source>
+        <translation>هزینهٔ تراکنش:</translation>
     </message>
     <message>
         <source>fast</source>
@@ -1286,6 +1318,10 @@
     <message>
         <source>Message:</source>
         <translation>پیام:</translation>
+    </message>
+    <message>
+        <source>Pay To:</source>
+        <translation>پرداخت به:</translation>
     </message>
     </context>
 <context>
@@ -1613,8 +1649,16 @@
         <translation>تولید شده ولی قبول نشده</translation>
     </message>
     <message>
+        <source>Offline</source>
+        <translation>آفلاین</translation>
+    </message>
+    <message>
         <source>Label</source>
         <translation>برچسب</translation>
+    </message>
+    <message>
+        <source>Unconfirmed</source>
+        <translation>تایید نشده</translation>
     </message>
     <message>
         <source>Received with</source>
@@ -1933,6 +1977,18 @@
     <message>
         <source>Information</source>
         <translation>اطلاعات</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s'</source>
+        <translation>میزان وجه اشتباه برای maxtxfee=&lt;میزان وجه&gt;: %s</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: '%s'</source>
+        <translation>میزان وجه اشتباه برای minrelaytxfee=&lt;میزان وجه&gt;: %s</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -mintxfee=&lt;amount&gt;: '%s'</source>
+        <translation>میزان وجه اشتباه برای mintxfee=&lt;میزان وجه&gt;: %s</translation>
     </message>
     <message>
         <source>Send trace/debug info to console instead of debug.log file</source>

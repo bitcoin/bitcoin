@@ -303,6 +303,10 @@
         <translation>Zetacoin Nucleus</translation>
     </message>
     <message>
+        <source>&amp;Command-line options</source>
+        <translation>Optiones mandati initiantis</translation>
+    </message>
+    <message>
         <source>No block source available...</source>
         <translation>Nulla fons frustorum absens...</translation>
     </message>
@@ -511,6 +515,10 @@
         <translation>&amp;Rete</translation>
     </message>
     <message>
+        <source>W&amp;allet</source>
+        <translation>Cassidile</translation>
+    </message>
+    <message>
         <source>Automatically open the Zetacoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
         <translation>Aperi per se portam clientis Zetacoin in itineratore.  Hoc tantum effectivum est si itineratrum tuum supportat UPnP et id activum est.</translation>
     </message>
@@ -653,6 +661,10 @@
         <translation>&amp;Informatio</translation>
     </message>
     <message>
+        <source>Debug window</source>
+        <translation>Fenestra Debug</translation>
+    </message>
+    <message>
         <source>Using OpenSSL version</source>
         <translation>Utens OpenSSL versione</translation>
     </message>
@@ -712,8 +724,16 @@
 <context>
     <name>ReceiveCoinsDialog</name>
     <message>
+        <source>&amp;Amount:</source>
+        <translation>Quantitas:</translation>
+    </message>
+    <message>
         <source>&amp;Label:</source>
         <translation>&amp;Titulus:</translation>
+    </message>
+    <message>
+        <source>&amp;Message:</source>
+        <translation>Nuntius:</translation>
     </message>
     <message>
         <source>Copy label</source>
@@ -726,6 +746,10 @@
 </context>
 <context>
     <name>ReceiveRequestDialog</name>
+    <message>
+        <source>Copy &amp;Address</source>
+        <translation>&amp;Copia Inscriptionem</translation>
+    </message>
     <message>
         <source>Address</source>
         <translation>Inscriptio</translation>
@@ -781,8 +805,16 @@
         <translation>Mitte Nummos</translation>
     </message>
     <message>
+        <source>Insufficient funds!</source>
+        <translation>Inopia nummorum</translation>
+    </message>
+    <message>
         <source>Amount:</source>
         <translation>Quantitas:</translation>
+    </message>
+    <message>
+        <source>Transaction Fee:</source>
+        <translation>Transactionis merces:</translation>
     </message>
     <message>
         <source>Send to multiple recipients at once</source>
@@ -866,6 +898,10 @@
     <message>
         <source>Message:</source>
         <translation>Nuntius:</translation>
+    </message>
+    <message>
+        <source>Pay To:</source>
+        <translation>Pensa Ad:</translation>
     </message>
     </context>
 <context>
@@ -1479,8 +1515,16 @@
         <translation>Importat frusta ab externa plica blk000??.dat</translation>
     </message>
     <message>
+        <source>Cannot resolve -whitebind address: '%s'</source>
+        <translation>Non posse resolvere -whitebind inscriptionem: '%s'</translation>
+    </message>
+    <message>
         <source>Information</source>
         <translation>Informatio</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s'</source>
+        <translation>Quantitas non valida pro -maxtxfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
         <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: '%s'</source>

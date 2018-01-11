@@ -219,6 +219,10 @@
         <translation>Трака са картицама</translation>
     </message>
     <message>
+        <source>&amp;About Bitcoin Core</source>
+        <translation>O Bitcoin Coru</translation>
+    </message>
+    <message>
         <source>Up to date</source>
         <translation>Ажурно</translation>
     </message>
@@ -335,6 +339,10 @@
         <translation>Поставке</translation>
     </message>
     <message>
+        <source>W&amp;allet</source>
+        <translation>новчаник</translation>
+    </message>
+    <message>
         <source>&amp;Unit to show amounts in:</source>
         <translation>&amp;Јединица за приказивање износа:</translation>
     </message>
@@ -372,8 +380,16 @@
 <context>
     <name>ReceiveCoinsDialog</name>
     <message>
+        <source>&amp;Amount:</source>
+        <translation>Iznos:</translation>
+    </message>
+    <message>
         <source>&amp;Label:</source>
         <translation>&amp;Етикета</translation>
+    </message>
+    <message>
+        <source>&amp;Message:</source>
+        <translation>Poruka:</translation>
     </message>
     <message>
         <source>Copy label</source>
@@ -387,6 +403,10 @@
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
+        <source>Copy &amp;Address</source>
+        <translation>Kopirajte adresu</translation>
+    </message>
+    <message>
         <source>Address</source>
         <translation>Адреса</translation>
     </message>
@@ -398,6 +418,10 @@
         <source>Label</source>
         <translation>Етикета</translation>
     </message>
+    <message>
+        <source>Message</source>
+        <translation>Poruka</translation>
+    </message>
     </context>
 <context>
     <name>RecentRequestsTableModel</name>
@@ -408,6 +432,10 @@
     <message>
         <source>Label</source>
         <translation>Етикета</translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation>Poruka</translation>
     </message>
     <message>
         <source>Amount</source>
@@ -447,6 +475,10 @@
     </context>
 <context>
     <name>SendCoinsEntry</name>
+    <message>
+        <source>A&amp;mount:</source>
+        <translation>Iznos:</translation>
+    </message>
     <message>
         <source>&amp;Label:</source>
         <translation>&amp;Етикета</translation>
@@ -509,6 +541,14 @@
     <message>
         <source>label</source>
         <translation>етикета</translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation>Poruka</translation>
+    </message>
+    <message>
+        <source>Transaction</source>
+        <translation>transakcije</translation>
     </message>
     <message>
         <source>Amount</source>

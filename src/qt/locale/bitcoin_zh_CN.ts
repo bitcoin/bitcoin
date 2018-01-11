@@ -35,7 +35,7 @@
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation>导出当前数据到文件</translation>
+        <translation>导出当前分页里的数据到文件</translation>
     </message>
     <message>
         <source>&amp;Export</source>
@@ -47,11 +47,11 @@
     </message>
     <message>
         <source>Choose the address to send coins to</source>
-        <translation>选择发款地址</translation>
+        <translation>选择发币地址</translation>
     </message>
     <message>
         <source>Choose the address to receive coins with</source>
-        <translation>选择收款地址</translation>
+        <translation>选择收币地址</translation>
     </message>
     <message>
         <source>C&amp;hoose</source>
@@ -185,7 +185,7 @@
     </message>
     <message>
         <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation>请输入新的钱包密码. &lt;br/&gt;密码须包含&lt;b&gt;10个以上字符&lt;/b&gt;,或&lt;b&gt;8个以上单词&lt;/b&gt;.</translation>
+        <translation>请输入新的钱包密码. &lt;br/&gt;密码须包含&lt;b&gt;10个以上随机字符&lt;/b&gt;,或&lt;b&gt;8个以上单词&lt;/b&gt;.</translation>
     </message>
     <message>
         <source>Enter the old passphrase and new passphrase to the wallet.</source>
@@ -1034,7 +1034,7 @@
     </message>
     <message>
         <source>If you disable the spending of unconfirmed change, the change from a transaction cannot be used until that transaction has at least one confirmation. This also affects how your balance is computed.</source>
-        <translation>如果禁用未确认的零钱，则零钱至少需要1个确认才能使用。同时账户余额显示会受到影响。</translation>
+        <translation>如果禁用未确认的零钱，则零钱至少需要1个确认才能使用。同时账户余额计算会受到影响。</translation>
     </message>
     <message>
         <source>&amp;Spend unconfirmed change</source>
@@ -1936,7 +1936,7 @@
     </message>
     <message>
         <source>Confirm the send action</source>
-        <translation>确认并发送货币</translation>
+        <translation>确认发送货币</translation>
     </message>
     <message>
         <source>S&amp;end</source>

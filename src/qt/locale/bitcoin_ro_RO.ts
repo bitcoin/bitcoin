@@ -997,6 +997,10 @@
         <translation>Reţea</translation>
     </message>
     <message>
+        <source>Automatically start Zetacoin Core after logging in to the system.</source>
+        <translation>Porneşte automat Zetacoin Core după logarea în sistem.</translation>
+    </message>
+    <message>
         <source>&amp;Start Zetacoin Core on system login</source>
         <translation>Porneşte Nucleul Zetacoin la pornirea sistemului</translation>
     </message>
@@ -1300,6 +1304,10 @@
     <message>
         <source>User Agent</source>
         <translation>Agent utilizator</translation>
+    </message>
+    <message>
+        <source>Node/Service</source>
+        <translation>Nod/Serviciu</translation>
     </message>
     <message>
         <source>Ping Time</source>
@@ -1953,6 +1961,10 @@
     <message>
         <source>The recipient address is not valid. Please recheck.</source>
         <translation>Adresa destinatarului nu este validă, vă rugăm să o verificaţi.</translation>
+    </message>
+    <message>
+        <source>Duplicate address found: addresses should only be used once each.</source>
+        <translation>Adresă duplicat găsită: fiecare adresă ar trebui folosită o singură dată.</translation>
     </message>
     <message>
         <source>Warning: Invalid Zetacoin address</source>
@@ -2865,6 +2877,10 @@
         <translation>Opţiuni portofel:</translation>
     </message>
     <message>
+        <source>Warning: This version is obsolete; upgrade required!</source>
+        <translation>Atenţie: această versiune este depăşită, actualizarea este necesară !</translation>
+    </message>
+    <message>
         <source>You need to rebuild the database using -reindex to change -txindex</source>
         <translation>Trebuie să reconstruiţi baza de date folosind -reindex pentru a schimba -txindex</translation>
     </message>
@@ -2897,8 +2913,16 @@
         <translation>Acest produs include programe dezvoltate de către Proiectul OpenSSL pentru a fi folosite în OpenSSL Toolkit &lt;https://www.openssl.org/&gt; şi programe criptografice scrise de către Eric Young şi programe UPnP scrise de către Thomas Bernard.</translation>
     </message>
     <message>
+        <source>(default: %u)</source>
+        <translation>(implicit: %u)</translation>
+    </message>
+    <message>
         <source>Accept public REST requests (default: %u)</source>
         <translation>Acceptă cererile publice REST (implicit: %u)</translation>
+    </message>
+    <message>
+        <source>Cannot resolve -whitebind address: '%s'</source>
+        <translation>Nu se poate rezolva adresa -whitebind: '%s'</translation>
     </message>
     <message>
         <source>Choose data directory on startup (default: 0)</source>
@@ -3023,6 +3047,10 @@
     <message>
         <source>Transaction too large</source>
         <translation>Tranzacţie prea mare</translation>
+    </message>
+    <message>
+        <source>UI Options:</source>
+        <translation>Opţiuni UI:</translation>
     </message>
     <message>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>

@@ -46,6 +46,22 @@
         <translation>&amp;Borrar</translation>
     </message>
     <message>
+        <source>Choose the address to send coins to</source>
+        <translation>Selecciones la direccion para enviar coins</translation>
+    </message>
+    <message>
+        <source>Choose the address to receive coins with</source>
+        <translation>Selecciona la dirección para recibir coins</translation>
+    </message>
+    <message>
+        <source>Sending addresses</source>
+        <translation>Dirección de envio</translation>
+    </message>
+    <message>
+        <source>Receiving addresses</source>
+        <translation>Dirección para recibir</translation>
+    </message>
+    <message>
         <source>Copy &amp;Label</source>
         <translation>Copia &amp;etiqueta</translation>
     </message>
@@ -54,8 +70,16 @@
         <translation>&amp;Editar</translation>
     </message>
     <message>
+        <source>Export Address List</source>
+        <translation>Exportar lista de direcciones</translation>
+    </message>
+    <message>
         <source>Comma separated file (*.csv)</source>
         <translation>Archivos separados por coma (*.csv)</translation>
+    </message>
+    <message>
+        <source>Exporting Failed</source>
+        <translation>Exportado fallo</translation>
     </message>
     </context>
 <context>
@@ -223,6 +247,14 @@
         <translation>&amp;Cambiar la contraseña...</translation>
     </message>
     <message>
+        <source>&amp;Sending addresses...</source>
+        <translation>Mandando direcciones</translation>
+    </message>
+    <message>
+        <source>&amp;Receiving addresses...</source>
+        <translation>Recibiendo direcciones</translation>
+    </message>
+    <message>
         <source>Open &amp;URI...</source>
         <translation>Abrir y url...</translation>
     </message>
@@ -255,6 +287,10 @@
         <translation>Abre consola de depuración y diagnóstico</translation>
     </message>
     <message>
+        <source>&amp;Verify message...</source>
+        <translation>Verificar mensaje....</translation>
+    </message>
+    <message>
         <source>Zetacoin</source>
         <translation>Zetacoin</translation>
     </message>
@@ -269,6 +305,10 @@
     <message>
         <source>&amp;Receive</source>
         <translation>y recibir</translation>
+    </message>
+    <message>
+        <source>Show information about Zetacoin Core</source>
+        <translation>Mostrar informacion sobre Zetacoin Core</translation>
     </message>
     <message>
         <source>&amp;Show / Hide</source>
@@ -297,6 +337,26 @@
     <message>
         <source>Zetacoin Core</source>
         <translation>zetacoin core</translation>
+    </message>
+    <message>
+        <source>Request payments (generates QR codes and zetacoin: URIs)</source>
+        <translation>Pide pagos (genera codigos QR and zetacoin: URls)</translation>
+    </message>
+    <message>
+        <source>&amp;About Zetacoin Core</source>
+        <translation>&amp;Sobre Zetacoin Core</translation>
+    </message>
+    <message>
+        <source>Modify configuration options for Zetacoin Core</source>
+        <translation>Modifica las opciones para ZetaCoin Core</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n week(s)</source>
+        <translation><numerusform>%n semanas</numerusform><numerusform>%n semanas</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n year(s)</source>
+        <translation><numerusform>%n año</numerusform><numerusform>%n años</numerusform></translation>
     </message>
     <message>
         <source>Error</source>
@@ -349,12 +409,24 @@
         <translation>Cantidad:</translation>
     </message>
     <message>
+        <source>Priority:</source>
+        <translation>prioridad:</translation>
+    </message>
+    <message>
+        <source>Fee:</source>
+        <translation>comisión:</translation>
+    </message>
+    <message>
         <source>Amount</source>
         <translation>Cantidad</translation>
     </message>
     <message>
         <source>Date</source>
         <translation>Fecha</translation>
+    </message>
+    <message>
+        <source>Confirmations</source>
+        <translation>Confirmaciones</translation>
     </message>
     <message>
         <source>Confirmed</source>
@@ -377,8 +449,24 @@
         <translation>Copiar Cantidad</translation>
     </message>
     <message>
+        <source>Copy quantity</source>
+        <translation>copiar cantidad</translation>
+    </message>
+    <message>
+        <source>Copy fee</source>
+        <translation>copiar comision</translation>
+    </message>
+    <message>
+        <source>Copy bytes</source>
+        <translation>copiar bytes</translation>
+    </message>
+    <message>
         <source>medium</source>
         <translation>medio</translation>
+    </message>
+    <message>
+        <source>low</source>
+        <translation>bajo</translation>
     </message>
     <message>
         <source>yes</source>
@@ -458,6 +546,10 @@
         <translation>versión</translation>
     </message>
     <message>
+        <source>Command-line options</source>
+        <translation>opciones de linea de comando</translation>
+    </message>
+    <message>
         <source>Usage:</source>
         <translation>Uso:</translation>
     </message>
@@ -501,6 +593,10 @@
     <message>
         <source>&amp;Network</source>
         <translation>&amp;Red</translation>
+    </message>
+    <message>
+        <source>W&amp;allet</source>
+        <translation>Cartera</translation>
     </message>
     <message>
         <source>Expert</source>
@@ -634,6 +730,10 @@
         <translation>&amp;Información</translation>
     </message>
     <message>
+        <source>Debug window</source>
+        <translation>Ventana Debug</translation>
+    </message>
+    <message>
         <source>General</source>
         <translation>General</translation>
     </message>
@@ -681,6 +781,10 @@
     </context>
 <context>
     <name>ReceiveCoinsDialog</name>
+    <message>
+        <source>&amp;Amount:</source>
+        <translation>Cantidad:</translation>
+    </message>
     <message>
         <source>&amp;Label:</source>
         <translation>&amp;Etiqueta:</translation>
@@ -759,8 +863,33 @@
         <translation>Enviar monedas</translation>
     </message>
     <message>
+        <source>Insufficient funds!</source>
+        <translation>Fondos insuficientes</translation>
+    </message>
+    <message>
         <source>Amount:</source>
         <translation>Cantidad:</translation>
+    </message>
+    <message>
+        <source>Priority:</source>
+        <translation>prioridad:</translation>
+    </message>
+    <message>
+        <source>Fee:</source>
+        <translation>comisión:
+</translation>
+    </message>
+    <message>
+        <source>Transaction Fee:</source>
+        <translation>Comisión transacción:</translation>
+    </message>
+    <message>
+        <source>normal</source>
+        <translation>normal</translation>
+    </message>
+    <message>
+        <source>fast</source>
+        <translation>rapido</translation>
     </message>
     <message>
         <source>Send to multiple recipients at once</source>
@@ -791,8 +920,20 @@
         <translation>Confirmar el envio de monedas</translation>
     </message>
     <message>
+        <source>Copy quantity</source>
+        <translation>copiar cantidad</translation>
+    </message>
+    <message>
         <source>Copy amount</source>
         <translation>Copiar Cantidad</translation>
+    </message>
+    <message>
+        <source>Copy fee</source>
+        <translation>copiar comision</translation>
+    </message>
+    <message>
+        <source>Copy bytes</source>
+        <translation>copiar bytes</translation>
     </message>
     <message>
         <source>The amount to pay must be larger than 0.</source>
@@ -844,6 +985,10 @@
     <message>
         <source>Message:</source>
         <translation>Mensaje:</translation>
+    </message>
+    <message>
+        <source>Pay To:</source>
+        <translation>Pagar a:</translation>
     </message>
     </context>
 <context>
@@ -1071,8 +1216,16 @@
         <translation>Generado pero no acceptado</translation>
     </message>
     <message>
+        <source>Offline</source>
+        <translation>fuera de linea</translation>
+    </message>
+    <message>
         <source>Label</source>
         <translation>Etiqueta</translation>
+    </message>
+    <message>
+        <source>Unconfirmed</source>
+        <translation>no confirmado</translation>
     </message>
     <message>
         <source>Received with</source>
@@ -1192,6 +1345,10 @@
     <message>
         <source>Show transaction details</source>
         <translation>Mostrar detalles de la transacción</translation>
+    </message>
+    <message>
+        <source>Exporting Failed</source>
+        <translation>Exportado fallo</translation>
     </message>
     <message>
         <source>Comma separated file (*.csv)</source>
@@ -1319,6 +1476,18 @@
         <translation>Información</translation>
     </message>
     <message>
+        <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s'</source>
+        <translation>Cantidad inválida para -maxtxfee=&lt;amount&gt;: '%s'</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: '%s'</source>
+        <translation>Cantidad inválida para -minrelaytxfee=&lt;amount&gt;: '%s'</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -mintxfee=&lt;amount&gt;: '%s'</source>
+        <translation>Cantidad inválida para -mintxfee=&lt;amount&gt;: '%s'</translation>
+    </message>
+    <message>
         <source>Send trace/debug info to console instead of debug.log file</source>
         <translation>Enviar informacion de seguimiento a la consola en vez del archivo debug.log</translation>
     </message>
@@ -1390,6 +1559,14 @@
         <translation>Dirección -proxy invalida: '%s'</translation>
     </message>
     <message>
+        <source>Cannot resolve -bind address: '%s'</source>
+        <translation>No se pudo resolver la dirección fija: '%s'</translation>
+    </message>
+    <message>
+        <source>Cannot resolve -externalip address: '%s'</source>
+        <translation>No se pudo resolver la dirección ip: '%s'</translation>
+    </message>
+    <message>
         <source>Invalid amount for -paytxfee=&lt;amount&gt;: '%s'</source>
         <translation>Cantidad inválida para -paytxfee=&lt;amount&gt;: '%s'</translation>
     </message>
@@ -1408,6 +1585,14 @@
     <message>
         <source>Loading wallet...</source>
         <translation>Cargando cartera...</translation>
+    </message>
+    <message>
+        <source>Cannot downgrade wallet</source>
+        <translation>No es posible desactualizar la billetera</translation>
+    </message>
+    <message>
+        <source>Cannot write default address</source>
+        <translation>No se pudo escribir la dirección por defecto</translation>
     </message>
     <message>
         <source>Rescanning...</source>

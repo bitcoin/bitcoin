@@ -85,8 +85,11 @@ private:
     //! the database itself
     leveldb::DB* pdb;
 
+    //! the key under which a obfuscation key may be stored by a future version of DBWrapper
+    static const std::string OBFUSCATE_KEY_KEY;
+
 public:
-    CLevelDBWrapper(const boost::filesystem::path& path, size_t nCacheSize, bool fMemory = false, bool fWipe = false);
+    CLevelDBWrapper(const boost::filesystem::path& path, size_t nCacheSize, bool &isObfuscated, bool fMemory = false, bool fWipe = false);
     ~CLevelDBWrapper();
 
     template <typename K, typename V>

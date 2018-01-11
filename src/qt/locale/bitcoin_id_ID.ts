@@ -2,6 +2,10 @@
 <context>
     <name>AddressBookPage</name>
     <message>
+        <source>Right-click to edit address or label</source>
+        <translation>Klik-kanan untuk mengubah alamat atau label</translation>
+    </message>
+    <message>
         <source>Create a new address</source>
         <translation>Buat alamat baru</translation>
     </message>
@@ -89,7 +93,11 @@
         <source>Exporting Failed</source>
         <translation>Proses Ekspor Gagal</translation>
     </message>
-    </context>
+    <message>
+        <source>There was an error trying to save the address list to %1. Please try again.</source>
+        <translation>Terjadi kesalahan saat menyimpan daftar alamat ke %1. Silakan coba lagi.</translation>
+    </message>
+</context>
 <context>
     <name>AddressTableModel</name>
     <message>
@@ -160,12 +168,28 @@
         <translation>Apakah kamu yakin ingin mengenkripsi dompet anda?</translation>
     </message>
     <message>
+        <source>Bitcoin Core will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
+        <translation>Bitcoin Core akan ditutup untuk menyelesaikan proses enkripsi. Mohon diingat bahwa mengenkripsi dompet Anda tidak akan sepenuhnya melindungi bitcoin Anda dari virus atau malware yang menginfeksi komputer Anda.</translation>
+    </message>
+    <message>
+        <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
+        <translation>PENTING: Setiap back up yang sudah Anda buat sebaiknya diganti dengan data dompet Anda yang baru dan terenkripsi. Untuk alasan keamanan, data back up tidak terenkripsi yang sudah Anda buat sebelumnya tidak akan dapat digunakan setelah Anda mulai menggunakan dompet yang baru dan terenkripsi.</translation>
+    </message>
+    <message>
         <source>Warning: The Caps Lock key is on!</source>
         <translation>Perhatian: tombol Caps Lock sementara aktif!</translation>
     </message>
     <message>
         <source>Wallet encrypted</source>
         <translation>Dompet terenkripsi</translation>
+    </message>
+    <message>
+        <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
+        <translation>Masukkan kata kunci untuk dompet Anda.&lt;br/&gt;Mohon gunakan kata kunci &lt;b&gt;yang terdiri dari 10 karakter acak&lt;/b&gt;, atau &lt;b&gt;delapan atau beberapa kata lagi&lt;/b&gt;.</translation>
+    </message>
+    <message>
+        <source>Enter the old passphrase and new passphrase to the wallet.</source>
+        <translation>Masukkan kata kunci lama dan kata kunci baru dompet Anda.</translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
@@ -371,6 +395,10 @@
         <translation>&amp;Mengenai Zetacoin Core</translation>
     </message>
     <message>
+        <source>Modify configuration options for Bitcoin Core</source>
+        <translation>Modifikasi pengaturan konfigurasi untuk Bitcoin Core</translation>
+    </message>
+    <message>
         <source>Show the list of used sending addresses and labels</source>
         <translation>Tampilkan daftar alamat dan label yang terkirim</translation>
     </message>
@@ -451,6 +479,34 @@
         <translation>Menyusul...</translation>
     </message>
     <message>
+        <source>Date: %1
+</source>
+        <translation>Tanggal: %1</translation>
+    </message>
+    <message>
+        <source>Amount: %1
+</source>
+        <translation>Jumlah: %1
+</translation>
+    </message>
+    <message>
+        <source>Type: %1
+</source>
+        <translation>Tipe: %1
+</translation>
+    </message>
+    <message>
+        <source>Label: %1
+</source>
+        <translation>Label: %1</translation>
+    </message>
+    <message>
+        <source>Address: %1
+</source>
+        <translation>Alamat: %1
+</translation>
+    </message>
+    <message>
         <source>Sent transaction</source>
         <translation>Transaksi terkirim</translation>
     </message>
@@ -477,6 +533,10 @@
 <context>
     <name>CoinControlDialog</name>
     <message>
+        <source>Coin Selection</source>
+        <translation>Pemilihan Koin</translation>
+    </message>
+    <message>
         <source>Quantity:</source>
         <translation>Kuantitas:</translation>
     </message>
@@ -495,6 +555,10 @@
     <message>
         <source>Fee:</source>
         <translation>Biaya:</translation>
+    </message>
+    <message>
+        <source>Dust:</source>
+        <translation>Dust:</translation>
     </message>
     <message>
         <source>After Fee:</source>
@@ -519,6 +583,14 @@
     <message>
         <source>Amount</source>
         <translation>Nilai</translation>
+    </message>
+    <message>
+        <source>Received with label</source>
+        <translation>Diterima dengan label</translation>
+    </message>
+    <message>
+        <source>Received with address</source>
+        <translation>Diterima dengan alamat</translation>
     </message>
     <message>
         <source>Date</source>
@@ -581,6 +653,10 @@
         <translation>Salin prioritas</translation>
     </message>
     <message>
+        <source>Copy dust</source>
+        <translation>Salin dust</translation>
+    </message>
+    <message>
         <source>Copy change</source>
         <translation>Salin uang kembali</translation>
     </message>
@@ -627,6 +703,22 @@
     <message>
         <source>none</source>
         <translation>tidak satupun</translation>
+    </message>
+    <message>
+        <source>This label turns red if the transaction size is greater than 1000 bytes.</source>
+        <translation>Label ini akan menjadi merah apabila ukuran transaksi melebihi 1000 bytes.</translation>
+    </message>
+    <message>
+        <source>This label turns red if the priority is smaller than "medium".</source>
+        <translation>Label ini akan menjadi merah apabila prioritasnya lebih kecil dari "sedang"</translation>
+    </message>
+    <message>
+        <source>This label turns red if any recipient receives an amount smaller than %1.</source>
+        <translation>Label ini akan menjadi merah apabila penerima menerima jumlah yang lebih kecil dari %1.</translation>
+    </message>
+    <message>
+        <source>Can vary +/- %1 satoshi(s) per input.</source>
+        <translation>Dapat beragam +/- %1 satoshi per input.</translation>
     </message>
     <message>
         <source>yes</source>
@@ -750,8 +842,16 @@
         <translation>versi</translation>
     </message>
     <message>
+        <source>(%1-bit)</source>
+        <translation>(%1-bit)</translation>
+    </message>
+    <message>
         <source>About Zetacoin Core</source>
         <translation>Mengenai Zetacoin Core</translation>
+    </message>
+    <message>
+        <source>Command-line options</source>
+        <translation>pilihan Perintah-baris</translation>
     </message>
     <message>
         <source>Usage:</source>
@@ -773,6 +873,14 @@
         <translation>Selamat Datang ke Zetacoin Core</translation>
     </message>
     <message>
+        <source>As this is the first time the program is launched, you can choose where Bitcoin Core will store its data.</source>
+        <translation>Ini adalah pertama kali program ini dijalankan, Anda dapat memilih dimana Bitcoin Core menyimpan data.</translation>
+    </message>
+    <message>
+        <source>Bitcoin Core will download and store a copy of the Bitcoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
+        <translation>Bitcoin Core akan mengunduh dan menyimpan salinan dari block chain Bitcoin. Setidaknya %1GB data akan disimpan di direktori ini, dan akan terus bertambah. Dompet Anda juga akan disimpan di direktori ini.</translation>
+    </message>
+    <message>
         <source>Use the default data directory</source>
         <translation>Menggunakan direktori untuk data yang biasa.</translation>
     </message>
@@ -783,6 +891,10 @@
     <message>
         <source>Zetacoin Core</source>
         <translation>Zetacoin Core</translation>
+    </message>
+    <message>
+        <source>Error: Specified data directory "%1" cannot be created.</source>
+        <translation>Kesalahan: Direktori data "%1" tidak dapat dibuat.</translation>
     </message>
     <message>
         <source>Error</source>
@@ -827,12 +939,40 @@
         <translation>&amp;Utama</translation>
     </message>
     <message>
+        <source>Size of &amp;database cache</source>
+        <translation>Ukuran cache &amp;database</translation>
+    </message>
+    <message>
         <source>MB</source>
         <translation>MB</translation>
     </message>
     <message>
+        <source>Number of script &amp;verification threads</source>
+        <translation>Jumlah script &amp;verification threads</translation>
+    </message>
+    <message>
+        <source>Accept connections from outside</source>
+        <translation>Terima koneksi dari luar</translation>
+    </message>
+    <message>
+        <source>Allow incoming connections</source>
+        <translation>Perbolehkan koneksi masuk</translation>
+    </message>
+    <message>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
         <translation>Alamat IP proxy (cth. IPv4: 127.0.0.1 / IPv6: ::1)</translation>
+    </message>
+    <message>
+        <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Exit in the menu.</source>
+        <translation>Minimalisasi aplikasi ketika jendela ditutup. Ketika pilihan ini dipilih, aplikasi akan menutup seluruhnya jika anda memilih Keluar di menu yang tersedia.</translation>
+    </message>
+    <message>
+        <source>The user interface language can be set here. This setting will take effect after restarting Bitcoin Core.</source>
+        <translation>Bahasa interface pengguna bisa diubah disini. Pengaturan ini akan memberikan efek setelah Bitcoin Core di-restart.</translation>
+    </message>
+    <message>
+        <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
+        <translation>URL pihak ketika (misalnya sebuah block explorer) yang mumcul dalam tab transaksi sebagai konteks menu. %s dalam URL diganti dengan kode transaksi. URL dipisahkan dengan tanda vertikal |.</translation>
     </message>
     <message>
         <source>Third party transaction URLs</source>
@@ -853,6 +993,18 @@
     <message>
         <source>&amp;Network</source>
         <translation>&amp;Jaringan</translation>
+    </message>
+    <message>
+        <source>Automatically start Bitcoin Core after logging in to the system.</source>
+        <translation>Buka Bitcoin Core secara otomatis setelah Anda log-in ke sistem Anda.</translation>
+    </message>
+    <message>
+        <source>&amp;Start Bitcoin Core on system login</source>
+        <translation>&amp;Mulai Bitcoin Core saat log-in sistem</translation>
+    </message>
+    <message>
+        <source>(0 = auto, &lt;0 = leave that many cores free)</source>
+        <translation>(0 = auto, &lt;0 = leave that many cores free)</translation>
     </message>
     <message>
         <source>W&amp;allet</source>
@@ -881,6 +1033,10 @@
     <message>
         <source>Map port using &amp;UPnP</source>
         <translation>Petakan port dengan &amp;UPnP</translation>
+    </message>
+    <message>
+        <source>Connect to the Bitcoin network through a SOCKS5 proxy.</source>
+        <translation>Hubungkan ke jaringan Bitcoin melalui SOCKS5 proxy.</translation>
     </message>
     <message>
         <source>Proxy &amp;IP:</source>
@@ -955,6 +1111,10 @@
         <translation>Restart klien diperlukan untuk mengaktifkan perubahan.</translation>
     </message>
     <message>
+        <source>Client will be shut down. Do you want to proceed?</source>
+        <translation>Klien akan dimatikan, apakah anda hendak melanjutkan?</translation>
+    </message>
+    <message>
         <source>This change would require a client restart.</source>
         <translation>Perubahan ini akan memerlukan restart klien</translation>
     </message>
@@ -998,6 +1158,10 @@
         <translation>Saldo ditambang yang masih terlalu muda</translation>
     </message>
     <message>
+        <source>Balances</source>
+        <translation>Saldo:</translation>
+    </message>
+    <message>
         <source>Total:</source>
         <translation>Jumlah:</translation>
     </message>
@@ -1017,12 +1181,20 @@
         <translation>Alamat pembayaran salah %1</translation>
     </message>
     <message>
+        <source>Payment request rejected</source>
+        <translation>Permintaan pembayaran ditolak</translation>
+    </message>
+    <message>
         <source>Requested payment amount of %1 is too small (considered dust).</source>
         <translation>Nilai pembayaran %1 yang diminta oleh Anda terlalu sedikit (dianggap debu).</translation>
     </message>
     <message>
         <source>Payment request error</source>
         <translation>Gagalan permintaan pembayaran</translation>
+    </message>
+    <message>
+        <source>Payment request expired.</source>
+        <translation>Permintaan pembayaran telah kadaluarsa</translation>
     </message>
     <message>
         <source>Refund from %1</source>
@@ -1047,12 +1219,20 @@
 </context>
 <context>
     <name>PeerTableModel</name>
+    <message>
+        <source>User Agent</source>
+        <translation>Agen Pengguna</translation>
+    </message>
     </context>
 <context>
     <name>QObject</name>
     <message>
         <source>Amount</source>
         <translation>Nilai</translation>
+    </message>
+    <message>
+        <source>Enter a Bitcoin address (e.g. %1)</source>
+        <translation>Masukkan alamat Bitcoin (contoh %1)</translation>
     </message>
     <message>
         <source>%1 h</source>
@@ -1141,6 +1321,22 @@
         <translation>Jumlah blok terkini</translation>
     </message>
     <message>
+        <source>Sent</source>
+        <translation>Terkirim</translation>
+    </message>
+    <message>
+        <source>Version</source>
+        <translation>Versi</translation>
+    </message>
+    <message>
+        <source>User Agent</source>
+        <translation>Agen Pengguna</translation>
+    </message>
+    <message>
+        <source>Services</source>
+        <translation>Layanan</translation>
+    </message>
+    <message>
         <source>Last block time</source>
         <translation>Waktu blok terakhir</translation>
     </message>
@@ -1185,6 +1381,10 @@
         <translation>Bersihkan konsol</translation>
     </message>
     <message>
+        <source>Welcome to the Bitcoin Core RPC console.</source>
+        <translation>Selamat datang di konsol RPC Bitcoin.</translation>
+    </message>
+    <message>
         <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
         <translation>Gunakan panah keatas dan kebawah untuk menampilkan sejarah, dan &lt;b&gt;Ctrl-L&lt;/b&gt; untuk bersihkan layar.</translation>
     </message>
@@ -1207,6 +1407,10 @@
     <message>
         <source>%1 GB</source>
         <translation>%1 GB</translation>
+    </message>
+    <message>
+        <source>Unknown</source>
+        <translation>Tidak diketahui</translation>
     </message>
     </context>
 <context>
@@ -1429,6 +1633,26 @@
         <translation>Alamat uang kembali yang kustom</translation>
     </message>
     <message>
+        <source>Transaction Fee:</source>
+        <translation>Biaya Transaksi:</translation>
+    </message>
+    <message>
+        <source>Recommended:</source>
+        <translation>Disarankan</translation>
+    </message>
+    <message>
+        <source>Confirmation time:</source>
+        <translation>Waktu konfirmasi:</translation>
+    </message>
+    <message>
+        <source>normal</source>
+        <translation>normal</translation>
+    </message>
+    <message>
+        <source>fast</source>
+        <translation>cepat</translation>
+    </message>
+    <message>
         <source>Send to multiple recipients at once</source>
         <translation>Kirim ke beberapa penerima sekaligus</translation>
     </message>
@@ -1439,6 +1663,10 @@
     <message>
         <source>Clear all fields of the form.</source>
         <translation>Hapus informasi dari form.</translation>
+    </message>
+    <message>
+        <source>Dust:</source>
+        <translation>Dust:</translation>
     </message>
     <message>
         <source>Balance:</source>
@@ -1513,12 +1741,24 @@
         <translation>Gagal: Transaksi ditolak. Ini mungkin terjadi jika beberapa dari koin dalam dompet Anda telah digunakan, seperti ketika Anda menggunakan salinan wallet.dat dan beberapa koin telah dibelanjakan dalam salinan tersebut tetapi disini tidak tertandai sebagai terpakai.</translation>
     </message>
     <message>
+        <source>A fee higher than %1 is considered an absurdly high fee.</source>
+        <translation>Biaya yang lebih tinggi dari %1 dianggap biaya tak masuk akal.</translation>
+    </message>
+    <message>
+        <source>Payment request expired.</source>
+        <translation>Permintaan pembayaran telah kadaluarsa</translation>
+    </message>
+    <message>
         <source>Warning: Invalid Zetacoin address</source>
         <translation>Awas: Alamat Zetacoin tidak sah</translation>
     </message>
     <message>
         <source>(no label)</source>
         <translation>(tidak ada label)</translation>
+    </message>
+    <message>
+        <source>Copy dust</source>
+        <translation>Salin dust</translation>
     </message>
     <message>
         <source>Are you sure you want to send?</source>
@@ -2323,8 +2563,20 @@
         <translation>Tidak bisa mengunci data directory %s. Kemungkinan Zetacoin Core sudah mulai.</translation>
     </message>
     <message>
+        <source>Cannot resolve -whitebind address: '%s'</source>
+        <translation>Tidak dapat menyelesaikan alamat -whitebind: '%s'</translation>
+    </message>
+    <message>
+        <source>Connect through SOCKS5 proxy</source>
+        <translation>Hubungkan melalui proxy SOCKS</translation>
+    </message>
+    <message>
         <source>Information</source>
         <translation>Informasi</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s'</source>
+        <translation>Nilai salah untuk -maxtxfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
         <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: '%s'</source>
@@ -2341,6 +2593,10 @@
     <message>
         <source>Send trace/debug info to console instead of debug.log file</source>
         <translation>Kirim info jejak/debug ke konsol bukan berkas debug.log</translation>
+    </message>
+    <message>
+        <source>Set SSL root certificates for payment request (default: -system-)</source>
+        <translation>Pilih sertifikat root SSL untuk permintaan pembayaran {default: -system-)</translation>
     </message>
     <message>
         <source>Set language, for example "de_DE" (default: system locale)</source>
@@ -2373,6 +2629,10 @@
     <message>
         <source>Transaction too large</source>
         <translation>Transaksi terlalu besar</translation>
+    </message>
+    <message>
+        <source>UI Options:</source>
+        <translation>Pilihan UI:</translation>
     </message>
     <message>
         <source>Username for JSON-RPC connections</source>

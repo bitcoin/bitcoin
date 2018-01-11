@@ -2011,6 +2011,10 @@
         <translation>Payer seulement les frais minimum de %1</translation>
     </message>
     <message>
+        <source>Total Amount %1&lt;span style='font-size:10pt;font-weight:normal;'&gt;&lt;br /&gt;(=%2)&lt;/span&gt;</source>
+        <translation>Montant total %1&lt;span style='font-size:10pt;font-weight:normal;'&gt;&lt;br /&gt;(=%2)&lt;/span&gt;</translation>
+    </message>
+    <message>
         <source>The recipient address is not valid. Please recheck.</source>
         <translation>L'adresse du destinataire est invalide. Veuillez la vérifier.</translation>
     </message>
@@ -3177,6 +3181,10 @@ par exemple : alertnotify=echo %%s | mail -s "Alerte Zetacoin" admin@foo.com
         <translation>Erreur de lecture de la base de données, fermeture en cours.</translation>
     </message>
     <message>
+        <source>Error: A fatal internal error occurred, see debug.log for details</source>
+        <translation>Erreur : une erreur interne fatale s'est produite, voir debug.log pour plus de détails</translation>
+    </message>
+    <message>
         <source>Error: Unsupported argument -tor found, use -onion.</source>
         <translation>Erreur : argument non pris en charge -tor trouvé, utiliser -onion.</translation>
     </message>
@@ -3225,6 +3233,10 @@ par exemple : alertnotify=echo %%s | mail -s "Alerte Zetacoin" admin@foo.com
         <translation>Options de relais du nœud :</translation>
     </message>
     <message>
+        <source>Pruning blockstore...</source>
+        <translation>Élagage du magasin de blocs...</translation>
+    </message>
+    <message>
         <source>RPC SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
         <translation>Options RPC SSL : (voir le wiki Zetacoin pour les instructions de configuration de SSL)</translation>
     </message>
@@ -3242,7 +3254,7 @@ par exemple : alertnotify=echo %%s | mail -s "Alerte Zetacoin" admin@foo.com
     </message>
     <message>
         <source>Receive and display P2P network alerts (default: %u)</source>
-        <translation>Recevoir et afficher les alertes du réseau poste à poste (%u par défaut)</translation>
+        <translation>Recevoir et afficher les alertes du réseau poste à poste (par défaut : %u )</translation>
     </message>
     <message>
         <source>Send trace/debug info to console instead of debug.log file</source>

@@ -1429,6 +1429,10 @@
         <translation>ხურდის მისამართი</translation>
     </message>
     <message>
+        <source>Transaction Fee:</source>
+        <translation>ტრანსაქციის საფასური - საკომისიო:</translation>
+    </message>
+    <message>
         <source>Send to multiple recipients at once</source>
         <translation>გაგზავნა რამდენიმე რეციპიენტთან ერთდროულად</translation>
     </message>
@@ -2347,12 +2351,20 @@
         <translation>მაღალპრიორიტეტული/დაბალსაკომისიოიანი ტრანსაქციების მაქსიმალური ზომა ბაიტებში (ნაგულისხმევი: %d)</translation>
     </message>
     <message>
+        <source>Cannot resolve -whitebind address: '%s'</source>
+        <translation>ვერ ხერხდება -whitebind მისამართის გარკვევა: '%s'</translation>
+    </message>
+    <message>
         <source>Choose data directory on startup (default: 0)</source>
         <translation>მონაცემთა კატალოგის მითითება ყოველი გაშვებისას (ნაგულისხმევი: 0)</translation>
     </message>
     <message>
         <source>Information</source>
         <translation>ინფორმაცია</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s'</source>
+        <translation>დაუშვებელი მნიშვნელობა -pmaxtxfee&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
         <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: '%s'</source>

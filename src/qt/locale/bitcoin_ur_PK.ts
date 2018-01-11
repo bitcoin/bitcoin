@@ -121,6 +121,10 @@
 <context>
     <name>CoinControlDialog</name>
     <message>
+        <source>Amount:</source>
+        <translation>رقم:</translation>
+    </message>
+    <message>
         <source>Amount</source>
         <translation>رقم</translation>
     </message>
@@ -135,6 +139,14 @@
     </context>
 <context>
     <name>EditAddressDialog</name>
+    <message>
+        <source>&amp;Label</source>
+        <translation>چٹ</translation>
+    </message>
+    <message>
+        <source>&amp;Address</source>
+        <translation> پتہ</translation>
+    </message>
     </context>
 <context>
     <name>FreespaceChecker</name>
@@ -183,6 +195,10 @@
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
+        <source>Copy &amp;Address</source>
+        <translation>کاپی پتہ</translation>
+    </message>
+    <message>
         <source>Address</source>
         <translation> پتہ</translation>
     </message>
@@ -216,6 +232,14 @@
     </context>
 <context>
     <name>SendCoinsDialog</name>
+    <message>
+        <source>Insufficient funds!</source>
+        <translation>ناکافی فنڈز</translation>
+    </message>
+    <message>
+        <source>Amount:</source>
+        <translation>رقم:</translation>
+    </message>
     <message>
         <source>Balance:</source>
         <translation>بیلنس:</translation>

@@ -63,7 +63,7 @@
     </message>
     <message>
         <source>Receiving addresses</source>
-        <translation>Adresa prijatia</translation>
+        <translation>Prijímacia adresa</translation>
     </message>
     <message>
         <source>These are your Zetacoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
@@ -2015,6 +2015,10 @@
         <translation>Zaplatiť minimálny poplatok %1</translation>
     </message>
     <message>
+        <source>Total Amount %1&lt;span style='font-size:10pt;font-weight:normal;'&gt;&lt;br /&gt;(=%2)&lt;/span&gt;</source>
+        <translation>Celkové množstvo %1&lt;span style='font-size:10pt;font-weight:normal;'&gt;&lt;br /&gt;(=%2)&lt;/span&gt;</translation>
+    </message>
+    <message>
         <source>The recipient address is not valid. Please recheck.</source>
         <translation>Adresa príjemcu je neplatná. Prosím, overte ju.</translation>
     </message>
@@ -2094,6 +2098,10 @@
         <translation>Odstrániť túto položku</translation>
     </message>
     <message>
+        <source>The fee will be deducted from the amount being sent. The recipient will receive less bitcoins than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
+        <translation>Poplatok sa odpočíta od čiastky, ktorú odosielate. Príjemca dostane menej bitcoinov ako zadáte. Ak je vybraných viacero príjemcov, poplatok je rozdelený rovným dielom.</translation>
+    </message>
+    <message>
         <source>S&amp;ubtract fee from amount</source>
         <translation>Odpočítať poplatok od s&amp;umy</translation>
     </message>
@@ -2146,6 +2154,10 @@
     <message>
         <source>&amp;Sign Message</source>
         <translation>&amp;Podpísať Správu</translation>
+    </message>
+    <message>
+        <source>The Bitcoin address to sign the message with</source>
+        <translation>Bitcoin adresa pre podpísanie správy s</translation>
     </message>
     <message>
         <source>Choose previously used address</source>
@@ -2797,6 +2809,10 @@
         <translation>Vykonaj príkaz keď sa zmení transakcia peňaženky (%s v príkaze je nahradená TxID)</translation>
     </message>
     <message>
+        <source>Maximum total fees to use in a single wallet transaction; setting this too low may abort large transactions (default: %s)</source>
+        <translation>Maximálny poplatok pre jednu tranzakciu; príliš nízky poplatok môže spôsobiť zrušenie väčšej tranzakcie (predvolené: %s)</translation>
+    </message>
+    <message>
         <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>
         <translation>Nastaviť počeť vlákien overujúcich skripty (%u až %d, 0 = auto, &lt;0 = nechať toľkoto jadier voľných, prednastavené: %d)</translation>
     </message>
@@ -2807,6 +2823,14 @@
     <message>
         <source>Unable to bind to %s on this computer. Zetacoin Core is probably already running.</source>
         <translation>Nepodarilo sa pripojiť na %s na tomto počítači. Zetacoin Jadro je už pravdepodobne spustené.</translation>
+    </message>
+    <message>
+        <source>WARNING: abnormally high number of blocks generated, %d blocks received in the last %d hours (%d expected)</source>
+        <translation>VAROVANIE: príliš veľa vygenerovaných blokov; %d prijatých blokov v posledných %d hodinách (očakávaných %d)</translation>
+    </message>
+    <message>
+        <source>WARNING: check your network connection, %d blocks received in the last %d hours (%d expected)</source>
+        <translation>VAROVANIE: skontrolujte sieťové pripojenie, %d prijatých blokov za posledných %d hodín (očakávané %d)</translation>
     </message>
     <message>
         <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
@@ -2923,6 +2947,14 @@ The network does not appear to fully agree! Some miners appear to be experiencin
         <translation>Pripojiť iba k uzlom v sieti &lt;net&gt; (ipv4, ipv6, alebo onion)</translation>
     </message>
     <message>
+        <source>Prune cannot be configured with a negative value.</source>
+        <translation>Redukovanie nemôže byť nastavené na zápornú hodnotu.</translation>
+    </message>
+    <message>
+        <source>Prune mode is incompatible with -txindex.</source>
+        <translation>Redukovanie je nekompatibilné s -txindex.</translation>
+    </message>
+    <message>
         <source>Set database cache size in megabytes (%d to %d, default: %d)</source>
         <translation>Nastaviť veľkosť pomocnej pamäti databázy v megabajtoch (%d do %d, prednastavené: %d)</translation>
     </message>
@@ -2953,6 +2985,10 @@ The network does not appear to fully agree! Some miners appear to be experiencin
     <message>
         <source>Wallet options:</source>
         <translation>Voľby peňaženky:</translation>
+    </message>
+    <message>
+        <source>Warning: This version is obsolete; upgrade required!</source>
+        <translation>Varovanie: Táto verzia je zastaralá; vyžaduje sa aktualizácia!</translation>
     </message>
     <message>
         <source>You need to rebuild the database using -reindex to change -txindex</source>
@@ -2987,6 +3023,10 @@ The network does not appear to fully agree! Some miners appear to be experiencin
         <translation>Vytvoriť nové súbory z predvolenými systémovými právami, namiesto umask 077 (funguje iba z vypnutou funkcionalitou peňaženky)</translation>
     </message>
     <message>
+        <source>Discover own IP addresses (default: 1 when listening and no -externalip or -proxy)</source>
+        <translation>Zisti vlastnú IP adresu (predvolené: 1 pre listen a -externalip alebo -proxy)</translation>
+    </message>
+    <message>
         <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
         <translation>Chyba: Počúvanie prichádzajúcich spojení zlyhalo (vrátená chyba je %s)</translation>
     </message>
@@ -3015,6 +3055,10 @@ The network does not appear to fully agree! Some miners appear to be experiencin
         <translation>Maximálna veľkosť dát v transakciách nosných dát, ktoré prenášame a ťažíme (predvolené: %u)</translation>
     </message>
     <message>
+        <source>Prune configured below the minimum of %d MB.  Please use a higher number.</source>
+        <translation>Redukovanie nastavené pod minimálnu hodnotu %d MB. Použite vyššiu hodnotu prosím.</translation>
+    </message>
+    <message>
         <source>Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect)</source>
         <translation>Dotaz na partnerské adresy pomocou vyhľadávania DNS v prípade nedostatku adries (predvolené: 1, pokiaľ -connect)</translation>
     </message>
@@ -3025,6 +3069,10 @@ The network does not appear to fully agree! Some miners appear to be experiencin
     <message>
         <source>Set the number of threads for coin generation if enabled (-1 = all cores, default: %d)</source>
         <translation>Nastaviť počet vlákien pre generáciu mincí (-1 = všetky jadrá, predvolené: %d)</translation>
+    </message>
+    <message>
+        <source>The transaction amount is too small to send after the fee has been deducted</source>
+        <translation>Suma je príliš malá pre odoslanie tranzakcie</translation>
     </message>
     <message>
         <source>This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit &lt;https://www.openssl.org/&gt; and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.</source>
@@ -3045,6 +3093,14 @@ The network does not appear to fully agree! Some miners appear to be experiencin
     <message>
         <source>Accept public REST requests (default: %u)</source>
         <translation>Akceptovať verejné REST žiadosti (predvolené: %u)</translation>
+    </message>
+    <message>
+        <source>Activating best chain...</source>
+        <translation>Aktivácia najlepšej reťaze...</translation>
+    </message>
+    <message>
+        <source>Can't run with a wallet in prune mode.</source>
+        <translation>Nemôže pracovať s peňaženkou v redukovanom móde.</translation>
     </message>
     <message>
         <source>Cannot resolve -whitebind address: '%s'</source>
@@ -3075,6 +3131,10 @@ The network does not appear to fully agree! Some miners appear to be experiencin
         <translation>Chyba pri načítaní z databázy, ukončuje sa.</translation>
     </message>
     <message>
+        <source>Error: A fatal internal error occurred, see debug.log for details</source>
+        <translation>Chyba: Vyskytla sa interná chyba, pre viac informácií zobrazte debug.log</translation>
+    </message>
+    <message>
         <source>Error: Unsupported argument -tor found, use -onion.</source>
         <translation>Chyba: nájdený nepodporovaný argument -tor, použite -onion.</translation>
     </message>
@@ -3085,6 +3145,10 @@ The network does not appear to fully agree! Some miners appear to be experiencin
     <message>
         <source>Information</source>
         <translation>Informácia</translation>
+    </message>
+    <message>
+        <source>Initialization sanity check failed. Bitcoin Core is shutting down.</source>
+        <translation>Inicializačná kontrola zlyhala. Jadro Bitcoin sa ukončuje.</translation>
     </message>
     <message>
         <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s'</source>
@@ -3117,6 +3181,10 @@ The network does not appear to fully agree! Some miners appear to be experiencin
     <message>
         <source>Node relay options:</source>
         <translation>Prenosové možnosti uzla:</translation>
+    </message>
+    <message>
+        <source>Pruning blockstore...</source>
+        <translation>Redukovanie blockstore...</translation>
     </message>
     <message>
         <source>RPC SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
@@ -3171,6 +3239,10 @@ The network does not appear to fully agree! Some miners appear to be experiencin
         <translation>Spustiť minimalizované</translation>
     </message>
     <message>
+        <source>The transaction amount is too small to pay the fee</source>
+        <translation>Suma tranzakcie je príliš malá na zaplatenie poplatku</translation>
+    </message>
+    <message>
         <source>This is experimental software.</source>
         <translation>Toto je experimentálny softvér.</translation>
     </message>
@@ -3205,6 +3277,10 @@ The network does not appear to fully agree! Some miners appear to be experiencin
     <message>
         <source>Username for JSON-RPC connections</source>
         <translation>Užívateľské meno pre JSON-RPC spojenia</translation>
+    </message>
+    <message>
+        <source>Wallet needed to be rewritten: restart Bitcoin Core to complete</source>
+        <translation>Peňaženka musí byť prepísaná: pre dokončenie reštartujte Jadro Bitcoin</translation>
     </message>
     <message>
         <source>Warning</source>

@@ -2019,6 +2019,10 @@
         <translation>Paga només la comissió mínima de %1</translation>
     </message>
     <message>
+        <source>Total Amount %1&lt;span style='font-size:10pt;font-weight:normal;'&gt;&lt;br /&gt;(=%2)&lt;/span&gt;</source>
+        <translation>Import total %1&lt;span style='font-size:10pt;font-weight:normal;'&gt;&lt;br /&gt;(=%2)&lt;/span&gt;</translation>
+    </message>
+    <message>
         <source>The recipient address is not valid. Please recheck.</source>
         <translation>L'adreça de destinatari no és vàlida. Torneu-la a comprovar.</translation>
     </message>
@@ -3180,6 +3184,10 @@ per exemple: alertnotify=echo %%s | mail -s "Avís de Zetacoin" admin@foo.com</t
         <translation>Error en llegir la base de dades, tancant.</translation>
     </message>
     <message>
+        <source>Error: A fatal internal error occurred, see debug.log for details</source>
+        <translation>Error: s'ha produït un error intern fatal. Vegeu debug.log per a més detalls</translation>
+    </message>
+    <message>
         <source>Error: Unsupported argument -tor found, use -onion.</source>
         <translation>Error: s'ha trobat un argument -tor no acceptat. Feu servir -onion.</translation>
     </message>
@@ -3226,6 +3234,10 @@ per exemple: alertnotify=echo %%s | mail -s "Avís de Zetacoin" admin@foo.com</t
     <message>
         <source>Node relay options:</source>
         <translation>Opcions de transmissió del node:</translation>
+    </message>
+    <message>
+        <source>Pruning blockstore...</source>
+        <translation>S'està podant l'emmagatzemament de blocs...</translation>
     </message>
     <message>
         <source>RPC SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>

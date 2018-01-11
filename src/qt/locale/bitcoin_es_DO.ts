@@ -827,6 +827,10 @@
         <translation>&amp;Red</translation>
     </message>
     <message>
+        <source>W&amp;allet</source>
+        <translation>Monedero</translation>
+    </message>
+    <message>
         <source>Expert</source>
         <translation>Experto</translation>
     </message>
@@ -1365,6 +1369,10 @@
         <translation>Dirección propia</translation>
     </message>
     <message>
+        <source>Transaction Fee:</source>
+        <translation>Comisión de transacción:</translation>
+    </message>
+    <message>
         <source>Send to multiple recipients at once</source>
         <translation>Enviar a múltiples destinatarios de una vez</translation>
     </message>
@@ -1514,6 +1522,10 @@
     <message>
         <source>Remove this entry</source>
         <translation>Eliminar esta transacción</translation>
+    </message>
+    <message>
+        <source>Message:</source>
+        <translation>Mensaje:</translation>
     </message>
     <message>
         <source>Enter a label for this address to add it to the list of used addresses</source>
@@ -2243,12 +2255,20 @@
         <translation>Establecer tamaño máximo de las transacciones de alta prioridad/comisión baja en bytes (por defecto: %d)</translation>
     </message>
     <message>
+        <source>Cannot resolve -whitebind address: '%s'</source>
+        <translation>No se puede resolver la dirección de -whitebind: '%s'</translation>
+    </message>
+    <message>
         <source>Choose data directory on startup (default: 0)</source>
         <translation>Elegir directorio de datos al iniciar (predeterminado: 0)</translation>
     </message>
     <message>
         <source>Information</source>
         <translation>Información</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s'</source>
+        <translation>Inválido por el monto -maxtxfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
         <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: '%s'</source>
