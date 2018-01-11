@@ -1241,20 +1241,8 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     // ********************************************************* Step 5: Backup wallet and verify wallet database integrity
 #ifdef ENABLE_WALLET
-    std::string strWarning;
-    std::string strError;
-
-    nWalletBackups = GetArg("-createwalletbackups", 10);
-    nWalletBackups = std::max(0, std::min(10, nWalletBackups));
-
-    std::string strWalletFile = GetArg("-wallet", DEFAULT_WALLET_DAT);
-
-    if(!AutoBackupWallet(NULL, strWalletFile, strWarning, strError)) {
-        if (!strWarning.empty())
-            InitWarning(strWarning);
-        if (!strError.empty())
-            return InitError(strError);
-    }
+    if (!CWallet::InitAutoBackup())
+        return false;
 
     if (!CWallet::Verify())
         return false;
