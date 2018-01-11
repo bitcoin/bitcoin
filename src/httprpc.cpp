@@ -85,11 +85,11 @@ static void JSONErrorReply(HTTPRequest* req, const UniValue& objError, const Uni
 //entries from config file.
 static bool multiUserAuthorized(std::string strUserPass)
 {    
-    if (strUserPass.find(":") == std::string::npos) {
+    if (strUserPass.find(':') == std::string::npos) {
         return false;
     }
-    std::string strUser = strUserPass.substr(0, strUserPass.find(":"));
-    std::string strPass = strUserPass.substr(strUserPass.find(":") + 1);
+    std::string strUser = strUserPass.substr(0, strUserPass.find(':'));
+    std::string strPass = strUserPass.substr(strUserPass.find(':') + 1);
 
     for (const std::string& strRPCAuth : gArgs.GetArgs("-rpcauth")) {
         //Search for multi-user login/pass "rpcauth" from config
@@ -131,9 +131,9 @@ static bool RPCAuthorized(const std::string& strAuth, std::string& strAuthUserna
     std::string strUserPass64 = strAuth.substr(6);
     boost::trim(strUserPass64);
     std::string strUserPass = DecodeBase64(strUserPass64);
-    
-    if (strUserPass.find(":") != std::string::npos)
-        strAuthUsernameOut = strUserPass.substr(0, strUserPass.find(":"));
+
+    if (strUserPass.find(':') != std::string::npos)
+        strAuthUsernameOut = strUserPass.substr(0, strUserPass.find(':'));
 
     //Check if authorized under single-user field
     if (TimingResistantEqual(strUserPass, strRPCUserColonPass)) {

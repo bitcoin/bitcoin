@@ -517,7 +517,7 @@ UniValue setban(const JSONRPCRequest& request)
     CNetAddr netAddr;
     bool isSubnet = false;
 
-    if (request.params[0].get_str().find("/") != std::string::npos)
+    if (request.params[0].get_str().find('/') != std::string::npos)
         isSubnet = true;
 
     if (!isSubnet) {
