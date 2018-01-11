@@ -14,6 +14,7 @@ gradually.
   - No indentation for public/protected/private or for namespaces.
   - No extra spaces inside parenthesis; don't do ( this )
   - No space after function names; one space after if, for and while.
+  - `++i` is preferred over `i++`.
   - Align pointers and references to the left i.e. use `type& var` and not `type &var`.
 
 Block style example:
@@ -25,7 +26,7 @@ class Class
     bool Function(char* psz, int n, const string& s)
     {
         // Comment summarising what this section of code does
-        for (int i = 0; i < n; i++) {
+        for (int i = 0; i < n; ++i) {
             // When something fails, return early
             if (!Something())
                 return false;
@@ -234,9 +235,9 @@ General Dash Core
   - *Rationale*: Makes sure that they pass thorough testing, and that the tester will keep passing
      on the master branch. Otherwise all new pull requests will start failing the tests, resulting in
      confusion and mayhem
- 
+
   - *Explanation*: If the test suite is to be updated for a change, this has to
-    be done first 
+    be done first
 
 Wallet
 -------

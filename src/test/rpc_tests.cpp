@@ -18,17 +18,6 @@
 
 using namespace std;
 
-UniValue createArgs(int nRequired, const char* address1=NULL, const char* address2=NULL)
-{
-    UniValue result(UniValue::VARR);
-    result.push_back(nRequired);
-    UniValue addresses(UniValue::VARR);
-    if (address1) addresses.push_back(address1);
-    if (address2) addresses.push_back(address2);
-    result.push_back(addresses);
-    return result;
-}
-
 UniValue CallRPC(string args)
 {
     vector<string> vArgs;

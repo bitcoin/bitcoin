@@ -4725,7 +4725,16 @@ bool CWallet::InitLoadWallet()
     }
     walletInstance->SetBroadcastTransactions(GetBoolArg("-walletbroadcast", DEFAULT_WALLETBROADCAST));
 
+    {
+        LOCK(walletInstance->cs_wallet);
+        LogPrintf("setExternalKeyPool.size() = %u\n",   walletInstance->KeypoolCountExternalKeys());
+        LogPrintf("setInternalKeyPool.size() = %u\n",   walletInstance->KeypoolCountInternalKeys());
+        LogPrintf("mapWallet.size() = %u\n",            walletInstance->mapWallet.size());
+        LogPrintf("mapAddressBook.size() = %u\n",       walletInstance->mapAddressBook.size());
+    }
+
     pwalletMain = walletInstance;
+
     return true;
 }
 
@@ -4964,7 +4973,6 @@ CWalletKey::CWalletKey(int64_t nExpires)
 int CMerkleTx::SetMerkleBranch(const CBlockIndex* pindex, int posInBlock)
 {
     AssertLockHeld(cs_main);
-    CBlock blockTmp;
 
     // Update the tx's hashBlock
     hashBlock = pindex->GetBlockHash();

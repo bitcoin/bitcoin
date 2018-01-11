@@ -135,12 +135,16 @@ def sync_blocks(rpc_connections, wait=1, timeout=60):
     """
     Wait until everybody has the same tip
     """
+    maxheight = 0
     while timeout > 0:
-        tips = [ x.getbestblockhash() for x in rpc_connections ]
+        tips = [ x.waitforblockheight(maxheight, int(wait * 1000)) for x in rpc_connections ]
+        heights = [ x["height"] for x in tips ]
         if tips == [ tips[0] ]*len(tips):
             return True
-        time.sleep(wait)
+        if heights == [ heights[0] ]*len(heights): #heights are the same but hashes are not
+            raise AssertionError("Block sync failed")
         timeout -= wait
+        maxheight = max(heights)
     raise AssertionError("Block sync failed")
 
 def sync_mempools(rpc_connections, wait=1, timeout=60):

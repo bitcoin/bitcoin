@@ -42,11 +42,14 @@ PGP keys used for signing Bitcoin Core [Gitian release](/doc/release-process.md)
 ### [MacDeploy](/contrib/macdeploy) ###
 Scripts and notes for Mac builds. 
 
+### [Gitian-build](/contrib/gitian-build.sh) ###
+Script for running full gitian builds.
+
 Test and Verify Tools 
 ---------------------
 
 ### [TestGen](/contrib/testgen) ###
 Utilities to generate test vectors for the data-driven Dash tests.
 
-### [Verify SF Binaries](/contrib/verifysfbinaries) ###
-This script attempts to download and verify the signature file SHA256SUMS.asc from SourceForge.
+### [Verify Binaries](/contrib/verifybinaries) ###
+This script attempts to download and verify the signature file SHA256SUMS.asc from bitcoin.org.

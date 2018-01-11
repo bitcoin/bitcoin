@@ -20,14 +20,10 @@ class ImportPrunedFundsTest(BitcoinTestFramework):
         self.is_network_split=False
         self.sync_all()
 
-    def run_test (self):
-        import time
-        begintime = int(time.time())
-
+    def run_test(self):
         print("Mining blocks...")
         self.nodes[0].generate(101)
 
-        # sync
         self.sync_all()
         
         # address
@@ -72,7 +68,6 @@ class ImportPrunedFundsTest(BitcoinTestFramework):
         rawtxn2 = self.nodes[0].gettransaction(txnid2)['hex']
         proof2 = self.nodes[0].gettxoutproof([txnid2])
 
-
         txnid3 = self.nodes[0].sendtoaddress(address3, 0.025)
         self.nodes[0].generate(1)
         rawtxn3 = self.nodes[0].gettransaction(txnid3)['hex']
@@ -82,28 +77,27 @@ class ImportPrunedFundsTest(BitcoinTestFramework):
 
         #Import with no affiliated address
         try:
-            result1 = self.nodes[1].importprunedfunds(rawtxn1, proof1, "")
+            self.nodes[1].importprunedfunds(rawtxn1, proof1)
         except JSONRPCException as e:
             assert('No addresses' in e.error['message'])
         else:
             assert(False)
 
-
         balance1 = self.nodes[1].getbalance("", 0, False, True)
         assert_equal(balance1, Decimal(0))
 
         #Import with affiliated address with no rescan
-        self.nodes[1].importaddress(address2, "", False)
-        result2 = self.nodes[1].importprunedfunds(rawtxn2, proof2, "")
-        balance2 = Decimal(self.nodes[1].getbalance("", 0, False, True))
+        self.nodes[1].importaddress(address2, "add2", False)
+        result2 = self.nodes[1].importprunedfunds(rawtxn2, proof2)
+        balance2 = self.nodes[1].getbalance("add2", 0, False, True)
         assert_equal(balance2, Decimal('0.05'))
 
         #Import with private key with no rescan
-        self.nodes[1].importprivkey(address3_privkey, "", False)
-        result3 = self.nodes[1].importprunedfunds(rawtxn3, proof3, "")
-        balance3 = Decimal(self.nodes[1].getbalance("", 0, False, False))
+        self.nodes[1].importprivkey(address3_privkey, "add3", False)
+        result3 = self.nodes[1].importprunedfunds(rawtxn3, proof3)
+        balance3 = self.nodes[1].getbalance("add3", 0, False, False)
         assert_equal(balance3, Decimal('0.025'))
-        balance3 = Decimal(self.nodes[1].getbalance("", 0, False, True))
+        balance3 = self.nodes[1].getbalance("*", 0, False, True)
         assert_equal(balance3, Decimal('0.075'))
 
         #Addresses Test - after import
@@ -118,7 +112,6 @@ class ImportPrunedFundsTest(BitcoinTestFramework):
         assert_equal(address_info['ismine'], True)
 
         #Remove transactions
-
         try:
             self.nodes[1].removeprunedfunds(txnid1)
         except JSONRPCException as e:
@@ -126,18 +119,16 @@ class ImportPrunedFundsTest(BitcoinTestFramework):
         else:
             assert(False)
 
-
-        balance1 = Decimal(self.nodes[1].getbalance("", 0, False, True))
+        balance1 = self.nodes[1].getbalance("*", 0, False, True)
         assert_equal(balance1, Decimal('0.075'))
 
-
         self.nodes[1].removeprunedfunds(txnid2)
-        balance2 = Decimal(self.nodes[1].getbalance("", 0, False, True))
+        balance2 = self.nodes[1].getbalance("*", 0, False, True)
         assert_equal(balance2, Decimal('0.025'))
 
         self.nodes[1].removeprunedfunds(txnid3)
-        balance3 = Decimal(self.nodes[1].getbalance("", 0, False, True))
+        balance3 = self.nodes[1].getbalance("*", 0, False, True)
         assert_equal(balance3, Decimal('0.0'))
 
 if __name__ == '__main__':
-    ImportPrunedFundsTest ().main ()
+    ImportPrunedFundsTest().main()

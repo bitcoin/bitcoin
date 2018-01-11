@@ -107,9 +107,10 @@ The gbuild invocations below <b>DO NOT DO THIS</b> by default.
 
 ### Verify other gitian builders signatures to your own. (Optional)
 
-  Add other gitian builders keys to your gpg keyring
+  Add other gitian builders keys to your gpg keyring, and/or refresh keys.
 
 	gpg --import ../dash/contrib/gitian-keys/*.pgp
+        gpg --refresh-keys
 
   Verify the signatures
 

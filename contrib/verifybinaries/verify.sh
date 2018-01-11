@@ -14,17 +14,14 @@ function clean_up {
    done
 }
 
-WORKINGDIR="/tmp/bitcoin"
+WORKINGDIR="/tmp/bitcoin_verify_binaries"
 TMPFILE="hashes.tmp"
 
 SIGNATUREFILENAME="SHA256SUMS.asc"
-RCSUBDIR="test/"
+RCSUBDIR="test"
 BASEDIR="https://bitcoin.org/bin/"
 VERSIONPREFIX="bitcoin-core-"
 RCVERSIONSTRING="rc"
-
-#this URL is used if a version number is not specified as an argument to the script
-SIGNATUREFILE="$BASEDIR""$VERSIONPREFIX""0.10.4/""$RCSUBDIR""$SIGNATUREFILENAME"
 
 if [ ! -d "$WORKINGDIR" ]; then
    mkdir "$WORKINGDIR"
@@ -46,14 +43,15 @@ if [ -n "$1" ]; then
    #  and simultaneously add RCSUBDIR to BASEDIR, where we will look for SIGNATUREFILENAME
    if [[ $VERSION == *"$RCVERSIONSTRING"* ]]; then
       BASEDIR="$BASEDIR${VERSION/%-$RCVERSIONSTRING*}/"
-      BASEDIR="$BASEDIR$RCSUBDIR"
+      BASEDIR="$BASEDIR$RCSUBDIR.$RCVERSIONSTRING${VERSION: -1}/"
    else
       BASEDIR="$BASEDIR$VERSION/"
    fi
 
    SIGNATUREFILE="$BASEDIR$SIGNATUREFILENAME"
 else
-   BASEDIR="${SIGNATUREFILE%/*}/"
+   echo "Error: need to specify a version on the command line"
+   exit 2
 fi
 
 #first we fetch the file containing the signature
@@ -95,7 +93,7 @@ fi
 FILES=$(awk '{print $2}' "$TMPFILE")
 
 #and download these one by one
-for file in in $FILES
+for file in $FILES
 do
    wget --quiet -N "$BASEDIR$file"
 done
@@ -110,11 +108,16 @@ if [ $? -eq 1 ]; then
    exit 1
 elif [ $? -gt 1 ]; then
    echo "Error executing 'diff'"
-   exit 2   
+   exit 2
 fi
 
-#everything matches! clean up the mess
-clean_up $FILES $SIGNATUREFILENAME $TMPFILE
+if [ -n "$2" ]; then
+   echo "Clean up the binaries"
+   clean_up $FILES $SIGNATUREFILENAME $TMPFILE
+else
+   echo "Keep the binaries in $WORKINGDIR"
+   clean_up $TMPFILE
+fi
 
 echo -e "Verified hashes of \n$FILES"
 
