@@ -1979,6 +1979,7 @@ CAmount CWalletTx::GetImmatureCredit(bool fUseCache) const
 
 CAmount CWalletTx::GetAvailableCredit(bool fUseCache, const isminefilter& filter) const
 {
+    bool allow_dirty_addresses = !gArgs.GetBoolArg("-avoidreuse", DEFAULT_AVOIDREUSE);
     if (pwallet == nullptr)
         return 0;
 
@@ -2005,7 +2006,7 @@ CAmount CWalletTx::GetAvailableCredit(bool fUseCache, const isminefilter& filter
     uint256 hashTx = GetHash();
     for (unsigned int i = 0; i < tx->vout.size(); i++)
     {
-        if (!pwallet->IsSpent(hashTx, i))
+        if (!pwallet->IsSpent(hashTx, i) && (allow_dirty_addresses || !pwallet->IsDirty(hashTx, i)))
         {
             const CTxOut &txout = tx->vout[i];
             nCredit += pwallet->GetCredit(txout, filter);
