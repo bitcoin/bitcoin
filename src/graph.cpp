@@ -27,7 +27,7 @@ struct cycle_visitor
 	}
 	ClearedVertices& cleared;
 };
-void CreateDAGFromBlock(const CBlock& pblock, Graph &graph, unordered_map<int, int> &mapTxIndex) {
+void CreateDAGFromBlock(const CBlock& pblock, Graph &graph, std::vector<unsigned int, vertex_descriptor> &vertices, unordered_map<int, int> &mapTxIndex) {
 	unordered_map<string, int> mapAliasIndex;
 	for (unsigned int nOut = 0; nOut< pblock.vtx.size(); nOut++) {
 		const CTransaction& tx = pblock.vtx[nOut];
@@ -76,7 +76,7 @@ unsigned int DAGRemoveCycles(CBlock & pblock, std::unique_ptr<CBlockTemplate> &p
 	unordered_map<int, int> &mapTxIndex;
 	Graph graph;
 
-	CreateDAGFromBlock(pblock, graph, mapTxIndex);
+	CreateDAGFromBlock(pblock, graph, vertices, mapTxIndex);
 
 	std::vector<int> clearedVertices;
 	cycle_visitor<vector<int> > visitor(clearedVertices);
