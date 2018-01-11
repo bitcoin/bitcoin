@@ -10,8 +10,10 @@ CONFIG_FLAGS=""
 FUNCTIONAL_TESTS=0
 DELETE_EXISTING=0
 USE_DEPENDS=0
+RELEASE_PATH_POSTFIX=""
+CONFIG_FLAGS=""
 
-while getopts ":hfrd" opt; do
+while getopts ":hfrdb" opt; do
   case $opt in
     h)
       echo "Usage: .previous_release.sh [options] tag1 tag2"
@@ -20,16 +22,22 @@ while getopts ":hfrd" opt; do
       echo "  -f   Configure for functional tests"
       echo "  -r   Remove existing directory"
       echo "  -d   Use depends"
+      echo "  -b   configure --with-incompatible-bdb"
       exit 0
       ;;
     f)
-      FUNCTIONAL_TESTS=1
+      FUNCTIONAL_TESTS=0
+      CONFIG_FLAGS="$CONFIG_FLAGS --without-gui --disable-tests --disable-bench"
       ;;
     r)
       DELETE_EXISTING=1
       ;;
     d)
       USE_DEPENDS=1
+      ;;
+    b)
+      CONFIG_FLAGS="$CONFIG_FLAGS --with-incompatible-bdb"
+      RELEASE_PATH_POSTFIX="$RELEASE_PATH_POSTFIX-incompatible-bdb"
       ;;
     \?)
       echo "Invalid option: -$OPTARG" >&2
@@ -47,15 +55,12 @@ fi
 
 for tag in "$@"
 do
+  RELEASE_PATH="build/releases/$tag$RELEASE_PATH_POSTFIX"
   if [ "$DELETE_EXISTING" -eq "1" ]; then
-    rm -rf build/releases/$tag
+    rm -rf $RELEASE_PATH
   fi
 
-  if [ "$FUNCTIONAL_TESTS" -eq "1" ]; then
-    CONFIG_FLAGS="--without-gui --disable-tests --disable-bench"
-  fi
-
-  if [ ! -d "build/releases/$tag" ]; then
+  if [ ! -d "$RELEASE_PATH" ]; then
     if [ -f $(git rev-parse --git-dir)/shallow ]; then
       git fetch --unshallow --tags
     fi
@@ -65,8 +70,8 @@ do
       exit 1
     fi
 
-    git clone . build/releases/$tag
-    pushd build/releases/$tag
+    git clone . $RELEASE_PATH
+    pushd $RELEASE_PATH
     git checkout $tag
 
     if [ "$USE_DEPENDS" -eq "1" ]; then
