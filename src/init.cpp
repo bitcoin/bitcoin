@@ -1498,6 +1498,8 @@ bool AppInitMain()
 
         uiInterface.InitMessage(_("Loading block index..."));
 
+        LOCK(cs_main);
+
         nStart = GetTimeMillis();
         do {
             try {
@@ -1606,16 +1608,13 @@ bool AppInitMain()
                             MIN_BLOCKS_TO_KEEP);
                     }
 
-                    {
-                        LOCK(cs_main);
-                        CBlockIndex* tip = chainActive.Tip();
-                        RPCNotifyBlockChange(true, tip);
-                        if (tip && tip->nTime > GetAdjustedTime() + 2 * 60 * 60) {
-                            strLoadError = _("The block database contains a block which appears to be from the future. "
-                                    "This may be due to your computer's date and time being set incorrectly. "
-                                    "Only rebuild the block database if you are sure that your computer's date and time are correct");
-                            break;
-                        }
+                    CBlockIndex* tip = chainActive.Tip();
+                    RPCNotifyBlockChange(true, tip);
+                    if (tip && tip->nTime > GetAdjustedTime() + 2 * 60 * 60) {
+                        strLoadError = _("The block database contains a block which appears to be from the future. "
+                                "This may be due to your computer's date and time being set incorrectly. "
+                                "Only rebuild the block database if you are sure that your computer's date and time are correct");
+                        break;
                     }
 
                     if (!CVerifyDB().VerifyDB(chainparams, pcoinsdbview.get(), gArgs.GetArg("-checklevel", DEFAULT_CHECKLEVEL),
