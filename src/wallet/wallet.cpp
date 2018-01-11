@@ -2365,7 +2365,7 @@ void CWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, const
                 continue;
             }
 
-            if (IsDirty(wtxid, i)) {
+            if ((!coinControl || !coinControl->allow_dirty_addresses) && IsDirty(wtxid, i)) {
                 continue;
             }
 
