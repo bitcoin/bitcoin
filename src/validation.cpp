@@ -607,7 +607,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight,con
 		else if (!block.IsNull()) {
 			CBlock sortedBlock = block;
 			if (!sortedBlock.IsNull()) {
-				if (!DAGTopologicalSort(sortedBlock)) {
+				if (!DAGTopologicalSort(&sortedBlock)) {
 					return false;
 				}
 			}
