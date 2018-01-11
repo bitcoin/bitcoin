@@ -1,4 +1,9 @@
 #include "graph.h"
+#include "offer.h"
+#include "cert.h"
+#include "alias.h"
+#include "asset.h"
+#include "assetallocation.h"
 using namespace boost;
 template <typename ClearedVertices>
 struct cycle_visitor
@@ -131,10 +136,11 @@ bool DAGTopologicalSort(CBlock & pblock) {
 	const IndexMap &indices = get(vertex_index, (const Graph &)graph);
 	
 	// add sys tx's to newVtx in sorted order
-	for (container::iterator it = c.rbegin(); it != c.rend(); ++it) {
+	reverse(c.begin(), c.end()));
+	for (auto& t:container) {
 		LogPrintf("add sys tx in sorted order\n");
-		if (mapTxIndex.count(*it)) {
-			const int &nIndex = get(indices, *it);
+		if (mapTxIndex.count(t)) {
+			const int &nIndex = get(indices, t);
 			const int &nOut = mapTxIndex[nIndex];
 			LogPrintf("push nOut %d\n", nOut);
 			newVtx.push_back(pblock.vtx[nOut]);
