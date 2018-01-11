@@ -283,25 +283,39 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
 				}
 			}
 			int nRemovedTxs = DAGRemoveCycles(pblock, pblocktemplate, nBlockTx, nBlockSize, nBlockSigOps, nFees);
+			bool priorityTx = false;
 			// remove cycles and add more from mempool and check for cycles again repeatedly until no cycles exist
 			// also ensure that mempool still has some tx's to add
-			while (nRemovedTxs > 0 && mi != mempool.mapTx.get<3>().end())
+			while (nRemovedTxs > 0 && (mi != mempool.mapTx.get<3>().end() || !clearedTxs.empty()))
 			{
 				// to track if we need to run DAGRemoveCycles again if we add more tx's from mempool
 				bool bAddedMore = false;
 				LogPrintf("cycles found! checking to add more from mempool\n");
-				while (nRemovedTxs > 0 && mi != mempool.mapTx.get<3>().end()) {
+				while (nRemovedTxs > 0 && (mi != mempool.mapTx.get<3>().end() || !clearedTxs.empty())) {
 					LogPrintf("adding more from mempool nRemovedTxs %d\n", nRemovedTxs);
 					nRemovedTxs--;
-					mi++;
-					iter = mempool.mapTx.project<0>(mi);
+					// code from above to do checks before adding to block
+					// ----------------
+					bool priorityTx = false;
+					if (fPriorityBlock && !vecPriority.empty()) { // add a tx from priority queue to fill the blockprioritysize
+						priorityTx = true;
+						iter = vecPriority.front().second;
+						actualPriority = vecPriority.front().first;
+						std::pop_heap(vecPriority.begin(), vecPriority.end(), pricomparer);
+						vecPriority.pop_back();
+					}
+					else if (clearedTxs.empty()) { // add tx with next highest score
+						iter = mempool.mapTx.project<0>(mi);
+						mi++;
+					}
+					else {  // try to add a previously postponed child tx
+						iter = clearedTxs.top();
+						clearedTxs.pop();
+					}
+	
 					const CTransaction& tx = iter->GetTx();
 					if (inBlock.count(iter))
 						continue; // could have been added to the priorityBlock
-
-					// code from above to do checks before adding to block
-					// ----------------
-					const CTransaction& tx = iter->GetTx();
 
 					bool fOrphan = false;
 					BOOST_FOREACH(CTxMemPool::txiter parent, mempool.GetMemPoolParents(iter))
@@ -364,6 +378,24 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
 					nFees += nTxFees;
 
 					inBlock.insert(iter);
+					// Add transactions that depend on this one to the priority queue
+					BOOST_FOREACH(CTxMemPool::txiter child, mempool.GetMemPoolChildren(iter))
+					{
+						if (fPriorityBlock) {
+							waitPriIter wpiter = waitPriMap.find(child);
+							if (wpiter != waitPriMap.end()) {
+								vecPriority.push_back(TxCoinAgePriority(wpiter->second, child));
+								std::push_heap(vecPriority.begin(), vecPriority.end(), pricomparer);
+								waitPriMap.erase(wpiter);
+							}
+						}
+						else {
+							if (waitSet.count(child)) {
+								clearedTxs.push(child);
+								waitSet.erase(child);
+							}
+						}
+					}
 					// end code from above which adds tx to block
 					//--------------------
 					bAddedMore = true;

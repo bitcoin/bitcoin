@@ -12,6 +12,6 @@
 #include <unordered_set>
 #include "miner.h"
 using namespace std;
-unsigned int DAGRemoveCycles(CBlock & pblock, unique_ptr<CBlockTemplate> &pblocktemplate, uint64_t &nBlockTx, uint64_t &nBlockSize, unsigned int &nBlockSigOps, CAmount &nFees);
-bool DAGTopologicalSort(CBlock & pblock);
+unsigned int DAGRemoveCycles(CBlock * pblock, unique_ptr<CBlockTemplate> &pblocktemplate, uint64_t &nBlockTx, uint64_t &nBlockSize, unsigned int &nBlockSigOps, CAmount &nFees);
+bool DAGTopologicalSort(CBlock * pblock);
 #endif // GRAPH_H

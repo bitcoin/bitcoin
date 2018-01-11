@@ -33,15 +33,15 @@ struct cycle_visitor
 	}
 	ClearedVertices& cleared;
 };
-void CreateDAGFromBlock(const CBlock& pblock, Graph &graph, std::vector<vertex_descriptor> &vertices, std::unordered_map<int, int> &mapTxIndex) {
+void CreateDAGFromBlock(const CBlock*pblock, Graph &graph, std::vector<vertex_descriptor> &vertices, std::unordered_map<int, int> &mapTxIndex) {
 	std::unordered_map<string, int> mapAliasIndex;
 	std::vector<vector<unsigned char> > vvchArgs;
 	std::vector<vector<unsigned char> > vvchAliasArgs;
 	int op;
 	int nOut;
 
-	for (unsigned int n = 0; n< pblock.vtx.size(); n++) {
-		const CTransaction& tx = pblock.vtx[n];
+	for (unsigned int n = 0; n< pblock->vtx.size(); n++) {
+		const CTransaction& tx = pblock->vtx[n];
 		if (tx.nVersion == SYSCOIN_TX_VERSION)
 		{
 			if (!DecodeAliasTx(tx, op, nOut, vvchAliasArgs))
@@ -73,7 +73,7 @@ void CreateDAGFromBlock(const CBlock& pblock, Graph &graph, std::vector<vertex_d
 		}
 	}
 }
-unsigned int DAGRemoveCycles(CBlock & pblock, std::unique_ptr<CBlockTemplate> &pblocktemplate, uint64_t &nBlockTx, uint64_t &nBlockSize, unsigned int &nBlockSigOps, CAmount &nFees) {
+unsigned int DAGRemoveCycles(CBlock * pblock, std::unique_ptr<CBlockTemplate> &pblocktemplate, uint64_t &nBlockTx, uint64_t &nBlockSize, unsigned int &nBlockSigOps, CAmount &nFees) {
 	LogPrintf("DAGRemoveCycles\n");
 	std::vector<CTransaction> newVtx;
 	std::vector<vertex_descriptor> vertices;
@@ -98,22 +98,22 @@ unsigned int DAGRemoveCycles(CBlock & pblock, std::unique_ptr<CBlockTemplate> &p
 		if (seenVertex.count(nVertex) > 0)
 			continue;
 		seenVertex.insert(nVertex);
-		const int &nOut = mapTxIndex[nVertex];
-		if (nOut >= pblock.vtx.size())
+		const unsigned int &nOut = mapTxIndex[nVertex];
+		if (nOut >= pblock->vtx.size())
 			continue;
 		LogPrintf("cleared vertex, erasing nOut %d\n", nOut);
-		const CTransaction& txToRemove = pblock.vtx[nOut];
+		const CTransaction& txToRemove = pblock->vtx[nOut];
 		nFees -= pblocktemplate->vTxFees[nOut];
 		nBlockSigOps -= pblocktemplate->vTxSigOps[nOut];
 		nBlockSize -= txToRemove.GetTotalSize();
-		pblock.vtx.erase(pblock.vtx.begin() + nOut);
+		pblock->vtx.erase(pblock->vtx.begin() + nOut);
 		nBlockTx--;
 		pblocktemplate->vTxFees.erase(pblocktemplate->vTxFees.begin() + nOut);
 		pblocktemplate->vTxSigOps.erase(pblocktemplate->vTxSigOps.begin() + nOut);
 	}
 	return clearedVertices.size();
 }
-bool DAGTopologicalSort(CBlock & pblock) {
+bool DAGTopologicalSort(CBlock * pblock) {
 	LogPrintf("DAGTopologicalSort\n");
 	std::vector<CTransaction> newVtx;
 	std::vector<vertex_descriptor> vertices;
@@ -141,24 +141,24 @@ bool DAGTopologicalSort(CBlock & pblock) {
 			const int &nIndex = get(indices, t);
 			const int &nOut = mapTxIndex[nIndex];
 			LogPrintf("push nOut %d\n", nOut);
-			newVtx.push_back(pblock.vtx[nOut]);
+			newVtx.push_back(pblock->vtx[nOut]);
 		}
 	}
 	// add non sys tx's to end of newVtx
-	for (unsigned int nOut = 0; nOut< pblock.vtx.size(); nOut++) {
-		const CTransaction& tx = pblock.vtx[nOut];
+	for (unsigned int nOut = 0; nOut< pblock->vtx.size(); nOut++) {
+		const CTransaction& tx = pblock->vtx[nOut];
 		if (tx.nVersion != SYSCOIN_TX_VERSION)
 		{
-			newVtx.push_back(pblock.vtx[nOut]);
+			newVtx.push_back(pblock->vtx[nOut]);
 		}
 	}
-	LogPrintf("newVtx size %d vs pblock.vtx size %d\n", newVtx.size(), pblock.vtx.size());
-	if (pblock.vtx.size() != newVtx.size())
+	LogPrintf("newVtx size %d vs pblock.vtx size %d\n", newVtx.size(), pblock->vtx.size());
+	if (pblock->vtx.size() != newVtx.size())
 	{
 		LogPrintf("DAGTopologicalSort: sorted block transaction count does not match unsorted block transaction count!\n");
 		return false;
 	}
 	// set newVtx to block's vtx so block can process as normal
-	pblock.vtx = newVtx;
+	pblock->vtx = newVtx;
 	return true;
 }
