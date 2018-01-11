@@ -57,6 +57,7 @@ public:
 private:
     ClientModel *clientModel;
     WalletModel *walletModel;
+	void *unlockContext;
 
     OverviewPage *overviewPage;
     QWidget *transactionsPage;
@@ -98,6 +99,8 @@ public Q_SLOTS:
     void changePassphrase();
     /** Ask for passphrase to unlock wallet temporarily */
     void unlockWallet();
+	/** Ask for passphrase to unlock wallet and return context*/
+	void requestUnlockWallet();
 
     /** Show used sending addresses */
     void usedSendingAddresses();
