@@ -283,12 +283,11 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
 				}
 			}
 			int nRemovedTxs = DAGRemoveCycles(pblock, pblocktemplate, nBlockTx, nBlockSize, nBlockSigOps, nFees);
+			bool bAddedNewTx = false;
 			// remove cycles and add more from mempool and check for cycles again repeatedly until no cycles exist
 			// also ensure that mempool still has some tx's to add
 			while (nRemovedTxs > 0 && (mi != mempool.mapTx.get<3>().end() || !clearedTxs.empty()))
 			{
-				// to track if we need to run DAGRemoveCycles again if we add more tx's from mempool
-				bool bAddedMore = false;
 				LogPrintf("adding more from mempool nRemovedTxs %d\n", nRemovedTxs);
 				nRemovedTxs--;
 				// code from above to do checks before adding to block
@@ -342,6 +341,7 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
 				}
 				if (nBlockSize + nTxSize >= nBlockMaxSize) {
 					if (nBlockSize > nBlockMaxSize - 100 || lastFewTxs > 50) {
+						bAddedNewTx = true;
 						break;
 					}
 					// Once we're within 1000 bytes of a full block, only look at 50 more txs
@@ -359,6 +359,7 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
 				unsigned int nMaxBlockSigOps = MaxBlockSigOps(fDIP0001ActiveAtTip);
 				if (nBlockSigOps + nTxSigOps >= nMaxBlockSigOps) {
 					if (nBlockSigOps > nMaxBlockSigOps - 2) {
+						bAddedNewTx = true;
 						break;
 					}
 					continue;
@@ -373,7 +374,6 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
 				++nBlockTx;
 				nBlockSigOps += nTxSigOps;
 				nFees += nTxFees;
-
 				inBlock.insert(iter);
 				// Add transactions that depend on this one to the priority queue
 				BOOST_FOREACH(CTxMemPool::txiter child, mempool.GetMemPoolChildren(iter))
@@ -395,12 +395,22 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
 				}
 				// end code from above which adds tx to block
 				//--------------------
-				bAddedMore = true;
-				LogPrintf("added another tx to block\n");
+				bAddedNewTx = true;
+				LogPrintf("added another tx to block %d\n", nRemovedTxs);
+				// finished adding nRemovedTxs tx's to block, let's check for cycles again, if not exit while loop on next loop
+				if (nRemovedTxs <= 0) {
+					nRemovedTxs = DAGRemoveCycles(pblock, pblocktemplate, nBlockTx, nBlockSize, nBlockSigOps, nFees);
+					bAddedNewTx = false;
+				}
 			}
-			if (bAddedMore)
-				nRemovedTxs += DAGRemoveCycles(pblock, pblocktemplate, nBlockTx, nBlockSize, nBlockSigOps, nFees);
-
+		}
+		// if bAddedNewTx is true means we didn't get to add nRemovedTxs to the block, mempool empty or block limit reached, so check for cycle once more
+		if (bAddedNewTx) {
+			nRemovedTxs = DAGRemoveCycles(pblock, pblocktemplate, nBlockTx, nBlockSize, nBlockSigOps, nFees);
+			// sanity check, should never happen
+			if (nRemovedTxs > 0) {
+				throw std::runtime_error(strprintf("DAGRemoveCycles failed: %d cycles found", nRemovedTxs))
+			}
 		}
 
 		
