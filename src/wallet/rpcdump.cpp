@@ -72,7 +72,7 @@ bool GetWalletAddressesForKey(CWallet * const pwallet, const CKeyID &keyid, std:
     bool fLabelFound = false;
     CKey key;
     pwallet->GetKey(keyid, key);
-    for (const auto& dest : GetAllDestinationsForKey(key.GetPubKey())) {
+    for (const auto& dest : GetAllDestinationsForKey(key.GetPubKey(), true)) {
         if (pwallet->mapAddressBook.count(dest)) {
             if (!strAddr.empty()) {
                 strAddr += ",";
@@ -152,7 +152,7 @@ UniValue importprivkey(const JSONRPCRequest& request)
         {
             pwallet->MarkDirty();
             // We don't know which corresponding address will be used; label them all
-            for (const auto& dest : GetAllDestinationsForKey(pubkey)) {
+            for (const auto& dest : GetAllDestinationsForKey(pubkey, pwallet->HasImplicitSegwit())) {
                 pwallet->SetAddressBook(dest, strLabel, "receive");
             }
 
@@ -471,7 +471,7 @@ UniValue importpubkey(const JSONRPCRequest& request)
     {
         LOCK2(cs_main, pwallet->cs_wallet);
 
-        for (const auto& dest : GetAllDestinationsForKey(pubKey)) {
+        for (const auto& dest : GetAllDestinationsForKey(pubKey, pwallet->HasImplicitSegwit())) {
             ImportAddress(pwallet, dest, strLabel);
         }
         ImportScript(pwallet, GetScriptForRawPubKey(pubKey), strLabel, false);
