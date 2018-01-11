@@ -60,6 +60,7 @@
 #include "asset.h"
 #include "assetallocation.h"
 #include "escrow.h"
+#include "graph.h"
 #include "base58.h"
 using namespace std;
 
