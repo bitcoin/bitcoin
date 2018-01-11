@@ -184,7 +184,7 @@ void WalletView::gotoReceiveCoinsPage()
     setCurrentWidget(receiveCoinsPage);
 }
 
-void WalletView::gotoSendCoinsPage(QString addr)
+void WalletView::gotoSendCoinsPage(const QString& addr)
 {
     setCurrentWidget(sendCoinsPage);
 
@@ -192,7 +192,7 @@ void WalletView::gotoSendCoinsPage(QString addr)
         sendCoinsPage->setAddress(addr);
 }
 
-void WalletView::gotoSignMessageTab(QString addr)
+void WalletView::gotoSignMessageTab(const QString& addr)
 {
     // calls show() in showTab_SM()
     SignVerifyMessageDialog *signVerifyMessageDialog = new SignVerifyMessageDialog(platformStyle, this);
@@ -204,7 +204,7 @@ void WalletView::gotoSignMessageTab(QString addr)
         signVerifyMessageDialog->setAddress_SM(addr);
 }
 
-void WalletView::gotoVerifyMessageTab(QString addr)
+void WalletView::gotoVerifyMessageTab(const QString& addr)
 {
     // calls show() in showTab_VM()
     SignVerifyMessageDialog *signVerifyMessageDialog = new SignVerifyMessageDialog(platformStyle, this);

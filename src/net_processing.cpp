@@ -30,6 +30,8 @@
 #include <utilmoneystr.h>
 #include <utilstrencodings.h>
 
+#include <utility>
+
 #if defined(NDEBUG)
 # error "Bitcoin cannot be compiled without assertions."
 #endif
@@ -237,7 +239,7 @@ struct CNodeState {
     //! Time of last new block announcement
     int64_t m_last_block_announcement;
 
-    CNodeState(CAddress addrIn, std::string addrNameIn) : address(addrIn), name(addrNameIn) {
+    CNodeState(CAddress addrIn, std::string addrNameIn) : address(addrIn), name(std::move(addrNameIn)) {
         fCurrentlyConnected = false;
         nMisbehavior = 0;
         fShouldBan = false;

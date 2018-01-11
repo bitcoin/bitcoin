@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <regex>
 #include <numeric>
+#include <utility>
 
 void benchmark::ConsolePrinter::header()
 {
@@ -45,7 +46,7 @@ void benchmark::ConsolePrinter::result(const State& state)
 
 void benchmark::ConsolePrinter::footer() {}
 benchmark::PlotlyPrinter::PlotlyPrinter(std::string plotly_url, int64_t width, int64_t height)
-    : m_plotly_url(plotly_url), m_width(width), m_height(height)
+    : m_plotly_url(std::move(plotly_url)), m_width(width), m_height(height)
 {
 }
 
@@ -91,7 +92,7 @@ benchmark::BenchRunner::BenchmarkMap& benchmark::BenchRunner::benchmarks()
 
 benchmark::BenchRunner::BenchRunner(std::string name, benchmark::BenchFunction func, uint64_t num_iters_for_one_second)
 {
-    benchmarks().insert(std::make_pair(name, Bench{func, num_iters_for_one_second}));
+    benchmarks().insert(std::make_pair(name, Bench{std::move(func), num_iters_for_one_second}));
 }
 
 void benchmark::BenchRunner::RunAll(Printer& printer, uint64_t num_evals, double scaling, const std::string& filter, bool is_list_only)

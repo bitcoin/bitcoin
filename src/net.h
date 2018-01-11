@@ -180,7 +180,7 @@ public:
     bool OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant *grantOutbound = nullptr, const char *strDest = nullptr, bool fOneShot = false, bool fFeeler = false, bool manual_connection = false);
     bool CheckIncomingNonce(uint64_t nonce);
 
-    bool ForNode(NodeId id, std::function<bool(CNode* pnode)> func);
+    bool ForNode(NodeId id, const std::function<bool(CNode* pnode)>& func);
 
     void PushMessage(CNode* pnode, CSerializedNetMsg&& msg);
 

@@ -2846,7 +2846,7 @@ void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg)
         RecordBytesSent(nBytesSent);
 }
 
-bool CConnman::ForNode(NodeId id, std::function<bool(CNode* pnode)> func)
+bool CConnman::ForNode(NodeId id, const std::function<bool(CNode* pnode)>& func)
 {
     CNode* found = nullptr;
     LOCK(cs_vNodes);

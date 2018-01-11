@@ -22,6 +22,7 @@
 #include <fstream>
 #include <stdint.h>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include <boost/test/unit_test.hpp>
@@ -1029,7 +1030,7 @@ BOOST_AUTO_TEST_CASE(script_PushData)
 }
 
 CScript
-sign_multisig(CScript scriptPubKey, std::vector<CKey> keys, CTransaction transaction)
+sign_multisig(const CScript& scriptPubKey, std::vector<CKey> keys, const CTransaction& transaction)
 {
     uint256 hash = SignatureHash(scriptPubKey, transaction, 0, SIGHASH_ALL, 0, SIGVERSION_BASE);
 
@@ -1057,7 +1058,7 @@ sign_multisig(CScript scriptPubKey, const CKey &key, CTransaction transaction)
 {
     std::vector<CKey> keys;
     keys.push_back(key);
-    return sign_multisig(scriptPubKey, keys, transaction);
+    return sign_multisig(std::move(scriptPubKey), keys, std::move(transaction));
 }
 
 BOOST_AUTO_TEST_CASE(script_CHECKMULTISIG12)

@@ -114,10 +114,10 @@ void CScheduler::schedule(CScheduler::Function f, boost::chrono::system_clock::t
 
 void CScheduler::scheduleFromNow(CScheduler::Function f, int64_t deltaMilliSeconds)
 {
-    schedule(f, boost::chrono::system_clock::now() + boost::chrono::milliseconds(deltaMilliSeconds));
+    schedule(std::move(f), boost::chrono::system_clock::now() + boost::chrono::milliseconds(deltaMilliSeconds));
 }
 
-static void Repeat(CScheduler* s, CScheduler::Function f, int64_t deltaMilliSeconds)
+static void Repeat(CScheduler* s, const CScheduler::Function& f, int64_t deltaMilliSeconds)
 {
     f();
     s->scheduleFromNow(boost::bind(&Repeat, s, f, deltaMilliSeconds), deltaMilliSeconds);
@@ -125,7 +125,7 @@ static void Repeat(CScheduler* s, CScheduler::Function f, int64_t deltaMilliSeco
 
 void CScheduler::scheduleEvery(CScheduler::Function f, int64_t deltaMilliSeconds)
 {
-    scheduleFromNow(boost::bind(&Repeat, this, f, deltaMilliSeconds), deltaMilliSeconds);
+    scheduleFromNow(boost::bind(&Repeat, this, std::move(f), deltaMilliSeconds), deltaMilliSeconds);
 }
 
 size_t CScheduler::getQueueInfo(boost::chrono::system_clock::time_point &first,
