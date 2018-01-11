@@ -74,7 +74,7 @@ unsigned int DAGRemoveCycles(CBlock & pblock, std::unique_ptr<CBlockTemplate> &p
 	LogPrintf("DAGRemoveCycles\n");
 	std::vector<CTransaction> newVtx;
 	std::vector<unsigned int, vertex_descriptor> vertices;
-	unordered_map<int, int> &mapTxIndex;
+	unordered_map<int, int> mapTxIndex;
 	Graph graph;
 
 	CreateDAGFromBlock(pblock, graph, vertices, mapTxIndex);
@@ -114,7 +114,7 @@ bool DAGTopologicalSort(CBlock & pblock) {
 	LogPrintf("DAGTopologicalSort\n");
 	std::vector<CTransaction> newVtx;
 	std::vector<unsigned int, vertex_descriptor> vertices;
-	unordered_map<int, int> &mapTxIndex;
+	unordered_map<int, int> mapTxIndex;
 	Graph graph;
 
 	CreateDAGFromBlock(pblock, graph, vertices, mapTxIndex);
@@ -131,7 +131,7 @@ bool DAGTopologicalSort(CBlock & pblock) {
 	const IndexMap &indices = get(vertex_index, (const Graph &)graph);
 	
 	// add sys tx's to newVtx in sorted order
-	reverse(c.begin(), c.end()));
+	reverse(c.begin(), c.end());
 	for (auto& t:container) {
 		LogPrintf("add sys tx in sorted order\n");
 		if (mapTxIndex.count(t)) {
