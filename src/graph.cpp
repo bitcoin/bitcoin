@@ -33,14 +33,17 @@ struct cycle_visitor
 	}
 	ClearedVertices& cleared;
 };
-void CreateDAGFromBlock(const CBlock& pblock, Graph &graph, std::vector<vertex_descriptor> &vertices, unordered_map<int, int> &mapTxIndex) {
+void CreateDAGFromBlock(const CBlock& pblock, Graph &graph, std::vector<vertex_descriptor> &vertices, std::unordered_map<int, int> &mapTxIndex) {
 	std::unordered_map<string, int> mapAliasIndex;
-	for (unsigned int nOut = 0; nOut< pblock.vtx.size(); nOut++) {
-		const CTransaction& tx = pblock.vtx[nOut];
+	std::vector<vector<unsigned char> > vvchArgs;
+	std::vector<vector<unsigned char> > vvchAliasArgs;
+	int op;
+	int nOut;
+
+	for (unsigned int n = 0; n< pblock.vtx.size(); n++) {
+		const CTransaction& tx = pblock.vtx[n];
 		if (tx.nVersion == SYSCOIN_TX_VERSION)
 		{
-			bool bDestCheckFailed = false;
-			bool good = true;
 			if (!DecodeAliasTx(tx, op, nOut, vvchAliasArgs))
 				continue;
 
