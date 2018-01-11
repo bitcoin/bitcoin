@@ -22,7 +22,7 @@
 #include <boost/scoped_ptr.hpp>
 #include <boost/thread.hpp>
 // SYSCOIN
-extern int SYSCOIN_TX_VERSION;
+extern const int SYSCOIN_TX_VERSION;
 
 using namespace std;
 

@@ -39,11 +39,10 @@
 #include <boost/filesystem.hpp>
 #include <boost/thread.hpp>
 
-
 using namespace std;
 // SYSCOIN services
 extern bool IsSyscoinScript(const CScript& scriptPubKey, int &op, vector<vector<unsigned char> > &vvchArgs);
-extern int SYSCOIN_TX_VERSION;
+extern const int SYSCOIN_TX_VERSION;
 extern bool GetSyscoinTransaction(int nHeight, const uint256 &hash, CTransaction &txOut, uint256 &hashBlock, const Consensus::Params& consensusParams);
 extern vector<unsigned char> vchFromString(const string &str);
 extern CWallet* pwalletMain;

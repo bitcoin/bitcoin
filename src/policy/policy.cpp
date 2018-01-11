@@ -15,7 +15,7 @@
 
 #include <boost/foreach.hpp>
 // SYSCOIN need constant SYSCOIN_TX_VERSION
-extern int SYSCOIN_TX_VERSION;
+extern const int SYSCOIN_TX_VERSION;
     /**
      * Check transaction inputs to mitigate two
      * potential denial-of-service attacks:
