@@ -33,7 +33,7 @@ struct cycle_visitor
 	}
 	ClearedVertices& cleared;
 };
-void CreateDAGFromBlock(const CBlock& pblock, Graph &graph, std::vector<unsigned int, vertex_descriptor> &vertices, unordered_map<int, int> &mapTxIndex) {
+void CreateDAGFromBlock(const CBlock& pblock, Graph &graph, std::vector<vertex_descriptor> &vertices, unordered_map<int, int> &mapTxIndex) {
 	std::unordered_map<string, int> mapAliasIndex;
 	for (unsigned int nOut = 0; nOut< pblock.vtx.size(); nOut++) {
 		const CTransaction& tx = pblock.vtx[nOut];
@@ -132,7 +132,7 @@ bool DAGTopologicalSort(CBlock & pblock) {
 	
 	// add sys tx's to newVtx in sorted order
 	reverse(c.begin(), c.end());
-	for (auto& t:container) {
+	for (auto& t:c) {
 		LogPrintf("add sys tx in sorted order\n");
 		if (mapTxIndex.count(t)) {
 			const int &nIndex = get(indices, t);
