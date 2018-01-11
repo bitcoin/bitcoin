@@ -1083,6 +1083,7 @@ void BitcoinGUI::enableSystemnodes()
 void BitcoinGUI::disableSystemnodes()
 {
     toolbar->removeAction(systemnodeAction);
+    gotoOverviewPage();
 }
 
 void BitcoinGUI::enableMasternodes()
@@ -1108,6 +1109,7 @@ void BitcoinGUI::enableMasternodes()
 void BitcoinGUI::disableMasternodes()
 {
     toolbar->removeAction(masternodeAction);
+    gotoOverviewPage();
 }
 
 void BitcoinGUI::guiEnableSystemnodesChanged(bool enabled)
