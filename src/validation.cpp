@@ -555,7 +555,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight,con
 	if (nHeight == 0)
 		nHeight = chainActive.Height();
 	string errorMessage;
-	if (block.vtx.empty(); && tx.nVersion == SYSCOIN_TX_VERSION)
+	if (block.vtx.empty() && tx.nVersion == SYSCOIN_TX_VERSION)
 	{
 		bool bDestCheckFailed = false;
 		bool good = true;
