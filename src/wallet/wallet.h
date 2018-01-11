@@ -1046,8 +1046,8 @@ public:
         }
     }
 
-    void GetScriptForMining(std::shared_ptr<CReserveScript> &script);
-    
+    void GetScriptForMining(std::unique_ptr<CReserveScript>& script);
+
     unsigned int GetKeyPoolSize()
     {
         AssertLockHeld(cs_wallet); // set{Ex,In}ternalKeyPool

@@ -3636,14 +3636,14 @@ void CWallet::MarkReserveKeysAsUsed(int64_t keypool_id)
     }
 }
 
-void CWallet::GetScriptForMining(std::shared_ptr<CReserveScript> &script)
+void CWallet::GetScriptForMining(std::unique_ptr<CReserveScript>& script)
 {
-    std::shared_ptr<CReserveKey> rKey = std::make_shared<CReserveKey>(this);
+    std::unique_ptr<CReserveKey> rKey(new CReserveKey(this));
     CPubKey pubkey;
     if (!rKey->GetReservedKey(pubkey))
         return;
 
-    script = rKey;
+    script.reset(rKey.release());
     script->reserveScript = CScript() << ToByteVector(pubkey) << OP_CHECKSIG;
 }
 
