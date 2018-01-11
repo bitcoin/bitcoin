@@ -35,18 +35,6 @@ Homepage: https://peercoin.net/
 Vcs-Git: git://github.com/peercoin/peercoin.git
 Vcs-Browser: https://github.com/peercoin/peercoin
 
-Package: peercoin
-Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}
-Description: peer-to-peer network based digital currency - daemon
- .
- Peercoin is a crypto-currency project forked from Bitcoin and we aim to achieve
- energy-efficiency and keep as much as possible the original Bitcoin's
- preferable properties.
- .
- This package provides the daemon, peercoin, and the CLI tool
- peercoin-cli to interact with the daemon.
-
 Package: peercoin-qt
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
