@@ -4,6 +4,7 @@
 #include "alias.h"
 #include "asset.h"
 #include "assetallocation.h"
+#include <boost/sort/spreadsort/spreadsort.hpp>
 using namespace boost;
 template <typename ClearedVertices>
 struct cycle_visitor
@@ -80,17 +81,16 @@ unsigned int DAGRemoveCycles(CBlock & pblock, std::unique_ptr<CBlockTemplate> &p
 
 	std::vector<int> clearedVertices;
 	cycle_visitor<vector<int> > visitor(clearedVertices);
-	// fastest sort when integers are used, falls back to std::sort if < 1000 elements for optimal performance in all cases
-	clearedVertices.reverse();
-	sort::spreadsort::spreadsort(clearedVertices.begin(), clearedVertices.end());
 	hawick_circuits(graph, visitor);
+	// fastest sort when integers are used, falls back to std::sort if < 1000 elements for optimal performance in all cases
+	sort::spreadsort::spreadsort(clearedVertices.begin(), clearedVertices.end());
 	LogPrintf("Found %d circuits\n", clearedVertices.size());
 	// iterate backwards over sorted list of vertices, we can do this because we remove vertices from end to beginning, 
 	// which invalidate iterators from positon removed to end (we don't care about those after removal since we are iterating backwards to begining)
 	std::unordered_set<int> seenVertex;
-	for (std::vector<int>::iterator it = clearedVertices.rbegin(); it != clearedVertices.rend(); ++it) {
-		LogPrintf("trying to clear vertex %d\n", *it);
-		const int &nVertex = *it;
+	reverse(clearedVertices.begin(), clearedVertices.end());
+	for (auto& nVertex : clearedVertices) {
+		LogPrintf("trying to clear vertex %d\n", nVertex);
 		// ensure unique vertices are checked for removal
 		if (seenVertex.count(nVertex) > 0)
 			continue;
