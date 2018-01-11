@@ -326,7 +326,6 @@ std::string stringFromVch(const std::vector<unsigned char> &vch);
 std::vector<unsigned char> vchFromValue(const UniValue& value);
 std::vector<unsigned char> vchFromString(const std::string &str);
 std::string stringFromValue(const UniValue& value);
-int GetSyscoinTxVersion();
 const int SYSCOIN_TX_VERSION = 0x7400;
 bool IsValidAliasName(const std::vector<unsigned char> &vchAlias);
 bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const std::vector<std::vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, std::string &errorMessage, bool & bDestCheckFailed,bool dontaddtodb=false);

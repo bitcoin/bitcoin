@@ -12,7 +12,6 @@
 #include "chainparams.h"
 #include <boost/test/unit_test.hpp>
 #include <boost/lexical_cast.hpp>
-#include <deque>
 #include <iterator>
 
 #include <boost/graph/directed_graph.hpp>
@@ -22,7 +21,6 @@
 #include <boost/property_map/property_map.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/topological_sort.hpp>
-#include <iostream>
 #include <map>
 using namespace std;
 BOOST_GLOBAL_FIXTURE( SyscoinTestingSetup );
@@ -57,8 +55,6 @@ void build_graph(Graph& graph) {
 	typedef boost::graph_traits<Graph> Traits;
 	typedef typename Traits::vertex_descriptor vertex_descriptor;
 	std::map<unsigned int, vertex_descriptor> vertices;
-
-	//allows_parallel_edges(graph);
 
 	unsigned int nvertices = 5;
 	for (unsigned int i = 0; i < nvertices; ++i)
@@ -107,7 +103,8 @@ void sort_graph(Graph& graph) {
 }
 BOOST_AUTO_TEST_CASE(generate_graph_topological_sort) {
 	printf("Running generate_graph_topological_sort...\n");
-	boost::adjacency_list< boost::vecS, boost::vecS, boost::directedS > graph;
+	typedef boost::adjacency_list< boost::vecS, boost::vecS, boost::directedS > Graph;
+	Graph graph;
 	build_graph(graph);
 	sort_graph(graph);
 	exit(0);

@@ -179,26 +179,6 @@ namespace {
 	/** Dirty block file entries. */
 	set<int> setDirtyFileInfo;
 } // anon namespace
-struct DecodeDetails {
-	int op;
-	int nOut;
-	vector<vector<unsigned char> > vvchArgs;
-	DecodeDetails(int _op, int _nOut, const vector<vector<unsigned char> > & _vvchArgs) {
-		op = _op;
-		nOut = _nOut;
-		vvchArgs = _vvchArgs;
-	}
-	DecodeDetails(const DecodeDetails& details) {
-		op = details.op;
-		nOut = details.nOut;
-		vvchArgs = details.vvchArgs;
-	}
-	DecodeDetails() {
-	}
-};
-bool AllocationSenderSort(const std::pair<string, size_t>& a, const std::pair<string, size_t>& b) {
-	return a.second < b.second;
-}
 CBlockIndex* FindForkInGlobalIndex(const CChain& chain, const CBlockLocator& locator)
 {
 	// Find the first block the caller has in the main chain
@@ -574,7 +554,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight,con
 	if (nHeight == 0)
 		nHeight = chainActive.Height();
 	string errorMessage;
-	if (block.IsNull() && tx.nVersion == GetSyscoinTxVersion())
+	if (block.IsNull() && tx.nVersion == SYSCOIN_TX_VERSION)
 	{
 		bool bDestCheckFailed = false;
 		bool good = true;
@@ -624,13 +604,17 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight,con
 			}
 		}
 		else if (!block.IsNull()) {
-			std::unordered_map<string, size_t> mapSenderOrderPosition;
-			unordered_map<string, unordered_set<string> > mapReceiverVOutPosition;
-			unordered_map<string, DecodeDetails> mapSenderDetails;
-			for (unsigned int i = 0; i < block.vtx.size(); i++)
+			CBlock sortedBlock = block;
+			if (!sortedBlock.IsNull()) {
+				if (!DAGTopologicalSort(sortedBlock)) {
+					return false;
+				}
+			}
+
+			for (unsigned int i = 0; i < sortedBlock.vtx.size(); i++)
 			{
-				const CTransaction &tx = block.vtx[i];
-				if (tx.nVersion == GetSyscoinTxVersion())
+				const CTransaction &tx = sortedBlock.vtx[i];
+				if (tx.nVersion == SYSCOIN_TX_VERSION)
 				{
 					bool bDestCheckFailed = false;
 					bool good = true;
@@ -659,15 +643,10 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight,con
 						}
 						else if (DecodeAssetAllocationTx(tx, op, nOut, vvchArgs))
 						{
-							const string& sender = stringFromVch(vvchAliasArgs[0]);
-							mapSenderDetails[sender] = DecodeDetails(op, nOut, vvchArgs);
-							mapSenderOrderPosition[sender] = 0;
-							CAssetAllocation allocation(tx);
-							if (!allocation.listSendingAllocationAmounts.empty()) {
-								for (auto& allocationInstance : allocation.listSendingAllocationAmounts) {
-									mapReceiverVOutPosition[stringFromVch(allocationInstance.first)].insert(sender);
-								}
-							}
+							errorMessage.clear();
+							good = CheckAssetAllocationInputs(tx, op, nOut, vvchArgs, vvchAliasArgs[0], fJustCheck, nHeight, errorMessage);
+							if (fDebug && !errorMessage.empty())
+								LogPrintf("%s\n", errorMessage.c_str());
 						}
 						else if (DecodeEscrowTx(tx, op, nOut, vvchArgs))
 						{
@@ -685,15 +664,6 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight,con
 						}
 					}
 				}
-			}
-			std::vector<std::pair<string, size_t> > elems(mapSenderOrderPosition.begin(), mapSenderOrderPosition.end());
-			std::sort(elems.begin(), elems.end(), AllocationSenderSort);
-			for (auto& senderPosition : elems) {
-				const DecodeDetails& details = mapSenderDetails[senderPosition.first];
-				errorMessage.clear();
-				good = CheckAssetAllocationInputs(tx, details.op, details.nOut, details.vvchArgs, vchFromString(senderPosition.first), fJustCheck, nHeight, errorMessage);
-				if (fDebug && !errorMessage.empty())
-					LogPrintf("%s\n", errorMessage.c_str());
 			}
 		}
 		
@@ -731,7 +701,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 	// -testnet/-regtest).
 	const CChainParams& chainparams = Params();
 	// SYSCOIN
-	if (fRequireStandard && tx.nVersion != GetSyscoinTxVersion() && tx.nVersion >= 2 && VersionBitsTipState(chainparams.GetConsensus(), Consensus::DEPLOYMENT_CSV) != THRESHOLD_ACTIVE) {
+	if (fRequireStandard && tx.nVersion != SYSCOIN_TX_VERSION && tx.nVersion >= 2 && VersionBitsTipState(chainparams.GetConsensus(), Consensus::DEPLOYMENT_CSV) != THRESHOLD_ACTIVE) {
 		return state.DoS(0, false, REJECT_NONSTANDARD, "premature-version2-tx");
 	}
 

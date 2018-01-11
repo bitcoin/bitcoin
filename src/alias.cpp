@@ -301,10 +301,7 @@ bool IsSyscoinDataOutput(const CTxOut& out) {
 		return true;
    return false;
 }
-int GetSyscoinTxVersion()
-{
-	return SYSCOIN_TX_VERSION;
-}
+
 
 bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, string &errorMessage, bool &bDestCheckFailed, bool dontaddtodb) {
 	if (!paliasdb)

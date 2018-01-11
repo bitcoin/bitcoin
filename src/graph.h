@@ -1,26 +1,17 @@
 #ifndef GRAPH_H
 #define GRAPH_H
-#include <list>
 #include <vector>
-#define NIL -1
+#include <boost/graph/directed_graph.hpp>
+#include <boost/graph/graph_traits.hpp>
+#include <boost/graph/hawick_circuits.hpp>
+#include <boost/next_prior.hpp>
+#include <boost/property_map/property_map.hpp>
+#include <boost/graph/adjacency_list.hpp>
+#include <boost/graph/topological_sort.hpp>
+#include <unordered_map>
+#include <unordered_set>
+#include "miner.h"
 using namespace std;
-
-// A class that represents an directed graph
-class Graph
-{
-	int V;    // No. of vertices
-	list<int> *adj;    // A dynamic array of adjacency lists
-
-					   // A Recursive DFS based function used by SCC()
-	bool isCyclicUtil(int v, bool visited[], bool *recStack);
-public:
-	Graph(int V);   // Constructor
-	~Graph();
-	void addEdge(int v, int w);   // function to add an edge to graph
-	bool topologicalSort(vector<int>& result);
-	bool isCyclic();
-	
-};
-
-
+unsigned int DAGRemoveCycles(CBlock & pblock, unique_ptr<CBlockTemplate> &pblocktemplate, uint64_t &nBlockTx, uint64_t &nBlockSize, unsigned int &nBlockSigOps, CAmount &nFees);
+unsigned int DAGTopologicalSort(CBlock & pblock);
 #endif // GRAPH_H

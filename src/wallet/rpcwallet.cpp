@@ -51,7 +51,7 @@ extern int aliasunspent(const vector<unsigned char> &vchAlias, COutPoint& outPoi
 extern std::string stringFromVch(const std::vector<unsigned char> &vch);
 extern std::vector<unsigned char> vchFromString(const std::string &str);
 extern unsigned int MAX_ALIAS_UPDATES_PER_BLOCK;
-extern int GetSyscoinTxVersion();
+extern int SYSCOIN_TX_VERSION;
 extern bool IsSyscoinScript(const CScript& scriptPubKey, int &op, vector<vector<unsigned char> > &vvchArgs);
 extern int aliasselectpaymentcoins(const vector<unsigned char> &vchAlias, const CAmount &nAmount, vector<COutPoint>& outPoints, bool& bIsFunded, CAmount &nRequiredAmount, bool bSelectFeePlacement, bool bSelectAll, bool bNoAliasRecipient);
 int64_t nWalletUnlockTime;
@@ -598,7 +598,7 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
 	bool fJustCheck = true;
 	string errorMessage = "";
 	bool bCheckDestError = false;
-	if (wtxNew.nVersion == GetSyscoinTxVersion()) {
+	if (wtxNew.nVersion == SYSCOIN_TX_VERSION) {
 		if (DecodeAliasTx(wtxNew, op, nOut, vvchAlias))
 		{
 			CheckAliasInputs(wtxNew, op, nOut, vvchAlias, fJustCheck, chainActive.Tip()->nHeight, errorMessage, bCheckDestError, true);

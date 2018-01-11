@@ -43,7 +43,7 @@
 using namespace std;
 // SYSCOIN services
 extern bool IsSyscoinScript(const CScript& scriptPubKey, int &op, vector<vector<unsigned char> > &vvchArgs);
-extern int GetSyscoinTxVersion();
+extern int SYSCOIN_TX_VERSION;
 extern bool GetSyscoinTransaction(int nHeight, const uint256 &hash, CTransaction &txOut, uint256 &hashBlock, const Consensus::Params& consensusParams);
 extern vector<unsigned char> vchFromString(const string &str);
 extern CWallet* pwalletMain;
@@ -2777,7 +2777,7 @@ bool CWallet::SelectCoins(const CAmount& nTargetValue, set<pair<const CWalletTx*
 		{
 			const CWalletTx* pcoin = &it->second;
 			// SYSCOIN txs are unspendable unless input to another syscoin tx (passed into createtransaction)
-			if (pcoin->nVersion == GetSyscoinTxVersion())
+			if (pcoin->nVersion == SYSCOIN_TX_VERSION)
 			{
 				int op;
 				vector<vector<unsigned char> > vvchArgs;
@@ -3306,7 +3306,7 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
 	CMutableTransaction txNew;
 	// SYSCOIN: set syscoin tx version if its a syscoin service call
 	if (sysTx)
-		txNew.nVersion = GetSyscoinTxVersion();
+		txNew.nVersion = SYSCOIN_TX_VERSION;
 	// Discourage fee sniping.
 	//
 	// For a large miner the value of the transactions in the best block and

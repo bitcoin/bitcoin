@@ -15,7 +15,7 @@
 
 #include <boost/foreach.hpp>
 // SYSCOIN need constant SYSCOIN_TX_VERSION
-extern int GetSyscoinTxVersion();
+extern int SYSCOIN_TX_VERSION;
     /**
      * Check transaction inputs to mitigate two
      * potential denial-of-service attacks:
@@ -62,7 +62,7 @@ bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType)
 bool IsStandardTx(const CTransaction& tx, std::string& reason)
 {
 	// SYSCOIN check for syscoin or bitcoin tx
-	if ((tx.nVersion > CTransaction::MAX_STANDARD_VERSION || tx.nVersion < 1) && tx.nVersion != GetSyscoinTxVersion()) {
+	if ((tx.nVersion > CTransaction::MAX_STANDARD_VERSION || tx.nVersion < 1) && tx.nVersion != SYSCOIN_TX_VERSION) {
 		reason = "version";
 		return false;
 	}
@@ -108,7 +108,7 @@ bool IsStandardTx(const CTransaction& tx, std::string& reason)
 		{
 			// SYSCOIN if not syscoin tx and opreturn size is bigger than maxcarrier bytes, return false
 			// we need this because if it is a sys tx then we allow 20x maxcarrier bytes.
-			if (tx.nVersion != GetSyscoinTxVersion() && txout.scriptPubKey.size() > nMaxDatacarrierBytes)
+			if (tx.nVersion != SYSCOIN_TX_VERSION && txout.scriptPubKey.size() > nMaxDatacarrierBytes)
 			{
 				reason = "scriptpubkey";
 				return false;
