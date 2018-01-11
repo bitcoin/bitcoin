@@ -508,12 +508,7 @@ BOOST_AUTO_TEST_CASE(script_standard_IsMine)
         scriptPubKey.clear();
         scriptPubKey << OP_0 << ToByteVector(pubkeys[0].GetID());
 
-        // Keystore has key, but no P2SH redeemScript
-        result = IsMine(keystore, scriptPubKey, isInvalid);
-        BOOST_CHECK_EQUAL(result, ISMINE_NO);
-        BOOST_CHECK(!isInvalid);
-
-        // Keystore has key and P2SH redeemScript
+        // Keystore implicitly has key and P2SH redeemScript
         keystore.AddCScript(scriptPubKey);
         result = IsMine(keystore, scriptPubKey, isInvalid);
         BOOST_CHECK_EQUAL(result, ISMINE_SPENDABLE);

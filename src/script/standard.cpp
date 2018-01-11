@@ -348,19 +348,14 @@ CScript GetScriptForWitness(const CScript& redeemscript)
     std::vector<std::vector<unsigned char> > vSolutions;
     if (Solver(redeemscript, typ, vSolutions)) {
         if (typ == TX_PUBKEY) {
-            unsigned char h160[20];
-            CHash160().Write(&vSolutions[0][0], vSolutions[0].size()).Finalize(h160);
-            ret << OP_0 << std::vector<unsigned char>(&h160[0], &h160[20]);
-            return ret;
+            return GetScriptForDestination(WitnessV0KeyHash(Hash160(vSolutions[0].begin(), vSolutions[0].end())));
         } else if (typ == TX_PUBKEYHASH) {
-           ret << OP_0 << vSolutions[0];
-           return ret;
+            return GetScriptForDestination(WitnessV0KeyHash(vSolutions[0]));
         }
     }
     uint256 hash;
     CSHA256().Write(&redeemscript[0], redeemscript.size()).Finalize(hash.begin());
-    ret << OP_0 << ToByteVector(hash);
-    return ret;
+    return GetScriptForDestination(WitnessV0ScriptHash(hash));
 }
 
 bool IsValidDestination(const CTxDestination& dest) {

@@ -131,7 +131,11 @@ UniValue importprivkey(const JSONRPCRequest& request)
     CKeyID vchAddress = pubkey.GetID();
     {
         pwallet->MarkDirty();
-        pwallet->SetAddressBook(vchAddress, strLabel, "receive");
+
+        // We don't know which corresponding address will be used; label them all
+        for (const auto& dest : GetAllDestinationsForKey(pubkey)) {
+            pwallet->SetAddressBook(dest, strLabel, "receive");
+        }
 
         // Don't throw error in case a key is already there
         if (pwallet->HaveKey(vchAddress)) {
@@ -143,6 +147,7 @@ UniValue importprivkey(const JSONRPCRequest& request)
         if (!pwallet->AddKeyPubKey(key, pubkey)) {
             throw JSONRPCError(RPC_WALLET_ERROR, "Error adding key to wallet");
         }
+        pwallet->LearnAllRelatedScripts(pubkey);
 
         // whenever a key is imported, we need to scan the whole chain
         pwallet->UpdateTimeFirstKey(1);
@@ -433,8 +438,11 @@ UniValue importpubkey(const JSONRPCRequest& request)
 
     LOCK2(cs_main, pwallet->cs_wallet);
 
-    ImportAddress(pwallet, pubKey.GetID(), strLabel);
+    for (const auto& dest : GetAllDestinationsForKey(pubKey)) {
+        ImportAddress(pwallet, dest, strLabel);
+    }
     ImportScript(pwallet, GetScriptForRawPubKey(pubKey), strLabel, false);
+    pwallet->LearnAllRelatedScripts(pubKey);
 
     if (fRescan)
     {
@@ -595,12 +603,12 @@ UniValue dumpprivkey(const JSONRPCRequest& request)
     if (!IsValidDestination(dest)) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address");
     }
-    const CKeyID *keyID = boost::get<CKeyID>(&dest);
-    if (!keyID) {
+    auto keyid = GetKeyForDestination(*pwallet, dest);
+    if (keyid.IsNull()) {
         throw JSONRPCError(RPC_TYPE_ERROR, "Address does not refer to a key");
     }
     CKey vchSecret;
-    if (!pwallet->GetKey(*keyID, vchSecret)) {
+    if (!pwallet->GetKey(keyid, vchSecret)) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Private key for address " + strAddress + " is not known");
     }
     return CBitcoinSecret(vchSecret).ToString();
