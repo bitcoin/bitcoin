@@ -1396,18 +1396,20 @@ class SegWitTest(BitcoinTestFramework):
 
         temp_utxos.pop(0)
 
-        # Update self.utxos for later tests. Just spend everything in
-        # temp_utxos to a corresponding entry in self.utxos
+        # Update self.utxos for later tests by creating two outputs
+        # that consolidate all the coins in temp_utxos.
+        output_value = sum(i.nValue for i in temp_utxos) // 2
+
         tx = CTransaction()
         index = 0
+        # Just spend to our usual anyone-can-spend output
+        tx.vout = [CTxOut(output_value, CScript([OP_TRUE]))] * 2
         for i in temp_utxos:
-            # Just spend to our usual anyone-can-spend output
-            # Use SIGHASH_SINGLE|SIGHASH_ANYONECANPAY so we can build up
+            # Use SIGHASH_ALL|SIGHASH_ANYONECANPAY so we can build up
             # the signatures as we go.
             tx.vin.append(CTxIn(COutPoint(i.sha256, i.n), b""))
-            tx.vout.append(CTxOut(i.nValue, CScript([OP_TRUE])))
             tx.wit.vtxinwit.append(CTxInWitness())
-            sign_P2PK_witness_input(witness_program, tx, index, SIGHASH_SINGLE|SIGHASH_ANYONECANPAY, i.nValue, key)
+            sign_P2PK_witness_input(witness_program, tx, index, SIGHASH_ALL|SIGHASH_ANYONECANPAY, i.nValue, key)
             index += 1
         block = self.build_next_block()
         self.update_witness_block_with_transactions(block, [tx])
