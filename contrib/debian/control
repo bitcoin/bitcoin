@@ -23,23 +23,31 @@ Build-Depends: debhelper,
  libboost-thread1.54-dev | libboost-thread-dev (>> 1.47),
  libboost-test1.54-dev | libboost-test-dev (>> 1.47),
  libboost-chrono1.54-dev | libboost-chrono-dev (>> 1.47),
- libboost-program-options1.54-dev | libboost-program-options,
+ libboost-program-options1.54-dev | libboost-program-options-dev,
  libminiupnpc8-dev | libminiupnpc-dev,
  qtbase5-dev,
  qttools5-dev-tools, qttools5-dev,
  libqrencode-dev,
  python
-
 Standards-Version: 3.9.5
 Homepage: https://peercoin.net/
 Vcs-Git: git://github.com/peercoin/peercoin.git
 Vcs-Browser: https://github.com/peercoin/peercoin
 
+Package: peercoind
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: peer-to-peer network based digital currency - daemon
+ Peercoin is a crypto-currency project forked from Bitcoin and we aim to achieve
+ energy-efficiency and keep as much as possible the original Bitcoin's
+ preferable properties.
+ .
+ This package provides peercoind, a daemon client for the Peercoin network.
+
 Package: peercoin-qt
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: peer-to-peer network based digital currency - Qt GUI
- .
  Peercoin is a crypto-currency project forked from Bitcoin and we aim to achieve
  energy-efficiency and keep as much as possible the original Bitcoin's
  preferable properties.
@@ -50,7 +58,6 @@ Package: peercoin-cli
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: peer-to-peer digital currency - standalone transaction tool
- .
  Peercoin is a crypto-currency project forked from Bitcoin and we aim to achieve
  energy-efficiency and keep as much as possible the original Bitcoin's
  preferable properties.
