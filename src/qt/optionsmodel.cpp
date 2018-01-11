@@ -72,12 +72,12 @@ void OptionsModel::Init()
     fCoinControlFeatures = settings.value("fCoinControlFeatures", false).toBool();
 
     if (!settings.contains("fEnableSystemnodes"))
-        settings.setValue("fEnableSystemnodes", false);
-    fEnableSystemnodes = settings.value("fEnableSystemnodes", false).toBool();
+        settings.setValue("fEnableSystemnodes", true);
+    fEnableSystemnodes = settings.value("fEnableSystemnodes", true).toBool();
 
     if (!settings.contains("fEnableMasternodes"))
-        settings.setValue("fEnableMasternodes", false);
-    fEnableMasternodes = settings.value("fEnableMasternodes", false).toBool();
+        settings.setValue("fEnableMasternodes", true);
+    fEnableMasternodes = settings.value("fEnableMasternodes", true).toBool();
 
     // These are shared with the core or have a command-line parameter
     // and we want command-line parameters to overwrite the GUI settings.
