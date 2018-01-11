@@ -409,7 +409,7 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
 			nRemovedTxs = DAGRemoveCycles(pblock, pblocktemplate, nBlockTx, nBlockSize, nBlockSigOps, nFees);
 			// sanity check, should never happen
 			if (nRemovedTxs > 0) {
-				throw std::runtime_error(strprintf("DAGRemoveCycles failed: %d cycles found", nRemovedTxs))
+				throw std::runtime_error(strprintf("DAGRemoveCycles failed: %d cycles found", nRemovedTxs));
 			}
 		}
 
