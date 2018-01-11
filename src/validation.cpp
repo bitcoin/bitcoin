@@ -555,7 +555,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight,con
 	if (nHeight == 0)
 		nHeight = chainActive.Height();
 	string errorMessage;
-	if (block.IsNull() && tx.nVersion == SYSCOIN_TX_VERSION)
+	if (block.vtx.empty(); && tx.nVersion == SYSCOIN_TX_VERSION)
 	{
 		bool bDestCheckFailed = false;
 		bool good = true;
@@ -604,9 +604,10 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight,con
 					LogPrintf("%s\n", errorMessage.c_str());
 			}
 		}
-		else if (!block.IsNull()) {
-			CBlock sortedBlock = block;
-			if (!sortedBlock.IsNull()) {
+		else if (!block.vtx.empty()) {
+			CBlock sortedBlock;
+			sortedBlock.vtx = block.vtx;
+			if (!sortedBlock.vtx.empty()) {
 				if (!DAGTopologicalSort(&sortedBlock)) {
 					return false;
 				}
