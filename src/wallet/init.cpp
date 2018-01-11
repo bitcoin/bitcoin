@@ -14,6 +14,7 @@
 #include <node/context.h>
 #include <node/interface_ui.h>
 #include <outputtype.h>
+#include <script/signingprovider.h>
 #include <univalue.h>
 #include <util/check.h>
 #include <util/moneystr.h>
@@ -76,6 +77,7 @@ void WalletInit::AddWalletOptions(ArgsManager& argsman) const
     argsman.AddArg("-wallet=<path>", "Specify wallet path to load at startup. Can be used multiple times to load multiple wallets. Path is to a directory containing wallet data and log files. If the path is not absolute, it is interpreted relative to <walletdir>. This only loads existing wallets and does not create new ones. For backwards compatibility this also accepts names of existing top-level data files in <walletdir>.", ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::WALLET);
     argsman.AddArg("-walletbroadcast",  strprintf("Make the wallet broadcast transactions (default: %u)", DEFAULT_WALLETBROADCAST), ArgsManager::ALLOW_ANY, OptionsCategory::WALLET);
     argsman.AddArg("-walletdir=<dir>", "Specify directory to hold wallets (default: <datadir>/wallets if it exists, otherwise <datadir>)", ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::WALLET);
+    argsman.AddArg("-walletimplicitsegwit", strprintf("Support segwit when restoring wallet backups and importing keys (default: %u)", DEFAULT_WALLET_IMPLICIT_SEGWIT), ArgsManager::ALLOW_ANY, OptionsCategory::WALLET);
 #if HAVE_SYSTEM
     argsman.AddArg("-walletnotify=<cmd>", "Execute command when a wallet transaction changes. %s in cmd is replaced by TxID, %w is replaced by wallet name, %b is replaced by the hash of the block including the transaction (set to 'unconfirmed' if the transaction is not included) and %h is replaced by the block height (-1 if not included). %w is not currently implemented on windows. On systems where %w is supported, it should NOT be quoted because this would break shell escaping used to invoke the command.", ArgsManager::ALLOW_ANY, OptionsCategory::WALLET);
 #endif
@@ -117,6 +119,13 @@ bool WalletInit::ParameterInteraction() const
 
     if (gArgs.GetBoolArg("-blocksonly", DEFAULT_BLOCKSONLY) && gArgs.SoftSetBoolArg("-walletbroadcast", false)) {
         LogPrintf("%s: parameter interaction: -blocksonly=1 -> setting -walletbroadcast=0\n", __func__);
+    }
+
+    g_implicit_segwit = gArgs.GetBoolArg("-walletimplicitsegwit", DEFAULT_WALLET_IMPLICIT_SEGWIT);
+    if (!g_implicit_segwit) {
+        if (gArgs.SoftSetArg("-addresstype", "legacy")) {
+            LogPrintf("%s: parameter interaction: -walletimplicitsegwit=%u -> setting -addresstype=legacy\n", __func__, g_implicit_segwit);
+        }
     }
 
     return true;
