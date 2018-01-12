@@ -107,7 +107,9 @@ bool DAGTopologicalSort(CBlock * pblock) {
 		return false;
 	}
 	const IndexMap &indices = get(vertex_index, (const Graph &)graph);
-	
+	// add coinbase
+	newVtx.push_back(pblock->vtx[0]);
+
 	// add sys tx's to newVtx in sorted order
 	reverse(c.begin(), c.end());
 	string ordered = "";
@@ -123,7 +125,7 @@ bool DAGTopologicalSort(CBlock * pblock) {
 	}
 	LogPrintf("topological ordering: %s\n", ordered);
 	// add non sys tx's to end of newVtx
-	for (unsigned int nOut = 0; nOut< pblock->vtx.size(); nOut++) {
+	for (unsigned int nOut = 1; nOut< pblock->vtx.size(); nOut++) {
 		const CTransaction& tx = pblock->vtx[nOut];
 		if (tx.nVersion != SYSCOIN_TX_VERSION)
 		{
