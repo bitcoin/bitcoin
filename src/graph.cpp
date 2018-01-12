@@ -27,10 +27,11 @@ bool CreateDAGFromBlock(const CBlock*pblock, Graph &graph, std::vector<vertex_de
 			if (DecodeAssetAllocationTx(tx, op, nOut, vvchArgs))
 			{
 				const string& sender = stringFromVch(vvchAliasArgs[0]);
+				const size_t& verticesSize = vertices.size() - 1;
 				if (mapAliasIndex.count(sender) == 0) {
 					vertices.push_back(add_vertex(graph));
-					mapAliasIndex[sender] = vertices.size() - 1;
-					mapTxIndex[vertices.size() - 1] = nOut;
+					mapAliasIndex[sender] = verticesSize;
+					mapTxIndex[verticesSize] = nOut;
 				}
 				LogPrintf("CreateDAGFromBlock: found asset allocation from sender %s\n", sender);
 				CAssetAllocation allocation(tx);
@@ -39,7 +40,7 @@ bool CreateDAGFromBlock(const CBlock*pblock, Graph &graph, std::vector<vertex_de
 						const string& receiver = stringFromVch(allocationInstance.first);
 						if (mapAliasIndex.count(receiver) == 0) {
 							vertices.push_back(add_vertex(graph));
-							mapAliasIndex[receiver] = vertices.size() - 1;
+							mapAliasIndex[receiver] = verticesSize;
 						}
 						// the graph needs to be from index to index 
 						add_edge(vertices[mapAliasIndex[receiver]], vertices[mapAliasIndex[sender]], graph);
@@ -71,7 +72,8 @@ unsigned int DAGRemoveCycles(CBlock * pblock, std::unique_ptr<CBlockTemplate> &p
 	reverse(clearedVertices.begin(), clearedVertices.end());
 	for (auto& nVertex : clearedVertices) {
 		LogPrintf("trying to clear vertex %d\n", nVertex);
-		const unsigned int &nOut = mapTxIndex[nVertex];
+		// mapTxIndex knows of the mapping between vertices and tx vout position, add 1 to account for coinbase (0) vout
+		const unsigned int &nOut = mapTxIndex[nVertex]+1;
 		if (nOut >= pblock->vtx.size())
 			continue;
 		LogPrintf("cleared vertex, erasing nOut %d\n", nOut);
