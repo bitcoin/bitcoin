@@ -22,7 +22,7 @@ struct sorted_vector {
 	iterator end() { return V.end(); }
 	const_iterator begin() const { return V.begin(); }
 	const_iterator end() const { return V.end(); }
-	
+	const size_t size() const { return V.size(); }
 	sorted_vector(const Compare& c = Compare())
 		: V(), cmp(c) {}
 	template <class InputIterator>
@@ -56,7 +56,7 @@ struct cycle_visitor
 	{
 		if (p.empty())
 			return;
-		const int &nValue = *(boost::prior(p.end());
+		const int &nValue = *(boost::prior(p.end()));
 		cleared.insert(nValue);
 	}
 	ClearedVertices& cleared;

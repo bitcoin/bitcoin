@@ -65,8 +65,6 @@ unsigned int DAGRemoveCycles(CBlock * pblock, std::unique_ptr<CBlockTemplate> &p
 	sorted_vector<int> clearedVertices;
 	cycle_visitor<sorted_vector<int> > visitor(clearedVertices);
 	hawick_circuits(graph, visitor);
-	// fastest sort when integers are used, falls back to std::sort if < 1000 elements for optimal performance in all cases
-	sort(clearedVertices.begin(), clearedVertices.end());
 	LogPrintf("Found %d circuits\n", clearedVertices.size());
 	// iterate backwards over sorted list of vertices, we can do this because we remove vertices from end to beginning, 
 	// which invalidate iterators from positon removed to end (we don't care about those after removal since we are iterating backwards to begining)
@@ -75,7 +73,7 @@ unsigned int DAGRemoveCycles(CBlock * pblock, std::unique_ptr<CBlockTemplate> &p
 	for (auto& nVertex : clearedVertices) {
 		LogPrintf("trying to clear vertex %d\n", nVertex);
 		// ensure unique vertices are checked for removal
-		if (sorted_vector.find(nVertex) != sorted_vector.end())
+		if (seenVertex.find(nVertex) != seenVertex.end())
 			continue;
 		seenVertex.insert(nVertex);
 		const unsigned int &nOut = mapTxIndex[nVertex];
