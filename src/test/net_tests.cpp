@@ -62,11 +62,11 @@ public:
     }
 };
 
-CDataStream AddrmanToStream(CAddrManSerializationMock& addrman)
+CDataStream AddrmanToStream(CAddrManSerializationMock& _addrman)
 {
     CDataStream ssPeersIn(SER_DISK, CLIENT_VERSION);
     ssPeersIn << FLATDATA(Params().MessageStart());
-    ssPeersIn << addrman;
+    ssPeersIn << _addrman;
     std::string str = ssPeersIn.str();
     vector<unsigned char> vchData(str.begin(), str.end());
     return CDataStream(vchData, SER_DISK, CLIENT_VERSION);
@@ -164,12 +164,12 @@ BOOST_AUTO_TEST_CASE(cnode_simple_test)
     bool fInboundIn = false;
 
     // Test that fFeeler is false by default.
-    CNode* pnode1 = new CNode(id++, NODE_NETWORK, height, hSocket, addr, pszDest, fInboundIn);
+    CNode* pnode1 = new CNode(id++, NODE_NETWORK, height, hSocket, addr, 0, pszDest, fInboundIn);
     BOOST_CHECK(pnode1->fInbound == false);
     BOOST_CHECK(pnode1->fFeeler == false);
 
     fInboundIn = true;
-    CNode* pnode2 = new CNode(id++, NODE_NETWORK, height, hSocket, addr, pszDest, fInboundIn);
+    CNode* pnode2 = new CNode(id++, NODE_NETWORK, height, hSocket, addr, 1, pszDest, fInboundIn);
     BOOST_CHECK(pnode2->fInbound == true);
     BOOST_CHECK(pnode2->fFeeler == false);
 }

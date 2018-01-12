@@ -121,7 +121,8 @@ class BitcoinTestFramework(object):
         self.add_options(parser)
         (self.options, self.args) = parser.parse_args()
 
-        self.options.tmpdir += '/' + str(self.options.port_seed)
+        # backup dir variable for removal at cleanup
+        self.options.root, self.options.tmpdir = self.options.tmpdir, self.options.tmpdir + '/' + str(self.options.port_seed)
 
         if self.options.trace_rpc:
             logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
@@ -172,6 +173,8 @@ class BitcoinTestFramework(object):
         if not self.options.nocleanup and not self.options.noshutdown and success:
             print("Cleaning up")
             shutil.rmtree(self.options.tmpdir)
+            if not os.listdir(self.options.root):
+                os.rmdir(self.options.root)
         else:
             print("Not cleaning up dir %s" % self.options.tmpdir)
 

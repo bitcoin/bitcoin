@@ -257,8 +257,7 @@ BOOST_AUTO_TEST_CASE(addrman_tried_collisions)
         addrman.Good(CAddress(addr, NODE_NONE));
 
         //Test 15: No collision in tried table yet.
-        BOOST_TEST_MESSAGE(addrman.size());
-        BOOST_CHECK(addrman.size() == i);
+        BOOST_CHECK_EQUAL(addrman.size(), i);
     }
 
     //Test 16: tried table collision!

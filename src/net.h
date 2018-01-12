@@ -11,6 +11,7 @@
 #include "amount.h"
 #include "bloom.h"
 #include "compat.h"
+#include "hash.h"
 #include "limitedmap.h"
 #include "netaddress.h"
 #include "protocol.h"
@@ -80,6 +81,8 @@ static const size_t SETASKFOR_MAX_SZ = 2 * MAX_INV_SZ;
 static const unsigned int DEFAULT_MAX_PEER_CONNECTIONS = 125;
 /** The default for -maxuploadtarget. 0 = Unlimited */
 static const uint64_t DEFAULT_MAX_UPLOAD_TARGET = 0;
+/** The default timeframe for -maxuploadtarget. 1 day. */
+static const uint64_t MAX_UPLOAD_TIMEFRAME = 60 * 60 * 24;
 /** Default for blocks only*/
 static const bool DEFAULT_BLOCKSONLY = false;
 
@@ -128,8 +131,10 @@ public:
         CClientUIInterface* uiInterface = nullptr;
         unsigned int nSendBufferMaxSize = 0;
         unsigned int nReceiveFloodSize = 0;
+        uint64_t nMaxOutboundTimeframe = 0;
+        uint64_t nMaxOutboundLimit = 0;
     };
-    CConnman();
+    CConnman(uint64_t seed0, uint64_t seed1);
     ~CConnman();
     bool Start(CScheduler& scheduler, std::string& strNodeError, Options options);
     void Stop();
@@ -386,6 +391,8 @@ public:
     void SetBestHeight(int height);
     int GetBestHeight() const;
 
+    /** Get a unique deterministic randomizer. */
+    CSipHasher GetDeterministicRandomizer(uint64_t id);
 
     unsigned int GetReceiveFloodSize() const;
 private:
@@ -404,6 +411,8 @@ private:
     void ThreadSocketHandler();
     void ThreadDNSAddressSeed();
     void ThreadMnbRequestConnections();
+
+    uint64_t CalculateKeyedNetGroup(const CAddress& ad);
 
     void WakeMessageHandler();
 
@@ -490,6 +499,9 @@ private:
     int nMaxFeeler;
     std::atomic<int> nBestHeight;
     CClientUIInterface* clientInterface;
+
+    /** SipHasher seeds for deterministic randomness */
+    const uint64_t nSeed0, nSeed1;
 
     /** flag for waking the message processor. */
     bool fMsgProcWake;
@@ -784,7 +796,7 @@ public:
     CAmount lastSentFeeFilter;
     int64_t nextSendTimeFeeFilter;
 
-    CNode(NodeId id, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn, SOCKET hSocketIn, const CAddress &addrIn, const std::string &addrNameIn = "", bool fInboundIn = false, bool fNetworkNodeIn = false);
+    CNode(NodeId id, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn, SOCKET hSocketIn, const CAddress &addrIn, uint64_t nKeyedNetGroupIn, const std::string &addrNameIn = "", bool fInboundIn = false, bool fNetworkNodeIn = false);
     ~CNode();
 
 private:
@@ -793,9 +805,9 @@ private:
     CNode(const CNode&);
     void operator=(const CNode&);
 
-    static uint64_t CalculateKeyedNetGroup(const CAddress& ad);
 
     uint64_t nLocalHostNonce;
+    // Services offered to this peer
     ServiceFlags nLocalServices;
     int nMyStartingHeight;
     int nSendVersion;
