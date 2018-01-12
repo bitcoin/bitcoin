@@ -14,15 +14,7 @@
 #include <boost/lexical_cast.hpp>
 #include <iterator>
 
-#include <boost/graph/directed_graph.hpp>
-#include <boost/graph/graph_traits.hpp>
-#include <boost/graph/hawick_circuits.hpp>
-#include <boost/next_prior.hpp>
-#include <boost/property_map/property_map.hpp>
-#include <boost/graph/adjacency_list.hpp>
-#include <boost/graph/topological_sort.hpp>
-#include <map>
-#include <vector>
+#include "graph.h"
 using namespace std;
 BOOST_GLOBAL_FIXTURE( SyscoinTestingSetup );
 
@@ -41,10 +33,9 @@ struct cycle_visitor
 	{
 		if (p.empty())
 			return;
-		const auto iter = std::lower_bound(std::begin(cleared), std::end(cleared), v);
-		if (iter != std::end(vec)) {
-			cleared.push_back(*(boost::prior(p.end())));
-			std::sort(std::begin(cleared), std::end(cleared));
+		const int &nValue = *(boost::prior(p.end());
+		if (cleared.find(nValue) != cleared.end()) {
+			cleared.insert(nValue);
 		}
 	}
 	ClearedVertices& cleared;
@@ -94,8 +85,8 @@ void build_graph(Graph& graph) {
 
 	BOOST_ASSERT(num_vertices(graph) == nvertices);
 
-	std::vector<int> clearedVertices;
-	cycle_visitor<std::vector<int> > visitor(clearedVertices);
+	sorted_vector<int> clearedVertices;
+	cycle_visitor<sorted_vector<int> > visitor(clearedVertices);
 	boost::hawick_circuits(graph, visitor);
 	printf("Found %d circuits\n", clearedVertices.size());
 	for(auto &vert: clearedVertices)
