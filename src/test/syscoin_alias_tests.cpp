@@ -56,21 +56,42 @@ void build_graph(Graph& graph) {
 	typedef typename Traits::vertex_descriptor vertex_descriptor;
 	std::map<unsigned int, vertex_descriptor> vertices;
 
-	unsigned int nvertices = 5;
+	unsigned int nvertices = 16;
 	for (unsigned int i = 0; i < nvertices; ++i)
 		vertices[i] = add_vertex(graph);
 
-	boost::add_edge(vertices[0], vertices[1], graph);
 	boost::add_edge(vertices[0], vertices[2], graph);
-	boost::add_edge(vertices[0], vertices[3], graph);
-	boost::add_edge(vertices[0], vertices[4], graph);
-	boost::add_edge(vertices[2], vertices[0], graph);
-	boost::add_edge(vertices[3], vertices[0], graph);
-	boost::add_edge(vertices[2], vertices[4], graph);
-	boost::add_edge(vertices[3], vertices[1], graph);
+	boost::add_edge(vertices[0], vertices[10], graph);
+	boost::add_edge(vertices[0], vertices[14], graph);
+	boost::add_edge(vertices[1, vertices[5], graph);
+	boost::add_edge(vertices[1], vertices[8], graph);
+	boost::add_edge(vertices[2], vertices[7], graph);
+	boost::add_edge(vertices[2], vertices[9], graph);
+	boost::add_edge(vertices[3], vertices[3], graph);
 	boost::add_edge(vertices[3], vertices[4], graph);
-	boost::add_edge(vertices[4], vertices[0], graph);
-	boost::add_edge(vertices[4], vertices[1], graph);
+	boost::add_edge(vertices[3], vertices[6], graph);
+	boost::add_edge(vertices[4], vertices[5], graph);
+	boost::add_edge(vertices[4], vertices[13], graph);
+	boost::add_edge(vertices[4], vertices[15], graph);
+	boost::add_edge(vertices[6], vertices[13], graph);
+	boost::add_edge(vertices[8], vertices[0], graph);
+	boost::add_edge(vertices[8], vertices[4], graph);
+	boost::add_edge(vertices[8], vertices[8], graph);
+	boost::add_edge(vertices[9], vertices[9], graph);
+	boost::add_edge(vertices[10], vertices[7], graph);
+	boost::add_edge(vertices[10], vertices[11], graph);
+	boost::add_edge(vertices[11], vertices[6], graph);
+	boost::add_edge(vertices[12], vertices[1], graph);
+	boost::add_edge(vertices[12], vertices[1], graph);
+	boost::add_edge(vertices[12], vertices[2], graph);
+	boost::add_edge(vertices[12], vertices[10], graph);
+	boost::add_edge(vertices[12], vertices[12], graph);
+	boost::add_edge(vertices[12], vertices[14], graph);
+	boost::add_edge(vertices[13], vertices[3], graph);
+	boost::add_edge(vertices[13], vertices[12], graph);
+	boost::add_edge(vertices[13], vertices[15], graph);
+	boost::add_edge(vertices[14], vertices[11], graph);
+	boost::add_edge(vertices[15], vertices[0], graph);
 
 	BOOST_ASSERT(num_vertices(graph) == nvertices);
 
