@@ -139,6 +139,7 @@ bool DAGTopologicalSort(CBlock * pblock) {
 	
 	// add sys tx's to newVtx in sorted order
 	reverse(c.begin(), c.end());
+	string ordered = "";
 	for (auto& t:c) {
 		LogPrintf("add sys tx in sorted order\n");
 		if (mapTxIndex.count(t)) {
@@ -146,8 +147,10 @@ bool DAGTopologicalSort(CBlock * pblock) {
 			const int &nOut = mapTxIndex[nIndex];
 			LogPrintf("push nOut %d\n", nOut);
 			newVtx.push_back(pblock->vtx[nOut]);
+			ordered += strprintf("%d ", nOut);
 		}
 	}
+	LogPrintf("topological ordering: %s\n", ordered);
 	// add non sys tx's to end of newVtx
 	for (unsigned int nOut = 0; nOut< pblock->vtx.size(); nOut++) {
 		const CTransaction& tx = pblock->vtx[nOut];
