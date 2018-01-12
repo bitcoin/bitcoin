@@ -27,7 +27,7 @@ bool CreateDAGFromBlock(const CBlock*pblock, Graph &graph, std::vector<vertex_de
 			if (DecodeAssetAllocationTx(tx, op, nOut, vvchArgs))
 			{
 				const string& sender = stringFromVch(vvchAliasArgs[0]);
-				const size_t& verticesSize = vertices.size() - 1;
+				const unsigned int verticesSize = vertices.size() - 1;
 				if (mapAliasIndex.count(sender) == 0) {
 					vertices.push_back(add_vertex(graph));
 					mapAliasIndex[sender] = verticesSize;
@@ -73,7 +73,7 @@ unsigned int DAGRemoveCycles(CBlock * pblock, std::unique_ptr<CBlockTemplate> &p
 	for (auto& nVertex : clearedVertices) {
 		LogPrintf("trying to clear vertex %d\n", nVertex);
 		// mapTxIndex knows of the mapping between vertices and tx vout position, add 1 to account for coinbase (0) vout
-		const unsigned int &nOut = mapTxIndex[nVertex]+1;
+		const unsigned int nOut = mapTxIndex[nVertex]+1;
 		if (nOut >= pblock->vtx.size())
 			continue;
 		LogPrintf("cleared vertex, erasing nOut %d\n", nOut);
