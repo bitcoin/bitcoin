@@ -27,7 +27,7 @@ struct sorted_vector {
 		: V(), cmp(c) {}
 	template <class InputIterator>
 	sorted_vector(InputIterator first, InputIterator last,
-		Const Compare& c = Compare())
+		const Compare& c = Compare())
 		: V(first, last), cmp(c)
 	{
 		std::sort(begin(), end(), cmp);
@@ -43,6 +43,23 @@ struct sorted_vector {
 		const_iterator i = lower_bound(begin(), end(), t, cmp);
 		return i == end() || cmp(t, *i) ? end() : i;
 	}
+};
+template <typename ClearedVertices>
+struct cycle_visitor
+{
+	cycle_visitor(ClearedVertices& vertices)
+		: cleared(vertices)
+	{}
+
+	template <typename Path, typename Graph>
+	void cycle(Path const& p, Graph & g)
+	{
+		if (p.empty())
+			return;
+		const int &nValue = *(boost::prior(p.end());
+		cleared.insert(nValue);
+	}
+	ClearedVertices& cleared;
 };
 unsigned int DAGRemoveCycles(CBlock * pblock, unique_ptr<CBlockTemplate> &pblocktemplate, uint64_t &nBlockTx, uint64_t &nBlockSize, unsigned int &nBlockSigOps, CAmount &nFees);
 bool DAGTopologicalSort(CBlock * pblock);

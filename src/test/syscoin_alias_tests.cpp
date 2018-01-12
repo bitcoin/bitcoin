@@ -21,25 +21,6 @@ BOOST_GLOBAL_FIXTURE( SyscoinTestingSetup );
 BOOST_FIXTURE_TEST_SUITE (syscoin_alias_tests, BasicSyscoinTestingSetup)
 const unsigned int MAX_ALIAS_UPDATES_PER_BLOCK = 5;
 
-template <typename ClearedVertices>
-struct cycle_visitor
-{
-	cycle_visitor(ClearedVertices& vertices)
-		: cleared(vertices)
-	{}
-
-	template <typename Path, typename Graph>
-	void cycle(Path const& p, Graph & g)
-	{
-		if (p.empty())
-			return;
-		const int &nValue = *(boost::prior(p.end());
-		if (cleared.find(nValue) != cleared.end()) {
-			cleared.insert(nValue);
-		}
-	}
-	ClearedVertices& cleared;
-};
 template <typename Graph>
 void build_graph(Graph& graph) {
 	typedef boost::graph_traits<Graph> Traits;

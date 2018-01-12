@@ -11,28 +11,6 @@ typedef typename Traits::vertex_descriptor vertex_descriptor;
 typedef typename std::vector< vertex_descriptor > container;
 typedef typename property_map<Graph, vertex_index_t>::const_type IndexMap;
 
-template <typename ClearedVertices>
-struct cycle_visitor
-{
-	cycle_visitor(ClearedVertices& vertices)
-		: cleared(vertices)
-	{}
-
-	template <typename Path, typename Graph>
-	void cycle(Path const& p, Graph & g)
-	{
-		if (p.empty())
-			return;
-
-		// Iterate over path printing each vertex that forms the cycle.
-		typename Path::const_iterator end = prior(p.end());
-		typename Path::const_iterator before_end = prior(end);
-		cleared.push_back(*before_end);
-
-
-	}
-	ClearedVertices& cleared;
-};
 bool CreateDAGFromBlock(const CBlock*pblock, Graph &graph, std::vector<vertex_descriptor> &vertices, std::unordered_map<int, int> &mapTxIndex) {
 	std::unordered_map<string, int> mapAliasIndex;
 	std::vector<vector<unsigned char> > vvchArgs;
@@ -84,20 +62,20 @@ unsigned int DAGRemoveCycles(CBlock * pblock, std::unique_ptr<CBlockTemplate> &p
 		return true;
 	}
 
-	std::vector<int> clearedVertices;
-	cycle_visitor<vector<int> > visitor(clearedVertices);
+	sorted_vector<int> clearedVertices;
+	cycle_visitor<sorted_vector<int> > visitor(clearedVertices);
 	hawick_circuits(graph, visitor);
 	// fastest sort when integers are used, falls back to std::sort if < 1000 elements for optimal performance in all cases
 	sort(clearedVertices.begin(), clearedVertices.end());
 	LogPrintf("Found %d circuits\n", clearedVertices.size());
 	// iterate backwards over sorted list of vertices, we can do this because we remove vertices from end to beginning, 
 	// which invalidate iterators from positon removed to end (we don't care about those after removal since we are iterating backwards to begining)
-	std::unordered_set<int> seenVertex;
+	sorted_vector<int> seenVertex;
 	reverse(clearedVertices.begin(), clearedVertices.end());
 	for (auto& nVertex : clearedVertices) {
 		LogPrintf("trying to clear vertex %d\n", nVertex);
 		// ensure unique vertices are checked for removal
-		if (seenVertex.count(nVertex) > 0)
+		if (sorted_vector.find(nVertex) != sorted_vector.end())
 			continue;
 		seenVertex.insert(nVertex);
 		const unsigned int &nOut = mapTxIndex[nVertex];
