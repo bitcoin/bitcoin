@@ -14,8 +14,6 @@
 using namespace std;
 template <class T, class Compare = std::less<T> >
 struct sorted_vector {
-	using std::vector;
-	using std::lower_bound;
 	vector<T> V;
 	Compare cmp;
 	typedef typename vector<T>::iterator iterator;
