@@ -99,6 +99,7 @@ BASE_SCRIPTS= [
     'mempool_reorg.py',
     'mempool_persist.py',
     'multiwallet.py',
+    'multiwallet.py --usecli',
     'httpbasics.py',
     'multi_rpc.py',
     'proxy_test.py',
