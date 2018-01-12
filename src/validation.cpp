@@ -264,10 +264,8 @@ CBlockIndex* FindForkInGlobalIndex(const CChain& chain, const CBlockLocator& loc
 
     // Find the first block the caller has in the main chain
     for (const uint256& hash : locator.vHave) {
-        BlockMap::iterator mi = mapBlockIndex.find(hash);
-        if (mi != mapBlockIndex.end())
-        {
-            CBlockIndex* pindex = (*mi).second;
+        CBlockIndex* pindex = LookupBlockIndex(hash);
+        if (pindex) {
             if (chain.Contains(pindex))
                 return pindex;
             if (pindex->GetAncestor(chain.Height()) == chain.Tip()) {
@@ -1319,7 +1317,7 @@ bool CScriptCheck::operator()() {
 int GetSpendHeight(const CCoinsViewCache& inputs)
 {
     LOCK(cs_main);
-    CBlockIndex* pindexPrev = mapBlockIndex.find(inputs.GetBestBlock())->second;
+    CBlockIndex* pindexPrev = LookupBlockIndex(inputs.GetBestBlock());
     return pindexPrev->nHeight + 1;
 }
 
@@ -3224,7 +3222,6 @@ bool CChainState::AcceptBlockHeader(const CBlockHeader& block, CValidationState&
     BlockMap::iterator miSelf = mapBlockIndex.find(hash);
     CBlockIndex *pindex = nullptr;
     if (hash != chainparams.GetConsensus().hashGenesisBlock) {
-
         if (miSelf != mapBlockIndex.end()) {
             // Block header is already known.
             pindex = miSelf->second;
@@ -3802,10 +3799,11 @@ bool LoadChainTip(const CChainParams& chainparams)
     }
 
     // Load pointer to end of best chain
-    BlockMap::iterator it = mapBlockIndex.find(pcoinsTip->GetBestBlock());
-    if (it == mapBlockIndex.end())
+    CBlockIndex* pindex = LookupBlockIndex(pcoinsTip->GetBestBlock());
+    if (!pindex) {
         return false;
-    chainActive.SetTip(it->second);
+    }
+    chainActive.SetTip(pindex);
 
     g_chainstate.PruneBlockIndexCandidates();
 
@@ -4256,7 +4254,7 @@ bool LoadExternalBlockFile(const CChainParams& chainparams, FILE* fileIn, CDiskB
                 {
                     LOCK(cs_main);
                     // detect out of order blocks, and store them for later
-                    if (hash != chainparams.GetConsensus().hashGenesisBlock && mapBlockIndex.find(block.hashPrevBlock) == mapBlockIndex.end()) {
+                    if (hash != chainparams.GetConsensus().hashGenesisBlock && !LookupBlockIndex(block.hashPrevBlock)) {
                         LogPrint(BCLog::REINDEX, "%s: Out of order block %s, parent %s not known\n", __func__, hash.ToString(),
                                 block.hashPrevBlock.ToString());
                         if (dbp)
@@ -4265,14 +4263,17 @@ bool LoadExternalBlockFile(const CChainParams& chainparams, FILE* fileIn, CDiskB
                     }
 
                     // process in case the block isn't known yet
-                    if (mapBlockIndex.count(hash) == 0 || (mapBlockIndex[hash]->nStatus & BLOCK_HAVE_DATA) == 0) {
-                        CValidationState state;
-                        if (g_chainstate.AcceptBlock(pblock, state, chainparams, nullptr, true, dbp, nullptr))
-                            nLoaded++;
-                        if (state.IsError())
-                            break;
-                    } else if (hash != chainparams.GetConsensus().hashGenesisBlock && mapBlockIndex[hash]->nHeight % 1000 == 0) {
-                        LogPrint(BCLog::REINDEX, "Block Import: already had block %s at height %d\n", hash.ToString(), mapBlockIndex[hash]->nHeight);
+                    CBlockIndex* pindex = LookupBlockIndex(hash);
+                    if (!pindex || (pindex->nStatus & BLOCK_HAVE_DATA) == 0) {
+                      CValidationState state;
+                      if (g_chainstate.AcceptBlock(pblock, state, chainparams, nullptr, true, dbp, nullptr)) {
+                          nLoaded++;
+                      }
+                      if (state.IsError()) {
+                          break;
+                      }
+                    } else if (hash != chainparams.GetConsensus().hashGenesisBlock && pindex->nHeight % 1000 == 0) {
+                      LogPrint(BCLog::REINDEX, "Block Import: already had block %s at height %d\n", hash.ToString(), pindex->nHeight);
                     }
                 }
 
