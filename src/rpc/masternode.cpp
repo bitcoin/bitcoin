@@ -351,7 +351,7 @@ UniValue masternode(const UniValue& params, bool fHelp)
     if (strCommand == "genkey")
     {
         CKey secret;
-        secret.MakeNewKey(false);
+        secret.MakeNewKey(true);
 
         return CSyscoinSecret(secret).ToString();
     }
