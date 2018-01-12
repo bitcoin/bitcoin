@@ -555,10 +555,10 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight,con
 	if (nHeight == 0)
 		nHeight = chainActive.Height();
 	string errorMessage;
+	bool good = true;
 	if (block.vtx.empty() && tx.nVersion == SYSCOIN_TX_VERSION)
 	{
 		bool bDestCheckFailed = false;
-		bool good = true;
 		if (DecodeAliasTx(tx, op, nOut, vvchAliasArgs))
 		{
 			errorMessage.clear();
@@ -603,6 +603,10 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight,con
 				if (fDebug && !errorMessage.empty())
 					LogPrintf("%s\n", errorMessage.c_str());
 			}
+		}
+		if (!good)
+		{
+			return false;
 		}
 	}
 	else if (!block.vtx.empty()) {
@@ -665,6 +669,10 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight,con
 						if (fDebug && !errorMessage.empty())
 							LogPrintf("%s\n", errorMessage.c_str());
 					}
+				}
+				if (!good)
+				{
+					return false;
 				}
 			}
 		}
