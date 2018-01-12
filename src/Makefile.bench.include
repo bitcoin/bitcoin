@@ -1,3 +1,8 @@
+# Copyright (c) 2015-2016 The Bitcoin Core developers
+# Copyright (c) 2014-2018 The Dash Core developers
+# Distributed under the MIT software license, see the accompanying
+# file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
 bin_PROGRAMS += bench/bench_dash
 BENCH_SRCDIR = bench
 BENCH_BINARY = bench/bench_dash$(EXEEXT)
@@ -10,6 +15,8 @@ bench_bench_dash_SOURCES = \
   bench/Examples.cpp \
   bench/rollingbloom.cpp \
   bench/crypto_hash.cpp \
+  bench/ccoins_caching.cpp \
+  bench/mempool_eviction.cpp \
   bench/base58.cpp
 
 bench_bench_dash_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(EVENT_CLFAGS) $(EVENT_PTHREADS_CFLAGS) -I$(builddir)/bench/
@@ -30,7 +37,8 @@ bench_bench_dash_LDADD += $(LIBBITCOIN_ZMQ) $(ZMQ_LIBS)
 endif
 
 if ENABLE_WALLET
-bench_bench_dash_LDADD += $(LIBBITCOIN_WALLET)
+bench_bench_dash_SOURCES += bench/coin_selection.cpp
+bench_bench_dash_LDADD += $(LIBBITCOIN_WALLET) $(LIBBITCOIN_CRYPTO)
 endif
 
 bench_bench_dash_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS)

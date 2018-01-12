@@ -475,6 +475,14 @@ public:
             return ((size_t)(sizeof(T))) * _union.capacity;
         }
     }
+
+    value_type* data() {
+        return item_ptr(0);
+    }
+
+    const value_type* data() const {
+        return item_ptr(0);
+    }
 };
 #pragma pack(pop)
 

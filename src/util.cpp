@@ -607,9 +607,9 @@ void ClearDatadirCache()
     pathCachedNetSpecific = boost::filesystem::path();
 }
 
-boost::filesystem::path GetConfigFile()
+boost::filesystem::path GetConfigFile(const std::string& confPath)
 {
-    boost::filesystem::path pathConfigFile(GetArg("-conf", BITCOIN_CONF_FILENAME));
+    boost::filesystem::path pathConfigFile(confPath);
     if (!pathConfigFile.is_complete())
         pathConfigFile = GetDataDir(false) / pathConfigFile;
 
@@ -619,17 +619,19 @@ boost::filesystem::path GetConfigFile()
 boost::filesystem::path GetMasternodeConfigFile()
 {
     boost::filesystem::path pathConfigFile(GetArg("-mnconf", "masternode.conf"));
-    if (!pathConfigFile.is_complete()) pathConfigFile = GetDataDir() / pathConfigFile;
+    if (!pathConfigFile.is_complete())
+        pathConfigFile = GetDataDir() / pathConfigFile;
     return pathConfigFile;
 }
 
-void ReadConfigFile(map<string, string>& mapSettingsRet,
+void ReadConfigFile(const std::string& confPath,
+                    map<string, string>& mapSettingsRet,
                     map<string, vector<string> >& mapMultiSettingsRet)
 {
-    boost::filesystem::ifstream streamConfig(GetConfigFile());
+    boost::filesystem::ifstream streamConfig(GetConfigFile(confPath));
     if (!streamConfig.good()){
         // Create empty dash.conf if it does not excist
-        FILE* configFile = fopen(GetConfigFile().string().c_str(), "a");
+        FILE* configFile = fopen(GetConfigFile(confPath).string().c_str(), "a");
         if (configFile != NULL)
             fclose(configFile);
         return; // Nothing to read, so just return

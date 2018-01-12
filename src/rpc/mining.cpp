@@ -28,6 +28,7 @@
 #include "masternode-payments.h"
 #include "masternode-sync.h"
 
+#include <memory>
 #include <stdint.h>
 
 #include <boost/assign/list_of.hpp>
@@ -234,7 +235,6 @@ UniValue getmininginfo(const UniValue& params, bool fHelp)
             "  \"errors\": \"...\"            (string) Current errors\n"
             "  \"networkhashps\": nnn,      (numeric) The network hashes per second\n"
             "  \"pooledtx\": n              (numeric) The size of the mem pool\n"
-            "  \"testnet\": true|false      (boolean) If using testnet or not\n"
             "  \"chain\": \"xxxx\",           (string) current network name as defined in BIP70 (main, test, regtest)\n"
             "}\n"
             "\nExamples:\n"
@@ -253,7 +253,6 @@ UniValue getmininginfo(const UniValue& params, bool fHelp)
     obj.push_back(Pair("errors",           GetWarnings("statusbar")));
     obj.push_back(Pair("networkhashps",    getnetworkhashps(params, false)));
     obj.push_back(Pair("pooledtx",         (uint64_t)mempool.size()));
-    obj.push_back(Pair("testnet",          Params().TestnetToBeDeprecatedFieldRPC()));
     obj.push_back(Pair("chain",            Params().NetworkIDString()));
     return obj;
 }
@@ -549,12 +548,12 @@ UniValue getblocktemplate(const UniValue& params, bool fHelp)
     // Update block
     static CBlockIndex* pindexPrev;
     static int64_t nStart;
-    static CBlockTemplate* pblocktemplate;
+    static std::unique_ptr<CBlockTemplate> pblocktemplate;
     if (pindexPrev != chainActive.Tip() ||
         (mempool.GetTransactionsUpdated() != nTransactionsUpdatedLast && GetTime() - nStart > 5))
     {
         // Clear pindexPrev so future calls make a new block, despite any failures from here on
-        pindexPrev = NULL;
+        pindexPrev = nullptr;
 
         // Store the chainActive.Tip() used before CreateNewBlock, to avoid races
         nTransactionsUpdatedLast = mempool.GetTransactionsUpdated();
@@ -562,11 +561,6 @@ UniValue getblocktemplate(const UniValue& params, bool fHelp)
         nStart = GetTime();
 
         // Create new block
-        if(pblocktemplate)
-        {
-            delete pblocktemplate;
-            pblocktemplate = NULL;
-        }
         CScript scriptDummy = CScript() << OP_TRUE;
         pblocktemplate = BlockAssembler(Params()).CreateNewBlock(scriptDummy);
         if (!pblocktemplate)

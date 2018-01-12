@@ -1832,7 +1832,7 @@ void CWallet::ReacceptWalletTransactions()
         CWalletTx& wtx = *(item.second);
 
         LOCK(mempool.cs);
-        wtx.AcceptToMemoryPool(false, maxTxFee);
+        wtx.AcceptToMemoryPool(maxTxFee);
     }
 }
 
@@ -2509,7 +2509,7 @@ static void ApproximateBestSubset(vector<pair<CAmount, pair<const CWalletTx*,uns
     vfBest.assign(vValue.size(), true);
     nBest = nTotalLower;
 
-    seed_insecure_rand();
+    FastRandomContext insecure_rand;
 
     for (int nRep = 0; nRep < iterations && nBest != nTargetValue; nRep++)
     {
@@ -2529,7 +2529,7 @@ static void ApproximateBestSubset(vector<pair<CAmount, pair<const CWalletTx*,uns
                 //that the rng is fast. We do not use a constant random sequence,
                 //because there may be some privacy improvement by making
                 //the selection random.
-                if (nPass == 0 ? insecure_rand()&1 : !vfIncluded[i])
+                if (nPass == 0 ? insecure_rand.rand32()&1 : !vfIncluded[i])
                 {
                     nTotal += vValue[i].first;
                     vfIncluded[i] = true;
@@ -2867,7 +2867,7 @@ bool CWallet::SelectCoinsByDenominations(int nDenom, CAmount nValueMin, CAmount 
     int nDenomResult = 0;
 
     std::vector<CAmount> vecPrivateSendDenominations = CPrivateSend::GetStandardDenominations();
-    InsecureRand insecureRand;
+    FastRandomContext insecure_rand;
     BOOST_FOREACH(const COutput& out, vCoins)
     {
         // masternode-like input should not be selected by AvailableCoins now anyway
@@ -2884,9 +2884,9 @@ bool CWallet::SelectCoinsByDenominations(int nDenom, CAmount nValueMin, CAmount 
                 if(out.tx->vout[out.i].nValue == vecPrivateSendDenominations[nBit]) {
                     if(nValueRet >= nValueMin) {
                         //randomly reduce the max amount we'll submit (for anonymity)
-                        nValueMax -= insecureRand(nValueMax/5);
+                        nValueMax -= insecure_rand.rand32(nValueMax/5);
                         //on average use 50% of the inputs or less
-                        int r = insecureRand(vCoins.size());
+                        int r = insecure_rand.rand32(vCoins.size());
                         if((int)vecTxDSInRet.size() > r) return true;
                     }
                     nValueRet += out.tx->vout[out.i].nValue;
@@ -3646,8 +3646,7 @@ bool CWallet::CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey, CCon
         if (fBroadcastTransactions)
         {
             // Broadcast
-            if (!wtxNew.AcceptToMemoryPool(false, maxTxFee))
-            {
+            if (!wtxNew.AcceptToMemoryPool(maxTxFee)) {
                 // This must not fail. The transaction has already been signed and recorded.
                 LogPrintf("CommitTransaction(): Error: Transaction not valid\n");
                 return false;
@@ -4786,7 +4785,7 @@ bool CWallet::ParameterInteraction()
     if (mapArgs.count("-mintxfee"))
     {
         CAmount n = 0;
-        if (!ParseMoney(mapArgs["-mintxfee"], n))
+        if (!ParseMoney(mapArgs["-mintxfee"], n) || 0 == n)
             return InitError(AmountErrMsg("mintxfee", mapArgs["-mintxfee"]));
         if (n > HIGH_TX_FEE_PER_KB)
             InitWarning(AmountHighWarn("-mintxfee") + " " +
@@ -5099,8 +5098,8 @@ int CMerkleTx::GetBlocksToMaturity() const
 }
 
 
-bool CMerkleTx::AcceptToMemoryPool(bool fLimitFree, CAmount nAbsurdFee)
+bool CMerkleTx::AcceptToMemoryPool(const CAmount& nAbsurdFee)
 {
     CValidationState state;
-    return ::AcceptToMemoryPool(mempool, state, *this, fLimitFree, NULL, false, nAbsurdFee);
+    return ::AcceptToMemoryPool(mempool, state, *this, true, NULL, false, nAbsurdFee);
 }

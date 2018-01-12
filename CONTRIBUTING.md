@@ -178,7 +178,9 @@ language is used within pull-request comments:
 
   - ACK means "I have tested the code and I agree it should be merged";
   - NACK means "I disagree this should be merged", and must be accompanied by
-    sound technical justification. NACKs without accompanying reasoning may be disregarded;
+    sound technical justification (or in certain cases of copyright/patent/licensing
+    issues, legal justification). NACKs without accompanying reasoning may be
+    disregarded;
   - utACK means "I have not tested the code, but I have reviewed it and it looks
     OK, I agree it can be merged";
   - Concept ACK means "I agree in the general principle of this pull request";

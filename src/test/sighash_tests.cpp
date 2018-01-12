@@ -6,7 +6,7 @@
 #include "data/sighash.json.h"
 #include "hash.h"
 #include "validation.h" // For CheckTransaction
-#include "random.h"
+#include "test_random.h"
 #include "script/interpreter.h"
 #include "script/script.h"
 #include "serialize.h"

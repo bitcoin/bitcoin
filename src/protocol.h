@@ -18,8 +18,6 @@
 #include <stdint.h>
 #include <string>
 
-#define MESSAGE_START_SIZE 4
-
 /** Message header.
  * (4) message start.
  * (12) command.
@@ -29,6 +27,16 @@
 class CMessageHeader
 {
 public:
+    enum {
+        MESSAGE_START_SIZE = 4,
+        COMMAND_SIZE = 12,
+        MESSAGE_SIZE_SIZE = 4,
+        CHECKSUM_SIZE = 4,
+
+        MESSAGE_SIZE_OFFSET = MESSAGE_START_SIZE + COMMAND_SIZE,
+        CHECKSUM_OFFSET = MESSAGE_SIZE_OFFSET + MESSAGE_SIZE_SIZE,
+        HEADER_SIZE = MESSAGE_START_SIZE + COMMAND_SIZE + MESSAGE_SIZE_SIZE + CHECKSUM_SIZE
+    };
     typedef unsigned char MessageStartChars[MESSAGE_START_SIZE];
 
     CMessageHeader(const MessageStartChars& pchMessageStartIn);
@@ -48,17 +56,6 @@ public:
         READWRITE(FLATDATA(pchChecksum));
     }
 
-    // TODO: make private (improves encapsulation)
-public:
-    enum {
-        COMMAND_SIZE = 12,
-        MESSAGE_SIZE_SIZE = 4,
-        CHECKSUM_SIZE = 4,
-
-        MESSAGE_SIZE_OFFSET = MESSAGE_START_SIZE + COMMAND_SIZE,
-        CHECKSUM_OFFSET = MESSAGE_SIZE_OFFSET + MESSAGE_SIZE_SIZE,
-        HEADER_SIZE = MESSAGE_START_SIZE + COMMAND_SIZE + MESSAGE_SIZE_SIZE + CHECKSUM_SIZE
-    };
     char pchMessageStart[MESSAGE_START_SIZE];
     char pchCommand[COMMAND_SIZE];
     uint32_t nMessageSize;
@@ -319,6 +316,36 @@ public:
     unsigned int nTime;
 };
 
+/** getdata / inv message types.
+ * These numbers are defined by the protocol. When adding a new value, be sure
+ * to mention it in the respective BIP.
+ */
+enum GetDataMsg {
+    UNDEFINED = 0,
+    MSG_TX = 1,
+    MSG_BLOCK = 2,
+    // The following can only occur in getdata. Invs always use TX or BLOCK.
+    MSG_FILTERED_BLOCK = 3,  //!< Defined in BIP37
+    // Dash message types
+    // NOTE: declare non-implmented here, we must keep this enum consistent and backwards compatible
+    MSG_TXLOCK_REQUEST = 4,
+    MSG_TXLOCK_VOTE = 5,
+    MSG_SPORK = 6,
+    MSG_MASTERNODE_PAYMENT_VOTE = 7,
+    MSG_MASTERNODE_PAYMENT_BLOCK = 8, // reusing, was MSG_MASTERNODE_SCANNING_ERROR previousely, was NOT used in 12.0
+    MSG_BUDGET_VOTE = 9, // depreciated since 12.1
+    MSG_BUDGET_PROPOSAL = 10, // depreciated since 12.1
+    MSG_BUDGET_FINALIZED = 11, // depreciated since 12.1
+    MSG_BUDGET_FINALIZED_VOTE = 12, // depreciated since 12.1
+    MSG_MASTERNODE_QUORUM = 13, // not implemented
+    MSG_MASTERNODE_ANNOUNCE = 14,
+    MSG_MASTERNODE_PING = 15,
+    MSG_DSTX = 16,
+    MSG_GOVERNANCE_OBJECT = 17,
+    MSG_GOVERNANCE_OBJECT_VOTE = 18,
+    MSG_MASTERNODE_VERIFY = 19,
+};
+
 /** inv message data */
 class CInv
 {
@@ -346,32 +373,6 @@ public:
 public:
     int type;
     uint256 hash;
-};
-
-enum {
-    MSG_TX = 1,
-    MSG_BLOCK,
-    // Nodes may always request a MSG_FILTERED_BLOCK in a getdata, however,
-    // MSG_FILTERED_BLOCK should not appear in any invs except as a part of getdata.
-    MSG_FILTERED_BLOCK,
-    // Dash message types
-    // NOTE: declare non-implmented here, we must keep this enum consistent and backwards compatible
-    MSG_TXLOCK_REQUEST,
-    MSG_TXLOCK_VOTE,
-    MSG_SPORK,
-    MSG_MASTERNODE_PAYMENT_VOTE,
-    MSG_MASTERNODE_PAYMENT_BLOCK, // reusing, was MSG_MASTERNODE_SCANNING_ERROR previousely, was NOT used in 12.0
-    MSG_BUDGET_VOTE, // depreciated since 12.1
-    MSG_BUDGET_PROPOSAL, // depreciated since 12.1
-    MSG_BUDGET_FINALIZED, // depreciated since 12.1
-    MSG_BUDGET_FINALIZED_VOTE, // depreciated since 12.1
-    MSG_MASTERNODE_QUORUM, // not implemented
-    MSG_MASTERNODE_ANNOUNCE,
-    MSG_MASTERNODE_PING,
-    MSG_DSTX,
-    MSG_GOVERNANCE_OBJECT,
-    MSG_GOVERNANCE_OBJECT_VOTE,
-    MSG_MASTERNODE_VERIFY,
 };
 
 #endif // BITCOIN_PROTOCOL_H

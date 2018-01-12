@@ -24,6 +24,9 @@ def bctest(testDir, testObj, exeext):
 	if "output_cmp" in testObj:
 		outputFn = testObj['output_cmp']
 		outputData = open(testDir + "/" + outputFn).read()
+		if not outputData:
+			print("Output data missing for " + outputFn)
+			sys.exit(1)
 	proc = subprocess.Popen(execrun, stdin=stdinCfg, stdout=subprocess.PIPE, stderr=subprocess.PIPE,universal_newlines=True)
 	try:
 		outs = proc.communicate(input=inputData)
@@ -42,13 +45,17 @@ def bctest(testDir, testObj, exeext):
 		print("Return code mismatch for " + outputFn)
 		sys.exit(1)
 
-def bctester(testDir, input_basename, buildenv):
+def bctester(testDir, input_basename, buildenv, verbose = False):
 	input_filename = testDir + "/" + input_basename
 	raw_data = open(input_filename).read()
 	input_data = json.loads(raw_data)
 
 	for testObj in input_data:
+		if verbose and "description" in testObj:
+			print ("Testing: " + testObj["description"])
 		bctest(testDir, testObj, buildenv.exeext)
+		if verbose and "description" in testObj:
+			print ("PASS")
 
 	sys.exit(0)
 

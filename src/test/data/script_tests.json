@@ -1486,6 +1486,27 @@
     "BIP66 example 4, with DERSIG"
 ],
 [
+    "0x09 0x300602010102010101",
+    "0x21 0x038282263212c609d9ea2a6e3e172de238d8c39cabd5ac1ca10646e23fd5f51508 CHECKSIG NOT",
+    "DERSIG",
+    "OK",
+    "BIP66 example 4, with DERSIG, non-null DER-compliant signature"
+],
+[
+    "0",
+    "0x21 0x038282263212c609d9ea2a6e3e172de238d8c39cabd5ac1ca10646e23fd5f51508 CHECKSIG NOT",
+    "DERSIG,NULLFAIL",
+    "OK",
+    "BIP66 example 4, with DERSIG and NULLFAIL"
+],
+[
+    "0x09 0x300602010102010101",
+    "0x21 0x038282263212c609d9ea2a6e3e172de238d8c39cabd5ac1ca10646e23fd5f51508 CHECKSIG NOT",
+    "DERSIG,NULLFAIL",
+    "NULLFAIL",
+    "BIP66 example 4, with DERSIG and NULLFAIL, non-null DER-compliant signature"
+],
+[
     "1",
     "0x21 0x038282263212c609d9ea2a6e3e172de238d8c39cabd5ac1ca10646e23fd5f51508 CHECKSIG",
     "",
@@ -1836,5 +1857,15 @@
 ["0", "CHECKSEQUENCEVERIFY", "CHECKSEQUENCEVERIFY", "UNSATISFIED_LOCKTIME", "CSV fails if stack top bit 1 << 31 is set and the tx version < 2"],
 ["4294967296", "CHECKSEQUENCEVERIFY", "CHECKSEQUENCEVERIFY", "UNSATISFIED_LOCKTIME",
   "CSV fails if stack top bit 1 << 31 is not set, and tx version < 2"],
+["NULLFAIL should cover all signatures and signatures only"],
+["0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0", "0x01 0x14 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0x01 0x14 CHECKMULTISIG NOT", "DERSIG", "OK", "BIP66 and NULLFAIL-compliant"],
+["0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0", "0x01 0x14 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0x01 0x14 CHECKMULTISIG NOT", "DERSIG,NULLFAIL", "OK", "BIP66 and NULLFAIL-compliant"],
+["1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0", "0x01 0x14 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0x01 0x14 CHECKMULTISIG NOT", "DERSIG,NULLFAIL", "OK", "BIP66 and NULLFAIL-compliant, not NULLDUMMY-compliant"],
+["1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0", "0x01 0x14 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0x01 0x14 CHECKMULTISIG NOT", "DERSIG,NULLFAIL,NULLDUMMY", "SIG_NULLDUMMY", "BIP66 and NULLFAIL-compliant, not NULLDUMMY-compliant"],
+["0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0x09 0x300602010102010101", "0x01 0x14 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0x01 0x14 CHECKMULTISIG NOT", "DERSIG", "OK", "BIP66-compliant but not NULLFAIL-compliant"],
+["0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0x09 0x300602010102010101", "0x01 0x14 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0x01 0x14 CHECKMULTISIG NOT", "DERSIG,NULLFAIL", "NULLFAIL", "BIP66-compliant but not NULLFAIL-compliant"],
+["0 0x09 0x300602010102010101 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0", "0x01 0x14 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0x01 0x14 CHECKMULTISIG NOT", "DERSIG", "OK", "BIP66-compliant but not NULLFAIL-compliant"],
+["0 0x09 0x300602010102010101 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0", "0x01 0x14 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0x01 0x14 CHECKMULTISIG NOT", "DERSIG,NULLFAIL", "NULLFAIL", "BIP66-compliant but not NULLFAIL-compliant"],
+
 ["The End"]
 ]

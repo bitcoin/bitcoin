@@ -95,14 +95,19 @@ executables.
 
 The following extra files can be found in the download directory or torrent:
 
-- `bitcoin-${VERSION}-arm-linux-gnueabihf.tar.gz`: Linux binaries for the most
-  common 32-bit ARM architecture.
-- `bitcoin-${VERSION}-aarch64-linux-gnu.tar.gz`: Linux binaries for the most
-  common 64-bit ARM architecture.
+- `bitcoin-${VERSION}-arm-linux-gnueabihf.tar.gz`: Linux binaries targeting
+  the 32-bit ARMv7-A architecture.
+- `bitcoin-${VERSION}-aarch64-linux-gnu.tar.gz`: Linux binaries targeting
+  the 64-bit ARMv8-A architecture.
 
 ARM builds are still experimental. If you have problems on a certain device or
 Linux distribution combination please report them on the bug tracker, it may be
-possible to resolve them.
+possible to resolve them. Note that the device you use must be (backward)
+compatible with the architecture targeted by the binary that you use.
+For example, a Raspberry Pi 2 Model B or Raspberry Pi 3 Model B (in its 32-bit
+execution state) device, can run the 32-bit ARMv7-A targeted binary. However,
+no model of Raspberry Pi 1 device can run either binary because they are all
+ARMv6 architecture devices that are not compatible with ARMv7-A or ARMv8-A.
 
 Note that Android is not considered ARM Linux in this context. The executables
 are not expected to work out of the box on Android.
@@ -643,7 +648,7 @@ git merge commit are mentioned.
 - #8041 `5b736dd` Fix bip9-softforks blockstore issue (MarcoFalke)
 - #7994 `1f01443` Add op csv tests to script_tests.json (Christewart)
 - #8038 `e2bf830` Various minor fixes (MarcoFalke)
-- #8072 `1b87e5b` Travis: 'make check' in parallel and verbose (MarcoFalke)
+- #8072 `1b87e5b` Travis: 'make check' in parallel and verbose (theuni)
 - #8056 `8844ef1` Remove hardcoded "4 nodes" from test_framework (MarcoFalke)
 - #8047 `37f9a1f` Test_framework: Set wait-timeout for bitcoind procs (MarcoFalke)
 - #8095 `6700cc9` Test framework: only cleanup on successful test runs (sdaftuar)

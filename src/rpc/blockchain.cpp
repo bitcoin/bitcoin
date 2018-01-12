@@ -982,6 +982,8 @@ UniValue gettxoutsetinfo(const UniValue& params, bool fHelp)
         ret.push_back(Pair("hash_serialized_2", stats.hashSerialized.GetHex()));
         ret.push_back(Pair("disk_size", stats.nDiskSize));
         ret.push_back(Pair("total_amount", ValueFromAmount(stats.nTotalAmount)));
+    } else {
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "Unable to read UTXO set");
     }
     return ret;
 }
@@ -1170,7 +1172,7 @@ UniValue getblockchaininfo(const UniValue& params, bool fHelp)
             "  \"verificationprogress\": xxxx, (numeric) estimate of verification progress [0..1]\n"
             "  \"chainwork\": \"xxxx\"     (string) total amount of work in active chain, in hexadecimal\n"
             "  \"pruned\": xx,             (boolean) if the blocks are subject to pruning\n"
-            "  \"pruneheight\": xxxxxx,    (numeric) highest block available\n"
+            "  \"pruneheight\": xxxxxx,    (numeric) lowest-height complete block stored\n"
             "  \"softforks\": [            (array) status of softforks in progress\n"
             "     {\n"
             "        \"id\": \"xxxx\",        (string) name of softfork\n"
@@ -1408,6 +1410,44 @@ UniValue getmempoolinfo(const UniValue& params, bool fHelp)
     return mempoolInfoToJSON();
 }
 
+UniValue preciousblock(const UniValue& params, bool fHelp)
+{
+    if (fHelp || params.size() != 1)
+        throw runtime_error(
+            "preciousblock \"hash\"\n"
+            "\nTreats a block as if it were received before others with the same work.\n"
+            "\nA later preciousblock call can override the effect of an earlier one.\n"
+            "\nThe effects of preciousblock are not retained across restarts.\n"
+            "\nArguments:\n"
+            "1. hash   (string, required) the hash of the block to mark as precious\n"
+            "\nResult:\n"
+            "\nExamples:\n"
+            + HelpExampleCli("preciousblock", "\"blockhash\"")
+            + HelpExampleRpc("preciousblock", "\"blockhash\"")
+        );
+
+    std::string strHash = params[0].get_str();
+    uint256 hash(uint256S(strHash));
+    CBlockIndex* pblockindex;
+
+    {
+        LOCK(cs_main);
+        if (mapBlockIndex.count(hash) == 0)
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
+
+        pblockindex = mapBlockIndex[hash];
+    }
+
+    CValidationState state;
+    PreciousBlock(state, Params(), pblockindex);
+
+    if (!state.IsValid()) {
+        throw JSONRPCError(RPC_DATABASE_ERROR, state.GetRejectReason());
+    }
+
+    return NullUniValue;
+}
+
 UniValue invalidateblock(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
@@ -1504,6 +1544,8 @@ static const CRPCCommand commands[] =
     { "blockchain",         "gettxout",               &gettxout,               true  },
     { "blockchain",         "gettxoutsetinfo",        &gettxoutsetinfo,        true  },
     { "blockchain",         "verifychain",            &verifychain,            true  },
+
+    { "blockchain",         "preciousblock",          &preciousblock,          true  },
 
     /* Not shown in help */
     { "hidden",             "invalidateblock",        &invalidateblock,        true  },

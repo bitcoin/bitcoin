@@ -170,7 +170,11 @@ namespace {
      */
     CCriticalSection cs_nBlockSequenceId;
     /** Blocks loaded from disk are assigned id 0, so start the counter at 1. */
-    uint32_t nBlockSequenceId = 1;
+    int32_t nBlockSequenceId = 1;
+    /** Decreasing counter (used by subsequent preciousblock calls). */
+    int32_t nBlockReverseSequenceId = -1;
+    /** chainwork for the last block that preciousblock has been applied to. */
+    arith_uint256 nLastPreciousChainwork = 0;
 
     /** Dirty block index entries. */
     set<CBlockIndex*> setDirtyBlockIndex;
@@ -2924,6 +2928,36 @@ bool ActivateBestChain(CValidationState &state, const CChainParams& chainparams,
     return true;
 }
 
+
+bool PreciousBlock(CValidationState& state, const CChainParams& params, CBlockIndex *pindex)
+{
+    {
+        LOCK(cs_main);
+        if (pindex->nChainWork < chainActive.Tip()->nChainWork) {
+            // Nothing to do, this block is not at the tip.
+            return true;
+        }
+        if (chainActive.Tip()->nChainWork > nLastPreciousChainwork) {
+            // The chain has been extended since the last call, reset the counter.
+            nBlockReverseSequenceId = -1;
+        }
+        nLastPreciousChainwork = chainActive.Tip()->nChainWork;
+        setBlockIndexCandidates.erase(pindex);
+        pindex->nSequenceId = nBlockReverseSequenceId;
+        if (nBlockReverseSequenceId > std::numeric_limits<int32_t>::min()) {
+            // We can't keep reducing the counter if somebody really wants to
+            // call preciousblock 2**31-1 times on the same set of tips...
+            nBlockReverseSequenceId--;
+        }
+        if (pindex->IsValid(BLOCK_VALID_TRANSACTIONS) && pindex->nChainTx) {
+            setBlockIndexCandidates.insert(pindex);
+            PruneBlockIndexCandidates();
+        }
+    }
+
+    return ActivateBestChain(state, params);
+}
+
 bool InvalidateBlock(CValidationState& state, const CChainParams& chainparams, CBlockIndex *pindex)
 {
     AssertLockHeld(cs_main);
@@ -4102,11 +4136,11 @@ bool LoadExternalBlockFile(const CChainParams& chainparams, FILE* fileIn, CDiskB
             unsigned int nSize = 0;
             try {
                 // locate a header
-                unsigned char buf[MESSAGE_START_SIZE];
+                unsigned char buf[CMessageHeader::MESSAGE_START_SIZE];
                 blkdat.FindByte(chainparams.MessageStart()[0]);
                 nRewind = blkdat.GetPos()+1;
                 blkdat >> FLATDATA(buf);
-                if (memcmp(buf, chainparams.MessageStart(), MESSAGE_START_SIZE))
+                if (memcmp(buf, chainparams.MessageStart(), CMessageHeader::MESSAGE_START_SIZE))
                     continue;
                 // read size
                 blkdat >> nSize;
@@ -4254,7 +4288,7 @@ void static CheckBlockIndex(const Consensus::Params& consensusParams)
             assert(pindex->GetBlockHash() == consensusParams.hashGenesisBlock); // Genesis block's hash must match.
             assert(pindex == chainActive.Genesis()); // The current active chain's genesis block must be this block.
         }
-        if (pindex->nChainTx == 0) assert(pindex->nSequenceId == 0);  // nSequenceId can't be set for blocks that aren't linked
+        if (pindex->nChainTx == 0) assert(pindex->nSequenceId <= 0);  // nSequenceId can't be set positive for blocks that aren't linked (negative is used for preciousblock)
         // VALID_TRANSACTIONS is equivalent to nTx > 0 for all nodes (whether or not pruning has occurred).
         // HAVE_DATA is only equivalent to nTx > 0 (or VALID_TRANSACTIONS) if no pruning has occurred.
         if (!fHavePruned) {

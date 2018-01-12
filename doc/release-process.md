@@ -7,6 +7,8 @@ Release Process
 * * *
 
 ### First time / New builders
+If you're using the automated script (found in [contrib/gitian-build.sh](/contrib/gitian-build.sh)), then at this point you should run it with the "--setup" command. Otherwise ignore this.
+
 Check out the source code in the following directory hierarchy.
 
 	cd /path/to/your/toplevel/build
@@ -37,6 +39,8 @@ Check out the source code in the following directory hierarchy.
 * * *
 
 ### Setup and perform Gitian builds
+
+If you're using the automated script (found in [contrib/gitian-build.sh](/contrib/gitian-build.sh)), then at this point you should run it with the "--build" command. Otherwise ignore this.
 
  Setup Gitian descriptors:
 
