@@ -609,7 +609,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight,con
 			return false;
 		}
 	}
-	else if (!block.vtx.empty()) {
+	else if (!block.vtx.empty() && !fJustCheck) {
 		CBlock sortedBlock;
 		sortedBlock.vtx = block.vtx;
 		if (!sortedBlock.vtx.empty()) {
