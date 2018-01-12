@@ -800,6 +800,11 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 		if (!fJustCheck && bSendLocked) {
 			if (theEscrow.nHeight >= nHeight)
 			{
+				if (!pescrowdb->EraseISLock(serializedEscrow.vchEscrow))
+				{
+					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from escrow DB");
+					return error(errorMessage.c_str());
+				}
 				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Block height of service request must be less than or equal to the stored service block height.");
 				return true;
 			}
