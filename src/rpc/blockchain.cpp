@@ -1607,11 +1607,15 @@ UniValue savemempool(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() != 0) {
         throw std::runtime_error(
             "savemempool\n"
-            "\nDumps the mempool to disk.\n"
+            "\nDumps the mempool to disk. It will fail until the previous dump is fully loaded.\n"
             "\nExamples:\n"
             + HelpExampleCli("savemempool", "")
             + HelpExampleRpc("savemempool", "")
         );
+    }
+
+    if (!g_is_mempool_loaded) {
+        throw JSONRPCError(RPC_MISC_ERROR, "The mempool was not loaded yet");
     }
 
     if (!DumpMempool()) {
