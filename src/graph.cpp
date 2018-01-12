@@ -27,10 +27,9 @@ bool CreateDAGFromBlock(const CBlock*pblock, Graph &graph, std::vector<vertex_de
 			if (DecodeAssetAllocationTx(tx, op, nOut, vvchArgs))
 			{
 				const string& sender = stringFromVch(vvchAliasArgs[0]);
-				const unsigned int verticesSize = vertices.size() - 1;
 				if (mapAliasIndex.count(sender) == 0) {
 					vertices.push_back(add_vertex(graph));
-					mapAliasIndex[sender] = verticesSize;
+					mapAliasIndex[sender] = vertices.size() - 1;
 					mapTxIndex[verticesSize] = nOut;
 				}
 				LogPrintf("CreateDAGFromBlock: found asset allocation from sender %s\n", sender);
@@ -40,7 +39,7 @@ bool CreateDAGFromBlock(const CBlock*pblock, Graph &graph, std::vector<vertex_de
 						const string& receiver = stringFromVch(allocationInstance.first);
 						if (mapAliasIndex.count(receiver) == 0) {
 							vertices.push_back(add_vertex(graph));
-							mapAliasIndex[receiver] = verticesSize;
+							mapAliasIndex[receiver] = vertices.size() - 1;
 						}
 						// the graph needs to be from index to index 
 						add_edge(vertices[mapAliasIndex[receiver]], vertices[mapAliasIndex[sender]], graph);
