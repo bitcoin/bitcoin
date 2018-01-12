@@ -2015,6 +2015,10 @@
         <translation>Sadece asgari ücret olan %1 tutarını öde</translation>
     </message>
     <message>
+        <source>Total Amount %1&lt;span style='font-size:10pt;font-weight:normal;'&gt;&lt;br /&gt;(=%2)&lt;/span&gt;</source>
+        <translation>Toplam Meblağ %1&lt;span style='font-size:10pt;font-weight:normal;'&gt;&lt;br /&gt;(=%2)&lt;/span&gt;</translation>
+    </message>
+    <message>
         <source>The recipient address is not valid. Please recheck.</source>
         <translation>Alıcı adresi geçerli değildir. Lütfen denetleyiniz.</translation>
     </message>
@@ -3181,6 +3185,10 @@ mesela: alertnotify=echo %%s | mail -s "Zetacoin Alert" admin@foo.com
         <translation>Veritabanından okumada hata, kapatılıyor.</translation>
     </message>
     <message>
+        <source>Error: A fatal internal error occurred, see debug.log for details</source>
+        <translation>Hata: Ölümcül dahili bir hata meydana geldi, ayrıntılar için debug.log dosyasına bakınız</translation>
+    </message>
+    <message>
         <source>Error: Unsupported argument -tor found, use -onion.</source>
         <translation>Hata: Deskteklenmeyen -tor argümanı bulundu, -onion kullanınız.</translation>
     </message>
@@ -3227,6 +3235,10 @@ mesela: alertnotify=echo %%s | mail -s "Zetacoin Alert" admin@foo.com
     <message>
         <source>Node relay options:</source>
         <translation>Düğüm röle seçenekleri:</translation>
+    </message>
+    <message>
+        <source>Pruning blockstore...</source>
+        <translation>Blockstore budanıyor...</translation>
     </message>
     <message>
         <source>RPC SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>

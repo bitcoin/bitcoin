@@ -326,6 +326,14 @@
         <source>Zetacoin Core</source>
         <translation>Zetacoini tuumik</translation>
     </message>
+    <message>
+        <source>&amp;About Bitcoin Core</source>
+        <translation>Kirjeldus Bitcoini Tuumast</translation>
+    </message>
+    <message>
+        <source>&amp;Command-line options</source>
+        <translation>Käsurea valikud</translation>
+    </message>
     <message numerus="yes">
         <source>%n hour(s)</source>
         <translation><numerusform>%n tund</numerusform><numerusform>%n tundi</numerusform></translation>
@@ -807,6 +815,10 @@
         <translation>&amp;Informatsioon</translation>
     </message>
     <message>
+        <source>Debug window</source>
+        <translation>Debugimise aken</translation>
+    </message>
+    <message>
         <source>General</source>
         <translation>Üldine</translation>
     </message>
@@ -945,6 +957,10 @@
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
+        <source>Copy &amp;Address</source>
+        <translation>&amp;Kopeeri Aadress</translation>
+    </message>
+    <message>
         <source>Address</source>
         <translation>Aadress</translation>
     </message>
@@ -1007,6 +1023,10 @@
         <translation>Müntide saatmine</translation>
     </message>
     <message>
+        <source>Insufficient funds!</source>
+        <translation>Liiga suur summa</translation>
+    </message>
+    <message>
         <source>Quantity:</source>
         <translation>Kogus:</translation>
     </message>
@@ -1017,6 +1037,10 @@
     <message>
         <source>Fee:</source>
         <translation>Tasu:</translation>
+    </message>
+    <message>
+        <source>Transaction Fee:</source>
+        <translation>Tehingu tasu:</translation>
     </message>
     <message>
         <source>Choose...</source>
@@ -1128,6 +1152,10 @@
     <message>
         <source>Message:</source>
         <translation>Sõnum:</translation>
+    </message>
+    <message>
+        <source>Pay To:</source>
+        <translation>Maksa :</translation>
     </message>
     </context>
 <context>
@@ -1749,8 +1777,28 @@
         <translation>Impordi blokid välisest blk000??.dat failist</translation>
     </message>
     <message>
+        <source>(default: %u)</source>
+        <translation>(vaikimisi: %u)</translation>
+    </message>
+    <message>
+        <source>Cannot resolve -whitebind address: '%s'</source>
+        <translation>Tundmatu -whitebind aadress: '%s'</translation>
+    </message>
+    <message>
         <source>Information</source>
         <translation>Informatsioon</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s'</source>
+        <translation>-maxtxfee=&lt;amount&gt; jaoks vigane kogus: '%s'</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: '%s'</source>
+        <translation>-minrelaytxfee=&lt;amount&gt; jaoks vigane kogus: '%s'</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -mintxfee=&lt;amount&gt;: '%s'</source>
+        <translation>-mintxfee=&lt;amount&gt; jaoks vigane kogus: '%s'</translation>
     </message>
     <message>
         <source>RPC server options:</source>

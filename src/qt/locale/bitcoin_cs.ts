@@ -2019,6 +2019,10 @@
         <translation>Zaplatit pouze minimální poplatek %1</translation>
     </message>
     <message>
+        <source>Total Amount %1&lt;span style='font-size:10pt;font-weight:normal;'&gt;&lt;br /&gt;(=%2)&lt;/span&gt;</source>
+        <translation>Celková částka %1&lt;span style='font-size:10pt;font-weight:normal;'&gt;&lt;br /&gt;(=%2)&lt;/span&gt;</translation>
+    </message>
+    <message>
         <source>The recipient address is not valid. Please recheck.</source>
         <translation>Adresa příjemce je neplatná – překontroluj ji prosím.</translation>
     </message>
@@ -3185,6 +3189,10 @@ například: alertnotify=echo %%s | mail -s "Zetacoin Alert" admin@foo.com
         <translation>Chyba při čtení z databáze, ukončuji se.</translation>
     </message>
     <message>
+        <source>Error: A fatal internal error occurred, see debug.log for details</source>
+        <translation>Chyba: Přihodila se závažná vnitřní chyba, podrobnosti viz v debug.log.</translation>
+    </message>
+    <message>
         <source>Error: Unsupported argument -tor found, use -onion.</source>
         <translation>Chyba: Argument -tor již není podporovaný, použij -onion.</translation>
     </message>
@@ -3231,6 +3239,10 @@ například: alertnotify=echo %%s | mail -s "Zetacoin Alert" admin@foo.com
     <message>
         <source>Node relay options:</source>
         <translation>Možnosti přeposílání:</translation>
+    </message>
+    <message>
+        <source>Pruning blockstore...</source>
+        <translation>Prořezávám úložiště bloků...</translation>
     </message>
     <message>
         <source>RPC SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>

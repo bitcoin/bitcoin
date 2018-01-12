@@ -308,7 +308,7 @@
     </message>
     <message>
         <source>Send coins to a Zetacoin address</source>
-        <translation>付錢給一個位元幣位址</translation>
+        <translation>付錢給一個 Zetacoin 位址</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -340,11 +340,11 @@
     </message>
     <message>
         <source>&amp;Send</source>
-        <translation>已傳送</translation>
+        <translation>付款</translation>
     </message>
     <message>
         <source>&amp;Receive</source>
-        <translation>已接收</translation>
+        <translation>收款</translation>
     </message>
     <message>
         <source>Show information about Zetacoin Core</source>
@@ -1448,11 +1448,11 @@
     </message>
     <message>
         <source>Received</source>
-        <translation>收款</translation>
+        <translation>收到</translation>
     </message>
     <message>
         <source>Sent</source>
-        <translation>付款</translation>
+        <translation>送出</translation>
     </message>
     <message>
         <source>&amp;Peers</source>
@@ -1544,11 +1544,11 @@
     </message>
     <message>
         <source>In:</source>
-        <translation>輸入:</translation>
+        <translation>來:</translation>
     </message>
     <message>
         <source>Out:</source>
-        <translation>輸出:</translation>
+        <translation>去:</translation>
     </message>
     <message>
         <source>Build date</source>
@@ -2859,7 +2859,7 @@
     </message>
     <message>
         <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>
-        <translation>警告: 位元幣網路對於區塊鏈結的決定目前有分歧！看來有些礦工會有問題。</translation>
+        <translation>警告: Bitcoin 網路對於區塊鏈結的決定目前有分歧！看來有些礦工會有問題。</translation>
     </message>
     <message>
         <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
@@ -3439,7 +3439,7 @@ rpcpassword=%s
     </message>
     <message>
         <source>Generate coins (default: %u)</source>
-        <translation>生產位元幣(預設值: %u)</translation>
+        <translation>生產 bitcoin (預設值: %u)</translation>
     </message>
     <message>
         <source>How many blocks to check at startup (default: %u, 0 = all)</source>

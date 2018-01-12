@@ -3241,6 +3241,10 @@ Beispiel: alertnotify=echo %%s | mail -s "Zetacoin Alert" admin@foo.com
         <translation>Knoten-Weiterleitungsoptionen:</translation>
     </message>
     <message>
+        <source>Pruning blockstore...</source>
+        <translation>Kürze Blockspeicher...</translation>
+    </message>
+    <message>
         <source>RPC SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
         <translation>RPC-SSL-Optionen (siehe Zetacoin-Wiki für SSL-Einrichtung):</translation>
     </message>

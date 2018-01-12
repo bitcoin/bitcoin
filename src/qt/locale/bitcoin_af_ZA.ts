@@ -32,6 +32,10 @@
 <context>
     <name>AskPassphraseDialog</name>
     <message>
+        <source>Passphrase Dialog</source>
+        <translation>Wagwoord Dialoog</translation>
+    </message>
+    <message>
         <source>Enter passphrase</source>
         <translation>Tik Wagwoord in</translation>
     </message>
@@ -76,6 +80,10 @@
         <translation>Die beursie is nou bewaak</translation>
     </message>
     <message>
+        <source>Enter the old passphrase and new passphrase to the wallet.</source>
+        <translation>Tik in die ou wagwoord en die nuwe wagwoord vir die beursie.</translation>
+    </message>
+    <message>
         <source>Wallet encryption failed</source>
         <translation>Die beursie kon nie bewaak word nie</translation>
     </message>
@@ -99,7 +107,11 @@
         <source>Wallet decryption failed</source>
         <translation>Beursie dekripsie het misluk</translation>
     </message>
-    </context>
+    <message>
+        <source>Wallet passphrase was successfully changed.</source>
+        <translation>Die beursie se wagfrase verandering was suksesvol.</translation>
+    </message>
+</context>
 <context>
     <name>BitcoinGUI</name>
     <message>
@@ -212,6 +224,14 @@
 <context>
     <name>EditAddressDialog</name>
     <message>
+        <source>&amp;Label</source>
+        <translation>&amp;Etiket</translation>
+    </message>
+    <message>
+        <source>&amp;Address</source>
+        <translation>&amp;Adres</translation>
+    </message>
+    <message>
         <source>New receiving address</source>
         <translation>Nuwe ontvangende adres</translation>
     </message>
@@ -258,6 +278,10 @@
         <source>Options</source>
         <translation>Opsies</translation>
     </message>
+    <message>
+        <source>W&amp;allet</source>
+        <translation>&amp;Beursie</translation>
+    </message>
     </context>
 <context>
     <name>OverviewPage</name>
@@ -291,6 +315,14 @@
     </context>
 <context>
     <name>ReceiveCoinsDialog</name>
+    <message>
+        <source>&amp;Amount:</source>
+        <translation>&amp;Bedrag:</translation>
+    </message>
+    <message>
+        <source>&amp;Message:</source>
+        <translation>&amp;Boodskap:</translation>
+    </message>
     <message>
         <source>Copy amount</source>
         <translation>Kopieer bedrag</translation>
@@ -345,8 +377,16 @@
         <translation>Stuur Munstukke</translation>
     </message>
     <message>
+        <source>Insufficient funds!</source>
+        <translation>Onvoldoende fondse</translation>
+    </message>
+    <message>
         <source>Amount:</source>
         <translation>Bedrag:</translation>
+    </message>
+    <message>
+        <source>Transaction Fee:</source>
+        <translation>Transaksie fooi:</translation>
     </message>
     <message>
         <source>Send to multiple recipients at once</source>
@@ -371,6 +411,10 @@
     </context>
 <context>
     <name>SendCoinsEntry</name>
+    <message>
+        <source>A&amp;mount:</source>
+        <translation>&amp;Bedrag:</translation>
+    </message>
     <message>
         <source>Message:</source>
         <translation>Boodskap:</translation>
@@ -449,6 +493,10 @@
     <message>
         <source>Transaction ID</source>
         <translation>Transaksie ID</translation>
+    </message>
+    <message>
+        <source>Transaction</source>
+        <translation>Transaksie</translation>
     </message>
     <message>
         <source>Amount</source>

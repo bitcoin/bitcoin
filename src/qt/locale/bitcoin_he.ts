@@ -2,12 +2,16 @@
 <context>
     <name>AddressBookPage</name>
     <message>
+        <source>Right-click to edit address or label</source>
+        <translation>לחץ משק ימני כדי לערוך כתובת או חברה</translation>
+    </message>
+    <message>
         <source>Create a new address</source>
-        <translation>יצירת כתובת חדשה</translation>
+        <translation>צור כתובת חדשה</translation>
     </message>
     <message>
         <source>&amp;New</source>
-        <translation>&amp;חדשה</translation>
+        <translation>&amp;חדש</translation>
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
@@ -164,6 +168,10 @@
         <translation>האם אכן להצפין את הארנק?</translation>
     </message>
     <message>
+        <source>Bitcoin Core will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
+        <translation>ליבת ביטקוין תיסגר עכשיו כדי לסיים את תליך ההצפנה. זכור כי הצפנה אינה יכולה להגן עלייך באופן מלא מגניבה שמקורה בתוכנות זדוניות המצויות במחשב שלך.</translation>
+    </message>
+    <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
         <translation>לתשומת לבך: כל גיבוי קודם שביצעת לארנק שלך יש להחליף בקובץ הארנק המוצפן שזה עתה נוצר. מטעמי אבטחה, גיבויים קודמים של קובץ הארנק הבלתי-מוצפן יהפכו לחסרי תועלת עם התחלת השימוש בארנק החדש המוצפן.</translation>
     </message>
@@ -178,6 +186,10 @@
     <message>
         <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
         <translation>נא להזין את מילת הצופן החדשה לארנק.&lt;br/&gt;כדאי להשתמש במילת צופן המורכבת מ&lt;b&gt;עשרה תווים אקראיים ומעלה&lt;/b&gt;, או &lt;b&gt;שמונה מילים ומעלה&lt;/b&gt;.</translation>
+    </message>
+    <message>
+        <source>Enter the old passphrase and new passphrase to the wallet.</source>
+        <translation>הכנס את מילת הצופן הישנה ומילת צופן חדשה לארנק שלך.</translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
@@ -469,6 +481,10 @@
 <context>
     <name>CoinControlDialog</name>
     <message>
+        <source>Coin Selection</source>
+        <translation>בחירת מטבע</translation>
+    </message>
+    <message>
         <source>Quantity:</source>
         <translation>כמות:</translation>
     </message>
@@ -515,6 +531,14 @@
     <message>
         <source>Amount</source>
         <translation>כמות</translation>
+    </message>
+    <message>
+        <source>Received with label</source>
+        <translation>התקבל עם תווית</translation>
+    </message>
+    <message>
+        <source>Received with address</source>
+        <translation>התקבל עם כתובת</translation>
     </message>
     <message>
         <source>Date</source>
@@ -1058,6 +1082,10 @@
         <translation>המאזן הנוכחי שלך בכתובות לקריאה בלבד</translation>
     </message>
     <message>
+        <source>Spendable:</source>
+        <translation>ניתנים לבזבוז</translation>
+    </message>
+    <message>
         <source>Recent transactions</source>
         <translation>העברות אחרונות</translation>
     </message>
@@ -1125,8 +1153,16 @@
         <translation>לא ניתן לקרוא את קובץ בקשת התשלום! מצב כזה יכול לקרות בעקבות קובץ בקשת תשלום פגום.</translation>
     </message>
     <message>
+        <source>Payment request expired.</source>
+        <translation>תוקף בקשת תשלום פג</translation>
+    </message>
+    <message>
         <source>Unverified payment requests to custom payment scripts are unsupported.</source>
         <translation>בקשות תשלום בלתי מאומתות לסקריפטים לתשלום מותאמים אישית אינן נתמכות.</translation>
+    </message>
+    <message>
+        <source>Invalid payment request.</source>
+        <translation>שגיאה בבקשת תשלום.</translation>
     </message>
     <message>
         <source>Refund from %1</source>
@@ -1347,6 +1383,10 @@
     <message>
         <source>Ping Time</source>
         <translation>זמן המענה</translation>
+    </message>
+    <message>
+        <source>Time Offset</source>
+        <translation>הפרש זמן</translation>
     </message>
     <message>
         <source>Last block time</source>
@@ -1669,6 +1709,46 @@
         <translation>כתובת לעודף מותאמת אישית</translation>
     </message>
     <message>
+        <source>Transaction Fee:</source>
+        <translation>עמלת העברה:</translation>
+    </message>
+    <message>
+        <source>Choose...</source>
+        <translation>בחר...</translation>
+    </message>
+    <message>
+        <source>per kilobyte</source>
+        <translation>עבור קילו-בית</translation>
+    </message>
+    <message>
+        <source>Hide</source>
+        <translation>הסתר</translation>
+    </message>
+    <message>
+        <source>total at least</source>
+        <translation>סה''כ לפחות</translation>
+    </message>
+    <message>
+        <source>Recommended:</source>
+        <translation>מומלץ:</translation>
+    </message>
+    <message>
+        <source>Custom:</source>
+        <translation>מותאם אישית:</translation>
+    </message>
+    <message>
+        <source>Confirmation time:</source>
+        <translation>זמן האישור:</translation>
+    </message>
+    <message>
+        <source>normal</source>
+        <translation>רגיל</translation>
+    </message>
+    <message>
+        <source>fast</source>
+        <translation>מהיר</translation>
+    </message>
+    <message>
         <source>Send to multiple recipients at once</source>
         <translation>שליחה למספר מוטבים בו־זמנית</translation>
     </message>
@@ -1761,6 +1841,10 @@
         <translation>ההעברה נדחתה! מצב כזה עשוי לקרות אם חלק מהמטבעות בארנק שלך כבר הושקעו, כמו למשל עקב שימוש בעותק של wallet.dat והמטבעות הושקעו בעותק אבל לא סומנו כאילו הושקעו דרך כאן.</translation>
     </message>
     <message>
+        <source>Payment request expired.</source>
+        <translation>תוקף בקשת תשלום פג</translation>
+    </message>
+    <message>
         <source>Warning: Invalid Zetacoin address</source>
         <translation>אזהרה: כתובת ביטקוין שגויה</translation>
     </message>
@@ -1834,6 +1918,10 @@
     <message>
         <source>Message:</source>
         <translation>הודעה:</translation>
+    </message>
+    <message>
+        <source>This is an authenticated payment request.</source>
+        <translation>זוהי בקשה מאומתת לתשלום.</translation>
     </message>
     <message>
         <source>Enter a label for this address to add it to the list of used addresses</source>
@@ -2667,6 +2755,10 @@
         <translation>הרץ פקודה כאשר ההתראה הרלוונטית מתקבלת או כשאנחנו עדים לפיצול ארוך מאוד (%s בשורת הפקודה יוחלף ע"י ההודעה)</translation>
     </message>
     <message>
+        <source>The transaction amount is too small to send after the fee has been deducted</source>
+        <translation>סכום העברה נמוך מדי לשליחה אחרי גביית העמלה</translation>
+    </message>
+    <message>
         <source>Warning: Please check that your computer's date and time are correct! If your clock is wrong Zetacoin Core will not work properly.</source>
         <translation>אזהרה: נא לבדוק שהתאריך והשעה של המחשב שלך נכונים! אם השעון שלך שגוי ליבת ביטקוין לא תעבוד כראוי.</translation>
     </message>
@@ -2695,6 +2787,10 @@
         <translation>אירעה שגיאה בטעינת wallet.dat: הארנק דורש גרסה חדשה יותר של ליבת ביטקוין</translation>
     </message>
     <message>
+        <source>Error: A fatal internal error occurred, see debug.log for details</source>
+        <translation>שגיאה: סניה קלמה קריטית פנימית קרטה, פנה ל debug.log לפרטים</translation>
+    </message>
+    <message>
         <source>Error: Unsupported argument -tor found, use -onion.</source>
         <translation>שגיאה: נמצא ארגומנט בלתי נתמך ‎-tor, יש להשתמש ב־‎-onion.</translation>
     </message>
@@ -2709,6 +2805,10 @@
     <message>
         <source>Initialization sanity check failed. Zetacoin Core is shutting down.</source>
         <translation>בדיקת התקינות ההתחלתית נכשלה. ליבת ביטקוין תיסגר כעת.</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s'</source>
+        <translation>כמות לא תקינה עבור -maxtxfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
         <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: '%s'</source>
@@ -2775,6 +2875,10 @@
         <translation>התחלה במצב ממוזער</translation>
     </message>
     <message>
+        <source>The transaction amount is too small to pay the fee</source>
+        <translation>סכום ההעברה נמוך מכדי לשלם את העמלה</translation>
+    </message>
+    <message>
         <source>This is experimental software.</source>
         <translation>זוהי תכנית נסיונית.</translation>
     </message>
@@ -2787,8 +2891,16 @@
         <translation>סכומי ההעברות חייבים להיות חיוביים</translation>
     </message>
     <message>
+        <source>Transaction too large for fee policy</source>
+        <translation>ההעברה גבוהה מדי עבור מדיניות העמלות</translation>
+    </message>
+    <message>
         <source>Transaction too large</source>
         <translation>סכום ההעברה גדול מדי</translation>
+    </message>
+    <message>
+        <source>UI Options:</source>
+        <translation>אפשרויות ממשק</translation>
     </message>
     <message>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>
@@ -2861,6 +2973,10 @@
     <message>
         <source>Error loading wallet.dat: Wallet corrupted</source>
         <translation>שגיאה בטעינת הקובץ wallet.dat: הארנק מושחת</translation>
+    </message>
+    <message>
+        <source>(default: %s)</source>
+        <translation>(ברירת מחדל: %s)</translation>
     </message>
     <message>
         <source>Error loading wallet.dat</source>
