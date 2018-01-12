@@ -2293,7 +2293,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 	std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue> > addressUnspentIndex;
 	std::vector<std::pair<CSpentIndexKey, CSpentIndexValue> > spentIndex;
 
-	if(!CheckSyscoinInputs(block.vtx[0], false, pindex->nHeight, block))
+	if(!CheckSyscoinInputs(block.vtx[0], fJustCheck, pindex->nHeight, block))
 		return error("ConnectBlock(): CheckSyscoinInputs on block %s failed",
 			block.GetHash().ToString());
 	for (unsigned int i = 0; i < block.vtx.size(); i++)
