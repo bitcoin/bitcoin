@@ -2867,7 +2867,7 @@ bool CWallet::SelectCoinsByDenominations(int nDenom, CAmount nValueMin, CAmount 
     int nDenomResult = 0;
 
     std::vector<CAmount> vecPrivateSendDenominations = CPrivateSend::GetStandardDenominations();
-    InsecureRand insecureRand;
+    FastRandomContext insecure_rand;
     BOOST_FOREACH(const COutput& out, vCoins)
     {
         // masternode-like input should not be selected by AvailableCoins now anyway
@@ -2884,9 +2884,9 @@ bool CWallet::SelectCoinsByDenominations(int nDenom, CAmount nValueMin, CAmount 
                 if(out.tx->vout[out.i].nValue == vecPrivateSendDenominations[nBit]) {
                     if(nValueRet >= nValueMin) {
                         //randomly reduce the max amount we'll submit (for anonymity)
-                        nValueMax -= insecureRand(nValueMax/5);
+                        nValueMax -= insecure_rand.rand32(nValueMax/5);
                         //on average use 50% of the inputs or less
-                        int r = insecureRand(vCoins.size());
+                        int r = insecure_rand.rand32(vCoins.size());
                         if((int)vecTxDSInRet.size() > r) return true;
                     }
                     nValueRet += out.tx->vout[out.i].nValue;

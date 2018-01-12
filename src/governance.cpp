@@ -1193,10 +1193,10 @@ int CGovernanceManager::RequestGovernanceObjectVotes(const std::vector<CNode*>& 
     LogPrint("gobject", "CGovernanceManager::RequestGovernanceObjectVotes -- start: vpGovObjsTriggersTmp %d vpGovObjsTmp %d mapAskedRecently %d\n",
                 vpGovObjsTriggersTmp.size(), vpGovObjsTmp.size(), mapAskedRecently.size());
 
-    InsecureRand insecureRand;
+    FastRandomContext insecure_rand;
     // shuffle pointers
-    std::random_shuffle(vpGovObjsTriggersTmp.begin(), vpGovObjsTriggersTmp.end(), insecureRand);
-    std::random_shuffle(vpGovObjsTmp.begin(), vpGovObjsTmp.end(), insecureRand);
+    std::random_shuffle(vpGovObjsTriggersTmp.begin(), vpGovObjsTriggersTmp.end(), insecure_rand);
+    std::random_shuffle(vpGovObjsTmp.begin(), vpGovObjsTmp.end(), insecure_rand);
 
     for (int i = 0; i < nMaxObjRequestsPerNode; ++i) {
         uint256 nHashGovobj;
