@@ -63,7 +63,7 @@ void build_graph(Graph& graph) {
 	boost::add_edge(vertices[0], vertices[2], graph);
 	boost::add_edge(vertices[0], vertices[10], graph);
 	boost::add_edge(vertices[0], vertices[14], graph);
-	boost::add_edge(vertices[1, vertices[5], graph);
+	boost::add_edge(vertices[1], vertices[5], graph);
 	boost::add_edge(vertices[1], vertices[8], graph);
 	boost::add_edge(vertices[2], vertices[7], graph);
 	boost::add_edge(vertices[2], vertices[9], graph);
