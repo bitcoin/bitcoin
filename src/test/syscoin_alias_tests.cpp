@@ -22,6 +22,7 @@
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/topological_sort.hpp>
 #include <map>
+#include <vector>
 using namespace std;
 BOOST_GLOBAL_FIXTURE( SyscoinTestingSetup );
 
@@ -40,13 +41,11 @@ struct cycle_visitor
 	{
 		if (p.empty())
 			return;
-
-		// Iterate over path printing each vertex that forms the cycle.
-		typename Path::const_iterator end = boost::prior(p.end());
-		typename Path::const_iterator before_end = boost::prior(end);
-		cleared.push_back(*before_end);
-		
-	
+		const auto iter = std::lower_bound(std::begin(cleared), std::end(cleared), v);
+		if (iter != std::end(vec)) {
+			cleared.push_back(*(boost::prior(p.end())));
+			std::sort(std::begin(cleared), std::end(cleared));
+		}
 	}
 	ClearedVertices& cleared;
 };
@@ -95,8 +94,8 @@ void build_graph(Graph& graph) {
 
 	BOOST_ASSERT(num_vertices(graph) == nvertices);
 
-	list<vertex_descriptor> clearedVertices;
-	cycle_visitor<list<vertex_descriptor> > visitor(clearedVertices);
+	std::vector<int> clearedVertices;
+	cycle_visitor<std::vector<int> > visitor(clearedVertices);
 	boost::hawick_circuits(graph, visitor);
 	printf("Found %d circuits\n", clearedVertices.size());
 	for(auto &vert: clearedVertices)
