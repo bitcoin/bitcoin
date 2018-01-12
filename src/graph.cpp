@@ -30,7 +30,7 @@ bool CreateDAGFromBlock(const CBlock*pblock, Graph &graph, std::vector<vertex_de
 				if (mapAliasIndex.count(sender) == 0) {
 					vertices.push_back(add_vertex(graph));
 					mapAliasIndex[sender] = vertices.size() - 1;
-					mapTxIndex[verticesSize] = nOut;
+					mapTxIndex[vertices.size() - 1] = nOut;
 				}
 				LogPrintf("CreateDAGFromBlock: found asset allocation from sender %s\n", sender);
 				CAssetAllocation allocation(tx);
