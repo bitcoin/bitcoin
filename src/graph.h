@@ -10,7 +10,6 @@
 #include <boost/graph/topological_sort.hpp>
 #include <unordered_map>
 #include <vector>
-#include <lower_bound>
 #include "miner.h"
 using namespace std;
 template <class T, class Compare = std::less<T> >
