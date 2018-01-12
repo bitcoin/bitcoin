@@ -514,9 +514,9 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		}
 		else
 		{
-			if (fJustCheck && bSendLocked && dbAsset.nHeight >= nHeight && dbAsset.txHash != tx.GetHash())
+			if (fJustCheck && bSendLocked && dbAsset.nHeight >= nHeight)
 			{
-				if (!dontaddtodb) {
+				if (!dontaddtodb && dbAsset.txHash != tx.GetHash()) {
 					nLockStatus = LOCK_CONFLICT_UNCONFIRMED_STATE;
 					if (strResponse != "") {
 						paliasdb->UpdateAliasIndexTxHistoryLockStatus(dbAsset.txHash.GetHex() + "-" + stringFromVch(theAsset.vchAsset), nLockStatus);
@@ -611,8 +611,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					receiverAllocation.nBalance += amountTuple.second;
 					// adjust sender balance
 					theAsset.nBalance -= amountTuple.second;
-					// we know the receiver update is not a double spend so we lock it in with false meaning we should store previous db entry with this one
-					if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, op, fJustCheck))
+					if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, op, false))
 					{
 						errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to write to asset allocation DB");
 						continue;

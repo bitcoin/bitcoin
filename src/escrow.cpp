@@ -852,9 +852,9 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 		}
 		else
 		{
-			if (fJustCheck && bSendLocked && theEscrow.nHeight >= nHeight && theEscrow.txHash != tx.GetHash())
+			if (fJustCheck && bSendLocked && theEscrow.nHeight >= nHeight)
 			{
-				if (!dontaddtodb) {
+				if (!dontaddtodb && theEscrow.txHash != tx.GetHash()) {
 					nLockStatus = LOCK_CONFLICT_UNCONFIRMED_STATE;
 					if (strResponse != "") {
 						paliasdb->UpdateAliasIndexTxHistoryLockStatus(theEscrow.txHash.GetHex() + "-" + stringFromVch(serializedEscrow.vchEscrow), nLockStatus);

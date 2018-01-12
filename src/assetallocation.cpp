@@ -384,7 +384,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 								theAssetAllocation.nBalance += amountTuple.second;
 								receiverAllocation.nHeight = nHeight;
 								receiverAllocation.txHash = tx.GetHash();
-								if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, op, fJustCheck))
+								if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, op, false))
 								{
 									errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to write to asset allocation DB");
 									continue;
@@ -425,9 +425,9 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 		}
 		else
 		{
-			if (fJustCheck && bSendLocked && dbAssetAllocation.nHeight >= nHeight && dbAssetAllocation.txHash != tx.GetHash())
+			if (fJustCheck && bSendLocked && dbAssetAllocation.nHeight >= nHeight)
 			{
-				if (!dontaddtodb) {
+				if (!dontaddtodb && dbAssetAllocation.txHash != tx.GetHash()) {
 					nLockStatus = LOCK_CONFLICT_UNCONFIRMED_STATE;
 					if (strResponse != "") {
 						paliasdb->UpdateAliasIndexTxHistoryLockStatus(dbAssetAllocation.txHash.GetHex() + "-" + assetAllocationTuple.ToString(), nLockStatus);

@@ -519,9 +519,9 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 		}
 		else
 		{
-			if(fJustCheck && bSendLocked && dbCert.nHeight >= nHeight && dbCert.txHash != tx.GetHash())
+			if(fJustCheck && bSendLocked && dbCert.nHeight >= nHeight)
 			{
-				if (!dontaddtodb) {
+				if (!dontaddtodb && dbCert.txHash != tx.GetHash()) {
 					nLockStatus = LOCK_CONFLICT_UNCONFIRMED_STATE;
 					if (strResponse != "") {
 						paliasdb->UpdateAliasIndexTxHistoryLockStatus(dbCert.txHash.GetHex() + "-" + stringFromVch(theCert.vchCert), nLockStatus);

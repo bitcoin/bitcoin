@@ -572,9 +572,9 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		}
 		else
 		{
-			if (fJustCheck && bSendLocked && dbOffer.nHeight >= nHeight && dbOffer.txHash != tx.GetHash())
+			if (fJustCheck && bSendLocked && dbOffer.nHeight >= nHeight)
 			{
-				if (!dontaddtodb) {
+				if (!dontaddtodb && dbOffer.txHash != tx.GetHash()) {
 					nLockStatus = LOCK_CONFLICT_UNCONFIRMED_STATE;
 					if (strResponse != "") {
 						paliasdb->UpdateAliasIndexTxHistoryLockStatus(dbOffer.txHash.GetHex() + "-" + stringFromVch(theOffer.vchOffer), nLockStatus);

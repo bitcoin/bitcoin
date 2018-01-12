@@ -605,9 +605,9 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			}
 			else
 			{
-				if (fJustCheck && bSendLocked && dbAlias.nHeight >= nHeight && dbAlias.txHash != tx.GetHash())
+				if (fJustCheck && bSendLocked && dbAlias.nHeight >= nHeight)
 				{
-					if (!dontaddtodb) {
+					if (!dontaddtodb && dbAlias.txHash != tx.GetHash()) {
 						nLockStatus = LOCK_CONFLICT_UNCONFIRMED_STATE;
 						if (strResponse != "") {
 							paliasdb->UpdateAliasIndexTxHistoryLockStatus(dbAlias.txHash.GetHex() + "-" + strName, nLockStatus);
