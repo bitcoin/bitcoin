@@ -567,9 +567,9 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 UniValue assetallocationsend(const UniValue& params, bool fHelp) {
 	if (fHelp || params.size() != 5)
 		throw runtime_error(
-			"assetallocationsend [guid] [aliasfrom] aliasto amount [witness]\n"
+			"assetallocationsend [asset] [aliasfrom] aliasto amount [witness]\n"
 			"Send an asset allocation you own to another alias.\n"
-			"<guid> asset guidkey.\n"
+			"<asset> Asset name.\n"
 			"<aliasfrom> alias to transfer from.\n"
 			"<aliasto> alias to transfer to.\n"
 			"<witness> Witness alias name that will sign for web-of-trust notarization of this transaction.\n"
@@ -641,7 +641,7 @@ UniValue assetallocationsend(const UniValue& params, bool fHelp) {
 
 UniValue assetallocationinfo(const UniValue& params, bool fHelp) {
     if (fHelp || 2 != params.size())
-        throw runtime_error("assetallocationinfo <guid> <alias>\n"
+        throw runtime_error("assetallocationinfo <asset> <alias>\n"
                 "Show stored values of a single asset allocation.\n");
 
     vector<unsigned char> vchAsset = vchFromValue(params[0]);

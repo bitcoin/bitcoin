@@ -771,9 +771,9 @@ UniValue assetnew(const UniValue& params, bool fHelp) {
 UniValue assetupdate(const UniValue& params, bool fHelp) {
     if (fHelp || params.size() != 5)
         throw runtime_error(
-			"assetupdate [guid] [public] [category=assets] [balance] [witness]\n"
+			"assetupdate [asset] [public] [category=assets] [balance] [witness]\n"
 						"Perform an update on an asset you control.\n"
-						"<guid> Asset guidkey.\n"
+						"<asset> Asset name.\n"
                         "<public> Public data, 256 characters max.\n"                
 						"<category> Category, 256 characters max. Defaults to assets\n"
 						"<witness> Witness alias name that will sign for web-of-trust notarization of this transaction.\n"
@@ -855,9 +855,9 @@ UniValue assetupdate(const UniValue& params, bool fHelp) {
 UniValue assettransfer(const UniValue& params, bool fHelp) {
  if (fHelp || params.size() != 3)
         throw runtime_error(
-			"assettransfer [guid] [alias] [witness]\n"
+			"assettransfer [asset] [alias] [witness]\n"
 						"Transfer a asset allocation you own to another alias.\n"
-						"<guid> asset guidkey.\n"
+						"<asset> Asset name.\n"
 						"<alias> alias to transfer to.\n"
 						"<witness> Witness alias name that will sign for web-of-trust notarization of this transaction.\n"	
 						+ HelpRequiringPassphrase());
@@ -937,9 +937,9 @@ UniValue assettransfer(const UniValue& params, bool fHelp) {
 UniValue assetsend(const UniValue& params, bool fHelp) {
 	if (fHelp || params.size() != 5)
 		throw runtime_error(
-			"assetallocationsend [guid] [alias] aliasto amount [witness]\n"
+			"assetsend [asset] [alias] aliasto amount [witness]\n"
 			"Send an asset allocation you own to another alias.\n"
-			"<guid> asset guidkey.\n"
+			"<asset> Asset name.\n"
 			"<aliasfrom> alias to transfer from.\n"
 			"<aliasto> alias to transfer to.\n"
 			"<witness> Witness alias name that will sign for web-of-trust notarization of this transaction.\n"
@@ -1011,7 +1011,7 @@ UniValue assetsend(const UniValue& params, bool fHelp) {
 
 UniValue assetinfo(const UniValue& params, bool fHelp) {
     if (fHelp || 1 > params.size())
-        throw runtime_error("assetinfo <guid>\n"
+        throw runtime_error("assetinfo <asset>\n"
                 "Show stored values of a single asset and its .\n");
 
     vector<unsigned char> vchAsset = vchFromValue(params[0]);
