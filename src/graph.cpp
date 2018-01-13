@@ -76,7 +76,7 @@ unsigned int DAGRemoveCycles(CBlock * pblock, std::unique_ptr<CBlockTemplate> &p
 			for (auto& nOut : mapTxIndex[nVertex]) {
 				if (nOut >= pblock->vtx.size())
 					continue;
-				LogPrintf("cleared vertex, erasing nOut %d\n", nOut);
+				LogPrintf("outputsToRemove %d\n", nOut);
 				outputsToRemove.insert(nOut);
 			}
 		}
@@ -84,6 +84,7 @@ unsigned int DAGRemoveCycles(CBlock * pblock, std::unique_ptr<CBlockTemplate> &p
 	// outputs were saved above and loop through them backwards to remove from back to front
 	reverse(outputsToRemove.begin(), outputsToRemove.end());
 	for (auto& nOut : outputsToRemove) {
+		LogPrintf("reversed outputsToRemove %d\n", nOut);
 		nFees -= pblocktemplate->vTxFees[nOut];
 		nBlockSigOps -= pblocktemplate->vTxSigOps[nOut];
 		nBlockSize -= pblock->vtx[nOut].GetTotalSize();
