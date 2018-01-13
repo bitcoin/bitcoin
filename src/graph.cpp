@@ -65,15 +65,17 @@ unsigned int DAGRemoveCycles(CBlock * pblock, std::unique_ptr<CBlockTemplate> &p
 
 	sorted_vector<int> clearedVertices;
 	cycle_visitor<sorted_vector<int> > visitor(clearedVertices);
-	// keep track of outputs to remove in order
-	sorted_vector<int> outputsToRemove;
 	hawick_circuits(graph, visitor);
 	LogPrintf("Found %d circuits\n", clearedVertices.size());
 	// iterate backwards over sorted list of vertices, we can do this because we remove vertices from end to beginning, 
 	// which invalidate iterators from positon removed to end (we don't care about those after removal since we are iterating backwards to begining)
 	for (auto& nVertex : clearedVertices) {
+		if (nVertex >= mapTxIndex.size())
+			continue;
+		if (!mapTxIndex.count(nVertex))
+			continue;
 		// mapTxIndex knows of the mapping between vertices and tx vout position
-		const unsigned int nOut = mapTxIndex[nVertex];
+		const int &nOut = mapTxIndex[nVertex];
 		if (nOut >= pblock->vtx.size())
 			continue;
 		LogPrintf("cleared vertex, erasing nOut %d\n", nOut);
@@ -114,6 +116,10 @@ bool DAGTopologicalSort(CBlock * pblock) {
 	reverse(c.begin(), c.end());
 	string ordered = "";
 	for (auto& nVertex : c) {
+		if (nVertex >= mapTxIndex.size())
+			continue;
+		if (!mapTxIndex.count(nVertex))
+			continue;
 		LogPrintf("add sys tx in sorted order\n");
 		const int &nOut = mapTxIndex[nVertex];
 		if (nOut >= pblock->vtx.size())
