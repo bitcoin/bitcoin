@@ -11,8 +11,8 @@ typedef typename Traits::vertex_descriptor vertex_descriptor;
 typedef typename std::vector< vertex_descriptor > container;
 typedef typename property_map<Graph, vertex_index_t>::const_type IndexMap;
 
-bool CreateDAGFromBlock(const CBlock*pblock, Graph &graph, std::vector<vertex_descriptor> &vertices, std::unordered_map<int, int> &mapTxIndex) {
-	std::unordered_map<string, int> mapAliasIndex;
+bool CreateDAGFromBlock(const CBlock*pblock, Graph &graph, std::vector<vertex_descriptor> &vertices, std::unordered_map<int, vector<int> > &mapTxIndex) {
+	std::map<string, int> mapAliasIndex;
 	std::vector<vector<unsigned char> > vvchArgs;
 	std::vector<vector<unsigned char> > vvchAliasArgs;
 	int op;
@@ -30,8 +30,8 @@ bool CreateDAGFromBlock(const CBlock*pblock, Graph &graph, std::vector<vertex_de
 				if (mapAliasIndex.count(sender) == 0) {
 					vertices.push_back(add_vertex(graph));
 					mapAliasIndex[sender] = vertices.size() - 1;
-					mapTxIndex[vertices.size() - 1] = n;
 				}
+				mapTxIndex[mapAliasIndex[sender]].push_back(n);
 				LogPrintf("CreateDAGFromBlock: found asset allocation from sender %s\n", sender);
 				CAssetAllocation allocation(tx);
 				if (!allocation.listSendingAllocationAmounts.empty()) {
@@ -42,7 +42,7 @@ bool CreateDAGFromBlock(const CBlock*pblock, Graph &graph, std::vector<vertex_de
 							mapAliasIndex[receiver] = vertices.size() - 1;
 						}
 						// the graph needs to be from index to index 
-						add_edge(vertices[mapAliasIndex[receiver]], vertices[mapAliasIndex[sender]], graph);
+						add_edge(vertices[mapAliasIndex[sender]], vertices[mapAliasIndex[receiver]], graph);
 						LogPrintf("CreateDAGFromBlock: add edge from %s(index %d) to %s(index %d)\n", sender, mapAliasIndex[sender], receiver, mapAliasIndex[receiver]);
 					}
 				}
@@ -55,7 +55,7 @@ unsigned int DAGRemoveCycles(CBlock * pblock, std::unique_ptr<CBlockTemplate> &p
 	LogPrintf("DAGRemoveCycles\n");
 	std::vector<CTransaction> newVtx;
 	std::vector<vertex_descriptor> vertices;
-	std::unordered_map<int, int> mapTxIndex;
+	std::unordered_map<int, vector<int> > mapTxIndex;
 	Graph graph;
 
 	if (!CreateDAGFromBlock(pblock, graph, vertices, mapTxIndex)) {
@@ -64,22 +64,29 @@ unsigned int DAGRemoveCycles(CBlock * pblock, std::unique_ptr<CBlockTemplate> &p
 
 	sorted_vector<int> clearedVertices;
 	cycle_visitor<sorted_vector<int> > visitor(clearedVertices);
+	// keep track of outputs to remove in order
+	sorted_vector<int> outputsToRemove;
 	hawick_circuits(graph, visitor);
 	LogPrintf("Found %d circuits\n", clearedVertices.size());
-	// iterate backwards over sorted list of vertices, we can do this because we remove vertices from end to beginning, 
-	// which invalidate iterators from positon removed to end (we don't care about those after removal since we are iterating backwards to begining)
-	reverse(clearedVertices.begin(), clearedVertices.end());
 	for (auto& nVertex : clearedVertices) {
 		LogPrintf("trying to clear vertex %d\n", nVertex);
-		// mapTxIndex knows of the mapping between vertices and tx vout position, add 1 to account for coinbase (0) vout
-		const unsigned int nOut = mapTxIndex[nVertex]+1;
-		if (nOut >= pblock->vtx.size())
-			continue;
-		LogPrintf("cleared vertex, erasing nOut %d\n", nOut);
-		const CTransaction& txToRemove = pblock->vtx[nOut];
+		// performance trick on map to avoid a O(N) search miss time, we know that if the nVertex is within the bounds of map it exists
+		if (mapTxIndex.size() > nVertex) {
+			// mapTxIndex knows of the mapping between vertices and tx vout positions, this is O(1) for unordered_map lookup
+			for (auto& nOut : mapTxIndex[nVertex]) {
+				if (nOut >= pblock->vtx.size())
+					continue;
+				LogPrintf("cleared vertex, erasing nOut %d\n", nOut);
+				outputsToRemove.insert(nOut);
+			}
+		}
+	}
+	// outputs were saved above and loop through them backwards to remove from back to front
+	reverse(outputsToRemove.begin(), outputsToRemove.end());
+	for (auto& nOut : outputsToRemove) {
 		nFees -= pblocktemplate->vTxFees[nOut];
 		nBlockSigOps -= pblocktemplate->vTxSigOps[nOut];
-		nBlockSize -= txToRemove.GetTotalSize();
+		nBlockSize -= pblock->vtx[nOut].GetTotalSize();
 		pblock->vtx.erase(pblock->vtx.begin() + nOut);
 		nBlockTx--;
 		pblocktemplate->vTxFees.erase(pblocktemplate->vTxFees.begin() + nOut);
@@ -91,7 +98,7 @@ bool DAGTopologicalSort(CBlock * pblock) {
 	LogPrintf("DAGTopologicalSort\n");
 	std::vector<CTransaction> newVtx;
 	std::vector<vertex_descriptor> vertices;
-	std::unordered_map<int, int> mapTxIndex;
+	std::unordered_map<int, vector<int> > mapTxIndex;
 	Graph graph;
 
 	if (!CreateDAGFromBlock(pblock, graph, vertices, mapTxIndex)) {
@@ -114,14 +121,18 @@ bool DAGTopologicalSort(CBlock * pblock) {
 	// add sys tx's to newVtx in sorted order
 	reverse(c.begin(), c.end());
 	string ordered = "";
-	for (auto& t:c) {
+	for (auto& nVertex :c) {
 		LogPrintf("add sys tx in sorted order\n");
-		if (mapTxIndex.count(t)) {
-			const int &nIndex = get(indices, t);
-			const int &nOut = mapTxIndex[nIndex];
-			LogPrintf("push nOut %d\n", nOut);
-			newVtx.push_back(pblock->vtx[nOut]);
-			ordered += strprintf("%d ", nOut);
+		// performance trick on map to avoid a O(N) search miss time, we know that if the nVertex is within the bounds of map it exists
+		if (mapTxIndex.size() > nVertex) {
+			// mapTxIndex knows of the mapping between vertices and tx vout positions, this is O(1) for unordered_map lookup
+			for (auto& nOut : mapTxIndex[nVertex]) {
+				if (nOut >= pblock->vtx.size())
+					continue;
+				LogPrintf("push nOut %d\n", nOut);
+				newVtx.push_back(pblock->vtx[nOut]);
+				ordered += strprintf("%d ", nOut);
+			}
 		}
 	}
 	LogPrintf("topological ordering: %s\n", ordered);
@@ -134,11 +145,6 @@ bool DAGTopologicalSort(CBlock * pblock) {
 		}
 	}
 	LogPrintf("newVtx size %d vs pblock.vtx size %d\n", newVtx.size(), pblock->vtx.size());
-	if (pblock->vtx.size() != newVtx.size())
-	{
-		LogPrintf("DAGTopologicalSort: sorted block transaction count does not match unsorted block transaction count!\n");
-		return false;
-	}
 	// set newVtx to block's vtx so block can process as normal
 	pblock->vtx = newVtx;
 	return true;
