@@ -128,7 +128,7 @@ void AddressBookPage::setModel(AddressTableModel *model)
     case SendingTab:
         // Send filter
         proxyModel->setFilterRole(AddressTableModel::TypeRole);
-        proxyModel->setFilterFixedString(AddressTableModel::Send);
+        //proxyModel->setFilterFixedString(AddressTableModel::Send);
         break;
     }
     ui->tableView->setModel(proxyModel);
