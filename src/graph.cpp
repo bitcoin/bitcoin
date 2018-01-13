@@ -11,7 +11,7 @@ typedef typename Traits::vertex_descriptor vertex_descriptor;
 typedef typename std::vector< vertex_descriptor > container;
 typedef typename property_map<Graph, vertex_index_t>::const_type IndexMap;
 
-bool CreateDAGFromBlock(const CBlock*pblock, Graph &graph, std::vector<vertex_descriptor> &vertices, std::unordered_map<int, vector<int> > &mapTxIndex) {
+bool CreateDAGFromBlock(const CBlock*pblock, Graph &graph, std::vector<vertex_descriptor> &vertices, std::unordered_map<int, int> &mapTxIndex) {
 	std::map<string, int> mapAliasIndex;
 	std::vector<vector<unsigned char> > vvchArgs;
 	std::vector<vector<unsigned char> > vvchAliasArgs;
@@ -30,8 +30,9 @@ bool CreateDAGFromBlock(const CBlock*pblock, Graph &graph, std::vector<vertex_de
 				if (mapAliasIndex.count(sender) == 0) {
 					vertices.push_back(add_vertex(graph));
 					mapAliasIndex[sender] = vertices.size() - 1;
+					mapTxIndex[vertices.size() - 1] = n;
 				}
-				mapTxIndex[mapAliasIndex[sender]].push_back(n);
+				
 				LogPrintf("CreateDAGFromBlock: found asset allocation from sender %s, nOut %d\n", sender, n);
 				CAssetAllocation allocation(tx);
 				if (!allocation.listSendingAllocationAmounts.empty()) {
@@ -55,7 +56,7 @@ unsigned int DAGRemoveCycles(CBlock * pblock, std::unique_ptr<CBlockTemplate> &p
 	LogPrintf("DAGRemoveCycles\n");
 	std::vector<CTransaction> newVtx;
 	std::vector<vertex_descriptor> vertices;
-	std::unordered_map<int, vector<int> > mapTxIndex;
+	std::unordered_map<int, int> mapTxIndex;
 	Graph graph;
 
 	if (!CreateDAGFromBlock(pblock, graph, vertices, mapTxIndex)) {
@@ -68,23 +69,14 @@ unsigned int DAGRemoveCycles(CBlock * pblock, std::unique_ptr<CBlockTemplate> &p
 	sorted_vector<int> outputsToRemove;
 	hawick_circuits(graph, visitor);
 	LogPrintf("Found %d circuits\n", clearedVertices.size());
+	// iterate backwards over sorted list of vertices, we can do this because we remove vertices from end to beginning, 
+	// which invalidate iterators from positon removed to end (we don't care about those after removal since we are iterating backwards to begining)
 	for (auto& nVertex : clearedVertices) {
-		LogPrintf("trying to clear vertex %d\n", nVertex);
-		// performance trick on map to avoid a O(N) search miss time, we know that if the nVertex is within the bounds of map it exists
-		if (mapTxIndex.size() > nVertex) {
-			// mapTxIndex knows of the mapping between vertices and tx vout positions, this is O(1) for unordered_map lookup
-			for (auto& nOut : mapTxIndex[nVertex]) {
-				if (nOut >= pblock->vtx.size())
-					continue;
-				LogPrintf("outputsToRemove %d\n", nOut);
-				outputsToRemove.insert(nOut);
-			}
-		}
-	}
-	// outputs were saved above and loop through them backwards to remove from back to front
-	reverse(outputsToRemove.begin(), outputsToRemove.end());
-	for (auto& nOut : outputsToRemove) {
-		LogPrintf("reversed outputsToRemove %d\n", nOut);
+		// mapTxIndex knows of the mapping between vertices and tx vout position
+		const unsigned int nOut = mapTxIndex[nVertex];
+		if (nOut >= pblock->vtx.size())
+			continue;
+		LogPrintf("cleared vertex, erasing nOut %d\n", nOut);
 		nFees -= pblocktemplate->vTxFees[nOut];
 		nBlockSigOps -= pblocktemplate->vTxSigOps[nOut];
 		nBlockSize -= pblock->vtx[nOut].GetTotalSize();
@@ -99,7 +91,7 @@ bool DAGTopologicalSort(CBlock * pblock) {
 	LogPrintf("DAGTopologicalSort\n");
 	std::vector<CTransaction> newVtx;
 	std::vector<vertex_descriptor> vertices;
-	std::unordered_map<int, vector<int> > mapTxIndex;
+	std::unordered_map<int, int> mapTxIndex;
 	Graph graph;
 
 	if (!CreateDAGFromBlock(pblock, graph, vertices, mapTxIndex)) {
@@ -115,26 +107,20 @@ bool DAGTopologicalSort(CBlock * pblock) {
 		LogPrintf("DAGTopologicalSort: Not a DAG: %s\n", e.what());
 		return false;
 	}
-	const IndexMap &indices = get(vertex_index, (const Graph &)graph);
 	// add coinbase
 	newVtx.push_back(pblock->vtx[0]);
 
 	// add sys tx's to newVtx in sorted order
 	reverse(c.begin(), c.end());
 	string ordered = "";
-	for (auto& nVertex :c) {
+	for (auto& nVertex : c) {
 		LogPrintf("add sys tx in sorted order\n");
-		// performance trick on map to avoid a O(N) search miss time, we know that if the nVertex is within the bounds of map it exists
-		if (mapTxIndex.size() > nVertex) {
-			// mapTxIndex knows of the mapping between vertices and tx vout positions, this is O(1) for unordered_map lookup
-			for (auto& nOut : mapTxIndex[nVertex]) {
-				if (nOut >= pblock->vtx.size())
-					continue;
-				LogPrintf("push nOut %d\n", nOut);
-				newVtx.push_back(pblock->vtx[nOut]);
-				ordered += strprintf("%d ", nOut);
-			}
-		}
+		const int &nOut = mapTxIndex[nVertex];
+		if (nOut >= pblock->vtx.size())
+			continue;
+		LogPrintf("push nOut %d\n", nOut);
+		newVtx.push_back(pblock->vtx[nOut]);
+		ordered += strprintf("%d ", nOut);
 	}
 	LogPrintf("topological ordering: %s\n", ordered);
 	// add non sys tx's to end of newVtx

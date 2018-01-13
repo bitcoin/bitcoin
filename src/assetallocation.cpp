@@ -334,6 +334,16 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 		bool bSendLocked = false;
 		passetallocationdb->ReadISLock(assetAllocationTuple, bSendLocked);
 		if (!fJustCheck && bSendLocked) {
+			if (dbAssetAllocation.nHeight >= nHeight)
+			{
+				if (!dontaddtodb && !passetallocationdb->EraseISLock(assetAllocationTuple))
+				{
+					errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from assetallocation DB");
+					return error(errorMessage.c_str());
+				}
+				errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Block height of service request must be less than or equal to the stored service block height.");
+				return true;
+			}
 			if (dbAssetAllocation.txHash != tx.GetHash())
 			{
 				nLockStatus = LOCK_CONFLICT_CONFIRMED_STATE;
