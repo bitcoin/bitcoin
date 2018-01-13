@@ -800,7 +800,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 		if (!fJustCheck && bSendLocked) {
 			if (theEscrow.nHeight >= nHeight)
 			{
-				if (!pescrowdb->EraseISLock(serializedEscrow.vchEscrow))
+				if (!dontaddtodb && !pescrowdb->EraseISLock(serializedEscrow.vchEscrow))
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from escrow DB");
 					return error(errorMessage.c_str());

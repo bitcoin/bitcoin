@@ -552,7 +552,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			bool bSendLocked = false;
 			paliasdb->ReadISLock(vvchArgs[0], bSendLocked);
 			if (!fJustCheck &&  bSendLocked) {
-				if (dbAlias.nHeight >= nHeight)
+				if (!dontaddtodb && dbAlias.nHeight >= nHeight)
 				{
 					if (!paliasdb->EraseISLock(vvchArgs[0]))
 					{

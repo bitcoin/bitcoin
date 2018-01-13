@@ -519,7 +519,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		if (!fJustCheck && bSendLocked) {
 			if (dbOffer.nHeight >= nHeight)
 			{
-				if (!pofferdb->EraseISLock(theOffer.vchOffer))
+				if (!dontaddtodb && !pofferdb->EraseISLock(theOffer.vchOffer))
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from offer DB");
 					return error(errorMessage.c_str());

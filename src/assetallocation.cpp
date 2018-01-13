@@ -334,16 +334,6 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 		bool bSendLocked = false;
 		passetallocationdb->ReadISLock(assetAllocationTuple, bSendLocked);
 		if (!fJustCheck && bSendLocked) {
-			if (dbAssetAllocation.nHeight >= nHeight)
-			{
-				if (!passetallocationdb->EraseISLock(assetAllocationTuple))
-				{
-					errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from assetallocation DB");
-					return error(errorMessage.c_str());
-				}
-				errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Block height of service request must be less than or equal to the stored service block height.");
-				return true;
-			}
 			if (dbAssetAllocation.txHash != tx.GetHash())
 			{
 				nLockStatus = LOCK_CONFLICT_CONFIRMED_STATE;
@@ -358,7 +348,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 				if (op == OP_ASSET_ALLOCATION_SEND) {
 					if (dbAssetAllocation.listSendingAllocationInputs.empty()) {
 						if (!theAssetAllocation.listAllocationInputs.empty()) {
-							if (!passetallocationdb->EraseISLock(assetAllocationTuple))
+							if (!dontaddtodb && !passetallocationdb->EraseISLock(assetAllocationTuple))
 							{
 								errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from assetallocation DB");
 								return error(errorMessage.c_str());
@@ -367,7 +357,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 							return true;
 						}
 						if (dbAssetAllocation.listSendingAllocationAmounts.empty()) {
-							if (!passetallocationdb->EraseISLock(assetAllocationTuple))
+							if (!dontaddtodb && !passetallocationdb->EraseISLock(assetAllocationTuple))
 							{
 								errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from assetallocation DB");
 								return error(errorMessage.c_str());
@@ -393,7 +383,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 							{
 								errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("An alias you are transferring to does not accept asset transfers");
 								continue;
-							} 
+							}
 							if (!dontaddtodb) {
 								receiverAllocation.nBalance -= amountTuple.second;
 								theAssetAllocation.nBalance += amountTuple.second;

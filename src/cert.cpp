@@ -468,7 +468,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 			
 			if (dbCert.nHeight >= nHeight)
 			{
-				if (!pcertdb->EraseISLock(theCert.vchCert))
+				if (!dontaddtodb && !pcertdb->EraseISLock(theCert.vchCert))
 				{
 					errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from certificate DB");
 					return error(errorMessage.c_str());
