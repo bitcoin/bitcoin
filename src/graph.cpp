@@ -43,7 +43,7 @@ bool CreateDAGFromBlock(const CBlock*pblock, Graph &graph, std::vector<vertex_de
 						}
 						// the graph needs to be from index to index 
 						add_edge(vertices[mapAliasIndex[receiver]], vertices[mapAliasIndex[sender]], graph);
-						LogPrintf("CreateDAGFromBlock: add edge from %s(index %d) to %s(index %d)\n", receiver, mapAliasIndex[receiver],  sender, mapAliasIndex[sender]);
+						LogPrintf("CreateDAGFromBlock: add edge from %s(index %d) to %s(index %d)\n", sender, mapAliasIndex[sender], receiver, mapAliasIndex[receiver]);
 					}
 				}
 			}
