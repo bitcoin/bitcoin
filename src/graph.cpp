@@ -125,9 +125,9 @@ bool DAGTopologicalSort(CBlock * pblock) {
 		std::vector<int>::iterator it = mapTxIndex.find(nVertex);
 		if (it == mapTxIndex.end())
 			continue;
-		
+		const std::vector<int> &vecTx = *it;
 		// we only need to add the first index we find because we want to ensure that we aren't processing more than one per sender per block
-		newVtx.push_back(pblock->vtx[*(it.begin())]);
+		newVtx.push_back(pblock->vtx[vecTx.front()]);
 	}
 	LogPrintf("topological ordering: %s\n", ordered);
 	// add non sys tx's to end of newVtx
