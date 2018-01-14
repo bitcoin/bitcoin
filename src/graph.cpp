@@ -34,7 +34,7 @@ bool CreateDAGFromBlock(const CBlock*pblock, Graph &graph, std::vector<vertex_de
 				// remove duplicate senders and avoid processing into DAG
 				else if(vecTxIndexToRemove != NULL)
 				{
-					vecTxIndexToRemove->push_back(n);
+					vecTxIndexToRemove->insert(n);
 					continue;
 				}
 				mapTxIndex[mapAliasIndex[sender]] = n;
