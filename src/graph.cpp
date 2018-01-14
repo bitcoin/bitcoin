@@ -11,7 +11,7 @@ typedef typename Traits::vertex_descriptor vertex_descriptor;
 typedef typename std::vector< vertex_descriptor > container;
 typedef typename property_map<Graph, vertex_index_t>::const_type IndexMap;
 
-bool CreateDAGFromBlock(const CBlock*pblock, Graph &graph, std::vector<vertex_descriptor> &vertices, std::unordered_map<int, int> &mapTxIndex, sorted_vector *vecTxIndexToRemove=NULL) {
+bool CreateDAGFromBlock(const CBlock*pblock, Graph &graph, std::vector<vertex_descriptor> &vertices, std::unordered_map<int, int> &mapTxIndex, sorted_vector<int> *vecTxIndexToRemove=NULL) {
 	std::map<string, int> mapAliasIndex;
 	std::vector<vector<unsigned char> > vvchArgs;
 	std::vector<vector<unsigned char> > vvchAliasArgs;
