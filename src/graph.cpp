@@ -81,7 +81,7 @@ unsigned int DAGRemoveCycles(CBlock * pblock, std::unique_ptr<CBlockTemplate> &p
 	for (auto& nVertex : clearedVertices) {
 		if (!mapTxIndex.count(nVertex))
 			continue;
-		vecTxIndexToRemove.push_back(mapTxIndex[nVertex]);
+		vecTxIndexToRemove.insert(mapTxIndex[nVertex]);
 	}
 	// iterate backwards over sorted list of vertices, we can do this because we remove vertices from end to beginning, 
 	// which invalidate iterators from positon removed to end (we don't care about those after removal since we are iterating backwards to begining)
