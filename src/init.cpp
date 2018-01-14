@@ -1627,7 +1627,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     std::vector<fs::path> vImportFiles;
     for (const std::string& strFile : gArgs.GetArgs("-loadblock")) {
-        vImportFiles.push_back(strFile);
+        vImportFiles.emplace_back(strFile);
     }
 
     threadGroup.create_thread(boost::bind(&ThreadImport, vImportFiles));

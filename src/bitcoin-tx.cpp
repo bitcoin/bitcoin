@@ -546,7 +546,7 @@ static void MutateTxSign(CMutableTransaction& tx, const std::string& flagStr)
             throw std::runtime_error("unknown sighash flag/sign option");
 
     std::vector<CTransaction> txVariants;
-    txVariants.push_back(tx);
+    txVariants.emplace_back(tx);
 
     // mergedTx will end up with all the signatures; it
     // starts as a clone of the raw tx:

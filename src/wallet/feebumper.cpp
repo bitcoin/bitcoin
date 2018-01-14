@@ -48,7 +48,7 @@ static int64_t CalculateMaximumSignedTxSize(const CTransaction &tx, const CWalle
 static feebumper::Result PreconditionChecks(const CWallet* wallet, const CWalletTx& wtx, std::vector<std::string>& errors)
 {
     if (wallet->HasWalletSpend(wtx.GetHash())) {
-        errors.push_back("Transaction has descendants in the wallet");
+        errors.emplace_back("Transaction has descendants in the wallet");
         return feebumper::Result::INVALID_PARAMETER;
     }
 
@@ -56,13 +56,13 @@ static feebumper::Result PreconditionChecks(const CWallet* wallet, const CWallet
         LOCK(mempool.cs);
         auto it_mp = mempool.mapTx.find(wtx.GetHash());
         if (it_mp != mempool.mapTx.end() && it_mp->GetCountWithDescendants() > 1) {
-            errors.push_back("Transaction has descendants in the mempool");
+            errors.emplace_back("Transaction has descendants in the mempool");
             return feebumper::Result::INVALID_PARAMETER;
         }
     }
 
     if (wtx.GetDepthInMainChain() != 0) {
-        errors.push_back("Transaction has been mined, or is conflicted with a mined transaction");
+        errors.emplace_back("Transaction has been mined, or is conflicted with a mined transaction");
         return feebumper::Result::WALLET_ERROR;
     }
     return feebumper::Result::OK;
@@ -84,7 +84,7 @@ Result CreateTransaction(const CWallet* wallet, const uint256& txid, const CCoin
     errors.clear();
     auto it = wallet->mapWallet.find(txid);
     if (it == wallet->mapWallet.end()) {
-        errors.push_back("Invalid or non-wallet transaction id");
+        errors.emplace_back("Invalid or non-wallet transaction id");
         return Result::INVALID_ADDRESS_OR_KEY;
     }
     const CWalletTx& wtx = it->second;
@@ -95,7 +95,7 @@ Result CreateTransaction(const CWallet* wallet, const uint256& txid, const CCoin
     }
 
     if (!SignalsOptInRBF(*wtx.tx)) {
-        errors.push_back("Transaction is not BIP 125 replaceable");
+        errors.emplace_back("Transaction is not BIP 125 replaceable");
         return Result::WALLET_ERROR;
     }
 
@@ -107,7 +107,7 @@ Result CreateTransaction(const CWallet* wallet, const uint256& txid, const CCoin
     // check that original tx consists entirely of our inputs
     // if not, we can't bump the fee, because the wallet has no way of knowing the value of the other inputs (thus the fee)
     if (!wallet->IsAllFromMe(*wtx.tx, ISMINE_SPENDABLE)) {
-        errors.push_back("Transaction contains inputs that don't belong to this wallet");
+        errors.emplace_back("Transaction contains inputs that don't belong to this wallet");
         return Result::WALLET_ERROR;
     }
 
@@ -117,14 +117,14 @@ Result CreateTransaction(const CWallet* wallet, const uint256& txid, const CCoin
     for (size_t i = 0; i < wtx.tx->vout.size(); ++i) {
         if (wallet->IsChange(wtx.tx->vout[i])) {
             if (nOutput != -1) {
-                errors.push_back("Transaction has multiple change outputs");
+                errors.emplace_back("Transaction has multiple change outputs");
                 return Result::WALLET_ERROR;
             }
             nOutput = i;
         }
     }
     if (nOutput == -1) {
-        errors.push_back("Transaction does not have a change output");
+        errors.emplace_back("Transaction does not have a change output");
         return Result::WALLET_ERROR;
     }
 
@@ -132,7 +132,7 @@ Result CreateTransaction(const CWallet* wallet, const uint256& txid, const CCoin
     int64_t txSize = GetVirtualTransactionSize(*(wtx.tx));
     const int64_t maxNewTxSize = CalculateMaximumSignedTxSize(*wtx.tx, wallet);
     if (maxNewTxSize < 0) {
-        errors.push_back("Transaction contains inputs that cannot be signed");
+        errors.emplace_back("Transaction contains inputs that cannot be signed");
         return Result::INVALID_ADDRESS_OR_KEY;
     }
 
@@ -209,7 +209,7 @@ Result CreateTransaction(const CWallet* wallet, const uint256& txid, const CCoin
     mtx =  *wtx.tx;
     CTxOut* poutput = &(mtx.vout[nOutput]);
     if (poutput->nValue < nDelta) {
-        errors.push_back("Change output is too small to bump the fee");
+        errors.emplace_back("Change output is too small to bump the fee");
         return Result::WALLET_ERROR;
     }
 
@@ -244,7 +244,7 @@ Result CommitTransaction(CWallet* wallet, const uint256& txid, CMutableTransacti
     }
     auto it = txid.IsNull() ? wallet->mapWallet.end() : wallet->mapWallet.find(txid);
     if (it == wallet->mapWallet.end()) {
-        errors.push_back("Invalid or non-wallet transaction id");
+        errors.emplace_back("Invalid or non-wallet transaction id");
         return Result::MISC_ERROR;
     }
     CWalletTx& oldWtx = it->second;
@@ -284,7 +284,7 @@ Result CommitTransaction(CWallet* wallet, const uint256& txid, CMutableTransacti
         // along with an exception. It would be good to return information about
         // wtxBumped to the caller even if marking the original transaction
         // replaced does not succeed for some reason.
-        errors.push_back("Created new bumpfee transaction but could not mark the original transaction as replaced");
+        errors.emplace_back("Created new bumpfee transaction but could not mark the original transaction as replaced");
     }
     return Result::OK;
 }
