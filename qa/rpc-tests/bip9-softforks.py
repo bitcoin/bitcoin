@@ -82,6 +82,8 @@ class BIP9SoftForksTest(ComparisonTestFramework):
 
     def test_BIP(self, bipName, activated_version, invalidate, invalidatePostSignature, bitno):
         wait_to_sync(self.nodes[0])
+        assert_equal(self.get_bip9_status(bipName)['status'], 'defined')
+        assert_equal(self.get_bip9_status(bipName)['since'], 0)
         # generate some coins for later
         self.coinbase_blocks = self.nodes[0].generate(2)
         self.height = 3  # height of the next block to build
@@ -90,6 +92,7 @@ class BIP9SoftForksTest(ComparisonTestFramework):
         self.last_block_time = int(time.time())
 
         assert_equal(self.get_bip9_status(bipName)['status'], 'defined')
+        assert_equal(self.get_bip9_status(bipName)['since'], 0)
         tmpl = self.nodes[0].getblocktemplate({})
         assert(bipName not in tmpl['rules'])
         assert(bipName not in tmpl['vbavailable'])
@@ -102,6 +105,7 @@ class BIP9SoftForksTest(ComparisonTestFramework):
         yield TestInstance(test_blocks, sync_every_block=False)
 
         assert_equal(self.get_bip9_status(bipName)['status'], 'started')
+        assert_equal(self.get_bip9_status(bipName)['since'], 144)
         tmpl = self.nodes[0].getblocktemplate({})
         assert(bipName not in tmpl['rules'])
         assert_equal(tmpl['vbavailable'][bipName], bitno)
@@ -118,6 +122,7 @@ class BIP9SoftForksTest(ComparisonTestFramework):
         yield TestInstance(test_blocks, sync_every_block=False)
 
         assert_equal(self.get_bip9_status(bipName)['status'], 'started')
+        assert_equal(self.get_bip9_status(bipName)['since'], 144)
         tmpl = self.nodes[0].getblocktemplate({})
         assert(bipName not in tmpl['rules'])
         assert_equal(tmpl['vbavailable'][bipName], bitno)
@@ -134,6 +139,7 @@ class BIP9SoftForksTest(ComparisonTestFramework):
         yield TestInstance(test_blocks, sync_every_block=False)
 
         assert_equal(self.get_bip9_status(bipName)['status'], 'locked_in')
+        assert_equal(self.get_bip9_status(bipName)['since'], 432)
         tmpl = self.nodes[0].getblocktemplate({})
         assert(bipName not in tmpl['rules'])
 
@@ -143,6 +149,7 @@ class BIP9SoftForksTest(ComparisonTestFramework):
         yield TestInstance(test_blocks, sync_every_block=False)
 
         assert_equal(self.get_bip9_status(bipName)['status'], 'locked_in')
+        assert_equal(self.get_bip9_status(bipName)['since'], 432)
         tmpl = self.nodes[0].getblocktemplate({})
         assert(bipName not in tmpl['rules'])
 
@@ -168,6 +175,7 @@ class BIP9SoftForksTest(ComparisonTestFramework):
         yield TestInstance([[block, True]])
 
         assert_equal(self.get_bip9_status(bipName)['status'], 'active')
+        assert_equal(self.get_bip9_status(bipName)['since'], 576)
         tmpl = self.nodes[0].getblocktemplate({})
         assert(bipName in tmpl['rules'])
         assert(bipName not in tmpl['vbavailable'])

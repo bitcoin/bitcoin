@@ -256,7 +256,10 @@ bool RPCConsole::RPCExecuteCommandLine(std::string &strResult, const std::string
                         std::string strPrint;
                         // Convert argument list to JSON objects in method-dependent way,
                         // and pass it along with the method name to the dispatcher.
-                        lastResult = tableRPC.execute(stack.back()[0], RPCConvertValues(stack.back()[0], std::vector<std::string>(stack.back().begin() + 1, stack.back().end())));
+                        JSONRPCRequest req;
+                        req.params = RPCConvertValues(stack.back()[0], std::vector<std::string>(stack.back().begin() + 1, stack.back().end()));
+                        req.strMethod = stack.back()[0];
+                        lastResult = tableRPC.execute(req);
 
                         state = STATE_COMMAND_EXECUTED;
                         curarg.clear();

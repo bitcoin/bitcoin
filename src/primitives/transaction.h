@@ -164,8 +164,6 @@ public:
         return (nValue == -1);
     }
 
-    uint256 GetHash() const;
-
     CAmount GetDustThreshold(const CFeeRate &minRelayTxFee) const
     {
         // "Dust" is defined in terms of CTransaction::minRelayTxFee, which has units duffs-per-kilobyte.

@@ -191,10 +191,10 @@ static void TestPassphraseSingle(const std::vector<unsigned char>& vchSalt, cons
 
     OldSetKeyFromPassphrase(passphrase, vchSalt, rounds, 0, chKey, chIV);
 
-    BOOST_CHECK_MESSAGE(memcmp(chKey, crypt.chKey, sizeof(chKey)) == 0, \
-        HexStr(chKey, chKey+sizeof(chKey)) + std::string(" != ") + HexStr(crypt.chKey, crypt.chKey + (sizeof crypt.chKey)));
-    BOOST_CHECK_MESSAGE(memcmp(chIV, crypt.chIV, sizeof(chIV)) == 0, \
-        HexStr(chIV, chIV+sizeof(chIV)) + std::string(" != ") + HexStr(crypt.chIV, crypt.chIV + (sizeof crypt.chIV)));
+    BOOST_CHECK_MESSAGE(memcmp(chKey, crypt.vchKey.data(), crypt.vchKey.size()) == 0, \
+        HexStr(chKey, chKey+sizeof(chKey)) + std::string(" != ") + HexStr(crypt.vchKey));
+    BOOST_CHECK_MESSAGE(memcmp(chIV, crypt.vchIV.data(), crypt.vchIV.size()) == 0, \
+        HexStr(chIV, chIV+sizeof(chIV)) + std::string(" != ") + HexStr(crypt.vchIV));
 
     if(!correctKey.empty())
         BOOST_CHECK_MESSAGE(memcmp(chKey, &correctKey[0], sizeof(chKey)) == 0, \
@@ -221,7 +221,7 @@ static void TestDecrypt(const CCrypter& crypt, const std::vector<unsigned char>&
     CKeyingMaterial vchDecrypted2;
     int result1, result2;
     result1 = crypt.Decrypt(vchCiphertext, vchDecrypted1);
-    result2 = OldDecrypt(vchCiphertext, vchDecrypted2, crypt.chKey, crypt.chIV);
+    result2 = OldDecrypt(vchCiphertext, vchDecrypted2, crypt.vchKey.data(), crypt.vchIV.data());
     BOOST_CHECK(result1 == result2);
 
     // These two should be equal. However, OpenSSL 1.0.1j introduced a change
@@ -246,7 +246,7 @@ static void TestEncryptSingle(const CCrypter& crypt, const CKeyingMaterial& vchP
     std::vector<unsigned char> vchCiphertext2;
     int result1 = crypt.Encrypt(vchPlaintext, vchCiphertext1);
 
-    int result2 = OldEncrypt(vchPlaintext, vchCiphertext2, crypt.chKey, crypt.chIV);
+    int result2 = OldEncrypt(vchPlaintext, vchCiphertext2, crypt.vchKey.data(), crypt.vchIV.data());
     BOOST_CHECK(result1 == result2);
     BOOST_CHECK(vchCiphertext1 == vchCiphertext2);
 
