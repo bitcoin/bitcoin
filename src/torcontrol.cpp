@@ -13,7 +13,7 @@
 #include <vector>
 #include <deque>
 #include <set>
-#include <stdlib.h>
+#include <cstdlib>
 
 #include <boost/bind.hpp>
 #include <boost/signals2/signal.hpp>

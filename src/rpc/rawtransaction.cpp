@@ -32,7 +32,7 @@
 #endif
 
 #include <future>
-#include <stdint.h>
+#include <cstdint>
 
 #include <univalue.h>
 

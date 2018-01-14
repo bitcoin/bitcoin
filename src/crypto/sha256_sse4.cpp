@@ -5,8 +5,8 @@
 // This is a translation to GCC extended asm syntax from YASM code by Intel
 // (available at the bottom of this file).
 
-#include <stdint.h>
-#include <stdlib.h>
+#include <cstdint>
+#include <cstdlib>
 
 #if defined(__x86_64__) || defined(__amd64__)
 

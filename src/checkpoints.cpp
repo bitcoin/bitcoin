@@ -9,7 +9,7 @@
 #include <reverse_iterator.h>
 #include <validation.h>
 
-#include <stdint.h>
+#include <cstdint>
 
 
 namespace Checkpoints {

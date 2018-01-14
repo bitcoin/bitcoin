@@ -5,7 +5,7 @@
 #include <wallet/wallet.h>
 
 #include <set>
-#include <stdint.h>
+#include <cstdint>
 #include <utility>
 #include <vector>
 

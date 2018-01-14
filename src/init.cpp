@@ -47,8 +47,8 @@
 #include <wallet/init.h>
 #endif
 #include <warnings.h>
-#include <stdint.h>
-#include <stdio.h>
+#include <cstdint>
+#include <cstdio>
 #include <memory>
 
 #ifndef WIN32

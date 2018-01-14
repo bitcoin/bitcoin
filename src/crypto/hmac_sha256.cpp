@@ -4,7 +4,7 @@
 
 #include <crypto/hmac_sha256.h>
 
-#include <string.h>
+#include <cstring>
 
 CHMAC_SHA256::CHMAC_SHA256(const unsigned char* key, size_t keylen)
 {
