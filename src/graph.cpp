@@ -9,8 +9,8 @@ typedef adjacency_list< vecS, vecS, directedS > Graph;
 typedef graph_traits<Graph> Traits;
 typedef typename Traits::vertex_descriptor vertex_descriptor;
 typedef typename sorted_vector< int > container;
-typedef typename std::map<int, vector<int> > IndexMap;
-bool CreateDAGFromBlock(const CBlock*pblock, Graph &graph, std::vector<vertex_descriptor> &vertices, std::map<int, vector<int> > &mapTxIndex) {
+typedef std::map<int, vector<int> > IndexMap;
+bool CreateDAGFromBlock(const CBlock*pblock, Graph &graph, std::vector<vertex_descriptor> &vertices, IndexMap &mapTxIndex) {
 	std::map<string, int> mapAliasIndex;
 	std::vector<vector<unsigned char> > vvchArgs;
 	std::vector<vector<unsigned char> > vvchAliasArgs;
@@ -71,7 +71,7 @@ unsigned int DAGRemoveCycles(CBlock * pblock, std::unique_ptr<CBlockTemplate> &p
 		IndexMap::iterator it = mapTxIndex.find(nVertex);
 		if (it == mapTxIndex.end())
 			continue;
-		const std::vector<int> &vecTx = (*it).second;
+		std::vector<int> &vecTx = (*it).second;
 		// mapTxIndex knows of the mapping between vertices and tx vout positions
 		for (auto& nOut : vecTx) {
 			if (nOut >= pblock->vtx.size())
