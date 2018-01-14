@@ -11,7 +11,7 @@ typedef typename Traits::vertex_descriptor vertex_descriptor;
 typedef typename std::vector< vertex_descriptor > container;
 typedef typename property_map<Graph, vertex_index_t>::const_type IndexMap;
 
-bool CreateDAGFromBlock(const CBlock*pblock, Graph &graph, std::vector<vertex_descriptor> &vertices, std::unordered_map<int, int> &mapTxIndex, sorted_vector<int> *vecTxIndexToRemove=NULL) {
+bool CreateDAGFromBlock(const CBlock*pblock, Graph &graph, std::vector<vertex_descriptor> &vertices, std::unordered_map<int, int> &mapTxIndex, sorted_vector<int> &vecTxIndexToRemove) {
 	std::map<string, int> mapAliasIndex;
 	std::vector<vector<unsigned char> > vvchArgs;
 	std::vector<vector<unsigned char> > vvchAliasArgs;
@@ -32,9 +32,9 @@ bool CreateDAGFromBlock(const CBlock*pblock, Graph &graph, std::vector<vertex_de
 					mapAliasIndex[sender] = vertices.size() - 1;
 				}
 				// remove duplicate senders and avoid processing into DAG
-				else if(vecTxIndexToRemove != NULL)
+				else 
 				{
-					vecTxIndexToRemove->insert(n);
+					vecTxIndexToRemove.insert(n);
 					continue;
 				}
 				mapTxIndex[mapAliasIndex[sender]] = n;
@@ -67,7 +67,7 @@ unsigned int DAGRemoveCycles(CBlock * pblock, std::unique_ptr<CBlockTemplate> &p
 	sorted_vector<int> vecTxIndexToRemove;
 	Graph graph;
 
-	if (!CreateDAGFromBlock(pblock, graph, vertices, mapTxIndex, &vecTxIndexToRemove)) {
+	if (!CreateDAGFromBlock(pblock, graph, vertices, mapTxIndex, vecTxIndexToRemove)) {
 		return true;
 	}
 
@@ -105,12 +105,17 @@ bool DAGTopologicalSort(CBlock * pblock) {
 	std::vector<CTransaction> newVtx;
 	std::vector<vertex_descriptor> vertices;
 	std::unordered_map<int, int> mapTxIndex;
+	sorted_vector<int> vecTxIndexToRemove;
 	Graph graph;
 
-	if (!CreateDAGFromBlock(pblock, graph, vertices, mapTxIndex)) {
+	if (!CreateDAGFromBlock(pblock, graph, vertices, mapTxIndex, vecTxIndexToRemove)) {
 		return true;
 	}
-
+	// DAGTopologicalSort is enforced by clients. Ensure duplicate senders have been removed by miner
+	if (vecTxIndexToRemove.size() > 0) {
+		LogPrintf("DAGTopologicalSort: Duplicate senders found in block (%d duplicates)\n", vecTxIndexToRemove.size());
+		return false;
+	}
 	container c;
 	try
 	{
