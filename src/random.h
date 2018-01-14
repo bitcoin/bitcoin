@@ -32,7 +32,7 @@ void RandAddSeedSleep();
 
 /**
  * Function to gather random data from multiple sources, failing whenever any
- * of those source fail to provide a result.
+ * of those sources fail to provide a result.
  */
 void GetStrongRandBytes(unsigned char* buf, int num);
 
