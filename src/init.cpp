@@ -224,7 +224,7 @@ std::string HelpMessage(HelpMessageMode hmm)
                                             "solved instantly. This is intended for regression testing tools and app development.") + "\n";
 #ifdef WIN32
         strUsage += 
-        "  -printtodebugger       " + _("Send trace/debug info to debugger") + "\n"
+        "  -printtodebugger       " + _("Send trace/debug info to debugger") + "\n";
 #endif
 
     if (hmm == HMM_BITCOIN_QT)
