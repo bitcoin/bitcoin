@@ -2938,7 +2938,6 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
 
                 // Include more fee and try again.
                 nFeeRet = nFeeNeeded;
-                continue;
             }
         }
 
