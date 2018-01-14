@@ -8,7 +8,7 @@ using namespace boost;
 typedef adjacency_list< vecS, vecS, directedS > Graph;
 typedef graph_traits<Graph> Traits;
 typedef typename Traits::vertex_descriptor vertex_descriptor;
-typedef typename sorted_vector<int> container;
+typedef typename std::vector<int> container;
 typedef std::map<int, vector<int> > IndexMap;
 bool CreateDAGFromBlock(const CBlock*pblock, Graph &graph, std::vector<vertex_descriptor> &vertices, IndexMap &mapTxIndex) {
 	std::map<string, int> mapAliasIndex;
@@ -83,7 +83,7 @@ unsigned int DAGRemoveCycles(CBlock * pblock, std::unique_ptr<CBlockTemplate> &p
 	// outputs were saved above and loop through them backwards to remove from back to front
 	std::sort(outputsToRemove.begin(), outputsToRemove.end(), std::greater<int>());
 	for (auto& nIndex : outputsToRemove) {
-		LogPrintf("reversed outputsToRemove %d\n", nOut);
+		LogPrintf("reversed outputsToRemove %d\n", nIndex);
 		nFees -= pblocktemplate->vTxFees[nIndex];
 		nBlockSigOps -= pblocktemplate->vTxSigOps[nIndex];
 		nBlockSize -= pblock->vtx[nIndex].GetTotalSize();
