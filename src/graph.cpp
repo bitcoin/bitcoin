@@ -70,8 +70,10 @@ unsigned int DAGRemoveCycles(CBlock * pblock, std::unique_ptr<CBlockTemplate> &p
 	// iterate backwards over sorted list of vertices, we can do this because we remove vertices from end to beginning, 
 	// which invalidate iterators from positon removed to end (we don't care about those after removal since we are iterating backwards to begining)
 	for (auto& nVertex : clearedVertices) {
+		LogPrintf("trying to clear %d\n", nVertex);
 		if (!mapTxIndex.count(nVertex))
 			continue;
+		LogPrintf("found nOut %d\n", mapTxIndex[nVertex]);
 		// mapTxIndex knows of the mapping between vertices and tx vout position
 		const int &nOut = mapTxIndex[nVertex];
 		if (nOut >= pblock->vtx.size())
