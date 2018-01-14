@@ -11,7 +11,7 @@ typedef typename Traits::vertex_descriptor vertex_descriptor;
 typedef typename std::vector< vertex_descriptor > container;
 typedef typename property_map<Graph, vertex_index_t>::const_type IndexMap;
 
-bool CreateDAGFromBlock(const CBlock*pblock, Graph &graph, std::vector<vertex_descriptor> &vertices, std::unordered_map<int, int> &mapTxIndex) {
+bool CreateDAGFromBlock(const CBlock*pblock, Graph &graph, std::vector<vertex_descriptor> &vertices, std::unordered_map<int, int> &mapTxIndex, sorted_vector *vecTxIndexToRemove=NULL) {
 	std::map<string, int> mapAliasIndex;
 	std::vector<vector<unsigned char> > vvchArgs;
 	std::vector<vector<unsigned char> > vvchAliasArgs;
@@ -30,8 +30,14 @@ bool CreateDAGFromBlock(const CBlock*pblock, Graph &graph, std::vector<vertex_de
 				if (mapAliasIndex.count(sender) == 0) {
 					vertices.push_back(add_vertex(graph));
 					mapAliasIndex[sender] = vertices.size() - 1;
-					mapTxIndex[vertices.size() - 1] = n;
 				}
+				// remove duplicate senders and avoid processing into DAG
+				else if(vecTxIndexToRemove != NULL)
+				{
+					vecTxIndexToRemove->push_back(n);
+					continue;
+				}
+				mapTxIndex[mapAliasIndex[sender]] = n;
 				
 				LogPrintf("CreateDAGFromBlock: found asset allocation from sender %s, nOut %d\n", sender, n);
 				CAssetAllocation allocation(tx);
@@ -41,6 +47,7 @@ bool CreateDAGFromBlock(const CBlock*pblock, Graph &graph, std::vector<vertex_de
 						if (mapAliasIndex.count(receiver) == 0) {
 							vertices.push_back(add_vertex(graph));
 							mapAliasIndex[receiver] = vertices.size() - 1;
+							mapTxIndex[vertices.size() - 1] = n;
 						}
 						// the graph needs to be from index to index 
 						add_edge(vertices[mapAliasIndex[sender]], vertices[mapAliasIndex[receiver]], graph);
@@ -57,9 +64,10 @@ unsigned int DAGRemoveCycles(CBlock * pblock, std::unique_ptr<CBlockTemplate> &p
 	std::vector<CTransaction> newVtx;
 	std::vector<vertex_descriptor> vertices;
 	std::unordered_map<int, int> mapTxIndex;
+	sorted_vector<int> vecTxIndexToRemove;
 	Graph graph;
 
-	if (!CreateDAGFromBlock(pblock, graph, vertices, mapTxIndex)) {
+	if (!CreateDAGFromBlock(pblock, graph, vertices, mapTxIndex, &vecTxIndexToRemove)) {
 		return true;
 	}
 
@@ -67,25 +75,28 @@ unsigned int DAGRemoveCycles(CBlock * pblock, std::unique_ptr<CBlockTemplate> &p
 	cycle_visitor<sorted_vector<int> > visitor(clearedVertices);
 	hawick_circuits(graph, visitor);
 	LogPrintf("Found %d circuits\n", clearedVertices.size());
-	// iterate backwards over sorted list of vertices, we can do this because we remove vertices from end to beginning, 
-	// which invalidate iterators from positon removed to end (we don't care about those after removal since we are iterating backwards to begining)
+	// add vertices to vecTxIndexToRemove only if they exist in mapTxIndex (which keeps track of all the senders tx index's)
+	// we only want to remove sender's tx since its one to many relationship between sender and receiver respectively, sender is the initiator of the tx
+	// receivers do not even have their own tx's
 	for (auto& nVertex : clearedVertices) {
-		LogPrintf("trying to clear %d\n", nVertex);
 		if (!mapTxIndex.count(nVertex))
 			continue;
-		LogPrintf("found nOut %d\n", mapTxIndex[nVertex]);
-		// mapTxIndex knows of the mapping between vertices and tx vout position
-		const int &nOut = mapTxIndex[nVertex];
-		if (nOut >= pblock->vtx.size())
+		vecTxIndexToRemove.push_back(mapTxIndex[nVertex]);
+	}
+	// iterate backwards over sorted list of vertices, we can do this because we remove vertices from end to beginning, 
+	// which invalidate iterators from positon removed to end (we don't care about those after removal since we are iterating backwards to begining)
+	reverse(vecTxIndexToRemove.begin(), vecTxIndexToRemove.end());
+	for (auto& nIndex : vecTxIndexToRemove) {
+		if (nIndex >= pblock->vtx.size())
 			continue;
-		LogPrintf("cleared vertex, erasing nOut %d\n", nOut);
-		nFees -= pblocktemplate->vTxFees[nOut];
-		nBlockSigOps -= pblocktemplate->vTxSigOps[nOut];
-		nBlockSize -= pblock->vtx[nOut].GetTotalSize();
-		pblock->vtx.erase(pblock->vtx.begin() + nOut);
+		LogPrintf("cleared vertex, erasing nIndex %d\n", nIndex);
+		nFees -= pblocktemplate->vTxFees[nIndex];
+		nBlockSigOps -= pblocktemplate->vTxSigOps[nIndex];
+		nBlockSize -= pblock->vtx[nIndex].GetTotalSize();
+		pblock->vtx.erase(pblock->vtx.begin() + nIndex);
 		nBlockTx--;
-		pblocktemplate->vTxFees.erase(pblocktemplate->vTxFees.begin() + nOut);
-		pblocktemplate->vTxSigOps.erase(pblocktemplate->vTxSigOps.begin() + nOut);
+		pblocktemplate->vTxFees.erase(pblocktemplate->vTxFees.begin() + nIndex);
+		pblocktemplate->vTxSigOps.erase(pblocktemplate->vTxSigOps.begin() + nIndex);
 	}
 	return clearedVertices.size();
 }
@@ -136,6 +147,11 @@ bool DAGTopologicalSort(CBlock * pblock) {
 		}
 	}
 	LogPrintf("newVtx size %d vs pblock.vtx size %d\n", newVtx.size(), pblock->vtx.size());
+	if (pblock->vtx.size() != newVtx.size())
+	{
+		LogPrintf("DAGTopologicalSort: sorted block transaction count does not match unsorted block transaction count!\n");
+		return false;
+	}
 	// set newVtx to block's vtx so block can process as normal
 	pblock->vtx = newVtx;
 	return true;
