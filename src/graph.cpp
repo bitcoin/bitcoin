@@ -8,10 +8,10 @@ using namespace boost;
 typedef adjacency_list< vecS, vecS, directedS > Graph;
 typedef graph_traits<Graph> Traits;
 typedef typename Traits::vertex_descriptor vertex_descriptor;
-typedef typename std::vector< vertex_descriptor > container;
+typedef typename sorted_vector< vertex_descriptor > container;
 typedef typename property_map<Graph, vertex_index_t>::const_type IndexMap;
 
-bool CreateDAGFromBlock(const CBlock*pblock, Graph &graph, std::vector<vertex_descriptor> &vertices, std::unordered_map<int, int> &mapTxIndex, sorted_vector<int> &vecTxIndexToRemove) {
+bool CreateDAGFromBlock(const CBlock*pblock, Graph &graph, std::vector<vertex_descriptor> &vertices, std::unordered_map<int, vector<int> > &mapTxIndex) {
 	std::map<string, int> mapAliasIndex;
 	std::vector<vector<unsigned char> > vvchArgs;
 	std::vector<vector<unsigned char> > vvchAliasArgs;
@@ -31,13 +31,7 @@ bool CreateDAGFromBlock(const CBlock*pblock, Graph &graph, std::vector<vertex_de
 					vertices.push_back(add_vertex(graph));
 					mapAliasIndex[sender] = vertices.size() - 1;
 				}
-				// remove duplicate senders and avoid processing into DAG
-				else 
-				{
-					vecTxIndexToRemove.insert(n);
-					continue;
-				}
-				mapTxIndex[mapAliasIndex[sender]] = n;
+				mapTxIndex[mapAliasIndex[sender]].push_back(n);
 				
 				LogPrintf("CreateDAGFromBlock: found asset allocation from sender %s, nOut %d\n", sender, n);
 				CAssetAllocation allocation(tx);
@@ -62,33 +56,34 @@ unsigned int DAGRemoveCycles(CBlock * pblock, std::unique_ptr<CBlockTemplate> &p
 	LogPrintf("DAGRemoveCycles\n");
 	std::vector<CTransaction> newVtx;
 	std::vector<vertex_descriptor> vertices;
-	std::unordered_map<int, int> mapTxIndex;
-	sorted_vector<int> vecTxIndexToRemove;
+	std::unordered_map<int, std::vector<int> > mapTxIndex;
 	Graph graph;
 
-	if (!CreateDAGFromBlock(pblock, graph, vertices, mapTxIndex, vecTxIndexToRemove)) {
+	if (!CreateDAGFromBlock(pblock, graph, vertices, mapTxIndex)) {
 		return true;
 	}
-
-	sorted_vector<int> clearedVertices;
-	cycle_visitor<sorted_vector<int> > visitor(clearedVertices);
+	std::vector<int> outputsToRemove;
+	std::vector<int> clearedVertices;
+	cycle_visitor<std::vector<int> > visitor(clearedVertices);
 	hawick_circuits(graph, visitor);
 	LogPrintf("Found %d circuits\n", clearedVertices.size());
-	// add vertices to vecTxIndexToRemove only if they exist in mapTxIndex (which keeps track of all the senders tx index's)
-	// we only want to remove sender's tx since its one to many relationship between sender and receiver respectively, sender is the initiator of the tx
-	// receivers do not even have their own tx's
 	for (auto& nVertex : clearedVertices) {
-		if (!mapTxIndex.count(nVertex))
+		LogPrintf("trying to clear vertex %d\n", nVertex);
+		std::vector<int>::iterator it = mapTxIndex.find(nVertex);
+		if (it == mapTxIndex.end())
 			continue;
-		vecTxIndexToRemove.insert(mapTxIndex[nVertex]);
+		// mapTxIndex knows of the mapping between vertices and tx vout positions
+		for (auto& nOut : *it) {
+			if (nOut >= pblock->vtx.size())
+				continue;
+			LogPrintf("outputsToRemove %d\n", nOut);
+			outputsToRemove.insert(nOut);
+		}
 	}
-	// iterate backwards over sorted list of vertices, we can do this because we remove vertices from end to beginning, 
-	// which invalidate iterators from positon removed to end (we don't care about those after removal since we are iterating backwards to begining)
-	reverse(vecTxIndexToRemove.begin(), vecTxIndexToRemove.end());
-	for (auto& nIndex : vecTxIndexToRemove) {
-		if (nIndex >= pblock->vtx.size())
-			continue;
-		LogPrintf("cleared vertex, erasing nIndex %d\n", nIndex);
+	// outputs were saved above and loop through them backwards to remove from back to front
+	std::sort(outputsToRemove.begin(), outputsToRemove.end(), std::greater<int>());
+	for (auto& nIndex : outputsToRemove) {
+		LogPrintf("reversed outputsToRemove %d\n", nOut);
 		nFees -= pblocktemplate->vTxFees[nIndex];
 		nBlockSigOps -= pblocktemplate->vTxSigOps[nIndex];
 		nBlockSize -= pblock->vtx[nIndex].GetTotalSize();
@@ -104,16 +99,10 @@ bool DAGTopologicalSort(CBlock * pblock) {
 	std::vector<CTransaction> newVtx;
 	std::vector<vertex_descriptor> vertices;
 	std::unordered_map<int, int> mapTxIndex;
-	sorted_vector<int> vecTxIndexToRemove;
 	Graph graph;
 
-	if (!CreateDAGFromBlock(pblock, graph, vertices, mapTxIndex, vecTxIndexToRemove)) {
+	if (!CreateDAGFromBlock(pblock, graph, vertices, mapTxIndex)) {
 		return true;
-	}
-	// DAGTopologicalSort is enforced by clients. Ensure duplicate senders have been removed by miner
-	if (vecTxIndexToRemove.size() > 0) {
-		LogPrintf("DAGTopologicalSort: Duplicate senders found in block (%d duplicates)\n", vecTxIndexToRemove.size());
-		return false;
 	}
 	container c;
 	try
@@ -127,19 +116,17 @@ bool DAGTopologicalSort(CBlock * pblock) {
 	// add coinbase
 	newVtx.push_back(pblock->vtx[0]);
 
-	// add sys tx's to newVtx in sorted order
+	// add sys tx's to newVtx in reverse sorted order
 	reverse(c.begin(), c.end());
 	string ordered = "";
 	for (auto& nVertex : c) {
-		if (!mapTxIndex.count(nVertex))
-			continue;
 		LogPrintf("add sys tx in sorted order\n");
-		const int &nOut = mapTxIndex[nVertex];
-		if (nOut >= pblock->vtx.size())
+		// this may not find the vertex if its a receiver (we only want to process sender as tx is tied to sender)
+		std::vector<int>::iterator it = mapTxIndex.find(nVertex);
+		if (it == mapTxIndex.end())
 			continue;
-		LogPrintf("push nOut %d\n", nOut);
-		newVtx.push_back(pblock->vtx[nOut]);
-		ordered += strprintf("%d ", nOut);
+		// we only need to add the first index we find because we want to ensure that we aren't processing more than one per sender per block
+		newVtx.push_back(pblock->vtx[(*it).first()]);
 	}
 	LogPrintf("topological ordering: %s\n", ordered);
 	// add non sys tx's to end of newVtx
@@ -151,11 +138,6 @@ bool DAGTopologicalSort(CBlock * pblock) {
 		}
 	}
 	LogPrintf("newVtx size %d vs pblock.vtx size %d\n", newVtx.size(), pblock->vtx.size());
-	if (pblock->vtx.size() != newVtx.size())
-	{
-		LogPrintf("DAGTopologicalSort: sorted block transaction count does not match unsorted block transaction count!\n");
-		return false;
-	}
 	// set newVtx to block's vtx so block can process as normal
 	pblock->vtx = newVtx;
 	return true;
