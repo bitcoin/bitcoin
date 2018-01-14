@@ -47,7 +47,6 @@ bool CreateDAGFromBlock(const CBlock*pblock, Graph &graph, std::vector<vertex_de
 						if (mapAliasIndex.count(receiver) == 0) {
 							vertices.push_back(add_vertex(graph));
 							mapAliasIndex[receiver] = vertices.size() - 1;
-							mapTxIndex[vertices.size() - 1] = n;
 						}
 						// the graph needs to be from index to index 
 						add_edge(vertices[mapAliasIndex[sender]], vertices[mapAliasIndex[receiver]], graph);
