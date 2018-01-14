@@ -107,7 +107,7 @@ class RESTTest (BitcoinTestFramework):
         #check chainTip response
         assert_equal(json_obj['chaintipHash'], bb_hash)
 
-        #make sure there is no utox in the response because this oupoint has been spent
+        #make sure there is no utxo in the response because this oupoint has been spent
         assert_equal(len(json_obj['utxos']), 0)
 
         #check bitmap

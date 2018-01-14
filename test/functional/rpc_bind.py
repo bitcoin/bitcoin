@@ -54,7 +54,7 @@ class RPCBindTest(BitcoinTestFramework):
     def run_test(self):
         # due to OS-specific network stats queries, this test works only on Linux
         if not sys.platform.startswith('linux'):
-            raise SkipTest("This test can only be run on linux.")
+            raise SkipTest("This test can only be run on Linux.")
         # find the first non-loopback interface for testing
         non_loopback_ip = None
         for name,ip in all_interfaces():
