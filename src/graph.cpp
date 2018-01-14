@@ -9,8 +9,7 @@ typedef adjacency_list< vecS, vecS, directedS > Graph;
 typedef graph_traits<Graph> Traits;
 typedef typename Traits::vertex_descriptor vertex_descriptor;
 typedef typename sorted_vector< int > container;
-typedef typename property_map<Graph, vertex_index_t>::const_type IndexMap;
-
+typedef typename std::map<int, vector<int> > IndexMap;
 bool CreateDAGFromBlock(const CBlock*pblock, Graph &graph, std::vector<vertex_descriptor> &vertices, std::map<int, vector<int> > &mapTxIndex) {
 	std::map<string, int> mapAliasIndex;
 	std::vector<vector<unsigned char> > vvchArgs;
@@ -56,7 +55,7 @@ unsigned int DAGRemoveCycles(CBlock * pblock, std::unique_ptr<CBlockTemplate> &p
 	LogPrintf("DAGRemoveCycles\n");
 	std::vector<CTransaction> newVtx;
 	std::vector<vertex_descriptor> vertices;
-	std::map<int, std::vector<int> > mapTxIndex;
+	IndexMap mapTxIndex;
 	Graph graph;
 
 	if (!CreateDAGFromBlock(pblock, graph, vertices, mapTxIndex)) {
@@ -69,11 +68,12 @@ unsigned int DAGRemoveCycles(CBlock * pblock, std::unique_ptr<CBlockTemplate> &p
 	LogPrintf("Found %d circuits\n", clearedVertices.size());
 	for (auto& nVertex : clearedVertices) {
 		LogPrintf("trying to clear vertex %d\n", nVertex);
-		std::vector<int>::iterator it = mapTxIndex.find(nVertex);
+		IndexMap::iterator it = mapTxIndex.find(nVertex);
 		if (it == mapTxIndex.end())
 			continue;
+		const std::vector<int> &vecTx = (*it).second;
 		// mapTxIndex knows of the mapping between vertices and tx vout positions
-		for (auto& nOut : *it) {
+		for (auto& nOut : vecTx) {
 			if (nOut >= pblock->vtx.size())
 				continue;
 			LogPrintf("outputsToRemove %d\n", nOut);
@@ -98,7 +98,7 @@ bool DAGTopologicalSort(CBlock * pblock) {
 	LogPrintf("DAGTopologicalSort\n");
 	std::vector<CTransaction> newVtx;
 	std::vector<vertex_descriptor> vertices;
-	std::map<int, int> mapTxIndex;
+	IndexMap mapTxIndex;
 	Graph graph;
 
 	if (!CreateDAGFromBlock(pblock, graph, vertices, mapTxIndex)) {
@@ -122,10 +122,10 @@ bool DAGTopologicalSort(CBlock * pblock) {
 	for (auto& nVertex : c) {
 		LogPrintf("add sys tx in sorted order\n");
 		// this may not find the vertex if its a receiver (we only want to process sender as tx is tied to sender)
-		std::vector<int>::iterator it = mapTxIndex.find(nVertex);
+		IndexMap::iterator it = mapTxIndex.find(nVertex);
 		if (it == mapTxIndex.end())
 			continue;
-		const std::vector<int> &vecTx = *it;
+		const std::vector<int> &vecTx = (*it).second;
 		// we only need to add the first index we find because we want to ensure that we aren't processing more than one per sender per block
 		newVtx.push_back(pblock->vtx[vecTx.front()]);
 	}
