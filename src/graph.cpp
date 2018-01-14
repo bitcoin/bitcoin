@@ -8,10 +8,10 @@ using namespace boost;
 typedef adjacency_list< vecS, vecS, directedS > Graph;
 typedef graph_traits<Graph> Traits;
 typedef typename Traits::vertex_descriptor vertex_descriptor;
-typedef typename sorted_vector< vertex_descriptor > container;
+typedef typename sorted_vector< int > container;
 typedef typename property_map<Graph, vertex_index_t>::const_type IndexMap;
 
-bool CreateDAGFromBlock(const CBlock*pblock, Graph &graph, std::vector<vertex_descriptor> &vertices, std::unordered_map<int, vector<int> > &mapTxIndex) {
+bool CreateDAGFromBlock(const CBlock*pblock, Graph &graph, std::vector<vertex_descriptor> &vertices, std::map<int, vector<int> > &mapTxIndex) {
 	std::map<string, int> mapAliasIndex;
 	std::vector<vector<unsigned char> > vvchArgs;
 	std::vector<vector<unsigned char> > vvchAliasArgs;
@@ -56,15 +56,15 @@ unsigned int DAGRemoveCycles(CBlock * pblock, std::unique_ptr<CBlockTemplate> &p
 	LogPrintf("DAGRemoveCycles\n");
 	std::vector<CTransaction> newVtx;
 	std::vector<vertex_descriptor> vertices;
-	std::unordered_map<int, std::vector<int> > mapTxIndex;
+	std::map<int, std::vector<int> > mapTxIndex;
 	Graph graph;
 
 	if (!CreateDAGFromBlock(pblock, graph, vertices, mapTxIndex)) {
 		return true;
 	}
 	std::vector<int> outputsToRemove;
-	std::vector<int> clearedVertices;
-	cycle_visitor<std::vector<int> > visitor(clearedVertices);
+	sorted_vector<int> clearedVertices;
+	cycle_visitor<sorted_vector<int> > visitor(clearedVertices);
 	hawick_circuits(graph, visitor);
 	LogPrintf("Found %d circuits\n", clearedVertices.size());
 	for (auto& nVertex : clearedVertices) {
@@ -98,7 +98,7 @@ bool DAGTopologicalSort(CBlock * pblock) {
 	LogPrintf("DAGTopologicalSort\n");
 	std::vector<CTransaction> newVtx;
 	std::vector<vertex_descriptor> vertices;
-	std::unordered_map<int, int> mapTxIndex;
+	std::map<int, int> mapTxIndex;
 	Graph graph;
 
 	if (!CreateDAGFromBlock(pblock, graph, vertices, mapTxIndex)) {

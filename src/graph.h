@@ -56,8 +56,7 @@ struct cycle_visitor
 	{
 		if (p.empty())
 			return;
-		const int &nValue = *(boost::prior(p.end()));
-		cleared.insert(nValue);
+		cleared.insert(*(boost::prior(p.end())));
 	}
 	ClearedVertices& cleared;
 };
