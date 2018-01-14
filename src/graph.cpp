@@ -70,8 +70,6 @@ unsigned int DAGRemoveCycles(CBlock * pblock, std::unique_ptr<CBlockTemplate> &p
 	// iterate backwards over sorted list of vertices, we can do this because we remove vertices from end to beginning, 
 	// which invalidate iterators from positon removed to end (we don't care about those after removal since we are iterating backwards to begining)
 	for (auto& nVertex : clearedVertices) {
-		if (nVertex >= mapTxIndex.size())
-			continue;
 		if (!mapTxIndex.count(nVertex))
 			continue;
 		// mapTxIndex knows of the mapping between vertices and tx vout position
@@ -116,8 +114,6 @@ bool DAGTopologicalSort(CBlock * pblock) {
 	reverse(c.begin(), c.end());
 	string ordered = "";
 	for (auto& nVertex : c) {
-		if (nVertex >= mapTxIndex.size())
-			continue;
 		if (!mapTxIndex.count(nVertex))
 			continue;
 		LogPrintf("add sys tx in sorted order\n");
