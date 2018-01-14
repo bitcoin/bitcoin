@@ -127,7 +127,7 @@ std::string EncodeBase64(const unsigned char* pch, size_t len)
 {
     static const char *pbase64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
-    std::string strRet = "";
+    std::string strRet;
     strRet.reserve((len+2)/3*4);
 
     int mode=0, left=0;
@@ -267,7 +267,7 @@ std::string EncodeBase32(const unsigned char* pch, size_t len)
 {
     static const char *pbase32 = "abcdefghijklmnopqrstuvwxyz234567";
 
-    std::string strRet="";
+    std::string strRet;
     strRet.reserve((len+4)/5*8);
 
     int mode=0, left=0;
