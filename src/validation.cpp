@@ -683,9 +683,9 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight,con
 		}
 		// clear all locks
 		for (auto& index : assetAllocationIndexes) {
-			const CTransaction &tx = sortedBlock.vtx[index.first];
+			const CTransaction &tx = sortedBlock.vtx[index.second];
 			CAssetAllocation assetAllocation(tx);
-			const CAssetAllocationTuple assetAllocationTuple(assetAllocation.vchAsset, index.second);
+			const CAssetAllocationTuple assetAllocationTuple(assetAllocation.vchAsset, index.first);
 			passetallocationdb->EraseISLock(assetAllocationTuple);
 		}
 	}
