@@ -144,7 +144,7 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         # getrawtransaction tests
         # 1. valid parameters - only supply txid
-        txHash = rawTx["hash"]
+        txHash = rawTx["txid"]
         assert_equal(self.nodes[0].getrawtransaction(txHash), rawTxSigned['hex'])
 
         # 2. valid parameters - supply txid and 0 for non-verbose

@@ -52,7 +52,7 @@ class SpentIndexTest(BitcoinTestFramework):
         scriptPubKey = CScript([OP_DUP, OP_HASH160, addressHash, OP_EQUALVERIFY, OP_CHECKSIG])
         unspent = self.nodes[0].listunspent()
         tx = CTransaction()
-        amount = int(unspent[0]["amount"] * 100000000)
+        amount = int(unspent[0]["amount"] * COIN)
         tx.vin = [CTxIn(COutPoint(int(unspent[0]["txid"], 16), unspent[0]["vout"]))]
         tx.vout = [CTxOut(amount, scriptPubKey)]
         tx.rehash()
@@ -90,8 +90,8 @@ class SpentIndexTest(BitcoinTestFramework):
         scriptPubKey2 = CScript([OP_DUP, OP_HASH160, addressHash2, OP_EQUALVERIFY, OP_CHECKSIG])
         tx2 = CTransaction()
         tx2.vin = [CTxIn(COutPoint(int(txid, 16), 0))]
-        tx2.vout = [CTxOut(amount, scriptPubKey2)]
-        tx.rehash()
+        tx2.vout = [CTxOut(amount - int(COIN / 10), scriptPubKey2)]
+        tx2.rehash()
         self.nodes[0].importprivkey(privkey)
         signed_tx2 = self.nodes[0].signrawtransaction(binascii.hexlify(tx2.serialize()).decode("utf-8"))
         txid2 = self.nodes[0].sendrawtransaction(signed_tx2["hex"], True)
