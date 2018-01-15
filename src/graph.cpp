@@ -74,7 +74,7 @@ unsigned int DAGRemoveCycles(CBlock * pblock, std::unique_ptr<CBlockTemplate> &p
 		IndexMap::iterator it = mapTxIndex.find(nVertex);
 		if (it == mapTxIndex.end())
 			continue;
-		std::vector<int> &vecTx = (*it).second;
+		const std::vector<int> &vecTx = (*it).second;
 		// mapTxIndex knows of the mapping between vertices and tx vout positions
 		for (auto& nOut : vecTx) {
 			if (nOut >= pblock->vtx.size())
@@ -129,8 +129,12 @@ bool DAGTopologicalSort(CBlock * pblock) {
 		if (it == mapTxIndex.end())
 			continue;
 		const std::vector<int> &vecTx = (*it).second;
-		// we only need to add the first index we find because we want to ensure that we aren't processing more than one per sender per block
-		newVtx.push_back(pblock->vtx[vecTx.front()]);
+		// mapTxIndex knows of the mapping between vertices and tx vout positions
+		for (auto& nOut : vecTx) {
+			if (nOut >= pblock->vtx.size())
+				continue;
+			newVtx.push_back(nOut);
+		}
 	}
 	LogPrintf("topological ordering: %s\n", ordered);
 	// add non sys tx's to end of newVtx
@@ -142,6 +146,11 @@ bool DAGTopologicalSort(CBlock * pblock) {
 		}
 	}
 	LogPrintf("newVtx size %d vs pblock.vtx size %d\n", newVtx.size(), pblock->vtx.size());
+	if (pblock->vtx.size() != newVtx.size())
+	{
+		LogPrintf("DAGTopologicalSort: sorted block transaction count does not match unsorted block transaction count!\n");
+		return false;
+	}
 	// set newVtx to block's vtx so block can process as normal
 	pblock->vtx = newVtx;
 	return true;

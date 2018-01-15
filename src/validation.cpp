@@ -620,6 +620,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight,con
 		// on connectblock, we only care when they are actually being connected not just checked
 		if (fJustCheck)
 			return true;
+		std::vector<std::pair<std::vector<unsigned char>, int> assetAllocationIndexes;
 		for (unsigned int i = 0; i < sortedBlock.vtx.size(); i++)
 		{
 			const CTransaction &tx = sortedBlock.vtx[i];
@@ -656,6 +657,8 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight,con
 						good = CheckAssetAllocationInputs(tx, op, nOut, vvchArgs, vvchAliasArgs[0], fJustCheck, nHeight, errorMessage);
 						if (fDebug && !errorMessage.empty())
 							LogPrintf("%s\n", errorMessage.c_str());
+						assetAllocationIndexes.push_back(make_pair(vvchAliasArgs[0], i));
+
 					}
 					else if (DecodeEscrowTx(tx, op, nOut, vvchArgs))
 					{
@@ -674,9 +677,16 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight,con
 				}
 				if (!good)
 				{
-					return false;
+					break;
 				}
 			}
+		}
+		// clear all locks
+		for (auto& index : assetAllocationIndexes) {
+			const CTransaction &tx = sortedBlock.vtx[index.first];
+			CAssetAllocation assetAllocation(tx);
+			const CAssetAllocationTuple assetAllocationTuple(assetAllocation.vchAsset, index.second);
+			passetallocationdb->EraseISLock(assetAllocationTuple);
 		}
 	}
 
