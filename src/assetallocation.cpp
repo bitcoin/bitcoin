@@ -355,6 +355,12 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 							nHeight,
 							fJustCheck ? 1 : 0);
 					paliasdb->UpdateAliasIndexTxHistoryLockStatus(tx.GetHash().GetHex() + "-" + assetAllocationTuple.ToString(), nLockStatus);
+					if (!passetallocationdb->EraseISLock(assetAllocationTuple, tx.GetHash()))
+					{
+						errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from assetallocation DB");
+						return error(errorMessage.c_str());
+					}
+					
 				}
 				return true;
 			}
@@ -436,6 +442,13 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 		{
 			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot send this asset. Asset allocation owner must sign off on this change");
 			return true;
+		}
+		if (!fJustCheck && !dontaddtodb) {
+			if (!passetallocationdb->EraseISLock(assetAllocationTuple, tx.GetHash()))
+			{
+				errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from assetallocation DB");
+				return error(errorMessage.c_str());
+			}
 		}
 		if (theAssetAllocation.listSendingAllocationInputs.empty()) {
 			if (!dbAssetAllocation.listAllocationInputs.empty()) {
