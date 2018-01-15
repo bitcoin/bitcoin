@@ -331,6 +331,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 	CAsset dbAsset;
 	if (GetAssetAllocation(assetAllocationTuple, dbAssetAllocation)){
 		vector<uint256> lockedTXIDs;
+		LogPrintf("lockedTXIDs size %d", lockedTXIDs.size());
 		passetallocationdb->ReadISLock(assetAllocationTuple, lockedTXIDs);
 		if (!fJustCheck && !lockedTXIDs.empty()) {
 			if (std::find(lockedTXIDs.begin(), lockedTXIDs.end(), tx.GetHash()) == lockedTXIDs.end())
@@ -407,7 +408,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 									}
 								}
 							}
-							errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("Sender balance is insufficient");
+							errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2024 - " + _("Sender balance is insufficient");
 							return true;
 						}
 					}

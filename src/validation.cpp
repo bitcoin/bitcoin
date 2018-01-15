@@ -617,9 +617,6 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight,con
 				return false;
 			}
 		}
-		// on connectblock, we only care when they are actually being connected not just checked
-		if (fJustCheck)
-			return true;
 		for (unsigned int i = 0; i < sortedBlock.vtx.size(); i++)
 		{
 			const CTransaction &tx = sortedBlock.vtx[i];
