@@ -261,7 +261,7 @@ bool RemoveAssetAllocationScriptPrefix(const CScript& scriptIn, CScript& scriptO
 	return true;
 }
 
-bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const std::vector<unsigned char> &vvchAlias,
+bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const std::vector<unsigned char> &vchAlias,
         bool fJustCheck, int nHeight, string &errorMessage, bool dontaddtodb) {
 	if (!paliasdb || !passetallocationdb)
 		return false;
@@ -318,10 +318,10 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 			return error(errorMessage.c_str());
 		}
 	}
-	const CAssetAllocationTuple assetAllocationTuple(theAssetAllocation.vchAsset, vvchAlias);
+	const CAssetAllocationTuple assetAllocationTuple(theAssetAllocation.vchAsset, vchAlias);
 	const string &user3 = "";
 	const string &user2 = "";
-	const string &user1 = stringFromVch(vvchAlias);
+	const string &user1 = stringFromVch(vchAlias);
 	string strResponseEnglish = "";
 	string strResponse = GetSyscoinTransactionDescription(op, strResponseEnglish, ASSETALLOCATION);
 	char nLockStatus = NOLOCK_UNCONFIRMED_STATE;
@@ -415,7 +415,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 			}
 		}
 	}
-	theAssetAllocation.vchAlias = vvchAlias;
+	theAssetAllocation.vchAlias = vchAlias;
 	theAssetAllocation.nBalance = dbAssetAllocation.nBalance;
 	if (op == OP_ASSET_ALLOCATION_SEND)
 	{
@@ -440,7 +440,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 				// deduct qty from sender and add to receiver
 				// commit receiver details to database using  through receiver alias/assetallocation id tuple as key
 		// commit sender details to database
-		if (dbAssetAllocation.vchAlias != vvchAlias)
+		if (dbAssetAllocation.vchAlias != vchAlias)
 		{
 			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot send this asset. Asset allocation owner must sign off on this change");
 			return true;
@@ -478,6 +478,10 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 			}
 			for (auto& amountTuple : theAssetAllocation.listSendingAllocationAmounts) {
 				CAssetAllocation receiverAllocation;
+				if (amountTuple.first == vchAlias) {
+					errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("Cannot send an asset allocation to yourself");
+					continue;
+				}
 				const CAssetAllocationTuple receiverAllocationTuple(theAssetAllocation.vchAsset, amountTuple.first);
 				// don't need to check for existance of allocation because it may not exist, may be creating it here for the first time for receiver
 				GetAssetAllocation(receiverAllocationTuple, receiverAllocation);
@@ -485,7 +489,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 				// check receiver alias
 				if (!GetAlias(amountTuple.first, alias))
 				{
-					errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2024 - " + _("Cannot find alias you are transferring to.");
+					errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2024 - " + _("Cannot find alias you are transferring to");
 					continue;
 				}
 				if (!(alias.nAcceptTransferFlags & ACCEPT_TRANSFER_ASSETS))
@@ -500,8 +504,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 						receiverAllocation.vchAlias = receiverAllocationTuple.vchAlias;
 						receiverAllocation.vchAsset = receiverAllocationTuple.vchAsset;
 					}
-					if (fJustCheck)
-						receiverAllocation.nHeight = nHeight;
+					receiverAllocation.nHeight = nHeight;
 					receiverAllocation.txHash = tx.GetHash();
 					receiverAllocation.nBalance += amountTuple.second;
 					theAssetAllocation.nBalance -= amountTuple.second;
@@ -520,8 +523,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 	}
 
 	// set the assetallocation's txn-dependent values
-	if(fJustCheck)
-		theAssetAllocation.nHeight = nHeight;
+	theAssetAllocation.nHeight = nHeight;
 	theAssetAllocation.txHash = tx.GetHash();
 	// write assetallocation  
 	if (!dontaddtodb) {
