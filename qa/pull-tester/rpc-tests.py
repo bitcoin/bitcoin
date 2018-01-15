@@ -109,78 +109,87 @@ if ENABLE_ZMQ:
 
 testScripts = [
     # longest test should go first, to favor running tests in parallel
-    'p2p-fullblocktest.py', # NOTE: needs dash_hash to pass
+    'wallet-hd.py',
     'walletbackup.py',
-    'bip68-112-113-p2p.py',
+    # vv Tests less than 5m vv
+    'p2p-fullblocktest.py', # NOTE: needs dash_hash to pass
+    'fundrawtransaction.py',
+    'fundrawtransaction-hd.py',
+    # vv Tests less than 2m vv
     'wallet.py',
     'wallet-accounts.py',
-    'wallet-hd.py',
     'listtransactions.py',
+    # vv Tests less than 60s vv
+    'sendheaders.py', # NOTE: needs dash_hash to pass
+    'zapwallettxes.py',
+    'importmulti.py',
+    'mempool_limit.py',
+    'merkle_blocks.py',
     'receivedby.py',
+    'abandonconflict.py',
+    'bip68-112-113-p2p.py',
+    'rawtransactions.py',
+    'reindex.py',
+    # vv Tests less than 30s vv
     'mempool_resurrect_test.py',
     'txn_doublespend.py --mineblock',
     'txn_clone.py',
     'getchaintips.py',
-    'rawtransactions.py',
     'rest.py',
     'mempool_spendcoinbase.py',
     'mempool_reorg.py',
-    'mempool_limit.py',
     'httpbasics.py',
     'multi_rpc.py',
-    'zapwallettxes.py',
     'proxy_test.py',
-    'merkle_blocks.py',
-    'fundrawtransaction.py',
-    'fundrawtransaction-hd.py',
     'signrawtransactions.py',
     'nodehandling.py',
-    'reindex.py',
     'addressindex.py',
     'timestampindex.py',
     'spentindex.py',
     'decodescript.py',
     'blockchain.py',
     'disablewallet.py',
-    'sendheaders.py', # NOTE: needs dash_hash to pass
     'keypool.py',
     'keypool-hd.py',
     'p2p-mempool.py',
     'prioritise_transaction.py',
     'invalidblockrequest.py', # NOTE: needs dash_hash to pass
     'invalidtxrequest.py', # NOTE: needs dash_hash to pass
-    'abandonconflict.py',
     'p2p-versionbits-warning.py',
     'preciousblock.py',
     'importprunedfunds.py',
     'signmessages.py',
-    'importmulti.py',
 ]
 if ENABLE_ZMQ:
     testScripts.append('zmq_test.py')
 
 testScriptsExt = [
+    # 'pruning.py', # Prune mode is incompatible with -txindex.
+    # vv Tests less than 20m vv
+    'smartfees.py',
+    # vv Tests less than 5m vv
+    'maxuploadtarget.py',
+    'mempool_packages.py',
+    # vv Tests less than 2m vv
+    'bip68-sequence.py',
+    'getblocktemplate_longpoll.py',  # FIXME: "socket.error: [Errno 54] Connection reset by peer" on my Mac, same as  https://github.com/bitcoin/bitcoin/issues/6651
+    # vv Tests less than 60s vv
     'bip9-softforks.py',
+    'p2p-feefilter.py',
+    'rpcbind_test.py',
+    # vv Tests less than 30s vv
     'bip65-cltv.py',
     'bip65-cltv-p2p.py', # NOTE: needs dash_hash to pass
-    'bip68-sequence.py',
     'bipdersig-p2p.py', # NOTE: needs dash_hash to pass
     'bipdersig.py',
-    'getblocktemplate_longpoll.py', # FIXME: "socket.error: [Errno 54] Connection reset by peer" on my Mac, same as  https://github.com/bitcoin/bitcoin/issues/6651
     'getblocktemplate_proposals.py',
     'txn_doublespend.py',
     'txn_clone.py --mineblock',
     'forknotify.py',
     'invalidateblock.py',
-    'rpcbind_test.py',
-    'smartfees.py',
     'maxblocksinflight.py',
     'p2p-acceptblock.py', # NOTE: needs dash_hash to pass
-    'mempool_packages.py',
-    'maxuploadtarget.py',
     # 'replace-by-fee.py', # RBF is disabled in Dash Core
-    'p2p-feefilter.py',
-    # 'pruning.py', # leave pruning last as it takes a REALLY long time #### Prune mode is incompatible with -txindex.
 ]
 
 
