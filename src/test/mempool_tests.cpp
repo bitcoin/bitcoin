@@ -397,6 +397,23 @@ BOOST_AUTO_TEST_CASE(MempoolAncestorIndexingTest)
         sortedOrder.erase(sortedOrder.end()-2);
     sortedOrder.insert(sortedOrder.begin(), tx7.GetHash().ToString());
     CheckSort<ancestor_score>(pool, sortedOrder);
+
+    // High-fee parent, low-fee child
+    // tx7 -> tx8
+    CMutableTransaction tx8 = CMutableTransaction();
+    tx8.vin.resize(1);
+    tx8.vin[0].prevout  = COutPoint(tx7.GetHash(), 0);
+    tx8.vin[0].scriptSig = CScript() << OP_11;
+    tx8.vout.resize(1);
+    tx8.vout[0].scriptPubKey = CScript() << OP_11 << OP_EQUAL;
+    tx8.vout[0].nValue = 10*COIN;
+
+    // Check that we sort by min(feerate, ancestor_feerate):
+    // set the fee so that the ancestor feerate is above tx1/5,
+    // but the transaction's own feerate is lower
+    pool.addUnchecked(tx8.GetHash(), entry.Fee(5000LL).FromTx(tx8));
+    sortedOrder.insert(sortedOrder.end()-1, tx8.GetHash().ToString());
+    CheckSort<ancestor_score>(pool, sortedOrder);
 }
 
 
