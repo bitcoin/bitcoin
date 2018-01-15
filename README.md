@@ -5,6 +5,8 @@ Bitcoin Core integration/staging tree
 
 https://bitcoincore.org
 
+在不违反开源协议的情况下，我只能写一写这些了，Fork官方项目，然后我去改一行代码。
+
 What is Bitcoin?
 ----------------
 
