@@ -168,11 +168,11 @@ public:
 	}
 	bool EraseISLock(const CAssetAllocationTuple& assetAllocationTuple, const uint256& txid) {
 		std::vector<uint256> locks;
-		ReadISLock(allocationTuple, locks);
+		ReadISLock(assetAllocationTuple, locks);
 		std::vector<uint256>::iterator it = std::find(locks.begin(), locks.end(), txid);
 		if (it != locks.end())
 			locks.erase(it);
-		return Write(make_pair(std::string("assetallocationl"), allocationTuple), locks);
+		return Write(make_pair(std::string("assetallocationl"), assetAllocationTuple), locks);
 	}
 	void WriteAssetAllocationIndex(const CAssetAllocation& assetAllocationTuple, const int &op);
 	void EraseAssetAllocationIndex(const CAssetAllocationTuple& assetAllocationTuple, bool cleanup=false);
