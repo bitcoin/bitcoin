@@ -14,7 +14,7 @@ added in the future, they should try to follow the same convention and not
 make assumptions about execution order.
 """
 
-from segwit import send_to_witness
+from test_framework.blocktools import send_to_witness
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework import blocktools
 from test_framework.mininode import CTransaction
