@@ -170,7 +170,7 @@ public:
 		std::vector<uint256> locks;
 		ReadISLock(allocationTuple, locks);
 		std::vector<uint256>::iterator it = std::find(locks.begin(), locks.end(), txid);
-		if (it != locks.end)
+		if (it != locks.end())
 			locks.erase(it);
 		return Write(make_pair(std::string("assetallocationl"), allocationTuple), locks);
 	}
