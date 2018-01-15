@@ -335,13 +335,15 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 		if (!fJustCheck && !lockedTXIDs.empty()) {
 			if (std::find(lockedTXIDs.begin(), lockedTXIDs.end(), tx.GetHash()) == lockedTXIDs.end())
 			{
-				nLockStatus = LOCK_CONFLICT_CONFIRMED_STATE;
-				if (fDebug)
-					LogPrintf("ASSET ALLOCATION txid not found in locks! Recreating from previous state...\n");
+				if (!dontaddtodb) {
+					nLockStatus = LOCK_CONFLICT_CONFIRMED_STATE;
+					if (fDebug)
+						LogPrintf("ASSET ALLOCATION txid not found in locks! Recreating from previous state...\n");
 
-				// recreate this assetallocation tx from last known good position (last assetallocation stored)
-				if (!passetallocationdb->ReadLastAssetAllocation(assetAllocationTuple, theAssetAllocation)) {
-					dbAssetAllocation.SetNull();
+					// recreate this assetallocation tx from last known good position (last assetallocation stored)
+					if (!passetallocationdb->ReadLastAssetAllocation(assetAllocationTuple, theAssetAllocation)) {
+						dbAssetAllocation.SetNull();
+					}
 				}
 			}
 			else {
