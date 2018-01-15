@@ -10,8 +10,9 @@ typedef graph_traits<Graph> Traits;
 typedef typename Traits::vertex_descriptor vertex_descriptor;
 typedef typename std::vector<int> container;
 typedef std::map<int, vector<int> > IndexMap;
+typedef std::map<string, int> AliasMap;
 bool CreateDAGFromBlock(const CBlock*pblock, Graph &graph, std::vector<vertex_descriptor> &vertices, IndexMap &mapTxIndex) {
-	std::map<string, int> mapAliasIndex;
+	AliasMap mapAliasIndex;
 	std::vector<vector<unsigned char> > vvchArgs;
 	std::vector<vector<unsigned char> > vvchAliasArgs;
 	int op;
@@ -26,7 +27,8 @@ bool CreateDAGFromBlock(const CBlock*pblock, Graph &graph, std::vector<vertex_de
 			if (DecodeAssetAllocationTx(tx, op, nOut, vvchArgs))
 			{
 				const string& sender = stringFromVch(vvchAliasArgs[0]);
-				if (mapAliasIndex.count(sender) == 0) {
+				AliasMap::iterator it = mapAliasIndex.find(sender);
+				if (it == mapAliasIndex.end()) {
 					vertices.push_back(add_vertex(graph));
 					mapAliasIndex[sender] = vertices.size() - 1;
 				}
@@ -37,7 +39,8 @@ bool CreateDAGFromBlock(const CBlock*pblock, Graph &graph, std::vector<vertex_de
 				if (!allocation.listSendingAllocationAmounts.empty()) {
 					for (auto& allocationInstance : allocation.listSendingAllocationAmounts) {
 						const string& receiver = stringFromVch(allocationInstance.first);
-						if (mapAliasIndex.count(receiver) == 0) {
+						AliasMap::iterator it = mapAliasIndex.find(receiver);
+						if (it == mapAliasIndex.end()) {
 							vertices.push_back(add_vertex(graph));
 							mapAliasIndex[receiver] = vertices.size() - 1;
 						}
