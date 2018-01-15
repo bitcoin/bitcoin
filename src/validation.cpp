@@ -620,7 +620,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight,con
 		// on connectblock, we only care when they are actually being connected not just checked
 		if (fJustCheck)
 			return true;
-		std::vector<std::pair<std::vector<unsigned char>, int> assetAllocationIndexes;
+		std::vector<pair<std::vector<unsigned char>, int> > assetAllocationIndexes;
 		for (unsigned int i = 0; i < sortedBlock.vtx.size(); i++)
 		{
 			const CTransaction &tx = sortedBlock.vtx[i];
