@@ -138,7 +138,7 @@ public:
 		if (!fJustCheck)
 			writeState = writeState && Write(make_pair(std::string("assetallocationp"), allocationTuple), assetallocation);
 		else if (fJustCheck) {
-			std::vector<uint256>& locks;
+			std::vector<uint256> locks;
 			ReadISLock(allocationTuple, locks);
 			locks.push_back(assetallocation.txHash);
 			writeState = writeState && Write(make_pair(std::string("assetallocationl"), allocationTuple), locks);
@@ -167,7 +167,7 @@ public:
 		return Erase(make_pair(std::string("assetallocationl"), assetAllocationTuple));
 	}
 	bool EraseISLock(const CAssetAllocationTuple& assetAllocationTuple, const uint256& txid) {
-		std::vector<uint256>& locks;
+		std::vector<uint256> locks;
 		ReadISLock(allocationTuple, locks);
 		std::vector<uint256>::iterator it = std::find(locks.begin(), locks.end(), txid);
 		if (it != locks.end)
