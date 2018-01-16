@@ -137,12 +137,8 @@ public:
 		bool writeState = Write(make_pair(std::string("assetallocationi"), allocationTuple), assetallocation);
 		if (!fJustCheck)
 			writeState = writeState && Write(make_pair(std::string("assetallocationp"), allocationTuple), assetallocation);
-		else if (fJustCheck) {
-			std::vector<uint256> locks;
-			ReadISLock(allocationTuple, locks);
-			locks.push_back(assetallocation.txHash);
-			writeState = writeState && Write(make_pair(std::string("assetallocationl"), allocationTuple), locks);
-		}
+		else if (fJustCheck)
+			writeState = writeState && Write(make_pair(std::string("assetallocationl"), allocationTuple), fJustCheck);
 		WriteAssetAllocationIndex(assetallocation, op);
         return writeState;
     }
@@ -160,19 +156,11 @@ public:
 	bool ReadLastAssetAllocation(const CAssetAllocationTuple& assetAllocationTuple, CAssetAllocation& assetallocation) {
 		return Read(make_pair(std::string("assetallocationp"), assetAllocationTuple), assetallocation);
 	}
-	bool ReadISLock(const CAssetAllocationTuple& assetAllocationTuple, std::vector<uint256>& locks) {
-		return Read(make_pair(std::string("assetallocationl"), assetAllocationTuple), locks);
+	bool ReadISLock(const CAssetAllocationTuple& assetAllocationTuple, bool& lock) {
+		return Read(make_pair(std::string("assetallocationl"), assetAllocationTuple), lock);
 	}
 	bool EraseISLock(const CAssetAllocationTuple& assetAllocationTuple) {
 		return Erase(make_pair(std::string("assetallocationl"), assetAllocationTuple));
-	}
-	bool EraseISLock(const CAssetAllocationTuple& assetAllocationTuple, const uint256& txid) {
-		std::vector<uint256> locks;
-		ReadISLock(assetAllocationTuple, locks);
-		std::vector<uint256>::iterator it = std::find(locks.begin(), locks.end(), txid);
-		if (it != locks.end())
-			locks.erase(it);
-		return Write(make_pair(std::string("assetallocationl"), assetAllocationTuple), locks);
 	}
 	void WriteAssetAllocationIndex(const CAssetAllocation& assetAllocationTuple, const int &op);
 	void EraseAssetAllocationIndex(const CAssetAllocationTuple& assetAllocationTuple, bool cleanup=false);
