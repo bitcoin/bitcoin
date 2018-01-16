@@ -90,7 +90,7 @@ bool OrderBasedOnArrivalTime(const std::vector<CTransaction>& blockVtx, std::vec
 	}
 	if (blockVtx.size() != orderedVtx.size())
 	{
-		LogPrintf("OrderBasedOnArrivalTime: sorted block transaction count does not match unsorted block transaction count!\n");
+		LogPrintf("OrderBasedOnArrivalTime: sorted block transaction count does not match unsorted block transaction count! sorted block count %d vs unsorted block count %d\n", orderedVtx.size(), blockVtx.size());
 		return false;
 	}
 	return true;
