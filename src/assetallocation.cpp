@@ -347,12 +347,13 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 							for (auto& amountTuple : dbAssetAllocation.listSendingAllocationAmounts) {
 								CAssetAllocation receiverAllocation;
 								const CAssetAllocationTuple receiverAllocationTuple(dbAssetAllocation.vchAsset, amountTuple.first);
-								if (!passetallocationdb->EraseISLock(receiverAllocationTuple, tx.GetHash()))
-								{
-									errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from assetallocation DB");
-									return error(errorMessage.c_str());
-								}
 								if (!dontaddtodb) {
+									if (!passetallocationdb->EraseISLock(receiverAllocationTuple, tx.GetHash()))
+									{
+										errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from assetallocation DB");
+										return error(errorMessage.c_str());
+									}
+
 									if (passetallocationdb->ReadLastAssetAllocation(receiverAllocationTuple, receiverAllocation) &&
 										!passetallocationdb->WriteAssetAllocation(receiverAllocation, op, fJustCheck))
 									{
@@ -420,14 +421,23 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 									errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from assetallocation DB");
 									return error(errorMessage.c_str());
 								}
-								// erase all receiver locks so when reciever checks they will recreate their tx from previous state
+								// erase all receiver locks and revert them to last state
 								for (auto& amountTuple : theAssetAllocation.listSendingAllocationAmounts) {
 									CAssetAllocation receiverAllocation;
 									const CAssetAllocationTuple receiverAllocationTuple(theAssetAllocation.vchAsset, amountTuple.first);
-									if (!passetallocationdb->EraseISLock(receiverAllocationTuple, tx.GetHash()))
-									{
-										errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from assetallocation DB");
-										return error(errorMessage.c_str());
+									if (!dontaddtodb) {
+										if (!passetallocationdb->EraseISLock(receiverAllocationTuple, tx.GetHash()))
+										{
+											errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from assetallocation DB");
+											return error(errorMessage.c_str());
+										}
+
+										if (passetallocationdb->ReadLastAssetAllocation(receiverAllocationTuple, receiverAllocation) &&
+											!passetallocationdb->WriteAssetAllocation(receiverAllocation, op, fJustCheck))
+										{
+											errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to write to asset allocation DB");
+											continue;
+										}
 									}
 								}
 							}

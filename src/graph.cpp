@@ -11,7 +11,7 @@ typedef typename Traits::vertex_descriptor vertex_descriptor;
 typedef typename std::vector<int> container;
 typedef std::map<int, vector<int> > IndexMap;
 typedef std::map<string, int> AliasMap;
-bool CreateDAGFromBlock(const CBlock*pblock, Graph &graph, std::vector<vertex_descriptor> &vertices, IndexMap &mapTxIndex) {
+bool CreateGraphFromBlock(const CBlock*pblock, Graph &graph, std::vector<vertex_descriptor> &vertices, IndexMap &mapTxIndex) {
 	AliasMap mapAliasIndex;
 	std::vector<vector<unsigned char> > vvchArgs;
 	std::vector<vector<unsigned char> > vvchAliasArgs;
@@ -34,7 +34,7 @@ bool CreateDAGFromBlock(const CBlock*pblock, Graph &graph, std::vector<vertex_de
 				}
 				mapTxIndex[mapAliasIndex[sender]].push_back(n);
 				
-				LogPrintf("CreateDAGFromBlock: found asset allocation from sender %s, nOut %d\n", sender, n);
+				LogPrintf("CreateGraphFromBlock: found asset allocation from sender %s, nOut %d\n", sender, n);
 				CAssetAllocation allocation(tx);
 				if (!allocation.listSendingAllocationAmounts.empty()) {
 					for (auto& allocationInstance : allocation.listSendingAllocationAmounts) {
@@ -46,7 +46,7 @@ bool CreateDAGFromBlock(const CBlock*pblock, Graph &graph, std::vector<vertex_de
 						}
 						// the graph needs to be from index to index 
 						add_edge(vertices[mapAliasIndex[sender]], vertices[mapAliasIndex[receiver]], graph);
-						LogPrintf("CreateDAGFromBlock: add edge from %s(index %d) to %s(index %d)\n", sender, mapAliasIndex[sender], receiver, mapAliasIndex[receiver]);
+						LogPrintf("CreateGraphFromBlock: add edge from %s(index %d) to %s(index %d)\n", sender, mapAliasIndex[sender], receiver, mapAliasIndex[receiver]);
 					}
 				}
 			}
@@ -54,17 +54,16 @@ bool CreateDAGFromBlock(const CBlock*pblock, Graph &graph, std::vector<vertex_de
 	}
 	return mapTxIndex.size() > 0;
 }
-unsigned int DAGRemoveCycles(CBlock * pblock, std::unique_ptr<CBlockTemplate> &pblocktemplate, uint64_t &nBlockTx, uint64_t &nBlockSize, unsigned int &nBlockSigOps, CAmount &nFees) {
-	LogPrintf("DAGRemoveCycles\n");
+bool GraphRemoveCycles(CBlock * pblock, Graph& graph, std::vector<int> &indexesToMove) {
+	LogPrintf("GraphRemoveCycles\n");
 	std::vector<CTransaction> newVtx;
 	std::vector<vertex_descriptor> vertices;
 	IndexMap mapTxIndex;
 	Graph graph;
 
-	if (!CreateDAGFromBlock(pblock, graph, vertices, mapTxIndex)) {
-		return true;
+	if (!CreateGraphFromBlock(pblock, graph, vertices, mapTxIndex)) {
+		return false;
 	}
-	std::vector<int> outputsToRemove;
 	sorted_vector<int> clearedVertices;
 	cycle_visitor<sorted_vector<int> > visitor(clearedVertices);
 	hawick_circuits(graph, visitor);
@@ -79,34 +78,22 @@ unsigned int DAGRemoveCycles(CBlock * pblock, std::unique_ptr<CBlockTemplate> &p
 		for (auto& nOut : vecTx) {
 			if (nOut >= pblock->vtx.size())
 				continue;
-			LogPrintf("outputsToRemove %d\n", nOut);
-			outputsToRemove.push_back(nOut);
+			LogPrintf("indexesToMove %d\n", nOut);
+			indexesToMove.push_back(nOut);
 		}
 	}
 	// outputs were saved above and loop through them backwards to remove from back to front
-	std::sort(outputsToRemove.begin(), outputsToRemove.end(), std::greater<int>());
-	for (auto& nIndex : outputsToRemove) {
-		LogPrintf("reversed outputsToRemove %d\n", nIndex);
-		nFees -= pblocktemplate->vTxFees[nIndex];
-		nBlockSigOps -= pblocktemplate->vTxSigOps[nIndex];
-		nBlockSize -= pblock->vtx[nIndex].GetTotalSize();
+	std::sort(indexesToMove.begin(), indexesToMove.end(), std::greater<int>());
+	for (auto& nIndex : indexesToMove) {
 		pblock->vtx.erase(pblock->vtx.begin() + nIndex);
-		nBlockTx--;
-		pblocktemplate->vTxFees.erase(pblocktemplate->vTxFees.begin() + nIndex);
-		pblocktemplate->vTxSigOps.erase(pblocktemplate->vTxSigOps.begin() + nIndex);
 	}
-	return clearedVertices.size();
+	return true;
 }
-bool DAGTopologicalSort(CBlock * pblock) {
+bool DAGTopologicalSort(CBlock* pblock, const Graph &graph, const CBlock& originalBlock, const std::vector<int> &outputsToMove) {
 	LogPrintf("DAGTopologicalSort\n");
 	std::vector<CTransaction> newVtx;
-	std::vector<vertex_descriptor> vertices;
 	IndexMap mapTxIndex;
-	Graph graph;
 
-	if (!CreateDAGFromBlock(pblock, graph, vertices, mapTxIndex)) {
-		return true;
-	}
 	container c;
 	try
 	{
@@ -145,6 +132,10 @@ bool DAGTopologicalSort(CBlock * pblock) {
 		{
 			newVtx.push_back(pblock->vtx[nOut]);
 		}
+	}
+	for (auto& nIndex : indexesToMove) {
+		LogPrintf("add indexesToMove %d to back\n", nIndex);
+		newVtx.push_back(originalBlock.vtx[nIndex]);
 	}
 	LogPrintf("newVtx size %d vs pblock.vtx size %d\n", newVtx.size(), pblock->vtx.size());
 	if (pblock->vtx.size() != newVtx.size())

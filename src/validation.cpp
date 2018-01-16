@@ -612,9 +612,14 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight,con
 	else if (!block.vtx.empty()) {
 		CBlock sortedBlock;
 		sortedBlock.vtx = block.vtx;
-		if (!sortedBlock.vtx.empty() && !IsInitialBlockDownload()) {
-			if (!DAGTopologicalSort(&sortedBlock)) {
-				return false;
+		if (!sortedBlock.vtx.empty()) {
+			std::vector<int> indexesToMove;
+			Graph graph;
+			// if this is a valid graph of asset allocation sends, then validate toposort on it
+			if (GraphRemoveCycles(&sortedBlock, graph, indexesToMove)) {
+				if (!DAGTopologicalSort(&sortedBlock, graph, (const CBlock*)&block, indexesToMove)) {
+					return false;
+				}
 			}
 		}
 		if (fJustCheck)
