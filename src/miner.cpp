@@ -403,15 +403,16 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
 					bAddedNewTx = false;
 				}
 			}
-		}
-		// if bAddedNewTx is true means we didn't get to add nRemovedTxs to the block, mempool empty or block limit reached, so check for cycle once more
-		if (bAddedNewTx) {
-			nRemovedTxs = GraphRemoveCycles(pblock, pblocktemplate, nBlockTx, nBlockSize, nBlockSigOps, nFees);
-			// sanity check, should never happen
-			if (nRemovedTxs > 0) {
-				throw std::runtime_error(strprintf("GraphRemoveCycles failed: %d cycles found", nRemovedTxs));
+			// if bAddedNewTx is true means we didn't get to add nRemovedTxs to the block, mempool empty or block limit reached, so check for cycle once more
+			if (bAddedNewTx) {
+				nRemovedTxs = GraphRemoveCycles(pblock, pblocktemplate, nBlockTx, nBlockSize, nBlockSigOps, nFees);
+				// sanity check, should never happen
+				if (nRemovedTxs > 0) {
+					throw std::runtime_error(strprintf("GraphRemoveCycles failed: %d cycles found", nRemovedTxs));
+				}
 			}
 		}
+
 
 		
 		// SYSCOIN
