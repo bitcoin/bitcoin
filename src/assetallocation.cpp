@@ -508,7 +508,8 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 				}
 				const CAssetAllocationTuple receiverAllocationTuple(theAssetAllocation.vchAsset, amountTuple.first);
 				// don't need to check for existance of allocation because it may not exist, may be creating it here for the first time for receiver
-				GetAssetAllocation(receiverAllocationTuple, receiverAllocation);
+				if (!GetAssetAllocation(receiverAllocationTuple, receiverAllocation))
+					receiverAllocation.SetNull();
 
 				// check receiver alias
 				if (!GetAlias(amountTuple.first, alias))
