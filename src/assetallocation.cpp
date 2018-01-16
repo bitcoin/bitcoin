@@ -23,6 +23,8 @@
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/range/adaptor/reversed.hpp>
 #include <mongoc.h>
+#include <chrono>
+using namespace std::chrono;
 using namespace std;
 extern mongoc_collection_t *assetallocation_collection;
 extern mongoc_collection_t *aliastxhistory_collection;
@@ -560,6 +562,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 	// set the assetallocation's txn-dependent values
 	theAssetAllocation.nHeight = nHeight;
 	theAssetAllocation.txHash = tx.GetHash();
+	theAssetAllocation.nArrivalTime = duration_cast<milliseconds>(system_clock::now().time_since_epoch().count(););
 	// write assetallocation  
 	if (!dontaddtodb) {
 		if (strResponse != "") {
@@ -679,14 +682,7 @@ bool BuildAssetAllocationJson(const CAssetAllocation& assetallocation, UniValue&
 	oAssetAllocation.push_back(Pair("asset", stringFromVch(assetallocation.vchAsset)));
     oAssetAllocation.push_back(Pair("txid", assetallocation.txHash.GetHex()));
     oAssetAllocation.push_back(Pair("height", (int)assetallocation.nHeight));
-	int64_t nTime = 0;
-	if (chainActive.Height() >= assetallocation.nHeight) {
-		CBlockIndex *pindex = chainActive[assetallocation.nHeight];
-		if (pindex) {
-			nTime = pindex->GetMedianTimePast();
-		}
-	}
-	oAssetAllocation.push_back(Pair("time", nTime));
+	oAssetAllocation.push_back(Pair("time", assetallocation.nArrivalTime));
 	oAssetAllocation.push_back(Pair("alias", stringFromVch(assetallocation.vchAlias)));
 	oAssetAllocation.push_back(Pair("balance", ValueFromAmount(assetallocation.nBalance)));
 	int64_t expired_time = GetAssetAllocationExpiration(assetallocation);

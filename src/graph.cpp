@@ -12,14 +12,14 @@ typedef typename Traits::vertex_descriptor vertex_descriptor;
 typedef typename std::vector<int> container;
 typedef std::map<int, vector<int> > IndexMap;
 typedef std::map<string, int> AliasMap;
-bool CreateGraphFromBlock(const CBlock*pblock, Graph &graph, std::vector<vertex_descriptor> &vertices, IndexMap &mapTxIndex) {
+bool CreateGraphFromVTX(const std::vector<CTransaction>& blockVtx, Graph &graph, std::vector<vertex_descriptor> &vertices, IndexMap &mapTxIndex) {
 	AliasMap mapAliasIndex;
 	std::vector<vector<unsigned char> > vvchArgs;
 	std::vector<vector<unsigned char> > vvchAliasArgs;
 	int op;
 	int nOut;
-	for (unsigned int n = 0; n< pblock->vtx.size(); n++) {
-		const CTransaction& tx = pblock->vtx[n];
+	for (unsigned int n = 0; n< blockVtx.size(); n++) {
+		const CTransaction& tx = blockVtx[n];
 		if (tx.nVersion == SYSCOIN_TX_VERSION)
 		{
 			if (!DecodeAliasTx(tx, op, nOut, vvchAliasArgs))
@@ -55,16 +55,59 @@ bool CreateGraphFromBlock(const CBlock*pblock, Graph &graph, std::vector<vertex_
 	}
 	return mapTxIndex.size() > 0;
 }
+bool OrderBasedOnArrivalTime(const std::vector<CTransaction>& blockVtx, std::vector<CTransaction> &orderedVtx, std::map<int, int> &mapIndexOriginalVTxToOrderedVtx) {
+	std::vector<vector<unsigned char> > vvchArgs;
+	std::vector<vector<unsigned char> > vvchAliasArgs;
+	int op;
+	int nOut;
+	// order the arrival times in ascending order using a map
+	std::map<int64_t, int> orderedIndexes;
+	for (unsigned int n = 0; n < blockVtx.size(); n++) {
+		const CTransaction& tx = blockVtx[n];
+		if (tx.nVersion == SYSCOIN_TX_VERSION)
+		{
+			if (!DecodeAliasTx(tx, op, nOut, vvchAliasArgs))
+				continue;
+
+			if (DecodeAssetAllocationTx(tx, op, nOut, vvchArgs))
+			{
+				const string& sender = stringFromVch(vvchAliasArgs[0]);
+				CAssetAllocation assetallocation(tx);
+				CAssetAllocationTuple assetAllocationTuple(assetallocation.vchAsset, vvchAliasArgs[0]);
+				CAssetAllocation dBAssetAllocation;
+				GetAssetAllocation(assetAllocationTuple, dBAssetAllocation);
+				orderedIndexes[dBAssetAllocation.nArrivalTime] = n;
+				continue;
+			}
+		}
+		// add normal tx's to orderedvtx, 
+		orderedVtx.push_back(tx);
+	}
+	for (auto& orderedIndex : orderedIndexes) {
+		orderedVtx.push_back(blockVtx[orderedIndex.second]);
+		mapIndexOriginalVTxToOrderedVtx[orderedVtx.size() - 1] = orderedIndex.second;
+		LogPrintf("OrderBasedOnArrivalTime: mapping %d to %d\n", orderedVtx.size() - 1, orderedIndex.second);
+	}
+	if (blockVtx.size() != orderedVtx.size())
+	{
+		LogPrintf("OrderBasedOnArrivalTime: sorted block transaction count does not match unsorted block transaction count!\n");
+		return false;
+	}
+	return true;
+}
 unsigned int GraphRemoveCycles(CBlock * pblock, std::unique_ptr<CBlockTemplate> &pblocktemplate, uint64_t &nBlockTx, uint64_t &nBlockSize, unsigned int &nBlockSigOps, CAmount &nFees) {
 	LogPrintf("GraphRemoveCycles\n");
 	std::vector<CTransaction> newVtx;
+	std::vector<CTransaction> orderedVtx;
 	std::vector<vertex_descriptor> vertices;
+	std::map<int, int> mapIndexOriginalVTxToOrderedVtx;
 	IndexMap mapTxIndex;
 	Graph graph;
-
-	if (!CreateGraphFromBlock(pblock, graph, vertices, mapTxIndex)) {
-		return true;
-	}
+	if (!OrderBasedOnArrivalTime(pblock->vtx, orderedVtx, mapIndexOriginalVTxToOrderedVtx))
+		return 0;
+	if (!CreateGraphFromVTX(orderedVtx, graph, vertices, mapTxIndex))
+		return 0;
+	
 	std::vector<int> outputsToRemove;
 	sorted_vector<int> clearedVertices;
 	cycle_visitor<sorted_vector<int> > visitor(clearedVertices);
@@ -77,11 +120,12 @@ unsigned int GraphRemoveCycles(CBlock * pblock, std::unique_ptr<CBlockTemplate> 
 			continue;
 		const std::vector<int> &vecTx = (*it).second;
 		// mapTxIndex knows of the mapping between vertices and tx vout positions
-		for (auto& nOut : vecTx) {
-			if (nOut >= pblock->vtx.size())
+		for (auto& nIndex : vecTx) {
+			if (nIndex >= pblock->vtx.size())
 				continue;
-			LogPrintf("outputsToRemove %d\n", nOut);
-			outputsToRemove.push_back(nOut);
+			LogPrintf("outputsToRemove %d mapIndexOriginalVTxToOrderedVtx[nIndex] \n", nIndex, mapIndexOriginalVTxToOrderedVtx[nIndex]);
+			// mapIndexOriginalVTxToOrderedVtx is the mapping from the ordered by arrival time index to the original block index for removal below
+			outputsToRemove.push_back(mapIndexOriginalVTxToOrderedVtx[nIndex]);
 		}
 	}
 	// outputs were saved above and loop through them backwards to remove from back to front
@@ -105,7 +149,7 @@ bool DAGTopologicalSort(CBlock * pblock) {
 	IndexMap mapTxIndex;
 	Graph graph;
 
-	if (!CreateGraphFromBlock(pblock, graph, vertices, mapTxIndex)) {
+	if (!CreateGraphFromVTX(pblock->vtx, graph, vertices, mapTxIndex)) {
 		return true;
 	}
 	container c;
