@@ -100,6 +100,9 @@ void benchmark::BenchRunner::RunAll(Printer& printer, uint64_t num_evals, double
     if (!std::ratio_less_equal<benchmark::clock::period, std::micro>::value) {
         std::cerr << "WARNING: Clock precision is worse than microsecond - benchmarks may be less accurate!\n";
     }
+#ifdef DEBUG
+    std::cerr << "WARNING: This is a debug build - may result in slower benchmarks.\n";
+#endif
 
     std::regex reFilter(filter);
     std::smatch baseMatch;

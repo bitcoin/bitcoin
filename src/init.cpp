@@ -895,7 +895,13 @@ void InitLogging()
     fLogIPs = gArgs.GetBoolArg("-logips", DEFAULT_LOGIPS);
 
     LogPrintf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
-    LogPrintf("Chaincoin Core version %s (%s)\n", FormatFullVersion(), CLIENT_DATE);
+    std::string version_string = FormatFullVersion();
+#ifdef DEBUG
+    version_string += " (debug build)";
+#else
+    version_string += " (release build)";
+#endif
+    LogPrintf("Chaincoin version %s\n", version_string);
 }
 
 namespace { // Variables internal to initialization process only
