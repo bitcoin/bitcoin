@@ -78,6 +78,9 @@ bool OrderBasedOnArrivalTime(const std::vector<CTransaction>& blockVtx, std::vec
 				ArrivalTimesMap::iterator it = arrivalTimes.find(tx.GetHash());
 				if(it != arrivalTimes.end())
 					orderedIndexes.insert(make_pair((*it).second, n));
+				// we don't have this in our arrival times list, means it must be rejected via consensus so add it to the end
+				else
+					orderedIndexes.insert(INT64_MAX, n));
 				continue;
 			}
 		}
@@ -89,6 +92,7 @@ bool OrderBasedOnArrivalTime(const std::vector<CTransaction>& blockVtx, std::vec
 		mapIndexOriginalVTxToOrderedVtx[orderedVtx.size() - 1] = orderedIndex.second;
 		LogPrintf("OrderBasedOnArrivalTime: mapping %d to %d with time %llu\n", orderedVtx.size() - 1, orderedIndex.second, orderedIndex.first);
 	}
+
 	if (blockVtx.size() != orderedVtx.size())
 	{
 		LogPrintf("OrderBasedOnArrivalTime: sorted block transaction count does not match unsorted block transaction count! sorted block count %d vs unsorted block count %d\n", orderedVtx.size(), blockVtx.size());

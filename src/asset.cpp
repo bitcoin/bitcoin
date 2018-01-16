@@ -617,7 +617,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					receiverAllocation.nBalance += amountTuple.second;
 					// adjust sender balance
 					theAsset.nBalance -= amountTuple.second;
-					if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, op, INT64_MAX, false))
+					if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, op, duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count(), false))
 					{
 						errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to write to asset allocation DB");
 						continue;
