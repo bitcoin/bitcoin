@@ -23,6 +23,8 @@
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/range/adaptor/reversed.hpp>
 #include <mongoc.h>
+#include <chrono>
+using namespace std::chrono;
 using namespace std;
 extern mongoc_collection_t *asset_collection;
 extern mongoc_collection_t *assethistory_collection;
