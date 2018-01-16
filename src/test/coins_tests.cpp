@@ -3,12 +3,12 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "coins.h"
-#include "test_random.h"
 #include "script/standard.h"
 #include "uint256.h"
 #include "undo.h"
 #include "utilstrencodings.h"
 #include "test/test_dash.h"
+#include "test/test_random.h"
 #include "validation.h"
 #include "consensus/validation.h"
 

@@ -24,13 +24,13 @@ class TxInUndoSerializer
 
 public:
     template<typename Stream>
-    void Serialize(Stream &s, int nType, int nVersion) const {
-        ::Serialize(s, VARINT(txout->nHeight * 2 + (txout->fCoinBase ? 1 : 0)), nType, nVersion);
+    void Serialize(Stream &s) const {
+        ::Serialize(s, VARINT(txout->nHeight * 2 + (txout->fCoinBase ? 1 : 0)));
         if (txout->nHeight > 0) {
             // Required to maintain compatibility with older undo format.
-            ::Serialize(s, (unsigned char)0, nType, nVersion);
+            ::Serialize(s, (unsigned char)0);
         }
-        ::Serialize(s, CTxOutCompressor(REF(txout->out)), nType, nVersion);
+        ::Serialize(s, CTxOutCompressor(REF(txout->out)));
     }
 
     TxInUndoSerializer(const Coin* coin) : txout(coin) {}
@@ -42,9 +42,9 @@ class TxInUndoDeserializer
 
 public:
     template<typename Stream>
-    void Unserialize(Stream &s, int nType, int nVersion) {
+    void Unserialize(Stream &s) {
         unsigned int nCode = 0;
-        ::Unserialize(s, VARINT(nCode), nType, nVersion);
+        ::Unserialize(s, VARINT(nCode));
         txout->nHeight = nCode / 2;
         txout->fCoinBase = nCode & 1;
         if (txout->nHeight > 0) {
@@ -52,9 +52,9 @@ public:
             // a transaction's outputs. Non-final spends were indicated with
             // height = 0.
             int nVersionDummy;
-            ::Unserialize(s, VARINT(nVersionDummy), nType, nVersion);
+            ::Unserialize(s, VARINT(nVersionDummy));
         }
-        ::Unserialize(s, REF(CTxOutCompressor(REF(txout->out))), nType, nVersion);
+        ::Unserialize(s, REF(CTxOutCompressor(REF(txout->out))));
     }
 
     TxInUndoDeserializer(Coin* coin) : txout(coin) {}
@@ -70,26 +70,26 @@ public:
     std::vector<Coin> vprevout;
 
     template <typename Stream>
-    void Serialize(Stream& s, int nType, int nVersion) const {
+    void Serialize(Stream& s) const {
         // TODO: avoid reimplementing vector serializer
         uint64_t count = vprevout.size();
-        ::Serialize(s, COMPACTSIZE(REF(count)), nType, nVersion);
+        ::Serialize(s, COMPACTSIZE(REF(count)));
         for (const auto& prevout : vprevout) {
-            ::Serialize(s, REF(TxInUndoSerializer(&prevout)), nType, nVersion);
+            ::Serialize(s, REF(TxInUndoSerializer(&prevout)));
         }
     }
 
     template <typename Stream>
-    void Unserialize(Stream& s, int nType, int nVersion) {
+    void Unserialize(Stream& s) {
         // TODO: avoid reimplementing vector deserializer
         uint64_t count = 0;
-        ::Unserialize(s, COMPACTSIZE(count), nType, nVersion);
+        ::Unserialize(s, COMPACTSIZE(count));
         if (count > MAX_INPUTS_PER_BLOCK) {
             throw std::ios_base::failure("Too many input undo records");
         }
         vprevout.resize(count);
         for (auto& prevout : vprevout) {
-            ::Unserialize(s, REF(TxInUndoDeserializer(&prevout)), nType, nVersion);
+            ::Unserialize(s, REF(TxInUndoDeserializer(&prevout)));
         }
     }
 };
@@ -103,7 +103,7 @@ public:
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+    inline void SerializationOp(Stream& s, Operation ser_action) {
         READWRITE(vtxundo);
     }
 };

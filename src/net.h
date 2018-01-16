@@ -184,7 +184,7 @@ public:
     void PushMessageWithVersionAndFlag(CNode* pnode, int nVersion, int flag, const std::string& sCommand, Args&&... args)
     {
         auto msg(BeginMessage(pnode, nVersion, flag, sCommand));
-        ::SerializeMany(msg, msg.nType, msg.nVersion, std::forward<Args>(args)...);
+        ::SerializeMany(msg, std::forward<Args>(args)...);
         EndMessage(msg);
         PushMessage(pnode, msg, sCommand);
     }
@@ -471,7 +471,7 @@ private:
     unsigned int nReceiveFloodSize;
 
     std::vector<ListenSocket> vhListenSocket;
-    bool fNetworkActive;
+    std::atomic<bool> fNetworkActive;
     banmap_t setBanned;
     CCriticalSection cs_setBanned;
     bool setBannedIsDirty;
@@ -629,6 +629,9 @@ public:
 
 
 class CNetMessage {
+private:
+    mutable CHash256 hasher;
+    mutable uint256 data_hash;
 public:
     bool in_data;                   // parsing header (false) or data (true)
 
@@ -655,6 +658,8 @@ public:
             return false;
         return (hdr.nMessageSize == nDataPos);
     }
+
+    const uint256& GetMessageHash() const;
 
     void SetVersion(int nVersionIn)
     {

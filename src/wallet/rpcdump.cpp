@@ -1002,8 +1002,8 @@ UniValue processImport(const UniValue& data) {
                     throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Pubkey must be a hex string");
                 }
 
-                std::vector<unsigned char> data(ParseHex(strPubKey));
-                CPubKey pubKey(data.begin(), data.end());
+                std::vector<unsigned char> vData(ParseHex(strPubKey));
+                CPubKey pubKey(vData.begin(), vData.end());
 
                 if (!pubKey.IsFullyValid()) {
                     throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Pubkey is not a valid public key");
@@ -1221,7 +1221,7 @@ UniValue importmulti(const JSONRPCRequest& mainRequest)
 
     bool fRunScan = false;
     const int64_t minimumTimestamp = 1;
-    int64_t nLowestTimestamp;
+    int64_t nLowestTimestamp = 0;
 
     if (fRescan && chainActive.Tip()) {
         nLowestTimestamp = chainActive.Tip()->GetBlockTime();

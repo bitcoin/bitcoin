@@ -4,10 +4,16 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 import socket
+import os
 
 from test_framework.socks5 import Socks5Configuration, Socks5Command, Socks5Server, AddressType
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
+from test_framework.util import (
+    PORT_MIN,
+    PORT_RANGE,
+    start_nodes,
+    assert_equal,
+)
 from test_framework.netutil import test_ipv6_local
 '''
 Test plan:
@@ -33,6 +39,8 @@ addnode connect to onion
 addnode connect to generic DNS name
 '''
 
+RANGE_BEGIN = PORT_MIN + 2 * PORT_RANGE  # Start after p2p and rpc ports
+
 
 class ProxyTest(BitcoinTestFramework):
     def __init__(self):
@@ -44,19 +52,19 @@ class ProxyTest(BitcoinTestFramework):
         # Create two proxies on different ports
         # ... one unauthenticated
         self.conf1 = Socks5Configuration()
-        self.conf1.addr = ('127.0.0.1', 13000 + (os.getpid() % 1000))
+        self.conf1.addr = ('127.0.0.1', RANGE_BEGIN + (os.getpid() % 1000))
         self.conf1.unauth = True
         self.conf1.auth = False
         # ... one supporting authenticated and unauthenticated (Tor)
         self.conf2 = Socks5Configuration()
-        self.conf2.addr = ('127.0.0.1', 14000 + (os.getpid() % 1000))
+        self.conf2.addr = ('127.0.0.1', RANGE_BEGIN + 1000 + (os.getpid() % 1000))
         self.conf2.unauth = True
         self.conf2.auth = True
         if self.have_ipv6:
             # ... one on IPv6 with similar configuration
             self.conf3 = Socks5Configuration()
             self.conf3.af = socket.AF_INET6
-            self.conf3.addr = ('::1', 15000 + (os.getpid() % 1000))
+            self.conf3.addr = ('::1', RANGE_BEGIN + 2000 + (os.getpid() % 1000))
             self.conf3.unauth = True
             self.conf3.auth = True
         else:
