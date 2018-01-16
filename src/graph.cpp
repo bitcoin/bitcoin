@@ -60,7 +60,6 @@ bool GraphRemoveCycles(CBlock * pblock, Graph& graph, std::vector<int> &indexesT
 	std::vector<CTransaction> newVtx;
 	std::vector<vertex_descriptor> vertices;
 	IndexMap mapTxIndex;
-	Graph graph;
 
 	if (!CreateGraphFromBlock(pblock, graph, vertices, mapTxIndex)) {
 		return false;
