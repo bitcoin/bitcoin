@@ -610,9 +610,10 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					if (receiverAllocation.IsNull()) {
 						receiverAllocation.vchAlias = receiverAllocationTuple.vchAlias;
 						receiverAllocation.vchAsset = receiverAllocationTuple.vchAsset;
+						receiverAllocation.txHash = tx.GetHash();
+						receiverAllocation.nHeight = nHeight;
 					}
-					receiverAllocation.nHeight = nHeight;
-					receiverAllocation.txHash = tx.GetHash();
+					
 					receiverAllocation.nBalance += amountTuple.second;
 					// adjust sender balance
 					theAsset.nBalance -= amountTuple.second;

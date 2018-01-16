@@ -397,11 +397,6 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 		}
 		else
 		{
-			if (dbAssetAllocation.nHeight > nHeight)
-			{
-				errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Block height of service request cannot be lower than stored service block height.");
-				return true;
-			}
 			if (fJustCheck) {
 				nLockStatus = LOCK_NOCONFLICT_UNCONFIRMED_STATE;
 				if (!lockedTXIDs.empty())
@@ -541,9 +536,10 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 					if (receiverAllocation.IsNull()) {
 						receiverAllocation.vchAlias = receiverAllocationTuple.vchAlias;
 						receiverAllocation.vchAsset = receiverAllocationTuple.vchAsset;
+						receiverAllocation.txHash = tx.GetHash();
+						receiverAllocation.nHeight = nHeight;
 					}
-					receiverAllocation.nHeight = nHeight;
-					receiverAllocation.txHash = tx.GetHash();
+					
 					receiverAllocation.nBalance += amountTuple.second;
 					theAssetAllocation.nBalance -= amountTuple.second;
 					if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, op, INT64_MAX, fJustCheck))
