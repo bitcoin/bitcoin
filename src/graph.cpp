@@ -134,7 +134,7 @@ bool DAGTopologicalSort(CBlock * pblock) {
 			if (nOut >= pblock->vtx.size())
 				continue;
 			newVtx.push_back(pblock->vtx[nOut]);
-			ordered += strprintf("%d", nOut)
+			ordered += strprintf("%d", nOut);
 		}
 	}
 	LogPrintf("topological ordering: %s\n", ordered);
