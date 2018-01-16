@@ -15,8 +15,8 @@ template <class T, class Compare = std::less<T> >
 struct sorted_vector {
 	std::vector<T> V;
 	Compare cmp;
-	typedef typename std:vector<T>::iterator iterator;
-	typedef typename std:vector<T>::const_iterator const_iterator;
+	typedef typename std::vector<T>::iterator iterator;
+	typedef typename std::vector<T>::const_iterator const_iterator;
 	iterator begin() { return V.begin(); }
 	iterator end() { return V.end(); }
 	const_iterator begin() const { return V.begin(); }
