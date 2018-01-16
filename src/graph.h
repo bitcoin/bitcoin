@@ -12,6 +12,7 @@
 #include <vector>
 #include "miner.h"
 using namespace std;
+typedef adjacency_list< vecS, vecS, directedS > Graph;
 template <class T, class Compare = std::less<T> >
 struct sorted_vector {
 	vector<T> V;
