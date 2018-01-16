@@ -5420,6 +5420,8 @@ UniValue walletsettings(const JSONRPCRequest &request)
                     // TODO: override option?
                     if (pwallet->HaveAddress(addr))
                         throw JSONRPCError(RPC_INVALID_PARAMETER, sAddress + _(" is spendable from this wallet."));
+                    if (pwallet->idDefaultAccount.IsNull())
+                        throw JSONRPCError(RPC_INVALID_PARAMETER, _("Wallet must have a default account set."));
 
                     const Consensus::Params& consensusParams = Params().GetConsensus();
                     if (GetAdjustedTime() < consensusParams.OpIsCoinstakeTime)

@@ -2743,7 +2743,7 @@ UniValue walletpassphrase(const JSONRPCRequest& request)
         RPCRunLater(strprintf("lockwallet(%s)", pwallet->GetName()), boost::bind(LockWallet, pwallet), nSleepTime);
     } else
     {
-        RPCRunLaterErase("lockwallet");
+        RPCRunLaterErase(strprintf("lockwallet(%s)", pwallet->GetName()));
         pwallet->nRelockTime = 0;
     };
 
