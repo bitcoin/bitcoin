@@ -333,7 +333,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 	CAsset dbAsset;
 	if (GetAssetAllocation(assetAllocationTuple, dbAssetAllocation)){
 		vector<uint256> lockedTXIDs;
-		if(lockedTXIDs.size()) > 0)
+		if(lockedTXIDs.size() > 0)
 			LogPrintf("lockedTXIDs size %d\n", lockedTXIDs.size());
 		passetallocationdb->ReadISLock(assetAllocationTuple, lockedTXIDs);
 		if (!fJustCheck && !lockedTXIDs.empty()) {

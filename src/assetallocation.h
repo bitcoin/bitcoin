@@ -145,7 +145,7 @@ public:
 			locks.push_back(assetallocation.txHash);
 			writeState = writeState && Write(make_pair(std::string("assetallocationl"), allocationTuple), locks);
 			ArrivalTimesMap arrivalTimes;
-			ReadISArrivalTimes(assetallocation.txHash, arrivalTimes);
+			ReadISArrivalTimes(allocationTuple, arrivalTimes);
 			arrivalTimes[assetallocation.txHash] = arrivalTime;
 			writeState = writeState && Write(make_pair(std::string("assetallocationa"), allocationTuple), arrivalTimes);
 		}
