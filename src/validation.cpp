@@ -556,6 +556,8 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight,con
 		nHeight = chainActive.Height();
 	string errorMessage;
 	bool good = true;
+	if (fJustCheck && IsInitialBlockDownload())
+		return true;
 	if (block.vtx.empty() && tx.nVersion == SYSCOIN_TX_VERSION)
 	{
 		bool bDestCheckFailed = false;
