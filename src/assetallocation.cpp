@@ -371,12 +371,30 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 					// recreate this assetallocation tx from last known good position (last assetallocation stored)
 					if (!passetallocationdb->ReadLastAssetAllocation(assetAllocationTuple, dbAssetAllocation)) {
 						dbAssetAllocation.SetNull();
+						LogPrintf("Last asset allocation not found, setting to null...\n");
 					}
 				}
 			}
 			else {
+				// set the assetallocation's txn-dependent values
+				dbAssetAllocation.nHeight = nHeight;
+				dbAssetAllocation.txHash = tx.GetHash();
+				// write assetallocation  
 				if (!dontaddtodb) {
 					nLockStatus = LOCK_NOCONFLICT_CONFIRMED_STATE;
+					// ensure previous asset allocation gets written
+					if (!passetallocationdb->WriteAssetAllocation(dbAssetAllocation, op, INT64_MAX, fJustCheck))
+					{
+						errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to write to asset allocation DB");
+						return error(errorMessage.c_str());
+					}
+					if (!passetallocationdb->EraseISLock(assetAllocationTuple, tx.GetHash()))
+					{
+						errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from assetallocation DB");
+						return error(errorMessage.c_str());
+					}
+					paliasdb->UpdateAliasIndexTxHistoryLockStatus(tx.GetHash().GetHex() + "-" + assetAllocationTuple.ToString(), nLockStatus);
+					// debug
 					if (fDebug)
 						LogPrintf("CONNECTED ASSET ALLOCATION: op=%s assetallocation=%s hash=%s height=%d fJustCheck=%d POW IS\n",
 							assetFromOp(op).c_str(),
@@ -384,13 +402,6 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 							tx.GetHash().ToString().c_str(),
 							nHeight,
 							fJustCheck ? 1 : 0);
-					paliasdb->UpdateAliasIndexTxHistoryLockStatus(tx.GetHash().GetHex() + "-" + assetAllocationTuple.ToString(), nLockStatus);
-					if (!passetallocationdb->EraseISLock(assetAllocationTuple, tx.GetHash()))
-					{
-						errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from assetallocation DB");
-						return error(errorMessage.c_str());
-					}
-					
 				}
 				return true;
 			}
@@ -571,7 +582,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 		}
 		// debug
 		if (fDebug)
-			LogPrintf("CONNECTED ASSET ALLOCATION TO ASSET ALLOCATION SEND: op=%s assetallocation=%s hash=%s height=%d fJustCheck=%d\n",
+			LogPrintf("CONNECTED ASSET ALLOCATION: op=%s assetallocation=%s hash=%s height=%d fJustCheck=%d\n",
 				assetFromOp(op).c_str(),
 				assetAllocationTuple.ToString().c_str(),
 				tx.GetHash().ToString().c_str(),
