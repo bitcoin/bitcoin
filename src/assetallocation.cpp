@@ -352,12 +352,9 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 									errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from assetallocation DB");
 									return error(errorMessage.c_str());
 								}
-								// recreate this assetallocation tx from last known good position (last assetallocation stored)
-								if (!passetallocationdb->ReadLastAssetAllocation(receiverAllocationTuple, receiverAllocation)) {
-									receiverAllocation.SetNull();
-								}
 								if (!dontaddtodb) {
-									if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, op, fJustCheck))
+									if (passetallocationdb->ReadLastAssetAllocation(receiverAllocationTuple, receiverAllocation) &&
+										!passetallocationdb->WriteAssetAllocation(receiverAllocation, op, fJustCheck))
 									{
 										errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to write to asset allocation DB");
 										continue;
