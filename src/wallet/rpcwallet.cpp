@@ -2707,8 +2707,6 @@ extern UniValue importmulti(const JSONRPCRequest& request);
 extern UniValue dumphdinfo(const JSONRPCRequest& request);
 extern UniValue importelectrumwallet(const JSONRPCRequest& request);
 
-extern UniValue privatesend(const JSONRPCRequest& request);
-
 static const CRPCCommand commands[] =
 { //  category              name                        actor (function)           okSafeMode
     //  --------------------- ------------------------    -----------------------    ----------
@@ -2763,8 +2761,6 @@ static const CRPCCommand commands[] =
     { "wallet",             "instantsendtoaddress",     &instantsendtoaddress,     false },
     { "wallet",             "dumphdinfo",               &dumphdinfo,               true  },
     { "wallet",             "importelectrumwallet",     &importelectrumwallet,     true  },
-
-    { "dash",               "privatesend",              &privatesend,              false },
 };
 
 void RegisterWalletRPCCommands(CRPCTable &t)
