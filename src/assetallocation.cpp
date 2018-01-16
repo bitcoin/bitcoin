@@ -562,7 +562,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 	// set the assetallocation's txn-dependent values
 	theAssetAllocation.nHeight = nHeight;
 	theAssetAllocation.txHash = tx.GetHash();
-	theAssetAllocation.nArrivalTime = duration_cast<milliseconds>(system_clock::now().time_since_epoch().count(););
+	theAssetAllocation.nArrivalTime = duration_cast<milliseconds>(system_clock::now().time_since_epoch().count());
 	// write assetallocation  
 	if (!dontaddtodb) {
 		if (strResponse != "") {
