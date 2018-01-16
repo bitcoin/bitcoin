@@ -5,7 +5,7 @@
 #include "asset.h"
 #include "assetallocation.h"
 using namespace boost;
-typedef adjacency_list< vecS, vecS, directedS > Graph;
+using namespace std;
 typedef graph_traits<Graph> Traits;
 typedef typename Traits::vertex_descriptor vertex_descriptor;
 typedef typename std::vector<int> container;

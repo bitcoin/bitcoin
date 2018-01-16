@@ -11,14 +11,13 @@
 #include <unordered_map>
 #include <vector>
 #include "miner.h"
-using namespace std;
-typedef adjacency_list< vecS, vecS, directedS > Graph;
+typedef boost::adjacency_list< boost::vecS, boost::vecS, boost::directedS > Graph;
 template <class T, class Compare = std::less<T> >
 struct sorted_vector {
-	vector<T> V;
+	std::vector<T> V;
 	Compare cmp;
-	typedef typename vector<T>::iterator iterator;
-	typedef typename vector<T>::const_iterator const_iterator;
+	typedef typename std::vector<T>::iterator iterator;
+	typedef typename std::vector<T>::const_iterator const_iterator;
 	iterator begin() { return V.begin(); }
 	iterator end() { return V.end(); }
 	const_iterator begin() const { return V.begin(); }
