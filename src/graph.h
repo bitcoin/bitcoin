@@ -60,6 +60,6 @@ struct cycle_visitor
 	}
 	ClearedVertices& cleared;
 };
-unsigned int GraphRemoveCycles(CBlock * pblock, unique_ptr<CBlockTemplate> &pblocktemplate, uint64_t &nBlockTx, uint64_t &nBlockSize, unsigned int &nBlockSigOps, CAmount &nFees);
+unsigned int GraphRemoveCycles(CBlock * pblock, std::unique_ptr<CBlockTemplate> &pblocktemplate, uint64_t &nBlockTx, uint64_t &nBlockSize, unsigned int &nBlockSigOps, CAmount &nFees);
 bool DAGTopologicalSort(CBlock * pblock);
 #endif // GRAPH_H
