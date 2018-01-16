@@ -156,6 +156,7 @@ public:
 		bool eraseState = Erase(make_pair(std::string("assetallocationi"), assetAllocationTuple));
 		Erase(make_pair(std::string("assetp"), assetAllocationTuple));
 		EraseISLock(assetAllocationTuple);
+		EraseISArrivalTimes(assetAllocationTuple);
 		EraseAssetAllocationIndex(assetAllocationTuple, cleanup);
 		return eraseState;
 	}
@@ -170,7 +171,7 @@ public:
 		return Read(make_pair(std::string("assetallocationl"), assetAllocationTuple), locks);
 	}
 	bool EraseISLock(const CAssetAllocationTuple& assetAllocationTuple) {
-		return Erase(make_pair(std::string("assetallocationl"), assetAllocationTuple)) && EraseISArrivalTimes(assetAllocationTuple);
+		return Erase(make_pair(std::string("assetallocationl"), assetAllocationTuple));
 	}
 	bool EraseISLock(const CAssetAllocationTuple& assetAllocationTuple, const uint256& txid) {
 		std::vector<uint256> locks;
@@ -178,19 +179,13 @@ public:
 		std::vector<uint256>::iterator it = std::find(locks.begin(), locks.end(), txid);
 		if (it != locks.end())
 			locks.erase(it);
-		return Write(make_pair(std::string("assetallocationl"), assetAllocationTuple), locks) && EraseISArrivalTime(assetAllocationTuple, txid);
+		return Write(make_pair(std::string("assetallocationl"), assetAllocationTuple), locks);
 	}
 	bool ReadISArrivalTimes(const CAssetAllocationTuple& assetAllocationTuple, ArrivalTimesMap& arrivalTimes) {
 		return Read(make_pair(std::string("assetallocationa"), assetAllocationTuple), arrivalTimes);
 	}
 	bool EraseISArrivalTimes(const CAssetAllocationTuple& assetAllocationTuple) {
 		return Erase(make_pair(std::string("assetallocationa"), assetAllocationTuple));
-	}
-	bool EraseISArrivalTime(const CAssetAllocationTuple& assetAllocationTuple, const uint256& txid) {
-		ArrivalTimesMap arrivalTimes;
-		ReadISArrivalTimes(assetAllocationTuple, arrivalTimes);
-		arrivalTimes.erase(txid);
-		return Write(make_pair(std::string("assetallocationa"), assetAllocationTuple), arrivalTimes);
 	}
 	void WriteAssetAllocationIndex(const CAssetAllocation& assetAllocationTuple, const int &op);
 	void EraseAssetAllocationIndex(const CAssetAllocationTuple& assetAllocationTuple, bool cleanup=false);
