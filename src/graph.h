@@ -11,13 +11,12 @@
 #include <unordered_map>
 #include <vector>
 #include "miner.h"
-typedef boost::adjacency_list< boost::vecS, boost::vecS, boost::directedS > Graph;
 template <class T, class Compare = std::less<T> >
 struct sorted_vector {
 	std::vector<T> V;
 	Compare cmp;
-	typedef typename std::vector<T>::iterator iterator;
-	typedef typename std::vector<T>::const_iterator const_iterator;
+	typedef typename std:vector<T>::iterator iterator;
+	typedef typename std:vector<T>::const_iterator const_iterator;
 	iterator begin() { return V.begin(); }
 	iterator end() { return V.end(); }
 	const_iterator begin() const { return V.begin(); }
@@ -56,10 +55,11 @@ struct cycle_visitor
 	{
 		if (p.empty())
 			return;
-		cleared.insert(*(boost::prior(p.end())));
+		const int &nValue = *(boost::prior(p.end()));
+		cleared.insert(nValue);
 	}
 	ClearedVertices& cleared;
 };
-bool GraphRemoveCycles(CBlock * pblock, Graph& graph, std::vector<int> &indexesToMove);
-bool DAGTopologicalSort(CBlock* pblock, const Graph &graph, const CBlock* originalBlock, const std::vector<int> &indexesToMove);
+unsigned int GraphRemoveCycles(CBlock * pblock, unique_ptr<CBlockTemplate> &pblocktemplate, uint64_t &nBlockTx, uint64_t &nBlockSize, unsigned int &nBlockSigOps, CAmount &nFees);
+bool DAGTopologicalSort(CBlock * pblock);
 #endif // GRAPH_H

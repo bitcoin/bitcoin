@@ -32,6 +32,7 @@
 #include <boost/thread.hpp>
 #include <boost/tuple/tuple.hpp>
 #include <queue>
+#include "graph.h"
 using namespace std;
 
 //////////////////////////////////////////////////////////////////////////////
@@ -280,6 +281,135 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
 						}
 					}
 				}
+			}
+			int nRemovedTxs = GraphRemoveCycles(pblock, pblocktemplate, nBlockTx, nBlockSize, nBlockSigOps, nFees);
+			bool bAddedNewTx = false;
+			// remove cycles and add more from mempool and check for cycles again repeatedly until no cycles exist
+			// also ensure that mempool still has some tx's to add
+			while (nRemovedTxs > 0 && (mi != mempool.mapTx.get<3>().end() || !clearedTxs.empty()))
+			{
+				LogPrintf("adding more from mempool nRemovedTxs %d\n", nRemovedTxs);
+				nRemovedTxs--;
+				// code from above to do checks before adding to block
+				// ----------------
+				bool priorityTx = false;
+				if (fPriorityBlock && !vecPriority.empty()) { // add a tx from priority queue to fill the blockprioritysize
+					priorityTx = true;
+					iter = vecPriority.front().second;
+					actualPriority = vecPriority.front().first;
+					std::pop_heap(vecPriority.begin(), vecPriority.end(), pricomparer);
+					vecPriority.pop_back();
+				}
+				else if (clearedTxs.empty()) { // add tx with next highest score
+					iter = mempool.mapTx.project<0>(mi);
+					mi++;
+				}
+				else {  // try to add a previously postponed child tx
+					iter = clearedTxs.top();
+					clearedTxs.pop();
+				}
+
+				const CTransaction& tx = iter->GetTx();
+				if (inBlock.count(iter))
+					continue; // could have been added to the priorityBlock
+
+				bool fOrphan = false;
+				BOOST_FOREACH(CTxMemPool::txiter parent, mempool.GetMemPoolParents(iter))
+				{
+					if (!inBlock.count(parent)) {
+						fOrphan = true;
+						break;
+					}
+				}
+				if (fOrphan) {
+					if (priorityTx)
+						waitPriMap.insert(std::make_pair(iter, actualPriority));
+					else
+						waitSet.insert(iter);
+					continue;
+				}
+
+				unsigned int nTxSize = iter->GetTxSize();
+				if (fPriorityBlock &&
+					(nBlockSize + nTxSize >= nBlockPrioritySize || !AllowFree(actualPriority))) {
+					fPriorityBlock = false;
+					waitPriMap.clear();
+				}
+				if (!priorityTx &&
+					(iter->GetModifiedFee() < ::minRelayTxFee.GetFee(nTxSize) && nBlockSize >= nBlockMinSize)) {
+					break;
+				}
+				if (nBlockSize + nTxSize >= nBlockMaxSize) {
+					if (nBlockSize > nBlockMaxSize - 100 || lastFewTxs > 50) {
+						bAddedNewTx = true;
+						break;
+					}
+					// Once we're within 1000 bytes of a full block, only look at 50 more txs
+					// to try to fill the remaining space.
+					if (nBlockSize > nBlockMaxSize - 1000) {
+						lastFewTxs++;
+					}
+					continue;
+				}
+
+				if (!IsFinalTx(tx, nHeight, nLockTimeCutoff))
+					continue;
+
+				unsigned int nTxSigOps = iter->GetSigOpCount();
+				unsigned int nMaxBlockSigOps = MaxBlockSigOps(fDIP0001ActiveAtTip);
+				if (nBlockSigOps + nTxSigOps >= nMaxBlockSigOps) {
+					if (nBlockSigOps > nMaxBlockSigOps - 2) {
+						bAddedNewTx = true;
+						break;
+					}
+					continue;
+				}
+
+				CAmount nTxFees = iter->GetFee();
+				// Added
+				pblock->vtx.push_back(tx);
+				pblocktemplate->vTxFees.push_back(nTxFees);
+				pblocktemplate->vTxSigOps.push_back(nTxSigOps);
+				nBlockSize += nTxSize;
+				++nBlockTx;
+				nBlockSigOps += nTxSigOps;
+				nFees += nTxFees;
+				inBlock.insert(iter);
+				// Add transactions that depend on this one to the priority queue
+				BOOST_FOREACH(CTxMemPool::txiter child, mempool.GetMemPoolChildren(iter))
+				{
+					if (fPriorityBlock) {
+						waitPriIter wpiter = waitPriMap.find(child);
+						if (wpiter != waitPriMap.end()) {
+							vecPriority.push_back(TxCoinAgePriority(wpiter->second, child));
+							std::push_heap(vecPriority.begin(), vecPriority.end(), pricomparer);
+							waitPriMap.erase(wpiter);
+						}
+					}
+					else {
+						if (waitSet.count(child)) {
+							clearedTxs.push(child);
+							waitSet.erase(child);
+						}
+					}
+				}
+				// end code from above which adds tx to block
+				//--------------------
+				bAddedNewTx = true;
+				LogPrintf("added another tx to block %d\n", nRemovedTxs);
+				// finished adding nRemovedTxs tx's to block, let's check for cycles again, if not exit while loop on next loop
+				if (nRemovedTxs <= 0) {
+					nRemovedTxs = GraphRemoveCycles(pblock, pblocktemplate, nBlockTx, nBlockSize, nBlockSigOps, nFees);
+					bAddedNewTx = false;
+				}
+			}
+		}
+		// if bAddedNewTx is true means we didn't get to add nRemovedTxs to the block, mempool empty or block limit reached, so check for cycle once more
+		if (bAddedNewTx) {
+			nRemovedTxs = GraphRemoveCycles(pblock, pblocktemplate, nBlockTx, nBlockSize, nBlockSigOps, nFees);
+			// sanity check, should never happen
+			if (nRemovedTxs > 0) {
+				throw std::runtime_error(strprintf("GraphRemoveCycles failed: %d cycles found", nRemovedTxs));
 			}
 		}
 

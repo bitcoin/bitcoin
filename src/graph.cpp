@@ -6,7 +6,7 @@
 #include "assetallocation.h"
 using namespace boost;
 using namespace std;
-typedef boost::adjacency_list< boost::vecS, boost::vecS, boost::directedS > Graph;
+typedef adjacency_list< vecS, vecS, directedS > Graph;
 typedef graph_traits<Graph> Traits;
 typedef typename Traits::vertex_descriptor vertex_descriptor;
 typedef typename std::vector<int> container;
@@ -35,7 +35,7 @@ bool CreateGraphFromBlock(const CBlock*pblock, Graph &graph, std::vector<vertex_
 				}
 				mapTxIndex[mapAliasIndex[sender]].push_back(n);
 				
-				LogPrintf("CreateGraphFromBlock: found asset allocation from sender %s, nOut %d\n", sender, n);
+				LogPrintf("CreateDAGFromBlock: found asset allocation from sender %s, nOut %d\n", sender, n);
 				CAssetAllocation allocation(tx);
 				if (!allocation.listSendingAllocationAmounts.empty()) {
 					for (auto& allocationInstance : allocation.listSendingAllocationAmounts) {
@@ -47,7 +47,7 @@ bool CreateGraphFromBlock(const CBlock*pblock, Graph &graph, std::vector<vertex_
 						}
 						// the graph needs to be from index to index 
 						add_edge(vertices[mapAliasIndex[sender]], vertices[mapAliasIndex[receiver]], graph);
-						LogPrintf("CreateGraphFromBlock: add edge from %s(index %d) to %s(index %d)\n", sender, mapAliasIndex[sender], receiver, mapAliasIndex[receiver]);
+						LogPrintf("CreateDAGFromBlock: add edge from %s(index %d) to %s(index %d)\n", sender, mapAliasIndex[sender], receiver, mapAliasIndex[receiver]);
 					}
 				}
 			}
@@ -55,15 +55,17 @@ bool CreateGraphFromBlock(const CBlock*pblock, Graph &graph, std::vector<vertex_
 	}
 	return mapTxIndex.size() > 0;
 }
-bool GraphRemoveCycles(CBlock * pblock, Graph& graph, std::vector<int> &indexesToMove) {
+unsigned int GraphRemoveCycles(CBlock * pblock, std::unique_ptr<CBlockTemplate> &pblocktemplate, uint64_t &nBlockTx, uint64_t &nBlockSize, unsigned int &nBlockSigOps, CAmount &nFees) {
 	LogPrintf("GraphRemoveCycles\n");
 	std::vector<CTransaction> newVtx;
 	std::vector<vertex_descriptor> vertices;
 	IndexMap mapTxIndex;
+	Graph graph;
 
 	if (!CreateGraphFromBlock(pblock, graph, vertices, mapTxIndex)) {
-		return false;
+		return true;
 	}
+	std::vector<int> outputsToRemove;
 	sorted_vector<int> clearedVertices;
 	cycle_visitor<sorted_vector<int> > visitor(clearedVertices);
 	hawick_circuits(graph, visitor);
@@ -78,22 +80,34 @@ bool GraphRemoveCycles(CBlock * pblock, Graph& graph, std::vector<int> &indexesT
 		for (auto& nOut : vecTx) {
 			if (nOut >= pblock->vtx.size())
 				continue;
-			LogPrintf("indexesToMove %d\n", nOut);
-			indexesToMove.push_back(nOut);
+			LogPrintf("outputsToRemove %d\n", nOut);
+			outputsToRemove.push_back(nOut);
 		}
 	}
 	// outputs were saved above and loop through them backwards to remove from back to front
-	std::sort(indexesToMove.begin(), indexesToMove.end(), std::greater<int>());
-	for (auto& nIndex : indexesToMove) {
+	std::sort(outputsToRemove.begin(), outputsToRemove.end(), std::greater<int>());
+	for (auto& nIndex : outputsToRemove) {
+		LogPrintf("reversed outputsToRemove %d\n", nIndex);
+		nFees -= pblocktemplate->vTxFees[nIndex];
+		nBlockSigOps -= pblocktemplate->vTxSigOps[nIndex];
+		nBlockSize -= pblock->vtx[nIndex].GetTotalSize();
 		pblock->vtx.erase(pblock->vtx.begin() + nIndex);
+		nBlockTx--;
+		pblocktemplate->vTxFees.erase(pblocktemplate->vTxFees.begin() + nIndex);
+		pblocktemplate->vTxSigOps.erase(pblocktemplate->vTxSigOps.begin() + nIndex);
 	}
-	return true;
+	return clearedVertices.size();
 }
-bool DAGTopologicalSort(CBlock* pblock, const Graph &graph, const CBlock& originalBlock, const std::vector<int> &indexesToMove) {
+bool DAGTopologicalSort(CBlock * pblock) {
 	LogPrintf("DAGTopologicalSort\n");
 	std::vector<CTransaction> newVtx;
+	std::vector<vertex_descriptor> vertices;
 	IndexMap mapTxIndex;
+	Graph graph;
 
+	if (!CreateGraphFromBlock(pblock, graph, vertices, mapTxIndex)) {
+		return true;
+	}
 	container c;
 	try
 	{
@@ -132,10 +146,6 @@ bool DAGTopologicalSort(CBlock* pblock, const Graph &graph, const CBlock& origin
 		{
 			newVtx.push_back(pblock->vtx[nOut]);
 		}
-	}
-	for (auto& nIndex : indexesToMove) {
-		LogPrintf("add indexesToMove %d to back\n", nIndex);
-		newVtx.push_back(originalBlock.vtx[nIndex]);
 	}
 	LogPrintf("newVtx size %d vs pblock.vtx size %d\n", newVtx.size(), pblock->vtx.size());
 	if (pblock->vtx.size() != newVtx.size())
