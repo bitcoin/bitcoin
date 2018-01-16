@@ -6,6 +6,7 @@
 #include "assetallocation.h"
 using namespace boost;
 using namespace std;
+typedef boost::adjacency_list< boost::vecS, boost::vecS, boost::directedS > Graph;
 typedef graph_traits<Graph> Traits;
 typedef typename Traits::vertex_descriptor vertex_descriptor;
 typedef typename std::vector<int> container;
@@ -89,7 +90,7 @@ bool GraphRemoveCycles(CBlock * pblock, Graph& graph, std::vector<int> &indexesT
 	}
 	return true;
 }
-bool DAGTopologicalSort(CBlock* pblock, const Graph &graph, const CBlock& originalBlock, const std::vector<int> &outputsToMove) {
+bool DAGTopologicalSort(CBlock* pblock, const Graph &graph, const CBlock& originalBlock, const std::vector<int> &indexesToMove) {
 	LogPrintf("DAGTopologicalSort\n");
 	std::vector<CTransaction> newVtx;
 	IndexMap mapTxIndex;

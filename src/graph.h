@@ -61,5 +61,5 @@ struct cycle_visitor
 	ClearedVertices& cleared;
 };
 bool GraphRemoveCycles(CBlock * pblock, Graph& graph, std::vector<int> &indexesToMove);
-bool DAGTopologicalSort(CBlock* pblock, const Graph &graph, const CBlock* originalBlock, const std::vector<int> &outputsToMove);
+bool DAGTopologicalSort(CBlock* pblock, const Graph &graph, const CBlock* originalBlock, const std::vector<int> &indexesToMove);
 #endif // GRAPH_H
