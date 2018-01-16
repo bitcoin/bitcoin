@@ -194,7 +194,7 @@ CDBEnv::VerifyResult CDBEnv::Verify(const std::string& strFile, recoverFunc_type
     return (fRecovered ? RECOVER_OK : RECOVER_FAIL);
 }
 
-bool CDB::Recover(const std::string& filename, void *callbackDataIn, bool (*recoverKVcallback)(void* callbackData, CDataStream ssKey, CDataStream ssValue), std::string& newFilename)
+bool CDB::Recover(const std::string& filename, void *callbackDataIn, bool (*recoverKVcallback)(void* callbackData, CDataStream &ssKey, CDataStream &ssValue), std::string& newFilename)
 {
     // Recovery procedure:
     // move wallet file to walletfilename.timestamp.bak
@@ -247,7 +247,18 @@ bool CDB::Recover(const std::string& filename, void *callbackDataIn, bool (*reco
             CDataStream ssValue(row.second, SER_DISK, CLIENT_VERSION);
             if (!(*recoverKVcallback)(callbackDataIn, ssKey, ssValue))
                 continue;
-        }
+
+            if (fParticlMode)
+            {
+                Dbt datKey(&row.first[0], row.first.size());
+                Dbt datValue(ssValue.data(), ssValue.size());
+                int ret2 = pdbCopy->put(ptxn, &datKey, &datValue, DB_NOOVERWRITE);
+                if (ret2 > 0)
+                    fSuccess = false;
+                    continue;
+            };
+        };
+
         Dbt datKey(&row.first[0], row.first.size());
         Dbt datValue(&row.second[0], row.second.size());
         int ret2 = pdbCopy->put(ptxn, &datKey, &datValue, DB_NOOVERWRITE);

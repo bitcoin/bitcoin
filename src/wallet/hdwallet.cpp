@@ -492,7 +492,6 @@ bool CHDWallet::DumpJson(UniValue &rv, std::string &sError)
         if (acc["stealth_keys_received_pack"].isNum())
             nPackStealthKeys = acc["stealth_keys_received_pack"].get_int();
 
-
         CKeyID idAcc;
         CBitcoinAddress accIdAddr(acc["id"].get_str());
 

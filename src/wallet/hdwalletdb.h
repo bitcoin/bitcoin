@@ -58,7 +58,7 @@ prefixes
     lns                 - stealth link, key: keyid, value uint32_t (stealth index)
     lne                 - extkey link key: keyid, value uint32_t (stealth index)
 
-    mkey
+    mkey                - CMasterKey
     minversion
 
     oal
