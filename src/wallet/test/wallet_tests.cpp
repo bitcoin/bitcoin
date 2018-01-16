@@ -68,7 +68,7 @@ static void empty_wallet(void)
     wtxn.clear();
 }
 
-static bool equal_sets(CoinSet a, CoinSet b)
+static bool equal_sets(const CoinSet& a, const CoinSet& b)
 {
     std::pair<CoinSet::iterator, CoinSet::iterator> ret = mismatch(a.begin(), a.end(), b.begin());
     return ret.first == a.end() && ret.second == b.end();
@@ -618,7 +618,7 @@ public:
         ::bitdb.Reset();
     }
 
-    CWalletTx& AddTx(CRecipient recipient)
+    CWalletTx& AddTx(const CRecipient& recipient)
     {
         CWalletTx wtx;
         CReserveKey reservekey(wallet.get());

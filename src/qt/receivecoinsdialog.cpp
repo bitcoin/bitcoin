@@ -184,7 +184,7 @@ void ReceiveCoinsDialog::on_removeRequestButton_clicked()
     if(selection.empty())
         return;
     // correct for selection mode ContiguousSelection
-    QModelIndex firstIndex = selection.at(0);
+    const QModelIndex& firstIndex = selection.at(0);
     model->getRecentRequestsTableModel()->removeRows(firstIndex.row(), selection.length(), firstIndex.parent());
 }
 
@@ -220,7 +220,7 @@ QModelIndex ReceiveCoinsDialog::selectedRow()
     if(selection.empty())
         return QModelIndex();
     // correct for selection mode ContiguousSelection
-    QModelIndex firstIndex = selection.at(0);
+    const QModelIndex& firstIndex = selection.at(0);
     return firstIndex;
 }
 

@@ -21,6 +21,7 @@
 #include <sys/stat.h>
 #include <signal.h>
 #include <future>
+#include <utility>
 
 #include <event2/thread.h>
 #include <event2/buffer.h>
@@ -154,7 +155,7 @@ struct HTTPPathHandler
 {
     HTTPPathHandler() {}
     HTTPPathHandler(std::string _prefix, bool _exactMatch, HTTPRequestHandler _handler):
-        prefix(_prefix), exactMatch(_exactMatch), handler(_handler)
+        prefix(std::move(_prefix)), exactMatch(_exactMatch), handler(std::move(_handler))
     {
     }
     std::string prefix;

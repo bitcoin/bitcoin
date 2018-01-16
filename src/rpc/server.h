@@ -23,8 +23,8 @@ class CRPCCommand;
 
 namespace RPCServer
 {
-    void OnStarted(std::function<void ()> slot);
-    void OnStopped(std::function<void ()> slot);
+    void OnStarted(const std::function<void ()>& slot);
+    void OnStopped(const std::function<void ()>& slot);
 }
 
 /** Wrapper for UniValue::VType, which includes typeAny:
@@ -179,10 +179,10 @@ extern CRPCTable tableRPC;
  * Utilities: convert hex-encoded Values
  * (throws error if not hex).
  */
-extern uint256 ParseHashV(const UniValue& v, std::string strName);
-extern uint256 ParseHashO(const UniValue& o, std::string strKey);
-extern std::vector<unsigned char> ParseHexV(const UniValue& v, std::string strName);
-extern std::vector<unsigned char> ParseHexO(const UniValue& o, std::string strKey);
+extern uint256 ParseHashV(const UniValue& v, const std::string& strName);
+extern uint256 ParseHashO(const UniValue& o, const std::string& strKey);
+extern std::vector<unsigned char> ParseHexV(const UniValue& v, const std::string& strName);
+extern std::vector<unsigned char> ParseHexO(const UniValue& o, const std::string& strKey);
 
 extern CAmount AmountFromValue(const UniValue& value);
 extern std::string HelpExampleCli(const std::string& methodname, const std::string& args);

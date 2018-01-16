@@ -935,8 +935,8 @@ public:
      */
     int64_t IncOrderPosNext(CWalletDB *pwalletdb = nullptr);
     DBErrors ReorderTransactions();
-    bool AccountMove(std::string strFrom, std::string strTo, CAmount nAmount, std::string strComment = "");
-    bool GetAccountDestination(CTxDestination &dest, std::string strAccount, bool bForceNew = false);
+    bool AccountMove(const std::string& strFrom, const std::string& strTo, CAmount nAmount, const std::string& strComment = "");
+    bool GetAccountDestination(CTxDestination &dest, const std::string& strAccount, bool bForceNew = false);
 
     void MarkDirty();
     bool AddToWallet(const CWalletTx& wtxIn, bool fFlushOnClose=true);
@@ -1046,8 +1046,8 @@ public:
         }
     }
 
-    void GetScriptForMining(std::shared_ptr<CReserveScript> &script);
-    
+    void GetScriptForMining(std::unique_ptr<CReserveScript>& script);
+
     unsigned int GetKeyPoolSize()
     {
         AssertLockHeld(cs_wallet); // set{Ex,In}ternalKeyPool
@@ -1109,7 +1109,7 @@ public:
     bool MarkReplaced(const uint256& originalHash, const uint256& newHash);
 
     /* Initializes the wallet, returns a new CWallet instance or a null pointer in case of an error */
-    static CWallet* CreateWalletFromFile(const std::string walletFile);
+    static CWallet* CreateWalletFromFile(const std::string& walletFile);
 
     /**
      * Wallet post-init setup

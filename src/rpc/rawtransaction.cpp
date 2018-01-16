@@ -791,7 +791,7 @@ UniValue signrawtransaction(const JSONRPCRequest& request)
             if (!p.isObject())
                 throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "expected object with {\"txid'\",\"vout\",\"scriptPubKey\"}");
 
-            UniValue prevOut = p.get_obj();
+            const UniValue& prevOut = p.get_obj();
 
             RPCTypeCheckObj(prevOut,
                 {

@@ -61,7 +61,7 @@ static CNetAddr ResolveIP(const char* ip)
     return addr;
 }
 
-static CNetAddr ResolveIP(std::string ip)
+static CNetAddr ResolveIP(const std::string& ip)
 {
     return ResolveIP(ip.c_str());
 }
@@ -73,7 +73,7 @@ static CService ResolveService(const char* ip, int port = 0)
     return serv;
 }
 
-static CService ResolveService(std::string ip, int port = 0)
+static CService ResolveService(const std::string& ip, int port = 0)
 {
     return ResolveService(ip.c_str(), port);
 }

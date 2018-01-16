@@ -34,6 +34,8 @@
 
 #include <univalue.h>
 
+#include <utility>
+
 static const std::string WALLET_ENDPOINT_BASE = "/wallet/";
 
 CWallet *GetWalletForJSONRPCRequest(const JSONRPCRequest& request)
@@ -188,7 +190,7 @@ UniValue getnewaddress(const JSONRPCRequest& request)
 CTxDestination GetAccountDestination(CWallet* const pwallet, std::string strAccount, bool bForceNew=false)
 {
     CTxDestination dest;
-    if (!pwallet->GetAccountDestination(dest, strAccount, bForceNew)) {
+    if (!pwallet->GetAccountDestination(dest, std::move(strAccount), bForceNew)) {
         throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first");
     }
 
@@ -3357,7 +3359,7 @@ UniValue generate(const JSONRPCRequest& request)
         max_tries = request.params[1].get_int();
     }
 
-    std::shared_ptr<CReserveScript> coinbase_script;
+    std::unique_ptr<CReserveScript> coinbase_script;
     pwallet->GetScriptForMining(coinbase_script);
 
     // If the keypool is exhausted, no script is returned at all.  Catch this.
@@ -3370,7 +3372,7 @@ UniValue generate(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INTERNAL_ERROR, "No coinbase script available");
     }
 
-    return generateBlocks(coinbase_script, num_generate, max_tries, true);
+    return generateBlocks(coinbase_script.get(), num_generate, max_tries, true);
 }
 
 UniValue rescanblockchain(const JSONRPCRequest& request)

@@ -10,7 +10,7 @@
 
 BOOST_FIXTURE_TEST_SUITE(torcontrol_tests, BasicTestingSetup)
 
-void CheckSplitTorReplyLine(std::string input, std::string command, std::string args)
+void CheckSplitTorReplyLine(const std::string& input, const std::string& command, const std::string& args)
 {
     BOOST_TEST_MESSAGE(std::string("CheckSplitTorReplyLine(") + input + ")");
     auto ret = SplitTorReplyLine(input);
@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE(util_SplitTorReplyLine)
     CheckSplitTorReplyLine("COMMAND   EVEN+more  ARGS", "COMMAND", "  EVEN+more  ARGS");
 }
 
-void CheckParseTorReplyMapping(std::string input, std::map<std::string,std::string> expected)
+void CheckParseTorReplyMapping(const std::string& input, std::map<std::string,std::string> expected)
 {
     BOOST_TEST_MESSAGE(std::string("CheckParseTorReplyMapping(") + input + ")");
     auto ret = ParseTorReplyMapping(input);
