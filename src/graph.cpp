@@ -80,7 +80,7 @@ bool OrderBasedOnArrivalTime(const std::vector<CTransaction>& blockVtx, std::vec
 					orderedIndexes.insert(make_pair((*it).second, n));
 				// we don't have this in our arrival times list, means it must be rejected via consensus so add it to the end
 				else
-					orderedIndexes.insert(INT64_MAX, n));
+					orderedIndexes.insert(INT64_MAX, n);
 				continue;
 			}
 		}
