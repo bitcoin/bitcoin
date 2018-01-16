@@ -87,7 +87,7 @@ bool OrderBasedOnArrivalTime(const std::vector<CTransaction>& blockVtx, std::vec
 	for (auto& orderedIndex : orderedIndexes) {
 		orderedVtx.push_back(blockVtx[orderedIndex.second]);
 		mapIndexOriginalVTxToOrderedVtx[orderedVtx.size() - 1] = orderedIndex.second;
-		LogPrintf("OrderBasedOnArrivalTime: mapping %d to %d with time\n", orderedVtx.size() - 1, orderedIndex.second, orderedIndex.first);
+		LogPrintf("OrderBasedOnArrivalTime: mapping %d to %d with time %llu\n", orderedVtx.size() - 1, orderedIndex.second, orderedIndex.first);
 	}
 	if (blockVtx.size() != orderedVtx.size())
 	{
