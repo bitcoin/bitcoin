@@ -341,8 +341,39 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 					if (fDebug)
 						LogPrintf("ASSET ALLOCATION txid not found in locks! Recreating from previous state...\n");
 
+					// deal with assetallocation send reverting
+					if (op == OP_ASSET_ALLOCATION_SEND) {
+						if (dbAssetAllocation.listSendingAllocationInputs.empty()) {
+							for (auto& amountTuple : dbAssetAllocation.listSendingAllocationAmounts) {
+								CAssetAllocation receiverAllocation;
+								const CAssetAllocationTuple receiverAllocationTuple(dbAssetAllocation.vchAsset, amountTuple.first);
+								if (!passetallocationdb->EraseISLock(receiverAllocationTuple, tx.GetHash()))
+								{
+									errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from assetallocation DB");
+									return error(errorMessage.c_str());
+								}
+								if (!GetAssetAllocation(receiverAllocationTuple, receiverAllocation))
+								{
+									errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2024 - " + _("Cannot find receiver asset allocation you are trying to revert.");
+									continue;
+								}
+								if (!dontaddtodb) {
+									receiverAllocation.nBalance -= amountTuple.second;
+									theAssetAllocation.nBalance += amountTuple.second;
+									receiverAllocation.nHeight = nHeight;
+									receiverAllocation.txHash = tx.GetHash();
+									if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, op, fJustCheck))
+									{
+										errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to write to asset allocation DB");
+										continue;
+									}
+								}
+
+							}
+						}
+					}
 					// recreate this assetallocation tx from last known good position (last assetallocation stored)
-					if (!passetallocationdb->ReadLastAssetAllocation(assetAllocationTuple, theAssetAllocation)) {
+					if (!passetallocationdb->ReadLastAssetAllocation(assetAllocationTuple, dbAssetAllocation)) {
 						dbAssetAllocation.SetNull();
 					}
 				}
