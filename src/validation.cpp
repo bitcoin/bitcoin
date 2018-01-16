@@ -617,6 +617,8 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight,con
 				return false;
 			}
 		}
+		if (fJustCheck)
+			return true;
 		for (unsigned int i = 0; i < sortedBlock.vtx.size(); i++)
 		{
 			const CTransaction &tx = sortedBlock.vtx[i];
