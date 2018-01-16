@@ -70,7 +70,7 @@ public:
 };
 typedef std::vector<std::pair<std::vector<unsigned char>, std::vector<CRange> > > RangeInputArrayTuples;
 typedef std::vector<std::pair<std::vector<unsigned char>, CAmount > > RangeAmountTuples;
-typedef std::unordered_map<uint256, int64_t> ArrivalTimesMap;
+typedef std::map<uint256, int64_t> ArrivalTimesMap;
 class CAssetAllocation {
 public:
 	std::vector<unsigned char> vchAsset;
