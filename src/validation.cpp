@@ -612,7 +612,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight,con
 	else if (!block.vtx.empty()) {
 		CBlock sortedBlock;
 		sortedBlock.vtx = block.vtx;
-		if (!sortedBlock.vtx.empty() && !IsInitialBlockDownload()) {
+		if (!sortedBlock.vtx.empty()) {
 			if (!DAGTopologicalSort(&sortedBlock)) {
 				return false;
 			}
