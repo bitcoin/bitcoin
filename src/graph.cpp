@@ -87,7 +87,7 @@ bool OrderBasedOnArrivalTime(const std::vector<CTransaction>& blockVtx, std::vec
 	for (auto& orderedIndex : orderedIndexes) {
 		orderedVtx.push_back(blockVtx[orderedIndex.second]);
 		mapIndexOriginalVTxToOrderedVtx[orderedVtx.size() - 1] = orderedIndex.second;
-		LogPrintf("OrderBasedOnArrivalTime: mapping %d to %d\n", orderedVtx.size() - 1, orderedIndex.second);
+		LogPrintf("OrderBasedOnArrivalTime: mapping %d to %d with time\n", orderedVtx.size() - 1, orderedIndex.second, orderedIndex.first);
 	}
 	if (blockVtx.size() != orderedVtx.size())
 	{
@@ -124,7 +124,7 @@ unsigned int GraphRemoveCycles(CBlock * pblock, std::unique_ptr<CBlockTemplate> 
 		for (auto& nIndex : vecTx) {
 			if (nIndex >= pblock->vtx.size())
 				continue;
-			LogPrintf("outputsToRemove %d mapIndexOriginalVTxToOrderedVtx[nIndex] \n", nIndex, mapIndexOriginalVTxToOrderedVtx[nIndex]);
+			LogPrintf("outputsToRemove %d mapIndexOriginalVTxToOrderedVtx[nIndex] %d\n", nIndex, mapIndexOriginalVTxToOrderedVtx[nIndex]);
 			// mapIndexOriginalVTxToOrderedVtx is the mapping from the ordered by arrival time index to the original block index for removal below
 			outputsToRemove.push_back(mapIndexOriginalVTxToOrderedVtx[nIndex]);
 		}
