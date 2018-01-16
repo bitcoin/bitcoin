@@ -87,7 +87,7 @@ class ImportRescanTest(BitcoinTestFramework):
             for import_rpc, label, amount, txid, addr in import_rpc_variants:
                 watchonly = import_rpc(node, import_node.rescan)
 
-                balance = node.getbalance(label, 0, True)
+                balance = node.getbalance(label, 0, False, True)
                 if import_node.rescan:
                     assert_equal(balance, amount)
                 else:
@@ -134,7 +134,7 @@ class ImportRescanTest(BitcoinTestFramework):
         for node, import_node in zip(self.nodes[1:], IMPORT_NODES):
             txs = node.listtransactions("*", 10000, 0, True)
             for (import_rpc, label, amount, txid, addr), spend_txid in zip(import_rpc_variants, spend_txids):
-                balance = node.getbalance(label, 0, True)
+                balance = node.getbalance(label, 0, False, True)
                 spend_tx = [tx for tx in txs if tx["txid"] == spend_txid]
                 if import_node.rescan:
                     assert_equal(balance, amount)
