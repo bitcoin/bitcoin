@@ -443,7 +443,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 	theAssetAllocation.nBalance = dbAssetAllocation.nBalance;
 	if (op == OP_ASSET_ALLOCATION_SEND)
 	{
-		if (dbAssetAllocation.IsNull())
+		if (dbAssetAllocation.IsNull() && !IsInitialBlockDownload())
 		{
 			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2024 - " + _("Cannot find sender asset allocation.");
 			return true;
