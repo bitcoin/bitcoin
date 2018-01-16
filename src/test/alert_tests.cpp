@@ -8,9 +8,7 @@
 #include "chain.h"
 #include "chainparams.h"
 #include "clientversion.h"
-namespace alert_tests {
 #include "data/alertTests.raw.h"
-}
 #include "serialize.h"
 #include "streams.h"
 #include "utilstrencodings.h"
@@ -112,7 +110,7 @@ struct ReadAlerts : public TestingSetup
 {
     ReadAlerts()
     {
-        std::vector<unsigned char> vch(alert_tests::alertTests, alert_tests::alertTests + sizeof(alert_tests::alertTests));
+        std::vector<unsigned char> vch(alertTests, alertTests + sizeof(alertTests));
         CDataStream stream(vch, SER_DISK, CLIENT_VERSION);
         try {
             while (!stream.eof())
