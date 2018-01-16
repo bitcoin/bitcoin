@@ -683,6 +683,7 @@ bool BuildAssetAllocationJson(const CAssetAllocation& assetallocation, UniValue&
 	oAssetAllocation.push_back(Pair("asset", stringFromVch(assetallocation.vchAsset)));
     oAssetAllocation.push_back(Pair("txid", assetallocation.txHash.GetHex()));
     oAssetAllocation.push_back(Pair("height", (int)assetallocation.nHeight));
+	ArrivalTimesMap arrivalTimes;
 	passetallocationdb->ReadISArrivalTimes(assetAllocationTuple, arrivalTimes);
 	ArrivalTimesMap::iterator it = arrivalTimes.find(assetallocation.txHash);
 	int64_t nArrivalTime = INT64_MAX;
