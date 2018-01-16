@@ -333,7 +333,8 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 	CAsset dbAsset;
 	if (GetAssetAllocation(assetAllocationTuple, dbAssetAllocation)){
 		vector<uint256> lockedTXIDs;
-		LogPrintf("lockedTXIDs size %d", lockedTXIDs.size());
+		if(lockedTXIDs.size()) > 0)
+			LogPrintf("lockedTXIDs size %d\n", lockedTXIDs.size());
 		passetallocationdb->ReadISLock(assetAllocationTuple, lockedTXIDs);
 		if (!fJustCheck && !lockedTXIDs.empty()) {
 			if (std::find(lockedTXIDs.begin(), lockedTXIDs.end(), tx.GetHash()) == lockedTXIDs.end())
@@ -357,7 +358,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 									}
 
 									if (passetallocationdb->ReadLastAssetAllocation(receiverAllocationTuple, receiverAllocation) &&
-										!passetallocationdb->WriteAssetAllocation(receiverAllocation, op, fJustCheck))
+										!passetallocationdb->WriteAssetAllocation(receiverAllocation, op, INT64_MAX, fJustCheck))
 									{
 										errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to write to asset allocation DB");
 										continue;
@@ -435,7 +436,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 										}
 
 										if (passetallocationdb->ReadLastAssetAllocation(receiverAllocationTuple, receiverAllocation) &&
-											!passetallocationdb->WriteAssetAllocation(receiverAllocation, op, fJustCheck))
+											!passetallocationdb->WriteAssetAllocation(receiverAllocation, op, INT64_MAX, fJustCheck))
 										{
 											errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to write to asset allocation DB");
 											continue;
@@ -545,7 +546,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 					receiverAllocation.txHash = tx.GetHash();
 					receiverAllocation.nBalance += amountTuple.second;
 					theAssetAllocation.nBalance -= amountTuple.second;
-					if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, op, fJustCheck))
+					if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, op, INT64_MAX, fJustCheck))
 					{
 						errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to write to asset allocation DB");
 						continue;
@@ -562,14 +563,12 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 	// set the assetallocation's txn-dependent values
 	theAssetAllocation.nHeight = nHeight;
 	theAssetAllocation.txHash = tx.GetHash();
-	if(fJustCheck)
-		theAssetAllocation.nArrivalTime = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
 	// write assetallocation  
 	if (!dontaddtodb) {
 		if (strResponse != "") {
 			paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, assetAllocationTuple.ToString(), nLockStatus);
 		}
-		if (!passetallocationdb->WriteAssetAllocation(theAssetAllocation, op, fJustCheck))
+		if (!passetallocationdb->WriteAssetAllocation(theAssetAllocation, op, duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count(), fJustCheck))
 		{
 			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to write to asset allocation DB");
 			return error(errorMessage.c_str());
@@ -683,7 +682,12 @@ bool BuildAssetAllocationJson(const CAssetAllocation& assetallocation, UniValue&
 	oAssetAllocation.push_back(Pair("asset", stringFromVch(assetallocation.vchAsset)));
     oAssetAllocation.push_back(Pair("txid", assetallocation.txHash.GetHex()));
     oAssetAllocation.push_back(Pair("height", (int)assetallocation.nHeight));
-	oAssetAllocation.push_back(Pair("time", assetallocation.nArrivalTime));
+	passetallocationdb->ReadISArrivalTimes(assetAllocationTuple, arrivalTimes);
+	ArrivalTimesMap::iterator it = arrivalTimes.find(assetallocation.txHash);
+	int64_t nArrivalTime = INT64_MAX;
+	if (it != arrivalTimes.end())
+		nArrivalTime = (*it).second;
+	oAssetAllocation.push_back(Pair("time", nArrivalTime));
 	oAssetAllocation.push_back(Pair("alias", stringFromVch(assetallocation.vchAlias)));
 	oAssetAllocation.push_back(Pair("balance", ValueFromAmount(assetallocation.nBalance)));
 	int64_t expired_time = GetAssetAllocationExpiration(assetallocation);

@@ -61,7 +61,7 @@ bool OrderBasedOnArrivalTime(const std::vector<CTransaction>& blockVtx, std::vec
 	int op;
 	int nOut;
 	// order the arrival times in ascending order using a map
-	std::map<int64_t, int> orderedIndexes;
+	std::multimap<int64_t, int> orderedIndexes;
 	for (unsigned int n = 0; n < blockVtx.size(); n++) {
 		const CTransaction& tx = blockVtx[n];
 		if (tx.nVersion == SYSCOIN_TX_VERSION)
@@ -71,12 +71,13 @@ bool OrderBasedOnArrivalTime(const std::vector<CTransaction>& blockVtx, std::vec
 
 			if (DecodeAssetAllocationTx(tx, op, nOut, vvchArgs))
 			{
-				const string& sender = stringFromVch(vvchAliasArgs[0]);
+				ArrivalTimesMap arrivalTimes;
 				CAssetAllocation assetallocation(tx);
 				CAssetAllocationTuple assetAllocationTuple(assetallocation.vchAsset, vvchAliasArgs[0]);
-				CAssetAllocation dBAssetAllocation;
-				GetAssetAllocation(assetAllocationTuple, dBAssetAllocation);
-				orderedIndexes[dBAssetAllocation.nArrivalTime] = n;
+				passetallocationdb->ReadISArrivalTimes(assetAllocationTuple, arrivalTimes);
+				ArrivalTimesMap::iterator it = arrivalTimes.find(tx.GetHash());
+				if(it != arrivalTimes.end())
+					orderedIndexes.insert(make_pair((*it).second, n));
 				continue;
 			}
 		}

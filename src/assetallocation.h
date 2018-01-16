@@ -10,6 +10,7 @@
 #include "feedback.h"
 #include "primitives/transaction.h"
 #include "ranges.h"
+#include <unordered_map>
 class CWalletTx;
 class CTransaction;
 class CReserveKey;
@@ -69,11 +70,11 @@ public:
 };
 typedef std::vector<std::pair<std::vector<unsigned char>, std::vector<CRange> > > RangeInputArrayTuples;
 typedef std::vector<std::pair<std::vector<unsigned char>, CAmount > > RangeAmountTuples;
+typedef std::unordered_map<uint256, int64_t> ArrivalTimesMap;
 class CAssetAllocation {
 public:
 	std::vector<unsigned char> vchAsset;
 	std::vector<unsigned char> vchAlias;
-	int64_t nArrivalTime;
 	uint256 txHash;
 	uint64_t nHeight;
 	// if allocations are tracked by individual inputs
@@ -96,7 +97,6 @@ public:
 		READWRITE(vchAlias);
 		READWRITE(txHash);
 		READWRITE(VARINT(nHeight));
-		READWRITE(VARINT(nArrivalTime));
 		READWRITE(listAllocationInputs);
 		READWRITE(listSendingAllocationInputs);
 		READWRITE(listSendingAllocationAmounts);
@@ -111,7 +111,6 @@ public:
 		vchAsset = b.vchAsset;
 		txHash = b.txHash;
 		nHeight = b.nHeight;
-		nArrivalTime = b.nArrivalTime;
 		vchAlias = b.vchAlias;
 		listAllocationInputs = b.listAllocationInputs;
 		listSendingAllocationInputs = b.listSendingAllocationInputs;
@@ -123,7 +122,7 @@ public:
 	inline friend bool operator!=(const CAssetAllocation &a, const CAssetAllocation &b) {
 		return !(a == b);
 	}
-	inline void SetNull() { nArrivalTime = INT64_MAX; nBalance = 0;  listSendingAllocationAmounts.clear();  listSendingAllocationInputs.clear(); listAllocationInputs.clear(); vchAsset.clear(); nHeight = 0; txHash.SetNull(); vchAlias.clear(); }
+	inline void SetNull() { nBalance = 0;  listSendingAllocationAmounts.clear();  listSendingAllocationInputs.clear(); listAllocationInputs.clear(); vchAsset.clear(); nHeight = 0; txHash.SetNull(); vchAlias.clear(); }
 	inline bool IsNull() const { return (vchAsset.empty()); }
 	bool UnserializeFromTx(const CTransaction &tx);
 	bool UnserializeFromData(const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash);
@@ -135,7 +134,7 @@ class CAssetAllocationDB : public CDBWrapper {
 public:
 	CAssetAllocationDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "assetallocations", nCacheSize, fMemory, fWipe) {}
 
-    bool WriteAssetAllocation(const CAssetAllocation& assetallocation, const int &op, const bool& fJustCheck) {
+    bool WriteAssetAllocation(const CAssetAllocation& assetallocation, const int &op, const int64_t& arrivalTime, const bool& fJustCheck) {
 		const CAssetAllocationTuple allocationTuple(assetallocation.vchAsset, assetallocation.vchAlias);
 		bool writeState = Write(make_pair(std::string("assetallocationi"), allocationTuple), assetallocation);
 		if (!fJustCheck)
@@ -145,6 +144,10 @@ public:
 			ReadISLock(allocationTuple, locks);
 			locks.push_back(assetallocation.txHash);
 			writeState = writeState && Write(make_pair(std::string("assetallocationl"), allocationTuple), locks);
+			ArrivalTimesMap arrivalTimes;
+			ReadISArrivalTimes(assetallocation.txHash, arrivalTimes);
+			arrivalTimes[assetallocation.txHash] = arrivalTime;
+			writeState = writeState && Write(make_pair(std::string("assetallocationa"), allocationTuple), arrivalTimes);
 		}
 		WriteAssetAllocationIndex(assetallocation, op);
         return writeState;
@@ -167,7 +170,7 @@ public:
 		return Read(make_pair(std::string("assetallocationl"), assetAllocationTuple), locks);
 	}
 	bool EraseISLock(const CAssetAllocationTuple& assetAllocationTuple) {
-		return Erase(make_pair(std::string("assetallocationl"), assetAllocationTuple));
+		return Erase(make_pair(std::string("assetallocationl"), assetAllocationTuple)) && EraseISArrivalTimes(assetAllocationTuple);
 	}
 	bool EraseISLock(const CAssetAllocationTuple& assetAllocationTuple, const uint256& txid) {
 		std::vector<uint256> locks;
@@ -175,7 +178,19 @@ public:
 		std::vector<uint256>::iterator it = std::find(locks.begin(), locks.end(), txid);
 		if (it != locks.end())
 			locks.erase(it);
-		return Write(make_pair(std::string("assetallocationl"), assetAllocationTuple), locks);
+		return Write(make_pair(std::string("assetallocationl"), assetAllocationTuple), locks) && EraseISArrivalTime(assetAllocationTuple, txid);
+	}
+	bool ReadISArrivalTimes(const CAssetAllocationTuple& assetAllocationTuple, ArrivalTimesMap& arrivalTimes) {
+		return Read(make_pair(std::string("assetallocationa"), assetAllocationTuple), arrivalTimes);
+	}
+	bool EraseISArrivalTimes(const CAssetAllocationTuple& assetAllocationTuple) {
+		return Erase(make_pair(std::string("assetallocationa"), assetAllocationTuple));
+	}
+	bool EraseISArrivalTime(const CAssetAllocationTuple& assetAllocationTuple, const uint256& txid) {
+		ArrivalTimesMap arrivalTimes;
+		ReadISArrivalTimes(assetAllocationTuple, arrivalTimes);
+		arrivalTimes.erase(txid);
+		return Write(make_pair(std::string("assetallocationa"), assetAllocationTuple), arrivalTimes);
 	}
 	void WriteAssetAllocationIndex(const CAssetAllocation& assetAllocationTuple, const int &op);
 	void EraseAssetAllocationIndex(const CAssetAllocationTuple& assetAllocationTuple, bool cleanup=false);
