@@ -82,7 +82,7 @@ CConditionVariable cvBlockChange;
 int nScriptCheckThreads = 0;
 bool fImporting = false;
 bool fReindex = false;
-bool fTxIndex = false;
+bool fTxIndex = true;
 int nIndexPort = 0;
 bool fAddressIndex = true;
 bool fTimestampIndex = false;
