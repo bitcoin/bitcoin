@@ -389,8 +389,6 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 			}
 		}
 	}
-	theAssetAllocation.vchAlias = vchAlias;
-	theAssetAllocation.nBalance = dbAssetAllocation.nBalance;
 	if (op == OP_ASSET_ALLOCATION_SEND)
 	{
 		// if this is pow, then always start from a known state to recreate the new state based on what the block is saying
@@ -427,6 +425,8 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 				LogPrintf("Last asset allocation not found, setting to null...\n");
 			}
 		}
+		theAssetAllocation.vchAlias = vchAlias;
+		theAssetAllocation.nBalance = dbAssetAllocation.nBalance;
 		if (dbAssetAllocation.IsNull())
 		{
 			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2024 - " + _("Cannot find sender asset allocation.");
