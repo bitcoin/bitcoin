@@ -448,7 +448,7 @@ bool CGovernanceObject::IsValidLocally(std::string& strError, bool& fMissingMast
 			masternode_info_t infoMn;
 			if (!mnodeman.GetMasternodeInfo(vinMasternode.prevout, infoMn)) {
 
-				CMasternode::CollateralStatus err = CMasternode::CheckCollateral(vinMasternode.prevout, CPubKey());
+				CMasternode::CollateralStatus err = CMasternode::CheckCollateral(vinMasternode.prevout);
 				if (err == CMasternode::COLLATERAL_UTXO_NOT_FOUND) {
 					strError = "Failed to find Masternode UTXO, missing masternode=" + strOutpoint + "\n";
 				}
