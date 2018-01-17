@@ -1044,18 +1044,20 @@ bool CMasternodeMan::SendVerifyRequest(const CAddress& addr, const std::vector<C
         return false;
     }
 
-    CNode* pnode = connman.ConnectNode(addr, NULL, false, true);
-    if(pnode == NULL) {
+    connman.OpenMasternodeConnection(addr);
+    bool fSuccess = connman.ForNode(addr, CConnman::AllNodes, [&](CNode* pnode){
+        netfulfilledman.AddFulfilledRequest(addr, strprintf("%s", NetMsgType::MNVERIFY)+"-request");
+        // use random nonce, store it and require node to reply with correct one later
+        CMasternodeVerification mnv(addr, GetRandInt(999999), nCachedBlockHeight - 1);
+        mWeAskedForVerification[addr] = mnv;
+        LogPrintf("CMasternodeMan::SendVerifyRequest -- verifying node using nonce %d addr=%s\n", mnv.nonce, addr.ToString());
+        connman.PushMessage(pnode, NetMsgType::MNVERIFY, mnv);
+        return true;
+    });
+    if (!fSuccess) {
         LogPrintf("CMasternodeMan::SendVerifyRequest -- can't connect to node to verify it, addr=%s\n", addr.ToString());
         return false;
     }
-
-    netfulfilledman.AddFulfilledRequest(addr, strprintf("%s", NetMsgType::MNVERIFY)+"-request");
-    // use random nonce, store it and require node to reply with correct one later
-    CMasternodeVerification mnv(addr, GetRandInt(999999), nCachedBlockHeight - 1);
-    mWeAskedForVerification[addr] = mnv;
-    LogPrintf("CMasternodeMan::SendVerifyRequest -- verifying node using nonce %d addr=%s\n", mnv.nonce, addr.ToString());
-    connman.PushMessage(pnode, NetMsgType::MNVERIFY, mnv);
 
     return true;
 }

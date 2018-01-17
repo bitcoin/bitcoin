@@ -873,35 +873,34 @@ bool CPrivateSendClient::JoinExistingQueue(CAmount nBalanceNeedsAnonymized, CCon
 
         vecMasternodesUsed.push_back(dsq.vin.prevout);
 
-        bool fSkip = false;
-        connman.ForNode(infoMn.addr, CConnman::AllNodes, [&fSkip](CNode* pnode) {
-            fSkip = pnode->fDisconnect || pnode->fMasternode;
-            return true;
-        });
-        if (fSkip) {
+        if (connman.IsMasternodeOrDisconnectRequested(infoMn.addr)) {
             LogPrintf("CPrivateSendClient::JoinExistingQueue -- skipping masternode connection, addr=%s\n", infoMn.addr.ToString());
             continue;
         }
 
         LogPrintf("CPrivateSendClient::JoinExistingQueue -- attempt to connect to masternode from queue, addr=%s\n", infoMn.addr.ToString());
         // connect to Masternode and submit the queue request
-        CNode* pnode = connman.ConnectNode(CAddress(infoMn.addr, NODE_NETWORK), NULL, false, true);
-        if(pnode) {
+        CAddress addr(infoMn.addr, NODE_NETWORK);
+        connman.OpenMasternodeConnection(addr);
+
+        bool fSuccess = connman.ForNode(addr, CConnman::AllNodes, [&](CNode* pnode){
             infoMixingMasternode = infoMn;
             nSessionDenom = dsq.nDenom;
 
             connman.PushMessage(pnode, NetMsgType::DSACCEPT, nSessionDenom, txMyCollateral);
             LogPrintf("CPrivateSendClient::JoinExistingQueue -- connected (from queue), sending DSACCEPT: nSessionDenom: %d (%s), addr=%s\n",
-                    nSessionDenom, CPrivateSend::GetDenominationsToString(nSessionDenom), pnode->addr.ToString());
+                      nSessionDenom, CPrivateSend::GetDenominationsToString(nSessionDenom), pnode->addr.ToString());
             strAutoDenomResult = _("Mixing in progress...");
             SetState(POOL_STATE_QUEUE);
             nTimeLastSuccessfulStep = GetTimeMillis();
             return true;
-        } else {
+        });
+        if (!fSuccess) {
             LogPrintf("CPrivateSendClient::JoinExistingQueue -- can't connect, addr=%s\n", infoMn.addr.ToString());
             strAutoDenomResult = _("Error connecting to Masternode.");
             continue;
         }
+        return true;
     }
     return false;
 }
@@ -940,20 +939,17 @@ bool CPrivateSendClient::StartNewQueue(CAmount nValueMin, CAmount nBalanceNeedsA
             continue;
         }
 
-        bool fSkip = false;
-        connman.ForNode(infoMn.addr, CConnman::AllNodes, [&fSkip](CNode* pnode) {
-            fSkip = pnode->fDisconnect || pnode->fMasternode;
-            return true;
-        });
-        if (fSkip) {
+        if (connman.IsMasternodeOrDisconnectRequested(infoMn.addr)) {
             LogPrintf("CPrivateSendClient::StartNewQueue -- skipping masternode connection, addr=%s\n", infoMn.addr.ToString());
             nTries++;
             continue;
         }
 
         LogPrintf("CPrivateSendClient::StartNewQueue -- attempt %d connection to Masternode %s\n", nTries, infoMn.addr.ToString());
-        CNode* pnode = connman.ConnectNode(CAddress(infoMn.addr, NODE_NETWORK), NULL, false, true);
-        if(pnode) {
+        CAddress addr(infoMn.addr, NODE_NETWORK);
+        connman.OpenMasternodeConnection(addr);
+
+        bool fSuccess = connman.ForNode(addr, CConnman::AllNodes, [&](CNode* pnode){
             LogPrintf("CPrivateSendClient::StartNewQueue -- connected, addr=%s\n", infoMn.addr.ToString());
             infoMixingMasternode = infoMn;
 
@@ -971,11 +967,13 @@ bool CPrivateSendClient::StartNewQueue(CAmount nValueMin, CAmount nBalanceNeedsA
             SetState(POOL_STATE_QUEUE);
             nTimeLastSuccessfulStep = GetTimeMillis();
             return true;
-        } else {
+        });
+        if (!fSuccess) {
             LogPrintf("CPrivateSendClient::StartNewQueue -- can't connect, addr=%s\n", infoMn.addr.ToString());
             nTries++;
             continue;
         }
+        return true;
     }
     return false;
 }
