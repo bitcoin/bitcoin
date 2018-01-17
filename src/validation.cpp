@@ -1954,8 +1954,7 @@ bool DisconnectBlock(const CBlock& block, CValidationState& state, const CBlockI
 		// exactly.
 		{
 			CCoinsModifier outs = view.ModifyCoins(hash);
-			// SYSCOIN do not remove unspendable's from utxo
-			//outs->ClearUnspendable();
+			outs->ClearUnspendable();
 
 			CCoins outsBlock(tx, pindex->nHeight);
 			// The CCoins serialization does not serialize negative numbers.
