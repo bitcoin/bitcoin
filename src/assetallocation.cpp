@@ -404,7 +404,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 									errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from assetallocation DB");
 									return error(errorMessage.c_str());
 								}
-								// erase all receiver locks and revert them to last state
+								// erase all receiver locks
 								for (auto& amountTuple : theAssetAllocation.listSendingAllocationAmounts) {
 									CAssetAllocation receiverAllocation;
 									const CAssetAllocationTuple receiverAllocationTuple(theAssetAllocation.vchAsset, amountTuple.first);
@@ -413,13 +413,6 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 										{
 											errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from assetallocation DB");
 											return error(errorMessage.c_str());
-										}
-
-										if (passetallocationdb->ReadLastAssetAllocation(receiverAllocationTuple, receiverAllocation) &&
-											!passetallocationdb->WriteAssetAllocation(receiverAllocation, op, INT64_MAX, fJustCheck))
-										{
-											errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to write to asset allocation DB");
-											continue;
 										}
 									}
 								}
@@ -479,19 +472,21 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 				return true;
 			}
 			// check balance is sufficient on sender
-			CAmount nTotal = 0;
-			for (auto& amountTuple : theAssetAllocation.listSendingAllocationAmounts) {
-				nTotal += amountTuple.second;
-				if (amountTuple.second <= 0)
-				{
-					errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("Receiving amount must be positive");
+			if (nLockStatus != LOCK_NOCONFLICT_CONFIRMED_STATE) {
+				CAmount nTotal = 0;
+				for (auto& amountTuple : theAssetAllocation.listSendingAllocationAmounts) {
+					nTotal += amountTuple.second;
+					if (amountTuple.second <= 0)
+					{
+						errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("Receiving amount must be positive");
+						return true;
+					}
+				}
+				if (dbAssetAllocation.nBalance < nTotal) {
+					errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("Sender balance is insufficient");
+					paliasdb->EraseAliasIndexTxHistory(tx.GetHash().GetHex() + "-" + assetAllocationTuple.ToString());
 					return true;
 				}
-			}
-			if (dbAssetAllocation.nBalance < nTotal) {
-				errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("Sender balance is insufficient");
-				paliasdb->EraseAliasIndexTxHistory(tx.GetHash().GetHex() + "-" + assetAllocationTuple.ToString());
-				return true;
 			}
 			for (auto& amountTuple : theAssetAllocation.listSendingAllocationAmounts) {
 				CAssetAllocation receiverAllocation;
@@ -503,7 +498,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 				// don't need to check for existance of allocation because it may not exist, may be creating it here for the first time for receiver
 				if (!GetAssetAllocation(receiverAllocationTuple, receiverAllocation))
 					receiverAllocation.SetNull();
-				if (fJustCheck) {
+				if (nLockStatus != LOCK_NOCONFLICT_CONFIRMED_STATE) {
 					// check receiver alias
 					if (!GetAlias(amountTuple.first, alias))
 					{
