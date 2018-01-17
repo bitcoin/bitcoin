@@ -11,10 +11,15 @@ matrix:
         services: docker
         script:
           - docker build --build-arg BRANCH_NAME=$TRAVIS_BRANCH --build-arg REPO_SLUG=$TRAVIS_REPO_SLUG -f scripts/docker/debian/Dockerfile-jessie .
+      #cross compile windows
       - os: linux
         services: docker
         script:
           - docker build --build-arg BRANCH_NAME=$TRAVIS_BRANCH --build-arg REPO_SLUG=$TRAVIS_REPO_SLUG -f scripts/docker/windows-crosscompile/Dockerfile-wheezy .
+      - os: linux
+        services: docker
+        script:
+          - docker build --build-arg BRANCH_NAME=$TRAVIS_BRANCH --build-arg REPO_SLUG=$TRAVIS_REPO_SLUG -f scripts/docker/windows-crosscompile/Dockerfile-xenial .
       #ubuntu
       - os: linux
         sudo: required
@@ -24,17 +29,14 @@ matrix:
         script:
           - ./scripts/install-ubuntu.sh
       #cross compile windows
-      #exceeds 50 minutes
       - os: linux
         sudo: required
-        #cache:
-        #  directories:
-        #  - /opt/mxe
         before_install:
-          - true #travis_wait 120 ./scripts//windows-crosscompile/dependencies.sh
+          - sudo apt-get update && sudo apt-get install -yqq libtool-bin 
+          - ./scripts//windows-crosscompile/dependencies.sh
         install: true
         script:
-          - true #travis_wait 120 ./scripts/windows-crosscompile/compile-peercoin.sh
+          - ./scripts/windows-crosscompile/compile-peercoin.sh
       #osx     
       - os: osx
         osx_image: xcode9.2
