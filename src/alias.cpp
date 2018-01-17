@@ -358,9 +358,9 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		for (unsigned int i = 0; i < tx.vin.size(); i++) {
 			vector<vector<unsigned char> > vvch;
 			int pop;
-			CCoins prevCoins;
+			const CCoins *prevCoins = GetUTXOCoins(tx.vin[i].prevout);
 			// ensure inputs are unspent when doing consensus check to add to block
-			if(!GetUTXOCoins(tx.vin[i].prevout, prevCoins) || !IsSyscoinScript(prevCoins.vout[tx.vin[i].prevout.n].scriptPubKey, pop, vvch))
+			if(!prevCoins || !IsSyscoinScript(prevCoins->vout[tx.vin[i].prevout.n].scriptPubKey, pop, vvch))
 			{
 				continue;
 			}
@@ -378,8 +378,9 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			for (unsigned int i = 0; i < tx.vin.size(); i++) {
 				vector<vector<unsigned char> > vvch;
 				int pop;
-				CCoins prevCoins;
-				if(!GetUTXOCoins(tx.vin[i].prevout, prevCoins) || !IsSyscoinScript(prevCoins.vout[tx.vin[i].prevout.n].scriptPubKey, pop, vvch))
+				const CCoins *prevCoins = GetUTXOCoins(tx.vin[i].prevout);
+				// ensure inputs are unspent when doing consensus check to add to block
+				if (!prevCoins || !IsSyscoinScript(prevCoins->vout[tx.vin[i].prevout.n].scriptPubKey, pop, vvch))
 				{
 					continue;
 				}

@@ -599,8 +599,7 @@ bool CInstantSend::ResolveConflicts(const CTxLockCandidate& txLockCandidate)
     }
     // Not in block yet, make sure all its inputs are still unspent
     BOOST_FOREACH(const CTxIn& txin, txLockCandidate.txLockRequest.vin) {
-        CCoins coins;
-        if(!GetUTXOCoins(txin.prevout, coins)) {
+        if(!GetUTXOCoins(txin.prevout)) {
             // Not in UTXO anymore? A conflicting tx was mined while we were waiting for votes.
             LogPrintf("CInstantSend::ResolveConflicts -- ERROR: Failed to find UTXO %s, can't complete Transaction Lock\n", txin.prevout.ToStringShort());
             return false;
@@ -938,20 +937,20 @@ bool CTxLockRequest::IsValid() const
     BOOST_FOREACH(const CTxIn& txin, vin) {
 
         CCoins coins;
-
-        if(!GetUTXOCoins(txin.prevout, coins)) {
+		const CCoins *coins = GetUTXOCoins(txin.prevout);
+        if(!coins) {
             LogPrint("instantsend", "CTxLockRequest::IsValid -- Failed to find UTXO %s\n", txin.prevout.ToStringShort());
             return false;
         }
 		// SYSCOIN
-        int nTxAge = chainActive.Height() - coins.nHeight + 1;
+        int nTxAge = chainActive.Height() - coins->nHeight + 1;
         if(nTxAge < INSTANTSEND_CONFIRMATIONS_REQUIRED) {
             LogPrint("instantsend", "CTxLockRequest::IsValid -- outpoint %s too new: nTxAge=%d, nConfirmationsRequired=%d, txid=%s\n",
                     txin.prevout.ToStringShort(), nTxAge, INSTANTSEND_CONFIRMATIONS_REQUIRED, GetHash().ToString());
             return false;
         }
 
-        nValueIn += coins.vout[txin.prevout.n].nValue;
+        nValueIn += coins->vout[txin.prevout.n].nValue;
     }
 
     if(nValueIn > sporkManager.GetSporkValue(SPORK_5_INSTANTSEND_MAX_VALUE)*COIN) {
@@ -991,13 +990,13 @@ bool CTxLockVote::IsValid(CNode* pnode, CConnman& connman) const
         return false;
     }
 
-    CCoins coins;
-    if(!GetUTXOCoins(outpoint, coins)) {
+    const CCoins *coins = GetUTXOCoins(outpoint);
+    if(!coins) {
         LogPrint("instantsend", "CTxLockVote::IsValid -- Failed to find UTXO %s\n", outpoint.ToStringShort());
         return false;
     }
 
-    int nLockInputHeight = coins.nHeight;
+    int nLockInputHeight = coins->nHeight;
 
     int nRank;
     if(!mnodeman.GetMasternodeRank(outpointMasternode, nRank, nLockInputHeight, MIN_INSTANTSEND_PROTO_VERSION)) {
