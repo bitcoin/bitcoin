@@ -15,11 +15,11 @@ matrix:
       - os: linux
         services: docker
         script:
-          - docker build --build-arg BRANCH_NAME=$TRAVIS_BRANCH --build-arg REPO_SLUG=$TRAVIS_REPO_SLUG -f scripts/docker/windows-crosscompile/Dockerfile-wheezy .
+          - travis_wait 30 docker build --build-arg BRANCH_NAME=$TRAVIS_BRANCH --build-arg REPO_SLUG=$TRAVIS_REPO_SLUG -f scripts/docker/windows-crosscompile/Dockerfile-wheezy .
       - os: linux
         services: docker
         script:
-          - docker build --build-arg BRANCH_NAME=$TRAVIS_BRANCH --build-arg REPO_SLUG=$TRAVIS_REPO_SLUG -f scripts/docker/windows-crosscompile/Dockerfile-xenial .
+          - travis_wait 30 docker build --build-arg BRANCH_NAME=$TRAVIS_BRANCH --build-arg REPO_SLUG=$TRAVIS_REPO_SLUG -f scripts/docker/windows-crosscompile/Dockerfile-xenial .
       #ubuntu
       - os: linux
         sudo: required
@@ -32,8 +32,7 @@ matrix:
       - os: linux
         sudo: required
         before_install:
-          - sudo apt-get update && sudo apt-get install -yqq libtool-bin 
-          - ./scripts//windows-crosscompile/dependencies.sh
+          - travis_wait 30 ./scripts//windows-crosscompile/dependencies.sh
         install: true
         script:
           - ./scripts/windows-crosscompile/compile-peercoin.sh
