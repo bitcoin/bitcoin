@@ -333,9 +333,9 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 	CAsset dbAsset;
 	if (GetAssetAllocation(assetAllocationTuple, dbAssetAllocation)){
 		vector<uint256> lockedTXIDs;
-		if(lockedTXIDs.size() > 0)
-			LogPrintf("lockedTXIDs size %d\n", lockedTXIDs.size());
 		passetallocationdb->ReadISLock(assetAllocationTuple, lockedTXIDs);
+		if (lockedTXIDs.size() > 0)
+			LogPrintf("lockedTXIDs size %d\n", lockedTXIDs.size());
 		if (!fJustCheck && !lockedTXIDs.empty()) {
 			if (std::find(lockedTXIDs.begin(), lockedTXIDs.end(), tx.GetHash()) == lockedTXIDs.end())
 			{
@@ -376,34 +376,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 				}
 			}
 			else {
-				// set the assetallocation's txn-dependent values
-				dbAssetAllocation.nHeight = nHeight;
-				dbAssetAllocation.txHash = tx.GetHash();
-				// write assetallocation  
-				if (!dontaddtodb) {
-					nLockStatus = LOCK_NOCONFLICT_CONFIRMED_STATE;
-					// ensure previous asset allocation gets written
-					if (!passetallocationdb->WriteAssetAllocation(dbAssetAllocation, op, INT64_MAX, fJustCheck))
-					{
-						errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to write to asset allocation DB");
-						return error(errorMessage.c_str());
-					}
-					if (!passetallocationdb->EraseISLock(assetAllocationTuple, tx.GetHash()))
-					{
-						errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from assetallocation DB");
-						return error(errorMessage.c_str());
-					}
-					paliasdb->UpdateAliasIndexTxHistoryLockStatus(tx.GetHash().GetHex() + "-" + assetAllocationTuple.ToString(), nLockStatus);
-					// debug
-					if (fDebug)
-						LogPrintf("CONNECTED ASSET ALLOCATION: op=%s assetallocation=%s hash=%s height=%d fJustCheck=%d POW IS\n",
-							assetFromOp(op).c_str(),
-							assetAllocationTuple.ToString().c_str(),
-							tx.GetHash().ToString().c_str(),
-							nHeight,
-							fJustCheck ? 1 : 0);
-				}
-				return true;
+				nLockStatus = LOCK_NOCONFLICT_CONFIRMED_STATE;
 			}
 		}
 		else
@@ -529,17 +502,18 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 				// don't need to check for existance of allocation because it may not exist, may be creating it here for the first time for receiver
 				if (!GetAssetAllocation(receiverAllocationTuple, receiverAllocation))
 					receiverAllocation.SetNull();
-
-				// check receiver alias
-				if (!GetAlias(amountTuple.first, alias))
-				{
-					errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2024 - " + _("Cannot find alias you are transferring to");
-					continue;
-				}
-				if (!(alias.nAcceptTransferFlags & ACCEPT_TRANSFER_ASSETS))
-				{
-					errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("An alias you are transferring to does not accept assets");
-					continue;
+				if (fJustCheck) {
+					// check receiver alias
+					if (!GetAlias(amountTuple.first, alias))
+					{
+						errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2024 - " + _("Cannot find alias you are transferring to");
+						continue;
+					}
+					if (!(alias.nAcceptTransferFlags & ACCEPT_TRANSFER_ASSETS))
+					{
+						errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("An alias you are transferring to does not accept assets");
+						continue;
+					}
 				}
 
 
@@ -550,17 +524,21 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 						receiverAllocation.txHash = tx.GetHash();
 						receiverAllocation.nHeight = nHeight;
 					}
-					
-					receiverAllocation.nBalance += amountTuple.second;
-					theAssetAllocation.nBalance -= amountTuple.second;
+					if (nLockStatus != LOCK_NOCONFLICT_CONFIRMED_STATE) {
+						receiverAllocation.nBalance += amountTuple.second;
+						theAssetAllocation.nBalance -= amountTuple.second;
+					}
 					if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, op, INT64_MAX, fJustCheck))
 					{
 						errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to write to asset allocation DB");
 						continue;
 					}
-					// only need to add this on mempool inclusion so receivers will be notified of a new asset send, then can check the validity of that via looking up in aliasindex tx history table the appropriate entries "up the chain"
-					if (strResponse != "" && fJustCheck) {
+
+					if (strResponse != "" && fJustCheck && nLockStatus != LOCK_NOCONFLICT_CONFIRMED_STATE) {
 						paliasdb->WriteAliasIndexTxHistory(user1, stringFromVch(receiverAllocation.vchAlias), user3, tx.GetHash(), nHeight, strResponseEnglish, receiverAllocationTuple.ToString(), UNKNOWN);
+					}
+					else if (nLockStatus == LOCK_NOCONFLICT_CONFIRMED_STATE) {
+						paliasdb->UpdateAliasIndexTxHistoryLockStatus(tx.GetHash().GetHex() + "-" + assetAllocationTuple.ToString(), nLockStatus);
 					}
 				}
 			}
