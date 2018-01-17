@@ -11,29 +11,28 @@
 class CKeyHolder
 {
 private:
-    CReserveKey reserveKey;
-    CPubKey pubKey;
+	CReserveKey reserveKey;
+	CPubKey pubKey;
 public:
-    CKeyHolder(CWallet* pwalletIn);
-    CKeyHolder(CKeyHolder&&) = default;
-    CKeyHolder& operator=(CKeyHolder&&) = default;
-    void KeepKey();
-    void ReturnKey();
+	CKeyHolder(CWallet* pwalletIn);
+	CKeyHolder(CKeyHolder&&) = default;
+	CKeyHolder& operator=(CKeyHolder&&) = default;
+	void KeepKey();
+	void ReturnKey();
 
-    CScript GetScriptForDestination() const;
+	CScript GetScriptForDestination() const;
 
 };
 
 class CKeyHolderStorage
 {
 private:
-    std::vector<std::unique_ptr<CKeyHolder> > storage;
-	mutable CCriticalSection cs_storage;
+	std::vector<std::unique_ptr<CKeyHolder> > storage;
 
 public:
-	CScript AddKey(CWallet* pwalletIn);
-    void KeepAll();
-    void ReturnAll();
+	const CKeyHolder& AddKey(CWallet* pwalletIn);
+	void KeepAll();
+	void ReturnAll();
 
 };
 #endif //PRIVATESENDUTIL_H
