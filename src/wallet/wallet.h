@@ -99,7 +99,7 @@ enum WalletFeature
     FEATURE_LATEST = FEATURE_COMPRPUBKEY // HD is optional, use FEATURE_COMPRPUBKEY as latest version
 };
 
-enum OutputType
+enum OutputType : int
 {
     OUTPUT_TYPE_NONE,
     OUTPUT_TYPE_LEGACY,
