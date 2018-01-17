@@ -360,83 +360,83 @@ void CPrivateSendClient::CheckTimeout()
 // Execute a mixing denomination via a Masternode.
 // This is only ran from clients
 //
-bool CPrivateSendClient::SendDenominate(const std::vector<CTxIn>& vecTxIn, const std::vector<CTxOut>& vecTxOut, CConnman& connman)
+bool CPrivateSendClient::SendDenominate(const std::vector<CTxDSIn>& vecTxDSIn, const std::vector<CTxOut>& vecTxOut, CConnman& connman)
 {
-    if(fMasterNode) {
-        LogPrintf("CPrivateSendClient::SendDenominate -- PrivateSend from a Masternode is not supported currently.\n");
-        return false;
-    }
+	if (fMasterNode) {
+		LogPrintf("CPrivateSendClient::SendDenominate -- PrivateSend from a Masternode is not supported currently.\n");
+		return false;
+	}
 
-    if(txMyCollateral == CMutableTransaction()) {
-        LogPrintf("CPrivateSendClient:SendDenominate -- PrivateSend collateral not set\n");
-        return false;
-    }
+	if (txMyCollateral == CMutableTransaction()) {
+		LogPrintf("CPrivateSendClient:SendDenominate -- PrivateSend collateral not set\n");
+		return false;
+	}
 
-    // lock the funds we're going to use
-    BOOST_FOREACH(CTxIn txin, txMyCollateral.vin)
-        vecOutPointLocked.push_back(txin.prevout);
+	// lock the funds we're going to use
+	BOOST_FOREACH(CTxIn txin, txMyCollateral.vin)
+		vecOutPointLocked.push_back(txin.prevout);
 
-    BOOST_FOREACH(CTxIn txin, vecTxIn)
-        vecOutPointLocked.push_back(txin.prevout);
+	for (const auto& txdsin : vecTxDSIn)
+		vecOutPointLocked.push_back(txdsin.prevout);
 
-    // we should already be connected to a Masternode
-    if(!nSessionID) {
-        LogPrintf("CPrivateSendClient::SendDenominate -- No Masternode has been selected yet.\n");
-        UnlockCoins();
-        keyHolderStorage.ReturnAll();
-        SetNull();
-        return false;
-    }
+	// we should already be connected to a Masternode
+	if (!nSessionID) {
+		LogPrintf("CPrivateSendClient::SendDenominate -- No Masternode has been selected yet.\n");
+		UnlockCoins();
+		keyHolderStorage.ReturnAll();
+		SetNull();
+		return false;
+	}
 
-    if(!CheckDiskSpace()) {
-        UnlockCoins();
-        keyHolderStorage.ReturnAll();
-        SetNull();
-        fEnablePrivateSend = false;
-        LogPrintf("CPrivateSendClient::SendDenominate -- Not enough disk space, disabling PrivateSend.\n");
-        return false;
-    }
+	if (!CheckDiskSpace()) {
+		UnlockCoins();
+		keyHolderStorage.ReturnAll();
+		SetNull();
+		fEnablePrivateSend = false;
+		LogPrintf("CPrivateSendClient::SendDenominate -- Not enough disk space, disabling PrivateSend.\n");
+		return false;
+	}
 
-    SetState(POOL_STATE_ACCEPTING_ENTRIES);
-    strLastMessage = "";
+	SetState(POOL_STATE_ACCEPTING_ENTRIES);
+	strLastMessage = "";
 
-    LogPrintf("CPrivateSendClient::SendDenominate -- Added transaction to pool.\n");
+	LogPrintf("CPrivateSendClient::SendDenominate -- Added transaction to pool.\n");
 
-    //check it against the memory pool to make sure it's valid
-    {
-        CValidationState validationState;
-        CMutableTransaction tx;
+	//check it against the memory pool to make sure it's valid
+	{
+		CValidationState validationState;
+		CMutableTransaction tx;
 
-        BOOST_FOREACH(const CTxIn& txin, vecTxIn) {
-            LogPrint("privatesend", "CPrivateSendClient::SendDenominate -- txin=%s\n", txin.ToString());
-            tx.vin.push_back(txin);
-        }
+		for (const auto& txdsin : vecTxDSIn) {
+			LogPrint("privatesend", "CPrivateSendClient::SendDenominate -- txdsin=%s\n", txdsin.ToString());
+			tx.vin.push_back(txdsin);
+		}
 
-        BOOST_FOREACH(const CTxOut& txout, vecTxOut) {
-            LogPrint("privatesend", "CPrivateSendClient::SendDenominate -- txout=%s\n", txout.ToString());
-            tx.vout.push_back(txout);
-        }
+		BOOST_FOREACH(const CTxOut& txout, vecTxOut) {
+			LogPrint("privatesend", "CPrivateSendClient::SendDenominate -- txout=%s\n", txout.ToString());
+			tx.vout.push_back(txout);
+		}
 
-        LogPrintf("CPrivateSendClient::SendDenominate -- Submitting partial tx %s", tx.ToString());
+		LogPrintf("CPrivateSendClient::SendDenominate -- Submitting partial tx %s", tx.ToString());
 
-        mempool.PrioritiseTransaction(tx.GetHash(), tx.GetHash().ToString(), 1000, 0.1*COIN);
-        TRY_LOCK(cs_main, lockMain);
-        if(!lockMain || !AcceptToMemoryPool(mempool, validationState, CTransaction(tx), false, NULL, false, true, true)) {
-            LogPrintf("CPrivateSendClient::SendDenominate -- AcceptToMemoryPool() failed! tx=%s", tx.ToString());
-            UnlockCoins();
-            keyHolderStorage.ReturnAll();
-            SetNull();
-            return false;
-        }
-    }
+		mempool.PrioritiseTransaction(tx.GetHash(), tx.GetHash().ToString(), 1000, 0.1*COIN);
+		TRY_LOCK(cs_main, lockMain);
+		if (!lockMain || !AcceptToMemoryPool(mempool, validationState, CTransaction(tx), false, NULL, false, maxTxFee, true)) {
+			LogPrintf("CPrivateSendClient::SendDenominate -- AcceptToMemoryPool() failed! tx=%s", tx.ToString());
+			UnlockCoins();
+			keyHolderStorage.ReturnAll();
+			SetNull();
+			return false;
+		}
+	}
 
-    // store our entry for later use
-    CDarkSendEntry entry(vecTxIn, vecTxOut, txMyCollateral);
-    vecEntries.push_back(entry);
-    RelayIn(entry, connman);
-    nTimeLastSuccessfulStep = GetTimeMillis();
+	// store our entry for later use
+	CDarkSendEntry entry(vecTxDSIn, vecTxOut, txMyCollateral);
+	vecEntries.push_back(entry);
+	RelayIn(entry, connman);
+	nTimeLastSuccessfulStep = GetTimeMillis();
 
-    return true;
+	return true;
 }
 
 // Incoming message from Masternode updating the progress of mixing
