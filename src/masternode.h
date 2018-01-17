@@ -268,7 +268,7 @@ public:
 
     int GetLastPaidTime() { return nTimeLastPaid; }
     int GetLastPaidBlock() { return nBlockLastPaid; }
-	void UpdateLastPaid(const CBlockIndex *pindex, int nMaxBlocksToScanBack);
+	void UpdateLastPaid();
 
     // KEEP TRACK OF EACH GOVERNANCE ITEM INCASE THIS NODE GOES OFFLINE, SO WE CAN RECALC THEIR STATUS
     void AddGovernanceVote(uint256 nGovernanceObjectHash);

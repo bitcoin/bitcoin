@@ -199,7 +199,7 @@ UniValue masternode(const UniValue& params, bool fHelp)
             pindex = chainActive.Tip();
         }
         nHeight = pindex->nHeight + (strCommand == "current" ? 1 : 10);
-        mnodeman.UpdateLastPaid(pindex);
+        mnodeman.UpdateLastPaid();
 
         if(!mnodeman.GetNextMasternodeInQueueForPayment(nHeight, true, nCount, mnInfo))
             return "unknown";
@@ -495,12 +495,7 @@ UniValue masternodelist(const UniValue& params, bool fHelp)
     }
 
     if (strMode == "full" || strMode == "lastpaidtime" || strMode == "lastpaidblock") {
-		CBlockIndex* pindex = NULL;
-		{
-			LOCK(cs_main);
-			pindex = chainActive.Tip();
-		}
-		mnodeman.UpdateLastPaid(pindex);
+		mnodeman.UpdateLastPaid();
     }
 
     UniValue obj(UniValue::VOBJ);
