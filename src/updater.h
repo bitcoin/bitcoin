@@ -6,6 +6,8 @@
 #define UPDATER_H 
 
 #include <iostream>
+#define CURL_STATICLIB
+#include "curl/curl.h"
 
 #include "json/json_spirit_reader_template.h"
 #include "json/json_spirit_utils.h"
@@ -30,10 +32,7 @@ public:
         MAC_OS,
     };
     Updater();
-    bool GetStatus()
-    {
-        return status;
-    }
+    bool Check();
     int GetVersion()
     {
         return version;
@@ -42,21 +41,23 @@ public:
     {
         return os;
     }
-    void DownloadFile(std::string url, std::string fileName, void(progressFunction)(int, int));
+    void DownloadFile(std::string url, std::string fileName, void(progressFunction)(curl_off_t, curl_off_t));
+    void DownloadFileAsync(std::string url, std::string fileName, void(progressFunction)(curl_off_t, curl_off_t));
     void StopDownload();
-    std::string GetDownloadUrl(Updater::OS version);
+    std::string GetDownloadUrl(Updater::OS version = UNKNOWN);
+    std::string GetDownloadSha256Sum(Updater::OS version = UNKNOWN);
+    std::string GetOsString(Updater::OS os = UNKNOWN);
     bool GetStopDownload()
     {
         return stopDownload;
     }
 private:
     std::string updaterInfoUrl;
-    void GetUpdateInfo();
+    bool LoadUpdateInfo();
     Value ParseJson(std::string info);
     void SetOS();
     bool NeedToBeUpdated();
     int GetVersionFromJson();
-    std::string GetOsString(Updater::OS os);
     std::string GetUrl(Value value);
     std::string GetSha256sum(Value value);
 

@@ -98,7 +98,7 @@ void UpdateDialog::selectionChanged(int index)
     }
 };
 
-void UpdateProgressBar(int now, int total)
+void UpdateProgressBar(curl_off_t now, curl_off_t total)
 {
     QCoreApplication::processEvents();
     if (now != 0 && total != 0)

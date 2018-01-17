@@ -2,8 +2,6 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #include "updater.h"
-#define CURL_STATICLIB
-#include "curl/curl.h"
 #include "clientversion.h"
 #include "util.h"
 
@@ -14,7 +12,7 @@
 struct myprogress {
     double lastruntime;
     CURL *curl;
-    void(*progressFunction)(int, int);
+    void(*progressFunction)(curl_off_t, curl_off_t);
 };
 
 // Global updater instance
@@ -28,7 +26,6 @@ Updater::Updater() :
     stopDownload(false)
 {
     SetOS();
-    GetUpdateInfo();
 }
 
 void Updater::SetOS()
@@ -83,8 +80,9 @@ bool Updater::NeedToBeUpdated()
     return false;
 }
 
-void Updater::GetUpdateInfo()
+bool Updater::LoadUpdateInfo()
 {
+    bool result = false;
     CURL *curl;
     std::string updateData;
     CURLcode res = CURLE_FAILED_INIT;
@@ -92,14 +90,12 @@ void Updater::GetUpdateInfo()
     if (curl)
     {
         curl_easy_setopt(curl, CURLOPT_URL, updaterInfoUrl.c_str());
-        // Diable cache
-        curl_easy_setopt(curl, CURLOPT_DNS_CACHE_TIMEOUT, 0);
-        curl_easy_setopt(curl, CURLOPT_SSL_SESSIONID_CACHE, 0);
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, GetUpdateData);
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, &updateData);
         res = curl_easy_perform(curl);
         curl_easy_cleanup(curl);
     }
+
     if (res == CURLE_OK)
     {
         jsonData = ParseJson(updateData);
@@ -111,15 +107,22 @@ void Updater::GetUpdateInfo()
             // There is an update
             status = true;
         }
+        result = true;
     }
     else 
     {
         LogPrintf("Updater::GetUpdateInfo() - Error! Couldn't get data json. Error code - %d\n", res);
+        result = false;
     }
+    return result;
 }
 
 std::string Updater::GetOsString(Updater::OS os)
 {
+    if (os == UNKNOWN)
+    {
+        os = this->os;
+    }
     std::string result = "Unknown";
     switch(os) {
         case Updater::LINUX_32:
@@ -185,8 +188,22 @@ int Updater::GetVersionFromJson()
 
 std::string Updater::GetDownloadUrl(Updater::OS version)
 {
+    if (version == UNKNOWN)
+    {
+        version = os;
+    }
     Value json = find_value(jsonData.get_obj(), GetOsString(version));
     return GetUrl(json);
+}
+
+std::string Updater::GetDownloadSha256Sum(Updater::OS version)
+{
+    if (version == UNKNOWN)
+    {
+        version = os;
+    }
+    Value json = find_value(jsonData.get_obj(), GetOsString(version));
+    return GetSha256sum(json);
 }
 
 static size_t write_data(void *ptr, size_t size, size_t nmemb, void *stream)
@@ -204,7 +221,12 @@ static int xferinfo(void *p,
     return updater.GetStopDownload();
 }
 
-void Updater::DownloadFile(std::string url, std::string fileName, void(progressFunction)(int, int))
+void Updater::DownloadFileAsync(std::string url, std::string fileName, void(progressFunction)(curl_off_t, curl_off_t))
+{
+    boost::thread t(boost::bind(&Updater::DownloadFile, this, url, fileName, progressFunction));
+}
+
+void Updater::DownloadFile(std::string url, std::string fileName, void(progressFunction)(curl_off_t, curl_off_t))
 {
     stopDownload = false;
     CURL *curl_handle;
@@ -235,4 +257,10 @@ void Updater::DownloadFile(std::string url, std::string fileName, void(progressF
 void Updater::StopDownload()
 {
     stopDownload = true;
+}
+
+bool Updater::Check()
+{
+    LoadUpdateInfo();
+    return status;
 }
