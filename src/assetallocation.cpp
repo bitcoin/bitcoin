@@ -426,7 +426,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 				LogPrintf("Last asset allocation not found, setting to null...\n");
 			}
 			// write the state back to previous state incase of any consensus failures below before the new write
-			passetallocationdb->WriteAssetAllocation(dbAssetAllocation, op, INT64_MAX, fJustCheck)
+			passetallocationdb->WriteAssetAllocation(dbAssetAllocation, op, INT64_MAX, fJustCheck);
 		}
 		theAssetAllocation.vchAlias = vchAlias;
 		theAssetAllocation.nBalance = dbAssetAllocation.nBalance;
