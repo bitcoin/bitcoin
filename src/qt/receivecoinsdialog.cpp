@@ -94,14 +94,11 @@ void ReceiveCoinsDialog::setModel(WalletModel *_model)
         // Last 2 columns are set by the columnResizingFixer, when the table geometry is ready.
         columnResizingFixer = new GUIUtil::TableViewLastColumnResizingFixer(tableView, AMOUNT_MINIMUM_COLUMN_WIDTH, DATE_COLUMN_WIDTH, this);
 
-        // configure bech32 checkbox, disable if launched with legacy as default:
         if (model->wallet().getDefaultAddressType() == OutputType::BECH32) {
             ui->useBech32->setCheckState(Qt::Checked);
         } else {
             ui->useBech32->setCheckState(Qt::Unchecked);
         }
-
-        ui->useBech32->setVisible(model->wallet().getDefaultAddressType() != OutputType::LEGACY);
     }
 }
 
@@ -144,9 +141,14 @@ void ReceiveCoinsDialog::on_receiveButton_clicked()
     QString address;
     QString label = ui->reqLabel->text();
     /* Generate new receiving address */
-    OutputType address_type = model->wallet().getDefaultAddressType();
-    if (address_type != OutputType::LEGACY) {
-        address_type = ui->useBech32->isChecked() ? OutputType::BECH32 : OutputType::P2SH_SEGWIT;
+    OutputType address_type;
+    if (ui->useBech32->isChecked()) {
+        address_type = OutputType::BECH32;
+    } else {
+        address_type = model->wallet().getDefaultAddressType();
+        if (address_type == OutputType::BECH32) {
+            address_type = OutputType::P2SH_SEGWIT;
+        }
     }
     address = model->getAddressTableModel()->addRow(AddressTableModel::Receive, label, "", address_type);
     SendCoinsRecipient info(address, label,
