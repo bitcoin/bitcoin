@@ -516,16 +516,16 @@ bool CGovernanceObject::IsCollateralValid(std::string& strError, bool& fMissingC
     CTransaction txCollateral;
     uint256 nBlockHash;
 
-    // SYSCOIN
-	const CCoins* coins = GetUTXOCoins(COutPoint(nCollateralHash, 0));
-    if(!coins){
-        strError = strprintf("Can't find collateral tx %s", nCollateralHash.ToString());
+	// RETRIEVE TRANSACTION IN QUESTION
+
+	if (!GetTransaction(nCollateralHash, txCollateral, Params().GetConsensus(), nBlockHash, true)) {
+		strError = strprintf("Can't find collateral tx %s", txCollateral.ToString());
         LogPrintf("CGovernanceObject::IsCollateralValid -- %s\n", strError);
         return false;
     }
 
-    if(coins->vout.size() < 1) {
-        strError = strprintf("tx vout size less than 1 | %d", coins->vout.size());
+	if (txCollateral.vout.size() < 1) {
+		strError = strprintf("tx vout size less than 1 | %d", txCollateral.vout.size());
         LogPrintf("CGovernanceObject::IsCollateralValid -- %s\n", strError);
         return false;
     }
@@ -535,7 +535,7 @@ bool CGovernanceObject::IsCollateralValid(std::string& strError, bool& fMissingC
     CScript findScript;
     findScript << OP_RETURN << ToByteVector(nExpectedHash);
 
-    DBG( cout << "IsCollateralValid: txCollateral.vout.size() = " << coins->vout.size() << endl; );
+    DBG( cout << "IsCollateralValid: txCollateral.vout.size() = " << txCollateral.vout.size() << endl; );
 
     DBG( cout << "IsCollateralValid: findScript = " << ScriptToAsmStr( findScript, false ) << endl; );
 
@@ -543,7 +543,7 @@ bool CGovernanceObject::IsCollateralValid(std::string& strError, bool& fMissingC
 
 
     bool foundOpReturn = false;
-    BOOST_FOREACH(const CTxOut o, coins->vout) {
+    BOOST_FOREACH(const CTxOut o, txCollateral.vout) {
         DBG( cout << "IsCollateralValid txout : " << o.ToString()
              << ", o.nValue = " << o.nValue
              << ", o.scriptPubKey = " << ScriptToAsmStr( o.scriptPubKey, false )
@@ -570,9 +570,17 @@ bool CGovernanceObject::IsCollateralValid(std::string& strError, bool& fMissingC
     }
 
     // GET CONFIRMATIONS FOR TRANSACTION
+	AssertLockHeld(cs_main);
 	int nConfirmationsIn = instantsend.GetConfirmations(nCollateralHash);
-	nConfirmationsIn += (chainActive.Height() - coins->nHeight) + 1;
-
+	if (nBlockHash != uint256()) {
+		BlockMap::iterator mi = mapBlockIndex.find(nBlockHash);
+		if (mi != mapBlockIndex.end() && (*mi).second) {
+			CBlockIndex* pindex = (*mi).second;
+			if (chainActive.Contains(pindex)) {
+				nConfirmationsIn += chainActive.Height() - pindex->nHeight + 1;
+			}
+		}
+	}
     if(nConfirmationsIn < GOVERNANCE_FEE_CONFIRMATIONS) {
         strError = strprintf("Collateral requires at least %d confirmations to be relayed throughout the network (it has only %d)", GOVERNANCE_FEE_CONFIRMATIONS, nConfirmationsIn);
         if (nConfirmationsIn >= GOVERNANCE_MIN_RELAY_FEE_CONFIRMATIONS) {
