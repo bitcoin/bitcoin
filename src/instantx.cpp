@@ -591,8 +591,10 @@ bool CInstantSend::ResolveConflicts(const CTxLockCandidate& txLockCandidate)
         }
     } // FOREACH
     // No conflicts were found so far, check to see if it was already included in block
-	if (GetUTXOCoins(COutPoint(txHash, 0)) {
-        LogPrint("instantsend", "CInstantSend::ResolveConflicts -- Done, %s is included in a block\n", txHash.ToString());
+    CTransaction txTmp;
+    uint256 hashBlock;
+    if(GetTransaction(txHash, txTmp, Params().GetConsensus(), hashBlock, true) && hashBlock != uint256()) {
+        LogPrint("instantsend", "CInstantSend::ResolveConflicts -- Done, %s is included in block %s\n", txHash.ToString(), hashBlock.ToString());
         return true;
     }
     // Not in block yet, make sure all its inputs are still unspent
