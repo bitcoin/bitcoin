@@ -411,7 +411,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 							receiverAllocation.txHash = tx.GetHash();
 							receiverAllocation.nHeight = nHeight;
 						}
-						// read and write the previous state of any receivers
+						// write the state back to previous state incase of any consensus failures below before the new write
 						if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, op, INT64_MAX, fJustCheck))
 						{
 							errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to write to asset allocation DB");
@@ -426,6 +426,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 				errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from assetallocation DB");
 				return true;
 			}
+			// if sender did not exist prior to this send then initiate it to empty balance
 			if(!passetallocationdb->ReadLastAssetAllocation(assetAllocationTuple, dbAssetAllocation)) {
 				dbAssetAllocation.SetNull();
 				dbAssetAllocation.vchAlias = assetAllocationTuple.vchAlias;
