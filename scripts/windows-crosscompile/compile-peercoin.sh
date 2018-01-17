@@ -1,11 +1,12 @@
 #!/bin/bash -ev
 
 
-export PATH=/opt/mxe/usr/bin:$PATH
+MXE_PATH=/usr/lib/mxe
+export PATH=$MXE_PATH/usr/bin:$PATH
 
 
-MXE_INCLUDE_PATH=/opt/mxe/usr/i686-w64-mingw32.static/include
-MXE_LIB_PATH=/opt/mnt/mxe/usr/i686-w64-mingw32.static/lib
+MXE_INCLUDE_PATH=$MXE_PATH/usr/i686-w64-mingw32.static/include
+MXE_LIB_PATH=$MXE_PATH/usr/i686-w64-mingw32.static/lib
 
 i686-w64-mingw32.static-qmake-qt5 \
         BOOST_LIB_SUFFIX=-mt \
@@ -18,7 +19,7 @@ i686-w64-mingw32.static-qmake-qt5 \
         BDB_LIB_PATH=$MXE_LIB_PATH \
         MINIUPNPC_INCLUDE_PATH=$MXE_INCLUDE_PATH \
         MINIUPNPC_LIB_PATH=$MXE_LIB_PATH \
-        QMAKE_LRELEASE=/opt/mxe/usr/i686-w64-mingw32.static/qt5/bin/lrelease bitcoin-qt.pro
+        QMAKE_LRELEASE=$MXE_PATH/usr/i686-w64-mingw32.static/qt5/bin/lrelease bitcoin-qt.pro
 
 #make clean
 make -j$(nproc) -f Makefile.Release
