@@ -404,6 +404,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 							return error(errorMessage.c_str());
 						}
 
+						// read and write the previous state of any receivers
 						if (passetallocationdb->ReadLastAssetAllocation(receiverAllocationTuple, receiverAllocation) &&
 							!passetallocationdb->WriteAssetAllocation(receiverAllocation, op, INT64_MAX, fJustCheck))
 						{
@@ -424,6 +425,8 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 				dbAssetAllocation.SetNull();
 				LogPrintf("Last asset allocation not found, setting to null...\n");
 			}
+			// write the state back to previous state incase of any consensus failures below before the new write
+			passetallocationdb->WriteAssetAllocation(dbAssetAllocation, op, INT64_MAX, fJustCheck)
 		}
 		theAssetAllocation.vchAlias = vchAlias;
 		theAssetAllocation.nBalance = dbAssetAllocation.nBalance;
