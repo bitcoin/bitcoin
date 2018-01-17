@@ -1466,7 +1466,7 @@ bool CMasternodeMan::CheckMnbAndUpdateMasternodeList(CNode* pfrom, CMasternodeBr
     return true;
 }
 
-void CMasternodeMan::UpdateLastPaid(c)
+void CMasternodeMan::UpdateLastPaid()
 {
 	LOCK(cs);
 
