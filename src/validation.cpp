@@ -469,7 +469,7 @@ const CCoins* GetUTXOCoins(const COutPoint& outpoint)
 int GetUTXOHeight(const COutPoint& outpoint)
 {
 	// -1 means UTXO is yet unknown or already spent
-	const CCoins *coins = GetUTXOCoins(outpoint, coins);
+	const CCoins *coins = GetUTXOCoins(outpoint);
 	return coins ? coins->nHeight : -1;
 }
 
