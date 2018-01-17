@@ -44,3 +44,4 @@ matrix:
           - ./scripts/dependencies-osx.sh 
         script:
           - ./scripts/install-osx.sh
+
