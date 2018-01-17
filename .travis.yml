@@ -28,14 +28,6 @@ matrix:
         install: true
         script:
           - ./scripts/install-ubuntu.sh
-      #cross compile windows
-      - os: linux
-        sudo: required
-        before_install:
-          - travis_wait 30 ./scripts//windows-crosscompile/dependencies.sh
-        install: true
-        script:
-          - ./scripts/windows-crosscompile/compile-peercoin.sh
       #osx     
       - os: osx
         osx_image: xcode9.2
