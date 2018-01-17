@@ -5,7 +5,6 @@
 #include "include/secp256k1.h"
 #include "include/secp256k1_ecdh.h"
 #include "include/secp256k1_recovery.h"
-#include "include/secp256k1_schnorr.h"
 
 
 SECP256K1_API jlong JNICALL Java_org_bitcoin_NativeSecp256k1_secp256k1_1ctx_1clone
@@ -331,39 +330,6 @@ SECP256K1_API jlong JNICALL Java_org_bitcoin_NativeSecp256k1_secp256k1_1ecdsa_1p
   (void)classObject;(void)env;(void)byteBufferObject;(void)ctx_l;(void)numkeys;
 
   return 0;
-}
-
-SECP256K1_API jobjectArray JNICALL Java_org_bitcoin_NativeSecp256k1_secp256k1_1schnorr_1sign
-  (JNIEnv* env, jclass classObject, jobject byteBufferObject, jlong ctx_l)
-{
-  secp256k1_context *ctx = (secp256k1_context*)(uintptr_t)ctx_l;
-  unsigned char* data = (unsigned char*) (*env)->GetDirectBufferAddress(env, byteBufferObject);
-  unsigned char* secKey = (unsigned char*) (data + 32);
-
-  jobjectArray retArray;
-  jbyteArray sigArray, intsByteArray;
-  unsigned char intsarray[1];
-  unsigned char sig[64];
-
-  int ret = secp256k1_schnorr_sign(ctx, sig, data, secKey, NULL, NULL);
-
-  intsarray[0] = ret;
-
-  retArray = (*env)->NewObjectArray(env, 2,
-    (*env)->FindClass(env, "[B"),
-    (*env)->NewByteArray(env, 1));
-
-  sigArray = (*env)->NewByteArray(env, 64);
-  (*env)->SetByteArrayRegion(env, sigArray, 0, 64, (jbyte*)sig);
-  (*env)->SetObjectArrayElement(env, retArray, 0, sigArray);
-
-  intsByteArray = (*env)->NewByteArray(env, 1);
-  (*env)->SetByteArrayRegion(env, intsByteArray, 0, 1, (jbyte*)intsarray);
-  (*env)->SetObjectArrayElement(env, retArray, 1, intsByteArray);
-
-  (void)classObject;
-
-  return retArray;
 }
 
 SECP256K1_API jobjectArray JNICALL Java_org_bitcoin_NativeSecp256k1_secp256k1_1ecdh

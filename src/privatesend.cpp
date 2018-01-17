@@ -12,6 +12,7 @@
 #include "masternode-sync.h"
 #include "masternodeman.h"
 #include "messagesigner.h"
+#include "netmessagemaker.h"
 #include "script/sign.h"
 #include "txmempool.h"
 #include "util.h"
@@ -65,9 +66,11 @@ bool CDarksendQueue::CheckSignature(const CPubKey& pubKeyMasternode)
 bool CDarksendQueue::Relay(CConnman& connman)
 {
     std::vector<CNode*> vNodesCopy = connman.CopyNodeVector();
-    BOOST_FOREACH(CNode* pnode, vNodesCopy)
-        if(pnode->nVersion >= MIN_PRIVATESEND_PEER_PROTO_VERSION)
-            connman.PushMessage(pnode, NetMsgType::DSQUEUE, (*this));
+    BOOST_FOREACH(CNode* pnode, vNodesCopy) {
+        CNetMsgMaker msgMaker(pnode->GetSendVersion());
+        if (pnode->nVersion >= MIN_PRIVATESEND_PEER_PROTO_VERSION)
+            connman.PushMessage(pnode, msgMaker.Make(NetMsgType::DSQUEUE, (*this)));
+    }
 
     connman.ReleaseNodeVector(vNodesCopy);
     return true;
@@ -77,7 +80,7 @@ bool CDarksendBroadcastTx::Sign()
 {
     if(!fMasterNode) return false;
 
-    std::string strMessage = tx.GetHash().ToString() + boost::lexical_cast<std::string>(sigTime);
+    std::string strMessage = tx->GetHash().ToString() + boost::lexical_cast<std::string>(sigTime);
 
     if(!CMessageSigner::SignMessage(strMessage, vchSig, activeMasternode.keyMasternode)) {
         LogPrintf("CDarksendBroadcastTx::Sign -- SignMessage() failed\n");
@@ -89,7 +92,7 @@ bool CDarksendBroadcastTx::Sign()
 
 bool CDarksendBroadcastTx::CheckSignature(const CPubKey& pubKeyMasternode)
 {
-    std::string strMessage = tx.GetHash().ToString() + boost::lexical_cast<std::string>(sigTime);
+    std::string strMessage = tx->GetHash().ToString() + boost::lexical_cast<std::string>(sigTime);
     std::string strError = "";
 
     if(!CMessageSigner::VerifyMessage(pubKeyMasternode, vchSig, strMessage, strError)) {
@@ -379,7 +382,7 @@ std::string CPrivateSend::GetMessageByID(PoolMessage nMessageID)
 void CPrivateSend::AddDSTX(const CDarksendBroadcastTx& dstx)
 {
     LOCK(cs_mapdstx);
-    mapDSTX.insert(std::make_pair(dstx.tx.GetHash(), dstx));
+    mapDSTX.insert(std::make_pair(dstx.tx->GetHash(), dstx));
 }
 
 CDarksendBroadcastTx CPrivateSend::GetDSTX(const uint256& hash)
