@@ -393,9 +393,10 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 							nTotal += amountTuple.second;
 						}
 						if (dbAssetAllocation.nBalance < nTotal) {
+							nLockStatus = LOCK_CONFLICT_UNCONFIRMED_STATE;
 							if (!dontaddtodb) {
 								if (strResponse != "") {
-									paliasdb->UpdateAliasIndexTxHistoryLockStatus(dbAssetAllocation.txHash.GetHex() + "-" + assetAllocationTuple.ToString(), LOCK_CONFLICT_UNCONFIRMED_STATE);
+									paliasdb->UpdateAliasIndexTxHistoryLockStatus(dbAssetAllocation.txHash.GetHex() + "-" + assetAllocationTuple.ToString(), nLockStatus);
 								}
 								// erase sender lock
 								if (!passetallocationdb->EraseISLock(assetAllocationTuple, tx.GetHash()))
@@ -553,7 +554,10 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 		if (strResponse != "") {
 			paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, assetAllocationTuple.ToString(), nLockStatus);
 		}
-		if (!passetallocationdb->WriteAssetAllocation(theAssetAllocation, op, duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count(), fJustCheck))
+		int64_t ms = INT64_MAX;
+		if(fJustCheck)
+			ms = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+		if (!passetallocationdb->WriteAssetAllocation(theAssetAllocation, op, ms, fJustCheck))
 		{
 			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to write to asset allocation DB");
 			return error(errorMessage.c_str());
