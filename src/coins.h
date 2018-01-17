@@ -92,7 +92,8 @@ public:
         vout = tx.vout;
         nHeight = nHeightIn;
         nVersion = tx.nVersion;
-        ClearUnspendable();
+		// SYSCOIN do not remove unspendable's from utxo
+        //ClearUnspendable();
     }
 
     //! construct a CCoins from a CTransaction, at a given height
@@ -117,14 +118,14 @@ public:
         if (vout.empty())
             std::vector<CTxOut>().swap(vout);
     }
-
-    void ClearUnspendable() {
+	// SYSCOIN do not remove unspendable's from utxo
+   /* void ClearUnspendable() {
         BOOST_FOREACH(CTxOut &txout, vout) {
             if (txout.scriptPubKey.IsUnspendable())
                 txout.SetNull();
         }
         Cleanup();
-    }
+    }*/
 
     void swap(CCoins &to) {
         std::swap(to.fCoinBase, fCoinBase);
