@@ -401,12 +401,18 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 						if (!passetallocationdb->EraseISLock(receiverAllocationTuple, tx.GetHash()))
 						{
 							errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from assetallocation DB");
-							return error(errorMessage.c_str());
+							continue;
 						}
-
+						// if receiver did not exist prior to this send then initiate it to empty balance
+						if (!passetallocationdb->ReadLastAssetAllocation(receiverAllocationTuple, receiverAllocation)) {
+							receiverAllocation.SetNull();
+							receiverAllocation.vchAlias = receiverAllocationTuple.vchAlias;
+							receiverAllocation.vchAsset = receiverAllocationTuple.vchAsset;
+							receiverAllocation.txHash = tx.GetHash();
+							receiverAllocation.nHeight = nHeight;
+						}
 						// read and write the previous state of any receivers
-						if (passetallocationdb->ReadLastAssetAllocation(receiverAllocationTuple, receiverAllocation) &&
-							!passetallocationdb->WriteAssetAllocation(receiverAllocation, op, INT64_MAX, fJustCheck))
+						if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, op, INT64_MAX, fJustCheck))
 						{
 							errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to write to asset allocation DB");
 							continue;
@@ -418,15 +424,22 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 			if (!passetallocationdb->EraseISLock(assetAllocationTuple, tx.GetHash()))
 			{
 				errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from assetallocation DB");
-				return error(errorMessage.c_str());
+				return true;
 			}
-			// recreate this assetallocation tx from last known good position (last assetallocation stored)
-			if (!passetallocationdb->ReadLastAssetAllocation(assetAllocationTuple, dbAssetAllocation)) {
+			if(!passetallocationdb->ReadLastAssetAllocation(assetAllocationTuple, dbAssetAllocation)) {
 				dbAssetAllocation.SetNull();
-				LogPrintf("Last asset allocation not found, setting to null...\n");
+				dbAssetAllocation.vchAlias = assetAllocationTuple.vchAlias;
+				dbAssetAllocation.vchAsset = assetAllocationTuple.vchAsset;
+				dbAssetAllocation.txHash = tx.GetHash();
+				dbAssetAllocation.nHeight = nHeight;
 			}
 			// write the state back to previous state incase of any consensus failures below before the new write
-			passetallocationdb->WriteAssetAllocation(dbAssetAllocation, op, INT64_MAX, fJustCheck);
+			if (!passetallocationdb->WriteAssetAllocation(dbAssetAllocation, op, INT64_MAX, fJustCheck)) 
+			{
+				errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to write to asset allocation DB");
+				return true;
+			}
+
 		}
 		theAssetAllocation.vchAlias = vchAlias;
 		theAssetAllocation.nBalance = dbAssetAllocation.nBalance;
