@@ -203,7 +203,7 @@ public:
     bool CheckMnbAndUpdateMasternodeList(CNode* pfrom, CMasternodeBroadcast mnb, int& nDos, CConnman& connman);
     bool IsMnbRecoveryRequested(const uint256& hash) { return mMnbRecoveryRequests.count(hash); }
 
-    void UpdateLastPaid();
+	void UpdateLastPaid(const CBlockIndex *pindex, int nMaxBlocksToScanBack);
 
     void AddDirtyGovernanceObjectHash(const uint256& nHash)
     {
