@@ -97,6 +97,8 @@ Low-level RPC changes
   * `getwalletinfo`
   * `getmininginfo`
 - The wallet RPC `getreceivedbyaddress` will return an error if called with an address not in the wallet.
+- The wallet RPC `addwitnessaddress` was deprecated and will be removed in version 0.17,
+  set the `address_type` argument of `getnewaddress`, or option `-addresstype=[bech32|p2sh-segwit]` instead.
 
 Changed command-line options
 -----------------------------

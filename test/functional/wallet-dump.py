@@ -72,7 +72,7 @@ class WalletDumpTest(BitcoinTestFramework):
         super().__init__()
         self.setup_clean_chain = False
         self.num_nodes = 1
-        self.extra_args = [["-keypool=90", "-addresstype=legacy"]]
+        self.extra_args = [["-keypool=90", "-addresstype=legacy", "-deprecatedrpc=addwitnessaddress"]]
 
     def setup_network(self, split=False):
         # Use 1 minute timeout because the initial getnewaddress RPC can take
