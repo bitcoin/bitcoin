@@ -34,7 +34,7 @@ matrix:
       - os: linux
         sudo: required
         before_install:
-          - travis_wait 60 cd $TRAVIS_BUILD_DIR/scripts/windows-crosscompile && ./dependencies.sh
+          - travis_wait 60 cd $TRAVIS_BUILD_DIR/scripts/windows-crosscompile && pwd && ls -al && ./dependencies.sh
         install: true
         script:
           - travis_wait 60 ./scripts/windows-crosscompile/compile-peercoin.sh
