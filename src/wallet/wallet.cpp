@@ -5027,6 +5027,15 @@ bool CWallet::ParameterInteraction()
     if (fSendFreeTransactions && GetArg("-limitfreerelay", DEFAULT_LIMITFREERELAY) <= 0)
         return InitError("Creation of free transactions with their relay disabled is not supported.");
 
+    if (IsArgSet("-walletbackupsdir")) {
+        if (!boost::filesystem::is_directory(GetArg("-walletbackupsdir", ""))) {
+            LogPrintf("%s: Warning: incorrect parameter -walletbackupsdir, path must exist! Using default path.\n", __func__);
+            InitWarning("Warning: incorrect parameter -walletbackupsdir, path must exist! Using default path.\n");
+
+            ForceRemoveArg("-walletbackupsdir");
+        }
+    }
+
     return true;
 }
 
@@ -5116,6 +5125,12 @@ bool AutoBackupWallet (CWallet* wallet, std::string strWalletFile, std::string& 
                 nWalletBackups = -1;
                 return false;
             }
+        } else if (!fs::is_directory(backupsDir)) {
+            // smth is wrong, we shouldn't continue until it's resolved
+            strBackupError = strprintf(_("%s is not a valid backup folder!"), backupsDir.string());
+            LogPrintf("%s\n", strBackupError);
+            nWalletBackups = -1;
+            return false;
         }
 
         // Create backup of the ...
