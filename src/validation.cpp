@@ -624,7 +624,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight,con
 		if (fJustCheck)
 			return true;
 		// revert all of the asset allocations to previous state
-		RevertAssetAllocations(assetAllocationsThisBlock, nHeight);
+		RevertAssetAllocations(assetAllocationsThisBlock);
 		// clear asset allocation structure for this block
 		assetAllocationsThisBlock.clear();
 		for (unsigned int i = 0; i < sortedBlock.vtx.size(); i++)
