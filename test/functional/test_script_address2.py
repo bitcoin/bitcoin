@@ -12,16 +12,14 @@ from test_framework.util import *
 import decimal
 
 class ScriptAddress2Test(BitcoinTestFramework):
-    def __init__(self):
-        super().__init__()
+    def set_test_params(self):
         self.num_nodes = 3
         self.setup_clean_chain = False
 
-    def setup_network(self):
-        self.nodes = self.start_nodes(self.num_nodes, self.options.tmpdir)
+    def setup_network(self, split=False):
+        self.setup_nodes()
         connect_nodes(self.nodes[1], 0)
         connect_nodes(self.nodes[2], 0)
-        self.is_network_split = False
         self.sync_all()
 
     def run_test(self):

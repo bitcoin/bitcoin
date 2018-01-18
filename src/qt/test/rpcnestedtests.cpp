@@ -36,14 +36,6 @@ void RPCNestedTests::rpcNestedTests()
     // do some test setup
     // could be moved to a more generic place when we add more tests on QT level
     tableRPC.appendCommand("rpcNestedTest", &vRPCCommands[0]);
-<<<<<<< c4466c1eb3215d3faa1f1fe4d4d122114c1e143a
-=======
-    ClearDatadirCache();
-    std::string path = QDir::tempPath().toStdString() + "/" + strprintf("test_litecoin_qt_%lu_%i", (unsigned long)GetTime(), (int)(GetRand(100000)));
-    QDir dir(QString::fromStdString(path));
-    dir.mkpath(".");
-    gArgs.ForceSetArg("-datadir", path);
->>>>>>> Litecoin: Fix various tests
     //mempool.setSanityCheck(1.0);
 
     TestingSetup test;
