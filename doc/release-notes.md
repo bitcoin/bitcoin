@@ -90,9 +90,8 @@ bitcoin data directory. The behavior is now:
   already exists in the data directory root, then wallets will be stored in the
   `wallets/` subdirectory by default.
 - The location of the wallets directory can be overridden by specifying a
-  `-walletdir=<path>` option where `<path>` can be an absolute path or a
-  relative path (relative to the current working directory). `<path>` can
-  also be a path to symlink to a directory.
+  `-walletdir=<path>` option where `<path>` can be an absolute path to a
+  directory or directory symlink.
 
 Care should be taken when choosing the wallets directory location, as if it
 becomes unavailable during operation, funds may be lost.

@@ -81,13 +81,13 @@ class TestNode():
             assert self.rpc_connected and self.rpc is not None, "Error: no RPC connection"
             return getattr(self.rpc, name)
 
-    def start(self, extra_args=None, stderr=None):
+    def start(self, extra_args=None, stderr=None, *args, **kwargs):
         """Start the node."""
         if extra_args is None:
             extra_args = self.extra_args
         if stderr is None:
             stderr = self.stderr
-        self.process = subprocess.Popen(self.args + extra_args, stderr=stderr)
+        self.process = subprocess.Popen(self.args + extra_args, stderr=stderr, *args, **kwargs)
         self.running = True
         self.log.debug("bitcoind started, waiting for RPC to come up")
 
