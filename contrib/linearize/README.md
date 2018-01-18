@@ -24,7 +24,7 @@ standalone hash lists but safe to use with linearize-data.py, which will output
 the same data no matter which byte format is chosen.
 
 The `linearize-hashes` script requires a connection, local or remote, to a
-JSON-RPC server. Running `bitcoind` or `bitcoin-qt -server` will be sufficient.
+JSON-RPC server. Running `dashd` or `dash-qt -server` will be sufficient.
 
 ## Step 2: Copy local block data
 
@@ -38,13 +38,13 @@ Required configuration file settings:
 Optional config file setting for linearize-data:
 * `file_timestamp`: Set each file's last-modified time to that of the most
 recent block in that file.
-* `genesis`: The hash of the genesis block in the blockchain. (default is '00000bafbc94add76cb75e2ec92894837288a481e5c005f6563d91623bf8bc2c', testnet)
-* `input`: bitcoind blocks/ directory containing blkNNNNN.dat
+* `genesis`: The hash of the genesis block in the blockchain. (default is '00000ffd590b1485b3caadc19b22e6379c733355108f107a430458cdf3407ab6', mainnet)
+* `input`: dashd blocks/ directory containing blkNNNNN.dat
 * `hashlist`: text file containing list of block hashes created by
 linearize-hashes.py.
 * `max_out_sz`: Maximum size for files created by the `output_file` option.
 (Default: `1000*1000*1000 bytes`)
-* `netmagic`: Network magic number. (default is 'cee2caff', testnet)
+* `netmagic`: Network magic number. (default is 'bf0c6bbd', mainnet)
 * `rev_hash_bytes`: If true, the block hash list written by linearize-hashes.py
 will be byte-reversed when read by linearize-data.py. See the linearize-hashes
 entry for more information.
