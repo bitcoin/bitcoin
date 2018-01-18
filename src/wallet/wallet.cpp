@@ -2739,8 +2739,8 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
                     return false;
                 }
 
-                LearnRelatedScripts(vchPubKey, g_change_type);
-                scriptChange = GetScriptForDestination(GetDestinationForKey(vchPubKey, g_change_type));
+                LearnRelatedScripts(vchPubKey, coin_control.m_change_type);
+                scriptChange = GetScriptForDestination(GetDestinationForKey(vchPubKey, coin_control.m_change_type));
             }
             CTxOut change_prototype_txout(0, scriptChange);
             size_t change_prototype_size = GetSerializeSize(change_prototype_txout, SER_DISK, 0);
