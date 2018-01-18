@@ -8,8 +8,8 @@ CFLAGS="-DSTATICLIB -I$MXE_PATH/usr/i686-w64-mingw32.static/include" \
 LDFLAGS="-L$MXE_PATH/usr/i686-w64-mingw32.static/lib" \
 make libminiupnpc.a
 
-mkdir $MXE_PATH/usr/i686-w64-mingw32.static/include/miniupnpc
-cp *.h $MXE_PATH/usr/i686-w64-mingw32.static/include/miniupnpc
-cp libminiupnpc.a $MXE_PATH/usr/i686-w64-mingw32.static/lib
+sudo mkdir $MXE_PATH/usr/i686-w64-mingw32.static/include/miniupnpc
+sudo cp *.h $MXE_PATH/usr/i686-w64-mingw32.static/include/miniupnpc
+sudo cp libminiupnpc.a $MXE_PATH/usr/i686-w64-mingw32.static/lib
 
 

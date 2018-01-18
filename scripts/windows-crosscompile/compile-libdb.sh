@@ -18,5 +18,5 @@ CFLAGS="-DSTATICLIB -I$MXE_PATH/usr/i686-w64-mingw32.static/include" \
         --prefix=$MXE_PATH/usr/i686-w64-mingw32.static
 
 make -j$(nproc)
-make install
+sudo make install
 
