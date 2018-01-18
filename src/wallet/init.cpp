@@ -37,7 +37,7 @@ std::string GetWalletHelpString(bool showDebug)
     strUsage += HelpMessageOpt("-upgradewallet", _("Upgrade wallet to latest format on startup"));
     strUsage += HelpMessageOpt("-wallet=<file>", _("Specify wallet file (within data directory)") + " " + strprintf(_("(default: %s)"), DEFAULT_WALLET_DAT));
     strUsage += HelpMessageOpt("-walletbroadcast", _("Make the wallet broadcast transactions") + " " + strprintf(_("(default: %u)"), DEFAULT_WALLETBROADCAST));
-    strUsage += HelpMessageOpt("-walletdir=<dir>", _("Specify directory to hold wallets (default: <datadir>/wallets if it exists, otherwise <datadir>)"));
+    strUsage += HelpMessageOpt("-walletsdir=<dir>", _("Specify directory to hold wallets (default: <datadir>/wallets if it exists, otherwise <datadir>)"));
     strUsage += HelpMessageOpt("-walletnotify=<cmd>", _("Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)"));
     strUsage += HelpMessageOpt("-zapwallettxes=<mode>", _("Delete all wallet transactions and only recover those parts of the blockchain through -rescan on startup") +
                                " " + _("(1 = keep tx meta data e.g. account owner and payment request information, 2 = drop tx meta data)"));
@@ -205,11 +205,11 @@ bool VerifyWallets()
         return true;
     }
 
-    if (gArgs.IsArgSet("-walletdir") && !fs::is_directory(GetWalletDir())) {
-        if (fs::exists(fs::system_complete(gArgs.GetArg("-walletdir", "")))) {
-            return InitError(strprintf(_("Specified -walletdir \"%s\" is not a directory"), gArgs.GetArg("-walletdir", "").c_str()));
+    if (gArgs.IsArgSet("-walletsdir") && !fs::is_directory(GetWalletDir())) {
+        if (fs::exists(fs::system_complete(gArgs.GetArg("-walletsdir", "")))) {
+            return InitError(strprintf(_("Specified -walletsdir \"%s\" is not a directory"), gArgs.GetArg("-walletsdir", "").c_str()));
         }
-        return InitError(strprintf(_("Specified -walletdir \"%s\" does not exist"), gArgs.GetArg("-walletdir", "").c_str()));
+        return InitError(strprintf(_("Specified -walletsdir \"%s\" does not exist"), gArgs.GetArg("-walletsdir", "").c_str()));
     }
 
     LogPrintf("Using wallet directory %s\n", GetWalletDir().string());

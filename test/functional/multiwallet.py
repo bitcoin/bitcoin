@@ -45,33 +45,33 @@ class MultiWalletTest(BitcoinTestFramework):
         os.symlink(wallet_dir('w1'), wallet_dir('w12'))
         self.assert_start_raises_init_error(0, ['-wallet=w12'], 'Error loading wallet w12. -wallet filename must be a regular file.')
 
-        # should not initialize if the specified walletdir does not exist
-        self.assert_start_raises_init_error(0, ['-walletdir=bad'], 'Error: Specified -walletdir "bad" does not exist')
-        # should not initialize if the specified walletdir is not a directory
+        # should not initialize if the specified walletsdir does not exist
+        self.assert_start_raises_init_error(0, ['-walletsdir=bad'], 'Error: Specified -walletsdir "bad" does not exist')
+        # should not initialize if the specified walletsdir is not a directory
         not_a_dir = wallet_dir('notadir')
         open(not_a_dir, 'a').close()
-        self.assert_start_raises_init_error(0, ['-walletdir=' + not_a_dir], 'Error: Specified -walletdir "' + not_a_dir + '" is not a directory')
+        self.assert_start_raises_init_error(0, ['-walletsdir=' + not_a_dir], 'Error: Specified -walletsdir "' + not_a_dir + '" is not a directory')
 
         # if wallets/ doesn't exist, datadir should be the default wallet dir
-        wallet_dir2 = data_dir('walletdir')
+        wallet_dir2 = data_dir('walletsdir')
         os.rename(wallet_dir(), wallet_dir2)
         self.start_node(0, ['-wallet=w4', '-wallet=w5'])
         assert_equal(set(node.listwallets()), {"w4", "w5"})
         w5 = wallet("w5")
         w5.generate(1)
 
-        # now if wallets/ exists again, but the rootdir is specified as the walletdir, w4 and w5 should still be loaded
+        # now if wallets/ exists again, but the rootdir is specified as the walletsdir, w4 and w5 should still be loaded
         os.rename(wallet_dir2, wallet_dir())
-        self.restart_node(0, ['-wallet=w4', '-wallet=w5', '-walletdir=' + data_dir()])
+        self.restart_node(0, ['-wallet=w4', '-wallet=w5', '-walletsdir=' + data_dir()])
         assert_equal(set(node.listwallets()), {"w4", "w5"})
         w5 = wallet("w5")
         w5_info = w5.getwalletinfo()
         assert_equal(w5_info['immature_balance'], 50)
 
-        competing_wallet_dir = os.path.join(self.options.tmpdir, 'competing_walletdir')
+        competing_wallet_dir = os.path.join(self.options.tmpdir, 'competing_walletsdir')
         os.mkdir(competing_wallet_dir)
-        self.restart_node(0, ['-walletdir='+competing_wallet_dir])
-        self.assert_start_raises_init_error(1, ['-walletdir='+competing_wallet_dir], 'Error initializing wallet database environment')
+        self.restart_node(0, ['-walletsdir='+competing_wallet_dir])
+        self.assert_start_raises_init_error(1, ['-walletsdir='+competing_wallet_dir], 'Error initializing wallet database environment')
 
         self.restart_node(0, self.extra_args[0])
 
