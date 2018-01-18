@@ -28,15 +28,20 @@ bool IsAssetAllocationOp(int op);
 void AssetAllocationTxToJSON(const int op, const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash, UniValue &entry);
 std::string assetAllocationFromOp(int op);
 bool RemoveAssetAllocationScriptPrefix(const CScript& scriptIn, CScript& scriptOut);
-struct AssetAllocationTupleHasher
-{
-	std::size_t operator()(const CAssetAllocationTuple& k) const
+
+namespace std {
+
+	template <>
+	struct hash<CAssetAllocationTuple>
 	{
-		using std::vector;
-		return ((hash<vector<unsigned char>>()(k.vchAlias)
-			^ (hash<vector<unsigned char>>()(k.vchAsset) << 1)) >> 1);
-	}
-};
+		size_t operator()(const CAssetAllocationTuple& k) const
+		{
+			return ((hash<vector<unsigned char> >()(k.vchAlias)
+				^ (hash<vector<unsigned char> >()(k.vchAsset) << 1)) >> 1);
+		}
+	};
+
+}
 class CAssetAllocationTuple {
 public:
 	std::vector<unsigned char> vchAsset;
@@ -203,5 +208,5 @@ bool GetAssetAllocation(const CAssetAllocationTuple& assetAllocationTuple,CAsset
 bool BuildAssetAllocationJson(const CAssetAllocation& assetallocation, UniValue& oName);
 bool BuildAssetAllocationIndexerJson(const CAssetAllocation& assetallocation,UniValue& oName);
 uint64_t GetAssetAllocationExpiration(const CAssetAllocation& assetallocation);
-void RevertAssetAllocations(const std::unordered_set<CAssetAllocationTuple, AssetAllocationTupleHasher> &assetAllocationsThisBlock);
+void RevertAssetAllocations(const std::unordered_set<CAssetAllocationTuple> &assetAllocationsThisBlock);
 #endif // ASSETALLOCATION_H

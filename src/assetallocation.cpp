@@ -303,7 +303,7 @@ void RevertAssetAllocations(const unordered_set<CAssetAllocationTuple> &assetAll
 	
 }
 bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const std::vector<unsigned char> &vchAlias,
-        bool fJustCheck, int nHeight, unordered_set<CAssetAllocationTuple, AssetAllocationTupleHasher> &assetAllocationsThisBlock, string &errorMessage, bool dontaddtodb) {
+        bool fJustCheck, int nHeight, unordered_set<CAssetAllocationTuple> &assetAllocationsThisBlock, string &errorMessage, bool dontaddtodb) {
 	if (!paliasdb || !passetallocationdb)
 		return false;
 	if (tx.IsCoinBase() && !fJustCheck && !dontaddtodb)
