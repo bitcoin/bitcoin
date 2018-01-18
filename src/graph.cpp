@@ -76,9 +76,8 @@ bool OrderBasedOnArrivalTime(const std::vector<CTransaction>& blockVtx, std::vec
 				CAssetAllocationTuple assetAllocationTuple(assetallocation.vchAsset, vvchAliasArgs[0]);
 				passetallocationdb->ReadISArrivalTimes(assetAllocationTuple, arrivalTimes);
 				ArrivalTimesMap::iterator it = arrivalTimes.find(tx.GetHash());
-				if(it != arrivalTimes.end()){
+				if(it != arrivalTimes.end())
 					orderedIndexes.insert(make_pair((*it).second, n));
-
 				// we don't have this in our arrival times list, means it must be rejected via consensus so add it to the end
 				else
 					orderedIndexes.insert(make_pair(INT64_MAX, n));
