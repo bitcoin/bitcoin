@@ -20,23 +20,23 @@ CreateSystemnodeDialog::~CreateSystemnodeDialog()
 
 QString CreateSystemnodeDialog::getAlias()
 {
-    return ui->alias->text();
+    return ui->aliasEdit->text();
 }
 
 void CreateSystemnodeDialog::setAlias(QString alias)
 {
-    ui->alias->setText(alias);
+    ui->aliasEdit->setText(alias);
     startAlias = alias;
 }
 
 QString CreateSystemnodeDialog::getIP()
 {
-    return ui->ip->text();
+    return ui->ipEdit->text();
 }
 
 void CreateSystemnodeDialog::setIP(QString ip)
 {
-    ui->ip->setText(ip);
+    ui->ipEdit->setText(ip);
 }
 
 QString CreateSystemnodeDialog::getLabel()
@@ -65,21 +65,21 @@ void CreateSystemnodeDialog::done(int r)
     if (QDialog::Accepted == r)
     {
         // Check alias
-        if (ui->alias->text().isEmpty())
+        if (ui->aliasEdit->text().isEmpty())
         {
             ui->errorLabel->setText("Alias is Required");
             return;
         }
         // Check if alias exists
-        if (systemnodeConfig.aliasExists(ui->alias->text().toStdString()))
+        if (systemnodeConfig.aliasExists(ui->aliasEdit->text().toStdString()))
         {
-            if (!(startAlias != "" && ui->alias->text() == startAlias))
+            if (!(startAlias != "" && ui->aliasEdit->text() == startAlias))
             {
-                ui->errorLabel->setText("Alias '" + ui->alias->text() + "' Already Exists");
+                ui->errorLabel->setText("Alias '" + ui->aliasEdit->text() + "' Already Exists");
                 return;
             }
         }
-        QString ip = ui->ip->text();
+        QString ip = ui->ipEdit->text();
         // Check ip
         if (ip.isEmpty())
         {

@@ -356,10 +356,10 @@ void SystemnodeList::on_startButton_clicked()
 
 void SystemnodeList::on_editButton_clicked()
 {
-    CreateSystemnodeDialog *dialog = new CreateSystemnodeDialog();
-    dialog->setWindowModality(Qt::ApplicationModal);
-    dialog->setEditMode();
-    dialog->setWindowTitle("Edit Systemnode");
+    CreateSystemnodeDialog dialog(this);
+    dialog.setWindowModality(Qt::ApplicationModal);
+    dialog.setEditMode();
+    dialog.setWindowTitle("Edit Systemnode");
     
     QItemSelectionModel* selectionModel = ui->tableWidgetMySystemnodes->selectionModel();
     QModelIndexList selected = selectionModel->selectedRows();
@@ -372,9 +372,9 @@ void SystemnodeList::on_editButton_clicked()
     QString strIP = ui->tableWidgetMySystemnodes->item(r, 1)->text();
     strIP.replace(QRegExp(":+\\d*"), "");
 
-    dialog->setAlias(strAlias);
-    dialog->setIP(strIP);
-    if (dialog->exec())
+    dialog.setAlias(strAlias);
+    dialog.setIP(strIP);
+    if (dialog.exec())
     {
         // OK pressed
         std::string port = "9340";
@@ -384,8 +384,8 @@ void SystemnodeList::on_editButton_clicked()
         BOOST_FOREACH(CSystemnodeConfig::CSystemnodeEntry &sne, systemnodeConfig.getEntries()) {
             if (sne.getAlias() == strAlias.toStdString())
             {
-                sne.setAlias(dialog->getAlias().toStdString());
-                sne.setIp(dialog->getIP().toStdString() + ":" + port);
+                sne.setAlias(dialog.getAlias().toStdString());
+                sne.setIp(dialog.getIP().toStdString() + ":" + port);
                 systemnodeConfig.write();
                 ui->tableWidgetMySystemnodes->removeRow(r);
                 updateMyNodeList(true);
@@ -483,15 +483,15 @@ void SystemnodeList::on_UpdateButton_clicked()
 
 void SystemnodeList::on_CreateNewSystemnode_clicked()
 {
-    CreateSystemnodeDialog *dialog = new CreateSystemnodeDialog();
-    dialog->setWindowModality(Qt::ApplicationModal);
+    CreateSystemnodeDialog dialog(this);
+    dialog.setWindowModality(Qt::ApplicationModal);
     QString formattedAmount = BitcoinUnits::formatWithUnit(walletModel->getOptionsModel()->getDisplayUnit(), 
                                                            SYSTEMNODE_COLLATERAL * COIN);
-    dialog->setNoteLabel("*This action will send " + formattedAmount + " to yourself");
-    if (dialog->exec())
+    dialog.setNoteLabel("This action will send " + formattedAmount + " to yourself");
+    if (dialog.exec())
     {
         // OK Pressed
-        QString label = dialog->getLabel();
+        QString label = dialog.getLabel();
         QString address = walletModel->getAddressTableModel()->addRow(AddressTableModel::Receive, label, "");
         SendCoinsRecipient recipient(address, label, SYSTEMNODE_COLLATERAL * COIN, "");
         QList<SendCoinsRecipient> recipients;
@@ -524,7 +524,7 @@ void SystemnodeList::on_CreateNewSystemnode_clicked()
                     port = "19340";
                 }
 
-                systemnodeConfig.add(dialog->getAlias().toStdString(), dialog->getIP().toStdString() + ":" + port, 
+                systemnodeConfig.add(dialog.getAlias().toStdString(), dialog.getIP().toStdString() + ":" + port, 
                         privateKey, out.tx->GetHash().ToString(), strprintf("%d", out.i));
                 systemnodeConfig.write();
                 updateMyNodeList(true);
