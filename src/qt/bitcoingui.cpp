@@ -331,7 +331,9 @@ void BitcoinGUI::createToolBars()
     toolbar->addAction(sendCoinsAction);
     toolbar->addAction(receiveCoinsAction);
     toolbar->addAction(historyAction);
+#ifdef ENABLE_MINING
     toolbar->addAction(mintingAction);
+#endif
     toolbar->addAction(addressBookAction);
 }
 

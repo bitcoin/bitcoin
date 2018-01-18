@@ -422,8 +422,10 @@ static const CRPCCommand vRPCCommands[] =
     { "getaddednodeinfo",       &getaddednodeinfo,       true,      true },
     { "getdifficulty",          &getdifficulty,          true,      false },
     { "getgenerate",            &getgenerate,            true,      false },
+#ifdef ENABLE_MINING
     { "setgenerate",            &setgenerate,            true,      false },
     { "gethashespersec",        &gethashespersec,        true,      false },
+#endif // ENABLE_MINING
     { "getnetworkghps",         &getnetworkghps,         true,      false },
     { "getinfo",                &getinfo,                true,      false },
     { "getmininginfo",          &getmininginfo,          true,      false },
@@ -460,10 +462,14 @@ static const CRPCCommand vRPCCommands[] =
     { "listaddressgroupings",   &listaddressgroupings,   false,     false },
     { "signmessage",            &signmessage,            false,     false },
     { "verifymessage",          &verifymessage,          false,     false },
+#ifdef ENABLE_MINING
     { "getwork",                &getwork,                true,      false },
+#endif // ENABLE_MINING
     { "listaccounts",           &listaccounts,           false,     false },
     { "settxfee",               &settxfee,               false,     false },
+#ifdef ENABLE_MINING
     { "getblocktemplate",       &getblocktemplate,       true,      false },
+#endif // ENABLE_MINING
     { "submitblock",            &submitblock,            false,     false },
     { "listsinceblock",         &listsinceblock,         false,     false },
     { "dumpprivkey",            &dumpprivkey,            true,      false },
