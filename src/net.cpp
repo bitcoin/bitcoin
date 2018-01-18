@@ -1863,7 +1863,7 @@ void CConnman::ThreadMnbRequestConnections()
         }
 
         CAddress addr(p.first, NODE_NETWORK);
-        OpenNetworkConnection(CAddress(p.first, NODE_NETWORK), false, NULL, NULL, false, false, false, true);
+        OpenMasternodeConnection(addr);
 
         ForNode(addr, CConnman::AllNodes, [&](CNode* pnode) {
             if (pnode->fDisconnect) return false;
