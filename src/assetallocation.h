@@ -81,6 +81,9 @@ namespace std {
 	{
 		size_t operator()(const CAssetAllocationTuple& k) const
 		{
+			using std::size_t;
+			using std::hash;
+			using std::vector;
 			return ((hash<vector<unsigned char>>()(k.vchAlias)
 				^ (hash<vector<unsigned char>>()(k.vchAsset) << 1)) >> 1);
 		}
