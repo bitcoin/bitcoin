@@ -76,8 +76,9 @@ bool OrderBasedOnArrivalTime(const std::vector<CTransaction>& blockVtx, std::vec
 				CAssetAllocationTuple assetAllocationTuple(assetallocation.vchAsset, vvchAliasArgs[0]);
 				passetallocationdb->ReadISArrivalTimes(assetAllocationTuple, arrivalTimes);
 				ArrivalTimesMap::iterator it = arrivalTimes.find(tx.GetHash());
-				if(it != arrivalTimes.end())
+				if(it != arrivalTimes.end()){
 					orderedIndexes.insert(make_pair((*it).second, n));
+
 				// we don't have this in our arrival times list, means it must be rejected via consensus so add it to the end
 				else
 					orderedIndexes.insert(make_pair(INT64_MAX, n));
@@ -90,7 +91,7 @@ bool OrderBasedOnArrivalTime(const std::vector<CTransaction>& blockVtx, std::vec
 	for (auto& orderedIndex : orderedIndexes) {
 		orderedVtx.push_back(blockVtx[orderedIndex.second]);
 		mapIndexOriginalVTxToOrderedVtx[orderedVtx.size() - 1] = orderedIndex.second;
-		LogPrintf("OrderBasedOnArrivalTime: mapping %d to %d with time %llu\n", orderedVtx.size() - 1, orderedIndex.second, orderedIndex.first);
+		LogPrintf("OrderBasedOnArrivalTime: mapping %d to %d with time %llu txhash %s\n", orderedVtx.size() - 1, orderedIndex.second, orderedIndex.first, blockVtx[orderedIndex.second].GetHash().GetHex().c_str());
 	}
 
 	if (blockVtx.size() != orderedVtx.size())
@@ -126,11 +127,14 @@ unsigned int GraphRemoveCycles(CBlock * pblock, std::unique_ptr<CBlockTemplate> 
 		const std::vector<int> &vecTx = (*it).second;
 		// mapTxIndex knows of the mapping between vertices and tx vout positions
 		for (auto& nIndex : vecTx) {
-			if (nIndex >= pblock->vtx.size())
+			if (nIndex >= mapIndexOriginalVTxToOrderedVtx.size())
 				continue;
-			LogPrintf("outputsToRemove %d mapIndexOriginalVTxToOrderedVtx[nIndex] %d\n", nIndex, mapIndexOriginalVTxToOrderedVtx[nIndex]);
+			const int nMappedIndex = mapIndexOriginalVTxToOrderedVtx[nIndex];
+			if (nMappedIndex >= pblock->vtx.size())
+				continue;
+			LogPrintf("outputsToRemove %d mapIndexOriginalVTxToOrderedVtx[nIndex] %d\n", nIndex, nMappedIndex);
 			// mapIndexOriginalVTxToOrderedVtx is the mapping from the ordered by arrival time index to the original block index for removal below
-			outputsToRemove.push_back(mapIndexOriginalVTxToOrderedVtx[nIndex]);
+			outputsToRemove.push_back(nMappedIndex);
 		}
 	}
 	// outputs were saved above and loop through them backwards to remove from back to front
@@ -184,7 +188,7 @@ bool DAGTopologicalSort(CBlock * pblock) {
 			if (nOut >= pblock->vtx.size())
 				continue;
 			newVtx.push_back(pblock->vtx[nOut]);
-			ordered += strprintf("%d", nOut);
+			ordered += strprintf("%d (txhash %s)\n", nOut, pblock->vtx[nOut].GetHash().GetHex());
 		}
 	}
 	LogPrintf("topological ordering: %s\n", ordered);

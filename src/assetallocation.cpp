@@ -413,7 +413,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 			// check balance is sufficient on sender
 			for (auto& amountTuple : theAssetAllocation.listSendingAllocationAmounts) {
 				const CAssetAllocationTuple receiverAllocationTuple(theAssetAllocation.vchAsset, amountTuple.first);
-				// erase arrival of this tx on this service
+				// erase arrival of this tx on this service for each receiver
 				passetallocationdb->EraseISArrivalTime(receiverAllocationTuple, tx.GetHash());
 			}
 			CAmount nTotal = 0;
@@ -500,12 +500,12 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 		}
 		// debug
 		if (fDebug)
-			LogPrintf("CONNECTED ASSET ALLOCATION: op=%s assetallocation=%s hash=%s height=%d fJustCheck=%d\n",
+			LogPrintf("CONNECTED ASSET ALLOCATION: op=%s assetallocation=%s hash=%s height=%d fJustCheck=%d at time %llu\n",
 				assetFromOp(op).c_str(),
 				assetAllocationTuple.ToString().c_str(),
 				tx.GetHash().ToString().c_str(),
 				nHeight,
-				fJustCheck ? 1 : 0);
+				fJustCheck ? 1 : 0, ms);
 	}
     return true;
 }
