@@ -2,7 +2,7 @@ sudo: false
 language: cpp
 matrix:
   include:
-      #docker
+      #linux
       - os: linux
         services: docker
         script:
@@ -11,6 +11,13 @@ matrix:
         services: docker
         script:
           - docker build --build-arg BRANCH_NAME=$TRAVIS_BRANCH --build-arg REPO_SLUG=$TRAVIS_REPO_SLUG -f scripts/docker/debian/Dockerfile-jessie .
+      - os: linux
+        sudo: required
+        before_install:
+          - ./scripts/dependencies-ubuntu.sh
+        install: true
+        script:
+          - ./scripts/install-ubuntu.sh
       #cross compile windows
       - os: linux
         services: docker
@@ -20,14 +27,17 @@ matrix:
         services: docker
         script:
           - travis_wait 60 docker build --build-arg BRANCH_NAME=$TRAVIS_BRANCH --build-arg REPO_SLUG=$TRAVIS_REPO_SLUG -f scripts/docker/windows-crosscompile/Dockerfile-xenial .
-      #ubuntu
+      - os: linux
+        services: docker
+        script:
+          - travis_wait 60 docker build --build-arg BRANCH_NAME=$TRAVIS_BRANCH --build-arg REPO_SLUG=$TRAVIS_REPO_SLUG -f scripts/docker/windows-crosscompile/Dockerfile-trusty .
       - os: linux
         sudo: required
         before_install:
-          - ./scripts/dependencies-ubuntu.sh
+          - cd /peercoin/scripts/windows-crosscompile && ./dependencies.sh
         install: true
         script:
-          - ./scripts/install-ubuntu.sh
+          - cd /peercoin && scripts/windows-crosscompile/compile-peercoin.sh
       #osx     
       - os: osx
         osx_image: xcode9.2
