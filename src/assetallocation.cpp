@@ -94,7 +94,7 @@ void CAssetAllocation::Serialize( vector<unsigned char> &vchData) {
 	vchData = vector<unsigned char>(dsAsset.begin(), dsAsset.end());
 
 }
-void CAssetAllocationDB::WriteAssetAllocationIndex(const CAssetAllocation& assetallocation, const int& op) {
+void CAssetAllocationDB::WriteAssetAllocationIndex(const CAssetAllocation& assetallocation) {
 	if (!assetallocation_collection)
 		return;
 	bson_error_t error;
@@ -262,9 +262,48 @@ bool RemoveAssetAllocationScriptPrefix(const CScript& scriptIn, CScript& scriptO
 	scriptOut = CScript(pc, scriptIn.end());
 	return true;
 }
+// revert allocation to previous state and remove 
+void RevertAssetAllocations(const unordered_set<CAssetAllocationTuple> &assetAllocationsThisBlock) {
+	CAssetAllocation dbAssetAllocation;
+	for (auto &assetAllocationTuple : assetAllocationsThisBlock) {
+		if (GetAssetAllocation(assetAllocationTuple, dbAssetAllocation)) {
+			if (dbAssetAllocation.listSendingAllocationInputs.empty()) {
+				for (auto& amountTuple : dbAssetAllocation.listSendingAllocationAmounts) {
+					CAssetAllocation receiverAllocation;
+					const CAssetAllocationTuple receiverAllocationTuple(dbAssetAllocation.vchAsset, amountTuple.first);
+					paliasdb->EraseAliasIndexTxHistory(dbAssetAllocation.txHash.GetHex() + "-" + receiverAllocationTuple.ToString());
+					// if receiver did not exist prior to this send then initiate it to empty balance
+					if (!passetallocationdb->ReadLastAssetAllocation(receiverAllocationTuple, receiverAllocation)) {
+						receiverAllocation.SetNull();
+						receiverAllocation.vchAlias = receiverAllocationTuple.vchAlias;
+						receiverAllocation.vchAsset = receiverAllocationTuple.vchAsset;
+					}
+					// write the state back to previous state incase of any consensus failures below before the new write
+					if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, INT64_MAX, false))
+					{
+						continue;
+					}
+				}
+			}
+			paliasdb->EraseAliasIndexTxHistory(dbAssetAllocation.txHash.GetHex() + "-" + assetAllocationTuple.ToString());
+			// if sender did not exist prior to this send then initiate it to empty balance
+			if (!passetallocationdb->ReadLastAssetAllocation(assetAllocationTuple, dbAssetAllocation)) {
+				dbAssetAllocation.SetNull();
+				dbAssetAllocation.vchAlias = assetAllocationTuple.vchAlias;
+				dbAssetAllocation.vchAsset = assetAllocationTuple.vchAsset;
+			}
+			// write the state back to previous state incase of any consensus failures below before the new write
+			if (!passetallocationdb->WriteAssetAllocation(dbAssetAllocation, INT64_MAX, false))
+			{
+				continue;
+			}
+		}
+	}
 
+	
+}
 bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const std::vector<unsigned char> &vchAlias,
-        bool fJustCheck, int nHeight, string &errorMessage, bool dontaddtodb) {
+        bool fJustCheck, int nHeight, unordered_set<CAssetAllocationTuple> &assetAllocationsThisBlock, string &errorMessage, bool dontaddtodb) {
 	if (!paliasdb || !passetallocationdb)
 		return false;
 	if (tx.IsCoinBase() && !fJustCheck && !dontaddtodb)
@@ -326,129 +365,21 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 	const string &user1 = stringFromVch(vchAlias);
 	string strResponseEnglish = "";
 	string strResponse = GetSyscoinTransactionDescription(op, strResponseEnglish, ASSETALLOCATION);
-	char nLockStatus = NOLOCK_UNCONFIRMED_STATE;
-	if (!fJustCheck)
-		nLockStatus = NOLOCK_CONFIRMED_STATE;
 	CAssetAllocation dbAssetAllocation;
 	CAsset dbAsset;
-	if (GetAssetAllocation(assetAllocationTuple, dbAssetAllocation)){
-		vector<uint256> lockedTXIDs;
-		passetallocationdb->ReadISLock(assetAllocationTuple, lockedTXIDs);
-		if (lockedTXIDs.size() > 0)
-			LogPrintf("lockedTXIDs size %d\n", lockedTXIDs.size());
-		if (!fJustCheck) {
-			nLockStatus = LOCK_NOCONFLICT_CONFIRMED_STATE;
-			if (!lockedTXIDs.empty())
-			{
-				if (std::find(lockedTXIDs.begin(), lockedTXIDs.end(), tx.GetHash()) == lockedTXIDs.end()) {
-					nLockStatus = LOCK_CONFLICT_CONFIRMED_STATE;
-					LogPrintf("Lock conflict confirmed state!\n");
-				}
-			}
-		}
-		else if (fJustCheck)
-		{
-			nLockStatus = LOCK_NOCONFLICT_UNCONFIRMED_STATE;
-			if (!lockedTXIDs.empty())
-			{
-				if (std::find(lockedTXIDs.begin(), lockedTXIDs.end(), tx.GetHash()) == lockedTXIDs.end()) {
-					// check balance is sufficient on sender
-					CAmount nTotal = 0;
-					for (auto& amountTuple : theAssetAllocation.listSendingAllocationAmounts) {
-						nTotal += amountTuple.second;
-					}
-					if (dbAssetAllocation.nBalance < nTotal) {
-						nLockStatus = LOCK_CONFLICT_UNCONFIRMED_STATE;
-						if (!dontaddtodb) {
-							if (strResponse != "") {
-								paliasdb->UpdateAliasIndexTxHistoryLockStatus(dbAssetAllocation.txHash.GetHex() + "-" + assetAllocationTuple.ToString(), nLockStatus);
-							}
-							// erase sender lock
-							if (!passetallocationdb->EraseISLock(assetAllocationTuple, tx.GetHash()))
-							{
-								errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from assetallocation DB");
-								return error(errorMessage.c_str());
-							}
-							// erase all receiver locks
-							for (auto& amountTuple : theAssetAllocation.listSendingAllocationAmounts) {
-								CAssetAllocation receiverAllocation;
-								const CAssetAllocationTuple receiverAllocationTuple(theAssetAllocation.vchAsset, amountTuple.first);
-								if (!dontaddtodb) {
-									if (!passetallocationdb->EraseISLock(receiverAllocationTuple, tx.GetHash()))
-									{
-										errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from assetallocation DB");
-										return error(errorMessage.c_str());
-									}
-								}
-							}
-						}
-						errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2024 - " + _("Sender balance is insufficient");
-						return true;
-					}
-				}
-			}
-		}
-	}
 	if (op == OP_ASSET_ALLOCATION_SEND)
 	{
-		// if this is pow, then always start from a known state to recreate the new state based on what the block is saying
-		if (!fJustCheck && !dontaddtodb) {
-			if (dbAssetAllocation.listSendingAllocationInputs.empty()) {
-				for (auto& amountTuple : dbAssetAllocation.listSendingAllocationAmounts) {
-					CAssetAllocation receiverAllocation;
-					const CAssetAllocationTuple receiverAllocationTuple(dbAssetAllocation.vchAsset, amountTuple.first);
-					if (!dontaddtodb) {
-						if (!passetallocationdb->EraseISLock(receiverAllocationTuple, tx.GetHash()))
-						{
-							errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from assetallocation DB");
-							continue;
-						}
-						// if receiver did not exist prior to this send then initiate it to empty balance
-						if (!passetallocationdb->ReadLastAssetAllocation(receiverAllocationTuple, receiverAllocation)) {
-							receiverAllocation.SetNull();
-							receiverAllocation.vchAlias = receiverAllocationTuple.vchAlias;
-							receiverAllocation.vchAsset = receiverAllocationTuple.vchAsset;
-						}
-						receiverAllocation.txHash = tx.GetHash();
-						receiverAllocation.nHeight = nHeight;
-						// write the state back to previous state incase of any consensus failures below before the new write
-						if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, op, INT64_MAX, fJustCheck))
-						{
-							errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to write to asset allocation DB");
-							continue;
-						}
-					}
-
-				}
-			}
-			if (!passetallocationdb->EraseISLock(assetAllocationTuple, tx.GetHash()))
-			{
-				errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from assetallocation DB");
-				return true;
-			}
-			// if sender did not exist prior to this send then initiate it to empty balance
-			if (!passetallocationdb->ReadLastAssetAllocation(assetAllocationTuple, dbAssetAllocation)) {
-				dbAssetAllocation.SetNull();
-				dbAssetAllocation.vchAlias = assetAllocationTuple.vchAlias;
-				dbAssetAllocation.vchAsset = assetAllocationTuple.vchAsset;
-			}
-			dbAssetAllocation.txHash = tx.GetHash();
-			dbAssetAllocation.nHeight = nHeight;
-			// write the state back to previous state incase of any consensus failures below before the new write
-			if (!passetallocationdb->WriteAssetAllocation(dbAssetAllocation, op, INT64_MAX, fJustCheck))
-			{
-				errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to write to asset allocation DB");
-				return true;
-			}
-
-		}
-		theAssetAllocation.vchAlias = vchAlias;
-		theAssetAllocation.nBalance = dbAssetAllocation.nBalance;
-		if (dbAssetAllocation.IsNull())
+		if (!GetAssetAllocation(assetAllocationTuple, dbAssetAllocation))
 		{
 			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2024 - " + _("Cannot find sender asset allocation.");
 			return true;
 		}
+		if (!fJustCheck) {
+			// erase arrival of this tx on this service
+			passetallocationdb->EraseISArrivalTime(assetAllocationTuple, tx.GetHash());
+		}
+		theAssetAllocation.vchAlias = vchAlias;
+		theAssetAllocation.nBalance = dbAssetAllocation.nBalance;
 		// get sender assetallocation
 		// if no custom allocations are sent with request
 			// if sender assetallocation has custom allocations, break as invalid assetsend request
@@ -480,7 +411,11 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 				return true;
 			}
 			// check balance is sufficient on sender
-			
+			for (auto& amountTuple : theAssetAllocation.listSendingAllocationAmounts) {
+				const CAssetAllocationTuple receiverAllocationTuple(theAssetAllocation.vchAsset, amountTuple.first);
+				// erase arrival of this tx on this service
+				passetallocationdb->EraseISArrivalTime(receiverAllocationTuple, tx.GetHash());
+			}
 			CAmount nTotal = 0;
 			for (auto& amountTuple : theAssetAllocation.listSendingAllocationAmounts) {
 				nTotal += amountTuple.second;
@@ -492,7 +427,11 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 			}
 			if (dbAssetAllocation.nBalance < nTotal) {
 				errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("Sender balance is insufficient");
-				paliasdb->EraseAliasIndexTxHistory(tx.GetHash().GetHex() + "-" + assetAllocationTuple.ToString());
+				if (!dontaddtodb) {
+					if (strResponse != "") {
+						paliasdb->WriteAliasIndexTxHistory(user1, stringFromVch(assetAllocationTuple.vchAlias), user3, tx.GetHash(), nHeight, strResponseEnglish, assetAllocationTuple.ToString(), LOCK_CONFLICT_UNCONFIRMED_STATE);
+					}
+				}
 				return true;
 			}
 			
@@ -516,8 +455,6 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 						continue;
 					}
 				}
-
-
 				if (!dontaddtodb) {
 					if (!GetAssetAllocation(receiverAllocationTuple, receiverAllocation)) {
 						receiverAllocation.SetNull();
@@ -528,16 +465,15 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 					receiverAllocation.nHeight = nHeight;
 					receiverAllocation.nBalance += amountTuple.second;
 					theAssetAllocation.nBalance -= amountTuple.second;
-					if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, op, INT64_MAX, fJustCheck))
+					if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, INT64_MAX, fJustCheck))
 					{
 						errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to write to asset allocation DB");
 						continue;
 					}
-
+	
 					if (strResponse != "") {
-						paliasdb->WriteAliasIndexTxHistory(user1, stringFromVch(receiverAllocation.vchAlias), user3, tx.GetHash(), nHeight, strResponseEnglish, receiverAllocationTuple.ToString(), nLockStatus);
+						paliasdb->WriteAliasIndexTxHistory(user1, stringFromVch(receiverAllocation.vchAlias), user3, tx.GetHash(), nHeight, strResponseEnglish, receiverAllocationTuple.ToString(), fJustCheck? LOCK_UNCONFIRMED_STATE: LOCK_CONFIRMED_STATE);
 					}
-					
 				}
 			}
 		}
@@ -549,12 +485,15 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 		theAssetAllocation.nHeight = nHeight;
 		theAssetAllocation.txHash = tx.GetHash();
 		if (strResponse != "") {
-			paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, assetAllocationTuple.ToString(), nLockStatus);
+			paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, assetAllocationTuple.ToString(), fJustCheck ? LOCK_UNCONFIRMED_STATE : LOCK_CONFIRMED_STATE);
 		}
 		int64_t ms = INT64_MAX;
-		if(fJustCheck)
+		if (fJustCheck) {
 			ms = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
-		if (!passetallocationdb->WriteAssetAllocation(theAssetAllocation, op, ms, fJustCheck))
+			// add the asset allocation index into a static set so we can revert to previous state before next block is provided
+			assetAllocationsThisBlock.insert(assetAllocationTuple);
+		}
+		if (!passetallocationdb->WriteAssetAllocation(theAssetAllocation, ms, fJustCheck))
 		{
 			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to write to asset allocation DB");
 			return error(errorMessage.c_str());

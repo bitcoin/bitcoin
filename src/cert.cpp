@@ -485,7 +485,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 					dbCert.SetNull();
 				}
 				if (!dontaddtodb) {
-					nLockStatus = LOCK_CONFLICT_CONFIRMED_STATE;
+					//nLockStatus = LOCK_CONFLICT_CONFIRMED_STATE;
 					if (!pcertdb->EraseISLock(theCert.vchCert))
 					{
 						errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from certificate DB");
@@ -497,7 +497,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 			}
 			else {
 				if (!dontaddtodb) {
-					nLockStatus = LOCK_NOCONFLICT_CONFIRMED_STATE;
+					nLockStatus = LOCK_CONFIRMED_STATE;
 					if (fDebug)
 						LogPrintf("CONNECTED CERT: op=%s cert=%s hash=%s height=%d fJustCheck=%d POW IS\n",
 							certFromOp(op).c_str(),
@@ -541,7 +541,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 				return true;
 			}
 			if (fJustCheck)
-				nLockStatus = LOCK_NOCONFLICT_UNCONFIRMED_STATE;
+				nLockStatus = LOCK_UNCONFIRMED_STATE;
 		}
 	}
 	if(op != OP_CERT_ACTIVATE) 

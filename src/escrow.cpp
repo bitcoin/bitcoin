@@ -817,7 +817,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 					theEscrow.SetNull();
 				}
 				if (!dontaddtodb) {
-					nLockStatus = LOCK_CONFLICT_CONFIRMED_STATE;
+					//nLockStatus = LOCK_CONFLICT_CONFIRMED_STATE;
 					if (!pescrowdb->EraseISLock(serializedEscrow.vchEscrow))
 					{
 						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from escrow DB");
@@ -830,7 +830,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 			}
 			else {
 				if (!dontaddtodb) {
-					nLockStatus = LOCK_NOCONFLICT_CONFIRMED_STATE;
+					nLockStatus = LOCK_CONFIRMED_STATE;
 					if (fDebug)
 						LogPrintf("CONNECTED ESCROW: op=%s escrow=%s hash=%s height=%d fJustCheck=%d POW IS\n",
 							escrowFromOp(op).c_str(),
@@ -874,7 +874,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				return true;
 			}
 			if (fJustCheck)
-				nLockStatus = LOCK_NOCONFLICT_UNCONFIRMED_STATE;
+				nLockStatus = LOCK_UNCONFIRMED_STATE;
 		}
 	}
 	// make sure escrow settings don't change (besides scriptSigs/nTotal's) outside of activation

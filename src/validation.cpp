@@ -52,8 +52,6 @@
 #include <boost/thread.hpp>
 // SYSCOIN
 #include "auxpow.h"
-#include <unordered_map>
-#include <unordered_set>
 #include "offer.h"
 #include "cert.h"
 #include "alias.h"
@@ -551,6 +549,7 @@ std::string FormatStateMessage(const CValidationState &state)
 // SYSCOIN
 bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight,const CBlock& block)
 {
+	static unordered_set<CAssetAllocationTuple> assetAllocationsThisBlock;
 	vector<vector<unsigned char> > vvchArgs;
 	vector<vector<unsigned char> > vvchAliasArgs;
 	int op;
@@ -590,7 +589,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight,con
 			else if (DecodeAssetAllocationTx(tx, op, nOut, vvchArgs))
 			{
 				errorMessage.clear();
-				good = CheckAssetAllocationInputs(tx, op, nOut, vvchArgs, vvchAliasArgs[0], fJustCheck, nHeight, errorMessage);
+				good = CheckAssetAllocationInputs(tx, op, nOut, vvchArgs, vvchAliasArgs[0], fJustCheck, nHeight, assetAllocationsThisBlock, errorMessage);
 				if (fDebug && !errorMessage.empty())
 					LogPrintf("%s\n", errorMessage.c_str());
 			}
@@ -624,6 +623,10 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight,con
 		}
 		if (fJustCheck)
 			return true;
+		// revert all of the asset allocations to previous state
+		RevertAssetAllocations(assetAllocationsThisBlock, nHeight);
+		// clear asset allocation structure for this block
+		assetAllocationsThisBlock.clear();
 		for (unsigned int i = 0; i < sortedBlock.vtx.size(); i++)
 		{
 			const CTransaction &tx = sortedBlock.vtx[i];
@@ -657,7 +660,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight,con
 					else if (DecodeAssetAllocationTx(tx, op, nOut, vvchArgs))
 					{
 						errorMessage.clear();
-						good = CheckAssetAllocationInputs(tx, op, nOut, vvchArgs, vvchAliasArgs[0], fJustCheck, nHeight, errorMessage);
+						good = CheckAssetAllocationInputs(tx, op, nOut, vvchArgs, vvchAliasArgs[0], fJustCheck, nHeight, assetAllocationsThisBlock, errorMessage);
 						if (fDebug && !errorMessage.empty())
 							LogPrintf("%s\n", errorMessage.c_str());
 

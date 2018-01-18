@@ -696,7 +696,7 @@ string AliasTransfer(const string& node, const string& aliasname, const string& 
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "user2").get_str(), address);
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "_id").get_str(), txid + "-" + aliasname);
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "type").get_str(), "Alias Updated");
-	BOOST_CHECK_EQUAL(find_value(historyResultObj, "lock_status").get_int(), LOCK_NOCONFLICT_UNCONFIRMED_STATE);
+	BOOST_CHECK_EQUAL(find_value(historyResultObj, "lock_status").get_int(), LOCK_UNCONFIRMED_STATE);
 
 	GenerateBlocks(5, tonode);
 	GenerateBlocks(5, node);
@@ -724,7 +724,7 @@ string AliasTransfer(const string& node, const string& aliasname, const string& 
 	BOOST_CHECK(!txHistoryResult.empty());
 	BOOST_CHECK(ret.read(txHistoryResult[0].get_str()));
 	historyResultObj = ret.get_obj();
-	BOOST_CHECK(find_value(historyResultObj, "lock_status").get_int() == LOCK_NOCONFLICT_CONFIRMED_STATE || find_value(historyResultObj, "lock_status").get_int() == NOLOCK_CONFIRMED_STATE);
+	BOOST_CHECK(find_value(historyResultObj, "lock_status").get_int() == LOCK_CONFIRMED_STATE || find_value(historyResultObj, "lock_status").get_int() == NOLOCK_CONFIRMED_STATE);
 	return "";
 }
 string AliasUpdate(const string& node, const string& aliasname, const string& pubdata, string addressStr, string witness)
@@ -782,7 +782,7 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "user1").get_str(), aliasname);
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "_id").get_str(), txid + "-" + aliasname);
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "type").get_str(), "Alias Updated");
-	BOOST_CHECK_EQUAL(find_value(historyResultObj, "lock_status").get_int(), LOCK_NOCONFLICT_UNCONFIRMED_STATE);
+	BOOST_CHECK_EQUAL(find_value(historyResultObj, "lock_status").get_int(), LOCK_UNCONFIRMED_STATE);
 	
 	if (!otherNode1.empty())
 	{
@@ -804,7 +804,7 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 			printf("relay to node1 to took about %d Sec\n", (5 - numtries));
 			BOOST_CHECK(ret.read(txHistoryResult[0].get_str()));
 			historyResultObj = ret.get_obj();
-			BOOST_CHECK_EQUAL(find_value(historyResultObj, "lock_status").get_int(), LOCK_NOCONFLICT_UNCONFIRMED_STATE);
+			BOOST_CHECK_EQUAL(find_value(historyResultObj, "lock_status").get_int(), LOCK_UNCONFIRMED_STATE);
 
 
 			BOOST_CHECK_NO_THROW(r = CallRPC(otherNode1, "aliasinfo " + aliasname));
@@ -825,7 +825,7 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "user1").get_str(), aliasname);
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "_id").get_str(), txid + "-" + aliasname);
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "type").get_str(), "Alias Updated");
-	BOOST_CHECK_EQUAL(find_value(historyResultObj, "lock_status").get_int(), LOCK_NOCONFLICT_CONFIRMED_STATE);
+	BOOST_CHECK_EQUAL(find_value(historyResultObj, "lock_status").get_int(), LOCK_CONFIRMED_STATE);
 	if(!otherNode1.empty())
 	{
 		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode1, "aliasinfo " + aliasname));
@@ -838,7 +838,7 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 		BOOST_CHECK(!txHistoryResult.empty());
 		BOOST_CHECK(ret.read(txHistoryResult[0].get_str()));
 		historyResultObj = ret.get_obj();
-		BOOST_CHECK(find_value(historyResultObj, "lock_status").get_int() == LOCK_NOCONFLICT_CONFIRMED_STATE || find_value(historyResultObj, "lock_status").get_int() == NOLOCK_CONFIRMED_STATE);
+		BOOST_CHECK(find_value(historyResultObj, "lock_status").get_int() == LOCK_CONFIRMED_STATE || find_value(historyResultObj, "lock_status").get_int() == NOLOCK_CONFIRMED_STATE);
 
 	}
 	if(!otherNode2.empty())
@@ -855,7 +855,7 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 		BOOST_CHECK(!txHistoryResult.empty());
 		BOOST_CHECK(ret.read(txHistoryResult[0].get_str()));
 		historyResultObj = ret.get_obj();
-		BOOST_CHECK(find_value(historyResultObj, "lock_status").get_int() == LOCK_NOCONFLICT_CONFIRMED_STATE || find_value(historyResultObj, "lock_status").get_int() == NOLOCK_CONFIRMED_STATE);
+		BOOST_CHECK(find_value(historyResultObj, "lock_status").get_int() == LOCK_CONFIRMED_STATE || find_value(historyResultObj, "lock_status").get_int() == NOLOCK_CONFIRMED_STATE);
 	}
 	return "";
 

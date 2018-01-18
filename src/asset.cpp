@@ -482,7 +482,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					dbAsset.SetNull();
 				}
 				if(!dontaddtodb){
-					nLockStatus = LOCK_CONFLICT_CONFIRMED_STATE;
+					//nLockStatus = LOCK_CONFLICT_CONFIRMED_STATE;
 					if (!passetdb->EraseISLock(theAsset.vchAsset))
 					{
 						errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from asset DB");
@@ -494,7 +494,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			}
 			else {
 				if (!dontaddtodb) {
-					nLockStatus = LOCK_NOCONFLICT_CONFIRMED_STATE;
+					nLockStatus = LOCK_CONFIRMED_STATE;
 					if (fDebug)
 						LogPrintf("CONNECTED ASSET: op=%s asset=%s hash=%s height=%d fJustCheck=%d POW IS\n",
 							assetFromOp(op).c_str(),
@@ -538,7 +538,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				return true;
 			}
 			if (fJustCheck)
-				nLockStatus = LOCK_NOCONFLICT_UNCONFIRMED_STATE;
+				nLockStatus = LOCK_UNCONFIRMED_STATE;
 		}
 	}
 	if (op == OP_ASSET_UPDATE || op == OP_ASSET_TRANSFER || op == OP_ASSET_SEND)
@@ -619,7 +619,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					receiverAllocation.nBalance += amountTuple.second;
 					// adjust sender balance
 					theAsset.nBalance -= amountTuple.second;
-					if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, op, duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count(), false))
+					if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count(), false))
 					{
 						errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to write to asset allocation DB");
 						continue;
