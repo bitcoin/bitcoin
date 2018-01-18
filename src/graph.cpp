@@ -35,7 +35,7 @@ bool CreateGraphFromVTX(const std::vector<CTransaction>& blockVtx, Graph &graph,
 				}
 				mapTxIndex[mapAliasIndex[sender]].push_back(n);
 				
-				LogPrintf("CreateDAGFromBlock: found asset allocation from sender %s, nOut %d\n", sender, n);
+				LogPrintf("CreateGraphFromVTX: found asset allocation from sender %s, nOut %d\n", sender, n);
 				CAssetAllocation allocation(tx);
 				if (!allocation.listSendingAllocationAmounts.empty()) {
 					for (auto& allocationInstance : allocation.listSendingAllocationAmounts) {
@@ -47,7 +47,7 @@ bool CreateGraphFromVTX(const std::vector<CTransaction>& blockVtx, Graph &graph,
 						}
 						// the graph needs to be from index to index 
 						add_edge(vertices[mapAliasIndex[sender]], vertices[mapAliasIndex[receiver]], graph);
-						LogPrintf("CreateDAGFromBlock: add edge from %s(index %d) to %s(index %d)\n", sender, mapAliasIndex[sender], receiver, mapAliasIndex[receiver]);
+						LogPrintf("CreateGraphFromVTX: add edge from %s(index %d) to %s(index %d)\n", sender, mapAliasIndex[sender], receiver, mapAliasIndex[receiver]);
 					}
 				}
 			}

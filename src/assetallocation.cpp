@@ -392,7 +392,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 	if (op == OP_ASSET_ALLOCATION_SEND)
 	{
 		// if this is pow, then always start from a known state to recreate the new state based on what the block is saying
-		if (!fJustCheck & !dontaddtodb) {
+		if (!fJustCheck && !dontaddtodb) {
 			if (dbAssetAllocation.listSendingAllocationInputs.empty()) {
 				for (auto& amountTuple : dbAssetAllocation.listSendingAllocationAmounts) {
 					CAssetAllocation receiverAllocation;
@@ -408,9 +408,9 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 							receiverAllocation.SetNull();
 							receiverAllocation.vchAlias = receiverAllocationTuple.vchAlias;
 							receiverAllocation.vchAsset = receiverAllocationTuple.vchAsset;
-							receiverAllocation.txHash = tx.GetHash();
-							receiverAllocation.nHeight = nHeight;
 						}
+						receiverAllocation.txHash = tx.GetHash();
+						receiverAllocation.nHeight = nHeight;
 						// write the state back to previous state incase of any consensus failures below before the new write
 						if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, op, INT64_MAX, fJustCheck))
 						{
@@ -427,15 +427,15 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 				return true;
 			}
 			// if sender did not exist prior to this send then initiate it to empty balance
-			if(!passetallocationdb->ReadLastAssetAllocation(assetAllocationTuple, dbAssetAllocation)) {
+			if (!passetallocationdb->ReadLastAssetAllocation(assetAllocationTuple, dbAssetAllocation)) {
 				dbAssetAllocation.SetNull();
 				dbAssetAllocation.vchAlias = assetAllocationTuple.vchAlias;
 				dbAssetAllocation.vchAsset = assetAllocationTuple.vchAsset;
-				dbAssetAllocation.txHash = tx.GetHash();
-				dbAssetAllocation.nHeight = nHeight;
 			}
+			dbAssetAllocation.txHash = tx.GetHash();
+			dbAssetAllocation.nHeight = nHeight;
 			// write the state back to previous state incase of any consensus failures below before the new write
-			if (!passetallocationdb->WriteAssetAllocation(dbAssetAllocation, op, INT64_MAX, fJustCheck)) 
+			if (!passetallocationdb->WriteAssetAllocation(dbAssetAllocation, op, INT64_MAX, fJustCheck))
 			{
 				errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to write to asset allocation DB");
 				return true;
@@ -503,9 +503,6 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 					continue;
 				}
 				const CAssetAllocationTuple receiverAllocationTuple(theAssetAllocation.vchAsset, amountTuple.first);
-				// don't need to check for existance of allocation because it may not exist, may be creating it here for the first time for receiver
-				if (!GetAssetAllocation(receiverAllocationTuple, receiverAllocation))
-					receiverAllocation.SetNull();
 				if (fJustCheck) {
 					// check receiver alias
 					if (!GetAlias(amountTuple.first, alias))
@@ -522,12 +519,13 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 
 
 				if (!dontaddtodb) {
-					if (receiverAllocation.IsNull()) {
+					if (!GetAssetAllocation(receiverAllocationTuple, receiverAllocation)) {
+						receiverAllocation.SetNull();
 						receiverAllocation.vchAlias = receiverAllocationTuple.vchAlias;
 						receiverAllocation.vchAsset = receiverAllocationTuple.vchAsset;
-						receiverAllocation.txHash = tx.GetHash();
-						receiverAllocation.nHeight = nHeight;
 					}
+					receiverAllocation.txHash = tx.GetHash();
+					receiverAllocation.nHeight = nHeight;
 					receiverAllocation.nBalance += amountTuple.second;
 					theAssetAllocation.nBalance -= amountTuple.second;
 					if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, op, INT64_MAX, fJustCheck))
@@ -545,11 +543,11 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 		}
 	}
 
-	// set the assetallocation's txn-dependent values
-	theAssetAllocation.nHeight = nHeight;
-	theAssetAllocation.txHash = tx.GetHash();
 	// write assetallocation  
 	if (!dontaddtodb) {
+		// set the assetallocation's txn-dependent values
+		theAssetAllocation.nHeight = nHeight;
+		theAssetAllocation.txHash = tx.GetHash();
 		if (strResponse != "") {
 			paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, assetAllocationTuple.ToString(), nLockStatus);
 		}
