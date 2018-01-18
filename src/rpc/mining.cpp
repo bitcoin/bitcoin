@@ -760,7 +760,7 @@ UniValue submitblock(const JSONRPCRequest& request)
             "The 'jsonparametersobject' parameter is currently ignored.\n"
             "See https://en.bitcoin.it/wiki/BIP_0022 for full specification.\n"
 
-            "\nArguments\n"
+            "\nArguments:\n"
             "1. \"hexdata\"        (string, required) the hex-encoded block data to submit\n"
             "2. \"parameters\"     (string, optional) object of optional parameters\n"
             "    {\n"

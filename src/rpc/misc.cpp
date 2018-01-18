@@ -717,7 +717,7 @@ UniValue getaddressutxos(const JSONRPCRequest& request)
             "      ,...\n"
             "    ]\n"
             "}\n"
-            "\nResult\n"
+            "\nResult:\n"
             "[\n"
             "  {\n"
             "    \"address\"  (string) The address base58check encoded\n"
