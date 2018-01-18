@@ -60,6 +60,10 @@ public:
 	inline bool operator!=(const CAssetAllocationTuple& other) const {
 		return (this->vchAsset != other.vchAsset || this->vchAlias != other.vchAlias);
 	}
+	inline bool operator< (const CAssetAllocationTuple& right) const
+	{
+		return vchAlias < right.vchAlias;
+	}
 	inline void SetNull() {
 		vchAsset.clear();
 		vchAlias.clear();
