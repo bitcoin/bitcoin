@@ -83,9 +83,8 @@ namespace std {
 		{
 			using std::size_t;
 			using std::hash;
-			using std::vector;
-			return ((hash<vector<unsigned char>>()(k.vchAlias)
-				^ (hash<vector<unsigned char>>()(k.vchAsset) << 1)) >> 1);
+			return ((hash<string>()(stringFromVch(k.vchAlias))
+				^ (hash<string>()(stringFromVch(k.vchAsset)) << 1)) >> 1);
 		}
 	};
 
