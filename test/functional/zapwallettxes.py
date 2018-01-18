@@ -10,7 +10,7 @@
   transactions are still available.
 - restart node 0 with zapwallettxes and persistmempool, and verify that both
   the confirmed and the unconfirmed transactions are still available.
-- restart node 0 with just zapwallettxed and verify that the confirmed
+- restart node 0 with just zapwallettxes and verify that the confirmed
   transactions are still available, but that the unconfirmed transaction has
   been zapped.
 """
