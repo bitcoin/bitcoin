@@ -35,7 +35,7 @@ from test_framework.util import assert_equal, assert_greater_than, connect_nodes
 class AddressTypeTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 5
-        self.extra_args = [["-addresstype=legacy"], ["-addresstype=p2sh-segwit"], ["-addresstype=p2sh-segwit", "-changetype=bech32"], ["-addresstype=bech32"], []]
+        self.extra_args = [["-defaultaddresstype=legacy"], ["-defaultaddresstype=p2sh-segwit"], ["-defaultaddresstype=p2sh-segwit", "-defaultchangetype=bech32"], ["-defaultaddresstype=bech32"], []]
 
     def setup_network(self):
         self.setup_nodes()
