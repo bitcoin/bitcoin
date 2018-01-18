@@ -500,12 +500,12 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 		}
 		// debug
 		if (fDebug)
-			LogPrintf("CONNECTED ASSET ALLOCATION: op=%s assetallocation=%s hash=%s height=%d fJustCheck=%d at time %llu\n",
+			LogPrintf("CONNECTED ASSET ALLOCATION: op=%s assetallocation=%s hash=%s height=%d fJustCheck=%d at time %lld\n",
 				assetFromOp(op).c_str(),
 				assetAllocationTuple.ToString().c_str(),
 				tx.GetHash().ToString().c_str(),
 				nHeight,
-				fJustCheck ? 1 : 0, ms);
+				fJustCheck ? 1 : 0, (long long)ms);
 	}
     return true;
 }
