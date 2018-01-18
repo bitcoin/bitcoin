@@ -20,6 +20,7 @@
 #include "ui_interface.h"
 #include "rpc/server.h"
 #include "rpc/register.h"
+#include "script/sigcache.h"
 
 #include "test/testutil.h"
 
@@ -40,6 +41,7 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName)
         ECC_Start();
         SetupEnvironment();
         SetupNetworking();
+        InitSignatureCache();
         fPrintToDebugLog = false; // don't want to write to debug.log file
         fCheckBlockIndex = true;
         SelectParams(chainName);
@@ -61,7 +63,7 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
         ClearDatadirCache();
         pathTemp = GetTempPath() / strprintf("test_dash_%lu_%i", (unsigned long)GetTime(), (int)(GetRand(100000)));
         boost::filesystem::create_directories(pathTemp);
-        mapArgs["-datadir"] = pathTemp.string();
+        ForceSetArg("-datadir", pathTemp.string());
         mempool.setSanityCheck(1.0);
         pblocktree = new CBlockTreeDB(1 << 20, true);
         pcoinsdbview = new CCoinsViewDB(1 << 23, true);
@@ -127,7 +129,7 @@ TestChain100Setup::CreateAndProcessBlock(const std::vector<CMutableTransaction>&
     while (!CheckProofOfWork(block.GetHash(), block.nBits, chainparams.GetConsensus())) ++block.nNonce;
 
     std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(block);
-    ProcessNewBlock(chainparams, shared_pblock, true, NULL, NULL);
+    ProcessNewBlock(chainparams, shared_pblock, true, NULL);
 
     CBlock result = block;
     return result;
@@ -140,12 +142,11 @@ TestChain100Setup::~TestChain100Setup()
 
 CTxMemPoolEntry TestMemPoolEntryHelper::FromTx(const CMutableTransaction &tx, CTxMemPool *pool) {
     CTransaction txn(tx);
-    bool hasNoDependencies = pool ? pool->HasNoInputsOf(tx) : hadNoDependencies;
     // Hack to assume either its completely dependent on other mempool txs or not at all
-    CAmount inChainValue = hasNoDependencies ? txn.GetValueOut() : 0;
+    CAmount inChainValue = pool && pool->HasNoInputsOf(txn) ? txn.GetValueOut() : 0;
 
-    return CTxMemPoolEntry(txn, nFee, nTime, dPriority, nHeight,
-                           hasNoDependencies, inChainValue, spendsCoinbase, sigOpCount, lp);
+    return CTxMemPoolEntry(MakeTransactionRef(txn), nFee, nTime, dPriority, nHeight,
+                           inChainValue, spendsCoinbase, sigOpCount, lp);
 }
 
 void Shutdown(void* parg)

@@ -117,7 +117,7 @@ void SelectBaseParams(const std::string& chain)
 std::string ChainNameFromCommandLine()
 {
     bool fRegTest = GetBoolArg("-regtest", false);
-    bool fDevNet = mapArgs.count("-devnet") != 0;
+    bool fDevNet = IsArgSet("-devnet");
     bool fTestNet = GetBoolArg("-testnet", false);
 
     int nameParamsCount = (fRegTest ? 1 : 0) + (fDevNet ? 1 : 0) + (fTestNet ? 1 : 0);
@@ -136,7 +136,7 @@ std::string ChainNameFromCommandLine()
 std::string GetDevNetName()
 {
     // This function should never be called for non-devnets
-    assert(mapArgs.count("-devnet"));
+    assert(IsArgSet("-devnet"));
     std::string devNetName = GetArg("-devnet", "");
     return "devnet" + (devNetName.empty() ? "" : "-" + devNetName);
 }

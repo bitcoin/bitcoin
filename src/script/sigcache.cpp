@@ -11,20 +11,29 @@
 #include "uint256.h"
 #include "util.h"
 
+#include "cuckoocache.h"
 #include <boost/thread.hpp>
-#include <boost/unordered_set.hpp>
 
 namespace {
 
 /**
  * We're hashing a nonce into the entries themselves, so we don't need extra
  * blinding in the set hash computation.
+ *
+ * This may exhibit platform endian dependent behavior but because these are
+ * nonced hashes (random) and this state is only ever used locally it is safe.
+ * All that matters is local consistency.
  */
-class CSignatureCacheHasher
+class SignatureCacheHasher
 {
 public:
-    size_t operator()(const uint256& key) const {
-        return key.GetCheapHash();
+    template <uint8_t hash_select>
+    uint32_t operator()(const uint256& key) const
+    {
+        static_assert(hash_select <8, "SignatureCacheHasher only has 8 hashes available.");
+        uint32_t u;
+        std::memcpy(&u, key.begin()+4*hash_select, 4);
+        return u;
     }
 };
 
@@ -38,10 +47,9 @@ class CSignatureCache
 private:
      //! Entries are SHA256(nonce || signature hash || public key || signature):
     uint256 nonce;
-    typedef boost::unordered_set<uint256, CSignatureCacheHasher> map_type;
+    typedef CuckooCache::cache<uint256, SignatureCacheHasher> map_type;
     map_type setValid;
     boost::shared_mutex cs_sigcache;
-
 
 public:
     CSignatureCache()
@@ -56,58 +64,51 @@ public:
     }
 
     bool
-    Get(const uint256& entry)
+    Get(const uint256& entry, const bool erase)
     {
         boost::shared_lock<boost::shared_mutex> lock(cs_sigcache);
-        return setValid.count(entry);
+        return setValid.contains(entry, erase);
     }
 
-    void Erase(const uint256& entry)
+    void Set(uint256& entry)
     {
         boost::unique_lock<boost::shared_mutex> lock(cs_sigcache);
-        setValid.erase(entry);
-    }
-
-    void Set(const uint256& entry)
-    {
-        size_t nMaxCacheSize = GetArg("-maxsigcachesize", DEFAULT_MAX_SIG_CACHE_SIZE) * ((size_t) 1 << 20);
-        if (nMaxCacheSize <= 0) return;
-
-        boost::unique_lock<boost::shared_mutex> lock(cs_sigcache);
-        while (memusage::DynamicUsage(setValid) > nMaxCacheSize)
-        {
-            map_type::size_type s = GetRand(setValid.bucket_count());
-            map_type::local_iterator it = setValid.begin(s);
-            if (it != setValid.end(s)) {
-                setValid.erase(*it);
-            }
-        }
-
         setValid.insert(entry);
+    }
+    uint32_t setup_bytes(size_t n)
+    {
+        return setValid.setup_bytes(n);
     }
 };
 
+/* In previous versions of this code, signatureCache was a local static variable
+ * in CachingTransactionSignatureChecker::VerifySignature.  We initialize
+ * signatureCache outside of VerifySignature to avoid the atomic operation per
+ * call overhead associated with local static variables even though
+ * signatureCache could be made local to VerifySignature.
+*/
+static CSignatureCache signatureCache;
+}
+
+// To be called once in AppInit2/TestingSetup to initialize the signatureCache
+void InitSignatureCache()
+{
+    size_t nMaxCacheSize = GetArg("-maxsigcachesize", DEFAULT_MAX_SIG_CACHE_SIZE) * ((size_t) 1 << 20);
+    if (nMaxCacheSize <= 0) return;
+    size_t nElems = signatureCache.setup_bytes(nMaxCacheSize);
+    LogPrintf("Using %zu MiB out of %zu requested for signature cache, able to store %zu elements\n",
+            (nElems*sizeof(uint256)) >>20, nMaxCacheSize>>20, nElems);
 }
 
 bool CachingTransactionSignatureChecker::VerifySignature(const std::vector<unsigned char>& vchSig, const CPubKey& pubkey, const uint256& sighash) const
 {
-    static CSignatureCache signatureCache;
-
     uint256 entry;
     signatureCache.ComputeEntry(entry, sighash, vchSig, pubkey);
-
-    if (signatureCache.Get(entry)) {
-        if (!store) {
-            signatureCache.Erase(entry);
-        }
+    if (signatureCache.Get(entry, !store))
         return true;
-    }
-
     if (!TransactionSignatureChecker::VerifySignature(vchSig, pubkey, sighash))
         return false;
-
-    if (store) {
+    if (store)
         signatureCache.Set(entry);
-    }
     return true;
 }

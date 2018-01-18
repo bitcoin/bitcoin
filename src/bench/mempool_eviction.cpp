@@ -18,7 +18,7 @@ static void AddTx(const CTransaction& tx, const CAmount& nFee, CTxMemPool& pool)
     unsigned int sigOpCost = 4;
     LockPoints lp;
     pool.addUnchecked(tx.GetHash(), CTxMemPoolEntry(
-                                        tx, nFee, nTime, dPriority, nHeight, pool.HasNoInputsOf(tx),
+                                        MakeTransactionRef(tx), nFee, nTime, dPriority, nHeight,
                                         tx.GetValueOut(), spendsCoinbase, sigOpCost, lp));
 }
 

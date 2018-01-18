@@ -11,9 +11,13 @@ gradually.
   - Braces on new lines for namespaces, classes, functions, methods.
   - Braces on the same line for everything else.
   - 4 space indentation (no tabs) for every block except namespaces.
-  - No indentation for public/protected/private or for namespaces.
+  - No indentation for `public`/`protected`/`private` or for `namespace`.
   - No extra spaces inside parenthesis; don't do ( this )
-  - No space after function names; one space after if, for and while.
+  - No space after function names; one space after `if`, `for` and `while`.
+  - If an `if` only has a single-statement then-clause, it can appear
+    on the same line as the if, without braces. In every other case,
+    braces are required, and the then and else clauses must appear
+    correctly indented on a new line.
   - `++i` is preferred over `i++`.
   - Align pointers and references to the left i.e. use `type& var` and not `type &var`.
 
@@ -23,14 +27,18 @@ namespace foo
 {
 class Class
 {
-    bool Function(char* psz, int n, const string& s)
+    bool Function(const std::string& s, int n)
     {
         // Comment summarising what this section of code does
         for (int i = 0; i < n; ++i) {
             // When something fails, return early
-            if (!Something())
-                return false;
+            if (!Something()) return false;
             ...
+            if (SomethingElse()) {
+                DoMore();
+            } else {
+                DoLess();
+            }
         }
 
         // Success return is usually at the end

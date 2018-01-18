@@ -119,7 +119,6 @@ BOOST_AUTO_TEST_CASE(MempoolIndexingTest)
 {
     CTxMemPool pool(CFeeRate(0));
     TestMemPoolEntryHelper entry;
-    entry.hadNoDependencies = true;
 
     /* 3rd highest fee */
     CMutableTransaction tx1 = CMutableTransaction();
@@ -322,7 +321,6 @@ BOOST_AUTO_TEST_CASE(MempoolAncestorIndexingTest)
 {
     CTxMemPool pool(CFeeRate(0));
     TestMemPoolEntryHelper entry;
-    entry.hadNoDependencies = true;
 
     /* 3rd highest fee */
     CMutableTransaction tx1 = CMutableTransaction();

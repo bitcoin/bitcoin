@@ -17,7 +17,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-using namespace std;
+extern std::map<std::string, std::string> mapArgs;
 
 BOOST_FIXTURE_TEST_SUITE(util_tests, BasicTestingSetup)
 
@@ -115,13 +115,13 @@ BOOST_AUTO_TEST_CASE(util_ParseParameters)
     // -a, -b and -ccc end up in map, -d ignored because it is after
     // a non-option argument (non-GNU option parsing)
     BOOST_CHECK(mapArgs.size() == 3 && mapMultiArgs.size() == 3);
-    BOOST_CHECK(mapArgs.count("-a") && mapArgs.count("-b") && mapArgs.count("-ccc")
-                && !mapArgs.count("f") && !mapArgs.count("-d"));
+    BOOST_CHECK(IsArgSet("-a") && IsArgSet("-b") && IsArgSet("-ccc")
+                && !IsArgSet("f") && !IsArgSet("-d"));
     BOOST_CHECK(mapMultiArgs.count("-a") && mapMultiArgs.count("-b") && mapMultiArgs.count("-ccc")
                 && !mapMultiArgs.count("f") && !mapMultiArgs.count("-d"));
 
     BOOST_CHECK(mapArgs["-a"] == "" && mapArgs["-ccc"] == "multiple");
-    BOOST_CHECK(mapMultiArgs["-ccc"].size() == 2);
+    BOOST_CHECK(mapMultiArgs.at("-ccc").size() == 2);
 }
 
 BOOST_AUTO_TEST_CASE(util_GetArg)
@@ -571,14 +571,14 @@ BOOST_AUTO_TEST_CASE(version_info_helper)
     BOOST_CHECK(StringVersionToInt("1.1.1") == 0x010101);
     BOOST_CHECK(IntVersionToString(0x010101) == "1.1.1");
 
-    BOOST_CHECK_THROW(StringVersionToInt("1.1.hgdghfgf"), bad_cast);
-    BOOST_CHECK_THROW(StringVersionToInt("1.1"), bad_cast);
-    BOOST_CHECK_THROW(StringVersionToInt("1.1.1f"), bad_cast);
-    BOOST_CHECK_THROW(StringVersionToInt("1.1.1000"), bad_cast);
-    BOOST_CHECK_THROW(StringVersionToInt("10"), bad_cast);
-    BOOST_CHECK_THROW(StringVersionToInt("1.1.1.1"), bad_cast);
-    BOOST_CHECK_THROW(IntVersionToString(0x01010101), bad_cast);
-    BOOST_CHECK_THROW(IntVersionToString(0), bad_cast);
+    BOOST_CHECK_THROW(StringVersionToInt("1.1.hgdghfgf"), std::bad_cast);
+    BOOST_CHECK_THROW(StringVersionToInt("1.1"), std::bad_cast);
+    BOOST_CHECK_THROW(StringVersionToInt("1.1.1f"), std::bad_cast);
+    BOOST_CHECK_THROW(StringVersionToInt("1.1.1000"), std::bad_cast);
+    BOOST_CHECK_THROW(StringVersionToInt("10"), std::bad_cast);
+    BOOST_CHECK_THROW(StringVersionToInt("1.1.1.1"), std::bad_cast);
+    BOOST_CHECK_THROW(IntVersionToString(0x01010101), std::bad_cast);
+    BOOST_CHECK_THROW(IntVersionToString(0), std::bad_cast);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

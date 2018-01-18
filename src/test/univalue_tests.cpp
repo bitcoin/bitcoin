@@ -12,8 +12,6 @@
 
 #include <boost/test/unit_test.hpp>
 
-using namespace std;
-
 BOOST_FIXTURE_TEST_SUITE(univalue_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(univalue_constructor)
@@ -53,7 +51,7 @@ BOOST_AUTO_TEST_CASE(univalue_constructor)
     BOOST_CHECK(v7.isNum());
     BOOST_CHECK_EQUAL(v7.getValStr(), "-7.21");
 
-    string vs("yawn");
+    std::string vs("yawn");
     UniValue v8(vs);
     BOOST_CHECK(v8.isStr());
     BOOST_CHECK_EQUAL(v8.getValStr(), "yawn");
@@ -69,41 +67,41 @@ BOOST_AUTO_TEST_CASE(univalue_typecheck)
     UniValue v1;
     BOOST_CHECK(v1.setNumStr("1"));
     BOOST_CHECK(v1.isNum());
-    BOOST_CHECK_THROW(v1.get_bool(), runtime_error);
+    BOOST_CHECK_THROW(v1.get_bool(), std::runtime_error);
 
     UniValue v2;
     BOOST_CHECK(v2.setBool(true));
     BOOST_CHECK_EQUAL(v2.get_bool(), true);
-    BOOST_CHECK_THROW(v2.get_int(), runtime_error);
+    BOOST_CHECK_THROW(v2.get_int(), std::runtime_error);
 
     UniValue v3;
     BOOST_CHECK(v3.setNumStr("32482348723847471234"));
-    BOOST_CHECK_THROW(v3.get_int64(), runtime_error);
+    BOOST_CHECK_THROW(v3.get_int64(), std::runtime_error);
     BOOST_CHECK(v3.setNumStr("1000"));
     BOOST_CHECK_EQUAL(v3.get_int64(), 1000);
 
     UniValue v4;
     BOOST_CHECK(v4.setNumStr("2147483648"));
     BOOST_CHECK_EQUAL(v4.get_int64(), 2147483648ULL);
-    BOOST_CHECK_THROW(v4.get_int(), runtime_error);
+    BOOST_CHECK_THROW(v4.get_int(), std::runtime_error);
     BOOST_CHECK(v4.setNumStr("1000"));
     BOOST_CHECK_EQUAL(v4.get_int(), 1000);
-    BOOST_CHECK_THROW(v4.get_str(), runtime_error);
+    BOOST_CHECK_THROW(v4.get_str(), std::runtime_error);
     BOOST_CHECK_EQUAL(v4.get_real(), 1000);
-    BOOST_CHECK_THROW(v4.get_array(), runtime_error);
-    BOOST_CHECK_THROW(v4.getKeys(), runtime_error);
-    BOOST_CHECK_THROW(v4.getValues(), runtime_error);
-    BOOST_CHECK_THROW(v4.get_obj(), runtime_error);
+    BOOST_CHECK_THROW(v4.get_array(), std::runtime_error);
+    BOOST_CHECK_THROW(v4.getKeys(), std::runtime_error);
+    BOOST_CHECK_THROW(v4.getValues(), std::runtime_error);
+    BOOST_CHECK_THROW(v4.get_obj(), std::runtime_error);
 
     UniValue v5;
     BOOST_CHECK(v5.read("[true, 10]"));
     BOOST_CHECK_NO_THROW(v5.get_array());
     std::vector<UniValue> vals = v5.getValues();
-    BOOST_CHECK_THROW(vals[0].get_int(), runtime_error);
+    BOOST_CHECK_THROW(vals[0].get_int(), std::runtime_error);
     BOOST_CHECK_EQUAL(vals[0].get_bool(), true);
 
     BOOST_CHECK_EQUAL(vals[1].get_int(), 10);
-    BOOST_CHECK_THROW(vals[1].get_bool(), runtime_error);
+    BOOST_CHECK_THROW(vals[1].get_bool(), std::runtime_error);
 }
 
 BOOST_AUTO_TEST_CASE(univalue_set)
@@ -172,13 +170,13 @@ BOOST_AUTO_TEST_CASE(univalue_array)
     UniValue v((int64_t)1023LL);
     BOOST_CHECK(arr.push_back(v));
 
-    string vStr("zippy");
+    std::string vStr("zippy");
     BOOST_CHECK(arr.push_back(vStr));
 
     const char *s = "pippy";
     BOOST_CHECK(arr.push_back(s));
 
-    vector<UniValue> vec;
+    std::vector<UniValue> vec;
     v.setStr("boing");
     vec.push_back(v);
 
@@ -206,7 +204,7 @@ BOOST_AUTO_TEST_CASE(univalue_array)
 BOOST_AUTO_TEST_CASE(univalue_object)
 {
     UniValue obj(UniValue::VOBJ);
-    string strKey, strVal;
+    std::string strKey, strVal;
     UniValue v;
 
     strKey = "age";
@@ -266,7 +264,7 @@ BOOST_AUTO_TEST_CASE(univalue_object)
 
     BOOST_CHECK(!obj.exists("nyuknyuknyuk"));
 
-    map<string, UniValue::VType> objTypes;
+    std::map<std::string, UniValue::VType> objTypes;
     objTypes["age"] = UniValue::VNUM;
     objTypes["first"] = UniValue::VSTR;
     objTypes["last"] = UniValue::VSTR;
@@ -294,7 +292,7 @@ BOOST_AUTO_TEST_CASE(univalue_readwrite)
     UniValue v;
     BOOST_CHECK(v.read(json1));
 
-    string strJson1(json1);
+    std::string strJson1(json1);
     BOOST_CHECK(v.read(strJson1));
 
     BOOST_CHECK(v.isArray());
@@ -333,4 +331,3 @@ BOOST_AUTO_TEST_CASE(univalue_readwrite)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-
