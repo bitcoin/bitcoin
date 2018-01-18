@@ -29,19 +29,6 @@ void AssetAllocationTxToJSON(const int op, const std::vector<unsigned char> &vch
 std::string assetAllocationFromOp(int op);
 bool RemoveAssetAllocationScriptPrefix(const CScript& scriptIn, CScript& scriptOut);
 
-namespace std {
-
-	template <>
-	struct hash<CAssetAllocationTuple>
-	{
-		size_t operator()(const CAssetAllocationTuple& k) const
-		{
-			return ((hash<vector<unsigned char> >()(k.vchAlias)
-				^ (hash<vector<unsigned char> >()(k.vchAsset) << 1)) >> 1);
-		}
-	};
-
-}
 class CAssetAllocationTuple {
 public:
 	std::vector<unsigned char> vchAsset;
@@ -87,6 +74,19 @@ public:
 		return (vchAsset.empty() && vchAlias.empty());
 	}
 };
+namespace std {
+
+	template <>
+	struct hash<CAssetAllocationTuple>
+	{
+		size_t operator()(const CAssetAllocationTuple& k) const
+		{
+			return ((hash<vector<unsigned char> >()(k.vchAlias)
+				^ (hash<vector<unsigned char> >()(k.vchAsset) << 1)) >> 1);
+		}
+	};
+
+}
 typedef std::vector<std::pair<std::vector<unsigned char>, std::vector<CRange> > > RangeInputArrayTuples;
 typedef std::vector<std::pair<std::vector<unsigned char>, CAmount > > RangeAmountTuples;
 typedef std::map<uint256, int64_t> ArrivalTimesMap;
