@@ -549,7 +549,7 @@ std::string FormatStateMessage(const CValidationState &state)
 // SYSCOIN
 bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight,const CBlock& block)
 {
-	static unordered_set<CAssetAllocationTuple> assetAllocationsThisBlock;
+	static unordered_set<CAssetAllocationTuple, AssetAllocationTupleHasher> assetAllocationsThisBlock;
 	vector<vector<unsigned char> > vvchArgs;
 	vector<vector<unsigned char> > vvchAliasArgs;
 	int op;
