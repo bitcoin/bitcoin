@@ -30,7 +30,7 @@ namespace RPCServer
 /** Wrapper for UniValue::VType, which includes typeAny:
  * Used to denote don't care type. Only used by RPCTypeCheckObj */
 struct UniValueType {
-    explicit UniValueType(UniValue::VType _type) : typeAny(false), type(_type) {}
+    UniValueType(UniValue::VType _type) : typeAny(false), type(_type) {}
     UniValueType() : typeAny(true) {}
     bool typeAny;
     UniValue::VType type;
@@ -69,12 +69,12 @@ bool RPCIsInWarmup(std::string *outStatus);
  * the right number of arguments are passed, just that any passed are the correct type.
  */
 void RPCTypeCheck(const UniValue& params,
-                  const std::list<UniValue::VType>& typesExpected, bool fAllowNull=false);
+                  const std::list<UniValueType>& typesExpected, bool fAllowNull=false);
 
 /**
  * Type-check one argument; throws JSONRPCError if wrong type given.
  */
-void RPCTypeCheckArgument(const UniValue& value, UniValue::VType typeExpected);
+void RPCTypeCheckArgument(const UniValue& value, const UniValueType& typeExpected);
 
 /*
   Check for expected keys/value types in an Object.
