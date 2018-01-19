@@ -981,16 +981,17 @@ bool CBlockPolicyEstimator::Read(CAutoFile& filein)
     return true;
 }
 
-void CBlockPolicyEstimator::FlushUnconfirmed(CTxMemPool& pool) {
+void CBlockPolicyEstimator::FlushUnconfirmed() {
     int64_t startclear = GetTimeMicros();
-    std::vector<uint256> txids;
-    pool.queryHashes(txids);
     LOCK(cs_feeEstimator);
-    for (auto& txid : txids) {
-        removeTx(txid, false);
+    size_t num_entries = mapMemPoolTxs.size();
+    // Remove every entry in mapMemPoolTxs
+    while (!mapMemPoolTxs.empty()) {
+        auto mi = mapMemPoolTxs.begin();
+        removeTx(mi->first, false); // this calls erase() on mapMemPoolTxs
     }
     int64_t endclear = GetTimeMicros();
-    LogPrint(BCLog::ESTIMATEFEE, "Recorded %u unconfirmed txs from mempool in %gs\n",txids.size(), (endclear - startclear)*0.000001);
+    LogPrint(BCLog::ESTIMATEFEE, "Recorded %u unconfirmed txs from mempool in %gs\n", num_entries, (endclear - startclear)*0.000001);
 }
 
 FeeFilterRounder::FeeFilterRounder(const CFeeRate& minIncrementalFee)
