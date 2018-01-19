@@ -172,15 +172,13 @@ UniValue getpeerinfo(const JSONRPCRequest& request)
 
         UniValue sendPerMsgCmd(UniValue::VOBJ);
         for (const mapMsgCmdSize::value_type &i : stats.mapSendBytesPerMsgCmd) {
-            if (i.second > 0)
-                sendPerMsgCmd.push_back(Pair(i.first, i.second));
+            sendPerMsgCmd.pushKV(i.first, i.second);
         }
         obj.push_back(Pair("bytessent_per_msg", sendPerMsgCmd));
 
         UniValue recvPerMsgCmd(UniValue::VOBJ);
         for (const mapMsgCmdSize::value_type &i : stats.mapRecvBytesPerMsgCmd) {
-            if (i.second > 0)
-                recvPerMsgCmd.push_back(Pair(i.first, i.second));
+            recvPerMsgCmd.pushKV(i.first, i.second);
         }
         obj.push_back(Pair("bytesrecv_per_msg", recvPerMsgCmd));
 
