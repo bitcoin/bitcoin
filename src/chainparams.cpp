@@ -483,13 +483,17 @@ public:
 
         checkpointData = (CCheckpointData) {
             boost::assign::map_list_of
-            ( 0, uint256S("0x000008ca1832a4baf228eb1553c03d3a2c8e02399550dd6ea8d65cec3ef23d2e"))
-            ( 1, devnetGenesis.GetHash()),
-            0,
-            0,
-            0
+            (      0, uint256S("0x000008ca1832a4baf228eb1553c03d3a2c8e02399550dd6ea8d65cec3ef23d2e"))
+            (      1, devnetGenesis.GetHash())
         };
 
+        chainTxData = ChainTxData{
+            // Data as of block 0000024bc3f4f4cb30d29827c13d921ad77d2c6072e586c7f60d83c2722cdcc5 (height 2999)
+            devnetGenesis.GetBlockTime(),
+            2,     // * total number of transactions between genesis and last checkpoint
+            //   (the tx=... number in the SetBestChain debug.log lines)
+            0.01        // * estimated number of transactions per day after checkpoint
+        };
     }
 };
 static CDevNetParams *devNetParams;
