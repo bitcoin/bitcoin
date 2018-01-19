@@ -192,7 +192,7 @@ public:
 	bool EraseISArrivalTime(const CAssetAllocationTuple& assetAllocationTuple, const uint256& txid) {
 		ArrivalTimesMap arrivalTimes;
 		ReadISArrivalTimes(assetAllocationTuple, arrivalTimes);
-		ArrivalTimesMap::iterator it = arrivalTimes.find(txid);
+		ArrivalTimesMap::const_iterator it = arrivalTimes.find(txid);
 		if (it != arrivalTimes.end())
 			arrivalTimes.erase(it);
 		if(arrivalTimes.size() > 0)

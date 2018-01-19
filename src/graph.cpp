@@ -68,7 +68,7 @@ bool CreateGraphFromVTX(const std::vector<CTransaction>& blockVtx, Graph &graph,
 			if (DecodeAssetAllocationTx(tx, op, nOut, vvchArgs))
 			{
 				const string& sender = stringFromVch(vvchAliasArgs[0]);
-				AliasMap::iterator it = mapAliasIndex.find(sender);
+				AliasMap::const_iterator it = mapAliasIndex.find(sender);
 				if (it == mapAliasIndex.end()) {
 					vertices.push_back(add_vertex(graph));
 					mapAliasIndex[sender] = vertices.size() - 1;
@@ -80,7 +80,7 @@ bool CreateGraphFromVTX(const std::vector<CTransaction>& blockVtx, Graph &graph,
 				if (!allocation.listSendingAllocationAmounts.empty()) {
 					for (auto& allocationInstance : allocation.listSendingAllocationAmounts) {
 						const string& receiver = stringFromVch(allocationInstance.first);
-						AliasMap::iterator it = mapAliasIndex.find(receiver);
+						AliasMap::const_iterator it = mapAliasIndex.find(receiver);
 						if (it == mapAliasIndex.end()) {
 							vertices.push_back(add_vertex(graph));
 							mapAliasIndex[receiver] = vertices.size() - 1;
@@ -148,7 +148,7 @@ bool DAGTopologicalSort(std::vector<CTransaction>& blockVtx, const std::vector<i
 	for (auto& nVertex : c) {
 		LogPrintf("add sys tx in sorted order\n");
 		// this may not find the vertex if its a receiver (we only want to process sender as tx is tied to sender)
-		IndexMap::iterator it = mapTxIndex.find(nVertex);
+		IndexMap::const_iterator it = mapTxIndex.find(nVertex);
 		if (it == mapTxIndex.end())
 			continue;
 		const std::vector<int> &vecTx = (*it).second;
