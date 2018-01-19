@@ -65,7 +65,7 @@ struct cycle_visitor
 	}
 	ClearedVertices& cleared;
 };
-void OrderBasedOnArrivalTime(std::vector<CTransaction>& blockVtx);
+bool OrderBasedOnArrivalTime(std::vector<CTransaction>& blockVtx);
 bool CreateGraphFromVTX(const std::vector<CTransaction>& blockVtx, Graph &graph, std::vector<vertex_descriptor> &vertices, IndexMap &mapTxIndex);
 void GraphRemoveCycles(const std::vector<CTransaction>& blockVtx, std::vector<int> &conflictedIndexes, const Graph& graph, const std::vector<vertex_descriptor> &vertices, const IndexMap &mapTxIndex);
 bool DAGTopologicalSort(std::vector<CTransaction>& blockVtx, const std::vector<int> &conflictedIndexes, const Graph& graph, const IndexMap &mapTxIndex);

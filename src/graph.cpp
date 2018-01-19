@@ -107,7 +107,7 @@ void GraphRemoveCycles(const std::vector<CTransaction>& blockVtx, std::vector<in
 	for (auto& nVertex : clearedVertices) {
 		
 		LogPrintf("trying to clear vertex %d\n", nVertex);
-		IndexMap::iterator it = mapTxIndex.find(nVertex);
+		IndexMap::const_iterator it = mapTxIndex.find(nVertex);
 		if (it == mapTxIndex.end())
 			continue;
 		// remove from graph
