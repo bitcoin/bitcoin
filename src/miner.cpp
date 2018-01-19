@@ -282,8 +282,11 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
 					}
 				}
 			}
-		OrderBasedOnArrivalTime(pblock->vtx);
-		
+		}
+		if (!OrderBasedOnArrivalTime(pblock->vtx))
+		{
+			throw std::runtime_error(strprintf("OrderBasedOnArrivalTime failed!"));
+		}
 		// SYSCOIN
 		CAmount nTotalRewardWithMasternodes;
 		CAmount blockReward = GetBlockSubsidy(nHeight, Params().GetConsensus(), nTotalRewardWithMasternodes);

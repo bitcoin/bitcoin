@@ -7,7 +7,7 @@
 using namespace boost;
 using namespace std;
 typedef typename std::vector<int> container;
-void OrderBasedOnArrivalTime(std::vector<CTransaction>& blockVtx) {
+bool OrderBasedOnArrivalTime(std::vector<CTransaction>& blockVtx) {
 	std::vector<vector<unsigned char> > vvchArgs;
 	std::vector<vector<unsigned char> > vvchAliasArgs;
 	std::vector<CTransaction> orderedVtx;
@@ -50,6 +50,7 @@ void OrderBasedOnArrivalTime(std::vector<CTransaction>& blockVtx) {
 		return false;
 	}
 	blockVtx = orderedVtx;
+	return true;
 }
 bool CreateGraphFromVTX(const std::vector<CTransaction>& blockVtx, Graph &graph, std::vector<vertex_descriptor> &vertices, IndexMap &mapTxIndex) {
 	AliasMap mapAliasIndex;
@@ -156,7 +157,7 @@ bool DAGTopologicalSort(std::vector<CTransaction>& blockVtx, const std::vector<i
 			if (nIndex >= blockVtx.size())
 				continue;
 			newVtx.push_back(blockVtx[nIndex]);
-			ordered += strprintf("%d (txhash %s)\n", nOut, blockVtx[nIndex].GetHash().GetHex());
+			ordered += strprintf("%d (txhash %s)\n", nIndex, blockVtx[nIndex].GetHash().GetHex());
 		}
 	}
 	LogPrintf("topological ordering: %s\n", ordered);
@@ -178,7 +179,7 @@ bool DAGTopologicalSort(std::vector<CTransaction>& blockVtx, const std::vector<i
 			newVtx.push_back(blockVtx[nOut]);
 		}
 	}
-	LogPrintf("newVtx size %d vs blockVtx size %d\n", newVtx.size(), pblock->vtx.size());
+	LogPrintf("newVtx size %d vs blockVtx size %d\n", newVtx.size(), blockVtx.size());
 	if (blockVtx.size() != newVtx.size())
 	{
 		LogPrintf("DAGTopologicalSort: sorted block transaction count does not match unsorted block transaction count!\n");

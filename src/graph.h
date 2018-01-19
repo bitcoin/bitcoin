@@ -13,7 +13,7 @@
 #include "miner.h"
 typedef boost::adjacency_list< boost::vecS, boost::vecS, boost::directedS > Graph;
 typedef boost::graph_traits<Graph> Traits;
-typedef typename boost::Traits::vertex_descriptor vertex_descriptor;
+typedef typename Traits::vertex_descriptor vertex_descriptor;
 typedef std::map<int, std::vector<int> > IndexMap;
 typedef std::map<std::string, int> AliasMap;
 template <class T, class Compare = std::less<T> >
