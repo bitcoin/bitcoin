@@ -458,8 +458,7 @@ const CCoins* GetUTXOCoins(const COutPoint& outpoint)
 {
 	CCoinsViewCache &view = *pcoinsTip;
 	const CCoins* coins = view.AccessCoins(outpoint.hash);
-
-	if ((unsigned int)outpoint.n >= coins->vout.size() || coins->vout[outpoint.n].IsNull())
+	if (!coins || (unsigned int)outpoint.n >= coins->vout.size() || coins->vout[outpoint.n].IsNull())
 		return NULL;
 	return coins;
 }

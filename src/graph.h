@@ -11,8 +11,8 @@
 #include <unordered_map>
 #include <vector>
 #include "miner.h"
-typedef std::map<int, vector<int> > IndexMap;
-typedef std::map<string, int> AliasMap;
+typedef std::map<int, std::vector<int> > IndexMap;
+typedef std::map<std::string, int> AliasMap;
 template <class T, class Compare = std::less<T> >
 struct sorted_vector {
 	std::vector<T> V;
