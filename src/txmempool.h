@@ -379,8 +379,9 @@ public:
  *
  * mapTx is a boost::multi_index that sorts the mempool on 4 criteria:
  * - transaction hash
- * - feerate [we use max(feerate of tx, feerate of tx with all descendants)]
+ * - descendant feerate [we use max(feerate of tx, feerate of tx with all descendants)]
  * - time in mempool
+ * - ancestor feerate [we use min(feerate of tx, feerate of tx with all unconfirmed ancestors)]
  *
  * Note: the term "descendant" refers to in-mempool transactions that depend on
  * this one, while "ancestor" refers to in-mempool transactions that a given
