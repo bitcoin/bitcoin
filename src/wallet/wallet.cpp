@@ -48,6 +48,7 @@ CFeeRate payTxFee(DEFAULT_TRANSACTION_FEE);
 unsigned int nTxConfirmTarget = DEFAULT_TX_CONFIRM_TARGET;
 bool bSpendZeroConfChange = DEFAULT_SPEND_ZEROCONF_CHANGE;
 bool fSendFreeTransactions = DEFAULT_SEND_FREE_TRANSACTIONS;
+bool bBIP69Enabled = true;
 
 const char * DEFAULT_WALLET_DAT = "wallet.dat";
 
@@ -3607,9 +3608,11 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
                     txNew.vin.push_back(txin);
                 }
 
-                sort(txNew.vin.begin(), txNew.vin.end(), CompareInputBIP69());
-                sort(vecTxDSInTmp.begin(), vecTxDSInTmp.end(), CompareInputBIP69());
-                sort(txNew.vout.begin(), txNew.vout.end(), CompareOutputBIP69());
+                if (bBIP69Enabled) {
+                    sort(txNew.vin.begin(), txNew.vin.end(), CompareInputBIP69());
+                    sort(vecTxDSInTmp.begin(), vecTxDSInTmp.end(), CompareInputBIP69());
+                    sort(txNew.vout.begin(), txNew.vout.end(), CompareOutputBIP69());
+                }
 
                 // If there was change output added before, we must update its position now
                 if (nChangePosInOut != -1) {

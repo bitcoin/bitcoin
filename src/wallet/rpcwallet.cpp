@@ -2747,6 +2747,23 @@ UniValue fundrawtransaction(const JSONRPCRequest& request)
     return result;
 }
 
+UniValue setbip69enabled(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() != 1)
+        throw runtime_error(
+            "setbip69enabled enable\n"
+                "\nEnable/Disable BIP69 input/output sorting (-regtest only)\n"
+                "\nArguments:\n"
+                "1. enable  (bool, required) true or false"
+        );
+    if (Params().NetworkIDString() != CBaseChainParams::REGTEST)
+        throw runtime_error("setbip69enabled for regression testing (-regtest mode) only");
+
+    bBIP69Enabled = request.params[0].get_bool();
+
+    return NullUniValue;
+}
+
 extern UniValue dumpprivkey(const JSONRPCRequest& request); // in rpcdump.cpp
 extern UniValue importprivkey(const JSONRPCRequest& request);
 extern UniValue importaddress(const JSONRPCRequest& request);
@@ -2814,6 +2831,8 @@ static const CRPCCommand commands[] =
     { "wallet",             "instantsendtoaddress",     &instantsendtoaddress,     false,  {"address","amount","comment","comment_to","subtractfeefromamount"} },
     { "wallet",             "dumphdinfo",               &dumphdinfo,               true,   {} },
     { "wallet",             "importelectrumwallet",     &importelectrumwallet,     true,   {"filename", "index"} },
+
+    { "hidden",             "setbip69enabled",          &setbip69enabled,          true,   {} },
 };
 
 void RegisterWalletRPCCommands(CRPCTable &t)
