@@ -617,8 +617,8 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight,con
 		sortedBlock.vtx = block.vtx;
 		Graph graph;
 		std::vector<vertex_descriptor> vertices;
+		IndexMap mapTxIndex;
 		if (CreateGraphFromVTX(sortedBlock.vtx, graph, vertices, mapTxIndex)) {
-			IndexMap mapTxIndex;
 			std::vector<int> conflictedIndexes;
 			GraphRemoveCycles(sortedBlock.vtx, conflictedIndexes, graph, vertices, mapTxIndex);
 			if (!sortedBlock.vtx.empty()) {
