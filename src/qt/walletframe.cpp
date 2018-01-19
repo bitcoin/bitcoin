@@ -179,7 +179,13 @@ void WalletFrame::unlockWallet()
     if (walletView)
         walletView->unlockWallet();
 }
-
+void WalletFrame::unlockWalletAndKeepUnlocked()
+{
+    WalletView *walletView = currentWalletView();
+    if (walletView)
+        walletView->requestUnlockWallet();
+}
+  
 void WalletFrame::usedSendingAddresses()
 {
     WalletView *walletView = currentWalletView();
