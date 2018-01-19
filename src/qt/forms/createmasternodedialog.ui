@@ -6,133 +6,80 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>250</width>
+    <width>300</width>
     <height>282</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Create a New Masternode</string>
   </property>
-  <widget class="QDialogButtonBox" name="buttonBox">
-   <property name="geometry">
-    <rect>
-     <x>34</x>
-     <y>213</y>
-     <width>180</width>
-     <height>32</height>
-    </rect>
-   </property>
-   <property name="orientation">
-    <enum>Qt::Horizontal</enum>
-   </property>
-   <property name="standardButtons">
-    <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
-   </property>
-  </widget>
-  <widget class="QLineEdit" name="alias">
-   <property name="geometry">
-    <rect>
-     <x>40</x>
-     <y>53</y>
-     <width>171</width>
-     <height>27</height>
-    </rect>
-   </property>
-  </widget>
-  <widget class="QLineEdit" name="ip">
-   <property name="geometry">
-    <rect>
-     <x>40</x>
-     <y>113</y>
-     <width>171</width>
-     <height>27</height>
-    </rect>
-   </property>
-  </widget>
-  <widget class="QLabel" name="aliasLabel">
-   <property name="geometry">
-    <rect>
-     <x>40</x>
-     <y>33</y>
-     <width>67</width>
-     <height>17</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Alias*</string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="ipLabel">
-   <property name="geometry">
-    <rect>
-     <x>40</x>
-     <y>93</y>
-     <width>181</width>
-     <height>17</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>IP Address (without port)*</string>
-   </property>
-  </widget>
-  <widget class="QLineEdit" name="labelEdit">
-   <property name="geometry">
-    <rect>
-     <x>40</x>
-     <y>173</y>
-     <width>171</width>
-     <height>27</height>
-    </rect>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label">
-   <property name="geometry">
-    <rect>
-     <x>40</x>
-     <y>153</y>
-     <width>67</width>
-     <height>17</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Label</string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="errorLabel">
-   <property name="geometry">
-    <rect>
-     <x>10</x>
-     <y>10</y>
-     <width>231</width>
-     <height>17</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string/>
-   </property>
-  </widget>
-  <widget class="QLabel" name="noteLabel">
-   <property name="geometry">
-    <rect>
-     <x>10</x>
-     <y>250</y>
-     <width>221</width>
-     <height>25</height>
-    </rect>
-   </property>
-   <property name="font">
-    <font>
-     <pointsize>8</pointsize>
-    </font>
-   </property>
-   <property name="text">
-    <string/>
-   </property>
-   <property name="wordWrap">
-    <bool>true</bool>
-   </property>
-  </widget>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QLabel" name="noteLabel">
+     <property name="wordWrap">
+      <bool>true</bool>
+     </property>
+     <property name="text">
+      <string>Alias</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="aliasLabel">
+     <property name="text">
+      <string>Alias</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QValidatedLineEdit" name="aliasEdit"/>
+   </item>
+   <item>
+    <widget class="QLabel" name="ipLabel">
+     <property name="text">
+      <string>IP Address (without port)</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QValidatedLineEdit" name="ipEdit"/>
+   </item>
+   <item>
+    <widget class="QLabel" name="label">
+     <property name="text">
+      <string>Label</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QValidatedLineEdit" name="labelEdit"/>
+   </item>
+   <item>
+    <widget class="QLabel" name="errorLabel">
+     <property name="text">
+      <string></string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+     </property>
+    </widget>
+   </item>
+  </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>QValidatedLineEdit</class>
+   <extends>QLineEdit</extends>
+   <header>qvalidatedlineedit.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections>
   <connection>

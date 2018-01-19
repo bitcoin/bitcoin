@@ -361,10 +361,10 @@ void MasternodeList::on_startButton_clicked()
 
 void MasternodeList::on_editButton_clicked()
 {
-    CreateMasternodeDialog *dialog = new CreateMasternodeDialog();
-    dialog->setWindowModality(Qt::ApplicationModal);
-    dialog->setEditMode();
-    dialog->setWindowTitle("Edit Masternode");
+    CreateMasternodeDialog dialog(this);
+    dialog.setWindowModality(Qt::ApplicationModal);
+    dialog.setEditMode();
+    dialog.setWindowTitle("Edit Masternode");
     
     QItemSelectionModel* selectionModel = ui->tableWidgetMyMasternodes->selectionModel();
     QModelIndexList selected = selectionModel->selectedRows();
@@ -377,9 +377,9 @@ void MasternodeList::on_editButton_clicked()
     QString strIP = ui->tableWidgetMyMasternodes->item(r, 1)->text();
     strIP.replace(QRegExp(":+\\d*"), "");
 
-    dialog->setAlias(strAlias);
-    dialog->setIP(strIP);
-    if (dialog->exec())
+    dialog.setAlias(strAlias);
+    dialog.setIP(strIP);
+    if (dialog.exec())
     {
         // OK pressed
         std::string port = "9340";
@@ -389,8 +389,8 @@ void MasternodeList::on_editButton_clicked()
         BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry &mne, masternodeConfig.getEntries()) {
             if (mne.getAlias() == strAlias.toStdString())
             {
-                mne.setAlias(dialog->getAlias().toStdString());
-                mne.setIp(dialog->getIP().toStdString() + ":" + port);
+                mne.setAlias(dialog.getAlias().toStdString());
+                mne.setIp(dialog.getIP().toStdString() + ":" + port);
                 masternodeConfig.write();
                 ui->tableWidgetMyMasternodes->removeRow(r);
                 updateMyNodeList(true);
@@ -758,16 +758,16 @@ void MasternodeList::on_tableWidgetVoting_itemSelectionChanged()
 
 void MasternodeList::on_CreateNewMasternode_clicked()
 {
-    CreateMasternodeDialog *dialog = new CreateMasternodeDialog();
-    dialog->setWindowModality(Qt::ApplicationModal);
-    dialog->setWindowTitle("Create a New Masternode");
+    CreateMasternodeDialog dialog(this);
+    dialog.setWindowModality(Qt::ApplicationModal);
+    dialog.setWindowTitle("Create a New Masternode");
     QString formattedAmount = BitcoinUnits::formatWithUnit(walletModel->getOptionsModel()->getDisplayUnit(), 
                                                            MASTERNODE_COLLATERAL * COIN);
-    dialog->setNoteLabel("*This action will send " + formattedAmount + " to yourself");
-    if (dialog->exec())
+    dialog.setNoteLabel("*This action will send " + formattedAmount + " to yourself");
+    if (dialog.exec())
     {
         // OK Pressed
-        QString label = dialog->getLabel();
+        QString label = dialog.getLabel();
         QString address = walletModel->getAddressTableModel()->addRow(AddressTableModel::Receive, label, "");
         SendCoinsRecipient recipient(address, label, MASTERNODE_COLLATERAL * COIN, "");
         QList<SendCoinsRecipient> recipients;
@@ -800,7 +800,7 @@ void MasternodeList::on_CreateNewMasternode_clicked()
                     port = "19340";
                 }
 
-                masternodeConfig.add(dialog->getAlias().toStdString(), dialog->getIP().toStdString() + ":" + port, 
+                masternodeConfig.add(dialog.getAlias().toStdString(), dialog.getIP().toStdString() + ":" + port, 
                         privateKey, out.tx->GetHash().ToString(), strprintf("%d", out.i));
                 masternodeConfig.write();
                 updateMyNodeList(true);

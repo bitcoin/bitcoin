@@ -22,8 +22,10 @@ public:
     void setAlias(QString alias);
     void setIP(QString ip);
     void setNoteLabel(QString text);
-    void done(int);
     void setEditMode();
+
+protected slots:
+    void accept();
 
 private:
     bool editMode;
