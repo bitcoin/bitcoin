@@ -285,7 +285,7 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
 		}
 		if (!OrderBasedOnArrivalTime(pblock->vtx))
 		{
-			throw std::runtime_error(strprintf("OrderBasedOnArrivalTime failed!"));
+			throw std::runtime_error("OrderBasedOnArrivalTime failed!");
 		}
 		// SYSCOIN
 		CAmount nTotalRewardWithMasternodes;
