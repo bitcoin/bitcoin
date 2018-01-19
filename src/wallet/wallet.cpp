@@ -40,8 +40,6 @@
 #include <boost/thread.hpp>
 
 
-using namespace std;
-
 CWallet* pwalletMain = NULL;
 /** Transaction fee set by the user */
 CFeeRate payTxFee(DEFAULT_TRANSACTION_FEE);
@@ -2666,7 +2664,7 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const int nConfMin
     random_shuffle(vCoins.begin(), vCoins.end(), GetRandInt);
 
     // move denoms down on the list
-    sort(vCoins.begin(), vCoins.end(), less_then_denom);
+    std::sort(vCoins.begin(), vCoins.end(), less_then_denom);
 
     // try to find nondenom first to prevent unneeded spending of mixed coins
     for (unsigned int tryDenom = 0; tryDenom < 2; tryDenom++)
@@ -3086,7 +3084,7 @@ bool CWallet::SelectCoinsGrouppedByAddresses(std::vector<CompactTallyItem>& vecT
     }
 
     // order by amounts per address, from smallest to largest
-    sort(vecTallyRet.rbegin(), vecTallyRet.rend(), CompareByAmount());
+    std::sort(vecTallyRet.rbegin(), vecTallyRet.rend(), CompareByAmount());
 
     // cache already confirmed anonymizable entries for later use
     if(fAnonymizable && fSkipUnconfirmed) {
@@ -3121,7 +3119,7 @@ bool CWallet::SelectCoinsDark(CAmount nValueMin, CAmount nValueMax, std::vector<
     AvailableCoins(vCoins, true, coinControl, false, nPrivateSendRoundsMin < 0 ? ONLY_NONDENOMINATED : ONLY_DENOMINATED);
 
     //order the array so largest nondenom are first, then denominations, then very small inputs.
-    sort(vCoins.rbegin(), vCoins.rend(), CompareByPriority());
+    std::sort(vCoins.rbegin(), vCoins.rend(), CompareByPriority());
 
     BOOST_FOREACH(const COutput& out, vCoins)
     {
@@ -3609,9 +3607,9 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
                 }
 
                 if (bBIP69Enabled) {
-                    sort(txNew.vin.begin(), txNew.vin.end(), CompareInputBIP69());
-                    sort(vecTxDSInTmp.begin(), vecTxDSInTmp.end(), CompareInputBIP69());
-                    sort(txNew.vout.begin(), txNew.vout.end(), CompareOutputBIP69());
+                    std::sort(txNew.vin.begin(), txNew.vin.end(), CompareInputBIP69());
+                    std::sort(vecTxDSInTmp.begin(), vecTxDSInTmp.end(), CompareInputBIP69());
+                    std::sort(txNew.vout.begin(), txNew.vout.end(), CompareOutputBIP69());
                 }
 
                 // If there was change output added before, we must update its position now
