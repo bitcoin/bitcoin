@@ -48,7 +48,7 @@ class ListSinceBlockTest (BitcoinTestFramework):
 
         assert_equal(self.nodes[0].getbalance(), 0)
         assert_equal(self.nodes[1].getbalance(), 0)
-        assert_equal(self.nodes[2].getbalance(), 50)
+        assert_equal(self.nodes[2].getbalance(), 500)
         assert_equal(self.nodes[3].getbalance(), 0)
 
         # Split network into two
