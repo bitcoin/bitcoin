@@ -348,10 +348,10 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     // nDustThreshold = 182 * 1234 / 1000 * 3
     minRelayTxFee = CFeeRate(1234);
     // dust:
-    t.vout[0].nValue = 672 - 1;
+    t.vout[0].nValue = 546 - 1;
     BOOST_CHECK(!IsStandardTx(t, reason));
     // not dust:
-    t.vout[0].nValue = 672;
+    t.vout[0].nValue = 546;
     BOOST_CHECK(IsStandardTx(t, reason));
     minRelayTxFee = CFeeRate(DUST_RELAY_TX_FEE);
 
