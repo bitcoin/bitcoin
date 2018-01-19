@@ -11,6 +11,8 @@
 #include <unordered_map>
 #include <vector>
 #include "miner.h"
+typedef std::map<int, vector<int> > IndexMap;
+typedef std::map<string, int> AliasMap;
 template <class T, class Compare = std::less<T> >
 struct sorted_vector {
 	std::vector<T> V;
@@ -60,6 +62,8 @@ struct cycle_visitor
 	}
 	ClearedVertices& cleared;
 };
-unsigned int GraphRemoveCycles(CBlock * pblock, std::unique_ptr<CBlockTemplate> &pblocktemplate, uint64_t &nBlockTx, uint64_t &nBlockSize, unsigned int &nBlockSigOps, CAmount &nFees);
-bool DAGTopologicalSort(CBlock * pblock);
+void OrderBasedOnArrivalTime(std::vector<CTransaction>& blockVtx);
+bool CreateGraphFromVTX(const std::vector<CTransaction>& blockVtx, Graph &graph, IndexMap &mapTxIndex);
+void GraphRemoveCycles(const std::vector<CTransaction>& blockVtx, std::vector<int> &conflictedIndexes, const Graph& graph, const IndexMap &mapTxIndex);
+bool DAGTopologicalSort(std::vector<CTransaction>& blockVtx, const std::vector<int> &conflictedIndexes, const Graph& graph, const IndexMap &mapTxIndex);
 #endif // GRAPH_H

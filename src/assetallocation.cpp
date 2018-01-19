@@ -369,6 +369,9 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 	CAsset dbAsset;
 	if (op == OP_ASSET_ALLOCATION_SEND)
 	{
+		char nStatus = LOCK_CONFIRMED_STATE;
+		if (fJustCheck)
+			nStatus = LOCK_UNCONFIRMED_STATE;
 		if (!GetAssetAllocation(assetAllocationTuple, dbAssetAllocation))
 		{
 			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2024 - " + _("Cannot find sender asset allocation.");
@@ -377,6 +380,15 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 		if (!fJustCheck) {
 			// erase arrival of this tx on this service
 			passetallocationdb->EraseISArrivalTime(assetAllocationTuple, tx.GetHash());
+		}
+		else
+		{
+			// check to see if a transaction for this asset/alias tuple has arrived before 10 second minimum latency GAP
+			ArrivalTimesMap arrivalTimes;
+			passetallocationdb->ReadISArrivalTimes(assetAllocationTuple, arrivalTimes);
+			if (!arrivalTimes.empty()) {
+				nStatus = LOCK_CONFLICT_UNCONFIRMED_STATE;
+			}
 		}
 		theAssetAllocation.vchAlias = vchAlias;
 		theAssetAllocation.nBalance = dbAssetAllocation.nBalance;
@@ -429,7 +441,12 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 				errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("Sender balance is insufficient");
 				if (!dontaddtodb) {
 					if (strResponse != "") {
-						paliasdb->WriteAliasIndexTxHistory(user1, stringFromVch(assetAllocationTuple.vchAlias), user3, tx.GetHash(), nHeight, strResponseEnglish, assetAllocationTuple.ToString(), LOCK_CONFLICT_UNCONFIRMED_STATE);
+						for (auto& amountTuple : theAssetAllocation.listSendingAllocationAmounts) {
+							const CAssetAllocationTuple receiverAllocationTuple(theAssetAllocation.vchAsset, amountTuple.first);
+							// update status of tx to conflicted for each reciever
+							paliasdb->UpdateAliasIndexTxHistoryLockStatus(tx.GetHash().GetHex() + "-" + receiverAllocationTuple.ToString(), LOCK_CONFLICT_UNCONFIRMED_STATE);
+						}
+						
 					}
 				}
 				return true;
@@ -471,8 +488,14 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 						continue;
 					}
 	
-					if (strResponse != "") {
-						paliasdb->WriteAliasIndexTxHistory(user1, stringFromVch(receiverAllocation.vchAlias), user3, tx.GetHash(), nHeight, strResponseEnglish, receiverAllocationTuple.ToString(), fJustCheck? LOCK_UNCONFIRMED_STATE: LOCK_CONFIRMED_STATE);
+					// if mempool inclusion or conflict with another tx we simply update, otherwise we create the tx history entry
+					if (fJustCheck && nStatus != LOCK_CONFLICT_UNCONFIRMED_STATE) {
+						if (strResponse != "") {
+							paliasdb->WriteAliasIndexTxHistory(user1, stringFromVch(receiverAllocation.vchAlias), user3, tx.GetHash(), nHeight, strResponseEnglish, receiverAllocationTuple.ToString(), nStatus);
+						}
+					}
+					else {
+						paliasdb->UpdateAliasIndexTxHistoryLockStatus(tx.GetHash().GetHex() + "-" + receiverAllocationTuple.ToString(), nStatus);
 					}
 				}
 			}
@@ -484,9 +507,6 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 		// set the assetallocation's txn-dependent values
 		theAssetAllocation.nHeight = nHeight;
 		theAssetAllocation.txHash = tx.GetHash();
-		if (strResponse != "") {
-			paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, assetAllocationTuple.ToString(), fJustCheck ? LOCK_UNCONFIRMED_STATE : LOCK_CONFIRMED_STATE);
-		}
 		int64_t ms = INT64_MAX;
 		if (fJustCheck) {
 			ms = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();

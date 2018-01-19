@@ -616,9 +616,15 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight,con
 	else if (!block.vtx.empty()) {
 		CBlock sortedBlock;
 		sortedBlock.vtx = block.vtx;
-		if (!sortedBlock.vtx.empty()) {
-			if (!DAGTopologicalSort(&sortedBlock)) {
-				return false;
+		Graph graph;
+		if (CreateGraphFromVTX(sortedBlock.vtx, graph, mapTxIndex)) {
+			IndexMap mapTxIndex;
+			std::vector<int> conflictedIndexes;
+			GraphRemoveCycles(sortedBlock.vtx, conflictedIndexes, graph, mapTxIndex);
+			if (!sortedBlock.vtx.empty()) {
+				if (!DAGTopologicalSort(sortedBlock.vtx, conflictedIndexes, graph, mapTxIndex)) {
+					return false;
+				}
 			}
 		}
 		if (fJustCheck)
