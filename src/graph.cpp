@@ -119,11 +119,8 @@ void GraphRemoveCycles(const std::vector<CTransaction>& blockVtx, std::vector<in
 		for (auto& nIndex : vecTx) {
 			if (nIndex >= blockVtx.size())
 				continue;
-			const int nMappedIndex = blockVtx[nIndex];
-			if (nMappedIndex >= pblock->vtx.size())
-				continue;
-			LogPrintf("outputsToRemove nIndex %d nMappedIndex %d\n", nIndex, nMappedIndex);
-			conflictedIndexes.push_back(nMappedIndex);
+			LogPrintf("outputsToRemove nIndex\n", nIndex);
+			conflictedIndexes.push_back(nIndex);
 		}
 	}
 	// block gives us the transactions in order by time so we want to ensure we preserve it
@@ -142,7 +139,7 @@ bool DAGTopologicalSort(std::vector<CTransaction>& blockVtx, const std::vector<i
 		return false;
 	}
 	// add coinbase
-	newVtx.push_back(pblock->vtx[0]);
+	newVtx.push_back(blockVtx[0]);
 
 	// add sys tx's to newVtx in reverse sorted order
 	reverse(c.begin(), c.end());
