@@ -11,6 +11,9 @@
 #include <unordered_map>
 #include <vector>
 #include "miner.h"
+typedef boost::adjacency_list< boost::vecS, boost::vecS, boost::directedS > Graph;
+typedef graph_traits<Graph> Traits;
+typedef typename Traits::vertex_descriptor vertex_descriptor;
 typedef std::map<int, std::vector<int> > IndexMap;
 typedef std::map<std::string, int> AliasMap;
 template <class T, class Compare = std::less<T> >
@@ -63,7 +66,7 @@ struct cycle_visitor
 	ClearedVertices& cleared;
 };
 void OrderBasedOnArrivalTime(std::vector<CTransaction>& blockVtx);
-bool CreateGraphFromVTX(const std::vector<CTransaction>& blockVtx, Graph &graph, IndexMap &mapTxIndex);
-void GraphRemoveCycles(const std::vector<CTransaction>& blockVtx, std::vector<int> &conflictedIndexes, const Graph& graph, const IndexMap &mapTxIndex);
+bool CreateGraphFromVTX(const std::vector<CTransaction>& blockVtx, Graph &graph, std::vector<vertex_descriptor> &vertices, IndexMap &mapTxIndex);
+void GraphRemoveCycles(const std::vector<CTransaction>& blockVtx, std::vector<int> &conflictedIndexes, const Graph& graph, const std::vector<vertex_descriptor> &vertices, const IndexMap &mapTxIndex);
 bool DAGTopologicalSort(std::vector<CTransaction>& blockVtx, const std::vector<int> &conflictedIndexes, const Graph& graph, const IndexMap &mapTxIndex);
 #endif // GRAPH_H

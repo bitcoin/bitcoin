@@ -6,9 +6,6 @@
 #include "assetallocation.h"
 using namespace boost;
 using namespace std;
-typedef adjacency_list< vecS, vecS, directedS > Graph;
-typedef graph_traits<Graph> Traits;
-typedef typename Traits::vertex_descriptor vertex_descriptor;
 typedef typename std::vector<int> container;
 void OrderBasedOnArrivalTime(std::vector<CTransaction>& blockVtx) {
 	std::vector<vector<unsigned char> > vvchArgs;
@@ -54,11 +51,10 @@ void OrderBasedOnArrivalTime(std::vector<CTransaction>& blockVtx) {
 	}
 	blockVtx = orderedVtx;
 }
-bool CreateGraphFromVTX(const std::vector<CTransaction>& blockVtx, Graph &graph, IndexMap &mapTxIndex) {
+bool CreateGraphFromVTX(const std::vector<CTransaction>& blockVtx, Graph &graph, std::vector<vertex_descriptor> &vertices, IndexMap &mapTxIndex) {
 	AliasMap mapAliasIndex;
 	std::vector<vector<unsigned char> > vvchArgs;
 	std::vector<vector<unsigned char> > vvchAliasArgs;
-	std::vector<vertex_descriptor> vertices;
 	int op;
 	int nOut;
 	for (unsigned int n = 0; n< blockVtx.size(); n++) {
@@ -99,7 +95,7 @@ bool CreateGraphFromVTX(const std::vector<CTransaction>& blockVtx, Graph &graph,
 	return mapTxIndex.size() > 0;
 }
 // remove cycles in a graph and create a DAG, modify the blockVtx passed in to remove conflicts, the conflicts should be added back to the end of this vtx after toposort
-void GraphRemoveCycles(const std::vector<CTransaction>& blockVtx, std::vector<int> &conflictedIndexes, const Graph& graph, const IndexMap &mapTxIndex) {
+void GraphRemoveCycles(const std::vector<CTransaction>& blockVtx, std::vector<int> &conflictedIndexes, const Graph& graph, const std::vector<vertex_descriptor> &vertices, const IndexMap &mapTxIndex) {
 	LogPrintf("GraphRemoveCycles\n");
 	std::vector<CTransaction> newVtx;
 	std::vector<CTransaction> orderedVtx;
@@ -114,7 +110,10 @@ void GraphRemoveCycles(const std::vector<CTransaction>& blockVtx, std::vector<in
 		if (it == mapTxIndex.end())
 			continue;
 		// remove from graph
-		boost::clear_out_edges((*it).first, graph);
+		const int nVertexIndex = (*it).first;
+		if (nVertexIndex >= vertices.size())
+			continue;
+		boost::clear_out_edges(vertices[nVertexIndex], graph);
 		const std::vector<int> &vecTx = (*it).second;
 		// mapTxIndex knows of the mapping between vertices and tx vout positions
 		for (auto& nIndex : vecTx) {
