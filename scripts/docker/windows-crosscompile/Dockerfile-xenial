@@ -11,7 +11,11 @@ RUN apt-get -qq update && \
     apt-get -qqy install \
     git \
     sudo
-RUN git clone ${REPO_URL} --branch $BRANCH_NAME --single-branch --depth 1
+#RUN git clone ${REPO_URL} --branch $BRANCH_NAME --single-branch --depth 1
+
+COPY peercoin.tar.gz /peercoin.tar.gz
+RUN tar -xvf /peercoin.tar.gz
+
 #xenial
 #Missing requirement: libtool
 RUN apt install -yqq libtool-bin

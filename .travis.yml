@@ -6,11 +6,13 @@ matrix:
       - os: linux
         services: docker
         script:
-          - docker build --build-arg BRANCH_NAME=$TRAVIS_BRANCH --build-arg REPO_SLUG=$TRAVIS_REPO_SLUG -f scripts/docker/debian/Dockerfile-stretch .
+          - ./archive.sh
+          - docker build -f scripts/docker/debian/Dockerfile-stretch .
       - os: linux
         services: docker
         script:
-          - docker build --build-arg BRANCH_NAME=$TRAVIS_BRANCH --build-arg REPO_SLUG=$TRAVIS_REPO_SLUG -f scripts/docker/debian/Dockerfile-jessie .
+          - ./archive.sh
+          - docker build -f scripts/docker/debian/Dockerfile-jessie .
       - os: linux
         sudo: required
         before_install:
@@ -22,15 +24,18 @@ matrix:
       - os: linux
         services: docker
         script:
-          - travis_wait 60 docker build --build-arg BRANCH_NAME=$TRAVIS_BRANCH --build-arg REPO_SLUG=$TRAVIS_REPO_SLUG -f scripts/docker/windows-crosscompile/Dockerfile-wheezy .
+          - ./archive.sh
+          - travis_wait 60 docker build -f scripts/docker/windows-crosscompile/Dockerfile-wheezy .
       - os: linux
         services: docker
         script:
-          - travis_wait 60 docker build --build-arg BRANCH_NAME=$TRAVIS_BRANCH --build-arg REPO_SLUG=$TRAVIS_REPO_SLUG -f scripts/docker/windows-crosscompile/Dockerfile-xenial .
+          - ./archive.sh
+          - travis_wait 60 docker build -f scripts/docker/windows-crosscompile/Dockerfile-xenial .
       - os: linux
         services: docker
         script:
-          - travis_wait 60 docker build --build-arg BRANCH_NAME=$TRAVIS_BRANCH --build-arg REPO_SLUG=$TRAVIS_REPO_SLUG -f scripts/docker/windows-crosscompile/Dockerfile-trusty .
+          - ./archive.sh
+          - travis_wait 60 docker build -f scripts/docker/windows-crosscompile/Dockerfile-trusty .
       - os: linux
         sudo: required
         before_install:
