@@ -19,6 +19,7 @@ packages:
 - "bsdmainutils"
 - "ca-certificates"
 - "python"
+- "wine"
 remotes:
 - "url": "https://github.com/particl/partgui"
   "dir": "partgui"

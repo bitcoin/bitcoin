@@ -24,6 +24,20 @@ std::vector<std::string> testsFail = {
     "pep1qqqqqqqqqqqqqqcpjvcv9trdnv8t2nscuw056mm74cps7jkmrrdq48xpdjy6ylf6vpru36q6zax883gjclngas40d7097mudl05y48ewzvulpnsk5z75kg24d5nf",
 };
 
+std::vector<std::pair<CChainParams::Base58Type, std::string>> testsType = {
+    std::make_pair(CChainParams::PUBKEY_ADDRESS, "ph1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqx7sxra"),
+    std::make_pair(CChainParams::SCRIPT_ADDRESS, "pr1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqwp6w94"),
+    std::make_pair(CChainParams::PUBKEY_ADDRESS_256, "pl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqra7r7c"),
+    std::make_pair(CChainParams::SCRIPT_ADDRESS_256, "pj1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqsthset"),
+    std::make_pair(CChainParams::SECRET_KEY, "px1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqjjpjvf"),
+    std::make_pair(CChainParams::EXT_PUBLIC_KEY, "pep1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq5cjrsh"),
+    std::make_pair(CChainParams::EXT_SECRET_KEY, "pex1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq77wfra"),
+    std::make_pair(CChainParams::STEALTH_ADDRESS, "ps1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq9ld9g7"),
+    std::make_pair(CChainParams::EXT_KEY_HASH, "pek1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqhe0qm5"),
+    std::make_pair(CChainParams::EXT_ACC_HASH, "pea1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqt25ujg"),
+};
+
+
 BOOST_AUTO_TEST_CASE(bech32_test)
 {
     CBitcoinAddress addr_base58;
@@ -50,6 +64,14 @@ BOOST_AUTO_TEST_CASE(bech32_test)
     for (auto &v : testsFail)
     {
         BOOST_CHECK(!addr_bech32.SetString(v));
+    };
+
+    CKeyID knull;
+    for (auto &v : testsType)
+    {
+        CBitcoinAddress addr;
+        addr.Set(knull, v.first, true);
+        BOOST_CHECK(addr.ToString() == v.second);
     };
 }
 

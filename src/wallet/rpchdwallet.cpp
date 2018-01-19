@@ -3922,7 +3922,6 @@ UniValue getcoldstakinginfo(const JSONRPCRequest &request)
     };
 
 
-
     bool fEnabled = false;
     UniValue jsonSettings;
     CBitcoinAddress addrColdStaking;

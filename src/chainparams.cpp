@@ -542,7 +542,7 @@ public:
         bech32Prefixes[EXT_SECRET_KEY].assign       ("pex","pex"+3);
         bech32Prefixes[STEALTH_ADDRESS].assign      ("ps","ps"+2);
         bech32Prefixes[EXT_KEY_HASH].assign         ("pek","pek"+3);
-        bech32Prefixes[EXT_KEY_HASH].assign         ("pea","pea"+3);
+        bech32Prefixes[EXT_ACC_HASH].assign         ("pea","pea"+3);
 
         vFixedSeeds = std::vector<SeedSpec6>(pnSeed6_main, pnSeed6_main + ARRAYLEN(pnSeed6_main));
 
@@ -688,7 +688,7 @@ public:
         bech32Prefixes[EXT_SECRET_KEY].assign       ("tpex","tpex"+4);
         bech32Prefixes[STEALTH_ADDRESS].assign      ("tps","tps"+3);
         bech32Prefixes[EXT_KEY_HASH].assign         ("tpek","tpek"+4);
-        bech32Prefixes[EXT_KEY_HASH].assign         ("tpea","tpea"+4);
+        bech32Prefixes[EXT_ACC_HASH].assign         ("tpea","tpea"+4);
 
 
         vFixedSeeds = std::vector<SeedSpec6>(pnSeed6_test, pnSeed6_test + ARRAYLEN(pnSeed6_test));

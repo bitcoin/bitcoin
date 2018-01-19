@@ -255,7 +255,7 @@ bool CDB::Recover(const std::string& filename, void *callbackDataIn, bool (*reco
                 int ret2 = pdbCopy->put(ptxn, &datKey, &datValue, DB_NOOVERWRITE);
                 if (ret2 > 0)
                     fSuccess = false;
-                    continue;
+                continue;
             };
         };
 

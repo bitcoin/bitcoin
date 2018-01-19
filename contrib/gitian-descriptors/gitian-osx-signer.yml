@@ -7,7 +7,7 @@ architectures:
 packages:
 - "faketime"
 remotes:
-- "url": "https://github.com/bitcoin-core/bitcoin-detached-sigs.git"
+- "url": "https://github.com/particl/particl-detached-sigs.git"
   "dir": "signature"
 files:
 - "particl-osx-unsigned.tar.gz"

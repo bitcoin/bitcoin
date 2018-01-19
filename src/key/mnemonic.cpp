@@ -501,14 +501,11 @@ int MnemonicAddChecksum(int nLanguageIn, const std::string &sWordListIn, std::st
 
 int MnemonicGetWord(int nLanguage, int nWord, std::string &sWord, std::string &sError)
 {
-    LogPrint(BCLog::HDWALLET, "%s: Language %d.\n", __func__, nLanguage);
-
     if (nLanguage < 1 || nLanguage > WLL_MAX)
     {
         sError = "Unknown language.";
         return errorN(1, "%s: %s", __func__, sError.c_str());
     };
-
 
     char *pwl = (char*) mnLanguages[nLanguage];
     int m = mnLanguageLens[nLanguage];
