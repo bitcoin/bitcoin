@@ -27,7 +27,6 @@ bool IsAssetAllocationOp(int op);
 void AssetAllocationTxToJSON(const int op, const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash, UniValue &entry);
 std::string assetAllocationFromOp(int op);
 bool RemoveAssetAllocationScriptPrefix(const CScript& scriptIn, CScript& scriptOut);
-
 class CAssetAllocationTuple {
 public:
 	std::vector<unsigned char> vchAsset;
@@ -90,6 +89,7 @@ namespace std {
 typedef std::vector<std::pair<std::vector<unsigned char>, std::vector<CRange> > > RangeInputArrayTuples;
 typedef std::vector<std::pair<std::vector<unsigned char>, CAmount > > RangeAmountTuples;
 typedef std::map<uint256, int64_t> ArrivalTimesMap;
+static const int ZDAG_MINIMUM_LATENCY_SECONDS 10
 class CAssetAllocation {
 public:
 	std::vector<unsigned char> vchAsset;
