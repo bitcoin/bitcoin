@@ -1,6 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2012 The Bitcoin developers
-// Copyright (c) 2011-2017 The Peercoin developers
+// Copyright (c) 2011-2018 The Peercoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -224,7 +224,7 @@ std::string HelpMessage(HelpMessageMode hmm)
                                             "solved instantly. This is intended for regression testing tools and app development.") + "\n";
 #ifdef WIN32
         strUsage += 
-        "  -printtodebugger       " + _("Send trace/debug info to debugger") + "\n"
+        "  -printtodebugger       " + _("Send trace/debug info to debugger") + "\n";
 #endif
 
     if (hmm == HMM_BITCOIN_QT)
@@ -997,14 +997,18 @@ bool AppInit2(boost::thread_group& threadGroup)
     if (fServer)
         StartRPCThreads();
 
+#ifdef ENABLE_MINING
     // Generate coins in the background
     GenerateBitcoins(GetBoolArg("-gen", false), pwalletMain);
+#endif // ENABLE_MINING
 
     // ppcoin: mint proof-of-stake blocks in the background
+#ifdef ENABLE_MINING
 #ifdef TESTING
     if (GetBoolArg("-stakegen", true))
 #endif
     MintStake(threadGroup, pwalletMain);
+#endif // ENABLE_MINING
 
     // ********************************************************* Step 12: finished
 

@@ -1,6 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2012 The Bitcoin developers
-// Copyright (c) 2011-2015 The Peercoin developers
+// Copyright (c) 2011-2018 The Peercoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -4668,7 +4668,7 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
 
 
 
-
+#ifdef ENABLE_MINING
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -4771,9 +4771,11 @@ public:
 };
 
 
+#endif // ENABLE_MINING
 uint64 nLastBlockTx = 0;
 uint64 nLastBlockSize = 0;
 int64 nLastCoinStakeSearchInterval = 0;
+#ifdef ENABLE_MINING
 
 // We want to sort transactions by priority and fee, so:
 typedef boost::tuple<double, double, CTransaction*> TxPriority;
@@ -5456,6 +5458,7 @@ void MintStake(boost::thread_group& threadGroup, CWallet* pwallet)
     // ppcoin: mint proof-of-stake blocks in the background
     threadGroup.create_thread(boost::bind(&ThreadStakeMinter, pwallet));
 }
+#endif // ENABLE_MINING
 
 // Amount compression:
 // * If the amount is 0, output 0

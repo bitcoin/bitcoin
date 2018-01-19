@@ -3,7 +3,7 @@
  *
  * W.J. van der Laan 2011-2012
  * The Bitcoin developers 2011-2012
- * The Peercoin developers 2011-2017
+ * The Peercoin developers 2011-2018
  */
 
 #include <QApplication>
@@ -75,7 +75,7 @@ BitcoinGUI::BitcoinGUI(QWidget *parent) :
     restoreWindowGeometry();
     setWindowTitle(tr("Peercoin") + " - " + tr("Wallet"));
     
-    QFontDatabase::addApplicationFont(":/fonts/weblysleek");
+    QFontDatabase::addApplicationFont(":/fonts/notosans-regular");
     QFile styleFile(":/themes/default");
     styleFile.open(QFile::ReadOnly);
     QString styleSheet = QLatin1String(styleFile.readAll());
@@ -331,7 +331,9 @@ void BitcoinGUI::createToolBars()
     toolbar->addAction(sendCoinsAction);
     toolbar->addAction(receiveCoinsAction);
     toolbar->addAction(historyAction);
+#ifdef ENABLE_MINING
     toolbar->addAction(mintingAction);
+#endif
     toolbar->addAction(addressBookAction);
 }
 

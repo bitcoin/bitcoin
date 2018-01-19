@@ -1,6 +1,6 @@
 /* Global Styles */
 * {
-    font-family: "WeblySleek UI Normal";
+    font-family: "NotoSans-Regular";
     color: #4b4b4b;
 }
 

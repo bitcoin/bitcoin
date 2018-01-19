@@ -833,6 +833,11 @@ Adres: %4
         <translation>Peercoin&apos;i sistem oturumuyla &amp;başlat</translation>
     </message>
     <message>
+        <location line="+7"/>
+        <source>Enforce checkpoints</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location line="+35"/>
         <source>Reset all client options to default.</source>
         <translation>İstemcinin tüm seçeneklerini varsayılan değerlere geri al.</translation>

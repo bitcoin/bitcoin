@@ -834,6 +834,11 @@ Address: %4
         <translation>&amp;Έναρξη του Βιtcoin κατά την εκκίνηση του συστήματος</translation>
     </message>
     <message>
+        <location line="+7"/>
+        <source>Enforce checkpoints</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location line="+35"/>
         <source>Reset all client options to default.</source>
         <translation>Επαναφορα όλων των επιλογων του πελάτη σε default.</translation>

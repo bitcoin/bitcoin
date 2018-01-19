@@ -832,6 +832,11 @@ Address: %4
         <translation>התחל את ביטקוין בעת התחברות למערכת</translation>
     </message>
     <message>
+        <location line="+7"/>
+        <source>Enforce checkpoints</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location line="+35"/>
         <source>Reset all client options to default.</source>
         <translation>אפס כל אפשרויות התוכנה לברירת המחדל.</translation>

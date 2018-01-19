@@ -65,13 +65,13 @@ script: |
     export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1
     export FAKETIME=$REFERENCE_DATETIME
 
-    $STAGING/host/bin/qmake -spec win32-g++ CROSS_COMPILE=$HOST USE_QRCODE=1 INCLUDEPATH=$STAGING BOOST_LIB_SUFFIX=-mt-s BOOST_THREAD_LIB_SUFFIX=_win32-mt-s DEFINES=BOOST_THREAD_USE_LIB BITCOIN_NEED_QT_PLUGINS=1 QMAKE_LRELEASE=lrelease QMAKE_CXXFLAGS=-frandom-seed=nu QMAKE_LFLAGS="-static-libgcc -static-libstdc++ -frandom-seed=nu" USE_BUILD_INFO=1 CURL_STATIC=1 MINIUPNP_STATICLIB=1
+    $STAGING/host/bin/qmake -spec win32-g++ CROSS_COMPILE=$HOST USE_QRCODE=1 INCLUDEPATH=$STAGING BOOST_LIB_SUFFIX=-mt-s BOOST_THREAD_LIB_SUFFIX=_win32-mt-s DEFINES=BOOST_THREAD_USE_LIB BITCOIN_NEED_QT_PLUGINS=1 QMAKE_LRELEASE=lrelease QMAKE_CXXFLAGS=-frandom-seed=peercoin QMAKE_LFLAGS="-static-libgcc -static-libstdc++ -frandom-seed=peercoin" USE_BUILD_INFO=1 CURL_STATIC=1 MINIUPNP_STATICLIB=1
     make $MAKEOPTS
     ${HOST}-strip release/peercoin-qt.exe
     cp -f release/peercoin-qt.exe $BINDIR/
 
     cd src
-    make -f makefile.linux-mingw $MAKEOPTS HOST=$HOST DEPSDIR=$STAGING peercoind.exe USE_UPNP=0 DEBUGFLAGS="-frandom-seed=nu"
+    make -f makefile.linux-mingw $MAKEOPTS HOST=$HOST DEPSDIR=$STAGING peercoind.exe USE_UPNP=0 DEBUGFLAGS="-frandom-seed=peercoin" LDFLAGS="-static-libgcc -static-libstdc++"
     ${HOST}-strip peercoind.exe
     cp -f peercoind.exe $BINDIR/
 
@@ -82,6 +82,7 @@ script: |
     mkdir release
     cp $BINDIR/peercoin-qt.exe release/
     cp $BINDIR/peercoind.exe release/
+    cp share/setup.nsi.in share/setup.nsi
     makensis share/setup.nsi
     cp share/peercoin-*setup*.exe $BINDIR
     unset LD_PRELOAD

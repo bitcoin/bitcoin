@@ -1,55 +1,64 @@
-Source: bitcoin
+Source: peercoin
 Section: utils
 Priority: optional
-Maintainer: Jonas Smedegaard <dr@jones.dk>
-Uploaders: Micah Anderson <micah@debian.org>
+Maintainer: Matt Corallo <matt@mattcorallo.com>
+Uploaders: Matt Corallo <matt@mattcorallo.com>
 Build-Depends: debhelper,
  devscripts,
+ automake,
+ libtool,
+ pkg-config,
  bash-completion,
- libboost-system-dev (>> 1.35) | libboost-system1.35-dev,
- libdb4.8++-dev,
+ libdb-dev,
+ libdb++-dev,
  libssl-dev,
  pkg-config,
- libminiupnpc8-dev,
- libboost-filesystem-dev (>> 1.35) | libboost-filesystem1.35-dev,
- libboost-program-options-dev (>> 1.35) | libboost-program-options1.35-dev,
- libboost-thread-dev (>> 1.35) | libboost-thread1.35-dev,
- libboost-test-dev (>> 1.35) | libboost-test1.35-dev,
- qt4-qmake,
- libqt4-dev,
- libqrencode-dev
-Standards-Version: 3.9.2
-Homepage: http://www.bitcoin.org/
-Vcs-Git: git://github.com/bitcoin/bitcoin.git
-Vcs-Browser: http://github.com/bitcoin/bitcoin
+ perl,
+ perl-modules,
+ libevent-dev,
+ libboost-system1.54-dev | libboost-system-dev (>> 1.47),
+ libboost-filesystem1.54-dev | libboost-filesystem-dev (>> 1.47),
+ libboost-program-options1.54-dev | libboost-program-options-dev (>> 1.47),
+ libboost-thread1.54-dev | libboost-thread-dev (>> 1.47),
+ libboost-test1.54-dev | libboost-test-dev (>> 1.47),
+ libboost-chrono1.54-dev | libboost-chrono-dev (>> 1.47),
+ libboost-program-options1.54-dev | libboost-program-options-dev,
+ libminiupnpc8-dev | libminiupnpc-dev,
+ qtbase5-dev,
+ qttools5-dev-tools, qttools5-dev,
+ libqrencode-dev,
+ python
+Standards-Version: 3.9.5
+Homepage: https://peercoin.net/
+Vcs-Git: git://github.com/peercoin/peercoin.git
+Vcs-Browser: https://github.com/peercoin/peercoin
 
-Package: bitcoind
+Package: peercoind
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: peer-to-peer network based digital currency - daemon
- Bitcoin is a free open source peer-to-peer electronic cash system that
- is completely decentralized, without the need for a central server or
- trusted parties.  Users hold the crypto keys to their own money and
- transact directly with each other, with the help of a P2P network to
- check for double-spending.
+ Peercoin is a crypto-currency project forked from Bitcoin and we aim to achieve
+ energy-efficiency and keep as much as possible the original Bitcoin's
+ preferable properties.
  .
- Full transaction history is stored locally at each client.  This
- requires 2+ GB of space, slowly growing.
- .
- This package provides bitcoind, a combined daemon and CLI tool to
- interact with the daemon.
+ This package provides peercoind, a daemon client for the Peercoin network.
 
-Package: bitcoin-qt
+Package: peercoin-qt
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: peer-to-peer network based digital currency - Qt GUI
- Bitcoin is a free open source peer-to-peer electronic cash system that
- is completely decentralized, without the need for a central server or
- trusted parties.  Users hold the crypto keys to their own money and
- transact directly with each other, with the help of a P2P network to
- check for double-spending.
+ Peercoin is a crypto-currency project forked from Bitcoin and we aim to achieve
+ energy-efficiency and keep as much as possible the original Bitcoin's
+ preferable properties.
  .
- Full transaction history is stored locally at each client.  This
- requires 2+ GB of space, slowly growing.
+ This package provides Peercoin-Qt, a GUI client for Peercoin based on Qt.
+
+Package: peercoin-cli
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: peer-to-peer digital currency - standalone transaction tool
+ Peercoin is a crypto-currency project forked from Bitcoin and we aim to achieve
+ energy-efficiency and keep as much as possible the original Bitcoin's
+ preferable properties.
  .
- This package provides Bitcoin-Qt, a GUI for Bitcoin based on Qt.
+ This package provides peercoin-cli, a command-line tool used to control the daemon.

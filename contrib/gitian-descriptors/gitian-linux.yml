@@ -48,7 +48,7 @@ script: |
   export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1
   export FAKETIME=$REFERENCE_DATETIME
 
-  qmake INCLUDEPATH="$STAGING/include" LIBS="-L$STAGING/lib" USE_QRCODE=1 RELEASE=1 BOOST_LIB_SUFFIX=-mt QMAKE_CXXFLAGS=-frandom-seed=nu QMAKE_LFLAGS=-frandom-seed=nu
+  qmake INCLUDEPATH="$STAGING/include" LIBS="-L$STAGING/lib" USE_QRCODE=1 RELEASE=1 BOOST_LIB_SUFFIX=-mt QMAKE_CXXFLAGS=-frandom-seed=peercoin QMAKE_LFLAGS=-frandom-seed=peercoin
   make $MAKEOPTS
   install -s peercoin-qt $BINDIR
 

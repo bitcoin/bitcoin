@@ -8,7 +8,7 @@ index bef0ef3..07ef8d3 100644
  CXX=llvm-g++
 -DEPSDIR=/opt/local
 +DEPSDIR=/usr/local
-+DB4DIR=/usr/local/opt/berkeley-db4
++DB4DIR=$(shell pwd)/../db4
 +OPENSSLDIR=/usr/local/opt/openssl
  
  INCLUDEPATHS= \

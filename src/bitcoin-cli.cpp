@@ -60,12 +60,12 @@ int main(int argc, char* argv[])
     try
     {
         if(!CommandLineRPC(argc, argv))
-            return 1;
+            return 0;
     }
     catch (std::exception& e) {
         PrintExceptionContinue(&e, "CommandLineRPC()");
     } catch (...) {
         PrintExceptionContinue(NULL, "CommandLineRPC()");
     }
-    return 0;
+    return 1;
 }

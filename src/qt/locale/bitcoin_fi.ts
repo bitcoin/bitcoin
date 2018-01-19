@@ -833,6 +833,11 @@ Osoite: %4</translation>
         <translation>&amp;Käynnistä Peercoin kirjautumisen yhteydessä</translation>
     </message>
     <message>
+        <location line="+7"/>
+        <source>Enforce checkpoints</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location line="+35"/>
         <source>Reset all client options to default.</source>
         <translation type="unfinished"/>

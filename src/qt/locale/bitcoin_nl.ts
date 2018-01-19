@@ -833,6 +833,11 @@ Adres: %4
         <translation>Start &amp;Peercoin bij het inloggen in het systeem</translation>
     </message>
     <message>
+        <location line="+7"/>
+        <source>Enforce checkpoints</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location line="+35"/>
         <source>Reset all client options to default.</source>
         <translation>Reset alle clientopties naar de standaardinstellingen.</translation>

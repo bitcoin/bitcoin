@@ -833,6 +833,11 @@ Adresa: %4
         <translation>S&amp;pustit Peercoin po přihlášení do systému</translation>
     </message>
     <message>
+        <location line="+7"/>
+        <source>Enforce checkpoints</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location line="+35"/>
         <source>Reset all client options to default.</source>
         <translation>Vrátí všechny volby na výchozí hodnoty.</translation>

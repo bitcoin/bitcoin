@@ -833,6 +833,11 @@ Endereço: %4
         <translation>&amp;Começar o Peercoin ao iniciar o sistema</translation>
     </message>
     <message>
+        <location line="+7"/>
+        <source>Enforce checkpoints</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location line="+35"/>
         <source>Reset all client options to default.</source>
         <translation>Repôr todas as opções.</translation>

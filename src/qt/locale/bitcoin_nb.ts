@@ -834,6 +834,11 @@ Adresse: %4
         <translation>&amp;Start Peercoin ved systeminnlogging</translation>
     </message>
     <message>
+        <location line="+7"/>
+        <source>Enforce checkpoints</source>
+        <translation>Følg kontrollpunkter</translation>
+    </message>
+    <message>
         <location line="+35"/>
         <source>Reset all client options to default.</source>
         <translation type="unfinished"/>

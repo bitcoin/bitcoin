@@ -834,6 +834,11 @@ Address: %4
         <translation>启动时&amp;运行</translation>
     </message>
     <message>
+        <location line="+7"/>
+        <source>Enforce checkpoints</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location line="+35"/>
         <source>Reset all client options to default.</source>
         <translation>恢复客户端的缺省设置</translation>
