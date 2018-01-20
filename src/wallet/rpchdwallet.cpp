@@ -2826,6 +2826,7 @@ static void ParseOutputs(
         } else if (!nFee) {
             entry.push_back(Pair("category", "receive"));
         } else if (amount == 0) {
+            entry.push_back(Pair("fee", ValueFromAmount(-nFee)));
             entry.push_back(Pair("category", "internal_transfer"));
         } else {
             entry.push_back(Pair("category", "send"));
