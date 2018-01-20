@@ -3,6 +3,7 @@
 #include "ui_interface.h"
 #include "net.h"
 #include "masternodeconfig.h"
+#include <QMessageBox>
 
 CreateMasternodeDialog::CreateMasternodeDialog(QWidget *parent) :
     QDialog(parent),
@@ -66,7 +67,7 @@ void CreateMasternodeDialog::accept()
     {
         //ui->errorLabel->setText("Alias is Required");
         ui->aliasEdit->setValid(false);
-        ui->aliasEdit->setPlaceholderText("Alias is Required");
+        QMessageBox::warning(this, windowTitle(), tr("Alias is Required"), QMessageBox::Ok, QMessageBox::Ok);
         return;
     }
     // Check if alias exists
@@ -75,8 +76,9 @@ void CreateMasternodeDialog::accept()
         QString aliasEditText = ui->aliasEdit->text();
         if (!(startAlias != "" && aliasEditText == startAlias))
         {
-            //ui->errorLabel->setText("Alias '" + ui->aliasEdit->text() + "' Already Exists");
             ui->aliasEdit->setValid(false);
+            QMessageBox::warning(this, windowTitle(), tr("Alias %1 Already Exists").arg(ui->aliasEdit->text()), 
+                    QMessageBox::Ok, QMessageBox::Ok);
             return;
         }
     }
@@ -84,22 +86,22 @@ void CreateMasternodeDialog::accept()
     // Check ip
     if (ip.isEmpty())
     {
-        ui->ipEdit->setPlaceholderText("IP is Required");
         ui->ipEdit->setValid(false);
+        QMessageBox::warning(this, windowTitle(), tr("IP is Required"), QMessageBox::Ok, QMessageBox::Ok);
         return;
     }
     // Check if port is not entered
     if (ip.contains(QRegExp(":+[0-9]")))
     {
-        //ui->errorLabel->setText("Enter IP Without Port");
         ui->ipEdit->setValid(false);
+        QMessageBox::warning(this, windowTitle(), tr("Enter IP Without Port"), QMessageBox::Ok, QMessageBox::Ok);
         return;
     }
     // Validate ip address
     // This is only for validation so port doesn't matter
     if (!(CService(ip.toStdString() + ":9340").IsIPv4() && CService(ip.toStdString()).IsRoutable())) {
-        //ui->errorLabel->setText("Invalid IP Address. IPV4 ONLY");
         ui->ipEdit->setValid(false);
+        QMessageBox::warning(this, windowTitle(), tr("Invalid IP Address. IPV4 ONLY"), QMessageBox::Ok, QMessageBox::Ok);
         return;
     }
 
