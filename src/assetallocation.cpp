@@ -24,6 +24,7 @@
 #include <boost/range/adaptor/reversed.hpp>
 #include <mongoc.h>
 #include <chrono>
+extern CTxMemPool mempool;
 using namespace std::chrono;
 using namespace std;
 extern mongoc_collection_t *assetallocation_collection;
@@ -303,7 +304,7 @@ void RevertAssetAllocations(const unordered_set<CAssetAllocationTuple> &assetAll
 	
 }
 bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const std::vector<unsigned char> &vchAlias,
-        bool fJustCheck, int nHeight, unordered_set<CAssetAllocationTuple> &assetAllocationsThisBlock, string &errorMessage, bool dontaddtodb) {
+        bool fJustCheck, int nHeight, unordered_set<CAssetAllocationTuple> &assetAllocationsThisBlock, const CAmount& nFees, string &errorMessage, bool dontaddtodb) {
 	if (!paliasdb || !passetallocationdb)
 		return false;
 	if (tx.IsCoinBase() && !fJustCheck && !dontaddtodb)
@@ -393,6 +394,10 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 					nStatus = LOCK_CONFLICT_UNCONFIRMED_STATE;
 					break;
 				}
+			}
+			if (nFees < mempool.estimateFee(1)) {
+				nStatus = LOCK_CONFLICT_UNCONFIRMED_STATE;
+				errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Not enough fees paid for this transaction to confirm within 1 block");
 			}
 		}
 		theAssetAllocation.vchAlias = vchAlias;

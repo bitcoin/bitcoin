@@ -546,7 +546,7 @@ std::string FormatStateMessage(const CValidationState &state)
 		state.GetRejectCode());
 }
 // SYSCOIN
-bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight,const CBlock& block)
+bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight,const CAmount& nFees, const CBlock& block)
 {
 	static unordered_set<CAssetAllocationTuple> assetAllocationsThisBlock;
 	vector<vector<unsigned char> > vvchArgs;
@@ -588,7 +588,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight,con
 			else if (DecodeAssetAllocationTx(tx, op, nOut, vvchArgs))
 			{
 				errorMessage.clear();
-				good = CheckAssetAllocationInputs(tx, op, nOut, vvchArgs, vvchAliasArgs[0], fJustCheck, nHeight, assetAllocationsThisBlock, errorMessage);
+				good = CheckAssetAllocationInputs(tx, op, nOut, vvchArgs, vvchAliasArgs[0], fJustCheck, nHeight, assetAllocationsThisBlock, nFees, errorMessage);
 				if (fDebug && !errorMessage.empty())
 					LogPrintf("%s\n", errorMessage.c_str());
 			}
@@ -666,7 +666,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight,con
 					else if (DecodeAssetAllocationTx(tx, op, nOut, vvchArgs))
 					{
 						errorMessage.clear();
-						good = CheckAssetAllocationInputs(tx, op, nOut, vvchArgs, vvchAliasArgs[0], fJustCheck, nHeight, assetAllocationsThisBlock, errorMessage);
+						good = CheckAssetAllocationInputs(tx, op, nOut, vvchArgs, vvchAliasArgs[0], fJustCheck, nHeight, assetAllocationsThisBlock, nFees, errorMessage);
 						if (fDebug && !errorMessage.empty())
 							LogPrintf("%s\n", errorMessage.c_str());
 
@@ -1131,7 +1131,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 			return error("%s: BUG! PLEASE REPORT THIS! ConnectInputs failed against MANDATORY but not STANDARD flags %s, %s",
 				__func__, hash.ToString(), FormatStateMessage(state));
 		}
-		if (!CheckSyscoinInputs(tx, true, chainActive.Height(), CBlock()))
+		if (!CheckSyscoinInputs(tx, true, chainActive.Height(), 0, CBlock()))
 			return false;
 		// Remove conflicting transactions from the mempool
 		BOOST_FOREACH(const CTxMemPool::txiter it, allConflicting)
@@ -2309,9 +2309,6 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 	std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue> > addressUnspentIndex;
 	std::vector<std::pair<CSpentIndexKey, CSpentIndexValue> > spentIndex;
 
-	if(!CheckSyscoinInputs(block.vtx[0], fJustCheck, pindex->nHeight, block))
-		return error("ConnectBlock(): CheckSyscoinInputs on block %s failed",
-			block.GetHash().ToString());
 	for (unsigned int i = 0; i < block.vtx.size(); i++)
 	{
 		const CTransaction &tx = block.vtx[i];
@@ -2415,7 +2412,9 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 					tx.GetHash().ToString(), FormatStateMessage(state));
 			control.Add(vChecks);
 		}
-		
+		if (!CheckSyscoinInputs(block.vtx[0], fJustCheck, pindex->nHeight, nFees, block))
+			return error("ConnectBlock(): CheckSyscoinInputs on block %s failed",
+				block.GetHash().ToString());
 		if (fAddressIndex) {
 			for (unsigned int k = 0; k < tx.vout.size(); k++) {
 				const CTxOut &out = tx.vout[k];
