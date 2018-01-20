@@ -395,7 +395,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 					break;
 				}
 			}
-			if (nFees < mempool.estimateFee(1)) {
+			if (nFees < CWallet::GetMinimumFee(tx.GetTotalSize(), nTxConfirmTarget, mempool)) {
 				nStatus = LOCK_CONFLICT_UNCONFIRMED_STATE;
 				errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Not enough fees paid for this transaction to confirm within 1 block");
 			}
