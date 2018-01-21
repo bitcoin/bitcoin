@@ -1,12 +1,12 @@
 WINDOWS BUILD NOTES
 ====================
 
-Below are some notes on how to build Bitcoin Core for Windows.
+Below are some notes on how to build Litecoin Core for Windows.
 
-The options known to work for building Bitcoin Core on Windows are:
+The options known to work for building Litecoin Core on Windows are:
 
 * On Linux using the [Mingw-w64](https://mingw-w64.org/doku.php) cross compiler tool chain. Ubuntu Trusty 14.04 is recommended
-and is the platform used to build the Bitcoin Core Windows release binaries.
+and is the platform used to build the Litecoin Core Windows release binaries.
 * On Windows using [Windows
 Subsystem for Linux (WSL)](https://msdn.microsoft.com/commandline/wsl/about) and the Mingw-w64 cross compiler tool chain.
 
@@ -53,7 +53,7 @@ Cross-compilation for Ubuntu and Windows Subsystem for Linux
 ------------------------------------------------------------
 
 At the time of writing the Windows Subsystem for Linux installs Ubuntu Xenial 16.04. The Mingw-w64 package
-for Ubuntu Xenial does not produce working executables for some of the Bitcoin Core applications.
+for Ubuntu Xenial does not produce working executables for some of the Litecoin Core applications.
 It is possible to build on Ubuntu Xenial by installing the cross compiler packages from Ubuntu Zesty, see the steps below.
 Building on Ubuntu Zesty 17.04 up to 17.10 has been verified to work.
 
@@ -98,15 +98,15 @@ Ubuntu Zesty 17.04 <sup>[2](#footnote2)</sup>:
 
 Once the tool chain is installed the build steps are common:
 
-Note that for WSL the Bitcoin Core source path MUST be somewhere in the default mount file system, for
-example /usr/src/bitcoin, AND not under /mnt/d/. If this is not the case the dependency autoconf scripts will fail.
+Note that for WSL the Litecoin Core source path MUST be somewhere in the default mount file system, for
+example /usr/src/litecoin, AND not under /mnt/d/. If this is not the case the dependency autoconf scripts will fail.
 This means you cannot use a directory that located directly on the host Windows file system to perform the build.
 
 The next three steps are an example of how to acquire the source in an appropriate way.
 
     cd /usr/src
-    sudo git clone https://github.com/bitcoin/bitcoin.git
-    sudo chmod -R a+rw bitcoin
+    sudo git clone https://github.com/litecoin-project/litecoin.git
+    sudo chmod -R a+rw litecoin
 
 Once the source code is ready the build steps are below.
 
@@ -128,15 +128,15 @@ For Ubuntu Xenial 16.04, Ubuntu Zesty 17.04 and Windows Subsystem for Linux <sup
 
     sudo update-alternatives --config i686-w64-mingw32-g++  # Set the default mingw32 g++ compiler option to posix.
 
-Note that for WSL the Bitcoin Core source path MUST be somewhere in the default mount file system, for
-example /usr/src/bitcoin, AND not under /mnt/d/. If this is not the case the dependency autoconf scripts will fail.
+Note that for WSL the Litecoin Core source path MUST be somewhere in the default mount file system, for
+example /usr/src/litecoin, AND not under /mnt/d/. If this is not the case the dependency autoconf scripts will fail.
 This means you cannot use a directory that located directly on the host Windows file system to perform the build.
 
 The next three steps are an example of how to acquire the source in an appropriate way.
 
     cd /usr/src
-    sudo git clone https://github.com/bitcoin/bitcoin.git
-    sudo chmod -R a+rw bitcoin
+    sudo git clone https://github.com/litecoin-project/litecoin.git
+    sudo chmod -R a+rw litecoin
 
 Then build using:
 
@@ -158,15 +158,15 @@ Installation
 After building using the Windows subsystem it can be useful to copy the compiled
 executables to a directory on the windows drive in the same directory structure
 as they appear in the release `.zip` archive. This can be done in the following
-way. This will install to `c:\workspace\bitcoin`, for example:
+way. This will install to `c:\workspace\litecoin`, for example:
 
-    make install DESTDIR=/mnt/c/workspace/bitcoin
+    make install DESTDIR=/mnt/c/workspace/litecoin
 
 Footnotes
 ---------
 
 <a name="footnote1">1</a>: There is currently a bug in the 64 bit Mingw-w64 cross compiler packaged for WSL/Ubuntu Xenial 16.04 that
-causes two of the bitcoin executables to crash shortly after start up. The bug is related to the
+causes two of the litecoin executables to crash shortly after start up. The bug is related to the
 -fstack-protector-all g++ compiler flag which is used to mitigate buffer overflows.
 Installing the Mingw-w64 packages from the Ubuntu 17 distribution solves the issue, however, this is not
 an officially supported approach and it's only recommended if you are prepared to reinstall WSL/Ubuntu should
@@ -176,5 +176,5 @@ something break.
 compiler options to allow a choice between either posix or win32 threads. The default option is win32 threads which is the more
 efficient since it will result in binary code that links directly with the Windows kernel32.lib. Unfortunately, the headers
 required to support win32 threads conflict with some of the classes in the C++11 standard library in particular std::mutex.
-It's not possible to build the bitcoin code using the win32 version of the Mingw-w64 cross compilers (at least not without
-modifying headers in the bitcoin source code).
+It's not possible to build the litecoin code using the win32 version of the Mingw-w64 cross compilers (at least not without
+modifying headers in the litecoin source code).
