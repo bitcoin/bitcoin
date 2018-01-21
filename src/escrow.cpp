@@ -783,9 +783,6 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 	string user1 = "";
 	string user2 = "";
 	string user3 = "";
-	char nLockStatus = NOLOCK_UNCONFIRMED_STATE;
-	if (!fJustCheck)
-		nLockStatus = NOLOCK_CONFIRMED_STATE;
 	if (!GetEscrow(serializedEscrow.vchEscrow, theEscrow))
 	{
 		if (op != OP_ESCROW_ACTIVATE) {
@@ -817,7 +814,6 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 					theEscrow.SetNull();
 				}
 				if (!dontaddtodb) {
-					//nLockStatus = LOCK_CONFLICT_CONFIRMED_STATE;
 					if (!pescrowdb->EraseISLock(serializedEscrow.vchEscrow))
 					{
 						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from escrow DB");
@@ -830,7 +826,6 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 			}
 			else {
 				if (!dontaddtodb) {
-					nLockStatus = LOCK_CONFIRMED_STATE;
 					if (fDebug)
 						LogPrintf("CONNECTED ESCROW: op=%s escrow=%s hash=%s height=%d fJustCheck=%d POW IS\n",
 							escrowFromOp(op).c_str(),
@@ -848,9 +843,6 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from escrow DB");
 						return error(errorMessage.c_str());
 					}
-					if (strResponse != "") {
-						paliasdb->UpdateAliasIndexTxHistoryLockStatus(tx.GetHash().GetHex() + "-" + stringFromVch(serializedEscrow.vchEscrow), nLockStatus);
-					}
 				}
 				return true;
 			}
@@ -859,12 +851,6 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 		{
 			if (fJustCheck && bSendLocked && theEscrow.nHeight >= nHeight)
 			{
-				if (!dontaddtodb && theEscrow.txHash != tx.GetHash()) {
-					nLockStatus = LOCK_CONFLICT_UNCONFIRMED_STATE;
-					if (strResponse != "") {
-						paliasdb->UpdateAliasIndexTxHistoryLockStatus(theEscrow.txHash.GetHex() + "-" + stringFromVch(serializedEscrow.vchEscrow), nLockStatus);
-					}
-				}
 				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Block height of service request must be less than or equal to the stored service block height.");
 				return true;
 			}
@@ -873,8 +859,6 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Block height of service request cannot be lower than stored service block height.");
 				return true;
 			}
-			if (fJustCheck)
-				nLockStatus = LOCK_UNCONFIRMED_STATE;
 		}
 	}
 	// make sure escrow settings don't change (besides scriptSigs/nTotal's) outside of activation
@@ -1318,7 +1302,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 			user1 = stringFromVch(theEscrow.vchBuyerAlias);
 			user2 = stringFromVch(theEscrow.vchSellerAlias);
 			user3 = stringFromVch(theEscrow.vchArbiterAlias);
-			paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, stringFromVch(serializedEscrow.vchEscrow), nLockStatus);
+			paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, stringFromVch(serializedEscrow.vchEscrow));
 		}
 	}
     // set the escrow's txn-dependent values

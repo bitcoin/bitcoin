@@ -24,7 +24,6 @@
 #include <boost/range/adaptor/reversed.hpp>
 #include <mongoc.h>
 #include <chrono>
-extern CTxMemPool mempool;
 using namespace std::chrono;
 using namespace std;
 extern mongoc_collection_t *assetallocation_collection;
@@ -304,7 +303,7 @@ void RevertAssetAllocations(const unordered_set<CAssetAllocationTuple> &assetAll
 	
 }
 bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const std::vector<unsigned char> &vchAlias,
-        bool fJustCheck, int nHeight, unordered_set<CAssetAllocationTuple> &assetAllocationsThisBlock, const CAmount& nFees, string &errorMessage, bool dontaddtodb) {
+        bool fJustCheck, int nHeight, unordered_set<CAssetAllocationTuple> &assetAllocationsThisBlock, string &errorMessage, bool dontaddtodb) {
 	if (!paliasdb || !passetallocationdb)
 		return false;
 	if (tx.IsCoinBase() && !fJustCheck && !dontaddtodb)
@@ -370,9 +369,6 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 	CAsset dbAsset;
 	if (op == OP_ASSET_ALLOCATION_SEND)
 	{
-		char nStatus = LOCK_CONFIRMED_STATE;
-		if (fJustCheck)
-			nStatus = LOCK_UNCONFIRMED_STATE;
 		if (!GetAssetAllocation(assetAllocationTuple, dbAssetAllocation))
 		{
 			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2024 - " + _("Cannot find sender asset allocation.");
@@ -381,24 +377,6 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 		if (!fJustCheck) {
 			// erase arrival of this tx on this service
 			passetallocationdb->EraseISArrivalTime(assetAllocationTuple, tx.GetHash());
-		}
-		else
-		{
-			// check to see if a transaction for this asset/alias tuple has arrived before minimum latency period
-			ArrivalTimesMap arrivalTimes;
-			passetallocationdb->ReadISArrivalTimes(assetAllocationTuple, arrivalTimes);
-			const int64_t & nNow = duration_cast<seconds>(system_clock::now().time_since_epoch()).count();
-			for (auto& arrivalTime : arrivalTimes) {
-				// if this tx arrived within the minimum latency period flag it as potentially conflicting
-				if ((nNow - (arrivalTime.second / 1000)) < ZDAG_MINIMUM_LATENCY_SECONDS) {
-					nStatus = LOCK_CONFLICT_UNCONFIRMED_STATE;
-					break;
-				}
-			}
-			if (nFees < CWallet::GetMinimumFee(tx.GetTotalSize(), nTxConfirmTarget, mempool)) {
-				nStatus = LOCK_CONFLICT_UNCONFIRMED_STATE;
-				errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Not enough fees paid for this transaction to confirm within 1 block");
-			}
 		}
 		theAssetAllocation.vchAlias = vchAlias;
 		theAssetAllocation.nBalance = dbAssetAllocation.nBalance;
@@ -449,16 +427,6 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 			}
 			if (dbAssetAllocation.nBalance < nTotal) {
 				errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("Sender balance is insufficient");
-				if (!dontaddtodb) {
-					if (strResponse != "") {
-						for (auto& amountTuple : theAssetAllocation.listSendingAllocationAmounts) {
-							const CAssetAllocationTuple receiverAllocationTuple(theAssetAllocation.vchAsset, amountTuple.first);
-							// update status of tx to conflicted for each reciever
-							paliasdb->UpdateAliasIndexTxHistoryLockStatus(tx.GetHash().GetHex() + "-" + receiverAllocationTuple.ToString(), LOCK_CONFLICT_UNCONFIRMED_STATE);
-						}
-						
-					}
-				}
 				return true;
 			}
 			
@@ -499,13 +467,10 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 					}
 	
 					// if mempool inclusion or conflict with another tx we simply update, otherwise we create the tx history entry
-					if (fJustCheck && nStatus != LOCK_CONFLICT_UNCONFIRMED_STATE) {
+					if (fJustCheck) {
 						if (strResponse != "") {
-							paliasdb->WriteAliasIndexTxHistory(user1, stringFromVch(receiverAllocation.vchAlias), user3, tx.GetHash(), nHeight, strResponseEnglish, receiverAllocationTuple.ToString(), nStatus);
+							paliasdb->WriteAliasIndexTxHistory(user1, stringFromVch(receiverAllocation.vchAlias), user3, tx.GetHash(), nHeight, strResponseEnglish, receiverAllocationTuple.ToString());
 						}
-					}
-					else {
-						paliasdb->UpdateAliasIndexTxHistoryLockStatus(tx.GetHash().GetHex() + "-" + receiverAllocationTuple.ToString(), nStatus);
 					}
 				}
 			}

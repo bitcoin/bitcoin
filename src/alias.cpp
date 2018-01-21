@@ -514,9 +514,6 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	string user3 = "";
 	if (!theAlias.vchAddress.empty())
 		user2 = EncodeBase58(theAlias.vchAddress);
-	char nLockStatus = NOLOCK_UNCONFIRMED_STATE;
-	if (!fJustCheck)
-		nLockStatus = NOLOCK_CONFIRMED_STATE;
 	if (op == OP_ALIAS_UPDATE)
 	{
 		CTxDestination aliasDest;
@@ -572,7 +569,6 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						dbAlias.SetNull();
 					}
 					if (!dontaddtodb) {
-						//nLockStatus = LOCK_CONFLICT_CONFIRMED_STATE;
 						if (!paliasdb->EraseISLock(vvchArgs[0]))
 						{
 							errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from alias DB");
@@ -584,7 +580,6 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				}
 				else {
 					if (!dontaddtodb) {
-						nLockStatus = LOCK_CONFIRMED_STATE;
 						if (fDebug)
 							LogPrintf(
 								"CONNECTED ALIAS: name=%s  op=%s  hash=%s  height=%d fJustCheck=%d POW IS\n",
@@ -602,9 +597,6 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 							errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from alias DB");
 							return error(errorMessage.c_str());
 						}
-						if (strResponse != "") {
-							paliasdb->UpdateAliasIndexTxHistoryLockStatus(tx.GetHash().GetHex() + "-" + strName, nLockStatus);
-						}
 					}
 					return true;
 				}
@@ -613,12 +605,6 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			{
 				if (fJustCheck && bSendLocked && dbAlias.nHeight >= nHeight)
 				{
-					if (!dontaddtodb && dbAlias.txHash != tx.GetHash()) {
-						nLockStatus = LOCK_CONFLICT_UNCONFIRMED_STATE;
-						if (strResponse != "") {
-							paliasdb->UpdateAliasIndexTxHistoryLockStatus(dbAlias.txHash.GetHex() + "-" + strName, nLockStatus);
-						}
-					}
 					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Block height of service request must be less than or equal to the stored service block height.");
 					return true;
 				}
@@ -627,8 +613,6 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Block height of service request cannot be lower than stored service block height.");
 					return true;
 				}
-				if(fJustCheck)
-					nLockStatus = LOCK_UNCONFIRMED_STATE;
 			}
 			COfferLinkWhitelist whiteList;
 			// if updating whitelist, we dont allow updating any alias details
@@ -764,7 +748,7 @@ theAlias = dbAlias;
 	{
 		if (!dontaddtodb) {
 			if (strResponse != "") {
-				paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, strName, nLockStatus);
+				paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, strName);
 			}
 		}
 		theAlias.nHeight = nHeight;
@@ -1836,10 +1820,9 @@ bool BuildAliasIndexerTxHistoryJson(const string &user1, const string &user2, co
 		}
 	}
 	oName.push_back(Pair("time", nTime));
-	oName.push_back(Pair("lock_status", lockstatus));
 	return true;
 }
-void CAliasDB::WriteAliasIndexTxHistory(const string &user1, const string &user2, const string &user3, const uint256 &txHash, const uint64_t& nHeight, const string &type, const string &guid, const char &lockstatus) {
+void CAliasDB::WriteAliasIndexTxHistory(const string &user1, const string &user2, const string &user3, const uint256 &txHash, const uint64_t& nHeight, const string &type, const string &guid) {
 	if (!aliastxhistory_collection)
 		return;
 	bson_error_t error;
@@ -1853,7 +1836,7 @@ void CAliasDB::WriteAliasIndexTxHistory(const string &user1, const string &user2
 	selector = BCON_NEW("_id", BCON_UTF8(id.c_str()));
 	mongoc_update_flags_t update_flags;
 	update_flags = (mongoc_update_flags_t)(MONGOC_UPDATE_NO_VALIDATE | MONGOC_UPDATE_UPSERT);
-	BuildAliasIndexerTxHistoryJson(user1, user2, user3, txHash, nHeight, type, guid, lockstatus, oName);
+	BuildAliasIndexerTxHistoryJson(user1, user2, user3, txHash, nHeight, type, guid, oName);
 	insert = bson_new_from_json((unsigned char *)oName.write().c_str(), -1, &error);
 	if (!insert || !mongoc_collection_update(aliastxhistory_collection, update_flags, selector, insert, write_concern, &error)) {
 		LogPrintf("MONGODB ALIAS TX HISTORY ERROR: %s\n", error.message);
@@ -1862,31 +1845,6 @@ void CAliasDB::WriteAliasIndexTxHistory(const string &user1, const string &user2
 		bson_destroy(selector);
 	if (insert)
 		bson_destroy(insert);
-	if (write_concern)
-		mongoc_write_concern_destroy(write_concern);
-}
-void CAliasDB::UpdateAliasIndexTxHistoryLockStatus(const string &id, const char &lockstatus) {
-	if (!aliastxhistory_collection)
-		return;
-	bson_error_t error;
-	bson_t *selector = NULL;
-	mongoc_write_concern_t* write_concern = NULL;
-	UniValue oName(UniValue::VOBJ);
-	mongoc_update_flags_t update_flags;
-	update_flags = (mongoc_update_flags_t)(MONGOC_UPDATE_NO_VALIDATE);
-	selector = BCON_NEW("_id", BCON_UTF8(id.c_str()));
-	write_concern = mongoc_write_concern_new();
-	mongoc_write_concern_set_w(write_concern, MONGOC_WRITE_CONCERN_W_UNACKNOWLEDGED);
-	bson_t *update = BCON_NEW("$set", "{",
-		"lock_status", BCON_INT32(lockstatus),
-		"}");
-	if (!update || !mongoc_collection_update(aliastxhistory_collection, update_flags, selector, update, write_concern, &error)) {
-		LogPrintf("MONGODB ALIAS TX HISTORY LOCK STATUS ERROR: %s\n", error.message);
-	}
-	if (update)
-		bson_destroy(update);
-	if (selector)
-		bson_destroy(selector);
 	if (write_concern)
 		mongoc_write_concern_destroy(write_concern);
 }

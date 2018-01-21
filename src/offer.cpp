@@ -500,9 +500,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	}
 	string strResponseEnglish = "";
 	string strResponse = GetSyscoinTransactionDescription(op, strResponseEnglish, OFFER);
-	char nLockStatus = NOLOCK_UNCONFIRMED_STATE;
-	if (!fJustCheck)
-		nLockStatus = NOLOCK_CONFIRMED_STATE;
 	COffer dbOffer;
 	// load the offer data from the DB
 	if (!GetOffer(theOffer.vchOffer, dbOffer))
@@ -535,7 +532,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					dbOffer.SetNull();
 				}
 				if (!dontaddtodb) {
-					//nLockStatus = LOCK_CONFLICT_CONFIRMED_STATE;
 					if (!pofferdb->EraseISLock(theOffer.vchOffer))
 					{
 						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from offer DB");
@@ -549,7 +545,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			}
 			else {
 				if (!dontaddtodb) {
-					nLockStatus = LOCK_CONFIRMED_STATE;
 					if (fDebug)
 						LogPrintf("CONNECTED OFFER: op=%s offer=%s qty=%u hash=%s height=%d fJustCheck=%d POW IS\n",
 							offerFromOp(op).c_str(),
@@ -568,9 +563,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from offer DB");
 						return error(errorMessage.c_str());
 					}
-					if (strResponse != "") {
-						paliasdb->UpdateAliasIndexTxHistoryLockStatus(tx.GetHash().GetHex() + "-" + stringFromVch(theOffer.vchOffer), nLockStatus);
-					}
 				}
 				return true;
 			}
@@ -579,12 +571,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		{
 			if (fJustCheck && bSendLocked && dbOffer.nHeight >= nHeight)
 			{
-				if (!dontaddtodb && dbOffer.txHash != tx.GetHash()) {
-					nLockStatus = LOCK_CONFLICT_UNCONFIRMED_STATE;
-					if (strResponse != "") {
-						paliasdb->UpdateAliasIndexTxHistoryLockStatus(dbOffer.txHash.GetHex() + "-" + stringFromVch(theOffer.vchOffer), nLockStatus);
-					}
-				}
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Block height of service request must be less than or equal to the stored service block height.");
 				return true;
 			}
@@ -593,8 +579,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Block height of service request cannot be lower than stored service block height.");
 				return true;
 			}
-			if (fJustCheck)
-				nLockStatus = LOCK_UNCONFIRMED_STATE;
 		}
 	}
 	if (op == OP_OFFER_UPDATE) {
@@ -727,7 +711,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	}
 	if(!dontaddtodb) {
 		if (strResponse != "") {
-			paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, stringFromVch(theOffer.vchOffer), nLockStatus);
+			paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, stringFromVch(theOffer.vchOffer));
 		}
 	}
 	theOffer.nHeight = nHeight;

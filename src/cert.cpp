@@ -448,9 +448,6 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 	}
 	string strResponseEnglish = "";
 	string strResponse = GetSyscoinTransactionDescription(op, strResponseEnglish, CERT);
-	char nLockStatus = NOLOCK_UNCONFIRMED_STATE;
-	if(!fJustCheck)
-		nLockStatus = NOLOCK_CONFIRMED_STATE;
 	// if not an certnew, load the cert data from the DB
 	CCert dbCert;
 	if (!GetCert(theCert.vchCert, dbCert))
@@ -485,7 +482,6 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 					dbCert.SetNull();
 				}
 				if (!dontaddtodb) {
-					//nLockStatus = LOCK_CONFLICT_CONFIRMED_STATE;
 					if (!pcertdb->EraseISLock(theCert.vchCert))
 					{
 						errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from certificate DB");
@@ -515,9 +511,6 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 						errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from certificate DB");
 						return error(errorMessage.c_str());
 					}
-					if (strResponse != "") {
-						paliasdb->UpdateAliasIndexTxHistoryLockStatus(tx.GetHash().GetHex() + "-" + stringFromVch(theCert.vchCert), nLockStatus);
-					}
 				}
 				return true;
 			}
@@ -526,12 +519,6 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 		{
 			if(fJustCheck && bSendLocked && dbCert.nHeight >= nHeight)
 			{
-				if (!dontaddtodb && dbCert.txHash != tx.GetHash()) {
-					nLockStatus = LOCK_CONFLICT_UNCONFIRMED_STATE;
-					if (strResponse != "") {
-						paliasdb->UpdateAliasIndexTxHistoryLockStatus(dbCert.txHash.GetHex() + "-" + stringFromVch(theCert.vchCert), nLockStatus);
-					}
-				}
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Block height of service request must be less than or equal to the stored service block height.");
 				return true;
 			}
@@ -540,8 +527,6 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Block height of service request cannot be lower than stored service block height.");
 				return true;
 			}
-			if (fJustCheck)
-				nLockStatus = LOCK_UNCONFIRMED_STATE;
 		}
 	}
 	if(op != OP_CERT_ACTIVATE) 
@@ -610,7 +595,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 	}
 	if(!dontaddtodb) {
 		if (strResponse != "") {
-			paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, stringFromVch(theCert.vchCert), nLockStatus);
+			paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, stringFromVch(theCert.vchCert));
 		}
 	}
     // set the cert's txn-dependent values
