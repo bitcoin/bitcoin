@@ -226,7 +226,7 @@ Value masternode(const Array& params, bool fHelp)
         Object statusObj;
         statusObj.push_back(Pair("alias", alias));
 
-        BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry mne, masternodeConfig.getEntries()) {
+        BOOST_FOREACH(CNodeEntry mne, masternodeConfig.getEntries()) {
             if(mne.getAlias() == alias) {
                 found = true;
                 std::string errorMessage;
@@ -268,7 +268,7 @@ Value masternode(const Array& params, bool fHelp)
             throw runtime_error("You can't use this command until masternode list is synced\n");
         }
 
-        std::vector<CMasternodeConfig::CMasternodeEntry> mnEntries;
+        std::vector<CNodeEntry> mnEntries;
         mnEntries = masternodeConfig.getEntries();
 
         int successful = 0;
@@ -276,7 +276,7 @@ Value masternode(const Array& params, bool fHelp)
 
         Object resultsObj;
 
-        BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry mne, masternodeConfig.getEntries()) {
+        BOOST_FOREACH(CNodeEntry mne, masternodeConfig.getEntries()) {
             std::string errorMessage;
 
             CTxIn vin = CTxIn(uint256S(mne.getTxHash()), uint32_t(atoi(mne.getOutputIndex().c_str())));
@@ -319,12 +319,12 @@ Value masternode(const Array& params, bool fHelp)
 
     if(strCommand == "list-conf")
     {
-        std::vector<CMasternodeConfig::CMasternodeEntry> mnEntries;
+        std::vector<CNodeEntry> mnEntries;
         mnEntries = masternodeConfig.getEntries();
 
         Object resultObj;
 
-        BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry mne, masternodeConfig.getEntries()) {
+        BOOST_FOREACH(CNodeEntry mne, masternodeConfig.getEntries()) {
             CTxIn vin = CTxIn(uint256S(mne.getTxHash()), uint32_t(atoi(mne.getOutputIndex().c_str())));
             CMasternode *pmn = mnodeman.Find(vin);
 
@@ -612,7 +612,7 @@ Value masternodebroadcast(const Array& params, bool fHelp)
 
         statusObj.push_back(Pair("alias", alias));
 
-        BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry mne, masternodeConfig.getEntries()) {
+        BOOST_FOREACH(CNodeEntry mne, masternodeConfig.getEntries()) {
             if(mne.getAlias() == alias) {
                 found = true;
                 std::string errorMessage;
@@ -653,7 +653,7 @@ Value masternodebroadcast(const Array& params, bool fHelp)
             EnsureWalletIsUnlocked();
         }
 
-        std::vector<CMasternodeConfig::CMasternodeEntry> mnEntries;
+        std::vector<CNodeEntry> mnEntries;
         mnEntries = masternodeConfig.getEntries();
 
         int successful = 0;
@@ -662,7 +662,7 @@ Value masternodebroadcast(const Array& params, bool fHelp)
         Object resultsObj;
         std::vector<CMasternodeBroadcast> vecMnb;
 
-        BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry mne, masternodeConfig.getEntries()) {
+        BOOST_FOREACH(CNodeEntry mne, masternodeConfig.getEntries()) {
             std::string errorMessage;
 
             CTxIn vin = CTxIn(uint256S(mne.getTxHash()), uint32_t(atoi(mne.getOutputIndex().c_str())));

@@ -114,7 +114,7 @@ void SystemnodeList::StartAlias(std::string strAlias)
     std::string statusObj;
     statusObj += "<center>Alias: " + strAlias;
 
-    BOOST_FOREACH(CSystemnodeConfig::CSystemnodeEntry mne, systemnodeConfig.getEntries()) {
+    BOOST_FOREACH(CNodeEntry mne, systemnodeConfig.getEntries()) {
         if(mne.getAlias() == strAlias) {
             std::string errorMessage;
             CSystemnodeBroadcast mnb;
@@ -146,7 +146,7 @@ void SystemnodeList::StartAll(std::string strCommand)
     int fail = 0;
     std::string statusObj;
 
-    BOOST_FOREACH(CSystemnodeConfig::CSystemnodeEntry mne, systemnodeConfig.getEntries()) {
+    BOOST_FOREACH(CNodeEntry mne, systemnodeConfig.getEntries()) {
         std::string errorMessage;
         CSystemnodeBroadcast mnb;
 
@@ -232,7 +232,7 @@ void SystemnodeList::updateMyNodeList(bool reset) {
     lastMyListUpdate = GetTime();
 
     ui->tableWidgetSystemnodes->setSortingEnabled(false);
-    BOOST_FOREACH(CSystemnodeConfig::CSystemnodeEntry mne, systemnodeConfig.getEntries()) {
+    BOOST_FOREACH(CNodeEntry mne, systemnodeConfig.getEntries()) {
         CTxIn vin = CTxIn(uint256S(mne.getTxHash()), uint32_t(atoi(mne.getOutputIndex().c_str())));
         CSystemnode *pmn = snodeman.Find(vin);
 
@@ -381,7 +381,7 @@ void SystemnodeList::on_editButton_clicked()
         if (Params().NetworkID() == CBaseChainParams::TESTNET) {
             port = "19340";
         }
-        BOOST_FOREACH(CSystemnodeConfig::CSystemnodeEntry &sne, systemnodeConfig.getEntries()) {
+        BOOST_FOREACH(CNodeEntry &sne, systemnodeConfig.getEntries()) {
             if (sne.getAlias() == strAlias.toStdString())
             {
                 sne.setAlias(dialog.getAlias().toStdString());

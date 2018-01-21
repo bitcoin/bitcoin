@@ -119,7 +119,7 @@ void MasternodeList::StartAlias(std::string strAlias)
     std::string statusObj;
     statusObj += "<center>Alias: " + strAlias;
 
-    BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry mne, masternodeConfig.getEntries()) {
+    BOOST_FOREACH(CNodeEntry mne, masternodeConfig.getEntries()) {
         if(mne.getAlias() == strAlias) {
             std::string errorMessage;
             CMasternodeBroadcast mnb;
@@ -151,7 +151,7 @@ void MasternodeList::StartAll(std::string strCommand)
     int fail = 0;
     std::string statusObj;
 
-    BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry mne, masternodeConfig.getEntries()) {
+    BOOST_FOREACH(CNodeEntry mne, masternodeConfig.getEntries()) {
         std::string errorMessage;
         CMasternodeBroadcast mnb;
 
@@ -237,7 +237,7 @@ void MasternodeList::updateMyNodeList(bool reset) {
     lastMyListUpdate = GetTime();
 
     ui->tableWidgetMasternodes->setSortingEnabled(false);
-    BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry mne, masternodeConfig.getEntries()) {
+    BOOST_FOREACH(CNodeEntry mne, masternodeConfig.getEntries()) {
         CTxIn vin = CTxIn(uint256S(mne.getTxHash()), uint32_t(atoi(mne.getOutputIndex().c_str())));
         CMasternode *pmn = mnodeman.Find(vin);
 
@@ -386,7 +386,7 @@ void MasternodeList::on_editButton_clicked()
         if (Params().NetworkID() == CBaseChainParams::TESTNET) {
             port = "19340";
         }
-        BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry &mne, masternodeConfig.getEntries()) {
+        BOOST_FOREACH(CNodeEntry &mne, masternodeConfig.getEntries()) {
             if (mne.getAlias() == strAlias.toStdString())
             {
                 mne.setAlias(dialog.getAlias().toStdString());
@@ -585,7 +585,7 @@ void MasternodeList::updateVoteList(bool reset)
 
 void MasternodeList::VoteMany(std::string strCommand)
 {
-    std::vector<CMasternodeConfig::CMasternodeEntry> mnEntries;
+    std::vector<CNodeEntry> mnEntries;
     mnEntries = masternodeConfig.getEntries();
 
     int nVote = VOTE_ABSTAIN;
@@ -608,7 +608,7 @@ void MasternodeList::VoteMany(std::string strCommand)
     int failed = 0;
     std::string statusObj;
 
-    BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry mne, masternodeConfig.getEntries()) {
+    BOOST_FOREACH(CNodeEntry mne, masternodeConfig.getEntries()) {
         std::string errorMessage;
         std::vector<unsigned char> vchMasterNodeSignature;
         std::string strMasterNodeSignMessage;

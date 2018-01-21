@@ -1,36 +1,25 @@
 #ifndef CREATESYSTEMNODEDIALOG_H
 #define CREATESYSTEMNODEDIALOG_H
 
+#include "createnodedialog.h"
+#include "systemnodeconfig.h"
 #include <QDialog>
 
-namespace Ui {
-class CreateSystemnodeDialog;
-}
-
-class CreateSystemnodeDialog : public QDialog
+class CreateSystemnodeDialog : public CreateNodeDialog
 {
     Q_OBJECT
 
 public:
-    explicit CreateSystemnodeDialog(QWidget *parent = 0);
-    ~CreateSystemnodeDialog();
-
-public:
-    QString getAlias();
-    QString getIP();
-    QString getLabel();
-    void setAlias(QString alias);
-    void setIP(QString ip);
-    void setNoteLabel(QString text);
-    void setEditMode();
-
-protected slots:
-    void accept();
-
+    explicit CreateSystemnodeDialog(QWidget *parent = 0)
+        : CreateNodeDialog(parent)
+    {
+        setWindowTitle("Create a new Systemnode");
+    }
 private:
-    bool editMode;
-    QString startAlias;
-    Ui::CreateSystemnodeDialog *ui;
+    virtual bool aliasExists(QString alias)
+    {
+        return systemnodeConfig.aliasExists(alias.toStdString());
+    }
 };
 
 #endif // CREATESYSTEMNODEDIALOG_H

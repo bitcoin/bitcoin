@@ -195,7 +195,7 @@ Value systemnode(const Array& params, bool fHelp)
         Object statusObj;
         statusObj.push_back(Pair("alias", alias));
 
-        BOOST_FOREACH(CSystemnodeConfig::CSystemnodeEntry mne, systemnodeConfig.getEntries()) {
+        BOOST_FOREACH(CNodeEntry mne, systemnodeConfig.getEntries()) {
             if(mne.getAlias() == alias) {
                 found = true;
                 std::string errorMessage;
@@ -231,12 +231,12 @@ Value systemnode(const Array& params, bool fHelp)
 
     if(strCommand == "list-conf")
     {
-        std::vector<CSystemnodeConfig::CSystemnodeEntry> mnEntries;
+        std::vector<CNodeEntry> mnEntries;
         mnEntries = systemnodeConfig.getEntries();
 
         Object resultObj;
 
-        BOOST_FOREACH(CSystemnodeConfig::CSystemnodeEntry mne, systemnodeConfig.getEntries()) {
+        BOOST_FOREACH(CNodeEntry mne, systemnodeConfig.getEntries()) {
             CTxIn vin = CTxIn(uint256S(mne.getTxHash()), uint32_t(atoi(mne.getOutputIndex().c_str())));
             CSystemnode *pmn = snodeman.Find(vin);
 
@@ -280,7 +280,7 @@ Value systemnode(const Array& params, bool fHelp)
             throw runtime_error("You can't use this command until systemnode list is synced\n");
         }
 
-        std::vector<CSystemnodeConfig::CSystemnodeEntry> mnEntries;
+        std::vector<CNodeEntry> mnEntries;
         mnEntries = systemnodeConfig.getEntries();
 
         int successful = 0;
@@ -288,7 +288,7 @@ Value systemnode(const Array& params, bool fHelp)
 
         Object resultsObj;
 
-        BOOST_FOREACH(CSystemnodeConfig::CSystemnodeEntry mne, systemnodeConfig.getEntries()) {
+        BOOST_FOREACH(CNodeEntry mne, systemnodeConfig.getEntries()) {
             std::string errorMessage;
 
             CTxIn vin = CTxIn(uint256S(mne.getTxHash()), uint32_t(atoi(mne.getOutputIndex().c_str())));
@@ -551,7 +551,7 @@ Value systemnodebroadcast(const Array& params, bool fHelp)
 
         statusObj.push_back(Pair("alias", alias));
 
-        BOOST_FOREACH(CSystemnodeConfig::CSystemnodeEntry mne, systemnodeConfig.getEntries()) {
+        BOOST_FOREACH(CNodeEntry mne, systemnodeConfig.getEntries()) {
             if(mne.getAlias() == alias) {
                 found = true;
                 std::string errorMessage;
@@ -592,7 +592,7 @@ Value systemnodebroadcast(const Array& params, bool fHelp)
             EnsureWalletIsUnlocked();
         }
 
-        std::vector<CSystemnodeConfig::CSystemnodeEntry> mnEntries;
+        std::vector<CNodeEntry> mnEntries;
         mnEntries = systemnodeConfig.getEntries();
 
         int successful = 0;
@@ -601,7 +601,7 @@ Value systemnodebroadcast(const Array& params, bool fHelp)
         Object resultsObj;
         std::vector<CSystemnodeBroadcast> vecMnb;
 
-        BOOST_FOREACH(CSystemnodeConfig::CSystemnodeEntry mne, systemnodeConfig.getEntries()) {
+        BOOST_FOREACH(CNodeEntry mne, systemnodeConfig.getEntries()) {
             std::string errorMessage;
 
             CTxIn vin = CTxIn(uint256S(mne.getTxHash()), uint32_t(atoi(mne.getOutputIndex().c_str())));

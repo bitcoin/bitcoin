@@ -1,36 +1,25 @@
 #ifndef CREATEMASTERNODEDIALOG_H
 #define CREATEMASTERNODEDIALOG_H
 
+#include "createnodedialog.h"
+#include "masternodeconfig.h"
 #include <QDialog>
 
-namespace Ui {
-class CreateMasternodeDialog;
-}
-
-class CreateMasternodeDialog : public QDialog
+class CreateMasternodeDialog : public CreateNodeDialog
 {
     Q_OBJECT
 
 public:
-    explicit CreateMasternodeDialog(QWidget *parent = 0);
-    ~CreateMasternodeDialog();
-
-public:
-    QString getAlias();
-    QString getIP();
-    QString getLabel();
-    void setAlias(QString alias);
-    void setIP(QString ip);
-    void setNoteLabel(QString text);
-    void setEditMode();
-
-protected slots:
-    void accept();
-
+    explicit CreateMasternodeDialog(QWidget *parent = 0)
+        : CreateNodeDialog(parent)
+    {
+        setWindowTitle("Create a new Masternode");
+    }
 private:
-    bool editMode;
-    QString startAlias;
-    Ui::CreateMasternodeDialog *ui;
+    virtual bool aliasExists(QString alias)
+    {
+        return masternodeConfig.aliasExists(alias.toStdString());
+    }
 };
 
 #endif // CREATEMASTERNODEDIALOG_H

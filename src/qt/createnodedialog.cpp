@@ -1,56 +1,55 @@
-#include "createsystemnodedialog.h"
-#include "ui_createsystemnodedialog.h"
+#include "createnodedialog.h"
+#include "ui_createnodedialog.h"
 #include "ui_interface.h"
 #include "net.h"
-#include "systemnodeconfig.h"
 #include <QMessageBox>
 
-CreateSystemnodeDialog::CreateSystemnodeDialog(QWidget *parent) :
+CreateNodeDialog::CreateNodeDialog(QWidget *parent) :
     QDialog(parent),
     editMode(false),
     startAlias(""),
-    ui(new Ui::CreateSystemnodeDialog)
+    ui(new Ui::CreateNodeDialog)
 {
     ui->setupUi(this);
 }
 
-CreateSystemnodeDialog::~CreateSystemnodeDialog()
+CreateNodeDialog::~CreateNodeDialog()
 {
     delete ui;
 }
 
-QString CreateSystemnodeDialog::getAlias()
+QString CreateNodeDialog::getAlias()
 {
     return ui->aliasEdit->text();
 }
 
-void CreateSystemnodeDialog::setAlias(QString alias)
+void CreateNodeDialog::setAlias(QString alias)
 {
     ui->aliasEdit->setText(alias);
     startAlias = alias;
 }
 
-QString CreateSystemnodeDialog::getIP()
+QString CreateNodeDialog::getIP()
 {
     return ui->ipEdit->text();
 }
 
-void CreateSystemnodeDialog::setIP(QString ip)
+void CreateNodeDialog::setIP(QString ip)
 {
     ui->ipEdit->setText(ip);
 }
 
-QString CreateSystemnodeDialog::getLabel()
+QString CreateNodeDialog::getLabel()
 {
     return ui->labelEdit->text();
 }
 
-void CreateSystemnodeDialog::setNoteLabel(QString text)
+void CreateNodeDialog::setNoteLabel(QString text)
 {
     ui->noteLabel->setText(text);
 }
 
-void CreateSystemnodeDialog::setEditMode()
+void CreateNodeDialog::setEditMode()
 {
     ui->labelEdit->setVisible(false);
     ui->label->setVisible(false);
@@ -60,7 +59,7 @@ void CreateSystemnodeDialog::setEditMode()
     editMode = true;
 }
 
-void CreateSystemnodeDialog::accept()
+void CreateNodeDialog::accept()
 {
     // Check alias
     if (ui->aliasEdit->text().isEmpty())
@@ -70,7 +69,7 @@ void CreateSystemnodeDialog::accept()
         return;
     }
     // Check if alias exists
-    if (systemnodeConfig.aliasExists(ui->aliasEdit->text().toStdString()))
+    if (aliasExists(ui->aliasEdit->text()))
     {
         QString aliasEditText = ui->aliasEdit->text();
         if (!(startAlias != "" && aliasEditText == startAlias))

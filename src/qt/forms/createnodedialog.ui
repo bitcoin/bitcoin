@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>CreateSystemnodeDialog</class>
- <widget class="QDialog" name="CreateSystemnodeDialog">
+ <class>CreateNodeDialog</class>
+ <widget class="QDialog" name="CreateNodeDialog">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Create a New Systemnode</string>
+   <string></string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
@@ -20,7 +20,7 @@
       <bool>true</bool>
      </property>
      <property name="text">
-      <string>Alias</string>
+      <string></string>
      </property>
     </widget>
    </item>
@@ -85,7 +85,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>accepted()</signal>
-   <receiver>CreateSystemnodeDialog</receiver>
+   <receiver>CreateNodeDialog</receiver>
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -101,7 +101,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>rejected()</signal>
-   <receiver>CreateSystemnodeDialog</receiver>
+   <receiver>CreateNodeDialog</receiver>
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">
