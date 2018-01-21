@@ -40,24 +40,12 @@ EXTRA_DIST += \
 	test/data/txcreatemultisig1.json \
 	test/data/txcreatemultisig2.hex \
 	test/data/txcreatemultisig2.json \
-	test/data/txcreatemultisig3.hex \
-	test/data/txcreatemultisig3.json \
-	test/data/txcreatemultisig4.hex \
-	test/data/txcreatemultisig4.json \
 	test/data/txcreateoutpubkey1.hex \
 	test/data/txcreateoutpubkey1.json \
-	test/data/txcreateoutpubkey2.hex \
-	test/data/txcreateoutpubkey2.json \
-	test/data/txcreateoutpubkey3.hex \
-	test/data/txcreateoutpubkey3.json \
 	test/data/txcreatescript1.hex \
 	test/data/txcreatescript1.json \
 	test/data/txcreatescript2.hex \
 	test/data/txcreatescript2.json \
-	test/data/txcreatescript3.hex \
-	test/data/txcreatescript3.json \
-	test/data/txcreatescript4.hex \
-	test/data/txcreatescript4.json \
 	test/data/txcreatesignv1.hex \
 	test/data/txcreatesignv1.json \
 	test/data/txcreatesignv2.hex
