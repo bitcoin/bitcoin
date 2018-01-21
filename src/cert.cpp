@@ -493,7 +493,6 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 			}
 			else {
 				if (!dontaddtodb) {
-					nLockStatus = LOCK_CONFIRMED_STATE;
 					if (fDebug)
 						LogPrintf("CONNECTED CERT: op=%s cert=%s hash=%s height=%d fJustCheck=%d POW IS\n",
 							certFromOp(op).c_str(),
