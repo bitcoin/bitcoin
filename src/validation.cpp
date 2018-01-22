@@ -744,7 +744,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 
 	// If this is a Transaction Lock Request check to see if it's valid
 	// SYSCOIN transactions are not IS compatible
-	if (instantsend.HasTxLockRequest(hash) && !CTxLockRequest(tx).IsValid() || tx.nVersion == SYSCOIN_TX_VERSION)
+	if (instantsend.HasTxLockRequest(hash) && !CTxLockRequest(tx).IsValid())
 		return state.DoS(10, error("AcceptToMemoryPool : CTxLockRequest %s is invalid", hash.ToString()),
 			REJECT_INVALID, "bad-txlockrequest");
 
