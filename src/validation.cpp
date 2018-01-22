@@ -546,7 +546,7 @@ std::string FormatStateMessage(const CValidationState &state)
 		state.GetRejectCode());
 }
 // SYSCOIN
-bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight, const CAmount& nFees, const CBlock& block)
+bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight, const CBlock& block)
 {
 	static unordered_set<CAssetAllocationTuple> assetAllocationsThisBlock;
 	vector<vector<unsigned char> > vvchArgs;
