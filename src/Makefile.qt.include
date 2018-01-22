@@ -290,6 +290,7 @@ BITCOIN_QT_CPP += \
   qt/receiverequestdialog.cpp \
   qt/recentrequeststablemodel.cpp \
   qt/sendcoinsdialog.cpp \
+  qt/sendcollateraldialog.cpp \
   qt/sendcoinsentry.cpp \
   qt/signverifymessagedialog.cpp \
   qt/masternodelist.cpp \

@@ -8,24 +8,17 @@ class SendCollateralDialog : public SendCoinsDialog
     Q_OBJECT
 
 public:
-    explicit SendCollateralDialog(QWidget *parent = 0)
-    {
-        fAutoCreate = false;
-    }
-
-    void send(QList<SendCoinsRecipient> &recipients)
-    {
-        QStringList formatted = constructConfirmationMessage(recipients);
-        fAutoCreate = true;
-        checkAndSend(recipients, formatted);
-        fAutoCreate = false;
-    }
+    enum Node {
+        SYSTEMNODE,
+        MASTERNODE
+    };
+    explicit SendCollateralDialog(Node node, QWidget *parent = 0);
+    void send(QList<SendCoinsRecipient> &recipients);
     bool fAutoCreate;
 private:
-    bool instantXChecked()
-    {
-        return false;
-    }
+    bool instantXChecked();
+    void processSendCoinsReturn(const WalletModel::SendCoinsReturn &sendCoinsReturn, const QString &msgArg = QString());
+    Node node;
 };
 
 #endif // SENDCOINSDIALOG_H
