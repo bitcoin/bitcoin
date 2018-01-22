@@ -603,11 +603,10 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
 	if (wtxNew.nVersion == SYSCOIN_TX_VERSION) {
 		if (DecodeAliasTx(wtxNew, op, nOut, vvchAlias))
 		{
-			CheckAliasInputs(wtxNew, op, nOut, vvchAlias, fJustCheck, chainActive.Tip()->nHeight, errorMessage, bCheckDestError, nFees, true);
-			if (!errorMessage.empty())
+			if (!CheckAliasInputs(wtxNew, op, nOut, vvchAlias, fJustCheck, chainActive.Tip()->nHeight, errorMessage, bCheckDestError, nFees, true) || !errorMessage.empty())
 				throw runtime_error(errorMessage.c_str());
-			CheckAliasInputs(wtxNew, op, nOut, vvchAlias, !fJustCheck, chainActive.Tip()->nHeight, errorMessage, bCheckDestError, nFees, true);
-			if (!errorMessage.empty())
+			
+			if (!CheckAliasInputs(wtxNew, op, nOut, vvchAlias, !fJustCheck, chainActive.Tip()->nHeight, errorMessage, bCheckDestError, nFees, true) || !errorMessage.empty())
 				throw runtime_error(errorMessage.c_str());
 		}
 		if (DecodeCertTx(wtxNew, op, nOut, vvch))

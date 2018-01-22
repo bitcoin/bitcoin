@@ -481,7 +481,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		}
 	}
 	// check fees
-	if (nFees != ::minRelayTxFee.GetFee(tx.GetTotalSize())) {
+	if (nFees != ::minRelayTxFee.GetFee(100000)) {
 		errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5019 - " + _("Transaction pays incorrect fee, fee paid: ") + ValueFromAmount(nFees).write() + " vs fee required: " + ValueFromAmount(::minRelayTxFee.GetFee(tx.GetTotalSize())).write();
 		return error(errorMessage.c_str());
 	}
@@ -1159,8 +1159,7 @@ void CreateAliasRecipient(const CScript& scriptPubKeyDest, CRecipient& recipient
 	CRecipient recp = { scriptPubKeyDest, 0, false};
 	recipient = recp;
 	CTxOut txout(0,	recipient.scriptPubKey);
-	size_t nSize = txout.GetSerializeSize(SER_DISK,0)+148u;
-	nFee = 3 * minRelayTxFee.GetFee(nSize);
+	nFee = ::minRelayTxFee.GetFee(110000);
 	recipient.nAmount = nFee;
 }
 void CreateFeeRecipient(CScript& scriptPubKey, const vector<unsigned char>& data, CRecipient& recipient)

@@ -3276,7 +3276,9 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
 	int& nChangePosRet, std::string& strFailReason, const CCoinControl* coinControl, bool sign, bool sysTx, AvailableCoinsType nCoinType, bool fUseInstantSend)
 {
 	CAmount nFeePay = fUseInstantSend ? CTxLockRequest().GetMinFee() : 0;
-
+	// SYSCOIN tx's always send with set fee
+	if (sysTx)
+		nFeePay = ::minRelayTxFee.GetFee(100000);
 	CAmount nValue = 0;
 	unsigned int nSubtractFeeFromAmount = 0;
 	BOOST_FOREACH(const CRecipient& recipient, vecSend)
@@ -3648,9 +3650,6 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
 				if (fUseInstantSend) {
 					nFeeNeeded = std::max(nFeeNeeded, CTxLockRequest(txNew).GetMinFee());
 				}
-				// SYSCOIN tx's always send with set fee
-				if (sysTx)
-					nFeeNeeded = ::minRelayTxFee.GetFee(nBytes);
 
 				// If we made it here and we aren't even able to meet the relay fee on the next pass, give up
 				// because we must be at the maximum allowed fee.
