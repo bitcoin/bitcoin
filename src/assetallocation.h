@@ -209,5 +209,5 @@ bool GetAssetAllocation(const CAssetAllocationTuple& assetAllocationTuple,CAsset
 bool BuildAssetAllocationJson(const CAssetAllocation& assetallocation, UniValue& oName);
 bool BuildAssetAllocationIndexerJson(const CAssetAllocation& assetallocation,UniValue& oName);
 uint64_t GetAssetAllocationExpiration(const CAssetAllocation& assetallocation);
-void RevertAssetAllocations(const std::unordered_set<CAssetAllocationTuple> &assetAllocationsThisBlock);
+bool RevertAssetAllocations(const std::unordered_set<CAssetAllocationTuple> &assetAllocationsThisBlock);
 #endif // ASSETALLOCATION_H
