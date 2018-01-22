@@ -21,9 +21,9 @@ def allInvsMatch(invsExpected, testnode):
     for x in range(60):
         with mininode_lock:
             if (sorted(invsExpected) == sorted(testnode.txinvs)):
-                return True;
+                return True
         time.sleep(1)
-    return False;
+    return False
 
 # TestNode: bare-bones "peer".  Used to track which invs are received from a node
 # and to send the node feefilter messages.

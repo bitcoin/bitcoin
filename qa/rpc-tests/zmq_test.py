@@ -12,9 +12,6 @@ from test_framework.util import *
 import zmq
 import struct
 
-import http.client
-import urllib.parse
-
 class ZMQTest (BitcoinTestFramework):
 
     def __init__(self):

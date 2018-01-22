@@ -25,7 +25,7 @@
 static const char* WWW_AUTH_HEADER_DATA = "Basic realm=\"jsonrpc\"";
 
 /** Simple one-shot callback timer to be used by the RPC mechanism to e.g.
- * re-lock the wellet.
+ * re-lock the wallet.
  */
 class HTTPRPCTimer : public RPCTimerBase
 {
@@ -113,8 +113,8 @@ static bool multiUserAuthorized(std::string strUserPass)
             std::string strHash = vFields[2];
 
             unsigned int KEY_SIZE = 32;
-            unsigned char *out = new unsigned char[KEY_SIZE]; 
-            
+            unsigned char out[KEY_SIZE];
+
             CHMAC_SHA256(reinterpret_cast<const unsigned char*>(strSalt.c_str()), strSalt.size()).Write(reinterpret_cast<const unsigned char*>(strPass.c_str()), strPass.size()).Finalize(out);
             std::vector<unsigned char> hexvec(out, out+KEY_SIZE);
             std::string strHashFromPass = HexStr(hexvec);

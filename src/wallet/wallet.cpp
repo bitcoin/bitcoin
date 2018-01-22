@@ -48,6 +48,7 @@ CFeeRate payTxFee(DEFAULT_TRANSACTION_FEE);
 unsigned int nTxConfirmTarget = DEFAULT_TX_CONFIRM_TARGET;
 bool bSpendZeroConfChange = DEFAULT_SPEND_ZEROCONF_CHANGE;
 bool fSendFreeTransactions = DEFAULT_SEND_FREE_TRANSACTIONS;
+bool bBIP69Enabled = true;
 
 const char * DEFAULT_WALLET_DAT = "wallet.dat";
 
@@ -1188,9 +1189,17 @@ bool CWallet::LoadToWallet(const CWalletTx& wtxIn)
 }
 
 /**
- * Add a transaction to the wallet, or update it.
- * pblock is optional, but should be provided if the transaction is known to be in a block.
+ * Add a transaction to the wallet, or update it.  pIndex and posInBlock should
+ * be set when the transaction was known to be included in a block.  When
+ * posInBlock = SYNC_TRANSACTION_NOT_IN_BLOCK (-1) , then wallet state is not
+ * updated in AddToWallet, but notifications happen and cached balances are
+ * marked dirty.
  * If fUpdate is true, existing transactions will be updated.
+ * TODO: One exception to this is that the abandoned state is cleared under the
+ * assumption that any further notification of a transaction that was considered
+ * abandoned is an indication that it is not safe to be considered abandoned.
+ * Abandoned state should probably be more carefuly tracked via different
+ * posInBlock signals or by checking mempool presence when necessary.
  */
 bool CWallet::AddToWalletIfInvolvingMe(const CTransaction& tx, const CBlockIndex* pIndex, int posInBlock, bool fUpdate)
 {
@@ -1848,12 +1857,12 @@ int CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, bool fUpdate)
             pindex = chainActive.Next(pindex);
 
         ShowProgress(_("Rescanning..."), 0); // show rescan progress in GUI as dialog or on splashscreen, if -rescan on startup
-        double dProgressStart = Checkpoints::GuessVerificationProgress(chainParams.Checkpoints(), pindex, false);
-        double dProgressTip = Checkpoints::GuessVerificationProgress(chainParams.Checkpoints(), chainActive.Tip(), false);
+        double dProgressStart = GuessVerificationProgress(chainParams.TxData(), pindex);
+        double dProgressTip = GuessVerificationProgress(chainParams.TxData(), chainActive.Tip());
         while (pindex)
         {
             if (pindex->nHeight % 100 == 0 && dProgressTip - dProgressStart > 0.0)
-                ShowProgress(_("Rescanning..."), std::max(1, std::min(99, (int)((Checkpoints::GuessVerificationProgress(chainParams.Checkpoints(), pindex, false) - dProgressStart) / (dProgressTip - dProgressStart) * 100))));
+                ShowProgress(_("Rescanning..."), std::max(1, std::min(99, (int)((GuessVerificationProgress(chainParams.TxData(), pindex) - dProgressStart) / (dProgressTip - dProgressStart) * 100))));
 
             CBlock block;
             ReadBlockFromDisk(block, pindex, Params().GetConsensus());
@@ -1866,7 +1875,7 @@ int CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, bool fUpdate)
             pindex = chainActive.Next(pindex);
             if (GetTime() >= nNow + 60) {
                 nNow = GetTime();
-                LogPrintf("Still rescanning. At block %d. Progress=%f\n", pindex->nHeight, Checkpoints::GuessVerificationProgress(chainParams.Checkpoints(), pindex));
+                LogPrintf("Still rescanning. At block %d. Progress=%f\n", pindex->nHeight, GuessVerificationProgress(chainParams.TxData(), pindex));
             }
         }
         ShowProgress(_("Rescanning..."), 100); // hide progress dialog in GUI
@@ -2878,14 +2887,15 @@ struct CompareByPriority
     }
 };
 
-bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, bool overrideEstimatedFeeRate, const CFeeRate& specificFeeRate, int& nChangePosInOut, std::string& strFailReason, bool includeWatching, bool lockUnspents, const CTxDestination& destChange)
+bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, bool overrideEstimatedFeeRate, const CFeeRate& specificFeeRate, int& nChangePosInOut, std::string& strFailReason, bool includeWatching, bool lockUnspents, const std::set<int>& setSubtractFeeFromOutputs, bool keepReserveKey, const CTxDestination& destChange)
 {
     vector<CRecipient> vecSend;
 
     // Turn the txout set into a CRecipient vector
-    BOOST_FOREACH(const CTxOut& txOut, tx.vout)
+    for (size_t idx = 0; idx < tx.vout.size(); idx++)
     {
-        CRecipient recipient = {txOut.scriptPubKey, txOut.nValue, false};
+        const CTxOut& txOut = tx.vout[idx];
+        CRecipient recipient = {txOut.scriptPubKey, txOut.nValue, setSubtractFeeFromOutputs.count(idx) == 1};
         vecSend.push_back(recipient);
     }
 
@@ -2907,6 +2917,10 @@ bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, bool ov
     if (nChangePosInOut != -1)
         tx.vout.insert(tx.vout.begin() + nChangePosInOut, wtx.tx->vout[nChangePosInOut]);
 
+    // Copy output sizes from new transaction; they may have had the fee subtracted from them
+    for (unsigned int idx = 0; idx < tx.vout.size(); idx++)
+        tx.vout[idx].nValue = wtx.tx->vout[idx].nValue;
+
     // Add new txins (keeping original txin scriptSig/order)
     BOOST_FOREACH(const CTxIn& txin, wtx.tx->vin)
     {
@@ -2921,6 +2935,10 @@ bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, bool ov
             }
         }
     }
+
+    // optionally keep the change output key
+    if (keepReserveKey)
+        reservekey.KeepKey();
 
     return true;
 }
@@ -3427,7 +3445,7 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
                         }
                     }
 
-                    if (txout.IsDust(::minRelayTxFee))
+                    if (txout.IsDust(dustRelayFee))
                     {
                         if (recipient.fSubtractFeeFromAmount && nFeeRet > 0)
                         {
@@ -3530,16 +3548,16 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
                         // We do not move dust-change to fees, because the sender would end up paying more than requested.
                         // This would be against the purpose of the all-inclusive feature.
                         // So instead we raise the change and deduct from the recipient.
-                        if (nSubtractFeeFromAmount > 0 && newTxOut.IsDust(::minRelayTxFee))
+                        if (nSubtractFeeFromAmount > 0 && newTxOut.IsDust(dustRelayFee))
                         {
-                            CAmount nDust = newTxOut.GetDustThreshold(::minRelayTxFee) - newTxOut.nValue;
+                            CAmount nDust = newTxOut.GetDustThreshold(dustRelayFee) - newTxOut.nValue;
                             newTxOut.nValue += nDust; // raise change until no more dust
                             for (unsigned int i = 0; i < vecSend.size(); i++) // subtract from first recipient
                             {
                                 if (vecSend[i].fSubtractFeeFromAmount)
                                 {
                                     txNew.vout[i].nValue -= nDust;
-                                    if (txNew.vout[i].IsDust(::minRelayTxFee))
+                                    if (txNew.vout[i].IsDust(dustRelayFee))
                                     {
                                         strFailReason = _("The transaction amount is too small to send after the fee has been deducted");
                                         return false;
@@ -3551,7 +3569,7 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
 
                         // Never create dust outputs; if we would, just
                         // add the dust to the fee.
-                        if (newTxOut.IsDust(::minRelayTxFee))
+                        if (newTxOut.IsDust(dustRelayFee))
                         {
                             nChangePosInOut = -1;
                             nFeeRet += nChange;
@@ -3590,9 +3608,11 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
                     txNew.vin.push_back(txin);
                 }
 
-                sort(txNew.vin.begin(), txNew.vin.end(), CompareInputBIP69());
-                sort(vecTxDSInTmp.begin(), vecTxDSInTmp.end(), CompareInputBIP69());
-                sort(txNew.vout.begin(), txNew.vout.end(), CompareOutputBIP69());
+                if (bBIP69Enabled) {
+                    sort(txNew.vin.begin(), txNew.vin.end(), CompareInputBIP69());
+                    sort(vecTxDSInTmp.begin(), vecTxDSInTmp.end(), CompareInputBIP69());
+                    sort(txNew.vout.begin(), txNew.vout.end(), CompareOutputBIP69());
+                }
 
                 // If there was change output added before, we must update its position now
                 if (nChangePosInOut != -1) {

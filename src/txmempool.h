@@ -27,6 +27,8 @@
 #include "boost/multi_index/ordered_index.hpp"
 #include "boost/multi_index/hashed_index.hpp"
 
+#include <boost/signals2/signal.hpp>
+
 class CAutoFile;
 class CBlockIndex;
 
@@ -333,6 +335,19 @@ struct TxMempoolInfo
     int64_t nFeeDelta;
 };
 
+/** Reason why a transaction was removed from the mempool,
+ * this is passed to the notification signal.
+ */
+enum class MemPoolRemovalReason {
+    UNKNOWN = 0, //! Manually removed or unknown reason
+    EXPIRY,      //! Expired from mempool
+    SIZELIMIT,   //! Removed in size limiting
+    REORG,       //! Removed for reorganization
+    BLOCK,       //! Removed for block
+    CONFLICT,    //! Removed for conflict with in-block transaction
+    REPLACED     //! Removed for replacement
+};
+
 class SaltedTxidHasher
 {
 private:
@@ -354,7 +369,7 @@ public:
  * Transactions are added when they are seen on the network (or created by the
  * local node), but not all transactions seen are added to the pool. For
  * example, the following new transactions will not be added to the mempool:
- * - a transaction which doesn't make the mimimum fee requirements.
+ * - a transaction which doesn't meet the minimum fee requirements.
  * - a new transaction that double-spends an input of a transaction already in
  * the pool where the new transaction does not meet the Replace-By-Fee
  * requirements as defined in BIP 125.
@@ -436,8 +451,6 @@ private:
 
     uint64_t totalTxSize;      //!< sum of all mempool tx' byte sizes
     uint64_t cachedInnerUsage; //!< sum of dynamic memory usage of all the map elements (NOT the maps themselves)
-
-    CFeeRate minReasonableRelayFee;
 
     mutable int64_t lastRollingFeeUpdate;
     mutable bool blockSinceLastRollingFeeBump;
@@ -526,9 +539,6 @@ public:
     std::map<uint256, std::pair<double, CAmount> > mapDeltas;
 
     /** Create a new CTxMemPool.
-     *  minReasonableRelayFee should be a feerate which is, roughly, somewhere
-     *  around what it "costs" to relay a transaction around the network and
-     *  below which we would reasonably say a transaction has 0-effective-fee.
      */
     CTxMemPool(const CFeeRate& _minReasonableRelayFee);
     ~CTxMemPool();
@@ -558,10 +568,11 @@ public:
     bool getSpentIndex(CSpentIndexKey &key, CSpentIndexValue &value);
     bool removeSpentIndex(const uint256 txhash);
 
-    void removeRecursive(const CTransaction &tx);
+    void removeRecursive(const CTransaction &tx, MemPoolRemovalReason reason = MemPoolRemovalReason::UNKNOWN);
     void removeForReorg(const CCoinsViewCache *pcoins, unsigned int nMemPoolHeight, int flags);
     void removeConflicts(const CTransaction &tx);
     void removeForBlock(const std::vector<CTransactionRef>& vtx, unsigned int nBlockHeight);
+
     void clear();
     void _clear(); //lock free
     bool CompareDepthAndScore(const uint256& hasha, const uint256& hashb);
@@ -588,7 +599,7 @@ public:
      *  Set updateDescendants to true when removing a tx that was in a block, so
      *  that any in-mempool descendants have their ancestor state updated.
      */
-    void RemoveStaged(setEntries &stage, bool updateDescendants);
+    void RemoveStaged(setEntries &stage, bool updateDescendants, MemPoolRemovalReason reason = MemPoolRemovalReason::UNKNOWN);
 
     /** When adding transactions from a disconnected block back to the mempool,
      *  new mempool entries may have children in the mempool (which is generally
@@ -620,7 +631,7 @@ public:
 
     /** The minimum fee to get into the mempool, which may itself not be enough
       *  for larger-sized transactions.
-      *  The minReasonableRelayFee constructor arg is used to bound the time it
+      *  The incrementalRelayFee policy variable is used to bound the time it
       *  takes the fee rate to go back down all the way to 0. When the feerate
       *  would otherwise be half of this, it is set to 0 instead.
       */
@@ -692,6 +703,9 @@ public:
 
     size_t DynamicMemoryUsage() const;
 
+    boost::signals2::signal<void (CTransactionRef)> NotifyEntryAdded;
+    boost::signals2::signal<void (CTransactionRef, MemPoolRemovalReason)> NotifyEntryRemoved;
+
 private:
     /** UpdateForDescendants is used by UpdateTransactionsFromBlock to update
      *  the descendants for a single transaction that has been added to the
@@ -728,7 +742,7 @@ private:
      *  transactions in a chain before we've updated all the state for the
      *  removal.
      */
-    void removeUnchecked(txiter entry);
+    void removeUnchecked(txiter entry, MemPoolRemovalReason reason = MemPoolRemovalReason::UNKNOWN);
 };
 
 /** 

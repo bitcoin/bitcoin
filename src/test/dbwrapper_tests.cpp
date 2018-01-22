@@ -76,7 +76,7 @@ BOOST_AUTO_TEST_CASE(dbwrapper_batch)
         BOOST_CHECK(dbw.Read(key2, res));
         BOOST_CHECK_EQUAL(res.ToString(), in2.ToString());
 
-        // key3 never should've been written
+        // key3 should've never been written
         BOOST_CHECK(dbw.Read(key3, res) == false);
     }
 }

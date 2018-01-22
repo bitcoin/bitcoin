@@ -33,6 +33,7 @@ def call_import_rpc(call, data, address, scriptPubKey, pubkey, key, label, node,
             "scriptPubKey": {
                 "address": address
             },
+            "timestamp": "now",
             "pubkeys": [pubkey] if data == Data.pub else [],
             "keys": [key] if data == Data.priv else [],
             "label": label,

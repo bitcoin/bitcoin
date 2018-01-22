@@ -45,6 +45,7 @@ class CScriptCheck;
 class CTxMemPool;
 class CValidationInterface;
 class CValidationState;
+struct ChainTxData;
 
 struct LockPoints;
 
@@ -293,6 +294,9 @@ double ConvertBitsToDouble(unsigned int nBits);
 CAmount GetBlockSubsidy(int nBits, int nHeight, const Consensus::Params& consensusParams, bool fSuperblockPartOnly = false);
 CAmount GetMasternodePayment(int nHeight, CAmount blockValue);
 
+/** Guess verification progress (as a fraction between 0.0=genesis and 1.0=current tip). */
+double GuessVerificationProgress(const ChainTxData& data, CBlockIndex* pindex);
+
 /**
  * Prune block and undo files (blk???.dat and undo???.dat) so that the disk space used is less than a user-defined target.
  * The user sets the target (in MB) on the command line or in config file.  This will be run on startup and whenever new
@@ -321,6 +325,8 @@ CBlockIndex * InsertBlockIndex(uint256 hash);
 void FlushStateToDisk();
 /** Prune block files and flush state to disk. */
 void PruneAndFlush();
+/** Prune block files up to a given height */
+void PruneBlockFilesManual(int nPruneUpToHeight);
 
 /** (try to) add transaction to memory pool **/
 bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransactionRef &tx, bool fLimitFree,

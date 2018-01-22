@@ -23,6 +23,8 @@
 
 using namespace std;
 
+std::vector<std::unique_ptr<CWalletTx>> wtxn;
+
 typedef set<pair<const CWalletTx*,unsigned int> > CoinSet;
 
 BOOST_FIXTURE_TEST_SUITE(wallet_tests, WalletTestingSetup)
@@ -42,21 +44,21 @@ static void add_coin(const CAmount& nValue, int nAge = 6*24, bool fIsFromMe = fa
         // so stop vin being empty, and cache a non-zero Debit to fake out IsFromMe()
         tx.vin.resize(1);
     }
-    CWalletTx* wtx = new CWalletTx(&wallet, MakeTransactionRef(std::move(tx)));
+    std::unique_ptr<CWalletTx> wtx(new CWalletTx(&wallet, MakeTransactionRef(std::move(tx))));
     if (fIsFromMe)
     {
         wtx->fDebitCached = true;
         wtx->nDebitCached = 1;
     }
-    COutput output(wtx, nInput, nAge, true, true);
+    COutput output(wtx.get(), nInput, nAge, true, true);
     vCoins.push_back(output);
+    wtxn.emplace_back(std::move(wtx));
 }
 
 static void empty_wallet(void)
 {
-    BOOST_FOREACH(COutput output, vCoins)
-        delete output.tx;
     vCoins.clear();
+    wtxn.clear();
 }
 
 static bool equal_sets(CoinSet a, CoinSet b)
@@ -349,6 +351,8 @@ BOOST_AUTO_TEST_CASE(ApproximateBestSubset)
     BOOST_CHECK(wallet.SelectCoinsMinConf(1003 * COIN, 1, 6, 0, vCoins, setCoinsRet, nValueRet));
     BOOST_CHECK_EQUAL(nValueRet, 1003 * COIN);
     BOOST_CHECK_EQUAL(setCoinsRet.size(), 2U);
+
+    empty_wallet();
 }
 
 BOOST_AUTO_TEST_SUITE_END()

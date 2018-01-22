@@ -39,6 +39,7 @@ BOOST_FIXTURE_TEST_CASE(tx_mempool_block_doublespend, TestChain100Setup)
     spends.resize(2);
     for (int i = 0; i < 2; i++)
     {
+        spends[i].nVersion = 1;
         spends[i].vin.resize(1);
         spends[i].vin[0].prevout.hash = coinbaseTxns[0].GetHash();
         spends[i].vin[0].prevout.n = 0;

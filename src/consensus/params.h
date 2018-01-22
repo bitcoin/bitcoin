@@ -56,15 +56,15 @@ struct Params {
     int nGovernanceMinQuorum; // Min absolute vote count to trigger an action
     int nGovernanceFilterElements;
     int nMasternodeMinimumConfirmations;
-    /** Used to check majorities for block version upgrade */
-    int nMajorityEnforceBlockUpgrade;
-    int nMajorityRejectBlockOutdated;
-    int nMajorityWindow;
     /** Block height and hash at which BIP34 becomes active */
     int BIP34Height;
     uint256 BIP34Hash;
+    /** Block height at which BIP65 becomes active */
+    int BIP65Height;
+    /** Block height at which BIP66 becomes active */
+    int BIP66Height;
     /**
-     * Minimum blocks including miner confirmation of the total of nMinerConfirmationWindow blocks in a retargetting period,
+     * Minimum blocks including miner confirmation of the total of nMinerConfirmationWindow blocks in a retargeting period,
      * (nPowTargetTimespan / nPowTargetSpacing) which is also used for BIP9 deployments.
      * Default BIP9Deployment::nThreshold value for deployments where it's not specified and for unknown deployments.
      * Examples: 1916 for 95%, 1512 for testchains.

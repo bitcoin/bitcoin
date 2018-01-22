@@ -519,9 +519,9 @@ UniValue listaddressgroupings(const JSONRPCRequest& request)
             "[\n"
             "  [\n"
             "    [\n"
-            "      \"address\",     (string) The dash address\n"
+            "      \"address\",            (string) The dash address\n"
             "      amount,                 (numeric) The amount in " + CURRENCY_UNIT + "\n"
-            "      \"account\"             (string, optional) The account (DEPRECATED)\n"
+            "      \"account\"             (string, optional) DEPRECATED. The account\n"
             "    ]\n"
             "    ,...\n"
             "  ]\n"
@@ -746,7 +746,7 @@ UniValue getbalance(const JSONRPCRequest& request)
             "1. \"account\"        (string, optional) DEPRECATED. The selected account, or \"*\" for entire wallet. It may be the default account using \"\".\n"
             "2. minconf          (numeric, optional, default=1) Only include transactions confirmed at least this many times.\n"
             "3. addlockconf      (bool, optional, default=false) Whether to add " + std::to_string(nInstantSendDepth) + " confirmations to transactions locked via InstantSend.\n"
-            "4. include_watchonly (bool, optional, default=false) Also include balance in watchonly addresses (see 'importaddress')\n"
+            "4. include_watchonly (bool, optional, default=false) Also include balance in watch-only addresses (see 'importaddress')\n"
             "\nResult:\n"
             "amount              (numeric) The total amount in " + CURRENCY_UNIT + " received for this account.\n"
             "\nExamples:\n"
@@ -1267,7 +1267,7 @@ UniValue listreceivedbyaddress(const JSONRPCRequest& request)
             "1. minconf           (numeric, optional, default=1) The minimum number of confirmations before payments are included.\n"
             "2. addlockconf       (bool, optional, default=false) Whether to add " + std::to_string(nInstantSendDepth) + " confirmations to transactions locked via InstantSend.\n"
             "3. include_empty     (bool, optional, default=false) Whether to include addresses that haven't received any payments.\n"
-            "4. include_watchonly (bool, optional, default=false) Whether to include watchonly addresses (see 'importaddress').\n"
+            "4. include_watchonly (bool, optional, default=false) Whether to include watch-only addresses (see 'importaddress').\n"
 
             "\nResult:\n"
             "[\n"
@@ -1279,7 +1279,11 @@ UniValue listreceivedbyaddress(const JSONRPCRequest& request)
             "    \"confirmations\" : n                (numeric) The number of confirmations of the most recent transaction included.\n"
             "                                                 If 'addlockconf' is true, the minimum number of confirmations is calculated\n"
             "                                                 including additional " + std::to_string(nInstantSendDepth) + " confirmations for transactions locked via InstantSend\n"
-            "    \"label\" : \"label\"                  (string) A comment for the address/transaction, if any\n"
+            "    \"label\" : \"label\",               (string) A comment for the address/transaction, if any\n"
+            "    \"txids\": [\n"
+            "       n,                                (numeric) The ids of transactions received with the address \n"
+            "       ...\n"
+            "    ]\n"
             "  }\n"
             "  ,...\n"
             "]\n"
@@ -1308,7 +1312,7 @@ UniValue listreceivedbyaccount(const JSONRPCRequest& request)
             "1. minconf           (numeric, optional, default=1) The minimum number of confirmations before payments are included.\n"
             "2. addlockconf       (bool, optional, default=false) Whether to add " + std::to_string(nInstantSendDepth) + " confirmations to transactions locked via InstantSend.\n"
             "3. include_empty     (bool, optional, default=false) Whether to include accounts that haven't received any payments.\n"
-            "4. include_watchonly (bool, optional, default=false) Whether to include watchonly addresses (see 'importaddress').\n"
+            "4. include_watchonly (bool, optional, default=false) Whether to include watch-only addresses (see 'importaddress').\n"
 
             "\nResult:\n"
             "[\n"
@@ -1446,7 +1450,7 @@ UniValue listtransactions(const JSONRPCRequest& request)
             "1. \"account\"        (string, optional) DEPRECATED. The account name. Should be \"*\".\n"
             "2. count            (numeric, optional, default=10) The number of transactions to return\n"
             "3. skip           (numeric, optional, default=0) The number of transactions to skip\n"
-            "4. include_watchonly (bool, optional, default=false) Include transactions to watchonly addresses (see 'importaddress')\n"
+            "4. include_watchonly (bool, optional, default=false) Include transactions to watch-only addresses (see 'importaddress')\n"
             "\nResult:\n"
             "[\n"
             "  {\n"
@@ -1461,15 +1465,15 @@ UniValue listtransactions(const JSONRPCRequest& request)
             "    \"amount\": x.xxx,          (numeric) The amount in " + CURRENCY_UNIT + ". This is negative for the 'send' category, and for the\n"
             "                                         'move' category for moves outbound. It is positive for the 'receive' category,\n"
             "                                         and for the 'move' category for inbound funds.\n"
+            "    \"label\": \"label\",       (string) A comment for the address/transaction, if any\n"
             "    \"vout\": n,                (numeric) the vout value\n"
             "    \"fee\": x.xxx,             (numeric) The amount of the fee in " + CURRENCY_UNIT + ". This is negative and only available for the \n"
             "                                         'send' category of transactions.\n"
-            "    \"abandoned\": xxx          (bool) 'true' if the transaction has been abandoned (inputs are respendable).\n"
             "    \"instantlock\" : true|false, (bool) Current transaction lock state. Available for 'send' and 'receive' category of transactions.\n"
             "    \"confirmations\": n,       (numeric) The number of blockchain confirmations for the transaction. Available for 'send' and \n"
             "                                         'receive' category of transactions. Negative confirmations indicate the\n"
             "                                         transation conflicts with the block chain\n"
-            "    \"trusted\": xxx            (bool) Whether we consider the outputs of this unconfirmed transaction safe to spend.\n"
+            "    \"trusted\": xxx,           (bool) Whether we consider the outputs of this unconfirmed transaction safe to spend.\n"
             "    \"blockhash\": \"hashvalue\", (string) The block hash containing the transaction. Available for 'send' and 'receive'\n"
             "                                          category of transactions.\n"
             "    \"blockindex\": n,          (numeric) The index of the transaction in the block that includes it. Available for 'send' and 'receive'\n"
@@ -1480,12 +1484,13 @@ UniValue listtransactions(const JSONRPCRequest& request)
             "    \"timereceived\": xxx,      (numeric) The time received in seconds since epoch (midnight Jan 1 1970 GMT). Available \n"
             "                                          for 'send' and 'receive' category of transactions.\n"
             "    \"comment\": \"...\",         (string) If a comment is associated with the transaction.\n"
-            "    \"label\": \"label\"          (string) A comment for the address/transaction, if any\n"
-            "    \"otheraccount\": \"accountname\",  (string) For the 'move' category of transactions, the account the funds came \n"
+            "    \"otheraccount\": \"accountname\",  (string) DEPRECATED. For the 'move' category of transactions, the account the funds came \n"
             "                                          from (for receiving funds, positive amounts), or went to (for sending funds,\n"
             "                                          negative amounts).\n"
-            "    \"bip125-replaceable\": \"yes|no|unknown\"  (string) Whether this transaction could be replaced due to BIP125 (replace-by-fee);\n"
+            "    \"bip125-replaceable\": \"yes|no|unknown\",  (string) Whether this transaction could be replaced due to BIP125 (replace-by-fee);\n"
             "                                                     may be unknown for unconfirmed transactions not in the mempool\n"
+            "    \"abandoned\": xxx          (bool) 'true' if the transaction has been abandoned (inputs are respendable). Only available for the \n"
+            "                                         'send' category of transactions.\n"
             "  }\n"
             "]\n"
 
@@ -1573,7 +1578,7 @@ UniValue listaccounts(const JSONRPCRequest& request)
             "\nArguments:\n"
             "1. minconf             (numeric, optional, default=1) Only include transactions with at least this many confirmations\n"
             "2. addlockconf         (bool, optional, default=false) Whether to add " + std::to_string(nInstantSendDepth) + " confirmations to transactions locked via InstantSend.\n"
-            "3. include_watchonly   (bool, optional, default=false) Include balances in watchonly addresses (see 'importaddress')\n"
+            "3. include_watchonly   (bool, optional, default=false) Include balances in watch-only addresses (see 'importaddress')\n"
             "\nResult:\n"
             "{                    (json object where keys are account names, and values are numeric balances\n"
             "  \"account\": x.xxx,  (numeric) The property name is the account name, and the value is the total balance for the account.\n"
@@ -1654,7 +1659,7 @@ UniValue listsinceblock(const JSONRPCRequest& request)
             "\nArguments:\n"
             "1. \"blockhash\"            (string, optional) The block hash to list transactions since\n"
             "2. target_confirmations:    (numeric, optional) The confirmations required, must be 1 or more\n"
-            "3. include_watchonly:       (bool, optional, default=false) Include transactions to watchonly addresses (see 'importaddress')"
+            "3. include_watchonly:       (bool, optional, default=false) Include transactions to watch-only addresses (see 'importaddress')"
             "\nResult:\n"
             "{\n"
             "  \"transactions\": [\n"
@@ -1674,6 +1679,9 @@ UniValue listsinceblock(const JSONRPCRequest& request)
             "    \"txid\": \"transactionid\",  (string) The transaction id. Available for 'send' and 'receive' category of transactions.\n"
             "    \"time\": xxx,              (numeric) The transaction time in seconds since epoch (Jan 1 1970 GMT).\n"
             "    \"timereceived\": xxx,      (numeric) The time received in seconds since epoch (Jan 1 1970 GMT). Available for 'send' and 'receive' category of transactions.\n"
+            "    \"bip125-replaceable\": \"yes|no|unknown\",  (string) Whether this transaction could be replaced due to BIP125 (replace-by-fee);\n"
+            "                                                   may be unknown for unconfirmed transactions not in the mempool\n"
+            "    \"abandoned\": xxx,         (bool) 'true' if the transaction has been abandoned (inputs are respendable). Only available for the 'send' category of transactions.\n"
             "    \"comment\": \"...\",         (string) If a comment is associated with the transaction.\n"
             "    \"label\" : \"label\"         (string) A comment for the address/transaction, if any\n"
             "    \"to\": \"...\",              (string) If a comment to is associated with the transaction.\n"
@@ -1688,7 +1696,7 @@ UniValue listsinceblock(const JSONRPCRequest& request)
 
     LOCK2(cs_main, pwalletMain->cs_wallet);
 
-    CBlockIndex *pindex = NULL;
+    const CBlockIndex *pindex = NULL;
     int target_confirms = 1;
     isminefilter filter = ISMINE_SPENDABLE;
 
@@ -1699,7 +1707,16 @@ UniValue listsinceblock(const JSONRPCRequest& request)
         blockId.SetHex(request.params[0].get_str());
         BlockMap::iterator it = mapBlockIndex.find(blockId);
         if (it != mapBlockIndex.end())
+        {
             pindex = it->second;
+            if (chainActive[pindex->nHeight] != pindex)
+            {
+                // the block being asked for is a part of a deactivated chain;
+                // we don't want to depend on its perceived height in the block
+                // chain, we want to instead use the last common ancestor
+                pindex = chainActive.FindFork(pindex);
+            }
+        }
         else
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid blockhash");
     }
@@ -1712,9 +1729,10 @@ UniValue listsinceblock(const JSONRPCRequest& request)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter");
     }
 
-    if(request.params.size() > 2)
-        if(request.params[2].get_bool())
-            filter = filter | ISMINE_WATCH_ONLY;
+    if (request.params.size() > 2 && request.params[2].get_bool())
+    {
+        filter = filter | ISMINE_WATCH_ONLY;
+    }
 
     int depth = pindex ? (1 + chainActive.Height() - pindex->nHeight) : -1;
 
@@ -1749,10 +1767,12 @@ UniValue gettransaction(const JSONRPCRequest& request)
             "\nGet detailed information about in-wallet transaction <txid>\n"
             "\nArguments:\n"
             "1. \"txid\"                  (string, required) The transaction id\n"
-            "2. \"include_watchonly\"     (bool, optional, default=false) Whether to include watchonly addresses in balance calculation and details[]\n"
+            "2. \"include_watchonly\"     (bool, optional, default=false) Whether to include watch-only addresses in balance calculation and details[]\n"
             "\nResult:\n"
             "{\n"
             "  \"amount\" : x.xxx,        (numeric) The transaction amount in " + CURRENCY_UNIT + "\n"
+            "  \"fee\": x.xxx,            (numeric) The amount of the fee in " + CURRENCY_UNIT + ". This is negative and only available for the \n"
+            "                              'send' category of transactions.\n"
             "  \"instantlock\" : true|false, (bool) Current transaction lock state\n"
             "  \"confirmations\" : n,     (numeric) The number of blockchain confirmations\n"
             "  \"blockhash\" : \"hash\",    (string) The block hash\n"
@@ -1761,16 +1781,20 @@ UniValue gettransaction(const JSONRPCRequest& request)
             "  \"txid\" : \"transactionid\",   (string) The transaction id.\n"
             "  \"time\" : ttt,            (numeric) The transaction time in seconds since epoch (1 Jan 1970 GMT)\n"
             "  \"timereceived\" : ttt,    (numeric) The time received in seconds since epoch (1 Jan 1970 GMT)\n"
-            "  \"bip125-replaceable\": \"yes|no|unknown\"  (string) Whether this transaction could be replaced due to BIP125 (replace-by-fee);\n"
+            "  \"bip125-replaceable\": \"yes|no|unknown\",  (string) Whether this transaction could be replaced due to BIP125 (replace-by-fee);\n"
             "                                                   may be unknown for unconfirmed transactions not in the mempool\n"
             "  \"details\" : [\n"
             "    {\n"
             "      \"account\" : \"accountname\",      (string) DEPRECATED. The account name involved in the transaction, can be \"\" for the default account.\n"
-            "      \"address\" : \"address\",   (string) The dash address involved in the transaction\n"
+            "      \"address\" : \"address\",          (string) The dash address involved in the transaction\n"
             "      \"category\" : \"send|receive\",    (string) The category, either 'send' or 'receive'\n"
             "      \"amount\" : x.xxx,               (numeric) The amount in " + CURRENCY_UNIT + "\n"
             "      \"label\" : \"label\",              (string) A comment for the address/transaction, if any\n"
             "      \"vout\" : n,                     (numeric) the vout value\n"
+            "      \"fee\": x.xxx,                     (numeric) The amount of the fee in " + CURRENCY_UNIT + ". This is negative and only available for the \n"
+            "                                           'send' category of transactions.\n"
+            "      \"abandoned\": xxx                  (bool) 'true' if the transaction has been abandoned (inputs are respendable). Only available for the \n"
+            "                                           'send' category of transactions.\n"			
             "    }\n"
             "    ,...\n"
             "  ],\n"
@@ -2577,7 +2601,8 @@ UniValue fundrawtransaction(const JSONRPCRequest& request)
         throw runtime_error(
                             "fundrawtransaction \"hexstring\" ( options )\n"
                             "\nAdd inputs to a transaction until it has enough in value to meet its out value.\n"
-                            "This will not modify existing inputs, and will add one change output to the outputs.\n"
+                            "This will not modify existing inputs, and will add at most one change output to the outputs.\n"
+                            "No existing outputs will be modified unless \"subtractFeeFromOutputs\" is specified.\n"
                             "Note that inputs which were signed may need to be resigned after completion since in/outputs have been added.\n"
                             "The inputs added will not be signed, use signrawtransaction for that.\n"
                             "Note that all existing inputs must have their previous output transaction be in the wallet.\n"
@@ -2589,11 +2614,18 @@ UniValue fundrawtransaction(const JSONRPCRequest& request)
                             "1. \"hexstring\"           (string, required) The hex string of the raw transaction\n"
                             "2. options                 (object, optional)\n"
                             "   {\n"
-                            "     \"changeAddress\"     (string, optional, default pool address) The dash address to receive the change\n"
-                            "     \"changePosition\"    (numeric, optional, default random) The index of the change output\n"
-                            "     \"includeWatching\"   (boolean, optional, default false) Also select inputs which are watch only\n"
-                            "     \"lockUnspents\"      (boolean, optional, default false) Lock selected unspent outputs\n"
-                            "     \"feeRate\"           (numeric, optional, default not set: makes wallet determine the fee) Set a specific feerate (" + CURRENCY_UNIT + " per KB)\n"
+                            "     \"changeAddress\"          (string, optional, default pool address) The dash address to receive the change\n"
+                            "     \"changePosition\"         (numeric, optional, default random) The index of the change output\n"
+                            "     \"includeWatching\"        (boolean, optional, default false) Also select inputs which are watch only\n"
+                            "     \"lockUnspents\"           (boolean, optional, default false) Lock selected unspent outputs\n"
+                            "     \"reserveChangeKey\"       (boolean, optional, default true) Reserves the change output key from the keypool\n"
+                            "     \"feeRate\"                (numeric, optional, default not set: makes wallet determine the fee) Set a specific feerate (" + CURRENCY_UNIT + " per KB)\n"
+                            "     \"subtractFeeFromOutputs\" (array, optional) A json array of integers.\n"
+                            "                              The fee will be equally deducted from the amount of each specified output.\n"
+                            "                              The outputs are specified by their zero-based index, before any change output is added.\n"
+                            "                              Those recipients will receive less dash than you enter in their corresponding amount field.\n"
+                            "                              If no outputs are specified here, the sender pays the fee.\n"
+                            "                                  [vout_index,...]\n"
                             "   }\n"
                             "                         for backward compatibility: passing in a true instead of an object will result in {\"includeWatching\":true}\n"
                             "\nResult:\n"
@@ -2602,7 +2634,6 @@ UniValue fundrawtransaction(const JSONRPCRequest& request)
                             "  \"fee\":       n,         (numeric) Fee in " + CURRENCY_UNIT + " the resulting transaction pays\n"
                             "  \"changepos\": n          (numeric) The position of the added change output, or -1\n"
                             "}\n"
-                            "\"hex\"             \n"
                             "\nExamples:\n"
                             "\nCreate a transaction with no inputs\n"
                             + HelpExampleCli("createrawtransaction", "\"[]\" \"{\\\"myaddress\\\":0.01}\"") +
@@ -2620,8 +2651,11 @@ UniValue fundrawtransaction(const JSONRPCRequest& request)
     int changePosition = -1;
     bool includeWatching = false;
     bool lockUnspents = false;
+    bool reserveChangeKey = true;
     CFeeRate feeRate = CFeeRate(0);
     bool overrideEstimatedFeerate = false;
+    UniValue subtractFeeFromOutputs;
+    set<int> setSubtractFeeFromOutputs;
 
     if (request.params.size() > 1) {
       if (request.params[1].type() == UniValue::VBOOL) {
@@ -2639,7 +2673,9 @@ UniValue fundrawtransaction(const JSONRPCRequest& request)
                 {"changePosition", UniValueType(UniValue::VNUM)},
                 {"includeWatching", UniValueType(UniValue::VBOOL)},
                 {"lockUnspents", UniValueType(UniValue::VBOOL)},
+                {"reserveChangeKey", UniValueType(UniValue::VBOOL)},
                 {"feeRate", UniValueType()}, // will be checked below
+                {"subtractFeeFromOutputs", UniValueType(UniValue::VARR)},
             },
             true, true);
 
@@ -2661,11 +2697,17 @@ UniValue fundrawtransaction(const JSONRPCRequest& request)
         if (options.exists("lockUnspents"))
             lockUnspents = options["lockUnspents"].get_bool();
 
+        if (options.exists("reserveChangeKey"))
+            reserveChangeKey = options["reserveChangeKey"].get_bool();
+
         if (options.exists("feeRate"))
         {
             feeRate = CFeeRate(AmountFromValue(options["feeRate"]));
             overrideEstimatedFeerate = true;
         }
+
+        if (options.exists("subtractFeeFromOutputs"))
+            subtractFeeFromOutputs = options["subtractFeeFromOutputs"].get_array();
       }
     }
 
@@ -2680,10 +2722,21 @@ UniValue fundrawtransaction(const JSONRPCRequest& request)
     if (changePosition != -1 && (changePosition < 0 || (unsigned int)changePosition > tx.vout.size()))
         throw JSONRPCError(RPC_INVALID_PARAMETER, "changePosition out of bounds");
 
+    for (unsigned int idx = 0; idx < subtractFeeFromOutputs.size(); idx++) {
+        int pos = subtractFeeFromOutputs[idx].get_int();
+        if (setSubtractFeeFromOutputs.count(pos))
+            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid parameter, duplicated position: %d", pos));
+        if (pos < 0)
+            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid parameter, negative position: %d", pos));
+        if (pos >= int(tx.vout.size()))
+            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid parameter, position too large: %d", pos));
+        setSubtractFeeFromOutputs.insert(pos);
+    }
+
     CAmount nFeeOut;
     string strFailReason;
 
-    if(!pwalletMain->FundTransaction(tx, nFeeOut, overrideEstimatedFeerate, feeRate, changePosition, strFailReason, includeWatching, lockUnspents, changeAddress))
+    if(!pwalletMain->FundTransaction(tx, nFeeOut, overrideEstimatedFeerate, feeRate, changePosition, strFailReason, includeWatching, lockUnspents, setSubtractFeeFromOutputs, reserveChangeKey, changeAddress))
         throw JSONRPCError(RPC_INTERNAL_ERROR, strFailReason);
 
     UniValue result(UniValue::VOBJ);
@@ -2692,6 +2745,23 @@ UniValue fundrawtransaction(const JSONRPCRequest& request)
     result.push_back(Pair("fee", ValueFromAmount(nFeeOut)));
 
     return result;
+}
+
+UniValue setbip69enabled(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() != 1)
+        throw runtime_error(
+            "setbip69enabled enable\n"
+                "\nEnable/Disable BIP69 input/output sorting (-regtest only)\n"
+                "\nArguments:\n"
+                "1. enable  (bool, required) true or false"
+        );
+    if (Params().NetworkIDString() != CBaseChainParams::REGTEST)
+        throw runtime_error("setbip69enabled for regression testing (-regtest mode) only");
+
+    bBIP69Enabled = request.params[0].get_bool();
+
+    return NullUniValue;
 }
 
 extern UniValue dumpprivkey(const JSONRPCRequest& request); // in rpcdump.cpp
@@ -2761,6 +2831,8 @@ static const CRPCCommand commands[] =
     { "wallet",             "instantsendtoaddress",     &instantsendtoaddress,     false,  {"address","amount","comment","comment_to","subtractfeefromamount"} },
     { "wallet",             "dumphdinfo",               &dumphdinfo,               true,   {} },
     { "wallet",             "importelectrumwallet",     &importelectrumwallet,     true,   {"filename", "index"} },
+
+    { "hidden",             "setbip69enabled",          &setbip69enabled,          true,   {} },
 };
 
 void RegisterWalletRPCCommands(CRPCTable &t)

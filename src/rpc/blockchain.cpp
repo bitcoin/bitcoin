@@ -336,8 +336,8 @@ std::string EntryDescriptionString()
            "    \"modifiedfee\" : n,      (numeric) transaction fee with fee deltas used for mining priority\n"
            "    \"time\" : n,             (numeric) local time transaction entered pool in seconds since 1 Jan 1970 GMT\n"
            "    \"height\" : n,           (numeric) block height when transaction entered pool\n"
-           "    \"startingpriority\" : n, (numeric) priority when transaction entered pool\n"
-           "    \"currentpriority\" : n,  (numeric) transaction priority now\n"
+           "    \"startingpriority\" : n, (numeric) DEPRECATED. Priority when transaction entered pool\n"
+           "    \"currentpriority\" : n,  (numeric) DEPRECATED. Transaction priority now\n"
            "    \"descendantcount\" : n,  (numeric) number of in-mempool descendant transactions (including this one)\n"
            "    \"descendantsize\" : n,   (numeric) size of in-mempool descendants (including this one)\n"
            "    \"descendantfees\" : n,   (numeric) modified fees (see above) of in-mempool descendants (including this one)\n"
@@ -948,6 +948,53 @@ static bool GetUTXOStats(CCoinsView *view, CCoinsStats &stats)
     return true;
 }
 
+UniValue pruneblockchain(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() != 1)
+        throw runtime_error(
+            "pruneblockchain\n"
+            "\nArguments:\n"
+            "1. \"height\"       (numeric, required) The block height to prune up to. May be set to a discrete height, or to a unix timestamp to prune based on block time.\n"
+            "\nResult:\n"
+            "n    (numeric) Height of the last block pruned.\n"
+            "\nExamples:\n"
+            + HelpExampleCli("pruneblockchain", "1000")
+            + HelpExampleRpc("pruneblockchain", "1000"));
+
+    if (!fPruneMode)
+        throw JSONRPCError(RPC_METHOD_NOT_FOUND, "Cannot prune blocks because node is not in prune mode.");
+
+    LOCK(cs_main);
+
+    int heightParam = request.params[0].get_int();
+    if (heightParam < 0)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative block height.");
+
+    // Height value more than a billion is too high to be a block height, and
+    // too low to be a block time (corresponds to timestamp from Sep 2001).
+    if (heightParam > 1000000000) {
+        CBlockIndex* pindex = chainActive.FindEarliestAtLeast(heightParam);
+        if (!pindex) {
+            throw JSONRPCError(RPC_INTERNAL_ERROR, "Could not find block with at least the specified timestamp.");
+        }
+        heightParam = pindex->nHeight;
+    }
+
+    unsigned int height = (unsigned int) heightParam;
+    unsigned int chainHeight = (unsigned int) chainActive.Height();
+    if (chainHeight < Params().PruneAfterHeight())
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "Blockchain is too short for pruning.");
+    else if (height > chainHeight)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Blockchain is shorter than the attempted prune height.");
+    else if (height > chainHeight - MIN_BLOCKS_TO_KEEP) {
+        LogPrint("rpc", "Attempt to prune blocks close to the tip.  Retaining the minimum number of blocks.");
+        height = chainHeight - MIN_BLOCKS_TO_KEEP;
+    }
+
+    PruneBlockFilesManual(height);
+    return uint64_t(height);
+}
+
 UniValue gettxoutsetinfo(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 0)
@@ -1097,22 +1144,23 @@ UniValue verifychain(const JSONRPCRequest& request)
 }
 
 /** Implementation of IsSuperMajority with better feedback */
-static UniValue SoftForkMajorityDesc(int minVersion, CBlockIndex* pindex, int nRequired, const Consensus::Params& consensusParams)
+static UniValue SoftForkMajorityDesc(int version, CBlockIndex* pindex, const Consensus::Params& consensusParams)
 {
-    int nFound = 0;
-    CBlockIndex* pstart = pindex;
-    for (int i = 0; i < consensusParams.nMajorityWindow && pstart != NULL; i++)
-    {
-        if (pstart->nVersion >= minVersion)
-            ++nFound;
-        pstart = pstart->pprev;
-    }
-
     UniValue rv(UniValue::VOBJ);
-    rv.push_back(Pair("status", nFound >= nRequired));
-    rv.push_back(Pair("found", nFound));
-    rv.push_back(Pair("required", nRequired));
-    rv.push_back(Pair("window", consensusParams.nMajorityWindow));
+    bool activated = false;
+    switch(version)
+    {
+        case 2:
+            activated = pindex->nHeight >= consensusParams.BIP34Height;
+            break;
+        case 3:
+            activated = pindex->nHeight >= consensusParams.BIP66Height;
+            break;
+        case 4:
+            activated = pindex->nHeight >= consensusParams.BIP65Height;
+            break;
+    }
+    rv.push_back(Pair("status", activated));
     return rv;
 }
 
@@ -1121,8 +1169,7 @@ static UniValue SoftForkDesc(const std::string &name, int version, CBlockIndex* 
     UniValue rv(UniValue::VOBJ);
     rv.push_back(Pair("id", name));
     rv.push_back(Pair("version", version));
-    rv.push_back(Pair("enforce", SoftForkMajorityDesc(version, pindex, consensusParams.nMajorityEnforceBlockUpgrade, consensusParams)));
-    rv.push_back(Pair("reject", SoftForkMajorityDesc(version, pindex, consensusParams.nMajorityRejectBlockOutdated, consensusParams)));
+    rv.push_back(Pair("reject", SoftForkMajorityDesc(version, pindex, consensusParams)));
     return rv;
 }
 
@@ -1178,13 +1225,9 @@ UniValue getblockchaininfo(const JSONRPCRequest& request)
             "     {\n"
             "        \"id\": \"xxxx\",        (string) name of softfork\n"
             "        \"version\": xx,         (numeric) block version\n"
-            "        \"enforce\": {           (object) progress toward enforcing the softfork rules for new-version blocks\n"
+            "        \"reject\": {            (object) progress toward rejecting pre-softfork blocks\n"
             "           \"status\": xx,       (boolean) true if threshold reached\n"
-            "           \"found\": xx,        (numeric) number of blocks with the new version found\n"
-            "           \"required\": xx,     (numeric) number of blocks required to trigger\n"
-            "           \"window\": xx,       (numeric) maximum size of examined window of recent blocks\n"
             "        },\n"
-            "        \"reject\": { ... }      (object) progress toward rejecting pre-softfork blocks (same fields as \"enforce\")\n"
             "     }, ...\n"
             "  ],\n"
             "  \"bip9_softforks\": {          (object) status of BIP9 softforks in progress\n"
@@ -1211,7 +1254,7 @@ UniValue getblockchaininfo(const JSONRPCRequest& request)
     obj.push_back(Pair("bestblockhash",         chainActive.Tip()->GetBlockHash().GetHex()));
     obj.push_back(Pair("difficulty",            (double)GetDifficulty()));
     obj.push_back(Pair("mediantime",            (int64_t)chainActive.Tip()->GetMedianTimePast()));
-    obj.push_back(Pair("verificationprogress",  Checkpoints::GuessVerificationProgress(Params().Checkpoints(), chainActive.Tip())));
+    obj.push_back(Pair("verificationprogress",  GuessVerificationProgress(Params().TxData(), chainActive.Tip())));
     obj.push_back(Pair("chainwork",             chainActive.Tip()->nChainWork.GetHex()));
     obj.push_back(Pair("pruned",                fPruneMode));
 
@@ -1545,6 +1588,7 @@ static const CRPCCommand commands[] =
     { "blockchain",         "getrawmempool",          &getrawmempool,          true,  {"verbose"} },
     { "blockchain",         "gettxout",               &gettxout,               true,  {"txid","n","include_mempool"} },
     { "blockchain",         "gettxoutsetinfo",        &gettxoutsetinfo,        true,  {} },
+    { "blockchain",         "pruneblockchain",        &pruneblockchain,        true,  {"height"} },
     { "blockchain",         "verifychain",            &verifychain,            true,  {"checklevel","nblocks"} },
 
     { "blockchain",         "preciousblock",          &preciousblock,          true,  {"blockhash"} },
