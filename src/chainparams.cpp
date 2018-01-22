@@ -251,7 +251,7 @@ public:
             1507424630, // * UNIX timestamp of last known number of transactions
             3701128,    // * total number of transactions between genesis and that timestamp
                         //   (the tx=... number in the SetBestChain debug.log lines)
-            0.1         // * estimated number of transactions second after that timestamp
+            0.1         // * estimated number of transactions per second after that timestamp
         };
     }
 };
@@ -367,11 +367,10 @@ public:
         };
 
         chainTxData = ChainTxData{        
-            // Data as of block 0000024bc3f4f4cb30d29827c13d921ad77d2c6072e586c7f60d83c2722cdcc5 (height 2999)
-            1462856598,
-            3094,     // * total number of transactions between genesis and last checkpoint
+            1462856598, // * UNIX timestamp of last known number of transactions
+            3094,       // * total number of transactions between genesis and that timestamp
                         //   (the tx=... number in the SetBestChain debug.log lines)
-            0.01        // * estimated number of transactions per day after checkpoint
+            0.01        // * estimated number of transactions per second after that timestamp
         };
 
     }
@@ -488,11 +487,9 @@ public:
         };
 
         chainTxData = ChainTxData{
-            // Data as of block 0000024bc3f4f4cb30d29827c13d921ad77d2c6072e586c7f60d83c2722cdcc5 (height 2999)
-            devnetGenesis.GetBlockTime(),
-            2,     // * total number of transactions between genesis and last checkpoint
-            //   (the tx=... number in the SetBestChain debug.log lines)
-            0.01        // * estimated number of transactions per day after checkpoint
+            devnetGenesis.GetBlockTime(), // * UNIX timestamp of devnet genesis block
+            2,                            // * we only have 2 coinbase transactions when a devnet is started up
+            0.01                          // * estimated number of transactions per second
         };
     }
 };

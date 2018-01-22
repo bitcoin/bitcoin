@@ -1718,7 +1718,7 @@ UniValue listsinceblock(const JSONRPCRequest& request)
             }
         }
         else
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid blockhash");        
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid blockhash");
     }
 
     if (request.params.size() > 1)
