@@ -559,143 +559,140 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight, co
 	bool good = false;
 	if (fJustCheck && IsInitialBlockDownload())
 		return true;
-	if (tx.nVersion == SYSCOIN_TX_VERSION) {
-		if (block.vtx.empty())
+	if (block.vtx.empty() && tx.nVersion == SYSCOIN_TX_VERSION) {
+		bool bDestCheckFailed = false;
+		if (DecodeAliasTx(tx, op, nOut, vvchAliasArgs))
 		{
-			bool bDestCheckFailed = false;
-			if (DecodeAliasTx(tx, op, nOut, vvchAliasArgs))
+			errorMessage.clear();
+			good = CheckAliasInputs(tx, op, nOut, vvchAliasArgs, fJustCheck, nHeight, errorMessage, bDestCheckFailed);
+			if (fDebug && !errorMessage.empty())
+				LogPrintf("%s\n", errorMessage.c_str());
+		}
+		if (!bDestCheckFailed && !vvchAliasArgs.empty() && good && errorMessage.empty())
+		{
+			if (DecodeCertTx(tx, op, nOut, vvchArgs))
 			{
 				errorMessage.clear();
-				good = CheckAliasInputs(tx, op, nOut, vvchAliasArgs, fJustCheck, nHeight, errorMessage, bDestCheckFailed);
+				good = CheckCertInputs(tx, op, nOut, vvchArgs, vvchAliasArgs[0], fJustCheck, nHeight, errorMessage);
 				if (fDebug && !errorMessage.empty())
 					LogPrintf("%s\n", errorMessage.c_str());
 			}
-			if (!bDestCheckFailed && !vvchAliasArgs.empty() && good && errorMessage.empty())
+			if (DecodeAssetTx(tx, op, nOut, vvchArgs))
 			{
-				if (DecodeCertTx(tx, op, nOut, vvchArgs))
-				{
-					errorMessage.clear();
-					good = CheckCertInputs(tx, op, nOut, vvchArgs, vvchAliasArgs[0], fJustCheck, nHeight, errorMessage);
-					if (fDebug && !errorMessage.empty())
-						LogPrintf("%s\n", errorMessage.c_str());
-				}
-				if (DecodeAssetTx(tx, op, nOut, vvchArgs))
-				{
-					errorMessage.clear();
-					good = CheckAssetInputs(tx, op, nOut, vvchArgs, vvchAliasArgs[0], fJustCheck, nHeight, errorMessage);
-					if (fDebug && !errorMessage.empty())
-						LogPrintf("%s\n", errorMessage.c_str());
-				}
-				else if (DecodeAssetAllocationTx(tx, op, nOut, vvchArgs))
-				{
-					errorMessage.clear();
-					good = CheckAssetAllocationInputs(tx, op, nOut, vvchArgs, vvchAliasArgs[0], fJustCheck, nHeight, assetAllocationsThisBlock, errorMessage);
-					if (fDebug && !errorMessage.empty())
-						LogPrintf("%s\n", errorMessage.c_str());
-				}
-				else if (DecodeEscrowTx(tx, op, nOut, vvchArgs))
-				{
-					errorMessage.clear();
-					good = CheckEscrowInputs(tx, op, nOut, vvchArgs, vvchAliasArgs, fJustCheck, nHeight, errorMessage);
-					if (fDebug && !errorMessage.empty())
-						LogPrintf("%s\n", errorMessage.c_str());
-				}
-				else if (DecodeOfferTx(tx, op, nOut, vvchArgs))
-				{
-					errorMessage.clear();
-					good = CheckOfferInputs(tx, op, nOut, vvchArgs, vvchAliasArgs[0], fJustCheck, nHeight, errorMessage);
-					if (fDebug && !errorMessage.empty())
-						LogPrintf("%s\n", errorMessage.c_str());
-				}
+				errorMessage.clear();
+				good = CheckAssetInputs(tx, op, nOut, vvchArgs, vvchAliasArgs[0], fJustCheck, nHeight, errorMessage);
+				if (fDebug && !errorMessage.empty())
+					LogPrintf("%s\n", errorMessage.c_str());
 			}
-			if (!good)
+			else if (DecodeAssetAllocationTx(tx, op, nOut, vvchArgs))
 			{
-				return false;
+				errorMessage.clear();
+				good = CheckAssetAllocationInputs(tx, op, nOut, vvchArgs, vvchAliasArgs[0], fJustCheck, nHeight, assetAllocationsThisBlock, errorMessage);
+				if (fDebug && !errorMessage.empty())
+					LogPrintf("%s\n", errorMessage.c_str());
+			}
+			else if (DecodeEscrowTx(tx, op, nOut, vvchArgs))
+			{
+				errorMessage.clear();
+				good = CheckEscrowInputs(tx, op, nOut, vvchArgs, vvchAliasArgs, fJustCheck, nHeight, errorMessage);
+				if (fDebug && !errorMessage.empty())
+					LogPrintf("%s\n", errorMessage.c_str());
+			}
+			else if (DecodeOfferTx(tx, op, nOut, vvchArgs))
+			{
+				errorMessage.clear();
+				good = CheckOfferInputs(tx, op, nOut, vvchArgs, vvchAliasArgs[0], fJustCheck, nHeight, errorMessage);
+				if (fDebug && !errorMessage.empty())
+					LogPrintf("%s\n", errorMessage.c_str());
 			}
 		}
-		else {
-			CBlock sortedBlock;
-			sortedBlock.vtx = block.vtx;
-			Graph graph;
-			std::vector<vertex_descriptor> vertices;
-			IndexMap mapTxIndex;
-			if (CreateGraphFromVTX(sortedBlock.vtx, graph, vertices, mapTxIndex)) {
-				std::vector<int> conflictedIndexes;
-				GraphRemoveCycles(sortedBlock.vtx, conflictedIndexes, graph, vertices, mapTxIndex);
-				if (!sortedBlock.vtx.empty()) {
-					if (!DAGTopologicalSort(sortedBlock.vtx, conflictedIndexes, graph, mapTxIndex)) {
-						return false;
-					}
+		if (!good)
+		{
+			return false;
+		}
+	}
+	else if (!block.vtx.empty()) {
+		CBlock sortedBlock;
+		sortedBlock.vtx = block.vtx;
+		Graph graph;
+		std::vector<vertex_descriptor> vertices;
+		IndexMap mapTxIndex;
+		if (CreateGraphFromVTX(sortedBlock.vtx, graph, vertices, mapTxIndex)) {
+			std::vector<int> conflictedIndexes;
+			GraphRemoveCycles(sortedBlock.vtx, conflictedIndexes, graph, vertices, mapTxIndex);
+			if (!sortedBlock.vtx.empty()) {
+				if (!DAGTopologicalSort(sortedBlock.vtx, conflictedIndexes, graph, mapTxIndex)) {
+					return false;
 				}
 			}
-			if (fJustCheck)
-				return true;
-			// revert all of the asset allocations to previous state
-			RevertAssetAllocations(assetAllocationsThisBlock);
-			// clear asset allocation structure for this block
-			assetAllocationsThisBlock.clear();
-			for (unsigned int i = 0; i < sortedBlock.vtx.size(); i++)
+		}
+		if (fJustCheck)
+			return true;
+		// revert all of the asset allocations to previous state
+		RevertAssetAllocations(assetAllocationsThisBlock);
+		// clear asset allocation structure for this block
+		assetAllocationsThisBlock.clear();
+		for (unsigned int i = 0; i < sortedBlock.vtx.size(); i++)
+		{
+			const CTransaction &tx = sortedBlock.vtx[i];
+			if (tx.nVersion == SYSCOIN_TX_VERSION)
 			{
-				const CTransaction &tx = sortedBlock.vtx[i];
-				if (tx.nVersion == SYSCOIN_TX_VERSION)
+				bool bDestCheckFailed = false;
+				if (DecodeAliasTx(tx, op, nOut, vvchAliasArgs))
 				{
-					bool bDestCheckFailed = false;
-					if (DecodeAliasTx(tx, op, nOut, vvchAliasArgs))
+					errorMessage.clear();
+					good = CheckAliasInputs(tx, op, nOut, vvchAliasArgs, fJustCheck, nHeight, errorMessage, bDestCheckFailed);
+					if (fDebug && !errorMessage.empty())
+						LogPrintf("%s\n", errorMessage.c_str());
+				}
+				if (!bDestCheckFailed && !vvchAliasArgs.empty() && good && errorMessage.empty())
+				{
+					if (DecodeCertTx(tx, op, nOut, vvchArgs))
 					{
 						errorMessage.clear();
-						good = CheckAliasInputs(tx, op, nOut, vvchAliasArgs, fJustCheck, nHeight, errorMessage, bDestCheckFailed);
+						good = CheckCertInputs(tx, op, nOut, vvchArgs, vvchAliasArgs[0], fJustCheck, nHeight, errorMessage);
 						if (fDebug && !errorMessage.empty())
 							LogPrintf("%s\n", errorMessage.c_str());
 					}
-					if (!bDestCheckFailed && !vvchAliasArgs.empty() && good && errorMessage.empty())
+					if (DecodeAssetTx(tx, op, nOut, vvchArgs))
 					{
-						if (DecodeCertTx(tx, op, nOut, vvchArgs))
-						{
-							errorMessage.clear();
-							good = CheckCertInputs(tx, op, nOut, vvchArgs, vvchAliasArgs[0], fJustCheck, nHeight, errorMessage);
-							if (fDebug && !errorMessage.empty())
-								LogPrintf("%s\n", errorMessage.c_str());
-						}
-						if (DecodeAssetTx(tx, op, nOut, vvchArgs))
-						{
-							errorMessage.clear();
-							good = CheckAssetInputs(tx, op, nOut, vvchArgs, vvchAliasArgs[0], fJustCheck, nHeight, errorMessage);
-							if (fDebug && !errorMessage.empty())
-								LogPrintf("%s\n", errorMessage.c_str());
-						}
-						else if (DecodeAssetAllocationTx(tx, op, nOut, vvchArgs))
-						{
-							errorMessage.clear();
-							good = CheckAssetAllocationInputs(tx, op, nOut, vvchArgs, vvchAliasArgs[0], fJustCheck, nHeight, assetAllocationsThisBlock, errorMessage);
-							if (fDebug && !errorMessage.empty())
-								LogPrintf("%s\n", errorMessage.c_str());
-
-						}
-						else if (DecodeEscrowTx(tx, op, nOut, vvchArgs))
-						{
-							errorMessage.clear();
-							good = CheckEscrowInputs(tx, op, nOut, vvchArgs, vvchAliasArgs, fJustCheck, nHeight, errorMessage);
-							if (fDebug && !errorMessage.empty())
-								LogPrintf("%s\n", errorMessage.c_str());
-						}
-						else if (DecodeOfferTx(tx, op, nOut, vvchArgs))
-						{
-							errorMessage.clear();
-							good = CheckOfferInputs(tx, op, nOut, vvchArgs, vvchAliasArgs[0], fJustCheck, nHeight, errorMessage);
-							if (fDebug && !errorMessage.empty())
-								LogPrintf("%s\n", errorMessage.c_str());
-						}
+						errorMessage.clear();
+						good = CheckAssetInputs(tx, op, nOut, vvchArgs, vvchAliasArgs[0], fJustCheck, nHeight, errorMessage);
+						if (fDebug && !errorMessage.empty())
+							LogPrintf("%s\n", errorMessage.c_str());
 					}
-					if (!good)
+					else if (DecodeAssetAllocationTx(tx, op, nOut, vvchArgs))
 					{
-						break;
+						errorMessage.clear();
+						good = CheckAssetAllocationInputs(tx, op, nOut, vvchArgs, vvchAliasArgs[0], fJustCheck, nHeight, assetAllocationsThisBlock, errorMessage);
+						if (fDebug && !errorMessage.empty())
+							LogPrintf("%s\n", errorMessage.c_str());
+
+					}
+					else if (DecodeEscrowTx(tx, op, nOut, vvchArgs))
+					{
+						errorMessage.clear();
+						good = CheckEscrowInputs(tx, op, nOut, vvchArgs, vvchAliasArgs, fJustCheck, nHeight, errorMessage);
+						if (fDebug && !errorMessage.empty())
+							LogPrintf("%s\n", errorMessage.c_str());
+					}
+					else if (DecodeOfferTx(tx, op, nOut, vvchArgs))
+					{
+						errorMessage.clear();
+						good = CheckOfferInputs(tx, op, nOut, vvchArgs, vvchAliasArgs[0], fJustCheck, nHeight, errorMessage);
+						if (fDebug && !errorMessage.empty())
+							LogPrintf("%s\n", errorMessage.c_str());
 					}
 				}
+				if (!good)
+				{
+					break;
+				}
 			}
-			if (!good)
-			{
-				return false;
-			}
+		}
+		if (!good)
+		{
+			return false;
 		}
 	}
 
