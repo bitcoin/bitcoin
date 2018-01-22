@@ -179,7 +179,7 @@ void CMasternodeSync::ProcessTick(CConnman& connman)
 
     // gradually request the rest of the votes after sync finished
     if(IsSynced()) {
-        std::vector<CNode*> vNodesCopy = connman.CopyNodeVector();
+        std::vector<CNode*> vNodesCopy = connman.CopyNodeVector(CConnman::FullyConnectedOnly);
         governance.RequestGovernanceObjectVotes(vNodesCopy, connman);
         connman.ReleaseNodeVector(vNodesCopy);
         return;
@@ -190,7 +190,7 @@ void CMasternodeSync::ProcessTick(CConnman& connman)
     LogPrintf("CMasternodeSync::ProcessTick -- nTick %d nRequestedMasternodeAssets %d nRequestedMasternodeAttempt %d nSyncProgress %f\n", nTick, nRequestedMasternodeAssets, nRequestedMasternodeAttempt, nSyncProgress);
     uiInterface.NotifyAdditionalDataSyncProgressChanged(nSyncProgress);
 
-    std::vector<CNode*> vNodesCopy = connman.CopyNodeVector();
+    std::vector<CNode*> vNodesCopy = connman.CopyNodeVector(CConnman::FullyConnectedOnly);
 
     BOOST_FOREACH(CNode* pnode, vNodesCopy)
     {

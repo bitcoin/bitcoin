@@ -889,7 +889,7 @@ bool CPrivateSendClient::JoinExistingQueue(CAmount nBalanceNeedsAnonymized, CCon
             infoMixingMasternode = infoMn;
             nSessionDenom = dsq.nDenom;
 
-            CNetMsgMaker msgMaker(pnode->GetSendVersion());
+            CNetMsgMaker msgMaker(pnode->GetSendVersion()); // TODO this gives a warning about version not being set (we should wait for VERSION exchange)
             connman.PushMessage(pnode, msgMaker.Make(NetMsgType::DSACCEPT, nSessionDenom, txMyCollateral));
             LogPrintf("CPrivateSendClient::JoinExistingQueue -- connected (from queue), sending DSACCEPT: nSessionDenom: %d (%s), addr=%s\n",
                       nSessionDenom, CPrivateSend::GetDenominationsToString(nSessionDenom), pnode->addr.ToString());
@@ -963,7 +963,7 @@ bool CPrivateSendClient::StartNewQueue(CAmount nValueMin, CAmount nBalanceNeedsA
                 nSessionDenom = CPrivateSend::GetDenominationsByAmounts(vecAmounts);
             }
 
-            CNetMsgMaker msgMaker(pnode->GetSendVersion());
+            CNetMsgMaker msgMaker(pnode->GetSendVersion()); // TODO this gives a warning about version not being set (we should wait for VERSION exchange)
             connman.PushMessage(pnode, msgMaker.Make(NetMsgType::DSACCEPT, nSessionDenom, txMyCollateral));
             LogPrintf("CPrivateSendClient::StartNewQueue -- connected, sending DSACCEPT, nSessionDenom: %d (%s)\n",
                     nSessionDenom, CPrivateSend::GetDenominationsToString(nSessionDenom));

@@ -65,7 +65,7 @@ bool CDarksendQueue::CheckSignature(const CPubKey& pubKeyMasternode)
 
 bool CDarksendQueue::Relay(CConnman& connman)
 {
-    std::vector<CNode*> vNodesCopy = connman.CopyNodeVector();
+    std::vector<CNode*> vNodesCopy = connman.CopyNodeVector(CConnman::FullyConnectedOnly);
     BOOST_FOREACH(CNode* pnode, vNodesCopy) {
         CNetMsgMaker msgMaker(pnode->GetSendVersion());
         if (pnode->nVersion >= MIN_PRIVATESEND_PEER_PROTO_VERSION)

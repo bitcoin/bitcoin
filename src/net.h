@@ -303,6 +303,7 @@ public:
         ForEachNodeThen(FullyConnectedOnly, pre, post);
     }
 
+    std::vector<CNode*> CopyNodeVector(std::function<bool(const CNode* pnode)> cond);
     std::vector<CNode*> CopyNodeVector();
     void ReleaseNodeVector(const std::vector<CNode*>& vecNodes);
 
