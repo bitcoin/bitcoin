@@ -70,7 +70,7 @@ For Ubuntu 12.04 and later or Debian 7 and later libboost-all-dev has to be inst
         sudo apt-get update
 
  Ubuntu 12.04 and later have packages for libdb5.1-dev and libdb5.1++-dev,
- but using these will break binary wallet compatibility, and is not recommended.
+ but using these will break the wallet.
 
 For other Debian & Ubuntu (with ppa):
 
