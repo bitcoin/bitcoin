@@ -900,8 +900,19 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 				break;
 			}
 		}
+		// SYSCOIN
+		// Calculate in-mempool ancestors, up to a limit.
+		CTxMemPoolEntry entry(tx, nFees, GetTime(), dPriority, chainActive.Height(), pool.HasNoInputsOf(tx), inChainInputValue, fSpendsCoinbase, nSigOps, lp);
+		CTxMemPool::setEntries setAncestors;
+		size_t nLimitAncestors = GetArg("-limitancestorcount", DEFAULT_ANCESTOR_LIMIT);
+		size_t nLimitAncestorSize = GetArg("-limitancestorsize", DEFAULT_ANCESTOR_SIZE_LIMIT) * 1000;
+		size_t nLimitDescendants = GetArg("-limitdescendantcount", DEFAULT_DESCENDANT_LIMIT);
+		size_t nLimitDescendantSize = GetArg("-limitdescendantsize", DEFAULT_DESCENDANT_SIZE_LIMIT) * 1000;
+		std::string errString;
+		if (!pool.CalculateMemPoolAncestors(entry, setAncestors, nLimitAncestors, nLimitAncestorSize, nLimitDescendants, nLimitDescendantSize, errString)) {
+			return state.DoS(0, false, REJECT_NONSTANDARD, "too-long-mempool-chain", false, errString);
+		}
 		if (tx.nVersion != SYSCOIN_TX_VERSION) {
-			CTxMemPoolEntry entry(tx, nFees, GetTime(), dPriority, chainActive.Height(), pool.HasNoInputsOf(tx), inChainInputValue, fSpendsCoinbase, nSigOps, lp);
 			unsigned int nSize = entry.GetTxSize();
 
 			// Check that the transaction doesn't have an excessive number of
@@ -951,7 +962,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 					strprintf("%d > %d", nFees, ::minRelayTxFee.GetFee(nSize) * 10000));
 
 			// Calculate in-mempool ancestors, up to a limit.
-			CTxMemPool::setEntries setAncestors;
+			/*CTxMemPool::setEntries setAncestors;
 			size_t nLimitAncestors = GetArg("-limitancestorcount", DEFAULT_ANCESTOR_LIMIT);
 			size_t nLimitAncestorSize = GetArg("-limitancestorsize", DEFAULT_ANCESTOR_SIZE_LIMIT) * 1000;
 			size_t nLimitDescendants = GetArg("-limitdescendantcount", DEFAULT_DESCENDANT_LIMIT);
@@ -959,7 +970,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 			std::string errString;
 			if (!pool.CalculateMemPoolAncestors(entry, setAncestors, nLimitAncestors, nLimitAncestorSize, nLimitDescendants, nLimitDescendantSize, errString)) {
 				return state.DoS(0, false, REJECT_NONSTANDARD, "too-long-mempool-chain", false, errString);
-			}
+			}*/
 
 			// A transaction that spends outputs that would be replaced by it is invalid. Now
 			// that we have the set of all ancestors we can detect this
