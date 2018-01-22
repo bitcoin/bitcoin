@@ -599,7 +599,8 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
 	string errorMessage = "";
 	bool bCheckDestError = false;
 	unordered_set<CAssetAllocationTuple> assetAllocationsThisBlock;
-	const CAmount nFees = ::minRelayTxFee.GetFee(wtxNew.GetTotalSize());
+	// in * 146 + out * 33 + 10 + 1
+	const CAmount nFees = ::minRelayTxFee.GetFee(wtxNew.vin.size()*146 + wtxNew.vout.size()*33 + 11);
 	if (wtxNew.nVersion == SYSCOIN_TX_VERSION) {
 		if (DecodeAliasTx(wtxNew, op, nOut, vvchAlias))
 		{
