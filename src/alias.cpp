@@ -303,7 +303,7 @@ bool IsSyscoinDataOutput(const CTxOut& out) {
 }
 
 
-bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, string &errorMessage, bool &bDestCheckFailed, const CAmount& nFees, bool dontaddtodb) {
+bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, string &errorMessage, bool &bDestCheckFailed, bool dontaddtodb) {
 	if (!paliasdb)
 		return false;
 	if (tx.IsCoinBase() && !fJustCheck && !dontaddtodb)
@@ -480,21 +480,14 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			return true;
 		}
 	}
-	// check fees
-	CAmount diff = nFees - ::minRelayTxFee.GetFee(tx.vin.size() * 180 + tx.vout.size() * 34 + 10);
-	CAmount allowedDiff = (tx.vin.size() / COIN);
-	if (diff > allowedDiff || diff < -allowedDiff) {
-		errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5019 - " + _("Transaction pays incorrect fee, fee paid: ") + ValueFromAmount(nFees).write() + " vs fee required: " + ValueFromAmount(::minRelayTxFee.GetFee(tx.vin.size() * 180 + tx.vout.size() * 34 + 10)).write();
-		return error(errorMessage.c_str());
-	}
 	// whitelist alias updates don't update expiry date
-	if (fJustCheck && !vchData.empty() && theAlias.offerWhitelist.entries.empty() && theAlias.nExpireTime > 0)
+	if(!vchData.empty() && theAlias.offerWhitelist.entries.empty() && theAlias.nExpireTime > 0)
 	{
 		CAmount fee = GetDataFee(tx.vout[nDataOut].scriptPubKey);
 		float fYears;
 		//  get expire time and figure out if alias payload pays enough fees for expiry
 		int nHeightTmp = nHeight;
-		if (nHeightTmp > chainActive.Height())
+		if(nHeightTmp > chainActive.Height())
 			nHeightTmp = chainActive.Height();
 		uint64_t nTimeExpiry = theAlias.nExpireTime - chainActive[nHeightTmp]->GetMedianTimePast();
 		// ensure aliases are good for atleast an hour
@@ -503,17 +496,16 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			theAlias.nExpireTime = chainActive[nHeightTmp]->GetMedianTimePast() + 3600;
 		}
 		fYears = nTimeExpiry / ONE_YEAR_IN_SECONDS;
-		if (fYears < 1)
+		if(fYears < 1)
 			fYears = 1;
-		fee *= powf(2.88, fYears);
-
-		if ((fee - 10000) > tx.vout[nDataOut].nValue)
+		fee *= powf(2.88,fYears);
+			
+		if ((fee-10000) > tx.vout[nDataOut].nValue) 
 		{
-			errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5019 - " + _("Transaction does not pay enough fee: ") + ValueFromAmount(tx.vout[nDataOut].nValue).write() + "/" + ValueFromAmount(fee - 10000).write() + "/" + boost::lexical_cast<string>(fYears) + " years.";
-			return error(errorMessage.c_str());
+			errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5019 - " + _("Transaction does not pay enough fee: ") + ValueFromAmount(tx.vout[nDataOut].nValue).write() + "/" + ValueFromAmount(fee-10000).write() + "/" + boost::lexical_cast<string>(fYears) + " years.";
+			return true;
 		}
 	}
-	
 	bool theAliasNull = theAlias.IsNull();
 	string strResponseEnglish = "";
 	string strResponse = GetSyscoinTransactionDescription(op, strResponseEnglish, ALIAS);

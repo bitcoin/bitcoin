@@ -566,7 +566,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight, co
 			if (DecodeAliasTx(tx, op, nOut, vvchAliasArgs))
 			{
 				errorMessage.clear();
-				good = CheckAliasInputs(tx, op, nOut, vvchAliasArgs, fJustCheck, nHeight, errorMessage, bDestCheckFailed, nFees);
+				good = CheckAliasInputs(tx, op, nOut, vvchAliasArgs, fJustCheck, nHeight, errorMessage, nFees, bDestCheckFailed);
 				if (fDebug && !errorMessage.empty())
 					LogPrintf("%s\n", errorMessage.c_str());
 			}
@@ -643,7 +643,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight, co
 					if (DecodeAliasTx(tx, op, nOut, vvchAliasArgs))
 					{
 						errorMessage.clear();
-						good = CheckAliasInputs(tx, op, nOut, vvchAliasArgs, fJustCheck, nHeight, errorMessage, bDestCheckFailed, nFees);
+						good = CheckAliasInputs(tx, op, nOut, vvchAliasArgs, fJustCheck, nHeight, errorMessage, nFees, bDestCheckFailed);
 						if (fDebug && !errorMessage.empty())
 							LogPrintf("%s\n", errorMessage.c_str());
 					}
@@ -699,6 +699,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight, co
 		}
 	}
 
+
 	return true;
 
 }
@@ -743,7 +744,6 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 		return state.Invalid(false, REJECT_ALREADY_KNOWN, "txn-already-in-mempool");
 
 	// If this is a Transaction Lock Request check to see if it's valid
-	// SYSCOIN transactions are not IS compatible
 	if (instantsend.HasTxLockRequest(hash) && !CTxLockRequest(tx).IsValid())
 		return state.DoS(10, error("AcceptToMemoryPool : CTxLockRequest %s is invalid", hash.ToString()),
 			REJECT_INVALID, "bad-txlockrequest");
@@ -901,7 +901,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 				break;
 			}
 		}
-		
+
 		CTxMemPoolEntry entry(tx, nFees, GetTime(), dPriority, chainActive.Height(), pool.HasNoInputsOf(tx), inChainInputValue, fSpendsCoinbase, nSigOps, lp);
 		unsigned int nSize = entry.GetTxSize();
 
@@ -914,39 +914,36 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 			return state.DoS(0, false, REJECT_NONSTANDARD, "bad-txns-too-many-sigops", false,
 				strprintf("%d", nSigOps));
 
-		// SYSCOIN skip over fee check if sys tx, it will be checked by checkaliasinputs
-		if (tx.nVersion != SYSCOIN_TX_VERSION) {
-			CAmount mempoolRejectFee = pool.GetMinFee(GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000).GetFee(nSize);
-			if (mempoolRejectFee > 0 && nModifiedFees < mempoolRejectFee) {
-				return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "mempool min fee not met", false, strprintf("%d < %d", nFees, mempoolRejectFee));
-			}
-			else if (GetBoolArg("-relaypriority", DEFAULT_RELAYPRIORITY) && nModifiedFees < ::minRelayTxFee.GetFee(nSize) && !AllowFree(entry.GetPriority(chainActive.Height() + 1))) {
-				// Require that free transactions have sufficient priority to be mined in the next block.
-				return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "insufficient priority");
-			}
+		CAmount mempoolRejectFee = pool.GetMinFee(GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000).GetFee(nSize);
+		if (mempoolRejectFee > 0 && nModifiedFees < mempoolRejectFee) {
+			return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "mempool min fee not met", false, strprintf("%d < %d", nFees, mempoolRejectFee));
+		}
+		else if (GetBoolArg("-relaypriority", DEFAULT_RELAYPRIORITY) && nModifiedFees < ::minRelayTxFee.GetFee(nSize) && !AllowFree(entry.GetPriority(chainActive.Height() + 1))) {
+			// Require that free transactions have sufficient priority to be mined in the next block.
+			return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "insufficient priority");
+		}
 
-			// Continuously rate-limit free (really, very-low-fee) transactions
-			// This mitigates 'penny-flooding' -- sending thousands of free transactions just to
-			// be annoying or make others' transactions take longer to confirm.
-			if (fLimitFree && nModifiedFees < ::minRelayTxFee.GetFee(nSize))
-			{
-				static CCriticalSection csFreeLimiter;
-				static double dFreeCount;
-				static int64_t nLastTime;
-				int64_t nNow = GetTime();
+		// Continuously rate-limit free (really, very-low-fee) transactions
+		// This mitigates 'penny-flooding' -- sending thousands of free transactions just to
+		// be annoying or make others' transactions take longer to confirm.
+		if (fLimitFree && nModifiedFees < ::minRelayTxFee.GetFee(nSize))
+		{
+			static CCriticalSection csFreeLimiter;
+			static double dFreeCount;
+			static int64_t nLastTime;
+			int64_t nNow = GetTime();
 
-				LOCK(csFreeLimiter);
+			LOCK(csFreeLimiter);
 
-				// Use an exponentially decaying ~10-minute window:
-				dFreeCount *= pow(1.0 - 1.0 / 600.0, (double)(nNow - nLastTime));
-				nLastTime = nNow;
-				// -limitfreerelay unit is thousand-bytes-per-minute
-				// At default rate it would take over a month to fill 1GB
-				if (dFreeCount >= GetArg("-limitfreerelay", DEFAULT_LIMITFREERELAY) * 10 * 1000)
-					return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "rate limited free transaction");
-				LogPrint("mempool", "Rate limit dFreeCount: %g => %g\n", dFreeCount, dFreeCount + nSize);
-				dFreeCount += nSize;
-			}
+			// Use an exponentially decaying ~10-minute window:
+			dFreeCount *= pow(1.0 - 1.0 / 600.0, (double)(nNow - nLastTime));
+			nLastTime = nNow;
+			// -limitfreerelay unit is thousand-bytes-per-minute
+			// At default rate it would take over a month to fill 1GB
+			if (dFreeCount >= GetArg("-limitfreerelay", DEFAULT_LIMITFREERELAY) * 10 * 1000)
+				return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "rate limited free transaction");
+			LogPrint("mempool", "Rate limit dFreeCount: %g => %g\n", dFreeCount, dFreeCount + nSize);
+			dFreeCount += nSize;
 		}
 
 		if (fRejectAbsurdFee && nFees > ::minRelayTxFee.GetFee(nSize) * 10000)
@@ -1119,7 +1116,6 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 					REJECT_INSUFFICIENTFEE, "insufficient fee");
 			}
 		}
-		
 
 		// If we aren't going to actually accept it but just were verifying it, we are fine already
 		if (fDryRun) return true;
@@ -1143,7 +1139,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 			return error("%s: BUG! PLEASE REPORT THIS! ConnectInputs failed against MANDATORY but not STANDARD flags %s, %s",
 				__func__, hash.ToString(), FormatStateMessage(state));
 		}
-		if (!CheckSyscoinInputs(tx, true, chainActive.Height(), nFees, CBlock()))
+		if (!CheckSyscoinInputs(tx, true, chainActive.Height(), CBlock()))
 			return false;
 		// Remove conflicting transactions from the mempool
 		BOOST_FOREACH(const CTxMemPool::txiter it, allConflicting)
@@ -2321,6 +2317,9 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 	std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue> > addressUnspentIndex;
 	std::vector<std::pair<CSpentIndexKey, CSpentIndexValue> > spentIndex;
 
+	if(!CheckSyscoinInputs(block.vtx[0], fJustCheck, pindex->nHeight, block))
+		return error("ConnectBlock(): CheckSyscoinInputs on block %s failed",
+			block.GetHash().ToString());
 	for (unsigned int i = 0; i < block.vtx.size(); i++)
 	{
 		const CTransaction &tx = block.vtx[i];
@@ -2424,9 +2423,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 					tx.GetHash().ToString(), FormatStateMessage(state));
 			control.Add(vChecks);
 		}
-		if (!CheckSyscoinInputs(block.vtx[0], fJustCheck, pindex->nHeight, nFees, block))
-			return error("ConnectBlock(): CheckSyscoinInputs on block %s failed",
-				block.GetHash().ToString());
+		
 		if (fAddressIndex) {
 			for (unsigned int k = 0; k < tx.vout.size(); k++) {
 				const CTxOut &out = tx.vout[k];

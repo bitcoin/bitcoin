@@ -318,7 +318,7 @@ std::vector<unsigned char> vchFromString(const std::string &str);
 std::string stringFromValue(const UniValue& value);
 const int SYSCOIN_TX_VERSION = 0x7400;
 bool IsValidAliasName(const std::vector<unsigned char> &vchAlias);
-bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const std::vector<std::vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, std::string &errorMessage, bool & bDestCheckFailed, const CAmount& nFees, bool dontaddtodb=false);
+bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const std::vector<std::vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, std::string &errorMessage, bool & bDestCheckFailed,bool dontaddtodb=false);
 void CreateRecipient(const CScript& scriptPubKey, CRecipient& recipient);
 void CreateFeeRecipient(CScript& scriptPubKey, const std::vector<unsigned char>& data, CRecipient& recipient);
 void CreateAliasRecipient(const CScript& scriptPubKey, CRecipient& recipient);
