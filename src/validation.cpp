@@ -691,12 +691,12 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight, co
 				}
 			}
 		}
+		if (!good)
+		{
+			return false;
+		}
 	}
 
-	if (!good)
-	{
-		return false;
-	}
 	return true;
 
 }
