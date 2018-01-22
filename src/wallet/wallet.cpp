@@ -3649,7 +3649,7 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
 					nFeeNeeded = std::max(nFeeNeeded, CTxLockRequest(txNew).GetMinFee());
 				}
 				// SYSCOIN tx's always send with set fee
-				if (systx)
+				if (sysTx)
 					nFeeNeeded = ::minRelayTxFee.GetFee(nBytes);
 
 				// If we made it here and we aren't even able to meet the relay fee on the next pass, give up
