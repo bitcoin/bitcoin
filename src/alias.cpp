@@ -481,7 +481,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		}
 	}
 	// check fees
-	if (nFees != ::minRelayTxFee.GetFee(tx.vin.size() * 146 + tx.vout.size() * 33 + 11)) {
+	if (nFees != ::minRelayTxFee.GetFee(tx.vin.size() * 180 + tx.vout.size() * 34 + 11)) {
 		errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5019 - " + _("Transaction pays incorrect fee, fee paid: ") + ValueFromAmount(nFees).write() + " vs fee required: " + ValueFromAmount(::minRelayTxFee.GetFee(tx.GetTotalSize())).write();
 		return error(errorMessage.c_str());
 	}

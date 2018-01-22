@@ -3650,11 +3650,11 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
 				}
 				// SYSCOIN tx's always send with set fee
 				if (sysTx)
-					nFeeNeeded = ::minRelayTxFee.GetFee(wtxNew.vin.size() * 146 + wtxNew.vout.size() * 33 + 11);
+					nFeeNeeded = ::minRelayTxFee.GetFee(wtxNew.vin.size() * 180 + wtxNew.vout.size() * 34 + 11);
 
 				// If we made it here and we aren't even able to meet the relay fee on the next pass, give up
 				// because we must be at the maximum allowed fee.
-				if (nFeeNeeded < ::minRelayTxFee.GetFee(nBytes))
+				else if (nFeeNeeded < ::minRelayTxFee.GetFee(nBytes))
 				{
 					strFailReason = _("Transaction too large for fee policy");
 					return false;
