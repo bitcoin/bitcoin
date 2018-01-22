@@ -1,7 +1,10 @@
 ### System
-Operation System: (Windows 10/Ubuntu 16.04 etc)
-Wallet Version: (help --> debug/hodlcoind --version)
-Linux GCC Version: (none on windows/gcc --version)
+**Operation System:** (Windows 10/Ubuntu 16.04 etc)
+
+**Wallet Version:** (help --> debug/hodlcoind --version)
+
+**Linux GCC Version:** (none on windows/gcc --version)
+
 ----
 
 ### Description of issue
