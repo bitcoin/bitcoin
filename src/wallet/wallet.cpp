@@ -3648,6 +3648,9 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
 				if (fUseInstantSend) {
 					nFeeNeeded = std::max(nFeeNeeded, CTxLockRequest(txNew).GetMinFee());
 				}
+				// SYSCOIN tx's always send with set fee
+				if (systx)
+					nFeeNeeded = ::minRelayTxFee.GetFee(nBytes);
 
 				// If we made it here and we aren't even able to meet the relay fee on the next pass, give up
 				// because we must be at the maximum allowed fee.
@@ -3656,7 +3659,6 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
 					strFailReason = _("Transaction too large for fee policy");
 					return false;
 				}
-
 				if (nFeeRet >= nFeeNeeded)
 					break; // Done, enough fee included.
 
