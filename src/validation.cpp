@@ -565,7 +565,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight, co
 		if (DecodeAliasTx(tx, op, nOut, vvchAliasArgs))
 		{
 			errorMessage.clear();
-			good = CheckAliasInputs(tx, op, nOut, vvchAliasArgs, fJustCheck, nHeight, errorMessage, nFees, bDestCheckFailed);
+			good = CheckAliasInputs(tx, op, nOut, vvchAliasArgs, fJustCheck, nHeight, errorMessage, bDestCheckFailed, nFees);
 			if (fDebug && !errorMessage.empty())
 				LogPrintf("%s\n", errorMessage.c_str());
 		}
@@ -642,7 +642,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight, co
 				if (DecodeAliasTx(tx, op, nOut, vvchAliasArgs))
 				{
 					errorMessage.clear();
-					good = CheckAliasInputs(tx, op, nOut, vvchAliasArgs, fJustCheck, nHeight, errorMessage, nFees, bDestCheckFailed);
+					good = CheckAliasInputs(tx, op, nOut, vvchAliasArgs, fJustCheck, nHeight, errorMessage, bDestCheckFailed, nFees);
 					if (fDebug && !errorMessage.empty())
 						LogPrintf("%s\n", errorMessage.c_str());
 				}
