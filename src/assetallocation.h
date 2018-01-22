@@ -81,7 +81,7 @@ namespace std {
 		{
 			using std::size_t;
 			using std::hash;
-			return hash<string>()(k.ToString());
+			return boost::hash_value(k.ToString());
 		}
 	};
 
