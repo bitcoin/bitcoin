@@ -629,7 +629,8 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight, co
 		if (fJustCheck)
 			return true;
 		// revert all of the asset allocations to previous state
-		RevertAssetAllocations(assetAllocationsThisBlock);
+		if (!RevertAssetAllocations(assetAllocationsThisBlock))
+			return false;
 		// clear asset allocation structure for this block
 		assetAllocationsThisBlock.clear();
 		good = true;

@@ -263,7 +263,8 @@ bool RemoveAssetAllocationScriptPrefix(const CScript& scriptIn, CScript& scriptO
 	return true;
 }
 // revert allocation to previous state and remove 
-void RevertAssetAllocations(const unordered_set<CAssetAllocationTuple> &assetAllocationsThisBlock) {
+bool RevertAssetAllocations(const unordered_set<CAssetAllocationTuple> &assetAllocationsThisBlock) {
+	string errorMessage = "";
 	CAssetAllocation dbAssetAllocation;
 	for (auto &assetAllocationTuple : assetAllocationsThisBlock) {
 		if (GetAssetAllocation(assetAllocationTuple, dbAssetAllocation)) {
@@ -278,10 +279,12 @@ void RevertAssetAllocations(const unordered_set<CAssetAllocationTuple> &assetAll
 						receiverAllocation.vchAlias = receiverAllocationTuple.vchAlias;
 						receiverAllocation.vchAsset = receiverAllocationTuple.vchAsset;
 					}
+					LogPrintf("RevertAssetAllocations erasing recver %s\n", receiverAllocationTuple.ToString().c_str());
 					// write the state back to previous state incase of any consensus failures below before the new write
 					if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, INT64_MAX, false))
 					{
-						continue;
+						errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2021 - " + _("Failed to write to asset allocation DB");
+						return error(errorMessage.c_str());
 					}
 				}
 			}
@@ -292,14 +295,16 @@ void RevertAssetAllocations(const unordered_set<CAssetAllocationTuple> &assetAll
 				dbAssetAllocation.vchAlias = assetAllocationTuple.vchAlias;
 				dbAssetAllocation.vchAsset = assetAllocationTuple.vchAsset;
 			}
+			LogPrintf("RevertAssetAllocations erasing sender %s\n", assetAllocationTuple.ToString().c_str());
 			// write the state back to previous state incase of any consensus failures below before the new write
 			if (!passetallocationdb->WriteAssetAllocation(dbAssetAllocation, INT64_MAX, false))
 			{
-				continue;
+				errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2022 - " + _("Failed to write to asset allocation DB");
+				return error(errorMessage.c_str());
 			}
 		}
 	}
-
+	return true;
 	
 }
 bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const std::vector<unsigned char> &vchAlias,
@@ -463,7 +468,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 					if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, INT64_MAX, fJustCheck))
 					{
 						errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to write to asset allocation DB");
-						continue;
+						return error(errorMessage.c_str());
 					}
 	
 					// if mempool inclusion or conflict with another tx we simply update, otherwise we create the tx history entry
