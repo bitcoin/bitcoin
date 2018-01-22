@@ -2826,7 +2826,8 @@ static void ParseOutputs(
         } else if (!nFee) {
             entry.push_back(Pair("category", "receive"));
         } else if (amount == 0) {
-            entry.push_back(Pair("fee", ValueFromAmount(-nFee)));
+            if (listSent.empty())
+                entry.push_back(Pair("fee", ValueFromAmount(-nFee)));
             entry.push_back(Pair("category", "internal_transfer"));
         } else {
             entry.push_back(Pair("category", "send"));
@@ -4345,54 +4346,6 @@ UniValue listunspentblind(const JSONRPCRequest &request)
 
     return results;
 };
-
-/*
-UniValue gettransactionsummary(const JSONRPCRequest &request)
-{
-    if (request.fHelp || request.params.size() != 1)
-        throw std::runtime_error(
-            "gettransactionsummary <txhash>\n"
-            "Returns a summary of a transaction in the wallet.");
-
-    CHDWallet *pwallet = GetHDWalletForJSONRPCRequest(request);
-
-    UniValue obj(UniValue::VOBJ);
-
-    uint256 hash;
-    hash.SetHex(request.params[0].get_str());
-
-    {
-        LOCK(pwallet->cs_wallet);
-
-        MapRecords_t::const_iterator mri;
-        MapWallet_t::const_iterator mwi;
-
-        if ((mwi = pwallet->mapWallet.find(hash)) != pwallet->mapWallet.end())
-        {
-            const CWalletTx &wtx = mwi->second;
-
-            obj.push_back(Pair("time", (int64_t)wtx.nTimeSmart));
-
-        } else
-        if ((mri = pwallet->mapRecords.find(hash)) != pwallet->mapRecords.end())
-        {
-            const CTransactionRecord &rtx = mri->second;
-
-            obj.push_back(Pair("time", std::min((int64_t)rtx.nTimeReceived, (int64_t)rtx.nBlockTime)));
-        } else
-        {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, _("Unknown transaction."));
-        };
-    }
-
-    obj.push_back(Pair("part_balance", ""));
-    obj.push_back(Pair("blind_balance", ""));
-    obj.push_back(Pair("anon_balance", ""));
-
-
-    return obj;
-};
-*/
 
 
 static int AddOutput(uint8_t nType, std::vector<CTempRecipient> &vecSend, const CTxDestination &address, CAmount nValue,

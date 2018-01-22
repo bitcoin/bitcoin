@@ -12,14 +12,13 @@
 #include "support/events.h"
 
 
-
 UniValue CallRPC(std::string args, std::string wallet)
 {
     if (args.empty())
         throw std::runtime_error("No input.");
-    
+
     std::vector<std::string> vArgs;
-    
+
     bool fInQuotes = false;
     std::string s;
     for (size_t i = 0; i < args.size(); ++i)
@@ -33,22 +32,34 @@ UniValue CallRPC(std::string args, std::string wallet)
             s.clear();
             continue;
         };
-        
+
         if (c == '"' && (i == 0 || args[i-1] != '\\'))
             fInQuotes = !fInQuotes;
-        
+
         s.push_back(c);
     };
     if (!s.empty())
         vArgs.push_back(part::TrimQuotes(s));
-    
-    
+
+
     std::string strMethod = vArgs[0];
     vArgs.erase(vArgs.begin());
+
+
     JSONRPCRequest request;
     request.strMethod = strMethod;
     request.params = RPCConvertValues(strMethod, vArgs);
-    
+    request.fHelp = false;
+
+    AddUri(request, wallet);
+
+    UniValue rv;
+    CallRPC(rv, request);
+    return rv;
+};
+
+void AddUri(JSONRPCRequest &request, std::string wallet)
+{
     if (!wallet.empty()) {
         char *encodedURI = evhttp_uriencode(wallet.c_str(), wallet.size(), false);
         if (encodedURI) {
@@ -58,17 +69,21 @@ UniValue CallRPC(std::string args, std::string wallet)
             throw std::runtime_error("uri-encode failed");
         }
     }
-    
-    request.fHelp = false;
-    const CRPCCommand *cmd = tableRPC[strMethod];
-    
+    return;
+}
+
+void CallRPC(UniValue &rv, const JSONRPCRequest &request)
+{
+    const CRPCCommand *cmd = tableRPC[request.strMethod];
+
     if (!cmd)
-        throw std::runtime_error(strprintf("CallRPC Unknown command, %s.", strMethod));
-    rpcfn_type method = tableRPC[strMethod]->actor;
+        throw std::runtime_error(strprintf("CallRPC Unknown command, %s.", request.strMethod));
+    rpcfn_type method = tableRPC[request.strMethod]->actor;
     try {
-        return (*method)(request);
+        rv = (*method)(request);
     }
     catch (const UniValue& objError) {
         throw std::runtime_error(find_value(objError, "message").get_str());
     }
-};
+    return;
+}

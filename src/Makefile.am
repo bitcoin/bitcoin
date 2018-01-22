@@ -250,6 +250,7 @@ libparticl_server_a_SOURCES = \
   rpc/net.cpp \
   rpc/rawtransaction.cpp \
   rpc/server.cpp \
+  rpc/client.cpp \
   rpc/rpcutil.cpp \
   script/sigcache.cpp \
   script/ismine.cpp \
@@ -433,6 +434,7 @@ libparticl_cli_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libparticl_cli_a_SOURCES = \
   rpc/client.cpp \
   $(BITCOIN_CORE_H)
+
 
 nodist_libparticl_util_a_SOURCES = $(srcdir)/obj/build.h
 #

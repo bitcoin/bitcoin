@@ -26,6 +26,9 @@
 #endif
 #include "warnings.h"
 
+#include "rpcutil.h"
+#include "rpc/client.h"
+
 #if ENABLE_ZMQ
 #include <zmq.h>
 #endif
@@ -737,6 +740,50 @@ UniValue echo(const JSONRPCRequest& request)
     return request.params;
 }
 
+UniValue runstrings(const JSONRPCRequest& request)
+{
+    if (request.params.size() < 2) {
+        throw std::runtime_error(
+            "runstrings method wallet arg1 arg2 ...\n"
+            "Run method with all inputs as strings.\n"
+        );
+    }
+
+    std::string strMethod = request.params[0].get_str();
+    std::string strWallet = request.params[1].get_str();
+
+    if (strMethod == "runstrings")
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid method.");
+
+    std::vector<std::string> vArgs;
+
+    for (size_t i = 2; i < request.params.size(); ++i)
+    {
+        if (!request.params[i].isStr())
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Parameters must all be strings.");
+        vArgs.push_back(request.params[i].get_str());
+    }
+
+    JSONRPCRequest newrequest;
+    newrequest.strMethod = strMethod;
+    newrequest.fHelp = request.fHelp;
+    newrequest.params = RPCConvertValues(strMethod, vArgs);
+    newrequest.id = request.id;
+    newrequest.authUser = request.authUser;
+
+    // Keep incoming URI if no wallet is specified
+    if (!strWallet.empty()) {
+        AddUri(newrequest, strWallet);
+    } else {
+        newrequest.URI = request.URI;
+    }
+
+    UniValue rv;
+    CallRPC(rv, newrequest);
+
+    return rv;
+}
+
 bool getAddressFromIndex(const int &type, const uint256 &hash, std::string &address)
 {
     if (type == ADDR_INDT_SCRIPT_ADDRESS) {
@@ -1330,6 +1377,8 @@ static const CRPCCommand commands[] =
     { "hidden",             "echo",                   &echo,                   true,  {"arg0","arg1","arg2","arg3","arg4","arg5","arg6","arg7","arg8","arg9"}},
     { "hidden",             "echojson",               &echo,                   true,  {"arg0","arg1","arg2","arg3","arg4","arg5","arg6","arg7","arg8","arg9"}},
     { "hidden",             "logging",                &logging,                true,  {"include", "exclude"}},
+    { "hidden",             "runstrings",             &runstrings,             true,  {"arg0","arg1","arg2","arg3","arg4","arg5","arg6","arg7","arg8","arg9"}},
+
 };
 
 void RegisterMiscRPCCommands(CRPCTable &t)

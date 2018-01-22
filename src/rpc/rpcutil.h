@@ -10,11 +10,12 @@
 #include "univalue.h"
 #include <string>
 
+class JSONRPCRequest;
 
 UniValue CallRPC(std::string args, std::string wallet="");
 
-class JSONRPCRequest;
-extern UniValue gettransactionsummary(const JSONRPCRequest &request);
+void AddUri(JSONRPCRequest &request, std::string wallet);
+void CallRPC(UniValue &rv, const JSONRPCRequest &request);
 
 #endif // BITCOIN_RPCUTIL_H
 

@@ -241,9 +241,7 @@ bool CZMQPublishHashWalletTransactionNotifier::NotifyTransaction(const std::stri
 
 bool CZMQPublishSMSGNotifier::NotifySecureMessage(const uint160 &hash)
 {
-    //uint256 hash = transaction.GetHash();
     LogPrint(BCLog::ZMQ, "zmq: Publish smsg %s\n", hash.GetHex());
-    //LogPrint(BCLog::ZMQ, "zmq: Publish smsg\n");
     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION | RPCSerializationFlags());
     ss << hash;
     return SendMessage(MSG_SMSG, &(*ss.begin()), ss.size());
