@@ -481,8 +481,10 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		}
 	}
 	// check fees
-	if (nFees != ::minRelayTxFee.GetFee(tx.vin.size() * 180 + tx.vout.size() * 34 + 11)) {
-		errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5019 - " + _("Transaction pays incorrect fee, fee paid: ") + ValueFromAmount(nFees).write() + " vs fee required: " + ValueFromAmount(::minRelayTxFee.GetFee(tx.GetTotalSize())).write();
+	CAmount diff = nFees - ::minRelayTxFee.GetFee(tx.vin.size() * 180 + tx.vout.size() * 34 + 10);
+	CAmount allowedDiff = (tx.vin.size() / COIN);
+	if (diff > allowedDiff || diff < -allowedDiff) {
+		errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5019 - " + _("Transaction pays incorrect fee, fee paid: ") + ValueFromAmount(nFees).write() + " vs fee required: " + ValueFromAmount(::minRelayTxFee.GetFee(tx.vin.size() * 180 + tx.vout.size() * 34 + 10)).write();
 		return error(errorMessage.c_str());
 	}
 	// whitelist alias updates don't update expiry date
