@@ -632,12 +632,14 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight, co
 		RevertAssetAllocations(assetAllocationsThisBlock);
 		// clear asset allocation structure for this block
 		assetAllocationsThisBlock.clear();
+		good = true;
 		for (unsigned int i = 0; i < sortedBlock.vtx.size(); i++)
 		{
 			const CTransaction &tx = sortedBlock.vtx[i];
 			if (tx.nVersion == SYSCOIN_TX_VERSION)
 			{
 				bool bDestCheckFailed = false;
+				good = false;
 				if (DecodeAliasTx(tx, op, nOut, vvchAliasArgs))
 				{
 					errorMessage.clear();
