@@ -61,7 +61,7 @@ public:
 	}
 	inline bool operator< (const CAssetAllocationTuple& right) const
 	{
-		return vchAlias < right.vchAlias;
+		return ToString() < right.ToString();
 	}
 	inline void SetNull() {
 		vchAsset.clear();
@@ -165,7 +165,7 @@ public:
 				arrivalTimes[assetallocation.txHash] = arrivalTime;
 				writeState = writeState && Write(make_pair(std::string("assetallocationa"), allocationTuple), arrivalTimes);
 			}
-			sorted_vector assetAllocations;
+			sorted_vector<CAssetAllocationTuple> assetAllocations;
 			ReadAssetAllocationSet(assetAllocations);
 			assetAllocations.insert(allocationTuple);
 			writeState = writeState && Write(make_pair(std::string("assetallocations"), 0), assetAllocations);
@@ -194,13 +194,13 @@ public:
 	bool EraseISArrivalTimes(const CAssetAllocationTuple& assetAllocationTuple) {
 		return Erase(make_pair(std::string("assetallocationa"), assetAllocationTuple));
 	}
-	bool ReadAssetAllocationSet(sorted_vector& assetAllocations) {
+	bool ReadAssetAllocationSet(sorted_vector<CAssetAllocationTuple>& assetAllocations) {
 		return Read(std::string("assetallocations"), assetAllocations);
 	}
 	bool EraseAssetAllocationSet() {
 		return Erase(std::string("assetallocations"));
 	}
-	bool WriteAssetAllocationSet(const sorted_vector& assetAllocations) {
+	bool WriteAssetAllocationSet(const sorted_vector<CAssetAllocationTuple>& assetAllocations) {
 		return Write(std::string("assetallocations"), assetAllocations);
 	}
 	bool EraseISArrivalTime(const CAssetAllocationTuple& assetAllocationTuple, const uint256& txid) {
