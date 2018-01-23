@@ -290,6 +290,24 @@ libbitcoin_consensus_a_SOURCES = \
   consensus/merkle.h \
   consensus/params.h \
   consensus/validation.h \
+  crypto/cryptonight.c \
+  crypto/cryptonight.h \
+  crypto/aesb.c \
+  crypto/c_skein.c \
+  crypto/c_skein.h \
+  crypto/c_jh.c \
+  crypto/c_jh.h \
+  crypto/c_blake256.c \
+  crypto/c_blake256.h \
+  crypto/c_groestl.c \
+  crypto/c_groestl.h \
+  crypto/groestl_tables.h \
+  crypto/c_keccak.c \
+  crypto/c_keccak.h \
+  crypto/oaes_lib.c \
+  crypto/oaes_lib.h \
+  crypto/oaes_config.h \
+  crypto/types.h \
   hash.cpp \
   hash.h \
   prevector.h \

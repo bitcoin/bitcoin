@@ -19,7 +19,7 @@ To Build
 
 ```bash
 ./autogen.sh
-./configure
+CFLAGS="-g -O2 -fPIC" CXXFLAGS="-g -O2 -Wall -Wextra -Wformat -Wvla -Wformat-security -Wno-unused-parameter -fPIC" ./configure --with-incompatible-bdb
 make
 make install # optional
 ```
