@@ -98,10 +98,10 @@ static void potential_deadlock_detected(const std::pair<void*, void*>& mismatch,
         }
         strOutput += strprintf(" %s\n", i.second.ToString().c_str());
     }
-    if(!onlyMaybeDeadlock) {
-        printf("%s\n", strOutput.c_str());
-        LogPrintf("%s\n", strOutput.c_str());
-    }
+
+    printf("%s\n", strOutput.c_str());
+    LogPrintf("%s\n", strOutput.c_str());
+
     assert(false);
 }
 
