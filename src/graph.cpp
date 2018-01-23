@@ -120,7 +120,7 @@ void GraphRemoveCycles(const std::vector<CTransaction>& blockVtx, std::vector<in
 		for (auto& nIndex : vecTx) {
 			if (nIndex >= blockVtx.size())
 				continue;
-			LogPrintf("outputsToRemove nIndex\n", nIndex);
+			LogPrintf("outputsToRemove nIndex %d\n", nIndex);
 			conflictedIndexes.push_back(nIndex);
 		}
 	}
