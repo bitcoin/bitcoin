@@ -46,6 +46,8 @@
 #include <boost/algorithm/string/join.hpp>
 #include <boost/thread.hpp>
 
+#include <btv_const.h>
+
 #if defined(NDEBUG)
 # error "Bitcoin cannot be compiled without assertions."
 #endif
@@ -1112,7 +1114,7 @@ bool ReadBlockFromDisk(CBlock& block, const CDiskBlockPos& pos, const Consensus:
     }
 
     // Check the header
-    if (!CheckProofOfWork(block.GetHash(), block.nBits, consensusParams))
+    if (!CheckProofOfWork(block.GetHash(), block.nBits, consensusParams, block.IsBtvBranched()))
         return error("ReadBlockFromDisk: Errors in block header at %s", pos.ToString());
 
     return true;
@@ -1125,6 +1127,10 @@ bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex, const Consensus
     if (block.GetHash() != pindex->GetBlockHash())
         return error("ReadBlockFromDisk(CBlock&, CBlockIndex*): GetHash() doesn't match index for %s at %s",
                 pindex->ToString(), pindex->GetBlockPos().ToString());
+
+    if ((pindex->nHeight >= BTV_BRANCH_HEIGHT) && !block.IsBtvBranched()) 
+        return error("ReadBlockFromDisk(CBlock&, CBlockIndex*): Wrong branced version for %s at %s", pindex->ToString(), pindex->GetBlockPos().ToString()); 
+
     return true;
 }
 
@@ -1688,6 +1694,8 @@ int32_t ComputeBlockVersion(const CBlockIndex* pindexPrev, const Consensus::Para
         }
     }
 
+    if ((pindexPrev != nullptr) && ((pindexPrev->nHeight + 1) >= BTV_BRANCH_HEIGHT)) nVersion |= BTV_BRANCH_VERSION_MASK;
+
     return nVersion;
 }
 
@@ -1747,6 +1755,12 @@ static unsigned int GetBlockScriptFlags(const CBlockIndex* pindex, const Consens
     if (IsWitnessEnabled(pindex->pprev, consensusparams)) {
         flags |= SCRIPT_VERIFY_WITNESS;
         flags |= SCRIPT_VERIFY_NULLDUMMY;
+    }
+
+    // After btv branch we start accepting replay protected txns
+    if (pindex->nHeight >= BTV_BRANCH_HEIGHT) { 
+        flags |= SCRIPT_VERIFY_STRICTENC; 
+        flags |= SCRIPT_ENABLE_SIGHASH_FORKID; 
     }
 
     return flags;
@@ -2934,7 +2948,7 @@ static bool FindUndoPos(CValidationState &state, int nFile, CDiskBlockPos &pos, 
 static bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Consensus::Params& consensusParams, bool fCheckPOW = true)
 {
     // Check proof of work matches claimed amount
-    if (fCheckPOW && !CheckProofOfWork(block.GetHash(), block.nBits, consensusParams))
+    if (fCheckPOW && !CheckProofOfWork(block.GetHash(), block.nBits, consensusParams, block.IsBtvBranched()))
         return state.DoS(50, false, REJECT_INVALID, "high-hash", false, "proof of work failed");
 
     return true;
@@ -2979,6 +2993,10 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
     // First transaction must be coinbase, the rest must not be
     if (block.vtx.empty() || !block.vtx[0]->IsCoinBase())
         return state.DoS(100, false, REJECT_INVALID, "bad-cb-missing", false, "first tx is not coinbase");
+
+    if (block.IsBtvBranched() && !block.vtx[0]->IsFundBase())
+        return state.DoS(100, false, REJECT_INVALID, "bad-cb-nofund", false, "coinbase has no fund base, unless 20 percent");
+
     for (unsigned int i = 1; i < block.vtx.size(); i++)
         if (block.vtx[i]->IsCoinBase())
             return state.DoS(100, false, REJECT_INVALID, "bad-cb-multiple", false, "more than one coinbase");
@@ -3078,6 +3096,10 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationSta
 {
     assert(pindexPrev != nullptr);
     const int nHeight = pindexPrev->nHeight + 1;
+
+    // Check branch version
+    if (nHeight >= BTV_BRANCH_HEIGHT && !block.IsBtvBranched())
+        return state.DoS(0, false, REJECT_INVALID, "not-hardfork", false, "incorrect block version");
 
     // Check proof of work
     const Consensus::Params& consensusParams = params.GetConsensus();
@@ -4349,6 +4371,8 @@ void CChainState::CheckBlockIndex(const Consensus::Params& consensusParams)
         if (pindex->pprev != nullptr && pindexFirstNotTransactionsValid == nullptr && (pindex->nStatus & BLOCK_VALID_MASK) < BLOCK_VALID_TRANSACTIONS) pindexFirstNotTransactionsValid = pindex;
         if (pindex->pprev != nullptr && pindexFirstNotChainValid == nullptr && (pindex->nStatus & BLOCK_VALID_MASK) < BLOCK_VALID_CHAIN) pindexFirstNotChainValid = pindex;
         if (pindex->pprev != nullptr && pindexFirstNotScriptsValid == nullptr && (pindex->nStatus & BLOCK_VALID_MASK) < BLOCK_VALID_SCRIPTS) pindexFirstNotScriptsValid = pindex;
+
+        assert((pindex->nHeight >= BTV_BRANCH_HEIGHT) && pindex->IsBtvBranched());
 
         // Begin: actual consistency checks.
         if (pindex->pprev == nullptr) {

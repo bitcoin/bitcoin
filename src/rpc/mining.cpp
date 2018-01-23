@@ -29,6 +29,8 @@
 #include <memory>
 #include <stdint.h>
 
+#include "btv_const.h"
+
 unsigned int ParseConfirmTarget(const UniValue& value)
 {
     int target = value.get_int();
@@ -126,7 +128,7 @@ UniValue generateBlocks(std::shared_ptr<CReserveScript> coinbaseScript, int nGen
             LOCK(cs_main);
             IncrementExtraNonce(pblock, chainActive.Tip(), nExtraNonce);
         }
-        while (nMaxTries > 0 && pblock->nNonce < nInnerLoopCount && !CheckProofOfWork(pblock->GetHash(), pblock->nBits, Params().GetConsensus())) {
+        while (nMaxTries > 0 && pblock->nNonce < nInnerLoopCount && !CheckProofOfWork(pblock->GetHash(), pblock->nBits, Params().GetConsensus(), pblock->IsBtvBranched())) {
             ++pblock->nNonce;
             --nMaxTries;
         }
@@ -651,7 +653,13 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
     result.push_back(Pair("previousblockhash", pblock->hashPrevBlock.GetHex()));
     result.push_back(Pair("transactions", transactions));
     result.push_back(Pair("coinbaseaux", aux));
-    result.push_back(Pair("coinbasevalue", (int64_t)pblock->vtx[0]->vout[0].nValue));
+
+    CAmount sum = 0;
+    for (CTxOut out : pblock->vtx[0]->vout) sum += out.nValue;
+
+    result.push_back(Pair("coinbasevalue", (int64_t)sum));
+    result.push_back(Pair("fund_address", BTV_FUND_ADDR));
+    result.push_back(Pair("fund_coinbasevalue", (int64_t)sum / BTV_FUND_RATIO));
     result.push_back(Pair("longpollid", chainActive.Tip()->GetBlockHash().GetHex() + i64tostr(nTransactionsUpdatedLast)));
     result.push_back(Pair("target", hashTarget.GetHex()));
     result.push_back(Pair("mintime", (int64_t)pindexPrev->GetMedianTimePast()+1));

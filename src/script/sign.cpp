@@ -11,7 +11,7 @@
 #include <primitives/transaction.h>
 #include <script/standard.h>
 #include <uint256.h>
-
+#include <iostream>
 
 typedef std::vector<unsigned char> valtype;
 
@@ -419,6 +419,6 @@ bool DummySignatureCreator::CreateSig(std::vector<unsigned char>& vchSig, const 
     vchSig[4 + 33] = 0x02;
     vchSig[5 + 33] = 32;
     vchSig[6 + 33] = 0x01;
-    vchSig[6 + 33 + 32] = SIGHASH_ALL;
+    vchSig[6 + 33 + 32] = SIGHASH_ALL | SIGHASH_FORKID;
     return true;
 }

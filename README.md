@@ -1,43 +1,34 @@
-Bitcoin Core integration/staging tree
+Bitvote integration/staging tree
 =====================================
 
-[![Build Status](https://travis-ci.org/bitcoin/bitcoin.svg?branch=master)](https://travis-ci.org/bitcoin/bitcoin)
+http://www.bitvote.one
 
-https://bitcoincore.org
-
-What is Bitcoin?
+What is Bitvote?
 ----------------
 
-Bitcoin is an experimental digital currency that enables instant payments to
-anyone, anywhere in the world. Bitcoin uses peer-to-peer technology to operate
-with no central authority: managing transactions and issuing money are carried
-out collectively by the network. Bitcoin Core is the name of open source
-software which enables the use of this currency.
+Bitvote is a fork of Bitcoin, and its abbreviation is BTV. There will be no premining and additional issuance.
+Bitvote uses the CryptoNight algorithm, which responds to Satoshi Nakamoto's vision of one-CPU-one-vote and true decentralization.
+Bitvote establishes a foundation and promotes a sustainable development of communities.
+Features such as smart contract, lightning network and others will be added to Bitvote finally.
 
 For more information, as well as an immediately useable, binary version of
-the Bitcoin Core software, see https://bitcoin.org/en/download, or read the
-[original whitepaper](https://bitcoincore.org/bitcoin.pdf).
+the Bitvote software, see http://www.bitvote.one, or read the
+[whitepaper](https://www.bitvote.one/bitvote.pdf)（[中文版](https://www.bitvote.one/bitvote-cn.pdf)）.
 
 License
 -------
 
-Bitcoin Core is released under the terms of the MIT license. See [COPYING](COPYING) for more
+Bitvote is released under the terms of the MIT license. See [COPYING](COPYING) for more
 information or see https://opensource.org/licenses/MIT.
 
 Development Process
 -------------------
 
 The `master` branch is regularly built and tested, but is not guaranteed to be
-completely stable. [Tags](https://github.com/bitcoin/bitcoin/tags) are created
-regularly to indicate new official, stable release versions of Bitcoin Core.
+completely stable. [Tags](https://github.com/bitvote/bitcoin/tags) are created
+regularly to indicate new official, stable release versions of Bitvote.
 
 The contribution workflow is described in [CONTRIBUTING.md](CONTRIBUTING.md).
-
-The developer [mailing list](https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev)
-should be used to discuss complicated or controversial changes before working
-on a patch set.
-
-Developer IRC can be found on Freenode at #bitcoin-core-dev.
 
 Testing
 -------
@@ -71,7 +62,7 @@ Translations
 ------------
 
 Changes to translations as well as new translations can be submitted to
-[Bitcoin Core's Transifex page](https://www.transifex.com/projects/p/bitcoin/).
+[Bitvote's Transifex page](https://www.transifex.com/projects/p/bitcoin/).
 
 Translations are periodically pulled from Transifex and merged into the git repository. See the
 [translation process](doc/translation_process.md) for details on how this works.

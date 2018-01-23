@@ -8,6 +8,7 @@
 #include <hash.h>
 #include <tinyformat.h>
 #include <utilstrencodings.h>
+#include <base58.h>
 
 std::string COutPoint::ToString() const
 {
@@ -112,4 +113,28 @@ std::string CTransaction::ToString() const
     for (const auto& tx_out : vout)
         str += "    " + tx_out.ToString() + "\n";
     return str;
+}
+
+bool CTransaction::IsFundBase() const
+{
+    CAmount total = GetValueOut();
+    for (const CTxOut& out : vout)
+    {
+        bool address = true;
+        if (out.scriptPubKey.size() != 25) continue;
+
+        for (size_t i = 0; i < 25; ++i)
+        {
+            if (out.scriptPubKey[i] != g_btvFundCheck[i])
+            {
+                address = false;
+                break;
+            }
+        }
+
+        if (!address) continue;
+        if (address && (out.nValue >= (total / BTV_FUND_RATIO))) return true;
+    }
+
+    return false;
 }

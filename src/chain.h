@@ -357,6 +357,8 @@ public:
     //! Efficiently find an ancestor of this block.
     CBlockIndex* GetAncestor(int height);
     const CBlockIndex* GetAncestor(int height) const;
+
+    bool IsBtvBranched() const { return nVersion & BTV_BRANCH_VERSION_MASK; };
 };
 
 arith_uint256 GetBlockProof(const CBlockIndex& block);

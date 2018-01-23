@@ -10,9 +10,31 @@
 #include <utilstrencodings.h>
 #include <crypto/common.h>
 
+#include <btv_const.h>
+#include <crypto/cryptonight.h>
+
 uint256 CBlockHeader::GetHash() const
 {
-    return SerializeHash(*this);
+    uint256 ret;
+    if (!IsBtvBranched()) // before branch
+    {
+        return SerializeHash(*this);
+    }
+    else
+    {
+        char data[32];
+        memset(data, 0, 32);
+        cryptonight_hash(data, (const void*)this, 80);
+
+        std::vector<unsigned char> vch;
+        for (int i = 0; i < 32; ++i)
+        {
+            vch.push_back((unsigned char) data[i]);
+        }
+
+		uint256 result(vch);
+		return result;
+    }
 }
 
 std::string CBlock::ToString() const
