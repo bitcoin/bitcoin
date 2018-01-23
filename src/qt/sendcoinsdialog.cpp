@@ -27,9 +27,9 @@
 
 SendCoinsDialog::SendCoinsDialog(QWidget *parent) :
     QDialog(parent),
+    model(0),
     ui(new Ui::SendCoinsDialog),
     clientModel(0),
-    model(0),
     fNewRecipientAllowed(true),
     fFeeMinimized(true)
 {
