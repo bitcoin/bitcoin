@@ -11,7 +11,7 @@
 #include "primitives/transaction.h"
 #include "ranges.h"
 #include <unordered_map>
-#include <unordered_set>
+#include "graph.h"
 class CWalletTx;
 class CTransaction;
 class CReserveKey;
@@ -89,7 +89,6 @@ namespace std {
 typedef std::vector<std::pair<std::vector<unsigned char>, std::vector<CRange> > > RangeInputArrayTuples;
 typedef std::vector<std::pair<std::vector<unsigned char>, CAmount > > RangeAmountTuples;
 typedef std::map<uint256, int64_t> ArrivalTimesMap;
-typedef std::unordered_set<CAssetAllocationTuple> AssetAllocationSet;
 static const int ZDAG_MINIMUM_LATENCY_SECONDS = 10;
 class CAssetAllocation {
 public:
@@ -166,7 +165,7 @@ public:
 				arrivalTimes[assetallocation.txHash] = arrivalTime;
 				writeState = writeState && Write(make_pair(std::string("assetallocationa"), allocationTuple), arrivalTimes);
 			}
-			AssetAllocationSet assetAllocations;
+			sorted_vector assetAllocations;
 			ReadAssetAllocationSet(assetAllocations);
 			assetAllocations.insert(allocationTuple);
 			writeState = writeState && Write(make_pair(std::string("assetallocations"), 0), assetAllocations);
@@ -195,14 +194,14 @@ public:
 	bool EraseISArrivalTimes(const CAssetAllocationTuple& assetAllocationTuple) {
 		return Erase(make_pair(std::string("assetallocationa"), assetAllocationTuple));
 	}
-	bool ReadAssetAllocationSet(AssetAllocationSet& assetAllocations) {
-		return Read(make_pair(std::string("assetallocations"), 0), assetAllocations);
+	bool ReadAssetAllocationSet(sorted_vector& assetAllocations) {
+		return Read(std::string("assetallocations"), assetAllocations);
 	}
 	bool EraseAssetAllocationSet() {
 		return Erase(std::string("assetallocations"));
 	}
-	bool WriteAssetAllocationSet(const AssetAllocationSet& assetAllocations) {
-		return Write(make_pair(std::string("assetallocations"), 0), assetAllocations);
+	bool WriteAssetAllocationSet(const sorted_vector& assetAllocations) {
+		return Write(std::string("assetallocations"), assetAllocations);
 	}
 	bool EraseISArrivalTime(const CAssetAllocationTuple& assetAllocationTuple, const uint256& txid) {
 		ArrivalTimesMap arrivalTimes;
