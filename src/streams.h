@@ -139,6 +139,80 @@ private:
     size_t nPos;
 };
 
+/** Minimal stream for reading from an existing vector by reference
+ */
+class VectorReader
+{
+private:
+    const int m_type;
+    const int m_version;
+    const std::vector<unsigned char>& m_data;
+    size_t m_pos = 0;
+
+public:
+
+    /*
+     * @param[in]  type Serialization Type
+     * @param[in]  version Serialization Version (including any flags)
+     * @param[in]  data Referenced byte vector to overwrite/append
+     * @param[in]  pos Starting position. Vector index where reads should start.
+     */
+    VectorReader(int type, int version, const std::vector<unsigned char>& data, size_t pos)
+        : m_type(type), m_version(version), m_data(data)
+    {
+        seek(pos);
+    }
+
+    /*
+     * (other params same as above)
+     * @param[in]  args  A list of items to deserialize starting at pos.
+     */
+    template <typename... Args>
+    VectorReader(int type, int version, const std::vector<unsigned char>& data, size_t pos,
+                  Args&&... args)
+        : VectorReader(type, version, data, pos)
+    {
+        ::UnserializeMany(*this, std::forward<Args>(args)...);
+    }
+
+    template<typename T>
+    VectorReader& operator>>(T& obj)
+    {
+        // Unserialize from this stream
+        ::Unserialize(*this, obj);
+        return (*this);
+    }
+
+    int GetVersion() const { return m_version; }
+    int GetType() const { return m_type; }
+
+    size_t size() const { return m_data.size() - m_pos; }
+    bool empty() const { return m_data.size() == m_pos; }
+
+    void read(char* dst, size_t n)
+    {
+        if (n == 0) {
+            return;
+        }
+
+        // Read from the beginning of the buffer
+        size_t pos_next = m_pos + n;
+        if (pos_next > m_data.size()) {
+            throw std::ios_base::failure("VectorReader::read(): end of data");
+        }
+        memcpy(dst, m_data.data() + m_pos, n);
+        m_pos = pos_next;
+    }
+
+    void seek(size_t n)
+    {
+        m_pos += n;
+        if (m_pos > m_data.size()) {
+            throw std::ios_base::failure("VectorReader::seek(): end of data");
+        }
+    }
+};
+
 /** Double ended buffer combining vector and stream-like interfaces.
  *
  * >> and << read and write unformatted data using the above serialization templates.
