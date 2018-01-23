@@ -268,34 +268,12 @@ bool RevertAssetAllocations(const unordered_set<CAssetAllocationTuple> &assetAll
 	CAssetAllocation dbAssetAllocation;
 	for (auto &assetAllocationTuple : assetAllocationsThisBlock) {
 		if (GetAssetAllocation(assetAllocationTuple, dbAssetAllocation)) {
-			if (dbAssetAllocation.listSendingAllocationInputs.empty()) {
-				for (auto& amountTuple : dbAssetAllocation.listSendingAllocationAmounts) {
-					CAssetAllocation receiverAllocation;
-					const CAssetAllocationTuple receiverAllocationTuple(dbAssetAllocation.vchAsset, amountTuple.first);
-					paliasdb->EraseAliasIndexTxHistory(dbAssetAllocation.txHash.GetHex() + "-" + receiverAllocationTuple.ToString());
-					// if receiver did not exist prior to this send then initiate it to empty balance
-					if (!passetallocationdb->ReadLastAssetAllocation(receiverAllocationTuple, receiverAllocation)) {
-						receiverAllocation.SetNull();
-						receiverAllocation.vchAlias = receiverAllocationTuple.vchAlias;
-						receiverAllocation.vchAsset = receiverAllocationTuple.vchAsset;
-					}
-					LogPrintf("RevertAssetAllocations erasing recver %s\n", receiverAllocationTuple.ToString().c_str());
-					// write the state back to previous state incase of any consensus failures below before the new write
-					if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, INT64_MAX, false))
-					{
-						errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2021 - " + _("Failed to write to asset allocation DB");
-						return error(errorMessage.c_str());
-					}
-				}
-			}
 			paliasdb->EraseAliasIndexTxHistory(dbAssetAllocation.txHash.GetHex() + "-" + assetAllocationTuple.ToString());
-			// if sender did not exist prior to this send then initiate it to empty balance
 			if (!passetallocationdb->ReadLastAssetAllocation(assetAllocationTuple, dbAssetAllocation)) {
 				dbAssetAllocation.SetNull();
 				dbAssetAllocation.vchAlias = assetAllocationTuple.vchAlias;
 				dbAssetAllocation.vchAsset = assetAllocationTuple.vchAsset;
 			}
-			LogPrintf("RevertAssetAllocations erasing sender %s\n", assetAllocationTuple.ToString().c_str());
 			// write the state back to previous state incase of any consensus failures below before the new write
 			if (!passetallocationdb->WriteAssetAllocation(dbAssetAllocation, INT64_MAX, false))
 			{
@@ -473,6 +451,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 	
 					// if mempool inclusion or conflict with another tx we simply update, otherwise we create the tx history entry
 					if (fJustCheck) {
+						assetAllocationsThisBlock.insert(receiverAllocationTuple);
 						if (strResponse != "") {
 							paliasdb->WriteAliasIndexTxHistory(user1, stringFromVch(receiverAllocation.vchAlias), user3, tx.GetHash(), nHeight, strResponseEnglish, receiverAllocationTuple.ToString());
 						}
