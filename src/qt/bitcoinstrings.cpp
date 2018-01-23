@@ -251,13 +251,6 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Warning: We do not appear to fully agree with our peers! You may need to "
 "upgrade, or other nodes may need to upgrade."),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
-"What type of addresses to use (\"legacy\", \"p2sh-segwit\", or \"bech32\", "
-"default: \"%s\")"),
-QT_TRANSLATE_NOOP("bitcoin-core", ""
-"What type of change to use (\"legacy\", \"p2sh-segwit\", or \"bech32\"). "
-"Default is same as -addresstype, except when -addresstype=p2sh-segwit a "
-"native segwit output is used when sending to a native segwit address)"),
-QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Whether to save the mempool on shutdown and load on restart (default: %u)"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Whitelist peers connecting from the given IP address (e.g. 1.2.3.4) or CIDR "
@@ -414,8 +407,6 @@ QT_TRANSLATE_NOOP("bitcoin-core", "Unable to bind to %s on this computer (bind r
 QT_TRANSLATE_NOOP("bitcoin-core", "Unable to bind to %s on this computer. %s is probably already running."),
 QT_TRANSLATE_NOOP("bitcoin-core", "Unable to generate initial keys"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Unable to start HTTP server. See debug log for details."),
-QT_TRANSLATE_NOOP("bitcoin-core", "Unknown address type '%s'"),
-QT_TRANSLATE_NOOP("bitcoin-core", "Unknown change type '%s'"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Unknown network specified in -onlynet: '%s'"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Unsupported argument -benchmark ignored, use -debug=bench."),
 QT_TRANSLATE_NOOP("bitcoin-core", "Unsupported argument -debugnet ignored, use -debug=net."),
