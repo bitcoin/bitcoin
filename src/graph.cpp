@@ -115,7 +115,6 @@ void GraphRemoveCycles(const std::vector<CTransaction>& blockVtx, std::vector<in
 		if (nVertexIndex >= vertices.size())
 			continue;
 		boost::clear_out_edges(vertices[nVertexIndex], graph);
-		mapTxIndex.erase(nVertex);
 		const std::vector<int> &vecTx = (*it).second;
 		// mapTxIndex knows of the mapping between vertices and tx vout positions
 		for (auto& nIndex : vecTx) {
@@ -124,6 +123,7 @@ void GraphRemoveCycles(const std::vector<CTransaction>& blockVtx, std::vector<in
 			LogPrintf("outputsToRemove nIndex %d\n", nIndex);
 			conflictedIndexes.push_back(nIndex);
 		}
+		mapTxIndex.erase(it);
 	}
 	// block gives us the transactions in order by time so we want to ensure we preserve it
 	std::sort(conflictedIndexes.begin(), conflictedIndexes.end());
