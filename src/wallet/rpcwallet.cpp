@@ -531,7 +531,7 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
 	{
 		// create utxo minimum 1kb worth of fees
 		if ((op == OP_ALIAS_ACTIVATE && vvch.size() > 1) || op != OP_ALIAS_ACTIVATE) {
-			CAmount nMinFee = minRelayTxFee.GetFee(1000);
+			CAmount nMinFee = minRelayTxFee.GetFee(3000);
 			if (aliasFeePlaceholderRecipient.nAmount < nMinFee)
 				aliasFeePlaceholderRecipient.nAmount = nMinFee;
 		}
