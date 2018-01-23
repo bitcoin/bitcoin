@@ -263,10 +263,12 @@ bool RemoveAssetAllocationScriptPrefix(const CScript& scriptIn, CScript& scriptO
 	return true;
 }
 // revert allocation to previous state and remove 
-bool RevertAssetAllocations(const unordered_set<CAssetAllocationTuple> &assetAllocationsThisBlock) {
+bool RevertAssetAllocations() {
+	AssetAllocationSet allocationSet;
+	passetallocationdb->ReadAssetAllocationSet(allocationSet);
 	string errorMessage = "";
 	CAssetAllocation dbAssetAllocation;
-	for (auto &assetAllocationTuple : assetAllocationsThisBlock) {
+	for (auto &assetAllocationTuple : allocationSet) {
 		if (GetAssetAllocation(assetAllocationTuple, dbAssetAllocation)) {
 			paliasdb->EraseAliasIndexTxHistory(dbAssetAllocation.txHash.GetHex() + "-" + assetAllocationTuple.ToString());
 			if (!passetallocationdb->ReadLastAssetAllocation(assetAllocationTuple, dbAssetAllocation)) {
@@ -281,12 +283,15 @@ bool RevertAssetAllocations(const unordered_set<CAssetAllocationTuple> &assetAll
 				return error(errorMessage.c_str());
 			}
 		}
+		passetallocationdb->EraseISArrivalTimes(assetAllocationTuple);
 	}
+	passetallocationdb->EraseAssetAllocationSet();
+	
 	return true;
 	
 }
 bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const std::vector<unsigned char> &vchAlias,
-        bool fJustCheck, int nHeight, unordered_set<CAssetAllocationTuple> &assetAllocationsThisBlock, string &errorMessage, bool dontaddtodb) {
+        bool fJustCheck, int nHeight, string &errorMessage, bool dontaddtodb) {
 	if (!paliasdb || !passetallocationdb)
 		return false;
 	if (tx.IsCoinBase() && !fJustCheck && !dontaddtodb)
@@ -451,7 +456,6 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 	
 					// if mempool inclusion or conflict with another tx we simply update, otherwise we create the tx history entry
 					if (fJustCheck) {
-						assetAllocationsThisBlock.insert(receiverAllocationTuple);
 						if (strResponse != "") {
 							paliasdb->WriteAliasIndexTxHistory(user1, stringFromVch(receiverAllocation.vchAlias), user3, tx.GetHash(), nHeight, strResponseEnglish, receiverAllocationTuple.ToString());
 						}
@@ -469,8 +473,6 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 		int64_t ms = INT64_MAX;
 		if (fJustCheck) {
 			ms = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
-			// add the asset allocation index into a static set so we can revert to previous state before next block is provided
-			assetAllocationsThisBlock.insert(assetAllocationTuple);
 		}
 		if (!passetallocationdb->WriteAssetAllocation(theAssetAllocation, ms, fJustCheck))
 		{
