@@ -60,6 +60,7 @@
 #include "escrow.h"
 #include "graph.h"
 #include "base58.h"
+#include "rpc/server.h"
 using namespace std;
 
 #if defined(NDEBUG)
@@ -557,7 +558,8 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight, co
 		nHeight = chainActive.Height();
 	string errorMessage;
 	bool good = false;
-	if (fJustCheck && IsInitialBlockDownload())
+	string statusRpc = "";
+	if (fJustCheck && (IsInitialBlockDownload() || RPCIsInWarmup(statusRpc)))
 		return true;
 	if (block.vtx.empty() && tx.nVersion == SYSCOIN_TX_VERSION) {
 		bool bDestCheckFailed = false;
