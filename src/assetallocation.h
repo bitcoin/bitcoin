@@ -165,7 +165,7 @@ public:
 				arrivalTimes[assetallocation.txHash] = arrivalTime;
 				writeState = writeState && Write(make_pair(std::string("assetallocationa"), allocationTuple), arrivalTimes);
 			}
-			sorted_vector assetAllocations;
+			AssetAllocationSet assetAllocations;
 			ReadAssetAllocationSet(assetAllocations);
 			assetAllocations.insert(allocationTuple);
 			writeState = writeState && Write(make_pair(std::string("assetallocations"), 0), assetAllocations);
@@ -194,7 +194,7 @@ public:
 	bool EraseISArrivalTimes(const CAssetAllocationTuple& assetAllocationTuple) {
 		return Erase(make_pair(std::string("assetallocationa"), assetAllocationTuple));
 	}
-	bool ReadAssetAllocationSet(sorted_vector& assetAllocations) {
+	bool ReadAssetAllocationSet(AssetAllocationSet& assetAllocations) {
 		return Read(std::string("assetallocations"), assetAllocations);
 	}
 	bool EraseAssetAllocationSet() {
