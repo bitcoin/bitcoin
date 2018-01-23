@@ -472,21 +472,15 @@ class TestResult():
 
 
 def check_script_prefixes():
-    """Check that at most a handful of the
-       test scripts don't start with one of the allowed name prefixes."""
-
-    # LEEWAY is provided as a transition measure, so that pull-requests
-    # that introduce new tests that don't conform with the naming
-    # convention don't immediately cause the tests to fail.
-    LEEWAY = 10
+    """Check that test scripts start with one of the allowed name prefixes."""
 
     good_prefixes_re = re.compile("(example|feature|interface|mempool|mining|p2p|rpc|wallet)_")
     bad_script_names = [script for script in ALL_SCRIPTS if good_prefixes_re.match(script) is None]
 
-    if len(bad_script_names) > 0:
-        print("INFO: %d tests not meeting naming conventions:" % (len(bad_script_names)))
+    if bad_script_names:
+        print("%sERROR:%s %d tests not meeting naming conventions:" % (BOLD[1], BOLD[0], len(bad_script_names)))
         print("  %s" % ("\n  ".join(sorted(bad_script_names))))
-    assert len(bad_script_names) <= LEEWAY, "Too many tests not following naming convention! (%d found, maximum: %d)" % (len(bad_script_names), LEEWAY)
+        raise AssertionError("Some tests are not following naming convention!")
 
 
 def check_script_list(src_dir):
