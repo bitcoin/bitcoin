@@ -202,7 +202,7 @@ public:
 		return Erase(std::string("assetallocations"));
 	}
 	bool WriteAssetAllocationSet(const AssetAllocationSet& assetAllocations) {
-		return Erase(make_pair(std::string("assetallocations"), 0), assetAllocations);
+		return Write(make_pair(std::string("assetallocations"), 0), assetAllocations);
 	}
 	bool EraseISArrivalTime(const CAssetAllocationTuple& assetAllocationTuple, const uint256& txid) {
 		ArrivalTimesMap arrivalTimes;
