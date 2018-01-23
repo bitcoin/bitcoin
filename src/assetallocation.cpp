@@ -24,6 +24,7 @@
 #include <boost/range/adaptor/reversed.hpp>
 #include <mongoc.h>
 #include <chrono>
+#include "graph.h"
 using namespace std::chrono;
 using namespace std;
 extern mongoc_collection_t *assetallocation_collection;
@@ -263,36 +264,33 @@ bool RemoveAssetAllocationScriptPrefix(const CScript& scriptIn, CScript& scriptO
 	return true;
 }
 // revert allocation to previous state and remove 
-bool RevertAssetAllocations() {
-	AssetAllocationSet allocationSet;
-	passetallocationdb->ReadAssetAllocationSet(allocationSet);
+bool RevertAssetAllocation(const CAssetAllocationTuple &assetAllocationToRemove, const uint256 &txHash, sorted_vector<CAssetAllocationTuple> &revertedAssetAllocations) {
+	paliasdb->EraseAliasIndexTxHistory(txHash.GetHex() + "-" + assetAllocationToRemove.ToString());
+	// only revert asset allocation once
+	if (revertedAssetAllocations.find(assetAllocationToRemove) != revertedAssetAllocations.end())
+		return true;
+
 	string errorMessage = "";
 	CAssetAllocation dbAssetAllocation;
-	for (auto &assetAllocationTuple : allocationSet) {
-		if (GetAssetAllocation(assetAllocationTuple, dbAssetAllocation)) {
-			paliasdb->EraseAliasIndexTxHistory(dbAssetAllocation.txHash.GetHex() + "-" + assetAllocationTuple.ToString());
-			if (!passetallocationdb->ReadLastAssetAllocation(assetAllocationTuple, dbAssetAllocation)) {
-				dbAssetAllocation.SetNull();
-				dbAssetAllocation.vchAlias = assetAllocationTuple.vchAlias;
-				dbAssetAllocation.vchAsset = assetAllocationTuple.vchAsset;
-			}
-			LogPrintf("RevertAssetAllocations %s\n", assetAllocationTuple.ToString().c_str());
-			// write the state back to previous state incase of any consensus failures below before the new write
-			if (!passetallocationdb->WriteAssetAllocation(dbAssetAllocation, INT64_MAX, false))
-			{
-				errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2022 - " + _("Failed to write to asset allocation DB");
-				return error(errorMessage.c_str());
-			}
-		}
-		passetallocationdb->EraseISArrivalTimes(assetAllocationTuple);
+	if (!passetallocationdb->ReadLastAssetAllocation(assetAllocationToRemove, dbAssetAllocation)) {
+		dbAssetAllocation.SetNull();
+		dbAssetAllocation.vchAlias = assetAllocationToRemove.vchAlias;
+		dbAssetAllocation.vchAsset = assetAllocationToRemove.vchAsset;
 	}
-	passetallocationdb->EraseAssetAllocationSet();
-	
+	LogPrintf("RevertAssetAllocations %s\n", assetAllocationToRemove.ToString().c_str());
+	// write the state back to previous state
+	if (!passetallocationdb->WriteAssetAllocation(dbAssetAllocation, INT64_MAX, false))
+	{
+		errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2022 - " + _("Failed to write to asset allocation DB");
+		return error(errorMessage.c_str());
+	}
+	passetallocationdb->EraseISArrivalTimes(assetAllocationToRemove);
+	revertedAssetAllocations.insert(assetAllocationToRemove);
 	return true;
 	
 }
 bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const std::vector<unsigned char> &vchAlias,
-        bool fJustCheck, int nHeight, string &errorMessage, bool dontaddtodb) {
+        bool fJustCheck, int nHeight, sorted_vector<CAssetAllocationTuple> &revertedAssetAllocations, string &errorMessage, bool dontaddtodb) {
 	if (!paliasdb || !passetallocationdb)
 		return false;
 	if (tx.IsCoinBase() && !fJustCheck && !dontaddtodb)
@@ -358,14 +356,17 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 	CAsset dbAsset;
 	if (op == OP_ASSET_ALLOCATION_SEND)
 	{
+		if (!fJustCheck && !dontaddtodb) {
+			if (!RevertAssetAllocation(assetAllocationTuple, tx.GetHash(), revertedAssetAllocations))
+			{
+				errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to revert asset allocation DB");
+				return error(errorMessage.c_str());
+			}
+		}
 		if (!GetAssetAllocation(assetAllocationTuple, dbAssetAllocation))
 		{
 			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2024 - " + _("Cannot find sender asset allocation.");
 			return true;
-		}
-		if (!fJustCheck) {
-			// erase arrival of this tx on this service
-			passetallocationdb->EraseISArrivalTime(assetAllocationTuple, tx.GetHash());
 		}
 		theAssetAllocation.vchAlias = vchAlias;
 		theAssetAllocation.nBalance = dbAssetAllocation.nBalance;
@@ -400,13 +401,16 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 				return true;
 			}
 			// check balance is sufficient on sender
-			for (auto& amountTuple : theAssetAllocation.listSendingAllocationAmounts) {
-				const CAssetAllocationTuple receiverAllocationTuple(theAssetAllocation.vchAsset, amountTuple.first);
-				// erase arrival of this tx on this service for each receiver
-				passetallocationdb->EraseISArrivalTime(receiverAllocationTuple, tx.GetHash());
-			}
 			CAmount nTotal = 0;
 			for (auto& amountTuple : theAssetAllocation.listSendingAllocationAmounts) {
+				// one of the first things we do per receiver is revert it to last pow state on the pow(!fJustCheck)
+				if (!fJustCheck && !dontaddtodb) {
+					if (!RevertAssetAllocation(CAssetAllocationTuple(theAssetAllocation.vchAsset, amountTuple.first), tx.GetHash(), revertedAssetAllocations))
+					{
+						errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to revert asset allocation DB");
+						return error(errorMessage.c_str());
+					}
+				}
 				nTotal += amountTuple.second;
 				if (amountTuple.second <= 0)
 				{
@@ -439,6 +443,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 						continue;
 					}
 				}
+				
 				if (!dontaddtodb) {
 					if (!GetAssetAllocation(receiverAllocationTuple, receiverAllocation)) {
 						receiverAllocation.SetNull();
@@ -454,7 +459,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 						errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to write to asset allocation DB");
 						return error(errorMessage.c_str());
 					}
-	
+					
 					// if mempool inclusion or conflict with another tx we simply update, otherwise we create the tx history entry
 					if (fJustCheck) {
 						if (strResponse != "") {

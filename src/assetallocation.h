@@ -74,7 +74,6 @@ public:
 typedef std::vector<std::pair<std::vector<unsigned char>, std::vector<CRange> > > RangeInputArrayTuples;
 typedef std::vector<std::pair<std::vector<unsigned char>, CAmount > > RangeAmountTuples;
 typedef std::map<uint256, int64_t> ArrivalTimesMap;
-typedef std::set<CAssetAllocationTuple> AssetAllocationSet;
 static const int ZDAG_MINIMUM_LATENCY_SECONDS = 10;
 class CAssetAllocation {
 public:
@@ -151,10 +150,6 @@ public:
 				arrivalTimes[assetallocation.txHash] = arrivalTime;
 				writeState = writeState && Write(make_pair(std::string("assetallocationa"), allocationTuple), arrivalTimes);
 			}
-			AssetAllocationSet assetAllocations;
-			ReadAssetAllocationSet(assetAllocations);
-			assetAllocations.insert(allocationTuple);
-			writeState = writeState && Write(make_pair(std::string("assetallocations"), 0), assetAllocations);
 		}
 		WriteAssetAllocationIndex(assetallocation);
         return writeState;
@@ -163,7 +158,6 @@ public:
 		bool eraseState = Erase(make_pair(std::string("assetallocationi"), assetAllocationTuple));
 		Erase(make_pair(std::string("assetp"), assetAllocationTuple));
 		EraseISArrivalTimes(assetAllocationTuple);
-		EraseAssetAllocationSet();
 		EraseAssetAllocationIndex(assetAllocationTuple, cleanup);
 		return eraseState;
 	}
@@ -180,15 +174,6 @@ public:
 	bool EraseISArrivalTimes(const CAssetAllocationTuple& assetAllocationTuple) {
 		return Erase(make_pair(std::string("assetallocationa"), assetAllocationTuple));
 	}
-	bool ReadAssetAllocationSet(AssetAllocationSet& assetAllocations) {
-		return Read(std::string("assetallocations"), assetAllocations);
-	}
-	bool EraseAssetAllocationSet() {
-		return Erase(std::string("assetallocations"));
-	}
-	bool WriteAssetAllocationSet(const AssetAllocationSet& assetAllocations) {
-		return Write(std::string("assetallocations"), assetAllocations);
-	}
 	bool EraseISArrivalTime(const CAssetAllocationTuple& assetAllocationTuple, const uint256& txid) {
 		ArrivalTimesMap arrivalTimes;
 		ReadISArrivalTimes(assetAllocationTuple, arrivalTimes);
@@ -204,10 +189,9 @@ public:
 	void EraseAssetAllocationIndex(const CAssetAllocationTuple& assetAllocationTuple, bool cleanup=false);
 
 };
-bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const std::vector<std::vector<unsigned char> > &vvchArgs, const std::vector<unsigned char> &vvchAlias, bool fJustCheck, int nHeight, std::string &errorMessage, bool dontaddtodb = false);
+bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const std::vector<std::vector<unsigned char> > &vvchArgs, const std::vector<unsigned char> &vvchAlias, bool fJustCheck, int nHeight, sorted_vector<CAssetAllocationTuple> &revertedAssetAllocations, std::string &errorMessage, bool dontaddtodb = false);
 bool GetAssetAllocation(const CAssetAllocationTuple& assetAllocationTuple,CAssetAllocation& txPos);
 bool BuildAssetAllocationJson(const CAssetAllocation& assetallocation, UniValue& oName);
 bool BuildAssetAllocationIndexerJson(const CAssetAllocation& assetallocation,UniValue& oName);
 uint64_t GetAssetAllocationExpiration(const CAssetAllocation& assetallocation);
-bool RevertAssetAllocations();
 #endif // ASSETALLOCATION_H
