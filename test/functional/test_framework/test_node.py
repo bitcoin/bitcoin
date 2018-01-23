@@ -238,7 +238,7 @@ class TestNodeCLI():
                results.append(dict(error=e))
         return results
 
-    def send_cli(self, command, *args, **kwargs):
+    def send_cli(self, command=None, *args, **kwargs):
         """Run bitcoin-cli command. Deserializes returned string as python object."""
 
         pos_args = [str(arg) for arg in args]
@@ -247,7 +247,9 @@ class TestNodeCLI():
         p_args = [self.binary, "-datadir=" + self.datadir] + self.options
         if named_args:
             p_args += ["-named"]
-        p_args += [command] + pos_args + named_args
+        if command is not None:
+            p_args += [command]
+        p_args += pos_args + named_args
         self.log.debug("Running bitcoin-cli command: %s" % command)
         process = subprocess.Popen(p_args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
         cli_stdout, cli_stderr = process.communicate(input=self.input)

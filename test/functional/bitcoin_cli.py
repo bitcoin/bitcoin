@@ -39,7 +39,7 @@ class TestBitcoinCli(BitcoinTestFramework):
         assert_raises_process_error(1, "-getinfo takes no arguments", self.nodes[0].cli('-getinfo').help)
 
         self.log.info("Compare responses from `bitcoin-cli -getinfo` and the RPCs data is retrieved from.")
-        cli_get_info = self.nodes[0].cli().send_cli('-getinfo')
+        cli_get_info = self.nodes[0].cli('-getinfo').send_cli()
         wallet_info = self.nodes[0].getwalletinfo()
         network_info = self.nodes[0].getnetworkinfo()
         blockchain_info = self.nodes[0].getblockchaininfo()
