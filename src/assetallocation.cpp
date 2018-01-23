@@ -276,6 +276,7 @@ bool RevertAssetAllocations() {
 				dbAssetAllocation.vchAlias = assetAllocationTuple.vchAlias;
 				dbAssetAllocation.vchAsset = assetAllocationTuple.vchAsset;
 			}
+			LogPrintf("RevertAssetAllocations %s\n", assetAllocationTuple.ToString().c_str());
 			// write the state back to previous state incase of any consensus failures below before the new write
 			if (!passetallocationdb->WriteAssetAllocation(dbAssetAllocation, INT64_MAX, false))
 			{
