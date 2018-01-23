@@ -11,6 +11,7 @@
 #include "primitives/transaction.h"
 #include "ranges.h"
 #include <unordered_map>
+#include "graph.h"
 class CWalletTx;
 class CTransaction;
 class CReserveKey;

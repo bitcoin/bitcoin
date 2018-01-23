@@ -24,7 +24,7 @@
 #include <boost/range/adaptor/reversed.hpp>
 #include <mongoc.h>
 #include <chrono>
-#include "graph.h"
+
 using namespace std::chrono;
 using namespace std;
 extern mongoc_collection_t *assetallocation_collection;
