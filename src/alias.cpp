@@ -1171,14 +1171,12 @@ void CreateFeeRecipient(CScript& scriptPubKey, const vector<unsigned char>& data
 CAmount GetDataFee(const CScript& scriptPubKey)
 {
 	CAmount nFee = 0;
-	CRecipient recipient;
 	CRecipient recp = {scriptPubKey, 0, false};
-	recipient = recp;
-	CTxOut txout(0,	recipient.scriptPubKey);
+	CTxOut txout(0, scriptPubKey);
     size_t nSize = txout.GetSerializeSize(SER_DISK,0)+148u;
-	nFee = 3 * minRelayTxFee.GetFee(nSize);
-	recipient.nAmount = nFee;
-	return recipient.nAmount;
+	nFee = 1000 * 3 * minRelayTxFee.GetFee(nSize);
+	recp.nAmount = nFee;
+	return recp.nAmount;
 }
 bool CheckParam(const UniValue& params, const unsigned int index)
 {
