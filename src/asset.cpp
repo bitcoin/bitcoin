@@ -950,7 +950,7 @@ UniValue assetsend(const UniValue& params, bool fHelp) {
 
 	// this is a syscoin txn
 	CWalletTx wtx;
-	CScript scriptPubKeyOrig, scriptPubKeyFromOrig;
+	CScript scriptPubKeyFromOrig;
 
 	CAsset theAsset;
 	if (!GetAsset(vchAsset, theAsset))
@@ -970,7 +970,7 @@ UniValue assetsend(const UniValue& params, bool fHelp) {
 
 	vector<unsigned char> vchHashAsset = vchFromValue(hash.GetHex());
 	scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_ASSET) << CScript::EncodeOP_N(OP_ASSET_SEND) << vchHashAsset << OP_2DROP << OP_DROP;
-	scriptPubKey += scriptPubKeyOrig;
+	scriptPubKey += scriptPubKeyFromOrig;
 	// send the asset pay txn
 	vector<CRecipient> vecSend;
 	CRecipient recipient;
