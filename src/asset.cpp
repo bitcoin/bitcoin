@@ -679,15 +679,15 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 UniValue assetnew(const UniValue& params, bool fHelp) {
     if (fHelp || params.size() != 7)
         throw runtime_error(
-			"assetnew [alias] [name] [public] [category=assets] [balance] [total_supply] [witness]\n"
-						"<alias> An alias you own.\n"
+			"assetnew [name] [alias] [public] [category=assets] [balance] [total_supply] [witness]\n"
 						"<name> name, 20 characters max.\n"
+						"<alias> An alias you own.\n"
                         "<public> public data, 256 characters max.\n"
 						"<category> category, 256 characters max. Defaults to assets\n"
 						"<witness> Witness alias name that will sign for web-of-trust notarization of this transaction.\n"
 						+ HelpRequiringPassphrase());
-	vector<unsigned char> vchAlias = vchFromValue(params[0]);
-    vector<unsigned char> vchName = vchFromString(params[1].get_str());
+    vector<unsigned char> vchName = vchFromString(params[0].get_str());
+	vector<unsigned char> vchAlias = vchFromValue(params[1]);
 	vector<unsigned char> vchPubData = vchFromString(params[2].get_str());
 	string strCategory = "assets";
 	strCategory = params[3].get_str();
