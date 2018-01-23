@@ -169,7 +169,7 @@ public:
 			AssetAllocationSet assetAllocations;
 			ReadAssetAllocationSet(assetAllocations);
 			assetAllocations.insert(allocationTuple);
-			writeState = writeState && Write(std::string("assetallocations"), assetAllocations);
+			writeState = writeState && Write(make_pair(std::string("assetallocations"), 0), assetAllocations);
 		}
 		WriteAssetAllocationIndex(assetallocation);
         return writeState;
@@ -196,13 +196,13 @@ public:
 		return Erase(make_pair(std::string("assetallocationa"), assetAllocationTuple));
 	}
 	bool ReadAssetAllocationSet(AssetAllocationSet& assetAllocations) {
-		return Read(std::string("assetallocations"), assetAllocations);
+		return Read(make_pair(std::string("assetallocations"), 0), assetAllocations);
 	}
 	bool EraseAssetAllocationSet() {
 		return Erase(std::string("assetallocations"));
 	}
 	bool WriteAssetAllocationSet(const AssetAllocationSet& assetAllocations) {
-		return Erase(std::string("assetallocations"), assetAllocations);
+		return Erase(make_pair(std::string("assetallocations"), 0), assetAllocations);
 	}
 	bool EraseISArrivalTime(const CAssetAllocationTuple& assetAllocationTuple, const uint256& txid) {
 		ArrivalTimesMap arrivalTimes;
