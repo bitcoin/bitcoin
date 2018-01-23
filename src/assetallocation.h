@@ -60,7 +60,7 @@ public:
 	}
 	inline bool operator< (const CAssetAllocationTuple& right) const
 	{
-		return return ToString() < right.ToString();
+		return ToString() < right.ToString();
 	}
 	inline void SetNull() {
 		vchAsset.clear();
@@ -71,20 +71,6 @@ public:
 		return (vchAsset.empty() && vchAlias.empty());
 	}
 };
-namespace std {
-
-	template <>
-	struct hash<CAssetAllocationTuple>
-	{
-		size_t operator()(const CAssetAllocationTuple& k) const
-		{
-			using std::size_t;
-			using std::hash;
-			return hash<string>()(k.ToString());
-		}
-	};
-
-}
 typedef std::vector<std::pair<std::vector<unsigned char>, std::vector<CRange> > > RangeInputArrayTuples;
 typedef std::vector<std::pair<std::vector<unsigned char>, CAmount > > RangeAmountTuples;
 typedef std::map<uint256, int64_t> ArrivalTimesMap;
