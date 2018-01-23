@@ -96,7 +96,7 @@ bool CreateGraphFromVTX(const std::vector<CTransaction>& blockVtx, Graph &graph,
 	return mapTxIndex.size() > 0;
 }
 // remove cycles in a graph and create a DAG, modify the blockVtx passed in to remove conflicts, the conflicts should be added back to the end of this vtx after toposort
-void GraphRemoveCycles(const std::vector<CTransaction>& blockVtx, std::vector<int> &conflictedIndexes, Graph& graph, const std::vector<vertex_descriptor> &vertices, const IndexMap &mapTxIndex) {
+void GraphRemoveCycles(const std::vector<CTransaction>& blockVtx, std::vector<int> &conflictedIndexes, Graph& graph, const std::vector<vertex_descriptor> &vertices, IndexMap &mapTxIndex) {
 	LogPrintf("GraphRemoveCycles\n");
 	std::vector<CTransaction> newVtx;
 	std::vector<CTransaction> orderedVtx;
@@ -115,6 +115,7 @@ void GraphRemoveCycles(const std::vector<CTransaction>& blockVtx, std::vector<in
 		if (nVertexIndex >= vertices.size())
 			continue;
 		boost::clear_out_edges(vertices[nVertexIndex], graph);
+		mapTxIndex.erase(nVertex);
 		const std::vector<int> &vecTx = (*it).second;
 		// mapTxIndex knows of the mapping between vertices and tx vout positions
 		for (auto& nIndex : vecTx) {
