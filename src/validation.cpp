@@ -559,7 +559,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight, co
 	string errorMessage;
 	bool good = false;
 	string statusRpc = "";
-	if (fJustCheck && (IsInitialBlockDownload() || RPCIsInWarmup(statusRpc)))
+	if (fJustCheck && (IsInitialBlockDownload() || RPCIsInWarmup(&statusRpc)))
 		return true;
 	if (block.vtx.empty() && tx.nVersion == SYSCOIN_TX_VERSION) {
 		bool bDestCheckFailed = false;
