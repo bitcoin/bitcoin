@@ -1167,9 +1167,6 @@ void CreateFeeRecipient(CScript& scriptPubKey, const vector<unsigned char>& data
 	CRecipient recp = {scriptPubKey, 0, false};
 	recipient = recp;
 	CTxOut txout(0,	recipient.scriptPubKey);
-	size_t nSize = txout.GetSerializeSize(SER_DISK,0)+148u;
-	nFee = 3 * minRelayTxFee.GetFee(nSize);
-	recipient.nAmount = nFee;
 }
 CAmount GetDataFee(const CScript& scriptPubKey)
 {
@@ -2167,7 +2164,7 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	float fYears = nTimeExpiry / ONE_YEAR_IN_SECONDS;
 	if(fYears < 1)
 		fYears = 1;
-	fee.nAmount *= powf(2.88,fYears);
+	fee.nAmount = GetDataFee(scriptData) * powf(2.88,fYears);
 	CCoinControl coinControl;
 	if(bActivation && mapAliasRegistrations.count(vchHashAlias) > 0)
 	{
@@ -2276,7 +2273,7 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 		float fYears = nTimeExpiry / ONE_YEAR_IN_SECONDS;
 		if (fYears < 1)
 			fYears = 1;
-		fee.nAmount *= powf(2.88, fYears);
+		fee.nAmount = GetDataFee(scriptData) * powf(2.88, fYears);
 	}
 	
 	vecSend.push_back(fee);
