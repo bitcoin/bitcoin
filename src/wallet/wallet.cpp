@@ -3592,8 +3592,8 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
 					CScript& scriptSigRes = txNew.vin[nIn].scriptSig;
 					if (sign)
 						signSuccess = ProduceSignature(TransactionSignatureCreator(this, &txNewConst, nIn, SIGHASH_ALL), scriptPubKey, scriptSigRes);
-					/*else
-					signSuccess = ProduceSignature(DummySignatureCreator(this), scriptPubKey, scriptSigRes);*/
+					else
+						ProduceSignature(DummySignatureCreator(this), scriptPubKey, scriptSigRes);
 
 					if (!signSuccess)
 					{
@@ -3648,7 +3648,8 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
 				if (fUseInstantSend) {
 					nFeeNeeded = std::max(nFeeNeeded, CTxLockRequest(txNew).GetMinFee());
 				}
-
+				else if (sysTx)
+					nFeeNeeded = ::minRelayTxFee.GetFee(nBytes);
 				// If we made it here and we aren't even able to meet the relay fee on the next pass, give up
 				// because we must be at the maximum allowed fee.
 				if (nFeeNeeded < ::minRelayTxFee.GetFee(nBytes))
