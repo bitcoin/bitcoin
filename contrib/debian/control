@@ -26,8 +26,7 @@ Build-Depends: debhelper,
  libminiupnpc8-dev | libminiupnpc-dev,
  qtbase5-dev,
  qttools5-dev-tools, qttools5-dev,
- libqrencode-dev,
- python
+ libqrencode-dev
 Standards-Version: 3.9.5
 Homepage: https://peercoin.net/
 Vcs-Git: git://github.com/peercoin/peercoin.git
