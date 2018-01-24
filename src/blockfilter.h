@@ -36,6 +36,9 @@ private:
 
     std::vector<uint64_t> BuildHashedSet(const ElementSet& elements) const;
 
+    /** Helper method used to implement Match and MatchAny */
+    bool MatchInternal(const uint64_t* sorted_element_hashes, size_t size) const;
+
 public:
 
     /** Constructs an empty filter. */
