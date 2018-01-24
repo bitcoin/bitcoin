@@ -36,6 +36,19 @@ bool OrderBasedOnArrivalTime(std::vector<CTransaction>& blockVtx) {
 					orderedIndexes.insert(make_pair(INT64_MAX, n));
 				continue;
 			}
+			else if (DecodeOfferTx(tx, op, nOut, vvchArgs))
+			{
+				ArrivalTimesMap arrivalTimes;
+				COffer offer(tx);
+				pofferdb->ReadISArrivalTimes(offer.vchOffer, arrivalTimes);
+				ArrivalTimesMap::iterator it = arrivalTimes.find(tx.GetHash());
+				if (it != arrivalTimes.end())
+					orderedIndexes.insert(make_pair((*it).second, n));
+				// we don't have this in our arrival times list, means it must be rejected via consensus so add it to the end
+				else
+					orderedIndexes.insert(make_pair(INT64_MAX, n));
+				continue;
+			}
 		}
 		// add normal tx's to orderedvtx, 
 		orderedVtx.push_back(tx);
@@ -172,13 +185,13 @@ bool DAGTopologicalSort(std::vector<CTransaction>& blockVtx, const std::vector<i
 		newVtx.push_back(blockVtx[nIndex]);
 	}
 	
-	// add non sys tx's to end of newVtx
+	// add non-sys and other sys tx's to end of newVtx
 	std::vector<vector<unsigned char> > vvchArgs;
 	int op;
 	int nOut;
 	for (unsigned int vOut = 1; vOut< blockVtx.size(); vOut++) {
 		const CTransaction& tx = blockVtx[vOut];
-		if (tx.nVersion != SYSCOIN_TX_VERSION || (tx.nVersion == SYSCOIN_TX_VERSION && !DecodeAssetAllocationTx(tx, op, nOut, vvchArgs)))
+		if (!DecodeAssetAllocationTx(tx, op, nOut, vvchArgs))
 		{
 			newVtx.push_back(blockVtx[vOut]);
 		}

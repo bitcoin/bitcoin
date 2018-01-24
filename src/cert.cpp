@@ -440,181 +440,112 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 			return error(errorMessage.c_str());
 		}
 	}
-	const string &user1 = stringFromVch(vvchAlias);
-	string user2 = "";
-	string user3 = "";
-	if (op == OP_CERT_TRANSFER) {
-		user2 = stringFromVch(theCert.vchAlias);
-	}
-	string strResponseEnglish = "";
-	string strResponse = GetSyscoinTransactionDescription(op, strResponseEnglish, CERT);
-	// if not an certnew, load the cert data from the DB
-	CCert dbCert;
-	if (!GetCert(theCert.vchCert, dbCert))
-	{
-		if (op != OP_CERT_ACTIVATE) {
-			errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2022 - " + _("Failed to read from certificate DB");
-			return true;
+	if (!fJustCheck) {
+		const string &user1 = stringFromVch(vvchAlias);
+		string user2 = "";
+		string user3 = "";
+		if (op == OP_CERT_TRANSFER) {
+			user2 = stringFromVch(theCert.vchAlias);
 		}
-	}
-	else
-	{
-		bool bSendLocked = false;
-		pcertdb->ReadISLock(theCert.vchCert, bSendLocked);
-		if (!fJustCheck && bSendLocked) {
-			
-			if (dbCert.nHeight >= nHeight)
-			{
-				if (!dontaddtodb && !pcertdb->EraseISLock(theCert.vchCert))
-				{
-					errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from certificate DB");
-					return error(errorMessage.c_str());
-				}
-				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Block height of service request must be less than or equal to the stored service block height.");
+		string strResponseEnglish = "";
+		string strResponse = GetSyscoinTransactionDescription(op, strResponseEnglish, CERT);
+		// if not an certnew, load the cert data from the DB
+		CCert dbCert;
+		if (!GetCert(theCert.vchCert, dbCert))
+		{
+			if (op != OP_CERT_ACTIVATE) {
+				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2022 - " + _("Failed to read from certificate DB");
 				return true;
 			}
-			if (dbCert.txHash != tx.GetHash())
+		}
+		if (op != OP_CERT_ACTIVATE)
+		{
+			if (dbCert.vchAlias != vvchAlias)
 			{
-				if (fDebug)
-					LogPrintf("CERT txid mismatch! Recreating...\n");
-				const string &txHashHex = dbCert.txHash.GetHex();
-				if (op != OP_CERT_ACTIVATE && !pcertdb->ReadLastCert(theCert.vchCert, dbCert)) {
-					dbCert.SetNull();
+				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot update this certificate. Certificate owner must sign off on this change.");
+				return true;
+			}
+			if (theCert.vchAlias.empty())
+				theCert.vchAlias = dbCert.vchAlias;
+			if (theCert.vchPubData.empty())
+				theCert.vchPubData = dbCert.vchPubData;
+			if (theCert.vchTitle.empty())
+				theCert.vchTitle = dbCert.vchTitle;
+			if (theCert.sCategory.empty())
+				theCert.sCategory = dbCert.sCategory;
+
+			CCert firstCert;
+			if (!GetFirstCert(dbCert.vchCert, firstCert)) {
+				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("Cannot read first cert from cert DB");
+				return true;
+			}
+			if (op == OP_CERT_TRANSFER)
+			{
+				// check toalias
+				if (!GetAlias(theCert.vchAlias, alias))
+				{
+					errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2024 - " + _("Cannot find alias you are transferring to. It may be expired");
+					return true;
 				}
-				if (!dontaddtodb) {
-					if (!pcertdb->EraseISLock(theCert.vchCert))
-					{
-						errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from certificate DB");
-						return error(errorMessage.c_str());
-					}
-					paliasdb->EraseAliasIndexTxHistory(txHashHex+"-"+stringFromVch(theCert.vchCert));
-					pcertdb->EraseCertIndexHistory(txHashHex);
+				if (!(alias.nAcceptTransferFlags & ACCEPT_TRANSFER_CERTIFICATES))
+				{
+					errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("The alias you are transferring to does not accept certificate transfers");
+					return true;
+				}
+
+				// the original owner can modify certificate regardless of access flags, new owners must adhere to access flags
+				if (dbCert.nAccessFlags < 2 && dbCert.vchAlias != firstCert.vchAlias)
+				{
+					errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot transfer this certificate. Insufficient privileges.");
+					return true;
 				}
 			}
-			else {
-				if (!dontaddtodb) {
-					if (fDebug)
-						LogPrintf("CONNECTED CERT: op=%s cert=%s hash=%s height=%d fJustCheck=%d POW IS\n",
-							certFromOp(op).c_str(),
-							stringFromVch(theCert.vchCert).c_str(),
-							tx.GetHash().ToString().c_str(),
-							nHeight,
-							fJustCheck ? 1 : 0);
-					if (!pcertdb->Write(make_pair(std::string("certp"), theCert.vchCert), dbCert))
-					{
-						errorMessage = "SYSCOIN_CERT_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to write previous cert to cert DB");
-						return error(errorMessage.c_str());
-					}
-					if (!pcertdb->EraseISLock(theCert.vchCert))
-					{
-						errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from certificate DB");
-						return error(errorMessage.c_str());
-					}
+			else if (op == OP_CERT_UPDATE)
+			{
+				if (dbCert.nAccessFlags < 1 && dbCert.vchAlias != firstCert.vchAlias)
+				{
+					errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot edit this certificate. It is view-only.");
+					return true;
 				}
+			}
+			if (theCert.nAccessFlags > dbCert.nAccessFlags && dbCert.vchAlias != firstCert.vchAlias)
+			{
+				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot modify for more lenient access. Only tighter access level can be granted.");
 				return true;
 			}
 		}
 		else
 		{
-			if(fJustCheck && bSendLocked && dbCert.nHeight >= nHeight)
+			if (fJustCheck && GetCert(theCert.vchCert, theCert))
 			{
-				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Block height of service request must be less than or equal to the stored service block height.");
-				return true;
-			}
-			if (dbCert.nHeight > nHeight)
-			{
-				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Block height of service request cannot be lower than stored service block height.");
+				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2027 - " + _("Certificate already exists");
 				return true;
 			}
 		}
-	}
-	if(op != OP_CERT_ACTIVATE) 
-	{
-		if (dbCert.vchAlias != vvchAlias)
-		{
-			errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot update this certificate. Certificate owner must sign off on this change.");
-			return true;
-		}
-		if (theCert.vchAlias.empty())
-			theCert.vchAlias = dbCert.vchAlias;
-		if(theCert.vchPubData.empty())
-			theCert.vchPubData = dbCert.vchPubData;
-		if(theCert.vchTitle.empty())
-			theCert.vchTitle = dbCert.vchTitle;
-		if(theCert.sCategory.empty())
-			theCert.sCategory = dbCert.sCategory;
-
-		CCert firstCert;
-		if (!GetFirstCert(dbCert.vchCert, firstCert)) {
-			errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("Cannot read first cert from cert DB");
-			return true;
-		}
-		if(op == OP_CERT_TRANSFER)
-		{
-			// check toalias
-			if(!GetAlias(theCert.vchAlias, alias))
-			{
-				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2024 - " + _("Cannot find alias you are transferring to. It may be expired");	
-				return true;
-			}
-			if(!(alias.nAcceptTransferFlags & ACCEPT_TRANSFER_CERTIFICATES))
-			{
-				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("The alias you are transferring to does not accept certificate transfers");
-				return true;
-			}
-				
-			// the original owner can modify certificate regardless of access flags, new owners must adhere to access flags
-			if(dbCert.nAccessFlags < 2 && dbCert.vchAlias != firstCert.vchAlias)
-			{
-				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot transfer this certificate. Insufficient privileges.");
-				return true;
+		if (!dontaddtodb) {
+			if (strResponse != "") {
+				paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, stringFromVch(theCert.vchCert));
 			}
 		}
-		else if(op == OP_CERT_UPDATE)
-		{
-			if(dbCert.nAccessFlags < 1 && dbCert.vchAlias != firstCert.vchAlias)
+		// set the cert's txn-dependent values
+		theCert.nHeight = nHeight;
+		theCert.txHash = tx.GetHash();
+		// write cert  
+		if (!dontaddtodb) {
+			if (!pcertdb->WriteCert(theCert, op))
 			{
-				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot edit this certificate. It is view-only.");
-				return true;
+				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to write to certifcate DB");
+				return error(errorMessage.c_str());
 			}
+			// debug
+			if (fDebug)
+				LogPrintf("CONNECTED CERT: op=%s cert=%s hash=%s height=%d fJustCheck=%d\n",
+					certFromOp(op).c_str(),
+					stringFromVch(theCert.vchCert).c_str(),
+					tx.GetHash().ToString().c_str(),
+					nHeight,
+					fJustCheck ? 1 : -1);
 		}
-		if(theCert.nAccessFlags > dbCert.nAccessFlags && dbCert.vchAlias != firstCert.vchAlias)
-		{
-			errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot modify for more lenient access. Only tighter access level can be granted.");
-			return true;
-		}
-	}
-	else
-	{
-		if (fJustCheck && GetCert(theCert.vchCert, theCert))
-		{
-			errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2027 - " + _("Certificate already exists");
-			return true;
-		}
-	}
-	if(!dontaddtodb) {
-		if (strResponse != "") {
-			paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, stringFromVch(theCert.vchCert));
-		}
-	}
-    // set the cert's txn-dependent values
-	theCert.nHeight = nHeight;
-	theCert.txHash = tx.GetHash();
-    // write cert  
-	if (!dontaddtodb) {
-		if (!pcertdb->WriteCert(theCert, op, fJustCheck) || (op == OP_CERT_ACTIVATE && !pcertdb->WriteFirstCert(theCert.vchCert, theCert)))
-		{
-			errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to write to certifcate DB");
-			return error(errorMessage.c_str());
-		}
-		// debug
-		if (fDebug)
-			LogPrintf("CONNECTED CERT: op=%s cert=%s hash=%s height=%d fJustCheck=%d\n",
-				certFromOp(op).c_str(),
-				stringFromVch(theCert.vchCert).c_str(),
-				tx.GetHash().ToString().c_str(),
-				nHeight,
-				fJustCheck ? 1 : -1);
 	}
 
     return true;

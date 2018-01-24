@@ -175,17 +175,6 @@ public:
 	bool EraseISArrivalTimes(const CAssetAllocationTuple& assetAllocationTuple) {
 		return Erase(make_pair(std::string("assetallocationa"), assetAllocationTuple));
 	}
-	bool EraseISArrivalTime(const CAssetAllocationTuple& assetAllocationTuple, const uint256& txid) {
-		ArrivalTimesMap arrivalTimes;
-		ReadISArrivalTimes(assetAllocationTuple, arrivalTimes);
-		ArrivalTimesMap::const_iterator it = arrivalTimes.find(txid);
-		if (it != arrivalTimes.end())
-			arrivalTimes.erase(it);
-		if(arrivalTimes.size() > 0)
-			return Write(make_pair(std::string("assetallocationa"), assetAllocationTuple), arrivalTimes);
-		else
-			return Erase(make_pair(std::string("assetallocationa"), assetAllocationTuple));
-	}
 	void WriteAssetAllocationIndex(const CAssetAllocation& assetAllocationTuple);
 	void EraseAssetAllocationIndex(const CAssetAllocationTuple& assetAllocationTuple, bool cleanup=false);
 

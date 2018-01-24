@@ -96,19 +96,15 @@ public:
 
     bool WriteCert(const CCert& cert, const int &op, const bool &fJustCheck) {
 		bool writeState =  Write(make_pair(std::string("certi"), cert.vchCert), cert);
-		if (!fJustCheck)
-			writeState = writeState && Write(make_pair(std::string("certp"), cert.vchCert), cert);
-		else if (fJustCheck)
-			writeState = writeState && Write(make_pair(std::string("certl"), cert.vchCert), fJustCheck);
+		if(op == OP_CERT_ACTIVATE)
+			writeState = writeState && Write(make_pair(std::string("certf"), cert.vchCert), cert);
 		WriteCertIndex(cert, op);
         return writeState;
     }
 
     bool EraseCert(const std::vector<unsigned char>& vchCert, bool cleanup = false) {
 		bool eraseState = Erase(make_pair(std::string("certi"), vchCert));
-		Erase(make_pair(std::string("certp"), vchCert));
 		Erase(make_pair(std::string("certf"), vchCert));
-		EraseISLock(vchCert);
 		EraseCertIndex(vchCert, cleanup);
 		EraseCertIndexHistory(vchCert, cleanup);
         return eraseState;
@@ -122,15 +118,6 @@ public:
 	}
 	bool ReadLastCert(const std::vector<unsigned char>& vchGuid, CCert& cert) {
 		return Read(make_pair(std::string("certp"), vchGuid), cert);
-	}
-	bool ReadISLock(const std::vector<unsigned char>& vchGuid, bool& lock) {
-		return Read(make_pair(std::string("certl"), vchGuid), lock);
-	}
-	bool EraseISLock(const std::vector<unsigned char>& vchGuid) {
-		return Erase(make_pair(std::string("certl"), vchGuid));
-	}
-	bool WriteFirstCert(const std::vector<unsigned char>& vchCert, const CCert& cert) {
-		return Write(make_pair(std::string("certf"), vchCert), cert);
 	}
 	bool CleanupDatabase(int &servicesCleaned);
 	void WriteCertIndex(const CCert& cert, const int &op);

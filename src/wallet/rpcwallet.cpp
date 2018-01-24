@@ -42,7 +42,7 @@ extern bool DecodeAssetTx(const CTransaction& tx, int& op, int& nOut, vector<vec
 extern bool DecodeAssetAllocationTx(const CTransaction& tx, int& op, int& nOut, vector<vector<unsigned char> >& vvch);
 extern bool DecodeEscrowTx(const CTransaction& tx, int& op, int& nOut, vector<vector<unsigned char> >& vvch);
 extern bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, string &errorMessage, bool &bDestCheckFailed, bool dontaddtodb);
-extern bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const std::vector<unsigned char> &vvchAlias, bool fJustCheck, int nHeight, string &errorMessage, bool dontaddtodb);
+extern bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const std::vector<unsigned char> &vvchAlias, bool fJustCheck, int nHeight, sorted_vector<std::vector<unsigned char> > &revertedOffers, string &errorMessage, bool dontaddtodb);
 extern bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const std::vector<unsigned char> &vvchAlias, bool fJustCheck, int nHeight, string &errorMessage, bool dontaddtodb);
 extern bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const std::vector<std::vector<unsigned char> > &vvchAliasArgs, bool fJustCheck, int nHeight, string &errorMessage, bool dontaddtodb);
 extern bool DecodeAliasScript(const CScript& script, int& op, vector<vector<unsigned char> > &vvch);
@@ -599,6 +599,7 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
 	string errorMessage = "";
 	bool bCheckDestError = false;
 	sorted_vector<CAssetAllocationTuple> revertedAssetAllocations;
+	sorted_vector<vector<unsigned char> > revertedOffers;
 	if (wtxNew.nVersion == SYSCOIN_TX_VERSION) {
 		if (DecodeAliasTx(wtxNew, op, nOut, vvchAlias))
 		{
@@ -647,10 +648,10 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
 		}
 		if (DecodeOfferTx(wtxNew, op, nOut, vvch))
 		{
-			CheckOfferInputs(wtxNew, op, nOut, vvch, vvchAlias[0], fJustCheck, chainActive.Tip()->nHeight, errorMessage, true);
+			CheckOfferInputs(wtxNew, op, nOut, vvch, vvchAlias[0], fJustCheck, chainActive.Tip()->nHeight, revertedOffers, errorMessage, true);
 			if (!errorMessage.empty())
 				throw runtime_error(errorMessage.c_str());
-			CheckOfferInputs(wtxNew, op, nOut, vvch, vvchAlias[0], !fJustCheck, chainActive.Tip()->nHeight, errorMessage, true);
+			CheckOfferInputs(wtxNew, op, nOut, vvch, vvchAlias[0], !fJustCheck, chainActive.Tip()->nHeight, revertedOffers, errorMessage, true);
 			if (!errorMessage.empty())
 				throw runtime_error(errorMessage.c_str());
 

@@ -190,6 +190,8 @@ bool DecodeAndParseAssetAllocationTx(const CTransaction& tx, int& op, int& nOut,
 }
 bool DecodeAssetAllocationTx(const CTransaction& tx, int& op, int& nOut,
         vector<vector<unsigned char> >& vvch) {
+	if (tx.nVersion != SYSCOIN_TX_VERSION)
+		return false;
     bool found = false;
 
 

@@ -29,6 +29,9 @@
 #include <boost/tokenizer.hpp>
 #include <boost/range/adaptor/reversed.hpp>
 #include <mongoc.h>
+#include <chrono>
+
+using namespace std::chrono;
 using namespace std;
 extern mongoc_collection_t *offer_collection;
 extern mongoc_collection_t *offerhistory_collection;
@@ -214,7 +217,7 @@ bool COfferDB::CleanupDatabase(int &servicesCleaned)
 
 bool GetOffer(const vector<unsigned char> &vchOffer,
 				  COffer& txPos) {
-	if (!pofferdb || !pofferdb->ReadOffer(vchOffer, txPos))
+	if (!pofferdb || !pofferdb->ReadLastOffer(vchOffer, txPos))
 		return false;
 	if (chainActive.Tip()->GetMedianTimePast() >= GetOfferExpiration(txPos))
 	{
@@ -307,7 +310,34 @@ bool RemoveOfferScriptPrefix(const CScript& scriptIn, CScript& scriptOut) {
 	scriptOut = CScript(pc, scriptIn.end());
 	return true;
 }
+bool RevertOffer(const std::vector<unsigned char>& vchOffer, const int op, const uint256 &txHash, sorted_vector<std::vector<unsigned char> > &revertedOffers) {
+	paliasdb->EraseAliasIndexTxHistory(txHash.GetHex() + "-" + stringFromVch(theOffer.vchOffer));
+	// only revert offer once
+	if (revertedOffers.find(vchOffer) != revertedOffers.end())
+		return true;
 
+	string errorMessage = "";
+	COffer dbOffer;
+	LogPrintf("RevertOffer %s\n", stringFromVch(theOffer.vchOffer).c_str());
+	// if prev state doesn't exist, probably offeractivate, in which case delete the offer and let pow create it again.
+	if (!pofferdb->ReadLastOffer(vchOffer, dbOffer)) {
+		if(!pofferdb->EraseOffer(vchOffer))
+		{
+			errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 2022 - " + _("Failed to erase offer");
+			return error(errorMessage.c_str());
+		}
+	}
+	// write the state back to previous state
+	else if (!pofferdb->WriteOffer(dbOffer, op, INT64_MAX, false))
+	{
+		errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 2022 - " + _("Failed to write to offer DB");
+		return error(errorMessage.c_str());
+	}
+	pofferdb->EraseISArrivalTimes(vchOffer);
+	revertedOffers.insert(vchOffer);
+	return true;
+
+}
 bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const std::vector<unsigned char> &vvchAlias, bool fJustCheck, int nHeight, string &errorMessage, bool dontaddtodb) {
 	if (!pofferdb || !paliasdb)
 		return false;
@@ -492,6 +522,13 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			return error(errorMessage.c_str());
 		}
 	}
+	if (!fJustCheck && !dontaddtodb) {
+		if (!RevertOffer(vchOffer, op, tx.GetHash(), revertedOffers))
+		{
+			errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to revert offer");
+			return error(errorMessage.c_str());
+		}
+	}
 	const string &user1 = stringFromVch(vvchAlias);
 	string user2 = "";
 	string user3 = "";
@@ -507,78 +544,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		if (op == OP_OFFER_UPDATE) {
 			errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1048 - " + _("Failed to read from offer DB");
 			return true;
-		}
-	}
-	else
-	{
-		bool bSendLocked = false;
-		pofferdb->ReadISLock(theOffer.vchOffer, bSendLocked);
-		if (!fJustCheck && bSendLocked) {
-			if (dbOffer.nHeight >= nHeight)
-			{
-				if (!dontaddtodb && !pofferdb->EraseISLock(theOffer.vchOffer))
-				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from offer DB");
-					return error(errorMessage.c_str());
-				}
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Block height of service request must be less than or equal to the stored service block height.");
-				return true;
-			}
-			if (dbOffer.txHash != tx.GetHash())
-			{
-				if (fDebug)
-					LogPrintf("OFFER txid mismatch! Recreating...\n");
-				if (op != OP_OFFER_ACTIVATE && !pofferdb->ReadLastOffer(theOffer.vchOffer, dbOffer)) {
-					dbOffer.SetNull();
-				}
-				if (!dontaddtodb) {
-					if (!pofferdb->EraseISLock(theOffer.vchOffer))
-					{
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from offer DB");
-						return error(errorMessage.c_str());
-					}
-					const string &txHashHex = dbOffer.txHash.GetHex();
-					paliasdb->EraseAliasIndexTxHistory(txHashHex+"-"+stringFromVch(theOffer.vchOffer));
-					pofferdb->EraseOfferIndexHistory(txHashHex);
-					pofferdb->EraseExtTXID(dbOffer.txHash);
-				}
-			}
-			else {
-				if (!dontaddtodb) {
-					if (fDebug)
-						LogPrintf("CONNECTED OFFER: op=%s offer=%s qty=%u hash=%s height=%d fJustCheck=%d POW IS\n",
-							offerFromOp(op).c_str(),
-							stringFromVch(theOffer.vchOffer).c_str(),
-							theOffer.nQty,
-							tx.GetHash().ToString().c_str(),
-							nHeight,
-							fJustCheck ? 1 : 0);
-					if (!pofferdb->Write(make_pair(std::string("offerp"), theOffer.vchOffer), dbOffer))
-					{
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to write previous offer to offer DB");
-						return error(errorMessage.c_str());
-					}
-					if (!pofferdb->EraseISLock(theOffer.vchOffer))
-					{
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to erase Instant Send lock from offer DB");
-						return error(errorMessage.c_str());
-					}
-				}
-				return true;
-			}
-		}
-		else
-		{
-			if (fJustCheck && bSendLocked && dbOffer.nHeight >= nHeight)
-			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Block height of service request must be less than or equal to the stored service block height.");
-				return true;
-			}
-			if (dbOffer.nHeight > nHeight)
-			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Block height of service request cannot be lower than stored service block height.");
-				return true;
-			}
 		}
 	}
 	if (op == OP_OFFER_UPDATE) {
@@ -638,7 +603,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	else if(op == OP_OFFER_ACTIVATE)
 	{
 		COfferLinkWhitelistEntry entry;
-		if (fJustCheck && GetOffer(theOffer.vchOffer, theOffer))
+		if (GetOffer(theOffer.vchOffer, theOffer))
 		{
 			errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1050 - " + _("Offer already exists");
 			return true;
@@ -718,7 +683,11 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	theOffer.txHash = tx.GetHash();
 	// write offer
 	if (!dontaddtodb) {
-		if (!pofferdb->WriteOffer(theOffer, op, fJustCheck))
+		int64_t ms = INT64_MAX;
+		if (fJustCheck) {
+			ms = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+		}
+		if (!pofferdb->WriteOffer(theOffer, op, ms, fJustCheck))
 		{
 			errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Failed to write to offer DB");
 			return error(errorMessage.c_str());

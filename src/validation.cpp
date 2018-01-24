@@ -552,6 +552,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight, co
 	vector<vector<unsigned char> > vvchArgs;
 	vector<vector<unsigned char> > vvchAliasArgs;
 	sorted_vector<CAssetAllocationTuple> revertedAssetAllocations;
+	sorted_vector<vector<unsigned char> > revertedOffers;
 	int op;
 	int nOut;
 	if (nHeight == 0)
@@ -603,7 +604,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight, co
 			else if (DecodeOfferTx(tx, op, nOut, vvchArgs))
 			{
 				errorMessage.clear();
-				good = CheckOfferInputs(tx, op, nOut, vvchArgs, vvchAliasArgs[0], fJustCheck, nHeight, errorMessage);
+				good = CheckOfferInputs(tx, op, nOut, vvchArgs, vvchAliasArgs[0], fJustCheck, nHeight, revertedOffers, errorMessage);
 				if (fDebug && !errorMessage.empty())
 					LogPrintf("%s\n", errorMessage.c_str());
 			}
@@ -680,7 +681,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight, co
 					else if (DecodeOfferTx(tx, op, nOut, vvchArgs))
 					{
 						errorMessage.clear();
-						good = CheckOfferInputs(tx, op, nOut, vvchArgs, vvchAliasArgs[0], fJustCheck, nHeight, errorMessage);
+						good = CheckOfferInputs(tx, op, nOut, vvchArgs, vvchAliasArgs[0], fJustCheck, nHeight, revertedOffers, errorMessage);
 						if (fDebug && !errorMessage.empty())
 							LogPrintf("%s\n", errorMessage.c_str());
 					}
