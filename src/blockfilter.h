@@ -31,6 +31,11 @@ private:
     uint64_t m_F;  //!< Range of element hashes, F = N * M
     std::vector<unsigned char> m_encoded;
 
+    /** Hash a data element to an integer in the range [0, N * M). */
+    uint64_t HashToRange(const Element& element) const;
+
+    std::vector<uint64_t> BuildHashedSet(const ElementSet& elements) const;
+
 public:
 
     /** Constructs an empty filter. */
