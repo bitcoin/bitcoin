@@ -10,7 +10,7 @@ class DeprecatedRpcTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
         self.setup_clean_chain = True
-        self.extra_args = [[], ["-deprecatedrpc=estimatefee"]]
+        self.extra_args = [[], ["-deprecatedrpc=estimatefee", "-deprecatedrpc=createmultisig"]]
 
     def run_test(self):
         self.log.info("estimatefee: Shows deprecated message")
@@ -18,6 +18,10 @@ class DeprecatedRpcTest(BitcoinTestFramework):
 
         self.log.info("Using -deprecatedrpc=estimatefee bypasses the error")
         self.nodes[1].estimatefee(1)
+
+        self.log.info("Make sure that -deprecatedrpc=createmultisig allows it to take addresses")
+        assert_raises_rpc_error(-5, "Invalid public key", self.nodes[0].createmultisig, 1, [self.nodes[0].getnewaddress()])
+        self.nodes[1].createmultisig(1, [self.nodes[1].getnewaddress()])
 
 if __name__ == '__main__':
     DeprecatedRpcTest().main()
