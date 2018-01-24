@@ -710,6 +710,16 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
     if (!GetCert( vchCert, theCert))
         throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2504 - " + _("Could not find a certificate with this key"));
 
+	ArrivalTimesMap arrivalTimes;
+	pcertdb->ReadISArrivalTimes(vchCert, arrivalTimes);
+	const int64_t & nNow = duration_cast<seconds>(system_clock::now().time_since_epoch()).count();
+	for (auto& arrivalTime : arrivalTimes) {
+		// if this tx arrived within the minimum latency period flag it as potentially conflicting
+		if ((nNow - (arrivalTime.second / 1000)) < ZDAG_MINIMUM_LATENCY_SECONDS) {
+			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR: ERRCODE: 2510 - " + _("Please wait a few more seconds and try again..."));
+		}
+	}
+
 	CAliasIndex theAlias;
 
 	if (!GetAlias(theCert.vchAlias, theAlias))
@@ -801,6 +811,16 @@ UniValue certtransfer(const UniValue& params, bool fHelp) {
 	CCert theCert;
     if (!GetCert( vchCert, theCert))
         throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2510 - " + _("Could not find a certificate with this key"));
+
+	ArrivalTimesMap arrivalTimes;
+	pcertdb->ReadISArrivalTimes(vchCert, arrivalTimes);
+	const int64_t & nNow = duration_cast<seconds>(system_clock::now().time_since_epoch()).count();
+	for (auto& arrivalTime : arrivalTimes) {
+		// if this tx arrived within the minimum latency period flag it as potentially conflicting
+		if ((nNow - (arrivalTime.second / 1000)) < ZDAG_MINIMUM_LATENCY_SECONDS) {
+			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR: ERRCODE: 2510 - " + _("Please wait a few more seconds and try again..."));
+		}
+	}
 
 	CAliasIndex fromAlias;
 	if(!GetAlias(theCert.vchAlias, fromAlias))

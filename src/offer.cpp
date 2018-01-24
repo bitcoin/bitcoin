@@ -1044,6 +1044,16 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	if (!GetOffer( vchOffer, theOffer))
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1534 - " + _("Could not find an offer with this guid"));
 
+	ArrivalTimesMap arrivalTimes;
+	pofferdb->ReadISArrivalTimes(vchOffer, arrivalTimes);
+	const int64_t & nNow = duration_cast<seconds>(system_clock::now().time_since_epoch()).count();
+	for (auto& arrivalTime : arrivalTimes) {
+		// if this tx arrived within the minimum latency period flag it as potentially conflicting
+		if ((nNow - (arrivalTime.second / 1000)) < ZDAG_MINIMUM_LATENCY_SECONDS) {
+			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR: ERRCODE: 2510 - " + _("Please wait a few more seconds and try again..."));
+		}
+	}
+
 	if (!GetAlias(theOffer.vchAlias, offerAlias))
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1535 - " + _("Could not find an alias with this name"));
 
