@@ -161,12 +161,8 @@ class CEscrowDB : public CDBWrapper {
 public:
     CEscrowDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "escrow", nCacheSize, fMemory, fWipe) {}
 
-    bool WriteEscrow( const std::vector<std::vector<unsigned char> > &vvchArgs, const CEscrow& escrow, const bool& fJustCheck) {
+    bool WriteEscrow( const std::vector<std::vector<unsigned char> > &vvchArgs, const CEscrow& escrow) {
 		bool writeState = Write(make_pair(std::string("escrowi"), escrow.vchEscrow), escrow);
-		if (!fJustCheck)
-			writeState = writeState && Write(make_pair(std::string("escrowp"), escrow.vchEscrow), escrow);
-		else if (fJustCheck)
-			writeState = writeState && Write(make_pair(std::string("escrowl"), escrow.vchEscrow), fJustCheck);
 		WriteEscrowIndex(escrow, vvchArgs);
         return writeState;
     }
@@ -178,8 +174,6 @@ public:
 	}
     bool EraseEscrow(const std::vector<unsigned char>& vchEscrow, bool cleanup = false) {
 		bool eraseState = Erase(make_pair(std::string("escrowi"), vchEscrow));
-		Erase(make_pair(std::string("escrowp"), vchEscrow));
-		EraseISLock(vchEscrow);
 		EraseEscrowIndex(vchEscrow, cleanup);
 		EraseEscrowFeedbackIndex(vchEscrow, cleanup);
 		EraseEscrowBidIndex(vchEscrow, cleanup);
@@ -188,15 +182,6 @@ public:
     bool ReadEscrow(const std::vector<unsigned char>& vchEscrow, CEscrow& escrow) {
         return Read(make_pair(std::string("escrowi"), vchEscrow), escrow);
     }
-	bool ReadLastEscrow(const std::vector<unsigned char>& vchGuid, CEscrow& escrow) {
-		return Read(make_pair(std::string("escrowp"), vchGuid), escrow);
-	}
-	bool ReadISLock(const std::vector<unsigned char>& vchGuid, bool& lock) {
-		return Read(make_pair(std::string("escrowl"), vchGuid), lock);
-	}
-	bool EraseISLock(const std::vector<unsigned char>& vchGuid) {
-		return Erase(make_pair(std::string("escrowl"), vchGuid));
-	}
 	bool ReadEscrowLastTXID(const std::vector<unsigned char>& escrow, uint256& txid) {
 		return Read(make_pair(std::string("escrowlt"), escrow), txid);
 	}

@@ -362,7 +362,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 			if (bRevert) {
 				if (!RevertAssetAllocation(assetAllocationTuple, tx.GetHash(), revertedAssetAllocations))
 				{
-					errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to revert asset allocation DB");
+					errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to revert asset allocation");
 					return error(errorMessage.c_str());
 				}
 			}
@@ -411,7 +411,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 				if (bRevert) {
 					if (!RevertAssetAllocation(CAssetAllocationTuple(theAssetAllocation.vchAsset, amountTuple.first), tx.GetHash(), revertedAssetAllocations))
 					{
-						errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to revert asset allocation DB");
+						errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to revert asset allocation");
 						return error(errorMessage.c_str());
 					}
 				}
