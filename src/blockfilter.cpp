@@ -233,3 +233,24 @@ BlockFilter::BlockFilter(BlockFilterType filter_type, const CBlock& block, const
         throw std::invalid_argument("unknown filter_type");
     }
 }
+
+uint256 BlockFilter::GetHash() const
+{
+    const std::vector<unsigned char>& data = GetEncodedFilter();
+
+    uint256 result;
+    CHash256().Write(data.data(), data.size()).Finalize(result.begin());
+    return result;
+}
+
+uint256 BlockFilter::ComputeHeader(const uint256& prev_header) const
+{
+    const uint256& filter_hash = GetHash();
+
+    uint256 result;
+    CHash256()
+        .Write(filter_hash.begin(), filter_hash.size())
+        .Write(prev_header.begin(), prev_header.size())
+        .Finalize(result.begin());
+    return result;
+}

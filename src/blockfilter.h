@@ -106,6 +106,12 @@ public:
         return m_filter.GetEncoded();
     }
 
+    // Compute the filter hash.
+    uint256 GetHash() const;
+
+    // Compute the filter header given the previous one.
+    uint256 ComputeHeader(const uint256& prev_header) const;
+
     template <typename Stream>
     void Serialize(Stream& s) const {
         s << m_block_hash
