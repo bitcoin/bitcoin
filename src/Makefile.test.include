@@ -183,7 +183,7 @@ if EMBEDDED_UNIVALUE
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C univalue check
 endif
 
-%.json.h: %.json
+test/data/%.json.h: test/data/%.json
 	@$(MKDIR_P) $(@D)
 	@{ \
 	 echo "namespace json_tests{" && \
@@ -193,11 +193,12 @@ endif
 	} > "$@.new" && mv -f "$@.new" "$@"
 	@echo "Generated $@"
 
-test/data/alertTests.raw.h: test/data/alertTests.raw
+test/data/%.raw.h: test/data/%.raw
 	@$(MKDIR_P) $(@D)
 	@{ \
+	 echo "namespace raw_tests{" && \
 	 echo "static unsigned const char $(*F)[] = {" && \
-	  $(HEXDUMP) -v -e '8/1 "0x%02x, "' -e '"\n"' $< | $(SED) -e 's/0x  ,//g' && \
-	 echo "};"; \
+	 $(HEXDUMP) -v -e '8/1 "0x%02x, "' -e '"\n"' $< | $(SED) -e 's/0x  ,//g' && \
+	 echo "};};"; \
 	} > "$@.new" && mv -f "$@.new" "$@"
 	@echo "Generated $@"
