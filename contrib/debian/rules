@@ -1,8 +1,8 @@
 #!/usr/bin/make -f
 # -*- mode: makefile; coding: utf-8 -*-
 
-DEB_INSTALL_EXAMPLES_bitcoind += debian/examples/*
-DEB_INSTALL_MANPAGES_bitcoind += debian/manpages/*
+DEB_INSTALL_EXAMPLES_peercoind += debian/examples/*
+DEB_INSTALL_MANPAGES_peercoind += debian/manpages/*
 
 %:
 	dh --with bash-completion $@
