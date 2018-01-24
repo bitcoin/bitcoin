@@ -523,7 +523,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		}
 	}
 	if (!fJustCheck && !dontaddtodb) {
-		if (!RevertOffer(vchOffer, op, tx.GetHash(), revertedOffers))
+		if (!RevertOffer(theOffer.vchOffer, op, tx.GetHash(), revertedOffers))
 		{
 			errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to revert offer");
 			return error(errorMessage.c_str());
