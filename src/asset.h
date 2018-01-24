@@ -11,6 +11,7 @@
 #include "serialize.h"
 #include "primitives/transaction.h"
 #include "ranges.h"
+#include "graph.h"
 class CWalletTx;
 class CTransaction;
 class CReserveKey;
