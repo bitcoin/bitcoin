@@ -1096,7 +1096,6 @@ bool CHDWallet::HaveKey(const CKeyID &address) const
 bool CHDWallet::HaveExtKey(const CKeyID &keyID) const
 {
     LOCK(cs_wallet);
-
     // NOTE: This only checks keys currently in memory (mapExtKeys)
     //       There may be other extkeys in the db.
 
@@ -1106,6 +1105,23 @@ bool CHDWallet::HaveExtKey(const CKeyID &keyID) const
 
     return false;
 };
+
+bool CHDWallet::GetExtKey(const CKeyID &keyID, CStoredExtKey &extKeyOut) const
+{
+    LOCK(cs_wallet);
+    // NOTE: This only checks keys currently in memory (mapExtKeys)
+    //       There may be other extkeys in the db.
+
+    ExtKeyMap::const_iterator it = mapExtKeys.find(keyID);
+    if (it != mapExtKeys.end())
+    {
+        extKeyOut = *it->second;
+        return true;
+    };
+
+    return false;
+};
+
 
 bool CHDWallet::HaveTransaction(const uint256 &txhash) const
 {

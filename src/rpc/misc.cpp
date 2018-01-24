@@ -312,9 +312,20 @@ UniValue validateaddress(const JSONRPCRequest& request)
         ret.push_back(Pair("scriptPubKey", HexStr(scriptPubKey.begin(), scriptPubKey.end())));
 
 #ifdef ENABLE_WALLET
-        isminetype mine = pwallet ? IsMine(*pwallet, dest) : ISMINE_NO;
-        ret.push_back(Pair("ismine", bool(mine & ISMINE_SPENDABLE)));
-        ret.push_back(Pair("iswatchonly", bool(mine & ISMINE_WATCH_ONLY)));
+        if (IsHDWallet(pwallet)
+            && dest.type() == typeid(CExtKeyPair))
+        {
+            CHDWallet *phdw = GetHDWallet(pwallet);
+            CExtKeyPair ek = boost::get<CExtKeyPair>(dest);
+            CKeyID id = ek.GetID();
+            ret.push_back(Pair("ismine", phdw->HaveExtKey(id)));
+        } else
+        {
+            isminetype mine = pwallet ? IsMine(*pwallet, dest) : ISMINE_NO;
+            ret.push_back(Pair("ismine", bool(mine & ISMINE_SPENDABLE)));
+            ret.push_back(Pair("iswatchonly", bool(mine & ISMINE_WATCH_ONLY)));
+        };
+
         UniValue detail = boost::apply_visitor(DescribeAddressVisitor(pwallet), dest);
         ret.pushKVs(detail);
         if (pwallet && pwallet->mapAddressBook.count(dest)) {

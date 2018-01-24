@@ -411,7 +411,8 @@ public:
     bool HaveKey(const CKeyID &address, CEKAKey &ak, CExtKeyAccount *&pa) const;
     bool HaveKey(const CKeyID &address) const override;
 
-    bool HaveExtKey(const CKeyID &address) const;
+    bool HaveExtKey(const CKeyID &keyID) const;
+    bool GetExtKey(const CKeyID &keyID, CStoredExtKey &extKeyOut) const;
 
     bool HaveTransaction(const uint256 &txhash) const;
 

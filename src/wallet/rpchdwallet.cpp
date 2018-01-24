@@ -411,7 +411,6 @@ int AccountInfo(CHDWallet *pwallet, CKeyID &keyId, int nShowKeys, bool fAllChain
     };
 
     CExtKeyAccount *pa = mi->second;
-
     return AccountInfo(pwallet, pa, nShowKeys, fAllChains, obj, sError);
 };
 
@@ -945,7 +944,7 @@ UniValue extkey(const JSONRPCRequest &request)
                 // Display default account
                 keyId = pwallet->idDefaultAccount;
             };
-        }
+        };
         if (keyId.IsNull())
             throw std::runtime_error(strprintf("Must specify ext key or id %s.", mode == "account" ? "or 'default'" : ""));
 

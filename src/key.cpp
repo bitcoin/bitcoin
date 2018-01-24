@@ -258,7 +258,7 @@ bool CKey::Derive(CKey& keyChild, unsigned char ccChild[32], unsigned int nChild
         assert(begin() + 32 == end());
         BIP32Hash(cc, nChild, 0, begin(), vout.data());
     };
-    
+
     memcpy(ccChild, vout.data()+32, 32);
     //bool ret = TweakSecret((unsigned char*)keyChild.begin(), begin(), out);
     memcpy((unsigned char*)keyChild.begin(), begin(), 32);

@@ -62,7 +62,7 @@ std::string DecodeDumpString(const std::string &str) {
     for (unsigned int pos = 0; pos < str.length(); pos++) {
         unsigned char c = str[pos];
         if (c == '%' && pos+2 < str.length()) {
-            c = (((str[pos+1]>>6)*9+((str[pos+1]-'0')&15)) << 4) | 
+            c = (((str[pos+1]>>6)*9+((str[pos+1]-'0')&15)) << 4) |
                 ((str[pos+2]>>6)*9+((str[pos+2]-'0')&15));
             pos += 2;
         }
@@ -491,7 +491,7 @@ UniValue importwallet(const JSONRPCRequest& request)
         pwallet->ShowProgress("", std::max(1, std::min(99, (int)(((double)file.tellg() / (double)nFilesize) * 100))));
         std::string line;
         std::getline(file, line);
-        
+
         if (line.rfind("# --- Begin JSON ---", 0) == 0)
         {
             fJson = true;
@@ -500,19 +500,19 @@ UniValue importwallet(const JSONRPCRequest& request)
         if (line.rfind("# --- End JSON ---", 0) == 0)
         {
             fJson = false;
-            
+
             if (!sJson.empty())
             {
                 std::string sError;
                 UniValue inj;
                 inj.read(sJson);
-                
+
                 if (!IsHDWallet(pwallet))
                     throw JSONRPCError(RPC_INVALID_PARAMETER, "Legacy wallet");
                 if (!GetHDWallet(pwallet)->LoadJson(inj, sError))
                     throw JSONRPCError(RPC_WALLET_ERROR, "LoadJson failed " + sError);
             };
-            
+
             continue;
         };
         if (fJson)
@@ -520,7 +520,7 @@ UniValue importwallet(const JSONRPCRequest& request)
             sJson += line;
             continue;
         };
-        
+
         if (line.empty() || line[0] == '#')
             continue;
 
@@ -606,6 +606,34 @@ UniValue dumpprivkey(const JSONRPCRequest& request)
     CBitcoinAddress address;
     if (!address.SetString(strAddress))
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Particl address");
+
+
+    if (address.IsValid()
+        && IsHDWallet(pwallet))
+    {
+        CTxDestination dest = address.Get();
+        if (dest.type() == typeid(CExtKeyPair))
+        {
+            CHDWallet *phdw = GetHDWallet(pwallet);
+            CExtKeyPair ek = boost::get<CExtKeyPair>(dest);
+            CKeyID id = ek.GetID();
+            CStoredExtKey sek;
+            if (!phdw->GetExtKey(id, sek))
+                throw JSONRPCError(RPC_WALLET_ERROR, "Private key for extaddress " + strAddress + " is not known");
+            CExtKey58 eKey58;
+
+            if (0 != phdw->ExtKeyUnlock(&sek))
+                throw JSONRPCError(RPC_WALLET_ERROR, "Unlock extaddress " + strAddress + " failed");
+
+            if (!sek.kp.IsValidV())
+                throw JSONRPCError(RPC_WALLET_ERROR, "Private key for extaddress " + strAddress + " is not known");
+
+            eKey58.SetKeyV(sek.kp);
+            return eKey58.ToString();
+        };
+    };
+
+
     CKeyID keyID;
     if (!address.GetKeyID(keyID))
         throw JSONRPCError(RPC_TYPE_ERROR, "Address does not refer to a key");
@@ -684,7 +712,7 @@ UniValue dumpwallet(const JSONRPCRequest& request)
     file << strprintf("#   mined on %s\n", EncodeDumpTime(chainActive.Tip()->GetBlockTime()));
     file << "\n";
 
-    // add the base58check encoded extended master if the wallet uses HD 
+    // add the base58check encoded extended master if the wallet uses HD
     CKeyID masterKeyID = pwallet->GetHDChain().masterKeyID;
     if (!masterKeyID.IsNull())
     {
@@ -720,22 +748,22 @@ UniValue dumpwallet(const JSONRPCRequest& request)
             file << strprintf(" # addr=%s%s\n", strAddr, (pwallet->mapKeyMetadata[keyid].hdKeypath.size() > 0 ? " hdkeypath="+pwallet->mapKeyMetadata[keyid].hdKeypath : ""));
         }
     }
-    
+
     if (IsHDWallet(pwallet))
     {
         std::string sError;
         file << "\n# --- Begin JSON --- \n";
-        
+
         UniValue rv(UniValue::VOBJ);
         if (!GetHDWallet(pwallet)->DumpJson(rv, sError))
             throw JSONRPCError(RPC_WALLET_ERROR, "DumpJson failed " + sError);
         file << rv.write(1);
-        
+
         file << "\n# --- End JSON --- \n";
     };
-    
-    
-    
+
+
+
     file << "\n";
     file << "# End of dump\n";
     file.close();

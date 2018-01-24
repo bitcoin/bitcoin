@@ -48,16 +48,22 @@ class ExtKeyTest(ParticlTestFramework):
         ro = node1.reservebalance(True, 10000000)
 
         ro = node1.extkeyimportmaster("drip fog service village program equip minute dentist series hawk crop sphere olympic lazy garbage segment fox library good alley steak jazz force inmate")
-        #print(ro)
+        assert(ro['account_id'] == 'ahL1QdHhzNCtZWJzv36ScfPipJP1cUzAD8')
 
         extAddrTo = node1.getnewextaddress()
-        #print(extAddrTo)
+        assert(extAddrTo == 'pparszNYZ1cpWxnNieFqHCV2rtXmG74a4WAXHHhXaRATzzU6kMixjy1rXDM1UM4LVgkXRpLNM1rQNvkgLf7kUeMXiyaBMK8aSR3td4b4cX4epnHF')
+
+        ro = node1.validateaddress(extAddrTo)
+        assert(ro['isvalid'] == True)
+        assert(ro['ismine'] == True)
+        assert(ro['isextkey'] == True)
+
+        ro = node1.dumpprivkey(extAddrTo)
+        assert(ro == 'xparFnnG7xJkEekTjWGumcEY1BKgryY4txW5Ce56KQPBJG7u3cNsUHxGgjVwHGEaxUGDAjT4SXv7fkWkp4TFaFHjaoZVh8Zricnwz3DjAxtqtmi')
 
         txnHash = node.sendtoaddress(extAddrTo, 10)
-        #print(txnHash)
 
         ro = node.getmempoolentry(txnHash)
-        #print("getmempoolentry",ro)
         assert(ro['height'] == 1)
 
         #ro = node.listtransactions()
@@ -92,7 +98,6 @@ class ExtKeyTest(ParticlTestFramework):
 
 
         txnHash2 = node.sendtoaddress(extAddrTo, 20, '', '', False, 'narration test')
-        print(txnHash2)
 
         assert(self.wait_for_mempool(node1, txnHash2))
 
