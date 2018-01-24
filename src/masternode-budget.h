@@ -12,8 +12,10 @@
 #include "util.h"
 #include "base58.h"
 #include "masternode.h"
-#include <boost/lexical_cast.hpp>
 #include "init.h"
+
+#include <boost/lexical_cast.hpp>
+#include <chrono>
 
 using namespace std;
 
@@ -426,12 +428,16 @@ public:
 
     bool IsValid(std::string& strError, bool fCheckCollateral=true);
 
-    bool IsEstablished() {
-        //Proposals must be at least a day old to make it into a budget
-        if(Params().NetworkID() == CBaseChainParams::MAIN) return (nTime < GetTime() - (60*60*24));
+    auto IsEstablished()
+    {
+        using namespace std::literals::chrono_literals;
+        using std::chrono::seconds;
 
-        //for testing purposes - 4 hours
-        return (nTime < GetTime() - (60*20));
+        //Proposals must be at least a day old to make it into a budget
+        if(Params().NetworkID() == CBaseChainParams::MAIN)
+            return (nTime < GetTime() - seconds(24h).count());
+        else
+            return (nTime < GetTime() - seconds(15min).count()); // 15 minutes for testing purposes
     }
 
     std::string GetName() {return strProposalName; }

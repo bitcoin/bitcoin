@@ -22,12 +22,25 @@ std::map<uint256, int64_t> askedForSourceProposalOrBudget;
 std::vector<CBudgetProposalBroadcast> vecImmatureBudgetProposals;
 std::vector<CFinalizedBudgetBroadcast> vecImmatureFinalizedBudgets;
 
-int GetBudgetPaymentCycleBlocks(){
-    // Amount of blocks in a months period of time (using 1 minutes per) = (60*24*30)/1
-    if(Params().NetworkID() == CBaseChainParams::MAIN) return 43200;
-    //for testing purposes
+auto BlocksBeforeSuperblockToSubmitFinalBudget()
+{
+    // Relatively 43200 / 30 = 1440, for testnet  - 8 blocks (cannot be less)
 
-    return 50; //ten times per day
+    if (Params().NetworkID() == CBaseChainParams::TESTNET)
+        return CAmount{8};          // aprox 12 mins
+    else
+        return CAmount{1440} * 2;   // aprox 2 days
+
+}
+
+auto GetBudgetPaymentCycleBlocks() -> int
+{
+    // Amount of blocks in a months period of time (using 1 minutes per) = (60*24*30)/1
+
+    if(Params().NetworkID() == CBaseChainParams::MAIN)
+        return 43200;
+    else
+        return 50; //for testing purposes
 }
 
 bool IsBudgetCollateralValid(uint256 nTxCollateralHash, uint256 nExpectedHash, std::string& strError, int64_t& nTime, int& nConf)
@@ -131,13 +144,11 @@ void CBudgetManager::SubmitFinalBudget()
     }
 
     int nBlockStart = nCurrentHeight - nCurrentHeight % GetBudgetPaymentCycleBlocks() + GetBudgetPaymentCycleBlocks();
-    if(nSubmittedHeight >= nBlockStart) return;
-    CAmount amount = 1440;
-    if (Params().NetworkID() == CBaseChainParams::TESTNET) {
-        // Relatively 43200 / 30 = 1440, for testnet 50 / 30 ~ 2
-        amount = 2;
-    }
-    if(nBlockStart - nCurrentHeight > amount*2) return; // allow submitting final budget only when 2 days left before payments
+    if(nSubmittedHeight >= nBlockStart)
+        return;
+
+    if(nBlockStart - nCurrentHeight > BlocksBeforeSuperblockToSubmitFinalBudget())
+        return; // allow submitting final budget only when 2 days left before payments
 
     std::vector<CBudgetProposal*> vBudgetProposals = budget.GetBudget();
     std::string strBudgetName = "main";
@@ -568,7 +579,8 @@ bool CBudgetManager::IsBudgetPaymentBlock(int nBlockHeight)
     /*
         If budget doesn't have 5% of the network votes, then we should pay a masternode instead
     */
-    if(nHighestCount > mnodeman.CountEnabled(MIN_BUDGET_PEER_PROTO_VERSION)/20) return true;
+    if(20*nHighestCount > mnodeman.CountEnabled(MIN_BUDGET_PEER_PROTO_VERSION))
+        return true;
 
     return false;
 }
@@ -621,7 +633,7 @@ bool CBudgetManager::IsTransactionValid(const CTransaction& txNew, int nBlockHei
         If budget doesn't have 5% of the network votes, then we should pay a masternode instead
     */
 
-    if(nHighestCount*20 < mnodeman.CountEnabled(MIN_BUDGET_PEER_PROTO_VERSION))
+    if(20*nHighestCount < mnodeman.CountEnabled(MIN_BUDGET_PEER_PROTO_VERSION))
         return false;
 
     // check the highest finalized budgets (+/- 10% to assist in consensus)
@@ -631,7 +643,7 @@ bool CBudgetManager::IsTransactionValid(const CTransaction& txNew, int nBlockHei
     {
         CFinalizedBudget* pfinalizedBudget = &((*it).second);
 
-        if((pfinalizedBudget->GetVoteCount() - nHighestCount)*10 > -mnodeman.CountEnabled(MIN_BUDGET_PEER_PROTO_VERSION)){
+        if(10*(nHighestCount - pfinalizedBudget->GetVoteCount()) < mnodeman.CountEnabled(MIN_BUDGET_PEER_PROTO_VERSION)){
             if(nBlockHeight >= pfinalizedBudget->GetBlockStart() && nBlockHeight <= pfinalizedBudget->GetBlockEnd()){
                 if(pfinalizedBudget->IsTransactionValid(txNew, nBlockHeight)){
                     return true;
