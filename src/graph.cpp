@@ -173,9 +173,12 @@ bool DAGTopologicalSort(std::vector<CTransaction>& blockVtx, const std::vector<i
 	}
 	
 	// add non sys tx's to end of newVtx
+	std::vector<vector<unsigned char> > vvchArgs;
+	int op;
+	int nOut;
 	for (unsigned int nOut = 1; nOut< blockVtx.size(); nOut++) {
 		const CTransaction& tx = blockVtx[nOut];
-		if (tx.nVersion != SYSCOIN_TX_VERSION)
+		if (tx.nVersion != SYSCOIN_TX_VERSION || (tx.nVersion == SYSCOIN_TX_VERSION && !DecodeAssetAllocationTx(tx, op, nOut, vvchArgs)))
 		{
 			newVtx.push_back(blockVtx[nOut]);
 		}
