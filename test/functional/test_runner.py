@@ -472,9 +472,8 @@ class TestResult():
 
 
 def check_script_prefixes():
-    """Check that no more than `EXPECTED_VIOLATION_COUNT` of the
+    """Check that at most a handful of the
        test scripts don't start with one of the allowed name prefixes."""
-    EXPECTED_VIOLATION_COUNT = 0
 
     # LEEWAY is provided as a transition measure, so that pull-requests
     # that introduce new tests that don't conform with the naming
@@ -484,13 +483,10 @@ def check_script_prefixes():
     good_prefixes_re = re.compile("(example|feature|interface|mempool|mining|p2p|rpc|wallet)_")
     bad_script_names = [script for script in ALL_SCRIPTS if good_prefixes_re.match(script) is None]
 
-    if len(bad_script_names) < EXPECTED_VIOLATION_COUNT:
-        print("{}HURRAY!{} Number of functional tests violating naming convention reduced!".format(BOLD[1], BOLD[0]))
-        print("Consider reducing EXPECTED_VIOLATION_COUNT from %d to %d" % (EXPECTED_VIOLATION_COUNT, len(bad_script_names)))
-    elif len(bad_script_names) > EXPECTED_VIOLATION_COUNT:
-        print("INFO: %d tests not meeting naming conventions (expected %d):" % (len(bad_script_names), EXPECTED_VIOLATION_COUNT))
+    if len(bad_script_names) > 0:
+        print("INFO: %d tests not meeting naming conventions:" % (len(bad_script_names)))
         print("  %s" % ("\n  ".join(sorted(bad_script_names))))
-        assert len(bad_script_names) <= EXPECTED_VIOLATION_COUNT + LEEWAY, "Too many tests not following naming convention! (%d found, expected: <= %d)" % (len(bad_script_names), EXPECTED_VIOLATION_COUNT)
+    assert len(bad_script_names) <= LEEWAY, "Too many tests not following naming convention! (%d found, maximum: %d)" % (len(bad_script_names), LEEWAY)
 
 
 def check_script_list(src_dir):
