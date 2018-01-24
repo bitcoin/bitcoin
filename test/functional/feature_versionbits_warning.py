@@ -7,17 +7,18 @@
 Generate chains with block versions that appear to be signalling unknown
 soft-forks, and test that warning alerts are generated.
 """
-
-from test_framework.mininode import *
-from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
+import os
 import re
-from test_framework.blocktools import create_block, create_coinbase
 
-VB_PERIOD = 144 # versionbits period length for regtest
-VB_THRESHOLD = 108 # versionbits activation threshold for regtest
+from test_framework.blocktools import create_block, create_coinbase
+from test_framework.messages import msg_block
+from test_framework.mininode import P2PInterface, network_thread_start
+from test_framework.test_framework import BitcoinTestFramework
+
+VB_PERIOD = 144           # versionbits period length for regtest
+VB_THRESHOLD = 108        # versionbits activation threshold for regtest
 VB_TOP_BITS = 0x20000000
-VB_UNKNOWN_BIT = 27 # Choose a bit unassigned to any deployment
+VB_UNKNOWN_BIT = 27       # Choose a bit unassigned to any deployment
 
 WARN_UNKNOWN_RULES_MINED = "Unknown block versions being mined! It's possible unknown rules are in effect"
 WARN_UNKNOWN_RULES_ACTIVE = "unknown new rules activated (versionbit {})".format(VB_UNKNOWN_BIT)
@@ -35,21 +36,21 @@ class VersionBitsWarningTest(BitcoinTestFramework):
     def setup_network(self):
         self.alert_filename = os.path.join(self.options.tmpdir, "alert.txt")
         # Open and close to create zero-length file
-        with open(self.alert_filename, 'w', encoding='utf8') as _:
+        with open(self.alert_filename, 'w', encoding='utf8'):
             pass
         self.extra_args = [["-alertnotify=echo %s >> \"" + self.alert_filename + "\""]]
         self.setup_nodes()
 
-    # Send numblocks blocks via peer with nVersionToUse set.
-    def send_blocks_with_version(self, peer, numblocks, nVersionToUse):
+    # Send numblocks blocks via peer with version set.
+    def send_blocks_with_version(self, peer, numblocks, version):
         tip = self.nodes[0].getbestblockhash()
         height = self.nodes[0].getblockcount()
-        block_time = self.nodes[0].getblockheader(tip)["time"]+1
+        block_time = self.nodes[0].getblockheader(tip)["time"] + 1
         tip = int(tip, 16)
 
         for _ in range(numblocks):
-            block = create_block(tip, create_coinbase(height+1), block_time)
-            block.nVersion = nVersionToUse
+            block = create_block(tip, create_coinbase(height + 1), block_time)
+            block.nVersion = version
             block.solve()
             peer.send_message(msg_block(block))
             block_time += 1
@@ -76,8 +77,8 @@ class VersionBitsWarningTest(BitcoinTestFramework):
 
         # 2. Now build one period of blocks on the tip, with < VB_THRESHOLD
         # blocks signaling some unknown bit.
-        nVersion = VB_TOP_BITS | (1<<VB_UNKNOWN_BIT)
-        self.send_blocks_with_version(self.nodes[0].p2p, VB_THRESHOLD-1, nVersion)
+        version = VB_TOP_BITS | (1 << VB_UNKNOWN_BIT)
+        self.send_blocks_with_version(self.nodes[0].p2p, VB_THRESHOLD - 1, version)
 
         # Fill rest of period with regular version blocks
         self.nodes[0].generate(VB_PERIOD - VB_THRESHOLD + 1)
@@ -88,7 +89,7 @@ class VersionBitsWarningTest(BitcoinTestFramework):
 
         # 3. Now build one period of blocks with >= VB_THRESHOLD blocks signaling
         # some unknown bit
-        self.send_blocks_with_version(self.nodes[0].p2p, VB_THRESHOLD, nVersion)
+        self.send_blocks_with_version(self.nodes[0].p2p, VB_THRESHOLD, version)
         self.nodes[0].generate(VB_PERIOD - VB_THRESHOLD)
         # Might not get a versionbits-related alert yet, as we should
         # have gotten a different alert due to more than 51/100 blocks
@@ -103,7 +104,7 @@ class VersionBitsWarningTest(BitcoinTestFramework):
         self.nodes[0].generate(VB_PERIOD)
         self.stop_nodes()
         # Empty out the alert file
-        with open(self.alert_filename, 'w', encoding='utf8') as _:
+        with open(self.alert_filename, 'w', encoding='utf8'):
             pass
         self.start_nodes()
 
