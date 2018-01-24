@@ -4,16 +4,24 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test that the wallet can send and receive using all combinations of address types.
 
-There are 4 nodes-under-test:
+There are 5 nodes-under-test:
     - node0 uses legacy addresses
     - node1 uses p2sh/segwit addresses
     - node2 uses p2sh/segwit addresses and bech32 addresses for change
     - node3 uses bech32 addresses
+    - node4 uses a p2sh/segwit addresses for change
 
-node4 exists to generate new blocks.
+node5 exists to generate new blocks.
 
-The script is a series of tests, iterating over the 4 nodes. In each iteration
-of the test, one node sends:
+## Multisig address test
+
+Test that adding a multisig address with:
+    - an uncompressed pubkey always gives a legacy address
+    - only compressed pubkeys gives the an `-addresstype` address
+
+## Sending to address types test
+
+A series of tests, iterating over node0-node4. In each iteration of the test, one node sends:
     - 10/101th of its balance to itself (using getrawchangeaddress for single key addresses)
     - 20/101th to the next node
     - 30/101th to the node after that
@@ -21,21 +29,51 @@ of the test, one node sends:
     - 1/101th remains as fee+change
 
 Iterate over each node for single key addresses, and then over each node for
-multisig addresses. In a second iteration, the same is done, but with explicit address_type
-parameters passed to getnewaddress and getrawchangeaddress. Node0 and node3 send to p2sh,
-node 1 sends to bech32, and node2 sends to legacy. As every node sends coins after receiving,
-this also verifies that spending coins sent to all these address types works."""
+multisig addresses.
+
+Repeat test, but with explicit address_type parameters passed to getnewaddress
+and getrawchangeaddress:
+    - node0 and node3 send to p2sh.
+    - node1 sends to bech32.
+    - node2 sends to legacy.
+
+As every node sends coins after receiving, this also
+verifies that spending coins sent to all these address types works.
+
+## Change type test
+
+Test that the nodes generate the correct change address type:
+    - node0 always uses a legacy change address.
+    - node1 uses a bech32 addresses for change if any destination address is bech32.
+    - node2 always uses a bech32 address for change
+    - node3 always uses a bech32 address for change
+    - node4 always uses p2sh/segwit output for change.
+"""
 
 from decimal import Decimal
 import itertools
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal, assert_greater_than, connect_nodes_bi, sync_blocks, sync_mempools
+from test_framework.util import (
+    assert_equal,
+    assert_greater_than,
+    assert_raises_rpc_error,
+    connect_nodes_bi,
+    sync_blocks,
+    sync_mempools,
+)
 
 class AddressTypeTest(BitcoinTestFramework):
     def set_test_params(self):
-        self.num_nodes = 5
-        self.extra_args = [["-addresstype=legacy"], ["-addresstype=p2sh-segwit"], ["-addresstype=p2sh-segwit", "-changetype=bech32"], ["-addresstype=bech32"], []]
+        self.num_nodes = 6
+        self.extra_args = [
+            ["-addresstype=legacy"],
+            ["-addresstype=p2sh-segwit"],
+            ["-addresstype=p2sh-segwit", "-changetype=bech32"],
+            ["-addresstype=bech32"],
+            ["-changetype=p2sh-segwit"],
+            []
+        ]
 
     def setup_network(self):
         self.setup_nodes()
@@ -104,10 +142,26 @@ class AddressTypeTest(BitcoinTestFramework):
             # Unknown type
             assert(False)
 
+    def test_change_output_type(self, node_sender, destinations, expected_type):
+        txid = self.nodes[node_sender].sendmany(fromaccount="", amounts=dict.fromkeys(destinations, 0.001))
+        raw_tx = self.nodes[node_sender].getrawtransaction(txid)
+        tx = self.nodes[node_sender].decoderawtransaction(raw_tx)
+
+        # Make sure the transaction has change:
+        assert_equal(len(tx["vout"]), len(destinations) + 1)
+
+        # Make sure the destinations are included, and remove them:
+        output_addresses = [vout['scriptPubKey']['addresses'][0] for vout in tx["vout"]]
+        change_addresses = [d for d in output_addresses if d not in destinations]
+        assert_equal(len(change_addresses), 1)
+
+        self.log.debug("Check if change address " + change_addresses[0] + " is " + expected_type)
+        self.test_address(node_sender, change_addresses[0], multisig=False, typ=expected_type)
+
     def run_test(self):
-        # Mine 101 blocks on node4 to bring nodes out of IBD and make sure that
+        # Mine 101 blocks on node5 to bring nodes out of IBD and make sure that
         # no coinbases are maturing for the nodes-under-test during the test
-        self.nodes[4].generate(101)
+        self.nodes[5].generate(101)
         sync_blocks(self.nodes)
 
         uncompressed_1 = "0496b538e853519c726a2c91e61ec11600ae1390813a627c66fb8be7947be63c52da7589379515d4e0a604f8141781e62294721166bf621e73a82cbf2342c858ee"
@@ -182,8 +236,8 @@ class AddressTypeTest(BitcoinTestFramework):
                 to_node %= 4
                 assert_equal(unconf_balances[to_node], to_send * 10 * (2 + n))
 
-            # node4 collects fee and block subsidy to keep accounting simple
-            self.nodes[4].generate(1)
+            # node5 collects fee and block subsidy to keep accounting simple
+            self.nodes[5].generate(1)
             sync_blocks(self.nodes)
 
             new_balances = self.get_balances()
@@ -194,6 +248,47 @@ class AddressTypeTest(BitcoinTestFramework):
             for n, to_node in enumerate(range(from_node + 1, from_node + 4)):
                 to_node %= 4
                 assert_equal(new_balances[to_node], old_balances[to_node] + to_send * 10 * (2 + n))
+
+        # Get one p2sh/segwit address from node2 and two bech32 addresses from node3:
+        to_address_p2sh = self.nodes[2].getnewaddress()
+        to_address_bech32_1 = self.nodes[3].getnewaddress()
+        to_address_bech32_2 = self.nodes[3].getnewaddress()
+
+        # Fund node 4:
+        self.nodes[5].sendtoaddress(self.nodes[4].getnewaddress(), Decimal("1"))
+        self.nodes[5].generate(1)
+        sync_blocks(self.nodes)
+        assert_equal(self.nodes[4].getbalance(), 1)
+
+        self.log.info("Nodes with addresstype=legacy never use a P2WPKH change output")
+        self.test_change_output_type(0, [to_address_bech32_1], 'legacy')
+
+        self.log.info("Nodes with addresstype=p2sh-segwit only use a P2WPKH change output if any destination address is bech32:")
+        self.test_change_output_type(1, [to_address_p2sh], 'p2sh-segwit')
+        self.test_change_output_type(1, [to_address_bech32_1], 'bech32')
+        self.test_change_output_type(1, [to_address_p2sh, to_address_bech32_1], 'bech32')
+        self.test_change_output_type(1, [to_address_bech32_1, to_address_bech32_2], 'bech32')
+
+        self.log.info("Nodes with change_type=bech32 always use a P2WPKH change output:")
+        self.test_change_output_type(2, [to_address_bech32_1], 'bech32')
+        self.test_change_output_type(2, [to_address_p2sh], 'bech32')
+
+        self.log.info("Nodes with addresstype=bech32 always use a P2WPKH change output (unless changetype is set otherwise):")
+        self.test_change_output_type(3, [to_address_bech32_1], 'bech32')
+        self.test_change_output_type(3, [to_address_p2sh], 'bech32')
+
+        self.log.info('getrawchangeaddress defaults to addresstype if -changetype is not set and argument is absent')
+        self.test_address(3, self.nodes[3].getrawchangeaddress(), multisig=False, typ='bech32')
+
+        self.log.info('getrawchangeaddress fails with invalid changetype argument')
+        assert_raises_rpc_error(-5, "Unknown address type 'bech23'", self.nodes[3].getrawchangeaddress, 'bech23')
+
+        self.log.info("Nodes with changetype=p2sh-segwit never use a P2WPKH change output")
+        self.test_change_output_type(4, [to_address_bech32_1], 'p2sh-segwit')
+        self.test_address(4, self.nodes[4].getrawchangeaddress(), multisig=False, typ='p2sh-segwit')
+        self.log.info("Except for getrawchangeaddress if specified:")
+        self.test_address(4, self.nodes[4].getrawchangeaddress(), multisig=False, typ='p2sh-segwit')
+        self.test_address(4, self.nodes[4].getrawchangeaddress('bech32'), multisig=False, typ='bech32')
 
 if __name__ == '__main__':
     AddressTypeTest().main()
