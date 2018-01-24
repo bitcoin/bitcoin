@@ -354,13 +354,23 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 	string strResponse = GetSyscoinTransactionDescription(op, strResponseEnglish, ASSETALLOCATION);
 	CAssetAllocation dbAssetAllocation;
 	CAsset dbAsset;
+	bool bRevert = false;
 	if (op == OP_ASSET_ALLOCATION_SEND)
 	{
-		if (!fJustCheck && !dontaddtodb) {
-			if (!RevertAssetAllocation(assetAllocationTuple, tx.GetHash(), revertedAssetAllocations))
-			{
-				errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to revert asset allocation DB");
-				return error(errorMessage.c_str());
+		if (!dontaddtodb) {
+			bRevert = !fJustCheck;
+			// if we already have this tx in our arrival list, we should just revert and replay it
+			ArrivalTimesMap arrivalTimes;
+			ReadISArrivalTimes(assetAllocationTuple, arrivalTimes);
+			ArrivalTimesMap::const_iterator it = arrivalTimes.find(tx.GetHash());
+			if (it != arrivalTimes.end())
+				bRevert = true;
+			if (bRevert) {
+				if (!RevertAssetAllocation(assetAllocationTuple, tx.GetHash(), revertedAssetAllocations))
+				{
+					errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to revert asset allocation DB");
+					return error(errorMessage.c_str());
+				}
 			}
 		}
 		if (!GetAssetAllocation(assetAllocationTuple, dbAssetAllocation))
@@ -404,7 +414,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 			CAmount nTotal = 0;
 			for (auto& amountTuple : theAssetAllocation.listSendingAllocationAmounts) {
 				// one of the first things we do per receiver is revert it to last pow state on the pow(!fJustCheck)
-				if (!fJustCheck && !dontaddtodb) {
+				if (bRevert) {
 					if (!RevertAssetAllocation(CAssetAllocationTuple(theAssetAllocation.vchAsset, amountTuple.first), tx.GetHash(), revertedAssetAllocations))
 					{
 						errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to revert asset allocation DB");
