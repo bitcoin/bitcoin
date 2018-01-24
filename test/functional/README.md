@@ -133,7 +133,7 @@ Each `TestInstance` consists of:
     acceptance is tested against the given outcome.
 
 - For examples of tests written in this framework, see
-  `invalidblockrequest.py` and `p2p-fullblocktest.py`.
+  `invalidblockrequest.py` and `feature_block.py`.
 
 ### test-framework modules
 
