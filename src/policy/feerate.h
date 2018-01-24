@@ -14,7 +14,7 @@
 extern const std::string CURRENCY_UNIT;
 
 /**
- * Fee rate in satoshis per kilobyte: CAmount / kB
+ * Fee rate in satoshis per kilovbyte: CAmount / kvB
  */
 class CFeeRate
 {
@@ -22,14 +22,14 @@ private:
     CAmount nSatoshisPerK; // unit is satoshis-per-1,000-bytes
 
 public:
-    /** Fee rate of 0 satoshis per kB */
+    /** Fee rate of 0 satoshis per kvB */
     CFeeRate() : nSatoshisPerK(0) { }
     template<typename I>
     CFeeRate(const I _nSatoshisPerK): nSatoshisPerK(_nSatoshisPerK) {
         // We've previously had bugs creep in from silent double->int conversion...
         static_assert(std::is_integral<I>::value, "CFeeRate should be used without floats");
     }
-    /** Constructor for a fee rate in satoshis per kB. The size in bytes must not exceed (2^63 - 1)*/
+    /** Constructor for a fee rate in satoshis per kvB. The size in bytes must not exceed (2^63 - 1)*/
     CFeeRate(const CAmount& nFeePaid, size_t nBytes);
     /**
      * Return the fee in satoshis for the given size in bytes.

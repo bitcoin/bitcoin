@@ -18,7 +18,7 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 "-maxtxfee is set very high! Fees this large could be paid on a single "
 "transaction."),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
-"A fee rate (in %s/kB) that will be used when fee estimation has insufficient "
+"A fee rate (in %s/kvB) that will be used when fee estimation has insufficient "
 "data (default: %s)"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Accept relayed transactions received from whitelisted peers even when not "
@@ -87,10 +87,10 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Extra transactions to keep in memory for compact block reconstructions "
 "(default: %u)"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
-"Fees (in %s/kB) smaller than this are considered zero fee for relaying, "
+"Fees (in %s/kvB) smaller than this are considered zero fee for relaying, "
 "mining and transaction creation (default: %s)"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
-"Fees (in %s/kB) smaller than this are considered zero fee for transaction "
+"Fees (in %s/kvB) smaller than this are considered zero fee for transaction "
 "creation (default: %s)"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Force relay of transactions from whitelisted peers even if they violate "
@@ -157,7 +157,7 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Rescans are not possible in pruned mode. You will need to use -reindex which "
 "will download the whole blockchain again."),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
-"Set lowest fee rate (in %s/kB) for transactions to be included in block "
+"Set lowest fee rate (in %s/kvB) for transactions to be included in block "
 "creation. (default: %s)"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Set the number of script verification threads (%u to %d, 0 = auto, <0 = "
@@ -173,7 +173,7 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 "rebuild the block database if you are sure that your computer's date and "
 "time are correct"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
-"The fee rate (in %s/kB) that indicates your tolerance for discarding change "
+"The fee rate (in %s/kvB) that indicates your tolerance for discarding change "
 "by adding it to the fee (default: %s). Note: An output is discarded if it is "
 "dust at this rate, but we will always discard up to the dust relay fee and a "
 "discard fee above that is limited by the fee estimate for the longest target"),
@@ -306,7 +306,7 @@ QT_TRANSLATE_NOOP("bitcoin-core", "Error"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Error: A fatal internal error occurred, see debug.log for details"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Error: Disk space is low!"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Failed to listen on any port. Use -listen=0 if you want this."),
-QT_TRANSLATE_NOOP("bitcoin-core", "Fee (in %s/kB) to add to transactions you send (default: %s)"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Fee (in %s/kvB) to add to transactions you send (default: %s)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "How many blocks to check at startup (default: %u, 0 = all)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Importing..."),
 QT_TRANSLATE_NOOP("bitcoin-core", "Imports blocks from external blk000??.dat file on startup"),
