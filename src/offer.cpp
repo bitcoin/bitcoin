@@ -338,7 +338,7 @@ bool RevertOffer(const std::vector<unsigned char>& vchOffer, const int op, const
 	return true;
 
 }
-bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const std::vector<unsigned char> &vvchAlias, bool fJustCheck, int nHeight, string &errorMessage, bool dontaddtodb) {
+bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const std::vector<unsigned char> &vvchAlias, bool fJustCheck, int nHeight, sorted_vector<std::vector<unsigned char> > &revertedOffers, string &errorMessage, bool dontaddtodb) {
 	if (!pofferdb || !paliasdb)
 		return false;
 	if (tx.IsCoinBase() && !fJustCheck && !dontaddtodb)
