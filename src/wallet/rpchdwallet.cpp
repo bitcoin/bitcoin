@@ -1508,10 +1508,10 @@ UniValue extkeyimportinternal(const JSONRPCRequest &request, bool fGenesisChain)
     std::string sLblAccount = "Default Account";
     std::string sPassphrase = "";
     std::string sError;
+    int64_t nScanFrom = 1;
 
     if (request.params.size() > 1)
         sPassphrase = request.params[1].get_str();
-
 
     if (request.params.size() > 2)
     {
@@ -1525,8 +1525,19 @@ UniValue extkeyimportinternal(const JSONRPCRequest &request, bool fGenesisChain)
         sLblMaster = request.params[3].get_str();
     if (request.params.size() > 4)
         sLblAccount = request.params[4].get_str();
-    if (request.params.size() > 5)
-        throw std::runtime_error(strprintf("Unknown parameter '%s'", request.params[5].get_str()));
+
+    if (request.params[5].isStr())
+    {
+        std::string s = request.params[5].get_str();
+        if (!ParseInt64(s, &nScanFrom))
+            throw std::runtime_error(strprintf("Unknown argument for scan_chain_from: %s.", s.c_str()));
+    } else
+    if (request.params[5].isNum())
+    {
+        nScanFrom = request.params[5].get_int64();
+    };
+    if (request.params.size() > 6)
+        throw std::runtime_error(strprintf("Unknown parameter '%s'", request.params[6].get_str()));
 
     LogPrintf("Importing master key and account with labels '%s', '%s'.\n", sLblMaster.c_str(), sLblAccount.c_str());
 
@@ -1628,7 +1639,7 @@ UniValue extkeyimportinternal(const JSONRPCRequest &request, bool fGenesisChain)
         };
     } // cs_wallet
 
-    if (0 != pwallet->ScanChainFromTime(1))
+    if (0 != pwallet->ScanChainFromTime(nScanFrom))
         throw std::runtime_error("ScanChainFromTime failed.");
 
     CBitcoinAddress addr;
@@ -1648,7 +1659,7 @@ UniValue extkeyimportinternal(const JSONRPCRequest &request, bool fGenesisChain)
 UniValue extkeyimportmaster(const JSONRPCRequest &request)
 {
     static const char *help = ""
-        "extkeyimportmaster <mnemonic/key> [passphrase] [save_bip44_root] [master_label] [account_label]\n"
+        "extkeyimportmaster <mnemonic/key> [passphrase] [save_bip44_root] [master_label] [account_label] [scan_chain_from]\n"
         "Import master key from bip44 mnemonic root key and derive default account.\n"
         "       Use '-stdin' to be prompted to enter a passphrase.\n"
         "       if mnemonic is blank, defaults to '-stdin'.\n"
@@ -1657,6 +1668,7 @@ UniValue extkeyimportmaster(const JSONRPCRequest &request)
         "   save_bip44_root:    Save bip44 root key to wallet - default false.\n"
         "   master_label:       Label for master key - default 'Master Key'.\n"
         "   account_label:      Label for account - default 'Default Account'.\n"
+        "   scan_chain_from:    Scan the blockchain from blocks after timestamp - default 1.\n"
         "Examples:\n"
         "   extkeyimportmaster -stdin -stdin false label_master label_account\n"
         "\n";
@@ -1672,7 +1684,7 @@ UniValue extkeyimportmaster(const JSONRPCRequest &request)
 UniValue extkeygenesisimport(const JSONRPCRequest &request)
 {
     static const char *help = ""
-        "extkeygenesisimport <mnemonic/key> [passphrase] [save_bip44_root] [master_label] [account_label]\n"
+        "extkeygenesisimport <mnemonic/key> [passphrase] [save_bip44_root] [master_label] [account_label] [scan_chain_from]\n"
         "Import master key from bip44 mnemonic root key and derive default account.\n"
         "Derives an extra chain from path 444444 to receive imported coin.\n"
         "       Use '-stdin' to be prompted to enter a passphrase.\n"
@@ -1682,6 +1694,7 @@ UniValue extkeygenesisimport(const JSONRPCRequest &request)
         "   save_bip44_root:    Save bip44 root key to wallet - default false.\n"
         "   master_label:       Label for master key - default 'Master Key'.\n"
         "   account_label:      Label for account - default 'Default Account'.\n"
+        "   scan_chain_from:    Scan the blockchain from blocks after timestamp - default 1.\n"
         "Examples:\n"
         "   extkeygenesisimport -stdin -stdin false label_master label_account\n"
         "\n";
@@ -5748,8 +5761,8 @@ static const CRPCCommand commands[] =
 { //  category              name                        actor (function)           okSafeMode
   //  --------------------- ------------------------    -----------------------    ----------
     { "wallet",             "extkey",                   &extkey,                   false,  {} },
-    { "wallet",             "extkeyimportmaster",       &extkeyimportmaster,       false,  {"source","passphrase","save_bip44_root","master_label","account_label"} }, // import, set as master, derive account, set default account, force users to run mnemonic new first make them copy the key
-    { "wallet",             "extkeygenesisimport",      &extkeygenesisimport,      false,  {"source","passphrase","save_bip44_root","master_label","account_label"} },
+    { "wallet",             "extkeyimportmaster",       &extkeyimportmaster,       false,  {"source","passphrase","save_bip44_root","master_label","account_label", "scan_chain_from"} }, // import, set as master, derive account, set default account, force users to run mnemonic new first make them copy the key
+    { "wallet",             "extkeygenesisimport",      &extkeygenesisimport,      false,  {"source","passphrase","save_bip44_root","master_label","account_label", "scan_chain_from"} },
     { "wallet",             "keyinfo",                  &keyinfo,                  false,  {"key","show_secret"} },
     { "wallet",             "extkeyaltversion",         &extkeyaltversion,         false,  {"ext_key"} },
     { "wallet",             "getnewextaddress",         &getnewextaddress,         false,  {"label","childNo"} },
