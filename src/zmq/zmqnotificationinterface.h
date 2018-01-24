@@ -24,6 +24,8 @@ protected:
     bool Initialize();
     void Shutdown();
 
+    void TransactionAddedToWallet(const CTransactionRef& tx, const uint256 &hashBlock);
+
     // CValidationInterface
     void TransactionAddedToMempool(const CTransactionRef& tx) override;
     void BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexConnected, const std::vector<CTransactionRef>& vtxConflicted) override;

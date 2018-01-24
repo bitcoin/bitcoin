@@ -34,6 +34,7 @@ public:
 
     virtual bool NotifyBlock(const CBlockIndex *pindex);
     virtual bool NotifyTransaction(const CTransaction &transaction);
+    virtual bool NotifyWalletTransaction(const CTransaction &transaction, const uint256 &hashBlock);
 
 protected:
     void *psocket;
