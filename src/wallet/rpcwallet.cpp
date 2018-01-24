@@ -469,7 +469,7 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
 		numResults = aliasunspent(vchAlias, aliasOutPoint) - 1;
 		if (numResults < 0)
 			numResults = 0;
-		if ((numResults > 0 && numResults >= (MAX_ALIAS_UPDATES_PER_BLOCK - 1)) || bAliasRegistration)
+		if (numResults > 0 || bAliasRegistration)
 			numResults = MAX_ALIAS_UPDATES_PER_BLOCK - 1;
 		if (transferAlias)
 			numResults = 0;
@@ -529,12 +529,6 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
 	bool bNeedNewAliasPaymentInputs = numFeeCoinsLeft <= 0;
 	if (bNeedNewAliasPaymentInputs && !bAliasRegistration && !aliasRecipient.scriptPubKey.empty())
 	{
-		// create utxo minimum 1kb worth of fees
-		if ((op == OP_ALIAS_ACTIVATE && vvch.size() > 1) || op != OP_ALIAS_ACTIVATE) {
-			CAmount nMinFee = minRelayTxFee.GetFee(3000);
-			if (aliasFeePlaceholderRecipient.nAmount < nMinFee)
-				aliasFeePlaceholderRecipient.nAmount = nMinFee;
-		}
 		for (unsigned int i = 0; i<MAX_ALIAS_UPDATES_PER_BLOCK; i++)
 		{
 			vecSend.push_back(aliasFeePlaceholderRecipient);
