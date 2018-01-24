@@ -14,95 +14,12 @@
 #include <boost/lexical_cast.hpp>
 #include <iterator>
 
-#include "graph.h"
 using namespace std;
 BOOST_GLOBAL_FIXTURE( SyscoinTestingSetup );
 
 BOOST_FIXTURE_TEST_SUITE (syscoin_alias_tests, BasicSyscoinTestingSetup)
 const unsigned int MAX_ALIAS_UPDATES_PER_BLOCK = 5;
 
-template <typename Graph>
-void build_graph(Graph& graph) {
-	typedef boost::graph_traits<Graph> Traits;
-	typedef typename Traits::vertex_descriptor vertex_descriptor;
-	std::map<unsigned int, vertex_descriptor> vertices;
-
-	unsigned int nvertices = 16;
-	for (unsigned int i = 0; i < nvertices; ++i)
-		vertices[i] = add_vertex(graph);
-
-	boost::add_edge(vertices[0], vertices[2], graph);
-	boost::add_edge(vertices[0], vertices[10], graph);
-	boost::add_edge(vertices[0], vertices[14], graph);
-	boost::add_edge(vertices[1], vertices[5], graph);
-	boost::add_edge(vertices[1], vertices[8], graph);
-	boost::add_edge(vertices[2], vertices[7], graph);
-	boost::add_edge(vertices[2], vertices[9], graph);
-	boost::add_edge(vertices[3], vertices[3], graph);
-	boost::add_edge(vertices[3], vertices[4], graph);
-	boost::add_edge(vertices[3], vertices[6], graph);
-	boost::add_edge(vertices[4], vertices[5], graph);
-	boost::add_edge(vertices[4], vertices[13], graph);
-	boost::add_edge(vertices[4], vertices[15], graph);
-	boost::add_edge(vertices[6], vertices[13], graph);
-	boost::add_edge(vertices[8], vertices[0], graph);
-	boost::add_edge(vertices[8], vertices[4], graph);
-	boost::add_edge(vertices[8], vertices[8], graph);
-	boost::add_edge(vertices[9], vertices[9], graph);
-	boost::add_edge(vertices[10], vertices[7], graph);
-	boost::add_edge(vertices[10], vertices[11], graph);
-	boost::add_edge(vertices[11], vertices[6], graph);
-	boost::add_edge(vertices[12], vertices[1], graph);
-	boost::add_edge(vertices[12], vertices[1], graph);
-	boost::add_edge(vertices[12], vertices[2], graph);
-	boost::add_edge(vertices[12], vertices[10], graph);
-	boost::add_edge(vertices[12], vertices[12], graph);
-	boost::add_edge(vertices[12], vertices[14], graph);
-	boost::add_edge(vertices[13], vertices[3], graph);
-	boost::add_edge(vertices[13], vertices[12], graph);
-	boost::add_edge(vertices[13], vertices[15], graph);
-	boost::add_edge(vertices[14], vertices[11], graph);
-	boost::add_edge(vertices[15], vertices[0], graph);
-
-	BOOST_ASSERT(num_vertices(graph) == nvertices);
-
-	sorted_vector<int> clearedVertices;
-	cycle_visitor<sorted_vector<int> > visitor(clearedVertices);
-	boost::hawick_circuits(graph, visitor);
-	printf("Found %d circuits\n", clearedVertices.size());
-	for(auto &vert: clearedVertices)
-		boost::clear_out_edges(vertices[vert], graph);
-}
-template <typename Graph>
-void sort_graph(Graph& graph) {
-	typedef boost::graph_traits<Graph> Traits;
-	typedef typename Traits::vertex_descriptor vertex_descriptor;
-	typedef typename std::vector< vertex_descriptor > container;
-	typedef typename boost::property_map<Graph, boost::vertex_index_t>::const_type IndexMap;
-
-	container c;
-	boost::topological_sort(graph, std::back_inserter(c));
-
-	ostringstream topstream;
-	const IndexMap &indices = get(boost::vertex_index, (const Graph &)graph);
-	printf("A topological ordering: ");
-	std::reverse(c.begin(), c.end());
-	for (auto& i : c) {
-		topstream << get(indices, i) << " ";
-	}
-	printf(topstream.str().c_str());
-
-}
-BOOST_AUTO_TEST_CASE(generate_graph_topological_sort) {
-	printf("Running generate_graph_topological_sort...\n");
-	typedef boost::adjacency_list< boost::vecS, boost::vecS, boost::directedS > Graph;
-	Graph graph;
-	build_graph(graph);
-	sort_graph(graph);
-	exit(0);
-
-
-}
 BOOST_AUTO_TEST_CASE (generate_big_aliasdata)
 {
 	UniValue r;
@@ -187,7 +104,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasupdate)
 
 }
 
-/*BOOST_AUTO_TEST_CASE (generate_aliasmultiupdate)
+BOOST_AUTO_TEST_CASE (generate_aliasmultiupdate)
 {
 	printf("Running generate_aliasmultiupdate...\n");
 	GenerateBlocks(1);
@@ -270,7 +187,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasupdate)
 	GenerateBlocks(10, "node1");
 	hex_str = AliasUpdate("node1", "jagmultiupdate", "changeddata11");
 	BOOST_CHECK(hex_str.empty());
-}*/
+}
 
 BOOST_AUTO_TEST_CASE (generate_sendmoneytoalias)
 {
@@ -380,7 +297,7 @@ BOOST_AUTO_TEST_CASE (generate_aliaspay)
 
 	// update aliases afterwards, there should be MAX_ALIAS_UPDATES_PER_BLOCK UTXOs again after update
 	// alias1 was only funded with 10 sys which gets used in the 5th update, 1 was used above in aliasupdate, while alias2/alias3 have more fund utxos so they can do more updates without a block
-	/*for (unsigned int i = 0; i < MAX_ALIAS_UPDATES_PER_BLOCK - 1; i++)
+	for (unsigned int i = 0; i < MAX_ALIAS_UPDATES_PER_BLOCK - 1; i++)
 	{
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasupdate alias1.aliaspay.tld changedata1 " + oldAddressStr1 + " 3 " + " 0 " + encryptionprivkey1 + " " + encryptionkey1 + " ''"));
 		UniValue varray = r.get_array();
@@ -408,7 +325,7 @@ BOOST_AUTO_TEST_CASE (generate_aliaspay)
 		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "signrawtransaction " + varray[0].get_str()));
 		BOOST_CHECK_NO_THROW(CallRPC("node3", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
 	}
-	BOOST_CHECK_THROW(r = CallRPC("node3", "aliasupdate alias3.aliaspay.tld changedata3 " + oldAddressStr3 + " 3 " + " 0 " + encryptionprivkey3 + " " + encryptionkey3 + " ''"), runtime_error);*/
+	BOOST_CHECK_THROW(r = CallRPC("node3", "aliasupdate alias3.aliaspay.tld changedata3 " + oldAddressStr3 + " 3 " + " 0 " + encryptionprivkey3 + " " + encryptionkey3 + " ''"), runtime_error);
 	GenerateBlocks(10, "node1");
 	GenerateBlocks(10, "node2");
 	GenerateBlocks(10, "node3");
