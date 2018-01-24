@@ -149,3 +149,47 @@ GCSFilter::GCSFilter(uint64_t siphash_k0, uint64_t siphash_k1, uint8_t P, uint32
 
     bitwriter.Flush();
 }
+
+bool GCSFilter::MatchInternal(const uint64_t* element_hashes, size_t size) const
+{
+    VectorReader stream(GCS_SER_TYPE, GCS_SER_VERSION, m_encoded, 0);
+
+    // Seek forward by size of N
+    uint64_t N = ReadCompactSize(stream);
+    assert(N == m_N);
+
+    BitStreamReader<VectorReader> bitreader(stream);
+
+    uint64_t value = 0;
+    size_t hashes_index = 0;
+    for (uint32_t i = 0; i < m_N; ++i) {
+        uint64_t delta = GolombRiceDecode(bitreader, m_P);
+        value += delta;
+
+        while (true) {
+            if (hashes_index == size) {
+                return false;
+            } else if (element_hashes[hashes_index] == value) {
+                return true;
+            } else if (element_hashes[hashes_index] > value) {
+                break;
+            }
+
+            hashes_index++;
+        }
+    }
+
+    return false;
+}
+
+bool GCSFilter::Match(const Element& element) const
+{
+    uint64_t query = HashToRange(element);
+    return MatchInternal(&query, 1);
+}
+
+bool GCSFilter::MatchAny(const ElementSet& elements) const
+{
+    const std::vector<uint64_t> queries = BuildHashedSet(elements);
+    return MatchInternal(queries.data(), queries.size());
+}
