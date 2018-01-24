@@ -95,12 +95,11 @@ class SegWitTest(BitcoinTestFramework):
         for i in range(3):
             newaddress = self.nodes[i].getnewaddress()
             self.pubkey.append(self.nodes[i].validateaddress(newaddress)["pubkey"])
-            multiaddress = self.nodes[i].addmultisigaddress(1, [self.pubkey[-1]])['address']
             multiscript = CScript([OP_1, hex_str_to_bytes(self.pubkey[-1]), OP_1, OP_CHECKMULTISIG])
             p2sh_addr = self.nodes[i].addwitnessaddress(newaddress)
             bip173_addr = self.nodes[i].addwitnessaddress(newaddress, False)
-            p2sh_ms_addr = self.nodes[i].addwitnessaddress(multiaddress)
-            bip173_ms_addr = self.nodes[i].addwitnessaddress(multiaddress, False)
+            p2sh_ms_addr = self.nodes[i].addmultisigaddress(1, [self.pubkey[-1]], '', 'p2sh-segwit')['address']
+            bip173_ms_addr = self.nodes[i].addmultisigaddress(1, [self.pubkey[-1]], '', 'bech32')['address']
             assert_equal(p2sh_addr, key_to_p2sh_p2wpkh(self.pubkey[-1]))
             assert_equal(bip173_addr, key_to_p2wpkh(self.pubkey[-1]))
             assert_equal(p2sh_ms_addr, script_to_p2sh_p2wsh(multiscript))
