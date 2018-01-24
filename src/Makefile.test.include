@@ -193,7 +193,7 @@ endif
 	} > "$@.new" && mv -f "$@.new" "$@"
 	@echo "Generated $@"
 
-alertTests.raw.h: alertTests.raw
+test/data/alertTests.raw.h: test/data/alertTests.raw
 	@$(MKDIR_P) $(@D)
 	@{ \
 	 echo "static unsigned const char $(*F)[] = {" && \
