@@ -14,6 +14,11 @@ from test_framework.util import *
 from test_framework.blocktools import create_block, create_coinbase, add_witness_commitment
 from test_framework.script import CScript, OP_TRUE
 
+# Maximum number of parallel compact-blocks-in-flight bitcoind allows
+MAX_CMPCTBLOCKS_INFLIGHT_PER_BLOCK = 2
+# Maximum number of missing txn in a compact block for parallel downloads
+MAX_GETBLOCKTXN_TXN_AFTER_FIRST_IN_FLIGHT = 10
+
 # TestNode: A peer we use to send messages to bitcoind, and store responses.
 class TestNode(P2PInterface):
     def __init__(self):
@@ -737,7 +742,7 @@ class CompactBlocksTest(BitcoinTestFramework):
         msg.announce = True
         peer.send_and_ping(msg)
 
-    def test_compactblock_reconstruction_multiple_peers(self, node, stalling_peer, delivery_peer):
+    def test_compactblock_reconstruction_stalling_peer(self, node, stalling_peer, delivery_peer):
         assert(len(self.utxos))
 
         def announce_cmpct_block(node, peer):
@@ -784,6 +789,63 @@ class CompactBlocksTest(BitcoinTestFramework):
         msg.block_transactions.blockhash = block.sha256
         msg.block_transactions.transactions = block.vtx[1:]
         stalling_peer.send_and_ping(msg)
+        assert_equal(int(node.getbestblockhash(), 16), block.sha256)
+
+    def test_compactblock_reconstruction_parallel_reconstruction(self, node, stalling_peer, delivery_peer):
+        assert(len(self.utxos))
+
+        def announce_cmpct_block(node, peer, txn_count):
+            utxo = self.utxos.pop(0)
+            block = self.build_block_with_transactions(node, utxo, txn_count)
+
+            cmpct_block = HeaderAndShortIDs()
+            cmpct_block.initialize_from_block(block)
+            msg = msg_cmpctblock(cmpct_block.to_p2p())
+            peer.send_and_ping(msg)
+            with mininode_lock:
+                assert "getblocktxn" in peer.last_message
+            return block, cmpct_block
+
+        # Test the simple parallel download case...
+        block, cmpct_block = announce_cmpct_block(node, stalling_peer, MAX_GETBLOCKTXN_TXN_AFTER_FIRST_IN_FLIGHT)
+
+        delivery_peer.send_and_ping(msg_cmpctblock(cmpct_block.to_p2p()))
+        with mininode_lock:
+            # The second peer to announce should still get a getblocktxn
+            assert "getblocktxn" in delivery_peer.last_message
+        assert(int(node.getbestblockhash(), 16) != block.sha256)
+
+        msg = msg_blocktxn()
+        msg.block_transactions.blockhash = block.sha256
+        msg.block_transactions.transactions = block.vtx[1:]
+        delivery_peer.send_and_ping(msg)
+        assert_equal(int(node.getbestblockhash(), 16), block.sha256)
+
+        # Nothing bad should happen if we get a late fill from the first peer...
+        stalling_peer.send_and_ping(msg)
+
+        self.utxos.append([block.vtx[-1].sha256, 0, block.vtx[-1].vout[0].nValue])
+
+        # Now test that parallel downloads are not allowed if they would require too many transactions
+        with mininode_lock:
+            # We're gonna wanna check that stalling_peer didn't send us a getblocktxn in a second
+            del stalling_peer.last_message["getblocktxn"]
+
+        block, cmpct_block = announce_cmpct_block(node, delivery_peer, MAX_GETBLOCKTXN_TXN_AFTER_FIRST_IN_FLIGHT + 1)
+
+        stalling_peer.send_and_ping(msg_cmpctblock(cmpct_block.to_p2p()))
+        with mininode_lock:
+            # The second peer to announce should not get a getblocktxn this time
+            assert "getblocktxn" not in stalling_peer.last_message
+
+        msg = msg_blocktxn()
+        msg.block_transactions.blockhash = block.sha256
+        msg.block_transactions.transactions = block.vtx[1:]
+        stalling_peer.send_and_ping(msg)
+
+        assert(int(node.getbestblockhash(), 16) != block.sha256)
+
+        delivery_peer.send_and_ping(msg)
         assert_equal(int(node.getbestblockhash(), 16), block.sha256)
 
     def run_test(self):
@@ -858,8 +920,11 @@ class CompactBlocksTest(BitcoinTestFramework):
         self.test_invalid_tx_in_compactblock(self.nodes[1], self.segwit_node, False)
         self.test_invalid_tx_in_compactblock(self.nodes[1], self.old_node, False)
 
-        self.log.info("Testing reconstructing compact blocks from all peers...")
-        self.test_compactblock_reconstruction_multiple_peers(self.nodes[1], self.segwit_node, self.old_node)
+        self.log.info("Testing reconstructing compact blocks with a stalling peer...")
+        self.test_compactblock_reconstruction_stalling_peer(self.nodes[1], self.segwit_node, self.old_node)
+
+        self.log.info("Testing reconstructing compact blocks from multiple peers...")
+        self.test_compactblock_reconstruction_parallel_reconstruction(self.nodes[1], self.segwit_node, self.old_node)
         sync_blocks(self.nodes)
 
         # Advance to segwit activation
