@@ -4,6 +4,8 @@
 
 #include <blockfilter.h>
 #include <hash.h>
+#include <primitives/transaction.h>
+#include <script/script.h>
 #include <streams.h>
 
 /// SerType used to serialize parameters in GCS filter encoding.
@@ -192,4 +194,42 @@ bool GCSFilter::MatchAny(const ElementSet& elements) const
 {
     const std::vector<uint64_t> queries = BuildHashedSet(elements);
     return MatchInternal(queries.data(), queries.size());
+}
+
+static GCSFilter::ElementSet BasicFilterElements(const CBlock& block,
+                                                 const CBlockUndo& block_undo)
+{
+    GCSFilter::ElementSet elements;
+
+    for (const CTransactionRef& tx : block.vtx) {
+        for (const CTxOut& txout : tx->vout) {
+            const CScript& script = txout.scriptPubKey;
+            if (script[0] == OP_RETURN) continue;
+            elements.emplace(script.begin(), script.end());
+        }
+    }
+
+    for (const CTxUndo& tx_undo : block_undo.vtxundo) {
+        for (const Coin& prevout : tx_undo.vprevout) {
+            const CScript& script = prevout.out.scriptPubKey;
+            elements.emplace(script.begin(), script.end());
+        }
+    }
+
+    return elements;
+}
+
+BlockFilter::BlockFilter(BlockFilterType filter_type, const CBlock& block, const CBlockUndo& block_undo)
+    : m_filter_type(filter_type), m_block_hash(block.GetHash())
+{
+    switch (m_filter_type) {
+    case BlockFilterType::BASIC:
+        m_filter = GCSFilter(m_block_hash.GetUint64(0), m_block_hash.GetUint64(1),
+                             BASIC_FILTER_P, BASIC_FILTER_M,
+                             BasicFilterElements(block, block_undo));
+        break;
+
+    default:
+        throw std::invalid_argument("unknown filter_type");
+    }
 }
