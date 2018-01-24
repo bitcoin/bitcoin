@@ -159,6 +159,7 @@ EXTENDED_SCRIPTS = [
     'assumevalid.py',
     'example_test.py',
     'txn_doublespend.py',
+    'backwards_compatibility.py',
     'txn_clone.py --mineblock',
     'notifications.py',
     'invalidateblock.py',
