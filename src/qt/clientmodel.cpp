@@ -78,12 +78,10 @@ int ClientModel::getNumBlocks() const
 int ClientModel::getHeaderTipHeight() const
 {
     if (cachedBestHeaderHeight == -1) {
-        // make sure we initially populate the cache via a cs_main lock
-        // otherwise we need to wait for a tip update
-        LOCK(cs_main);
-        if (pindexBestHeader) {
-            cachedBestHeaderHeight = pindexBestHeader->nHeight;
-            cachedBestHeaderTime = pindexBestHeader->GetBlockTime();
+        const CBlockIndex* best_header = GetBestHeader();
+        if (best_header) {
+            cachedBestHeaderHeight = best_header->nHeight;
+            cachedBestHeaderTime = best_header->GetBlockTime();
         }
     }
     return cachedBestHeaderHeight;
@@ -92,10 +90,10 @@ int ClientModel::getHeaderTipHeight() const
 int64_t ClientModel::getHeaderTipTime() const
 {
     if (cachedBestHeaderTime == -1) {
-        LOCK(cs_main);
-        if (pindexBestHeader) {
-            cachedBestHeaderHeight = pindexBestHeader->nHeight;
-            cachedBestHeaderTime = pindexBestHeader->GetBlockTime();
+        const CBlockIndex* best_header = GetBestHeader();
+        if (best_header) {
+            cachedBestHeaderHeight = best_header->nHeight;
+            cachedBestHeaderTime = best_header->GetBlockTime();
         }
     }
     return cachedBestHeaderTime;

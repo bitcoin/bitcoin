@@ -60,6 +60,7 @@
 namespace {
     struct CBlockIndexWorkComparator
     {
+        // Returns pa < pb in work-order
         bool operator()(const CBlockIndex *pa, const CBlockIndex *pb) const {
             // First sort by most total work, ...
             if (pa->nChainWork > pb->nChainWork) return false;
@@ -107,10 +108,36 @@ class CChainState {
 private:
     /**
      * The set of all CBlockIndex entries with BLOCK_VALID_TRANSACTIONS (for itself and all ancestors) and
-     * as good as our current tip or better. Entries may be failed, though, and pruning nodes may be
-     * missing the data for the block.
+     * as good as our current tip or better. Pruning nodes may be missing the data for the block.
      */
     std::set<CBlockIndex*, CBlockIndexWorkComparator> setBlockIndexCandidates;
+    /**
+     * The set of all leaf CBlockIndex entries with BLOCK_VALID_TREE (for itself and all ancestors) and
+     * as good as our current tip or better. Entries here are potential future candidates for insertion
+     * into setBlockIndexCandidates, once we get all the required block data. Thus, entries here
+     * represent chains on which we should be actively downloading block data.
+     *
+     * Note that we define "as good as our current tip or better" slightly differently here than in
+     * setBlockIndexCandidates - we include things which will have a higher nSequence (but have the
+     * same chain work) here, but do not include such entries in setBlockIndexCandidates. This is
+     * because we prefer to also download towards chains which have the same total work as our current
+     * chain (as an optimization since a reorg is very possible in such cases).
+     *
+     * Note that, unlike setBlockIndexCandidates, we only store "leaf" entries here, as we are not as
+     * aggressively prune-able (setBlockIndexCandidates are things which we can, and usually do, try to
+     * connect immediately, and thus entries dont stick around for long). Thus, it may be the case that
+     * chainActive.Tip() is NOT in setBlockIndexHeaderCandidates.
+     *
+     * Additionally, unlike setBlockIndexCandidates, we are happy to store entries which are not
+     * connectable due to pruning here.
+     *
+     * Note that we have to be pretty careful with nSequenceId here - CBlockIndexWorkComparator uses
+     * nSequenceId to sort, but entries may have the same work and sequence! Thus, we don't use the set's
+     * sorter but instead compare using nChainWork while iterating!
+     */
+    std::set<CBlockIndex*, CBlockIndexWorkComparator> setBlockIndexHeaderCandidates;
+
+    CBlockIndex *pindexBestHeader = nullptr;
 
     /**
      * Every received block is assigned a unique and increasing identifier, so we
@@ -155,7 +182,7 @@ public:
     bool ActivateBestChain(CValidationState &state, const CChainParams& chainparams, std::shared_ptr<const CBlock> pblock);
 
     bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state, const CChainParams& chainparams, CBlockIndex** ppindex);
-    bool AcceptBlock(const std::shared_ptr<const CBlock>& pblock, CValidationState& state, const CChainParams& chainparams, CBlockIndex** ppindex, bool fRequested, const CDiskBlockPos* dbp, bool* fNewBlock);
+    bool AcceptBlock(const std::shared_ptr<const CBlock>& pblock, CValidationState& state, const CChainParams& chainparams, CBlockIndex** ppindex, const CDiskBlockPos* dbp, bool* fNewBlock);
 
     // Block (dis)connection on a given view:
     DisconnectResult DisconnectBlock(const CBlock& block, const CBlockIndex* pindex, CCoinsViewCache& view);
@@ -178,6 +205,7 @@ public:
 
     void UnloadBlockIndex();
 
+    const CBlockIndex* GetBestHeader();
 private:
     bool ActivateBestChainStep(CValidationState& state, const CChainParams& chainparams, CBlockIndex* pindexMostWork, const std::shared_ptr<const CBlock>& pblock, bool& fInvalidFound, ConnectTrace& connectTrace);
     bool ConnectTip(CValidationState& state, const CChainParams& chainparams, CBlockIndex* pindexNew, const std::shared_ptr<const CBlock>& pblock, ConnectTrace& connectTrace, DisconnectedBlockTransactions &disconnectpool);
@@ -191,6 +219,8 @@ private:
     CBlockIndex* FindMostWorkChain();
     bool ReceivedBlockTransactions(const CBlock &block, CValidationState& state, CBlockIndex *pindexNew, const CDiskBlockPos& pos, const Consensus::Params& consensusParams);
 
+    void PruneInvalidBlockIndexCandidates(CBlockIndex* pindexInvalid);
+    void MaybeAddNewHeaderCandidate(CBlockIndex* pindex, bool chain_ordered_insertion, bool no_descendants);
 
     bool RollforwardBlock(const CBlockIndex* pindex, CCoinsViewCache& inputs, const CChainParams& params);
 } g_chainstate;
@@ -201,7 +231,6 @@ CCriticalSection cs_main;
 
 BlockMap& mapBlockIndex = g_chainstate.mapBlockIndex;
 CChain& chainActive = g_chainstate.chainActive;
-CBlockIndex *pindexBestHeader = nullptr;
 CWaitableCriticalSection csBestBlock;
 CConditionVariable cvBlockChange;
 int nScriptCheckThreads = 0;
@@ -447,7 +476,7 @@ static bool IsCurrentForFeeEstimation()
         return false;
     if (chainActive.Tip()->GetBlockTime() < (GetTime() - MAX_FEE_ESTIMATION_TIP_AGE))
         return false;
-    if (chainActive.Height() < pindexBestHeader->nHeight - 1)
+    if (chainActive.Height() < GetBestHeader()->nHeight - 1)
         return false;
     return true;
 }
@@ -1172,7 +1201,7 @@ bool IsInitialBlockDownload()
     return false;
 }
 
-CBlockIndex *pindexBestForkTip = nullptr, *pindexBestForkBase = nullptr;
+static CBlockIndex *pindexBestForkTip = nullptr, *pindexBestForkBase = nullptr;
 
 static void AlertNotify(const std::string& strMessage)
 {
@@ -1265,6 +1294,130 @@ static void CheckForkWarningConditionsOnNewFork(CBlockIndex* pindexNewForkTip)
     CheckForkWarningConditions();
 }
 
+/**
+ * Called when a header (re-)reached BLOCK_VALID_TREE.
+ *
+ * setBlockIndexHeaderCandidates is a bit more complicated than
+ * setBlockIndexCandidates as setBlockIndexCandidates can be rather lazy
+ * as everything in it is about to be connected. In our case, we may have many
+ * headers above the tip leading down different chains, for which we really
+ * only want to keep the tip of each chain.
+ *
+ * Works even if chainActive is empty!
+ *
+ * If chain_ordered_inertion, we assume that if pindex->pprev was previously a
+ * header candidate, it will be when we're called. ie we assume that there are
+ * no header candidates which are parents of us except for possibly our direct
+ * parent.
+ *
+ * no_descendants allows us to make a similar, but inverted, assumption -
+ * assuming no descendant blocks may be header candidates.
+ */
+void CChainState::MaybeAddNewHeaderCandidate(CBlockIndex* pindex, bool chain_ordered_insertion, bool no_descendants) {
+    if (!pindex->IsValid(BLOCK_VALID_TREE)) return; // We only want things that have a valid header tree
+
+    bool lower_work = chainActive.Tip() != nullptr && chainActive.Tip()->nChainWork > pindex->nChainWork;
+    if (lower_work) return; // We don't want things with less work than our current tip
+
+    bool parent_present = false;
+    if (pindex->pprev && setBlockIndexHeaderCandidates.count(pindex->pprev)) {
+        // If the parent is a previous candidate, then no parents of it could
+        // be candidates, either. This is the only thing we need to check by
+        // definition of chain_ordered_insertion, however even in the case of
+        // !chain_ordered_insertion, if this is true, no need to do a full
+        // parent scan (as no further-up parent can be a candidate, either).
+        setBlockIndexHeaderCandidates.erase(pindex->pprev);
+        parent_present = true;
+    } else if (!chain_ordered_insertion) {
+        // We are being called in a for(p : mapBlockIndex) loop, so can make no
+        // assumptions about existing entries. Scan all other entries to check
+        // if we're a descendant of some other candidate.
+        for (auto it = setBlockIndexHeaderCandidates.begin(); it != setBlockIndexHeaderCandidates.end() && (*it)->nChainWork < pindex->nChainWork; it++) {
+            if (pindex->GetAncestor((*it)->nHeight) == *it) {
+                // it should be removed - we only keep the tip of potential
+                // chains, not anything in them. At this point we should be
+                // consistent by adding pindex, there should be more more work
+                // to do here.
+                setBlockIndexHeaderCandidates.erase(it);
+                break;
+                parent_present = true;
+            }
+        }
+    }
+
+    if (!parent_present && !no_descendants) {
+        // Scan higher-work entries to check that we're not a parent of some
+        // other candidate(s). If a parent of ours was already present then we
+        // can be certain that no such child is also a candidate, so we can
+        // skip the whole scan.
+        for (auto it = setBlockIndexHeaderCandidates.rbegin(); it != setBlockIndexHeaderCandidates.rend() && (*it)->nChainWork > pindex->nChainWork; it++) {
+            if ((*it)->GetAncestor(pindex->nHeight) == pindex) {
+                // pindex is useless - even if there are other tips based on it
+                // which we want in setBlockIndexHeaderCandidates, we're not
+                // gonna find them here.
+                return;
+            }
+        }
+    }
+
+    setBlockIndexHeaderCandidates.insert(pindex);
+}
+
+const CBlockIndex* CChainState::GetBestHeader() {
+    LOCK(cs_main);
+    auto it = setBlockIndexHeaderCandidates.rbegin();
+    if (it == setBlockIndexHeaderCandidates.rend())
+        return nullptr;
+    return *it;
+}
+
+const CBlockIndex* GetBestHeader() {
+    return g_chainstate.GetBestHeader();
+}
+
+// Helper for PruneInvalidBlockIndexCandidates
+static void PruneInvalidIndexCandidatesInSet(CBlockIndex* pindexInvalid, std::set<CBlockIndex*, CBlockIndexWorkComparator>& set_candidates) {
+    // Iterate set_candidates downwards, deleting parents of pindexInvalid,
+    // until we get to headers which are lower total-work than pindexInvalid
+    // (at which point they can't be parents of pindexInvalid).
+    std::set<CBlockIndex*, CBlockIndexWorkComparator>::reverse_iterator it = set_candidates.rbegin();
+    while (it != set_candidates.rend() && (*it)->nChainWork > pindexInvalid->nChainWork) {
+        if ((*it)->GetAncestor(pindexInvalid->nHeight) == pindexInvalid) {
+            CBlockIndex* pindexInvalidTip = *it;
+            if (!pindexBestInvalid || pindexInvalidTip->nChainWork > pindexBestInvalid->nChainWork)
+                pindexBestInvalid = pindexInvalidTip;
+
+            while (pindexInvalidTip != pindexInvalid) {
+                if (!(pindexInvalidTip->nStatus & BLOCK_FAILED_MASK)) {
+                    pindexInvalidTip->nStatus |= BLOCK_FAILED_CHILD;
+                    setDirtyBlockIndex.insert(pindexInvalidTip);
+                }
+                pindexInvalidTip = pindexInvalidTip->pprev;
+            }
+            std::set<CBlockIndex*, CBlockIndexWorkComparator>::iterator forward_it = it.base(); // Is one past it
+            forward_it--; // Now points to it
+            forward_it = set_candidates.erase(forward_it);
+            it = std::set<CBlockIndex*, CBlockIndexWorkComparator>::reverse_iterator(forward_it);
+            // forward_it == it.base() now points to one-past previous it, making it point to one-before previous it.
+        } else {
+            it++;
+        }
+    }
+    set_candidates.erase(pindexInvalid);
+}
+
+/**
+ * Removes any descendants of pindexInvalid from candidate blocks,
+ * marking them BLOCK_FAILED_CHILD as we go
+ */
+void CChainState::PruneInvalidBlockIndexCandidates(CBlockIndex* pindexInvalid) {
+    AssertLockHeld(cs_main);
+    assert(pindexInvalid->nStatus & BLOCK_FAILED_MASK);
+
+    PruneInvalidIndexCandidatesInSet(pindexInvalid, setBlockIndexCandidates);
+    PruneInvalidIndexCandidatesInSet(pindexInvalid, setBlockIndexHeaderCandidates);
+}
+
 void static InvalidChainFound(CBlockIndex* pindexNew)
 {
     if (!pindexBestInvalid || pindexNew->nChainWork > pindexBestInvalid->nChainWork)
@@ -1287,7 +1440,17 @@ void CChainState::InvalidBlockFound(CBlockIndex *pindex, const CValidationState 
         pindex->nStatus |= BLOCK_FAILED_VALID;
         g_failed_blocks.insert(pindex);
         setDirtyBlockIndex.insert(pindex);
-        setBlockIndexCandidates.erase(pindex);
+        PruneInvalidBlockIndexCandidates(pindex);
+        if (pindex->pprev) {
+            // In the simple case where we tried to advance forward one block,
+            // but failed, we may now have an empty setBlockIndexHeaderCandidates,
+            // so we need to re-add the previous block here. The same is not true
+            // for setBlockIndexCandidates, as it does not have the same leaf-only
+            // precondition which setBlockIndexHeaderCandidates has.
+            // Note that its possible there are later descendants that are candidates
+            // so we cannot set no_descendants here.
+            MaybeAddNewHeaderCandidate(pindex->pprev, true, false);
+        }
         InvalidChainFound(pindex);
     }
 }
@@ -1826,6 +1989,8 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
                 pindexBestHeader->GetAncestor(pindex->nHeight) == pindex &&
                 pindexBestHeader->nChainWork >= nMinimumChainWork) {
                 // This block is a member of the assumed verified chain and an ancestor of the best header.
+                // Note that we use pindexBestHeader here, not GetBestHeader(), ignoring potential
+                // chain-invalidity of the best header.
                 // The equivalent time check discourages hash power from extorting the network via DOS attack
                 //  into accepting an invalid block through telling users they must manually set assumevalid.
                 //  Requiring a software change or burying the invalid block, regardless of the setting, makes
@@ -2402,28 +2567,21 @@ CBlockIndex* CChainState::FindMostWorkChain() {
         bool fInvalidAncestor = false;
         while (pindexTest && !chainActive.Contains(pindexTest)) {
             assert(pindexTest->nChainTx || pindexTest->nHeight == 0);
+            assert(pindexTest->IsValid(BLOCK_VALID_TRANSACTIONS));
 
             // Pruned nodes may have entries in setBlockIndexCandidates for
             // which block files have been deleted.  Remove those as candidates
             // for the most work chain if we come across them; we can't switch
             // to a chain unless we have all the non-active-chain parent blocks.
-            bool fFailedChain = pindexTest->nStatus & BLOCK_FAILED_MASK;
-            bool fMissingData = !(pindexTest->nStatus & BLOCK_HAVE_DATA);
-            if (fFailedChain || fMissingData) {
+            if (!(pindexTest->nStatus & BLOCK_HAVE_DATA)) {
                 // Candidate chain is not usable (either invalid or missing data)
-                if (fFailedChain && (pindexBestInvalid == nullptr || pindexNew->nChainWork > pindexBestInvalid->nChainWork))
-                    pindexBestInvalid = pindexNew;
                 CBlockIndex *pindexFailed = pindexNew;
                 // Remove the entire chain from the set.
                 while (pindexTest != pindexFailed) {
-                    if (fFailedChain) {
-                        pindexFailed->nStatus |= BLOCK_FAILED_CHILD;
-                    } else if (fMissingData) {
-                        // If we're missing data, then add back to mapBlocksUnlinked,
-                        // so that if the block arrives in the future we can try adding
-                        // to setBlockIndexCandidates again.
-                        mapBlocksUnlinked.insert(std::make_pair(pindexFailed->pprev, pindexFailed));
-                    }
+                    // If we're missing data, then add back to mapBlocksUnlinked,
+                    // so that if the block arrives in the future we can try adding
+                    // to setBlockIndexCandidates again.
+                    mapBlocksUnlinked.insert(std::make_pair(pindexFailed->pprev, pindexFailed));
                     setBlockIndexCandidates.erase(pindexFailed);
                     pindexFailed = pindexFailed->pprev;
                 }
@@ -2448,6 +2606,16 @@ void CChainState::PruneBlockIndexCandidates() {
     }
     // Either the current tip or a successor of it we're working towards is left in setBlockIndexCandidates.
     assert(!setBlockIndexCandidates.empty());
+    // Now do the same for setBlockIndexHeaderCandidates (noting that we have to compare manually due to nSequenceId oddities)
+    it = setBlockIndexHeaderCandidates.begin();
+    while (it != setBlockIndexHeaderCandidates.end() && (*it)->nChainWork <= chainActive.Tip()->nChainWork) {
+        if (chainActive.Tip()->nChainWork > (*it)->nChainWork) {
+            setBlockIndexHeaderCandidates.erase(it++);
+        } else {
+            it++;
+        }
+    }
+    assert(!setBlockIndexHeaderCandidates.empty());
 }
 
 /**
@@ -2538,11 +2706,11 @@ bool CChainState::ActivateBestChainStep(CValidationState& state, const CChainPar
 static void NotifyHeaderTip() {
     bool fNotify = false;
     bool fInitialBlockDownload = false;
-    static CBlockIndex* pindexHeaderOld = nullptr;
-    CBlockIndex* pindexHeader = nullptr;
+    static const CBlockIndex* pindexHeaderOld = nullptr;
+    const CBlockIndex* pindexHeader = nullptr;
     {
         LOCK(cs_main);
-        pindexHeader = pindexBestHeader;
+        pindexHeader = GetBestHeader();
 
         if (pindexHeader != pindexHeaderOld) {
             fNotify = true;
@@ -2588,34 +2756,43 @@ bool CChainState::ActivateBestChain(CValidationState &state, const CChainParams&
         bool fInitialDownload;
         {
             LOCK(cs_main);
-            ConnectTrace connectTrace(mempool); // Destructed before cs_main is unlocked
+            arith_uint256 starting_work = chainActive.Tip() ? chainActive.Tip()->nChainWork : arith_uint256(0);
+            bool blocks_connected = false;
+            do {
+                // We absolutely may not unlock cs_main until we've made forward progress
+                // (with the exception of shutdown due to hardware issues, low disk space, etc).
+                ConnectTrace connectTrace(mempool); // Destructed before cs_main is unlocked
 
-            CBlockIndex *pindexOldTip = chainActive.Tip();
-            if (pindexMostWork == nullptr) {
-                pindexMostWork = FindMostWorkChain();
-            }
+                CBlockIndex *pindexOldTip = chainActive.Tip();
+                if (pindexMostWork == nullptr) {
+                    pindexMostWork = FindMostWorkChain();
+                }
 
-            // Whether we have anything to do at all.
-            if (pindexMostWork == nullptr || pindexMostWork == chainActive.Tip())
-                return true;
+                // Whether we have anything to do at all.
+                if (pindexMostWork == nullptr || pindexMostWork == chainActive.Tip()) {
+                    break;
+                }
 
-            bool fInvalidFound = false;
-            std::shared_ptr<const CBlock> nullBlockPtr;
-            if (!ActivateBestChainStep(state, chainparams, pindexMostWork, pblock && pblock->GetHash() == pindexMostWork->GetBlockHash() ? pblock : nullBlockPtr, fInvalidFound, connectTrace))
-                return false;
+                bool fInvalidFound = false;
+                std::shared_ptr<const CBlock> nullBlockPtr;
+                if (!ActivateBestChainStep(state, chainparams, pindexMostWork, pblock && pblock->GetHash() == pindexMostWork->GetBlockHash() ? pblock : nullBlockPtr, fInvalidFound, connectTrace))
+                    return false;
+                blocks_connected = true;
 
-            if (fInvalidFound) {
-                // Wipe cache, we may need another branch now.
-                pindexMostWork = nullptr;
-            }
-            pindexNewTip = chainActive.Tip();
-            pindexFork = chainActive.FindFork(pindexOldTip);
-            fInitialDownload = IsInitialBlockDownload();
+                if (fInvalidFound) {
+                    // Wipe cache, we may need another branch now.
+                    pindexMostWork = nullptr;
+                }
+                pindexNewTip = chainActive.Tip();
+                pindexFork = chainActive.FindFork(pindexOldTip);
+                fInitialDownload = IsInitialBlockDownload();
 
-            for (const PerBlockConnectTrace& trace : connectTrace.GetBlocksConnected()) {
-                assert(trace.pblock && trace.pindex);
-                GetMainSignals().BlockConnected(trace.pblock, trace.pindex, trace.conflictedTxs);
-            }
+                for (const PerBlockConnectTrace& trace : connectTrace.GetBlocksConnected()) {
+                    assert(trace.pblock && trace.pindex);
+                    GetMainSignals().BlockConnected(trace.pblock, trace.pindex, trace.conflictedTxs);
+                }
+            } while (!chainActive.Tip() || chainActive.Tip()->nChainWork < starting_work);
+            if (!blocks_connected) return true; // no work done, no notifications to fire
         }
         // When we reach this point, we switched to a new tip (stored in pindexNewTip).
 
@@ -2657,12 +2834,19 @@ bool CChainState::PreciousBlock(CValidationState& state, const CChainParams& par
             nBlockReverseSequenceId = -1;
         }
         nLastPreciousChainwork = chainActive.Tip()->nChainWork;
+        // Make sure to remove from sets which are indexed by nSequenceId first...
         setBlockIndexCandidates.erase(pindex);
+        bool pindex_is_header_candidate = setBlockIndexHeaderCandidates.erase(pindex);
         pindex->nSequenceId = nBlockReverseSequenceId;
         if (nBlockReverseSequenceId > std::numeric_limits<int32_t>::min()) {
             // We can't keep reducing the counter if somebody really wants to
             // call preciousblock 2**31-1 times on the same set of tips...
             nBlockReverseSequenceId--;
+        }
+        if (pindex_is_header_candidate) {
+            // Note that because we only changed the sequence, pindex should be in
+            // setBlockIndexHeaderCandidates iff it was previously in the same.
+            setBlockIndexHeaderCandidates.insert(pindex);
         }
         if (pindex->IsValid(BLOCK_VALID_TRANSACTIONS) && pindex->nChainTx) {
             setBlockIndexCandidates.insert(pindex);
@@ -2686,12 +2870,8 @@ bool CChainState::InvalidateBlock(CValidationState& state, const CChainParams& c
     // are no blocks that meet the "have data and are not invalid per
     // nStatus" criteria for inclusion in setBlockIndexCandidates).
 
-    bool pindex_was_in_chain = false;
-    CBlockIndex *invalid_walk_tip = chainActive.Tip();
-
     DisconnectedBlockTransactions disconnectpool;
     while (chainActive.Contains(pindex)) {
-        pindex_was_in_chain = true;
         // ActivateBestChain considers blocks already in chainActive
         // unconditionally valid already, so force disconnect away from it.
         if (!DisconnectTip(state, chainparams, &disconnectpool)) {
@@ -2702,19 +2882,13 @@ bool CChainState::InvalidateBlock(CValidationState& state, const CChainParams& c
         }
     }
 
-    // Now mark the blocks we just disconnected as descendants invalid
-    // (note this may not be all descendants).
-    while (pindex_was_in_chain && invalid_walk_tip != pindex) {
-        invalid_walk_tip->nStatus |= BLOCK_FAILED_CHILD;
-        setDirtyBlockIndex.insert(invalid_walk_tip);
-        setBlockIndexCandidates.erase(invalid_walk_tip);
-        invalid_walk_tip = invalid_walk_tip->pprev;
-    }
-
     // Mark the block itself as invalid.
     pindex->nStatus |= BLOCK_FAILED_VALID;
     setDirtyBlockIndex.insert(pindex);
-    setBlockIndexCandidates.erase(pindex);
+
+    // chainActive.Tip() is always in our candidate sets, so any blocks we just
+    // disconnected will be marked BLOCK_FAILED_CHILD by PruneInvalidBlockIndexCandidates.
+    PruneInvalidBlockIndexCandidates(pindex);
     g_failed_blocks.insert(pindex);
 
     // DisconnectTip will add transactions to disconnectpool; try to add these
@@ -2725,8 +2899,26 @@ bool CChainState::InvalidateBlock(CValidationState& state, const CChainParams& c
     // add it again.
     BlockMap::iterator it = mapBlockIndex.begin();
     while (it != mapBlockIndex.end()) {
-        if (it->second->IsValid(BLOCK_VALID_TRANSACTIONS) && it->second->nChainTx && !setBlockIndexCandidates.value_comp()(it->second, chainActive.Tip())) {
-            setBlockIndexCandidates.insert(it->second);
+        if (it->second->nChainWork >= chainActive.Tip()->nChainWork) {
+            if (it->second->GetAncestor(pindex->nHeight) == pindex) {
+                // It is possible that we have a CBlockIndex which is a
+                // descendant of the one we just marked invalid, but which we
+                // did not mark BLOCK_FAILED_CHILD in the
+                // PruneInvalidBlockIndexCandidates pass, as it was below our
+                // previous tip. We should mark it (and its parents) invalid.
+                CBlockIndex* invalid_walk = it->second;
+                while (invalid_walk != pindex && !(invalid_walk->nStatus & BLOCK_FAILED_MASK)) {
+                    invalid_walk->nStatus |= BLOCK_FAILED_CHILD;
+                    setDirtyBlockIndex.insert(invalid_walk);
+                    invalid_walk = invalid_walk->pprev;
+                }
+            } else if (it->second->IsValid(BLOCK_VALID_TREE)) {
+                MaybeAddNewHeaderCandidate(it->second, false, false);
+                if (it->second->IsValid(BLOCK_VALID_TRANSACTIONS) && it->second->nChainTx &&
+                        !setBlockIndexCandidates.value_comp()(it->second, chainActive.Tip())) { // check sequence now because we didn't earlier
+                    setBlockIndexCandidates.insert(it->second);
+                }
+            }
         }
         it++;
     }
@@ -2750,8 +2942,12 @@ bool CChainState::ResetBlockFailureFlags(CBlockIndex *pindex) {
         if (!it->second->IsValid() && it->second->GetAncestor(nHeight) == pindex) {
             it->second->nStatus &= ~BLOCK_FAILED_MASK;
             setDirtyBlockIndex.insert(it->second);
-            if (it->second->IsValid(BLOCK_VALID_TRANSACTIONS) && it->second->nChainTx && setBlockIndexCandidates.value_comp()(chainActive.Tip(), it->second)) {
-                setBlockIndexCandidates.insert(it->second);
+            if (it->second->IsValid(BLOCK_VALID_TREE) && it->second->nChainWork >= chainActive.Tip()->nChainWork) {
+                MaybeAddNewHeaderCandidate(it->second, false, false);
+                if (it->second->IsValid(BLOCK_VALID_TRANSACTIONS) && it->second->nChainTx &&
+                        setBlockIndexCandidates.value_comp()(chainActive.Tip(), it->second)) { // Check nSequence here
+                    setBlockIndexCandidates.insert(it->second);
+                }
             }
             if (it->second == pindexBestInvalid) {
                 // Reset invalid block marker if it was pointing to one of those.
@@ -2804,6 +3000,7 @@ CBlockIndex* CChainState::AddToBlockIndex(const CBlockHeader& block)
     pindexNew->RaiseValidity(BLOCK_VALID_TREE);
     if (pindexBestHeader == nullptr || pindexBestHeader->nChainWork < pindexNew->nChainWork)
         pindexBestHeader = pindexNew;
+    MaybeAddNewHeaderCandidate(pindexNew, true, true);
 
     setDirtyBlockIndex.insert(pindexNew);
 
@@ -2835,9 +3032,17 @@ bool CChainState::ReceivedBlockTransactions(const CBlock &block, CValidationStat
             CBlockIndex *pindex = queue.front();
             queue.pop_front();
             pindex->nChainTx = (pindex->pprev ? pindex->pprev->nChainTx : 0) + pindex->nTx;
+            // Make sure to remove from sets which are indexed by nSequenceId first...
+            bool was_header_candidate = setBlockIndexHeaderCandidates.erase(pindex);
             {
                 LOCK(cs_nBlockSequenceId);
                 pindex->nSequenceId = nBlockSequenceId++;
+            }
+            if (was_header_candidate) {
+                // It is safe to use chain_ordered_insertion and no_descendants here
+                // as, if the block was previously a header candidate, we know there
+                // are no parents/descendants which are also header candidates.
+                MaybeAddNewHeaderCandidate(pindex, true, true);
             }
             if (chainActive.Tip() == nullptr || !setBlockIndexCandidates.value_comp()(pindex, chainActive.Tip())) {
                 setBlockIndexCandidates.insert(pindex);
@@ -3249,6 +3454,23 @@ bool CChainState::AcceptBlockHeader(const CBlockHeader& block, CValidationState&
         if (!ContextualCheckBlockHeader(block, state, chainparams, pindexPrev, GetAdjustedTime()))
             return error("%s: Consensus::ContextualCheckBlockHeader: %s, %s", __func__, hash.ToString(), FormatStateMessage(state));
 
+        /* Take the following chain:
+         *
+         *                D3
+         *              /
+         *      B2 - C2
+         *    /         \
+         *  A             D2 - E2 - F2
+         *    \
+         *      B1 - C1 - D1 - E1
+         *
+         * In the case that we attempted to reorg from E1 to F2, only to find
+         * C2 to be invalid, we would mark D2, E2, and F2 as BLOCK_FAILED_CHILD
+         * but NOT D3 (it was not in any of our candidate sets at the time).
+         * Thus, if we now are accepting headers built on D3, it may be the
+         * case that they actually have failed parents despite pindexPrev being
+         * !BLOCK_FAILED_MASK. We check for this case here:
+         */
         if (!pindexPrev->IsValid(BLOCK_VALID_SCRIPTS)) {
             for (const CBlockIndex* failedit : g_failed_blocks) {
                 if (pindexPrev->GetAncestor(failedit->nHeight) == failedit) {
@@ -3316,7 +3538,7 @@ static CDiskBlockPos SaveBlockToDisk(const CBlock& block, int nHeight, const CCh
 }
 
 /** Store block on disk. If dbp is non-nullptr, the file is known to already reside on disk */
-bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, CValidationState& state, const CChainParams& chainparams, CBlockIndex** ppindex, bool fRequested, const CDiskBlockPos* dbp, bool* fNewBlock)
+bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, CValidationState& state, const CChainParams& chainparams, CBlockIndex** ppindex, const CDiskBlockPos* dbp, bool* fNewBlock)
 {
     const CBlock& block = *pblock;
 
@@ -3341,32 +3563,40 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, CVali
     // not process unrequested blocks.
     bool fTooFarAhead = (pindex->nHeight > int(chainActive.Height() + MIN_BLOCKS_TO_KEEP));
 
-    // TODO: Decouple this function from the block download logic by removing fRequested
-    // This requires some new chain data structure to efficiently look up if a
-    // block is in a chain leading to a candidate for best tip, despite not
-    // being such a candidate itself.
-
     // TODO: deal better with return value and error conditions for duplicate
     // and unrequested blocks.
     if (fAlreadyHave) return true;
-    if (!fRequested) {  // If we didn't ask for it:
-        if (pindex->nTx != 0) return true;    // This is a previously-processed block that was pruned
-        if (!fHasMoreOrSameWork) return true; // Don't process less-work chains
-        if (fTooFarAhead) return true;        // Block height is too high
+    if (!pindex->IsValid(BLOCK_VALID_TREE)) return true; // Parent block somewhere is invalid
+    if (pindex->nTx != 0) return true;                   // This is a previously-processed block that was pruned
+    if (fTooFarAhead) return true;                       // Block height is too high
 
-        // Protect against DoS attacks from low-work chains.
-        // If our tip is behind, a peer could try to send us
-        // low-work blocks on a fake chain that we would never
-        // request; don't process these.
-        if (pindex->nChainWork < nMinimumChainWork) return true;
+    bool parent_of_header_candidate = false;
+    bool parent_of_min_chainwork_header_candidate = false;
+    for (auto it = setBlockIndexHeaderCandidates.rbegin(); it != setBlockIndexHeaderCandidates.rend(); it++) {
+        if ((*it)->GetAncestor(pindex->nHeight) == pindex) {
+            parent_of_header_candidate = true;
+            // Protect against DoS attacks from low-work chains.
+            // If our tip is behind, a peer could try to send us
+            // low-work blocks on a fake chain that we would never
+            // request; don't process these.
+            if ((*it)->nChainWork >= nMinimumChainWork) {
+                parent_of_min_chainwork_header_candidate = true;
+                break;
+            }
+        }
     }
+    if (!fHasMoreOrSameWork && !parent_of_header_candidate) return true; // We dont think this block leads somewhere interesting
+    if (!parent_of_min_chainwork_header_candidate && pindex->nChainWork < nMinimumChainWork) {
+        // Neither this new block, nor any descendants we have, meet our minimum chain work.
+        return true;
+    }
+
     if (fNewBlock) *fNewBlock = true;
 
     if (!CheckBlock(block, state, chainparams.GetConsensus()) ||
         !ContextualCheckBlock(block, state, chainparams.GetConsensus(), pindex->pprev)) {
-        if (state.IsInvalid() && !state.CorruptionPossible()) {
-            pindex->nStatus |= BLOCK_FAILED_VALID;
-            setDirtyBlockIndex.insert(pindex);
+        if (state.IsInvalid()) {
+            InvalidBlockFound(pindex, state);
         }
         return error("%s: %s", __func__, FormatStateMessage(state));
     }
@@ -3397,7 +3627,7 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, CVali
     return true;
 }
 
-bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<const CBlock> pblock, bool fForceProcessing, bool *fNewBlock)
+bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<const CBlock> pblock, bool *fNewBlock)
 {
     AssertLockNotHeld(cs_main);
 
@@ -3413,7 +3643,7 @@ bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<cons
 
         if (ret) {
             // Store to disk
-            ret = g_chainstate.AcceptBlock(pblock, state, chainparams, &pindex, fForceProcessing, nullptr, fNewBlock);
+            ret = g_chainstate.AcceptBlock(pblock, state, chainparams, &pindex, nullptr, fNewBlock);
         }
         if (!ret) {
             GetMainSignals().BlockChecked(*pblock, state);
@@ -3711,6 +3941,8 @@ bool CChainState::LoadBlockIndex(const Consensus::Params& consensus_params, CBlo
             pindex->nStatus |= BLOCK_FAILED_CHILD;
             setDirtyBlockIndex.insert(pindex);
         }
+        if (pindex->IsValid(BLOCK_VALID_TREE))
+            MaybeAddNewHeaderCandidate(pindex, true, true);
         if (pindex->IsValid(BLOCK_VALID_TRANSACTIONS) && (pindex->nChainTx || pindex->pprev == nullptr))
             setBlockIndexCandidates.insert(pindex);
         if (pindex->nStatus & BLOCK_FAILED_MASK && (!pindexBestInvalid || pindex->nChainWork > pindexBestInvalid->nChainWork))
@@ -4077,6 +4309,11 @@ bool CChainState::RewindBlockIndex(const CChainParams& params)
         } else if (pindexIter->IsValid(BLOCK_VALID_TRANSACTIONS) && pindexIter->nChainTx) {
             setBlockIndexCandidates.insert(pindexIter);
         }
+        // In case we disconnected blocks which resulted in new header
+        // candidates, we need to re-add them here.
+        if (pindexIter->IsValid(BLOCK_VALID_TREE)) {
+            MaybeAddNewHeaderCandidate(pindexIter, false, false);
+        }
     }
 
     if (chainActive.Tip() != nullptr) {
@@ -4110,8 +4347,10 @@ bool RewindBlockIndex(const CChainParams& params) {
 
 void CChainState::UnloadBlockIndex() {
     nBlockSequenceId = 1;
+    pindexBestHeader = nullptr;
     g_failed_blocks.clear();
     setBlockIndexCandidates.clear();
+    setBlockIndexHeaderCandidates.clear();
 }
 
 // May NOT be used after any connections are up as much
@@ -4122,7 +4361,6 @@ void UnloadBlockIndex()
     LOCK(cs_main);
     chainActive.SetTip(nullptr);
     pindexBestInvalid = nullptr;
-    pindexBestHeader = nullptr;
     mempool.clear();
     mapBlocksUnlinked.clear();
     vinfoBlockFile.clear();
@@ -4260,7 +4498,7 @@ bool LoadExternalBlockFile(const CChainParams& chainparams, FILE* fileIn, CDiskB
                 if (mapBlockIndex.count(hash) == 0 || (mapBlockIndex[hash]->nStatus & BLOCK_HAVE_DATA) == 0) {
                     LOCK(cs_main);
                     CValidationState state;
-                    if (g_chainstate.AcceptBlock(pblock, state, chainparams, nullptr, true, dbp, nullptr))
+                    if (g_chainstate.AcceptBlock(pblock, state, chainparams, nullptr, dbp, nullptr))
                         nLoaded++;
                     if (state.IsError())
                         break;
@@ -4294,7 +4532,7 @@ bool LoadExternalBlockFile(const CChainParams& chainparams, FILE* fileIn, CDiskB
                                     head.ToString());
                             LOCK(cs_main);
                             CValidationState dummy;
-                            if (g_chainstate.AcceptBlock(pblockrecursive, dummy, chainparams, nullptr, true, &it->second, nullptr))
+                            if (g_chainstate.AcceptBlock(pblockrecursive, dummy, chainparams, nullptr, &it->second, nullptr))
                             {
                                 nLoaded++;
                                 queue.push_back(pblockrecursive->GetHash());
@@ -4358,6 +4596,7 @@ void CChainState::CheckBlockIndex(const Consensus::Params& consensusParams)
     CBlockIndex* pindexFirstNotTransactionsValid = nullptr; // Oldest ancestor of pindex which does not have BLOCK_VALID_TRANSACTIONS (regardless of being valid or not).
     CBlockIndex* pindexFirstNotChainValid = nullptr; // Oldest ancestor of pindex which does not have BLOCK_VALID_CHAIN (regardless of being valid or not).
     CBlockIndex* pindexFirstNotScriptsValid = nullptr; // Oldest ancestor of pindex which does not have BLOCK_VALID_SCRIPTS (regardless of being valid or not).
+    CBlockIndex* pindexFirstInBlockIndexHeaderCandidates = nullptr; // Oldest ancestor of pindex which is in setBlockIndexHeaderCandidates (should always be only pindex)
     while (pindex != nullptr) {
         nNodes++;
         if (pindexFirstInvalid == nullptr && pindex->nStatus & BLOCK_FAILED_VALID) pindexFirstInvalid = pindex;
@@ -4401,21 +4640,45 @@ void CChainState::CheckBlockIndex(const Consensus::Params& consensusParams)
             // Checks for not-invalid blocks.
             assert((pindex->nStatus & BLOCK_FAILED_MASK) == 0); // The failed mask cannot be set for blocks without invalid parents.
         }
-        if (!CBlockIndexWorkComparator()(pindex, chainActive.Tip()) && pindexFirstNeverProcessed == nullptr) {
-            if (pindexFirstInvalid == nullptr) {
-                // If this block sorts at least as good as the current tip and
-                // is valid and we have all data for its parents, it must be in
-                // setBlockIndexCandidates.  chainActive.Tip() must also be there
-                // even if some data has been pruned.
-                if (pindexFirstMissing == nullptr || pindex == chainActive.Tip()) {
-                    assert(setBlockIndexCandidates.count(pindex));
-                }
-                // If some parent is missing, then it could be that this block was in
-                // setBlockIndexCandidates but had to be removed because of the missing data.
-                // In this case it must be in mapBlocksUnlinked -- see test below.
+        if (pindex->nStatus & BLOCK_FAILED_CHILD) {
+            // Blocks which failed with "CHILD" must have an invalid parent
+            assert(pindexFirstInvalid);
+            assert(pindexFirstInvalid != pindex);
+            assert(!(pindex->nStatus & BLOCK_FAILED_VALID));
+        }
+        if (pindex->nStatus & BLOCK_FAILED_VALID) {
+            assert(!(pindex->nStatus & BLOCK_FAILED_CHILD));
+        }
+        if (!CBlockIndexWorkComparator()(pindex, chainActive.Tip()) && pindexFirstNeverProcessed == nullptr && pindexFirstInvalid == nullptr) {
+            // If this block sorts at least as good as the current tip and
+            // is valid and we have all data for its parents, it must be in
+            // setBlockIndexCandidates.  chainActive.Tip() must also be there
+            // even if some data has been pruned.
+            if (pindexFirstMissing == nullptr || pindex == chainActive.Tip()) {
+                assert(setBlockIndexCandidates.count(pindex));
             }
-        } else { // If this block sorts worse than the current tip or some ancestor's block has never been seen, it cannot be in setBlockIndexCandidates.
+            // If some parent is missing, then it could be that this block was in
+            // setBlockIndexCandidates but had to be removed because of the missing data.
+            // In this case it must be in mapBlocksUnlinked -- see test below.
+        } else { // If this block sorts worse than the current tip or some ancestor's block has never been seen or is invalid, it cannot be in setBlockIndexCandidates.
             assert(setBlockIndexCandidates.count(pindex) == 0);
+        }
+        bool must_be_header_candidate_if_leaf = false;
+        if (pindex->nChainWork < chainActive.Tip()->nChainWork) {
+            // Irrespective of pruned-ness, if this block sorts worse than the current tip, it cannot be in setBlockIndexHeaderCandidates
+            assert(setBlockIndexHeaderCandidates.count(pindex) == 0);
+        } else if (pindexFirstInvalid == nullptr) {
+            // If pindex is a leaf node and sorts at the same or greater height
+            // than chainActive.Tip(), it must be in setBlockIndexHeaderCandidates.
+            must_be_header_candidate_if_leaf = true;
+        }
+        if (setBlockIndexHeaderCandidates.count(pindex)) {
+            // setBlockIndexHeaderCandidates may not contain anything for which a parent is invalid
+            assert(pindexFirstInvalid == nullptr);
+            assert(pindex->IsValid(BLOCK_VALID_TREE));
+            // We should only be in setBlockIndexHeaderCandidates if we are a leaf node
+            assert(pindexFirstInBlockIndexHeaderCandidates == nullptr);
+            pindexFirstInBlockIndexHeaderCandidates = pindex;
         }
         // Check whether this block is in mapBlocksUnlinked.
         std::pair<std::multimap<CBlockIndex*,CBlockIndex*>::iterator,std::multimap<CBlockIndex*,CBlockIndex*>::iterator> rangeUnlinked = mapBlocksUnlinked.equal_range(pindex->pprev);
@@ -4463,6 +4726,7 @@ void CChainState::CheckBlockIndex(const Consensus::Params& consensusParams)
             continue;
         }
         // This is a leaf node.
+        if (must_be_header_candidate_if_leaf) assert(setBlockIndexHeaderCandidates.count(pindex));
         // Move upwards until we reach a node of which we have not yet visited the last child.
         while (pindex) {
             // We are going to either move to a parent or a sibling of pindex.
@@ -4474,6 +4738,7 @@ void CChainState::CheckBlockIndex(const Consensus::Params& consensusParams)
             if (pindex == pindexFirstNotTransactionsValid) pindexFirstNotTransactionsValid = nullptr;
             if (pindex == pindexFirstNotChainValid) pindexFirstNotChainValid = nullptr;
             if (pindex == pindexFirstNotScriptsValid) pindexFirstNotScriptsValid = nullptr;
+            if (pindex == pindexFirstInBlockIndexHeaderCandidates) pindexFirstInBlockIndexHeaderCandidates = nullptr;
             // Find our parent.
             CBlockIndex* pindexPar = pindex->pprev;
             // Find which child we just visited.
