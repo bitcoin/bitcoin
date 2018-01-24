@@ -46,19 +46,14 @@ extern bool fLargeWorkInvalidChainFound;
 
 static const unsigned int DEFAULT_KEYPOOL_SIZE = 1000;
 //! -paytxfee default
-static const CAmount DEFAULT_TRANSACTION_FEE = 0;
+static const CAmount DEFAULT_TRANSACTION_FEE = 1000;
 //! -paytxfee will warn if called with a higher fee than this amount (in satoshis) per KB
 static const CAmount nHighTransactionFeeWarning = 0.01 * COIN;
 //! -fallbackfee default
 static const CAmount DEFAULT_LEGACY_FALLBACK_FEE = 1000;
 static const CAmount DEFAULT_DIP0001_FALLBACK_FEE = 1000;
 //! -mintxfee default
-/**
-* We are ~100 times smaller then syscoin now (2016-03-01), set minTxFee 10 times higher
-* so it's still 10 times lower comparing to syscoin.
-* 2017-07: we are 10x smaller now, let's lower defaults 10x via the same BIP9 bit as DIP0001
-*/
-static const CAmount DEFAULT_LEGACY_TRANSACTION_MINFEE = 1000; // was 1000
+static const CAmount DEFAULT_LEGACY_TRANSACTION_MINFEE = 1000;
 static const CAmount DEFAULT_DIP0001_TRANSACTION_MINFEE = 1000;
 //! -maxtxfee default
 static const CAmount DEFAULT_TRANSACTION_MAXFEE = 0.2 * COIN; // "smallest denom" + X * "denom tails"
@@ -69,8 +64,7 @@ static const bool DEFAULT_SPEND_ZEROCONF_CHANGE = true;
 //! Default for -sendfreetransactions
 static const bool DEFAULT_SEND_FREE_TRANSACTIONS = false;
 //! -txconfirmtarget default
-// SYSCOIN set to 1 as when services are stored in db they should be usable
-static const unsigned int DEFAULT_TX_CONFIRM_TARGET = 1;
+static const unsigned int DEFAULT_TX_CONFIRM_TARGET = 2;
 //! -maxtxfee will warn if called with a higher fee than this amount (in satoshis)
 static const CAmount nHighTransactionMaxFeeWarning = 100 * nHighTransactionFeeWarning;
 //! Largest (in bytes) free transaction we're willing to create
