@@ -59,7 +59,7 @@ BASE_SCRIPTS= [
     'wallet_backup.py',
     # vv Tests less than 5m vv
     'feature_block.py',
-    'fundrawtransaction.py',
+    'rpc_fundrawtransaction.py',
     'p2p_compactblocks.py',
     'feature_segwit.py',
     # vv Tests less than 2m vv
@@ -67,17 +67,17 @@ BASE_SCRIPTS= [
     'wallet_accounts.py',
     'p2p_segwit.py',
     'wallet_dump.py',
-    'listtransactions.py',
+    'rpc_listtransactions.py',
     # vv Tests less than 60s vv
     'p2p_sendheaders.py',
     'wallet_zapwallettxes.py',
     'wallet_importmulti.py',
     'mempool_limit.py',
-    'merkle_blocks.py',
+    'rpc_txoutproof.py',
     'wallet_listreceivedby.py',
     'wallet_abandonconflict.py',
     'feature_csv_activation.py',
-    'rawtransactions.py',
+    'rpc_rawtransaction.py',
     'wallet_address_types.py',
     'feature_reindex.py',
     # vv Tests less than 30s vv
@@ -88,7 +88,7 @@ BASE_SCRIPTS= [
     'wallet_txn_doublespend.py --mineblock',
     'wallet_txn_clone.py',
     'wallet_txn_clone.py --segwit',
-    'getchaintips.py',
+    'rpc_getchaintips.py',
     'rest.py',
     'mempool_spendcoinbase.py',
     'mempool_reorg.py',
@@ -96,35 +96,35 @@ BASE_SCRIPTS= [
     'wallet_multiwallet.py',
     'wallet_multiwallet.py --usecli',
     'httpbasics.py',
-    'multi_rpc.py',
+    'rpc_users.py',
     'feature_proxy.py',
-    'signrawtransactions.py',
+    'rpc_signrawtransaction.py',
     'p2p_disconnect_ban.py',
-    'decodescript.py',
-    'blockchain.py',
-    'deprecated_rpc.py',
+    'rpc_decodescript.py',
+    'rpc_blockchain.py',
+    'rpc_deprecated.py',
     'wallet_disable.py',
-    'net.py',
+    'rpc_net.py',
     'wallet_keypool.py',
     'p2p_mempool.py',
     'prioritise_transaction.py',
     'p2p_invalid_block.py',
     'p2p_invalid_tx.py',
     'feature_versionbits_warning.py',
-    'preciousblock.py',
+    'rpc_preciousblock.py',
     'wallet_importprunedfunds.py',
-    'signmessages.py',
+    'rpc_signmessage.py',
     'feature_nulldummy.py',
     'wallet_import_rescan.py',
     'mining.py',
     'wallet_bumpfee.py',
-    'rpcnamedargs.py',
+    'rpc_named_arguments.py',
     'wallet_listsinceblock.py',
     'p2p_leak.py',
     'wallet_encryption.py',
     'feature_dersig.py',
     'feature_cltv.py',
-    'uptime.py',
+    'rpc_uptime.py',
     'wallet_resendwallettransactions.py',
     'feature_minchainwork.py',
     'p2p_fingerprint.py',
@@ -154,14 +154,14 @@ EXTENDED_SCRIPTS = [
     # vv Tests less than 60s vv
     'feature_bip9_softforks.py',
     'p2p_feefilter.py',
-    'rpcbind_test.py',
+    'rpc_bind.py',
     # vv Tests less than 30s vv
     'feature_assumevalid.py',
     'example_test.py',
     'wallet_txn_doublespend.py',
     'wallet_txn_clone.py --mineblock',
     'feature_notifications.py',
-    'invalidateblock.py',
+    'rpc_invalidateblock.py',
     'feature_rbf.py',
 ]
 
@@ -474,7 +474,7 @@ class TestResult():
 def check_script_prefixes():
     """Check that no more than `EXPECTED_VIOLATION_COUNT` of the
        test scripts don't start with one of the allowed name prefixes."""
-    EXPECTED_VIOLATION_COUNT = 24
+    EXPECTED_VIOLATION_COUNT = 7
 
     # LEEWAY is provided as a transition measure, so that pull-requests
     # that introduce new tests that don't conform with the naming
