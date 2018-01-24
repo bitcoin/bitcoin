@@ -234,16 +234,16 @@ class TestNodeCLI():
     """Interface to bitcoin-cli for an individual node"""
 
     def __init__(self, binary, datadir):
-        self.args = []
+        self.options = []
         self.binary = binary
         self.datadir = datadir
         self.input = None
         self.log = logging.getLogger('TestFramework.bitcoincli')
 
-    def __call__(self, *args, input=None):
-        # TestNodeCLI is callable with bitcoin-cli command-line args
+    def __call__(self, *options, input=None):
+        # TestNodeCLI is callable with bitcoin-cli command-line options
         cli = TestNodeCLI(self.binary, self.datadir)
-        cli.args = [str(arg) for arg in args]
+        cli.options = [str(o) for o in options]
         cli.input = input
         return cli
 
@@ -259,16 +259,18 @@ class TestNodeCLI():
                results.append(dict(error=e))
         return results
 
-    def send_cli(self, command, *args, **kwargs):
+    def send_cli(self, command=None, *args, **kwargs):
         """Run bitcoin-cli command. Deserializes returned string as python object."""
 
         pos_args = [str(arg) for arg in args]
         named_args = [str(key) + "=" + str(value) for (key, value) in kwargs.items()]
         assert not (pos_args and named_args), "Cannot use positional arguments and named arguments in the same bitcoin-cli call"
-        p_args = [self.binary, "-datadir=" + self.datadir] + self.args
+        p_args = [self.binary, "-datadir=" + self.datadir] + self.options
         if named_args:
             p_args += ["-named"]
-        p_args += [command] + pos_args + named_args
+        if command is not None:
+            p_args += [command]
+        p_args += pos_args + named_args
         self.log.debug("Running bitcoin-cli command: %s" % command)
         process = subprocess.Popen(p_args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
         cli_stdout, cli_stderr = process.communicate(input=self.input)
