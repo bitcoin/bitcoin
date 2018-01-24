@@ -24,8 +24,8 @@ don't have test cases for.
 - Use a module-level docstring to describe what the test is testing, and how it
   is testing it.
 - When subclassing the BitcoinTestFramwork, place overrides for the
-  `__init__()`, and `setup_xxxx()` methods at the top of the subclass, then
-  locally-defined helper methods, then the `run_test()` method.
+  `set_test_params()`, `add_options()` and `setup_xxxx()` methods at the top of
+  the subclass, then locally-defined helper methods, then the `run_test()` method.
 
 #### Naming guidelines
 
@@ -39,7 +39,7 @@ don't have test cases for.
     - `wallet` for tests for wallet features, eg `wallet_keypool.py`
 - use an underscore to separate words
     - exception: for tests for specific RPCs or command line options which don't include underscores, name the test after the exact RPC or argument name, eg `rpc_decodescript.py`, not `rpc_decode_script.py`
-- Don't use the redundant work `test` in the name, eg `interface_zmq.py`, not `interface_zmq_test.py`
+- Don't use the redundant word `test` in the name, eg `interface_zmq.py`, not `interface_zmq_test.py`
 
 #### General test-writing advice
 
@@ -50,7 +50,7 @@ don't have test cases for.
 - Avoid stop-starting the nodes multiple times during the test if possible. A
   stop-start takes several seconds, so doing it several times blows up the
   runtime of the test.
-- Set the `self.setup_clean_chain` variable in `__init__()` to control whether
+- Set the `self.setup_clean_chain` variable in `set_test_params()` to control whether
   or not to use the cached data directories. The cached data directories
   contain a 200-block pre-mined blockchain and wallets for four nodes. Each node
   has 25 mature blocks (25x50=1250 BTC) in its wallet.
@@ -87,7 +87,7 @@ start the networking thread.  (Continue with the test logic in your existing
 thread.)
 
 - Can be used to write tests where specific P2P protocol behavior is tested.
-Examples tests are `p2p-accept-block.py`, `p2p-compactblocks.py`.
+Examples tests are `p2p_unrequested_blocks.py`, `p2p_compactblocks.py`.
 
 #### Comptool
 
@@ -133,7 +133,7 @@ Each `TestInstance` consists of:
     acceptance is tested against the given outcome.
 
 - For examples of tests written in this framework, see
-  `invalidblockrequest.py` and `feature_block.py`.
+  `p2p_invalid_block.py` and `feature_block.py`.
 
 ### test-framework modules
 
