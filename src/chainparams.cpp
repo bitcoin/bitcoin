@@ -230,7 +230,7 @@ public:
         nRejectBlockOutdatedMajority = 75;
         nToCheckBlockUpgradeMajority = 100;
         nMinerThreads = 0;
-        nTargetTimespan = 2 * 24 * 60 * 60; // Crown: 2 day
+        nTargetTimespan = 6 * 60 * 60; // Crown: 6 hours
         nTargetSpacing = 1.5 * 60; // Crown: 1.5 minutes
         nMaxTipAge = 0x7fffffff;
 
