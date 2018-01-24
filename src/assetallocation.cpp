@@ -359,14 +359,6 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 	{
 		if (!dontaddtodb) {
 			bRevert = !fJustCheck;
-			if (fJustCheck) {
-				// if we already have this tx in our arrival list, we should just revert and replay it
-				ArrivalTimesMap arrivalTimes;
-				passetallocationdb->ReadISArrivalTimes(assetAllocationTuple, arrivalTimes);
-				ArrivalTimesMap::const_iterator it = arrivalTimes.find(tx.GetHash());
-				if (it != arrivalTimes.end())
-					bRevert = true;
-			}
 			if (bRevert) {
 				if (!RevertAssetAllocation(assetAllocationTuple, tx.GetHash(), revertedAssetAllocations))
 				{
