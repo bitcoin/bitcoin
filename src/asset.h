@@ -10,8 +10,7 @@
 #include "script/script.h"
 #include "serialize.h"
 #include "primitives/transaction.h"
-#include "ranges.h"
-#include "graph.h"
+#include "assetallocation.h"
 class CWalletTx;
 class CTransaction;
 class CReserveKey;
