@@ -37,9 +37,6 @@
 #include <univalue.h>
 
 using namespace std;
-// SYSCOIN
-extern std::vector<unsigned char> vchFromString(const std::string &str);
-extern int GetSyscoinTxVersion();
 void ScriptPubKeyToJSON(const CScript& scriptPubKey, UniValue& out, bool fIncludeHex)
 {
     txnouttype type;

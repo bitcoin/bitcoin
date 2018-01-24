@@ -121,7 +121,7 @@ static const bool DEFAULT_RELAYPRIORITY = true;
 static const bool DEFAULT_PERMIT_BAREMULTISIG = true;
 static const unsigned int DEFAULT_BYTES_PER_SIGOP = 20;
 static const bool DEFAULT_CHECKPOINTS_ENABLED = true;
-static const bool DEFAULT_TXINDEX = false;
+static const bool DEFAULT_TXINDEX = true;
 static const bool DEFAULT_ADDRESSINDEX = true;
 static const bool DEFAULT_TIMESTAMPINDEX = false;
 static const bool DEFAULT_SPENTINDEX = false;
@@ -192,7 +192,7 @@ extern uint64_t nPruneTarget;
 static const unsigned int MIN_BLOCKS_TO_KEEP = 288;
 
 static const signed int DEFAULT_CHECKBLOCKS = MIN_BLOCKS_TO_KEEP;
-static const unsigned int DEFAULT_CHECKLEVEL = 3;
+static const unsigned int DEFAULT_CHECKLEVEL = 4;
 
 // Require that user allocate at least 945MB for block & undo files (blk???.dat and rev???.dat)
 // At 2MB per block, 288 blocks = 576MB.
@@ -303,7 +303,7 @@ void PruneAndFlush();
 bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransaction &tx, bool fLimitFree,
                         bool* pfMissingInputs, bool fOverrideMempoolLimit=false, bool fRejectAbsurdFee=false, bool fDryRun=false);
 
-bool GetUTXOCoins(const COutPoint& outpoint, CCoins& coins);
+const CCoins* GetUTXOCoins(const COutPoint& outpoint);
 int GetUTXOHeight(const COutPoint& outpoint);
 int GetUTXOConfirmations(const COutPoint& outpoint);
 
@@ -311,7 +311,7 @@ int GetUTXOConfirmations(const COutPoint& outpoint);
 std::string FormatStateMessage(const CValidationState &state);
 
 // SYSCOIN
-bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight = 0);
+bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight, const CBlock& block);
 
 /** Get the BIP9 state for a given deployment at the current tip. */
 ThresholdState VersionBitsTipState(const Consensus::Params& params, Consensus::DeploymentPos pos);

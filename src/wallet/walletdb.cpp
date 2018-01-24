@@ -22,7 +22,7 @@
 #include <boost/scoped_ptr.hpp>
 #include <boost/thread.hpp>
 // SYSCOIN
-extern int GetSyscoinTxVersion();
+#include "alias.h"
 
 using namespace std;
 
@@ -380,7 +380,7 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
 			if (!(CheckTransaction(wtx, state) && (wtx.GetHash() == hash) && state.IsValid()))
 			{
 				// SYSCOIN
-				if (wtx.GetHash() != hash && wtx.nVersion == GetSyscoinTxVersion())
+				if (wtx.GetHash() != hash && wtx.nVersion == SYSCOIN_TX_VERSION)
 					return true;
 				strErr = "Error reading wallet database. CheckTransaction failed, validation state: " + FormatStateMessage(state);
 				return false;

@@ -12,51 +12,6 @@ enum FeedbackUser {
 	FEEDBACKSELLER=2,
 	FEEDBACKARBITER=3
 };
-class CNameTXIDTuple {
-public:
-	std::vector<unsigned char> first;
-	uint256 second;
-	std::vector<unsigned char> third;
-
-	ADD_SERIALIZE_METHODS;
-
-	template <typename Stream, typename Operation>
-	inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-		READWRITE(first);
-		READWRITE(second);
-		READWRITE(third);
-	}
-
-	CNameTXIDTuple(const std::vector<unsigned char> &f, uint256 s, const std::vector<unsigned char> &guid=std::vector<unsigned char>()) {
-		first = f;
-		second = s;
-		third = guid;
-	}
-
-	CNameTXIDTuple() {
-		SetNull();
-	}
-	inline CNameTXIDTuple operator=(const CNameTXIDTuple& other) {
-		this->first = other.first;
-		this->second = other.second;
-		this->third = other.third;
-		return *this;
-	}
-	inline bool operator==(const CNameTXIDTuple& other) const {
-		return this->first == other.first && this->second == other.second && this->third == other.third;
-	}
-	inline bool operator!=(const CNameTXIDTuple& other) const {
-		return (this->first != other.first || this->second != other.second || this->third != other.third);
-	}
-	inline void SetNull() {
-		second.SetNull();
-		first.clear();
-		third.clear();
-	}
-	inline bool IsNull() {
-		return (first.empty() && second.IsNull() && third.empty());
-	}
-};
 class CFeedback {
 public:
 	std::vector<unsigned char> vchFeedback;

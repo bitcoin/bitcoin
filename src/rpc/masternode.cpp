@@ -351,7 +351,7 @@ UniValue masternode(const UniValue& params, bool fHelp)
     if (strCommand == "genkey")
     {
         CKey secret;
-        secret.MakeNewKey(false);
+        secret.MakeNewKey(true);
 
         return CSyscoinSecret(secret).ToString();
     }
@@ -495,7 +495,7 @@ UniValue masternodelist(const UniValue& params, bool fHelp)
     }
 
     if (strMode == "full" || strMode == "lastpaidtime" || strMode == "lastpaidblock") {
-        mnodeman.UpdateLastPaid();
+		mnodeman.UpdateLastPaid();
     }
 
     UniValue obj(UniValue::VOBJ);

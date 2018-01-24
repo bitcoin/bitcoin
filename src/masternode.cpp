@@ -107,20 +107,20 @@ CMasternode::CollateralStatus CMasternode::CheckCollateral(const COutPoint& outp
 {
     AssertLockHeld(cs_main);
 
-    CCoins coins;
-    if(!GetUTXOCoins(outpoint, coins)) {
+    const CCoins *coins = GetUTXOCoins(outpoint);
+    if(!coins) {
         return COLLATERAL_UTXO_NOT_FOUND;
     }
 
-    if(coins.vout[outpoint.n].nValue != 100000 * COIN) {
+    if(coins->vout[outpoint.n].nValue != 100000 * COIN) {
         return COLLATERAL_INVALID_AMOUNT;
     }
 
-	if (pubkey == CPubKey() || coins.vout[outpoint.n].scriptPubKey != GetScriptForDestination(pubkey.GetID())) {
+	if (pubkey == CPubKey() || coins->vout[outpoint.n].scriptPubKey != GetScriptForDestination(pubkey.GetID())) {
 		return COLLATERAL_INVALID_PUBKEY;
 	}
 
-    nHeightRet = coins.nHeight;
+    nHeightRet = coins->nHeight;
     return COLLATERAL_OK;
 }
 
@@ -143,8 +143,7 @@ void CMasternode::Check(bool fForce)
         TRY_LOCK(cs_main, lockMain);
         if(!lockMain) return;
 
-		CCoins coins;
-		if (!GetUTXOCoins(vin.prevout, coins)) {
+		if (!GetUTXOCoins(vin.prevout)) {
             nActiveState = MASTERNODE_OUTPOINT_SPENT;
             LogPrint("masternode", "CMasternode::Check -- Failed to find Masternode UTXO, masternode=%s\n", vin.prevout.ToStringShort());
             return;
@@ -292,7 +291,7 @@ std::string CMasternode::GetStatus() const
 }
 void CMasternode::UpdateLastPaid()
 {
-   	CSyscoinAddress collateralAddress(pubKeyCollateralAddress.GetID());
+	CSyscoinAddress collateralAddress(pubKeyCollateralAddress.GetID());
 	uint160 hashBytes;
 	int type = 0;
 	if (!collateralAddress.GetIndexKey(hashBytes, type)) {
@@ -301,7 +300,7 @@ void CMasternode::UpdateLastPaid()
 	std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue> > unspentOutputs;
 	if (!GetAddressUnspent(hashBytes, type, unspentOutputs))
 		return;
-	if(unspentOutputs.size() > 0)
+	if (unspentOutputs.size() > 0)
 		std::sort(unspentOutputs.begin(), unspentOutputs.end(), heightSort);
 	CAmount nTotalRewardWithMasternodes;
 	const CScript &mnpayee = GetScriptForDestination(pubKeyCollateralAddress.GetID());
@@ -318,6 +317,10 @@ void CMasternode::UpdateLastPaid()
 			}
 		}
 	}
+
+	// Last payment for this masternode wasn't found in latest mnpayments blocks
+	// or it was found in mnpayments blocks but wasn't found in the blockchain.
+	// LogPrint("masternode", "CMasternode::UpdateLastPaidBlock -- searching for block with payment to %s -- keeping old %d\n", vin.prevout.ToStringShort(), nBlockLastPaid);
 }
 
 bool CMasternodeBroadcast::Create(std::string strService, std::string strKeyMasternode, std::string strTxHash, std::string strOutputIndex, std::string& strErrorRet, CMasternodeBroadcast &mnbRet, bool fOffline)
@@ -493,7 +496,7 @@ bool CMasternodeBroadcast::Update(CMasternode* pmn, int& nDos, CConnman& connman
 	}
 
 	if (err == COLLATERAL_INVALID_AMOUNT) {
-		LogPrint("masternode", "CMasternodeBroadcast::CheckOutpoint -- Masternode UTXO should have 1000 DASH, masternode=%s\n", vin.prevout.ToStringShort());
+		LogPrint("masternode", "CMasternodeBroadcast::CheckOutpoint -- Masternode UTXO should have 100000 SYS, masternode=%s\n", vin.prevout.ToStringShort());
 		nDos = 33;
 		return false;
 	}
@@ -535,7 +538,7 @@ bool CMasternodeBroadcast::CheckOutpoint(int& nDos)
 	}
 
 	if (err == COLLATERAL_INVALID_AMOUNT) {
-		LogPrint("masternode", "CMasternodeBroadcast::CheckOutpoint -- Masternode UTXO should have 1000 DASH, masternode=%s\n", vin.prevout.ToStringShort());
+		LogPrint("masternode", "CMasternodeBroadcast::CheckOutpoint -- Masternode UTXO should have 100000 SYS, masternode=%s\n", vin.prevout.ToStringShort());
 		nDos = 33;
 		return false;
 	}
@@ -560,10 +563,10 @@ bool CMasternodeBroadcast::CheckOutpoint(int& nDos)
 	// Verify that sig time is legit, should be at least not earlier than the timestamp of the block
 	// at which collateral became nMasternodeMinimumConfirmations blocks deep.
 	// NOTE: this is not accurate because block timestamp is NOT guaranteed to be 100% correct one.
-	CBlockIndex* pRequredConfIndex = chainActive[nHeight + Params().GetConsensus().nMasternodeMinimumConfirmations - 1]; // block where tx got nMasternodeMinimumConfirmations
-	if (pRequredConfIndex->GetBlockTime() > sigTime) {
+	CBlockIndex* pRequiredConfIndex = chainActive[nHeight + Params().GetConsensus().nMasternodeMinimumConfirmations - 1]; // block where tx got nMasternodeMinimumConfirmations
+	if (pRequiredConfIndex->GetBlockTime() > sigTime) {
 		LogPrintf("CMasternodeBroadcast::CheckOutpoint -- Bad sigTime %d (%d conf block is at %d) for Masternode %s %s\n",
-			sigTime, Params().GetConsensus().nMasternodeMinimumConfirmations, pRequredConfIndex->GetBlockTime(), vin.prevout.ToStringShort(), addr.ToString());
+			sigTime, Params().GetConsensus().nMasternodeMinimumConfirmations, pRequiredConfIndex->GetBlockTime(), vin.prevout.ToStringShort(), addr.ToString());
 		return false;
 	}
 
@@ -573,7 +576,7 @@ bool CMasternodeBroadcast::CheckOutpoint(int& nDos)
 	}
 
 	// remember the block hash when collateral for this masternode had minimum required confirmations
-	nCollateralMinConfBlockHash = pRequredConfIndex->GetBlockHash();
+	nCollateralMinConfBlockHash = pRequiredConfIndex->GetBlockHash();
 
 	return true;
 }

@@ -38,15 +38,10 @@
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/thread.hpp>
-
-
-using namespace std;
 // SYSCOIN services
-extern int IndexOfAliasOutput(const CTransaction& tx);
-extern bool IsSyscoinScript(const CScript& scriptPubKey, int &op, vector<vector<unsigned char> > &vvchArgs);
-extern int GetSyscoinTxVersion();
-extern bool GetSyscoinTransaction(int nHeight, const uint256 &hash, CTransaction &txOut, uint256 &hashBlock, const Consensus::Params& consensusParams);
-extern vector<unsigned char> vchFromString(const string &str);
+#include "alias.h"
+using namespace std;
+
 extern CWallet* pwalletMain;
 vector<CWalletTx*> mapWtxToDelete;
 /** Transaction fee set by the user */
@@ -2460,7 +2455,7 @@ void CWallet::AvailableCoins(vector<COutput>& vCoins, bool fOnlyConfirmed, const
 }
 
 static void ApproximateBestSubset(vector<pair<CAmount, pair<const CWalletTx*, unsigned int> > >vValue, const CAmount& nTotalLower, const CAmount& nTargetValue,
-	vector<char>& vfBest, CAmount& nBest, int iterations = 1000, bool fUseInstantSend = false)
+	vector<char>& vfBest, CAmount& nBest, bool fUseInstantSend = false, int iterations = 1000)
 {
 	vector<char> vfIncluded;
 
@@ -2778,7 +2773,7 @@ bool CWallet::SelectCoins(const CAmount& nTargetValue, set<pair<const CWalletTx*
 		{
 			const CWalletTx* pcoin = &it->second;
 			// SYSCOIN txs are unspendable unless input to another syscoin tx (passed into createtransaction)
-			if (pcoin->nVersion == GetSyscoinTxVersion())
+			if (pcoin->nVersion == SYSCOIN_TX_VERSION)
 			{
 				int op;
 				vector<vector<unsigned char> > vvchArgs;
@@ -3307,7 +3302,7 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
 	CMutableTransaction txNew;
 	// SYSCOIN: set syscoin tx version if its a syscoin service call
 	if (sysTx)
-		txNew.nVersion = GetSyscoinTxVersion();
+		txNew.nVersion = SYSCOIN_TX_VERSION;
 	// Discourage fee sniping.
 	//
 	// For a large miner the value of the transactions in the best block and
@@ -3597,8 +3592,8 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
 					CScript& scriptSigRes = txNew.vin[nIn].scriptSig;
 					if (sign)
 						signSuccess = ProduceSignature(TransactionSignatureCreator(this, &txNewConst, nIn, SIGHASH_ALL), scriptPubKey, scriptSigRes);
-					/*else
-					signSuccess = ProduceSignature(DummySignatureCreator(this), scriptPubKey, scriptSigRes);*/
+					else
+						ProduceSignature(DummySignatureCreator(this), scriptPubKey, scriptSigRes);
 
 					if (!signSuccess)
 					{
@@ -3653,7 +3648,8 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
 				if (fUseInstantSend) {
 					nFeeNeeded = std::max(nFeeNeeded, CTxLockRequest(txNew).GetMinFee());
 				}
-
+				else if (sysTx)
+					nFeeNeeded = ::minRelayTxFee.GetFee(nBytes*1.5);
 				// If we made it here and we aren't even able to meet the relay fee on the next pass, give up
 				// because we must be at the maximum allowed fee.
 				if (nFeeNeeded < ::minRelayTxFee.GetFee(nBytes))
@@ -3661,7 +3657,6 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
 					strFailReason = _("Transaction too large for fee policy");
 					return false;
 				}
-
 				if (nFeeRet >= nFeeNeeded)
 					break; // Done, enough fee included.
 

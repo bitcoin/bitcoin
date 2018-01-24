@@ -516,16 +516,16 @@ bool CGovernanceObject::IsCollateralValid(std::string& strError, bool& fMissingC
     CTransaction txCollateral;
     uint256 nBlockHash;
 
-    // RETRIEVE TRANSACTION IN QUESTION
+	// RETRIEVE TRANSACTION IN QUESTION
 
-    if(!GetTransaction(nCollateralHash, txCollateral, Params().GetConsensus(), nBlockHash, true)){
-        strError = strprintf("Can't find collateral tx %s", txCollateral.ToString());
+	if (!GetTransaction(nCollateralHash, txCollateral, Params().GetConsensus(), nBlockHash, true)) {
+		strError = strprintf("Can't find collateral tx %s", txCollateral.ToString());
         LogPrintf("CGovernanceObject::IsCollateralValid -- %s\n", strError);
         return false;
     }
 
-    if(txCollateral.vout.size() < 1) {
-        strError = strprintf("tx vout size less than 1 | %d", txCollateral.vout.size());
+	if (txCollateral.vout.size() < 1) {
+		strError = strprintf("tx vout size less than 1 | %d", txCollateral.vout.size());
         LogPrintf("CGovernanceObject::IsCollateralValid -- %s\n", strError);
         return false;
     }
@@ -570,19 +570,17 @@ bool CGovernanceObject::IsCollateralValid(std::string& strError, bool& fMissingC
     }
 
     // GET CONFIRMATIONS FOR TRANSACTION
-
-    AssertLockHeld(cs_main);
-    int nConfirmationsIn = instantsend.GetConfirmations(nCollateralHash);
-    if (nBlockHash != uint256()) {
-        BlockMap::iterator mi = mapBlockIndex.find(nBlockHash);
-        if (mi != mapBlockIndex.end() && (*mi).second) {
-            CBlockIndex* pindex = (*mi).second;
-            if (chainActive.Contains(pindex)) {
-                nConfirmationsIn += chainActive.Height() - pindex->nHeight + 1;
-            }
-        }
-    }
-
+	AssertLockHeld(cs_main);
+	int nConfirmationsIn = instantsend.GetConfirmations(nCollateralHash);
+	if (nBlockHash != uint256()) {
+		BlockMap::iterator mi = mapBlockIndex.find(nBlockHash);
+		if (mi != mapBlockIndex.end() && (*mi).second) {
+			CBlockIndex* pindex = (*mi).second;
+			if (chainActive.Contains(pindex)) {
+				nConfirmationsIn += chainActive.Height() - pindex->nHeight + 1;
+			}
+		}
+	}
     if(nConfirmationsIn < GOVERNANCE_FEE_CONFIRMATIONS) {
         strError = strprintf("Collateral requires at least %d confirmations to be relayed throughout the network (it has only %d)", GOVERNANCE_FEE_CONFIRMATIONS, nConfirmationsIn);
         if (nConfirmationsIn >= GOVERNANCE_MIN_RELAY_FEE_CONFIRMATIONS) {

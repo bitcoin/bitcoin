@@ -14,12 +14,11 @@ class CReserveKey;
 class CCoinsViewCache;
 class CCoins;
 class CBlock;
-bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const std::vector<std::vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, std::string &errorMessage,  bool dontaddtodb=false);
+bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const std::vector<std::vector<unsigned char> > &vvchArgs, const std::vector<std::vector<unsigned char> > &vvchAliasArgs, bool fJustCheck, int nHeight, std::string &errorMessage, bool dontaddtodb=false);
 bool DecodeEscrowTx(const CTransaction& tx, int& op, int& nOut, std::vector<std::vector<unsigned char> >& vvch);
 bool DecodeAndParseEscrowTx(const CTransaction& tx, int& op, int& nOut, std::vector<std::vector<unsigned char> >& vvch, char &type);
 bool DecodeEscrowScript(const CScript& script, int& op, std::vector<std::vector<unsigned char> > &vvch);
 bool IsEscrowOp(int op);
-int IndexOfEscrowOutput(const CTransaction& tx);
 void EscrowTxToJSON(const int op, const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash, UniValue &entry);
 std::string escrowFromOp(int op);
 bool RemoveEscrowScriptPrefix(const CScript& scriptIn, CScript& scriptOut);
@@ -32,13 +31,12 @@ class CEscrow {
 public:
 	std::vector<unsigned char> vchEscrow;
 	std::vector<unsigned char> vchWitness;
-	CNameTXIDTuple sellerAliasTuple;
-	CNameTXIDTuple linkSellerAliasTuple;
-	CNameTXIDTuple arbiterAliasTuple;
-	CNameTXIDTuple offerTuple;
+	std::vector<unsigned char> vchSellerAlias;
+	std::vector<unsigned char> vchLinkSellerAlias;
+	std::vector<unsigned char> vchArbiterAlias;
+	std::vector<unsigned char> vchOffer;
 	std::vector<CScriptBase> scriptSigs;
-	CNameTXIDTuple buyerAliasTuple;
-	CNameTXIDTuple linkAliasTuple;
+	std::vector<unsigned char> vchBuyerAlias;
 	CFeedback feedback;
     uint256 txHash;
 	uint256 extTxId;
@@ -59,15 +57,17 @@ public:
 	float fBidPerUnit;
 	std::vector<unsigned char> vchRedeemScript;
 	unsigned char role;
-	void ClearEscrow()
+	inline void ClearEscrow()
 	{
 		feedback.SetNull();
-		linkSellerAliasTuple.first.clear();
-		linkAliasTuple.first.clear();
-		offerTuple.first.clear();
+		vchLinkSellerAlias.clear();
+		vchOffer.clear();
 		scriptSigs.clear();
 		vchWitness.clear();
 		vchRedeemScript.clear();
+		vchSellerAlias.clear();
+		vchArbiterAlias.clear();
+		vchBuyerAlias.clear();
 	}
     CEscrow() {
         SetNull();
@@ -80,11 +80,11 @@ public:
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-		READWRITE(sellerAliasTuple);
-		READWRITE(linkSellerAliasTuple);
-		READWRITE(arbiterAliasTuple);
+		READWRITE(vchSellerAlias);
+		READWRITE(vchLinkSellerAlias);
+		READWRITE(vchArbiterAlias);
 		READWRITE(vchWitness);
-        READWRITE(offerTuple);
+        READWRITE(vchOffer);
 		READWRITE(scriptSigs);
 		READWRITE(txHash);
 		READWRITE(extTxId);
@@ -94,9 +94,8 @@ public:
 		READWRITE(VARINT(op));
 		READWRITE(VARINT(nPaymentOption));
 		READWRITE(VARINT(role));
-        READWRITE(buyerAliasTuple);
+        READWRITE(vchBuyerAlias);
 		READWRITE(vchEscrow);
-		READWRITE(linkAliasTuple);
 		READWRITE(feedback);
 		READWRITE(bPaymentAck);
 		READWRITE(bBuyNow);
@@ -111,50 +110,20 @@ public:
 		READWRITE(nAmountOrBidPerUnit);
 	}
 
-    friend bool operator==(const CEscrow &a, const CEscrow &b) {
-		return (
-			a.buyerAliasTuple == b.buyerAliasTuple
-			&& a.sellerAliasTuple == b.sellerAliasTuple
-			&& a.linkSellerAliasTuple == b.linkSellerAliasTuple
-			&& a.arbiterAliasTuple == b.arbiterAliasTuple
-			&& a.offerTuple == b.offerTuple
-			&& a.scriptSigs == b.scriptSigs
-			&& a.extTxId == b.extTxId
-			&& a.txHash == b.txHash
-			&& a.nHeight == b.nHeight
-			&& a.nQty == b.nQty
-			&& a.nPaymentOption == b.nPaymentOption
-			&& a.linkAliasTuple == b.linkAliasTuple
-			&& a.vchEscrow == b.vchEscrow
-			&& a.op == b.op
-			&& a.feedback == b.feedback
-			&& a.redeemTxId == b.redeemTxId
-			&& a.bPaymentAck == b.bPaymentAck
-			&& a.bBuyNow == b.bBuyNow
-			&& a.fBidPerUnit == b.fBidPerUnit
-			&& a.nDeposit == b.nDeposit
-			&& a.nArbiterFee == b.nArbiterFee
-			&& a.nNetworkFee == b.nNetworkFee
-			&& a.nCommission == b.nCommission
-			&& a.nWitnessFee == b.nWitnessFee
-			&& a.vchWitness == b.vchWitness
-			&& a.vchRedeemScript == b.vchRedeemScript
-			&& a.nShipping == b.nShipping
-			&& a.nAmountOrBidPerUnit == b.nAmountOrBidPerUnit
-			&& a.role == b.role
+    inline friend bool operator==(const CEscrow &a, const CEscrow &b) {
+		return (a.vchEscrow == b.vchEscrow
         );
     }
 
-    CEscrow operator=(const CEscrow &b) {
-        buyerAliasTuple = b.buyerAliasTuple;
-		sellerAliasTuple = b.sellerAliasTuple;
-		linkSellerAliasTuple = b.linkSellerAliasTuple;
-		arbiterAliasTuple = b.arbiterAliasTuple;
-        offerTuple = b.offerTuple;
+    inline CEscrow operator=(const CEscrow &b) {
+        vchBuyerAlias = b.vchBuyerAlias;
+		vchSellerAlias = b.vchSellerAlias;
+		vchLinkSellerAlias = b.vchLinkSellerAlias;
+		vchArbiterAlias = b.vchArbiterAlias;
+        vchOffer = b.vchOffer;
 		scriptSigs = b.scriptSigs;
 		extTxId = b.extTxId;
 		txHash = b.txHash;
-		linkAliasTuple = b.linkAliasTuple;
 		nHeight = b.nHeight;
 		nQty = b.nQty;
 		nPaymentOption = b.nPaymentOption;
@@ -177,11 +146,11 @@ public:
         return *this;
     }
 
-    friend bool operator!=(const CEscrow &a, const CEscrow &b) {
+    inline friend bool operator!=(const CEscrow &a, const CEscrow &b) {
         return !(a == b);
     }
-	void SetNull() { role = 0; nAmountOrBidPerUnit = 0; vchWitness.clear();  fBidPerUnit = 0;  nDeposit = nArbiterFee = nNetworkFee = nCommission = nShipping = nWitnessFee = 0; extTxId.SetNull(); op = 0; bPaymentAck = bBuyNow = false; redeemTxId.SetNull(); linkAliasTuple.first.clear(); feedback.SetNull(); linkSellerAliasTuple.first.clear(); vchEscrow.clear(); nHeight = nPaymentOption = 0; txHash.SetNull(); nQty = 0; buyerAliasTuple.first.clear(); arbiterAliasTuple.first.clear(); sellerAliasTuple.first.clear(); offerTuple.first.clear(); scriptSigs.clear(); vchRedeemScript.clear(); }
-	bool IsNull() const { return (role == 0 && nAmountOrBidPerUnit == 0 && vchWitness.empty() && fBidPerUnit == 0 && nDeposit == 0 && nArbiterFee == 0 && nShipping == 0 && nCommission == 0 && nNetworkFee == 0 && nWitnessFee == 0 && extTxId.IsNull() && !bBuyNow && !bPaymentAck && redeemTxId.IsNull() && linkSellerAliasTuple.first.empty() && linkAliasTuple.first.empty() && feedback.IsNull() && op == 0 && vchEscrow.empty() && txHash.IsNull() && nHeight == 0 && nPaymentOption == 0 && nQty == 0 && buyerAliasTuple.first.empty() && arbiterAliasTuple.first.empty() && sellerAliasTuple.first.empty() && offerTuple.first.empty() && scriptSigs.empty() && vchRedeemScript.empty()); }
+	inline void SetNull() { role = 0; nAmountOrBidPerUnit = 0; vchWitness.clear();  fBidPerUnit = 0;  nDeposit = nArbiterFee = nNetworkFee = nCommission = nShipping = nWitnessFee = 0; extTxId.SetNull(); op = 0; bPaymentAck = bBuyNow = false; redeemTxId.SetNull(); feedback.SetNull(); vchLinkSellerAlias.clear(); vchEscrow.clear(); nHeight = nPaymentOption = 0; txHash.SetNull(); nQty = 0; vchBuyerAlias.clear(); vchArbiterAlias.clear(); vchSellerAlias.clear(); vchOffer.clear(); scriptSigs.clear(); vchRedeemScript.clear(); }
+	inline bool IsNull() const { return (vchEscrow.empty()); }
     bool UnserializeFromTx(const CTransaction &tx);
 	bool UnserializeFromData(const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash);
 	void Serialize(std::vector<unsigned char>& vchData);
@@ -193,7 +162,7 @@ public:
     CEscrowDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "escrow", nCacheSize, fMemory, fWipe) {}
 
     bool WriteEscrow( const std::vector<std::vector<unsigned char> > &vvchArgs, const CEscrow& escrow) {
-		bool writeState = WriteEscrowLastTXID(escrow.vchEscrow, escrow.txHash) && Write(make_pair(std::string("escrowi"), CNameTXIDTuple(escrow.vchEscrow, escrow.txHash)), escrow);
+		bool writeState = Write(make_pair(std::string("escrowi"), escrow.vchEscrow), escrow);
 		WriteEscrowIndex(escrow, vvchArgs);
         return writeState;
     }
@@ -203,37 +172,31 @@ public:
 	void RefundEscrowBid(const std::vector<unsigned char> &vchEscrow) {
 		RefundEscrowBidIndex(vchEscrow, "refunded");
 	}
-    bool EraseEscrow(const CNameTXIDTuple& escrowTuple, bool cleanup = false) {
-		bool eraseState = Erase(make_pair(std::string("escrowi"), escrowTuple));
-		EraseEscrowLastTXID(escrowTuple.first);
-		EraseEscrowIndex(escrowTuple.first, cleanup);
-		EraseEscrowFeedbackIndex(escrowTuple.first, cleanup);
-		EraseEscrowBidIndex(escrowTuple.first, cleanup);
+    bool EraseEscrow(const std::vector<unsigned char>& vchEscrow, bool cleanup = false) {
+		bool eraseState = Erase(make_pair(std::string("escrowi"), vchEscrow));
+		EraseEscrowIndex(vchEscrow, cleanup);
+		EraseEscrowFeedbackIndex(vchEscrow, cleanup);
+		EraseEscrowBidIndex(vchEscrow, cleanup);
         return eraseState;
     }
-    bool ReadEscrow(const CNameTXIDTuple& escrowTuple, CEscrow& escrow) {
-        return Read(make_pair(std::string("escrowi"), escrowTuple), escrow);
+    bool ReadEscrow(const std::vector<unsigned char>& vchEscrow, CEscrow& escrow) {
+        return Read(make_pair(std::string("escrowi"), vchEscrow), escrow);
     }
-	bool WriteEscrowLastTXID(const std::vector<unsigned char>& escrow, const uint256& txid) {
-		return Write(make_pair(std::string("escrowlt"), escrow), txid);
-	}
 	bool ReadEscrowLastTXID(const std::vector<unsigned char>& escrow, uint256& txid) {
 		return Read(make_pair(std::string("escrowlt"), escrow), txid);
-	}
-	bool EraseEscrowLastTXID(const std::vector<unsigned char>& escrow) {
-		return Erase(make_pair(std::string("escrowlt"), escrow));
 	}
 	bool CleanupDatabase(int &servicesCleaned);
 	void WriteEscrowIndex(const CEscrow& escrow, const std::vector<std::vector<unsigned char> > &vvchArgs);
 	void EraseEscrowIndex(const std::vector<unsigned char>& vchEscrow, bool cleanup);
 	void WriteEscrowFeedbackIndex(const CEscrow& escrow);
 	void EraseEscrowFeedbackIndex(const std::vector<unsigned char>& vchEscrow, bool cleanup);
+	void EraseEscrowFeedbackIndex(const std::string& id);
 	void WriteEscrowBidIndex(const CEscrow& escrow, const std::string& status);
 	void RefundEscrowBidIndex(const std::vector<unsigned char>& vchEscrow, const std::string& status);
 	void EraseEscrowBidIndex(const std::vector<unsigned char>& vchEscrow, bool cleanup);
+	void EraseEscrowBidIndex(const std::string& id);
 };
 
-bool GetEscrow(const CNameTXIDTuple &escrowTuple, CEscrow& txPos);
 bool GetEscrow(const std::vector<unsigned char> &vchEscrow, CEscrow& txPos);
 bool BuildEscrowJson(const CEscrow &escrow, UniValue& oEscrow);
 bool BuildEscrowIndexerJson(const CEscrow &escrow, UniValue& oEscrow);

@@ -7,9 +7,10 @@
 
 #include "rpc/server.h"
 #include "dbwrapper.h"
-#include "feedback.h"
 #include "consensus/params.h"
-#include "sync.h" 
+#include "sync.h"
+#include "script/script.h"
+#include "serialize.h"
 class CWalletTx;
 class CTransaction;
 class CTxOut;
@@ -33,7 +34,14 @@ enum {
 	OFFER, 
 	CERT,
 	ESCROW,
-	ASSET
+	ASSET,
+	ASSETALLOCATION
+};
+enum {
+	ACCEPT_TRANSFER_NONE=0,
+	ACCEPT_TRANSFER_CERTIFICATES,
+	ACCEPT_TRANSFER_ASSETS,
+	ACCEPT_TRANSFER_ALL,
 };
 class CAliasUnprunable
 {
@@ -68,8 +76,8 @@ class CAliasUnprunable
         return !(a == b);
     }
 
-    inline void SetNull() { vchGUID.clear(); nExpireTime=0;}
-    inline bool IsNull() const { return (vchGUID.empty() && nExpireTime == 0); }
+	inline void SetNull() { vchGUID.clear(); nExpireTime = 0; }
+    inline bool IsNull() const { return (vchGUID.empty()); }
 };
 class COfferLinkWhitelistEntry {
 public:
@@ -103,8 +111,11 @@ public:
 		return !(a == b);
 	}
 
-	inline void SetNull() { aliasLinkVchRand.clear(); nDiscountPct = 0; }
-	inline bool IsNull() const { return (aliasLinkVchRand.empty() && nDiscountPct == 0); }
+	inline void SetNull() {
+		aliasLinkVchRand.clear(); 
+		nDiscountPct = 0;
+	}
+	inline bool IsNull() const { return (aliasLinkVchRand.empty()); }
 
 };
 typedef std::map<std::vector<unsigned char>, COfferLinkWhitelistEntry> whitelistMap_t;
@@ -161,7 +172,8 @@ public:
 	std::vector<unsigned char> vchAddress;
 	std::vector<unsigned char> vchEncryptionPublicKey;
 	std::vector<unsigned char> vchEncryptionPrivateKey;
-	bool acceptCertTransfers;
+	// 1 accepts certs, 2 accepts assets, 3 accepts both (default)
+	unsigned char nAcceptTransferFlags;
 	// 1 can edit, 2 can edit/transfer
 	unsigned char nAccessFlags;
 	std::vector<unsigned char> vchPublicValue;
@@ -174,7 +186,7 @@ public:
         SetNull();
         UnserializeFromTx(tx);
     }
-	void ClearAlias()
+	inline void ClearAlias()
 	{
 		vchEncryptionPublicKey.clear();
 		vchEncryptionPrivateKey.clear();
@@ -194,19 +206,19 @@ public:
 		READWRITE(vchAlias);
 		READWRITE(vchGUID);
 		READWRITE(VARINT(nExpireTime));
-		READWRITE(acceptCertTransfers);
+		READWRITE(VARINT(nAcceptTransferFlags));
 		READWRITE(VARINT(nAccessFlags));
 		READWRITE(vchAddress);	
 		READWRITE(offerWhitelist);
 	}
-    friend bool operator==(const CAliasIndex &a, const CAliasIndex &b) {
-		return (a.offerWhitelist == b.offerWhitelist && a.nAccessFlags == b.nAccessFlags && a.vchAddress == b.vchAddress && a.vchEncryptionPublicKey == b.vchEncryptionPublicKey && a.vchEncryptionPrivateKey == b.vchEncryptionPrivateKey && a.acceptCertTransfers == b.acceptCertTransfers && a.nExpireTime == b.nExpireTime && a.vchGUID == b.vchGUID && a.vchAlias == b.vchAlias && a.nHeight == b.nHeight && a.txHash == b.txHash && a.vchPublicValue == b.vchPublicValue);
+    inline friend bool operator==(const CAliasIndex &a, const CAliasIndex &b) {
+		return (a.vchGUID == b.vchGUID && a.vchAlias == b.vchAlias);
     }
 
-    friend bool operator!=(const CAliasIndex &a, const CAliasIndex &b) {
+    inline friend bool operator!=(const CAliasIndex &a, const CAliasIndex &b) {
         return !(a == b);
     }
-    CAliasIndex operator=(const CAliasIndex &b) {
+    inline CAliasIndex operator=(const CAliasIndex &b) {
 		vchGUID = b.vchGUID;
 		nExpireTime = b.nExpireTime;
 		vchAlias = b.vchAlias;
@@ -214,15 +226,15 @@ public:
         nHeight = b.nHeight;
         vchPublicValue = b.vchPublicValue;
 		vchAddress = b.vchAddress;
-		acceptCertTransfers = b.acceptCertTransfers;
+		nAcceptTransferFlags = b.nAcceptTransferFlags;
 		vchEncryptionPrivateKey = b.vchEncryptionPrivateKey;
 		vchEncryptionPublicKey = b.vchEncryptionPublicKey;
 		nAccessFlags = b.nAccessFlags;
 		offerWhitelist = b.offerWhitelist;
         return *this;
     }   
-	void SetNull() { offerWhitelist.SetNull(); nAccessFlags = 2; vchAddress.clear(); vchEncryptionPublicKey.clear(); vchEncryptionPrivateKey.clear(); acceptCertTransfers = true; nExpireTime = 0; vchGUID.clear(); vchAlias.clear(); txHash.SetNull(); nHeight = 0; vchPublicValue.clear(); }
-    bool IsNull() const { return (offerWhitelist.IsNull() && nAccessFlags == 2 && vchAddress.empty() && vchEncryptionPublicKey.empty() && vchEncryptionPrivateKey.empty() && acceptCertTransfers && nExpireTime == 0 && vchGUID.empty() && vchAlias.empty() && nHeight == 0 && txHash.IsNull() && vchPublicValue.empty()); }
+	inline void SetNull() { offerWhitelist.SetNull(); nAccessFlags = 2; vchAddress.clear(); vchEncryptionPublicKey.clear(); vchEncryptionPrivateKey.clear(); nAcceptTransferFlags = 3; nExpireTime = 0; vchGUID.clear(); vchAlias.clear(); txHash.SetNull(); nHeight = 0; vchPublicValue.clear(); }
+    inline bool IsNull() const { return (vchAlias.empty()); }
 	bool UnserializeFromTx(const CTransaction &tx);
 	bool UnserializeFromData(const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash);
 	void Serialize(std::vector<unsigned char>& vchData);
@@ -235,20 +247,20 @@ public:
 	bool WriteAlias(const CAliasUnprunable &aliasUnprunable, const std::vector<unsigned char>& address, const CAliasIndex& alias, const int &op) {
 		if(address.empty())
 			return false;	
-		bool writeState = WriteAliasLastTXID(alias.vchAlias, alias.txHash) && Write(make_pair(std::string("namei"), CNameTXIDTuple(alias.vchAlias, alias.txHash)), alias) && Write(make_pair(std::string("namea"), address), alias.vchAlias) && Write(make_pair(std::string("nameu"), alias.vchAlias), aliasUnprunable);
+		bool writeState = Write(make_pair(std::string("namei"), alias.vchAlias), alias) && Write(make_pair(std::string("namea"), address), alias.vchAlias) && Write(make_pair(std::string("nameu"), alias.vchAlias), aliasUnprunable);
 		WriteAliasIndex(alias, op);
 		return writeState;
 	}
 
-
-	bool EraseAlias(const CNameTXIDTuple& aliasTuple, bool cleanup = false) {
-		bool eraseState = Erase(make_pair(std::string("namei"), CNameTXIDTuple(aliasTuple.first, aliasTuple.second)));
-		EraseAliasLastTXID(aliasTuple.first);
-		EraseAliasIndex(aliasTuple.first, cleanup);
+	bool EraseAlias(const std::vector<unsigned char>& vchAlias, bool cleanup = false) {
+		bool eraseState = Erase(make_pair(std::string("namei"), vchAlias));
+		EraseAliasIndex(vchAlias, cleanup);
+		EraseAliasIndexHistory(vchAlias, cleanup);
+		EraseAliasIndexTxHistory(vchAlias, cleanup);
 		return eraseState;
 	}
-	bool ReadAlias(const CNameTXIDTuple& aliasTuple, CAliasIndex& alias) {
-		return Read(make_pair(std::string("namei"), CNameTXIDTuple(aliasTuple.first, aliasTuple.second)), alias);
+	bool ReadAlias(const std::vector<unsigned char>& vchAlias, CAliasIndex& alias) {
+		return Read(make_pair(std::string("namei"), vchAlias), alias);
 	}
 	bool ReadAddress(const std::vector<unsigned char>& address, std::vector<unsigned char>& name) {
 		return Read(make_pair(std::string("namea"), address), name);
@@ -262,53 +274,44 @@ public:
 	bool ExistsAddress(const std::vector<unsigned char>& address) {
 	    return Exists(make_pair(std::string("namea"), address));
 	}
-	bool WriteAliasLastTXID(const std::vector<unsigned char>& alias, const uint256& txid) {
-		return Write(make_pair(std::string("namelt"), alias), txid);
-	}
-	bool ReadAliasLastTXID(const std::vector<unsigned char>& alias, uint256& txid) {
-		return Read(make_pair(std::string("namelt"), alias), txid);
-	}
-	bool EraseAliasLastTXID(const std::vector<unsigned char>& alias) {
-		return Erase(make_pair(std::string("namelt"), alias));
-	}
 	bool CleanupDatabase(int &servicesCleaned);
 	void WriteAliasIndex(const CAliasIndex& alias, const int &op);
 	void EraseAliasIndex(const std::vector<unsigned char>& vchAlias, bool cleanup);
 	void WriteAliasIndexHistory(const CAliasIndex& alias, const int &op);
 	void EraseAliasIndexHistory(const std::vector<unsigned char>& vchAlias, bool cleanup);
+	void EraseAliasIndexHistory(const std::string& id);
 	void WriteAliasIndexTxHistory(const std::string &user1, const std::string &user2, const std::string &user3, const uint256 &txHash, const uint64_t& nHeight, const std::string &type, const std::string &guid);
 	void EraseAliasIndexTxHistory(const std::vector<unsigned char>& vchAlias, bool cleanup);
+	void EraseAliasIndexTxHistory(const std::string& id);
 };
 
 class COfferDB;
 class CCertDB;
 class CEscrowDB;
+class CAssetDB;
+class CAssetAllocationDB;
 extern CAliasDB *paliasdb;
 extern COfferDB *pofferdb;
 extern CCertDB *pcertdb;
 extern CEscrowDB *pescrowdb;
-
-
+extern CAssetDB *passetdb;
+extern CAssetAllocationDB *passetallocationdb;
 
 std::string stringFromVch(const std::vector<unsigned char> &vch);
 std::vector<unsigned char> vchFromValue(const UniValue& value);
 std::vector<unsigned char> vchFromString(const std::string &str);
 std::string stringFromValue(const UniValue& value);
-int GetSyscoinTxVersion();
 const int SYSCOIN_TX_VERSION = 0x7400;
 bool IsValidAliasName(const std::vector<unsigned char> &vchAlias);
-bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const std::vector<std::vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, std::string &errorMessage, bool dontaddtodb=false);
+bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const std::vector<std::vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, std::string &errorMessage, bool & bDestCheckFailed,bool dontaddtodb=false);
 void CreateRecipient(const CScript& scriptPubKey, CRecipient& recipient);
 void CreateFeeRecipient(CScript& scriptPubKey, const std::vector<unsigned char>& data, CRecipient& recipient);
 void CreateAliasRecipient(const CScript& scriptPubKey, CRecipient& recipient);
 int aliasselectpaymentcoins(const std::vector<unsigned char> &vchAlias, const CAmount &nAmount, std::vector<COutPoint>& outPoints, bool& bIsFunded, CAmount &nRequiredAmount, bool bSelectFeePlacement, bool bSelectAll=false, bool bNoAliasRecipient=false);
 CAmount GetDataFee(const CScript& scriptPubKey);
-bool IsSyscoinTxMine(const CTransaction& tx,const std::string &type);
 bool IsAliasOp(int op);
-bool GetAlias(const CNameTXIDTuple& aliasTuple, CAliasIndex& alias);
 bool GetAlias(const std::vector<unsigned char> &vchAlias, CAliasIndex& alias);
 bool CheckParam(const UniValue& params, const unsigned int index);
-int IndexOfAliasOutput(const CTransaction& tx);
 bool GetAliasOfTx(const CTransaction& tx, std::vector<unsigned char>& name);
 bool DecodeAliasTx(const CTransaction& tx, int& op, int& nOut, std::vector<std::vector<unsigned char> >& vvch);
 bool DecodeAndParseAliasTx(const CTransaction& tx, int& op, int& nOut, std::vector<std::vector<unsigned char> >& vvch, char &type);
@@ -338,10 +341,9 @@ void AliasTxToJSON(const int op, const std::vector<unsigned char> &vchData, cons
 bool BuildAliasJson(const CAliasIndex& alias, UniValue& oName);
 void CleanupSyscoinServiceDatabases(int &servicesCleaned);
 int aliasunspent(const std::vector<unsigned char> &vchAlias, COutPoint& outPoint);
-bool IsMyAlias(const CAliasIndex& alias);
 void GetAddress(const CAliasIndex &alias, CSyscoinAddress* address, CScript& script, const uint32_t nPaymentOption=1);
 void startMongoDB();
 void stopMongoDB();
-std::string GetSyscoinTransactionDescription(const int op, const std::vector<std::vector<unsigned char> > &vvchArgs, const CTransaction &tx, std::string& responseEnglish, std::string& responseGUID, const char &type);
+std::string GetSyscoinTransactionDescription(const int op, std::string& responseEnglish, const char &type);
 bool BuildAliasIndexerHistoryJson(const CAliasIndex& alias, UniValue& oName);
 #endif // ALIAS_H

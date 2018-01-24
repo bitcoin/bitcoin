@@ -1634,6 +1634,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                 LogPrintf("TXLOCKREQUEST -- Transaction Lock Request accepted, txid=%s, peer=%d\n",
                         tx.GetHash().ToString(), pfrom->id);
                 instantsend.AcceptLockRequest(txLockRequest);
+				instantsend.Vote(tx.GetHash(), connman);
             }
 
             mempool.check(pcoinsTip);

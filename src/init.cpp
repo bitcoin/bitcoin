@@ -72,6 +72,8 @@
 #include "offer.h"
 #include "cert.h"
 #include "escrow.h"
+#include "asset.h"
+#include "assetallocation.h"
 
 #ifndef WIN32
 #include <signal.h>
@@ -293,6 +295,20 @@ void PrepareShutdown()
 				LogPrintf("Failed to write to cert database!");
 			delete pcertdb;
 			pcertdb = NULL;
+		}
+		if (passetdb != NULL)
+		{
+			if (!passetdb->Flush())
+				LogPrintf("Failed to write to asset database!");
+			delete passetdb;
+			passetdb = NULL;
+		}
+		if (passetallocationdb != NULL)
+		{
+			if (!passetallocationdb->Flush())
+				LogPrintf("Failed to write to asset allocation database!");
+			delete passetallocationdb;
+			passetallocationdb = NULL;
 		}
 		if (pescrowdb != NULL)
 		{
@@ -1604,6 +1620,8 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
 				delete paliasdb;
 				delete pofferdb;
 				delete pcertdb;
+				delete passetdb;
+				delete passetallocationdb;
 				delete pescrowdb;
 
 				pblocktree = new CBlockTreeDB(nBlockTreeDBCache, false, fReindex);
@@ -1613,6 +1631,8 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
 				paliasdb = new CAliasDB(nCoinCacheUsage * 20, false, fReindex);
 				pofferdb = new COfferDB(nCoinCacheUsage * 2, false, fReindex);
 				pcertdb = new CCertDB(nCoinCacheUsage * 2, false, fReindex);
+				passetdb = new CAssetDB(nCoinCacheUsage * 2, false, fReindex);
+				passetallocationdb = new CAssetAllocationDB(nCoinCacheUsage * 2, false, fReindex);
 				pescrowdb = new CEscrowDB(nCoinCacheUsage * 2, false, fReindex);
 				startMongoDB();
 				if (fReindex) {
@@ -1948,9 +1968,9 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
 	fMasterNode = GetBoolArg("-masternode", false);
 
 	// SYSCOIN
-	if ((fMasterNode || masternodeConfig.getCount() > 0) && fAddressIndex == false) {
-		return InitError("Enabling Masternode support requires turning on address indexing."
-			"Please add addressindex=1 to your configuration and start with -reindex");
+	if ((fMasterNode || masternodeConfig.getCount() > 0) && (fAddressIndex == false || fTxIndex == false)) {
+		return InitError("Enabling Masternode support requires turning on address indexing and transaction indexing."
+			"Please add addressindex=1 and txindex=1 to your configuration and start with -reindex");
 	}
 
 	if (fMasterNode) {

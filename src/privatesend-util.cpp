@@ -5,51 +5,51 @@
 #include "privatesend-util.h"
 
 CKeyHolder::CKeyHolder(CWallet* pwallet) :
-    reserveKey(pwallet)
+	reserveKey(pwallet)
 {
-    reserveKey.GetReservedKey(pubKey, false);
+	reserveKey.GetReservedKey(pubKey, false);
 }
 
 void CKeyHolder::KeepKey()
 {
-    reserveKey.KeepKey();
+	reserveKey.KeepKey();
 }
 
 void CKeyHolder::ReturnKey()
 {
-    reserveKey.ReturnKey();
+	reserveKey.ReturnKey();
 }
 
 CScript CKeyHolder::GetScriptForDestination() const
 {
-    return ::GetScriptForDestination(pubKey.GetID());
+	return ::GetScriptForDestination(pubKey.GetID());
 }
 
 
 const CKeyHolder& CKeyHolderStorage::AddKey(CWallet* pwallet)
 {
-    storage.emplace_back(std::unique_ptr<CKeyHolder>(new CKeyHolder(pwallet)));
-    LogPrintf("CKeyHolderStorage::%s -- storage size %lld\n", __func__, storage.size());
-    return *storage.back();
+	storage.emplace_back(std::unique_ptr<CKeyHolder>(new CKeyHolder(pwallet)));
+	LogPrintf("CKeyHolderStorage::%s -- storage size %lld\n", __func__, storage.size());
+	return *storage.back();
 }
 
-void CKeyHolderStorage::KeepAll(){
-    if (storage.size() > 0) {
-        for (auto &key : storage) {
-            key->KeepKey();
-        }
-        LogPrintf("CKeyHolderStorage::%s -- %lld keys kept\n", __func__, storage.size());
-        storage.clear();
-    }
+void CKeyHolderStorage::KeepAll() {
+	if (storage.size() > 0) {
+		for (auto &key : storage) {
+			key->KeepKey();
+		}
+		LogPrintf("CKeyHolderStorage::%s -- %lld keys kept\n", __func__, storage.size());
+		storage.clear();
+	}
 }
 
 void CKeyHolderStorage::ReturnAll()
 {
-    if (storage.size() > 0) {
-        for (auto &key : storage) {
-            key->ReturnKey();
-        }
-        LogPrintf("CKeyHolderStorage::%s -- %lld keys returned\n", __func__, storage.size());
-        storage.clear();
-    }
+	if (storage.size() > 0) {
+		for (auto &key : storage) {
+			key->ReturnKey();
+		}
+		LogPrintf("CKeyHolderStorage::%s -- %lld keys returned\n", __func__, storage.size());
+		storage.clear();
+	}
 }

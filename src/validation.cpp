@@ -55,8 +55,12 @@
 #include "offer.h"
 #include "cert.h"
 #include "alias.h"
+#include "asset.h"
+#include "assetallocation.h"
 #include "escrow.h"
+#include "graph.h"
 #include "base58.h"
+#include "rpc/server.h"
 using namespace std;
 
 #if defined(NDEBUG)
@@ -77,7 +81,7 @@ CConditionVariable cvBlockChange;
 int nScriptCheckThreads = 0;
 bool fImporting = false;
 bool fReindex = false;
-bool fTxIndex = false;
+bool fTxIndex = true;
 int nIndexPort = 0;
 bool fAddressIndex = true;
 bool fTimestampIndex = false;
@@ -113,7 +117,7 @@ static void CheckBlockIndex(const Consensus::Params& consensusParams);
 /** Constant stuff for coinbase transactions we create: */
 CScript COINBASE_FLAGS;
 
-const string strMessageMagic = "Syscoin Signed Message:\n";
+const string strMessageMagic = "Bitcoin Signed Message:\n";
 
 // Internal stuff
 namespace {
@@ -175,7 +179,6 @@ namespace {
 	/** Dirty block file entries. */
 	set<int> setDirtyFileInfo;
 } // anon namespace
-
 CBlockIndex* FindForkInGlobalIndex(const CChain& chain, const CBlockLocator& locator)
 {
 	// Find the first block the caller has in the main chain
@@ -452,18 +455,20 @@ unsigned int GetP2SHSigOpCount(const CTransaction& tx, const CCoinsViewCache& in
 	return nSigOps;
 }
 
-bool GetUTXOCoins(const COutPoint& outpoint, CCoins& coins)
+const CCoins* GetUTXOCoins(const COutPoint& outpoint)
 {
-	return !(!pcoinsTip->GetCoins(outpoint.hash, coins) ||
-		(unsigned int)outpoint.n >= coins.vout.size() ||
-		coins.vout[outpoint.n].IsNull());
+	CCoinsViewCache &view = *pcoinsTip;
+	const CCoins* coins = view.AccessCoins(outpoint.hash);
+	if (!coins || (unsigned int)outpoint.n >= coins->vout.size() || coins->vout[outpoint.n].IsNull())
+		return NULL;
+	return coins;
 }
 
 int GetUTXOHeight(const COutPoint& outpoint)
 {
 	// -1 means UTXO is yet unknown or already spent
-	CCoins coins;
-	return GetUTXOCoins(outpoint, coins) ? coins.nHeight : -1;
+	const CCoins *coins = GetUTXOCoins(outpoint);
+	return coins ? coins->nHeight : -1;
 }
 
 int GetUTXOConfirmations(const COutPoint& outpoint)
@@ -542,44 +547,65 @@ std::string FormatStateMessage(const CValidationState &state)
 		state.GetRejectCode());
 }
 // SYSCOIN
-bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight)
+bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight, const CBlock& block)
 {
 	vector<vector<unsigned char> > vvchArgs;
+	vector<vector<unsigned char> > vvchAliasArgs;
+	sorted_vector<CAssetAllocationTuple> revertedAssetAllocations;
+	sorted_vector<vector<unsigned char> > revertedOffers;
+	sorted_vector<vector<unsigned char> > revertedCerts;
 	int op;
 	int nOut;
 	if (nHeight == 0)
 		nHeight = chainActive.Height();
 	string errorMessage;
-	if (tx.nVersion == GetSyscoinTxVersion())
-	{
-		bool good = true;
-		if (DecodeAliasTx(tx, op, nOut, vvchArgs))
+	bool good = false;
+	string statusRpc = "";
+	if (fJustCheck && (IsInitialBlockDownload() || RPCIsInWarmup(&statusRpc)))
+		return true;
+	if (block.vtx.empty() && tx.nVersion == SYSCOIN_TX_VERSION) {
+		bool bDestCheckFailed = false;
+		if (DecodeAliasTx(tx, op, nOut, vvchAliasArgs))
 		{
 			errorMessage.clear();
-			good = CheckAliasInputs(tx, op, nOut, vvchArgs, fJustCheck, nHeight, errorMessage);
+			good = CheckAliasInputs(tx, op, nOut, vvchAliasArgs, fJustCheck, nHeight, errorMessage, bDestCheckFailed);
 			if (fDebug && !errorMessage.empty())
 				LogPrintf("%s\n", errorMessage.c_str());
 		}
-		if (good && errorMessage.empty())
+		if (!bDestCheckFailed && !vvchAliasArgs.empty() && good && errorMessage.empty())
 		{
 			if (DecodeCertTx(tx, op, nOut, vvchArgs))
 			{
 				errorMessage.clear();
-				good = CheckCertInputs(tx, op, nOut, vvchArgs, fJustCheck, nHeight, errorMessage);
+				good = CheckCertInputs(tx, op, nOut, vvchArgs, vvchAliasArgs[0], fJustCheck, nHeight, revertedCerts, errorMessage);
+				if (fDebug && !errorMessage.empty())
+					LogPrintf("%s\n", errorMessage.c_str());
+			}
+			if (DecodeAssetTx(tx, op, nOut, vvchArgs))
+			{
+				errorMessage.clear();
+				good = CheckAssetInputs(tx, op, nOut, vvchArgs, vvchAliasArgs[0], fJustCheck, nHeight, revertedAssetAllocations, errorMessage);
+				if (fDebug && !errorMessage.empty())
+					LogPrintf("%s\n", errorMessage.c_str());
+			}
+			else if (DecodeAssetAllocationTx(tx, op, nOut, vvchArgs))
+			{
+				errorMessage.clear();
+				good = CheckAssetAllocationInputs(tx, op, nOut, vvchArgs, vvchAliasArgs[0], fJustCheck, nHeight, revertedAssetAllocations, errorMessage);
 				if (fDebug && !errorMessage.empty())
 					LogPrintf("%s\n", errorMessage.c_str());
 			}
 			else if (DecodeEscrowTx(tx, op, nOut, vvchArgs))
 			{
 				errorMessage.clear();
-				good = CheckEscrowInputs(tx, op, nOut, vvchArgs, fJustCheck, nHeight, errorMessage);
+				good = CheckEscrowInputs(tx, op, nOut, vvchArgs, vvchAliasArgs, fJustCheck, nHeight, errorMessage);
 				if (fDebug && !errorMessage.empty())
 					LogPrintf("%s\n", errorMessage.c_str());
 			}
 			else if (DecodeOfferTx(tx, op, nOut, vvchArgs))
 			{
 				errorMessage.clear();
-				good = CheckOfferInputs(tx, op, nOut, vvchArgs, fJustCheck, nHeight, errorMessage);
+				good = CheckOfferInputs(tx, op, nOut, vvchArgs, vvchAliasArgs[0], fJustCheck, nHeight, revertedOffers, errorMessage);
 				if (fDebug && !errorMessage.empty())
 					LogPrintf("%s\n", errorMessage.c_str());
 			}
@@ -588,8 +614,92 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight)
 		{
 			return false;
 		}
-
 	}
+	else if (!block.vtx.empty()) {
+		CBlock sortedBlock;
+		sortedBlock.vtx = block.vtx;
+		Graph graph;
+		std::vector<vertex_descriptor> vertices;
+		IndexMap mapTxIndex;
+		if (CreateGraphFromVTX(sortedBlock.vtx, graph, vertices, mapTxIndex)) {
+			std::vector<int> conflictedIndexes;
+			GraphRemoveCycles(sortedBlock.vtx, conflictedIndexes, graph, vertices, mapTxIndex);
+			if (!sortedBlock.vtx.empty()) {
+				if (!DAGTopologicalSort(sortedBlock.vtx, conflictedIndexes, graph, mapTxIndex)) {
+					return false;
+				}
+			}
+		}
+		if (fJustCheck)
+			return true;
+		
+		good = true;
+		for (unsigned int i = 0; i < sortedBlock.vtx.size(); i++)
+		{
+			const CTransaction &tx = sortedBlock.vtx[i];
+			if (tx.nVersion == SYSCOIN_TX_VERSION)
+			{
+				bool bDestCheckFailed = false;
+				good = false;
+				if (DecodeAliasTx(tx, op, nOut, vvchAliasArgs))
+				{
+					errorMessage.clear();
+					good = CheckAliasInputs(tx, op, nOut, vvchAliasArgs, fJustCheck, nHeight, errorMessage, bDestCheckFailed);
+					if (fDebug && !errorMessage.empty())
+						LogPrintf("%s\n", errorMessage.c_str());
+				}
+				if (!bDestCheckFailed && !vvchAliasArgs.empty() && good && errorMessage.empty())
+				{
+					if (DecodeCertTx(tx, op, nOut, vvchArgs))
+					{
+						errorMessage.clear();
+						good = CheckCertInputs(tx, op, nOut, vvchArgs, vvchAliasArgs[0], fJustCheck, nHeight, revertedCerts, errorMessage);
+						if (fDebug && !errorMessage.empty())
+							LogPrintf("%s\n", errorMessage.c_str());
+					}
+					if (DecodeAssetTx(tx, op, nOut, vvchArgs))
+					{
+						errorMessage.clear();
+						good = CheckAssetInputs(tx, op, nOut, vvchArgs, vvchAliasArgs[0], fJustCheck, nHeight, revertedAssetAllocations, errorMessage);
+						if (fDebug && !errorMessage.empty())
+							LogPrintf("%s\n", errorMessage.c_str());
+					}
+					else if (DecodeAssetAllocationTx(tx, op, nOut, vvchArgs))
+					{
+						errorMessage.clear();
+						good = CheckAssetAllocationInputs(tx, op, nOut, vvchArgs, vvchAliasArgs[0], fJustCheck, nHeight, revertedAssetAllocations, errorMessage);
+						if (fDebug && !errorMessage.empty())
+							LogPrintf("%s\n", errorMessage.c_str());
+
+					}
+					else if (DecodeEscrowTx(tx, op, nOut, vvchArgs))
+					{
+						errorMessage.clear();
+						good = CheckEscrowInputs(tx, op, nOut, vvchArgs, vvchAliasArgs, fJustCheck, nHeight, errorMessage);
+						if (fDebug && !errorMessage.empty())
+							LogPrintf("%s\n", errorMessage.c_str());
+					}
+					else if (DecodeOfferTx(tx, op, nOut, vvchArgs))
+					{
+						errorMessage.clear();
+						good = CheckOfferInputs(tx, op, nOut, vvchArgs, vvchAliasArgs[0], fJustCheck, nHeight, revertedOffers, errorMessage);
+						if (fDebug && !errorMessage.empty())
+							LogPrintf("%s\n", errorMessage.c_str());
+					}
+				}
+				if (!good)
+				{
+					break;
+				}
+			}
+		}
+		if (!good)
+		{
+			return false;
+		}
+	}
+
+
 	return true;
 
 }
@@ -618,7 +728,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 	// -testnet/-regtest).
 	const CChainParams& chainparams = Params();
 	// SYSCOIN
-	if (fRequireStandard && tx.nVersion != GetSyscoinTxVersion() && tx.nVersion >= 2 && VersionBitsTipState(chainparams.GetConsensus(), Consensus::DEPLOYMENT_CSV) != THRESHOLD_ACTIVE) {
+	if (fRequireStandard && tx.nVersion != SYSCOIN_TX_VERSION && tx.nVersion >= 2 && VersionBitsTipState(chainparams.GetConsensus(), Consensus::DEPLOYMENT_CSV) != THRESHOLD_ACTIVE) {
 		return state.DoS(0, false, REJECT_NONSTANDARD, "premature-version2-tx");
 	}
 
@@ -671,6 +781,12 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 						return state.DoS(0, error("AcceptToMemoryPool : Transaction Lock Request %s conflicts with transaction %s",
 							hash.ToString(), ptxConflicting->GetHash().ToString()),
 							REJECT_INVALID, "txlockreq-tx-mempool-conflict");
+					}
+					// SYSCOIN txs are not replacable
+					else if (ptxConflicting->nVersion == SYSCOIN_TX_VERSION) {
+						return state.DoS(0, error("AcceptToMemoryPool : Syscoin Transaction %s conflicts with Transaction request %s",
+							hash.ToString(), ptxConflicting->GetHash().ToString()),
+							REJECT_INVALID, "txn-mempool-conflict");
 					}
 					// Allow opt-out of transaction replacement by setting
 					// nSequence >= maxint-1 on all inputs.
@@ -770,7 +886,9 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 		// nModifiedFees includes any fee deltas from PrioritiseTransaction
 		CAmount nModifiedFees = nFees;
 		double nPriorityDummy = 0;
-		pool.ApplyDeltas(hash, nPriorityDummy, nModifiedFees);
+		// SYSCOIN, don't apply any deltas for sys txs, should be minrelayfees regardless
+		if(tx.nVersion != SYSCOIN_TX_VERSION)
+			pool.ApplyDeltas(hash, nPriorityDummy, nModifiedFees);
 
 		CAmount inChainInputValue;
 		double dPriority = view.GetPriority(tx, chainActive.Height(), inChainInputValue);
@@ -1023,11 +1141,8 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 			return error("%s: BUG! PLEASE REPORT THIS! ConnectInputs failed against MANDATORY but not STANDARD flags %s, %s",
 				__func__, hash.ToString(), FormatStateMessage(state));
 		}
-
-		// SYSCOIN
-		if (!CheckSyscoinInputs(tx, true))
+		if (!CheckSyscoinInputs(tx, true, chainActive.Height(), CBlock()))
 			return false;
-
 		// Remove conflicting transactions from the mempool
 		BOOST_FOREACH(const CTxMemPool::txiter it, allConflicting)
 		{
@@ -2204,7 +2319,9 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 	std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue> > addressUnspentIndex;
 	std::vector<std::pair<CSpentIndexKey, CSpentIndexValue> > spentIndex;
 
-
+	if(!CheckSyscoinInputs(block.vtx[0], fJustCheck, pindex->nHeight, block))
+		return error("ConnectBlock(): CheckSyscoinInputs on block %s failed",
+			block.GetHash().ToString());
 	for (unsigned int i = 0; i < block.vtx.size(); i++)
 	{
 		const CTransaction &tx = block.vtx[i];
@@ -2306,12 +2423,9 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 			if (!CheckInputs(tx, state, view, fScriptChecks, flags, fCacheResults, nScriptCheckThreads ? &vChecks : NULL))
 				return error("ConnectBlock(): CheckInputs on %s failed with %s",
 					tx.GetHash().ToString(), FormatStateMessage(state));
-			// SYSCOIN
-			if (!instantsend.IsLockedInstantSendTransaction(txhash) && !CheckSyscoinInputs(tx, fJustCheck, pindex->nHeight))
-				return error("ConnectBlock(): CheckSyscoinInputs on %s failed", tx.GetHash().ToString());
 			control.Add(vChecks);
 		}
-
+		
 		if (fAddressIndex) {
 			for (unsigned int k = 0; k < tx.vout.size(); k++) {
 				const CTxOut &out = tx.vout[k];

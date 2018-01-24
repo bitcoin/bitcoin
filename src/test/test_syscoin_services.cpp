@@ -9,6 +9,8 @@
 #include "rpc/server.h"
 #include "feedback.h"
 #include "cert.h"
+#include "asset.h"
+#include "assetallocation.h"
 #include "escrow.h"
 #include "offer.h"
 #include "alias.h"
@@ -97,7 +99,7 @@ void StartNode(const string &dataDir, bool regTest, const string& extraArgs)
     boost::filesystem::path fpath = boost::filesystem::system_complete("../syscoind");
 	string nodePath = fpath.string() + string(" -datadir=") + dataDir;
 	if(regTest)
-		nodePath += string(" -regtest -debug -addressindex");
+		nodePath += string(" -regtest -debug -addressindex -unittest");
 	if(!extraArgs.empty())
 		nodePath += string(" ") + extraArgs;
 	if (!boost::filesystem::exists(boost::filesystem::system_complete(dataDir + "/db")))
@@ -570,7 +572,7 @@ string AliasNew(const string& node, const string& aliasname, const string& pubda
 	BOOST_CHECK_NO_THROW(CallRPC(node, "importprivkey " + CSyscoinSecret(privEncryptionKey).ToString() + " \"\" false", true, false));
 
 	string strEncryptionPrivateKeyHex = HexStr(vchPrivEncryptionKey);
-	string acceptTransfers = "true";
+	string acceptTransfers = "3";
 	string expireTime = "0";
 
 	UniValue r;
@@ -597,15 +599,14 @@ string AliasNew(const string& node, const string& aliasname, const string& pubda
 	BOOST_CHECK(balanceAfter >= 10*COIN);
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasinfo " + aliasname));
 
-	const UniValue &txHistoryResult = AliasTxHistoryFilter(node, txid);
+	UniValue txHistoryResult = AliasTxHistoryFilter(node, txid + "-" + aliasname);
 	BOOST_CHECK(!txHistoryResult.empty());
 	UniValue ret;
 	BOOST_CHECK(ret.read(txHistoryResult[0].get_str()));
-	const UniValue &historyResultObj = ret.get_obj();
+	UniValue historyResultObj = ret.get_obj();
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "user1").get_str(), aliasname);
-	BOOST_CHECK_EQUAL(find_value(historyResultObj, "_id").get_str(), txid);
+	BOOST_CHECK_EQUAL(find_value(historyResultObj, "_id").get_str(), txid + "-" + aliasname);
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "type").get_str(), "Alias Activated");
-
 
 	BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == aliasname);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str(), pubdata);
@@ -618,6 +619,10 @@ string AliasNew(const string& node, const string& aliasname, const string& pubda
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str(), pubdata);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), false);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "address").get_str() , aliasAddress.ToString());
+		txHistoryResult = AliasTxHistoryFilter(otherNode1, txid + "-" + aliasname);
+		BOOST_CHECK(!txHistoryResult.empty());
+		BOOST_CHECK(ret.read(txHistoryResult[0].get_str()));
+		historyResultObj = ret.get_obj();
 	}
 	if(!otherNode2.empty())
 	{
@@ -626,6 +631,10 @@ string AliasNew(const string& node, const string& aliasname, const string& pubda
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str(), pubdata);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), false);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "address").get_str() , aliasAddress.ToString());
+		txHistoryResult = AliasTxHistoryFilter(otherNode2, txid + "-" + aliasname);
+		BOOST_CHECK(!txHistoryResult.empty());
+		BOOST_CHECK(ret.read(txHistoryResult[0].get_str()));
+		historyResultObj = ret.get_obj();
 	}
 	return aliasAddress.ToString();
 }
@@ -635,7 +644,7 @@ string AliasTransfer(const string& node, const string& aliasname, const string& 
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasinfo " + aliasname));
 
 	string oldvalue = find_value(r.get_obj(), "publicvalue").get_str();
-	bool bAcceptTransfers = find_value(r.get_obj(), "acceptcerttransfers").get_bool();
+	int nAcceptTransferFlags = find_value(r.get_obj(), "accepttransferflags").get_int();
 	string expires = boost::lexical_cast<string>(find_value(r.get_obj(), "expires_on").get_int64());
 	string encryptionkey = find_value(r.get_obj(), "encryption_publickey").get_str();
 	string encryptionprivkey = find_value(r.get_obj(), "encryption_privatekey").get_str();
@@ -652,10 +661,9 @@ string AliasTransfer(const string& node, const string& aliasname, const string& 
 	BOOST_CHECK(pubKey.IsFullyValid());
 	BOOST_CHECK_NO_THROW(CallRPC(tonode, "importprivkey " + CSyscoinSecret(privKey).ToString() + " \"\" false", true, false));	
 
-	string acceptTransfers = bAcceptTransfers? "true": "false";
 	string address = aliasAddress.ToString();
 	string newpubdata = pubdata == "''" ? oldvalue : pubdata;
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasupdate " + aliasname + " " + newpubdata + " " + address + " " + acceptTransfers + " " + expires + " " + encryptionprivkey + " " + encryptionkey + " " + witness + " false"));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasupdate " + aliasname + " " + newpubdata + " " + address + " " + boost::lexical_cast<string>(nAcceptTransferFlags) + " " + expires + " " + encryptionprivkey + " " + encryptionkey + " " + witness));
 	UniValue varray = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + varray[0].get_str()));
 	string hex_str;
@@ -672,24 +680,30 @@ string AliasTransfer(const string& node, const string& aliasname, const string& 
 	BOOST_CHECK_NO_THROW(CallRPC(node, "syscoinsendrawtransaction " + hex_str));
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "decoderawtransaction " + hex_str));
 	string txid = find_value(r.get_obj(), "txid").get_str();
+
+
 	GenerateBlocks(5, tonode);
 	GenerateBlocks(5, node);
 
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasbalance " + aliasname));
-	CAmount balanceAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
+
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasinfo " + aliasname));
 
-	const UniValue &txHistoryResult = AliasTxHistoryFilter(node, txid);
+	UniValue txHistoryResult = AliasTxHistoryFilter(node, txid + "-" + aliasname);
 	BOOST_CHECK(!txHistoryResult.empty());
 	UniValue ret;
 	BOOST_CHECK(ret.read(txHistoryResult[0].get_str()));
-	const UniValue &historyResultObj = ret.get_obj();
+	UniValue historyResultObj = ret.get_obj();
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "user1").get_str(), aliasname);
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "user2").get_str(), address);
-	BOOST_CHECK_EQUAL(find_value(historyResultObj, "_id").get_str(), txid);
+	BOOST_CHECK_EQUAL(find_value(historyResultObj, "_id").get_str(), txid + "-" + aliasname);
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "type").get_str(), "Alias Updated");
 
+
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasbalance " + aliasname));
+	CAmount balanceAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
+
 	BOOST_CHECK(balanceAfter >= (balanceBefore-COIN));
+	BOOST_CHECK_NO_THROW(r = CallRPC(tonode, "aliasinfo " + aliasname));
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str() , newpubdata);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "encryption_publickey").get_str() , encryptionkey);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "encryption_privatekey").get_str() , encryptionprivkey);
@@ -704,6 +718,10 @@ string AliasTransfer(const string& node, const string& aliasname, const string& 
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "encryption_publickey").get_str() , encryptionkey);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "encryption_privatekey").get_str() , encryptionprivkey);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "address").get_str() , aliasAddress.ToString());
+	txHistoryResult = AliasTxHistoryFilter(tonode, txid + "-" + aliasname);
+	BOOST_CHECK(!txHistoryResult.empty());
+	BOOST_CHECK(ret.read(txHistoryResult[0].get_str()));
+	historyResultObj = ret.get_obj();
 	return "";
 }
 string AliasUpdate(const string& node, const string& aliasname, const string& pubdata, string addressStr, string witness)
@@ -719,15 +737,12 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 	string encryptionkey = find_value(r.get_obj(), "encryption_publickey").get_str();
 	string encryptionprivkey = find_value(r.get_obj(), "encryption_privatekey").get_str();
 	string expires = boost::lexical_cast<string>(find_value(r.get_obj(), "expires_on").get_int64());
-	bool bAcceptTransfers = find_value(r.get_obj(), "acceptcerttransfers").get_bool();
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasbalance " + aliasname));
-	CAmount balanceBefore = AmountFromValue(find_value(r.get_obj(), "balance"));
+	int nAcceptTransferFlags = find_value(r.get_obj(), "accepttransferflags").get_int();
 
 	string newpubdata = pubdata == "''" ? oldvalue : pubdata;
 	string newAddressStr = addressStr == "''" ? oldAddressStr : addressStr;
-	string acceptTransfers = bAcceptTransfers ? "true" : "false";
 	// "aliasupdate <aliasname> [public value]  [address] [accept_transfers=true] [expire_timestamp] [encryption_privatekey] [encryption_publickey] [witness]\n"
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasupdate " + aliasname + " " + newpubdata + " " + newAddressStr + " " + acceptTransfers + " " + expires + " " + encryptionprivkey + " " + encryptionkey + " " + witness + " false"));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasupdate " + aliasname + " " + newpubdata + " " + newAddressStr + " " + boost::lexical_cast<string>(nAcceptTransferFlags) + " " + expires + " " + encryptionprivkey + " " + encryptionkey + " " + witness));
 	UniValue varray = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + varray[0].get_str()));
 	string hex_str;
@@ -744,14 +759,12 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 	BOOST_CHECK_NO_THROW(CallRPC(node, "syscoinsendrawtransaction " + hex_str));
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "decoderawtransaction " + hex_str));
 	string txid = find_value(r.get_obj(), "txid").get_str();
+
 	GenerateBlocks(5, node);
-	GenerateBlocks(5, node);
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasbalance " + aliasname));
-	CAmount balanceAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
+
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasinfo " + aliasname));
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "address").get_str() , newAddressStr);
 	
-	BOOST_CHECK(abs(balanceBefore-balanceAfter) < COIN);
 	BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == aliasname);
 
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str() , newpubdata);
@@ -760,44 +773,42 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "encryption_privatekey").get_str() , encryptionprivkey);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), false);
 
-	const UniValue &txHistoryResult = AliasTxHistoryFilter(node, txid);
+	UniValue txHistoryResult = AliasTxHistoryFilter(node, txid + "-" + aliasname);
 	BOOST_CHECK(!txHistoryResult.empty());
 	UniValue ret;
 	BOOST_CHECK(ret.read(txHistoryResult[0].get_str()));
-	const UniValue &historyResultObj = ret.get_obj();
+	UniValue historyResultObj = ret.get_obj();
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "user1").get_str(), aliasname);
-	BOOST_CHECK_EQUAL(find_value(historyResultObj, "_id").get_str(), txid);
+	BOOST_CHECK_EQUAL(find_value(historyResultObj, "_id").get_str(), txid + "-" + aliasname);
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "type").get_str(), "Alias Updated");
-
 	if(!otherNode1.empty())
 	{
-		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode1, "aliasbalance " + aliasname));
-		balanceAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
 		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode1, "aliasinfo " + aliasname));
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "address").get_str() , newAddressStr);
-		
-		BOOST_CHECK(abs(balanceBefore-balanceAfter) < COIN);	
 		BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == aliasname);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), false);
-
-		
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str() , newpubdata);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "encryption_publickey").get_str() , encryptionkey);
+		txHistoryResult = AliasTxHistoryFilter(otherNode1, txid + "-" + aliasname);
+		BOOST_CHECK(!txHistoryResult.empty());
+		BOOST_CHECK(ret.read(txHistoryResult[0].get_str()));
+		historyResultObj = ret.get_obj();
 
 	}
 	if(!otherNode2.empty())
 	{
-		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode2, "aliasbalance " + aliasname));
-		balanceAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
 		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode2, "aliasinfo " + aliasname));
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "address").get_str() , newAddressStr);
 		
-		BOOST_CHECK(abs(balanceBefore-balanceAfter) < COIN);
 		BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == aliasname);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), false);
 
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str() , newpubdata);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "encryption_publickey").get_str() , encryptionkey);
+		txHistoryResult = AliasTxHistoryFilter(otherNode2, txid + "-" + aliasname);
+		BOOST_CHECK(!txHistoryResult.empty());
+		BOOST_CHECK(ret.read(txHistoryResult[0].get_str()));
+		historyResultObj = ret.get_obj();
 	}
 	return "";
 
@@ -807,11 +818,11 @@ void AliasAddWhitelist(const string& node, const string& owneralias, const strin
 	bool found = false;
 	UniValue r;
 	string whiteListArray = "\"[{\\\"alias\\\":\\\"" + aliasname + "\\\",\\\"discount_percentage\\\":" + discount + "}]\"";
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasupdatewhitelist " + owneralias + " " + whiteListArray + " " + witness + " false"));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasupdatewhitelist " + owneralias + " " + whiteListArray + " " + witness));
 	UniValue varray = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + varray[0].get_str()));
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
-	GenerateBlocks(10, node);
+	GenerateBlocks(5, node);
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliaswhitelist " + owneralias));
 	const UniValue &arrayValue = r.get_array();
 	for (int i = 0; i<arrayValue.size(); i++)
@@ -824,16 +835,17 @@ void AliasAddWhitelist(const string& node, const string& owneralias, const strin
 		}
 	}
 	BOOST_CHECK(found);
+	
 }
 void AliasRemoveWhitelist(const string& node, const string& owneralias, const string& aliasname, const string& discount, const string& witness)
 {
 	UniValue r;
 	string whiteListArray = "\"[{\\\"alias\\\":\\\"" + aliasname + "\\\",\\\"discount_percentage\\\":" + discount + "}]\"";
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasupdatewhitelist " + owneralias + " " + whiteListArray + " " + witness + " false"));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasupdatewhitelist " + owneralias + " " + whiteListArray + " " + witness));
 	UniValue varray = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + varray[0].get_str()));
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
-	GenerateBlocks(10, node);
+	GenerateBlocks(5, node);
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliaswhitelist " + owneralias));
 	const UniValue &arrayValue = r.get_array();
 	for (int i = 0; i<arrayValue.size(); i++)
@@ -841,19 +853,20 @@ void AliasRemoveWhitelist(const string& node, const string& owneralias, const st
 		const string &aliasguid = find_value(arrayValue[i].get_obj(), "alias").get_str();
 		BOOST_CHECK(aliasguid != aliasname);
 	}
+	
 }
 void AliasClearWhitelist(const string& node, const string& owneralias, const string &witness)
 {
 	UniValue r;
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasclearwhitelist " + owneralias + " " + witness + " false"));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasclearwhitelist " + owneralias + " " + witness));
 	UniValue varray = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + varray[0].get_str()));
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
-	GenerateBlocks(10, node);
+	GenerateBlocks(5, node);
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliaswhitelist " + owneralias));
 	const UniValue &arrayValue = r.get_array();
 	BOOST_CHECK(arrayValue.empty());
-
+	
 }
 int FindAliasDiscount(const string& node, const string& owneralias, const string &aliasname) 
 {
@@ -879,11 +892,11 @@ bool AliasFilter(const string& node, const string& alias)
 	const UniValue &arr = r.get_array();
 	return !arr.empty();
 }
-UniValue AliasTxHistoryFilter(const string& node, const string& txid)
+UniValue AliasTxHistoryFilter(const string& node, const string& id)
 {
 	UniValue r;
 	int64_t currentTime = GetTime();
-	string query = "\"{\\\"_id\\\":\\\"" + txid + "\\\"}\"";
+	string query = "\"{\\\"_id\\\":\\\"" + id + "\\\"}\"";
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinquery aliastxhistory " + query));
 	const UniValue &arr = r.get_array();
 	return arr;
@@ -938,7 +951,7 @@ const string CertNew(const string& node, const string& alias, const string& titl
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasinfo " + alias));
 
 
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "certnew " + alias + " " + title + " " + pubdata + " " + " certificates " + witness + " false"));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "certnew " + alias + " " + title + " " + pubdata + " " + " certificates " + witness));
 	UniValue arr = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + arr[0].get_str()));
 	string hex_str = find_value(r.get_obj(), "hex").get_str();
@@ -947,23 +960,24 @@ const string CertNew(const string& node, const string& alias, const string& titl
 	string txid = find_value(r.get_obj(), "txid").get_str();
 
 	string guid = arr[1].get_str();
-	GenerateBlocks(10, node);
+
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "certinfo " + guid));
 
-	const UniValue &txHistoryResult = AliasTxHistoryFilter(node, txid);
+	const UniValue &txHistoryResult = AliasTxHistoryFilter(node, txid + "-" + guid);
 	BOOST_CHECK(!txHistoryResult.empty());
 	UniValue ret;
 	BOOST_CHECK(ret.read(txHistoryResult[0].get_str()));
 	const UniValue &historyResultObj = ret.get_obj();
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "user1").get_str(), alias);
-	BOOST_CHECK_EQUAL(find_value(historyResultObj, "_id").get_str(), txid);
-	BOOST_CHECK_EQUAL(find_value(historyResultObj, "guid").get_str(), guid);
+	BOOST_CHECK_EQUAL(find_value(historyResultObj, "_id").get_str(), txid + "-" + guid);
+	
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "type").get_str(), "Certificate Activated");
 
 	BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == guid);
 	BOOST_CHECK(find_value(r.get_obj(), "alias").get_str() == alias);
 	BOOST_CHECK(find_value(r.get_obj(), "title").get_str() == title);
 	BOOST_CHECK(find_value(r.get_obj(), "publicvalue").get_str() == pubdata);
+	GenerateBlocks(5, node);
 	if(!otherNode1.empty())
 	{
 		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode1, "certinfo " + guid));
@@ -978,6 +992,7 @@ const string CertNew(const string& node, const string& alias, const string& titl
 		BOOST_CHECK(find_value(r.get_obj(), "publicvalue").get_str() == pubdata);
 		BOOST_CHECK(find_value(r.get_obj(), "title").get_str() == title);
 	}
+	
 	return guid;
 }
 void CertUpdate(const string& node, const string& guid, const string& title, const string& pubdata, const string& witness)
@@ -994,7 +1009,7 @@ void CertUpdate(const string& node, const string& guid, const string& title, con
 	string newtitle = title == "''" ? oldtitle : title;
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasinfo " + oldalias));
 
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "certupdate " + guid + " " + newtitle + " " + newpubdata + " certificates " + witness + " false"));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "certupdate " + guid + " " + newtitle + " " + newpubdata + " certificates " + witness));
 	UniValue arr = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + arr[0].get_str()));
 	string hex_str = find_value(r.get_obj(), "hex").get_str();
@@ -1002,24 +1017,24 @@ void CertUpdate(const string& node, const string& guid, const string& title, con
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "decoderawtransaction " + hex_str));
 	string txid = find_value(r.get_obj(), "txid").get_str();
 
-	GenerateBlocks(10, node);
+
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "certinfo " + guid));
 
-	const UniValue &txHistoryResult = AliasTxHistoryFilter(node, txid);
+	const UniValue &txHistoryResult = AliasTxHistoryFilter(node, txid + "-" + guid);
 	BOOST_CHECK(!txHistoryResult.empty());
 	UniValue ret;
 	BOOST_CHECK(ret.read(txHistoryResult[0].get_str()));
 	const UniValue &historyResultObj = ret.get_obj();
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "user1").get_str(), oldalias);
-	BOOST_CHECK_EQUAL(find_value(historyResultObj, "_id").get_str(), txid);
-	BOOST_CHECK_EQUAL(find_value(historyResultObj, "guid").get_str(), guid);
+	BOOST_CHECK_EQUAL(find_value(historyResultObj, "_id").get_str(), txid + "-" + guid);
+	
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "type").get_str(), "Certificate Updated");
 
 
 	BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == guid);
 	BOOST_CHECK(find_value(r.get_obj(), "alias").get_str() == oldalias);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "title").get_str(), newtitle);
-
+	GenerateBlocks(5, node);
 	if(!otherNode1.empty())
 	{
 		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode1, "certinfo " + guid));
@@ -1038,6 +1053,7 @@ void CertUpdate(const string& node, const string& guid, const string& title, con
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "title").get_str(), newtitle);
 
 	}
+	
 }
 void CertTransfer(const string& node, const string &tonode, const string& guid, const string& toalias, const string& witness)
 {
@@ -1051,7 +1067,7 @@ void CertTransfer(const string& node, const string &tonode, const string& guid, 
 
 	if (pubdata.empty())
 		pubdata = "''";
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "certtransfer " + guid + " " + toalias + " " + pubdata + " 2 " + witness + " false"));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "certtransfer " + guid + " " + toalias + " " + pubdata + " 2 " + witness));
 	UniValue arr = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + arr[0].get_str()));
 	string hex_str = find_value(r.get_obj(), "hex").get_str();
@@ -1059,28 +1075,28 @@ void CertTransfer(const string& node, const string &tonode, const string& guid, 
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "decoderawtransaction " + hex_str));
 	string txid = find_value(r.get_obj(), "txid").get_str();
 
-	GenerateBlocks(5, node);
-	GenerateBlocks(5, tonode);
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "certinfo " + guid));
 
-	const UniValue &txHistoryResult = AliasTxHistoryFilter(node, txid);
+	const UniValue &txHistoryResult = AliasTxHistoryFilter(node, txid + "-" + guid);
 	BOOST_CHECK(!txHistoryResult.empty());
 	UniValue ret;
 	BOOST_CHECK(ret.read(txHistoryResult[0].get_str()));
 	const UniValue &historyResultObj = ret.get_obj();
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "user1").get_str(), oldalias);
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "user2").get_str(), toalias);
-	BOOST_CHECK_EQUAL(find_value(historyResultObj, "_id").get_str(), txid);
-	BOOST_CHECK_EQUAL(find_value(historyResultObj, "guid").get_str(), guid);
+	BOOST_CHECK_EQUAL(find_value(historyResultObj, "_id").get_str(), txid + "-" + guid);
+	
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "type").get_str(), "Certificate Transferred");
 
 	BOOST_CHECK(find_value(r.get_obj(), "publicvalue").get_str() == pubdata);
 	BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == guid);
 
+	GenerateBlocks(5, node);
+
 	BOOST_CHECK_NO_THROW(r = CallRPC(tonode, "certinfo " + guid));
 	BOOST_CHECK(find_value(r.get_obj(), "alias").get_str() == toalias);
 	BOOST_CHECK(find_value(r.get_obj(), "publicvalue").get_str() == pubdata);
-
+	
 }
 const string OfferLink(const string& node, const string& alias, const string& guid, const string& commissionStr, const string& newdetails, const string &witness)
 {
@@ -1089,7 +1105,7 @@ const string OfferLink(const string& node, const string& alias, const string& gu
 	GetOtherNodes(node, otherNode1, otherNode2);
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "offerinfo " + guid));
 	const string &olddetails = find_value(r.get_obj(), "description").get_str();
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "offerlink " + alias + " " + guid + " " + commissionStr + " " + newdetails + " " + witness + " false"));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "offerlink " + alias + " " + guid + " " + commissionStr + " " + newdetails + " " + witness));
 	UniValue arr = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + arr[0].get_str()));
 	string hex_str = find_value(r.get_obj(), "hex").get_str();
@@ -1098,17 +1114,16 @@ const string OfferLink(const string& node, const string& alias, const string& gu
 	string txid = find_value(r.get_obj(), "txid").get_str();
 
 	string linkedguid = arr[1].get_str();
-	GenerateBlocks(10, node);
+	
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "offerinfo " + linkedguid));
 
-	const UniValue &txHistoryResult = AliasTxHistoryFilter(node, txid);
+	const UniValue &txHistoryResult = AliasTxHistoryFilter(node, txid + "-" + linkedguid);
 	BOOST_CHECK(!txHistoryResult.empty());
 	UniValue ret;
 	BOOST_CHECK(ret.read(txHistoryResult[0].get_str()));
 	const UniValue &historyResultObj = ret.get_obj();
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "user1").get_str(), alias);
-	BOOST_CHECK_EQUAL(find_value(historyResultObj, "_id").get_str(), txid);
-	BOOST_CHECK_EQUAL(find_value(historyResultObj, "guid").get_str(), linkedguid);
+	BOOST_CHECK_EQUAL(find_value(historyResultObj, "_id").get_str(), txid + "-" + linkedguid);
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "type").get_str(), "Offer Activated");
 
 	if(!newdetails.empty())
@@ -1119,6 +1134,7 @@ const string OfferLink(const string& node, const string& alias, const string& gu
 	BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == linkedguid);
 	BOOST_CHECK(find_value(r.get_obj(), "offerlink_guid").get_str() == guid);
 	BOOST_CHECK(find_value(r.get_obj(), "commission").get_int() == commission);
+	GenerateBlocks(5, node);
 	if(!otherNode1.empty())
 	{
 		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode1, "offerinfo " + linkedguid));
@@ -1137,6 +1153,7 @@ const string OfferLink(const string& node, const string& alias, const string& gu
 			BOOST_CHECK(find_value(r.get_obj(), "description").get_str() == olddetails);
 		BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == linkedguid);
 	}
+
 	return linkedguid;
 }
 const string OfferNew(const string& node, const string& aliasname, const string& category, const string& title, const string& qtyStr, const string& price, const string& description, const string& currency, const string& certguid, const string& paymentoptions, const string& offerType, const string& auction_expires, const string& auction_reserve, const string& auction_require_witness, const string &auction_deposit, const string& witness)
@@ -1149,7 +1166,7 @@ const string OfferNew(const string& node, const string& aliasname, const string&
 	int qty = atoi(qtyStr.c_str());
 	
 	//						"offernew <alias> <category> <title> <quantity> <price> <description> <currency> [cert. guid] [payment options=SYS] [private=false] [units] [offerType=BUYNOW] [auction_expires] [auction_reserve] [auction_require_witness] [auction_deposit] [witness]\n"
-	string offercreatestr = "offernew " + aliasname + " " + category + " " + title + " " + qtyStr + " " + price + " " + description + " " + currency  + " " + certguid + " " + paymentoptions + " " + pvt + " " + units + " " + offerType + " " + auction_expires + " " + auction_reserve + " " + auction_require_witness + " " + auction_deposit + " " + witness + " false";
+	string offercreatestr = "offernew " + aliasname + " " + category + " " + title + " " + qtyStr + " " + price + " " + description + " " + currency  + " " + certguid + " " + paymentoptions + " " + pvt + " " + units + " " + offerType + " " + auction_expires + " " + auction_reserve + " " + auction_require_witness + " " + auction_deposit + " " + witness;
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, offercreatestr));
 	UniValue arr = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + arr[0].get_str()));
@@ -1159,17 +1176,17 @@ const string OfferNew(const string& node, const string& aliasname, const string&
 	string txid = find_value(r.get_obj(), "txid").get_str();
 
 	string guid = arr[1].get_str();
-	GenerateBlocks(10, node);
+	
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "offerinfo " + guid));
 
-	const UniValue &txHistoryResult = AliasTxHistoryFilter(node, txid);
+	const UniValue &txHistoryResult = AliasTxHistoryFilter(node, txid + "-" + guid);
 	BOOST_CHECK(!txHistoryResult.empty());
 	UniValue ret;
 	BOOST_CHECK(ret.read(txHistoryResult[0].get_str()));
 	const UniValue &historyResultObj = ret.get_obj();
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "user1").get_str(), aliasname);
-	BOOST_CHECK_EQUAL(find_value(historyResultObj, "_id").get_str(), txid);
-	BOOST_CHECK_EQUAL(find_value(historyResultObj, "guid").get_str(), guid);
+	BOOST_CHECK_EQUAL(find_value(historyResultObj, "_id").get_str(), txid + "-" + guid);
+	
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "type").get_str(), "Offer Activated");
 
 
@@ -1198,7 +1215,7 @@ const string OfferNew(const string& node, const string& aliasname, const string&
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "auction_require_witness").get_bool(), auctionreqwitness);
 	if (auction_deposit != "''")
 		BOOST_CHECK_EQUAL(((int)(find_value(r.get_obj(), "auction_deposit").get_real() * 1000 + 0.5)), ((int)(boost::lexical_cast<float>(auction_deposit) * 1000)));
-	
+	GenerateBlocks(5, node);
 	if(!otherNode1.empty())
 	{
 		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode1, "offerinfo " + guid));
@@ -1255,6 +1272,7 @@ const string OfferNew(const string& node, const string& aliasname, const string&
 		if (auction_deposit != "''")
 			BOOST_CHECK_EQUAL(((int)(find_value(r.get_obj(), "auction_deposit").get_real() * 1000 + 0.5)), ((int)(boost::lexical_cast<float>(auction_deposit) * 1000)));
 	}
+
 	return guid;
 }
 
@@ -1299,8 +1317,8 @@ void OfferUpdate(const string& node, const string& aliasname, const string& offe
 	string newauction_reserve = auction_reserve == "''" ? oldauctionreserve : auction_reserve;
 	string newauction_require_witness = auction_require_witness == "''"? oldauctionrequirewitness : auction_require_witness;
 	string newauction_deposit = auction_deposit == "''" ? oldauctiondeposit : auction_deposit;
-	//						"offerupdate <alias> <guid> [category] [title] [quantity] [price] [description] [currency] [private=false] [cert. guid] [commission] [paymentOptions] [offerType=BUYNOW] [auction_expires] [auction_reserve] [auction_require_witness] [auction_deposit] [witness] [instantsend]\n"
-	string offerupdatestr = "offerupdate " + aliasname + " " + offerguid + " " + newcategory + " " + newtitle + " " + newqty + " " + newprice + " " + newdescription + " " + newcurrency + " " + newisprivate + " " + newcertguid + " " + newcommission + " " + newpaymentoptions + " " + newoffertype + " " + newauction_expires + " " + newauction_reserve + " " + newauction_require_witness + " " + newauction_deposit + " " + witness + " false";
+	//						"offerupdate <alias> <guid> [category] [title] [quantity] [price] [description] [currency] [private=false] [cert. guid] [commission] [paymentOptions] [offerType=BUYNOW] [auction_expires] [auction_reserve] [auction_require_witness] [auction_deposit] [witness]\n"
+	string offerupdatestr = "offerupdate " + aliasname + " " + offerguid + " " + newcategory + " " + newtitle + " " + newqty + " " + newprice + " " + newdescription + " " + newcurrency + " " + newisprivate + " " + newcertguid + " " + newcommission + " " + newpaymentoptions + " " + newoffertype + " " + newauction_expires + " " + newauction_reserve + " " + newauction_require_witness + " " + newauction_deposit + " " + witness;
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, offerupdatestr));
 	UniValue arr = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + arr[0].get_str()));
@@ -1309,13 +1327,13 @@ void OfferUpdate(const string& node, const string& aliasname, const string& offe
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "decoderawtransaction " + hex_str));
 	string txid = find_value(r.get_obj(), "txid").get_str();
 
-	GenerateBlocks(10, node);
+
 	bool auctionreqwitness = (auction_require_witness == "true") ? true : false;
 
 		
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "offerinfo " + offerguid));
 
-	const UniValue &txHistoryResult = AliasTxHistoryFilter(node, txid);
+	const UniValue &txHistoryResult = AliasTxHistoryFilter(node, txid + "-" + offerguid);
 	BOOST_CHECK(!txHistoryResult.empty());
 	UniValue ret;
 	BOOST_CHECK(ret.read(txHistoryResult[0].get_str()));
@@ -1323,8 +1341,7 @@ void OfferUpdate(const string& node, const string& aliasname, const string& offe
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "user1").get_str(), oldalias);
 	if(oldalias != aliasname)
 		BOOST_CHECK_EQUAL(find_value(historyResultObj, "user2").get_str(), aliasname);
-	BOOST_CHECK_EQUAL(find_value(historyResultObj, "_id").get_str(), txid);
-	BOOST_CHECK_EQUAL(find_value(historyResultObj, "guid").get_str(), offerguid);
+	BOOST_CHECK_EQUAL(find_value(historyResultObj, "_id").get_str(), txid + "-" + offerguid);
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "type").get_str(), "Offer Updated");
 
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "_id").get_str() , offerguid);
@@ -1355,6 +1372,7 @@ void OfferUpdate(const string& node, const string& aliasname, const string& offe
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "auction_require_witness").get_bool(), auctionreqwitness);
 	if (auction_deposit != "''")
 		BOOST_CHECK_EQUAL(((int)(find_value(r.get_obj(), "auction_deposit").get_real() * 1000 + 0.5)), ((int)(boost::lexical_cast<float>(auction_deposit) * 1000)));
+	GenerateBlocks(5, node);
 	if(!otherNode1.empty())
 	{
 		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode1, "offerinfo " + offerguid));
@@ -1418,6 +1436,7 @@ void OfferUpdate(const string& node, const string& aliasname, const string& offe
 		if (auction_deposit != "''")
 			BOOST_CHECK_EQUAL(((int)(find_value(r.get_obj(), "auction_deposit").get_real() * 1000 + 0.5)), ((int)(boost::lexical_cast<float>(auction_deposit) * 1000)));
 	}
+
 }
 
 void EscrowFeedback(const string& node, const string& userfrom, const string& escrowguid, const string& feedback, const string& rating,  const string& userto, const string& witness) {
@@ -1429,7 +1448,7 @@ void EscrowFeedback(const string& node, const string& userfrom, const string& es
 	string seller = find_value(r.get_obj(), "seller").get_str();
 	string arbiter = find_value(r.get_obj(), "arbiter").get_str();
 
-	string escrowfeedbackstr = "escrowfeedback " + escrowguid + " " + userfrom + " " + feedback + " " + rating + " " + userto + " " + witness + " false";
+	string escrowfeedbackstr = "escrowfeedback " + escrowguid + " " + userfrom + " " + feedback + " " + rating + " " + userto + " " + witness;
 
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, escrowfeedbackstr));
 	UniValue arr = r.get_array();
@@ -1439,8 +1458,8 @@ void EscrowFeedback(const string& node, const string& userfrom, const string& es
 
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "decoderawtransaction " + finalsignedhex));
 	string txid = find_value(r.get_obj(), "txid").get_str();
+	GenerateBlocks(5, node);
 
-	GenerateBlocks(10, node);
 	unsigned char feedbackusertoenum;
 	if (userto == "buyer")
 		feedbackusertoenum = FEEDBACKBUYER;
@@ -1464,7 +1483,7 @@ void EscrowFeedback(const string& node, const string& userfrom, const string& es
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "offer").get_str() , offerguid);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "txid").get_str() , txid);
 
-	const UniValue &txHistoryResult = AliasTxHistoryFilter(node, txid);
+	const UniValue &txHistoryResult = AliasTxHistoryFilter(node, txid + "-" + escrowguid);
 	BOOST_CHECK(!txHistoryResult.empty());
 	UniValue ret1;
 	BOOST_CHECK(ret1.read(txHistoryResult[0].get_str()));
@@ -1472,14 +1491,14 @@ void EscrowFeedback(const string& node, const string& userfrom, const string& es
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "user1").get_str(), buyer);
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "user2").get_str(), seller);
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "user3").get_str(), arbiter);
-	BOOST_CHECK_EQUAL(find_value(historyResultObj, "_id").get_str(), txid);
-	BOOST_CHECK_EQUAL(find_value(historyResultObj, "guid").get_str(), escrowguid);
+	BOOST_CHECK_EQUAL(find_value(historyResultObj, "_id").get_str(), txid + "-" + escrowguid);
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "type").get_str(), "Escrow Feedback");
 
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "rating").get_int() , atoi(rating.c_str()));
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "feedback").get_str() , feedback);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "feedbackuserfrom").get_int() , feedbackuserfromenum);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "feedbackuserto").get_int() , feedbackusertoenum);
+	
 }
 const string OfferAccept(const string& ownernode, const string& buyernode, const string& aliasname, const string& arbiter, const string& offerguid, const string& qty, const string& witness) {
 	const string &escrowguid = EscrowNewBuyItNow(buyernode, ownernode, aliasname, offerguid, qty, arbiter);
@@ -1503,7 +1522,7 @@ void EscrowBid(const string& node, const string& buyeralias, const string& escro
 	const string &bid_in_offer_currency1 = strprintf("%.*f", 8, fPaymentCurrency);
 	const string &bid_in_payment_option1 = strprintf("%.*f", 8, strprintf("%.*f", 8, pegRates[currency] * fPaymentCurrency));
 	//										"escrowbid <alias> <escrow> <bid_in_payment_option> <bid_in_offer_currency> [witness]\n"
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowbid " + buyeralias + " " + escrowguid + " " + bid_in_payment_option1 + " " + bid_in_offer_currency1 + " " + witness + " false"));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowbid " + buyeralias + " " + escrowguid + " " + bid_in_payment_option1 + " " + bid_in_offer_currency1 + " " + witness));
 	UniValue arr = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + arr[0].get_str()));
 	string finalsignedhex = find_value(r.get_obj(), "hex").get_str();
@@ -1511,8 +1530,8 @@ void EscrowBid(const string& node, const string& buyeralias, const string& escro
 
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "decoderawtransaction " + finalsignedhex));
 	string txid = find_value(r.get_obj(), "txid").get_str();
+	GenerateBlocks(5, node);
 
-	GenerateBlocks(10, node);
 	const UniValue &escrowBid = EscrowBidFilter(node, txid);
 	BOOST_CHECK(!escrowBid.empty());
 	BOOST_CHECK(ret.read(escrowBid[0].get_str()));
@@ -1529,7 +1548,7 @@ void EscrowBid(const string& node, const string& buyeralias, const string& escro
 
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowinfo " + escrowguid));
 
-	const UniValue &txHistoryResult = AliasTxHistoryFilter(node, txid);
+	const UniValue &txHistoryResult = AliasTxHistoryFilter(node, txid + "-" + escrowguid);
 	BOOST_CHECK(!txHistoryResult.empty());
 	UniValue ret1;
 	BOOST_CHECK(ret1.read(txHistoryResult[0].get_str()));
@@ -1537,8 +1556,7 @@ void EscrowBid(const string& node, const string& buyeralias, const string& escro
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "user1").get_str(), buyeralias);
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "user2").get_str(), selleralias);
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "user3").get_str(), arbiteralias);
-	BOOST_CHECK_EQUAL(find_value(historyResultObj, "_id").get_str(), txid);
-	BOOST_CHECK_EQUAL(find_value(historyResultObj, "guid").get_str(), escrowguid);
+	BOOST_CHECK_EQUAL(find_value(historyResultObj, "_id").get_str(), txid + "-" + escrowguid);
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "type").get_str(), "Escrow Bid");
 
 	int qty = find_value(r.get_obj(), "quantity").get_int();
@@ -1548,6 +1566,7 @@ void EscrowBid(const string& node, const string& buyeralias, const string& escro
 	BOOST_CHECK(AmountFromValue(find_value(r.get_obj(), "total_without_fee")) == bidPaymentOption*qty);
 	BOOST_CHECK_EQUAL(AmountFromValue(find_value(r.get_obj(), "total_or_bid_in_payment_option_per_unit")), bidPaymentOption);
 	BOOST_CHECK(find_value(r.get_obj(), "buyer").get_str() == buyeralias);
+	
 	if (!otherNode1.empty())
 	{
 		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode1, "escrowinfo " + escrowguid));
@@ -1566,6 +1585,7 @@ void EscrowBid(const string& node, const string& buyeralias, const string& escro
 		BOOST_CHECK_EQUAL(AmountFromValue(find_value(r.get_obj(), "total_or_bid_in_payment_option_per_unit")), bidPaymentOption);
 		BOOST_CHECK(find_value(r.get_obj(), "buyer").get_str() == buyeralias);
 	}
+
 }
 const string EscrowNewAuction(const string& node, const string& sellernode, const string& buyeralias, const string& offerguid, const string& qtyStr, const string& bid_in_offer_currency, const string& arbiteralias, const string& shipping, const string& networkFee, const string& arbiterFee, const string& witnessFee, const string &witness)
 {
@@ -1617,18 +1637,18 @@ const string EscrowNewAuction(const string& node, const string& sellernode, cons
 
 
 	//										"escrownew <getamountandaddress> <alias> <arbiter alias> <offer> <quantity> <buynow> <total_in_payment_option> [shipping amount] [network fee] [arbiter fee] [witness fee] [extTx] [payment option] [bid_in_payment_option] [bid_in_offer_currency] [witness]\n"
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrownew false " + buyeralias + " " + arbiteralias + " " + offerguid + " " + qtyStr + " " + buyNowStr + " " + strTotalInPaymentOption + " " + shipping + " " + networkFee + " " + arbiterFee + " " + witnessFee + " " + exttxid + " " + paymentoptions + " " + bid_in_payment_option1 + " " + bid_in_offer_currency1 + " " + witness + " false"));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrownew false " + buyeralias + " " + arbiteralias + " " + offerguid + " " + qtyStr + " " + buyNowStr + " " + strTotalInPaymentOption + " " + shipping + " " + networkFee + " " + arbiterFee + " " + witnessFee + " " + exttxid + " " + paymentoptions + " " + bid_in_payment_option1 + " " + bid_in_offer_currency1 + " " + witness));
 	UniValue arr = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + arr[0].get_str()));
 	string hex_str = find_value(r.get_obj(), "hex").get_str();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinsendrawtransaction " + hex_str));
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "decoderawtransaction " + hex_str));
 	string guid = arr[1].get_str();
-	GenerateBlocks(10, node);
-
+	
+	GenerateBlocks(5, node);
 	
 	string txid = find_value(r.get_obj(), "txid").get_str();
-	const UniValue &txHistoryResult = AliasTxHistoryFilter(node, txid);
+	const UniValue &txHistoryResult = AliasTxHistoryFilter(node, txid + "-" + guid);
 	BOOST_CHECK(!txHistoryResult.empty());
 	UniValue ret;
 	BOOST_CHECK(ret.read(txHistoryResult[0].get_str()));
@@ -1636,8 +1656,8 @@ const string EscrowNewAuction(const string& node, const string& sellernode, cons
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "user1").get_str(), buyeralias);
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "user2").get_str(), selleralias);
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "user3").get_str(), arbiteralias);
-	BOOST_CHECK_EQUAL(find_value(historyResultObj, "_id").get_str(), txid);
-	BOOST_CHECK_EQUAL(find_value(historyResultObj, "guid").get_str(), guid);
+	BOOST_CHECK_EQUAL(find_value(historyResultObj, "_id").get_str(), txid + "-" + guid);
+	
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "type").get_str(), "Escrow Activated");
 
 
@@ -1664,7 +1684,6 @@ const string EscrowNewAuction(const string& node, const string& sellernode, cons
 	BOOST_CHECK_EQUAL(AmountFromValue(find_value(r.get_obj(), "networkfee")) , nNetworkFee);
 	BOOST_CHECK_EQUAL(AmountFromValue(find_value(r.get_obj(), "witnessfee")) , nWitnessFee);
 	BOOST_CHECK_EQUAL(AmountFromValue(find_value(r.get_obj(), "shipping")) , nShipping);
-
 	if (!otherNode1.empty())
 	{
 		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode1, "escrowinfo " + guid));
@@ -1695,6 +1714,7 @@ const string EscrowNewAuction(const string& node, const string& sellernode, cons
 	BOOST_CHECK_NO_THROW(r = CallRPC(sellernode, "offerinfo " + offerguid));
 	int nQtyAfter = find_value(r.get_obj(), "quantity").get_int();
 	BOOST_CHECK_EQUAL(nQtyAfter, nQtyBefore);
+
 	return guid;
 }
 const string EscrowNewBuyItNow(const string& node, const string& sellernode, const string& buyeralias, const string& offerguid, const string& qtyStr, const string& arbiteralias, const string& shipping, const string& networkFee, const string& arbiterFee, const string& witnessFee, const string &witness)
@@ -1744,7 +1764,7 @@ const string EscrowNewBuyItNow(const string& node, const string& sellernode, con
 	const string &bid_in_offer_currency = strprintf("%.*f", 8, fPaymentCurrency);
 	const string &bid_in_payment_option = strprintf("%.*f", 8, strprintf("%.*f", 8, pegRates[currency] * fPaymentCurrency));
 	//										"escrownew <getamountandaddress> <alias> <arbiter alias> <offer> <quantity> <buynow> <total_in_payment_option> [shipping amount] [network fee] [arbiter fee] [witness fee] [extTx] [payment option] [bid_in_payment_option] [bid_in_offer_currency] [witness]\n"
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrownew false " + buyeralias + " " + arbiteralias + " " + offerguid + " " + qtyStr + " " + buyNowStr + " " + strTotalInPaymentOption + " " + shipping + " " + networkFee + " " + arbiterFee + " " + witnessFee + " " + exttxid + " " + paymentoptions + " " + bid_in_payment_option + " " + bid_in_offer_currency + " " + witness + " false"));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrownew false " + buyeralias + " " + arbiteralias + " " + offerguid + " " + qtyStr + " " + buyNowStr + " " + strTotalInPaymentOption + " " + shipping + " " + networkFee + " " + arbiterFee + " " + witnessFee + " " + exttxid + " " + paymentoptions + " " + bid_in_payment_option + " " + bid_in_offer_currency + " " + witness));
 	UniValue arr = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + arr[0].get_str()));
 	string hex_str = find_value(r.get_obj(), "hex").get_str();
@@ -1754,7 +1774,7 @@ const string EscrowNewBuyItNow(const string& node, const string& sellernode, con
 	GenerateBlocks(10, node);
 
 	string txid = find_value(r.get_obj(), "txid").get_str();
-	const UniValue &txHistoryResult = AliasTxHistoryFilter(node, txid);
+	const UniValue &txHistoryResult = AliasTxHistoryFilter(node, txid + "-" + guid);
 	BOOST_CHECK(!txHistoryResult.empty());
 	UniValue ret;
 	BOOST_CHECK(ret.read(txHistoryResult[0].get_str()));
@@ -1762,8 +1782,8 @@ const string EscrowNewBuyItNow(const string& node, const string& sellernode, con
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "user1").get_str(), buyeralias);
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "user2").get_str(), selleralias);
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "user3").get_str(), arbiteralias);
-	BOOST_CHECK_EQUAL(find_value(historyResultObj, "_id").get_str(), txid);
-	BOOST_CHECK_EQUAL(find_value(historyResultObj, "guid").get_str(), guid);
+	BOOST_CHECK_EQUAL(find_value(historyResultObj, "_id").get_str(), txid + "-" + guid);
+	
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "type").get_str(), "Escrow Activated");
 
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "offerinfo " + offerguid));
@@ -1816,19 +1836,17 @@ const string EscrowNewBuyItNow(const string& node, const string& sellernode, con
 	}
 	
 
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowacknowledge " + guid + " '' false"));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowacknowledge " + guid + " ''"));
 	UniValue varray = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + varray[0].get_str()));
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "complete").get_bool(), false);
-	BOOST_CHECK_NO_THROW(r = CallRPC(sellernode, "escrowacknowledge " + guid + " '' false"));
+	BOOST_CHECK_NO_THROW(r = CallRPC(sellernode, "escrowacknowledge " + guid + " ''"));
 	UniValue arrres = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(sellernode, "signrawtransaction " + arrres[0].get_str()));
 	BOOST_CHECK_NO_THROW(r = CallRPC(sellernode, "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
 	GenerateBlocks(10, sellernode);
-	BOOST_CHECK_THROW(r = CallRPC(sellernode, "escrowacknowledge " + guid + " '' false"), runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC(sellernode, "escrowacknowledge " + guid + " ''"), runtime_error);
 	BOOST_CHECK_NO_THROW(r = CallRPC(sellernode, "offerinfo " + offerguid));
-	nQtyAfter = find_value(r.get_obj(), "quantity").get_int();
-	BOOST_CHECK_EQUAL(nQtyAfter, nQtyBefore-qty);
 	return guid;
 }
 void EscrowRelease(const string& node, const string& role, const string& guid ,const string& witness)
@@ -1912,17 +1930,17 @@ void EscrowRelease(const string& node, const string& role, const string& guid ,c
 	const UniValue& hex_value = find_value(r.get_obj(), "hex");
 	BOOST_CHECK(hex_value.get_str() != rawtx);
 	// "escrowrelease <escrow guid> <user role> <rawtx> [witness]\n"
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowrelease " + guid + " " + role + " " + hex_value.get_str() + " " + witness + " false"));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowrelease " + guid + " " + role + " " + hex_value.get_str() + " " + witness));
 	UniValue arr1 = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + arr1[0].get_str()));
 	string hex_str = find_value(r.get_obj(), "hex").get_str();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinsendrawtransaction " + hex_str));
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "decoderawtransaction " + hex_str));
-	GenerateBlocks(10, node);
-	GenerateBlocks(10, node);
+
+	GenerateBlocks(5, node);
 
 	string txid = find_value(r.get_obj(), "txid").get_str();
-	const UniValue &txHistoryResult = AliasTxHistoryFilter(node, txid);
+	const UniValue &txHistoryResult = AliasTxHistoryFilter(node, txid + "-" + guid);
 	BOOST_CHECK(!txHistoryResult.empty());
 	UniValue ret;
 	BOOST_CHECK(ret.read(txHistoryResult[0].get_str()));
@@ -1930,8 +1948,8 @@ void EscrowRelease(const string& node, const string& role, const string& guid ,c
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "user1").get_str(), buyeralias);
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "user2").get_str(), selleralias);
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "user3").get_str(), arbiteralias);
-	BOOST_CHECK_EQUAL(find_value(historyResultObj, "_id").get_str(), txid);
-	BOOST_CHECK_EQUAL(find_value(historyResultObj, "guid").get_str(), guid);
+	BOOST_CHECK_EQUAL(find_value(historyResultObj, "_id").get_str(), txid + "-" + guid);
+	
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "type").get_str(), "Escrow Released");
 
 
@@ -1999,18 +2017,17 @@ void EscrowRefund(const string& node, const string& role, const string& guid, co
 	const UniValue& hex_value = find_value(r.get_obj(), "hex");
 	BOOST_CHECK(hex_value.get_str() != rawtx);
 	// "escrowrefund <escrow guid> <user role> <rawtx> [witness]\n"
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowrefund " + guid + " " + role + " " + hex_value.get_str() + " " + witness + " false"));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowrefund " + guid + " " + role + " " + hex_value.get_str() + " " + witness));
 	UniValue arr1 = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + arr1[0].get_str()));
 	string hex_str = find_value(r.get_obj(), "hex").get_str();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinsendrawtransaction " + hex_str));
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "decoderawtransaction " + hex_str));
-	GenerateBlocks(10, node);
-	GenerateBlocks(10, node);
 
+	GenerateBlocks(5, node);
 
 	string txid = find_value(r.get_obj(), "txid").get_str();
-	const UniValue &txHistoryResult = AliasTxHistoryFilter(node, txid);
+	const UniValue &txHistoryResult = AliasTxHistoryFilter(node, txid + "-" + guid);
 	BOOST_CHECK(!txHistoryResult.empty());
 	UniValue ret;
 	BOOST_CHECK(ret.read(txHistoryResult[0].get_str()));
@@ -2018,15 +2035,10 @@ void EscrowRefund(const string& node, const string& role, const string& guid, co
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "user1").get_str(), buyeralias);
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "user2").get_str(), selleralias);
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "user3").get_str(), arbiteralias);
-	BOOST_CHECK_EQUAL(find_value(historyResultObj, "_id").get_str(), txid);
-	BOOST_CHECK_EQUAL(find_value(historyResultObj, "guid").get_str(), guid);
+	BOOST_CHECK_EQUAL(find_value(historyResultObj, "_id").get_str(), txid + "-" + guid);
+	
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "type").get_str(), "Escrow Refunded");
 
-
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "offerinfo " + offer));
-	int nQtyOfferAfter = find_value(r.get_obj(), "quantity").get_int();
-	// refund adds qty
-	BOOST_CHECK_EQUAL(nQtyOfferAfter, nQtyOfferBefore+nQty);
 	if (!bBuyNow) {
 		const UniValue &escrowBidAfter = EscrowBidFilterFromGUID(node, guid);
 		BOOST_CHECK(escrowBidAfter.empty());
@@ -2124,8 +2136,8 @@ void EscrowClaimRefund(const string& node, const string& guid)
 	BOOST_CHECK(hex_value.get_str() != rawtx);
 	BOOST_CHECK(complete_value.get_bool());
 	// ensure that you cannot refund with partially signed tx
-	BOOST_CHECK_THROW(CallRPC(node, "escrowcompleterefund " + guid + " " + rawtx + " '' false"), runtime_error);
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowcompleterefund " + guid + " " + hex_value.get_str() + " '' false"));
+	BOOST_CHECK_THROW(CallRPC(node, "escrowcompleterefund " + guid + " " + rawtx + " ''"), runtime_error);
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowcompleterefund " + guid + " " + hex_value.get_str() + " ''"));
 	UniValue arr1 = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + arr1[0].get_str()));
 	string hex_str = find_value(r.get_obj(), "hex").get_str();
@@ -2135,7 +2147,7 @@ void EscrowClaimRefund(const string& node, const string& guid)
 	GenerateBlocks(10, node);
 
 	string txid = find_value(r.get_obj(), "txid").get_str();
-	const UniValue &txHistoryResult = AliasTxHistoryFilter(node, txid);
+	const UniValue &txHistoryResult = AliasTxHistoryFilter(node, txid + "-" + guid);
 	BOOST_CHECK(!txHistoryResult.empty());
 	UniValue ret;
 	BOOST_CHECK(ret.read(txHistoryResult[0].get_str()));
@@ -2143,8 +2155,8 @@ void EscrowClaimRefund(const string& node, const string& guid)
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "user1").get_str(), buyeralias);
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "user2").get_str(), selleralias);
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "user3").get_str(), arbiteralias);
-	BOOST_CHECK_EQUAL(find_value(historyResultObj, "_id").get_str(), txid);
-	BOOST_CHECK_EQUAL(find_value(historyResultObj, "guid").get_str(), guid);
+	BOOST_CHECK_EQUAL(find_value(historyResultObj, "_id").get_str(), txid + "-" + guid);
+	
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "type").get_str(), "Escrow Refund Complete");
 
 
@@ -2315,8 +2327,8 @@ void EscrowClaimRelease(const string& node, const string& guid)
 	BOOST_CHECK(hex_value.get_str() != rawtx);
 	BOOST_CHECK(complete_value.get_bool());
 	// ensure that you cannot release with partially signed tx
-	BOOST_CHECK_THROW(CallRPC(node, "escrowcompleterelease " + guid + " " + rawtx + " '' false"), runtime_error);
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowcompleterelease " + guid + " " + hex_value.get_str() + " '' false"));
+	BOOST_CHECK_THROW(CallRPC(node, "escrowcompleterelease " + guid + " " + rawtx + " ''"), runtime_error);
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowcompleterelease " + guid + " " + hex_value.get_str() + " ''"));
 	UniValue arr1 = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + arr1[0].get_str()));
 	string hex_str = find_value(r.get_obj(), "hex").get_str();
@@ -2327,7 +2339,7 @@ void EscrowClaimRelease(const string& node, const string& guid)
 
 
 	string txid = find_value(r.get_obj(), "txid").get_str();
-	const UniValue &txHistoryResult = AliasTxHistoryFilter(node, txid);
+	const UniValue &txHistoryResult = AliasTxHistoryFilter(node, txid + "-" + guid);
 	BOOST_CHECK(!txHistoryResult.empty());
 	UniValue ret;
 	BOOST_CHECK(ret.read(txHistoryResult[0].get_str()));
@@ -2335,18 +2347,10 @@ void EscrowClaimRelease(const string& node, const string& guid)
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "user1").get_str(), buyeralias);
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "user2").get_str(), selleralias);
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "user3").get_str(), arbiteralias);
-	BOOST_CHECK_EQUAL(find_value(historyResultObj, "_id").get_str(), txid);
-	BOOST_CHECK_EQUAL(find_value(historyResultObj, "guid").get_str(), guid);
+	BOOST_CHECK_EQUAL(find_value(historyResultObj, "_id").get_str(), txid + "-" + guid);
+	
 	BOOST_CHECK_EQUAL(find_value(historyResultObj, "type").get_str(), "Escrow Release Complete");
 
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "offerinfo " + offer));
-	int nQtyOfferAfter = find_value(r.get_obj(), "quantity").get_int();
-	// we have already changed qty as we ack the escrow when calling escrownew in this test suite unless its an auction(we are not acking auction bids or buynow purchases in our test suite)
-	if (offertype.find("AUCTION") == std::string::npos) {
-		BOOST_CHECK_EQUAL(nQtyOfferBefore, nQtyOfferAfter);
-	}
-	else
-		BOOST_CHECK_EQUAL(nQtyOfferBefore-nQty, nQtyOfferAfter);
 
 	// get balances after
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasbalance " + selleralias));
