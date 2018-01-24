@@ -49,6 +49,19 @@ bool OrderBasedOnArrivalTime(std::vector<CTransaction>& blockVtx) {
 					orderedIndexes.insert(make_pair(INT64_MAX, n));
 				continue;
 			}
+			else if (DecodeCertTx(tx, op, nOut, vvchArgs))
+			{
+				ArrivalTimesMap arrivalTimes;
+				CCert cert(tx);
+				pcertdb->ReadISArrivalTimes(cert.vchCert, arrivalTimes);
+				ArrivalTimesMap::iterator it = arrivalTimes.find(tx.GetHash());
+				if (it != arrivalTimes.end())
+					orderedIndexes.insert(make_pair((*it).second, n));
+				// we don't have this in our arrival times list, means it must be rejected via consensus so add it to the end
+				else
+					orderedIndexes.insert(make_pair(INT64_MAX, n));
+				continue;
+			}
 		}
 		// add normal tx's to orderedvtx, 
 		orderedVtx.push_back(tx);

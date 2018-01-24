@@ -9,7 +9,7 @@
 #include "dbwrapper.h"
 #include "script/script.h"
 #include "serialize.h"
-
+#include "assetallocation.h"
 class CWalletTx;
 class CTransaction;
 class CReserveKey;
@@ -17,7 +17,7 @@ class CCoinsViewCache;
 class CCoins;
 class CBlock;
 class CAliasIndex;
-bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const std::vector<std::vector<unsigned char> > &vvchArgs, const std::vector<unsigned char> &vvchAlias, bool fJustCheck, int nHeight, std::string &errorMessage, bool dontaddtodb=false);
+bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const std::vector<std::vector<unsigned char> > &vvchArgs, const std::vector<unsigned char> &vvchAlias, bool fJustCheck, int nHeight, sorted_vector<std::vector<unsigned char> > &revertedCerts, std::string &errorMessage, bool dontaddtodb=false);
 bool DecodeCertTx(const CTransaction& tx, int& op, int& nOut, std::vector<std::vector<unsigned char> >& vvch);
 bool DecodeAndParseCertTx(const CTransaction& tx, int& op, int& nOut, std::vector<std::vector<unsigned char> >& vvch, char& type);
 bool DecodeCertScript(const CScript& script, int& op, std::vector<std::vector<unsigned char> > &vvch);
@@ -94,19 +94,32 @@ class CCertDB : public CDBWrapper {
 public:
     CCertDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "certificates", nCacheSize, fMemory, fWipe) {}
 
-    bool WriteCert(const CCert& cert, const int &op, const bool &fJustCheck) {
+    bool WriteCert(const CCert& cert, const int &op, const int64_t& arrivalTime, const bool &fJustCheck) {
 		bool writeState =  Write(make_pair(std::string("certi"), cert.vchCert), cert);
-		if(op == OP_CERT_ACTIVATE)
-			writeState = writeState && Write(make_pair(std::string("certf"), cert.vchCert), cert);
+		if (!fJustCheck) {
+			writeState = writeState && Write(make_pair(std::string("certp"), cert.vchCert), cert);
+			if (op == OP_CERT_ACTIVATE)
+				writeState = writeState && Write(make_pair(std::string("certf"), cert.vchCert), cert);
+		}
+		else if (fJustCheck) {
+			if (arrivalTime < INT64_MAX) {
+				ArrivalTimesMap arrivalTimes;
+				ReadISArrivalTimes(cert.vchCert, arrivalTimes);
+				arrivalTimes[cert.txHash] = arrivalTime;
+				writeState = writeState && Write(make_pair(std::string("certa"), cert.vchCert), arrivalTimes);
+			}
+		}
 		WriteCertIndex(cert, op);
         return writeState;
     }
 
     bool EraseCert(const std::vector<unsigned char>& vchCert, bool cleanup = false) {
 		bool eraseState = Erase(make_pair(std::string("certi"), vchCert));
+		Erase(make_pair(std::string("certp"), vchCert));
 		Erase(make_pair(std::string("certf"), vchCert));
 		EraseCertIndex(vchCert, cleanup);
 		EraseCertIndexHistory(vchCert, cleanup);
+		EraseISArrivalTimes(vchCert);
         return eraseState;
     }
 
@@ -118,6 +131,12 @@ public:
 	}
 	bool ReadLastCert(const std::vector<unsigned char>& vchGuid, CCert& cert) {
 		return Read(make_pair(std::string("certp"), vchGuid), cert);
+	}
+	bool ReadISArrivalTimes(const std::vector<unsigned char>& vchCert, ArrivalTimesMap& arrivalTimes) {
+		return Read(make_pair(std::string("certa"), vchCert), arrivalTimes);
+	}
+	bool EraseISArrivalTimes(const std::vector<unsigned char>& vchCert) {
+		return Erase(make_pair(std::string("certa"), vchCert));
 	}
 	bool CleanupDatabase(int &servicesCleaned);
 	void WriteCertIndex(const CCert& cert, const int &op);
