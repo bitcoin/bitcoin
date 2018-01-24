@@ -82,20 +82,20 @@ BASE_SCRIPTS= [
     'feature_reindex.py',
     # vv Tests less than 30s vv
     'wallet_keypool_topup.py',
-    'zmq_test.py',
-    'bitcoin_cli.py',
-    'mempool_resurrect_test.py',
+    'interface_zmq.py',
+    'interface_bitcoin_cli.py',
+    'mempool_resurrect.py',
     'wallet_txn_doublespend.py --mineblock',
     'wallet_txn_clone.py',
     'wallet_txn_clone.py --segwit',
     'rpc_getchaintips.py',
-    'rest.py',
-    'mempool_spendcoinbase.py',
+    'interface_rest.py',
+    'mempool_spend_coinbase.py',
     'mempool_reorg.py',
     'mempool_persist.py',
     'wallet_multiwallet.py',
     'wallet_multiwallet.py --usecli',
-    'httpbasics.py',
+    'interface_http.py',
     'rpc_users.py',
     'feature_proxy.py',
     'rpc_signrawtransaction.py',
@@ -107,7 +107,7 @@ BASE_SCRIPTS= [
     'rpc_net.py',
     'wallet_keypool.py',
     'p2p_mempool.py',
-    'prioritise_transaction.py',
+    'mining_prioritisetransaction.py',
     'p2p_invalid_block.py',
     'p2p_invalid_tx.py',
     'feature_versionbits_warning.py',
@@ -116,7 +116,7 @@ BASE_SCRIPTS= [
     'rpc_signmessage.py',
     'feature_nulldummy.py',
     'wallet_import_rescan.py',
-    'mining.py',
+    'mining_basic.py',
     'wallet_bumpfee.py',
     'rpc_named_arguments.py',
     'wallet_listsinceblock.py',
@@ -149,7 +149,7 @@ EXTENDED_SCRIPTS = [
     'feature_dbcrash.py',
     # vv Tests less than 2m vv
     'feature_bip68_sequence.py',
-    'getblocktemplate_longpoll.py',
+    'mining_getblocktemplate_longpoll.py',
     'p2p_timeouts.py',
     # vv Tests less than 60s vv
     'feature_bip9_softforks.py',
@@ -474,7 +474,7 @@ class TestResult():
 def check_script_prefixes():
     """Check that no more than `EXPECTED_VIOLATION_COUNT` of the
        test scripts don't start with one of the allowed name prefixes."""
-    EXPECTED_VIOLATION_COUNT = 7
+    EXPECTED_VIOLATION_COUNT = 0
 
     # LEEWAY is provided as a transition measure, so that pull-requests
     # that introduce new tests that don't conform with the naming
