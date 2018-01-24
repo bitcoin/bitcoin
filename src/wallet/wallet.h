@@ -69,8 +69,8 @@ static const bool DEFAULT_SPEND_ZEROCONF_CHANGE = true;
 //! Default for -sendfreetransactions
 static const bool DEFAULT_SEND_FREE_TRANSACTIONS = false;
 //! -txconfirmtarget default
-// SYSCOIN
-static const unsigned int DEFAULT_TX_CONFIRM_TARGET = 5;
+// SYSCOIN set to 1 as when services are stored in db they should be usable
+static const unsigned int DEFAULT_TX_CONFIRM_TARGET = 1;
 //! -maxtxfee will warn if called with a higher fee than this amount (in satoshis)
 static const CAmount nHighTransactionMaxFeeWarning = 100 * nHighTransactionFeeWarning;
 //! Largest (in bytes) free transaction we're willing to create

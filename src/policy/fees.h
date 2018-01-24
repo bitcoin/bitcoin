@@ -195,10 +195,10 @@ static const double SUFFICIENT_FEETXS = 1;
 static const double SUFFICIENT_PRITXS = .2;
 
 // Minimum and Maximum values for tracking fees and priorities
-static const double MIN_FEERATE = 1;
+static const double MIN_FEERATE = 10;
 static const double MAX_FEERATE = 1e7;
 static const double INF_FEERATE = MAX_MONEY;
-static const double MIN_PRIORITY = 1;
+static const double MIN_PRIORITY = 10;
 static const double MAX_PRIORITY = 1e16;
 static const double INF_PRIORITY = 1e9 * MAX_MONEY;
 
