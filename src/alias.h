@@ -244,22 +244,16 @@ class CAliasDB : public CDBWrapper {
 public:
     CAliasDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "aliases", nCacheSize, fMemory, fWipe) {
     }
-	bool WriteAlias(const CAliasUnprunable &aliasUnprunable, const std::vector<unsigned char>& address, const CAliasIndex& alias, const int &op, const bool &fJustCheck) {
+	bool WriteAlias(const CAliasUnprunable &aliasUnprunable, const std::vector<unsigned char>& address, const CAliasIndex& alias, const int &op) {
 		if(address.empty())
 			return false;	
 		bool writeState = Write(make_pair(std::string("namei"), alias.vchAlias), alias) && Write(make_pair(std::string("namea"), address), alias.vchAlias) && Write(make_pair(std::string("nameu"), alias.vchAlias), aliasUnprunable);
-		if (!fJustCheck)
-			writeState = writeState && Write(make_pair(std::string("namep"), alias.vchAlias), alias);
-		else if(fJustCheck)
-			writeState = writeState && Write(make_pair(std::string("namel"), alias.vchAlias), fJustCheck);
 		WriteAliasIndex(alias, op);
 		return writeState;
 	}
 
 	bool EraseAlias(const std::vector<unsigned char>& vchAlias, bool cleanup = false) {
 		bool eraseState = Erase(make_pair(std::string("namei"), vchAlias));
-		Erase(make_pair(std::string("namep"), vchAlias));
-		EraseISLock(vchAlias);
 		EraseAliasIndex(vchAlias, cleanup);
 		EraseAliasIndexHistory(vchAlias, cleanup);
 		EraseAliasIndexTxHistory(vchAlias, cleanup);
@@ -267,15 +261,6 @@ public:
 	}
 	bool ReadAlias(const std::vector<unsigned char>& vchAlias, CAliasIndex& alias) {
 		return Read(make_pair(std::string("namei"), vchAlias), alias);
-	}
-	bool ReadLastAlias(const std::vector<unsigned char>& vchGuid, CAliasIndex& alias) {
-		return Read(make_pair(std::string("namep"), vchGuid), alias);
-	}
-	bool ReadISLock(const std::vector<unsigned char>& vchGuid, bool& lock) {
-		return Read(make_pair(std::string("namel"), vchGuid), lock);
-	}
-	bool EraseISLock(const std::vector<unsigned char>& vchGuid) {
-		return Erase(make_pair(std::string("namel"), vchGuid));
 	}
 	bool ReadAddress(const std::vector<unsigned char>& address, std::vector<unsigned char>& name) {
 		return Read(make_pair(std::string("namea"), address), name);
