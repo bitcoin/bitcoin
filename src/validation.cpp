@@ -886,7 +886,9 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 		// nModifiedFees includes any fee deltas from PrioritiseTransaction
 		CAmount nModifiedFees = nFees;
 		double nPriorityDummy = 0;
-		pool.ApplyDeltas(hash, nPriorityDummy, nModifiedFees);
+		// SYSCOIN, don't apply any deltas for sys txs, should be minrelayfees regardless
+		if(tx.nVersion != SYSCOIN_TX_VERSION)
+			pool.ApplyDeltas(hash, nPriorityDummy, nModifiedFees);
 
 		CAmount inChainInputValue;
 		double dPriority = view.GetPriority(tx, chainActive.Height(), inChainInputValue);
