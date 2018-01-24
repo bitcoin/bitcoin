@@ -9,6 +9,7 @@ TEST_BINARY=test/test_bitcoin$(EXEEXT)
 
 JSON_TEST_FILES = \
   test/data/base58_encode_decode.json \
+  test/data/blockfilters.json \
   test/data/key_io_valid.json \
   test/data/key_io_invalid.json \
   test/data/script_tests.json \
