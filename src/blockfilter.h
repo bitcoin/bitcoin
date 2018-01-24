@@ -9,8 +9,10 @@
 #include <stdint.h>
 #include <vector>
 
+#include <primitives/block.h>
 #include <serialize.h>
 #include <uint256.h>
+#include <undo.h>
 
 /**
  * This implements a Golomb-coded set as defined in BIP 158. It is a
@@ -69,6 +71,39 @@ public:
      * efficient that checking Match on multiple elements separately.
      */
     bool MatchAny(const ElementSet& elements) const;
+};
+
+constexpr uint8_t BASIC_FILTER_P = 19;
+constexpr uint32_t BASIC_FILTER_M = 784931;
+
+enum BlockFilterType : uint8_t
+{
+    BASIC = 0,
+};
+
+/**
+ * Complete block filter struct as defined in BIP 157.
+ */
+class BlockFilter
+{
+private:
+    BlockFilterType m_filter_type;
+    uint256 m_block_hash;
+    GCSFilter m_filter;
+
+public:
+
+    // Construct a new BlockFilter of the specified type from a block.
+    BlockFilter(BlockFilterType filter_type, const CBlock& block, const CBlockUndo& block_undo);
+
+    BlockFilterType GetFilterType() const { return m_filter_type; }
+
+    const GCSFilter& GetFilter() const { return m_filter; }
+
+    const std::vector<unsigned char>& GetEncodedFilter() const
+    {
+        return m_filter.GetEncoded();
+    }
 };
 
 #endif // BITCOIN_BLOCKFILTER_H
