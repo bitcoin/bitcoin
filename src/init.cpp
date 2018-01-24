@@ -997,18 +997,18 @@ bool AppInit2(boost::thread_group& threadGroup)
     if (fServer)
         StartRPCThreads();
 
-#ifdef ENABLE_MINING
+#ifndef DISABLE_MINING
     // Generate coins in the background
     GenerateBitcoins(GetBoolArg("-gen", false), pwalletMain);
-#endif // ENABLE_MINING
+#endif // DISABLE_MINING
 
     // ppcoin: mint proof-of-stake blocks in the background
-#ifdef ENABLE_MINING
+#ifndef DISABLE_MINING
 #ifdef TESTING
     if (GetBoolArg("-stakegen", true))
 #endif
     MintStake(threadGroup, pwalletMain);
-#endif // ENABLE_MINING
+#endif // DISABLE_MINING
 
     // ********************************************************* Step 12: finished
 
