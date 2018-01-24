@@ -822,7 +822,7 @@ void AliasAddWhitelist(const string& node, const string& owneralias, const strin
 	UniValue varray = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + varray[0].get_str()));
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
-
+	GenerateBlocks(5, node);
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliaswhitelist " + owneralias));
 	const UniValue &arrayValue = r.get_array();
 	for (int i = 0; i<arrayValue.size(); i++)
@@ -835,7 +835,7 @@ void AliasAddWhitelist(const string& node, const string& owneralias, const strin
 		}
 	}
 	BOOST_CHECK(found);
-	GenerateBlocks(5, node);
+	
 }
 void AliasRemoveWhitelist(const string& node, const string& owneralias, const string& aliasname, const string& discount, const string& witness)
 {
@@ -845,7 +845,7 @@ void AliasRemoveWhitelist(const string& node, const string& owneralias, const st
 	UniValue varray = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + varray[0].get_str()));
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
-
+	GenerateBlocks(5, node);
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliaswhitelist " + owneralias));
 	const UniValue &arrayValue = r.get_array();
 	for (int i = 0; i<arrayValue.size(); i++)
@@ -853,7 +853,7 @@ void AliasRemoveWhitelist(const string& node, const string& owneralias, const st
 		const string &aliasguid = find_value(arrayValue[i].get_obj(), "alias").get_str();
 		BOOST_CHECK(aliasguid != aliasname);
 	}
-	GenerateBlocks(5, node);
+	
 }
 void AliasClearWhitelist(const string& node, const string& owneralias, const string &witness)
 {
@@ -862,11 +862,11 @@ void AliasClearWhitelist(const string& node, const string& owneralias, const str
 	UniValue varray = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + varray[0].get_str()));
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
-
+	GenerateBlocks(5, node);
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliaswhitelist " + owneralias));
 	const UniValue &arrayValue = r.get_array();
 	BOOST_CHECK(arrayValue.empty());
-	GenerateBlocks(5, node);
+	
 }
 int FindAliasDiscount(const string& node, const string& owneralias, const string &aliasname) 
 {
