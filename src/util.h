@@ -124,6 +124,7 @@ boost::filesystem::path GetSpecialFolderPath(int nFolder, bool fCreate = true);
 boost::filesystem::path GetTempPath();
 void ShrinkDebugFile();
 void runCommand(std::string strCommand);
+bool Sha256Sum(const std::string& filename, std::string& result);
 
 inline bool IsSwitchChar(char c)
 {

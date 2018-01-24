@@ -1,5 +1,6 @@
 #include "updatedialog.h"
 #include "ui_updatedialog.h"
+#include "util.h"
 #include <QPushButton>
 #include <QFileDialog>
 #include <QMessageBox>
@@ -105,10 +106,6 @@ void UpdateProgressBar(curl_off_t now, curl_off_t total)
     {
         UpdateDialog::GetInstance()->setProgressMaximum(total);
         UpdateDialog::GetInstance()->setProgressValue(now);
-        if (now == total)
-        {
-            UpdateDialog::GetInstance()->downloadFinished();
-        }
     }
 }
 
@@ -117,8 +114,22 @@ void UpdateDialog::downloadFinished()
     if (!finished)
     {
         finished = true;
-        QMessageBox::information(this, tr("Download Complete"),
-            tr("Package has been successfully downloaded!\nPath - %1").arg(fileName));
+        std::string sha;
+        std::string newSha = updater.GetDownloadSha256Sum();
+        if (Sha256Sum(fileName.toStdString(), sha)) {
+            if (newSha.compare(sha) == 0) {
+                QMessageBox::information(this, tr("Download Complete"),
+                    tr("Package has been successfully downloaded!\nPath - %1").arg(fileName));
+            } else {
+                QMessageBox::warning(this, "Error", tr("Sha256Sum is not valid."), 
+                    QMessageBox::Ok, QMessageBox::Ok);
+                // Remove file
+            }
+        } else {
+            QMessageBox::warning(this, "Error", tr("Failed to get Sha256Sum."), 
+                QMessageBox::Ok, QMessageBox::Ok);
+            // Remove file
+        }
         QDialog::done(true);
     }
 }
@@ -149,6 +160,7 @@ void UpdateDialog::downloadVersion()
         ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(false);
         ui->buttonBox->button(QDialogButtonBox::Cancel)->setText("Cancel");
         updater.DownloadFile(url, fileName.toStdString(), &UpdateProgressBar);
+        downloadFinished();
     }
 }
 
