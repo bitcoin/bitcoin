@@ -579,7 +579,7 @@ bool CBudgetManager::IsBudgetPaymentBlock(int nBlockHeight)
     /*
         If budget doesn't have 5% of the network votes, then we should pay a masternode instead
     */
-    if(20*nHighestCount > mnodeman.CountEnabled(MIN_BUDGET_PEER_PROTO_VERSION))
+    if(20 * nHighestCount > mnodeman.CountEnabled(MIN_BUDGET_PEER_PROTO_VERSION))
         return true;
 
     return false;
@@ -633,7 +633,7 @@ bool CBudgetManager::IsTransactionValid(const CTransaction& txNew, int nBlockHei
         If budget doesn't have 5% of the network votes, then we should pay a masternode instead
     */
 
-    if(20*nHighestCount < mnodeman.CountEnabled(MIN_BUDGET_PEER_PROTO_VERSION))
+    if(20 * nHighestCount < mnodeman.CountEnabled(MIN_BUDGET_PEER_PROTO_VERSION))
         return false;
 
     // check the highest finalized budgets (+/- 10% to assist in consensus)
@@ -643,7 +643,7 @@ bool CBudgetManager::IsTransactionValid(const CTransaction& txNew, int nBlockHei
     {
         CFinalizedBudget* pfinalizedBudget = &((*it).second);
 
-        if(10*(nHighestCount - pfinalizedBudget->GetVoteCount()) < mnodeman.CountEnabled(MIN_BUDGET_PEER_PROTO_VERSION)){
+        if(10 * (nHighestCount - pfinalizedBudget->GetVoteCount()) < mnodeman.CountEnabled(MIN_BUDGET_PEER_PROTO_VERSION)){
             if(nBlockHeight >= pfinalizedBudget->GetBlockStart() && nBlockHeight <= pfinalizedBudget->GetBlockEnd()){
                 if(pfinalizedBudget->IsTransactionValid(txNew, nBlockHeight)){
                     return true;
