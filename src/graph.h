@@ -43,8 +43,8 @@ struct sorted_vector {
 			V.insert(i, t);
 		return i;
 	}
-	const_iterator find(const T& t) const {
-		const_iterator i = lower_bound(begin(), end(), t, cmp);
+	iterator find(const T& t) const {
+		iterator i = lower_bound(begin(), end(), t, cmp);
 		return i == end() || cmp(t, *i) ? end() : i;
 	}
 };
