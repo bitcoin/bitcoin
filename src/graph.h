@@ -48,11 +48,6 @@ struct sorted_vector {
 		return i == end() || cmp(t, *i) ? end() : i;
 	}
 };
-template <typename Container, typename ConstIterator>
-typename Container::iterator remove_constness(Container& c, ConstIterator it)
-{
-	return c.erase(it, it);
-}
 template <typename ClearedVertices>
 struct cycle_visitor
 {
