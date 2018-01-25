@@ -439,14 +439,14 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 			}
 			if (dbAssetAllocation.nBalance < nTotal) {
 				errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("Sender balance is insufficient");
-				if (fJustCheck) {
+				if (fJustCheck && !dontaddtodb) {
 					// add conflicting sender
 					assetAllocationConflicts.insert(assetAllocationTuple);
 					bBalanceOverrun = true;
-					LogPrintf("CheckAssetAllocationInputs: balance overrrun dbAssetAllocation.nBalance %llu vs nTotal %llu\n", dbAssetAllocation.nBalance, nTotal);
+					LogPrintf("CheckAssetAllocationInputs: balance overrun dbAssetAllocation.nBalance %llu vs nTotal %llu\n", dbAssetAllocation.nBalance, nTotal);
 				}
 			}
-			else if (fJustCheck) {
+			else if (fJustCheck && !dontaddtodb) {
 				// if sender was is flagged as conflicting, add all receivers to conflict list
 				if (assetAllocationConflicts.find(assetAllocationTuple) != assetAllocationConflicts.end())
 				{
