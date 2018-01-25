@@ -1823,9 +1823,9 @@ void StartNode(boost::thread_group& threadGroup)
 bool StopNode()
 {
     printf("StopNode()\n");
-#ifdef ENABLE_MINING
+#ifndef DISABLE_MINING
     GenerateBitcoins(false, NULL);
-#endif // ENABLE_MINING
+#endif // DISABLE_MINING
     MapPort(false);
     nTransactionsUpdated++;
     if (semOutbound)
