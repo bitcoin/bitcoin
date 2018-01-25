@@ -1,8 +1,8 @@
 Source: peercoin
 Section: utils
 Priority: optional
-Maintainer: Matt Corallo <matt@mattcorallo.com>
-Uploaders: Matt Corallo <matt@mattcorallo.com>
+Maintainer: Peerchemist <peerchemist@protonmail.ch>
+Uploaders: Peerchemist <peerchemist@protonmail.ch>
 Build-Depends: debhelper,
  devscripts,
  automake,
@@ -26,8 +26,7 @@ Build-Depends: debhelper,
  libminiupnpc8-dev | libminiupnpc-dev,
  qtbase5-dev,
  qttools5-dev-tools, qttools5-dev,
- libqrencode-dev,
- python
+ libqrencode-dev
 Standards-Version: 3.9.5
 Homepage: https://peercoin.net/
 Vcs-Git: git://github.com/peercoin/peercoin.git
@@ -37,7 +36,7 @@ Package: peercoind
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: peer-to-peer network based digital currency - daemon
- Peercoin is a crypto-currency project forked from Bitcoin and we aim to achieve
+ Peercoin is a crypto-currency project forked from Bitcoin with aim to achieve
  energy-efficiency and keep as much as possible the original Bitcoin's
  preferable properties.
  .
@@ -47,7 +46,7 @@ Package: peercoin-qt
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: peer-to-peer network based digital currency - Qt GUI
- Peercoin is a crypto-currency project forked from Bitcoin and we aim to achieve
+ Peercoin is a crypto-currency project forked from Bitcoin with aim to achieve
  energy-efficiency and keep as much as possible the original Bitcoin's
  preferable properties.
  .
@@ -57,7 +56,7 @@ Package: peercoin-cli
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: peer-to-peer digital currency - standalone transaction tool
- Peercoin is a crypto-currency project forked from Bitcoin and we aim to achieve
+ Peercoin is a crypto-currency project forked from Bitcoin with aim to achieve
  energy-efficiency and keep as much as possible the original Bitcoin's
  preferable properties.
  .
