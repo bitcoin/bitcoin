@@ -289,12 +289,7 @@ bool RevertAssetAllocation(const CAssetAllocationTuple &assetAllocationToRemove,
 		errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2022 - " + _("Failed to write to asset allocation DB");
 		return error(errorMessage.c_str());
 	}
-	// remove the receiver arrival time from this tx
-	if (dbAssetAllocation.listSendingAllocationInputs.empty()) {
-		for (auto& amountTuple : dbAssetAllocation.listSendingAllocationAmounts) {
-			passetallocationdb->EraseISArrivalTime(CAssetAllocationTuple(dbAssetAllocation.vchAsset, amountTuple.first), txHash);
-		}
-	}
+
 	// remove the sender arrival time from this tx
 	passetallocationdb->EraseISArrivalTime(assetAllocationToRemove, txHash);
 
