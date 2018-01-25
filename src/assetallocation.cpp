@@ -31,6 +31,7 @@ extern mongoc_collection_t *assetallocation_collection;
 extern mongoc_collection_t *aliastxhistory_collection;
 extern void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsigned char> &vchWitness, const CRecipient &aliasRecipient, CRecipient &aliasPaymentRecipient, vector<CRecipient> &vecSend, CWalletTx& wtxNew, CCoinControl* coinControl, bool fUseInstantSend = false, bool transferAlias = false);
 static sorted_vector<CAssetAllocationTuple> assetAllocationConflicts;
+
 bool IsAssetAllocationOp(int op) {
 	return op == OP_ASSET_ALLOCATION_SEND;
 }
@@ -292,6 +293,7 @@ bool RevertAssetAllocation(const CAssetAllocationTuple &assetAllocationToRemove,
 	sorted_vector<CAssetAllocationTuple>::iterator it = assetAllocationConflicts.find(assetAllocationToRemove);
 	if (it != assetAllocationConflicts.end())
 		assetAllocationConflicts.V.erase(it);
+
 	return true;
 	
 }
@@ -438,7 +440,6 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 					assetAllocationConflicts.insert(assetAllocationTuple);
 					bBalanceOverrun = true;
 				}
-				return true;
 			}
 			else if (fJustCheck) {
 				// if sender was is flagged as conflicting, add all receivers to conflict list
@@ -447,6 +448,10 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 					bAddAllReceiversToConflictList = true;
 				}
 			}
+			AssetAllocationSpendMap::iterator it = assetAllocationTrackRealtimeSpends.find(assetAllocationTuple);
+			AssetAllocationSpendPair *spendPair = NULL;
+			if (it != assetAllocationTrackRealtimeSpends.end())
+				spendPair = &(*it);
 			for (auto& amountTuple : theAssetAllocation.listSendingAllocationAmounts) {
 				CAssetAllocation receiverAllocation;
 				if (amountTuple.first == vchAlias) {
@@ -483,6 +488,8 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 						receiverAllocation.nHeight = nHeight;
 						receiverAllocation.nBalance += amountTuple.second;
 						theAssetAllocation.nBalance -= amountTuple.second;
+						if(spendPair)
+							spendPair->second += amountTuple.second;
 					}
 					
 					if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, INT64_MAX, fJustCheck))
@@ -582,6 +589,7 @@ UniValue assetallocationsend(const UniValue& params, bool fHelp) {
 	}
 	if (assetAllocationConflicts.find(assetAllocationTuple) != assetAllocationConflicts.end())
 		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 2510 - " + _("This asset allocation is involved in a conflict which must be resolved with Proof-Of-Work. Please wait for a block confirmation and try again..."));
+	
 	vector<unsigned char> data;
 	theAssetAllocation.Serialize(data);
 	uint256 hash = Hash(data.begin(), data.end());
@@ -636,6 +644,73 @@ UniValue assetallocationinfo(const UniValue& params, bool fHelp) {
 		oAssetAllocation.clear();
     return oAssetAllocation;
 }
+bool DetectPotentialAssetAllocationSenderConflicts(const CAssetAllocationTuple& assetAllocationTuple) {
+	CAssetAllocation dbAssetAllocation;
+	std::vector<vector<unsigned char> > vvchAliasArgs;
+	std::vector<vector<unsigned char> > vvchArgs;
+	int op;
+	int nOut;
+	ArrivalTimesMap arrivalTimes;
+	// get last POW asset allocation balance to ensure we use POW balance to check for potential conflicts in mempool (real-time balances).
+	// The idea is that real-time spending amounts can in some cases overrun the POW balance safely whereas in some cases some of the spends are 
+	// put in another block due to not using enough fees or for other reasons that miners don't mine them.
+	// We just want to flag them as level 1 so it warrants deeper investigation on receiver side if desired (if fund amounts being transferred are not negligible)
+	if (!passetallocationdb || !passetallocationdb->ReadLastAssetAllocation(assetAllocationTuple, dbAssetAllocation))
+		return false;
+
+	// ensure that this transaction exists in the arrivalTimes DB (which is the running stored lists of all real-time asset allocation sends not in POW)
+	// the arrivalTimes DB is only added to for valid asset allocation sends that happen in real-time and it is removed once there is POW on that transaction
+	passetallocationdb->ReadISArrivalTimes(assetAllocationTuple, arrivalTimes);
+	LOCK(cs_main);
+	// go through arrival times and check that balances don't overrun the POW balance
+	CAmount nRealtimeBalanceRequired = 0;
+	for(auto& arrivalTime, arrivalTimes)
+	{
+		CTransaction tx;
+		// ensure mempool has this transaction and it is not yet mined, get the transaction in question
+		if (mempool.lookup(arrivalTime.first, tx))
+		{
+			return true;
+		}
+		// get asset allocation object from this tx, if for some reason it doesn't have it, just skip (shouldn't happen)
+		CAssetAllocation assetallocation(tx);
+		if (assetallocation.IsNull())
+			continue;
+		if (assetallocation.listSendingAllocationInputs.empty()) {
+			for (auto& amountTuple : assetallocation.listSendingAllocationAmounts) {
+				nRealtimeBalanceRequired += amountTuple.second;
+				// if running balance overruns the stored balance then we have a potential conflict
+				if (nRealtimeBalanceRequired > dbAssetAllocation.nBalance) {
+					return true;
+				}
+			}
+		}
+	}
+	return false;
+}
+UniValue assetallocationsenderstatus(const UniValue& params, bool fHelp) {
+	if (fHelp || 2 != params.size())
+		throw runtime_error("assetallocationsenderstatus <asset> <alias>\n"
+			"Show status as it pertains to any current Z-DAG conflicts or warnings related to a sender of an asset allocation.\n
+			"Return value is in the status field and can represent 3 levels(0, 1 or 2)\n"
+			"Level 0 means OK.\n"
+			"Level 1 means warning (checked that in the mempool there are more spending balances than current POW sender balance). An active stance should be taken and perhaps a deeper analysis as to potential conflicts related to the sender.\n"
+			"Level 2 means an active double spend was found and any depending asset allocation sends are also flagged as dangerous and should wait for POW confirmation before proceeding.\n");
+
+	vector<unsigned char> vchAsset = vchFromValue(params[0]);
+	vector<unsigned char> vchAlias = vchFromValue(params[1]);
+	UniValue oAssetAllocationStatus(UniValue::VOBJ);
+
+	CAssetAllocationTuple assetAllocationTuple(vchAsset, vchAlias);
+	int nStatus = ZDAG_STATUS_OK;
+	if (assetAllocationConflicts.find(assetAllocationTuple) != assetAllocationConflicts.end())
+		nStatus = ZDAG_MAJOR_CONFLICT_OK;
+	else if (DetectPotentialAssetAllocationSenderConflicts(assetAllocationTuple)) {
+		nStatus = ZDAG_MINOR_CONFLICT_OK;
+	}
+	oAssetAllocationStatus.push_back(Pair("status", nStatus));
+	return oAssetAllocationStatus;
+}
 bool BuildAssetAllocationJson(const CAssetAllocation& assetallocation, UniValue& oAssetAllocation)
 {
 	CAssetAllocationTuple assetAllocationTuple(assetallocation.vchAsset, assetallocation.vchAlias);
@@ -660,10 +735,6 @@ bool BuildAssetAllocationJson(const CAssetAllocation& assetallocation, UniValue&
 	}
 	oAssetAllocation.push_back(Pair("expires_on", expired_time));
 	oAssetAllocation.push_back(Pair("expired", expired));
-	int nStatus = ZDAG_STATUS_OK;
-	if (assetAllocationConflicts.find(assetAllocationTuple) != assetAllocationConflicts.end())
-		nStatus = ZDAG_MAJOR_CONFLICT_OK;
-	oAssetAllocation.push_back(Pair("status", nStatus));
 	return true;
 }
 bool BuildAssetAllocationIndexerJson(const CAssetAllocation& assetallocation, UniValue& oAssetAllocation)

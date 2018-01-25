@@ -453,7 +453,8 @@ static const CRPCCommand vRPCCommands[] =
 	{ "wallet", "assetsend",      &assetsend,  false },
 	{ "wallet", "assetinfo",      &assetinfo,  false },
 	{ "wallet", "assetallocationsend",          &assetallocationsend,      false },
-	{ "wallet", "assetallocationinfo",          &assetallocationinfo,      false }
+	{ "wallet", "assetallocationinfo",          &assetallocationinfo,      false },
+	{ "wallet", "assetallocationsenderstatus",          &assetallocationsenderstatus,      false }
 #endif // ENABLE_WALLET
 };
 
