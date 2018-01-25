@@ -292,7 +292,7 @@ bool RevertAssetAllocation(const CAssetAllocationTuple &assetAllocationToRemove,
 	
 	revertedAssetAllocations.insert(assetAllocationToRemove);
 	passetallocationdb->EraseISArrivalTime(assetAllocationToRemove, txHash);
-	vector<CAssetAllocationTuple>::const_iterator it = assetAllocationConflicts.find(assetAllocationToRemove);
+	vector<CAssetAllocationTuple>::iterator it = assetAllocationConflicts.find(assetAllocationToRemove);
 	if (it != assetAllocationConflicts.end())
 		assetAllocationConflicts.V.erase(it);
 
