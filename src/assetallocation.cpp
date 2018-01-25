@@ -448,10 +448,6 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 					bAddAllReceiversToConflictList = true;
 				}
 			}
-			AssetAllocationSpendMap::iterator it = assetAllocationTrackRealtimeSpends.find(assetAllocationTuple);
-			AssetAllocationSpendPair *spendPair = NULL;
-			if (it != assetAllocationTrackRealtimeSpends.end())
-				spendPair = &(*it);
 			for (auto& amountTuple : theAssetAllocation.listSendingAllocationAmounts) {
 				CAssetAllocation receiverAllocation;
 				if (amountTuple.first == vchAlias) {
@@ -488,8 +484,6 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 						receiverAllocation.nHeight = nHeight;
 						receiverAllocation.nBalance += amountTuple.second;
 						theAssetAllocation.nBalance -= amountTuple.second;
-						if(spendPair)
-							spendPair->second += amountTuple.second;
 					}
 					
 					if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, INT64_MAX, fJustCheck))
@@ -691,7 +685,7 @@ bool DetectPotentialAssetAllocationSenderConflicts(const CAssetAllocationTuple& 
 UniValue assetallocationsenderstatus(const UniValue& params, bool fHelp) {
 	if (fHelp || 2 != params.size())
 		throw runtime_error("assetallocationsenderstatus <asset> <alias>\n"
-			"Show status as it pertains to any current Z-DAG conflicts or warnings related to a sender of an asset allocation.\n
+			"Show status as it pertains to any current Z-DAG conflicts or warnings related to a sender of an asset allocation.\n"
 			"Return value is in the status field and can represent 3 levels(0, 1 or 2)\n"
 			"Level 0 means OK.\n"
 			"Level 1 means warning (checked that in the mempool there are more spending balances than current POW sender balance). An active stance should be taken and perhaps a deeper analysis as to potential conflicts related to the sender.\n"
