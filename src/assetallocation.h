@@ -178,6 +178,17 @@ public:
 	bool ReadISArrivalTimes(const CAssetAllocationTuple& assetAllocationTuple, ArrivalTimesMap& arrivalTimes) {
 		return Read(make_pair(std::string("assetallocationa"), assetAllocationTuple), arrivalTimes);
 	}
+	bool EraseISArrivalTime(const CAssetAllocationTuple& assetAllocationTuple, const uint256& txid) {
+		ArrivalTimesMap arrivalTimes;
+		ReadISArrivalTimes(assetAllocationTuple, arrivalTimes);
+		ArrivalTimesMap::const_iterator it = arrivalTimes.find(txid);
+		if (it != arrivalTimes.end())
+			arrivalTimes.erase(it);
+		if (arrivalTimes.size() > 0)
+			return Write(make_pair(std::string("assetallocationa"), assetAllocationTuple), arrivalTimes);
+		else
+			return Erase(make_pair(std::string("assetallocationa"), assetAllocationTuple));
+	}
 	bool EraseISArrivalTimes(const CAssetAllocationTuple& assetAllocationTuple) {
 		return Erase(make_pair(std::string("assetallocationa"), assetAllocationTuple));
 	}

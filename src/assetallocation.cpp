@@ -289,9 +289,10 @@ bool RevertAssetAllocation(const CAssetAllocationTuple &assetAllocationToRemove,
 		errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2022 - " + _("Failed to write to asset allocation DB");
 		return error(errorMessage.c_str());
 	}
-	passetallocationdb->EraseISArrivalTimes(assetAllocationToRemove);
+	
 	revertedAssetAllocations.insert(assetAllocationToRemove);
-	sorted_vector<CAssetAllocationTuple>::iterator it = assetAllocationConflicts.find(assetAllocationToRemove);
+	passetallocationdb->EraseISArrivalTime(assetAllocationToRemove, txHash);
+	vector<CAssetAllocationTuple>::const_iterator it = assetAllocationConflicts.find(assetAllocationToRemove);
 	if (it != assetAllocationConflicts.end())
 		assetAllocationConflicts.V.erase(it);
 
