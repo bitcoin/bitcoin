@@ -166,6 +166,7 @@ BITCOIN_QT_H = \
   qt/privatekeywidget.h \
   qt/createsystemnodedialog.h \
   qt/createmasternodedialog.h \
+  qt/createnodedialog.h \
   qt/trafficgraphwidget.h \
   qt/transactiondesc.h \
   qt/transactiondescdialog.h \
