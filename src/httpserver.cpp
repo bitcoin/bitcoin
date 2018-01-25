@@ -300,6 +300,22 @@ static void connection_close_cb(evhttp_connection* conn, void *arg)
     }
 }
 
+#if LIBEVENT_VERSION_NUMBER >= 0x02020001
+static int http_newreq_cb(evhttp_request* req, void *arg)
+{
+    /*
+        A return value of -1 here forces the connection to close immediately.
+        Otherwise, the connection's fd will be added to the limiter in the
+        normal request callback.
+    */
+    ConnectionLimiter* limiter = static_cast<ConnectionLimiter*>(arg);
+    if (limiter && !limiter->IsReady()) {
+        return -1;
+    }
+    return 0;
+}
+#endif
+
 /** HTTP request callback */
 static void http_request_cb(struct evhttp_request* req, void* arg)
 {
@@ -514,6 +530,16 @@ bool InitHTTPServer()
     g_limiter = MakeUnique<ConnectionLimiter>(std::move(listeners), workQueueDepth * 2);
     evhttp_set_gencb(http, http_request_cb, g_limiter.get());
 
+#if LIBEVENT_VERSION_NUMBER >= 0x02020001
+    /*  If the runtime libevent is new enough to have evhttp_set_newreqcb, use
+        it. http_newreq_cb will be called for each new request, and allows us to
+        reject the request (which closes the connection) immediately.
+    */
+    if (event_get_version_number() >= 0x02020001) {
+        evhttp_set_newreqcb(http, http_newreq_cb, g_limiter.get());
+    }
+#endif
+
     workQueue = new WorkQueue<HTTPClosure>(workQueueDepth);
     // transfer ownership to eventBase/HTTP via .release()
     eventBase = base_ctr.release();
@@ -559,6 +585,11 @@ void InterruptHTTPServer()
     LogPrint(BCLog::HTTP, "Interrupting HTTP server\n");
     if (eventHTTP) {
         // Unlisten sockets
+#if LIBEVENT_VERSION_NUMBER >= 0x02020001
+        if (event_get_version_number() >= 0x02020001) {
+            evhttp_set_newreqcb(http, nullptr, nullptr);
+        }
+#endif
         if (g_limiter) {
             g_limiter->Interrupt();
         }
