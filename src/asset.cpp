@@ -611,11 +611,13 @@ bool CheckAssetInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 UniValue assetnew(const UniValue& params, bool fHelp) {
     if (fHelp || params.size() != 7)
         throw runtime_error(
-			"assetnew [name] [alias] [public] [category=assets] [balance] [total_supply] [witness]\n"
+			"assetnew [name] [alias] [public] [category=assets] [supply] [total_supply] [witness]\n"
 						"<name> name, 20 characters max.\n"
 						"<alias> An alias you own.\n"
                         "<public> public data, 256 characters max.\n"
 						"<category> category, 256 characters max. Defaults to assets\n"
+						"<supply> Initial supply of asset. Can mint more supply up to total_supply amount or if total_supply is -1 then minting is uncapped.\n"
+						"<total_supply> Total supply of this asset.\n"
 						"<witness> Witness alias name that will sign for web-of-trust notarization of this transaction.\n"
 						+ HelpRequiringPassphrase());
     vector<unsigned char> vchName = vchFromString(params[0].get_str());
@@ -695,11 +697,12 @@ UniValue assetnew(const UniValue& params, bool fHelp) {
 UniValue assetupdate(const UniValue& params, bool fHelp) {
     if (fHelp || params.size() != 5)
         throw runtime_error(
-			"assetupdate [asset] [public] [category=assets] [balance] [witness]\n"
+			"assetupdate [asset] [public] [category=assets] [supply] [witness]\n"
 						"Perform an update on an asset you control.\n"
 						"<asset> Asset name.\n"
                         "<public> Public data, 256 characters max.\n"                
 						"<category> Category, 256 characters max. Defaults to assets\n"
+						"<supply> New supply of asset. Can mint more supply up to total_supply amount or if total_supply is - 1 then minting is uncapped.\n"
 						"<witness> Witness alias name that will sign for web-of-trust notarization of this transaction.\n"
 						+ HelpRequiringPassphrase());
 	vector<unsigned char> vchAsset = vchFromValue(params[0]);
