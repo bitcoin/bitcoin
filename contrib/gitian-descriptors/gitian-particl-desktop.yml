@@ -1,5 +1,5 @@
 ---
-name: "partgui"
+name: "particl-desktop"
 enable_cache: true
 suites:
 - "trusty"
@@ -21,8 +21,8 @@ packages:
 - "python"
 - "wine"
 remotes:
-- "url": "https://github.com/particl/partgui"
-  "dir": "partgui"
+- "url": "https://github.com/particl/particl-desktop"
+  "dir": "particl-desktop"
 files: []
 script: |
 
@@ -69,12 +69,12 @@ script: |
   nvm install 6.11.5
   nvm use 6.11.5
 
-  cd partgui
+  cd particl-desktop
   npm install
 
   npm run package:linux
   npm run package:win
-  npm run package:osx
+  #npm run package:osx
 
   mkdir -p $OUTDIR
   mv packages $OUTDIR

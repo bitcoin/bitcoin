@@ -1668,7 +1668,7 @@ UniValue extkeyimportmaster(const JSONRPCRequest &request)
         "   save_bip44_root:    Save bip44 root key to wallet - default false.\n"
         "   master_label:       Label for master key - default 'Master Key'.\n"
         "   account_label:      Label for account - default 'Default Account'.\n"
-        "   scan_chain_from:    Scan the blockchain from blocks after timestamp - default 1.\n"
+        "   scan_chain_from:    Scan for transactions in blocks after timestamp - default 1.\n"
         "Examples:\n"
         "   extkeyimportmaster -stdin -stdin false label_master label_account\n"
         "\n";
@@ -1694,7 +1694,7 @@ UniValue extkeygenesisimport(const JSONRPCRequest &request)
         "   save_bip44_root:    Save bip44 root key to wallet - default false.\n"
         "   master_label:       Label for master key - default 'Master Key'.\n"
         "   account_label:      Label for account - default 'Default Account'.\n"
-        "   scan_chain_from:    Scan the blockchain from blocks after timestamp - default 1.\n"
+        "   scan_chain_from:    Scan for transactions in blocks after timestamp - default 1.\n"
         "Examples:\n"
         "   extkeygenesisimport -stdin -stdin false label_master label_account\n"
         "\n";
