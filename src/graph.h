@@ -43,7 +43,9 @@ struct sorted_vector {
 	}
 	iterator find(const T& t) const {
 		iterator i = lower_bound(begin(), end(), t, cmp);
-		return i == end() || cmp(t, *i) ? end() : i;
+		if (i == end() || cmp(t, *i))
+			i = end();
+		return i;
 	}
 };
 template <typename ClearedVertices>
