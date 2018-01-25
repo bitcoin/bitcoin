@@ -651,9 +651,6 @@ UniValue assetallocationinfo(const UniValue& params, bool fHelp) {
 }
 bool DetectPotentialAssetAllocationSenderConflicts(const CAssetAllocationTuple& assetAllocationTuple) {
 	CAssetAllocation dbAssetAllocation;
-	std::vector<vector<unsigned char> > vvchAliasArgs;
-	int op;
-	int nOut;
 	ArrivalTimesMap arrivalTimes;
 	// get last POW asset allocation balance to ensure we use POW balance to check for potential conflicts in mempool (real-time balances).
 	// The idea is that real-time spending amounts can in some cases overrun the POW balance safely whereas in some cases some of the spends are 
@@ -674,18 +671,10 @@ bool DetectPotentialAssetAllocationSenderConflicts(const CAssetAllocationTuple& 
 		// ensure mempool has this transaction and it is not yet mined, get the transaction in question
 		if (!mempool.lookup(arrivalTime.first, tx))
 			continue;
-		if (!DecodeAliasTx(tx, op, nOut, vvchAliasArgs))
-			continue;
 
 		// get asset allocation object from this tx, if for some reason it doesn't have it, just skip (shouldn't happen)
 		CAssetAllocation assetallocation(tx);
 		if (assetallocation.IsNull())
-			continue;
-
-		const CAssetAllocationTuple assetAllocationTupleMempool(assetallocation.vchAsset, vvchAliasArgs[0]);
-
-		// only look for the sender that matches assetAllocationTuple in the mempool
-		if (assetAllocationTupleMempool != assetAllocationTuple)
 			continue;
 
 		if (assetallocation.listSendingAllocationInputs.empty()) {
