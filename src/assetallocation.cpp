@@ -292,7 +292,7 @@ bool RevertAssetAllocation(const CAssetAllocationTuple &assetAllocationToRemove,
 	// remove the receiver arrival time from this tx
 	if (dbAssetAllocation.listSendingAllocationInputs.empty()) {
 		for (auto& amountTuple : dbAssetAllocation.listSendingAllocationAmounts) {
-			passetallocationdb->EraseISArrivalTime(CAssetAllocationTuple(receiverAllocationTuple(theAssetAllocation.vchAsset, amountTuple.first), txHash);
+			passetallocationdb->EraseISArrivalTime(CAssetAllocationTuple(receiverAllocationTuple(dbAssetAllocation.vchAsset, amountTuple.first), txHash);
 		}
 	}
 	// remove the sender arrival time from this tx
