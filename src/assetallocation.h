@@ -76,6 +76,12 @@ typedef std::vector<std::pair<std::vector<unsigned char>, std::vector<CRange> > 
 typedef std::vector<std::pair<std::vector<unsigned char>, CAmount > > RangeAmountTuples;
 typedef std::map<uint256, int64_t> ArrivalTimesMap;
 static const int ZDAG_MINIMUM_LATENCY_SECONDS = 10;
+enum {
+	ZDAG_STATUS_OK = 0,
+	ZDAG_MINOR_CONFLICT_OK,
+	ZDAG_MAJOR_CONFLICT_OK
+};
+
 class CAssetAllocation {
 public:
 	std::vector<unsigned char> vchAsset;

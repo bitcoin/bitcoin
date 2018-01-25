@@ -660,9 +660,9 @@ bool BuildAssetAllocationJson(const CAssetAllocation& assetallocation, UniValue&
 	}
 	oAssetAllocation.push_back(Pair("expires_on", expired_time));
 	oAssetAllocation.push_back(Pair("expired", expired));
-	int nStatus = 0;
+	int nStatus = ZDAG_STATUS_OK;
 	if (assetAllocationConflicts.find(assetAllocationTuple) != assetAllocationConflicts.end())
-		nStatus = 2;
+		nStatus = ZDAG_MAJOR_CONFLICT_OK;
 	oAssetAllocation.push_back(Pair("status", nStatus));
 	return true;
 }
