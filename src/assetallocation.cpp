@@ -7,6 +7,7 @@
 #include "asset.h"
 #include "init.h"
 #include "validation.h"
+#include "txmempool.h"
 #include "util.h"
 #include "random.h"
 #include "base58.h"
@@ -30,7 +31,6 @@ using namespace std;
 extern mongoc_collection_t *assetallocation_collection;
 extern mongoc_collection_t *aliastxhistory_collection;
 extern void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsigned char> &vchWitness, const CRecipient &aliasRecipient, CRecipient &aliasPaymentRecipient, vector<CRecipient> &vecSend, CWalletTx& wtxNew, CCoinControl* coinControl, bool fUseInstantSend = false, bool transferAlias = false);
-extern CTxMemPool mempool;
 static sorted_vector<CAssetAllocationTuple> assetAllocationConflicts;
 
 bool IsAssetAllocationOp(int op) {
