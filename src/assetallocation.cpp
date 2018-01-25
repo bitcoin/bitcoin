@@ -30,6 +30,7 @@ using namespace std;
 extern mongoc_collection_t *assetallocation_collection;
 extern mongoc_collection_t *aliastxhistory_collection;
 extern void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsigned char> &vchWitness, const CRecipient &aliasRecipient, CRecipient &aliasPaymentRecipient, vector<CRecipient> &vecSend, CWalletTx& wtxNew, CCoinControl* coinControl, bool fUseInstantSend = false, bool transferAlias = false);
+static sorted_vector<CAssetAllocationTuple> assetAllocationConflicts;
 bool IsAssetAllocationOp(int op) {
 	return op == OP_ASSET_ALLOCATION_SEND;
 }
@@ -288,6 +289,9 @@ bool RevertAssetAllocation(const CAssetAllocationTuple &assetAllocationToRemove,
 	}
 	passetallocationdb->EraseISArrivalTimes(assetAllocationToRemove);
 	revertedAssetAllocations.insert(assetAllocationToRemove);
+	sorted_vector<CAssetAllocationTuple>::const_iterator it = assetAllocationConflicts.find(assetAllocationToRemove);
+	if (it != assetAllocationConflicts.end())
+		assetAllocationConflicts.V.erase(it);
 	return true;
 	
 }
@@ -357,6 +361,8 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 	CAssetAllocation dbAssetAllocation;
 	CAsset dbAsset;
 	bool bRevert = false;
+	bool bBalanceOverrun = false;
+	bool bAddAllReceiversToConflictList = false;
 	if (op == OP_ASSET_ALLOCATION_SEND)
 	{
 		if (!dontaddtodb) {
@@ -409,9 +415,10 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 			// check balance is sufficient on sender
 			CAmount nTotal = 0;
 			for (auto& amountTuple : theAssetAllocation.listSendingAllocationAmounts) {
+				const CAssetAllocationTuple receiverAllocationTuple(theAssetAllocation.vchAsset, amountTuple.first);
 				// one of the first things we do per receiver is revert it to last pow state on the pow(!fJustCheck)
 				if (bRevert) {
-					if (!RevertAssetAllocation(CAssetAllocationTuple(theAssetAllocation.vchAsset, amountTuple.first), tx.GetHash(), revertedAssetAllocations))
+					if (!RevertAssetAllocation(receiverAllocationTuple, tx.GetHash(), revertedAssetAllocations))
 					{
 						errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to revert asset allocation");
 						return error(errorMessage.c_str());
@@ -426,9 +433,20 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 			}
 			if (dbAssetAllocation.nBalance < nTotal) {
 				errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("Sender balance is insufficient");
+				if (fJustCheck) {
+					// add conflicting sender
+					assetAllocationConflicts.insert(assetAllocationTuple);
+					bBalanceOverrun = true;
+				}
 				return true;
 			}
-			
+			else if (fJustCheck) {
+				// if sender was is flagged as conflicting, add all receivers to conflict list
+				if (assetAllocationConflicts.find(assetAllocationTuple) != assetAllocationConflicts.end())
+				{
+					bAddAllReceiversToConflictList = true;
+				}
+			}
 			for (auto& amountTuple : theAssetAllocation.listSendingAllocationAmounts) {
 				CAssetAllocation receiverAllocation;
 				if (amountTuple.first == vchAlias) {
@@ -448,6 +466,10 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 						errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("An alias you are transferring to does not accept assets");
 						continue;
 					}
+					if (bAddAllReceiversToConflictList || bBalanceOverrun) {
+						assetAllocationConflicts.insert(receiverAllocationTuple);
+					}
+					
 				}
 				
 				if (!dontaddtodb) {
@@ -456,17 +478,19 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 						receiverAllocation.vchAlias = receiverAllocationTuple.vchAlias;
 						receiverAllocation.vchAsset = receiverAllocationTuple.vchAsset;
 					}
-					receiverAllocation.txHash = tx.GetHash();
-					receiverAllocation.nHeight = nHeight;
-					receiverAllocation.nBalance += amountTuple.second;
-					theAssetAllocation.nBalance -= amountTuple.second;
+					if (!bBalanceOverrun) {
+						receiverAllocation.txHash = tx.GetHash();
+						receiverAllocation.nHeight = nHeight;
+						receiverAllocation.nBalance += amountTuple.second;
+						theAssetAllocation.nBalance -= amountTuple.second;
+					}
+					
 					if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, INT64_MAX, fJustCheck))
 					{
 						errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to write to asset allocation DB");
 						return error(errorMessage.c_str());
 					}
 					
-					// if mempool inclusion or conflict with another tx we simply update, otherwise we create the tx history entry
 					if (fJustCheck) {
 						if (strResponse != "") {
 							paliasdb->WriteAliasIndexTxHistory(user1, stringFromVch(receiverAllocation.vchAlias), user3, tx.GetHash(), nHeight, strResponseEnglish, receiverAllocationTuple.ToString());
@@ -479,9 +503,12 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 
 	// write assetallocation  
 	if (!dontaddtodb) {
-		// set the assetallocation's txn-dependent values
-		theAssetAllocation.nHeight = nHeight;
-		theAssetAllocation.txHash = tx.GetHash();
+		// set the assetallocation's txn-dependent 
+		if (!bBalanceOverrun) {
+			theAssetAllocation.nHeight = nHeight;
+			theAssetAllocation.txHash = tx.GetHash();
+		}
+		
 		int64_t ms = INT64_MAX;
 		if (fJustCheck) {
 			ms = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
@@ -540,9 +567,9 @@ UniValue assetallocationsend(const UniValue& params, bool fHelp) {
 	theAssetAllocation.vchAsset = vchAsset;
 	theAssetAllocation.listSendingAllocationAmounts.push_back(make_pair(vchAliasTo, AmountFromValue(params[3])));
 
+	CAssetAllocationTuple assetAllocationTuple(vchAsset, vchAliasFrom);
 	if (!GetBoolArg("-unittest", false)) {
 		// check to see if a transaction for this asset/alias tuple has arrived before minimum latency period
-		CAssetAllocationTuple assetAllocationTuple(vchAsset, vchAliasFrom);
 		ArrivalTimesMap arrivalTimes;
 		passetallocationdb->ReadISArrivalTimes(assetAllocationTuple, arrivalTimes);
 		const int64_t & nNow = duration_cast<seconds>(system_clock::now().time_since_epoch()).count();
@@ -553,7 +580,8 @@ UniValue assetallocationsend(const UniValue& params, bool fHelp) {
 			}
 		}
 	}
-
+	if (assetAllocationConflicts.find(assetAllocationTuple) != assetAllocationConflicts.end())
+		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 2510 - " + _("This asset allocation is involved in a conflict which must be resolved with Proof-Of-Work. Please wait for a block confirmation and try again..."));
 	vector<unsigned char> data;
 	theAssetAllocation.Serialize(data);
 	uint256 hash = Hash(data.begin(), data.end());
@@ -632,6 +660,10 @@ bool BuildAssetAllocationJson(const CAssetAllocation& assetallocation, UniValue&
 	}
 	oAssetAllocation.push_back(Pair("expires_on", expired_time));
 	oAssetAllocation.push_back(Pair("expired", expired));
+	int nStatus = 0;
+	if (assetAllocationConflicts.find(assetAllocationTuple) != assetAllocationConflicts.end())
+		nStatus = 2;
+	oAssetAllocation.push_back(Pair("status", nStatus));
 	return true;
 }
 bool BuildAssetAllocationIndexerJson(const CAssetAllocation& assetallocation, UniValue& oAssetAllocation)
