@@ -669,10 +669,9 @@ bool DetectPotentialAssetAllocationSenderConflicts(const CAssetAllocationTuple& 
 	{
 		CTransaction tx;
 		// ensure mempool has this transaction and it is not yet mined, get the transaction in question
-		if (mempool.lookup(arrivalTime.first, tx))
-		{
-			return true;
-		}
+		if (!mempool.lookup(arrivalTime.first, tx))
+			continue;
+		
 		// get asset allocation object from this tx, if for some reason it doesn't have it, just skip (shouldn't happen)
 		CAssetAllocation assetallocation(tx);
 		if (assetallocation.IsNull())
