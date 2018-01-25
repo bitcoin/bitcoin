@@ -41,7 +41,7 @@ public:
     {
         return os;
     }
-    void DownloadFile(std::string url, std::string fileName, void(progressFunction)(curl_off_t, curl_off_t));
+    CURLcode DownloadFile(std::string url, std::string fileName, void(progressFunction)(curl_off_t, curl_off_t));
     void DownloadFileAsync(std::string url, std::string fileName, void(progressFunction)(curl_off_t, curl_off_t));
     void StopDownload();
     std::string GetDownloadUrl(Updater::OS version = UNKNOWN);

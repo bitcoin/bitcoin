@@ -159,8 +159,20 @@ void UpdateDialog::downloadVersion()
         this->resize(this->width(), this->height() + 45);
         ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(false);
         ui->buttonBox->button(QDialogButtonBox::Cancel)->setText("Cancel");
-        updater.DownloadFile(url, fileName.toStdString(), &UpdateProgressBar);
-        downloadFinished();
+        CURLcode res = updater.DownloadFile(url, fileName.toStdString(), &UpdateProgressBar);
+        if (res == CURLE_OK) {
+            downloadFinished();
+        } else {
+            // This error code appears when canceling download
+            if (res != CURLE_ABORTED_BY_CALLBACK)
+            {
+                QMessageBox::warning(this, "Error",
+                    tr("Failed to download file - %1 \nCheck debug.log for more information.")
+                    .arg(QString::fromStdString(url)),
+                    QMessageBox::Ok, QMessageBox::Ok);
+            }
+            QDialog::done(true);
+        }
     }
 }
 

@@ -19,7 +19,7 @@ struct myprogress {
 Updater updater;
 
 Updater::Updater() :
-    updaterInfoUrl("https://raw.githubusercontent.com/ashotkhachatryan/crowncoin/systemnode/update.json"),
+    updaterInfoUrl("https://raw.githubusercontent.com/ashotkhachatryan/crowncoin/systemnode/update1.json"),
     os(Updater::UNKNOWN),
     status(false),
     version(-1),
@@ -226,32 +226,37 @@ void Updater::DownloadFileAsync(std::string url, std::string fileName, void(prog
     boost::thread t(boost::bind(&Updater::DownloadFile, this, url, fileName, progressFunction));
 }
 
-void Updater::DownloadFile(std::string url, std::string fileName, void(progressFunction)(curl_off_t, curl_off_t))
+CURLcode Updater::DownloadFile(std::string url, std::string fileName, void(progressFunction)(curl_off_t, curl_off_t))
 {
     stopDownload = false;
     CURL *curl_handle;
     struct myprogress prog;
     prog.progressFunction = progressFunction;
     FILE *pagefile;
+    CURLcode res = CURLE_FAILED_INIT;
 
     curl_global_init(CURL_GLOBAL_ALL);
     curl_handle = curl_easy_init();
     curl_easy_setopt(curl_handle, CURLOPT_URL, url.c_str());
-    //curl_easy_setopt(curl_handle, CURLOPT_VERBOSE, 1L);
     curl_easy_setopt(curl_handle, CURLOPT_NOPROGRESS, 0L);
     curl_easy_setopt(curl_handle, CURLOPT_FOLLOWLOCATION, 1L);
     curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, write_data);
 
     curl_easy_setopt(curl_handle, CURLOPT_XFERINFOFUNCTION, xferinfo);
     curl_easy_setopt(curl_handle, CURLOPT_XFERINFODATA, &prog);
-
     pagefile = fopen(fileName.c_str(), "wb");
     if(pagefile) {
         curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, pagefile);
-        curl_easy_perform(curl_handle);
+        res = curl_easy_perform(curl_handle);
         fclose(pagefile);
     }
     curl_easy_cleanup(curl_handle);
+
+    if (res != CURLE_OK)
+    {
+        LogPrintf("Updater::DownloadFile() - Error! Failed to download file - %s. Error code - %d\n", url, res);
+    }
+    return res;
 }
 
 void Updater::StopDownload()
