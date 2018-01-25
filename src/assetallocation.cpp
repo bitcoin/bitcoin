@@ -679,11 +679,10 @@ bool DetectPotentialAssetAllocationSenderConflicts(const CAssetAllocationTuple& 
 
 		if (assetallocation.listSendingAllocationInputs.empty()) {
 			for (auto& amountTuple : assetallocation.listSendingAllocationAmounts) {
-				CAmount prevBalance = nRealtimeBalanceRequired;
 				nRealtimeBalanceRequired += amountTuple.second;
 				// if running balance overruns the stored balance then we have a potential conflict
-				// only if prevBalance > 0 meaning we are processing multiple realtime balance requirements before next block
-				if (prevBalance > 0 && nRealtimeBalanceRequired > dbAssetAllocation.nBalance) {
+				// only if nRealtimeBalanceRequired != amountTuple.second meaning we are processing multiple realtime balance requirements before next block
+				if (nRealtimeBalanceRequired != amountTuple.second && nRealtimeBalanceRequired > dbAssetAllocation.nBalance) {
 					return true;
 				}
 			}
