@@ -54,7 +54,7 @@ class ScoreCompare
 public:
     ScoreCompare() {}
 
-    bool operator()(const CTxMemPool::txiter a, const CTxMemPool::txiter b)
+    bool operator()(const CTxMemPool::txiter a, const CTxMemPool::txiter b) const
     {
         return CompareTxMemPoolEntryByScore()(*b,*a); // Convert to less than
     }
