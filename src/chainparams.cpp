@@ -10,9 +10,10 @@
 #include "util.h"
 #include "utilstrencodings.h"
 
-#include <assert.h>
-
 #include <boost/assign/list_of.hpp>
+
+#include <assert.h>
+#include <chrono>
 
 using namespace std;
 using namespace boost::assign;
@@ -215,9 +216,14 @@ static CMainParams mainParams;
 /**
  * Testnet (v3)
  */
-class CTestNetParams : public CMainParams {
+class CTestNetParams : public CMainParams
+{
 public:
-    CTestNetParams() {
+    CTestNetParams()
+    {
+        using namespace std::literals::chrono_literals;
+        using std::chrono::seconds;
+
         networkID = CBaseChainParams::TESTNET;
         strNetworkID = "test";
         pchMessageStart[0] = 0x0f;
@@ -230,8 +236,8 @@ public:
         nRejectBlockOutdatedMajority = 75;
         nToCheckBlockUpgradeMajority = 100;
         nMinerThreads = 0;
-        nTargetTimespan = 6 * 60 * 60; // Crown: 6 hours
-        nTargetSpacing = 1.5 * 60; // Crown: 1.5 minutes
+        nTargetTimespan = seconds(6h).count();
+        nTargetSpacing = seconds(1.5min).count();
         nMaxTipAge = 0x7fffffff;
 
         //! Modify the testnet genesis block so the timestamp is valid for a later start.
