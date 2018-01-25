@@ -291,7 +291,7 @@ bool RevertAssetAllocation(const CAssetAllocationTuple &assetAllocationToRemove,
 	revertedAssetAllocations.insert(assetAllocationToRemove);
 	sorted_vector<CAssetAllocationTuple>::const_iterator it = assetAllocationConflicts.find(assetAllocationToRemove);
 	if (it != assetAllocationConflicts.end())
-		assetAllocationConflicts.V.erase(it);
+		assetAllocationConflicts.V.erase(*it);
 	return true;
 	
 }
