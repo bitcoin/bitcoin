@@ -223,6 +223,7 @@ public:
     {
         using namespace std::literals::chrono_literals;
         using std::chrono::seconds;
+        using std::chrono::duration_cast;
 
         networkID = CBaseChainParams::TESTNET;
         strNetworkID = "test";
@@ -236,8 +237,8 @@ public:
         nRejectBlockOutdatedMajority = 75;
         nToCheckBlockUpgradeMajority = 100;
         nMinerThreads = 0;
-        nTargetTimespan = seconds(6h).count();
-        nTargetSpacing = seconds(1.5min).count();
+        nTargetTimespan = duration_cast<seconds>(6h).count();
+        nTargetSpacing = duration_cast<seconds>(1.5min).count();
         nMaxTipAge = 0x7fffffff;
 
         //! Modify the testnet genesis block so the timestamp is valid for a later start.

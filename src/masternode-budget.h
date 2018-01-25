@@ -428,16 +428,17 @@ public:
 
     bool IsValid(std::string& strError, bool fCheckCollateral=true);
 
-    auto IsEstablished()
+    auto IsEstablished() const
     {
         using namespace std::literals::chrono_literals;
         using std::chrono::seconds;
+        using std::chrono::duration_cast;
 
         //Proposals must be at least a day old to make it into a budget
         if(Params().NetworkID() == CBaseChainParams::MAIN)
-            return (nTime < GetTime() - seconds(24h).count());
+            return nTime < GetTime() - duration_cast<seconds>(24h).count();
         else
-            return (nTime < GetTime() - seconds(15min).count()); // 15 minutes for testing purposes
+            return nTime < GetTime() - duration_cast<seconds>(15min).count(); // 15 minutes for testing purposes
     }
 
     std::string GetName() {return strProposalName; }
