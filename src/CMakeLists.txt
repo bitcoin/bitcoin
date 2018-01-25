@@ -282,8 +282,7 @@ add_library(crown_common
   wallet_ismine.h 
   compat/byteswap.h 
   compat/endian.h 
-  compat/sanity.h
-        test/governance.cpp)
+  compat/sanity.h)
 
 target_include_directories(crown_common PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} PRIVATE leveldb/helpers/memenv PRIVATE secp256k1/include)
 target_link_libraries(crown_common PUBLIC crown_core PUBLIC crown_crypto PRIVATE secp256k1 PRIVATE crown_util PRIVATE crown_univalue)
