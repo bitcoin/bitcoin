@@ -294,6 +294,7 @@ bool RevertAssetAllocation(const CAssetAllocationTuple &assetAllocationToRemove,
 	passetallocationdb->EraseISArrivalTime(assetAllocationToRemove, txHash);
 	sorted_vector<CAssetAllocationTuple>::const_iterator it = assetAllocationConflicts.find(assetAllocationToRemove);
 	if (it != assetAllocationConflicts.end()) {
+		LogPrintf("RevertAssetAllocation: removing asset allocation conflict\n");
 		assetAllocationConflicts.V.erase(const_iterator_cast(assetAllocationConflicts.V, it));
 	}
 
@@ -438,17 +439,19 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 			}
 			if (dbAssetAllocation.nBalance < nTotal) {
 				errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("Sender balance is insufficient");
-				if (fJustCheck) {
+				if (fJustCheck && !dontaddtodb) {
 					// add conflicting sender
 					assetAllocationConflicts.insert(assetAllocationTuple);
 					bBalanceOverrun = true;
+					LogPrintf("CheckAssetAllocationInputs: balance overrun dbAssetAllocation.nBalance %llu vs nTotal %llu\n", dbAssetAllocation.nBalance, nTotal);
 				}
 			}
-			else if (fJustCheck) {
+			else if (fJustCheck && !dontaddtodb) {
 				// if sender was is flagged as conflicting, add all receivers to conflict list
 				if (assetAllocationConflicts.find(assetAllocationTuple) != assetAllocationConflicts.end())
 				{
 					bAddAllReceiversToConflictList = true;
+					LogPrintf("CheckAssetAllocationInputs: found conflict on %s\n", assetAllocationTuple.ToString().c_str());
 				}
 			}
 			for (auto& amountTuple : theAssetAllocation.listSendingAllocationAmounts) {
@@ -471,6 +474,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 						continue;
 					}
 					if (bAddAllReceiversToConflictList || bBalanceOverrun) {
+						LogPrintf("CheckAssetAllocationInputs: adding recver %s to conflict list\n", receiverAllocationTuple.ToString().c_str());
 						assetAllocationConflicts.insert(receiverAllocationTuple);
 					}
 					
@@ -665,10 +669,9 @@ bool DetectPotentialAssetAllocationSenderConflicts(const CAssetAllocationTuple& 
 	{
 		CTransaction tx;
 		// ensure mempool has this transaction and it is not yet mined, get the transaction in question
-		if (mempool.lookup(arrivalTime.first, tx))
-		{
-			return true;
-		}
+		if (!mempool.lookup(arrivalTime.first, tx))
+			continue;
+		
 		// get asset allocation object from this tx, if for some reason it doesn't have it, just skip (shouldn't happen)
 		CAssetAllocation assetallocation(tx);
 		if (assetallocation.IsNull())
