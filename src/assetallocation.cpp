@@ -658,7 +658,7 @@ bool DetectPotentialAssetAllocationSenderConflicts(const CAssetAllocationTuple& 
 	LOCK(cs_main);
 	// go through arrival times and check that balances don't overrun the POW balance
 	CAmount nRealtimeBalanceRequired = 0;
-	for(auto& arrivalTime, arrivalTimes)
+	for(auto& arrivalTime: arrivalTimes)
 	{
 		CTransaction tx;
 		// ensure mempool has this transaction and it is not yet mined, get the transaction in question
