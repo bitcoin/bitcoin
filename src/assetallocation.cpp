@@ -289,12 +289,21 @@ bool RevertAssetAllocation(const CAssetAllocationTuple &assetAllocationToRemove,
 		errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2022 - " + _("Failed to write to asset allocation DB");
 		return error(errorMessage.c_str());
 	}
-	
-	revertedAssetAllocations.insert(assetAllocationToRemove);
+	// remove the receiver arrival time from this tx
+	if (dbAssetAllocation.listSendingAllocationInputs.empty()) {
+		for (auto& amountTuple : dbAssetAllocation.listSendingAllocationAmounts) {
+			passetallocationdb->EraseISArrivalTime(CAssetAllocationTuple(receiverAllocationTuple(theAssetAllocation.vchAsset, amountTuple.first), txHash);
+		}
+	}
+	// remove the sender arrival time from this tx
 	passetallocationdb->EraseISArrivalTime(assetAllocationToRemove, txHash);
+
+	revertedAssetAllocations.insert(assetAllocationToRemove);
+
+	// remove the conflict once we revert since it is assumed to be resolved on POW
 	sorted_vector<CAssetAllocationTuple>::const_iterator it = assetAllocationConflicts.find(assetAllocationToRemove);
 	if (it != assetAllocationConflicts.end()) {
-		LogPrintf("RevertAssetAllocation: removing asset allocation conflict\n");
+		LogPrintf("RevertAssetAllocation: removing asset allocation conflict %s\n", assetAllocationToRemove.ToString().c_str());
 		assetAllocationConflicts.V.erase(const_iterator_cast(assetAllocationConflicts.V, it));
 	}
 
