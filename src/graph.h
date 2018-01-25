@@ -24,6 +24,8 @@ struct sorted_vector {
 	typedef typename std::vector<T>::const_iterator const_iterator;
 	iterator begin() { return V.begin(); }
 	iterator end() { return V.end(); }
+	const_iterator begin() const { return V.begin(); }
+	const_iterator end() const { return V.end(); }
 	size_t size() const { return V.size(); }
 	sorted_vector(const Compare& c = Compare())
 		: V(), cmp(c) {}
@@ -41,11 +43,9 @@ struct sorted_vector {
 			V.insert(i, t);
 		return i;
 	}
-	iterator find(const T& t) const {
-		iterator i = lower_bound(begin(), end(), t, cmp);
-		if (i == end() || cmp(t, *i))
-			i = end();
-		return i;
+	const_iterator find(const T& t) const {
+		const_iterator i = lower_bound(begin(), end(), t, cmp);
+		return i == end() || cmp(t, *i) ? end() : i;
 	}
 };
 template <typename ClearedVertices>
