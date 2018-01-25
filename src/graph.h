@@ -24,8 +24,6 @@ struct sorted_vector {
 	typedef typename std::vector<T>::const_iterator const_iterator;
 	iterator begin() { return V.begin(); }
 	iterator end() { return V.end(); }
-	const_iterator begin() const { return V.begin(); }
-	const_iterator end() const { return V.end(); }
 	size_t size() const { return V.size(); }
 	sorted_vector(const Compare& c = Compare())
 		: V(), cmp(c) {}
