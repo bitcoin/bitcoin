@@ -48,6 +48,12 @@ struct sorted_vector {
 		return i == end() || cmp(t, *i) ? end() : i;
 	}
 };
+template<typename T>
+typename std::vector<T>::iterator
+const_iterator_cast(std::vector<T>& v, typename std::vector<T>::const_iterator iter)
+{
+	return v.begin() + (iter - v.cbegin());
+}
 template <typename ClearedVertices>
 struct cycle_visitor
 {
