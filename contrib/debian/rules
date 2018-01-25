@@ -9,7 +9,9 @@ DEB_INSTALL_MANPAGES_peercoind += debian/manpages/*
 
 override_dh_auto_clean:
 	if [ -f Makefile ]; then $(MAKE) distclean; fi
-	rm -rf Makefile.in aclocal.m4 configure src/Makefile.in src/bitcoin-config.h.in src/build-aux src/qt/Makefile.in src/qt/test/Makefile.in src/test/Makefile.in
+	rm -rf Makefile.in aclocal.m4 configure src/Makefile.in src/bitcoin-config.h.in src/build-aux src/qt/Makefile.in src/qt/test/Makefile.in src/test/Makefile.in \
+		   build-aux/m4/libtool.m4 build-aux/m4/ltoptions.m4 build-aux/m4/ltversion.m4 build-aux/m4/ltsugar.m4 build-aux/m4/lt~obsolete.m4 \
+		   rm build-aux/{compile,config.guess,`config.sub,depcomp,install-sh,ltmain.sh,missing,test-driver}
 
 override_dh_auto_configure:
 	./autogen.sh
