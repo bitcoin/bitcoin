@@ -805,17 +805,18 @@ void SetThreadPriority(int nPriority)
 
 bool Sha256Sum(const std::string& filename, std::string& result)
 {
-    // Check if file exists
-    // return false;
     std::ifstream f;
-    f.exceptions(std::ifstream::failbit | std::ifstream::badbit);
     f.open(filename.c_str(), std::ios_base::binary | std::ios_base::in | std::ios::ate);
-    if (!f)
+    if (!f) {
+        LogPrintf("Sha256Sum() - Error: Bad file descriptor.\n");
         return false;
+    }
     std::ifstream::pos_type file_size = f.tellg();
     SHA256_CTX ctx;
-    if (!SHA256_Init(&ctx))
+    if (!SHA256_Init(&ctx)) {
+        LogPrintf("Sha256Sum() - Error: Couldn't SHA256 initialization failed.\n");
         return false;
+    }
     size_t size_left = file_size;
     f.seekg(0, std::ios::beg);
     while (size_left)
@@ -823,17 +824,23 @@ bool Sha256Sum(const std::string& filename, std::string& result)
         char buf[4096];
         std::ifstream::pos_type read_size = size_left > sizeof(buf) ? sizeof(buf) : size_left;
         f.read(buf, read_size);
-        if (!f || !f.good())
+        if (!f || !f.good()) {
+            LogPrintf("Sha256Sum() - Error: Couldn't read file.\n");
             return false;
-        if (!SHA256_Update(&ctx, buf, read_size))
+        }
+        if (!SHA256_Update(&ctx, buf, read_size)) {
+            LogPrintf("Sha256Sum() - Error: SHA256_Update failed.\n");
             return false;
+        }
         size_left -= read_size;
     }
     f.close();
 
     unsigned char results[SHA256_DIGEST_LENGTH];
-    if (!SHA256_Final(results, &ctx))
+    if (!SHA256_Final(results, &ctx)) {
+        LogPrintf("Sha256Sum() - Error: SHA256_Final failed.\n");
         return false;
+    }
     for (int n = 0; n < SHA256_DIGEST_LENGTH; n++) {
         result.append(strprintf("%02x", results[n]));
     }

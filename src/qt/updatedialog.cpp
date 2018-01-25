@@ -121,14 +121,14 @@ void UpdateDialog::downloadFinished()
                 QMessageBox::information(this, tr("Download Complete"),
                     tr("Package has been successfully downloaded!\nPath - %1").arg(fileName));
             } else {
-                QMessageBox::warning(this, "Error", tr("Sha256Sum is not valid."), 
+                QMessageBox::warning(this, "Error", tr("Download Failed. \nSHA-256 Checksum is not valid."), 
                     QMessageBox::Ok, QMessageBox::Ok);
-                // Remove file
+                QFile(fileName).remove();
             }
         } else {
-            QMessageBox::warning(this, "Error", tr("Failed to get Sha256Sum."), 
+            QMessageBox::warning(this, "Error", tr("An error occurred during SHA-256 verification."), 
                 QMessageBox::Ok, QMessageBox::Ok);
-            // Remove file
+            QFile(fileName).remove();
         }
         QDialog::done(true);
     }
