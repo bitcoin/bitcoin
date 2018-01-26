@@ -544,11 +544,12 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, int nOut, const 
 UniValue assetallocationsend(const UniValue& params, bool fHelp) {
 	if (fHelp || params.size() != 5)
 		throw runtime_error(
-			"assetallocationsend [asset] [aliasfrom] aliasto amount [witness]\n"
+			"assetallocationsend [asset] [aliasfrom] [aliasto] [amount] [witness]\n"
 			"Send an asset allocation you own to another alias.\n"
 			"<asset> Asset name.\n"
 			"<aliasfrom> alias to transfer from.\n"
 			"<aliasto> alias to transfer to.\n"
+			"<amount> quantity of the asset to transfer.\n"
 			"<witness> Witness alias name that will sign for web-of-trust notarization of this transaction.\n"
 			+ HelpRequiringPassphrase());
 
