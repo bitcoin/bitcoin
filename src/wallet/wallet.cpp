@@ -1558,7 +1558,7 @@ void CWalletTx::GetAmounts(
     std::list<COutputEntry> &listReceived,
     std::list<COutputEntry> &listSent,
     std::list<COutputEntry> &listStaked,
-    CAmount& nFee, std::string& strSentAccount, const isminefilter& filter) const
+    CAmount& nFee, std::string& strSentAccount, const isminefilter& filter, bool fForFilterTx) const
 {
     nFee = 0;
     listReceived.clear();
@@ -1581,35 +1581,42 @@ void CWalletTx::GetAmounts(
         CTxDestination addressStake = CNoDestination();
 
         isminetype isMineAll = ISMINE_NO;
-        for (const auto txout : tx->vpout)
+        for (unsigned int i = 0; i < tx->vpout.size(); ++i)
         {
+            const CTxOutBase *txout = tx->vpout[i].get();
             if (!txout->IsType(OUTPUT_STANDARD))
                 continue;
 
-            isminetype mine = pwallet->IsMine(txout.get());
+            isminetype mine = pwallet->IsMine(txout);
             if (!(mine & filter))
                 continue;
-
             isMineAll = (isminetype)((uint8_t)isMineAll |(uint8_t)mine);
+
+            if (fForFilterTx || address.type() == typeid(CNoDestination))
+            {
+                const CScript &scriptPubKey = *txout->GetPScriptPubKey();
+                ExtractDestination(scriptPubKey, address);
+
+                if (HasIsCoinstakeOp(scriptPubKey))
+                {
+                    CScript scriptOut;
+                    if (GetCoinstakeScriptPath(scriptPubKey, scriptOut))
+                        ExtractDestination(scriptOut, addressStake);
+                };
+            };
             nCredit += txout->GetValue();
 
-            if (address.type() == typeid(CNoDestination))
-                ExtractDestination(*txout->GetPScriptPubKey(), address);
-
-            if (addressStake.type() == typeid(CNoDestination)
-                && HasIsCoinstakeOp(*txout->GetPScriptPubKey()))
+            if (fForFilterTx)
             {
-                CScript scriptOut;
-                if (GetCoinstakeScriptPath(*txout->GetPScriptPubKey(), scriptOut))
-                    ExtractDestination(scriptOut, addressStake);
+                COutputEntry output = {address, txout->GetValue(), (int)i, mine, addressStake};
+                listStaked.push_back(output);
             };
         };
-
-        if (!(isMineAll & filter))
-            return;
-
         // Recalc fee as GetValueOut might include foundation fund output
         nFee = nDebit - nCredit;
+
+        if (fForFilterTx || !(isMineAll & filter))
+            return;
 
         COutputEntry output = {address, nCredit, 1, isMineAll, addressStake};
         listStaked.push_back(output);
@@ -1645,7 +1652,7 @@ void CWalletTx::GetAmounts(
                 continue;
 
             // In either case, we need to get the destination address
-            const CScript &scriptPubKey = ((CTxOutStandard*)txout)->scriptPubKey;
+            const CScript &scriptPubKey = *txout->GetPScriptPubKey();
             CTxDestination address;
             CTxDestination addressStake = CNoDestination();
 

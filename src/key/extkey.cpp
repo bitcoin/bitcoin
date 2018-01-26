@@ -590,14 +590,13 @@ int CExtKeyAccount::HaveSavedKey(const CKeyID &id)
 
 int CExtKeyAccount::HaveKey(const CKeyID &id, bool fUpdate, CEKAKey &ak)
 {
-    // rv 0 = no, 1 = yes, 2 = lookahead, 3 = lookahead + updated
     LOCK(cs_account);
     // If fUpdate, promote key if found in look ahead
     AccKeyMap::const_iterator mi = mapKeys.find(id);
     if (mi != mapKeys.end())
     {
         ak = mi->second;
-        return 1;
+        return HK_YES;
     };
 
     mi = mapLookAhead.find(id);
@@ -608,16 +607,16 @@ int CExtKeyAccount::HaveKey(const CKeyID &id, bool fUpdate, CEKAKey &ak)
         if (fUpdate)
         {
             ak = mi->second; // pass up for save to db
-            return 3;
+            return HK_LOOKAHEAD_DO_UPDATE;
         };
-        return 2;
+        return HK_LOOKAHEAD;
     };
 
     AccKeySCMap::const_iterator miSck = mapStealthChildKeys.find(id);
     if (miSck != mapStealthChildKeys.end())
-        return 1;
+        return HK_YES;
 
-    return 0;
+    return HK_NO;
 };
 
 bool CExtKeyAccount::GetKey(const CKeyID &id, CKey &keyOut) const

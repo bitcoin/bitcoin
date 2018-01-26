@@ -394,6 +394,7 @@ static void AppendKey(CHDWallet *pw, CKey &key, uint32_t nChild, UniValue &deriv
             keyobj.pushKV("destdata", objDestData);
     };
     derivedKeys.push_back(keyobj);
+    return;
 };
 
 extern int ListLooseExtKeys(CHDWallet *pwallet, int nShowKeys, UniValue &ret, size_t &nKeys);
@@ -1085,7 +1086,6 @@ bool CHDWallet::HaveKey(const CKeyID &address, CEKAKey &ak, CExtKeyAccount *&pa)
 
 bool CHDWallet::HaveKey(const CKeyID &address) const
 {
-    //AssertLockHeld(cs_wallet);
     LOCK(cs_wallet);
 
     CEKAKey ak;
@@ -1534,7 +1534,6 @@ isminetype CHDWallet::IsMine(const CScript &scriptPubKey, CKeyID &keyID,
             return typeB;
 
         isminetype typeA = IsMine(scriptA, keyID, ak, pa, isInvalid, sigversion);
-
         if (typeA & ISMINE_SPENDABLE)
         {
             int ia = (int)typeA;
@@ -1545,7 +1544,6 @@ isminetype CHDWallet::IsMine(const CScript &scriptPubKey, CKeyID &keyID,
 
         return (isminetype)((int)typeA | (int)typeB);
     };
-
 
     std::vector<valtype> vSolutions;
     txnouttype whichType;
@@ -1807,7 +1805,7 @@ CAmount CHDWallet::GetCredit(const CTransaction &tx, const isminefilter &filter)
             throw std::runtime_error(std::string(__func__) + ": value out of range");
     };
     return nCredit;
-}
+};
 
 void CHDWallet::GetCredit(const CTransaction &tx, CAmount &nSpendable, CAmount &nWatchOnly) const
 {
@@ -1829,7 +1827,8 @@ void CHDWallet::GetCredit(const CTransaction &tx, CAmount &nSpendable, CAmount &
     if (!MoneyRange(nSpendable))
         throw std::runtime_error(std::string(__func__) + ": value out of range");
     if (!MoneyRange(nWatchOnly))
-            throw std::runtime_error(std::string(__func__) + ": value out of range");
+        throw std::runtime_error(std::string(__func__) + ": value out of range");
+    return;
 };
 
 CAmount CHDWallet::GetOutputValue(const COutPoint &op, bool fAllowTXIndex)
@@ -2341,6 +2340,39 @@ int CHDWallet::GetChangeAddress(CPubKey &pk)
     return 0;
 };
 
+void CHDWallet::ParseAddressForMetaData(const CTxDestination &addr, COutputRecord &rec)
+{
+    if (addr.type() == typeid(CStealthAddress))
+    {
+        CStealthAddress sx = boost::get<CStealthAddress>(addr);
+
+        CStealthAddressIndexed sxi;
+        sx.ToRaw(sxi.addrRaw);
+        uint32_t sxId;
+        if (GetStealthKeyIndex(sxi, sxId))
+        {
+            rec.vPath.resize(5);
+            rec.vPath[0] = ORA_STEALTH;
+            memcpy(&rec.vPath[1], &sxId, 4);
+        };
+    } else
+    if (addr.type() == typeid(CExtKeyPair))
+    {
+        CExtKeyPair ek = boost::get<CExtKeyPair>(addr);
+        /*
+        rec.vPath.resize(21);
+        rec.vPath[0] = ORA_EXTKEY;
+        CKeyID eid = ek.GetID()();
+        memcpy(&rec.vPath[1], eid.begin(), 20)
+        */
+    } else
+    if (addr.type() == typeid(CKeyID))
+    {
+        //ORA_STANDARD
+    };
+    return;
+};
+
 void CHDWallet::AddOutputRecordMetaData(CTransactionRecord &rtx, std::vector<CTempRecipient> &vecSend)
 {
     for (auto &r : vecSend)
@@ -2371,37 +2403,8 @@ void CHDWallet::AddOutputRecordMetaData(CTransactionRecord &rtx, std::vector<CTe
                 rec.nFlags |= ORF_CHANGE;
             rec.sNarration = r.sNarration;
 
-            if (r.address.type() == typeid(CStealthAddress))
-            {
-                CStealthAddress sx = boost::get<CStealthAddress>(r.address);
+            ParseAddressForMetaData(r.address, rec);
 
-                CStealthAddressIndexed sxi;
-                sx.ToRaw(sxi.addrRaw);
-                uint32_t sxId;
-                if (GetStealthKeyIndex(sxi, sxId))
-                {
-                    rec.vPath.resize(5);
-                    rec.vPath[0] = ORA_STEALTH;
-                    memcpy(&rec.vPath[1], &sxId, 4);
-                };
-
-            } else
-            if (r.address.type() == typeid(CExtKeyPair))
-            {
-                CExtKeyPair ek = boost::get<CExtKeyPair>(r.address);
-                /*
-                rec.vPath.resize(21);
-                rec.vPath[0] = ORA_EXTKEY;
-                CKeyID eid = ek.GetID()();
-                memcpy(&rec.vPath[1], eid.begin(), 20)
-                */
-            } else
-            if (r.address.type() == typeid(CKeyID))
-            {
-                //ORA_STANDARD
-
-
-            };
             rtx.InsertOutput(rec);
         } else
         if (r.nType == OUTPUT_RINGCT)
@@ -2416,43 +2419,17 @@ void CHDWallet::AddOutputRecordMetaData(CTransactionRecord &rtx, std::vector<CTe
                 rec.nFlags |= ORF_CHANGE;
             rec.sNarration = r.sNarration;
 
-            if (r.address.type() == typeid(CStealthAddress))
-            {
-                CStealthAddress sx = boost::get<CStealthAddress>(r.address);
+            ParseAddressForMetaData(r.address, rec);
 
-                CStealthAddressIndexed sxi;
-                sx.ToRaw(sxi.addrRaw);
-                uint32_t sxId;
-                if (GetStealthKeyIndex(sxi, sxId))
-                {
-                    rec.vPath.resize(5);
-                    rec.vPath[0] = ORA_STEALTH;
-                    memcpy(&rec.vPath[1], &sxId, 4);
-                };
-            } else
-            if (r.address.type() == typeid(CExtKeyPair))
-            {
-                CExtKeyPair ek = boost::get<CExtKeyPair>(r.address);
-                /*
-                rec.vPath.resize(21);
-                rec.vPath[0] = ORA_EXTKEY;
-                CKeyID eid = ek.GetID()();
-                memcpy(&rec.vPath[1], eid.begin(), 20)
-                */
-            } else
-            if (r.address.type() == typeid(CKeyID))
-            {
-                //ORA_STANDARD
-            };
             rtx.InsertOutput(rec);
         };
     };
+    return;
 };
 
 static int MakeStealthData(const std::string &sNarration, stealth_prefix prefix, const CKey &sShared, const CPubKey &pkEphem,
     std::vector<uint8_t> &vData, uint32_t &nStealthPrefix, std::string &sError)
 {
-
     std::vector<uint8_t> vchNarr;
     if (sNarration.length() > 0)
     {
@@ -2713,6 +2690,7 @@ static void SetCTOutVData(std::vector<uint8_t> &vData, CPubKey &pkEphem, uint32_
         vData[33] = DO_STEALTH_PREFIX;
         memcpy(&vData[34], &nStealthPrefix, 4);
     };
+    return;
 };
 
 int CHDWallet::CreateOutput(OUTPUT_PTR<CTxOutBase> &txbout, CTempRecipient &r, std::string &sError)
@@ -2876,6 +2854,7 @@ void InspectOutputs(std::vector<CTempRecipient> &vecSend,
                 nSubtractFeeFromAmount++;
         };
     };
+    return;
 };
 
 bool CTempRecipient::ApplySubFee(CAmount nFee, size_t nSubtractFeeFromAmount, bool &fFirst)
@@ -4917,6 +4896,7 @@ void CHDWallet::RemoveFromTxSpends(const uint256 &hash, const CTransactionRef pt
             ++it;
         };
     };
+    return;
 };
 
 int CHDWallet::UnloadTransaction(const uint256 &hash)
@@ -9397,6 +9377,7 @@ void CHDWallet::ResendWalletTransactions(int64_t nBestBlockTime, CConnman *connm
     std::vector<uint256> relayedRecord = ResendRecordTransactionsBefore(nBestBlockTime-5*60, connman);
     if (!relayed.empty() || !relayedRecord.empty())
         LogPrintf("%s: rebroadcast %u unconfirmed transactions\n", __func__, relayed.size() + relayedRecord.size());
+    return;
 };
 
 void CHDWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, const CCoinControl *coinControl, const CAmount &nMinimumAmount, const CAmount &nMaximumAmount, const CAmount &nMinimumSumAmount, const uint64_t &nMaximumCount, const int &nMinDepth, const int &nMaxDepth, bool fIncludeImmature) const
@@ -9595,6 +9576,7 @@ void CHDWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, con
             }
         };
     };
+    return;
 };
 
 bool CHDWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAmount& nTargetValue, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet, const CCoinControl *coinControl) const
@@ -9763,7 +9745,7 @@ void CHDWallet::AvailableBlindedCoins(std::vector<COutputR>& vCoins, bool fOnlyS
             }
         };
     };
-
+    return;
 };
 
 bool CHDWallet::SelectBlindedCoins(const std::vector<COutputR> &vAvailableCoins, const CAmount &nTargetValue, std::vector<std::pair<MapRecords_t::const_iterator,unsigned int> > &setCoinsRet, CAmount &nValueRet, const CCoinControl *coinControl) const
@@ -9933,6 +9915,7 @@ void CHDWallet::AvailableAnonCoins(std::vector<COutputR> &vCoins, bool fOnlySafe
     };
 
     random_shuffle(vCoins.begin(), vCoins.end(), GetRandInt);
+    return;
 };
 
 /*
@@ -9996,12 +9979,12 @@ static void ApproximateBestSubset(std::vector<std::pair<CAmount, std::pair<MapRe
             }
         }
     }
+    return;
 }
 
 bool CHDWallet::SelectCoinsMinConf(const CAmount& nTargetValue, int nConfMine, int nConfTheirs,
     uint64_t nMaxAncestors, std::vector<COutputR> vCoins, std::vector<std::pair<MapRecords_t::const_iterator,unsigned int> >& setCoinsRet, CAmount& nValueRet) const
 {
-
     setCoinsRet.clear();
     nValueRet = 0;
 
@@ -10400,6 +10383,7 @@ void CHDWallet::MarkConflicted(const uint256 &hashBlock, const uint256 &hashTx)
 
     if (LogAcceptCategory(BCLog::HDWALLET))
         LogPrintf("%s: %s, %s processed %d txns.", __func__, hashBlock.ToString(), hashTx.ToString(), done.size());
+    return;
 };
 
 void CHDWallet::SyncMetaData(std::pair<TxSpends::iterator, TxSpends::iterator> range)
@@ -10445,6 +10429,7 @@ void CHDWallet::SyncMetaData(std::pair<TxSpends::iterator, TxSpends::iterator> r
         // nOrderPos not copied on purpose
         // cached members not copied on purpose
     }
+    return;
 }
 
 bool CHDWallet::GetSetting(const std::string &setting, UniValue &json)
@@ -10490,11 +10475,30 @@ bool CHDWallet::EraseSetting(const std::string &setting)
     return true;
 };
 
-bool CHDWallet::GetScriptForAddress(CScript &script, const CBitcoinAddress &addr, bool fUpdate)
+bool CHDWallet::GetScriptForAddress(CScript &script, const CBitcoinAddress &addr, bool fUpdate, std::vector<uint8_t> *vData)
 {
     LOCK(cs_wallet);
 
     CTxDestination dest = addr.Get();
+    if (dest.type() == typeid(CStealthAddress))
+    {
+        if (!vData)
+            return error("%s: StealthAddress, vData is null .", __func__);
+
+        CStealthAddress sx = boost::get<CStealthAddress>(dest);
+        std::vector<CTempRecipient> vecSend;
+        std::string strError;
+        CTempRecipient r;
+        r.nType = OUTPUT_STANDARD;
+        r.address = sx;
+        vecSend.push_back(r);
+
+        if (0 != ExpandTempRecipients(vecSend, NULL, strError) || vecSend.size() != 2)
+            return error("%s: ToStealthRecipient failed, %s.", __func__, strError);
+
+        script = vecSend[0].scriptPubKey;
+        *vData = vecSend[1].vData;
+    } else
     if (dest.type() == typeid(CExtKeyPair))
     {
         CExtKeyPair ek = boost::get<CExtKeyPair>(dest);
@@ -10678,6 +10682,7 @@ void CHDWallet::AvailableCoinsForStaking(std::vector<COutput> &vCoins, int64_t n
     }
 
     random_shuffle(vCoins.begin(), vCoins.end(), GetRandInt);
+    return;
 };
 
 bool CHDWallet::SelectCoinsForStaking(int64_t nTargetValue, int64_t nTime, int nHeight, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, int64_t& nValueRet) const
@@ -11027,12 +11032,19 @@ bool CHDWallet::CreateCoinStake(unsigned int nBits, int64_t nTime, int nBlockHei
     if (rewardAddress.IsValid())
     {
         CScript scriptReward;
-        if (!GetScriptForAddress(scriptReward, rewardAddress, true))
+        std::vector<uint8_t> vData;
+        if (!GetScriptForAddress(scriptReward, rewardAddress, true, &vData))
             return error("%s: Could not get script for reward address.", __func__);
         std::shared_ptr<CTxOutStandard> outReward = MAKE_OUTPUT<CTxOutStandard>();
         outReward->nValue = nRewardOut;
         outReward->scriptPubKey = scriptReward;
         txNew.vpout.push_back(outReward);
+        if (vData.size() > 0)
+        {
+            OUTPUT_PTR<CTxOutData> outData = MAKE_OUTPUT<CTxOutData>();
+            outData->vData = vData;
+            txNew.vpout.push_back(outData);
+        };
     };
 
 
@@ -11113,52 +11125,6 @@ bool CHDWallet::SignBlock(CBlockTemplate *pblocktemplate, int nHeight, int64_t n
 
     return false;
 };
-
-int ToStealthRecipient(CStealthAddress &sx, CAmount nValue, bool fSubtractFeeFromAmount,
-    std::vector<CRecipient> &vecSend, std::string &sNarr, std::string &strError)
-{
-    CScript scriptPubKey;
-    CKey sEphem;
-    CKey sShared;
-    ec_point pkSendTo;
-
-    int k, nTries = 24;
-    for (k = 0; k < nTries; ++k) // if StealthSecret fails try again with new ephem key
-    {
-        sEphem.MakeNewKey(true);
-        if (StealthSecret(sEphem, sx.scan_pubkey, sx.spend_pubkey, sShared, pkSendTo) == 0)
-            break;
-    };
-    if (k >= nTries)
-    {
-        strError = "Could not generate receiving public key.";
-        return 1;
-    };
-
-    CPubKey pkEphem = sEphem.GetPubKey();
-    CPubKey pkTo(pkSendTo);
-    CKeyID idTo = pkTo.GetID();
-
-    if (LogAcceptCategory(BCLog::HDWALLET))
-    {
-        LogPrintf("Stealth send to generated address: %s\n", CBitcoinAddress(idTo).ToString());
-        //LogPrintf("ephem_pubkey: %s\n", HexStr(pkEphem.begin(), pkEphem.end()));
-    };
-
-    scriptPubKey = GetScriptForDestination(idTo);
-    CRecipient recipient(scriptPubKey, nValue, fSubtractFeeFromAmount);
-    vecSend.push_back(recipient);
-
-    vecSend.push_back(CRecipient());
-    CRecipient &rData = vecSend.back();
-
-    uint32_t nStealthPrefix;
-    if (0 != MakeStealthData(sNarr, sx.prefix, sShared, pkEphem, rData.vData, nStealthPrefix, strError))
-        return 1;
-
-    return 0;
-};
-
 
 int LoopExtKeysInDB(CHDWallet *pwallet, bool fInactive, bool fInAccount, LoopExtKeyCallback &callback)
 {

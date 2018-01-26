@@ -57,19 +57,29 @@ static const std::string strSecret2C("H5hDgLvFjLcZG9jyxkUTJ28P6N5T7iMBQ79boMuaPa
 
 BOOST_AUTO_TEST_CASE(stealth)
 {
+    CHDWallet *pwallet = (CHDWallet*) pwalletMain;
+
     ECC_Start_Stealth();
     CStealthAddress sx;
     BOOST_CHECK(true == sx.SetEncoded("SPGyji8uZFip6H15GUfj6bsutRVLsCyBFL3P7k7T7MUDRaYU8GfwUHpfxonLFAvAwr2RkigyGfTgWMfzLAAP8KMRHq7RE8cwpEEekH"));
 
     CAmount nValue = 1;
 
-    std::vector<CRecipient> vecSend;
     std::string strError;
     std::string sNarr;
 
 
     // No bitfield, no narration
-    BOOST_CHECK(0 == ToStealthRecipient(sx, nValue, false, vecSend, sNarr, strError));
+    std::vector<CTempRecipient> vecSend;
+    CTempRecipient r;
+    r.nType = OUTPUT_STANDARD;
+    r.SetAmount(nValue);
+    r.fSubtractFeeFromAmount = false;
+    r.address = sx;
+    r.sNarration = sNarr;
+    vecSend.push_back(r);
+
+    BOOST_CHECK(0 == pwallet->ExpandTempRecipients(vecSend, NULL, strError));
     BOOST_CHECK(2 == vecSend.size());
     BOOST_CHECK(34 == vecSend[1].vData.size());
 
@@ -77,7 +87,9 @@ BOOST_AUTO_TEST_CASE(stealth)
     // No bitfield, with narration
     vecSend.clear();
     sNarr = "test narration";
-    BOOST_CHECK(0 == ToStealthRecipient(sx, nValue, false, vecSend, sNarr, strError));
+    r.sNarration = sNarr;
+    vecSend.push_back(r);
+    BOOST_CHECK(0 == pwallet->ExpandTempRecipients(vecSend, NULL, strError));
     BOOST_CHECK(2 == vecSend.size());
     BOOST_REQUIRE(51 == vecSend[1].vData.size());
     BOOST_REQUIRE(vecSend[1].vData[34] == DO_NARR_CRYPT);
@@ -109,7 +121,10 @@ BOOST_AUTO_TEST_CASE(stealth)
     sNarr = "";
     sx.prefix.number_bits = 5;
     sx.prefix.bitfield = 0xaaaaaaaa;
-    BOOST_CHECK(0 == ToStealthRecipient(sx, nValue, false, vecSend, sNarr, strError));
+    r.address = sx;
+    r.sNarration = sNarr;
+    vecSend.push_back(r);
+    BOOST_CHECK(0 == pwallet->ExpandTempRecipients(vecSend, NULL, strError));
     BOOST_CHECK(2 == vecSend.size());
     BOOST_REQUIRE(39 == vecSend[1].vData.size());
     BOOST_CHECK(vecSend[1].vData[34] == DO_STEALTH_PREFIX);
@@ -124,7 +139,10 @@ BOOST_AUTO_TEST_CASE(stealth)
     sNarr = "another test narration";
     sx.prefix.number_bits = 18;
     sx.prefix.bitfield = 0xaaaaaaaa;
-    BOOST_CHECK(0 == ToStealthRecipient(sx, nValue, false, vecSend, sNarr, strError));
+    r.address = sx;
+    r.sNarration = sNarr;
+    vecSend.push_back(r);
+    BOOST_CHECK(0 == pwallet->ExpandTempRecipients(vecSend, NULL, strError));
     BOOST_CHECK(2 == vecSend.size());
     BOOST_REQUIRE(72 == vecSend[1].vData.size());
 

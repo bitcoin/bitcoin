@@ -692,7 +692,7 @@ public:
     bool EraseSetting(const std::string &setting);
 
     /* Return a script for a simple address type (normal/extended) */
-    bool GetScriptForAddress(CScript &script, const CBitcoinAddress &addr, bool fUpdate = false);
+    bool GetScriptForAddress(CScript &script, const CBitcoinAddress &addr, bool fUpdate = false, std::vector<uint8_t> *vData = NULL);
 
     bool SetReserveBalance(CAmount nNewReserveBalance);
     uint64_t GetStakeWeight() const;
@@ -743,10 +743,11 @@ public:
 
     int64_t nRCTOutSelectionGroup1;
     int64_t nRCTOutSelectionGroup2;
+
+private:
+    void ParseAddressForMetaData(const CTxDestination &addr, COutputRecord &rec);
 };
 
-int ToStealthRecipient(CStealthAddress &sx, CAmount nValue, bool fSubtractFeeFromAmount,
-    std::vector<CRecipient> &vecSend, std::string &sNarr, std::string &strError);
 
 class LoopExtKeyCallback
 {

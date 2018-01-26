@@ -2723,7 +2723,8 @@ static void ParseOutputs(
         listStaked,
         nFee,
         strSentAccount,
-        ISMINE_ALL);
+        ISMINE_ALL,
+        true);
 
     if (wtx.IsFromMe(ISMINE_WATCH_ONLY) && !(watchonly & ISMINE_WATCH_ONLY)) {
         return ;
@@ -5466,8 +5467,6 @@ UniValue walletsettings(const JSONRPCRequest &request)
                     CBitcoinAddress addr(json["rewardaddress"].get_str());
                     if (!addr.IsValid())
                         throw JSONRPCError(RPC_INVALID_PARAMETER, _("Invalid rewardaddress."));
-                    if (addr.IsValidStealthAddress())
-                        throw JSONRPCError(RPC_INVALID_PARAMETER, _("rewardaddress can't be a stealthaddress."));
                 } else
                 {
                     warnings.push_back("Unknown key " + sKey);

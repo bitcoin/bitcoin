@@ -52,7 +52,7 @@ script: |
 
   WRAP_DIR=$HOME/wrapped
   FAKETIME_HOST_PROGS=""
-  FAKETIME_PROGS="date ar ranlib nm npm"
+  FAKETIME_PROGS="date ar ranlib nm npm zip makensis"
 
   export GZIP="-9n"
   export TAR_OPTIONS="--mtime="$REFERENCE_DATE\\\ $REFERENCE_TIME""

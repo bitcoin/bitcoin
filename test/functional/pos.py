@@ -101,9 +101,7 @@ class PosTest(ParticlTestFramework):
 
         self.stakeBlocks(1)
         block3_hash = nodes[0].getblockhash(3)
-        ro = nodes[0].getblock(block3_hash)
-
-        coinstakehash = ro['tx'][0]
+        coinstakehash = nodes[0].getblock(block3_hash)['tx'][0]
         ro = nodes[0].getrawtransaction(coinstakehash, True)
 
         fFound = False
@@ -125,6 +123,50 @@ class PosTest(ParticlTestFramework):
         assert(ro['weight'] == 400000000000)
 
         self.stakeBlocks(1, nStakeNode=2)
+
+
+        addrRewardExt = nodes[0].getnewextaddress()
+        ro = nodes[0].walletsettings('stakingoptions', {'rewardaddress':addrRewardExt})
+        assert(ro['stakingoptions']['rewardaddress'] == addrRewardExt)
+        self.stakeBlocks(1)
+        block5_hash = nodes[0].getblockhash(5)
+        coinstakehash = nodes[0].getblock(block5_hash)['tx'][0]
+        ro = nodes[0].getrawtransaction(coinstakehash, True)
+
+        fFound = False
+        for vout in ro["vout"]:
+            try:
+                addr0 = vout['scriptPubKey']['addresses'][0]
+                ro = nodes[0].validateaddress(addr0)
+                if ro['from_ext_address'] == addrRewardExt:
+                    assert(addr0 == 'pgaKYsNmHTuQB83FguN44WW4ADKmwJwV7e')
+                    fFound = True
+                    assert(vout['valueSat'] == 39637)
+            except:
+                continue
+        assert(fFound)
+
+
+
+        addrRewardSx = nodes[0].getnewstealthaddress()
+        ro = nodes[0].walletsettings('stakingoptions', {'rewardaddress':addrRewardSx})
+        assert(ro['stakingoptions']['rewardaddress'] == addrRewardSx)
+        self.stakeBlocks(1)
+        block6_hash = nodes[0].getblockhash(6)
+        coinstakehash = nodes[0].getblock(block6_hash)['tx'][0]
+        ro = nodes[0].getrawtransaction(coinstakehash, True)
+
+        fFound = False
+        for vout in ro["vout"]:
+            try:
+                addr0 = vout['scriptPubKey']['addresses'][0]
+                ro = nodes[0].validateaddress(addr0)
+                if ro['from_stealth_address'] == addrRewardSx:
+                    fFound = True
+                    assert(vout['valueSat'] == 39637)
+            except:
+                continue
+        assert(fFound)
 
 
         #assert(False)

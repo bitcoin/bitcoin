@@ -35,9 +35,6 @@ class StealthTest(ParticlTestFramework):
         ro = node.extkeyimportmaster("abandon baby cabbage dad eager fabric gadget habit ice kangaroo lab absorb")
         assert(ro['account_id'] == 'aaaZf2qnNr5T7PWRmqgmusuu5ACnBcX2ev')
 
-        #ro = node.extkey("list", "true")
-        #print(json.dumps(ro, indent=4))
-
         ro = node.getinfo()
         assert(ro['total_balance'] == 100000)
 
@@ -49,6 +46,10 @@ class StealthTest(ParticlTestFramework):
         sxAddrTo1 = node1.getnewstealthaddress()
         assert(sxAddrTo1 == 'TetbYTGv5LiqyFiUD3a5HHbpSinQ9KiRYDGAMvRzPfz4RnHMbKGAwDr1fjLGJ5Eqg1XDwpeGyqWMiwdK3qM3zKWjzHNpaatdoHVzzA')
 
+        ro = node1.validateaddress(sxAddrTo1)
+        assert(ro['ismine'] == True)
+        assert(ro['isstealthaddress'] == True)
+
         txnHash = node.sendtoaddress(sxAddrTo1, 1)
         txnHashes.append(txnHash)
 
@@ -58,6 +59,11 @@ class StealthTest(ParticlTestFramework):
         assert(len(ro) == 1)
         assert(ro[0]['stealth_address'] == sxAddrTo1)
         assert(isclose(ro[0]['amount'], 1))
+
+        ro = node1.validateaddress(ro[0]['address'])
+        assert(ro['isvalid'] == True)
+        assert(ro['ismine'] == True)
+        assert(ro['from_stealth_address'] == sxAddrTo1)
 
         # Test imported sx address
         ro = node1.importstealthaddress("7pJLDnLxoYmkwpMNDX69dWGT7tuZ45LHgMajQDD8JrXb9LHmzfBA",
@@ -87,7 +93,6 @@ class StealthTest(ParticlTestFramework):
         assert(self.wait_for_mempool(node1, txnHash))
 
         ro = node1.listtransactions()
-        print(json.dumps(ro, indent=4, default=self.jsonDecimal))
         assert(ro[-1]['stealth_address'] == sxAddrTo3)
         assert(isclose(ro[-1]['amount'], 0.3))
         assert('narration test' in str(ro[-1]))
@@ -171,7 +176,6 @@ class StealthTest(ParticlTestFramework):
 
         self.sync_all()
         ro = node2.getwalletinfo()
-        print("node2.getwalletinfo() ", ro)
 
         txnHash = node2.sendtoaddress(sxAddrTo3, 1.4, '', '', False, 'node2 -> node1')
         txnHashes.append(txnHash)

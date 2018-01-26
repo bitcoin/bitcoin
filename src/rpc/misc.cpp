@@ -312,13 +312,49 @@ UniValue validateaddress(const JSONRPCRequest& request)
         ret.push_back(Pair("scriptPubKey", HexStr(scriptPubKey.begin(), scriptPubKey.end())));
 
 #ifdef ENABLE_WALLET
-        if (IsHDWallet(pwallet)
-            && dest.type() == typeid(CExtKeyPair))
+        if (IsHDWallet(pwallet))
         {
             CHDWallet *phdw = GetHDWallet(pwallet);
-            CExtKeyPair ek = boost::get<CExtKeyPair>(dest);
-            CKeyID id = ek.GetID();
-            ret.push_back(Pair("ismine", phdw->HaveExtKey(id)));
+            if (dest.type() == typeid(CExtKeyPair))
+            {
+                CExtKeyPair ek = boost::get<CExtKeyPair>(dest);
+                CKeyID id = ek.GetID();
+                ret.push_back(Pair("ismine", phdw->HaveExtKey(id)));
+            } else
+            if (dest.type() == typeid(CStealthAddress))
+            {
+                const CStealthAddress &sxAddr = boost::get<CStealthAddress>(dest);
+                ret.push_back(Pair("ismine", phdw->HaveStealthAddress(sxAddr)));
+            } else
+            if (dest.type() == typeid(CKeyID))
+            {
+                CKeyID idk;
+                CEKAKey ak;
+                CExtKeyAccount *pa = nullptr;
+                bool isInvalid;
+                isminetype mine = phdw->IsMine(scriptPubKey, idk, ak, pa, isInvalid);
+                ret.push_back(Pair("ismine", bool(mine & ISMINE_SPENDABLE)));
+                ret.push_back(Pair("iswatchonly", bool(mine & ISMINE_WATCH_ONLY)));
+
+                if (pa && ak.nParent > 0 && ak.nParent < pa->vExtKeys.size())
+                {
+                    CStoredExtKey *sek = pa->vExtKeys[ak.nParent];
+                    CExtKey58 eKey58;
+                    eKey58.SetKeyP(sek->kp);
+                    ret.pushKV("from_ext_address", eKey58.ToString());
+                } else
+                {
+                    CStealthAddress sx;
+                    idk = boost::get<CKeyID>(dest);
+                    if (phdw->GetStealthLinked(idk, sx))
+                    ret.pushKV("from_stealth_address", sx.Encoded());
+                };
+            } else
+            {
+                isminetype mine = pwallet ? IsMine(*pwallet, dest) : ISMINE_NO;
+                ret.push_back(Pair("ismine", bool(mine & ISMINE_SPENDABLE)));
+                ret.push_back(Pair("iswatchonly", bool(mine & ISMINE_WATCH_ONLY)));
+            }
         } else
         {
             isminetype mine = pwallet ? IsMine(*pwallet, dest) : ISMINE_NO;

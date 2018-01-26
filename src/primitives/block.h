@@ -127,7 +127,6 @@ public:
         return (vtx.size() > 0 && vtx[0]->IsCoinStake());
     }
 
-
     bool IsProofOfWork() const
     {
         return !IsProofOfStake();

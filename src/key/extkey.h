@@ -61,6 +61,8 @@ enum AccountFlagTypes
     EAF_IN_ACCOUNT       = (1 << 4), // CStoredExtKey is part of an account
 };
 
+enum {HK_NO = 0, HK_YES, HK_LOOKAHEAD, HK_LOOKAHEAD_DO_UPDATE};
+
 struct CExtPubKey {
     unsigned char nDepth;
     unsigned char vchFingerprint[4];
