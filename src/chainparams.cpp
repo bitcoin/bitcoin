@@ -13,7 +13,6 @@
 #include <boost/assign/list_of.hpp>
 
 #include <assert.h>
-#include <chrono>
 
 using namespace boost::assign;
 
@@ -220,10 +219,6 @@ class CTestNetParams : public CMainParams
 public:
     CTestNetParams()
     {
-        using namespace std::literals::chrono_literals;
-        using std::chrono::seconds;
-        using std::chrono::duration_cast;
-
         networkID = CBaseChainParams::TESTNET;
         strNetworkID = "test";
         pchMessageStart[0] = 0x0f;
@@ -236,8 +231,8 @@ public:
         nRejectBlockOutdatedMajority = 75;
         nToCheckBlockUpgradeMajority = 100;
         nMinerThreads = 0;
-        nTargetTimespan = duration_cast<seconds>(6h).count();
-        nTargetSpacing = duration_cast<seconds>(1.5min).count();
+        nTargetTimespan = 6 * 60 * 60;  // 6 hours
+        nTargetSpacing = 1.5 * 60;      // 1.5 minuts
         nMaxTipAge = 0x7fffffff;
 
         //! Modify the testnet genesis block so the timestamp is valid for a later start.
