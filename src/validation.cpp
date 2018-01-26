@@ -2435,6 +2435,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 			if (tx.nVersion == SYSCOIN_TX_VERSION)
 			{
 				const CAmount nExpectedFee = ::minRelayTxFee.GetFee(tx.GetTotalSize()*1.5);
+				CAmount nDescrepency;
 				if (nFees > nExpectedFee)
 					nDescrepency = nFees - nExpectedFee;
 				else
