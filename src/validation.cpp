@@ -649,15 +649,6 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight, co
 			const CTransaction &tx = sortedBlock.vtx[i];
 			if (tx.nVersion == SYSCOIN_TX_VERSION)
 			{
-				const CAmount nExpectedFee = ::minRelayTxFee.GetFee(tx.GetTotalSize()*1.5);
-				if (nFees > nExpectedFee)
-					nDescrepency = nFees - nExpectedFee;
-				else
-					nDescrepency = nExpectedFee - nFees;
-				if ((nDescrepency - (tx.vin.size() + 1)) < 0) {
-					LogPrintf("CheckSyscoinInputs: fees not correct for Syscoin transaction nFees %s vs nExpectedFee %s", ValueFromAmount(nFees).write().c_str(), ValueFromAmount(nExpectedFee).write().c_str());
-					return false;
-				}
 				bool bDestCheckFailed = false;
 				good = false;
 				if (DecodeAliasTx(tx, op, nOut, vvchAliasArgs))
@@ -2440,10 +2431,19 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 				return error("ConnectBlock(): CheckInputs on %s failed with %s",
 					tx.GetHash().ToString(), FormatStateMessage(state));
 			control.Add(vChecks);
+			// SYSCOIN
+			if (tx.nVersion == SYSCOIN_TX_VERSION)
+			{
+				const CAmount nExpectedFee = ::minRelayTxFee.GetFee(tx.GetTotalSize()*1.5);
+				if (nFees > nExpectedFee)
+					nDescrepency = nFees - nExpectedFee;
+				else
+					nDescrepency = nExpectedFee - nFees;
+				if ((nDescrepency - (tx.vin.size() + 1)) < 0) {
+					return error("ConnectBlock: fees not correct for Syscoin transaction nFees %s vs nExpectedFee %s", ValueFromAmount(nFees).write().c_str(), ValueFromAmount(nExpectedFee).write().c_str());
+				}
+			}
 		}
-		if (!CheckSyscoinInputs(block.vtx[0], fJustCheck, pindex->nHeight, nFees, block))
-			return error("ConnectBlock(): CheckSyscoinInputs on block %s failed",
-				block.GetHash().ToString());
 		if (fAddressIndex) {
 			for (unsigned int k = 0; k < tx.vout.size(); k++) {
 				const CTxOut &out = tx.vout[k];
@@ -2488,7 +2488,9 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 
 			}
 		}
-
+		if (!CheckSyscoinInputs(block.vtx[0], fJustCheck, pindex->nHeight, nFees, block))
+			return error("ConnectBlock(): CheckSyscoinInputs on block %s failed",
+				block.GetHash().ToString());
 		CTxUndo undoDummy;
 		if (i > 0) {
 			blockundo.vtxundo.push_back(CTxUndo());
