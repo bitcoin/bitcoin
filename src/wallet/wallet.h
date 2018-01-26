@@ -920,7 +920,23 @@ public:
     void BlockDisconnected(const std::shared_ptr<const CBlock>& pblock) override;
     bool AddToWalletIfInvolvingMe(const CTransactionRef& tx, const CBlockIndex* pIndex, int posInBlock, bool fUpdate);
     int64_t RescanFromTime(int64_t startTime, const WalletRescanReserver& reserver, bool update);
-    CBlockIndex* ScanForWalletTransactions(CBlockIndex* pindexStart, CBlockIndex* pindexStop, const WalletRescanReserver& reserver, bool fUpdate = false);
+
+    //! Result of wallet scan.
+    //!
+    //! If scan was not completely successful, the failed pointers will be
+    //! non-null and [first_failed, last_failed] will indicate the range of
+    //! blocks that could not be scanned. The caller can assume that all blocks
+    //! in the complementary ranges [first_scanned, last_first) and
+    //! (last_failed, last_scanned] were successfully scanned.
+    struct ScanResult
+    {
+        const CBlockIndex* first_scanned = nullptr;
+        const CBlockIndex* last_scanned = nullptr;
+        const CBlockIndex* first_failed = nullptr;
+        const CBlockIndex* last_failed = nullptr;
+    };
+
+    ScanResult ScanForWalletTransactions(const CBlockIndex* pindexStart, const CBlockIndex* pindexStop, const WalletRescanReserver& reserver, bool fUpdate = false);
     void TransactionRemovedFromMempool(const CTransactionRef &ptx) override;
     void ReacceptWalletTransactions();
     void ResendWalletTransactions(int64_t nBestBlockTime, CConnman* connman) override;

@@ -1678,7 +1678,7 @@ int64_t CWallet::RescanFromTime(int64_t startTime, const WalletRescanReserver& r
     }
 
     if (startBlock) {
-        const CBlockIndex* const failedBlock = ScanForWalletTransactions(startBlock, nullptr, reserver, update);
+        const CBlockIndex* const failedBlock = ScanForWalletTransactions(startBlock, nullptr, reserver, update).last_failed;
         if (failedBlock) {
             return failedBlock->GetBlockTimeMax() + TIMESTAMP_WINDOW + 1;
         }
@@ -1686,23 +1686,36 @@ int64_t CWallet::RescanFromTime(int64_t startTime, const WalletRescanReserver& r
     return startTime;
 }
 
+void UpdateResult(CWallet::ScanResult& result, const CBlockIndex& block, bool failed)
+{
+    if (!result.first_scanned) result.first_scanned = &block;
+    result.last_scanned = &block;
+
+    if (failed) {
+        if (!result.first_failed) result.first_failed = &block;
+        result.last_failed = &block;
+    }
+}
+
 /**
  * Scan the block chain (starting in pindexStart) for transactions
  * from or to us. If fUpdate is true, found transactions that already
  * exist in the wallet will be updated.
  *
- * Returns null if scan was successful. Otherwise, if a complete rescan was not
- * possible (due to pruning or corruption), returns pointer to the most recent
- * block that could not be scanned.
- *
  * If pindexStop is not a nullptr, the scan will stop at the block-index
  * defined by pindexStop
  *
- * Caller needs to make sure pindexStop (and the optional pindexStart) are on
- * the main chain after to the addition of any new keys you want to detect
- * transactions for.
- */
-CBlockIndex* CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, CBlockIndex* pindexStop, const WalletRescanReserver &reserver, bool fUpdate)
+ * If blocks in the scan range are missing due pruning or corruption,
+ * the scan will return a failure status indicating the range of
+ * blocks that couldn't be scanned.
+ *
+ * If there is a reorg during the scan (or if start and stop blocks
+ * that aren't on the active chain are specified), the scan will abort
+ * at the point where the scan range diverges from the active chain.
+ * This is not considered an error, since appropriate blocks will be
+ * scanned in notifications from the reorg.
+  */
+CWallet::ScanResult CWallet::ScanForWalletTransactions(const CBlockIndex* pindexStart, const CBlockIndex* pindexStop, const WalletRescanReserver &reserver, bool fUpdate)
 {
     int64_t nNow = GetTime();
     const CChainParams& chainParams = Params();
@@ -1712,8 +1725,8 @@ CBlockIndex* CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, CBlock
         assert(pindexStop->nHeight >= pindexStart->nHeight);
     }
 
-    CBlockIndex* pindex = pindexStart;
-    CBlockIndex* ret = nullptr;
+    const CBlockIndex* pindex = pindexStart;
+    ScanResult ret;
 
     if (pindex) LogPrintf("Rescan started from block %d...\n", pindex->nHeight);
 
@@ -1741,19 +1754,18 @@ CBlockIndex* CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, CBlock
             }
 
             CBlock block;
-            if (ReadBlockFromDisk(block, pindex, Params().GetConsensus())) {
+            bool read_block = ReadBlockFromDisk(block, pindex, Params().GetConsensus());
+            UpdateResult(ret, *pindex, !read_block);
+            if (read_block) {
                 LOCK2(cs_main, cs_wallet);
-                if (pindex && !chainActive.Contains(pindex)) {
+                if (!chainActive.Contains(pindex)) {
                     // Abort scan if current block is no longer active, to prevent
                     // marking transactions as coming from the wrong block.
-                    ret = pindex;
                     break;
                 }
                 for (size_t posInBlock = 0; posInBlock < block.vtx.size(); ++posInBlock) {
                     AddToWalletIfInvolvingMe(block.vtx[posInBlock], pindex, posInBlock, fUpdate);
                 }
-            } else {
-                ret = pindex;
             }
             if (pindex == pindexStop) {
                 break;
