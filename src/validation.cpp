@@ -547,7 +547,7 @@ std::string FormatStateMessage(const CValidationState &state)
 		state.GetRejectCode());
 }
 // SYSCOIN
-bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight, const CBlock& block)
+bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight, const CAmount& nFees, const CBlock& block)
 {
 	vector<vector<unsigned char> > vvchArgs;
 	vector<vector<unsigned char> > vvchAliasArgs;
@@ -564,6 +564,16 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight, co
 	if (fJustCheck && (IsInitialBlockDownload() || RPCIsInWarmup(&statusRpc)))
 		return true;
 	if (block.vtx.empty() && tx.nVersion == SYSCOIN_TX_VERSION) {
+		const CAmount nDescrepency;
+		const CAmount nExpectedFee = ::minRelayTxFee(tx.GetTotalSize()) * 1.5;
+		if (nFees > nExpectedFee)
+			nDescrepency = nFees - nExpectedFee;
+		else
+			nDescrepency = nExpectedFee - nFees;
+		if ((nDescrepency - (tx.vin.size() + 1)) < 0) {
+			LogPrintf("CheckSyscoinInputs: fees not correct for Syscoin transaction nFees %s vs nExpectedFee %s", ValueFromAmount(nFees).write().c_str(), ValueFromAmount(nFees).write().c_str(nExpectedFee));
+			return false;
+		}
 		bool bDestCheckFailed = false;
 		if (DecodeAliasTx(tx, op, nOut, vvchAliasArgs))
 		{
@@ -639,6 +649,16 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight, co
 			const CTransaction &tx = sortedBlock.vtx[i];
 			if (tx.nVersion == SYSCOIN_TX_VERSION)
 			{
+				const CAmount nDescrepency;
+				const CAmount nExpectedFee = ::minRelayTxFee(tx.GetTotalSize()) * 1.5;
+				if (nFees > nExpectedFee)
+					nDescrepency = nFees - nExpectedFee;
+				else
+					nDescrepency = nExpectedFee - nFees;
+				if ((nDescrepency - (tx.vin.size() + 1)) < 0) {
+					LogPrintf("CheckSyscoinInputs: fees not correct for Syscoin transaction nFees %s vs nExpectedFee %s", ValueFromAmount(nFees).write().c_str(), ValueFromAmount(nFees).write().c_str(nExpectedFee));
+					return false;
+				}
 				bool bDestCheckFailed = false;
 				good = false;
 				if (DecodeAliasTx(tx, op, nOut, vvchAliasArgs))
@@ -1141,7 +1161,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 			return error("%s: BUG! PLEASE REPORT THIS! ConnectInputs failed against MANDATORY but not STANDARD flags %s, %s",
 				__func__, hash.ToString(), FormatStateMessage(state));
 		}
-		if (!CheckSyscoinInputs(tx, true, chainActive.Height(), CBlock()))
+		if (!CheckSyscoinInputs(tx, true, chainActive.Height(), nFees, CBlock()))
 			return false;
 		// Remove conflicting transactions from the mempool
 		BOOST_FOREACH(const CTxMemPool::txiter it, allConflicting)
@@ -2319,9 +2339,6 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 	std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue> > addressUnspentIndex;
 	std::vector<std::pair<CSpentIndexKey, CSpentIndexValue> > spentIndex;
 
-	if(!CheckSyscoinInputs(block.vtx[0], fJustCheck, pindex->nHeight, block))
-		return error("ConnectBlock(): CheckSyscoinInputs on block %s failed",
-			block.GetHash().ToString());
 	for (unsigned int i = 0; i < block.vtx.size(); i++)
 	{
 		const CTransaction &tx = block.vtx[i];
@@ -2425,7 +2442,9 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 					tx.GetHash().ToString(), FormatStateMessage(state));
 			control.Add(vChecks);
 		}
-		
+		if (!CheckSyscoinInputs(block.vtx[0], fJustCheck, pindex->nHeight, nFees, block))
+			return error("ConnectBlock(): CheckSyscoinInputs on block %s failed",
+				block.GetHash().ToString());
 		if (fAddressIndex) {
 			for (unsigned int k = 0; k < tx.vout.size(); k++) {
 				const CTxOut &out = tx.vout[k];
