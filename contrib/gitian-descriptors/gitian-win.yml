@@ -1,6 +1,7 @@
 ---
 name: "particl-win-0.15.1.2"
 enable_cache: true
+sudo: true
 suites:
 - "trusty"
 architectures:
