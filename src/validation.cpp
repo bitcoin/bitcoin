@@ -2329,6 +2329,30 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 	std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue> > addressUnspentIndex;
 	std::vector<std::pair<CSpentIndexKey, CSpentIndexValue> > spentIndex;
 
+	// SYSCOIN calc fees and do checksyscoininputs first then updatecoins db after that
+	for (unsigned int i = 0; i < block.vtx.size(); i++)
+	{
+		const CTransaction &tx = block.vtx[i];
+		nFees += view.GetValueIn(tx) - tx.GetValueOut();
+		// SYSCOIN
+		if (tx.nVersion == SYSCOIN_TX_VERSION)
+		{
+			const CAmount nExpectedFee = ::minRelayTxFee.GetFee(tx.GetTotalSize()*1.5);
+			CAmount nDescrepency;
+			if (nFees > nExpectedFee)
+				nDescrepency = nFees - nExpectedFee;
+			else
+				nDescrepency = nExpectedFee - nFees;
+			if ((nDescrepency - (tx.vin.size() + 1)) < 0) {
+				return error("ConnectBlock: fees not correct for Syscoin transaction nFees %s vs nExpectedFee %s", ValueFromAmount(nFees).write().c_str(), ValueFromAmount(nExpectedFee).write().c_str());
+			}
+		}
+	}
+
+	if (!CheckSyscoinInputs(block.vtx[0], fJustCheck, pindex->nHeight, nFees, block))
+		return error("ConnectBlock(): CheckSyscoinInputs on block %s failed",
+			block.GetHash().ToString());
+
 	for (unsigned int i = 0; i < block.vtx.size(); i++)
 	{
 		const CTransaction &tx = block.vtx[i];
@@ -2423,27 +2447,12 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 						REJECT_INVALID, "bad-blk-sigops");
 			}
 
-			nFees += view.GetValueIn(tx) - tx.GetValueOut();
-
 			std::vector<CScriptCheck> vChecks;
 			bool fCacheResults = fJustCheck; /* Don't cache results if we're actually connecting blocks (still consult the cache, though) */
 			if (!CheckInputs(tx, state, view, fScriptChecks, flags, fCacheResults, nScriptCheckThreads ? &vChecks : NULL))
 				return error("ConnectBlock(): CheckInputs on %s failed with %s",
 					tx.GetHash().ToString(), FormatStateMessage(state));
 			control.Add(vChecks);
-			// SYSCOIN
-			if (tx.nVersion == SYSCOIN_TX_VERSION)
-			{
-				const CAmount nExpectedFee = ::minRelayTxFee.GetFee(tx.GetTotalSize()*1.5);
-				CAmount nDescrepency;
-				if (nFees > nExpectedFee)
-					nDescrepency = nFees - nExpectedFee;
-				else
-					nDescrepency = nExpectedFee - nFees;
-				if ((nDescrepency - (tx.vin.size() + 1)) < 0) {
-					return error("ConnectBlock: fees not correct for Syscoin transaction nFees %s vs nExpectedFee %s", ValueFromAmount(nFees).write().c_str(), ValueFromAmount(nExpectedFee).write().c_str());
-				}
-			}
 		}
 		if (fAddressIndex) {
 			for (unsigned int k = 0; k < tx.vout.size(); k++) {
@@ -2498,9 +2507,6 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 		vPos.push_back(std::make_pair(tx.GetHash(), pos));
 		pos.nTxOffset += ::GetSerializeSize(tx, SER_DISK, CLIENT_VERSION);
 	}
-	if (!CheckSyscoinInputs(block.vtx[0], fJustCheck, pindex->nHeight, nFees, block))
-		return error("ConnectBlock(): CheckSyscoinInputs on block %s failed",
-			block.GetHash().ToString());
 	int64_t nTime3 = GetTimeMicros(); nTimeConnect += nTime3 - nTime2;
 	LogPrint("bench", "      - Connect %u transactions: %.2fms (%.3fms/tx, %.3fms/txin) [%.2fs]\n", (unsigned)block.vtx.size(), 0.001 * (nTime3 - nTime2), 0.001 * (nTime3 - nTime2) / block.vtx.size(), nInputs <= 1 ? 0 : 0.001 * (nTime3 - nTime2) / (nInputs - 1), nTimeConnect * 0.000001);
 
