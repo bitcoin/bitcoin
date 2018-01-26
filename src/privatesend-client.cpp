@@ -888,9 +888,9 @@ bool CPrivateSendClient::JoinExistingQueue(CAmount nBalanceNeedsAnonymized, CCon
         bool fSuccess = connman.ForNode(addr, CConnman::AllNodes, [&](CNode* pnode){
             infoMixingMasternode = infoMn;
             nSessionDenom = dsq.nDenom;
-
+            CDarksendAccept dsa(nSessionDenom, txMyCollateral);
             CNetMsgMaker msgMaker(pnode->GetSendVersion()); // TODO this gives a warning about version not being set (we should wait for VERSION exchange)
-            connman.PushMessage(pnode, msgMaker.Make(NetMsgType::DSACCEPT, nSessionDenom, txMyCollateral));
+            connman.PushMessage(pnode, msgMaker.Make(NetMsgType::DSACCEPT, dsa));
             LogPrintf("CPrivateSendClient::JoinExistingQueue -- connected (from queue), sending DSACCEPT: nSessionDenom: %d (%s), addr=%s\n",
                       nSessionDenom, CPrivateSend::GetDenominationsToString(nSessionDenom), pnode->addr.ToString());
             strAutoDenomResult = _("Mixing in progress...");
@@ -962,9 +962,9 @@ bool CPrivateSendClient::StartNewQueue(CAmount nValueMin, CAmount nBalanceNeedsA
             while(nSessionDenom == 0) {
                 nSessionDenom = CPrivateSend::GetDenominationsByAmounts(vecAmounts);
             }
-
+            CDarksendAccept dsa(nSessionDenom, txMyCollateral);
             CNetMsgMaker msgMaker(pnode->GetSendVersion()); // TODO this gives a warning about version not being set (we should wait for VERSION exchange)
-            connman.PushMessage(pnode, msgMaker.Make(NetMsgType::DSACCEPT, nSessionDenom, txMyCollateral));
+            connman.PushMessage(pnode, msgMaker.Make(NetMsgType::DSACCEPT, dsa));
             LogPrintf("CPrivateSendClient::StartNewQueue -- connected, sending DSACCEPT, nSessionDenom: %d (%s)\n",
                     nSessionDenom, CPrivateSend::GetDenominationsToString(nSessionDenom));
             strAutoDenomResult = _("Mixing in progress...");

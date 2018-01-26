@@ -38,11 +38,10 @@ void CPrivateSendServer::ProcessMessage(CNode* pfrom, std::string& strCommand, C
             return;
         }
 
-        int nDenom;
-        vRecv >> nDenom;
-        CTransaction txCollateral(deserialize, vRecv);
+        CDarksendAccept dsa;
+        vRecv >> dsa;
 
-        LogPrint("privatesend", "DSACCEPT -- nDenom %d (%s)  txCollateral %s", nDenom, CPrivateSend::GetDenominationsToString(nDenom), txCollateral.ToString());
+        LogPrint("privatesend", "DSACCEPT -- nDenom %d (%s)  txCollateral %s", dsa.nDenom, CPrivateSend::GetDenominationsToString(dsa.nDenom), dsa.txCollateral.ToString());
 
         masternode_info_t mnInfo;
         if(!mnodeman.GetMasternodeInfo(activeMasternode.outpoint, mnInfo)) {
@@ -60,8 +59,8 @@ void CPrivateSendServer::ProcessMessage(CNode* pfrom, std::string& strCommand, C
 
         PoolMessage nMessageID = MSG_NOERR;
 
-        bool fResult = nSessionID == 0  ? CreateNewSession(nDenom, txCollateral, nMessageID, connman)
-                                        : AddUserToExistingSession(nDenom, txCollateral, nMessageID);
+        bool fResult = nSessionID == 0  ? CreateNewSession(dsa, nMessageID, connman)
+                                        : AddUserToExistingSession(dsa, nMessageID);
         if(fResult) {
             LogPrintf("DSACCEPT -- is compatible, please submit!\n");
             PushStatus(pfrom, STATUS_ACCEPTED, nMessageID, connman);
@@ -684,21 +683,21 @@ bool CPrivateSendServer::IsOutputsCompatibleWithSessionDenom(const std::vector<C
     return true;
 }
 
-bool CPrivateSendServer::IsAcceptableDenomAndCollateral(int nDenom, CTransaction txCollateral, PoolMessage& nMessageIDRet)
+bool CPrivateSendServer::IsAcceptableDSA(const CDarksendAccept& dsa, PoolMessage& nMessageIDRet)
 {
     if(!fMasternodeMode) return false;
 
     // is denom even smth legit?
     std::vector<int> vecBits;
-    if(!CPrivateSend::GetDenominationsBits(nDenom, vecBits)) {
-        LogPrint("privatesend", "CPrivateSendServer::IsAcceptableDenomAndCollateral -- denom not valid!\n");
+    if(!CPrivateSend::GetDenominationsBits(dsa.nDenom, vecBits)) {
+        LogPrint("privatesend", "CPrivateSendServer::%s -- denom not valid!\n", __func__);
         nMessageIDRet = ERR_DENOM;
         return false;
     }
 
     // check collateral
-    if(!fUnitTest && !CPrivateSend::IsCollateralValid(txCollateral)) {
-        LogPrint("privatesend", "CPrivateSendServer::IsAcceptableDenomAndCollateral -- collateral not valid!\n");
+    if(!fUnitTest && !CPrivateSend::IsCollateralValid(dsa.txCollateral)) {
+        LogPrint("privatesend", "CPrivateSendServer::%s -- collateral not valid!\n", __func__);
         nMessageIDRet = ERR_INVALID_COLLATERAL;
         return false;
     }
@@ -706,7 +705,7 @@ bool CPrivateSendServer::IsAcceptableDenomAndCollateral(int nDenom, CTransaction
     return true;
 }
 
-bool CPrivateSendServer::CreateNewSession(int nDenom, CTransaction txCollateral, PoolMessage& nMessageIDRet, CConnman& connman)
+bool CPrivateSendServer::CreateNewSession(const CDarksendAccept& dsa, PoolMessage& nMessageIDRet, CConnman& connman)
 {
     if(!fMasternodeMode || nSessionID != 0) return false;
 
@@ -717,39 +716,39 @@ bool CPrivateSendServer::CreateNewSession(int nDenom, CTransaction txCollateral,
         return false;
     }
 
-    if(!IsAcceptableDenomAndCollateral(nDenom, txCollateral, nMessageIDRet)) {
+    if(!IsAcceptableDSA(dsa, nMessageIDRet)) {
         return false;
     }
 
     // start new session
     nMessageIDRet = MSG_NOERR;
     nSessionID = GetRandInt(999999)+1;
-    nSessionDenom = nDenom;
+    nSessionDenom = dsa.nDenom;
 
     SetState(POOL_STATE_QUEUE);
     nTimeLastSuccessfulStep = GetTimeMillis();
 
     if(!fUnitTest) {
         //broadcast that I'm accepting entries, only if it's the first entry through
-        CDarksendQueue dsq(nDenom, activeMasternode.outpoint, GetAdjustedTime(), false);
+        CDarksendQueue dsq(dsa.nDenom, activeMasternode.outpoint, GetAdjustedTime(), false);
         LogPrint("privatesend", "CPrivateSendServer::CreateNewSession -- signing and relaying new queue: %s\n", dsq.ToString());
         dsq.Sign();
         dsq.Relay(connman);
         vecDarksendQueue.push_back(dsq);
     }
 
-    vecSessionCollaterals.push_back(MakeTransactionRef(txCollateral));
+    vecSessionCollaterals.push_back(MakeTransactionRef(dsa.txCollateral));
     LogPrintf("CPrivateSendServer::CreateNewSession -- new session created, nSessionID: %d  nSessionDenom: %d (%s)  vecSessionCollaterals.size(): %d\n",
             nSessionID, nSessionDenom, CPrivateSend::GetDenominationsToString(nSessionDenom), vecSessionCollaterals.size());
 
     return true;
 }
 
-bool CPrivateSendServer::AddUserToExistingSession(int nDenom, CTransaction txCollateral, PoolMessage& nMessageIDRet)
+bool CPrivateSendServer::AddUserToExistingSession(const CDarksendAccept& dsa, PoolMessage& nMessageIDRet)
 {
     if(!fMasternodeMode || nSessionID == 0 || IsSessionReady()) return false;
 
-    if(!IsAcceptableDenomAndCollateral(nDenom, txCollateral, nMessageIDRet)) {
+    if(!IsAcceptableDSA(dsa, nMessageIDRet)) {
         return false;
     }
 
@@ -760,9 +759,9 @@ bool CPrivateSendServer::AddUserToExistingSession(int nDenom, CTransaction txCol
         return false;
     }
 
-    if(nDenom != nSessionDenom) {
+    if(dsa.nDenom != nSessionDenom) {
         LogPrintf("CPrivateSendServer::AddUserToExistingSession -- incompatible denom %d (%s) != nSessionDenom %d (%s)\n",
-                    nDenom, CPrivateSend::GetDenominationsToString(nDenom), nSessionDenom, CPrivateSend::GetDenominationsToString(nSessionDenom));
+                    dsa.nDenom, CPrivateSend::GetDenominationsToString(dsa.nDenom), nSessionDenom, CPrivateSend::GetDenominationsToString(nSessionDenom));
         nMessageIDRet = ERR_DENOM;
         return false;
     }
@@ -771,7 +770,7 @@ bool CPrivateSendServer::AddUserToExistingSession(int nDenom, CTransaction txCol
 
     nMessageIDRet = MSG_NOERR;
     nTimeLastSuccessfulStep = GetTimeMillis();
-    vecSessionCollaterals.push_back(MakeTransactionRef(txCollateral));
+    vecSessionCollaterals.push_back(MakeTransactionRef(dsa.txCollateral));
 
     LogPrintf("CPrivateSendServer::AddUserToExistingSession -- new user accepted, nSessionID: %d  nSessionDenom: %d (%s)  vecSessionCollaterals.size(): %d\n",
             nSessionID, nSessionDenom, CPrivateSend::GetDenominationsToString(nSessionDenom), vecSessionCollaterals.size());

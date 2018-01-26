@@ -98,6 +98,31 @@ public:
         {}
 };
 
+class CDarksendAccept
+{
+public:
+    int nDenom;
+    CMutableTransaction txCollateral;
+
+    CDarksendAccept() :
+        nDenom(0),
+        txCollateral(CMutableTransaction())
+        {};
+
+    CDarksendAccept(int nDenom, const CMutableTransaction& txCollateral) :
+        nDenom(nDenom),
+        txCollateral(txCollateral)
+        {};
+
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action) {
+        READWRITE(nDenom);
+        READWRITE(txCollateral);
+    }
+};
+
 // A clients transaction in the mixing pool
 class CDarkSendEntry
 {
