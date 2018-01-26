@@ -2054,7 +2054,6 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 		data = mapAliasRegistrationData[vchAlias];
 		hash = Hash(data.begin(), data.end());
 		vchHashAlias = vchFromValue(hash.GetHex());
-		mapAliasRegistrationData.erase(vchAlias);
 		if(!newAlias.UnserializeFromData(data, vchHashAlias))
 			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5508 - " + _("Cannot unserialize alias registration transaction"));
 		bActivation = true;
