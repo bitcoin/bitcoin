@@ -47,7 +47,7 @@ UniValue privatesend(const JSONRPCRequest& request)
             EnsureWalletIsUnlocked();
         }
 
-        if(fMasterNode)
+        if(fMasternodeMode)
             return "Mixing is not supported from masternodes";
 
         privateSendClient.fEnablePrivateSend = true;
@@ -77,11 +77,11 @@ UniValue getpoolinfo(const JSONRPCRequest& request)
             "Returns an object containing mixing pool related information.\n");
 
 #ifdef ENABLE_WALLET
-    CPrivateSendBase* pprivateSendBase = fMasterNode ? (CPrivateSendBase*)&privateSendServer : (CPrivateSendBase*)&privateSendClient;
+    CPrivateSendBase* pprivateSendBase = fMasternodeMode ? (CPrivateSendBase*)&privateSendServer : (CPrivateSendBase*)&privateSendClient;
 
     UniValue obj(UniValue::VOBJ);
     obj.push_back(Pair("state",             pprivateSendBase->GetStateString()));
-    obj.push_back(Pair("mixing_mode",       (!fMasterNode && privateSendClient.fPrivateSendMultiSession) ? "multi-session" : "normal"));
+    obj.push_back(Pair("mixing_mode",       (!fMasternodeMode && privateSendClient.fPrivateSendMultiSession) ? "multi-session" : "normal"));
     obj.push_back(Pair("queue",             pprivateSendBase->GetQueueSize()));
     obj.push_back(Pair("entries",           pprivateSendBase->GetEntriesCount()));
     obj.push_back(Pair("status",            privateSendClient.GetStatus()));
@@ -387,7 +387,7 @@ UniValue masternode(const JSONRPCRequest& request)
 
     if (strCommand == "status")
     {
-        if (!fMasterNode)
+        if (!fMasternodeMode)
             throw JSONRPCError(RPC_INTERNAL_ERROR, "This is not a masternode");
 
         UniValue mnObj(UniValue::VOBJ);

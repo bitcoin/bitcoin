@@ -38,7 +38,7 @@ bool CDarkSendEntry::AddScriptSig(const CTxIn& txin)
 
 bool CDarksendQueue::Sign()
 {
-    if(!fMasterNode) return false;
+    if(!fMasternodeMode) return false;
 
     std::string strMessage = vin.ToString() + boost::lexical_cast<std::string>(nDenom) + boost::lexical_cast<std::string>(nTime) + boost::lexical_cast<std::string>(fReady);
 
@@ -78,7 +78,7 @@ bool CDarksendQueue::Relay(CConnman& connman)
 
 bool CDarksendBroadcastTx::Sign()
 {
-    if(!fMasterNode) return false;
+    if(!fMasternodeMode) return false;
 
     std::string strMessage = tx->GetHash().ToString() + boost::lexical_cast<std::string>(sigTime);
 
@@ -466,7 +466,7 @@ void ThreadCheckPrivateSend(CConnman& connman)
                 mnpayments.CheckAndRemove();
                 instantsend.CheckAndRemove();
             }
-            if(fMasterNode && (nTick % (60 * 5) == 0)) {
+            if(fMasternodeMode && (nTick % (60 * 5) == 0)) {
                 mnodeman.DoFullVerificationStep(connman);
             }
 
