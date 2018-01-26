@@ -2489,9 +2489,6 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 
 			}
 		}
-		if (!CheckSyscoinInputs(block.vtx[0], fJustCheck, pindex->nHeight, nFees, block))
-			return error("ConnectBlock(): CheckSyscoinInputs on block %s failed",
-				block.GetHash().ToString());
 		CTxUndo undoDummy;
 		if (i > 0) {
 			blockundo.vtxundo.push_back(CTxUndo());
@@ -2501,6 +2498,9 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 		vPos.push_back(std::make_pair(tx.GetHash(), pos));
 		pos.nTxOffset += ::GetSerializeSize(tx, SER_DISK, CLIENT_VERSION);
 	}
+	if (!CheckSyscoinInputs(block.vtx[0], fJustCheck, pindex->nHeight, nFees, block))
+		return error("ConnectBlock(): CheckSyscoinInputs on block %s failed",
+			block.GetHash().ToString());
 	int64_t nTime3 = GetTimeMicros(); nTimeConnect += nTime3 - nTime2;
 	LogPrint("bench", "      - Connect %u transactions: %.2fms (%.3fms/tx, %.3fms/txin) [%.2fs]\n", (unsigned)block.vtx.size(), 0.001 * (nTime3 - nTime2), 0.001 * (nTime3 - nTime2) / block.vtx.size(), nInputs <= 1 ? 0 : 0.001 * (nTime3 - nTime2) / (nInputs - 1), nTimeConnect * 0.000001);
 
