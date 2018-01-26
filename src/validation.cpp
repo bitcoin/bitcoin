@@ -565,7 +565,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight, co
 	if (fJustCheck && (IsInitialBlockDownload() || RPCIsInWarmup(&statusRpc)))
 		return true;
 	if (block.vtx.empty() && tx.nVersion == SYSCOIN_TX_VERSION) {
-		const CAmount nExpectedFee = ::minRelayTxFee(tx.GetTotalSize()*1.5);
+		const CAmount nExpectedFee = ::minRelayTxFee.GetFee(tx.GetTotalSize()*1.5);
 		if (nFees > nExpectedFee)
 			nDescrepency = nFees - nExpectedFee;
 		else
@@ -649,7 +649,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight, co
 			const CTransaction &tx = sortedBlock.vtx[i];
 			if (tx.nVersion == SYSCOIN_TX_VERSION)
 			{
-				const CAmount nExpectedFee = ::minRelayTxFee(tx.GetTotalSize()*1.5);
+				const CAmount nExpectedFee = ::minRelayTxFee.GetFee(tx.GetTotalSize()*1.5);
 				if (nFees > nExpectedFee)
 					nDescrepency = nFees - nExpectedFee;
 				else
