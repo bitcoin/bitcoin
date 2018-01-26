@@ -60,6 +60,16 @@ class ImportMultiTest (BitcoinTestFramework):
         assert_equal(address_assert['iswatchonly'], True)
         assert_equal(address_assert['ismine'], False)
 
+        print("Should not import an invalid address")
+        result = self.nodes[1].importmulti([{
+            "scriptPubKey": {
+                "address": "not valid address",
+            },
+            "timestamp": "now",
+        }])
+        assert_equal(result[0]['success'], False)
+        assert_equal(result[0]['error']['code'], -5)
+        assert_equal(result[0]['error']['message'], 'Invalid address')
 
         # ScriptPubKey + internal
         print("Should import a scriptPubKey with internal flag")

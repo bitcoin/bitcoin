@@ -15,10 +15,6 @@ Copyright: 2010-2011, Jonas Smedegaard <dr@jones.dk>
            2011, Matt Corallo <matt@bluematt.me>
 License: GPL-2+
 
-Files: debian/manpages/*
-Copyright: Micah Anderson <micah@debian.org>
-License: GPL-3+
-
 Files: src/qt/res/icons/add.png
        src/qt/res/icons/address-book.png
        src/qt/res/icons/chevron.png

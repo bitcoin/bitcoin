@@ -5,9 +5,6 @@
 #build/dashd::
 #	$(if $(filter nocheck,$(DEB_BUILD_OPTIONS)),,src/test_dash)
 
-DEB_INSTALL_EXAMPLES_dashd += debian/examples/*
-DEB_INSTALL_MANPAGES_dashd += debian/manpages/*
-
 %:
 	dh --with bash-completion $@
 

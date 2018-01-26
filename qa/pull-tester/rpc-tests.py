@@ -162,6 +162,7 @@ testScripts = [
     'import-rescan.py',
     'rpcnamedargs.py',
     'listsinceblock.py',
+    'p2p-leaktests.py',
 ]
 if ENABLE_ZMQ:
     testScripts.append('zmq_test.py')
@@ -176,6 +177,7 @@ testScriptsExt = [
     # vv Tests less than 2m vv
     'bip68-sequence.py',
     'getblocktemplate_longpoll.py',  # FIXME: "socket.error: [Errno 54] Connection reset by peer" on my Mac, same as  https://github.com/bitcoin/bitcoin/issues/6651
+    'p2p-timeouts.py',
     # vv Tests less than 60s vv
     'bip9-softforks.py',
     'p2p-feefilter.py',

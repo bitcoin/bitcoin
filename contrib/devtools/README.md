@@ -8,11 +8,6 @@ check-doc.py
 Check if all command line args are documented. The return value indicates the
 number of undocumented args.
 
-clang-format.py
-===============
-
-A script to format cpp source code according to [.clang-format](../../src/.clang-format). This should only be applied to new files or files which are currently not actively developed on. Also, git subtrees are not subject to formatting.
-
 clang-format-diff.py
 ===================
 
@@ -24,6 +19,7 @@ the script should be called from the git root folder as follows.
 ```
 git diff -U0 HEAD~1.. | ./contrib/devtools/clang-format-diff.py -p1 -i -v
 ```
+
 copyright\_header.py
 ====================
 
@@ -129,7 +125,7 @@ check or whatever).
 
 This means that there are no potential race conditions (where a
 pullreq gets updated while you're reviewing it, but before you click
-merge), and when using GPG signatures, that even a compromised github
+merge), and when using GPG signatures, that even a compromised GitHub
 couldn't mess with the sources.
 
 Setup

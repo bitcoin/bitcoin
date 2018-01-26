@@ -4,10 +4,11 @@ Developer Notes
 Various coding styles have been used during the history of the codebase,
 and the result is not very consistent. However, we're now trying to converge to
 a single style, so please use it in new code. Old code will be converted
-gradually.
+gradually and you are encouraged to use the provided
+[clang-format-diff script](/contrib/devtools/README.md#clang-format-diffpy)
+to clean up the patch automatically before submitting a pull request.
+
 - Basic rules specified in [src/.clang-format](/src/.clang-format).
-  Use a recent clang-format to format automatically using one of the [dev scripts]
-  (/contrib/devtools/README.md#clang-formatpy).
   - Braces on new lines for namespaces, classes, functions, methods.
   - Braces on the same line for everything else.
   - 4 space indentation (no tabs) for every block except namespaces.
@@ -449,7 +450,7 @@ Current subtrees include:
   - Upstream at https://github.com/jgarzik/univalue ; report important PRs to Core to avoid delay.
 
 
-Git and github tips
+Git and GitHub tips
 ---------------------
 
 - For resolving merge/rebase conflicts, it can be useful to enable diff3 style using

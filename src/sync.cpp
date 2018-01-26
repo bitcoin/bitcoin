@@ -76,57 +76,33 @@ boost::thread_specific_ptr<LockStack> lockstack;
 
 static void potential_deadlock_detected(const std::pair<void*, void*>& mismatch, const LockStack& s1, const LockStack& s2)
 {
-    // We attempt to not assert on probably-not deadlocks by assuming that
-    // a try lock will immediately have otherwise bailed if it had
-    // failed to get the lock
-    // We do this by, for the locks which triggered the potential deadlock,
-    // in either lockorder, checking that the second of the two which is locked
-    // is only a TRY_LOCK, ignoring locks if they are reentrant.
-    bool firstLocked = false;
-    bool secondLocked = false;
-    bool onlyMaybeDeadlock = false;
     std::string strOutput = "";
-
     strOutput += "POTENTIAL DEADLOCK DETECTED\n";
     strOutput += "Previous lock order was:\n";
     BOOST_FOREACH (const PAIRTYPE(void*, CLockLocation) & i, s2) {
         if (i.first == mismatch.first) {
             strOutput += " (1)";
-            if (!firstLocked && secondLocked && i.second.fTry)
-                onlyMaybeDeadlock = true;
-            firstLocked = true;
         }
         if (i.first == mismatch.second) {
             strOutput += " (2)";
-            if (!secondLocked && firstLocked && i.second.fTry)
-                onlyMaybeDeadlock = true;
-            secondLocked = true;
         }
         strOutput += strprintf(" %s\n", i.second.ToString().c_str());
     }
-    firstLocked = false;
-    secondLocked = false;
     strOutput += "Current lock order is:\n";
     BOOST_FOREACH (const PAIRTYPE(void*, CLockLocation) & i, s1) {
         if (i.first == mismatch.first) {
             strOutput += " (1)";
-            if (!firstLocked && secondLocked && i.second.fTry)
-                onlyMaybeDeadlock = true;
-            firstLocked = true;
         }
         if (i.first == mismatch.second) {
             strOutput += " (2)";
-            if (!secondLocked && firstLocked && i.second.fTry)
-                onlyMaybeDeadlock = true;
-            secondLocked = true;
         }
         strOutput += strprintf(" %s\n", i.second.ToString().c_str());
     }
-    if(!onlyMaybeDeadlock) {
-        printf("%s\n", strOutput.c_str());
-        LogPrintf("%s\n", strOutput.c_str());
-    }
-    assert(onlyMaybeDeadlock);
+
+    printf("%s\n", strOutput.c_str());
+    LogPrintf("%s\n", strOutput.c_str());
+
+    assert(false);
 }
 
 static void push_lock(void* c, const CLockLocation& locklocation, bool fTry)
@@ -138,21 +114,19 @@ static void push_lock(void* c, const CLockLocation& locklocation, bool fTry)
 
     (*lockstack).push_back(std::make_pair(c, locklocation));
 
-    if (!fTry) {
-        BOOST_FOREACH (const PAIRTYPE(void*, CLockLocation) & i, (*lockstack)) {
-            if (i.first == c)
-                break;
+    BOOST_FOREACH (const PAIRTYPE(void*, CLockLocation) & i, (*lockstack)) {
+        if (i.first == c)
+            break;
 
-            std::pair<void*, void*> p1 = std::make_pair(i.first, c);
-            if (lockdata.lockorders.count(p1))
-                continue;
-            lockdata.lockorders[p1] = (*lockstack);
+        std::pair<void*, void*> p1 = std::make_pair(i.first, c);
+        if (lockdata.lockorders.count(p1))
+            continue;
+        lockdata.lockorders[p1] = (*lockstack);
 
-            std::pair<void*, void*> p2 = std::make_pair(c, i.first);
-            lockdata.invlockorders.insert(p2);
-            if (lockdata.lockorders.count(p2))
-                potential_deadlock_detected(p1, lockdata.lockorders[p2], lockdata.lockorders[p1]);
-        }
+        std::pair<void*, void*> p2 = std::make_pair(c, i.first);
+        lockdata.invlockorders.insert(p2);
+        if (lockdata.lockorders.count(p2))
+            potential_deadlock_detected(p1, lockdata.lockorders[p2], lockdata.lockorders[p1]);
     }
 }
 
