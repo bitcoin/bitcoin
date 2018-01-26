@@ -2072,18 +2072,6 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 		mapAliasRegistrationData.insert(make_pair(vchAlias, data));
 	}
 
-	if (mapAliasRegistrations.count(vchHashAlias) > 0) {
-		CCoinsView dummy;
-		CCoinsViewCache view(&dummy);
-		if (!view.HaveCoins(mapAliasRegistrations[vchHashAlias].hash)) {
-			mapAliasRegistrations.erase(vchHashAlias);
-			mapAliasRegistrationData.erase(vchAlias);
-		}
-		newAlias.Serialize(data);
-		hash = Hash(data.begin(), data.end());
-		vchHashAlias = vchFromValue(hash.GetHex());
-		mapAliasRegistrationData.insert(make_pair(vchAlias, data));
-	}
 
 	CScript scriptPubKey;
 	if(bActivation)
