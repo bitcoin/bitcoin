@@ -2104,6 +2104,8 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	CCoinControl coinControl;
 	if(bActivation && mapAliasRegistrations.count(vchHashAlias) > 0)
 	{
+		if (pwalletMain)
+			pwalletMain->UnlockCoin(mapAliasRegistrations[vchHashAlias]);
 		vecSend.push_back(fee);
 		// add the registration input to the alias activation transaction
 		coinControl.Select(mapAliasRegistrations[vchHashAlias]);
