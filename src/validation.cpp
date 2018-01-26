@@ -571,7 +571,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight, co
 		else
 			nDescrepency = nExpectedFee - nFees;
 		if ((nDescrepency - (tx.vin.size() + 1)) < 0) {
-			LogPrintf("CheckSyscoinInputs: fees not correct for Syscoin transaction nFees %s vs nExpectedFee %s", ValueFromAmount(nFees).write().c_str(), ValueFromAmount(nFees).write().c_str(nExpectedFee));
+			LogPrintf("CheckSyscoinInputs: fees not correct for Syscoin transaction nFees %s vs nExpectedFee %s", ValueFromAmount(nFees).write().c_str(), ValueFromAmount(nExpectedFee).write().c_str());
 			return false;
 		}
 		bool bDestCheckFailed = false;
@@ -656,7 +656,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, bool fJustCheck, int nHeight, co
 				else
 					nDescrepency = nExpectedFee - nFees;
 				if ((nDescrepency - (tx.vin.size() + 1)) < 0) {
-					LogPrintf("CheckSyscoinInputs: fees not correct for Syscoin transaction nFees %s vs nExpectedFee %s", ValueFromAmount(nFees).write().c_str(), ValueFromAmount(nFees).write().c_str(nExpectedFee));
+					LogPrintf("CheckSyscoinInputs: fees not correct for Syscoin transaction nFees %s vs nExpectedFee %s", ValueFromAmount(nFees).write().c_str(), ValueFromAmount(nExpectedFee).write().c_str());
 					return false;
 				}
 				bool bDestCheckFailed = false;
