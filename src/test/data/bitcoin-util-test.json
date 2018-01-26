@@ -84,15 +84,15 @@
     "error_txt": "error: TX output missing or too many separators",
     "description": "Malformed outaddr argument (no address specified). Expected to fail."
   },
-  { "exec": "./bitcoin-tx",
+  { "exec": "./dash-tx",
     "args":
     ["-create",
-     "outaddr=1:13tuJJDR2RgArmgfv6JScSdreahzgc4T6o:garbage"],
+     "outaddr=1:Xdak8YsJz8tm1iHFmycfTyKeUvHgfbdpyw:garbage"],
     "return_code": 1,
     "error_txt": "error: TX output missing or too many separators",
     "description": "Malformed outaddr argument (too many separators). Expected to fail."
   },
-  { "exec": "./bitcoin-tx",
+  { "exec": "./dash-tx",
     "args":
     ["-create",
      "outpubkey=0"],
@@ -100,15 +100,15 @@
     "error_txt": "error: TX output missing or too many separators",
     "description": "Malformed outpubkey argument (no pubkey specified). Expected to fail."
   },
-  { "exec": "./bitcoin-tx",
+  { "exec": "./dash-tx",
     "args":
     ["-create",
-     "outpubkey=0:02a5613bd857b7048924264d1e70e08fb2a7e6527d32b7ab1bb993ac59964ff397:W:non53nse"],
+     "outpubkey=0:02a5613bd857b7048924264d1e70e08fb2a7e6527d32b7ab1bb993ac59964ff397:S:non53nse"],
     "return_code": 1,
     "error_txt": "error: TX output missing or too many separators",
     "description": "Malformed outpubkey argument (too many separators). Expected to fail."
   },
-  { "exec": "./bitcoin-tx",
+  { "exec": "./dash-tx",
     "args":
     ["-create",
      "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0",
