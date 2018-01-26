@@ -1511,7 +1511,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	COffer theOffer, linkedOffer;
 
 	if (!GetOffer( vchOffer, theOffer))
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4513 - " + _("Could not find an offer with this identifier"));
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4513 - " + _("Could not find offer with this identifier"));
 	float fDepositPercentage = theOffer.auctionOffer.fDepositPercentage;
 	CAliasIndex selleralias;
 	if (!GetAlias( theOffer.vchAlias, selleralias))

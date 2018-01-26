@@ -2054,6 +2054,7 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	vector<unsigned char> vchHashAlias;
 	uint256 hash;
 	bool bActivation = false;
+
 	if(mapAliasRegistrationData.count(vchAlias) > 0)
 	{
 		data = mapAliasRegistrationData[vchAlias];
@@ -2071,7 +2072,19 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 		mapAliasRegistrationData.insert(make_pair(vchAlias, data));
 	}
 
-	
+	if (mapAliasRegistrations.count(vchHashAlias) > 0) {
+		CCoinsView dummy;
+		CCoinsViewCache view(&dummy);
+		if (!view.HaveCoins(mapAliasRegistrations[vchHashAlias].hash)) {
+			mapAliasRegistrations.erase(vchHashAlias);
+			mapAliasRegistrationData.erase(vchAlias);
+		}
+		newAlias.Serialize(data);
+		hash = Hash(data.begin(), data.end());
+		vchHashAlias = vchFromValue(hash.GetHex());
+		mapAliasRegistrationData.insert(make_pair(vchAlias, data));
+	}
+
 	CScript scriptPubKey;
 	if(bActivation)
 		scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_ALIAS) << CScript::EncodeOP_N(OP_ALIAS_ACTIVATE) << vchAlias << newAlias.vchGUID << vchHashAlias << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
@@ -2894,7 +2907,7 @@ UniValue aliaswhitelist(const UniValue& params, bool fHelp) {
 	CAliasIndex theAlias;
 
 	if (!GetAlias(vchAlias, theAlias))
-		throw runtime_error("could not find an offer with this guid");
+		throw runtime_error("could not find alias with this guid");
 
 	for (auto const &it : theAlias.offerWhitelist.entries)
 	{

@@ -903,7 +903,7 @@ UniValue offerlink(const UniValue& params, bool fHelp) {
 	vector<unsigned char> vchDescription;
 	COffer linkOffer;
 	if (vchLinkOffer.empty() || !GetOffer( vchLinkOffer, linkOffer))
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1513 - " + _("Could not find an offer with this guid"));
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1513 - " + _("Could not find offer with this guid"));
 
 	int commissionInteger = params[2].get_int();
 	vchDescription = vchFromValue(params[3]);
@@ -1042,7 +1042,7 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 
 	COffer theOffer, linkOffer;
 	if (!GetOffer( vchOffer, theOffer))
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1534 - " + _("Could not find an offer with this guid"));
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1534 - " + _("Could not find offer with this guid"));
 
 	if (!GetBoolArg("-unittest", false)) {
 		ArrivalTimesMap arrivalTimes;
