@@ -22,7 +22,7 @@ std::map<uint256, int64_t> askedForSourceProposalOrBudget;
 std::vector<CBudgetProposalBroadcast> vecImmatureBudgetProposals;
 std::vector<CFinalizedBudgetBroadcast> vecImmatureFinalizedBudgets;
 
-auto BlocksBeforeSuperblockToSubmitFinalBudget()
+auto BlocksBeforeSuperblockToSubmitFinalBudget() -> CAmount
 {
     // Relatively 43200 / 30 = 1440, for testnet  - 8 blocks (cannot be less)
 
