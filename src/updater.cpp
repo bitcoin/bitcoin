@@ -93,7 +93,6 @@ void Updater::SetJsonPath()
             updaterInfoUrl = "https://raw.githubusercontent.com/Crowndev/crowncoin/master/update_testnet.json";
         }
     }
-    std::cout << updaterInfoUrl << std::endl;
 }
 
 bool Updater::LoadUpdateInfo()
