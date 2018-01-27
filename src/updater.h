@@ -55,6 +55,7 @@ private:
     std::string updaterInfoUrl;
     bool LoadUpdateInfo();
     Value ParseJson(std::string info);
+    void SetJsonPath();
     void SetOS();
     bool NeedToBeUpdated();
     int GetVersionFromJson();

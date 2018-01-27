@@ -106,6 +106,9 @@ void RPCInstall()
         } else {
             RPCUpdate::statusObj.push_back(Pair("Install", "Done"));
         }
+
+        // Restart crownd
+        StartRestart();
     }
 
     boost::filesystem::remove_all(dir);

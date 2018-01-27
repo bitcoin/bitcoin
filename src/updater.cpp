@@ -4,6 +4,7 @@
 #include "updater.h"
 #include "clientversion.h"
 #include "util.h"
+#include "chainparams.h"
 
 #include <stdio.h>
 #include <curl/curl.h>
@@ -19,7 +20,6 @@ struct myprogress {
 Updater updater;
 
 Updater::Updater() :
-    updaterInfoUrl("https://raw.githubusercontent.com/ashotkhachatryan/crowncoin/systemnode/update1.json"),
     os(Updater::UNKNOWN),
     status(false),
     version(-1),
@@ -80,11 +80,28 @@ bool Updater::NeedToBeUpdated()
     return false;
 }
 
+void Updater::SetJsonPath()
+{
+    if (updaterInfoUrl.empty())
+    {
+        if (Params().NetworkID() == CBaseChainParams::MAIN)
+        {
+            updaterInfoUrl = "https://raw.githubusercontent.com/Crowndev/crowncoin/master/update.json";
+        }
+        else
+        {
+            updaterInfoUrl = "https://raw.githubusercontent.com/Crowndev/crowncoin/master/update_testnet.json";
+        }
+    }
+    std::cout << updaterInfoUrl << std::endl;
+}
+
 bool Updater::LoadUpdateInfo()
 {
     bool result = false;
     CURL *curl;
     std::string updateData;
+    SetJsonPath();
     CURLcode res = CURLE_FAILED_INIT;
     curl = curl_easy_init();
     if (curl)
