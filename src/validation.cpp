@@ -2335,6 +2335,10 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 		const CTransaction &tx = block.vtx[i];
 		if (!tx.IsCoinBase())
 		{
+			if (!view.HaveInputs(tx))
+				return state.DoS(100, error("ConnectBlock(): inputs missing/spent"),
+					REJECT_INVALID, "bad-txns-inputs-missingorspent");
+
 			nFees += view.GetValueIn(tx) - tx.GetValueOut();
 			// SYSCOIN
 			if (tx.nVersion == SYSCOIN_TX_VERSION)
@@ -2369,9 +2373,6 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 
 		if (!tx.IsCoinBase())
 		{
-			if (!view.HaveInputs(tx))
-				return state.DoS(100, error("ConnectBlock(): inputs missing/spent"),
-					REJECT_INVALID, "bad-txns-inputs-missingorspent");
 
 			// Check that transaction is BIP68 final
 			// BIP68 lock checks (as opposed to nLockTime checks) must
