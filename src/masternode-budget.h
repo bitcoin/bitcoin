@@ -427,7 +427,7 @@ public:
 
     bool IsValid(std::string& strError, bool fCheckCollateral=true);
 
-    auto IsEstablished() const
+    auto IsEstablished() const -> decltype(nTime)
     {
         //Proposals must be at least a day old to make it into a budget
         if(Params().NetworkID() == CBaseChainParams::MAIN)
