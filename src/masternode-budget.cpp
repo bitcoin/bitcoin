@@ -245,6 +245,17 @@ void CBudgetManager::SubmitFinalBudget()
 // CBudgetDB
 //
 
+#ifdef MAC_OSX
+namespace std
+{
+    template< class T >
+    typename std::remove_reference<T>::type&& move( T&& t ) noexcept
+    {
+        return static_cast<typename std::remove_reference<T>::type&&>(t);
+    }
+}
+#endif
+
 CBudgetDB::CBudgetDB()
     : CBudgetDB(GetDataDir() / "budget.dat")
 {
