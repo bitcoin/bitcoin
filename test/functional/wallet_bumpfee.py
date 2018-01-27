@@ -231,13 +231,16 @@ def test_unconfirmed_not_spendable(rbf_node, rbf_node_address):
     assert_equal([t for t in rbf_node.listunspent(minconf=0, include_unsafe=False) if t["txid"] == bumpid], [])
 
     # submit a block with the rbf tx to clear the bump tx out of the mempool,
-    # then call abandon to make sure the wallet doesn't attempt to resubmit the
-    # bump tx, then invalidate the block so the rbf tx will be put back in the
-    # mempool. this makes it possible to check whether the rbf tx outputs are
+    # then invalidate the block so the rbf tx will be put back in the mempool.
+    # This makes it possible to check whether the rbf tx outputs are
     # spendable before the rbf tx is confirmed.
     block = submit_block_with_tx(rbf_node, rbftx)
-    rbf_node.abandontransaction(bumpid)
+    # Can not abandon conflicted tx
+    assert_raises_rpc_error(-5, 'Transaction not eligible for abandonment', lambda: rbf_node.abandontransaction(txid=bumpid))
     rbf_node.invalidateblock(block.hash)
+    # Call abandon to make sure the wallet doesn't attempt to resubmit
+    # the bump tx and hope the wallet does not rebroadcast before we call.
+    rbf_node.abandontransaction(bumpid)
     assert bumpid not in rbf_node.getrawmempool()
     assert rbfid in rbf_node.getrawmempool()
 
