@@ -2333,18 +2333,21 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 	for (unsigned int i = 0; i < block.vtx.size(); i++)
 	{
 		const CTransaction &tx = block.vtx[i];
-		nFees += view.GetValueIn(tx) - tx.GetValueOut();
-		// SYSCOIN
-		if (tx.nVersion == SYSCOIN_TX_VERSION)
+		if (!tx.IsCoinBase())
 		{
-			const CAmount nExpectedFee = ::minRelayTxFee.GetFee(tx.GetTotalSize()*1.5);
-			CAmount nDescrepency;
-			if (nFees > nExpectedFee)
-				nDescrepency = nFees - nExpectedFee;
-			else
-				nDescrepency = nExpectedFee - nFees;
-			if ((nDescrepency - (tx.vin.size() + 1)) < 0) {
-				return error("ConnectBlock: fees not correct for Syscoin transaction nFees %s vs nExpectedFee %s", ValueFromAmount(nFees).write().c_str(), ValueFromAmount(nExpectedFee).write().c_str());
+			nFees += view.GetValueIn(tx) - tx.GetValueOut();
+			// SYSCOIN
+			if (tx.nVersion == SYSCOIN_TX_VERSION)
+			{
+				const CAmount nExpectedFee = ::minRelayTxFee.GetFee(tx.GetTotalSize()*1.5);
+				CAmount nDescrepency;
+				if (nFees > nExpectedFee)
+					nDescrepency = nFees - nExpectedFee;
+				else
+					nDescrepency = nExpectedFee - nFees;
+				if ((nDescrepency - (tx.vin.size() + 1)) < 0) {
+					return error("ConnectBlock: fees not correct for Syscoin transaction nFees %s vs nExpectedFee %s", ValueFromAmount(nFees).write().c_str(), ValueFromAmount(nExpectedFee).write().c_str());
+				}
 			}
 		}
 	}
