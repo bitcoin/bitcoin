@@ -14,6 +14,7 @@
 #include "addrman.h"
 #include <boost/filesystem.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/type_traits.hpp>
 
 CBudgetManager budget;
 CCriticalSection cs_budget;
@@ -249,9 +250,9 @@ void CBudgetManager::SubmitFinalBudget()
 namespace std
 {
     template< class T >
-    typename std::remove_reference<T>::type&& move( T&& t ) noexcept
+    typename boost::remove_reference<T>::type&& move( T&& t ) noexcept
     {
-        return static_cast<typename std::remove_reference<T>::type&&>(t);
+        return static_cast<typename boost::remove_reference<T>::type&&>(t);
     }
 }
 #endif
