@@ -6,7 +6,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Bitcoin P2P network half-a-node.
 
-This python code was modified from ArtForz' public domain  half-a-node, as
+This python code was modified from ArtForz' public domain half-a-node, as
 found in the mini-node branch of http://github.com/jgarzik/pynode.
 
 P2PConnection: A low-level connection object to a node's P2P interface
