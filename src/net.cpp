@@ -8,6 +8,7 @@
 #endif
 
 #include <net.h>
+#include <ctype.h>
 
 #include <chainparams.h>
 #include <clientversion.h>
@@ -27,10 +28,7 @@
 #endif
 
 #ifdef USE_UPNP
-#include <miniupnpc/miniupnpc.h>
-#include <miniupnpc/miniwget.h>
-#include <miniupnpc/upnpcommands.h>
-#include <miniupnpc/upnperrors.h>
+#include <natpmp.h>
 #endif
 
 
@@ -1462,106 +1460,120 @@ void CConnman::WakeMessageHandler()
 void ThreadMapPort()
 {
     std::string port = strprintf("%u", GetListenPort());
-    const char * multicastif = nullptr;
-    const char * minissdpdpath = nullptr;
-    struct UPNPDev * devlist = nullptr;
-    char lanaddr[64];
 
-#ifndef UPNPDISCOVER_SUCCESS
-    /* miniupnpc 1.5 */
-    devlist = upnpDiscover(2000, multicastif, minissdpdpath, 0);
-#elif MINIUPNPC_API_VERSION < 14
-    /* miniupnpc 1.6 */
-    int error = 0;
-    devlist = upnpDiscover(2000, multicastif, minissdpdpath, 0, 0, &error);
-#else
-    /* miniupnpc 1.9.20150730 */
-    int error = 0;
-    devlist = upnpDiscover(2000, multicastif, minissdpdpath, 0, 0, 2, &error);
-#endif
-
-    struct UPNPUrls urls;
-    struct IGDdatas data;
+    natpmp_t natpmp;
+    natpmpresp_t response;
     int r;
+    int sav_errno;
+    struct timeval timeout;
+    fd_set fds;
+    int i;
+    int protocol = 0;
+    uint16_t privateport = std::atoi(port);
+    uint16_t publicport = std::atoi(port);
+    uint32_t lifetime = 3600;
+    int command = 0;
+    int forcegw = 0;
+    in_addr_t gateway = 0;
+    struct in_addr gateway_in_use;
 
-    r = UPNP_GetValidIGD(devlist, &urls, &data, lanaddr, sizeof(lanaddr));
-    if (r == 1)
-    {
-        if (fDiscover) {
-            char externalIPAddress[40];
-            r = UPNP_GetExternalIPAddress(urls.controlURL, data.first.servicetype, externalIPAddress);
-            if(r != UPNPCOMMAND_SUCCESS)
-                LogPrintf("UPnP: GetExternalIPAddress() returned %d\n", r);
-            else
-            {
-                if(externalIPAddress[0])
-                {
-                    CNetAddr resolved;
-                    if(LookupHost(externalIPAddress, resolved, false)) {
-                        LogPrintf("UPnP: ExternalIPAddress = %s\n", resolved.ToString().c_str());
-                        AddLocal(resolved, LOCAL_UPNP);
-                    }
-                }
-                else
-                    LogPrintf("UPnP: GetExternalIPAddress failed.\n");
-            }
-        }
 
-        std::string strDesc = "Bitcoin " + FormatFullVersion();
+    try{
+        /* initnatpmp() */
+        r = initnatpmp(&natpmp, forcegw, gateway);
+        LogPrintf("NATPMP: initnatpmp returned %d\n", r);
 
-        try {
-            while (true) {
-#ifndef UPNPDISCOVER_SUCCESS
-                /* miniupnpc 1.5 */
-                r = UPNP_AddPortMapping(urls.controlURL, data.first.servicetype,
-                                    port.c_str(), port.c_str(), lanaddr, strDesc.c_str(), "TCP", 0);
-#else
-                /* miniupnpc 1.6 */
-                r = UPNP_AddPortMapping(urls.controlURL, data.first.servicetype,
-                                    port.c_str(), port.c_str(), lanaddr, strDesc.c_str(), "TCP", 0, "0");
+        gateway_in_use.s_addr = natpmp.gateway;
+
+        /* sendpublicaddressrequest() */
+        r = sendpublicaddressrequest(&natpmp);
+        LogPrintf("NATPMP: sendpublicaddressrequest returned %d\n", r);
+
+        do {
+            FD_ZERO(&fds);
+            FD_SET(natpmp.s, &fds);
+            getnatpmprequesttimeout(&natpmp, &timeout);
+            r = select(FD_SETSIZE, &fds, nullptr, nullptr, &timeout);
+            if(r>=0) {
+                r = readnatpmpresponseorretry(&natpmp, &response);
+                sav_errno = errno;
+                LogPrintf("NATPMP: readnatpmpresponseorretry returned %d (%s)\n",
+                        r, r==0?"OK":(r==NATPMP_TRYAGAIN?"TRY AGAIN":"FAILED"));
+
+                if(r<0 && r!=NATPMP_TRYAGAIN) {
+#ifdef ENABLE_STRNATPMPERR
+                    LogPrintf("NATPMP: readnatpmpresponseorretry() failed : %s\n",
+                            strnatpmperr(r));
 #endif
-
-                if(r!=UPNPCOMMAND_SUCCESS)
-                    LogPrintf("AddPortMapping(%s, %s, %s) failed with code %d (%s)\n",
-                        port, port, lanaddr, r, strupnperror(r));
-                else
-                    LogPrintf("UPnP Port Mapping successful.\n");
-
-                MilliSleep(20*60*1000); // Refresh every 20 minutes
+                    LogPrintf("  errno=%d '%s'\n",
+                            sav_errno, strerror(sav_errno));
+                }
+            }else{
+                LogPrintf("NATPMP: Error with select()\n");
             }
+        } while(r==NATPMP_TRYAGAIN);
+
+        LogPrintf("NATPMP: Public IP address : %s\n", 
+                inet_ntoa(response.pnu.publicaddress.addr));
+
+
+        /* sendnewportmappingrequest() */
+        r = sendnewportmappingrequest(&natpmp, privateport, 
+                publicport, lifetime);
+        LogPrintf("NATPMP: sendnewportmappingrequest returned %d (%s)\n",
+                r, r==12?"SUCCESS":"FAILED");
+
+        do {
+            FD_ZERO(&fds);
+            FD_SET(natpmp.s, &fds);
+            getnatpmprequesttimeout(&natpmp, &timeout);
+            select(FD_SETSIZE, &fds, nullptr, nullptr, &timeout);
+            r = readnatpmpresponseorretry(&natpmp, &response);
+            LogPrintf("NATPMP: readnatpmpresponseorretry returned %d (%s)\n",
+                    r, r==0?"OK":(r==NATPMP_TRYAGAIN?"TRY AGAIN":"FAILED"));
+        } while(r==NATPMP_TRYAGAIN);
+
+        if(r<0) {
+#ifdef ENABLE_STRNATPMPERR
+            LogPrintf("NATPMP: readnatpmpresponseorretry() failed : %s\n",
+                    strnatpmperr(r));
+#endif
         }
-        catch (const boost::thread_interrupted&)
-        {
-            r = UPNP_DeletePortMapping(urls.controlURL, data.first.servicetype, port.c_str(), "TCP", 0);
-            LogPrintf("UPNP_DeletePortMapping() returned: %d\n", r);
-            freeUPNPDevlist(devlist); devlist = nullptr;
-            FreeUPNPUrls(&urls);
-            throw;
-        }
-    } else {
-        LogPrintf("No valid UPnP IGDs found\n");
-        freeUPNPDevlist(devlist); devlist = nullptr;
-        if (r != 0)
-            FreeUPNPUrls(&urls);
+
+        LogPrintf("Mapped public port %hu protocol %s to local port %hu "
+                "liftime %u\n",
+                response.pnu.newportmapping.mappedpublicport,
+                "TCP",
+                response.pnu.newportmapping.privateport,
+                response.pnu.newportmapping.lifetime);
+    }
+    catch (const boost::thread_interrupted&)
+    {
+        r = closenatpmp(&natpmp);
+        LogPrintf("NATPMP: closenatpmp() returned %d (%s)\n", 
+                r, r==0?"SUCCESS":"FAILED");
+
+        throw;
+
     }
 }
 
 void MapPort(bool fUseUPnP)
 {
-    static std::unique_ptr<boost::thread> upnp_thread;
+    static std::unique_ptr<boost::thread> natpmp_thread;
 
     if (fUseUPnP)
     {
-        if (upnp_thread) {
-            upnp_thread->interrupt();
-            upnp_thread->join();
+        if (natpmp_thread) {
+            natpmp_thread->interrupt();
+            natpmp_thread->join();
         }
-        upnp_thread.reset(new boost::thread(boost::bind(&TraceThread<void (*)()>, "upnp", &ThreadMapPort)));
+        natpmp_thread.reset(new boost::thread(boost::bind(&TraceThread<void (*)()>, "upnp", &ThreadMapPort)));
     }
-    else if (upnp_thread) {
-        upnp_thread->interrupt();
-        upnp_thread->join();
-        upnp_thread.reset();
+    else if (natpmp_thread) {
+        natpmp_thread->interrupt();
+        natpmp_thread->join();
+        natpmp_thread.reset();
     }
 }
 
@@ -1570,8 +1582,7 @@ void MapPort(bool)
 {
     // Intentionally left blank.
 }
-#endif
-
+#endif  // for UPNP
 
 
 
