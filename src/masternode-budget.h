@@ -55,7 +55,7 @@ class CBudgetDB
 {
 private:
     boost::filesystem::path pathDB;
-    std::string strMagicMessage{"MasternodeBudget"};
+    std::string strMagicMessage;
 public:
     enum ReadResult {
         Ok,
@@ -427,7 +427,7 @@ public:
 
     bool IsValid(std::string& strError, bool fCheckCollateral=true);
 
-    auto IsEstablished() const -> decltype(nTime)
+    int IsEstablished() const
     {
         //Proposals must be at least a day old to make it into a budget
         if(Params().NetworkID() == CBaseChainParams::MAIN)

@@ -14,7 +14,6 @@
 #include "addrman.h"
 #include <boost/filesystem.hpp>
 #include <boost/lexical_cast.hpp>
-#include <boost/type_traits.hpp>
 
 CBudgetManager budget;
 CCriticalSection cs_budget;
@@ -23,7 +22,7 @@ std::map<uint256, int64_t> askedForSourceProposalOrBudget;
 std::vector<CBudgetProposalBroadcast> vecImmatureBudgetProposals;
 std::vector<CFinalizedBudgetBroadcast> vecImmatureFinalizedBudgets;
 
-auto BlocksBeforeSuperblockToSubmitFinalBudget() -> CAmount
+CAmount BlocksBeforeSuperblockToSubmitFinalBudget()
 {
     // Relatively 43200 / 30 = 1440, for testnet  - 8 blocks (cannot be less)
 
@@ -34,7 +33,7 @@ auto BlocksBeforeSuperblockToSubmitFinalBudget() -> CAmount
 
 }
 
-auto GetBudgetPaymentCycleBlocks() -> int
+int GetBudgetPaymentCycleBlocks()
 {
     // Amount of blocks in a months period of time (using 1 minutes per) = (60*24*30)/1
 
@@ -246,24 +245,15 @@ void CBudgetManager::SubmitFinalBudget()
 // CBudgetDB
 //
 
-#ifdef MAC_OSX
-namespace std
-{
-    template< class T >
-    typename boost::remove_reference<T>::type&& move( T&& t ) noexcept
-    {
-        return static_cast<typename boost::remove_reference<T>::type&&>(t);
-    }
-}
-#endif
-
 CBudgetDB::CBudgetDB()
-    : CBudgetDB(GetDataDir() / "budget.dat")
+    : pathDB(GetDataDir() / "budget.dat")
+    , strMagicMessage("MasternodeBudget")
 {
 }
 
-CBudgetDB::CBudgetDB(boost::filesystem::path dbPath)
-    : pathDB(std::move(dbPath))
+CBudgetDB::CBudgetDB(const boost::filesystem::path& dbPath)
+    : pathDB(dbPath)
+    , strMagicMessage("MasternodeBudget")
 {
 
 }
