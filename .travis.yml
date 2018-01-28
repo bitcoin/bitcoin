@@ -17,6 +17,7 @@ env:
     - BASE_OUTDIR=$TRAVIS_BUILD_DIR/out
     - SDK_URL=https://bitcoincore.org/depends-sources/sdks
     - WINEDEBUG=fixme-all
+    - CXXFLAGS="-std=c++1y"
   matrix:
 # ARM
     - HOST=arm-linux-gnueabihf PACKAGES="g++-arm-linux-gnueabihf" DEP_OPTS="" GOAL="install" CROWN_CONFIG="--enable-glibc-back-compat --enable-reduce-exports"
