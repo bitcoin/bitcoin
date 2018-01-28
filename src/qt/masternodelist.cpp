@@ -18,6 +18,7 @@
 #include "addresstablemodel.h"
 #include "transactiontablemodel.h"
 #include "optionsmodel.h"
+#include "startmissingdialog.h"
 
 #include <QTimer>
 #include <QMessageBox>
@@ -445,32 +446,34 @@ void MasternodeList::on_startMissingButton_clicked()
         return;
     }
 
+    StartMissingDialog dg(this);
+    dg.setWindowTitle("Confirm missing masternodes start");
+    dg.setText("Are you sure you want to start MISSING masternodes?");
+    dg.setCheckboxText("Start all nodes");
+    dg.setWarningText(QString("<b>") + tr("WARNING!") + QString("</b>") +
+            " If checked all ACTIVE masternodes will be reset.");
+    bool startAll = false;
+
     // Display message box
-    QMessageBox::StandardButton retval = QMessageBox::question(this,
-        tr("Confirm missing masternodes start"),
-        tr("Are you sure you want to start MISSING masternodes?"),
-        QMessageBox::Yes | QMessageBox::Cancel,
-        QMessageBox::Cancel);
+    if (dg.exec()) {
+        if (dg.checkboxChecked()) {
+            startAll = true;
+        }
 
-    if(retval != QMessageBox::Yes)
-    {
-        return;
-    }
-
-    WalletModel::EncryptionStatus encStatus = walletModel->getEncryptionStatus();
-    if(encStatus == walletModel->Locked)
-    {
-        WalletModel::UnlockContext ctx(walletModel->requestUnlock(true));
-        if(!ctx.isValid())
+        WalletModel::EncryptionStatus encStatus = walletModel->getEncryptionStatus();
+        if(encStatus == walletModel->Locked)
         {
-            // Unlock wallet was cancelled
+            WalletModel::UnlockContext ctx(walletModel->requestUnlock(true));
+            if(!ctx.isValid())
+            {
+                // Unlock wallet was cancelled
+                return;
+            }
+            startAll ? StartAll() : StartAll("start-missing");
             return;
         }
-        StartAll("start-missing");
-        return;
+        startAll ? StartAll() : StartAll("start-missing");
     }
-
-    StartAll("start-missing");
 }
 
 void MasternodeList::on_tableWidgetMyMasternodes_itemSelectionChanged()

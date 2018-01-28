@@ -44,6 +44,7 @@ QT_FORMS_UI = \
   qt/forms/multisigdialog.ui \
   qt/forms/multisiginputentry.ui \
   qt/forms/createnodedialog.ui \
+  qt/forms/startmissingdialog.ui \
   qt/forms/updatedialog.ui
 
 QT_MOC_CPP = \
@@ -95,6 +96,7 @@ QT_MOC_CPP = \
   qt/moc_createsystemnodedialog.cpp \
   qt/moc_createmasternodedialog.cpp \
   qt/moc_createnodedialog.cpp \
+  qt/moc_startmissingdialog.cpp \
   qt/moc_walletmodel.cpp \
   qt/moc_walletview.cpp \
   qt/moc_multisigaddressentry.cpp \
@@ -167,6 +169,7 @@ BITCOIN_QT_H = \
   qt/createsystemnodedialog.h \
   qt/createmasternodedialog.h \
   qt/createnodedialog.h \
+  qt/startmissingdialog.h \
   qt/trafficgraphwidget.h \
   qt/transactiondesc.h \
   qt/transactiondescdialog.h \
@@ -299,6 +302,7 @@ BITCOIN_QT_CPP += \
   qt/datetablewidgetitem.cpp \
   qt/privatekeywidget.cpp \
   qt/createnodedialog.cpp \
+  qt/startmissingdialog.cpp \
   qt/transactiondesc.cpp \
   qt/transactiondescdialog.cpp \
   qt/transactionfilterproxy.cpp \
