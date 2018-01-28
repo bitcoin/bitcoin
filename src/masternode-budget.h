@@ -68,7 +68,7 @@ public:
     };
 
     CBudgetDB();
-    CBudgetDB(boost::filesystem::path pathDb);
+    CBudgetDB(const boost::filesystem::path& pathDb);
 
     bool Write(const CBudgetManager &objToSave);
     ReadResult Read(CBudgetManager& objToLoad, bool fDryRun = false);
