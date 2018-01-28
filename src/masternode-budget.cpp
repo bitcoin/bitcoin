@@ -27,9 +27,9 @@ CAmount BlocksBeforeSuperblockToSubmitFinalBudget()
     // Relatively 43200 / 30 = 1440, for testnet  - 8 blocks (cannot be less)
 
     if (Params().NetworkID() == CBaseChainParams::TESTNET)
-        return CAmount{8};          // aprox 12 mins
+        return 8;          // aprox 12 mins
     else
-        return CAmount{1440} * 2;   // aprox 2 days
+        return 1440 * 2;   // aprox 2 days
 
 }
 
