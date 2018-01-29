@@ -7,4 +7,5 @@
 # Check for specified flake8 warnings in python files.
 
 # F401: module imported but unused
-flake8 --ignore=B,C,E,F,I,N,W --select=F401 .
+# F812 list comprehension redefines 'foo' from line N
+flake8 --ignore=B,C,E,F,I,N,W --select=F401,F812 .
