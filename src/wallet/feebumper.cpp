@@ -89,11 +89,15 @@ static feebumper::Result PreconditionChecks(const CWallet* wallet, const CWallet
 
 namespace feebumper {
 
-bool TransactionCanBeBumped(CWallet* wallet, const uint256& txid)
+bool TransactionCanBeBumped(const CWallet* wallet, const uint256& txid)
 {
     LOCK2(cs_main, wallet->cs_wallet);
     const CWalletTx* wtx = wallet->GetWalletTx(txid);
-    return wtx && SignalsOptInRBF(*wtx->tx) && !wtx->mapValue.count("replaced_by_txid");
+    if (wtx == nullptr) return false;
+
+    std::vector<std::string> errors_dummy;
+    feebumper::Result res = PreconditionChecks(wallet, *wtx, errors_dummy);
+    return res == feebumper::Result::OK;
 }
 
 Result CreateTransaction(const CWallet* wallet, const uint256& txid, const CCoinControl& coin_control, CAmount total_fee, std::vector<std::string>& errors,
