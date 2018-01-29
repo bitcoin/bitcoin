@@ -1403,20 +1403,33 @@ bool CWallet::IsAllFromMe(const CTransaction& tx, const isminefilter& filter) co
 {
     LOCK(cs_wallet);
 
-    for (const CTxIn& txin : tx.vin)
-    {
+    std::vector<const CTxOut*> outs;
+    outs.reserve(tx.vin.size());
+
+    // The folllwing is a 2 pass algorithm. Both passes can early return if an
+    // input fails a check. Therefore, the checks in the 2nd pass, which are
+    // more expensive, are only performed if the 1st pass succeeds.
+    //  - 1st pass: all inputs are valid and must belong to the wallet.
+    for (const CTxIn& txin : tx.vin) {
         auto mi = mapWallet.find(txin.prevout.hash);
-        if (mi == mapWallet.end())
-            return false; // any unknown inputs can't be from us
 
-        const CWalletTx& prev = (*mi).second;
+        // any unknown inputs can't be from us
+        if (mi == mapWallet.end()) return false;
 
-        if (txin.prevout.n >= prev.tx->vout.size())
-            return false; // invalid input!
+        const CWalletTx& prev = mi->second;
+        // check for invalid input
+        if (txin.prevout.n >= prev.tx->vout.size()) return false;
 
-        if (!(IsMine(prev.tx->vout[txin.prevout.n]) & filter))
-            return false;
+        outs.push_back(&prev.tx->vout[txin.prevout.n]);
     }
+
+    assert(outs.size() == tx.vin.size());
+
+    //  - 2nd pass: all inputs match the isminetype filter.
+    for (const CTxOut* txout : outs) {
+        if (!(IsMine(*txout) & filter)) return false;
+    }
+
     return true;
 }
 
