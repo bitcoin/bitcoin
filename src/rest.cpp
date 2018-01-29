@@ -423,8 +423,8 @@ static bool rest_getutxos(HTTPRequest* req, const std::string& strURIPart)
         {
             uint256 txid;
             int32_t nOutput;
-            std::string strTxid = uriParts[i].substr(0, uriParts[i].find("-"));
-            std::string strOutput = uriParts[i].substr(uriParts[i].find("-")+1);
+            std::string strTxid = uriParts[i].substr(0, uriParts[i].find('-'));
+            std::string strOutput = uriParts[i].substr(uriParts[i].find('-')+1);
 
             if (!ParseInt32(strOutput, &nOutput) || !IsHex(strTxid))
                 return RESTERR(req, HTTP_BAD_REQUEST, "Parse error");
