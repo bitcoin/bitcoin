@@ -72,7 +72,7 @@ patch -p2 < clang.patch
 cd build_unix/
 
 "${BDB_PREFIX}/${BDB_VERSION}/dist/configure" \
-  --enable-cxx --disable-shared --with-pic --prefix="${BDB_PREFIX}" \
+  --enable-cxx --disable-shared --disable-replication --with-pic --prefix="${BDB_PREFIX}" \
   "${@}"
 
 make install
@@ -83,4 +83,4 @@ echo
 echo 'When compiling bitcoind, run `./configure` in the following way:'
 echo
 echo "  export BDB_PREFIX='${BDB_PREFIX}'"
-echo '  ./configure LDFLAGS="-L${BDB_PREFIX}/lib/" CPPFLAGS="-I${BDB_PREFIX}/include/" ...'
+echo '  ./configure BDB_LIBS="-L${BDB_PREFIX}/lib -ldb_cxx-4.8" BDB_CFLAGS="-I${BDB_PREFIX}/include" ...'
