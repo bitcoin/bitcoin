@@ -54,6 +54,11 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.nodes[0].generate(121)
         self.sync_all()
 
+        # ensure that setting changePosition in fundraw with an exact match is handled properly
+        rawmatch = self.nodes[2].createrawtransaction([], {self.nodes[2].getnewaddress():500})
+        rawmatch = self.nodes[2].fundrawtransaction(rawmatch, {"changePosition":1, "subtractFeeFromOutputs":[0]})
+        assert_equal(rawmatch["changepos"], -1)
+
         watchonly_address = self.nodes[0].getnewaddress()
         watchonly_pubkey = self.nodes[0].validateaddress(watchonly_address)["pubkey"]
         watchonly_amount = Decimal(2000)
@@ -469,7 +474,9 @@ class RawTransactionsTest(BitcoinTestFramework):
         # locked wallet test
         self.nodes[1].encryptwallet("test")
         self.nodes.pop(1)
-        stop_nodes(self.nodes)
+        stop_node(self.nodes[0], 0)
+        stop_node(self.nodes[1], 2)
+        stop_node(self.nodes[2], 3)
 
         self.nodes = start_nodes(self.num_nodes, self.options.tmpdir, [['-usehd=0'], ['-usehd=0'], ['-usehd=0'], ['-usehd=0']])
         # This test is not meant to test fee estimation and we'd like

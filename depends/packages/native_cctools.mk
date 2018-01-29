@@ -38,7 +38,8 @@ $(package)_cxx=$($(package)_extract_dir)/toolchain/bin/clang++
 endef
 
 define $(package)_preprocess_cmds
-  cd $($(package)_build_subdir); ./autogen.sh
+  cd $($(package)_build_subdir); ./autogen.sh && \
+  sed -i.old "/define HAVE_PTHREADS/d" ld64/src/ld/InputFiles.h
 endef
 
 define $(package)_config_cmds

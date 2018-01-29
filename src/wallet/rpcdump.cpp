@@ -97,6 +97,8 @@ UniValue importprivkey(const JSONRPCRequest& request)
             + HelpExampleCli("importprivkey", "\"mykey\"") +
             "\nImport using a label and without rescan\n"
             + HelpExampleCli("importprivkey", "\"mykey\" \"testing\" false") +
+            "\nImport using default blank label and without rescan\n"
+            + HelpExampleCli("importprivkey", "\"mykey\" \"\" false") +
             "\nAs a JSON-RPC call\n"
             + HelpExampleRpc("importprivkey", "\"mykey\", \"testing\", false")
         );
@@ -496,15 +498,12 @@ UniValue importwallet(const JSONRPCRequest& request)
     }
     file.close();
     pwalletMain->ShowProgress("", 100); // hide progress dialog in GUI
-
-    CBlockIndex *pindex = chainActive.Tip();
-    while (pindex && pindex->pprev && pindex->GetBlockTime() > nTimeBegin - 7200)
-        pindex = pindex->pprev;
-
     if (!pwalletMain->nTimeFirstKey || nTimeBegin < pwalletMain->nTimeFirstKey)
         pwalletMain->nTimeFirstKey = nTimeBegin;
 
-    LogPrintf("Rescanning last %i blocks\n", chainActive.Height() - pindex->nHeight + 1);
+    CBlockIndex *pindex = chainActive.FindEarliestAtLeast(nTimeBegin - 7200);
+
+    LogPrintf("Rescanning last %i blocks\n", pindex ? chainActive.Height() - pindex->nHeight + 1 : 0);
     pwalletMain->ScanForWalletTransactions(pindex);
     pwalletMain->MarkDirty();
 
@@ -1278,12 +1277,34 @@ UniValue importmulti(const JSONRPCRequest& mainRequest)
         }
     }
 
-    if (fRescan && fRunScan && requests.size() && nLowestTimestamp <= chainActive.Tip()->GetBlockTimeMax()) {
+    if (fRescan && fRunScan && requests.size()) {
         CBlockIndex* pindex = nLowestTimestamp > minimumTimestamp ? chainActive.FindEarliestAtLeast(nLowestTimestamp) : chainActive.Genesis();
-
+        CBlockIndex* scannedRange = nullptr;
         if (pindex) {
-            pwalletMain->ScanForWalletTransactions(pindex, true);
+            scannedRange = pwalletMain->ScanForWalletTransactions(pindex, true);
             pwalletMain->ReacceptWalletTransactions();
+        }
+
+        if (!scannedRange || scannedRange->nHeight > pindex->nHeight) {
+            std::vector<UniValue> results = response.getValues();
+            response.clear();
+            response.setArray();
+            size_t i = 0;
+            for (const UniValue& request : requests.getValues()) {
+                // If key creation date is within the successfully scanned
+                // range, or if the import result already has an error set, let
+                // the result stand unmodified. Otherwise replace the result
+                // with an error message.
+                if (GetImportTimestamp(request, now) - 7200 >= scannedRange->GetBlockTimeMax() || results.at(i).exists("error")) {
+                    response.push_back(results.at(i));
+                } else {
+                    UniValue result = UniValue(UniValue::VOBJ);
+                    result.pushKV("success", UniValue(false));
+                    result.pushKV("error", JSONRPCError(RPC_MISC_ERROR, strprintf("Failed to rescan before time %d, transactions may be missing.", scannedRange->GetBlockTimeMax())));
+                    response.push_back(std::move(result));
+                }
+                ++i;
+            }
         }
     }
 

@@ -18,6 +18,11 @@ import os
 
 MIN_BLOCKS_TO_KEEP = 288
 
+# Rescans start at the earliest block up to 2 hours before a key timestamp, so
+# the manual prune RPC avoids pruning blocks in the same window to be
+# compatible with pruning based on key creation time.
+RESCAN_WINDOW = 2 * 60 * 60
+
 
 def calc_usage(blockdir):
     return sum(os.path.getsize(blockdir+f) for f in os.listdir(blockdir) if os.path.isfile(blockdir+f)) / (1024. * 1024.)
@@ -239,7 +244,7 @@ class PruneTest(BitcoinTestFramework):
 
         def height(index):
             if use_timestamp:
-                return node.getblockheader(node.getblockhash(index))["time"]
+                return node.getblockheader(node.getblockhash(index))["time"] + RESCAN_WINDOW
             else:
                 return index
 

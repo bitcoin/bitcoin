@@ -153,7 +153,7 @@ static std::vector<CAddress> convertSeed6(const std::vector<SeedSpec6> &vSeedsIn
 // one by discovery.
 CAddress GetLocalAddress(const CNetAddr *paddrPeer, ServiceFlags nLocalServices)
 {
-    CAddress ret(CService(CNetAddr(),GetListenPort()), NODE_NONE);
+    CAddress ret(CService(CNetAddr(),GetListenPort()), nLocalServices);
     CService addr;
     if (GetLocal(addr, paddrPeer))
     {
@@ -1566,13 +1566,20 @@ static std::string GetDNSHost(const CDNSSeedData& data, ServiceFlags* requiredSe
 void CConnman::ThreadDNSAddressSeed()
 {
     // goal: only query DNS seeds if address need is acute
+    // Avoiding DNS seeds when we don't need them improves user privacy by
+    //  creating fewer identifying DNS requests, reduces trust by giving seeds
+    //  less influence on the network topology, and reduces traffic to the seeds.
     if ((addrman.size() > 0) &&
         (!GetBoolArg("-forcednsseed", DEFAULT_FORCEDNSSEED))) {
         if (!interruptNet.sleep_for(std::chrono::seconds(11)))
             return;
 
         LOCK(cs_vNodes);
-        if (vNodes.size() >= 2) {
+        int nRelevant = 0;
+        for (auto pnode : vNodes) {
+            nRelevant += pnode->fSuccessfullyConnected && ((pnode->nServices & nRelevantServices) == nRelevantServices);
+        }
+        if (nRelevant >= 2) {
             LogPrintf("P2P peers available. Skipped DNS seeding.\n");
             return;
         }
@@ -1584,6 +1591,9 @@ void CConnman::ThreadDNSAddressSeed()
     LogPrintf("Loading addresses from DNS seeds (could take a while)\n");
 
     BOOST_FOREACH(const CDNSSeedData &seed, vSeeds) {
+        if (interruptNet) {
+            return;
+        }
         if (HaveNameProxy()) {
             AddOneShot(seed.host);
         } else {
@@ -1600,6 +1610,9 @@ void CConnman::ThreadDNSAddressSeed()
                     vAdd.push_back(addr);
                     found++;
                 }
+            }
+            if (interruptNet) {
+                return;
             }
             // TODO: The seed name resolve may fail, yielding an IP of [::], which results in
             // addrman assigning the same source to results from different seeds.
@@ -1722,11 +1735,17 @@ void CConnman::ThreadOpenConnections()
         // Do this here so we don't have to critsect vNodes inside mapAddresses critsect.
         // This is only done for mainnet and testnet
         int nOutbound = 0;
+        int nOutboundRelevant = 0;
         std::set<std::vector<unsigned char> > setConnected;
         if (!Params().AllowMultipleAddressesFromGroup()) {
             LOCK(cs_vNodes);
             BOOST_FOREACH(CNode* pnode, vNodes) {
                 if (!pnode->fInbound && !pnode->fAddnode && !pnode->fMasternode) {
+
+                    // Count the peers that have all relevant services
+                    if (pnode->fSuccessfullyConnected && !pnode->fFeeler && ((pnode->nServices & nRelevantServices) == nRelevantServices)) {
+                        nOutboundRelevant++;
+                    }
                     // Netgroups for inbound and addnode peers are not excluded because our goal here
                     // is to not use multiple of our limited outbound slots on a single netgroup
                     // but inbound and addnode peers do not use our outbound slots.  Inbound peers
@@ -1789,11 +1808,28 @@ void CConnman::ThreadOpenConnections()
             if (nANow - addr.nLastTry < 600 && nTries < 30)
                 continue;
 
+            // only consider nodes missing relevant services after 40 failed attempts and only if less than half the outbound are up.
+            ServiceFlags nRequiredServices = nRelevantServices;
+            if (nTries >= 40 && nOutbound < (nMaxOutbound >> 1)) {
+                nRequiredServices = REQUIRED_SERVICES;
+            }
+
+            if ((addr.nServices & nRequiredServices) != nRequiredServices) {
+                continue;
+            }
+
             // do not allow non-default ports, unless after 50 invalid addresses selected already
             if (addr.GetPort() != Params().GetDefaultPort() && nTries < 50)
                 continue;
 
             addrConnect = addr;
+
+            // regardless of the services assumed to be available, only require the minimum if half or more outbound have relevant services
+            if (nOutboundRelevant >= (nMaxOutbound >> 1)) {
+                addrConnect.nServices = REQUIRED_SERVICES;
+            } else {
+                addrConnect.nServices = nRequiredServices;
+            }
             break;
         }
 
@@ -2378,9 +2414,17 @@ void CConnman::Interrupt()
     interruptNet();
     InterruptSocks5(true);
 
-    if (semOutbound)
-        for (int i=0; i<(nMaxOutbound + nMaxFeeler); i++)
+    if (semOutbound) {
+        for (int i=0; i<(nMaxOutbound + nMaxFeeler); i++) {
             semOutbound->post();
+        }
+    }
+
+    if (semAddnode) {
+        for (int i=0; i<nMaxAddnode; i++) {
+            semAddnode->post();
+        }
+    }
 }
 
 void CConnman::Stop()
@@ -2397,10 +2441,6 @@ void CConnman::Stop()
         threadDNSAddressSeed.join();
     if (threadSocketHandler.joinable())
         threadSocketHandler.join();
-
-    if (semAddnode)
-        for (int i=0; i<nMaxAddnode; i++)
-            semOutbound->post();
 
     if (semMasternodeOutbound)
         for (int i=0; i<MAX_OUTBOUND_MASTERNODE_CONNECTIONS; i++)

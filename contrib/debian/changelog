@@ -1,3 +1,60 @@
+bitcoin (0.14.1-trusty4) trusty; urgency=medium
+
+  * Re-enable UPnP support.
+
+ -- Matt Corallo (BlueMatt) <matt@mattcorallo.com>  Fri, 05 May 2017 13:28:00 -0400
+
+bitcoin (0.14.1-trusty3) trusty; urgency=medium
+
+  * Build with qt5 if we are on a non-Ubuntu (ie non-Unity) distro.
+
+ -- Matt Corallo (BlueMatt) <matt@mattcorallo.com>  Thu, 04 May 2017 17:13:00 -0400
+
+bitcoin (0.14.1-trusty2) trusty; urgency=medium
+
+  * Bump minimum boost version in deps.
+
+ -- Matt Corallo (BlueMatt) <matt@mattcorallo.com>  Thu, 04 May 2017 17:12:00 -0400
+
+bitcoin (0.14.1-trusty1) trusty; urgency=medium
+
+  * New upstream release.
+
+ -- Matt Corallo (BlueMatt) <matt@mattcorallo.com>  Sat, 22 Apr 2017 17:10:00 -0400
+
+bitcoin (0.14.0-trusty1) trusty; urgency=medium
+
+  * New upstream release.
+
+ -- Matt Corallo (BlueMatt) <matt@mattcorallo.com>  Wed, 08 Mar 2017 10:30:00 -0500
+
+bitcoin (0.13.2-trusty1) trusty; urgency=medium
+
+  * New upstream release.
+
+ -- Matt Corallo (BlueMatt) <matt@mattcorallo.com>  Thu, 05 Jan 2017 09:59:00 -0500
+
+bitcoin (0.13.1-trusty2) trusty; urgency=medium
+
+  * Revert to Qt4, due to https://github.com/bitcoin/bitcoin/issues/9038
+
+ -- Matt Corallo (BlueMatt) <matt@mattcorallo.com>  Mon, 31 Oct 2016 11:16:00 -0400
+
+bitcoin (0.13.1-trusty1) trusty; urgency=medium
+
+  * New upstream release.
+  * Backport updated bitcoin-qt.desktop from upstream master
+  * Add zmq dependency
+  * Switch to Qt5 (breaks precise, but that was already broken by C++11)
+
+ -- Matt Corallo (BlueMatt) <matt@mattcorallo.com>  Thu, 27 Oct 2016 17:32:00 -0400
+
+bitcoin (0.13.0-trusty1) trusty; urgency=medium
+
+  * New upstream release.
+
+ -- Matt Corallo (BlueMatt) <matt@mattcorallo.com>  Sun, 04 Sep 2016 22:09:00 -0400
+
 bitcoin (0.12.1-trusty1) trusty; urgency=medium
 
   * New upstream release.
