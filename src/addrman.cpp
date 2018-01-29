@@ -387,7 +387,7 @@ int CAddrMan::Check_()
     std::set<int> setTried;
     std::map<int, int> mapNew;
 
-    if (vRandom.size() != nTried + nNew)
+    if (vRandom.size() != (size_t)(nTried + nNew))
         return -7;
 
     for (const auto& entry : mapInfo) {
@@ -408,7 +408,7 @@ int CAddrMan::Check_()
         }
         if (mapAddr[info] != n)
             return -5;
-        if (info.nRandomPos < 0 || info.nRandomPos >= vRandom.size() || vRandom[info.nRandomPos] != n)
+        if (info.nRandomPos < 0 || (size_t)info.nRandomPos >= vRandom.size() || vRandom[info.nRandomPos] != n)
             return -14;
         if (info.nLastTry < 0)
             return -6;
@@ -416,9 +416,9 @@ int CAddrMan::Check_()
             return -8;
     }
 
-    if (setTried.size() != nTried)
+    if (setTried.size() != (size_t)nTried)
         return -9;
-    if (mapNew.size() != nNew)
+    if (mapNew.size() != (size_t)nNew)
         return -10;
 
     for (int n = 0; n < ADDRMAN_TRIED_BUCKET_COUNT; n++) {
