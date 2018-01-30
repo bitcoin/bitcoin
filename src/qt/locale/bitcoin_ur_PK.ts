@@ -133,6 +133,10 @@
     </context>
 <context>
     <name>OptionsDialog</name>
+    <message>
+        <source>Error</source>
+        <translation>نقص</translation>
+    </message>
     </context>
 <context>
     <name>OverviewPage</name>
