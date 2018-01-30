@@ -1384,7 +1384,10 @@ bool CWallet::IsMine(const CTransaction& tx) const
 
 bool CWallet::IsFromMe(const CTransaction& tx) const
 {
-    return (GetDebit(tx, ISMINE_ALL) > 0);
+    for (const CTxIn& txin : tx.vin) {
+        if (GetDebit(txin, ISMINE_ALL) > 0) return true;
+    }
+    return false;
 }
 
 CAmount CWallet::GetDebit(const CTransaction& tx, const isminefilter& filter) const
