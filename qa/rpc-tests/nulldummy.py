@@ -6,7 +6,7 @@
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 from test_framework.mininode import CTransaction, NetworkThread
-from test_framework.blocktools import create_coinbase, create_block, add_witness_commitment
+from test_framework.blocktools import create_coinbase, create_block
 from test_framework.script import CScript
 from io import BytesIO
 import time
@@ -46,13 +46,11 @@ class NULLDUMMYTest(BitcoinTestFramework):
     def setup_network(self):
         # Must set the blockversion for this test
         self.nodes = start_nodes(self.num_nodes, self.options.tmpdir,
-                                 extra_args=[['-debug', '-whitelist=127.0.0.1', '-walletprematurewitness']])
+                                 extra_args=[['-debug', '-whitelist=127.0.0.1']])
 
     def run_test(self):
         self.address = self.nodes[0].getnewaddress()
         self.ms_address = self.nodes[0].addmultisigaddress(1,[self.address])
-        self.wit_address = self.nodes[0].addwitnessaddress(self.address)
-        self.wit_ms_address = self.nodes[0].addwitnessaddress(self.ms_address)
 
         NetworkThread().start() # Start up network handling in another thread
         self.coinbase_blocks = self.nodes[0].generate(2) # Block 2
@@ -70,9 +68,7 @@ class NULLDUMMYTest(BitcoinTestFramework):
         txid1 = self.tx_submit(self.nodes[0], test1txs[0])
         test1txs.append(self.create_transaction(self.nodes[0], txid1, self.ms_address, 48))
         txid2 = self.tx_submit(self.nodes[0], test1txs[1])
-        test1txs.append(self.create_transaction(self.nodes[0], coinbase_txid[1], self.wit_ms_address, 49))
-        txid3 = self.tx_submit(self.nodes[0], test1txs[2])
-        self.block_submit(self.nodes[0], test1txs, False, True)
+        self.block_submit(self.nodes[0], test1txs, True)
 
         print ("Test 2: Non-NULLDUMMY base multisig transaction should not be accepted to mempool before activation")
         test2tx = self.create_transaction(self.nodes[0], txid2, self.ms_address, 48)
@@ -80,7 +76,7 @@ class NULLDUMMYTest(BitcoinTestFramework):
         txid4 = self.tx_submit(self.nodes[0], test2tx, NULLDUMMY_ERROR)
 
         print ("Test 3: Non-NULLDUMMY base transactions should be accepted in a block before activation [431]")
-        self.block_submit(self.nodes[0], [test2tx], False, True)
+        self.block_submit(self.nodes[0], [test2tx], True)
 
         print ("Test 4: Non-NULLDUMMY base multisig transaction is invalid after activation")
         test4tx = self.create_transaction(self.nodes[0], txid4, self.address, 47)
@@ -89,17 +85,10 @@ class NULLDUMMYTest(BitcoinTestFramework):
         self.tx_submit(self.nodes[0], test4tx, NULLDUMMY_ERROR)
         self.block_submit(self.nodes[0], [test4tx])
 
-        print ("Test 5: Non-NULLDUMMY P2WSH multisig transaction invalid after activation")
-        test5tx = self.create_transaction(self.nodes[0], txid3, self.wit_address, 48)
-        test6txs.append(CTransaction(test5tx))
-        test5tx.wit.vtxinwit[0].scriptWitness.stack[0] = b'\x01'
-        self.tx_submit(self.nodes[0], test5tx, NULLDUMMY_ERROR)
-        self.block_submit(self.nodes[0], [test5tx], True)
-
-        print ("Test 6: NULLDUMMY compliant base/witness transactions should be accepted to mempool and in block after activation [432]")
+        print ("Test 6: NULLDUMMY compliant transactions should be accepted to mempool and in block after activation [432]")
         for i in test6txs:
             self.tx_submit(self.nodes[0], i)
-        self.block_submit(self.nodes[0], test6txs, True, True)
+        self.block_submit(self.nodes[0], test6txs, True)
 
 
     def create_transaction(self, node, txid, to_address, amount):
@@ -116,7 +105,7 @@ class NULLDUMMYTest(BitcoinTestFramework):
     def tx_submit(self, node, tx, msg = ""):
         tx.rehash()
         try:
-            node.sendrawtransaction(bytes_to_hex_str(tx.serialize_with_witness()), True)
+            node.sendrawtransaction(bytes_to_hex_str(tx.serialize()), True)
         except JSONRPCException as exp:
             assert_equal(exp.error["message"], msg)
         else:
@@ -124,17 +113,16 @@ class NULLDUMMYTest(BitcoinTestFramework):
         return tx.hash
 
 
-    def block_submit(self, node, txs, witness = False, accept = False):
+    def block_submit(self, node, txs, accept = False):
         block = create_block(self.tip, create_coinbase(self.lastblockheight + 1), self.lastblocktime + 1)
         block.nVersion = 4
         for tx in txs:
             tx.rehash()
             block.vtx.append(tx)
         block.hashMerkleRoot = block.calc_merkle_root()
-        witness and add_witness_commitment(block)
         block.rehash()
         block.solve()
-        node.submitblock(bytes_to_hex_str(block.serialize(True)))
+        node.submitblock(bytes_to_hex_str(block.serialize()))
         if (accept):
             assert_equal(node.getbestblockhash(), block.hash)
             self.tip = block.sha256
