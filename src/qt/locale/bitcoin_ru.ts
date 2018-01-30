@@ -132,6 +132,10 @@
         <translation>Повторите новый пароль</translation>
     </message>
     <message>
+        <source>Show password</source>
+        <translation>Показать пароль</translation>
+    </message>
+    <message>
         <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
         <translation>Введите новый пароль бумажника.&lt;br/&gt;Используйте пароль, состоящий из &lt;b&gt;десяти или более случайных символов&lt;/b&gt;, или &lt;b&gt;восьми или более слов&lt;/b&gt;.</translation>
     </message>
@@ -851,8 +855,12 @@
         <translation>При первом запуске программы вы можете выбрать где %1 будет хранить свои данные.</translation>
     </message>
     <message>
-        <source>%1 will download and store a copy of the Bitcoin block chain. At least %2GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
-        <translation>%1 скачает и сохранит копию цепи блоков. Как минимум %2GB будут записаны в этот каталог, и со временем он будет расти. Бумажник также будет сохранен в этом каталоге.</translation>
+        <source>When you click OK, %1 will begin to download and process the full %4 block chain (%2GB) starting with the earliest transactions in %3 when %4 initially launched.</source>
+        <translation>Когда вы нажимаете ОК, %1  начнет загружать и обрабатывать полную цепочку блоков %4 (%2 ГБ), начиная с самых ранних транзакций в %3, когда первоначально запускался %4.</translation>
+    </message>
+    <message>
+        <source>If you have chosen to limit block chain storage (pruning), the historical data must still be downloaded and processed, but will be deleted afterward to keep your disk usage low.</source>
+        <translation>©Если вы решили ограничить хранение цепочки блоков (обрезка), исторические данные должны быть загружены и обработаны, но впоследствии будут удалены, чтобы поддерживать низкий уровень использования вашего диска.</translation>
     </message>
     <message>
         <source>Use the default data directory</source>
@@ -861,6 +869,26 @@
     <message>
         <source>Use a custom data directory:</source>
         <translation>Использовать другой каталог данных:</translation>
+    </message>
+    <message>
+        <source>Bitcoin</source>
+        <translation>Bitcoin</translation>
+    </message>
+    <message>
+        <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
+        <translation>Минимум %1 Гб данных будет храниться в этом каталоге, и со временем объем данных будет увеличиваться.</translation>
+    </message>
+    <message>
+        <source>Approximately %1 GB of data will be stored in this directory.</source>
+        <translation>Приблизительно %1 Гб данных будет храниться в этом каталоге.</translation>
+    </message>
+    <message>
+        <source>%1 will download and store a copy of the Bitcoin block chain.</source>
+        <translation>%1 будет загружать и хранить копию цепочки блоков Bitcoin.</translation>
+    </message>
+    <message>
+        <source>The wallet will also be stored in this directory.</source>
+        <translation>Кошелек будет также храниться в этом каталоге.</translation>
     </message>
     <message>
         <source>Error: Specified data directory "%1" cannot be created.</source>
@@ -984,16 +1012,24 @@
         <translation>Число потоков проверки &amp;сценария</translation>
     </message>
     <message>
-        <source>Accept connections from outside</source>
-        <translation>Принимать входящие соединения</translation>
-    </message>
-    <message>
-        <source>Allow incoming connections</source>
-        <translation>Разрешить входящие подключения</translation>
-    </message>
-    <message>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
         <translation>IP-адрес прокси (например IPv4: 127.0.0.1 / IPv6: ::1)</translation>
+    </message>
+    <message>
+        <source>Shows if the supplied default SOCKS5 proxy is used to reach peers via this network type.</source>
+        <translation>Показывает, используется ли SOCKS5 прокси по умолчанию для подключения к другим участникам по этому типу сети.</translation>
+    </message>
+    <message>
+        <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor hidden services:</source>
+        <translation>Использовать отдельный прокси SOCKS&amp;5 для соединения с участниками через скрытые сервисы Tor:</translation>
+    </message>
+    <message>
+        <source>Hide the icon from the system tray.</source>
+        <translation>Скрыть иконку из системного трея.</translation>
+    </message>
+    <message>
+        <source>&amp;Hide tray icon</source>
+        <translation>Скрыть иконку из трея</translation>
     </message>
     <message>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Exit in the menu.</source>
@@ -1004,12 +1040,16 @@
         <translation>Сторонние URL (например, block explorer), которые отображаются на вкладке транзакций как пункты контекстного меню. %s в URL заменяется хэшем транзакции. URL отделяются друг от друга вертикальной чертой |.</translation>
     </message>
     <message>
-        <source>Third party transaction URLs</source>
-        <translation>Сторонние URL транзакций.</translation>
-    </message>
-    <message>
         <source>Active command-line options that override above options:</source>
         <translation>Активные опции командной строки, которые перекрывают вышеуказанные опции:</translation>
+    </message>
+    <message>
+        <source>Open the %1 configuration file from the working directory.</source>
+        <translation>Откройте файл конфигурации %1 из рабочего каталога.</translation>
+    </message>
+    <message>
+        <source>Open Configuration File</source>
+        <translation>Открыть конфигурационный файл</translation>
     </message>
     <message>
         <source>Reset all client options to default.</source>
@@ -1056,6 +1096,14 @@
         <translation>Пробросить порт через &amp;UPnP</translation>
     </message>
     <message>
+        <source>Accept connections from outside.</source>
+        <translation>Разрешать соединения извне</translation>
+    </message>
+    <message>
+        <source>Allow incomin&amp;g connections</source>
+        <translation>Разрешить входящие подключения</translation>
+    </message>
+    <message>
         <source>Connect to the Bitcoin network through a SOCKS5 proxy.</source>
         <translation>Подключаться к сети Bitcoin через прокси SOCKS5</translation>
     </message>
@@ -1080,10 +1128,6 @@
         <translation>Используется для достижения участников через:</translation>
     </message>
     <message>
-        <source>Shows, if the supplied default SOCKS5 proxy is used to reach peers via this network type.</source>
-        <translation>Показывается, если включено прокси SOCKS5 по умолчанию, используемое для соединения с участниками по этому типу сети.</translation>
-    </message>
-    <message>
         <source>IPv4</source>
         <translation>IPv4</translation>
     </message>
@@ -1100,20 +1144,8 @@
         <translation>Подключаться к сети Bitcoin через прокси SOCKS5 для скрытых сервисов Tor.</translation>
     </message>
     <message>
-        <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services:</source>
-        <translation>Использовать отдельный прокси SOCKS5 для соединения с участниками через скрытые сервисы Tor:</translation>
-    </message>
-    <message>
         <source>&amp;Window</source>
         <translation>&amp;Окно</translation>
-    </message>
-    <message>
-        <source>&amp;Hide the icon from the system tray.</source>
-        <translation>&amp;Скрыть иконку из системного трея.</translation>
-    </message>
-    <message>
-        <source>Hide tray icon</source>
-        <translation>Скрыть иконку в трее</translation>
     </message>
     <message>
         <source>Show only a tray icon after minimizing the window.</source>
@@ -1152,6 +1184,10 @@
         <translation>Показывать ли функции контроля монет или нет.</translation>
     </message>
     <message>
+        <source>&amp;Third party transaction URLs</source>
+        <translation>Сторонние URL адреса транзакций.</translation>
+    </message>
+    <message>
         <source>&amp;OK</source>
         <translation>&amp;OK</translation>
     </message>
@@ -1178,6 +1214,22 @@
     <message>
         <source>Client will be shut down. Do you want to proceed?</source>
         <translation>Клиент будет выключен. Желаете продолжить?</translation>
+    </message>
+    <message>
+        <source>Configuration options</source>
+        <translation>Параметры конфигурации</translation>
+    </message>
+    <message>
+        <source>The configuration file is used to specify advanced user options which override GUI settings. Additionally, any command-line options will override this configuration file.</source>
+        <translation>Файл конфигурации используется для задания расширенных опций, которые имеют приоритет над настройками в GUI. Аналогично, опции командной строки будут иметь приоритет над этим файлом конфигурации.</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>Ошибка</translation>
+    </message>
+    <message>
+        <source>The configuration file could not be opened.</source>
+        <translation>Не удалось открыть файл конфигурации.</translation>
     </message>
     <message>
         <source>This change would require a client restart.</source>
@@ -1372,6 +1424,14 @@
         <source>Ping</source>
         <translation>Пинг</translation>
     </message>
+    <message>
+        <source>Sent</source>
+        <translation>Отправлено</translation>
+    </message>
+    <message>
+        <source>Received</source>
+        <translation>Получено</translation>
+    </message>
 </context>
 <context>
     <name>QObject</name>
@@ -1440,8 +1500,28 @@
         <translation><numerusform>%n год</numerusform><numerusform>%n года</numerusform><numerusform>%n лет</numerusform><numerusform>%n лет</numerusform></translation>
     </message>
     <message>
+        <source>%1 B</source>
+        <translation>%1 Б</translation>
+    </message>
+    <message>
+        <source>%1 KB</source>
+        <translation>%1 КБ</translation>
+    </message>
+    <message>
+        <source>%1 MB</source>
+        <translation>%1 МБ</translation>
+    </message>
+    <message>
+        <source>%1 GB</source>
+        <translation>%1 ГБ</translation>
+    </message>
+    <message>
         <source>%1 didn't yet exit safely...</source>
         <translation>%1 ещё не завершился безопасно...</translation>
+    </message>
+    <message>
+        <source>unknown</source>
+        <translation>неизвестно</translation>
     </message>
 </context>
 <context>
@@ -1543,6 +1623,10 @@
     <message>
         <source>Memory usage</source>
         <translation>Использование памяти</translation>
+    </message>
+    <message>
+        <source>&amp;Reset</source>
+        <translation>&amp;Сброс</translation>
     </message>
     <message>
         <source>Received</source>
@@ -1661,10 +1745,6 @@
         <translation>Сетевой &amp;трафик</translation>
     </message>
     <message>
-        <source>&amp;Clear</source>
-        <translation>&amp;Очистить</translation>
-    </message>
-    <message>
         <source>Totals</source>
         <translation>Всего</translation>
     </message>
@@ -1717,36 +1797,24 @@
         <translation>Добро пожаловать в консоль RPC %1.</translation>
     </message>
     <message>
-        <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
-        <translation>Используйте стрелки вверх и вниз для просмотра истории и &lt;b&gt;Ctrl-L&lt;/b&gt; для очистки экрана.</translation>
+        <source>Use up and down arrows to navigate history, and %1 to clear screen.</source>
+        <translation>Используйте стрелки вверх и вниз для просмотра истории и %1 для очистки экрана</translation>
     </message>
     <message>
-        <source>Type &lt;b&gt;help&lt;/b&gt; for an overview of available commands.</source>
-        <translation>Напишите &lt;b&gt;help&lt;/b&gt; для просмотра доступных команд.</translation>
+        <source>Type %1 for an overview of available commands.</source>
+        <translation>Напишите %1 help для просмотра доступных команд.</translation>
     </message>
     <message>
-        <source>WARNING: Scammers have been active, telling users to type commands here, stealing their wallet contents. Do not use this console without fully understanding the ramification of a command.</source>
-        <translation>ВНИМАНИЕ: мошенники предлагали пользователям вводить сюда команды, похищая таким образом содержимое их бумажников. Не используйте эту консоль без полного понимания смысла команд.</translation>
+        <source>For more information on using this console type %1.</source>
+        <translation>Для получения дополнительной информации по использованию этой консоли напишите %1.</translation>
+    </message>
+    <message>
+        <source>WARNING: Scammers have been active, telling users to type commands here, stealing their wallet contents. Do not use this console without fully understanding the ramifications of a command.</source>
+        <translation>ПРЕДУПРЕЖДЕНИЕ: Были замечены мошенники,  предлагающие  пользователям вводить здесь команды, крадя содержимое их кошелька. Не используйте эту консоль, не понимая полностью последствия команды.</translation>
     </message>
     <message>
         <source>Network activity disabled</source>
         <translation>Сетевая активность запрещена</translation>
-    </message>
-    <message>
-        <source>%1 B</source>
-        <translation>%1 Б</translation>
-    </message>
-    <message>
-        <source>%1 KB</source>
-        <translation>%1 КБ</translation>
-    </message>
-    <message>
-        <source>%1 MB</source>
-        <translation>%1 МБ</translation>
-    </message>
-    <message>
-        <source>%1 GB</source>
-        <translation>%1 ГБ</translation>
     </message>
     <message>
         <source>(node id: %1)</source>
@@ -1796,14 +1864,6 @@
         <translation>&amp;Сообщение</translation>
     </message>
     <message>
-        <source>Reuse one of the previously used receiving addresses. Reusing addresses has security and privacy issues. Do not use this unless re-generating a payment request made before.</source>
-        <translation>Повторно использовать один из ранее использованных адресов. Повторное использование адресов несёт риски безопасности и приватности. Не используйте эту опцию, если вы не создаёте повторно ранее сделанный запрос платежа.</translation>
-    </message>
-    <message>
-        <source>R&amp;euse an existing receiving address (not recommended)</source>
-        <translation>&amp;Повторно использовать существующий адрес получения (не рекомендуется)</translation>
-    </message>
-    <message>
         <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Bitcoin network.</source>
         <translation>Необязательное сообщение для запроса платежа, которое будет показано при открытии запроса. Заметьте: сообщение не будет отправлено вместе с платежом через сеть Bitcoin.</translation>
     </message>
@@ -1834,6 +1894,14 @@
     <message>
         <source>&amp;Request payment</source>
         <translation>&amp;Запросить платёж</translation>
+    </message>
+    <message>
+        <source>Bech32 addresses (BIP-173) are cheaper to spend from and offer better protection against typos. When unchecked a P2SH wrapped SegWit address will be created, compatible with older wallets.</source>
+        <translation>Bech32 адреса (BIP-173) дешевле в коммисиях и предлагают лучшую защиту от опечаток. Когда пункт P2SH не отмечен, будет создан связанный SegWit адрес, совместимый со старыми кошельками.</translation>
+    </message>
+    <message>
+        <source>Generate Bech32 address</source>
+        <translation>Создать Bech32 адрес</translation>
     </message>
     <message>
         <source>Show the selected request (does the same as double clicking an entry)</source>
@@ -2017,6 +2085,14 @@
         <translation>Выберите...</translation>
     </message>
     <message>
+        <source>Using the fallbackfee can result in sending a transaction that will take several hours or days (or never) to confirm. Consider choosing your fee manually or wait until you have validated the complete chain.</source>
+        <translation>Использование резервной комиссии может привести к подтверждению транзакции в течение нескольких часов или дней (или она никогда не будет подтверждена). Советуем выбрать комиссию вручную или дождаться полной валидации цепи.</translation>
+    </message>
+    <message>
+        <source>Warning: Fee estimation is currently not possible.</source>
+        <translation>Внимание: оценка размера комиссии в настоящее время невозможна.</translation>
+    </message>
+    <message>
         <source>collapse fee-settings</source>
         <translation>Свернуть настройки комиссии</translation>
     </message>
@@ -2031,10 +2107,6 @@
     <message>
         <source>Hide</source>
         <translation>Скрыть</translation>
-    </message>
-    <message>
-        <source>total at least</source>
-        <translation>Итого как минимум</translation>
     </message>
     <message>
         <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for bitcoin transactions than the network can process.</source>
@@ -2057,14 +2129,6 @@
         <translation>(Умная комиссия пока не инициализирована. Обычно для этого требуется несколько блоков...)</translation>
     </message>
     <message>
-        <source>normal</source>
-        <translation>обычный</translation>
-    </message>
-    <message>
-        <source>fast</source>
-        <translation>ускоренный</translation>
-    </message>
-    <message>
         <source>Send to multiple recipients at once</source>
         <translation>Отправить нескольким получателям одновременно</translation>
     </message>
@@ -2083,6 +2147,14 @@
     <message>
         <source>Confirmation time target:</source>
         <translation>Время подтверждения:</translation>
+    </message>
+    <message>
+        <source>Enable Replace-By-Fee</source>
+        <translation>Включить Replace-By-Fee (возможность замены комиссии)</translation>
+    </message>
+    <message>
+        <source>With Replace-By-Fee (BIP-125) you can increase a transaction's fee after it is sent. Without this, a higher fee may be recommended to compensate for increased transaction delay risk.</source>
+        <translation>С опцией Replace-By-Fee (BIP-125) вы можете увеличить комиссию за транзакцию уже после отправки. Без этого, рекомендуем вам отправлять заведомо с более высокой комиссией, чтобы компенсировать риск задержки подтверждения.</translation>
     </message>
     <message>
         <source>Clear &amp;All</source>
@@ -2129,6 +2201,10 @@
         <translation>Копировать сдачу</translation>
     </message>
     <message>
+        <source>%1 (%2 blocks)</source>
+        <translation>%1 (%2 блоков)</translation>
+    </message>
+    <message>
         <source>%1 to %2</source>
         <translation>С %1 на %2</translation>
     </message>
@@ -2147,6 +2223,14 @@
     <message>
         <source>or</source>
         <translation>или</translation>
+    </message>
+    <message>
+        <source>You can increase the fee later (signals Replace-By-Fee, BIP-125).</source>
+        <translation>Вы можете увеличить комиссию позже (опция Replace-By-Fee, BIP-125).</translation>
+    </message>
+    <message>
+        <source>Not signalling Replace-By-Fee, BIP-125.</source>
+        <translation>Не используется Replace-By-Fee, BIP-125.</translation>
     </message>
     <message>
         <source>Confirm send coins</source>
@@ -2187,10 +2271,6 @@
     <message>
         <source>Payment request expired.</source>
         <translation>Запрос платежа просрочен.</translation>
-    </message>
-    <message numerus="yes">
-        <source>%n block(s)</source>
-        <translation><numerusform>%n блок</numerusform><numerusform>%n блока</numerusform><numerusform>%n блоков</numerusform><numerusform>%n блоков</numerusform></translation>
     </message>
     <message>
         <source>Pay only the required fee of %1</source>
@@ -2270,6 +2350,10 @@
     <message>
         <source>S&amp;ubtract fee from amount</source>
         <translation>Вычесть комиссию из суммы</translation>
+    </message>
+    <message>
+        <source>Use available balance</source>
+        <translation>Использовать весь баланс</translation>
     </message>
     <message>
         <source>Message:</source>
@@ -2827,8 +2911,8 @@
         <translation>Другое</translation>
     </message>
     <message>
-        <source>Enter address or label to search</source>
-        <translation>Введите адрес или метку для поиска</translation>
+        <source>Enter address, transaction id, or label to search</source>
+        <translation>Введите адрес, ID транзакции или метку для поиска</translation>
     </message>
     <message>
         <source>Min amount</source>
@@ -2837,6 +2921,10 @@
     <message>
         <source>Abandon transaction</source>
         <translation>Отказаться от транзакции</translation>
+    </message>
+    <message>
+        <source>Increase transaction fee</source>
+        <translation>Увеличить комиссию</translation>
     </message>
     <message>
         <source>Copy address</source>
@@ -2951,6 +3039,42 @@
         <source>Send Coins</source>
         <translation>Отправка</translation>
     </message>
+    <message>
+        <source>Fee bump error</source>
+        <translation>Ошибка повышения комиссии</translation>
+    </message>
+    <message>
+        <source>Increasing transaction fee failed</source>
+        <translation>Увеличение комиссии не удалось</translation>
+    </message>
+    <message>
+        <source>Do you want to increase the fee?</source>
+        <translation>Вы хотите увеличить комиссию?</translation>
+    </message>
+    <message>
+        <source>Current fee:</source>
+        <translation>Текущая комиссия</translation>
+    </message>
+    <message>
+        <source>Increase:</source>
+        <translation>Увеличение:</translation>
+    </message>
+    <message>
+        <source>New fee:</source>
+        <translation>Новая комиссия:</translation>
+    </message>
+    <message>
+        <source>Confirm fee bump</source>
+        <translation>Подтвердите увеличение комиссии</translation>
+    </message>
+    <message>
+        <source>Can't sign transaction.</source>
+        <translation>Невозможно подписать транзакцию.</translation>
+    </message>
+    <message>
+        <source>Could not commit transaction</source>
+        <translation>Не удалось совершить транзакцию</translation>
+    </message>
 </context>
 <context>
     <name>WalletView</name>
@@ -3010,14 +3134,6 @@
         <translation>Принимать командную строку и команды JSON-RPC</translation>
     </message>
     <message>
-        <source>Accept connections from outside (default: 1 if no -proxy or -connect/-noconnect)</source>
-        <translation>Принимать подключения снаружи (по умолчанию: 1, если не -proxy или -connect/-disconnect)</translation>
-    </message>
-    <message>
-        <source>Connect only to the specified node(s); -noconnect or -connect=0 alone to disable automatic connections</source>
-        <translation>Подключаться только к указанному узлу(ам); -noconnect или -connect=0 для запрета автоматических подключений</translation>
-    </message>
-    <message>
         <source>Distributed under the MIT software license, see the accompanying file %s or %s</source>
         <translation>Распространяется под лицензией MIT, см. приложенный файл %s или %s</translation>
     </message>
@@ -3070,6 +3186,10 @@
         <translation>Принимать транзакции пересылаемые от узлов из белого списка даже если они не удовлетворяют требованиям ретрансляции (по умолчанию: %d)</translation>
     </message>
     <message>
+        <source>Add a node to connect to and attempt to keep the connection open (see the `addnode` RPC command help for more info)</source>
+        <translation>Добавить узел сети для соединения и для возможности сохранять соединение открытым (см. команду RPC `addnode` в справочном разделе)</translation>
+    </message>
+    <message>
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
         <translation>Привязаться к указанному адресу и всегда прослушивать только его. Используйте [хост]:порт для IPv6</translation>
     </message>
@@ -3078,16 +3198,24 @@
         <translation>Невозможно заблокировать каталог данных %s. %s возможно уже работает.</translation>
     </message>
     <message>
+        <source>Cannot provide specific connections and have addrman find outgoing connections at the same.</source>
+        <translation>Не удалось предоставить определённые подключения, и в то же время найти исходящие подключения через addrman.</translation>
+    </message>
+    <message>
+        <source>Connect only to the specified node(s); -connect=0 disables automatic connections (the rules for this peer are the same as for -addnode)</source>
+        <translation>Подключаться только к указанному узлу(ам); -connect=0 отключает автоматические подключения (правила для этого участника такие же, как и для -addnode)</translation>
+    </message>
+    <message>
         <source>Delete all wallet transactions and only recover those parts of the blockchain through -rescan on startup</source>
         <translation>Удалить все транзакции бумажника с возможностью восстановить эти части цепи блоков с помощью -rescan при запуске</translation>
     </message>
     <message>
-        <source>Error loading %s: You can't enable HD on a already existing non-HD wallet</source>
-        <translation>Ошибка загрузки %s: Вы не можете включить HD в уже существующем не-HD кошельке</translation>
-    </message>
-    <message>
         <source>Error reading %s! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
         <translation>Ошибка чтения %s! Все ключи прочитаны верно, но данные транзакций или записи адресной книги могут отсутствовать или быть неправильными.</translation>
+    </message>
+    <message>
+        <source>Exclude debugging information for a category. Can be used in conjunction with -debug=1 to output debug logs for all categories except one or more specified categories.</source>
+        <translation>Исключить отладочную информацию для категории. Может быть использовано вместе с -debug=1 для вывода отладочных логов по всем категориям, кроме одной или более указанных категорий.</translation>
     </message>
     <message>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
@@ -3118,6 +3246,10 @@
         <translation>Пожалуйста, внести свой вклад, если вы найдете %s полезными. Посетите  %s для получения дополнительной информации о программном обеспечении.</translation>
     </message>
     <message>
+        <source>Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect used)</source>
+        <translation>Запрашивать адреса участников с помощью DNS, если адресов мало (по умолчанию: 1, если не указан -connect)</translation>
+    </message>
+    <message>
         <source>Reduce storage requirements by enabling pruning (deleting) of old blocks. This allows the pruneblockchain RPC to be called to delete specific blocks, and enables automatic pruning of old blocks if a target size in MiB is provided. This mode is incompatible with -txindex and -rescan. Warning: Reverting this setting requires re-downloading the entire blockchain. (default: 0 = disable pruning blocks, 1 = allow manual pruning via RPC, &gt;%u = automatically prune block files to stay under the specified target size in MiB)</source>
         <translation>Уменьшить размер хранилища за счёт обрезания (удаления) старых блоков. Будет разрешён вызов RPC метода pruneblockchain для удаления определённых блоков и разрешено автоматическое обрезание старых блоков, если указан целевой размер в Мб. Этот режим несовместим с -txindex и -rescan. Внимание: переключение этой опции обратно потребует полной загрузки цепи блоков. (по умолчанию: 0 = отключить обрезание блоков, 1 = разрешить ручное обрезание через RPC, &gt;%u = автоматически обрезать файлы блоков, чтобы они были меньше указанного размера в Мб)</translation>
     </message>
@@ -3136,6 +3268,14 @@
     <message>
         <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
         <translation>Это пре-релизная тестовая сборка - используйте на свой страх и риск - не используйте для добычи или торговых приложений</translation>
+    </message>
+    <message>
+        <source>This is the transaction fee you may discard if change is smaller than dust at this level</source>
+        <translation>Это комиссия, которую можно отбросить, если сдача окажется меньше пыли</translation>
+    </message>
+    <message>
+        <source>Unable to replay blocks. You will need to rebuild the database using -reindex-chainstate.</source>
+        <translation>Не удалось воспроизвести блоки. Вам необходимо пересобрать базу данных с помощью -reindex-chainstate.</translation>
     </message>
     <message>
         <source>Unable to rewind the database to a pre-fork state. You will need to redownload the blockchain</source>
@@ -3162,8 +3302,12 @@
         <translation>Внимание: мы не полностью согласны с подключенными участниками! Вам или другим участникам, возможно, следует обновиться.</translation>
     </message>
     <message>
-        <source>You need to rebuild the database using -reindex-chainstate to change -txindex</source>
-        <translation>Вам необходимо пересобрать базы данных с помощью -reindex-chainstate, чтобы изменить -txindex</translation>
+        <source>Whether to save the mempool on shutdown and load on restart (default: %u)</source>
+        <translation>Сохранять ли mempool при выключении и загружать ли его при запуске (по умолчанию: %u)</translation>
+    </message>
+    <message>
+        <source>%d of last 100 blocks have unexpected version</source>
+        <translation>%d из последних 100 блоков имеют непредвиденную версию</translation>
     </message>
     <message>
         <source>%s corrupt, salvage failed</source>
@@ -3176,6 +3320,10 @@
     <message>
         <source>&lt;category&gt; can be:</source>
         <translation>&lt;category&gt; может быть:</translation>
+    </message>
+    <message>
+        <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
+        <translation>Принимать подключения извне (по умолчанию: 1, если не используется -proxy или -connect)</translation>
     </message>
     <message>
         <source>Append comment to the user agent string</source>
@@ -3246,6 +3394,10 @@
         <translation>Включить замену транзакций в пуле памяти (по умолчанию:%u)</translation>
     </message>
     <message>
+        <source>Error creating %s: You can't create non-HD wallets with this version.</source>
+        <translation>Ошибка создания %s: Вы не можете создавать не-HD бумажники с помощью этой версии.</translation>
+    </message>
+    <message>
         <source>Error initializing block database</source>
         <translation>Ошибка инициализации БД блоков</translation>
     </message>
@@ -3266,10 +3418,6 @@
         <translation>Ошибка загрузки %s: Для бумажника требуется более новая версия %s</translation>
     </message>
     <message>
-        <source>Error loading %s: You can't disable HD on a already existing HD wallet</source>
-        <translation>Ошибка загрузки %s: Вы не можете включить HD в уже существующем не-HD кошельке</translation>
-    </message>
-    <message>
         <source>Error loading block database</source>
         <translation>Ошибка чтения базы данных блоков</translation>
     </message>
@@ -3286,6 +3434,10 @@
         <translation>Не удалось начать прослушивание на порту. Используйте -listen=0 если вас это устраивает.</translation>
     </message>
     <message>
+        <source>Failed to rescan the wallet during initialization</source>
+        <translation>Не удалось пересканировать бумажник во время инициализации</translation>
+    </message>
+    <message>
         <source>Importing...</source>
         <translation>Импорт ...</translation>
     </message>
@@ -3298,12 +3450,12 @@
         <translation>Начальная проверка исправности не удалась. %s завершает работу.</translation>
     </message>
     <message>
-        <source>Invalid -onion address: '%s'</source>
-        <translation>Неверный -onion адрес: '%s'</translation>
-    </message>
-    <message>
         <source>Invalid amount for -%s=&lt;amount&gt;: '%s'</source>
         <translation>Неверная сумма для -%s=&lt;amount&gt;: '%s'</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -discardfee=&lt;amount&gt;: '%s'</source>
+        <translation>Неверная сумма для -discardfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
         <source>Invalid amount for -fallbackfee=&lt;amount&gt;: '%s'</source>
@@ -3312,6 +3464,10 @@
     <message>
         <source>Keep the transaction memory pool below &lt;n&gt; megabytes (default: %u)</source>
         <translation>Сбрасывать транзакции из памяти на диск каждые &lt;n&gt; мегабайт (по умолчанию: %u)</translation>
+    </message>
+    <message>
+        <source>Loading P2P addresses...</source>
+        <translation>Загрузка P2P адресов...</translation>
     </message>
     <message>
         <source>Loading banlist...</source>
@@ -3354,16 +3510,20 @@
         <translation>Перестроить индекс цепи из текущих индексированных блоков</translation>
     </message>
     <message>
+        <source>Replaying blocks...</source>
+        <translation>Воспроизведение блоков...</translation>
+    </message>
+    <message>
         <source>Rewinding blocks...</source>
         <translation>Перемотка блоков...</translation>
     </message>
     <message>
-        <source>Set database cache size in megabytes (%d to %d, default: %d)</source>
-        <translation>Установить размер кэша БД в мегабайтах(от %d до %d, по умолчанию: %d)</translation>
+        <source>Send transactions with full-RBF opt-in enabled (RPC only, default: %u)</source>
+        <translation>Отправлять транзакции с включенным full-RBF (только RPC, по умолчанию: %u)</translation>
     </message>
     <message>
-        <source>Set maximum block size in bytes (default: %d)</source>
-        <translation>Задать максимальный размер блока в байтах (по умолчанию: %d)</translation>
+        <source>Set database cache size in megabytes (%d to %d, default: %d)</source>
+        <translation>Установить размер кэша БД в мегабайтах(от %d до %d, по умолчанию: %d)</translation>
     </message>
     <message>
         <source>Specify wallet file (within data directory)</source>
@@ -3372,6 +3532,10 @@
     <message>
         <source>The source code is available from %s.</source>
         <translation>Исходный код доступен в %s.</translation>
+    </message>
+    <message>
+        <source>Transaction fee and change calculation failed</source>
+        <translation>Не удалось рассчитать комиссию и сдачу</translation>
     </message>
     <message>
         <source>Unable to bind to %s on this computer. %s is probably already running.</source>
@@ -3390,6 +3554,14 @@
         <translation>Обнаружен не поддерживаемый параметр -tor, используйте -onion.</translation>
     </message>
     <message>
+        <source>Unsupported logging category %s=%s.</source>
+        <translation>Неподдерживаемая категория лога %s=%s.</translation>
+    </message>
+    <message>
+        <source>Upgrading UTXO database</source>
+        <translation>Модернизация базы данных UTXO</translation>
+    </message>
+    <message>
         <source>Use UPnP to map the listening port (default: %u)</source>
         <translation>Использовать UPnP для проброса порта (по умолчанию: %u)</translation>
     </message>
@@ -3404,14 +3576,6 @@
     <message>
         <source>Verifying blocks...</source>
         <translation>Проверка блоков...</translation>
-    </message>
-    <message>
-        <source>Verifying wallet...</source>
-        <translation>Проверка бумажника...</translation>
-    </message>
-    <message>
-        <source>Wallet %s resides outside data directory %s</source>
-        <translation>Бумажник %s располагается вне каталога данных %s</translation>
     </message>
     <message>
         <source>Wallet debugging/testing options:</source>
@@ -3432,10 +3596,6 @@
     <message>
         <source>Bind to given address and whitelist peers connecting to it. Use [host]:port notation for IPv6</source>
         <translation>Привязаться к указанному адресу и внести в белый список подключающихся к нему участников. Используйте [хост]:порт для IPv6</translation>
-    </message>
-    <message>
-        <source>Bind to given address to listen for JSON-RPC connections. Use [host]:port notation for IPv6. This option can be specified multiple times (default: bind to all interfaces)</source>
-        <translation>Привязаться к указанному адресу для прослушивания JSON-RPC подключений. Используйте запись [хост]:порт для IPv6. Эту опцию можно использовать многократно (по умолчанию: привязываться ко всем интерфейсам)</translation>
     </message>
     <message>
         <source>Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)</source>
@@ -3474,16 +3634,8 @@
         <translation>Использовать случайные учётные данные для каждого прокси-подключения. Эта функция позволяет изолировать потоки Tor (по умолчанию: %u)</translation>
     </message>
     <message>
-        <source>Set maximum size of high-priority/low-fee transactions in bytes (default: %d)</source>
-        <translation>Задать максимальный размер высокоприоритетных/низкокомиссионных транзакций в байтах (по умолчанию: %d)</translation>
-    </message>
-    <message>
         <source>The transaction amount is too small to send after the fee has been deducted</source>
         <translation>Сумма транзакции за вычетом комиссии слишком мала</translation>
-    </message>
-    <message>
-        <source>Use hierarchical deterministic key generation (HD) after BIP32. Only has effect during wallet creation/first start</source>
-        <translation>Использовать иерархическую детерминированную генерацию ключей (HD) после BIP32. Применяется в процессе создания бумажника / первого запуска</translation>
     </message>
     <message>
         <source>Whitelisted peers cannot be DoS banned and their transactions are always relayed, even if they are already in the mempool, useful e.g. for a gateway</source>
@@ -3510,8 +3662,16 @@
         <translation>Подключаться через SOCKS5 прокси</translation>
     </message>
     <message>
+        <source>Error loading %s: You can't disable HD on an already existing HD wallet</source>
+        <translation>Ошибка загрузки %s: Вы не можете выключить HD в уже существующем HD кошельке</translation>
+    </message>
+    <message>
         <source>Error reading from database, shutting down.</source>
         <translation>Ошибка чтения базы данных, работа завершается.</translation>
+    </message>
+    <message>
+        <source>Error upgrading chainstate database</source>
+        <translation>Ошибка модернизации базы блокчейна</translation>
     </message>
     <message>
         <source>Imports blocks from external blk000??.dat file on startup</source>
@@ -3520,6 +3680,14 @@
     <message>
         <source>Information</source>
         <translation>Информация</translation>
+    </message>
+    <message>
+        <source>Invalid -onion address or hostname: '%s'</source>
+        <translation>Неверный адрес или имя -onion: '%s'</translation>
+    </message>
+    <message>
+        <source>Invalid -proxy address or hostname: '%s'</source>
+        <translation>Неверный адрес или имя -proxy: '%s'</translation>
     </message>
     <message>
         <source>Invalid amount for -paytxfee=&lt;amount&gt;: '%s' (must be at least %s)</source>
@@ -3558,10 +3726,6 @@
         <translation>Выводить информацию трассировки/отладки на консоль вместо файла debug.log</translation>
     </message>
     <message>
-        <source>Send transactions as zero-fee transactions if possible (default: %u)</source>
-        <translation>Осуществить транзакцию бесплатно, если возможно (по умолчанию: %u)</translation>
-    </message>
-    <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
         <translation>Показать все отладочные параметры (использование: --help -help-debug)</translation>
     </message>
@@ -3574,6 +3738,18 @@
         <translation>Не удалось подписать транзакцию</translation>
     </message>
     <message>
+        <source>Specified -walletdir "%s" does not exist</source>
+        <translation>Указанный -walletdir "%s" не существует</translation>
+    </message>
+    <message>
+        <source>Specified -walletdir "%s" is a relative path</source>
+        <translation>Указанный путь -walletdir "%s" является относительным</translation>
+    </message>
+    <message>
+        <source>Specified -walletdir "%s" is not a directory</source>
+        <translation>Указанный -walletdir "%s" не является директорией</translation>
+    </message>
+    <message>
         <source>The transaction amount is too small to pay the fee</source>
         <translation>Сумма транзакции слишком мала для уплаты комиссии</translation>
     </message>
@@ -3583,11 +3759,11 @@
     </message>
     <message>
         <source>Tor control port password (default: empty)</source>
-        <translation>Пароль контроля порта Tor (по умолчанию: пустой)</translation>
+        <translation>Пароль от порта управления Tor (по умолчанию: пустой)</translation>
     </message>
     <message>
         <source>Tor control port to use if onion listening enabled (default: %s)</source>
-        <translation>Порт контроля Tor используется, если включено прослушивание onion (по умолчанию: %s)</translation>
+        <translation>Порт управления Tor используется, если включено прослушивание onion (по умолчанию: %s)</translation>
     </message>
     <message>
         <source>Transaction amount too small</source>
@@ -3606,12 +3782,24 @@
         <translation>Невозможно привязаться к %s на этом компьютере (bind вернул ошибку %s)</translation>
     </message>
     <message>
+        <source>Unable to generate initial keys</source>
+        <translation>Невозможно создать ключи инициализации</translation>
+    </message>
+    <message>
         <source>Upgrade wallet to latest format on startup</source>
         <translation>Обновить бумажник до последнего формата при запуске</translation>
     </message>
     <message>
         <source>Username for JSON-RPC connections</source>
         <translation>Имя для подключений JSON-RPC</translation>
+    </message>
+    <message>
+        <source>Verifying wallet(s)...</source>
+        <translation>Проверка кошелька(ов) ...</translation>
+    </message>
+    <message>
+        <source>Wallet %s resides outside wallet directory %s</source>
+        <translation>Кошелёк %s расположен за пределами директории кошелька %s</translation>
     </message>
     <message>
         <source>Warning</source>
@@ -3624,6 +3812,10 @@
     <message>
         <source>Whether to operate in a blocks only mode (default: %u)</source>
         <translation>Будет работать в режиме только блоков (по умолчанию: %u)</translation>
+    </message>
+    <message>
+        <source>You need to rebuild the database using -reindex to change -txindex</source>
+        <translation>Вам необходимо пересобрать базу данных с помощью -reindex, чтобы изменить -txindex</translation>
     </message>
     <message>
         <source>Zapping all transactions from wallet...</source>
@@ -3646,10 +3838,6 @@
         <translation>Разрешить поиск в DNS для -addnode, -seednode и -connect</translation>
     </message>
     <message>
-        <source>Loading addresses...</source>
-        <translation>Загрузка адресов...</translation>
-    </message>
-    <message>
         <source>(1 = keep tx meta data e.g. account owner and payment request information, 2 = drop tx meta data)</source>
         <translation>(1 = сохранять метаданные транзакции: например, владельца аккаунта и информацию запроса платежа; 2 = отбросить метаданные)</translation>
     </message>
@@ -3658,12 +3846,24 @@
         <translation>Установлено очень большое значение -maxtxfee. Такие большие комиссии могут быть уплачены в отдельной транзакции.</translation>
     </message>
     <message>
+        <source>Bind to given address to listen for JSON-RPC connections. This option is ignored unless -rpcallowip is also passed. Port is optional and overrides -rpcport. Use [host]:port notation for IPv6. This option can be specified multiple times (default: 127.0.0.1 and ::1 i.e., localhost, or if -rpcallowip has been specified, 0.0.0.0 and :: i.e., all addresses)</source>
+        <translation>Привязаться к указанному адресу для прослушивания JSON-RPC подключений. Этот параметр игнорируется, если не задан -rpcallowip. Порт необязателен и имеет приоритет над -rpcport. Используйте запись [хост]:порт для IPv6. Эту опцию можно использовать многократно (по умолчанию: 127.0.0.1 и ::1, т.е. localhost, или, если указан -rpcallowip, 0.0.0.0 и ::, т.е. все адреса)</translation>
+    </message>
+    <message>
         <source>Do not keep transactions in the mempool longer than &lt;n&gt; hours (default: %u)</source>
         <translation>Не хранить транзакции в памяти дольше, чем &lt;n&gt; часов (по умолчанию %u)</translation>
     </message>
     <message>
         <source>Equivalent bytes per sigop in transactions for relay and mining (default: %u)</source>
         <translation>Эквивалентных байт на sigop в транзакциях для ретрансляции или добычи (по умолчанию: %u)</translation>
+    </message>
+    <message>
+        <source>Error loading %s: You can't enable HD on an already existing non-HD wallet</source>
+        <translation>Ошибка загрузки %s: Вы не можете включить HD в уже существующем не-HD кошельке</translation>
+    </message>
+    <message>
+        <source>Error loading wallet %s. -wallet parameter must only specify a filename (not a path).</source>
+        <translation>Ошибка загрузки бумажника %s. -wallet должен содержать лишь имя файла, а не путь.</translation>
     </message>
     <message>
         <source>Fees (in %s/kB) smaller than this are considered zero fee for transaction creation (default: %s)</source>
@@ -3690,16 +3890,28 @@
         <translation>Выводить отладочную информацию (по умолчанию: %u, указание &lt;category&gt; необязательно)</translation>
     </message>
     <message>
-        <source>Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect/-noconnect)</source>
-        <translation>Запрашивать адреса участников с помощью DNS, если адресов мало (по умолчанию: 1, если не указан -connect/-noconnect)</translation>
+        <source>Set maximum BIP141 block weight to this * 4. Deprecated, use blockmaxweight</source>
+        <translation>Задать максимальный вес BIP141 блока как это * 4. Устарело, используйте blockmaxweight</translation>
     </message>
     <message>
         <source>Sets the serialization of raw transaction or block hex returned in non-verbose mode, non-segwit(0) or segwit(1) (default: %d)</source>
         <translation>Задаёт сериализацию сырой транзакции или хекса блока, возвращённого в не подробном режиме, non-segwit(0) или segwit(1) (по умолчанию: %d)</translation>
     </message>
     <message>
+        <source>Specify directory to hold wallets (default: &lt;datadir&gt;/wallets if it exists, otherwise &lt;datadir&gt;)</source>
+        <translation>Укажите папку для хранения бумажников (по умолчанию: &lt;datadir&gt;/wallets если она существует, иначе &lt;datadir&gt;)</translation>
+    </message>
+    <message>
+        <source>Specify location of debug log file: this can be an absolute path or a path relative to the data directory (default: %s)</source>
+        <translation>Укажите расположение файла журнала отладки: это может быть абсолютный путь или путь относительно папки данных (по умолчанию: %s)</translation>
+    </message>
+    <message>
         <source>Support filtering of blocks and transaction with bloom filters (default: %u)</source>
         <translation>Поддерживать фильтрацию блоков и транзакций с помощью фильтра Блума (по умолчанию: %u)</translation>
+    </message>
+    <message>
+        <source>The fee rate (in %s/kB) that indicates your tolerance for discarding change by adding it to the fee (default: %s). Note: An output is discarded if it is dust at this rate, but we will always discard up to the dust relay fee and a discard fee above that is limited by the fee estimate for the longest target</source>
+        <translation>Доля комиссии (в %s/Кб), которая означает допустимость отбрасывания сдачи путём добавления её к комиссии (по умолчанию: %s).</translation>
     </message>
     <message>
         <source>This is the transaction fee you may pay when fee estimates are not available.</source>
@@ -3754,16 +3966,24 @@
         <translation>Всегда запрашивать адреса участников с помощью DNS (по умолчанию: %u)</translation>
     </message>
     <message>
+        <source>Error loading wallet %s. -wallet filename must be a regular file.</source>
+        <translation>Ошибка загрузки бумажника %s. Имя в параметре -wallet должно быть именем обычного файла.</translation>
+    </message>
+    <message>
+        <source>Error loading wallet %s. Duplicate -wallet filename specified.</source>
+        <translation>Ошибка загрузки бумажника %s. В параметре -wallet указано повторяющееся имя файла.</translation>
+    </message>
+    <message>
+        <source>Error loading wallet %s. Invalid characters in -wallet filename.</source>
+        <translation>Ошибка загрузки бумажника %s. Неверные символы в параметре -wallet.</translation>
+    </message>
+    <message>
         <source>How many blocks to check at startup (default: %u, 0 = all)</source>
         <translation>Сколько блоков проверять при запуске (по умолчанию: %u, 0 = все)</translation>
     </message>
     <message>
         <source>Include IP addresses in debug output (default: %u)</source>
         <translation>Включить IP-адреса в отладочный вывод (по умолчанию: %u)</translation>
-    </message>
-    <message>
-        <source>Invalid -proxy address: '%s'</source>
-        <translation>Неверный адрес -proxy: '%s'</translation>
     </message>
     <message>
         <source>Keypool ran out, please call keypoolrefill first</source>
@@ -3804,10 +4024,6 @@
     <message>
         <source>Relay non-P2SH multisig (default: %u)</source>
         <translation>Транслировать не-P2SH мультиподпись (по умолчанию: %u)</translation>
-    </message>
-    <message>
-        <source>Send transactions with full-RBF opt-in enabled (default: %u)</source>
-        <translation>Отправлять транзакции с включенным full-RBF (по умолчанию: %u)</translation>
     </message>
     <message>
         <source>Set key pool size to &lt;n&gt; (default: %u)</source>
@@ -3882,20 +4098,12 @@
         <translation>Загрузка индекса блоков...</translation>
     </message>
     <message>
-        <source>Add a node to connect to and attempt to keep the connection open</source>
-        <translation>Добавить узел для подключения и пытаться поддерживать соединение открытым</translation>
-    </message>
-    <message>
         <source>Loading wallet...</source>
         <translation>Загрузка бумажника...</translation>
     </message>
     <message>
         <source>Cannot downgrade wallet</source>
         <translation>Не удаётся понизить версию бумажника</translation>
-    </message>
-    <message>
-        <source>Cannot write default address</source>
-        <translation>Не удаётся записать адрес по умолчанию</translation>
     </message>
     <message>
         <source>Rescanning...</source>

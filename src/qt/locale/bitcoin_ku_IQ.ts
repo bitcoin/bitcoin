@@ -137,6 +137,10 @@
         <source>Options</source>
         <translation>هەڵبژاردنەکان</translation>
     </message>
+    <message>
+        <source>Error</source>
+        <translation>هەڵە</translation>
+    </message>
     </context>
 <context>
     <name>OverviewPage</name>
@@ -150,6 +154,10 @@
     </context>
 <context>
     <name>PeerTableModel</name>
+    <message>
+        <source>Sent</source>
+        <translation>نێدرا</translation>
+    </message>
     </context>
 <context>
     <name>QObject</name>
@@ -197,10 +205,6 @@
     <message>
         <source>&amp;Open</source>
         <translation>&amp;کردنەوە</translation>
-    </message>
-    <message>
-        <source>&amp;Clear</source>
-        <translation>&amp;پاککردنەوە</translation>
     </message>
     <message>
         <source>Totals</source>
@@ -293,10 +297,6 @@
     <message>
         <source>Fee:</source>
         <translation>تێچوون:</translation>
-    </message>
-    <message>
-        <source>fast</source>
-        <translation>خێرا</translation>
     </message>
     </context>
 <context>

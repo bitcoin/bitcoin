@@ -824,7 +824,7 @@
     </message>
     <message>
         <source>Welcome to %1.</source>
-        <translation>Selamat Datang ke %1.</translation>
+        <translation>Selamat Datang di %1.</translation>
     </message>
     <message>
         <source>As this is the first time the program is launched, you can choose where %1 will store its data.</source>
@@ -837,6 +837,10 @@
     <message>
         <source>Use a custom data directory:</source>
         <translation>Gunakan direktori pilihan Anda:</translation>
+    </message>
+    <message>
+        <source>Bitcoin</source>
+        <translation>Bitcoin</translation>
     </message>
     <message>
         <source>Error: Specified data directory "%1" cannot be created.</source>
@@ -908,14 +912,6 @@
         <translation>Jumlah script &amp;verification threads</translation>
     </message>
     <message>
-        <source>Accept connections from outside</source>
-        <translation>Terima koneksi dari luar</translation>
-    </message>
-    <message>
-        <source>Allow incoming connections</source>
-        <translation>Perbolehkan koneksi masuk</translation>
-    </message>
-    <message>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
         <translation>Alamat IP proxy (cth. IPv4: 127.0.0.1 / IPv6: ::1)</translation>
     </message>
@@ -926,10 +922,6 @@
     <message>
         <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
         <translation>URL pihak ketika (misalnya sebuah block explorer) yang mumcul dalam tab transaksi sebagai konteks menu. %s dalam URL diganti dengan kode transaksi. URL dipisahkan dengan tanda vertikal |.</translation>
-    </message>
-    <message>
-        <source>Third party transaction URLs</source>
-        <translation>URL transaksi pihak ketiga</translation>
     </message>
     <message>
         <source>Active command-line options that override above options:</source>
@@ -1072,6 +1064,10 @@
         <translation>Klien akan dimatikan, apakah anda hendak melanjutkan?</translation>
     </message>
     <message>
+        <source>Error</source>
+        <translation>Terjadi sebuah kesalahan</translation>
+    </message>
+    <message>
         <source>This change would require a client restart.</source>
         <translation>Perubahan ini akan memerlukan restart klien</translation>
     </message>
@@ -1136,6 +1132,10 @@
         <source>User Agent</source>
         <translation>Agen Pengguna</translation>
     </message>
+    <message>
+        <source>Sent</source>
+        <translation>Terkirim</translation>
+    </message>
     </context>
 <context>
     <name>QObject</name>
@@ -1163,7 +1163,27 @@
         <source>%1 and %2</source>
         <translation>%1 dan %2</translation>
     </message>
-    </context>
+    <message>
+        <source>%1 B</source>
+        <translation>%1 B</translation>
+    </message>
+    <message>
+        <source>%1 KB</source>
+        <translation>%1 KB</translation>
+    </message>
+    <message>
+        <source>%1 MB</source>
+        <translation>%1 MB</translation>
+    </message>
+    <message>
+        <source>%1 GB</source>
+        <translation>%1 GB</translation>
+    </message>
+    <message>
+        <source>unknown</source>
+        <translation>tidak diketahui</translation>
+    </message>
+</context>
 <context>
     <name>QObject::QObject</name>
     </context>
@@ -1251,10 +1271,6 @@
         <translation>Kemacetan &amp;Jaringan </translation>
     </message>
     <message>
-        <source>&amp;Clear</source>
-        <translation>&amp;Kosongkan</translation>
-    </message>
-    <message>
         <source>Totals</source>
         <translation>Total</translation>
     </message>
@@ -1291,30 +1307,6 @@
         <translation>1 &amp;tahun</translation>
     </message>
     <message>
-        <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
-        <translation>Gunakan panah keatas dan kebawah untuk menampilkan sejarah, dan &lt;b&gt;Ctrl-L&lt;/b&gt; untuk bersihkan layar.</translation>
-    </message>
-    <message>
-        <source>Type &lt;b&gt;help&lt;/b&gt; for an overview of available commands.</source>
-        <translation>Ketik &lt;b&gt;help&lt;/b&gt; untuk menampilkan perintah tersedia.</translation>
-    </message>
-    <message>
-        <source>%1 B</source>
-        <translation>%1 B</translation>
-    </message>
-    <message>
-        <source>%1 KB</source>
-        <translation>%1 KB</translation>
-    </message>
-    <message>
-        <source>%1 MB</source>
-        <translation>%1 MB</translation>
-    </message>
-    <message>
-        <source>%1 GB</source>
-        <translation>%1 GB</translation>
-    </message>
-    <message>
         <source>Yes</source>
         <translation>Ya</translation>
     </message>
@@ -1340,10 +1332,6 @@
     <message>
         <source>&amp;Message:</source>
         <translation>&amp;Pesan:</translation>
-    </message>
-    <message>
-        <source>R&amp;euse an existing receiving address (not recommended)</source>
-        <translation>Gunakan lagi alamat penerima yang ada (tidak disarankan)</translation>
     </message>
     <message>
         <source>An optional label to associate with the new receiving address.</source>
@@ -1501,14 +1489,6 @@
     <message>
         <source>Recommended:</source>
         <translation>Disarankan</translation>
-    </message>
-    <message>
-        <source>normal</source>
-        <translation>normal</translation>
-    </message>
-    <message>
-        <source>fast</source>
-        <translation>cepat</translation>
     </message>
     <message>
         <source>Send to multiple recipients at once</source>
@@ -1828,6 +1808,10 @@
         <translation>Jalankan perintah ketika perubahan transaksi dompet (%s di cmd digantikan oleh TxID)</translation>
     </message>
     <message>
+        <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
+        <translation>Terima hubungan dari luar (standar: 1 kalau -proxy atau -connect tidak dipilih)</translation>
+    </message>
+    <message>
         <source>Block creation options:</source>
         <translation>Pilihan pembuatan blok:</translation>
     </message>
@@ -1876,16 +1860,8 @@
         <translation>Tidak bisa cari blok pertama, atau blok pertama salah. Salah direktori untuk jaringan?</translation>
     </message>
     <message>
-        <source>Invalid -onion address: '%s'</source>
-        <translation>Alamat -onion salah: '%s'</translation>
-    </message>
-    <message>
         <source>Not enough file descriptors available.</source>
         <translation>Deskripsi berkas tidak tersedia dengan cukup.</translation>
-    </message>
-    <message>
-        <source>Set maximum block size in bytes (default: %d)</source>
-        <translation>Atur ukuran maksimal untuk blok dalam byte (biasanya: %d)</translation>
     </message>
     <message>
         <source>Specify wallet file (within data directory)</source>
@@ -1894,14 +1870,6 @@
     <message>
         <source>Verifying blocks...</source>
         <translation>Blok-blok sedang diverifikasi...</translation>
-    </message>
-    <message>
-        <source>Verifying wallet...</source>
-        <translation>Dompet sedang diverifikasi...</translation>
-    </message>
-    <message>
-        <source>Wallet %s resides outside data directory %s</source>
-        <translation>Dompet %s ada diluar direktori data %s</translation>
     </message>
     <message>
         <source>Wallet options:</source>
@@ -1964,14 +1932,6 @@
         <translation>Izinkan peninjauan DNS untuk -addnote, -seednode dan -connect</translation>
     </message>
     <message>
-        <source>Loading addresses...</source>
-        <translation>Memuat alamat...</translation>
-    </message>
-    <message>
-        <source>Invalid -proxy address: '%s'</source>
-        <translation>Alamat -proxy salah: '%s'</translation>
-    </message>
-    <message>
         <source>Unknown network specified in -onlynet: '%s'</source>
         <translation>Jaringan tidak diketahui yang ditentukan dalam -onlynet: '%s'</translation>
     </message>
@@ -1984,20 +1944,12 @@
         <translation>Memuat indeks blok...</translation>
     </message>
     <message>
-        <source>Add a node to connect to and attempt to keep the connection open</source>
-        <translation>Tambahkan node untuk dihubungkan dan upaya untuk menjaga hubungan tetap terbuka</translation>
-    </message>
-    <message>
         <source>Loading wallet...</source>
         <translation>Memuat dompet...</translation>
     </message>
     <message>
         <source>Cannot downgrade wallet</source>
         <translation>Tidak dapat menurunkan versi dompet</translation>
-    </message>
-    <message>
-        <source>Cannot write default address</source>
-        <translation>Tidak dapat menyimpan alamat standar</translation>
     </message>
     <message>
         <source>Rescanning...</source>

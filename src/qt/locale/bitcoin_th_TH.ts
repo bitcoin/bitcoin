@@ -563,16 +563,16 @@
         <translation>นี่เป็นการรันโปรแกรมครั้งแรก ท่านสามารถเลือก ว่าจะเก็บข้อมูลไว้ที่ %1</translation>
     </message>
     <message>
-        <source>%1 will download and store a copy of the Bitcoin block chain. At least %2GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
-        <translation>%1 จะดาวน์โหลดและเก็บกอปปี้ชุดหนึ่งของ บล็อกเชน Bitcoin ไว้ ข้อมูลขนานอย่างน้อย %2GB จะเก็บไว้ในไดเร็กทอรี่นี้ และข้อมูลจะมีขนาดใหญ่ขึ้นเรื่อยๆ กระเป๋าเงิน จะเก็บไว้ในไดเร็กทอรี่นี้ด้วย</translation>
-    </message>
-    <message>
         <source>Use the default data directory</source>
         <translation>ใช้ไดเร็กทอรี่ข้อมูล ที่เป็นค่าเริ่มต้น</translation>
     </message>
     <message>
         <source>Use a custom data directory:</source>
         <translation>ใช้ไดเร็กทอรี่ข้อมูลที่ตั้งค่าเอง:</translation>
+    </message>
+    <message>
+        <source>Bitcoin</source>
+        <translation>Bitcoin</translation>
     </message>
     <message>
         <source>Error: Specified data directory "%1" cannot be created.</source>
@@ -648,14 +648,6 @@
         <translation>จำนวนของสคริปท์ &amp;verification threads</translation>
     </message>
     <message>
-        <source>Accept connections from outside</source>
-        <translation>ยอมรับ การเชื่อมต่อจากภายนอก</translation>
-    </message>
-    <message>
-        <source>Allow incoming connections</source>
-        <translation>ยอมให้เชื่อมต่อจากภายนอกได้</translation>
-    </message>
-    <message>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
         <translation>IP แอดเดส ของ proxy (เช่น IPv4: 127.0.0.1 / IPv6: ::1)</translation>
     </message>
@@ -666,10 +658,6 @@
     <message>
         <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
         <translation>URL แบบอื่น (ยกตัวอย่าง เอ็กพลอเลอร์บล็อก) ที่อยู่ใน เมนูรายการ ลำดับ %s ใน URL จะถูกเปลี่ยนด้วย รายการแฮช URL ที่เป็นแบบหลายๆอัน จะถูกแยก โดย เครื่องหมายเส้นบาร์ตั้ง |</translation>
-    </message>
-    <message>
-        <source>Third party transaction URLs</source>
-        <translation>URI รายการ แบบของเจ้าอื่นๆ</translation>
     </message>
     <message>
         <source>Active command-line options that override above options:</source>
@@ -744,10 +732,6 @@
         <translation>ใช้ในการเข้าถึงอีกฝ่ายหนึ่ง peer โดย:</translation>
     </message>
     <message>
-        <source>Shows, if the supplied default SOCKS5 proxy is used to reach peers via this network type.</source>
-        <translation>แสดง หากใช้พร็อกซี่ SOCKS5 ที่เป็นค่าเริ่มต้น เพื่อเข้าถึง peer อีกฝ่าย ผ่านทางเน็ตเวิร์กชนิดนี้</translation>
-    </message>
-    <message>
         <source>IPv4</source>
         <translation>IPv4</translation>
     </message>
@@ -764,24 +748,16 @@
         <translation>เชื่อมต่อกับ เครือข่าย Bitcoin ผ่านทาง พร้อกซี่ SOCKS5 แยกต่างหาก สำหรับ Tor เซอร์วิส</translation>
     </message>
     <message>
-        <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services:</source>
-        <translation>ใช้ พร็อกซี่ SOCKS5 แยก เพื่อเข้าถึง peers ผ่าน Tor เซอร์วิสซ่อน:</translation>
-    </message>
-    <message>
         <source>&amp;Window</source>
         <translation>&amp;วันโดว์</translation>
     </message>
     <message>
-        <source>&amp;Hide the icon from the system tray.</source>
-        <translation>&amp;ซ่อนไอคอน จากเทรย์ระบบ</translation>
-    </message>
-    <message>
-        <source>Hide tray icon</source>
-        <translation>ซ่อนไอคอนเทรย์</translation>
-    </message>
-    <message>
         <source>Show only a tray icon after minimizing the window.</source>
         <translation>แสดงเทรย์ไอคอน หลังมืนิไมส์วินโดว์ เท่านั้น</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>ข้อผิดพลาด</translation>
     </message>
     </context>
 <context>
