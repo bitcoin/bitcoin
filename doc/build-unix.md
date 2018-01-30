@@ -2,7 +2,8 @@ UNIX BUILD NOTES
 ====================
 Some notes on how to build Dash Core in Unix.
 
-(for OpenBSD specific instructions, see [build-openbsd.md](build-openbsd.md))
+(For BSD specific instructions, see [build-openbsd.md](build-openbsd.md) and/or
+[build-netbsd.md](build-netbsd.md))
 
 Note
 ---------------------
@@ -62,8 +63,13 @@ tuned to conserve memory with additional CXXFLAGS:
 
     ./configure CXXFLAGS="--param ggc-min-expand=1 --param ggc-min-heapsize=32768"
 
-Dependency Build Instructions: Ubuntu & Debian
-----------------------------------------------
+
+## Linux Distribution Specific Instructions
+
+### Ubuntu & Debian
+
+#### Dependency Build Instructions
+
 Build requirements:
 
     sudo apt-get install build-essential libtool autotools-dev automake pkg-config libevent-dev bsdmainutils bison python3
@@ -111,8 +117,7 @@ GMP dependencies (provides platform-optimized routines):
 
    sudo apt-get install libgmp-dev
 
-Dependencies for the GUI: Ubuntu & Debian
------------------------------------------
+#### Dependencies for the GUI
 
 If you want to build dash-qt, make sure that the required packages for Qt development
 are installed. Qt 5 is necessary to build the GUI.
@@ -130,8 +135,10 @@ Once these are installed, they will be found by configure and a dash-qt executab
 built by default.
 
 
-Dependency Build Instructions: Fedora
--------------------------------------
+### Fedora
+
+#### Dependency Build Instructions
+
 Build requirements:
 
     sudo dnf install gcc-c++ libtool make autoconf automake libevent-devel boost-devel libdb4-devel libdb4-cxx-devel python3
