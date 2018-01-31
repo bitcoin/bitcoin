@@ -12,7 +12,6 @@ Build-Depends: debhelper,
  libdb-dev,
  libdb++-dev,
  libssl-dev,
- pkg-config,
  perl,
  perl-modules,
  libevent-dev,
@@ -50,13 +49,3 @@ Description: peer-to-peer network based digital currency - Qt GUI
  preferable properties.
  .
  This package provides Peercoin-Qt, a GUI client for Peercoin based on Qt.
-
-Package: peercoin-cli
-Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}
-Description: peer-to-peer digital currency - standalone transaction tool
- Peercoin is a crypto-currency project forked from Bitcoin with aim to achieve
- energy-efficiency and keep as much as possible the original Bitcoin's
- preferable properties.
- .
- This package provides peercoin-cli, a command-line tool used to control the daemon.
