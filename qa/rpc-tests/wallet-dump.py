@@ -57,14 +57,13 @@ class WalletDumpTest(BitcoinTestFramework):
     def __init__(self):
         super().__init__()
         self.setup_clean_chain = False
-        self.redirect_stderr = True
         self.num_nodes = 1
         self.extra_args = [["-keypool=90", "-usehd=1"]]
 
     def setup_chain(self):
         # TODO remove this when usehd=1 becomes the default
         # use our own cache and -usehd=1 as extra arg as the default cache is run with -usehd=0
-        initialize_chain(self.options.tmpdir, self.num_nodes, self.options.cachedir + "/hd", ["-usehd=1"])
+        initialize_chain(self.options.tmpdir, self.num_nodes, self.options.cachedir + "/hd", ["-usehd=1"], redirect_stderr=True)
 
     def setup_network(self, split=False):
         # Use 1 minute timeout because the initial getnewaddress RPC can take

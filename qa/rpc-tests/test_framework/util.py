@@ -240,7 +240,7 @@ def wait_for_bitcoind_start(process, url, i):
                 raise # unknown JSON RPC exception
         time.sleep(0.25)
 
-def initialize_chain(test_dir, num_nodes, cachedir, extra_args=None):
+def initialize_chain(test_dir, num_nodes, cachedir, extra_args=None, redirect_stderr=False):
     """
     Create a cache of a 200-block-long chain (with wallet) for MAX_NODES
     Afterward, create num_nodes copies from the cache
@@ -268,7 +268,10 @@ def initialize_chain(test_dir, num_nodes, cachedir, extra_args=None):
                 args.append("-connect=127.0.0.1:"+str(p2p_port(0)))
             if extra_args is not None:
                 args += extra_args
-            bitcoind_processes[i] = subprocess.Popen(args)
+            stderr = None
+            if redirect_stderr:
+                stderr = sys.stdout
+            bitcoind_processes[i] = subprocess.Popen(args, stderr=stderr)
             if os.getenv("PYTHON_DEBUG", ""):
                 print("initialize_chain: dashd started, waiting for RPC to come up")
             wait_for_bitcoind_start(bitcoind_processes[i], rpc_url(i), i)
