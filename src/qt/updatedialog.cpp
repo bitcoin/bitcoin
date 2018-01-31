@@ -5,11 +5,6 @@
 #include <QFileDialog>
 #include <QMessageBox>
 
-struct myprogress {
-    double lastruntime;
-    CURL *curl;
-};
-
 UpdateDialog::UpdateDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::UpdateDialog),
@@ -109,26 +104,35 @@ void UpdateProgressBar(curl_off_t now, curl_off_t total)
     }
 }
 
+void UpdateDialog::shaError(const QString& error)
+{
+    QMessageBox::warning(this, "Error", tr(qPrintable(error)),
+        QMessageBox::Ok, QMessageBox::Ok);
+    QFile(fileName).remove();
+}
+
 void UpdateDialog::downloadFinished()
 {
     if (!finished)
     {
         finished = true;
-        std::string sha;
         std::string newSha = updater.GetDownloadSha256Sum();
-        if (Sha256Sum(fileName.toStdString(), sha)) {
-            if (newSha.compare(sha) == 0) {
-                QMessageBox::information(this, tr("Download Complete"),
-                    tr("Package has been successfully downloaded!\nPath - %1").arg(fileName));
+        try
+        {
+            std::string sha = Sha256Sum(fileName.toStdString());
+            if (!sha.empty()) {
+                if (newSha.compare(sha) == 0) {
+                    QMessageBox::information(this, tr("Download Complete"),
+                        tr("Package has been successfully downloaded!\nPath - %1").arg(fileName));
+                } else {
+                    shaError("Download Failed. \nSHA-256 Checksum is not valid.");
+                }
             } else {
-                QMessageBox::warning(this, "Error", tr("Download Failed. \nSHA-256 Checksum is not valid."), 
-                    QMessageBox::Ok, QMessageBox::Ok);
-                QFile(fileName).remove();
+                shaError("An error occurred during SHA-256 verification.");
             }
-        } else {
-            QMessageBox::warning(this, "Error", tr("An error occurred during SHA-256 verification."), 
-                QMessageBox::Ok, QMessageBox::Ok);
-            QFile(fileName).remove();
+        } catch(std::runtime_error &e) {
+            LogPrintf("%s\n", e.what());
+            shaError("An error occurred during SHA-256 verification.");
         }
         QDialog::done(true);
     }

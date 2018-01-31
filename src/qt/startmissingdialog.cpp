@@ -17,17 +17,17 @@ StartMissingDialog::~StartMissingDialog()
     delete ui;
 }
 
-void StartMissingDialog::setText(QString text)
+void StartMissingDialog::setText(const QString& text)
 {
     ui->textLabel->setText(text);
 }
 
-void StartMissingDialog::setWarningText(QString text)
+void StartMissingDialog::setWarningText(const QString& text)
 {
     ui->warningLabel->setText(text);
 }
 
-void StartMissingDialog::setCheckboxText(QString text)
+void StartMissingDialog::setCheckboxText(const QString& text)
 {
     ui->checkBox->setText(text);
 }

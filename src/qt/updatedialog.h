@@ -32,6 +32,9 @@ public:
 private:
     explicit UpdateDialog(QWidget *parent = 0);
     void setPossibleOS();
+    void shaError(const QString& error);
+
+private:
     Ui::UpdateDialog *ui;
     bool finished;
     static UpdateDialog *instance;

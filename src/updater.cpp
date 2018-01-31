@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2015 The Crown developers
+// Copyright (c) 2014-2018 The Crown developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #include "updater.h"
@@ -10,7 +10,7 @@
 #include <curl/curl.h>
 #include <boost/thread.hpp>
  
-struct myprogress {
+struct DownloadProgress {
     double lastruntime;
     CURL *curl;
     void(*progressFunction)(curl_off_t, curl_off_t);
@@ -23,7 +23,9 @@ Updater::Updater() :
     os(Updater::UNKNOWN),
     status(false),
     version(-1),
-    stopDownload(false)
+    stopDownload(false),
+    testnetUrl("https://raw.githubusercontent.com/Crowndev/crowncoin/master/update_testnet.json"),
+    mainnetUrl("https://raw.githubusercontent.com/Crowndev/crowncoin/master/update.json")
 {
     SetOS();
 }
@@ -47,7 +49,7 @@ void Updater::SetOS()
 #endif
 }
 
-size_t GetUpdateData(char *data, size_t size, size_t nmemb, std::string *updateData) {
+size_t GetUpdateData(const char *data, size_t size, size_t nmemb, std::string *updateData) {
     size_t len = size * nmemb;
 
     if (updateData != NULL)
@@ -86,11 +88,11 @@ void Updater::SetJsonPath()
     {
         if (Params().NetworkID() == CBaseChainParams::MAIN)
         {
-            updaterInfoUrl = "https://raw.githubusercontent.com/Crowndev/crowncoin/master/update.json";
+            updaterInfoUrl = mainnetUrl;
         }
         else
         {
-            updaterInfoUrl = "https://raw.githubusercontent.com/Crowndev/crowncoin/master/update_testnet.json";
+            updaterInfoUrl = testnetUrl;
         }
     }
 }
@@ -157,13 +159,13 @@ std::string Updater::GetOsString(Updater::OS os)
             result = "Osx";
             break;
         case Updater::UNKNOWN:
-            // Do nothing
+            assert(false);
             break;
     }
     return result;
 }
 
-std::string Updater::GetUrl(Value value)
+std::string Updater::GetUrl(const Value& value)
 {
     if (value.type() == obj_type)
     {
@@ -222,7 +224,7 @@ std::string Updater::GetDownloadSha256Sum(Updater::OS version)
     return GetSha256sum(json);
 }
 
-static size_t write_data(void *ptr, size_t size, size_t nmemb, void *stream)
+static size_t write_data(void *ptr, size_t size, size_t nmemb, const void *stream)
 {
     size_t written = fwrite(ptr, size, nmemb, (FILE *)stream);
     return written;
@@ -232,7 +234,7 @@ static int xferinfo(void *p,
         curl_off_t dltotal, curl_off_t dlnow,
         curl_off_t ultotal, curl_off_t ulnow)
 {
-    struct myprogress *myp = (struct myprogress *)p;
+    struct DownloadProgress *myp = (struct DownloadProgress*)p;
     myp->progressFunction(dlnow, dltotal);
     return updater.GetStopDownload();
 }
@@ -246,7 +248,7 @@ CURLcode Updater::DownloadFile(std::string url, std::string fileName, void(progr
 {
     stopDownload = false;
     CURL *curl_handle;
-    struct myprogress prog;
+    struct DownloadProgress prog;
     prog.progressFunction = progressFunction;
     FILE *pagefile;
     CURLcode res = CURLE_FAILED_INIT;

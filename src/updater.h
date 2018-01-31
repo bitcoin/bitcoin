@@ -1,5 +1,5 @@
 
-// Copyright (c) 2014-2017 The Crown developers
+// Copyright (c) 2014-2018 The Crown developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #ifndef UPDATER_H
@@ -33,11 +33,11 @@ public:
     };
     Updater();
     bool Check();
-    int GetVersion()
+    int GetVersion() const
     {
         return version;
     }
-    Updater::OS GetOS()
+    Updater::OS GetOS() const
     {
         return os;
     }
@@ -51,22 +51,26 @@ public:
     {
         return stopDownload;
     }
+
 private:
     std::string updaterInfoUrl;
+    OS os;
+    bool status;
+    int version;
+    bool stopDownload;
+    Value jsonData;
+    std::string testnetUrl;
+    std::string mainnetUrl;
+
+private:
     bool LoadUpdateInfo();
     Value ParseJson(std::string info);
     void SetJsonPath();
     void SetOS();
     bool NeedToBeUpdated();
     int GetVersionFromJson();
-    std::string GetUrl(Value value);
+    std::string GetUrl(const Value& value);
     std::string GetSha256sum(Value value);
-
-    OS os;
-    bool status;
-    int version;
-    bool stopDownload;
-    Value jsonData;
 };
 
 #endif

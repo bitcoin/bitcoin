@@ -9,7 +9,7 @@ class DateTableWidgetItem : public QTableWidgetItem
 private:
     int64_t date;
 public:
-    DateTableWidgetItem(int64_t date);
+    explicit DateTableWidgetItem(int64_t date);
     bool operator< ( const QTableWidgetItem & other ) const;
 };
 

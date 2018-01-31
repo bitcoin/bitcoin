@@ -803,19 +803,18 @@ void SetThreadPriority(int nPriority)
 #endif // WIN32
 }
 
-bool Sha256Sum(const std::string& filename, std::string& result)
+std::string Sha256Sum(const std::string& filename)
 {
+    std::string result;
     std::ifstream f;
     f.open(filename.c_str(), std::ios_base::binary | std::ios_base::in | std::ios::ate);
     if (!f) {
-        LogPrintf("Sha256Sum() - Error: Bad file descriptor.\n");
-        return false;
+        throw std::runtime_error("Sha256Sum() - Error: Bad file descriptor.");
     }
     std::ifstream::pos_type file_size = f.tellg();
     SHA256_CTX ctx;
     if (!SHA256_Init(&ctx)) {
-        LogPrintf("Sha256Sum() - Error: Couldn't SHA256 initialization failed.\n");
-        return false;
+        throw std::runtime_error("Sha256Sum() - Error: SHA256 initialization failed.");
     }
     size_t size_left = file_size;
     f.seekg(0, std::ios::beg);
@@ -825,12 +824,10 @@ bool Sha256Sum(const std::string& filename, std::string& result)
         std::ifstream::pos_type read_size = size_left > sizeof(buf) ? sizeof(buf) : size_left;
         f.read(buf, read_size);
         if (!f || !f.good()) {
-            LogPrintf("Sha256Sum() - Error: Couldn't read file.\n");
-            return false;
+            throw std::runtime_error("Sha256Sum() - Error: Couldn't read file.");
         }
         if (!SHA256_Update(&ctx, buf, read_size)) {
-            LogPrintf("Sha256Sum() - Error: SHA256_Update failed.\n");
-            return false;
+            throw std::runtime_error("Sha256Sum() - Error: SHA256_Update failed.");
         }
         size_left -= read_size;
     }
@@ -838,11 +835,10 @@ bool Sha256Sum(const std::string& filename, std::string& result)
 
     unsigned char results[SHA256_DIGEST_LENGTH];
     if (!SHA256_Final(results, &ctx)) {
-        LogPrintf("Sha256Sum() - Error: SHA256_Final failed.\n");
-        return false;
+        throw std::runtime_error("Sha256Sum() - Error: SHA256_Final failed.");
     }
     for (int n = 0; n < SHA256_DIGEST_LENGTH; n++) {
         result.append(strprintf("%02x", results[n]));
     }
-    return true;
+    return result;
 }

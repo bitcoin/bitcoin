@@ -29,6 +29,8 @@ protected slots:
 
 private:
     virtual bool aliasExists(QString alias) = 0;
+    bool CheckAlias();
+    bool CheckIP();
 
 private:
     bool editMode;

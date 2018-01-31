@@ -59,14 +59,14 @@ void CreateNodeDialog::setEditMode()
     editMode = true;
 }
 
-void CreateNodeDialog::accept()
+bool CreateNodeDialog::CheckAlias()
 {
     // Check alias
     if (ui->aliasEdit->text().isEmpty())
     {
         ui->aliasEdit->setValid(false);
         QMessageBox::warning(this, windowTitle(), tr("Alias is Required"), QMessageBox::Ok, QMessageBox::Ok);
-        return;
+        return false;
     }
     // Check if alias exists
     if (aliasExists(ui->aliasEdit->text()))
@@ -77,31 +77,48 @@ void CreateNodeDialog::accept()
             ui->aliasEdit->setValid(false);
             QMessageBox::warning(this, windowTitle(), tr("Alias %1 Already Exists").arg(ui->aliasEdit->text()), 
                     QMessageBox::Ok, QMessageBox::Ok);
-            return;
+            return false;
         }
     }
+    return true;
+}
+
+bool CreateNodeDialog::CheckIP()
+{
     QString ip = ui->ipEdit->text();
     // Check ip
     if (ip.isEmpty())
     {
         ui->ipEdit->setValid(false);
         QMessageBox::warning(this, windowTitle(), tr("IP is Required"), QMessageBox::Ok, QMessageBox::Ok);
-        return;
+        return false;
     }
     // Check if port is not entered
     if (ip.contains(QRegExp(":+[0-9]")))
     {
         ui->ipEdit->setValid(false);
         QMessageBox::warning(this, windowTitle(), tr("Enter IP Without Port"), QMessageBox::Ok, QMessageBox::Ok);
-        return;
+        return false;
     }
     // Validate ip address
     // This is only for validation so port doesn't matter
     if (!(CService(ip.toStdString() + ":9340").IsIPv4() && CService(ip.toStdString()).IsRoutable())) {
         ui->ipEdit->setValid(false);
         QMessageBox::warning(this, windowTitle(), tr("Invalid IP Address. IPV4 ONLY"), QMessageBox::Ok, QMessageBox::Ok);
+        return false;
+    }
+    return true;
+}
+
+void CreateNodeDialog::accept()
+{
+    if (!CheckAlias())
+    {
         return;
     }
-
+    if (!CheckIP())
+    {
+        return;
+    }
     QDialog::accept();
 }

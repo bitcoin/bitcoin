@@ -2,57 +2,25 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "main.h"
-#include "db.h"
+#include "rpcupdate.h"
+
 #include "init.h"
-#include "systemnodeconfig.h"
-#include "systemnode.h"
-#include "systemnodeman.h"
-#include "activesystemnode.h"
+#include "clientversion.h"
 #include "rpcserver.h"
-#include "utilmoneystr.h"
-#include "wallet.h"
-#include "key.h"
-#include "base58.h"
+#include "util.h"
 
-#include "updater.h"
-
-#include "json/json_spirit_utils.h"
-#include "json/json_spirit_value.h"
+#include <boost/filesystem.hpp>
 #include <boost/thread.hpp>
 
 using namespace json_spirit;
 using namespace std;
 
-namespace RPCUpdate
-{
-    Object statusObj;
-    bool Started = false;
-    void progressFunction(curl_off_t now, curl_off_t total)
-    {
-        int percent = 0;
-        if (total != 0) {
-            percent = now * 100 / total;
-        }
-        if (statusObj.size() == 0) {
-            statusObj.push_back(Pair("Download", "In Progress"));
-        }
-        if ((now == total) && now != 0) {
-            Started = false;
-            statusObj[0] = Pair("Download", "Done");
-        } else if (now != total) {
-            Started = true;
-            statusObj[0] = Pair("Download", strprintf("%0.1f/%0.1fMB, %d%%",
-                                            double(now) / 1024 / 1024, 
-                                            double(total) / 1024 / 1024,
-                                            percent));
-        }
-    }
-}
+bool RPCUpdate::started = false;
+Object RPCUpdate::statusObj;
 
-void RPCDownload()
+void RPCUpdate::Download()
 {
-    RPCUpdate::statusObj.clear();
+    statusObj.clear();
     // Create temporary directory
     boost::filesystem::path dir = boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
     bool result = TryCreateDirectory(dir);
@@ -63,13 +31,21 @@ void RPCDownload()
     // Download archive
     std::string url = updater.GetDownloadUrl();
     std::string archivePath = (dir / boost::filesystem::path(url).filename()).string();
-    updater.DownloadFile(url, archivePath, &RPCUpdate::progressFunction);
-    RPCUpdate::statusObj[0] = Pair("Download", "Done - " + archivePath);
+    updater.DownloadFile(url, archivePath, &ProgressFunction);
+    if (CheckSha(archivePath))
+    {
+        statusObj[0] = Pair("Download", "Done - " + archivePath);
+    }
+    else
+    {
+        statusObj[0] = Pair("Download", "Error. SHA-256 verification failed.");
+        boost::filesystem::remove_all(dir);
+    }
 }
 
-void RPCInstall()
+void RPCUpdate::Install()
 {
-    RPCUpdate::statusObj.clear();
+    statusObj.clear();
     // Create temporary directory
     boost::filesystem::path dir = GetTempPath() / boost::filesystem::unique_path();
     bool result = TryCreateDirectory(dir);
@@ -80,7 +56,17 @@ void RPCInstall()
     // Download archive
     std::string url = updater.GetDownloadUrl();
     std::string archivePath = (dir / boost::filesystem::path(url).filename()).string();
-    updater.DownloadFile(url, archivePath, &RPCUpdate::progressFunction);
+    updater.DownloadFile(url, archivePath, &ProgressFunction);
+    if (CheckSha(archivePath))
+    {
+        statusObj[0] = Pair("Download", "Done");
+    }
+    else
+    {
+        statusObj[0] = Pair("Download", "Error. SHA-256 verification failed.");
+        boost::filesystem::remove_all(dir);
+        return;
+    }
 
     // Extract archive
     result = TryCreateDirectory(dir / "archive");
@@ -91,9 +77,9 @@ void RPCInstall()
     int nErr = ::system(strCommand.c_str());
     if (nErr) {
         LogPrintf("runCommand error: system(%s) returned %d\n", strCommand, nErr);
-        RPCUpdate::statusObj.push_back(Pair("Extract", "Error. Check debug.log"));
+        statusObj.push_back(Pair("Extract", "Error. Check debug.log"));
     } else {
-        RPCUpdate::statusObj.push_back(Pair("Extract", "Done"));
+        statusObj.push_back(Pair("Extract", "Done"));
     }
 
     // Copy files to /usr/
@@ -102,9 +88,9 @@ void RPCInstall()
         nErr = ::system(strCommand.c_str());
         if (nErr) {
             LogPrintf("runCommand error: system(%s) returned %d\n", strCommand, nErr);
-            RPCUpdate::statusObj.push_back(Pair("Install", "Error. Check debug.log."));
+            statusObj.push_back(Pair("Install", "Error. Check debug.log."));
         } else {
-            RPCUpdate::statusObj.push_back(Pair("Install", "Done"));
+            statusObj.push_back(Pair("Install", "Done"));
         }
 
         // Restart crownd
@@ -114,8 +100,62 @@ void RPCInstall()
     boost::filesystem::remove_all(dir);
 }
 
+void RPCUpdate::ProgressFunction(curl_off_t now, curl_off_t total)
+{
+    int percent = 0;
+    if (total != 0) {
+        percent = now * 100 / total;
+    }
+    if (statusObj.size() == 0) {
+        statusObj.push_back(Pair("Download", "In Progress"));
+    }
+    if ((now == total) && now != 0) {
+        started = false;
+        statusObj[0] = Pair("Download", "Done");
+    } else if (now != total) {
+        started = true;
+        statusObj[0] = Pair("Download", strprintf("%0.1f/%0.1fMB, %d%%",
+                                        static_cast<double>(now) / 1024 / 1024,
+                                        static_cast<double>(total) / 1024 / 1024,
+                                        percent));
+    }
+}
+
+bool RPCUpdate::IsStarted() const
+{
+    return started;
+}
+
+Object RPCUpdate::GetStatusObject() const
+{
+    return statusObj;
+}
+
+bool RPCUpdate::CheckSha(const std::string& fileName) const
+{
+    bool result = false;
+    std::string newSha = updater.GetDownloadSha256Sum();
+    try
+    {
+        std::string sha = Sha256Sum(fileName);
+        if (!sha.empty()) {
+            if (newSha.compare(sha) == 0) {
+                result = true;
+            } else {
+                result = false;
+            }
+        } else {
+            result = false;
+        }
+    } catch(std::runtime_error &e) {
+        result = false;
+    }
+    return result;
+}
+
 Value update(const Array& params, bool fHelp)
 {
+    RPCUpdate rpcUpdate;
     string strCommand;
     if (params.size() >= 1)
         strCommand = params[0].get_str();
@@ -133,6 +173,11 @@ Value update(const Array& params, bool fHelp)
                 "  status       - Check download status\n"
                 "  install      - Install update\n"
                 );
+    if (!fServer)
+    {
+        throw runtime_error("Command is available only in server mode."
+            "\ncrown-qt will automatically check and notify if there is an updates\n");
+    }
 
     if (strCommand == "check")
     {
@@ -160,17 +205,17 @@ Value update(const Array& params, bool fHelp)
         {
             return "You are running the latest version of Crown - " + FormatVersion(CLIENT_VERSION);
         }
-        if (RPCUpdate::Started)
+        if (rpcUpdate.IsStarted())
         {
             return "Download is in progress. Run 'crown-cli update status' to check the status.";
         }
-        boost::thread t(boost::bind(&RPCDownload));
+        boost::thread t(boost::bind(&RPCUpdate::Download, rpcUpdate));
         return "Crown download started. \nRun 'crown-cli update status' to check download status.";
     }
 
     if (strCommand == "status")
     {
-        return RPCUpdate::statusObj;
+        return rpcUpdate.GetStatusObject();
     }
 
     if (strCommand == "install")
@@ -179,11 +224,11 @@ Value update(const Array& params, bool fHelp)
         {
             return "You are running the latest version of Crown - " + FormatVersion(CLIENT_VERSION);
         }
-        if (RPCUpdate::Started)
+        if (rpcUpdate.IsStarted())
         {
             return "Download is in progress. Run 'crown-cli update status' to check the status.";
         }
-        boost::thread t(boost::bind(&RPCInstall));
+        boost::thread t(boost::bind(&RPCUpdate::Install, rpcUpdate));
         return "Crown install started. \nRun 'crown-cli update status' to check download status.";
     }
     return "";

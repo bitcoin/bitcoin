@@ -121,6 +121,7 @@ BITCOIN_CORE_H = \
   rpcclient.h \
   rpcprotocol.h \
   rpcserver.h \
+  rpcupdate.h \
   script/interpreter.h \
   script/script_error.h \
   script/script.h \

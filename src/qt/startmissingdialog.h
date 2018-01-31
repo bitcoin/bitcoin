@@ -16,9 +16,9 @@ public:
     ~StartMissingDialog();
 
 public:
-    void setText(QString text);
-    void setCheckboxText(QString text);
-    void setWarningText(QString text);
+    void setText(const QString& text);
+    void setCheckboxText(const QString& text);
+    void setWarningText(const QString& text);
     bool checkboxChecked();
 
 private slots:

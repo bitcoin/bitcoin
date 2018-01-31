@@ -35,7 +35,6 @@
  */
 
 static bool fDaemon;
-std::string appPath;
 
 void DetectShutdownThread(boost::thread_group* threadGroup)
 {
@@ -63,7 +62,6 @@ bool AppInit(int argc, char* argv[])
     boost::thread* detectShutdownThread = NULL;
 
     bool fRet = false;
-
     //
     // Parameters
     //
@@ -193,13 +191,14 @@ bool AppInit(int argc, char* argv[])
         // The old one will be exited below.
         PrepareShutdown();
         CExplicitNetCleanup::callCleanup();
-        if (appPath.empty())
+
+        if (argc > 0)
         {
-            fprintf(stderr, "Error: Application name couldn't be detected.");
+            runCommand(std::string(argv[0]) + " &");
         }
         else
         {
-            runCommand(appPath + " &");
+            fprintf(stderr, "Error: Application name couldn't be detected.");
         }
     }
     Shutdown();
@@ -209,10 +208,6 @@ bool AppInit(int argc, char* argv[])
 
 int main(int argc, char* argv[])
 {
-    if (argc > 0)
-    {
-        appPath = std::string(argv[0]);
-    }
     SetupEnvironment();
 
     // Connect crownd signal handlers
