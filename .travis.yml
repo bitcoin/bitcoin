@@ -20,6 +20,13 @@ matrix:
         install: true
         script:
           - ./scripts/install-ubuntu.sh
+      - os: linux
+        sudo: required
+        before_install:
+          - ./scripts/dependencies-ubuntu.sh
+        install: true
+        script:
+          - ./scripts/debuild.sh
       #cross compile windows
       - os: linux
         services: docker
