@@ -151,7 +151,7 @@ public:
     std::string ToString() const
     {
         std::ostringstream ostr;
-        ostr << vinMasternode.ToString() << ":"
+        ostr << vinMasternode.prevout.ToStringShort() << ":"
              << nTime << ":"
              << CGovernanceVoting::ConvertOutcomeToString(GetOutcome()) << ":"
              << CGovernanceVoting::ConvertSignalToString(GetSignal());
