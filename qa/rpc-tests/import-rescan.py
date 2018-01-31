@@ -112,7 +112,8 @@ class ImportRescanTest(BitcoinTestFramework):
         extra_args = [["-debug=1"] for _ in range(self.num_nodes)]
         for i, import_node in enumerate(IMPORT_NODES, 1):
             if import_node.prune:
-                extra_args[i] += ["-prune=1"]
+                # txindex is enabled by default in Dash and needs to be disabled for import-rescan.py
+                extra_args[i] += ["-prune=1", "-txindex=0", "-reindex-chainstate"]
 
         self.nodes = start_nodes(self.num_nodes, self.options.tmpdir, extra_args)
         for i in range(1, self.num_nodes):
