@@ -192,8 +192,8 @@ CPubKey CKey::GetPubKey() const {
 bool CKey::Sign(const uint256 &hash, std::vector<unsigned char>& vchSig, uint32_t test_case) const {
     if (!fValid)
         return false;
-    vchSig.resize(CPubKey::SIGNATURE_SIZE);
-    size_t nSigLen = CPubKey::SIGNATURE_SIZE;
+    vchSig.resize(CPubKeySig::SIZE);
+    size_t nSigLen = CPubKeySig::SIZE;
     unsigned char extra_entropy[32] = {0};
     WriteLE32(extra_entropy, test_case);
     secp256k1_ecdsa_signature sig;
@@ -221,7 +221,7 @@ bool CKey::VerifyPubKey(const CPubKey& pubkey) const {
 bool CKey::SignCompact(const uint256 &hash, std::vector<unsigned char>& vchSig) const {
     if (!fValid)
         return false;
-    vchSig.resize(CPubKey::COMPACT_SIGNATURE_SIZE);
+    vchSig.resize(CPubKeySig::COMPACT_SIZE);
     int rec = -1;
     secp256k1_ecdsa_recoverable_signature sig;
     int ret = secp256k1_ecdsa_sign_recoverable(secp256k1_context_sign, &sig, hash.begin(), begin(), secp256k1_nonce_function_rfc6979, nullptr);

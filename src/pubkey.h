@@ -26,6 +26,16 @@ public:
 
 typedef uint256 ChainCode;
 
+class CPubKeySig
+{
+public:
+    /**
+     * secp256k1:
+     */
+    static const unsigned int SIZE         = 72;
+    static const unsigned int COMPACT_SIZE = 65;
+};
+
 /** An encapsulated public key. */
 class CPubKey
 {
@@ -35,8 +45,6 @@ public:
      */
     static const unsigned int PUBLIC_KEY_SIZE             = 65;
     static const unsigned int COMPRESSED_PUBLIC_KEY_SIZE  = 33;
-    static const unsigned int SIGNATURE_SIZE              = 72;
-    static const unsigned int COMPACT_SIGNATURE_SIZE      = 65;
     /**
      * see www.keylength.com
      * script supports up to 75 for single byte push
