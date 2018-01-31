@@ -1,3 +1,5 @@
+#!/bin/bash -ev
+
 #debuild and associated tools
 sudo apt-get install -qqy devscripts debhelper
 
@@ -10,7 +12,10 @@ sudo apt-get install -qqy libdb-dev
 
 
 export DEB_BUILD_OPTIONS="parallel=$(nproc)"
+
 rm -rf debian
 cp -r contrib/debian .
+
+#binary build for now
 debuild -b -us -uc
 
