@@ -221,7 +221,7 @@ public:
         consensus.nSegwitEnabled = true;
         consensus.nCSVEnabled = true;
 
-        consensus.powLimit = uint256S("00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+        consensus.powLimit = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.nPowTargetTimespan = 2016 * 60; // 1.4 days
         consensus.nPowTargetSpacing = 1 * 60;
         consensus.fPowAllowMinDifficultyBlocks = true;
@@ -233,35 +233,26 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = 1230767999; // December 31, 2008
 
 
-
         // The best chain should have at least this much work.
-        consensus.nMinimumChainWork = uint256S("0x00000000000000000000000000000000000000000000002830dab7f76dbb7d63");
+        consensus.nMinimumChainWork = uint256S("0x00");
 
         // By default assume that the signatures in ancestors of this block are valid.
-        consensus.defaultAssumeValid = uint256S("0x0000000002e9e7b00e1f6dc5123a04aad68dd0f0968d8c7aa45f6640795c37b1"); //1135275
+        consensus.defaultAssumeValid = uint256S("0x00");
 
-        pchMessageStart[0] = 0x45;
-        pchMessageStart[1] = 0x50;
-        pchMessageStart[2] = 0x4F;
-        pchMessageStart[3] = 0x45;
+
+        pchMessageStart[0] = 0x52;
+        pchMessageStart[1] = 0x56;
+        pchMessageStart[2] = 0x4E;
+        pchMessageStart[3] = 0x54;
         nDefaultPort = 18767;
         nPruneAfterHeight = 1000;
 
-        genesis = CreateGenesisBlock(1513705170, 23209737, 0x1e00ffff, 4, 5000 * COIN); 
+        genesis = CreateGenesisBlock(1517350340, 4791361, 0x1e00ffff, 4, 5000 * COIN); 
         consensus.hashGenesisBlock = genesis.GetHash();
 
-        std::cout << "HGB: " << consensus.hashGenesisBlock.GetHex() << std::endl; 
-        LogPrintf("Testnet HGB: %s\n", consensus.hashGenesisBlock.GetHex());
-
-        //TODO:  Add this back in after updating genesis info for testnet
-        //assert(consensus.hashGenesisBlock == uint256S("0x000000cc19dcb46cb42a408836cf23319c5c3f0360b67847e1486677cf02888a"));
-
-
-        std::cout << "HMR: " << genesis.hashMerkleRoot.GetHex() << std::endl;        
-        
-        //TODO:  Add this back in after updating genesis info for testnet
-        //assert(genesis.hashMerkleRoot == uint256S("0x9686ea5f254a7542381897095789b44282f5d8685cee089e94c4f373cec99128"));
-
+        //Test MerkleRoot and GenesisBlock
+        assert(consensus.hashGenesisBlock == uint256S("0x000000055c6b201ac99ed634953f92bd52239f5b26e090ce3caab6ec81bec921"));
+        assert(genesis.hashMerkleRoot == uint256S("0x28ff00a867739a352523808d301f504bc4547699398d70faf2266a8bae5f3516"));
 
         vFixedSeeds.clear();
         vSeeds.clear();

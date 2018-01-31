@@ -215,7 +215,10 @@ def getFrameworks(binaryPath, verbose):
             sys.stderr.flush()
             raise RuntimeError("otool failed with return code %d" % otool.returncode)
 
+    print("OUT: " + o_stdout.decode())
+
     otoolLines = o_stdout.decode().split("\n")
+    otoolLines.append(" /usr/local/opt/boost/lib/libboost_system-mt.dylib (compatibility version 0.0.0, current version 0.0.0)")
     otoolLines.pop(0) # First line is the inspected binary
     if ".framework" in binaryPath or binaryPath.endswith(".dylib"):
         otoolLines.pop(0) # Frameworks and dylibs list themselves as a dependency.
