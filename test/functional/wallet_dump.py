@@ -20,6 +20,7 @@ def read_dump(file_name, addrs, script_addrs, hd_master_addr_old):
         found_script_addr = 0
         found_addr_chg = 0
         found_addr_rsv = 0
+        witness_addr_ret = None
         hd_master_addr_ret = None
         for line in inputfile:
             # only read non comment lines
@@ -47,7 +48,14 @@ def read_dump(file_name, addrs, script_addrs, hd_master_addr_old):
 
                     # count key types
                     for addrObj in addrs:
-                        if addrObj['address'] == addr and addrObj['hdkeypath'] == keypath and keytype == "label=":
+                        if addrObj['address'] == addr.split(",")[0] and addrObj['hdkeypath'] == keypath and keytype == "label=":
+                            # a labled entry in the wallet should contain both a native address
+                            # and the p2sh-p2wpkh address that was added at wallet setup
+                            if len(addr.split(",")) == 2:
+                                addr_list = addr.split(",")
+                                # the entry should be of the first key in the wallet
+                                assert_equal(addrs[0]['address'], addr_list[0])
+                                witness_addr_ret = addr_list[1]
                             found_addr += 1
                             break
                         elif keytype == "change=1":
@@ -63,7 +71,7 @@ def read_dump(file_name, addrs, script_addrs, hd_master_addr_old):
                             found_script_addr += 1
                             break
 
-        return found_addr, found_script_addr, found_addr_chg, found_addr_rsv, hd_master_addr_ret
+        return found_addr, found_script_addr, found_addr_chg, found_addr_rsv, hd_master_addr_ret, witness_addr_ret
 
 
 class WalletDumpTest(BitcoinTestFramework):
@@ -83,6 +91,8 @@ class WalletDumpTest(BitcoinTestFramework):
         tmpdir = self.options.tmpdir
 
         # generate 20 addresses to compare against the dump
+        # but since we add a p2sh-p2wpkh address for the first pubkey in the
+        # wallet, we will expect 21 addresses in the dump
         test_addr_count = 20
         addrs = []
         for i in range(0,test_addr_count):
@@ -101,12 +111,13 @@ class WalletDumpTest(BitcoinTestFramework):
         result = self.nodes[0].dumpwallet(tmpdir + "/node0/wallet.unencrypted.dump")
         assert_equal(result['filename'], os.path.abspath(tmpdir + "/node0/wallet.unencrypted.dump"))
 
-        found_addr, found_script_addr, found_addr_chg, found_addr_rsv, hd_master_addr_unenc = \
+        found_addr, found_script_addr, found_addr_chg, found_addr_rsv, hd_master_addr_unenc, witness_addr_ret = \
             read_dump(tmpdir + "/node0/wallet.unencrypted.dump", addrs, script_addrs, None)
         assert_equal(found_addr, test_addr_count)  # all keys must be in the dump
         assert_equal(found_script_addr, 2)  # all scripts must be in the dump
         assert_equal(found_addr_chg, 50)  # 50 blocks where mined
         assert_equal(found_addr_rsv, 90*2) # 90 keys plus 100% internal keys
+        assert_equal(witness_addr_ret, witness_addr) # p2sh-p2wsh address added to the first key
 
         #encrypt wallet, restart, unlock and dump
         self.nodes[0].node_encrypt_wallet('test')
@@ -116,12 +127,13 @@ class WalletDumpTest(BitcoinTestFramework):
         self.nodes[0].keypoolrefill()
         self.nodes[0].dumpwallet(tmpdir + "/node0/wallet.encrypted.dump")
 
-        found_addr, found_script_addr, found_addr_chg, found_addr_rsv, _ = \
+        found_addr, found_script_addr, found_addr_chg, found_addr_rsv, _, witness_addr_ret = \
             read_dump(tmpdir + "/node0/wallet.encrypted.dump", addrs, script_addrs, hd_master_addr_unenc)
         assert_equal(found_addr, test_addr_count)
         assert_equal(found_script_addr, 2)
         assert_equal(found_addr_chg, 90*2 + 50)  # old reserve keys are marked as change now
         assert_equal(found_addr_rsv, 90*2) 
+        assert_equal(witness_addr_ret, witness_addr)
 
         # Overwriting should fail
         assert_raises_rpc_error(-8, "already exists", self.nodes[0].dumpwallet, tmpdir + "/node0/wallet.unencrypted.dump")
