@@ -59,6 +59,17 @@ static std::string DecodeDumpString(const std::string &str) {
     return ret.str();
 }
 
+static bool GetWalletAddressesForKey(LegacyScriptPubKeyMan* spk_man, const CWallet& wallet, const CKeyID& keyid, std::string& strAddr, std::string& strLabel) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
+{
+    const PKHash& dest = PKHash(keyid);
+    strAddr = EncodeDestination(dest);
+    if (const auto* address_book_entry = wallet.FindAddressBookEntry(dest); address_book_entry != nullptr) {
+        strLabel = EncodeDumpString(address_book_entry->GetLabel());
+        return true;
+    }
+    return false;
+}
+
 static const int64_t TIMESTAMP_MIN = 0;
 
 static void RescanWallet(CWallet& wallet, const WalletRescanReserver& reserver, int64_t time_begin = TIMESTAMP_MIN, bool update = true)
@@ -1031,15 +1042,14 @@ RPCHelpMan dumpwallet()
 
     for (std::vector<std::pair<int64_t, CKeyID> >::const_iterator it = vKeyBirth.begin(); it != vKeyBirth.end(); it++) {
         const CKeyID &keyid = it->second;
-        const PKHash &pkhash = PKHash(keyid);
         std::string strTime = FormatISO8601DateTime(it->first);
-        std::string strAddr = EncodeDestination(PKHash(keyid));
+        std::string strAddr;
+        std::string strLabel;
         CKey key;
         if (spk_man.GetKey(keyid, key)) {
             file << strprintf("%s %s ", EncodeSecret(key), strTime);
-            const auto* address_book_entry = wallet.FindAddressBookEntry(pkhash);
-            if (address_book_entry) {
-                file << strprintf("label=%s", EncodeDumpString(address_book_entry->GetLabel()));
+            if (GetWalletAddressesForKey(&spk_man, wallet, keyid, strAddr, strLabel)) {
+                file << strprintf("label=%s", strLabel);
             } else if (mapKeyPool.count(keyid)) {
                 file << "reserve=1";
             } else {
