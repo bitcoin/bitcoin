@@ -2,7 +2,8 @@ UNIX BUILD NOTES
 ====================
 Some notes on how to build Dash Core in Unix.
 
-(for OpenBSD specific instructions, see [build-openbsd.md](build-openbsd.md))
+(For BSD specific instructions, see [build-openbsd.md](build-openbsd.md) and/or
+[build-netbsd.md](build-netbsd.md))
 
 Base build dependencies
 -----------------------
