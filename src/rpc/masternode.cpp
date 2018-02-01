@@ -141,9 +141,8 @@ UniValue masternode(const JSONRPCRequest& request)
             strCommand != "start-alias" && strCommand != "start-all" && strCommand != "start-missing" &&
          strCommand != "start-disabled" && strCommand != "outputs" &&
 #endif // ENABLE_WALLET
-         strCommand != "list" && strCommand != "list-conf" && strCommand != "count" &&
-         strCommand != "debug" && strCommand != "current" && strCommand != "winner" && strCommand != "winners" && strCommand != "genkey" &&
-         strCommand != "connect" && strCommand != "status"))
+         strCommand != "list" && strCommand != "list-conf" && strCommand != "count" && strCommand != "debug" && strCommand != "current" &&
+         strCommand != "winner" && strCommand != "winners" && strCommand != "genkey" && strCommand != "status"))
             throw std::runtime_error(
                 "masternode \"command\"...\n"
                 "Set of commands to execute masternode related actions\n"
@@ -174,24 +173,6 @@ UniValue masternode(const JSONRPCRequest& request)
             newRequest.params.push_back(request.params[i]);
         }
         return masternodelist(newRequest);
-    }
-
-    if(strCommand == "connect")
-    {
-        if (request.params.size() < 2)
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Masternode address required");
-
-        std::string strAddress = request.params[1].get_str();
-
-        CService addr;
-        if (!Lookup(strAddress.c_str(), addr, 0, false))
-            throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("Incorrect masternode address %s", strAddress));
-
-        // TODO: Pass CConnman instance somehow and don't use global variable.
-        if (!g_connman->OpenNetworkConnection(CAddress(addr, NODE_NETWORK), false, nullptr, nullptr, false, false, false, true))
-            throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("Couldn't connect to masternode %s", strAddress));
-
-        return "successfully connected";
     }
 
     if (strCommand == "count")

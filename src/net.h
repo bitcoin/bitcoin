@@ -179,20 +179,13 @@ public:
     void Interrupt();
     bool GetNetworkActive() const { return fNetworkActive; }
     void SetNetworkActive(bool active);
-    bool OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant *grantOutbound = nullptr, const char *strDest = nullptr, bool fOneShot = false, bool fFeeler = false, bool manual_connection = false, bool fConnectToMasternode = false);
+    void OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant *grantOutbound = nullptr, const char *strDest = nullptr, bool fOneShot = false, bool fFeeler = false, bool manual_connection = false, bool fConnectToMasternode = false);
     bool CheckIncomingNonce(uint64_t nonce);
 
     bool ForNode(NodeId id, std::function<bool(CNode* pnode)> func);
     bool ForNode(NodeId id, std::function<bool(const CNode* pnode)> cond, std::function<bool(CNode* pnode)> func);
     bool ForNode(const CService& addr, std::function<bool(CNode* pnode)> func);
     bool ForNode(const CService& addr, std::function<bool(const CNode* pnode)> cond, std::function<bool(CNode* pnode)> func);
-
-    bool IsConnected(const CService& addr, std::function<bool(const CNode* pnode)>)
-    {
-        return ForNode(addr, [](CNode* pnode){
-            return true;
-        });
-    }
 
     bool IsMasternodeOrDisconnectRequested(const CService& addr);
 
