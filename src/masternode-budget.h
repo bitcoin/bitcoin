@@ -12,8 +12,9 @@
 #include "util.h"
 #include "base58.h"
 #include "masternode.h"
-#include <boost/lexical_cast.hpp>
 #include "init.h"
+
+#include <boost/lexical_cast.hpp>
 
 using namespace std;
 
@@ -67,6 +68,8 @@ public:
     };
 
     CBudgetDB();
+    CBudgetDB(const boost::filesystem::path& pathDb);
+
     bool Write(const CBudgetManager &objToSave);
     ReadResult Read(CBudgetManager& objToLoad, bool fDryRun = false);
 };
@@ -138,7 +141,6 @@ public:
     bool UpdateFinalizedBudget(CFinalizedBudgetVote& vote, CNode* pfrom, std::string& strError);
     bool PropExists(uint256 nHash);
     bool IsTransactionValid(const CTransaction& txNew, int nBlockHeight);
-    bool IsDevTransactionValid(const CTransaction& txNew, int nBlockHeight);
     std::string GetRequiredPaymentsString(int nBlockHeight);
     void FillBlockPayee(CMutableTransaction& txNew, CAmount nFees);
 
@@ -425,12 +427,13 @@ public:
 
     bool IsValid(std::string& strError, bool fCheckCollateral=true);
 
-    bool IsEstablished() {
+    int IsEstablished() const
+    {
         //Proposals must be at least a day old to make it into a budget
-        if(Params().NetworkID() == CBaseChainParams::MAIN) return (nTime < GetTime() - (60*60*24));
-
-        //for testing purposes - 4 hours
-        return (nTime < GetTime() - (60*20));
+        if(Params().NetworkID() == CBaseChainParams::MAIN)
+            return nTime < GetTime() - 24 * 60 * 60;
+        else
+            return nTime < GetTime() - 15 * 60; // 15 minutes for testing purposes
     }
 
     std::string GetName() {return strProposalName; }
@@ -557,10 +560,10 @@ public:
     CBudgetVote(CTxIn vin, uint256 nProposalHash, int nVoteIn);
 
     bool Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode);
-    bool SignatureValid(bool fSignatureCheck);
+    bool SignatureValid(bool fSignatureCheck) const;
     void Relay();
 
-    std::string GetVoteString() {
+    std::string GetVoteString() const {
         std::string ret = "ABSTAIN";
         if(nVote == VOTE_YES) ret = "YES";
         if(nVote == VOTE_NO) ret = "NO";

@@ -22,7 +22,7 @@ public:
     leveldb_error(const std::string& msg) : std::runtime_error(msg) {}
 };
 
-void HandleError(const leveldb::Status& status) throw(leveldb_error);
+void HandleError(const leveldb::Status& status); // throw(leveldb_error)
 
 /** Batch of changes queued to be written to a CLevelDBWrapper */
 class CLevelDBBatch
@@ -90,7 +90,7 @@ public:
     ~CLevelDBWrapper();
 
     template <typename K, typename V>
-    bool Read(const K& key, V& value) const throw(leveldb_error)
+    bool Read(const K& key, V& value) const // throw(leveldb_error)
     {
         CDataStream ssKey(SER_DISK, CLIENT_VERSION);
         ssKey.reserve(ssKey.GetSerializeSize(key));
@@ -115,7 +115,7 @@ public:
     }
 
     template <typename K, typename V>
-    bool Write(const K& key, const V& value, bool fSync = false) throw(leveldb_error)
+    bool Write(const K& key, const V& value, bool fSync = false) // throw(leveldb_error)
     {
         CLevelDBBatch batch;
         batch.Write(key, value);
@@ -123,7 +123,7 @@ public:
     }
 
     template <typename K>
-    bool Exists(const K& key) const throw(leveldb_error)
+    bool Exists(const K& key) const // throw(leveldb_error)
     {
         CDataStream ssKey(SER_DISK, CLIENT_VERSION);
         ssKey.reserve(ssKey.GetSerializeSize(key));
@@ -142,14 +142,14 @@ public:
     }
 
     template <typename K>
-    bool Erase(const K& key, bool fSync = false) throw(leveldb_error)
+    bool Erase(const K& key, bool fSync = false) // throw(leveldb_error)
     {
         CLevelDBBatch batch;
         batch.Erase(key);
         return WriteBatch(batch, fSync);
     }
 
-    bool WriteBatch(CLevelDBBatch& batch, bool fSync = false) throw(leveldb_error);
+    bool WriteBatch(CLevelDBBatch& batch, bool fSync = false); // throw(leveldb_error)
 
     // not available for LevelDB; provide for compatibility with BDB
     bool Flush()
@@ -157,7 +157,7 @@ public:
         return true;
     }
 
-    bool Sync() throw(leveldb_error)
+    bool Sync() // throw(leveldb_error)
     {
         CLevelDBBatch batch;
         return WriteBatch(batch, true);
