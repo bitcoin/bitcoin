@@ -53,6 +53,7 @@ struct Params {
     int nBudgetPaymentsWindowBlocks;
     int nBudgetProposalEstablishingTime; // in seconds
     int nSuperblockStartBlock;
+    uint256 nSuperblockStartHash;
     int nSuperblockCycle; // in blocks
     int nGovernanceMinQuorum; // Min absolute vote count to trigger an action
     int nGovernanceFilterElements;
