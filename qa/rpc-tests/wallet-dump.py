@@ -108,7 +108,7 @@ class WalletDumpTest(BitcoinTestFramework):
         assert_equal(found_addr, test_addr_count)
         # TODO clarify if we want the behavior that is tested below in Dash (only when HD seed was generated and not user-provided)
         # assert_equal(found_addr_chg, 180 + 50)  # old reserve keys are marked as change now
-        assert_equal(found_addr_rsv, 180)  # keypool size (TODO: fix off-by-one)
+        assert_equal(found_addr_rsv, 180)  # keypool size
 
 if __name__ == '__main__':
     WalletDumpTest().main ()
