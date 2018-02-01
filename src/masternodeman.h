@@ -63,6 +63,9 @@ private:
     std::map<uint256, std::pair< int64_t, std::set<CNetAddr> > > mMnbRecoveryRequests;
     std::map<uint256, std::vector<CMasternodeBroadcast> > mMnbRecoveryGoodReplies;
     std::list< std::pair<CService, uint256> > listScheduledMnbRequestConnections;
+    std::map<CService, std::pair<int64_t, std::set<uint256> > > mapPendingMNB;
+    std::map<CService, std::pair<int64_t, CMasternodeVerification> > mapPendingMNV;
+    CCriticalSection cs_mapPendingMNV;
 
     /// Set when masternodes are added, cleared when CGovernanceManager is notified
     bool fMasternodesAdded;
@@ -180,12 +183,14 @@ public:
 
     void ProcessMasternodeConnections(CConnman& connman);
     std::pair<CService, std::set<uint256> > PopScheduledMnbRequestConnection();
+    void ProcessPendingMnbRequests(CConnman& connman);
 
     void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman);
 
     void DoFullVerificationStep(CConnman& connman);
     void CheckSameAddr();
     bool SendVerifyRequest(const CAddress& addr, const std::vector<CMasternode*>& vSortedByAddr, CConnman& connman);
+    void ProcessPendingMnvRequests(CConnman& connman);
     void SendVerifyReply(CNode* pnode, CMasternodeVerification& mnv, CConnman& connman);
     void ProcessVerifyReply(CNode* pnode, CMasternodeVerification& mnv);
     void ProcessVerifyBroadcast(CNode* pnode, const CMasternodeVerification& mnv);

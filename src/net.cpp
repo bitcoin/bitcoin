@@ -1936,7 +1936,7 @@ void CConnman::ThreadOpenAddedConnections()
     }
 }
 
-void CConnman::ThreadMnbRequestConnections()
+void CConnman::ThreadOpenMasternodeConnections()
 {
     // Connecting to specific addresses, no masternode connections available
     if (IsArgSet("-connect") && mapMultiArgs.at("-connect").size() > 0)
@@ -1951,34 +1951,22 @@ void CConnman::ThreadMnbRequestConnections()
         if (interruptNet)
             return;
 
-        std::pair<CService, std::set<uint256> > p = mnodeman.PopScheduledMnbRequestConnection();
-        if(p.first == CService() || p.second.empty()) continue;
-
-        // compile request vector
-        std::vector<CInv> vToFetch;
-        std::set<uint256>::iterator it = p.second.begin();
-        while(it != p.second.end()) {
-            if(*it != uint256()) {
-                vToFetch.push_back(CInv(MSG_MASTERNODE_ANNOUNCE, *it));
-                LogPrint("masternode", "ThreadMnbRequestConnections -- asking for mnb %s from addr=%s\n", it->ToString(), p.first.ToString());
+        LOCK(cs_vPendingMasternodes);
+        std::vector<CService>::iterator it = vPendingMasternodes.begin();
+        while (it != vPendingMasternodes.end()) {
+            if (!IsMasternodeOrDisconnectRequested(*it)) {
+                OpenMasternodeConnection(CAddress(*it, NODE_NETWORK));
+                // should be in the list now if connection was opened
+                ForNode(*it, CConnman::AllNodes, [&](CNode* pnode) {
+                    if (pnode->fDisconnect) {
+                        return false;
+                    }
+                    grant.MoveTo(pnode->grantMasternodeOutbound);
+                    return true;
+                });
             }
-            ++it;
+            it = vPendingMasternodes.erase(it);
         }
-
-        CAddress addr(p.first, NODE_NETWORK);
-        OpenMasternodeConnection(addr);
-
-        ForNode(addr, CConnman::AllNodes, [&](CNode* pnode) {
-            if (pnode->fDisconnect) return false;
-
-            grant.MoveTo(pnode->grantMasternodeOutbound);
-
-            // ask for data
-            CNetMsgMaker msgMaker(pnode->GetSendVersion());
-            PushMessage(pnode, msgMaker.Make(NetMsgType::GETDATA, vToFetch));
-
-            return true;
-        });
     }
 }
 
@@ -2369,7 +2357,7 @@ bool CConnman::Start(CScheduler& scheduler, std::string& strNodeError, Options c
         threadOpenConnections = std::thread(&TraceThread<std::function<void()> >, "opencon", std::function<void()>(std::bind(&CConnman::ThreadOpenConnections, this)));
 
     // Initiate masternode connections
-    threadMnbRequestConnections = std::thread(&TraceThread<std::function<void()> >, "mnbcon", std::function<void()>(std::bind(&CConnman::ThreadMnbRequestConnections, this)));
+    threadOpenMasternodeConnections = std::thread(&TraceThread<std::function<void()> >, "mncon", std::function<void()>(std::bind(&CConnman::ThreadOpenMasternodeConnections, this)));
 
     // Process messages
     threadMessageHandler = std::thread(&TraceThread<std::function<void()> >, "msghand", std::function<void()>(std::bind(&CConnman::ThreadMessageHandler, this)));
@@ -2431,8 +2419,8 @@ void CConnman::Stop()
 {
     if (threadMessageHandler.joinable())
         threadMessageHandler.join();
-    if (threadMnbRequestConnections.joinable())
-        threadMnbRequestConnections.join();
+    if (threadOpenMasternodeConnections.joinable())
+        threadOpenMasternodeConnections.join();
     if (threadOpenConnections.joinable())
         threadOpenConnections.join();
     if (threadOpenAddedConnections.joinable())
@@ -2546,6 +2534,18 @@ bool CConnman::RemoveAddedNode(const std::string& strNode)
         }
     }
     return false;
+}
+
+bool CConnman::AddPendingMasternode(const CService& service)
+{
+    LOCK(cs_vPendingMasternodes);
+    for(std::vector<CService>::const_iterator it = vPendingMasternodes.begin(); it != vPendingMasternodes.end(); ++it) {
+        if (service == *it)
+            return false;
+    }
+
+    vPendingMasternodes.push_back(service);
+    return true;
 }
 
 size_t CConnman::GetNodeCount(NumConnections flags)

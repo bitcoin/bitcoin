@@ -121,6 +121,11 @@ public:
         READWRITE(nDenom);
         READWRITE(txCollateral);
     }
+
+    friend bool operator==(const CDarksendAccept& a, const CDarksendAccept& b)
+    {
+        return a.nDenom == b.nDenom && a.txCollateral == b.txCollateral;
+    }
 };
 
 // A clients transaction in the mixing pool
