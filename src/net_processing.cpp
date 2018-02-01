@@ -1479,7 +1479,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                     // This is because after startup of the node, we are in IBD mode, which will only be left when recent
                     // blocks arrive. At the same time, we won't get any blocks from peers because we keep delaying
                     // GETHEADERS
-                    bool fDevNetGenesis = chainparams.NetworkIDString() == CBaseChainParams::DEVNET && pindexBestHeader->GetBlockHash() == chainparams.DevNetGenesisBlock().GetHash();
+                    bool fDevNetGenesis = !chainparams.GetConsensus().hashDevnetGenesisBlock.IsNull() && pindexBestHeader->GetBlockHash() == chainparams.GetConsensus().hashDevnetGenesisBlock;
 
                     if (!fDevNetGenesis && chainparams.DelayGetHeadersTime() != 0 && pindexBestHeader->GetBlockTime() < GetAdjustedTime() - chainparams.DelayGetHeadersTime()) {
                         // We are pretty far from being completely synced at the moment. If we would initiate a new

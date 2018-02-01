@@ -3274,9 +3274,9 @@ bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, const 
         return state.Invalid(false, REJECT_INVALID, "time-too-new", "block timestamp too far in the future");
 
     // Check DevNet
-    if (Params().NetworkIDString() == CBaseChainParams::DEVNET &&
-            block.hashPrevBlock == Params().GetConsensus().hashGenesisBlock &&
-            block.GetHash() != Params().DevNetGenesisBlock().GetHash()) {
+    if (!consensusParams.hashDevnetGenesisBlock.IsNull() &&
+            block.hashPrevBlock == consensusParams.hashGenesisBlock &&
+            block.GetHash() != consensusParams.hashDevnetGenesisBlock) {
         return state.DoS(100, error("CheckBlockHeader(): wrong devnet genesis"),
                          REJECT_INVALID, "devnet-genesis");
     }

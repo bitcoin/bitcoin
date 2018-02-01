@@ -9,7 +9,7 @@
 #include "streams.h"
 #include "consensus/validation.h"
 
-#include "bench/data/block413567.raw.h"
+#include "bench/data/block813851.raw.h"
 
 // These are the two major time-sinks which happen after we have fully received
 // a block off the wire, but before we can relay the block on to peers using
@@ -17,8 +17,8 @@
 
 static void DeserializeBlockTest(benchmark::State& state)
 {
-    CDataStream stream((const char*)raw_bench::block413567,
-            (const char*)&raw_bench::block413567[sizeof(raw_bench::block413567)],
+    CDataStream stream((const char*)raw_bench::block813851,
+            (const char*)&raw_bench::block813851[sizeof(raw_bench::block813851)],
             SER_NETWORK, PROTOCOL_VERSION);
     char a;
     stream.write(&a, 1); // Prevent compaction
@@ -26,14 +26,14 @@ static void DeserializeBlockTest(benchmark::State& state)
     while (state.KeepRunning()) {
         CBlock block;
         stream >> block;
-        assert(stream.Rewind(sizeof(raw_bench::block413567)));
+        assert(stream.Rewind(sizeof(raw_bench::block813851)));
     }
 }
 
 static void DeserializeAndCheckBlockTest(benchmark::State& state)
 {
-    CDataStream stream((const char*)raw_bench::block413567,
-            (const char*)&raw_bench::block413567[sizeof(raw_bench::block413567)],
+    CDataStream stream((const char*)raw_bench::block813851,
+            (const char*)&raw_bench::block813851[sizeof(raw_bench::block813851)],
             SER_NETWORK, PROTOCOL_VERSION);
     char a;
     stream.write(&a, 1); // Prevent compaction
@@ -43,7 +43,7 @@ static void DeserializeAndCheckBlockTest(benchmark::State& state)
     while (state.KeepRunning()) {
         CBlock block; // Note that CBlock caches its checked state, so we need to recreate it here
         stream >> block;
-        assert(stream.Rewind(sizeof(raw_bench::block413567)));
+        assert(stream.Rewind(sizeof(raw_bench::block813851)));
 
         CValidationState validationState;
         assert(CheckBlock(block, validationState, params, block.GetBlockTime()));
