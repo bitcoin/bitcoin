@@ -1686,8 +1686,7 @@ void CConnman::ProcessOneShot()
     CAddress addr;
     CSemaphoreGrant grant(*semOutbound, true);
     if (grant) {
-        if (!OpenNetworkConnection(addr, false, &grant, strDest.c_str(), true))
-            AddOneShot(strDest);
+        OpenNetworkConnection(addr, false, &grant, strDest.c_str(), true);
     }
 }
 
@@ -2032,10 +2031,6 @@ bool CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
     }
 
     return true;
-}
-
-bool CConnman::OpenMasternodeConnection(const CAddress &addrConnect) {
-    return OpenNetworkConnection(addrConnect, false, nullptr, nullptr, false, false, false, true);
 }
 
 void CConnman::ThreadMessageHandler()
