@@ -141,7 +141,7 @@ SplashScreen::~SplashScreen()
 
 bool SplashScreen::eventFilter(QObject * obj, QEvent * ev) {
     if (ev->type() == QEvent::KeyPress) {
-        QKeyEvent *keyEvent = static_cast<QKeyEvent *>(ev);
+        QKeyEvent *keyEvent = dynamic_cast<QKeyEvent *>(ev);
         if(keyEvent->text()[0] == 'q') {
             StartShutdown();
         }

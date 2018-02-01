@@ -939,7 +939,7 @@ void BitcoinGUI::changeEvent(QEvent *e)
     {
         if(clientModel && clientModel->getOptionsModel() && clientModel->getOptionsModel()->getMinimizeToTray())
         {
-            QWindowStateChangeEvent *wsevt = static_cast<QWindowStateChangeEvent*>(e);
+            QWindowStateChangeEvent *wsevt = dynamic_cast<QWindowStateChangeEvent*>(e);
             if(!(wsevt->oldState() & Qt::WindowMinimized) && isMinimized())
             {
                 QTimer::singleShot(0, this, SLOT(hide()));

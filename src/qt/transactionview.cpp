@@ -605,7 +605,7 @@ bool TransactionView::eventFilter(QObject *obj, QEvent *event)
 {
     if (event->type() == QEvent::KeyPress)
     {
-        QKeyEvent *ke = static_cast<QKeyEvent *>(event);
+        QKeyEvent *ke = dynamic_cast<QKeyEvent *>(event);
         if (ke->key() == Qt::Key_C && ke->modifiers().testFlag(Qt::ControlModifier))
         {
              GUIUtil::copyEntryData(transactionView, 0, TransactionTableModel::TxPlainTextRole);

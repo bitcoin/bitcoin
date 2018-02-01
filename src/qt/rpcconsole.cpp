@@ -512,7 +512,7 @@ bool RPCConsole::eventFilter(QObject* obj, QEvent *event)
 {
     if(event->type() == QEvent::KeyPress) // Special key handling
     {
-        QKeyEvent *keyevt = static_cast<QKeyEvent*>(event);
+        QKeyEvent *keyevt = dynamic_cast<QKeyEvent*>(event);
         int key = keyevt->key();
         Qt::KeyboardModifiers mod = keyevt->modifiers();
         switch(key)

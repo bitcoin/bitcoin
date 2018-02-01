@@ -39,7 +39,7 @@ ModalOverlay::~ModalOverlay()
 bool ModalOverlay::eventFilter(QObject * obj, QEvent * ev) {
     if (obj == parent()) {
         if (ev->type() == QEvent::Resize) {
-            QResizeEvent * rev = static_cast<QResizeEvent*>(ev);
+            QResizeEvent * rev = dynamic_cast<QResizeEvent*>(ev);
             resize(rev->size());
             if (!layerIsVisible)
                 setGeometry(0, height(), width(), height());
