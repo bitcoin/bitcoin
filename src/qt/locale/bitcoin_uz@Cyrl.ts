@@ -1,4 +1,4 @@
-<TS language="uz@Cyrl" version="2.0">
+<TS language="uz@Cyrl" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -161,7 +161,7 @@
     </message>
     <message>
         <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR ZETACOINS&lt;/b&gt;!</source>
-        <translation>Диққат: Агар сиз ҳамёнингизни кодласангиз ва махфий сўзингизни унутсангиз, сиз &lt;b&gt;БАРЧА BITCOIN ПУЛЛАРИНГИЗНИ ЙЎҚОТАСИЗ&lt;/b&gt;!</translation>
+        <translation>Диққат: Агар сиз ҳамёнингизни кодласангиз ва махфий сўзингизни унутсангиз, сиз &lt;b&gt;БАРЧА ZETACOIN ПУЛЛАРИНГИЗНИ ЙЎҚОТАСИЗ&lt;/b&gt;!</translation>
     </message>
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
@@ -212,6 +212,9 @@
         <translation>Ҳамён пароли муваффақиятли алмаштирилди.</translation>
     </message>
 </context>
+<context>
+    <name>BanTableModel</name>
+    </context>
 <context>
     <name>BitcoinGUI</name>
     <message>
@@ -801,7 +804,7 @@
         <source>command-line options</source>
         <translation>буйруқлар қатори орқали мослаш</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>Intro</name>
     <message>
@@ -1095,8 +1098,8 @@
         <translation>Миқдори</translation>
     </message>
     <message>
-        <source>Enter a Bitcoin address (e.g. %1)</source>
-        <translation>Bitcoin манзилини киритинг (масалан.  %1)</translation>
+        <source>Enter a Zetacoin address (e.g. %1)</source>
+        <translation>Zetacoin манзилини киритинг (масалан.  %1)</translation>
     </message>
     <message>
         <source>%1 m</source>
@@ -1209,14 +1212,6 @@
         <translation>Хизматлар</translation>
     </message>
     <message>
-        <source>Starting Height</source>
-        <translation>Узунликнинг бошланиши</translation>
-    </message>
-    <message>
-        <source>Sync Height</source>
-        <translation>Узунликни синхронлаш</translation>
-    </message>
-    <message>
         <source>Ban Score</source>
         <translation>Тезликни бан қилиш</translation>
     </message>
@@ -1231,14 +1226,6 @@
     <message>
         <source>Last Receive</source>
         <translation>Сўнгги қабул қилинган</translation>
-    </message>
-    <message>
-        <source>Bytes Sent</source>
-        <translation>Жўнатилган байтлар</translation>
-    </message>
-    <message>
-        <source>Bytes Received</source>
-        <translation>Қабул қилинган байтлар</translation>
     </message>
     <message>
         <source>Ping Time</source>
@@ -1329,12 +1316,16 @@
         <translation>Ташқи йўналиш</translation>
     </message>
     <message>
-        <source>Unknown</source>
-        <translation>Номаълум</translation>
+        <source>Yes</source>
+        <translation>Ҳа</translation>
     </message>
     <message>
-        <source>Fetching...</source>
-        <translation>Олинмоқда...</translation>
+        <source>No</source>
+        <translation>Йўқ</translation>
+    </message>
+    <message>
+        <source>Unknown</source>
+        <translation>Номаълум</translation>
     </message>
 </context>
 <context>
@@ -2135,28 +2126,12 @@
         <translation>Демон сифатида орқа фонда ишга туширинг ва буйруқларга рози бўлинг</translation>
     </message>
     <message>
-        <source>Use the test network</source>
-        <translation>Синов тармоғидан фойдаланинг</translation>
-    </message>
-    <message>
         <source>Connection options:</source>
         <translation>Уланиш кўрсаткичлари:</translation>
     </message>
     <message>
-        <source>Choose data directory on startup (default: 0)</source>
-        <translation>Ишга тушиш вақтида маълумотлар директориясини танлаш (стандарт: 0)</translation>
-    </message>
-    <message>
         <source>Information</source>
         <translation>Маълумот</translation>
-    </message>
-    <message>
-        <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation>Тўлов сўровлари учун SSL асос сертификатларини ўрнатиш (стандарт: -system-)</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>Йиғилганларни бошлаш</translation>
     </message>
     <message>
         <source>Username for JSON-RPC connections</source>
@@ -2169,10 +2144,6 @@
     <message>
         <source>Password for JSON-RPC connections</source>
         <translation>JSON-RPC уланишлари учун парол</translation>
-    </message>
-    <message>
-        <source>Use OpenSSL (https) for JSON-RPC connections</source>
-        <translation>JSON-RPC уланишлари учун OpenSSL (https)дан фойдаланиш</translation>
     </message>
     <message>
         <source>This help message</source>

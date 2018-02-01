@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2014 The Bitcoin Core developers
+// Copyright (c) 2009-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -185,7 +185,8 @@ void PaymentServerTests::paymentServerTests()
     tempFile.open();
     tempFile.write((const char*)randData, sizeof(randData));
     tempFile.close();
-    QCOMPARE(PaymentServer::readPaymentRequestFromFile(tempFile.fileName(), r.paymentRequest), false);
+    // compares 50001 <= BIP70_MAX_PAYMENTREQUEST_SIZE == false
+    QCOMPARE(PaymentServer::verifySize(tempFile.size()), false);
 
     // Payment request with amount overflow (amount is set to 21000001 BTC):
     data = DecodeBase64(paymentrequest5_cert2_BASE64);

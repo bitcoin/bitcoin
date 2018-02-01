@@ -1,4 +1,4 @@
-<TS language="fa_IR" version="2.0">
+<TS language="fa_IR" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -188,6 +188,9 @@
         <translation>رمز عبور کیف پول با موفقیت تغییر کرد.</translation>
     </message>
 </context>
+<context>
+    <name>BanTableModel</name>
+    </context>
 <context>
     <name>BitcoinGUI</name>
     <message>
@@ -391,6 +394,10 @@
     <message>
         <source>Edit sending address</source>
         <translation>ویرایش حساب ارسال کننده</translation>
+    </message>
+    <message>
+        <source>The entered address "%1" is already in the address book.</source>
+        <translation>حساب وارد شده «%1» از پیش در دفترچه حساب ها موجود است.</translation>
     </message>
     <message>
         <source>The entered address "%1" is not a valid Zetacoin address.</source>
@@ -1025,10 +1032,6 @@
         <translation>به عنوان daemon بک گراند را اجرا کنید و دستورات را قبول نمایید</translation>
     </message>
     <message>
-        <source>Use the test network</source>
-        <translation>از تستِ شبکه استفاده نمایید</translation>
-    </message>
-    <message>
         <source>The transaction amount is too small to send after the fee has been deducted</source>
         <translation>مبلغ تراکنش کمتر از آن است که پس از کسر هزینه  تراکنش قابل ارسال باشد</translation>
     </message>
@@ -1067,18 +1070,6 @@
     <message>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>دستور را وقتی بهترین بلاک تغییر کرد اجرا کن (%s در دستور توسط block hash جایگزین شده است)</translation>
-    </message>
-    <message>
-        <source>Upgrade wallet to latest format</source>
-        <translation>wallet را به جدیدترین نسخه روزآمد کنید</translation>
-    </message>
-    <message>
-        <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>زنجیره بلاک را برای تراکنش جا افتاده در WALLET دوباره اسکن کنید</translation>
-    </message>
-    <message>
-        <source>Use OpenSSL (https) for JSON-RPC connections</source>
-        <translation>برای ارتباطاتِ JSON-RPC  از OpenSSL (https) استفاده کنید</translation>
     </message>
     <message>
         <source>This help message</source>

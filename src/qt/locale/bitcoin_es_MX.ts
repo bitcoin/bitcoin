@@ -1,25 +1,21 @@
-<TS language="es_MX" version="2.0">
+<TS language="es_MX" version="2.1">
 <context>
     <name>AddressBookPage</name>
-    <message>
-        <source>Right-click to edit address or label</source>
-        <translation>Click derecho para editar tu dirección o etiqueta</translation>
-    </message>
     <message>
         <source>Create a new address</source>
         <translation>Crear una dirección nueva</translation>
     </message>
     <message>
         <source>&amp;New</source>
-        <translation>Nuevo</translation>
+        <translation>&amp;Nuevo</translation>
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation>Copiar el domicilio seleccionado al portapapeles del sistema</translation>
+        <translation>Copiar la dirección seleccionada al portapapeles del sistema</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
-        <translation>Copiar</translation>
+        <translation>&amp;Copiar</translation>
     </message>
     <message>
         <source>C&amp;lose</source>
@@ -27,7 +23,7 @@
     </message>
     <message>
         <source>&amp;Copy Address</source>
-        <translation>Copiar dirección</translation>
+        <translation>&amp;Copiar dirección</translation>
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
@@ -75,11 +71,11 @@
     </message>
     <message>
         <source>Copy &amp;Label</source>
-        <translation>Copiar y etiquetar</translation>
+        <translation>Copiar &amp;Etiqueta</translation>
     </message>
     <message>
         <source>&amp;Edit</source>
-        <translation>Editar</translation>
+        <translation>&amp;Editar</translation>
     </message>
     <message>
         <source>Export Address List</source>
@@ -87,7 +83,7 @@
     </message>
     <message>
         <source>Comma separated file (*.csv)</source>
-        <translation>Arhchivo separado por comas (*.CSV)</translation>
+        <translation>Archivo separado por comas (*.CSV)</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
@@ -102,7 +98,7 @@
     </message>
     <message>
         <source>Address</source>
-        <translation>Domicilio</translation>
+        <translation>Dirección</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -169,7 +165,7 @@
     </message>
     <message>
         <source>Wallet encryption failed</source>
-        <translation>Encriptación de la cartera fallida</translation>
+        <translation>La encriptación de la cartera fallo</translation>
     </message>
     <message>
         <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
@@ -185,7 +181,7 @@
     </message>
     <message>
         <source>The passphrase entered for the wallet decryption was incorrect.</source>
-        <translation>La contraseña ingresada para la desencriptación de la cartera es incorrecto</translation>
+        <translation>La contraseña ingresada para la desencriptación de la cartera es incorrecta</translation>
     </message>
     <message>
         <source>Wallet decryption failed</source>
@@ -197,10 +193,13 @@
     </message>
 </context>
 <context>
+    <name>BanTableModel</name>
+    </context>
+<context>
     <name>BitcoinGUI</name>
     <message>
         <source>Sign &amp;message...</source>
-        <translation>Sign &amp;mensaje</translation>
+        <translation>Firmar &amp;mensaje</translation>
     </message>
     <message>
         <source>Synchronizing with network...</source>
@@ -260,19 +259,19 @@
     </message>
     <message>
         <source>&amp;Sending addresses...</source>
-        <translation>&amp;Enviando direcciones...</translation>
+        <translation>Direcciones de &amp;envío...</translation>
     </message>
     <message>
         <source>&amp;Receiving addresses...</source>
-        <translation>&amp;Recibiendo direcciones...</translation>
+        <translation>Direcciones de &amp;recepción...</translation>
     </message>
     <message>
         <source>Open &amp;URI...</source>
         <translation>Abrir &amp;URL...</translation>
     </message>
     <message>
-        <source>Bitcoin Core client</source>
-        <translation>cliente Bitcoin Core</translation>
+        <source>Zetacoin Core client</source>
+        <translation>cliente Zetacoin Core</translation>
     </message>
     <message>
         <source>Importing blocks from disk...</source>
@@ -300,15 +299,15 @@
     </message>
     <message>
         <source>Open debugging and diagnostic console</source>
-        <translation>Abrir la consola de depuración y disgnostico</translation>
+        <translation>Abrir consola de depuración y diagnostico</translation>
     </message>
     <message>
         <source>&amp;Verify message...</source>
         <translation>&amp;Verificar mensaje...</translation>
     </message>
     <message>
-        <source>Bitcoin</source>
-        <translation>Bitcoin</translation>
+        <source>Zetacoin</source>
+        <translation>Zetacoin</translation>
     </message>
     <message>
         <source>Wallet</source>
@@ -343,12 +342,8 @@
         <translation>nucleo Zetacoin</translation>
     </message>
     <message>
-        <source>&amp;About Bitcoin Core</source>
-        <translation>Acerca de Bitcoin Core</translation>
-    </message>
-    <message>
-        <source>Modify configuration options for Bitcoin Core</source>
-        <translation>Modificar las opciones de configuración de Bitcoin Core</translation>
+        <source>&amp;About Zetacoin Core</source>
+        <translation>Acerca de Zetacoin Core</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
@@ -359,24 +354,12 @@
         <translation>Mostrar mensaje de ayuda del nucleo de Zetacoin para optener una lista con los posibles comandos  de Zetacoin</translation>
     </message>
     <message>
-        <source>Error</source>
-        <translation>Error</translation>
-    </message>
-    <message>
-        <source>Warning</source>
-        <translation>Aviso</translation>
-    </message>
-    <message>
-        <source>Information</source>
-        <translation>Información </translation>
-    </message>
-    <message>
         <source>Up to date</source>
         <translation>Actualizado al dia </translation>
     </message>
     <message>
         <source>Catching up...</source>
-        <translation>Resiviendo...</translation>
+        <translation>Recibiendo...</translation>
     </message>
     <message>
         <source>Sent transaction</source>
@@ -401,10 +384,6 @@
 <context>
     <name>CoinControlDialog</name>
     <message>
-        <source>Quantity:</source>
-        <translation>Cantidad</translation>
-    </message>
-    <message>
         <source>Bytes:</source>
         <translation>Bytes:</translation>
     </message>
@@ -419,14 +398,6 @@
     <message>
         <source>Fee:</source>
         <translation>Cuota:</translation>
-    </message>
-    <message>
-        <source>After Fee:</source>
-        <translation>Después de los cargos por comisión. </translation>
-    </message>
-    <message>
-        <source>Change:</source>
-        <translation>Cambio</translation>
     </message>
     <message>
         <source>Amount</source>
@@ -450,65 +421,41 @@
     </message>
     <message>
         <source>Copy label</source>
-        <translation>Copiar capa </translation>
+        <translation>Copiar etiqueta</translation>
     </message>
     <message>
         <source>Copy amount</source>
-        <translation>copiar monto</translation>
-    </message>
-    <message>
-        <source>Copy transaction ID</source>
-        <translation>Copiar identificación de la transacción. </translation>
+        <translation>Copiar monto</translation>
     </message>
     <message>
         <source>Copy quantity</source>
-        <translation>copiar cantidad</translation>
+        <translation>Copiar cantidad</translation>
     </message>
     <message>
         <source>Copy fee</source>
-        <translation>copiar cuota</translation>
+        <translation>Copiar cuota</translation>
     </message>
     <message>
         <source>Copy after fee</source>
-        <translation>copiar despues de cuota</translation>
+        <translation>Copiar después de cuota</translation>
     </message>
     <message>
         <source>Copy bytes</source>
-        <translation>copiar bytes</translation>
+        <translation>Copiar bytes</translation>
     </message>
     <message>
         <source>Copy priority</source>
-        <translation>copiar prioridad</translation>
+        <translation>Copiar prioridad</translation>
     </message>
     <message>
         <source>Copy change</source>
-        <translation>copiar cambio</translation>
-    </message>
-    <message>
-        <source>low</source>
-        <translation>Bajo</translation>
-    </message>
-    <message>
-        <source>none</source>
-        <translation>Ninguno </translation>
-    </message>
-    <message>
-        <source>yes</source>
-        <translation>si</translation>
-    </message>
-    <message>
-        <source>no</source>
-        <translation>no</translation>
+        <translation>Copiar cambio</translation>
     </message>
     <message>
         <source>(no label)</source>
         <translation>(sin etiqueta)</translation>
     </message>
-    <message>
-        <source>(change)</source>
-        <translation>(cambio)</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -525,23 +472,23 @@
     </message>
     <message>
         <source>New receiving address</source>
-        <translation>Nueva dirección de entregas</translation>
+        <translation>Nueva dirección de recepción</translation>
     </message>
     <message>
         <source>New sending address</source>
-        <translation>Nueva dirección de entregas</translation>
+        <translation>Nueva dirección de envío</translation>
     </message>
     <message>
         <source>Edit receiving address</source>
-        <translation>Editar dirección de entregas</translation>
+        <translation>Editar dirección de recepción</translation>
     </message>
     <message>
         <source>Edit sending address</source>
-        <translation>Editar dirección de envios</translation>
+        <translation>Editar dirección de envío</translation>
     </message>
     <message>
         <source>The entered address "%1" is already in the address book.</source>
-        <translation>El domicilio ingresado "%1" ya existe en la libreta de direcciones</translation>
+        <translation>La dirección ingresada "%1" ya existe en la libreta de direcciones</translation>
     </message>
     <message>
         <source>Could not unlock wallet.</source>
@@ -554,10 +501,6 @@
 </context>
 <context>
     <name>FreespaceChecker</name>
-    <message>
-        <source>name</source>
-        <translation>nombre</translation>
-    </message>
     </context>
 <context>
     <name>HelpMessageDialog</name>
@@ -567,7 +510,7 @@
     </message>
     <message>
         <source>version</source>
-        <translation>Versión</translation>
+        <translation>versión</translation>
     </message>
     <message>
         <source>(%1-bit)</source>
@@ -589,16 +532,12 @@
         <source>command-line options</source>
         <translation>Opciones de comando de lineas</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>Intro</name>
     <message>
         <source>Zetacoin Core</source>
         <translation>nucleo Zetacoin</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>Error</translation>
     </message>
     </context>
 <context>
@@ -617,10 +556,6 @@
     <message>
         <source>W&amp;allet</source>
         <translation>Cartera</translation>
-    </message>
-    <message>
-        <source>none</source>
-        <translation>Ninguno </translation>
     </message>
     </context>
 <context>
@@ -664,10 +599,6 @@
         <translation>&amp;Etiqueta</translation>
     </message>
     <message>
-        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Zetacoin network.</source>
-        <translation>Mensaje opcional para agregar a la solicitud de pago, el cual será mostrado cuando la solicitud este abierta. Nota: El mensaje no se manda con el pago a travéz de la red de Zetacoin.</translation>
-    </message>
-    <message>
         <source>&amp;Message:</source>
         <translation>Mensaje:</translation>
     </message>
@@ -685,11 +616,11 @@
     </message>
     <message>
         <source>Copy label</source>
-        <translation>Copiar capa </translation>
+        <translation>Copiar etiqueta</translation>
     </message>
     <message>
         <source>Copy amount</source>
-        <translation>copiar monto</translation>
+        <translation>Copiar monto</translation>
     </message>
 </context>
 <context>
@@ -700,7 +631,7 @@
     </message>
     <message>
         <source>Address</source>
-        <translation>Domicilio</translation>
+        <translation>Dirección</translation>
     </message>
     <message>
         <source>Amount</source>
@@ -742,11 +673,7 @@
     <name>SendCoinsDialog</name>
     <message>
         <source>Send Coins</source>
-        <translation>Mandar monedas</translation>
-    </message>
-    <message>
-        <source>Quantity:</source>
-        <translation>Cantidad</translation>
+        <translation>Enviar monedas</translation>
     </message>
     <message>
         <source>Bytes:</source>
@@ -763,14 +690,6 @@
     <message>
         <source>Fee:</source>
         <translation>Cuota:</translation>
-    </message>
-    <message>
-        <source>After Fee:</source>
-        <translation>Después de los cargos por comisión. </translation>
-    </message>
-    <message>
-        <source>Change:</source>
-        <translation>Cambio</translation>
     </message>
     <message>
         <source>fast</source>
@@ -790,35 +709,35 @@
     </message>
     <message>
         <source>Confirm send coins</source>
-        <translation>Confirme para mandar monedas</translation>
+        <translation>Confirme para enviar monedas</translation>
     </message>
     <message>
         <source>Copy quantity</source>
-        <translation>copiar cantidad</translation>
+        <translation>Copiar cantidad</translation>
     </message>
     <message>
         <source>Copy amount</source>
-        <translation>copiar monto</translation>
+        <translation>Copiar monto</translation>
     </message>
     <message>
         <source>Copy fee</source>
-        <translation>copiar cuota</translation>
+        <translation>Copiar cuota</translation>
     </message>
     <message>
         <source>Copy after fee</source>
-        <translation>copiar despues de cuota</translation>
+        <translation>Copiar después de cuota</translation>
     </message>
     <message>
         <source>Copy bytes</source>
-        <translation>copiar bytes</translation>
+        <translation>Copiar bytes</translation>
     </message>
     <message>
         <source>Copy priority</source>
-        <translation>copiar prioridad</translation>
+        <translation>Copiar prioridad</translation>
     </message>
     <message>
         <source>Copy change</source>
-        <translation>copiar cambio</translation>
+        <translation>Copiar cambio</translation>
     </message>
     <message>
         <source>or</source>
@@ -830,7 +749,7 @@
     </message>
     <message>
         <source>Transaction creation failed!</source>
-        <translation>¡La creación de transacion falló!</translation>
+        <translation>¡La creación de la transación falló!</translation>
     </message>
     <message>
         <source>The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
@@ -930,7 +849,7 @@
     <name>SplashScreen</name>
     <message>
         <source>Zetacoin Core</source>
-        <translation>nucleo Zetacoin</translation>
+        <translation>Zetacoin Core</translation>
     </message>
     <message>
         <source>The Zetacoin Core developers</source>
@@ -1144,10 +1063,6 @@
         <translation>copiar monto</translation>
     </message>
     <message>
-        <source>Copy transaction ID</source>
-        <translation>Copiar identificación de la transacción. </translation>
-    </message>
-    <message>
         <source>Edit label</source>
         <translation>Editar capa </translation>
     </message>
@@ -1166,6 +1081,10 @@
     <message>
         <source>Exporting Successful</source>
         <translation>Exportacion satisfactoria</translation>
+    </message>
+    <message>
+        <source>The transaction history was successfully saved to %1.</source>
+        <translation>el historial de transaciones ha sido guardado exitosamente en %1</translation>
     </message>
     <message>
         <source>Comma separated file (*.csv)</source>
@@ -1231,6 +1150,10 @@
         <source>There was an error trying to save the wallet data to %1.</source>
         <translation>Ocurrio un error tratando de guardar la información de la cartera %1</translation>
     </message>
+    <message>
+        <source>The wallet data was successfully saved to %1.</source>
+        <translation>La información de la cartera fué guardada exitosamente a %1</translation>
+    </message>
     </context>
 <context>
     <name>bitcoin-core</name>
@@ -1255,30 +1178,6 @@
         <translation>Opciones de cartera:</translation>
     </message>
     <message>
-        <source>Choose data directory on startup (default: 0)</source>
-        <translation>Escojer el directorio de información al iniciar (por defecto : 0)</translation>
-    </message>
-    <message>
-        <source>Information</source>
-        <translation>Información </translation>
-    </message>
-    <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>Definir idioma, por ejemplo "de_DE" (por defecto: Sistema local)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>Mostrar pantalla de arraque al iniciar (por defecto: 1)</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>Iniciar minimizado</translation>
-    </message>
-    <message>
-        <source>Warning</source>
-        <translation>Aviso</translation>
-    </message>
-    <message>
         <source>Loading addresses...</source>
         <translation>Cargando direcciones...</translation>
     </message>
@@ -1294,9 +1193,5 @@
         <source>Done loading</source>
         <translation>Carga completa</translation>
     </message>
-    <message>
-        <source>Error</source>
-        <translation>Error</translation>
-    </message>
-</context>
+    </context>
 </TS>

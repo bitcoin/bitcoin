@@ -1,4 +1,4 @@
-<TS language="af_ZA" version="2.0">
+<TS language="af_ZA" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -33,19 +33,19 @@
     <name>AskPassphraseDialog</name>
     <message>
         <source>Passphrase Dialog</source>
-        <translation>Wagwoord Dialoog</translation>
+        <translation>Wagfrase Dialoog</translation>
     </message>
     <message>
         <source>Enter passphrase</source>
-        <translation>Tik Wagwoord in</translation>
+        <translation>Tik wagfrase in</translation>
     </message>
     <message>
         <source>New passphrase</source>
-        <translation>Nuwe wagwoord</translation>
+        <translation>Nuwe wagfrase</translation>
     </message>
     <message>
         <source>Repeat new passphrase</source>
-        <translation>Herhaal nuwe wagwoord</translation>
+        <translation>Herhaal nuwe wagfrase</translation>
     </message>
     <message>
         <source>Encrypt wallet</source>
@@ -69,7 +69,7 @@
     </message>
     <message>
         <source>Change passphrase</source>
-        <translation>Verander wagwoord</translation>
+        <translation>Verander wagfrase</translation>
     </message>
     <message>
         <source>Confirm wallet encryption</source>
@@ -81,7 +81,7 @@
     </message>
     <message>
         <source>Enter the old passphrase and new passphrase to the wallet.</source>
-        <translation>Tik in die ou wagwoord en die nuwe wagwoord vir die beursie.</translation>
+        <translation>Tik in die ou wagfrase en die nuwe wagfrase vir die beursie.</translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
@@ -93,7 +93,7 @@
     </message>
     <message>
         <source>The supplied passphrases do not match.</source>
-        <translation>Die wagwoord stem nie ooreen nie</translation>
+        <translation>Die wagfrase stem nie ooreen nie</translation>
     </message>
     <message>
         <source>Wallet unlock failed</source>
@@ -101,7 +101,7 @@
     </message>
     <message>
         <source>The passphrase entered for the wallet decryption was incorrect.</source>
-        <translation>Die wagwoord wat ingetik was om die beursie oop te sluit, was verkeerd.</translation>
+        <translation>Die wagfrase wat ingetik was om die beursie oop te sluit, was verkeerd.</translation>
     </message>
     <message>
         <source>Wallet decryption failed</source>
@@ -112,6 +112,9 @@
         <translation>Die beursie se wagfrase verandering was suksesvol.</translation>
     </message>
 </context>
+<context>
+    <name>BanTableModel</name>
+    </context>
 <context>
     <name>BitcoinGUI</name>
     <message>
@@ -677,10 +680,6 @@
     <message>
         <source>Options:</source>
         <translation>Opsies:</translation>
-    </message>
-    <message>
-        <source>Use the test network</source>
-        <translation>Gebruik die toets netwerk</translation>
     </message>
     <message>
         <source>Error: Disk space is low!</source>

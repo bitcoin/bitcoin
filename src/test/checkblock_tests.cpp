@@ -1,10 +1,11 @@
-// Copyright (c) 2013-2014 The Bitcoin Core developers
+// Copyright (c) 2013-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "clientversion.h"
 #include "consensus/validation.h"
-#include "main.h"
+#include "main.h" // For CheckBlock
+#include "primitives/block.h"
 #include "test/test_bitcoin.h"
 #include "utiltime.h"
 

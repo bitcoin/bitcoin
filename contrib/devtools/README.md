@@ -1,9 +1,45 @@
 Contents
-===========
+========
 This directory contains tools for developers working on this repository.
 
+clang-format.py
+===============
+
+A script to format cpp source code according to [.clang-format](../../src/.clang-format). This should only be applied to new files or files which are currently not actively developed on. Also, git subtrees are not subject to formatting.
+
+fix-copyright-headers.py
+========================
+
+Every year newly updated files need to have its copyright headers updated to reflect the current year.
+If you run this script from the root folder it will automatically update the year on the copyright header for all
+source files if these have a git commit from the current year.
+
+For example a file changed in 2015 (with 2015 being the current year):
+
+```// Copyright (c) 2009-2013 The Bitcoin Core developers```
+
+would be changed to:
+
+```// Copyright (c) 2009-2015 The Bitcoin Core developers```
+
+git-subtree-check.sh
+====================
+
+Run this script from the root of the repository to verify that a subtree matches the contents of
+the commit it claims to have been updated to.
+
+To use, make sure that you have fetched the upstream repository branch in which the subtree is
+maintained:
+* for `src/secp256k1`: https://github.com/bitcoin/secp256k1.git (branch master)
+* for `src/leveldb`: https://github.com/bitcoin/leveldb.git (branch bitcoin-fork)
+* for `src/univalue`: https://github.com/bitcoin/univalue.git (branch master)
+
+Usage: `git-subtree-check.sh DIR COMMIT`
+
+`COMMIT` may be omitted, in which case `HEAD` is used.
+
 github-merge.sh
-==================
+===============
 
 A small script to automate merging pull-requests securely and sign them with GPG.
 
@@ -36,24 +72,22 @@ Configuring the github-merge tool for the bitcoin repository is done in the foll
     git config githubmerge.testcmd "make -j4 check" (adapt to whatever you want to use for testing)
     git config --global user.signingkey mykeyid (if you want to GPG sign)
 
-fix-copyright-headers.py
-===========================
+optimize-pngs.py
+================
 
-Every year newly updated files need to have its copyright headers updated to reflect the current year.
-If you run this script from src/ it will automatically update the year on the copyright header for all
-.cpp and .h files if these have a git commit from the current year.
+A script to optimize png files in the bitcoin
+repository (requires pngcrush).
 
-For example a file changed in 2014 (with 2014 being the current year):
-```// Copyright (c) 2009-2013 The Bitcoin Core developers```
+security-check.py and test-security-check.py
+============================================
 
-would be changed to:
-```// Copyright (c) 2009-2014 The Bitcoin Core developers```
+Perform basic ELF security checks on a series of executables.
 
 symbol-check.py
-==================
+===============
 
 A script to check that the (Linux) executables produced by gitian only contain
-allowed gcc, glibc and libstdc++ version symbols.  This makes sure they are
+allowed gcc, glibc and libstdc++ version symbols. This makes sure they are
 still compatible with the minimum supported Linux distribution versions.
 
 Example usage after a gitian build:
@@ -70,7 +104,7 @@ If there are 'unsupported' symbols, the return value will be 1 a list like this 
     .../64/test_bitcoin: symbol _ZNSt8__detail15_List_nod from unsupported version GLIBCXX_3.4.15
 
 update-translations.py
-=======================
+======================
 
 Run this script from the root of the repository to update all translations from transifex.
 It will do the following automatically:
@@ -80,17 +114,3 @@ It will do the following automatically:
 - add missing translations to the build system (TODO)
 
 See doc/translation-process.md for more information.
-
-git-subtree-check.sh
-====================
-
-Run this script from the root of the repository to verify that a subtree matches the contents of
-the commit it claims to have been updated to.
-
-To use, make sure that you have fetched the upstream repository branch in which the subtree is
-maintained:
-* for src/secp256k1: https://github.com/bitcoin/secp256k1.git (branch master)
-* for sec/leveldb: https://github.com/bitcoin/leveldb.git (branch bitcoin-fork)
-
-Usage: git-subtree-check.sh DIR COMMIT
-COMMIT may be omitted, in which case HEAD is used.

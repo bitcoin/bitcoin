@@ -1,4 +1,4 @@
-<TS language="es_UY" version="2.0">
+<TS language="es_UY" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -162,6 +162,9 @@
     </message>
     </context>
 <context>
+    <name>BanTableModel</name>
+    </context>
+<context>
     <name>BitcoinGUI</name>
     <message>
         <source>Synchronizing with network...</source>
@@ -216,7 +219,7 @@
         <translation>Recibiendo direcciones</translation>
     </message>
     <message>
-        <source>Send coins to a Bitcoin address</source>
+        <source>Send coins to a Zetacoin address</source>
         <translation>Enviar monedas a una dirección BItCoin</translation>
     </message>
     <message>
@@ -224,8 +227,8 @@
         <translation>Cambie la clave utilizada para el cifrado del monedero</translation>
     </message>
     <message>
-        <source>Bitcoin</source>
-        <translation>Bitcoin</translation>
+        <source>Zetacoin</source>
+        <translation>Zetacoin</translation>
     </message>
     <message>
         <source>Wallet</source>
@@ -280,8 +283,7 @@
     <message>
         <source>Address: %1
 </source>
-        <translation>Dirección: %1
-</translation>
+        <translation>Dirección: %1</translation>
     </message>
     <message>
         <source>Sent transaction</source>
@@ -371,6 +373,10 @@
     <message>
         <source>Edit sending address</source>
         <translation>Editar dirección de envío </translation>
+    </message>
+    <message>
+        <source>The entered address "%1" is already in the address book.</source>
+        <translation>La dirección introducida "%1" ya está en la libreta de direcciones.</translation>
     </message>
     <message>
         <source>Could not unlock wallet.</source>

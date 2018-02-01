@@ -24,11 +24,9 @@ The HTTP request and response are both handled entirely in-memory, thus making m
 With the /notxdetails/ option JSON response will only contain the transaction hash instead of the complete transaction details. The option only affects the JSON response.
 
 ####Blockheaders
-`GET /rest/headers/<COUNT>/<BLOCK-HASH>.<bin|hex>`
+`GET /rest/headers/<COUNT>/<BLOCK-HASH>.<bin|hex|json>`
 
 Given a block hash: returns <COUNT> amount of blockheaders in upward direction.
-
-JSON is not supported.
 
 ####Chaininfos
 `GET /rest/chaininfo.json`
@@ -42,6 +40,9 @@ Only supports JSON as output format.
 * difficulty : (numeric) the current difficulty
 * verificationprogress : (numeric) estimate of verification progress [0..1]
 * chainwork : (string) total amount of work in active chain, in hexadecimal
+* pruned : (boolean) if the blocks are subject to pruning
+* pruneheight : (numeric) heighest block available
+* softforks : (array) status of softforks in progress
 
 ####Query UTXO set
 `GET /rest/getutxos/<checkmempool>/<txid>-<n>/<txid>-<n>/.../<txid>-<n>.<bin|hex|json>`
@@ -75,6 +76,20 @@ $ curl localhost:18332/rest/getutxos/checkmempool/b2cdfd7b89def827ff8af7cd9bff76
    "bitmap" : "1"
 }
 ```
+
+####Memory pool
+`GET /rest/mempool/info.json`
+
+Returns various information about the TX mempool.
+Only supports JSON as output format.
+* size : (numeric) the number of transactions in the TX mempool
+* bytes : (numeric) size of the TX mempool in bytes
+* usage : (numeric) total TX mempool memory usage
+
+`GET /rest/mempool/contents.json`
+
+Returns transactions in the TX mempool.
+Only supports JSON as output format.
 
 Risks
 -------------

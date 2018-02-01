@@ -1,4 +1,4 @@
-<TS language="et" version="2.0">
+<TS language="et" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -129,7 +129,7 @@
     </message>
     <message>
         <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR ZETACOINS&lt;/b&gt;!</source>
-        <translation>Hoiatus: Kui sa kaotad oma, rahakoti krüpteerimisel kasutatud, salafraasi, siis &lt;b&gt;KAOTAD KA KÕIK OMA BITCOINID&lt;/b&gt;!</translation>
+        <translation>Hoiatus: Kui sa kaotad oma, rahakoti krüpteerimisel kasutatud, salafraasi, siis &lt;b&gt;KAOTAD KA KÕIK OMA ZETACOINID&lt;/b&gt;!</translation>
     </message>
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
@@ -176,6 +176,9 @@
         <translation>Rahakoti salafraasi muutmine õnnestus.</translation>
     </message>
 </context>
+<context>
+    <name>BanTableModel</name>
+    </context>
 <context>
     <name>BitcoinGUI</name>
     <message>
@@ -327,8 +330,8 @@
         <translation>Zetacoini tuumik</translation>
     </message>
     <message>
-        <source>&amp;About Bitcoin Core</source>
-        <translation>Kirjeldus Bitcoini Tuumast</translation>
+        <source>&amp;About Zetacoin Core</source>
+        <translation>Kirjeldus Zetacoini Tuumast</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
@@ -611,7 +614,7 @@
         <source>command-line options</source>
         <translation>käsurea valikud</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>Intro</name>
     <message>
@@ -643,6 +646,10 @@
     <message>
         <source>Options</source>
         <translation>Valikud</translation>
+    </message>
+    <message>
+        <source>&amp;Main</source>
+        <translation>&amp;Peamine</translation>
     </message>
     <message>
         <source>MB</source>
@@ -1309,6 +1316,10 @@
         <translation>Avatud kuni %1</translation>
     </message>
     <message>
+        <source>%1/offline</source>
+        <translation>%1/offline'is</translation>
+    </message>
+    <message>
         <source>%1/unconfirmed</source>
         <translation>%1/kinnitamata</translation>
     </message>
@@ -1685,10 +1696,6 @@
         <translation>Tööta taustal ning aktsepteeri käsklusi</translation>
     </message>
     <message>
-        <source>Use the test network</source>
-        <translation>Testvõrgu kasutamine</translation>
-    </message>
-    <message>
         <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
         <translation>Luba välisühendusi (vaikeväärtus: 1 kui puudub -proxy või -connect)</translation>
     </message>
@@ -1705,20 +1712,8 @@
         <translation>See on test-versioon - kasutamine omal riisikol - ära kasuta mining'uks ega kaupmeeste programmides</translation>
     </message>
     <message>
-        <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
-        <translation>Hoiatus: -paytxfee on seatud väga kõrgeks! See on sinu poolt makstav tehingu lisatasu.</translation>
-    </message>
-    <message>
-        <source>Warning: error reading wallet.dat! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
-        <translation>Hoiatus: ilmnes tõrge wallet.dat faili lugemisel! Võtmed on terved, kuid tehingu andmed või aadressiraamatu kirjed võivad olla kadunud või vigased.</translation>
-    </message>
-    <message>
         <source>Warning: wallet.dat corrupt, data salvaged! Original wallet.dat saved as wallet.{timestamp}.bak in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
         <translation>Hoiatus: toimus wallet.dat faili andmete päästmine! Originaal wallet.dat nimetati kaustas %s ümber wallet.{ajatempel}.bak'iks, jäägi või tehingute ebakõlade puhul tuleks teha backup'ist taastamine.</translation>
-    </message>
-    <message>
-        <source>Attempt to recover private keys from a corrupt wallet.dat</source>
-        <translation>Püüa vigasest wallet.dat failist taastada turvavõtmed</translation>
     </message>
     <message>
         <source>Block creation options:</source>
@@ -1773,10 +1768,6 @@
         <translation>Rahakoti valikud:</translation>
     </message>
     <message>
-        <source>Imports blocks from external blk000??.dat file</source>
-        <translation>Impordi blokid välisest blk000??.dat failist</translation>
-    </message>
-    <message>
         <source>(default: %u)</source>
         <translation>(vaikimisi: %u)</translation>
     </message>
@@ -1809,24 +1800,12 @@
         <translation>Saada jälitus/debug, debug.log faili asemel, konsooli</translation>
     </message>
     <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>Keele valik, nt "ee_ET" (vaikeväärtus: system locale)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>Käivitamisel teabeakna kuvamine (vaikeväärtus: 1)</translation>
-    </message>
-    <message>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
         <translation>Kahanda programmi käivitamisel debug.log faili (vaikeväärtus: 1, kui ei ole -debug)</translation>
     </message>
     <message>
         <source>Signing transaction failed</source>
         <translation>Tehingu allkirjastamine ebaõnnestus</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>Käivitu tegumiribale</translation>
     </message>
     <message>
         <source>The transaction amount is too small to pay the fee</source>
@@ -1841,24 +1820,12 @@
         <translation>Tehing liiga suur</translation>
     </message>
     <message>
-        <source>UI Options:</source>
-        <translation>UI Valikud:</translation>
-    </message>
-    <message>
-        <source>Use UPnP to map the listening port (default: 1 when listening)</source>
-        <translation>Kasuta kuulatava pordi määramiseks UPnP ühendust (vaikeväärtus: 1, kui kuulatakse)</translation>
-    </message>
-    <message>
         <source>Username for JSON-RPC connections</source>
         <translation>JSON-RPC ühenduste kasutajatunnus</translation>
     </message>
     <message>
         <source>Warning</source>
         <translation>Hoiatus</translation>
-    </message>
-    <message>
-        <source>on startup</source>
-        <translation>käivitamisel</translation>
     </message>
     <message>
         <source>wallet.dat corrupt, salvage failed</source>
@@ -1871,18 +1838,6 @@
     <message>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>Käivita käsklus, kui parim plokk muutub (käskluse %s asendatakse ploki hash'iga)</translation>
-    </message>
-    <message>
-        <source>Upgrade wallet to latest format</source>
-        <translation>Uuenda rahakott uusimasse vormingusse</translation>
-    </message>
-    <message>
-        <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>Otsi ploki jadast rahakoti kadunud tehinguid</translation>
-    </message>
-    <message>
-        <source>Use OpenSSL (https) for JSON-RPC connections</source>
-        <translation>Kasuta JSON-RPC ühenduste jaoks OpenSSL'i (https)</translation>
     </message>
     <message>
         <source>This help message</source>

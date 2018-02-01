@@ -19,9 +19,6 @@ P2SH_2 = "2NBdpwq8Aoo1EEKEXPNrKvr5xQr3M9UfcZA" # P2SH of "OP_2 OP_DROP"
 # 4 bytes of OP_TRUE and push 2-byte redeem script of "OP_1 OP_DROP" or "OP_2 OP_DROP"
 SCRIPT_SIG = ["0451025175", "0451025275"]
 
-def satoshi_round(amount):
-    return  Decimal(amount).quantize(Decimal('0.00000001'), rounding=ROUND_DOWN)
-
 def small_txpuzzle_randfee(from_node, conflist, unconflist, amount, min_fee, fee_increment):
     '''
     Create and send a transaction with a random fee.
@@ -120,15 +117,26 @@ def check_estimates(node, fees_seen, max_invalid, print_estimates = True):
         last_e = e
     valid_estimate = False
     invalid_estimates = 0
-    for e in all_estimates:
+    for i,e in enumerate(all_estimates): # estimate is for i+1
         if e >= 0:
             valid_estimate = True
+            # estimatesmartfee should return the same result
+            assert_equal(node.estimatesmartfee(i+1)["feerate"], e)
+
         else:
             invalid_estimates += 1
-        # Once we're at a high enough confirmation count that we can give an estimate
-        # We should have estimates for all higher confirmation counts
-        if valid_estimate and e < 0:
-            raise AssertionError("Invalid estimate appears at higher confirm count than valid estimate")
+
+            # estimatesmartfee should still be valid
+            approx_estimate = node.estimatesmartfee(i+1)["feerate"]
+            answer_found = node.estimatesmartfee(i+1)["blocks"]
+            assert(approx_estimate > 0)
+            assert(answer_found > i+1)
+
+            # Once we're at a high enough confirmation count that we can give an estimate
+            # We should have estimates for all higher confirmation counts
+            if valid_estimate:
+                raise AssertionError("Invalid estimate appears at higher confirm count than valid estimate")
+
     # Check on the expected number of different confirmation counts
     # that we might not have valid estimates for
     if invalid_estimates > max_invalid:
@@ -184,13 +192,13 @@ class EstimateFeeTest(BitcoinTestFramework):
         # NOTE: the CreateNewBlock code starts counting block size at 1,000 bytes,
         # (17k is room enough for 110 or so transactions)
         self.nodes.append(start_node(1, self.options.tmpdir,
-                                     ["-blockprioritysize=1500", "-blockmaxsize=18000",
+                                     ["-blockprioritysize=1500", "-blockmaxsize=17000",
                                       "-maxorphantx=1000", "-relaypriority=0", "-debug=estimatefee"]))
         connect_nodes(self.nodes[1], 0)
 
         # Node2 is a stingy miner, that
-        # produces too small blocks (room for only 70 or so transactions)
-        node2args = ["-blockprioritysize=0", "-blockmaxsize=12000", "-maxorphantx=1000", "-relaypriority=0"]
+        # produces too small blocks (room for only 55 or so transactions)
+        node2args = ["-blockprioritysize=0", "-blockmaxsize=8000", "-maxorphantx=1000", "-relaypriority=0"]
 
         self.nodes.append(start_node(2, self.options.tmpdir, node2args))
         connect_nodes(self.nodes[0], 2)
@@ -229,22 +237,19 @@ class EstimateFeeTest(BitcoinTestFramework):
         self.fees_per_kb = []
         self.memutxo = []
         self.confutxo = self.txouts # Start with the set of confirmed txouts after splitting
-        print("Checking estimates for 1/2/3/6/15/25 blocks")
-        print("Creating transactions and mining them with a huge block size")
-        # Create transactions and mine 20 big blocks with node 0 such that the mempool is always emptied
-        self.transact_and_mine(30, self.nodes[0])
-        check_estimates(self.nodes[1], self.fees_per_kb, 1)
+        print("Will output estimates for 1/2/3/6/15/25 blocks")
 
-        print("Creating transactions and mining them with a block size that can't keep up")
-        # Create transactions and mine 30 small blocks with node 2, but create txs faster than we can mine
-        self.transact_and_mine(20, self.nodes[2])
-        check_estimates(self.nodes[1], self.fees_per_kb, 3)
+        for i in xrange(2):
+            print("Creating transactions and mining them with a block size that can't keep up")
+            # Create transactions and mine 10 small blocks with node 2, but create txs faster than we can mine
+            self.transact_and_mine(10, self.nodes[2])
+            check_estimates(self.nodes[1], self.fees_per_kb, 14)
 
-        print("Creating transactions and mining them at a block size that is just big enough")
-        # Generate transactions while mining 40 more blocks, this time with node1
-        # which mines blocks with capacity just above the rate that transactions are being created
-        self.transact_and_mine(40, self.nodes[1])
-        check_estimates(self.nodes[1], self.fees_per_kb, 2)
+            print("Creating transactions and mining them at a block size that is just big enough")
+            # Generate transactions while mining 10 more blocks, this time with node1
+            # which mines blocks with capacity just above the rate that transactions are being created
+            self.transact_and_mine(10, self.nodes[1])
+            check_estimates(self.nodes[1], self.fees_per_kb, 2)
 
         # Finish by mining a normal-sized block:
         while len(self.nodes[1].getrawmempool()) > 0:

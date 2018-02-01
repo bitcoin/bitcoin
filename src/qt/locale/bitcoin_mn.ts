@@ -1,4 +1,4 @@
-<TS language="mn" version="2.0">
+<TS language="mn" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -48,6 +48,10 @@
     <message>
         <source>Choose the address to receive coins with</source>
         <translation>Зооснуудыг хүлээн авах хаягийг сонгоно уу</translation>
+    </message>
+    <message>
+        <source>C&amp;hoose</source>
+        <translation>С&amp;онго</translation>
     </message>
     <message>
         <source>Sending addresses</source>
@@ -172,6 +176,9 @@
         <translation>Түрүйвчийн нууц үг амжилттай ѳѳр</translation>
     </message>
 </context>
+<context>
+    <name>BanTableModel</name>
+    </context>
 <context>
     <name>BitcoinGUI</name>
     <message>
@@ -1061,10 +1068,6 @@
     <message>
         <source>Information</source>
         <translation>Мэдээллэл</translation>
-    </message>
-    <message>
-        <source>Upgrade wallet to latest format</source>
-        <translation>Түрүйвчийг хамгийн сүүлийн үеийн форматруу шинэчлэх</translation>
     </message>
     <message>
         <source>Loading addresses...</source>

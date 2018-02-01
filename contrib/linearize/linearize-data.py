@@ -12,6 +12,7 @@ import json
 import struct
 import re
 import os
+import os.path
 import base64
 import httplib
 import sys
@@ -115,19 +116,20 @@ class BlockDataCopier:
 			self.setFileTime = True
 		if settings['split_timestamp'] != 0:
 			self.timestampSplit = True
-        # Extents and cache for out-of-order blocks
+		# Extents and cache for out-of-order blocks
 		self.blockExtents = {}
 		self.outOfOrderData = {}
 		self.outOfOrderSize = 0 # running total size for items in outOfOrderData
 
 	def writeBlock(self, inhdr, blk_hdr, rawblock):
-		if not self.fileOutput and ((self.outsz + self.inLen) > self.maxOutSz):
+		blockSizeOnDisk = len(inhdr) + len(blk_hdr) + len(rawblock)
+		if not self.fileOutput and ((self.outsz + blockSizeOnDisk) > self.maxOutSz):
 			self.outF.close()
 			if self.setFileTime:
 				os.utime(outFname, (int(time.time()), highTS))
 			self.outF = None
 			self.outFname = None
-			self.outFn = outFn + 1
+			self.outFn = self.outFn + 1
 			self.outsz = 0
 
 		(blkDate, blkTS) = get_blk_dt(blk_hdr)
@@ -147,7 +149,7 @@ class BlockDataCopier:
 			if self.fileOutput:
 				outFname = self.settings['output_file']
 			else:
-				outFname = "%s/blk%05d.dat" % (self.settings['output'], outFn)
+				outFname = os.path.join(self.settings['output'], "blk%05d.dat" % self.outFn)
 			print("Output file " + outFname)
 			self.outF = open(outFname, "wb")
 
@@ -165,7 +167,7 @@ class BlockDataCopier:
 					(self.blkCountIn, self.blkCountOut, len(self.blkindex), 100.0 * self.blkCountOut / len(self.blkindex)))
 
 	def inFileName(self, fn):
-		return "%s/blk%05d.dat" % (self.settings['input'], fn)
+		return os.path.join(self.settings['input'], "blk%05d.dat" % fn)
 
 	def fetchBlock(self, extent):
 		'''Fetch block contents from disk given extents'''

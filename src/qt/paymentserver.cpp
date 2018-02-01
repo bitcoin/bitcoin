@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2014 The Bitcoin Core developers
+// Copyright (c) 2011-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -10,7 +10,7 @@
 
 #include "base58.h"
 #include "chainparams.h"
-#include "main.h"
+#include "main.h" // For minRelayTxFee
 #include "ui_interface.h"
 #include "util.h"
 #include "wallet/wallet.h"
@@ -45,8 +45,6 @@
 #else
 #include <QUrlQuery>
 #endif
-
-using namespace std;
 
 const int BITCOIN_IPC_CONNECT_TIMEOUT = 1000; // milliseconds
 const QString BITCOIN_IPC_PREFIX("zetacoin:");
@@ -511,12 +509,7 @@ bool PaymentServer::readPaymentRequestFromFile(const QString& filename, PaymentR
     }
 
     // BIP70 DoS protection
-    if (f.size() > BIP70_MAX_PAYMENTREQUEST_SIZE) {
-        qWarning() << QString("PaymentServer::%1: Payment request %2 is too large (%3 bytes, allowed %4 bytes).")
-            .arg(__func__)
-            .arg(filename)
-            .arg(f.size())
-            .arg(BIP70_MAX_PAYMENTREQUEST_SIZE);
+    if (!verifySize(f.size())) {
         return false;
     }
 
@@ -647,7 +640,7 @@ void PaymentServer::fetchPaymentACK(CWallet* wallet, SendCoinsRecipient recipien
     // Create a new refund address, or re-use:
     QString account = tr("Refund from %1").arg(recipient.authenticatedMerchant);
     std::string strAccount = account.toStdString();
-    set<CTxDestination> refundAddresses = wallet->GetAccountAddresses(strAccount);
+    std::set<CTxDestination> refundAddresses = wallet->GetAccountAddresses(strAccount);
     if (!refundAddresses.empty()) {
         CScript s = GetScriptForDestination(*refundAddresses.begin());
         payments::Output* refund_to = payment.add_refund_to();
@@ -687,14 +680,13 @@ void PaymentServer::netRequestFinished(QNetworkReply* reply)
     reply->deleteLater();
 
     // BIP70 DoS protection
-    if (reply->size() > BIP70_MAX_PAYMENTREQUEST_SIZE) {
-        QString msg = tr("Payment request %1 is too large (%2 bytes, allowed %3 bytes).")
-            .arg(reply->request().url().toString())
-            .arg(reply->size())
-            .arg(BIP70_MAX_PAYMENTREQUEST_SIZE);
-
-        qWarning() << QString("PaymentServer::%1:").arg(__func__) << msg;
-        Q_EMIT message(tr("Payment request DoS protection"), msg, CClientUIInterface::MSG_ERROR);
+    if (!verifySize(reply->size())) {
+        Q_EMIT message(tr("Payment request rejected"),
+            tr("Payment request %1 is too large (%2 bytes, allowed %3 bytes).")
+                .arg(reply->request().url().toString())
+                .arg(reply->size())
+                .arg(BIP70_MAX_PAYMENTREQUEST_SIZE),
+            CClientUIInterface::MSG_ERROR);
         return;
     }
 
@@ -788,6 +780,18 @@ bool PaymentServer::verifyExpired(const payments::PaymentDetails& requestDetails
         qWarning() << QString("PaymentServer::%1: Payment request expired \"%2\".")
             .arg(__func__)
             .arg(requestExpires);
+    }
+    return fVerified;
+}
+
+bool PaymentServer::verifySize(qint64 requestSize)
+{
+    bool fVerified = (requestSize <= BIP70_MAX_PAYMENTREQUEST_SIZE);
+    if (!fVerified) {
+        qWarning() << QString("PaymentServer::%1: Payment request too large (%2 bytes, allowed %3 bytes).")
+            .arg(__func__)
+            .arg(requestSize)
+            .arg(BIP70_MAX_PAYMENTREQUEST_SIZE);
     }
     return fVerified;
 }
