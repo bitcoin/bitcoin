@@ -7,11 +7,10 @@
 #define SEC_MESSAGE_H
 
 #include "net.h"
-#include "lz4/lz4.h"
 #include "base58.h"
 #include "serialize.h"
 #include "ui_interface.h"
-
+#include "lz4/lz4.h"
 
 enum SecureMessageCodes {
     SMSG_NO_ERROR           = 0,

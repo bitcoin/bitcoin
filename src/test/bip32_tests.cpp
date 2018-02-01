@@ -101,12 +101,12 @@ void RunTest(const TestVector &test) {
 
         // Test private key
         CBitcoinExtKey b58key; b58key.SetKey(key);
-        
+
         BOOST_CHECK(b58key.ToString() == derive.prv);
 
         CBitcoinExtKey b58keyDecodeCheck(derive.prv);
         CExtKey checkKey = b58keyDecodeCheck.GetKey();
-        
+
         assert(checkKey == key); //ensure a base58 decoded key also matches
 
         // Test public key
@@ -136,8 +136,6 @@ void RunTest(const TestVector &test) {
 
         CDataStream ssPriv(SER_DISK, CLIENT_VERSION);
         ssPriv << keyNew;
-        //BOOST_MESSAGE("ssPriv.size() " << ssPriv.size());
-        //BOOST_CHECK(ssPriv.size() == 75);
         BOOST_CHECK(ssPriv.size() == 74);
 
         CExtPubKey pubCheck;

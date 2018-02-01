@@ -339,9 +339,7 @@ UniValue validateaddress(const JSONRPCRequest& request)
                 if (pa && ak.nParent > 0 && ak.nParent < pa->vExtKeys.size())
                 {
                     CStoredExtKey *sek = pa->vExtKeys[ak.nParent];
-                    CExtKey58 eKey58;
-                    eKey58.SetKeyP(sek->kp);
-                    ret.pushKV("from_ext_address", eKey58.ToString());
+                    ret.pushKV("from_ext_address_id", sek->GetIDString58());
                 } else
                 {
                     CStealthAddress sx;

@@ -28,6 +28,8 @@ packages:
 - "bsdmainutils"
 - "ca-certificates"
 - "python"
+- "libudev-dev:i386"
+- "libudev-dev"
 remotes:
 - "url": "https://github.com/particl/particl-core.git"
   "dir": "particl-core"

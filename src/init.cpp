@@ -48,6 +48,9 @@
 #ifdef ENABLE_WALLET
 #include "wallet/hdwallet.h"
 #endif
+#if ENABLE_USBDEVICE
+#include "usbdevice/rpcusbdevice.h"
+#endif
 #include "warnings.h"
 #include "anon.h"
 #include "core_io.h"
@@ -1131,6 +1134,9 @@ bool AppInitParameterInteraction()
 #ifdef ENABLE_WALLET
     RegisterWalletRPCCommands(tableRPC);
     RegisterHDWalletRPCCommands(tableRPC);
+#endif
+#if ENABLE_USBDEVICE
+    RegisterUSBDeviceRPCCommands(tableRPC);
 #endif
 
     nConnectTimeout = gArgs.GetArg("-timeout", DEFAULT_CONNECT_TIMEOUT);

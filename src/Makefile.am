@@ -43,6 +43,9 @@ endif
 if ENABLE_WALLET
 LIBPARTICL_WALLET=libparticl_wallet.a
 endif
+if ENABLE_USBDEVICE
+LIBPARTICL_USBDEVICE=libparticl_usbdevice.a
+endif
 
 $(LIBSECP256K1): $(wildcard secp256k1/src/*) $(wildcard secp256k1/include/*)
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C $(@D) $(@F)
@@ -57,6 +60,7 @@ EXTRA_LIBRARIES += \
   $(LIBPARTICL_SERVER) \
   $(LIBPARTICL_CLI) \
   $(LIBPARTICL_WALLET) \
+  $(LIBPARTICL_USBDEVICE) \
   $(LIBPARTICL_ZMQ) \
   $(LIBPARTICL_SMSG)
 
@@ -131,7 +135,6 @@ BITCOIN_CORE_H = \
   key/wordlists/italian.h \
   key/wordlists/korean.h \
   keystore.h \
-  lz4/lz4.h \
   dbwrapper.h \
   limitedmap.h \
   memusage.h \
@@ -201,11 +204,12 @@ BITCOIN_CORE_H = \
   wallet/hdwalletdb.h \
   wallet/hdwallet.h \
   warnings.h \
-  xxhash/xxhash.h \
   zmq/zmqabstractnotifier.h \
   zmq/zmqconfig.h\
   zmq/zmqnotificationinterface.h \
-  zmq/zmqpublishnotifier.h
+  zmq/zmqpublishnotifier.h \
+  usbdevice/usbdevice.h \
+  usbdevice/rpcusbdevice.h
 
 
 obj/build.h: FORCE
@@ -273,6 +277,19 @@ libparticl_zmq_a_SOURCES = \
   zmq/zmqpublishnotifier.cpp
 endif
 
+if ENABLE_USBDEVICE
+libparticl_usbdevice_a_CPPFLAGS = $(BITCOIN_INCLUDES) $(AM_CPPFLAGS)
+libparticl_usbdevice_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libparticl_usbdevice_a_CFLAGS = -DHAVE_HIDAPI $(AM_CFLAGS)
+libparticl_usbdevice_a_SOURCES = \
+  usbdevice/ledger/btchipApdu.h \
+  usbdevice/ledger/ledgerLayer.h \
+  usbdevice/ledger/ledgerLayer.c \
+  usbdevice/ledger/dongleCommHidHidapi.h \
+  usbdevice/ledger/dongleCommHidHidapi.c \
+  usbdevice/usbdevice.cpp \
+  usbdevice/rpcusbdevice.cpp
+endif
 
 # wallet: shared between bitcoind and bitcoin-qt, but only linked
 # when wallet enabled
@@ -411,8 +428,6 @@ libparticl_util_a_SOURCES = \
   utilmoneystr.cpp \
   utilstrencodings.cpp \
   utiltime.cpp \
-  lz4/lz4.c \
-  xxhash/xxhash.c \
   $(BITCOIN_CORE_H)
 
 
@@ -421,7 +436,11 @@ libparticl_smsg_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libparticl_smsg_a_SOURCES = \
   smsg/smessage.cpp \
   smsg/crypter.cpp \
-  smsg/db.cpp
+  smsg/db.cpp \
+  lz4/lz4.h \
+  xxhash/xxhash.h \
+  lz4/lz4.c \
+  xxhash/xxhash.c
 
 
 if GLIBC_BACK_COMPAT
@@ -462,9 +481,10 @@ particld_LDADD = \
   $(LIBLEVELDB_SSE42) \
   $(LIBMEMENV) \
   $(LIBSECP256K1) \
-  $(LIBPARTICL_SMSG)
+  $(LIBPARTICL_SMSG) \
+  $(LIBPARTICL_USBDEVICE)
 
-particld_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS)
+particld_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(USB_LIBS)
 
 # bitcoin-cli binary #
 #$(BITCOIN_CLI_NAME)_SOURCES = bitcoin-cli.cpp

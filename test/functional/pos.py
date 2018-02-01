@@ -138,7 +138,7 @@ class PosTest(ParticlTestFramework):
             try:
                 addr0 = vout['scriptPubKey']['addresses'][0]
                 ro = nodes[0].validateaddress(addr0)
-                if ro['from_ext_address'] == addrRewardExt:
+                if ro['from_ext_address_id'] == 'xXZRLYvJgbJyrqJhgNzMjEvVGViCdGmVAt':
                     assert(addr0 == 'pgaKYsNmHTuQB83FguN44WW4ADKmwJwV7e')
                     fFound = True
                     assert(vout['valueSat'] == 39637)

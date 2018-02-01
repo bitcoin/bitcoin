@@ -31,7 +31,7 @@ class CKeyID : public uint160
 public:
     CKeyID() : uint160() {}
     CKeyID(const uint160& in) : uint160(in) {}
-    
+
     CKeyID(const uint256& in);
 };
 
@@ -158,7 +158,6 @@ public:
         return CKeyID256(HashSha256(vch, vch + size()));
     }
 
-
     //! Get the 256-bit hash of this public key.
     uint256 GetHash() const
     {
@@ -201,9 +200,12 @@ public:
     //! Turn this public key into an uncompressed public key.
     bool Decompress();
 
+    //! Turn this public key into a compressed public key.
+    bool Compress();
+
     //! Derive BIP32 child pubkey.
     bool Derive(CPubKey& pubkeyChild, ChainCode &ccChild, unsigned int nChild, const ChainCode& cc) const;
-    
+
     bool Derive(CPubKey& pubkeyChild, unsigned char ccChild[32], unsigned int nChild, const unsigned char cc[32]) const;
 };
 
@@ -261,7 +263,7 @@ public:
     {
         Set(_vch.begin(), _vch.end());
     }
-    
+
     CCmpPubKey(CPubKey pk)
     {
         Set(pk.begin(), pk.end());
@@ -334,7 +336,7 @@ public:
     {
         return size() > 0;
     }
-    
+
     //! Check whether this is a compressed public key.
     bool IsCompressed() const
     {

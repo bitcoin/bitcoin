@@ -1,4 +1,5 @@
 packages:=boost openssl libevent libsodium zeromq
+linux_packages_usb := libusb
 native_packages := native_ccache
 
 qt_native_packages = native_protobuf
@@ -13,6 +14,7 @@ qt_mingw32_packages=qt
 wallet_packages=bdb
 
 upnp_packages=miniupnpc
+usb_packages=hidapi
 
 darwin_native_packages = native_biplist native_ds_store native_mac_alias
 

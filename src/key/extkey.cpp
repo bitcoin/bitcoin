@@ -22,7 +22,6 @@ const char *ExtKeyGetString(int ind)
         case 3:     return "Path string empty";
         case 4:     return "Integer conversion invalid character";
         case 5:     return "Integer conversion out of range";
-        case 6:     return "'0' only valid at start or end";
         case 7:     return "Malformed path";
         case 8:     return "Offset is hardened already";
         case 9:     return "Can't use BIP44 key as master";
@@ -196,20 +195,30 @@ int ExtractExtKeyPath(const std::string &sPath, std::vector<uint32_t> &vPath)
     if (sPath.length() < 1)
         return 3;
 
-    memcpy(data, sPath.data(), sPath.length());
-    data[sPath.length()] = '\0';
+    size_t nStart = 0;
+    size_t nLen = sPath.length();
+    if (tolower(sPath[0]) == 'm')
+    {
+        nStart+=2;
+        nLen-=2;
+    };
+    if (nLen < 1)
+        return 3;
+
+    memcpy(data, sPath.data()+nStart, nLen);
+    data[nLen] = '\0';
 
     int nSlashes = 0;
-    for (size_t k = 0; k < sPath.length(); ++k)
+    for (size_t k = 0; k < nLen; ++k)
     {
-        if (sPath[k] == '/')
+        if (data[k] == '/')
         {
             nSlashes++;
 
             // Catch start or end '/', and '//'
             if (k == 0
-                || k == sPath.length()-1
-                || (k < sPath.length()-1 && sPath[k+1] == '/'))
+                || k == nLen-1
+                || (k < nLen-1 && data[k+1] == '/'))
                 return 7;
         };
     };
@@ -221,57 +230,45 @@ int ExtractExtKeyPath(const std::string &sPath, std::vector<uint32_t> &vPath)
     while (p)
     {
         uint32_t nChild;
-        if (tolower(*p) == 'm')
+        bool fHarden = false;
+
+        // Don't allow octal, only hex and binary
+        int nBase = *p == '0' && (*(p+1) == 'b' || *(p+1) == 'B') ? 2
+            : *p == '0' && (*(p+1) == 'x' || *(p+1) == 'X') ? 16 : 10;
+        if (nBase != 10)
+            p += 2; // step over 0b / 0x
+        char *ps = p;
+        for (; *p; ++p)
         {
-            nChild = 0;
-        } else
+            // Last char can be (h, H ,')
+            if (!*(p+1) && (tolower(*p) == 'h' || *p == '\''))
+            {
+                fHarden = true;
+                *p = '\0';
+            } else
+            if (!validDigit(*p, nBase))
+                return 4;
+        };
+
+        errno = 0;
+        nChild = strtou32max(ps, nBase);
+        if (errno != 0)
+            return 5;
+
+        if (fHarden)
         {
-
-            bool fHarden = false;
-
-            // Don't allow octal, only hex and binary
-            int nBase = *p == '0' && (*(p+1) == 'b' || *(p+1) == 'B') ? 2
-                : *p == '0' && (*(p+1) == 'x' || *(p+1) == 'X') ? 16 : 10;
-            if (nBase != 10)
-                p += 2; // step over 0b / 0x
-            char *ps = p;
-            for (; *p; ++p)
+            if ((nChild >> 31) == 0)
             {
-                // Last char can be (h, H ,')
-                if (!*(p+1) && (tolower(*p) == 'h' || *p == '\''))
-                {
-                    fHarden = true;
-                    *p = '\0';
-                } else
-                if (!validDigit(*p, nBase))
-                    return 4;
-            };
-
-            errno = 0;
-            nChild = strtou32max(ps, nBase);
-            if (errno != 0)
-                return 5;
-
-            if (fHarden)
+                nChild |= 1 << 31;
+            } else
             {
-                if ((nChild >> 31) == 0)
-                {
-                    nChild |= 1 << 31;
-                } else
-                {
-                    return 8;
-                };
+                return 8;
             };
         };
 
         vPath.push_back(nChild);
 
         p = strtok(NULL, "/");
-
-        if (nChild == 0
-            && vPath.size() != 1
-            && p)
-            return 6;
     };
 
     if (vPath.size() < 1)

@@ -25,7 +25,7 @@ public:
     const CKeyStore& KeyStore() const { return *keystore; };
     virtual ~BaseSignatureCreator() {}
     virtual const BaseSignatureChecker& Checker() const =0;
-    
+
     virtual bool IsParticlVersion() const { return false; }
     virtual bool IsCoinStake() const  { return false; }
 
@@ -44,10 +44,10 @@ class TransactionSignatureCreator : public BaseSignatureCreator {
 public:
     TransactionSignatureCreator(const CKeyStore* keystoreIn, const CTransaction* txToIn, unsigned int nInIn, const std::vector<uint8_t>& amountIn, int nHashTypeIn=SIGHASH_ALL);
     const BaseSignatureChecker& Checker() const { return checker; }
-    
+
     bool IsParticlVersion() const { return txTo && txTo->IsParticlVersion(); }
     bool IsCoinStake() const { return txTo && txTo->IsCoinStake(); }
-    
+
     bool CreateSig(std::vector<unsigned char>& vchSig, const CKeyID& keyid, const CScript& scriptCode, SigVersion sigversion) const override;
 };
 
@@ -56,7 +56,7 @@ class MutableTransactionSignatureCreator : public TransactionSignatureCreator {
 
 public:
     bool IsParticlVersion() const { return tx.IsParticlVersion(); }
-    
+
     MutableTransactionSignatureCreator(const CKeyStore* keystoreIn, const CMutableTransaction* txToIn, unsigned int nInIn, const std::vector<uint8_t>& amountIn, int nHashTypeIn) : TransactionSignatureCreator(keystoreIn, &tx, nInIn, amountIn, nHashTypeIn), tx(*txToIn) {}
     //MutableTransactionSignatureCreator(const CKeyStore* keystoreIn, const CMutableTransaction* txToIn, unsigned int nInIn, CAmount amountIn, int nHashTypeIn) : TransactionSignatureCreator(keystoreIn, &tx, nInIn, amountIn, nHashTypeIn), tx(*txToIn) {}
 };

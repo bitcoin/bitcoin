@@ -32,7 +32,6 @@ FailTest failTests[] = {
     FailTest("  ", 4),
     FailTest("abcd", 4),
     FailTest("M/3h/1111111111111111111111", 5),
-    FailTest("0/8/0/0", 6),
     FailTest("/1/1", 7),
     FailTest("0/1/1/", 7),
     FailTest("0/1//1", 7),
@@ -54,18 +53,17 @@ public:
 };
 
 PassTest passTests[] = {
-    PassTest("m", 0, { 0 }),
     PassTest("0", 0, { 0 }),
     PassTest("1", 0, { 1 }),
     PassTest("0/1", 0, { 0, 1 }),
     PassTest("1/0", 0, { 1, 0 }),
-    PassTest("M/3", 0, { 0, 3 }),
-    PassTest("m/0h", 0, { 0, 2147483648 }),
-    PassTest("m/1H", 0, { 0, 2147483649 }),
-    PassTest("m/2'", 0, { 0, 2147483650 }),
-    PassTest("m/4294967295", 0, { 0, 4294967295 }),
-    PassTest("m/4/0b001/0xFe/3/0b010/0b010h", 0, { 0, 4, 1, 254, 3, 2, 2147483650 }),
-    PassTest("m/2147483647h", 0, { 0, 4294967295 }),
+    PassTest("M/3", 0, { 3 }),
+    PassTest("m/0h", 0, { 2147483648 }),
+    PassTest("m/1H", 0, { 2147483649 }),
+    PassTest("m/2'", 0, { 2147483650 }),
+    PassTest("m/4294967295", 0, { 4294967295 }),
+    PassTest("m/4/0b001/0xFe/3/0b010/0b010h", 0, { 4, 1, 254, 3, 2, 2147483650 }),
+    PassTest("m/2147483647h", 0, { 4294967295 }),
     PassTest("0800/0xFh", 0, { 800, 2147483663 }),
 };
 
@@ -77,14 +75,12 @@ void RunPathTest()
     std::vector<uint32_t> vExpect;
     std::string sTest;
 
+    // Tests expected to fail:
     int al = sizeof(failTests)/sizeof(FailTest);
-
-    BOOST_MESSAGE("Running " << al << " tests expected to fail.");
 
     for (int i = 0; i < al; ++i)
     {
         FailTest &ft = failTests[i];
-        BOOST_MESSAGE("Fail test " << i << ", path '"  << ft.sTest << "', expect return " << ft.rv);
         rv = ExtractExtKeyPath(ft.sTest, vPath);
         BOOST_CHECK(rv == ft.rv);
     };
@@ -93,20 +89,16 @@ void RunPathTest()
     memset(tooMuchData, '/', 512);
     tooMuchData[512] = '\0';
     sTest = std::string(tooMuchData);
-    BOOST_MESSAGE("Testing Path 'tooMuchData'");
     rv = ExtractExtKeyPath(sTest, vPath);
     BOOST_CHECK(rv == 2);
 
-
+    // Tests expected to pass:
     al = sizeof(passTests)/sizeof(PassTest);
-
-    BOOST_MESSAGE("Running " << al << " tests expected to pass.");
 
     std::stringstream ss, ssE;
     for (int i = 0; i < al; ++i)
     {
         PassTest &pt = passTests[i];
-        BOOST_MESSAGE("Pass test " << i << ", path '" << pt.sTest << "', expect return " << pt.rv);
         rv = ExtractExtKeyPath(pt.sTest, vPath);
 
         ss.str("");
@@ -116,7 +108,6 @@ void RunPathTest()
             if (it != vPath.end()-1)
                 ss << ", ";
         };
-        BOOST_MESSAGE("vPath   " << ss.str());
 
         ssE.str("");
         for (std::vector<uint32_t>::iterator it = pt.vExpect.begin(); it != pt.vExpect.end(); ++it)
@@ -125,7 +116,6 @@ void RunPathTest()
             if (it != pt.vExpect.end()-1)
                 ssE << ", ";
         };
-        BOOST_MESSAGE("vExpect " << ssE.str());
 
         BOOST_CHECK(rv == pt.rv);
         BOOST_CHECK(vPath == pt.vExpect);
@@ -413,7 +403,6 @@ void RunSerialiseTests()
     BOOST_CHECK(ep.pubkey == ev.key.GetPubKey());
 
 
-
     CStoredExtKey skp = sk;
     skp.kp = skp.kp.Neutered();
 
@@ -490,7 +479,6 @@ void RunSerialiseTests()
 
 
     // Switch to testnet
-    BOOST_MESSAGE("Entering Testnet");
     SelectParams(CBaseChainParams::TESTNET);
 
     id = sk.GetID();
@@ -520,7 +508,6 @@ void RunSerialiseTests()
 
     // Return to mainnet
     SelectParams(CBaseChainParams::MAIN);
-
 };
 
 BOOST_AUTO_TEST_CASE(extkey_path)
@@ -543,7 +530,6 @@ BOOST_AUTO_TEST_CASE(extkey_regtest_keys)
     CExtKey58 ek58;
 
     // Switch to testnet
-    BOOST_MESSAGE("Entering RegTest");
     SelectParams(CBaseChainParams::REGTEST);
 
     BOOST_CHECK(0 == ek58.Set58("pparszMzzW1247AwkKCH1MqneucXJfDoR3M5KoLsJZJpHkcjayf1xUMwPoTcTfUoQ32ahnkHhjvD2vNiHN5dHL6zmx8vR799JxgCw95APdkwuGm1",

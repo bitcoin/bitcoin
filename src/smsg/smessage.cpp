@@ -64,11 +64,8 @@ Notes:
 #include "utilstrencodings.h"
 #include "clientversion.h"
 
-
-#include "lz4/lz4.c"
-
+#include "lz4/lz4.h"
 #include "xxhash/xxhash.h"
-#include "xxhash/xxhash.c"
 
 #include "smsg/crypter.h"
 #include "smsg/db.h"
@@ -132,6 +129,7 @@ void SecMsgBucket::hashBucket()
     };
 
     LogPrint(BCLog::SMSG, "Hashed %u messages, hash %u\n", nActive, hash_new);
+    return;
 };
 
 size_t SecMsgBucket::CountActive()
@@ -278,6 +276,7 @@ void ThreadSecureMsg()
 
         MilliSleep(SMSG_THREAD_DELAY * 1000); //  // check every SMSG_THREAD_DELAY seconds
     };
+    return;
 };
 
 void ThreadSecureMsgPow()
@@ -420,6 +419,7 @@ void ThreadSecureMsgPow()
         // Shutdown thread waits 5 seconds, this should be less
         MilliSleep(2000);
     };
+    return;
 };
 
 std::string SecureMsgGetHelpString(bool showDebug)

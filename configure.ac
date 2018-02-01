@@ -52,6 +52,7 @@ else
   CXXFLAGS_overridden=no
 fi
 AC_PROG_CXX
+AC_PROG_CC
 
 dnl By default, libtool for mingw refuses to link static libs into a dll for
 dnl fear of mixing pic/non-pic objects, and import/export complications. Since
@@ -103,6 +104,12 @@ AC_ARG_ENABLE([wallet],
   [disable wallet (enabled by default)])],
   [enable_wallet=$enableval],
   [enable_wallet=yes])
+
+AC_ARG_ENABLE([usbdevice],
+  [AS_HELP_STRING([--enable-usbdevice],
+  [enable usbdevice (disabled by default)])],
+  [enable_usbdevice=$enableval],
+  [enable_usbdevice=no])
 
 AC_ARG_WITH([miniupnpc],
   [AS_HELP_STRING([--with-miniupnpc],
@@ -553,7 +560,7 @@ fi
 
 if test x$TARGET_OS != xwindows; then
   # All windows code is PIC, forcing it on just adds useless compile warnings
-  AX_CHECK_COMPILE_FLAG([-fPIC],[PIC_FLAGS="-fPIC"])
+  AX_CHECK_COMPILE_FLAG([-fPIC],[PIC_FLAGS="-fPIC";CFLAGS="$PIC_FLAGS $CFLAGS"])
 fi
 
 if test x$use_hardening != xno; then
@@ -902,6 +909,21 @@ fi
 
 fi
 
+case $host in
+  *linux*)
+    LIBHIDAPINAME=hidapi-libusb
+    HIDAPILIBS=-l$LIBHIDAPINAME
+    ;;
+  *mingw*)
+    LIBHIDAPINAME=hidapi
+    HIDAPILIBS="-l$LIBHIDAPINAME -lsetupapi"
+    ;;
+  *)
+    LIBHIDAPINAME=hidapi
+    HIDAPILIBS=-l$LIBHIDAPINAME
+    ;;
+esac
+
 if test x$use_pkgconfig = xyes; then
   : dnl
   m4_ifdef(
@@ -928,6 +950,16 @@ if test x$use_pkgconfig = xyes; then
            use_zmq=no])
       else
           AC_DEFINE_UNQUOTED([ENABLE_ZMQ],[0],[Define to 1 to enable ZMQ functions])
+      fi
+
+      if test "x$enable_usbdevice" = "xyes"; then
+        PKG_CHECK_MODULES([USB],[$LIBHIDAPINAME >= 0],
+          [AC_DEFINE([ENABLE_USBDEVICE],[1],[Define to 1 to enable USBDEVICE functions])],
+          [AC_DEFINE([ENABLE_USBDEVICE],[0],[Define to 1 to enable USBDEVICE functions])
+           AC_MSG_WARN([$LIBHIDAPINAME version 0 or greater not found, disabling])
+           enable_usbdevice=no])
+      else
+          AC_DEFINE_UNQUOTED([ENABLE_USBDEVICE],[0],[Define to 1 to enable USBDEVICE functions])
       fi
     ]
   )
@@ -967,6 +999,20 @@ else
         ZMQ_CFLAGS="$ZMQ_CFLAGS -DZMQ_STATIC"
       ;;
     esac
+  fi
+
+  if test "x$enable_usbdevice" = "xyes"; then
+    AC_CHECK_HEADER([hidapi/hidapi.h],
+       [AC_DEFINE([ENABLE_USBDEVICE],[1],[Define to 1 to enable USBDEVICE functions])],
+       [AC_MSG_WARN([hidapi.h not found, disabling usbdevice support])
+        enable_usbdevice=no
+        AC_DEFINE([ENABLE_USBDEVICE],[0],[Define to 1 to enable USBDEVICE functions])])
+    AC_CHECK_LIB([$LIBHIDAPINAME],[hid_open],USB_LIBS=$HIDAPILIBS,
+       [AC_MSG_WARN([$LIBHIDAPINAME not found, disabling usbdevice support])
+        enable_usbdevice=no
+        AC_DEFINE([ENABLE_USBDEVICE],[0],[Define to 1 to enable USBDEVICE functions])],[-lsetupapi])
+  else
+    AC_DEFINE_UNQUOTED([ENABLE_USBDEVICE],[0],[Define to 1 to enable USBDEVICE functions])
   fi
 
   BITCOIN_QT_CHECK(AC_CHECK_LIB([protobuf] ,[main],[PROTOBUF_LIBS=-lprotobuf], BITCOIN_QT_FAIL(libprotobuf not found)))
@@ -1075,7 +1121,15 @@ AC_MSG_CHECKING([if wallet should be enabled])
 if test x$enable_wallet != xno; then
   AC_MSG_RESULT(yes)
   AC_DEFINE_UNQUOTED([ENABLE_WALLET],[1],[Define to 1 to enable wallet functions])
+else
+  AC_MSG_RESULT(no)
+fi
 
+dnl enable usbdevice
+AC_MSG_CHECKING([if usbdevice should be enabled])
+if test x$enable_usbdevice != xno; then
+  AC_MSG_RESULT(yes)
+  AC_DEFINE_UNQUOTED([ENABLE_USBDEVICE],[1],[Define to 1 to enable usbdevice functions])
 else
   AC_MSG_RESULT(no)
 fi
@@ -1173,6 +1227,7 @@ AM_CONDITIONAL([TARGET_DARWIN], [test x$TARGET_OS = xdarwin])
 AM_CONDITIONAL([BUILD_DARWIN], [test x$BUILD_OS = xdarwin])
 AM_CONDITIONAL([TARGET_WINDOWS], [test x$TARGET_OS = xwindows])
 AM_CONDITIONAL([ENABLE_WALLET],[test x$enable_wallet = xyes])
+AM_CONDITIONAL([ENABLE_USBDEVICE],[test x$enable_usbdevice = xyes])
 AM_CONDITIONAL([ENABLE_TESTS],[test x$BUILD_TEST = xyes])
 AM_CONDITIONAL([ENABLE_QT],[test x$bitcoin_enable_qt = xyes])
 AM_CONDITIONAL([ENABLE_QT_TESTS],[test x$BUILD_TEST_QT = xyes])
@@ -1231,6 +1286,7 @@ AC_SUBST(SSL_LIBS)
 AC_SUBST(EVENT_LIBS)
 AC_SUBST(EVENT_PTHREADS_LIBS)
 AC_SUBST(ZMQ_LIBS)
+AC_SUBST(USB_LIBS)
 AC_SUBST(PROTOBUF_LIBS)
 AC_SUBST(QR_LIBS)
 AC_CONFIG_FILES([Makefile src/Makefile doc/man/Makefile share/setup.nsi share/qt/Info.plist test/config.ini])
@@ -1295,27 +1351,28 @@ esac
 
 echo
 echo "Options used to compile and link:"
-echo "  with wallet   = $enable_wallet"
-echo "  with gui / qt = $bitcoin_enable_qt"
+echo "  with wallet     = $enable_wallet"
+echo "  with usbdevice  = $enable_usbdevice"
+echo "  with gui / qt   = $bitcoin_enable_qt"
 if test x$bitcoin_enable_qt != xno; then
-    echo "    qt version  = $bitcoin_qt_got_major_vers"
-    echo "    with qr     = $use_qr"
+    echo "    qt version    = $bitcoin_qt_got_major_vers"
+    echo "    with qr       = $use_qr"
 fi
-echo "  with zmq      = $use_zmq"
-echo "  with test     = $use_tests"
-echo "  with bench    = $use_bench"
-echo "  with upnp     = $use_upnp"
-echo "  debug enabled = $enable_debug"
-echo "  werror        = $enable_werror"
+echo "  with zmq        = $use_zmq"
+echo "  with test       = $use_tests"
+echo "  with bench      = $use_bench"
+echo "  with upnp       = $use_upnp"
+echo "  debug enabled   = $enable_debug"
+echo "  werror          = $enable_werror"
 echo
-echo "  target os     = $TARGET_OS"
-echo "  build os      = $BUILD_OS"
+echo "  target os       = $TARGET_OS"
+echo "  build os        = $BUILD_OS"
 echo
-echo "  CC            = $CC"
-echo "  CFLAGS        = $CFLAGS"
-echo "  CPPFLAGS      = $CPPFLAGS"
-echo "  CXX           = $CXX"
-echo "  CXXFLAGS      = $CXXFLAGS"
-echo "  LDFLAGS       = $LDFLAGS"
-echo "  ARFLAGS       = $ARFLAGS"
+echo "  CC              = $CC"
+echo "  CFLAGS          = $CFLAGS"
+echo "  CPPFLAGS        = $CPPFLAGS"
+echo "  CXX             = $CXX"
+echo "  CXXFLAGS        = $CXXFLAGS"
+echo "  LDFLAGS         = $LDFLAGS"
+echo "  ARFLAGS         = $ARFLAGS"
 echo

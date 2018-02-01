@@ -247,7 +247,6 @@ public:
 
         pubkey.Serialize(s);
     }
-
     template<typename Stream>
     void Unserialize(Stream &s)
     {

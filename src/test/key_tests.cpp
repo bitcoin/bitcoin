@@ -157,4 +157,29 @@ BOOST_AUTO_TEST_CASE(key_test1)
     BOOST_CHECK(detsigc == ParseHex("2052d8a32079c11e79db95af63bb9600c5b04f21a9ca33dc129c2bfa8ac9dc1cd561d8ae5e0f6c1a16bde3719c64c2fd70e404b6428ab9a69566962e8771b5944d"));
 }
 
+BOOST_AUTO_TEST_CASE(key_pubkey_compression)
+{
+    CBitcoinSecret bsecret1;
+    BOOST_CHECK(bsecret1.SetString(strSecret1));
+    CKey key1 = bsecret1.GetKey();
+
+    CPubKey pk1 = key1.GetPubKey();
+    BOOST_CHECK(pk1.IsValid());
+    BOOST_CHECK(!pk1.IsCompressed());
+
+    key1.SetFlags(true, true);
+    CPubKey pk1C = key1.GetPubKey();
+    BOOST_CHECK(pk1C.IsValid());
+    BOOST_CHECK(pk1C.IsCompressed());
+    BOOST_CHECK(pk1 != pk1C);
+
+    CPubKey pk1r = pk1;
+    pk1r.Compress();
+    BOOST_CHECK(pk1r == pk1C);
+
+    CPubKey pk1Cr = pk1C;
+    pk1Cr.Decompress();
+    BOOST_CHECK(pk1Cr == pk1);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

@@ -1,4 +1,4 @@
-// Copyright (c) 2017 The Particl Core developers
+// Copyright (c) 2017-2018 The Particl Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -62,7 +62,7 @@ CHDWallet *GetHDWalletForJSONRPCRequest(const JSONRPCRequest &request)
     return ::vpwallets.size() == 1 || (request.fHelp && ::vpwallets.size() > 0) ? GetHDWallet(::vpwallets[0]) : nullptr;
 }
 
-inline uint32_t reversePlace(uint8_t *p)
+inline uint32_t reversePlace(const uint8_t *p)
 {
     uint32_t rv = 0;
     for (int i = 0; i < 4; ++i)
@@ -70,7 +70,7 @@ inline uint32_t reversePlace(uint8_t *p)
     return rv;
 };
 
-int ExtractBip32InfoV(std::vector<uint8_t> &vchKey, UniValue &keyInfo, std::string &sError)
+int ExtractBip32InfoV(const std::vector<uint8_t> &vchKey, UniValue &keyInfo, std::string &sError)
 {
     CExtKey58 ek58;
     CExtKeyPair vk;
@@ -117,7 +117,7 @@ int ExtractBip32InfoV(std::vector<uint8_t> &vchKey, UniValue &keyInfo, std::stri
     return 0;
 };
 
-int ExtractBip32InfoP(std::vector<uint8_t> &vchKey, UniValue &keyInfo, std::string &sError)
+int ExtractBip32InfoP(const std::vector<uint8_t> &vchKey, UniValue &keyInfo, std::string &sError)
 {
     CExtPubKey pk;
 
@@ -150,7 +150,7 @@ int ExtractBip32InfoP(std::vector<uint8_t> &vchKey, UniValue &keyInfo, std::stri
     return 0;
 };
 
-int ExtKeyPathV(std::string &sPath, std::vector<uint8_t> &vchKey, UniValue &keyInfo, std::string &sError)
+int ExtKeyPathV(const std::string &sPath, const std::vector<uint8_t> &vchKey, UniValue &keyInfo, std::string &sError)
 {
     if (sPath.compare("info") == 0)
         return ExtractBip32InfoV(vchKey, keyInfo, sError);
@@ -164,22 +164,12 @@ int ExtKeyPathV(std::string &sPath, std::vector<uint8_t> &vchKey, UniValue &keyI
     std::vector<uint32_t> vPath;
     int rv;
     if ((rv = ExtractExtKeyPath(sPath, vPath)) != 0)
-    {
-        sError = ExtKeyGetString(rv);
-        return 1;
-    };
+        return errorN(1, sError, __func__, "ExtractExtKeyPath failed %s", ExtKeyGetString(rv));
 
     for (std::vector<uint32_t>::iterator it = vPath.begin(); it != vPath.end(); ++it)
     {
-        if (*it == 0)
-        {
-            vkOut = vkWork;
-        } else
         if (!vkWork.Derive(vkOut, *it))
-        {
-            sError = "CExtKey Derive failed.";
-            return 1;
-        };
+            return errorN(1, sError, __func__, "CExtKey Derive failed");
         vkWork = vkOut;
     };
 
@@ -187,10 +177,16 @@ int ExtKeyPathV(std::string &sPath, std::vector<uint8_t> &vchKey, UniValue &keyI
     ekOut.SetKey(vkOut);
     keyInfo.pushKV("result", ekOut.ToString());
 
+    // Display path, the quotes can go missing through the debug console. eg: m/44'/1', m/44\'/1\' works
+    std::string sPathOut;
+    if (0 != PathToString(vPath, sPathOut))
+        return errorN(1, sError, __func__, "PathToString failed");
+    keyInfo.pushKV("path", sPathOut);
+
     return 0;
 };
 
-int ExtKeyPathP(std::string &sPath, std::vector<uint8_t> &vchKey, UniValue &keyInfo, std::string &sError)
+int ExtKeyPathP(const std::string &sPath, const std::vector<uint8_t> &vchKey, UniValue &keyInfo, std::string &sError)
 {
     if (sPath.compare("info") == 0)
         return ExtractBip32InfoP(vchKey, keyInfo, sError);
@@ -204,33 +200,26 @@ int ExtKeyPathP(std::string &sPath, std::vector<uint8_t> &vchKey, UniValue &keyI
     std::vector<uint32_t> vPath;
     int rv;
     if ((rv = ExtractExtKeyPath(sPath, vPath)) != 0)
-    {
-        sError = ExtKeyGetString(rv);
-        return 1;
-    };
+        return errorN(1, sError, __func__, "ExtractExtKeyPath failed %s", ExtKeyGetString(rv));
 
     for (std::vector<uint32_t>::iterator it = vPath.begin(); it != vPath.end(); ++it)
     {
-        if (*it == 0)
-        {
-            pkOut = pkWork;
-        } else
         if ((*it >> 31) == 1)
-        {
-            sError = "Can't derive hardened keys from public ext key.";
-            return 1;
-        } else
+            return errorN(1, sError, __func__, "Can't derive hardened keys from public ext key");
         if (!pkWork.Derive(pkOut, *it))
-        {
-            sError = "CExtKey Derive failed.";
-            return 1;
-        };
+            return errorN(1, sError, __func__, "CExtKey Derive failed");
         pkWork = pkOut;
     };
 
     CBitcoinExtPubKey ekOut;
     ekOut.SetKey(pkOut);
     keyInfo.pushKV("result", ekOut.ToString());
+
+    // Display path, the quotes can go missing through the debug console. eg: m/44'/1', m/44\'/1\' works
+    std::string sPathOut;
+    if (0 != PathToString(vPath, sPathOut))
+        return errorN(1, sError, __func__, "PathToString failed");
+    keyInfo.pushKV("path", sPathOut);
 
     return 0;
 };
@@ -831,7 +820,6 @@ UniValue extkey(const JSONRPCRequest &request)
         {
             st.erase(std::remove(st.begin(), st.end(), ' '), st.end());
             mode = st;
-
             nParamOffset = 1;
         } else
         {
@@ -1167,7 +1155,6 @@ UniValue extkey(const JSONRPCRequest &request)
         };
 
         {
-            //LOCK(pwallet->cs_wallet);
             LOCK2(cs_main, pwallet->cs_wallet);
             CHDWalletDB wdb(pwallet->GetDBHandle(), "r+");
             if (!wdb.TxnBegin())
@@ -5227,7 +5214,7 @@ UniValue rewindchain(const JSONRPCRequest &request)
     if (request.fHelp || request.params.size() > 1)
         throw std::runtime_error(
             "rewindchain [height]\n"
-            "height default - last known rct index .\n");
+            "height default - last known rct index.\n");
 
     EnsureWalletIsUnlocked(pwallet);
 
