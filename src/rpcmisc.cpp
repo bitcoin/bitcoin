@@ -198,8 +198,8 @@ UniValue validateaddress(const UniValue& params, bool fHelp)
 
 		CSyscoinAddress v2addr;
 		v2addr.Set(dest);
-		result.push_back(Pair("v1address", v1addr.ToString()));
-		result.push_back(Pair("v2address", v2addr.ToString()));
+		ret.push_back(Pair("v1address", v1addr.ToString()));
+		ret.push_back(Pair("v2address", v2addr.ToString()));
 
 
         CScript scriptPubKey = GetScriptForDestination(dest);
