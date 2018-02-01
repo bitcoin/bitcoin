@@ -8,102 +8,21 @@
 
 #include <string>
 #include <vector>
+#include "nodeconfig.h"
 
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
+#include <boost/foreach.hpp>
 
 class CSystemnodeConfig;
 extern CSystemnodeConfig systemnodeConfig;
 
-class CSystemnodeConfig
+class CSystemnodeConfig : public CNodeConfig
 {
-
-public:
-
-    class CSystemnodeEntry {
-
-    private:
-        std::string alias;
-        std::string ip;
-        std::string privKey;
-        std::string txHash;
-        std::string outputIndex;
-    public:
-
-        CSystemnodeEntry(std::string alias, std::string ip, std::string privKey, std::string txHash, std::string outputIndex) {
-            this->alias = alias;
-            this->ip = ip;
-            this->privKey = privKey;
-            this->txHash = txHash;
-            this->outputIndex = outputIndex;
-        }
-
-        const std::string& getAlias() const {
-            return alias;
-        }
-
-        void setAlias(const std::string& alias) {
-            this->alias = alias;
-        }
-
-        const std::string& getOutputIndex() const {
-            return outputIndex;
-        }
-
-        void setOutputIndex(const std::string& outputIndex) {
-            this->outputIndex = outputIndex;
-        }
-
-        const std::string& getPrivKey() const {
-            return privKey;
-        }
-
-        void setPrivKey(const std::string& privKey) {
-            this->privKey = privKey;
-        }
-
-        const std::string& getTxHash() const {
-            return txHash;
-        }
-
-        void setTxHash(const std::string& txHash) {
-            this->txHash = txHash;
-        }
-
-        const std::string& getIp() const {
-            return ip;
-        }
-
-        void setIp(const std::string& ip) {
-            this->ip = ip;
-        }
-    };
-
-    CSystemnodeConfig() {
-        entries = std::vector<CSystemnodeEntry>();
-    }
-
-    void clear();
-    bool read(std::string& strErr);
-    void add(std::string alias, std::string ip, std::string privKey, std::string txHash, std::string outputIndex);
-
-    std::vector<CSystemnodeEntry>& getEntries() {
-        return entries;
-    }
-
-    int getCount() {
-        int c = -1;
-        BOOST_FOREACH(CSystemnodeEntry e, entries) {
-            if(e.getAlias() != "") c++;
-        }
-        return c;
-    }
-
 private:
-    std::vector<CSystemnodeEntry> entries;
-
-
+    boost::filesystem::path getNodeConfigFile();
+    std::string getHeader();
+    std::string getFileName();
 };
-
 
 #endif /* SRC_SYSTEMNODECONFIG_H_ */

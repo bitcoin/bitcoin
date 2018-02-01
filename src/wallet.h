@@ -902,6 +902,10 @@ public:
     }
 
     std::string ToString() const;
+    friend bool operator==(const COutput& a, const COutput& b)
+    {
+        return a.tx == b.tx && a.i == b.i;
+    }
 };
 
 

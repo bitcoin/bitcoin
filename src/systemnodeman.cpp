@@ -454,8 +454,9 @@ CSystemnode* CSystemnodeMan::GetNextSystemnodeInQueueForPayment(int nBlockHeight
         //it's in the list (up to 8 entries ahead of current block to allow propagation) -- so let's skip it
         if(systemnodePayments.IsScheduled(sn, nBlockHeight)) continue;
 
-        //it's too new, wait for a cycle
-        if(fFilterSigTime && sn.sigTime + (nSnCount*2.6*60) > GetAdjustedTime()) continue;
+        // For security reasons and for network stability there is a delay to get the first reward.
+        // The time is calculated as a product of 60 block and node count.
+        if(fFilterSigTime && sn.sigTime + (nSnCount * 1 * 60) > GetAdjustedTime()) continue;
 
         //make sure it has as many confirmations as there are systemnodes
         if(sn.GetSystemnodeInputAge() < nSnCount) continue;

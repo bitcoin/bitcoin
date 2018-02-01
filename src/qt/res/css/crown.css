@@ -516,6 +516,16 @@ background-color: #f2f2f2;
 min-height: 25px;
 }
 
+/* create SN/MN dialog */
+#ipEdit, #aliasEdit, #labelEdit 
+{
+border: 1px solid #f2f2f2;
+color: #555555;
+background-color: #f2f2f2;
+min-height: 25px;
+}
+
+
 
 /* sign/verify message dialog */
 #addressIn_SM

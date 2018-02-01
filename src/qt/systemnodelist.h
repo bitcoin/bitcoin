@@ -4,6 +4,7 @@
 #include "systemnode.h"
 #include "sync.h"
 #include "util.h"
+#include "sendcollateraldialog.h"
 
 #include <QMenu>
 #include <QTimer>
@@ -46,6 +47,10 @@ public Q_SLOTS:
     void updateMySystemnodeInfo(QString alias, QString addr, QString privkey, QString txHash, QString txIndex, CSystemnode *pmn);
     void updateMyNodeList(bool reset = false);
     void updateNodeList();
+    SendCollateralDialog* getSendCollateralDialog()
+    {
+        return sendDialog;
+    }
 
 Q_SIGNALS:
 
@@ -54,6 +59,7 @@ private:
     Ui::SystemnodeList *ui;
     ClientModel *clientModel;
     WalletModel *walletModel;
+    SendCollateralDialog *sendDialog;
     CCriticalSection cs_mnlistupdate;
     QString strCurrentFilter;
 
@@ -61,10 +67,13 @@ private Q_SLOTS:
     void showContextMenu(const QPoint &);
     void on_filterLineEdit_textChanged(const QString &filterString);
     void on_startButton_clicked();
+    void on_editButton_clicked();
     void on_startAllButton_clicked();
     void on_startMissingButton_clicked();
     void on_tableWidgetMySystemnodes_itemSelectionChanged();
     void on_UpdateButton_clicked();
+    void on_CreateNewSystemnode_clicked();
     
 };
+
 #endif // SYSTEMNODELIST_H

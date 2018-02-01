@@ -343,6 +343,15 @@ void SNFillBlockPayee(CMutableTransaction& txNew, int64_t nFees)
     }
 }
 
+std::string SNGetRequiredPaymentsString(int nBlockHeight)
+{
+    if(IsSporkActive(SPORK_13_ENABLE_SUPERBLOCKS) && budget.IsBudgetPaymentBlock(nBlockHeight)){
+        return budget.GetRequiredPaymentsString(nBlockHeight);
+    } else {
+        return systemnodePayments.GetRequiredPaymentsString(nBlockHeight);
+    }
+}
+
 void CSystemnodePayments::FillBlockPayee(CMutableTransaction& txNew, int64_t nFees)
 {
     CBlockIndex* pindexPrev = chainActive.Tip();
@@ -384,6 +393,39 @@ void CSystemnodePayments::FillBlockPayee(CMutableTransaction& txNew, int64_t nFe
 
         LogPrintf("Systemnode payment to %s\n", address2.ToString().c_str());
     }
+}
+
+std::string CSystemnodeBlockPayees::GetRequiredPaymentsString()
+{
+    LOCK(cs_vecPayments);
+
+    std::string ret = "Unknown";
+
+    BOOST_FOREACH(CSystemnodePayee& payee, vecPayments)
+    {
+        CTxDestination address1;
+        ExtractDestination(payee.scriptPubKey, address1);
+        CBitcoinAddress address2(address1);
+
+        if(ret != "Unknown"){
+            ret += ", " + address2.ToString() + ":" + boost::lexical_cast<std::string>(payee.nVotes);
+        } else {
+            ret = address2.ToString() + ":" + boost::lexical_cast<std::string>(payee.nVotes);
+        }
+    }
+
+    return ret;
+}
+
+std::string CSystemnodePayments::GetRequiredPaymentsString(int nBlockHeight)
+{
+    LOCK(cs_mapSystemnodeBlocks);
+
+    if(mapSystemnodeBlocks.count(nBlockHeight)){
+        return mapSystemnodeBlocks[nBlockHeight].GetRequiredPaymentsString();
+    }
+
+    return "Unknown";
 }
 
 bool CSystemnodeBlockPayees::IsTransactionValid(const CTransaction& txNew)

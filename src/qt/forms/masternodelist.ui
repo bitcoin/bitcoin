@@ -111,6 +111,11 @@
              </column>
              <column>
               <property name="text">
+               <string>PrivateKey</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
                <string>Protocol</string>
               </property>
              </column>
@@ -142,16 +147,16 @@
               <number>0</number>
              </property>
              <item>
-              <widget class="QPushButton" name="startButton">
+              <widget class="QPushButton" name="CreateNewMasternode">
                <property name="text">
-                <string>S&amp;tart alias</string>
+                <string>&amp;New Masternode</string>
                </property>
               </widget>
              </item>
              <item>
-              <widget class="QPushButton" name="startAllButton">
+              <widget class="QPushButton" name="startButton">
                <property name="text">
-                <string>Start &amp;all</string>
+                <string>S&amp;tart alias</string>
                </property>
               </widget>
              </item>

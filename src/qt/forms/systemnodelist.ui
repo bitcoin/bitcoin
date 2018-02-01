@@ -111,6 +111,11 @@
              </column>
              <column>
               <property name="text">
+               <string>PrivateKey</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
                <string>Protocol</string>
               </property>
              </column>
@@ -142,16 +147,16 @@
               <number>0</number>
              </property>
              <item>
-              <widget class="QPushButton" name="startButton">
+              <widget class="QPushButton" name="CreateNewSystemnode">
                <property name="text">
-                <string>S&amp;tart alias</string>
+                <string>&amp;New Systemnode</string>
                </property>
               </widget>
              </item>
              <item>
-              <widget class="QPushButton" name="startAllButton">
+              <widget class="QPushButton" name="startButton">
                <property name="text">
-                <string>Start &amp;all</string>
+                <string>S&amp;tart alias</string>
                </property>
               </widget>
              </item>
@@ -305,6 +310,22 @@
           </layout>
          </item>
         </layout>
+       </widget>
+       <widget class="QWidget" name="tab">
+        <attribute name="title">
+         <string>Voting</string>
+        </attribute>
+        <widget class="QLabel" name="label_superblock">
+         <property name="margin">
+            <number>30</number>
+         </property>
+         <property name="styleSheet">
+          <string>color: black;</string>
+         </property>
+         <property name="text">
+          <string>Voting with systemnodes will be available in the future.</string>
+         </property>
+        </widget>
        </widget>
       </widget>
      </item>

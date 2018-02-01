@@ -24,7 +24,7 @@
 #include <openssl/bio.h>
 #include <openssl/evp.h>
 #include <openssl/buffer.h>
-
+#include <openssl/sha.h>
 
 #ifndef WIN32
 // for posix_fallocate
@@ -801,4 +801,44 @@ void SetThreadPriority(int nPriority)
     setpriority(PRIO_PROCESS, 0, nPriority);
 #endif // PRIO_THREAD
 #endif // WIN32
+}
+
+std::string Sha256Sum(const std::string& filename)
+{
+    std::string result;
+    std::ifstream f;
+    f.open(filename.c_str(), std::ios_base::binary | std::ios_base::in | std::ios::ate);
+    if (!f) {
+        throw std::runtime_error("Sha256Sum() - Error: Bad file descriptor.");
+    }
+    std::ifstream::pos_type file_size = f.tellg();
+    SHA256_CTX ctx;
+    if (!SHA256_Init(&ctx)) {
+        throw std::runtime_error("Sha256Sum() - Error: SHA256 initialization failed.");
+    }
+    size_t size_left = file_size;
+    f.seekg(0, std::ios::beg);
+    while (size_left)
+    {
+        boost::scoped_array<char> buf(new char[4096]);
+        std::ifstream::pos_type read_size = size_left > sizeof(buf.get()) ? sizeof(buf.get()) : size_left;
+        f.read(buf.get(), read_size);
+        if (!f || !f.good()) {
+            throw std::runtime_error("Sha256Sum() - Error: Couldn't read file.");
+        }
+        if (!SHA256_Update(&ctx, buf.get(), read_size)) {
+            throw std::runtime_error("Sha256Sum() - Error: SHA256_Update failed.");
+        }
+        size_left -= read_size;
+    }
+    f.close();
+
+    unsigned char results[SHA256_DIGEST_LENGTH];
+    if (!SHA256_Final(results, &ctx)) {
+        throw std::runtime_error("Sha256Sum() - Error: SHA256_Final failed.");
+    }
+    for (int n = 0; n < SHA256_DIGEST_LENGTH; n++) {
+        result.append(strprintf("%02x", results[n]));
+    }
+    return result;
 }

@@ -39,6 +39,7 @@ src/config/crown-config.h.in
 src/config/stamp-h1
 share/setup.nsi
 share/qt/Info.plist
+share/certs/curl-ca-bundle.crt
 
 src/univalue/gen
 
