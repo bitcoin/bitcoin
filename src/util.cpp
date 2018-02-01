@@ -820,13 +820,13 @@ std::string Sha256Sum(const std::string& filename)
     f.seekg(0, std::ios::beg);
     while (size_left)
     {
-        char buf[4096];
-        std::ifstream::pos_type read_size = size_left > sizeof(buf) ? sizeof(buf) : size_left;
-        f.read(buf, read_size);
+        boost::scoped_array<char> buf(new char[4096]);
+        std::ifstream::pos_type read_size = size_left > sizeof(buf.get()) ? sizeof(buf.get()) : size_left;
+        f.read(buf.get(), read_size);
         if (!f || !f.good()) {
             throw std::runtime_error("Sha256Sum() - Error: Couldn't read file.");
         }
-        if (!SHA256_Update(&ctx, buf, read_size)) {
+        if (!SHA256_Update(&ctx, buf.get(), read_size)) {
             throw std::runtime_error("Sha256Sum() - Error: SHA256_Update failed.");
         }
         size_left -= read_size;
