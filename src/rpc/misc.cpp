@@ -210,6 +210,9 @@ UniValue validateaddress(const UniValue& params, bool fHelp)
 		address = CSyscoinAddress(address.ToString());
 		ret.push_back(Pair("alias", address.aliasName));	
 
+		ret.push_back(Pair("v1address", v1addr.ToString()));
+		ret.push_back(Pair("v2address", currentAddress.ToString()));
+
         CScript scriptPubKey = GetScriptForDestination(dest);
 		// SYSCOIN
 		if(!address.vchRedeemScript.empty())
