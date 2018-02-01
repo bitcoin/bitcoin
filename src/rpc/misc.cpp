@@ -211,7 +211,7 @@ UniValue validateaddress(const UniValue& params, bool fHelp)
 		ret.push_back(Pair("alias", address.aliasName));	
 
 		ret.push_back(Pair("v1address", v1addr.ToString()));
-		ret.push_back(Pair("v2address", currentAddress.ToString()));
+		ret.push_back(Pair("v2address", currentAddress));
 
         CScript scriptPubKey = GetScriptForDestination(dest);
 		// SYSCOIN
