@@ -38,27 +38,29 @@ void UpdateDialog::setCurrentVersion(QString text)
     ui->currentVersionLabel->setText(ui->currentVersionLabel->text().arg(text));
 }
 
-QString UpdateDialog::getOSString(Updater::OS os)
+QString UpdateDialog::getOSString(boost::optional<Updater::OS> os)
 {
     QString osString = "Unknown";
-    switch(os) {
-        case Updater::LINUX_32:
-            osString = "Linux 32";
-            break;
-        case Updater::LINUX_64:
-            osString = "Linux 64";
-            break;
-        case Updater::WINDOWS_32:
-            osString = "Windows 32";
-            break;
-        case Updater::WINDOWS_64:
-            osString = "Windows 64";
-            break;
-        case Updater::MAC_OS:
-            osString = "Mac OS";
-            break;
-        default:
-            osString = "Unknown";
+    if (os) {
+        switch(os.get()) {
+            case Updater::LINUX_32:
+                osString = "Linux 32";
+                break;
+            case Updater::LINUX_64:
+                osString = "Linux 64";
+                break;
+            case Updater::WINDOWS_32:
+                osString = "Windows 32";
+                break;
+            case Updater::WINDOWS_64:
+                osString = "Windows 64";
+                break;
+            case Updater::MAC_OS:
+                osString = "Mac OS";
+                break;
+            default:
+                osString = "Unknown";
+        }
     }
     return osString;
 }
@@ -75,22 +77,25 @@ Updater::OS UpdateDialog::getOS()
 
 void UpdateDialog::setPossibleOS()
 {
-    ui->osComboBox->addItem(getOSString(Updater::UNKNOWN));
     ui->osComboBox->addItem(getOSString(Updater::LINUX_32));
     ui->osComboBox->addItem(getOSString(Updater::LINUX_64));
     ui->osComboBox->addItem(getOSString(Updater::WINDOWS_32));
     ui->osComboBox->addItem(getOSString(Updater::WINDOWS_64));
     ui->osComboBox->addItem(getOSString(Updater::MAC_OS));
+    ui->osComboBox->addItem(getOSString());
 }
 
 void UpdateDialog::selectionChanged(int index)
 {
-    (void)index;
-    if (getOS() == Updater::UNKNOWN)
+    if (ui->osComboBox->count() > 1)
     {
-        ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(false);
-    } else {
-        ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(true);
+        // If tha last item is choosen
+        if (index == ui->osComboBox->count() - 1)
+        {
+            ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(false);
+        } else {
+            ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(true);
+        }
     }
 };
 
@@ -116,7 +121,7 @@ void UpdateDialog::downloadFinished()
     if (!finished)
     {
         finished = true;
-        std::string newSha = updater.GetDownloadSha256Sum();
+        std::string newSha = updater.GetDownloadSha256Sum(getOS());
         try
         {
             std::string sha = Sha256Sum(fileName.toStdString());

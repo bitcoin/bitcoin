@@ -24,7 +24,6 @@ class Updater
 {
 public:
     enum OS {
-        UNKNOWN,
         LINUX_32,
         LINUX_64,
         WINDOWS_32,
@@ -37,16 +36,16 @@ public:
     {
         return version;
     }
-    Updater::OS GetOS() const
+    OS GetOS() const
     {
         return os;
     }
     CURLcode DownloadFile(std::string url, std::string fileName, void(progressFunction)(curl_off_t, curl_off_t));
     void DownloadFileAsync(std::string url, std::string fileName, void(progressFunction)(curl_off_t, curl_off_t));
     void StopDownload();
-    std::string GetDownloadUrl(Updater::OS version = UNKNOWN);
-    std::string GetDownloadSha256Sum(Updater::OS version = UNKNOWN);
-    std::string GetOsString(Updater::OS os = UNKNOWN);
+    std::string GetDownloadUrl(boost::optional<OS> version = boost::none);
+    std::string GetDownloadSha256Sum(boost::optional<OS> version = boost::none);
+    std::string GetOsString(boost::optional<OS> os = boost::none);
     bool GetStopDownload()
     {
         return stopDownload;
@@ -66,7 +65,7 @@ private:
     bool LoadUpdateInfo();
     Value ParseJson(std::string info);
     void SetJsonPath();
-    void SetOS();
+    static OS DetectOS();
     bool NeedToBeUpdated();
     int GetVersionFromJson();
     std::string GetUrl(const Value& value);

@@ -20,7 +20,7 @@ public:
     QString getLabel();
     void setOS(Updater::OS os);
     Updater::OS getOS();
-    QString getOSString(Updater::OS os);
+    QString getOSString(boost::optional<Updater::OS> os = boost::none);
     void downloadVersion();
     void downloadFinished();
     static UpdateDialog* GetInstance();

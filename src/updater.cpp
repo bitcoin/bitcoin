@@ -20,33 +20,35 @@ struct DownloadProgress {
 Updater updater;
 
 Updater::Updater() :
-    os(Updater::UNKNOWN),
+    os(DetectOS()),
     status(false),
     version(-1),
     stopDownload(false),
     testnetUrl("https://raw.githubusercontent.com/Crowndev/crowncoin/master/update_testnet.json"),
-    mainnetUrl("https://raw.githubusercontent.com/Crowndev/crowncoin/master/update.json")
+    //mainnetUrl("https://raw.githubusercontent.com/Crowndev/crowncoin/master/update.json")
+    mainnetUrl("https://raw.githubusercontent.com/ashotkhachatryan/crowncoin/systemnode/update1.json")
 {
-    SetOS();
 }
 
-void Updater::SetOS()
+Updater::OS Updater::DetectOS()
 {
-#ifdef _WIN32
-    os = Updater::WINDOWS_32;
-    #ifdef _WIN64
-        os = Updater::WINDOWS_64;
-    #endif
-#elif __APPLE__
-    os = Updater::MAC_OS;
-#elif __linux__
-    os = Updater::LINUX_32;
-    #if defined(__i386__) || defined(__i686__) || defined(__i486__) || defined(__i586__)
+    OS os = Updater::LINUX_32;
+    #ifdef _WIN32
+        os = Updater::WINDOWS_32;
+        #ifdef _WIN64
+            os = Updater::WINDOWS_64;
+        #endif
+    #elif __APPLE__
+        os = Updater::MAC_OS;
+    #elif __linux__
         os = Updater::LINUX_32;
-    #elif defined(__x86_64__) || defined(__amd64__)
-        os = Updater::LINUX_64;
+        #if defined(__i386__) || defined(__i686__) || defined(__i486__) || defined(__i586__)
+            os = Updater::LINUX_32;
+        #elif defined(__x86_64__) || defined(__amd64__)
+            os = Updater::LINUX_64;
+        #endif
     #endif
-#endif
+    return os;
 }
 
 size_t GetUpdateData(const char *data, size_t size, size_t nmemb, std::string *updateData) {
@@ -135,34 +137,26 @@ bool Updater::LoadUpdateInfo()
     return result;
 }
 
-std::string Updater::GetOsString(Updater::OS os)
+std::string Updater::GetOsString(boost::optional<OS> os)
 {
-    if (os == UNKNOWN)
-    {
-        os = this->os;
+    if (!os) {
+        return GetOsString(GetOS());
     }
-    std::string result = "Unknown";
-    switch(os) {
+    switch(os.get()) {
         case Updater::LINUX_32:
-            result = "Linux32";
-            break;
+            return "Linux32";
         case Updater::LINUX_64:
-            result = "Linux64";
-            break;
+            return "Linux64";
         case Updater::WINDOWS_32:
-            result = "Win32";
-            break;
+            return "Win32";
         case Updater::WINDOWS_64:
-            result = "Win64";
-            break;
+            return "Win64";
         case Updater::MAC_OS:
-            result = "Osx";
-            break;
-        case Updater::UNKNOWN:
+            return "Osx";
+        default:
             assert(false);
-            break;
     }
-    return result;
+    return "";
 }
 
 std::string Updater::GetUrl(const Value& value)
@@ -204,22 +198,14 @@ int Updater::GetVersionFromJson()
     return -1;
 }
 
-std::string Updater::GetDownloadUrl(Updater::OS version)
+std::string Updater::GetDownloadUrl(boost::optional<OS> version)
 {
-    if (version == UNKNOWN)
-    {
-        version = os;
-    }
     Value json = find_value(jsonData.get_obj(), GetOsString(version));
     return GetUrl(json);
 }
 
-std::string Updater::GetDownloadSha256Sum(Updater::OS version)
+std::string Updater::GetDownloadSha256Sum(boost::optional<OS> version)
 {
-    if (version == UNKNOWN)
-    {
-        version = os;
-    }
     Value json = find_value(jsonData.get_obj(), GetOsString(version));
     return GetSha256sum(json);
 }
