@@ -2676,11 +2676,12 @@ CAmount CWallet::GetAvailableBalance(const CCoinControl* coinControl) const
 
 void CWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, const CCoinControl *coinControl, AvailableCoinsType nCoinType, const CAmount &nMinimumAmount, const CAmount &nMaximumAmount, const CAmount &nMinimumSumAmount, const uint64_t nMaximumCount, const int nMinDepth, const int nMaxDepth) const
 {
+    AssertLockHeld(cs_main);
+    AssertLockHeld(cs_wallet);
+
     vCoins.clear();
 
     {
-        LOCK2(cs_main, cs_wallet);
-
         CAmount nTotal = 0;
 
         for (const auto& entry : mapWallet)
@@ -2813,11 +2814,11 @@ std::map<CTxDestination, std::vector<COutput>> CWallet::ListCoins() const
     // avoid adding some extra complexity to the Qt code.
 
     std::map<CTxDestination, std::vector<COutput>> result;
-
     std::vector<COutput> availableCoins;
-    AvailableCoins(availableCoins);
 
     LOCK2(cs_main, cs_wallet);
+    AvailableCoins(availableCoins);
+
     for (auto& coin : availableCoins) {
         CTxDestination address;
         if (coin.fSpendable &&
