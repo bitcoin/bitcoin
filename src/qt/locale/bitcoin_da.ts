@@ -3186,6 +3186,10 @@
         <translation>Acceptér videresendte transaktioner, der modtages fra hvidlistede knuder, selv når transaktioner ikke videresendes (standard: %d)</translation>
     </message>
     <message>
+        <source>Add a node to connect to and attempt to keep the connection open (see the `addnode` RPC command help for more info)</source>
+        <translation>Tilføj en knude at forbinde til og forsøg at holde forbindelsen åben (se hjælp for RPC-kommandoen “addnode” for mere info)</translation>
+    </message>
+    <message>
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
         <translation>Tildel til den givne adresse og lyt altid på den. Brug [vært]:port-notation for IPv6</translation>
     </message>

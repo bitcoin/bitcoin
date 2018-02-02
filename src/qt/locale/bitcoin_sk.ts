@@ -2158,6 +2158,10 @@
         <translation>Povoliť dodatočné navýšenie poplatku (tzv. „Replace-By-Fee“)</translation>
     </message>
     <message>
+        <source>With Replace-By-Fee (BIP-125) you can increase a transaction's fee after it is sent. Without this, a higher fee may be recommended to compensate for increased transaction delay risk.</source>
+        <translation>S dodatočným navýšením poplatku (BIP-125, tzv. „Replace-By-Fee“), môžete zvýšiť poplatok aj po odoslaní. Bez toho, by mohol byť navrhnutý väčší transakčný poplatok, aby kompenzoval zvýšené riziko omeškania transakcie.</translation>
+    </message>
+    <message>
         <source>Clear &amp;All</source>
         <translation>&amp;Zmazať všetko</translation>
     </message>
@@ -3191,6 +3195,10 @@
         <translation>Akceptovať postúpené transakcie od povolených partnerov aj keď normálne nepostupujete transakcie (predvolené: %d)</translation>
     </message>
     <message>
+        <source>Add a node to connect to and attempt to keep the connection open (see the `addnode` RPC command help for more info)</source>
+        <translation>Pridať uzol na pripojenie a pokus o udržanie otvoreného pripojenia (pre viac informácií si pozrite nápovedu pre RPC príkaz "addnode")</translation>
+    </message>
+    <message>
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
         <translation>Spojiť s danou adresou a vždy na nej počúvať. Použite zápis [host]:port pre IPv6</translation>
     </message>
@@ -3200,7 +3208,11 @@
     </message>
     <message>
         <source>Cannot provide specific connections and have addrman find outgoing connections at the same.</source>
-        <translation>Nemôžete zadať konkrétne spojenia a zároveň mať nastavený addrman pre hľadanie odchádzajúcich spojení.</translation>
+        <translation>Nemôžete zadať konkrétne spojenia a zároveň mať nastavený addrman pre hľadanie odchádzajúcich spojení.</translation>
+    </message>
+    <message>
+        <source>Connect only to the specified node(s); -connect=0 disables automatic connections (the rules for this peer are the same as for -addnode)</source>
+        <translation>Pripojiť sa iba k určenému uzlu(om); -connect=0 zakáže automatické pripojovanie (pravidlá pre tento uzol sú rovnaké ako pre -addnode)</translation>
     </message>
     <message>
         <source>Delete all wallet transactions and only recover those parts of the blockchain through -rescan on startup</source>
@@ -3429,6 +3441,10 @@
     <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation>Chyba počúvania na ktoromkoľvek porte. Použi -listen=0 ak toto chcete.</translation>
+    </message>
+    <message>
+        <source>Failed to rescan the wallet during initialization</source>
+        <translation>Počas inicializácie sa nepodarila pre-skenovať peňaženka</translation>
     </message>
     <message>
         <source>Importing...</source>

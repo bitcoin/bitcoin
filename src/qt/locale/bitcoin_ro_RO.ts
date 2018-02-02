@@ -132,6 +132,10 @@
         <translation>Repetaţi noua frază de acces</translation>
     </message>
     <message>
+        <source>Show password</source>
+        <translation>Arata parola</translation>
+    </message>
+    <message>
         <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
         <translation>Introduceţi noua parolă a portofelului electronic.&lt;br/&gt;Vă rugăm să folosiţi o parolă de&lt;b&gt;minimum 10 caractere aleatoare&lt;/b&gt;, sau &lt;b&gt;minimum 8 cuvinte&lt;/b&gt;.</translation>
     </message>
@@ -1016,6 +1020,18 @@
         <translation>Arata daca proxy-ul SOCKS5 furnizat implicit este folosit pentru a gasi parteneri via acest tip de retea.</translation>
     </message>
     <message>
+        <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor hidden services:</source>
+        <translation>Foloseste un proxy SOCKS&amp;5 separat pentru a gasi parteneri via servicii TOR ascunse</translation>
+    </message>
+    <message>
+        <source>Hide the icon from the system tray.</source>
+        <translation>Ascunde icon-ul din system tray.</translation>
+    </message>
+    <message>
+        <source>&amp;Hide tray icon</source>
+        <translation>&amp;Ascunde icon-ul din system tray.</translation>
+    </message>
+    <message>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Exit in the menu.</source>
         <translation>Minimizează fereastra în locul părăsirii programului în momentul închiderii ferestrei. Cînd acestă opţiune e activă, aplicaţia se va opri doar în momentul selectării comenzii 'Închide aplicaţia' din menu.</translation>
     </message>
@@ -1078,6 +1094,14 @@
     <message>
         <source>Map port using &amp;UPnP</source>
         <translation>Mapare port folosind &amp;UPnP</translation>
+    </message>
+    <message>
+        <source>Accept connections from outside.</source>
+        <translation>Acceptă conexiuni din exterior</translation>
+    </message>
+    <message>
+        <source>Allow incomin&amp;g connections</source>
+        <translation>Permite conexiuni de intrar&amp;e</translation>
     </message>
     <message>
         <source>Connect to the Bitcoin network through a SOCKS5 proxy.</source>
@@ -1158,6 +1182,10 @@
     <message>
         <source>Whether to show coin control features or not.</source>
         <translation>Arată controlul caracteristicilor monedei sau nu.</translation>
+    </message>
+    <message>
+        <source>&amp;Third party transaction URLs</source>
+        <translation>URL-uri tranzacţii &amp;terţe părţi</translation>
     </message>
     <message>
         <source>&amp;OK</source>
@@ -1773,6 +1801,14 @@
         <translation>Folosiţi săgetile sus şi jos pentru a naviga în istoric şi %1 pentru a curăţa ecranul.</translation>
     </message>
     <message>
+        <source>Type %1 for an overview of available commands.</source>
+        <translation>Tastati %1 pentru o recapitulare a comenzilor disponibile.</translation>
+    </message>
+    <message>
+        <source>For more information on using this console type %1.</source>
+        <translation>Pentru mai multe informatii despre folosirea acestei console tastati %1.</translation>
+    </message>
+    <message>
         <source>WARNING: Scammers have been active, telling users to type commands here, stealing their wallet contents. Do not use this console without fully understanding the ramifications of a command.</source>
         <translation>ATENTIONARE: Sunt excroci care instruiesc userii sa introduca aici comenzi, pentru a le fura continutul portofelelor. Nu folositi aceasta consolă fara a intelege pe deplin ramificatiile unei comenzi.</translation>
     </message>
@@ -1858,6 +1894,14 @@
     <message>
         <source>&amp;Request payment</source>
         <translation>&amp;Cerere plată</translation>
+    </message>
+    <message>
+        <source>Bech32 addresses (BIP-173) are cheaper to spend from and offer better protection against typos. When unchecked a P2SH wrapped SegWit address will be created, compatible with older wallets.</source>
+        <translation>Adresele de tip Bech32 (BIP-173) sunt mai ieftin de folosit si ofera o protectie mai buna impotriva greselilor de tastare. Daca nu este bifat se creaza o adresa SegWit impachetata in P2SH, compatibila cu portofelele mai vechi.</translation>
+    </message>
+    <message>
+        <source>Generate Bech32 address</source>
+        <translation>Genereaza adresa Bech32</translation>
     </message>
     <message>
         <source>Show the selected request (does the same as double clicking an entry)</source>
@@ -2105,6 +2149,14 @@
         <translation>Timp confirmare tinta:</translation>
     </message>
     <message>
+        <source>Enable Replace-By-Fee</source>
+        <translation>Autorizeaza Replace-By-Fee</translation>
+    </message>
+    <message>
+        <source>With Replace-By-Fee (BIP-125) you can increase a transaction's fee after it is sent. Without this, a higher fee may be recommended to compensate for increased transaction delay risk.</source>
+        <translation>Cu Replace-By-Fee (BIP-125) se poate creste taxa unei tranzactii dupa ce a fost trimisa. Fara aceasta optiune, o taxa mai mare e posibil sa fie recomandata pentru a compensa riscul crescut de intarziere a tranzactiei.</translation>
+    </message>
+    <message>
         <source>Clear &amp;All</source>
         <translation>Curăţă to&amp;ate</translation>
     </message>
@@ -2171,6 +2223,10 @@
     <message>
         <source>or</source>
         <translation>sau</translation>
+    </message>
+    <message>
+        <source>You can increase the fee later (signals Replace-By-Fee, BIP-125).</source>
+        <translation>Puteti creste taxa mai tarziu (semnaleaza Replace-By-Fee, BIP-125).</translation>
     </message>
     <message>
         <source>Confirm send coins</source>

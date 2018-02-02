@@ -1028,6 +1028,14 @@
         <translation>Bruk egen SOCKS&amp;5-proxy for å nå noder via Tor hidden services:</translation>
     </message>
     <message>
+        <source>Hide the icon from the system tray.</source>
+        <translation>Skjul ikonet fra systemkurven.</translation>
+    </message>
+    <message>
+        <source>&amp;Hide tray icon</source>
+        <translation>&amp;Skjul systemkurvsikon</translation>
+    </message>
+    <message>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Exit in the menu.</source>
         <translation>Minimer i stedet for å avslutte applikasjonen når vinduet lukkes. Når dette er valgt, vil applikasjonen avsluttes kun etter at Avslutte er valgt i menyen.</translation>
     </message>
@@ -1090,6 +1098,14 @@
     <message>
         <source>Map port using &amp;UPnP</source>
         <translation>Sett opp port ved hjelp av &amp;UPnP</translation>
+    </message>
+    <message>
+        <source>Accept connections from outside.</source>
+        <translation>Tillat tilkoblinger fra utsiden</translation>
+    </message>
+    <message>
+        <source>Allow incomin&amp;g connections</source>
+        <translation>Tillatt innkommend&amp;e tilkoblinger</translation>
     </message>
     <message>
         <source>Connect to the Bitcoin network through a SOCKS5 proxy.</source>

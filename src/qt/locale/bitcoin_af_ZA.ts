@@ -136,6 +136,10 @@
         <translation>Wys wagwoord</translation>
     </message>
     <message>
+        <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
+        <translation>Tik die nuwe wagwoord vir die beursie in.&lt;br/&gt;Gebruik asseblief 'n wagwoord van &lt;b&gt;ten minste 10 ewekansige karakters&lt;/b&gt;, of &lt;b&gt;agt (8) of meer woorde.&lt;/b&gt;</translation>
+    </message>
+    <message>
         <source>Encrypt wallet</source>
         <translation>Enkripteer beursie</translation>
     </message>
@@ -168,8 +172,20 @@
         <translation>Bevestig beursie enkripsie.</translation>
     </message>
     <message>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
+        <translation>Waarskuwing: As jy jou beursie enkripteer en jou wagwoord verloor, sal jy &lt;b&gt;AL JOU BITCOINS VERLOOR&lt;/b&gt;!</translation>
+    </message>
+    <message>
+        <source>Are you sure you wish to encrypt your wallet?</source>
+        <translation>Is jy seker jy wil jou beursie enkripteer?</translation>
+    </message>
+    <message>
         <source>Wallet encrypted</source>
         <translation>Beursie Enkripteer</translation>
+    </message>
+    <message>
+        <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
+        <translation>%1 gaan nou toe maak om die enkripsie proses klaar te maak. Onthou dat jou bitcoins nie ten volle beskerm kan word deur die beursie te enkrip teen "malware" wat jou rekenaar besmet.</translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
@@ -199,12 +215,24 @@
         <source>Wallet passphrase was successfully changed.</source>
         <translation>Die beursie se wagfrase verandering was suksesvol.</translation>
     </message>
-    </context>
+    <message>
+        <source>Warning: The Caps Lock key is on!</source>
+        <translation>Waarskuwing: Die Caps Lock is aan!</translation>
+    </message>
+</context>
 <context>
     <name>BanTableModel</name>
-    </context>
+    <message>
+        <source>Banned Until</source>
+        <translation>Verban Tot</translation>
+    </message>
+</context>
 <context>
     <name>BitcoinGUI</name>
+    <message>
+        <source>Sign &amp;message...</source>
+        <translation>Teken &amp;Boodskap</translation>
+    </message>
     <message>
         <source>Synchronizing with network...</source>
         <translation>Sinchroniseer met die netwerk ...</translation>
@@ -238,12 +266,48 @@
         <translation>Sluit af</translation>
     </message>
     <message>
+        <source>Show information about %1</source>
+        <translation>Wys inligting oor %1</translation>
+    </message>
+    <message>
+        <source>About &amp;Qt</source>
+        <translation>Oor &amp;Qt</translation>
+    </message>
+    <message>
         <source>Show information about Qt</source>
         <translation>Wys inligting oor Qt</translation>
     </message>
     <message>
         <source>&amp;Options...</source>
         <translation>&amp;Opsies</translation>
+    </message>
+    <message>
+        <source>Modify configuration options for %1</source>
+        <translation>Verander konfigurasie opsies vir %1</translation>
+    </message>
+    <message>
+        <source>&amp;Encrypt Wallet...</source>
+        <translation>&amp;Enkripteer Beursie...</translation>
+    </message>
+    <message>
+        <source>&amp;Change Passphrase...</source>
+        <translation>Verander wagwoord frase...</translation>
+    </message>
+    <message>
+        <source>&amp;Sending addresses...</source>
+        <translation>Uitstuur adresse...</translation>
+    </message>
+    <message>
+        <source>Open &amp;URI...</source>
+        <translation>Maak &amp;URI oop...</translation>
+    </message>
+    <message>
+        <source>Network activity disabled.</source>
+        <translation>Netwerk aktiwiteid afgeskakel.</translation>
+    </message>
+    <message>
+        <source>&amp;Verify message...</source>
+        <translation>&amp;Verifieer boodskap...</translation>
     </message>
     <message>
         <source>Bitcoin</source>
@@ -306,8 +370,18 @@
         <translation>Op datum</translation>
     </message>
     <message>
+        <source>%1 client</source>
+        <translation>%1 klient</translation>
+    </message>
+    <message>
         <source>Catching up...</source>
         <translation>Besig om op te vang...</translation>
+    </message>
+    <message>
+        <source>Date: %1
+</source>
+        <translation>Datum: %1
+</translation>
     </message>
     <message>
         <source>Amount: %1
@@ -316,12 +390,44 @@
 </translation>
     </message>
     <message>
+        <source>Type: %1
+</source>
+        <translation>Tipe: %1
+</translation>
+    </message>
+    <message>
+        <source>Address: %1
+</source>
+        <translation>Adres: %1
+</translation>
+    </message>
+    <message>
         <source>Incoming transaction</source>
         <translation>Inkomende transaksie</translation>
+    </message>
+    <message>
+        <source>HD key generation is &lt;b&gt;enabled&lt;/b&gt;</source>
+        <translation>HD sleutel generasie is &lt;b&gt;aangesit&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <source>HD key generation is &lt;b&gt;disabled&lt;/b&gt;</source>
+        <translation>HD sleutel generasie is &lt;b&gt;afgesit&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
+        <translation>Beursie is &lt;b&gt;versleutel&lt;/b&gt; en is tans &lt;b&gt;oopgesluit&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
+        <translation>Beursie is &lt;b&gt;versleutel&lt;/b&gt; en is tans &lt;b&gt;gesluit&lt;/b&gt;</translation>
     </message>
     </context>
 <context>
     <name>CoinControlDialog</name>
+    <message>
+        <source>Coin Selection</source>
+        <translation>Munt Keuse</translation>
+    </message>
     <message>
         <source>Quantity:</source>
         <translation>Hoeveelheid:</translation>
@@ -333,6 +439,14 @@
     <message>
         <source>Amount:</source>
         <translation>Bedrag:</translation>
+    </message>
+    <message>
+        <source>Fee:</source>
+        <translation>Fooi:</translation>
+    </message>
+    <message>
+        <source>Dust:</source>
+        <translation>Stof:</translation>
     </message>
     <message>
         <source>Change:</source>
@@ -477,12 +591,24 @@
         <source>Could not unlock wallet.</source>
         <translation>Kon nie die beursie oopsluit nie.</translation>
     </message>
-    </context>
+    <message>
+        <source>New key generation failed.</source>
+        <translation>Nuwe sleutel genereering het misluk.</translation>
+    </message>
+</context>
 <context>
     <name>FreespaceChecker</name>
     <message>
+        <source>A new data directory will be created.</source>
+        <translation>n Nuwe data  lêer sal geskep word.</translation>
+    </message>
+    <message>
         <source>name</source>
         <translation>naam</translation>
+    </message>
+    <message>
+        <source>Directory already exists. Add %1 if you intend to create a new directory here.</source>
+        <translation>Lêer bestaan reeds. Voeg %1 indien u van plan is om n nuwe lêer hier te skep.</translation>
     </message>
     <message>
         <source>Cannot create data directory here.</source>
@@ -543,6 +669,10 @@
         <translation>Bitcoin</translation>
     </message>
     <message>
+        <source>The wallet will also be stored in this directory.</source>
+        <translation>Die beursie sal ook gestoor word in hierdie lêer.</translation>
+    </message>
+    <message>
         <source>Error</source>
         <translation>Fout</translation>
     </message>
@@ -552,6 +682,10 @@
     <message>
         <source>Form</source>
         <translation>Vorm</translation>
+    </message>
+    <message>
+        <source>Progress</source>
+        <translation>Vorderering</translation>
     </message>
     <message>
         <source>Hide</source>
@@ -642,6 +776,10 @@
         <source>Balances</source>
         <translation>Balans</translation>
     </message>
+    <message>
+        <source>Total:</source>
+        <translation>Totaal:</translation>
+    </message>
     </context>
 <context>
     <name>PaymentServer</name>
@@ -654,6 +792,30 @@
     <message>
         <source>Amount</source>
         <translation>Bedrag</translation>
+    </message>
+    <message>
+        <source>%1 d</source>
+        <translation>%1 d</translation>
+    </message>
+    <message>
+        <source>%1 h</source>
+        <translation>%1 h</translation>
+    </message>
+    <message>
+        <source>%1 m</source>
+        <translation>%1 m</translation>
+    </message>
+    <message>
+        <source>%1 s</source>
+        <translation>%1 s</translation>
+    </message>
+    <message>
+        <source>None</source>
+        <translation>Geen</translation>
+    </message>
+    <message>
+        <source>%1 ms</source>
+        <translation>%1 ms</translation>
     </message>
     <message>
         <source>unknown</source>
@@ -753,6 +915,10 @@
         <translation>Bedrag:</translation>
     </message>
     <message>
+        <source>Fee:</source>
+        <translation>Fooi:</translation>
+    </message>
+    <message>
         <source>Change:</source>
         <translation>Verander:</translation>
     </message>
@@ -767,6 +933,10 @@
     <message>
         <source>Send to multiple recipients at once</source>
         <translation>Stuur aan vele ontvangers op eens</translation>
+    </message>
+    <message>
+        <source>Dust:</source>
+        <translation>Stof:</translation>
     </message>
     <message>
         <source>Balance:</source>
@@ -1124,6 +1294,10 @@
     <message>
         <source>Error: Disk space is low!</source>
         <translation>Fout: Hardeskyf spasie is baie laag!</translation>
+    </message>
+    <message>
+        <source>Importing...</source>
+        <translation>Invoer proses tans besig..</translation>
     </message>
     <message>
         <source>Information</source>
