@@ -9,7 +9,15 @@ import random
 from test_framework.mininode import CTransaction, CTxIn, CTxOut, COutPoint, ToHex, COIN
 from test_framework.script import CScript, OP_1, OP_DROP, OP_2, OP_HASH160, OP_EQUAL, hash160, OP_TRUE
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import satoshi_round, sync_mempools, sync_blocks, connect_nodes, assert_greater_than
+from test_framework.util import (
+    assert_equal,
+    assert_greater_than,
+    assert_greater_than_or_equal,
+    connect_nodes,
+    satoshi_round,
+    sync_blocks,
+    sync_mempools,
+)
 
 # Construct 2 trivial P2SH's and the ScriptSigs that spend them
 # So we can create many transactions without needing to spend
@@ -21,8 +29,6 @@ P2SH_2 = CScript([OP_HASH160, hash160(REDEEM_SCRIPT_2), OP_EQUAL])
 
 # Associated ScriptSig's to spend satisfy P2SH_1 and P2SH_2
 SCRIPT_SIG = [CScript([OP_TRUE, REDEEM_SCRIPT_1]), CScript([OP_TRUE, REDEEM_SCRIPT_2])]
-
-global log
 
 def small_txpuzzle_randfee(from_node, conflist, unconflist, amount, min_fee, fee_increment):
     """Create and send a transaction with a random fee.
@@ -93,52 +99,28 @@ def split_inputs(from_node, txins, txouts, initial_split=False):
     txouts.append({"txid": txid, "vout": 0, "amount": half_change})
     txouts.append({"txid": txid, "vout": 1, "amount": rem_change})
 
-def check_estimates(node, fees_seen, max_invalid, print_estimates=True):
-    """Call estimatefee and verify that the estimates meet certain invariants."""
+def check_estimates(node, fees_seen, max_invalid):
+    """Call estimatesmartfee and verify that the estimates meet certain invariants."""
 
-    all_estimates = [node.estimatefee(i) for i in range(1, 26)]
-    if print_estimates:
-        log.info([str(all_estimates[e - 1]) for e in [1, 2, 3, 6, 15, 25]])
     delta = 1.0e-6  # account for rounding error
-    last_e = max(fees_seen)
-    for e in [x for x in all_estimates if x >= 0]:
-        # Estimates should be within the bounds of what transactions fees actually were:
-        if float(e) + delta < min(fees_seen) or float(e) - delta > max(fees_seen):
+    last_feerate = float(max(fees_seen))
+    all_smart_estimates = [node.estimatesmartfee(i) for i in range(1, 26)]
+    for i, e in enumerate(all_smart_estimates):  # estimate is for i+1
+        feerate = float(e["feerate"])
+        assert_greater_than(feerate, 0)
+
+        if feerate + delta < min(fees_seen) or feerate - delta > max(fees_seen):
             raise AssertionError("Estimated fee (%f) out of range (%f,%f)"
-                                 % (float(e), min(fees_seen), max(fees_seen)))
-        # Estimates should be monotonically decreasing
-        if float(e) - delta > last_e:
+                                 % (feerate, min(fees_seen), max(fees_seen)))
+        if feerate - delta > last_feerate:
             raise AssertionError("Estimated fee (%f) larger than last fee (%f) for lower number of confirms"
-                                 % (float(e), float(last_e)))
-        last_e = e
-    valid_estimate = False
-    invalid_estimates = 0
-    for i, e in enumerate(all_estimates):  # estimate is for i+1
-        if e >= 0:
-            valid_estimate = True
-            if i >= 13:  # for n>=14 estimatesmartfee(n/2) should be at least as high as estimatefee(n)
-                assert_greater_than(node.estimatesmartfee((i + 1) // 2)["feerate"], float(e) - delta)
+                                 % (feerate, last_feerate))
+        last_feerate = feerate
 
+        if i == 0:
+            assert_equal(e["blocks"], 2)
         else:
-            invalid_estimates += 1
-
-            # estimatesmartfee should still be valid
-            approx_estimate = node.estimatesmartfee(i + 1)["feerate"]
-            answer_found = node.estimatesmartfee(i + 1)["blocks"]
-            assert_greater_than(approx_estimate, 0)
-            assert_greater_than(answer_found, i + 1)
-
-            # Once we're at a high enough confirmation count that we can give an estimate
-            # We should have estimates for all higher confirmation counts
-            if valid_estimate:
-                raise AssertionError("Invalid estimate appears at higher confirm count than valid estimate")
-
-    # Check on the expected number of different confirmation counts
-    # that we might not have valid estimates for
-    if invalid_estimates > max_invalid:
-        raise AssertionError("More than (%d) invalid estimates" % (max_invalid))
-    return all_estimates
-
+            assert_greater_than_or_equal(i + 1, e["blocks"])
 
 class EstimateFeeTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -151,7 +133,7 @@ class EstimateFeeTest(BitcoinTestFramework):
         which we will use to generate our transactions.
         """
         self.add_nodes(3, extra_args=[["-maxorphantx=1000", "-whitelist=127.0.0.1"],
-                                      ["-blockmaxsize=17000", "-maxorphantx=1000", "-deprecatedrpc=estimatefee"],
+                                      ["-blockmaxsize=17000", "-maxorphantx=1000"],
                                       ["-blockmaxsize=8000", "-maxorphantx=1000"]])
         # Use node0 to mine blocks for input splitting
         # Node1 mines small blocks but that are bigger than the expected transaction rate.
@@ -189,10 +171,6 @@ class EstimateFeeTest(BitcoinTestFramework):
     def run_test(self):
         self.log.info("This test is time consuming, please be patient")
         self.log.info("Splitting inputs so we can generate tx's")
-
-        # Make log handler available to helper functions
-        global log
-        log = self.log
 
         # Start node0
         self.start_node(0)
