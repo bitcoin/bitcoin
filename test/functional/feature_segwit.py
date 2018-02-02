@@ -30,10 +30,12 @@ def getutxo(txid):
     utxo["txid"] = txid
     return utxo
 
-def find_unspent(node, min_value):
-    for utxo in node.listunspent():
-        if utxo['amount'] >= min_value:
+def find_spendable_utxo(node, min_value):
+    for utxo in node.listunspent(query_options={'minimumAmount': min_value}):
+        if utxo['spendable']:
             return utxo
+
+    raise AssertionError("Unspent output equal or higher than %s not found" % min_value)
 
 class SegWitTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -113,8 +115,8 @@ class SegWitTest(BitcoinTestFramework):
         for i in range(5):
             for n in range(3):
                 for v in range(2):
-                    wit_ids[n][v].append(send_to_witness(v, self.nodes[0], find_unspent(self.nodes[0], 50), self.pubkey[n], False, Decimal("49.999")))
-                    p2sh_ids[n][v].append(send_to_witness(v, self.nodes[0], find_unspent(self.nodes[0], 50), self.pubkey[n], True, Decimal("49.999")))
+                    wit_ids[n][v].append(send_to_witness(v, self.nodes[0], find_spendable_utxo(self.nodes[0], 50), self.pubkey[n], False, Decimal("49.999")))
+                    p2sh_ids[n][v].append(send_to_witness(v, self.nodes[0], find_spendable_utxo(self.nodes[0], 50), self.pubkey[n], True, Decimal("49.999")))
 
         self.nodes[0].generate(1) #block 163
         sync_blocks(self.nodes)
@@ -209,7 +211,7 @@ class SegWitTest(BitcoinTestFramework):
         #                      tx2 (segwit input, paying to a non-segwit output) ->
         #                      tx3 (non-segwit input, paying to a non-segwit output).
         # tx1 is allowed to appear in the block, but no others.
-        txid1 = send_to_witness(1, self.nodes[0], find_unspent(self.nodes[0], 50), self.pubkey[0], False, Decimal("49.996"))
+        txid1 = send_to_witness(1, self.nodes[0], find_spendable_utxo(self.nodes[0], 50), self.pubkey[0], False, Decimal("49.996"))
         hex_tx = self.nodes[0].gettransaction(txid)['hex']
         tx = FromHex(CTransaction(), hex_tx)
         assert(tx.wit.is_null()) # This should not be a segwit input
@@ -570,7 +572,7 @@ class SegWitTest(BitcoinTestFramework):
             assert_equal(self.nodes[1].listtransactions("*", 1, 0, True)[0]["txid"], txid)
 
     def mine_and_test_listunspent(self, script_list, ismine):
-        utxo = find_unspent(self.nodes[0], 50)
+        utxo = find_spendable_utxo(self.nodes[0], 50)
         tx = CTransaction()
         tx.vin.append(CTxIn(COutPoint(int('0x'+utxo['txid'],0), utxo['vout'])))
         for i in script_list:
