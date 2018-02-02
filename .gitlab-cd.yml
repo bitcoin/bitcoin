@@ -1,0 +1,81 @@
+variables:
+  GIT_STRATEGY: "clone"
+  OUTDIR: "out"
+  MAKEJOBS: "-j4"
+  CCACHE_SIZE: "100M"
+  GOAL: "install"
+  CROWN_CONFIG_ALL: "--disable-tests --disable-dependency-tracking --prefix=$CI_PROJECT_DIR/depends/$HOST --bindir=$CI_PROJECT_DIR/$OUTDIR/bin --libdir=$CI_PROJECT_DIR/$OUTDIR/lib"
+  SDK_URL: "https://bitcoincore.org/depends-sources/sdks"
+  WINEDEBUG: "fixme-all"
+
+cache:
+  paths:
+  - depends/built
+  - depends/sdk-sources
+
+.job_template: &job_definition
+  stage: build
+  before_script:
+    - if [ -n "$PACKAGES" ]; then sudo apt-get update; fi
+    - if [ -n "$PACKAGES" ]; then sudo apt-get install --no-install-recommends --no-upgrade -qq $PACKAGES; fi
+    - unset CC; unset CXX
+    - mkdir -p depends/SDKs depends/sdk-sources out
+    - if [ -n "$OSX_SDK" -a ! -f depends/sdk-sources/MacOSX${OSX_SDK}.sdk.tar.gz ]; then curl --location --fail $SDK_URL/MacOSX${OSX_SDK}.sdk.tar.gz -o depends/sdk-sources/MacOSX${OSX_SDK}.sdk.tar.gz; fi
+    - if [ -n "$OSX_SDK" -a -f depends/sdk-sources/MacOSX${OSX_SDK}.sdk.tar.gz ]; then tar -C depends/SDKs -xf depends/sdk-sources/MacOSX${OSX_SDK}.sdk.tar.gz; fi
+    - make $MAKEJOBS -C depends HOST=$HOST $DEP_OPTS
+  script:
+    - ./autogen.sh
+    - mkdir build && cd build
+    - ../configure --cache-file=config.cache $CROWN_CONFIG_ALL $CROWN_CONFIG
+    - make distdir VERSION=$HOST
+    - cd crown-$HOST
+    - ./configure --cache-file=../config.cache $CROWN_CONFIG_ALL $CROWN_CONFIG
+    - make $MAKEJOBS $GOAL || ( echo "Build failure. Verbose build follows." && make $GOAL V=1 ; false )
+  artifacts:
+    paths:
+    - $OUTDIR
+    expire_in: 2 mos
+
+Win64:
+  variables:
+    CROWN_CONFIG: "--enable-reduce-exports --enable-mingw"
+    HOST: "x86_64-w64-mingw32"
+    PACKAGES: "nsis gcc-mingw-w64-x86-64 g++-mingw-w64-x86-64 binutils-mingw-w64-x86-64 wine1.6 bc"
+  <<: *job_definition 
+  
+Win32:
+ variables:
+   CROWN_CONFIG: "--enable-reduce-exports"
+   HOST: "i686-w64-mingw32"
+   PACKAGES: "nsis g++-mingw-w64-i686 gcc-mingw-w64-i686 binutils-mingw-w64-i686 wine1.6 bc"
+ <<: *job_definition
+
+Linux64:
+  variables:
+    CROWN_CONFIG: "--enable-glibc-back-compat --enable-reduce-exports"
+    HOST: "x86_64-unknown-linux-gnu"
+    DEP_OPTS: "USE_LINUX_STATIC_QT5=1"
+  <<: *job_definition 
+
+Linux32:
+  variables:
+    CROWN_CONFIG: "--enable-glibc-back-compat --enable-reduce-exports"
+    HOST: "i686-pc-linux-gnu"
+    DEP_OPTS: "USE_LINUX_STATIC_QT5=1"
+    PACKAGES: "g++-multilib bc"
+  <<: *job_definition 
+
+RaspberryPi:
+  variables:
+    CROWN_CONFIG: "--enable-glibc-back-compat --enable-reduce-exports"
+    HOST: "arm-linux-gnueabihf"
+    PACKAGES: "g++-arm-linux-gnueabihf"
+  <<: *job_definition
+
+Osx:
+  variables:
+    CROWN_CONFIG: "--enable-glibc-back-compat --enable-reduce-exports"
+    HOST: "x86_64-apple-darwin11"
+    OSX_SDK: "10.7"
+    PACKAGES: "cmake gcc-multilib g++-multilib libcap-dev libbz2-dev"
+  <<: *job_definition 
