@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE(coin_selection_tests)
         // we can't make 3 cents of mature coins
         BOOST_CHECK(!testWallet.SelectCoinsMinConf( 3 * CENT, 1, 6, 0, vCoins, setCoinsRet, nValueRet));
 
-        // we can make 3 cents of new  coins
+        // we can make 3 cents of new coins
         BOOST_CHECK( testWallet.SelectCoinsMinConf( 3 * CENT, 1, 1, 0, vCoins, setCoinsRet, nValueRet));
         BOOST_CHECK_EQUAL(nValueRet, 3 * CENT);
 

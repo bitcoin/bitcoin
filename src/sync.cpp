@@ -25,8 +25,8 @@ void PrintLockContention(const char* pszName, const char* pszFile, int nLine)
 //
 // Early deadlock detection.
 // Problem being solved:
-//    Thread 1 locks  A, then B, then C
-//    Thread 2 locks  D, then C, then A
+//    Thread 1 locks A, then B, then C
+//    Thread 2 locks D, then C, then A
 //     --> may result in deadlock between the two threads, depending on when they run.
 // Solution implemented here:
 // Keep track of pairs of locks: (A before B), (A before C), etc.
