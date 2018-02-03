@@ -1,0 +1,20 @@
+<!DOCTYPE RCC><RCC version="1.0">
+    <qresource prefix="/translations">
+        <file alias="bg">locale/chaincoin_bg.qm</file>
+        <file alias="de">locale/chaincoin_de.qm</file>
+        <file alias="en">locale/chaincoin_en.qm</file>
+        <file alias="es">locale/chaincoin_es.qm</file>
+        <file alias="fi">locale/chaincoin_fi.qm</file>
+        <file alias="fr">locale/chaincoin_fr.qm</file>
+        <file alias="it">locale/chaincoin_it.qm</file>
+        <file alias="ja">locale/chaincoin_ja.qm</file>
+        <file alias="pl">locale/chaincoin_pl.qm</file>
+        <file alias="pt">locale/chaincoin_pt.qm</file>
+        <file alias="ru">locale/chaincoin_ru.qm</file>
+        <file alias="sk">locale/chaincoin_sk.qm</file>
+        <file alias="sv">locale/chaincoin_sv.qm</file>
+        <file alias="vi">locale/chaincoin_vi.qm</file>
+        <file alias="zh_CN">locale/chaincoin_zh_CN.qm</file>
+        <file alias="zh_TW">locale/chaincoin_zh_TW.qm</file>
+    </qresource>
+</RCC>

@@ -2,21 +2,20 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "core_io.h"
+#include <core_io.h>
 
-#include "base58.h"
-#include "primitives/transaction.h"
-#include "script/script.h"
-#include "script/standard.h"
-#include "serialize.h"
-#include "streams.h"
+#include <base58.h>
+#include <primitives/transaction.h>
+#include <script/script.h>
+#include <script/standard.h>
+#include <serialize.h>
+#include <streams.h>
 #include <univalue.h>
-#include "util.h"
-#include "utilmoneystr.h"
-#include "utilstrencodings.h"
+#include <util.h>
+#include <utilmoneystr.h>
+#include <utilstrencodings.h>
 
 #include <boost/assign/list_of.hpp>
-#include <boost/foreach.hpp>
 
 using namespace std;
 
@@ -116,9 +115,9 @@ string ScriptToAsmStr(const CScript& script, const bool fAttemptSighashDecode)
     return str;
 }
 
-string EncodeHexTx(const CTransaction& tx)
+string EncodeHexTx(const CTransaction& tx, const int serialFlags)
 {
-    CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
+    CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION | serialFlags);
     ssTx << tx;
     return HexStr(ssTx.begin(), ssTx.end());
 }
@@ -143,7 +142,7 @@ void ScriptPubKeyToUniv(const CScript& scriptPubKey,
     out.pushKV("type", GetTxnOutputType(type));
 
     UniValue a(UniValue::VARR);
-    BOOST_FOREACH(const CTxDestination& addr, addresses)
+    for (const CTxDestination& addr : addresses)
         a.push_back(CBitcoinAddress(addr).ToString());
     out.pushKV("addresses", a);
 }

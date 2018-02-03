@@ -12,7 +12,7 @@
 #include <stdint.h>
 #include <string>
 
-#include "amount.h"
+#include <amount.h>
 
 std::string FormatMoney(const CAmount& n);
 bool ParseMoney(const std::string& str, CAmount& nRet);

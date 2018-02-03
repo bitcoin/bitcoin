@@ -2,20 +2,20 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "walletframe.h"
+#include <walletframe.h>
 
-#include "bitcoingui.h"
-#include "walletview.h"
+#include <bitcoingui.h>
+#include <walletview.h>
 
 #include <cstdio>
 
 #include <QHBoxLayout>
 #include <QLabel>
 
-WalletFrame::WalletFrame(const PlatformStyle *_platformStyle, BitcoinGUI *_gui) :
+WalletFrame::WalletFrame(const PlatformStyle *platformStyle, BitcoinGUI *_gui) :
     QFrame(_gui),
     gui(_gui),
-    platformStyle(_platformStyle)
+    platformStyle(platformStyle)
 {
     // Leave HBox hook for adding a list view later
     QHBoxLayout *walletFrameLayout = new QHBoxLayout(this);
@@ -33,9 +33,9 @@ WalletFrame::~WalletFrame()
 {
 }
 
-void WalletFrame::setClientModel(ClientModel *_clientModel)
+void WalletFrame::setClientModel(ClientModel *clientModel)
 {
-    this->clientModel = _clientModel;
+    this->clientModel = clientModel;
 }
 
 bool WalletFrame::addWallet(const QString& name, WalletModel *walletModel)
@@ -122,6 +122,13 @@ void WalletFrame::gotoHistoryPage()
         i.value()->gotoHistoryPage();
 }
 
+void WalletFrame::gotoMasternodePage()
+{
+    QMap<QString, WalletView*>::const_iterator i;
+    for (i = mapWalletViews.constBegin(); i != mapWalletViews.constEnd(); ++i)
+        i.value()->gotoMasternodePage();
+}
+
 void WalletFrame::gotoReceiveCoinsPage()
 {
     QMap<QString, WalletView*>::const_iterator i;
@@ -176,6 +183,13 @@ void WalletFrame::unlockWallet()
     WalletView *walletView = currentWalletView();
     if (walletView)
         walletView->unlockWallet();
+}
+
+void WalletFrame::lockWallet()
+{
+    WalletView *walletView = currentWalletView();
+    if (walletView)
+        walletView->lockWallet();
 }
 
 void WalletFrame::usedSendingAddresses()

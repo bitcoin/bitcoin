@@ -2,10 +2,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "base58.h"
+#include <base58.h>
 
-#include "hash.h"
-#include "uint256.h"
+#include <hash.h>
+#include <uint256.h>
 
 #include <assert.h>
 #include <stdint.h>
@@ -15,6 +15,7 @@
 #include <boost/variant/apply_visitor.hpp>
 #include <boost/variant/static_visitor.hpp>
 
+/** All alphanumeric characters except for "0", "I", "O", and "l" */
 /** All alphanumeric characters except for "0", "I", "O", and "l" */
 static const char* pszBase58 = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
 
@@ -37,7 +38,7 @@ bool DecodeBase58(const char* psz, std::vector<unsigned char>& vch)
     while (*psz && !isspace(*psz)) {
         // Decode base58 character
         const char* ch = strchr(pszBase58, *psz);
-        if (ch == NULL)
+        if (ch == nullptr)
             return false;
         // Apply "b256 = b256 * 58 + ch".
         int carry = ch - pszBase58;
@@ -218,7 +219,7 @@ private:
     CBitcoinAddress* addr;
 
 public:
-    CBitcoinAddressVisitor(CBitcoinAddress* addrIn) : addr(addrIn) {}
+    explicit CBitcoinAddressVisitor(CBitcoinAddress* addrIn) : addr(addrIn) {}
 
     bool operator()(const CKeyID& id) const { return addr->Set(id); }
     bool operator()(const CScriptID& id) const { return addr->Set(id); }

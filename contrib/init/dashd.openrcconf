@@ -1,0 +1,33 @@
+# /etc/conf.d/chaincoind: config file for /etc/init.d/chaincoind
+
+# Config file location
+#BITCOIND_CONFIGFILE="/etc/chaincoincore/chaincoin.conf"
+
+# What directory to write pidfile to?  (created and owned by $BITCOIND_USER)
+#BITCOIND_PIDDIR="/var/run/chaincoind"
+
+# What filename to give the pidfile
+#BITCOIND_PIDFILE="${BITCOIND_PIDDIR}/chaincoind.pid"
+
+# Where to write chaincoind data (be mindful that the blockchain is large)
+#BITCOIND_DATADIR="/var/lib/chaincoind"
+
+# User and group to own chaincoind process
+#BITCOIND_USER="chaincoincore"
+#BITCOIND_GROUP="chaincoincore"
+
+# Path to chaincoind executable
+#BITCOIND_BIN="/usr/bin/chaincoind"
+
+# Nice value to run chaincoind under
+#BITCOIND_NICE=0
+
+# Additional options (avoid -conf and -datadir, use flags above)
+BITCOIND_OPTS="-disablewallet"
+
+# The timeout in seconds OpenRC will wait for bitcoind to terminate
+# after a SIGTERM has been raised.
+# Note that this will be mapped as argument to start-stop-daemon's
+# '--retry' option, which means you can specify a retry schedule
+# here. For more information see man 8 start-stop-daemon.
+BITCOIND_SIGTERM_TIMEOUT=60

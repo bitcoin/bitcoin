@@ -1,15 +1,16 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2018 PM-Tech
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_PRIMITIVES_TRANSACTION_H
 #define BITCOIN_PRIMITIVES_TRANSACTION_H
 
-#include "amount.h"
-#include "script/script.h"
-#include "serialize.h"
-#include "uint256.h"
+#include <amount.h>
+#include <script/script.h>
+#include <serialize.h>
+#include <uint256.h>
 
 static const int SERIALIZE_TRANSACTION_NO_WITNESS = 0x40000000;
 
@@ -53,6 +54,7 @@ public:
     }
 
     std::string ToString() const;
+    std::string ToStringShort() const;
 };
 
 /** An input of a transaction.  It contains the location of the previous
@@ -65,6 +67,7 @@ public:
     COutPoint prevout;
     CScript scriptSig;
     uint32_t nSequence;
+    CScript prevPubKey;
 
     /* Setting nSequence to this value for every input in a transaction
      * disables nLockTime. */
@@ -133,6 +136,7 @@ class CTxOut
 public:
     CAmount nValue;
     CScript scriptPubKey;
+    int nRounds;
 
     CTxOut()
     {
@@ -153,12 +157,15 @@ public:
     {
         nValue = -1;
         scriptPubKey.clear();
+        nRounds = -10; // an initial value, should be no way to get this by calculations
     }
 
     bool IsNull() const
     {
         return (nValue == -1);
     }
+
+    uint256 GetHash() const;
 
     CAmount GetDustThreshold(const CFeeRate &minRelayTxFee) const
     {
@@ -200,7 +207,8 @@ public:
     friend bool operator==(const CTxOut& a, const CTxOut& b)
     {
         return (a.nValue       == b.nValue &&
-                a.scriptPubKey == b.scriptPubKey);
+                a.scriptPubKey == b.scriptPubKey &&
+                a.nRounds      == b.nRounds);
     }
 
     friend bool operator!=(const CTxOut& a, const CTxOut& b)
@@ -286,6 +294,7 @@ struct CMutableTransaction;
  *   - CTxWitness wit;
  * - uint32_t nLockTime
  */
+
 template<typename Stream, typename Operation, typename TxType>
 inline void SerializeTransaction(TxType& tx, Stream& s, Operation ser_action) {
     const bool fAllowWitness = !(s.GetVersion() & SERIALIZE_TRANSACTION_NO_WITNESS);
@@ -342,6 +351,14 @@ inline void SerializeTransaction(TxType& tx, Stream& s, Operation ser_action) {
         }
     }
     READWRITE(*const_cast<uint32_t*>(&tx.nLockTime));
+
+    // Until now, regardless OP_RETURN a special tx message was allowed and
+    // tx version 2 has been dedicated for that
+
+//    if (tx.nVersion == 2) {
+//       READWRITE(*const_cast<std::string*>(strTxComment));
+//    }
+
 }
 
 /** The basic transaction that is broadcasted on the network and contained in
@@ -361,7 +378,8 @@ public:
     // adapting relay policy by bumping MAX_STANDARD_VERSION, and then later date
     // bumping the default CURRENT_VERSION at which point both CURRENT_VERSION and
     // MAX_STANDARD_VERSION will be equal.
-    static const int32_t MAX_STANDARD_VERSION=2;
+
+    static const int32_t MAX_STANDARD_VERSION=3;
 
     // The local variables are made const to prevent unintended modification
     // without updating the cached hash value. However, CTransaction is not
@@ -373,6 +391,7 @@ public:
     const std::vector<CTxOut> vout;
     CTxWitness wit; // Not const: can change without invalidating the txid cache
     const uint32_t nLockTime;
+    std::string strTxComment;
 
     /** Construct a CTransaction that qualifies as IsNull() */
     CTransaction();
@@ -388,6 +407,9 @@ public:
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action) {
         SerializeTransaction(*this, s, ser_action);
+        if(this->nVersion == 2) {
+            READWRITE(strTxComment);
+        }
         if (ser_action.ForRead()) {
             UpdateHash();
         }
@@ -417,7 +439,7 @@ public:
 
     // Compute modified tx size for priority calculation (optionally given tx size)
     unsigned int CalculateModifiedSize(unsigned int nTxSize=0) const;
-    
+
     /**
      * Get the total transaction size in bytes, including witness data.
      * "Total Size" defined in BIP141 and BIP144.
@@ -484,4 +506,33 @@ static inline CTransactionRef MakeTransactionRef(CTransactionRef&& txIn) { retur
 /** Compute the weight of a transaction, as defined by BIP 141 */
 int64_t GetTransactionWeight(const CTransaction &tx);
 
+/** Implementation of BIP69
+ * https://github.com/bitcoin/bips/blob/master/bip-0069.mediawiki
+ */
+struct CompareInputBIP69
+{
+    inline bool operator()(const CTxIn& a, const CTxIn& b) const
+    {
+        if (a.prevout.hash == b.prevout.hash) return a.prevout.n < b.prevout.n;
+
+        uint256 hasha = a.prevout.hash;
+        uint256 hashb = b.prevout.hash;
+
+        typedef std::reverse_iterator<const unsigned char*> rev_it;
+        rev_it rita = rev_it(hasha.end());
+        rev_it ritb = rev_it(hashb.end());
+
+        return std::lexicographical_compare(rita, rita + hasha.size(), ritb, ritb + hashb.size());
+    }
+};
+
+struct CompareOutputBIP69
+{
+    inline bool operator()(const CTxOut& a, const CTxOut& b) const
+    {
+        return a.nValue < b.nValue || (a.nValue == b.nValue && a.scriptPubKey < b.scriptPubKey);
+    }
+};
+
 #endif // BITCOIN_PRIMITIVES_TRANSACTION_H
+

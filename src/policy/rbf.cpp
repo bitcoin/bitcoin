@@ -2,11 +2,11 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "policy/rbf.h"
+#include <policy/rbf.h>
 
 bool SignalsOptInRBF(const CTransaction &tx)
 {
-    BOOST_FOREACH(const CTxIn &txin, tx.vin) {
+    for (const CTxIn &txin : tx.vin) {
         if (txin.nSequence < std::numeric_limits<unsigned int>::max()-1) {
             return true;
         }
@@ -38,7 +38,7 @@ RBFTransactionState IsRBFOptIn(const CTransaction &tx, CTxMemPool &pool)
     CTxMemPoolEntry entry = *pool.mapTx.find(tx.GetHash());
     pool.CalculateMemPoolAncestors(entry, setAncestors, noLimit, noLimit, noLimit, noLimit, dummy, false);
 
-    BOOST_FOREACH(CTxMemPool::txiter it, setAncestors) {
+    for (CTxMemPool::txiter it : setAncestors) {
         if (SignalsOptInRBF(it->GetTx())) {
             return RBF_TRANSACTIONSTATE_REPLACEABLE_BIP125;
         }

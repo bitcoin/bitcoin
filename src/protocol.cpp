@@ -3,10 +3,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "protocol.h"
+#include <protocol.h>
 
-#include "util.h"
-#include "utilstrencodings.h"
+#include <util.h>
+#include <utilstrencodings.h>
 
 #ifndef WIN32
 # include <arpa/inet.h>
@@ -39,6 +39,54 @@ const char *SENDCMPCT="sendcmpct";
 const char *CMPCTBLOCK="cmpctblock";
 const char *GETBLOCKTXN="getblocktxn";
 const char *BLOCKTXN="blocktxn";
+// Dash message types
+const char *TXLOCKREQUEST="ix";
+const char *TXLOCKVOTE="txlvote";
+const char *MASTERNODEPAYMENTVOTE="mnw";
+const char *MASTERNODEPAYMENTBLOCK="mnwb";
+const char *MASTERNODEPAYMENTSYNC="mnget";
+const char *MNQUORUM="mn quorum"; // not implemented
+const char *MNANNOUNCE="mnb";
+const char *MNPING="mnp";
+const char *DSACCEPT="dsa";
+const char *DSVIN="dsi";
+const char *DSFINALTX="dsf";
+const char *DSSIGNFINALTX="dss";
+const char *DSCOMPLETE="dsc";
+const char *DSSTATUSUPDATE="dssu";
+const char *DSTX="dstx";
+const char *DSQUEUE="dsq";
+const char *DSEG="dseg";
+const char *SYNCSTATUSCOUNT="ssc";
+const char *MNGOVERNANCESYNC="govsync";
+const char *MNGOVERNANCEOBJECT="govobj";
+const char *MNGOVERNANCEOBJECTVOTE="govobjvote";
+const char *MNVERIFY="mnv";
+}
+
+static const char* ppszTypeName[] =
+{
+    "ERROR", // Should never occur
+    NetMsgType::TX,
+    NetMsgType::BLOCK,
+    "filtered block", // Should never occur
+    NetMsgType::CMPCTBLOCK,
+    "witness block", // uses BLOCK NetMsgType::WITNESS_BLOCK,
+    "witness TX", // uses TX NetMsgType::WITNESS_TX,
+    "witness filtered block", // uses the above NetMsgType::FILTERED_WITNESS_BLOCK,
+    // Dash message types
+    // NOTE: include non-implmented here, we must keep this list in sync with enum in protocol.h
+    NetMsgType::TXLOCKREQUEST,
+    NetMsgType::TXLOCKVOTE,
+    NetMsgType::MASTERNODEPAYMENTVOTE,
+    NetMsgType::MASTERNODEPAYMENTBLOCK, // reusing, was MNSCANERROR previousely, was NOT used in 12.0, we need this for inv
+    NetMsgType::MNQUORUM, // not implemented
+    NetMsgType::MNANNOUNCE,
+    NetMsgType::MNPING,
+    NetMsgType::DSTX,
+    NetMsgType::MNGOVERNANCEOBJECT,
+    NetMsgType::MNGOVERNANCEOBJECTVOTE,
+    NetMsgType::MNVERIFY,
 };
 
 /** All known message types. Keep this in the same order as the list of
@@ -71,6 +119,29 @@ const static std::string allNetMessageTypes[] = {
     NetMsgType::CMPCTBLOCK,
     NetMsgType::GETBLOCKTXN,
     NetMsgType::BLOCKTXN,
+    // Dash message types
+    // NOTE: do NOT include non-implmented here, we want them to be "Unknown command" in ProcessMessage()
+    NetMsgType::TXLOCKREQUEST,
+    NetMsgType::TXLOCKVOTE,
+    NetMsgType::MASTERNODEPAYMENTVOTE,
+    // NetMsgType::MASTERNODEPAYMENTBLOCK, // there is no message for this, only inventory
+    NetMsgType::MASTERNODEPAYMENTSYNC,
+    NetMsgType::MNANNOUNCE,
+    NetMsgType::MNPING,
+    NetMsgType::DSACCEPT,
+    NetMsgType::DSVIN,
+    NetMsgType::DSFINALTX,
+    NetMsgType::DSSIGNFINALTX,
+    NetMsgType::DSCOMPLETE,
+    NetMsgType::DSSTATUSUPDATE,
+    NetMsgType::DSTX,
+    NetMsgType::DSQUEUE,
+    NetMsgType::DSEG,
+    NetMsgType::SYNCSTATUSCOUNT,
+    NetMsgType::MNGOVERNANCESYNC,
+    NetMsgType::MNGOVERNANCEOBJECT,
+    NetMsgType::MNGOVERNANCEOBJECTVOTE,
+    NetMsgType::MNVERIFY,
 };
 const static std::vector<std::string> allNetMessageTypesVec(allNetMessageTypes, allNetMessageTypes+ARRAYLEN(allNetMessageTypes));
 
@@ -157,9 +228,30 @@ CInv::CInv(int typeIn, const uint256& hashIn)
     hash = hashIn;
 }
 
+CInv::CInv(const std::string& strType, const uint256& hashIn)
+{
+    unsigned int i;
+    for (i = 1; i < ARRAYLEN(ppszTypeName); i++)
+    {
+        if (strType == ppszTypeName[i])
+        {
+            type = i;
+            break;
+        }
+    }
+    if (i == ARRAYLEN(ppszTypeName))
+        throw std::out_of_range(strprintf("CInv::CInv(string, uint256): unknown type '%s'", strType));
+    hash = hashIn;
+}
+
 bool operator<(const CInv& a, const CInv& b)
 {
     return (a.type < b.type || (a.type == b.type && a.hash < b.hash));
+}
+
+bool CInv::IsKnownType() const
+{
+    return (type >= 1 && type < (int)ARRAYLEN(ppszTypeName));
 }
 
 std::string CInv::GetCommand() const
@@ -181,11 +273,7 @@ std::string CInv::GetCommand() const
 
 std::string CInv::ToString() const
 {
-    try {
-        return strprintf("%s %s", GetCommand(), hash.ToString());
-    } catch(const std::out_of_range &) {
-        return strprintf("0x%08x %s", type, hash.ToString());
-    }
+    return strprintf("%s %s", GetCommand(), hash.ToString());
 }
 
 const std::vector<std::string> &getAllNetMessageTypes()

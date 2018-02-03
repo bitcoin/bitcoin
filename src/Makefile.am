@@ -37,7 +37,7 @@ if ENABLE_ZMQ
 LIBBITCOIN_ZMQ=libbitcoin_zmq.a
 endif
 if BUILD_BITCOIN_LIBS
-LIBBITCOINCONSENSUS=libbitcoinconsensus.la
+LIBBITCOINCONSENSUS=libchaincoinconsensus.la
 endif
 if ENABLE_WALLET
 LIBBITCOIN_WALLET=libbitcoin_wallet.a
@@ -65,16 +65,17 @@ TESTS =
 BENCHMARKS =
 
 if BUILD_BITCOIND
-  bin_PROGRAMS += bitcoind
+  bin_PROGRAMS += chaincoind
 endif
 
 if BUILD_BITCOIN_UTILS
-  bin_PROGRAMS += bitcoin-cli bitcoin-tx
+  bin_PROGRAMS += chaincoin-cli chaincoin-tx
 endif
 
 .PHONY: FORCE check-symbols check-security
-# bitcoin core #
+# chaincoin core #
 BITCOIN_CORE_H = \
+  activemasternode.h \
   addrdb.h \
   addrman.h \
   base58.h \
@@ -96,14 +97,29 @@ BITCOIN_CORE_H = \
   consensus/consensus.h \
   core_io.h \
   core_memusage.h \
+  dsnotificationinterface.h \
+  governance.h \
+  governance-classes.h \
+  governance-exceptions.h \
+  governance-object.h \
+  governance-validators.h \
+  governance-vote.h \
+  governance-votedb.h \
   httprpc.h \
   httpserver.h \
   indirectmap.h \
   init.h \
+  instantx.h \
   key.h \
+  keepass.h \
   keystore.h \
   dbwrapper.h \
   limitedmap.h \
+  masternode.h \
+  masternode-payments.h \
+  masternode-sync.h \
+  masternodeman.h \
+  masternodeconfig.h \
   memusage.h \
   merkleblock.h \
   miner.h \
@@ -118,8 +134,13 @@ BITCOIN_CORE_H = \
   policy/rbf.h \
   pow.h \
   protocol.h \
+  privatesend.h \
+  privatesend-client.h \
+  privatesend-server.h \
+  privatesend-util.h \
   random.h \
   reverselock.h \
+  reverse_iterator.h \
   rpc/client.h \
   rpc/protocol.h \
   rpc/server.h \
@@ -166,21 +187,36 @@ obj/build.h: FORCE
 	  $(abs_top_srcdir)
 libbitcoin_util_a-clientversion.$(OBJEXT): obj/build.h
 
-# server: shared between bitcoind and bitcoin-qt
+# server: shared between chaincoind and chaincoin-qt
 libbitcoin_server_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(MINIUPNPC_CPPFLAGS) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS)
 libbitcoin_server_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_server_a_SOURCES = \
+  activemasternode.cpp \
   addrman.cpp \
   addrdb.cpp \
   bloom.cpp \
   blockencodings.cpp \
   chain.cpp \
   checkpoints.cpp \
+  dsnotificationinterface.cpp \
   httprpc.cpp \
   httpserver.cpp \
   init.cpp \
+  instantx.cpp \
   dbwrapper.cpp \
+  governance.cpp \
+  governance-classes.cpp \
+  governance-object.cpp \
+  governance-validators.cpp \
+  governance-vote.cpp \
+  governance-votedb.cpp \
+  masternode.cpp \
+  masternode-payments.cpp \
+  masternode-sync.cpp \
+  masternodeconfig.cpp \
+  masternodeman.cpp \
   merkleblock.cpp \
+  messagesigner.cpp \
   miner.cpp \
   net.cpp \
   net_processing.cpp \
@@ -188,8 +224,12 @@ libbitcoin_server_a_SOURCES = \
   policy/fees.cpp \
   policy/policy.cpp \
   pow.cpp \
+  privatesend.cpp \
+  privatesend-server.cpp \
   rest.cpp \
   rpc/blockchain.cpp \
+  rpc/masternode.cpp \
+  rpc/governance.cpp \
   rpc/mining.cpp \
   rpc/misc.cpp \
   rpc/net.cpp \
@@ -217,11 +257,14 @@ libbitcoin_zmq_a_SOURCES = \
 endif
 
 
-# wallet: shared between bitcoind and bitcoin-qt, but only linked
+# wallet: shared between chaincoind and chaincoin-qt, but only linked
 # when wallet enabled
 libbitcoin_wallet_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 libbitcoin_wallet_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_wallet_a_SOURCES = \
+  keepass.cpp \
+  privatesend-client.cpp \
+  privatesend-util.cpp \
   wallet/crypter.cpp \
   wallet/db.cpp \
   wallet/rpcdump.cpp \
@@ -243,6 +286,7 @@ crypto_libbitcoin_crypto_a_SOURCES = \
   crypto/hmac_sha512.cpp \
   crypto/hmac_sha512.h \
   crypto/ripemd160.cpp \
+  crypto/aes_helper.c \
   crypto/ripemd160.h \
   crypto/sha1.cpp \
   crypto/sha1.h \
@@ -251,6 +295,32 @@ crypto_libbitcoin_crypto_a_SOURCES = \
   crypto/sha512.cpp \
   crypto/sha512.h
 
+# x11
+crypto_libbitcoin_crypto_a_SOURCES += \
+  crypto/blake.c \
+  crypto/bmw.c \
+  crypto/cubehash.c \
+  crypto/echo.c \
+  crypto/groestl.c \
+  crypto/jh.c \
+  crypto/keccak.c \
+  crypto/luffa.c \
+  crypto/shavite.c \
+  crypto/simd.c \
+  crypto/skein.c \
+  crypto/sph_blake.h \
+  crypto/sph_bmw.h \
+  crypto/sph_cubehash.h \
+  crypto/sph_echo.h \
+  crypto/sph_groestl.h \
+  crypto/sph_jh.h \
+  crypto/sph_keccak.h \
+  crypto/sph_luffa.h \
+  crypto/sph_shavite.h \
+  crypto/sph_simd.h \
+  crypto/sph_skein.h \
+  crypto/sph_types.h
+  
 # consensus: shared between all executables that validate any consensus rules.
 libbitcoin_consensus_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 libbitcoin_consensus_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
@@ -264,6 +334,11 @@ libbitcoin_consensus_a_SOURCES = \
   consensus/validation.h \
   hash.cpp \
   hash.h \
+  masternode.cpp \
+  masternode-payments.cpp \
+  masternode-sync.cpp \
+  masternodeconfig.cpp \
+  masternodeman.cpp \
   prevector.h \
   primitives/block.cpp \
   primitives/block.h \
@@ -286,23 +361,32 @@ libbitcoin_consensus_a_SOURCES = \
   utilstrencodings.h \
   version.h
 
-# common: shared between bitcoind, and bitcoin-qt and non-server tools
+# common: shared between chaincoind, and chaincoin-qt and non-server tools
 libbitcoin_common_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 libbitcoin_common_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_common_a_SOURCES = \
   amount.cpp \
+  arith_uint256.cpp \
   base58.cpp \
   chainparams.cpp \
   coins.cpp \
   compressor.cpp \
+  consensus/merkle.cpp \
   core_read.cpp \
   core_write.cpp \
+  hash.cpp \
   key.cpp \
   keystore.cpp \
   netaddress.cpp \
   netbase.cpp \
+  primitives/block.cpp \
+  primitives/transaction.cpp \
   protocol.cpp \
+  pubkey.cpp \
   scheduler.cpp \
+  script/interpreter.cpp \
+  script/script.cpp \
+  script/script_error.cpp \
   script/sign.cpp \
   script/standard.cpp \
   $(BITCOIN_CORE_H)
@@ -323,6 +407,7 @@ libbitcoin_util_a_SOURCES = \
   rpc/protocol.cpp \
   support/cleanse.cpp \
   sync.cpp \
+  uint256.cpp \
   util.cpp \
   utilmoneystr.cpp \
   utilstrencodings.cpp \
@@ -333,7 +418,7 @@ if GLIBC_BACK_COMPAT
 libbitcoin_util_a_SOURCES += compat/glibc_compat.cpp
 endif
 
-# cli: shared between bitcoin-cli and bitcoin-qt
+# cli: shared between chaincoin-cli and chaincoin-qt
 libbitcoin_cli_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 libbitcoin_cli_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_cli_a_SOURCES = \
@@ -344,16 +429,16 @@ nodist_libbitcoin_util_a_SOURCES = $(srcdir)/obj/build.h
 #
 
 # bitcoind binary #
-bitcoind_SOURCES = bitcoind.cpp
-bitcoind_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
-bitcoind_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-bitcoind_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+chaincoind_SOURCES = chaincoind.cpp
+chaincoind_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+chaincoind_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+chaincoind_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
 if TARGET_WINDOWS
-bitcoind_SOURCES += bitcoind-res.rc
+chaincoind_SOURCES += chaincoind-res.rc
 endif
 
-bitcoind_LDADD = \
+chaincoind_LDADD = \
   $(LIBBITCOIN_SERVER) \
   $(LIBBITCOIN_COMMON) \
   $(LIBUNIVALUE) \
@@ -366,38 +451,38 @@ bitcoind_LDADD = \
   $(LIBMEMENV) \
   $(LIBSECP256K1)
 
-bitcoind_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS)
+chaincoind_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS)
 
-# bitcoin-cli binary #
-bitcoin_cli_SOURCES = bitcoin-cli.cpp
-bitcoin_cli_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(EVENT_CFLAGS)
-bitcoin_cli_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-bitcoin_cli_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+# chaincoin-cli binary #
+chaincoin_cli_SOURCES = chaincoin-cli.cpp
+chaincoin_cli_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(EVENT_CFLAGS)
+chaincoin_cli_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+chaincoin_cli_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
 if TARGET_WINDOWS
-bitcoin_cli_SOURCES += bitcoin-cli-res.rc
+chaincoin_cli_SOURCES += chaincoin-cli-res.rc
 endif
 
-bitcoin_cli_LDADD = \
+chaincoin_cli_LDADD = \
   $(LIBBITCOIN_CLI) \
   $(LIBUNIVALUE) \
   $(LIBBITCOIN_UTIL) \
   $(LIBBITCOIN_CRYPTO)
 
-bitcoin_cli_LDADD += $(BOOST_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(EVENT_LIBS)
+chaincoin_cli_LDADD += $(BOOST_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(EVENT_LIBS)
 #
 
-# bitcoin-tx binary #
-bitcoin_tx_SOURCES = bitcoin-tx.cpp
-bitcoin_tx_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
-bitcoin_tx_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-bitcoin_tx_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+# chaincoin-tx binary #
+chaincoin_tx_SOURCES = chaincoin-tx.cpp
+chaincoin_tx_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+chaincoin_tx_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+chaincoin_tx_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
 if TARGET_WINDOWS
-bitcoin_tx_SOURCES += bitcoin-tx-res.rc
+chaincoin_tx_SOURCES += chaincoin-tx-res.rc
 endif
 
-bitcoin_tx_LDADD = \
+chaincoin_tx_LDADD = \
   $(LIBUNIVALUE) \
   $(LIBBITCOIN_COMMON) \
   $(LIBBITCOIN_UTIL) \
@@ -405,22 +490,22 @@ bitcoin_tx_LDADD = \
   $(LIBBITCOIN_CRYPTO) \
   $(LIBSECP256K1)
 
-bitcoin_tx_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
+chaincoin_tx_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
 #
 
-# bitcoinconsensus library #
+# chaincoinconsensus library #
 if BUILD_BITCOIN_LIBS
-include_HEADERS = script/bitcoinconsensus.h
-libbitcoinconsensus_la_SOURCES = $(crypto_libbitcoin_crypto_a_SOURCES) $(libbitcoin_consensus_a_SOURCES)
+include_HEADERS = script/chaincoinconsensus.h
+libchaincoinconsensus_la_SOURCES = $(crypto_libbitcoin_crypto_a_SOURCES) $(libchaincoin_consensus_a_SOURCES)
 
 if GLIBC_BACK_COMPAT
-  libbitcoinconsensus_la_SOURCES += compat/glibc_compat.cpp
+  libchaincoinconsensus_la_SOURCES += compat/glibc_compat.cpp
 endif
 
-libbitcoinconsensus_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined $(RELDFLAGS)
-libbitcoinconsensus_la_LIBADD = $(LIBSECP256K1)
-libbitcoinconsensus_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(builddir)/obj -I$(srcdir)/secp256k1/include -DBUILD_BITCOIN_INTERNAL
-libbitcoinconsensus_la_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libchaincoinconsensus_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined $(RELDFLAGS)
+libchaincoinconsensus_la_LIBADD = $(LIBSECP256K1)
+libchaincoinconsensus_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(builddir)/obj -I$(srcdir)/secp256k1/include -DBUILD_BITCOIN_INTERNAL
+libchaincoinconsensus_la_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 
 endif
 #
@@ -480,7 +565,7 @@ endif
 
 %.pb.cc %.pb.h: %.proto
 	@test -f $(PROTOC)
-	$(AM_V_GEN) $(PROTOC) --cpp_out=$(@D) --proto_path=$(<D) $<
+        $(AM_V_GEN) $(PROTOC) --cpp_out=$(@D) --proto_path=$(<D) $<
 
 if EMBEDDED_LEVELDB
 include Makefile.leveldb.include

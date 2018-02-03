@@ -63,6 +63,7 @@ PLATFORM_SHARED_EXT="so"
 PLATFORM_SHARED_LDFLAGS="-shared -Wl,-soname -Wl,"
 PLATFORM_SHARED_CFLAGS="-fPIC"
 PLATFORM_SHARED_VERSIONED=true
+PLATFORM_SSEFLAGS=
 
 MEMCMP_FLAG=
 if [ "$CXX" = "g++" ]; then
@@ -77,6 +78,7 @@ case "$TARGET_OS" in
         COMMON_FLAGS="$MEMCMP_FLAG -lpthread -DOS_LINUX -DCYGWIN"
         PLATFORM_LDFLAGS="-lpthread"
         PORT_FILE=port/port_posix.cc
+        PORT_SSE_FILE=port/port_posix_sse.cc
         ;;
     Darwin)
         PLATFORM=OS_MACOSX
@@ -85,24 +87,28 @@ case "$TARGET_OS" in
         [ -z "$INSTALL_PATH" ] && INSTALL_PATH=`pwd`
         PLATFORM_SHARED_LDFLAGS="-dynamiclib -install_name $INSTALL_PATH/"
         PORT_FILE=port/port_posix.cc
+        PORT_SSE_FILE=port/port_posix_sse.cc
         ;;
     Linux)
         PLATFORM=OS_LINUX
         COMMON_FLAGS="$MEMCMP_FLAG -pthread -DOS_LINUX"
         PLATFORM_LDFLAGS="-pthread"
         PORT_FILE=port/port_posix.cc
+        PORT_SSE_FILE=port/port_posix_sse.cc
         ;;
     SunOS)
         PLATFORM=OS_SOLARIS
         COMMON_FLAGS="$MEMCMP_FLAG -D_REENTRANT -DOS_SOLARIS"
         PLATFORM_LIBS="-lpthread -lrt"
         PORT_FILE=port/port_posix.cc
+        PORT_SSE_FILE=port/port_posix_sse.cc
         ;;
     FreeBSD)
         PLATFORM=OS_FREEBSD
         COMMON_FLAGS="$MEMCMP_FLAG -D_REENTRANT -DOS_FREEBSD"
         PLATFORM_LIBS="-lpthread"
         PORT_FILE=port/port_posix.cc
+        PORT_SSE_FILE=port/port_posix_sse.cc
         ;;
     GNU/kFreeBSD)
         PLATFORM=OS_KFREEBSD
@@ -115,24 +121,28 @@ case "$TARGET_OS" in
         COMMON_FLAGS="$MEMCMP_FLAG -D_REENTRANT -DOS_NETBSD"
         PLATFORM_LIBS="-lpthread -lgcc_s"
         PORT_FILE=port/port_posix.cc
+        PORT_SSE_FILE=port/port_posix_sse.cc
         ;;
     OpenBSD)
         PLATFORM=OS_OPENBSD
         COMMON_FLAGS="$MEMCMP_FLAG -D_REENTRANT -DOS_OPENBSD"
         PLATFORM_LDFLAGS="-pthread"
         PORT_FILE=port/port_posix.cc
+        PORT_SSE_FILE=port/port_posix_sse.cc
         ;;
     DragonFly)
         PLATFORM=OS_DRAGONFLYBSD
         COMMON_FLAGS="$MEMCMP_FLAG -D_REENTRANT -DOS_DRAGONFLYBSD"
         PLATFORM_LIBS="-lpthread"
         PORT_FILE=port/port_posix.cc
+        PORT_SSE_FILE=port/port_posix_sse.cc
         ;;
     OS_ANDROID_CROSSCOMPILE)
         PLATFORM=OS_ANDROID
         COMMON_FLAGS="$MEMCMP_FLAG -D_REENTRANT -DOS_ANDROID -DLEVELDB_PLATFORM_POSIX"
         PLATFORM_LDFLAGS=""  # All pthread features are in the Android C library
         PORT_FILE=port/port_posix.cc
+        PORT_SSE_FILE=port/port_posix_sse.cc
         CROSS_COMPILE=true
         ;;
     HP-UX)
@@ -140,6 +150,7 @@ case "$TARGET_OS" in
         COMMON_FLAGS="$MEMCMP_FLAG -D_REENTRANT -DOS_HPUX"
         PLATFORM_LDFLAGS="-pthread"
         PORT_FILE=port/port_posix.cc
+        PORT_SSE_FILE=port/port_posix_sse.cc
         # man ld: +h internal_name
         PLATFORM_SHARED_LDFLAGS="-shared -Wl,+h -Wl,"
         ;;
@@ -148,6 +159,7 @@ case "$TARGET_OS" in
         COMMON_FLAGS="$MEMCMP_FLAG -DOS_MACOSX"
         [ -z "$INSTALL_PATH" ] && INSTALL_PATH=`pwd`
         PORT_FILE=port/port_posix.cc
+        PORT_SSE_FILE=port/port_posix_sse.cc
         PLATFORM_SHARED_EXT=
         PLATFORM_SHARED_LDFLAGS=
         PLATFORM_SHARED_CFLAGS=
@@ -175,14 +187,14 @@ DIRS="$PREFIX/db $PREFIX/util $PREFIX/table"
 set -f # temporarily disable globbing so that our patterns aren't expanded
 PRUNE_TEST="-name *test*.cc -prune"
 PRUNE_BENCH="-name *_bench.cc -prune"
-PRUNE_TOOL="-name leveldb_main.cc -prune"
+PRUNE_TOOL="-name leveldbutil.cc -prune"
 PORTABLE_FILES=`find $DIRS $PRUNE_TEST -o $PRUNE_BENCH -o $PRUNE_TOOL -o -name '*.cc' -print | sort | sed "s,^$PREFIX/,," | tr "\n" " "`
 
 set +f # re-enable globbing
 
 # The sources consist of the portable files, plus the platform-specific port
 # file.
-echo "SOURCES=$PORTABLE_FILES $PORT_FILE" >> $OUTPUT
+echo "SOURCES=$PORTABLE_FILES $PORT_FILE $PORT_SSE_FILE" >> $OUTPUT
 echo "MEMENV_SOURCES=helpers/memenv/memenv.cc" >> $OUTPUT
 
 if [ "$CROSS_COMPILE" = "true" ]; then
@@ -213,6 +225,21 @@ EOF
     fi
 
     rm -f $CXXOUTPUT 2>/dev/null
+
+    # Test if gcc SSE 4.2 is supported
+    $CXX $CXXFLAGS -x c++ - -o $CXXOUTPUT -msse4.2 2>/dev/null  <<EOF
+      int main() {}
+EOF
+    if [ "$?" = 0 ]; then
+        PLATFORM_SSEFLAGS="-msse4.2"
+    fi
+
+    rm -f $CXXOUTPUT 2>/dev/null
+fi
+
+# Use the SSE 4.2 CRC32C intrinsics iff runtime checks indicate compiler supports them.
+if [ -n "$PLATFORM_SSEFLAGS" ]; then
+    PLATFORM_SSEFLAGS="$PLATFORM_SSEFLAGS -DLEVELDB_PLATFORM_POSIX_SSE"
 fi
 
 PLATFORM_CCFLAGS="$PLATFORM_CCFLAGS $COMMON_FLAGS"
@@ -225,6 +252,7 @@ echo "PLATFORM_LDFLAGS=$PLATFORM_LDFLAGS" >> $OUTPUT
 echo "PLATFORM_LIBS=$PLATFORM_LIBS" >> $OUTPUT
 echo "PLATFORM_CCFLAGS=$PLATFORM_CCFLAGS" >> $OUTPUT
 echo "PLATFORM_CXXFLAGS=$PLATFORM_CXXFLAGS" >> $OUTPUT
+echo "PLATFORM_SSEFLAGS=$PLATFORM_SSEFLAGS" >> $OUTPUT
 echo "PLATFORM_SHARED_CFLAGS=$PLATFORM_SHARED_CFLAGS" >> $OUTPUT
 echo "PLATFORM_SHARED_EXT=$PLATFORM_SHARED_EXT" >> $OUTPUT
 echo "PLATFORM_SHARED_LDFLAGS=$PLATFORM_SHARED_LDFLAGS" >> $OUTPUT

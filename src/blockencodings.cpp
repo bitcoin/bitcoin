@@ -2,16 +2,16 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "blockencodings.h"
-#include "consensus/consensus.h"
-#include "consensus/validation.h"
-#include "chainparams.h"
-#include "hash.h"
-#include "random.h"
-#include "streams.h"
-#include "txmempool.h"
-#include "validation.h"
-#include "util.h"
+#include <blockencodings.h>
+#include <consensus/consensus.h>
+#include <consensus/validation.h>
+#include <chainparams.h>
+#include <hash.h>
+#include <random.h>
+#include <streams.h>
+#include <txmempool.h>
+#include <util.h>
+#include <validation.h>
 
 #include <unordered_map>
 
@@ -62,7 +62,7 @@ ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& c
         if (cmpctblock.prefilledtxn[i].tx->IsNull())
             return READ_STATUS_INVALID;
 
-        lastprefilledindex += cmpctblock.prefilledtxn[i].index + 1; //index is a uint16_t, so can't overflow here
+        lastprefilledindex += cmpctblock.prefilledtxn[i].index + 1; //index is a uint16_t, so cant overflow here
         if (lastprefilledindex > std::numeric_limits<uint16_t>::max())
             return READ_STATUS_INVALID;
         if ((uint32_t)lastprefilledindex > cmpctblock.shorttxids.size() + i) {
@@ -172,7 +172,7 @@ ReadStatus PartiallyDownloadedBlock::FillBlock(CBlock& block, const std::vector<
 
     LogPrint("cmpctblock", "Successfully reconstructed block %s with %lu txn prefilled, %lu txn from mempool and %lu txn requested\n", header.GetHash().ToString(), prefilled_count, mempool_count, vtx_missing.size());
     if (vtx_missing.size() < 5) {
-        for (const auto& tx : vtx_missing)
+        for(const auto& tx : vtx_missing)
             LogPrint("cmpctblock", "Reconstructed block %s required tx %s\n", header.GetHash().ToString(), tx->GetHash().ToString());
     }
 

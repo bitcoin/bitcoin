@@ -88,6 +88,9 @@ public:
     /** Network activity state changed. */
     boost::signals2::signal<void (bool networkActive)> NotifyNetworkActiveChanged;
 
+    /** Number of masternodes changed. */
+    boost::signals2::signal<void (int newNumMasternodes)> NotifyStrMasternodeCountChanged;
+
     /**
      * Status bar alerts changed.
      */
@@ -104,6 +107,9 @@ public:
 
     /** Best header has changed */
     boost::signals2::signal<void (bool, const CBlockIndex *)> NotifyHeaderTip;
+
+    /** Additional data sync progress changed */
+    boost::signals2::signal<void (double nSyncProgress)> NotifyAdditionalDataSyncProgressChanged;
 
     /** Banlist did change. */
     boost::signals2::signal<void (void)> BannedListChanged;

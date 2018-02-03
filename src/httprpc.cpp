@@ -2,24 +2,23 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "httprpc.h"
+#include <httprpc.h>
 
-#include "base58.h"
-#include "chainparams.h"
-#include "httpserver.h"
-#include "rpc/protocol.h"
-#include "rpc/server.h"
-#include "random.h"
-#include "sync.h"
-#include "util.h"
-#include "utilstrencodings.h"
-#include "ui_interface.h"
-#include "crypto/hmac_sha256.h"
+#include <base58.h>
+#include <chainparams.h>
+#include <httpserver.h>
+#include <rpc/protocol.h>
+#include <rpc/server.h>
+#include <random.h>
+#include <sync.h>
+#include <util.h>
+#include <utilstrencodings.h>
+#include <ui_interface.h>
+#include <crypto/hmac_sha256.h>
 #include <stdio.h>
-#include "utilstrencodings.h"
+#include <utilstrencodings.h>
 
 #include <boost/algorithm/string.hpp> // boost::trim
-#include <boost/foreach.hpp> //BOOST_FOREACH
 
 /** WWW-Authenticate to present with 401 Unauthorized response */
 static const char* WWW_AUTH_HEADER_DATA = "Basic realm=\"jsonrpc\"";
@@ -45,7 +44,7 @@ private:
 class HTTPRPCTimerInterface : public RPCTimerInterface
 {
 public:
-    HTTPRPCTimerInterface(struct event_base* _base) : base(_base)
+    explicit HTTPRPCTimerInterface(struct event_base* base) : base(base)
     {
     }
     const char* Name()
@@ -95,7 +94,7 @@ static bool multiUserAuthorized(std::string strUserPass)
 
     if (mapMultiArgs.count("-rpcauth") > 0) {
         //Search for multi-user login/pass "rpcauth" from config
-        BOOST_FOREACH(std::string strRPCAuth, mapMultiArgs["-rpcauth"])
+        for (std::string strRPCAuth : mapMultiArgs["-rpcauth"])
         {
             std::vector<std::string> vFields;
             boost::split(vFields, strRPCAuth, boost::is_any_of(":$"));
@@ -127,7 +126,7 @@ static bool multiUserAuthorized(std::string strUserPass)
     return false;
 }
 
-static bool RPCAuthorized(const std::string& strAuth, std::string& strAuthUsernameOut)
+static bool RPCAuthorized(const std::string& strAuth)
 {
     if (strRPCUserColonPass.empty()) // Belt-and-suspenders measure if InitRPCAuthentication was not called
         return false;
@@ -136,10 +135,7 @@ static bool RPCAuthorized(const std::string& strAuth, std::string& strAuthUserna
     std::string strUserPass64 = strAuth.substr(6);
     boost::trim(strUserPass64);
     std::string strUserPass = DecodeBase64(strUserPass64);
-
-    if (strUserPass.find(":") != std::string::npos)
-        strAuthUsernameOut = strUserPass.substr(0, strUserPass.find(":"));
-
+    
     //Check if authorized under single-user field
     if (TimingResistantEqual(strUserPass, strRPCUserColonPass)) {
         return true;
@@ -162,8 +158,7 @@ static bool HTTPReq_JSONRPC(HTTPRequest* req, const std::string &)
         return false;
     }
 
-    JSONRPCRequest jreq;
-    if (!RPCAuthorized(authHeader.second, jreq.authUser)) {
+    if (!RPCAuthorized(authHeader.second)) {
         LogPrintf("ThreadRPCServer incorrect password attempt from %s\n", req->GetPeer().ToString());
 
         /* Deter brute-forcing
@@ -176,14 +171,12 @@ static bool HTTPReq_JSONRPC(HTTPRequest* req, const std::string &)
         return false;
     }
 
+    JSONRPCRequest jreq;
     try {
         // Parse request
         UniValue valRequest;
         if (!valRequest.read(req->ReadBody()))
             throw JSONRPCError(RPC_PARSE_ERROR, "Parse error");
-
-        // Set the URI
-        jreq.URI = req->GetURI();
 
         std::string strReply;
         // singleton request

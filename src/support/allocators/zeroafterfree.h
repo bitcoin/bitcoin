@@ -6,7 +6,7 @@
 #ifndef BITCOIN_SUPPORT_ALLOCATORS_ZEROAFTERFREE_H
 #define BITCOIN_SUPPORT_ALLOCATORS_ZEROAFTERFREE_H
 
-#include "support/cleanse.h"
+#include <support/cleanse.h>
 
 #include <memory>
 #include <vector>
@@ -36,7 +36,7 @@ struct zero_after_free_allocator : public std::allocator<T> {
 
     void deallocate(T* p, std::size_t n)
     {
-        if (p != NULL)
+        if (p != nullptr)
             memory_cleanse(p, sizeof(T) * n);
         std::allocator<T>::deallocate(p, n);
     }

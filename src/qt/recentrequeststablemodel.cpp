@@ -2,16 +2,14 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "recentrequeststablemodel.h"
+#include <recentrequeststablemodel.h>
 
-#include "bitcoinunits.h"
-#include "guiutil.h"
-#include "optionsmodel.h"
+#include <bitcoinunits.h>
+#include <guiutil.h>
+#include <optionsmodel.h>
 
-#include "clientversion.h"
-#include "streams.h"
-
-#include <boost/foreach.hpp>
+#include <clientversion.h>
+#include <streams.h>
 
 RecentRequestsTableModel::RecentRequestsTableModel(CWallet *wallet, WalletModel *parent) :
     QAbstractTableModel(parent), walletModel(parent)
@@ -22,7 +20,7 @@ RecentRequestsTableModel::RecentRequestsTableModel(CWallet *wallet, WalletModel 
     // Load entries from wallet
     std::vector<std::string> vReceiveRequests;
     parent->loadReceiveRequests(vReceiveRequests);
-    BOOST_FOREACH(const std::string& request, vReceiveRequests)
+    for (const std::string& request : vReceiveRequests)
         addNewRequest(request);
 
     /* These columns must match the indices in the ColumnIndex enumeration */
@@ -83,7 +81,7 @@ QVariant RecentRequestsTableModel::data(const QModelIndex &index, int role) cons
             }
         case Amount:
             if (rec->recipient.amount == 0 && role == Qt::DisplayRole)
-                return tr("(no amount requested)");
+                return tr("(no amount)");
             else if (role == Qt::EditRole)
                 return BitcoinUnits::format(walletModel->getOptionsModel()->getDisplayUnit(), rec->recipient.amount, false, BitcoinUnits::separatorNever);
             else
@@ -125,7 +123,12 @@ void RecentRequestsTableModel::updateAmountColumnTitle()
 /** Gets title for amount column including current display unit if optionsModel reference available. */
 QString RecentRequestsTableModel::getAmountTitle()
 {
-    return (this->walletModel->getOptionsModel() != NULL) ? tr("Requested") + " ("+BitcoinUnits::name(this->walletModel->getOptionsModel()->getDisplayUnit()) + ")" : "";
+    QString amountTitle = tr("Amount");
+    if (this->walletModel->getOptionsModel() != nullptr)
+    {
+        amountTitle += " ("+BitcoinUnits::name(this->walletModel->getOptionsModel()->getDisplayUnit()) + ")";
+    }
+    return amountTitle;
 }
 
 QModelIndex RecentRequestsTableModel::index(int row, int column, const QModelIndex &parent) const

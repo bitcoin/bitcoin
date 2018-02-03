@@ -6,13 +6,13 @@
 #ifndef BITCOIN_MINER_H
 #define BITCOIN_MINER_H
 
-#include "primitives/block.h"
-#include "txmempool.h"
+#include <primitives/block.h>
+#include <txmempool.h>
 
 #include <stdint.h>
 #include <memory>
-#include "boost/multi_index_container.hpp"
-#include "boost/multi_index/ordered_index.hpp"
+#include <boost/multi_index_container.hpp>
+#include <boost/multi_index/ordered_index.hpp>
 
 class CBlockIndex;
 class CChainParams;
@@ -164,7 +164,7 @@ private:
 public:
     BlockAssembler(const CChainParams& chainparams);
     /** Construct a new block template with coinbase to scriptPubKeyIn */
-    std::unique_ptr<CBlockTemplate> CreateNewBlock(const CScript& scriptPubKeyIn);
+    CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn);
 
 private:
     // utility functions

@@ -3,10 +3,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "chainparamsbase.h"
+#include <chainparamsbase.h>
 
-#include "tinyformat.h"
-#include "util.h"
+#include <tinyformat.h>
+#include <util.h>
 
 #include <assert.h>
 
@@ -32,7 +32,7 @@ class CBaseMainParams : public CBaseChainParams
 public:
     CBaseMainParams()
     {
-        nRPCPort = 8332;
+        nRPCPort = 11995;
     }
 };
 static CBaseMainParams mainParams;
@@ -45,8 +45,8 @@ class CBaseTestNetParams : public CBaseChainParams
 public:
     CBaseTestNetParams()
     {
-        nRPCPort = 18332;
-        strDataDir = "testnet3";
+        nRPCPort = 21995;
+        strDataDir = "testnet4";
     }
 };
 static CBaseTestNetParams testNetParams;
@@ -59,7 +59,7 @@ class CBaseRegTestParams : public CBaseChainParams
 public:
     CBaseRegTestParams()
     {
-        nRPCPort = 18332;
+        nRPCPort = 18445;
         strDataDir = "regtest";
     }
 };
@@ -106,5 +106,5 @@ std::string ChainNameFromCommandLine()
 
 bool AreBaseParamsConfigured()
 {
-    return pCurrentBaseParams != NULL;
+    return pCurrentBaseParams != nullptr;
 }

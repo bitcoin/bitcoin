@@ -1,43 +1,40 @@
-Bitcoin Core integration/staging tree
-=====================================
+Chaincoin Core staging tree 0.13.99
+===============================
 
-[![Build Status](https://travis-ci.org/bitcoin/bitcoin.svg?branch=master)](https://travis-ci.org/bitcoin/bitcoin)
+THIS IS AN ALPHA VERSION - DO NOT USE FOR MINING OR MERCHANT APPLICATIONS!!!
+===============================
 
-https://bitcoincore.org
 
-What is Bitcoin?
+https://www.chaincoin.org
+
+
+What is Chaincoin?
 ----------------
 
-Bitcoin is an experimental digital currency that enables instant payments to
-anyone, anywhere in the world. Bitcoin uses peer-to-peer technology to operate
-with no central authority: managing transactions and issuing money are carried
-out collectively by the network. Bitcoin Core is the name of open source
-software which enables the use of this currency.
+Chaincoin is an experimental new digital currency that enables anonymous, instant
+payments to anyone, anywhere in the world. Chaincoin uses peer-to-peer technology
+to operate with no central authority: managing transactions and issuing money
+are carried out collectively by the network. Chaincoin Core is the name of the open
+source software which enables the use of this currency.
 
 For more information, as well as an immediately useable, binary version of
-the Bitcoin Core software, see https://bitcoin.org/en/download, or read the
-[original whitepaper](https://bitcoincore.org/bitcoin.pdf).
+the Chaincoin Core software, see https://www.chaincoin.org/get-chaincoin/.
+
 
 License
 -------
 
-Bitcoin Core is released under the terms of the MIT license. See [COPYING](COPYING) for more
+Chaincoin Core is released under the terms of the MIT license. See [COPYING](COPYING) for more
 information or see https://opensource.org/licenses/MIT.
 
 Development Process
 -------------------
 
-The `master` branch is regularly built and tested, but is not guaranteed to be
-completely stable. [Tags](https://github.com/bitcoin/bitcoin/tags) are created
-regularly to indicate new official, stable release versions of Bitcoin Core.
+The `master` branch is meant to be stable. Development is normally done in separate branches.
+[Tags](https://github.com/ChainCoinUnlimited/chaincoin/tags) are created to indicate new official,
+stable release versions of Chaincoin Core.
 
 The contribution workflow is described in [CONTRIBUTING.md](CONTRIBUTING.md).
-
-The developer [mailing list](https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev)
-should be used to discuss complicated or controversial changes before working
-on a patch set.
-
-Developer IRC can be found on Freenode at #bitcoin-core-dev.
 
 Testing
 -------
@@ -49,16 +46,16 @@ lots of money.
 
 ### Automated Testing
 
-Developers are strongly encouraged to write [unit tests](src/test/README.md) for new code, and to
+Developers are strongly encouraged to write [unit tests](/doc/unit-tests.md) for new code, and to
 submit new unit tests for old code. Unit tests can be compiled and run
-(assuming they weren't disabled in configure) with: `make check`. Further details on running
-and extending unit tests can be found in [/src/test/README.md](/src/test/README.md).
+(assuming they weren't disabled in configure) with: `make check`
 
 There are also [regression and integration tests](/qa) of the RPC interface, written
 in Python, that are run automatically on the build server.
 These tests can be run (if the [test dependencies](/qa) are installed) with: `qa/pull-tester/rpc-tests.py`
 
-The Travis CI system makes sure that every pull request is built for Windows, Linux, and OS X, and that unit/sanity tests are run automatically.
+The Travis CI system makes sure that every pull request is built for Windows
+and Linux, OS X, and that unit and sanity tests are automatically run.
 
 ### Manual Quality Assurance (QA) Testing
 
@@ -71,7 +68,7 @@ Translations
 ------------
 
 Changes to translations as well as new translations can be submitted to
-[Bitcoin Core's Transifex page](https://www.transifex.com/projects/p/bitcoin/).
+[Chaincoin Core's Transifex page](https://www.transifex.com/projects/p/chaincoin/).
 
 Translations are periodically pulled from Transifex and merged into the git repository. See the
 [translation process](doc/translation_process.md) for details on how this works.
@@ -79,4 +76,4 @@ Translations are periodically pulled from Transifex and merged into the git repo
 **Important**: We do not accept translation changes as GitHub pull requests because the next
 pull from Transifex would automatically overwrite them again.
 
-Translators should also subscribe to the [mailing list](https://groups.google.com/forum/#!forum/bitcoin-translators).
+Translators should also follow the [forum](https://www.chaincoin.org/forum/topic/chaincoin-worldwide-collaboration.88/).

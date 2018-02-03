@@ -1,18 +1,19 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2018 PM-Tech
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "primitives/block.h"
+#include <primitives/block.h>
 
-#include "hash.h"
-#include "tinyformat.h"
-#include "utilstrencodings.h"
-#include "crypto/common.h"
+#include <hash.h>
+#include <tinyformat.h>
+#include <utilstrencodings.h>
+#include <crypto/common.h>
 
 uint256 CBlockHeader::GetHash() const
 {
-    return SerializeHash(*this);
+    return HashC11(BEGIN(nVersion), END(nNonce));
 }
 
 std::string CBlock::ToString() const

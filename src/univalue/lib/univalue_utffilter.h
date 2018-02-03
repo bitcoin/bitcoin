@@ -13,7 +13,7 @@
 class JSONUTF8StringFilter
 {
 public:
-    JSONUTF8StringFilter(std::string &s):
+    explicit JSONUTF8StringFilter(std::string &s):
         str(s), is_valid(true), codepoint(0), state(0), surpair(0)
     {
     }
@@ -48,7 +48,8 @@ public:
     // Write codepoint directly, possibly collating surrogate pairs
     void push_back_u(unsigned int codepoint)
     {
-        if (state) // Only accept full codepoints in open state
+        // Only accept full codepoints in open state
+        if (state)
             is_valid = false;
         if (codepoint >= 0xD800 && codepoint < 0xDC00) { // First half of surrogate pair
             if (surpair) // Two subsequent surrogate pair openers - fail
@@ -60,10 +61,10 @@ public:
                 // Compute code point from UTF-16 surrogate pair
                 append_codepoint(0x10000 | ((surpair - 0xD800)<<10) | (codepoint - 0xDC00));
                 surpair = 0;
-            } else // Second half doesn't follow a first half - fail
+            } else // First half of surrogate pair not followed by second
                 is_valid = false;
         } else {
-            if (surpair) // First half of surrogate pair not followed by second - fail
+            if (surpair) // First half of surrogate pair not followed by second
                 is_valid = false;
             else
                 append_codepoint(codepoint);
@@ -84,8 +85,7 @@ private:
     unsigned int codepoint;
     int state; // Top bit to be filled in for next UTF-8 byte, or 0
 
-    // Keep track of the following state to handle the following section of
-    // RFC4627:
+    // Keep track of this state to handle the following section of RFC4627:
     //
     //    To escape an extended character that is not in the Basic Multilingual
     //    Plane, the character is represented as a twelve-character sequence,

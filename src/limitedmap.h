@@ -27,7 +27,7 @@ protected:
     size_type nMaxSize;
 
 public:
-    limitedmap(size_type nMaxSizeIn)
+    explicit limitedmap(size_type nMaxSizeIn)
     {
         assert(nMaxSizeIn > 0);
         nMaxSize = nMaxSizeIn;
@@ -66,11 +66,8 @@ public:
     }
     void update(const_iterator itIn, const mapped_type& v)
     {
-        // Using map::erase() with empty range instead of map::find() to get a non-const iterator,
-        // since it is a constant time operation in C++11. For more details, see
-        // https://stackoverflow.com/questions/765148/how-to-remove-constness-of-const-iterator
-        iterator itTarget = map.erase(itIn, itIn);
-        
+        // TODO: When we switch to C++11, use map.erase(itIn, itIn) to get the non-const iterator.
+        iterator itTarget = map.find(itIn->first);
         if (itTarget == map.end())
             return;
         std::pair<rmap_iterator, rmap_iterator> itPair = rmap.equal_range(itTarget->second);

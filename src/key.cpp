@@ -2,18 +2,18 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "key.h"
+#include <key.h>
 
-#include "arith_uint256.h"
-#include "crypto/common.h"
-#include "crypto/hmac_sha512.h"
-#include "pubkey.h"
-#include "random.h"
+#include <arith_uint256.h>
+#include <crypto/common.h>
+#include <crypto/hmac_sha512.h>
+#include <pubkey.h>
+#include <random.h>
 
 #include <secp256k1.h>
 #include <secp256k1_recovery.h>
 
-static secp256k1_context* secp256k1_context_sign = NULL;
+static secp256k1_context* secp256k1_context_sign = nullptr;
 
 /** These functions are taken from the libsecp256k1 distribution and are very ugly. */
 static int ec_privkey_import_der(const secp256k1_context* ctx, unsigned char *out32, const unsigned char *privkey, size_t privkeylen) {
@@ -173,7 +173,7 @@ bool CKey::Sign(const uint256 &hash, std::vector<unsigned char>& vchSig, uint32_
     unsigned char extra_entropy[32] = {0};
     WriteLE32(extra_entropy, test_case);
     secp256k1_ecdsa_signature sig;
-    int ret = secp256k1_ecdsa_sign(secp256k1_context_sign, &sig, hash.begin(), begin(), secp256k1_nonce_function_rfc6979, test_case ? extra_entropy : NULL);
+    int ret = secp256k1_ecdsa_sign(secp256k1_context_sign, &sig, hash.begin(), begin(), secp256k1_nonce_function_rfc6979, test_case ? extra_entropy : nullptr);
     assert(ret);
     secp256k1_ecdsa_signature_serialize_der(secp256k1_context_sign, (unsigned char*)&vchSig[0], &nSigLen, &sig);
     vchSig.resize(nSigLen);
@@ -200,7 +200,7 @@ bool CKey::SignCompact(const uint256 &hash, std::vector<unsigned char>& vchSig) 
     vchSig.resize(65);
     int rec = -1;
     secp256k1_ecdsa_recoverable_signature sig;
-    int ret = secp256k1_ecdsa_sign_recoverable(secp256k1_context_sign, &sig, hash.begin(), begin(), secp256k1_nonce_function_rfc6979, NULL);
+    int ret = secp256k1_ecdsa_sign_recoverable(secp256k1_context_sign, &sig, hash.begin(), begin(), secp256k1_nonce_function_rfc6979, nullptr);
     assert(ret);
     secp256k1_ecdsa_recoverable_signature_serialize_compact(secp256k1_context_sign, (unsigned char*)&vchSig[1], &rec, &sig);
     assert(ret);
@@ -297,10 +297,10 @@ bool ECC_InitSanityCheck() {
 }
 
 void ECC_Start() {
-    assert(secp256k1_context_sign == NULL);
+    assert(secp256k1_context_sign == nullptr);
 
     secp256k1_context *ctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN);
-    assert(ctx != NULL);
+    assert(ctx != nullptr);
 
     {
         // Pass in a random blinding seed to the secp256k1 context.
@@ -315,7 +315,7 @@ void ECC_Start() {
 
 void ECC_Stop() {
     secp256k1_context *ctx = secp256k1_context_sign;
-    secp256k1_context_sign = NULL;
+    secp256k1_context_sign = nullptr;
 
     if (ctx) {
         secp256k1_context_destroy(ctx);

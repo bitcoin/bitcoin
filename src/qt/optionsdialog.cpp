@@ -3,23 +3,25 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
-#include "config/bitcoin-config.h"
+#include <config/chaincoin-config.h>
 #endif
 
-#include "optionsdialog.h"
-#include "ui_optionsdialog.h"
+#include <optionsdialog.h>
+#include <ui_optionsdialog.h>
 
-#include "bitcoinunits.h"
-#include "guiutil.h"
-#include "optionsmodel.h"
+#include <bitcoinunits.h>
+#include <guiutil.h>
+#include <optionsmodel.h>
 
-#include "validation.h" // for DEFAULT_SCRIPTCHECK_THREADS and MAX_SCRIPTCHECK_THREADS
-#include "netbase.h"
-#include "txdb.h" // for -dbcache defaults
+#include <validation.h> // for DEFAULT_SCRIPTCHECK_THREADS and MAX_SCRIPTCHECK_THREADS
+#include <netbase.h>
+#include <txdb.h> // for -dbcache defaults
 
 #ifdef ENABLE_WALLET
-#include "wallet/wallet.h" // for CWallet::GetRequiredFee()
+#include <wallet/wallet.h> // for CWallet::GetRequiredFee()
 #endif
+
+#include <privatesend-client.h>
 
 #include <boost/thread.hpp>
 
@@ -29,6 +31,8 @@
 #include <QLocale>
 #include <QMessageBox>
 #include <QTimer>
+
+extern CWallet* pwalletMain;
 
 OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
     QDialog(parent),
@@ -77,14 +81,23 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
     }
 
     /* Display elements init */
+    
+    /* Number of displayed decimal digits selector */
+    QString digits;
+    for(int index = 2; index <=8; index++){
+        digits.setNum(index);
+        ui->digits->addItem(digits, digits);
+    }
+    
+    /* Theme selector */
+
+    ui->theme->addItem(QString("CHAINCOIN-green"), QVariant("green"));
+    /*ui->theme->addItem(QString("CHAINCOIN-light"), QVariant("light"));*/
+    
+    /* Language selector */
     QDir translations(":translations");
-
-    ui->bitcoinAtStartup->setToolTip(ui->bitcoinAtStartup->toolTip().arg(tr(PACKAGE_NAME)));
-    ui->bitcoinAtStartup->setText(ui->bitcoinAtStartup->text().arg(tr(PACKAGE_NAME)));
-
-    ui->lang->setToolTip(ui->lang->toolTip().arg(tr(PACKAGE_NAME)));
     ui->lang->addItem(QString("(") + tr("default") + QString(")"), QVariant(""));
-    Q_FOREACH(const QString &langStr, translations.entryList())
+    for (const QString &langStr : translations.entryList())
     {
         QLocale locale(langStr);
 
@@ -135,22 +148,22 @@ OptionsDialog::~OptionsDialog()
     delete ui;
 }
 
-void OptionsDialog::setModel(OptionsModel *_model)
+void OptionsDialog::setModel(OptionsModel *model)
 {
-    this->model = _model;
+    this->model = model;
 
-    if(_model)
+    if(model)
     {
         /* check if client restart is needed and show persistent message */
-        if (_model->isRestartRequired())
+        if (model->isRestartRequired())
             showRestartWarning(true);
 
-        QString strLabel = _model->getOverriddenByCommandLine();
+        QString strLabel = model->getOverriddenByCommandLine();
         if (strLabel.isEmpty())
             strLabel = tr("none");
         ui->overriddenByCommandLineLabel->setText(strLabel);
 
-        mapper->setModel(_model);
+        mapper->setModel(model);
         setMapper();
         mapper->toFirst();
 
@@ -163,12 +176,15 @@ void OptionsDialog::setModel(OptionsModel *_model)
     connect(ui->databaseCache, SIGNAL(valueChanged(int)), this, SLOT(showRestartWarning()));
     connect(ui->threadsScriptVerif, SIGNAL(valueChanged(int)), this, SLOT(showRestartWarning()));
     /* Wallet */
+    connect(ui->showMasternodesTab, SIGNAL(clicked(bool)), this, SLOT(showRestartWarning()));
     connect(ui->spendZeroConfChange, SIGNAL(clicked(bool)), this, SLOT(showRestartWarning()));
     /* Network */
     connect(ui->allowIncoming, SIGNAL(clicked(bool)), this, SLOT(showRestartWarning()));
     connect(ui->connectSocks, SIGNAL(clicked(bool)), this, SLOT(showRestartWarning()));
     connect(ui->connectSocksTor, SIGNAL(clicked(bool)), this, SLOT(showRestartWarning()));
     /* Display */
+    connect(ui->digits, SIGNAL(valueChanged()), this, SLOT(showRestartWarning()));
+    connect(ui->theme, SIGNAL(valueChanged()), this, SLOT(showRestartWarning()));
     connect(ui->lang, SIGNAL(valueChanged()), this, SLOT(showRestartWarning()));
     connect(ui->thirdPartyTxUrls, SIGNAL(textChanged(const QString &)), this, SLOT(showRestartWarning()));
 }
@@ -181,8 +197,14 @@ void OptionsDialog::setMapper()
     mapper->addMapping(ui->databaseCache, OptionsModel::DatabaseCache);
 
     /* Wallet */
-    mapper->addMapping(ui->spendZeroConfChange, OptionsModel::SpendZeroConfChange);
     mapper->addMapping(ui->coinControlFeatures, OptionsModel::CoinControlFeatures);
+    mapper->addMapping(ui->showMasternodesTab, OptionsModel::ShowMasternodesTab);
+    mapper->addMapping(ui->showAdvancedPSUI, OptionsModel::ShowAdvancedPSUI);
+    mapper->addMapping(ui->lowKeysWarning, OptionsModel::LowKeysWarning);
+    mapper->addMapping(ui->privateSendMultiSession, OptionsModel::PrivateSendMultiSession);
+    mapper->addMapping(ui->spendZeroConfChange, OptionsModel::SpendZeroConfChange);
+    mapper->addMapping(ui->privateSendRounds, OptionsModel::PrivateSendRounds);
+    mapper->addMapping(ui->privateSendAmount, OptionsModel::PrivateSendAmount);
 
     /* Network */
     mapper->addMapping(ui->mapPortUpnp, OptionsModel::MapPortUPnP);
@@ -204,9 +226,12 @@ void OptionsDialog::setMapper()
 #endif
 
     /* Display */
+    mapper->addMapping(ui->digits, OptionsModel::Digits);
+    mapper->addMapping(ui->theme, OptionsModel::Theme);
     mapper->addMapping(ui->lang, OptionsModel::Language);
     mapper->addMapping(ui->unit, OptionsModel::DisplayUnit);
     mapper->addMapping(ui->thirdPartyTxUrls, OptionsModel::ThirdPartyTxUrls);
+
 }
 
 void OptionsDialog::setOkButtonState(bool fState)
@@ -235,6 +260,8 @@ void OptionsDialog::on_resetButton_clicked()
 void OptionsDialog::on_okButton_clicked()
 {
     mapper->submit();
+    privateSendClient.nCachedNumBlocks = std::numeric_limits<int>::max();
+    pwalletMain->MarkDirty();
     accept();
     updateDefaultProxyNets();
 }

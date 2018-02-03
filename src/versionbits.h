@@ -5,7 +5,7 @@
 #ifndef BITCOIN_CONSENSUS_VERSIONBITS
 #define BITCOIN_CONSENSUS_VERSIONBITS
 
-#include "chain.h"
+#include <chain.h>
 #include <map>
 
 /** What block version to use for new blocks (pre versionbits) */
@@ -27,7 +27,7 @@ enum ThresholdState {
 
 // A map that gives the state for blocks whose height is a multiple of Period().
 // The map is indexed by the block's parent, however, so all keys in the map
-// will either be NULL or a block with (height + 1) % Period() == 0.
+// will either be nullptr or a block with (height + 1) % Period() == 0.
 typedef std::map<const CBlockIndex*, ThresholdState> ThresholdConditionCache;
 
 struct BIP9DeploymentInfo {
@@ -35,6 +35,8 @@ struct BIP9DeploymentInfo {
     const char *name;
     /** Whether GBT clients can safely ignore this rule in simplified usage */
     bool gbt_force;
+    /** Whether to check current MN protocol or not */
+    bool check_mn_protocol;
 };
 
 extern const struct BIP9DeploymentInfo VersionBitsDeploymentInfo[];
@@ -51,7 +53,7 @@ protected:
     virtual int Threshold(const Consensus::Params& params) const =0;
 
 public:
-    // Note that the functions below take a pindexPrev as input: they compute information for block B based on its parent.
+    // Note that the function below takes a pindexPrev as input: they compute information for block B based on its parent.
     ThresholdState GetStateFor(const CBlockIndex* pindexPrev, const Consensus::Params& params, ThresholdConditionCache& cache) const;
     int GetStateSinceHeightFor(const CBlockIndex* pindexPrev, const Consensus::Params& params, ThresholdConditionCache& cache) const;
 };

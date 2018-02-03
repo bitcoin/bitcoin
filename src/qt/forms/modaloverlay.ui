@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>640</width>
-    <height>385</height>
+    <height>401</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -32,9 +32,9 @@
    <item>
     <widget class="QWidget" name="bgWidget" native="true">
      <property name="styleSheet">
-      <string notr="true">#bgWidget { background: rgba(0,0,0,220); }</string>
+      <string notr="true"/>
      </property>
-     <layout class="QVBoxLayout" name="verticalLayoutMain" stretch="1">
+     <layout class="QVBoxLayout" name="verticalLayoutMain" stretch="0">
       <property name="leftMargin">
        <number>60</number>
       </property>
@@ -50,11 +50,9 @@
       <item>
        <widget class="QWidget" name="contentWidget" native="true">
         <property name="styleSheet">
-         <string notr="true">#contentWidget { background: rgba(255,255,255,240); border-radius: 6px; }
-
-QLabel { color: rgb(40,40,40);  }</string>
+         <string notr="true"/>
         </property>
-        <layout class="QVBoxLayout" name="verticalLayoutSub" stretch="1,0,0,0">
+        <layout class="QVBoxLayout" name="verticalLayoutSub" stretch="1,0,0,0,0">
          <property name="spacing">
           <number>0</number>
          </property>
@@ -130,7 +128,7 @@ QLabel { color: rgb(40,40,40);  }</string>
              <item>
               <widget class="QLabel" name="infoText">
                <property name="text">
-                <string>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the bitcoin network, as detailed below.</string>
+                <string>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the Chaincoin network, as detailed below.</string>
                </property>
                <property name="textFormat">
                 <enum>Qt::RichText</enum>
@@ -149,7 +147,7 @@ QLabel { color: rgb(40,40,40);  }</string>
                 </font>
                </property>
                <property name="text">
-                <string>Attempting to spend bitcoins that are affected by not-yet-displayed transactions will not be accepted by the network.</string>
+                <string>Attempting to spend Chaincoin that are affected by not-yet-displayed transactions will not be accepted by the network.</string>
                </property>
                <property name="textFormat">
                 <enum>Qt::RichText</enum>
@@ -352,6 +350,23 @@ QLabel { color: rgb(40,40,40);  }</string>
               <string>Hide</string>
              </property>
             </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <layout class="QVBoxLayout" name="verticalLayout_2">
+           <item>
+            <spacer name="verticalSpacer">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>40</height>
+              </size>
+             </property>
+            </spacer>
            </item>
           </layout>
          </item>

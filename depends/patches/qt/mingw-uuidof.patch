@@ -10,7 +10,7 @@
  #endif
  
 @@ -762,7 +762,7 @@
-                           HWND_MESSAGE, NULL, (HINSTANCE)GetModuleHandle(0), NULL);
+                           HWND_MESSAGE, nullptr, (HINSTANCE)GetModuleHandle(0), nullptr);
  }
  
 -#ifndef Q_OS_WINCE

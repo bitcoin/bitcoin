@@ -1,15 +1,16 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2018 PM-Tech
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_CHAINPARAMS_H
 #define BITCOIN_CHAINPARAMS_H
 
-#include "chainparamsbase.h"
-#include "consensus/params.h"
-#include "primitives/block.h"
-#include "protocol.h"
+#include <chainparamsbase.h>
+#include <consensus/params.h>
+#include <primitives/block.h>
+#include <protocol.h>
 
 #include <vector>
 
@@ -35,7 +36,7 @@ struct CCheckpointData {
 
 /**
  * CChainParams defines various tweakable parameters of a given instance of the
- * Bitcoin system. There are three: the main network on which people trade goods
+ * Dash system. There are three: the main network on which people trade goods
  * and services, the public test network which gets reset from time to time and
  * a regression test mode which is intended for private networks only. It has
  * minimal difficulty to ensure that blocks can be found instantly.
@@ -46,9 +47,9 @@ public:
     enum Base58Type {
         PUBKEY_ADDRESS,
         SCRIPT_ADDRESS,
-        SECRET_KEY,
-        EXT_PUBLIC_KEY,
-        EXT_SECRET_KEY,
+        SECRET_KEY,     // BIP16
+        EXT_PUBLIC_KEY, // BIP32
+        EXT_SECRET_KEY, // BIP32
 
         MAX_BASE58_TYPES
     };
@@ -67,12 +68,16 @@ public:
     uint64_t PruneAfterHeight() const { return nPruneAfterHeight; }
     /** Make miner stop after a block is found. In RPC, don't return until nGenProcLimit blocks are generated */
     bool MineBlocksOnDemand() const { return fMineBlocksOnDemand; }
+    /** In the future use NetworkIDString() for RPC fields */
+    bool TestnetToBeDeprecatedFieldRPC() const { return fTestnetToBeDeprecatedFieldRPC; }
     /** Return the BIP70 network string (main, test or regtest) */
     std::string NetworkIDString() const { return strNetworkID; }
     const std::vector<CDNSSeedData>& DNSSeeds() const { return vSeeds; }
     const std::vector<unsigned char>& Base58Prefix(Base58Type type) const { return base58Prefixes[type]; }
     const std::vector<SeedSpec6>& FixedSeeds() const { return vFixedSeeds; }
     const CCheckpointData& Checkpoints() const { return checkpointData; }
+    int PoolMaxTransactions() const { return nPoolMaxTransactions; }
+    int FulfilledRequestExpireTime() const { return nFulfilledRequestExpireTime; }
 protected:
     CChainParams() {}
 
@@ -89,7 +94,10 @@ protected:
     bool fDefaultConsistencyChecks;
     bool fRequireStandard;
     bool fMineBlocksOnDemand;
+    bool fTestnetToBeDeprecatedFieldRPC;
     CCheckpointData checkpointData;
+    int nPoolMaxTransactions;
+    int nFulfilledRequestExpireTime;
 };
 
 /**

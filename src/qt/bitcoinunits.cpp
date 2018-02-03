@@ -1,11 +1,14 @@
 // Copyright (c) 2011-2015 The Bitcoin Core developers
+// Copyright (c) 2014-2017 The Dash Core developers
+// Copyright (c) 2018 PM-Tech
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "bitcoinunits.h"
+#include <bitcoinunits.h>
+#include <chainparams.h>
+#include <primitives/transaction.h>
 
-#include "primitives/transaction.h"
-
+#include <QSettings>
 #include <QStringList>
 
 BitcoinUnits::BitcoinUnits(QObject *parent):
@@ -17,9 +20,10 @@ BitcoinUnits::BitcoinUnits(QObject *parent):
 QList<BitcoinUnits::Unit> BitcoinUnits::availableUnits()
 {
     QList<BitcoinUnits::Unit> unitlist;
-    unitlist.append(BTC);
-    unitlist.append(mBTC);
-    unitlist.append(uBTC);
+    unitlist.append(CHC);
+    unitlist.append(mCHC);
+    unitlist.append(uCHC);
+    unitlist.append(chuffs);
     return unitlist;
 }
 
@@ -27,9 +31,10 @@ bool BitcoinUnits::valid(int unit)
 {
     switch(unit)
     {
-    case BTC:
-    case mBTC:
-    case uBTC:
+    case CHC:
+    case mCHC:
+    case uCHC:
+    case chuffs:
         return true;
     default:
         return false;
@@ -38,23 +43,53 @@ bool BitcoinUnits::valid(int unit)
 
 QString BitcoinUnits::name(int unit)
 {
-    switch(unit)
+    if(Params().NetworkIDString() == CBaseChainParams::MAIN)
     {
-    case BTC: return QString("BTC");
-    case mBTC: return QString("mBTC");
-    case uBTC: return QString::fromUtf8("μBTC");
-    default: return QString("???");
+        switch(unit)
+        {
+            case CHC: return QString("CHC");
+            case mCHC: return QString("mCHC");
+            case uCHC: return QString::fromUtf8("μCHC");
+            case chuffs: return QString("chuffs");
+            default: return QString("???");
+        }
+    }
+    else
+    {
+        switch(unit)
+        {
+            case CHC: return QString("tCHC");
+            case mCHC: return QString("mtCHC");
+            case uCHC: return QString::fromUtf8("μtCHC");
+            case chuffs: return QString("tchuffs");
+            default: return QString("???");
+        }
     }
 }
 
 QString BitcoinUnits::description(int unit)
 {
-    switch(unit)
+    if(Params().NetworkIDString() == CBaseChainParams::MAIN)
     {
-    case BTC: return QString("Bitcoins");
-    case mBTC: return QString("Milli-Bitcoins (1 / 1" THIN_SP_UTF8 "000)");
-    case uBTC: return QString("Micro-Bitcoins (1 / 1" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
-    default: return QString("???");
+        switch(unit)
+        {
+            case CHC: return QString("Chaincoin");
+            case mCHC: return QString("Milli-Chaincoin (1 / 1" THIN_SP_UTF8 "000)");
+            case uCHC: return QString("Micro-Chaincoin (1 / 1" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
+            case chuffs: return QString("Ten Nano-Chaincoin (1 / 100" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
+            default: return QString("???");
+        }
+    }
+    else
+    {
+        switch(unit)
+        {
+            case CHC: return QString("TestChaincoin");
+            case mCHC: return QString("Milli-TestChaincoin (1 / 1" THIN_SP_UTF8 "000)");
+            case uCHC: return QString("Micro-TestChaincoin (1 / 1" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
+            case chuffs: return QString("Ten Nano-TestChaincoin (1 / 100" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
+            default: return QString("???");
+        }
     }
 }
 
@@ -62,9 +97,10 @@ qint64 BitcoinUnits::factor(int unit)
 {
     switch(unit)
     {
-    case BTC:  return 100000000;
-    case mBTC: return 100000;
-    case uBTC: return 100;
+    case CHC:  return 100000000;
+    case mCHC: return 100000;
+    case uCHC: return 100;
+    case chuffs: return 1;
     default:   return 100000000;
     }
 }
@@ -73,9 +109,10 @@ int BitcoinUnits::decimals(int unit)
 {
     switch(unit)
     {
-    case BTC: return 8;
-    case mBTC: return 5;
-    case uBTC: return 2;
+    case CHC: return 8;
+    case mCHC: return 5;
+    case uCHC: return 2;
+    case chuffs: return 0;
     default: return 0;
     }
 }
@@ -107,6 +144,10 @@ QString BitcoinUnits::format(int unit, const CAmount& nIn, bool fPlus, Separator
         quotient_str.insert(0, '-');
     else if (fPlus && n > 0)
         quotient_str.insert(0, '+');
+
+    if (num_decimals <= 0)
+        return quotient_str;
+
     return quotient_str + QString(".") + remainder_str;
 }
 
@@ -131,6 +172,23 @@ QString BitcoinUnits::formatHtmlWithUnit(int unit, const CAmount& amount, bool p
     return QString("<span style='white-space: nowrap;'>%1</span>").arg(str);
 }
 
+QString BitcoinUnits::floorWithUnit(int unit, const CAmount& amount, bool plussign, SeparatorStyle separators)
+{
+    QSettings settings;
+    int digits = settings.value("digits").toInt();
+
+    QString result = format(unit, amount, plussign, separators);
+    if(decimals(unit) > digits) result.chop(decimals(unit) - digits);
+
+    return result + QString(" ") + name(unit);
+}
+
+QString BitcoinUnits::floorHtmlWithUnit(int unit, const CAmount& amount, bool plussign, SeparatorStyle separators)
+{
+    QString str(floorWithUnit(unit, amount, plussign, separators));
+    str.replace(QChar(THIN_SP_CP), QString(THIN_SP_HTML));
+    return QString("<span style='white-space: nowrap;'>%1</span>").arg(str);
+}
 
 bool BitcoinUnits::parse(int unit, const QString &value, CAmount *val_out)
 {

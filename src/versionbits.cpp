@@ -2,22 +2,25 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "versionbits.h"
+#include <versionbits.h>
 
-#include "consensus/params.h"
+#include <consensus/params.h>
 
 const struct BIP9DeploymentInfo VersionBitsDeploymentInfo[Consensus::MAX_VERSION_BITS_DEPLOYMENTS] = {
     {
         /*.name =*/ "testdummy",
         /*.gbt_force =*/ true,
+        /*.check_mn_protocol =*/ false,
     },
     {
         /*.name =*/ "csv",
         /*.gbt_force =*/ true,
+        /*.check_mn_protocol =*/ false,
     },
     {
-        /*.name =*/ "segwit",
-        /*.gbt_force =*/ false,
+    /*.name =*/ "segwit",
+        /*.gbt_force =*/ true,
+        /*.check_mn_protocol =*/ false,
     }
 };
 
@@ -29,20 +32,20 @@ ThresholdState AbstractThresholdConditionChecker::GetStateFor(const CBlockIndex*
     int64_t nTimeTimeout = EndTime(params);
 
     // A block's state is always the same as that of the first of its period, so it is computed based on a pindexPrev whose height equals a multiple of nPeriod - 1.
-    if (pindexPrev != NULL) {
+    if (pindexPrev != nullptr) {
         pindexPrev = pindexPrev->GetAncestor(pindexPrev->nHeight - ((pindexPrev->nHeight + 1) % nPeriod));
     }
 
     // Walk backwards in steps of nPeriod to find a pindexPrev whose information is known
     std::vector<const CBlockIndex*> vToCompute;
     while (cache.count(pindexPrev) == 0) {
-        if (pindexPrev == NULL) {
+        if (pindexPrev == nullptr) {
             // The genesis block is by definition defined.
             cache[pindexPrev] = THRESHOLD_DEFINED;
             break;
         }
         if (pindexPrev->GetMedianTimePast() < nTimeStart) {
-            // Optimization: don't recompute down further, as we know every earlier block will be before the start time
+            // Optimizaton: don't recompute down further, as we know every earlier block will be before the start time
             cache[pindexPrev] = THRESHOLD_DEFINED;
             break;
         }
@@ -156,7 +159,7 @@ protected:
     }
 
 public:
-    VersionBitsConditionChecker(Consensus::DeploymentPos id_) : id(id_) {}
+    explicit VersionBitsConditionChecker(Consensus::DeploymentPos id_) : id(id_) {}
     uint32_t Mask(const Consensus::Params& params) const { return ((uint32_t)1) << params.vDeployments[id].bit; }
 };
 

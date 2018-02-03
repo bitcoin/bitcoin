@@ -1,25 +1,25 @@
 // Copyright (c) 2011-2015 The Bitcoin Core developers
+// Copyright (c) 2014-2017 The Dash Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
-#include "config/bitcoin-config.h"
+#include <config/chaincoin-config.h>
 #endif
 
-#include "rpcconsole.h"
-#include "ui_debugwindow.h"
+#include <rpcconsole.h>
+#include <ui_debugwindow.h>
 
-#include "bantablemodel.h"
-#include "clientmodel.h"
-#include "guiutil.h"
-#include "platformstyle.h"
-#include "bantablemodel.h"
+#include <bantablemodel.h>
+#include <clientmodel.h>
+#include <guiutil.h>
+#include <platformstyle.h>
 
-#include "chainparams.h"
-#include "netbase.h"
-#include "rpc/server.h"
-#include "rpc/client.h"
-#include "util.h"
+#include <chainparams.h>
+#include <netbase.h>
+#include <rpc/server.h>
+#include <rpc/client.h>
+#include <util.h>
 
 #include <openssl/crypto.h>
 
@@ -29,6 +29,7 @@
 #include <db_cxx.h>
 #endif
 
+#include <QDir>
 #include <QKeyEvent>
 #include <QMenu>
 #include <QScrollBar>
@@ -52,15 +53,23 @@ const int INITIAL_TRAFFIC_GRAPH_MINS = 30;
 const QSize FONT_RANGE(4, 40);
 const char fontSizeSettingsKey[] = "consoleFontSize";
 
+// Repair parameters
+const QString SALVAGEWALLET("-salvagewallet");
+const QString RESCAN("-rescan");
+const QString ZAPTXES1("-zapwallettxes=1");
+const QString ZAPTXES2("-zapwallettxes=2");
+const QString UPGRADEWALLET("-upgradewallet");
+const QString REINDEX("-reindex");
+
 const struct {
     const char *url;
     const char *source;
 } ICON_MAPPING[] = {
-    {"cmd-request", ":/icons/tx_input"},
-    {"cmd-reply", ":/icons/tx_output"},
-    {"cmd-error", ":/icons/tx_output"},
-    {"misc", ":/icons/tx_inout"},
-    {NULL, NULL}
+    {"cmd-request", "tx_input"},
+    {"cmd-reply", "tx_output"},
+    {"cmd-error", "tx_output"},
+    {"misc", "tx_inout"},
+    {nullptr, nullptr}
 };
 
 /* Object for executing console RPC commands in a separate thread.
@@ -83,8 +92,8 @@ class QtRPCTimerBase: public QObject, public RPCTimerBase
 {
     Q_OBJECT
 public:
-    QtRPCTimerBase(boost::function<void(void)>& _func, int64_t millis):
-        func(_func)
+    QtRPCTimerBase(boost::function<void(void)>& func, int64_t millis):
+        func(func)
     {
         timer.setSingleShot(true);
         connect(&timer, SIGNAL(timeout()), this, SLOT(timeout()));
@@ -338,27 +347,26 @@ void RPCExecutor::request(const QString &command)
     }
 }
 
-RPCConsole::RPCConsole(const PlatformStyle *_platformStyle, QWidget *parent) :
+RPCConsole::RPCConsole(const PlatformStyle *platformStyle, QWidget *parent) :
     QWidget(parent),
     ui(new Ui::RPCConsole),
     clientModel(0),
     historyPtr(0),
-    platformStyle(_platformStyle),
+    platformStyle(platformStyle),
     peersTableContextMenu(0),
     banTableContextMenu(0),
     consoleFontSize(0)
 {
     ui->setupUi(this);
     GUIUtil::restoreWindowGeometry("nRPCConsoleWindow", this->size(), this);
-
-    ui->openDebugLogfileButton->setToolTip(ui->openDebugLogfileButton->toolTip().arg(tr(PACKAGE_NAME)));
-
+    QString theme = GUIUtil::getThemeName();
     if (platformStyle->getImagesOnButtons()) {
-        ui->openDebugLogfileButton->setIcon(platformStyle->SingleColorIcon(":/icons/export"));
+        ui->openDebugLogfileButton->setIcon(QIcon(":/icons/" + theme + "/export"));
     }
-    ui->clearButton->setIcon(platformStyle->SingleColorIcon(":/icons/remove"));
-    ui->fontBiggerButton->setIcon(platformStyle->SingleColorIcon(":/icons/fontbigger"));
-    ui->fontSmallerButton->setIcon(platformStyle->SingleColorIcon(":/icons/fontsmaller"));
+    // Needed on Mac also
+    ui->clearButton->setIcon(QIcon(":/icons/" + theme + "/remove"));
+    ui->fontBiggerButton->setIcon(QIcon(":/icons/" + theme + "/fontbigger"));
+    ui->fontSmallerButton->setIcon(QIcon(":/icons/" + theme + "/fontsmaller"));
 
     // Install event filter for up and down arrow
     ui->lineEdit->installEventFilter(this);
@@ -368,6 +376,16 @@ RPCConsole::RPCConsole(const PlatformStyle *_platformStyle, QWidget *parent) :
     connect(ui->fontBiggerButton, SIGNAL(clicked()), this, SLOT(fontBigger()));
     connect(ui->fontSmallerButton, SIGNAL(clicked()), this, SLOT(fontSmaller()));
     connect(ui->btnClearTrafficGraph, SIGNAL(clicked()), ui->trafficGraph, SLOT(clear()));
+    
+    // Wallet Repair Buttons
+    // connect(ui->btn_salvagewallet, SIGNAL(clicked()), this, SLOT(walletSalvage()));
+    // Disable salvage option in GUI, it's way too powerful and can lead to funds loss
+    ui->btn_salvagewallet->setEnabled(false);
+    connect(ui->btn_rescan, SIGNAL(clicked()), this, SLOT(walletRescan()));
+    connect(ui->btn_zapwallettxes1, SIGNAL(clicked()), this, SLOT(walletZaptxes1()));
+    connect(ui->btn_zapwallettxes2, SIGNAL(clicked()), this, SLOT(walletZaptxes2()));
+    connect(ui->btn_upgradewallet, SIGNAL(clicked()), this, SLOT(walletUpgrade()));
+    connect(ui->btn_reindex, SIGNAL(clicked()), this, SLOT(walletReindex()));
 
     // set library version labels
 #ifdef ENABLE_WALLET
@@ -453,11 +471,14 @@ void RPCConsole::setClientModel(ClientModel *model)
         setNumConnections(model->getNumConnections());
         connect(model, SIGNAL(numConnectionsChanged(int)), this, SLOT(setNumConnections(int)));
 
-        setNumBlocks(model->getNumBlocks(), model->getLastBlockDate(), model->getVerificationProgress(NULL), false);
+        setNumBlocks(model->getNumBlocks(), model->getLastBlockDate(), model->getVerificationProgress(nullptr), false);
         connect(model, SIGNAL(numBlocksChanged(int,QDateTime,double,bool)), this, SLOT(setNumBlocks(int,QDateTime,double,bool)));
 
         updateNetworkState();
         connect(model, SIGNAL(networkActiveChanged(bool)), this, SLOT(setNetworkActive(bool)));
+
+        setMasternodeCount(model->getMasternodeCountString());
+        connect(model, SIGNAL(strMasternodesChanged(QString)), this, SLOT(setMasternodeCount(QString)));
 
         updateTrafficStats(model->getTotalBytesRecv(), model->getTotalBytesSent());
         connect(model, SIGNAL(bytesChanged(quint64,quint64)), this, SLOT(updateTrafficStats(quint64, quint64)));
@@ -514,8 +535,6 @@ void RPCConsole::setClientModel(ClientModel *model)
             this, SLOT(peerSelected(const QItemSelection &, const QItemSelection &)));
         // peer table signal handling - update peer details when new nodes are added to the model
         connect(model->getPeerTableModel(), SIGNAL(layoutChanged()), this, SLOT(peerLayoutChanged()));
-        // peer table signal handling - cache selected node ids
-        connect(model->getPeerTableModel(), SIGNAL(layoutAboutToChange()), this, SLOT(peerLayoutAboutToChange()));
         
         // set up ban table
         ui->banlistWidget->setModel(model->getBanTableModel());
@@ -548,6 +567,7 @@ void RPCConsole::setClientModel(ClientModel *model)
         // Provide initial values
         ui->clientVersion->setText(model->formatFullVersion());
         ui->clientUserAgent->setText(model->formatSubVersion());
+        ui->clientName->setText(model->clientName());
         ui->dataDir->setText(model->dataDir());
         ui->startupTime->setText(model->formatClientStartupTime());
         ui->networkName->setText(QString::fromStdString(Params().NetworkIDString()));
@@ -620,6 +640,64 @@ void RPCConsole::setFontSize(int newSize)
     ui->messagesWidget->verticalScrollBar()->setValue(oldPosFactor * ui->messagesWidget->verticalScrollBar()->maximum());
 }
 
+/** Restart wallet with "-salvagewallet" */
+void RPCConsole::walletSalvage()
+{
+    buildParameterlist(SALVAGEWALLET);
+}
+
+/** Restart wallet with "-rescan" */
+void RPCConsole::walletRescan()
+{
+    buildParameterlist(RESCAN);
+}
+
+/** Restart wallet with "-zapwallettxes=1" */
+void RPCConsole::walletZaptxes1()
+{
+    buildParameterlist(ZAPTXES1);
+}
+
+/** Restart wallet with "-zapwallettxes=2" */
+void RPCConsole::walletZaptxes2()
+{
+    buildParameterlist(ZAPTXES2);
+}
+
+/** Restart wallet with "-upgradewallet" */
+void RPCConsole::walletUpgrade()
+{
+    buildParameterlist(UPGRADEWALLET);
+}
+
+/** Restart wallet with "-reindex" */
+void RPCConsole::walletReindex()
+{
+    buildParameterlist(REINDEX);
+}
+
+/** Build command-line parameter list for restart */
+void RPCConsole::buildParameterlist(QString arg)
+{
+    // Get command-line arguments and remove the application name
+    QStringList args = QApplication::arguments();
+    args.removeFirst();
+
+    // Remove existing repair-options
+    args.removeAll(SALVAGEWALLET);
+    args.removeAll(RESCAN);
+    args.removeAll(ZAPTXES1);
+    args.removeAll(ZAPTXES2);
+    args.removeAll(UPGRADEWALLET);
+    args.removeAll(REINDEX);
+   
+    // Append repair parameter to command line.
+    args.append(arg);
+
+    // Send command-line arguments to BitcoinGUI::handleRestart()
+    Q_EMIT handleRestart(args);
+}
+
 void RPCConsole::clear(bool clearHistory)
 {
     ui->messagesWidget->clear();
@@ -633,12 +711,16 @@ void RPCConsole::clear(bool clearHistory)
 
     // Add smoothly scaled icon images.
     // (when using width/height on an img, Qt uses nearest instead of linear interpolation)
+    QString iconPath = ":/icons/" + GUIUtil::getThemeName() + "/";
+    QString iconName = "";
+    
     for(int i=0; ICON_MAPPING[i].url; ++i)
     {
+        iconName = ICON_MAPPING[i].source;
         ui->messagesWidget->document()->addResource(
                     QTextDocument::ImageResource,
                     QUrl(ICON_MAPPING[i].url),
-                    platformStyle->SingleColorImage(ICON_MAPPING[i].source).scaled(QSize(consoleFontSize*2, consoleFontSize*2), Qt::IgnoreAspectRatio, Qt::SmoothTransformation));
+                    QImage(iconPath + iconName).scaled(QSize(consoleFontSize*2, consoleFontSize*2), Qt::IgnoreAspectRatio, Qt::SmoothTransformation));
     }
 
     // Set default style sheet
@@ -654,7 +736,7 @@ void RPCConsole::clear(bool clearHistory)
             ).arg(fixedFontInfo.family(), QString("%1pt").arg(consoleFontSize))
         );
 
-    message(CMD_REPLY, (tr("Welcome to the %1 RPC console.").arg(tr(PACKAGE_NAME)) + "<br>" +
+    message(CMD_REPLY, (tr("Welcome to the Chaincoin Core RPC console.") + "<br>" +
                         tr("Use up and down arrows to navigate history, and <b>Ctrl-L</b> to clear screen.") + "<br>" +
                         tr("Type <b>help</b> for an overview of available commands.")), true);
 }
@@ -715,6 +797,11 @@ void RPCConsole::setNumBlocks(int count, const QDateTime& blockDate, double nVer
         ui->numberOfBlocks->setText(QString::number(count));
         ui->lastBlockTime->setText(blockDate.toString());
     }
+}
+
+void RPCConsole::setMasternodeCount(const QString &strMasternodes)
+{
+    ui->masternodeCount->setText(strMasternodes);
 }
 
 void RPCConsole::setMempoolSize(long numberOfTxs, size_t dynUsage)
@@ -847,23 +934,12 @@ void RPCConsole::peerSelected(const QItemSelection &selected, const QItemSelecti
         updateNodeDetail(stats);
 }
 
-void RPCConsole::peerLayoutAboutToChange()
-{
-    QModelIndexList selected = ui->peerWidget->selectionModel()->selectedIndexes();
-    cachedNodeids.clear();
-    for(int i = 0; i < selected.size(); i++)
-    {
-        const CNodeCombinedStats *stats = clientModel->getPeerTableModel()->getNodeStats(selected.at(i).row());
-        cachedNodeids.append(stats->nodeStats.nodeid);
-    }
-}
-
 void RPCConsole::peerLayoutChanged()
 {
     if (!clientModel || !clientModel->getPeerTableModel())
         return;
 
-    const CNodeCombinedStats *stats = NULL;
+    const CNodeCombinedStats *stats = nullptr;
     bool fUnselect = false;
     bool fReselect = false;
 
@@ -905,10 +981,7 @@ void RPCConsole::peerLayoutChanged()
 
     if (fReselect)
     {
-        for(int i = 0; i < cachedNodeids.size(); i++)
-        {
-            ui->peerWidget->selectRow(clientModel->getPeerTableModel()->getRowByNodeId(cachedNodeids.at(i)));
-        }
+        ui->peerWidget->selectRow(detailNodeRow);
     }
 
     if (stats)
@@ -924,11 +997,11 @@ void RPCConsole::updateNodeDetail(const CNodeCombinedStats *stats)
         peerAddrDetails += "<br />" + tr("via %1").arg(QString::fromStdString(stats->nodeStats.addrLocal));
     ui->peerHeading->setText(peerAddrDetails);
     ui->peerServices->setText(GUIUtil::formatServicesStr(stats->nodeStats.nServices));
-    ui->peerLastSend->setText(stats->nodeStats.nLastSend ? GUIUtil::formatDurationStr(GetTime() - stats->nodeStats.nLastSend) : tr("never"));
-    ui->peerLastRecv->setText(stats->nodeStats.nLastRecv ? GUIUtil::formatDurationStr(GetTime() - stats->nodeStats.nLastRecv) : tr("never"));
+    ui->peerLastSend->setText(stats->nodeStats.nLastSend ? GUIUtil::formatDurationStr(GetSystemTimeInSeconds() - stats->nodeStats.nLastSend) : tr("never"));
+    ui->peerLastRecv->setText(stats->nodeStats.nLastRecv ? GUIUtil::formatDurationStr(GetSystemTimeInSeconds() - stats->nodeStats.nLastRecv) : tr("never"));
     ui->peerBytesSent->setText(FormatBytes(stats->nodeStats.nSendBytes));
     ui->peerBytesRecv->setText(FormatBytes(stats->nodeStats.nRecvBytes));
-    ui->peerConnTime->setText(GUIUtil::formatDurationStr(GetTime() - stats->nodeStats.nTimeConnected));
+    ui->peerConnTime->setText(GUIUtil::formatDurationStr(GetSystemTimeInSeconds() - stats->nodeStats.nTimeConnected));
     ui->peerPingTime->setText(GUIUtil::formatPingTime(stats->nodeStats.dPingTime));
     ui->peerPingWait->setText(GUIUtil::formatPingTime(stats->nodeStats.dPingWait));
     ui->peerMinPing->setText(GUIUtil::formatPingTime(stats->nodeStats.dMinPing));
@@ -1006,7 +1079,7 @@ void RPCConsole::disconnectSelectedNode()
 {
     if(!g_connman)
         return;
-    
+
     // Get selected peer addresses
     QList<QModelIndex> nodes = GUIUtil::getEntryData(ui->peerWidget, 0);
     for(int i = 0; i < nodes.count(); i++)
@@ -1023,7 +1096,7 @@ void RPCConsole::banSelectedNode(int bantime)
 {
     if (!clientModel || !g_connman)
         return;
-    
+
     // Get selected peer addresses
     QList<QModelIndex> nodes = GUIUtil::getEntryData(ui->peerWidget, 0);
     for(int i = 0; i < nodes.count(); i++)
@@ -1031,16 +1104,16 @@ void RPCConsole::banSelectedNode(int bantime)
         // Get currently selected peer address
         NodeId id = nodes.at(i).data(PeerTableModel::NetNodeId).toInt();
 
-	// Get currently selected peer address
-	int detailNodeRow = clientModel->getPeerTableModel()->getRowByNodeId(id);
-	if(detailNodeRow < 0)
-	    return;
+    // Get currently selected peer address
+    int detailNodeRow = clientModel->getPeerTableModel()->getRowByNodeId(id);
+    if(detailNodeRow < 0)
+        return;
 
-	// Find possible nodes, ban it and clear the selected node
-	const CNodeCombinedStats *stats = clientModel->getPeerTableModel()->getNodeStats(detailNodeRow);
-	if(stats) {
-	    g_connman->Ban(stats->nodeStats.addr, BanReasonManuallyAdded, bantime);
-	}
+    // Find possible nodes, ban it and clear the selected node
+    const CNodeCombinedStats *stats = clientModel->getPeerTableModel()->getNodeStats(detailNodeRow);
+    if(stats) {
+        g_connman->Ban(stats->nodeStats.addr, BanReasonManuallyAdded, bantime);
+    }
     }
     clearSelectedNode();
     clientModel->getBanTableModel()->refresh();

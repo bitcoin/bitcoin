@@ -14,19 +14,19 @@
 #ifndef BITCOIN_BASE58_H
 #define BITCOIN_BASE58_H
 
-#include "chainparams.h"
-#include "key.h"
-#include "pubkey.h"
-#include "script/script.h"
-#include "script/standard.h"
-#include "support/allocators/zeroafterfree.h"
+#include <chainparams.h>
+#include <key.h>
+#include <pubkey.h>
+#include <script/script.h>
+#include <script/standard.h>
+#include <support/allocators/zeroafterfree.h>
 
 #include <string>
 #include <vector>
 
 /**
  * Encode a byte sequence as a base58-encoded string.
- * pbegin and pend cannot be NULL, unless both are.
+ * pbegin and pend cannot be nullptr, unless both are.
  */
 std::string EncodeBase58(const unsigned char* pbegin, const unsigned char* pend);
 
@@ -38,7 +38,7 @@ std::string EncodeBase58(const std::vector<unsigned char>& vch);
 /**
  * Decode a base58-encoded string (psz) into a byte vector (vchRet).
  * return true if decoding is successful.
- * psz cannot be NULL.
+ * psz cannot be nullptr.
  */
 bool DecodeBase58(const char* psz, std::vector<unsigned char>& vchRet);
 
@@ -95,10 +95,10 @@ public:
     bool operator> (const CBase58Data& b58) const { return CompareTo(b58) >  0; }
 };
 
-/** base58-encoded Bitcoin addresses.
- * Public-key-hash-addresses have version 0 (or 111 testnet).
+/** base58-encoded Dash addresses.
+ * Public-key-hash-addresses have version 76 (or 140 testnet).
  * The data vector contains RIPEMD160(SHA256(pubkey)), where pubkey is the serialized public key.
- * Script-hash-addresses have version 5 (or 196 testnet).
+ * Script-hash-addresses have version 16 (or 19 testnet).
  * The data vector contains RIPEMD160(SHA256(cscript)), where cscript is the serialized redemption script.
  */
 class CBitcoinAddress : public CBase58Data {
@@ -164,7 +164,7 @@ public:
     CBitcoinExtKeyBase() {}
 };
 
-typedef CBitcoinExtKeyBase<CExtKey, BIP32_EXTKEY_SIZE, CChainParams::EXT_SECRET_KEY> CBitcoinExtKey;
-typedef CBitcoinExtKeyBase<CExtPubKey, BIP32_EXTKEY_SIZE, CChainParams::EXT_PUBLIC_KEY> CBitcoinExtPubKey;
+typedef CBitcoinExtKeyBase<CExtKey, 74, CChainParams::EXT_SECRET_KEY> CBitcoinExtKey;
+typedef CBitcoinExtKeyBase<CExtPubKey, 74, CChainParams::EXT_PUBLIC_KEY> CBitcoinExtPubKey;
 
 #endif // BITCOIN_BASE58_H

@@ -3,17 +3,17 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "random.h"
+#include <random.h>
 
-#include "crypto/sha512.h"
-#include "support/cleanse.h"
+#include <crypto/sha512.h>
+#include <support/cleanse.h>
 #ifdef WIN32
-#include "compat.h" // for Windows API
+#include <compat.h> // for Windows API
 #include <wincrypt.h>
 #endif
-#include "serialize.h"        // for begin_ptr(vec)
-#include "util.h"             // for LogPrint()
-#include "utilstrencodings.h" // for GetTime()
+#include <serialize.h>        // for begin_ptr(vec)
+#include <util.h>             // for LogPrint()
+#include <utilstrencodings.h> // for GetTime()
 
 #include <stdlib.h>
 #include <limits>
@@ -52,7 +52,7 @@ void RandAddSeed()
     memory_cleanse((void*)&nCounter, sizeof(nCounter));
 }
 
-static void RandAddSeedPerfmon()
+void RandAddSeedPerfmon()
 {
     RandAddSeed();
 
@@ -196,3 +196,22 @@ FastRandomContext::FastRandomContext(bool fDeterministic)
     }
 }
 
+uint32_t insecure_rand_Rz = 11;
+uint32_t insecure_rand_Rw = 11;
+void seed_insecure_rand(bool fDeterministic)
+{
+    // The seed values have some unlikely fixed points which we avoid.
+    if (fDeterministic) {
+        insecure_rand_Rz = insecure_rand_Rw = 11;
+    } else {
+        uint32_t tmp;
+        do {
+            GetRandBytes((unsigned char*)&tmp, 4);
+        } while (tmp == 0 || tmp == 0x9068ffffU);
+        insecure_rand_Rz = tmp;
+        do {
+            GetRandBytes((unsigned char*)&tmp, 4);
+        } while (tmp == 0 || tmp == 0x464fffffU);
+        insecure_rand_Rw = tmp;
+    }
+}

@@ -1,17 +1,17 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2009-2015 The Bitcoin developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "policy/fees.h"
-#include "policy/policy.h"
+#include <policy/fees.h>
+#include <policy/policy.h>
 
-#include "amount.h"
-#include "primitives/transaction.h"
-#include "random.h"
-#include "streams.h"
-#include "txmempool.h"
-#include "util.h"
+#include <amount.h>
+#include <primitives/transaction.h>
+#include <random.h>
+#include <streams.h>
+#include <txmempool.h>
+#include <util.h>
 
 void TxConfirmStats::Initialize(std::vector<double>& defaultBuckets,
                                 unsigned int maxConfirms, double _decay)
@@ -315,7 +315,7 @@ void CBlockPolicyEstimator::processTransaction(const CTxMemPoolEntry& entry, boo
     if (mapMemPoolTxs.count(hash)) {
         LogPrint("estimatefee", "Blockpolicy error mempool tx %s already being tracked\n",
                  hash.ToString().c_str());
-	return;
+    return;
     }
 
     if (txHeight < nBestSeenHeight) {

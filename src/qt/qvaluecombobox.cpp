@@ -2,7 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "qvaluecombobox.h"
+#include <qvaluecombobox.h>
 
 QValueComboBox::QValueComboBox(QWidget *parent) :
         QComboBox(parent), role(Qt::UserRole)
@@ -20,9 +20,9 @@ void QValueComboBox::setValue(const QVariant &value)
     setCurrentIndex(findData(value, role));
 }
 
-void QValueComboBox::setRole(int _role)
+void QValueComboBox::setRole(int role)
 {
-    this->role = _role;
+    this->role = role;
 }
 
 void QValueComboBox::handleSelectionChanged(int idx)

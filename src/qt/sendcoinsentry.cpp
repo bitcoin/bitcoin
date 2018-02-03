@@ -1,33 +1,28 @@
 // Copyright (c) 2011-2015 The Bitcoin Core developers
+// Copyright (c) 2014-2017 The Dash Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "sendcoinsentry.h"
-#include "ui_sendcoinsentry.h"
+#include <sendcoinsentry.h>
+#include <ui_sendcoinsentry.h>
 
-#include "addressbookpage.h"
-#include "addresstablemodel.h"
-#include "guiutil.h"
-#include "optionsmodel.h"
-#include "platformstyle.h"
-#include "walletmodel.h"
+#include <addressbookpage.h>
+#include <addresstablemodel.h>
+#include <guiutil.h>
+#include <optionsmodel.h>
+#include <platformstyle.h>
+#include <walletmodel.h>
 
 #include <QApplication>
 #include <QClipboard>
 
-SendCoinsEntry::SendCoinsEntry(const PlatformStyle *_platformStyle, QWidget *parent) :
+SendCoinsEntry::SendCoinsEntry(const PlatformStyle *platformStyle, QWidget *parent) :
     QStackedWidget(parent),
     ui(new Ui::SendCoinsEntry),
     model(0),
-    platformStyle(_platformStyle)
+    platformStyle(platformStyle)
 {
     ui->setupUi(this);
-
-    ui->addressBookButton->setIcon(platformStyle->SingleColorIcon(":/icons/address-book"));
-    ui->pasteButton->setIcon(platformStyle->SingleColorIcon(":/icons/editpaste"));
-    ui->deleteButton->setIcon(platformStyle->SingleColorIcon(":/icons/remove"));
-    ui->deleteButton_is->setIcon(platformStyle->SingleColorIcon(":/icons/remove"));
-    ui->deleteButton_s->setIcon(platformStyle->SingleColorIcon(":/icons/remove"));
 
     setCurrentWidget(ui->SendCoins);
 
@@ -37,9 +32,18 @@ SendCoinsEntry::SendCoinsEntry(const PlatformStyle *_platformStyle, QWidget *par
     ui->addAsLabel->setPlaceholderText(tr("Enter a label for this address to add it to your address book"));
 #endif
 
-    // normal bitcoin address field
+    QString theme = GUIUtil::getThemeName();
+
+    // These icons are needed on Mac also!
+    ui->addressBookButton->setIcon(QIcon(":/icons/" + theme + "/address-book"));
+    ui->pasteButton->setIcon(QIcon(":/icons/" + theme + "/editpaste"));
+    ui->deleteButton->setIcon(QIcon(":/icons/" + theme + "/remove"));
+    ui->deleteButton_is->setIcon(QIcon(":/icons/" + theme + "/remove"));
+    ui->deleteButton_s->setIcon(QIcon(":/icons/" + theme + "/remove"));
+      
+    // normal chaincoin address field
     GUIUtil::setupAddressWidget(ui->payTo, this);
-    // just a label for displaying bitcoin address(es)
+    // just a label for displaying chaincoin address(es)
     ui->payTo_is->setFont(GUIUtil::fixedPitchFont());
 
     // Connect signals
@@ -79,12 +83,12 @@ void SendCoinsEntry::on_payTo_textChanged(const QString &address)
     updateLabel(address);
 }
 
-void SendCoinsEntry::setModel(WalletModel *_model)
+void SendCoinsEntry::setModel(WalletModel *model)
 {
-    this->model = _model;
+    this->model = model;
 
-    if (_model && _model->getOptionsModel())
-        connect(_model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
+    if (model && model->getOptionsModel())
+        connect(model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
 
     clear();
 }

@@ -1,22 +1,22 @@
-// Copyright (c) 2011-2014 The Bitcoin Core developers
+// Copyright (c) 2011-2013 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "csvmodelwriter.h"
+#include <csvmodelwriter.h>
 
 #include <QAbstractItemModel>
 #include <QFile>
 #include <QTextStream>
 
-CSVModelWriter::CSVModelWriter(const QString &_filename, QObject *parent) :
+CSVModelWriter::CSVModelWriter(const QString &filename, QObject *parent) :
     QObject(parent),
-    filename(_filename), model(0)
+    filename(filename), model(0)
 {
 }
 
-void CSVModelWriter::setModel(const QAbstractItemModel *_model)
+void CSVModelWriter::setModel(const QAbstractItemModel *model)
 {
-    this->model = _model;
+    this->model = model;
 }
 
 void CSVModelWriter::addColumn(const QString &title, int column, int role)

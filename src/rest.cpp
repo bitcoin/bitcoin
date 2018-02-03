@@ -3,18 +3,18 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "chain.h"
-#include "chainparams.h"
-#include "primitives/block.h"
-#include "primitives/transaction.h"
-#include "validation.h"
-#include "httpserver.h"
-#include "rpc/server.h"
-#include "streams.h"
-#include "sync.h"
-#include "txmempool.h"
-#include "utilstrencodings.h"
-#include "version.h"
+#include <chain.h>
+#include <chainparams.h>
+#include <primitives/block.h>
+#include <primitives/transaction.h>
+#include <validation.h>
+#include <httpserver.h>
+#include <rpc/server.h>
+#include <streams.h>
+#include <sync.h>
+#include <txmempool.h>
+#include <utilstrencodings.h>
+#include <version.h>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/dynamic_bitset.hpp>
@@ -139,7 +139,7 @@ static bool rest_headers(HTTPRequest* req,
     if (path.size() != 2)
         return RESTERR(req, HTTP_BAD_REQUEST, "No header count specified. Use /rest/headers/<count>/<hash>.<ext>.");
 
-    long count = strtol(path[0].c_str(), NULL, 10);
+    long count = strtol(path[0].c_str(), nullptr, 10);
     if (count < 1 || count > 2000)
         return RESTERR(req, HTTP_BAD_REQUEST, "Header count out of range: " + path[0]);
 
@@ -153,8 +153,8 @@ static bool rest_headers(HTTPRequest* req,
     {
         LOCK(cs_main);
         BlockMap::const_iterator it = mapBlockIndex.find(hash);
-        const CBlockIndex *pindex = (it != mapBlockIndex.end()) ? it->second : NULL;
-        while (pindex != NULL && chainActive.Contains(pindex)) {
+        const CBlockIndex *pindex = (it != mapBlockIndex.end()) ? it->second : nullptr;
+        while (pindex != nullptr && chainActive.Contains(pindex)) {
             headers.push_back(pindex);
             if (headers.size() == (unsigned long)count)
                 break;
@@ -163,7 +163,7 @@ static bool rest_headers(HTTPRequest* req,
     }
 
     CDataStream ssHeader(SER_NETWORK, PROTOCOL_VERSION);
-    BOOST_FOREACH(const CBlockIndex *pindex, headers) {
+    for (const CBlockIndex *pindex : headers) {
         ssHeader << pindex->GetBlockHeader();
     }
 
@@ -183,7 +183,7 @@ static bool rest_headers(HTTPRequest* req,
     }
     case RF_JSON: {
         UniValue jsonHeaders(UniValue::VARR);
-        BOOST_FOREACH(const CBlockIndex *pindex, headers) {
+        for (const CBlockIndex *pindex : headers) {
             jsonHeaders.push_back(blockheaderToJSON(pindex));
         }
         string strJSON = jsonHeaders.write() + "\n";
@@ -214,7 +214,7 @@ static bool rest_block(HTTPRequest* req,
         return RESTERR(req, HTTP_BAD_REQUEST, "Invalid hash: " + hashStr);
 
     CBlock block;
-    CBlockIndex* pblockindex = NULL;
+    CBlockIndex* pblockindex = nullptr;
     {
         LOCK(cs_main);
         if (mapBlockIndex.count(hash) == 0)
@@ -421,7 +421,7 @@ static bool rest_getutxos(HTTPRequest* req, const std::string& strURIPart)
     // throw exception in case of a empty request
     std::string strRequestMutable = req->ReadBody();
     if (strRequestMutable.length() == 0 && uriParts.size() == 0)
-        return RESTERR(req, HTTP_BAD_REQUEST, "Error: empty request");
+        return RESTERR(req, HTTP_INTERNAL_SERVER_ERROR, "Error: empty request");
 
     bool fInputParsed = false;
     bool fCheckMemPool = false;
@@ -445,7 +445,7 @@ static bool rest_getutxos(HTTPRequest* req, const std::string& strURIPart)
             std::string strOutput = uriParts[i].substr(uriParts[i].find("-")+1);
 
             if (!ParseInt32(strOutput, &nOutput) || !IsHex(strTxid))
-                return RESTERR(req, HTTP_BAD_REQUEST, "Parse error");
+                return RESTERR(req, HTTP_INTERNAL_SERVER_ERROR, "Parse error");
 
             txid.SetHex(strTxid);
             vOutPoints.push_back(COutPoint(txid, (uint32_t)nOutput));
@@ -454,7 +454,7 @@ static bool rest_getutxos(HTTPRequest* req, const std::string& strURIPart)
         if (vOutPoints.size() > 0)
             fInputParsed = true;
         else
-            return RESTERR(req, HTTP_BAD_REQUEST, "Error: empty request");
+            return RESTERR(req, HTTP_INTERNAL_SERVER_ERROR, "Error: empty request");
     }
 
     switch (rf) {
@@ -470,7 +470,7 @@ static bool rest_getutxos(HTTPRequest* req, const std::string& strURIPart)
             if (strRequestMutable.size() > 0)
             {
                 if (fInputParsed) //don't allow sending input over URI and HTTP RAW DATA
-                    return RESTERR(req, HTTP_BAD_REQUEST, "Combination of URI scheme inputs and raw post data is not allowed");
+                    return RESTERR(req, HTTP_INTERNAL_SERVER_ERROR, "Combination of URI scheme inputs and raw post data is not allowed");
 
                 CDataStream oss(SER_NETWORK, PROTOCOL_VERSION);
                 oss << strRequestMutable;
@@ -479,14 +479,14 @@ static bool rest_getutxos(HTTPRequest* req, const std::string& strURIPart)
             }
         } catch (const std::ios_base::failure& e) {
             // abort in case of unreadable binary data
-            return RESTERR(req, HTTP_BAD_REQUEST, "Parse error");
+            return RESTERR(req, HTTP_INTERNAL_SERVER_ERROR, "Parse error");
         }
         break;
     }
 
     case RF_JSON: {
         if (!fInputParsed)
-            return RESTERR(req, HTTP_BAD_REQUEST, "Error: empty request");
+            return RESTERR(req, HTTP_INTERNAL_SERVER_ERROR, "Error: empty request");
         break;
     }
     default: {
@@ -496,7 +496,7 @@ static bool rest_getutxos(HTTPRequest* req, const std::string& strURIPart)
 
     // limit max outpoints
     if (vOutPoints.size() > MAX_GETUTXOS_OUTPOINTS)
-        return RESTERR(req, HTTP_BAD_REQUEST, strprintf("Error: max outpoints exceeded (max: %d, tried: %d)", MAX_GETUTXOS_OUTPOINTS, vOutPoints.size()));
+        return RESTERR(req, HTTP_INTERNAL_SERVER_ERROR, strprintf("Error: max outpoints exceeded (max: %d, tried: %d)", MAX_GETUTXOS_OUTPOINTS, vOutPoints.size()));
 
     // check spentness and form a bitmap (as well as a JSON capable human-readable string representation)
     vector<unsigned char> bitmap;
@@ -571,7 +571,7 @@ static bool rest_getutxos(HTTPRequest* req, const std::string& strURIPart)
         objGetUTXOResponse.push_back(Pair("bitmap", bitmapStringRepresentation));
 
         UniValue utxos(UniValue::VARR);
-        BOOST_FOREACH (const CCoin& coin, outs) {
+        for (const CCoin& coin : outs) {
             UniValue utxo(UniValue::VOBJ);
             utxo.push_back(Pair("txvers", (int32_t)coin.nTxVer));
             utxo.push_back(Pair("height", (int32_t)coin.nHeight));

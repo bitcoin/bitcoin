@@ -4,12 +4,13 @@
 
 #include <vector>
 #include "prevector.h"
+#include "random.h"
+#include <reverse_iterator.h>
 
 #include "serialize.h"
 #include "streams.h"
 
-#include "test/test_bitcoin.h"
-#include "test/test_random.h"
+#include "test/test_chaincoin.h"
 
 #include <boost/test/unit_test.hpp>
 
@@ -27,7 +28,8 @@ class prevector_tester {
 
     typedef typename pretype::size_type Size;
     bool passed = true;
-    FastRandomContext rand_cache;
+    uint32_t insecure_rand_Rz_cache;
+    uint32_t insecure_rand_Rw_cache;
 
 
     template <typename A, typename B>
@@ -53,16 +55,16 @@ class prevector_tester {
         local_check(pretype(real_vector.begin(), real_vector.end()) == pre_vector);
         local_check(pretype(pre_vector.begin(), pre_vector.end()) == pre_vector);
         size_t pos = 0;
-        BOOST_FOREACH(const T& v, pre_vector) {
+        for (const T& v : pre_vector) {
              local_check(v == real_vector[pos++]);
         }
-        BOOST_REVERSE_FOREACH(const T& v, pre_vector) {
+        for (const T& v : reverse_iterate(pre_vector)) {
              local_check(v == real_vector[--pos]);
         }
-        BOOST_FOREACH(const T& v, const_pre_vector) {
+        for (const T& v : const_pre_vector) {
              local_check(v == real_vector[pos++]);
         }
-        BOOST_REVERSE_FOREACH(const T& v, const_pre_vector) {
+        for (const T& v : reverse_iterate(const_pre_vector)) {
              local_check(v == real_vector[--pos]);
         }
         CDataStream ss1(SER_DISK, 0);
@@ -151,11 +153,11 @@ public:
         pre_vector.assign(n, value);
     }
 
-    Size size() {
+    Size size() const {
         return real_vector.size();
     }
 
-    Size capacity() {
+    Size capacity() const {
         return pre_vector.capacity();
     }
 
@@ -170,14 +172,15 @@ public:
         test();
     }
     ~prevector_tester() {
-        BOOST_CHECK_MESSAGE(passed, "insecure_rand_Rz: "
-                << rand_cache.Rz
+        BOOST_CHECK_MESSAGE(passed, "insecure_rand_Rz: " 
+                << insecure_rand_Rz_cache 
                 << ", insecure_rand_Rw: "
-                << rand_cache.Rw);
+                << insecure_rand_Rw_cache);
     }
     prevector_tester() {
         seed_insecure_rand();
-        rand_cache = insecure_rand_ctx;
+        insecure_rand_Rz_cache = insecure_rand_Rz;
+        insecure_rand_Rw_cache = insecure_rand_Rw;
     }
 };
 
@@ -214,8 +217,8 @@ BOOST_AUTO_TEST_CASE(PrevectorTestInt)
             if (((r >> 21) % 32) == 7) {
                 int values[4];
                 int num = 1 + (insecure_rand() % 4);
-                for (int k = 0; k < num; k++) {
-                    values[k] = insecure_rand();
+                for (int i = 0; i < num; i++) {
+                    values[i] = insecure_rand();
                 }
                 test.insert_range(insecure_rand() % (test.size() + 1), values, values + num);
             }

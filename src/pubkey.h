@@ -6,14 +6,14 @@
 #ifndef BITCOIN_PUBKEY_H
 #define BITCOIN_PUBKEY_H
 
-#include "hash.h"
-#include "serialize.h"
-#include "uint256.h"
+#include <hash.h>
+#include <serialize.h>
+#include <uint256.h>
 
 #include <stdexcept>
 #include <vector>
 
-/**
+/** 
  * secp256k1:
  * const unsigned int PRIVATE_KEY_SIZE = 279;
  * const unsigned int PUBLIC_KEY_SIZE  = 65;
@@ -30,7 +30,7 @@ class CKeyID : public uint160
 {
 public:
     CKeyID() : uint160() {}
-    CKeyID(const uint160& in) : uint160(in) {}
+    explicit CKeyID(const uint160& in) : uint160(in) {}
 };
 
 typedef uint256 ChainCode;
@@ -88,9 +88,9 @@ public:
     }
 
     //! Construct a public key from a byte vector.
-    CPubKey(const std::vector<unsigned char>& _vch)
+    explicit CPubKey(const std::vector<unsigned char>& vch)
     {
-        Set(_vch.begin(), _vch.end());
+        Set(vch.begin(), vch.end());
     }
 
     //! Simple read-only vector-like interface to the pubkey data.
@@ -152,7 +152,7 @@ public:
 
     /*
      * Check syntactic correctness.
-     *
+     * 
      * Note that this is consensus critical as CheckSig() calls it!
      */
     bool IsValid() const
@@ -199,15 +199,12 @@ struct CExtPubKey {
 
     friend bool operator==(const CExtPubKey &a, const CExtPubKey &b)
     {
-        return a.nDepth == b.nDepth &&
-            memcmp(&a.vchFingerprint[0], &b.vchFingerprint[0], sizeof(vchFingerprint)) == 0 &&
-            a.nChild == b.nChild &&
-            a.chaincode == b.chaincode &&
-            a.pubkey == b.pubkey;
+        return a.nDepth == b.nDepth && memcmp(&a.vchFingerprint[0], &b.vchFingerprint[0], 4) == 0 && a.nChild == b.nChild &&
+               a.chaincode == b.chaincode && a.pubkey == b.pubkey;
     }
 
-    void Encode(unsigned char code[BIP32_EXTKEY_SIZE]) const;
-    void Decode(const unsigned char code[BIP32_EXTKEY_SIZE]);
+    void Encode(unsigned char code[74]) const;
+    void Decode(const unsigned char code[74]);
     bool Derive(CExtPubKey& out, unsigned int nChild) const;
 
     void Serialize(CSizeComputer& s) const
@@ -215,12 +212,13 @@ struct CExtPubKey {
         // Optimized implementation for ::GetSerializeSize that avoids copying.
         s.seek(BIP32_EXTKEY_SIZE + 1); // add one byte for the size (compact int)
     }
+
     template <typename Stream>
     void Serialize(Stream& s) const
     {
-        unsigned int len = BIP32_EXTKEY_SIZE;
+        unsigned int len = 74;
         ::WriteCompactSize(s, len);
-        unsigned char code[BIP32_EXTKEY_SIZE];
+        unsigned char code[74];
         Encode(code);
         s.write((const char *)&code[0], len);
     }
@@ -228,8 +226,8 @@ struct CExtPubKey {
     void Unserialize(Stream& s)
     {
         unsigned int len = ::ReadCompactSize(s);
-        unsigned char code[BIP32_EXTKEY_SIZE];
-        if (len != BIP32_EXTKEY_SIZE)
+        unsigned char code[74];
+        if (len != 74)
             throw std::runtime_error("Invalid extended key size\n");
         s.read((char *)&code[0], len);
         Decode(code);

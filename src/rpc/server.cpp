@@ -1,23 +1,23 @@
 // Copyright (c) 2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2018 PM-Tech
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "rpc/server.h"
+#include <rpc/server.h>
 
-#include "base58.h"
-#include "init.h"
-#include "random.h"
-#include "sync.h"
-#include "ui_interface.h"
-#include "util.h"
-#include "utilstrencodings.h"
+#include <base58.h>
+#include <init.h>
+#include <random.h>
+#include <sync.h>
+#include <ui_interface.h>
+#include <util.h>
+#include <utilstrencodings.h>
 
 #include <univalue.h>
 
 #include <boost/bind.hpp>
 #include <boost/filesystem.hpp>
-#include <boost/foreach.hpp>
 #include <boost/iostreams/concepts.hpp>
 #include <boost/iostreams/stream.hpp>
 #include <boost/shared_ptr.hpp>
@@ -37,7 +37,7 @@ static CCriticalSection cs_rpcWarmup;
 /* Timer-creating functions */
 static RPCTimerInterface* timerInterface = NULL;
 /* Map of name to timer. */
-static std::map<std::string, std::unique_ptr<RPCTimerBase> > deadlineTimers;
+static std::map<std::string, boost::shared_ptr<RPCTimerBase> > deadlineTimers;
 
 static struct CRPCSignals
 {
@@ -72,7 +72,7 @@ void RPCTypeCheck(const UniValue& params,
                   bool fAllowNull)
 {
     unsigned int i = 0;
-    BOOST_FOREACH(UniValue::VType t, typesExpected)
+    for (UniValue::VType t : typesExpected)
     {
         if (params.size() <= i)
             break;
@@ -107,7 +107,7 @@ void RPCTypeCheckObj(const UniValue& o,
 
     if (fStrict)
     {
-        BOOST_FOREACH(const string& k, o.getKeys())
+        for (const string& k : o.getKeys())
         {
             if (typesExpected.count(k) == 0)
             {
@@ -186,7 +186,7 @@ std::string CRPCTable::help(const std::string& strCommand) const
         vCommands.push_back(make_pair(mi->second->category + mi->first, mi->second));
     sort(vCommands.begin(), vCommands.end());
 
-    BOOST_FOREACH(const PAIRTYPE(string, const CRPCCommand*)& command, vCommands)
+    for (const std::pair<string, const CRPCCommand*>& command : vCommands)
     {
         const CRPCCommand *pcmd = command.second;
         string strMethod = pcmd->name;
@@ -257,11 +257,11 @@ UniValue stop(const JSONRPCRequest& jsonRequest)
     if (jsonRequest.fHelp || jsonRequest.params.size() > 1)
         throw runtime_error(
             "stop\n"
-            "\nStop Bitcoin server.");
+            "\nStop Chaincoin server.");
     // Event loop will exit after current HTTP requests have been handled, so
     // this reply will get back to the client.
     StartShutdown();
-    return "Bitcoin server stopping";
+    return "Chaincoin server stopping";
 }
 
 /**
@@ -462,7 +462,7 @@ std::vector<std::string> CRPCTable::listCommands() const
 
 std::string HelpExampleCli(const std::string& methodname, const std::string& args)
 {
-    return "> bitcoin-cli " + methodname + " " + args + "\n";
+    return "> chaincoin-cli " + methodname + " " + args + "\n";
 }
 
 std::string HelpExampleRpc(const std::string& methodname, const std::string& args)
@@ -485,7 +485,7 @@ void RPCSetTimerInterface(RPCTimerInterface *iface)
 void RPCUnsetTimerInterface(RPCTimerInterface *iface)
 {
     if (timerInterface == iface)
-        timerInterface = NULL;
+        timerInterface = nullptr;
 }
 
 void RPCRunLater(const std::string& name, boost::function<void(void)> func, int64_t nSeconds)
@@ -494,7 +494,7 @@ void RPCRunLater(const std::string& name, boost::function<void(void)> func, int6
         throw JSONRPCError(RPC_INTERNAL_ERROR, "No timer handler registered for RPC");
     deadlineTimers.erase(name);
     LogPrint("rpc", "queue run of timer %s in %i seconds (using %s)\n", name, nSeconds, timerInterface->Name());
-    deadlineTimers.emplace(name, std::unique_ptr<RPCTimerBase>(timerInterface->NewTimer(func, nSeconds*1000)));
+    deadlineTimers.insert(std::make_pair(name, boost::shared_ptr<RPCTimerBase>(timerInterface->NewTimer(func, nSeconds*1000))));
 }
 
 CRPCTable tableRPC;

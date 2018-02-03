@@ -1,21 +1,22 @@
 // Copyright (c) 2011-2015 The Bitcoin Core developers
+// Copyright (c) 2014-2017 The Dash Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "guiutil.h"
+#include <guiutil.h>
 
-#include "bitcoinaddressvalidator.h"
-#include "bitcoinunits.h"
-#include "qvalidatedlineedit.h"
-#include "walletmodel.h"
+#include <bitcoinaddressvalidator.h>
+#include <bitcoinunits.h>
+#include <qvalidatedlineedit.h>
+#include <walletmodel.h>
 
-#include "primitives/transaction.h"
-#include "init.h"
-#include "validation.h" // For minRelayTxFee
-#include "protocol.h"
-#include "script/script.h"
-#include "script/standard.h"
-#include "util.h"
+#include <primitives/transaction.h>
+#include <init.h>
+#include <validation.h> // For minRelayTxFee
+#include <protocol.h>
+#include <script/script.h>
+#include <script/standard.h>
+#include <util.h>
 
 #ifdef WIN32
 #ifdef _WIN32_WINNT
@@ -55,6 +56,7 @@
 #include <QSettings>
 #include <QTextDocument> // for Qt::mightBeRichText
 #include <QThread>
+#include <QMouseEvent>
 
 #if QT_VERSION < 0x050000
 #include <QUrl>
@@ -107,23 +109,6 @@ QFont fixedPitchFont()
 #endif
 }
 
-// Just some dummy data to generate an convincing random-looking (but consistent) address
-static const uint8_t dummydata[] = {0xeb,0x15,0x23,0x1d,0xfc,0xeb,0x60,0x92,0x58,0x86,0xb6,0x7d,0x06,0x52,0x99,0x92,0x59,0x15,0xae,0xb1,0x72,0xc0,0x66,0x47};
-
-// Generate a dummy address with invalid CRC, starting with the network prefix.
-static std::string DummyAddress(const CChainParams &params)
-{
-    std::vector<unsigned char> sourcedata = params.Base58Prefix(CChainParams::PUBKEY_ADDRESS);
-    sourcedata.insert(sourcedata.end(), dummydata, dummydata + sizeof(dummydata));
-    for(int i=0; i<256; ++i) { // Try every trailing byte
-        std::string s = EncodeBase58(begin_ptr(sourcedata), end_ptr(sourcedata));
-        if (!CBitcoinAddress(s).IsValid())
-            return s;
-        sourcedata[sourcedata.size()-1] += 1;
-    }
-    return "";
-}
-
 void setupAddressWidget(QValidatedLineEdit *widget, QWidget *parent)
 {
     parent->setFocusProxy(widget);
@@ -132,8 +117,7 @@ void setupAddressWidget(QValidatedLineEdit *widget, QWidget *parent)
 #if QT_VERSION >= 0x040700
     // We don't want translators to use own addresses in translations
     // and this is the only place, where this address is supplied.
-    widget->setPlaceholderText(QObject::tr("Enter a Bitcoin address (e.g. %1)").arg(
-        QString::fromStdString(DummyAddress(Params()))));
+    widget->setPlaceholderText(QObject::tr("Enter a Chaincoin address (e.g. %1)").arg("XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg"));
 #endif
     widget->setValidator(new BitcoinAddressEntryValidator(parent));
     widget->setCheckValidator(new BitcoinAddressCheckValidator(parent));
@@ -150,8 +134,8 @@ void setupAmountWidget(QLineEdit *widget, QWidget *parent)
 
 bool parseBitcoinURI(const QUrl &uri, SendCoinsRecipient *out)
 {
-    // return if URI is not valid or is no bitcoin: URI
-    if(!uri.isValid() || uri.scheme() != QString("bitcoin"))
+    // return if URI is not valid or is no chaincoin: URI
+    if(!uri.isValid() || uri.scheme() != QString("chaincoin"))
         return false;
 
     SendCoinsRecipient rv;
@@ -168,6 +152,8 @@ bool parseBitcoinURI(const QUrl &uri, SendCoinsRecipient *out)
     QUrlQuery uriQuery(uri);
     QList<QPair<QString, QString> > items = uriQuery.queryItems();
 #endif
+    
+    rv.fUseInstantSend = false;
     for (QList<QPair<QString, QString> >::iterator i = items.begin(); i != items.end(); i++)
     {
         bool fShouldReturnFalse = false;
@@ -182,6 +168,13 @@ bool parseBitcoinURI(const QUrl &uri, SendCoinsRecipient *out)
             rv.label = i->second;
             fShouldReturnFalse = false;
         }
+        if (i->first == "IS")
+        {
+            if(i->second.compare(QString("1")) == 0)
+                rv.fUseInstantSend = true;
+
+            fShouldReturnFalse = false;
+        }
         if (i->first == "message")
         {
             rv.message = i->second;
@@ -191,7 +184,7 @@ bool parseBitcoinURI(const QUrl &uri, SendCoinsRecipient *out)
         {
             if(!i->second.isEmpty())
             {
-                if(!BitcoinUnits::parse(BitcoinUnits::BTC, i->second, &rv.amount))
+                if(!BitcoinUnits::parse(BitcoinUnits::CHC, i->second, &rv.amount))
                 {
                     return false;
                 }
@@ -211,13 +204,13 @@ bool parseBitcoinURI(const QUrl &uri, SendCoinsRecipient *out)
 
 bool parseBitcoinURI(QString uri, SendCoinsRecipient *out)
 {
-    // Convert bitcoin:// to bitcoin:
+    // Convert chaincoin:// to chaincoin:
     //
-    //    Cannot handle this later, because bitcoin:// will cause Qt to see the part after // as host,
+    //    Cannot handle this later, because chaincoin:// will cause Qt to see the part after // as host,
     //    which will lower-case it (and thus invalidate the address).
-    if(uri.startsWith("bitcoin://", Qt::CaseInsensitive))
+    if(uri.startsWith("chaincoin://", Qt::CaseInsensitive))
     {
-        uri.replace(0, 10, "bitcoin:");
+        uri.replace(0, 7, "chaincoin:");
     }
     QUrl uriInstance(uri);
     return parseBitcoinURI(uriInstance, out);
@@ -225,12 +218,12 @@ bool parseBitcoinURI(QString uri, SendCoinsRecipient *out)
 
 QString formatBitcoinURI(const SendCoinsRecipient &info)
 {
-    QString ret = QString("bitcoin:%1").arg(info.address);
+    QString ret = QString("chaincoin:%1").arg(info.address);
     int paramCount = 0;
 
     if (info.amount)
     {
-        ret += QString("?amount=%1").arg(BitcoinUnits::format(BitcoinUnits::BTC, info.amount, false, BitcoinUnits::separatorNever));
+        ret += QString("?amount=%1").arg(BitcoinUnits::format(BitcoinUnits::CHC, info.amount, false, BitcoinUnits::separatorNever));
         paramCount++;
     }
 
@@ -245,6 +238,12 @@ QString formatBitcoinURI(const SendCoinsRecipient &info)
     {
         QString msg(QUrl::toPercentEncoding(info.message));
         ret += QString("%1message=%2").arg(paramCount == 0 ? "?" : "&").arg(msg);
+        paramCount++;
+    }
+    
+    if(info.fUseInstantSend)
+    {
+        ret += QString("%1IS=1").arg(paramCount == 0 ? "?" : "&");
         paramCount++;
     }
 
@@ -266,6 +265,7 @@ QString HtmlEscape(const QString& str, bool fMultiLine)
 #else
     QString escaped = str.toHtmlEscaped();
 #endif
+    escaped = escaped.replace(" ", "&nbsp;");
     if(fMultiLine)
     {
         escaped = escaped.replace("\n", "<br>\n");
@@ -420,6 +420,33 @@ void openDebugLogfile()
         QDesktopServices::openUrl(QUrl::fromLocalFile(boostPathToQString(pathDebug)));
 }
 
+void openConfigfile()
+{
+    boost::filesystem::path pathConfig = GetConfigFile();
+
+    /* Open chaincoin.conf with the associated application */
+    if (boost::filesystem::exists(pathConfig))
+        QDesktopServices::openUrl(QUrl::fromLocalFile(boostPathToQString(pathConfig)));
+}
+
+void openMNConfigfile()
+{
+    boost::filesystem::path pathConfig = GetMasternodeConfigFile();
+
+    /* Open masternode.conf with the associated application */
+    if (boost::filesystem::exists(pathConfig))
+        QDesktopServices::openUrl(QUrl::fromLocalFile(boostPathToQString(pathConfig)));
+}
+
+void showBackups()
+{
+    boost::filesystem::path backupsDir = GetBackupsDir();
+
+    /* Open folder with default browser */
+    if (boost::filesystem::exists(backupsDir))
+        QDesktopServices::openUrl(QUrl::fromLocalFile(boostPathToQString(backupsDir)));
+}
+
 void SubstituteFonts(const QString& language)
 {
 #if defined(Q_OS_MAC)
@@ -456,9 +483,9 @@ void SubstituteFonts(const QString& language)
 #endif
 }
 
-ToolTipToRichTextFilter::ToolTipToRichTextFilter(int _size_threshold, QObject *parent) :
+ToolTipToRichTextFilter::ToolTipToRichTextFilter(int size_threshold, QObject *parent) :
     QObject(parent),
-    size_threshold(_size_threshold)
+    size_threshold(size_threshold)
 {
 
 }
@@ -469,11 +496,14 @@ bool ToolTipToRichTextFilter::eventFilter(QObject *obj, QEvent *evt)
     {
         QWidget *widget = static_cast<QWidget*>(obj);
         QString tooltip = widget->toolTip();
-        if(tooltip.size() > size_threshold && !tooltip.startsWith("<qt") && !Qt::mightBeRichText(tooltip))
+        if(tooltip.size() > size_threshold && !tooltip.startsWith("<qt"))
         {
-            // Envelop with <qt></qt> to make sure Qt detects this as rich text
-            // Escape the current message as HTML and replace \n by <br>
-            tooltip = "<qt>" + HtmlEscape(tooltip, true) + "</qt>";
+            // Escape the current message as HTML and replace \n by <br> if it's not rich text
+            if(!Qt::mightBeRichText(tooltip))
+                tooltip = HtmlEscape(tooltip, true);
+            // Envelop with <qt></qt> to make sure Qt detects every tooltip as rich text
+            // and style='white-space:pre' to preserve line composition
+            tooltip = "<qt style='white-space:pre'>" + tooltip + "</qt>";
             widget->setToolTip(tooltip);
             return true;
         }
@@ -604,15 +634,15 @@ boost::filesystem::path static StartupShortcutPath()
 {
     std::string chain = ChainNameFromCommandLine();
     if (chain == CBaseChainParams::MAIN)
-        return GetSpecialFolderPath(CSIDL_STARTUP) / "Bitcoin.lnk";
+        return GetSpecialFolderPath(CSIDL_STARTUP) / "Chaincoin Core.lnk";
     if (chain == CBaseChainParams::TESTNET) // Remove this special case when CBaseChainParams::TESTNET = "testnet4"
-        return GetSpecialFolderPath(CSIDL_STARTUP) / "Bitcoin (testnet).lnk";
-    return GetSpecialFolderPath(CSIDL_STARTUP) / strprintf("Bitcoin (%s).lnk", chain);
+        return GetSpecialFolderPath(CSIDL_STARTUP) / "Chaincoin Core (testnet).lnk";
+    return GetSpecialFolderPath(CSIDL_STARTUP) / strprintf("Chaincoin Core (%s).lnk", chain);
 }
 
 bool GetStartOnSystemStartup()
 {
-    // check for Bitcoin*.lnk
+    // check for "Chaincoin Core*.lnk"
     return boost::filesystem::exists(StartupShortcutPath());
 }
 
@@ -623,11 +653,11 @@ bool SetStartOnSystemStartup(bool fAutoStart)
 
     if (fAutoStart)
     {
-        CoInitialize(NULL);
+        CoInitialize(nullptr);
 
         // Get a pointer to the IShellLink interface.
-        IShellLink* psl = NULL;
-        HRESULT hres = CoCreateInstance(CLSID_ShellLink, NULL,
+        IShellLink* psl = nullptr;
+        HRESULT hres = CoCreateInstance(CLSID_ShellLink, nullptr,
             CLSCTX_INPROC_SERVER, IID_IShellLink,
             reinterpret_cast<void**>(&psl));
 
@@ -635,7 +665,7 @@ bool SetStartOnSystemStartup(bool fAutoStart)
         {
             // Get the current executable path
             TCHAR pszExePath[MAX_PATH];
-            GetModuleFileName(NULL, pszExePath, sizeof(pszExePath));
+            GetModuleFileName(nullptr, pszExePath, sizeof(pszExePath));
 
             // Start client minimized
             QString strArgs = "-min";
@@ -663,7 +693,7 @@ bool SetStartOnSystemStartup(bool fAutoStart)
 
             // Query IShellLink for the IPersistFile interface for
             // saving the shortcut in persistent storage.
-            IPersistFile* ppf = NULL;
+            IPersistFile* ppf = nullptr;
             hres = psl->QueryInterface(IID_IPersistFile, reinterpret_cast<void**>(&ppf));
             if (SUCCEEDED(hres))
             {
@@ -704,8 +734,8 @@ boost::filesystem::path static GetAutostartFilePath()
 {
     std::string chain = ChainNameFromCommandLine();
     if (chain == CBaseChainParams::MAIN)
-        return GetAutostartDir() / "bitcoin.desktop";
-    return GetAutostartDir() / strprintf("bitcoin-%s.lnk", chain);
+        return GetAutostartDir() / "chaincoincore.desktop";
+    return GetAutostartDir() / strprintf("chaincoincore-%s.lnk", chain);
 }
 
 bool GetStartOnSystemStartup()
@@ -744,13 +774,13 @@ bool SetStartOnSystemStartup(bool fAutoStart)
         if (!optionFile.good())
             return false;
         std::string chain = ChainNameFromCommandLine();
-        // Write a bitcoin.desktop file to the autostart directory:
+        // Write a chaincoincore.desktop file to the autostart directory:
         optionFile << "[Desktop Entry]\n";
         optionFile << "Type=Application\n";
         if (chain == CBaseChainParams::MAIN)
-            optionFile << "Name=Bitcoin\n";
+            optionFile << "Name=Chaincoin Core\n";
         else
-            optionFile << strprintf("Name=Bitcoin (%s)\n", chain);
+            optionFile << strprintf("Name=Chaincoin Core (%s)\n", chain);
         optionFile << "Exec=" << pszExePath << strprintf(" -min -testnet=%d -regtest=%d\n", GetBoolArg("-testnet", false), GetBoolArg("-regtest", false));
         optionFile << "Terminal=false\n";
         optionFile << "Hidden=false\n";
@@ -769,22 +799,22 @@ bool SetStartOnSystemStartup(bool fAutoStart)
 LSSharedFileListItemRef findStartupItemInList(LSSharedFileListRef list, CFURLRef findUrl);
 LSSharedFileListItemRef findStartupItemInList(LSSharedFileListRef list, CFURLRef findUrl)
 {
-    // loop through the list of startup items and try to find the bitcoin app
-    CFArrayRef listSnapshot = LSSharedFileListCopySnapshot(list, NULL);
+    // loop through the list of startup items and try to find the Chaincoin Core app
+    CFArrayRef listSnapshot = LSSharedFileListCopySnapshot(list, nullptr);
     for(int i = 0; i < CFArrayGetCount(listSnapshot); i++) {
         LSSharedFileListItemRef item = (LSSharedFileListItemRef)CFArrayGetValueAtIndex(listSnapshot, i);
         UInt32 resolutionFlags = kLSSharedFileListNoUserInteraction | kLSSharedFileListDoNotMountVolumes;
-        CFURLRef currentItemURL = NULL;
+        CFURLRef currentItemURL = nullptr;
 
 #if defined(MAC_OS_X_VERSION_MAX_ALLOWED) && MAC_OS_X_VERSION_MAX_ALLOWED >= 10100
     if(&LSSharedFileListItemCopyResolvedURL)
-        currentItemURL = LSSharedFileListItemCopyResolvedURL(item, resolutionFlags, NULL);
+        currentItemURL = LSSharedFileListItemCopyResolvedURL(item, resolutionFlags, nullptr);
 #if defined(MAC_OS_X_VERSION_MIN_REQUIRED) && MAC_OS_X_VERSION_MIN_REQUIRED < 10100
     else
-        LSSharedFileListItemResolve(item, resolutionFlags, &currentItemURL, NULL);
+        LSSharedFileListItemResolve(item, resolutionFlags, &currentItemURL, nullptr);
 #endif
 #else
-    LSSharedFileListItemResolve(item, resolutionFlags, &currentItemURL, NULL);
+    LSSharedFileListItemResolve(item, resolutionFlags, &currentItemURL, nullptr);
 #endif
 
         if(currentItemURL && CFEqual(currentItemURL, findUrl)) {
@@ -796,13 +826,13 @@ LSSharedFileListItemRef findStartupItemInList(LSSharedFileListRef list, CFURLRef
             CFRelease(currentItemURL);
         }
     }
-    return NULL;
+    return nullptr;
 }
 
 bool GetStartOnSystemStartup()
 {
     CFURLRef bitcoinAppUrl = CFBundleCopyBundleURL(CFBundleGetMainBundle());
-    LSSharedFileListRef loginItems = LSSharedFileListCreate(NULL, kLSSharedFileListSessionLoginItems, NULL);
+    LSSharedFileListRef loginItems = LSSharedFileListCreate(nullptr, kLSSharedFileListSessionLoginItems, nullptr);
     LSSharedFileListItemRef foundItem = findStartupItemInList(loginItems, bitcoinAppUrl);
     return !!foundItem; // return boolified object
 }
@@ -810,12 +840,12 @@ bool GetStartOnSystemStartup()
 bool SetStartOnSystemStartup(bool fAutoStart)
 {
     CFURLRef bitcoinAppUrl = CFBundleCopyBundleURL(CFBundleGetMainBundle());
-    LSSharedFileListRef loginItems = LSSharedFileListCreate(NULL, kLSSharedFileListSessionLoginItems, NULL);
+    LSSharedFileListRef loginItems = LSSharedFileListCreate(nullptr, kLSSharedFileListSessionLoginItems, nullptr);
     LSSharedFileListItemRef foundItem = findStartupItemInList(loginItems, bitcoinAppUrl);
 
     if(fAutoStart && !foundItem) {
-        // add bitcoin app to startup item list
-        LSSharedFileListInsertItemURL(loginItems, kLSSharedFileListItemBeforeFirst, NULL, NULL, bitcoinAppUrl, NULL, NULL);
+        // add Chaincoin Core app to startup item list
+        LSSharedFileListInsertItemURL(loginItems, kLSSharedFileListItemBeforeFirst, nullptr, nullptr, bitcoinAppUrl, nullptr, nullptr);
     }
     else if(!fAutoStart && foundItem) {
         // remove item
@@ -830,6 +860,18 @@ bool SetStartOnSystemStartup(bool fAutoStart) { return false; }
 
 #endif
 
+void migrateQtSettings()
+{
+    // Migration (12.1)
+    QSettings settings;
+    if(!settings.value("fMigrationDone121", false).toBool()) {
+        settings.remove("theme");
+        settings.remove("nWindowPos");
+        settings.remove("nWindowSize");
+        settings.setValue("fMigrationDone121", true);
+    }
+}
+
 void saveWindowGeometry(const QString& strSetting, QWidget *parent)
 {
     QSettings settings;
@@ -843,14 +885,53 @@ void restoreWindowGeometry(const QString& strSetting, const QSize& defaultSize, 
     QPoint pos = settings.value(strSetting + "Pos").toPoint();
     QSize size = settings.value(strSetting + "Size", defaultSize).toSize();
 
-    if (!pos.x() && !pos.y()) {
-        QRect screen = QApplication::desktop()->screenGeometry();
-        pos.setX((screen.width() - size.width()) / 2);
-        pos.setY((screen.height() - size.height()) / 2);
-    }
-
     parent->resize(size);
     parent->move(pos);
+
+    if ((!pos.x() && !pos.y()) || (QApplication::desktop()->screenNumber(parent) == -1))
+    {
+        QRect screen = QApplication::desktop()->screenGeometry();
+        QPoint defaultPos = screen.center() -
+            QPoint(defaultSize.width() / 2, defaultSize.height() / 2);
+        parent->resize(defaultSize);
+        parent->move(defaultPos);
+    }
+}
+
+// Return name of current UI-theme or default theme if no theme was found
+QString getThemeName()
+{
+    QSettings settings;
+    QString theme = settings.value("theme", "").toString();
+
+    if(!theme.isEmpty()){
+        return theme;
+    }
+    return QString("green");  
+}
+
+// Open CSS when configured
+QString loadStyleSheet()
+{
+    QString styleSheet;
+    QSettings settings;
+    QString cssName;
+    QString theme = settings.value("theme", "").toString();
+
+    if(!theme.isEmpty()){
+        cssName = QString(":/css/") + theme; 
+    }
+    else {
+        cssName = QString(":/css/green");  
+        settings.setValue("theme", "green");
+    }
+    
+    QFile qFile(cssName);      
+    if (qFile.open(QFile::ReadOnly)) {
+        styleSheet = QLatin1String(qFile.readAll());
+    }
+        
+    return styleSheet;
 }
 
 void setClipboard(const QString& str)
@@ -950,7 +1031,7 @@ QString formatTimeOffset(int64_t nTimeOffset)
   return QString(QObject::tr("%1 s")).arg(QString::number((int)nTimeOffset, 10));
 }
 
-QString formateNiceTimeOffset(qint64 secs)
+QString formatNiceTimeOffset(qint64 secs)
 {
     // Represent time from last generated block in human readable text
     QString timeBehindText;
@@ -960,11 +1041,11 @@ QString formateNiceTimeOffset(qint64 secs)
     const int YEAR_IN_SECONDS = 31556952; // Average length of year in Gregorian calendar
     if(secs < 60)
     {
-        timeBehindText = QObject::tr("%n seconds(s)","",secs);
+        timeBehindText = QObject::tr("%n second(s)","",secs);
     }
     else if(secs < 2*HOUR_IN_SECONDS)
     {
-        timeBehindText = QObject::tr("%n minutes(s)","",secs/60);
+        timeBehindText = QObject::tr("%n minute(s)","",secs/60);
     }
     else if(secs < 2*DAY_IN_SECONDS)
     {
@@ -986,4 +1067,15 @@ QString formateNiceTimeOffset(qint64 secs)
     }
     return timeBehindText;
 }
+
+void ClickableLabel::mouseReleaseEvent(QMouseEvent *event)
+{
+    Q_EMIT clicked(event->pos());
+}
+    
+void ClickableProgressBar::mouseReleaseEvent(QMouseEvent *event)
+{
+    Q_EMIT clicked(event->pos());
+}
+
 } // namespace GUIUtil

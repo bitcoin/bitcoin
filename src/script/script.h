@@ -6,8 +6,8 @@
 #ifndef BITCOIN_SCRIPT_SCRIPT_H
 #define BITCOIN_SCRIPT_SCRIPT_H
 
-#include "crypto/common.h"
-#include "prevector.h"
+#include <crypto/common.h>
+#include <prevector.h>
 
 #include <assert.h>
 #include <climits>
@@ -485,7 +485,7 @@ public:
     bool GetOp(iterator& pc, opcodetype& opcodeRet)
     {
          const_iterator pc2 = pc;
-         bool fRet = GetOp2(pc2, opcodeRet, NULL);
+         bool fRet = GetOp2(pc2, opcodeRet, nullptr);
          pc = begin() + (pc2 - begin());
          return fRet;
     }
@@ -497,7 +497,7 @@ public:
 
     bool GetOp(const_iterator& pc, opcodetype& opcodeRet) const
     {
-        return GetOp2(pc, opcodeRet, NULL);
+        return GetOp2(pc, opcodeRet, nullptr);
     }
 
     bool GetOp2(const_iterator& pc, opcodetype& opcodeRet, std::vector<unsigned char>* pvchRet) const
@@ -620,6 +620,8 @@ public:
      */
     unsigned int GetSigOpCount(const CScript& scriptSig) const;
 
+    bool IsNormalPaymentScript() const;
+    bool IsPayToPublicKeyHash() const;
     bool IsPayToScriptHash() const;
     bool IsPayToWitnessScriptHash() const;
     bool IsWitnessProgram(int& version, std::vector<unsigned char>& program) const;

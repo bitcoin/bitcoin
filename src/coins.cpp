@@ -2,10 +2,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "coins.h"
+#include <coins.h>
 
-#include "memusage.h"
-#include "random.h"
+#include <memusage.h>
+#include <random.h>
 
 #include <assert.h>
 
@@ -32,7 +32,7 @@ void CCoins::CalcMaskSize(unsigned int &nBytes, unsigned int &nNonzeroBytes) con
     nBytes += nLastUsedByte;
 }
 
-bool CCoins::Spend(uint32_t nPos) 
+bool CCoins::Spend(uint32_t nPos)
 {
     if (nPos >= vout.size() || vout[nPos].IsNull())
         return false;
@@ -269,7 +269,7 @@ double CCoinsViewCache::GetPriority(const CTransaction &tx, int nHeight, CAmount
     if (tx.IsCoinBase())
         return 0.0;
     double dResult = 0.0;
-    BOOST_FOREACH(const CTxIn& txin, tx.vin)
+    for (const CTxIn& txin : tx.vin)
     {
         const CCoins* coins = AccessCoins(txin.prevout.hash);
         assert(coins);

@@ -5,7 +5,7 @@
 #ifndef BITCOIN_QT_RECENTREQUESTSTABLEMODEL_H
 #define BITCOIN_QT_RECENTREQUESTSTABLEMODEL_H
 
-#include "walletmodel.h"
+#include <walletmodel.h>
 
 #include <QAbstractTableModel>
 #include <QStringList>
@@ -31,6 +31,7 @@ public:
         unsigned int nDate = date.toTime_t();
 
         READWRITE(this->nVersion);
+        nVersion = this->nVersion;
         READWRITE(id);
         READWRITE(nDate);
         READWRITE(recipient);
@@ -52,7 +53,7 @@ private:
     Qt::SortOrder order;
 };
 
-/** Model for list of recently generated payment requests / bitcoin: URIs.
+/** Model for list of recently generated payment requests / chaincoin: URIs.
  * Part of wallet model.
  */
 class RecentRequestsTableModel: public QAbstractTableModel

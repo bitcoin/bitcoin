@@ -3,21 +3,21 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "wallet/walletdb.h"
+#include <wallet/walletdb.h>
 
-#include "base58.h"
-#include "consensus/validation.h"
-#include "validation.h" // For CheckTransaction
-#include "protocol.h"
-#include "serialize.h"
-#include "sync.h"
-#include "util.h"
-#include "utiltime.h"
-#include "wallet/wallet.h"
+#include <base58.h>
+#include <consensus/validation.h>
+#include <validation.h> // For CheckTransaction
+#include <protocol.h>
+#include <serialize.h>
+#include <sync.h>
+#include <util.h>
+#include <utiltime.h>
+#include <wallet/wallet.h>
 
 #include <boost/version.hpp>
 #include <boost/filesystem.hpp>
-#include <boost/foreach.hpp>
+#include <boost/scoped_ptr.hpp>
 #include <boost/thread.hpp>
 
 using namespace std;
@@ -202,7 +202,7 @@ CAmount CWalletDB::GetAccountCreditDebit(const string& strAccount)
     ListAccountCreditDebit(strAccount, entries);
 
     CAmount nCreditDebit = 0;
-    BOOST_FOREACH (const CAccountingEntry& entry, entries)
+    for (const CAccountingEntry& entry : entries)
         nCreditDebit += entry.nCreditDebit;
 
     return nCreditDebit;
@@ -215,16 +215,16 @@ void CWalletDB::ListAccountCreditDebit(const string& strAccount, list<CAccountin
     Dbc* pcursor = GetCursor();
     if (!pcursor)
         throw runtime_error(std::string(__func__) + ": cannot create DB cursor");
-    bool setRange = true;
+    unsigned int fFlags = DB_SET_RANGE;
     while (true)
     {
         // Read next record
         CDataStream ssKey(SER_DISK, CLIENT_VERSION);
-        if (setRange)
+        if (fFlags == DB_SET_RANGE)
             ssKey << std::make_pair(std::string("acentry"), std::make_pair((fAllAccounts ? string("") : strAccount), uint64_t(0)));
         CDataStream ssValue(SER_DISK, CLIENT_VERSION);
-        int ret = ReadAtCursor(pcursor, ssKey, ssValue, setRange);
-        setRange = false;
+        int ret = ReadAtCursor(pcursor, ssKey, ssValue, fFlags);
+        fFlags = DB_NEXT;
         if (ret == DB_NOTFOUND)
             break;
         else if (ret != 0)
@@ -323,7 +323,7 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
             if (wtx.nOrderPos == -1)
                 wss.fAnyUnordered = true;
 
-            pwallet->LoadToWallet(wtx);
+            pwallet->AddToWallet(wtx);
         }
         else if (strType == "acentry")
         {
@@ -599,6 +599,10 @@ DBErrors CWalletDB::LoadWallet(CWallet* pwallet)
                 LogPrintf("%s\n", strErr);
         }
         pcursor->close();
+        // Store initial keypool size
+        pwallet->nKeysLeftSinceAutoBackup = pwallet->GetKeyPoolSize();
+        LogPrintf("nKeysLeftSinceAutoBackup: %d\n", pwallet->nKeysLeftSinceAutoBackup);
+
     }
     catch (const boost::thread_interrupted&) {
         throw;
@@ -624,7 +628,7 @@ DBErrors CWalletDB::LoadWallet(CWallet* pwallet)
     if ((wss.nKeys + wss.nCKeys) != wss.nKeyMeta)
         pwallet->nTimeFirstKey = 1; // 0 would be considered 'no value'
 
-    BOOST_FOREACH(uint256 hash, wss.vWalletUpgrade)
+    for (uint256 hash : wss.vWalletUpgrade)
         WriteTx(pwallet->mapWallet[hash]);
 
     // Rewrite encrypted wallets of versions 0.4.0 and 0.5.0rc:
@@ -639,7 +643,7 @@ DBErrors CWalletDB::LoadWallet(CWallet* pwallet)
 
     pwallet->laccentries.clear();
     ListAccountCreditDebit("*", pwallet->laccentries);
-    BOOST_FOREACH(CAccountingEntry& entry, pwallet->laccentries) {
+    for (CAccountingEntry& entry : pwallet->laccentries) {
         pwallet->wtxOrdered.insert(make_pair(entry.nOrderPos, CWallet::TxPair((CWalletTx*)0, &entry)));
     }
 
@@ -728,7 +732,7 @@ DBErrors CWalletDB::ZapSelectTx(CWallet* pwallet, vector<uint256>& vTxHashIn, ve
     // erase each matching wallet TX
     bool delerror = false;
     vector<uint256>::iterator it = vTxHashIn.begin();
-    BOOST_FOREACH (uint256 hash, vTxHash) {
+    for (uint256 hash : vTxHash) {
         while (it < vTxHashIn.end() && (*it) < hash) {
             it++;
         }
@@ -760,7 +764,7 @@ DBErrors CWalletDB::ZapWalletTx(CWallet* pwallet, vector<CWalletTx>& vWtx)
         return err;
 
     // erase each wallet TX
-    BOOST_FOREACH (uint256& hash, vTxHash) {
+    for (uint256& hash : vTxHash) {
         if (!EraseTx(hash))
             return DB_CORRUPT;
     }
@@ -771,7 +775,7 @@ DBErrors CWalletDB::ZapWalletTx(CWallet* pwallet, vector<CWalletTx>& vWtx)
 void ThreadFlushWalletDB(const string& strFile)
 {
     // Make this thread recognisable as the wallet flushing thread
-    RenameThread("bitcoin-wallet");
+    RenameThread("chaincoin-wallet");
 
     static bool fOneThread;
     if (fOneThread)
@@ -810,18 +814,18 @@ void ThreadFlushWalletDB(const string& strFile)
                 if (nRefCount == 0)
                 {
                     boost::this_thread::interruption_point();
-                    map<string, int>::iterator _mi = bitdb.mapFileUseCount.find(strFile);
-                    if (_mi != bitdb.mapFileUseCount.end())
+                    map<string, int>::iterator mi = bitdb.mapFileUseCount.find(strFile);
+                    if (mi != bitdb.mapFileUseCount.end())
                     {
                         LogPrint("db", "Flushing %s\n", strFile);
                         nLastFlushed = nWalletDBUpdated;
                         int64_t nStart = GetTimeMillis();
 
-                        // Flush wallet file so it's self contained
+                        // Flush wallet so it's self contained
                         bitdb.CloseDb(strFile);
                         bitdb.CheckpointLSN(strFile);
 
-                        bitdb.mapFileUseCount.erase(_mi++);
+                        bitdb.mapFileUseCount.erase(mi++);
                         LogPrint("db", "Flushed %s %dms\n", strFile, GetTimeMillis() - nStart);
                     }
                 }
@@ -880,7 +884,7 @@ bool CWalletDB::Recover(CDBEnv& dbenv, const std::string& filename, bool fOnlyKe
     CWalletScanState wss;
 
     DbTxn* ptxn = dbenv.TxnBegin();
-    BOOST_FOREACH(CDBEnv::KeyValPair& row, salvagedData)
+    for (CDBEnv::KeyValPair& row : salvagedData)
     {
         if (fOnlyKeys)
         {

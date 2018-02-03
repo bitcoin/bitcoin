@@ -1,11 +1,11 @@
-// Copyright (c) 2011-2014 The Bitcoin Core developers
+// Copyright (c) 2011-2013 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "transactionfilterproxy.h"
+#include <transactionfilterproxy.h>
 
-#include "transactiontablemodel.h"
-#include "transactionrecord.h"
+#include <transactiontablemodel.h>
+#include <transactionrecord.h>
 
 #include <cstdlib>
 
@@ -21,7 +21,7 @@ TransactionFilterProxy::TransactionFilterProxy(QObject *parent) :
     dateFrom(MIN_DATE),
     dateTo(MAX_DATE),
     addrPrefix(),
-    typeFilter(ALL_TYPES),
+    typeFilter(COMMON_TYPES),
     watchOnlyFilter(WatchOnlyFilter_All),
     minAmount(0),
     limitRows(-1),
@@ -66,9 +66,9 @@ void TransactionFilterProxy::setDateRange(const QDateTime &from, const QDateTime
     invalidateFilter();
 }
 
-void TransactionFilterProxy::setAddressPrefix(const QString &_addrPrefix)
+void TransactionFilterProxy::setAddressPrefix(const QString &addrPrefix)
 {
-    this->addrPrefix = _addrPrefix;
+    this->addrPrefix = addrPrefix;
     invalidateFilter();
 }
 
@@ -95,9 +95,9 @@ void TransactionFilterProxy::setLimit(int limit)
     this->limitRows = limit;
 }
 
-void TransactionFilterProxy::setShowInactive(bool _showInactive)
+void TransactionFilterProxy::setShowInactive(bool showInactive)
 {
-    this->showInactive = _showInactive;
+    this->showInactive = showInactive;
     invalidateFilter();
 }
 

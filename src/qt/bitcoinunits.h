@@ -1,11 +1,12 @@
 // Copyright (c) 2011-2015 The Bitcoin Core developers
+// Copyright (c) 2014-2017 The Dash Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_QT_BITCOINUNITS_H
 #define BITCOIN_QT_BITCOINUNITS_H
 
-#include "amount.h"
+#include <amount.h>
 
 #include <QAbstractListModel>
 #include <QString>
@@ -41,7 +42,7 @@
 #define THIN_SP_UTF8 REAL_THIN_SP_UTF8
 #define THIN_SP_HTML HTML_HACK_SP
 
-/** Bitcoin unit definitions. Encapsulates parsing and formatting
+/** Dash unit definitions. Encapsulates parsing and formatting
    and serves as list model for drop-down selection boxes.
 */
 class BitcoinUnits: public QAbstractListModel
@@ -51,14 +52,15 @@ class BitcoinUnits: public QAbstractListModel
 public:
     explicit BitcoinUnits(QObject *parent);
 
-    /** Bitcoin units.
+    /** Dash units.
       @note Source: https://en.bitcoin.it/wiki/Units . Please add only sensible ones
      */
     enum Unit
     {
-        BTC,
-        mBTC,
-        uBTC
+        CHC,
+        mCHC,
+        uCHC,
+        chuffs
     };
 
     enum SeparatorStyle
@@ -91,6 +93,9 @@ public:
     //! Format as HTML string (with unit)
     static QString formatHtmlWithUnit(int unit, const CAmount& amount, bool plussign=false, SeparatorStyle separators=separatorStandard);
     //! Parse string to coin amount
+    //! Format as string (with unit) but floor value up to "digits" settings
+    static QString floorWithUnit(int unit, const CAmount& amount, bool plussign=false, SeparatorStyle separators=separatorStandard);
+    static QString floorHtmlWithUnit(int unit, const CAmount& amount, bool plussign=false, SeparatorStyle separators=separatorStandard);
     static bool parse(int unit, const QString &value, CAmount *val_out);
     //! Gets title for amount column including current display unit if optionsModel reference available */
     static QString getAmountColumnTitle(int unit);

@@ -6,12 +6,12 @@
 #ifndef BITCOIN_ADDRMAN_H
 #define BITCOIN_ADDRMAN_H
 
-#include "netaddress.h"
-#include "protocol.h"
-#include "random.h"
-#include "sync.h"
-#include "timedata.h"
-#include "util.h"
+#include <netaddress.h>
+#include <protocol.h>
+#include <random.h>
+#include <sync.h>
+#include <timedata.h>
+#include <util.h>
 
 #include <map>
 #include <set>
@@ -211,15 +211,12 @@ protected:
     //! secret key to randomize bucket select with
     uint256 nKey;
 
-    //! Source of random numbers for randomization in inner loops
-    FastRandomContext insecure_rand;
-
     //! Find an entry.
-    CAddrInfo* Find(const CNetAddr& addr, int *pnId = NULL);
+    CAddrInfo* Find(const CNetAddr& addr, int *pnId = nullptr);
 
     //! find an entry, creating it if necessary.
     //! nTime and nServices of the found node are updated, if necessary.
-    CAddrInfo* Create(const CAddress &addr, const CNetAddr &addrSource, int *pnId = NULL);
+    CAddrInfo* Create(const CAddress &addr, const CNetAddr &addrSource, int *pnId = nullptr);
 
     //! Swap two elements in vRandom.
     void SwapRandom(unsigned int nRandomPos1, unsigned int nRandomPos2);
@@ -466,7 +463,6 @@ public:
         nIdCount = 0;
         nTried = 0;
         nNew = 0;
-        nLastGood = 1; //Initially at 1 so that "never" is strictly worse.
     }
 
     CAddrMan()
@@ -502,11 +498,13 @@ public:
     //! Add a single address.
     bool Add(const CAddress &addr, const CNetAddr& source, int64_t nTimePenalty = 0)
     {
-        LOCK(cs);
         bool fRet = false;
-        Check();
-        fRet |= Add_(addr, source, nTimePenalty);
-        Check();
+        {
+            LOCK(cs);
+            Check();
+            fRet |= Add_(addr, source, nTimePenalty);
+            Check();
+        }
         if (fRet)
             LogPrint("addrman", "Added %s from %s: %i tried, %i new\n", addr.ToStringIPPort(), source.ToString(), nTried, nNew);
         return fRet;
@@ -515,12 +513,14 @@ public:
     //! Add multiple addresses.
     bool Add(const std::vector<CAddress> &vAddr, const CNetAddr& source, int64_t nTimePenalty = 0)
     {
-        LOCK(cs);
         int nAdd = 0;
-        Check();
-        for (std::vector<CAddress>::const_iterator it = vAddr.begin(); it != vAddr.end(); it++)
-            nAdd += Add_(*it, source, nTimePenalty) ? 1 : 0;
-        Check();
+        {
+            LOCK(cs);
+            Check();
+            for (std::vector<CAddress>::const_iterator it = vAddr.begin(); it != vAddr.end(); it++)
+                nAdd += Add_(*it, source, nTimePenalty) ? 1 : 0;
+            Check();
+        }
         if (nAdd)
             LogPrint("addrman", "Added %i addresses from %s: %i tried, %i new\n", nAdd, source.ToString(), nTried, nNew);
         return nAdd > 0;

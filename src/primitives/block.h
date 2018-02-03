@@ -1,5 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2016-2017 The Dash Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -76,6 +77,8 @@ public:
     std::vector<CTransactionRef> vtx;
 
     // memory only
+    mutable CTxOut txoutMasternode; // masternode payment
+    mutable std::vector<CTxOut> voutSuperblock; // superblock payment
     mutable bool fChecked;
 
     CBlock()
@@ -101,6 +104,8 @@ public:
     {
         CBlockHeader::SetNull();
         vtx.clear();
+        txoutMasternode = CTxOut();
+        voutSuperblock.clear();
         fChecked = false;
     }
 
@@ -119,6 +124,7 @@ public:
     std::string ToString() const;
 };
 
+
 /** Describes a place in the block chain to another node such that if the
  * other node doesn't have the same branch, it can find a recent common trunk.
  * The further back it is, the further before the fork it may be.
@@ -129,7 +135,7 @@ struct CBlockLocator
 
     CBlockLocator() {}
 
-    CBlockLocator(const std::vector<uint256>& vHaveIn)
+    explicit CBlockLocator(const std::vector<uint256>& vHaveIn)
     {
         vHave = vHaveIn;
     }

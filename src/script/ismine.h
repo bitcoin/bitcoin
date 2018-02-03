@@ -6,7 +6,7 @@
 #ifndef BITCOIN_SCRIPT_ISMINE_H
 #define BITCOIN_SCRIPT_ISMINE_H
 
-#include "script/standard.h"
+#include <script/standard.h>
 
 #include <stdint.h>
 

@@ -6,20 +6,19 @@
 #ifndef BITCOIN_COINS_H
 #define BITCOIN_COINS_H
 
-#include "compressor.h"
-#include "core_memusage.h"
-#include "hash.h"
-#include "memusage.h"
-#include "serialize.h"
-#include "uint256.h"
+#include <compressor.h>
+#include <core_memusage.h>
+#include <hash.h>
+#include <memusage.h>
+#include <serialize.h>
+#include <uint256.h>
 
 #include <assert.h>
 #include <stdint.h>
 
-#include <boost/foreach.hpp>
 #include <boost/unordered_map.hpp>
 
-/** 
+/**
  * Pruned version of CTransaction: only retains metadata and unspent transaction outputs
  *
  * Serialized format:
@@ -119,7 +118,7 @@ public:
     }
 
     void ClearUnspendable() {
-        BOOST_FOREACH(CTxOut &txout, vout) {
+        for (CTxOut &txout : vout) {
             if (txout.scriptPubKey.IsUnspendable())
                 txout.SetNull();
         }
@@ -227,7 +226,7 @@ public:
     //! check whether the entire CCoins is spent
     //! note that only !IsPruned() CCoins can be serialized
     bool IsPruned() const {
-        BOOST_FOREACH(const CTxOut &out, vout)
+        for (const CTxOut &out : vout)
             if (!out.IsNull())
                 return false;
         return true;
@@ -235,7 +234,7 @@ public:
 
     size_t DynamicMemoryUsage() const {
         size_t ret = memusage::DynamicUsage(vout);
-        BOOST_FOREACH(const CTxOut &out, vout) {
+        for (const CTxOut &out : vout) {
             ret += RecursiveDynamicUsage(out.scriptPubKey);
         }
         return ret;
@@ -342,10 +341,10 @@ public:
 
 class CCoinsViewCache;
 
-/** 
+/**
  * A reference to a mutable cache entry. Encapsulating it allows us to run
  *  cleanup code after the modification is finished, and keeping track of
- *  concurrent modifications. 
+ *  concurrent modifications.
  */
 class CCoinsModifier
 {
@@ -372,7 +371,7 @@ protected:
 
     /**
      * Make mutable so that we can "fill the cache" even from Get-methods
-     * declared as "const".  
+     * declared as "const".
      */
     mutable uint256 hashBlock;
     mutable CCoinsMap cacheCoins;
@@ -442,7 +441,7 @@ public:
     //! Calculate the size of the cache (in bytes)
     size_t DynamicMemoryUsage() const;
 
-    /** 
+    /**
      * Amount of bitcoins coming in to a transaction
      * Note that lightweight clients may not know anything besides the hash of previous transactions,
      * so may not be able to calculate this.

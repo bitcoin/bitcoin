@@ -1,11 +1,13 @@
 // Copyright (c) 2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2014-2017 The Dash Core developers
+// Copyright (c) 2018 PM-Tech
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "rpc/client.h"
-#include "rpc/protocol.h"
-#include "util.h"
+#include <rpc/client.h>
+#include <rpc/protocol.h>
+#include <util.h>
 
 #include <set>
 #include <stdint.h>
@@ -18,10 +20,9 @@ using namespace std;
 class CRPCConvertParam
 {
 public:
-    std::string methodName; //!< method whose params want conversion
-    int paramIdx;           //!< 0-based idx of param to convert
+    std::string methodName;            //! method whose params want conversion
+    int paramIdx;                      //! 0-based idx of param to convert
 };
-
 static const CRPCConvertParam vRPCConvertParams[] =
 {
     { "stop", 0 },
@@ -34,6 +35,8 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "getnetworkhashps", 1 },
     { "sendtoaddress", 1 },
     { "sendtoaddress", 4 },
+    { "instantsendtoaddress", 1 },
+    { "instantsendtoaddress", 4 },
     { "settxfee", 0 },
     { "getreceivedbyaddress", 1 },
     { "getreceivedbyaccount", 1 },
@@ -52,6 +55,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "waitforblock", 2 },
     { "waitfornewblock", 0 },
     { "waitfornewblock", 1 },
+    { "getsuperblockbudget", 0 },
     { "move", 2 },
     { "move", 3 },
     { "sendfrom", 2 },
@@ -110,6 +114,8 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "setban", 2 },
     { "setban", 3 },
     { "setnetworkactive", 0 },
+    { "voteraw", 1 },
+    { "voteraw", 5 },
     { "getmempoolancestors", 1 },
     { "getmempooldescendants", 1 },
 };
@@ -171,3 +177,4 @@ UniValue RPCConvertValues(const std::string &strMethod, const std::vector<std::s
 
     return params;
 }
+

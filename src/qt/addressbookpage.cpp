@@ -1,45 +1,46 @@
 // Copyright (c) 2011-2015 The Bitcoin Core developers
+// Copyright (c) 2014-2017 The Dash Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
-#include "config/bitcoin-config.h"
+#include "config/chaincoin-config.h"
 #endif
 
-#include "addressbookpage.h"
-#include "ui_addressbookpage.h"
+#include <addressbookpage.h>
+#include <ui_addressbookpage.h>
 
-#include "addresstablemodel.h"
-#include "bitcoingui.h"
-#include "csvmodelwriter.h"
-#include "editaddressdialog.h"
-#include "guiutil.h"
-#include "platformstyle.h"
+#include <addresstablemodel.h>
+#include <bitcoingui.h>
+#include <csvmodelwriter.h>
+#include <editaddressdialog.h>
+#include <guiutil.h>
+#include <platformstyle.h>
 
 #include <QIcon>
 #include <QMenu>
 #include <QMessageBox>
 #include <QSortFilterProxyModel>
 
-AddressBookPage::AddressBookPage(const PlatformStyle *platformStyle, Mode _mode, Tabs _tab, QWidget *parent) :
+AddressBookPage::AddressBookPage(const PlatformStyle *platformStyle, Mode mode, Tabs tab, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::AddressBookPage),
     model(0),
-    mode(_mode),
-    tab(_tab)
+    mode(mode),
+    tab(tab)
 {
+    QString theme = GUIUtil::getThemeName();
     ui->setupUi(this);
-
     if (!platformStyle->getImagesOnButtons()) {
         ui->newAddress->setIcon(QIcon());
         ui->copyAddress->setIcon(QIcon());
         ui->deleteAddress->setIcon(QIcon());
         ui->exportButton->setIcon(QIcon());
     } else {
-        ui->newAddress->setIcon(platformStyle->SingleColorIcon(":/icons/add"));
-        ui->copyAddress->setIcon(platformStyle->SingleColorIcon(":/icons/editcopy"));
-        ui->deleteAddress->setIcon(platformStyle->SingleColorIcon(":/icons/remove"));
-        ui->exportButton->setIcon(platformStyle->SingleColorIcon(":/icons/export"));
+        ui->newAddress->setIcon(QIcon(":/icons/" + theme + "/add"));
+        ui->copyAddress->setIcon(QIcon(":/icons/" + theme + "/editcopy"));
+        ui->deleteAddress->setIcon(QIcon(":/icons/" + theme + "/remove"));
+        ui->exportButton->setIcon(QIcon(":/icons/" + theme + "/export"));
     }
 
     switch(mode)
@@ -67,11 +68,11 @@ AddressBookPage::AddressBookPage(const PlatformStyle *platformStyle, Mode _mode,
     switch(tab)
     {
     case SendingTab:
-        ui->labelExplanation->setText(tr("These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins."));
+        ui->labelExplanation->setText(tr("These are your Chaincoin addresses for sending payments. Always check the amount and the receiving address before sending coins."));
         ui->deleteAddress->setVisible(true);
         break;
     case ReceivingTab:
-        ui->labelExplanation->setText(tr("These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction."));
+        ui->labelExplanation->setText(tr("These are your Chaincoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction."));
         ui->deleteAddress->setVisible(false);
         break;
     }
@@ -107,14 +108,14 @@ AddressBookPage::~AddressBookPage()
     delete ui;
 }
 
-void AddressBookPage::setModel(AddressTableModel *_model)
+void AddressBookPage::setModel(AddressTableModel *model)
 {
-    this->model = _model;
-    if(!_model)
+    this->model = model;
+    if(!model)
         return;
 
     proxyModel = new QSortFilterProxyModel(this);
-    proxyModel->setSourceModel(_model);
+    proxyModel->setSourceModel(model);
     proxyModel->setDynamicSortFilter(true);
     proxyModel->setSortCaseSensitivity(Qt::CaseInsensitive);
     proxyModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
@@ -147,7 +148,7 @@ void AddressBookPage::setModel(AddressTableModel *_model)
         this, SLOT(selectionChanged()));
 
     // Select row for newly created address
-    connect(_model, SIGNAL(rowsInserted(QModelIndex,int,int)), this, SLOT(selectNewAddress(QModelIndex,int,int)));
+    connect(model, SIGNAL(rowsInserted(QModelIndex,int,int)), this, SLOT(selectNewAddress(QModelIndex,int,int)));
 
     selectionChanged();
 }
@@ -254,7 +255,7 @@ void AddressBookPage::done(int retval)
     // Figure out which address was selected, and return it
     QModelIndexList indexes = table->selectionModel()->selectedRows(AddressTableModel::Address);
 
-    Q_FOREACH (const QModelIndex& index, indexes) {
+    for (const QModelIndex& index : indexes) {
         QVariant address = table->model()->data(index);
         returnValue = address.toString();
     }
@@ -273,7 +274,7 @@ void AddressBookPage::on_exportButton_clicked()
     // CSV is currently the only supported format
     QString filename = GUIUtil::getSaveFileName(this,
         tr("Export Address List"), QString(),
-        tr("Comma separated file (*.csv)"), NULL);
+        tr("Comma separated file (*.csv)"), nullptr);
 
     if (filename.isNull())
         return;

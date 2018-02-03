@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "trafficgraphwidget.h"
-#include "clientmodel.h"
+#include <trafficgraphwidget.h>
+#include <clientmodel.h>
 
 #include <QPainter>
 #include <QColor>
@@ -78,7 +78,7 @@ void TrafficGraphWidget::paintEvent(QPaintEvent *)
 
     const QString units     = tr("KB/s");
     const float yMarginText = 2.0;
-    
+
     // draw lines
     painter.setPen(axisCol);
     painter.drawText(XMARGIN, YMARGIN + h - h * val / fMax-yMarginText, QString("%1 %2").arg(val).arg(units));
@@ -139,10 +139,10 @@ void TrafficGraphWidget::updateRates()
     }
 
     float tmax = 0.0f;
-    Q_FOREACH(float f, vSamplesIn) {
+    for (float f : vSamplesIn) {
         if(f > tmax) tmax = f;
     }
-    Q_FOREACH(float f, vSamplesOut) {
+    for (float f : vSamplesOut) {
         if(f > tmax) tmax = f;
     }
     fMax = tmax;

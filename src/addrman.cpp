@@ -3,11 +3,11 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "addrman.h"
+#include <addrman.h>
 
-#include "hash.h"
-#include "serialize.h"
-#include "streams.h"
+#include <hash.h>
+#include <serialize.h>
+#include <streams.h>
 
 int CAddrInfo::GetTriedBucket(const uint256& nKey) const
 {
@@ -76,13 +76,13 @@ CAddrInfo* CAddrMan::Find(const CNetAddr& addr, int* pnId)
 {
     std::map<CNetAddr, int>::iterator it = mapAddr.find(addr);
     if (it == mapAddr.end())
-        return NULL;
+        return nullptr;
     if (pnId)
         *pnId = (*it).second;
     std::map<int, CAddrInfo>::iterator it2 = mapInfo.find((*it).second);
     if (it2 != mapInfo.end())
         return &(*it2).second;
-    return NULL;
+    return nullptr;
 }
 
 CAddrInfo* CAddrMan::Create(const CAddress& addr, const CNetAddr& addrSource, int* pnId)
@@ -255,11 +255,6 @@ bool CAddrMan::Add_(const CAddress& addr, const CNetAddr& source, int64_t nTimeP
     int nId;
     CAddrInfo* pinfo = Find(addr, &nId);
 
-    // Do not set a penality for a source's self-announcement
-    if (addr == source) {
-        nTimePenalty = 0;
-    }
-
     if (pinfo) {
         // periodically update nTime
         bool fCurrentlyOnline = (GetAdjustedTime() - addr.nTime < 24 * 60 * 60);
@@ -358,8 +353,8 @@ CAddrInfo CAddrMan::Select_(bool newOnly)
             int nKBucket = RandomInt(ADDRMAN_TRIED_BUCKET_COUNT);
             int nKBucketPos = RandomInt(ADDRMAN_BUCKET_SIZE);
             while (vvTried[nKBucket][nKBucketPos] == -1) {
-                nKBucket = (nKBucket + insecure_rand.rand32()) % ADDRMAN_TRIED_BUCKET_COUNT;
-                nKBucketPos = (nKBucketPos + insecure_rand.rand32()) % ADDRMAN_BUCKET_SIZE;
+                nKBucket = (nKBucket + insecure_rand()) % ADDRMAN_TRIED_BUCKET_COUNT;
+                nKBucketPos = (nKBucketPos + insecure_rand()) % ADDRMAN_BUCKET_SIZE;
             }
             int nId = vvTried[nKBucket][nKBucketPos];
             assert(mapInfo.count(nId) == 1);
@@ -375,8 +370,8 @@ CAddrInfo CAddrMan::Select_(bool newOnly)
             int nUBucket = RandomInt(ADDRMAN_NEW_BUCKET_COUNT);
             int nUBucketPos = RandomInt(ADDRMAN_BUCKET_SIZE);
             while (vvNew[nUBucket][nUBucketPos] == -1) {
-                nUBucket = (nUBucket + insecure_rand.rand32()) % ADDRMAN_NEW_BUCKET_COUNT;
-                nUBucketPos = (nUBucketPos + insecure_rand.rand32()) % ADDRMAN_BUCKET_SIZE;
+                nUBucket = (nUBucket + insecure_rand()) % ADDRMAN_NEW_BUCKET_COUNT;
+                nUBucketPos = (nUBucketPos + insecure_rand()) % ADDRMAN_BUCKET_SIZE;
             }
             int nId = vvNew[nUBucket][nUBucketPos];
             assert(mapInfo.count(nId) == 1);

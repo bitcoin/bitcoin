@@ -5,7 +5,7 @@
 #include "random.h"
 #include "scheduler.h"
 
-#include "test/test_bitcoin.h"
+#include "test/test_chaincoin.h"
 
 #include <boost/bind.hpp>
 #include <boost/random/mersenne_twister.hpp>
@@ -42,6 +42,8 @@ static void MicroSleep(uint64_t n)
 
 BOOST_AUTO_TEST_CASE(manythreads)
 {
+    seed_insecure_rand(false);
+
     // Stress test: hundreds of microsecond-scheduled tasks,
     // serviced by 10 threads.
     //
@@ -56,7 +58,7 @@ BOOST_AUTO_TEST_CASE(manythreads)
 
     boost::mutex counterMutex[10];
     int counter[10] = { 0 };
-    boost::random::mt19937 rng(42);
+    boost::random::mt19937 rng(insecure_rand());
     boost::random::uniform_int_distribution<> zeroToNine(0, 9);
     boost::random::uniform_int_distribution<> randomMsec(-11, 1000);
     boost::random::uniform_int_distribution<> randomDelta(-1000, 1000);

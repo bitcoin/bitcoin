@@ -1,11 +1,11 @@
 ---
-name: "bitcoin-win-0.13"
+name: "chaincoin-win-0.12"
 enable_cache: true
 suites:
 - "trusty"
 architectures:
 - "amd64"
-packages:
+packages: 
 - "curl"
 - "g++"
 - "git-core"
@@ -21,13 +21,14 @@ packages:
 - "zip"
 - "ca-certificates"
 - "python"
+reference_datetime: "2017-01-01 00:00:00"
 remotes:
-- "url": "https://github.com/bitcoin/bitcoin.git"
-  "dir": "bitcoin"
+- "url": "https://github.com/chaincoinpay/chaincoin.git"
+  "dir": "chaincoin"
 files: []
 script: |
   WRAP_DIR=$HOME/wrapped
-  HOSTS="i686-w64-mingw32 x86_64-w64-mingw32"
+  HOSTS="x86_64-w64-mingw32 i686-w64-mingw32"
   CONFIGFLAGS="--enable-reduce-exports --disable-bench --disable-gui-tests"
   FAKETIME_HOST_PROGS="g++ ar ranlib nm windres strip objcopy"
   FAKETIME_PROGS="date makensis zip"
@@ -46,31 +47,29 @@ script: |
     mkdir -p ${BASE_CACHE} ${SOURCES_PATH}
   fi
 
-  function create_global_faketime_wrappers {
+  # Create global faketime wrappers
   for prog in ${FAKETIME_PROGS}; do
     echo '#!/bin/bash' > ${WRAP_DIR}/${prog}
     echo "REAL=\`which -a ${prog} | grep -v ${WRAP_DIR}/${prog} | head -1\`" >> ${WRAP_DIR}/${prog}
     echo 'export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1' >> ${WRAP_DIR}/${prog}
-    echo "export FAKETIME=\"$1\"" >> ${WRAP_DIR}/${prog}
+    echo "export FAKETIME=\"${REFERENCE_DATETIME}\"" >> ${WRAP_DIR}/${prog}
     echo "\$REAL \$@" >> $WRAP_DIR/${prog}
     chmod +x ${WRAP_DIR}/${prog}
   done
-  }
 
-  function create_per-host_faketime_wrappers {
+  # Create per-host faketime wrappers
   for i in $HOSTS; do
     for prog in ${FAKETIME_HOST_PROGS}; do
         echo '#!/bin/bash' > ${WRAP_DIR}/${i}-${prog}
         echo "REAL=\`which -a ${i}-${prog} | grep -v ${WRAP_DIR}/${i}-${prog} | head -1\`" >> ${WRAP_DIR}/${i}-${prog}
         echo 'export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1' >> ${WRAP_DIR}/${i}-${prog}
-        echo "export FAKETIME=\"$1\"" >> ${WRAP_DIR}/${i}-${prog}
+        echo "export FAKETIME=\"${REFERENCE_DATETIME}\"" >> ${WRAP_DIR}/${i}-${prog}
         echo "\$REAL \$@" >> $WRAP_DIR/${i}-${prog}
         chmod +x ${WRAP_DIR}/${i}-${prog}
     done
   done
-  }
 
-  function create_per-host_linker_wrapper {
+  # Create per-host linker wrapper
   # This is only needed for trusty, as the mingw linker leaks a few bytes of
   # heap, causing non-determinism. See discussion in https://github.com/bitcoin/bitcoin/pull/6900
   for i in $HOSTS; do
@@ -86,47 +85,34 @@ script: |
         echo '#!/bin/bash' > ${WRAP_DIR}/${i}-${prog}
         echo "REAL=\`which -a ${i}-${prog} | grep -v ${WRAP_DIR}/${i}-${prog} | head -1\`" >> ${WRAP_DIR}/${i}-${prog}
         echo 'export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1' >> ${WRAP_DIR}/${i}-${prog}
-        echo "export FAKETIME=\"$1\"" >> ${WRAP_DIR}/${i}-${prog}
+        echo "export FAKETIME=\"${REFERENCE_DATETIME}\"" >> ${WRAP_DIR}/${i}-${prog}
         echo "export COMPILER_PATH=${WRAP_DIR}/${i}" >> ${WRAP_DIR}/${i}-${prog}
         echo "\$REAL \$@" >> $WRAP_DIR/${i}-${prog}
         chmod +x ${WRAP_DIR}/${i}-${prog}
     done
   done
-  }
 
-  # Faketime for depends so intermediate results are comparable
-  export PATH_orig=${PATH}
-  create_global_faketime_wrappers "2000-01-01 12:00:00"
-  create_per-host_faketime_wrappers "2000-01-01 12:00:00"
-  create_per-host_linker_wrapper "2000-01-01 12:00:00"
   export PATH=${WRAP_DIR}:${PATH}
 
-  cd bitcoin
+  cd chaincoin
   BASEPREFIX=`pwd`/depends
   # Build dependencies for each host
   for i in $HOSTS; do
     make ${MAKEOPTS} -C ${BASEPREFIX} HOST="${i}"
   done
 
-  # Faketime for binaries
-  export PATH=${PATH_orig}
-  create_global_faketime_wrappers "${REFERENCE_DATETIME}"
-  create_per-host_faketime_wrappers "${REFERENCE_DATETIME}"
-  create_per-host_linker_wrapper "${REFERENCE_DATETIME}"
-  export PATH=${WRAP_DIR}:${PATH}
-
   # Create the release tarball using (arbitrarily) the first host
   ./autogen.sh
   CONFIG_SITE=${BASEPREFIX}/`echo "${HOSTS}" | awk '{print $1;}'`/share/config.site ./configure --prefix=/
   make dist
-  SOURCEDIST=`echo bitcoin-*.tar.gz`
+  SOURCEDIST=`echo chaincoincore-*.tar.gz`
   DISTNAME=`echo ${SOURCEDIST} | sed 's/.tar.*//'`
 
   # Correct tar file order
   mkdir -p temp
   pushd temp
   tar xf ../$SOURCEDIST
-  find bitcoin-* | sort | tar --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > ../$SOURCEDIST
+  find chaincoincore-* | sort | tar --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > ../$SOURCEDIST
   mkdir -p $OUTDIR/src
   cp ../$SOURCEDIST $OUTDIR/src
   popd
@@ -146,7 +132,7 @@ script: |
     make ${MAKEOPTS} -C src check-security
     make deploy
     make install DESTDIR=${INSTALLPATH}
-    cp -f bitcoin-*setup*.exe $OUTDIR/
+    cp -f chaincoincore-*setup*.exe $OUTDIR/
     cd installed
     mv ${DISTNAME}/bin/*.dll ${DISTNAME}/lib/
     find . -name "lib*.la" -delete

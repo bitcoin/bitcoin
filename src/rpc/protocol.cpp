@@ -3,14 +3,14 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "rpc/protocol.h"
+#include <rpc/protocol.h>
 
-#include "random.h"
-#include "tinyformat.h"
-#include "util.h"
-#include "utilstrencodings.h"
-#include "utiltime.h"
-#include "version.h"
+#include <random.h>
+#include <tinyformat.h>
+#include <util.h>
+#include <utilstrencodings.h>
+#include <utiltime.h>
+#include <version.h>
 
 #include <stdint.h>
 #include <fstream>
@@ -26,13 +26,13 @@ using namespace std;
  * 1.2 spec: http://jsonrpc.org/historical/json-rpc-over-http.html
  */
 
-UniValue JSONRPCRequestObj(const string& strMethod, const UniValue& params, const UniValue& id)
+string JSONRPCRequest(const string& strMethod, const UniValue& params, const UniValue& id)
 {
     UniValue request(UniValue::VOBJ);
     request.push_back(Pair("method", strMethod));
     request.push_back(Pair("params", params));
     request.push_back(Pair("id", id));
-    return request;
+    return request.write() + "\n";
 }
 
 UniValue JSONRPCReplyObj(const UniValue& result, const UniValue& error, const UniValue& id)

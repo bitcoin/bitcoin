@@ -3,10 +3,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "noui.h"
+#include <noui.h>
 
-#include "ui_interface.h"
-#include "util.h"
+#include <ui_interface.h>
+#include <util.h>
 
 #include <cstdio>
 #include <stdint.h>
@@ -51,7 +51,7 @@ static void noui_InitMessage(const std::string& message)
 
 void noui_connect()
 {
-    // Connect bitcoind signal handlers
+    // Connect chaincoind signal handlers
     uiInterface.ThreadSafeMessageBox.connect(noui_ThreadSafeMessageBox);
     uiInterface.ThreadSafeQuestion.connect(noui_ThreadSafeQuestion);
     uiInterface.InitMessage.connect(noui_InitMessage);

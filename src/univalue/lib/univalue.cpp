@@ -31,7 +31,7 @@ bool ParseInt32(const std::string& str, int32_t *out)
 {
     if (!ParsePrechecks(str))
         return false;
-    char *endp = NULL;
+    char *endp = nullptr;
     errno = 0; // strtol will not set errno if valid
     long int n = strtol(str.c_str(), &endp, 10);
     if(out) *out = (int32_t)n;
@@ -47,7 +47,7 @@ bool ParseInt64(const std::string& str, int64_t *out)
 {
     if (!ParsePrechecks(str))
         return false;
-    char *endp = NULL;
+    char *endp = nullptr;
     errno = 0; // strtoll will not set errno if valid
     long long int n = strtoll(str.c_str(), &endp, 10);
     if(out) *out = (int64_t)n;
@@ -119,29 +119,32 @@ bool UniValue::setNumStr(const string& val_)
     return true;
 }
 
-bool UniValue::setInt(uint64_t val_)
+bool UniValue::setInt(uint64_t val)
 {
+    string s;
     ostringstream oss;
 
-    oss << val_;
+    oss << val;
 
     return setNumStr(oss.str());
 }
 
-bool UniValue::setInt(int64_t val_)
+bool UniValue::setInt(int64_t val)
 {
+    string s;
     ostringstream oss;
 
-    oss << val_;
+    oss << val;
 
     return setNumStr(oss.str());
 }
 
-bool UniValue::setFloat(double val_)
+bool UniValue::setFloat(double val)
 {
+    string s;
     ostringstream oss;
 
-    oss << std::setprecision(16) << val_;
+    oss << std::setprecision(16) << val;
 
     bool ret = setNumStr(oss.str());
     typ = VNUM;
@@ -170,12 +173,12 @@ bool UniValue::setObject()
     return true;
 }
 
-bool UniValue::push_back(const UniValue& val_)
+bool UniValue::push_back(const UniValue& val)
 {
     if (typ != VARR)
         return false;
 
-    values.push_back(val_);
+    values.push_back(val);
     return true;
 }
 
@@ -189,13 +192,13 @@ bool UniValue::push_backV(const std::vector<UniValue>& vec)
     return true;
 }
 
-bool UniValue::pushKV(const std::string& key, const UniValue& val_)
+bool UniValue::pushKV(const std::string& key, const UniValue& val)
 {
     if (typ != VOBJ)
         return false;
 
     keys.push_back(key);
-    values.push_back(val_);
+    values.push_back(val);
     return true;
 }
 
@@ -225,7 +228,7 @@ int UniValue::findKey(const std::string& key) const
 bool UniValue::checkObject(const std::map<std::string,UniValue::VType>& t)
 {
     for (std::map<std::string,UniValue::VType>::const_iterator it = t.begin();
-         it != t.end(); ++it) {
+         it != t.end(); it++) {
         int idx = findKey(it->first);
         if (idx < 0)
             return false;
@@ -271,7 +274,7 @@ const char *uvTypeName(UniValue::VType t)
     }
 
     // not reached
-    return NULL;
+    return nullptr;
 }
 
 const UniValue& find_value(const UniValue& obj, const std::string& name)
@@ -283,14 +286,14 @@ const UniValue& find_value(const UniValue& obj, const std::string& name)
     return NullUniValue;
 }
 
-const std::vector<std::string>& UniValue::getKeys() const
+std::vector<std::string> UniValue::getKeys() const
 {
     if (typ != VOBJ)
         throw std::runtime_error("JSON value is not an object as expected");
     return keys;
 }
 
-const std::vector<UniValue>& UniValue::getValues() const
+std::vector<UniValue> UniValue::getValues() const
 {
     if (typ != VOBJ && typ != VARR)
         throw std::runtime_error("JSON value is not an object or array as expected");
@@ -304,7 +307,7 @@ bool UniValue::get_bool() const
     return getBool();
 }
 
-const std::string& UniValue::get_str() const
+std::string UniValue::get_str() const
 {
     if (typ != VSTR)
         throw std::runtime_error("JSON value is not a string as expected");

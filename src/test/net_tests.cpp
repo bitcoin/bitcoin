@@ -2,7 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #include "addrman.h"
-#include "test/test_bitcoin.h"
+#include "test/test_chaincoin.h"
 #include <string>
 #include <boost/test/unit_test.hpp>
 #include "hash.h"
@@ -23,7 +23,7 @@ public:
     void MakeDeterministic()
     {
         nKey.SetNull();
-        insecure_rand = FastRandomContext(true);
+        seed_insecure_rand(true);
     }
 };
 
@@ -62,11 +62,11 @@ public:
     }
 };
 
-CDataStream AddrmanToStream(CAddrManSerializationMock& _addrman)
+CDataStream AddrmanToStream(CAddrManSerializationMock& addrman)
 {
     CDataStream ssPeersIn(SER_DISK, CLIENT_VERSION);
     ssPeersIn << FLATDATA(Params().MessageStart());
-    ssPeersIn << _addrman;
+    ssPeersIn << addrman;
     std::string str = ssPeersIn.str();
     vector<unsigned char> vchData(str.begin(), str.end());
     return CDataStream(vchData, SER_DISK, CLIENT_VERSION);
@@ -81,8 +81,8 @@ BOOST_AUTO_TEST_CASE(caddrdb_read)
 
     CService addr1, addr2, addr3;
     Lookup("250.7.1.1", addr1, 8333, false);
-    Lookup("250.7.2.2", addr2, 9999, false);
-    Lookup("250.7.3.3", addr3, 9999, false);
+    Lookup("250.7.2.2", addr2, 11994, false);
+    Lookup("250.7.3.3", addr3, 11994, false);
 
     // Add three addresses to new table.
     CService source;
@@ -136,7 +136,7 @@ BOOST_AUTO_TEST_CASE(caddrdb_read_corrupted)
     } catch (const std::exception& e) {
         exceptionThrown = true;
     }
-    // Even through de-serialization failed addrman is not left in a clean state.
+    // Even through de-serialization failed adddrman is not left in a clean state.
     BOOST_CHECK(addrman1.size() == 1);
     BOOST_CHECK(exceptionThrown);
 
@@ -164,12 +164,12 @@ BOOST_AUTO_TEST_CASE(cnode_simple_test)
     bool fInboundIn = false;
 
     // Test that fFeeler is false by default.
-    CNode* pnode1 = new CNode(id++, NODE_NETWORK, height, hSocket, addr, 0, 0, pszDest, fInboundIn);
+    CNode* pnode1 = new CNode(id++, NODE_NETWORK, height, hSocket, addr, pszDest, fInboundIn);
     BOOST_CHECK(pnode1->fInbound == false);
     BOOST_CHECK(pnode1->fFeeler == false);
 
     fInboundIn = true;
-    CNode* pnode2 = new CNode(id++, NODE_NETWORK, height, hSocket, addr, 1, 1, pszDest, fInboundIn);
+    CNode* pnode2 = new CNode(id++, NODE_NETWORK, height, hSocket, addr, pszDest, fInboundIn);
     BOOST_CHECK(pnode2->fInbound == true);
     BOOST_CHECK(pnode2->fFeeler == false);
 }

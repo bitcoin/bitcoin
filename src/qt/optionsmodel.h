@@ -5,7 +5,7 @@
 #ifndef BITCOIN_QT_OPTIONSMODEL_H
 #define BITCOIN_QT_OPTIONSMODEL_H
 
-#include "amount.h"
+#include <amount.h>
 
 #include <QAbstractListModel>
 
@@ -40,11 +40,19 @@ public:
         ProxyPortTor,           // int
         DisplayUnit,            // BitcoinUnits::Unit
         ThirdPartyTxUrls,       // QString
+        Digits,                 // QString
+        Theme,                  // QString
         Language,               // QString
         CoinControlFeatures,    // bool
         ThreadsScriptVerif,     // int
         DatabaseCache,          // int
         SpendZeroConfChange,    // bool
+        ShowMasternodesTab,     // bool
+        ShowAdvancedPSUI,       // bool
+        LowKeysWarning,         // bool
+        PrivateSendRounds,      // int
+        PrivateSendAmount,      // int
+        PrivateSendMultiSession,// bool
         Listen,                 // bool
         OptionIDRowCount,
     };
@@ -59,18 +67,20 @@ public:
     void setDisplayUnit(const QVariant &value);
 
     /* Explicit getters */
-    bool getHideTrayIcon() { return fHideTrayIcon; }
-    bool getMinimizeToTray() { return fMinimizeToTray; }
-    bool getMinimizeOnClose() { return fMinimizeOnClose; }
-    int getDisplayUnit() { return nDisplayUnit; }
-    QString getThirdPartyTxUrls() { return strThirdPartyTxUrls; }
+    bool getHideTrayIcon() const { return fHideTrayIcon; }
+    bool getMinimizeToTray() const { return fMinimizeToTray; }
+    bool getMinimizeOnClose() const { return fMinimizeOnClose; }
+    int getDisplayUnit() const { return nDisplayUnit; }
+    QString getThirdPartyTxUrls() const { return strThirdPartyTxUrls; }
     bool getProxySettings(QNetworkProxy& proxy) const;
-    bool getCoinControlFeatures() { return fCoinControlFeatures; }
+    bool getCoinControlFeatures() const { return fCoinControlFeatures; }
+    bool getShowAdvancedPSUI() { return fShowAdvancedPSUI; }
     const QString& getOverriddenByCommandLine() { return strOverriddenByCommandLine; }
 
     /* Restart flag helper */
     void setRestartRequired(bool fRequired);
-    bool isRestartRequired();
+    bool isRestartRequired() const;
+    bool resetSettings;
 
 private:
     /* Qt-only settings */
@@ -81,7 +91,8 @@ private:
     int nDisplayUnit;
     QString strThirdPartyTxUrls;
     bool fCoinControlFeatures;
-    /* settings that were overridden by command-line */
+    bool fShowAdvancedPSUI;
+    /* settings that were overriden by command-line */
     QString strOverriddenByCommandLine;
 
     // Add option to list of GUI options overridden through command line/config file
@@ -91,6 +102,9 @@ private:
     void checkAndMigrate();
 Q_SIGNALS:
     void displayUnitChanged(int unit);
+    void privateSendRoundsChanged();
+    void privateSentAmountChanged();
+    void advancedPSUIChanged(bool);
     void coinControlFeaturesChanged(bool);
     void hideTrayIconChanged(bool);
 };

@@ -1,17 +1,16 @@
-// Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2009-2014 The Bitcoin developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "checkpoints.h"
+#include <checkpoints.h>
 
-#include "chain.h"
-#include "chainparams.h"
-#include "validation.h"
-#include "uint256.h"
+#include <chain.h>
+#include <chainparams.h>
+#include <reverse_iterator.h>
+#include <validation.h>
+#include <uint256.h>
 
 #include <stdint.h>
-
-#include <boost/foreach.hpp>
 
 namespace Checkpoints {
 
@@ -27,10 +26,10 @@ namespace Checkpoints {
 
     //! Guess how far we are in the verification process at the given block index
     double GuessVerificationProgress(const CCheckpointData& data, CBlockIndex *pindex, bool fSigchecks) {
-        if (pindex==NULL)
+        if (pindex==nullptr)
             return 0.0;
 
-        int64_t nNow = time(NULL);
+        int64_t nNow = time(nullptr);
 
         double fSigcheckVerificationFactor = fSigchecks ? SIGCHECK_VERIFICATION_FACTOR : 1.0;
         double fWorkBefore = 0.0; // Amount of work done before pindex
@@ -59,14 +58,14 @@ namespace Checkpoints {
     {
         const MapCheckpoints& checkpoints = data.mapCheckpoints;
 
-        BOOST_REVERSE_FOREACH(const MapCheckpoints::value_type& i, checkpoints)
+        for (const MapCheckpoints::value_type& i : reverse_iterate(checkpoints))
         {
             const uint256& hash = i.second;
             BlockMap::const_iterator t = mapBlockIndex.find(hash);
             if (t != mapBlockIndex.end())
                 return t->second;
         }
-        return NULL;
+        return nullptr;
     }
 
 } // namespace Checkpoints

@@ -1,21 +1,24 @@
 // Copyright (c) 2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2014-2017 The Dash Core developers
+// Copyright (c) 2018 PM-Tech
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "base58.h"
-#include "clientversion.h"
-#include "init.h"
-#include "validation.h"
-#include "net.h"
-#include "netbase.h"
-#include "rpc/server.h"
-#include "timedata.h"
-#include "util.h"
-#include "utilstrencodings.h"
+#include <base58.h>
+#include <clientversion.h>
+#include <init.h>
+#include <net.h>
+#include <netbase.h>
+#include <rpc/server.h>
+#include <timedata.h>
+#include <util.h>
+#include <utilstrencodings.h>
+#include <validation.h>
 #ifdef ENABLE_WALLET
-#include "wallet/wallet.h"
-#include "wallet/walletdb.h"
+#include <masternode-sync.h>
+#include <wallet/wallet.h>
+#include <wallet/walletdb.h>
 #endif
 
 #include <stdint.h>
@@ -44,20 +47,21 @@ UniValue getinfo(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() != 0)
         throw runtime_error(
             "getinfo\n"
-            "\nDEPRECATED. Returns an object containing various state info.\n"
+            "Returns an object containing various state info.\n"
             "\nResult:\n"
             "{\n"
             "  \"version\": xxxxx,           (numeric) the server version\n"
             "  \"protocolversion\": xxxxx,   (numeric) the protocol version\n"
             "  \"walletversion\": xxxxx,     (numeric) the wallet version\n"
-            "  \"balance\": xxxxxxx,         (numeric) the total bitcoin balance of the wallet\n"
+            "  \"balance\": xxxxxxx,         (numeric) the total chaincoin balance of the wallet\n"
+            "  \"privatesend_balance\": xxxxxx, (numeric) the anonymized chaincoin balance of the wallet\n"
             "  \"blocks\": xxxxxx,           (numeric) the current number of blocks processed in the server\n"
             "  \"timeoffset\": xxxxx,        (numeric) the time offset\n"
             "  \"connections\": xxxxx,       (numeric) the number of connections\n"
             "  \"proxy\": \"host:port\",     (string, optional) the proxy used by the server\n"
             "  \"difficulty\": xxxxxx,       (numeric) the current difficulty\n"
             "  \"testnet\": true|false,      (boolean) if the server is using testnet or not\n"
-            "  \"keypoololdest\": xxxxxx,    (numeric) the timestamp (seconds since Unix epoch) of the oldest pre-generated key in the key pool\n"
+            "  \"keypoololdest\": xxxxxx,    (numeric) the timestamp (seconds since GMT epoch) of the oldest pre-generated key in the key pool\n"
             "  \"keypoolsize\": xxxx,        (numeric) how many new keys are pre-generated\n"
             "  \"unlocked_until\": ttt,      (numeric) the timestamp in seconds since epoch (midnight Jan 1 1970 GMT) that the wallet is unlocked for transfers, or 0 if the wallet is locked\n"
             "  \"paytxfee\": x.xxxx,         (numeric) the transaction fee set in " + CURRENCY_UNIT + "/kB\n"
@@ -70,7 +74,7 @@ UniValue getinfo(const JSONRPCRequest& request)
         );
 
 #ifdef ENABLE_WALLET
-    LOCK2(cs_main, pwalletMain ? &pwalletMain->cs_wallet : NULL);
+    LOCK2(cs_main, pwalletMain ? &pwalletMain->cs_wallet : nullptr);
 #else
     LOCK(cs_main);
 #endif
@@ -85,6 +89,8 @@ UniValue getinfo(const JSONRPCRequest& request)
     if (pwalletMain) {
         obj.push_back(Pair("walletversion", pwalletMain->GetVersion()));
         obj.push_back(Pair("balance",       ValueFromAmount(pwalletMain->GetBalance())));
+        if(!fLiteMode)
+            obj.push_back(Pair("privatesend_balance",       ValueFromAmount(pwalletMain->GetAnonymizedBalance())));
     }
 #endif
     obj.push_back(Pair("blocks",        (int)chainActive.Height()));
@@ -93,7 +99,7 @@ UniValue getinfo(const JSONRPCRequest& request)
         obj.push_back(Pair("connections",   (int)g_connman->GetNodeCount(CConnman::CONNECTIONS_ALL)));
     obj.push_back(Pair("proxy",         (proxy.IsValid() ? proxy.proxy.ToStringIPPort() : string())));
     obj.push_back(Pair("difficulty",    (double)GetDifficulty()));
-    obj.push_back(Pair("testnet",       Params().NetworkIDString() == CBaseChainParams::TESTNET));
+    obj.push_back(Pair("testnet",       Params().TestnetToBeDeprecatedFieldRPC()));
 #ifdef ENABLE_WALLET
     if (pwalletMain) {
         obj.push_back(Pair("keypoololdest", pwalletMain->GetOldestKeyPoolTime()));
@@ -106,6 +112,45 @@ UniValue getinfo(const JSONRPCRequest& request)
     obj.push_back(Pair("relayfee",      ValueFromAmount(::minRelayTxFee.GetFeePerK())));
     obj.push_back(Pair("errors",        GetWarnings("statusbar")));
     return obj;
+}
+
+UniValue mnsync(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() != 1)
+        throw runtime_error(
+            "mnsync [status|next|reset]\n"
+            "Returns the sync status, updates to the next step or resets it entirely.\n"
+        );
+
+    std::string strMode = request.params[0].get_str();
+
+    if(strMode == "status") {
+        UniValue objStatus(UniValue::VOBJ);
+        objStatus.push_back(Pair("AssetID", masternodeSync.GetAssetID()));
+        objStatus.push_back(Pair("AssetName", masternodeSync.GetAssetName()));
+        objStatus.push_back(Pair("AssetStartTime", masternodeSync.GetAssetStartTime()));
+        objStatus.push_back(Pair("Attempt", masternodeSync.GetAttempt()));
+        objStatus.push_back(Pair("IsBlockchainSynced", masternodeSync.IsBlockchainSynced()));
+        objStatus.push_back(Pair("IsMasternodeListSynced", masternodeSync.IsMasternodeListSynced()));
+        objStatus.push_back(Pair("IsWinnersListSynced", masternodeSync.IsWinnersListSynced()));
+        objStatus.push_back(Pair("IsSynced", masternodeSync.IsSynced()));
+        objStatus.push_back(Pair("IsFailed", masternodeSync.IsFailed()));
+        return objStatus;
+    }
+
+    if(strMode == "next")
+    {
+        masternodeSync.SwitchToNextAsset(*g_connman);
+        return "sync updated to " + masternodeSync.GetAssetName();
+    }
+
+    if(strMode == "reset")
+    {
+        masternodeSync.Reset();
+        masternodeSync.SwitchToNextAsset(*g_connman);
+        return "success";
+    }
+    return "failure";
 }
 
 #ifdef ENABLE_WALLET
@@ -137,7 +182,7 @@ public:
             obj.push_back(Pair("script", GetTxnOutputType(whichType)));
             obj.push_back(Pair("hex", HexStr(subscript.begin(), subscript.end())));
             UniValue a(UniValue::VARR);
-            BOOST_FOREACH(const CTxDestination& addr, addresses)
+            for (const CTxDestination& addr : addresses)
                 a.push_back(CBitcoinAddress(addr).ToString());
             obj.push_back(Pair("addresses", a));
             if (whichType == TX_MULTISIG)
@@ -152,14 +197,14 @@ UniValue validateaddress(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
         throw runtime_error(
-            "validateaddress \"bitcoinaddress\"\n"
-            "\nReturn information about the given bitcoin address.\n"
+            "validateaddress \"chaincoinaddress\"\n"
+            "\nReturn information about the given chaincoin address.\n"
             "\nArguments:\n"
-            "1. \"bitcoinaddress\"     (string, required) The bitcoin address to validate\n"
+            "1. \"chaincoinaddress\"     (string, required) The chaincoin address to validate\n"
             "\nResult:\n"
             "{\n"
             "  \"isvalid\" : true|false,       (boolean) If the address is valid or not. If not, this is the only property returned.\n"
-            "  \"address\" : \"bitcoinaddress\", (string) The bitcoin address validated\n"
+            "  \"address\" : \"chaincoinaddress\", (string) The chaincoin address validated\n"
             "  \"scriptPubKey\" : \"hex\",       (string) The hex encoded scriptPubKey generated by the address\n"
             "  \"ismine\" : true|false,        (boolean) If the address is yours or not\n"
             "  \"iswatchonly\" : true|false,   (boolean) If the address is watchonly\n"
@@ -168,15 +213,15 @@ UniValue validateaddress(const JSONRPCRequest& request)
             "  \"iscompressed\" : true|false,  (boolean) If the address is compressed\n"
             "  \"account\" : \"account\"         (string) DEPRECATED. The account associated with the address, \"\" is the default account\n"
             "  \"hdkeypath\" : \"keypath\"       (string, optional) The HD keypath if the key is HD and available\n"
-            "  \"hdmasterkeyid\" : \"<hash160>\" (string, optional) The Hash160 of the HD master pubkey\n"
+            "  \"hdchainid\" : \"<hash>\"        (string, optional) The ID of the HD chain\n"
             "}\n"
             "\nExamples:\n"
-            + HelpExampleCli("validateaddress", "\"1PSSGeFHDnKNxiEyFrD1wcEaHr9hrQDDWc\"")
-            + HelpExampleRpc("validateaddress", "\"1PSSGeFHDnKNxiEyFrD1wcEaHr9hrQDDWc\"")
+            + HelpExampleCli("validateaddress", "\"CwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg\"")
+            + HelpExampleRpc("validateaddress", "\"CwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg\"")
         );
 
 #ifdef ENABLE_WALLET
-    LOCK2(cs_main, pwalletMain ? &pwalletMain->cs_wallet : NULL);
+    LOCK2(cs_main, pwalletMain ? &pwalletMain->cs_wallet : nullptr);
 #else
     LOCK(cs_main);
 #endif
@@ -237,7 +282,7 @@ CScript _createmultisig_redeemScript(const UniValue& params)
     {
         const std::string& ks = keys[i].get_str();
 #ifdef ENABLE_WALLET
-        // Case 1: Bitcoin address and we have full public key:
+        // Case 1: Dash address and we have full public key:
         CBitcoinAddress address(ks);
         if (pwalletMain && address.IsValid())
         {
@@ -288,9 +333,9 @@ UniValue createmultisig(const JSONRPCRequest& request)
 
             "\nArguments:\n"
             "1. nrequired      (numeric, required) The number of required signatures out of the n keys or addresses.\n"
-            "2. \"keys\"       (string, required) A json array of keys which are bitcoin addresses or hex-encoded public keys\n"
+            "2. \"keys\"       (string, required) A json array of keys which are chaincoin addresses or hex-encoded public keys\n"
             "     [\n"
-            "       \"key\"    (string) bitcoin address or hex-encoded public key\n"
+            "       \"key\"    (string) chaincoin address or hex-encoded public key\n"
             "       ,...\n"
             "     ]\n"
 
@@ -302,9 +347,9 @@ UniValue createmultisig(const JSONRPCRequest& request)
 
             "\nExamples:\n"
             "\nCreate a multisig address from 2 addresses\n"
-            + HelpExampleCli("createmultisig", "2 \"[\\\"16sSauSf5pF2UkUwvKGq4qjNRzBZYqgEL5\\\",\\\"171sgjn4YtPu27adkKGrdDwzRTxnRkBfKV\\\"]\"") +
+            + HelpExampleCli("createmultisig", "2 \"[\\\"Ct4qk9uKvQYAonVGSZNXqxeDmtjaEWgfrs\\\",\\\"XoSoWQkpgLpppPoyyzbUFh1fq2RBvW6UK1\\\"]\"") +
             "\nAs a json rpc call\n"
-            + HelpExampleRpc("createmultisig", "2, \"[\\\"16sSauSf5pF2UkUwvKGq4qjNRzBZYqgEL5\\\",\\\"171sgjn4YtPu27adkKGrdDwzRTxnRkBfKV\\\"]\"")
+            + HelpExampleRpc("createmultisig", "2, \"[\\\"Ct4qk9uKvQYAonVGSZNXqxeDmtjaEWgfrs\\\",\\\"XoSoWQkpgLpppPoyyzbUFh1fq2RBvW6UK1\\\"]\"")
         ;
         throw runtime_error(msg);
     }
@@ -325,10 +370,10 @@ UniValue verifymessage(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 3)
         throw runtime_error(
-            "verifymessage \"bitcoinaddress\" \"signature\" \"message\"\n"
+            "verifymessage \"chaincoinaddress\" \"signature\" \"message\"\n"
             "\nVerify a signed message\n"
             "\nArguments:\n"
-            "1. \"bitcoinaddress\"  (string, required) The bitcoin address to use for the signature.\n"
+            "1. \"chaincoinaddress\"  (string, required) The chaincoin address to use for the signature.\n"
             "2. \"signature\"       (string, required) The signature provided by the signer in base 64 encoding (see signmessage).\n"
             "3. \"message\"         (string, required) The message that was signed.\n"
             "\nResult:\n"
@@ -337,11 +382,11 @@ UniValue verifymessage(const JSONRPCRequest& request)
             "\nUnlock the wallet for 30 seconds\n"
             + HelpExampleCli("walletpassphrase", "\"mypassphrase\" 30") +
             "\nCreate the signature\n"
-            + HelpExampleCli("signmessage", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\" \"my message\"") +
+            + HelpExampleCli("signmessage", "\"CwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg\" \"my message\"") +
             "\nVerify the signature\n"
-            + HelpExampleCli("verifymessage", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\" \"signature\" \"my message\"") +
+            + HelpExampleCli("verifymessage", "\"CwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg\" \"signature\" \"my message\"") +
             "\nAs json rpc\n"
-            + HelpExampleRpc("verifymessage", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\", \"signature\", \"my message\"")
+            + HelpExampleRpc("verifymessage", "\"CwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg\", \"signature\", \"my message\"")
         );
 
     LOCK(cs_main);
@@ -390,7 +435,7 @@ UniValue signmessagewithprivkey(const JSONRPCRequest& request)
             "\nCreate the signature\n"
             + HelpExampleCli("signmessagewithprivkey", "\"privkey\" \"my message\"") +
             "\nVerify the signature\n"
-            + HelpExampleCli("verifymessage", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\" \"signature\" \"my message\"") +
+            + HelpExampleCli("verifymessage", "\"CwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg\" \"signature\" \"my message\"") +
             "\nAs json rpc\n"
             + HelpExampleRpc("signmessagewithprivkey", "\"privkey\", \"my message\"")
         );
@@ -501,6 +546,7 @@ static const CRPCCommand commands[] =
     { "util",               "createmultisig",         &createmultisig,         true  },
     { "util",               "verifymessage",          &verifymessage,          true  },
     { "util",               "signmessagewithprivkey", &signmessagewithprivkey, true  },
+    { "chaincoin",          "mnsync",                 &mnsync,                 true  },
 
     /* Not shown in help */
     { "hidden",             "setmocktime",            &setmocktime,            true  },

@@ -1,5 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2014-2017 The Dash Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -11,14 +12,14 @@
 #define BITCOIN_UTIL_H
 
 #if defined(HAVE_CONFIG_H)
-#include "config/bitcoin-config.h"
+#include <config/chaincoin-config.h>
 #endif
 
-#include "compat.h"
-#include "tinyformat.h"
-#include "utiltime.h"
+#include <compat.h>
+#include <tinyformat.h>
+#include <utiltime.h>
+#include <amount.h>
 
-#include <atomic>
 #include <exception>
 #include <map>
 #include <stdint.h>
@@ -29,9 +30,27 @@
 #include <boost/signals2/signal.hpp>
 #include <boost/thread/exceptions.hpp>
 
-static const bool DEFAULT_LOGTIMEMICROS = false;
-static const bool DEFAULT_LOGIPS        = false;
-static const bool DEFAULT_LOGTIMESTAMPS = true;
+// Debugging macros
+
+// Uncomment the following line to enable debugging messages
+// or enable on a per file basis prior to inclusion of util.h
+//#define ENABLE_CHAINCOIN_DEBUG
+#ifdef ENABLE_CHAINCOIN_DEBUG
+#define DBG( x ) x
+#else
+#define DBG( x ) 
+#endif
+
+//Dash only features
+
+extern bool fMasterNode;
+extern bool fLiteMode;
+extern int nWalletBackups;
+
+static const bool DEFAULT_LOGTIMEMICROS  = false;
+static const bool DEFAULT_LOGIPS         = false;
+static const bool DEFAULT_LOGTIMESTAMPS  = true;
+static const bool DEFAULT_LOGTHREADNAMES = false;
 
 /** Signals for translation. */
 class CTranslationInterface
@@ -46,11 +65,13 @@ extern std::map<std::string, std::vector<std::string> > mapMultiArgs;
 extern bool fDebug;
 extern bool fPrintToConsole;
 extern bool fPrintToDebugLog;
+extern bool fServer;
 extern std::string strMiscWarning;
 extern bool fLogTimestamps;
 extern bool fLogTimeMicros;
+extern bool fLogThreadNames;
 extern bool fLogIPs;
-extern std::atomic<bool> fReopenDebugLog;
+extern volatile bool fReopenDebugLog;
 extern CTranslationInterface translationInterface;
 
 extern const char * const BITCOIN_CONF_FILENAME;
@@ -74,25 +95,41 @@ bool LogAcceptCategory(const char* category);
 /** Send a string to the log output */
 int LogPrintStr(const std::string &str);
 
-#define LogPrintf(...) LogPrint(NULL, __VA_ARGS__)
+#define LogPrintf(...) LogPrint(nullptr, __VA_ARGS__)
 
-template<typename... Args>
-static inline int LogPrint(const char* category, const char* fmt, const Args&... args)
+template<typename T1, typename... Args>
+static inline int LogPrint(const char* category, const char* fmt, const T1& v1, const Args&... args)
 {
     if(!LogAcceptCategory(category)) return 0;                            \
-    return LogPrintStr(tfm::format(fmt, args...));
+    return LogPrintStr(tfm::format(fmt, v1, args...));
 }
 
-template<typename... Args>
-bool error(const char* fmt, const Args&... args)
+template<typename T1, typename... Args>
+bool error(const char* fmt, const T1& v1, const Args&... args)
 {
-    LogPrintStr("ERROR: " + tfm::format(fmt, args...) + "\n");
+    LogPrintStr("ERROR: " + tfm::format(fmt, v1, args...) + "\n");
+    return false;
+}
+
+/**
+ * Zero-arg versions of logging and error, these are not covered by
+ * the variadic templates above (and don't take format arguments but
+ * bare strings).
+ */
+static inline int LogPrint(const char* category, const char* format)
+{
+    if(!LogAcceptCategory(category)) return 0;
+    return LogPrintStr(format);
+}
+static inline bool error(const char* format)
+{
+    LogPrintStr(std::string("ERROR: ") + format + "\n");
     return false;
 }
 
 void PrintExceptionContinue(const std::exception *pex, const char* pszThread);
 void ParseParameters(int argc, const char*const argv[]);
-void FileCommit(FILE *file);
+void FileCommit(FILE *fileout);
 bool TruncateFile(FILE *file, unsigned int length);
 int RaiseFileDescriptorLimit(int nMinFD);
 void AllocateFileRange(FILE *file, unsigned int offset, unsigned int length);
@@ -100,16 +137,19 @@ bool RenameOver(boost::filesystem::path src, boost::filesystem::path dest);
 bool TryCreateDirectory(const boost::filesystem::path& p);
 boost::filesystem::path GetDefaultDataDir();
 const boost::filesystem::path &GetDataDir(bool fNetSpecific = true);
+const boost::filesystem::path &GetBackupsDir();
 void ClearDatadirCache();
-boost::filesystem::path GetConfigFile(const std::string& confPath);
+boost::filesystem::path GetConfigFile();
+boost::filesystem::path GetMasternodeConfigFile();
 #ifndef WIN32
 boost::filesystem::path GetPidFile();
 void CreatePidFile(const boost::filesystem::path &path, pid_t pid);
 #endif
-void ReadConfigFile(const std::string& confPath, std::map<std::string, std::string>& mapSettingsRet, std::map<std::string, std::vector<std::string> >& mapMultiSettingsRet);
+void ReadConfigFile(std::map<std::string, std::string>& mapSettingsRet, std::map<std::string, std::vector<std::string> >& mapMultiSettingsRet);
 #ifdef WIN32
 boost::filesystem::path GetSpecialFolderPath(int nFolder, bool fCreate = true);
 #endif
+boost::filesystem::path GetTempPath();
 void OpenDebugLog();
 void ShrinkDebugFile();
 void runCommand(const std::string& strCommand);
@@ -192,14 +232,16 @@ std::string HelpMessageOpt(const std::string& option, const std::string& message
  */
 int GetNumCores();
 
+void SetThreadPriority(int nPriority);
 void RenameThread(const char* name);
+std::string GetThreadName();
 
 /**
  * .. and a wrapper that just calls func once
  */
 template <typename Callable> void TraceThread(const char* name,  Callable func)
 {
-    std::string s = strprintf("bitcoin-%s", name);
+    std::string s = strprintf("chaincoin-%s", name);
     RenameThread(s.c_str());
     try
     {
@@ -217,10 +259,38 @@ template <typename Callable> void TraceThread(const char* name,  Callable func)
         throw;
     }
     catch (...) {
-        PrintExceptionContinue(NULL, name);
+        PrintExceptionContinue(nullptr, name);
         throw;
     }
 }
+
+
+/**
+ * @brief Converts version strings to 4-byte unsigned integer
+ * @param strVersion version in "x.x.x" format (decimal digits only)
+ * @return 4-byte unsigned integer, most significant byte is always 0
+ * Throws std::bad_cast if format doesn\t match.
+ */
+uint32_t StringVersionToInt(const std::string& strVersion);
+
+
+/**
+ * @brief Converts version as 4-byte unsigned integer to string
+ * @param nVersion 4-byte unsigned integer, most significant byte is always 0
+ * @return version string in "x.x.x" format (last 3 bytes as version parts)
+ * Throws std::bad_cast if format doesn\t match.
+ */
+std::string IntVersionToString(uint32_t nVersion);
+
+
+/**
+ * @brief Copy of the IntVersionToString, that returns "Invalid version" string
+ * instead of throwing std::bad_cast
+ * @param nVersion 4-byte unsigned integer, most significant byte is always 0
+ * @return version string in "x.x.x" format (last 3 bytes as version parts)
+ * or "Invalid version" if can't cast the given value
+ */
+std::string SafeIntVersionToString(uint32_t nVersion);
 
 std::string CopyrightHolders(const std::string& strPrefix);
 

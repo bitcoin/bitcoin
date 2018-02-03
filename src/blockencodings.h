@@ -5,7 +5,7 @@
 #ifndef BITCOIN_BLOCK_ENCODINGS_H
 #define BITCOIN_BLOCK_ENCODINGS_H
 
-#include "primitives/block.h"
+#include <primitives/block.h>
 
 #include <memory>
 
@@ -53,11 +53,11 @@ public:
             }
 
             uint16_t offset = 0;
-            for (size_t j = 0; j < indexes.size(); j++) {
-                if (uint64_t(indexes[j]) + uint64_t(offset) > std::numeric_limits<uint16_t>::max())
+            for (size_t i = 0; i < indexes.size(); i++) {
+                if (uint64_t(indexes[i]) + uint64_t(offset) > std::numeric_limits<uint16_t>::max())
                     throw std::ios_base::failure("indexes overflowed 16 bits");
-                indexes[j] = indexes[j] + offset;
-                offset = indexes[j] + 1;
+                indexes[i] = indexes[i] + offset;
+                offset = indexes[i] + 1;
             }
         } else {
             for (size_t i = 0; i < indexes.size(); i++) {
@@ -202,7 +202,6 @@ public:
 
     ReadStatus InitData(const CBlockHeaderAndShortTxIDs& cmpctblock);
     bool IsTxAvailable(size_t index) const;
-    ReadStatus FillBlock(CBlock& block, const std::vector<CTransactionRef>& vtx_missing) const;
-};
+    ReadStatus FillBlock(CBlock& block, const std::vector<CTransactionRef>& vtx_missing) const;};
 
 #endif

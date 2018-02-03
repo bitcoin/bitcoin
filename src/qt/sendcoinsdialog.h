@@ -5,7 +5,7 @@
 #ifndef BITCOIN_QT_SENDCOINSDIALOG_H
 #define BITCOIN_QT_SENDCOINSDIALOG_H
 
-#include "walletmodel.h"
+#include <walletmodel.h>
 
 #include <QDialog>
 #include <QMessageBox>
@@ -52,7 +52,7 @@ public Q_SLOTS:
     void accept();
     SendCoinsEntry *addEntry();
     void updateTabsAndLabels();
-    void setBalance(const CAmount& balance, const CAmount& unconfirmedBalance, const CAmount& immatureBalance,
+    void setBalance(const CAmount& balance, const CAmount& unconfirmedBalance, const CAmount& immatureBalance, const CAmount& anonymizedBalance,
                     const CAmount& watchOnlyBalance, const CAmount& watchUnconfBalance, const CAmount& watchImmatureBalance);
 
 private:
@@ -60,6 +60,7 @@ private:
     ClientModel *clientModel;
     WalletModel *model;
     bool fNewRecipientAllowed;
+    void send(QList<SendCoinsRecipient> recipients, QString strFee, QString strFunds);
     bool fFeeMinimized;
     const PlatformStyle *platformStyle;
 
@@ -76,6 +77,7 @@ private Q_SLOTS:
     void on_buttonMinimizeFee_clicked();
     void removeEntry(SendCoinsEntry* entry);
     void updateDisplayUnit();
+    void updateInstantSend();
     void coinControlFeatureChanged(bool);
     void coinControlButtonClicked();
     void coinControlChangeChecked(int);
@@ -98,8 +100,6 @@ Q_SIGNALS:
     // Fired when a message should be reported to the user
     void message(const QString &title, const QString &message, unsigned int style);
 };
-
-
 
 class SendConfirmationDialog : public QMessageBox
 {

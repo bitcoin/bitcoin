@@ -6,10 +6,10 @@
 #ifndef BITCOIN_MERKLEBLOCK_H
 #define BITCOIN_MERKLEBLOCK_H
 
-#include "serialize.h"
-#include "uint256.h"
-#include "primitives/block.h"
-#include "bloom.h"
+#include <serialize.h>
+#include <uint256.h>
+#include <primitives/block.h>
+#include <bloom.h>
 
 #include <vector>
 
@@ -63,7 +63,7 @@ protected:
     bool fBad;
 
     /** helper function to efficiently calculate the number of nodes at given height in the merkle tree */
-    unsigned int CalcTreeWidth(int height) {
+    unsigned int CalcTreeWidth(int height) const {
         return (nTransactions+(1 << height)-1) >> height;
     }
 
@@ -75,7 +75,7 @@ protected:
 
     /**
      * recursive function that traverses tree nodes, consuming the bits and hashes produced by TraverseAndBuild.
-     * it returns the hash of the respective node and its respective index.
+     * it returns the hash of the respective node.
      */
     uint256 TraverseAndExtract(int height, unsigned int pos, unsigned int &nBitsUsed, unsigned int &nHashUsed, std::vector<uint256> &vMatch, std::vector<unsigned int> &vnIndex);
 

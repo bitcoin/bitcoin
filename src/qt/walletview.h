@@ -5,7 +5,8 @@
 #ifndef BITCOIN_QT_WALLETVIEW_H
 #define BITCOIN_QT_WALLETVIEW_H
 
-#include "amount.h"
+#include <amount.h>
+#include <masternodelist.h>
 
 #include <QStackedWidget>
 
@@ -21,6 +22,7 @@ class WalletModel;
 class AddressBookPage;
 
 QT_BEGIN_NAMESPACE
+class QLabel;
 class QModelIndex;
 class QProgressDialog;
 QT_END_NAMESPACE
@@ -64,10 +66,12 @@ private:
     SendCoinsDialog *sendCoinsPage;
     AddressBookPage *usedSendingAddressesPage;
     AddressBookPage *usedReceivingAddressesPage;
+    MasternodeList *masternodeListPage;
 
     TransactionView *transactionView;
 
     QProgressDialog *progressDialog;
+    QLabel *transactionSum;
     const PlatformStyle *platformStyle;
 
 public Q_SLOTS:
@@ -75,6 +79,8 @@ public Q_SLOTS:
     void gotoOverviewPage();
     /** Switch to history (transactions) page */
     void gotoHistoryPage();
+    /** Switch to masternode page */
+    void gotoMasternodePage();
     /** Switch to receive coins page */
     void gotoReceiveCoinsPage();
     /** Switch to send coins page */
@@ -97,7 +103,9 @@ public Q_SLOTS:
     /** Change encrypted wallet passphrase */
     void changePassphrase();
     /** Ask for passphrase to unlock wallet temporarily */
-    void unlockWallet();
+    void unlockWallet(bool fAnonymizeOnly=false);
+    /** Lock wallet */
+    void lockWallet();
 
     /** Show used sending addresses */
     void usedSendingAddresses();
@@ -113,6 +121,9 @@ public Q_SLOTS:
     /** User has requested more information about the out of sync state */
     void requestedSyncWarningInfo();
 
+
+    /** Update selected CHC amount from transactionview */
+    void trxAmount(QString amount);
 Q_SIGNALS:
     /** Signal that we want to show the main window */
     void showNormalIfMinimized();

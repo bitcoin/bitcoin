@@ -2,7 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "clientversion.h"
+#include <clientversion.h>
 
 #include "tinyformat.h"
 
@@ -10,10 +10,10 @@
 
 /**
  * Name of client reported in the 'version' message. Report the same name
- * for both bitcoind and bitcoin-core, to make it harder for attackers to
+ * for both chaincoind and chaincoin-qt, to make it harder for attackers to
  * target servers or GUI users specifically.
  */
-const std::string CLIENT_NAME("Satoshi");
+const std::string CLIENT_NAME("Chaincoin Core");
 
 /**
  * Client version number
@@ -67,7 +67,16 @@ const std::string CLIENT_NAME("Satoshi");
 #endif
 #endif
 
+#ifndef BUILD_DATE
+#ifdef GIT_COMMIT_DATE
+#define BUILD_DATE GIT_COMMIT_DATE
+#else
+#define BUILD_DATE __DATE__ ", " __TIME__
+#endif
+#endif
+
 const std::string CLIENT_BUILD(BUILD_DESC CLIENT_VERSION_SUFFIX);
+const std::string CLIENT_DATE(BUILD_DATE);
 
 static std::string FormatVersion(int nVersion)
 {

@@ -2,7 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #include "addrman.h"
-#include "test/test_bitcoin.h"
+#include "test/test_chaincoin.h"
 #include <string>
 #include <boost/test/unit_test.hpp>
 
@@ -26,7 +26,7 @@ public:
     void MakeDeterministic()
     {
         nKey.SetNull();
-        insecure_rand = FastRandomContext(true);
+        seed_insecure_rand(true);
     }
 
     int RandomInt(int nMax)
@@ -35,12 +35,12 @@ public:
         return (unsigned int)(state % nMax);
     }
 
-    CAddrInfo* Find(const CNetAddr& addr, int* pnId = NULL)
+    CAddrInfo* Find(const CNetAddr& addr, int* pnId = nullptr)
     {
         return CAddrMan::Find(addr, pnId);
     }
 
-    CAddrInfo* Create(const CAddress& addr, const CNetAddr& addrSource, int* pnId = NULL)
+    CAddrInfo* Create(const CAddress& addr, const CNetAddr& addrSource, int* pnId = nullptr)
     {
         return CAddrMan::Create(addr, addrSource, pnId);
     }
@@ -257,7 +257,8 @@ BOOST_AUTO_TEST_CASE(addrman_tried_collisions)
         addrman.Good(CAddress(addr, NODE_NONE));
 
         //Test 15: No collision in tried table yet.
-        BOOST_CHECK_EQUAL(addrman.size(), i);
+        BOOST_TEST_MESSAGE(addrman.size());
+        BOOST_CHECK(addrman.size() == i);
     }
 
     //Test 16: tried table collision!
@@ -352,7 +353,7 @@ BOOST_AUTO_TEST_CASE(addrman_delete)
     addrman.Delete(nId);
     BOOST_CHECK(addrman.size() == 0);
     CAddrInfo* info2 = addrman.Find(addr1);
-    BOOST_CHECK(info2 == NULL);
+    BOOST_CHECK(info2 == nullptr);
 }
 
 BOOST_AUTO_TEST_CASE(addrman_getaddr)

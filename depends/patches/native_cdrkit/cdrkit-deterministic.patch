@@ -17,8 +17,8 @@
  	errno = 0;	/* Paranoia */
 -	current_dir = opendir(path);
 +	//current_dir = opendir(path);
-+        current_file = scandir(path, &d_list, NULL, alphasort);
- 	d_entry = NULL;
++        current_file = scandir(path, &d_list, nullptr, alphasort);
+ 	d_entry = nullptr;
  
  	/*
 @@ -1173,12 +1175,12 @@

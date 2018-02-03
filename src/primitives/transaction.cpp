@@ -3,15 +3,20 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "primitives/transaction.h"
+#include <primitives/transaction.h>
 
-#include "hash.h"
-#include "tinyformat.h"
-#include "utilstrencodings.h"
+#include <hash.h>
+#include <tinyformat.h>
+#include <utilstrencodings.h>
 
 std::string COutPoint::ToString() const
 {
-    return strprintf("COutPoint(%s, %u)", hash.ToString().substr(0,10), n);
+    return strprintf("COutPoint(%s, %u)", hash.ToString()/*.substr(0,10)*/, n);
+}
+
+std::string COutPoint::ToStringShort() const
+{
+    return strprintf("%s-%u", hash.ToString().substr(0,64), n);
 }
 
 CTxIn::CTxIn(COutPoint prevoutIn, CScript scriptSigIn, uint32_t nSequenceIn)
@@ -47,6 +52,12 @@ CTxOut::CTxOut(const CAmount& nValueIn, CScript scriptPubKeyIn)
 {
     nValue = nValueIn;
     scriptPubKey = scriptPubKeyIn;
+    nRounds = -10;
+}
+
+uint256 CTxOut::GetHash() const
+{
+    return SerializeHash(*this);
 }
 
 std::string CTxOut::ToString() const
@@ -75,10 +86,6 @@ uint256 CTransaction::GetWitnessHash() const
 CTransaction::CTransaction() : nVersion(CTransaction::CURRENT_VERSION), vin(), vout(), nLockTime(0) { }
 
 CTransaction::CTransaction(const CMutableTransaction &tx) : nVersion(tx.nVersion), vin(tx.vin), vout(tx.vout), wit(tx.wit), nLockTime(tx.nLockTime) {
-    UpdateHash();
-}
-
-CTransaction::CTransaction(CMutableTransaction &&tx) : nVersion(tx.nVersion), vin(std::move(tx.vin)), vout(std::move(tx.vout)), wit(std::move(tx.wit)), nLockTime(tx.nLockTime) {
     UpdateHash();
 }
 
@@ -130,20 +137,16 @@ unsigned int CTransaction::CalculateModifiedSize(unsigned int nTxSize) const
     return nTxSize;
 }
 
-unsigned int CTransaction::GetTotalSize() const
-{
-    return ::GetSerializeSize(*this, SER_NETWORK, PROTOCOL_VERSION);
-}
-
 std::string CTransaction::ToString() const
 {
     std::string str;
-    str += strprintf("CTransaction(hash=%s, ver=%d, vin.size=%u, vout.size=%u, nLockTime=%u)\n",
+    str += strprintf("CTransaction(hash=%s, ver=%d, vin.size=%u, vout.size=%u, nLockTime=%u, strTxComment=%s)\n",
         GetHash().ToString().substr(0,10),
         nVersion,
         vin.size(),
         vout.size(),
-        nLockTime);
+        nLockTime,
+        strTxComment.substr(0,30).c_str());
     for (unsigned int i = 0; i < vin.size(); i++)
         str += "    " + vin[i].ToString() + "\n";
     for (unsigned int i = 0; i < wit.vtxinwit.size(); i++)

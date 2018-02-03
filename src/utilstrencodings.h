@@ -19,9 +19,6 @@
 #define UEND(a)             ((unsigned char*)&((&(a))[1]))
 #define ARRAYLEN(array)     (sizeof(array)/sizeof((array)[0]))
 
-/** This is needed because the foreach macro can't get over the comma in pair<t1, t2> */
-#define PAIRTYPE(t1, t2)    std::pair<t1, t2>
-
 /** Used by SanitizeString() */
 enum SafeChars
 {
@@ -41,11 +38,11 @@ std::vector<unsigned char> ParseHex(const char* psz);
 std::vector<unsigned char> ParseHex(const std::string& str);
 signed char HexDigit(char c);
 bool IsHex(const std::string& str);
-std::vector<unsigned char> DecodeBase64(const char* p, bool* pfInvalid = NULL);
+std::vector<unsigned char> DecodeBase64(const char* p, bool* pfInvalid = nullptr);
 std::string DecodeBase64(const std::string& str);
 std::string EncodeBase64(const unsigned char* pch, size_t len);
 std::string EncodeBase64(const std::string& str);
-std::vector<unsigned char> DecodeBase32(const char* p, bool* pfInvalid = NULL);
+std::vector<unsigned char> DecodeBase32(const char* p, bool* pfInvalid = nullptr);
 std::string DecodeBase32(const std::string& str);
 std::string EncodeBase32(const unsigned char* pch, size_t len);
 std::string EncodeBase32(const std::string& str);

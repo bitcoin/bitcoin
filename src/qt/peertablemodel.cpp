@@ -2,14 +2,14 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "peertablemodel.h"
+#include <peertablemodel.h>
 
-#include "clientmodel.h"
-#include "guiconstants.h"
-#include "guiutil.h"
+#include <clientmodel.h>
+#include <guiconstants.h>
+#include <guiutil.h>
 
-#include "validation.h" // for cs_main
-#include "sync.h"
+#include <validation.h> // for cs_main
+#include <sync.h>
 
 #include <QDebug>
 #include <QList>
@@ -62,7 +62,7 @@ public:
 #if QT_VERSION >= 0x040700
             cachedNodeStats.reserve(vstats.size());
 #endif
-            Q_FOREACH (const CNodeStats& nodestats, vstats)
+            for (const CNodeStats& nodestats : vstats)
             {
                 CNodeCombinedStats stats;
                 stats.nodeStateStats.nMisbehavior = 0;
@@ -79,7 +79,7 @@ public:
             TRY_LOCK(cs_main, lockMain);
             if (lockMain)
             {
-                BOOST_FOREACH(CNodeCombinedStats &stats, cachedNodeStats)
+                for (CNodeCombinedStats &stats : cachedNodeStats)
                     stats.fNodeStateStatsAvailable = GetNodeStateStats(stats.nodeStats.nodeid, stats.nodeStateStats);
             }
         }
@@ -91,7 +91,7 @@ public:
         // build index map
         mapNodeRows.clear();
         int row = 0;
-        Q_FOREACH (const CNodeCombinedStats& stats, cachedNodeStats)
+        for (const CNodeCombinedStats& stats : cachedNodeStats)
             mapNodeRows.insert(std::pair<NodeId, int>(stats.nodeStats.nodeid, row++));
     }
 

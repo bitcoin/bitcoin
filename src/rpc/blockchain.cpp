@@ -3,31 +3,31 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "amount.h"
-#include "chain.h"
-#include "chainparams.h"
-#include "checkpoints.h"
-#include "coins.h"
-#include "consensus/validation.h"
-#include "validation.h"
-#include "policy/policy.h"
-#include "primitives/transaction.h"
-#include "rpc/server.h"
-#include "streams.h"
-#include "sync.h"
-#include "txmempool.h"
-#include "util.h"
-#include "utilstrencodings.h"
-#include "hash.h"
+#include <amount.h>
+#include <chain.h>
+#include <chainparams.h>
+#include <checkpoints.h>
+#include <coins.h>
+#include <consensus/validation.h>
+#include <hash.h>
+#include <policy/policy.h>
+#include <primitives/transaction.h>
+#include <rpc/server.h>
+#include <streams.h>
+#include <sync.h>
+#include <txmempool.h>
+#include <util.h>
+#include <utilstrencodings.h>
+#include <validation.h>
 
 #include <stdint.h>
 
 #include <univalue.h>
 
 #include <boost/thread/thread.hpp> // boost::thread::interrupt
-
 #include <mutex>
 #include <condition_variable>
+
 using namespace std;
 
 struct CUpdatedBlock
@@ -187,7 +187,7 @@ void RPCNotifyBlockChange(bool ibd, const CBlockIndex * pindex)
         latestblock.hash = pindex->GetBlockHash();
         latestblock.height = pindex->nHeight;
     }
-	cond_blockchange.notify_all();
+    cond_blockchange.notify_all();
 }
 
 UniValue waitfornewblock(const JSONRPCRequest& request)
@@ -368,14 +368,14 @@ void entryToJSON(UniValue &info, const CTxMemPoolEntry &e)
     info.push_back(Pair("ancestorfees", e.GetModFeesWithAncestors()));
     const CTransaction& tx = e.GetTx();
     set<string> setDepends;
-    BOOST_FOREACH(const CTxIn& txin, tx.vin)
+    for (const CTxIn& txin : tx.vin)
     {
         if (mempool.exists(txin.prevout.hash))
             setDepends.insert(txin.prevout.hash.ToString());
     }
 
     UniValue depends(UniValue::VARR);
-    BOOST_FOREACH(const string& dep, setDepends)
+    for (const string& dep : setDepends)
     {
         depends.push_back(dep);
     }
@@ -389,7 +389,7 @@ UniValue mempoolToJSON(bool fVerbose = false)
     {
         LOCK(mempool.cs);
         UniValue o(UniValue::VOBJ);
-        BOOST_FOREACH(const CTxMemPoolEntry& e, mempool.mapTx)
+        for (const CTxMemPoolEntry& e : mempool.mapTx)
         {
             const uint256& hash = e.GetTx().GetHash();
             UniValue info(UniValue::VOBJ);
@@ -404,7 +404,7 @@ UniValue mempoolToJSON(bool fVerbose = false)
         mempool.queryHashes(vtxid);
 
         UniValue a(UniValue::VARR);
-        BOOST_FOREACH(const uint256& hash, vtxid)
+        for (const uint256& hash : vtxid)
             a.push_back(hash.ToString());
 
         return a;
@@ -488,14 +488,14 @@ UniValue getmempoolancestors(const JSONRPCRequest& request)
 
     if (!fVerbose) {
         UniValue o(UniValue::VARR);
-        BOOST_FOREACH(CTxMemPool::txiter ancestorIt, setAncestors) {
+        for (CTxMemPool::txiter ancestorIt : setAncestors) {
             o.push_back(ancestorIt->GetTx().GetHash().ToString());
         }
 
         return o;
     } else {
         UniValue o(UniValue::VOBJ);
-        BOOST_FOREACH(CTxMemPool::txiter ancestorIt, setAncestors) {
+        for (CTxMemPool::txiter ancestorIt : setAncestors) {
             const CTxMemPoolEntry &e = *ancestorIt;
             const uint256& _hash = e.GetTx().GetHash();
             UniValue info(UniValue::VOBJ);
@@ -552,14 +552,14 @@ UniValue getmempooldescendants(const JSONRPCRequest& request)
 
     if (!fVerbose) {
         UniValue o(UniValue::VARR);
-        BOOST_FOREACH(CTxMemPool::txiter descendantIt, setDescendants) {
+        for (CTxMemPool::txiter descendantIt : setDescendants) {
             o.push_back(descendantIt->GetTx().GetHash().ToString());
         }
 
         return o;
     } else {
         UniValue o(UniValue::VOBJ);
-        BOOST_FOREACH(CTxMemPool::txiter descendantIt, setDescendants) {
+        for (CTxMemPool::txiter descendantIt : setDescendants) {
             const CTxMemPoolEntry &e = *descendantIt;
             const uint256& _hash = e.GetTx().GetHash();
             UniValue info(UniValue::VOBJ);
@@ -963,23 +963,22 @@ UniValue verifychain(const JSONRPCRequest& request)
 }
 
 /** Implementation of IsSuperMajority with better feedback */
-static UniValue SoftForkMajorityDesc(int version, CBlockIndex* pindex, const Consensus::Params& consensusParams)
+static UniValue SoftForkMajorityDesc(int minVersion, CBlockIndex* pindex, int nRequired, const Consensus::Params& consensusParams)
 {
-    UniValue rv(UniValue::VOBJ);
-    bool activated = false;
-    switch(version)
+    int nFound = 0;
+    CBlockIndex* pstart = pindex;
+    for (int i = 0; i < consensusParams.nMajorityWindow && pstart != NULL; i++)
     {
-        case 2:
-            activated = pindex->nHeight >= consensusParams.BIP34Height;
-            break;
-        case 3:
-            activated = pindex->nHeight >= consensusParams.BIP66Height;
-            break;
-        case 4:
-            activated = pindex->nHeight >= consensusParams.BIP65Height;
-            break;
+        if (pstart->nVersion >= minVersion)
+            ++nFound;
+        pstart = pstart->pprev;
     }
-    rv.push_back(Pair("status", activated));
+
+    UniValue rv(UniValue::VOBJ);
+    rv.push_back(Pair("status", nFound >= nRequired));
+    rv.push_back(Pair("found", nFound));
+    rv.push_back(Pair("required", nRequired));
+    rv.push_back(Pair("window", consensusParams.nMajorityWindow));
     return rv;
 }
 
@@ -988,7 +987,8 @@ static UniValue SoftForkDesc(const std::string &name, int version, CBlockIndex* 
     UniValue rv(UniValue::VOBJ);
     rv.push_back(Pair("id", name));
     rv.push_back(Pair("version", version));
-    rv.push_back(Pair("reject", SoftForkMajorityDesc(version, pindex, consensusParams)));
+    rv.push_back(Pair("enforce", SoftForkMajorityDesc(version, pindex, consensusParams.nMajorityEnforceBlockUpgrade, consensusParams)));
+    rv.push_back(Pair("reject", SoftForkMajorityDesc(version, pindex, consensusParams.nMajorityRejectBlockOutdated, consensusParams)));
     return rv;
 }
 
@@ -1151,7 +1151,7 @@ UniValue getchaintips(const JSONRPCRequest& request)
     LOCK(cs_main);
 
     /*
-     * Idea:  the set of chain tips is chainActive.tip, plus orphan blocks which do not have another orphan building off of them. 
+     * Idea:  the set of chain tips is chainActive.tip, plus orphan blocks which do not have another orphan building off of them.
      * Algorithm:
      *  - Make one pass through mapBlockIndex, picking out the orphan blocks, and also storing a set of the orphan block's pprev pointers.
      *  - Iterate through the orphan blocks. If the block isn't pointed to by another orphan, it is a chain tip.
@@ -1161,7 +1161,7 @@ UniValue getchaintips(const JSONRPCRequest& request)
     std::set<const CBlockIndex*> setOrphans;
     std::set<const CBlockIndex*> setPrevs;
 
-    BOOST_FOREACH(const PAIRTYPE(const uint256, CBlockIndex*)& item, mapBlockIndex)
+    for (const std::pair<const uint256, CBlockIndex*>& item : mapBlockIndex)
     {
         if (!chainActive.Contains(item.second)) {
             setOrphans.insert(item.second);
@@ -1181,7 +1181,7 @@ UniValue getchaintips(const JSONRPCRequest& request)
 
     /* Construct the output array.  */
     UniValue res(UniValue::VARR);
-    BOOST_FOREACH(const CBlockIndex* block, setTips)
+    for (const CBlockIndex* block : setTips)
     {
         UniValue obj(UniValue::VOBJ);
         obj.push_back(Pair("height", block->nHeight));

@@ -1,28 +1,32 @@
 // Copyright (c) 2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2014-2017 The Dash Core developers
+// Copyright (c) 2018 PM-Tech
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "base58.h"
-#include "amount.h"
-#include "chain.h"
-#include "chainparams.h"
-#include "consensus/consensus.h"
-#include "consensus/params.h"
-#include "consensus/validation.h"
-#include "core_io.h"
-#include "init.h"
-#include "validation.h"
-#include "miner.h"
-#include "net.h"
-#include "pow.h"
-#include "rpc/server.h"
-#include "txmempool.h"
-#include "util.h"
-#include "utilstrencodings.h"
-#include "validationinterface.h"
+#include <base58.h>
+#include <amount.h>
+#include <chain.h>
+#include <chainparams.h>
+#include <consensus/consensus.h>
+#include <consensus/params.h>
+#include <consensus/validation.h>
+#include <core_io.h>
+#include <init.h>
+#include <validation.h>
+#include <miner.h>
+#include <net.h>
+#include <pow.h>
+#include <rpc/server.h>
+#include <txmempool.h>
+#include <util.h>
+#ifdef ENABLE_WALLET
+#include <masternode-sync.h>
+#endif
+#include <utilstrencodings.h>
+#include <validationinterface.h>
 
-#include <memory>
 #include <stdint.h>
 
 #include <boost/assign/list_of.hpp>
@@ -43,7 +47,7 @@ UniValue GetNetworkHashPS(int lookup, int height) {
     if (height >= 0 && height < chainActive.Height())
         pb = chainActive[height];
 
-    if (pb == NULL || !pb->nHeight)
+    if (pb == nullptr || !pb->nHeight)
         return 0;
 
     // If lookup is -1, then use blocks since last difficulty change.
@@ -131,7 +135,7 @@ UniValue generateBlocks(boost::shared_ptr<CReserveScript> coinbaseScript, int nG
         if (pblock->nNonce == nInnerLoopCount) {
             continue;
         }
-        if (!ProcessNewBlock(Params(), pblock, true, NULL, NULL))
+        if (!ProcessNewBlock(Params(), pblock, true, nullptr, nullptr))
             throw JSONRPCError(RPC_INTERNAL_ERROR, "ProcessNewBlock, block not accepted");
         ++nHeight;
         blockHashes.push_back(pblock->GetHash().GetHex());
@@ -207,7 +211,7 @@ UniValue generatetoaddress(const JSONRPCRequest& request)
     CBitcoinAddress address(request.params[1].get_str());
     if (!address.IsValid())
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Error: Invalid address");
-    
+
     boost::shared_ptr<CReserveScript> coinbaseScript(new CReserveScript());
     coinbaseScript->reserveScript = GetScriptForDestination(address.Get());
 
@@ -224,13 +228,14 @@ UniValue getmininginfo(const JSONRPCRequest& request)
             "{\n"
             "  \"blocks\": nnn,             (numeric) The current block\n"
             "  \"currentblocksize\": nnn,   (numeric) The last block size\n"
-            "  \"currentblockweight\": nnn, (numeric) The last block weight\n"
             "  \"currentblocktx\": nnn,     (numeric) The last block transaction\n"
             "  \"difficulty\": xxx.xxxxx    (numeric) The current difficulty\n"
-            "  \"errors\": \"...\"            (string) Current errors\n"
-            "  \"networkhashps\": nnn,      (numeric) The network hashes per second\n"
-            "  \"pooledtx\": n              (numeric) The size of the mempool\n"
-            "  \"chain\": \"xxxx\",           (string) current network name as defined in BIP70 (main, test, regtest)\n"
+            "  \"errors\": \"...\"          (string) Current errors\n"
+            "  \"generate\": true|false     (boolean) If the generation is on or off (see getgenerate or setgenerate calls)\n"
+            "  \"genproclimit\": n          (numeric) The processor limit for generation. -1 if no generation. (see getgenerate or setgenerate calls)\n"
+            "  \"pooledtx\": n              (numeric) The size of the mem pool\n"
+            "  \"testnet\": true|false      (boolean) If using testnet or not\n"
+            "  \"chain\": \"xxxx\",         (string) current network name as defined in BIP70 (main, test, regtest)\n"
             "}\n"
             "\nExamples:\n"
             + HelpExampleCli("getmininginfo", "")
@@ -243,12 +248,12 @@ UniValue getmininginfo(const JSONRPCRequest& request)
     UniValue obj(UniValue::VOBJ);
     obj.push_back(Pair("blocks",           (int)chainActive.Height()));
     obj.push_back(Pair("currentblocksize", (uint64_t)nLastBlockSize));
-    obj.push_back(Pair("currentblockweight", (uint64_t)nLastBlockWeight));
     obj.push_back(Pair("currentblocktx",   (uint64_t)nLastBlockTx));
     obj.push_back(Pair("difficulty",       (double)GetDifficulty()));
     obj.push_back(Pair("errors",           GetWarnings("statusbar")));
     obj.push_back(Pair("networkhashps",    getnetworkhashps(request)));
     obj.push_back(Pair("pooledtx",         (uint64_t)mempool.size()));
+    obj.push_back(Pair("testnet",          Params().TestnetToBeDeprecatedFieldRPC()));
     obj.push_back(Pair("chain",            Params().NetworkIDString()));
     return obj;
 }
@@ -265,8 +270,8 @@ UniValue prioritisetransaction(const JSONRPCRequest& request)
             "1. \"txid\"       (string, required) The transaction id.\n"
             "2. priority delta (numeric, required) The priority to add or subtract.\n"
             "                  The transaction selection algorithm considers the tx as it would have a higher priority.\n"
-            "                  (priority of a transaction is calculated: coinage * value_in_satoshis / txsize) \n"
-            "3. fee delta      (numeric, required) The fee value (in satoshis) to add (or subtract, if negative).\n"
+            "                  (priority of a transaction is calculated: coinage * value_in_chuffs / txsize) \n"
+            "3. fee delta      (numeric, required) The fee value (in chuffs) to add (or subtract, if negative).\n"
             "                  The fee is not actually paid, only the algorithm for selecting transactions into a block\n"
             "                  considers the transaction as it would have paid a higher (or lower) fee.\n"
             "\nResult\n"
@@ -328,11 +333,11 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
             "    https://github.com/bitcoin/bips/blob/master/bip-0145.mediawiki\n"
 
             "\nArguments:\n"
-            "1. TemplateRequest          (json object, optional) A json object in the following spec\n"
+                "1. TemplateRequest          (json object, optional) A json object in the following spec\n"
             "     {\n"
-            "       \"mode\":\"template\"    (string, optional) This must be set to \"template\", \"proposal\" (see BIP 23), or omitted\n"
-            "       \"capabilities\":[     (array, optional) A list of strings\n"
-            "           \"support\"          (string) client side supported feature, 'longpoll', 'coinbasetxn', 'coinbasevalue', 'proposal', 'serverlist', 'workid'\n"
+            "       \"mode\":\"template\"    (string, optional) This must be set to \"template\" or omitted\n"
+            "       \"capabilities\":[       (array, optional) A list of strings\n"
+            "           \"support\"           (string) client side supported feature, 'longpoll', 'coinbasetxn', 'coinbasevalue', 'proposal', 'serverlist', 'workid'\n"
             "           ,...\n"
             "       ],\n"
             "       \"rules\":[            (array, optional) A list of strings\n"
@@ -344,48 +349,65 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
 
             "\nResult:\n"
             "{\n"
-            "  \"version\" : n,                    (numeric) The preferred block version\n"
+            "  \"version\" : n,                    (numeric) The block version\n"
             "  \"rules\" : [ \"rulename\", ... ],    (array of strings) specific block rules that are to be enforced\n"
             "  \"vbavailable\" : {                 (json object) set of pending, supported versionbit (BIP 9) softfork deployments\n"
-            "      \"rulename\" : bitnumber          (numeric) identifies the bit number as indicating acceptance and readiness for the named softfork rule\n"
+            "      \"rulename\" : bitnumber        (numeric) identifies the bit number as indicating acceptance and readiness for the named softfork rule\n"
             "      ,...\n"
             "  },\n"
             "  \"vbrequired\" : n,                 (numeric) bit mask of versionbits the server requires set in submissions\n"
-            "  \"previousblockhash\" : \"xxxx\",     (string) The hash of current highest block\n"
+            "  \"previousblockhash\" : \"xxxx\",    (string) The hash of current highest block\n"
             "  \"transactions\" : [                (array) contents of non-coinbase transactions that should be included in the next block\n"
             "      {\n"
-            "         \"data\" : \"xxxx\",             (string) transaction data encoded in hexadecimal (byte-for-byte)\n"
-            "         \"txid\" : \"xxxx\",             (string) transaction id encoded in little-endian hexadecimal\n"
-            "         \"hash\" : \"xxxx\",             (string) hash encoded in little-endian hexadecimal (including witness data)\n"
-            "         \"depends\" : [                (array) array of numbers \n"
-            "             n                          (numeric) transactions before this one (by 1-based index in 'transactions' list) that must be present in the final block if this one is\n"
+            "         \"data\" : \"xxxx\",          (string) transaction data encoded in hexadecimal (byte-for-byte)\n"
+            "         \"txid\" : \"xxxx\",          (string) transaction id encoded in little-endian hexadecimal\n"
+            "         \"hash\" : \"xxxx\",          (string) hash/id encoded in little-endian hexadecimal\n"
+            "         \"depends\" : [              (array) array of numbers \n"
+            "             n                        (numeric) transactions before this one (by 1-based index in 'transactions' list) that must be present in the final block if this one is\n"
             "             ,...\n"
             "         ],\n"
-            "         \"fee\": n,                    (numeric) difference in value between transaction inputs and outputs (in Satoshis); for coinbase transactions, this is a negative Number of the total collected block fees (ie, not including the block subsidy); if key is not present, fee is unknown and clients MUST NOT assume there isn't one\n"
-            "         \"sigops\" : n,                (numeric) total SigOps cost, as counted for purposes of block limits; if key is not present, sigop cost is unknown and clients MUST NOT assume it is zero\n"
+            "         \"fee\": n,                   (numeric) difference in value between transaction inputs and outputs (in chuffs); for coinbase transactions, this is a negative Number of the total collected block fees (ie, not including the block subsidy); if key is not present, fee is unknown and clients MUST NOT assume there isn't one\n"
             "         \"weight\" : n,                (numeric) total transaction weight, as counted for purposes of block limits\n"
-            "         \"required\" : true|false      (boolean) if provided and true, this transaction must be in the final block\n"
+            "         \"sigops\" : n,               (numeric) total number of SigOps, as counted for purposes of block limits; if key is not present, sigop count is unknown and clients MUST NOT assume there aren't any\n"
+            "         \"required\" : true|false     (boolean) if provided and true, this transaction must be in the final block\n"
             "      }\n"
             "      ,...\n"
             "  ],\n"
-            "  \"coinbaseaux\" : {                 (json object) data that should be included in the coinbase's scriptSig content\n"
-            "      \"flags\" : \"xx\"                  (string) key name is to be ignored, and value included in scriptSig\n"
+            "  \"coinbaseaux\" : {                  (json object) data that should be included in the coinbase's scriptSig content\n"
+            "      \"flags\" : \"flags\"            (string) \n"
             "  },\n"
-            "  \"coinbasevalue\" : n,              (numeric) maximum allowable input to coinbase transaction, including the generation award and transaction fees (in Satoshis)\n"
-            "  \"coinbasetxn\" : { ... },          (json object) information for coinbase transaction\n"
-            "  \"target\" : \"xxxx\",                (string) The hash target\n"
-            "  \"mintime\" : xxx,                  (numeric) The minimum timestamp appropriate for next block time in seconds since epoch (Jan 1 1970 GMT)\n"
-            "  \"mutable\" : [                     (array of string) list of ways the block template may be changed \n"
-            "     \"value\"                          (string) A way the block template may be changed, e.g. 'time', 'transactions', 'prevblock'\n"
+            "  \"coinbasevalue\" : n,               (numeric) maximum allowable input to coinbase transaction, including the generation award and transaction fees (in chuffs)\n"
+            "  \"coinbasetxn\" : { ... },           (json object) information for coinbase transaction\n"
+            "  \"target\" : \"xxxx\",               (string) The hash target\n"
+            "  \"mintime\" : xxx,                   (numeric) The minimum timestamp appropriate for next block time in seconds since epoch (Jan 1 1970 GMT)\n"
+            "  \"mutable\" : [                      (array of string) list of ways the block template may be changed \n"
+            "     \"value\"                         (string) A way the block template may be changed, e.g. 'time', 'transactions', 'prevblock'\n"
             "     ,...\n"
             "  ],\n"
-            "  \"noncerange\" : \"00000000ffffffff\",(string) A range of valid nonces\n"
+            "  \"noncerange\" : \"00000000ffffffff\",   (string) A range of valid nonces\n"
             "  \"sigoplimit\" : n,                 (numeric) limit of sigops in blocks\n"
             "  \"sizelimit\" : n,                  (numeric) limit of block size\n"
             "  \"weightlimit\" : n,                (numeric) limit of block weight\n"
             "  \"curtime\" : ttt,                  (numeric) current timestamp in seconds since epoch (Jan 1 1970 GMT)\n"
-            "  \"bits\" : \"xxxxxxxx\",              (string) compressed target of next block\n"
+            "  \"bits\" : \"xxx\",                 (string) compressed target of next block\n"
             "  \"height\" : n                      (numeric) The height of the next block\n"
+            "  \"masternode\" : {                  (json object) required masternode payee that must be included in the next block\n"
+            "      \"payee\" : \"xxxx\",             (string) payee address\n"
+            "      \"script\" : \"xxxx\",            (string) payee scriptPubKey\n"
+            "      \"amount\": n                   (numeric) required amount to pay\n"
+            "  },\n"
+            "  \"masternode_payments_started\" :  true|false, (boolean) true, if masternode payments started\n"
+            "  \"masternode_payments_enforced\" : true|false, (boolean) true, if masternode payments are enforced\n"
+            "  \"superblock\" : [                  (array) required superblock payees that must be included in the next block\n"
+            "      {\n"
+            "         \"payee\" : \"xxxx\",          (string) payee address\n"
+            "         \"script\" : \"xxxx\",         (string) payee scriptPubKey\n"
+            "         \"amount\": n                (numeric) required amount to pay\n"
+            "      }\n"
+            "      ,...\n"
+            "  ],\n"
+            "  \"superblocks_started\" : true|false, (boolean) true, if superblock payments started\n"
+            "  \"superblocks_enabled\" : true|false  (boolean) true, if superblock payments are enabled\n"
             "}\n"
 
             "\nExamples:\n"
@@ -468,7 +490,10 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, "Bitcoin is not connected!");
 
     if (IsInitialBlockDownload())
-        throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Bitcoin is downloading blocks...");
+        throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Chaincoin Core is downloading blocks...");
+
+    if (!masternodeSync.IsSynced())
+        throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Chaincoin Core is syncing with network...");
 
     static unsigned int nTransactionsUpdatedLast;
 
@@ -521,14 +546,14 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
     // Update block
     static CBlockIndex* pindexPrev;
     static int64_t nStart;
-    static std::unique_ptr<CBlockTemplate> pblocktemplate;
+    static CBlockTemplate* pblocktemplate;
     if (pindexPrev != chainActive.Tip() ||
         (mempool.GetTransactionsUpdated() != nTransactionsUpdatedLast && GetTime() - nStart > 5))
     {
         // Clear pindexPrev so future calls make a new block, despite any failures from here on
         pindexPrev = nullptr;
 
-        // Store the pindexBest used before CreateNewBlock, to avoid races
+        // Store the chainActive.Tip() used before CreateNewBlock, to avoid races
         nTransactionsUpdatedLast = mempool.GetTransactionsUpdated();
         CBlockIndex* pindexPrevNew = chainActive.Tip();
         nStart = GetTime();
@@ -569,10 +594,10 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
 
         entry.push_back(Pair("data", EncodeHexTx(tx)));
         entry.push_back(Pair("txid", txHash.GetHex()));
-        entry.push_back(Pair("hash", tx.GetWitnessHash().GetHex()));
+        entry.push_back(Pair("hash", txHash.GetHex()));
 
         UniValue deps(UniValue::VARR);
-        BOOST_FOREACH (const CTxIn &in, tx.vin)
+        for (const CTxIn &in : tx.vin)
         {
             if (setTxIndex.count(in.prevout.hash))
                 deps.push_back(setTxIndex[in.prevout.hash]);
@@ -607,8 +632,8 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
 
     UniValue aRules(UniValue::VARR);
     UniValue vbavailable(UniValue::VOBJ);
-    for (int j = 0; j < (int)Consensus::MAX_VERSION_BITS_DEPLOYMENTS; ++j) {
-        Consensus::DeploymentPos pos = Consensus::DeploymentPos(j);
+    for (int i = 0; i < (int)Consensus::MAX_VERSION_BITS_DEPLOYMENTS; ++i) {
+        Consensus::DeploymentPos pos = Consensus::DeploymentPos(i);
         ThresholdState state = VersionBitsState(pindexPrev, consensusParams, pos, versionbitscache);
         switch (state) {
             case THRESHOLD_DEFINED:
@@ -654,7 +679,7 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
 
     if (nMaxVersionPreVB >= 2) {
         // If VB is supported by the client, nMaxVersionPreVB is -1, so we won't get here
-        // Because BIP 34 changed how the generation transaction is serialized, we can only use version/force back to v2 blocks
+        // Because BIP 34 changed how the generation transaction is serialised, we can only use version/force back to v2 blocks
         // This is safe to do [otherwise-]unconditionally only because we are throwing an exception above if a non-force deployment gets activated
         // Note that this can probably also be removed entirely after the first BIP9 non-force deployment (ie, probably segwit) gets activated
         aMutable.push_back("version/force");
@@ -681,6 +706,36 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
     result.push_back(Pair("bits", strprintf("%08x", pblock->nBits)));
     result.push_back(Pair("height", (int64_t)(pindexPrev->nHeight+1)));
 
+    UniValue masternodeObj(UniValue::VOBJ);
+    if(pblock->txoutMasternode != CTxOut()) {
+        CTxDestination address1;
+        ExtractDestination(pblock->txoutMasternode.scriptPubKey, address1);
+        CBitcoinAddress address2(address1);
+        masternodeObj.push_back(Pair("payee", address2.ToString().c_str()));
+        masternodeObj.push_back(Pair("script", HexStr(pblock->txoutMasternode.scriptPubKey.begin(), pblock->txoutMasternode.scriptPubKey.end())));
+        masternodeObj.push_back(Pair("amount", pblock->txoutMasternode.nValue));
+    }
+    result.push_back(Pair("masternode", masternodeObj));
+    result.push_back(Pair("masternode_payments_started", pindexPrev->nHeight + 1 > Params().GetConsensus().nMasternodePaymentsStartBlock));
+    result.push_back(Pair("masternode_payments_enforced", pindexPrev->nHeight + 1 > Params().GetConsensus().nMasternodePaymentsStartBlock));
+
+    UniValue superblockObjArray(UniValue::VARR);
+    if(pblock->voutSuperblock.size()) {
+        for  (const CTxOut& txout : pblock->voutSuperblock) {
+            UniValue entry(UniValue::VOBJ);
+            CTxDestination address1;
+            ExtractDestination(txout.scriptPubKey, address1);
+            CBitcoinAddress address2(address1);
+            entry.push_back(Pair("payee", address2.ToString().c_str()));
+            entry.push_back(Pair("script", HexStr(txout.scriptPubKey.begin(), txout.scriptPubKey.end())));
+            entry.push_back(Pair("amount", txout.nValue));
+            superblockObjArray.push_back(entry);
+        }
+    }
+    result.push_back(Pair("superblock", superblockObjArray));
+    result.push_back(Pair("superblocks_started", pindexPrev->nHeight + 1 > Params().GetConsensus().nSuperblockStartBlock));
+    result.push_back(Pair("superblocks_enabled", pindexPrev->nHeight + 1 > Params().GetConsensus().nSuperblockStartBlock));
+
     const struct BIP9DeploymentInfo& segwit_info = VersionBitsDeploymentInfo[Consensus::DEPLOYMENT_SEGWIT];
     if (!pblocktemplate->vchCoinbaseCommitment.empty() && setClientRules.find(segwit_info.name) != setClientRules.end()) {
         result.push_back(Pair("default_witness_commitment", HexStr(pblocktemplate->vchCoinbaseCommitment.begin(), pblocktemplate->vchCoinbaseCommitment.end())));
@@ -696,7 +751,7 @@ public:
     bool found;
     CValidationState state;
 
-    submitblock_StateCatcher(const uint256 &hashIn) : hash(hashIn), found(false), state() {};
+    explicit submitblock_StateCatcher(const uint256 &hashIn) : hash(hashIn), found(false), state() {}
 
 protected:
     virtual void BlockChecked(const CBlock& block, const CValidationState& stateIn) {
@@ -807,7 +862,7 @@ UniValue estimatepriority(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() != 1)
         throw runtime_error(
             "estimatepriority nblocks\n"
-            "\nDEPRECATED. Estimates the approximate priority a zero-fee transaction needs to begin\n"
+            "\nEstimates the approximate priority a zero-fee transaction needs to begin\n"
             "confirmation within nblocks blocks.\n"
             "\nArguments:\n"
             "1. nblocks     (numeric)\n"
@@ -870,7 +925,7 @@ UniValue estimatesmartpriority(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() != 1)
         throw runtime_error(
             "estimatesmartpriority nblocks\n"
-            "\nDEPRECATED. WARNING: This interface is unstable and may disappear or change!\n"
+            "\nWARNING: This interface is unstable and may disappear or change!\n"
             "\nEstimates the approximate priority a zero-fee transaction needs to begin\n"
             "confirmation within nblocks blocks if possible and return the number of blocks\n"
             "for which the estimate is valid.\n"

@@ -6,19 +6,19 @@
 #ifndef BITCOIN_NET_H
 #define BITCOIN_NET_H
 
-#include "addrdb.h"
-#include "addrman.h"
-#include "amount.h"
-#include "bloom.h"
-#include "compat.h"
-#include "hash.h"
-#include "limitedmap.h"
-#include "netaddress.h"
-#include "protocol.h"
-#include "random.h"
-#include "streams.h"
-#include "sync.h"
-#include "uint256.h"
+#include <addrdb.h>
+#include <addrman.h>
+#include <bloom.h>
+#include <compat.h>
+#include <hash.h>
+#include <limitedmap.h>
+#include <netaddress.h>
+#include <protocol.h>
+#include <random.h>
+#include <streams.h>
+#include <sync.h>
+#include <uint256.h>
+#include <util.h>
 
 #include <atomic>
 #include <deque>
@@ -30,7 +30,6 @@
 #endif
 
 #include <boost/filesystem/path.hpp>
-#include <boost/foreach.hpp>
 #include <boost/signals2/signal.hpp>
 
 class CAddrMan;
@@ -57,6 +56,8 @@ static const unsigned int MAX_PROTOCOL_MESSAGE_LENGTH = 4 * 1000 * 1000;
 static const unsigned int MAX_SUBVERSION_LENGTH = 256;
 /** Maximum number of outgoing nodes */
 static const int MAX_OUTBOUND_CONNECTIONS = 8;
+/** Maximum number if outgoing masternodes */
+static const int MAX_OUTBOUND_MASTERNODE_CONNECTIONS = 20;
 /** -listen default */
 static const bool DEFAULT_LISTEN = true;
 /** -upnp default */
@@ -114,7 +115,6 @@ struct CSerializedNetMsg
     std::string command;
 };
 
-
 class CConnman
 {
 public:
@@ -145,12 +145,26 @@ public:
     bool Start(boost::thread_group& threadGroup, CScheduler& scheduler, std::string& strNodeError, Options options);
     void Stop();
     bool BindListenPort(const CService &bindAddr, std::string& strError, bool fWhitelisted = false);
-    bool GetNetworkActive() const { return fNetworkActive; };
+    bool GetNetworkActive() const { return fNetworkActive; }
     void SetNetworkActive(bool active);
-    bool OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant *grantOutbound = NULL, const char *strDest = NULL, bool fOneShot = false, bool fFeeler = false);
-    bool CheckIncomingNonce(uint64_t nonce);
+    bool OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant *grantOutbound = NULL, const char *strDest = NULL, bool fOneShot = false, bool fFeeler = false); bool CheckIncomingNonce(uint64_t nonce);
+
+    // fConnectToMasternode should be 'true' only if you want this node to allow to connect to itself
+    // and/or you want it to be disconnected on CMasternodeMan::ProcessMasternodeConnections()
+    // Unfortunately, can't make this method private like in Bitcoin,
+    // because it's used in many Dash-specific places (masternode, privatesend).
+    CNode* ConnectNode(CAddress addrConnect, const char *pszDest, bool fCountFailure, bool fConnectToMasternode = false);
+
+    struct CAllNodes {
+        bool operator() (const CNode*) const {return true;}
+    };
+
+    constexpr static const CAllNodes AllNodes{};
 
     bool ForNode(NodeId id, std::function<bool(CNode* pnode)> func);
+    bool ForNode(const CService& addr, std::function<bool(CNode* pnode)> func);
+    bool ForNode(NodeId id, std::function<bool(const CNode* pnode)> cond, std::function<bool(CNode* pnode)> func);
+    bool ForNode(const CService& addr, std::function<bool(const CNode* pnode)> cond, std::function<bool(CNode* pnode)> func);
 
     void PushMessage(CNode* pnode, CSerializedNetMsg&& msg);
 
@@ -162,7 +176,7 @@ public:
             if(!func(node))
                 return false;
         return true;
-    };
+    }
 
     template<typename Callable>
     bool ForEachNodeContinueIf(Callable&& func) const
@@ -172,7 +186,28 @@ public:
             if(!func(node))
                 return false;
         return true;
-    };
+    }
+
+    template<typename Condition, typename Callable>
+    bool ForEachNodeContinueIf(const Condition& cond, Callable&& func) const
+    {
+        LOCK(cs_vNodes);
+        for (const auto& node : vNodes)
+            if (cond(node))
+                if(!func(node))
+                    return false;
+        return true;
+    }
+
+    template<typename Condition, typename Callable>
+    void ForEachNode(const Condition& cond, Callable&& func)
+    {
+        LOCK(cs_vNodes);
+        for (auto&& node : vNodes) {
+            if (cond(node))
+                func(node);
+        }
+    }
 
     template<typename Callable, typename CallableAfter>
     bool ForEachNodeContinueIfThen(Callable&& pre, CallableAfter&& post)
@@ -187,7 +222,6 @@ public:
         post();
         return ret;
     };
-
     template<typename Callable, typename CallableAfter>
     bool ForEachNodeContinueIfThen(Callable&& pre, CallableAfter&& post) const
     {
@@ -200,7 +234,7 @@ public:
             }
         post();
         return ret;
-    };
+    }
 
     template<typename Callable>
     void ForEachNode(Callable&& func)
@@ -208,7 +242,7 @@ public:
         LOCK(cs_vNodes);
         for (auto&& node : vNodes)
             func(node);
-    };
+    }
 
     template<typename Callable>
     void ForEachNode(Callable&& func) const
@@ -216,7 +250,7 @@ public:
         LOCK(cs_vNodes);
         for (const auto& node : vNodes)
             func(node);
-    };
+    }
 
     template<typename Callable, typename CallableAfter>
     void ForEachNodeThen(Callable&& pre, CallableAfter&& post)
@@ -225,7 +259,7 @@ public:
         for (auto&& node : vNodes)
             pre(node);
         post();
-    };
+    }
 
     template<typename Callable, typename CallableAfter>
     void ForEachNodeThen(Callable&& pre, CallableAfter&& post) const
@@ -234,9 +268,13 @@ public:
         for (const auto& node : vNodes)
             pre(node);
         post();
-    };
+    }
+
+    std::vector<CNode*> CopyNodeVector();
+    void ReleaseNodeVector(const std::vector<CNode*>& vecNodes);
 
     void RelayTransaction(const CTransaction& tx);
+    void RelayInv(CInv &inv, const int minProtoVersion = MIN_PEER_PROTO_VERSION);
 
     // Addrman functions
     size_t GetAddressCount() const;
@@ -335,6 +373,7 @@ private:
     void AcceptConnection(const ListenSocket& hListenSocket);
     void ThreadSocketHandler();
     void ThreadDNSAddressSeed();
+    void ThreadMnbRequestConnections();
 
     uint64_t CalculateKeyedNetGroup(const CAddress& ad);
 
@@ -344,7 +383,6 @@ private:
     CNode* FindNode(const CService& addr);
 
     bool AttemptToEvictConnection();
-    CNode* ConnectNode(CAddress addrConnect, const char *pszDest, bool fCountFailure);
     bool IsWhitelistedRange(const CNetAddr &addr);
 
     void DeleteNode(CNode* pnode);
@@ -388,7 +426,7 @@ private:
     unsigned int nReceiveFloodSize;
 
     std::vector<ListenSocket> vhListenSocket;
-    std::atomic<bool> fNetworkActive;
+    bool fNetworkActive;
     banmap_t setBanned;
     CCriticalSection cs_setBanned;
     bool setBannedIsDirty;
@@ -411,6 +449,7 @@ private:
     ServiceFlags nRelevantServices;
 
     CSemaphore *semOutbound;
+    CSemaphore *semMasternodeOutbound;
     int nMaxConnections;
     int nMaxOutbound;
     int nMaxFeeler;
@@ -476,7 +515,7 @@ bool AddLocal(const CNetAddr& addr, int nScore = LOCAL_NONE);
 bool RemoveLocal(const CService& addr);
 bool SeenLocal(const CService& addr);
 bool IsLocal(const CService& addr);
-bool GetLocal(CService &addr, const CNetAddr *paddrPeer = NULL);
+bool GetLocal(CService &addr, const CNetAddr *paddrPeer = nullptr);
 bool IsReachable(enum Network net);
 bool IsReachable(const CNetAddr &addr);
 CAddress GetLocalAddress(const CNetAddr *paddrPeer, ServiceFlags nLocalServices);
@@ -619,9 +658,12 @@ public:
     // a) it allows us to not relay tx invs before receiving the peer's version message
     // b) the peer may tell us in its version message that we should not relay tx invs
     //    unless it loads a bloom filter.
-    bool fRelayTxes; //protected by cs_filter
+    bool fRelayTxes;
+    // If 'true' this node will be disconnected on CMasternodeMan::ProcessMasternodeConnections()
+    bool fMasternode;
     bool fSentAddr;
     CSemaphoreGrant grantOutbound;
+    CSemaphoreGrant grantMasternodeOutbound;
     CCriticalSection cs_filter;
     CBloomFilter* pfilter;
     int nRefCount;
@@ -695,7 +737,6 @@ private:
     CNode(const CNode&);
     void operator=(const CNode&);
 
-
     const uint64_t nLocalHostNonce;
     // Services offered to this peer
     const ServiceFlags nLocalServices;
@@ -725,7 +766,7 @@ public:
     unsigned int GetTotalRecvSize()
     {
         unsigned int total = 0;
-        BOOST_FOREACH(const CNetMessage &msg, vRecvMsg)
+        for (const CNetMessage &msg : vRecvMsg)
             total += msg.vRecv.size() + 24;
         return total;
     }
@@ -737,7 +778,7 @@ public:
     void SetRecvVersion(int nVersionIn)
     {
         nRecvVersion = nVersionIn;
-        BOOST_FOREACH(CNetMessage &msg, vRecvMsg)
+        for (CNetMessage &msg : vRecvMsg)
             msg.SetVersion(nVersionIn);
     }
     void SetSendVersion(int nVersionIn)
@@ -804,7 +845,7 @@ public:
     void PushInventory(const CInv& inv)
     {
         LOCK(cs_inventory);
-        if (inv.type == MSG_TX) {
+        if ((inv.type == MSG_TX) || (inv.type == MSG_DSTX) || (inv.type == MSG_TXLOCK_REQUEST)) {
             if (!filterInventoryKnown.contains(inv.hash)) {
                 setInventoryTxToSend.insert(inv.hash);
             }
@@ -830,8 +871,6 @@ public:
         return nLocalServices;
     }
 };
-
-
 
 
 

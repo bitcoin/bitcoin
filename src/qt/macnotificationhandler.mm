@@ -2,7 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "macnotificationhandler.h"
+#include <macnotificationhandler.h>
 
 #undef slots
 #import <objc/runtime.h>
@@ -13,7 +13,7 @@
 - (NSString *)__bundleIdentifier
 {
     if (self == [NSBundle mainBundle]) {
-        return @"org.bitcoinfoundation.Bitcoin-Qt";
+        return @"org.chaincoin.Chaincoin-Qt";
     } else {
         return [self __bundleIdentifier];
     }
@@ -75,7 +75,7 @@ bool MacNotificationHandler::hasUserNotificationCenterSupport(void)
 
 MacNotificationHandler *MacNotificationHandler::instance()
 {
-    static MacNotificationHandler *s_instance = NULL;
+    static MacNotificationHandler *s_instance = nullptr;
     if (!s_instance) {
         s_instance = new MacNotificationHandler();
         

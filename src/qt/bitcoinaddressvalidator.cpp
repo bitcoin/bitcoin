@@ -1,10 +1,11 @@
 // Copyright (c) 2011-2014 The Bitcoin Core developers
+// Copyright (c) 2014-2017 The Dash Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "bitcoinaddressvalidator.h"
+#include <bitcoinaddressvalidator.h>
 
-#include "base58.h"
+#include <base58.h>
 
 /* Base58 characters are:
      "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
@@ -88,7 +89,7 @@ BitcoinAddressCheckValidator::BitcoinAddressCheckValidator(QObject *parent) :
 QValidator::State BitcoinAddressCheckValidator::validate(QString &input, int &pos) const
 {
     Q_UNUSED(pos);
-    // Validate the passed Bitcoin address
+    // Validate the passed Dash address
     CBitcoinAddress addr(input.toStdString());
     if (addr.IsValid())
         return QValidator::Acceptable;

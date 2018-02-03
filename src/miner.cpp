@@ -1,35 +1,36 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2014-2017 The Dash Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "miner.h"
+#include <miner.h>
 
-#include "amount.h"
-#include "chain.h"
-#include "chainparams.h"
-#include "coins.h"
-#include "consensus/consensus.h"
-#include "consensus/merkle.h"
-#include "consensus/validation.h"
-#include "hash.h"
-#include "validation.h"
-#include "net.h"
-#include "policy/policy.h"
-#include "pow.h"
-#include "primitives/transaction.h"
-#include "script/standard.h"
-#include "timedata.h"
-#include "txmempool.h"
-#include "util.h"
-#include "utilmoneystr.h"
-#include "validationinterface.h"
+#include <amount.h>
+#include <chain.h>
+#include <chainparams.h>
+#include <coins.h>
+#include <consensus/consensus.h>
+#include <consensus/merkle.h>
+#include <consensus/validation.h>
+#include <hash.h>
+#include <net.h>
+#include <policy/policy.h>
+#include <pow.h>
+#include <primitives/transaction.h>
+#include <script/standard.h>
+#include <timedata.h>
+#include <txmempool.h>
+#include <util.h>
+#include <utilmoneystr.h>
+#include <masternode-payments.h>
+#include <masternode-sync.h>
+#include <validation.h>
+#include <validationinterface.h>
 
-#include <algorithm>
 #include <boost/thread.hpp>
 #include <boost/tuple/tuple.hpp>
 #include <queue>
-#include <utility>
 
 using namespace std;
 
@@ -123,14 +124,14 @@ void BlockAssembler::resetBlock()
     blockFinished = false;
 }
 
-std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& scriptPubKeyIn)
+CBlockTemplate* BlockAssembler::CreateNewBlock(const CScript& scriptPubKeyIn)
 {
     resetBlock();
 
     pblocktemplate.reset(new CBlockTemplate());
 
     if(!pblocktemplate.get())
-        return nullptr;
+        return NULL;
     pblock = &pblocktemplate->block; // pointer for convenience
 
     // Add dummy coinbase tx as first transaction
@@ -171,13 +172,15 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     nLastBlockWeight = nBlockWeight;
 
     // Create coinbase transaction.
+    CAmount blockReward = nFees + GetBlockSubsidy(nHeight, Params().GetConsensus());
     CMutableTransaction coinbaseTx;
     coinbaseTx.vin.resize(1);
     coinbaseTx.vin[0].prevout.SetNull();
     coinbaseTx.vout.resize(1);
     coinbaseTx.vout[0].scriptPubKey = scriptPubKeyIn;
-    coinbaseTx.vout[0].nValue = nFees + GetBlockSubsidy(nHeight, chainparams.GetConsensus());
+    coinbaseTx.vout[0].nValue = blockReward;
     coinbaseTx.vin[0].scriptSig = CScript() << nHeight << OP_0;
+    FillBlockPayments(coinbaseTx, nHeight, blockReward, pblock->txoutMasternode, pblock->voutSuperblock);
     pblock->vtx[0] = MakeTransactionRef(std::move(coinbaseTx));
     pblocktemplate->vchCoinbaseCommitment = GenerateCoinbaseCommitment(*pblock, pindexPrev, chainparams.GetConsensus());
     pblocktemplate->vTxFees[0] = -nFees;
@@ -197,12 +200,12 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
         throw std::runtime_error(strprintf("%s: TestBlockValidity failed: %s", __func__, FormatStateMessage(state)));
     }
 
-    return std::move(pblocktemplate);
+    return pblocktemplate.release();
 }
 
 bool BlockAssembler::isStillDependent(CTxMemPool::txiter iter)
 {
-    BOOST_FOREACH(CTxMemPool::txiter parent, mempool.GetMemPoolParents(iter))
+    for (CTxMemPool::txiter parent : mempool.GetMemPoolParents(iter))
     {
         if (!inBlock.count(parent)) {
             return true;
@@ -242,7 +245,7 @@ bool BlockAssembler::TestPackage(uint64_t packageSize, int64_t packageSigOpsCost
 bool BlockAssembler::TestPackageTransactions(const CTxMemPool::setEntries& package)
 {
     uint64_t nPotentialBlockSize = nBlockSize; // only used with fNeedSizeAccounting
-    BOOST_FOREACH (const CTxMemPool::txiter it, package) {
+    for (const CTxMemPool::txiter it : package) {
         if (!IsFinalTx(it->GetTx(), nHeight, nLockTimeCutoff))
             return false;
         if (!fIncludeWitness && !it->GetTx().wit.IsNull())
@@ -339,11 +342,11 @@ void BlockAssembler::AddToBlock(CTxMemPool::txiter iter)
 void BlockAssembler::UpdatePackagesForAdded(const CTxMemPool::setEntries& alreadyAdded,
         indexed_modified_transaction_set &mapModifiedTx)
 {
-    BOOST_FOREACH(const CTxMemPool::txiter it, alreadyAdded) {
+    for (const CTxMemPool::txiter it : alreadyAdded) {
         CTxMemPool::setEntries descendants;
         mempool.CalculateDescendants(it, descendants);
         // Insert all descendants (not yet in block) into the modified set
-        BOOST_FOREACH(CTxMemPool::txiter desc, descendants) {
+        for (CTxMemPool::txiter desc : descendants) {
             if (alreadyAdded.count(desc))
                 continue;
             modtxiter mit = mapModifiedTx.find(desc);
@@ -576,7 +579,7 @@ void BlockAssembler::addPriorityTxs()
 
             // This tx was successfully added, so
             // add transactions that depend on this one to the priority queue to try again
-            BOOST_FOREACH(CTxMemPool::txiter child, mempool.GetMemPoolChildren(iter))
+            for (CTxMemPool::txiter child : mempool.GetMemPoolChildren(iter))
             {
                 waitPriIter wpiter = waitPriMap.find(child);
                 if (wpiter != waitPriMap.end()) {

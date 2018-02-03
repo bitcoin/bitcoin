@@ -1,4 +1,4 @@
-// Copyright (c) 2014 The Bitcoin Core developers
+// Copyright (c) 2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,7 +6,7 @@
 #define BITCOIN_ZMQ_ZMQCONFIG_H
 
 #if defined(HAVE_CONFIG_H)
-#include "config/bitcoin-config.h"
+#include "config/chaincoin-config.h"
 #endif
 
 #include <stdarg.h>

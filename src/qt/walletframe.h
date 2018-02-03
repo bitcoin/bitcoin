@@ -19,13 +19,6 @@ QT_BEGIN_NAMESPACE
 class QStackedWidget;
 QT_END_NAMESPACE
 
-/**
- * A container for embedding all wallet-related
- * controls into BitcoinGUI. The purpose of this class is to allow future
- * refinements of the wallet controls with minimal need for further
- * modifications to BitcoinGUI, thus greatly simplifying merges while
- * reducing the risk of breaking top-level stuff.
- */
 class WalletFrame : public QFrame
 {
     Q_OBJECT
@@ -66,6 +59,8 @@ public Q_SLOTS:
     void gotoOverviewPage();
     /** Switch to history (transactions) page */
     void gotoHistoryPage();
+    /** Switch to masternode page */
+    void gotoMasternodePage();
     /** Switch to receive coins page */
     void gotoReceiveCoinsPage();
     /** Switch to send coins page */
@@ -84,6 +79,8 @@ public Q_SLOTS:
     void changePassphrase();
     /** Ask for passphrase to unlock wallet temporarily */
     void unlockWallet();
+    /** Lock wallet */
+    void lockWallet();
 
     /** Show used sending addresses */
     void usedSendingAddresses();

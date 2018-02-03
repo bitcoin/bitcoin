@@ -6,7 +6,7 @@
 #ifndef BITCOIN_SCRIPT_SIGCACHE_H
 #define BITCOIN_SCRIPT_SIGCACHE_H
 
-#include "script/interpreter.h"
+#include <script/interpreter.h>
 
 #include <vector>
 

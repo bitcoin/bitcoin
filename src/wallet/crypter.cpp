@@ -2,17 +2,20 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "crypter.h"
+#include <wallet/crypter.h>
 
-#include "crypto/aes.h"
-#include "crypto/sha512.h"
-#include "script/script.h"
-#include "script/standard.h"
-#include "util.h"
+#include <crypto/aes.h>
+#include <crypto/sha512.h>
+#include <script/script.h>
+#include <script/standard.h>
+#include <util.h>
 
 #include <string>
 #include <vector>
-#include <boost/foreach.hpp>
+
+#include <openssl/aes.h>
+#include <openssl/evp.h>
+
 
 int CCrypter::BytesToKeySHA512AES(const std::vector<unsigned char>& chSalt, const SecureString& strKeyData, int count, unsigned char *key,unsigned char *iv) const
 {
@@ -120,6 +123,45 @@ static bool EncryptSecret(const CKeyingMaterial& vMasterKey, const CKeyingMateri
     return cKeyCrypter.Encrypt(*((const CKeyingMaterial*)&vchPlaintext), vchCiphertext);
 }
 
+// General secure AES 256 CBC encryption routine
+bool EncryptAES256(const SecureString& sKey, const SecureString& sPlaintext, const std::string& sIV, std::string& sCiphertext)
+{
+    // max ciphertext len for a n bytes of plaintext is
+    // n + AES_BLOCK_SIZE - 1 bytes
+    int nLen = sPlaintext.size();
+    int nCLen = nLen + AES_BLOCK_SIZE;
+    int nFLen = 0;
+
+    // Verify key sizes
+    if(sKey.size() != 32 || sIV.size() != AES_BLOCK_SIZE) {
+        LogPrintf("crypter EncryptAES256 - Invalid key or block size: Key: %d sIV:%d\n", sKey.size(), sIV.size());
+        return false;
+    }
+
+    // Prepare output buffer
+    sCiphertext.resize(nCLen);
+
+    // Perform the encryption
+    EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
+
+    if (!ctx) return false;
+
+    bool fOk = true;
+
+    EVP_CIPHER_CTX_init(ctx);
+    if (fOk) fOk = EVP_EncryptInit_ex(ctx, EVP_aes_256_cbc(), NULL, (const unsigned char*) &sKey[0], (const unsigned char*) &sIV[0]);
+    if (fOk) fOk = EVP_EncryptUpdate(ctx, (unsigned char*) &sCiphertext[0], &nCLen, (const unsigned char*) &sPlaintext[0], nLen);
+    if (fOk) fOk = EVP_EncryptFinal_ex(ctx, (unsigned char*) (&sCiphertext[0])+nCLen, &nFLen);
+    EVP_CIPHER_CTX_cleanup(ctx);
+
+    EVP_CIPHER_CTX_free(ctx);
+
+    if (!fOk) return false;
+
+    sCiphertext.resize(nCLen + nFLen);
+    return true;
+}
+
 static bool DecryptSecret(const CKeyingMaterial& vMasterKey, const std::vector<unsigned char>& vchCiphertext, const uint256& nIV, CKeyingMaterial& vchPlaintext)
 {
     CCrypter cKeyCrypter;
@@ -128,6 +170,40 @@ static bool DecryptSecret(const CKeyingMaterial& vMasterKey, const std::vector<u
     if(!cKeyCrypter.SetKey(vMasterKey, chIV))
         return false;
     return cKeyCrypter.Decrypt(vchCiphertext, *((CKeyingMaterial*)&vchPlaintext));
+}
+
+bool DecryptAES256(const SecureString& sKey, const std::string& sCiphertext, const std::string& sIV, SecureString& sPlaintext)
+{
+    // plaintext will always be equal to or lesser than length of ciphertext
+    int nLen = sCiphertext.size();
+    int nPLen = nLen, nFLen = 0;
+
+    // Verify key sizes
+    if(sKey.size() != 32 || sIV.size() != AES_BLOCK_SIZE) {
+        LogPrintf("crypter DecryptAES256 - Invalid key or block size\n");
+        return false;
+    }
+
+    sPlaintext.resize(nPLen);
+
+    EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
+
+    if (!ctx) return false;
+
+    bool fOk = true;
+
+    EVP_CIPHER_CTX_init(ctx);
+    if (fOk) fOk = EVP_DecryptInit_ex(ctx, EVP_aes_256_cbc(), NULL, (const unsigned char*) &sKey[0], (const unsigned char*) &sIV[0]);
+    if (fOk) fOk = EVP_DecryptUpdate(ctx, (unsigned char *) &sPlaintext[0], &nPLen, (const unsigned char *) &sCiphertext[0], nLen);
+    if (fOk) fOk = EVP_DecryptFinal_ex(ctx, (unsigned char *) (&sPlaintext[0])+nPLen, &nFLen);
+    EVP_CIPHER_CTX_cleanup(ctx);
+
+    EVP_CIPHER_CTX_free(ctx);
+
+    if (!fOk) return false;
+
+    sPlaintext.resize(nPLen + nFLen);
+    return true;
 }
 
 static bool DecryptKey(const CKeyingMaterial& vMasterKey, const std::vector<unsigned char>& vchCryptedSecret, const CPubKey& vchPubKey, CKey& key)
@@ -154,7 +230,7 @@ bool CCryptoKeyStore::SetCrypted()
     return true;
 }
 
-bool CCryptoKeyStore::Lock()
+bool CCryptoKeyStore::Lock(bool fAllowMixing)
 {
     if (!SetCrypted())
         return false;
@@ -164,11 +240,12 @@ bool CCryptoKeyStore::Lock()
         vMasterKey.clear();
     }
 
+    fOnlyMixingAllowed = fAllowMixing;
     NotifyStatusChanged(this);
     return true;
 }
 
-bool CCryptoKeyStore::Unlock(const CKeyingMaterial& vMasterKeyIn)
+bool CCryptoKeyStore::Unlock(const CKeyingMaterial& vMasterKeyIn, bool fForMixingOnly)
 {
     {
         LOCK(cs_KeyStore);
@@ -202,6 +279,7 @@ bool CCryptoKeyStore::Unlock(const CKeyingMaterial& vMasterKeyIn)
         vMasterKey = vMasterKeyIn;
         fDecryptionThoroughlyChecked = true;
     }
+    fOnlyMixingAllowed = fForMixingOnly;
     NotifyStatusChanged(this);
     return true;
 }
@@ -213,7 +291,7 @@ bool CCryptoKeyStore::AddKeyPubKey(const CKey& key, const CPubKey &pubkey)
         if (!IsCrypted())
             return CBasicKeyStore::AddKeyPubKey(key, pubkey);
 
-        if (IsLocked())
+        if (IsLocked(true))
             return false;
 
         std::vector<unsigned char> vchCryptedSecret;
@@ -285,7 +363,7 @@ bool CCryptoKeyStore::EncryptKeys(CKeyingMaterial& vMasterKeyIn)
             return false;
 
         fUseCrypto = true;
-        BOOST_FOREACH(KeyMap::value_type& mKey, mapKeys)
+        for (KeyMap::value_type& mKey : mapKeys)
         {
             const CKey &key = mKey.second;
             CPubKey vchPubKey = key.GetPubKey();
