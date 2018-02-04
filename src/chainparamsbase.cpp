@@ -17,11 +17,11 @@ const std::string CBaseChainParams::REGTEST = "regtest";
 void AppendParamsHelpMessages(std::string& strUsage, bool debugHelp)
 {
     strUsage += HelpMessageGroup(_("Chain selection options:"));
-    strUsage += HelpMessageOpt("-testnet", _("Use the test chain"));
     if (debugHelp) {
         strUsage += HelpMessageOpt("-regtest", "Enter regression test mode, which uses a special chain in which blocks can be solved instantly. "
                                    "This is intended for regression testing tools and app development.");
     }
+    strUsage += HelpMessageOpt("-testnet", _("Use the test chain"));
 }
 
 /**
