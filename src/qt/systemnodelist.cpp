@@ -76,7 +76,7 @@ SystemnodeList::SystemnodeList(QWidget *parent) :
     //CBlockIndex* pindexPrev = chainActive.Tip();
     //int nNext = pindexPrev->nHeight - pindexPrev->nHeight % GetBudgetPaymentCycleBlocks() + GetBudgetPaymentCycleBlocks();
     //ui->superblockLabel->setText(QString::number(nNext));
-    sendDialog = new SendCollateralDialog(SendCollateralDialog::SYSTEMNODE);
+    sendDialog = new SendCollateralDialog(SendCollateralDialog::SYSTEMNODE, this);
 }
 
 SystemnodeList::~SystemnodeList()
@@ -179,6 +179,20 @@ void SystemnodeList::StartAll(std::string strCommand)
     QMessageBox msg;
     msg.setText(QString::fromStdString(returnObj));
     msg.exec();
+}
+
+void SystemnodeList::selectAliasRow(QString alias)
+{
+    for(int i=0; i < ui->tableWidgetMySystemnodes->rowCount(); i++)
+    {
+        if(ui->tableWidgetMySystemnodes->item(i, 0)->text() == alias)
+        {
+            ui->tableWidgetMySystemnodes->selectRow(i);
+            ui->tableWidgetMySystemnodes->setFocus();
+            ui->tabWidget->setCurrentIndex(0);
+            return;
+        }
+    }
 }
 
 void SystemnodeList::updateMySystemnodeInfo(QString alias, QString addr, QString privkey, QString txHash, QString txIndex, CSystemnode *pmn)

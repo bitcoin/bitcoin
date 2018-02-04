@@ -39,6 +39,7 @@ public:
     void StartAlias(std::string strAlias);
     void StartAll(std::string strCommand = "start-all");
     void VoteMany(std::string strCommand);
+    void selectAliasRow(QString alias);
 
 private:
     QMenu *contextMenu;

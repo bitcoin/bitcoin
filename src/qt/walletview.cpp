@@ -120,6 +120,9 @@ void WalletView::setBitcoinGUI(BitcoinGUI *gui)
 
         connect(this, SIGNAL(guiEnableSystemnodesChanged(bool)), gui, SLOT(guiEnableSystemnodesChanged(bool)));
         connect(this, SIGNAL(guiEnableMasternodesChanged(bool)), gui, SLOT(guiEnableMasternodesChanged(bool)));
+
+        connect(this, SIGNAL(guiGotoMasternodePage()), gui, SLOT(gotoMasternodePage()));
+        connect(this, SIGNAL(guiGotoSystemnodePage()), gui, SLOT(gotoSystemnodePage()));
     }
 }
 
@@ -278,11 +281,15 @@ void WalletView::processNewTransaction(const QModelIndex& parent, int start, int
                         if (systemnodePayment) {
                             systemnodeConfig.add(alias, ip, privateKey, hash.toStdString(), strprintf("%d", out.i));
                             systemnodeConfig.write();
+                            emit guiGotoSystemnodePage();
                             systemnodeListPage->updateMyNodeList(true);
+                            systemnodeListPage->selectAliasRow(QString::fromStdString(alias));
                         } else if (masternodePayment) {
                             masternodeConfig.add(alias, ip, privateKey, hash.toStdString(), strprintf("%d", out.i));
                             masternodeConfig.write();
+                            emit guiGotoMasternodePage();
                             masternodeListPage->updateMyNodeList(true);
+                            masternodeListPage->selectAliasRow(QString::fromStdString(alias));
                         }
                     }
                 }

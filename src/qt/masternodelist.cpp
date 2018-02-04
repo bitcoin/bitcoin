@@ -185,6 +185,20 @@ void MasternodeList::StartAll(std::string strCommand)
     msg.exec();
 }
 
+void MasternodeList::selectAliasRow(QString alias)
+{
+    for(int i=0; i < ui->tableWidgetMyMasternodes->rowCount(); i++)
+    {
+        if(ui->tableWidgetMyMasternodes->item(i, 0)->text() == alias)
+        {
+            ui->tableWidgetMyMasternodes->selectRow(i);
+            ui->tableWidgetMyMasternodes->setFocus();
+            ui->tabWidget->setCurrentIndex(0);
+            return;
+        }
+    }
+}
+
 void MasternodeList::updateMyMasternodeInfo(QString alias, QString addr, QString privkey, QString txHash, QString txIndex, CMasternode *pmn)
 {
     LOCK(cs_mnlistupdate);

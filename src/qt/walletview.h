@@ -145,6 +145,8 @@ signals:
     void incomingTransaction(const QString& date, int unit, const CAmount& amount, const QString& type, const QString& address);
     void guiEnableSystemnodesChanged(bool);
     void guiEnableMasternodesChanged(bool);
+    void guiGotoMasternodePage();
+    void guiGotoSystemnodePage();
 };
 
 #endif // BITCOIN_QT_WALLETVIEW_H
