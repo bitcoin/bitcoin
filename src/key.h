@@ -37,8 +37,8 @@ public:
      * script supports up to 75 for single byte push
      */
     static_assert(
-        PRIVATE_KEY_SIZE >= COMPRESSED_PRIVATE_KEY_SIZE,
-        "COMPRESSED_PRIVATE_KEY_SIZE is larger than PRIVATE_KEY_SIZE");
+        PRIVATE_KEY_SIZE > COMPRESSED_PRIVATE_KEY_SIZE,
+        "COMPRESSED_PRIVATE_KEY_SIZE should be smaller than PRIVATE_KEY_SIZE");
 
 private:
     //! Whether this private key is valid. We check for correctness when modifying the key
