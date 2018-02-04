@@ -9,7 +9,7 @@
 /* #undef AC_APPLE_UNIVERSAL_BUILD */
 
 /* Version Build */
-#define CLIENT_VERSION_BUILD 99
+#define CLIENT_VERSION_BUILD 0
 
 /* Version is release */
 #define CLIENT_VERSION_IS_RELEASE false
@@ -21,7 +21,7 @@
 #define CLIENT_VERSION_MINOR 13
 
 /* Build revision */
-#define CLIENT_VERSION_REVISION 3
+#define CLIENT_VERSION_REVISION 99
 
 /* Copyright holder(s) before %s replacement */
 #define COPYRIGHT_HOLDERS "The %s developers"
@@ -159,7 +159,7 @@
 /* #undef HAVE_FUNC_ATTRIBUTE_DLLIMPORT */
 
 /* Define to 1 if the system has the `visibility' function attribute */
-#define HAVE_FUNC_ATTRIBUTE_VISIBILITY 1
+/* #undef HAVE_FUNC_ATTRIBUTE_VISIBILITY */
 
 /* Define this symbol if you have getaddrinfo_a */
 /* #undef HAVE_GETADDRINFO_A */
@@ -324,7 +324,7 @@
 #define PACKAGE_NAME "Chaincoin Core"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "Chaincoin Core 0.13.3"
+#define PACKAGE_STRING "Chaincoin Core 0.13.99"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "chaincoincore"
@@ -333,7 +333,7 @@
 #define PACKAGE_URL ""
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "0.13.3"
+#define PACKAGE_VERSION "0.13.99"
 
 /* Define to necessary symbol if this constant uses a non-standard name on
    your system. */
