@@ -34,6 +34,10 @@ public:
      */
     static const unsigned int SIZE         = 72;
     static const unsigned int COMPACT_SIZE = 65;
+
+    static_assert(
+        SIZE > COMPACT_SIZE,
+        "COMPACT_SIZE should be smaller than SIZE");
 };
 
 /** An encapsulated public key. */
@@ -50,8 +54,8 @@ public:
      * script supports up to 75 for single byte push
      */
     static_assert(
-        SIZE >= COMPRESSED_SIZE,
-        "COMPRESSED_SIZE is larger than SIZE");
+        SIZE > COMPRESSED_SIZE,
+        "COMPRESSED_SIZE should be smaller than SIZE");
 
 private:
 
