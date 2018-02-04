@@ -4,74 +4,12 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <stdint.h>
-#include <errno.h>
 #include <iomanip>
-#include <limits>
 #include <sstream>
-#include <stdexcept>
 #include <stdlib.h>
-#include <string.h>
+#include <stdexcept>
 
 #include "univalue.h"
-
-namespace 
-{
-static bool ParsePrechecks(const std::string& str)
-{
-    if (str.empty()) // No empty string allowed
-        return false;
-    if (str.size() >= 1 && (json_isspace(str[0]) || json_isspace(str[str.size()-1]))) // No padding allowed
-        return false;
-    if (str.size() != strlen(str.c_str())) // No embedded NUL characters allowed
-        return false;
-    return true;
-}
-
-bool ParseInt32(const std::string& str, int32_t *out)
-{
-    if (!ParsePrechecks(str))
-        return false;
-    char *endp = NULL;
-    errno = 0; // strtol will not set errno if valid
-    long int n = strtol(str.c_str(), &endp, 10);
-    if(out) *out = (int32_t)n;
-    // Note that strtol returns a *long int*, so even if strtol doesn't report a over/underflow
-    // we still have to check that the returned value is within the range of an *int32_t*. On 64-bit
-    // platforms the size of these types may be different.
-    return endp && *endp == 0 && !errno &&
-        n >= std::numeric_limits<int32_t>::min() &&
-        n <= std::numeric_limits<int32_t>::max();
-}
-
-bool ParseInt64(const std::string& str, int64_t *out)
-{
-    if (!ParsePrechecks(str))
-        return false;
-    char *endp = NULL;
-    errno = 0; // strtoll will not set errno if valid
-    long long int n = strtoll(str.c_str(), &endp, 10);
-    if(out) *out = (int64_t)n;
-    // Note that strtoll returns a *long long int*, so even if strtol doesn't report a over/underflow
-    // we still have to check that the returned value is within the range of an *int64_t*.
-    return endp && *endp == 0 && !errno &&
-        n >= std::numeric_limits<int64_t>::min() &&
-        n <= std::numeric_limits<int64_t>::max();
-}
-
-bool ParseDouble(const std::string& str, double *out)
-{
-    if (!ParsePrechecks(str))
-        return false;
-    if (str.size() >= 2 && str[0] == '0' && str[1] == 'x') // No hexadecimal floats allowed
-        return false;
-    std::istringstream text(str);
-    text.imbue(std::locale::classic());
-    double result;
-    text >> result;
-    if(out) *out = result;
-    return text.eof() && !text.fail();
-}
-}
 
 using namespace std;
 
@@ -104,7 +42,7 @@ static bool validNumStr(const string& s)
 {
     string tokenVal;
     unsigned int consumed;
-    enum jtokentype tt = getJsonToken(tokenVal, consumed, s.c_str());
+    enum jtokentype tt = getJsonToken(tokenVal, consumed, s.data(), s.data() + s.size());
     return (tt == JTOK_NUMBER);
 }
 
@@ -183,7 +121,7 @@ bool UniValue::insert(size_t pos, const UniValue& val_)
 {
     if (typ != VARR)
         return false;
-    
+
     if (pos >= values.size())
         values.push_back(val_);
     else
@@ -195,11 +133,11 @@ bool UniValue::erase(size_t from, size_t to)
 {
     if (typ != VARR)
         return false;
-    
+
     if (from >= values.size() || to > values.size()
         || from > to)
         return false;
-    
+
     values.erase(values.begin() + from, values.begin() + to);
     return true;
 }
@@ -214,13 +152,22 @@ bool UniValue::push_backV(const std::vector<UniValue>& vec)
     return true;
 }
 
+void UniValue::__pushKV(const std::string& key, const UniValue& val_)
+{
+    keys.push_back(key);
+    values.push_back(val_);
+}
+
 bool UniValue::pushKV(const std::string& key, const UniValue& val_)
 {
     if (typ != VOBJ)
         return false;
 
-    keys.push_back(key);
-    values.push_back(val_);
+    size_t idx;
+    if (findKey(key, idx))
+        values[idx] = val_;
+    else
+        __pushKV(key, val_);
     return true;
 }
 
@@ -229,30 +176,43 @@ bool UniValue::pushKVs(const UniValue& obj)
     if (typ != VOBJ || obj.typ != VOBJ)
         return false;
 
-    for (unsigned int i = 0; i < obj.keys.size(); i++) {
-        keys.push_back(obj.keys[i]);
-        values.push_back(obj.values.at(i));
-    }
+    for (size_t i = 0; i < obj.keys.size(); i++)
+        __pushKV(obj.keys[i], obj.values.at(i));
 
     return true;
 }
 
-int UniValue::findKey(const std::string& key) const
+void UniValue::getObjMap(std::map<std::string,UniValue>& kv) const
 {
-    for (unsigned int i = 0; i < keys.size(); i++) {
-        if (keys[i] == key)
-            return (int) i;
-    }
+    if (typ != VOBJ)
+        return;
 
-    return -1;
+    kv.clear();
+    for (size_t i = 0; i < keys.size(); i++)
+        kv[keys[i]] = values[i];
 }
 
-bool UniValue::checkObject(const std::map<std::string,UniValue::VType>& t)
+bool UniValue::findKey(const std::string& key, size_t& retIdx) const
 {
+    for (size_t i = 0; i < keys.size(); i++) {
+        if (keys[i] == key) {
+            retIdx = i;
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool UniValue::checkObject(const std::map<std::string,UniValue::VType>& t) const
+{
+    if (typ != VOBJ)
+        return false;
+
     for (std::map<std::string,UniValue::VType>::const_iterator it = t.begin();
          it != t.end(); ++it) {
-        int idx = findKey(it->first);
-        if (idx < 0)
+        size_t idx = 0;
+        if (!findKey(it->first, idx))
             return false;
 
         if (values.at(idx).getType() != it->second)
@@ -267,21 +227,21 @@ const UniValue& UniValue::operator[](const std::string& key) const
     if (typ != VOBJ)
         return NullUniValue;
 
-    int index = findKey(key);
-    if (index < 0)
+    size_t idx = 0;
+    if (!findKey(key, idx))
         return NullUniValue;
 
-    return values.at(index);
+    return values.at(idx);
 }
 
-const UniValue& UniValue::operator[](unsigned int index) const
+const UniValue& UniValue::operator[](size_t idx) const
 {
     if (typ != VOBJ && typ != VARR)
         return NullUniValue;
-    if (index >= values.size())
+    if (idx >= values.size())
         return NullUniValue;
 
-    return values.at(index);
+    return values.at(idx);
 }
 
 UniValue& UniValue::get(const std::string& key)
@@ -289,21 +249,21 @@ UniValue& UniValue::get(const std::string& key)
     if (typ != VOBJ)
         throw std::runtime_error("Not an object.");
 
-    int index = findKey(key);
-    if (index < 0)
+    size_t idx;
+    if (!findKey(key, idx))
         throw std::runtime_error("Key not found.");
 
-    return values.at(index);
+    return values.at(idx);
 };
 
-UniValue& UniValue::get(unsigned int index)
+UniValue& UniValue::get(size_t idx)
 {
     if (typ != VOBJ && typ != VARR)
         throw std::runtime_error("Not an object or array.");
-    if (index >= values.size())
+    if (idx >= values.size())
         throw std::runtime_error("Index out of range.");
 
-    return values.at(index);
+    return values.at(idx);
 };
 
 const char *uvTypeName(UniValue::VType t)
@@ -328,77 +288,5 @@ const UniValue& find_value(const UniValue& obj, const std::string& name)
             return obj.values.at(i);
 
     return NullUniValue;
-}
-
-const std::vector<std::string>& UniValue::getKeys() const
-{
-    if (typ != VOBJ)
-        throw std::runtime_error("JSON value is not an object as expected");
-    return keys;
-}
-
-const std::vector<UniValue>& UniValue::getValues() const
-{
-    if (typ != VOBJ && typ != VARR)
-        throw std::runtime_error("JSON value is not an object or array as expected");
-    return values;
-}
-
-bool UniValue::get_bool() const
-{
-    if (typ != VBOOL)
-        throw std::runtime_error("JSON value is not a boolean as expected");
-    return getBool();
-}
-
-const std::string& UniValue::get_str() const
-{
-    if (typ != VSTR)
-        throw std::runtime_error("JSON value is not a string as expected");
-    return getValStr();
-}
-
-int UniValue::get_int() const
-{
-    if (typ != VNUM)
-        throw std::runtime_error("JSON value is not an integer as expected");
-    int32_t retval;
-    if (!ParseInt32(getValStr(), &retval))
-        throw std::runtime_error("JSON integer out of range");
-    return retval;
-}
-
-int64_t UniValue::get_int64() const
-{
-    if (typ != VNUM)
-        throw std::runtime_error("JSON value is not an integer as expected");
-    int64_t retval;
-    if (!ParseInt64(getValStr(), &retval))
-        throw std::runtime_error("JSON integer out of range");
-    return retval;
-}
-
-double UniValue::get_real() const
-{
-    if (typ != VNUM)
-        throw std::runtime_error("JSON value is not a number as expected");
-    double retval;
-    if (!ParseDouble(getValStr(), &retval))
-        throw std::runtime_error("JSON double out of range");
-    return retval;
-}
-
-const UniValue& UniValue::get_obj() const
-{
-    if (typ != VOBJ)
-        throw std::runtime_error("JSON value is not an object as expected");
-    return *this;
-}
-
-const UniValue& UniValue::get_array() const
-{
-    if (typ != VARR)
-        throw std::runtime_error("JSON value is not an array as expected");
-    return *this;
 }
 

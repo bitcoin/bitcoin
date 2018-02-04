@@ -5,14 +5,14 @@
 #ifndef PARTICL_WALLET_HDWALLETDB_H
 #define PARTICL_WALLET_HDWALLETDB_H
 
-#include "amount.h"
-#include "primitives/transaction.h"
-#include "wallet/wallet.h"
-#include "wallet/walletdb.h"
-#include "key.h"
-#include "key/types.h"
-#include "key/stealth.h"
-#include "key/extkey.h"
+#include <amount.h>
+#include <primitives/transaction.h>
+#include <wallet/wallet.h>
+#include <wallet/walletdb.h>
+#include <key.h>
+#include <key/types.h>
+#include <key/stealth.h>
+#include <key/extkey.h>
 
 #include <list>
 #include <stdint.h>

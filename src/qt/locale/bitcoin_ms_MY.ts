@@ -352,7 +352,7 @@ Alihkan fail data ke dalam tab semasa</translation>
     </message>
     <message>
         <source>&amp;Debug window</source>
-        <translation>Tetingkap Debug</translation>
+        <translation>Tetingkap windows</translation>
     </message>
     <message>
         <source>Open debugging and diagnostic console</source>
@@ -391,8 +391,8 @@ Alihkan fail data ke dalam tab semasa</translation>
         <translation>sulitkan kata laluan milik peribadi anda </translation>
     </message>
     <message>
-        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
-        <translation>Log mesej dengan alamat Bitcoin anda untuk membuktikan anda memilikinya</translation>
+        <source>Sign messages with your Particl addresses to prove you own them</source>
+        <translation>sahkan mesej bersama alamat particl anda untuk menunjukkan alamat ini anda punya</translation>
     </message>
     <message>
         <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
@@ -437,6 +437,10 @@ Alihkan fail data ke dalam tab semasa</translation>
     </context>
 <context>
     <name>Intro</name>
+    <message>
+        <source>Bitcoin</source>
+        <translation>Bitcoin</translation>
+    </message>
     </context>
 <context>
     <name>ModalOverlay</name>

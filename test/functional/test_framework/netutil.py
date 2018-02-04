@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2016 The Bitcoin Core developers
+# Copyright (c) 2014-2017 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Linux network utilities.
@@ -15,17 +15,17 @@ import array
 import os
 from binascii import unhexlify, hexlify
 
-STATE_ESTABLISHED = '01'
-STATE_SYN_SENT  = '02'
-STATE_SYN_RECV = '03'
-STATE_FIN_WAIT1 = '04'
-STATE_FIN_WAIT2 = '05'
-STATE_TIME_WAIT = '06'
-STATE_CLOSE = '07'
-STATE_CLOSE_WAIT = '08'
-STATE_LAST_ACK = '09'
+# STATE_ESTABLISHED = '01'
+# STATE_SYN_SENT  = '02'
+# STATE_SYN_RECV = '03'
+# STATE_FIN_WAIT1 = '04'
+# STATE_FIN_WAIT2 = '05'
+# STATE_TIME_WAIT = '06'
+# STATE_CLOSE = '07'
+# STATE_CLOSE_WAIT = '08'
+# STATE_LAST_ACK = '09'
 STATE_LISTEN = '0A'
-STATE_CLOSING = '0B'
+# STATE_CLOSING = '0B'
 
 def get_socket_inodes(pid):
     '''

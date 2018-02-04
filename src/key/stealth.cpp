@@ -3,15 +3,15 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
-#include "key/stealth.h"
-#include "base58.h"
-#include "crypto/sha256.h"
-#include "key/keyutil.h"
-#include "key.h"
-#include "pubkey.h"
-#include "random.h"
+#include <key/stealth.h>
+#include <base58.h>
+#include <crypto/sha256.h>
+#include <key/keyutil.h>
+#include <key.h>
+#include <pubkey.h>
+#include <random.h>
 
-#include "support/allocators/secure.h"
+#include <support/allocators/secure.h>
 
 #include <cmath>
 #include <secp256k1.h>

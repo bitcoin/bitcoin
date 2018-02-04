@@ -7,7 +7,7 @@
 #ifndef BITCOIN_RPCUTIL_H
 #define BITCOIN_RPCUTIL_H
 
-#include "univalue.h"
+#include <univalue.h>
 #include <string>
 
 class JSONRPCRequest;

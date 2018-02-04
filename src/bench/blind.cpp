@@ -4,12 +4,12 @@
 
 #include <iostream>
 
-#include "bench.h"
-#include "utiltime.h"
+#include <bench/bench.h>
+#include <utiltime.h>
 
-#include "blind.h"
-#include "random.h"
-#include "key.h"
+#include <blind.h>
+#include <random.h>
+#include <key.h>
 
 #include <secp256k1_rangeproof.h>
 
@@ -60,4 +60,4 @@ static void Blind(benchmark::State& state)
     ECC_Stop_Blinding();
 }
 
-BENCHMARK(Blind);
+BENCHMARK(Blind, 10);

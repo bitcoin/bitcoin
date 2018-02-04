@@ -2,34 +2,34 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "amount.h"
-#include "base58.h"
-#include "chain.h"
-#include "consensus/validation.h"
-#include "core_io.h"
-#include "init.h"
-#include "httpserver.h"
-#include "validation.h"
-#include "net.h"
-#include "policy/policy.h"
-#include "policy/rbf.h"
-#include "rpc/server.h"
-#include "rpc/mining.h"
-#include "script/sign.h"
-#include "timedata.h"
-#include "util.h"
-#include "txdb.h"
-#include "anon.h"
-#include "utilmoneystr.h"
-#include "wallet/hdwallet.h"
-#include "wallet/hdwalletdb.h"
-#include "wallet/coincontrol.h"
-#include "wallet/rpcwallet.h"
-#include "chainparams.h"
-#include "key/mnemonic.h"
-#include "pos/miner.h"
-#include "crypto/sha256.h"
-#include "warnings.h"
+#include <amount.h>
+#include <base58.h>
+#include <chain.h>
+#include <consensus/validation.h>
+#include <core_io.h>
+#include <init.h>
+#include <httpserver.h>
+#include <validation.h>
+#include <net.h>
+#include <policy/policy.h>
+#include <policy/rbf.h>
+#include <rpc/server.h>
+#include <rpc/mining.h>
+#include <script/sign.h>
+#include <timedata.h>
+#include <util.h>
+#include <txdb.h>
+#include <anon.h>
+#include <utilmoneystr.h>
+#include <wallet/hdwallet.h>
+#include <wallet/hdwalletdb.h>
+#include <wallet/coincontrol.h>
+#include <wallet/rpcwallet.h>
+#include <chainparams.h>
+#include <key/mnemonic.h>
+#include <pos/miner.h>
+#include <crypto/sha256.h>
+#include <warnings.h>
 
 #include <univalue.h>
 #include <stdint.h>
@@ -3464,10 +3464,7 @@ UniValue filteraddresses(const JSONRPCRequest &request)
         for (it = pwallet->mapAddressBook.begin(); it != pwallet->mapAddressBook.end(); ++it)
         {
             if (it->second.nOwned == 0)
-            {
-                CBitcoinAddress address(it->first);
-                it->second.nOwned = pwallet->HaveAddress(address) ? 1 : 2;
-            };
+                it->second.nOwned = pwallet->HaveAddress(it->first) ? 1 : 2;
 
             if (it->second.nOwned == 1)
                 nReceive++;
@@ -3546,10 +3543,7 @@ UniValue filteraddresses(const JSONRPCRequest &request)
         for (it = pwallet->mapAddressBook.begin(); it != pwallet->mapAddressBook.end(); ++it)
         {
             if (it->second.nOwned == 0)
-            {
-                CBitcoinAddress address(it->first);
-                it->second.nOwned = pwallet->HaveAddress(address) ? 1 : 2;
-            };
+                it->second.nOwned = pwallet->HaveAddress(it->first) ? 1 : 2;
 
             if (nMatchOwned && it->second.nOwned != nMatchOwned)
                 continue;
@@ -3718,7 +3712,7 @@ UniValue manageaddressbook(const JSONRPCRequest &request)
         result.pushKV("purpose", mabi->second.purpose);
 
         if (mabi->second.nOwned == 0)
-            mabi->second.nOwned = pwallet->HaveAddress(address) ? 1 : 2;
+            mabi->second.nOwned = pwallet->HaveAddress(mabi->first) ? 1 : 2;
 
         result.pushKV("owned", mabi->second.nOwned == 1 ? "true" : "false");
 
@@ -5224,7 +5218,7 @@ UniValue rewindchain(const JSONRPCRequest &request)
 
     UniValue result(UniValue::VOBJ);
 
-    CCoinsViewCache view(pcoinsTip);
+    CCoinsViewCache view(pcoinsTip.get());
     CBlockIndex* pindexState = chainActive.Tip();
     CValidationState state;
 
@@ -5371,7 +5365,7 @@ UniValue walletsettings(const JSONRPCRequest &request)
                         throw JSONRPCError(RPC_INVALID_PARAMETER, _("coldstakingaddress can't be a stealthaddress."));
 
                     // TODO: override option?
-                    if (pwallet->HaveAddress(addr))
+                    if (pwallet->HaveAddress(addr.Get()))
                         throw JSONRPCError(RPC_INVALID_PARAMETER, sAddress + _(" is spendable from this wallet."));
                     if (pwallet->idDefaultAccount.IsNull())
                         throw JSONRPCError(RPC_INVALID_PARAMETER, _("Wallet must have a default account set."));
@@ -5744,61 +5738,61 @@ UniValue tallyvotes(const JSONRPCRequest &request)
 
 
 static const CRPCCommand commands[] =
-{ //  category              name                        actor (function)           okSafeMode
+{ //  category              name                        actor (function)           argNames
   //  --------------------- ------------------------    -----------------------    ----------
-    { "wallet",             "extkey",                   &extkey,                   false,  {} },
-    { "wallet",             "extkeyimportmaster",       &extkeyimportmaster,       false,  {"source","passphrase","save_bip44_root","master_label","account_label", "scan_chain_from"} }, // import, set as master, derive account, set default account, force users to run mnemonic new first make them copy the key
-    { "wallet",             "extkeygenesisimport",      &extkeygenesisimport,      false,  {"source","passphrase","save_bip44_root","master_label","account_label", "scan_chain_from"} },
-    { "wallet",             "keyinfo",                  &keyinfo,                  false,  {"key","show_secret"} },
-    { "wallet",             "extkeyaltversion",         &extkeyaltversion,         false,  {"ext_key"} },
-    { "wallet",             "getnewextaddress",         &getnewextaddress,         false,  {"label","childNo"} },
-    { "wallet",             "getnewstealthaddress",     &getnewstealthaddress,     false,  {"label","num_prefix_bits","prefix_num","bech32"} },
-    { "wallet",             "importstealthaddress",     &importstealthaddress,     false,  {"scan_secret","spend_secret","label","num_prefix_bits","prefix_num"} },
-    { "wallet",             "liststealthaddresses",     &liststealthaddresses,     false,  {"show_secrets"} },
+    { "wallet",             "extkey",                   &extkey,                   {} },
+    { "wallet",             "extkeyimportmaster",       &extkeyimportmaster,       {"source","passphrase","save_bip44_root","master_label","account_label", "scan_chain_from"} }, // import, set as master, derive account, set default account, force users to run mnemonic new first make them copy the key
+    { "wallet",             "extkeygenesisimport",      &extkeygenesisimport,      {"source","passphrase","save_bip44_root","master_label","account_label", "scan_chain_from"} },
+    { "wallet",             "keyinfo",                  &keyinfo,                  {"key","show_secret"} },
+    { "wallet",             "extkeyaltversion",         &extkeyaltversion,         {"ext_key"} },
+    { "wallet",             "getnewextaddress",         &getnewextaddress,         {"label","childNo"} },
+    { "wallet",             "getnewstealthaddress",     &getnewstealthaddress,     {"label","num_prefix_bits","prefix_num","bech32"} },
+    { "wallet",             "importstealthaddress",     &importstealthaddress,     {"scan_secret","spend_secret","label","num_prefix_bits","prefix_num"} },
+    { "wallet",             "liststealthaddresses",     &liststealthaddresses,     {"show_secrets"} },
 
-    { "wallet",             "scanchain",                &scanchain,                false,  {"fromHeight"} },
-    { "wallet",             "reservebalance",           &reservebalance,           false,  {"enabled","amount"} },
-    { "wallet",             "deriverangekeys",          &deriverangekeys,          false,  {"start", "end", "key/id", "hardened", "save", "add_to_addressbook", "256bithash"} },
-    { "wallet",             "clearwallettransactions",  &clearwallettransactions,  false,  {"remove_all"} },
+    { "wallet",             "scanchain",                &scanchain,                {"fromHeight"} },
+    { "wallet",             "reservebalance",           &reservebalance,           {"enabled","amount"} },
+    { "wallet",             "deriverangekeys",          &deriverangekeys,          {"start", "end", "key/id", "hardened", "save", "add_to_addressbook", "256bithash"} },
+    { "wallet",             "clearwallettransactions",  &clearwallettransactions,  {"remove_all"} },
 
-    { "wallet",             "filtertransactions",       &filtertransactions,       false,  {"options"} },
-    { "wallet",             "filteraddresses",          &filteraddresses,          false,  {"offset","count","sort_code"} },
-    { "wallet",             "manageaddressbook",        &manageaddressbook,        true,   {"action","address","label","purpose"} },
+    { "wallet",             "filtertransactions",       &filtertransactions,       {"options"} },
+    { "wallet",             "filteraddresses",          &filteraddresses,          {"offset","count","sort_code"} },
+    { "wallet",             "manageaddressbook",        &manageaddressbook,        {"action","address","label","purpose"} },
 
-    { "wallet",             "getstakinginfo",           &getstakinginfo,           true,   {} },
-    { "wallet",             "getcoldstakinginfo",       &getcoldstakinginfo,       true,   {} },
+    { "wallet",             "getstakinginfo",           &getstakinginfo,           {} },
+    { "wallet",             "getcoldstakinginfo",       &getcoldstakinginfo,       {} },
 
-    //{ "wallet",             "gettransactionsummary",    &gettransactionsummary,    true,  {} },
+    //{ "wallet",             "gettransactionsummary",    &gettransactionsummary,    {} },
 
-    { "wallet",             "listunspentanon",          &listunspentanon,          true,   {"minconf","maxconf","addresses","include_unsafe","query_options"} },
-    { "wallet",             "listunspentblind",         &listunspentblind,         true,   {"minconf","maxconf","addresses","include_unsafe","query_options"} },
+    { "wallet",             "listunspentanon",          &listunspentanon,          {"minconf","maxconf","addresses","include_unsafe","query_options"} },
+    { "wallet",             "listunspentblind",         &listunspentblind,         {"minconf","maxconf","addresses","include_unsafe","query_options"} },
 
 
     //sendparttopart // normal txn
-    { "wallet",             "sendparttoblind",          &sendparttoblind,          false,  {"address","amount","comment","comment_to","subtractfeefromamount", "narration"} },
-    { "wallet",             "sendparttoanon",           &sendparttoanon,           false,  {"address","amount","comment","comment_to","subtractfeefromamount", "narration"} },
+    { "wallet",             "sendparttoblind",          &sendparttoblind,          {"address","amount","comment","comment_to","subtractfeefromamount", "narration"} },
+    { "wallet",             "sendparttoanon",           &sendparttoanon,           {"address","amount","comment","comment_to","subtractfeefromamount", "narration"} },
 
-    { "wallet",             "sendblindtopart",          &sendblindtopart,          false,  {"address","amount","comment","comment_to","subtractfeefromamount", "narration"} },
-    { "wallet",             "sendblindtoblind",         &sendblindtoblind,         false,  {"address","amount","comment","comment_to","subtractfeefromamount", "narration"} },
-    { "wallet",             "sendblindtoanon",          &sendblindtoanon,          false,  {"address","amount","comment","comment_to","subtractfeefromamount", "narration"} },
+    { "wallet",             "sendblindtopart",          &sendblindtopart,          {"address","amount","comment","comment_to","subtractfeefromamount", "narration"} },
+    { "wallet",             "sendblindtoblind",         &sendblindtoblind,         {"address","amount","comment","comment_to","subtractfeefromamount", "narration"} },
+    { "wallet",             "sendblindtoanon",          &sendblindtoanon,          {"address","amount","comment","comment_to","subtractfeefromamount", "narration"} },
 
-    { "wallet",             "sendanontopart",           &sendanontopart,           false,  {"address","amount","comment","comment_to","subtractfeefromamount", "narration", "ring_size", "inputs_per_sig"} },
-    { "wallet",             "sendanontoblind",          &sendanontoblind,          false,  {"address","amount","comment","comment_to","subtractfeefromamount", "narration", "ring_size", "inputs_per_sig"} },
-    { "wallet",             "sendanontoanon",           &sendanontoanon,           false,  {"address","amount","comment","comment_to","subtractfeefromamount", "narration", "ring_size", "inputs_per_sig"} },
+    { "wallet",             "sendanontopart",           &sendanontopart,           {"address","amount","comment","comment_to","subtractfeefromamount", "narration", "ring_size", "inputs_per_sig"} },
+    { "wallet",             "sendanontoblind",          &sendanontoblind,          {"address","amount","comment","comment_to","subtractfeefromamount", "narration", "ring_size", "inputs_per_sig"} },
+    { "wallet",             "sendanontoanon",           &sendanontoanon,           {"address","amount","comment","comment_to","subtractfeefromamount", "narration", "ring_size", "inputs_per_sig"} },
 
-    { "wallet",             "sendtypeto",               &sendtypeto,               false,  {"typein", "typeout", "outputs","comment","comment_to", "ring_size", "inputs_per_sig", "test_fee"} },
+    { "wallet",             "sendtypeto",               &sendtypeto,               {"typein", "typeout", "outputs","comment","comment_to", "ring_size", "inputs_per_sig", "test_fee"} },
 
-    { "wallet",             "buildscript",              &buildscript,              false,  {"json"} },
+    { "wallet",             "buildscript",              &buildscript,              {"json"} },
 
-    { "wallet",             "debugwallet",              &debugwallet,              false,  {"attempt_repair"} },
-    { "wallet",             "rewindchain",              &rewindchain,              false,  {"height"} },
+    { "wallet",             "debugwallet",              &debugwallet,              {"attempt_repair"} },
+    { "wallet",             "rewindchain",              &rewindchain,              {"height"} },
 
-    { "wallet",             "walletsettings",           &walletsettings,           true,   {"setting","json"} },
+    { "wallet",             "walletsettings",           &walletsettings,           {"setting","json"} },
 
 
-    { "governance",         "setvote",                  &setvote,                  false,  {"proposal","option","height_start","height_end"} },
-    { "governance",         "votehistory",              &votehistory,              false,  {"current_only"} },
-    { "governance",         "tallyvotes",               &tallyvotes,               false,  {"proposal","height_start","height_end"} },
+    { "governance",         "setvote",                  &setvote,                  {"proposal","option","height_start","height_end"} },
+    { "governance",         "votehistory",              &votehistory,              {"current_only"} },
+    { "governance",         "tallyvotes",               &tallyvotes,               {"proposal","height_start","height_end"} },
 };
 
 void RegisterHDWalletRPCCommands(CRPCTable &t)

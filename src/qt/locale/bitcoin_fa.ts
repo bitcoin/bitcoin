@@ -66,6 +66,10 @@
         <translation>اینها آدرس های شما برای فرستادن پرداخت هاست. همیشه قبل از فرستادن سکه ها مقدار و آدرس دریافت کننده را چک کنید.</translation>
     </message>
     <message>
+        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
+        <translation>این ها آدرس های بیت کوین شما برای دریافت پرداخت ها می باشد. توصیه میشود برای هر تراکنش از یک آدرس دریافت جدید استفاده کنید.</translation>
+    </message>
+    <message>
         <source>&amp;Copy Address</source>
         <translation>کپی کردن آدرس</translation>
     </message>
@@ -80,6 +84,10 @@
     <message>
         <source>Export Address List</source>
         <translation>صدور لیست آدرس ها</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>فایل جدا شده با ویرگول(*.csv)</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
@@ -743,6 +751,10 @@
         <translation>استفاده از یک مسیر سفارشی:</translation>
     </message>
     <message>
+        <source>Bitcoin</source>
+        <translation>بیت‌کوین</translation>
+    </message>
+    <message>
         <source>Error</source>
         <translation>خطا</translation>
     </message>
@@ -822,14 +834,6 @@
     <message>
         <source>MB</source>
         <translation>مگابایت</translation>
-    </message>
-    <message>
-        <source>Accept connections from outside</source>
-        <translation>پذیرش اتصالات از بیرون</translation>
-    </message>
-    <message>
-        <source>Allow incoming connections</source>
-        <translation>اجازه دادن به اتصالات دریافتی</translation>
     </message>
     <message>
         <source>Reset all client options to default.</source>
@@ -936,6 +940,10 @@
         <translation>تأییدِ بازنشانی گزینه‌ها</translation>
     </message>
     <message>
+        <source>Error</source>
+        <translation>خطا</translation>
+    </message>
+    <message>
         <source>This change would require a client restart.</source>
         <translation>برای این تغییرات بازنشانی مشتری ضروری است</translation>
     </message>
@@ -1008,7 +1016,15 @@
     </context>
 <context>
     <name>PeerTableModel</name>
-    </context>
+    <message>
+        <source>Sent</source>
+        <translation>ارسال شده</translation>
+    </message>
+    <message>
+        <source>Received</source>
+        <translation>دریافتی</translation>
+    </message>
+</context>
 <context>
     <name>QObject</name>
     <message>
@@ -1051,7 +1067,27 @@
         <source>%1 and %2</source>
         <translation>%1 و %2</translation>
     </message>
-    </context>
+    <message>
+        <source>%1 B</source>
+        <translation>%1 بایت</translation>
+    </message>
+    <message>
+        <source>%1 KB</source>
+        <translation>%1 کیلوبایت</translation>
+    </message>
+    <message>
+        <source>%1 MB</source>
+        <translation>%1 مگابایت</translation>
+    </message>
+    <message>
+        <source>%1 GB</source>
+        <translation>%1 گیگابایت</translation>
+    </message>
+    <message>
+        <source>unknown</source>
+        <translation>ناشناس</translation>
+    </message>
+</context>
 <context>
     <name>QObject::QObject</name>
     </context>
@@ -1199,30 +1235,6 @@
     <message>
         <source>Ban for</source>
         <translation>محدود شده برای</translation>
-    </message>
-    <message>
-        <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
-        <translation>دکمه‌های بالا و پایین برای پیمایش تاریخچه و &lt;b&gt;Ctrl-L&lt;/b&gt; برای پاک کردن صفحه.</translation>
-    </message>
-    <message>
-        <source>Type &lt;b&gt;help&lt;/b&gt; for an overview of available commands.</source>
-        <translation>برای نمایش یک مرور کلی از دستورات ممکن، عبارت &lt;b&gt;help&lt;/b&gt; را بنویسید.</translation>
-    </message>
-    <message>
-        <source>%1 B</source>
-        <translation>%1 بایت</translation>
-    </message>
-    <message>
-        <source>%1 KB</source>
-        <translation>%1 کیلوبایت</translation>
-    </message>
-    <message>
-        <source>%1 MB</source>
-        <translation>%1 مگابایت</translation>
-    </message>
-    <message>
-        <source>%1 GB</source>
-        <translation>%1 گیگابایت</translation>
     </message>
     <message>
         <source>never</source>
@@ -1381,24 +1393,12 @@
         <translation>پنهان کردن</translation>
     </message>
     <message>
-        <source>total at least</source>
-        <translation>در مجموع حداقل</translation>
-    </message>
-    <message>
         <source>Recommended:</source>
         <translation>توصیه شده:</translation>
     </message>
     <message>
         <source>Custom:</source>
         <translation>سفارشی:</translation>
-    </message>
-    <message>
-        <source>normal</source>
-        <translation>نرمال</translation>
-    </message>
-    <message>
-        <source>fast</source>
-        <translation>سریع</translation>
     </message>
     <message>
         <source>Send to multiple recipients at once</source>
@@ -1651,6 +1651,10 @@
         <translation>کپی شناسهٔ تراکنش</translation>
     </message>
     <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>فایل جدا شده با ویرگول(*.csv)</translation>
+    </message>
+    <message>
         <source>Label</source>
         <translation>برچسب</translation>
     </message>
@@ -1712,6 +1716,10 @@
     <message>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
         <translation>هنگامی که یک تراکنش در کیف پولی رخ می دهد، دستور را اجرا کن(%s در دستورات بوسیله ی TxID جایگزین می شود)</translation>
+    </message>
+    <message>
+        <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
+        <translation>پذیرش اتصالات از بیرون (پیش فرض:1 بدون پراکسی یا اتصال)</translation>
     </message>
     <message>
         <source>Block creation options:</source>
@@ -1778,10 +1786,6 @@
         <translation>در حال بازبینی بلوک‌ها...</translation>
     </message>
     <message>
-        <source>Verifying wallet...</source>
-        <translation>در حال بازبینی کیف پول...</translation>
-    </message>
-    <message>
         <source>Wallet options:</source>
         <translation>گزینه‌های کیف پول:</translation>
     </message>
@@ -1834,16 +1838,8 @@
         <translation>به DNS اجازه بده تا برای addnode ، seednode و اتصال جستجو کند</translation>
     </message>
     <message>
-        <source>Loading addresses...</source>
-        <translation>بار گیری آدرس ها</translation>
-    </message>
-    <message>
         <source>(default: %s)</source>
         <translation>(پیش‌فرض %s)</translation>
-    </message>
-    <message>
-        <source>Invalid -proxy address: '%s'</source>
-        <translation>آدرس پراکسی اشتباه %s</translation>
     </message>
     <message>
         <source>Unknown network specified in -onlynet: '%s'</source>
@@ -1858,20 +1854,12 @@
         <translation>بار گیری شاخص بلوک</translation>
     </message>
     <message>
-        <source>Add a node to connect to and attempt to keep the connection open</source>
-        <translation>به اتصال یک گره اضافه کنید و اتصال را باز نگاه دارید</translation>
-    </message>
-    <message>
         <source>Loading wallet...</source>
         <translation>بار گیری والت</translation>
     </message>
     <message>
         <source>Cannot downgrade wallet</source>
         <translation>امکان تنزل نسخه در wallet وجود ندارد</translation>
-    </message>
-    <message>
-        <source>Cannot write default address</source>
-        <translation>آدرس پیش فرض قابل ذخیره نیست</translation>
     </message>
     <message>
         <source>Rescanning...</source>

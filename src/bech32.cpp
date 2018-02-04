@@ -2,7 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "bech32.h"
+#include <bech32.h>
 
 namespace
 {
@@ -166,16 +166,20 @@ std::pair<std::string, data> Decode(const std::string& str) {
     }
     if (lower && upper) return {};
     size_t pos = str.rfind('1');
-    if (str.size() > 140 || pos == str.npos || pos == 0 || pos + 7 > str.size()) {
+    if (str.size() > 140 || pos == str.npos || pos == 0 || pos + 7 > str.size()
+        || pos > 83) // hrp: 1 to 83 ascii chars
+        {
         return {};
     }
     data values(str.size() - 1 - pos);
     for (size_t i = 0; i < str.size() - 1 - pos; ++i) {
         unsigned char c = str[i + pos + 1];
+
         int8_t rev = (c < 33 || c > 126) ? -1 : CHARSET_REV[c];
         if (rev == -1) {
             return {};
         }
+        //1", "b", "i", and "o"[4].
         values[i] = rev;
     }
     std::string hrp;

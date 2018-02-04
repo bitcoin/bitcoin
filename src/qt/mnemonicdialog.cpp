@@ -2,18 +2,18 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "mnemonicdialog.h"
-#include "ui_mnemonicdialog.h"
+#include <qt/mnemonicdialog.h>
+#include <qt/forms/ui_mnemonicdialog.h>
 
-#include "guiutil.h"
+#include <qt/guiutil.h>
 
-#include "walletmodel.h"
-#include "wallet/hdwallet.h"
+#include <qt/walletmodel.h>
+#include <wallet/hdwallet.h>
 
-#include "rpc/rpcutil.h"
-#include "util.h"
-#include "univalue.h"
-#include "key/mnemonic.h"
+#include <rpc/rpcutil.h>
+#include <util.h>
+#include <univalue.h>
+#include <key/mnemonic.h>
 
 #include <QDebug>
 

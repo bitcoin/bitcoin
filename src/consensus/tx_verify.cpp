@@ -2,28 +2,29 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "tx_verify.h"
+#include <consensus/tx_verify.h>
 
-#include "consensus.h"
-#include "primitives/transaction.h"
-#include "script/interpreter.h"
-#include "validation.h"
-#include "chainparams.h"
+#include <consensus/consensus.h>
+#include <primitives/transaction.h>
+#include <script/interpreter.h>
+#include <consensus/validation.h>
+#include <validation.h>
+#include <chainparams.h>
 
-#include "blind.h"
-#include "anon.h"
-#include "timedata.h"
-#include "util.h"
+#include <blind.h>
+#include <anon.h>
+#include <timedata.h>
+#include <util.h>
 
 
 // TODO remove the following dependencies
-#include "chain.h"
-#include "coins.h"
-#include "utilmoneystr.h"
+#include <chain.h>
+#include <coins.h>
+#include <utilmoneystr.h>
 
 
-#include "policy/policy.h"
-#include "smsg/smessage.h"
+#include <policy/policy.h>
+#include <smsg/smessage.h>
 
 
 extern bool fBusyImporting;
@@ -389,12 +390,17 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state, bool fChe
     return true;
 }
 
-bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, int nSpendHeight)
+bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, int nSpendHeight, CAmount& nTxFee)
 {
-    // This doesn't trigger the DoS code on purpose; if it did, it would make it easier
-    // for an attacker to attempt to split the network.
-    if (!inputs.HaveInputs(tx))
-        return state.Invalid(false, 0, "", "Inputs unavailable");
+    // reset per tx
+    state.fHasAnonOutput = false;
+    state.fHasAnonInput = false;
+
+    // are the actual inputs available?
+    if (!inputs.HaveInputs(tx)) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-txns-inputs-missingorspent", false,
+                         strprintf("%s: inputs missing/spent", __func__));
+    }
 
     std::vector<const secp256k1_pedersen_commitment*> vpCommitsIn, vpCommitsOut;
     size_t nStandard = 0, nCt = 0, nRingCT = 0;
@@ -404,9 +410,11 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
     {
         if (tx.vin[i].IsAnonInput())
         {
+            state.fHasAnonInput = true;
             nRingCT++;
             continue;
         };
+
         const COutPoint &prevout = tx.vin[i].prevout;
         const Coin& coin = inputs.AccessCoin(prevout);
         assert(!coin.IsSpent());
@@ -462,11 +470,12 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
         || (nRingCT > 0 && (nCt > 0 || nStandard > 0)))
         return state.DoS(100, false, REJECT_INVALID, "mixed-input-types");
 
+    size_t nRingCTInputs = nRingCT;
     // GetPlainValueOut adds to nStandard, nCt, nRingCT
     CAmount nPlainValueOut = tx.GetPlainValueOut(nStandard, nCt, nRingCT);
+    state.fHasAnonOutput = nRingCT > nRingCTInputs;
 
-
-    CAmount nTxFee = 0;
+    nTxFee = 0;
     if (fParticlMode)
     {
         if (!tx.IsCoinStake())
@@ -522,6 +531,14 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
                     else
                         LogPrintf("%s: bad-txns-fee-smsg, %d expected %d, not enforcing.\n", nTxFee, nTotalExpectedFees);
                 };
+            };
+        } else
+        {
+            // Return stake reward in nTxFee
+            nTxFee = nPlainValueOut - nValueIn;
+            if (nCt > 0 || nRingCT > 0) { // counters track both outputs and inputs
+                return state.DoS(100, error("ConnectBlock(): non-standard elements in coinstake"),
+                     REJECT_INVALID, "bad-coinstake-outputs");
             };
         };
     } else

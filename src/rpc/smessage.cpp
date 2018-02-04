@@ -3,19 +3,20 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "rpc/server.h"
+#include <rpc/server.h>
 
 #include <algorithm>
 #include <string>
 
-#include "smsg/smessage.h"
-#include "smsg/db.h"
-#include "script/ismine.h"
-#include "utilstrencodings.h"
-#include "core_io.h"
+#include <smsg/smessage.h>
+#include <smsg/db.h>
+#include <script/ismine.h>
+#include <utilstrencodings.h>
+#include <core_io.h>
+#include <base58.h>
 
 #ifdef ENABLE_WALLET
-#include "wallet/wallet.h"
+#include <wallet/wallet.h>
 #endif
 
 #include <univalue.h>
@@ -1301,23 +1302,23 @@ UniValue smsgview(const JSONRPCRequest &request)
 
 
 static const CRPCCommand commands[] =
-{ //  category              name                      actor (function)         okSafeMode
+{ //  category              name                      actor (function)         argNames
   //  --------------------- ------------------------  -----------------------  ----------
-    { "smsg",               "smsgenable",             &smsgenable,             true, {} },
-    { "smsg",               "smsgdisable",            &smsgdisable,            true, {} },
-    { "smsg",               "smsgoptions",            &smsgoptions,            true, {} },
-    { "smsg",               "smsglocalkeys",          &smsglocalkeys,          true, {} },
-    { "smsg",               "smsgscanchain",          &smsgscanchain,          true, {} },
-    { "smsg",               "smsgscanbuckets",        &smsgscanbuckets,        true, {} },
-    { "smsg",               "smsgaddkey",             &smsgaddkey,             true, {} },
-    { "smsg",               "smsgaddlocaladdress",    &smsgaddlocaladdress,    true, {} },
-    { "smsg",               "smsggetpubkey",          &smsggetpubkey,          true, {} },
-    { "smsg",               "smsgsend",               &smsgsend,               true, {} },
-    { "smsg",               "smsgsendanon",           &smsgsendanon,           true, {} },
-    { "smsg",               "smsginbox",              &smsginbox,              true, {} },
-    { "smsg",               "smsgoutbox",             &smsgoutbox,             true, {} },
-    { "smsg",               "smsgbuckets",            &smsgbuckets,            true, {} },
-    { "smsg",               "smsgview",               &smsgview,               true, {} },
+    { "smsg",               "smsgenable",             &smsgenable,             {} },
+    { "smsg",               "smsgdisable",            &smsgdisable,            {} },
+    { "smsg",               "smsgoptions",            &smsgoptions,            {} },
+    { "smsg",               "smsglocalkeys",          &smsglocalkeys,          {} },
+    { "smsg",               "smsgscanchain",          &smsgscanchain,          {} },
+    { "smsg",               "smsgscanbuckets",        &smsgscanbuckets,        {} },
+    { "smsg",               "smsgaddkey",             &smsgaddkey,             {"address", "pubkey"} },
+    { "smsg",               "smsgaddlocaladdress",    &smsgaddlocaladdress,    {"address"} },
+    { "smsg",               "smsggetpubkey",          &smsggetpubkey,          {"address"} },
+    { "smsg",               "smsgsend",               &smsgsend,               {"address_to", "message"} },
+    { "smsg",               "smsgsendanon",           &smsgsendanon,           {"address_to", "message"} },
+    { "smsg",               "smsginbox",              &smsginbox,              {"mode"} },
+    { "smsg",               "smsgoutbox",             &smsgoutbox,             {"mode"} },
+    { "smsg",               "smsgbuckets",            &smsgbuckets,            {"mode"} },
+    { "smsg",               "smsgview",               &smsgview,               {} },
 
     /* Not shown in help */
     //{ "hidden",             "setmocktime",            &setmocktime,            true  },

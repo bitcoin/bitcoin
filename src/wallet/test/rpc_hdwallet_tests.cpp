@@ -2,16 +2,16 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "rpc/server.h"
-#include "rpc/client.h"
+#include <rpc/server.h>
+#include <rpc/client.h>
 
-#include "base58.h"
-#include "validation.h"
-#include "wallet/hdwallet.h"
+#include <base58.h>
+#include <validation.h>
+#include <wallet/hdwallet.h>
 
-#include "policy/policy.h"
+#include <policy/policy.h>
 
-#include "wallet/test/hdwallet_test_fixture.h"
+#include <wallet/test/hdwallet_test_fixture.h>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/test/unit_test.hpp>
@@ -24,12 +24,9 @@ using namespace std;
 extern UniValue createArgs(int nRequired, const char* address1 = NULL, const char* address2 = nullptr);
 extern UniValue CallRPC(std::string args, std::string wallet="");
 
-extern CWallet *pwalletMain;
-
-void RewindHdSxChain()
+void RewindHdSxChain(CHDWallet *pwallet)
 {
     // Rewind the chain to get the same key next request
-    CHDWallet *pwallet = (CHDWallet*) pwalletMain;
     ExtKeyAccountMap::iterator mi = pwallet->mapExtAccounts.find(pwallet->idDefaultAccount);
     BOOST_REQUIRE(mi != pwallet->mapExtAccounts.end());
     CExtKeyAccount *sea = mi->second;
@@ -63,7 +60,7 @@ BOOST_AUTO_TEST_CASE(rpc_hdwallet)
     BOOST_CHECK(s1.prefix.bitfield == 0b1);
 
 
-    RewindHdSxChain();
+    RewindHdSxChain(pwalletMain.get());
 
     BOOST_CHECK_NO_THROW(rv = CallRPC("getnewstealthaddress onebit 32"));
     sResult = StripQuotes(rv.write());
@@ -78,7 +75,7 @@ BOOST_AUTO_TEST_CASE(rpc_hdwallet)
     BOOST_CHECK(s2.scan_pubkey == s1.scan_pubkey);
     BOOST_CHECK(s2.spend_pubkey == s1.spend_pubkey);
 
-    RewindHdSxChain();
+    RewindHdSxChain(pwalletMain.get());
 
     // Check the same prefix is generated
     BOOST_CHECK_NO_THROW(rv = CallRPC("getnewstealthaddress onebit 32"));
@@ -89,11 +86,11 @@ BOOST_AUTO_TEST_CASE(rpc_hdwallet)
     sResult = StripQuotes(rv.write());
     BOOST_CHECK(sResult == "9XXDiTExjRZsi1ZrvptyJr8AVpMpS5hPsi9uQ3EHgkhicC4EP5MzTg7BkLkSjbgeE69V3wRyuvuoR8WdRPCK6aTcNFKcRYJopwy7BinU3");
 
-    RewindHdSxChain();
+    RewindHdSxChain(pwalletMain.get());
     BOOST_CHECK_NO_THROW(rv = CallRPC("getnewstealthaddress t2hex 10 0x2AF"));
     BOOST_CHECK(sResult == StripQuotes(rv.write()));
 
-    RewindHdSxChain();
+    RewindHdSxChain(pwalletMain.get());
     BOOST_CHECK_NO_THROW(rv = CallRPC("getnewstealthaddress t3dec 10 687"));
     BOOST_CHECK(sResult == StripQuotes(rv.write()));
 

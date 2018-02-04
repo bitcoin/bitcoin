@@ -2,13 +2,13 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "smsg/smessage.h"
+#include <smsg/smessage.h>
 
-#include "test/test_particl.h"
-#include "net.h"
+#include <test/test_particl.h>
+#include <net.h>
 
 #ifdef ENABLE_WALLET
-#include "wallet/wallet.h"
+#include <wallet/wallet.h>
 #endif
 
 #include <boost/test/unit_test.hpp>

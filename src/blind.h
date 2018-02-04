@@ -9,7 +9,7 @@
 #include <inttypes.h>
 #include <vector>
 
-#include "amount.h"
+#include <amount.h>
 
 extern secp256k1_context *secp256k1_ctx_blind;
 

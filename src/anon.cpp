@@ -2,19 +2,19 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
-#include "anon.h"
+#include <anon.h>
 
 #include <assert.h>
 #include <secp256k1.h>
 #include <secp256k1_rangeproof.h>
 #include <secp256k1_mlsag.h>
 
-#include "blind.h"
-#include "rctindex.h"
-#include "txdb.h"
-#include "txmempool.h"
-#include "util.h"
-#include "validation.h"
+#include <blind.h>
+#include <rctindex.h>
+#include <txdb.h>
+#include <txmempool.h>
+#include <util.h>
+#include <validation.h>
 
 
 bool VerifyMLSAG(const CTransaction &tx, CValidationState &state)
@@ -248,11 +248,12 @@ bool RemoveKeyImagesFromMempool(const uint256 &hash, const CTxIn &txin, CTxMemPo
 
 bool AllAnonOutputsUnknown(const CTransaction &tx, CValidationState &state)
 {
-
+    state.fHasAnonOutput = false;
     for (unsigned int k = 0; k < tx.vpout.size(); k++)
     {
         if (!tx.vpout[k]->IsType(OUTPUT_RINGCT))
             continue;
+        state.fHasAnonOutput = true;
 
         CTxOutRingCT *txout = (CTxOutRingCT*)tx.vpout[k].get();
 

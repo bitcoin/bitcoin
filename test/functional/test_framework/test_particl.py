@@ -17,18 +17,19 @@ class ParticlTestFramework(BitcoinTestFramework):
     def __init__(self):
         super().__init__()
 
-    def start_node(self, i, extra_args=None, stderr=None):
-        return super().start_node(i, extra_args, stderr, False)
+    def start_node(self, i, *args, **kwargs):
+        kwargs['legacymode'] = False
+        return super().start_node(i, *args, **kwargs)
 
-    def start_nodes(self, extra_args=None):
+    def start_nodes(self, extra_args=None, *args, **kwargs):
         """Start multiple bitcoinds"""
-
+        kwargs['legacymode'] = False
         if extra_args is None:
             extra_args = [None] * self.num_nodes
         assert_equal(len(extra_args), self.num_nodes)
         try:
             for i, node in enumerate(self.nodes):
-                node.start(extra_args[i], legacymode=False)
+                node.start(extra_args[i], *args, **kwargs)
             for node in self.nodes:
                 node.wait_for_rpc_connection()
         except:
@@ -36,10 +37,14 @@ class ParticlTestFramework(BitcoinTestFramework):
             self.stop_nodes()
             raise
 
+        if self.options.coveragedir is not None:
+            for node in self.nodes:
+                coverage.write_all_rpc_commands(self.options.coveragedir, node.rpc)
+
     def wait_for_height(self, node, nHeight, nTries=500):
         for i in range(nTries):
             time.sleep(1)
-            ro = node.getinfo()
+            ro = node.getblockchaininfo()
             if ro['blocks'] >= nHeight:
                 return True
         return False

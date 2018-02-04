@@ -2,17 +2,15 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "wallet/hdwallet.h"
+#include <wallet/hdwallet.h>
 
-#include "wallet/test/hdwallet_test_fixture.h"
-#include "base58.h"
-#include "chainparams.h"
-#include "smsg/smessage.h"
-#include "smsg/crypter.h"
+#include <wallet/test/hdwallet_test_fixture.h>
+#include <base58.h>
+#include <chainparams.h>
+#include <smsg/smessage.h>
+#include <smsg/crypter.h>
 
 #include <boost/test/unit_test.hpp>
-
-extern CWallet* pwalletMain;
 
 BOOST_FIXTURE_TEST_SUITE(hdwallet_tests, HDWalletTestingSetup)
 
@@ -37,7 +35,7 @@ BOOST_AUTO_TEST_CASE(new_ext_key)
 {
     // Match keys from http://bip32.org/
 
-    CHDWallet *pwallet = (CHDWallet*) pwalletMain;
+    CHDWallet *pwallet = pwalletMain.get();
 
     for (auto it = vTestVector1.begin(); it != vTestVector1.end(); ++it)
     {
@@ -57,7 +55,7 @@ static const std::string strSecret2C("H5hDgLvFjLcZG9jyxkUTJ28P6N5T7iMBQ79boMuaPa
 
 BOOST_AUTO_TEST_CASE(stealth)
 {
-    CHDWallet *pwallet = (CHDWallet*) pwalletMain;
+    CHDWallet *pwallet = pwalletMain.get();
 
     ECC_Start_Stealth();
     CStealthAddress sx;
@@ -172,7 +170,7 @@ BOOST_AUTO_TEST_CASE(stealth)
 
 BOOST_AUTO_TEST_CASE(stealth_key_index)
 {
-    CHDWallet *pwallet = (CHDWallet*) pwalletMain;
+    CHDWallet *pwallet = pwalletMain.get();
 
     //ECC_Start_Stealth();
     CStealthAddress sx;
@@ -221,7 +219,7 @@ BOOST_AUTO_TEST_CASE(stealth_key_index)
 
 BOOST_AUTO_TEST_CASE(ext_key_index)
 {
-    CHDWallet *pwallet = (CHDWallet*) pwalletMain;
+    CHDWallet *pwallet = pwalletMain.get();
 
     CHDWalletDB wdb(pwallet->GetDBHandle(), "r+");
     CKeyID dummy;

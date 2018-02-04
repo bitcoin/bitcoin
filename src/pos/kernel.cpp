@@ -6,19 +6,19 @@
 
 #include <boost/assign/list_of.hpp>
 
-#include "kernel.h"
-#include "txdb.h"
-#include "validation.h"
-#include "chainparams.h"
-#include "serialize.h"
-#include "streams.h"
-#include "hash.h"
-#include "script/interpreter.h"
-#include "script/script.h"
-#include "script/ismine.h" // valtype
-#include "policy/policy.h"
-#include "consensus/validation.h"
-#include "coins.h"
+#include <pos/kernel.h>
+#include <txdb.h>
+#include <validation.h>
+#include <chainparams.h>
+#include <serialize.h>
+#include <streams.h>
+#include <hash.h>
+#include <script/interpreter.h>
+#include <script/script.h>
+#include <script/ismine.h> // valtype
+#include <policy/policy.h>
+#include <consensus/validation.h>
+#include <coins.h>
 
 /**
  * Stake Modifier (hash modifier of proof-of-stake):

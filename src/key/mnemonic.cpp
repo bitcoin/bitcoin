@@ -3,23 +3,23 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "mnemonic.h"
+#include <key/mnemonic.h>
 
-#include "util.h"
-#include "crypto/hmac_sha512.h"
-#include "crypto/sha256.h"
+#include <util.h>
+#include <crypto/hmac_sha512.h>
+#include <crypto/sha256.h>
 
-#include "unilib/uninorms.h"
-#include "unilib/utf8.h"
+#include <unilib/uninorms.h>
+#include <unilib/utf8.h>
 
-#include "key/wordlists/english.h"
-#include "key/wordlists/french.h"
-#include "key/wordlists/japanese.h"
-#include "key/wordlists/spanish.h"
-#include "key/wordlists/chinese_simplified.h"
-#include "key/wordlists/chinese_traditional.h"
-#include "key/wordlists/italian.h"
-#include "key/wordlists/korean.h"
+#include <key/wordlists/english.h>
+#include <key/wordlists/french.h>
+#include <key/wordlists/japanese.h>
+#include <key/wordlists/spanish.h>
+#include <key/wordlists/chinese_simplified.h>
+#include <key/wordlists/chinese_traditional.h>
+#include <key/wordlists/italian.h>
+#include <key/wordlists/korean.h>
 
 
 static const unsigned char *mnLanguages[] =

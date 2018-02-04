@@ -23,58 +23,31 @@ git clone https://github.com/bitcoin/bitcoin.git
 
 See [dependencies.md](dependencies.md) for a complete overview.
 
-GCC
--------
-
-The default C++ compiler that comes with OpenBSD 6.2 is g++ 4.2.1. This version is old (from 2007), and is not able to compile the current version of Bitcoin Core because it has no C++11 support. We'll install a newer version of GCC:
-
-```bash
- pkg_add g++
- ```
-
- This compiler will not overwrite the system compiler, it will be installed as `egcc` and `eg++` in `/usr/local/bin`.
+**Important**: From OpenBSD 6.2 onwards a C++11-supporting clang compiler is
+part of the base image, and while building it is necessary to make sure that this
+compiler is used and not ancient g++ 4.2.1. This is done by appending
+`CC=cc CXX=c++` to configuration commands. Mixing different compilers
+within the same executable will result in linker errors.
 
 ### Building BerkeleyDB
 
-BerkeleyDB is only necessary for the wallet functionality. To skip this, pass `--disable-wallet` to `./configure`.
+BerkeleyDB is only necessary for the wallet functionality. To skip this, pass
+`--disable-wallet` to `./configure` and skip to the next section.
 
-See "Berkeley DB" in [build-unix.md](build-unix.md#berkeley-db) for instructions on how to build BerkeleyDB 4.8.
-You cannot use the BerkeleyDB library from ports, for the same reason as boost above (g++/libstd++ incompatibility).
+It is recommended to use Berkeley DB 4.8. You cannot use the BerkeleyDB library
+from ports, for the same reason as boost above (g++/libstd++ incompatibility).
+If you have to build it yourself, you can use [the installation script included
+in contrib/](/contrib/install_db4.sh) like so
 
-```bash
-# Pick some path to install BDB to, here we create a directory within the bitcoin directory
-BITCOIN_ROOT=$(pwd)
-BDB_PREFIX="${BITCOIN_ROOT}/db4"
-mkdir -p $BDB_PREFIX
-
-# Fetch the source and verify that it is not tampered with
-curl -o db-4.8.30.NC.tar.gz 'http://download.oracle.com/berkeley-db/db-4.8.30.NC.tar.gz'
-echo '12edc0df75bf9abd7f82f821795bcee50f42cb2e5f76a6a281b85732798364ef  db-4.8.30.NC.tar.gz' | sha256 -c
-# MUST output: (SHA256) db-4.8.30.NC.tar.gz: OK
-tar -xzf db-4.8.30.NC.tar.gz
-
-# Build the library and install to specified prefix
-cd db-4.8.30.NC/build_unix/
-#  Note: Do a static build so that it can be embedded into the executable, instead of having to find a .so at runtime
-../dist/configure --enable-cxx --disable-shared --with-pic --prefix=$BDB_PREFIX CC=egcc CXX=eg++ CPP=ecpp
-make install # do NOT use -jX, this is broken
+```shell
+./contrib/install_db4.sh `pwd` CC=cc CXX=c++
 ```
 
-### Resource limits
+from the root of the repository. Then set `BDB_PREFIX` for the next section:
 
-The standard ulimit restrictions in OpenBSD are very strict:
-
-    data(kbytes)         1572864
-
-This, unfortunately, may no longer be enough to compile some `.cpp` files in the project,
-at least with GCC 4.9.4 (see issue [#6658](https://github.com/bitcoin/bitcoin/issues/6658)).
-If your user is in the `staff` group the limit can be raised with:
-
-    ulimit -d 3000000
-
-The change will only affect the current shell and processes spawned by it. To
-make the change system-wide, change `datasize-cur` and `datasize-max` in
-`/etc/login.conf`, and reboot.
+```shell
+export BDB_PREFIX="$PWD/db4"
+```
 
 ### Building Bitcoin Core
 
@@ -90,13 +63,13 @@ Make sure `BDB_PREFIX` is set to the appropriate path from the above steps.
 
 To configure with wallet:
 ```bash
-./configure --with-gui=no CC=egcc CXX=eg++ CPP=ecpp \
+./configure --with-gui=no CC=cc CXX=c++ \
     BDB_LIBS="-L${BDB_PREFIX}/lib -ldb_cxx-4.8" BDB_CFLAGS="-I${BDB_PREFIX}/include"
 ```
 
 To configure without wallet:
 ```bash
-./configure --disable-wallet --with-gui=no CC=egcc CXX=eg++ CPP=ecpp
+./configure --disable-wallet --with-gui=no CC=cc CXX=c++
 ```
 
 Build and run the tests:
@@ -105,13 +78,23 @@ gmake # use -jX here for parallelism
 gmake check
 ```
 
-Clang
-------------------------------
+Resource limits
+-------------------
 
-```bash
-pkg_add llvm
+If the build runs into out-of-memory errors, the instructions in this section
+might help.
 
-./configure --disable-wallet --with-gui=no CC=clang CXX=clang++
-gmake # use -jX here for parallelism
-gmake check
-```
+The standard ulimit restrictions in OpenBSD are very strict:
+
+    data(kbytes)         1572864
+
+This, unfortunately, in some cases not enough to compile some `.cpp` files in the project,
+(see issue [#6658](https://github.com/bitcoin/bitcoin/issues/6658)).
+If your user is in the `staff` group the limit can be raised with:
+
+    ulimit -d 3000000
+
+The change will only affect the current shell and processes spawned by it. To
+make the change system-wide, change `datasize-cur` and `datasize-max` in
+`/etc/login.conf`, and reboot.
+

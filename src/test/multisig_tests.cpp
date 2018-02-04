@@ -1,19 +1,19 @@
-// Copyright (c) 2011-2016 The Bitcoin Core developers
+// Copyright (c) 2011-2017 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "key/extkey.h"
-#include "key/stealth.h"
-#include "key.h"
-#include "keystore.h"
-#include "policy/policy.h"
-#include "script/script.h"
-#include "script/script_error.h"
-#include "script/interpreter.h"
-#include "script/sign.h"
-#include "script/ismine.h"
-#include "uint256.h"
-#include "test/test_particl.h"
+#include <key.h>
+#include <key/extkey.h>
+#include <key/stealth.h>
+#include <keystore.h>
+#include <policy/policy.h>
+#include <script/script.h>
+#include <script/script_error.h>
+#include <script/interpreter.h>
+#include <script/sign.h>
+#include <script/ismine.h>
+#include <uint256.h>
+#include <test/test_particl.h>
 
 
 #include <boost/test/unit_test.hpp>
@@ -177,7 +177,6 @@ BOOST_AUTO_TEST_CASE(multisig_IsStandard)
     for (int i = 0; i < 6; i++)
         BOOST_CHECK(!::IsStandard(malformed[i], whichType));
 }
-
 
 BOOST_AUTO_TEST_CASE(multisig_Solver1)
 {

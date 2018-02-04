@@ -1,11 +1,11 @@
-// Copyright (c) 2012-2016 The Bitcoin Core developers
+// Copyright (c) 2012-2017 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "random.h"
-#include "scheduler.h"
+#include <random.h>
+#include <scheduler.h>
 
-#include "test/test_particl.h"
+#include <test/test_particl.h>
 
 #include <boost/bind.hpp>
 #include <boost/thread.hpp>

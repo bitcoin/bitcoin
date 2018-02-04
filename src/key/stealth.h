@@ -11,11 +11,11 @@
 #include <vector>
 #include <inttypes.h>
 
-#include "util.h"
-#include "serialize.h"
-#include "key.h"
-#include "uint256.h"
-#include "key/types.h"
+#include <util.h>
+#include <serialize.h>
+#include <key.h>
+#include <uint256.h>
+#include <key/types.h>
 
 const uint32_t MAX_STEALTH_NARRATION_SIZE = 48;
 

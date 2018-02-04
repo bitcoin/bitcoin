@@ -7,6 +7,6 @@
 
 class CRPCTable;
 
-void RegisterUSBDeviceRPCCommands(CRPCTable &t);
+void RegisterUSBDeviceRPC(CRPCTable &t);
 
 #endif //PARTICL_USBDEVICE_RPCUSBDEVICE_H

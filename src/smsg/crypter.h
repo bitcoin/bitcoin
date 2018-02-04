@@ -5,7 +5,7 @@
 #ifndef PARTICL_SMSG_CRYPTER_H
 #define PARTICL_SMSG_CRYPTER_H
 
-#include "support/allocators/secure.h"
+#include <support/allocators/secure.h>
 #include <vector>
 #include <string.h>
 

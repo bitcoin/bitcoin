@@ -5,7 +5,7 @@
 #ifndef POS_MINER_H
 #define POS_MINER_H
 
-#include "primitives/block.h"
+#include <primitives/block.h>
 #include <thread>
 #include <condition_variable>
 #include <atomic>

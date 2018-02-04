@@ -2,14 +2,13 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "wallet/test/hdwallet_test_fixture.h"
+#include <wallet/test/hdwallet_test_fixture.h>
 
-#include "rpc/server.h"
-#include "wallet/db.h"
-#include "wallet/hdwallet.h"
-#include "validation.h"
-
-extern CWallet *pwalletMain;
+#include <rpc/server.h>
+#include <wallet/db.h>
+#include <wallet/hdwallet.h>
+#include <validation.h>
+#include <util.h>
 
 HDWalletTestingSetup::HDWalletTestingSetup(const std::string &chainName):
     TestingSetup(chainName, true) // fParticlMode = true
@@ -18,11 +17,11 @@ HDWalletTestingSetup::HDWalletTestingSetup(const std::string &chainName):
 
     bool fFirstRun;
     std::unique_ptr<CWalletDBWrapper> dbw(new CWalletDBWrapper(&bitdb, "wallet_test_part.dat"));
-    pwalletMain = (CWallet*) new CHDWallet(std::move(dbw));
-    vpwallets.push_back(pwalletMain);
+    pwalletMain = MakeUnique<CHDWallet>(std::move(dbw));
+    vpwallets.push_back(pwalletMain.get());
     fParticlWallet = true;
     pwalletMain->LoadWallet(fFirstRun);
-    RegisterValidationInterface(pwalletMain);
+    RegisterValidationInterface(pwalletMain.get());
 
     RegisterWalletRPCCommands(tableRPC);
     RegisterHDWalletRPCCommands(tableRPC);
@@ -30,9 +29,8 @@ HDWalletTestingSetup::HDWalletTestingSetup(const std::string &chainName):
 
 HDWalletTestingSetup::~HDWalletTestingSetup()
 {
-    UnregisterValidationInterface(pwalletMain);
-    delete pwalletMain;
-    pwalletMain = nullptr;
+    UnregisterValidationInterface(pwalletMain.get());
+    pwalletMain.reset();
 
     bitdb.Flush(true);
     bitdb.Reset();

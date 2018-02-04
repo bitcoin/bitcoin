@@ -8,9 +8,9 @@
 #include <leveldb/db.h>
 #include <leveldb/write_batch.h>
 
-#include "sync.h"
-#include "serialize.h"
-#include "streams.h"
+#include <sync.h>
+#include <serialize.h>
+#include <streams.h>
 
 class SecMsgStored;
 class CKeyID;

@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2016 The Bitcoin Core developers
+// Copyright (c) 2009-2017 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,10 +7,10 @@
 #define BITCOIN_CONSENSUS_VALIDATION_H
 
 #include <string>
-#include "version.h"
-#include "consensus/consensus.h"
-#include "primitives/transaction.h"
-#include "primitives/block.h"
+#include <version.h>
+#include <consensus/consensus.h>
+#include <primitives/transaction.h>
+#include <primitives/block.h>
 
 /** "reject" message codes */
 static const unsigned char REJECT_MALFORMED = 0x01;
@@ -92,20 +92,21 @@ public:
     std::string GetRejectReason() const { return strRejectReason; }
     std::string GetDebugMessage() const { return strDebugMessage; }
 
-    bool fEnforceSmsgFees = false;
+    bool fEnforceSmsgFees = false; // per block
+    bool fHasAnonOutput = false; // per tx
+    bool fHasAnonInput = false; // per tx
 };
 
+// These implement the weight = (stripped_size * 4) + witness_size formula,
+// using only serialization with and without witness data. As witness_size
+// is equal to total_size - stripped_size, this formula is identical to:
+// weight = (stripped_size * 3) + total_size.
 static inline int64_t GetTransactionWeight(const CTransaction& tx)
 {
-    return ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS) * (WITNESS_SCALE_FACTOR -1) + ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION);
+    return ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS) * (WITNESS_SCALE_FACTOR - 1) + ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION);
 }
-
 static inline int64_t GetBlockWeight(const CBlock& block)
 {
-    // This implements the weight = (stripped_size * 4) + witness_size formula,
-    // using only serialization with and without witness data. As witness_size
-    // is equal to total_size - stripped_size, this formula is identical to:
-    // weight = (stripped_size * 3) + total_size.
     return ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS) * (WITNESS_SCALE_FACTOR - 1) + ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION);
 }
 

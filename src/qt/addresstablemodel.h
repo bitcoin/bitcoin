@@ -8,6 +8,8 @@
 #include <QAbstractTableModel>
 #include <QStringList>
 
+enum OutputType : int;
+
 class AddressTablePriv;
 class WalletModel;
 
@@ -42,7 +44,7 @@ public:
         WALLET_UNLOCK_FAILURE,  /**< Wallet could not be unlocked to create new receiving address */
         KEY_GENERATION_FAILURE  /**< Generating a new public key for a receiving address failed */
     };
-    
+
     enum AddrType {
         ADDR_STANDARD,
         ADDR_STEALTH,
@@ -68,7 +70,7 @@ public:
     /* Add an address to the model.
        Returns the added address on success, and an empty string otherwise.
      */
-    QString addRow(const QString &type, const QString &label, const QString &address, int addrType = ADDR_STANDARD);
+    QString addRow(const QString &type, const QString &label, const QString &address, const OutputType address_type, AddrType addrType = ADDR_STANDARD);
 
     /* Look up label for address in address book, if not found return empty string.
      */

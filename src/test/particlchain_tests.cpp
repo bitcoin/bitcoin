@@ -2,17 +2,17 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "test/test_particl.h"
-#include "net.h"
-#include "keystore.h"
-#include "script/script.h"
-#include "script/ismine.h"
-#include "consensus/merkle.h"
-#include "key/extkey.h"
-#include "pos/kernel.h"
+#include <test/test_particl.h>
+#include <net.h>
+#include <keystore.h>
+#include <script/script.h>
+#include <script/ismine.h>
+#include <consensus/merkle.h>
+#include <key/extkey.h>
+#include <pos/kernel.h>
 
-#include "script/sign.h"
-#include "policy/policy.h"
+#include <script/sign.h>
+#include <policy/policy.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -47,9 +47,6 @@ BOOST_AUTO_TEST_CASE(signature_test)
     CPubKey pk = k.GetPubKey();
     CKeyID id = pk.GetID();
 
-    CAmount nValue = 100;
-    SignatureData sigdata;
-
     CMutableTransaction txn;
     txn.nVersion = PARTICL_TXN_VERSION;
     txn.nLockTime = 0;
@@ -65,18 +62,20 @@ BOOST_AUTO_TEST_CASE(signature_test)
     out1->scriptPubKey = script;
     txn.vpout.push_back(out1);
 
-    txn.vin.push_back(CTxIn(txn.GetHash(), 0));
-
     CMutableTransaction txn2;
-    txn2.vin.push_back(CTxIn(txn.GetHash(), 1));
+    txn2.nVersion = PARTICL_TXN_VERSION;
+    txn2.vin.push_back(CTxIn(txn.GetHash(), 0));
 
-    nValue = out1->nValue;
     std::vector<uint8_t> vchAmount(8);
-    memcpy(&vchAmount[0], &nValue, 8);
+    memcpy(&vchAmount[0], &out1->nValue, 8);
 
     CTransaction txToConst(txn2);
-    BOOST_CHECK(ProduceSignature(TransactionSignatureCreator(&keystore, &txToConst, 1, vchAmount, SIGHASH_ALL), script, sigdata));
+    SignatureData sigdata;
+    BOOST_CHECK(ProduceSignature(TransactionSignatureCreator(&keystore, &txToConst, 0, vchAmount, SIGHASH_ALL), script, sigdata));
 
+    ScriptError serror = SCRIPT_ERR_OK;
+    BOOST_CHECK(VerifyScript(txn2.vin[0].scriptSig, out1->scriptPubKey, &sigdata.scriptWitness, STANDARD_SCRIPT_VERIFY_FLAGS, TransactionSignatureChecker(&txToConst, 0, vchAmount), &serror));
+    BOOST_CHECK(serror == SCRIPT_ERR_OK);
 }
 
 BOOST_AUTO_TEST_CASE(particlchain_test)

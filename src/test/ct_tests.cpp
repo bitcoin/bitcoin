@@ -2,9 +2,9 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "test/test_particl.h"
+#include <test/test_particl.h>
 
-#include "crypto/sha256.h"
+#include <crypto/sha256.h>
 
 #include <secp256k1.h>
 #include <secp256k1_rangeproof.h>
@@ -12,7 +12,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "blind.h"
+#include <blind.h>
 
 BOOST_FIXTURE_TEST_SUITE(ct_tests, BasicTestingSetup)
 

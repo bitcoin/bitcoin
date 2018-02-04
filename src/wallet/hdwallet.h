@@ -5,15 +5,15 @@
 #ifndef PARTICL_WALLET_HDWALLET_H
 #define PARTICL_WALLET_HDWALLET_H
 
-#include "wallet/wallet.h"
-#include "wallet/hdwalletdb.h"
-#include "wallet/rpchdwallet.h"
-#include "base58.h"
+#include <wallet/wallet.h>
+#include <wallet/hdwalletdb.h>
+#include <wallet/rpchdwallet.h>
+#include <base58.h>
 
-#include "key/extkey.h"
-#include "key/stealth.h"
+#include <key/extkey.h>
+#include <key/stealth.h>
 
-#include "../miner.h"
+#include <miner.h>
 
 typedef std::map<CKeyID, CStealthKeyMetadata> StealthKeyMetaMap;
 typedef std::map<CKeyID, CExtKeyAccount*> ExtKeyAccountMap;
@@ -407,7 +407,7 @@ public:
     bool Unlock(const SecureString &strWalletPassphrase) override;
 
 
-    bool HaveAddress(const CBitcoinAddress &address);
+    bool HaveAddress(const CTxDestination &dest);
     bool HaveKey(const CKeyID &address, CEKAKey &ak, CExtKeyAccount *&pa) const;
     bool HaveKey(const CKeyID &address) const override;
 
@@ -602,11 +602,6 @@ public:
     int ScanChainFromHeight(int nHeight);
 
     /**
-     * Estimate the minimum fee considering user set parameters
-     * and the required fee
-     */
-    CAmount GetMinimumFee(unsigned int nTxBytes, const CCoinControl& coin_control, const CTxMemPool& pool, const CBlockPolicyEstimator& estimator, FeeCalculation *feeCalc) const override;
-    /**
      * Insert additional inputs into the transaction by
      * calling CreateTransaction();
      */
@@ -638,6 +633,8 @@ public:
     bool ScanForOwnedOutputs(const CTransaction &tx, size_t &nCT, size_t &nRingCT, mapValue_t &mapNarr);
     bool AddToWalletIfInvolvingMe(const CTransactionRef& ptx, const CBlockIndex* pIndex, int posInBlock, bool fUpdate) override;
 
+    CBlockIndex* ScanForWalletTransactions(CBlockIndex* pindexStart, bool fUpdate = false);
+
     CWalletTx *GetTempWalletTx(const uint256& hash);
 
     const CWalletTx *GetWalletTx(const uint256& hash) const override;
@@ -666,7 +663,7 @@ public:
     /**
      * populate vCoins with vector of available COutputs.
      */
-    void AvailableCoins(std::vector<COutput>& vCoins, bool fOnlySafe=true, const CCoinControl *coinControl = nullptr, const CAmount& nMinimumAmount = 1, const CAmount& nMaximumAmount = MAX_MONEY, const CAmount& nMinimumSumAmount = MAX_MONEY, const uint64_t& nMaximumCount = 0, const int& nMinDepth = 0, const int& nMaxDepth = 0x7FFFFFFF, bool fIncludeImmature=false) const override;
+    void AvailableCoins(std::vector<COutput>& vCoins, bool fOnlySafe=true, const CCoinControl *coinControl = nullptr, const CAmount& nMinimumAmount = 1, const CAmount& nMaximumAmount = MAX_MONEY, const CAmount& nMinimumSumAmount = MAX_MONEY, const uint64_t nMaximumCount = 0, const int nMinDepth = 0, const int nMaxDepth = 0x7FFFFFFF, bool fIncludeImmature=false) const override;
     bool SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAmount& nTargetValue, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet, const CCoinControl *coinControl = nullptr) const override;
 
     void AvailableBlindedCoins(std::vector<COutputR>& vCoins, bool fOnlySafe=true, const CCoinControl *coinControl = nullptr, const CAmount& nMinimumAmount = 1, const CAmount& nMaximumAmount = MAX_MONEY, const CAmount& nMinimumSumAmount = MAX_MONEY, const uint64_t& nMaximumCount = 0, const int& nMinDepth = 0, const int& nMaxDepth = 0x7FFFFFFF, bool fIncludeImmature=false) const;

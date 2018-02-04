@@ -1,15 +1,17 @@
-// Copyright (c) 2011-2016 The Bitcoin Core developers
+// Copyright (c) 2011-2017 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "editaddressdialog.h"
-#include "ui_editaddressdialog.h"
+#include <qt/editaddressdialog.h>
+#include <qt/forms/ui_editaddressdialog.h>
 
-#include "addresstablemodel.h"
-#include "guiutil.h"
+#include <qt/addresstablemodel.h>
+#include <qt/guiutil.h>
 
 #include <QDataWidgetMapper>
 #include <QMessageBox>
+
+extern OutputType g_address_type;
 
 EditAddressDialog::EditAddressDialog(Mode _mode, QWidget *parent) :
     QDialog(parent),
@@ -21,7 +23,7 @@ EditAddressDialog::EditAddressDialog(Mode _mode, QWidget *parent) :
     ui->setupUi(this);
 
     GUIUtil::setupAddressWidget(ui->addressEdit, this);
-    
+
     ui->cbxType->setCurrentIndex(ui->cbxType->findText("Standard"));
     if (mode == NewReceivingAddress)
     {
@@ -88,6 +90,7 @@ bool EditAddressDialog::saveCurrentRow()
                 AddressTableModel::Receive,
                 ui->labelEdit->text(),
                 ui->addressEdit->text(),
+                g_address_type,
                 ui->cbxType->currentText() == "Stealth" ? AddressTableModel::ADDR_STEALTH
                     : ui->cbxType->currentText() == "Extended" ? AddressTableModel::ADDR_EXT
                     : ui->cbxType->currentText() == "Standard 256bit" ? AddressTableModel::ADDR_STANDARD256
@@ -97,7 +100,8 @@ bool EditAddressDialog::saveCurrentRow()
         address = model->addRow(
                 AddressTableModel::Send,
                 ui->labelEdit->text(),
-                ui->addressEdit->text());
+                ui->addressEdit->text(),
+                g_address_type);
         break;
     case EditReceivingAddress:
     case EditSendingAddress:

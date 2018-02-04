@@ -1,5 +1,5 @@
 ---
-name: "particl-win-0.15.1.2"
+name: "particl-win-0.16.0.1"
 enable_cache: true
 sudo: true
 suites:

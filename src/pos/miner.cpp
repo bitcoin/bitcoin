@@ -2,21 +2,23 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "pos/miner.h"
-#include "pos/kernel.h"
-#include "../miner.h"
-#include "chainparams.h"
-#include "utilmoneystr.h"
+#include <pos/miner.h>
+#include <pos/kernel.h>
+#include <miner.h>
+#include <chainparams.h>
+#include <utilmoneystr.h>
 
-#include "sync.h"
-#include "net.h"
-#include "validation.h"
-#include "base58.h"
-#include "crypto/sha256.h"
+#include <fs.h>
+#include <sync.h>
+#include <net.h>
+#include <validation.h>
+#include <base58.h>
+#include <crypto/sha256.h>
 
-#include "wallet/hdwallet.h"
+#include <wallet/hdwallet.h>
 
-#include "fs.h"
+#include <fs.h>
+
 #include <atomic>
 #include <stdint.h>
 #include <thread>
@@ -390,7 +392,7 @@ void ThreadStakeMiner(size_t nThreadID, std::vector<CWalletRef> &vpwallets, size
 
             if (!pblocktemplate.get())
             {
-                pblocktemplate = BlockAssembler(Params()).CreateNewBlock(coinbaseScript);
+                pblocktemplate = BlockAssembler(Params()).CreateNewBlock(coinbaseScript, true, false);
                 if (!pblocktemplate.get())
                 {
                     fIsStaking = false;

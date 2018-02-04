@@ -2,15 +2,15 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "key/stealth.h"
-#include "key.h"
-#include "pubkey.h"
-#include "keystore.h"
-#include "base58.h"
-#include "serialize.h"
-#include "streams.h"
+#include <key/stealth.h>
+#include <key.h>
+#include <pubkey.h>
+#include <keystore.h>
+#include <base58.h>
+#include <serialize.h>
+#include <streams.h>
 
-#include "test/test_particl.h"
+#include <test/test_particl.h>
 
 #include <string>
 
@@ -235,12 +235,12 @@ BOOST_AUTO_TEST_CASE(stealth_key)
         CKey kSpendOut;
         BOOST_CHECK(StealthSharedToSecretSpend(secretShared_verify, kSpend, kSpendOut) == 0);
         pkTemp = kSpendOut.GetPubKey();
-        BOOST_CHECK(pkSendTo == pkTemp);
+        BOOST_CHECK(CPubKey(pkSendTo) == pkTemp);
 
         CKey kSpendOut_test2;
         BOOST_CHECK(StealthSecretSpend(sxAddr.scan_secret, ephem_pubkey, kSpend, kSpendOut_test2) == 0);
         pkTemp = kSpendOut_test2.GetPubKey();
-        BOOST_CHECK(pkSendTo == pkTemp);
+        BOOST_CHECK(CPubKey(pkSendTo) == pkTemp);
     };
 
     ECC_Stop_Stealth();

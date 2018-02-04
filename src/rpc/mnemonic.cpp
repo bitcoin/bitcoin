@@ -3,17 +3,17 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "rpc/server.h"
+#include <rpc/server.h>
 
-#include "util.h"
-#include "utilstrencodings.h"
-#include "key.h"
-#include "key/extkey.h"
-#include "base58.h"
-#include "random.h"
-#include "chainparams.h"
-#include "support/cleanse.h"
-#include "key/mnemonic.h"
+#include <util.h>
+#include <utilstrencodings.h>
+#include <key.h>
+#include <key/extkey.h>
+#include <base58.h>
+#include <random.h>
+#include <chainparams.h>
+#include <support/cleanse.h>
+#include <key/mnemonic.h>
 
 #include <string>
 #include <univalue.h>
@@ -289,9 +289,9 @@ UniValue mnemonic(const JSONRPCRequest &request)
 };
 
 static const CRPCCommand commands[] =
-{ //  category              name                      actor (function)         okSafeMode
+{ //  category              name                      actor (function)         argNames
   //  --------------------- ------------------------  -----------------------  ----------
-    { "mnemonic",           "mnemonic",               &mnemonic,               true,  {} },
+    { "mnemonic",           "mnemonic",               &mnemonic,               {} },
 };
 
 void RegisterMnemonicRPCCommands(CRPCTable &tableRPC)

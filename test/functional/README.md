@@ -17,7 +17,7 @@ don't have test cases for.
 
 #### Style guidelines
 
-- Where possible, try to adhere to [PEP-8 guidelines]([https://www.python.org/dev/peps/pep-0008/)
+- Where possible, try to adhere to [PEP-8 guidelines](https://www.python.org/dev/peps/pep-0008/)
 - Use a python linter like flake8 before submitting PRs to catch common style
   nits (eg trailing whitespace, unused imports, etc)
 - Avoid wildcard imports where possible
@@ -26,6 +26,20 @@ don't have test cases for.
 - When subclassing the BitcoinTestFramwork, place overrides for the
   `set_test_params()`, `add_options()` and `setup_xxxx()` methods at the top of
   the subclass, then locally-defined helper methods, then the `run_test()` method.
+
+#### Naming guidelines
+
+- Name the test `<area>_test.py`, where area can be one of the following:
+    - `feature` for tests for full features that aren't wallet/mining/mempool, eg `feature_rbf.py`
+    - `interface` for tests for other interfaces (REST, ZMQ, etc), eg `interface_rest.py`
+    - `mempool` for tests for mempool behaviour, eg `mempool_reorg.py`
+    - `mining` for tests for mining features, eg `mining_prioritisetransaction.py`
+    - `p2p` for tests that explicitly test the p2p interface, eg `p2p_disconnect_ban.py`
+    - `rpc` for tests for individual RPC methods or features, eg `rpc_listtransactions.py`
+    - `wallet` for tests for wallet features, eg `wallet_keypool.py`
+- use an underscore to separate words
+    - exception: for tests for specific RPCs or command line options which don't include underscores, name the test after the exact RPC or argument name, eg `rpc_decodescript.py`, not `rpc_decode_script.py`
+- Don't use the redundant word `test` in the name, eg `interface_zmq.py`, not `interface_zmq_test.py`
 
 #### General test-writing advice
 
@@ -63,17 +77,17 @@ wrappers for them, `msg_block`, `msg_tx`, etc).
 with the bitcoind(s) being tested (using python's asyncore package); the other
 implements the test logic.
 
-- `NodeConn` is the class used to connect to a bitcoind.  If you implement
-a callback class that derives from `NodeConnCB` and pass that to the
-`NodeConn` object, your code will receive the appropriate callbacks when
-events of interest arrive.
+- `P2PConnection` is the class used to connect to a bitcoind.  `P2PInterface`
+contains the higher level logic for processing P2P payloads and connecting to
+the Bitcoin Core node application logic. For custom behaviour, subclass the
+P2PInterface object and override the callback methods.
 
-- Call `NetworkThread.start()` after all `NodeConn` objects are created to
+- Call `network_thread_start()` after all `P2PInterface` objects are created to
 start the networking thread.  (Continue with the test logic in your existing
 thread.)
 
 - Can be used to write tests where specific P2P protocol behavior is tested.
-Examples tests are `p2p-accept-block.py`, `p2p-compactblocks.py`.
+Examples tests are `p2p_unrequested_blocks.py`, `p2p_compactblocks.py`.
 
 #### Comptool
 
@@ -119,7 +133,7 @@ Each `TestInstance` consists of:
     acceptance is tested against the given outcome.
 
 - For examples of tests written in this framework, see
-  `invalidblockrequest.py` and `p2p-fullblocktest.py`.
+  `p2p_invalid_block.py` and `feature_block.py`.
 
 ### test-framework modules
 

@@ -22,7 +22,7 @@ Notes:
 
 */
 
-#include "smessage.h"
+#include <smsg/smessage.h>
 
 #include <stdint.h>
 #include <time.h>
@@ -39,36 +39,36 @@ Notes:
 #include <secp256k1_ecdh.h>
 #include <secp256k1_recovery.h>
 
-#include "crypto/hmac_sha256.h"
-#include "crypto/sha512.h"
+#include <crypto/hmac_sha256.h>
+#include <crypto/sha512.h>
 
-#include "script/ismine.h"
-#include "policy/policy.h"
-#include "support/allocators/secure.h"
-#include "consensus/validation.h"
-#include "validation.h"
-#include "validationinterface.h"
+#include <script/ismine.h>
+#include <policy/policy.h>
+#include <support/allocators/secure.h>
+#include <consensus/validation.h>
+#include <validation.h>
+#include <validationinterface.h>
 
-#include "base58.h"
-#include "sync.h"
-#include "random.h"
-#include "chain.h"
-#include "netmessagemaker.h"
-#include "fs.h"
+#include <base58.h>
+#include <sync.h>
+#include <random.h>
+#include <chain.h>
+#include <netmessagemaker.h>
+#include <fs.h>
 
 #ifdef ENABLE_WALLET
-#include "wallet/coincontrol.h"
-#include "wallet/wallet.h"
+#include <wallet/coincontrol.h>
+#include <wallet/wallet.h>
 #endif
 
-#include "utilstrencodings.h"
-#include "clientversion.h"
+#include <utilstrencodings.h>
+#include <clientversion.h>
 
-#include "lz4/lz4.h"
-#include "xxhash/xxhash.h"
+#include <lz4/lz4.h>
+#include <xxhash/xxhash.h>
 
-#include "smsg/crypter.h"
-#include "smsg/db.h"
+#include <smsg/crypter.h>
+#include <smsg/db.h>
 
 
 boost::thread_group threadGroupSmsg;
@@ -89,7 +89,7 @@ CCriticalSection cs_smsgThreads;
 
 extern void Misbehaving(NodeId pnode, int howmuch);
 extern bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex, const Consensus::Params& consensusParams);
-extern CChain chainActive;
+extern CChain &chainActive;
 extern CCriticalSection cs_main;
 
 secp256k1_context *secp256k1_context_smsg = nullptr;

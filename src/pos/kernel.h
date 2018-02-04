@@ -6,7 +6,7 @@
 #ifndef PPCOIN_KERNEL_H
 #define PPCOIN_KERNEL_H
 
-#include "validation.h"
+#include <validation.h>
 
 
 // Compute the hash modifier for proof-of-stake

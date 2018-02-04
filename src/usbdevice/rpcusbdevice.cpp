@@ -2,11 +2,11 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "usbdevice/usbdevice.h"
-#include "rpc/server.h"
-#include "utilstrencodings.h"
-#include "base58.h"
-#include "key/extkey.h"
+#include <usbdevice/usbdevice.h>
+#include <rpc/server.h>
+#include <utilstrencodings.h>
+#include <base58.h>
+#include <key/extkey.h>
 
 #include <univalue.h>
 
@@ -116,15 +116,15 @@ UniValue devicesignmessage(const JSONRPCRequest &request)
 
 
 static const CRPCCommand commands[] =
-{ //  category              name                        actor (function)           okSafeMode
+{ //  category              name                        actor (function)           argNames
   //  --------------------- ------------------------    -----------------------    ----------
-    { "usbdevice",          "listdevices",              &listdevices,              false,  {} },
-    { "usbdevice",          "getdeviceinfo",            &getdeviceinfo,            false,  {} },
-    { "usbdevice",          "getdevicexpub",            &getdevicexpub,            false,  {} },
-    { "usbdevice",          "devicesignmessage",        &devicesignmessage,        false,  {} },
+    { "usbdevice",          "listdevices",              &listdevices,              {} },
+    { "usbdevice",          "getdeviceinfo",            &getdeviceinfo,            {} },
+    { "usbdevice",          "getdevicexpub",            &getdevicexpub,            {} },
+    { "usbdevice",          "devicesignmessage",        &devicesignmessage,        {} },
 };
 
-void RegisterUSBDeviceRPCCommands(CRPCTable &t)
+void RegisterUSBDeviceRPC(CRPCTable &t)
 {
     for (unsigned int vcidx = 0; vcidx < ARRAYLEN(commands); vcidx++)
         t.appendCommand(commands[vcidx].name, &commands[vcidx]);

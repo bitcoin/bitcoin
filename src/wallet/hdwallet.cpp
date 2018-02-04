@@ -2,35 +2,37 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "wallet/hdwallet.h"
+#include <wallet/hdwallet.h>
 
-#include "crypto/hmac_sha256.h"
-#include "crypto/hmac_sha512.h"
-#include "crypto/sha256.h"
+#include <crypto/hmac_sha256.h>
+#include <crypto/hmac_sha512.h>
+#include <crypto/sha256.h>
 
-#include "random.h"
-#include "base58.h"
-#include "validation.h"
-#include "consensus/validation.h"
-#include "consensus/merkle.h"
-#include "smsg/smessage.h"
-#include "smsg/crypter.h"
-#include "pos/kernel.h"
-#include "pos/miner.h"
-#include "utilmoneystr.h"
-#include "script/script.h"
-#include "script/standard.h"
-#include "script/sign.h"
-#include "policy/fees.h"
-#include "policy/policy.h"
-#include "policy/rbf.h"
-#include "wallet/coincontrol.h"
-#include "blind.h"
-#include "anon.h"
-#include "txdb.h"
-#include "rpc/server.h"
+#include <random.h>
+#include <base58.h>
+#include <validation.h>
+#include <consensus/validation.h>
+#include <consensus/merkle.h>
+#include <smsg/smessage.h>
+#include <smsg/crypter.h>
+#include <pos/kernel.h>
+#include <pos/miner.h>
+#include <utilmoneystr.h>
+#include <script/script.h>
+#include <script/standard.h>
+#include <script/sign.h>
+#include <policy/fees.h>
+#include <policy/policy.h>
+#include <policy/rbf.h>
+#include <wallet/coincontrol.h>
+#include <blind.h>
+#include <anon.h>
+#include <txdb.h>
+#include <rpc/server.h>
+#include <wallet/fees.h>
+#include <wallet/init.h>
 
-#include "univalue.h"
+#include <univalue.h>
 
 #include <secp256k1_mlsag.h>
 
@@ -39,6 +41,8 @@
 
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/thread.hpp>
+
+
 
 
 
@@ -140,7 +144,7 @@ int CHDWallet::FreeExtKeyMaps()
 /** Returns the wallets help message */
 std::string CHDWallet::GetWalletHelpString(bool showDebug)
 {
-    std::string strUsage = CWallet::GetWalletHelpString(showDebug);
+    std::string strUsage = ::GetWalletHelpString(showDebug);
 
     strUsage += HelpMessageGroup(_("Particl wallet options:"));
     strUsage += HelpMessageOpt("-defaultlookaheadsize=<n>", strprintf(_("Number of keys to load into the lookahead pool per chain. (default: %u)"), N_DEFAULT_LOOKAHEAD));
@@ -1025,11 +1029,10 @@ bool CHDWallet::Unlock(const SecureString &strWalletPassphrase)
     return true;
 };
 
-bool CHDWallet::HaveAddress(const CBitcoinAddress &address)
+bool CHDWallet::HaveAddress(const CTxDestination &dest)
 {
     LOCK(cs_wallet);
 
-    CTxDestination dest = address.Get();
     if (dest.type() == typeid(CKeyID))
     {
         CKeyID id = boost::get<CKeyID>(dest);
@@ -2108,15 +2111,15 @@ CAmount CHDWallet::GetStaked()
 {
     int64_t nTotal = 0;
     LOCK2(cs_main, cs_wallet);
-    for (MapWallet_t::iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
+    for (std::pair<const uint256, CWalletTx>& item : mapWallet)
     {
-        CWalletTx *pcoin = &(*it).second;
+        CWalletTx &wtx = item.second;
 
-        if (pcoin->IsCoinStake()
-            && pcoin->GetDepthInMainChainCached() > 0 // checks for hashunset
-            && pcoin->GetBlocksToMaturity() > 0)
+        if (wtx.IsCoinStake()
+            && wtx.GetDepthInMainChainCached() > 0 // checks for hashunset
+            && wtx.GetBlocksToMaturity() > 0)
         {
-            nTotal += CHDWallet::GetCredit(*pcoin, ISMINE_SPENDABLE);
+            nTotal += CHDWallet::GetCredit(*wtx.tx, ISMINE_SPENDABLE);
         };
     };
     return nTotal;
@@ -2184,32 +2187,32 @@ bool CHDWallet::GetBalances(CHDWalletBalances &bal)
     bal.Clear();
 
     LOCK2(cs_main, cs_wallet);
-    for (MapWallet_t::iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
+    for (std::pair<const uint256, CWalletTx>& item : mapWallet)
     {
-        CWalletTx *pcoin = &(*it).second;
+        CWalletTx &wtx = item.second;
 
-        bal.nPartImmature += pcoin->GetImmatureCredit();
+        bal.nPartImmature += wtx.GetImmatureCredit();
 
-        if (pcoin->IsCoinStake()
-            && pcoin->GetDepthInMainChainCached() > 0 // checks for hashunset
-            && pcoin->GetBlocksToMaturity() > 0)
+        if (wtx.IsCoinStake()
+            && wtx.GetDepthInMainChainCached() > 0 // checks for hashunset
+            && wtx.GetBlocksToMaturity() > 0)
         {
             CAmount nSpendable, nWatchOnly;
-            CHDWallet::GetCredit(*pcoin, nSpendable, nWatchOnly);
+            CHDWallet::GetCredit(*wtx.tx, nSpendable, nWatchOnly);
             bal.nPartStaked += nSpendable;
             bal.nPartWatchOnlyStaked += nWatchOnly;
         };
 
-        if (pcoin->IsTrusted())
+        if (wtx.IsTrusted())
         {
-            bal.nPart += pcoin->GetAvailableCredit();
-            bal.nPartWatchOnly += pcoin->GetAvailableWatchOnlyCredit();
+            bal.nPart += wtx.GetAvailableCredit();
+            bal.nPartWatchOnly += wtx.GetAvailableWatchOnlyCredit();
         } else
         {
-            if (pcoin->GetDepthInMainChain() == 0 && pcoin->InMempool())
+            if (wtx.GetDepthInMainChain() == 0 && wtx.InMempool())
             {
-                bal.nPartUnconf += pcoin->GetAvailableCredit();
-                bal.nPartWatchOnlyUnconf += pcoin->GetAvailableWatchOnlyCredit();
+                bal.nPartUnconf += wtx.GetAvailableCredit();
+                bal.nPartWatchOnlyUnconf += wtx.GetAvailableWatchOnlyCredit();
             };
         };
     };
@@ -3130,7 +3133,7 @@ int PreAcceptMempoolTx(CWalletTx &wtx, std::string &sError)
     // Check if wtx can get into the mempool
 
     // Limit size
-    if (GetTransactionWeight(wtx) >= MAX_STANDARD_TX_WEIGHT)
+    if (GetTransactionWeight(*wtx.tx) >= MAX_STANDARD_TX_WEIGHT)
     {
         return errorN(1, sError, __func__, _("Transaction too large").c_str());
     }
@@ -7332,71 +7335,6 @@ int CHDWallet::ScanChainFromHeight(int nHeight)
     return 0;
 };
 
-CAmount CHDWallet::GetMinimumFee(unsigned int nTxBytes, const CCoinControl& coin_control, const CTxMemPool& pool, const CBlockPolicyEstimator& estimator, FeeCalculation *feeCalc) const
-{
-    /* User control of how to calculate fee uses the following parameter precedence:
-       1. coin_control.m_feerate
-       2. coin_control.m_confirm_target
-       3. payTxFee (user-set global variable)
-       4. nTxConfirmTarget (user-set global variable)
-       The first parameter that is set is used.
-    */
-    CAmount fee_needed;
-    if (coin_control.m_feerate) { // 1.
-        fee_needed = coin_control.m_feerate->GetFee(nTxBytes);
-        if (feeCalc) feeCalc->reason = FeeReason::PAYTXFEE;
-    }
-    else if (!coin_control.m_confirm_target && ::payTxFee != CFeeRate(0)) { // 3. TODO: remove magic value of 0 for global payTxFee
-        fee_needed = ::payTxFee.GetFee(nTxBytes);
-        if (feeCalc) feeCalc->reason = FeeReason::PAYTXFEE;
-    }
-    else { // 2. or 4.
-        // We will use smart fee estimation
-        unsigned int target = coin_control.m_confirm_target ? *coin_control.m_confirm_target : ::nTxConfirmTarget;
-        // By default estimates are economical iff we are signaling opt-in-RBF
-        bool conservative_estimate = !coin_control.signalRbf;
-        // Allow to override the default fee estimate mode over the CoinControl instance
-        if (coin_control.m_fee_mode == FeeEstimateMode::CONSERVATIVE) conservative_estimate = true;
-        else if (coin_control.m_fee_mode == FeeEstimateMode::ECONOMICAL) conservative_estimate = false;
-
-        fee_needed = estimator.estimateSmartFee(target, feeCalc, conservative_estimate).GetFee(nTxBytes);
-        if (fee_needed == 0) {
-            // if we don't have enough data for estimateSmartFee, then use fallbackFee
-            fee_needed = fallbackFee.GetFee(nTxBytes);
-            if (feeCalc) feeCalc->reason = FeeReason::FALLBACK;
-        }
-        // Obey mempool min fee when using smart fee estimation
-        CAmount min_mempool_fee = pool.GetMinFee(gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000).GetFee(nTxBytes);
-        if (fee_needed < min_mempool_fee) {
-            fee_needed = min_mempool_fee;
-            if (feeCalc) feeCalc->reason = FeeReason::MEMPOOL_MIN;
-        }
-    }
-
-    // Allow to override automatic min/max check over coin control instance
-    if (!coin_control.fOverrideFeeRate)
-    {
-        // prevent user from paying a fee below minRelayTxFee or minTxFee
-        CAmount required_fee = GetRequiredFee(nTxBytes);
-        if (required_fee > fee_needed) {
-            fee_needed = required_fee;
-            if (feeCalc) feeCalc->reason = FeeReason::REQUIRED;
-        }
-        // But always obey the maximum
-        if (fee_needed > maxTxFee) {
-            fee_needed = maxTxFee;
-            if (feeCalc) feeCalc->reason = FeeReason::MAXTXFEE;
-        }
-    }
-
-    if (coin_control.fHaveAnonOutputs)
-        fee_needed *= ANON_FEE_MULTIPLIER;
-
-    fee_needed += coin_control.m_extrafee;
-
-    return fee_needed;
-};
-
 bool CHDWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& nChangePosInOut, std::string& strFailReason, bool lockUnspents, const std::set<int>& setSubtractFeeFromOutputs, CCoinControl coinControl)
 {
     std::vector<CTempRecipient> vecSend;
@@ -7576,7 +7514,7 @@ bool CHDWallet::CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey, CC
         LOCK2(cs_main, cs_wallet);
 
         mapValue_t mapNarr;
-        FindStealthTransactions(wtxNew, mapNarr);
+        FindStealthTransactions(*wtxNew.tx, mapNarr);
 
         if (!mapNarr.empty())
         {
@@ -8667,6 +8605,59 @@ bool CHDWallet::AddToWalletIfInvolvingMe(const CTransactionRef& ptx, const CBloc
     return false;
 };
 
+/**
+ * Scan the block chain (starting in pindexStart) for transactions
+ * from or to us. If fUpdate is true, found transactions that already
+ * exist in the wallet will be updated.
+ *
+ * Returns null if scan was successful. Otherwise, if a complete rescan was not
+ * possible (due to pruning or corruption), returns pointer to the most recent
+ * block that could not be scanned.
+ */
+CBlockIndex* CHDWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, bool fUpdate)
+{
+    int64_t nNow = GetTime();
+    const CChainParams& chainParams = Params();
+
+    CBlockIndex* pindex = pindexStart;
+    CBlockIndex* ret = nullptr;
+    {
+        LOCK2(cs_main, cs_wallet);
+        fAbortRescan = false;
+        fScanningWallet = true;
+
+        ShowProgress(_("Rescanning..."), 0); // show rescan progress in GUI as dialog or on splashscreen, if -rescan on startup
+        double dProgressStart = GuessVerificationProgress(chainParams.TxData(), pindex);
+        double dProgressTip = GuessVerificationProgress(chainParams.TxData(), chainActive.Tip());
+        while (pindex && !fAbortRescan)
+        {
+            if (pindex->nHeight % 100 == 0 && dProgressTip - dProgressStart > 0.0)
+                ShowProgress(_("Rescanning..."), std::max(1, std::min(99, (int)((GuessVerificationProgress(chainParams.TxData(), pindex) - dProgressStart) / (dProgressTip - dProgressStart) * 100))));
+            if (GetTime() >= nNow + 60) {
+                nNow = GetTime();
+                LogPrintf("Still rescanning. At block %d. Progress=%f\n", pindex->nHeight, GuessVerificationProgress(chainParams.TxData(), pindex));
+            }
+
+            CBlock block;
+            if (ReadBlockFromDisk(block, pindex, Params().GetConsensus())) {
+                for (size_t posInBlock = 0; posInBlock < block.vtx.size(); ++posInBlock) {
+                    AddToWalletIfInvolvingMe(block.vtx[posInBlock], pindex, posInBlock, fUpdate);
+                }
+            } else {
+                ret = pindex;
+            }
+            pindex = chainActive.Next(pindex);
+        }
+        if (pindex && fAbortRescan) {
+            LogPrintf("Rescan aborted at block %d. Progress=%f\n", pindex->nHeight, GuessVerificationProgress(chainParams.TxData(), pindex));
+        }
+        ShowProgress(_("Rescanning..."), 100); // hide progress dialog in GUI
+
+        fScanningWallet = false;
+    }
+    return ret;
+}
+
 CWalletTx *CHDWallet::GetTempWalletTx(const uint256& hash)
 {
     LOCK(cs_wallet);
@@ -9380,27 +9371,27 @@ void CHDWallet::ResendWalletTransactions(int64_t nBestBlockTime, CConnman *connm
     return;
 };
 
-void CHDWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, const CCoinControl *coinControl, const CAmount &nMinimumAmount, const CAmount &nMaximumAmount, const CAmount &nMinimumSumAmount, const uint64_t &nMaximumCount, const int &nMinDepth, const int &nMaxDepth, bool fIncludeImmature) const
+void CHDWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, const CCoinControl *coinControl, const CAmount &nMinimumAmount, const CAmount &nMaximumAmount, const CAmount &nMinimumSumAmount, const uint64_t nMaximumCount, const int nMinDepth, const int nMaxDepth, bool fIncludeImmature) const
 {
     vCoins.clear();
 
     CAmount nTotal = 0;
 
     LOCK2(cs_main, cs_wallet);
-    for (MapWallet_t::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
+    for (const auto& item : mapWallet)
     {
-        const uint256 &wtxid = it->first;
-        const CWalletTx *pcoin = &it->second;
+        const uint256& wtxid = item.first;
+        const CWalletTx& wtx = item.second;
 
-        if (!CheckFinalTx(*pcoin))
+        if (!CheckFinalTx(*wtx.tx))
             continue;
 
-        bool fMature = !(pcoin->GetBlocksToMaturity() > 0);
+        bool fMature = !(wtx.GetBlocksToMaturity() > 0);
         if (!fIncludeImmature
             && !fMature)
             continue;
 
-        int nDepth = pcoin->GetDepthInMainChain();
+        int nDepth = wtx.GetDepthInMainChain();
         if (nDepth < 0)
             continue;
 
@@ -9409,10 +9400,10 @@ void CHDWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, con
 
         // We should not consider coins which aren't at least in our mempool
         // It's possible for these to be conflicted via ancestors which we may never be able to detect
-        if (nDepth == 0 && !pcoin->InMempool())
+        if (nDepth == 0 && !wtx.InMempool())
             continue;
 
-        bool safeTx = pcoin->IsTrusted();
+        bool safeTx = wtx.IsTrusted();
         // We should not consider coins from transactions that are replacing
         // other transactions.
         //
@@ -9428,7 +9419,7 @@ void CHDWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, con
         // be a 1-block reorg away from the chain where transactions A and C
         // were accepted to another chain where B, B', and C were all
         // accepted.
-        if (nDepth == 0 && pcoin->mapValue.count("replaces_txid")) {
+        if (nDepth == 0 && wtx.mapValue.count("replaces_txid")) {
             safeTx = false;
         }
 
@@ -9440,7 +9431,7 @@ void CHDWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, con
         // intending to replace A', but potentially resulting in a scenario
         // where A, A', and D could all be accepted (instead of just B and
         // D, or just A and A' like the user would want).
-        if (nDepth == 0 && pcoin->mapValue.count("replaced_by_txid")) {
+        if (nDepth == 0 && wtx.mapValue.count("replaced_by_txid")) {
             safeTx = false;
         }
 
@@ -9448,11 +9439,11 @@ void CHDWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, con
             continue;
         }
 
-        for (unsigned int i = 0; i < pcoin->tx->vpout.size(); i++)
+        for (unsigned int i = 0; i < wtx.tx->vpout.size(); i++)
         {
-            if (!pcoin->tx->vpout[i]->IsStandardOutput())
+            if (!wtx.tx->vpout[i]->IsStandardOutput())
                 continue;
-            const CTxOutStandard *txout = pcoin->tx->vpout[i]->GetStandardOutput();
+            const CTxOutStandard *txout = wtx.tx->vpout[i]->GetStandardOutput();
 
             if (txout->nValue < nMinimumAmount || txout->nValue > nMaximumAmount)
                 continue;
@@ -9475,7 +9466,7 @@ void CHDWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, con
             bool fSpendableIn = ((mine & ISMINE_SPENDABLE) != ISMINE_NO) || (coinControl && coinControl->fAllowWatchOnly && (mine & ISMINE_WATCH_SOLVABLE) != ISMINE_NO);
             bool fSolvableIn = (mine & (ISMINE_SPENDABLE | ISMINE_WATCH_SOLVABLE)) != ISMINE_NO;
 
-            vCoins.emplace_back(pcoin, i, nDepth, fSpendableIn, fSolvableIn, safeTx, fMature);
+            vCoins.emplace_back(&wtx, i, nDepth, fSpendableIn, fSolvableIn, safeTx, fMature);
 
             // Checks the sum amount of all UTXO's.
             if (nMinimumSumAmount != MAX_MONEY) {
@@ -10794,11 +10785,11 @@ bool CHDWallet::CreateCoinStake(unsigned int nBits, int64_t nTime, int nBlockHei
             CKeyID spendId;
             if (whichType == TX_PUBKEYHASH)
             {
-                spendId = uint160(vSolutions[0]);
+                spendId = CKeyID(uint160(vSolutions[0]));
             } else
             if (whichType == TX_PUBKEYHASH256)
             {
-                spendId = uint256(vSolutions[0]);
+                spendId = CKeyID(uint256(vSolutions[0]));
             } else
             {
                 LogPrint(BCLog::POS, "%s: No support for kernel type=%d.\n", __func__, whichType);
@@ -11081,12 +11072,13 @@ bool CHDWallet::SignBlock(CBlockTemplate *pblocktemplate, int nHeight, int64_t n
 {
     LogPrint(BCLog::POS, "%s, nHeight %d\n", __func__, nHeight);
 
+    assert(pblocktemplate);
     CBlock *pblock = &pblocktemplate->block;
+    assert(pblock);
     if (pblock->vtx.size() < 1)
         return error("%s: Malformed block.", __func__);
 
     int64_t nFees = -pblocktemplate->vTxFees[0];
-
     CBlockIndex *pindexPrev = chainActive.Tip();
 
     CKey key;

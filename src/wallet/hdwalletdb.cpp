@@ -2,10 +2,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "wallet/hdwalletdb.h"
-#include "wallet/hdwallet.h"
+#include <wallet/hdwalletdb.h>
+#include <wallet/hdwallet.h>
 
-#include "serialize.h"
+#include <serialize.h>
 #include <boost/tuple/tuple.hpp>
 
 

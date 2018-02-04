@@ -1,18 +1,18 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2016 The Bitcoin Core developers
+// Copyright (c) 2009-2017 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_NETMESSAGEMAKER_H
 #define BITCOIN_NETMESSAGEMAKER_H
 
-#include "net.h"
-#include "serialize.h"
+#include <net.h>
+#include <serialize.h>
 
 class CNetMsgMaker
 {
 public:
-    CNetMsgMaker(int nVersionIn) : nVersion(nVersionIn){}
+    explicit CNetMsgMaker(int nVersionIn) : nVersion(nVersionIn){}
 
     template <typename... Args>
     CSerializedNetMsg Make(int nFlags, std::string sCommand, Args&&... args) const

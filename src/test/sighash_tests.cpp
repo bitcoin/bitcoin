@@ -1,19 +1,19 @@
-// Copyright (c) 2013-2016 The Bitcoin Core developers
+// Copyright (c) 2013-2017 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "consensus/tx_verify.h"
-#include "consensus/validation.h"
-#include "data/sighash.json.h"
-#include "hash.h"
-#include "script/interpreter.h"
-#include "script/script.h"
-#include "serialize.h"
-#include "streams.h"
-#include "test/test_particl.h"
-#include "util.h"
-#include "utilstrencodings.h"
-#include "version.h"
+#include <consensus/tx_verify.h>
+#include <consensus/validation.h>
+#include <test/data/sighash.json.h>
+#include <hash.h>
+#include <script/interpreter.h>
+#include <script/script.h>
+#include <serialize.h>
+#include <streams.h>
+#include <test/test_particl.h>
+#include <util.h>
+#include <utilstrencodings.h>
+#include <version.h>
 
 #include <iostream>
 
@@ -93,9 +93,9 @@ void static RandomScript(CScript &script) {
 }
 
 void static RandomTransaction(CMutableTransaction &tx, bool fSingle) {
-    
+
     tx.nVersion = ((uint32_t)InsecureRand32()) % (PARTICL_TXN_VERSION-1);
-    
+
     tx.vin.clear();
     tx.vout.clear();
     tx.nLockTime = (InsecureRandBool()) ? InsecureRand32() : 0;
@@ -126,11 +126,9 @@ BOOST_AUTO_TEST_CASE(sighash_test)
     #if defined(PRINT_SIGHASH_JSON)
     std::cout << "[\n";
     std::cout << "\t[\"raw_transaction, script, input_index, hashType, signature_hash (result)\"],\n";
-    #endif
+    int nRandomTests = 500;
+    #else
     int nRandomTests = 50000;
-
-    #if defined(PRINT_SIGHASH_JSON)
-    nRandomTests = 500;
     #endif
     for (int i=0; i<nRandomTests; i++) {
         int nHashType = InsecureRand32();
@@ -142,11 +140,11 @@ BOOST_AUTO_TEST_CASE(sighash_test)
 
         uint256 sh, sho;
         sho = SignatureHashOld(scriptCode, txTo, nIn, nHashType);
-        
+
         CAmount amount = 0;
         std::vector<uint8_t> vchAmount(8);
         memcpy(&vchAmount[0], &amount, 8);
-        
+
         sh = SignatureHash(scriptCode, txTo, nIn, nHashType, vchAmount, SIGVERSION_BASE);
         #if defined(PRINT_SIGHASH_JSON)
         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
@@ -190,7 +188,7 @@ BOOST_AUTO_TEST_CASE(sighash_from_data)
         uint256 sh;
         CTransactionRef tx;
         CScript scriptCode = CScript();
-        
+
         bool fExpectHashFailure = false; // adjusting test vectors >= PARTICL_TXN_VERSION
         try {
           // deserialize test data
@@ -199,8 +197,8 @@ BOOST_AUTO_TEST_CASE(sighash_from_data)
           nIn = test[2].get_int();
           nHashType = test[3].get_int();
           sigHashHex = test[4].get_str();
-          
-          
+
+
             char strHex[2];
             strHex[0] = raw_tx[0];
             strHex[1] = raw_tx[1];

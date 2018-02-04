@@ -1,13 +1,13 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2009-2017 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_POLICY_FEERATE_H
 #define BITCOIN_POLICY_FEERATE_H
 
-#include "amount.h"
-#include "serialize.h"
+#include <amount.h>
+#include <serialize.h>
 
 #include <string>
 
@@ -20,13 +20,17 @@ class CFeeRate
 {
 private:
     CAmount nSatoshisPerK; // unit is satoshis-per-1,000-bytes
+
 public:
     /** Fee rate of 0 satoshis per kB */
     CFeeRate() : nSatoshisPerK(0) { }
-    explicit CFeeRate(const CAmount& _nSatoshisPerK): nSatoshisPerK(_nSatoshisPerK) { }
+    template<typename I>
+    CFeeRate(const I _nSatoshisPerK): nSatoshisPerK(_nSatoshisPerK) {
+        // We've previously had bugs creep in from silent double->int conversion...
+        static_assert(std::is_integral<I>::value, "CFeeRate should be used without floats");
+    }
     /** Constructor for a fee rate in satoshis per kB. The size in bytes must not exceed (2^63 - 1)*/
     CFeeRate(const CAmount& nFeePaid, size_t nBytes);
-    CFeeRate(const CFeeRate& other) { nSatoshisPerK = other.nSatoshisPerK; }
     /**
      * Return the fee in satoshis for the given size in bytes.
      */

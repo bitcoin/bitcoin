@@ -7,10 +7,10 @@
 
 #include <inttypes.h>
 
-#include "primitives/transaction.h"
-#include "consensus/validation.h"
+#include <primitives/transaction.h>
+#include <consensus/validation.h>
 
-#include "txmempool.h"
+#include <txmempool.h>
 
 const size_t MIN_RINGSIZE = 3;
 const size_t MAX_RINGSIZE = 32;

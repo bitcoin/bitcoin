@@ -7,12 +7,12 @@
 #define EXT_KEY_H
 
 
-#include "key.h"
-#include "stealth.h"
-#include "util.h"
-#include "key/keyutil.h"
-#include "types.h"
-#include "sync.h"
+#include <key.h>
+#include <key/stealth.h>
+#include <util.h>
+#include <key/keyutil.h>
+#include <key/types.h>
+#include <sync.h>
 
 static const uint32_t MAX_DERIVE_TRIES = 16;
 static const uint32_t BIP32_KEY_LEN = 82;       // raw, 74 + 4 bytes id + 4 checksum

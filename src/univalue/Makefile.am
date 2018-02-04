@@ -12,6 +12,7 @@ pkgconfig_DATA = pc/libunivalue.pc
 
 libunivalue_la_SOURCES = \
 	lib/univalue.cpp \
+	lib/univalue_get.cpp \
 	lib/univalue_read.cpp \
 	lib/univalue_write.cpp
 
@@ -20,7 +21,7 @@ libunivalue_la_LDFLAGS = \
 	-no-undefined
 libunivalue_la_CXXFLAGS = -I$(top_srcdir)/include
 
-TESTS = test/unitester
+TESTS = test/object test/unitester test/no_nul
 
 GENBIN = gen/gen$(BUILD_EXEEXT)
 GEN_SRCS = gen/gen.cpp
@@ -33,7 +34,7 @@ gen: lib/univalue_escapes.h $(GENBIN)
 	@echo Updating $<
 	$(AM_V_at)$(GENBIN) > lib/univalue_escapes.h
 
-noinst_PROGRAMS = $(TESTS)
+noinst_PROGRAMS = $(TESTS) test/test_json
 
 TEST_DATA_DIR=test
 
@@ -41,6 +42,21 @@ test_unitester_SOURCES = test/unitester.cpp
 test_unitester_LDADD = libunivalue.la
 test_unitester_CXXFLAGS = -I$(top_srcdir)/include -DJSON_TEST_SRC=\"$(srcdir)/$(TEST_DATA_DIR)\"
 test_unitester_LDFLAGS = -static $(LIBTOOL_APP_LDFLAGS)
+
+test_test_json_SOURCES = test/test_json.cpp
+test_test_json_LDADD = libunivalue.la
+test_test_json_CXXFLAGS = -I$(top_srcdir)/include
+test_test_json_LDFLAGS = -static $(LIBTOOL_APP_LDFLAGS)
+
+test_no_nul_SOURCES = test/no_nul.cpp
+test_no_nul_LDADD = libunivalue.la
+test_no_nul_CXXFLAGS = -I$(top_srcdir)/include
+test_no_nul_LDFLAGS = -static $(LIBTOOL_APP_LDFLAGS)
+
+test_object_SOURCES = test/object.cpp
+test_object_LDADD = libunivalue.la
+test_object_CXXFLAGS = -I$(top_srcdir)/include
+test_object_LDFLAGS = -static $(LIBTOOL_APP_LDFLAGS)
 
 TEST_FILES = \
 	$(TEST_DATA_DIR)/fail10.json \
@@ -77,6 +93,8 @@ TEST_FILES = \
 	$(TEST_DATA_DIR)/fail39.json \
 	$(TEST_DATA_DIR)/fail40.json \
 	$(TEST_DATA_DIR)/fail41.json \
+	$(TEST_DATA_DIR)/fail42.json \
+	$(TEST_DATA_DIR)/fail44.json \
 	$(TEST_DATA_DIR)/fail3.json \
 	$(TEST_DATA_DIR)/fail4.json \
 	$(TEST_DATA_DIR)/fail5.json \
@@ -88,6 +106,11 @@ TEST_FILES = \
 	$(TEST_DATA_DIR)/pass2.json \
 	$(TEST_DATA_DIR)/pass3.json \
 	$(TEST_DATA_DIR)/round1.json \
-	$(TEST_DATA_DIR)/round2.json
+	$(TEST_DATA_DIR)/round2.json \
+	$(TEST_DATA_DIR)/round3.json \
+	$(TEST_DATA_DIR)/round4.json \
+	$(TEST_DATA_DIR)/round5.json \
+	$(TEST_DATA_DIR)/round6.json \
+	$(TEST_DATA_DIR)/round7.json
 
 EXTRA_DIST=$(TEST_FILES) $(GEN_SRCS)

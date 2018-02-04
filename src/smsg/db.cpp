@@ -2,11 +2,11 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "smsg/db.h"
-#include "smsg/smessage.h"
-#include "sync.h"
-#include "serialize.h"
-#include "clientversion.h"
+#include <smsg/db.h>
+#include <smsg/smessage.h>
+#include <sync.h>
+#include <serialize.h>
+#include <clientversion.h>
 
 
 CCriticalSection cs_smsgDB;

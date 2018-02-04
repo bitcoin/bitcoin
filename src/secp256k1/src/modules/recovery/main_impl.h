@@ -4,8 +4,8 @@
  * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
  **********************************************************************/
 
-#ifndef _SECP256K1_MODULE_RECOVERY_MAIN_
-#define _SECP256K1_MODULE_RECOVERY_MAIN_
+#ifndef SECP256K1_MODULE_RECOVERY_MAIN_H
+#define SECP256K1_MODULE_RECOVERY_MAIN_H
 
 #include "include/secp256k1_recovery.h"
 
@@ -190,4 +190,4 @@ int secp256k1_ecdsa_recover(const secp256k1_context* ctx, secp256k1_pubkey *pubk
     }
 }
 
-#endif
+#endif /* SECP256K1_MODULE_RECOVERY_MAIN_H */

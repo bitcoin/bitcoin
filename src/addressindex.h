@@ -6,9 +6,9 @@
 #ifndef BITCOIN_ADDRESSINDEX_H
 #define BITCOIN_ADDRESSINDEX_H
 
-#include "uint256.h"
-#include "amount.h"
-#include "script/script.h"
+#include <uint256.h>
+#include <amount.h>
+#include <script/script.h>
 
 enum AddressIndexType {
     ADDR_INDT_UNKNOWN                = 0,

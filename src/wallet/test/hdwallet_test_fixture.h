@@ -5,13 +5,17 @@
 #ifndef BITCOIN_WALLET_TEST_FIXTURE_H
 #define BITCOIN_WALLET_TEST_FIXTURE_H
 
-#include "test/test_particl.h"
+#include <test/test_particl.h>
+
+#include <wallet/hdwallet.h>
 
 /** Testing setup and teardown for wallet.
  */
 struct HDWalletTestingSetup: public TestingSetup {
     HDWalletTestingSetup(const std::string& chainName = CBaseChainParams::MAIN);
     ~HDWalletTestingSetup();
+
+    std::unique_ptr<CHDWallet> pwalletMain;
 };
 
 std::string StripQuotes(std::string s);

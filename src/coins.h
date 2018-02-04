@@ -1,22 +1,22 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2016 The Bitcoin Core developers
+// Copyright (c) 2009-2017 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_COINS_H
 #define BITCOIN_COINS_H
 
-#include "primitives/transaction.h"
-#include "compressor.h"
-#include "core_memusage.h"
-#include "hash.h"
-#include "memusage.h"
-#include "serialize.h"
-#include "uint256.h"
+#include <primitives/transaction.h>
+#include <compressor.h>
+#include <core_memusage.h>
+#include <hash.h>
+#include <memusage.h>
+#include <serialize.h>
+#include <uint256.h>
 
-#include "addressindex.h"
-#include "spentindex.h"
-#include "rctindex.h"
+#include <addressindex.h>
+#include <spentindex.h>
+#include <rctindex.h>
 
 #include <assert.h>
 #include <stdint.h>
@@ -43,7 +43,7 @@ public:
 
     //! at which height this containing transaction was included in the active block chain
     uint32_t nHeight : 31;
-    
+
     uint8_t nType = OUTPUT_STANDARD;
     secp256k1_pedersen_commitment commitment;
 
@@ -55,10 +55,10 @@ public:
     {
         if (!txo->IsType(nType))
             return false;
-        
+
         if (out.scriptPubKey != *txo->GetPScriptPubKey())
             return false;
-        
+
         if (nType == OUTPUT_STANDARD
             && out.nValue != txo->GetValue())
             return false;
@@ -237,10 +237,10 @@ class CCoinsViewCache : public CCoinsViewBacked
 {
 public:
 //protected:
-    
+
     /**
      * Make mutable so that we can "fill the cache" even from Get-methods
-     * declared as "const".  
+     * declared as "const".
      */
     mutable uint256 hashBlock;
     mutable int nBlockHeight = 0;
@@ -248,16 +248,16 @@ public:
 
     /* Cached dynamic memory usage for the inner Coin objects. */
     mutable size_t cachedCoinsUsage;
-    
+
     mutable std::vector<std::pair<CAddressIndexKey, CAmount> > addressIndex;
     mutable std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue> > addressUnspentIndex;
     mutable std::vector<std::pair<CSpentIndexKey, CSpentIndexValue> > spentIndex;
-    
+
     mutable int64_t nLastRCTOutput = 0;
     mutable std::vector<std::pair<int64_t, CAnonOutput> > anonOutputs;
     mutable std::map<CCmpPubKey, int64_t> anonOutputLinks;
     mutable std::vector<std::pair<CCmpPubKey, uint256> > keyImages;
-    
+
     bool ReadRCTOutputLink(CCmpPubKey &pk, int64_t &index)
     {
         std::map<CCmpPubKey, int64_t>::iterator it = anonOutputLinks.find(pk);
@@ -266,7 +266,7 @@ public:
             index = it->second;
             return true;
         };
-        
+
         return false;
     };
 
@@ -274,6 +274,11 @@ public:
 
 public:
     CCoinsViewCache(CCoinsView *baseIn);
+
+    /**
+     * By deleting the copy constructor, we prevent accidentally using it when one intends to create a cache on top of a base cache.
+     */
+    CCoinsViewCache(const CCoinsViewCache &) = delete;
 
     // Standard CCoinsView methods
     bool GetCoin(const COutPoint &outpoint, Coin &coin) const override;
@@ -336,7 +341,7 @@ public:
     //! Calculate the size of the cache (in bytes)
     size_t DynamicMemoryUsage() const;
 
-    /** 
+    /**
      * Amount of bitcoins coming in to a transaction
      * Note that lightweight clients may not know anything besides the hash of previous transactions,
      * so may not be able to calculate this.
@@ -345,22 +350,17 @@ public:
      * @return	Sum of value of all inputs (scriptSigs)
      */
     CAmount GetValueIn(const CTransaction& tx) const;
-    
-    
+
+
     CAmount GetPlainValueIn(const CTransaction &tx,
         size_t &nStandard, size_t &nCT, size_t &nRingCT) const;
-    
+
 
     //! Check whether all prevouts of the transaction are present in the UTXO set represented by this view
     bool HaveInputs(const CTransaction& tx) const;
 
 private:
     CCoinsMap::iterator FetchCoin(const COutPoint &outpoint) const;
-
-    /**
-     * By making the copy constructor private, we prevent accidentally using it when one intends to create a cache on top of a base cache.
-     */
-    CCoinsViewCache(const CCoinsViewCache &);
 };
 
 //! Utility function to add all of a transaction's outputs to a cache.

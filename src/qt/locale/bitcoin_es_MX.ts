@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation>Click derecho para editar dirección o etiqueta</translation>
+        <translation>Click derecho para editar tu dirección o etiqueta</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -31,7 +31,7 @@
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation>Exportar la información en la pestaña actual a un archivo</translation>
+        <translation>Exportar la información en la tabla actual a un archivo</translation>
     </message>
     <message>
         <source>&amp;Export</source>
@@ -40,6 +40,34 @@
     <message>
         <source>&amp;Delete</source>
         <translation>&amp;Borrar</translation>
+    </message>
+    <message>
+        <source>Choose the address to send coins to</source>
+        <translation>Elija la direccion a donde se enviaran las monedas</translation>
+    </message>
+    <message>
+        <source>Choose the address to receive coins with</source>
+        <translation>Elija la dirección para recibir monedas.</translation>
+    </message>
+    <message>
+        <source>C&amp;hoose</source>
+        <translation>Elija</translation>
+    </message>
+    <message>
+        <source>Sending addresses</source>
+        <translation>Direcciones de Envio</translation>
+    </message>
+    <message>
+        <source>Receiving addresses</source>
+        <translation>Direcciones de recibo</translation>
+    </message>
+    <message>
+        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation>Estas son tus direcciones de Bitcoin para enviar pagos. Siempre revisa el monto y la dirección de envío antes de enviar monedas.</translation>
+    </message>
+    <message>
+        <source>&amp;Copy Address</source>
+        <translation>&amp;Copiar dirección</translation>
     </message>
     </context>
 <context>
@@ -337,6 +365,10 @@
 <context>
     <name>Intro</name>
     <message>
+        <source>Bitcoin</source>
+        <translation>Bitcoin</translation>
+    </message>
+    <message>
         <source>Error</source>
         <translation>Error</translation>
     </message>
@@ -369,6 +401,10 @@
         <source>none</source>
         <translation>Ninguno </translation>
     </message>
+    <message>
+        <source>Error</source>
+        <translation>Error</translation>
+    </message>
     </context>
 <context>
     <name>OverviewPage</name>
@@ -389,7 +425,11 @@
         <source>Amount</source>
         <translation>Monto</translation>
     </message>
-    </context>
+    <message>
+        <source>unknown</source>
+        <translation>desconocido</translation>
+    </message>
+</context>
 <context>
     <name>QObject::QObject</name>
     </context>
@@ -469,10 +509,6 @@
     <message>
         <source>Change:</source>
         <translation>Cambio</translation>
-    </message>
-    <message>
-        <source>fast</source>
-        <translation>rápido</translation>
     </message>
     <message>
         <source>Send to multiple recipients at once</source>
@@ -593,7 +629,7 @@
         <source>Send Coins</source>
         <translation>Enviar monedas</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>WalletView</name>
     <message>
@@ -620,10 +656,6 @@
         <translation>Verificando bloques...</translation>
     </message>
     <message>
-        <source>Verifying wallet...</source>
-        <translation>Verificando cartera...</translation>
-    </message>
-    <message>
         <source>Wallet options:</source>
         <translation>Opciones de cartera:</translation>
     </message>
@@ -634,10 +666,6 @@
     <message>
         <source>Warning</source>
         <translation>Aviso</translation>
-    </message>
-    <message>
-        <source>Loading addresses...</source>
-        <translation>Cargando direcciones...</translation>
     </message>
     <message>
         <source>Loading block index...</source>

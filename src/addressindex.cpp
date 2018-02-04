@@ -2,11 +2,11 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "addressindex.h"
+#include <addressindex.h>
 
-#include "primitives/transaction.h"
-#include "script/interpreter.h"
-#include "util.h"
+#include <primitives/transaction.h>
+#include <script/interpreter.h>
+#include <util.h>
 
 bool ExtractIndexInfo(const CScript *pScript, int &scriptType, std::vector<uint8_t> &hashBytes)
 {

@@ -2,10 +2,10 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "rpc/server.h"
+#include <rpc/server.h>
 
-#include "validation.h"
-#include "txdb.h"
+#include <validation.h>
+#include <txdb.h>
 
 
 static bool IsDigits(const std::string &str)
@@ -69,9 +69,9 @@ UniValue anonoutput(const JSONRPCRequest &request)
 };
 
 static const CRPCCommand commands[] =
-{ //  category              name                      actor (function)         okSafeMode
+{ //  category              name                      actor (function)         argNames
   //  --------------------- ------------------------  -----------------------  ----------
-    { "anon",               "anonoutput",             &anonoutput,             true, {} },
+    { "anon",               "anonoutput",             &anonoutput,             {} },
 };
 
 void RegisterAnonRPCCommands(CRPCTable &tableRPC)

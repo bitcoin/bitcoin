@@ -34,6 +34,7 @@ BITCOIN_TESTS =\
   test/base64_tests.cpp \
   test/bech32_tests.cpp \
   test/bip32_tests.cpp \
+  test/blockchain_tests.cpp \
   test/blockencodings_tests.cpp \
   test/bloom_tests.cpp \
   test/bswap_tests.cpp \
@@ -52,6 +53,7 @@ BITCOIN_TESTS =\
   test/main_tests.cpp \
   test/mempool_tests.cpp \
   test/merkle_tests.cpp \
+  test/merkleblock_tests.cpp \
   test/miner_tests.cpp \
   test/multisig_tests.cpp \
   test/net_tests.cpp \
@@ -82,10 +84,10 @@ BITCOIN_TESTS =\
   test/timedata_tests.cpp \
   test/torcontrol_tests.cpp \
   test/transaction_tests.cpp \
+  test/txvalidation_tests.cpp \
   test/txvalidationcache_tests.cpp \
   test/versionbits_tests.cpp \
   test/uint256_tests.cpp \
-  test/univalue_tests.cpp \
   test/util_tests.cpp \
   test/smsg_tests.cpp \
   test/mnemonic_tests.cpp \
@@ -93,7 +95,6 @@ BITCOIN_TESTS =\
   test/ct_tests.cpp \
   test/ringct_tests.cpp \
   test/particlchain_tests.cpp
-
 
 if ENABLE_WALLET
 BITCOIN_TESTS += \
@@ -110,12 +111,9 @@ BITCOIN_TESTS += \
   wallet/test/stake_tests.cpp
 endif
 
-
-
 test_test_particl_SOURCES = $(BITCOIN_TESTS) $(JSON_TEST_FILES) $(RAW_TEST_FILES)
-test_test_particl_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -I$(builddir)/test/ $(TESTDEFS) $(EVENT_CFLAGS)
+test_test_particl_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(TESTDEFS) $(EVENT_CFLAGS)
 test_test_particl_LDADD =
-
 if ENABLE_WALLET
 test_test_particl_LDADD += $(LIBPARTICL_WALLET)
 endif

@@ -4,8 +4,8 @@
  * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
  **********************************************************************/
 
-#ifndef _SECP256K1_TESTRAND_H_
-#define _SECP256K1_TESTRAND_H_
+#ifndef SECP256K1_TESTRAND_H
+#define SECP256K1_TESTRAND_H
 
 #if defined HAVE_CONFIG_H
 #include "libsecp256k1-config.h"
@@ -38,4 +38,4 @@ static void secp256k1_rand_bytes_test(unsigned char *bytes, size_t len);
 /** Generate a pseudorandom 64-bit integer in the range min..max, inclusive. */
 static int64_t secp256k1_rands64(uint64_t min, uint64_t max);
 
-#endif
+#endif /* SECP256K1_TESTRAND_H */

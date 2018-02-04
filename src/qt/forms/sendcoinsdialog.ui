@@ -1191,10 +1191,10 @@
            <item>
             <widget class="QCheckBox" name="optInRBF">
              <property name="text">
-              <string>Request Replace-By-Fee</string>
+              <string>Enable Replace-By-Fee</string>
              </property>
              <property name="toolTip">
-              <string>Indicates that the sender may wish to replace this transaction with a new one paying higher fees (prior to being confirmed).</string>
+              <string>With Replace-By-Fee (BIP-125) you can increase a transaction's fee after it is sent. Without this, a higher fee may be recommended to compensate for increased transaction delay risk.</string>
              </property>
             </widget>
            </item>
@@ -1347,12 +1347,12 @@
   <customwidget>
    <class>QValidatedLineEdit</class>
    <extends>QLineEdit</extends>
-   <header>qvalidatedlineedit.h</header>
+   <header>qt/qvalidatedlineedit.h</header>
   </customwidget>
   <customwidget>
    <class>BitcoinAmountField</class>
    <extends>QLineEdit</extends>
-   <header>bitcoinamountfield.h</header>
+   <header>qt/bitcoinamountfield.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

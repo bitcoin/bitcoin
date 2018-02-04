@@ -1,17 +1,17 @@
-// Copyright (c) 2016 The Bitcoin Core developers
+// Copyright (c) 2016-2017 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "bench.h"
-#include "key.h"
-#include "key/extkey.h"
-#include "key/stealth.h"
+#include <bench/bench.h>
+#include <key.h>
+#include <key/extkey.h>
+#include <key/stealth.h>
 #if defined(HAVE_CONSENSUS_LIB)
-#include "script/particlconsensus.h"
+#include <script/particlconsensus.h>
 #endif
-#include "script/script.h"
-#include "script/sign.h"
-#include "streams.h"
+#include <script/script.h>
+#include <script/sign.h>
+#include <streams.h>
 
 #include <array>
 
@@ -77,14 +77,14 @@ static void VerifyScriptBench(benchmark::State& state)
     CMutableTransaction txSpend = BuildSpendingTransaction(scriptSig, txCredit);
     CScriptWitness& witness = txSpend.vin[0].scriptWitness;
     witness.stack.emplace_back();
-    
+
     std::vector<uint8_t> vchAmount(8);
     memcpy(&vchAmount[0], &txCredit.vout[0].nValue, 8);
-    
+
     key.Sign(SignatureHash(witScriptPubkey, txSpend, 0, SIGHASH_ALL, vchAmount, SIGVERSION_WITNESS_V0), witness.stack.back(), 0);
     witness.stack.back().push_back(static_cast<unsigned char>(SIGHASH_ALL));
     witness.stack.push_back(ToByteVector(pubkey));
-    
+
     // Benchmark.
     while (state.KeepRunning()) {
         ScriptError err;
@@ -111,4 +111,4 @@ static void VerifyScriptBench(benchmark::State& state)
     }
 }
 
-BENCHMARK(VerifyScriptBench);
+BENCHMARK(VerifyScriptBench, 6300);

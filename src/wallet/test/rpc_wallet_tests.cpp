@@ -2,14 +2,14 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "rpc/server.h"
-#include "rpc/client.h"
+#include <rpc/server.h>
+#include <rpc/client.h>
 
-#include "base58.h"
-#include "validation.h"
-#include "wallet/wallet.h"
+#include <base58.h>
+#include <validation.h>
+#include <wallet/wallet.h>
 
-#include "wallet/test/wallet_test_fixture.h"
+#include <wallet/test/wallet_test_fixture.h>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/test/unit_test.hpp>
@@ -20,8 +20,6 @@ using namespace std;
 
 //extern JSONRPCRequest createArgs(int nRequired, const char* address1 = NULL, const char* address2 = nullptr);
 extern UniValue CallRPC(std::string args, std::string wallet="");
-
-extern CWallet* pwalletMain;
 
 BOOST_FIXTURE_TEST_SUITE(rpc_wallet_tests, WalletTestingSetup)
 /*
@@ -70,16 +68,16 @@ BOOST_AUTO_TEST_CASE(rpc_wallet)
     CBitcoinAddress demoAddress;
     UniValue retValue;
     string strAccount = "walletDemoAccount";
-    
+
     // TODO: add new master key here
     return;
-    
-    
-    
+
+
+
     CBitcoinAddress setaccountDemoAddress;
     {
         LOCK(pwalletMain->cs_wallet);
-        
+
         CWalletDB walletdb(pwalletMain->GetDBHandle());
         demoPubkey = pwalletMain->GenerateNewKey(walletdb, false);
         demoAddress = CBitcoinAddress(CTxDestination(demoPubkey.GetID()));

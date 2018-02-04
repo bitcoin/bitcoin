@@ -2,16 +2,16 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "key/mnemonic.h"
+#include <key/mnemonic.h>
 
-#include "data/bip39_vectors_english.json.h"
-#include "data/bip39_vectors_japanese.json.h"
+#include <test/data/bip39_vectors_english.json.h>
+#include <test/data/bip39_vectors_japanese.json.h>
 
-#include "test/test_particl.h"
+#include <test/test_particl.h>
 
-#include "key/extkey.h"
-#include "base58.h"
-#include "util.h"
+#include <key/extkey.h>
+#include <base58.h>
+#include <util.h>
 
 #include <string>
 #include <boost/test/unit_test.hpp>

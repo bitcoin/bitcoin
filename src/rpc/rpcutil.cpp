@@ -4,12 +4,12 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "rpc/server.h"
-#include "rpc/client.h"
-#include "rpc/rpcutil.h"
-#include "util.h"
+#include <rpc/server.h>
+#include <rpc/client.h>
+#include <rpc/rpcutil.h>
+#include <util.h>
 
-#include "support/events.h"
+#include <support/events.h>
 
 
 UniValue CallRPC(std::string args, std::string wallet)
@@ -25,9 +25,9 @@ UniValue CallRPC(std::string args, std::string wallet)
     {
         char c = args[i];
         if (!fInQuotes
-            && !s.empty()
             && (c == ' ' || c == '\t'))
         {
+            if (s.empty()) continue; // trim whitespace
             vArgs.push_back(part::TrimQuotes(s));
             s.clear();
             continue;

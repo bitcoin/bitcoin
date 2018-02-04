@@ -1,22 +1,22 @@
-// Copyright (c) 2009-2016 The Bitcoin Core developers
+// Copyright (c) 2009-2017 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "core_io.h"
+#include <core_io.h>
 
-#include "base58.h"
-#include "consensus/consensus.h"
-#include "consensus/validation.h"
-#include "script/script.h"
-#include "script/standard.h"
-#include "serialize.h"
-#include "streams.h"
+#include <base58.h>
+#include <consensus/consensus.h>
+#include <consensus/validation.h>
+#include <script/script.h>
+#include <script/standard.h>
+#include <serialize.h>
+#include <streams.h>
 #include <univalue.h>
-#include "util.h"
-#include "utilmoneystr.h"
-#include "utilstrencodings.h"
-#include "spentindex.h"
-#include "blind.h"
+#include <util.h>
+#include <utilmoneystr.h>
+#include <utilstrencodings.h>
+#include <spentindex.h>
+#include <blind.h>
 
 //extern bool GetSpentIndex(CSpentIndexKey &key, CSpentIndexValue &value);
 bool (*pCoreWriteGetSpentIndex)(CSpentIndexKey &key, CSpentIndexValue &value) = nullptr; // HACK, alternative is to move GetSpentIndex into common lib
@@ -25,7 +25,6 @@ void SetCoreWriteGetSpentIndex(bool (*function)(CSpentIndexKey&, CSpentIndexValu
 {
     pCoreWriteGetSpentIndex = function;
 };
-
 
 UniValue ValueFromAmount(const CAmount& amount)
 {
@@ -159,15 +158,16 @@ void ScriptPubKeyToUniv(const CScript& scriptPubKey,
     out.pushKV("type", GetTxnOutputType(type));
 
     UniValue a(UniValue::VARR);
-    for (const CTxDestination& addr : addresses)
-        a.push_back(CBitcoinAddress(addr).ToString());
+    for (const CTxDestination& addr : addresses) {
+        a.push_back(EncodeDestination(addr));
+    }
     out.pushKV("addresses", a);
 }
 
 void AddRangeproof(const std::vector<uint8_t> &vRangeproof, UniValue &entry)
 {
     entry.push_back(Pair("rangeproof", HexStr(vRangeproof.begin(), vRangeproof.end())));
-    
+
     if (vRangeproof.size() > 0)
     {
         int exponent, mantissa;
@@ -217,7 +217,7 @@ void OutputToJSON(uint256 &txid, int i,
             ScriptPubKeyToUniv(s->scriptPubKey, o, true);
             entry.push_back(Pair("scriptPubKey", o));
             entry.push_back(Pair("data_hex", HexStr(s->vData.begin(), s->vData.end())));
-            
+
             AddRangeproof(s->vRangeproof, entry);
             }
             break;
@@ -228,7 +228,7 @@ void OutputToJSON(uint256 &txid, int i,
             entry.push_back(Pair("pubkey", HexStr(s->pk.begin(), s->pk.end())));
             entry.push_back(Pair("valueCommitment", HexStr(&s->commitment.data[0], &s->commitment.data[0]+33)));
             entry.push_back(Pair("data_hex", HexStr(s->vData.begin(), s->vData.end())));
-            
+
             AddRangeproof(s->vRangeproof, entry);
             }
             break;
@@ -236,7 +236,7 @@ void OutputToJSON(uint256 &txid, int i,
             entry.push_back(Pair("type", "unknown"));
             break;
     };
-    
+
     if (fCanSpend)
     {
         // Add spent information if spentindex is enabled
@@ -295,7 +295,7 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry,
         OutputToJSON(txid, i, tx.vpout[i].get(), out);
         vout.push_back(out);
     }
-    
+
     for (unsigned int i = 0; i < tx.vout.size(); i++) {
         const CTxOut& txout = tx.vout[i];
 

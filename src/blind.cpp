@@ -2,15 +2,15 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
-#include "blind.h"
+#include <blind.h>
 
 #include <assert.h>
 #include <secp256k1.h>
 #include <secp256k1_rangeproof.h>
 
-#include "support/allocators/secure.h"
-#include "random.h"
-#include "util.h"
+#include <support/allocators/secure.h>
+#include <random.h>
+#include <util.h>
 
 
 secp256k1_context *secp256k1_ctx_blind = nullptr;

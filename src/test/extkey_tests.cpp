@@ -2,12 +2,12 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "key/extkey.h"
+#include <key/extkey.h>
 
-#include "test/test_particl.h"
+#include <test/test_particl.h>
 
-#include "base58.h"
-#include "chainparams.h"
+#include <base58.h>
+#include <chainparams.h>
 
 
 #include <string>

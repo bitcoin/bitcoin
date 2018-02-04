@@ -2,10 +2,10 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "key/keyutil.h"
+#include <key/keyutil.h>
 
 #include <string.h>
-#include "crypto/sha256.h"
+#include <crypto/sha256.h>
 
 
 uint32_t BitcoinChecksum(uint8_t *p, uint32_t nBytes)
@@ -45,6 +45,3 @@ bool VerifyChecksum(const std::vector<uint8_t> &data)
 
     return BitcoinChecksum((uint8_t*)&data[0], data.size()-4) == checksum;
 };
-
-
-#include "crypto/sha256.h"
