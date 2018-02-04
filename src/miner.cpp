@@ -381,7 +381,7 @@ void static BitcoinMiner(const CChainParams& chainparams)
 {
     LogPrintf("ZetacoinMiner started\n");
     SetThreadPriority(THREAD_PRIORITY_LOWEST);
-    RenameThread("bitcoin-miner");
+    RenameThread("zetacoin-miner");
 
     unsigned int nExtraNonce = 0;
 
