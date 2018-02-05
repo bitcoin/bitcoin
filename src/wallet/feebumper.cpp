@@ -35,11 +35,8 @@ static int64_t CalculateMaximumSignedTxSize(const CTransaction &tx, const CWalle
         assert(mi != wallet->mapWallet.end() && input.prevout.n < mi->second.tx->vout.size());
         vCoins.emplace_back(CInputCoin(&(mi->second), input.prevout.n));
     }
-    if (!wallet->DummySignTx(txNew, vCoins)) {
-        // This should never happen, because IsAllFromMe(ISMINE_SPENDABLE)
-        // implies that we can sign for every input.
-        return -1;
-    }
+    // IsAllFromMe(ISMINE_SPENDABLE) implies that we can sign for every input.
+    assert(wallet->DummySignTx(txNew, vCoins));
     return GetVirtualTransactionSize(txNew);
 }
 
@@ -131,10 +128,7 @@ Result CreateTransaction(const CWallet* wallet, const uint256& txid, const CCoin
     // Calculate the expected size of the new transaction.
     int64_t txSize = GetVirtualTransactionSize(*(wtx.tx));
     const int64_t maxNewTxSize = CalculateMaximumSignedTxSize(*wtx.tx, wallet);
-    if (maxNewTxSize < 0) {
-        errors.push_back("Transaction contains inputs that cannot be signed");
-        return Result::INVALID_ADDRESS_OR_KEY;
-    }
+    assert(maxNewTxSize >= 0);
 
     // calculate the old fee and fee-rate
     old_fee = wtx.GetDebit(ISMINE_SPENDABLE) - wtx.tx->GetValueOut();
@@ -265,11 +259,9 @@ Result CommitTransaction(CWallet* wallet, const uint256& txid, CMutableTransacti
     wtxBumped.fTimeReceivedIsTxTime = true;
     wtxBumped.fFromMe = true;
     CValidationState state;
-    if (!wallet->CommitTransaction(wtxBumped, reservekey, g_connman.get(), state)) {
-        // NOTE: CommitTransaction never returns false, so this should never happen.
-        errors.push_back(strprintf("The transaction was rejected: %s", state.GetRejectReason()));
-        return Result::WALLET_ERROR;
-    }
+    bool result = wallet->CommitTransaction(wtxBumped, reservekey, g_connman.get(), state));
+    // NOTE: CommitTransaction never returns false.
+    assert(result);
 
     bumped_txid = wtxBumped.GetHash();
     if (state.IsInvalid()) {
