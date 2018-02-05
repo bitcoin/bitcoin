@@ -817,6 +817,13 @@ UniValue ProcessImport(CWallet * const pwallet, const UniValue& data, const int6
             script = CScript(vData.begin(), vData.end());
         }
 
+        // witness stuff
+        int witnessversion;
+        std::vector<unsigned char> witnessprogram;
+        bool isWitnessProgram = script.IsWitnessProgram(witnessversion, witnessprogram);
+        bool isP2WPKH = isWitnessProgram ? script.IsPayToWitnessPubKeyHash() : false;
+        bool isP2WSH = isWitnessProgram ? script.IsPayToWitnessScriptHash() : false;
+
         // Watchonly and private keys
         if (watchOnly && keys.size()) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Incompatibility found between watchonly and keys");
@@ -834,7 +841,9 @@ UniValue ProcessImport(CWallet * const pwallet, const UniValue& data, const int6
 
         // Keys / PubKeys size check.
         if (!isP2SH && (keys.size() > 1 || pubKeys.size() > 1)) { // Address / scriptPubKey
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "More than private key given for one address");
+            if (script.GetSigOpCount(true) <= 1) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "More than private key given for one address");
+            }
         }
 
         // Invalid P2SH redeemScript
