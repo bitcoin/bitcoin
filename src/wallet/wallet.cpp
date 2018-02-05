@@ -1401,7 +1401,7 @@ CAmount CWallet::GetDebit(const CTransaction& tx, const isminefilter& filter) co
 
 bool CWallet::IsAllFromMe(const CTransaction& tx, const isminefilter& filter) const
 {
-    LOCK(cs_wallet);
+    AssertLockHeld(cs_wallet);
 
     std::vector<const CTxOut*> outs;
     outs.reserve(tx.vin.size());
