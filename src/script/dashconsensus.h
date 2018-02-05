@@ -39,6 +39,7 @@ typedef enum dashconsensus_error_t
     dashconsensus_ERR_TX_INDEX,
     dashconsensus_ERR_TX_SIZE_MISMATCH,
     dashconsensus_ERR_TX_DESERIALIZE,
+    dashconsensus_ERR_INVALID_FLAGS,
 } dashconsensus_error;
 
 /** Script verification flags */
@@ -50,6 +51,9 @@ enum
     dashconsensus_SCRIPT_FLAGS_VERIFY_NULLDUMMY           = (1U << 4), // enforce NULLDUMMY (BIP147)
     dashconsensus_SCRIPT_FLAGS_VERIFY_CHECKLOCKTIMEVERIFY = (1U << 9), // enable CHECKLOCKTIMEVERIFY (BIP65)
     dashconsensus_SCRIPT_FLAGS_VERIFY_CHECKSEQUENCEVERIFY = (1U << 10), // enable CHECKSEQUENCEVERIFY (BIP112)
+    dashconsensus_SCRIPT_FLAGS_VERIFY_ALL                 = dashconsensus_SCRIPT_FLAGS_VERIFY_P2SH | dashconsensus_SCRIPT_FLAGS_VERIFY_DERSIG |
+                                                            dashconsensus_SCRIPT_FLAGS_VERIFY_NULLDUMMY | dashconsensus_SCRIPT_FLAGS_VERIFY_CHECKLOCKTIMEVERIFY |
+                                                            dashconsensus_SCRIPT_FLAGS_VERIFY_CHECKSEQUENCEVERIFY
 };
 
 /// Returns 1 if the input nIn of the serialized transaction pointed to by
