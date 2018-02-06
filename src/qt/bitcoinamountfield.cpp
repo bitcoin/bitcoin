@@ -153,7 +153,7 @@ protected:
     {
         if (event->type() == QEvent::KeyPress || event->type() == QEvent::KeyRelease)
         {
-            QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
+            QKeyEvent *keyEvent = dynamic_cast<QKeyEvent *>(event);
             if (keyEvent->key() == Qt::Key_Comma)
             {
                 // Translate a comma into a period

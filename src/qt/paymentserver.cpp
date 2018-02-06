@@ -346,7 +346,7 @@ PaymentServer::~PaymentServer()
 bool PaymentServer::eventFilter(QObject *object, QEvent *event)
 {
     if (event->type() == QEvent::FileOpen) {
-        QFileOpenEvent *fileEvent = static_cast<QFileOpenEvent*>(event);
+        QFileOpenEvent *fileEvent = dynamic_cast<QFileOpenEvent*>(event);
         if (!fileEvent->file().isEmpty())
             handleURIOrFile(fileEvent->file());
         else if (!fileEvent->url().isEmpty())
