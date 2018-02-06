@@ -18,9 +18,9 @@ extern CMasternodeMan mnodeman;
 class CMasternodeMan
 {
 public:
-    typedef std::pair<arith_uint256, CMasternode*> score_pair_t;
+    typedef std::pair<arith_uint256, const CMasternode*> score_pair_t;
     typedef std::vector<score_pair_t> score_pair_vec_t;
-    typedef std::pair<int, CMasternode> rank_pair_t;
+    typedef std::pair<int, const CMasternode> rank_pair_t;
     typedef std::vector<rank_pair_t> rank_pair_vec_t;
 
 private:
@@ -189,7 +189,7 @@ public:
 
     void DoFullVerificationStep(CConnman& connman);
     void CheckSameAddr();
-    bool SendVerifyRequest(const CAddress& addr, const std::vector<CMasternode*>& vSortedByAddr, CConnman& connman);
+    bool SendVerifyRequest(const CAddress& addr, const std::vector<const CMasternode*>& vSortedByAddr, CConnman& connman);
     void ProcessPendingMnvRequests(CConnman& connman);
     void SendVerifyReply(CNode* pnode, CMasternodeVerification& mnv, CConnman& connman);
     void ProcessVerifyReply(CNode* pnode, CMasternodeVerification& mnv);

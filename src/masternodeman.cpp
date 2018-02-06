@@ -24,8 +24,8 @@ const std::string CMasternodeMan::SERIALIZATION_VERSION_STRING = "CMasternodeMan
 
 struct CompareLastPaidBlock
 {
-    bool operator()(const std::pair<int, CMasternode*>& t1,
-                    const std::pair<int, CMasternode*>& t2) const
+    bool operator()(const std::pair<int, const CMasternode*>& t1,
+                    const std::pair<int, const CMasternode*>& t2) const
     {
         return (t1.first != t2.first) ? (t1.first < t2.first) : (t1.second->vin < t2.second->vin);
     }
@@ -33,8 +33,8 @@ struct CompareLastPaidBlock
 
 struct CompareScoreMN
 {
-    bool operator()(const std::pair<arith_uint256, CMasternode*>& t1,
-                    const std::pair<arith_uint256, CMasternode*>& t2) const
+    bool operator()(const std::pair<arith_uint256, const CMasternode*>& t1,
+                    const std::pair<arith_uint256, const CMasternode*>& t2) const
     {
         return (t1.first != t2.first) ? (t1.first < t2.first) : (t1.second->vin < t2.second->vin);
     }
@@ -362,7 +362,7 @@ int CMasternodeMan::CountMasternodes(int nProtocolVersion)
     int nCount = 0;
     nProtocolVersion = nProtocolVersion == -1 ? mnpayments.GetMinMasternodePaymentsProto() : nProtocolVersion;
 
-    for (auto& mnpair : mapMasternodes) {
+    for (const auto& mnpair : mapMasternodes) {
         if(mnpair.second.nProtocolVersion < nProtocolVersion) continue;
         nCount++;
     }
@@ -376,7 +376,7 @@ int CMasternodeMan::CountEnabled(int nProtocolVersion)
     int nCount = 0;
     nProtocolVersion = nProtocolVersion == -1 ? mnpayments.GetMinMasternodePaymentsProto() : nProtocolVersion;
 
-    for (auto& mnpair : mapMasternodes) {
+    for (const auto& mnpair : mapMasternodes) {
         if(mnpair.second.nProtocolVersion < nProtocolVersion || !mnpair.second.IsEnabled()) continue;
         nCount++;
     }
@@ -390,7 +390,7 @@ int CMasternodeMan::CountByIP(int nNetworkType)
     LOCK(cs);
     int nNodeCount = 0;
 
-    for (auto& mnpair : mapMasternodes)
+    for (const auto& mnpair : mapMasternodes)
         if ((nNetworkType == NET_IPV4 && mnpair.second.addr.IsIPv4()) ||
             (nNetworkType == NET_TOR  && mnpair.second.addr.IsTor())  ||
             (nNetworkType == NET_IPV6 && mnpair.second.addr.IsIPv6())) {
@@ -457,7 +457,7 @@ bool CMasternodeMan::GetMasternodeInfo(const COutPoint& outpoint, masternode_inf
 bool CMasternodeMan::GetMasternodeInfo(const CPubKey& pubKeyMasternode, masternode_info_t& mnInfoRet)
 {
     LOCK(cs);
-    for (auto& mnpair : mapMasternodes) {
+    for (const auto& mnpair : mapMasternodes) {
         if (mnpair.second.pubKeyMasternode == pubKeyMasternode) {
             mnInfoRet = mnpair.second.GetInfo();
             return true;
@@ -469,7 +469,7 @@ bool CMasternodeMan::GetMasternodeInfo(const CPubKey& pubKeyMasternode, masterno
 bool CMasternodeMan::GetMasternodeInfo(const CScript& payee, masternode_info_t& mnInfoRet)
 {
     LOCK(cs);
-    for (auto& mnpair : mapMasternodes) {
+    for (const auto& mnpair : mapMasternodes) {
         CScript scriptCollateralAddress = GetScriptForDestination(mnpair.second.pubKeyCollateralAddress.GetID());
         if (scriptCollateralAddress == payee) {
             mnInfoRet = mnpair.second.GetInfo();
@@ -506,7 +506,7 @@ bool CMasternodeMan::GetNextMasternodeInQueueForPayment(int nBlockHeight, bool f
     // Need LOCK2 here to ensure consistent locking order because the GetBlockHash call below locks cs_main
     LOCK2(cs_main,cs);
 
-    std::vector<std::pair<int, CMasternode*> > vecMasternodeLastPaid;
+    std::vector<std::pair<int, const CMasternode*> > vecMasternodeLastPaid;
 
     /*
         Make a vector with all of the last paid times
@@ -514,7 +514,7 @@ bool CMasternodeMan::GetNextMasternodeInQueueForPayment(int nBlockHeight, bool f
 
     int nMnCount = CountMasternodes();
 
-    for (auto& mnpair : mapMasternodes) {
+    for (const auto& mnpair : mapMasternodes) {
         if(!mnpair.second.IsValidForPayment()) continue;
 
         //check protocol version
@@ -553,8 +553,8 @@ bool CMasternodeMan::GetNextMasternodeInQueueForPayment(int nBlockHeight, bool f
     int nTenthNetwork = nMnCount/10;
     int nCountTenth = 0;
     arith_uint256 nHighest = 0;
-    CMasternode *pBestMasternode = NULL;
-    BOOST_FOREACH (PAIRTYPE(int, CMasternode*)& s, vecMasternodeLastPaid){
+    const CMasternode *pBestMasternode = NULL;
+    for (const auto& s : vecMasternodeLastPaid) {
         arith_uint256 nScore = s.second->CalculateScore(blockHash);
         if(nScore > nHighest){
             nHighest = nScore;
@@ -582,8 +582,8 @@ masternode_info_t CMasternodeMan::FindRandomNotInVec(const std::vector<COutPoint
     if(nCountNotExcluded < 1) return masternode_info_t();
 
     // fill a vector of pointers
-    std::vector<CMasternode*> vpMasternodesShuffled;
-    for (auto& mnpair : mapMasternodes) {
+    std::vector<const CMasternode*> vpMasternodesShuffled;
+    for (const auto& mnpair : mapMasternodes) {
         vpMasternodesShuffled.push_back(&mnpair.second);
     }
 
@@ -593,10 +593,10 @@ masternode_info_t CMasternodeMan::FindRandomNotInVec(const std::vector<COutPoint
     bool fExclude;
 
     // loop through
-    BOOST_FOREACH(CMasternode* pmn, vpMasternodesShuffled) {
+    for (const auto& pmn : vpMasternodesShuffled) {
         if(pmn->nProtocolVersion < nProtocolVersion || !pmn->IsEnabled()) continue;
         fExclude = false;
-        BOOST_FOREACH(const COutPoint &outpointToExclude, vecToExclude) {
+        for (const auto& outpointToExclude : vecToExclude) {
             if(pmn->vin.prevout == outpointToExclude) {
                 fExclude = true;
                 break;
@@ -625,7 +625,7 @@ bool CMasternodeMan::GetMasternodeScores(const uint256& nBlockHash, CMasternodeM
         return false;
 
     // calculate scores
-    for (auto& mnpair : mapMasternodes) {
+    for (const auto& mnpair : mapMasternodes) {
         if (mnpair.second.nProtocolVersion >= nMinProtocol) {
             vecMasternodeScoresRet.push_back(std::make_pair(mnpair.second.CalculateScore(nBlockHash), &mnpair.second));
         }
@@ -656,7 +656,7 @@ bool CMasternodeMan::GetMasternodeRank(const COutPoint& outpoint, int& nRankRet,
         return false;
 
     int nRank = 0;
-    for (auto& scorePair : vecMasternodeScores) {
+    for (const auto& scorePair : vecMasternodeScores) {
         nRank++;
         if(scorePair.second->vin.prevout == outpoint) {
             nRankRet = nRank;
@@ -688,7 +688,7 @@ bool CMasternodeMan::GetMasternodeRanks(CMasternodeMan::rank_pair_vec_t& vecMast
         return false;
 
     int nRank = 0;
-    for (auto& scorePair : vecMasternodeScores) {
+    for (const auto& scorePair : vecMasternodeScores) {
         nRank++;
         vecMasternodeRanksRet.push_back(std::make_pair(nRank, *scorePair.second));
     }
@@ -891,7 +891,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, const std::string& strCommand,
 
         int nInvCount = 0;
 
-        for (auto& mnpair : mapMasternodes) {
+        for (const auto& mnpair : mapMasternodes) {
             if (vin != CTxIn() && vin != mnpair.second.vin) continue; // asked for specific vin but we are not there yet
             if (mnpair.second.addr.IsRFC1918() || mnpair.second.addr.IsLocal()) continue; // do not send local network masternode
             if (mnpair.second.IsUpdateRequired()) continue; // do not send outdated masternodes
@@ -967,7 +967,7 @@ void CMasternodeMan::DoFullVerificationStep(CConnman& connman)
     int nRanksTotal = (int)vecMasternodeRanks.size();
 
     // send verify requests only if we are in top MAX_POSE_RANK
-    std::vector<std::pair<int, CMasternode> >::iterator it = vecMasternodeRanks.begin();
+    rank_pair_vec_t::iterator it = vecMasternodeRanks.begin();
     while(it != vecMasternodeRanks.end()) {
         if(it->first > MAX_POSE_RANK) {
             LogPrint("masternode", "CMasternodeMan::DoFullVerificationStep -- Must be in top %d to send verify request\n",
@@ -991,8 +991,8 @@ void CMasternodeMan::DoFullVerificationStep(CConnman& connman)
     int nOffset = MAX_POSE_RANK + nMyRank - 1;
     if(nOffset >= (int)vecMasternodeRanks.size()) return;
 
-    std::vector<CMasternode*> vSortedByAddr;
-    for (auto& mnpair : mapMasternodes) {
+    std::vector<const CMasternode*> vSortedByAddr;
+    for (const auto& mnpair : mapMasternodes) {
         vSortedByAddr.push_back(&mnpair.second);
     }
 
@@ -1049,7 +1049,7 @@ void CMasternodeMan::CheckSameAddr()
 
         sort(vSortedByAddr.begin(), vSortedByAddr.end(), CompareByAddr());
 
-        BOOST_FOREACH(CMasternode* pmn, vSortedByAddr) {
+        for (const auto& pmn : vSortedByAddr) {
             // check only (pre)enabled masternodes
             if(!pmn->IsEnabled() && !pmn->IsPreEnabled()) continue;
             // initial step
@@ -1077,13 +1077,13 @@ void CMasternodeMan::CheckSameAddr()
     }
 
     // ban duplicates
-    BOOST_FOREACH(CMasternode* pmn, vBan) {
+    for (auto& pmn : vBan) {
         LogPrintf("CMasternodeMan::CheckSameAddr -- increasing PoSe ban score for masternode %s\n", pmn->vin.prevout.ToStringShort());
         pmn->IncreasePoSeBanScore();
     }
 }
 
-bool CMasternodeMan::SendVerifyRequest(const CAddress& addr, const std::vector<CMasternode*>& vSortedByAddr, CConnman& connman)
+bool CMasternodeMan::SendVerifyRequest(const CAddress& addr, const std::vector<const CMasternode*>& vSortedByAddr, CConnman& connman)
 {
     if(netfulfilledman.HasFulfilledRequest(addr, strprintf("%s", NetMsgType::MNVERIFY)+"-request")) {
         // we already asked for verification, not a good idea to do this too often, skip it
@@ -1271,7 +1271,7 @@ void CMasternodeMan::ProcessVerifyReply(CNode* pnode, CMasternodeVerification& m
         LogPrintf("CMasternodeMan::ProcessVerifyReply -- verified real masternode %s for addr %s\n",
                     prealMasternode->vin.prevout.ToStringShort(), pnode->addr.ToString());
         // increase ban score for everyone else
-        BOOST_FOREACH(CMasternode* pmn, vpMasternodesToBan) {
+        for (const auto& pmn : vpMasternodesToBan) {
             pmn->IncreasePoSeBanScore();
             LogPrint("masternode", "CMasternodeMan::ProcessVerifyReply -- increased PoSe ban score for %s addr %s, new score %d\n",
                         prealMasternode->vin.prevout.ToStringShort(), pnode->addr.ToString(), pmn->nPoSeBanScore);

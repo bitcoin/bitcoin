@@ -200,7 +200,7 @@ public:
     }
 
     // CALCULATE A RANK AGAINST OF GIVEN BLOCK
-    arith_uint256 CalculateScore(const uint256& blockHash);
+    arith_uint256 CalculateScore(const uint256& blockHash) const;
 
     bool UpdateFromNewBroadcast(CMasternodeBroadcast& mnb, CConnman& connman);
 
@@ -220,16 +220,16 @@ public:
         return nTimeToCheckAt - lastPing.sigTime < nSeconds;
     }
 
-    bool IsEnabled() { return nActiveState == MASTERNODE_ENABLED; }
-    bool IsPreEnabled() { return nActiveState == MASTERNODE_PRE_ENABLED; }
-    bool IsPoSeBanned() { return nActiveState == MASTERNODE_POSE_BAN; }
+    bool IsEnabled() const { return nActiveState == MASTERNODE_ENABLED; }
+    bool IsPreEnabled() const { return nActiveState == MASTERNODE_PRE_ENABLED; }
+    bool IsPoSeBanned() const { return nActiveState == MASTERNODE_POSE_BAN; }
     // NOTE: this one relies on nPoSeBanScore, not on nActiveState as everything else here
-    bool IsPoSeVerified() { return nPoSeBanScore <= -MASTERNODE_POSE_BAN_MAX_SCORE; }
-    bool IsExpired() { return nActiveState == MASTERNODE_EXPIRED; }
-    bool IsOutpointSpent() { return nActiveState == MASTERNODE_OUTPOINT_SPENT; }
-    bool IsUpdateRequired() { return nActiveState == MASTERNODE_UPDATE_REQUIRED; }
-    bool IsWatchdogExpired() { return nActiveState == MASTERNODE_WATCHDOG_EXPIRED; }
-    bool IsNewStartRequired() { return nActiveState == MASTERNODE_NEW_START_REQUIRED; }
+    bool IsPoSeVerified() const { return nPoSeBanScore <= -MASTERNODE_POSE_BAN_MAX_SCORE; }
+    bool IsExpired() const { return nActiveState == MASTERNODE_EXPIRED; }
+    bool IsOutpointSpent() const { return nActiveState == MASTERNODE_OUTPOINT_SPENT; }
+    bool IsUpdateRequired() const { return nActiveState == MASTERNODE_UPDATE_REQUIRED; }
+    bool IsWatchdogExpired() const { return nActiveState == MASTERNODE_WATCHDOG_EXPIRED; }
+    bool IsNewStartRequired() const { return nActiveState == MASTERNODE_NEW_START_REQUIRED; }
 
     static bool IsValidStateForAutoStart(int nActiveStateIn)
     {
@@ -239,7 +239,7 @@ public:
                 nActiveStateIn == MASTERNODE_WATCHDOG_EXPIRED;
     }
 
-    bool IsValidForPayment()
+    bool IsValidForPayment() const
     {
         if(nActiveState == MASTERNODE_ENABLED) {
             return true;
@@ -259,14 +259,14 @@ public:
     void DecreasePoSeBanScore() { if(nPoSeBanScore > -MASTERNODE_POSE_BAN_MAX_SCORE) nPoSeBanScore--; }
     void PoSeBan() { nPoSeBanScore = MASTERNODE_POSE_BAN_MAX_SCORE; }
 
-    masternode_info_t GetInfo();
+    masternode_info_t GetInfo() const;
 
     static std::string StateToString(int nStateIn);
     std::string GetStateString() const;
     std::string GetStatus() const;
 
-    int GetLastPaidTime() { return nTimeLastPaid; }
-    int GetLastPaidBlock() { return nBlockLastPaid; }
+    int GetLastPaidTime() const { return nTimeLastPaid; }
+    int GetLastPaidBlock() const { return nBlockLastPaid; }
     void UpdateLastPaid(const CBlockIndex *pindex, int nMaxBlocksToScanBack);
 
     // KEEP TRACK OF EACH GOVERNANCE ITEM INCASE THIS NODE GOES OFFLINE, SO WE CAN RECALC THEIR STATUS
@@ -351,8 +351,8 @@ public:
     bool CheckOutpoint(int& nDos);
 
     bool Sign(const CKey& keyCollateralAddress);
-    bool CheckSignature(int& nDos);
-    void Relay(CConnman& connman);
+    bool CheckSignature(int& nDos) const;
+    void Relay(CConnman& connman) const;
 };
 
 class CMasternodeVerification

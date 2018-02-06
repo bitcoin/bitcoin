@@ -185,7 +185,7 @@ void TrafficGraphDataTests::averageBandwidthTest()
         trafficGraphData.update(totalBytesRecv, totalBytesSent);
     }
     QCOMPARE(trafficGraphData.getCurrentRangeQueueWithAverageBandwidth().size(), TrafficGraphData::DESIRED_DATA_SAMPLES);
-    for(auto& sample : trafficGraphData.getCurrentRangeQueueWithAverageBandwidth()){
+    for (const auto& sample : trafficGraphData.getCurrentRangeQueueWithAverageBandwidth()){
         QCOMPARE(sample.in, 1.0f);
         QCOMPARE(sample.out, 1.0f);
     }
@@ -193,7 +193,7 @@ void TrafficGraphDataTests::averageBandwidthTest()
     trafficGraphData.switchRange(TrafficGraphData::Range_10m);
 
     QCOMPARE(trafficGraphData.getCurrentRangeQueueWithAverageBandwidth().size(), TrafficGraphData::DESIRED_DATA_SAMPLES / 2);
-    for(auto& sample : trafficGraphData.getCurrentRangeQueueWithAverageBandwidth()){
+    for (const auto& sample : trafficGraphData.getCurrentRangeQueueWithAverageBandwidth()){
         QCOMPARE(sample.in, 1.0f);
         QCOMPARE(sample.out, 1.0f);
     }
@@ -216,7 +216,7 @@ void TrafficGraphDataTests::averageBandwidthEvery2EmptyTest()
     trafficGraphData.switchRange(TrafficGraphData::Range_10m);
 
     QCOMPARE(trafficGraphData.getCurrentRangeQueueWithAverageBandwidth().size(), TrafficGraphData::DESIRED_DATA_SAMPLES / 2);
-    for(auto& sample : trafficGraphData.getCurrentRangeQueueWithAverageBandwidth()){
+    for (const auto& sample : trafficGraphData.getCurrentRangeQueueWithAverageBandwidth()){
         QCOMPARE(sample.in, 0.5f);
         QCOMPARE(sample.out, 0.5f);
     }

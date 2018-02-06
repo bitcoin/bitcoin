@@ -715,7 +715,7 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
 
     UniValue superblockObjArray(UniValue::VARR);
     if(pblock->voutSuperblock.size()) {
-        BOOST_FOREACH (const CTxOut& txout, pblock->voutSuperblock) {
+        for (const auto& txout : pblock->voutSuperblock) {
             UniValue entry(UniValue::VOBJ);
             CTxDestination address1;
             ExtractDestination(txout.scriptPubKey, address1);
