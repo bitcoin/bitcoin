@@ -58,7 +58,7 @@ class MempoolLimitTest(BitcoinTestFramework):
         # specifically fund this tx with a fee < mempoolminfee, >= than minrelaytxfee
         txF = self.nodes[0].fundrawtransaction(tx, {'feeRate': relayfee})
         txFS = self.nodes[0].signrawtransaction(txF['hex'])
-        assert_raises_rpc_error(-26, "66: mempool min fee not met", self.nodes[0].sendrawtransaction, txFS['hex'])
+        assert_raises_rpc_error(-26, "mempool min fee not met, 166 < 411 (code 66)", self.nodes[0].sendrawtransaction, txFS['hex'])
 
 if __name__ == '__main__':
     MempoolLimitTest().main()
