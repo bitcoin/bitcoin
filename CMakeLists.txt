@@ -5,6 +5,7 @@ set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules")
 find_package(Boost COMPONENTS thread program_options REQUIRED)
 find_package(OpenSSL REQUIRED)
 find_package(BDB REQUIRED)
+find_package(CURL REQUIRED)
 
 add_definitions(-DHAVE_ENDIAN_H=1)
 add_definitions(-DHAVE_DECL_HTOBE16=1)

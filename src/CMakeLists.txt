@@ -92,7 +92,8 @@ add_library(crown_core INTERFACE
   masternode-budget.h 
   masternode-sync.h 
   masternodeman.h 
-  masternodeconfig.h 
+  masternodeconfig.h
+  nodeconfig.h
   systemnode.h 
   systemnode-payments.h 
   systemnode-sync.h 
@@ -146,7 +147,8 @@ add_library(crown_server
   rpcsystemnode.cpp 
   rpcmining.cpp 
   rpcmisc.cpp 
-  rpcnet.cpp 
+  rpcnet.cpp
+  rpcupdate.cpp
   rpcrawtransaction.cpp 
   rpcserver.cpp 
   script/sigcache.cpp 
@@ -258,7 +260,8 @@ add_library(crown_common
   masternode-budget.h 
   masternode-sync.h 
   masternodeman.h 
-  masternodeconfig.h 
+  masternodeconfig.h
+  nodeconfig.h
   systemnode.h 
   systemnode-payments.h 
   systemnode-sync.h 
@@ -321,18 +324,20 @@ add_library(crown_wallet
   masternode-budget.cpp 
   masternode-payments.cpp 
   masternode-sync.cpp 
-  masternodeconfig.cpp 
-  masternodeman.cpp 
+  masternodeconfig.cpp
+  nodeconfig.cpp
+  masternodeman.cpp
   systemnode-sync.cpp 
   systemnode.cpp 
   systemnode-payments.cpp 
   systemnodeconfig.cpp 
   systemnodeman.cpp 
-  rpcdump.cpp 
+  rpcdump.cpp
   rpcwallet.cpp 
   wallet.cpp 
   wallet_ismine.cpp 
-  walletdb.cpp 
+  walletdb.cpp
+  updater.cpp
 )
 target_include_directories(crown_wallet
   PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}
@@ -344,7 +349,8 @@ target_link_libraries(crown_wallet
   PUBLIC crown_common
   PUBLIC crown_server
   PUBLIC BDB::bdb
-  PRIVATE OpenSSL::Crypto)
+  PRIVATE OpenSSL::Crypto
+  PUBLIC curl)
 
 
 add_executable(crownd
@@ -371,6 +377,7 @@ target_link_libraries(crownd
   OpenSSL::Crypto
   OpenSSL::SSL
   BDB::bdb
+  curl
 )  
 
 #if TARGET_WINDOWS
