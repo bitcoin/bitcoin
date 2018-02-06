@@ -36,7 +36,7 @@ CGovernanceObject::CGovernanceObject()
   fExpired(false),
   fUnparsable(false),
   mapCurrentMNVotes(),
-  mapOrphanVotes(),
+  cmmapOrphanVotes(),
   fileVotes()
 {
     // PARSE JSON DATA STORAGE (STRDATA)
@@ -64,7 +64,7 @@ CGovernanceObject::CGovernanceObject(uint256 nHashParentIn, int nRevisionIn, int
   fExpired(false),
   fUnparsable(false),
   mapCurrentMNVotes(),
-  mapOrphanVotes(),
+  cmmapOrphanVotes(),
   fileVotes()
 {
     // PARSE JSON DATA STORAGE (STRDATA)
@@ -92,7 +92,7 @@ CGovernanceObject::CGovernanceObject(const CGovernanceObject& other)
   fExpired(other.fExpired),
   fUnparsable(other.fUnparsable),
   mapCurrentMNVotes(other.mapCurrentMNVotes),
-  mapOrphanVotes(other.mapOrphanVotes),
+  cmmapOrphanVotes(other.cmmapOrphanVotes),
   fileVotes(other.fileVotes)
 {}
 
@@ -105,7 +105,7 @@ bool CGovernanceObject::ProcessVote(CNode* pfrom,
         std::ostringstream ostr;
         ostr << "CGovernanceObject::ProcessVote -- Masternode index not found";
         exception = CGovernanceException(ostr.str(), GOVERNANCE_EXCEPTION_WARNING);
-        if(mapOrphanVotes.Insert(vote.GetMasternodeOutpoint(), vote_time_pair_t(vote, GetAdjustedTime() + GOVERNANCE_ORPHAN_EXPIRATION_TIME))) {
+        if(cmmapOrphanVotes.Insert(vote.GetMasternodeOutpoint(), vote_time_pair_t(vote, GetAdjustedTime() + GOVERNANCE_ORPHAN_EXPIRATION_TIME))) {
             if(pfrom) {
                 mnodeman.AskForMN(pfrom, vote.GetMasternodeOutpoint(), connman);
             }
@@ -729,8 +729,8 @@ void CGovernanceObject::swap(CGovernanceObject& first, CGovernanceObject& second
 void CGovernanceObject::CheckOrphanVotes(CConnman& connman)
 {
     int64_t nNow = GetAdjustedTime();
-    const vote_mcache_t::list_t& listVotes = mapOrphanVotes.GetItemList();
-    vote_mcache_t::list_cit it = listVotes.begin();
+    const vote_cmm_t::list_t& listVotes = cmmapOrphanVotes.GetItemList();
+    vote_cmm_t::list_cit it = listVotes.begin();
     while(it != listVotes.end()) {
         bool fRemove = false;
         const COutPoint& key = it->key;
@@ -753,7 +753,7 @@ void CGovernanceObject::CheckOrphanVotes(CConnman& connman)
         }
         ++it;
         if(fRemove) {
-            mapOrphanVotes.Erase(key, pairVote);
+            cmmapOrphanVotes.Erase(key, pairVote);
         }
     }
 }

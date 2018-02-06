@@ -122,7 +122,7 @@ public: // Types
 
     typedef vote_m_t::const_iterator vote_m_cit;
 
-    typedef CacheMultiMap<COutPoint, vote_time_pair_t> vote_mcache_t;
+    typedef CacheMultiMap<COutPoint, vote_time_pair_t> vote_cmm_t;
 
 private:
     /// critical section to protect the inner data structures
@@ -185,7 +185,7 @@ private:
     vote_m_t mapCurrentMNVotes;
 
     /// Limited map of votes orphaned by MN
-    vote_mcache_t mapOrphanVotes;
+    vote_cmm_t cmmapOrphanVotes;
 
     CGovernanceObjectVoteFile fileVotes;
 
