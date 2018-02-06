@@ -244,7 +244,7 @@ Result CommitTransaction(CWallet* wallet, const uint256& txid, CMutableTransacti
     CValidationState state;
     if (!wallet->CommitTransaction(tx, std::move(mapValue), oldWtx.vOrderForm, oldWtx.strFromAccount, reservekey, g_connman.get(), state)) {
         // NOTE: CommitTransaction never returns false, so this should never happen.
-        errors.push_back(strprintf("The transaction was rejected: %s", state.GetRejectReason()));
+        errors.push_back(strprintf("The transaction was rejected: %s", FormatStateMessage(state)));
         return Result::WALLET_ERROR;
     }
 
@@ -267,4 +267,3 @@ Result CommitTransaction(CWallet* wallet, const uint256& txid, CMutableTransacti
 }
 
 } // namespace feebumper
-

@@ -21,7 +21,7 @@ from test_framework.script import CScript
 from io import BytesIO
 import time
 
-NULLDUMMY_ERROR = "64: non-mandatory-script-verify-flag (Dummy CHECKMULTISIG argument must be zero)"
+NULLDUMMY_ERROR = "non-mandatory-script-verify-flag (Dummy CHECKMULTISIG argument must be zero) (code 64)"
 
 def trueDummy(tx):
     scriptSig = CScript(tx.vin[0].scriptSig)
