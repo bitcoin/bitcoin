@@ -2721,9 +2721,6 @@ bool CChainState::ActivateBestChain(CValidationState &state, const CChainParams&
             promise.get_future().wait();
         }
 
-        if (ShutdownRequested())
-            break;
-
         const CBlockIndex *pindexFork;
         bool fInitialDownload;
         {
@@ -2771,6 +2768,13 @@ bool CChainState::ActivateBestChain(CValidationState &state, const CChainParams&
         }
 
         if (nStopAtHeight && pindexNewTip && pindexNewTip->nHeight >= nStopAtHeight) StartShutdown();
+
+        // We check shutdown only after giving ActivateBestChainStep a chance to run once so that we
+        // never shutdown before connecting the genesis block during LoadChainTip(). Previously this
+        // caused an assert() failure during shutdown in such cases as the UTXO DB flushing checks
+        // that the best block hash is non-null.
+        if (ShutdownRequested())
+            break;
     } while (pindexNewTip != pindexMostWork);
     CheckBlockIndex(chainparams.GetConsensus());
 
