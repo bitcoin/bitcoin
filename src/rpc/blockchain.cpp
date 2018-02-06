@@ -438,7 +438,7 @@ UniValue mempoolToJSON(bool fVerbose)
 
 UniValue getrawmempool(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() > 1)
+    if (request.fHelp || request.params.size() > 1) {
         throw std::runtime_error(
             "getrawmempool ( verbose )\n"
             "\nReturns all transaction ids in memory pool as a json array of string transaction ids.\n"
@@ -460,12 +460,18 @@ UniValue getrawmempool(const JSONRPCRequest& request)
             + HelpExampleCli("getrawmempool", "true")
             + HelpExampleRpc("getrawmempool", "true")
         );
+    }
 
     bool fVerbose = false;
-    if (!request.params[0].isNull())
+    if (!request.params[0].isNull()) {
         fVerbose = request.params[0].get_bool();
+    }
 
-    return mempoolToJSON(fVerbose);
+    const UniValue txpool_json{mempoolToJSON(fVerbose)};
+
+    // Wait for ATMP calling thread to release the write lock:
+    LOCK(cs_main);
+    return txpool_json;
 }
 
 UniValue getmempoolancestors(const JSONRPCRequest& request)
