@@ -180,51 +180,7 @@ public:
     void OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant *grantOutbound = nullptr, const char *strDest = nullptr, bool fOneShot = false, bool fFeeler = false, bool manual_connection = false);
     bool CheckIncomingNonce(uint64_t nonce);
 
-    bool ForNode(NodeId id, std::function<bool(CNode* pnode)> func);
-
     void PushMessage(CNode* pnode, CSerializedNetMsg&& msg);
-
-    template<typename Callable>
-    void ForEachNode(Callable&& func)
-    {
-        LOCK(cs_vNodes);
-        for (auto&& node : vNodes) {
-            if (NodeFullyConnected(node))
-                func(node);
-        }
-    };
-
-    template<typename Callable>
-    void ForEachNode(Callable&& func) const
-    {
-        LOCK(cs_vNodes);
-        for (auto&& node : vNodes) {
-            if (NodeFullyConnected(node))
-                func(node);
-        }
-    };
-
-    template<typename Callable, typename CallableAfter>
-    void ForEachNodeThen(Callable&& pre, CallableAfter&& post)
-    {
-        LOCK(cs_vNodes);
-        for (auto&& node : vNodes) {
-            if (NodeFullyConnected(node))
-                pre(node);
-        }
-        post();
-    };
-
-    template<typename Callable, typename CallableAfter>
-    void ForEachNodeThen(Callable&& pre, CallableAfter&& post) const
-    {
-        LOCK(cs_vNodes);
-        for (auto&& node : vNodes) {
-            if (NodeFullyConnected(node))
-                pre(node);
-        }
-        post();
-    };
 
     // Addrman functions
     size_t GetAddressCount() const;
@@ -345,7 +301,7 @@ private:
     CNode* ConnectNode(CAddress addrConnect, const char *pszDest, bool fCountFailure);
     bool IsWhitelistedRange(const CNetAddr &addr);
 
-    void DeleteNode(CNode* pnode);
+    void FinalizeNode(CNode* pnode);
 
     NodeId GetNewNodeId();
 
@@ -363,9 +319,6 @@ private:
     // Network stats
     void RecordBytesRecv(uint64_t bytes);
     void RecordBytesSent(uint64_t bytes);
-
-    // Whether the node should be passed out in ForEach* callbacks
-    static bool NodeFullyConnected(const CNode* pnode);
 
     // Network usage totals
     CCriticalSection cs_totalBytesRecv;
@@ -397,9 +350,21 @@ private:
     CCriticalSection cs_vOneShots;
     std::vector<std::string> vAddedNodes GUARDED_BY(cs_vAddedNodes);
     CCriticalSection cs_vAddedNodes;
-    std::vector<CNode*> vNodes;
-    std::list<CNode*> vNodesDisconnected;
+    /**
+     * Nodes are first InitializeNode'd, then added to vNodes.
+     * After that, all calls to NetEventsInterface functions happen on the
+     * message handler thread to avoid calling two such functions at the same
+     * time for the same peer. After a node gets fDisconnect we first close
+     * the socket then move it to vNodesToFinalize on the socket handler
+     * thread, then the message handler thread picks it up, calls
+     * FinalizeNode on it, then moves it to vNodesDisconnected. From there,
+     * the socket handler thread will eventually delete the CNode itself once
+     * the refcount reaches 0.
+     */
     mutable CCriticalSection cs_vNodes;
+    std::vector<CNode*> vNodes;
+    std::vector<CNode*> vNodesToFinalize GUARDED_BY(cs_vNodes);
+    std::list<CNode*> vNodesDisconnected GUARDED_BY(cs_vNodes);
     std::atomic<NodeId> nLastNodeId;
 
     /** Services this instance offers */
@@ -667,7 +632,6 @@ protected:
 
 public:
     uint256 hashContinue;
-    std::atomic<int> nStartingHeight;
 
     // flood relay
     std::vector<CAddress> vAddrToSend;
@@ -712,8 +676,6 @@ public:
     std::atomic<int64_t> nPingUsecTime;
     // Best measured round-trip time.
     std::atomic<int64_t> nMinPingUsecTime;
-    // Whether a ping is requested.
-    std::atomic<bool> fPingQueued;
     // Minimum fee rate with which to filter inv's to this node
     CAmount minFeeFilter;
     CCriticalSection cs_feeFilter;

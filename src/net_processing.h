@@ -71,6 +71,7 @@ private:
 
 struct CNodeStateStats {
     int nMisbehavior;
+    int nStartingHeight;
     int nSyncHeight;
     int nCommonHeight;
     std::vector<int> vHeightInFlight;
@@ -80,5 +81,9 @@ struct CNodeStateStats {
 bool GetNodeStateStats(NodeId nodeid, CNodeStateStats &stats);
 /** Increase a node's misbehavior score. */
 void Misbehaving(NodeId nodeid, int howmuch);
+/** Relay a transaction that is in mempool to all our peers */
+void RelayTransaction(const uint256& tx_hash, CConnman* connman);
+/** Send all of our peers a ping */
+void QueuePingForAllPeers();
 
 #endif // BITCOIN_NET_PROCESSING_H
