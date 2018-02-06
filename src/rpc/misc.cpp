@@ -124,16 +124,16 @@ UniValue debug(const JSONRPCRequest& request)
             "debug ( 0|1|addrman|alert|bench|coindb|db|lock|rand|rpc|selectcoins|mempool"
             "|mempoolrej|net|proxy|prune|http|libevent|tor|zmq|"
             "dash|privatesend|instantsend|masternode|spork|keepass|mnpayments|gobject )\n"
-            "Change debug category on the fly. Specify single category or use comma to specify many.\n"
+            "Change debug category on the fly. Specify single category or use '+' to specify many.\n"
             "\nExamples:\n"
             + HelpExampleCli("debug", "dash")
-            + HelpExampleRpc("debug", "dash,net")
+            + HelpExampleRpc("debug", "dash+net")
         );
 
     std::string strMode = request.params[0].get_str();
 
     std::vector<std::string> newMultiArgs;
-    boost::split(newMultiArgs, strMode, boost::is_any_of(","));
+    boost::split(newMultiArgs, strMode, boost::is_any_of("+"));
     ForceSetMultiArgs("-debug", newMultiArgs);
     ForceSetArg("-debug", newMultiArgs[newMultiArgs.size() - 1]);
 
