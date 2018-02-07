@@ -292,6 +292,8 @@ def initialize_datadir(dirname, n):
         f.write("port=" + str(p2p_port(n)) + "\n")
         f.write("rpcport=" + str(rpc_port(n)) + "\n")
         f.write("listenonion=0\n")
+        os.makedirs(os.path.join(datadir, 'stderr'), exist_ok=True)
+        os.makedirs(os.path.join(datadir, 'stdout'), exist_ok=True)
     return datadir
 
 def get_datadir_path(dirname, n):

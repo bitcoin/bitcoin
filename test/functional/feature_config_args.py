@@ -24,7 +24,6 @@ class ConfArgsTest(BitcoinTestFramework):
         new_data_dir_2 = os.path.join(default_data_dir, 'newdatadir2')
 
         # Check that using -datadir argument on non-existent directory fails
-        self.nodes[0].datadir = new_data_dir
         self.nodes[0].assert_start_raises_init_error(['-datadir='+new_data_dir], 'Error: Specified data directory "' + new_data_dir + '" does not exist.')
 
         # Check that using non-existent datadir in conf file fails
@@ -35,12 +34,17 @@ class ConfArgsTest(BitcoinTestFramework):
 
         # Create the directory and ensure the config file now works
         os.mkdir(new_data_dir)
+        os.mkdir(os.path.join(new_data_dir, 'stdout'))
+        os.mkdir(os.path.join(new_data_dir, 'stderr'))
+        self.nodes[0].datadir = new_data_dir
         self.start_node(0, ['-conf='+conf_file, '-wallet=w1'])
         self.stop_node(0)
         assert os.path.isfile(os.path.join(new_data_dir, 'regtest', 'wallets', 'w1'))
 
         # Ensure command line argument overrides datadir in conf
         os.mkdir(new_data_dir_2)
+        os.mkdir(os.path.join(new_data_dir_2, 'stdout'))
+        os.mkdir(os.path.join(new_data_dir_2, 'stderr'))
         self.nodes[0].datadir = new_data_dir_2
         self.start_node(0, ['-datadir='+new_data_dir_2, '-conf='+conf_file, '-wallet=w2'])
         assert os.path.isfile(os.path.join(new_data_dir_2, 'regtest', 'wallets', 'w2'))
