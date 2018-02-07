@@ -24,12 +24,12 @@ class UacommentTest(BitcoinTestFramework):
         self.log.info("test -uacomment max length")
         self.stop_node(0)
         expected = "exceeds maximum length (256). Reduce the number or size of uacomments."
-        self.assert_start_raises_init_error(0, ["-uacomment=" + 'a' * 256], expected)
+        self.nodes[0].assert_start_raises_init_error(["-uacomment=" + 'a' * 256], expected)
 
         self.log.info("test -uacomment unsafe characters")
         for unsafe_char in ['/', ':', '(', ')']:
             expected = "User Agent comment (" + unsafe_char + ") contains unsafe characters"
-            self.assert_start_raises_init_error(0, ["-uacomment=" + unsafe_char], expected)
+            self.nodes[0].assert_start_raises_init_error(["-uacomment=" + unsafe_char], expected)
 
 if __name__ == '__main__':
     UacommentTest().main()
