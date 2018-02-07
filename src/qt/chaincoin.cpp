@@ -518,6 +518,7 @@ void BitcoinApplication::initializeResult(bool success)
 #endif
         pollShutdownTimer->start(200);
     } else {
+        Q_EMIT splashFinished(window);
         quit(); // Exit main loop
     }
 }
