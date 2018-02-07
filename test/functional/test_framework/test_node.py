@@ -88,9 +88,9 @@ class TestNode():
 
         # Add a new stdout and stderr file for each time bitcoind is started
         if stderr is None:
-            stderr = tempfile.NamedTemporaryFile(dir=os.path.join(self.datadir, 'stderr'), delete=False)
+            self.stderr = tempfile.NamedTemporaryFile(dir=os.path.join(self.datadir, 'stderr'), delete=False)
         if stdout is None:
-            stdout = tempfile.NamedTemporaryFile(dir=os.path.join(self.datadir, 'stdout'), delete=False)
+            self.stdout = tempfile.NamedTemporaryFile(dir=os.path.join(self.datadir, 'stdout'), delete=False)
 
         # add environment variable LIBC_FATAL_STDERR_=1 so that libc errors are written to stderr and not the terminal
         subp_env = dict(os.environ, LIBC_FATAL_STDERR_="1")
@@ -135,7 +135,7 @@ class TestNode():
             wallet_path = "wallet/%s" % wallet_name
             return self.rpc / wallet_path
 
-    def stop_node(self):
+    def stop_node(self, clean_stderr=True):
         """Stop the node."""
         if not self.running:
             return
@@ -144,6 +144,10 @@ class TestNode():
             self.stop()
         except http.client.CannotSendRequest:
             self.log.exception("Unable to stop node.")
+        if clean_stderr:
+            stderr = self.stderr.read()
+            if stderr != b'':
+                raise AssertionError("stderr not empty:\n{}".format(stderr))
         del self.p2ps[:]
 
     def is_node_stopped(self):
@@ -182,7 +186,7 @@ class TestNode():
             try:
                 self.start(extra_args, stderr=log_stderr, stdout=log_stdout, *args, **kwargs)
                 self.wait_for_rpc_connection()
-                self.stop_node()
+                self.stop_node(clean_stderr=False)
                 self.wait_util_stopped()
             except Exception as e:
                 assert 'bitcoind exited' in str(e)  # node must have shutdown
