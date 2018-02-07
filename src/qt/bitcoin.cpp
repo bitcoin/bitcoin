@@ -516,6 +516,7 @@ void BitcoinApplication::initializeResult(bool success)
         QTimer::singleShot(100, paymentServer, SLOT(uiReady()));
 #endif
     } else {
+        Q_EMIT splashFinished(window);
         quit(); // Exit main loop
     }
 }
