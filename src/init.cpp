@@ -23,19 +23,21 @@
 #include <key.h>
 #include <miner.h>
 #include <net.h>
+#include <netbase.h>
+#include <net_processing.h>
 #include <policy/policy.h>
 #include <rpc/server.h>
 #include <rpc/register.h>
 #include <script/standard.h>
 #include <script/sigcache.h>
 #include <scheduler.h>
+#include <timedata.h>
 #include <txdb.h>
 #include <txmempool.h>
 #include <torcontrol.h>
 #include <ui_interface.h>
 #include <util.h>
 #include <utilmoneystr.h>
-#include <utilstrencodings.h>
 #include <validation.h>
 #include <validationinterface.h>
 #ifdef ENABLE_WALLET
@@ -167,7 +169,7 @@ bool ShutdownRequested()
 class CCoinsViewErrorCatcher : public CCoinsViewBacked
 {
 public:
-    explicit CCoinsViewErrorCatcher(CCoinsView* view) : CCoinsViewBacked(view) {}
+    CCoinsViewErrorCatcher(CCoinsView* view) : CCoinsViewBacked(view) {}
     bool GetCoins(const uint256 &txid, CCoins &coins) const {
         try {
             return CCoinsViewBacked::GetCoins(txid, coins);
@@ -355,7 +357,7 @@ std::string HelpMessage(HelpMessageMode mode)
     // When adding new options to the categories, please keep and ensure alphabetical ordering.
     // Do not translate _(...) -help-debug options, Many technical terms, and only a very small audience, so is unnecessary stress to translators.
     string strUsage = HelpMessageGroup(_("Options:"));
-    strUsage += HelpMessageOpt("-?", _("This help message"));
+    strUsage += HelpMessageOpt("-?", _("Print this help message and exit"));
     strUsage += HelpMessageOpt("-version", _("Print version and exit"));
     strUsage += HelpMessageOpt("-alertnotify=<cmd>", _("Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)"));
     strUsage += HelpMessageOpt("-blocknotify=<cmd>", _("Execute command when the best block changes (%s in cmd is replaced by block hash)"));
@@ -398,13 +400,13 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += HelpMessageOpt("-banscore=<n>", strprintf(_("Threshold for disconnecting misbehaving peers (default: %u)"), DEFAULT_BANSCORE_THRESHOLD));
     strUsage += HelpMessageOpt("-bantime=<n>", strprintf(_("Number of seconds to keep misbehaving peers from reconnecting (default: %u)"), DEFAULT_MISBEHAVING_BANTIME));
     strUsage += HelpMessageOpt("-bind=<addr>", _("Bind to given address and always listen on it. Use [host]:port notation for IPv6"));
-    strUsage += HelpMessageOpt("-connect=<ip>", _("Connect only to the specified node(s)"));
+    strUsage += HelpMessageOpt("-connect=<ip>", _("Connect only to the specified node(s); -noconnect or -connect=0 alone to disable automatic connections"));
     strUsage += HelpMessageOpt("-discover", _("Discover own IP addresses (default: 1 when listening and no -externalip or -proxy)"));
     strUsage += HelpMessageOpt("-dns", _("Allow DNS lookups for -addnode, -seednode and -connect") + " " + strprintf(_("(default: %u)"), DEFAULT_NAME_LOOKUP));
-    strUsage += HelpMessageOpt("-dnsseed", _("Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect)"));
+    strUsage += HelpMessageOpt("-dnsseed", _("Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect/-noconnect)"));
     strUsage += HelpMessageOpt("-externalip=<ip>", _("Specify your own public address"));
     strUsage += HelpMessageOpt("-forcednsseed", strprintf(_("Always query for peer addresses via DNS lookup (default: %u)"), DEFAULT_FORCEDNSSEED));
-    strUsage += HelpMessageOpt("-listen", _("Accept connections from outside (default: 1 if no -proxy or -connect)"));
+    strUsage += HelpMessageOpt("-listen", _("Accept connections from outside (default: 1 if no -proxy or -connect/-noconnect)"));
     strUsage += HelpMessageOpt("-listenonion", strprintf(_("Automatically create Tor hidden service (default: %d)"), DEFAULT_LISTEN_ONION));
     strUsage += HelpMessageOpt("-maxconnections=<n>", strprintf(_("Maintain at most <n> connections to peers (default: %u)"), DEFAULT_MAX_PEER_CONNECTIONS));
     strUsage += HelpMessageOpt("-maxreceivebuffer=<n>", strprintf(_("Maximum per-connection receive buffer, <n>*1000 bytes (default: %u)"), DEFAULT_MAXRECEIVEBUFFER));
@@ -432,11 +434,11 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += HelpMessageOpt("-whitelist=<netmask>", _("Whitelist peers connecting from the given netmask or IP address. Can be specified multiple times.") +
         " " + _("Whitelisted peers cannot be DoS banned and their transactions are always relayed, even if they are already in the mempool, useful e.g. for a gateway"));
     strUsage += HelpMessageOpt("-whitelistrelay", strprintf(_("Accept relayed transactions received from whitelisted peers even when not relaying transactions (default: %d)"), DEFAULT_WHITELISTRELAY));
-    strUsage += HelpMessageOpt("-whitelistforcerelay", strprintf(_("Force relay of transactions from whitelisted peers even they violate local relay policy (default: %d)"), DEFAULT_WHITELISTFORCERELAY));
+    strUsage += HelpMessageOpt("-whitelistforcerelay", strprintf(_("Force relay of transactions from whitelisted peers even if they violate local relay policy (default: %d)"), DEFAULT_WHITELISTFORCERELAY));
     strUsage += HelpMessageOpt("-maxuploadtarget=<n>", strprintf(_("Tries to keep outbound traffic under the given target (in MiB per 24h), 0 = no limit (default: %d)"), DEFAULT_MAX_UPLOAD_TARGET));
 
 #ifdef ENABLE_WALLET
-        strUsage += HelpMessageOpt("-feefilter", strprintf("Tell other nodes to filter invs to us by our mempool min fee (default: %u)", DEFAULT_FEEFILTER));
+    strUsage += CWallet::GetWalletHelpString(showDebug);
 #endif
 
 #if ENABLE_ZMQ
@@ -465,9 +467,9 @@ std::string HelpMessage(HelpMessageMode mode)
         strUsage += HelpMessageOpt("-limitancestorsize=<n>", strprintf("Do not accept transactions whose size with all in-mempool ancestors exceeds <n> kilobytes (default: %u)", DEFAULT_ANCESTOR_SIZE_LIMIT));
         strUsage += HelpMessageOpt("-limitdescendantcount=<n>", strprintf("Do not accept transactions if any ancestor would have <n> or more in-mempool descendants (default: %u)", DEFAULT_DESCENDANT_LIMIT));
         strUsage += HelpMessageOpt("-limitdescendantsize=<n>", strprintf("Do not accept transactions if any ancestor would have more than <n> kilobytes of in-mempool descendants (default: %u).", DEFAULT_DESCENDANT_SIZE_LIMIT));
-        strUsage += HelpMessageOpt("-bip9params=deployment:start:end", "Use given start/end times for specified bip9 deployment (regtest-only)");
+        strUsage += HelpMessageOpt("-bip9params=deployment:start:end", "Use given start/end times for specified BIP9 deployment (regtest-only)");
     }
-    string debugCategories = "addrman, alert, bench, coindb, db, http, libevent, lock, mempool, mempoolrej, net, proxy, prune, rand, reindex, rpc, selectcoins, tor, zmq, "
+    string debugCategories = "addrman, alert, bench, cmpctblock, coindb, db, http, libevent, lock, mempool, mempoolrej, net, proxy, prune, rand, reindex, rpc, selectcoins, tor, zmq, "
                              "chaincoin (or specifically: gobject, instantsend, keepass, masternode, mnpayments, mnsync, privatesend)"; // Don't translate these and qt below
     if (mode == HMM_BITCOIN_QT)
         debugCategories += ", qt";
@@ -481,11 +483,11 @@ std::string HelpMessage(HelpMessageMode mode)
     if (showDebug)
     {
         strUsage += HelpMessageOpt("-logtimemicros", strprintf("Add microsecond precision to debug timestamps (default: %u)", DEFAULT_LOGTIMEMICROS));
-        strUsage += HelpMessageOpt("-logthreadnames", strprintf("Add thread names to debug messages (default: %u)", DEFAULT_LOGTHREADNAMES));
         strUsage += HelpMessageOpt("-mocktime=<n>", "Replace actual time with <n> seconds since epoch (default: 0)");
         strUsage += HelpMessageOpt("-limitfreerelay=<n>", strprintf("Continuously rate-limit free transactions to <n>*1000 bytes per minute (default: %u)", DEFAULT_LIMITFREERELAY));
         strUsage += HelpMessageOpt("-relaypriority", strprintf("Require high priority for relaying free or low-fee transactions (default: %u)", DEFAULT_RELAYPRIORITY));
         strUsage += HelpMessageOpt("-maxsigcachesize=<n>", strprintf("Limit size of signature cache to <n> MiB (default: %u)", DEFAULT_MAX_SIG_CACHE_SIZE));
+        strUsage += HelpMessageOpt("-maxtipage=<n>", strprintf("Maximum tip age in seconds to consider node in initial block download (default: %u)", DEFAULT_MAX_TIP_AGE));
     }
     strUsage += HelpMessageOpt("-minrelaytxfee=<amt>", strprintf(_("Fees (in %s/kB) smaller than this are considered zero fee for relaying, mining and transaction creation (default: %s)"),
         CURRENCY_UNIT, FormatMoney(DEFAULT_MIN_RELAY_TX_FEE)));
@@ -524,7 +526,7 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += HelpMessageGroup(_("Node relay options:"));
     if (showDebug)
         strUsage += HelpMessageOpt("-acceptnonstdtxn", strprintf("Relay and mine \"non-standard\" transactions (%sdefault: %u)", "testnet/regtest only; ", !Params(CBaseChainParams::TESTNET).RequireStandard()));
-    strUsage += HelpMessageOpt("-bytespersigop", strprintf(_("Minimum bytes per sigop in transactions we relay and mine (default: %u)"), DEFAULT_BYTES_PER_SIGOP));
+    strUsage += HelpMessageOpt("-bytespersigop", strprintf(_("Equivalent bytes per sigop in transactions for relay and mining (default: %u)"), DEFAULT_BYTES_PER_SIGOP));
     strUsage += HelpMessageOpt("-datacarrier", strprintf(_("Relay and mine data carrier transactions (default: %u)"), DEFAULT_ACCEPT_DATACARRIER));
     strUsage += HelpMessageOpt("-datacarriersize", strprintf(_("Maximum size of data in data carrier transactions we relay and mine (default: %u)"), MAX_OP_RETURN_RELAY));
     strUsage += HelpMessageOpt("-mempoolreplacement", strprintf(_("Enable transaction replacement in the memory pool (default: %u)"), DEFAULT_ENABLE_REPLACEMENT));
@@ -911,7 +913,7 @@ bool AppInitBasicSetup()
         return InitError("Initializing networking failed");
 
 #ifndef WIN32
-    if (GetBoolArg("-sysperms", false)) {
+    if (!GetBoolArg("-sysperms", false)) {
         umask(077);
     }
 
@@ -943,7 +945,7 @@ bool AppInitParameterInteraction()
 
     // also see: InitParameterInteraction()
 
-    // if using block pruning, then disable txindex
+    // if using block pruning, then disallow txindex
     if (GetArg("-prune", 0)) {
         if (GetBoolArg("-txindex", DEFAULT_TXINDEX))
             return InitError(_("Prune mode is incompatible with -txindex."));
@@ -953,12 +955,12 @@ bool AppInitParameterInteraction()
     int nBind = std::max(
                 (mapMultiArgs.count("-bind") ? mapMultiArgs.at("-bind").size() : 0) +
                 (mapMultiArgs.count("-whitebind") ? mapMultiArgs.at("-whitebind").size() : 0), size_t(1));
-    int nUserMaxConnections = GetArg("-maxconnections", DEFAULT_MAX_PEER_CONNECTIONS);
-    int nMaxConnections = std::max(nUserMaxConnections, 0);
+    nUserMaxConnections = GetArg("-maxconnections", DEFAULT_MAX_PEER_CONNECTIONS);
+    nMaxConnections = std::max(nUserMaxConnections, 0);
 
     // Trim requested connection counts, to fit into system limitations
     nMaxConnections = std::max(std::min(nMaxConnections, (int)(FD_SETSIZE - nBind - MIN_CORE_FILEDESCRIPTORS)), 0);
-    int nFD = RaiseFileDescriptorLimit(nMaxConnections + MIN_CORE_FILEDESCRIPTORS);
+    nFD = RaiseFileDescriptorLimit(nMaxConnections + MIN_CORE_FILEDESCRIPTORS);
     if (nFD < MIN_CORE_FILEDESCRIPTORS)
         return InitError(_("Not enough file descriptors available."));
     nMaxConnections = std::min(nFD - MIN_CORE_FILEDESCRIPTORS, nMaxConnections);
@@ -1054,8 +1056,8 @@ bool AppInitParameterInteraction()
         ::minRelayTxFee = CFeeRate(n);
     }
 
-    fRequireStandard = !GetBoolArg("-acceptnonstdtxn", !Params().RequireStandard());
-    if (Params().RequireStandard() && !fRequireStandard)
+    fRequireStandard = !GetBoolArg("-acceptnonstdtxn", !chainparams.RequireStandard());
+    if (chainparams.RequireStandard() && !fRequireStandard)
         return InitError(strprintf("acceptnonstdtxn is not currently supported for %s chain", chainparams.NetworkIDString()));
     nBytesPerSigOp = GetArg("-bytespersigop", nBytesPerSigOp);
 
@@ -1086,8 +1088,8 @@ bool AppInitParameterInteraction()
     }
 
     if (!mapMultiArgs["-bip9params"].empty()) {
-        // Allow overriding bip9 parameters for testing
-        if (!Params().MineBlocksOnDemand()) {
+        // Allow overriding BIP9 parameters for testing
+        if (!chainparams.MineBlocksOnDemand()) {
             return InitError("BIP9 parameters may only be overridden on regtest.");
         }
         const vector<string>& deployments = mapMultiArgs["-bip9params"];
@@ -1105,10 +1107,10 @@ bool AppInitParameterInteraction()
                 return InitError(strprintf("Invalid nTimeout (%s)", vDeploymentParams[2]));
             }
             bool found = false;
-            for (int i=0; i<(int)Consensus::MAX_VERSION_BITS_DEPLOYMENTS; ++i)
+            for (int j=0; j<(int)Consensus::MAX_VERSION_BITS_DEPLOYMENTS; ++j)
             {
-                if (vDeploymentParams[0].compare(VersionBitsDeploymentInfo[i].name) == 0) {
-                    UpdateRegtestBIP9Parameters(Consensus::DeploymentPos(i), nStartTime, nTimeout);
+                if (vDeploymentParams[0].compare(VersionBitsDeploymentInfo[j].name) == 0) {
+                    UpdateRegtestBIP9Parameters(Consensus::DeploymentPos(j), nStartTime, nTimeout);
                     found = true;
                     LogPrintf("Setting BIP9 activation parameters for %s to start=%ld, timeout=%ld\n", vDeploymentParams[0], nStartTime, nTimeout);
                     break;
@@ -1204,7 +1206,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
      * that the server is there and will be ready later).  Warmup mode will
      * be disabled when initialisation is finished.
      */
-    if (fServer)
+    if (GetBoolArg("-server", false))
     {
         uiInterface.InitMessage.connect(SetRPCWarmupStatus);
         if (!AppInitServers(threadGroup))
@@ -1345,8 +1347,8 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     fNameLookup = GetBoolArg("-dns", DEFAULT_NAME_LOOKUP);
     fRelayTxes = !GetBoolArg("-blocksonly", DEFAULT_BLOCKSONLY);
 
-    bool fBound = false;
     if (fListen) {
+        bool fBound = false;
         if (mapArgs.count("-bind") || mapArgs.count("-whitebind")) {
             for (const std::string& strBind : mapMultiArgs["-bind"]) {
                 CService addrBind;
@@ -1400,7 +1402,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     RegisterValidationInterface(pdsNotificationInterface);
 
     if (mapArgs.count("-maxuploadtarget")) {
-        connman.SetMaxOutboundTarget(GetArg("-maxuploadtarget", DEFAULT_MAX_UPLOAD_TARGET)*1024*1024);
+        nMaxOutboundLimit = GetArg("-maxuploadtarget", DEFAULT_MAX_UPLOAD_TARGET)*1024*1024;
     }
 
     // ********************************************************* Step 7: load block chain
@@ -1518,8 +1520,8 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
 
                 uiInterface.InitMessage(_("Verifying blocks..."));
                 if (fHavePruned && GetArg("-checkblocks", DEFAULT_CHECKBLOCKS) > MIN_BLOCKS_TO_KEEP) {
-                    LogPrintf("Prune: pruned datadir may not have more than %d blocks; -checkblocks=%d may fail\n",
-                        MIN_BLOCKS_TO_KEEP, GetArg("-checkblocks", DEFAULT_CHECKBLOCKS));
+                    LogPrintf("Prune: pruned datadir may not have more than %d blocks; only checking available blocks",
+                        MIN_BLOCKS_TO_KEEP);
                 }
 
                 {
@@ -1606,7 +1608,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
         }
     }
 
-    if (Params().GetConsensus().vDeployments[Consensus::DEPLOYMENT_SEGWIT].nTimeout != 0) {
+    if (chainparams.GetConsensus().vDeployments[Consensus::DEPLOYMENT_SEGWIT].nTimeout != 0) {
         // Only advertize witness capabilities if they have a reasonable start time.
         // This allows us to have the code merged without a defined softfork, by setting its
         // end time to 0.
@@ -1813,7 +1815,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     connOptions.nMaxOutboundTimeframe = nMaxOutboundTimeframe;
     connOptions.nMaxOutboundLimit = nMaxOutboundLimit;
 
-    if (!connman.Start(threadGroup, scheduler, strNodeError, connOptions))
+    if(!connman.Start(threadGroup, scheduler, strNodeError, connOptions))
         return InitError(strNodeError);
 
     // ********************************************************* Step 13: finished

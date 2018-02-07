@@ -1080,15 +1080,4 @@ QString formatNiceTimeOffset(qint64 secs)
     }
     return timeBehindText;
 }
-
-void ClickableLabel::mouseReleaseEvent(QMouseEvent *event)
-{
-    Q_EMIT clicked(event->pos());
-}
-    
-void ClickableProgressBar::mouseReleaseEvent(QMouseEvent *event)
-{
-    Q_EMIT clicked(event->pos());
-}
-
 } // namespace GUIUtil

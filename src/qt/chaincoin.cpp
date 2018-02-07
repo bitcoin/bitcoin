@@ -14,7 +14,6 @@
 #include <guiconstants.h>
 #include <guiutil.h>
 #include <intro.h>
-#include <net.h>
 #include <networkstyle.h>
 #include <optionsmodel.h>
 #include <platformstyle.h>
@@ -48,7 +47,6 @@
 #include <QLibraryInfo>
 #include <QLocale>
 #include <QMessageBox>
-#include <QProcess>
 #include <QSettings>
 #include <QThread>
 #include <QTimer>
@@ -193,7 +191,7 @@ private:
     void handleRunawayException(const std::exception *e);
 };
 
-/** Main Dash application object */
+/** Main Chaincoin application object */
 class BitcoinApplication: public QApplication
 {
     Q_OBJECT
@@ -254,7 +252,7 @@ private:
     void startThread();
 };
 
-#include "chaincoin.moc"
+#include <chaincoin.moc>
 
 BitcoinCore::BitcoinCore():
     QObject()
@@ -645,7 +643,7 @@ int main(int argc, char *argv[])
     QScopedPointer<const NetworkStyle> networkStyle(NetworkStyle::instantiate(QString::fromStdString(Params().NetworkIDString())));
     assert(!networkStyle.isNull());
     // Allow for separate UI settings for testnets
-    // QApplication::setApplicationName(networkStyle->getAppName()); // moved to NetworkStyle::NetworkStyle
+    QApplication::setApplicationName(networkStyle->getAppName());
     // Re-initialize translations after changing application name (language in network-specific settings can be different)
     initTranslations(qtTranslatorBase, qtTranslator, translatorBase, translator);
 

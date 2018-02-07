@@ -78,7 +78,7 @@ static int AppInitRPC(int argc, char* argv[])
     //
     ParseParameters(argc, argv);
     if (argc<2 || mapArgs.count("-?") || mapArgs.count("-h") || mapArgs.count("-help") || mapArgs.count("-version")) {
-        std::string strUsage = _("Chaincoin Core RPC client version") + " " + FormatFullVersion() + "\n";
+        std::string strUsage = strprintf(_("%s RPC client version"), _(PACKAGE_NAME)) + " " + FormatFullVersion() + "\n";
         if (!mapArgs.count("-version")) {
             strUsage += "\n" + _("Usage:") + "\n" +
                   "  chaincoin-cli [options] <command> [params]  " + _("Send command to Chaincoin Core") + "\n" +
@@ -248,7 +248,7 @@ UniValue CallRPC(const std::string& strMethod, const UniValue& params)
     event_base_free(base);
 
     if (response.status == 0)
-        throw CConnectionFailed("couldn't connect to server");
+        throw CConnectionFailed(strprintf("couldn't connect to server\n(make sure server is running and you are connecting to the correct RPC port: %d %s)", response.error, http_errorstring(response.error)));
     else if (response.status == HTTP_UNAUTHORIZED)
         throw std::runtime_error("incorrect rpcuser or rpcpassword (authorization failed)");
     else if (response.status >= 400 && response.status != HTTP_BAD_REQUEST && response.status != HTTP_NOT_FOUND && response.status != HTTP_INTERNAL_SERVER_ERROR)
