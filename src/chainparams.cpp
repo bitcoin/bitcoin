@@ -382,17 +382,18 @@ public:
         };
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,80);
-
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,44);
-
         base58Prefixes[SECRET_KEY] =     std::vector<unsigned char>(1,88+128);
-
         base58Prefixes[EXT_PUBLIC_KEY] = boost::assign::list_of(0x3A)(0x80)(0x61)(0xA0).convert_to_container<std::vector<unsigned char> >();
-
         base58Prefixes[EXT_SECRET_KEY] = boost::assign::list_of(0x3A)(0x80)(0x58)(0x37).convert_to_container<std::vector<unsigned char> >();
 
 
    }
+    void UpdateBIP9Parameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout)
+    {
+        consensus.vDeployments[d].nStartTime = nStartTime;
+        consensus.vDeployments[d].nTimeout = nTimeout;
+    }
 };
 static CRegTestParams regTestParams;
 
@@ -419,4 +420,9 @@ void SelectParams(const std::string& network)
 {
     SelectBaseParams(network);
     pCurrentParams = &Params(network);
+}
+
+void UpdateRegtestBIP9Parameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout)
+{
+    regTestParams.UpdateBIP9Parameters(d, nStartTime, nTimeout);
 }

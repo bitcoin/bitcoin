@@ -2762,7 +2762,7 @@ public:
     }
 };
 
-bool SendMessages(CNode* pto, CConnman& connman, const std::atomic<bool>& interruptMsgProc)
+bool SendMessages(CNode* pto, CConnman& connman)
 {
     const Consensus::Params& consensusParams = Params().GetConsensus();
     {
