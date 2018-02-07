@@ -106,7 +106,7 @@ int chaincoinconsensus_verify_script(const unsigned char *scriptPubKey, unsigned
                                    const unsigned char *txTo        , unsigned int txToLen,
                                    unsigned int nIn, unsigned int flags, chaincoinconsensus_error* err)
 {
-    if (flags & bitcoinconsensus_SCRIPT_FLAGS_VERIFY_WITNESS) {
+    if (flags & chaincoinconsensus_SCRIPT_FLAGS_VERIFY_WITNESS) {
         return set_error(err, chaincoinconsensus_ERR_AMOUNT_REQUIRED);
     }
 
