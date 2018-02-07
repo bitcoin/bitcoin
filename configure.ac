@@ -224,21 +224,21 @@ CPPFLAGS="$CPPFLAGS -DHAVE_BUILD_INFO -D__STDC_FORMAT_MACROS"
 
 AC_ARG_WITH([utils],
   [AS_HELP_STRING([--with-utils],
-  [build chaincoin-cli chaincoin-tx (default=yes)])],
-  [build_chaincoin_utils=$withval],
-  [build_chaincoin_utils=yes])
+  [build bitcoin-cli chaincoin-tx (default=yes)])],
+  [build_bitcoin_utils=$withval],
+  [build_bitcoin_utils=yes])
 
 AC_ARG_WITH([libs],
   [AS_HELP_STRING([--with-libs],
   [build libraries (default=yes)])],
-  [build_chaincoin_libs=$withval],
-  [build_chaincoin_libs=yes])
+  [build_bitcoin_libs=$withval],
+  [build_bitcoin_libs=yes])
 
 AC_ARG_WITH([daemon],
   [AS_HELP_STRING([--with-daemon],
-  [build chaincoind daemon (default=yes)])],
-  [build_chaincoind=$withval],
-  [build_chaincoind=yes])
+  [build bitcoind daemon (default=yes)])],
+  [build_bitcoind=$withval],
+  [build_bitcoind=yes])
 
 use_pkgconfig=yes
 case $host in

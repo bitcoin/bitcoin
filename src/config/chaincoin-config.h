@@ -69,7 +69,7 @@
 /* #undef HAVE_BYTESWAP_H */
 
 /* Define this symbol if the consensus lib has been built */
-/* #undef HAVE_CONSENSUS_LIB */
+#define HAVE_CONSENSUS_LIB 1
 
 /* define if the compiler supports basic C++11 syntax */
 #define HAVE_CXX11 1
