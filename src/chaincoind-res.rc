@@ -17,7 +17,7 @@ BEGIN
         BLOCK "040904E4" // U.S. English - multilingual (hex)
         BEGIN
             VALUE "CompanyName",        "Chaincoin"
-            VALUE "FileDescription",    "chaincoind (Dash node with a JSON-RPC server)"
+            VALUE "FileDescription",    "chaincoind (Chaincoin node with a JSON-RPC server)"
             VALUE "FileVersion",        VER_FILEVERSION_STR
             VALUE "InternalName",       "chaincoind"
             VALUE "LegalCopyright",     COPYRIGHT_STR

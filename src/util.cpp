@@ -117,6 +117,7 @@ int nWalletBackups = 10;
 
 const char * const BITCOIN_CONF_FILENAME = "chaincoin.conf";
 const char * const BITCOIN_PID_FILENAME = "chaincoind.pid";
+const char * const MASTERNODE_CONF_FILENAME = "masternode.conf";
 
 map<string, string> mapArgs;
 map<string, vector<string> > mapMultiArgs;
@@ -606,33 +607,31 @@ void ClearDatadirCache()
     pathCachedNetSpecific = boost::filesystem::path();
 }
 
-boost::filesystem::path GetConfigFile()
+boost::filesystem::path GetConfigFile(const std::string& confPath)
 {
-    boost::filesystem::path pathConfigFile(GetArg("-conf", BITCOIN_CONF_FILENAME));
+    boost::filesystem::path pathConfigFile(confPath);
     if (!pathConfigFile.is_complete())
         pathConfigFile = GetDataDir(false) / pathConfigFile;
 
     return pathConfigFile;
 }
 
-boost::filesystem::path GetMasternodeConfigFile()
+boost::filesystem::path GetMasternodeConfigFile(const std::string& confPath)
 {
     boost::filesystem::path pathConfigFile(GetArg("-mnconf", "masternode.conf"));
-    if (!pathConfigFile.is_complete()) pathConfigFile = GetDataDir() / pathConfigFile;
+    if (!pathConfigFile.is_complete())
+        pathConfigFile = GetDataDir(false) / pathConfigFile;
+
     return pathConfigFile;
 }
 
-void ReadConfigFile(map<string, string>& mapSettingsRet,
+void ReadConfigFile(const std::string& confPath,
+                    map<string, string>& mapSettingsRet,
                     map<string, vector<string> >& mapMultiSettingsRet)
 {
-    boost::filesystem::ifstream streamConfig(GetConfigFile());
-    if (!streamConfig.good()){
-        // Create empty chaincoin.conf if it does not excist
-        FILE* configFile = fopen(GetConfigFile().string().c_str(), "a");
-        if (configFile != nullptr)
-            fclose(configFile);
-        return; // Nothing to read, so just return
-    }
+    boost::filesystem::ifstream streamConfig(GetConfigFile(confPath));
+    if (!streamConfig.good())
+        return; // No chaincoin.conf file is OK
 
     set<string> setOptions;
     setOptions.insert("*");
