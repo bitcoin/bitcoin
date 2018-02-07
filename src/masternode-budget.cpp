@@ -24,12 +24,14 @@ std::vector<CFinalizedBudgetBroadcast> vecImmatureFinalizedBudgets;
 
 CAmount BlocksBeforeSuperblockToSubmitFinalBudget()
 {
+    assert(GetBudgetPaymentCycleBlocks() > 10);
+
     // Relatively 43200 / 30 = 1440, for testnet  - equal to budget payment cycle
 
     if (Params().NetworkID() == CBaseChainParams::MAIN)
         return 1440 * 2;   // aprox 2 days
     else
-        return GetBudgetPaymentCycleBlocks();
+        return GetBudgetPaymentCycleBlocks() - 10; // 40 blocks for 50-block cycle
 
 }
 
