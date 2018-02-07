@@ -1764,7 +1764,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
         // Process custom logic, no matter if tx will be accepted to mempool later or not
         if (strCommand == NetMsgType::TXLOCKREQUEST) {
-            if(!instantsend.ProcessTxLockRequest(txLockRequest, connman)) {
+            if(!instantsend.ProcessTxLockRequest(txLockRequest, &connman)) {
                 LogPrint("instantsend", "TXLOCKREQUEST -- failed %s\n", txLockRequest.GetHash().ToString());
                 return false;
             }
@@ -2602,13 +2602,13 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         if (found)
         {
             //probably one the extensions
-            privateSendClient.ProcessMessage(pfrom, strCommand, vRecv, connman);
-            privateSendServer.ProcessMessage(pfrom, strCommand, vRecv, connman);
-            mnodeman.ProcessMessage(pfrom, strCommand, vRecv, connman);
-            mnpayments.ProcessMessage(pfrom, strCommand, vRecv, connman);
-            instantsend.ProcessMessage(pfrom, strCommand, vRecv, connman);
+            privateSendClient.ProcessMessage(pfrom, strCommand, vRecv, &connman);
+            privateSendServer.ProcessMessage(pfrom, strCommand, vRecv, &connman);
+            mnodeman.ProcessMessage(pfrom, strCommand, vRecv, &connman);
+            mnpayments.ProcessMessage(pfrom, strCommand, vRecv, &connman);
+            instantsend.ProcessMessage(pfrom, strCommand, vRecv, &connman);
             masternodeSync.ProcessMessage(pfrom, strCommand, vRecv);
-            governance.ProcessMessage(pfrom, strCommand, vRecv, connman);
+            governance.ProcessMessage(pfrom, strCommand, vRecv, &connman);
         }
         else
         {

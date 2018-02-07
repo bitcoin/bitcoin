@@ -65,11 +65,11 @@ private:
 
     bool CreateTxLockCandidate(const CTxLockRequest& txLockRequest);
     void CreateEmptyTxLockCandidate(const uint256& txHash);
-    void Vote(CTxLockCandidate& txLockCandidate, CConnman& connman);
+    void Vote(CTxLockCandidate& txLockCandidate, CConnman* connman);
 
     //process consensus vote message
-    bool ProcessTxLockVote(CNode* pfrom, CTxLockVote& vote, CConnman& connman);
-    void ProcessOrphanTxLockVotes(CConnman& connman);
+    bool ProcessTxLockVote(CNode* pfrom, CTxLockVote& vote, CConnman* connman);
+    void ProcessOrphanTxLockVotes(CConnman* connman);
     bool IsEnoughOrphanVotesForTx(const CTxLockRequest& txLockRequest);
     bool IsEnoughOrphanVotesForTxAndOutPoint(const uint256& txHash, const COutPoint& outpoint);
     int64_t GetAverageMasternodeOrphanVoteTime();
@@ -85,9 +85,10 @@ private:
 public:
     CCriticalSection cs_instantsend;
 
-    void ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv, CConnman& connman);
+    void ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv, CConnman* connman);
 
-    bool ProcessTxLockRequest(const CTxLockRequest& txLockRequest, CConnman& connman);
+    bool ProcessTxLockRequest(const CTxLockRequest& txLockRequest, CConnman* connman);
+    void Vote(const uint256& txHash, CConnman* connman);
 
     bool AlreadyHave(const uint256& hash);
 
@@ -112,10 +113,11 @@ public:
     // verify if transaction lock timed out
     bool IsTxLockCandidateTimedOut(const uint256& txHash);
 
-    void Relay(const uint256& txHash, CConnman& connman);
+    void Relay(const uint256& txHash, CConnman* connman);
 
     void UpdatedBlockTip(const CBlockIndex *pindex);
     void SyncTransaction(const CTransaction& tx, const CBlock* pblock);
+
     std::string ToString();
 };
 
@@ -186,7 +188,7 @@ public:
     COutPoint GetOutpoint() const { return outpoint; }
     COutPoint GetMasternodeOutpoint() const { return outpointMasternode; }
 
-    bool IsValid(CNode* pnode, CConnman& connman) const;
+    bool IsValid(CNode* pnode, CConnman* connman) const;
     void SetConfirmedHeight(int nConfirmedHeightIn) { nConfirmedHeight = nConfirmedHeightIn; }
     bool IsExpired(int nHeight) const;
     bool IsTimedOut() const;
@@ -195,7 +197,7 @@ public:
     bool Sign();
     bool CheckSignature() const;
 
-    void Relay(CConnman& connman) const;
+    void Relay(CConnman* connman) const;
 };
 
 class COutPointLock
@@ -223,7 +225,7 @@ public:
     bool IsReady() const { return !fAttacked && CountVotes() >= SIGNATURES_REQUIRED; }
     void MarkAsAttacked() { fAttacked = true; }
 
-    void Relay(CConnman& connman) const;
+    void Relay(CConnman* connman) const;
 };
 
 class CTxLockCandidate
@@ -257,7 +259,7 @@ public:
     bool IsExpired(int nHeight) const;
     bool IsTimedOut() const;
 
-    void Relay(CConnman& connman) const;
+    void Relay(CConnman* connman) const;
 };
 
 #endif

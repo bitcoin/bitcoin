@@ -6,7 +6,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
-#include "config/chaincoin-config.h"
+#include <config/chaincoin-config.h>
 #endif
 
 #include <init.h>
@@ -1396,7 +1396,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     uint64_t nMaxOutboundLimit = 0; //unlimited unless -maxuploadtarget is set
     uint64_t nMaxOutboundTimeframe = MAX_UPLOAD_TIMEFRAME;
 
-    pdsNotificationInterface = new CDSNotificationInterface(connman);
+    pdsNotificationInterface = new CDSNotificationInterface(&connman);
     RegisterValidationInterface(pdsNotificationInterface);
 
     if (mapArgs.count("-maxuploadtarget")) {

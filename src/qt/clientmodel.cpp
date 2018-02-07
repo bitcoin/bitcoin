@@ -42,8 +42,6 @@ ClientModel::ClientModel(OptionsModel *optionsModel, QObject *parent) :
     banTableModel(0),
     pollTimer(0)
 {
-    cachedBestHeaderHeight = -1;
-    cachedBestHeaderTime = -1;
     peerTableModel = new PeerTableModel(this);
     banTableModel = new BanTableModel(this);
     pollTimer = new QTimer(this);
@@ -95,6 +93,22 @@ int ClientModel::getNumBlocks() const
 {
     LOCK(cs_main);
     return chainActive.Height();
+}
+
+int ClientModel::getHeaderTipHeight() const
+{
+    LOCK(cs_main);
+    if (!pindexBestHeader)
+        return 0;
+    return pindexBestHeader->nHeight;
+}
+
+int64_t ClientModel::getHeaderTipTime() const
+{
+    LOCK(cs_main);
+    if (!pindexBestHeader)
+        return 0;
+    return pindexBestHeader->GetBlockTime();
 }
 
 quint64 ClientModel::getTotalBytesRecv() const
@@ -167,6 +181,11 @@ void ClientModel::updateNumConnections(int numConnections)
     Q_EMIT numConnectionsChanged(numConnections);
 }
 
+void ClientModel::updateNetworkActive(bool networkActive)
+{
+    Q_EMIT networkActiveChanged(networkActive);
+}
+
 void ClientModel::updateAlert()
 {
     Q_EMIT alertsChanged(getStatusBarWarnings());
@@ -237,6 +256,11 @@ QString ClientModel::formatSubVersion() const
 bool ClientModel::isReleaseVersion() const
 {
     return CLIENT_VERSION_IS_RELEASE;
+}
+
+QString ClientModel::clientName() const
+{
+    return QString::fromStdString(CLIENT_NAME);
 }
 
 QString ClientModel::formatClientStartupTime() const

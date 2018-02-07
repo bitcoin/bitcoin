@@ -20,8 +20,13 @@
 #include <rpc/server.h>
 #include <util.h>
 #include <utilmoneystr.h>
+#ifdef ENABLE_WALLET
+#include "wallet/wallet.h"
+#endif // ENABLE_WALLET
 
 #include <boost/lexical_cast.hpp>
+
+CConnman& connman = *g_connman;
 
 UniValue gobject(const JSONRPCRequest& request)
 {
@@ -283,9 +288,9 @@ UniValue gobject(const JSONRPCRequest& request)
 
         if(fMissingConfirmations) {
             governance.AddPostponedObject(govobj);
-            govobj.Relay(*g_connman);
+            govobj.Relay(&connman);
         } else {
-            governance.AddGovernanceObject(govobj, *g_connman);
+            governance.AddGovernanceObject(govobj, &connman);
         }
 
         return govobj.GetHash().ToString();
@@ -351,7 +356,7 @@ UniValue gobject(const JSONRPCRequest& request)
         }
 
         CGovernanceException exception;
-        if(governance.ProcessVoteAndRelay(vote, exception, *g_connman)) {
+        if(governance.ProcessVoteAndRelay(vote, exception, &connman)) {
             nSuccessful++;
             statusObj.push_back(Pair("result", "success"));
         }
@@ -453,7 +458,7 @@ UniValue gobject(const JSONRPCRequest& request)
             }
 
             CGovernanceException exception;
-            if(governance.ProcessVoteAndRelay(vote, exception, *g_connman)) {
+            if(governance.ProcessVoteAndRelay(vote, exception, &connman)) {
                 nSuccessful++;
                 statusObj.push_back(Pair("result", "success"));
             }
@@ -578,7 +583,7 @@ UniValue gobject(const JSONRPCRequest& request)
             // UPDATE LOCAL DATABASE WITH NEW OBJECT SETTINGS
 
             CGovernanceException exception;
-            if(governance.ProcessVoteAndRelay(vote, exception, *g_connman)) {
+            if(governance.ProcessVoteAndRelay(vote, exception, &connman)) {
                 nSuccessful++;
                 statusObj.push_back(Pair("result", "success"));
             }
@@ -892,7 +897,7 @@ UniValue voteraw(const JSONRPCRequest& request)
     }
 
     CGovernanceException exception;
-    if(governance.ProcessVoteAndRelay(vote, exception, *g_connman)) {
+    if(governance.ProcessVoteAndRelay(vote, exception, &connman)) {
         return "Voted successfully";
     }
     else {

@@ -126,7 +126,7 @@ public:
     bool Add(CMasternode &mn);
 
     /// Ask (source) node for mnb
-    void AskForMN(CNode *pnode, const COutPoint& outpoint, CConnman& connman);
+    void AskForMN(CNode *pnode, const COutPoint& outpoint, CConnman* connman);
     void AskForMnb(CNode *pnode, const uint256 &hash);
 
     bool PoSeBan(const COutPoint &outpoint);
@@ -137,7 +137,7 @@ public:
     void Check();
 
     /// Check all Masternodes and remove inactive
-    void CheckAndRemove(CConnman& connman);
+    void CheckAndRemove(CConnman* connman);
     /// This is dummy overload to be used for dumping/loading mncache.dat
     void CheckAndRemove() {}
 
@@ -154,7 +154,7 @@ public:
     /// Count Masternodes by network type - NET_IPV4, NET_IPV6, NET_TOR
     // int CountByIP(int nNetworkType);
 
-    void DsegUpdate(CNode* pnode, CConnman& connman);
+    void DsegUpdate(CNode* pnode, CConnman* connman);
 
     /// Versions of Find that are safe to use from outside the class
     bool Get(const COutPoint& outpoint, CMasternode& masternodeRet);
@@ -178,15 +178,15 @@ public:
     bool GetMasternodeRank(const COutPoint &outpoint, int& nRankRet, int nBlockHeight = -1, int nMinProtocol = 0);
     bool GetMasternodeByRank(int nRank, masternode_info_t& mnInfoRet, int nBlockHeight = -1, int nMinProtocol = 0);
 
-    void ProcessMasternodeConnections(CConnman& connman);
+    void ProcessMasternodeConnections(CConnman* connman);
     std::pair<CService, std::set<uint256> > PopScheduledMnbRequestConnection();
 
-    void ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv, CConnman& connman);
+    void ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv, CConnman* connman);
 
-    void DoFullVerificationStep(CConnman& connman);
+    void DoFullVerificationStep(CConnman* connman);
     void CheckSameAddr();
-    bool SendVerifyRequest(const CAddress& addr, const std::vector<CMasternode*>& vSortedByAddr, CConnman& connman);
-    void SendVerifyReply(CNode* pnode, CMasternodeVerification& mnv, CConnman& connman);
+    bool SendVerifyRequest(const CAddress& addr, const std::vector<CMasternode*>& vSortedByAddr, CConnman* connman);
+    void SendVerifyReply(CNode* pnode, CMasternodeVerification& mnv, CConnman* connman);
     void ProcessVerifyReply(CNode* pnode, CMasternodeVerification& mnv);
     void ProcessVerifyBroadcast(CNode* pnode, const CMasternodeVerification& mnv);
 
@@ -196,9 +196,9 @@ public:
     std::string ToString() const;
 
     /// Update masternode list and maps using provided CMasternodeBroadcast
-    void UpdateMasternodeList(CMasternodeBroadcast mnb, CConnman& connman);
+    void UpdateMasternodeList(CMasternodeBroadcast mnb, CConnman* connman);
     /// Perform complete check and only then update list and maps
-    bool CheckMnbAndUpdateMasternodeList(CNode* pfrom, CMasternodeBroadcast mnb, int& nDos, CConnman& connman);
+    bool CheckMnbAndUpdateMasternodeList(CNode* pfrom, CMasternodeBroadcast mnb, int& nDos, CConnman* connman);
     bool IsMnbRecoveryRequested(const uint256& hash) { return mMnbRecoveryRequests.count(hash); }
 
     void UpdateLastPaid(const CBlockIndex* pindex);
@@ -233,7 +233,7 @@ public:
      * Called to notify CGovernanceManager that the masternode index has been updated.
      * Must be called while not holding the CMasternodeMan::cs mutex
      */
-    void NotifyMasternodeUpdates(CConnman& connman);
+    void NotifyMasternodeUpdates(CConnman* connman);
 
 };
 

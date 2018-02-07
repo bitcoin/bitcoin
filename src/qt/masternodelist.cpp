@@ -15,6 +15,8 @@
 #include <QTimer>
 #include <QMessageBox>
 
+CConnman& connman = *g_connman;
+
 int GetOffsetFromUtc()
 {
 #if QT_VERSION < 0x050200
@@ -113,9 +115,9 @@ void MasternodeList::StartAlias(std::string strAlias)
 
             if(fSuccess) {
                 strStatusHtml += "<br>Successfully started masternode.";
-                mnodeman.UpdateMasternodeList(mnb, *g_connman);
-                mnb.Relay(*g_connman);
-                mnodeman.NotifyMasternodeUpdates(*g_connman);
+                mnodeman.UpdateMasternodeList(mnb, &connman);
+                mnb.Relay(&connman);
+                mnodeman.NotifyMasternodeUpdates(&connman);
             } else {
                 strStatusHtml += "<br>Failed to start masternode.<br>Error: " + strError;
             }
@@ -154,9 +156,9 @@ void MasternodeList::StartAll(std::string strCommand)
 
         if(fSuccess) {
             nCountSuccessful++;
-            mnodeman.UpdateMasternodeList(mnb, *g_connman);
-            mnb.Relay(*g_connman);
-            mnodeman.NotifyMasternodeUpdates(*g_connman);
+            mnodeman.UpdateMasternodeList(mnb, &connman);
+            mnb.Relay(&connman);
+            mnodeman.NotifyMasternodeUpdates(&connman);
         } else {
             nCountFailed++;
             strFailedHtml += "\nFailed to start " + mne.getAlias() + ". Error: " + strError;

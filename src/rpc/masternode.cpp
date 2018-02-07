@@ -6,13 +6,16 @@
 #include <activemasternode.h>
 #include <base58.h>
 #include <init.h>
+#include <net.h>
 #include <netbase.h>
 #include <validation.h>
 #include <masternode-payments.h>
 #include <masternode-sync.h>
 #include <masternodeconfig.h>
 #include <masternodeman.h>
+#ifdef ENABLE_WALLET
 #include <privatesend-client.h>
+#endif // ENABLE_WALLET
 #include <privatesend-server.h>
 #include <rpc/server.h>
 #include <util.h>
@@ -22,6 +25,9 @@
 #include <iomanip>
 #include <univalue.h>
 
+CConnman& connman = *g_connman;
+
+#ifdef ENABLE_WALLET
 void EnsureWalletIsUnlocked();
 
 UniValue privatesend(const JSONRPCRequest& request)
@@ -47,7 +53,7 @@ UniValue privatesend(const JSONRPCRequest& request)
             return "Mixing is not supported from masternodes";
 
         privateSendClient.fEnablePrivateSend = true;
-        bool result = privateSendClient.DoAutomaticDenominating(*g_connman);
+        bool result = privateSendClient.DoAutomaticDenominating(&connman);
         return "Mixing " + (result ? "started successfully" : ("start failed: " + privateSendClient.GetStatus() + ", will retry"));
     }
 
@@ -63,6 +69,7 @@ UniValue privatesend(const JSONRPCRequest& request)
 
     return "Unknown command, please see \"help privatesend\"";
 }
+#endif // ENABLE_WALLET
 
 UniValue getpoolinfo(const JSONRPCRequest& request)
 {
@@ -71,6 +78,7 @@ UniValue getpoolinfo(const JSONRPCRequest& request)
             "getpoolinfo\n"
             "Returns an object containing mixing pool related information.\n");
 
+#ifdef ENABLE_WALLET
     CPrivateSendBase privateSend = fMasterNode ? (CPrivateSendBase)privateSendServer : (CPrivateSendBase)privateSendClient;
 
     UniValue obj(UniValue::VOBJ);
@@ -90,6 +98,12 @@ UniValue getpoolinfo(const JSONRPCRequest& request)
         obj.push_back(Pair("warnings",      pwalletMain->nKeysLeftSinceAutoBackup < PRIVATESEND_KEYS_THRESHOLD_WARNING
                                                 ? "WARNING: keypool is almost depleted!" : ""));
     }
+#else // ENABLE_WALLET
+    UniValue obj(UniValue::VOBJ);
+    obj.push_back(Pair("state",             privateSendServer.GetStateString()));
+    obj.push_back(Pair("queue",             privateSendServer.GetQueueSize()));
+    obj.push_back(Pair("entries",           privateSendServer.GetEntriesCount()));
+#endif // ENABLE_WALLET
 
     return obj;
 }
@@ -244,7 +258,7 @@ UniValue masternode(const JSONRPCRequest& request)
 
         if(activeMasternode.nState != ACTIVE_MASTERNODE_STARTED){
             activeMasternode.nState = ACTIVE_MASTERNODE_INITIAL; // TODO: consider better way
-            activeMasternode.ManageState(*g_connman);
+            activeMasternode.ManageState(&connman);
         }
 
         return activeMasternode.GetStatus();
@@ -277,12 +291,12 @@ UniValue masternode(const JSONRPCRequest& request)
 
                 statusObj.push_back(Pair("result", fResult ? "successful" : "failed"));
                 if(fResult) {
-                    mnodeman.UpdateMasternodeList(mnb, *g_connman);
-                    mnb.Relay(*g_connman);
+                    mnodeman.UpdateMasternodeList(mnb, &connman);
+                    mnb.Relay(&connman);
                 } else {
                     statusObj.push_back(Pair("errorMessage", strError));
                 }
-                mnodeman.NotifyMasternodeUpdates(*g_connman);
+                mnodeman.NotifyMasternodeUpdates(&connman);
                 break;
             }
         }
@@ -331,8 +345,8 @@ UniValue masternode(const JSONRPCRequest& request)
 
             if (fResult) {
                 nSuccessful++;
-                mnodeman.UpdateMasternodeList(mnb, *g_connman);
-                mnb.Relay(*g_connman);
+                mnodeman.UpdateMasternodeList(mnb, &connman);
+                mnb.Relay(&connman);
             } else {
                 nFailed++;
                 statusObj.push_back(Pair("errorMessage", strError));
@@ -340,7 +354,7 @@ UniValue masternode(const JSONRPCRequest& request)
 
             resultsObj.push_back(Pair("status", statusObj));
         }
-        mnodeman.NotifyMasternodeUpdates(*g_connman);
+        mnodeman.NotifyMasternodeUpdates(&connman);
 
         UniValue returnObj(UniValue::VOBJ);
         returnObj.push_back(Pair("overall", strprintf("Successfully started %d masternodes, failed to start %d, total %d", nSuccessful, nFailed, nSuccessful + nFailed)));
@@ -807,13 +821,13 @@ UniValue masternodebroadcast(const JSONRPCRequest& request)
             bool fResult;
             if (mnb.CheckSignature(nDos)) {
                 if (fSafe) {
-                    fResult = mnodeman.CheckMnbAndUpdateMasternodeList(nullptr, mnb, nDos, *g_connman);
+                    fResult = mnodeman.CheckMnbAndUpdateMasternodeList(nullptr, mnb, nDos, &connman);
                 } else {
-                    mnodeman.UpdateMasternodeList(mnb, *g_connman);
-                    mnb.Relay(*g_connman);
+                    mnodeman.UpdateMasternodeList(mnb, &connman);
+                    mnb.Relay(&connman);
                     fResult = true;
                 }
-                mnodeman.NotifyMasternodeUpdates(*g_connman);
+                mnodeman.NotifyMasternodeUpdates(&connman);
             } else fResult = false;
 
             if(fResult) {

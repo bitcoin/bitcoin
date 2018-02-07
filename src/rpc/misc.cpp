@@ -122,6 +122,7 @@ UniValue mnsync(const JSONRPCRequest& request)
             "Returns the sync status, updates to the next step or resets it entirely.\n"
         );
 
+    CConnman& connman = *g_connman;
     std::string strMode = request.params[0].get_str();
 
     if(strMode == "status") {
@@ -140,14 +141,14 @@ UniValue mnsync(const JSONRPCRequest& request)
 
     if(strMode == "next")
     {
-        masternodeSync.SwitchToNextAsset(*g_connman);
+        masternodeSync.SwitchToNextAsset(&connman);
         return "sync updated to " + masternodeSync.GetAssetName();
     }
 
     if(strMode == "reset")
     {
         masternodeSync.Reset();
-        masternodeSync.SwitchToNextAsset(*g_connman);
+        masternodeSync.SwitchToNextAsset(&connman);
         return "success";
     }
     return "failure";

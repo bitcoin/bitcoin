@@ -103,7 +103,6 @@ private Q_SLOTS:
     void clipboardFee();
     void clipboardAfterFee();
     void clipboardBytes();
-    void clipboardPriority();
     void clipboardLowOutput();
     void clipboardChange();
     void radioTreeMode(bool);

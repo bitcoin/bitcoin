@@ -1759,7 +1759,7 @@ bool CWalletTx::RelayWalletTransaction(CConnman* connman, std::string strCommand
             LogPrintf("Relaying wtx %s\n", GetHash().ToString());
 
             if(strCommand == NetMsgType::TXLOCKREQUEST) {
-                instantsend.ProcessTxLockRequest(((CTxLockRequest)*this), *connman);
+                instantsend.ProcessTxLockRequest(((CTxLockRequest)*this), connman);
             }
             if (connman) {
                 CInv inv(MSG_TX, GetHash());
@@ -2427,7 +2427,7 @@ static void ApproximateBestSubset(vector<pair<CAmount, pair<const CWalletTx*,uns
     vfBest.assign(vValue.size(), true);
     nBest = nTotalLower;
 
-    seed_insecure_rand();
+    FastRandomContext insecure_rand;
 
     for (int nRep = 0; nRep < iterations && nBest != nTargetValue; nRep++)
     {
@@ -2447,7 +2447,7 @@ static void ApproximateBestSubset(vector<pair<CAmount, pair<const CWalletTx*,uns
                 //that the rng is fast. We do not use a constant random sequence,
                 //because there may be some privacy improvement by making
                 //the selection random.
-                if (nPass == 0 ? insecure_rand()&1 : !vfIncluded[i])
+                if (nPass == 0 ? insecure_rand.rand32()&1 : !vfIncluded[i])
                 {
                     nTotal += vValue[i].first;
                     vfIncluded[i] = true;
@@ -2787,7 +2787,7 @@ bool CWallet::SelectCoinsByDenominations(int nDenom, CAmount nValueMin, CAmount 
     int nDenomResult = 0;
 
     std::vector<CAmount> vecPrivateSendDenominations = CPrivateSend::GetStandardDenominations();
-    InsecureRand insecureRand;
+    FastRandomContext insecure_rand;
     for (const COutput& out : vCoins)
     {
         // masternode-like input should not be selected by AvailableCoins now anyway
@@ -2804,9 +2804,9 @@ bool CWallet::SelectCoinsByDenominations(int nDenom, CAmount nValueMin, CAmount 
                 if(out.tx->vout[out.i].nValue == vecPrivateSendDenominations[nBit]) {
                     if(nValueRet >= nValueMin) {
                         //randomly reduce the max amount we'll submit (for anonymity)
-                        nValueMax -= insecureRand(nValueMax/5);
+                        nValueMax -= insecure_rand.rand32() % (nValueMax/5);
                         //on average use 50% of the inputs or less
-                        int r = insecureRand(vCoins.size());
+                        int r = insecure_rand.rand32() % (vCoins.size());
                         if((int)vecTxInRet.size() > r) return true;
                     }
                     txin.prevPubKey = out.tx->vout[out.i].scriptPubKey; // the inputs PubKey
@@ -3673,6 +3673,32 @@ DBErrors CWallet::LoadWallet(bool& fFirstRunRet)
     uiInterface.LoadWallet(this);
 
     return DB_LOAD_OK;
+}
+
+DBErrors CWallet::ZapSelectTx(vector<uint256>& vHashIn, vector<uint256>& vHashOut)
+{
+    if (!fFileBacked)
+        return DB_LOAD_OK;
+    DBErrors nZapSelectTxRet = CWalletDB(strWalletFile,"cr+").ZapSelectTx(this, vHashIn, vHashOut);
+    if (nZapSelectTxRet == DB_NEED_REWRITE)
+    {
+        if (CDB::Rewrite(strWalletFile, "\x04pool"))
+        {
+            LOCK(cs_wallet);
+            setKeyPool.clear();
+            // Note: can't top-up keypool here, because wallet is locked.
+            // User will be prompted to unlock wallet the next operation
+            // that requires a new key.
+        }
+    }
+
+    if (nZapSelectTxRet != DB_LOAD_OK)
+        return nZapSelectTxRet;
+
+    MarkDirty();
+
+    return DB_LOAD_OK;
+
 }
 
 DBErrors CWallet::ZapWalletTx(std::vector<CWalletTx>& vWtx)
@@ -4858,6 +4884,12 @@ int CMerkleTx::GetDepthInMainChain(const CBlockIndex* &pindexRet, bool enableIX)
         return nInstantSendDepth + nResult;
 }
 
+int CMerkleTx::GetBlocksToMaturity() const
+{
+    if (!IsCoinBase())
+        return 0;
+    return max(0, (COINBASE_MATURITY+1) - GetDepthInMainChain());
+}
 
 bool CMerkleTx::AcceptToMemoryPool(const CAmount& nAbsurdFee, CValidationState& state)
 {

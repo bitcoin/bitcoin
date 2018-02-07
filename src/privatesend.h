@@ -198,7 +198,7 @@ public:
     /// Check if we have a valid Masternode address
     bool CheckSignature(const CPubKey& pubKeyMasternode);
 
-    bool Relay(CConnman &connman);
+    bool Relay(CConnman* connman);
 
     /// Is this queue expired?
     bool IsExpired() { return GetAdjustedTime() - nTime > PRIVATESEND_QUEUE_TIMEOUT; }

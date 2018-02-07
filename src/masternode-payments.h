@@ -147,8 +147,8 @@ public:
     bool Sign();
     bool CheckSignature(const CPubKey& pubKeyMasternode, int nValidationHeight, int &nDos);
 
-    bool IsValid(CNode* pnode, int nValidationHeight, std::string& strError, CConnman& connman);
-    void Relay(CConnman& connman);
+    bool IsValid(CNode* pnode, int nValidationHeight, std::string& strError, CConnman* connman);
+    void Relay(CConnman* connman);
 
     bool IsVerified() { return !vchSig.empty(); }
     void MarkAsNotVerified() { vchSig.clear(); }
@@ -192,11 +192,11 @@ public:
 
     bool AddPaymentVote(const CMasternodePaymentVote& vote);
     bool HasVerifiedPaymentVote(uint256 hashIn);
-    bool ProcessBlock(int nBlockHeight, CConnman& connman);
+    bool ProcessBlock(int nBlockHeight, CConnman* connman);
     void CheckPreviousBlockVotes(int nPrevBlockHeight);
 
-    void Sync(CNode* node, CConnman& connman);
-    void RequestLowDataPaymentBlocks(CNode* pnode, CConnman& connman);
+    void Sync(CNode* node, CConnman* connman);
+    void RequestLowDataPaymentBlocks(CNode* pnode, CConnman* connman);
     void CheckAndRemove();
 
     bool GetBlockPayee(int nBlockHeight, CScript& payee);
@@ -206,7 +206,7 @@ public:
     bool CanVote(COutPoint outMasternode, int nBlockHeight);
 
     int GetMinMasternodePaymentsProto();
-    void ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv, CConnman& connman);
+    void ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv, CConnman* connman);
     std::string GetRequiredPaymentsString(int nBlockHeight);
     void FillBlockPayee(CMutableTransaction& txNew, int nBlockHeight, CAmount blockReward, CTxOut& txoutMasternodeRet);
     std::string ToString() const;
@@ -217,7 +217,7 @@ public:
     bool IsEnoughData();
     int GetStorageLimit();
 
-    void UpdatedBlockTip(const CBlockIndex *pindex, CConnman& connman);
+    void UpdatedBlockTip(const CBlockIndex *pindex, CConnman* connman);
 };
 
 #endif
