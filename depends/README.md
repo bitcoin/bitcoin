@@ -12,9 +12,9 @@ For example:
 
     make HOST=x86_64-w64-mingw32 -j4
 
-A prefix will be generated that's suitable for plugging into Dash's
+A prefix will be generated that's suitable for plugging into Bitcoin's
 configure. In the above example, a dir named x86_64-w64-mingw32 will be
-created. To use it for Dash:
+created. To use it for Bitcoin:
 
     ./configure --prefix=`pwd`/depends/x86_64-w64-mingw32
 
@@ -23,7 +23,8 @@ Common `host-platform-triplets` for cross compilation are:
 - `i686-w64-mingw32` for Win32
 - `x86_64-w64-mingw32` for Win64
 - `x86_64-apple-darwin11` for MacOSX
-- `arm-linux-gnueabihf` for Linux ARM
+- `arm-linux-gnueabihf` for Linux ARM 32 bit
+- `aarch64-linux-gnu` for Linux ARM 64 bit
 
 No other options are needed, the paths are automatically configured.
 
@@ -38,9 +39,11 @@ The following can be set when running make: make FOO=bar
     NO_WALLET: Don't download/build/cache libs needed to enable the wallet
     NO_UPNP: Don't download/build/cache packages needed for enabling upnp
     DEBUG: disable some optimizations and enable more runtime checking
+    HOST_ID_SALT: Optional salt to use when generating host package ids
+    BUILD_ID_SALT: Optional salt to use when generating build package ids
 
 If some packages are not built, for example `make NO_WALLET=1`, the appropriate
-options will be passed to Dash Core's configure. In this case, `--disable-wallet`.
+options will be passed to bitcoin's configure. In this case, `--disable-wallet`.
 
 Additional targets:
 

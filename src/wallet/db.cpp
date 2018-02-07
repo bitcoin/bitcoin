@@ -204,7 +204,7 @@ bool CDBEnv::Salvage(const std::string& strFile, bool fAggressive, std::vector<C
     // DATA=END
 
     string strLine;
-    while (!strDump.eof() && strLine != "HEADER=END")
+    while (!strDump.eof() && strLine != HEADER_END)
         getline(strDump, strLine); // Skip past header
 
     std::string keyHex, valueHex;

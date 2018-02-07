@@ -4,7 +4,7 @@ Debian
 This directory contains files used to package chaincoind/chaincoin-qt
 for Debian-based Linux systems. If you compile chaincoind/chaincoin-qt yourself, there are some useful files here.
 
-## chaincoin: URI support ##
+## bitcoin: URI support ##
 
 
 chaincoin-qt.desktop  (Gnome / Open Desktop)
@@ -15,7 +15,7 @@ To install:
 
 If you build yourself, you will either need to modify the paths in
 the .desktop file or copy or symlink your chaincoin-qt binary to `/usr/bin`
-and the `../../share/pixmaps/chaincoin128.png` to `/usr/share/pixmaps`
+and the `../../share/pixmaps/bitcoin128.png` to `/usr/share/pixmaps`
 
-chaincoin-qt.protocol (KDE)
+bitcoin-qt.protocol (KDE)
 

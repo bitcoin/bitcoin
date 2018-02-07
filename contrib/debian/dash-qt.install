@@ -1,6 +1,0 @@
-usr/local/bin/chaincoin-qt usr/bin
-share/pixmaps/chaincoin32.xpm usr/share/pixmaps
-share/pixmaps/chaincoin16.xpm usr/share/pixmaps
-share/pixmaps/chaincoin128.png usr/share/pixmaps
-debian/chaincoin-qt.desktop usr/share/applications
-debian/chaincoin-qt.protocol usr/share/kde4/services/
