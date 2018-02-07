@@ -23,7 +23,7 @@ class WalletHDTest(BitcoinTestFramework):
 
         # Make sure can't switch off usehd after wallet creation
         self.stop_node(1)
-        self.assert_start_raises_init_error(1, ['-usehd=0'], 'already existing HD wallet')
+        self.nodes[1].assert_start_raises_init_error(['-usehd=0'], 'already existing HD wallet')
         self.start_node(1)
         connect_nodes_bi(self.nodes, 0, 1)
 
