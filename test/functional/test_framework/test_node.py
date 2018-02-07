@@ -188,7 +188,7 @@ class TestNode():
             wallet_path = "wallet/%s" % wallet_name
             return self.rpc / wallet_path
 
-    def stop_node(self):
+    def stop_node(self, expected_stderr=''):
         """Stop the node."""
         if not self.running:
             return
@@ -197,6 +197,13 @@ class TestNode():
             self.stop()
         except http.client.CannotSendRequest:
             self.log.exception("Unable to stop node.")
+
+        # Check that stderr is as expected
+        self.stderr.seek(0)
+        stderr = self.stderr.read().decode('utf-8').strip()
+        if stderr != expected_stderr:
+            raise AssertionError("Unexpected stderr {} != {}".format(stderr, expected_stderr))
+
         del self.p2ps[:]
 
     def is_node_stopped(self):
