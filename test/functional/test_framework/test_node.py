@@ -143,7 +143,12 @@ class TestNode():
         # unclean shutdown), it will get overwritten anyway by bitcoind, and
         # potentially interfere with our attempt to authenticate
         delete_cookie_file(self.datadir)
-        self.process = subprocess.Popen(self.args + extra_args, stdout=stdout, stderr=stderr, *args, **kwargs)
+
+        # add environment variable LIBC_FATAL_STDERR_=1 so that libc errors are written to stderr and not the terminal
+        subp_env = dict(os.environ, LIBC_FATAL_STDERR_="1")
+
+        self.process = subprocess.Popen(self.args + extra_args, env=subp_env, stdout=stdout, stderr=stderr, *args, **kwargs)
+
         self.running = True
         self.log.debug("bitcoind started, waiting for RPC to come up")
 
