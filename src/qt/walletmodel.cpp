@@ -695,7 +695,7 @@ bool WalletModel::bumpFee(uint256 hash)
     questionString.append("</td></tr></table>");
     SendConfirmationDialog confirmationDialog(tr("Confirm fee bump"), questionString);
     confirmationDialog.exec();
-    QMessageBox::StandardButton retval = (QMessageBox::StandardButton)confirmationDialog.result();
+    QMessageBox::StandardButton retval = static_cast<QMessageBox::StandardButton>(confirmationDialog.result());
 
     // cancel sign&broadcast if users doesn't want to bump the fee
     if (retval != QMessageBox::Yes) {

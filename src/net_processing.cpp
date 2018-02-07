@@ -2863,7 +2863,7 @@ static bool SendRejectsAndCheckIfBanned(CNode* pnode, CConnman* connman)
     CNodeState &state = *State(pnode->GetId());
 
     for (const CBlockReject& reject : state.rejects) {
-        connman->PushMessage(pnode, CNetMsgMaker(INIT_PROTO_VERSION).Make(NetMsgType::REJECT, (std::string)NetMsgType::BLOCK, reject.chRejectCode, reject.strRejectReason, reject.hashBlock));
+        connman->PushMessage(pnode, CNetMsgMaker(INIT_PROTO_VERSION).Make(NetMsgType::REJECT, std::string(NetMsgType::BLOCK), reject.chRejectCode, reject.strRejectReason, reject.hashBlock));
     }
     state.rejects.clear();
 
