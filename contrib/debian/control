@@ -1,4 +1,4 @@
-Source: bitcoin
+Source: chaincoin
 Section: utils
 Priority: optional
 Maintainer: Jonas Smedegaard <dr@jones.dk>
@@ -23,11 +23,11 @@ Build-Depends: debhelper,
  libprotobuf-dev, protobuf-compiler,
  python
 Standards-Version: 3.9.2
-Homepage: https://bitcoincore.org/
-Vcs-Git: git://github.com/bitcoin/bitcoin.git
-Vcs-Browser: https://github.com/bitcoin/bitcoin
+Homepage: https://chaincoin.org/
+Vcs-Git: git://github.com/chaincoinunlimited/chaincoin.git
+Vcs-Browser: https://github.com/chaincoinunlimited/chaincoincoin
 
-Package: bitcoind
+Package: chaincoind
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: peer-to-peer network based digital currency - daemon
@@ -38,9 +38,9 @@ Description: peer-to-peer network based digital currency - daemon
  is the name of the open source software which enables the use of this currency.
  .
  This package provides the daemon, bitcoind, and the CLI tool
- bitcoin-cli to interact with the daemon.
+ chaincoin-cli to interact with the daemon.
 
-Package: bitcoin-qt
+Package: chaincoin-qt
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: peer-to-peer network based digital currency - Qt GUI
@@ -50,9 +50,9 @@ Description: peer-to-peer network based digital currency - Qt GUI
  and issuing money are carried out collectively by the network. Bitcoin Core
  is the name of the open source software which enables the use of this currency.
  .
- This package provides Bitcoin-Qt, a GUI for Bitcoin based on Qt.
+ This package provides Chaincoin-Qt, a GUI for Chaincoin based on Qt.
 
-Package: bitcoin-tx
+Package: chaincoin-tx
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: peer-to-peer digital currency - standalone transaction tool
