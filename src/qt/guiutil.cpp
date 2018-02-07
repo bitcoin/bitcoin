@@ -438,7 +438,7 @@ void openDebugLogfile()
 
 void openConfigfile()
 {
-    boost::filesystem::path pathConfig = GetConfigFile();
+    boost::filesystem::path pathConfig = GetConfigFile(BITCOIN_CONF_FILENAME);
 
     /* Open chaincoin.conf with the associated application */
     if (boost::filesystem::exists(pathConfig))
