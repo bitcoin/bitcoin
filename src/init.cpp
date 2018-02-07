@@ -1186,7 +1186,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
         LogPrintf("Startup time: %s\n", DateTimeStrFormat("%Y-%m-%d %H:%M:%S", GetTime()));
     LogPrintf("Default data directory %s\n", GetDefaultDataDir().string());
     LogPrintf("Using data directory %s\n", GetDataDir().string());
-    LogPrintf("Using config file %s\n", GetConfigFile().string());
+    LogPrintf("Using config file %s\n", GetConfigFile(GetArg("-conf", BITCOIN_CONF_FILENAME)).string());
     LogPrintf("Using at most %i connections (%i file descriptors available)\n", nMaxConnections, nFD);
 
     LogPrintf("Using %u threads for script verification\n", nScriptCheckThreads);
@@ -1680,7 +1680,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
         }
     }
 
-    LogPrintf("Using masternode config file %s\n", GetMasternodeConfigFile().string());
+    LogPrintf("Using masternode config file %s\n", GetMasternodeConfigFile(GetArg("-conf", MASTERNODE_CONF_FILENAME)).string());
 
     if(GetBoolArg("-mnconflock", true) && pwalletMain && (masternodeConfig.getCount() > 0)) {
         LOCK(pwalletMain->cs_wallet);

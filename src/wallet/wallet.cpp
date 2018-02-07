@@ -4164,9 +4164,12 @@ bool CWallet::UpdatedTransaction(const uint256 &hashTx)
         LOCK(cs_wallet);
         // Only notify UI if this transaction is in this wallet
         map<uint256, CWalletTx>::const_iterator mi = mapWallet.find(hashTx);
-        if (mi != mapWallet.end())
+        if (mi != mapWallet.end()){
             NotifyTransactionChanged(this, hashTx, CT_UPDATED);
+            return true;
+        }
     }
+    return false;
 }
 
 void CWallet::GetScriptForMining(boost::shared_ptr<CReserveScript> &script)
@@ -4882,6 +4885,8 @@ int CMerkleTx::GetDepthInMainChain(const CBlockIndex* &pindexRet, bool enableIX)
 
     if(enableIX && nResult < 6 && instantsend.IsLockedInstantSendTransaction(GetHash()))
         return nInstantSendDepth + nResult;
+
+    return nResult;
 }
 
 int CMerkleTx::GetBlocksToMaturity() const
