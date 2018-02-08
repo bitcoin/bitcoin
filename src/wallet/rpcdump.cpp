@@ -720,7 +720,7 @@ UniValue dumpwallet(const JSONRPCRequest& request)
     std::vector<std::pair<int64_t, CKeyID> > vKeyBirth;
     for (const auto& entry : mapKeyBirth) {
         if (const CKeyID* keyID = boost::get<CKeyID>(&entry.first)) { // set and test
-            vKeyBirth.push_back(std::make_pair(entry.second, *keyID));
+            vKeyBirth.emplace_back(entry.second, *keyID);
         }
     }
     mapKeyBirth.clear();

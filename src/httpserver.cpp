@@ -167,8 +167,8 @@ static bool InitHTTPAllowList()
     CNetAddr localv6;
     LookupHost("127.0.0.1", localv4, false);
     LookupHost("::1", localv6, false);
-    rpc_allow_subnets.push_back(CSubNet(localv4, 8));      // always allow IPv4 local subnet
-    rpc_allow_subnets.push_back(CSubNet(localv6));         // always allow IPv6 localhost
+    rpc_allow_subnets.emplace_back(localv4, 8);      // always allow IPv4 local subnet
+    rpc_allow_subnets.emplace_back(localv6);         // always allow IPv6 localhost
     for (const std::string& strAllow : gArgs.GetArgs("-rpcallowip")) {
         CSubNet subnet;
         LookupSubNet(strAllow.c_str(), subnet);
@@ -296,8 +296,8 @@ static bool HTTPBindAddresses(struct evhttp* http)
 
     // Determine what addresses to bind to
     if (!gArgs.IsArgSet("-rpcallowip")) { // Default to loopback if not allowing external IPs
-        endpoints.push_back(std::make_pair("::1", defaultPort));
-        endpoints.push_back(std::make_pair("127.0.0.1", defaultPort));
+        endpoints.emplace_back("::1", defaultPort);
+        endpoints.emplace_back("127.0.0.1", defaultPort);
         if (gArgs.IsArgSet("-rpcbind")) {
             LogPrintf("WARNING: option -rpcbind was ignored because -rpcallowip was not specified, refusing to allow everyone to connect\n");
         }
@@ -306,11 +306,11 @@ static bool HTTPBindAddresses(struct evhttp* http)
             int port = defaultPort;
             std::string host;
             SplitHostPort(strRPCBind, port, host);
-            endpoints.push_back(std::make_pair(host, port));
+            endpoints.emplace_back(host, port);
         }
     } else { // No specific bind address specified, bind to any
-        endpoints.push_back(std::make_pair("::", defaultPort));
-        endpoints.push_back(std::make_pair("0.0.0.0", defaultPort));
+        endpoints.emplace_back("::", defaultPort);
+        endpoints.emplace_back("0.0.0.0", defaultPort);
     }
 
     // Bind addresses
@@ -649,7 +649,7 @@ HTTPRequest::RequestMethod HTTPRequest::GetRequestMethod()
 void RegisterHTTPHandler(const std::string &prefix, bool exactMatch, const HTTPRequestHandler &handler)
 {
     LogPrint(BCLog::HTTP, "Registering HTTP handler for %s (exactmatch %d)\n", prefix, exactMatch);
-    pathHandlers.push_back(HTTPPathHandler(prefix, exactMatch, handler));
+    pathHandlers.emplace_back(prefix, exactMatch, handler);
 }
 
 void UnregisterHTTPHandler(const std::string &prefix, bool exactMatch)

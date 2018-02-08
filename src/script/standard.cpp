@@ -162,7 +162,7 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<std::v
                     (opcode1 >= OP_1 && opcode1 <= OP_16))
                 {
                     char n = (char)CScript::DecodeOP_N(opcode1);
-                    vSolutionsRet.push_back(valtype(1, n));
+                    vSolutionsRet.emplace_back(1, n);
                 }
                 else
                     break;

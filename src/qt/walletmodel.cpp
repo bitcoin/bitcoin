@@ -323,10 +323,10 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(WalletModelTransaction &tran
                 std::string key("PaymentRequest");
                 std::string value;
                 rcp.paymentRequest.SerializeToString(&value);
-                newTx->vOrderForm.push_back(make_pair(key, value));
+                newTx->vOrderForm.emplace_back(key, value);
             }
             else if (!rcp.message.isEmpty()) // Message from normal bitcoin:URI (bitcoin:123...?message=example)
-                newTx->vOrderForm.push_back(make_pair("Message", rcp.message.toStdString()));
+                newTx->vOrderForm.emplace_back("Message", rcp.message.toStdString());
         }
 
         CReserveKey *keyChange = transaction.getPossibleKeyChange();
