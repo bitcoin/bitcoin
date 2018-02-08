@@ -100,26 +100,25 @@ public:
  * Script-hash-addresses have version 5 (or 196 testnet).
  * The data vector contains RIPEMD160(SHA256(cscript)), where cscript is the serialized redemption script.
  */
-class CBitcoinAddress : public CBase58Data {
-public:
-    bool Set(const CKeyID &id);
-    bool Set(const CScriptID &id, CChainParams::Base58Type type=CChainParams::SCRIPT_ADDRESS2);
-    bool Set(const CTxDestination &dest, CChainParams::Base58Type type=CChainParams::SCRIPT_ADDRESS2);
-    bool IsValid() const;
-    bool IsValid(const CChainParams &params) const;
+	class CBitcoinAddress : public CBase58Data {
+	public:
+		bool Set(const CKeyID &id);
+		bool Set(const CScriptID &id);
+		bool Set(const CTxDestination &dest);
+		bool IsValid() const;
+		bool IsValid(const CChainParams &params) const;
+	
+		CBitcoinAddress() {}
+		CBitcoinAddress(const CTxDestination &dest) { Set(dest); }
+		CBitcoinAddress(const std::string& strAddress) { SetString(strAddress); }
+		CBitcoinAddress(const char* pszAddress) { SetString(pszAddress); }
+	
+		CTxDestination Get() const;
+		bool GetKeyID(CKeyID &keyID) const;
+		bool GetIndexKey(uint160& hashBytes, int& type) const;
+		bool IsScript() const;
+	};
 
-    CBitcoinAddress() {}
-    CBitcoinAddress(const CTxDestination &dest) { Set(dest); }
-    CBitcoinAddress(const std::string& strAddress) { SetString(strAddress); }
-    CBitcoinAddress(const char* pszAddress) { SetString(pszAddress); }
-
-    CTxDestination Get() const;
-	// <-AddressIndex-l-2018/02/01-modified for address index func.
-	bool GetIndexKey(uint160& hashBytes, int& type) const;
-	// ->AddressIndex-l
-    bool GetKeyID(CKeyID &keyID) const;
-    bool IsScript() const;
-};
 
 /**
  * A base58-encoded secret key
