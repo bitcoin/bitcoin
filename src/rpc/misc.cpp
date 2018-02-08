@@ -1075,11 +1075,11 @@ static const CRPCCommand commands[] =
     { "util",               "signmessagewithprivkey", &signmessagewithprivkey, {"privkey","message"} },
 
   	/* Address index --added by lbc @ 20180126*/
-    { "addressindex",       "getaddressmempool",      &getaddressmempool,      true, {"address"} },
-    { "addressindex",       "getaddressutxos",        &getaddressutxos,        true, {"address"} },
-    { "addressindex",       "getaddressdeltas",       &getaddressdeltas,       true, {"address"} },
-    { "addressindex",       "getaddresstxids",        &getaddresstxids,        true, {"address"} },
-    { "addressindex",       "getaddressbalance",      &getaddressbalance,      true, {"address"} },
+    { "addressindex",       "getaddressmempool",      &getaddressmempool,      {"address"} },
+    { "addressindex",       "getaddressutxos",        &getaddressutxos,        {"address"} },
+    { "addressindex",       "getaddressdeltas",       &getaddressdeltas,       {"address"} },
+    { "addressindex",       "getaddresstxids",        &getaddresstxids,        {"address"} },
+    { "addressindex",       "getaddressbalance",      &getaddressbalance,      {"address"} },
     /*add end*/
 
     /* Not shown in help */
