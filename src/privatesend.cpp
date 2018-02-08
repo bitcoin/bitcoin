@@ -156,8 +156,8 @@ void CPrivateSend::InitStandardDenominations()
     vecStandardDenominations.clear();
     /* Denominations
 
-        A note about convertability. Within mixing pools, each denomination
-        is convertable to another.
+        A note about convertibility. Within mixing pools, each denomination
+        is convertible to another.
 
         For example:
         1DRK+1000 == (.1DRK+100)*10
@@ -233,10 +233,10 @@ bool CPrivateSend::IsCollateralAmount(CAmount nInputAmount)
 /*  Create a nice string to show the denominations
     Function returns as follows (for 4 denominations):
         ( bit on if present )
-        bit 0           - 100
-        bit 1           - 10
-        bit 2           - 1
-        bit 3           - .1
+        bit 0           - 10
+        bit 1           - 1
+        bit 2           - .1
+        bit 3           - .01
         bit 4 and so on - out-of-bounds
         none of above   - non-denom
 */
@@ -265,10 +265,10 @@ std::string CPrivateSend::GetDenominationsToString(int nDenom)
 /*  Return a bitshifted integer representing the denominations in this list
     Function returns as follows (for 4 denominations):
         ( bit on if present )
-        100       - bit 0
-        10        - bit 1
-        1         - bit 2
-        .1        - bit 3
+        10        - bit 0
+        1         - bit 1
+        .1        - bit 2
+        .01       - bit 3
         non-denom - 0, all bits off
 */
 int CPrivateSend::GetDenominations(const std::vector<CTxOut>& vecTxOut, bool fSingleRandomDenom)

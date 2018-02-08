@@ -166,7 +166,7 @@ public:
 
 
 /**
- * A currently inprogress mixing merge and denomination information
+ * A currently in progress mixing merge and denomination information
  */
 class CDarksendQueue
 {

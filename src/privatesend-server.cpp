@@ -384,7 +384,7 @@ void CPrivateSendServer::CommitFinalTransaction(CConnman& connman)
 // Why bother? PrivateSend uses collateral to ensure abuse to the process is kept to a minimum.
 // The submission and signing stages are completely separate. In the cases where
 // a client submits a transaction then refused to sign, there must be a cost. Otherwise they
-// would be able to do this over and over again and bring the mixing to a hault.
+// would be able to do this over and over again and bring the mixing to a halt.
 //
 // How does this work? Messages to Masternodes come in via NetMsgType::DSVIN, these require a valid collateral
 // transaction for the client to be able to enter the pool. This transaction is kept by the Masternode
@@ -504,7 +504,7 @@ void CPrivateSendServer::CheckTimeout(CConnman& connman)
     bool fTimeout = GetTimeMillis() - nTimeLastSuccessfulStep >= nTimeout*1000 + nLagTime;
 
     if(nState != POOL_STATE_IDLE && fTimeout) {
-        LogPrint("privatesend", "CPrivateSendServer::CheckTimeout -- %s timed out (%ds) -- restting\n",
+        LogPrint("privatesend", "CPrivateSendServer::CheckTimeout -- %s timed out (%ds) -- resetting\n",
                 (nState == POOL_STATE_SIGNING) ? "Signing" : "Session", nTimeout);
         ChargeFees(connman);
         SetNull();

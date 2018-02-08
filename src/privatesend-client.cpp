@@ -346,7 +346,7 @@ void CPrivateSendClient::CheckTimeout()
     bool fTimeout = GetTimeMillis() - nTimeLastSuccessfulStep >= nTimeout*1000 + nLagTime;
 
     if(nState != POOL_STATE_IDLE && fTimeout) {
-        LogPrint("privatesend", "CPrivateSendClient::CheckTimeout -- %s timed out (%ds) -- restting\n",
+        LogPrint("privatesend", "CPrivateSendClient::CheckTimeout -- %s timed out (%ds) -- resetting\n",
                 (nState == POOL_STATE_SIGNING) ? "Signing" : "Session", nTimeout);
         UnlockCoins();
         keyHolderStorage.ReturnAll();
@@ -626,14 +626,14 @@ bool CPrivateSendClient::CheckAutomaticBackup()
         case -1:
             // Automatic backup failed, nothing else we can do until user fixes the issue manually.
             // There is no way to bring user attention in daemon mode so we just update status and
-            // keep spaming if debug is on.
+            // keep spamming if debug is on.
             LogPrint("privatesend", "CPrivateSendClient::CheckAutomaticBackup -- ERROR! Failed to create automatic backup.\n");
             strAutoDenomResult = _("ERROR! Failed to create automatic backup") + ", " + _("see debug.log for details.");
             return false;
         case -2:
             // We were able to create automatic backup but keypool was not replenished because wallet is locked.
             // There is no way to bring user attention in daemon mode so we just update status and
-            // keep spaming if debug is on.
+            // keep spamming if debug is on.
             LogPrint("privatesend", "CPrivateSendClient::CheckAutomaticBackup -- WARNING! Failed to create replenish keypool, please unlock your wallet to do so.\n");
             strAutoDenomResult = _("WARNING! Failed to replenish keypool, please unlock your wallet to do so.") + ", " + _("see debug.log for details.");
             return false;
@@ -1096,7 +1096,7 @@ bool CPrivateSendClient::PrepareDenominate(int nMinRounds, int nMaxRounds, std::
                 if ((*it2).tx->tx->vout[(*it2).i].nValue == nValueDenom) {
                     // add new input in resulting vector
                     vecTxDSInRet.push_back(*it);
-                    // remove corresponting items from initial vectors
+                    // remove corresponding items from initial vectors
                     vecTxDSIn.erase(it);
                     vCoins.erase(it2);
 
@@ -1209,7 +1209,7 @@ bool CPrivateSendClient::MakeCollateralAmounts(const CompactTallyItem& tallyItem
             nFeeRet, nChangePosRet, strFail, &coinControl, true, ONLY_NONDENOMINATED);
     if(!fSuccess) {
         LogPrintf("CPrivateSendClient::MakeCollateralAmounts -- ONLY_NONDENOMINATED: %s\n", strFail);
-        // If we failed then most likeky there are not enough funds on this address.
+        // If we failed then most likely there are not enough funds on this address.
         if(fTryDenominated) {
             // Try to also use denominated coins (we can't mix denominated without collaterals anyway).
             if(!pwalletMain->CreateTransaction(vecSend, wtx, reservekeyChange,
@@ -1229,7 +1229,7 @@ bool CPrivateSendClient::MakeCollateralAmounts(const CompactTallyItem& tallyItem
 
     LogPrintf("CPrivateSendClient::MakeCollateralAmounts -- txid=%s\n", wtx.GetHash().GetHex());
 
-    // use the same nCachedLastSuccessBlock as for DS mixinx to prevent race
+    // use the same nCachedLastSuccessBlock as for DS mixing to prevent race
     CValidationState state;
     if(!pwalletMain->CommitTransaction(wtx, reservekeyChange, &connman, state)) {
         LogPrintf("CPrivateSendClient::MakeCollateralAmounts -- CommitTransaction failed! Reason given: %s\n", state.GetRejectReason());
