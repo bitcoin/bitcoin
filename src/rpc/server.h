@@ -76,6 +76,11 @@ bool RPCIsInWarmup(std::string *statusOut);
 void RPCTypeCheck(const UniValue& params,
                   const std::list<UniValue::VType>& typesExpected, bool fAllowNull=false);
 
+/**
+ * Type-check one argument; throws JSONRPCError if wrong type given.
+ */
+void RPCTypeCheckArgument(const UniValue& value, UniValue::VType typeExpected);
+
 /*
   Check for expected keys/value types in an Object.
 */

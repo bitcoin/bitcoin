@@ -26,12 +26,14 @@ class SignRawTransactionsTest(BitcoinTestFramework):
 
         1) The transaction has a complete set of signatures
         2) No script verification error occurred"""
-        privKeys = ['cUeKHd5orzT3mz8P9pxyREHfsWtVfgsfDjiZZBcjUBAaGk1BTj7N']
+        privKeys = ['cUeKHd5orzT3mz8P9pxyREHfsWtVfgsfDjiZZBcjUBAaGk1BTj7N', 'cVKpPfVKSJxKqVpE9awvXNWuLHCa5j5tiE7K6zbUSptFpTEtiFrA']
 
         inputs = [
-            # Valid pay-to-pubkey script
+            # Valid pay-to-pubkey scripts
             {'txid': '9b907ef1e3c26fc71fe4a4b3580bc75264112f95050014157059c736f0202e71', 'vout': 0,
-             'scriptPubKey': '76a91460baa0f494b38ce3c940dea67f3804dc52d1fb9488ac'}
+             'scriptPubKey': '76a91460baa0f494b38ce3c940dea67f3804dc52d1fb9488ac'},
+            {'txid': '83a4f6a6b73660e13ee6cb3c6063fa3759c50c9b7521d0536022961898f4fb02', 'vout': 0,
+             'scriptPubKey': '76a914669b857c03a5ed269d5d85a1ffac9ed5d663072788ac'},
         ]
 
         outputs = {'ycwedq2f3sz2Yf9JqZsBCQPxp18WU3Hp4J': 0.1}
@@ -45,6 +47,22 @@ class SignRawTransactionsTest(BitcoinTestFramework):
 
         # 2) No script verification error occurred
         assert 'errors' not in rawTxSigned
+
+        # Check that signrawtransaction doesn't blow up on garbage merge attempts
+        dummyTxInconsistent = self.nodes[0].createrawtransaction([inputs[0]], outputs)
+        rawTxUnsigned = self.nodes[0].signrawtransaction(rawTx + dummyTxInconsistent, inputs)
+
+        assert 'complete' in rawTxUnsigned
+        assert_equal(rawTxUnsigned['complete'], False)
+
+        # Check that signrawtransaction properly merges unsigned and signed txn, even with garbage in the middle
+        rawTxSigned2 = self.nodes[0].signrawtransaction(rawTxUnsigned["hex"] + dummyTxInconsistent + rawTxSigned["hex"], inputs)
+
+        assert 'complete' in rawTxSigned2
+        assert_equal(rawTxSigned2['complete'], True)
+
+        assert 'errors' not in rawTxSigned2
+
 
     def script_verification_error_test(self):
         """Creates and signs a raw transaction with valid (vin 0), invalid (vin 1) and one missing (vin 2) input script.
@@ -78,6 +96,16 @@ class SignRawTransactionsTest(BitcoinTestFramework):
         outputs = {'ycwedq2f3sz2Yf9JqZsBCQPxp18WU3Hp4J': 0.1}
 
         rawTx = self.nodes[0].createrawtransaction(inputs, outputs)
+
+        # Make sure decoderawtransaction is at least marginally sane
+        decodedRawTx = self.nodes[0].decoderawtransaction(rawTx)
+        for i, inp in enumerate(inputs):
+            assert_equal(decodedRawTx["vin"][i]["txid"], inp["txid"])
+            assert_equal(decodedRawTx["vin"][i]["vout"], inp["vout"])
+
+        # Make sure decoderawtransaction throws if there is extra data
+        assert_raises(JSONRPCException, self.nodes[0].decoderawtransaction, rawTx + "00")
+
         rawTxSigned = self.nodes[0].signrawtransaction(rawTx, scripts, privKeys)
 
         # 3) The transaction has no complete set of signatures

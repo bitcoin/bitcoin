@@ -20,6 +20,7 @@ from .util import (
     sync_blocks,
     sync_mempools,
     stop_nodes,
+    stop_node,
     enable_coverage,
     check_json_precision,
     initialize_chain_clean,
@@ -47,6 +48,9 @@ class BitcoinTestFramework(object):
             initialize_chain_clean(self.options.tmpdir, self.num_nodes)
         else:
             initialize_chain(self.options.tmpdir, self.num_nodes, self.options.cachedir)
+
+    def stop_node(self, num_node):
+        stop_node(self.nodes[num_node], num_node)
 
     def setup_nodes(self):
         return start_nodes(self.num_nodes, self.options.tmpdir)
