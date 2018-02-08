@@ -629,9 +629,9 @@ UniValue echo(const JSONRPCRequest& request)
 bool getAddressFromIndex(const int &type, const uint160 &hash, std::string &address)
 {
     if (type == 2) {
-        address = CBitcoinAddress(CScriptID(hash)).ToString();
+        //address = CBitcoinAddress(CScriptID(hash)).ToString();
     } else if (type == 1) {
-        address = CBitcoinAddress(CKeyID(hash)).ToString();
+        //address = CBitcoinAddress(CKeyID(hash)).ToString();
     } else {
         return false;
     }
@@ -641,16 +641,16 @@ bool getAddressFromIndex(const int &type, const uint160 &hash, std::string &addr
 bool getAddressesFromParams(const UniValue& params, std::vector<std::pair<uint160, int> > &addresses)
 {
     if (params[0].isStr()) {
-        CBitcoinAddress address(params[0].get_str());
+        /*CBitcoinAddress address(params[0].get_str());
         uint160 hashBytes;
         int type = 0;
         if (!address.GetIndexKey(hashBytes, type)) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
         }
-        addresses.push_back(std::make_pair(hashBytes, type));
+        addresses.push_back(std::make_pair(hashBytes, type));*/
     } else if (params[0].isObject()) {
 
-        UniValue addressValues = find_value(params[0].get_obj(), "addresses");
+        /*UniValue addressValues = find_value(params[0].get_obj(), "addresses");
         if (!addressValues.isArray()) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Addresses is expected to be an array");
         }
@@ -666,9 +666,9 @@ bool getAddressesFromParams(const UniValue& params, std::vector<std::pair<uint16
                 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
             }
             addresses.push_back(std::make_pair(hashBytes, type));
-        }
+        }*/
     } else {
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
+        //throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
     }
 
     return true;
