@@ -14,7 +14,4 @@ const size_t EC_UNCOMPRESSED_SIZE = 65;
 
 //typedef struct ec_secret { uint8_t e[EC_SECRET_SIZE]; } ec_secret;
 
-
-
-
 #endif  // KEY_TYPES_H

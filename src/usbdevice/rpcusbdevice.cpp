@@ -22,7 +22,7 @@ UniValue listdevices(const JSONRPCRequest &request)
 
     UniValue result(UniValue::VARR);
 
-    for (const auto &device : vDevices)
+    for (auto &device : vDevices)
     {
         UniValue obj(UniValue::VOBJ);
         obj.pushKV("vendor", device.pType->cVendor);
@@ -73,10 +73,8 @@ UniValue getdevicexpub(const JSONRPCRequest &request)
 
     std::vector<CUSBDevice> vDevices;
     ListDevices(vDevices);
-
     if (vDevices.size() < 1)
         throw JSONRPCError(RPC_INTERNAL_ERROR, "No device found.");
-
     if (vDevices.size() > 1) // TODO: Select device
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Multiple devices found.");
 
@@ -98,20 +96,38 @@ UniValue getdevicexpub(const JSONRPCRequest &request)
         throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("GetXPub failed %s.", sError));
 
     return CBitcoinExtPubKey(ekp).ToString();
-    //UniValue result(UniValue::VARR);
-    //result.pushKV("xpub", CBitcoinExtPubKey(ekp).ToString());
-    //return result;
 };
 
 UniValue devicesignmessage(const JSONRPCRequest &request)
 {
-    if (request.fHelp || request.params.size() > 1)
+    if (request.fHelp || request.params.size() != 2)
         throw std::runtime_error(
             "devicesignmessage path message\n"
             "Sign message.\n");
 
-    UniValue result(UniValue::VARR);
-    return result;
+    std::vector<CUSBDevice> vDevices;
+    ListDevices(vDevices);
+    if (vDevices.size() < 1)
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "No device found.");
+    if (vDevices.size() > 1) // TODO: Select device
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "Multiple devices found.");
+
+    if (!request.params[0].isStr())
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Bad path.");
+    if (!request.params[1].isStr())
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Bad message.");
+    int rv;
+    std::string sMessage, sError;
+    std::vector<uint32_t> vPath;
+    if ((rv = ExtractExtKeyPath(request.params[0].get_str(), vPath)) != 0)
+        throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("Bad path: %s.", ExtKeyGetString(rv)));
+
+    sMessage = request.params[1].get_str();
+    std::vector<uint8_t> vchSig;
+    if (0 != vDevices[0].SignMessage(vPath, sMessage, vchSig, sError))
+        throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("SignMessage failed %s.", sError));
+
+    return EncodeBase64(vchSig.data(), vchSig.size());
 };
 
 

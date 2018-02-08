@@ -3775,7 +3775,32 @@ UniValue getstakinginfo(const JSONRPCRequest &request)
     if (request.fHelp || request.params.size() != 0)
         throw std::runtime_error(
             "getstakinginfo\n"
-            "Returns an object containing staking-related information.");
+            "Returns an object containing staking-related information."
+            "\nResult:\n"
+            "{\n"
+            "  \"enabled\": true|false,         (boolean) if staking is enabled or not on this wallet\n"
+            "  \"staking\": true|false,         (boolean) if this wallet is staking or not\n"
+            "  \"errors\": \"...\"              (string) any error messages\n"
+            "  \"percentyearreward\": xxxxxxx,  (numeric) current stake reward percentage\n"
+            "  \"moneysupply\": xxxxxxx,        (numeric) the total amount of particl in the network\n"
+            "  \"reserve\": xxxxxxx,            (numeric) the total amount of particl in the network\n"
+            "  \"walletfoundationdonationpercent\": xxxxxxx,\n    (numeric) user set percentage of the block reward ceded to the foundation\n"
+            "  \"foundationdonationpercent\": xxxxxxx,\n    (numeric) network enforced percentage of the block reward ceded to the foundation\n"
+            "  \"foundationdonationpercent\": xxxxxxx,\n    (numeric) network enforced percentage of the block reward ceded to the foundation\n"
+            "  \"currentblocksize\": nnn,       (numeric) the last block size in bytes\n"
+            "  \"currentblockweight\": nnn,     (numeric) the last block weight\n"
+            "  \"currentblocktx\": nnn,         (numeric) the number of transactions in the last block\n"
+            "  \"pooledtx\": n                  (numeric) the number of transactions in the mempool\n"
+            "  \"difficulty\": xxx.xxxxx        (numeric) the current difficulty\n"
+            "  \"last-search-time\": xxxxxxx    (numeric) the last time this wallet searched for a coinstake\n"
+            "  \"weight\": xxxxxxx              (numeric) the current stake weight of this wallet\n"
+            "  \"netstakeweight\": xxxxxxx      (numeric) the current stake weight of the network\n"
+            "  \"expectedtime\": xxxxxxx        (numeric) estimated time for next stake\n"
+            "}\n"
+            "\nExamples:\n"
+            + HelpExampleCli("getstakinginfo", "")
+            + HelpExampleRpc("getstakinginfo", "")
+            );
 
     UniValue obj(UniValue::VOBJ);
 

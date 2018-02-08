@@ -1523,6 +1523,7 @@ UniValue getblockchaininfo(const JSONRPCRequest& request)
             "  \"blocks\": xxxxxx,             (numeric) the current number of blocks processed in the server\n"
             "  \"headers\": xxxxxx,            (numeric) the current number of headers we have validated\n"
             "  \"bestblockhash\": \"...\",       (string) the hash of the currently best block\n"
+            "  \"moneysupply\": xxxxxxx,       (numeric) the total amount of coin in the network\n"
             "  \"difficulty\": xxxxxx,         (numeric) the current difficulty\n"
             "  \"mediantime\": xxxxxx,         (numeric) median time for the current best block\n"
             "  \"verificationprogress\": xxxx, (numeric) estimate of verification progress [0..1]\n"
@@ -1572,6 +1573,7 @@ UniValue getblockchaininfo(const JSONRPCRequest& request)
     obj.push_back(Pair("blocks",                (int)chainActive.Height()));
     obj.push_back(Pair("headers",               pindexBestHeader ? pindexBestHeader->nHeight : -1));
     obj.push_back(Pair("bestblockhash",         chainActive.Tip()->GetBlockHash().GetHex()));
+    obj.push_back(Pair("moneysupply",           ValueFromAmount(chainActive.Tip()->nMoneySupply)));
     obj.push_back(Pair("difficulty",            (double)GetDifficulty()));
     PushTime(obj, "mediantime", chainActive.Tip()->GetMedianTimePast());
     obj.push_back(Pair("verificationprogress",  GuessVerificationProgress(Params().TxData(), chainActive.Tip())));
@@ -1596,6 +1598,8 @@ UniValue getblockchaininfo(const JSONRPCRequest& request)
         }
     }
 
+    if (fParticlMode)
+        return obj;
     const Consensus::Params& consensusParams = Params().GetConsensus();
     CBlockIndex* tip = chainActive.Tip();
     UniValue softforks(UniValue::VARR);

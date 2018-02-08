@@ -271,6 +271,16 @@ EXTRA_DIST += \
     test/util/data/txcreatesignv1.json \
     test/util/data/txcreatesignv2.hex
 
+EXTRA_DIST += \
+    test/util/data_particl/particl-util-test.json \
+    test/util/data_particl/blanktxv1.hex \
+    test/util/data_particl/blanktxv1.json \
+    test/util/data_particl/blanktxva0.hex \
+    test/util/data_particl/blanktxva0.json \
+    test/util/data_particl/txdb5e6341.hex \
+    test/util/data_particl/tt-delin1-out.hex
+
+
 CLEANFILES = $(OSX_DMG) $(BITCOIN_WIN_INSTALLER)
 
 .INTERMEDIATE: $(COVERAGE_INFO)

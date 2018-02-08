@@ -128,7 +128,7 @@ struct CExtKey {
     void SetMaster(const unsigned char *seed, unsigned int nSeedLen);
     int SetKeyCode(const unsigned char *pkey, const unsigned char *pcode);
 
-    unsigned int GetSerializeSize(int nType, int nVersion) const
+    size_t GetSerializeSize(int nType, int nVersion) const
     {
         return 42 + (key.IsValid() ? 32 : 0);
     }

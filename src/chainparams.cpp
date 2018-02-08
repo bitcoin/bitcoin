@@ -900,3 +900,4 @@ void UpdateVersionBitsParameters(Consensus::DeploymentPos d, int64_t nStartTime,
 {
     globalChainParams->UpdateVersionBitsParameters(d, nStartTime, nTimeout);
 }
+

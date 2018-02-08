@@ -254,7 +254,7 @@ public:
     bool        fReceiveEnabled;
     bool        fReceiveAnon;
 
-    unsigned int GetSerializeSize(int nType, int nVersion) const
+    size_t GetSerializeSize(int nType, int nVersion) const
     {
         return 22;
     };
@@ -300,7 +300,7 @@ public:
     CKeyID               addrOutbox;     // owned address this copy was encrypted with
     std::vector<uint8_t> vchMessage;     // message header + encryped payload
 
-    unsigned int GetSerializeSize(int nType, int nVersion) const
+    size_t GetSerializeSize(int nType, int nVersion) const
     {
         return sizeof(timeReceived) + sizeof(status) + sizeof(folderId) + 20 + 20 +
             GetSizeOfCompactSize(vchMessage.size()) + vchMessage.size() * sizeof(uint8_t);

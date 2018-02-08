@@ -45,6 +45,7 @@
 #include <utilmoneystr.h>
 #include <validationinterface.h>
 #include <smsg/smessage.h>
+#include <smsg/rpcsmessage.h>
 #include <pos/miner.h>
 #ifdef ENABLE_WALLET
 #include <wallet/init.h>
@@ -1336,6 +1337,7 @@ bool AppInitMain()
      * available in the GUI RPC console even if external calls are disabled.
      */
     RegisterAllCoreRPCCommands(tableRPC);
+    RegisterSmsgRPCCommands(tableRPC);
 #ifdef ENABLE_WALLET
     RegisterWalletRPC(tableRPC);
     RegisterHDWalletRPCCommands(tableRPC);

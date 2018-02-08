@@ -174,6 +174,7 @@ BITCOIN_CORE_H = \
   smsg/db.h \
   smsg/crypter.h \
   smsg/smessage.h \
+  smsg/rpcsmessage.h \
   support/allocators/secure.h \
   support/allocators/zeroafterfree.h \
   support/cleanse.h \
@@ -251,7 +252,6 @@ libparticl_server_a_SOURCES = \
   rest.cpp \
   rpc/anon.cpp \
   rpc/mnemonic.cpp \
-  rpc/smessage.cpp \
   rpc/blockchain.cpp \
   rpc/mining.cpp \
   rpc/misc.cpp \
@@ -446,6 +446,7 @@ libparticl_smsg_a_SOURCES = \
   smsg/smessage.cpp \
   smsg/crypter.cpp \
   smsg/db.cpp \
+  smsg/rpcsmessage.cpp \
   lz4/lz4.h \
   xxhash/xxhash.h \
   lz4/lz4.c \

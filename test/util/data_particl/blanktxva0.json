@@ -1,0 +1,13 @@
+{
+    "txid": "ba6a691878bea46ba7c487cd47e1e84ba9df7fb61a4677edd89456dc2834aca3",
+    "hash": "ba6a691878bea46ba7c487cd47e1e84ba9df7fb61a4677edd89456dc2834aca3",
+    "version": 160,
+    "size": 8,
+    "vsize": 8,
+    "locktime": 0,
+    "vin": [
+    ],
+    "vout": [
+    ],
+    "hex": "a000000000000000"
+}

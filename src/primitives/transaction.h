@@ -737,14 +737,14 @@ class CTransaction
 public:
     // Default transaction version.
     static const int32_t CURRENT_VERSION=2;
+    static const int32_t CURRENT_PARTICL_VERSION=0xA0;
 
     // Changing the default transaction version requires a two step process: first
     // adapting relay policy by bumping MAX_STANDARD_VERSION, and then later date
     // bumping the default CURRENT_VERSION at which point both CURRENT_VERSION and
     // MAX_STANDARD_VERSION will be equal.
     static const int32_t MAX_STANDARD_VERSION=2;
-
-    //static const int32_t CURRENT_PARTICL_VERSION=2;
+    static const int32_t MAX_STANDARD_PARTICL_VERSION=0xA0;
 
     // The local variables are made const to prevent unintended modification
     // without updating the cached hash value. However, CTransaction is not

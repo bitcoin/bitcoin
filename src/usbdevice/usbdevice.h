@@ -19,6 +19,8 @@ enum DeviceTypeID {
 };
 
 class UniValue;
+struct hid_device_;
+typedef struct hid_device_ hid_device;
 
 class DeviceType
 {
@@ -52,17 +54,24 @@ public:
         nInterface = nInterface_;
     };
 
+    int Open();
+    int Close();
+
+    int GetFirmwareVersion(std::string &sFirmware, std::string &sError);
+    int GetInfo(UniValue &info, std::string &sError);
+
+    //int GetPubKey(const std::vector<uint32_t> &vPath, CPubKey &pk, std::string &sError);
+    int GetXPub(const std::vector<uint32_t> &vPath, CExtPubKey &ekp, std::string &sError);
+
+    int SignMessage(const std::vector<uint32_t> &vPath, const std::string &sMessage, std::vector<uint8_t> &vchSig, std::string &sError);
+
     const DeviceType *pType = nullptr;
     char cPath[128];
     char cSerialNo[128];
     int nInterface;
 
-    int GetFirmwareVersion(std::string &sFirmware, std::string &sError) const;
-    int GetInfo(UniValue &info, std::string &sError) const;
-
-    int GetXPub(const std::vector<uint32_t> &vPath, CExtPubKey &ekp, std::string &sError) const;
-
-
+private:
+    hid_device *handle = nullptr;
 };
 
 void ListDevices(std::vector<CUSBDevice> &vDevices);

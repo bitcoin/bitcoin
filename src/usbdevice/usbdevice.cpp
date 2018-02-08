@@ -19,13 +19,6 @@ extern "C" {
 #include <usbdevice/ledger/btchipApdu.h>
 #include <usbdevice/ledger/dongleCommHidHidapi.h>
 }
-/*
-void static inline WriteBE32(unsigned char* ptr, uint32_t x)
-{
-    uint32_t v = htobe32(x);
-    memcpy(ptr, (char*)&v, 4);
-}
-*/
 
 const char *GetLedgerString(int code)
 {
@@ -45,18 +38,38 @@ static const DeviceType usbDeviceTypes[] = {
     DeviceType(0x2c97, 0x0001, "Ledger", "Nano S", USBDEVICE_LEDGER_NANO_S),
 };
 
-int CUSBDevice::GetFirmwareVersion(std::string &sFirmware, std::string &sError) const
+int CUSBDevice::Open()
 {
+    if (!pType)
+        return 1;
+
     if (hid_init())
         return 1;
 
-    hid_device *handle = hid_open_path(cPath);
-
-    if (!handle)
+    if (!(handle = hid_open_path(cPath)))
     {
         hid_exit();
-        return errorN(1, sError, __func__, _("hid_open_path failed.").c_str());
+        return 1;
     };
+
+    return 0;
+};
+
+int CUSBDevice::Close()
+{
+    if (handle)
+        hid_close(handle);
+    handle = nullptr;
+
+    hid_exit();
+    return 0;
+};
+
+
+int CUSBDevice::GetFirmwareVersion(std::string &sFirmware, std::string &sError)
+{
+    if (0 != Open())
+        return errorN(1, sError, __func__, "Failed to open device.");
 
     uint8_t in[260];
     uint8_t out[260];
@@ -69,8 +82,7 @@ int CUSBDevice::GetFirmwareVersion(std::string &sFirmware, std::string &sError) 
 
     int sw;
     int result = sendApduHidHidapi(handle, 1, in, apduSize, out, sizeof(out), &sw);
-    hid_close(handle);
-    hid_exit();
+    Close();
 
     if (sw != SW_OK)
         return errorN(1, sError, __func__, "Dongle application error: %.4x", sw);
@@ -82,19 +94,10 @@ int CUSBDevice::GetFirmwareVersion(std::string &sFirmware, std::string &sError) 
     return 0;
 };
 
-int CUSBDevice::GetInfo(UniValue &info, std::string &sError) const
+int CUSBDevice::GetInfo(UniValue &info, std::string &sError)
 {
-
-    if (hid_init())
-        return 1;
-
-    hid_device *handle = hid_open_path(cPath);
-
-    if (!handle)
-    {
-        hid_exit();
-        return errorN(1, sError, __func__, _("hid_open_path failed.").c_str());
-    };
+    if (0 != Open())
+        return errorN(1, sError, __func__, "Failed to open device.");
 
     uint8_t in[260];
     uint8_t out[260];
@@ -107,8 +110,7 @@ int CUSBDevice::GetInfo(UniValue &info, std::string &sError) const
 
     int sw;
     int result = sendApduHidHidapi(handle, 1, in, apduSize, out, sizeof(out), &sw);
-    hid_close(handle);
-    hid_exit();
+    Close();
 
     if (sw != SW_OK)
         return errorN(1, sError, __func__, "Dongle application error: %.4x", sw);
@@ -128,27 +130,16 @@ int CUSBDevice::GetInfo(UniValue &info, std::string &sError) const
     if (errors.size() > 0)
         info.pushKV("errors", errors);
 
-
     return 0;
 };
 
-int CUSBDevice::GetXPub(const std::vector<uint32_t> &vPath, CExtPubKey &ekp, std::string &sError) const
+int CUSBDevice::GetXPub(const std::vector<uint32_t> &vPath, CExtPubKey &ekp, std::string &sError)
 {
-
     if (vPath.size() < 1 || vPath.size() > MAX_BIP32_PATH) // 10, in firmware
         return errorN(1, sError, __func__, _("Path depth out of range.").c_str());
     size_t lenPath = vPath.size();
-
-    if (hid_init())
-        return 1;
-
-    hid_device *handle = hid_open_path(cPath);
-
-    if (!handle)
-    {
-        hid_exit();
-        return errorN(1, sError, __func__, _("hid_open_path failed.").c_str());
-    };
+    if (0 != Open())
+        return errorN(1, sError, __func__, "Failed to open device.");
 
     uint8_t in[260];
     uint8_t out[260];
@@ -160,7 +151,6 @@ int CUSBDevice::GetXPub(const std::vector<uint32_t> &vPath, CExtPubKey &ekp, std
     in[apduSize++] = 0x00;      // segwit
     in[apduSize++] = 1 + 4 * lenPath; // num bytes to follow
     in[apduSize++] = lenPath;
-
     for (size_t k = 0; k < vPath.size(); k++, apduSize+=4)
         WriteBE32(&in[apduSize], vPath[k]);
 
@@ -177,9 +167,7 @@ int CUSBDevice::GetXPub(const std::vector<uint32_t> &vPath, CExtPubKey &ekp, std
 
         result = sendApduHidHidapi(handle, 1, in, apduSize, outB, sizeof(outB), &sw);
     };
-
-    hid_close(handle);
-    hid_exit();
+    Close();
 
     if (sw != SW_OK)
         return errorN(1, sError, __func__, "Dongle application error: %.4x %s", sw, GetLedgerString(sw));
@@ -217,6 +205,95 @@ int CUSBDevice::GetXPub(const std::vector<uint32_t> &vPath, CExtPubKey &ekp, std
         CKeyID id = pkParent.GetID();
         memcpy(&ekp.vchFingerprint[0], &id, 4);
     };
+
+    return 0;
+};
+
+int CUSBDevice::SignMessage(const std::vector<uint32_t> &vPath, const std::string &sMessage, std::vector<uint8_t> &vchSig, std::string &sError)
+{
+    if (vPath.size() < 1 || vPath.size() > MAX_BIP32_PATH) // 10, in firmware
+        return errorN(1, sError, __func__, _("Path depth out of range.").c_str());
+    size_t lenPath = vPath.size();
+    if (0 != Open())
+        return errorN(1, sError, __func__, "Failed to open device.");
+
+    uint8_t in[260];
+    uint8_t out[260];
+    size_t apduSize = 0;
+    in[apduSize++] = BTCHIP_CLA;
+    in[apduSize++] = BTCHIP_INS_SIGN_MESSAGE;
+    in[apduSize++] = 0x00;
+    in[apduSize++] = 0x00;
+    in[apduSize++] = 0x00;
+    in[apduSize++] = lenPath;
+    for (size_t k = 0; k < vPath.size(); k++, apduSize+=4)
+        WriteBE32(&in[apduSize], vPath[k]);
+    size_t slen = sMessage.size();
+    if (slen > sizeof(in) - apduSize)
+        return errorN(1, sError, __func__, _("Message too long.").c_str());
+
+    in[apduSize++] = slen;
+    memcpy(in + apduSize, sMessage.c_str(), slen);
+    apduSize += slen;
+    in[OFFSET_CDATA] = (apduSize - 5);
+
+    int sw;
+    int result = sendApduHidHidapi(handle, 1, in, apduSize, out, sizeof(out), &sw);
+
+    if (sw != SW_OK)
+    {
+        Close();
+        return errorN(1, sError, __func__, "Dongle application error: %.4x %s", sw, GetLedgerString(sw));
+    };
+    if (result < 1)
+    {
+        Close();
+        return errorN(1, sError, __func__, "Bad read length: %d", result);
+    };
+    if (out[0] != 0x00)
+    {
+        Close();
+        return errorN(1, sError, __func__, "Message signature prepared, please powercycle to get the second factor then proceed with signing");
+    };
+
+
+    apduSize = 0;
+    in[apduSize++] = BTCHIP_CLA;
+    in[apduSize++] = BTCHIP_INS_SIGN_MESSAGE;
+    in[apduSize++] = 0x80;
+    in[apduSize++] = 0x00;
+    in[apduSize++] = 0x00;
+    in[apduSize++] = 0x00;
+    in[OFFSET_CDATA] = (apduSize - 5);
+    result = sendApduHidHidapi(handle, 1, in, apduSize, out, sizeof(out), &sw);
+
+    Close();
+
+    if (sw != SW_OK)
+        return errorN(1, sError, __func__, "Dongle application error: %.4x %s", sw, GetLedgerString(sw));
+    if (result < 70)
+        return errorN(1, sError, __func__, "Bad read length: %d", result);
+
+
+
+    size_t lenR = out[3];
+    size_t lenS = out[4 + lenR + 1];
+    if (lenR < 32 || lenR > 33)
+        return errorN(1, sError, __func__, "Bad r length: %d", lenR);
+    if (lenS < 32 || lenS > 33)
+        return errorN(1, sError, __func__, "Bad s length: %d", lenS);
+
+    vchSig.resize(65);
+    vchSig[0] = 27 + 4 + (out[0] & 0x01);
+
+    if (lenR == 32)
+        memcpy(&vchSig[1], &out[4], 32);
+    else
+        memcpy(&vchSig[1], &out[5], 32);
+    if (lenS == 32)
+        memcpy(&vchSig[33], &out[4+lenR+2], 32);
+    else
+        memcpy(&vchSig[33], &out[4+lenR+3], 32);
 
     return 0;
 };

@@ -95,7 +95,7 @@ extern CCriticalSection cs_main;
 secp256k1_context *secp256k1_context_smsg = nullptr;
 CWallet *pwalletSmsg = nullptr;
 
-typedef std::vector<unsigned char> valtype; // script/ismine.cpp
+typedef std::vector<uint8_t> valtype; // script/ismine.cpp
 
 
 void SecMsgBucket::hashBucket()
@@ -859,7 +859,7 @@ bool SecureMsgStart(CWallet *pwallet, bool fDontStart, bool fScanChain)
 
     {
         // Pass in a random blinding seed to the secp256k1 context.
-        std::vector<unsigned char, secure_allocator<unsigned char>> vseed(32);
+        std::vector<uint8_t, secure_allocator<uint8_t>> vseed(32);
         GetRandBytes(vseed.data(), 32);
         bool ret = secp256k1_context_randomize(secp256k1_context_smsg, vseed.data());
         assert(ret);
@@ -3494,7 +3494,6 @@ int SecureMsgDecrypt(bool fTestOnly, CKeyID &address, uint8_t *pHeader, uint8_t 
     };
 
     SecureMessage *psmsg = (SecureMessage*) pHeader;
-
     if (psmsg->version[0] == 3)
     {
         nPayload -= 32; // Exclude funding txid
@@ -3506,7 +3505,6 @@ int SecureMsgDecrypt(bool fTestOnly, CKeyID &address, uint8_t *pHeader, uint8_t 
 
     // Fetch private key k, used to decrypt
     CKey keyDest;
-
     if (!pwalletSmsg->GetKey(address, keyDest))
         return errorN(SMSG_UNKNOWN_KEY, "%s: Could not get private key for addressDest.", __func__);
 

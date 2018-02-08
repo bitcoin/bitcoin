@@ -1,0 +1,35 @@
+[
+  { "exec": "./particl-tx",
+    "args": ["-create", "nversion=1"],
+    "output_cmp": "blanktxv1.hex",
+    "description": "Creates a blank v1 transaction"
+  },
+  { "exec": "./particl-tx",
+    "args": ["-json","-create", "nversion=1"],
+    "output_cmp": "blanktxv1.json",
+    "description": "Creates a blank v1 transaction (output in json)"
+  },
+  { "exec": "./particl-tx",
+    "args": ["-"],
+    "input": "blanktxva0.hex",
+    "output_cmp": "blanktxva0.hex",
+    "description": "Creates a blank transaction when nothing is piped into bitcoin-tx"
+  },
+  { "exec": "./particl-tx",
+    "args": ["-json","-create"],
+    "output_cmp": "blanktxva0.json",
+    "description": "Creates a blank transaction (output in json)"
+  },
+  { "exec": "./particl-tx",
+    "args": ["-json","-"],
+    "input": "blanktxva0.hex",
+    "output_cmp": "blanktxva0.json",
+    "description": "Creates a blank transaction when nothing is piped into particl-tx (output in json)"
+  },
+  { "exec": "./particl-tx",
+    "args": ["-", "delin=1"],
+    "input": "txdb5e6341.hex",
+    "output_cmp": "tt-delin1-out.hex",
+    "description": "Deletes a single input from a transaction"
+  }
+]
