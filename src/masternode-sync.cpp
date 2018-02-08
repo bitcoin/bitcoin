@@ -227,7 +227,7 @@ void CMasternodeSync::ProcessTick(CConnman& connman)
                 // We already fully synced from this node recently,
                 // disconnect to free this connection slot for another peer.
                 pnode->fDisconnect = true;
-                LogPrintf("CMasternodeSync::ProcessTick -- disconnecting from recently synced peer %d\n", pnode->id);
+                LogPrintf("CMasternodeSync::ProcessTick -- disconnecting from recently synced peer=%d\n", pnode->id);
                 continue;
             }
 
@@ -238,7 +238,7 @@ void CMasternodeSync::ProcessTick(CConnman& connman)
                 netfulfilledman.AddFulfilledRequest(pnode->addr, "spork-sync");
                 // get current network sporks
                 connman.PushMessage(pnode, msgMaker.Make(NetMsgType::GETSPORKS));
-                LogPrintf("CMasternodeSync::ProcessTick -- nTick %d nRequestedMasternodeAssets %d -- requesting sporks from peer %d\n", nTick, nRequestedMasternodeAssets, pnode->id);
+                LogPrintf("CMasternodeSync::ProcessTick -- nTick %d nRequestedMasternodeAssets %d -- requesting sporks from peer=%d\n", nTick, nRequestedMasternodeAssets, pnode->id);
             }
 
             // INITIAL TIMEOUT

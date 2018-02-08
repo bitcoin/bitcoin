@@ -909,18 +909,18 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, const std::string& strCommand,
             mapSeenMasternodePing.insert(std::make_pair(hashMNP, mnp));
 
             if (vin.prevout == mnpair.first) {
-                LogPrintf("DSEG -- Sent 1 Masternode inv to peer %d\n", pfrom->id);
+                LogPrintf("DSEG -- Sent 1 Masternode inv to peer=%d\n", pfrom->id);
                 return;
             }
         }
 
         if(vin == CTxIn()) {
             connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::SYNCSTATUSCOUNT, MASTERNODE_SYNC_LIST, nInvCount));
-            LogPrintf("DSEG -- Sent %d Masternode invs to peer %d\n", nInvCount, pfrom->id);
+            LogPrintf("DSEG -- Sent %d Masternode invs to peer=%d\n", nInvCount, pfrom->id);
             return;
         }
         // smth weird happen - someone asked us for vin we have no idea about?
-        LogPrint("masternode", "DSEG -- No invs sent to peer %d\n", pfrom->id);
+        LogPrint("masternode", "DSEG -- No invs sent to peer=%d\n", pfrom->id);
 
     } else if (strCommand == NetMsgType::MNVERIFY) { // Masternode Verify
 
