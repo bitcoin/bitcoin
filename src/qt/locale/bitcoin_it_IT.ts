@@ -767,6 +767,10 @@
         <translation>Bitcoin</translation>
     </message>
     <message>
+        <source>The wallet will also be stored in this directory.</source>
+        <translation>Il portafoglio sara' </translation>
+    </message>
+    <message>
         <source>Error</source>
         <translation>Errore</translation>
     </message>
@@ -788,18 +792,50 @@
         <translation>Opzioni</translation>
     </message>
     <message>
+        <source>Configuration options</source>
+        <translation>Opzioni di configurazione</translation>
+    </message>
+    <message>
         <source>Error</source>
         <translation>Errore</translation>
+    </message>
+    <message>
+        <source>This change would require a client restart.</source>
+        <translation>Questa modifica richiede un riavvio del client</translation>
     </message>
     </context>
 <context>
     <name>OverviewPage</name>
+    <message>
+        <source>Available:</source>
+        <translation>Disponibile:</translation>
+    </message>
+    <message>
+        <source>Your current spendable balance</source>
+        <translation>Saldo disponibile</translation>
+    </message>
+    <message>
+        <source>Recent transactions</source>
+        <translation>Transazioni recenti</translation>
+    </message>
     </context>
 <context>
     <name>PaymentServer</name>
+    <message>
+        <source>Payment request rejected</source>
+        <translation>Richiesta di pagamento rifiutata</translation>
+    </message>
+    <message>
+        <source>Refund from %1</source>
+        <translation>Rimborso da %1</translation>
+    </message>
     </context>
 <context>
     <name>PeerTableModel</name>
+    <message>
+        <source>Sent</source>
+        <translation>Inviato</translation>
+    </message>
     </context>
 <context>
     <name>QObject</name>
@@ -816,6 +852,10 @@
     </context>
 <context>
     <name>RPCConsole</name>
+    <message>
+        <source>Sent</source>
+        <translation>Inviato</translation>
+    </message>
     </context>
 <context>
     <name>ReceiveCoinsDialog</name>

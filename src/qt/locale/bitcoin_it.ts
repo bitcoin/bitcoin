@@ -1024,6 +1024,18 @@
         <translation>Mostra se il proxy SOCK5 di default che p stato fornito è usato per raggiungere i contatti attraverso questo tipo di rete.</translation>
     </message>
     <message>
+        <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor hidden services:</source>
+        <translation>Usa una SOCKS&amp;5 proxy differente per raggiungere peers usando servizi Tor hidden</translation>
+    </message>
+    <message>
+        <source>Hide the icon from the system tray.</source>
+        <translation>Nascondi l'icona nella barra delle applicazioni.</translation>
+    </message>
+    <message>
+        <source>&amp;Hide tray icon</source>
+        <translation>&amp;Nascondi l'icona della barra delle applicazioni</translation>
+    </message>
+    <message>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Exit in the menu.</source>
         <translation>Riduci ad icona invece di uscire dall'applicazione quando la finestra viene chiusa. Attivando questa opzione l'applicazione terminerà solo dopo aver selezionato Esci dal menu File.</translation>
     </message>
@@ -1087,6 +1099,14 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
     <message>
         <source>Map port using &amp;UPnP</source>
         <translation>Mappa le porte tramite &amp;UPnP</translation>
+    </message>
+    <message>
+        <source>Accept connections from outside.</source>
+        <translation>Accetta connessione esterne.</translation>
+    </message>
+    <message>
+        <source>Allow incomin&amp;g connections</source>
+        <translation>Accetta connessioni in entrata</translation>
     </message>
     <message>
         <source>Connect to the Bitcoin network through a SOCKS5 proxy.</source>
@@ -1167,6 +1187,10 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
     <message>
         <source>Whether to show coin control features or not.</source>
         <translation>Specifica se le funzionalita di coin control saranno visualizzate.</translation>
+    </message>
+    <message>
+        <source>&amp;Third party transaction URLs</source>
+        <translation>&amp;URLs per transazioni terzi </translation>
     </message>
     <message>
         <source>&amp;OK</source>
@@ -1782,6 +1806,14 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
         <translation>Usa le flecce su e giú per navigare nella storia, e %1 per pulire lo schermo</translation>
     </message>
     <message>
+        <source>Type %1 for an overview of available commands.</source>
+        <translation>Digita %1 per una descrizione di comandi disponibili</translation>
+    </message>
+    <message>
+        <source>For more information on using this console type %1.</source>
+        <translation>Per maggiori informazioni su come usare questa console digita %1</translation>
+    </message>
+    <message>
         <source>WARNING: Scammers have been active, telling users to type commands here, stealing their wallet contents. Do not use this console without fully understanding the ramifications of a command.</source>
         <translation>ATTENZIONE: I truffatori sono stati attivi in quest'area, cercando di convincere gli utenti a digitare linee di comando e rubando i contenuti dei loro portafogli. Non usare questa console senza la piena consapevolezza delle ramificazioni di un comando.</translation>
     </message>
@@ -1867,6 +1899,14 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
     <message>
         <source>&amp;Request payment</source>
         <translation>&amp;Richiedi pagamento</translation>
+    </message>
+    <message>
+        <source>Bech32 addresses (BIP-173) are cheaper to spend from and offer better protection against typos. When unchecked a P2SH wrapped SegWit address will be created, compatible with older wallets.</source>
+        <translation>Indirizzi Bech32 (BIP-173) sono piu' economici per spendere e offrono maggior protezione contro errori di battitura. Quando non selezionati, un indirizzo di tipo P2SH wrapped SegWit sara' creato, compatibile con i portafogli precedenti. </translation>
+    </message>
+    <message>
+        <source>Generate Bech32 address</source>
+        <translation>Genera un indirizzo Bech32</translation>
     </message>
     <message>
         <source>Show the selected request (does the same as double clicking an entry)</source>
@@ -2114,6 +2154,14 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
         <translation>Obiettivo del tempo di conferma:</translation>
     </message>
     <message>
+        <source>Enable Replace-By-Fee</source>
+        <translation>Attiva Replace-By-Fee</translation>
+    </message>
+    <message>
+        <source>With Replace-By-Fee (BIP-125) you can increase a transaction's fee after it is sent. Without this, a higher fee may be recommended to compensate for increased transaction delay risk.</source>
+        <translation>Con Replace-By-Fee (BIP-125) si puo' aumentare la commissione sulla transazione dopo averla inviata. Senza questa, una commissione piu' alta e' consigliabile per compensare l'aumento del rischio dovuto al ritardo della transazione.</translation>
+    </message>
+    <message>
         <source>Clear &amp;All</source>
         <translation>Cancella &amp;tutto</translation>
     </message>
@@ -2180,6 +2228,14 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
     <message>
         <source>or</source>
         <translation>o</translation>
+    </message>
+    <message>
+        <source>You can increase the fee later (signals Replace-By-Fee, BIP-125).</source>
+        <translation>Si puo' aumentare la commissione successivamente (segnalando Replace-By-Fee, BIP-125).</translation>
+    </message>
+    <message>
+        <source>Not signalling Replace-By-Fee, BIP-125.</source>
+        <translation>Senza segnalare Replace-By-Fee, BIP-125.</translation>
     </message>
     <message>
         <source>Confirm send coins</source>
@@ -3131,12 +3187,24 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
         <translation>Accetta le transazioni trasmesse ricevute da peers in whitelist anche se non si stanno trasmettendo transazioni (default: %d)</translation>
     </message>
     <message>
+        <source>Add a node to connect to and attempt to keep the connection open (see the `addnode` RPC command help for more info)</source>
+        <translation>Aggiungi un nodo al quale connettersi e prova a tenere la connessione aperta (fare riferimento al comando di aiuto `addnode` RPC per maggiori informazioni) </translation>
+    </message>
+    <message>
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
         <translation>Associa all'indirizzo indicato e resta permanentemente in ascolto su di esso. Usa la notazione [host]:porta per l'IPv6</translation>
     </message>
     <message>
         <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
         <translation>Non è possibile ottenere i dati sulla cartella %s. Probabilmente %s è già in esecuzione.</translation>
+    </message>
+    <message>
+        <source>Cannot provide specific connections and have addrman find outgoing connections at the same.</source>
+        <translation>Non e' possibile fornire connessioni specifiche e contemporaneamente usare addrman per trovare connessioni uscenti.  </translation>
+    </message>
+    <message>
+        <source>Connect only to the specified node(s); -connect=0 disables automatic connections (the rules for this peer are the same as for -addnode)</source>
+        <translation>Connettersi solamente a nodo(i) specificati; -connect=0 disattiva connessioni automatiche (le regole per questo peer sono le stesse di quelle per l' -addnode)</translation>
     </message>
     <message>
         <source>Delete all wallet transactions and only recover those parts of the blockchain through -rescan on startup</source>
@@ -3327,6 +3395,10 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
         <translation>Abilita la sostituzione della transazione nel pool della memoria (default: %u)</translation>
     </message>
     <message>
+        <source>Error creating %s: You can't create non-HD wallets with this version.</source>
+        <translation>Errore durante la creazione %s: non e' possibile creare portafogli non-HD con questa versione.</translation>
+    </message>
+    <message>
         <source>Error initializing block database</source>
         <translation>Errore durante l'inizializzazione del database dei blocchi</translation>
     </message>
@@ -3361,6 +3433,10 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
     <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation>Nessuna porta disponibile per l'ascolto. Usa -listen=0 se vuoi procedere comunque.</translation>
+    </message>
+    <message>
+        <source>Failed to rescan the wallet during initialization</source>
+        <translation>Impossibile ripetere la scansione del portafoglio durante l'inizializzazione</translation>
     </message>
     <message>
         <source>Importing...</source>
@@ -3441,6 +3517,10 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
     <message>
         <source>Rewinding blocks...</source>
         <translation>Verifica blocchi...</translation>
+    </message>
+    <message>
+        <source>Send transactions with full-RBF opt-in enabled (RPC only, default: %u)</source>
+        <translation>Invia transazioni con full-RBF opt-in attivo (solo RPC, default: %u)</translation>
     </message>
     <message>
         <source>Set database cache size in megabytes (%d to %d, default: %d)</source>
@@ -3659,6 +3739,18 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
         <translation>Firma transazione fallita</translation>
     </message>
     <message>
+        <source>Specified -walletdir "%s" does not exist</source>
+        <translation>-walletdir "%s"  specificata non esiste</translation>
+    </message>
+    <message>
+        <source>Specified -walletdir "%s" is a relative path</source>
+        <translation>-walletdir "%s" specificata e' un path relativo</translation>
+    </message>
+    <message>
+        <source>Specified -walletdir "%s" is not a directory</source>
+        <translation>-walletdir "%s" specificata non e' una directory</translation>
+    </message>
+    <message>
         <source>The transaction amount is too small to pay the fee</source>
         <translation>L'importo della transazione è troppo basso per pagare la commissione</translation>
     </message>
@@ -3691,6 +3783,10 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
         <translation>Impossibile associarsi a %s su questo computer (l'associazione ha restituito l'errore %s)</translation>
     </message>
     <message>
+        <source>Unable to generate initial keys</source>
+        <translation>Impossibile generare chiave iniziale</translation>
+    </message>
+    <message>
         <source>Upgrade wallet to latest format on startup</source>
         <translation>Aggiorna il wallet all'ultimo formato all'avvio</translation>
     </message>
@@ -3701,6 +3797,10 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
     <message>
         <source>Verifying wallet(s)...</source>
         <translation>Verifica portafoglio/i...</translation>
+    </message>
+    <message>
+        <source>Wallet %s resides outside wallet directory %s</source>
+        <translation>Il portafoglio %s e' situato fuori dalla directory del portafoglio %s </translation>
     </message>
     <message>
         <source>Warning</source>
@@ -3791,8 +3891,20 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
         <translation>Emette informazioni di debug (predefinito: %u, fornire &lt;category&gt; è opzionale)</translation>
     </message>
     <message>
+        <source>Set maximum BIP141 block weight to this * 4. Deprecated, use blockmaxweight</source>
+        <translation>Impostare massimo per il peso del blocco BIP141 a * 4. Obsoleto, usare blockmaxweight</translation>
+    </message>
+    <message>
         <source>Sets the serialization of raw transaction or block hex returned in non-verbose mode, non-segwit(0) or segwit(1) (default: %d)</source>
         <translation>Imposta che la serializzazione degli hex di transazioni o blocchi grezzi sia riportata in maniere non-verbose, non-segwit(0) o segwit(1) (predefinito: %d)</translation>
+    </message>
+    <message>
+        <source>Specify directory to hold wallets (default: &lt;datadir&gt;/wallets if it exists, otherwise &lt;datadir&gt;)</source>
+        <translation>Specificare la directory dove i portafogli saranno conservati (default: 1/portafogli se esiste, altrimenti 2)</translation>
+    </message>
+    <message>
+        <source>Specify location of debug log file: this can be an absolute path or a path relative to the data directory (default: %s)</source>
+        <translation>Specificare la posizione del debug log file:  questo puo' essere un percorso assoluto o un percorso relativo alla directory dei dati (default: %s)</translation>
     </message>
     <message>
         <source>Support filtering of blocks and transaction with bloom filters (default: %u)</source>

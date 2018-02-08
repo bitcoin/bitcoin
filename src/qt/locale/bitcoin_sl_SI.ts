@@ -62,8 +62,32 @@
         <translation>Imenik naslovov za prejemanje</translation>
     </message>
     <message>
+        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation>To so vaši Bitcoin naslovi za pošiljanje. Pred pošiljanjem vedno preverite količino in prejemnikov naslov.</translation>
+    </message>
+    <message>
+        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
+        <translation>To so vaši Bitcoin naslovi za prejemanje. Priporočeno je, da za vsako transakcijo uporabite nov naslov.</translation>
+    </message>
+    <message>
+        <source>&amp;Copy Address</source>
+        <translation>&amp;Kopiraj naslov</translation>
+    </message>
+    <message>
+        <source>Copy &amp;Label</source>
+        <translation>Kopiraj &amp;oznako</translation>
+    </message>
+    <message>
+        <source>&amp;Edit</source>
+        <translation>&amp;Uredi</translation>
+    </message>
+    <message>
         <source>Export Address List</source>
         <translation>Izvozi seznam naslovov</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Podatki ločenimi z vejico (*.csv)</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
@@ -104,12 +128,48 @@
         <translation>Ponovite novo geslo</translation>
     </message>
     <message>
+        <source>Show password</source>
+        <translation>Pokaži geslo</translation>
+    </message>
+    <message>
+        <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
+        <translation>Vnesite novo geslo za dostop do denarnice. Prosimo, da uporabite geslo sestavljeno iz &lt;b&gt;desetih ali več&lt;/b&gt; naključnih znakov ali &lt;b&gt;osmih ali večih&lt;/b&gt; besed.</translation>
+    </message>
+    <message>
+        <source>Encrypt wallet</source>
+        <translation>Šifriraj denarnico</translation>
+    </message>
+    <message>
+        <source>This operation needs your wallet passphrase to unlock the wallet.</source>
+        <translation>To dejanje zahteva geslo za odklepanje vaše denarnice.</translation>
+    </message>
+    <message>
         <source>Unlock wallet</source>
         <translation>Odkleni denarnico</translation>
     </message>
     <message>
+        <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
+        <translation>To dejanje zahteva geslo za dešifriranje vaše denarnice.</translation>
+    </message>
+    <message>
         <source>Decrypt wallet</source>
         <translation>Odšifriraj denarnico</translation>
+    </message>
+    <message>
+        <source>Change passphrase</source>
+        <translation>Spremeni geslo</translation>
+    </message>
+    <message>
+        <source>Enter the old passphrase and new passphrase to the wallet.</source>
+        <translation>Vnesite staro in novo geslo denarnice.</translation>
+    </message>
+    <message>
+        <source>Confirm wallet encryption</source>
+        <translation>Potrdi šifriranje denarnice</translation>
+    </message>
+    <message>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
+        <translation>Opozorilo: V primeru izgube gesla šifrirane denarnice, boste &lt;b&gt;IZGUBILI VSE SVOJE BITCOINE&lt;/b&gt;!</translation>
     </message>
     </context>
 <context>
@@ -1594,6 +1654,10 @@
     </context>
 <context>
     <name>TransactionView</name>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Podatki ločenimi z vejico (*.csv)</translation>
+    </message>
     <message>
         <source>Label</source>
         <translation>Oznaka</translation>

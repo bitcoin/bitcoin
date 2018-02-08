@@ -11,7 +11,7 @@
     </message>
     <message>
         <source>&amp;New</source>
-        <translation>新增</translation>
+        <translation>新增(&amp;N)</translation>
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
@@ -19,11 +19,11 @@
     </message>
     <message>
         <source>&amp;Copy</source>
-        <translation>複製</translation>
+        <translation>複製(&amp;C)</translation>
     </message>
     <message>
         <source>C&amp;lose</source>
-        <translation>關閉</translation>
+        <translation>關閉(&amp;L)</translation>
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
@@ -35,11 +35,11 @@
     </message>
     <message>
         <source>&amp;Export</source>
-        <translation>匯出</translation>
+        <translation>匯出(&amp;E)</translation>
     </message>
     <message>
         <source>&amp;Delete</source>
-        <translation>刪掉</translation>
+        <translation>刪掉(&amp;D)</translation>
     </message>
     <message>
         <source>Choose the address to send coins to</source>
@@ -51,7 +51,7 @@
     </message>
     <message>
         <source>C&amp;hoose</source>
-        <translation>選取</translation>
+        <translation>選取(&amp;H)</translation>
     </message>
     <message>
         <source>Sending addresses</source>
@@ -71,15 +71,15 @@
     </message>
     <message>
         <source>&amp;Copy Address</source>
-        <translation>複製位址</translation>
+        <translation>複製位址(&amp;C)</translation>
     </message>
     <message>
         <source>Copy &amp;Label</source>
-        <translation>複製標記</translation>
+        <translation>複製標記(&amp;L)</translation>
     </message>
     <message>
         <source>&amp;Edit</source>
-        <translation>編輯</translation>
+        <translation>編輯(&amp;E)</translation>
     </message>
     <message>
         <source>Export Address List</source>
@@ -239,7 +239,7 @@
     <name>BitcoinGUI</name>
     <message>
         <source>Sign &amp;message...</source>
-        <translation>簽署訊息...</translation>
+        <translation>簽署訊息(&amp;M)...</translation>
     </message>
     <message>
         <source>Synchronizing with network...</source>
@@ -247,7 +247,7 @@
     </message>
     <message>
         <source>&amp;Overview</source>
-        <translation>總覽</translation>
+        <translation>總覽(&amp;O)</translation>
     </message>
     <message>
         <source>Node</source>
@@ -259,7 +259,7 @@
     </message>
     <message>
         <source>&amp;Transactions</source>
-        <translation>交易</translation>
+        <translation>交易(&amp;T)</translation>
     </message>
     <message>
         <source>Browse transaction history</source>
@@ -267,7 +267,7 @@
     </message>
     <message>
         <source>E&amp;xit</source>
-        <translation>結束</translation>
+        <translation>結束(&amp;X)</translation>
     </message>
     <message>
         <source>Quit application</source>
@@ -275,7 +275,7 @@
     </message>
     <message>
         <source>&amp;About %1</source>
-        <translation>關於%1</translation>
+        <translation>關於%1(&amp;A)</translation>
     </message>
     <message>
         <source>Show information about %1</source>
@@ -291,7 +291,7 @@
     </message>
     <message>
         <source>&amp;Options...</source>
-        <translation>選項...</translation>
+        <translation>選項(&amp;O)...</translation>
     </message>
     <message>
         <source>Modify configuration options for %1</source>
@@ -299,27 +299,27 @@
     </message>
     <message>
         <source>&amp;Encrypt Wallet...</source>
-        <translation>加密錢包...</translation>
+        <translation>加密錢包(&amp;E)...</translation>
     </message>
     <message>
         <source>&amp;Backup Wallet...</source>
-        <translation>備份錢包...</translation>
+        <translation>備份錢包(&amp;B)...</translation>
     </message>
     <message>
         <source>&amp;Change Passphrase...</source>
-        <translation>改變密碼...</translation>
+        <translation>改變密碼(&amp;C)...</translation>
     </message>
     <message>
         <source>&amp;Sending addresses...</source>
-        <translation>付款位址...</translation>
+        <translation>付款位址(&amp;S)...</translation>
     </message>
     <message>
         <source>&amp;Receiving addresses...</source>
-        <translation>收款位址...</translation>
+        <translation>收款位址(&amp;R)...</translation>
     </message>
     <message>
         <source>Open &amp;URI...</source>
-        <translation>開啓 URI...</translation>
+        <translation>開啓 &amp;URI...</translation>
     </message>
     <message>
         <source>Click to disable network activity.</source>
@@ -355,7 +355,7 @@
     </message>
     <message>
         <source>&amp;Debug window</source>
-        <translation>除錯視窗</translation>
+        <translation>除錯視窗(&amp;D)</translation>
     </message>
     <message>
         <source>Open debugging and diagnostic console</source>
@@ -363,7 +363,7 @@
     </message>
     <message>
         <source>&amp;Verify message...</source>
-        <translation>驗證訊息...</translation>
+        <translation>驗證訊息(&amp;V)...</translation>
     </message>
     <message>
         <source>Bitcoin</source>
@@ -375,15 +375,15 @@
     </message>
     <message>
         <source>&amp;Send</source>
-        <translation>付款</translation>
+        <translation>付款(&amp;S)</translation>
     </message>
     <message>
         <source>&amp;Receive</source>
-        <translation>收款</translation>
+        <translation>收款(&amp;R)</translation>
     </message>
     <message>
         <source>&amp;Show / Hide</source>
-        <translation>顯示或隱藏</translation>
+        <translation>顯示或隱藏(&amp;S)</translation>
     </message>
     <message>
         <source>Show or hide the main Window</source>
@@ -403,15 +403,15 @@
     </message>
     <message>
         <source>&amp;File</source>
-        <translation>檔案</translation>
+        <translation>檔案(&amp;F)</translation>
     </message>
     <message>
         <source>&amp;Settings</source>
-        <translation>設定</translation>
+        <translation>設定(&amp;S)</translation>
     </message>
     <message>
         <source>&amp;Help</source>
-        <translation>說明</translation>
+        <translation>說明(&amp;H)</translation>
     </message>
     <message>
         <source>Tabs toolbar</source>
@@ -435,7 +435,7 @@
     </message>
     <message>
         <source>&amp;Command-line options</source>
-        <translation>命令列選項</translation>
+        <translation>命令列選項(&amp;C)</translation>
     </message>
     <message numerus="yes">
         <source>%n active connection(s) to Bitcoin network</source>
@@ -715,7 +715,7 @@
     </message>
     <message>
         <source>&amp;Label</source>
-        <translation>標記</translation>
+        <translation>標記(&amp;L)</translation>
     </message>
     <message>
         <source>The label associated with this address list entry</source>
@@ -727,7 +727,7 @@
     </message>
     <message>
         <source>&amp;Address</source>
-        <translation>位址</translation>
+        <translation>位址(&amp;A)</translation>
     </message>
     <message>
         <source>New receiving address</source>
@@ -993,7 +993,7 @@
     </message>
     <message>
         <source>&amp;Main</source>
-        <translation>主要</translation>
+        <translation>主要(&amp;M)</translation>
     </message>
     <message>
         <source>Automatically start %1 after logging in to the system.</source>
@@ -1001,11 +1001,11 @@
     </message>
     <message>
         <source>&amp;Start %1 on system login</source>
-        <translation>系統登入時啟動 %1</translation>
+        <translation>系統登入時啟動 %1 (&amp;S)</translation>
     </message>
     <message>
         <source>Size of &amp;database cache</source>
-        <translation>資料庫快取大小</translation>
+        <translation>資料庫快取大小(&amp;D)</translation>
     </message>
     <message>
         <source>MB</source>
@@ -1013,7 +1013,7 @@
     </message>
     <message>
         <source>Number of script &amp;verification threads</source>
-        <translation>指令碼驗證執行緒數目</translation>
+        <translation>指令碼驗證執行緒數目(&amp;V)</translation>
     </message>
     <message>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
@@ -1025,7 +1025,7 @@
     </message>
     <message>
         <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor hidden services:</source>
-        <translation>透過另外的 SOCKS5 代理伺服器來連線到 Bitcoin 網路中的 Tor 隱藏服務。</translation>
+        <translation>透過另外的 SOCKS&amp;5 代理伺服器來連線到 Bitcoin 網路中的 Tor 隱藏服務:</translation>
     </message>
     <message>
         <source>Hide the icon from the system tray.</source>
@@ -1033,7 +1033,7 @@
     </message>
     <message>
         <source>&amp;Hide tray icon</source>
-        <translation>隱藏通知區圖示</translation>
+        <translation>隱藏通知區圖示(&amp;H)</translation>
     </message>
     <message>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Exit in the menu.</source>
@@ -1061,11 +1061,11 @@
     </message>
     <message>
         <source>&amp;Reset Options</source>
-        <translation>重設選項</translation>
+        <translation>重設選項(&amp;R)</translation>
     </message>
     <message>
         <source>&amp;Network</source>
-        <translation>網路</translation>
+        <translation>網路(&amp;N)</translation>
     </message>
     <message>
         <source>(0 = auto, &lt;0 = leave that many cores free)</source>
@@ -1073,7 +1073,7 @@
     </message>
     <message>
         <source>W&amp;allet</source>
-        <translation>錢包</translation>
+        <translation>錢包(&amp;A)</translation>
     </message>
     <message>
         <source>Expert</source>
@@ -1081,7 +1081,7 @@
     </message>
     <message>
         <source>Enable coin &amp;control features</source>
-        <translation>開啟錢幣控制功能</translation>
+        <translation>開啟錢幣控制功能(&amp;C)</translation>
     </message>
     <message>
         <source>If you disable the spending of unconfirmed change, the change from a transaction cannot be used until that transaction has at least one confirmation. This also affects how your balance is computed.</source>
@@ -1089,7 +1089,7 @@
     </message>
     <message>
         <source>&amp;Spend unconfirmed change</source>
-        <translation>可以花還沒確認的零錢</translation>
+        <translation>可以花還沒確認的零錢(&amp;S)</translation>
     </message>
     <message>
         <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
@@ -1105,7 +1105,7 @@
     </message>
     <message>
         <source>Allow incomin&amp;g connections</source>
-        <translation>接受外來連線</translation>
+        <translation>接受外來連線(&amp;G)</translation>
     </message>
     <message>
         <source>Connect to the Bitcoin network through a SOCKS5 proxy.</source>
@@ -1113,15 +1113,15 @@
     </message>
     <message>
         <source>&amp;Connect through SOCKS5 proxy (default proxy):</source>
-        <translation>透過 SOCKS5 代理伺服器連線(預設代理伺服器):</translation>
+        <translation>透過 SOCKS5 代理伺服器連線(預設代理伺服器 &amp;C):</translation>
     </message>
     <message>
         <source>Proxy &amp;IP:</source>
-        <translation>代理位址:</translation>
+        <translation>代理位址(&amp;I):</translation>
     </message>
     <message>
         <source>&amp;Port:</source>
-        <translation>埠號:</translation>
+        <translation>埠號(&amp;P):</translation>
     </message>
     <message>
         <source>Port of the proxy (e.g. 9050)</source>
@@ -1149,7 +1149,7 @@
     </message>
     <message>
         <source>&amp;Window</source>
-        <translation>視窗</translation>
+        <translation>視窗(&amp;W)</translation>
     </message>
     <message>
         <source>Show only a tray icon after minimizing the window.</source>
@@ -1157,19 +1157,19 @@
     </message>
     <message>
         <source>&amp;Minimize to the tray instead of the taskbar</source>
-        <translation>縮到最小到通知區而不是工作列</translation>
+        <translation>縮到最小到通知區而不是工作列(&amp;M)</translation>
     </message>
     <message>
         <source>M&amp;inimize on close</source>
-        <translation>關閉時縮到最小</translation>
+        <translation>關閉時縮到最小(&amp;I)</translation>
     </message>
     <message>
         <source>&amp;Display</source>
-        <translation>顯示</translation>
+        <translation>顯示(&amp;D)</translation>
     </message>
     <message>
         <source>User Interface &amp;language:</source>
-        <translation>使用界面語言:</translation>
+        <translation>使用界面語言(&amp;L):</translation>
     </message>
     <message>
         <source>The user interface language can be set here. This setting will take effect after restarting %1.</source>
@@ -1177,7 +1177,7 @@
     </message>
     <message>
         <source>&amp;Unit to show amounts in:</source>
-        <translation>金額顯示單位:</translation>
+        <translation>金額顯示單位(&amp;U):</translation>
     </message>
     <message>
         <source>Choose the default subdivision unit to show in the interface and when sending coins.</source>
@@ -1189,15 +1189,15 @@
     </message>
     <message>
         <source>&amp;Third party transaction URLs</source>
-        <translation>第三方交易網址連結</translation>
+        <translation>第三方交易網址連結(&amp;T)</translation>
     </message>
     <message>
         <source>&amp;OK</source>
-        <translation>好</translation>
+        <translation>好(&amp;O)</translation>
     </message>
     <message>
         <source>&amp;Cancel</source>
-        <translation>取消</translation>
+        <translation>取消(&amp;C)</translation>
     </message>
     <message>
         <source>default</source>
@@ -1547,11 +1547,11 @@
     <name>QRImageWidget</name>
     <message>
         <source>&amp;Save Image...</source>
-        <translation>儲存圖片...</translation>
+        <translation>儲存圖片(&amp;S)...</translation>
     </message>
     <message>
         <source>&amp;Copy Image</source>
-        <translation>複製圖片</translation>
+        <translation>複製圖片(&amp;C)</translation>
     </message>
     <message>
         <source>Save QR Code</source>
@@ -1574,7 +1574,7 @@
     </message>
     <message>
         <source>&amp;Information</source>
-        <translation>資訊</translation>
+        <translation>資訊(&amp;I)</translation>
     </message>
     <message>
         <source>Debug window</source>
@@ -1630,7 +1630,7 @@
     </message>
     <message>
         <source>&amp;Reset</source>
-        <translation>重置</translation>
+        <translation>重置(&amp;R)</translation>
     </message>
     <message>
         <source>Received</source>
@@ -1642,7 +1642,7 @@
     </message>
     <message>
         <source>&amp;Peers</source>
-        <translation>節點</translation>
+        <translation>節點(&amp;P)</translation>
     </message>
     <message>
         <source>Banned peers</source>
@@ -1738,15 +1738,15 @@
     </message>
     <message>
         <source>&amp;Open</source>
-        <translation>開啓</translation>
+        <translation>開啓(&amp;O)</translation>
     </message>
     <message>
         <source>&amp;Console</source>
-        <translation>主控台</translation>
+        <translation>主控台(&amp;C)</translation>
     </message>
     <message>
         <source>&amp;Network Traffic</source>
-        <translation>網路流量</translation>
+        <translation>網路流量(&amp;N)</translation>
     </message>
     <message>
         <source>Totals</source>
@@ -1770,23 +1770,23 @@
     </message>
     <message>
         <source>1 &amp;hour</source>
-        <translation>1 小時</translation>
+        <translation>1 小時(&amp;H)</translation>
     </message>
     <message>
         <source>1 &amp;day</source>
-        <translation>1 天</translation>
+        <translation>1 天(&amp;D)</translation>
     </message>
     <message>
         <source>1 &amp;week</source>
-        <translation>1 星期</translation>
+        <translation>1 星期(&amp;W)</translation>
     </message>
     <message>
         <source>1 &amp;year</source>
-        <translation>1 年</translation>
+        <translation>1 年(&amp;Y)</translation>
     </message>
     <message>
         <source>&amp;Disconnect</source>
-        <translation>斷線</translation>
+        <translation>斷線(&amp;D)</translation>
     </message>
     <message>
         <source>Ban for</source>
@@ -1794,7 +1794,7 @@
     </message>
     <message>
         <source>&amp;Unban</source>
-        <translation>連線解禁</translation>
+        <translation>連線解禁(&amp;U)</translation>
     </message>
     <message>
         <source>Welcome to the %1 RPC console.</source>
@@ -1857,15 +1857,15 @@
     <name>ReceiveCoinsDialog</name>
     <message>
         <source>&amp;Amount:</source>
-        <translation>金額:</translation>
+        <translation>金額(&amp;A):</translation>
     </message>
     <message>
         <source>&amp;Label:</source>
-        <translation>標記:</translation>
+        <translation>標記(&amp;L):</translation>
     </message>
     <message>
         <source>&amp;Message:</source>
-        <translation>訊息:</translation>
+        <translation>訊息(&amp;M):</translation>
     </message>
     <message>
         <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Bitcoin network.</source>
@@ -1897,7 +1897,7 @@
     </message>
     <message>
         <source>&amp;Request payment</source>
-        <translation>要求付款</translation>
+        <translation>要求付款(&amp;R)</translation>
     </message>
     <message>
         <source>Bech32 addresses (BIP-173) are cheaper to spend from and offer better protection against typos. When unchecked a P2SH wrapped SegWit address will be created, compatible with older wallets.</source>
@@ -1948,15 +1948,15 @@
     </message>
     <message>
         <source>Copy &amp;URI</source>
-        <translation>複製 URI</translation>
+        <translation>複製 &amp;URI</translation>
     </message>
     <message>
         <source>Copy &amp;Address</source>
-        <translation>複製位址</translation>
+        <translation>複製位址(&amp;A)</translation>
     </message>
     <message>
         <source>&amp;Save Image...</source>
-        <translation>儲存圖片...</translation>
+        <translation>儲存圖片(&amp;S)...</translation>
     </message>
     <message>
         <source>Request payment to %1</source>
@@ -2138,7 +2138,7 @@
     </message>
     <message>
         <source>Add &amp;Recipient</source>
-        <translation>增加收款人</translation>
+        <translation>增加收款人(&amp;R)</translation>
     </message>
     <message>
         <source>Clear all fields of the form.</source>
@@ -2162,7 +2162,7 @@
     </message>
     <message>
         <source>Clear &amp;All</source>
-        <translation>全部清掉</translation>
+        <translation>全部清掉(&amp;A)</translation>
     </message>
     <message>
         <source>Balance:</source>
@@ -2174,7 +2174,7 @@
     </message>
     <message>
         <source>S&amp;end</source>
-        <translation>付款</translation>
+        <translation>付款(&amp;E)</translation>
     </message>
     <message>
         <source>Copy quantity</source>
@@ -2305,15 +2305,15 @@
     <name>SendCoinsEntry</name>
     <message>
         <source>A&amp;mount:</source>
-        <translation>金額:</translation>
+        <translation>金額(&amp;M):</translation>
     </message>
     <message>
         <source>Pay &amp;To:</source>
-        <translation>付給:</translation>
+        <translation>付給(&amp;T):</translation>
     </message>
     <message>
         <source>&amp;Label:</source>
-        <translation>標記:</translation>
+        <translation>標記(&amp;L):</translation>
     </message>
     <message>
         <source>Choose previously used address</source>
@@ -2349,7 +2349,7 @@
     </message>
     <message>
         <source>S&amp;ubtract fee from amount</source>
-        <translation>從付款金額減去手續費</translation>
+        <translation>從付款金額減去手續費(&amp;U)</translation>
     </message>
     <message>
         <source>Use available balance</source>
@@ -2414,7 +2414,7 @@
     </message>
     <message>
         <source>&amp;Sign Message</source>
-        <translation>簽署訊息</translation>
+        <translation>簽署訊息(&amp;S)</translation>
     </message>
     <message>
         <source>You can sign messages/agreements with your addresses to prove you can receive bitcoins sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
@@ -2458,7 +2458,7 @@
     </message>
     <message>
         <source>Sign &amp;Message</source>
-        <translation>簽署訊息</translation>
+        <translation>簽署訊息(&amp;M)</translation>
     </message>
     <message>
         <source>Reset all sign message fields</source>
@@ -2466,11 +2466,11 @@
     </message>
     <message>
         <source>Clear &amp;All</source>
-        <translation>全部清掉</translation>
+        <translation>全部清掉(&amp;A)</translation>
     </message>
     <message>
         <source>&amp;Verify Message</source>
-        <translation>驗證訊息</translation>
+        <translation>驗證訊息(&amp;V)</translation>
     </message>
     <message>
         <source>Enter the receiver's address, message (ensure you copy line breaks, spaces, tabs, etc. exactly) and signature below to verify the message. Be careful not to read more into the signature than what is in the signed message itself, to avoid being tricked by a man-in-the-middle attack. Note that this only proves the signing party receives with the address, it cannot prove sendership of any transaction!</source>
@@ -2486,7 +2486,7 @@
     </message>
     <message>
         <source>Verify &amp;Message</source>
-        <translation>驗證訊息</translation>
+        <translation>驗證訊息(&amp;M)</translation>
     </message>
     <message>
         <source>Reset all verify message fields</source>
@@ -3080,7 +3080,7 @@
     <name>WalletView</name>
     <message>
         <source>&amp;Export</source>
-        <translation>匯出</translation>
+        <translation>匯出(&amp;E)</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>

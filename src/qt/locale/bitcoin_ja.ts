@@ -1024,6 +1024,10 @@
         <translation>このネットワークタイプ経由で、与えられたデフォルトのSOCKS5プロキシを使用してピアに到達した場合に表示する。</translation>
     </message>
     <message>
+        <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor hidden services:</source>
+        <translation>Tor秘匿サービス経由でピアに接続するために専用のSOCKS5プロキシを利用する:</translation>
+    </message>
+    <message>
         <source>Hide the icon from the system tray.</source>
         <translation>システムトレイのアイコンを隠す</translation>
     </message>
@@ -1896,6 +1900,10 @@
         <translation>支払をリクエストする (&amp;R)</translation>
     </message>
     <message>
+        <source>Bech32 addresses (BIP-173) are cheaper to spend from and offer better protection against typos. When unchecked a P2SH wrapped SegWit address will be created, compatible with older wallets.</source>
+        <translation>Bech32形式(BIP-173を参照)のアドレスを利用するとアドレスからの出金時に安い手数料で済み、また誤入力の可能性を減らすことができます。チェックを外すと、古いウォレットと互換性を保つことができるP2SH形式のセグウィットアドレスが作られます。</translation>
+    </message>
+    <message>
         <source>Generate Bech32 address</source>
         <translation>Bech32形式のアドレスを生成</translation>
     </message>
@@ -2149,6 +2157,10 @@
         <translation>Replace-By-Fee を有効</translation>
     </message>
     <message>
+        <source>With Replace-By-Fee (BIP-125) you can increase a transaction's fee after it is sent. Without this, a higher fee may be recommended to compensate for increased transaction delay risk.</source>
+        <translation>手数料の上乗せ(Replace-By-Fee: BIP-125を参照)によってトランザクションを送信した後でも手数料を上乗せすることができます。この機能を利用しない場合、予め手数料を多めに見積もっておかないと送金が遅れる可能性があります。</translation>
+    </message>
+    <message>
         <source>Clear &amp;All</source>
         <translation>すべてクリア (&amp;A)</translation>
     </message>
@@ -2215,6 +2227,14 @@
     <message>
         <source>or</source>
         <translation>または</translation>
+    </message>
+    <message>
+        <source>You can increase the fee later (signals Replace-By-Fee, BIP-125).</source>
+        <translation>手数料は後から上乗せすることができます(Replace-By-Feeのシグナル: BIP-125を参照)。</translation>
+    </message>
+    <message>
+        <source>Not signalling Replace-By-Fee, BIP-125.</source>
+        <translation>BIP-125による手数料上乗せ機能を利用していません。</translation>
     </message>
     <message>
         <source>Confirm send coins</source>
@@ -2334,6 +2354,10 @@
     <message>
         <source>S&amp;ubtract fee from amount</source>
         <translation>送金額から手数料を差し引く (&amp;U)</translation>
+    </message>
+    <message>
+        <source>Use available balance</source>
+        <translation>利用可能な残額を使用</translation>
     </message>
     <message>
         <source>Message:</source>
@@ -2891,6 +2915,10 @@
         <translation>その他</translation>
     </message>
     <message>
+        <source>Enter address, transaction id, or label to search</source>
+        <translation>検索するアドレス、トランザクションID、またはラベルを入力してください</translation>
+    </message>
+    <message>
         <source>Min amount</source>
         <translation>最小の額</translation>
     </message>
@@ -3166,12 +3194,24 @@
         <translation>トランザクションの中継を行っていない場合でも、ホワイトリストのピアから受け取った中継トランザクションは受け取るようにする (デフォルト: %d)</translation>
     </message>
     <message>
+        <source>Add a node to connect to and attempt to keep the connection open (see the `addnode` RPC command help for more info)</source>
+        <translation>ネットワークとの接続を開始・維持するためにノードを手動で追加する(addnodeのRPCコマンドヘルプを参照)</translation>
+    </message>
+    <message>
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
         <translation>指定のアドレスへバインドし、その上で常にリッスンします。IPv6 は [ホスト名]:ポート番号 と表記します</translation>
     </message>
     <message>
         <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
         <translation>データ ディレクトリ %s のロックを取得することができません。おそらく %s は実行中です。</translation>
+    </message>
+    <message>
+        <source>Cannot provide specific connections and have addrman find outgoing connections at the same.</source>
+        <translation>特定の接続が利用できず、またaddrmanは外向き接続を見つけられませんでした。</translation>
+    </message>
+    <message>
+        <source>Connect only to the specified node(s); -connect=0 disables automatic connections (the rules for this peer are the same as for -addnode)</source>
+        <translation>特定のノードにのみ接続します: -connect=0オプションで自動接続を無効化します(このノードに対する接続ルールは-addnodeオプションで指定されるものと同様です)。</translation>
     </message>
     <message>
         <source>Delete all wallet transactions and only recover those parts of the blockchain through -rescan on startup</source>
@@ -3363,6 +3403,10 @@
         <translation>メモリプール内のトランザクションの置換を有効化する (デフォルト: %u)</translation>
     </message>
     <message>
+        <source>Error creating %s: You can't create non-HD wallets with this version.</source>
+        <translation>%sの作成に失敗しました。このバージョンではHDウォレット以外を作成することはできません。</translation>
+    </message>
+    <message>
         <source>Error initializing block database</source>
         <translation>ブロック データベースの初期化中にエラー</translation>
     </message>
@@ -3397,6 +3441,10 @@
     <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation>ポートのリッスンに失敗しました。必要であれば -listen=0 を使用してください。</translation>
+    </message>
+    <message>
+        <source>Failed to rescan the wallet during initialization</source>
+        <translation>初期化の途中でウォレットの再スキャンに失敗しました</translation>
     </message>
     <message>
         <source>Importing...</source>
@@ -3477,6 +3525,10 @@
     <message>
         <source>Rewinding blocks...</source>
         <translation>ブロックを巻き戻しています...</translation>
+    </message>
+    <message>
+        <source>Send transactions with full-RBF opt-in enabled (RPC only, default: %u)</source>
+        <translation>手数料上乗せ(RBF)がオプトイン形式で有効化されているときRBFを利用してトランザクションを送信する (RPCコマンドのみ。初期値: %u)</translation>
     </message>
     <message>
         <source>Set database cache size in megabytes (%d to %d, default: %d)</source>
@@ -3727,6 +3779,10 @@
         <translation>このコンピュータの %s にバインドすることができません (バインドが返したエラーは %s)</translation>
     </message>
     <message>
+        <source>Unable to generate initial keys</source>
+        <translation>初期化キーを生成できません</translation>
+    </message>
+    <message>
         <source>Upgrade wallet to latest format on startup</source>
         <translation>起動時にウォレットを最新のフォーマットにアップグレード</translation>
     </message>
@@ -3737,6 +3793,10 @@
     <message>
         <source>Verifying wallet(s)...</source>
         <translation>ウォレットの確認中...</translation>
+    </message>
+    <message>
+        <source>Wallet %s resides outside wallet directory %s</source>
+        <translation>ウォレット「%s」がウォレットフォルダ「%s」の外に存在します</translation>
     </message>
     <message>
         <source>Warning</source>
@@ -3825,6 +3885,10 @@
     <message>
         <source>Output debugging information (default: %u, supplying &lt;category&gt; is optional)</source>
         <translation>デバッグ情報を出力する (初期値: %u, &lt;category&gt; の指定は任意です)</translation>
+    </message>
+    <message>
+        <source>Set maximum BIP141 block weight to this * 4. Deprecated, use blockmaxweight</source>
+        <translation>BIP141:SegWitの最大ブロックサイズはこれを4倍したものとします。注意: 非推奨です。代わりにblockmaxweightを使用してください。</translation>
     </message>
     <message>
         <source>Sets the serialization of raw transaction or block hex returned in non-verbose mode, non-segwit(0) or segwit(1) (default: %d)</source>
