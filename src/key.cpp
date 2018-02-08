@@ -48,13 +48,13 @@ static int ec_privkey_import_der(const secp256k1_context* ctx, unsigned char *ou
     if (lenb < 1 || lenb > 2) {
         return 0;
     }
-    if (end - privkey < lenb) {
+    if (end < privkey || (size_t)(end - privkey) < lenb) {
         return 0;
     }
     /* sequence length */
     size_t len = privkey[lenb-1] | (lenb > 1 ? privkey[lenb-2] << 8 : 0u);
     privkey += lenb;
-    if (end - privkey < len) {
+    if (end < privkey || (size_t)(end - privkey) < len) {
         return 0;
     }
     /* sequence element 0: version number (=1) */
@@ -68,7 +68,7 @@ static int ec_privkey_import_der(const secp256k1_context* ctx, unsigned char *ou
     }
     size_t oslen = privkey[1];
     privkey += 2;
-    if (oslen > 32 || end - privkey < oslen) {
+    if (oslen > 32 || end < privkey || (size_t)(end - privkey) < oslen) {
         return 0;
     }
     memcpy(out32 + (32 - oslen), privkey, oslen);
