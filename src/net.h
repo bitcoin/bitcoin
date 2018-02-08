@@ -808,8 +808,6 @@ public:
     ~CNode();
 
 private:
-    CCriticalSection cs_nRefCount;
-
     CNode(const CNode&);
     void operator=(const CNode&);
 
@@ -842,7 +840,6 @@ public:
 
     int GetRefCount()
     {
-        LOCK(cs_nRefCount);
         assert(nRefCount >= 0);
         return nRefCount;
     }
@@ -866,16 +863,13 @@ public:
 
     CNode* AddRef()
     {
-        LOCK(cs_nRefCount);
         nRefCount++;
         return this;
     }
 
     void Release()
     {
-        LOCK(cs_nRefCount);
         nRefCount--;
-        assert(nRefCount >= 0);
     }
 
 
