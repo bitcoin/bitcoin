@@ -26,8 +26,8 @@ Drag Dash-Qt to your applications folder, and then run Dash-Qt.
 
 * See the [Dash documentation](https://dashpay.atlassian.net/wiki/display/DOC)
 for help and more information.
-* Ask for help on [#dashpay](http://webchat.freenode.net?channels=dashpay) on Freenode. If you don't have an IRC client use [webchat here](http://webchat.freenode.net?channels=dashpay).
-* Ask for help on the [DashTalk](https://dashtalk.org/) forums.
+* Ask for help on [Dash Nation Discord](http://dashchat.org)
+* Ask for help on the [Dash Forum](https://dash.org/forum)
 
 Building
 ---------------------
@@ -57,8 +57,8 @@ The Dash Core repo's [root README](/README.md) contains relevant information on 
 - [Benchmarking](benchmarking.md)
 
 ### Resources
-* Discuss on the [DashTalk](https://dashtalk.org/) forums, in the Development & Technical Discussion board.
-* Discuss on [#dashpay](http://webchat.freenode.net/?channels=dashpay) on Freenode. If you don't have an IRC client use [webchat here](http://webchat.freenode.net/?channels=dashpay).
+* Discuss on the [Dash Forum](https://dash.org/forum), in the Development & Technical Discussion board.
+* Discuss on [Dash Nation Discord](http://dashchat.org)
 
 ### Miscellaneous
 - [Assets Attribution](assets-attribution.md)
