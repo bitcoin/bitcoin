@@ -352,10 +352,10 @@ bool CBitcoinAddress::Set(const CScriptID& id)
     return true;
 }
 
-bool CBitcoinAddress::Set(const CTxDestination& dest)
+/*bool CBitcoinAddress::Set(const CTxDestination& dest)
 {
     return boost::apply_visitor(CBitcoinAddressVisitor(this), dest);
-}
+}*/
 
 bool CBitcoinAddress::IsValid() const
 {
