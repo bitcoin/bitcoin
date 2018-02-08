@@ -18,9 +18,6 @@ class UniValue;
  */
 double GetDifficulty(const CBlockIndex* blockindex = nullptr);
 
-/** Callback for when block tip changed. */
-void RPCNotifyBlockChange(bool ibd, const CBlockIndex *);
-
 /** Block description to JSON */
 UniValue blockToJSON(const CBlock& block, const CBlockIndex* blockindex, bool txDetails = false);
 

@@ -8,7 +8,9 @@
 
 #include <amount.h>
 #include <rpc/protocol.h>
+#include <sync.h>
 #include <uint256.h>
+#include <validationinterface.h>
 
 #include <list>
 #include <map>
@@ -25,6 +27,45 @@ namespace RPCServer
 {
     void OnStarted(std::function<void ()> slot);
     void OnStopped(std::function<void ()> slot);
+
+    struct InterruptedListenerInternals;
+    /** A scoped listener for when RPC is interrupted (ie IsRPCRunning moves
+     * from true to false immediately prior to the invocation of this callback).
+     */
+    class InterruptedListener {
+    private:
+        std::unique_ptr<InterruptedListenerInternals> m_internals;
+    public:
+        InterruptedListener(std::function<void ()> callback);
+        ~InterruptedListener();
+    };
+
+
+    /**
+     * A utility to block until either RPC is interrupted or the active block
+     * tip changes.
+     *
+     * Automatically registers/deregisters itself with the validationinterface
+     * on construction/deconstruction.
+     */
+    class BlockChangeBlocker : public CValidationInterface
+    {
+    private:
+        InterruptedListener m_interrupted_listener;
+
+    public:
+        uint256 m_last_block_hash;
+        int m_last_block_height;
+
+        CWaitableCriticalSection m_cs;
+        CConditionVariable m_cv;
+
+        BlockChangeBlocker();
+        ~BlockChangeBlocker();
+
+    protected:
+        void UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) override;
+    };
 }
 
 /** Wrapper for UniValue::VType, which includes typeAny:

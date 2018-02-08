@@ -13,6 +13,7 @@
 #include <ui_interface.h>
 #include <util.h>
 #include <utilstrencodings.h>
+#include <validation.h>
 
 #include <boost/bind.hpp>
 #include <boost/signals2/signal.hpp>
@@ -36,6 +37,7 @@ static struct CRPCSignals
 {
     boost::signals2::signal<void ()> Started;
     boost::signals2::signal<void ()> Stopped;
+    boost::signals2::signal<void ()> Interrupted;
     boost::signals2::signal<void (const CRPCCommand&)> PreCommand;
 } g_rpcSignals;
 
@@ -47,6 +49,47 @@ void RPCServer::OnStarted(std::function<void ()> slot)
 void RPCServer::OnStopped(std::function<void ()> slot)
 {
     g_rpcSignals.Stopped.connect(slot);
+}
+
+namespace RPCServer {
+    struct InterruptedListenerInternals {
+        boost::signals2::scoped_connection connection;
+    };
+} // namespace RPCServer
+
+RPCServer::InterruptedListener::InterruptedListener(std::function<void ()> callback)
+{
+    m_internals.reset(new InterruptedListenerInternals());
+    m_internals->connection = g_rpcSignals.Interrupted.connect(callback);
+}
+RPCServer::InterruptedListener::~InterruptedListener() {}
+
+
+RPCServer::BlockChangeBlocker::BlockChangeBlocker() : m_interrupted_listener([this] {
+            m_cv.notify_all();
+        })
+{
+    {
+        LOCK(cs_main);
+        m_last_block_hash = chainActive.Tip()->GetBlockHash();
+        m_last_block_height = chainActive.Tip()->nHeight;
+    }
+    RegisterValidationInterface(this);
+}
+
+RPCServer::BlockChangeBlocker::~BlockChangeBlocker()
+{
+    UnregisterValidationInterface(this);
+}
+
+void RPCServer::BlockChangeBlocker::UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload)
+{
+    {
+        WaitableLock lock(m_cs);
+        m_last_block_hash = pindexNew->GetBlockHash();
+        m_last_block_height = pindexNew->nHeight;
+    }
+    m_cv.notify_all();
 }
 
 void RPCTypeCheck(const UniValue& params,
@@ -315,6 +358,7 @@ void InterruptRPC()
     LogPrint(BCLog::RPC, "Interrupting RPC\n");
     // Interrupt e.g. running longpolls
     fRPCRunning = false;
+    g_rpcSignals.Interrupted();
 }
 
 void StopRPC()

@@ -304,19 +304,6 @@ static void registerSignalHandler(int signal, void(*handler)(int))
 }
 #endif
 
-void OnRPCStarted()
-{
-    uiInterface.NotifyBlockTip.connect(&RPCNotifyBlockChange);
-}
-
-void OnRPCStopped()
-{
-    uiInterface.NotifyBlockTip.disconnect(&RPCNotifyBlockChange);
-    RPCNotifyBlockChange(false, nullptr);
-    cvBlockChange.notify_all();
-    LogPrint(BCLog::RPC, "RPC stopped.\n");
-}
-
 std::string HelpMessage(HelpMessageMode mode)
 {
     const auto defaultBaseParams = CreateBaseChainParams(CBaseChainParams::MAIN);
@@ -537,32 +524,53 @@ std::string LicenseInfo()
            "\n";
 }
 
-static void BlockNotifyCallback(bool initialSync, const CBlockIndex *pBlockIndex)
+namespace {
+class BlockNotifyCaller : public CValidationInterface
 {
-    if (initialSync || !pBlockIndex)
-        return;
+public:
+    void UpdatedBlockTip(const CBlockIndex *pBlockIndex, const CBlockIndex *, bool initialSync) override
+    {
+        if (initialSync || !pBlockIndex)
+            return;
 
-    std::string strCmd = gArgs.GetArg("-blocknotify", "");
-    if (!strCmd.empty()) {
-        boost::replace_all(strCmd, "%s", pBlockIndex->GetBlockHash().GetHex());
-        boost::thread t(runCommand, strCmd); // thread runs free
-    }
-}
-
-static bool fHaveGenesis = false;
-static CWaitableCriticalSection cs_GenesisWait;
-static CConditionVariable condvar_GenesisWait;
-
-static void BlockNotifyGenesisWait(bool, const CBlockIndex *pBlockIndex)
-{
-    if (pBlockIndex != nullptr) {
-        {
-            WaitableLock lock_GenesisWait(cs_GenesisWait);
-            fHaveGenesis = true;
+        std::string strCmd = gArgs.GetArg("-blocknotify", "");
+        if (!strCmd.empty()) {
+            boost::replace_all(strCmd, "%s", pBlockIndex->GetBlockHash().GetHex());
+            boost::thread t(runCommand, strCmd); // thread runs free
         }
-        condvar_GenesisWait.notify_all();
     }
-}
+} g_blocknotify_caller;
+
+class GenesisWaiter : public CValidationInterface
+{
+    bool m_have_genesis;
+    CWaitableCriticalSection m_cs;
+    CConditionVariable m_cv;
+public:
+    GenesisWaiter()
+    {
+        LOCK(cs_main);
+        m_have_genesis = chainActive.Tip() != nullptr;
+    }
+
+    void AwaitGenesisBlock()
+    {
+        WaitableLock lock(m_cs);
+        m_cv.wait(lock, [this] { return m_have_genesis; });
+    }
+
+    void UpdatedBlockTip(const CBlockIndex *pBlockIndex, const CBlockIndex *, bool) override
+    {
+        if (pBlockIndex != nullptr) {
+            {
+                WaitableLock lock_GenesisWait(m_cs);
+                m_have_genesis = true;
+            }
+            m_cv.notify_all();
+        }
+    }
+};
+} // anonymous namespace
 
 struct CImportingNow
 {
@@ -715,8 +723,6 @@ bool InitSanityCheck(void)
 
 bool AppInitServers()
 {
-    RPCServer::OnStarted(&OnRPCStarted);
-    RPCServer::OnStopped(&OnRPCStopped);
     if (!InitHTTPServer())
         return false;
     if (!StartRPC())
@@ -1526,7 +1532,6 @@ bool AppInitMain()
                     {
                         LOCK(cs_main);
                         CBlockIndex* tip = chainActive.Tip();
-                        RPCNotifyBlockChange(true, tip);
                         if (tip && tip->nTime > GetAdjustedTime() + 2 * 60 * 60) {
                             strLoadError = _("The block database contains a block which appears to be from the future. "
                                     "This may be due to your computer's date and time being set incorrectly. "
@@ -1626,14 +1631,11 @@ bool AppInitMain()
 
     // Either install a handler to notify us when genesis activates, or set fHaveGenesis directly.
     // No locking, as this happens before any background thread is started.
-    if (chainActive.Tip() == nullptr) {
-        uiInterface.NotifyBlockTip.connect(BlockNotifyGenesisWait);
-    } else {
-        fHaveGenesis = true;
-    }
+    GenesisWaiter genesis_waiter;
+    RegisterValidationInterface(&genesis_waiter);
 
     if (gArgs.IsArgSet("-blocknotify"))
-        uiInterface.NotifyBlockTip.connect(BlockNotifyCallback);
+        RegisterValidationInterface(&g_blocknotify_caller);
 
     std::vector<fs::path> vImportFiles;
     for (const std::string& strFile : gArgs.GetArgs("-loadblock")) {
@@ -1643,13 +1645,8 @@ bool AppInitMain()
     threadGroup.create_thread(boost::bind(&ThreadImport, vImportFiles));
 
     // Wait for genesis block to be processed
-    {
-        WaitableLock lock(cs_GenesisWait);
-        while (!fHaveGenesis) {
-            condvar_GenesisWait.wait(lock);
-        }
-        uiInterface.NotifyBlockTip.disconnect(BlockNotifyGenesisWait);
-    }
+    genesis_waiter.AwaitGenesisBlock();
+    UnregisterValidationInterface(&genesis_waiter);
 
     // ********************************************************* Step 11: start node
 

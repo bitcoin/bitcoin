@@ -202,8 +202,6 @@ CCriticalSection cs_main;
 BlockMap& mapBlockIndex = g_chainstate.mapBlockIndex;
 CChain& chainActive = g_chainstate.chainActive;
 CBlockIndex *pindexBestHeader = nullptr;
-CWaitableCriticalSection csBestBlock;
-CConditionVariable cvBlockChange;
 int nScriptCheckThreads = 0;
 std::atomic_bool fImporting(false);
 std::atomic_bool fReindex(false);
@@ -2145,8 +2143,6 @@ void static UpdateTip(const CBlockIndex *pindexNew, const CChainParams& chainPar
     // New best block
     mempool.AddTransactionsUpdated(1);
 
-    cvBlockChange.notify_all();
-
     std::vector<std::string> warningMessages;
     if (!IsInitialBlockDownload())
     {
@@ -2624,11 +2620,6 @@ bool CChainState::ActivateBestChain(CValidationState &state, const CChainParams&
         // Notify external listeners about the new tip.
         GetMainSignals().UpdatedBlockTip(pindexNewTip, pindexFork, fInitialDownload);
 
-        // Always notify the UI if a new block tip was connected
-        if (pindexFork != pindexNewTip) {
-            uiInterface.NotifyBlockTip(fInitialDownload, pindexNewTip);
-        }
-
         if (nStopAtHeight && pindexNewTip && pindexNewTip->nHeight >= nStopAtHeight) StartShutdown();
     } while (pindexNewTip != pindexMostWork);
     CheckBlockIndex(chainparams.GetConsensus());
@@ -2732,7 +2723,7 @@ bool CChainState::InvalidateBlock(CValidationState& state, const CChainParams& c
     }
 
     InvalidChainFound(pindex);
-    uiInterface.NotifyBlockTip(IsInitialBlockDownload(), pindex->pprev);
+    GetMainSignals().UpdatedBlockTip(chainActive.Tip(), chainActive.Tip(), IsInitialBlockDownload());
     return true;
 }
 bool InvalidateBlock(CValidationState& state, const CChainParams& chainparams, CBlockIndex *pindex) {
