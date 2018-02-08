@@ -73,34 +73,13 @@ private:
     std::deque<std::unique_ptr<WorkItem>> queue;
     bool running;
     size_t maxDepth;
-    int numThreads;
-
-    /** RAII object to keep track of number of running worker threads */
-    class ThreadCounter
-    {
-    public:
-        WorkQueue &wq;
-        explicit ThreadCounter(WorkQueue &w): wq(w)
-        {
-            std::lock_guard<std::mutex> lock(wq.cs);
-            wq.numThreads += 1;
-        }
-        ~ThreadCounter()
-        {
-            std::lock_guard<std::mutex> lock(wq.cs);
-            wq.numThreads -= 1;
-            wq.cond.notify_all();
-        }
-    };
 
 public:
     explicit WorkQueue(size_t _maxDepth) : running(true),
-                                 maxDepth(_maxDepth),
-                                 numThreads(0)
+                                 maxDepth(_maxDepth)
     {
     }
-    /** Precondition: worker threads have all stopped
-     * (call WaitExit)
+    /** Precondition: worker threads have all stopped (they have been joined).
      */
     ~WorkQueue()
     {
@@ -119,7 +98,6 @@ public:
     /** Thread function */
     void Run()
     {
-        ThreadCounter count(*this);
         while (true) {
             std::unique_ptr<WorkItem> i;
             {
@@ -140,13 +118,6 @@ public:
         std::unique_lock<std::mutex> lock(cs);
         running = false;
         cond.notify_all();
-    }
-    /** Wait for worker threads to exit */
-    void WaitExit()
-    {
-        std::unique_lock<std::mutex> lock(cs);
-        while (numThreads > 0)
-            cond.wait(lock);
     }
 };
 
@@ -449,6 +420,7 @@ bool UpdateHTTPServerLogging(bool enable) {
 
 std::thread threadHTTP;
 std::future<bool> threadResult;
+static std::vector<std::thread> g_thread_http_workers;
 
 bool StartHTTPServer()
 {
@@ -460,8 +432,7 @@ bool StartHTTPServer()
     threadHTTP = std::thread(std::move(task), eventBase, eventHTTP);
 
     for (int i = 0; i < rpcThreads; i++) {
-        std::thread rpc_worker(HTTPWorkQueueRun, workQueue);
-        rpc_worker.detach();
+        g_thread_http_workers.emplace_back(HTTPWorkQueueRun, workQueue);
     }
     return true;
 }
@@ -486,7 +457,10 @@ void StopHTTPServer()
     LogPrint(BCLog::HTTP, "Stopping HTTP server\n");
     if (workQueue) {
         LogPrint(BCLog::HTTP, "Waiting for HTTP worker threads to exit\n");
-        workQueue->WaitExit();
+        for (auto& thread: g_thread_http_workers) {
+            thread.join();
+        }
+        g_thread_http_workers.clear();
         delete workQueue;
         workQueue = nullptr;
     }
