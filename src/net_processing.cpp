@@ -1489,7 +1489,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                         // send a GETHEADERS message at some point in time. This is delayed to later in SendMessages
                         // when the headers chain has catched up enough.
                         LogPrint("net", "delaying getheaders (%d) %s to peer=%d\n", pindexBestHeader->nHeight, inv.hash.ToString(), pfrom->id);
-                        pfrom->PushBlockHashFromINV(inv.hash);
+                        pfrom->PushDelayedGetHeaders(inv.hash);
                     } else {
                         // We used to request the full block here, but since headers-announcements are now the
                         // primary method of announcement on the network, and since, in the case that a node
@@ -2604,11 +2604,11 @@ bool SendMessages(CNode* pto, CConnman& connman, const std::atomic<bool>& interr
             // Headers chain has catched up enough so we can send out GETHEADER messages which were initially meant to
             // be sent directly after INV was received
             LOCK(pto->cs_inventory);
-            BOOST_FOREACH(const uint256 &hash, pto->vBlockHashesFromINV) {
+            BOOST_FOREACH(const uint256 &hash, pto->vDelayedGetHeaders) {
                 LogPrint("net", "process delayed getheaders (%d) to peer=%d\n", pindexBestHeader->nHeight, pto->id);
                 connman.PushMessage(pto, msgMaker.Make(NetMsgType::GETHEADERS, chainActive.GetLocator(pindexBestHeader), hash));
             }
-            pto->vBlockHashesFromINV.clear();
+            pto->vDelayedGetHeaders.clear();
         }
 
         // Resend wallet transactions that haven't gotten in a block yet
