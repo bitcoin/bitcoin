@@ -135,7 +135,7 @@ UniValue masternode(const JSONRPCRequest& request)
                 "\nArguments:\n"
                 "1. \"command\"        (string or set of strings, required) The command to execute\n"
                 "\nAvailable commands:\n"
-                "  count        - Print number of all known masternodes (optional: 'ps', 'enabled', 'all', 'qualify')\n"
+                "  count        - Get information about number of masternodes (DEPRECATED options: 'total', 'ps', 'enabled', 'qualify', 'all')\n"
                 "  current      - Print info on current masternode winner to be paid the next block (calculated locally)\n"
                 "  genkey       - Generate new masternodeprivkey\n"
 #ifdef ENABLE_WALLET
@@ -185,28 +185,42 @@ UniValue masternode(const JSONRPCRequest& request)
         if (request.params.size() > 2)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Too many parameters");
 
-        if (request.params.size() == 1)
-            return mnodeman.size();
-
-        std::string strMode = request.params[1].get_str();
-
-        if (strMode == "ps")
-            return mnodeman.CountEnabled(MIN_PRIVATESEND_PEER_PROTO_VERSION);
-
-        if (strMode == "enabled")
-            return mnodeman.CountEnabled();
-
         int nCount;
         masternode_info_t mnInfo;
         mnodeman.GetNextMasternodeInQueueForPayment(true, nCount, mnInfo);
+
+        int total = mnodeman.size();
+        int ps = mnodeman.CountEnabled(MIN_PRIVATESEND_PEER_PROTO_VERSION);
+        int enabled = mnodeman.CountEnabled();
+
+        if (request.params.size() == 1) {
+            UniValue obj(UniValue::VOBJ);
+
+            obj.push_back(Pair("total", total));
+            obj.push_back(Pair("ps_compatible", ps));
+            obj.push_back(Pair("enabled", enabled));
+            obj.push_back(Pair("qualify", nCount));
+
+            return obj;
+        }
+
+        std::string strMode = request.params[1].get_str();
+
+        if (strMode == "total")
+            return total;
+
+        if (strMode == "ps")
+            return ps;
+
+        if (strMode == "enabled")
+            return enabled;
 
         if (strMode == "qualify")
             return nCount;
 
         if (strMode == "all")
             return strprintf("Total: %d (PS Compatible: %d / Enabled: %d / Qualify: %d)",
-                mnodeman.size(), mnodeman.CountEnabled(MIN_PRIVATESEND_PEER_PROTO_VERSION),
-                mnodeman.CountEnabled(), nCount);
+                total, ps, enabled, nCount);
     }
 
     if (strCommand == "current" || strCommand == "winner")
