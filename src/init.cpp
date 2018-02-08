@@ -1221,12 +1221,12 @@ bool AppInitParameterInteraction()
         fEnableReplacement = (std::find(vstrReplacementModes.begin(), vstrReplacementModes.end(), "fee") != vstrReplacementModes.end());
     }
 
-    if (!mapMultiArgs["-bip9params"].empty()) {
+    if (mapMultiArgs.count("-bip9params")) {
         // Allow overriding BIP9 parameters for testing
-        if (!Params().MineBlocksOnDemand()) {
+        if (!chainparams.MineBlocksOnDemand()) {
             return InitError("BIP9 parameters may only be overridden on regtest.");
         }
-        const vector<string>& deployments = mapMultiArgs["-bip9params"];
+        const std::vector<std::string>& deployments = mapMultiArgs.at("-bip9params");
         for (auto i : deployments) {
             std::vector<std::string> vDeploymentParams;
             boost::split(vDeploymentParams, i, boost::is_any_of(":"));
