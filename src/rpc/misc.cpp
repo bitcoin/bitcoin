@@ -648,9 +648,18 @@ bool getAddressesFromParams(const UniValue& params, std::vector<std::pair<uint16
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
         }
         addresses.push_back(std::make_pair(hashBytes, type));*/
+        uint160 hashBytes;
+        int type = 0;
+        CTxDestination dest = DecodeDestination(params[0].get_str());
+		//get hash&byte here
+		addresses.push_back(std::make_pair(hashBytes, type));
+		if(!IsValidDestination(dest))
+		{
+			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
+		}
     } else if (params[0].isObject()) {
 
-        /*UniValue addressValues = find_value(params[0].get_obj(), "addresses");
+        UniValue addressValues = find_value(params[0].get_obj(), "addresses");
         if (!addressValues.isArray()) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Addresses is expected to be an array");
         }
@@ -659,16 +668,20 @@ bool getAddressesFromParams(const UniValue& params, std::vector<std::pair<uint16
 
         for (std::vector<UniValue>::iterator it = values.begin(); it != values.end(); ++it) {
 
-            CBitcoinAddress address(it->get_str());
+            /*CBitcoinAddress address(it->get_str());
             uint160 hashBytes;
             int type = 0;
             if (!address.GetIndexKey(hashBytes, type)) {
                 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
-            }
+            }*/
+            CTxDestination dest = DecodeDestination(it->get_str());
+            uint160 hashBytes;
+            int type = 0;
+			//get hash&byte here
             addresses.push_back(std::make_pair(hashBytes, type));
-        }*/
+        }
     } else {
-        //throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
     }
 
     return true;
