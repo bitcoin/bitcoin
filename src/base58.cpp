@@ -323,6 +323,23 @@ CTxDestination DecodeDestination(const std::string& str, const CChainParams& par
 }
 } // namespace
 // <-AddressIndex-l-2018/02/01-modified for address index func.
+namespace
+{
+class CBitcoinAddressVisitor : public boost::static_visitor<bool>
+{
+private:
+    CBitcoinAddress* addr;
+
+public:
+    CBitcoinAddressVisitor(CBitcoinAddress* addrIn) : addr(addrIn) {}
+
+    bool operator()(const CKeyID& id) const { return addr->Set(id); }
+    bool operator()(const CScriptID& id) const { return addr->Set(id); }
+    bool operator()(const CNoDestination& no) const { return false; }
+};
+
+} // anon namespace
+
 bool CBitcoinAddress::Set(const CKeyID& id)
 {
     SetData(Params().Base58Prefix(CChainParams::PUBKEY_ADDRESS), &id, 20);
