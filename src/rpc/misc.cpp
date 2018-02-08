@@ -10,6 +10,8 @@
 #include <crypto/ripemd160.h>
 #include <init.h>
 #include <validation.h>
+#include "txmempool.h"
+
 #include <httpserver.h>
 #include <net.h>
 #include <netbase.h>
