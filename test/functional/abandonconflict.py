@@ -8,10 +8,11 @@
  descendants as abandoned which allows their inputs to be respent. It can be
  used to replace "stuck" or evicted transactions. It only works on transactions
  which are not included in a block and are not currently in the mempool. It has
- no effect on transactions which are already conflicted or abandoned.
+ no effect on transactions which are already abandoned.
 """
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
+
 
 class AbandonConflictTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -27,6 +28,11 @@ class AbandonConflictTest(BitcoinTestFramework):
         txC = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), Decimal("10"))
         self.sync_mempools()
         self.nodes[1].generate(1)
+
+        # Can not abandon non-wallet transaction
+        assert_raises_rpc_error(-5, 'Invalid or non-wallet transaction id', lambda: self.nodes[0].abandontransaction(txid='ff' * 32))
+        # Can not abandon confirmed transaction
+        assert_raises_rpc_error(-5, 'Transaction not eligible for abandonment', lambda: self.nodes[0].abandontransaction(txid=txA))
 
         self.sync_blocks()
         newbalance = self.nodes[0].getbalance()
