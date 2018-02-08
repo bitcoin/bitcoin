@@ -75,7 +75,6 @@ cache:
   artifacts:
     paths:
     - $OUTDIR
-    expire_in: 1 year
   only:
     - master
     - tags
