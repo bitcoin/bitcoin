@@ -225,6 +225,7 @@ Known Issues
 - #12127 `9501dc2` Remove unused mempool index (sdaftuar)
 - #12118 `44080a9` Sort mempool by min(feerate, ancestor_feerate) (sdaftuar)
 - #8498 `0e3a411` Minimize the number of times it is checked that no money... (jtimon)
+- #12368 `3f5012b` Hold mempool.cs for the duration of ATMP (TheBlueMatt)
 
 ### P2P protocol and network code
 - #10596 `6866b49` Add vConnect to CConnman::Options (benma)
@@ -318,6 +319,8 @@ Known Issues
 - #11303 `e542728` Fix estimatesmartfee rounding display issue (TheBlueMatt)
 - #7061 `8c2de82` Add RPC call "rescanblockchain <startheight> <stopheight>" (jonasschnelli)
 - #11055 `95e14dc` RPC getreceivedbyaddress should return error if called with address not owned by the wallet (jnewbery)
+- #12366 `93de37a` http: Join worker threads before deleting work queue (laanwj)
+- #12315 `758a41e` Bech32 addresses in dumpwallet (fivepiece)
 
 ### GUI
 - #10964 `64e66bb` Pass SendCoinsRecipient (208 bytes) by reference (practicalswift)
@@ -349,6 +352,8 @@ Known Issues
 - #11991 `062c8b6` Receive: checkbox for bech32 address (Sjors)
 - #11644 `045a809` Fix qt build broken by 5a5e4e9 (TheBlueMatt)
 - #11448 `d473e6d` reset addrProxy/addrSeparateProxyTor if colon char missing (mess110)
+- #12377 `604f289` qt: Poll ShutdownTimer after init is done (MarcoFalke)
+- #12374 `daaae36` qt: Make sure splash screen is freed on AppInitMain fail (laanwj)
 
 ### Build system
 - #10923 `2c9f5ec` travis: Build with --enable-werror under OS X (practicalswift)
@@ -601,6 +606,7 @@ Known Issues
 - #12194 `7abb0f0` Add change type option to fundrawtransaction (promag)
 - #12269 `2ae7cf8` Update defaultAssumeValid to block 506067 (gmaxwell)
 - #11952 `9ab9963` univalue: Bump subtree (MarcoFalke)
+- #12367 `09fc859` Fix two fast-shutdown bugs (TheBlueMatt)
 
 Credits
 =======
@@ -642,6 +648,7 @@ Thanks to everyone who directly contributed to this release:
 - Evan Klitzke
 - fanquake
 - Ferdinando M. Ametrano
+- fivepiece
 - flack
 - Florian Schmaus
 - gnuser
@@ -709,4 +716,3 @@ Thanks to everyone who directly contributed to this release:
 - Wladimir J. van der Laan
 
 As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/bitcoin/).
-
