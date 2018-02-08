@@ -318,7 +318,7 @@ class WalletTest (BitcoinTestFramework):
             for s in [u'рыба', u'𝅘𝅥𝅯']:
                 addr = self.nodes[0].getaccountaddress(s)
                 label = self.nodes[0].getaccount(addr)
-                assert_equal(label.encode('utf-8'), s.encode('utf-8')) # TODO remove encode(...) when supporting only Python3
+                assert_equal(label, s)
                 assert(s in self.nodes[0].listaccounts().keys())
         self.nodes[0].ensure_ascii = True # restore to default
 
