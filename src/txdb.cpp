@@ -354,7 +354,7 @@ bool CBlockTreeDB::ReadAddressIndex(uint160 addressHash, int type,
                 return error("failed to get address index value");
             }
         } else {
-	        cout << "\npcursor info: blockHeight = " << key.second.blockHeight << " hash = " << key.second.hashBytes.ToString().c_str() << "\n"
+	        std::cout << "\npcursor info: blockHeight = " << key.second.blockHeight << " hash = " << key.second.hashBytes.ToString().c_str() << "\n"
             break;
         }
     }
