@@ -1034,7 +1034,7 @@ UniValue getaddressbalance(const JSONRPCRequest& request)
     std::vector<std::pair<CAddressIndexKey, CAmount> > addressIndex;
 
     for (std::vector<std::pair<uint160, int> >::iterator it = addresses.begin(); it != addresses.end(); it++) {
-		printf("address hash=(%s), type=%d\n", it->first.ToString().c_str(), it->second);
+		printf("\naddress hash=(%s), type=%d\n", it->first.ToString().c_str(), it->second);
 		//dbaddrs.push_back(std::make_pair(it->first, it->second));
         if (!GetAddressIndex((*it).first, (*it).second, addressIndex)) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No information available for address");
