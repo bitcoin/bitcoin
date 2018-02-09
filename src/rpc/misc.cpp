@@ -630,8 +630,15 @@ bool getAddressFromIndex(const int &type, const uint160 &hash, std::string &addr
 {
     if (type == 2) {
         //address = CBitcoinAddress(CScriptID(hash)).ToString();
+        CBase58Data addr;
+		assert(type == CChainParams::SCRIPT_ADDRESS || type == CChainParams::SCRIPT_ADDRESS2);
+		addr.SetData(Params().Base58Prefix(type), &CScriptID(hash), 20);
+		address = addr.ToString();
     } else if (type == 1) {
         //address = CBitcoinAddress(CKeyID(hash)).ToString();
+        CBase58Data addr;
+		addr.SetData(Params().Base58Prefix(CChainParams::PUBKEY_ADDRESS), &CKeyID(hash), 20);
+        address = addr.ToString();
     } else {
         return false;
     }
@@ -640,20 +647,21 @@ bool getAddressFromIndex(const int &type, const uint160 &hash, std::string &addr
 
 bool getAddressesFromParams(const UniValue& params, std::vector<std::pair<uint160, int> > &addresses)
 {
-    if (params[0].isStr()) {
-        uint160 hashBytes;
-        int type = 0;
-        CTxDestination dest = DecodeDestination(params[0].get_str());
+        /*CTxDestination dest = DecodeDestination(params[0].get_str());
 		//get hash&byte here
 		if (auto id = boost::get<CKeyID>(&dest)) {
         	hashBytes = *id;
 			type = 1;
-    	}
-		addresses.push_back(std::make_pair(hashBytes, type));
-		if(!IsValidDestination(dest))
-		{
-			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
-		}
+    	}*/
+	if (params[0].isStr()) {
+        CBase58Data address;
+		address.SetString(params[0].get_str());
+        uint160 hashBytes;
+        int type = 0;
+        if (!address.GetIndexKey(hashBytes, type)) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
+        }
+        addresses.push_back(std::make_pair(hashBytes, type));
     } else if (params[0].isObject()) {
 
         UniValue addressValues = find_value(params[0].get_obj(), "addresses");
@@ -664,10 +672,14 @@ bool getAddressesFromParams(const UniValue& params, std::vector<std::pair<uint16
         std::vector<UniValue> values = addressValues.getValues();
 
         for (std::vector<UniValue>::iterator it = values.begin(); it != values.end(); ++it) {
-            CTxDestination dest = DecodeDestination(it->get_str());
+
+            CBase58Data address;
+			address.SetString(params[0].get_str());
             uint160 hashBytes;
             int type = 0;
-			//get hash&byte here
+            if (!address.GetIndexKey(hashBytes, type)) {
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
+            }
             addresses.push_back(std::make_pair(hashBytes, type));
         }
     } else {

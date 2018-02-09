@@ -47,6 +47,7 @@ public:
         SECRET_KEY,
         EXT_PUBLIC_KEY,
         EXT_SECRET_KEY,
+        SCRIPT_ADDRESS2,
 
         MAX_BASE58_TYPES
     };

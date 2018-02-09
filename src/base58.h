@@ -87,6 +87,10 @@ public:
     std::string ToString() const;
     int CompareTo(const CBase58Data& b58) const;
 
+	bool IsValid() const;
+    bool IsValid(const CChainParams &params) const;
+	bool GetIndexKey(uint160& hashBytes, int& type) const;
+
     bool operator==(const CBase58Data& b58) const { return CompareTo(b58) == 0; }
     bool operator<=(const CBase58Data& b58) const { return CompareTo(b58) <= 0; }
     bool operator>=(const CBase58Data& b58) const { return CompareTo(b58) >= 0; }
