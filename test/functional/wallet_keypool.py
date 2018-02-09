@@ -14,7 +14,7 @@ class KeyPoolTest(BitcoinTestFramework):
     def run_test(self):
         nodes = self.nodes
         addr_before_encrypting = nodes[0].getnewaddress()
-        addr_before_encrypting_data = nodes[0].validateaddress(addr_before_encrypting)
+        addr_before_encrypting_data = nodes[0].getaddressinfo(addr_before_encrypting)
         wallet_info_old = nodes[0].getwalletinfo()
         assert(addr_before_encrypting_data['hdmasterkeyid'] == wallet_info_old['hdmasterkeyid'])
         
@@ -24,7 +24,7 @@ class KeyPoolTest(BitcoinTestFramework):
         self.start_node(0)
         # Keep creating keys
         addr = nodes[0].getnewaddress()
-        addr_data = nodes[0].validateaddress(addr)
+        addr_data = nodes[0].getaddressinfo(addr)
         wallet_info = nodes[0].getwalletinfo()
         assert(addr_before_encrypting_data['hdmasterkeyid'] != wallet_info['hdmasterkeyid'])
         assert(addr_data['hdmasterkeyid'] == wallet_info['hdmasterkeyid'])
