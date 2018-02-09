@@ -343,12 +343,13 @@ bool CBlockTreeDB::ReadAddressIndex(uint160 addressHash, int type,
         std::pair<char,CAddressIndexKey> key;
         if (pcursor->GetKey(key) && key.first == DB_ADDRESSINDEX && key.second.hashBytes == addressHash) {
             if (end > 0 && key.second.blockHeight > end) {
+				std::cout << "\break info: blockHeight = " << key.second.blockHeight << " hash = " << key.second.hashBytes.ToString().c_str() << "\n";
                 break;
             }
             CAmount nValue;
             if (pcursor->GetValue(nValue)) {
                 addressIndex.push_back(std::make_pair(key.second, nValue));
-				//printf("**readindex**,height=%d, hash=(%s), amount=%lld\n", key.second.blockHeight, key.second.hashBytes.ToString().c_str(), nValue);
+				printf("**readindex**,height=%d, hash=(%s), amount=%lld\n", key.second.blockHeight, key.second.hashBytes.ToString().c_str(), nValue);
                 pcursor->Next();
             } else {
                 return error("failed to get address index value");
