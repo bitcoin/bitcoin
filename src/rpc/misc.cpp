@@ -629,16 +629,9 @@ UniValue echo(const JSONRPCRequest& request)
 bool getAddressFromIndex(const int &type, const uint160 &hash, std::string &address)
 {
     if (type == 2) {
-        //address = CBitcoinAddress(CScriptID(hash)).ToString();
-        CBase58Data addr;
-		assert(type == CChainParams::SCRIPT_ADDRESS || type == CChainParams::SCRIPT_ADDRESS2);
-		addr.SetData(Params().Base58Prefix(type), &CScriptID(hash), 20);
-		address = addr.ToString();
+        address = CBitcoinAddress(CScriptID(hash)).ToString();
     } else if (type == 1) {
-        //address = CBitcoinAddress(CKeyID(hash)).ToString();
-        CBase58Data addr;
-		addr.SetData(Params().Base58Prefix(CChainParams::PUBKEY_ADDRESS), &CKeyID(hash), 20);
-        address = addr.ToString();
+        address = CBitcoinAddress(CKeyID(hash)).ToString();
     } else {
         return false;
     }
@@ -654,8 +647,7 @@ bool getAddressesFromParams(const UniValue& params, std::vector<std::pair<uint16
 			type = 1;
     	}*/
 	if (params[0].isStr()) {
-        CBase58Data address;
-		address.SetString(params[0].get_str());
+        CBitcoinAddress address(params[0].get_str());
         uint160 hashBytes;
         int type = 0;
         if (!address.GetIndexKey(hashBytes, type)) {
@@ -673,8 +665,7 @@ bool getAddressesFromParams(const UniValue& params, std::vector<std::pair<uint16
 
         for (std::vector<UniValue>::iterator it = values.begin(); it != values.end(); ++it) {
 
-            CBase58Data address;
-			address.SetString(params[0].get_str());
+            CBitcoinAddress address(params[0].get_str());
             uint160 hashBytes;
             int type = 0;
             if (!address.GetIndexKey(hashBytes, type)) {
