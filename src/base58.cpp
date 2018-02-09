@@ -322,10 +322,10 @@ CTxDestination DecodeDestination(const std::string& str, const CChainParams& par
     return CNoDestination();
 }
 
-uint160 DecodeAddrDest(const std::string& str, const CChainParams& params, int & type)
+bool DecodeAddrDest(const std::string& str, const CChainParams& params, uint160& hash, int & type)
 {
     std::vector<unsigned char> data;
-    uint160 hash;
+    //uint160 hash;
 	type = 0;
     if (DecodeBase58Check(str, data)) {
         // base58-encoded Bitcoin addresses.
@@ -335,7 +335,7 @@ uint160 DecodeAddrDest(const std::string& str, const CChainParams& params, int &
         if (data.size() == hash.size() + pubkey_prefix.size() && std::equal(pubkey_prefix.begin(), pubkey_prefix.end(), data.begin())) {
             std::copy(data.begin() + pubkey_prefix.size(), data.end(), hash.begin());
 			type = 1;
-            return hash;
+            return true;
         }
         // Script-hash-addresses have version 5 (or 196 testnet).
         // The data vector contains RIPEMD160(SHA256(cscript)), where cscript is the serialized redemption script.
@@ -344,10 +344,10 @@ uint160 DecodeAddrDest(const std::string& str, const CChainParams& params, int &
             std::copy(data.begin() + script_prefix.size(), data.end(), hash.begin());
             //dest = CScriptID(hash);
 			type = 2;
-			return hash;
+			return true;
         }
     }
-	return hash;
+	return false;
 }
 
 } // namespace
@@ -395,9 +395,9 @@ CTxDestination DecodeDestination(const std::string& str)
     return DecodeDestination(str, Params());
 }
 
-uint160 DecodeAddrDest(const std::string& str, int & type)
+bool DecodeAddrDest(const std::string& str, uint160& hash, int & type)
 {
-	return DecodeAddrDest(str, Params(), type);
+	return DecodeAddrDest(str, Params(), hash, type);
 }
 
 bool IsValidDestinationString(const std::string& str, const CChainParams& params)
