@@ -645,6 +645,10 @@ bool getAddressesFromParams(const UniValue& params, std::vector<std::pair<uint16
         int type = 0;
         CTxDestination dest = DecodeDestination(params[0].get_str());
 		//get hash&byte here
+		if (auto id = boost::get<CKeyID>(&dest)) {
+        	hashBytes = *id;
+			type = 1;
+    	}
 		addresses.push_back(std::make_pair(hashBytes, type));
 		if(!IsValidDestination(dest))
 		{
