@@ -343,6 +343,7 @@ public:
     bool operator()(const CScriptID& id) const { return addr->Set(id, script_type_); }
     bool operator()(const CNoDestination& no) const { return false; }
 	bool operator()(const WitnessV0ScriptHash& no) const { return false; }
+	bool operator()(const WitnessV0KeyHash& no) const { return false; }
 	bool operator()(const WitnessUnknown& no) const { return false; }
 };
 
