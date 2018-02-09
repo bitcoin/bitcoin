@@ -338,6 +338,10 @@ bool CBlockTreeDB::ReadAddressIndex(uint160 addressHash, int type,
         pcursor->Seek(std::make_pair(DB_ADDRESSINDEX, CAddressIndexIteratorKey(type, addressHash)));
     }
 
+	std::pair<char,CAddressIndexKey> key1;
+	bool btmp =	pcursor->GetKey(key1);
+	std::cout << "\nIsfind=" << btmp << " hash= " << key1.second.hashBytes.ToString().c_str() << " height =" << key.second.blockHeight << '\n';
+
     while (pcursor->Valid()) {
         boost::this_thread::interruption_point();
         std::pair<char,CAddressIndexKey> key;
@@ -349,7 +353,8 @@ bool CBlockTreeDB::ReadAddressIndex(uint160 addressHash, int type,
             CAmount nValue;
             if (pcursor->GetValue(nValue)) {
                 addressIndex.push_back(std::make_pair(key.second, nValue));
-				printf("**readindex**,height=%d, hash=(%s), amount=%lld\n", key.second.blockHeight, key.second.hashBytes.ToString().c_str(), nValue);
+				//printf("**readindex**,height=%d, hash=(%s), amount=%lld\n", key.second.blockHeight, key.second.hashBytes.ToString().c_str(), nValue);
+				std::cout << "\nfindindex,height=" << key.second.blockHeight << "hash=(" << key.second.hashBytes.ToString().c_str() << ") amount=" << nValue << '\n';
                 pcursor->Next();
             } else {
                 return error("failed to get address index value");
