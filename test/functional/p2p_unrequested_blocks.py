@@ -47,7 +47,12 @@ Node1 is unused in tests 3-7:
    of the invalid block. Check that we get disconnected if we send more headers
    on the chain the node now knows to be invalid.
 
-9. Test Node1 is able to sync when connected to node0 (which should have sufficient
+9. Send a block which prompts a DoS response and disconnect from the
+   receiving peer. Check that the block and associated chain tip get marked
+   with the "invalid" status. This is a relevant case for invalid fork
+   detection.
+
+10. Test Node1 is able to sync when connected to node0 (which should have sufficient
    work on its chain).
 """
 
@@ -55,7 +60,12 @@ from test_framework.mininode import *
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 import time
-from test_framework.blocktools import create_block, create_coinbase, create_transaction
+from test_framework.blocktools import (
+    create_block,
+    create_coinbase,
+    create_transaction,
+    create_coinbase_with_bad_txin,
+)
 
 
 class AcceptBlockTest(BitcoinTestFramework):
@@ -113,12 +123,7 @@ class AcceptBlockTest(BitcoinTestFramework):
         test_node.send_message(msg_block(block_h1f))
 
         test_node.sync_with_ping()
-        tip_entry_found = False
-        for x in self.nodes[0].getchaintips():
-            if x['hash'] == block_h1f.hash:
-                assert_equal(x['status'], "headers-only")
-                tip_entry_found = True
-        assert(tip_entry_found)
+        self._check_tip_status(self.nodes[0], block_h1f.hash, 'headers-only')
         assert_raises_rpc_error(-1, "Block not found on disk", self.nodes[0].getblock, block_h1f.hash)
 
         # 4. Send another two block that build on the fork.
@@ -130,12 +135,7 @@ class AcceptBlockTest(BitcoinTestFramework):
         test_node.sync_with_ping()
         # Since the earlier block was not processed by node, the new block
         # can't be fully validated.
-        tip_entry_found = False
-        for x in self.nodes[0].getchaintips():
-            if x['hash'] == block_h2f.hash:
-                assert_equal(x['status'], "headers-only")
-                tip_entry_found = True
-        assert(tip_entry_found)
+        self._check_tip_status(self.nodes[0], block_h2f.hash, 'headers-only')
 
         # But this block should be accepted by node since it has equal work.
         self.nodes[0].getblock(block_h2f.hash)
@@ -149,12 +149,7 @@ class AcceptBlockTest(BitcoinTestFramework):
         test_node.sync_with_ping()
         # Since the earlier block was not processed by node, the new block
         # can't be fully validated.
-        tip_entry_found = False
-        for x in self.nodes[0].getchaintips():
-            if x['hash'] == block_h3.hash:
-                assert_equal(x['status'], "headers-only")
-                tip_entry_found = True
-        assert(tip_entry_found)
+        self._check_tip_status(self.nodes[0], block_h3.hash, 'headers-only')
         self.nodes[0].getblock(block_h3.hash)
 
         # But this block should be accepted by node since it has more work.
@@ -265,12 +260,7 @@ class AcceptBlockTest(BitcoinTestFramework):
         test_node.send_message(headers_message)
 
         test_node.sync_with_ping()
-        tip_entry_found = False
-        for x in self.nodes[0].getchaintips():
-            if x['hash'] == block_292.hash:
-                assert_equal(x['status'], "headers-only")
-                tip_entry_found = True
-        assert(tip_entry_found)
+        self._check_tip_status(self.nodes[0], block_292.hash, 'headers-only')
         assert_raises_rpc_error(-1, "Block not found on disk", self.nodes[0].getblock, block_292.hash)
 
         test_node.send_message(msg_block(block_289f))
@@ -280,22 +270,27 @@ class AcceptBlockTest(BitcoinTestFramework):
         self.nodes[0].getblock(block_289f.hash)
         self.nodes[0].getblock(block_290f.hash)
 
-        test_node.send_message(msg_block(block_291))
+        for invalid_block in (block_291, block_292):
+            test_node.send_message(msg_block(invalid_block))
 
-        # At this point we've sent an obviously-bogus block, wait for full processing
-        # without assuming whether we will be disconnected or not
-        try:
-            # Only wait a short while so the test doesn't take forever if we do get
-            # disconnected
-            test_node.sync_with_ping(timeout=1)
-        except AssertionError:
-            test_node.wait_for_disconnect()
+            # At this point we've sent an obviously-bogus block, wait for full
+            # processing without assuming whether we will be disconnected or
+            # not
+            try:
+                # Only wait a short while so the test doesn't take forever if
+                # we do get disconnected
+                test_node.sync_with_ping(timeout=1)
+            except AssertionError:
+                test_node.wait_for_disconnect()
+                test_node = self._reconnect_node(self.nodes[0])
 
-            self.nodes[0].disconnect_p2ps()
-            test_node = self.nodes[0].add_p2p_connection(P2PInterface())
+            # We should still able to retrieve headers for the invalid block
+            # and its children.
+            self.nodes[0].getblockheader(invalid_block.hash)
 
-            network_thread_start()
-            test_node.wait_for_verack()
+        # ...but the tip descended from the bad block should be marked as
+        # invalid.
+        self._check_tip_status(self.nodes[0], block_292.hash, 'invalid')
 
         # We should have failed reorg and switched back to 290 (but have block 291)
         assert_equal(self.nodes[0].getblockcount(), 290)
@@ -310,10 +305,57 @@ class AcceptBlockTest(BitcoinTestFramework):
         test_node.send_message(headers_message)
         test_node.wait_for_disconnect()
 
-        # 9. Connect node1 to node0 and ensure it is able to sync
+        test_node = self._reconnect_node(self.nodes[0])
+
+        # 9. Send an invalid block which prompts a DoS response. Ensure the
+        # associated chain tip is marked as invalid.
+
+        # Create a block whose reception will prompt a DoS response, forking
+        # off some earlier point in the active chain
+        bad_cb = create_coinbase_with_bad_txin(275)
+
+        dos_block = create_block(
+            all_blocks[270].sha256, bad_cb, all_blocks[270].nTime + 1)
+        dos_block.solve()
+
+        test_node.send_message(msg_headers([CBlockHeader(dos_block)]))
+        test_node.send_message(msg_block(dos_block))
+        test_node.wait_for_disconnect()
+        test_node = self._reconnect_node(self.nodes[0])
+
+        # Check that we can still retrieve the header of the DoS-causing block
+        self.nodes[0].getblockheader(dos_block.hash)
+
+        self._check_tip_status(self.nodes[0], dos_block.hash, 'invalid')
+        assert_raises_rpc_error(
+            -1, "Block not found on disk",
+            self.nodes[0].getblock, dos_block.hash)
+
+        # 10. Connect node1 to node0 and ensure it is able to sync
         connect_nodes(self.nodes[0], 1)
         sync_blocks([self.nodes[0], self.nodes[1]])
         self.log.info("Successfully synced nodes 1 and 0")
+
+    def _reconnect_node(self, node):
+        """Reconnect to a node after being disconnected.
+
+        Return the resulting P2PInterface.
+        """
+        node.disconnect_p2ps()
+        network_thread_join()
+        test_node = node.add_p2p_connection(P2PInterface())
+        network_thread_start()
+        test_node.wait_for_verack()
+
+        return test_node
+
+    def _check_tip_status(self, node, tip_hash, expected_tip_status):
+        """Assert some tip status given a particular block hash."""
+        [tip_dict] = [
+            t for t in node.getchaintips() if t['hash'] == tip_hash]
+
+        assert_equal(tip_dict['status'], expected_tip_status)
+
 
 if __name__ == '__main__':
     AcceptBlockTest().main()
