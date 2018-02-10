@@ -186,7 +186,7 @@ The `validateaddress` RPC output has been extended with a few new fields, and su
 - Using addresses with the `createmultisig` RPC is now deprecated, and will be removed in a later version. Public keys should be used instead.
 - Blockchain rescans now no longer lock the wallet for the entire rescan process, so other RPCs can now be used at the same time (although results of balances / transactions may be incorrect or incomplete until the rescan is complete).
 - The `logging` RPC has now been made public rather than hidden.
-- An `initialblockdownload` boolean has been added to the `getblockchaininfo` RPC to indicate whether the node is currently in IDB or not.
+- An `initialblockdownload`(IBD) boolean has been added to the `getblockchaininfo` RPC to indicate whether the node is currently in IBD or not.
 - `minrelaytxfee` is now included in the output of `getmempoolinfo`
 
 Other changed command-line options
