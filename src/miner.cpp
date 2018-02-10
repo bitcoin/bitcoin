@@ -1,7 +1,5 @@
-// Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2017 The Bitcoin Core developers
-// Distributed under the MIT software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// Copyright (c) 2018 zablon onjoro
+
 
 #include <miner.h>
 
@@ -141,11 +139,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
                        : pblock->GetBlockTime();
 
     // Decide whether to include witness transactions
-    // This is only needed in case the witness softfork activation is reverted
-    // (which would require a very deep reorganization) or when
-    // -promiscuousmempoolflags is used.
-    // TODO: replace this with a call to main to assess validity of a mempool
-    // transaction (which in most cases can be a no-op).
+   
     fIncludeWitness = IsWitnessEnabled(pindexPrev, chainparams.GetConsensus()) && fMineWitnessTx;
 
     int nPackagesSelected = 0;
@@ -213,9 +207,7 @@ bool BlockAssembler::TestPackage(uint64_t packageSize, int64_t packageSigOpsCost
 }
 
 // Perform transaction-level checks before adding to block:
-// - transaction finality (locktime)
-// - premature witness (in case segwit transactions are added to mempool before
-//   segwit activation)
+
 bool BlockAssembler::TestPackageTransactions(const CTxMemPool::setEntries& package)
 {
     for (const CTxMemPool::txiter it : package) {
@@ -273,15 +265,7 @@ int BlockAssembler::UpdatePackagesForAdded(const CTxMemPool::setEntries& already
     return nDescendantsUpdated;
 }
 
-// Skip entries in mapTx that are already in a block or are present
-// in mapModifiedTx (which implies that the mapTx ancestor state is
-// stale due to ancestor inclusion in the block)
-// Also skip transactions that we've already failed to add. This can happen if
-// we consider a transaction in mapModifiedTx and it fails: we can then
-// potentially consider it again while walking mapTx.  It's currently
-// guaranteed to fail again, but as a belt-and-suspenders check we put it in
-// failedTx and avoid re-evaluation, since the re-evaluation would be using
-// cached size/sigops/fee values that are not actually correct.
+// Skip entries in mapTx that are already in a block 
 bool BlockAssembler::SkipMapTxEntry(CTxMemPool::txiter it, indexed_modified_transaction_set &mapModifiedTx, CTxMemPool::setEntries &failedTx)
 {
     assert (it != mempool.mapTx.end());
@@ -291,9 +275,7 @@ bool BlockAssembler::SkipMapTxEntry(CTxMemPool::txiter it, indexed_modified_tran
 void BlockAssembler::SortForBlock(const CTxMemPool::setEntries& package, CTxMemPool::txiter entry, std::vector<CTxMemPool::txiter>& sortedEntries)
 {
     // Sort package by ancestor count
-    // If a transaction A depends on transaction B, then A's ancestor count
-    // must be greater than B's.  So this is sufficient to validly order the
-    // transactions for block inclusion.
+    
     sortedEntries.clear();
     sortedEntries.insert(sortedEntries.begin(), package.begin(), package.end());
     std::sort(sortedEntries.begin(), sortedEntries.end(), CompareTxIterByAncestorCount());
@@ -305,10 +287,7 @@ void BlockAssembler::SortForBlock(const CTxMemPool::setEntries& package, CTxMemP
 // for block inclusion, we need an alternate method of updating the feerate
 // of a transaction with its not-yet-selected ancestors as we go.
 // This is accomplished by walking the in-mempool descendants of selected
-// transactions and storing a temporary modified state in mapModifiedTxs.
-// Each time through the loop, we compare the best transaction in
-// mapModifiedTxs with the next transaction in the mempool to decide what
-// transaction package to work on next.
+// transactions and storing a temp
 void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpdated)
 {
     // mapModifiedTx will store sorted packages after they are modified
