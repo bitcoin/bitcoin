@@ -9,7 +9,7 @@ cache:
   - depends/sdk-sources
   - $HOME/.ccache
 git:
-  depth: 1
+  depth: false  # full clone for git subtree check, this works around issue #12388
 env:
   global:
     - MAKEJOBS=-j3
