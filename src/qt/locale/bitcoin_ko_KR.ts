@@ -3207,12 +3207,24 @@
         <translation>%s 데이터 디렉토리에 락을 걸 수 없었습니다. %s가 이미 실행 중인 것으로 보입니다.</translation>
     </message>
     <message>
+        <source>Cannot provide specific connections and have addrman find outgoing connections at the same.</source>
+        <translation>특정 연결을 제공 할 수없고 addrman이 나가는 연결을 찾을 수 없습니다.</translation>
+    </message>
+    <message>
+        <source>Connect only to the specified node(s); -connect=0 disables automatic connections (the rules for this peer are the same as for -addnode)</source>
+        <translation>지정된 노드에만 연결하십시오. -connect = 0은 자동 연결을 비활성화합니다 (이 피어의 규칙은 -addnode의 규칙과 동일합니다)</translation>
+    </message>
+    <message>
         <source>Delete all wallet transactions and only recover those parts of the blockchain through -rescan on startup</source>
         <translation>시작시 모든 지갑 거래를 삭제하고 -rescan을 통하여 블록체인만 복구합니다.</translation>
     </message>
     <message>
         <source>Error reading %s! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
         <translation>%s 불러오기 오류: 주소 키는 모두 정확하게 로드되었으나 거래 데이터와 주소록 필드에서 누락이나 오류가 존재할 수 있습니다.</translation>
+    </message>
+    <message>
+        <source>Exclude debugging information for a category. Can be used in conjunction with -debug=1 to output debug logs for all categories except one or more specified categories.</source>
+        <translation>카테고리에 대한 디버깅 정보를 제외하십시오. -debug = 1과 함께 사용하여 하나 이상의 지정된 범주를 제외한 모든 범주의 디버그 로그를 출력 할 수 있습니다.</translation>
     </message>
     <message>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
@@ -3239,6 +3251,10 @@
         <translation>%s가 유용하다고 생각한다면 프로젝트에 공헌해주세요. 이 소프트웨어에 대한 보다 자세한 정보는 %s를 방문해주십시오.</translation>
     </message>
     <message>
+        <source>Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect used)</source>
+        <translation>DNS lookup를 통해 피어 주소에 대한 쿼리 보내기 (기본값: 1 -connect 예외)</translation>
+    </message>
+    <message>
         <source>Set lowest fee rate (in %s/kB) for transactions to be included in block creation. (default: %s)</source>
         <translation>블록 생성시 거래가 포함되도록 최저 수수료율을 설정하십시오 (%s/kB 단위). (기본값: %s)</translation>
     </message>
@@ -3253,6 +3269,10 @@
     <message>
         <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
         <translation>출시 전의 테스트 빌드 입니다. - 스스로의 책임하에 사용하십시오 - 채굴이나 상업적 용도로 프로그램으로 사용하지 마십시오</translation>
+    </message>
+    <message>
+        <source>This is the transaction fee you may discard if change is smaller than dust at this level</source>
+        <translation>이것은 수수료 견적을 이용할 수 없을 때 지불 할 수 있는 거래 수수료입니다.</translation>
     </message>
     <message>
         <source>Unable to replay blocks. You will need to rebuild the database using -reindex-chainstate.</source>
@@ -3411,6 +3431,10 @@
         <translation>어떤 포트도 반응하지 않습니다. 사용자 반응=0 만약 원한다면</translation>
     </message>
     <message>
+        <source>Failed to rescan the wallet during initialization</source>
+        <translation>지갑 스캔 오류</translation>
+    </message>
+    <message>
         <source>Importing...</source>
         <translation>들여오기 중...</translation>
     </message>
@@ -3489,6 +3513,10 @@
     <message>
         <source>Rewinding blocks...</source>
         <translation>블록 되감는중...</translation>
+    </message>
+    <message>
+        <source>Send transactions with full-RBF opt-in enabled (RPC only, default: %u)</source>
+        <translation>full-RBF opt-in이 활성화 된 거래을 전송합니다. (기본값: %u)</translation>
     </message>
     <message>
         <source>Set database cache size in megabytes (%d to %d, default: %d)</source>
@@ -3705,6 +3733,18 @@
     <message>
         <source>Signing transaction failed</source>
         <translation>거래를 서명하는것을 실패하였습니다.</translation>
+    </message>
+    <message>
+        <source>Specified -walletdir "%s" does not exist</source>
+        <translation>애러: 지정한 지갑 폴더 "%s"은 존재하지 않습니다.</translation>
+    </message>
+    <message>
+        <source>Specified -walletdir "%s" is a relative path</source>
+        <translation>애러: 지정한 지갑 폴더 "%s"은 상대 경로입니다.</translation>
+    </message>
+    <message>
+        <source>Specified -walletdir "%s" is not a directory</source>
+        <translation>애러: 지정한 지갑 폴더 "%s"은 디렉토리가 아닙니다.</translation>
     </message>
     <message>
         <source>The transaction amount is too small to pay the fee</source>

@@ -1790,19 +1790,28 @@ bool AppInitMain()
     // Wait for genesis block to be processed
     {
         WaitableLock lock(cs_GenesisWait);
-        while (!fHaveGenesis) {
-            condvar_GenesisWait.wait(lock);
+        // We previously could hang here if StartShutdown() is called prior to
+        // ThreadImport getting started, so instead we just wait on a timer to
+        // check ShutdownRequested() regularly.
+        while (!fHaveGenesis && !ShutdownRequested()) {
+            condvar_GenesisWait.wait_for(lock, std::chrono::milliseconds(500));
         }
         uiInterface.NotifyBlockTip.disconnect(BlockNotifyGenesisWait);
     }
 
     // ********************************************************* Step 10.1: start secure messaging
-
 #ifdef ENABLE_WALLET
     assert(vpwallets.size() > 0);
     if (fParticlMode) // SMSG breaks functional tests with services flag, see version msg
     smsgModule.Start(vpwallets[0], !gArgs.GetBoolArg("-smsg", true), gArgs.GetBoolArg("-smsgscanchain", false));
+#else
+    if (fParticlMode)
+    smsgModule.Start(nullptr, !gArgs.GetBoolArg("-smsg", true), gArgs.GetBoolArg("-smsgscanchain", false));
 #endif
+
+    if (ShutdownRequested()) {
+        return false;
+    }
 
     // ********************************************************* Step 11: start node
 

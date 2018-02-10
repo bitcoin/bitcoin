@@ -2229,6 +2229,10 @@
         <translation>Puteti creste taxa mai tarziu (semnaleaza Replace-By-Fee, BIP-125).</translation>
     </message>
     <message>
+        <source>Not signalling Replace-By-Fee, BIP-125.</source>
+        <translation>Nu se semnalizeaza Replace-By-Fee, BIP-125</translation>
+    </message>
+    <message>
         <source>Confirm send coins</source>
         <translation>Confirmă trimiterea monedelor</translation>
     </message>
@@ -2346,6 +2350,10 @@
     <message>
         <source>S&amp;ubtract fee from amount</source>
         <translation>S&amp;cade taxa din suma</translation>
+    </message>
+    <message>
+        <source>Use available balance</source>
+        <translation>Folosește balanța disponibilă</translation>
     </message>
     <message>
         <source>Message:</source>
@@ -2899,6 +2907,10 @@
         <translation>Altele</translation>
     </message>
     <message>
+        <source>Enter address, transaction id, or label to search</source>
+        <translation>Introduceți adresa, ID-ul tranzacției, sau eticheta pentru a căuta</translation>
+    </message>
+    <message>
         <source>Min amount</source>
         <translation>Suma minimă</translation>
     </message>
@@ -3172,6 +3184,10 @@
     <message>
         <source>Accept relayed transactions received from whitelisted peers even when not relaying transactions (default: %d)</source>
         <translation>Accepta retransmiterea tranzactiilor primite de la parteneri din whitelist chiar si atunci cand nu se retransmit tranzactii (implicit: %d)</translation>
+    </message>
+    <message>
+        <source>Add a node to connect to and attempt to keep the connection open (see the `addnode` RPC command help for more info)</source>
+        <translation>Adaugă un nod la care te poţi conecta pentru a menţine conexiunea deschisă (vezi ajutorul de comanda RPC 'addnode' pentru mai multe informatii)</translation>
     </message>
     <message>
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
