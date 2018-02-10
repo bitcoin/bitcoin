@@ -7,6 +7,8 @@ cache:
   - depends/built
   - depends/sdk-sources
   - $HOME/.ccache
+git:
+  depth: false  # full clone for git subtree check
 env:
   global:
     - MAKEJOBS=-j3
