@@ -22,6 +22,9 @@ class CValidationState;
 class uint256;
 class CScheduler;
 class CTxMemPool;
+namespace smsg {
+class SecureMessage;
+}
 enum class MemPoolRemovalReason;
 
 // These functions dispatch to one or all registered wallets
@@ -121,7 +124,7 @@ protected:
     friend void ::UnregisterAllValidationInterfaces();
 
     virtual void TransactionAddedToWallet(const std::string &sWalletName, const CTransactionRef& tx) {};
-    virtual void NewSecureMessage(const uint160 &hash) {};
+    virtual void NewSecureMessage(const smsg::SecureMessage *psmsg, const uint160 &hash) {};
 };
 
 struct MainSignalsInstance;
@@ -162,7 +165,7 @@ public:
     void NewPoWValidBlock(const CBlockIndex *, const std::shared_ptr<const CBlock>&);
 
     void TransactionAddedToWallet(const std::string &sWalletName, const CTransactionRef& tx);
-    void NewSecureMessage(const uint160 &hash);
+    void NewSecureMessage(const smsg::SecureMessage *psmsg, const uint160 &hash);
 };
 
 CMainSignals& GetMainSignals();

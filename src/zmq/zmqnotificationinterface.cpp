@@ -303,12 +303,12 @@ void CZMQNotificationInterface::TransactionAddedToWallet(const std::string &sWal
     }
 };
 
-void CZMQNotificationInterface::NewSecureMessage(const uint160 &hash)
+void CZMQNotificationInterface::NewSecureMessage(const smsg::SecureMessage *psmsg, const uint160 &hash)
 {
     for (std::list<CZMQAbstractNotifier*>::iterator i = notifiers.begin(); i!=notifiers.end(); )
     {
         CZMQAbstractNotifier *notifier = *i;
-        if (notifier->NotifySecureMessage(hash))
+        if (notifier->NotifySecureMessage(psmsg, hash))
         {
             i++;
         }

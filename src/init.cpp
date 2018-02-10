@@ -199,7 +199,7 @@ void Shutdown()
     StopREST();
     StopRPC();
     StopHTTPServer();
-    SecureMsgShutdown();
+    smsgModule.Shutdown();
 #ifdef ENABLE_WALLET
     ShutdownThreadStakeMiner();
     FlushWallets();
@@ -455,7 +455,7 @@ std::string HelpMessage(HelpMessageMode mode)
         " " + _("Whitelisted peers cannot be DoS banned and their transactions are always relayed, even if they are already in the mempool, useful e.g. for a gateway"));
     strUsage += HelpMessageOpt("-maxuploadtarget=<n>", strprintf(_("Tries to keep outbound traffic under the given target (in MiB per 24h), 0 = no limit (default: %d)"), DEFAULT_MAX_UPLOAD_TARGET));
 
-    strUsage += SecureMsgGetHelpString(showDebug);
+    strUsage += smsg::GetHelpString(showDebug);
 
 #ifdef ENABLE_WALLET
     if (fParticlMode)
@@ -1801,7 +1801,7 @@ bool AppInitMain()
 #ifdef ENABLE_WALLET
     assert(vpwallets.size() > 0);
     if (fParticlMode) // SMSG breaks functional tests with services flag, see version msg
-    SecureMsgStart(vpwallets[0], !gArgs.GetBoolArg("-smsg", true), gArgs.GetBoolArg("-smsgscanchain", false));
+    smsgModule.Start(vpwallets[0], !gArgs.GetBoolArg("-smsg", true), gArgs.GetBoolArg("-smsgscanchain", false));
 #endif
 
     // ********************************************************* Step 11: start node
@@ -1825,7 +1825,7 @@ bool AppInitMain()
     MapPort(gArgs.GetBoolArg("-upnp", DEFAULT_UPNP));
 
     CConnman::Options connOptions;
-    connOptions.nLocalServices = fSecMsgEnabled ? ServiceFlags(nLocalServices | NODE_SMSG) : nLocalServices;
+    connOptions.nLocalServices = smsg::fSecMsgEnabled ? ServiceFlags(nLocalServices | NODE_SMSG) : nLocalServices;
     connOptions.nMaxConnections = nMaxConnections;
     connOptions.nMaxOutbound = std::min(MAX_OUTBOUND_CONNECTIONS, connOptions.nMaxConnections);
     connOptions.nMaxAddnode = MAX_ADDNODE_CONNECTIONS;

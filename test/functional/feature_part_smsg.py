@@ -35,9 +35,9 @@ class SmsgTest(ParticlTestFramework):
         assert('SMSG' in ro['localservices_str'])
 
         ro = nodes[0].smsglocalkeys()
-        assert(len(ro['keys']) == 1)
+        assert(len(ro['wallet_keys']) == 1)
 
-        ro = nodes[1].smsgaddkey(address0, ro['keys'][0]['public_key'])
+        ro = nodes[1].smsgaddaddress(address0, ro['wallet_keys'][0]['public_key'])
         assert(ro['result'] == 'Public key added to db.')
 
         ro = nodes[1].smsgbuckets()

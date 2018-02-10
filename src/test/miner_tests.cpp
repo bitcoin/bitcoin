@@ -377,7 +377,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
         CBlockIndex* prev = chainActive.Tip();
         CBlockIndex* next = new CBlockIndex();
         next->phashBlock = new uint256(InsecureRand256());
-        pcoinsTip->SetBestBlock(next->GetBlockHash());
+        pcoinsTip->SetBestBlock(next->GetBlockHash(), prev->nHeight + 1);
         next->pprev = prev;
         next->nHeight = prev->nHeight + 1;
         next->BuildSkip();
@@ -389,7 +389,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
         CBlockIndex* prev = chainActive.Tip();
         CBlockIndex* next = new CBlockIndex();
         next->phashBlock = new uint256(InsecureRand256());
-        pcoinsTip->SetBestBlock(next->GetBlockHash());
+        pcoinsTip->SetBestBlock(next->GetBlockHash(), prev->nHeight + 1);
         next->pprev = prev;
         next->nHeight = prev->nHeight + 1;
         next->BuildSkip();
@@ -419,7 +419,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     while (chainActive.Tip()->nHeight > nHeight) {
         CBlockIndex* del = chainActive.Tip();
         chainActive.SetTip(del->pprev);
-        pcoinsTip->SetBestBlock(del->pprev->GetBlockHash());
+        pcoinsTip->SetBestBlock(del->pprev->GetBlockHash(), del->pprev->nHeight);
         delete del->phashBlock;
         delete del;
     }

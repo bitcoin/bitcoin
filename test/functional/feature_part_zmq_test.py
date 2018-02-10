@@ -13,7 +13,7 @@ from test_framework.test_particl import ParticlTestFramework
 from test_framework.test_framework import SkipTest
 from test_framework.util import bytes_to_hex_str
 
-class ZMQTest (ParticlTestFramework):
+class ZMQTest(ParticlTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 2
@@ -150,15 +150,15 @@ class ZMQTest (ParticlTestFramework):
         assert(address1 == 'pX9N6S76ZtA5BfsiJmqBbjaEgLMHpt58it')
 
         ro = nodes[0].smsglocalkeys()
-        assert(len(ro['keys']) == 0)
+        assert(len(ro['wallet_keys']) == 0)
 
         ro = nodes[0].smsgaddlocaladdress(address0) # listen on address0
         assert('Receiving messages enabled for address' in ro['result'])
 
         ro = nodes[0].smsglocalkeys()
-        assert(len(ro['keys']) == 1)
+        assert(len(ro['wallet_keys']) == 1)
 
-        ro = nodes[1].smsgaddkey(address0, ro['keys'][0]['public_key'])
+        ro = nodes[1].smsgaddaddress(address0, ro['wallet_keys'][0]['public_key'])
         assert(ro['result'] == 'Public key added to db.')
 
 

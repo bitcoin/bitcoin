@@ -8,6 +8,9 @@
 #include <zmq/zmqconfig.h>
 
 class CBlockIndex;
+namespace smsg {
+class SecureMessage;
+}
 class CZMQAbstractNotifier;
 
 typedef CZMQAbstractNotifier* (*CZMQNotifierFactory)();
@@ -36,7 +39,7 @@ public:
     virtual bool NotifyTransaction(const CTransaction &transaction);
 
     virtual bool NotifyTransaction(const std::string &sWalletName, const CTransaction &transaction);
-    virtual bool NotifySecureMessage(const uint160 &hash);
+    virtual bool NotifySecureMessage(const smsg::SecureMessage *psmsg, const uint160 &hash);
 
 protected:
     void *psocket;

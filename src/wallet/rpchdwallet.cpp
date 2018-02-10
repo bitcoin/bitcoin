@@ -5244,6 +5244,7 @@ UniValue rewindchain(const JSONRPCRequest &request)
     UniValue result(UniValue::VOBJ);
 
     CCoinsViewCache view(pcoinsTip.get());
+    view.fForceDisconnect = true;
     CBlockIndex* pindexState = chainActive.Tip();
     CValidationState state;
 
@@ -5253,15 +5254,8 @@ UniValue rewindchain(const JSONRPCRequest &request)
     int nLastRCTCheckpointHeight = ((pindexState->nHeight-1) / 250) * 250;
 
     int64_t nLastRCTOutput = 0;
-
-    pblocktree->ReadRCTOutputCheckpoint(nLastRCTCheckpointHeight, nLastRCTOutput);
-
-    result.pushKV("rct_checkpoint_height", nLastRCTCheckpointHeight);
-    result.pushKV("last_rct_output", (int)nLastRCTOutput);
-
-    std::set<CCmpPubKey> setKi; // unused
-    if (!RollBackRCTIndex(nLastRCTOutput, setKi))
-        throw JSONRPCError(RPC_MISC_ERROR, "RollBackRCTIndex failed.");
+    if (!pblocktree->ReadRCTOutputCheckpoint(nLastRCTCheckpointHeight, nLastRCTOutput))
+        throw JSONRPCError(RPC_MISC_ERROR, "ReadRCTOutputCheckpoint failed, suggest reindex.");
 
     for (CBlockIndex *pindex = chainActive.Tip(); pindex && pindex->pprev; pindex = pindex->pprev)
     {
@@ -5290,11 +5284,19 @@ UniValue rewindchain(const JSONRPCRequest &request)
         if (!FlushStateToDisk(Params(), state, FLUSH_STATE_IF_NEEDED))
             return false;
 
-        // Update chainActive and related variables.
+        chainActive.SetTip(pindex->pprev);
         UpdateTip(pindex->pprev, chainparams);
     };
 
     result.pushKV("nBlocks", nBlocks);
+
+
+    result.pushKV("rct_checkpoint_height", nLastRCTCheckpointHeight);
+    result.pushKV("last_rct_output", (int)nLastRCTOutput);
+
+    std::set<CCmpPubKey> setKi; // unused
+    if (!RollBackRCTIndex(nLastRCTOutput, setKi))
+        throw JSONRPCError(RPC_MISC_ERROR, "RollBackRCTIndex failed.");
 
 
     return result;

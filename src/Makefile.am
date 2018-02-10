@@ -443,14 +443,16 @@ libparticl_util_a_SOURCES = \
 libparticl_smsg_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 libparticl_smsg_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libparticl_smsg_a_SOURCES = \
-  smsg/smessage.cpp \
-  smsg/crypter.cpp \
-  smsg/db.cpp \
-  smsg/rpcsmessage.cpp \
   lz4/lz4.h \
-  xxhash/xxhash.h \
   lz4/lz4.c \
-  xxhash/xxhash.c
+  xxhash/xxhash.h \
+  xxhash/xxhash.c \
+  smsg/crypter.cpp \
+  smsg/keystore.h \
+  smsg/keystore.cpp \
+  smsg/db.cpp \
+  smsg/smessage.cpp \
+  smsg/rpcsmessage.cpp
 
 
 if GLIBC_BACK_COMPAT

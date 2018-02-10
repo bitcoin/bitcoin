@@ -41,24 +41,25 @@ class SmsgPaidTest(ParticlTestFramework):
         assert(address1 == 'pX9N6S76ZtA5BfsiJmqBbjaEgLMHpt58it')
 
         ro = nodes[0].smsglocalkeys()
-        assert(len(ro['keys']) == 0)
+        assert(len(ro['wallet_keys']) == 0)
 
         ro = nodes[0].smsgaddlocaladdress(address0)
         assert('Receiving messages enabled for address' in ro['result'])
 
         ro = nodes[0].smsglocalkeys()
-        assert(len(ro['keys']) == 1)
+        assert(len(ro['wallet_keys']) == 1)
 
 
-        ro = nodes[1].smsgaddkey(address0, ro['keys'][0]['public_key'])
+        ro = nodes[1].smsgaddaddress(address0, ro['wallet_keys'][0]['public_key'])
         assert(ro['result'] == 'Public key added to db.')
 
-        ro = nodes[1].smsgsend(address1, address0, "['data':'test','value':1]", True, 4, True)
+        text_1 = "['data':'test','value':1]"
+        ro = nodes[1].smsgsend(address1, address0, text_1, True, 4, True)
         assert(ro['result'] == 'Not Sent.')
         assert(isclose(ro['fee'], 0.00085800))
 
 
-        ro = nodes[1].smsgsend(address1, address0, "['data':'test','value':1]", True, 4)
+        ro = nodes[1].smsgsend(address1, address0, text_1, True, 4)
         assert(ro['result'] == 'Sent.')
 
         self.stakeBlocks(1, nStakeNode=1)
@@ -66,6 +67,79 @@ class SmsgPaidTest(ParticlTestFramework):
 
         ro = nodes[0].smsginbox()
         assert(len(ro['messages']) == 1)
+        assert(ro['messages'][0]['text'] == text_1)
+
+
+        ro = nodes[0].smsgimportprivkey('7pHSJFY1tNwi6d68UttGzB8YnXq2wFWrBVoadLv4Y6ekJD3L1iKs', 'smsg test key');
+
+        address0_1 = 'pasdoMwEn35xQUXFvsChWAQjuG8rEKJQW9'
+        text_2 = "['data':'test','value':2]"
+        ro = nodes[0].smsglocalkeys();
+        assert(len(ro['smsg_keys']) == 1)
+        assert(ro['smsg_keys'][0]['address'] == address0_1)
+
+        ro = nodes[1].smsgaddaddress(address0_1, ro['smsg_keys'][0]['public_key'])
+        assert(ro['result'] == 'Public key added to db.')
+
+        ro = nodes[1].smsgsend(address1, address0_1, text_2, True, 4)
+        assert(ro['result'] == 'Sent.')
+
+        self.stakeBlocks(1, nStakeNode=1)
+        self.waitForSmsgExchange(2, 1, 0)
+
+        ro = nodes[0].smsginbox()
+        assert(len(ro['messages']) == 1)
+        assert(ro['messages'][0]['text'] == text_2)
+
+
+
+        ro = nodes[0].encryptwallet("qwerty234")
+        assert("wallet encrypted" in ro)
+
+        nodes[0].wait_until_stopped() # wait until encryptwallet has shut down node
+        self.start_node(0, self.extra_args[0])
+        connect_nodes(self.nodes[0], 1)
+        connect_nodes(self.nodes[0], 2)
+        ro = nodes[0].getwalletinfo()
+        assert(ro['encryptionstatus'] == 'Locked')
+
+        localkeys0 = nodes[0].smsglocalkeys();
+        assert(len(localkeys0['smsg_keys']) == 1)
+        assert(len(localkeys0['wallet_keys']) == 1)
+        assert(localkeys0['smsg_keys'][0]['address'] == address0_1)
+        assert(localkeys0['wallet_keys'][0]['address'] == address0)
+
+        text_3 = "['data':'test','value':3]"
+        ro = nodes[0].smsglocalkeys();
+        assert(len(ro['smsg_keys']) == 1)
+        assert(ro['smsg_keys'][0]['address'] == address0_1)
+
+        ro = nodes[1].smsgsend(address1, address0, 'Non paid msg')
+        assert(ro['result'] == 'Sent.')
+
+        ro = nodes[1].smsgsend(address1, address0_1, text_3, True, 4)
+        assert(ro['result'] == 'Sent.')
+        assert(len(ro['txid']) == 64)
+
+        self.sync_all()
+        self.stakeBlocks(1, nStakeNode=1)
+        self.sync_all()
+        self.waitForSmsgExchange(4, 1, 0)
+
+        ro = nodes[0].walletpassphrase("qwerty234", 300)
+        ro = nodes[0].smsginbox()
+        assert(len(ro['messages']) == 2)
+        flat = json.dumps(ro, default=self.jsonDecimal)
+        assert('Non paid msg' in flat)
+        assert(text_3 in flat)
+
+        ro = nodes[0].walletlock()
+
+        ro = nodes[0].smsginbox("all")
+        assert(len(ro['messages']) == 4)
+        flat = json.dumps(ro, default=self.jsonDecimal)
+        assert(flat.count('Wallet is locked') == 2)
+
 
         #assert(False)
         #print(json.dumps(ro, indent=4, default=self.jsonDecimal))

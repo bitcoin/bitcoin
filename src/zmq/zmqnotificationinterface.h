@@ -14,6 +14,9 @@
 #include <atomic>
 
 class CBlockIndex;
+namespace smsg {
+class SecureMessage;
+}
 class CZMQAbstractNotifier;
 
 class CZMQNotificationInterface final : public CValidationInterface
@@ -34,7 +37,7 @@ protected:
     void UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) override;
 
     void TransactionAddedToWallet(const std::string &sWalletName, const CTransactionRef& tx) override;
-    void NewSecureMessage(const uint160 &hash) override;
+    void NewSecureMessage(const smsg::SecureMessage *psmsg, const uint160 &hash) override;
 
 private:
     CZMQNotificationInterface();

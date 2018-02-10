@@ -8,6 +8,20 @@
 #include <serialize.h>
 #include <clientversion.h>
 
+namespace smsg
+{
+
+/*
+prefixes
+    name
+
+    pk      - public key
+    sk      - secret key
+
+    im      - inbox message
+    sm      - sent message
+    qm      - queued message
+*/
 
 CCriticalSection cs_smsgDB;
 leveldb::DB *smsgDB = nullptr;
@@ -169,7 +183,7 @@ bool SecMsgDB::ReadPK(CKeyID &addr, CPubKey &pubkey)
         CDataStream ssValue(strValue.data(), strValue.data() + strValue.size(), SER_DISK, CLIENT_VERSION);
         ssValue >> pubkey;
     } catch (std::exception &e) {
-        LogPrintf("SecMsgDB::ReadPK() unserialize threw: %s.\n", e.what());
+        LogPrintf("%s unserialize threw: %s.\n", __func__, e.what());
         return false;
     };
 
@@ -228,36 +242,81 @@ bool SecMsgDB::ExistsPK(CKeyID &addr)
     return s.IsNotFound() == false;
 };
 
-
-bool SecMsgDB::NextSmesg(leveldb::Iterator *it, std::string &prefix, uint8_t *chKey, SecMsgStored &smsgStored)
+bool SecMsgDB::ReadKey(const CKeyID &idk, SecMsgKey &key)
 {
     if (!pdb)
         return false;
 
-    if (!it->Valid()) // first run
-        it->Seek(prefix);
-    else
-        it->Next();
+    CDataStream ssKey(SER_DISK, CLIENT_VERSION);
+    ssKey.reserve(sizeof(idk) + 2);
+    ssKey << 's';
+    ssKey << 'k';
+    ssKey << idk;
+    std::string strValue;
 
-    if (!(it->Valid()
-        && it->key().size() == 18
-        && memcmp(it->key().data(), prefix.data(), 2) == 0))
-        return false;
+    bool readFromDb = true;
+    if (activeBatch)
+    {
+        // Check activeBatch first
+        bool deleted = false;
+        readFromDb = ScanBatch(ssKey, &strValue, &deleted) == false;
+        if (deleted)
+            return false;
+    };
 
-    memcpy(chKey, it->key().data(), 18);
+    if (readFromDb)
+    {
+        leveldb::Status s = pdb->Get(leveldb::ReadOptions(), ssKey.str(), &strValue);
+        if (!s.ok())
+        {
+            if (s.IsNotFound())
+                return false;
+            return error("LevelDB read failure: %s\n", s.ToString());
+        };
+    };
 
     try {
-        CDataStream ssValue(it->value().data(), it->value().data() + it->value().size(), SER_DISK, CLIENT_VERSION);
-        ssValue >> smsgStored;
+        CDataStream ssValue(strValue.data(), strValue.data() + strValue.size(), SER_DISK, CLIENT_VERSION);
+        ssValue >> key;
     } catch (std::exception &e) {
-        LogPrintf("SecMsgDB::NextSmesg() unserialize threw: %s.\n", e.what());
+        LogPrintf("%s unserialize threw: %s.\n", __func__, e.what());
         return false;
     };
 
     return true;
 };
 
-bool SecMsgDB::NextSmesgKey(leveldb::Iterator *it, std::string &prefix, uint8_t *chKey)
+bool SecMsgDB::WriteKey(const CKeyID &idk, const SecMsgKey &key)
+{
+    if (!pdb)
+        return false;
+    CDataStream ssKey(SER_DISK, CLIENT_VERSION);
+    ssKey.reserve(sizeof(idk) + 2);
+    ssKey << 's';
+    ssKey << 'k';
+    ssKey << idk;
+
+    CDataStream ssValue(SER_DISK, CLIENT_VERSION);
+    ssValue.reserve(sizeof(key));
+    ssValue << key;
+
+    if (activeBatch)
+    {
+        activeBatch->Put(ssKey.str(), ssValue.str());
+        return true;
+    };
+
+    leveldb::WriteOptions writeOptions;
+    writeOptions.sync = true;
+    leveldb::Status s = pdb->Put(writeOptions, ssKey.str(), ssValue.str());
+    if (!s.ok())
+        return error("%s failed: %s\n", __func__, s.ToString());
+
+    return true;
+};
+
+
+bool SecMsgDB::NextSmesg(leveldb::Iterator *it, const std::string &prefix, uint8_t *chKey, SecMsgStored &smsgStored)
 {
     if (!pdb)
         return false;
@@ -268,22 +327,50 @@ bool SecMsgDB::NextSmesgKey(leveldb::Iterator *it, std::string &prefix, uint8_t 
         it->Next();
 
     if (!(it->Valid()
-        && it->key().size() == 18
+        && it->key().size() == 30
         && memcmp(it->key().data(), prefix.data(), 2) == 0))
         return false;
 
-    memcpy(chKey, it->key().data(), 18);
+    memcpy(chKey, it->key().data(), 30);
+
+    try {
+        CDataStream ssValue(it->value().data(), it->value().data() + it->value().size(), SER_DISK, CLIENT_VERSION);
+        ssValue >> smsgStored;
+    } catch (std::exception &e) {
+        LogPrintf("%s unserialize threw: %s.\n", __func__, e.what());
+        return false;
+    };
 
     return true;
 };
 
-bool SecMsgDB::ReadSmesg(uint8_t *chKey, SecMsgStored &smsgStored)
+bool SecMsgDB::NextSmesgKey(leveldb::Iterator *it, const std::string &prefix, uint8_t *chKey)
+{
+    if (!pdb)
+        return false;
+
+    if (!it->Valid()) // first run
+        it->Seek(prefix);
+    else
+        it->Next();
+
+    if (!(it->Valid()
+        && it->key().size() == 30
+        && memcmp(it->key().data(), prefix.data(), 2) == 0))
+        return false;
+
+    memcpy(chKey, it->key().data(), 30);
+
+    return true;
+};
+
+bool SecMsgDB::ReadSmesg(const uint8_t *chKey, SecMsgStored &smsgStored)
 {
     if (!pdb)
         return false;
 
     CDataStream ssKey(SER_DISK, CLIENT_VERSION);
-    ssKey.write((const char*)chKey, 18);
+    ssKey.write((const char*)chKey, 30);
     std::string strValue;
 
     bool readFromDb = true;
@@ -311,20 +398,20 @@ bool SecMsgDB::ReadSmesg(uint8_t *chKey, SecMsgStored &smsgStored)
         CDataStream ssValue(strValue.data(), strValue.data() + strValue.size(), SER_DISK, CLIENT_VERSION);
         ssValue >> smsgStored;
     } catch (std::exception &e) {
-        LogPrintf("SecMsgDB::ReadSmesg() unserialize threw: %s.\n", e.what());
+        LogPrintf("%s unserialize threw: %s.\n", __func__, e.what());
         return false;
     };
 
     return true;
 };
 
-bool SecMsgDB::WriteSmesg(uint8_t *chKey, SecMsgStored &smsgStored)
+bool SecMsgDB::WriteSmesg(const uint8_t *chKey, SecMsgStored &smsgStored)
 {
     if (!pdb)
         return false;
 
     CDataStream ssKey(SER_DISK, CLIENT_VERSION);
-    ssKey.write((const char*)chKey, 18);
+    ssKey.write((const char*)chKey, 30);
     CDataStream ssValue(SER_DISK, CLIENT_VERSION);
     ssValue << smsgStored;
 
@@ -343,13 +430,13 @@ bool SecMsgDB::WriteSmesg(uint8_t *chKey, SecMsgStored &smsgStored)
     return true;
 };
 
-bool SecMsgDB::ExistsSmesg(uint8_t *chKey)
+bool SecMsgDB::ExistsSmesg(const uint8_t *chKey)
 {
     if (!pdb)
         return false;
 
     CDataStream ssKey(SER_DISK, CLIENT_VERSION);
-    ssKey.write((const char*)chKey, 18);
+    ssKey.write((const char*)chKey, 30);
     std::string unused;
 
     if (activeBatch)
@@ -364,10 +451,10 @@ bool SecMsgDB::ExistsSmesg(uint8_t *chKey)
     return true;
 };
 
-bool SecMsgDB::EraseSmesg(uint8_t *chKey)
+bool SecMsgDB::EraseSmesg(const uint8_t *chKey)
 {
     CDataStream ssKey(SER_DISK, CLIENT_VERSION);
-    ssKey.write((const char*)chKey, 18);
+    ssKey.write((const char*)chKey, 30);
 
     if (activeBatch)
     {
@@ -384,3 +471,32 @@ bool SecMsgDB::EraseSmesg(uint8_t *chKey)
     return error("SecMsgDB erase failed: %s\n", s.ToString());
 };
 
+bool SecMsgDB::NextPrivKey(leveldb::Iterator *it, const std::string &prefix, CKeyID &idk, SecMsgKey &key)
+{
+    if (!pdb)
+        return false;
+
+    if (!it->Valid()) // first run
+        it->Seek(prefix);
+    else
+        it->Next();
+
+    if (!(it->Valid()
+        && it->key().size() == 22
+        && memcmp(it->key().data(), prefix.data(), 2) == 0))
+        return false;
+
+    memcpy(idk.begin(), it->key().data()+2, 20);
+
+    try {
+        CDataStream ssValue(it->value().data(), it->value().data() + it->value().size(), SER_DISK, CLIENT_VERSION);
+        ssValue >> key;
+    } catch (std::exception &e) {
+        LogPrintf("%s unserialize threw: %s.\n", __func__, e.what());
+        return false;
+    };
+
+    return true;
+};
+
+} // namespace smsg

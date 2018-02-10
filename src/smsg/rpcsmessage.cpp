@@ -29,7 +29,7 @@ UniValue smsgenable(const JSONRPCRequest &request)
             "smsgenable \n"
             "Enable secure messaging.");
 
-    if (fSecMsgEnabled)
+    if (smsg::fSecMsgEnabled)
         throw std::runtime_error("Secure messaging is already enabled.");
 
     UniValue result(UniValue::VOBJ);
@@ -40,7 +40,7 @@ UniValue smsgenable(const JSONRPCRequest &request)
     pwallet = vpwallets[0];
 #endif
 
-    result.pushKV("result", (SecureMsgEnable(pwallet) ? "Enabled secure messaging." : "Failed to enable secure messaging."));
+    result.pushKV("result", (smsgModule.Enable(pwallet) ? "Enabled secure messaging." : "Failed to enable secure messaging."));
 
     return result;
 }
@@ -52,11 +52,11 @@ UniValue smsgdisable(const JSONRPCRequest &request)
             "smsgdisable \n"
             "Disable secure messaging.");
 
-    if (!fSecMsgEnabled)
+    if (!smsg::fSecMsgEnabled)
         throw std::runtime_error("Secure messaging is already disabled.");
 
     UniValue result;
-    result.pushKV("result", (SecureMsgDisable() ? "Disabled secure messaging." : "Failed to disable secure messaging."));
+    result.pushKV("result", (smsgModule.Disable() ? "Disabled secure messaging." : "Failed to disable secure messaging."));
 
     return result;
 }
@@ -85,15 +85,15 @@ UniValue smsgoptions(const JSONRPCRequest &request)
             fDescriptions     = part::IsStringBoolPositive(value);
         };
 
-        result.pushKV("option", std::string("newAddressRecv = ") + (smsgOptions.fNewAddressRecv ? "true" : "false"));
+        result.pushKV("option", std::string("newAddressRecv = ") + (smsgModule.options.fNewAddressRecv ? "true" : "false"));
 
         if (fDescriptions)
             result.pushKV("newAddressRecv", "Enable receiving messages for newly created addresses.");
-        result.pushKV("option", std::string("newAddressAnon = ") + (smsgOptions.fNewAddressAnon ? "true" : "false"));
+        result.pushKV("option", std::string("newAddressAnon = ") + (smsgModule.options.fNewAddressAnon ? "true" : "false"));
 
         if (fDescriptions)
             result.pushKV("newAddressAnon", "Enable receiving anonymous messages for newly created addresses.");
-        result.pushKV("option", std::string("scanIncoming = ") + (smsgOptions.fScanIncoming ? "true" : "false"));
+        result.pushKV("option", std::string("scanIncoming = ") + (smsgModule.options.fScanIncoming ? "true" : "false"));
 
         if (fDescriptions)
             result.pushKV("scanIncoming", "Scan incoming blocks for public keys.");
@@ -119,37 +119,37 @@ UniValue smsgoptions(const JSONRPCRequest &request)
         {
             if (part::GetStringBool(value, fValue))
             {
-                smsgOptions.fNewAddressRecv = fValue;
+                smsgModule.options.fNewAddressRecv = fValue;
             } else
             {
                 result.pushKV("result", "Unknown value.");
                 return result;
             };
-            result.pushKV("set option", std::string("newAddressRecv = ") + (smsgOptions.fNewAddressRecv ? "true" : "false"));
+            result.pushKV("set option", std::string("newAddressRecv = ") + (smsgModule.options.fNewAddressRecv ? "true" : "false"));
         } else
         if (optname == "newaddressanon")
         {
             if (part::GetStringBool(value, fValue))
             {
-                smsgOptions.fNewAddressAnon = fValue;
+                smsgModule.options.fNewAddressAnon = fValue;
             } else
             {
                 result.pushKV("result", "Unknown value.");
                 return result;
             };
-            result.pushKV("set option", std::string("newAddressAnon = ") + (smsgOptions.fNewAddressAnon ? "true" : "false"));
+            result.pushKV("set option", std::string("newAddressAnon = ") + (smsgModule.options.fNewAddressAnon ? "true" : "false"));
         } else
         if (optname == "scanincoming")
         {
             if (part::GetStringBool(value, fValue))
             {
-                smsgOptions.fScanIncoming = fValue;
+                smsgModule.options.fScanIncoming = fValue;
             } else
             {
                 result.pushKV("result", "Unknown value.");
                 return result;
             };
-            result.pushKV("set option", std::string("scanIncoming = ") + (smsgOptions.fScanIncoming ? "true" : "false"));
+            result.pushKV("set option", std::string("scanIncoming = ") + (smsgModule.options.fScanIncoming ? "true" : "false"));
         } else
         {
             result.pushKV("result", "Option not found.");
@@ -171,12 +171,11 @@ UniValue smsglocalkeys(const JSONRPCRequest &request)
             "smsglocalkeys [whitelist|all|wallet|recv <+/-> <address>|anon <+/-> <address>]\n"
             "List and manage keys.");
 
-    if (!fSecMsgEnabled)
+    if (!smsg::fSecMsgEnabled)
         throw std::runtime_error("Secure messaging is disabled.");
 
     UniValue result(UniValue::VOBJ);
 
-#ifdef ENABLE_WALLET
     std::string mode = "whitelist";
     if (request.params.size() > 0)
     {
@@ -186,48 +185,73 @@ UniValue smsglocalkeys(const JSONRPCRequest &request)
     if (mode == "whitelist"
         || mode == "all")
     {
+        LOCK(smsgModule.cs_smsg);
         uint32_t nKeys = 0;
         int all = mode == "all" ? 1 : 0;
 
         UniValue keys(UniValue::VARR);
-
-        for (std::vector<SecMsgAddress>::iterator it = smsgAddresses.begin(); it != smsgAddresses.end(); ++it)
+#ifdef ENABLE_WALLET
+        if (smsgModule.pwallet)
         {
-            if (!all
-                && !it->fReceiveEnabled)
-                continue;
-
-            CKeyID &keyID = it->address;
-            std::string sPublicKey;
-            CPubKey pubKey;
-            if (!pwalletSmsg->GetPubKey(keyID, pubKey))
-                continue;
-            if (!pubKey.IsValid()
-                || !pubKey.IsCompressed())
+            for (auto it = smsgModule.addresses.begin(); it != smsgModule.addresses.end(); ++it)
             {
-                continue;
+                if (!all
+                    && !it->fReceiveEnabled)
+                    continue;
+
+                CKeyID &keyID = it->address;
+                std::string sPublicKey;
+                CPubKey pubKey;
+
+                if (smsgModule.pwallet)
+                {
+                    if (!smsgModule.pwallet->GetPubKey(keyID, pubKey))
+                        continue;
+                    if (!pubKey.IsValid()
+                        || !pubKey.IsCompressed())
+                    {
+                        continue;
+                    };
+                    sPublicKey = EncodeBase58(pubKey.begin(), pubKey.end());
+                };
+
+                UniValue objM(UniValue::VOBJ);
+                std::string sLabel = smsgModule.pwallet->mapAddressBook[keyID].name;
+                std::string sInfo;
+                if (all)
+                    sInfo = std::string("Receive ") + (it->fReceiveEnabled ? "on,  " : "off, ");
+                sInfo += std::string("Anon ") + (it->fReceiveAnon ? "on" : "off");
+                //result.pushKV("key", it->sAddress + " - " + sPublicKey + " " + sInfo + " - " + sLabel);
+                objM.pushKV("address", CBitcoinAddress(keyID).ToString());
+                objM.pushKV("public_key", sPublicKey);
+                objM.pushKV("receive", (it->fReceiveEnabled ? "1" : "0"));
+                objM.pushKV("anon", (it->fReceiveAnon ? "1" : "0"));
+                objM.pushKV("label", sLabel);
+                keys.push_back(objM);
+
+                nKeys++;
             };
+            result.pushKV("wallet_keys", keys);
+        };
+#endif
 
-            sPublicKey = EncodeBase58(pubKey.begin(), pubKey.end());
-
+        keys = UniValue(UniValue::VARR);
+        for (auto &p : smsgModule.keyStore.mapKeys)
+        {
+            auto &key = p.second;
             UniValue objM(UniValue::VOBJ);
-
-            std::string sLabel = pwalletSmsg->mapAddressBook[keyID].name;
-            std::string sInfo;
-            if (all)
-                sInfo = std::string("Receive ") + (it->fReceiveEnabled ? "on,  " : "off, ");
-            sInfo += std::string("Anon ") + (it->fReceiveAnon ? "on" : "off");
-            //result.pushKV("key", it->sAddress + " - " + sPublicKey + " " + sInfo + " - " + sLabel);
-            objM.pushKV("address", CBitcoinAddress(keyID).ToString());
-            objM.pushKV("public_key", sPublicKey);
-            objM.pushKV("receive", (it->fReceiveEnabled ? "1" : "0"));
-            objM.pushKV("anon", (it->fReceiveAnon ? "1" : "0"));
-            objM.pushKV("label", sLabel);
+            CPubKey pk = key.key.GetPubKey();
+            objM.pushKV("address", CBitcoinAddress(p.first).ToString());
+            objM.pushKV("public_key", EncodeBase58(pk.begin(), pk.end()));
+            objM.pushKV("receive", (key.nFlags & smsg::SMK_RECEIVE_ON ? "1" : "0"));
+            objM.pushKV("anon", (key.nFlags & smsg::SMK_RECEIVE_ANON ? "1" : "0"));
+            objM.pushKV("label", key.sLabel);
             keys.push_back(objM);
 
             nKeys++;
         };
-        result.pushKV("keys", keys);
+        result.pushKV("smsg_keys", keys);
+
         result.pushKV("result", strprintf("%u", nKeys));
     } else
     if (mode == "recv")
@@ -242,6 +266,13 @@ UniValue smsglocalkeys(const JSONRPCRequest &request)
         std::string op      = request.params[1].get_str();
         std::string addr    = request.params[2].get_str();
 
+        bool fValue;
+        if (!part::GetStringBool(op, fValue))
+        {
+            result.pushKV("result", "Unknown value.");
+            return result;
+        };
+
         CKeyID keyID;
         CBitcoinAddress coinAddress(addr);
         if (!coinAddress.IsValid())
@@ -249,36 +280,16 @@ UniValue smsglocalkeys(const JSONRPCRequest &request)
         if (!coinAddress.GetKeyID(keyID))
             throw std::runtime_error("Invalid address.");
 
-        std::vector<SecMsgAddress>::iterator it;
-        for (it = smsgAddresses.begin(); it != smsgAddresses.end(); ++it)
-        {
-            if (keyID != it->address)
-                continue;
-            break;
-        };
-
-        if (it == smsgAddresses.end())
+        if (smsgModule.SetWalletAddressOption(keyID, "receive", fValue)
+            && !smsgModule.SetSmsgAddressOption(keyID, "receive", fValue))
         {
             result.pushKV("result", "Address not found.");
             return result;
         };
 
-        if (op == "+" || op == "on"  || op == "add" || op == "a")
-        {
-            it->fReceiveEnabled = true;
-        } else
-        if (op == "-" || op == "off" || op == "rem" || op == "r")
-        {
-            it->fReceiveEnabled = false;
-        } else
-        {
-            result.pushKV("result", "Unknown operation.");
-            return result;
-        };
-
         std::string sInfo;
-        sInfo = std::string("Receive ") + (it->fReceiveEnabled ? "on, " : "off,");
-        sInfo += std::string("Anon ") + (it->fReceiveAnon ? "on" : "off");
+        sInfo = std::string("Receive ") + (fValue ? "on, " : "off,");
+        //sInfo += std::string("Anon ") + (it->fReceiveAnon ? "on" : "off");
         result.pushKV("result", "Success.");
         result.pushKV("key", coinAddress.ToString() + " " + sInfo);
         return result;
@@ -296,6 +307,13 @@ UniValue smsglocalkeys(const JSONRPCRequest &request)
         std::string op      = request.params[1].get_str();
         std::string addr    = request.params[2].get_str();
 
+        bool fValue;
+        if (!part::GetStringBool(op, fValue))
+        {
+            result.pushKV("result", "Unknown value.");
+            return result;
+        };
+
         CKeyID keyID;
         CBitcoinAddress coinAddress(addr);
         if (!coinAddress.IsValid())
@@ -303,36 +321,16 @@ UniValue smsglocalkeys(const JSONRPCRequest &request)
         if (!coinAddress.GetKeyID(keyID))
             throw std::runtime_error("Invalid address.");
 
-        std::vector<SecMsgAddress>::iterator it;
-        for (it = smsgAddresses.begin(); it != smsgAddresses.end(); ++it)
-        {
-            if (keyID != it->address)
-                continue;
-            break;
-        };
-
-        if (it == smsgAddresses.end())
+        if (smsgModule.SetWalletAddressOption(keyID, "anon", fValue)
+            && !smsgModule.SetSmsgAddressOption(keyID, "anon", fValue))
         {
             result.pushKV("result", "Address not found.");
             return result;
         };
 
-        if (op == "+" || op == "on"  || op == "add" || op == "a")
-        {
-            it->fReceiveAnon = true;
-        } else
-        if (op == "-" || op == "off" || op == "rem" || op == "r")
-        {
-            it->fReceiveAnon = false;
-        } else
-        {
-            result.pushKV("result", "Unknown operation.");
-            return result;
-        };
-
         std::string sInfo;
-        sInfo = std::string("Receive ") + (it->fReceiveEnabled ? "on, " : "off,");
-        sInfo += std::string("Anon ") + (it->fReceiveAnon ? "on" : "off");
+        //sInfo = std::string("Receive ") + (it->fReceiveEnabled ? "on, " : "off,");
+        sInfo += std::string("Anon ") + (fValue ? "on" : "off");
         result.pushKV("result", "Success.");
         result.pushKV("key", coinAddress.ToString() + " " + sInfo);
         return result;
@@ -340,12 +338,15 @@ UniValue smsglocalkeys(const JSONRPCRequest &request)
     } else
     if (mode == "wallet")
     {
+#ifdef ENABLE_WALLET
+        if (!smsgModule.pwallet)
+            throw std::runtime_error("No wallet.");
         uint32_t nKeys = 0;
         UniValue keys(UniValue::VOBJ);
 
-        for (const auto &entry : pwalletSmsg->mapAddressBook)
+        for (const auto &entry : smsgModule.pwallet->mapAddressBook)
         {
-            if (!IsMine(*pwalletSmsg, entry.first))
+            if (!IsMine(*smsgModule.pwallet, entry.first))
                 continue;
 
             CBitcoinAddress coinAddress(entry.first);
@@ -360,7 +361,7 @@ UniValue smsglocalkeys(const JSONRPCRequest &request)
                 continue;
 
             CPubKey pubKey;
-            if (!pwalletSmsg->GetPubKey(keyID, pubKey))
+            if (!smsgModule.pwallet->GetPubKey(keyID, pubKey))
                 continue;
             if (!pubKey.IsValid()
                 || !pubKey.IsCompressed())
@@ -380,14 +381,15 @@ UniValue smsglocalkeys(const JSONRPCRequest &request)
         };
         result.pushKV("keys", keys);
         result.pushKV("result", strprintf("%u", nKeys));
+#else
+        throw std::runtime_error("No wallet.");
+#endif
     } else
     {
         result.pushKV("result", "Unknown Mode.");
         result.pushKV("expected", "smsglocalkeys [whitelist|all|wallet|recv <+/-> <address>|anon <+/-> <address>]");
     };
-#else
-    throw std::runtime_error("No wallet.");
-#endif
+
     return result;
 };
 
@@ -398,11 +400,11 @@ UniValue smsgscanchain(const JSONRPCRequest &request)
             "smsgscanchain \n"
             "Look for public keys in the block chain.");
 
-    if (!fSecMsgEnabled)
+    if (!smsg::fSecMsgEnabled)
         throw std::runtime_error("Secure messaging is disabled.");
 
     UniValue result(UniValue::VOBJ);
-    if (!SecureMsgScanBlockChain())
+    if (!smsgModule.ScanBlockChain())
     {
         result.pushKV("result", "Scan Chain Failed.");
     } else
@@ -419,47 +421,40 @@ UniValue smsgscanbuckets(const JSONRPCRequest &request)
             "smsgscanbuckets \n"
             "Force rescan of all messages in the bucket store.");
 
-    if (!fSecMsgEnabled)
+    if (!smsg::fSecMsgEnabled)
         throw std::runtime_error("Secure messaging is disabled.");
 
-#ifdef ENABLE_WALLET
-    if (pwalletSmsg->IsLocked())
-        throw std::runtime_error("Wallet is locked.");
-
     UniValue result(UniValue::VOBJ);
-    if (!SecureMsgScanBuckets())
+    if (!smsgModule.ScanBuckets())
     {
         result.pushKV("result", "Scan Buckets Failed.");
     } else
     {
         result.pushKV("result", "Scan Buckets Completed.");
     };
-#else
-    UniValue result(UniValue::VOBJ);
-    throw std::runtime_error("No wallet.");
-#endif
+
     return result;
 }
 
-UniValue smsgaddkey(const JSONRPCRequest &request)
+UniValue smsgaddaddress(const JSONRPCRequest &request)
 {
     if (request.fHelp || request.params.size() != 2)
         throw std::runtime_error(
-            "smsgaddkey <address> <pubkey>\n"
+            "smsgaddaddress <address> <pubkey>\n"
             "Add address and matching public key to database.");
 
-    if (!fSecMsgEnabled)
+    if (!smsg::fSecMsgEnabled)
         throw std::runtime_error("Secure messaging is disabled.");
 
     std::string addr = request.params[0].get_str();
     std::string pubk = request.params[1].get_str();
 
     UniValue result(UniValue::VOBJ);
-    int rv = SecureMsgAddAddress(addr, pubk);
+    int rv = smsgModule.AddAddress(addr, pubk);
     if (rv != 0)
     {
         result.pushKV("result", "Public key not added to db.");
-        result.pushKV("reason", SecureMessageGetString(rv));
+        result.pushKV("reason", smsg::GetString(rv));
     } else
     {
         result.pushKV("result", "Public key added to db.");
@@ -476,17 +471,17 @@ UniValue smsgaddlocaladdress(const JSONRPCRequest &request)
             "Enable receiving messages on <address>.\n"
             "Key for <address> must exist in the wallet.");
 
-    if (!fSecMsgEnabled)
+    if (!smsg::fSecMsgEnabled)
         throw std::runtime_error("Secure messaging is disabled.");
 
     std::string addr = request.params[0].get_str();
 
     UniValue result(UniValue::VOBJ);
-    int rv = SecureMsgAddLocalAddress(addr);
+    int rv = smsgModule.AddLocalAddress(addr);
     if (rv != 0)
     {
         result.pushKV("result", "Address not added.");
-        result.pushKV("reason", SecureMessageGetString(rv));
+        result.pushKV("reason", smsg::GetString(rv));
     } else
     {
         result.pushKV("result", "Receiving messages enabled for address.");
@@ -495,6 +490,43 @@ UniValue smsgaddlocaladdress(const JSONRPCRequest &request)
     return result;
 }
 
+UniValue smsgimportprivkey(const JSONRPCRequest &request)
+{
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
+        throw std::runtime_error(
+            "smsgimportprivkey \"privkey\" ( \"label\" )\n"
+            "\nAdds a private key (as returned by dumpprivkey) to the smsg database.\n"
+            "\nThe imported key can receive messages even if the wallet is locked.\n"
+            "\nArguments:\n"
+            "1. \"privkey\"          (string, required) The private key (see dumpprivkey)\n"
+            "2. \"label\"            (string, optional, default=\"\") An optional label\n"
+            "\nExamples:\n"
+            "\nDump a private key\n"
+            + HelpExampleCli("dumpprivkey", "\"myaddress\"") +
+            "\nImport the private key\n"
+            + HelpExampleCli("smsgimportprivkey", "\"mykey\"") +
+            "\nAs a JSON-RPC call\n"
+            + HelpExampleRpc("smsgimportprivkey", "\"mykey\", \"testing\"")
+        );
+
+    if (!smsg::fSecMsgEnabled)
+        throw std::runtime_error("Secure messaging is disabled.");
+
+    CBitcoinSecret vchSecret;
+    if (!request.params[0].isStr()
+        || !vchSecret.SetString(request.params[0].get_str()))
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key encoding");
+
+    std::string strLabel = "";
+    if (!request.params[1].isNull())
+        strLabel = request.params[1].get_str();
+
+    int rv = smsgModule.ImportPrivkey(vchSecret, strLabel);
+    if (0 != rv)
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "Import failed.");
+
+    return NullUniValue;
+}
 
 UniValue smsggetpubkey(const JSONRPCRequest &request)
 {
@@ -504,33 +536,31 @@ UniValue smsggetpubkey(const JSONRPCRequest &request)
             "Return the base58 encoded compressed public key for an address.\n"
             "Tests localkeys first, then looks in public key db.\n");
 
-    if (!fSecMsgEnabled)
+    if (!smsg::fSecMsgEnabled)
         throw std::runtime_error("Secure messaging is disabled.");
 
     std::string address = request.params[0].get_str();
     std::string publicKey;
 
     UniValue result(UniValue::VOBJ);
-    int rv = SecureMsgGetLocalPublicKey(address, publicKey);
+    int rv = smsgModule.GetLocalPublicKey(address, publicKey);
     switch (rv)
     {
-        case SMSG_NO_ERROR:
+        case smsg::SMSG_NO_ERROR:
             result.pushKV("result", "Success.");
             result.pushKV("address", address);
             result.pushKV("publickey", publicKey);
             return result; // success, don't check db
-        case SMSG_WALLET_NO_PUBKEY:
+        case smsg::SMSG_WALLET_NO_PUBKEY:
             break; // check db
         //case 1:
         default:
             result.pushKV("result", "Failed.");
-            result.pushKV("reason", SecureMessageGetString(rv));
+            result.pushKV("reason", smsg::GetString(rv));
             return result;
     };
 
     CBitcoinAddress coinAddress(address);
-
-
     CKeyID keyID;
     if (!coinAddress.GetKeyID(keyID))
     {
@@ -540,11 +570,11 @@ UniValue smsggetpubkey(const JSONRPCRequest &request)
     };
 
     CPubKey cpkFromDB;
-    rv = SecureMsgGetStoredKey(keyID, cpkFromDB);
+    rv = smsgModule.GetStoredKey(keyID, cpkFromDB);
 
     switch (rv)
     {
-        case SMSG_NO_ERROR:
+        case smsg::SMSG_NO_ERROR:
             if (!cpkFromDB.IsValid()
                 || !cpkFromDB.IsCompressed())
             {
@@ -560,13 +590,13 @@ UniValue smsggetpubkey(const JSONRPCRequest &request)
                 result.pushKV("publickey", publicKey);
             };
             break;
-        case SMSG_PUBKEY_NOT_EXISTS:
+        case smsg::SMSG_PUBKEY_NOT_EXISTS:
             result.pushKV("result", "Failed.");
             result.pushKV("message", "Address not found in wallet or db.");
             return result;
         default:
             result.pushKV("result", "Failed.");
-            result.pushKV("reason", SecureMessageGetString(rv));
+            result.pushKV("reason", smsg::GetString(rv));
             return result;
     };
 
@@ -580,7 +610,7 @@ UniValue smsgsend(const JSONRPCRequest &request)
             "smsgsend <addrFrom> <addrTo> <message>  (paid retention testfee)n"
             "Send an encrypted message from addrFrom to addrTo.");
 
-    if (!fSecMsgEnabled)
+    if (!smsg::fSecMsgEnabled)
         throw std::runtime_error("Secure messaging is disabled.");
 
     RPCTypeCheck(request.params,
@@ -614,7 +644,8 @@ UniValue smsgsend(const JSONRPCRequest &request)
 
     UniValue result(UniValue::VOBJ);
     std::string sError;
-    if (SecureMsgSend(kiFrom, kiTo, msg, sError, fPaid, nRetention, fTestFee, &nFee) != 0)
+    smsg::SecureMessage smsgOut;
+    if (smsgModule.Send(kiFrom, kiTo, msg, smsgOut, sError, fPaid, nRetention, fTestFee, &nFee) != 0)
     {
         result.pushKV("result", "Send failed.");
         result.pushKV("error", sError);
@@ -622,7 +653,15 @@ UniValue smsgsend(const JSONRPCRequest &request)
     {
         result.pushKV("result", fTestFee ? "Not Sent." : "Sent.");
         if (fPaid)
+        {
+            if (!fTestFee)
+            {
+                uint256 txid;
+                smsgOut.GetFundingTxid(txid);
+                result.pushKV("txid", txid.ToString());
+            };
             result.pushKV("fee", ValueFromAmount(nFee));
+        }
     };
 
     return result;
@@ -635,7 +674,7 @@ UniValue smsgsendanon(const JSONRPCRequest &request)
             "smsgsendanon <addrTo> <message>\n"
             "Send an anonymous encrypted message to addrTo.");
 
-    if (!fSecMsgEnabled)
+    if (!smsg::fSecMsgEnabled)
         throw std::runtime_error("Secure messaging is disabled.");
 
     std::string addrTo    = request.params[0].get_str();
@@ -650,7 +689,8 @@ UniValue smsgsendanon(const JSONRPCRequest &request)
 
     UniValue result(UniValue::VOBJ);
     std::string sError;
-    if (SecureMsgSend(kiFrom, kiTo, msg, sError) != 0)
+    smsg::SecureMessage smsgOut;
+    if (smsgModule.Send(kiFrom, kiTo, msg, smsgOut, sError) != 0)
     {
         result.pushKV("result", "Send failed.");
         result.pushKV("error", sError);
@@ -670,12 +710,9 @@ UniValue smsginbox(const JSONRPCRequest &request)
             "Decrypt and display all received messages.\n"
             "Warning: clear will delete all messages.");
 
-    if (!fSecMsgEnabled)
+    if (!smsg::fSecMsgEnabled)
         throw std::runtime_error("Secure messaging is disabled.");
 
-#ifdef ENABLE_WALLET
-    if (pwalletSmsg->IsLocked())
-        throw std::runtime_error("Wallet is locked.");
 
     std::string mode = "unread";
     if (request.params.size() > 0)
@@ -685,15 +722,10 @@ UniValue smsginbox(const JSONRPCRequest &request)
 
     UniValue result(UniValue::VOBJ);
 
-    std::vector<unsigned char> vchKey;
-    vchKey.resize(16);
-    memset(&vchKey[0], 0, 16);
-
     {
-        LOCK(cs_smsgDB);
+        LOCK(smsg::cs_smsgDB);
 
-        SecMsgDB dbInbox;
-
+        smsg::SecMsgDB dbInbox;
         if (!dbInbox.Open("cr+"))
             throw std::runtime_error("Could not open DB.");
 
@@ -723,8 +755,8 @@ UniValue smsginbox(const JSONRPCRequest &request)
         {
             int fCheckReadStatus = mode == "unread" ? 1 : 0;
 
-            SecMsgStored smsgStored;
-            MessageData msg;
+            smsg::SecMsgStored smsgStored;
+            smsg::MessageData msg;
 
             dbInbox.TxnBegin();
 
@@ -736,25 +768,28 @@ UniValue smsginbox(const JSONRPCRequest &request)
                 if (fCheckReadStatus
                     && !(smsgStored.status & SMSG_MASK_UNREAD))
                     continue;
+                uint8_t *pHeader = &smsgStored.vchMessage[0];
+                const smsg::SecureMessage *psmsg = (smsg::SecureMessage*) pHeader;
 
-                uint32_t nPayload = smsgStored.vchMessage.size() - SMSG_HDR_LEN;
-                if (SecureMsgDecrypt(false, smsgStored.addrTo, &smsgStored.vchMessage[0], &smsgStored.vchMessage[SMSG_HDR_LEN], nPayload, msg) == 0)
+                UniValue objM(UniValue::VOBJ);
+                objM.pushKV("msgid", HexStr(&chKey[2], &chKey[2] + 28)); // timestamp+hash
+                objM.pushKV("version", strprintf("%02x%02x", psmsg->version[0], psmsg->version[1]));
+
+                uint32_t nPayload = smsgStored.vchMessage.size() - smsg::SMSG_HDR_LEN;
+                int rv = smsgModule.Decrypt(false, smsgStored.addrTo, pHeader, pHeader + smsg::SMSG_HDR_LEN, nPayload, msg);
+                if (rv == 0)
                 {
-                    UniValue objM(UniValue::VOBJ);
-                    objM.pushKV("success", "1");
                     objM.pushKV("received", part::GetTimeString(smsgStored.timeReceived, cbuf, sizeof(cbuf)));
                     objM.pushKV("sent", part::GetTimeString(msg.timestamp, cbuf, sizeof(cbuf)));
                     objM.pushKV("from", msg.sFromAddress);
                     objM.pushKV("to", CBitcoinAddress(smsgStored.addrTo).ToString());
                     objM.pushKV("text", std::string((char*)&msg.vchMessage[0])); // ugh
-
-                    messageList.push_back(objM);
                 } else
                 {
-                    UniValue objM(UniValue::VOBJ);
-                    objM.pushKV("success", "0");
-                    messageList.push_back(objM);
+                    objM.pushKV("status", "Decrypt failed");
+                    objM.pushKV("error", smsg::GetString(rv));
                 };
+                messageList.push_back(objM);
 
                 if (fCheckReadStatus)
                 {
@@ -774,10 +809,7 @@ UniValue smsginbox(const JSONRPCRequest &request)
             result.pushKV("expected", "[all|unread|clear].");
         };
     } // cs_smsgDB
-#else
-    UniValue result(UniValue::VOBJ);
-    throw std::runtime_error("No wallet.");
-#endif
+
     return result;
 };
 
@@ -789,12 +821,9 @@ UniValue smsgoutbox(const JSONRPCRequest &request)
             "Decrypt and display all sent messages.\n"
             "Warning: clear will delete all sent messages.");
 
-    if (!fSecMsgEnabled)
+    if (!smsg::fSecMsgEnabled)
         throw std::runtime_error("Secure messaging is disabled.");
 
-#ifdef ENABLE_WALLET
-    if (pwalletSmsg->IsLocked())
-        throw std::runtime_error("Wallet is locked.");
 
     std::string mode = "all";
     if (request.params.size() > 0)
@@ -809,10 +838,9 @@ UniValue smsgoutbox(const JSONRPCRequest &request)
     memset(&chKey[0], 0, sizeof(chKey));
 
     {
-        LOCK(cs_smsgDB);
+        LOCK(smsg::cs_smsgDB);
 
-        SecMsgDB dbOutbox;
-
+        smsg::SecMsgDB dbOutbox;
         if (!dbOutbox.Open("cr+"))
             throw std::runtime_error("Could not open DB.");
 
@@ -836,32 +864,33 @@ UniValue smsgoutbox(const JSONRPCRequest &request)
         } else
         if (mode == "all")
         {
-            SecMsgStored smsgStored;
-            MessageData msg;
+            smsg::SecMsgStored smsgStored;
+            smsg::MessageData msg;
             leveldb::Iterator *it = dbOutbox.pdb->NewIterator(leveldb::ReadOptions());
 
             UniValue messageList(UniValue::VARR);
 
             while (dbOutbox.NextSmesg(it, sPrefix, chKey, smsgStored))
             {
-                uint32_t nPayload = smsgStored.vchMessage.size() - SMSG_HDR_LEN;
+                uint8_t *pHeader = &smsgStored.vchMessage[0];
+                const smsg::SecureMessage *psmsg = (smsg::SecureMessage*) pHeader;
 
-                if (SecureMsgDecrypt(false, smsgStored.addrOutbox, &smsgStored.vchMessage[0], &smsgStored.vchMessage[SMSG_HDR_LEN], nPayload, msg) == 0)
+                UniValue objM(UniValue::VOBJ);
+                objM.pushKV("msgid", HexStr(&chKey[2], &chKey[2] + 28)); // timestamp+hash
+                objM.pushKV("version", strprintf("%02x%02x", psmsg->version[0], psmsg->version[1]));
+
+                uint32_t nPayload = smsgStored.vchMessage.size() - smsg::SMSG_HDR_LEN;
+                if (smsgModule.Decrypt(false, smsgStored.addrOutbox, pHeader, pHeader + smsg::SMSG_HDR_LEN, nPayload, msg) == 0)
                 {
-                    UniValue objM(UniValue::VOBJ);
-                    objM.pushKV("success", "1");
                     objM.pushKV("sent", part::GetTimeString(msg.timestamp, cbuf, sizeof(cbuf)));
                     objM.pushKV("from", msg.sFromAddress);
                     objM.pushKV("to", CBitcoinAddress(smsgStored.addrTo).ToString());
                     objM.pushKV("text", std::string((char*)&msg.vchMessage[0])); // ugh
-
-                    messageList.push_back(objM);
                 } else
                 {
-                    UniValue objM(UniValue::VOBJ);
-                    objM.pushKV("success", "0");
-                    messageList.push_back(objM);
+                    objM.pushKV("error", "Decrypt failed");
                 };
+                messageList.push_back(objM);
                 nMessages++;
             };
             delete it;
@@ -874,10 +903,7 @@ UniValue smsgoutbox(const JSONRPCRequest &request)
             result.pushKV("expected", "[all|clear].");
         };
     }
-#else
-    UniValue result(UniValue::VOBJ);
-    throw std::runtime_error("No wallet.");
-#endif
+
     return result;
 };
 
@@ -889,7 +915,7 @@ UniValue smsgbuckets(const JSONRPCRequest &request)
             "smsgbuckets [stats|dump]\n"
             "Display some statistics.");
 
-    if (!fSecMsgEnabled)
+    if (!smsg::fSecMsgEnabled)
         throw std::runtime_error("Secure messaging is disabled.");
 
     std::string mode = "stats";
@@ -907,17 +933,16 @@ UniValue smsgbuckets(const JSONRPCRequest &request)
         uint32_t nMessages = 0;
         uint64_t nBytes = 0;
         {
-            LOCK(cs_smsg);
-            std::map<int64_t, SecMsgBucket>::iterator it;
-            it = smsgBuckets.begin();
+            LOCK(smsgModule.cs_smsg);
+            std::map<int64_t, smsg::SecMsgBucket>::iterator it;
+            it = smsgModule.buckets.begin();
 
-            for (it = smsgBuckets.begin(); it != smsgBuckets.end(); ++it)
+            for (it = smsgModule.buckets.begin(); it != smsgModule.buckets.end(); ++it)
             {
-                std::set<SecMsgToken> &tokenSet = it->second.setTokens;
+                std::set<smsg::SecMsgToken> &tokenSet = it->second.setTokens;
 
                 std::string sBucket = std::to_string(it->first);
                 std::string sFile = sBucket + "_01.dat";
-
                 std::string sHash = std::to_string(it->second.hash);
 
                 size_t nActiveMessages = it->second.CountActive();
@@ -944,7 +969,6 @@ UniValue smsgbuckets(const JSONRPCRequest &request)
                 } else
                 {
                     try {
-
                         uint64_t nFBytes = 0;
                         nFBytes = boost::filesystem::file_size(fullPath);
                         nBytes += nFBytes;
@@ -972,11 +996,11 @@ UniValue smsgbuckets(const JSONRPCRequest &request)
     if (mode == "dump")
     {
         {
-            LOCK(cs_smsg);
-            std::map<int64_t, SecMsgBucket>::iterator it;
-            it = smsgBuckets.begin();
+            LOCK(smsgModule.cs_smsg);
+            std::map<int64_t, smsg::SecMsgBucket>::iterator it;
+            it = smsgModule.buckets.begin();
 
-            for (it = smsgBuckets.begin(); it != smsgBuckets.end(); ++it)
+            for (it = smsgModule.buckets.begin(); it != smsgModule.buckets.end(); ++it)
             {
                 std::string sFile = std::to_string(it->first) + "_01.dat";
 
@@ -989,11 +1013,10 @@ UniValue smsgbuckets(const JSONRPCRequest &request)
                     LogPrintf("Error removing bucket file %s.\n", ex.what());
                 };
             };
-            smsgBuckets.clear();
+            smsgModule.buckets.clear();
         }; // cs_smsg
 
         result.pushKV("result", "Removed all buckets.");
-
     } else
     {
         result.pushKV("result", "Unknown Mode.");
@@ -1025,11 +1048,11 @@ UniValue smsgview(const JSONRPCRequest &request)
             "Full date/time format for from and to is yyyy-mm-ddThh:mm:ss"
             "From and to will accept incomplete inputs like: -from 2016");
 
-    if (!fSecMsgEnabled)
+    if (!smsg::fSecMsgEnabled)
         throw std::runtime_error("Secure messaging is disabled.");
 
 #ifdef ENABLE_WALLET
-    if (pwalletSmsg->IsLocked())
+    if (smsgModule.pwallet->IsLocked())
         throw std::runtime_error("Wallet is locked.");
 
     char cbuf[256];
@@ -1078,7 +1101,7 @@ UniValue smsgview(const JSONRPCRequest &request)
 
                 std::map<CTxDestination, CAddressBookData>::iterator itl;
 
-                for (itl = pwalletSmsg->mapAddressBook.begin(); itl != pwalletSmsg->mapAddressBook.end(); ++itl)
+                for (itl = smsgModule.pwallet->mapAddressBook.begin(); itl != smsgModule.pwallet->mapAddressBook.end(); ++itl)
                 {
                     if (part::stringsMatchI(itl->second.name, sTemp, matchType))
                     {
@@ -1159,8 +1182,8 @@ UniValue smsgview(const JSONRPCRequest &request)
     size_t debugEmptySent = 0;
 
     {
-        LOCK(cs_smsgDB);
-        SecMsgDB dbMsg;
+        LOCK(smsg::cs_smsgDB);
+        smsg::SecMsgDB dbMsg;
         if (!dbMsg.Open("cr"))
             throw std::runtime_error("Could not open DB.");
 
@@ -1173,8 +1196,8 @@ UniValue smsgview(const JSONRPCRequest &request)
             dbMsg.TxnBegin();
 
             leveldb::Iterator *it = dbMsg.pdb->NewIterator(leveldb::ReadOptions());
-            SecMsgStored smsgStored;
-            MessageData msg;
+            smsg::SecMsgStored smsgStored;
+            smsg::MessageData msg;
 
             while (dbMsg.NextSmesg(it, *itp, chKey, smsgStored))
             {
@@ -1184,11 +1207,11 @@ UniValue smsgview(const JSONRPCRequest &request)
                     continue;
                 };
 
-                uint32_t nPayload = smsgStored.vchMessage.size() - SMSG_HDR_LEN;
+                uint32_t nPayload = smsgStored.vchMessage.size() - smsg::SMSG_HDR_LEN;
 
                 int rv;
-                if ((rv = SecureMsgDecrypt(false, fInbox ? smsgStored.addrTo : smsgStored.addrOutbox,
-                    &smsgStored.vchMessage[0], &smsgStored.vchMessage[SMSG_HDR_LEN], nPayload, msg)) == 0)
+                if ((rv = smsgModule.Decrypt(false, fInbox ? smsgStored.addrTo : smsgStored.addrOutbox,
+                    &smsgStored.vchMessage[0], &smsgStored.vchMessage[smsg::SMSG_HDR_LEN], nPayload, msg)) == 0)
                 {
                     if ((tFrom > 0 && msg.timestamp < tFrom)
                         || (tTo > 0 && msg.timestamp > tTo))
@@ -1228,8 +1251,8 @@ UniValue smsgview(const JSONRPCRequest &request)
                     {
                         CBitcoinAddress address_parsed(kiFrom);
                         std::map<CTxDestination, CAddressBookData>::iterator
-                            mi(pwalletSmsg->mapAddressBook.find(address_parsed.Get()));
-                        if (mi != pwalletSmsg->mapAddressBook.end())
+                            mi(smsgModule.pwallet->mapAddressBook.find(address_parsed.Get()));
+                        if (mi != smsgModule.pwallet->mapAddressBook.end())
                             lblFrom = mi->second.name;
                         mLabelCache[kiFrom] = lblFrom;
                     };
@@ -1241,8 +1264,8 @@ UniValue smsgview(const JSONRPCRequest &request)
                     {
                         CBitcoinAddress address_parsed(smsgStored.addrTo);
                         std::map<CTxDestination, CAddressBookData>::iterator
-                            mi(pwalletSmsg->mapAddressBook.find(address_parsed.Get()));
-                        if (mi != pwalletSmsg->mapAddressBook.end())
+                            mi(smsgModule.pwallet->mapAddressBook.find(address_parsed.Get()));
+                        if (mi != smsgModule.pwallet->mapAddressBook.end())
                             lblTo = mi->second.name;
                         mLabelCache[smsgStored.addrTo] = lblTo;
                     };
@@ -1310,8 +1333,9 @@ static const CRPCCommand commands[] =
     { "smsg",               "smsglocalkeys",          &smsglocalkeys,          {} },
     { "smsg",               "smsgscanchain",          &smsgscanchain,          {} },
     { "smsg",               "smsgscanbuckets",        &smsgscanbuckets,        {} },
-    { "smsg",               "smsgaddkey",             &smsgaddkey,             {"address", "pubkey"} },
+    { "smsg",               "smsgaddaddress",         &smsgaddaddress,         {"address", "pubkey"} },
     { "smsg",               "smsgaddlocaladdress",    &smsgaddlocaladdress,    {"address"} },
+    { "smsg",               "smsgimportprivkey",      &smsgimportprivkey,      {"privkey", "label"} },
     { "smsg",               "smsggetpubkey",          &smsggetpubkey,          {"address"} },
     { "smsg",               "smsgsend",               &smsgsend,               {"address_to", "message"} },
     { "smsg",               "smsgsendanon",           &smsgsendanon,           {"address_to", "message"} },

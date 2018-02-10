@@ -11,10 +11,12 @@
 #include <sync.h>
 #include <serialize.h>
 #include <streams.h>
+#include <smsg/keystore.h>
+
+namespace smsg
+{
 
 class SecMsgStored;
-class CKeyID;
-class CPubKey;
 
 extern CCriticalSection cs_smsgDB;
 extern leveldb::DB *smsgDB;
@@ -46,15 +48,22 @@ public:
     bool WritePK(CKeyID &addr, CPubKey &pubkey);
     bool ExistsPK(CKeyID &addr);
 
-    bool NextSmesg(leveldb::Iterator *it, std::string &prefix, uint8_t *vchKey, SecMsgStored &smsgStored);
-    bool NextSmesgKey(leveldb::Iterator *it, std::string &prefix, uint8_t *vchKey);
-    bool ReadSmesg(uint8_t *chKey, SecMsgStored &smsgStored);
-    bool WriteSmesg(uint8_t *chKey, SecMsgStored &smsgStored);
-    bool ExistsSmesg(uint8_t *chKey);
-    bool EraseSmesg(uint8_t *chKey);
+    bool ReadKey(const CKeyID &idk, SecMsgKey &key);
+    bool WriteKey(const CKeyID &idk, const SecMsgKey &key);
+
+    bool NextSmesg(leveldb::Iterator *it, const std::string &prefix, uint8_t *vchKey, SecMsgStored &smsgStored);
+    bool NextSmesgKey(leveldb::Iterator *it, const std::string &prefix, uint8_t *vchKey);
+    bool ReadSmesg(const uint8_t *chKey, SecMsgStored &smsgStored);
+    bool WriteSmesg(const uint8_t *chKey, SecMsgStored &smsgStored);
+    bool ExistsSmesg(const uint8_t *chKey);
+    bool EraseSmesg(const uint8_t *chKey);
+
+    bool NextPrivKey(leveldb::Iterator *it, const std::string &prefix, CKeyID &idk, SecMsgKey &key);
 
     leveldb::DB *pdb;       // points to the global instance
     leveldb::WriteBatch *activeBatch;
 };
+
+} // namespace smsg
 
 #endif // PARTICL_SMSG_DB_H

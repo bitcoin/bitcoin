@@ -520,7 +520,7 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
             if (nTotalMsgFees > 0)
             {
                 size_t nTxBytes = GetVirtualTransactionSize(tx);
-                CFeeRate fundingTxnFeeRate = CFeeRate(nFundingTxnFeePerK);
+                CFeeRate fundingTxnFeeRate = CFeeRate(smsg::nFundingTxnFeePerK);
                 CAmount nTotalExpectedFees = nTotalMsgFees + fundingTxnFeeRate.GetFee(nTxBytes);
 
                 if (nTxFee < nTotalExpectedFees)

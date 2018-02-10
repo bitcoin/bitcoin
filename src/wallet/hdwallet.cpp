@@ -367,7 +367,6 @@ bool CHDWallet::IsHDEnabled() const
     ExtKeyAccountMap::const_iterator mi = mapExtAccounts.find(idDefaultAccount);
     if (mi != mapExtAccounts.end())
         return true;
-
     return false;
 }
 
@@ -442,7 +441,6 @@ bool CHDWallet::DumpJson(UniValue &rv, std::string &sError)
                 nDerives = std::stoi(chain["num_derives"].get_str());
             if (chain["num_derives_h"].isStr())
                 nDerivesH = std::stoi(chain["num_derives_h"].get_str());
-
 
             eKey58.Set58(sEvkey.c_str());
             CExtKeyPair kp = eKey58.GetKey();
@@ -576,7 +574,6 @@ bool CHDWallet::DumpJson(UniValue &rv, std::string &sError)
                         sxAddr.pushKV("destdata", objDestData);
                 };
 
-
                 stealthAddresses.push_back(sxAddr);
             };
         };
@@ -617,7 +614,6 @@ bool CHDWallet::DumpJson(UniValue &rv, std::string &sError)
                 };
                 stealthReceivedKeys.push_back(obj);
             };
-
         };
 
         acc.pushKV("keys_received_on_stealth_addresses", stealthReceivedKeys);
@@ -1021,8 +1017,8 @@ bool CHDWallet::Unlock(const SecureString &strWalletPassphrase)
 
         ProcessLockedStealthOutputs();
         ProcessLockedBlindedOutputs();
-        SecureMsgWalletUnlocked();
     } // cs_main, cs_wallet
+    smsgModule.WalletUnlocked();
 
     WakeThreadStakeMiner(this);
 
@@ -1307,7 +1303,7 @@ bool CHDWallet::AddressBookChangedNotify(const CTxDestination &address, ChangeTy
         && address.type() == typeid(CKeyID))
     {
         CKeyID id = boost::get<CKeyID>(address);
-        SecureMsgWalletKeyChanged(id, entry.name, nMode);
+        smsgModule.WalletKeyChanged(id, entry.name, nMode);
     };
 
     return true;
@@ -1361,7 +1357,7 @@ bool CHDWallet::SetAddressBook(CHDWalletDB *pwdb, const CTxDestination &address,
             && address.type() == typeid(CKeyID))
         {
             CKeyID id = boost::get<CKeyID>(address);
-            SecureMsgWalletKeyChanged(id, strName, nMode);
+            smsgModule.WalletKeyChanged(id, strName, nMode);
         };
     };
 
@@ -1395,7 +1391,7 @@ bool CHDWallet::SetAddressBook(const CTxDestination &address, const std::string 
         && address.type() == typeid(CKeyID))
     {
         CKeyID id = boost::get<CKeyID>(address);
-        SecureMsgWalletKeyChanged(id, strName, nMode);
+        smsgModule.WalletKeyChanged(id, strName, nMode);
     };
 
     NotifyAddressBookChanged(this, address, strName, ::IsMine(*this, address) != ISMINE_NO,
@@ -1441,7 +1437,7 @@ bool CHDWallet::DelAddressBook(const CTxDestination &address)
         && address.type() == typeid(CKeyID))
     {
         CKeyID id = boost::get<CKeyID>(address);
-        SecureMsgWalletKeyChanged(id, "", CT_DELETED);
+        smsgModule.WalletKeyChanged(id, "", CT_DELETED);
     };
 
     bool fErased = false; // CWallet::DelAddressBook can return false
@@ -2620,7 +2616,7 @@ int CHDWallet::ExpandTempRecipients(std::vector<CTempRecipient> &vecSend, CStore
 
                 if (!GetPubKey(idTo, r.pkTo))
                 {
-                    if (0 != SecureMsgGetStoredKey(idTo, r.pkTo))
+                    if (0 != smsgModule.GetStoredKey(idTo, r.pkTo))
                         return errorN(1, sError, __func__, _("No public key found for address %s.").c_str(), CBitcoinAddress(idTo).ToString());
                 };
             } else

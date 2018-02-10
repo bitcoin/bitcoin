@@ -10,6 +10,7 @@
 #include <util.h>
 #include <rpc/server.h>
 #include <utilstrencodings.h>
+#include <smsg/smessage.h>
 
 static std::multimap<std::string, CZMQAbstractPublishNotifier*> mapPublishNotifiers;
 
@@ -239,10 +240,13 @@ bool CZMQPublishHashWalletTransactionNotifier::NotifyTransaction(const std::stri
     return SendMessage(MSG_HASHWTX, data, 32 + nName);
 }
 
-bool CZMQPublishSMSGNotifier::NotifySecureMessage(const uint160 &hash)
+bool CZMQPublishSMSGNotifier::NotifySecureMessage(const smsg::SecureMessage *psmsg, const uint160 &hash)
 {
     LogPrint(BCLog::ZMQ, "zmq: Publish smsg %s\n", hash.GetHex());
     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION | RPCSerializationFlags());
+    ss << psmsg->version[0];
+    ss << psmsg->version[1];
+    ss << psmsg->timestamp;
     ss << hash;
     return SendMessage(MSG_SMSG, &(*ss.begin()), ss.size());
 }

@@ -1957,18 +1957,21 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockI
                     pblocktree->ReadLastRCTOutput(view.nLastRCTOutput);
                     if (view.nLastRCTOutput == 0) {
                         error("%s: RCT index missing, txn %s, %d.", __func__, hash.ToString(), k);
-                        return DISCONNECT_FAILED;
+                        if (!view.fForceDisconnect)
+                            return DISCONNECT_FAILED;
                     };
 
                     // Verify data matches
                     CAnonOutput ao;
                     if (!pblocktree->ReadRCTOutput(view.nLastRCTOutput, ao)) {
                         error("%s: RCT output missing, txn %s, %d, index %d.", __func__, hash.ToString(), k, view.nLastRCTOutput);
-                        return DISCONNECT_FAILED;
-                    };
+                        if (!view.fForceDisconnect)
+                            return DISCONNECT_FAILED;
+                    } else
                     if (ao.pubkey != txout->pk) {
                         error("%s: RCT output mismatch, txn %s, %d, index %d.", __func__, hash.ToString(), k, view.nLastRCTOutput);
-                        return DISCONNECT_FAILED;
+                        if (!view.fForceDisconnect)
+                            return DISCONNECT_FAILED;
                     };
                 };
 
@@ -2107,7 +2110,7 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockI
     }
 
     // move best block pointer to prevout block
-    view.SetBestBlock(pindex->pprev->GetBlockHash());
+    view.SetBestBlock(pindex->pprev->GetBlockHash(), pindex->pprev->nHeight);
 
     return fClean ? DISCONNECT_OK : DISCONNECT_UNCLEAN;
 }
@@ -2345,7 +2348,7 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
     if (!fParticlMode  // genesis coinbase is spendable when in Particl mode
         && fIsGenesisBlock) {
         if (!fJustCheck)
-            view.SetBestBlock(pindex->GetBlockHash());
+            view.SetBestBlock(pindex->GetBlockHash(), pindex->nHeight);
         return true;
     }
 
@@ -2828,7 +2831,7 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
 
     assert(pindex->phashBlock);
     // add this block to the view's block chain
-    view.SetBestBlock(pindex->GetBlockHash());
+    view.SetBestBlock(pindex->GetBlockHash(), pindex->nHeight);
 
     int64_t nTime5 = GetTimeMicros(); nTimeIndex += nTime5 - nTime4;
     LogPrint(BCLog::BENCH, "    - Index writing: %.2fms [%.2fs (%.2fms/blk)]\n", MILLI * (nTime5 - nTime4), nTimeIndex * MICRO, nTimeIndex * MILLI / nBlocksTotal);
@@ -3024,6 +3027,7 @@ bool FlushView(CCoinsViewCache *view, CValidationState& state, bool fDisconnecti
                     return error("%s: EraseRCTOutput failed.", __func__);
             };
 
+            if (!view->fForceDisconnect)
             if (!pblocktree->WriteLastRCTOutput(view->nLastRCTOutput))
                 return error("%s: WriteLastRCTOutput failed.", __func__);
         };
@@ -3040,6 +3044,8 @@ bool FlushView(CCoinsViewCache *view, CValidationState& state, bool fDisconnecti
         } else
         if (view->nBlockHeight % 250 == 0)
         {
+
+            // TODO: Move nLastRCTOutput to chainindex
             if (pblocktree->ReadLastRCTOutput(view->nLastRCTOutput))
                 batch.Write(std::make_pair(DB_RCTOUTPUT_CHECKPOINT, view->nBlockHeight), view->nLastRCTOutput);
         };
@@ -4820,8 +4826,8 @@ bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<cons
     if (!g_chainstate.ActivateBestChain(state, chainparams, pblock))
         return error("%s: ActivateBestChain failed", __func__);
 
-    if (fSecMsgEnabled && gArgs.GetBoolArg("-smsgscanincoming", false))
-        SecureMsgScanBlock(*pblock);
+    if (smsg::fSecMsgEnabled && gArgs.GetBoolArg("-smsgscanincoming", false))
+        smsgModule.ScanBlock(*pblock);
     return true;
 }
 
@@ -5404,7 +5410,7 @@ bool CChainState::ReplayBlocks(const CChainParams& params, CCoinsView* view)
         if (!RollforwardBlock(pindex, cache, params)) return false;
     }
 
-    cache.SetBestBlock(pindexNew->GetBlockHash());
+    cache.SetBestBlock(pindexNew->GetBlockHash(), pindexNew->nHeight);
     cache.Flush();
     uiInterface.ShowProgress("", 100, false);
     return true;

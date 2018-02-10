@@ -12,6 +12,7 @@
 #include <txmempool.h>
 #include <util.h>
 #include <validation.h>
+#include <smsg/smessage.h>
 
 #include <list>
 #include <atomic>
@@ -30,7 +31,7 @@ struct MainSignalsInstance {
     boost::signals2::signal<void (int64_t nBestBlockTime, CConnman* connman)> Broadcast;
     boost::signals2::signal<void (const CBlock&, const CValidationState&)> BlockChecked;
     boost::signals2::signal<void (const CBlockIndex *, const std::shared_ptr<const CBlock>&)> NewPoWValidBlock;
-    boost::signals2::signal<void (const uint160 &)> NewSecureMessage;
+    boost::signals2::signal<void (const smsg::SecureMessage *psmsg, const uint160 &)> NewSecureMessage;
     boost::signals2::signal<void (const std::string &, const CTransactionRef &)> TransactionAddedToWallet;
 
     // We are not allowed to assume the scheduler only runs in one thread,
@@ -88,7 +89,7 @@ void RegisterValidationInterface(CValidationInterface* pwalletIn) {
     g_signals.m_internals->BlockChecked.connect(boost::bind(&CValidationInterface::BlockChecked, pwalletIn, _1, _2));
     g_signals.m_internals->NewPoWValidBlock.connect(boost::bind(&CValidationInterface::NewPoWValidBlock, pwalletIn, _1, _2));
     g_signals.m_internals->TransactionAddedToWallet.connect(boost::bind(&CValidationInterface::TransactionAddedToWallet, pwalletIn, _1, _2));
-    g_signals.m_internals->NewSecureMessage.connect(boost::bind(&CValidationInterface::NewSecureMessage, pwalletIn, _1));
+    g_signals.m_internals->NewSecureMessage.connect(boost::bind(&CValidationInterface::NewSecureMessage, pwalletIn, _1, _2));
 }
 
 void UnregisterValidationInterface(CValidationInterface* pwalletIn) {
@@ -103,7 +104,7 @@ void UnregisterValidationInterface(CValidationInterface* pwalletIn) {
     g_signals.m_internals->UpdatedBlockTip.disconnect(boost::bind(&CValidationInterface::UpdatedBlockTip, pwalletIn, _1, _2, _3));
     g_signals.m_internals->NewPoWValidBlock.disconnect(boost::bind(&CValidationInterface::NewPoWValidBlock, pwalletIn, _1, _2));
     g_signals.m_internals->TransactionAddedToWallet.disconnect(boost::bind(&CValidationInterface::TransactionAddedToWallet, pwalletIn, _1, _2));
-    g_signals.m_internals->NewSecureMessage.disconnect(boost::bind(&CValidationInterface::NewSecureMessage, pwalletIn, _1));
+    g_signals.m_internals->NewSecureMessage.disconnect(boost::bind(&CValidationInterface::NewSecureMessage, pwalletIn, _1, _2));
 }
 
 void UnregisterAllValidationInterfaces() {
@@ -198,7 +199,7 @@ void CMainSignals::TransactionAddedToWallet(const std::string &sWalletName, cons
     m_internals->TransactionAddedToWallet(sWalletName, tx);
 };
 
-void CMainSignals::NewSecureMessage(const uint160 &hash)
+void CMainSignals::NewSecureMessage(const smsg::SecureMessage *psmsg, const uint160 &hash)
 {
-    m_internals->NewSecureMessage(hash);
+    m_internals->NewSecureMessage(psmsg, hash);
 };

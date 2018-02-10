@@ -61,7 +61,7 @@ public:
 class CZMQPublishSMSGNotifier : public CZMQAbstractPublishNotifier
 {
 public:
-    bool NotifySecureMessage(const uint160 &hash) override;
+    bool NotifySecureMessage(const smsg::SecureMessage *psmsg, const uint160 &hash) override;
 };
 
 

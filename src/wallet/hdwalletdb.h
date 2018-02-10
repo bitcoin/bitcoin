@@ -81,7 +81,6 @@ prefixes
 
     wkey
     wset                - wallet setting
-
 */
 
 class CTransactionRecord;

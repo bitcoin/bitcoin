@@ -786,7 +786,7 @@ void CBitcoinSecret::SetKey(const CKey& vchSecret)
         vchData.push_back(1);
 }
 
-CKey CBitcoinSecret::GetKey()
+CKey CBitcoinSecret::GetKey() const
 {
     CKey ret;
     assert(vchData.size() >= 32);

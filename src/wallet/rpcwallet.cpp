@@ -2873,7 +2873,9 @@ UniValue walletpassphrase(const JSONRPCRequest& request)
         );
     }
 
-    LOCK2(cs_main, pwallet->cs_wallet);
+    // can't lock cs_wallet here, cs_smsg
+    LOCK(cs_main);
+    //LOCK2(cs_main, pwallet->cs_wallet);
 
     if (request.fHelp)
         return true;
@@ -2910,6 +2912,9 @@ UniValue walletpassphrase(const JSONRPCRequest& request)
             "walletpassphrase <passphrase> <timeout> [stakingonly]\n"
             "Stores the wallet decryption key in memory for <timeout> seconds.");
 
+    {
+    //LOCK2(cs_main, pwallet->cs_wallet);
+    LOCK(pwallet->cs_wallet);
     pwallet->TopUpKeyPool();
 
     bool fWalletUnlockStakingOnly = false;
@@ -2933,7 +2938,7 @@ UniValue walletpassphrase(const JSONRPCRequest& request)
         RPCRunLaterErase(strprintf("lockwallet(%s)", pwallet->GetName()));
         pwallet->nRelockTime = 0;
     };
-
+    }
     return NullUniValue;
 }
 

@@ -26,7 +26,7 @@ bool CZMQAbstractNotifier::NotifyTransaction(const std::string &sWalletName, con
     return true;
 }
 
-bool CZMQAbstractNotifier::NotifySecureMessage(const uint160 &/*hash*/)
+bool CZMQAbstractNotifier::NotifySecureMessage(const smsg::SecureMessage *psmsg, const uint160 &/*hash*/)
 {
     return true;
 }

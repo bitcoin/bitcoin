@@ -253,6 +253,7 @@ public:
     mutable std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue> > addressUnspentIndex;
     mutable std::vector<std::pair<CSpentIndexKey, CSpentIndexValue> > spentIndex;
 
+    mutable bool fForceDisconnect = false; // disconnect even if rct mismatch
     mutable int64_t nLastRCTOutput = 0;
     mutable std::vector<std::pair<int64_t, CAnonOutput> > anonOutputs;
     mutable std::map<CCmpPubKey, int64_t> anonOutputLinks;
@@ -266,11 +267,8 @@ public:
             index = it->second;
             return true;
         };
-
         return false;
     };
-
-
 
 public:
     CCoinsViewCache(CCoinsView *baseIn);
@@ -284,7 +282,7 @@ public:
     bool GetCoin(const COutPoint &outpoint, Coin &coin) const override;
     bool HaveCoin(const COutPoint &outpoint) const override;
     uint256 GetBestBlock() const override;
-    void SetBestBlock(const uint256 &hashBlock);
+    void SetBestBlock(const uint256 &hashBlock, int height);
     bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock) override;
     CCoinsViewCursor* Cursor() const override {
         throw std::logic_error("CCoinsViewCache cursor iteration not supported.");

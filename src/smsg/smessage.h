@@ -11,6 +11,12 @@
 #include <serialize.h>
 #include <ui_interface.h>
 #include <lz4/lz4.h>
+#include <smsg/keystore.h>
+
+class CWallet;
+
+namespace smsg
+{
 
 enum SecureMessageCodes {
     SMSG_NO_ERROR           = 0,
@@ -77,10 +83,6 @@ const CAmount nFundingTxnFeePerK = 200000;
 const CAmount nMsgFeePerKPerDay =   50000;
 
 #define SMSG_MASK_UNREAD            (1 << 0)
-
-extern bool fSecMsgEnabled;
-
-class CWallet;
 class SecMsgStored;
 
 // Inbox db changed, called with lock cs_smsgDB held.
@@ -95,14 +97,6 @@ extern boost::signals2::signal<void ()> NotifySecMsgWalletUnlocked;
 class SecMsgBucket;
 class SecMsgAddress;
 class SecMsgOptions;
-
-extern std::map<int64_t, SecMsgBucket>  smsgBuckets;
-extern std::vector<SecMsgAddress>       smsgAddresses;
-extern SecMsgOptions                    smsgOptions;
-extern CWallet                          *pwalletSmsg;
-
-extern CCriticalSection cs_smsg;            // all except inbox and outbox
-
 
 inline bool GetFundingTxid(const uint8_t *pPayload, size_t nPayload, uint256 &txid)
 {
@@ -132,11 +126,16 @@ public:
         pPayload = nullptr;
     };
 
+    bool IsPaidVersion()
+    {
+        return version[0] == 3;
+    }
+
     bool GetFundingTxid(uint256 &txid)
     {
         if (version[0] != 3)
             return false;
-        return ::GetFundingTxid(pPayload, nPayload, txid);
+        return smsg::GetFundingTxid(pPayload, nPayload, txid);
     };
 
     uint8_t *data()
@@ -327,63 +326,93 @@ public:
     };
 };
 
-std::string SecureMsgGetHelpString(bool showDebug);
-const char *SecureMessageGetString(size_t errorCode);
+std::string GetHelpString(bool showDebug);
+const char *GetString(size_t errorCode);
 
-int SecureMsgBuildBucketSet();
-int SecureMsgAddWalletAddresses();
+extern bool fSecMsgEnabled;
+class CSMSG
+{
+public:
+    int BuildBucketSet();
+    int AddWalletAddresses();
+    int LoadKeyStore();
 
-int SecureMsgReadIni();
-int SecureMsgWriteIni();
+    int ReadIni();
+    int WriteIni();
 
-bool SecureMsgStart(CWallet *pwallet, bool fDontStart, bool fScanChain);
-bool SecureMsgShutdown();
+    bool Start(CWallet *pwalletIn, bool fDontStart, bool fScanChain);
+    bool Shutdown();
 
-bool SecureMsgEnable(CWallet *pwallet);
-bool SecureMsgDisable();
+    bool Enable(CWallet *pwallet);
+    bool Disable();
 
-int SecureMsgReceiveData(CNode *pfrom, const std::string &strCommand, CDataStream &vRecv);
-bool SecureMsgSendData(CNode *pto, bool fSendTrickle);
+    int ReceiveData(CNode *pfrom, const std::string &strCommand, CDataStream &vRecv);
+    bool SendData(CNode *pto, bool fSendTrickle);
 
-bool SecureMsgScanBlock(const CBlock &block);
-bool ScanChainForPublicKeys(CBlockIndex *pindexStart);
-bool SecureMsgScanBlockChain();
-bool SecureMsgScanBuckets();
+    bool ScanBlock(const CBlock &block);
+    bool ScanChainForPublicKeys(CBlockIndex *pindexStart);
+    bool ScanBlockChain();
+    bool ScanBuckets();
 
-int SecureMsgManageLocalKey(CKeyID &keyId, ChangeType mode);
-int SecureMsgWalletUnlocked();
-int SecureMsgWalletKeyChanged(CKeyID &keyId, const std::string &sLabel, ChangeType mode);
+    int ManageLocalKey(CKeyID &keyId, ChangeType mode);
+    int WalletUnlocked();
+    int WalletKeyChanged(CKeyID &keyId, const std::string &sLabel, ChangeType mode);
 
-int SecureMsgScanMessage(uint8_t *pHeader, uint8_t *pPayload, uint32_t nPayload, bool reportToGui);
+    int ScanMessage(uint8_t *pHeader, uint8_t *pPayload, uint32_t nPayload, bool reportToGui);
 
-int SecureMsgGetStoredKey(CKeyID &ckid, CPubKey &cpkOut);
-int SecureMsgGetLocalKey(CKeyID &ckid, CPubKey &cpkOut);
-int SecureMsgGetLocalPublicKey(std::string &strAddress, std::string &strPublicKey);
+    int GetStoredKey(CKeyID &ckid, CPubKey &cpkOut);
+    int GetLocalKey(CKeyID &ckid, CPubKey &cpkOut);
+    int GetLocalPublicKey(std::string &strAddress, std::string &strPublicKey);
 
-//int SecureMsgAddAddress(CKeyID &address, CPubKey &publicKey); // TODO: necessary?
-int SecureMsgAddAddress(std::string &address, std::string &publicKey);
-int SecureMsgAddLocalAddress(std::string &sAddress);
+    //int AddAddress(CKeyID &address, CPubKey &publicKey); // TODO: necessary?
+    int AddAddress(std::string &address, std::string &publicKey);
+    int AddLocalAddress(const std::string &sAddress);
+    int ImportPrivkey(const CBitcoinSecret &vchSecret, const std::string &sLabel);
 
-int SecureMsgRetrieve(SecMsgToken &token, std::vector<uint8_t> &vchData);
+    bool SetWalletAddressOption(const CKeyID &idk, std::string sOption, bool fValue);
+    bool SetSmsgAddressOption(const CKeyID &idk, std::string sOption, bool fValue);
 
-int SecureMsgReceive(CNode *pfrom, std::vector<uint8_t> &vchData);
+    int ReadSmsgKey(const CKeyID &idk, CKey &key);
 
-int SecureMsgStoreUnscanned(uint8_t *pHeader, uint8_t *pPayload, uint32_t nPayload);
-int SecureMsgStore(uint8_t *pHeader, uint8_t *pPayload, uint32_t nPayload, bool fHashBucket);
-int SecureMsgStore(SecureMessage& smsg, bool fHashBucket);
+    int Retrieve(SecMsgToken &token, std::vector<uint8_t> &vchData);
 
-int SecureMsgSend(CKeyID &addressFrom, CKeyID &addressTo, std::string &message, std::string &sError, bool fPaid=false, size_t nDaysRetention=0, bool fTestFee=false, CAmount *nFee=NULL);
+    int Receive(CNode *pfrom, std::vector<uint8_t> &vchData);
 
-int SecureMsgHash(const SecureMessage &smsg, const uint8_t *pPayload, uint32_t nPayload, uint160 &hash);
-int SecureMsgFund(SecureMessage &smsg, std::string &sError, bool fTestFee, CAmount *nFee);
+    int StoreUnscanned(uint8_t *pHeader, uint8_t *pPayload, uint32_t nPayload);
+    int Store(uint8_t *pHeader, uint8_t *pPayload, uint32_t nPayload, bool fHashBucket);
+    int Store(SecureMessage& smsg, bool fHashBucket);
 
-int SecureMsgValidate(uint8_t *pHeader, uint8_t *pPayload, uint32_t nPayload);
-int SecureMsgSetHash (uint8_t *pHeader, uint8_t *pPayload, uint32_t nPayload);
+    int Send(CKeyID &addressFrom, CKeyID &addressTo, std::string &message,
+        SecureMessage &smsg, std::string &sError, bool fPaid=false,
+        size_t nDaysRetention=0, bool fTestFee=false, CAmount *nFee=NULL);
 
-int SecureMsgEncrypt(SecureMessage &smsg, const CKeyID &addressFrom, const CKeyID &addressTo, const std::string &message);
+    int HashMsg(const SecureMessage &smsg, const uint8_t *pPayload, uint32_t nPayload, uint160 &hash);
+    int FundMsg(SecureMessage &smsg, std::string &sError, bool fTestFee, CAmount *nFee);
 
-int SecureMsgDecrypt(bool fTestOnly, CKeyID &address, uint8_t *pHeader, uint8_t *pPayload, uint32_t nPayload, MessageData &msg);
-int SecureMsgDecrypt(bool fTestOnly, CKeyID &address, SecureMessage &smsg, MessageData &msg);
+    int Validate(uint8_t *pHeader, uint8_t *pPayload, uint32_t nPayload);
+    int SetHash (uint8_t *pHeader, uint8_t *pPayload, uint32_t nPayload);
+
+    int Encrypt(SecureMessage &smsg, const CKeyID &addressFrom, const CKeyID &addressTo, const std::string &message);
+
+    int Decrypt(bool fTestOnly, const CKey &keyDest, const CKeyID &address, uint8_t *pHeader, uint8_t *pPayload, uint32_t nPayload, MessageData &msg);
+    int Decrypt(bool fTestOnly, const CKey &keyDest, const CKeyID &address, SecureMessage &smsg, MessageData &msg);
+
+    int Decrypt(bool fTestOnly, const CKeyID &address, uint8_t *pHeader, uint8_t *pPayload, uint32_t nPayload, MessageData &msg);
+    int Decrypt(bool fTestOnly, const CKeyID &address, SecureMessage &smsg, MessageData &msg);
+
+    CCriticalSection cs_smsg;            // all except inbox and outbox
+
+    SecMsgKeyStore keyStore;
+    std::map<int64_t, SecMsgBucket> buckets;
+    std::vector<SecMsgAddress> addresses;
+    SecMsgOptions options;
+    CWallet *pwallet = nullptr;
+
+};
+
+} // namespace smsg
+
+extern smsg::CSMSG smsgModule;
 
 #endif // SEC_MESSAGE_H
 
