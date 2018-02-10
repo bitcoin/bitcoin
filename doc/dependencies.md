@@ -10,7 +10,7 @@ These are the dependencies currently used by Bitcoin Core. You can find instruct
 | ccache | [3.3.4](https://ccache.samba.org/download.html) |  | No |  |  |
 | Clang |  | [3.3+](http://llvm.org/releases/download.html) (C++11 support) |  |  |  |
 | D-Bus | [1.10.18](https://cgit.freedesktop.org/dbus/dbus/tree/NEWS?h=dbus-1.10) |  | No | Yes |  |
-| Expat | [2.2.1](https://libexpat.github.io/) |  | No | Yes |  |
+| Expat | [2.2.5](https://libexpat.github.io/) |  | No | Yes |  |
 | fontconfig | [2.12.1](https://www.freedesktop.org/software/fontconfig/release/) |  | No | Yes |  |
 | FreeType | [2.7.1](http://download.savannah.gnu.org/releases/freetype) |  | No |  |  |
 | GCC |  | [4.8+](https://gcc.gnu.org/) |  |  |  |
