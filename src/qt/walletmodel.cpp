@@ -709,8 +709,6 @@ void WalletModel::listCoins(std::map<QString, std::vector<CCoinControlEntry> >& 
     std::vector<COutput> vCoins;
     wallet->AvailableCoins(vCoins);
 
-    LOCK2(cs_main, wallet->cs_wallet); // ListLockedCoins, mapWallet
-
     UniValue rv;
     QString sCommand;
 
@@ -749,24 +747,6 @@ void WalletModel::listCoins(std::map<QString, std::vector<CCoinControlEntry> >& 
             continue;
         mapCoins[QString::fromStdString(uvi["address"].get_str())].push_back(entry);
     };
-
-
-    /*
-    std::vector<COutPoint> vLockedCoins;
-    wallet->ListLockedCoins(vLockedCoins);
-
-    // add locked coins
-    BOOST_FOREACH(const COutPoint& outpoint, vLockedCoins)
-    {
-        if (!wallet->mapWallet.count(outpoint.hash)) continue;
-        int nDepth = wallet->mapWallet[outpoint.hash].GetDepthInMainChain();
-        if (nDepth < 0) continue;
-        COutput out(&wallet->mapWallet[outpoint.hash], outpoint.n, nDepth, true, true);
-        if (outpoint.n < out.tx->tx->vout.size() && wallet->IsMine(out.tx->tx->vout[outpoint.n]) == ISMINE_SPENDABLE)
-            vCoins.push_back(out);
-    }
-    */
-
 
     /*
     for (auto& group : wallet->ListCoins()) {

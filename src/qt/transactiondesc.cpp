@@ -346,7 +346,6 @@ QString TransactionDesc::toHTML(CHDWallet *wallet, CTransactionRecord &rtx, Tran
 {
     QString strHTML;
 
-    LOCK2(cs_main, wallet->cs_wallet);
     strHTML.reserve(4000);
     strHTML += "<html><font face='verdana, arial, helvetica, sans-serif'>";
 
@@ -371,6 +370,7 @@ QString TransactionDesc::toHTML(CHDWallet *wallet, CTransactionRecord &rtx, Tran
     QByteArray encodedName = QUrl::toPercentEncoding(QString::fromStdString(wallet->GetName()));
     request.URI = "/wallet/"+std::string(encodedName.constData(), encodedName.length());
     request.fHelp = false;
+    request.fSkipBlock = true;
     UniValue params(UniValue::VARR);
     params.push_back(rec->getTxID().toStdString());
     request.params = params;

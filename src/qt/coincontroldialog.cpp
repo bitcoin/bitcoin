@@ -384,6 +384,8 @@ void CoinControlDialog::cbxTypeChanged(int index)
     if (model)
     {
         coinControl()->nCoinType = index+1;
+        coinControl()->UnSelectAll();
+        CoinControlDialog::updateLabels(model, this);
         updateView();
     };
 }
@@ -464,10 +466,7 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
     std::vector<COutPoint> vCoinControl;
     std::vector<COutput>   vOutputs;
     coinControl()->ListSelected(vCoinControl);
-    model->getOutputs(vCoinControl, vOutputs);
 
-
-    //model->getOutputRecords(vCoinControl, vOutputs);
     if (coinControl()->nCoinType != OUTPUT_STANDARD)
     {
         CHDWallet *phdw = model->getParticlWallet();
@@ -501,6 +500,9 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
                 coinControl()->UnSelect(outpt);
                 continue;
             }
+
+            if (out.tx->tx->vpout[out.i]->GetType() != OUTPUT_STANDARD)
+                continue;
 
             // Quantity
             nQuantity++;

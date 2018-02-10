@@ -651,6 +651,7 @@ UniValue sendtoaddress(const JSONRPCRequest& request)
     {
         JSONRPCRequest newRequest;
         newRequest.fHelp = false;
+        newRequest.fSkipBlock = true; // already blocked in this function
         newRequest.URI = request.URI;
         UniValue params(UniValue::VARR);
         params.push_back("part");
@@ -2650,7 +2651,8 @@ UniValue gettransaction(const JSONRPCRequest& request)
 
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
-    pwallet->BlockUntilSyncedToCurrentChain();
+    if (!request.fSkipBlock)
+        pwallet->BlockUntilSyncedToCurrentChain();
 
     LOCK2(cs_main, pwallet->cs_wallet);
 

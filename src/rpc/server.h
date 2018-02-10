@@ -43,6 +43,7 @@ public:
     std::string strMethod;
     UniValue params;
     bool fHelp;
+    bool fSkipBlock = false;
     std::string URI;
     std::string authUser;
 

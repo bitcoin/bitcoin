@@ -15,6 +15,7 @@
 #include <policy/rbf.h>
 #include <rpc/server.h>
 #include <rpc/mining.h>
+#include <rpc/safemode.h>
 #include <script/sign.h>
 #include <timedata.h>
 #include <util.h>
@@ -779,6 +780,7 @@ UniValue extkey(const JSONRPCRequest &request)
         "    Manage keys and accounts\n"
         "\n";
 
+    ObserveSafeMode();
 
     // default mode is list unless 1st parameter is a key - then mode is set to info
 
@@ -1645,6 +1647,8 @@ UniValue extkeyimportinternal(const JSONRPCRequest &request, bool fGenesisChain)
 
 UniValue extkeyimportmaster(const JSONRPCRequest &request)
 {
+    // Doesn't generate key, require users to run mnemonic new, more likely they'll save the phrase
+
     static const char *help = ""
         "extkeyimportmaster <mnemonic/key> [passphrase] [save_bip44_root] [master_label] [account_label] [scan_chain_from]\n"
         "Import master key from bip44 mnemonic root key and derive default account.\n"
@@ -1660,7 +1664,7 @@ UniValue extkeyimportmaster(const JSONRPCRequest &request)
         "   extkeyimportmaster -stdin -stdin false label_master label_account\n"
         "\n";
 
-    // Doesn't generate key, require users to run mnemonic new, more likely they'll save the phrase
+    ObserveSafeMode();
 
     if (request.fHelp)
         throw std::runtime_error(help);
@@ -1685,6 +1689,8 @@ UniValue extkeygenesisimport(const JSONRPCRequest &request)
         "Examples:\n"
         "   extkeygenesisimport -stdin -stdin false label_master label_account\n"
         "\n";
+
+    ObserveSafeMode();
 
     if (request.fHelp)
         throw std::runtime_error(help);
@@ -1787,6 +1793,8 @@ UniValue extkeyaltversion(const JSONRPCRequest &request)
             "Returns the provided ext_key encoded with alternate version bytes.\n"
             "If the provided ext_key has a Bitcoin prefix the output will be encoded with a Particl prefix.\n"
             "If the provided ext_key has a Particl prefix the output will be encoded with a Bitcoin prefix.");
+
+    ObserveSafeMode();
 
     std::string sKeyIn = request.params[0].get_str();
     std::string sKeyOut;
@@ -2315,6 +2323,8 @@ UniValue deriverangekeys(const JSONRPCRequest &request)
             "Derive keys from the specified chain.\n"
             "Wallet must be unlocked if save or hardened options are set.\n");
 
+    ObserveSafeMode();
+
     // TODO: manage nGenerated, nHGenerated properly
 
     int nStart = request.params[0].get_int();
@@ -2541,6 +2551,8 @@ UniValue clearwallettransactions(const JSONRPCRequest &request)
             "By default removes only failed stakes.\n"
             "Wallet must be unlocked.\n"
             "Warning: Backup your wallet first!");
+
+    ObserveSafeMode();
 
     EnsureWalletIsUnlocked(pwallet);
 
@@ -3151,6 +3163,12 @@ UniValue filtertransactions(const JSONRPCRequest &request)
             "                " + HelpExampleRpc("filtertransactions", "{\\\"category\\\":\\\"stake\\\"}") + "\n"
         );
 
+    ObserveSafeMode();
+
+    // Make sure the results are valid at least up to the most recent block
+    // the user could have gotten from another RPC command prior to now
+    pwallet->BlockUntilSyncedToCurrentChain();
+
     LOCK2(cs_main, pwallet->cs_wallet);
 
     unsigned int count     = 10;
@@ -3447,6 +3465,12 @@ UniValue filteraddresses(const JSONRPCRequest &request)
             "[match_owned] 0 off, 1 owned, 2 non-owned, default 0\n"
             "List addresses.");
 
+    ObserveSafeMode();
+
+    // Make sure the results are valid at least up to the most recent block
+    // the user could have gotten from another RPC command prior to now
+    pwallet->BlockUntilSyncedToCurrentChain();
+
     int nOffset = 0, nCount = 0x7FFFFFFF;
     if (request.params.size() > 0)
         nOffset = request.params[0].get_int();
@@ -3632,6 +3656,12 @@ UniValue manageaddressbook(const JSONRPCRequest &request)
             "3. \"label\"       (string, optional) Optional label.\n"
             "4. \"purpose\"     (string, optional) Optional purpose label.\n");
 
+    ObserveSafeMode();
+
+    // Make sure the results are valid at least up to the most recent block
+    // the user could have gotten from another RPC command prior to now
+    pwallet->BlockUntilSyncedToCurrentChain();
+
     std::string sAction = request.params[0].get_str();
     std::string sAddress = request.params[1].get_str();
     std::string sLabel, sPurpose;
@@ -3802,6 +3832,12 @@ UniValue getstakinginfo(const JSONRPCRequest &request)
             + HelpExampleRpc("getstakinginfo", "")
             );
 
+    ObserveSafeMode();
+
+    // Make sure the results are valid at least up to the most recent block
+    // the user could have gotten from another RPC command prior to now
+    pwallet->BlockUntilSyncedToCurrentChain();
+
     UniValue obj(UniValue::VOBJ);
 
     int64_t nTipTime;
@@ -3881,6 +3917,12 @@ UniValue getcoldstakinginfo(const JSONRPCRequest &request)
         throw std::runtime_error(
             "getcoldstakinginfo\n"
             "Returns an object containing coldstaking-related information.");
+
+    ObserveSafeMode();
+
+    // Make sure the results are valid at least up to the most recent block
+    // the user could have gotten from another RPC command prior to now
+    pwallet->BlockUntilSyncedToCurrentChain();
 
     UniValue obj(UniValue::VOBJ);
 
@@ -4037,6 +4079,8 @@ UniValue listunspentanon(const JSONRPCRequest &request)
             + HelpExampleRpc("listunspentanon", "6, 9999999 \"[\\\"PfqK97PXYfqRFtdYcZw82x3dzPrZbEAcYa\\\",\\\"Pka9M2Bva8WetQhQ4ngC255HAbMJf5P5Dc\\\"]\"")
         );
 
+    ObserveSafeMode();
+
     int nMinDepth = 1;
     if (request.params.size() > 0 && !request.params[0].isNull()) {
         RPCTypeCheckArgument(request.params[0], UniValue::VNUM);
@@ -4104,6 +4148,10 @@ UniValue listunspentanon(const JSONRPCRequest &request)
         if (options.exists("include_immature"))
             fIncludeImmature = options["include_immature"].get_bool();
     }
+
+    // Make sure the results are valid at least up to the most recent block
+    // the user could have gotten from another RPC command prior to now
+    pwallet->BlockUntilSyncedToCurrentChain();
 
     UniValue results(UniValue::VARR);
     std::vector<COutputR> vecOutputs;
@@ -4226,6 +4274,8 @@ UniValue listunspentblind(const JSONRPCRequest &request)
             + HelpExampleRpc("listunspentblind", "6, 9999999 \"[\\\"PfqK97PXYfqRFtdYcZw82x3dzPrZbEAcYa\\\",\\\"Pka9M2Bva8WetQhQ4ngC255HAbMJf5P5Dc\\\"]\"")
         );
 
+    ObserveSafeMode();
+
     int nMinDepth = 1;
     if (request.params.size() > 0 && !request.params[0].isNull()) {
         RPCTypeCheckArgument(request.params[0], UniValue::VNUM);
@@ -4289,6 +4339,10 @@ UniValue listunspentblind(const JSONRPCRequest &request)
         RPCTypeCheckArgument(request.params[3], UniValue::VBOOL);
         include_unsafe = request.params[3].get_bool();
     }
+
+    // Make sure the results are valid at least up to the most recent block
+    // the user could have gotten from another RPC command prior to now
+    pwallet->BlockUntilSyncedToCurrentChain();
 
     UniValue results(UniValue::VARR);
     std::vector<COutputR> vecOutputs;
@@ -4386,6 +4440,14 @@ static UniValue SendToInner(const JSONRPCRequest &request, OutputTypes typeIn, O
     CHDWallet *pwallet = GetHDWalletForJSONRPCRequest(request);
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
         return NullUniValue;
+
+    ObserveSafeMode();
+
+    // Make sure the results are valid at least up to the most recent block
+    // the user could have gotten from another RPC command prior to now
+    if (!request.fSkipBlock)
+        pwallet->BlockUntilSyncedToCurrentChain();
+
     EnsureWalletIsUnlocked(pwallet);
 
     if (pwallet->GetBroadcastTransactions() && !g_connman)
@@ -5092,6 +5154,12 @@ UniValue debugwallet(const JSONRPCRequest &request)
             "debugwallet [attempt_repair]\n"
             "Detect problems in wallet.\n");
 
+    ObserveSafeMode();
+
+    // Make sure the results are valid at least up to the most recent block
+    // the user could have gotten from another RPC command prior to now
+    pwallet->BlockUntilSyncedToCurrentChain();
+
     bool fAttemptRepair = false;
     if (request.params.size() > 0)
     {
@@ -5235,7 +5303,13 @@ UniValue rewindchain(const JSONRPCRequest &request)
             "rewindchain [height]\n"
             "height default - last known rct index.\n");
 
+    ObserveSafeMode();
     EnsureWalletIsUnlocked(pwallet);
+
+    // Make sure the results are valid at least up to the most recent block
+    // the user could have gotten from another RPC command prior to now
+    pwallet->BlockUntilSyncedToCurrentChain();
+
 
     LOCK2(cs_main, pwallet->cs_wallet);
 
@@ -5330,6 +5404,12 @@ UniValue walletsettings(const JSONRPCRequest &request)
             "Clear changeaddress settings\n"
             + HelpExampleCli("walletsettings", "changeaddress \"{}\"") + "\n"
         );
+
+    ObserveSafeMode();
+
+    // Make sure the results are valid at least up to the most recent block
+    // the user could have gotten from another RPC command prior to now
+    pwallet->BlockUntilSyncedToCurrentChain();
 
     EnsureWalletIsUnlocked(pwallet);
 
@@ -5573,7 +5653,12 @@ UniValue setvote(const JSONRPCRequest &request)
             "Wallet will include this token in staked blocks from height_start to height_end.\n"
             "Set proposal and/or option to 0 to stop voting.\n");
 
+    ObserveSafeMode();
     EnsureWalletIsUnlocked(pwallet);
+
+    // Make sure the results are valid at least up to the most recent block
+    // the user could have gotten from another RPC command prior to now
+    pwallet->BlockUntilSyncedToCurrentChain();
 
     uint32_t issue = request.params[0].get_int();
     uint32_t option = request.params[1].get_int();
@@ -5632,6 +5717,12 @@ UniValue votehistory(const JSONRPCRequest &request)
         throw std::runtime_error(
             "votehistory [current_only]\n"
             "Display voting history.\n");
+
+    ObserveSafeMode();
+
+    // Make sure the results are valid at least up to the most recent block
+    // the user could have gotten from another RPC command prior to now
+    pwallet->BlockUntilSyncedToCurrentChain();
 
     UniValue result(UniValue::VARR);
 
