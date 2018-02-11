@@ -192,6 +192,34 @@ static void MutateTxVersion(CMutableTransaction& tx, const std::string& cmdVal)
     if (newVersion < 1 || newVersion > CTransaction::MAX_STANDARD_PARTICL_VERSION)
         throw std::runtime_error("Invalid TX version requested");
 
+    if (!tx.IsParticlVersion() && IsParticlTxVersion(newVersion))
+    {
+        for (const auto& txout : tx.vout)
+        {
+            tx.vpout.push_back(MAKE_OUTPUT<CTxOutStandard>(txout.nValue, txout.scriptPubKey));
+        };
+
+        for (auto& txin : tx.vin)
+        {
+            ScriptError serror;
+            std::vector<std::vector<unsigned char> > stack;
+            if (!EvalScript(stack, txin.scriptSig, SCRIPT_VERIFY_P2SH, BaseSignatureChecker(), SIGVERSION_BASE, &serror))
+                throw std::runtime_error("EvalScript failed for input.");
+
+            txin.scriptWitness.stack = stack;
+            txin.scriptSig.clear();
+        };
+    } else
+    if (tx.IsParticlVersion() && !IsParticlTxVersion(newVersion))
+    {
+        for (const auto &txout : tx.vpout)
+        {
+            if (!txout->IsStandardOutput())
+                throw std::runtime_error("Can't convert non-standard output.");
+            tx.vout.emplace_back(txout->GetStandardOutput()->nValue, txout->GetStandardOutput()->scriptPubKey);
+        };
+    };
+
     tx.nVersion = (int) newVersion;
 }
 
@@ -279,8 +307,14 @@ static void MutateTxAddOutAddr(CMutableTransaction& tx, const std::string& strIn
     CScript scriptPubKey = GetScriptForDestination(destination);
 
     // construct TxOut, append to transaction output list
+    if (tx.IsParticlVersion())
+    {
+        tx.vpout.push_back(MAKE_OUTPUT<CTxOutStandard>(value, scriptPubKey));
+        return;
+    };
     CTxOut txout(value, scriptPubKey);
     tx.vout.push_back(txout);
+    return;
 }
 
 static void MutateTxAddOutPubKey(CMutableTransaction& tx, const std::string& strInput)
@@ -323,8 +357,14 @@ static void MutateTxAddOutPubKey(CMutableTransaction& tx, const std::string& str
     }
 
     // construct TxOut, append to transaction output list
+    if (tx.IsParticlVersion())
+    {
+        tx.vpout.push_back(MAKE_OUTPUT<CTxOutStandard>(value, scriptPubKey));
+        return;
+    };
     CTxOut txout(value, scriptPubKey);
     tx.vout.push_back(txout);
+    return;
 }
 
 static void MutateTxAddOutMultiSig(CMutableTransaction& tx, const std::string& strInput)
@@ -397,6 +437,11 @@ static void MutateTxAddOutMultiSig(CMutableTransaction& tx, const std::string& s
     }
 
     // construct TxOut, append to transaction output list
+    if (tx.IsParticlVersion())
+    {
+        tx.vpout.push_back(MAKE_OUTPUT<CTxOutStandard>(value, scriptPubKey));
+        return;
+    };
     CTxOut txout(value, scriptPubKey);
     tx.vout.push_back(txout);
 }
@@ -424,6 +469,12 @@ static void MutateTxAddOutData(CMutableTransaction& tx, const std::string& strIn
 
     std::vector<unsigned char> data = ParseHex(strData);
 
+    if (tx.IsParticlVersion())
+    {
+        // TODO OUTPUT_DATA
+        tx.vpout.push_back(MAKE_OUTPUT<CTxOutStandard>(value, CScript() << OP_RETURN << data));
+        return;
+    };
     CTxOut txout(value, CScript() << OP_RETURN << data);
     tx.vout.push_back(txout);
 }
@@ -474,6 +525,11 @@ static void MutateTxAddOutScript(CMutableTransaction& tx, const std::string& str
     }
 
     // construct TxOut, append to transaction output list
+    if (tx.IsParticlVersion())
+    {
+        tx.vpout.push_back(MAKE_OUTPUT<CTxOutStandard>(value, scriptPubKey));
+        return;
+    };
     CTxOut txout(value, scriptPubKey);
     tx.vout.push_back(txout);
 }
@@ -664,8 +720,11 @@ static void MutateTxSign(CMutableTransaction& tx, const std::string& flagStr)
         const CScript& prevPubKey = coin.out.scriptPubKey;
         const CAmount& amount = coin.out.nValue;
 
+        if (tx.IsParticlVersion() && amount == 0)
+            throw std::runtime_error("expected amount for prevtx");
+
         std::vector<uint8_t> vchAmount(8);
-        memcpy(&vchAmount[0], &amount, 8);
+        memcpy(vchAmount.data(), &amount, 8);
         SignatureData sigdata;
         // Only sign SIGHASH_SINGLE if there's a corresponding output:
         if (!fHashSingle || (i < mergedTx.GetNumVOuts()))
@@ -835,6 +894,7 @@ static int CommandLineRawTx(int argc, char* argv[])
         } else
             startArg = 1;
 
+        bool haveSigned = false;
         for (int i = startArg; i < argc; i++) {
             std::string arg = argv[i];
             std::string key, value;
@@ -846,7 +906,11 @@ static int CommandLineRawTx(int argc, char* argv[])
                 value = arg.substr(eqpos + 1);
             }
 
+            if (haveSigned)
+                fprintf(stdout, "Warning: Mutating tx after signing: %s\n", key.c_str());
             MutateTx(tx, key, value);
+            if (key == "sign")
+                haveSigned = true;
         }
 
         OutputTx(tx);

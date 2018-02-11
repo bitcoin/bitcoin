@@ -2,7 +2,7 @@
 
 
 #include <rpc/blockchain.cpp>
-#include <test/test_particl.h>
+#include <test/test_bitcoin.h>
 
 /* Equality between doubles is imprecise. Comparison should be done
  * with a small threshold of tolerance, rather than exact equality.

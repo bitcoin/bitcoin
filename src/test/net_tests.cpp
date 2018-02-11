@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <addrman.h>
-#include <test/test_particl.h>
+#include <test/test_bitcoin.h>
 #include <string>
 #include <boost/test/unit_test.hpp>
 #include <hash.h>

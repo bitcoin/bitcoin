@@ -78,8 +78,8 @@ BITCOIN_TESTS =\
   test/sigopcount_tests.cpp \
   test/skiplist_tests.cpp \
   test/streams_tests.cpp \
-  test/test_particl.cpp \
-  test/test_particl.h \
+  test/test_bitcoin.cpp \
+  test/test_bitcoin.h \
   test/test_bitcoin_main.cpp \
   test/timedata_tests.cpp \
   test/torcontrol_tests.cpp \

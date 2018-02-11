@@ -1,0 +1,24 @@
+{
+    "txid": "4cbd2cb878ebf435b8b1157cbdd37d998bf8034b57399216af8bc26c0c202fbc",
+    "hash": "4cbd2cb878ebf435b8b1157cbdd37d998bf8034b57399216af8bc26c0c202fbc",
+    "version": 160,
+    "size": 18,
+    "vsize": 18,
+    "locktime": 0,
+    "vin": [
+    ],
+    "vout": [
+        {
+            "n": 0,
+            "type": "standard",
+            "value": 0.00000000,
+            "valueSat": 0,
+            "scriptPubKey": {
+                "asm": "",
+                "hex": "",
+                "type": "nonstandard"
+            }
+        }
+    ],
+    "hex": "a00000000000000101000000000000000000"
+}

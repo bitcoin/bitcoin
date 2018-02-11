@@ -4,7 +4,7 @@
 
 #include <key/extkey.h>
 
-#include <test/test_particl.h>
+#include <test/test_bitcoin.h>
 
 #include <base58.h>
 #include <chainparams.h>

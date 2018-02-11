@@ -10,7 +10,7 @@
 #include <script/script.h>
 #include <serialize.h>
 #include <streams.h>
-#include <test/test_particl.h>
+#include <test/test_bitcoin.h>
 #include <util.h>
 #include <utilstrencodings.h>
 #include <version.h>

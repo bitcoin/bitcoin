@@ -277,8 +277,18 @@ EXTRA_DIST += \
     test/util/data_particl/blanktxv1.json \
     test/util/data_particl/blanktxva0.hex \
     test/util/data_particl/blanktxva0.json \
-    test/util/data_particl/txdb5e6341.hex \
-    test/util/data_particl/tt-delin1-out.hex
+    test/util/data_particl/tx14ae341f.hex \
+    test/util/data_particl/tt-delin1-out.hex \
+    test/util/data_particl/tt-delin1-out.json \
+    test/util/data_particl/tt-delout1-out.hex \
+    test/util/data_particl/tt-delout1-out.json \
+    test/util/data_particl/tt-locktime317000-out.hex \
+    test/util/data_particl/tt-locktime317000-out.json \
+    test/util/data_particl/txcreate1.hex \
+    test/util/data_particl/txcreate1.json \
+    test/util/data_particl/txcreate2.hex \
+    test/util/data_particl/txcreate2.json \
+    test/util/data_particl/txcreatesignva0.hex
 
 
 CLEANFILES = $(OSX_DMG) $(BITCOIN_WIN_INSTALLER)

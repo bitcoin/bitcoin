@@ -4,7 +4,7 @@
 
 #include <chain.h>
 #include <versionbits.h>
-#include <test/test_particl.h>
+#include <test/test_bitcoin.h>
 #include <chainparams.h>
 #include <validation.h>
 #include <consensus/params.h>

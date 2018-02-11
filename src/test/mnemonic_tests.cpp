@@ -7,7 +7,7 @@
 #include <test/data/bip39_vectors_english.json.h>
 #include <test/data/bip39_vectors_japanese.json.h>
 
-#include <test/test_particl.h>
+#include <test/test_bitcoin.h>
 
 #include <key/extkey.h>
 #include <base58.h>

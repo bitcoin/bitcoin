@@ -16,7 +16,7 @@
 #include <util.h>
 #include <validation.h>
 
-#include <test/test_particl.h>
+#include <test/test_bitcoin.h>
 
 #include <stdint.h>
 

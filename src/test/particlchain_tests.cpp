@@ -2,7 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <test/test_particl.h>
+#include <test/test_bitcoin.h>
 #include <net.h>
 #include <keystore.h>
 #include <script/script.h>

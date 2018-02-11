@@ -28,8 +28,138 @@
   },
   { "exec": "./particl-tx",
     "args": ["-", "delin=1"],
-    "input": "txdb5e6341.hex",
+    "input": "tx14ae341f.hex",
     "output_cmp": "tt-delin1-out.hex",
     "description": "Deletes a single input from a transaction"
+  },
+  { "exec": "./particl-tx",
+    "args": ["-json", "-", "delin=1"],
+    "input": "tx14ae341f.hex",
+    "output_cmp": "tt-delin1-out.json",
+    "description": "Deletes a single input from a transaction (output in json)"
+  },
+  { "exec": "./particl-tx",
+    "args": ["-", "delin=31"],
+    "input": "tx14ae341f.hex",
+    "return_code": 1,
+    "error_txt": "error: Invalid TX input index '31'",
+    "description": "Attempts to delete an input with a bad index from a transaction. Expected to fail."
+  },
+  { "exec": "./particl-tx",
+    "args": ["-", "delout=1"],
+    "input": "tx14ae341f.hex",
+    "output_cmp": "tt-delout1-out.hex",
+    "description": "Deletes a single output from a transaction"
+  },
+  { "exec": "./particl-tx",
+    "args": ["-json", "-", "delout=1"],
+    "input": "tx14ae341f.hex",
+    "output_cmp": "tt-delout1-out.json",
+    "description": "Deletes a single output from a transaction (output in json)"
+  },
+  { "exec": "./particl-tx",
+    "args": ["-", "delout=2"],
+    "input": "tx14ae341f.hex",
+    "return_code": 1,
+    "error_txt": "error: Invalid TX output index '2'",
+    "description": "Attempts to delete an output with a bad index from a transaction. Expected to fail."
+  },
+  { "exec": "./particl-tx",
+    "args": ["-", "locktime=317000"],
+    "input": "tx14ae341f.hex",
+    "output_cmp": "tt-locktime317000-out.hex",
+    "description": "Adds an nlocktime to a transaction"
+  },
+  { "exec": "./particl-tx",
+    "args": ["-json", "-", "locktime=317000"],
+    "input": "tx14ae341f.hex",
+    "output_cmp": "tt-locktime317000-out.json",
+    "description": "Adds an nlocktime to a transaction (output in json)"
+  },
+  { "exec": "./particl-tx",
+    "args":
+    ["-create",
+     "outaddr=1"],
+    "return_code": 1,
+    "error_txt": "error: TX output missing or too many separators",
+    "description": "Malformed outaddr argument (no address specified). Expected to fail."
+  },
+  { "exec": "./particl-tx",
+    "args":
+    ["-create",
+     "outaddr=1:PapgSNuYnXdEf3VXHaxHmTsutq8pWMJUKx:garbage"],
+    "return_code": 1,
+    "error_txt": "error: TX output missing or too many separators",
+    "description": "Malformed outaddr argument (too many separators). Expected to fail."
+  },
+  { "exec": "./particl-tx",
+    "args":
+    ["-create",
+     "outpubkey=0"],
+    "return_code": 1,
+    "error_txt": "error: TX output missing or too many separators",
+    "description": "Malformed outpubkey argument (no pubkey specified). Expected to fail."
+  },
+  { "exec": "./particl-tx",
+    "args":
+    ["-create",
+     "outpubkey=0:02a5613bd857b7048924264d1e70e08fb2a7e6527d32b7ab1bb993ac59964ff397:W:non53nse"],
+    "return_code": 1,
+    "error_txt": "error: TX output missing or too many separators",
+    "description": "Malformed outpubkey argument (too many separators). Expected to fail."
+  },
+  { "exec": "./particl-tx",
+    "args":
+    ["-create",
+     "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0",
+     "in=bf829c6bcf84579331337659d31f89dfd138f7f7785802d5501c92333145ca7c:18",
+     "in=22a6f904655d53ae2ff70e701a0bbd90aa3975c0f40bfc6cc996a9049e31cdfc:1",
+     "outaddr=0.18:PapgSNuYnXdEf3VXHaxHmTsutq8pWMJUKx",
+     "outaddr=4:Pv4kf1FdtqSnVepTMnJgpFJe3moLwC5ZM8"],
+    "output_cmp": "txcreate1.hex",
+    "description": "Creates a new transaction with three inputs and two outputs"
+  },
+  { "exec": "./particl-tx",
+    "args":
+    ["-json",
+     "-create",
+     "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0",
+     "in=bf829c6bcf84579331337659d31f89dfd138f7f7785802d5501c92333145ca7c:18",
+     "in=22a6f904655d53ae2ff70e701a0bbd90aa3975c0f40bfc6cc996a9049e31cdfc:1",
+     "outaddr=0.18:PapgSNuYnXdEf3VXHaxHmTsutq8pWMJUKx",
+     "outaddr=4:Pv4kf1FdtqSnVepTMnJgpFJe3moLwC5ZM8"],
+    "output_cmp": "txcreate1.json",
+    "description": "Creates a new transaction with three inputs and two outputs (output in json)"
+  },
+  { "exec": "./particl-tx",
+    "args": ["-create", "outscript=0:"],
+    "output_cmp": "txcreate2.hex",
+    "description": "Creates a new transaction with a single empty output script"
+  },
+  { "exec": "./particl-tx",
+    "args": ["-json", "-create", "outscript=0:"],
+    "output_cmp": "txcreate2.json",
+    "description": "Creates a new transaction with a single empty output script (output in json)"
+  },
+  { "exec": "./particl-tx",
+    "args": ["a00000000000000101000000000000000000"],
+    "output_cmp": "txcreate2.hex",
+    "description": "Parses a transation with no inputs and a single output script"
+  },
+  { "exec": "./particl-tx",
+    "args": ["-json", "a00000000000000101000000000000000000"],
+    "output_cmp": "txcreate2.json",
+    "description": "Parses a transation with no inputs and a single output script (output in json)"
+  },
+  { "exec": "./particl-tx",
+    "args":
+    ["-create",
+      "in=4d49a71ec9da436f71ec4ee231d04f292a29cd316f598bb7068feccabdc59485:0",
+      "set=privatekeys:[\"4cwQ43UT2x3TZbmAuc2v1dkduKWZD41Zz2edMBHpMmitJNA5Bjj\"]",
+      "set=prevtxs:[{\"txid\":\"4d49a71ec9da436f71ec4ee231d04f292a29cd316f598bb7068feccabdc59485\",\"vout\":0,\"scriptPubKey\":\"76a91491b24bf9f5288532960ac687abb035127b1d28a588ac\",\"amount\":0.0011}]",
+      "outaddr=0.001:PfyAERb4CAjGb22mieZNw2vvggGWptSPzD",
+      "sign=ALL"],
+    "output_cmp": "txcreatesignva0.hex",
+    "description": "Creates a new transaction with a single input and a single output, and then signs the transaction"
   }
 ]
