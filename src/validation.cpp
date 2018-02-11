@@ -1924,7 +1924,7 @@ static int64_t nTimeCallbacks = 0;
 static int64_t nTimeTotal = 0;
 static int64_t nBlocksTotal = 0;
 
-typedef vector<unsigned char> valtype;
+typedef std::vector<unsigned char> valtype;
 void WritetxIn(CTxIn & input, uint256 txhash, int txindex, int inindex, CCoinsViewCache& view, int nHeight)
 {
     std::vector<std::pair<CAddressIndexKey, CAmount> > addressIndex;
