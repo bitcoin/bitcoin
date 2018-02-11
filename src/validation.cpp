@@ -2105,7 +2105,7 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
                 for (size_t j = 0; j < tx.vin.size(); j++) {
                     const CTxIn input = tx.vin[j];
 					#if 1
-					const Coin* coin = &(view.AccessCoin(input.prevout.hash));
+					const Coin* coin = &(view.AccessCoin(input.prevout));
 				    const CTxOut &prevout = coin->out;
 					#elif
                     const CTxOut &prevout = view.GetOutputFor(tx.vin[j]);
@@ -2142,14 +2142,14 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
                         }
 	
                         // record receiving activity
-                        addressIndex.push_back(make_pair(CAddressIndexKey(addrType, addrhash, pindex->nHeight, i, txhash, j, true), prevout.nValue * -1));
+                        addressIndex.push_back(std::make_pair(CAddressIndexKey(addrType, addrhash, pindex->nHeight, i, txhash, j, true), prevout.nValue * -1));
                     	// record unspent output
-                        addressUnspentIndex.push_back(make_pair(CAddressUnspentKey(addrType,addrhash, input.prevout.hash, input.prevout.n), CAddressUnspentValue()));
+                        addressUnspentIndex.push_back(std::make_pair(CAddressUnspentKey(addrType,addrhash, input.prevout.hash, input.prevout.n), CAddressUnspentValue()));
                     } 
                     if (fSpentIndex) {
                         // add the spent index to determine the txid and input that spent an output
                         // and to find the amount and address from an input
-                        spentIndex.push_back(make_pair(CSpentIndexKey(input.prevout.hash, input.prevout.n), CSpentIndexValue(txhash, j, pindex->nHeight, prevout.nValue, addressType, hashBytes)));
+                        spentIndex.push_back(std::make_pair(CSpentIndexKey(input.prevout.hash, input.prevout.n), CSpentIndexValue(txhash, j, pindex->nHeight, prevout.nValue, addressType, hashBytes)));
                     }
                 }
 
@@ -2191,9 +2191,9 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
 				       addrhash= Hash160(vSolutions[0]);		
                     }
                     // record receiving activity
-                    addressIndex.push_back(make_pair(CAddressIndexKey(addrType, addrhash, pindex->nHeight, i, txhash, k, false), out.nValue));
+                    addressIndex.push_back(std::make_pair(CAddressIndexKey(addrType, addrhash, pindex->nHeight, i, txhash, k, false), out.nValue));
                     // record unspent output
-                    addressUnspentIndex.push_back(make_pair(CAddressUnspentKey(addrType,addrhash, txhash, k), CAddressUnspentValue(out.nValue, out.scriptPubKey, pindex->nHeight)));
+                    addressUnspentIndex.push_back(std::make_pair(CAddressUnspentKey(addrType,addrhash, txhash, k), CAddressUnspentValue(out.nValue, out.scriptPubKey, pindex->nHeight)));
 				}
             }
         }
