@@ -462,6 +462,14 @@ Instant send is a functionality ported from DASH distributing a copy of desired 
 
 - The log timestamp format is now ISO 8601 (e.g. "2018-02-28T12:34:56Z").
 
+RPC changes
+------------
+
+### Low-level changes
+
+- The `fundrawtransaction` rpc will reject the previously deprecated `reserveChangeKey` option.
+
+
 Credits
 =======
 
