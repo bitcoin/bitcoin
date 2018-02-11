@@ -173,11 +173,6 @@ Value update(const Array& params, bool fHelp)
                 "  status       - Check download status\n"
                 "  install      - Install update\n"
                 );
-    if (!fServer)
-    {
-        throw runtime_error("Command is available only in server mode."
-            "\ncrown-qt will automatically check and notify if there is an updates\n");
-    }
 
     if (strCommand == "check")
     {
@@ -220,6 +215,22 @@ Value update(const Array& params, bool fHelp)
 
     if (strCommand == "install")
     {
+        if (!fServer)
+        {
+            throw runtime_error("Command is available only in server mode."
+                "\ncrown-qt will automatically check and notify if there is an updates\n");
+        }
+
+        if (updater.GetOS() != Updater::LINUX_32 && updater.GetOS() != Updater::LINUX_64)
+        {
+            throw runtime_error("Command is available only in Linux.");
+        }
+
+        if (::system("command -v unzip"))
+        {
+            throw runtime_error("The command 'unzip' could not be found. Please install it and try again.");
+        }
+
         if (!updater.Check())
         {
             return "You are running the latest version of Crown - " + FormatVersion(CLIENT_VERSION);
