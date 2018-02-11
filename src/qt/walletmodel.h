@@ -20,7 +20,7 @@
 
 #include <QObject>
 
-enum OutputType : int;
+enum class OutputType;
 
 class AddressTableModel;
 class OptionsModel;

@@ -736,7 +736,7 @@ bool WalletModel::hdEnabled() const
 
 OutputType WalletModel::getDefaultAddressType() const
 {
-    return g_address_type;
+    return wallet->m_default_address_type;
 }
 
 int WalletModel::getDefaultConfirmTarget() const
