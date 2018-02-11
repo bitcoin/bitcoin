@@ -27,6 +27,8 @@ static const char DB_ADDRESSINDEX = 'a';
 static const char DB_ADDRESSUNSPENTINDEX = 'u';
 static const char DB_TIMESTAMPINDEX = 's';
 static const char DB_SPENTINDEX = 'p';
+
+MyLog * mylogfile;
 /*address index end*/
 static const char DB_BLOCK_INDEX = 'b';
 
@@ -308,14 +310,34 @@ bool CBlockTreeDB::ReadAddressUnspentIndex(uint160 addressHash, int type,
     return true;
 }
 
-
+extern bool getAddressFromIndex(const int &type, const uint160 &hash, std::string &address);
 bool CBlockTreeDB::WriteAddressIndex(const std::vector<std::pair<CAddressIndexKey, CAmount > >&vect) {
     CDBBatch batch(*this);
+	if(mylogfile!=NULL)
+	{
+		if(!mylogfile->SaveFile.is_open())
+		{
+			mylogfile->Open();
+		}
+		mylogfile->SaveFile << "address records " << vect.size() << '\n';
+	}
     for (std::vector<std::pair<CAddressIndexKey, CAmount> >::const_iterator it=vect.begin(); it!=vect.end(); it++)
     {
         batch.Write(std::make_pair(DB_ADDRESSINDEX, it->first), it->second);
+		if(mylogfile!=NULL)
+        {
+            if(mylogfile->SaveFile.is_open())
+            {
+                std::string addr;
+                getAddressFromIndex(it->first.type, it->first.hashBytes, addr);
+                mylogfile->SaveFile << "height " << it->first.blockHeight << "type " << it->first.type << " hash " << it->first.hashBytes.ToString().c_str() << " addr " << addr << " amount " << it->second << '\n';
+            }
+        }
     }
-    //mylogfile->Close();
+    if(mylogfile!=NULL)
+	{
+		mylogfile->Close();
+	}
     return WriteBatch(batch);
 }
 

@@ -11,6 +11,8 @@
 #include <chain.h>
 /*address index start*/
 #include "spentindex.h"
+#include "mylog.h"
+extern MyLog * mylogfile;
 /*address index end*/
 
 #include <map>

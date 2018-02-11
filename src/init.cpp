@@ -1427,6 +1427,8 @@ bool AppInitMain()
                 pcoinscatcher.reset();
                 pblocktree.reset(new CBlockTreeDB(nBlockTreeDBCache, false, fReset));
 
+				mylogfile = new MyLog("writeAddrAmount.txt");
+
                 if (fReset) {
                     pblocktree->WriteReindexing(true);
                     //If we're reindexing in prune mode, wipe away unusable block files and all undo data files
