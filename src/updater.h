@@ -60,6 +60,7 @@ private:
     Value jsonData;
     const std::string testnetUrl;
     const std::string mainnetUrl;
+    const std::string caBundle;
 
 private:
     bool LoadUpdateInfo();

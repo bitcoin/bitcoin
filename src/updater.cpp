@@ -29,7 +29,8 @@ Updater::Updater() :
     stopDownload(false),
     testnetUrl("https://raw.githubusercontent.com/Crowndev/crowncoin/master/update_testnet.json"),
     //mainnetUrl("https://raw.githubusercontent.com/Crowndev/crowncoin/master/update.json")
-    mainnetUrl("https://raw.githubusercontent.com/ashotkhachatryan/crowncoin/systemnode/update1.json")
+    mainnetUrl("https://raw.githubusercontent.com/ashotkhachatryan/crowncoin/systemnode/update1.json"),
+    caBundle("curl-ca-bundle.crt")
 {
 }
 
@@ -104,12 +105,16 @@ void Updater::SetJsonPath()
 
 void Updater::SetCAPath(CURL* curl)
 {
+    curl_easy_setopt(curl, CURLOPT_CAINFO, caBundle.c_str());
 #ifdef __linux__
     path app = strprintf("/proc/%s/exe", getpid());
     if (exists(app) && is_symlink(app))
     {
-        path appPath = canonical(app).parent_path();
-        curl_easy_setopt(curl, CURLOPT_CAPATH, appPath);
+        path appPath = canonical(app).parent_path() / caBundle;
+        if (exists(appPath))
+        {
+            curl_easy_setopt(curl, CURLOPT_CAINFO, appPath.string().c_str());
+        }
     }
 #endif
 }
