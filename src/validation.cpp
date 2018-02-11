@@ -2107,7 +2107,7 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
 					#if 1
 					const Coin* coin = &(view.AccessCoin(input.prevout));
 				    const CTxOut &prevout = coin->out;
-					#elif
+					#else
                     const CTxOut &prevout = view.GetOutputFor(tx.vin[j]);
 					#endif
                     uint160 hashBytes;
