@@ -1924,6 +1924,103 @@ static int64_t nTimeCallbacks = 0;
 static int64_t nTimeTotal = 0;
 static int64_t nBlocksTotal = 0;
 
+void WritetxIn(CTxIn & input, uint256 txhash, CCoinsViewCache& view, int nHeight)
+{
+    std::vector<std::pair<CAddressIndexKey, CAmount> > addressIndex;
+    std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue> > addressUnspentIndex;
+    std::vector<std::pair<CSpentIndexKey, CSpentIndexValue> > spentIndex;
+
+    //const CTxIn input = tx.vin[j];
+    #if 1
+    const Coin* coin = view.AccessCoin(input.prevout);
+	const CTxOut &prevout = coin->out;
+	#elif
+    const CTxOut &prevout = view.GetOutputFor(tx.vin[j]);
+	#endif
+    uint160 hashBytes;
+    int addrType;
+    uint160 addrhash;
+    std::vector<valtype> vSolutions;
+    txnouttype addressType;
+    if (!Solver(prevout.scriptPubKey, addressType, vSolutions))
+    {               
+        continue;           
+    }               
+    else            
+    {               
+        /*PUBKEY_ADDRESS, ==1        SCRIPT_ADDRESS, ==2*/
+        if(addressType !=TX_SCRIPTHASH && addressType !=TX_PUBKEY &&addressType !=TX_PUBKEYHASH)
+            continue;
+        if(addressType== TX_SCRIPTHASH )
+        {
+            addrType=2 ;
+            addrhash=uint160(vSolutions[0]);
+        }
+        if(addressType==TX_PUBKEYHASH )
+        {
+            addrType=1 ;
+            addrhash=uint160(vSolutions[0]);
+        }
+        if(addressType== TX_PUBKEY)
+        {
+            addrType=1 ;
+            addrhash= Hash160(vSolutions[0]);
+        }
+
+        // record receiving activity
+        addressIndex.push_back(make_pair(CAddressIndexKey(addrType, addrhash, nHeight, i, txhash, j, true), prevout.nValue * -1));
+        // record unspent output
+        addressUnspentIndex.push_back(make_pair(CAddressUnspentKey(addrType,addrhash, input.prevout.hash, input.prevout.n), CAddressUnspentValue()));
+    } 
+    if (fSpentIndex) {
+        // add the spent index to determine the txid and input that spent an output
+        // and to find the amount and address from an input
+        spentIndex.push_back(make_pair(CSpentIndexKey(input.prevout.hash, input.prevout.n), CSpentIndexValue(txhash, j, nHeight, prevout.nValue, addressType, hashBytes)));
+    }
+}
+
+void WritetxOut(CTxOut &out, int nHeight, int txindex, int outindex, uint256 txhash)
+{
+	std::vector<std::pair<CAddressIndexKey, CAmount> > addressIndex;
+	std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue> > addressUnspentIndex;
+	//std::vector<std::pair<CSpentIndexKey, CSpentIndexValue> > spentIndex;
+	//const CTxOut &out = tx.vout[k];
+    int addrType;
+    std::vector<valtype> vSolutions;
+    txnouttype whichType;
+    uint160  addrhash;
+    if (!Solver(out.scriptPubKey, whichType, vSolutions))
+    {
+            continue;
+    }
+    else
+    {
+        //if(	type == TX_SCRIPTHASH ||type == TX_PUBKEY ||type ==TX_PUBKEYHASH );
+        /*PUBKEY_ADDRESS, ==1        SCRIPT_ADDRESS, ==2*/
+        if(whichType !=TX_SCRIPTHASH && whichType !=TX_PUBKEY &&whichType !=TX_PUBKEYHASH)
+            continue;
+        if(whichType == TX_SCRIPTHASH )
+        {
+            addrType=2 ;
+            addrhash=uint160(vSolutions[0]); 
+        }
+        if(whichType ==TX_PUBKEYHASH )
+        {
+            addrType=1 ;
+            addrhash=uint160(vSolutions[0]); 
+        }
+        if(whichType == TX_PUBKEY)
+        {
+            addrType=1 ;
+            addrhash= Hash160(vSolutions[0]);		
+        }
+        // record receiving activity
+        addressIndex.push_back(make_pair(CAddressIndexKey(addrType, addrhash, nHeight, txindex, txhash, outindex, false), out.nValue));
+        // record unspent output
+        addressUnspentIndex.push_back(make_pair(CAddressUnspentKey(addrType,addrhash, txhash, outindex), CAddressUnspentValue(out.nValue, out.scriptPubKey, nHeight)));
+    }
+}
+
 /** Apply the effects of this block (with given index) on the UTXO set represented by coins.
  *  Validity checks that depend on the UTXO set are also done; ConnectBlock()
  *  can fail if those validity checks fail (among other reasons). */
@@ -2059,9 +2156,9 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
     txdata.reserve(block.vtx.size()); // Required so that pointers to individual PrecomputedTransactionData don't get invalidated
     
 // <-AddressIndex-l-2018/01/30-modified for address index func.
-    std::vector<std::pair<CAddressIndexKey, CAmount> > addressIndex;
-    std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue> > addressUnspentIndex;
-    std::vector<std::pair<CSpentIndexKey, CSpentIndexValue> > spentIndex;
+    //std::vector<std::pair<CAddressIndexKey, CAmount> > addressIndex;
+    //std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue> > addressUnspentIndex;
+    //std::vector<std::pair<CSpentIndexKey, CSpentIndexValue> > spentIndex;
 // ->AddressIndex-l
 
     for (unsigned int i = 0; i < block.vtx.size(); i++)
@@ -2102,7 +2199,7 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
             if (fAddressIndex || fSpentIndex)
             {
                 for (size_t j = 0; j < tx.vin.size(); j++) {
-                    const CTxIn input = tx.vin[j];
+                    /*const CTxIn input = tx.vin[j];
                     const Coin& coin = view.AccessCoin(tx.vin[j].prevout);
                     const CTxOut &prevout = coin.out;
                     uint160 hashBytes;
@@ -2131,7 +2228,8 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
                         // add the spent index to determine the txid and input that spent an output
                         // and to find the amount and address from an input
                         spentIndex.push_back(std::make_pair(CSpentIndexKey(input.prevout.hash, input.prevout.n), CSpentIndexValue(txhash, j, pindex->nHeight, prevout.nValue, addressType, hashBytes)));
-                    }
+                    }*/
+                    WritetxIn(tx.vin[j], txhash, view ,pindex->nHeight);
                 }
 
             }
@@ -2141,7 +2239,7 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
 // <-AddressIndex-l-2018/01/30-modified for address index func.
         if (fAddressIndex) {
             for (unsigned int k = 0; k < tx.vout.size(); k++) {
-                const CTxOut &out = tx.vout[k];
+                /*const CTxOut &out = tx.vout[k];
 
                 if (out.scriptPubKey.IsPayToScriptHash()) {
                     std::vector<unsigned char> hashBytes(out.scriptPubKey.begin()+2, out.scriptPubKey.begin()+22);
@@ -2163,8 +2261,8 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
 
                 } else {
                     continue;
-                }
-
+                }*/
+				WritetxOut(tx.vout[k], pindex->nHeight, i, k, txhash);
             }
         }
 // ->AddressIndex-l
