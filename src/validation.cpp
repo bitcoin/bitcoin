@@ -2111,7 +2111,7 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
                     const CTxOut &prevout = view.GetOutputFor(tx.vin[j]);
 					#endif
                     uint160 hashBytes;
-                    int addrType;
+                    int addrType = 0;
                     uint160 addrhash;
                     //txnouttype type;
                     std::vector<valtype> vSolutions;
@@ -2161,7 +2161,7 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
         if (fAddressIndex) {
             for (unsigned int k = 0; k < tx.vout.size(); k++) {
                 const CTxOut &out = tx.vout[k];
-		        int addrType;
+		        int addrType = 0;
  				std::vector<valtype> vSolutions;
 			    txnouttype whichType;
                 uint160  addrhash;
