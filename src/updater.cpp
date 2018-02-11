@@ -116,6 +116,14 @@ void Updater::SetCAPath(CURL* curl)
             curl_easy_setopt(curl, CURLOPT_CAINFO, appPath.string().c_str());
         }
     }
+#elif _WIN32
+    boost::scoped_array<char> exePath(new char[MAX_PATH]);
+    GetModuleFileName(NULL, exePath.get(), MAX_PATH);
+    path appPath = path(exePath.get()).parent_path() / caBundle;
+    if (exists(appPath))
+    {
+        curl_easy_setopt(curl, CURLOPT_CAINFO, appPath.string().c_str());
+    }
 #endif
 }
 
