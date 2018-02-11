@@ -9,7 +9,10 @@
 #include <stdio.h>
 #include <curl/curl.h>
 #include <boost/thread.hpp>
- 
+#include <boost/filesystem.hpp>
+
+using namespace boost::filesystem;
+
 struct DownloadProgress {
     double lastruntime;
     CURL *curl;
@@ -99,6 +102,18 @@ void Updater::SetJsonPath()
     }
 }
 
+void Updater::SetCAPath(CURL* curl)
+{
+#ifdef __linux__
+    path app = strprintf("/proc/%s/exe", getpid());
+    if (exists(app) && is_symlink(app))
+    {
+        path appPath = canonical(app).parent_path();
+        curl_easy_setopt(curl, CURLOPT_CAPATH, appPath);
+    }
+#endif
+}
+
 bool Updater::LoadUpdateInfo()
 {
     bool result = false;
@@ -112,6 +127,7 @@ bool Updater::LoadUpdateInfo()
         curl_easy_setopt(curl, CURLOPT_URL, updaterInfoUrl.c_str());
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, GetUpdateData);
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, &updateData);
+        SetCAPath(curl);
         res = curl_easy_perform(curl);
         curl_easy_cleanup(curl);
     }
@@ -245,6 +261,7 @@ CURLcode Updater::DownloadFile(std::string url, std::string fileName, void(progr
     curl_easy_setopt(curl_handle, CURLOPT_NOPROGRESS, 0L);
     curl_easy_setopt(curl_handle, CURLOPT_FOLLOWLOCATION, 1L);
     curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, write_data);
+    SetCAPath(curl_handle);
 
     curl_easy_setopt(curl_handle, CURLOPT_XFERINFOFUNCTION, xferinfo);
     curl_easy_setopt(curl_handle, CURLOPT_XFERINFODATA, &prog);

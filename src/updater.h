@@ -70,6 +70,7 @@ private:
     int GetVersionFromJson();
     std::string GetUrl(const Value& value);
     std::string GetSha256sum(Value value);
+    void SetCAPath(CURL* curl);
 };
 
 #endif
