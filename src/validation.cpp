@@ -1924,7 +1924,8 @@ static int64_t nTimeCallbacks = 0;
 static int64_t nTimeTotal = 0;
 static int64_t nBlocksTotal = 0;
 
-void WritetxIn(CTxIn & input, uint256 txhash, CCoinsViewCache& view, int nHeight)
+typedef vector<unsigned char> valtype;
+void WritetxIn(CTxIn & input, uint256 txhash, int txindex, int inindex, CCoinsViewCache& view, int nHeight)
 {
     std::vector<std::pair<CAddressIndexKey, CAmount> > addressIndex;
     std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue> > addressUnspentIndex;
@@ -1932,7 +1933,7 @@ void WritetxIn(CTxIn & input, uint256 txhash, CCoinsViewCache& view, int nHeight
 
     //const CTxIn input = tx.vin[j];
     #if 1
-    const Coin* coin = view.AccessCoin(input.prevout);
+    const Coin* coin = &(view.AccessCoin(input.prevout));
 	const CTxOut &prevout = coin->out;
 	#elif
     const CTxOut &prevout = view.GetOutputFor(tx.vin[j]);
@@ -1968,14 +1969,14 @@ void WritetxIn(CTxIn & input, uint256 txhash, CCoinsViewCache& view, int nHeight
         }
 
         // record receiving activity
-        addressIndex.push_back(make_pair(CAddressIndexKey(addrType, addrhash, nHeight, i, txhash, j, true), prevout.nValue * -1));
+        addressIndex.push_back(make_pair(CAddressIndexKey(addrType, addrhash, nHeight, txindex, txhash, inindex, true), prevout.nValue * -1));
         // record unspent output
         addressUnspentIndex.push_back(make_pair(CAddressUnspentKey(addrType,addrhash, input.prevout.hash, input.prevout.n), CAddressUnspentValue()));
     } 
     if (fSpentIndex) {
         // add the spent index to determine the txid and input that spent an output
         // and to find the amount and address from an input
-        spentIndex.push_back(make_pair(CSpentIndexKey(input.prevout.hash, input.prevout.n), CSpentIndexValue(txhash, j, nHeight, prevout.nValue, addressType, hashBytes)));
+        spentIndex.push_back(make_pair(CSpentIndexKey(input.prevout.hash, input.prevout.n), CSpentIndexValue(txhash, inindex, nHeight, prevout.nValue, addressType, hashBytes)));
     }
 }
 
@@ -2229,7 +2230,7 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
                         // and to find the amount and address from an input
                         spentIndex.push_back(std::make_pair(CSpentIndexKey(input.prevout.hash, input.prevout.n), CSpentIndexValue(txhash, j, pindex->nHeight, prevout.nValue, addressType, hashBytes)));
                     }*/
-                    WritetxIn(tx.vin[j], txhash, view ,pindex->nHeight);
+                    WritetxIn(tx.vin[j], txhash, i, j, view ,pindex->nHeight);
                 }
 
             }
