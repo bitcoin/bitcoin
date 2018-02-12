@@ -88,6 +88,7 @@ class VersionBitsWarningTest(RavenTestFramework):
         self.nodes[0].generate(VB_PERIOD - VB_THRESHOLD + 1)
         # Check that we're not getting any versionbit-related errors in
         # get*info()
+        assert(not VB_PATTERN.match(self.nodes[0].getinfo()["errors"]))
         assert(not VB_PATTERN.match(self.nodes[0].getmininginfo()["warnings"]))
         assert(not VB_PATTERN.match(self.nodes[0].getnetworkinfo()["warnings"]))
 
@@ -99,6 +100,7 @@ class VersionBitsWarningTest(RavenTestFramework):
         # have gotten a different alert due to more than 51/100 blocks
         # being of unexpected version.
         # Check that get*info() shows some kind of error.
+        assert(WARN_UNKNOWN_RULES_MINED in self.nodes[0].getinfo()["errors"])
         assert(WARN_UNKNOWN_RULES_MINED in self.nodes[0].getmininginfo()["warnings"])
         assert(WARN_UNKNOWN_RULES_MINED in self.nodes[0].getnetworkinfo()["warnings"])
 
@@ -114,6 +116,7 @@ class VersionBitsWarningTest(RavenTestFramework):
 
         # Connecting one block should be enough to generate an error.
         self.nodes[0].generate(1)
+        assert(WARN_UNKNOWN_RULES_ACTIVE in self.nodes[0].getinfo()["errors"])
         assert(WARN_UNKNOWN_RULES_ACTIVE in self.nodes[0].getmininginfo()["warnings"])
         assert(WARN_UNKNOWN_RULES_ACTIVE in self.nodes[0].getnetworkinfo()["warnings"])
         self.stop_nodes()
