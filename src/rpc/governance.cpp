@@ -931,31 +931,12 @@ UniValue getgovernanceinfo(const JSONRPCRequest& request)
             );
     }
 
-    // Compute last/next superblock
-    int nLastSuperblock, nNextSuperblock;
+    LOCK(cs_main);
 
-    // Get current block height
-    int nBlockHeight = 0;
-    {
-        LOCK(cs_main);
-        nBlockHeight = (int)chainActive.Height();
-    }
+    int nLastSuperblock = 0, nNextSuperblock = 0;
+    int nBlockHeight = chainActive.Height();
 
-    // Get chain parameters
-    int nSuperblockStartBlock = Params().GetConsensus().nSuperblockStartBlock;
-    int nSuperblockCycle = Params().GetConsensus().nSuperblockCycle;
-
-    // Get first superblock
-    int nFirstSuperblockOffset = (nSuperblockCycle - nSuperblockStartBlock % nSuperblockCycle) % nSuperblockCycle;
-    int nFirstSuperblock = nSuperblockStartBlock + nFirstSuperblockOffset;
-
-    if(nBlockHeight < nFirstSuperblock){
-        nLastSuperblock = 0;
-        nNextSuperblock = nFirstSuperblock;
-    } else {
-        nLastSuperblock = nBlockHeight - nBlockHeight % nSuperblockCycle;
-        nNextSuperblock = nLastSuperblock + nSuperblockCycle;
-    }
+    CSuperblock::GetNearestSuperblocksHeights(nBlockHeight, nLastSuperblock, nNextSuperblock);
 
     UniValue obj(UniValue::VOBJ);
     obj.push_back(Pair("governanceminquorum", Params().GetConsensus().nGovernanceMinQuorum));

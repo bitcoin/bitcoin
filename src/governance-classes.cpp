@@ -523,6 +523,25 @@ bool CSuperblock::IsValidBlockHeight(int nBlockHeight)
             ((nBlockHeight % Params().GetConsensus().nSuperblockCycle) == 0);
 }
 
+void CSuperblock::GetNearestSuperblocksHeights(int nBlockHeight, int& nLastSuperblockRet, int& nNextSuperblockRet)
+{
+    const Consensus::Params& consensusParams = Params().GetConsensus();
+    int nSuperblockStartBlock = consensusParams.nSuperblockStartBlock;
+    int nSuperblockCycle = consensusParams.nSuperblockCycle;
+
+    // Get first superblock
+    int nFirstSuperblockOffset = (nSuperblockCycle - nSuperblockStartBlock % nSuperblockCycle) % nSuperblockCycle;
+    int nFirstSuperblock = nSuperblockStartBlock + nFirstSuperblockOffset;
+
+    if(nBlockHeight < nFirstSuperblock) {
+        nLastSuperblockRet = 0;
+        nNextSuperblockRet = nFirstSuperblock;
+    } else {
+        nLastSuperblockRet = nBlockHeight - nBlockHeight % nSuperblockCycle;
+        nNextSuperblockRet = nLastSuperblockRet + nSuperblockCycle;
+    }
+}
+
 CAmount CSuperblock::GetPaymentsLimit(int nBlockHeight)
 {
     const Consensus::Params& consensusParams = Params().GetConsensus();
