@@ -43,8 +43,6 @@ static const int64_t GOVERNANCE_DELETION_DELAY = 10*60;
 static const int64_t GOVERNANCE_ORPHAN_EXPIRATION_TIME = 10*60;
 static const int64_t GOVERNANCE_WATCHDOG_EXPIRATION_TIME = 2*60*60;
 
-static const int GOVERNANCE_TRIGGER_EXPIRATION_BLOCKS = 576;
-
 // FOR SEEN MAP ARRAYS - GOVERNANCE OBJECTS AND VOTES
 static const int SEEN_OBJECT_IS_VALID = 0;
 static const int SEEN_OBJECT_ERROR_INVALID = 1;
@@ -112,8 +110,8 @@ struct vote_rec_t {
 class CGovernanceObject
 {
     friend class CGovernanceManager;
-
     friend class CGovernanceTriggerManager;
+    friend class CSuperblock;
 
 public: // Types
     typedef std::map<COutPoint, vote_rec_t> vote_m_t;

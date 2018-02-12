@@ -70,6 +70,7 @@ public:
     static bool IsSuperblockTriggered(int nBlockHeight);
 
     static void CreateSuperblock(CMutableTransaction& txNewRet, int nBlockHeight, std::vector<CTxOut>& voutSuperblockRet);
+    static void ExecuteBestSuperblock(int nBlockHeight);
 
     static std::string GetRequiredPaymentsString(int nBlockHeight);
     static bool IsValid(const CTransaction& txNew, int nBlockHeight, CAmount blockReward);
@@ -185,6 +186,7 @@ public:
     CAmount GetPaymentsTotalAmount();
 
     bool IsValid(const CTransaction& txNew, int nBlockHeight, CAmount blockReward);
+    bool IsExpired();
 };
 
 #endif

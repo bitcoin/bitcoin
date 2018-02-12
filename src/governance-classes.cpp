@@ -173,7 +173,7 @@ void CGovernanceTriggerManager::CleanAndRemove()
         }
     }
 
-    // Remove triggers that are invalid or already executed
+    // Remove triggers that are invalid or expired
     DBG( cout << "CGovernanceTriggerManager::CleanAndRemove: mapTrigger.size() = " << mapTrigger.size() << endl; );
     LogPrint("gobject", "CGovernanceTriggerManager::CleanAndRemove -- mapTrigger.size() = %d\n", mapTrigger.size());
     trigger_m_it it = mapTrigger.begin();
@@ -195,22 +195,7 @@ void CGovernanceTriggerManager::CleanAndRemove()
                 break;
             case SEEN_OBJECT_IS_VALID:
             case SEEN_OBJECT_EXECUTED:
-                {
-                    int nTriggerBlock = pSuperblock->GetBlockHeight();
-                    // Rough approximation: a cycle of superblock ++
-                    int nExpirationBlock = nTriggerBlock + GOVERNANCE_TRIGGER_EXPIRATION_BLOCKS;
-                    LogPrint("gobject", "CGovernanceTriggerManager::CleanAndRemove -- nTriggerBlock = %d, nExpirationBlock = %d\n", nTriggerBlock, nExpirationBlock);
-                    if(governance.GetCachedBlockHeight() > nExpirationBlock) {
-                        LogPrint("gobject", "CGovernanceTriggerManager::CleanAndRemove -- Outdated trigger found\n");
-                        remove = true;
-                        CGovernanceObject* pgovobj = pSuperblock->GetGovernanceObject();
-                        if(pgovobj) {
-                            LogPrint("gobject", "CGovernanceTriggerManager::CleanAndRemove -- Expiring outdated object: %s\n", pgovobj->GetHash().ToString());
-                            pgovobj->fExpired = true;
-                            pgovobj->nDeletionTime = GetAdjustedTime();
-                        }
-                    }
-                }
+                remove = pSuperblock->IsExpired();
                 break;
             default:
                 break;
@@ -458,6 +443,18 @@ bool CSuperblockManager::IsValid(const CTransaction& txNew, int nBlockHeight, CA
     }
 
     return false;
+}
+
+void CSuperblockManager::ExecuteBestSuperblock(int nBlockHeight)
+{
+    LOCK(governance.cs);
+
+    CSuperblock_sptr pSuperblock;
+    if(GetBestSuperblock(pSuperblock, nBlockHeight)) {
+        // All checks are done in CSuperblock::IsValid via IsBlockValueValid and IsBlockPayeeValid,
+        // tip wouldn't be updated if anything was wrong. Mark this trigger as executed.
+        pSuperblock->SetExecuted();
+    }
 }
 
 CSuperblock::
@@ -740,6 +737,42 @@ bool CSuperblock::IsValid(const CTransaction& txNew, int nBlockHeight, CAmount b
     }
 
     return true;
+}
+
+bool CSuperblock::IsExpired()
+{
+    bool fExpired{false};
+    int nExpirationBlocks{0};
+    // Executed triggers are kept for another superblock cycle (approximately 1 month),
+    // other valid triggers are kept for ~1 day only, everything else is pruned after ~1h.
+    switch (nStatus) {
+        case SEEN_OBJECT_EXECUTED:
+            nExpirationBlocks = Params().GetConsensus().nSuperblockCycle;
+            break;
+        case SEEN_OBJECT_IS_VALID:
+            nExpirationBlocks = 576;
+            break;
+        default:
+            nExpirationBlocks = 24;
+            break;
+    }
+
+    int nExpirationBlock = nBlockHeight + nExpirationBlocks;
+
+    LogPrint("gobject", "CSuperblock::IsExpired -- nBlockHeight = %d, nExpirationBlock = %d\n", nBlockHeight, nExpirationBlock);
+
+    if(governance.GetCachedBlockHeight() > nExpirationBlock) {
+        LogPrint("gobject", "CSuperblock::IsExpired -- Outdated trigger found\n");
+        fExpired = true;
+        CGovernanceObject* pgovobj = GetGovernanceObject();
+        if(pgovobj) {
+            LogPrint("gobject", "CSuperblock::IsExpired -- Expiring outdated object: %s\n", pgovobj->GetHash().ToString());
+            pgovobj->fExpired = true;
+            pgovobj->nDeletionTime = GetAdjustedTime();
+        }
+    }
+
+    return fExpired;
 }
 
 /**
