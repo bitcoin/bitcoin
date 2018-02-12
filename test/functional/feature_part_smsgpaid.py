@@ -28,8 +28,8 @@ class SmsgPaidTest(ParticlTestFramework):
         nodes = self.nodes
 
         # Stop staking
-        ro = nodes[0].reservebalance(True, 10000000)
-        ro = nodes[1].reservebalance(True, 10000000)
+        for i in range(len(nodes)):
+            nodes[i].reservebalance(True, 10000000)
 
         ro = nodes[0].mnemonic('new');
         roImport0 = nodes[0].extkeyimportmaster(ro['master'])

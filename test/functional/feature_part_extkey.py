@@ -26,16 +26,11 @@ class ExtKeyTest(ParticlTestFramework):
         node1 = self.nodes[1]
 
         # stop staking
-        ro = node.reservebalance(True, 10000000)
+        node.reservebalance(True, 10000000)
 
-        ro = node.extkeyimportmaster("abandon baby cabbage dad eager fabric gadget habit ice kangaroo lab absorb")
+        ro = node.extkeyimportmaster('abandon baby cabbage dad eager fabric gadget habit ice kangaroo lab absorb')
         assert(ro['account_id'] == 'aaaZf2qnNr5T7PWRmqgmusuu5ACnBcX2ev')
-
-        #ro = node.extkey("list", "true")
-        #print(json.dumps(ro, indent=4))
-
-        ro = node.getwalletinfo()
-        assert(ro['total_balance'] == 100000)
+        assert(node.getwalletinfo()['total_balance'] == 100000)
 
         # Start staking
         ro = node.walletsettings('stakelimit', {'height':1})
@@ -44,10 +39,10 @@ class ExtKeyTest(ParticlTestFramework):
         assert(self.wait_for_height(node, 1))
 
         # stop staking
-        ro = node.reservebalance(True, 10000000)
-        ro = node1.reservebalance(True, 10000000)
+        node.reservebalance(True, 10000000)
+        node1.reservebalance(True, 10000000)
 
-        ro = node1.extkeyimportmaster("drip fog service village program equip minute dentist series hawk crop sphere olympic lazy garbage segment fox library good alley steak jazz force inmate")
+        ro = node1.extkeyimportmaster('drip fog service village program equip minute dentist series hawk crop sphere olympic lazy garbage segment fox library good alley steak jazz force inmate')
         assert(ro['account_id'] == 'ahL1QdHhzNCtZWJzv36ScfPipJP1cUzAD8')
 
         extAddrTo = node1.getnewextaddress()
@@ -66,13 +61,9 @@ class ExtKeyTest(ParticlTestFramework):
         ro = node.getmempoolentry(txnHash)
         assert(ro['height'] == 1)
 
-        #ro = node.listtransactions()
-        #print("listtransactions",ro)
-        #print(json.dumps(ro, indent=4))
-
         # start staking
-        ro = node.walletsettings('stakelimit', {'height':2})
-        ro = node.reservebalance(False)
+        node.walletsettings('stakelimit', {'height':2})
+        node.reservebalance(False)
 
         assert(self.wait_for_height(node, 2))
 
@@ -81,8 +72,6 @@ class ExtKeyTest(ParticlTestFramework):
 
 
         ro = node1.listtransactions()
-        #print("listtransactions node1",ro)
-
         assert(len(ro) == 1)
         assert(ro[0]['address'] == 'pkGv5xgviEAEjwpRPeEt8c9cvraw2umKYo')
         assert(ro[0]['amount'] == 10)
@@ -102,8 +91,6 @@ class ExtKeyTest(ParticlTestFramework):
         assert(self.wait_for_mempool(node1, txnHash2))
 
         ro = node1.listtransactions()
-        #print("\nlisttransactions node1",ro)
-
         assert(len(ro) == 2)
         assert(ro[1]['address'] == 'pbo5e7tsLJBdUcCWteTTkGBxjW8Xy12o1V')
         assert(ro[1]['amount'] == 20)
@@ -111,7 +98,6 @@ class ExtKeyTest(ParticlTestFramework):
 
 
         ro = node.listtransactions()
-        #print("\nlisttransactions node",ro)
         assert('narration test' in ro[-1].values())
 
 
@@ -120,9 +106,7 @@ class ExtKeyTest(ParticlTestFramework):
         txnHashes = []
         for k in range(24):
             v = round(0.01 * float(k+1), 5)
-            #print(v)
             txnHash = node1.sendtoaddress(extAddrTo0, v, '', '', False)
-            #assert(self.wait_for_mempool(node1, txnHash))
             txnHashes.append(txnHash)
 
         for txnHash in txnHashes:
@@ -145,8 +129,15 @@ class ExtKeyTest(ParticlTestFramework):
             assert(txnHash in ro['tx'])
 
 
+
+        # Test bech32 encoding
+        ek_b32 = 'tpep1q3ehtcetqqqqqqesj04mypkmhnly5rktqmcpmjuq09lyevcsjxrgra6x8trd52vp2vpsk6kf86v3npg6x66ymrn5yrqnclxtqrlfdlw3j4f0309dhxct8kc68paxt'
+        assert(node.getnewextaddress('lbl_b32', '', True) == ek_b32)
+        assert(ek_b32 in json.dumps(node.filteraddresses()))
+
+
         #assert(False)
-        #print(json.dumps(ro, indent=4))
+        #print(json.dumps(ro, indent=4, default=self.jsonDecimal))
 
 
 if __name__ == '__main__':

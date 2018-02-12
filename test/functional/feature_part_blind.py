@@ -26,21 +26,17 @@ class BlindTest(ParticlTestFramework):
         nodes = self.nodes
 
         # Stop staking
-        ro = nodes[0].reservebalance(True, 10000000)
-        ro = nodes[1].reservebalance(True, 10000000)
-        ro = nodes[2].reservebalance(True, 10000000)
+        nodes[0].reservebalance(True, 10000000)
+        nodes[1].reservebalance(True, 10000000)
+        nodes[2].reservebalance(True, 10000000)
 
-        ro = nodes[0].extkeyimportmaster("abandon baby cabbage dad eager fabric gadget habit ice kangaroo lab absorb")
+        ro = nodes[0].extkeyimportmaster('abandon baby cabbage dad eager fabric gadget habit ice kangaroo lab absorb')
         assert(ro['account_id'] == 'aaaZf2qnNr5T7PWRmqgmusuu5ACnBcX2ev')
-
-        ro = nodes[0].getwalletinfo()
-        assert(ro['total_balance'] == 100000)
+        assert(nodes[0].getwalletinfo()['total_balance'] == 100000)
 
         txnHashes = []
 
-        #assert(self.wait_for_height(node, 1))
-
-        ro = nodes[1].extkeyimportmaster("drip fog service village program equip minute dentist series hawk crop sphere olympic lazy garbage segment fox library good alley steak jazz force inmate")
+        ro = nodes[1].extkeyimportmaster('drip fog service village program equip minute dentist series hawk crop sphere olympic lazy garbage segment fox library good alley steak jazz force inmate')
         sxAddrTo1_1 = nodes[1].getnewstealthaddress()
         assert(sxAddrTo1_1 == 'TetbYTGv5LiqyFiUD3a5HHbpSinQ9KiRYDGAMvRzPfz4RnHMbKGAwDr1fjLGJ5Eqg1XDwpeGyqWMiwdK3qM3zKWjzHNpaatdoHVzzA')
 
@@ -63,8 +59,8 @@ class BlindTest(ParticlTestFramework):
 
         self.stakeBlocks(2)
 
-        mnemonic2 = nodes[2].mnemonic("new");
-        ro = nodes[2].extkeyimportmaster(mnemonic2["master"])
+        mnemonic2 = nodes[2].mnemonic('new');
+        ro = nodes[2].extkeyimportmaster(mnemonic2['master'])
         sxAddrTo2_1 = nodes[2].getnewstealthaddress()
 
         txnHash3 = nodes[1].sendblindtoblind(sxAddrTo2_1, 0.2, '', '', False, 'node1 -> node2 b->b')
@@ -123,7 +119,7 @@ class BlindTest(ParticlTestFramework):
 
 
 
-        sxAddrTo2_3 = nodes[2].getnewstealthaddress("n2 sx+prefix", "4", "0xaaaa");
+        sxAddrTo2_3 = nodes[2].getnewstealthaddress('n2 sx+prefix', '4', '0xaaaa');
         ro = nodes[2].validateaddress(sxAddrTo2_3);
         assert(ro['isvalid'] == True)
         assert(ro['isstealthaddress'] == True)
@@ -137,7 +133,7 @@ class BlindTest(ParticlTestFramework):
         assert(self.wait_for_mempool(nodes[2], txnHash5))
 
         ro = nodes[2].listtransactions()
-        assert(ro[-1]["txid"] == txnHash5)
+        assert(ro[-1]['txid'] == txnHash5)
 
 
         ro = nodes[0].getwalletinfo()
@@ -149,7 +145,6 @@ class BlindTest(ParticlTestFramework):
         # Check node0 can spend remaining coin
         addrTo0_2 = nodes[0].getnewaddress()
         txnHash2 = nodes[0].sendtoaddress(addrTo0_2, availableBalance, '', '', True, 'node0 spend remaining')
-        #print("txnHash2 ", txnHash2)
         txnHashes.append(txnHash2)
 
         ro = nodes[0].getwalletinfo()

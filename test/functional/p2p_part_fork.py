@@ -31,28 +31,21 @@ class ForkTest(ParticlTestFramework):
     def run_test(self):
         nodes = self.nodes
 
-        #ro = nodes[0].extkeyimportmaster("abandon baby cabbage dad eager fabric gadget habit ice kangaroo lab absorb")
-        #assert(ro['account_id'] == 'aaaZf2qnNr5T7PWRmqgmusuu5ACnBcX2ev')
-
         # stop staking
-        ro = nodes[0].reservebalance(True, 10000000)
-        ro = nodes[3].reservebalance(True, 10000000)
+        nodes[0].reservebalance(True, 10000000)
+        nodes[3].reservebalance(True, 10000000)
 
-        ro = nodes[0].extkeyimportmaster("pact mammal barrel matrix local final lecture chunk wasp survey bid various book strong spread fall ozone daring like topple door fatigue limb olympic", "", "true")
-        ro = nodes[0].getnewextaddress("lblExtTest")
-        assert(ro == "pparszNetDqyrvZksLHJkwJGwJ1r9JCcEyLeHatLjerxRuD3qhdTdrdo2mE6e1ewfd25EtiwzsECooU5YwhAzRN63iFid6v5AQn9N5oE9wfBYehn")
+        ro = nodes[0].extkeyimportmaster('pact mammal barrel matrix local final lecture chunk wasp survey bid various book strong spread fall ozone daring like topple door fatigue limb olympic', '', 'true')
+        ro = nodes[0].getnewextaddress('lblExtTest')
+        assert(ro == 'pparszNetDqyrvZksLHJkwJGwJ1r9JCcEyLeHatLjerxRuD3qhdTdrdo2mE6e1ewfd25EtiwzsECooU5YwhAzRN63iFid6v5AQn9N5oE9wfBYehn')
 
         ro = nodes[0].scanchain()
-        ro = nodes[0].getwalletinfo()
-        assert(ro['total_balance'] == 25000)
+        assert(nodes[0].getwalletinfo()['total_balance'] == 25000)
 
 
-        ro = nodes[3].extkeyimportmaster("abandon baby cabbage dad eager fabric gadget habit ice kangaroo lab absorb")
+        ro = nodes[3].extkeyimportmaster('abandon baby cabbage dad eager fabric gadget habit ice kangaroo lab absorb')
         assert(ro['account_id'] == 'aaaZf2qnNr5T7PWRmqgmusuu5ACnBcX2ev')
-
-        ro = nodes[3].getwalletinfo()
-        print(json.dumps(ro, indent=4, default=self.jsonDecimal))
-        assert(ro['total_balance'] == 100000)
+        assert(nodes[3].getwalletinfo()['total_balance'] == 100000)
 
 
         # start staking
@@ -81,16 +74,16 @@ class ForkTest(ParticlTestFramework):
             try:
                 ro = nodes[0].getblockhash(k)
             except JSONRPCException as e:
-                assert("Block height out of range" in e.error['message'])
-                ro = ""
+                assert('Block height out of range' in e.error['message'])
+                ro = ''
             node0_chain.append(ro)
-            print("node0 ",k, " - ", ro)
+            print('node0 ',k, " - ", ro)
 
         node3_chain = []
         for k in range(1, 6):
             ro = nodes[3].getblockhash(k)
             node3_chain.append(ro)
-            print("node3 ",k, " - ", ro)
+            print('node3 ',k, ' - ', ro)
 
 
         # connect groups
@@ -105,8 +98,8 @@ class ForkTest(ParticlTestFramework):
                 try:
                     ro = nodes[0].getblockhash(k)
                 except JSONRPCException as e:
-                    assert("Block height out of range" in e.error['message'])
-                    ro = ""
+                    assert('Block height out of range' in e.error['message'])
+                    ro = ''
                 if not ro == node3_chain[k]:
                     fPass = False
                     break
@@ -120,10 +113,10 @@ class ForkTest(ParticlTestFramework):
             try:
                 ro = nodes[0].getblockhash(k)
             except JSONRPCException as e:
-                assert("Block height out of range" in e.error['message'])
-                ro = ""
+                assert('Block height out of range' in e.error['message'])
+                ro = ''
             node0_chain.append(ro)
-            print("node0 ",k, " - ", ro)
+            print('node0 ',k, ' - ', ro)
 
 
         ro = nodes[0].getblockchaininfo()

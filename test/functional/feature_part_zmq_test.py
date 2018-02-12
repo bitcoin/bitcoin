@@ -76,13 +76,12 @@ class ZMQTest(ParticlTestFramework):
     def _zmq_test(self):
         nodes = self.nodes
 
-        ro = nodes[0].reservebalance(True, 10000000)
-        ro = nodes[1].reservebalance(True, 10000000)
+        for i in range(len(nodes)):
+            nodes[i].reservebalance(True, 10000000)
 
-        ro = nodes[1].extkeyimportmaster('abandon baby cabbage dad eager fabric gadget habit ice kangaroo lab absorb')
+        nodes[1].extkeyimportmaster('abandon baby cabbage dad eager fabric gadget habit ice kangaroo lab absorb')
 
-        ro = nodes[0].mnemonic('new');
-        roImport0 = nodes[0].extkeyimportmaster(ro['master'])
+        nodes[0].extkeyimportmaster(nodes[0].mnemonic('new')['master'])
 
         addrTo = nodes[0].getnewaddress()
         txnHash = nodes[1].sendtoaddress(addrTo, 10)

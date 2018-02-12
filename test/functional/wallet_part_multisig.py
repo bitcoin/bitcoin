@@ -26,15 +26,12 @@ class MultiSigTest(ParticlTestFramework):
         nodes = self.nodes
 
         # stop staking
-        ro = nodes[0].reservebalance(True, 10000000)
-        ro = nodes[1].reservebalance(True, 10000000)
-        ro = nodes[2].reservebalance(True, 10000000)
+        for i in range(len(nodes)):
+            nodes[i].reservebalance(True, 10000000)
 
-        ro = nodes[0].extkeyimportmaster("abandon baby cabbage dad eager fabric gadget habit ice kangaroo lab absorb")
+        ro = nodes[0].extkeyimportmaster('abandon baby cabbage dad eager fabric gadget habit ice kangaroo lab absorb')
         assert(ro['account_id'] == 'aaaZf2qnNr5T7PWRmqgmusuu5ACnBcX2ev')
-
-        ro = nodes[0].getwalletinfo()
-        assert(ro['total_balance'] == 100000)
+        assert(nodes[0].getwalletinfo()['total_balance'] == 100000)
 
         addrs = []
         pubkeys = []
@@ -49,7 +46,7 @@ class MultiSigTest(ParticlTestFramework):
         ro = nodes[0].validateaddress(ro);
         pubkeys.append(ro['pubkey'])
 
-        ro = nodes[1].extkeyimportmaster("drip fog service village program equip minute dentist series hawk crop sphere olympic lazy garbage segment fox library good alley steak jazz force inmate")
+        ro = nodes[1].extkeyimportmaster('drip fog service village program equip minute dentist series hawk crop sphere olympic lazy garbage segment fox library good alley steak jazz force inmate')
 
         ro = nodes[1].getnewaddress();
         addrs.append(ro)

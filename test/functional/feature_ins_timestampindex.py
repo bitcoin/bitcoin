@@ -41,16 +41,12 @@ class TimestampIndexTest(ParticlTestFramework):
         nodes = self.nodes
 
         # Stop staking
-        ro = nodes[0].reservebalance(True, 10000000)
-        ro = nodes[1].reservebalance(True, 10000000)
-        ro = nodes[2].reservebalance(True, 10000000)
-        ro = nodes[3].reservebalance(True, 10000000)
+        for i in range(len(nodes)):
+            nodes[i].reservebalance(True, 10000000)
 
-        ro = nodes[0].extkeyimportmaster("abandon baby cabbage dad eager fabric gadget habit ice kangaroo lab absorb")
+        ro = nodes[0].extkeyimportmaster('abandon baby cabbage dad eager fabric gadget habit ice kangaroo lab absorb')
         assert(ro['account_id'] == 'aaaZf2qnNr5T7PWRmqgmusuu5ACnBcX2ev')
-
-        ro = nodes[0].getwalletinfo()
-        assert(ro['total_balance'] == 100000)
+        assert(nodes[0].getwalletinfo()['total_balance'] == 100000)
 
         blockhashes = []
         self.stakeToHeight(1, False)
@@ -65,17 +61,17 @@ class TimestampIndexTest(ParticlTestFramework):
         blockhashes.append(nodes[0].getblockhash(3))
         self.sync_all()
 
-        low = self.nodes[1].getblock(blockhashes[0])["time"]
+        low = self.nodes[1].getblock(blockhashes[0])['time']
         high = low + 76
 
-        print("Checking timestamp index...")
+        print('Checking timestamp index...')
         hashes = self.nodes[1].getblockhashes(high, low)
 
         assert_equal(len(hashes), len(blockhashes))
 
         assert_equal(hashes, blockhashes)
 
-        print("Passed\n")
+        print('Passed\n')
 
 
 if __name__ == '__main__':

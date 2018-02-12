@@ -27,9 +27,9 @@ class FilterTransactionsTest(ParticlTestFramework):
         nodes = self.nodes
 
         # Stop staking
-        ro = nodes[0].reservebalance(True, 10000000)
-        ro = nodes[1].reservebalance(True, 10000000)
-        ro = nodes[2].reservebalance(True, 10000000)
+        nodes[0].reservebalance(True, 10000000)
+        nodes[1].reservebalance(True, 10000000)
+        nodes[2].reservebalance(True, 10000000)
 
         # import keys for node wallets
         nodes[0].extkeyimportmaster('abandon baby cabbage dad eager fabric gadget habit ice kangaroo lab absorb')

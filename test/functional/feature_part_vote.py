@@ -25,14 +25,12 @@ class VoteTest(ParticlTestFramework):
         nodes = self.nodes
 
         # Stop staking
-        ro = nodes[0].reservebalance(True, 10000000)
-        ro = nodes[1].reservebalance(True, 10000000)
+        for i in range(len(nodes)):
+            nodes[i].reservebalance(True, 10000000)
 
-        ro = nodes[0].extkeyimportmaster("abandon baby cabbage dad eager fabric gadget habit ice kangaroo lab absorb")
+        ro = nodes[0].extkeyimportmaster('abandon baby cabbage dad eager fabric gadget habit ice kangaroo lab absorb')
         assert(ro['account_id'] == 'aaaZf2qnNr5T7PWRmqgmusuu5ACnBcX2ev')
-
-        ro = nodes[0].getwalletinfo()
-        assert(ro['total_balance'] == 100000)
+        assert(nodes[0].getwalletinfo()['total_balance'] == 100000)
 
         ro = nodes[0].setvote(1, 2, 0, 10)
         assert(ro['result'] == 'Voting for option 2 on proposal 1')

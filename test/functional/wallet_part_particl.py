@@ -413,9 +413,7 @@ class WalletParticlTest(ParticlTestFramework):
 
         ro = nodes[2].scanchain()
         assert(ro['result'] == 'Scan complete.')
-
-        ro = nodes[2].getwalletinfo()
-        assert(ro['total_balance'] == 25000)
+        assert(nodes[2].getwalletinfo()['total_balance'] == 25000)
 
 
         # Test extkeyaltversion

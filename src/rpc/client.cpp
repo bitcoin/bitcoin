@@ -191,8 +191,9 @@ static const CRPCConvertParam vRPCConvertParams[] =
 
     { "walletsettings", 1, "json" },
 
-    { "getnewextaddress", 1, "childno" },
+    { "getnewextaddress", 2, "bech32" },
     { "getnewstealthaddress", 3, "bech32" },
+    { "importstealthaddress", 5, "bech32" },
 
     { "listunspentanon", 0, "minconf" },
     { "listunspentanon", 1, "maxconf" },

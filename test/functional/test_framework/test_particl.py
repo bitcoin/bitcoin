@@ -83,10 +83,10 @@ class ParticlTestFramework(BitcoinTestFramework):
         assert(fPass)
 
     def stakeToHeight(self, height, fSync=True, nStakeNode=0, nSyncCheckNode=1):
-        ro = self.nodes[nStakeNode].walletsettings('stakelimit', {'height':height})
-        ro = self.nodes[nStakeNode].reservebalance(False)
+        self.nodes[nStakeNode].walletsettings('stakelimit', {'height':height})
+        self.nodes[nStakeNode].reservebalance(False)
         assert(self.wait_for_height(self.nodes[nStakeNode], height))
-        ro = self.nodes[nStakeNode].reservebalance(True, 10000000)
+        self.nodes[nStakeNode].reservebalance(True, 10000000)
         if not fSync:
             return
         self.sync_all()

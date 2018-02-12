@@ -391,6 +391,8 @@ QString AddressTableModel::addRow(const QString &type, const QString &label, con
             case ADDR_EXT:
                 sCommand = "getnewextaddress ";
                 sCommand += "\""+label+ "\" ";
+                sCommand += " \"\" ";
+                sCommand += (address_type == OUTPUT_TYPE_BECH32) ? " true " : " false ";
                 break;
             default:
                 sCommand = "getnewaddress ";

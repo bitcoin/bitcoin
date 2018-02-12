@@ -41,17 +41,15 @@ class SpentIndexTest(ParticlTestFramework):
         nodes = self.nodes
 
         # Stop staking
-        ro = nodes[0].reservebalance(True, 10000000)
-        ro = nodes[1].reservebalance(True, 10000000)
-        ro = nodes[2].reservebalance(True, 10000000)
-        ro = nodes[3].reservebalance(True, 10000000)
+        nodes[0].reservebalance(True, 10000000)
+        nodes[1].reservebalance(True, 10000000)
+        nodes[2].reservebalance(True, 10000000)
+        nodes[3].reservebalance(True, 10000000)
 
 
-        ro = nodes[0].extkeyimportmaster("abandon baby cabbage dad eager fabric gadget habit ice kangaroo lab absorb")
+        ro = nodes[0].extkeyimportmaster('abandon baby cabbage dad eager fabric gadget habit ice kangaroo lab absorb')
         assert(ro['account_id'] == 'aaaZf2qnNr5T7PWRmqgmusuu5ACnBcX2ev')
-
-        ro = nodes[0].getwalletinfo()
-        assert(ro['total_balance'] == 100000)
+        assert(nodes[0].getwalletinfo()['total_balance'] == 100000)
 
         ro = nodes[1].extkeyimportmaster('graine article givre hublot encadrer admirer stipuler capsule acajou paisible soutirer organe')
         ro = nodes[2].extkeyimportmaster('sección grito médula hecho pauta posada nueve ebrio bruto buceo baúl mitad')
@@ -63,13 +61,13 @@ class SpentIndexTest(ParticlTestFramework):
 
 
         # Check that
-        print("Testing spent index...")
+        print('Testing spent index...')
 
         unspent = nodes[0].listunspent()
 
 
         #{\"txid\":\"id\",\"vout\":n}
-        inputs = [{"txid":unspent[0]["txid"],"vout":unspent[0]["vout"]},]
+        inputs = [{'txid':unspent[0]['txid'],'vout':unspent[0]['vout']},]
         outputs = {addrs[0]:1}
         tx = nodes[0].createrawtransaction(inputs,outputs)
 

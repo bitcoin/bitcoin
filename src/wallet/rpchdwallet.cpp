@@ -1648,52 +1648,63 @@ UniValue extkeyimportinternal(const JSONRPCRequest &request, bool fGenesisChain)
 UniValue extkeyimportmaster(const JSONRPCRequest &request)
 {
     // Doesn't generate key, require users to run mnemonic new, more likely they'll save the phrase
+    CHDWallet *pwallet = GetHDWalletForJSONRPCRequest(request);
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
+        return NullUniValue;
 
-    static const char *help = ""
+    if (request.fHelp || request.params.size() > 6)
+        throw std::runtime_error(
         "extkeyimportmaster <mnemonic/key> [passphrase] [save_bip44_root] [master_label] [account_label] [scan_chain_from]\n"
         "Import master key from bip44 mnemonic root key and derive default account.\n"
+        + HelpRequiringPassphrase(pwallet) +
+        "\nArguments:\n"
+        "1. \"mnemonic/key\"          (string, required) The mnemonic or root extended key.\n"
         "       Use '-stdin' to be prompted to enter a passphrase.\n"
         "       if mnemonic is blank, defaults to '-stdin'.\n"
-        "   passphrase:         passphrase when importing mnemonic - default blank.\n"
+        "2. \"passphrase\":           (string, optional) passphrase when importing mnemonic - default blank.\n"
         "       Use '-stdin' to be prompted to enter a passphrase.\n"
-        "   save_bip44_root:    Save bip44 root key to wallet - default false.\n"
-        "   master_label:       Label for master key - default 'Master Key'.\n"
-        "   account_label:      Label for account - default 'Default Account'.\n"
-        "   scan_chain_from:    Scan for transactions in blocks after timestamp - default 1.\n"
-        "Examples:\n"
-        "   extkeyimportmaster -stdin -stdin false label_master label_account\n"
-        "\n";
+        "3. save_bip44_root:        (bool, optional) Save bip44 root key to wallet - default false.\n"
+        "4. \"master_label\":         (string, optional) Label for master key - default 'Master Key'.\n"
+        "5. \"account_label\":        (string, optional) Label for account - default 'Default Account'.\n"
+        "6. scan_chain_from:        (int, optional) Scan for transactions in blocks after timestamp - default 1.\n"
+        "\nExamples:\n"
+        + HelpExampleCli("extkeyimportmaster", "-stdin -stdin false \"label_master\" \"label_account\"")
+        + HelpExampleCli("extkeyimportmaster", "\"word1 ... word24\" \"passphrase\" false \"label_master\" \"label_account\"")
+        + HelpExampleRpc("extkeyimportmaster", "\"word1 ... word24\", \"passphrase\", false, \"label_master\", \"label_account\""));
 
     ObserveSafeMode();
-
-    if (request.fHelp)
-        throw std::runtime_error(help);
 
     return extkeyimportinternal(request, false);
 };
 
 UniValue extkeygenesisimport(const JSONRPCRequest &request)
 {
-    static const char *help = ""
+    CHDWallet *pwallet = GetHDWalletForJSONRPCRequest(request);
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
+        return NullUniValue;
+
+    if (request.fHelp || request.params.size() > 6)
+        throw std::runtime_error(
         "extkeygenesisimport <mnemonic/key> [passphrase] [save_bip44_root] [master_label] [account_label] [scan_chain_from]\n"
         "Import master key from bip44 mnemonic root key and derive default account.\n"
         "Derives an extra chain from path 444444 to receive imported coin.\n"
+        + HelpRequiringPassphrase(pwallet) +
+        "\nArguments:\n"
+        "1. \"mnemonic/key\"          (string, required) The mnemonic or root extended key.\n"
         "       Use '-stdin' to be prompted to enter a passphrase.\n"
         "       if mnemonic is blank, defaults to '-stdin'.\n"
-        "   passphrase:         passphrase when importing mnemonic - default blank.\n"
+        "2. \"passphrase\":           (string, optional) passphrase when importing mnemonic - default blank.\n"
         "       Use '-stdin' to be prompted to enter a passphrase.\n"
-        "   save_bip44_root:    Save bip44 root key to wallet - default false.\n"
-        "   master_label:       Label for master key - default 'Master Key'.\n"
-        "   account_label:      Label for account - default 'Default Account'.\n"
-        "   scan_chain_from:    Scan for transactions in blocks after timestamp - default 1.\n"
-        "Examples:\n"
-        "   extkeygenesisimport -stdin -stdin false label_master label_account\n"
-        "\n";
+        "3. save_bip44_root:        (bool, optional) Save bip44 root key to wallet - default false.\n"
+        "4. \"master_label\":         (string, optional) Label for master key - default 'Master Key'.\n"
+        "5. \"account_label\":        (string, optional) Label for account - default 'Default Account'.\n"
+        "6. scan_chain_from:        (int, optional) Scan for transactions in blocks after timestamp - default 1.\n"
+        "\nExamples:\n"
+        + HelpExampleCli("extkeygenesisimport", "-stdin -stdin false \"label_master\" \"label_account\"")
+        + HelpExampleCli("extkeygenesisimport", "\"word1 ... word24\" \"passphrase\" false \"label_master\" \"label_account\"")
+        + HelpExampleRpc("extkeygenesisimport", "\"word1 ... word24\", \"passphrase\", false, \"label_master\", \"label_account\""));
 
     ObserveSafeMode();
-
-    if (request.fHelp)
-        throw std::runtime_error(help);
 
     return extkeyimportinternal(request, true);
 }
@@ -1739,7 +1750,6 @@ UniValue keyinfo(const JSONRPCRequest &request)
         result.pushKV("owned", pwallet->HaveExtKey(id) ? "true" : "false");
 
         std::string sError;
-
         std::vector<uint8_t> vchOut;
 
         if (!DecodeBase58(sKey.c_str(), vchOut))
@@ -1825,12 +1835,20 @@ UniValue getnewextaddress(const JSONRPCRequest &request)
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
         return NullUniValue;
 
-    if (request.fHelp || request.params.size() > 2)
+    if (request.fHelp || request.params.size() > 3)
         throw std::runtime_error(
-            "getnewextaddress [label] [childNo]\n"
+            "getnewextaddress [label] [childNo] [bech32]\n"
             "Returns a new Particl ext address for receiving payments.\n"
-            "label   (string, optional), if specified the key is added to the address book.\n"
-            "childNo (int, optional), if specified, the account derive counter is not updated.");
+            + HelpRequiringPassphrase(pwallet) +
+            "\nArguments:\n"
+            "1. \"label\"             (string, optional) If specified the key is added to the address book.\n"
+            "2. \"childNo\"           (string, optional), If specified the account derive counter is not updated.\n"
+            "3. bech32              (bool, optional) Use Bech32 encoding.\n"
+            "\nResult:\n"
+            "\"address\"              (string) The new particl extended address\n"
+            "\nExamples:\n"
+            + HelpExampleCli("getnewextaddress", "")
+            + HelpExampleRpc("getnewextaddress", ""));
 
     EnsureWalletIsUnlocked(pwallet);
 
@@ -1838,28 +1856,38 @@ UniValue getnewextaddress(const JSONRPCRequest &request)
     uint32_t *pChild = nullptr;
     std::string strLabel;
     const char *pLabel = nullptr;
-    if (request.params.size() > 0)
+    if (request.params[1].isStr())
     {
         strLabel = request.params[0].get_str();
         if (strLabel.size() > 0)
             pLabel = strLabel.c_str();
     };
 
-    if (request.params.size() > 1)
+    if (request.params[1].isStr())
     {
-        nChild = request.params[1].get_int();
-        pChild = &nChild;
+        std::string s = request.params[1].get_str();
+        if (!s.empty())
+        {
+            // TODO, make full path work
+            std::vector<uint32_t> vPath;
+            if (0 != ExtractExtKeyPath(s, vPath) || vPath.size() != 1)
+                throw JSONRPCError(RPC_INVALID_PARAMETER, _("bad childNo."));
+            nChild = vPath[0];
+            pChild = &nChild;
+        };
     };
 
+    bool fbech32 = !request.params[2].isNull() ? request.params[2].get_bool() : false;
+
     CStoredExtKey *sek = new CStoredExtKey();
-    if (0 != pwallet->NewExtKeyFromAccount(strLabel, sek, pLabel, pChild))
+    if (0 != pwallet->NewExtKeyFromAccount(strLabel, sek, pLabel, pChild, fbech32))
     {
         delete sek;
         throw JSONRPCError(RPC_WALLET_ERROR, _("NewExtKeyFromAccount failed."));
     };
 
     // CBitcoinAddress displays public key only
-    return CBitcoinAddress(sek->kp).ToString();
+    return CBitcoinAddress(sek->kp, fbech32).ToString();
 }
 
 UniValue getnewstealthaddress(const JSONRPCRequest &request)
@@ -1872,15 +1900,21 @@ UniValue getnewstealthaddress(const JSONRPCRequest &request)
         throw std::runtime_error(
             "getnewstealthaddress [label] [num_prefix_bits] [prefix_num] [bech32]\n"
             "Returns a new Particl stealth address for receiving payments."
-            "If num_prefix_bits is specified and > 0, the stealth address is created with a prefix.\n"
-            "If prefix_num is not specified the prefix will be selected deterministically.\n"
-            "prefix_num can be specified in base2, 10 or 16, for base 2 prefix_str must begin with 0b, 0x for base16.\n"
-            "A 32bit integer will be created from prefix_num and the least significant num_prefix_bits will become the prefix.\n"
-            "A stealth address created without a prefix will scan all incoming stealth transactions, irrespective of transaction prefixes.\n"
-            "Stealth addresses with prefixes will scan only incoming stealth transactions with a matching prefix.\n"
-            "Examples:\n"
-            "   getnewstealthaddress \"lblTestSxAddrPrefix\" 3 \"0b101\" \n"
-            + HelpRequiringPassphrase(pwallet));
+            + HelpRequiringPassphrase(pwallet) +
+            "\nArguments:\n"
+            "1. \"label\"             (string, optional) If specified the key is added to the address book.\n"
+            "2. num_prefix_bits     (int, optional) If specified and > 0, the stealth address is created with a prefix.\n"
+            "3. prefix_num          (int, optional) If prefix_num is not specified the prefix will be selected deterministically.\n"
+            "           prefix_num can be specified in base2, 10 or 16, for base 2 prefix_num must begin with 0b, 0x for base16.\n"
+            "           A 32bit integer will be created from prefix_num and the least significant num_prefix_bits will become the prefix.\n"
+            "           A stealth address created without a prefix will scan all incoming stealth transactions, irrespective of transaction prefixes.\n"
+            "           Stealth addresses with prefixes will scan only incoming stealth transactions with a matching prefix.\n"
+            "4. bech32              (bool, optional) Use Bech32 encoding.\n"
+            "\nResult:\n"
+            "\"address\"              (string) The new particl stealth address\n"
+            "\nExamples:\n"
+            + HelpExampleCli("getnewstealthaddress", "\"lblTestSxAddrPrefix\" 3 \"0b101\"")
+            + HelpExampleRpc("getnewstealthaddress", "\"lblTestSxAddrPrefix\", 3, \"0b101\""));
 
     EnsureWalletIsUnlocked(pwallet);
 
@@ -1925,19 +1959,27 @@ UniValue importstealthaddress(const JSONRPCRequest &request)
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
         return NullUniValue;
 
-    if (request.fHelp || request.params.size() < 2 || request.params.size() > 5)
+    if (request.fHelp || request.params.size() < 2 || request.params.size() > 6)
         throw std::runtime_error(
-            "importstealthaddress <scan_secret> <spend_secret> [label] [num_prefix_bits] [prefix_num]\n"
+            "importstealthaddress <scan_secret> <spend_secret> [label] [num_prefix_bits] [prefix_num] [bech32]\n"
             "Import an owned stealth addresses.\n"
-            "If num_prefix_bits is specified and > 0, the stealth address is created with a prefix.\n"
-            "If prefix_num is not specified the prefix will be selected deterministically.\n"
-            "prefix_num can be specified in base2, 10 or 16, for base 2 prefix_str must begin with 0b, 0x for base16.\n"
-            "A 32bit integer will be created from prefix_num and the least significant num_prefix_bits will become the prefix.\n"
-            "A stealth address created without a prefix will scan all incoming stealth transactions, irrespective of transaction prefixes.\n"
-            "Stealth addresses with prefixes will scan only incoming stealth transactions with a matching prefix.\n"
-            "Examples:\n"
-            "   getnewstealthaddress \"lblTestSxAddrPrefix\" 3 \"0b101\" \n"
-            + HelpRequiringPassphrase(pwallet));
+            + HelpRequiringPassphrase(pwallet) +
+            "\nArguments:\n"
+            "1. \"scan_secret\"       (string, required) The hex or wif encoded scan secret.\n"
+            "2. \"spend_secret\"      (string, required) The hex or wif encoded spend secret.\n"
+            "3. \"label\"             (string, optional) If specified the key is added to the address book.\n"
+            "4. num_prefix_bits     (int, optional) If specified and > 0, the stealth address is created with a prefix.\n"
+            "5. prefix_num          (int, optional) If prefix_num is not specified the prefix will be selected deterministically.\n"
+            "           prefix_num can be specified in base2, 10 or 16, for base 2 prefix_num must begin with 0b, 0x for base16.\n"
+            "           A 32bit integer will be created from prefix_num and the least significant num_prefix_bits will become the prefix.\n"
+            "           A stealth address created without a prefix will scan all incoming stealth transactions, irrespective of transaction prefixes.\n"
+            "           Stealth addresses with prefixes will scan only incoming stealth transactions with a matching prefix.\n"
+            "6. bech32              (bool, optional) Use Bech32 encoding.\n"
+            "\nResult:\n"
+            "\"address\"              (string) The new particl stealth address\n"
+            "\nExamples:\n"
+            + HelpExampleCli("importstealthaddress", "scan_secret spend_secret \"label\" 3 \"0b101\"")
+            + HelpExampleRpc("importstealthaddress", "scan_secret, spend_secret, \"label\", 3, \"0b101\""));
 
     EnsureWalletIsUnlocked(pwallet);
 
@@ -1970,6 +2012,8 @@ UniValue importstealthaddress(const JSONRPCRequest &request)
         if (!ExtractStealthPrefix(sPrefix_num.c_str(), nPrefix))
             throw JSONRPCError(RPC_INVALID_PARAMETER, _("Could not convert prefix to number."));
     };
+
+    bool fbech32 = request.params.size() > 5 ? request.params[5].get_bool() : false;
 
     std::vector<uint8_t> vchScanSecret;
     std::vector<uint8_t> vchSpendSecret;
@@ -2012,6 +2056,9 @@ UniValue importstealthaddress(const JSONRPCRequest &request)
             throw JSONRPCError(RPC_INVALID_PARAMETER, _("Spend secret is not 32 bytes."));
         skSpend.Set(&vchSpendSecret[0], true);
     };
+
+    if (skSpend == skScan)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, _("Spend secret must be different to scan secret."));
 
     CStealthAddress sxAddr;
     sxAddr.label = sLabel;
@@ -2069,18 +2116,18 @@ UniValue importstealthaddress(const JSONRPCRequest &request)
         if (pwallet->HaveStealthAddress(sxAddr)) // check for extkeys, no update possible
             throw JSONRPCError(RPC_WALLET_ERROR, _("Import failed - stealth address exists."));
 
-        pwallet->SetAddressBook(sxAddr, sLabel, "");
+        pwallet->SetAddressBook(sxAddr, sLabel, "", fbech32);
     }
 
     if (fFound)
     {
-        result.pushKV("result", "Success, updated " + sxAddr.Encoded());
+        result.pushKV("result", "Success, updated " + sxAddr.Encoded(fbech32));
     } else
     {
         if (!pwallet->ImportStealthAddress(sxAddr, skSpend))
             throw std::runtime_error("Could not save to wallet.");
         result.pushKV("result", "Success");
-        result.pushKV("stealth_address", sxAddr.Encoded());
+        result.pushKV("stealth_address", sxAddr.Encoded(fbech32));
     };
 
     return result;
@@ -3829,8 +3876,7 @@ UniValue getstakinginfo(const JSONRPCRequest &request)
             "}\n"
             "\nExamples:\n"
             + HelpExampleCli("getstakinginfo", "")
-            + HelpExampleRpc("getstakinginfo", "")
-            );
+            + HelpExampleRpc("getstakinginfo", ""));
 
     ObserveSafeMode();
 
@@ -3916,7 +3962,19 @@ UniValue getcoldstakinginfo(const JSONRPCRequest &request)
     if (request.fHelp || request.params.size() != 0)
         throw std::runtime_error(
             "getcoldstakinginfo\n"
-            "Returns an object containing coldstaking-related information.");
+            "Returns an object containing coldstaking related information."
+            "\nResult:\n"
+            "{\n"
+            "  \"enabled\": true|false,             (boolean) If a valid coldstakingaddress is loaded or not on this wallet.\n"
+            "  \"coldstaking_extkey_id\"            (string) The id of the current coldstakingaddress.\n"
+            "  \"coin_in_stakeable_script\"         (numeric) Current amount of coin in scripts stakeable by this wallet.\n"
+            "  \"coin_in_coldstakeable_script\"     (numeric) Current amount of coin in scripts stakeable by the wallet with the coldstakingaddress.\n"
+            "  \"percent_in_coldstakeable_script\"  (numeric) Percentage of coin in coldstakeable scripts.\n"
+            "  \"currently_staking\"                (numeric) Amount of coin estimated to be currently staking by this wallet.\n"
+            "}\n"
+            "\nExamples:\n"
+            + HelpExampleCli("getcoldstakinginfo", "")
+            + HelpExampleRpc("getcoldstakinginfo", ""));
 
     ObserveSafeMode();
 
@@ -4076,7 +4134,7 @@ UniValue listunspentanon(const JSONRPCRequest &request)
             "\nExamples\n"
             + HelpExampleCli("listunspentanon", "")
             + HelpExampleCli("listunspentanon", "6 9999999 \"[\\\"PfqK97PXYfqRFtdYcZw82x3dzPrZbEAcYa\\\",\\\"Pka9M2Bva8WetQhQ4ngC255HAbMJf5P5Dc\\\"]\"")
-            + HelpExampleRpc("listunspentanon", "6, 9999999 \"[\\\"PfqK97PXYfqRFtdYcZw82x3dzPrZbEAcYa\\\",\\\"Pka9M2Bva8WetQhQ4ngC255HAbMJf5P5Dc\\\"]\"")
+            + HelpExampleRpc("listunspentanon", "6, 9999999, \"[\\\"PfqK97PXYfqRFtdYcZw82x3dzPrZbEAcYa\\\",\\\"Pka9M2Bva8WetQhQ4ngC255HAbMJf5P5Dc\\\"]\"")
         );
 
     ObserveSafeMode();
@@ -4234,7 +4292,7 @@ UniValue listunspentblind(const JSONRPCRequest &request)
             "\nArguments:\n"
             "1. minconf          (numeric, optional, default=1) The minimum confirmations to filter\n"
             "2. maxconf          (numeric, optional, default=9999999) The maximum confirmations to filter\n"
-            "3. \"addresses\"    (string) A json array of particl addresses to filter\n"
+            "3. \"addresses\"      (string) A json array of particl addresses to filter\n"
             "    [\n"
             "      \"address\"   (string) particl address\n"
             "      ,...\n"
@@ -4271,7 +4329,7 @@ UniValue listunspentblind(const JSONRPCRequest &request)
             "\nExamples\n"
             + HelpExampleCli("listunspentblind", "")
             + HelpExampleCli("listunspentblind", "6 9999999 \"[\\\"PfqK97PXYfqRFtdYcZw82x3dzPrZbEAcYa\\\",\\\"Pka9M2Bva8WetQhQ4ngC255HAbMJf5P5Dc\\\"]\"")
-            + HelpExampleRpc("listunspentblind", "6, 9999999 \"[\\\"PfqK97PXYfqRFtdYcZw82x3dzPrZbEAcYa\\\",\\\"Pka9M2Bva8WetQhQ4ngC255HAbMJf5P5Dc\\\"]\"")
+            + HelpExampleRpc("listunspentblind", "6, 9999999, \"[\\\"PfqK97PXYfqRFtdYcZw82x3dzPrZbEAcYa\\\",\\\"Pka9M2Bva8WetQhQ4ngC255HAbMJf5P5Dc\\\"]\"")
         );
 
     ObserveSafeMode();
@@ -5386,6 +5444,7 @@ UniValue walletsettings(const JSONRPCRequest &request)
         throw std::runtime_error(
             "walletsettings \"setting\" json\n"
             "\nManage wallet settings.\n"
+            + HelpRequiringPassphrase(pwallet) +
             "\nchangeaddress {\"address_standard\":,\"coldstakingaddress\":}.\n"
             "   - \"address_standard\": Change address for standard inputs.\n"
             "   - \"coldstakingaddress\": Cold staking address for standard inputs.\n"
@@ -5647,11 +5706,18 @@ UniValue setvote(const JSONRPCRequest &request)
         throw std::runtime_error(
             "setvote <proposal> <option> <height_start> <height_end>\n"
             "Set voting token.\n"
-            "Proposal is the proposal to vote on.\n"
-            "Option is the option to vote for.\n"
-            "The last added option valid for a range will be applied.\n"
             "Wallet will include this token in staked blocks from height_start to height_end.\n"
-            "Set proposal and/or option to 0 to stop voting.\n");
+            "Set proposal and/or option to 0 to stop voting.\n"
+            "The last added option valid for the current chain height will be applied.\n"
+            + HelpRequiringPassphrase(pwallet) +
+            "\nArguments:\n"
+            "1. proposal            (int, required) The proposal to vote on.\n"
+            "2. option              (int, required) The option to vote for.\n"
+            "3. height_start        (int, required) Start voting at this block height.\n"
+            "3. height_end          (int, required) Stop voting at this block height.\n"
+            "\nExamples:\n"
+            + HelpExampleCli("setvote", "1 1 1000 2000")
+            + HelpExampleRpc("setvote", "1, 1, 1000, 2000"));
 
     ObserveSafeMode();
     EnsureWalletIsUnlocked(pwallet);
@@ -5863,7 +5929,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "extkeygenesisimport",      &extkeygenesisimport,      {"source","passphrase","save_bip44_root","master_label","account_label", "scan_chain_from"} },
     { "wallet",             "keyinfo",                  &keyinfo,                  {"key","show_secret"} },
     { "wallet",             "extkeyaltversion",         &extkeyaltversion,         {"ext_key"} },
-    { "wallet",             "getnewextaddress",         &getnewextaddress,         {"label","childNo"} },
+    { "wallet",             "getnewextaddress",         &getnewextaddress,         {"label","childNo","bech32"} },
     { "wallet",             "getnewstealthaddress",     &getnewstealthaddress,     {"label","num_prefix_bits","prefix_num","bech32"} },
     { "wallet",             "importstealthaddress",     &importstealthaddress,     {"scan_secret","spend_secret","label","num_prefix_bits","prefix_num"} },
     { "wallet",             "liststealthaddresses",     &liststealthaddresses,     {"show_secrets"} },

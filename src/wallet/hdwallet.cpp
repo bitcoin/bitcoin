@@ -7081,7 +7081,7 @@ int CHDWallet::NewStealthKeyFromAccount(std::string &sLabel, CEKAStealthKey &akS
 };
 
 int CHDWallet::NewExtKeyFromAccount(CHDWalletDB *pwdb, const CKeyID &idAccount,
-    std::string &sLabel, CStoredExtKey *sekOut, const char *plabel, uint32_t *childNo)
+    std::string &sLabel, CStoredExtKey *sekOut, const char *plabel, uint32_t *childNo, bool fBech32)
 {
     if (LogAcceptCategory(BCLog::HDWALLET))
     {
@@ -7155,7 +7155,7 @@ int CHDWallet::NewExtKeyFromAccount(CHDWalletDB *pwdb, const CKeyID &idAccount,
             vPath.push_back(idIndex); // first entry is the index to the account / master key
 
         vPath.push_back(nNewChildNo);
-        SetAddressBook(pwdb, sekOut->kp, plabel, "receive", vPath, false);
+        SetAddressBook(pwdb, sekOut->kp, plabel, "receive", vPath, false, fBech32);
     };
 
     if (!pwdb->WriteExtAccount(idAccount, *sea)
@@ -7178,7 +7178,7 @@ int CHDWallet::NewExtKeyFromAccount(CHDWalletDB *pwdb, const CKeyID &idAccount,
 };
 
 int CHDWallet::NewExtKeyFromAccount(std::string &sLabel, CStoredExtKey *sekOut,
-    const char *plabel, uint32_t *childNo)
+    const char *plabel, uint32_t *childNo, bool fBech32)
 {
     {
         LOCK(cs_wallet);
@@ -7187,7 +7187,7 @@ int CHDWallet::NewExtKeyFromAccount(std::string &sLabel, CStoredExtKey *sekOut,
         if (!wdb.TxnBegin())
             return errorN(1, "%s TxnBegin failed.", __func__);
 
-        if (0 != NewExtKeyFromAccount(&wdb, idDefaultAccount, sLabel, sekOut, plabel, childNo))
+        if (0 != NewExtKeyFromAccount(&wdb, idDefaultAccount, sLabel, sekOut, plabel, childNo, fBech32))
         {
             wdb.TxnAbort();
             return 1;
