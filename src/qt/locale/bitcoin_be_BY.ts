@@ -221,6 +221,9 @@
     </message>
 </context>
 <context>
+    <name>BanTableModel</name>
+    </context>
+<context>
     <name>BitcoinGUI</name>
     <message>
         <source>Sign &amp;message...</source>
@@ -795,7 +798,7 @@
         <source>command-line options</source>
         <translation>опцыі каманднага радка</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>Intro</name>
     <message>
@@ -1405,10 +1408,6 @@
         <translation>Запусціць у фоне як дэман і прымаць каманды</translation>
     </message>
     <message>
-        <source>Use the test network</source>
-        <translation>Ужываць тэставае сеціва</translation>
-    </message>
-    <message>
         <source>Do you want to rebuild the block database now?</source>
         <translation>Ці жадаеце вы перабудаваць зараз базу звестак блокаў?</translation>
     </message>
@@ -1457,10 +1456,6 @@
         <translation>Опцыі гаманца:</translation>
     </message>
     <message>
-        <source>Imports blocks from external blk000??.dat file</source>
-        <translation>Імпартаванне блокаў з вонкавага blk000??.dat файла</translation>
-    </message>
-    <message>
         <source>Activating best chain...</source>
         <translation>Актывацыя лепшага ланцуга...</translation>
     </message>
@@ -1479,10 +1474,6 @@
     <message>
         <source>Signing transaction failed</source>
         <translation>Памылка подпісу транзакцыі</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>Стартаваць ммінімізаванай</translation>
     </message>
     <message>
         <source>This is experimental software.</source>
@@ -1511,18 +1502,6 @@
     <message>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>Выканаць каманду калі лепшы блок зменіцца (%s замяняецца на хэш блока)</translation>
-    </message>
-    <message>
-        <source>Upgrade wallet to latest format</source>
-        <translation>Абнавіць гаманец на новы фармат</translation>
-    </message>
-    <message>
-        <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>Перасканаваць ланцуг блокаў дзеля пошуку адсутных транзакцый</translation>
-    </message>
-    <message>
-        <source>Use OpenSSL (https) for JSON-RPC connections</source>
-        <translation>Ужываць OpenSSL (https) для JSON-RPC злучэнняў</translation>
     </message>
     <message>
         <source>Loading addresses...</source>

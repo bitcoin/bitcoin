@@ -10,6 +10,7 @@ class BlockStore(object):
     def __init__(self, datadir):
         self.blockDB = dbm.open(datadir + "/blocks", 'c')
         self.currentBlock = 0L
+        self.headers_map = dict()
     
     def close(self):
         self.blockDB.close()
@@ -26,24 +27,30 @@ class BlockStore(object):
         ret.calc_sha256()
         return ret
 
+    def get_header(self, blockhash):
+        try:
+            return self.headers_map[blockhash]
+        except KeyError:
+            return None
+
     # Note: this pulls full blocks out of the database just to retrieve
     # the headers -- perhaps we could keep a separate data structure
     # to avoid this overhead.
     def headers_for(self, locator, hash_stop, current_tip=None):
         if current_tip is None:
             current_tip = self.currentBlock
-        current_block = self.get(current_tip)
-        if current_block is None:
+        current_block_header = self.get_header(current_tip)
+        if current_block_header is None:
             return None
 
         response = msg_headers()
-        headersList = [ CBlockHeader(current_block) ]
+        headersList = [ current_block_header ]
         maxheaders = 2000
         while (headersList[0].sha256 not in locator.vHave):
             prevBlockHash = headersList[0].hashPrevBlock
-            prevBlock = self.get(prevBlockHash)
-            if prevBlock is not None:
-                headersList.insert(0, CBlockHeader(prevBlock))
+            prevBlockHeader = self.get_header(prevBlockHash)
+            if prevBlockHeader is not None:
+                headersList.insert(0, prevBlockHeader)
             else:
                 break
         headersList = headersList[:maxheaders] # truncate if we have too many
@@ -61,6 +68,10 @@ class BlockStore(object):
         except TypeError as e:
             print "Unexpected error: ", sys.exc_info()[0], e.args
         self.currentBlock = block.sha256
+        self.headers_map[block.sha256] = CBlockHeader(block)
+
+    def add_header(self, header):
+        self.headers_map[header.sha256] = header
 
     def get_blocks(self, inv):
         responses = []

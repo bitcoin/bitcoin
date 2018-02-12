@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2013 The Bitcoin Core developers
+// Copyright (c) 2011-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -37,8 +37,8 @@ namespace GUIUtil
     QString dateTimeStr(const QDateTime &datetime);
     QString dateTimeStr(qint64 nTime);
 
-    // Render Bitcoin addresses in monospace font
-    QFont bitcoinAddressFont();
+    // Return a monospace font
+    QFont fixedPitchFont();
 
     // Set up widgets for address and amounts
     void setupAddressWidget(QValidatedLineEdit *widget, QWidget *parent);
@@ -63,6 +63,14 @@ namespace GUIUtil
        @see  TransactionView::copyLabel, TransactionView::copyAmount, TransactionView::copyAddress
      */
     void copyEntryData(QAbstractItemView *view, int column, int role=Qt::EditRole);
+
+    /** Return a field of the currently selected entry as a QString. Does nothing if nothing
+        is selected.
+       @param[in] column  Data column to extract from the model
+       @param[in] role    Data role to extract from the model
+       @see  TransactionView::copyLabel, TransactionView::copyAmount, TransactionView::copyAddress
+     */
+    QString getEntryData(QAbstractItemView *view, int column, int role);
 
     void setClipboard(const QString& str);
 
@@ -205,7 +213,7 @@ namespace GUIUtil
 #else
     typedef QProgressBar ProgressBar;
 #endif
-    
+
 } // namespace GUIUtil
 
 #endif // BITCOIN_QT_GUIUTIL_H

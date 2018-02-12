@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
-<TS version="2.0" language="en">
+<TS version="2.1" language="en">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -284,29 +284,42 @@
     </message>
 </context>
 <context>
+    <name>BanTableModel</name>
+    <message>
+        <location filename="../bantablemodel.cpp" line="+88"/>
+        <source>IP/Netmask</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Banned Until</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>BitcoinGUI</name>
     <message>
-        <location filename="../bitcoingui.cpp" line="+326"/>
+        <location filename="../bitcoingui.cpp" line="+335"/>
         <source>Sign &amp;message...</source>
         <translation>Sign &amp;message...</translation>
     </message>
     <message>
-        <location line="+343"/>
+        <location line="+362"/>
         <source>Synchronizing with network...</source>
         <translation>Synchronizing with network...</translation>
     </message>
     <message>
-        <location line="-419"/>
+        <location line="-438"/>
         <source>&amp;Overview</source>
         <translation>&amp;Overview</translation>
     </message>
     <message>
-        <location line="-134"/>
+        <location line="-130"/>
         <source>Node</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+135"/>
+        <location line="+131"/>
         <source>Show general overview of wallet</source>
         <translation>Show general overview of wallet</translation>
     </message>
@@ -376,12 +389,12 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+176"/>
+        <location line="+183"/>
         <source>Zetacoin Core client</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+157"/>
+        <location line="+169"/>
         <source>Importing blocks from disk...</source>
         <translation>Importing blocks from disk...</translation>
     </message>
@@ -391,7 +404,7 @@
         <translation>Reindexing blocks on disk...</translation>
     </message>
     <message>
-        <location line="-417"/>
+        <location line="-436"/>
         <source>Send coins to a Zetacoin address</source>
         <translation>Send coins to a Zetacoin address</translation>
     </message>
@@ -421,17 +434,17 @@
         <translation>&amp;Verify message...</translation>
     </message>
     <message>
-        <location line="+440"/>
+        <location line="+459"/>
         <source>Zetacoin</source>
         <translation>Zetacoin</translation>
     </message>
     <message>
-        <location line="-654"/>
+        <location line="-669"/>
         <source>Wallet</source>
         <translation>Wallet</translation>
     </message>
     <message>
-        <location line="+143"/>
+        <location line="+139"/>
         <source>&amp;Send</source>
         <translation>&amp;Send</translation>
     </message>
@@ -471,7 +484,7 @@
         <translation>Verify messages to ensure they were signed with specified Zetacoin addresses</translation>
     </message>
     <message>
-        <location line="+49"/>
+        <location line="+56"/>
         <source>&amp;File</source>
         <translation>&amp;File</translation>
     </message>
@@ -491,12 +504,12 @@
         <translation>Tabs toolbar</translation>
     </message>
     <message>
-        <location line="-311"/>
+        <location line="-314"/>
         <source>Zetacoin Core</source>
         <translation type="unfinished">Zetacoin Core</translation>
     </message>
     <message>
-        <location line="+164"/>
+        <location line="+160"/>
         <source>Request payments (generates QR codes and zetacoin: URIs)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -536,7 +549,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message numerus="yes">
-        <location line="+310"/>
+        <location line="+329"/>
         <source>%n active connection(s) to Zetacoin network</source>
         <translation>
             <numerusform>%n active connection to Zetacoin network</numerusform>
@@ -688,7 +701,7 @@
 <context>
     <name>ClientModel</name>
     <message>
-        <location filename="../clientmodel.cpp" line="+141"/>
+        <location filename="../clientmodel.cpp" line="+135"/>
         <source>Network Alert</source>
         <translation>Network Alert</translation>
     </message>
@@ -791,7 +804,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="+46"/>
+        <location filename="../coincontroldialog.cpp" line="+47"/>
         <source>Copy address</source>
         <translation type="unfinished">Copy address</translation>
     </message>
@@ -927,12 +940,12 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+9"/>
         <source>Can vary +/- %1 satoshi(s) per input.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-32"/>
+        <location line="-33"/>
         <source>yes</source>
         <translation type="unfinished"></translation>
     </message>
@@ -959,7 +972,7 @@
     </message>
     <message>
         <location line="+59"/>
-        <location line="+61"/>
+        <location line="+60"/>
         <source>(no label)</source>
         <translation type="unfinished">(no label)</translation>
     </message>
@@ -1045,7 +1058,7 @@
 <context>
     <name>FreespaceChecker</name>
     <message>
-        <location filename="../intro.cpp" line="+69"/>
+        <location filename="../intro.cpp" line="+68"/>
         <source>A new data directory will be created.</source>
         <translation>A new data directory will be created.</translation>
     </message>
@@ -1073,7 +1086,7 @@
 <context>
     <name>HelpMessageDialog</name>
     <message>
-        <location filename="../utilitydialog.cpp" line="+33"/>
+        <location filename="../utilitydialog.cpp" line="+36"/>
         <source>Zetacoin Core</source>
         <translation type="unfinished">Zetacoin Core</translation>
     </message>
@@ -1107,6 +1120,41 @@
         <location line="+1"/>
         <source>command-line options</source>
         <translation type="unfinished">command-line options</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>UI Options:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Choose data directory on startup (default: %u)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Set language, for example &quot;de_DE&quot; (default: system locale)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Start minimized</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Set SSL root certificates for payment request (default: -system-)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Show splash screen on startup (default: %u)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Reset all settings changes made over the GUI</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -1240,6 +1288,7 @@
     </message>
     <message>
         <location line="+44"/>
+        <location line="+187"/>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1280,7 +1329,7 @@
         <translation>&amp;Reset Options</translation>
     </message>
     <message>
-        <location line="-317"/>
+        <location line="-504"/>
         <source>&amp;Network</source>
         <translation>&amp;Network</translation>
     </message>
@@ -1346,21 +1395,61 @@
     </message>
     <message>
         <location line="+9"/>
+        <location line="+187"/>
         <source>Proxy &amp;IP:</source>
         <translation>Proxy &amp;IP:</translation>
     </message>
     <message>
-        <location line="+32"/>
+        <location line="-155"/>
+        <location line="+187"/>
         <source>&amp;Port:</source>
         <translation>&amp;Port:</translation>
     </message>
     <message>
-        <location line="+25"/>
+        <location line="-162"/>
+        <location line="+187"/>
         <source>Port of the proxy (e.g. 9050)</source>
         <translation>Port of the proxy (e.g. 9050)</translation>
     </message>
     <message>
-        <location line="+36"/>
+        <location line="-163"/>
+        <source>Used for reaching peers via:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <location line="+23"/>
+        <location line="+23"/>
+        <source>Shows, if the supplied default SOCKS5 proxy is used to reach peers via this network type.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-36"/>
+        <source>IPv4</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+23"/>
+        <source>IPv6</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+23"/>
+        <source>Tor</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+25"/>
+        <source>Connect to the Zetacoin network through a separate SOCKS5 proxy for Tor hidden services.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+102"/>
         <source>&amp;Window</source>
         <translation>&amp;Window</translation>
     </message>
@@ -1400,12 +1489,12 @@
         <translation>Choose the default subdivision unit to show in the interface and when sending coins.</translation>
     </message>
     <message>
-        <location line="-253"/>
+        <location line="-440"/>
         <source>Whether to show coin control features or not.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+415"/>
+        <location line="+602"/>
         <source>&amp;OK</source>
         <translation>&amp;OK</translation>
     </message>
@@ -1415,33 +1504,33 @@
         <translation>&amp;Cancel</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="+75"/>
+        <location filename="../optionsdialog.cpp" line="+81"/>
         <source>default</source>
         <translation>default</translation>
     </message>
     <message>
-        <location line="+59"/>
+        <location line="+64"/>
         <source>none</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+76"/>
+        <location line="+71"/>
         <source>Confirm options reset</source>
         <translation>Confirm options reset</translation>
     </message>
     <message>
         <location line="+1"/>
-        <location line="+29"/>
+        <location line="+30"/>
         <source>Client restart required to activate changes.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-29"/>
+        <location line="-30"/>
         <source>Client will be shut down. Do you want to proceed?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+33"/>
+        <location line="+34"/>
         <source>This change would require a client restart.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1548,7 +1637,7 @@
 <context>
     <name>PaymentServer</name>
     <message>
-        <location filename="../paymentserver.cpp" line="+434"/>
+        <location filename="../paymentserver.cpp" line="+432"/>
         <location line="+14"/>
         <location line="+7"/>
         <source>URI handling</source>
@@ -1560,16 +1649,17 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+88"/>
+        <location line="+83"/>
         <location line="+9"/>
         <location line="+31"/>
         <location line="+10"/>
         <location line="+17"/>
+        <location line="+88"/>
         <source>Payment request rejected</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-67"/>
+        <location line="-155"/>
         <source>Payment request network doesn&apos;t match client network.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1584,17 +1674,17 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-263"/>
-        <location line="+221"/>
+        <location line="-258"/>
+        <location line="+216"/>
         <location line="+42"/>
-        <location line="+114"/>
+        <location line="+113"/>
         <location line="+14"/>
         <location line="+18"/>
         <source>Payment request error</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-408"/>
+        <location line="-402"/>
         <source>Cannot start zetacoin: click-to-pay handler</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1619,7 +1709,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+75"/>
+        <location line="+70"/>
         <source>Payment request expired.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1640,17 +1730,12 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+43"/>
+        <location line="+44"/>
         <source>Payment request %1 is too large (%2 bytes, allowed %3 bytes).</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+6"/>
-        <source>Payment request DoS protection</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+5"/>
+        <location line="+9"/>
         <source>Error communicating with %1: %2</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1678,7 +1763,7 @@
 <context>
     <name>PeerTableModel</name>
     <message>
-        <location filename="../peertablemodel.cpp" line="+118"/>
+        <location filename="../peertablemodel.cpp" line="+117"/>
         <source>User Agent</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1706,7 +1791,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+748"/>
+        <location line="+763"/>
         <source>%1 d</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1768,7 +1853,7 @@
 <context>
     <name>RPCConsole</name>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="+46"/>
+        <location filename="../forms/debugwindow.ui" line="+46"/>
         <source>Client name</source>
         <translation>Client name</translation>
     </message>
@@ -1777,15 +1862,16 @@
         <location line="+23"/>
         <location line="+26"/>
         <location line="+26"/>
+        <location line="+26"/>
+        <location line="+23"/>
+        <location line="+23"/>
         <location line="+23"/>
         <location line="+23"/>
         <location line="+36"/>
         <location line="+23"/>
         <location line="+36"/>
-        <location line="+23"/>
-        <location line="+465"/>
-        <location line="+23"/>
-        <location line="+23"/>
+        <location line="+36"/>
+        <location line="+534"/>
         <location line="+23"/>
         <location line="+23"/>
         <location line="+23"/>
@@ -1796,12 +1882,17 @@
         <location line="+23"/>
         <location line="+23"/>
         <location line="+23"/>
+        <location line="+23"/>
+        <location line="+23"/>
+        <location line="+23"/>
+        <location line="+23"/>
+        <location line="+26"/>
         <location line="+23"/>
         <source>N/A</source>
         <translation>N/A</translation>
     </message>
     <message>
-        <location line="-990"/>
+        <location line="-1216"/>
         <source>Client version</source>
         <translation>Client version</translation>
     </message>
@@ -1821,7 +1912,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+53"/>
+        <location line="+79"/>
         <source>Using OpenSSL version</source>
         <translation>Using OpenSSL version</translation>
     </message>
@@ -1836,12 +1927,12 @@
         <translation>Startup time</translation>
     </message>
     <message>
-        <location line="+29"/>
+        <location line="+170"/>
         <source>Network</source>
         <translation>Network</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-147"/>
         <source>Name</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1861,34 +1952,61 @@
         <translation>Current number of blocks</translation>
     </message>
     <message>
-        <location line="+72"/>
+        <location line="+52"/>
+        <source>Memory Pool</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Current number of transactions</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+36"/>
+        <source>Memory usage</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+48"/>
         <source>Open the Zetacoin Core debug log file from the current data directory. This can take a few seconds for large log files.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+231"/>
+        <location line="+233"/>
+        <location line="+552"/>
         <source>Received</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+80"/>
+        <location line="-472"/>
+        <location line="+449"/>
         <source>Sent</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+41"/>
+        <location line="-408"/>
         <source>&amp;Peers</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+39"/>
-        <location filename="../rpcconsole.cpp" line="+238"/>
-        <location line="+326"/>
+        <location line="+50"/>
+        <source>Banned peers</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+57"/>
+        <location filename="../rpcconsole.cpp" line="+287"/>
+        <location line="+578"/>
         <source>Select a peer to view detailed information.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+25"/>
+        <source>Whitelisted</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+23"/>
         <source>Direction</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1898,7 +2016,23 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <location line="+69"/>
+        <source>Starting Block</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location line="+23"/>
+        <source>Synced Headers</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+23"/>
+        <source>Synced Blocks</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-973"/>
+        <location line="+881"/>
         <source>User Agent</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1908,17 +2042,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+23"/>
-        <source>Starting Height</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+23"/>
-        <source>Sync Height</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+23"/>
+        <location line="+92"/>
         <source>Ban Score</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1938,18 +2062,18 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+23"/>
-        <source>Bytes Sent</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+23"/>
-        <source>Bytes Received</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+23"/>
+        <location line="+69"/>
         <source>Ping Time</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+23"/>
+        <source>The duration of a currently outstanding ping.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Ping Wait</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1958,17 +2082,17 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-764"/>
+        <location line="-977"/>
         <source>Last block time</source>
         <translation>Last block time</translation>
     </message>
     <message>
-        <location line="+52"/>
+        <location line="+123"/>
         <source>&amp;Open</source>
         <translation>&amp;Open</translation>
     </message>
     <message>
-        <location line="+24"/>
+        <location line="+26"/>
         <source>&amp;Console</source>
         <translation>&amp;Console</translation>
     </message>
@@ -1988,7 +2112,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="-164"/>
+        <location filename="../rpcconsole.cpp" line="-343"/>
         <source>In:</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1998,22 +2122,60 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="-357"/>
+        <location filename="../forms/debugwindow.ui" line="-417"/>
         <source>Build date</source>
         <translation>Build date</translation>
     </message>
     <message>
-        <location line="+183"/>
+        <location line="+241"/>
         <source>Debug log file</source>
         <translation>Debug log file</translation>
     </message>
     <message>
-        <location line="+83"/>
+        <location line="+85"/>
         <source>Clear console</source>
         <translation>Clear console</translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="-36"/>
+        <location filename="../rpcconsole.cpp" line="-156"/>
+        <source>&amp;Disconnect Node</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <source>Ban Node for</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-3"/>
+        <source>1 &amp;hour</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>1 &amp;day</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>1 &amp;week</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>1 &amp;year</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+46"/>
+        <source>&amp;Unban Node</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+70"/>
         <source>Welcome to the Zetacoin Core RPC console.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2028,7 +2190,7 @@
         <translation>Type &lt;b&gt;help&lt;/b&gt; for an overview of available commands.</translation>
     </message>
     <message>
-        <location line="+134"/>
+        <location line="+144"/>
         <source>%1 B</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2048,7 +2210,12 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+95"/>
+        <location line="+88"/>
+        <source>(node id: %1)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>via %1</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2059,7 +2226,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+9"/>
         <source>Inbound</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2069,14 +2236,19 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+13"/>
-        <source>Unknown</source>
+        <location line="+2"/>
+        <source>Yes</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+2"/>
-        <location line="+1"/>
-        <source>Fetching...</source>
+        <location line="+0"/>
+        <source>No</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <location line="+6"/>
+        <source>Unknown</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -2171,7 +2343,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../receivecoinsdialog.cpp" line="+45"/>
+        <location filename="../receivecoinsdialog.cpp" line="+46"/>
         <source>Copy label</source>
         <translation type="unfinished">Copy label</translation>
     </message>
@@ -2296,7 +2468,7 @@
     <name>SendCoinsDialog</name>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="+14"/>
-        <location filename="../sendcoinsdialog.cpp" line="+543"/>
+        <location filename="../sendcoinsdialog.cpp" line="+546"/>
         <source>Send Coins</source>
         <translation>Send Coins</translation>
     </message>
@@ -2498,7 +2670,7 @@
         <translation>Confirm send coins</translation>
     </message>
     <message>
-        <location line="-48"/>
+        <location line="-49"/>
         <location line="+5"/>
         <location line="+5"/>
         <location line="+4"/>
@@ -2541,7 +2713,12 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+246"/>
+        <location line="+244"/>
+        <source>Total Amount %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>or</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2580,8 +2757,13 @@
         <source>Payment request expired.</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <location line="+91"/>
+        <source>Pay only the required fee of %1</source>
+        <translation type="unfinished"></translation>
+    </message>
     <message numerus="yes">
-        <location line="+110"/>
+        <location line="+23"/>
         <source>Estimated to begin confirmation within %n block(s).</source>
         <translation type="unfinished">
             <numerusform>Estimated to begin confirmation within %n block.</numerusform>
@@ -2589,17 +2771,7 @@
         </translation>
     </message>
     <message>
-        <location line="-22"/>
-        <source>Pay only the minimum fee of %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="-309"/>
-        <source>Total Amount %1&lt;span style=&apos;font-size:10pt;font-weight:normal;&apos;&gt;&lt;br /&gt;(=%2)&lt;/span&gt;</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+195"/>
+        <location line="-140"/>
         <source>The recipient address is not valid. Please recheck.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2609,12 +2781,12 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+231"/>
+        <location line="+234"/>
         <source>Warning: Invalid Zetacoin address</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+20"/>
+        <location line="+19"/>
         <source>(no label)</source>
         <translation type="unfinished">(no label)</translation>
     </message>
@@ -2624,7 +2796,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-692"/>
+        <location line="-695"/>
         <source>Copy dust</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2751,7 +2923,7 @@
 <context>
     <name>ShutdownWindow</name>
     <message>
-        <location filename="../utilitydialog.cpp" line="+81"/>
+        <location filename="../utilitydialog.cpp" line="+78"/>
         <source>Zetacoin Core is shutting down...</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2872,7 +3044,7 @@
         <translation>Reset all verify message fields</translation>
     </message>
     <message>
-        <location filename="../signverifymessagedialog.cpp" line="+40"/>
+        <location filename="../signverifymessagedialog.cpp" line="+41"/>
         <source>Click &quot;Sign Message&quot; to generate signature</source>
         <translation>Click &quot;Sign Message&quot; to generate signature</translation>
     </message>
@@ -2956,7 +3128,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../networkstyle.cpp" line="+20"/>
+        <location filename="../networkstyle.cpp" line="+19"/>
         <source>[testnet]</source>
         <translation>[testnet]</translation>
     </message>
@@ -2972,7 +3144,7 @@
 <context>
     <name>TransactionDesc</name>
     <message>
-        <location filename="../transactiondesc.cpp" line="+34"/>
+        <location filename="../transactiondesc.cpp" line="+32"/>
         <source>Open until %1</source>
         <translation>Open until %1</translation>
     </message>
@@ -3196,7 +3368,7 @@
 <context>
     <name>TransactionTableModel</name>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="+230"/>
+        <location filename="../transactiontablemodel.cpp" line="+246"/>
         <source>Date</source>
         <translation>Date</translation>
     </message>
@@ -3299,7 +3471,7 @@
         <translation>(n/a)</translation>
     </message>
     <message>
-        <location line="+215"/>
+        <location line="+217"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
         <translation>Transaction status. Hover over this field to show number of confirmations.</translation>
     </message>
@@ -3332,7 +3504,7 @@
 <context>
     <name>TransactionView</name>
     <message>
-        <location filename="../transactionview.cpp" line="+68"/>
+        <location filename="../transactionview.cpp" line="+69"/>
         <location line="+16"/>
         <source>All</source>
         <translation>All</translation>
@@ -3424,6 +3596,11 @@
     </message>
     <message>
         <location line="+1"/>
+        <source>Copy raw transaction</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Edit label</source>
         <translation>Edit label</translation>
     </message>
@@ -3433,7 +3610,7 @@
         <translation>Show transaction details</translation>
     </message>
     <message>
-        <location line="+179"/>
+        <location line="+181"/>
         <source>Export Transaction History</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3498,7 +3675,7 @@
         <translation>ID</translation>
     </message>
     <message>
-        <location line="+116"/>
+        <location line="+121"/>
         <source>Range:</source>
         <translation>Range:</translation>
     </message>
@@ -3519,7 +3696,7 @@
 <context>
     <name>WalletFrame</name>
     <message>
-        <location filename="../walletframe.cpp" line="+26"/>
+        <location filename="../walletframe.cpp" line="+27"/>
         <source>No wallet has been loaded.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3535,7 +3712,7 @@
 <context>
     <name>WalletView</name>
     <message>
-        <location filename="../walletview.cpp" line="+45"/>
+        <location filename="../walletview.cpp" line="+46"/>
         <source>&amp;Export</source>
         <translation>&amp;Export</translation>
     </message>
@@ -3545,7 +3722,7 @@
         <translation>Export the data in the current tab to a file</translation>
     </message>
     <message>
-        <location line="+189"/>
+        <location line="+194"/>
         <source>Backup Wallet</source>
         <translation>Backup Wallet</translation>
     </message>
@@ -3578,47 +3755,97 @@
 <context>
     <name>bitcoin-core</name>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="+250"/>
+        <location filename="../bitcoinstrings.cpp" line="+267"/>
         <source>Options:</source>
         <translation>Options:</translation>
     </message>
     <message>
-        <location line="+33"/>
+        <location line="+27"/>
         <source>Specify data directory</source>
         <translation>Specify data directory</translation>
     </message>
     <message>
-        <location line="-88"/>
+        <location line="-84"/>
         <source>Connect to a node to retrieve peer addresses, and disconnect</source>
         <translation>Connect to a node to retrieve peer addresses, and disconnect</translation>
     </message>
     <message>
-        <location line="+91"/>
+        <location line="+87"/>
         <source>Specify your own public address</source>
         <translation>Specify your own public address</translation>
     </message>
     <message>
-        <location line="-110"/>
+        <location line="-105"/>
         <source>Accept command line and JSON-RPC commands</source>
         <translation>Accept command line and JSON-RPC commands</translation>
     </message>
     <message>
-        <location line="+89"/>
+        <location line="-118"/>
+        <source>If &lt;category&gt; is not supplied or if &lt;category&gt; = 1, output all debugging information.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <source>Maximum total fees (in %s) to use in a single wallet transaction; setting this too low may abort large transactions (default: %s)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Please check that your computer&apos;s date and time are correct! If your clock is wrong Zetacoin Core will not work properly.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Prune configured below the minimum of %d MiB.  Please use a higher number.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of pruned node)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Reduce storage requirements by pruning (deleting) old blocks. This mode is incompatible with -txindex and -rescan. Warning: Reverting this setting requires re-downloading the entire blockchain. (default: 0 = disable pruning blocks, &gt;%u = target size in MiB to use for block files)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+116"/>
+        <source>Error: A fatal internal error occurred, see debug.log for details</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Fee (in %s/kB) to add to transactions you send (default: %s)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+38"/>
+        <source>Pruning blockstore...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+9"/>
         <source>Run in the background as a daemon and accept commands</source>
         <translation>Run in the background as a daemon and accept commands</translation>
     </message>
     <message>
-        <location line="+39"/>
-        <source>Use the test network</source>
-        <translation>Use the test network</translation>
+        <location line="+29"/>
+        <source>Unable to start HTTP server. See debug log for details.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-127"/>
+        <location line="-117"/>
         <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
         <translation>Accept connections from outside (default: 1 if no -proxy or -connect)</translation>
     </message>
     <message>
-        <location line="-155"/>
+        <location line="-168"/>
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
         <translation>Bind to given address and always listen on it. Use [host]:port notation for IPv6</translation>
     </message>
@@ -3633,37 +3860,37 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="+13"/>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
         <translation>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</translation>
     </message>
     <message>
-        <location line="+23"/>
-        <source>Maximum total fees to use in a single wallet transaction; setting this too low may abort large transactions (default: %s)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+15"/>
-        <source>Reduce storage requirements by pruning (deleting) old blocks. This mode disables wallet support and is incompatible with -txindex. Warning: Reverting this setting requires re-downloading the entire blockchain. (default: 0 = disable pruning blocks, &gt;%u = target size in MiB to use for block files)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+8"/>
+        <location line="+60"/>
         <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+8"/>
+        <source>The block database contains a block which appears to be from the future. This may be due to your computer&apos;s date and time being set incorrectly. Only rebuild the block database if you are sure that your computer&apos;s date and time are correct</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
         <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
         <translation>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</translation>
     </message>
     <message>
-        <location line="+20"/>
+        <location line="+13"/>
         <source>Unable to bind to %s on this computer. Zetacoin Core is probably already running.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+6"/>
+        <source>Use UPnP to map the listening port (default: 1 when listening and no -proxy)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+9"/>
         <source>WARNING: abnormally high number of blocks generated, %d blocks received in the last %d hours (%d expected)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3673,12 +3900,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+6"/>
-        <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
-        <translation>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</translation>
-    </message>
-    <message>
-        <location line="+6"/>
+        <location line="+3"/>
         <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>
         <translation>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</translation>
     </message>
@@ -3686,11 +3908,6 @@
         <location line="+3"/>
         <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
         <translation>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Warning: error reading wallet.dat! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
-        <translation>Warning: error reading wallet.dat! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -3704,7 +3921,7 @@
     </message>
     <message>
         <location line="+11"/>
-        <source>(default: 1)</source>
+        <source>-maxmempool must be at least %d MB</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -3713,17 +3930,12 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+9"/>
-        <source>Attempt to recover private keys from a corrupt wallet.dat</source>
-        <translation>Attempt to recover private keys from a corrupt wallet.dat</translation>
-    </message>
-    <message>
-        <location line="+1"/>
+        <location line="+11"/>
         <source>Block creation options:</source>
         <translation>Block creation options:</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+6"/>
         <source>Connect only to the specified node(s)</source>
         <translation>Connect only to the specified node(s)</translation>
     </message>
@@ -3738,7 +3950,7 @@
         <translation>Corrupted block database detected</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+1"/>
         <source>Debugging/Testing options:</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3754,6 +3966,26 @@
     </message>
     <message>
         <location line="+2"/>
+        <source>Enable publish hash block in &lt;address&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Enable publish hash transaction in &lt;address&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Enable publish raw block in &lt;address&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Enable publish raw transaction in &lt;address&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Error initializing block database</source>
         <translation>Error initializing block database</translation>
     </message>
@@ -3778,17 +4010,12 @@
         <translation>Error: Disk space is low!</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+1"/>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation>Failed to listen on any port. Use -listen=0 if you want this.</translation>
     </message>
     <message>
         <location line="+4"/>
-        <source>If &lt;category&gt; is not supplied, output all debugging information.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
         <source>Importing...</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3803,7 +4030,12 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+20"/>
+        <location line="+9"/>
+        <source>Keep the transaction memory pool below &lt;n&gt; megabytes (default: %u)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+12"/>
         <source>Not enough file descriptors available.</source>
         <translation>Not enough file descriptors available.</translation>
     </message>
@@ -3823,27 +4055,47 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="+13"/>
         <source>Set database cache size in megabytes (%d to %d, default: %d)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
         <source>Set maximum block size in bytes (default: %d)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="+10"/>
         <source>Specify wallet file (within data directory)</source>
         <translation>Specify wallet file (within data directory)</translation>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="+16"/>
+        <source>Unsupported argument -benchmark ignored, use -debug=bench.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Unsupported argument -debugnet ignored, use -debug=net.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Unsupported argument -tor found, use -onion.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>Use UPnP to map the listening port (default: %u)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+1"/>
+        <source>User Agent comment (%s) contains unsafe characters.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>Verifying blocks...</source>
         <translation>Verifying blocks...</translation>
     </message>
@@ -3868,27 +4120,17 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
         <source>You need to rebuild the database using -reindex to change -txindex</source>
         <translation>You need to rebuild the database using -reindex to change -txindex</translation>
     </message>
     <message>
-        <location line="-93"/>
-        <source>Imports blocks from external blk000??.dat file</source>
-        <translation>Imports blocks from external blk000??.dat file</translation>
-    </message>
-    <message>
-        <location line="-207"/>
+        <location line="-306"/>
         <source>Allow JSON-RPC connections from specified source. Valid for &lt;ip&gt; are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+4"/>
-        <source>An error occurred while setting up the RPC address %s port %u for listening: %s</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+6"/>
+        <location line="+7"/>
         <source>Bind to given address and whitelist peers connecting to it. Use [host]:port notation for IPv6</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3913,27 +4155,22 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+11"/>
         <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+2"/>
-        <source>Error: Unsupported argument -socks found. Setting SOCKS version isn&apos;t possible anymore, only SOCKS5 proxies are supported.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+3"/>
         <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
         <translation>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</translation>
     </message>
     <message>
         <location line="+9"/>
-        <source>Fees (in BTC/Kb) smaller than this are considered zero fee for relaying (default: %s)</source>
+        <source>Fees (in %s/kB) smaller than this are considered zero fee for relaying, mining and transaction creation (default: %s)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+11"/>
         <source>If paytxfee is not set, include enough fee so transactions begin confirmation on average within n blocks (default: %u)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3948,12 +4185,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+10"/>
-        <source>Prune configured below the minimum of %d MB.  Please use a higher number.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+2"/>
+        <location line="+18"/>
         <source>Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3963,7 +4195,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+11"/>
         <source>Set maximum size of high-priority/low-fee transactions in bytes (default: %d)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3973,7 +4205,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+10"/>
         <source>The transaction amount is too small to send after the fee has been deducted</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3983,32 +4215,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+4"/>
-        <source>To use zetacoind, or the -server option to zetacoin-qt, you must set an rpcpassword in the configuration file:
-%s
-It is recommended you use the following random password:
-rpcuser=zetacoinrpc
-rpcpassword=%s
-(you do not need to remember this password)
-The username and password MUST NOT be the same.
-If the file does not exist, create it with owner-readable-only file permissions.
-It is also recommended to set alertnotify so you are notified of problems;
-for example: alertnotify=echo %%s | mail -s &quot;Zetacoin Alert&quot; admin@foo.com
-</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+25"/>
-        <source>Warning: -maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+6"/>
-        <source>Warning: Please check that your computer&apos;s date and time are correct! If your clock is wrong Zetacoin Core will not work properly.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+19"/>
+        <location line="+44"/>
         <source>Whitelisted peers cannot be DoS banned and their transactions are always relayed, even if they are already in the mempool, useful e.g. for a gateway</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4028,27 +4235,32 @@ for example: alertnotify=echo %%s | mail -s &quot;Zetacoin Alert&quot; admin@foo
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+1"/>
         <source>Activating best chain...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+6"/>
-        <source>Can&apos;t run with a wallet in prune mode.</source>
+        <location line="+4"/>
+        <source>Always relay transactions received from whitelisted peers (default: %d)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+1"/>
+        <source>Attempt to recover private keys from a corrupt wallet.dat on startup</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Automatically create Tor hidden service (default: %d)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+5"/>
         <source>Cannot resolve -whitebind address: &apos;%s&apos;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+2"/>
-        <source>Choose data directory on startup (default: 0)</source>
-        <translation type="unfinished">Choose data directory on startup (default: 0)</translation>
-    </message>
-    <message>
-        <location line="+2"/>
+        <location line="+3"/>
         <source>Connect through SOCKS5 proxy</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4058,12 +4270,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Zetacoin Alert&quot; admin@foo
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+2"/>
-        <source>Could not parse -rpcbind value %s as network address</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+10"/>
+        <location line="+15"/>
         <source>Error loading wallet.dat: Wallet requires newer version of Zetacoin Core</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4073,22 +4280,12 @@ for example: alertnotify=echo %%s | mail -s &quot;Zetacoin Alert&quot; admin@foo
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+2"/>
-        <source>Error: A fatal internal error occurred, see debug.log for details</source>
+        <location line="+9"/>
+        <source>Imports blocks from external blk000??.dat file on startup</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+2"/>
-        <source>Error: Unsupported argument -tor found, use -onion.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>Fee (in BTC/kB) to add to transactions you send (default: %s)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+8"/>
+        <location line="+3"/>
         <source>Information</source>
         <translation>Information</translation>
     </message>
@@ -4128,7 +4325,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Zetacoin Alert&quot; admin@foo
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+11"/>
         <source>Need to specify a port with -whitebind: &apos;%s&apos;</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4138,23 +4335,8 @@ for example: alertnotify=echo %%s | mail -s &quot;Zetacoin Alert&quot; admin@foo
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+8"/>
-        <source>Pruning blockstore...</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>RPC SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
+        <location line="+9"/>
         <source>RPC server options:</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>RPC support for HTTP persistent connections (default: %d)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4168,7 +4350,17 @@ for example: alertnotify=echo %%s | mail -s &quot;Zetacoin Alert&quot; admin@foo
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+1"/>
+        <source>Reducing -maxconnections from %d to %d, because of system limitations.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Rescan the block chain for missing wallet transactions on startup</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>Send trace/debug info to console instead of debug.log file</source>
         <translation>Send trace/debug info to console instead of debug.log file</translation>
     </message>
@@ -4178,24 +4370,9 @@ for example: alertnotify=echo %%s | mail -s &quot;Zetacoin Alert&quot; admin@foo
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+3"/>
-        <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Set language, for example &quot;de_DE&quot; (default: system locale)</source>
-        <translation type="unfinished">Set language, for example &quot;de_DE&quot; (default: system locale)</translation>
-    </message>
-    <message>
-        <location line="+4"/>
+        <location line="+6"/>
         <source>Show all debugging options (usage: --help -help-debug)</source>
         <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation type="unfinished">Show splash screen on startup (default: 1)</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -4209,11 +4386,6 @@ for example: alertnotify=echo %%s | mail -s &quot;Zetacoin Alert&quot; admin@foo
     </message>
     <message>
         <location line="+8"/>
-        <source>Start minimized</source>
-        <translation type="unfinished">Start minimized</translation>
-    </message>
-    <message>
-        <location line="+1"/>
         <source>The transaction amount is too small to pay the fee</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4224,6 +4396,16 @@ for example: alertnotify=echo %%s | mail -s &quot;Zetacoin Alert&quot; admin@foo
     </message>
     <message>
         <location line="+2"/>
+        <source>Tor control port password (default: empty)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Tor control port to use if onion listening enabled (default: %s)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Transaction amount too small</source>
         <translation>Transaction amount too small</translation>
     </message>
@@ -4244,21 +4426,16 @@ for example: alertnotify=echo %%s | mail -s &quot;Zetacoin Alert&quot; admin@foo
     </message>
     <message>
         <location line="+1"/>
-        <source>UI Options:</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+5"/>
-        <source>Use UPnP to map the listening port (default: 1 when listening)</source>
-        <translation>Use UPnP to map the listening port (default: 1 when listening)</translation>
+        <location line="+6"/>
+        <source>Upgrade wallet to latest format on startup</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+3"/>
         <source>Username for JSON-RPC connections</source>
         <translation>Username for JSON-RPC connections</translation>
     </message>
@@ -4274,12 +4451,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Zetacoin Alert&quot; admin@foo
     </message>
     <message>
         <location line="+2"/>
-        <source>Warning: Unsupported argument -benchmark ignored, use -debug=bench.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Warning: Unsupported argument -debugnet ignored, use -debug=net.</source>
+        <source>Whether to operate in a blocks only mode (default: %u)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4289,7 +4461,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Zetacoin Alert&quot; admin@foo
     </message>
     <message>
         <location line="+1"/>
-        <source>on startup</source>
+        <source>ZeroMQ notification options:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4298,62 +4470,72 @@ for example: alertnotify=echo %%s | mail -s &quot;Zetacoin Alert&quot; admin@foo
         <translation>wallet.dat corrupt, salvage failed</translation>
     </message>
     <message>
-        <location line="-67"/>
+        <location line="-62"/>
         <source>Password for JSON-RPC connections</source>
         <translation>Password for JSON-RPC connections</translation>
     </message>
     <message>
-        <location line="-193"/>
+        <location line="-205"/>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>Execute command when the best block changes (%s in cmd is replaced by block hash)</translation>
     </message>
     <message>
-        <location line="+242"/>
-        <source>Upgrade wallet to latest format</source>
-        <translation>Upgrade wallet to latest format</translation>
-    </message>
-    <message>
-        <location line="-37"/>
-        <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>Rescan the block chain for missing wallet transactions</translation>
-    </message>
-    <message>
-        <location line="+38"/>
-        <source>Use OpenSSL (https) for JSON-RPC connections</source>
-        <translation>Use OpenSSL (https) for JSON-RPC connections</translation>
-    </message>
-    <message>
-        <location line="-11"/>
+        <location line="+237"/>
         <source>This help message</source>
         <translation>This help message</translation>
     </message>
     <message>
-        <location line="-108"/>
+        <location line="-103"/>
         <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
         <translation>Allow DNS lookups for -addnode, -seednode and -connect</translation>
     </message>
     <message>
-        <location line="+57"/>
+        <location line="+59"/>
         <source>Loading addresses...</source>
         <translation>Loading addresses...</translation>
     </message>
     <message>
-        <location line="-31"/>
+        <location line="-30"/>
         <source>Error loading wallet.dat: Wallet corrupted</source>
         <translation>Error loading wallet.dat: Wallet corrupted</translation>
     </message>
     <message>
-        <location line="-196"/>
+        <location line="-214"/>
         <source>(1 = keep tx meta data e.g. account owner and payment request information, 2 = drop tx meta data)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+52"/>
+        <location line="+3"/>
+        <source>-maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>-paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+32"/>
+        <source>Do not keep transactions in the mempool longer than &lt;n&gt; hours (default: %u)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Error reading wallet.dat! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+17"/>
+        <source>Fees (in %s/kB) smaller than this are considered zero fee for transaction creation (default: %s)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>How thorough the block verification of -checkblocks is (0-4, default: %u)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+11"/>
         <source>Maintain a full transaction index, used by the getrawtransaction rpc call (default: %u)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4368,32 +4550,52 @@ for example: alertnotify=echo %%s | mail -s &quot;Zetacoin Alert&quot; admin@foo
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+49"/>
+        <location line="+32"/>
+        <source>Support filtering of blocks and transaction with bloom filters (default: %u)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+16"/>
+        <source>Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Tries to keep outbound traffic under the given target (in MiB per 24h), 0 = no limit (default: %d)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Unsupported argument -socks found. Setting SOCKS version isn&apos;t possible anymore, only SOCKS5 proxies are supported.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+5"/>
         <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: %s)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+40"/>
+        <location line="+3"/>
+        <source>Username and hashed password for JSON-RPC connections. The field &lt;userpw&gt; comes in the format: &lt;USERNAME&gt;:&lt;SALT&gt;$&lt;HASH&gt;. A canonical python script is included in share/rpcuser. This option can be specified multiple times</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+29"/>
         <source>(default: %s)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+7"/>
-        <source>Acceptable ciphers (default: %s)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+4"/>
+        <location line="+10"/>
         <source>Always query for peer addresses via DNS lookup (default: %u)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+24"/>
+        <location line="+27"/>
         <source>Error loading wallet.dat</source>
         <translation>Error loading wallet.dat</translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="+10"/>
         <source>Generate coins (default: %u)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4403,7 +4605,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Zetacoin Alert&quot; admin@foo
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+3"/>
         <source>Include IP addresses in debug output (default: %u)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4413,7 +4615,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Zetacoin Alert&quot; admin@foo
         <translation>Invalid -proxy address: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+9"/>
         <source>Listen for JSON-RPC connections on &lt;port&gt; (default: %u or testnet: %u)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4448,7 +4650,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Zetacoin Alert&quot; admin@foo
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+8"/>
         <source>Relay and mine data carrier transactions (default: %u)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4458,22 +4660,12 @@ for example: alertnotify=echo %%s | mail -s &quot;Zetacoin Alert&quot; admin@foo
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+6"/>
-        <source>Server certificate file (default: %s)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Server private key (default: %s)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+3"/>
+        <location line="+7"/>
         <source>Set key pool size to &lt;n&gt; (default: %u)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
         <source>Set minimum block size in bytes (default: %u)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4483,7 +4675,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Zetacoin Alert&quot; admin@foo
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+4"/>
         <source>Specify configuration file (default: %s)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4503,17 +4695,17 @@ for example: alertnotify=echo %%s | mail -s &quot;Zetacoin Alert&quot; admin@foo
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+4"/>
         <source>Threshold for disconnecting misbehaving peers (default: %u)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+9"/>
         <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
         <translation>Unknown network specified in -onlynet: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="-111"/>
+        <location line="-107"/>
         <source>Cannot resolve -bind address: &apos;%s&apos;</source>
         <translation>Cannot resolve -bind address: &apos;%s&apos;</translation>
     </message>
@@ -4533,22 +4725,22 @@ for example: alertnotify=echo %%s | mail -s &quot;Zetacoin Alert&quot; admin@foo
         <translation>Insufficient funds</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+14"/>
         <source>Loading block index...</source>
         <translation>Loading block index...</translation>
     </message>
     <message>
-        <location line="-59"/>
+        <location line="-61"/>
         <source>Add a node to connect to and attempt to keep the connection open</source>
         <translation>Add a node to connect to and attempt to keep the connection open</translation>
     </message>
     <message>
-        <location line="+60"/>
+        <location line="+62"/>
         <source>Loading wallet...</source>
         <translation>Loading wallet...</translation>
     </message>
     <message>
-        <location line="-54"/>
+        <location line="-55"/>
         <source>Cannot downgrade wallet</source>
         <translation>Cannot downgrade wallet</translation>
     </message>
@@ -4563,12 +4755,12 @@ for example: alertnotify=echo %%s | mail -s &quot;Zetacoin Alert&quot; admin@foo
         <translation>Rescanning...</translation>
     </message>
     <message>
-        <location line="-61"/>
+        <location line="-63"/>
         <source>Done loading</source>
         <translation>Done loading</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+13"/>
         <source>Error</source>
         <translation>Error</translation>
     </message>

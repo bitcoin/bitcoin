@@ -1,4 +1,4 @@
-<TS language="sq" version="2.0">
+<TS language="sq" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -28,10 +28,6 @@
     <message>
         <source>Delete the currently selected address from the list</source>
         <translation>Fshi adresen e selektuar nga lista</translation>
-    </message>
-    <message>
-        <source>Export the data in the current tab to a file</source>
-        <translation>Eksporto të dhënat e skedës korrente në një skedar</translation>
     </message>
     <message>
         <source>&amp;Delete</source>
@@ -171,6 +167,9 @@
         <source>Wallet decryption failed</source>
         <translation>Dekriptimi i portofolit dështoi</translation>
     </message>
+    </context>
+<context>
+    <name>BanTableModel</name>
     </context>
 <context>
     <name>BitcoinGUI</name>
@@ -476,7 +475,7 @@
         <source>Unknown</source>
         <translation>i/e panjohur</translation>
     </message>
-    </context>
+</context>
 <context>
     <name>ReceiveCoinsDialog</name>
     <message>
@@ -791,10 +790,6 @@
 </context>
 <context>
     <name>WalletView</name>
-    <message>
-        <source>Export the data in the current tab to a file</source>
-        <translation>Eksporto të dhënat e skedës korrente në një skedar</translation>
-    </message>
     </context>
 <context>
     <name>bitcoin-core</name>

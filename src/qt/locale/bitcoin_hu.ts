@@ -1,4 +1,4 @@
-<TS language="hu" version="2.0">
+<TS language="hu" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -161,7 +161,7 @@
     </message>
     <message>
         <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR ZETACOINS&lt;/b&gt;!</source>
-        <translation>Figyelem: ha titkosítod a tárcát és elveszted a jelszavad, akkor &lt;b&gt;AZ ÖSSZES BITCOINOD ELVESZIK!&lt;/b&gt;</translation>
+        <translation>Figyelem: ha titkosítod a tárcát és elveszted a jelszavad, akkor &lt;b&gt;AZ ÖSSZES ZETACOINOD ELVESZIK!&lt;/b&gt;</translation>
     </message>
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
@@ -216,6 +216,9 @@
         <translation>Jelszó megváltoztatva.</translation>
     </message>
 </context>
+<context>
+    <name>BanTableModel</name>
+    </context>
 <context>
     <name>BitcoinGUI</name>
     <message>
@@ -395,8 +398,8 @@
         <translation>&amp;A Zetacoin Core-ról</translation>
     </message>
     <message>
-        <source>Modify configuration options for Bitcoin Core</source>
-        <translation>Konfigurációs opciók módosítása a Bitcoin Core-hoz</translation>
+        <source>Modify configuration options for Zetacoin Core</source>
+        <translation>Konfigurációs opciók módosítása a Zetacoin Core-hoz</translation>
     </message>
     <message>
         <source>Show the list of used sending addresses and labels</source>
@@ -419,8 +422,8 @@
         <translation>A Zetacoin Core súgóüzenet megjelenítése a Zetacoin lehetséges parancssori kapcsolóival.</translation>
     </message>
     <message numerus="yes">
-        <source>%n active connection(s) to Bitcoin network</source>
-        <translation><numerusform>%n aktív kapcsolat a Bitcoin hálózathoz</numerusform><numerusform>%n aktív kapcsolat a Bitcoin hálózathoz</numerusform></translation>
+        <source>%n active connection(s) to Zetacoin network</source>
+        <translation><numerusform>%n aktív kapcsolat a Zetacoin hálózathoz</numerusform><numerusform>%n aktív kapcsolat a Zetacoin hálózathoz</numerusform></translation>
     </message>
     <message>
         <source>No block source available...</source>
@@ -863,7 +866,7 @@
         <source>command-line options</source>
         <translation>parancssoros opciók</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>Intro</name>
     <message>
@@ -957,12 +960,8 @@
         <translation>A proxy IP címe (pl.: IPv4: 127.0.0.1 / IPv6: ::1)</translation>
     </message>
     <message>
-        <source>The user interface language can be set here. This setting will take effect after restarting Bitcoin Core.</source>
-        <translation>Itt beállíthatod a kezelőfelület nyelvét. A beállítás a Bitcoin újraindítása után lép érvénybe.</translation>
-    </message>
-    <message>
-        <source>Third party transaction URLs</source>
-        <translation>Harmadik fél tranzakció URL-ek</translation>
+        <source>The user interface language can be set here. This setting will take effect after restarting Zetacoin Core.</source>
+        <translation>Itt beállíthatod a kezelőfelület nyelvét. A beállítás a Zetacoin újraindítása után lép érvénybe.</translation>
     </message>
     <message>
         <source>Reset all client options to default.</source>
@@ -1011,6 +1010,18 @@
     <message>
         <source>Port of the proxy (e.g. 9050)</source>
         <translation>Proxy portja (pl.: 9050)</translation>
+    </message>
+    <message>
+        <source>IPv4</source>
+        <translation>IPv4</translation>
+    </message>
+    <message>
+        <source>IPv6</source>
+        <translation>IPv6</translation>
+    </message>
+    <message>
+        <source>Tor</source>
+        <translation>Tor</translation>
     </message>
     <message>
         <source>&amp;Window</source>
@@ -1169,8 +1180,8 @@
         <translation>Összeg</translation>
     </message>
     <message>
-        <source>Enter a Bitcoin address (e.g. %1)</source>
-        <translation>Ad meg egy Bitcoin címet (pl: %1)</translation>
+        <source>Enter a Zetacoin address (e.g. %1)</source>
+        <translation>Ad meg egy Zetacoin címet (pl: %1)</translation>
     </message>
     <message>
         <source>%1 d</source>
@@ -1279,6 +1290,10 @@
         <translation>Aktuális blokkok száma</translation>
     </message>
     <message>
+        <source>Memory usage</source>
+        <translation>Memóriahasználat</translation>
+    </message>
+    <message>
         <source>Received</source>
         <translation>Fogadott</translation>
     </message>
@@ -1317,14 +1332,6 @@
     <message>
         <source>Last Receive</source>
         <translation>Legutóbbi fogadás</translation>
-    </message>
-    <message>
-        <source>Bytes Sent</source>
-        <translation>Küldött bájtok</translation>
-    </message>
-    <message>
-        <source>Bytes Received</source>
-        <translation>Fogadott bájtok</translation>
     </message>
     <message>
         <source>Ping Time</source>
@@ -1375,6 +1382,22 @@
         <translation>Konzol törlése</translation>
     </message>
     <message>
+        <source>1 &amp;hour</source>
+        <translation>1 &amp;óra</translation>
+    </message>
+    <message>
+        <source>1 &amp;day</source>
+        <translation>1 &amp;nap</translation>
+    </message>
+    <message>
+        <source>1 &amp;week</source>
+        <translation>1 &amp;hét</translation>
+    </message>
+    <message>
+        <source>1 &amp;year</source>
+        <translation>1 &amp;év</translation>
+    </message>
+    <message>
         <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
         <translation>Navigálhat a fel és le nyilakkal, és &lt;b&gt;Ctrl-L&lt;/b&gt; -vel törölheti a képernyőt.</translation>
     </message>
@@ -1415,12 +1438,16 @@
         <translation>Kimenő</translation>
     </message>
     <message>
-        <source>Unknown</source>
-        <translation>Ismeretlen</translation>
+        <source>Yes</source>
+        <translation>Igen</translation>
     </message>
     <message>
-        <source>Fetching...</source>
-        <translation>Begyüjtés</translation>
+        <source>No</source>
+        <translation>Nem</translation>
+    </message>
+    <message>
+        <source>Unknown</source>
+        <translation>Ismeretlen</translation>
     </message>
 </context>
 <context>
@@ -1727,8 +1754,8 @@
         <translation>A fizetési kérelem lejárt</translation>
     </message>
     <message>
-        <source>Warning: Invalid Bitcoin address</source>
-        <translation>Figyelmeztetés: Érvénytelen Bitcoin cím</translation>
+        <source>Warning: Invalid Zetacoin address</source>
+        <translation>Figyelmeztetés: Érvénytelen Zetacoin cím</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -2326,21 +2353,12 @@
 </translation>
     </message>
     <message>
-        <source>Use the test network</source>
-        <translation>Teszthálózat használata
-</translation>
-    </message>
-    <message>
         <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
         <translation>Kívülről érkező kapcsolatok elfogadása (alapértelmezett: 1, ha nem használt a -proxy vagy a -connect)</translation>
     </message>
     <message>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
         <translation>Parancs, amit akkor hajt végre, amikor egy tárca-tranzakció megváltozik  (%s a parancsban lecserélődik a blokk TxID-re)</translation>
-    </message>
-    <message>
-        <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
-        <translation>Figyelem: a -paytxfee nagyon magas.  Ennyi tranzakciós díjat fogsz fizetni, ha elküldöd a tranzakciót.</translation>
     </message>
     <message>
         <source>Connect only to the specified node(s)</source>
@@ -2411,10 +2429,6 @@
         <translation>Külső cím (-whitebind address) feloldása nem sikerült: '%s'</translation>
     </message>
     <message>
-        <source>Choose data directory on startup (default: 0)</source>
-        <translation>Adatkönyvtár kiválasztása induláskor (alapbeállítás: 0)</translation>
-    </message>
-    <message>
         <source>Copyright (C) 2009-%i The Zetacoin Core Developers</source>
         <translation>Copyright (C) 2009-%i A Zetacoin Core Fejlesztői</translation>
     </message>
@@ -2443,25 +2457,8 @@
         <translation>trace/debug információ küldése a konzolra a debog.log fájl helyett</translation>
     </message>
     <message>
-        <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation>SLL gyökér-igazolások megadása fizetési kérelmekhez (alapértelmezett: -system-)</translation>
-    </message>
-    <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>Nyelvbeállítás, például "de_DE" (alapértelmezett: rendszer nyelve)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>Indítóképernyő mutatása induláskor (alapértelmezett: 1)</translation>
-    </message>
-    <message>
         <source>Signing transaction failed</source>
         <translation>Tranzakció aláírása sikertelen</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>Indítás lekicsinyítve
-</translation>
     </message>
     <message>
         <source>This is experimental software.</source>
@@ -2480,14 +2477,6 @@
         <translation>Túl nagy tranzakció</translation>
     </message>
     <message>
-        <source>UI Options:</source>
-        <translation>Kezelőfelület beállításai:</translation>
-    </message>
-    <message>
-        <source>Use UPnP to map the listening port (default: 1 when listening)</source>
-        <translation>UPnP-használat engedélyezése a figyelő port feltérképezésénél (default: 1 when listening)</translation>
-    </message>
-    <message>
         <source>Username for JSON-RPC connections</source>
         <translation>Felhasználói név JSON-RPC csatlakozásokhoz
 </translation>
@@ -2504,20 +2493,6 @@
     <message>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>Parancs, amit akkor hajt végre, amikor a legjobb blokk megváltozik (%s a cmd-ban lecserélődik a blokk hash-re)</translation>
-    </message>
-    <message>
-        <source>Upgrade wallet to latest format</source>
-        <translation>A Tárca frissítése a legfrissebb formátumra</translation>
-    </message>
-    <message>
-        <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>Blokklánc újraszkennelése hiányzó tárca-tranzakciók után
-</translation>
-    </message>
-    <message>
-        <source>Use OpenSSL (https) for JSON-RPC connections</source>
-        <translation>OpenSSL (https) használata JSON-RPC csatalkozásokhoz
-</translation>
     </message>
     <message>
         <source>This help message</source>

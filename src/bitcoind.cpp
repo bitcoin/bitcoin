@@ -1,19 +1,24 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2013 The Bitcoin Core developers
+// Copyright (c) 2009-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "chainparams.h"
 #include "clientversion.h"
 #include "rpcserver.h"
 #include "init.h"
-#include "main.h"
 #include "noui.h"
 #include "scheduler.h"
 #include "util.h"
+#include "httpserver.h"
+#include "httprpc.h"
+#include "rpcserver.h"
 
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/thread.hpp>
+
+#include <stdio.h>
 
 /* Introduction text for doxygen: */
 
@@ -44,7 +49,7 @@ void WaitForShutdown(boost::thread_group* threadGroup)
     }
     if (threadGroup)
     {
-        threadGroup->interrupt_all();
+        Interrupt(*threadGroup);
         threadGroup->join_all();
     }
 }
@@ -102,8 +107,10 @@ bool AppInit(int argc, char* argv[])
             return false;
         }
         // Check for -testnet or -regtest parameter (Params() calls are only valid after this clause)
-        if (!SelectParamsFromCommandLine()) {
-            fprintf(stderr, "Error: Invalid combination of -regtest and -testnet.\n");
+        try {
+            SelectParams(ChainNameFromCommandLine());
+        } catch (const std::exception& e) {
+            fprintf(stderr, "Error: %s\n", e.what());
             return false;
         }
 
@@ -144,6 +151,9 @@ bool AppInit(int argc, char* argv[])
 #endif
         SoftSetBoolArg("-server", true);
 
+        // Set this early so that parameter interactions go to console
+        InitLogging();
+        InitParameterInteraction();
         fRet = AppInit2(threadGroup, scheduler);
     }
     catch (const std::exception& e) {
@@ -154,7 +164,7 @@ bool AppInit(int argc, char* argv[])
 
     if (!fRet)
     {
-        threadGroup.interrupt_all();
+        Interrupt(threadGroup);
         // threadGroup.join_all(); was left out intentionally here, because we didn't re-test all of
         // the startup-failure cases to make sure they don't result in a hang due to some
         // thread-blocking-waiting-for-another-thread-during-startup case

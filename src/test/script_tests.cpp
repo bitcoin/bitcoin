@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2014 The Bitcoin Core developers
+// Copyright (c) 2011-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,11 +8,11 @@
 #include "core_io.h"
 #include "key.h"
 #include "keystore.h"
-#include "main.h"
 #include "script/script.h"
 #include "script/script_error.h"
 #include "script/sign.h"
 #include "util.h"
+#include "utilstrencodings.h"
 #include "test/test_bitcoin.h"
 
 #if defined(HAVE_CONSENSUS_LIB)
@@ -26,12 +26,10 @@
 
 #include <boost/foreach.hpp>
 #include <boost/test/unit_test.hpp>
-#include "json/json_spirit_reader_template.h"
-#include "json/json_spirit_utils.h"
-#include "json/json_spirit_writer_template.h"
+
+#include <univalue.h>
 
 using namespace std;
-using namespace json_spirit;
 
 // Uncomment if you want to output updated JSON tests.
 // #define UPDATE_JSON_TESTS
@@ -41,15 +39,15 @@ static const unsigned int flags = SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_STRICTENC;
 unsigned int ParseScriptFlags(string strFlags);
 string FormatScriptFlags(unsigned int flags);
 
-Array
+UniValue
 read_json(const std::string& jsondata)
 {
-    Value v;
+    UniValue v;
 
-    if (!read_string(jsondata, v) || v.type() != array_type)
+    if (!v.read(jsondata) || !v.isArray())
     {
         BOOST_ERROR("Parse error.");
-        return Array();
+        return UniValue(UniValue::VARR);
     }
     return v.get_array();
 }
@@ -262,7 +260,7 @@ public:
 
     TestBuilder& PushRedeem()
     {
-        DoPush(static_cast<std::vector<unsigned char> >(scriptPubKey));
+        DoPush(std::vector<unsigned char>(scriptPubKey.begin(), scriptPubKey.end()));
         return *this;
     }
 
@@ -295,10 +293,10 @@ public:
         return *this;
     }
 
-    Array GetJSON()
+    UniValue GetJSON()
     {
         DoPush();
-        Array array;
+        UniValue array(UniValue::VARR);
         array.push_back(FormatScript(spendTx.vin[0].scriptSig));
         array.push_back(FormatScript(creditTx.vout[0].scriptPubKey));
         array.push_back(FormatScriptFlags(flags));
@@ -582,14 +580,16 @@ BOOST_AUTO_TEST_CASE(script_build)
     std::set<std::string> tests_bad;
 
     {
-        Array json_good = read_json(std::string(json_tests::script_valid, json_tests::script_valid + sizeof(json_tests::script_valid)));
-        Array json_bad = read_json(std::string(json_tests::script_invalid, json_tests::script_invalid + sizeof(json_tests::script_invalid)));
+        UniValue json_good = read_json(std::string(json_tests::script_valid, json_tests::script_valid + sizeof(json_tests::script_valid)));
+        UniValue json_bad = read_json(std::string(json_tests::script_invalid, json_tests::script_invalid + sizeof(json_tests::script_invalid)));
 
-        BOOST_FOREACH(Value& tv, json_good) {
-            tests_good.insert(write_string(Value(tv.get_array()), true));
+        for (unsigned int idx = 0; idx < json_good.size(); idx++) {
+            const UniValue& tv = json_good[idx];
+            tests_good.insert(tv.get_array().write());
         }
-        BOOST_FOREACH(Value& tv, json_bad) {
-            tests_bad.insert(write_string(Value(tv.get_array()), true));
+        for (unsigned int idx = 0; idx < json_bad.size(); idx++) {
+            const UniValue& tv = json_bad[idx];
+            tests_bad.insert(tv.get_array().write());
         }
     }
 
@@ -598,7 +598,7 @@ BOOST_AUTO_TEST_CASE(script_build)
 
     BOOST_FOREACH(TestBuilder& test, good) {
         test.Test(true);
-        std::string str = write_string(Value(test.GetJSON()), true);
+        std::string str = test.GetJSON().write();
 #ifndef UPDATE_JSON_TESTS
         if (tests_good.count(str) == 0) {
             BOOST_CHECK_MESSAGE(false, "Missing auto script_valid test: " + test.GetComment());
@@ -608,7 +608,7 @@ BOOST_AUTO_TEST_CASE(script_build)
     }
     BOOST_FOREACH(TestBuilder& test, bad) {
         test.Test(false);
-        std::string str = write_string(Value(test.GetJSON()), true);
+        std::string str = test.GetJSON().write();
 #ifndef UPDATE_JSON_TESTS
         if (tests_bad.count(str) == 0) {
             BOOST_CHECK_MESSAGE(false, "Missing auto script_invalid test: " + test.GetComment());
@@ -634,12 +634,11 @@ BOOST_AUTO_TEST_CASE(script_valid)
     // Inner arrays are [ "scriptSig", "scriptPubKey", "flags" ]
     // ... where scriptSig and scriptPubKey are stringified
     // scripts.
-    Array tests = read_json(std::string(json_tests::script_valid, json_tests::script_valid + sizeof(json_tests::script_valid)));
+    UniValue tests = read_json(std::string(json_tests::script_valid, json_tests::script_valid + sizeof(json_tests::script_valid)));
 
-    BOOST_FOREACH(Value& tv, tests)
-    {
-        Array test = tv.get_array();
-        string strTest = write_string(tv, false);
+    for (unsigned int idx = 0; idx < tests.size(); idx++) {
+        UniValue test = tests[idx];
+        string strTest = test.write();
         if (test.size() < 3) // Allow size > 3; extra stuff ignored (useful for comments)
         {
             if (test.size() != 1) {
@@ -660,13 +659,12 @@ BOOST_AUTO_TEST_CASE(script_valid)
 BOOST_AUTO_TEST_CASE(script_invalid)
 {
     // Scripts that should evaluate as invalid
-    Array tests = read_json(std::string(json_tests::script_invalid, json_tests::script_invalid + sizeof(json_tests::script_invalid)));
+    UniValue tests = read_json(std::string(json_tests::script_invalid, json_tests::script_invalid + sizeof(json_tests::script_invalid)));
 
-    BOOST_FOREACH(Value& tv, tests)
-    {
-        Array test = tv.get_array();
-        string strTest = write_string(tv, false);
-        if (test.size() < 3) // Allow size > 3; extra stuff ignored (useful for comments)
+    for (unsigned int idx = 0; idx < tests.size(); idx++) {
+        UniValue test = tests[idx];
+        string strTest = test.write();
+        if (test.size() < 3) // Allow size > 2; extra stuff ignored (useful for comments)
         {
             if (test.size() != 1) {
                 BOOST_ERROR("Bad test: " << strTest);
@@ -842,7 +840,7 @@ BOOST_AUTO_TEST_CASE(script_CHECKMULTISIG23)
     CScript badsig6 = sign_multisig(scriptPubKey23, keys, txTo23);
     BOOST_CHECK(!VerifyScript(badsig6, scriptPubKey23, flags, MutableTransactionSignatureChecker(&txTo23, 0), &err));
     BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_INVALID_STACK_OPERATION, ScriptErrorString(err));
-}    
+}
 
 BOOST_AUTO_TEST_CASE(script_combineSigs)
 {
@@ -894,7 +892,7 @@ BOOST_AUTO_TEST_CASE(script_combineSigs)
     combined = CombineSignatures(scriptPubKey, txTo, 0, scriptSigCopy, scriptSig);
     BOOST_CHECK(combined == scriptSigCopy || combined == scriptSig);
     // dummy scriptSigCopy with placeholder, should always choose non-placeholder:
-    scriptSigCopy = CScript() << OP_0 << static_cast<vector<unsigned char> >(pkSingle);
+    scriptSigCopy = CScript() << OP_0 << vector<unsigned char>(pkSingle.begin(), pkSingle.end());
     combined = CombineSignatures(scriptPubKey, txTo, 0, scriptSigCopy, scriptSig);
     BOOST_CHECK(combined == scriptSig);
     combined = CombineSignatures(scriptPubKey, txTo, 0, scriptSig, scriptSigCopy);
@@ -983,6 +981,36 @@ BOOST_AUTO_TEST_CASE(script_IsPushOnly_on_invalid_scripts)
     // the invalid push. Still, it doesn't hurt to test it explicitly.
     static const unsigned char direct[] = { 1 };
     BOOST_CHECK(!CScript(direct, direct+sizeof(direct)).IsPushOnly());
+}
+
+BOOST_AUTO_TEST_CASE(script_GetScriptAsm)
+{
+    BOOST_CHECK_EQUAL("OP_CHECKLOCKTIMEVERIFY", ScriptToAsmStr(CScript() << OP_NOP2, true));
+    BOOST_CHECK_EQUAL("OP_CHECKLOCKTIMEVERIFY", ScriptToAsmStr(CScript() << OP_CHECKLOCKTIMEVERIFY, true));
+    BOOST_CHECK_EQUAL("OP_CHECKLOCKTIMEVERIFY", ScriptToAsmStr(CScript() << OP_NOP2));
+    BOOST_CHECK_EQUAL("OP_CHECKLOCKTIMEVERIFY", ScriptToAsmStr(CScript() << OP_CHECKLOCKTIMEVERIFY));
+
+    string derSig("304502207fa7a6d1e0ee81132a269ad84e68d695483745cde8b541e3bf630749894e342a022100c1f7ab20e13e22fb95281a870f3dcf38d782e53023ee313d741ad0cfbc0c5090");
+    string pubKey("03b0da749730dc9b4b1f4a14d6902877a92541f5368778853d9c4a0cb7802dcfb2");
+    vector<unsigned char> vchPubKey = ToByteVector(ParseHex(pubKey));
+
+    BOOST_CHECK_EQUAL(derSig + "00 " + pubKey, ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "00")) << vchPubKey, true));
+    BOOST_CHECK_EQUAL(derSig + "80 " + pubKey, ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "80")) << vchPubKey, true));
+    BOOST_CHECK_EQUAL(derSig + "[ALL] " + pubKey, ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "01")) << vchPubKey, true));
+    BOOST_CHECK_EQUAL(derSig + "[NONE] " + pubKey, ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "02")) << vchPubKey, true));
+    BOOST_CHECK_EQUAL(derSig + "[SINGLE] " + pubKey, ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "03")) << vchPubKey, true));
+    BOOST_CHECK_EQUAL(derSig + "[ALL|ANYONECANPAY] " + pubKey, ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "81")) << vchPubKey, true));
+    BOOST_CHECK_EQUAL(derSig + "[NONE|ANYONECANPAY] " + pubKey, ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "82")) << vchPubKey, true));
+    BOOST_CHECK_EQUAL(derSig + "[SINGLE|ANYONECANPAY] " + pubKey, ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "83")) << vchPubKey, true));
+
+    BOOST_CHECK_EQUAL(derSig + "00 " + pubKey, ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "00")) << vchPubKey));
+    BOOST_CHECK_EQUAL(derSig + "80 " + pubKey, ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "80")) << vchPubKey));
+    BOOST_CHECK_EQUAL(derSig + "01 " + pubKey, ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "01")) << vchPubKey));
+    BOOST_CHECK_EQUAL(derSig + "02 " + pubKey, ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "02")) << vchPubKey));
+    BOOST_CHECK_EQUAL(derSig + "03 " + pubKey, ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "03")) << vchPubKey));
+    BOOST_CHECK_EQUAL(derSig + "81 " + pubKey, ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "81")) << vchPubKey));
+    BOOST_CHECK_EQUAL(derSig + "82 " + pubKey, ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "82")) << vchPubKey));
+    BOOST_CHECK_EQUAL(derSig + "83 " + pubKey, ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "83")) << vchPubKey));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

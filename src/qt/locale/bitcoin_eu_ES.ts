@@ -1,4 +1,4 @@
-<TS language="eu_ES" version="2.0">
+<TS language="eu_ES" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -66,12 +66,12 @@
         <translation>Helbideak jasotzen</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>Hauek dire zure Bitcoin helbideak dirua bidaltzeko. Beti egiaztatu diru-kantitatea eta jasotzeko helbidea bidali baino lehen.</translation>
+        <source>These are your Zetacoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation>Hauek dira zure Zetacoin helbideak dirua bidaltzeko. Beti egiaztatu diru-kantitatea eta jasotzeko helbidea bidali baino lehen.</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>Hauek dira zure Bitcoin helbideak dirua jasotzeko. Gomendagarria da erabiltzea jasotzeko helbide berri bat operazio bakoitzeko.</translation>
+        <source>These are your Zetacoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
+        <translation>Hauek dira zure Zetacoin helbideak dirua jasotzeko. Gomendagarria da erabiltzea jasotzeko helbide berri bat operazio bakoitzeko.</translation>
     </message>
     <message>
         <source>Copy &amp;Label</source>
@@ -160,20 +160,20 @@
         <translation>Berretsi zorroaren enkriptazioa</translation>
     </message>
     <message>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
-        <translation>Abisua: Zuk enkriptatzen baduzu zure diruzorroa eta zure pasahitza galtzen baduzu, &lt;b&gt;BITCOIN GUZTIAK GALDUKO DITUZU&lt;/b&gt;!</translation>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR ZETACOINS&lt;/b&gt;!</source>
+        <translation>Abisua: Zuk enkriptatzen baduzu zure diruzorroa eta zure pasahitza galtzen baduzu, &lt;b&gt;ZETACOIN GUZTIAK GALDUKO DITUZU&lt;/b&gt;!</translation>
     </message>
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
         <translation>Seguru zaude nahi duzula zure diruzorroa enkriptatu?</translation>
     </message>
     <message>
-        <source>Bitcoin Core will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>Bitcoin Core orain itxiko da enkriptazio prozezua amaitzeko. Gogoratu enkriptatzean zure diruzorroa ez duzula guztiz babesten zure Bitcoinak lapurretatik infektatzen zure ordenagailua Malwareekin.</translation>
+        <source>Zetacoin Core will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your zetacoins from being stolen by malware infecting your computer.</source>
+        <translation>Zetacoin Core orain itxiko da enkriptazio prozezua amaitzeko. Gogoratu enkriptatzean zure diruzorroa ez duzula guztiz babesten zure Zetacoinak lapurretatik infektatzen zure ordenagailua Malwareekin.</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
-        <translation>GARRANTZITSUA: Aurreko seguritate-kopiak ordeztuko dire berriekin, enkriptatutak. Segurtasun arrazoigaitik, aurreko kopiak ezin dira erabili hasiko zarenean zure diruzorro enkriptatu berriarekin</translation>
+        <translation>GARRANTZITSUA: Aurreko seguritate-kopiak ordeztuko dire berriekin, enkriptatutak. Segurtasun arrazoigaitik, aurreko kopiak ezin dira erabili hasiko zarenean zure diruzorro enkriptatu berriarekin.</translation>
     </message>
     <message>
         <source>Wallet encrypted</source>
@@ -203,6 +203,9 @@
         <source>Wallet decryption failed</source>
         <translation>Zorroaren desenkriptazioak huts egin du</translation>
     </message>
+    </context>
+<context>
+    <name>BanTableModel</name>
     </context>
 <context>
     <name>BitcoinGUI</name>

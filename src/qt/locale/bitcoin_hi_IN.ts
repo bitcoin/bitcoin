@@ -117,6 +117,9 @@
     </message>
     </context>
 <context>
+    <name>BanTableModel</name>
+    </context>
+<context>
     <name>BitcoinGUI</name>
     <message>
         <source>Synchronizing with network...</source>
@@ -828,10 +831,6 @@
     <message>
         <source>Run in the background as a daemon and accept commands</source>
         <translation>बैकग्राउंड में डेमॉन बन कर रन करे तथा कमांड्स स्वीकार करें </translation>
-    </message>
-    <message>
-        <source>Use the test network</source>
-        <translation>टेस्ट नेटवर्क का इस्तेमाल करे </translation>
     </message>
     <message>
         <source>Verifying blocks...</source>

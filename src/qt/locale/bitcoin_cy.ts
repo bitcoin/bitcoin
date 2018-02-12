@@ -1,4 +1,4 @@
-<TS language="cy" version="2.0">
+<TS language="cy" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -149,6 +149,9 @@
     </message>
     </context>
 <context>
+    <name>BanTableModel</name>
+    </context>
+<context>
     <name>BitcoinGUI</name>
     <message>
         <source>Synchronizing with network...</source>
@@ -211,8 +214,8 @@
         <translation>Newid y cyfrinymadrodd a ddefnyddiwyd ar gyfer amgryptio'r waled</translation>
     </message>
     <message>
-        <source>Bitcoin</source>
-        <translation>Bitcoin</translation>
+        <source>Zetacoin</source>
+        <translation>Zetacoin</translation>
     </message>
     <message>
         <source>Wallet</source>
@@ -227,12 +230,12 @@
         <translation>&amp;Derbyn</translation>
     </message>
     <message>
-        <source>Show information about Bitcoin Core</source>
-        <translation>Dangos gwybodaeth am Graidd Bitcoin</translation>
+        <source>Show information about Zetacoin Core</source>
+        <translation>Dangos gwybodaeth am Graidd Zetacoin</translation>
     </message>
     <message>
         <source>&amp;Show / Hide</source>
-        <translation>&amp;Dangod / Cuddio</translation>
+        <translation>&amp;Dangos / Cuddio</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -251,16 +254,32 @@
         <translation>Bar offer tabiau</translation>
     </message>
     <message>
-        <source>Bitcoin Core</source>
-        <translation>Craidd Bitcoin</translation>
+        <source>Zetacoin Core</source>
+        <translation>Craidd Zetacoin</translation>
     </message>
     <message>
-        <source>&amp;About Bitcoin Core</source>
-        <translation>&amp;Ynghylch Craidd Bitcoin</translation>
+        <source>&amp;About Zetacoin Core</source>
+        <translation>&amp;Ynghylch Craidd Zetacoin</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n hour(s)</source>
+        <translation><numerusform>%n awr</numerusform><numerusform>%n awr</numerusform><numerusform>%n awr</numerusform><numerusform>%n awr</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n day(s)</source>
+        <translation><numerusform>%n dydd</numerusform><numerusform>%n dydd</numerusform><numerusform>%n dydd</numerusform><numerusform>%n dydd</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n week(s)</source>
+        <translation><numerusform>%n wythnos</numerusform><numerusform>%n wythnos</numerusform><numerusform>%n wythnos</numerusform><numerusform>%n wythnos</numerusform></translation>
     </message>
     <message>
         <source>%1 and %2</source>
         <translation>%1 a %2</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n year(s)</source>
+        <translation><numerusform>%n blwydd</numerusform><numerusform>%n blwydd</numerusform><numerusform>%n blwydd</numerusform><numerusform>%n blwydd</numerusform></translation>
     </message>
     <message>
         <source>Error</source>
@@ -406,12 +425,12 @@
 <context>
     <name>HelpMessageDialog</name>
     <message>
-        <source>Bitcoin Core</source>
-        <translation>Craidd Bitcoin</translation>
+        <source>Zetacoin Core</source>
+        <translation>Craidd Zetacoin</translation>
     </message>
     <message>
-        <source>About Bitcoin Core</source>
-        <translation>Ynghylch Craidd Bitcoin</translation>
+        <source>About Zetacoin Core</source>
+        <translation>Ynghylch Craidd Zetacoin</translation>
     </message>
     <message>
         <source>Usage:</source>
@@ -425,12 +444,12 @@
         <translation>Croeso</translation>
     </message>
     <message>
-        <source>Welcome to Bitcoin Core.</source>
-        <translation>Croeso i Graidd Bitcoin</translation>
+        <source>Welcome to Zetacoin Core.</source>
+        <translation>Croeso i Graidd Zetacoin</translation>
     </message>
     <message>
-        <source>Bitcoin Core</source>
-        <translation>Craidd Bitcoin</translation>
+        <source>Zetacoin Core</source>
+        <translation>Craidd Zetacoin</translation>
     </message>
     <message>
         <source>Error</source>
@@ -461,6 +480,18 @@
     <message>
         <source>W&amp;allet</source>
         <translation>W&amp;aled</translation>
+    </message>
+    <message>
+        <source>IPv4</source>
+        <translation>IPv4</translation>
+    </message>
+    <message>
+        <source>IPv6</source>
+        <translation>IPv6</translation>
+    </message>
+    <message>
+        <source>Tor</source>
+        <translation>Tor</translation>
     </message>
     <message>
         <source>&amp;Window</source>
@@ -633,12 +664,12 @@
 <context>
     <name>SplashScreen</name>
     <message>
-        <source>Bitcoin Core</source>
-        <translation>Craidd Bitcoin</translation>
+        <source>Zetacoin Core</source>
+        <translation>Craidd Zetacoin</translation>
     </message>
     <message>
-        <source>The Bitcoin Core developers</source>
-        <translation>Datblygwyr Graidd Bitcoin</translation>
+        <source>The Zetacoin Core developers</source>
+        <translation>Datblygwyr Graidd Zetacoin</translation>
     </message>
     <message>
         <source>[testnet]</source>

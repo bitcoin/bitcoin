@@ -1,4 +1,4 @@
-<TS language="fa" version="2.0">
+<TS language="fa" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -217,6 +217,9 @@
     </message>
 </context>
 <context>
+    <name>BanTableModel</name>
+    </context>
+<context>
     <name>BitcoinGUI</name>
     <message>
         <source>Sign &amp;message...</source>
@@ -417,6 +420,14 @@
     <message numerus="yes">
         <source>%n week(s)</source>
         <translation><numerusform>%n هفته</numerusform></translation>
+    </message>
+    <message>
+        <source>%1 and %2</source>
+        <translation>%1 و %2</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n year(s)</source>
+        <translation><numerusform>%n سال</numerusform></translation>
     </message>
     <message>
         <source>%1 behind</source>
@@ -713,7 +724,7 @@
         <source>command-line options</source>
         <translation>گزینه‌های خط فرمان</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>Intro</name>
     <message>
@@ -743,6 +754,10 @@
     <message>
         <source>Error</source>
         <translation>خطا</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n GB of free space available</source>
+        <translation><numerusform>%n گیگابایت فضا موجود است</numerusform></translation>
     </message>
     </context>
 <context>
@@ -1072,7 +1087,7 @@
         <source>Unknown</source>
         <translation>ناشناخته</translation>
     </message>
-    </context>
+</context>
 <context>
     <name>ReceiveCoinsDialog</name>
     <message>
@@ -1895,10 +1910,6 @@
         <translation>اجرا در پشت زمینه به‌صورت یک سرویس و پذیرش دستورات</translation>
     </message>
     <message>
-        <source>Use the test network</source>
-        <translation>استفاده از شبکهٔ آزمایش</translation>
-    </message>
-    <message>
         <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
         <translation>پذیرش اتصالات از بیرون (پیش فرض:1 بدون پراکسی یا اتصال)</translation>
     </message>
@@ -1913,10 +1924,6 @@
     <message>
         <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
         <translation>این یک نسخه ی آزمایشی است - با مسئولیت خودتان از آن استفاده کنید -  آن را در معدن و بازرگانی بکار نگیرید.</translation>
-    </message>
-    <message>
-        <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
-        <translation>هشدار: مبلغ paytxfee بسیار بالایی تنظیم شده است! این مبلغ هزینه‌ای است که شما برای تراکنش‌ها پرداخت می‌کنید.</translation>
     </message>
     <message>
         <source>Block creation options:</source>
@@ -1967,14 +1974,6 @@
         <translation>در حال بازبینی کیف پول...</translation>
     </message>
     <message>
-        <source>Warning: Please check that your computer's date and time are correct! If your clock is wrong Zetacoin Core will not work properly.</source>
-        <translation>هشدار: تاریخ و ساعت کامپیوتر خود را بررسی کنید. اگر ساعت درست نباشد هسته بیت‌کوین به درستی کار نخواهد کرد.</translation>
-    </message>
-    <message>
-        <source>Choose data directory on startup (default: 0)</source>
-        <translation>انتخاب مسیر داده‌ها در ابتدای اجرای برنامه (پیش‌فرض: 0)</translation>
-    </message>
-    <message>
         <source>Information</source>
         <translation>اطلاعات</translation>
     </message>
@@ -1995,28 +1994,8 @@
         <translation>اطلاعات ردگیری/اشکال‌زدایی را به جای فایل لاگ اشکال‌زدایی به کنسول بفرستید</translation>
     </message>
     <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>زبان را تنظیم کنید؛ برای مثال «de_DE» (زبان پیش‌فرض محلی)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>نمایش پنجرهٔ خوشامدگویی در ابتدای اجرای برنامه (پیش‌فرض: 1)</translation>
-    </message>
-    <message>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
         <translation>فایل debug.log  را در startup مشتری کوچک کن (پیش فرض:1 اگر اشکال زدایی روی نداد)</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>اجرای برنامه به صورت کوچک‌شده</translation>
-    </message>
-    <message>
-        <source>UI Options:</source>
-        <translation>گزینه‌های رابط کاربری:</translation>
-    </message>
-    <message>
-        <source>Use UPnP to map the listening port (default: 1 when listening)</source>
-        <translation>از UPnP  برای شناسایی درگاه شنیداری استفاده کنید (پیش فرض:1 در زمان شنیدن)</translation>
     </message>
     <message>
         <source>Username for JSON-RPC connections</source>
@@ -2033,18 +2012,6 @@
     <message>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>زمانی که بهترین بلاک تغییر کرد، دستور را اجرا کن (%s در cmd با block hash جایگزین شده است)</translation>
-    </message>
-    <message>
-        <source>Upgrade wallet to latest format</source>
-        <translation>wallet  را به جدیدترین فرمت روزآمد کنید</translation>
-    </message>
-    <message>
-        <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>اسکان مجدد زنجیر بلوکها برای گم والت معامله</translation>
-    </message>
-    <message>
-        <source>Use OpenSSL (https) for JSON-RPC connections</source>
-        <translation>JSON-RPCبرای ارتباطات   استفاده کنید OpenSSL (https)</translation>
     </message>
     <message>
         <source>This help message</source>

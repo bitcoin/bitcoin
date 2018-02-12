@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2014 The Bitcoin Core developers
+// Copyright (c) 2009-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -68,6 +68,9 @@ static const int64_t nMaxActualTimespan = nAveragingTargetTimespan * (100 + nMax
 
 unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nFirstBlockTime, const Consensus::Params& params)
 {
+    if (params.fPowNoRetargeting)
+        return pindexLast->nBits;
+
     // Limit adjustment step
     int64_t nActualTimespan = pindexLast->GetBlockTime() - nFirstBlockTime;
     LogPrintf("  nHeight = %d   nActualTimespan = %d  before bounds\n", pindexLast->nHeight, nActualTimespan);

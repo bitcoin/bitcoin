@@ -1,4 +1,4 @@
-<TS language="la" version="2.0">
+<TS language="la" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -156,6 +156,9 @@
         <translation>Tessera cassidilis successa est in mutando.</translation>
     </message>
 </context>
+<context>
+    <name>BanTableModel</name>
+    </context>
 <context>
     <name>BitcoinGUI</name>
     <message>
@@ -477,7 +480,7 @@
         <source>command-line options</source>
         <translation>Optiones mandati intiantis</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>Intro</name>
     <message>
@@ -1423,10 +1426,6 @@
         <translation>Operare infere sicut daemon et mandata accipe</translation>
     </message>
     <message>
-        <source>Use the test network</source>
-        <translation>Utere rete experimentale</translation>
-    </message>
-    <message>
         <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
         <translation>Accipe conexiones externas (praedefinitum: 1 nisi -proxy neque -connect)</translation>
     </message>
@@ -1443,20 +1442,8 @@
         <translation>Hoc est prae-dimittum experimentala aedes - utere eo periculo tuo proprio - nolite utere fodendo vel applicationibus mercatoriis</translation>
     </message>
     <message>
-        <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
-        <translation>Monitio: -paytxfee constitutum valde magnum!  Hoc est merces transactionis solves si mittis transactionem.</translation>
-    </message>
-    <message>
-        <source>Warning: error reading wallet.dat! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
-        <translation>Monitio: error legendo wallet.dat!  Omnes claves recte lectae, sed data transactionum vel libri inscriptionum fortasse desint vel prava sint.</translation>
-    </message>
-    <message>
         <source>Warning: wallet.dat corrupt, data salvaged! Original wallet.dat saved as wallet.{timestamp}.bak in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
         <translation>Monitio: wallet.data corrupta, data salvata!  Originalis wallet.dat salvata ut wallet.{timestamp}.bak in %s; si pendendum tuum vel transactiones pravae sunt, oportet ab conservato restituere.</translation>
-    </message>
-    <message>
-        <source>Attempt to recover private keys from a corrupt wallet.dat</source>
-        <translation>Conare recipere claves privatas de corrupto wallet.dat</translation>
     </message>
     <message>
         <source>Block creation options:</source>
@@ -1511,10 +1498,6 @@
         <translation>Verificante cassidilem...</translation>
     </message>
     <message>
-        <source>Imports blocks from external blk000??.dat file</source>
-        <translation>Importat frusta ab externa plica blk000??.dat</translation>
-    </message>
-    <message>
         <source>Cannot resolve -whitebind address: '%s'</source>
         <translation>Non posse resolvere -whitebind inscriptionem: '%s'</translation>
     </message>
@@ -1539,24 +1522,12 @@
         <translation>Mitte informationem vestigii/debug ad terminale potius quam plicam debug.log</translation>
     </message>
     <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>Constitue linguam, exempli gratia "de_DE" (praedefinitum: lingua systematis)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>Monstra principem imaginem ad initium (praedefinitum: 1)</translation>
-    </message>
-    <message>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
         <translation>Diminue plicam debug.log ad initium clientis (praedefinitum: 1 nisi -debug)</translation>
     </message>
     <message>
         <source>Signing transaction failed</source>
         <translation>Signandum transactionis abortum est</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>Incipe minifactum ut icon</translation>
     </message>
     <message>
         <source>Transaction amount too small</source>
@@ -1569,10 +1540,6 @@
     <message>
         <source>Transaction too large</source>
         <translation>Transactio nimis magna</translation>
-    </message>
-    <message>
-        <source>Use UPnP to map the listening port (default: 1 when listening)</source>
-        <translation>Utere UPnP designare portam auscultandi (praedefinitum: 1 quando auscultans)</translation>
     </message>
     <message>
         <source>Username for JSON-RPC connections</source>
@@ -1593,18 +1560,6 @@
     <message>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>Pelle mandatum quando optissimum frustum mutat (%s in mandato substituitur ab hash frusti)</translation>
-    </message>
-    <message>
-        <source>Upgrade wallet to latest format</source>
-        <translation>Progredere cassidile ad formam recentissimam</translation>
-    </message>
-    <message>
-        <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>Iterum perlege catenam frustorum propter absentes cassidilis transactiones</translation>
-    </message>
-    <message>
-        <source>Use OpenSSL (https) for JSON-RPC connections</source>
-        <translation>Utere OpenSSL (https) pro conexionibus JSON-RPC</translation>
     </message>
     <message>
         <source>This help message</source>

@@ -21,7 +21,7 @@ License
 Zetacoin Core is released under the terms of the MIT license. See [COPYING](COPYING) for more
 information or see http://opensource.org/licenses/MIT.
 
-Development process
+Development Process
 -------------------
 
 Developers work in their own trees, then submit pull requests when they think
@@ -44,12 +44,18 @@ Testing
 
 ### Automated Testing
 
-Developers are strongly encouraged to write unit tests for new code, and to
-submit new unit tests for old code. Unit tests can be compiled and run (assuming they weren't disabled in configure) with: `make check`
+Developers are strongly encouraged to write [unit tests](/doc/unit-tests.md) for new code, and to
+submit new unit tests for old code. Unit tests can be compiled and run
+(assuming they weren't disabled in configure) with: `make check`
+
+There are also [regression and integration tests](/qa) of the RPC interface, written
+in Python, that are run automatically on the build server.
+These tests can be run with: `qa/pull-tester/rpc-tests.py`
 
 ### Manual Quality Assurance (QA) Testing
 
-Large changes should have a test plan, and should be tested by somebody other
-than the developer who wrote the code.
-See https://github.com/bitcoin/QA/ for how to create a test plan.
+Changes should be tested by somebody other than the developer who wrote the
+code. This is especially important for large or high-risk changes. It is useful
+to add a test plan to the pull request description if testing the changes is
+not straightforward.
 

@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2014 The Bitcoin Core developers
+// Copyright (c) 2011-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -17,6 +17,7 @@
 
 class AddressTableModel;
 class OptionsModel;
+class PlatformStyle;
 class RecentRequestsTableModel;
 class TransactionTableModel;
 class WalletModelTransaction;
@@ -100,7 +101,7 @@ class WalletModel : public QObject
     Q_OBJECT
 
 public:
-    explicit WalletModel(CWallet *wallet, OptionsModel *optionsModel, QObject *parent = 0);
+    explicit WalletModel(const PlatformStyle *platformStyle, CWallet *wallet, OptionsModel *optionsModel, QObject *parent = 0);
     ~WalletModel();
 
     enum StatusCode // Returned by sendCoins
@@ -186,6 +187,7 @@ public:
     UnlockContext requestUnlock();
 
     bool getPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const;
+    bool havePrivKey(const CKeyID &address) const;
     void getOutputs(const std::vector<COutPoint>& vOutpoints, std::vector<COutput>& vOutputs);
     bool isSpent(const COutPoint& outpoint) const;
     void listCoins(std::map<QString, std::vector<COutput> >& mapCoins) const;

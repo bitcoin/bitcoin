@@ -1,5 +1,5 @@
 #!/usr/bin/env python2
-# Copyright (c) 2014 The Bitcoin Core developers
+# Copyright (c) 2014-2015 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -38,7 +38,7 @@ class LongpollThread(threading.Thread):
         self.longpollid = templat['longpollid']
         # create a new connection to the node, we can't use the same
         # connection from two threads
-        self.node = AuthServiceProxy(node.url, timeout=600)
+        self.node = get_rpc_proxy(node.url, 1, timeout=600)
 
     def run(self):
         self.node.getblocktemplate({'longpollid':self.longpollid})

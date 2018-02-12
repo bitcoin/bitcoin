@@ -1,4 +1,4 @@
-<TS language="id_ID" version="2.0">
+<TS language="id_ID" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -93,11 +93,7 @@
         <source>Exporting Failed</source>
         <translation>Proses Ekspor Gagal</translation>
     </message>
-    <message>
-        <source>There was an error trying to save the address list to %1. Please try again.</source>
-        <translation>Terjadi kesalahan saat menyimpan daftar alamat ke %1. Silakan coba lagi.</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>AddressTableModel</name>
     <message>
@@ -161,19 +157,11 @@
     </message>
     <message>
         <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR ZETACOINS&lt;/b&gt;!</source>
-        <translation>Perhatian: Jika anda mengenkripsi dompet anda dan lupa kata kuncinya, anda pasti &lt;b&gt;KEHILANGAN SELURUH BITCOIN ANDA&lt;/B&gt;!</translation>
+        <translation>Perhatian: Jika anda mengenkripsi dompet anda dan lupa kata kuncinya, anda pasti &lt;b&gt;KEHILANGAN SELURUH ZETACOIN ANDA&lt;/B&gt;!</translation>
     </message>
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
         <translation>Apakah kamu yakin ingin mengenkripsi dompet anda?</translation>
-    </message>
-    <message>
-        <source>Bitcoin Core will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>Bitcoin Core akan ditutup untuk menyelesaikan proses enkripsi. Mohon diingat bahwa mengenkripsi dompet Anda tidak akan sepenuhnya melindungi bitcoin Anda dari virus atau malware yang menginfeksi komputer Anda.</translation>
-    </message>
-    <message>
-        <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
-        <translation>PENTING: Setiap back up yang sudah Anda buat sebaiknya diganti dengan data dompet Anda yang baru dan terenkripsi. Untuk alasan keamanan, data back up tidak terenkripsi yang sudah Anda buat sebelumnya tidak akan dapat digunakan setelah Anda mulai menggunakan dompet yang baru dan terenkripsi.</translation>
     </message>
     <message>
         <source>Warning: The Caps Lock key is on!</source>
@@ -182,14 +170,6 @@
     <message>
         <source>Wallet encrypted</source>
         <translation>Dompet terenkripsi</translation>
-    </message>
-    <message>
-        <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation>Masukkan kata kunci untuk dompet Anda.&lt;br/&gt;Mohon gunakan kata kunci &lt;b&gt;yang terdiri dari 10 karakter acak&lt;/b&gt;, atau &lt;b&gt;delapan atau beberapa kata lagi&lt;/b&gt;.</translation>
-    </message>
-    <message>
-        <source>Enter the old passphrase and new passphrase to the wallet.</source>
-        <translation>Masukkan kata kunci lama dan kata kunci baru dompet Anda.</translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
@@ -220,6 +200,9 @@
         <translation>Kata kunci untuk dompet berubah berhasil.</translation>
     </message>
 </context>
+<context>
+    <name>BanTableModel</name>
+    </context>
 <context>
     <name>BitcoinGUI</name>
     <message>
@@ -269,6 +252,10 @@
     <message>
         <source>&amp;Options...</source>
         <translation>&amp;Pilihan...</translation>
+    </message>
+    <message>
+        <source>&amp;Encrypt Wallet...</source>
+        <translation>&amp;Enkripsi Dompet...</translation>
     </message>
     <message>
         <source>&amp;Backup Wallet...</source>
@@ -395,10 +382,6 @@
         <translation>&amp;Mengenai Zetacoin Core</translation>
     </message>
     <message>
-        <source>Modify configuration options for Bitcoin Core</source>
-        <translation>Modifikasi pengaturan konfigurasi untuk Bitcoin Core</translation>
-    </message>
-    <message>
         <source>Show the list of used sending addresses and labels</source>
         <translation>Tampilkan daftar alamat dan label yang terkirim</translation>
     </message>
@@ -481,7 +464,8 @@
     <message>
         <source>Date: %1
 </source>
-        <translation>Tanggal: %1</translation>
+        <translation>Tanggal: %1
+</translation>
     </message>
     <message>
         <source>Amount: %1
@@ -498,7 +482,8 @@
     <message>
         <source>Label: %1
 </source>
-        <translation>Label: %1</translation>
+        <translation>Label: %1
+</translation>
     </message>
     <message>
         <source>Address: %1
@@ -557,10 +542,6 @@
         <translation>Biaya:</translation>
     </message>
     <message>
-        <source>Dust:</source>
-        <translation>Dust:</translation>
-    </message>
-    <message>
         <source>After Fee:</source>
         <translation>Dengan Biaya:</translation>
     </message>
@@ -583,14 +564,6 @@
     <message>
         <source>Amount</source>
         <translation>Nilai</translation>
-    </message>
-    <message>
-        <source>Received with label</source>
-        <translation>Diterima dengan label</translation>
-    </message>
-    <message>
-        <source>Received with address</source>
-        <translation>Diterima dengan alamat</translation>
     </message>
     <message>
         <source>Date</source>
@@ -653,10 +626,6 @@
         <translation>Salin prioritas</translation>
     </message>
     <message>
-        <source>Copy dust</source>
-        <translation>Salin dust</translation>
-    </message>
-    <message>
         <source>Copy change</source>
         <translation>Salin uang kembali</translation>
     </message>
@@ -703,22 +672,6 @@
     <message>
         <source>none</source>
         <translation>tidak satupun</translation>
-    </message>
-    <message>
-        <source>This label turns red if the transaction size is greater than 1000 bytes.</source>
-        <translation>Label ini akan menjadi merah apabila ukuran transaksi melebihi 1000 bytes.</translation>
-    </message>
-    <message>
-        <source>This label turns red if the priority is smaller than "medium".</source>
-        <translation>Label ini akan menjadi merah apabila prioritasnya lebih kecil dari "sedang"</translation>
-    </message>
-    <message>
-        <source>This label turns red if any recipient receives an amount smaller than %1.</source>
-        <translation>Label ini akan menjadi merah apabila penerima menerima jumlah yang lebih kecil dari %1.</translation>
-    </message>
-    <message>
-        <source>Can vary +/- %1 satoshi(s) per input.</source>
-        <translation>Dapat beragam +/- %1 satoshi per input.</translation>
     </message>
     <message>
         <source>yes</source>
@@ -842,10 +795,6 @@
         <translation>versi</translation>
     </message>
     <message>
-        <source>(%1-bit)</source>
-        <translation>(%1-bit)</translation>
-    </message>
-    <message>
         <source>About Zetacoin Core</source>
         <translation>Mengenai Zetacoin Core</translation>
     </message>
@@ -861,7 +810,7 @@
         <source>command-line options</source>
         <translation>pilihan perintah-baris</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>Intro</name>
     <message>
@@ -871,14 +820,6 @@
     <message>
         <source>Welcome to Zetacoin Core.</source>
         <translation>Selamat Datang ke Zetacoin Core</translation>
-    </message>
-    <message>
-        <source>As this is the first time the program is launched, you can choose where Bitcoin Core will store its data.</source>
-        <translation>Ini adalah pertama kali program ini dijalankan, Anda dapat memilih dimana Bitcoin Core menyimpan data.</translation>
-    </message>
-    <message>
-        <source>Bitcoin Core will download and store a copy of the Bitcoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
-        <translation>Bitcoin Core akan mengunduh dan menyimpan salinan dari block chain Bitcoin. Setidaknya %1GB data akan disimpan di direktori ini, dan akan terus bertambah. Dompet Anda juga akan disimpan di direktori ini.</translation>
     </message>
     <message>
         <source>Use the default data directory</source>
@@ -891,10 +832,6 @@
     <message>
         <source>Zetacoin Core</source>
         <translation>Zetacoin Core</translation>
-    </message>
-    <message>
-        <source>Error: Specified data directory "%1" cannot be created.</source>
-        <translation>Kesalahan: Direktori data "%1" tidak dapat dibuat.</translation>
     </message>
     <message>
         <source>Error</source>
@@ -939,40 +876,12 @@
         <translation>&amp;Utama</translation>
     </message>
     <message>
-        <source>Size of &amp;database cache</source>
-        <translation>Ukuran cache &amp;database</translation>
-    </message>
-    <message>
         <source>MB</source>
         <translation>MB</translation>
     </message>
     <message>
-        <source>Number of script &amp;verification threads</source>
-        <translation>Jumlah script &amp;verification threads</translation>
-    </message>
-    <message>
-        <source>Accept connections from outside</source>
-        <translation>Terima koneksi dari luar</translation>
-    </message>
-    <message>
-        <source>Allow incoming connections</source>
-        <translation>Perbolehkan koneksi masuk</translation>
-    </message>
-    <message>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
         <translation>Alamat IP proxy (cth. IPv4: 127.0.0.1 / IPv6: ::1)</translation>
-    </message>
-    <message>
-        <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Exit in the menu.</source>
-        <translation>Minimalisasi aplikasi ketika jendela ditutup. Ketika pilihan ini dipilih, aplikasi akan menutup seluruhnya jika anda memilih Keluar di menu yang tersedia.</translation>
-    </message>
-    <message>
-        <source>The user interface language can be set here. This setting will take effect after restarting Bitcoin Core.</source>
-        <translation>Bahasa interface pengguna bisa diubah disini. Pengaturan ini akan memberikan efek setelah Bitcoin Core di-restart.</translation>
-    </message>
-    <message>
-        <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
-        <translation>URL pihak ketika (misalnya sebuah block explorer) yang mumcul dalam tab transaksi sebagai konteks menu. %s dalam URL diganti dengan kode transaksi. URL dipisahkan dengan tanda vertikal |.</translation>
     </message>
     <message>
         <source>Third party transaction URLs</source>
@@ -993,18 +902,6 @@
     <message>
         <source>&amp;Network</source>
         <translation>&amp;Jaringan</translation>
-    </message>
-    <message>
-        <source>Automatically start Bitcoin Core after logging in to the system.</source>
-        <translation>Buka Bitcoin Core secara otomatis setelah Anda log-in ke sistem Anda.</translation>
-    </message>
-    <message>
-        <source>&amp;Start Bitcoin Core on system login</source>
-        <translation>&amp;Mulai Bitcoin Core saat log-in sistem</translation>
-    </message>
-    <message>
-        <source>(0 = auto, &lt;0 = leave that many cores free)</source>
-        <translation>(0 = auto, &lt;0 = leave that many cores free)</translation>
     </message>
     <message>
         <source>W&amp;allet</source>
@@ -1035,10 +932,6 @@
         <translation>Petakan port dengan &amp;UPnP</translation>
     </message>
     <message>
-        <source>Connect to the Bitcoin network through a SOCKS5 proxy.</source>
-        <translation>Hubungkan ke jaringan Bitcoin melalui SOCKS5 proxy.</translation>
-    </message>
-    <message>
         <source>Proxy &amp;IP:</source>
         <translation>IP Proxy:</translation>
     </message>
@@ -1049,6 +942,18 @@
     <message>
         <source>Port of the proxy (e.g. 9050)</source>
         <translation>Port proxy (cth. 9050)</translation>
+    </message>
+    <message>
+        <source>IPv4</source>
+        <translation>IPv4</translation>
+    </message>
+    <message>
+        <source>IPv6</source>
+        <translation>IPv6</translation>
+    </message>
+    <message>
+        <source>Tor</source>
+        <translation>Tor</translation>
     </message>
     <message>
         <source>&amp;Window</source>
@@ -1231,8 +1136,8 @@
         <translation>Nilai</translation>
     </message>
     <message>
-        <source>Enter a Bitcoin address (e.g. %1)</source>
-        <translation>Masukkan alamat Bitcoin (contoh %1)</translation>
+        <source>Enter a Zetacoin address (e.g. %1)</source>
+        <translation>Masukkan alamat Zetacoin (contoh %1)</translation>
     </message>
     <message>
         <source>%1 h</source>
@@ -1330,7 +1235,9 @@
     </message>
     <message>
         <source>User Agent</source>
-        <translation>Agen Pengguna</translation>
+        <translation>Agen Pengguna
+
+</translation>
     </message>
     <message>
         <source>Services</source>
@@ -1381,8 +1288,24 @@
         <translation>Bersihkan konsol</translation>
     </message>
     <message>
-        <source>Welcome to the Bitcoin Core RPC console.</source>
-        <translation>Selamat datang di konsol RPC Bitcoin.</translation>
+        <source>1 &amp;hour</source>
+        <translation>1 &amp;jam</translation>
+    </message>
+    <message>
+        <source>1 &amp;day</source>
+        <translation>1 &amp;hari</translation>
+    </message>
+    <message>
+        <source>1 &amp;week</source>
+        <translation>1 &amp;minggu</translation>
+    </message>
+    <message>
+        <source>1 &amp;year</source>
+        <translation>1 &amp;tahun</translation>
+    </message>
+    <message>
+        <source>Welcome to the Zetacoin Core RPC console.</source>
+        <translation>Selamat datang di konsol RPC Zetacoin.</translation>
     </message>
     <message>
         <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
@@ -1409,10 +1332,18 @@
         <translation>%1 GB</translation>
     </message>
     <message>
+        <source>Yes</source>
+        <translation>Ya</translation>
+    </message>
+    <message>
+        <source>No</source>
+        <translation>Tidak</translation>
+    </message>
+    <message>
         <source>Unknown</source>
         <translation>Tidak diketahui</translation>
     </message>
-    </context>
+</context>
 <context>
     <name>ReceiveCoinsDialog</name>
     <message>
@@ -1665,8 +1596,8 @@
         <translation>Hapus informasi dari form.</translation>
     </message>
     <message>
-        <source>Dust:</source>
-        <translation>Dust:</translation>
+        <source>Clear &amp;All</source>
+        <translation>Hapus &amp;Semua</translation>
     </message>
     <message>
         <source>Balance:</source>
@@ -1717,6 +1648,10 @@
         <translation>Salin uang kembali</translation>
     </message>
     <message>
+        <source>Total Amount %1</source>
+        <translation>Jumlah Total %1</translation>
+    </message>
+    <message>
         <source>or</source>
         <translation>atau</translation>
     </message>
@@ -1755,10 +1690,6 @@
     <message>
         <source>(no label)</source>
         <translation>(tidak ada label)</translation>
-    </message>
-    <message>
-        <source>Copy dust</source>
-        <translation>Salin dust</translation>
     </message>
     <message>
         <source>Are you sure you want to send?</source>
@@ -1888,6 +1819,10 @@
     <message>
         <source>Reset all sign message fields</source>
         <translation>Hapus semua bidang penanda pesan</translation>
+    </message>
+    <message>
+        <source>Clear &amp;All</source>
+        <translation>Hapus &amp;Semua</translation>
     </message>
     <message>
         <source>&amp;Verify Message</source>
@@ -2427,10 +2362,6 @@
         <translation>Berjalan dibelakang sebagai daemin dan menerima perintah</translation>
     </message>
     <message>
-        <source>Use the test network</source>
-        <translation>Gunakan jaringan uji</translation>
-    </message>
-    <message>
         <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
         <translation>Terima hubungan dari luar (standar: 1 kalau -proxy atau -connect tidak dipilih)</translation>
     </message>
@@ -2443,28 +2374,12 @@
         <translation>Tidak bisa mengikat dengan %s di computer ini. Kemungkinan Zetacoin Core sudah mulai.</translation>
     </message>
     <message>
-        <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
-        <translation>Peringatan: -paytxfee sangat besar! Ini adalah biaya pengiriman yang akan dibayar oleh Anda jika transaksi terkirim.</translation>
-    </message>
-    <message>
         <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>
         <translation>Peringatan: Jaringan tidak semua bersetuju! Beberapa penambang dapat persoalan.</translation>
     </message>
     <message>
         <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
         <translation>Peringatan: Kami tidak bersetujuh dengan peer-peer kami! Kemungkinan Anda harus upgrade, atau node-node lain yang harus diupgrade.</translation>
-    </message>
-    <message>
-        <source>Warning: error reading wallet.dat! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
-        <translation>Awas: wallet.dat tidak bisa dibaca! Berhasil periksakan kunci-kunci dalam arsipnya, tetapi ada kemungkinan informasi tentang transaksi atau isi-isi buku alamat salah atau terhilang.</translation>
-    </message>
-    <message>
-        <source>(default: 1)</source>
-        <translation>(pengaturan awal: 1)</translation>
-    </message>
-    <message>
-        <source>Attempt to recover private keys from a corrupt wallet.dat</source>
-        <translation>Coba memulihkan kunci-kunci pribadi dari wallet.dat yang rusak</translation>
     </message>
     <message>
         <source>Block creation options:</source>
@@ -2555,10 +2470,6 @@
         <translation>Harus membangun ulang database menggunakan -reindex supaya mengubah -txindex</translation>
     </message>
     <message>
-        <source>Imports blocks from external blk000??.dat file</source>
-        <translation>Impor blok dari eksternal berkas blk000???.dat</translation>
-    </message>
-    <message>
         <source>Cannot obtain a lock on data directory %s. Zetacoin Core is probably already running.</source>
         <translation>Tidak bisa mengunci data directory %s. Kemungkinan Zetacoin Core sudah mulai.</translation>
     </message>
@@ -2568,7 +2479,7 @@
     </message>
     <message>
         <source>Connect through SOCKS5 proxy</source>
-        <translation>Hubungkan melalui proxy SOCKS</translation>
+        <translation>Hubungkan melalui proxy SOCKS5</translation>
     </message>
     <message>
         <source>Information</source>
@@ -2595,28 +2506,12 @@
         <translation>Kirim info jejak/debug ke konsol bukan berkas debug.log</translation>
     </message>
     <message>
-        <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation>Pilih sertifikat root SSL untuk permintaan pembayaran {default: -system-)</translation>
-    </message>
-    <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>Atur bahasa, sebagai contoh "id_ID" (standar: system locale)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>Tampilkan layar pembuka saat nyala (standar: 1)</translation>
-    </message>
-    <message>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
         <translation>Mengecilkan berkas debug.log saat klien berjalan  (Standar: 1 jika tidak -debug)</translation>
     </message>
     <message>
         <source>Signing transaction failed</source>
         <translation>Tandatangani transaksi tergagal</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>Memulai terminimalisi</translation>
     </message>
     <message>
         <source>Transaction amount too small</source>
@@ -2629,10 +2524,6 @@
     <message>
         <source>Transaction too large</source>
         <translation>Transaksi terlalu besar</translation>
-    </message>
-    <message>
-        <source>UI Options:</source>
-        <translation>Pilihan UI:</translation>
     </message>
     <message>
         <source>Username for JSON-RPC connections</source>
@@ -2657,18 +2548,6 @@
     <message>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>Menjalankan perintah ketika perubahan blok terbaik (%s dalam cmd digantikan oleh hash blok)</translation>
-    </message>
-    <message>
-        <source>Upgrade wallet to latest format</source>
-        <translation>Perbarui dompet ke format terbaru</translation>
-    </message>
-    <message>
-        <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>Pindai ulang rantai-blok untuk transaksi dompet yang hilang</translation>
-    </message>
-    <message>
-        <source>Use OpenSSL (https) for JSON-RPC connections</source>
-        <translation>Gunakan OpenSSL (https) untuk hubungan JSON-RPC</translation>
     </message>
     <message>
         <source>This help message</source>

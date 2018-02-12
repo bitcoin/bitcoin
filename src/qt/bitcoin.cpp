@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2014 The Bitcoin Core developers
+// Copyright (c) 2011-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,12 +8,14 @@
 
 #include "bitcoingui.h"
 
+#include "chainparams.h"
 #include "clientmodel.h"
 #include "guiconstants.h"
 #include "guiutil.h"
 #include "intro.h"
 #include "networkstyle.h"
 #include "optionsmodel.h"
+#include "platformstyle.h"
 #include "splashscreen.h"
 #include "utilitydialog.h"
 #include "winshutdownmonitor.h"
@@ -24,7 +26,6 @@
 #endif
 
 #include "init.h"
-#include "main.h"
 #include "rpcserver.h"
 #include "scheduler.h"
 #include "ui_interface.h"
@@ -200,8 +201,10 @@ public:
     /// Create payment server
     void createPaymentServer();
 #endif
+    /// parameter interaction/setup based on rules
+    void parameterSetup();
     /// Create options model
-    void createOptionsModel();
+    void createOptionsModel(bool resetSettings);
     /// Create main window
     void createWindow(const NetworkStyle *networkStyle);
     /// Create splash screen
@@ -241,6 +244,7 @@ private:
     WalletModel *walletModel;
 #endif
     int returnValue;
+    const PlatformStyle *platformStyle;
 
     void startThread();
 };
@@ -264,13 +268,6 @@ void BitcoinCore::initialize()
     {
         qDebug() << __func__ << ": Running AppInit2 in thread";
         int rv = AppInit2(threadGroup, scheduler);
-        if(rv)
-        {
-            /* Start a dummy RPC thread if no RPC thread is active yet
-             * to handle timeouts.
-             */
-            StartDummyRPCThread();
-        }
         Q_EMIT initializeResult(rv);
     } catch (const std::exception& e) {
         handleRunawayException(&e);
@@ -284,7 +281,7 @@ void BitcoinCore::shutdown()
     try
     {
         qDebug() << __func__ << ": Running Shutdown in thread";
-        threadGroup.interrupt_all();
+        Interrupt(threadGroup);
         threadGroup.join_all();
         Shutdown();
         qDebug() << __func__ << ": Shutdown finished";
@@ -310,6 +307,16 @@ BitcoinApplication::BitcoinApplication(int &argc, char **argv):
     returnValue(0)
 {
     setQuitOnLastWindowClosed(false);
+
+    // UI per-platform customization
+    // This must be done inside the BitcoinApplication constructor, or after it, because
+    // PlatformStyle::instantiate requires a QApplication
+    std::string platformName;
+    platformName = GetArg("-uiplatform", BitcoinGUI::DEFAULT_UIPLATFORM);
+    platformStyle = PlatformStyle::instantiate(QString::fromStdString(platformName));
+    if (!platformStyle) // Fall back to "other" if specified name not found
+        platformStyle = PlatformStyle::instantiate("other");
+    assert(platformStyle);
 }
 
 BitcoinApplication::~BitcoinApplication()
@@ -330,6 +337,8 @@ BitcoinApplication::~BitcoinApplication()
 #endif
     delete optionsModel;
     optionsModel = 0;
+    delete platformStyle;
+    platformStyle = 0;
 }
 
 #ifdef ENABLE_WALLET
@@ -339,14 +348,14 @@ void BitcoinApplication::createPaymentServer()
 }
 #endif
 
-void BitcoinApplication::createOptionsModel()
+void BitcoinApplication::createOptionsModel(bool resetSettings)
 {
-    optionsModel = new OptionsModel();
+    optionsModel = new OptionsModel(NULL, resetSettings);
 }
 
 void BitcoinApplication::createWindow(const NetworkStyle *networkStyle)
 {
-    window = new BitcoinGUI(networkStyle, 0);
+    window = new BitcoinGUI(platformStyle, networkStyle, 0);
 
     pollShutdownTimer = new QTimer(window);
     connect(pollShutdownTimer, SIGNAL(timeout()), window, SLOT(detectShutdown()));
@@ -382,6 +391,12 @@ void BitcoinApplication::startThread()
     connect(this, SIGNAL(stopThread()), coreThread, SLOT(quit()));
 
     coreThread->start();
+}
+
+void BitcoinApplication::parameterSetup()
+{
+    InitLogging();
+    InitParameterInteraction();
 }
 
 void BitcoinApplication::requestInitialize()
@@ -421,6 +436,8 @@ void BitcoinApplication::initializeResult(int retval)
     returnValue = retval ? 0 : 1;
     if(retval)
     {
+        // Log this only after AppInit2 finishes, as then logging setup is guaranteed complete
+        qWarning() << "Platform customization:" << platformStyle->getName();
 #ifdef ENABLE_WALLET
         PaymentServer::LoadRootCAs();
         paymentServer->setOptionsModel(optionsModel);
@@ -432,7 +449,7 @@ void BitcoinApplication::initializeResult(int retval)
 #ifdef ENABLE_WALLET
         if(pwalletMain)
         {
-            walletModel = new WalletModel(pwalletMain, optionsModel);
+            walletModel = new WalletModel(platformStyle, pwalletMain, optionsModel);
 
             window->addWallet(BitcoinGUI::DEFAULT_WALLET, walletModel);
             window->setCurrentWallet(BitcoinGUI::DEFAULT_WALLET);
@@ -582,8 +599,10 @@ int main(int argc, char *argv[])
     // - Needs to be done before createOptionsModel
 
     // Check for -testnet or -regtest parameter (Params() calls are only valid after this clause)
-    if (!SelectParamsFromCommandLine()) {
-        QMessageBox::critical(0, QObject::tr("Zetacoin Core"), QObject::tr("Error: Invalid combination of -regtest and -testnet."));
+    try {
+        SelectParams(ChainNameFromCommandLine());
+    } catch(std::exception &e) {
+        QMessageBox::critical(0, QObject::tr("Zetacoin Core"), QObject::tr("Error: %1").arg(e.what()));
         return 1;
     }
 #ifdef ENABLE_WALLET
@@ -627,13 +646,15 @@ int main(int argc, char *argv[])
     // Install qDebug() message handler to route to debug.log
     qInstallMessageHandler(DebugMessageHandler);
 #endif
+    // Allow parameter interaction before we create the options model
+    app.parameterSetup();
     // Load GUI settings from QSettings
-    app.createOptionsModel();
+    app.createOptionsModel(mapArgs.count("-resetguisettings") != 0);
 
     // Subscribe to global signals from core
     uiInterface.InitMessage.connect(InitMessage);
 
-    if (GetBoolArg("-splash", true) && !GetBoolArg("-min", false))
+    if (GetBoolArg("-splash", DEFAULT_SPLASHSCREEN) && !GetBoolArg("-min", false))
         app.createSplashScreen(networkStyle.data());
 
     try

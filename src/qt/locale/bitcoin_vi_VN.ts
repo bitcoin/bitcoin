@@ -137,6 +137,9 @@
     </message>
     </context>
 <context>
+    <name>BanTableModel</name>
+    </context>
+<context>
     <name>BitcoinGUI</name>
     <message>
         <source>&amp;Overview</source>
@@ -725,10 +728,6 @@
     <message>
         <source>Warning</source>
         <translation>Chú ý</translation>
-    </message>
-    <message>
-        <source>on startup</source>
-        <translation>khi khởi động</translation>
     </message>
     <message>
         <source>This help message</source>

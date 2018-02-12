@@ -1,17 +1,13 @@
-<TS language="he" version="2.0">
+<TS language="he" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
-        <source>Right-click to edit address or label</source>
-        <translation>לחץ משק ימני כדי לערוך כתובת או חברה</translation>
-    </message>
-    <message>
         <source>Create a new address</source>
-        <translation>צור כתובת חדשה</translation>
+        <translation>יצירת כתובת חדשה</translation>
     </message>
     <message>
         <source>&amp;New</source>
-        <translation>&amp;חדש</translation>
+        <translation>&amp;חדשה</translation>
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
@@ -168,10 +164,6 @@
         <translation>האם אכן להצפין את הארנק?</translation>
     </message>
     <message>
-        <source>Bitcoin Core will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>ליבת ביטקוין תיסגר עכשיו כדי לסיים את תליך ההצפנה. זכור כי הצפנה אינה יכולה להגן עלייך באופן מלא מגניבה שמקורה בתוכנות זדוניות המצויות במחשב שלך.</translation>
-    </message>
-    <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
         <translation>לתשומת לבך: כל גיבוי קודם שביצעת לארנק שלך יש להחליף בקובץ הארנק המוצפן שזה עתה נוצר. מטעמי אבטחה, גיבויים קודמים של קובץ הארנק הבלתי-מוצפן יהפכו לחסרי תועלת עם התחלת השימוש בארנק החדש המוצפן.</translation>
     </message>
@@ -186,10 +178,6 @@
     <message>
         <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
         <translation>נא להזין את מילת הצופן החדשה לארנק.&lt;br/&gt;כדאי להשתמש במילת צופן המורכבת מ&lt;b&gt;עשרה תווים אקראיים ומעלה&lt;/b&gt;, או &lt;b&gt;שמונה מילים ומעלה&lt;/b&gt;.</translation>
-    </message>
-    <message>
-        <source>Enter the old passphrase and new passphrase to the wallet.</source>
-        <translation>הכנס את מילת הצופן הישנה ומילת צופן חדשה לארנק שלך.</translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
@@ -220,6 +208,9 @@
         <translation>מילת הצופן של הארנק שונתה בהצלחה.</translation>
     </message>
 </context>
+<context>
+    <name>BanTableModel</name>
+    </context>
 <context>
     <name>BitcoinGUI</name>
     <message>
@@ -427,6 +418,10 @@
         <translation>%1 ו%2</translation>
     </message>
     <message>
+        <source>%1 behind</source>
+        <translation>%1 מאחור</translation>
+    </message>
+    <message>
         <source>Last received block was generated %1 ago.</source>
         <translation>המקטע האחרון שהתקבל נוצר לפני %1.</translation>
     </message>
@@ -481,10 +476,6 @@
 <context>
     <name>CoinControlDialog</name>
     <message>
-        <source>Coin Selection</source>
-        <translation>בחירת מטבע</translation>
-    </message>
-    <message>
         <source>Quantity:</source>
         <translation>כמות:</translation>
     </message>
@@ -531,14 +522,6 @@
     <message>
         <source>Amount</source>
         <translation>כמות</translation>
-    </message>
-    <message>
-        <source>Received with label</source>
-        <translation>התקבל עם תווית</translation>
-    </message>
-    <message>
-        <source>Received with address</source>
-        <translation>התקבל עם כתובת</translation>
     </message>
     <message>
         <source>Date</source>
@@ -643,6 +626,10 @@
     <message>
         <source>lowest</source>
         <translation>הנמוך ביותר</translation>
+    </message>
+    <message>
+        <source>(%1 locked)</source>
+        <translation>(%1 נעול)</translation>
     </message>
     <message>
         <source>none</source>
@@ -793,7 +780,7 @@
         <source>command-line options</source>
         <translation>אפשרויות שורת פקודה</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>Intro</name>
     <message>
@@ -1082,10 +1069,6 @@
         <translation>המאזן הנוכחי שלך בכתובות לקריאה בלבד</translation>
     </message>
     <message>
-        <source>Spendable:</source>
-        <translation>ניתנים לבזבוז</translation>
-    </message>
-    <message>
         <source>Recent transactions</source>
         <translation>העברות אחרונות</translation>
     </message>
@@ -1153,16 +1136,8 @@
         <translation>לא ניתן לקרוא את קובץ בקשת התשלום! מצב כזה יכול לקרות בעקבות קובץ בקשת תשלום פגום.</translation>
     </message>
     <message>
-        <source>Payment request expired.</source>
-        <translation>תוקף בקשת תשלום פג</translation>
-    </message>
-    <message>
         <source>Unverified payment requests to custom payment scripts are unsupported.</source>
         <translation>בקשות תשלום בלתי מאומתות לסקריפטים לתשלום מותאמים אישית אינן נתמכות.</translation>
-    </message>
-    <message>
-        <source>Invalid payment request.</source>
-        <translation>שגיאה בבקשת תשלום.</translation>
     </message>
     <message>
         <source>Refund from %1</source>
@@ -1349,14 +1324,6 @@
         <translation>שירותים</translation>
     </message>
     <message>
-        <source>Starting Height</source>
-        <translation>גובה התחלתי</translation>
-    </message>
-    <message>
-        <source>Sync Height</source>
-        <translation>גובה הסנכרון</translation>
-    </message>
-    <message>
         <source>Ban Score</source>
         <translation>דירוג חסימה</translation>
     </message>
@@ -1373,20 +1340,8 @@
         <translation>קבלה אחרונה</translation>
     </message>
     <message>
-        <source>Bytes Sent</source>
-        <translation>בתים שנשלחו</translation>
-    </message>
-    <message>
-        <source>Bytes Received</source>
-        <translation>בתים שהתקבלו</translation>
-    </message>
-    <message>
         <source>Ping Time</source>
         <translation>זמן המענה</translation>
-    </message>
-    <message>
-        <source>Time Offset</source>
-        <translation>הפרש זמן</translation>
     </message>
     <message>
         <source>Last block time</source>
@@ -1473,12 +1428,16 @@
         <translation>תעבורה יוצאת</translation>
     </message>
     <message>
-        <source>Unknown</source>
-        <translation>לא ידוע</translation>
+        <source>Yes</source>
+        <translation>כן</translation>
     </message>
     <message>
-        <source>Fetching...</source>
-        <translation>מתקבל…</translation>
+        <source>No</source>
+        <translation>לא</translation>
+    </message>
+    <message>
+        <source>Unknown</source>
+        <translation>לא ידוע</translation>
     </message>
 </context>
 <context>
@@ -1713,42 +1672,6 @@
         <translation>עמלת העברה:</translation>
     </message>
     <message>
-        <source>Choose...</source>
-        <translation>בחר...</translation>
-    </message>
-    <message>
-        <source>per kilobyte</source>
-        <translation>עבור קילו-בית</translation>
-    </message>
-    <message>
-        <source>Hide</source>
-        <translation>הסתר</translation>
-    </message>
-    <message>
-        <source>total at least</source>
-        <translation>סה''כ לפחות</translation>
-    </message>
-    <message>
-        <source>Recommended:</source>
-        <translation>מומלץ:</translation>
-    </message>
-    <message>
-        <source>Custom:</source>
-        <translation>מותאם אישית:</translation>
-    </message>
-    <message>
-        <source>Confirmation time:</source>
-        <translation>זמן האישור:</translation>
-    </message>
-    <message>
-        <source>normal</source>
-        <translation>רגיל</translation>
-    </message>
-    <message>
-        <source>fast</source>
-        <translation>מהיר</translation>
-    </message>
-    <message>
         <source>Send to multiple recipients at once</source>
         <translation>שליחה למספר מוטבים בו־זמנית</translation>
     </message>
@@ -1841,10 +1764,6 @@
         <translation>ההעברה נדחתה! מצב כזה עשוי לקרות אם חלק מהמטבעות בארנק שלך כבר הושקעו, כמו למשל עקב שימוש בעותק של wallet.dat והמטבעות הושקעו בעותק אבל לא סומנו כאילו הושקעו דרך כאן.</translation>
     </message>
     <message>
-        <source>Payment request expired.</source>
-        <translation>תוקף בקשת תשלום פג</translation>
-    </message>
-    <message>
         <source>Warning: Invalid Zetacoin address</source>
         <translation>אזהרה: כתובת ביטקוין שגויה</translation>
     </message>
@@ -1918,10 +1837,6 @@
     <message>
         <source>Message:</source>
         <translation>הודעה:</translation>
-    </message>
-    <message>
-        <source>This is an authenticated payment request.</source>
-        <translation>זוהי בקשה מאומתת לתשלום.</translation>
     </message>
     <message>
         <source>Enter a label for this address to add it to the list of used addresses</source>
@@ -2579,10 +2494,6 @@
         <translation>ריצה כסוכן ברקע וקבלת פקודות</translation>
     </message>
     <message>
-        <source>Use the test network</source>
-        <translation>שימוש ברשת הבדיקה</translation>
-    </message>
-    <message>
         <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
         <translation>קבלת חיבורים מבחוץ (בררת מחדל: 1 ללא ‎-proxy או ‎-connect)</translation>
     </message>
@@ -2607,10 +2518,6 @@
         <translation>לא ניתן להתאגד אל %s במחשב זה. כנראה שליבת ביטקוין כבר פועלת.</translation>
     </message>
     <message>
-        <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
-        <translation>אזהרה: ‎-paytxfee נקבע לערך מאד גבוה! זוהי עמלת הפעולה שתשולם בעת העברת שליחה.</translation>
-    </message>
-    <message>
         <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>
         <translation>אזהרה: נראה שלא כל הרשת מסכימה! נראה שישנם כורים שנתקלים בבעיות.</translation>
     </message>
@@ -2619,24 +2526,12 @@
         <translation>אזהרה: נראה שישנה אי־הסכמה בינינו לבין שאר העמיתים שלנו! יתכן שעדיף לשדרג או שכל שאר העמיתים צריכים לשדרג.</translation>
     </message>
     <message>
-        <source>Warning: error reading wallet.dat! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
-        <translation>אזהרה: שגיאה בקריאת wallet.dat! כל המפתחות נקראו באופן תקין, אך נתוני ההעברות או ספר הכתובות עלולים להיות חסרים או שגויים.</translation>
-    </message>
-    <message>
         <source>Warning: wallet.dat corrupt, data salvaged! Original wallet.dat saved as wallet.{timestamp}.bak in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
         <translation>אזהרה: הקובץ wallet.dat הושחת, המידע חולץ! קובץ ה־wallet.dat המקורי נשמר בשם wallet.{timestamp}.bak במיקום %s; אם המאזן או ההעברות שגויים עליך לשחזר גיבוי.</translation>
     </message>
     <message>
-        <source>(default: 1)</source>
-        <translation>(בררת מחדל: 1)</translation>
-    </message>
-    <message>
         <source>&lt;category&gt; can be:</source>
         <translation>&lt;קטגוריה&gt; יכולה להיות:</translation>
-    </message>
-    <message>
-        <source>Attempt to recover private keys from a corrupt wallet.dat</source>
-        <translation>נסה לשחזר מפתחות פרטיים מקובץ wallet.dat מושחת.</translation>
     </message>
     <message>
         <source>Block creation options:</source>
@@ -2691,10 +2586,6 @@
         <translation>האזנה נכשלה בכל פורט. השתמש ב- -listen=0 אם ברצונך בכך.</translation>
     </message>
     <message>
-        <source>If &lt;category&gt; is not supplied, output all debugging information.</source>
-        <translation>אם לא סופקה &lt;קטגוריה&gt; יש לייצא את כל פרטי הניפוי.</translation>
-    </message>
-    <message>
         <source>Importing...</source>
         <translation>מתבצע יבוא…</translation>
     </message>
@@ -2747,28 +2638,12 @@
         <translation>עליך לבנות מחדש את מסד הנתונים תוך שימוש ב־‎-reindex על מנת לשנות את ‎-txindex</translation>
     </message>
     <message>
-        <source>Imports blocks from external blk000??.dat file</source>
-        <translation>מיובאים מקטעים מקובצי blk000??.dat חיצוניים</translation>
-    </message>
-    <message>
         <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
         <translation>הרץ פקודה כאשר ההתראה הרלוונטית מתקבלת או כשאנחנו עדים לפיצול ארוך מאוד (%s בשורת הפקודה יוחלף ע"י ההודעה)</translation>
     </message>
     <message>
-        <source>The transaction amount is too small to send after the fee has been deducted</source>
-        <translation>סכום העברה נמוך מדי לשליחה אחרי גביית העמלה</translation>
-    </message>
-    <message>
-        <source>Warning: Please check that your computer's date and time are correct! If your clock is wrong Zetacoin Core will not work properly.</source>
-        <translation>אזהרה: נא לבדוק שהתאריך והשעה של המחשב שלך נכונים! אם השעון שלך שגוי ליבת ביטקוין לא תעבוד כראוי.</translation>
-    </message>
-    <message>
         <source>Cannot resolve -whitebind address: '%s'</source>
         <translation>לא ניתן לפתור את הכתובת ‎-whitebind:‏ '%s'</translation>
-    </message>
-    <message>
-        <source>Choose data directory on startup (default: 0)</source>
-        <translation>בחירת תיקיית נתונים עם ההפעלה (בררת מחדל: 0)</translation>
     </message>
     <message>
         <source>Connect through SOCKS5 proxy</source>
@@ -2779,24 +2654,8 @@
         <translation>כל הזכויות שמורות (C)‏ 2009‏-%i מתכנתי ליבת ביטקוין</translation>
     </message>
     <message>
-        <source>Could not parse -rpcbind value %s as network address</source>
-        <translation>לא ניתן לנתח את הערך של ‎-rpcbind שצוין בתור %s ככתובת רשת</translation>
-    </message>
-    <message>
         <source>Error loading wallet.dat: Wallet requires newer version of Zetacoin Core</source>
         <translation>אירעה שגיאה בטעינת wallet.dat: הארנק דורש גרסה חדשה יותר של ליבת ביטקוין</translation>
-    </message>
-    <message>
-        <source>Error: A fatal internal error occurred, see debug.log for details</source>
-        <translation>שגיאה: סניה קלמה קריטית פנימית קרטה, פנה ל debug.log לפרטים</translation>
-    </message>
-    <message>
-        <source>Error: Unsupported argument -tor found, use -onion.</source>
-        <translation>שגיאה: נמצא ארגומנט בלתי נתמך ‎-tor, יש להשתמש ב־‎-onion.</translation>
-    </message>
-    <message>
-        <source>Fee (in BTC/kB) to add to transactions you send (default: %s)</source>
-        <translation>עמלה (ב־BTC/ק״ב) להוספה להעברות שנשלחות ממך (בררת מחדל: %s)</translation>
     </message>
     <message>
         <source>Information</source>
@@ -2835,10 +2694,6 @@
         <translation>אפשרויות ממסר מפרק:</translation>
     </message>
     <message>
-        <source>RPC SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
-        <translation>אפשרויות RPC SSL: (נא לעיין בוויקי של ביטקוין לקבלת הנחיות על הגדרת SSL)</translation>
-    </message>
-    <message>
         <source>RPC server options:</source>
         <translation>הגדרות שרת RPC</translation>
     </message>
@@ -2847,20 +2702,8 @@
         <translation>שלח מידע דיבאג ועקבה לקונסולה במקום לקובץ debug.log</translation>
     </message>
     <message>
-        <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation>הגדרות אישורי בסיס של SSL לבקשות תשלום (בררת המחדל: -מערכת-)</translation>
-    </message>
-    <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>הגדרת שפה, למשל „he_il“ (בררת מחדל: שפת המערכת)</translation>
-    </message>
-    <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
         <translation>הצגת כל אפשרויות הניפוי (שימוש: ‎--help -help-debug)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>הצגת מסך פתיחה בעת הפעלה (בררת מחדל: 1)</translation>
     </message>
     <message>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
@@ -2869,14 +2712,6 @@
     <message>
         <source>Signing transaction failed</source>
         <translation>החתימה על ההעברה נכשלה</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>התחלה במצב ממוזער</translation>
-    </message>
-    <message>
-        <source>The transaction amount is too small to pay the fee</source>
-        <translation>סכום ההעברה נמוך מכדי לשלם את העמלה</translation>
     </message>
     <message>
         <source>This is experimental software.</source>
@@ -2891,24 +2726,12 @@
         <translation>סכומי ההעברות חייבים להיות חיוביים</translation>
     </message>
     <message>
-        <source>Transaction too large for fee policy</source>
-        <translation>ההעברה גבוהה מדי עבור מדיניות העמלות</translation>
-    </message>
-    <message>
         <source>Transaction too large</source>
         <translation>סכום ההעברה גדול מדי</translation>
     </message>
     <message>
-        <source>UI Options:</source>
-        <translation>אפשרויות ממשק</translation>
-    </message>
-    <message>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>
         <translation>לא ניתן להתאגד עם הפתחה %s במחשב זה (פעולת האיגוד החזירה את השגיאה %s)</translation>
-    </message>
-    <message>
-        <source>Use UPnP to map the listening port (default: 1 when listening)</source>
-        <translation>יש להשתמש ב־UPnP כדי למפות את הפתחה להאזנה (בררת מחדל: 1 בעת האזנה)</translation>
     </message>
     <message>
         <source>Username for JSON-RPC connections</source>
@@ -2923,18 +2746,6 @@
         <translation>אזהרה</translation>
     </message>
     <message>
-        <source>Warning: Unsupported argument -benchmark ignored, use -debug=bench.</source>
-        <translation>אזהרה: הארגומנט שאינו נתמך עוד ‎-benchmark לא הופעל, נא להשתמש ב־‎-debug=bench.</translation>
-    </message>
-    <message>
-        <source>Warning: Unsupported argument -debugnet ignored, use -debug=net.</source>
-        <translation>אזהרה: הארגומנט שאינו נתמך עוד ‎-debugnet לא הופעל, נא להשתמש ב־‎-debug=net.</translation>
-    </message>
-    <message>
-        <source>on startup</source>
-        <translation>עם ההפעלה</translation>
-    </message>
-    <message>
         <source>wallet.dat corrupt, salvage failed</source>
         <translation>קובץ wallet.dat מושחת, החילוץ נכשל</translation>
     </message>
@@ -2945,18 +2756,6 @@
     <message>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>יש לבצע פקודה זו כשהמקטע הטוב ביותר משתנה (%s בפקודה יוחלף בגיבוב המקטע)</translation>
-    </message>
-    <message>
-        <source>Upgrade wallet to latest format</source>
-        <translation>שדרוג הארנק למבנה העדכני</translation>
-    </message>
-    <message>
-        <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>יש לסרוק מחדש את שרשרת המקטעים למציאת העברות חסרות בארנק</translation>
-    </message>
-    <message>
-        <source>Use OpenSSL (https) for JSON-RPC connections</source>
-        <translation>שימוש ב־OpenSSL (https)‎ עבור חיבורי JSON-RPC</translation>
     </message>
     <message>
         <source>This help message</source>
@@ -2973,10 +2772,6 @@
     <message>
         <source>Error loading wallet.dat: Wallet corrupted</source>
         <translation>שגיאה בטעינת הקובץ wallet.dat: הארנק מושחת</translation>
-    </message>
-    <message>
-        <source>(default: %s)</source>
-        <translation>(ברירת מחדל: %s)</translation>
     </message>
     <message>
         <source>Error loading wallet.dat</source>

@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2013 The Bitcoin Core developers
+// Copyright (c) 2011-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -12,11 +12,13 @@
 class BitcoinGUI;
 class ClientModel;
 class OverviewPage;
+class PlatformStyle;
 class ReceiveCoinsDialog;
 class SendCoinsDialog;
 class SendCoinsRecipient;
 class TransactionView;
 class WalletModel;
+class AddressBookPage;
 
 QT_BEGIN_NAMESPACE
 class QModelIndex;
@@ -34,7 +36,7 @@ class WalletView : public QStackedWidget
     Q_OBJECT
 
 public:
-    explicit WalletView(QWidget *parent);
+    explicit WalletView(const PlatformStyle *platformStyle, QWidget *parent);
     ~WalletView();
 
     void setBitcoinGUI(BitcoinGUI *gui);
@@ -60,10 +62,13 @@ private:
     QWidget *transactionsPage;
     ReceiveCoinsDialog *receiveCoinsPage;
     SendCoinsDialog *sendCoinsPage;
+    AddressBookPage *usedSendingAddressesPage;
+    AddressBookPage *usedReceivingAddressesPage;
 
     TransactionView *transactionView;
 
     QProgressDialog *progressDialog;
+    const PlatformStyle *platformStyle;
 
 public Q_SLOTS:
     /** Switch to overview (home) page */

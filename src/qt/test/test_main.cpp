@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2014 The Bitcoin Core developers
+// Copyright (c) 2009-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -16,6 +16,8 @@
 #include <QCoreApplication>
 #include <QObject>
 #include <QTest>
+
+#include <openssl/ssl.h>
 
 #if defined(QT_STATICPLUGIN) && QT_VERSION < 0x050000
 #include <QtPlugin>
@@ -35,6 +37,8 @@ int main(int argc, char *argv[])
     // QCoreApplication:: in the tests
     QCoreApplication app(argc, argv);
     app.setApplicationName("Bitcoin-Qt-test");
+
+    SSL_library_init();
 
     URITests test1;
     if (QTest::qExec(&test1) != 0)

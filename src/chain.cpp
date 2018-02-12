@@ -51,6 +51,9 @@ CBlockLocator CChain::GetLocator(const CBlockIndex *pindex) const {
 }
 
 const CBlockIndex *CChain::FindFork(const CBlockIndex *pindex) const {
+    if (pindex == NULL) {
+        return NULL;
+    }
     if (pindex->nHeight > Height())
         pindex = pindex->GetAncestor(Height());
     while (pindex && !Contains(pindex))
@@ -82,9 +85,10 @@ CBlockIndex* CBlockIndex::GetAncestor(int height)
     while (heightWalk > height) {
         int heightSkip = GetSkipHeight(heightWalk);
         int heightSkipPrev = GetSkipHeight(heightWalk - 1);
-        if (heightSkip == height ||
-            (heightSkip > height && !(heightSkipPrev < heightSkip - 2 &&
-                                      heightSkipPrev >= height))) {
+        if (pindexWalk->pskip != NULL &&
+            (heightSkip == height ||
+             (heightSkip > height && !(heightSkipPrev < heightSkip - 2 &&
+                                       heightSkipPrev >= height)))) {
             // Only follow pskip if pprev->pskip isn't better than pskip->pprev.
             pindexWalk = pindexWalk->pskip;
             heightWalk = heightSkip;

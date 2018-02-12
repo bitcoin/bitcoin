@@ -23,7 +23,7 @@ hundreds of blocks long.
 Bitcoin-Qt no longer automatically selects the first address
 in the address book (Issue #1384).
 
-Fixed minimize-to-dock behavior of Bitcon-Qt on the Mac.
+Fixed minimize-to-dock behavior of Bitcoin-Qt on the Mac.
 
 Added a block checkpoint at block 185,333 to speed up initial
 blockchain download.

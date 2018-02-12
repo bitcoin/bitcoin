@@ -49,6 +49,9 @@
     <name>AskPassphraseDialog</name>
     </context>
 <context>
+    <name>BanTableModel</name>
+    </context>
+<context>
     <name>BitcoinGUI</name>
     </context>
 <context>

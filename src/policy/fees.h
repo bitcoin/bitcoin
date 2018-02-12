@@ -15,6 +15,7 @@
 class CAutoFile;
 class CFeeRate;
 class CTxMemPoolEntry;
+class CTxMemPool;
 
 /** \class CBlockPolicyEstimator
  * The BlockPolicyEstimator is used for estimating the fee or priority needed
@@ -182,8 +183,8 @@ static const unsigned int MAX_BLOCK_CONFIRMS = 25;
 /** Decay of .998 is a half-life of 346 blocks or about 2.4 days */
 static const double DEFAULT_DECAY = .998;
 
-/** Require greater than 85% of X fee transactions to be confirmed within Y blocks for X to be big enough */
-static const double MIN_SUCCESS_PCT = .85;
+/** Require greater than 95% of X fee transactions to be confirmed within Y blocks for X to be big enough */
+static const double MIN_SUCCESS_PCT = .95;
 static const double UNLIKELY_PCT = .5;
 
 /** Require an avg of 1 tx in the combined fee bucket per block to have stat significance */
@@ -242,8 +243,20 @@ public:
     /** Return a fee estimate */
     CFeeRate estimateFee(int confTarget);
 
+    /** Estimate fee rate needed to get be included in a block within
+     *  confTarget blocks. If no answer can be given at confTarget, return an
+     *  estimate at the lowest target where one can be given.
+     */
+    CFeeRate estimateSmartFee(int confTarget, int *answerFoundAtTarget, const CTxMemPool& pool);
+
     /** Return a priority estimate */
     double estimatePriority(int confTarget);
+
+    /** Estimate priority needed to get be included in a block within
+     *  confTarget blocks. If no answer can be given at confTarget, return an
+     *  estimate at the lowest target where one can be given.
+     */
+    double estimateSmartPriority(int confTarget, int *answerFoundAtTarget, const CTxMemPool& pool);
 
     /** Write estimation data to a file */
     void Write(CAutoFile& fileout);

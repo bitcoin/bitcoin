@@ -34,7 +34,6 @@ class TestManager(NodeConnCB):
     def __init__(self):
         NodeConnCB.__init__(self)
         self.log = logging.getLogger("BlockRelayTest")
-        self.create_callback_map()
 
     def add_new_connection(self, connection):
         self.connection = connection

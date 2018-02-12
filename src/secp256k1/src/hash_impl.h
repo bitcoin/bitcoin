@@ -202,7 +202,7 @@ static void secp256k1_hmac_sha256_finalize(secp256k1_hmac_sha256_t *hash, unsign
 }
 
 
-static void secp256k1_rfc6979_hmac_sha256_initialize(secp256k1_rfc6979_hmac_sha256_t *rng, const unsigned char *key, size_t keylen, const unsigned char *msg, size_t msglen, const unsigned char *rnd, size_t rndlen) {
+static void secp256k1_rfc6979_hmac_sha256_initialize(secp256k1_rfc6979_hmac_sha256_t *rng, const unsigned char *key, size_t keylen) {
     secp256k1_hmac_sha256_t hmac;
     static const unsigned char zero[1] = {0x00};
     static const unsigned char one[1] = {0x01};
@@ -215,11 +215,6 @@ static void secp256k1_rfc6979_hmac_sha256_initialize(secp256k1_rfc6979_hmac_sha2
     secp256k1_hmac_sha256_write(&hmac, rng->v, 32);
     secp256k1_hmac_sha256_write(&hmac, zero, 1);
     secp256k1_hmac_sha256_write(&hmac, key, keylen);
-    secp256k1_hmac_sha256_write(&hmac, msg, msglen);
-    if (rnd && rndlen) {
-        /* RFC6979 3.6 "Additional data". */
-        secp256k1_hmac_sha256_write(&hmac, rnd, rndlen);
-    }
     secp256k1_hmac_sha256_finalize(&hmac, rng->k);
     secp256k1_hmac_sha256_initialize(&hmac, rng->k, 32);
     secp256k1_hmac_sha256_write(&hmac, rng->v, 32);
@@ -230,11 +225,6 @@ static void secp256k1_rfc6979_hmac_sha256_initialize(secp256k1_rfc6979_hmac_sha2
     secp256k1_hmac_sha256_write(&hmac, rng->v, 32);
     secp256k1_hmac_sha256_write(&hmac, one, 1);
     secp256k1_hmac_sha256_write(&hmac, key, keylen);
-    secp256k1_hmac_sha256_write(&hmac, msg, msglen);
-    if (rnd && rndlen) {
-        /* RFC6979 3.6 "Additional data". */
-        secp256k1_hmac_sha256_write(&hmac, rnd, rndlen);
-    }
     secp256k1_hmac_sha256_finalize(&hmac, rng->k);
     secp256k1_hmac_sha256_initialize(&hmac, rng->k, 32);
     secp256k1_hmac_sha256_write(&hmac, rng->v, 32);
