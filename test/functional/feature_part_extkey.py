@@ -4,6 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 from test_framework.test_particl import ParticlTestFramework
+from test_framework.test_particl import isclose
 from test_framework.util import *
 
 class ExtKeyTest(ParticlTestFramework):
@@ -106,14 +107,18 @@ class ExtKeyTest(ParticlTestFramework):
         txnHashes = []
         for k in range(24):
             v = round(0.01 * float(k+1), 5)
+            node1.syncwithvalidationinterfacequeue()
             txnHash = node1.sendtoaddress(extAddrTo0, v, '', '', False)
             txnHashes.append(txnHash)
 
         for txnHash in txnHashes:
             assert(self.wait_for_mempool(node, txnHash))
 
-        ro = node.listtransactions()
-        #print("\nlisttransactions node",ro)
+        ro = node.listtransactions('', 24)
+        assert(len(ro) == 24)
+        assert[isclose(ro[0]['amount'], 0.01)]
+        assert[isclose(ro[23]['amount'], 0.24)]
+        assert[ro[23]['address'] == 'pm23xKs3gy6AhZZ7JZe61Rn1m8VB83P49d']
 
 
         # start staking
