@@ -32,7 +32,7 @@ Build Raven Core
 1. Clone the raven source code and cd into `raven`
 
         git clone https://github.com/RavenProject/Ravencoin
-        cd raven
+        cd Ravencoin
 
 2.  Build raven-core:
 
