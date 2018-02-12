@@ -180,14 +180,19 @@ class StealthTest(ParticlTestFramework):
 
         assert_raises_rpc_error(-8, 'Spend secret must be different to scan secret.',
             nodes[0].importstealthaddress, '57F59BA2F9D9146635380FA453E4EED7E44290F0AAAE657C300AB0E51184151E',
-            '57F59BA2F9D9146635380FA453E4EED7E44290F0AAAE657C300AB0E51184151E', 'importedAddr', '9', '0xabcd', True)
+            '57F59BA2F9D9146635380FA453E4EED7E44290F0AAAE657C300AB0E51184151E', '', '9', '0xabcd', True)
 
         # Test bech32 encoding
         ro = nodes[0].importstealthaddress('57F59BA2F9D9146635380FA453E4EED7E44290F0AAAE657C300AB0E51184151E',
-            'F4708BD9B3D367F02EA6581AC446F12AA24350F1E0DEE309FACB561C2D81877A', 'importedAddr', '9', '0xabcd', True)
-        sx_b32 = 'tps1qqpt67v3g652e5mvqv3hl60zkj3424l0chhvsc0ervrltujd7dgl6uspqfd2hf5dglxt285yp9d9h3nym39cdzdpr5ndcm940lhmg6z3tjuvzqqfe5qs2gep0t'
-        assert(ro['stealth_address'] == sx_b32)
-        assert(sx_b32 in json.dumps(nodes[0].filteraddresses()))
+            'F4708BD9B3D367F02EA6581AC446F12AA24350F1E0DEE309FACB561C2D81877A', 'importedAddr1b32', '9', '0xabcd', True)
+        sx1_b32 = 'tps1qqpt67v3g652e5mvqv3hl60zkj3424l0chhvsc0ervrltujd7dgl6uspqfd2hf5dglxt285yp9d9h3nym39cdzdpr5ndcm940lhmg6z3tjuvzqqfe5qs2gep0t'
+        assert(ro['stealth_address'] == sx1_b32)
+
+        ro = nodes[0].getnewstealthaddress('importedAddr2b32', '', '', True)
+        sx2_b32 = 'tps1qqpxdqs29p7sadu3fqpc808aw93a25k9zjy6f5hzgyf3vluy3n4f4ygpqwkkfhujgzgq83y55enleldy9lh7tkv6dmkaxjrjtyaswjcx3mjyyqqqhefkp7'
+        assert(ro == sx2_b32)
+        flat = json.dumps(nodes[0].filteraddresses())
+        assert(sx1_b32 in flat and sx2_b32 in flat)
 
 
         #assert(False)

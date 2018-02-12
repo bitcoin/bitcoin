@@ -44,7 +44,7 @@ int exitHidHidapi() {
 
 int sendApduHidHidapi(hid_device *handle, const unsigned char ledger, const unsigned char *apdu, size_t apduLength, unsigned char *out, size_t outLength, int *sw) {
 	unsigned char buffer[400];
-	unsigned char paddingBuffer[MAX_BLOCK];
+	unsigned char paddingBuffer[MAX_BLOCK+1];
 	int result;
 	int length;
 	int swOffset;
@@ -64,9 +64,10 @@ int sendApduHidHidapi(hid_device *handle, const unsigned char ledger, const unsi
 	}
 	while (remaining > 0) {
 		int blockSize = (remaining > MAX_BLOCK ? MAX_BLOCK : remaining);
-		memset(paddingBuffer, 0, MAX_BLOCK);
-		memcpy(paddingBuffer, buffer + offset, blockSize);
-		result = hid_write(handle, paddingBuffer, blockSize);
+		// First byte must be 0x00, report ID
+		memset(paddingBuffer, 0, MAX_BLOCK+1);
+		memcpy(paddingBuffer+1, buffer + offset, blockSize);
+		result = hid_write(handle, paddingBuffer, blockSize+1);
 		if (result < 0) {
 			return result;
 		}
