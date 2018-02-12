@@ -29,8 +29,7 @@ Updater::Updater() :
     stopDownload(false),
     testnetUrl("https://raw.githubusercontent.com/Crowndev/crowncoin/master/update_testnet.json"),
     //mainnetUrl("https://raw.githubusercontent.com/Crowndev/crowncoin/master/update.json")
-    mainnetUrl("https://raw.githubusercontent.com/ashotkhachatryan/crowncoin/systemnode/update1.json"),
-    caBundle("curl-ca-bundle.crt")
+    mainnetUrl("https://raw.githubusercontent.com/ashotkhachatryan/crowncoin/systemnode/update1.json")
 {
 }
 
@@ -103,30 +102,6 @@ void Updater::SetJsonPath()
     }
 }
 
-void Updater::SetCAPath(CURL* curl)
-{
-    curl_easy_setopt(curl, CURLOPT_CAINFO, caBundle.c_str());
-#ifdef __linux__
-    path app = strprintf("/proc/%s/exe", getpid());
-    if (exists(app) && is_symlink(app))
-    {
-        path appPath = canonical(app).parent_path() / caBundle;
-        if (exists(appPath))
-        {
-            curl_easy_setopt(curl, CURLOPT_CAINFO, appPath.string().c_str());
-        }
-    }
-#elif _WIN32
-    boost::scoped_array<char> exePath(new char[MAX_PATH]);
-    GetModuleFileName(NULL, exePath.get(), MAX_PATH);
-    path appPath = path(exePath.get()).parent_path() / caBundle;
-    if (exists(appPath))
-    {
-        curl_easy_setopt(curl, CURLOPT_CAINFO, appPath.string().c_str());
-    }
-#endif
-}
-
 bool Updater::LoadUpdateInfo()
 {
     bool result = false;
@@ -140,7 +115,6 @@ bool Updater::LoadUpdateInfo()
         curl_easy_setopt(curl, CURLOPT_URL, updaterInfoUrl.c_str());
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, GetUpdateData);
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, &updateData);
-        SetCAPath(curl);
         res = curl_easy_perform(curl);
         curl_easy_cleanup(curl);
     }
@@ -274,7 +248,6 @@ CURLcode Updater::DownloadFile(std::string url, std::string fileName, void(progr
     curl_easy_setopt(curl_handle, CURLOPT_NOPROGRESS, 0L);
     curl_easy_setopt(curl_handle, CURLOPT_FOLLOWLOCATION, 1L);
     curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, write_data);
-    SetCAPath(curl_handle);
 
     curl_easy_setopt(curl_handle, CURLOPT_XFERINFOFUNCTION, xferinfo);
     curl_easy_setopt(curl_handle, CURLOPT_XFERINFODATA, &prog);
