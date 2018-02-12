@@ -185,9 +185,9 @@ void MasternodeList::StartAll(std::string strCommand)
     msg.exec();
 }
 
-void MasternodeList::selectAliasRow(QString alias)
+void MasternodeList::selectAliasRow(const QString& alias)
 {
-    for(int i=0; i < ui->tableWidgetMyMasternodes->rowCount(); i++)
+    for(int i=0; i < ui->tableWidgetMyMasternodes->rowCount(); ++i)
     {
         if(ui->tableWidgetMyMasternodes->item(i, 0)->text() == alias)
         {

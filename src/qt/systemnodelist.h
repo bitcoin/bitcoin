@@ -38,7 +38,7 @@ public:
     void setWalletModel(WalletModel *walletModel);
     void StartAlias(std::string strAlias);
     void StartAll(std::string strCommand = "start-all");
-    void selectAliasRow(QString alias);
+    void selectAliasRow(const QString& alias);
 
 private:
     QMenu *contextMenu;

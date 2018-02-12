@@ -181,7 +181,7 @@ void SystemnodeList::StartAll(std::string strCommand)
     msg.exec();
 }
 
-void SystemnodeList::selectAliasRow(QString alias)
+void SystemnodeList::selectAliasRow(const QString& alias)
 {
     for(int i=0; i < ui->tableWidgetMySystemnodes->rowCount(); i++)
     {
