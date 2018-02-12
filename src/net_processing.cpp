@@ -1226,10 +1226,10 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
         }
     } // release cs_main
 
-    if (it != pfrom->vRecvGetData.end()) {
+    if (it != pfrom->vRecvGetData.end() && !pfrom->fPauseSend) {
         const CInv &inv = *it;
-        it++;
         if (inv.type == MSG_BLOCK || inv.type == MSG_FILTERED_BLOCK || inv.type == MSG_CMPCT_BLOCK || inv.type == MSG_WITNESS_BLOCK) {
+            it++;
             ProcessGetBlockData(pfrom, consensusParams, inv, connman, interruptMsgProc);
         }
     }
