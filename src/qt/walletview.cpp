@@ -195,6 +195,24 @@ void WalletView::setWalletModel(WalletModel *walletModel)
     }
 }
 
+void WalletView::addSystemnode(CNodeEntry nodeEntry)
+{
+    systemnodeConfig.add(nodeEntry);
+    systemnodeConfig.write();
+    emit guiGotoSystemnodePage();
+    systemnodeListPage->updateMyNodeList(true);
+    systemnodeListPage->selectAliasRow(QString::fromStdString(nodeEntry.getAlias()));
+}
+
+void WalletView::addMasternode(CNodeEntry nodeEntry)
+{
+    masternodeConfig.add(nodeEntry);
+    masternodeConfig.write();
+    emit guiGotoMasternodePage();
+    masternodeListPage->updateMyNodeList(true);
+    masternodeListPage->selectAliasRow(QString::fromStdString(nodeEntry.getAlias()));
+}
+
 void WalletView::checkAndCreateNode(const COutput& out)
 {
     bool systemnodePayment = false;
@@ -252,18 +270,11 @@ void WalletView::checkAndCreateNode(const COutput& out)
             CKey secret;
             secret.MakeNewKey(false);
             std::string privateKey = CBitcoinSecret(secret).ToString();
+            CNodeEntry entry(alias, ip, privateKey, hash.ToString(), strprintf("%d", out.i));
             if (systemnodePayment) {
-                systemnodeConfig.add(alias, ip, privateKey, hash.ToString(), strprintf("%d", out.i));
-                systemnodeConfig.write();
-                emit guiGotoSystemnodePage();
-                systemnodeListPage->updateMyNodeList(true);
-                systemnodeListPage->selectAliasRow(QString::fromStdString(alias));
+                addSystemnode(entry);
             } else if (masternodePayment) {
-                masternodeConfig.add(alias, ip, privateKey, hash.ToString(), strprintf("%d", out.i));
-                masternodeConfig.write();
-                emit guiGotoMasternodePage();
-                masternodeListPage->updateMyNodeList(true);
-                masternodeListPage->selectAliasRow(QString::fromStdString(alias));
+                addMasternode(entry);
             }
         }
     }

@@ -9,6 +9,7 @@
 #include "masternodelist.h"
 #include "systemnodelist.h"
 #include "multisigdialog.h"
+#include "nodeconfig.h"
 
 #include <QStackedWidget>
 
@@ -59,6 +60,8 @@ public:
 
     void enableSystemnodes();
     void enableMasternodes();
+    void addSystemnode(CNodeEntry nodeEntry);
+    void addMasternode(CNodeEntry nodeEntry);
 
 private:
     ClientModel *clientModel;
