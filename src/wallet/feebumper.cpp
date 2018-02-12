@@ -65,16 +65,39 @@ static feebumper::Result PreconditionChecks(const CWallet* wallet, const CWallet
         errors.push_back("Transaction has been mined, or is conflicted with a mined transaction");
         return feebumper::Result::WALLET_ERROR;
     }
+
+    if (!SignalsOptInRBF(*wtx.tx)) {
+        errors.push_back("Transaction is not BIP 125 replaceable");
+        return feebumper::Result::WALLET_ERROR;
+    }
+
+    if (wtx.mapValue.count("replaced_by_txid")) {
+        errors.push_back(strprintf("Cannot bump transaction %s which was already bumped by transaction %s", wtx.GetHash().ToString(), wtx.mapValue.at("replaced_by_txid")));
+        return feebumper::Result::WALLET_ERROR;
+    }
+
+    // check that original tx consists entirely of our inputs
+    // if not, we can't bump the fee, because the wallet has no way of knowing the value of the other inputs (thus the fee)
+    if (!wallet->IsAllFromMe(*wtx.tx, ISMINE_SPENDABLE)) {
+        errors.push_back("Transaction contains inputs that don't belong to this wallet");
+        return feebumper::Result::WALLET_ERROR;
+    }
+
+
     return feebumper::Result::OK;
 }
 
 namespace feebumper {
 
-bool TransactionCanBeBumped(CWallet* wallet, const uint256& txid)
+bool TransactionCanBeBumped(const CWallet* wallet, const uint256& txid)
 {
     LOCK2(cs_main, wallet->cs_wallet);
     const CWalletTx* wtx = wallet->GetWalletTx(txid);
-    return wtx && SignalsOptInRBF(*wtx->tx) && !wtx->mapValue.count("replaced_by_txid");
+    if (wtx == nullptr) return false;
+
+    std::vector<std::string> errors_dummy;
+    feebumper::Result res = PreconditionChecks(wallet, *wtx, errors_dummy);
+    return res == feebumper::Result::OK;
 }
 
 Result CreateTransaction(const CWallet* wallet, const uint256& txid, const CCoinControl& coin_control, CAmount total_fee, std::vector<std::string>& errors,
@@ -92,23 +115,6 @@ Result CreateTransaction(const CWallet* wallet, const uint256& txid, const CCoin
     Result result = PreconditionChecks(wallet, wtx, errors);
     if (result != Result::OK) {
         return result;
-    }
-
-    if (!SignalsOptInRBF(*wtx.tx)) {
-        errors.push_back("Transaction is not BIP 125 replaceable");
-        return Result::WALLET_ERROR;
-    }
-
-    if (wtx.mapValue.count("replaced_by_txid")) {
-        errors.push_back(strprintf("Cannot bump transaction %s which was already bumped by transaction %s", txid.ToString(), wtx.mapValue.at("replaced_by_txid")));
-        return Result::WALLET_ERROR;
-    }
-
-    // check that original tx consists entirely of our inputs
-    // if not, we can't bump the fee, because the wallet has no way of knowing the value of the other inputs (thus the fee)
-    if (!wallet->IsAllFromMe(*wtx.tx, ISMINE_SPENDABLE)) {
-        errors.push_back("Transaction contains inputs that don't belong to this wallet");
-        return Result::WALLET_ERROR;
     }
 
     // figure out which output was change
@@ -227,6 +233,7 @@ Result CreateTransaction(const CWallet* wallet, const uint256& txid, const CCoin
             if (input.nSequence < 0xfffffffe) input.nSequence = 0xfffffffe;
         }
     }
+
 
     return Result::OK;
 }
