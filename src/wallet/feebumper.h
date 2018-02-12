@@ -26,7 +26,7 @@ enum class Result
 };
 
 //! Return whether transaction can be bumped.
-bool TransactionCanBeBumped(CWallet* wallet, const uint256& txid);
+bool TransactionCanBeBumped(const CWallet* wallet, const uint256& txid);
 
 //! Create bumpfee transaction.
 Result CreateTransaction(const CWallet* wallet,
