@@ -211,17 +211,6 @@ void CPrivateSendServer::ProcessMessage(CNode* pfrom, const std::string& strComm
                 PushStatus(pfrom, STATUS_REJECTED, ERR_FEES, connman);
                 return;
             }
-
-            {
-                LOCK(cs_main);
-                CValidationState validationState;
-                mempool.PrioritiseTransaction(tx.GetHash(), tx.GetHash().ToString(), 1000, 0.1*COIN);
-                if(!AcceptToMemoryPool(mempool, validationState, MakeTransactionRef(tx), false, NULL, false, maxTxFee, true)) {
-                    LogPrintf("DSVIN -- transaction not valid! tx=%s", tx.ToString());
-                    PushStatus(pfrom, STATUS_REJECTED, ERR_INVALID_TX, connman);
-                    return;
-                }
-            }
         }
 
         PoolMessage nMessageID = MSG_NOERR;
@@ -442,16 +431,7 @@ void CPrivateSendServer::ChargeFees(CConnman& connman)
         LogPrintf("CPrivateSendServer::ChargeFees -- found uncooperative node (didn't %s transaction), charging fees: %s\n",
                 (nState == POOL_STATE_SIGNING) ? "sign" : "send", vecOffendersCollaterals[0]->ToString());
 
-        LOCK(cs_main);
-
-        CValidationState state;
-        bool fMissingInputs;
-        if(!AcceptToMemoryPool(mempool, state, vecOffendersCollaterals[0], false, &fMissingInputs, false, maxTxFee)) {
-            // should never really happen
-            LogPrintf("CPrivateSendServer::ChargeFees -- ERROR: AcceptToMemoryPool failed!\n");
-        } else {
-            connman.RelayTransaction(*vecOffendersCollaterals[0]);
-        }
+        connman.RelayTransaction(*vecOffendersCollaterals[0]);
     }
 }
 
@@ -471,22 +451,10 @@ void CPrivateSendServer::ChargeRandomFees(CConnman& connman)
 {
     if(!fMasternodeMode) return;
 
-    LOCK(cs_main);
-
     for (const auto& txCollateral : vecSessionCollaterals) {
-
         if(GetRandInt(100) > 10) return;
-
         LogPrintf("CPrivateSendServer::ChargeRandomFees -- charging random fees, txCollateral=%s", txCollateral->ToString());
-
-        CValidationState state;
-        bool fMissingInputs;
-        if(!AcceptToMemoryPool(mempool, state, txCollateral, false, &fMissingInputs, false, maxTxFee)) {
-            // should never really happen
-            LogPrintf("CPrivateSendServer::ChargeRandomFees -- ERROR: AcceptToMemoryPool failed!\n");
-        } else {
-            connman.RelayTransaction(*txCollateral);
-        }
+        connman.RelayTransaction(*txCollateral);
     }
 }
 

@@ -403,9 +403,9 @@ bool CPrivateSendClient::SendDenominate(const std::vector<CTxDSIn>& vecTxDSIn, c
 
     LogPrintf("CPrivateSendClient::SendDenominate -- Added transaction to pool.\n");
 
-    //check it against the memory pool to make sure it's valid
     {
-        CValidationState validationState;
+        // construct a pseudo tx, for debugging purpuses only
+
         CMutableTransaction tx;
 
         for (const auto& txdsin : vecTxDSIn) {
@@ -419,16 +419,6 @@ bool CPrivateSendClient::SendDenominate(const std::vector<CTxDSIn>& vecTxDSIn, c
         }
 
         LogPrintf("CPrivateSendClient::SendDenominate -- Submitting partial tx %s", tx.ToString());
-
-        mempool.PrioritiseTransaction(tx.GetHash(), tx.GetHash().ToString(), 1000, 0.1*COIN);
-        TRY_LOCK(cs_main, lockMain);
-        if(!lockMain || !AcceptToMemoryPool(mempool, validationState, MakeTransactionRef(tx), false, NULL, false, maxTxFee, true)) {
-            LogPrintf("CPrivateSendClient::SendDenominate -- AcceptToMemoryPool() failed! tx=%s", tx.ToString());
-            UnlockCoins();
-            keyHolderStorage.ReturnAll();
-            SetNull();
-            return false;
-        }
     }
 
     // store our entry for later use
