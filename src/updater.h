@@ -31,7 +31,7 @@ public:
         MAC_OS,
     };
     Updater();
-    bool Check();
+    boost::optional<bool> Check();
     int GetVersion() const
     {
         return version;

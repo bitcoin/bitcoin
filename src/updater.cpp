@@ -298,8 +298,12 @@ void Updater::StopDownload()
     stopDownload = true;
 }
 
-bool Updater::Check()
+boost::optional<bool> Updater::Check()
 {
-    LoadUpdateInfo();
-    return status;
+    boost::optional<bool> result = boost::none;
+    if (LoadUpdateInfo())
+    {
+        result = status;
+    }
+    return result;
 }

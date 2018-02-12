@@ -180,7 +180,11 @@ Value update(const Array& params, bool fHelp)
             throw runtime_error("Too many parameters\n");
         }
 
-        if (updater.Check())
+        if (updater.Check() == boost::none)
+        {
+            throw runtime_error("An error occurred while checking for an update. \nCheck debug.log for more info.\n");
+        }
+        else if (updater.Check())
         {
             // There is an update
             Object obj;
@@ -196,7 +200,11 @@ Value update(const Array& params, bool fHelp)
     
     if (strCommand == "download")
     {
-        if (!updater.Check())
+        if (updater.Check() == boost::none)
+        {
+            throw runtime_error("An error occurred while checking for an update. \nCheck debug.log for more info.\n");
+        }
+        else if (!updater.Check())
         {
             return "You are running the latest version of Crown - " + FormatVersion(CLIENT_VERSION);
         }
@@ -231,7 +239,11 @@ Value update(const Array& params, bool fHelp)
             throw runtime_error("The command 'unzip' could not be found. Please install it and try again.");
         }
 
-        if (!updater.Check())
+        if (updater.Check() == boost::none)
+        {
+            throw runtime_error("An error occurred while checking for an update. \nCheck debug.log for more info.\n");
+        }
+        else if (!updater.Check())
         {
             return "You are running the latest version of Crown - " + FormatVersion(CLIENT_VERSION);
         }
