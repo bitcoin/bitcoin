@@ -309,7 +309,7 @@ protected:
     std::vector<CDarkSendEntry> vecEntries; // Masternode/clients entries
 
     PoolState nState; // should be one of the POOL_STATE_XXX values
-    int64_t nTimeLastSuccessfulStep; // the time when last successful mixing step was performed, in UTC milliseconds
+    int64_t nTimeLastSuccessfulStep; // the time when last successful mixing step was performed
 
     int nSessionID; // 0 if no mixing session is active
 

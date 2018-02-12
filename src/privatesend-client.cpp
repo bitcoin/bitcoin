@@ -305,7 +305,7 @@ bool CPrivateSendClient::IsMixingMasternode(const CNode* pnode)
 void CPrivateSendClient::CheckPool()
 {
     // reset if we're here for 10 seconds
-    if((nState == POOL_STATE_ERROR || nState == POOL_STATE_SUCCESS) && GetTimeMillis() - nTimeLastSuccessfulStep >= 10000) {
+    if((nState == POOL_STATE_ERROR || nState == POOL_STATE_SUCCESS) && GetTime() - nTimeLastSuccessfulStep >= 10) {
         LogPrint("privatesend", "CPrivateSendClient::CheckPool -- timeout, RESETTING\n");
         UnlockCoins();
         if (nState == POOL_STATE_ERROR) {
@@ -342,9 +342,9 @@ void CPrivateSendClient::CheckTimeout()
         }
     }
 
-    int nLagTime = fMasternodeMode ? 0 : 10000; // if we're the client, give the server a few extra seconds before resetting.
+    int nLagTime = 10; // give the server a few extra seconds before resetting.
     int nTimeout = (nState == POOL_STATE_SIGNING) ? PRIVATESEND_SIGNING_TIMEOUT : PRIVATESEND_QUEUE_TIMEOUT;
-    bool fTimeout = GetTimeMillis() - nTimeLastSuccessfulStep >= nTimeout*1000 + nLagTime;
+    bool fTimeout = GetTime() - nTimeLastSuccessfulStep >= nTimeout + nLagTime;
 
     if(nState != POOL_STATE_IDLE && fTimeout) {
         LogPrint("privatesend", "CPrivateSendClient::CheckTimeout -- %s timed out (%ds) -- resetting\n",
@@ -425,7 +425,7 @@ bool CPrivateSendClient::SendDenominate(const std::vector<CTxDSIn>& vecTxDSIn, c
     CDarkSendEntry entry(vecTxDSIn, vecTxOut, txMyCollateral);
     vecEntries.push_back(entry);
     RelayIn(entry, connman);
-    nTimeLastSuccessfulStep = GetTimeMillis();
+    nTimeLastSuccessfulStep = GetTime();
 
     return true;
 }
@@ -455,13 +455,13 @@ bool CPrivateSendClient::CheckPoolStateUpdate(PoolState nStateNew, int nEntriesC
         if(nStateNew == POOL_STATE_QUEUE && nSessionID == 0 && nSessionIDNew != 0) {
             // new session id should be set only in POOL_STATE_QUEUE state
             nSessionID = nSessionIDNew;
-            nTimeLastSuccessfulStep = GetTimeMillis();
+            nTimeLastSuccessfulStep = GetTime();
             LogPrintf("CPrivateSendClient::CheckPoolStateUpdate -- set nSessionID to %d\n", nSessionID);
             return true;
         }
         else if(nStateNew == POOL_STATE_ACCEPTING_ENTRIES && nEntriesCount != nEntriesCountNew) {
             nEntriesCount = nEntriesCountNew;
-            nTimeLastSuccessfulStep = GetTimeMillis();
+            nTimeLastSuccessfulStep = GetTime();
             fLastEntryAccepted = true;
             LogPrintf("CPrivateSendClient::CheckPoolStateUpdate -- new entry accepted!\n");
             return true;
@@ -571,7 +571,7 @@ bool CPrivateSendClient::SignFinalTransaction(const CTransaction& finalTransacti
     CNetMsgMaker msgMaker(pnode->GetSendVersion());
     connman.PushMessage(pnode, msgMaker.Make(NetMsgType::DSSIGNFINALTX, sigs));
     SetState(POOL_STATE_SIGNING);
-    nTimeLastSuccessfulStep = GetTimeMillis();
+    nTimeLastSuccessfulStep = GetTime();
 
     return true;
 }
@@ -884,7 +884,7 @@ bool CPrivateSendClient::JoinExistingQueue(CAmount nBalanceNeedsAnonymized, CCon
         connman.AddPendingMasternode(infoMn.addr);
         // TODO: add new state POOL_STATE_CONNECTING and bump MIN_PRIVATESEND_PEER_PROTO_VERSION
         SetState(POOL_STATE_QUEUE);
-        nTimeLastSuccessfulStep = GetTimeMillis();
+        nTimeLastSuccessfulStep = GetTime();
         LogPrintf("CPrivateSendClient::JoinExistingQueue -- pending connection (from queue): nSessionDenom: %d (%s), addr=%s\n",
                   nSessionDenom, CPrivateSend::GetDenominationsToString(nSessionDenom), infoMn.addr.ToString());
         strAutoDenomResult = _("Trying to connect...");
@@ -957,7 +957,7 @@ bool CPrivateSendClient::StartNewQueue(CAmount nValueMin, CAmount nBalanceNeedsA
         pendingDsaRequest = CPendingDsaRequest(infoMn.addr, CDarksendAccept(nSessionDenom, txMyCollateral));
         // TODO: add new state POOL_STATE_CONNECTING and bump MIN_PRIVATESEND_PEER_PROTO_VERSION
         SetState(POOL_STATE_QUEUE);
-        nTimeLastSuccessfulStep = GetTimeMillis();
+        nTimeLastSuccessfulStep = GetTime();
         LogPrintf("CPrivateSendClient::StartNewQueue -- pending connection, nSessionDenom: %d (%s), addr=%s\n",
                 nSessionDenom, CPrivateSend::GetDenominationsToString(nSessionDenom), infoMn.addr.ToString());
         strAutoDenomResult = _("Trying to connect...");
@@ -973,7 +973,7 @@ void CPrivateSendClient::ProcessPendingDsaRequest(CConnman& connman)
 
     bool fDone = connman.ForNode(pendingDsaRequest.GetAddr(), [&](CNode* pnode) {
         LogPrint("privatesend", "-- processing dsa queue for addr=%s\n", pnode->addr.ToString());
-        nTimeLastSuccessfulStep = GetTimeMillis();
+        nTimeLastSuccessfulStep = GetTime();
         // TODO: this vvvv should be here after new state POOL_STATE_CONNECTING is added and MIN_PRIVATESEND_PEER_PROTO_VERSION is bumped
         // SetState(POOL_STATE_QUEUE);
         strAutoDenomResult = _("Mixing in progress...");

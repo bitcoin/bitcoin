@@ -115,7 +115,7 @@ void CPrivateSendBase::SetNull()
     vecEntries.clear();
     finalMutableTransaction.vin.clear();
     finalMutableTransaction.vout.clear();
-    nTimeLastSuccessfulStep = GetTimeMillis();
+    nTimeLastSuccessfulStep = GetTime();
 }
 
 void CPrivateSendBase::CheckQueue()
