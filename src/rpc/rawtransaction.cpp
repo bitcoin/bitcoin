@@ -65,6 +65,7 @@ void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry)
     entry.push_back(Pair("txid", txid.GetHex()));
     entry.push_back(Pair("size", (int)::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION)));
     entry.push_back(Pair("version", tx.nVersion));
+    entry.push_back(Pair("type", tx.nType));
     entry.push_back(Pair("locktime", (int64_t)tx.nLockTime));
     UniValue vin(UniValue::VARR);
     BOOST_FOREACH(const CTxIn& txin, tx.vin) {
@@ -120,6 +121,11 @@ void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry)
         vout.push_back(out);
     }
     entry.push_back(Pair("vout", vout));
+
+    if (!tx.vExtraPayload.empty()) {
+        entry.push_back(Pair("extraPayloadSize", (int)tx.vExtraPayload.size()));
+        entry.push_back(Pair("extraPayload", HexStr(tx.vExtraPayload)));
+    }
 
     if (!hashBlock.IsNull()) {
         entry.push_back(Pair("blockhash", hashBlock.GetHex()));
@@ -500,6 +506,7 @@ UniValue decoderawtransaction(const JSONRPCRequest& request)
             "  \"txid\" : \"id\",        (string) The transaction id\n"
             "  \"size\" : n,             (numeric) The transaction size\n"
             "  \"version\" : n,          (numeric) The version\n"
+            "  \"type\" : n,             (numeric) The type\n"
             "  \"locktime\" : ttt,       (numeric) The lock time\n"
             "  \"vin\" : [               (array of json objects)\n"
             "     {\n"
