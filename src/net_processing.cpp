@@ -1481,7 +1481,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                     // GETHEADERS
                     bool fDevNetGenesis = !chainparams.GetConsensus().hashDevnetGenesisBlock.IsNull() && pindexBestHeader->GetBlockHash() == chainparams.GetConsensus().hashDevnetGenesisBlock;
 
-                    if (!fDevNetGenesis && chainparams.DelayGetHeadersTime() != 0 && pindexBestHeader->GetBlockTime() < GetAdjustedTime() - chainparams.DelayGetHeadersTime()) {
+                    if (!fDevNetGenesis && (GetAdjustedTime() - pindexBestHeader->GetBlockTime() > chainparams.DelayGetHeadersTime())) {
                         // We are pretty far from being completely synced at the moment. If we would initiate a new
                         // chain of GETHEADERS/HEADERS now, we may end up downnloading the full chain from multiple
                         // peers at the same time, slowing down the initial sync. At the same time, we don't know
@@ -1964,7 +1964,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             LogPrint("net", "more getheaders (%d) to end to peer=%d (startheight:%d)\n", pindexLast->nHeight, pfrom->id, pfrom->nStartingHeight);
             connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::GETHEADERS, chainActive.GetLocator(pindexLast), uint256()));
         } else {
-            if (chainparams.DelayGetHeadersTime() != 0 && pindexBestHeader->GetBlockTime() < GetAdjustedTime() - chainparams.DelayGetHeadersTime()) {
+            if (GetAdjustedTime() - pindexBestHeader->GetBlockTime() > chainparams.DelayGetHeadersTime()) {
                 // peer has sent us a HEADERS message below maximum size and we are still quite far from being fully
                 // synced, this means we probably got a bad peer for initial sync and need to continue with another one.
                 // By disconnecting we force to start a new iteration of initial headers sync in SendMessages
@@ -2600,7 +2600,7 @@ bool SendMessages(CNode* pto, CConnman& connman, const std::atomic<bool>& interr
             }
         }
 
-        if (chainParams.DelayGetHeadersTime() != 0 && pindexBestHeader->GetBlockTime() >= GetAdjustedTime() - chainParams.DelayGetHeadersTime()) {
+        if (GetAdjustedTime() - pindexBestHeader->GetBlockTime() <= chainParams.DelayGetHeadersTime()) {
             // Headers chain has catched up enough so we can send out GETHEADER messages which were initially meant to
             // be sent directly after INV was received
             LOCK(pto->cs_inventory);
