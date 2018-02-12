@@ -268,15 +268,6 @@ bool CGovernanceObject::CheckSignature(CPubKey& pubKeyMasternode)
     return true;
 }
 
-int CGovernanceObject::GetObjectSubtype()
-{
-    // todo - 12.1
-    //   - detect subtype from strData json, obj["subtype"]
-
-    if(nObjectType == GOVERNANCE_OBJECT_TRIGGER) return TRIGGER_SUPERBLOCK;
-    return -1;
-}
-
 uint256 CGovernanceObject::GetHash() const
 {
     // CREATE HASH OF ALL IMPORTANT PIECES OF DATA

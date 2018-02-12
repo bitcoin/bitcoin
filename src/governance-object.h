@@ -273,8 +273,6 @@ public:
 
     void UpdateSentinelVariables();
 
-    int GetObjectSubtype();
-
     CAmount GetMinCollateralFee();
 
     UniValue GetJSONObject();
