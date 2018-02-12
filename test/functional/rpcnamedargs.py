@@ -17,10 +17,10 @@ class NamedArgumentTest(RavenTestFramework):
 
     def run_test(self):
         node = self.nodes[0]
-        h = node.help(command='getblockchaininfo')
-        assert(h.startswith('getblockchaininfo\n'))
+        h = node.help(command='getinfo')
+        assert(h.startswith('getinfo\n'))
 
-        assert_raises_rpc_error(-8, 'Unknown named parameter', node.help, random='getblockchaininfo')
+        assert_raises_jsonrpc(-8, 'Unknown named parameter', node.help, random='getinfo')
 
         h = node.getblockhash(height=0)
         node.getblock(blockhash=h)
