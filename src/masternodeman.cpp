@@ -873,54 +873,11 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, const std::string& strCommand,
 
         LOCK(cs);
 
-        if(vin == CTxIn()) { //only should ask for this once
-            //local network
-            bool isLocal = (pfrom->addr.IsRFC1918() || pfrom->addr.IsLocal());
-
-            if(!isLocal && Params().NetworkIDString() == CBaseChainParams::MAIN) {
-                std::map<CNetAddr, int64_t>::iterator it = mAskedUsForMasternodeList.find(pfrom->addr);
-                if (it != mAskedUsForMasternodeList.end() && it->second > GetTime()) {
-                    Misbehaving(pfrom->GetId(), 34);
-                    LogPrintf("DSEG -- peer already asked me for the list, peer=%d\n", pfrom->id);
-                    return;
-                }
-                int64_t askAgain = GetTime() + DSEG_UPDATE_SECONDS;
-                mAskedUsForMasternodeList[pfrom->addr] = askAgain;
-            }
-        } //else, asking for a specific node which is ok
-
-        int nInvCount = 0;
-
-        for (const auto& mnpair : mapMasternodes) {
-            if (vin != CTxIn() && vin != mnpair.second.vin) continue; // asked for specific vin but we are not there yet
-            if (mnpair.second.addr.IsRFC1918() || mnpair.second.addr.IsLocal()) continue; // do not send local network masternode
-            if (mnpair.second.IsUpdateRequired()) continue; // do not send outdated masternodes
-
-            LogPrint("masternode", "DSEG -- Sending Masternode entry: masternode=%s  addr=%s\n", mnpair.first.ToStringShort(), mnpair.second.addr.ToString());
-            CMasternodeBroadcast mnb = CMasternodeBroadcast(mnpair.second);
-            CMasternodePing mnp = mnpair.second.lastPing;
-            uint256 hashMNB = mnb.GetHash();
-            uint256 hashMNP = mnp.GetHash();
-            pfrom->PushInventory(CInv(MSG_MASTERNODE_ANNOUNCE, hashMNB));
-            pfrom->PushInventory(CInv(MSG_MASTERNODE_PING, hashMNP));
-            nInvCount++;
-
-            mapSeenMasternodeBroadcast.insert(std::make_pair(hashMNB, std::make_pair(GetTime(), mnb)));
-            mapSeenMasternodePing.insert(std::make_pair(hashMNP, mnp));
-
-            if (vin.prevout == mnpair.first) {
-                LogPrintf("DSEG -- Sent 1 Masternode inv to peer=%d\n", pfrom->id);
-                return;
-            }
-        }
-
         if(vin == CTxIn()) {
-            connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::SYNCSTATUSCOUNT, MASTERNODE_SYNC_LIST, nInvCount));
-            LogPrintf("DSEG -- Sent %d Masternode invs to peer=%d\n", nInvCount, pfrom->id);
-            return;
+            SyncAll(pfrom, connman);
+        } else {
+            SyncSingle(pfrom, vin.prevout, connman);
         }
-        // smth weird happen - someone asked us for vin we have no idea about?
-        LogPrint("masternode", "DSEG -- No invs sent to peer=%d\n", pfrom->id);
 
     } else if (strCommand == NetMsgType::MNVERIFY) { // Masternode Verify
 
@@ -945,6 +902,74 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, const std::string& strCommand,
             ProcessVerifyBroadcast(pfrom, mnv);
         }
     }
+}
+
+void CMasternodeMan::SyncSingle(CNode* pnode, const COutPoint& outpoint, CConnman& connman)
+{
+    // do not provide any data until our node is synced
+    if (!masternodeSync.IsSynced()) return;
+
+    LOCK(cs);
+
+    auto it = mapMasternodes.find(outpoint);
+
+    if(it != mapMasternodes.end()) {
+        if (it->second.addr.IsRFC1918() || it->second.addr.IsLocal()) return; // do not send local network masternode
+        // NOTE: send masternode regardless of its current state, the other node will need it to verify old votes.
+        LogPrint("masternode", "CMasternodeMan::%s -- Sending Masternode entry: masternode=%s  addr=%s\n", __func__, outpoint.ToStringShort(), it->second.addr.ToString());
+        PushDsegInvs(pnode, it->second);
+        LogPrintf("CMasternodeMan::%s -- Sent 1 Masternode inv to peer=%d\n", __func__, pnode->id);
+    }
+}
+
+void CMasternodeMan::SyncAll(CNode* pnode, CConnman& connman)
+{
+    // do not provide any data until our node is synced
+    if (!masternodeSync.IsSynced()) return;
+
+    LOCK(cs);
+
+    // local network
+    bool isLocal = (pnode->addr.IsRFC1918() || pnode->addr.IsLocal());
+
+    // should only ask for this once
+    if(!isLocal && Params().NetworkIDString() == CBaseChainParams::MAIN) {
+        std::map<CNetAddr, int64_t>::iterator it = mAskedUsForMasternodeList.find(pnode->addr);
+        if (it != mAskedUsForMasternodeList.end() && it->second > GetTime()) {
+            Misbehaving(pnode->GetId(), 34);
+            LogPrintf("CMasternodeMan::%s -- peer already asked me for the list, peer=%d\n", __func__, pnode->id);
+            return;
+        }
+        int64_t askAgain = GetTime() + DSEG_UPDATE_SECONDS;
+        mAskedUsForMasternodeList[pnode->addr] = askAgain;
+    }
+
+    int nInvCount = 0;
+
+    for (const auto& mnpair : mapMasternodes) {
+        if (mnpair.second.addr.IsRFC1918() || mnpair.second.addr.IsLocal()) continue; // do not send local network masternode
+        // NOTE: send masternode regardless of its current state, the other node will need it to verify old votes.
+        LogPrint("masternode", "CMasternodeMan::%s -- Sending Masternode entry: masternode=%s  addr=%s\n", __func__, mnpair.first.ToStringShort(), mnpair.second.addr.ToString());
+        PushDsegInvs(pnode, mnpair.second);
+        nInvCount++;
+    }
+
+    connman.PushMessage(pnode, CNetMsgMaker(pnode->GetSendVersion()).Make(NetMsgType::SYNCSTATUSCOUNT, MASTERNODE_SYNC_LIST, nInvCount));
+    LogPrintf("CMasternodeMan::%s -- Sent %d Masternode invs to peer=%d\n", __func__, nInvCount, pnode->id);
+}
+
+void CMasternodeMan::PushDsegInvs(CNode* pnode, const CMasternode& mn)
+{
+    AssertLockHeld(cs);
+
+    CMasternodeBroadcast mnb(mn);
+    CMasternodePing mnp = mnb.lastPing;
+    uint256 hashMNB = mnb.GetHash();
+    uint256 hashMNP = mnp.GetHash();
+    pnode->PushInventory(CInv(MSG_MASTERNODE_ANNOUNCE, hashMNB));
+    pnode->PushInventory(CInv(MSG_MASTERNODE_PING, hashMNP));
+    mapSeenMasternodeBroadcast.insert(std::make_pair(hashMNB, std::make_pair(GetTime(), mnb)));
+    mapSeenMasternodePing.insert(std::make_pair(hashMNP, mnp));
 }
 
 // Verification of masternodes via unique direct requests.
