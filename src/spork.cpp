@@ -166,7 +166,7 @@ int64_t CSporkManager::GetSporkValue(int nSporkID)
 
 }
 
-int CSporkManager::GetSporkIDByName(std::string strName)
+int CSporkManager::GetSporkIDByName(const std::string& strName)
 {
     if (strName == "SPORK_2_INSTANTSEND_ENABLED")               return SPORK_2_INSTANTSEND_ENABLED;
     if (strName == "SPORK_3_INSTANTSEND_BLOCK_FILTERING")       return SPORK_3_INSTANTSEND_BLOCK_FILTERING;
@@ -198,7 +198,7 @@ std::string CSporkManager::GetSporkNameByID(int nSporkID)
     }
 }
 
-bool CSporkManager::SetPrivKey(std::string strPrivKey)
+bool CSporkManager::SetPrivKey(const std::string& strPrivKey)
 {
     CSporkMessage spork;
 
@@ -214,7 +214,7 @@ bool CSporkManager::SetPrivKey(std::string strPrivKey)
     }
 }
 
-bool CSporkMessage::Sign(std::string strSignKey)
+bool CSporkMessage::Sign(const std::string& strSignKey)
 {
     CKey key;
     CPubKey pubkey;

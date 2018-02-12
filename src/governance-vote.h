@@ -75,8 +75,8 @@ static const int MAX_SUPPORTED_VOTE_SIGNAL = VOTE_SIGNAL_ENDORSED;
 class CGovernanceVoting
 {
 public:
-    static vote_outcome_enum_t ConvertVoteOutcome(std::string strVoteOutcome);
-    static vote_signal_enum_t ConvertVoteSignal(std::string strVoteSignal);
+    static vote_outcome_enum_t ConvertVoteOutcome(const std::string& strVoteOutcome);
+    static vote_signal_enum_t ConvertVoteSignal(const std::string& strVoteSignal);
     static std::string ConvertOutcomeToString(vote_outcome_enum_t nOutcome);
     static std::string ConvertSignalToString(vote_signal_enum_t nSignal);
 };
@@ -121,7 +121,7 @@ public:
 
     void SetSignature(const std::vector<unsigned char>& vchSigIn) { vchSig = vchSigIn; }
 
-    bool Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode);
+    bool Sign(const CKey& keyMasternode, const CPubKey& pubKeyMasternode);
     bool IsValid(bool fSignatureCheck) const;
     void Relay(CConnman& connman) const;
 

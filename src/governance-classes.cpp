@@ -19,7 +19,7 @@ CGovernanceTriggerManager triggerman;
 
 // SPLIT UP STRING BY DELIMITER
 // http://www.boost.org/doc/libs/1_58_0/doc/html/boost/algorithm/split_idp202406848.html
-std::vector<std::string> SplitBy(std::string strCommand, std::string strDelimit)
+std::vector<std::string> SplitBy(const std::string& strCommand, const std::string& strDelimit)
 {
     std::vector<std::string> vParts;
     boost::split(vParts, strCommand, boost::is_any_of(strDelimit));
@@ -560,7 +560,7 @@ CAmount CSuperblock::GetPaymentsLimit(int nBlockHeight)
     return nPaymentsLimit;
 }
 
-void CSuperblock::ParsePaymentSchedule(std::string& strPaymentAddresses, std::string& strPaymentAmounts)
+void CSuperblock::ParsePaymentSchedule(const std::string& strPaymentAddresses, const std::string& strPaymentAmounts)
 {
     // SPLIT UP ADDR/AMOUNT STRINGS AND PUT IN VECTORS
 

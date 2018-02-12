@@ -192,7 +192,7 @@ private:
 public:
     CGovernanceObject();
 
-    CGovernanceObject(uint256 nHashParentIn, int nRevisionIn, int64_t nTime, uint256 nCollateralHashIn, std::string strDataIn);
+    CGovernanceObject(const uint256& nHashParentIn, int nRevisionIn, int64_t nTime, const uint256& nCollateralHashIn, const std::string& strDataIn);
 
     CGovernanceObject(const CGovernanceObject& other);
 
@@ -255,8 +255,8 @@ public:
     // Signature related functions
 
     void SetMasternodeVin(const COutPoint& outpoint);
-    bool Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode);
-    bool CheckSignature(CPubKey& pubKeyMasternode);
+    bool Sign(const CKey& keyMasternode, const CPubKey& pubKeyMasternode);
+    bool CheckSignature(const CPubKey& pubKeyMasternode);
 
     std::string GetSignatureMessage() const;
 
