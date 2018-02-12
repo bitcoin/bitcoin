@@ -427,14 +427,14 @@ bool CMasternodePayments::GetBlockPayee(int nBlockHeight, CScript& payee)
 
 // Is this masternode scheduled to get paid soon?
 // -- Only look ahead up to 8 blocks to allow for propagation of the latest 2 blocks of votes
-bool CMasternodePayments::IsScheduled(const CMasternode& mn, int nNotBlockHeight)
+bool CMasternodePayments::IsScheduled(const masternode_info_t& mnInfo, int nNotBlockHeight)
 {
     LOCK(cs_mapMasternodeBlocks);
 
     if(!masternodeSync.IsMasternodeListSynced()) return false;
 
     CScript mnpayee;
-    mnpayee = GetScriptForDestination(mn.pubKeyCollateralAddress.GetID());
+    mnpayee = GetScriptForDestination(mnInfo.pubKeyCollateralAddress.GetID());
 
     CScript payee;
     for(int64_t h = nCachedBlockHeight; h <= nCachedBlockHeight + 8; h++){
