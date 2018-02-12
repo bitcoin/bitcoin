@@ -196,7 +196,7 @@ void CGovernanceTriggerManager::CleanAndRemove()
             case SEEN_OBJECT_IS_VALID:
             case SEEN_OBJECT_EXECUTED:
                 {
-                    int nTriggerBlock = pSuperblock->GetBlockStart();
+                    int nTriggerBlock = pSuperblock->GetBlockHeight();
                     // Rough approximation: a cycle of superblock ++
                     int nExpirationBlock = nTriggerBlock + GOVERNANCE_TRIGGER_EXPIRATION_BLOCKS;
                     LogPrint("gobject", "CGovernanceTriggerManager::CleanAndRemove -- nTriggerBlock = %d, nExpirationBlock = %d\n", nTriggerBlock, nExpirationBlock);
@@ -312,13 +312,13 @@ bool CSuperblockManager::IsSuperblockTriggered(int nBlockHeight)
 
         // note : 12.1 - is epoch calculation correct?
 
-        if(nBlockHeight != pSuperblock->GetBlockStart()) {
+        if(nBlockHeight != pSuperblock->GetBlockHeight()) {
             LogPrint("gobject", "CSuperblockManager::IsSuperblockTriggered -- block height doesn't match nBlockHeight = %d, blockStart = %d, continuing\n",
                      nBlockHeight,
-                     pSuperblock->GetBlockStart());
+                     pSuperblock->GetBlockHeight());
             DBG( cout << "IsSuperblockTriggered Not the target block, continuing"
                  << ", nBlockHeight = " << nBlockHeight
-                 << ", superblock->GetBlockStart() = " << pSuperblock->GetBlockStart()
+                 << ", superblock->GetBlockHeight() = " << pSuperblock->GetBlockHeight()
                  << endl; );
             continue;
         }
@@ -365,7 +365,7 @@ bool CSuperblockManager::GetBestSuperblock(CSuperblock_sptr& pSuperblockRet, int
             continue;
         }
 
-        if(nBlockHeight != pSuperblock->GetBlockStart()) {
+        if(nBlockHeight != pSuperblock->GetBlockHeight()) {
             DBG( cout << "GetBestSuperblock Not the target block, continuing" << endl; );
             continue;
         }
@@ -463,7 +463,7 @@ bool CSuperblockManager::IsValid(const CTransaction& txNew, int nBlockHeight, CA
 CSuperblock::
 CSuperblock()
     : nGovObjHash(),
-      nEpochStart(0),
+      nBlockHeight(0),
       nStatus(SEEN_OBJECT_UNKNOWN),
       vecPayments()
 {}
@@ -471,7 +471,7 @@ CSuperblock()
 CSuperblock::
 CSuperblock(uint256& nHash)
     : nGovObjHash(nHash),
-      nEpochStart(0),
+      nBlockHeight(0),
       nStatus(SEEN_OBJECT_UNKNOWN),
       vecPayments()
 {
@@ -496,16 +496,16 @@ CSuperblock(uint256& nHash)
 
     UniValue obj = pGovObj->GetJSONObject();
 
-    // FIRST WE GET THE START EPOCH, THE DATE WHICH THE PAYMENT SHALL OCCUR
-    nEpochStart = obj["event_block_height"].get_int();
+    // FIRST WE GET THE START HEIGHT, THE BLOCK HEIGHT AT WHICH THE PAYMENT SHALL OCCUR
+    nBlockHeight = obj["event_block_height"].get_int();
 
     // NEXT WE GET THE PAYMENT INFORMATION AND RECONSTRUCT THE PAYMENT VECTOR
     std::string strAddresses = obj["payment_addresses"].get_str();
     std::string strAmounts = obj["payment_amounts"].get_str();
     ParsePaymentSchedule(strAddresses, strAmounts);
 
-    LogPrint("gobject", "CSuperblock -- nEpochStart = %d, strAddresses = %s, strAmounts = %s, vecPayments.size() = %d\n",
-             nEpochStart, strAddresses, strAmounts, vecPayments.size());
+    LogPrint("gobject", "CSuperblock -- nBlockHeight = %d, strAddresses = %s, strAmounts = %s, vecPayments.size() = %d\n",
+             nBlockHeight, strAddresses, strAmounts, vecPayments.size());
 
     DBG( cout << "CSuperblock Constructor End" << endl; );
 }

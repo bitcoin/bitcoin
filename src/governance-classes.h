@@ -148,7 +148,7 @@ class CSuperblock : public CGovernanceObject
 private:
     uint256 nGovObjHash;
 
-    int nEpochStart;
+    int nBlockHeight;
     int nStatus;
     std::vector<CGovernancePayment> vecPayments;
 
@@ -177,26 +177,9 @@ public:
         return pObj;
     }
 
-    int GetBlockStart()
+    int GetBlockHeight()
     {
-        /* // 12.1 TRIGGER EXECUTION */
-        /* // NOTE : Is this over complicated? */
-
-        /* //int nRet = 0; */
-        /* int nTipEpoch = 0; */
-        /* int nTipBlock = chainActive.Tip()->nHeight+1; */
-
-        /* // GET TIP EPOCK / BLOCK */
-
-        /* // typically it should be more than the current time */
-        /* int nDiff = nEpochStart - nTipEpoch; */
-        /* int nBlockDiff = nDiff / (2.6*60); */
-
-        /* // calculate predicted block height */
-        /* int nMod = (nTipBlock + nBlockDiff) % Params().GetConsensus().nSuperblockCycle; */
-
-        /* return (nTipBlock + nBlockDiff)-nMod; */
-        return nEpochStart;
+        return nBlockHeight;
     }
 
     int CountPayments() { return (int)vecPayments.size(); }
