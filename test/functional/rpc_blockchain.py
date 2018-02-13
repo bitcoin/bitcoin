@@ -123,6 +123,41 @@ class BlockchainTest(BitcoinTestFramework):
         assert_equal(res['prune_target_size'], 576716800)
         assert_greater_than(res['size_on_disk'], 0)
 
+        assert_equal(res['softforks'], {
+            'bip34': {'status': 'defined', 'fixedHeight': 500, 'since': 0},
+            'strictder': {'status': 'defined', 'fixedHeight': 1251, 'since': 0},
+            'cltv': {'status': 'defined', 'fixedHeight': 1351, 'since': 0},
+            'csv': {
+                'status': 'started',
+                'bit': 0,
+                'startTime': 0,
+                'timeout': 9223372036854775807,
+                'since': 144,
+                'statistics': {
+                    'period': 144,
+                    'threshold': 108,
+                    'elapsed': 57,
+                    'count': 57,
+                    'possible': True
+                }
+            },
+            'segwit': {'status': 'active', 'alwaysActive': True, 'since': 0},
+            'testdummy': {
+                'status': 'started',
+                'bit': 28,
+                'startTime': 0,
+                'timeout': 9223372036854775807,
+                'since': 144,
+                'statistics': {
+                    'period': 144,
+                    'threshold': 108,
+                    'elapsed': 57,
+                    'count': 57,
+                    'possible': True
+                }
+            },
+        })
+
     def _test_getchaintxstats(self):
         self.log.info("Test getchaintxstats")
 
