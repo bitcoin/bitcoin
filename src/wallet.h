@@ -904,6 +904,7 @@ public:
 
     COutput(const CWalletTx *txIn, int iIn)
     {
+        assert(txIn);
         tx = txIn; i = iIn; nDepth = tx->GetDepthInMainChain(false);
     }
 
