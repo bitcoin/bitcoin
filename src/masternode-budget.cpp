@@ -24,12 +24,14 @@ std::vector<CFinalizedBudgetBroadcast> vecImmatureFinalizedBudgets;
 
 CAmount BlocksBeforeSuperblockToSubmitFinalBudget()
 {
-    // Relatively 43200 / 30 = 1440, for testnet  - 8 blocks (cannot be less)
+    assert(GetBudgetPaymentCycleBlocks() > 10);
 
-    if (Params().NetworkID() == CBaseChainParams::TESTNET)
-        return 8;          // aprox 12 mins
-    else
+    // Relatively 43200 / 30 = 1440, for testnet  - equal to budget payment cycle
+
+    if (Params().NetworkID() == CBaseChainParams::MAIN)
         return 1440 * 2;   // aprox 2 days
+    else
+        return GetBudgetPaymentCycleBlocks() - 10; // 40 blocks for 50-block cycle
 
 }
 
@@ -179,8 +181,9 @@ void CBudgetManager::SubmitFinalBudget()
     uint256 txidCollateral;
 
     if(!mapCollateralTxids.count(tempBudget.GetHash())){
+        const bool useIX = false;
         CWalletTx wtx;
-        if(!pwalletMain->GetBudgetSystemCollateralTX(wtx, tempBudget.GetHash(), false)){
+        if(!pwalletMain->GetBudgetSystemCollateralTX(wtx, tempBudget.GetHash(), useIX)){
             LogPrintf("CBudgetManager::SubmitFinalBudget - Can't make collateral transaction\n");
             return;
         }
@@ -188,7 +191,7 @@ void CBudgetManager::SubmitFinalBudget()
         // make our change address
         CReserveKey reservekey(pwalletMain);
         //send the tx to the network
-        pwalletMain->CommitTransaction(wtx, reservekey, "ix");
+        pwalletMain->CommitTransaction(wtx, reservekey, useIX ? "ix" : "tx");
         tx = (CTransaction)wtx;
         txidCollateral = tx.GetHash();
         mapCollateralTxids.insert(make_pair(tempBudget.GetHash(), txidCollateral));
