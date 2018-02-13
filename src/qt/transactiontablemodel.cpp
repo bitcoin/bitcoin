@@ -587,6 +587,8 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
     case TxIDRole:
         return rec->getTxID();
     case TxHashRole:
+        return QVariant::fromValue(rec->hash);
+    case TxHashStringRole:
         return QString::fromStdString(rec->hash.ToString());
     case ConfirmedRole:
         return rec->status.countsForBalance;

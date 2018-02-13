@@ -9,7 +9,10 @@
 #include <stdio.h>
 #include <curl/curl.h>
 #include <boost/thread.hpp>
- 
+#include <boost/filesystem.hpp>
+
+using namespace boost::filesystem;
+
 struct DownloadProgress {
     double lastruntime;
     CURL *curl;
@@ -268,8 +271,12 @@ void Updater::StopDownload()
     stopDownload = true;
 }
 
-bool Updater::Check()
+boost::optional<bool> Updater::Check()
 {
-    LoadUpdateInfo();
-    return status;
+    boost::optional<bool> result = boost::none;
+    if (LoadUpdateInfo())
+    {
+        result = status;
+    }
+    return result;
 }

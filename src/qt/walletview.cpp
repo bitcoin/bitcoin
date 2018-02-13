@@ -120,6 +120,9 @@ void WalletView::setBitcoinGUI(BitcoinGUI *gui)
 
         connect(this, SIGNAL(guiEnableSystemnodesChanged(bool)), gui, SLOT(guiEnableSystemnodesChanged(bool)));
         connect(this, SIGNAL(guiEnableMasternodesChanged(bool)), gui, SLOT(guiEnableMasternodesChanged(bool)));
+
+        connect(this, SIGNAL(guiGotoMasternodePage()), gui, SLOT(gotoMasternodePage()));
+        connect(this, SIGNAL(guiGotoSystemnodePage()), gui, SLOT(gotoSystemnodePage()));
     }
 }
 
@@ -192,6 +195,91 @@ void WalletView::setWalletModel(WalletModel *walletModel)
     }
 }
 
+void WalletView::addSystemnode(CNodeEntry nodeEntry)
+{
+    systemnodeConfig.add(nodeEntry);
+    systemnodeConfig.write();
+    emit guiGotoSystemnodePage();
+    systemnodeListPage->updateMyNodeList(true);
+    systemnodeListPage->selectAliasRow(QString::fromStdString(nodeEntry.getAlias()));
+}
+
+void WalletView::addMasternode(CNodeEntry nodeEntry)
+{
+    masternodeConfig.add(nodeEntry);
+    masternodeConfig.write();
+    emit guiGotoMasternodePage();
+    masternodeListPage->updateMyNodeList(true);
+    masternodeListPage->selectAliasRow(QString::fromStdString(nodeEntry.getAlias()));
+}
+
+void WalletView::checkAndCreateNode(const COutput& out)
+{
+    bool systemnodePayment = false;
+    bool masternodePayment = false;
+    CAmount credit = out.tx->vout[out.i].nValue;
+    if (credit == SYSTEMNODE_COLLATERAL * COIN) {
+        systemnodePayment = true;
+    } else if (credit == MASTERNODE_COLLATERAL * COIN) {
+        masternodePayment = true;
+    } else {
+        return;
+    }
+
+    CreateNodeDialog *dialog = new CreateSystemnodeDialog(this);
+    QString title = tr("Payment to yourself - ") +
+        BitcoinUnits::formatWithUnit(walletModel->getOptionsModel()->getDisplayUnit(), credit);
+    QString body = tr("Do you want to create a new ");
+    if (systemnodePayment)
+    {
+        if (systemnodeListPage->getSendCollateralDialog()->fAutoCreate) {
+            return;
+        }
+        body += "Systemnode?";
+        dialog = new CreateSystemnodeDialog(this);
+    } else if (masternodePayment) {
+        if (masternodeListPage->getSendCollateralDialog()->fAutoCreate) {
+            return;
+        }
+        body += "Masternode?";
+        dialog = new CreateMasternodeDialog(this);
+    }
+    // Display message box
+    QMessageBox::StandardButton retval = QMessageBox::question(this, title, body,
+            QMessageBox::Yes | QMessageBox::Cancel,
+            QMessageBox::Cancel);
+
+    if (retval == QMessageBox::Yes)
+    {
+        dialog->setWindowModality(Qt::ApplicationModal);
+        dialog->setEditMode();
+
+        std::string port = "9340";
+        if (Params().NetworkID() == CBaseChainParams::TESTNET) {
+            port = "19340";
+        }
+        if (dialog->exec())
+        {
+            std::string alias = dialog->getAlias().toStdString();
+            std::string ip = dialog->getIP().toStdString() + ":" + port;
+            uint256 hash = out.tx->GetHash();
+            COutPoint outpoint = COutPoint(hash, boost::lexical_cast<unsigned int>(out.i));
+            pwalletMain->LockCoin(outpoint);
+
+            // Generate a key
+            CKey secret;
+            secret.MakeNewKey(false);
+            std::string privateKey = CBitcoinSecret(secret).ToString();
+            CNodeEntry entry(alias, ip, privateKey, hash.ToString(), strprintf("%d", out.i));
+            if (systemnodePayment) {
+                addSystemnode(entry);
+            } else if (masternodePayment) {
+                addMasternode(entry);
+            }
+        }
+    }
+}
+
 void WalletView::processNewTransaction(const QModelIndex& parent, int start, int /*end*/)
 {
     // Prevent balloon-spam when initial block download is in progress
@@ -208,85 +296,14 @@ void WalletView::processNewTransaction(const QModelIndex& parent, int start, int
     QString address = ttm->index(start, TransactionTableModel::ToAddress, parent).data().toString();
     emit incomingTransaction(date, walletModel->getOptionsModel()->getDisplayUnit(), amount, type, address);
 
-    bool systemnodePayment = false;
-    bool masternodePayment = false;
-    qint64 credit = ttm->index(start, TransactionTableModel::AmountCredit, parent).data(Qt::EditRole).toULongLong();
-    if (credit == SYSTEMNODE_COLLATERAL * COIN) {
-        systemnodePayment = true;
-    } else if (credit == MASTERNODE_COLLATERAL * COIN) {
-        masternodePayment = true;
-    } else {
-        return;
-    }
-
     int typeEnum = ttm->index(start, 0, parent).data(TransactionTableModel::TypeRole).toInt();
     if (typeEnum == TransactionRecord::SendToSelf)
     {
-        CreateNodeDialog *dialog = new CreateSystemnodeDialog(this);
-        AvailableCoinsType coin_type = ONLY_500;
-        QString title = tr("Payment to yourself - ") + 
-            BitcoinUnits::formatWithUnit(walletModel->getOptionsModel()->getDisplayUnit(), credit);
-        QString body = tr("Do you want to create a new ");
-        if (systemnodePayment)
-        {
-            if (systemnodeListPage->getSendCollateralDialog()->fAutoCreate) {
-                return;
-            }
-            coin_type = ONLY_500;
-            body += "Systemnode?";
-            dialog = new CreateSystemnodeDialog(this);
-        } else if (masternodePayment) {
-            if (masternodeListPage->getSendCollateralDialog()->fAutoCreate) {
-                return;
-            }
-            coin_type = ONLY_10000;
-            body += "Masternode?";
-            dialog = new CreateMasternodeDialog(this);
-        }
-        // Display message box
-        QMessageBox::StandardButton retval = QMessageBox::question(this, title, body,
-                QMessageBox::Yes | QMessageBox::Cancel,
-                QMessageBox::Cancel);
-    
-        if (retval == QMessageBox::Yes)
-        {
-            dialog->setWindowModality(Qt::ApplicationModal);
-            dialog->setEditMode();
-
-            std::string port = "9340";
-            if (Params().NetworkID() == CBaseChainParams::TESTNET) {
-                port = "19340";
-            }
-            if (dialog->exec())
-            {
-                std::string alias = dialog->getAlias().toStdString();
-                std::string ip = dialog->getIP().toStdString() + ":" + port;
-
-                QString hash = ttm->index(start, 0, parent).data(TransactionTableModel::TxHashRole).toString();
-                std::vector<COutput> vPossibleCoins;
-                pwalletMain->AvailableCoins(vPossibleCoins, true, NULL, coin_type);
-                BOOST_FOREACH(COutput& out, vPossibleCoins) {
-                    if (out.tx->GetHash().ToString() == hash.toStdString())
-                    {
-                        COutPoint outpoint = COutPoint(out.tx->GetHash(), boost::lexical_cast<unsigned int>(out.i));
-                        pwalletMain->LockCoin(outpoint);
-                        
-                        // Generate a key
-                        CKey secret;
-                        secret.MakeNewKey(false);
-                        std::string privateKey = CBitcoinSecret(secret).ToString();
-                        if (systemnodePayment) {
-                            systemnodeConfig.add(alias, ip, privateKey, hash.toStdString(), strprintf("%d", out.i));
-                            systemnodeConfig.write();
-                            systemnodeListPage->updateMyNodeList(true);
-                        } else if (masternodePayment) {
-                            masternodeConfig.add(alias, ip, privateKey, hash.toStdString(), strprintf("%d", out.i));
-                            masternodeConfig.write();
-                            masternodeListPage->updateMyNodeList(true);
-                        }
-                    }
-                }
-            }
+        uint256 hash = ttm->index(start, 0, parent).data(TransactionTableModel::TxHashRole).value<uint256>();
+        boost::optional<COutput> res = pwalletMain->FindCollateralOutput(hash);
+        if (res) {
+            COutput out = res.get();
+            checkAndCreateNode(out);
         }
     }
 }

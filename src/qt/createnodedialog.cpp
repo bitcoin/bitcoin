@@ -3,6 +3,7 @@
 #include "ui_interface.h"
 #include "net.h"
 #include <QMessageBox>
+#include <QPushButton>
 
 CreateNodeDialog::CreateNodeDialog(QWidget *parent) :
     QDialog(parent),
@@ -112,6 +113,7 @@ bool CreateNodeDialog::CheckIP()
 
 void CreateNodeDialog::accept()
 {
+    ui->buttonBox->button(QDialogButtonBox::Ok)->setFocus();
     if (!CheckAlias())
     {
         return;

@@ -9,6 +9,10 @@ void CNodeConfig::add(std::string alias, std::string ip, std::string privKey, st
     entries.push_back(cme);
 }
 
+void CNodeConfig::add(CNodeEntry cne) {
+    entries.push_back(cne);
+}
+
 bool CNodeConfig::read(std::string& strErr) {
     int linenumber = 1;
     boost::filesystem::path pathNodeConfigFile = getNodeConfigFile();

@@ -80,7 +80,7 @@ MasternodeList::MasternodeList(QWidget *parent) :
     CBlockIndex* pindexPrev = chainActive.Tip();
     int nNext = pindexPrev->nHeight - pindexPrev->nHeight % GetBudgetPaymentCycleBlocks() + GetBudgetPaymentCycleBlocks();
     ui->superblockLabel->setText(QString::number(nNext));
-    sendDialog = new SendCollateralDialog(SendCollateralDialog::MASTERNODE);
+    sendDialog = new SendCollateralDialog(SendCollateralDialog::MASTERNODE, this);
 }
 
 MasternodeList::~MasternodeList()
@@ -183,6 +183,20 @@ void MasternodeList::StartAll(std::string strCommand)
     QMessageBox msg;
     msg.setText(QString::fromStdString(returnObj));
     msg.exec();
+}
+
+void MasternodeList::selectAliasRow(const QString& alias)
+{
+    for(int i=0; i < ui->tableWidgetMyMasternodes->rowCount(); ++i)
+    {
+        if(ui->tableWidgetMyMasternodes->item(i, 0)->text() == alias)
+        {
+            ui->tableWidgetMyMasternodes->selectRow(i);
+            ui->tableWidgetMyMasternodes->setFocus();
+            ui->tabWidget->setCurrentIndex(0);
+            return;
+        }
+    }
 }
 
 void MasternodeList::updateMyMasternodeInfo(QString alias, QString addr, QString privkey, QString txHash, QString txIndex, CMasternode *pmn)

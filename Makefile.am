@@ -4,9 +4,6 @@ SUBDIRS = src
 
 GZIP_ENV="-9n"
 
-bindata_DATA= share/certs/curl-ca-bundle.crt
-bindatadir=$(bindir)
-
 BITCOIND_BIN=$(top_builddir)/src/crownd$(EXEEXT)
 BITCOIN_QT_BIN=$(top_builddir)/src/qt/crown-qt$(EXEEXT)
 BITCOIN_CLI_BIN=$(top_builddir)/src/crown-cli$(EXEEXT)

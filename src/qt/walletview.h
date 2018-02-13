@@ -9,6 +9,7 @@
 #include "masternodelist.h"
 #include "systemnodelist.h"
 #include "multisigdialog.h"
+#include "nodeconfig.h"
 
 #include <QStackedWidget>
 
@@ -59,6 +60,8 @@ public:
 
     void enableSystemnodes();
     void enableMasternodes();
+    void addSystemnode(CNodeEntry nodeEntry);
+    void addMasternode(CNodeEntry nodeEntry);
 
 private:
     ClientModel *clientModel;
@@ -97,7 +100,8 @@ public slots:
     void gotoSignMessageTab(QString addr = "");
     /** Show Sign/Verify Message dialog and switch to verify message tab */
     void gotoVerifyMessageTab(QString addr = "");
-
+    /** Ask to create SN/MN when the amount is equal to collateral*/
+    void checkAndCreateNode(const COutput& out);
     /** Show incoming transaction notification for new transactions.
 
         The new items are those between start and end inclusive, under the given parent item.
@@ -145,6 +149,8 @@ signals:
     void incomingTransaction(const QString& date, int unit, const CAmount& amount, const QString& type, const QString& address);
     void guiEnableSystemnodesChanged(bool);
     void guiEnableMasternodesChanged(bool);
+    void guiGotoMasternodePage();
+    void guiGotoSystemnodePage();
 };
 
 #endif // BITCOIN_QT_WALLETVIEW_H
