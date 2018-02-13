@@ -335,16 +335,16 @@
   { "exec": "./litecoin-tx",
     "args":
     ["-create",
-      "in=4d49a71ec9da436f71ec4ee231d04f292a29cd316f598bb7068feccabdc59485:0",
-      "set=privatekeys:[\"5HpHagT65TZzG1PH3CSu63k8DbpvD8s5ip4nEB3kEsreAnchuDf\"]",
-      "set=prevtxs:[{\"txid\":\"4d49a71ec9da436f71ec4ee231d04f292a29cd316f598bb7068feccabdc59485\",\"vout\":\"0foo\",\"scriptPubKey\":\"76a91491b24bf9f5288532960ac687abb035127b1d28a588ac\"}]",
+      "in=6c2789243608b46f750f49ff24f6f79a78c3010f7e56951e045e5b7ea5d07bf7:0",
+      "set=privatekeys:[\"T3Eyvg7Me8fuajt2RJvQaRokRabBweiyBWVJiQG8P1bwDUEXPhqv\"]",
+      "set=prevtxs:[{\"txid\":\"6c2789243608b46f750f49ff24f6f79a78c3010f7e56951e045e5b7ea5d07bf7\",\"vout\":\"0foo\",\"scriptPubKey\":\"76a91491b24bf9f5288532960ac687abb035127b1d28a588ac\"}]",
       "sign=ALL",
-      "outaddr=0.001:193P6LtvS4nCnkDvM9uXn1gsSRqh4aDAz7"],
+      "outaddr=0.001:LXC44cQhuRufFtaDhDYv4q8nxQJBkUAsXp"],
     "return_code": 1,
     "error_txt": "error: prevtxs internal object typecheck fail",
     "description": "Tests the check for invalid vout index in prevtxs for sign"
   },
-  { "exec": "./bitcoin-tx",
+  { "exec": "./litecoin-tx",
     "args":
     ["-create",
       "in=6c2789243608b46f750f49ff24f6f79a78c3010f7e56951e045e5b7ea5d07bf7:0",
@@ -423,7 +423,7 @@
     "error_txt": "error: Uncompressed pubkeys are not useable for SegWit outputs",
     "description": "Creates a new transaction with a single pay-to-pub-key output, wrapped in P2SH (output as json)"
   },
-  { "exec": "./bitcoin-tx",
+  { "exec": "./litecoin-tx",
     "args":
     ["-create",
      "in=69e9c12d30a6cd598a31ddfcaabeb9d9f0baf8938bf0ba6610beb04f589cc5ef:0",
@@ -551,12 +551,12 @@
     "output_cmp": "txcreatemultisig4.json",
     "description": "Creates a new transaction with a single 2-of-3 multisig in a P2WSH output, wrapped in P2SH (output in json)"
   },
-  { "exec": "./bitcoin-tx",
+  { "exec": "./litecoin-tx",
     "args": ["-json", "-create", "outmultisig=1:2:3:02a5613bd857b7048924264d1e70e08fb2a7e6527d32b7ab1bb993ac59964ff397:021ac43c7ff740014c3b33737ede99c967e4764553d1b2b83db77c83b8715fa72d:047d1368ba7ae01c94bc32293efd70bd7e3be7aa7912d07d0b1c659c1008d179b8642f5fb90f47580feb29f045e216ff5a4716d3a0fed36da414d332046303c44a:S"],
     "output_cmp": "txcreatemultisig5.json",
     "description": "Uncompressed pubkeys should work just fine for non-witness outputs"
   },
-  { "exec": "./bitcoin-tx",
+  { "exec": "./litecoin-tx",
     "args": ["-json", "-create", "outmultisig=1:2:3:02a5613bd857b7048924264d1e70e08fb2a7e6527d32b7ab1bb993ac59964ff397:021ac43c7ff740014c3b33737ede99c967e4764553d1b2b83db77c83b8715fa72d:047d1368ba7ae01c94bc32293efd70bd7e3be7aa7912d07d0b1c659c1008d179b8642f5fb90f47580feb29f045e216ff5a4716d3a0fed36da414d332046303c44a:WS"],
     "return_code": 1,
     "error_txt": "error: Uncompressed pubkeys are not useable for SegWit outputs",

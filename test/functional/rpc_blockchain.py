@@ -347,6 +347,7 @@ class BlockchainTest(BitcoinTestFramework):
 
         def solve_and_send_block(prevhash, height, time):
             b = create_block(prevhash, create_coinbase(height), time)
+            b.nVersion = 0x20000000
             b.solve()
             peer.send_and_ping(msg_block(b))
             return b

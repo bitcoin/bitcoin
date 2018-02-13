@@ -150,6 +150,7 @@ class BIP68_112_113Test(BitcoinTestFramework):
         self.setup_clean_chain = True
         self.extra_args = [[
             '-whitelist=noban@127.0.0.1',
+            '-blockversion=536870912'
             '-addresstype=legacy',
             '-par=1',  # Use only one script thread to get the exact reject reason for testing
         ]]
@@ -244,7 +245,7 @@ class BIP68_112_113Test(BitcoinTestFramework):
         assert_equal(len(self.nodes[0].getblock(inputblockhash, True)["tx"]), TESTING_TX_COUNT + 1)
 
         # 2 more version 4 blocks
-        test_blocks = self.generate_blocks(2)
+        test_blocks = self.generate_blocks(2, 0x20000000)
         self.send_blocks(test_blocks)
 
         assert_equal(self.tipheight, CSV_ACTIVATION_HEIGHT - 2)
@@ -353,7 +354,7 @@ class BIP68_112_113Test(BitcoinTestFramework):
             self.nodes[0].invalidateblock(self.nodes[0].getbestblockhash())
 
         # Next block height = 437 after 4 blocks of random version
-        test_blocks = self.generate_blocks(4)
+        test_blocks = self.generate_blocks(4, 0x20000000)
         self.send_blocks(test_blocks)
 
         self.log.info("BIP 68 tests")
@@ -381,7 +382,7 @@ class BIP68_112_113Test(BitcoinTestFramework):
             self.send_blocks([self.create_test_block([tx])], success=False, reject_reason='bad-txns-nonfinal')
 
         # Advance one block to 438
-        test_blocks = self.generate_blocks(1)
+        test_blocks = self.generate_blocks(1, 0x20000000)
         self.send_blocks(test_blocks)
 
         # Height txs should fail and time txs should now pass 9 * 600 > 10 * 512
@@ -392,7 +393,7 @@ class BIP68_112_113Test(BitcoinTestFramework):
             self.send_blocks([self.create_test_block([tx])], success=False, reject_reason='bad-txns-nonfinal')
 
         # Advance one block to 439
-        test_blocks = self.generate_blocks(1)
+        test_blocks = self.generate_blocks(1, 0x20000000)
         self.send_blocks(test_blocks)
 
         # All BIP 68 txs should pass
