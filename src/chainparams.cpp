@@ -231,8 +231,8 @@ public:
         nRejectBlockOutdatedMajority = 75;
         nToCheckBlockUpgradeMajority = 100;
         nMinerThreads = 0;
-        nTargetTimespan = 6 * 60 * 60;  // 6 hours
-        nTargetSpacing = 1.5 * 60;      // 1.5 minuts
+        nTargetTimespan = 2 * 24 * 60 * 60;  // 2 days
+        nTargetSpacing = 1.5 * 60;      // 1.5 minutes
         nMaxTipAge = 0x7fffffff;
 
         //! Modify the testnet genesis block so the timestamp is valid for a later start.
