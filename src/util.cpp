@@ -373,19 +373,22 @@ int LogPrintStr(const std::string &str)
     return ret;
 }
 
+/** A map that contains all the currently held directory locks. After
+ * successful locking, these will be held here until the global destructor
+ * cleans them up and thus automatically unlocks them, or ReleaseDirectoryLocks
+ * is called.
+ */
+static std::map<std::string, std::unique_ptr<boost::interprocess::file_lock>> dir_locks;
+/** Mutex to protect dir_locks. */
+static std::mutex cs_dir_locks;
+
 bool LockDirectory(const fs::path& directory, const std::string lockfile_name, bool probe_only)
 {
-    // A map that contains all the currently held directory locks. After
-    // successful locking, these will be held here until the global
-    // destructor cleans them up and thus automatically unlocks them.
-    static std::map<std::string, std::unique_ptr<boost::interprocess::file_lock>> locks;
-    // Protect the map with a mutex
-    static std::mutex cs;
-    std::lock_guard<std::mutex> ulock(cs);
+    std::lock_guard<std::mutex> ulock(cs_dir_locks);
     fs::path pathLockFile = directory / lockfile_name;
 
     // If a lock for this directory already exists in the map, don't try to re-lock it
-    if (locks.count(pathLockFile.string())) {
+    if (dir_locks.count(pathLockFile.string())) {
         return true;
     }
 
@@ -400,12 +403,18 @@ bool LockDirectory(const fs::path& directory, const std::string lockfile_name, b
         }
         if (!probe_only) {
             // Lock successful and we're not just probing, put it into the map
-            locks.emplace(pathLockFile.string(), std::move(lock));
+            dir_locks.emplace(pathLockFile.string(), std::move(lock));
         }
     } catch (const boost::interprocess::interprocess_exception& e) {
         return error("Error while attempting to lock directory %s: %s", directory.string(), e.what());
     }
     return true;
+}
+
+void ReleaseDirectoryLocks()
+{
+    std::lock_guard<std::mutex> ulock(cs_dir_locks);
+    dir_locks.clear();
 }
 
 /** Interpret string as boolean, for argument parsing */
