@@ -80,6 +80,11 @@ void WalletFrame::gotoHistoryPage()
     walletStack->gotoHistoryPage();
 }
 
+void WalletFrame::gotoMultisigPage()
+{
+    walletStack->gotoMultisigPage();
+}
+
 void WalletFrame::gotoMintingPage()
 {
     walletStack->gotoMintingPage();

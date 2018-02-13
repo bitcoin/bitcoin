@@ -44,6 +44,7 @@
         <file alias="debugwindow">res/icons/debugwindow.png</file>
         <file alias="sign">res/icons/sign.png</file>
         <file alias="verify">res/icons/verify.png</file>
+        <file alias="multisig">res/icons/multisig.png</file>
     </qresource>
     <qresource prefix="/images">
         <file alias="about">res/images/about.png</file>
