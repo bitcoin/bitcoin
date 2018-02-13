@@ -2654,8 +2654,18 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
     CAmount nValue = 0;
     int nChangePosRequest = nChangePosInOut;
     unsigned int nSubtractFeeFromAmount = 0;
+    std::set<CTxDestination> destinations;
+    if (!boost::get<CNoDestination>(&coin_control.destChange)) {
+        destinations.insert(coin_control.destChange);
+    }
     for (const auto& recipient : vecSend)
     {
+        CTxDestination destination;
+        if (ExtractDestination(recipient.scriptPubKey, destination) &&
+            !destinations.insert(destination).second) {
+            strFailReason = _("Duplicate address found: addresses should only be used once each.");
+            return false;
+        }
         if (nValue < 0 || recipient.nAmount < 0)
         {
             strFailReason = _("Transaction amounts must not be negative");
