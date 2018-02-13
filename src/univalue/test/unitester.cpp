@@ -59,7 +59,7 @@ static void runtest_file(const char *filename_)
         string basename(filename_);
         string filename = srcdir + "/" + basename;
         FILE *f = fopen(filename.c_str(), "r");
-        assert(f != nullptr);
+        assert(f != NULL);
 
         string jdata;
 

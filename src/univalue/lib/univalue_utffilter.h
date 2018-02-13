@@ -6,14 +6,10 @@
 
 #include <string>
 
-/**
- * Filter that generates and validates UTF-8, as well as collates UTF-16
- * surrogate pairs as specified in RFC4627.
- */
 class JSONUTF8StringFilter
 {
 public:
-    explicit JSONUTF8StringFilter(std::string &s):
+    JSONUTF8StringFilter(std::string &s):
         str(s), is_valid(true), codepoint(0), state(0), surpair(0)
     {
     }
@@ -84,7 +80,6 @@ private:
     // Current UTF-8 decoding state
     unsigned int codepoint;
     int state; // Top bit to be filled in for next UTF-8 byte, or 0
-
     // Keep track of this state to handle the following section of RFC4627:
     //
     //    To escape an extended character that is not in the Basic Multilingual
@@ -94,7 +89,7 @@ private:
     //    "\uD834\uDD1E".
     //
     //  Two subsequent \u.... may have to be replaced with one actual codepoint.
-    unsigned int surpair; // First half of open UTF-16 surrogate pair, or 0
+    unsigned int surpair; // First of UTF-16 surrogate pair
 
     void append_codepoint(unsigned int codepoint)
     {
