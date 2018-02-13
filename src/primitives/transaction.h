@@ -16,6 +16,8 @@ static const int SERIALIZE_TRANSACTION_NO_WITNESS = 0x40000000;
 
 static const int WITNESS_SCALE_FACTOR = 4;
 
+static const int32_t MSG_TX_VERSION = 2;
+
 /** An outpoint - a combination of a transaction hash and an index n into its vout */
 class COutPoint
 {
@@ -355,10 +357,9 @@ inline void SerializeTransaction(TxType& tx, Stream& s, Operation ser_action) {
     // Until now, regardless OP_RETURN a special tx message was allowed and
     // tx version 2 has been dedicated for that
 
-//    if (tx.nVersion == 2) {
-//       READWRITE(*const_cast<std::string*>(strTxComment));
-//    }
-
+    if ((*const_cast<int32_t*>(&tx.nVersion)) == MSG_TX_VERSION) {
+       READWRITE(*const_cast<std::string*>(&tx.strTxComment));
+    }
 }
 
 /** The basic transaction that is broadcasted on the network and contained in
@@ -391,7 +392,7 @@ public:
     const std::vector<CTxOut> vout;
     CTxWitness wit; // Not const: can change without invalidating the txid cache
     const uint32_t nLockTime;
-    std::string strTxComment;
+    const std::string strTxComment;
 
     /** Construct a CTransaction that qualifies as IsNull() */
     CTransaction();
@@ -407,9 +408,6 @@ public:
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action) {
         SerializeTransaction(*this, s, ser_action);
-        if(this->nVersion == 2) {
-            READWRITE(strTxComment);
-        }
         if (ser_action.ForRead()) {
             UpdateHash();
         }
@@ -475,6 +473,7 @@ struct CMutableTransaction
     std::vector<CTxOut> vout;
     CTxWitness wit;
     uint32_t nLockTime;
+    std::string strTxComment;
 
     CMutableTransaction();
     CMutableTransaction(const CTransaction& tx);
