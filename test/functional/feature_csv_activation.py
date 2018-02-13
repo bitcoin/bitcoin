@@ -143,7 +143,7 @@ class BIP68_112_113Test(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.setup_clean_chain = True
-        self.extra_args = [['-whitelist=127.0.0.1', '-blockversion=4', '-addresstype=legacy']]
+        self.extra_args = [['-whitelist=127.0.0.1', '-blockversion=536870912', '-addresstype=legacy']]
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -189,7 +189,7 @@ class BIP68_112_113Test(BitcoinTestFramework):
 
         self.log.info("Test that the csv softfork is DEFINED")
         assert_equal(get_bip9_status(self.nodes[0], 'csv')['status'], 'defined')
-        test_blocks = self.generate_blocks(61, 4)
+        test_blocks = self.generate_blocks(61, 0x20000000)
         self.sync_blocks(test_blocks)
 
         self.log.info("Advance from DEFINED to STARTED, height = 143")
@@ -199,7 +199,7 @@ class BIP68_112_113Test(BitcoinTestFramework):
         # 100 out of 144 signal bit 0. Use a variety of bits to simulate multiple parallel softforks
 
         test_blocks = self.generate_blocks(50, 536870913)  # 0x20000001 (signalling ready)
-        test_blocks = self.generate_blocks(20, 4, test_blocks)  # 0x00000004 (signalling not)
+        test_blocks = self.generate_blocks(20, 0x20000000, test_blocks)  # 0x00000004 (signalling not)
         test_blocks = self.generate_blocks(50, 536871169, test_blocks)  # 0x20000101 (signalling ready)
         test_blocks = self.generate_blocks(24, 536936448, test_blocks)  # 0x20010000 (signalling not)
         self.sync_blocks(test_blocks)
@@ -211,7 +211,7 @@ class BIP68_112_113Test(BitcoinTestFramework):
         # 108 out of 144 signal bit 0 to achieve lock-in
         # using a variety of bits to simulate multiple parallel softforks
         test_blocks = self.generate_blocks(58, 536870913)  # 0x20000001 (signalling ready)
-        test_blocks = self.generate_blocks(26, 4, test_blocks)  # 0x00000004 (signalling not)
+        test_blocks = self.generate_blocks(26, 0x20000000, test_blocks)  # 0x00000004 (signalling not)
         test_blocks = self.generate_blocks(50, 536871169, test_blocks)  # 0x20000101 (signalling ready)
         test_blocks = self.generate_blocks(10, 536936448, test_blocks)  # 0x20010000 (signalling not)
         self.sync_blocks(test_blocks)
@@ -220,7 +220,7 @@ class BIP68_112_113Test(BitcoinTestFramework):
         assert_equal(get_bip9_status(self.nodes[0], 'csv')['status'], 'locked_in')
 
         # Generate 140 more version 4 blocks
-        test_blocks = self.generate_blocks(140, 4)
+        test_blocks = self.generate_blocks(140, 0x20000000)
         self.sync_blocks(test_blocks)
 
         # Inputs at height = 572
@@ -263,7 +263,7 @@ class BIP68_112_113Test(BitcoinTestFramework):
         assert_equal(len(self.nodes[0].getblock(inputblockhash, True)["tx"]), 82 + 1)
 
         # 2 more version 4 blocks
-        test_blocks = self.generate_blocks(2, 4)
+        test_blocks = self.generate_blocks(2, 0x20000000)
         self.sync_blocks(test_blocks)
 
         self.log.info("Not yet advanced to ACTIVE, height = 574 (will activate for block 576, not 575)")
@@ -341,7 +341,7 @@ class BIP68_112_113Test(BitcoinTestFramework):
         self.nodes[0].invalidateblock(self.nodes[0].getbestblockhash())
 
         # 1 more version 4 block to get us to height 575 so the fork should now be active for the next block
-        test_blocks = self.generate_blocks(1, 4)
+        test_blocks = self.generate_blocks(1, 0x20000000)
         self.sync_blocks(test_blocks)
         assert_equal(get_bip9_status(self.nodes[0], 'csv')['status'], 'active')
 
@@ -365,7 +365,7 @@ class BIP68_112_113Test(BitcoinTestFramework):
             self.nodes[0].invalidateblock(self.nodes[0].getbestblockhash())
 
         # Next block height = 580 after 4 blocks of random version
-        test_blocks = self.generate_blocks(4, 1234)
+        test_blocks = self.generate_blocks(4, 0x20000000)
         self.sync_blocks(test_blocks)
 
         self.log.info("BIP 68 tests")
@@ -393,7 +393,7 @@ class BIP68_112_113Test(BitcoinTestFramework):
             self.sync_blocks([self.create_test_block([tx])], success=False)
 
         # Advance one block to 581
-        test_blocks = self.generate_blocks(1, 1234)
+        test_blocks = self.generate_blocks(1, 0x20000000)
         self.sync_blocks(test_blocks)
 
         # Height txs should fail and time txs should now pass 9 * 600 > 10 * 512
@@ -404,7 +404,7 @@ class BIP68_112_113Test(BitcoinTestFramework):
             self.sync_blocks([self.create_test_block([tx])], success=False)
 
         # Advance one block to 582
-        test_blocks = self.generate_blocks(1, 1234)
+        test_blocks = self.generate_blocks(1, 0x20000000)
         self.sync_blocks(test_blocks)
 
         # All BIP 68 txs should pass
