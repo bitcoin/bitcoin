@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
     SelectParams(CBaseChainParams::MAIN);
     noui_connect();
     ClearDatadirCache();
-    fs::path pathTemp = fs::temp_directory_path() / strprintf("test_bitcoin-qt_%lu_%i", (unsigned long)GetTime(), (int)GetRand(100000));
+    fs::path pathTemp = fs::temp_directory_path() / strprintf("test_litecoin-qt_%lu_%i", (unsigned long)GetTime(), (int)GetRand(100000));
     fs::create_directories(pathTemp);
     gArgs.ForceSetArg("-datadir", pathTemp.string());
 

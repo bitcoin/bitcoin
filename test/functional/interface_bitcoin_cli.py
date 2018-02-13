@@ -15,12 +15,12 @@ class TestBitcoinCli(BitcoinTestFramework):
     def run_test(self):
         """Main test logic"""
 
-        self.log.info("Compare responses from gewalletinfo RPC and `bitcoin-cli getwalletinfo`")
+        self.log.info("Compare responses from gewalletinfo RPC and `litecoin-cli getwalletinfo`")
         cli_response = self.nodes[0].cli.getwalletinfo()
         rpc_response = self.nodes[0].getwalletinfo()
         assert_equal(cli_response, rpc_response)
 
-        self.log.info("Compare responses from getblockchaininfo RPC and `bitcoin-cli getblockchaininfo`")
+        self.log.info("Compare responses from getblockchaininfo RPC and `litecoin-cli getblockchaininfo`")
         cli_response = self.nodes[0].cli.getblockchaininfo()
         rpc_response = self.nodes[0].getblockchaininfo()
         assert_equal(cli_response, rpc_response)
@@ -38,7 +38,7 @@ class TestBitcoinCli(BitcoinTestFramework):
         self.log.info("Make sure that -getinfo with arguments fails")
         assert_raises_process_error(1, "-getinfo takes no arguments", self.nodes[0].cli('-getinfo').help)
 
-        self.log.info("Compare responses from `bitcoin-cli -getinfo` and the RPCs data is retrieved from.")
+        self.log.info("Compare responses from `litecoin-cli -getinfo` and the RPCs data is retrieved from.")
         cli_get_info = self.nodes[0].cli('-getinfo').send_cli()
         wallet_info = self.nodes[0].getwalletinfo()
         network_info = self.nodes[0].getnetworkinfo()

@@ -20,6 +20,7 @@ DERSIG_HEIGHT = 1251
 REJECT_INVALID = 16
 REJECT_OBSOLETE = 17
 REJECT_NONSTANDARD = 64
+VB_TOP_BITS = 0x20000000
 
 # A canonical signature consists of:
 # <30> <total len> <02> <len R> <R> <02> <len S> <S> <hashtype>
@@ -75,7 +76,7 @@ class BIP66Test(BitcoinTestFramework):
         tip = self.nodes[0].getbestblockhash()
         block_time = self.nodes[0].getblockheader(tip)['mediantime'] + 1
         block = create_block(int(tip, 16), create_coinbase(DERSIG_HEIGHT - 1), block_time)
-        block.nVersion = 2
+        block.nVersion = VB_TOP_BITS
         block.vtx.append(spendtx)
         block.hashMerkleRoot = block.calc_merkle_root()
         block.rehash()
@@ -84,7 +85,7 @@ class BIP66Test(BitcoinTestFramework):
         self.nodes[0].p2p.send_and_ping(msg_block(block))
         assert_equal(self.nodes[0].getbestblockhash(), block.hash)
 
-        self.log.info("Test that blocks must now be at least version 3")
+        self.log.info("Test that blocks must now be at least VB_TOP_BITS")
         tip = block.sha256
         block_time += 1
         block = create_block(tip, create_coinbase(DERSIG_HEIGHT), block_time)
@@ -102,7 +103,7 @@ class BIP66Test(BitcoinTestFramework):
             del self.nodes[0].p2p.last_message["reject"]
 
         self.log.info("Test that transactions with non-DER signatures cannot appear in a block")
-        block.nVersion = 3
+        block.nVersion = VB_TOP_BITS
 
         spendtx = create_transaction(self.nodes[0], self.coinbase_blocks[1],
                 self.nodeaddress, 1.0)

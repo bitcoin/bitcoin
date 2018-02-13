@@ -57,6 +57,7 @@ seq_disable_flag = 1<<31
 seq_random_high_bit = 1<<25
 seq_type_flag = 1<<22
 seq_random_low_bit = 1<<18
+VB_TOP_BITS = 0x20000000
 
 # b31,b25,b22,b18 represent the 31st, 25th, 22nd and 18th bits respectively in the nSequence field
 # relative_locktimes[b31][b25][b22][b18] is a base_relative_locktime with the indicated bits set if their indices are 1
@@ -95,7 +96,7 @@ class BIP68_112_113Test(ComparisonTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.setup_clean_chain = True
-        self.extra_args = [['-whitelist=127.0.0.1', '-blockversion=4', '-addresstype=legacy']]
+        self.extra_args = [['-whitelist=127.0.0.1', '-blockversion=536870912', '-addresstype=legacy']]
 
     def run_test(self):
         test = TestManager(self, self.options.tmpdir)
@@ -210,7 +211,7 @@ class BIP68_112_113Test(ComparisonTestFramework):
         self.nodeaddress = self.nodes[0].getnewaddress()
 
         assert_equal(get_bip9_status(self.nodes[0], 'csv')['status'], 'defined')
-        test_blocks = self.generate_blocks(61, 4)
+        test_blocks = self.generate_blocks(61, VB_TOP_BITS)
         yield TestInstance(test_blocks, sync_every_block=False) # 1
         # Advanced from DEFINED to STARTED, height = 143
         assert_equal(get_bip9_status(self.nodes[0], 'csv')['status'], 'started')
@@ -218,7 +219,7 @@ class BIP68_112_113Test(ComparisonTestFramework):
         # Fail to achieve LOCKED_IN 100 out of 144 signal bit 0
         # using a variety of bits to simulate multiple parallel softforks
         test_blocks = self.generate_blocks(50, 536870913) # 0x20000001 (signalling ready)
-        test_blocks = self.generate_blocks(20, 4, test_blocks) # 0x00000004 (signalling not)
+        test_blocks = self.generate_blocks(20, VB_TOP_BITS, test_blocks) # 0x00000004 (signalling not)
         test_blocks = self.generate_blocks(50, 536871169, test_blocks) # 0x20000101 (signalling ready)
         test_blocks = self.generate_blocks(24, 536936448, test_blocks) # 0x20010000 (signalling not)
         yield TestInstance(test_blocks, sync_every_block=False) # 2
@@ -228,7 +229,7 @@ class BIP68_112_113Test(ComparisonTestFramework):
         # 108 out of 144 signal bit 0 to achieve lock-in
         # using a variety of bits to simulate multiple parallel softforks
         test_blocks = self.generate_blocks(58, 536870913) # 0x20000001 (signalling ready)
-        test_blocks = self.generate_blocks(26, 4, test_blocks) # 0x00000004 (signalling not)
+        test_blocks = self.generate_blocks(26, VB_TOP_BITS, test_blocks) # 0x00000004 (signalling not)
         test_blocks = self.generate_blocks(50, 536871169, test_blocks) # 0x20000101 (signalling ready)
         test_blocks = self.generate_blocks(10, 536936448, test_blocks) # 0x20010000 (signalling not)
         yield TestInstance(test_blocks, sync_every_block=False) # 3
@@ -236,7 +237,7 @@ class BIP68_112_113Test(ComparisonTestFramework):
         assert_equal(get_bip9_status(self.nodes[0], 'csv')['status'], 'locked_in')
 
         # 140 more version 4 blocks
-        test_blocks = self.generate_blocks(140, 4)
+        test_blocks = self.generate_blocks(140, VB_TOP_BITS)
         yield TestInstance(test_blocks, sync_every_block=False) # 4
 
         ### Inputs at height = 572
@@ -274,7 +275,7 @@ class BIP68_112_113Test(ComparisonTestFramework):
         assert_equal(len(self.nodes[0].getblock(inputblockhash,True)["tx"]), 82+1)
 
         # 2 more version 4 blocks
-        test_blocks = self.generate_blocks(2, 4)
+        test_blocks = self.generate_blocks(2, VB_TOP_BITS)
         yield TestInstance(test_blocks, sync_every_block=False) # 5
         # Not yet advanced to ACTIVE, height = 574 (will activate for block 576, not 575)
         assert_equal(get_bip9_status(self.nodes[0], 'csv')['status'], 'locked_in')
@@ -353,7 +354,7 @@ class BIP68_112_113Test(ComparisonTestFramework):
 
 
         # 1 more version 4 block to get us to height 575 so the fork should now be active for the next block
-        test_blocks = self.generate_blocks(1, 4)
+        test_blocks = self.generate_blocks(1, VB_TOP_BITS)
         yield TestInstance(test_blocks, sync_every_block=False) # 8
         assert_equal(get_bip9_status(self.nodes[0], 'csv')['status'], 'active')
 
@@ -379,7 +380,7 @@ class BIP68_112_113Test(ComparisonTestFramework):
             self.nodes[0].invalidateblock(self.nodes[0].getbestblockhash())
 
         # Next block height = 580 after 4 blocks of random version
-        test_blocks = self.generate_blocks(4, 1234)
+        test_blocks = self.generate_blocks(4, VB_TOP_BITS)
         yield TestInstance(test_blocks, sync_every_block=False) # 13
 
         ### BIP 68 ###
@@ -414,7 +415,7 @@ class BIP68_112_113Test(ComparisonTestFramework):
             yield TestInstance([[self.create_test_block([tx]), False]]) # 20 - 23
 
         # Advance one block to 581
-        test_blocks = self.generate_blocks(1, 1234)
+        test_blocks = self.generate_blocks(1, VB_TOP_BITS)
         yield TestInstance(test_blocks, sync_every_block=False) # 24
 
         # Height txs should fail and time txs should now pass 9 * 600 > 10 * 512
@@ -425,7 +426,7 @@ class BIP68_112_113Test(ComparisonTestFramework):
             yield TestInstance([[self.create_test_block([tx]), False]]) # 26 - 29
 
         # Advance one block to 582
-        test_blocks = self.generate_blocks(1, 1234)
+        test_blocks = self.generate_blocks(1, VB_TOP_BITS)
         yield TestInstance(test_blocks, sync_every_block=False) # 30
 
         # All BIP 68 txs should pass
