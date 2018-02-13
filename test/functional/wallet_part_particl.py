@@ -43,8 +43,8 @@ class WalletParticlTest(ParticlTestFramework):
         nodes = self.nodes
 
         # Wallet must initially contain no keys at all
-        nodes[0].dumpwallet(tmpdir + "/node0/wallet.unencrypted.dump")
-        sJson, nLines = read_dump(tmpdir + "/node0/wallet.unencrypted.dump")
+        nodes[0].dumpwallet(tmpdir + '/node0/wallet.unencrypted.dump')
+        sJson, nLines = read_dump(tmpdir + '/node0/wallet.unencrypted.dump')
         assert(nLines == 0)
         o = json.loads(sJson)
         assert(len(o['loose_extkeys']) == 0)
@@ -53,61 +53,61 @@ class WalletParticlTest(ParticlTestFramework):
         # Try get a new address without a master key:
         try:
             addr = nodes[0].getnewaddress()
-            raise AssertionError("Generated address from empty wallet.")
+            raise AssertionError('Generated address from empty wallet.')
         except JSONRPCException as e:
-            assert("Wallet has no active master key" in e.error['message'])
+            assert('Wallet has no active master key' in e.error['message'])
 
         ro = nodes[0].extkey()
-        assert("No keys to list" in ro['result'])
+        assert('No keys to list' in ro['result'])
 
 
-        oRoot0 = nodes[0].mnemonic("new")
+        oRoot0 = nodes[0].mnemonic('new')
 
-        ro = nodes[0].extkey("info", oRoot0['master'])
+        ro = nodes[0].extkey('info', oRoot0['master'])
         root0_id = ro['key_info']['id']
 
-        ro = nodes[0].extkey("info", oRoot0['master'], 'm/44h/1h')
+        ro = nodes[0].extkey('info', oRoot0['master'], 'm/44h/1h')
         expectedMasterKey0 = ro['key_info']['result']
 
 
-        # "extkey import <key> [label] [bip44] [save_bip44_key]\n"
-        ro = nodes[0].extkey("import", oRoot0['master'], "import save key", "true")
+        # 'extkey import <key> [label] [bip44] [save_bip44_key]\n'
+        ro = nodes[0].extkey('import', oRoot0['master'], 'import save key', 'true')
 
-        # "extkey list [show_secrets] - default\n"
-        ro = nodes[0].extkey("list")
+        # 'extkey list [show_secrets] - default\n'
+        ro = nodes[0].extkey('list')
         assert(len(ro) == 1)
         assert(ro[0]['path'] == 'm/44h/1h')
-        assert(not "evkey" in ro[0])
+        assert(not 'evkey' in ro[0])
 
-        # "extkey list [show_secrets] - default\n"
-        ro = nodes[0].extkey("list", "true")
-        assert(ro[0]["evkey"] == expectedMasterKey0)
-        assert(ro[0]["root_key_id"] == root0_id)
-        master0_id = ro[0]["id"]
+        # 'extkey list [show_secrets] - default\n'
+        ro = nodes[0].extkey('list', 'true')
+        assert(ro[0]['evkey'] == expectedMasterKey0)
+        assert(ro[0]['root_key_id'] == root0_id)
+        master0_id = ro[0]['id']
 
-        ro = nodes[0].extkey("setMaster", master0_id)
-        assert(ro["result"] == "Success.")
+        ro = nodes[0].extkey('setMaster', master0_id)
+        assert(ro['result'] == 'Success.')
 
-        ro = nodes[0].extkey("deriveAccount", "1st account")
+        ro = nodes[0].extkey('deriveAccount', '1st account')
         # NOTE: must pass blank path for num_derives_hardened to update on the master key
 
-        assert(ro["result"] == "Success.")
-        account0_id = ro["account"]
+        assert(ro['result'] == 'Success.')
+        account0_id = ro['account']
 
-        ro = nodes[0].extkey("key", master0_id)
-        assert(ro["num_derives"] == "0")
-        assert(ro["num_derives_hardened"] == "1")
+        ro = nodes[0].extkey('key', master0_id)
+        assert(ro['num_derives'] == '0')
+        assert(ro['num_derives_hardened'] == '1')
 
-        ro = nodes[0].extkey("setDefaultAccount", account0_id)
-        assert(ro["result"] == "Success.")
+        ro = nodes[0].extkey('setDefaultAccount', account0_id)
+        assert(ro['result'] == 'Success.')
 
         address0 = nodes[0].getnewaddress()
 
-        ro = nodes[0].extkey("account", account0_id)
+        ro = nodes[0].extkey('account', account0_id)
 
         fFound = False
         for c in ro['chains']:
-            if c['function'] != 'active_external' or c["num_derives"] != "1":
+            if c['function'] != 'active_external' or c['num_derives'] != '1':
                 continue
             fFound = True
             break
@@ -115,54 +115,46 @@ class WalletParticlTest(ParticlTestFramework):
 
 
 
-        ro = nodes[0].extkey("deriveAccount", "2nd account")
-        assert(ro["result"] == "Success.")
-        assert(account0_id != ro["account"])
-        #print("2nd account", json.dumps(ro, indent=4))
+        ro = nodes[0].extkey('deriveAccount', '2nd account')
+        assert(ro['result'] == 'Success.')
+        assert(account0_id != ro['account'])
 
-        ro = nodes[0].extkey("key", master0_id)
-        assert(ro["num_derives"] == "0")
-        assert(ro["num_derives_hardened"] == "2")
-
+        ro = nodes[0].extkey('key', master0_id)
+        assert(ro['num_derives'] == '0')
+        assert(ro['num_derives_hardened'] == '2')
 
         # re-derive 1st account
-        ro = nodes[0].extkey("deriveAccount", "1st account", "0'")
-        assert(ro["result"] == "Failed.")
-        assert(ro["reason"] == "Account already exists in db.")
-        #assert(account0_id == ro["account"])
+        ro = nodes[0].extkey('deriveAccount', '1st account', "0'")
+        assert(ro['result'] == 'Failed.')
+        assert(ro['reason'] == 'Account already exists in db.')
 
 
         # make sure info hasn't been forgotten/overwritten
-        ro = nodes[0].extkey("account", account0_id)
-        #assert(ro["num_derives_external"] == "1")
+        ro = nodes[0].extkey('account', account0_id)
         fFound = False
         for c in ro['chains']:
-            if c['function'] != 'active_external' or c["num_derives"] != "1":
+            if c['function'] != 'active_external' or c['num_derives'] != '1':
                 continue
             fFound = True
             break
         assert(fFound)
 
 
-        ro = nodes[0].extkey("deriveAccount", "Should fail", "abcd")
-        assert(ro["result"] == "Failed.")
+        ro = nodes[0].extkey('deriveAccount', 'Should fail', 'abcd')
+        assert(ro['result'] == 'Failed.')
 
         try:
-            ro = nodes[0].extkey("deriveAccount", "Should fail", "0'", "abcd")
-            raise AssertionError("Should have failed.")
+            ro = nodes[0].extkey('deriveAccount', 'Should fail', "0'", 'abcd')
+            raise AssertionError('Should have failed.')
         except JSONRPCException as e:
-            #print("error", e.error['message'])
-            assert("Unknown parameter" in e.error['message'])
+            assert('Unknown parameter' in e.error['message'])
 
 
         ro = nodes[0].getwalletinfo()
         assert(ro['encryptionstatus'] == 'Unencrypted')
 
-        ro = nodes[0].encryptwallet("qwerty123")
-        assert("wallet encrypted" in ro)
-
-        #ro = nodes[0].getwalletinfo()
-        #assert(ro['encryptionstatus'] == 'Locked')
+        ro = nodes[0].encryptwallet('qwerty123')
+        assert('wallet encrypted' in ro)
 
         # restart node
         self.stop_node(0)
@@ -173,47 +165,44 @@ class WalletParticlTest(ParticlTestFramework):
         assert(ro['encryptionstatus'] == 'Locked')
 
         try:
-            ro = nodes[0].extkey("list")
-            raise AssertionError("Should have failed.")
+            ro = nodes[0].extkey('list')
+            raise AssertionError('Should have failed.')
         except JSONRPCException as e:
-            #print("error", e.error['message'])
-            assert("Wallet locked" in e.error['message'])
+            assert('Wallet locked' in e.error['message'])
 
         try:
-            ro = nodes[0].walletpassphrase("qwerty123", 300)
-            #print(ro)
+            ro = nodes[0].walletpassphrase('qwerty123', 300)
         except JSONRPCException as e:
-            print("error", e.error['message'])
+            print('error', e.error['message'])
             assert(False)
 
-        ro = nodes[0].extkey("list")
+        ro = nodes[0].extkey('list')
         assert(len(ro) == 3) # 1 loose key (master) + 2 accounts
 
-        ro = nodes[0].extkey("key", master0_id)
-        assert(ro["key_type"] == "Master")
-        assert(ro["num_derives"] == "0")
-        assert(ro["num_derives_hardened"] == "2")
-        assert(ro["encrypted"] == "true")
-        assert(ro["id"] == master0_id)
-        assert(ro["root_key_id"] == root0_id)
-        assert(ro["current_master"] == "true")
+        ro = nodes[0].extkey('key', master0_id)
+        assert(ro['key_type'] == 'Master')
+        assert(ro['num_derives'] == '0')
+        assert(ro['num_derives_hardened'] == '2')
+        assert(ro['encrypted'] == 'true')
+        assert(ro['id'] == master0_id)
+        assert(ro['root_key_id'] == root0_id)
+        assert(ro['current_master'] == 'true')
 
 
-        ro = nodes[0].extkey("account", account0_id)
+        ro = nodes[0].extkey('account', account0_id)
         fFound = False
         for c in ro['chains']:
-            if c['function'] != 'active_external' or c["num_derives"] != "1":
+            if c['function'] != 'active_external' or c['num_derives'] != '1':
                 continue
             fFound = True
             break
         assert(fFound)
 
         address1 = nodes[0].getnewaddress()
-        ro = nodes[0].extkey("account", account0_id)
-        #assert(ro["num_derives_external"] == "2")
+        ro = nodes[0].extkey('account', account0_id)
         fFound = False
         for c in ro['chains']:
-            if c['function'] != 'active_external' or c["num_derives"] != "2":
+            if c['function'] != 'active_external' or c['num_derives'] != '2':
                 continue
             fFound = True
             break
@@ -221,8 +210,8 @@ class WalletParticlTest(ParticlTestFramework):
 
 
         # test encrypting empty wallet
-        nodes[1].dumpwallet(tmpdir + "/node1/wallet.unencrypted.dump")
-        sJson, nLines = read_dump(tmpdir + "/node1/wallet.unencrypted.dump")
+        nodes[1].dumpwallet(tmpdir + '/node1/wallet.unencrypted.dump')
+        sJson, nLines = read_dump(tmpdir + '/node1/wallet.unencrypted.dump')
         assert(nLines == 0)
         o = json.loads(sJson)
         assert(len(o['loose_extkeys']) == 0)
@@ -238,24 +227,14 @@ class WalletParticlTest(ParticlTestFramework):
         try:
             ro = nodes[1].extkeyimportmaster('abandon baby cabbage dad eager fabric gadget habit ice kangaroo lab absorb')
         except JSONRPCException as e:
-            #print("error", e.error['message'])
             assert('Wallet locked' in e.error['message'])
 
         try:
             ro = nodes[1].walletpassphrase('qwerty123', 300)
         except JSONRPCException as e:
-            #print("error", e.error['message'])
             assert('passphrase entered was incorrect' in e.error['message'])
 
-        ro = nodes[1].walletpassphrase('qwerty234', 300)
-
-        """
-        TODO: Double unlock, correct pwd
-        try:
-            ro = nodes[1].walletpassphrase("qwerty234", 300)
-        except JSONRPCException as e:
-
-        """
+        nodes[1].walletpassphrase('qwerty234', 300)
 
         ro = nodes[1].mnemonic('decode', '', 'abandon baby cabbage dad eager fabric gadget habit ice kangaroo lab absorb', 'false')
         decodedRoot = ro['master']
@@ -544,35 +523,34 @@ class WalletParticlTest(ParticlTestFramework):
 
 
 
-        ro = nodes[0].walletpassphrase("qwerty123", 3000)
+        nodes[0].walletpassphrase('qwerty123', 3000)
 
-        ro = nodes[0].extkey("account")
-
-        sExternalChainId = ""
-        for chain in ro["chains"]:
-            if chain["function"] == "active_external":
-                sExternalChainId = chain["id"]
-                nHardened = chain["num_derives_h"]
+        ro = nodes[0].extkey('account')
+        sExternalChainId = ''
+        for chain in ro['chains']:
+            if chain['function'] == 'active_external':
+                sExternalChainId = chain['id']
+                nHardened = chain['num_derives_h']
                 break
         assert(len(sExternalChainId) > 0)
-        assert(nHardened == "0")
+        assert(nHardened == '0')
 
 
-        ro = nodes[0].deriverangekeys(0, 0, sExternalChainId, "true")
+        ro = nodes[0].deriverangekeys(0, 0, sExternalChainId, 'true')
         sCheckAddr = ro[0]
 
-        ro = nodes[0].getnewaddress("h1","false","true")
+        ro = nodes[0].getnewaddress('h1','false','true')
         sHardenedAddr = ro
         assert(sHardenedAddr == sCheckAddr)
 
-        ro = nodes[0].extkey("account")
+        ro = nodes[0].extkey('account')
 
         nHardened = 0
         for chain in ro['chains']:
-            if chain['function'] == "active_external":
-                nHardened = chain["num_derives_h"]
+            if chain['function'] == 'active_external':
+                nHardened = chain['num_derives_h']
                 break
-        assert(nHardened == "1")
+        assert(nHardened == '1')
 
 
         ro = nodes[0].filteraddresses()

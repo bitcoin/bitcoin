@@ -181,6 +181,7 @@ PARTICL_SCRIPTS = [
     'rpc_part_filtertransactions.py',
     'feature_part_vote.py',
     'feature_part_zmq_test.py',
+    'rpc_part_wallet.py',
 ]
 
 INSIGHT_SCRIPTS = [

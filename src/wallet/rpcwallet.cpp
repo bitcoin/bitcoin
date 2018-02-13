@@ -1235,7 +1235,7 @@ UniValue sendfrom(const JSONRPCRequest& request)
     return wtx.GetHash().GetHex();
 }
 */
-/*
+
 UniValue sendmany(const JSONRPCRequest& request)
 {
     CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
@@ -1327,6 +1327,76 @@ UniValue sendmany(const JSONRPCRequest& request)
         }
     }
 
+    if (IsHDWallet(pwallet))
+    {
+        JSONRPCRequest newRequest;
+        newRequest.fHelp = false;
+        newRequest.fSkipBlock = true; // already blocked in this function
+        newRequest.URI = request.URI;
+        UniValue params(UniValue::VARR);
+        params.push_back("part");
+        params.push_back("part");
+        UniValue arr(UniValue::VARR);
+
+        std::vector<std::string> keys = sendTo.getKeys();
+        for (const std::string& name_ : keys) {
+
+            UniValue out(UniValue::VOBJ);
+
+            out.pushKV("address", name_);
+            out.pushKV("amount", sendTo[name_]);
+
+            bool fSubtractFeeFromAmount = false;
+            for (unsigned int idx = 0; idx < subtractFeeFromAmount.size(); idx++) {
+                const UniValue& addr = subtractFeeFromAmount[idx];
+                if (addr.get_str() == name_)
+                    fSubtractFeeFromAmount = true;
+            }
+            if (fSubtractFeeFromAmount)
+            {
+                UniValue uvBool(fSubtractFeeFromAmount);
+                out.pushKV("subfee", uvBool);
+            }
+            arr.push_back(out);
+        }
+        params.push_back(arr);
+
+        std::string sComment, sCommentTo;
+        if (!request.params[3].isNull() && !request.params[3].get_str().empty())
+            sComment = request.params[3].get_str();
+
+        params.push_back(sComment);
+        params.push_back(sCommentTo);
+
+        // Add coinstake params
+        if (request.params.size() > 5)
+        {
+            UniValue uvRingsize(4);
+            params.push_back(uvRingsize);
+            UniValue uvNumInputs(32);
+            params.push_back(uvNumInputs);
+            UniValue uvBool(false);
+            params.push_back(uvBool); // test_fee
+
+            UniValue uvCoinControl(UniValue::VOBJ);
+            uvCoinControl.pushKV("replaceable", coin_control.signalRbf);
+            unsigned int target = coin_control.m_confirm_target ? *coin_control.m_confirm_target : ::nTxConfirmTarget;
+            uvCoinControl.pushKV("conf_target", (int)target);
+            std::string sEstimateMode = "UNSET";
+            if (coin_control.m_fee_mode == FeeEstimateMode::ECONOMICAL)
+                sEstimateMode = "ECONOMICAL";
+            else
+            if (coin_control.m_fee_mode == FeeEstimateMode::CONSERVATIVE)
+                sEstimateMode = "CONSERVATIVE";
+            uvCoinControl.pushKV("estimate_mode", sEstimateMode);
+
+            params.push_back(uvCoinControl);
+        };
+
+        newRequest.params = params;
+        return sendtypeto(newRequest);
+    };
+
     std::set<CTxDestination> destinations;
     std::vector<CRecipient> vecSend;
 
@@ -1383,7 +1453,7 @@ UniValue sendmany(const JSONRPCRequest& request)
 
     return wtx.GetHash().GetHex();
 }
-*/
+
 
 UniValue addmultisigaddress(const JSONRPCRequest& request)
 {
@@ -4276,7 +4346,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "lockunspent",              &lockunspent,              {"unlock","transactions"} },
     { "wallet",             "move",                     &movecmd,                  {"fromaccount","toaccount","amount","minconf","comment"} },
     //{ "wallet",             "sendfrom",                 &sendfrom,                 {"fromaccount","toaddress","amount","minconf","comment","comment_to"} },
-    //{ "wallet",             "sendmany",                 &sendmany,                 {"fromaccount","amounts","minconf","comment","subtractfeefrom","replaceable","conf_target","estimate_mode"} },
+    { "wallet",             "sendmany",                 &sendmany,                 {"fromaccount","amounts","minconf","comment","subtractfeefrom","replaceable","conf_target","estimate_mode"} },
     { "wallet",             "sendtoaddress",            &sendtoaddress,            {"address","amount","comment","comment_to","subtractfeefromamount","replaceable","conf_target","estimate_mode"} },
     { "wallet",             "setaccount",               &setaccount,               {"address","account"} },
     { "wallet",             "settxfee",                 &settxfee,                 {"amount"} },

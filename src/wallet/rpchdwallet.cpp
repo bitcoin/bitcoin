@@ -2593,6 +2593,7 @@ UniValue clearwallettransactions(const JSONRPCRequest &request)
     if (request.fHelp || request.params.size() > 1)
         throw std::runtime_error(
             "clearwallettransactions [remove_all]\n"
+            + HelpRequiringPassphrase(pwallet) +
             "[remove_all] remove all transactions.\n"
             "Delete transactions from the wallet.\n"
             "By default removes only failed stakes.\n"
@@ -3505,12 +3506,13 @@ UniValue filteraddresses(const JSONRPCRequest &request)
     if (request.fHelp || request.params.size() > 6)
         throw std::runtime_error(
             "filteraddresses [offset] [count] [sort_code] [match_str] [match_owned] [show_path]\n"
+            "List addresses."
             "filteraddresses [offset] [count] will list 'count' addresses starting from 'offset'\n"
             "filteraddresses -1 will count addresses\n"
             "[sort_code] 0 sort by label ascending, 1 sort by label descending, default 0\n"
             "[match_str] filter by label\n"
             "[match_owned] 0 off, 1 owned, 2 non-owned, default 0\n"
-            "List addresses.");
+            );
 
     ObserveSafeMode();
 
@@ -5210,7 +5212,8 @@ UniValue debugwallet(const JSONRPCRequest &request)
     if (request.fHelp || request.params.size() > 1)
         throw std::runtime_error(
             "debugwallet [attempt_repair]\n"
-            "Detect problems in wallet.\n");
+            "Detect problems in wallet.\n"
+            + HelpRequiringPassphrase(pwallet));
 
     ObserveSafeMode();
 
@@ -5359,6 +5362,7 @@ UniValue rewindchain(const JSONRPCRequest &request)
     if (request.fHelp || request.params.size() > 1)
         throw std::runtime_error(
             "rewindchain [height]\n"
+            + HelpRequiringPassphrase(pwallet) +
             "height default - last known rct index.\n");
 
     ObserveSafeMode();

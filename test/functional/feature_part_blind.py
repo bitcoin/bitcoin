@@ -26,9 +26,8 @@ class BlindTest(ParticlTestFramework):
         nodes = self.nodes
 
         # Stop staking
-        nodes[0].reservebalance(True, 10000000)
-        nodes[1].reservebalance(True, 10000000)
-        nodes[2].reservebalance(True, 10000000)
+        for i in range(len(nodes)):
+            nodes[i].reservebalance(True, 10000000)
 
         ro = nodes[0].extkeyimportmaster('abandon baby cabbage dad eager fabric gadget habit ice kangaroo lab absorb')
         assert(ro['account_id'] == 'aaaZf2qnNr5T7PWRmqgmusuu5ACnBcX2ev')

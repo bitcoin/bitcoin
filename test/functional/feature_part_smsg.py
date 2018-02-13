@@ -22,10 +22,8 @@ class SmsgTest(ParticlTestFramework):
         tmpdir = self.options.tmpdir
         nodes = self.nodes
 
-        ro = nodes[0].mnemonic('new');
-        roImport0 = nodes[0].extkeyimportmaster(ro['master'])
-
-        roImport1 = nodes[1].extkeyimportmaster('abandon baby cabbage dad eager fabric gadget habit ice kangaroo lab absorb')
+        nodes[0].extkeyimportmaster(nodes[0].mnemonic('new')['master'])
+        nodes[1].extkeyimportmaster('abandon baby cabbage dad eager fabric gadget habit ice kangaroo lab absorb')
 
         address0 = nodes[0].getnewaddress() # will be different each run
         address1 = nodes[1].getnewaddress()

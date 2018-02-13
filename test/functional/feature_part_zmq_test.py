@@ -79,9 +79,8 @@ class ZMQTest(ParticlTestFramework):
         for i in range(len(nodes)):
             nodes[i].reservebalance(True, 10000000)
 
-        nodes[1].extkeyimportmaster('abandon baby cabbage dad eager fabric gadget habit ice kangaroo lab absorb')
-
         nodes[0].extkeyimportmaster(nodes[0].mnemonic('new')['master'])
+        nodes[1].extkeyimportmaster('abandon baby cabbage dad eager fabric gadget habit ice kangaroo lab absorb')
 
         addrTo = nodes[0].getnewaddress()
         txnHash = nodes[1].sendtoaddress(addrTo, 10)

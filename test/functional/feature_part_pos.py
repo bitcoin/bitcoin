@@ -34,8 +34,8 @@ class PosTest(ParticlTestFramework):
         assert(ro['account_id'] == 'aaaZf2qnNr5T7PWRmqgmusuu5ACnBcX2ev')
         assert(nodes[0].getwalletinfo()['total_balance'] == 100000)
 
-        ro = nodes[1].extkeyimportmaster(nodes[1].mnemonic("new")['master'])
-        ro = nodes[2].extkeyimportmaster('sección grito médula hecho pauta posada nueve ebrio bruto buceo baúl mitad')
+        nodes[1].extkeyimportmaster(nodes[1].mnemonic('new')['master'])
+        nodes[2].extkeyimportmaster('sección grito médula hecho pauta posada nueve ebrio bruto buceo baúl mitad')
 
 
         addrTo256 = nodes[2].getnewaddress('256 test', 'True', 'False', 'True')
