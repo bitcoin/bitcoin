@@ -15,6 +15,8 @@
 
 #include <univalue.h>
 
+extern bool fStrictJSONRPCSpec;
+
 //! HTTP status codes
 enum HTTPStatusCode
 {
