@@ -5,7 +5,10 @@
 #ifndef DASH_SPECIALTX_H
 #define DASH_SPECIALTX_H
 
-class CTransaction;
+#include "streams.h"
+#include "version.h"
+#include "primitives/transaction.h"
+
 class CBlock;
 class CBlockIndex;
 class CValidationState;
@@ -13,6 +16,36 @@ class CValidationState;
 bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindex, CValidationState& state);
 bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, CValidationState& state);
 bool UndoSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex);
+
+template <typename T>
+inline bool GetTxPayload(const std::vector<unsigned char>& payload, T& obj)
+{
+    CDataStream ds(payload, SER_NETWORK, PROTOCOL_VERSION);
+    try {
+        ds >> obj;
+    } catch (std::exception& e) {
+        return false;
+    }
+    return ds.empty();
+}
+template <typename T>
+inline bool GetTxPayload(const CMutableTransaction& tx, T& obj)
+{
+    return GetTxPayload(tx.vExtraPayload, obj);
+}
+template <typename T>
+inline bool GetTxPayload(const CTransaction& tx, T& obj)
+{
+    return GetTxPayload(tx.vExtraPayload, obj);
+}
+
+template <typename T>
+void SetTxPayload(CMutableTransaction& tx, const T& payload)
+{
+    CDataStream ds(SER_NETWORK, PROTOCOL_VERSION);
+    ds << payload;
+    tx.vExtraPayload.assign(ds.begin(), ds.end());
+}
 
 uint256 CalcTxInputsHash(const CTransaction& tx);
 
