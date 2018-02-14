@@ -650,6 +650,10 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
     if (fRequireStandard && !IsStandardTx(tx, reason))
         return state.DoS(0, false, REJECT_NONSTANDARD, reason);
 
+    if (pool.existsProviderTxConflict(tx)) {
+        return state.DoS(0, false, REJECT_DUPLICATE, "protx-dup");
+    }
+
     // Only accept nLockTime-using transactions that can be mined in the next
     // block; we don't want our mempool filled up with transactions that can't
     // be mined yet.

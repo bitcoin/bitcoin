@@ -21,6 +21,9 @@
 #include "version.h"
 #include "hash.h"
 
+#include "evo/specialtx.h"
+#include "evo/providertx.h"
+
 CTxMemPoolEntry::CTxMemPoolEntry(const CTransactionRef& _tx, const CAmount& _nFee,
                                  int64_t _nTime, double _entryPriority, unsigned int _entryHeight,
                                  CAmount _inChainInputValue,
@@ -438,6 +441,16 @@ bool CTxMemPool::addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry,
     vTxHashes.emplace_back(hash, newit);
     newit->vTxHashesIdx = vTxHashes.size() - 1;
 
+    if (tx.nType == TRANSACTION_PROVIDER_REGISTER) {
+        CProRegTx proTx;
+        if (!GetTxPayload(tx, proTx)) {
+            assert(false);
+        }
+        mapProTxRegisterAddresses.emplace(proTx.addr, tx.GetHash());
+        mapProTxPubKeyIDs.emplace(proTx.keyIDOwner, tx.GetHash());
+        mapProTxPubKeyIDs.emplace(proTx.keyIDOperator, tx.GetHash());
+    }
+
     return true;
 }
 
@@ -613,6 +626,16 @@ void CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason)
     } else
         vTxHashes.clear();
 
+    if (it->GetTx().nVersion >= 3 && it->GetTx().nType == TRANSACTION_PROVIDER_REGISTER) {
+        CProRegTx proTx;
+        if (!GetTxPayload(it->GetTx(), proTx)) {
+            assert(false);
+        }
+        mapProTxRegisterAddresses.erase(proTx.addr);
+        mapProTxPubKeyIDs.erase(proTx.keyIDOwner);
+        mapProTxPubKeyIDs.erase(proTx.keyIDOperator);
+    }
+
     totalTxSize -= it->GetTxSize();
     cachedInnerUsage -= it->DynamicMemoryUsage();
     cachedInnerUsage -= memusage::DynamicUsage(mapLinks[it].parents) + memusage::DynamicUsage(mapLinks[it].children);
@@ -739,6 +762,36 @@ void CTxMemPool::removeConflicts(const CTransaction &tx)
     }
 }
 
+void CTxMemPool::removeProTxConflicts(const CTransaction &tx)
+{
+    if (tx.nType != TRANSACTION_PROVIDER_REGISTER)
+        return;
+
+    CProRegTx proTx;
+    if (!GetTxPayload(tx, proTx)) {
+        assert(false);
+    }
+
+    if (mapProTxRegisterAddresses.count(proTx.addr)) {
+        uint256 conflictHash = mapProTxRegisterAddresses[proTx.addr];
+        if (conflictHash != tx.GetHash() && mapTx.count(conflictHash)) {
+            removeRecursive(mapTx.find(conflictHash)->GetTx(), MemPoolRemovalReason::CONFLICT);
+        }
+    }
+    if (mapProTxPubKeyIDs.count(proTx.keyIDOwner)) {
+        uint256 conflictHash = mapProTxPubKeyIDs[proTx.keyIDOwner];
+        if (conflictHash != tx.GetHash() && mapTx.count(conflictHash)) {
+            removeRecursive(mapTx.find(conflictHash)->GetTx(), MemPoolRemovalReason::CONFLICT);
+        }
+    }
+    if (mapProTxPubKeyIDs.count(proTx.keyIDOperator)) {
+        uint256 conflictHash = mapProTxPubKeyIDs[proTx.keyIDOperator];
+        if (conflictHash != tx.GetHash() && mapTx.count(conflictHash)) {
+            removeRecursive(mapTx.find(conflictHash)->GetTx(), MemPoolRemovalReason::CONFLICT);
+        }
+    }
+}
+
 /**
  * Called when a block is connected. Removes from mempool and updates the miner fee estimator.
  */
@@ -765,6 +818,7 @@ void CTxMemPool::removeForBlock(const std::vector<CTransactionRef>& vtx, unsigne
             RemoveStaged(stage, true, MemPoolRemovalReason::BLOCK);
         }
         removeConflicts(*tx);
+        removeProTxConflicts(*tx);
         ClearPrioritisation(tx->GetHash());
     }
     lastRollingFeeUpdate = GetTime();
@@ -776,6 +830,8 @@ void CTxMemPool::_clear()
     mapLinks.clear();
     mapTx.clear();
     mapNextTx.clear();
+    mapProTxRegisterAddresses.clear();
+    mapProTxPubKeyIDs.clear();
     totalTxSize = 0;
     cachedInnerUsage = 0;
     lastRollingFeeUpdate = GetTime();
@@ -1011,6 +1067,16 @@ TxMempoolInfo CTxMemPool::info(const uint256& hash) const
     if (i == mapTx.end())
         return TxMempoolInfo();
     return GetInfo(i);
+}
+
+bool CTxMemPool::existsProviderTxConflict(const CTransaction &tx) const {
+    LOCK(cs);
+    if (tx.nVersion < 3 || tx.nType != TRANSACTION_PROVIDER_REGISTER)
+        return false;
+    CProRegTx proTx;
+    if (!GetTxPayload(tx, proTx))
+        assert(false);
+    return mapProTxRegisterAddresses.count(proTx.addr) || mapProTxPubKeyIDs.count(proTx.keyIDOwner) || mapProTxPubKeyIDs.count(proTx.keyIDOperator);
 }
 
 CFeeRate CTxMemPool::estimateFee(int nBlocks) const
