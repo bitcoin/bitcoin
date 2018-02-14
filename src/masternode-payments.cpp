@@ -190,7 +190,7 @@ bool IsBlockPayeeValid(const CTransactionRef& txNew, int nBlockHeight, CAmount b
         return true;
     }
 
-    if(nBlockHeight >= consensusParams.nBudgetPaymentsStartBlock) {
+    if(nBlockHeight >= consensusParams.nMasternodePaymentsStartBlock) {
         LogPrintf("IsBlockPayeeValid -- ERROR: Invalid masternode payment detected at height %d: %s", nBlockHeight, txNew->ToString());
         return false;
     }

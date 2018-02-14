@@ -74,7 +74,7 @@ public:
     CMainParams() {
         strNetworkID = "main";
         consensus.nSubsidyHalvingInterval = 700800; // PM-Tech: ChainCoin // 2 years
-        consensus.nMasternodePaymentsStartBlock = 100000; // not true, but it's ok as long as it's less then nMasternodePaymentsIncreaseBlock
+        consensus.nMasternodePaymentsStartBlock = 1500000; // not true, but it's ok as long as it's less then nMasternodePaymentsIncreaseBlock
         consensus.nMasternodePaymentsIncreaseBlock = 2580000; // PM-Tech: to be defined
         consensus.nMasternodePaymentsIncreasePeriod = 576*30; // PM-Tech: to be defined
         consensus.nInstantSendKeepLock = 24;
@@ -190,7 +190,7 @@ public:
             1490629503, // * UNIX timestamp of last checkpoint block
             1179921,    // * total number of transactions between genesis and last checkpoint
                         //   (the tx=... number in the SetBestChain debug.log lines)
-            960         // * estimated number of transactions per day after checkpoint
+            960.0       // * estimated number of transactions per day after checkpoint
         };
     }
 };
