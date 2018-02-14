@@ -25,6 +25,7 @@
 #ifdef ENABLE_WALLET
 #include <db_cxx.h>
 #include <wallet/wallet.h>
+#include <wallet/init.h>
 #endif
 
 #include <QDesktopWidget>
@@ -446,6 +447,7 @@ RPCConsole::RPCConsole(const PlatformStyle *_platformStyle, QWidget *parent) :
     QWidget(parent),
     ui(new Ui::RPCConsole),
     clientModel(0),
+    walletModel(0),
     historyPtr(0),
     platformStyle(_platformStyle),
     peersTableContextMenu(0),
@@ -686,6 +688,11 @@ void RPCConsole::setClientModel(ClientModel *model)
     }
 }
 
+void RPCConsole::setWalletModel(WalletModel *model)
+{
+    this->walletModel = model;
+}
+
 static QString categoryClass(int category)
 {
     switch(category)
@@ -793,6 +800,19 @@ void RPCConsole::keyPressEvent(QKeyEvent *event)
 
 void RPCConsole::message(int category, const QString &message, bool html)
 {
+#ifdef ENABLE_WALLET
+    // TODO: Put this in a more sensible place
+    // Only for encrypting wallets and encryption was successful
+    if (message.indexOf("wallet encrypted;") == 0) {
+        StopWallets();
+        CloseWallets();
+        OpenWallets();
+        walletModel->ReloadWallet();
+        walletModel->subscribeToCoreSignals();
+        walletModel->SubscribeTableModelToCoreSignals();
+    }
+#endif
+
     QTime time = QTime::currentTime();
     QString timeString = time.toString();
     QString out;

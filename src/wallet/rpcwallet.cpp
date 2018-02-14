@@ -2530,6 +2530,7 @@ UniValue encryptwallet(const JSONRPCRequest& request)
     StopWallets();
     CloseWallets();
     OpenWallets();
+    // NOTE: This string is used to check that wallet encryption happened so that the rpcconsole can reset the GUI if encryptwallet is called from the rpcconsole.
     return "wallet encrypted; The keypool has been flushed and a new HD seed was generated (if you are using HD). You need to make a new backup.";
 }
 

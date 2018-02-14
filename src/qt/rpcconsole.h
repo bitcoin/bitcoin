@@ -7,6 +7,9 @@
 
 #include <qt/guiutil.h>
 #include <qt/peertablemodel.h>
+#ifdef ENABLE_WALLET
+#include <qt/walletmodel.h>
+#endif // ENABLE_WALLET
 
 #include <net.h>
 
@@ -42,6 +45,7 @@ public:
     }
 
     void setClientModel(ClientModel *model);
+    void setWalletModel(WalletModel *model);
 
     enum MessageClass {
         MC_ERROR,
@@ -140,6 +144,7 @@ private:
 
     Ui::RPCConsole *ui;
     ClientModel *clientModel;
+    WalletModel *walletModel;
     QStringList history;
     int historyPtr;
     QString cmdBeforeBrowsing;
