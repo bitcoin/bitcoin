@@ -11,6 +11,7 @@ env:
   global:
     - MAKEJOBS=-j3
     - RUN_TESTS=false
+    - TEST_ZMQ=0
     - RUN_UNIT_TESTS=false
     - CHECK_DOC=0
     - BOOST_TEST_RANDOM=1$TRAVIS_BUILD_ID
@@ -22,9 +23,9 @@ env:
     - WINEDEBUG=fixme-all
   matrix:
 # ARM
-    - HOST=arm-linux-gnueabihf PACKAGES="g++-arm-linux-gnueabihf python3-pip" DEP_OPTS="NO_USB=1 NO_QT=1" CHECK_DOC=1 GOAL="install" BITCOIN_CONFIG="--enable-glibc-back-compat --enable-reduce-exports" LDFLAGS=-static-libstdc++"
+    - HOST=arm-linux-gnueabihf PACKAGES="g++-arm-linux-gnueabihf python3" DEP_OPTS="NO_USB=1 NO_QT=1" CHECK_DOC=1 GOAL="install" BITCOIN_CONFIG="--enable-glibc-back-compat --enable-reduce-exports" LDFLAGS=-static-libstdc++"
 # bitcoind
-    - HOST=x86_64-unknown-linux-gnu PACKAGES="libudev-dev bc" DEP_OPTS="DEBUG=1 NO_QT=1" RUN_UNIT_TESTS=true RUN_TESTS=true GOAL="install" BITCOIN_CONFIG="--enable-usbdevice --enable-gui --enable-zmq --enable-glibc-back-compat --enable-reduce-exports CPPFLAGS=-DDEBUG_LOCKORDER" LDFLAGS=-static-libstdc++"
+    - HOST=x86_64-unknown-linux-gnu TEST_ZMQ=1 PACKAGES="python3-pip libudev-dev bc" DEP_OPTS="DEBUG=1 NO_QT=1" RUN_UNIT_TESTS=true RUN_TESTS=true GOAL="install" BITCOIN_CONFIG="--enable-usbdevice --enable-gui --enable-zmq --enable-glibc-back-compat --enable-reduce-exports CPPFLAGS=-DDEBUG_LOCKORDER" LDFLAGS=-static-libstdc++"
 # Win32
     - HOST=i686-w64-mingw32 DPKG_ADD_ARCH="i386" PACKAGES="python3 nsis g++-mingw-w64-i686 wine1.6" DEP_OPTS="NO_QT=1" RUN_UNIT_TESTS=true RUN_TESTS=false GOAL="install" BITCOIN_CONFIG="--enable-usbdevice --enable-reduce-exports"
 # Qt4 & system libs
@@ -32,7 +33,7 @@ env:
 # 32-bit + dash
     - HOST=i686-pc-linux-gnu PACKAGES="libudev-dev:i386 g++-multilib bc" DEP_OPTS="NO_QT=1" RUN_UNIT_TESTS=true RUN_TESTS=false GOAL="install" BITCOIN_CONFIG="--enable-usbdevice --enable-zmq --enable-glibc-back-compat --enable-reduce-exports LDFLAGS=-static-libstdc++" USE_SHELL="/bin/dash"
 # Win64
-    - HOST=x86_64-w64-mingw32 DPKG_ADD_ARCH="i386" DEP_OPTS="NO_QT=1" PACKAGES="python3 nsis g++-mingw-w64-x86-64 wine1.6" RUN_UNIT_TESTS=true RUN_TESTS=false GOAL="install" BITCOIN_CONFIG="--enable-usbdevice --enable-reduce-exports"
+    - HOST=x86_64-w64-mingw32 DPKG_ADD_ARCH="i386" DEP_OPTS="NO_QT=1" PACKAGES="nsis g++-mingw-w64-x86-64 wine1.6" RUN_UNIT_TESTS=true RUN_TESTS=false GOAL="install" BITCOIN_CONFIG="--enable-usbdevice --enable-reduce-exports"
 # x86_64 Linux (uses qt5 dev package instead of depends Qt to speed up build and avoid timeout)
     - HOST=x86_64-unknown-linux-gnu PACKAGES="libudev-dev qtbase5-dev qttools5-dev-tools protobuf-compiler libdbus-1-dev libharfbuzz-dev" DEP_OPTS="NO_QT=1 NO_UPNP=1 DEBUG=1 ALLOW_HOST_PACKAGES=1" RUN_UNIT_TESTS=true RUN_TESTS=false GOAL="install" BITCOIN_CONFIG="--enable-usbdevice --enable-zmq --with-gui=qt5 --enable-glibc-back-compat --enable-reduce-exports CPPFLAGS=-DDEBUG_LOCKORDER"
 # x86_64 Linux, No wallet
@@ -47,7 +48,7 @@ install:
     - if [ -n "$PACKAGES" ]; then travis_retry sudo apt-get update; fi
     - if [ -n "$PACKAGES" ]; then travis_retry sudo apt-get install --no-install-recommends --no-upgrade -qq $PACKAGES; fi
     - if [ "$CHECK_DOC" = 1 -a "$TRAVIS_EVENT_TYPE" = "pull_request" ]; then travis_retry pip3 install flake8 --user; fi
-    - sudo easy_install pyzmq
+    - if [ "$TEST_ZMQ" = 1 ]; then sudo python3 -m easy_install pyzmq; fi
 before_script:
     - if [ "$CHECK_DOC" = 1 -a "$TRAVIS_EVENT_TYPE" = "pull_request" ]; then contrib/devtools/commit-script-check.sh $TRAVIS_COMMIT_RANGE; fi
     #- if [ "$CHECK_DOC" = 1 ]; then contrib/devtools/git-subtree-check.sh src/crypto/ctaes; fi
@@ -55,7 +56,7 @@ before_script:
     #- if [ "$CHECK_DOC" = 1 ]; then contrib/devtools/git-subtree-check.sh src/univalue; fi
     #- if [ "$CHECK_DOC" = 1 ]; then contrib/devtools/git-subtree-check.sh src/leveldb; fi
     - if [ "$CHECK_DOC" = 1 ]; then contrib/devtools/check-doc.py; fi
-    #- if [ "$CHECK_DOC" = 1 ]; then contrib/devtools/check-rpc-mappings.py .; fi
+    - if [ "$CHECK_DOC" = 1 ]; then contrib/devtools/check-rpc-mappings.py .; fi
     - if [ "$CHECK_DOC" = 1 -a "$TRAVIS_EVENT_TYPE" = "pull_request" ]; then contrib/devtools/lint-all.sh; fi
     - unset CC; unset CXX
     - mkdir -p depends/SDKs depends/sdk-sources

@@ -260,9 +260,9 @@ static const CRPCCommand commands[] =
   //  --------------------- ------------------------    -----------------------    ----------
     { "usbdevice",          "listdevices",              &listdevices,              {} },
     { "usbdevice",          "getdeviceinfo",            &getdeviceinfo,            {} },
-    { "usbdevice",          "getdevicepublickey",       &getdevicepublickey,       {"path", "accountpath"} },
-    { "usbdevice",          "getdevicexpub",            &getdevicexpub,            {"path", "accountpath"} },
-    { "usbdevice",          "devicesignmessage",        &devicesignmessage,        {"path","message", "accountpath"} },
+    { "usbdevice",          "getdevicepublickey",       &getdevicepublickey,       {"path","accountpath"} },
+    { "usbdevice",          "getdevicexpub",            &getdevicexpub,            {"path","accountpath"} },
+    { "usbdevice",          "devicesignmessage",        &devicesignmessage,        {"path","message","accountpath"} },
 };
 
 void RegisterUSBDeviceRPC(CRPCTable &t)

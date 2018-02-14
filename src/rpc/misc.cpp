@@ -840,7 +840,7 @@ UniValue getaddressmempool(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
         throw std::runtime_error(
-            "getaddressmempool\n"
+            "getaddressmempool addresses\n"
             "\nReturns all mempool deltas for an address (requires addressindex to be enabled).\n"
             "\nArguments:\n"
             "{\n"
@@ -914,7 +914,7 @@ UniValue getaddressutxos(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
         throw std::runtime_error(
-            "getaddressutxos\n"
+            "getaddressutxos addresses\n"
             "\nReturns all unspent outputs for an address (requires addressindex to be enabled).\n"
             "\nArguments:\n"
             "{\n"
@@ -1003,7 +1003,7 @@ UniValue getaddressdeltas(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1 || !request.params[0].isObject())
         throw std::runtime_error(
-            "getaddressdeltas\n"
+            "getaddressdeltas addresses\n"
             "\nReturns all changes for an address (requires addressindex to be enabled).\n"
             "\nArguments:\n"
             "{\n"
@@ -1130,7 +1130,7 @@ UniValue getaddressbalance(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
         throw std::runtime_error(
-            "getaddressbalance\n"
+            "getaddressbalance addresses\n"
             "\nReturns the balance for an address(es) (requires addressindex to be enabled).\n"
             "\nArguments:\n"
             "{\n"
@@ -1188,7 +1188,7 @@ UniValue getaddresstxids(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
         throw std::runtime_error(
-            "getaddresstxids\n"
+            "getaddresstxids addresses\n"
             "\nReturns the txids for an address(es) (requires addressindex to be enabled).\n"
             "\nArguments:\n"
             "{\n"
@@ -1273,7 +1273,7 @@ UniValue getspentinfo(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1 || !request.params[0].isObject())
         throw std::runtime_error(
-            "getspentinfo\n"
+            "getspentinfo inputs\n"
             "\nReturns the txid and index where an output is spent.\n"
             "\nArguments:\n"
             "{\n"
@@ -1361,14 +1361,14 @@ static const CRPCCommand commands[] =
     { "util",               "signmessagewithprivkey", &signmessagewithprivkey, {"privkey","message"} },
 
     /* Address index */
-    { "addressindex",       "getaddressmempool",      &getaddressmempool,      {} },
-    { "addressindex",       "getaddressutxos",        &getaddressutxos,        {} },
-    { "addressindex",       "getaddressdeltas",       &getaddressdeltas,       {} },
-    { "addressindex",       "getaddresstxids",        &getaddresstxids,        {} },
-    { "addressindex",       "getaddressbalance",      &getaddressbalance,      {} },
+    { "addressindex",       "getaddressmempool",      &getaddressmempool,      {"addresses"} },
+    { "addressindex",       "getaddressutxos",        &getaddressutxos,        {"addresses"} },
+    { "addressindex",       "getaddressdeltas",       &getaddressdeltas,       {"addresses"} },
+    { "addressindex",       "getaddresstxids",        &getaddresstxids,        {"addresses"} },
+    { "addressindex",       "getaddressbalance",      &getaddressbalance,      {"addresses"} },
 
     /* Blockchain */
-    { "blockchain",         "getspentinfo",           &getspentinfo,           {} },
+    { "blockchain",         "getspentinfo",           &getspentinfo,           {"inputs"} },
 
     /* ZMQ */
     #if ENABLE_ZMQ

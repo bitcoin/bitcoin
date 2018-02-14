@@ -343,7 +343,7 @@ UniValue getblockhashes(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 2)
         throw std::runtime_error(
-            "getblockhashes timestamp\n"
+            "getblockhashes high low options\n"
             "\nReturns array of hashes of blocks within the timestamp range provided.\n"
             "\nArguments:\n"
             "1. high         (numeric, required) The newer block timestamp\n"
@@ -1990,7 +1990,7 @@ static const CRPCCommand commands[] =
     { "blockchain",         "getchaintxstats",        &getchaintxstats,        {"nblocks", "blockhash"} },
     { "blockchain",         "getbestblockhash",       &getbestblockhash,       {} },
     { "blockchain",         "getblockcount",          &getblockcount,          {} },
-    { "blockchain",         "getblock",               &getblock,               {"blockhash","verbosity|verbose"} },
+    { "blockchain",         "getblock",               &getblock,               {"blockhash","verbosity"} },
     { "blockchain",         "getblockhash",           &getblockhash,           {"height"} },
     { "blockchain",         "getblockheader",         &getblockheader,         {"blockhash","verbose"} },
     { "blockchain",         "getchaintips",           &getchaintips,           {} },
@@ -2010,7 +2010,7 @@ static const CRPCCommand commands[] =
 
     /* Insight */
     { "blockchain",         "getblockdeltas",         &getblockdeltas,          {} },
-    { "blockchain",         "getblockhashes",         &getblockhashes,          {} },
+    { "blockchain",         "getblockhashes",         &getblockhashes,          {"high","low","options"} },
     { "blockchain",         "gettxoutsetinfo",        &gettxoutsetinfo,         {} },
     { "blockchain",         "gettxoutsetinfobyscript",&gettxoutsetinfobyscript, {} },
 

@@ -607,7 +607,7 @@ UniValue smsgsend(const JSONRPCRequest &request)
 {
     if (request.fHelp || request.params.size() < 3 || request.params.size() > 6)
         throw std::runtime_error(
-            "smsgsend <addrFrom> <addrTo> <message>  (paid retention testfee)n"
+            "smsgsend <address_from> <address_to> <message>  (paid_msg days_retention testfee)n"
             "Send an encrypted message from addrFrom to addrTo.");
 
     if (!smsg::fSecMsgEnabled)
@@ -671,7 +671,7 @@ UniValue smsgsendanon(const JSONRPCRequest &request)
 {
     if (request.fHelp || request.params.size() != 2)
         throw std::runtime_error(
-            "smsgsendanon <addrTo> <message>\n"
+            "smsgsendanon <address_to> <message>\n"
             "Send an anonymous encrypted message to addrTo.");
 
     if (!smsg::fSecMsgEnabled)
@@ -1333,19 +1333,16 @@ static const CRPCCommand commands[] =
     { "smsg",               "smsglocalkeys",          &smsglocalkeys,          {} },
     { "smsg",               "smsgscanchain",          &smsgscanchain,          {} },
     { "smsg",               "smsgscanbuckets",        &smsgscanbuckets,        {} },
-    { "smsg",               "smsgaddaddress",         &smsgaddaddress,         {"address", "pubkey"} },
+    { "smsg",               "smsgaddaddress",         &smsgaddaddress,         {"address","pubkey"} },
     { "smsg",               "smsgaddlocaladdress",    &smsgaddlocaladdress,    {"address"} },
-    { "smsg",               "smsgimportprivkey",      &smsgimportprivkey,      {"privkey", "label"} },
+    { "smsg",               "smsgimportprivkey",      &smsgimportprivkey,      {"privkey","label"} },
     { "smsg",               "smsggetpubkey",          &smsggetpubkey,          {"address"} },
-    { "smsg",               "smsgsend",               &smsgsend,               {"address_to", "message"} },
-    { "smsg",               "smsgsendanon",           &smsgsendanon,           {"address_to", "message"} },
+    { "smsg",               "smsgsend",               &smsgsend,               {"address_from","address_to","message","paid_msg","days_retention","testfee"} },
+    { "smsg",               "smsgsendanon",           &smsgsendanon,           {"address_to","message"} },
     { "smsg",               "smsginbox",              &smsginbox,              {"mode"} },
     { "smsg",               "smsgoutbox",             &smsgoutbox,             {"mode"} },
     { "smsg",               "smsgbuckets",            &smsgbuckets,            {"mode"} },
-    { "smsg",               "smsgview",               &smsgview,               {} },
-
-    /* Not shown in help */
-    //{ "hidden",             "setmocktime",            &setmocktime,            true  },
+    { "smsg",               "smsgview",               &smsgview,               {}},
 };
 
 void RegisterSmsgRPCCommands(CRPCTable &tableRPC)

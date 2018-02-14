@@ -18,11 +18,21 @@ SOURCES = [
     "src/rpc/net.cpp",
     "src/rpc/rawtransaction.cpp",
     "src/wallet/rpcwallet.cpp",
+
+    "src/wallet/rpchdwallet.cpp",
+    "src/rpc/mnemonic.cpp",
+    "src/smsg/rpcsmessage.cpp",
 ]
+
 # Source file (relative to root) containing conversion mapping
 SOURCE_CLIENT = 'src/rpc/client.cpp'
 # Argument names that should be ignored in consistency checks
 IGNORE_DUMMY_ARGS = {'dummy', 'arg0', 'arg1', 'arg2', 'arg3', 'arg4', 'arg5', 'arg6', 'arg7', 'arg8', 'arg9'}
+
+IGNORE_COMMANDS = {
+    'sendfrom',
+    'addwitnessaddress'
+}
 
 class RPCCommand:
     def __init__(self, name, args):
@@ -110,6 +120,9 @@ def main():
     # Check mapping consistency
     errors = 0
     for (cmdname, argidx, argname) in mapping:
+        if cmdname in IGNORE_COMMANDS:
+            print('Skipping command: ' + cmdname)
+            continue
         try:
             rargnames = cmds_by_name[cmdname].args[argidx].names
         except IndexError:

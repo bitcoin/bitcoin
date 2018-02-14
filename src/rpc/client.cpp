@@ -130,7 +130,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "getblockhashes", 0 , "high"},
     { "getblockhashes", 1, "low"},
     { "getblockhashes", 2, "options" },
-    { "getspentinfo", 0, "txid_index"},
+    { "getspentinfo", 0, "inputs"},
     { "getaddresstxids", 0, "addresses"},
     { "getaddressbalance", 0, "addresses"},
     { "getaddressdeltas", 0, "addresses"},
@@ -140,7 +140,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
 
 
     { "reservebalance", 0, "enabled" },
-    { "scanchain", 0, "height" },
+    { "scanchain", 0, "from_height" },
     { "deriverangekeys", 0, "start" },
     { "deriverangekeys", 1, "end" },
     { "filtertransactions", 0, "options" },
@@ -208,6 +208,8 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "listunspentblind", 4, "query_options" },
 
     { "smsgsend", 3, "paid_msg" },
+    { "smsgsend", 4, "days_retention" },
+    { "smsgsend", 5, "testfee" },
 
 
     { "logging", 0, "include" },
