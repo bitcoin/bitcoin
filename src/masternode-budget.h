@@ -214,7 +214,7 @@ private:
     // critical section to protect the inner data structures
     mutable CCriticalSection cs;
     bool fAutoChecked; //If it matches what we see, we'll auto vote for it (masternode only)
-    bool voteSubmitted;
+    boost::optional<int> voteSubmittedTime;
 
 public:
     bool fValid;
@@ -233,7 +233,7 @@ public:
 
     bool IsValid(std::string& strError, bool fCheckCollateral=true) const;
     bool IsValid(bool fCheckCollateral=true) const;
-    bool IsVoteSubmitted() const { return voteSubmitted; }
+    bool IsVoteSubmitted() const { return voteSubmittedTime.is_initialized(); }
     void ResetAutoChecked();
 
     std::string GetName() {return strBudgetName; }

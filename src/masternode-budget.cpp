@@ -1681,7 +1681,7 @@ CFinalizedBudget::CFinalizedBudget()
     nTime = 0;
     fValid = true;
     fAutoChecked = false;
-    voteSubmitted = false;
+    voteSubmittedTime = boost::none;
 }
 
 CFinalizedBudget::CFinalizedBudget(const CFinalizedBudget& other)
@@ -1694,7 +1694,7 @@ CFinalizedBudget::CFinalizedBudget(const CFinalizedBudget& other)
     nTime = other.nTime;
     fValid = true;
     fAutoChecked = false;
-    voteSubmitted = false;
+    voteSubmittedTime = boost::none;
 }
 
 bool CFinalizedBudget::AddOrUpdateVote(CFinalizedBudgetVote& vote, std::string& strError)
@@ -1983,7 +1983,7 @@ void CFinalizedBudget::SubmitVote()
 
         budget.mapSeenFinalizedBudgetVotes.insert(make_pair(vote.GetHash(), vote));
         vote.Relay();
-        voteSubmitted = true;
+        voteSubmittedTime = GetTime();
     } else {
         LogPrintf("CFinalizedBudget::SubmitVote : Error submitting vote - %s\n", strError);
     }
