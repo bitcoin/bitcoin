@@ -89,6 +89,7 @@ int64_t nMaxTipAge = DEFAULT_MAX_TIP_AGE;
 bool fEnableReplacement = DEFAULT_ENABLE_REPLACEMENT;
 
 std::atomic<bool> fDIP0001ActiveAtTip{false};
+std::atomic<bool> fDIP0003ActiveAtTip{false};
 
 uint256 hashAssumeValid;
 
@@ -1885,6 +1886,9 @@ static DisconnectResult DisconnectBlock(const CBlock& block, CValidationState& s
         }
     }
 
+    if (pindex->pprev && pindex->pprev->pprev && VersionBitsState(pindex->pprev->pprev, Params().GetConsensus(), Consensus::DEPLOYMENT_DIP0003, versionbitscache) != THRESHOLD_ACTIVE) {
+        fDIP0003ActiveAtTip = false;
+    }
 
     // move best block pointer to prevout block
     view.SetBestBlock(pindex->pprev->GetBlockHash());
@@ -2151,6 +2155,12 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
 
     if (VersionBitsState(pindex->pprev, chainparams.GetConsensus(), Consensus::DEPLOYMENT_BIP147, versionbitscache) == THRESHOLD_ACTIVE) {
         flags |= SCRIPT_VERIFY_NULLDUMMY;
+    }
+
+    if (!fJustCheck && VersionBitsState(pindex->pprev, chainparams.GetConsensus(), Consensus::DEPLOYMENT_DIP0003, versionbitscache) == THRESHOLD_ACTIVE) {
+        if (!fDIP0003ActiveAtTip)
+            LogPrintf("ConnectBlock -- DIP0003 got activated at height %d\n", pindex->nHeight);
+        fDIP0003ActiveAtTip = true;
     }
 
     int64_t nTime2 = GetTimeMicros(); nTimeForks += nTime2 - nTime1;
