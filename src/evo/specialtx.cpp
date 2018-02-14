@@ -11,6 +11,7 @@
 #include "chainparams.h"
 
 #include "specialtx.h"
+#include "deterministicmns.h"
 
 bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state)
 {
@@ -67,6 +68,9 @@ bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, CV
             return false;
     }
 
+    if (!deterministicMNManager->ProcessBlock(block, pindex->pprev, state))
+        return false;
+
     return true;
 }
 
@@ -77,6 +81,10 @@ bool UndoSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex)
         if (!UndoSpecialTx(tx, pindex))
             return false;
     }
+
+    if (!deterministicMNManager->UndoBlock(block, pindex))
+        return false;
+
     return true;
 }
 

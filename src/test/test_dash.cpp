@@ -24,6 +24,8 @@
 
 #include "test/testutil.h"
 
+#include "evo/deterministicmns.h"
+
 #include <memory>
 
 #include <boost/filesystem.hpp>
@@ -68,6 +70,7 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
         evoDb = new CEvoDB(1 << 20, true, true);
         pblocktree = new CBlockTreeDB(1 << 20, true);
         pcoinsdbview = new CCoinsViewDB(1 << 23, true);
+        deterministicMNManager = new CDeterministicMNManager(*evoDb);
         pcoinsTip = new CCoinsViewCache(pcoinsdbview);
         InitBlockIndex(chainparams);
         {
@@ -90,6 +93,7 @@ TestingSetup::~TestingSetup()
         threadGroup.join_all();
         UnloadBlockIndex();
         delete pcoinsTip;
+        delete deterministicMNManager;
         delete pcoinsdbview;
         delete pblocktree;
         delete evoDb;

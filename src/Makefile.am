@@ -109,6 +109,7 @@ BITCOIN_CORE_H = \
   evo/evodb.h \
   evo/specialtx.h \
   evo/providertx.h \
+  evo/deterministicmns.h \
   privatesend.h \
   privatesend-client.h \
   privatesend-server.h \
@@ -222,6 +223,7 @@ libdash_server_a_SOURCES = \
   evo/evodb.cpp \
   evo/specialtx.cpp \
   evo/providertx.cpp \
+  evo/deterministicmns.cpp \
   httprpc.cpp \
   httpserver.cpp \
   init.cpp \

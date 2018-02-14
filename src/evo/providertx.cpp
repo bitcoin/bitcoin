@@ -4,6 +4,7 @@
 
 #include "providertx.h"
 #include "specialtx.h"
+#include "deterministicmns.h"
 
 #include "hash.h"
 #include "clientversion.h"
@@ -29,6 +30,13 @@ static bool CheckService(const uint256& proTxHash, const ProTx& proTx, const CBl
 
     if (!proTx.addr.IsIPv4())
         return state.DoS(10, false, REJECT_INVALID, "bad-protx-addr");
+
+    if (pindexPrev) {
+        auto mnList = deterministicMNManager->GetListForBlock(pindexPrev->GetBlockHash());
+        if (mnList.HasUniqueProperty(proTx.addr) && mnList.GetUniquePropertyMN(proTx.addr)->proTxHash != proTxHash) {
+            return state.DoS(10, false, REJECT_DUPLICATE, "bad-protx-dup-addr");
+        }
+    }
 
     return true;
 }
@@ -80,6 +88,19 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValid
 
     if (ptx.nOperatorReward > 10000)
         return state.DoS(10, false, REJECT_INVALID, "bad-protx-operator-reward");
+
+    if (pindexPrev) {
+        auto mnList = deterministicMNManager->GetListForBlock(pindexPrev->GetBlockHash());
+        if (mnList.HasUniqueProperty(ptx.keyIDOwner) || mnList.HasUniqueProperty(ptx.keyIDOperator)) {
+            return state.DoS(10, false, REJECT_DUPLICATE, "bad-protx-dup-key");
+        }
+
+        if (!deterministicMNManager->IsDeterministicMNsSporkActive(pindexPrev->nHeight)) {
+            if (ptx.keyIDOwner != ptx.keyIDOperator || ptx.keyIDOwner != ptx.keyIDVoting) {
+                return state.DoS(10, false, REJECT_INVALID, "bad-protx-key-not-same");
+            }
+        }
+    }
 
     if (!CheckInputsHashAndSig(tx, ptx, ptx.keyIDOwner, state))
         return false;
