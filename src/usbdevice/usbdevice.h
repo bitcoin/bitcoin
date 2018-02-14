@@ -60,7 +60,7 @@ public:
     int GetFirmwareVersion(std::string &sFirmware, std::string &sError);
     int GetInfo(UniValue &info, std::string &sError);
 
-    //int GetPubKey(const std::vector<uint32_t> &vPath, CPubKey &pk, std::string &sError);
+    int GetPubKey(const std::vector<uint32_t> &vPath, CPubKey &pk, std::string &sError);
     int GetXPub(const std::vector<uint32_t> &vPath, CExtPubKey &ekp, std::string &sError);
 
     int SignMessage(const std::vector<uint32_t> &vPath, const std::string &sMessage, std::vector<uint8_t> &vchSig, std::string &sError);

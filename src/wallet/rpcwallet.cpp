@@ -1340,7 +1340,6 @@ UniValue sendmany(const JSONRPCRequest& request)
 
         std::vector<std::string> keys = sendTo.getKeys();
         for (const std::string& name_ : keys) {
-
             UniValue out(UniValue::VOBJ);
 
             out.pushKV("address", name_);

@@ -235,7 +235,6 @@ bool VerifyWallets()
         }
 
         fs::path wallet_path = fs::absolute(walletFile, GetWalletDir());
-
         if (fs::exists(wallet_path) && (!fs::is_regular_file(wallet_path) || fs::is_symlink(wallet_path))) {
             return InitError(strprintf(_("Error loading wallet %s. -wallet filename must be a regular file."), walletFile));
         }

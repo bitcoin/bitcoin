@@ -133,6 +133,48 @@ int CUSBDevice::GetInfo(UniValue &info, std::string &sError)
     return 0;
 };
 
+int CUSBDevice::GetPubKey(const std::vector<uint32_t> &vPath, CPubKey &pk, std::string &sError)
+{
+    if (vPath.size() < 1 || vPath.size() > MAX_BIP32_PATH) // 10, in firmware
+        return errorN(1, sError, __func__, _("Path depth out of range.").c_str());
+    size_t lenPath = vPath.size();
+    if (0 != Open())
+        return errorN(1, sError, __func__, "Failed to open device.");
+
+
+    uint8_t in[260];
+    uint8_t out[260];
+    size_t apduSize = 0;
+    in[apduSize++] = BTCHIP_CLA;
+    in[apduSize++] = BTCHIP_INS_GET_WALLET_PUBLIC_KEY;
+    in[apduSize++] = 0x00;      // show on device
+    in[apduSize++] = 0x00;      // segwit
+    in[apduSize++] = 1 + 4 * lenPath; // num bytes to follow
+    in[apduSize++] = lenPath;
+    for (size_t k = 0; k < vPath.size(); k++, apduSize+=4)
+        WriteBE32(&in[apduSize], vPath[k]);
+
+    int sw;
+    int result = sendApduHidHidapi(handle, 1, in, apduSize, out, sizeof(out), &sw);
+    Close();
+
+    if (sw != SW_OK)
+        return errorN(1, sError, __func__, "Dongle application error: %.4x %s", sw, GetLedgerString(sw));
+    if (result < 65)
+        return errorN(1, sError, __func__, "Bad read length: %d", result);
+
+    size_t ofs = 0;
+    size_t lenPubkey = out[ofs++];
+    if (lenPubkey != 33 && lenPubkey != 65)
+        return errorN(1, sError, __func__, "Bad pubkey size: %d", lenPubkey);
+
+    pk.Set(&out[ofs], &out[ofs+lenPubkey]);
+    if (lenPubkey == 65 && !pk.Compress())
+        return errorN(1, sError, __func__, "Pubkey compression failed.");
+
+    return 0;
+};
+
 int CUSBDevice::GetXPub(const std::vector<uint32_t> &vPath, CExtPubKey &ekp, std::string &sError)
 {
     if (vPath.size() < 1 || vPath.size() > MAX_BIP32_PATH) // 10, in firmware

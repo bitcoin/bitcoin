@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017 The Particl Core developers
+# Copyright (c) 2018 The Particl Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -37,8 +37,8 @@ class WalletRPCTest(ParticlTestFramework):
         addr2 = nodes[1].getnewstealthaddress();
 
         txnid = nodes[0].sendmany(
-            fromaccount="",
-            amounts={addr1: 1, addr2:2},
+            fromaccount='',
+            amounts={addr1:1, addr2:2},
             subtractfeefrom=[addr1],
             minconf=0,
             )
@@ -46,7 +46,6 @@ class WalletRPCTest(ParticlTestFramework):
 
         ro = nodes[1].filtertransactions()
         assert(ro[0]['txid'] == txnid)
-        print(json.dumps(ro, indent=4, default=self.jsonDecimal))
         assert(isclose(ro[0]['amount'], 2.999512))
         assert(len(ro[0]['outputs']) == 2)
 
