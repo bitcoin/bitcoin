@@ -87,7 +87,7 @@ UniValue getinfo(const UniValue& params, bool fHelp)
     GetProxy(NET_IPV4, proxy);
 
     UniValue obj(UniValue::VOBJ);
-    obj.push_back(Pair("version", SYSCOIN_CLIENT_VERSION));
+    obj.push_back(Pair("version", CLIENT_VERSION));
     // SYSCOIN
     obj.push_back(Pair("dashversion", DASH_VERSION));
     obj.push_back(Pair("protocolversion", PROTOCOL_VERSION));
