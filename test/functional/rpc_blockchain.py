@@ -32,6 +32,18 @@ from test_framework.util import (
     assert_is_hex_string,
     assert_is_hash_string,
 )
+from test_framework.blocktools import (
+    create_block,
+    create_coinbase,
+)
+from test_framework.messages import (
+    msg_block,
+)
+from test_framework.mininode import (
+    P2PInterface,
+    network_thread_start,
+)
+
 
 class BlockchainTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -46,6 +58,7 @@ class BlockchainTest(BitcoinTestFramework):
         self._test_getdifficulty()
         self._test_getnetworkhashps()
         self._test_stopatheight()
+        self._test_waitforblockheight()
         assert self.nodes[0].verifychain(4, 0)
 
     def _test_getblockchaininfo(self):
@@ -226,6 +239,50 @@ class BlockchainTest(BitcoinTestFramework):
         self.nodes[0].wait_until_stopped()
         self.start_node(0)
         assert_equal(self.nodes[0].getblockcount(), 207)
+
+    def _test_waitforblockheight(self):
+        self.log.info("Test waitforblockheight")
+
+        node = self.nodes[0]
+
+        # Start a P2P connection since we'll need to create some blocks.
+        node.add_p2p_connection(P2PInterface())
+        network_thread_start()
+        node.p2p.wait_for_verack()
+
+        current_height = node.getblock(node.getbestblockhash())['height']
+
+        # Create a fork somewhere below our current height, invalidate the tip
+        # of that fork, and then ensure that waitforblockheight still
+        # works as expected.
+        #
+        # (Previously this was broken based on setting
+        # `rpc/blockchain.cpp:latestblock` incorrectly.)
+        #
+        b20hash = node.getblockhash(20)
+        b20 = node.getblock(b20hash)
+
+        def solve_and_send_block(prevhash, height, time):
+            b = create_block(prevhash, create_coinbase(height), time)
+            b.solve()
+            node.p2p.send_message(msg_block(b))
+            node.p2p.sync_with_ping()
+            return b
+
+        b21f = solve_and_send_block(int(b20hash, 16), 21, b20['time'] + 1)
+        b22f = solve_and_send_block(b21f.sha256, 22, b21f.nTime + 1)
+
+        node.invalidateblock(b22f.hash)
+
+        def assert_waitforheight(height, timeout=2):
+            assert_equal(
+                node.waitforblockheight(height, timeout)['height'],
+                current_height)
+
+        assert_waitforheight(0)
+        assert_waitforheight(current_height - 1)
+        assert_waitforheight(current_height)
+        assert_waitforheight(current_height + 1)
 
 
 if __name__ == '__main__':
