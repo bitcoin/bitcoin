@@ -19,7 +19,7 @@ std::string COutPoint::ToStringShort() const
     return strprintf("%s-%u", hash.ToString().substr(0,64), n);
 }
 
-uint256 COutPoint::GetHash()
+uint256 COutPoint::GetHash() const
 {
     return Hash(BEGIN(hash), END(hash), BEGIN(n), END(n));
 }

@@ -1697,19 +1697,27 @@ CFinalizedBudget::CFinalizedBudget(const CFinalizedBudget& other)
     voteSubmittedTime = boost::none;
 }
 
-bool CFinalizedBudget::AddOrUpdateVote(CFinalizedBudgetVote& vote, std::string& strError)
+bool CFinalizedBudget::AddOrUpdateVote(const CFinalizedBudgetVote& vote, std::string& strError)
 {
     LOCK(cs);
 
-    uint256 hash = vote.vin.prevout.GetHash();
-    if(mapVotes.count(hash)){
-        if(mapVotes[hash].nTime > vote.nTime){
+    auto masternodeHash = vote.vin.prevout.GetHash();
+    auto voteHash = vote.GetHash();
+    auto found = mapVotes.find(masternodeHash);
+
+    if(found != std::end(mapVotes)){
+        auto&& previousVote = found->second;
+        if (previousVote.GetHash() == vote.GetHash()) {
+            LogPrint("mnbudget", "CFinalizedBudget::AddOrUpdateVote - Already have the vote\n");
+            return true;
+        }
+        if(previousVote.nTime > vote.nTime) {
             strError = strprintf("new vote older than existing vote - %s\n", vote.GetHash().ToString());
             LogPrint("mnbudget", "CFinalizedBudget::AddOrUpdateVote - %s\n", strError);
             return false;
         }
-        if(vote.nTime - mapVotes[hash].nTime < BUDGET_VOTE_UPDATE_MIN){
-            strError = strprintf("time between votes is too soon - %s - %lli\n", vote.GetHash().ToString(), vote.nTime - mapVotes[hash].nTime);
+        if(vote.nTime - previousVote.nTime < FINAL_BUDGET_VOTE_UPDATE_MIN) {
+            strError = strprintf("time between votes is too soon - %s - %lli\n", vote.GetHash().ToString(), vote.nTime - previousVote.nTime);
             LogPrint("mnbudget", "CFinalizedBudget::AddOrUpdateVote - %s\n", strError);
             return false;
         }
@@ -1721,7 +1729,7 @@ bool CFinalizedBudget::AddOrUpdateVote(CFinalizedBudgetVote& vote, std::string& 
         return false;
     }
 
-    mapVotes[hash] = vote;
+    mapVotes.insert(found, std::make_pair(masternodeHash, vote));
     return true;
 }
 
@@ -1743,6 +1751,10 @@ void CFinalizedBudget::AutoCheck()
         LogPrintf("CFinalizedBudget::AutoCheck - waiting\n");
         return;
     }
+
+    // Auto-check votes with an interval that does not allow to submit votes to soon
+    if (voteSubmittedTime && GetTime() - voteSubmittedTime.value() < FINAL_BUDGET_VOTE_UPDATE_MIN)
+        return;
 
     fAutoChecked = true; //we only need to check this once
 

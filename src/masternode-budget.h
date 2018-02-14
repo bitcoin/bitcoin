@@ -36,6 +36,7 @@ class CTxBudgetPayment;
 static const CAmount BUDGET_FEE_TX = (25*COIN);
 static const int64_t BUDGET_FEE_CONFIRMATIONS = 6;
 static const int64_t BUDGET_VOTE_UPDATE_MIN = 60*60;
+static const int64_t FINAL_BUDGET_VOTE_UPDATE_MIN = 30*60;
 
 extern std::vector<CBudgetProposalBroadcast> vecImmatureBudgetProposals;
 extern std::vector<CFinalizedBudgetBroadcast> vecImmatureFinalizedBudgets;
@@ -229,7 +230,7 @@ public:
     CFinalizedBudget(const CFinalizedBudget& other);
 
     void CleanAndRemove(bool fSignatureCheck);
-    bool AddOrUpdateVote(CFinalizedBudgetVote& vote, std::string& strError);
+    bool AddOrUpdateVote(const CFinalizedBudgetVote& vote, std::string& strError);
 
     bool IsValid(std::string& strError, bool fCheckCollateral=true) const;
     bool IsValid(bool fCheckCollateral=true) const;
@@ -368,7 +369,7 @@ public:
     bool SignatureValid(bool fSignatureCheck);
     void Relay();
 
-    uint256 GetHash(){
+    uint256 GetHash() const{
         CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
         ss << vin;
         ss << nBudgetHash;
