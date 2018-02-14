@@ -124,12 +124,12 @@ int AbstractThresholdConditionChecker::GetStateSinceHeightFor(const CBlockIndex*
     // right now pindexPrev points to the block prior to the block that we are computing for, thus:
     // if we are computing for the last block of a period, then pindexPrev points to the second to last block of the period, and
     // if we are computing for the first block of a period, then pindexPrev points to the last block of the previous period.
-    // The parent of the genesis block is represented by NULL.
+    // The parent of the genesis block is represented by nullptr.
     pindexPrev = pindexPrev->GetAncestor(pindexPrev->nHeight - ((pindexPrev->nHeight + 1) % nPeriod));
 
     const CBlockIndex* previousPeriodParent = pindexPrev->GetAncestor(pindexPrev->nHeight - nPeriod);
 
-    while (previousPeriodParent != NULL && GetStateFor(previousPeriodParent, params, cache) == initialState) {
+    while (previousPeriodParent != nullptr && GetStateFor(previousPeriodParent, params, cache) == initialState) {
         pindexPrev = previousPeriodParent;
         previousPeriodParent = pindexPrev->GetAncestor(pindexPrev->nHeight - nPeriod);
     }

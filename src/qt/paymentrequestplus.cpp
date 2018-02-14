@@ -162,14 +162,14 @@ bool PaymentRequestPlus::getMerchant(X509_STORE* certStore, QString& merchant) c
         EVP_MD_CTX ctx;
         EVP_PKEY *pubkey = X509_get_pubkey(signing_cert);
         EVP_MD_CTX_init(&ctx);
-        if (!EVP_VerifyInit_ex(&ctx, digestAlgorithm, NULL) ||
+        if (!EVP_VerifyInit_ex(&ctx, digestAlgorithm, nullptr) ||
             !EVP_VerifyUpdate(&ctx, data_to_verify.data(), data_to_verify.size()) ||
             !EVP_VerifyFinal(&ctx, (const unsigned char*)paymentRequest.signature().data(), (unsigned int)paymentRequest.signature().size(), pubkey)) {
             throw SSLVerifyError("Bad signature, invalid payment request.");
         }
 
         // OpenSSL API for getting human printable strings from certs is baroque.
-        int textlen = X509_NAME_get_text_by_NID(certname, NID_commonName, NULL, 0);
+        int textlen = X509_NAME_get_text_by_NID(certname, NID_commonName, nullptr, 0);
         website = new char[textlen + 1];
         if (X509_NAME_get_text_by_NID(certname, NID_commonName, website, textlen + 1) == textlen && textlen > 0) {
             merchant = website;

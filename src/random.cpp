@@ -38,7 +38,7 @@ static inline int64_t GetPerformanceCounter()
     QueryPerformanceCounter((LARGE_INTEGER*)&nCounter);
 #else
     timeval t;
-    gettimeofday(&t, NULL);
+    gettimeofday(&t, nullptr);
     nCounter = (int64_t)(t.tv_sec * 1000000 + t.tv_usec);
 #endif
     return nCounter;
@@ -72,7 +72,7 @@ void RandAddSeedPerfmon()
     const size_t nMaxSize = 10000000; // Bail out at more than 10MB of performance data
     while (true) {
         nSize = vData.size();
-        ret = RegQueryValueExA(HKEY_PERFORMANCE_DATA, "Global", NULL, NULL, begin_ptr(vData), &nSize);
+        ret = RegQueryValueExA(HKEY_PERFORMANCE_DATA, "Global", nullptr, nullptr, begin_ptr(vData), &nSize);
         if (ret != ERROR_MORE_DATA || vData.size() >= nMaxSize)
             break;
         vData.resize(std::max((vData.size() * 3) / 2, nMaxSize)); // Grow size of buffer exponentially
@@ -97,7 +97,7 @@ static void GetOSRand(unsigned char *ent32)
 {
 #ifdef WIN32
     HCRYPTPROV hProvider;
-    int ret = CryptAcquireContextW(&hProvider, NULL, NULL, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT);
+    int ret = CryptAcquireContextW(&hProvider, nullptr, nullptr, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT);
     if (!ret) {
         RandFailure();
     }

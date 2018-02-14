@@ -301,7 +301,7 @@ static void http_request_cb(struct evhttp_request* req, void* arg)
 static void http_reject_request_cb(struct evhttp_request* req, void*)
 {
     LogPrint("http", "Rejecting request while shutting down\n");
-    evhttp_send_error(req, HTTP_SERVUNAVAIL, NULL);
+    evhttp_send_error(req, HTTP_SERVUNAVAIL, nullptr);
 }
 
 /** Event dispatcher thread */
@@ -344,7 +344,7 @@ static bool HTTPBindAddresses(struct evhttp* http)
     // Bind addresses
     for (std::vector<std::pair<std::string, uint16_t> >::iterator i = endpoints.begin(); i != endpoints.end(); ++i) {
         LogPrint("http", "Binding RPC on address %s port %i\n", i->first, i->second);
-        evhttp_bound_socket *bind_handle = evhttp_bind_socket_with_handle(http, i->first.empty() ? NULL : i->first.c_str(), i->second);
+        evhttp_bound_socket *bind_handle = evhttp_bind_socket_with_handle(http, i->first.empty() ? nullptr : i->first.c_str(), i->second);
         if (bind_handle) {
             boundSockets.push_back(bind_handle);
         } else {
@@ -422,7 +422,7 @@ bool InitHTTPServer()
     evhttp_set_timeout(http, GetArg("-rpcservertimeout", DEFAULT_HTTP_SERVER_TIMEOUT));
     evhttp_set_max_headers_size(http, MAX_HEADERS_SIZE);
     evhttp_set_max_body_size(http, MAX_SIZE);
-    evhttp_set_gencb(http, http_request_cb, NULL);
+    evhttp_set_gencb(http, http_request_cb, nullptr);
 
     if (!HTTPBindAddresses(http)) {
         LogPrintf("Unable to bind any endpoint for RPC server\n");
@@ -469,7 +469,7 @@ void InterruptHTTPServer()
             evhttp_del_accept_socket(eventHTTP, socket);
         }
         // Reject requests on current connections
-        evhttp_set_gencb(eventHTTP, http_reject_request_cb, NULL);
+        evhttp_set_gencb(eventHTTP, http_reject_request_cb, nullptr);
     }
     if (workQueue)
         workQueue->Interrupt();
@@ -534,7 +534,7 @@ HTTPEvent::~HTTPEvent()
 }
 void HTTPEvent::trigger(struct timeval* tv)
 {
-    if (tv == NULL)
+    if (tv == nullptr)
         event_active(ev, 0, 0); // immediately trigger event in main thread
     else
         evtimer_add(ev, tv); // trigger after timeval passed
@@ -577,7 +577,7 @@ std::string HTTPRequest::ReadBody()
      * abstraction to consume the evbuffer on the fly in the parsing algorithm.
      */
     const char* data = (const char*)evbuffer_pullup(buf, size);
-    if (!data) // returns NULL in case of empty buffer
+    if (!data) // returns nullptr in case of empty buffer
         return "";
     std::string rv(data, size);
     evbuffer_drain(buf, size);
@@ -604,7 +604,7 @@ void HTTPRequest::WriteReply(int nStatus, const std::string& strReply)
     assert(evb);
     evbuffer_add(evb, strReply.data(), strReply.size());
     HTTPEvent* ev = new HTTPEvent(eventBase, true,
-        std::bind(evhttp_send_reply, req, nStatus, (const char*)NULL, (struct evbuffer *)NULL));
+        std::bind(evhttp_send_reply, req, nStatus, (const char*)nullptr, (struct evbuffer *)nullptr));
     ev->trigger(0);
     replySent = true;
     req = 0; // transferred back to main thread

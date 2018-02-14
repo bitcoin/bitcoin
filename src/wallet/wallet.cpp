@@ -43,7 +43,7 @@
 
 using namespace std;
 
-CWallet* pwalletMain = NULL;
+CWallet* pwalletMain = nullptr;
 /** Transaction fee set by the user */
 CFeeRate payTxFee(DEFAULT_TRANSACTION_FEE);
 unsigned int nTxConfirmTarget = DEFAULT_TX_CONFIRM_TARGET;
@@ -4389,7 +4389,7 @@ std::string CWallet::GetWalletHelpString(bool showDebug)
 bool CWallet::InitLoadWallet()
 {
     if (GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET)) {
-        pwalletMain = NULL;
+        pwalletMain = nullptr;
         LogPrintf("Wallet disabled!\n");
         return true;
     }
@@ -4409,7 +4409,7 @@ bool CWallet::InitLoadWallet()
         }
 
         delete tempWallet;
-        tempWallet = NULL;
+        tempWallet = nullptr;
     }
 
     uiInterface.InitMessage(_("Loading wallet..."));

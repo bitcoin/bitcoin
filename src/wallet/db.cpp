@@ -154,10 +154,10 @@ CDBEnv::VerifyResult CDBEnv::Verify(const std::string& strFile, bool (*recoverFu
     assert(mapFileUseCount.count(strFile) == 0);
 
     Db db(dbenv, 0);
-    int result = db.verify(strFile.c_str(), NULL, NULL, 0);
+    int result = db.verify(strFile.c_str(), nullptr, nullptr, 0);
     if (result == 0)
         return VERIFY_OK;
-    else if (recoverFunc == NULL)
+    else if (recoverFunc == nullptr)
         return RECOVER_FAIL;
 
     // Try to recover:

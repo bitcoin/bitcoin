@@ -290,7 +290,7 @@ void BitcoinCore::initialize()
     } catch (const std::exception& e) {
         handleRunawayException(&e);
     } catch (...) {
-        handleRunawayException(NULL);
+        handleRunawayException(nullptr);
     }
 }
 

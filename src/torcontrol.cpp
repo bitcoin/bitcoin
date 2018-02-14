@@ -139,8 +139,8 @@ void TorControlConnection::readcb(struct bufferevent *bev, void *ctx)
     size_t n_read_out = 0;
     char *line;
     assert(input);
-    //  If there is not a whole line to read, evbuffer_readln returns NULL
-    while((line = evbuffer_readln(input, &n_read_out, EVBUFFER_EOL_CRLF)) != NULL)
+    //  If there is not a whole line to read, evbuffer_readln returns nullptr
+    while((line = evbuffer_readln(input, &n_read_out, EVBUFFER_EOL_CRLF)) != nullptr)
     {
         std::string s(line, n_read_out);
         free(line);
@@ -210,7 +210,7 @@ bool TorControlConnection::Connect(const std::string &target, const ConnectionCB
     b_conn = bufferevent_socket_new(base, -1, BEV_OPT_CLOSE_ON_FREE);
     if (!b_conn)
         return false;
-    bufferevent_setcb(b_conn, TorControlConnection::readcb, NULL, TorControlConnection::eventcb, this);
+    bufferevent_setcb(b_conn, TorControlConnection::readcb, nullptr, TorControlConnection::eventcb, this);
     bufferevent_enable(b_conn, EV_READ|EV_WRITE);
     this->connected = connected;
     this->disconnected = disconnected;
@@ -315,7 +315,7 @@ static std::map<std::string,std::string> ParseTorReplyMapping(const std::string 
 static std::pair<bool,std::string> ReadBinaryFile(const std::string &filename, size_t maxsize=std::numeric_limits<size_t>::max())
 {
     FILE *f = fopen(filename.c_str(), "rb");
-    if (f == NULL)
+    if (f == nullptr)
         return std::make_pair(false,"");
     std::string retval;
     char buffer[128];
@@ -335,7 +335,7 @@ static std::pair<bool,std::string> ReadBinaryFile(const std::string &filename, s
 static bool WriteBinaryFile(const std::string &filename, const std::string &data)
 {
     FILE *f = fopen(filename.c_str(), "wb");
-    if (f == NULL)
+    if (f == nullptr)
         return false;
     if (fwrite(data.data(), 1, data.size(), f) != data.size()) {
         fclose(f);
@@ -546,7 +546,7 @@ void TorController::protocolinfo_cb(TorControlConnection& conn, const TorControl
         std::string cookiefile;
         /*
          * 250-AUTH METHODS=COOKIE,SAFECOOKIE COOKIEFILE="/home/x/.tor/control_auth_cookie"
-         * 250-AUTH METHODS=NULL
+         * 250-AUTH METHODS=nullptr
          * 250-AUTH METHODS=HASHEDPASSWORD
          */
         for (const std::string &s : reply.lines) {
@@ -569,7 +569,7 @@ void TorController::protocolinfo_cb(TorControlConnection& conn, const TorControl
         for (const std::string &s : methods) {
             LogPrint("tor", "tor: Supported authentication method: %s\n", s);
         }
-        // Prefer NULL, otherwise SAFECOOKIE. If a password is provided, use HASHEDPASSWORD
+        // Prefer nullptr, otherwise SAFECOOKIE. If a password is provided, use HASHEDPASSWORD
         /* Authentication:
          *   cookie:   hex-encoded ~/.tor/control_auth_cookie
          *   password: "password"
@@ -583,8 +583,8 @@ void TorController::protocolinfo_cb(TorControlConnection& conn, const TorControl
             } else {
                 LogPrintf("tor: Password provided with -torpassword, but HASHEDPASSWORD authentication is not available\n");
             }
-        } else if (methods.count("NULL")) {
-            LogPrint("tor", "tor: Using NULL authentication\n");
+        } else if (methods.count("nullptr")) {
+            LogPrint("tor", "tor: Using nullptr authentication\n");
             conn.Command("AUTHENTICATE", boost::bind(&TorController::auth_cb, this, _1, _2));
         } else if (methods.count("SAFECOOKIE")) {
             // Cookie: hexdump -e '32/1 "%02x""\n"'  ~/.tor/control_auth_cookie

@@ -204,7 +204,7 @@ UniValue CallRPC(const std::string& strMethod, const UniValue& params)
 
     HTTPReply response;
     struct evhttp_request *req = evhttp_request_new(http_request_done, (void*)&response); // TODO RAII
-    if (req == NULL)
+    if (req == nullptr)
         throw std::runtime_error("create http request failed");
 #if LIBEVENT_VERSION_NUMBER >= 0x02010300
     evhttp_request_set_error_cb(req, http_error_cb);

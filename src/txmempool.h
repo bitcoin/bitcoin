@@ -55,7 +55,7 @@ struct LockPoints
     // values are still valid even after a reorg.
     CBlockIndex* maxInputBlock;
 
-    LockPoints() : height(0), time(0), maxInputBlock(NULL) { }
+    LockPoints() : height(0), time(0), maxInputBlock(nullptr) { }
 };
 
 class CTxMemPool;
@@ -527,11 +527,11 @@ public:
     bool addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry, bool fCurrentEstimate = true);
     bool addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry, setEntries &setAncestors, bool fCurrentEstimate = true);
 
-    void removeRecursive(const CTransaction &tx, std::vector<CTransactionRef>* removed = NULL);
+    void removeRecursive(const CTransaction &tx, std::vector<CTransactionRef>* removed = nullptr);
     void removeForReorg(const CCoinsViewCache *pcoins, unsigned int nMemPoolHeight, int flags);
-    void removeConflicts(const CTransaction &tx, std::vector<CTransactionRef>* removed = NULL);
+    void removeConflicts(const CTransaction &tx, std::vector<CTransactionRef>* removed = nullptr);
     void removeForBlock(const std::vector<CTransactionRef>& vtx, unsigned int nBlockHeight,
-                        std::vector<CTransactionRef>* conflicts = NULL, bool fCurrentEstimate = true);
+                        std::vector<CTransactionRef>* conflicts = nullptr, bool fCurrentEstimate = true);
     void clear();
     void _clear(); //lock free
     bool CompareDepthAndScore(const uint256& hasha, const uint256& hashb);
@@ -600,7 +600,7 @@ public:
       *  pvNoSpendsRemaining, if set, will be populated with the list of transactions
       *  which are not in mempool which no longer have any spends in this mempool.
       */
-    void TrimToSize(size_t sizelimit, std::vector<uint256>* pvNoSpendsRemaining=NULL);
+    void TrimToSize(size_t sizelimit, std::vector<uint256>* pvNoSpendsRemaining=nullptr);
 
     /** Expire all transaction (and their dependencies) in the mempool older than time. Return the number of removed transactions. */
     int Expire(int64_t time);
@@ -631,7 +631,7 @@ public:
      *  If no answer can be given at nBlocks, return an estimate
      *  at the lowest number of blocks where one can be given
      */
-    CFeeRate estimateSmartFee(int nBlocks, int *answerFoundAtBlocks = NULL) const;
+    CFeeRate estimateSmartFee(int nBlocks, int *answerFoundAtBlocks = nullptr) const;
 
     /** Estimate fee rate needed to get into the next nBlocks */
     CFeeRate estimateFee(int nBlocks) const;
@@ -640,7 +640,7 @@ public:
      *  If no answer can be given at nBlocks, return an estimate
      *  at the lowest number of blocks where one can be given
      */
-    double estimateSmartPriority(int nBlocks, int *answerFoundAtBlocks = NULL) const;
+    double estimateSmartPriority(int nBlocks, int *answerFoundAtBlocks = nullptr) const;
 
     /** Estimate priority needed to get into the next nBlocks */
     double estimatePriority(int nBlocks) const;

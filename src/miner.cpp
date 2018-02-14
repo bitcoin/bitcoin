@@ -131,7 +131,7 @@ CBlockTemplate* BlockAssembler::CreateNewBlock(const CScript& scriptPubKeyIn)
     pblocktemplate.reset(new CBlockTemplate());
 
     if(!pblocktemplate.get())
-        return NULL;
+        return nullptr;
     pblock = &pblocktemplate->block; // pointer for convenience
 
     // Add dummy coinbase tx as first transaction

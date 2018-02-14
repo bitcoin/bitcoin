@@ -113,13 +113,8 @@ private:
     QAction *encryptWalletAction;
     QAction *backupWalletAction;
     QAction *changePassphraseAction;
-    QAction *unlockWalletAction;
-    QAction *lockWalletAction;
     QAction *aboutQtAction;
-    QAction *openInfoAction;
     QAction *openRPCConsoleAction;
-    QAction *openGraphAction;
-    QAction *openPeersAction;
     QAction *openRepairAction;
     QAction *openConfEditorAction;
     QAction *openMNConfEditorAction;
@@ -164,13 +159,9 @@ private:
     /** Update UI with latest network info from model. */
     void updateNetworkState();
 
-    void updateHeadersSyncProgressLabel();
-
 Q_SIGNALS:
     /** Signal raised when a URI was entered or dragged to the GUI */
     void receivedURI(const QString &uri);
-    /** Restart handling */
-    void requestedRestart(QStringList args);
 
 public Q_SLOTS:
     /** Set number of connections shown in the UI */
@@ -237,13 +228,8 @@ private Q_SLOTS:
     void aboutClicked();
     /** Show debug window */
     void showDebugWindow();
-
-    /** Show debug window and set focus to the appropriate tab */
-    void showInfo();
-    void showConsole();
-    void showGraph();
-    void showPeers();
-    void showRepair();
+    /** Show debug window and set focus to the console */
+    void showDebugWindowActivateConsole();
 
     /** Open external (default) editor with chaincoin.conf */
     void showConfEditor();
