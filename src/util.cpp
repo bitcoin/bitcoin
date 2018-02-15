@@ -469,25 +469,48 @@ int LogPrintStr(const std::string &str)
     return ret;
 }
 
+/** A map that contains all the currently held directory locks. After
+ * successful locking, these will be held here until the global destructor
+ * cleans them up and thus automatically unlocks them, or ReleaseDirectoryLocks
+ * is called.
+ */
+static std::map<std::string, std::unique_ptr<boost::interprocess::file_lock>> dir_locks;
+/** Mutex to protect dir_locks. */
+static std::mutex cs_dir_locks;
+
 bool LockDirectory(const fs::path& directory, const std::string lockfile_name, bool probe_only)
 {
+    std::lock_guard<std::mutex> ulock(cs_dir_locks);
     fs::path pathLockFile = directory / lockfile_name;
-    FILE* file = fsbridge::fopen(pathLockFile, "a"); // empty lock file; created if it doesn't exist.
+
+    // If a lock for this directory already exists in the map, don't try to re-lock it
+    if (dir_locks.count(pathLockFile.string())) {
+        return true;
+    }
+
+    // Create empty lock file if it doesn't exist.
+    FILE* file = fsbridge::fopen(pathLockFile, "a");
     if (file) fclose(file);
 
     try {
-        static std::map<std::string, boost::interprocess::file_lock> locks;
-        boost::interprocess::file_lock& lock = locks.emplace(pathLockFile.string(), pathLockFile.string().c_str()).first->second;
-        if (!lock.try_lock()) {
+        auto lock = MakeUnique<boost::interprocess::file_lock>(pathLockFile.string().c_str());
+        if (!lock->try_lock()) {
             return false;
         }
-        if (probe_only) {
-            lock.unlock();
+        if (!probe_only) {
+            // Lock successful and we're not just probing, put it into the map
+            dir_locks.emplace(pathLockFile.string(), std::move(lock));
         }
     } catch (const boost::interprocess::interprocess_exception& e) {
         return error("Error while attempting to lock directory %s: %s", directory.string(), e.what());
     }
     return true;
+}
+
+void ReleaseDirectoryLocks()
+{
+    std::lock_guard<std::mutex> ulock(cs_dir_locks);
+    dir_locks.clear();
 }
 
 /** Interpret string as boolean, for argument parsing */
