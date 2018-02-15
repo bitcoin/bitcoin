@@ -798,11 +798,13 @@ void ThreadImport(std::vector<fs::path> vImportFiles)
     if (!ActivateBestChain(state, chainparams)) {
         LogPrintf("Failed to connect best block (%s)\n", FormatStateMessage(state));
         StartShutdown();
+        return;
     }
 
     if (gArgs.GetBoolArg("-stopafterblockimport", DEFAULT_STOPAFTERBLOCKIMPORT)) {
         LogPrintf("Stopping after block import\n");
         StartShutdown();
+        return;
     }
     } // End scope of CImportingNow
 
