@@ -823,9 +823,14 @@ void InitParameterInteraction()
     }
 
     if (GetBoolArg("-masternode", false)) {
-        // masternodes must accept connections from outside
-        if (SoftSetBoolArg("-listen", true))
-            LogPrintf("%s: parameter interaction: -masternode=1 -> setting -listen=1\n", __func__);
+        // masternodes MUST accept connections from outside
+        ForceSetArg("-listen", "1");
+        LogPrintf("%s: parameter interaction: -masternode=1 -> setting -listen=1\n", __func__);
+        if (GetArg("-maxconnections", DEFAULT_MAX_PEER_CONNECTIONS) < DEFAULT_MAX_PEER_CONNECTIONS) {
+            // masternodes MUST be able to handle at least DEFAULT_MAX_PEER_CONNECTIONS connections
+            ForceSetArg("-maxconnections", itostr(DEFAULT_MAX_PEER_CONNECTIONS));
+            LogPrintf("%s: parameter interaction: -masternode=1 -> setting -maxconnections=%d\n", __func__, DEFAULT_MAX_PEER_CONNECTIONS);
+        }
     }
 
     if (mapMultiArgs.count("-connect") && mapMultiArgs.at("-connect").size() > 0) {
