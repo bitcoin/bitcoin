@@ -148,7 +148,7 @@ private:
     std::string strData;
 
     /// Masternode info for signed objects
-    CTxIn vinMasternode;
+    COutPoint masternodeOutpoint;
     std::vector<unsigned char> vchSig;
 
     /// is valid by blockchain
@@ -214,8 +214,8 @@ public:
         return nCollateralHash;
     }
 
-    const CTxIn& GetMasternodeVin() const {
-        return vinMasternode;
+    const COutPoint& GetMasternodeOutpoint() const {
+        return masternodeOutpoint;
     }
 
     bool IsSetCachedFunding() const {
@@ -252,7 +252,7 @@ public:
 
     // Signature related functions
 
-    void SetMasternodeVin(const COutPoint& outpoint);
+    void SetMasternodeOutpoint(const COutPoint& outpoint);
     bool Sign(const CKey& keyMasternode, const CPubKey& pubKeyMasternode);
     bool CheckSignature(const CPubKey& pubKeyMasternode);
 
@@ -304,14 +304,27 @@ public:
     inline void SerializationOp(Stream& s, Operation ser_action)
     {
         // SERIALIZE DATA FOR SAVING/LOADING OR NETWORK FUNCTIONS
-
+        int nVersion = s.GetVersion();
         READWRITE(nHashParent);
         READWRITE(nRevision);
         READWRITE(nTime);
         READWRITE(nCollateralHash);
         READWRITE(LIMITED_STRING(strData, MAX_GOVERNANCE_OBJECT_DATA_SIZE));
         READWRITE(nObjectType);
-        READWRITE(vinMasternode);
+        if (nVersion == 70208) {
+            // converting from/to old format
+            CTxIn txin;
+            if (ser_action.ForRead()) {
+                READWRITE(txin);
+                masternodeOutpoint = txin.prevout;
+            } else {
+                txin = CTxIn(masternodeOutpoint);
+                READWRITE(txin);
+            }
+        } else {
+            // using new format directly
+            READWRITE(masternodeOutpoint);
+        }
         READWRITE(vchSig);
         if(s.GetType() & SER_DISK) {
             // Only include these for the disk file format

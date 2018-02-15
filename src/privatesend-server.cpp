@@ -96,17 +96,17 @@ void CPrivateSendServer::ProcessMessage(CNode* pfrom, const std::string& strComm
         if(dsq.IsExpired()) return;
 
         masternode_info_t mnInfo;
-        if(!mnodeman.GetMasternodeInfo(dsq.vin.prevout, mnInfo)) return;
+        if(!mnodeman.GetMasternodeInfo(dsq.masternodeOutpoint, mnInfo)) return;
 
         if(!dsq.CheckSignature(mnInfo.pubKeyMasternode)) {
             // we probably have outdated info
-            mnodeman.AskForMN(pfrom, dsq.vin.prevout, connman);
+            mnodeman.AskForMN(pfrom, dsq.masternodeOutpoint, connman);
             return;
         }
 
         if(!dsq.fReady) {
             for (const auto& q : vecDarksendQueue) {
-                if(q.vin == dsq.vin) {
+                if(q.masternodeOutpoint == dsq.masternodeOutpoint) {
                     // no way same mn can send another "not yet ready" dsq this soon
                     LogPrint("privatesend", "DSQUEUE -- Masternode %s is sending WAY too many dsq messages\n", mnInfo.addr.ToString());
                     return;
@@ -120,7 +120,7 @@ void CPrivateSendServer::ProcessMessage(CNode* pfrom, const std::string& strComm
                 LogPrint("privatesend", "DSQUEUE -- Masternode %s is sending too many dsq messages\n", mnInfo.addr.ToString());
                 return;
             }
-            mnodeman.AllowMixing(dsq.vin.prevout);
+            mnodeman.AllowMixing(dsq.masternodeOutpoint);
 
             LogPrint("privatesend", "DSQUEUE -- new PrivateSend queue (%s) from masternode %s\n", dsq.ToString(), mnInfo.addr.ToString());
             vecDarksendQueue.push_back(dsq);

@@ -24,7 +24,7 @@ CGovernanceObject::CGovernanceObject()
   nDeletionTime(0),
   nCollateralHash(),
   strData(),
-  vinMasternode(),
+  masternodeOutpoint(),
   vchSig(),
   fCachedLocalValidity(false),
   strLocalValidityError(),
@@ -52,7 +52,7 @@ CGovernanceObject::CGovernanceObject(const uint256& nHashParentIn, int nRevision
   nDeletionTime(0),
   nCollateralHash(nCollateralHashIn),
   strData(strDataIn),
-  vinMasternode(),
+  masternodeOutpoint(),
   vchSig(),
   fCachedLocalValidity(false),
   strLocalValidityError(),
@@ -80,7 +80,7 @@ CGovernanceObject::CGovernanceObject(const CGovernanceObject& other)
   nDeletionTime(other.nDeletionTime),
   nCollateralHash(other.nCollateralHash),
   strData(other.strData),
-  vinMasternode(other.vinMasternode),
+  masternodeOutpoint(other.masternodeOutpoint),
   vchSig(other.vchSig),
   fCachedLocalValidity(other.fCachedLocalValidity),
   strLocalValidityError(other.strLocalValidityError),
@@ -218,15 +218,15 @@ std::string CGovernanceObject::GetSignatureMessage() const
         boost::lexical_cast<std::string>(nRevision) + "|" +
         boost::lexical_cast<std::string>(nTime) + "|" +
         strData + "|" +
-        vinMasternode.prevout.ToStringShort() + "|" +
+        masternodeOutpoint.ToStringShort() + "|" +
         nCollateralHash.ToString();
 
     return strMessage;
 }
 
-void CGovernanceObject::SetMasternodeVin(const COutPoint& outpoint)
+void CGovernanceObject::SetMasternodeOutpoint(const COutPoint& outpoint)
 {
-    vinMasternode = CTxIn(outpoint);
+    masternodeOutpoint = outpoint;
 }
 
 bool CGovernanceObject::Sign(const CKey& keyMasternode, const CPubKey& pubKeyMasternode)
@@ -246,8 +246,8 @@ bool CGovernanceObject::Sign(const CKey& keyMasternode, const CPubKey& pubKeyMas
         return false;
     }
 
-    LogPrint("gobject", "CGovernanceObject::Sign -- pubkey id = %s, vin = %s\n",
-             pubKeyMasternode.GetID().ToString(), vinMasternode.prevout.ToStringShort());
+    LogPrint("gobject", "CGovernanceObject::Sign -- pubkey id = %s, masternode = %s\n",
+             pubKeyMasternode.GetID().ToString(), masternodeOutpoint.ToStringShort());
 
 
     return true;
@@ -277,14 +277,13 @@ uint256 CGovernanceObject::GetHash() const
     ss << nRevision;
     ss << nTime;
     ss << strData;
-    ss << vinMasternode;
+    ss << masternodeOutpoint << uint8_t{} << 0xffffffff;
     ss << vchSig;
     // fee_tx is left out on purpose
-    uint256 h1 = ss.GetHash();
 
     DBG( printf("CGovernanceObject::GetHash %i %li %s\n", nRevision, nTime, strData.c_str()); );
 
-    return h1;
+    return ss.GetHash();
 }
 
 /**
@@ -434,11 +433,11 @@ bool CGovernanceObject::IsValidLocally(std::string& strError, bool& fMissingMast
 
     if(fCheckCollateral) { 
         if((nObjectType == GOVERNANCE_OBJECT_TRIGGER) || (nObjectType == GOVERNANCE_OBJECT_WATCHDOG)) {
-            std::string strOutpoint = vinMasternode.prevout.ToStringShort();
+            std::string strOutpoint = masternodeOutpoint.ToStringShort();
             masternode_info_t infoMn;
-            if(!mnodeman.GetMasternodeInfo(vinMasternode.prevout, infoMn)) {
+            if(!mnodeman.GetMasternodeInfo(masternodeOutpoint, infoMn)) {
 
-                CMasternode::CollateralStatus err = CMasternode::CheckCollateral(vinMasternode.prevout, CPubKey());
+                CMasternode::CollateralStatus err = CMasternode::CheckCollateral(masternodeOutpoint, CPubKey());
                 if (err == CMasternode::COLLATERAL_UTXO_NOT_FOUND) {
                     strError = "Failed to find Masternode UTXO, missing masternode=" + strOutpoint + "\n";
                 } else if (err == CMasternode::COLLATERAL_INVALID_AMOUNT) {

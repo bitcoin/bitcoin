@@ -109,21 +109,21 @@ public:
 class CMasternodePaymentVote
 {
 public:
-    CTxIn vinMasternode;
+    COutPoint masternodeOutpoint;
 
     int nBlockHeight;
     CScript payee;
     std::vector<unsigned char> vchSig;
 
     CMasternodePaymentVote() :
-        vinMasternode(),
+        masternodeOutpoint(),
         nBlockHeight(0),
         payee(),
         vchSig()
         {}
 
-    CMasternodePaymentVote(COutPoint outpointMasternode, int nBlockHeight, CScript payee) :
-        vinMasternode(outpointMasternode),
+    CMasternodePaymentVote(COutPoint outpoint, int nBlockHeight, CScript payee) :
+        masternodeOutpoint(outpoint),
         nBlockHeight(nBlockHeight),
         payee(payee),
         vchSig()
@@ -133,7 +133,21 @@ public:
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action) {
-        READWRITE(vinMasternode);
+        int nVersion = s.GetVersion();
+        if (nVersion == 70208) {
+            // converting from/to old format
+            CTxIn txin{};
+            if (ser_action.ForRead()) {
+                READWRITE(txin);
+                masternodeOutpoint = txin.prevout;
+            } else {
+                txin = CTxIn(masternodeOutpoint);
+                READWRITE(txin);
+            }
+        } else {
+            // using new format directly
+            READWRITE(masternodeOutpoint);
+        }
         READWRITE(nBlockHeight);
         READWRITE(*(CScriptBase*)(&payee));
         READWRITE(vchSig);
@@ -143,7 +157,7 @@ public:
         CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
         ss << *(CScriptBase*)(&payee);
         ss << nBlockHeight;
-        ss << vinMasternode.prevout;
+        ss << masternodeOutpoint;
         return ss.GetHash();
     }
 

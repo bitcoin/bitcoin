@@ -32,7 +32,7 @@ static const int MASTERNODE_POSE_BAN_MAX_SCORE          = 5;
 class CMasternodePing
 {
 public:
-    CTxIn vin{};
+    COutPoint masternodeOutpoint{};
     uint256 blockHash{};
     int64_t sigTime{}; //mnb message times
     std::vector<unsigned char> vchSig{};
@@ -48,7 +48,21 @@ public:
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action) {
-        READWRITE(vin);
+        int nVersion = s.GetVersion();
+        if (nVersion == 70208) {
+            // converting from/to old format
+            CTxIn txin{};
+            if (ser_action.ForRead()) {
+                READWRITE(txin);
+                masternodeOutpoint = txin.prevout;
+            } else {
+                txin = CTxIn(masternodeOutpoint);
+                READWRITE(txin);
+            }
+        } else {
+            // using new format directly
+            READWRITE(masternodeOutpoint);
+        }
         READWRITE(blockHash);
         READWRITE(sigTime);
         READWRITE(vchSig);
@@ -65,7 +79,7 @@ public:
     uint256 GetHash() const
     {
         CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
-        ss << vin;
+        ss << masternodeOutpoint << uint8_t{} << 0xffffffff;
         ss << sigTime;
         return ss.GetHash();
     }
@@ -81,7 +95,7 @@ public:
 
 inline bool operator==(const CMasternodePing& a, const CMasternodePing& b)
 {
-    return a.vin == b.vin && a.blockHash == b.blockHash;
+    return a.masternodeOutpoint == b.masternodeOutpoint && a.blockHash == b.blockHash;
 }
 inline bool operator!=(const CMasternodePing& a, const CMasternodePing& b)
 {
@@ -99,11 +113,11 @@ struct masternode_info_t
         nActiveState{activeState}, nProtocolVersion{protoVer}, sigTime{sTime} {}
 
     masternode_info_t(int activeState, int protoVer, int64_t sTime,
-                      COutPoint const& outpoint, CService const& addr,
+                      COutPoint const& outpnt, CService const& addr,
                       CPubKey const& pkCollAddr, CPubKey const& pkMN,
                       int64_t tWatchdogV = 0) :
         nActiveState{activeState}, nProtocolVersion{protoVer}, sigTime{sTime},
-        vin{outpoint}, addr{addr},
+        outpoint{outpnt}, addr{addr},
         pubKeyCollateralAddress{pkCollAddr}, pubKeyMasternode{pkMN},
         nTimeLastWatchdogVote{tWatchdogV} {}
 
@@ -111,7 +125,7 @@ struct masternode_info_t
     int nProtocolVersion = 0;
     int64_t sigTime = 0; //mnb message time
 
-    CTxIn vin{};
+    COutPoint outpoint{};
     CService addr{};
     CPubKey pubKeyCollateralAddress{};
     CPubKey pubKeyMasternode{};
@@ -177,7 +191,21 @@ public:
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action) {
         LOCK(cs);
-        READWRITE(vin);
+        int nVersion = s.GetVersion();
+        if (nVersion == 70208) {
+            // converting from/to old format
+            CTxIn txin{};
+            if (ser_action.ForRead()) {
+                READWRITE(txin);
+                outpoint = txin.prevout;
+            } else {
+                txin = CTxIn(outpoint);
+                READWRITE(txin);
+            }
+        } else {
+            // using new format directly
+            READWRITE(outpoint);
+        }
         READWRITE(addr);
         READWRITE(pubKeyCollateralAddress);
         READWRITE(pubKeyMasternode);
@@ -296,11 +324,11 @@ public:
 
 inline bool operator==(const CMasternode& a, const CMasternode& b)
 {
-    return a.vin == b.vin;
+    return a.outpoint == b.outpoint;
 }
 inline bool operator!=(const CMasternode& a, const CMasternode& b)
 {
-    return !(a.vin == b.vin);
+    return !(a.outpoint == b.outpoint);
 }
 
 
@@ -323,7 +351,21 @@ public:
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action) {
-        READWRITE(vin);
+        int nVersion = s.GetVersion();
+        if (nVersion == 70208) {
+            // converting from/to old format
+            CTxIn txin{};
+            if (ser_action.ForRead()) {
+                READWRITE(txin);
+                outpoint = txin.prevout;
+            } else {
+                txin = CTxIn(outpoint);
+                READWRITE(txin);
+            }
+        } else {
+            // using new format directly
+            READWRITE(outpoint);
+        }
         READWRITE(addr);
         READWRITE(pubKeyCollateralAddress);
         READWRITE(pubKeyMasternode);
@@ -336,7 +378,7 @@ public:
     uint256 GetHash() const
     {
         CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
-        ss << vin;
+        ss << outpoint << uint8_t{} << 0xffffffff;
         ss << pubKeyCollateralAddress;
         ss << sigTime;
         return ss.GetHash();
@@ -358,8 +400,8 @@ public:
 class CMasternodeVerification
 {
 public:
-    CTxIn vin1{};
-    CTxIn vin2{};
+    COutPoint masternodeOutpoint1{};
+    COutPoint masternodeOutpoint2{};
     CService addr{};
     int nonce{};
     int nBlockHeight{};
@@ -378,8 +420,27 @@ public:
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action) {
-        READWRITE(vin1);
-        READWRITE(vin2);
+        int nVersion = s.GetVersion();
+        if (nVersion == 70208) {
+            // converting from/to old format
+            CTxIn txin1{};
+            CTxIn txin2{};
+            if (ser_action.ForRead()) {
+                READWRITE(txin1);
+                READWRITE(txin2);
+                masternodeOutpoint1 = txin1.prevout;
+                masternodeOutpoint2 = txin2.prevout;
+            } else {
+                txin1 = CTxIn(masternodeOutpoint1);
+                txin2 = CTxIn(masternodeOutpoint2);
+                READWRITE(txin1);
+                READWRITE(txin2);
+            }
+        } else {
+            // using new format directly
+            READWRITE(masternodeOutpoint1);
+            READWRITE(masternodeOutpoint2);
+        }
         READWRITE(addr);
         READWRITE(nonce);
         READWRITE(nBlockHeight);
@@ -390,8 +451,8 @@ public:
     uint256 GetHash() const
     {
         CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
-        ss << vin1;
-        ss << vin2;
+        ss << masternodeOutpoint1 << uint8_t{} << 0xffffffff;
+        ss << masternodeOutpoint2 << uint8_t{} << 0xffffffff;
         ss << addr;
         ss << nonce;
         ss << nBlockHeight;

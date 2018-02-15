@@ -195,9 +195,9 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, const std::string& strComm
         if(!fIsValid) {
             if(fMasternodeMissing) {
 
-                int& count = mapMasternodeOrphanCounter[govobj.GetMasternodeVin().prevout];
+                int& count = mapMasternodeOrphanCounter[govobj.GetMasternodeOutpoint()];
                 if (count >= 10) {
-                    LogPrint("gobject", "MNGOVERNANCEOBJECT -- Too many orphan objects, missing masternode=%s\n", govobj.GetMasternodeVin().prevout.ToStringShort());
+                    LogPrint("gobject", "MNGOVERNANCEOBJECT -- Too many orphan objects, missing masternode=%s\n", govobj.GetMasternodeOutpoint().ToStringShort());
                     // ask for this object again in 2 minutes
                     CInv inv(MSG_GOVERNANCE_OBJECT, govobj.GetHash());
                     pfrom->AskFor(inv);
@@ -830,11 +830,11 @@ void CGovernanceManager::MasternodeRateUpdate(const CGovernanceObject& govobj)
     if((nObjectType != GOVERNANCE_OBJECT_TRIGGER) && (nObjectType != GOVERNANCE_OBJECT_WATCHDOG))
         return;
 
-    const CTxIn& vin = govobj.GetMasternodeVin();
-    txout_m_it it  = mapLastMasternodeObject.find(vin.prevout);
+    const COutPoint& masternodeOutpoint = govobj.GetMasternodeOutpoint();
+    txout_m_it it  = mapLastMasternodeObject.find(masternodeOutpoint);
 
     if(it == mapLastMasternodeObject.end())
-        it = mapLastMasternodeObject.insert(txout_m_t::value_type(vin.prevout, last_object_rec(true))).first;
+        it = mapLastMasternodeObject.insert(txout_m_t::value_type(masternodeOutpoint, last_object_rec(true))).first;
 
     int64_t nTimestamp = govobj.GetCreationTime();
     if (GOVERNANCE_OBJECT_TRIGGER == nObjectType)
@@ -875,7 +875,7 @@ bool CGovernanceManager::MasternodeRateCheck(const CGovernanceObject& govobj, bo
         return true;
     }
 
-    const CTxIn& vin = govobj.GetMasternodeVin();
+    const COutPoint& masternodeOutpoint = govobj.GetMasternodeOutpoint();
     int64_t nTimestamp = govobj.GetCreationTime();
     int64_t nNow = GetAdjustedTime();
     int64_t nSuperblockCycleSeconds = Params().GetConsensus().nSuperblockCycle * Params().GetConsensus().nPowTargetSpacing;
@@ -883,18 +883,18 @@ bool CGovernanceManager::MasternodeRateCheck(const CGovernanceObject& govobj, bo
     std::string strHash = govobj.GetHash().ToString();
 
     if(nTimestamp < nNow - 2 * nSuperblockCycleSeconds) {
-        LogPrintf("CGovernanceManager::MasternodeRateCheck -- object %s rejected due to too old timestamp, masternode vin = %s, timestamp = %d, current time = %d\n",
-                 strHash, vin.prevout.ToStringShort(), nTimestamp, nNow);
+        LogPrintf("CGovernanceManager::MasternodeRateCheck -- object %s rejected due to too old timestamp, masternode = %s, timestamp = %d, current time = %d\n",
+                 strHash, masternodeOutpoint.ToStringShort(), nTimestamp, nNow);
         return false;
     }
 
     if(nTimestamp > nNow + MAX_TIME_FUTURE_DEVIATION) {
-        LogPrintf("CGovernanceManager::MasternodeRateCheck -- object %s rejected due to too new (future) timestamp, masternode vin = %s, timestamp = %d, current time = %d\n",
-                 strHash, vin.prevout.ToStringShort(), nTimestamp, nNow);
+        LogPrintf("CGovernanceManager::MasternodeRateCheck -- object %s rejected due to too new (future) timestamp, masternode = %s, timestamp = %d, current time = %d\n",
+                 strHash, masternodeOutpoint.ToStringShort(), nTimestamp, nNow);
         return false;
     }
 
-    txout_m_it it  = mapLastMasternodeObject.find(vin.prevout);
+    txout_m_it it  = mapLastMasternodeObject.find(masternodeOutpoint);
     if(it == mapLastMasternodeObject.end())
         return true;
 
@@ -927,8 +927,8 @@ bool CGovernanceManager::MasternodeRateCheck(const CGovernanceObject& govobj, bo
 
     if(!fRateOK)
     {
-        LogPrintf("CGovernanceManager::MasternodeRateCheck -- Rate too high: object hash = %s, masternode vin = %s, object timestamp = %d, rate = %f, max rate = %f\n",
-                  strHash, vin.prevout.ToStringShort(), nTimestamp, dRate, dMaxRate);
+        LogPrintf("CGovernanceManager::MasternodeRateCheck -- Rate too high: object hash = %s, masternode = %s, object timestamp = %d, rate = %f, max rate = %f\n",
+                  strHash, masternodeOutpoint.ToStringShort(), nTimestamp, dRate, dMaxRate);
 
         if (fUpdateFailStatus)
             it->second.fStatusOK = false;
@@ -1033,7 +1033,7 @@ void CGovernanceManager::CheckMasternodeOrphanObjects(CConnman& connman)
             Misbehaving(pair.second.idFrom, 20);
         }
 
-        auto it_count = mapMasternodeOrphanCounter.find(govobj.GetMasternodeVin().prevout);
+        auto it_count = mapMasternodeOrphanCounter.find(govobj.GetMasternodeOutpoint());
         if(--it_count->second == 0)
             mapMasternodeOrphanCounter.erase(it_count);
 

@@ -207,7 +207,7 @@ CGovernanceVote::CGovernanceVote()
     : fValid(true),
       fSynced(false),
       nVoteSignal(int(VOTE_SIGNAL_NONE)),
-      vinMasternode(),
+      masternodeOutpoint(),
       nParentHash(),
       nVoteOutcome(int(VOTE_OUTCOME_NONE)),
       nTime(0),
@@ -218,7 +218,7 @@ CGovernanceVote::CGovernanceVote(COutPoint outpointMasternodeIn, uint256 nParent
     : fValid(true),
       fSynced(false),
       nVoteSignal(eVoteSignalIn),
-      vinMasternode(outpointMasternodeIn),
+      masternodeOutpoint(outpointMasternodeIn),
       nParentHash(nParentHashIn),
       nVoteOutcome(eVoteOutcomeIn),
       nTime(GetAdjustedTime()),
@@ -244,7 +244,7 @@ bool CGovernanceVote::Sign(const CKey& keyMasternode, const CPubKey& pubKeyMaste
     CKey keyCollateralAddress;
 
     std::string strError;
-    std::string strMessage = vinMasternode.prevout.ToStringShort() + "|" + nParentHash.ToString() + "|" +
+    std::string strMessage = masternodeOutpoint.ToStringShort() + "|" + nParentHash.ToString() + "|" +
         boost::lexical_cast<std::string>(nVoteSignal) + "|" + boost::lexical_cast<std::string>(nVoteOutcome) + "|" + boost::lexical_cast<std::string>(nTime);
 
     if(!CMessageSigner::SignMessage(strMessage, vchSig, keyMasternode)) {
@@ -282,15 +282,15 @@ bool CGovernanceVote::IsValid(bool fSignatureCheck) const
     }
 
     masternode_info_t infoMn;
-    if(!mnodeman.GetMasternodeInfo(vinMasternode.prevout, infoMn)) {
-        LogPrint("gobject", "CGovernanceVote::IsValid -- Unknown Masternode - %s\n", vinMasternode.prevout.ToStringShort());
+    if(!mnodeman.GetMasternodeInfo(masternodeOutpoint, infoMn)) {
+        LogPrint("gobject", "CGovernanceVote::IsValid -- Unknown Masternode - %s\n", masternodeOutpoint.ToStringShort());
         return false;
     }
 
     if(!fSignatureCheck) return true;
 
     std::string strError;
-    std::string strMessage = vinMasternode.prevout.ToStringShort() + "|" + nParentHash.ToString() + "|" +
+    std::string strMessage = masternodeOutpoint.ToStringShort() + "|" + nParentHash.ToString() + "|" +
         boost::lexical_cast<std::string>(nVoteSignal) + "|" + boost::lexical_cast<std::string>(nVoteOutcome) + "|" + boost::lexical_cast<std::string>(nTime);
 
     if(!CMessageSigner::VerifyMessage(infoMn.pubKeyMasternode, vchSig, strMessage, strError)) {
@@ -303,7 +303,7 @@ bool CGovernanceVote::IsValid(bool fSignatureCheck) const
 
 bool operator==(const CGovernanceVote& vote1, const CGovernanceVote& vote2)
 {
-    bool fResult = ((vote1.vinMasternode == vote2.vinMasternode) &&
+    bool fResult = ((vote1.masternodeOutpoint == vote2.masternodeOutpoint) &&
                     (vote1.nParentHash == vote2.nParentHash) &&
                     (vote1.nVoteOutcome == vote2.nVoteOutcome) &&
                     (vote1.nVoteSignal == vote2.nVoteSignal) &&
@@ -313,11 +313,11 @@ bool operator==(const CGovernanceVote& vote1, const CGovernanceVote& vote2)
 
 bool operator<(const CGovernanceVote& vote1, const CGovernanceVote& vote2)
 {
-    bool fResult = (vote1.vinMasternode < vote2.vinMasternode);
+    bool fResult = (vote1.masternodeOutpoint < vote2.masternodeOutpoint);
     if(!fResult) {
         return false;
     }
-    fResult = (vote1.vinMasternode == vote2.vinMasternode);
+    fResult = (vote1.masternodeOutpoint == vote2.masternodeOutpoint);
 
     fResult = fResult && (vote1.nParentHash < vote2.nParentHash);
     if(!fResult) {

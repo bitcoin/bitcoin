@@ -40,7 +40,7 @@ bool CDarksendQueue::Sign()
 {
     if(!fMasternodeMode) return false;
 
-    std::string strMessage = vin.ToString() + boost::lexical_cast<std::string>(nDenom) + boost::lexical_cast<std::string>(nTime) + boost::lexical_cast<std::string>(fReady);
+    std::string strMessage = CTxIn(masternodeOutpoint).ToString() + boost::lexical_cast<std::string>(nDenom) + boost::lexical_cast<std::string>(nTime) + boost::lexical_cast<std::string>(fReady);
 
     if(!CMessageSigner::SignMessage(strMessage, vchSig, activeMasternode.keyMasternode)) {
         LogPrintf("CDarksendQueue::Sign -- SignMessage() failed, %s\n", ToString());
@@ -52,7 +52,7 @@ bool CDarksendQueue::Sign()
 
 bool CDarksendQueue::CheckSignature(const CPubKey& pubKeyMasternode)
 {
-    std::string strMessage = vin.ToString() + boost::lexical_cast<std::string>(nDenom) + boost::lexical_cast<std::string>(nTime) + boost::lexical_cast<std::string>(fReady);
+    std::string strMessage = CTxIn(masternodeOutpoint).ToString() + boost::lexical_cast<std::string>(nDenom) + boost::lexical_cast<std::string>(nTime) + boost::lexical_cast<std::string>(fReady);
     std::string strError = "";
 
     if(!CMessageSigner::VerifyMessage(pubKeyMasternode, vchSig, strMessage, strError)) {

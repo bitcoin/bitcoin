@@ -1684,13 +1684,13 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
 
             CMasternode mn;
 
-            if(!mnodeman.Get(dstx.vin.prevout, mn)) {
-                LogPrint("privatesend", "DSTX -- Can't find masternode %s to verify %s\n", dstx.vin.prevout.ToStringShort(), hashTx.ToString());
+            if(!mnodeman.Get(dstx.masternodeOutpoint, mn)) {
+                LogPrint("privatesend", "DSTX -- Can't find masternode %s to verify %s\n", dstx.masternodeOutpoint.ToStringShort(), hashTx.ToString());
                 return false;
             }
 
             if(!mn.fAllowMixingTx) {
-                LogPrint("privatesend", "DSTX -- Masternode %s is sending too many transactions %s\n", dstx.vin.prevout.ToStringShort(), hashTx.ToString());
+                LogPrint("privatesend", "DSTX -- Masternode %s is sending too many transactions %s\n", dstx.masternodeOutpoint.ToStringShort(), hashTx.ToString());
                 return true;
                 // TODO: Not an error? Could it be that someone is relaying old DSTXes
                 // we have no idea about (e.g we were offline)? How to handle them?
@@ -1703,7 +1703,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
 
             LogPrintf("DSTX -- Got Masternode transaction %s\n", hashTx.ToString());
             mempool.PrioritiseTransaction(hashTx, hashTx.ToString(), 1000, 0.1*COIN);
-            mnodeman.DisallowMixing(dstx.vin.prevout);
+            mnodeman.DisallowMixing(dstx.masternodeOutpoint);
         }
 
         LOCK(cs_main);

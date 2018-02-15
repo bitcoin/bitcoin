@@ -88,7 +88,7 @@ UniValue getpoolinfo(const JSONRPCRequest& request)
 
     masternode_info_t mnInfo;
     if (privateSendClient.GetMixingMasternodeInfo(mnInfo)) {
-        obj.push_back(Pair("outpoint",      mnInfo.vin.prevout.ToStringShort()));
+        obj.push_back(Pair("outpoint",      mnInfo.outpoint.ToStringShort()));
         obj.push_back(Pair("addr",          mnInfo.addr.ToString()));
     }
 
@@ -244,7 +244,7 @@ UniValue masternode(const JSONRPCRequest& request)
         obj.push_back(Pair("height",        nHeight));
         obj.push_back(Pair("IP:port",       mnInfo.addr.ToString()));
         obj.push_back(Pair("protocol",      (int64_t)mnInfo.nProtocolVersion));
-        obj.push_back(Pair("outpoint",      mnInfo.vin.prevout.ToStringShort()));
+        obj.push_back(Pair("outpoint",      mnInfo.outpoint.ToStringShort()));
         obj.push_back(Pair("payee",         CBitcoinAddress(mnInfo.pubKeyCollateralAddress.GetID()).ToString()));
         obj.push_back(Pair("lastseen",      mnInfo.nTimeLastPing));
         obj.push_back(Pair("activeseconds", mnInfo.nTimeLastPing - mnInfo.sigTime));
@@ -513,7 +513,7 @@ UniValue masternodelist(const JSONRPCRequest& request)
         CMasternodeMan::rank_pair_vec_t vMasternodeRanks;
         mnodeman.GetMasternodeRanks(vMasternodeRanks);
         for (const auto& rankpair : vMasternodeRanks) {
-            std::string strOutpoint = rankpair.second.vin.prevout.ToStringShort();
+            std::string strOutpoint = rankpair.second.outpoint.ToStringShort();
             if (strFilter !="" && strOutpoint.find(strFilter) == std::string::npos) continue;
             obj.push_back(Pair(strOutpoint, rankpair.first));
         }
@@ -761,7 +761,7 @@ UniValue masternodebroadcast(const JSONRPCRequest& request)
 
             if(mnb.CheckSignature(nDos)) {
                 nSuccessful++;
-                resultObj.push_back(Pair("outpoint", mnb.vin.prevout.ToStringShort()));
+                resultObj.push_back(Pair("outpoint", mnb.outpoint.ToStringShort()));
                 resultObj.push_back(Pair("addr", mnb.addr.ToString()));
                 resultObj.push_back(Pair("pubKeyCollateralAddress", CBitcoinAddress(mnb.pubKeyCollateralAddress.GetID()).ToString()));
                 resultObj.push_back(Pair("pubKeyMasternode", CBitcoinAddress(mnb.pubKeyMasternode.GetID()).ToString()));
@@ -771,7 +771,7 @@ UniValue masternodebroadcast(const JSONRPCRequest& request)
                 resultObj.push_back(Pair("nLastDsq", mnb.nLastDsq));
 
                 UniValue lastPingObj(UniValue::VOBJ);
-                lastPingObj.push_back(Pair("outpoint", mnb.lastPing.vin.prevout.ToStringShort()));
+                lastPingObj.push_back(Pair("outpoint", mnb.lastPing.masternodeOutpoint.ToStringShort()));
                 lastPingObj.push_back(Pair("blockHash", mnb.lastPing.blockHash.ToString()));
                 lastPingObj.push_back(Pair("sigTime", mnb.lastPing.sigTime));
                 lastPingObj.push_back(Pair("vchSig", EncodeBase64(&mnb.lastPing.vchSig[0], mnb.lastPing.vchSig.size())));
@@ -812,7 +812,7 @@ UniValue masternodebroadcast(const JSONRPCRequest& request)
         for (const auto& mnb : vecMnb) {
             UniValue resultObj(UniValue::VOBJ);
 
-            resultObj.push_back(Pair("outpoint", mnb.vin.prevout.ToStringShort()));
+            resultObj.push_back(Pair("outpoint", mnb.outpoint.ToStringShort()));
             resultObj.push_back(Pair("addr", mnb.addr.ToString()));
 
             int nDos = 0;

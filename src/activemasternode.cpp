@@ -228,7 +228,7 @@ void CActiveMasternode::ManageStateRemote()
         }
         if(nState != ACTIVE_MASTERNODE_STARTED) {
             LogPrintf("CActiveMasternode::ManageStateRemote -- STARTED!\n");
-            outpoint = infoMn.vin.prevout;
+            outpoint = infoMn.outpoint;
             service = infoMn.addr;
             fPingerEnabled = true;
             nState = ACTIVE_MASTERNODE_STARTED;
