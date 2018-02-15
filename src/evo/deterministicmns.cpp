@@ -11,6 +11,7 @@
 #include "script/standard.h"
 #include "base58.h"
 #include "core_io.h"
+#include "spork.h"
 
 #include <univalue.h>
 
@@ -312,6 +313,10 @@ bool CDeterministicMNManager::ProcessBlock(const CBlock& block, const CBlockInde
                   __func__, nHeight, newList.size());
     }
 
+    if (nHeight == GetSpork15Value()) {
+        LogPrintf("CDeterministicMNManager::%s -- spork15 is active now. nHeight=%d\n", __func__, nHeight);
+    }
+
     CleanupCache(nHeight);
 
     return true;
@@ -325,6 +330,10 @@ bool CDeterministicMNManager::UndoBlock(const CBlock& block, const CBlockIndex* 
 
     evoDb.Erase(std::make_pair(DB_LIST_DIFF, block.GetHash()));
     evoDb.Erase(std::make_pair(DB_LIST_SNAPSHOT, block.GetHash()));
+
+    if (nHeight == GetSpork15Value()) {
+        LogPrintf("CDeterministicMNManager::%s -- spork15 is not active anymore. nHeight=%d\n", __func__, nHeight);
+    }
 
     return true;
 }
@@ -471,6 +480,23 @@ bool CDeterministicMNManager::HasValidMNAtBlock(const uint256& blockHash, const 
 bool CDeterministicMNManager::HasValidMNAtChainTip(const uint256& proTxHash)
 {
     return GetListAtChainTip().IsMNValid(proTxHash);
+}
+
+int64_t CDeterministicMNManager::GetSpork15Value()
+{
+    return sporkManager.GetSporkValue(SPORK_15_DETERMINISTIC_MNS_ENABLED);
+}
+
+bool CDeterministicMNManager::IsDeterministicMNsSporkActive(int nHeight)
+{
+    LOCK(cs);
+
+    if (nHeight == -1) {
+        nHeight = tipHeight;
+    }
+
+    int64_t spork15Value = GetSpork15Value();
+    return nHeight >= spork15Value;
 }
 
 void CDeterministicMNManager::CleanupCache(int nHeight)

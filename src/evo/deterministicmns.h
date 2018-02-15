@@ -401,7 +401,11 @@ public:
     bool HasValidMNAtBlock(const uint256& blockHash, const uint256& proTxHash);
     bool HasValidMNAtChainTip(const uint256& proTxHash);
 
+    bool IsDeterministicMNsSporkActive(int nHeight = -1);
+
 private:
+    void UpdateSpork15Value();
+    int64_t GetSpork15Value();
     void CleanupCache(int nHeight);
 };
 
