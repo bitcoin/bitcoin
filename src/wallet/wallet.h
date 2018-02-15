@@ -877,6 +877,7 @@ public:
 
     //! Adds a watch-only address to the store, and saves it to disk.
     bool AddWatchOnly(const CScript& dest, int64_t nCreateTime);
+
     bool RemoveWatchOnly(const CScript &dest) override;
     //! Adds a watch-only address to the store, without saving it to disk (used by LoadWallet)
     bool LoadWatchOnly(const CScript &dest);
@@ -1142,7 +1143,7 @@ public:
     void ReturnKey();
     bool GetReservedKey(CPubKey &pubkey, bool fInternalIn /*= false*/);
     void KeepKey();
-    void KeepScript() { KeepKey(); }
+    void KeepScript() override { KeepKey(); }
 };
 
 

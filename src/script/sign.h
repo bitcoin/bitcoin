@@ -39,16 +39,16 @@ class TransactionSignatureCreator : public BaseSignatureCreator {
 
 public:
     TransactionSignatureCreator(const CKeyStore* keystoreIn, const CTransaction* txToIn, unsigned int nInIn, int nHashTypeIn=SIGHASH_ALL);
-    const BaseSignatureChecker& Checker() const { return checker; }
-    bool CreateSig(std::vector<unsigned char>& vchSig, const CKeyID& keyid, const CScript& scriptCode) const;
+    const BaseSignatureChecker& Checker() const  override{ return checker; }
+    bool CreateSig(std::vector<unsigned char>& vchSig, const CKeyID& keyid, const CScript& scriptCode) const override;
 };
 
 /** A signature creator that just produces 72-byte empty signatures. */
 class DummySignatureCreator : public BaseSignatureCreator {
 public:
     DummySignatureCreator(const CKeyStore* keystoreIn) : BaseSignatureCreator(keystoreIn) {}
-    const BaseSignatureChecker& Checker() const;
-    bool CreateSig(std::vector<unsigned char>& vchSig, const CKeyID& keyid, const CScript& scriptCode) const;
+    const BaseSignatureChecker& Checker() const override;
+    bool CreateSig(std::vector<unsigned char>& vchSig, const CKeyID& keyid, const CScript& scriptCode) const override;
 };
 
 /** Produce a script signature using a generic signature creator. */

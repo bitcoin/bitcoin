@@ -74,6 +74,7 @@ protected:
 public:
     CCoinsViewDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
 
+
     bool GetCoin(const COutPoint &outpoint, Coin &coin) const override;
     bool HaveCoin(const COutPoint &outpoint) const override;
     uint256 GetBestBlock() const override;
@@ -91,12 +92,12 @@ class CCoinsViewDBCursor: public CCoinsViewCursor
 public:
     ~CCoinsViewDBCursor() {}
 
-    bool GetKey(COutPoint &key) const;
-    bool GetValue(Coin &coin) const;
-    unsigned int GetValueSize() const;
+    bool GetKey(COutPoint &key) const override;
+    bool GetValue(Coin &coin) const override;
+    unsigned int GetValueSize() const override;
 
-    bool Valid() const;
-    void Next();
+    bool Valid() const override;
+    void Next() override;
 
 private:
     CCoinsViewDBCursor(CDBIterator* pcursorIn, const uint256 &hashBlockIn):

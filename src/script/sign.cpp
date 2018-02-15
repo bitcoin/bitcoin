@@ -284,7 +284,7 @@ class DummySignatureChecker : public BaseSignatureChecker
 public:
     DummySignatureChecker() {}
 
-    bool CheckSig(const std::vector<unsigned char>& scriptSig, const std::vector<unsigned char>& vchPubKey, const CScript& scriptCode) const
+    bool CheckSig(const std::vector<unsigned char>& scriptSig, const std::vector<unsigned char>& vchPubKey, const CScript& scriptCode) const override
     {
         return true;
     }

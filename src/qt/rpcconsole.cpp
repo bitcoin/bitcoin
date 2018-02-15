@@ -127,8 +127,8 @@ class QtRPCTimerInterface: public RPCTimerInterface
 {
 public:
     ~QtRPCTimerInterface() {}
-    const char *Name() { return "Qt"; }
-    RPCTimerBase* NewTimer(boost::function<void(void)>& func, int64_t millis)
+    const char *Name() override { return "Qt"; }
+    RPCTimerBase* NewTimer(boost::function<void(void)>& func, int64_t millis) override
     {
         return new QtRPCTimerBase(func, millis);
     }
