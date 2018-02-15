@@ -1928,9 +1928,7 @@ bool CFinalizedBudget::IsValid(std::string& strError, bool fCheckCollateral) con
 
 bool CFinalizedBudget::IsValid(bool fCheckCollateral) const
 {
-    using namespace std::literals;
-
-    auto dummy = ""s;
+    auto dummy = std::string{};
     return IsValid(dummy, fCheckCollateral);
 }
 
