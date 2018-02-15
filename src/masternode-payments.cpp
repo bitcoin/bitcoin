@@ -401,7 +401,7 @@ bool CMasternodePaymentVote::Sign()
     std::string strError;
     std::string strMessage = masternodeOutpoint.ToStringShort() +
                 boost::lexical_cast<std::string>(nBlockHeight) +
-                ScriptToAsmStr(payee);
+                (sporkManager.IsSporkActive(SPORK_6_NEW_SIGS) ? HexStr(payee) : ScriptToAsmStr(payee));
 
     if(!CMessageSigner::SignMessage(strMessage, vchSig, activeMasternode.keyMasternode)) {
         LogPrintf("CMasternodePaymentVote::Sign -- SignMessage() failed\n");
@@ -838,10 +838,34 @@ bool CMasternodePaymentVote::CheckSignature(const CPubKey& pubKeyMasternode, int
 
     std::string strMessage = masternodeOutpoint.ToStringShort() +
                 boost::lexical_cast<std::string>(nBlockHeight) +
-                ScriptToAsmStr(payee);
+                (sporkManager.IsSporkActive(SPORK_6_NEW_SIGS) ? HexStr(payee) : ScriptToAsmStr(payee));
 
     std::string strError = "";
     if (!CMessageSigner::VerifyMessage(pubKeyMasternode, vchSig, strMessage, strError)) {
+        if (sporkManager.IsSporkActive(SPORK_6_NEW_SIGS)) {
+            // Try old format even though we activated signing via new one already.
+            // Could be an old vote signed earlier or a vote signed by a non-upgraded MN.
+            std::string strErrorOld = "";
+            strMessage = masternodeOutpoint.ToStringShort() +
+                        boost::lexical_cast<std::string>(nBlockHeight) +
+                        ScriptToAsmStr(payee);
+
+            if (!CMessageSigner::VerifyMessage(pubKeyMasternode, vchSig, strMessage, strErrorOld)) {
+                // Neither format worked, definitely an invalid signature.
+                // Only ban for future block vote when we are already synced.
+                // Otherwise it could be the case when MN which signed this vote is using another key now
+                // and we have no idea about the old one.
+                if(masternodeSync.IsMasternodeListSynced() && nBlockHeight > nValidationHeight) {
+                    nDos = 20;
+                }
+                return error("CMasternodePaymentVote::CheckSignature -- Got bad Masternode payment signature, masternode=%s, error: %s",
+                            masternodeOutpoint.ToStringShort(), strErrorOld);
+            }
+            // Was indeed a valid signature in old format
+            LogPrintf("Masternode %s send payment vote in old format, new format \n", masternodeOutpoint.ToStringShort());
+            return true;
+        }
+        // Spork is off but message signature is invalid.
         // Only ban for future block vote when we are already synced.
         // Otherwise it could be the case when MN which signed this vote is using another key now
         // and we have no idea about the old one.

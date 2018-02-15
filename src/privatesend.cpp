@@ -40,7 +40,18 @@ bool CDarksendQueue::Sign()
 {
     if(!fMasternodeMode) return false;
 
-    std::string strMessage = CTxIn(masternodeOutpoint).ToString() + boost::lexical_cast<std::string>(nDenom) + boost::lexical_cast<std::string>(nTime) + boost::lexical_cast<std::string>(fReady);
+    std::string strMessage;
+    if (sporkManager.IsSporkActive(SPORK_6_NEW_SIGS)) {
+        strMessage = masternodeOutpoint.ToStringShort() +
+                    boost::lexical_cast<std::string>(nDenom) +
+                    boost::lexical_cast<std::string>(nTime) +
+                    boost::lexical_cast<std::string>(fReady);
+    } else {
+        strMessage = CTxIn(masternodeOutpoint).ToString() +
+                    boost::lexical_cast<std::string>(nDenom) +
+                    boost::lexical_cast<std::string>(nTime) +
+                    boost::lexical_cast<std::string>(fReady);
+    }
 
     if(!CMessageSigner::SignMessage(strMessage, vchSig, activeMasternode.keyMasternode)) {
         LogPrintf("CDarksendQueue::Sign -- SignMessage() failed, %s\n", ToString());
@@ -52,8 +63,19 @@ bool CDarksendQueue::Sign()
 
 bool CDarksendQueue::CheckSignature(const CPubKey& pubKeyMasternode)
 {
-    std::string strMessage = CTxIn(masternodeOutpoint).ToString() + boost::lexical_cast<std::string>(nDenom) + boost::lexical_cast<std::string>(nTime) + boost::lexical_cast<std::string>(fReady);
     std::string strError = "";
+    std::string strMessage;
+    if (sporkManager.IsSporkActive(SPORK_6_NEW_SIGS)) {
+        strMessage = masternodeOutpoint.ToStringShort() +
+                    boost::lexical_cast<std::string>(nDenom) +
+                    boost::lexical_cast<std::string>(nTime) +
+                    boost::lexical_cast<std::string>(fReady);
+    } else {
+        strMessage = CTxIn(masternodeOutpoint).ToString() +
+                    boost::lexical_cast<std::string>(nDenom) +
+                    boost::lexical_cast<std::string>(nTime) +
+                    boost::lexical_cast<std::string>(fReady);
+    }
 
     if(!CMessageSigner::VerifyMessage(pubKeyMasternode, vchSig, strMessage, strError)) {
         LogPrintf("CDarksendQueue::CheckSignature -- Got bad Masternode queue signature: %s; error: %s\n", ToString(), strError);

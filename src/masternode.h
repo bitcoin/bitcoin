@@ -26,8 +26,10 @@ static const int MASTERNODE_POSE_BAN_MAX_SCORE          = 5;
 // The Masternode Ping Class : Contains a different serialize method for sending pings from masternodes throughout the network
 //
 
-// sentinel version before sentinel ping implementation
+// sentinel version before implementation of nSentinelVersion in CMasternodePing
 #define DEFAULT_SENTINEL_VERSION 0x010001
+// daemon version before implementation of nDaemonVersion in CMasternodePing
+#define DEFAULT_DAEMON_VERSION 120200
 
 class CMasternodePing
 {
@@ -39,6 +41,7 @@ public:
     bool fSentinelIsCurrent = false; // true if last sentinel ping was actual
     // MSB is always 0, other 3 bits corresponds to x.x.x version scheme
     uint32_t nSentinelVersion{DEFAULT_SENTINEL_VERSION};
+    uint32_t nDaemonVersion{DEFAULT_DAEMON_VERSION};
 
     CMasternodePing() = default;
 
@@ -66,23 +69,24 @@ public:
         READWRITE(blockHash);
         READWRITE(sigTime);
         READWRITE(vchSig);
-        if(ser_action.ForRead() && (s.size() == 0))
-        {
+        if(ser_action.ForRead() && s.size() == 0) {
             fSentinelIsCurrent = false;
             nSentinelVersion = DEFAULT_SENTINEL_VERSION;
+            nDaemonVersion = DEFAULT_DAEMON_VERSION;
             return;
         }
         READWRITE(fSentinelIsCurrent);
         READWRITE(nSentinelVersion);
+        if(ser_action.ForRead() && s.size() == 0) {
+            nDaemonVersion = DEFAULT_DAEMON_VERSION;
+            return;
+        }
+        if (nVersion > 70208) {
+            READWRITE(nDaemonVersion);
+        }
     }
 
-    uint256 GetHash() const
-    {
-        CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
-        ss << masternodeOutpoint << uint8_t{} << 0xffffffff;
-        ss << sigTime;
-        return ss.GetHash();
-    }
+    uint256 GetHash() const;
 
     bool IsExpired() const { return GetAdjustedTime() - sigTime > MASTERNODE_NEW_START_REQUIRED_SECONDS; }
 
