@@ -447,7 +447,9 @@ RPCConsole::RPCConsole(const PlatformStyle *_platformStyle, QWidget *parent) :
     QWidget(parent),
     ui(new Ui::RPCConsole),
     clientModel(0),
+#ifdef ENABLE_WALLET
     walletModel(0),
+#endif
     historyPtr(0),
     platformStyle(_platformStyle),
     peersTableContextMenu(0),
@@ -688,10 +690,12 @@ void RPCConsole::setClientModel(ClientModel *model)
     }
 }
 
+#ifdef ENABLE_WALLET
 void RPCConsole::setWalletModel(WalletModel *model)
 {
     this->walletModel = model;
 }
+#endif
 
 static QString categoryClass(int category)
 {
