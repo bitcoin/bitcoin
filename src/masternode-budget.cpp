@@ -1296,14 +1296,14 @@ bool CBudgetManager::UpdateProposal(CBudgetVote& vote, CNode* pfrom, std::string
     }
 
 
-    auto proposal = mapProposals[vote.nProposalHash];
+    CBudgetProposal proposal = mapProposals[vote.nProposalHash];
     if(!proposal.AddOrUpdateVote(vote, strError))
         return false;
 
     if (fMasterNode)
     {
-        for (auto& fbpair: mapFinalizedBudgets) {
-            auto& finalBudget = fbpair.second;
+        for (map<uint256, CFinalizedBudget>::iterator i = mapFinalizedBudgets.begin(); i != mapFinalizedBudgets.end(); ++i) {
+            CFinalizedBudget& finalBudget = i->second;
 
             if (finalBudget.IsValid() && !finalBudget.IsVoteSubmitted())
                 finalBudget.ResetAutoChecked();
@@ -1489,11 +1489,10 @@ double CBudgetProposal::GetRatio() const
     int yeas = 0;
     int nays = 0;
 
-
-    for (const auto& pair: mapVotes) {
-        if (pair.second.nVote == VOTE_YES)
+    for (std::map<uint256, CBudgetVote>::const_iterator i = mapVotes.begin(); i != mapVotes.end(); ++i) {
+        if (i->second.nVote == VOTE_YES)
             ++yeas;
-        if (pair.second.nVote == VOTE_NO)
+        if (i->second.nVote == VOTE_NO)
             ++nays;
     }
 
@@ -1506,8 +1505,8 @@ int CBudgetProposal::GetYeas() const
 {
     int ret = 0;
 
-    for (const auto& pair: mapVotes) {
-        if (pair.second.nVote == VOTE_YES && pair.second.fValid)
+    for (std::map<uint256, CBudgetVote>::const_iterator i = mapVotes.begin(); i != mapVotes.end(); ++i) {
+        if (i->second.nVote == VOTE_YES && i->second.fValid)
             ++ret;
     }
 
@@ -1518,8 +1517,8 @@ int CBudgetProposal::GetNays() const
 {
     int ret = 0;
 
-    for (const auto& pair: mapVotes) {
-        if (pair.second.nVote == VOTE_NO && pair.second.fValid)
+    for (std::map<uint256, CBudgetVote>::const_iterator i = mapVotes.begin(); i != mapVotes.end(); ++i) {
+        if (i->second.nVote == VOTE_NO && i->second.fValid)
             ++ret;
     }
 
@@ -1530,8 +1529,8 @@ int CBudgetProposal::GetAbstains() const
 {
     int ret = 0;
 
-    for (const auto& pair: mapVotes) {
-        if (pair.second.nVote == VOTE_ABSTAIN && pair.second.fValid)
+    for (std::map<uint256, CBudgetVote>::const_iterator i = mapVotes.begin(); i != mapVotes.end(); ++i) {
+        if (i->second.nVote == VOTE_ABSTAIN && i->second.fValid)
             ++ret;
     }
 
@@ -1548,7 +1547,7 @@ int CBudgetProposal::GetBlockStartCycle() const
 int CBudgetProposal::GetBlockCurrentCycle() const
 {
     CBlockIndex* pindexPrev = chainActive.Tip();
-    if(pindexPrev == nullptr)
+    if(pindexPrev == NULL)
         return -1;
 
     if(pindexPrev->nHeight >= GetBlockEndCycle())
@@ -1701,12 +1700,12 @@ bool CFinalizedBudget::AddOrUpdateVote(const CFinalizedBudgetVote& vote, std::st
 {
     LOCK(cs);
 
-    auto masternodeHash = vote.vin.prevout.GetHash();
-    auto voteHash = vote.GetHash();
-    auto found = mapVotes.find(masternodeHash);
+    uint256 masternodeHash = vote.vin.prevout.GetHash();
+    uint256 voteHash = vote.GetHash();
+    map<uint256, CFinalizedBudgetVote>::iterator found = mapVotes.find(masternodeHash);
 
     if(found != mapVotes.end()){
-        auto&& previousVote = found->second;
+        const CFinalizedBudgetVote& previousVote = found->second;
         if (previousVote.GetHash() == vote.GetHash()) {
             LogPrint("mnbudget", "CFinalizedBudget::AddOrUpdateVote - Already have the vote\n");
             return true;
@@ -1928,7 +1927,7 @@ bool CFinalizedBudget::IsValid(std::string& strError, bool fCheckCollateral) con
 
 bool CFinalizedBudget::IsValid(bool fCheckCollateral) const
 {
-    auto dummy = std::string{};
+    std::string dummy;
     return IsValid(dummy, fCheckCollateral);
 }
 
