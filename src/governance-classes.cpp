@@ -204,13 +204,13 @@ void CGovernanceTriggerManager::CleanAndRemove()
 
         if(remove) {
             DBG(
-                string strdata = "NULL";
+                string strDataAsPlainString = "NULL";
                 CGovernanceObject* pgovobj = pSuperblock->GetGovernanceObject();
                 if(pgovobj) {
-                    strdata = pgovobj->GetDataAsString();
+                    strDataAsPlainString = pgovobj->GetDataAsPlainString();
                 }
                 cout << "CGovernanceTriggerManager::CleanAndRemove: Removing object: "
-                     << strdata
+                     << strDataAsPlainString
                      << endl;
                );
             LogPrint("gobject", "CGovernanceTriggerManager::CleanAndRemove -- Removing trigger object\n");
@@ -245,7 +245,7 @@ std::vector<CSuperblock_sptr> CGovernanceTriggerManager::GetActiveTriggers()
         CGovernanceObject* pObj = governance.FindGovernanceObject((*it).first);
 
         if(pObj) {
-            DBG( cout << "GetActiveTriggers: pObj->GetDataAsString() = " << pObj->GetDataAsString() << endl; );
+            DBG( cout << "GetActiveTriggers: pObj->GetDataAsPlainString() = " << pObj->GetDataAsPlainString() << endl; );
             vecResults.push_back(it->second);
         }
         ++it;
@@ -293,7 +293,7 @@ bool CSuperblockManager::IsSuperblockTriggered(int nBlockHeight)
             continue;
         }
 
-        LogPrint("gobject", "CSuperblockManager::IsSuperblockTriggered -- data = %s\n", pObj->GetDataAsString());
+        LogPrint("gobject", "CSuperblockManager::IsSuperblockTriggered -- data = %s\n", pObj->GetDataAsPlainString());
 
         // note : 12.1 - is epoch calculation correct?
 
@@ -482,7 +482,7 @@ CSuperblock(uint256& nHash)
     }
 
     DBG( cout << "CSuperblock Constructor pGovObj : "
-         << pGovObj->GetDataAsString()
+         << pGovObj->GetDataAsPlainString()
          << ", nObjectType = " << pGovObj->GetObjectType()
          << endl; );
 
@@ -673,8 +673,8 @@ bool CSuperblock::IsValid(const CTransaction& txNew, int nBlockHeight, CAmount b
     int nPayments = CountPayments();
     int nMinerPayments = nOutputs - nPayments;
 
-    LogPrint("gobject", "CSuperblock::IsValid nOutputs = %d, nPayments = %d, strData = %s\n",
-             nOutputs, nPayments, GetGovernanceObject()->GetDataAsHex());
+    LogPrint("gobject", "CSuperblock::IsValid nOutputs = %d, nPayments = %d, GetDataAsHexString = %s\n",
+             nOutputs, nPayments, GetGovernanceObject()->GetDataAsHexString());
 
     // We require an exact match (including order) between the expected
     // superblock payments and the payments actually in the block.

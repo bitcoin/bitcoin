@@ -10,7 +10,7 @@
 #include <algorithm>
 
 CProposalValidator::CProposalValidator(const std::string& strDataHexIn)
-    : strData(),
+    : strDataHex(),
       objJSON(UniValue::VOBJ),
       fJSONValid(false),
       strErrorMessages()
@@ -22,7 +22,7 @@ CProposalValidator::CProposalValidator(const std::string& strDataHexIn)
 
 void CProposalValidator::Clear()
 {
-    strData = std::string();
+    strDataHex = std::string();
     objJSON = UniValue(UniValue::VOBJ);
     fJSONValid = false;
     strErrorMessages = std::string();
@@ -31,7 +31,7 @@ void CProposalValidator::Clear()
 void CProposalValidator::SetHexData(const std::string& strDataHexIn)
 {
     std::vector<unsigned char> v = ParseHex(strDataHexIn);
-    strData = std::string(v.begin(), v.end());
+    strDataHex = std::string(v.begin(), v.end());
     ParseJSONData();
 }
 
@@ -195,13 +195,13 @@ void CProposalValidator::ParseJSONData()
 {
     fJSONValid = false;
 
-    if(strData.empty()) {
+    if(strDataHex.empty()) {
         return;
     }
 
     try {
         UniValue obj(UniValue::VOBJ);
-        obj.read(strData);
+        obj.read(strDataHex);
         std::vector<UniValue> arr1 = obj.getValues();
         std::vector<UniValue> arr2 = arr1.at(0).getValues();
         objJSON = arr2.at(1);

@@ -15,6 +15,7 @@
 #include "net.h"
 #include "sync.h"
 #include "util.h"
+#include "utilstrencodings.h"
 
 #include <univalue.h>
 
@@ -145,7 +146,7 @@ private:
     uint256 nCollateralHash;
 
     /// Data field - can be used for anything
-    std::string strData;
+    std::vector<unsigned char> vchData;
 
     /// Masternode info for signed objects
     COutPoint masternodeOutpoint;
@@ -190,7 +191,7 @@ private:
 public:
     CGovernanceObject();
 
-    CGovernanceObject(const uint256& nHashParentIn, int nRevisionIn, int64_t nTime, const uint256& nCollateralHashIn, const std::string& strDataIn);
+    CGovernanceObject(const uint256& nHashParentIn, int nRevisionIn, int64_t nTime, const uint256& nCollateralHashIn, const std::string& strDataHexIn);
 
     CGovernanceObject(const CGovernanceObject& other);
 
@@ -293,8 +294,8 @@ public:
 
     // FUNCTIONS FOR DEALING WITH DATA STRING
 
-    std::string GetDataAsHex();
-    std::string GetDataAsString();
+    std::string GetDataAsHexString() const;
+    std::string GetDataAsPlainString() const;
 
     // SERIALIZER
 
@@ -309,7 +310,20 @@ public:
         READWRITE(nRevision);
         READWRITE(nTime);
         READWRITE(nCollateralHash);
-        READWRITE(LIMITED_STRING(strData, MAX_GOVERNANCE_OBJECT_DATA_SIZE));
+        if (nVersion == 70208) {
+            // converting from/to old format
+            std::string strDataHex;
+            if (ser_action.ForRead()) {
+                READWRITE(LIMITED_STRING(strDataHex, MAX_GOVERNANCE_OBJECT_DATA_SIZE));
+                vchData = ParseHex(strDataHex);
+            } else {
+                strDataHex = HexStr(vchData);
+                READWRITE(LIMITED_STRING(strDataHex, MAX_GOVERNANCE_OBJECT_DATA_SIZE));
+            }
+        } else {
+            // using new format directly
+            READWRITE(vchData);
+        }
         READWRITE(nObjectType);
         if (nVersion == 70208) {
             // converting from/to old format
