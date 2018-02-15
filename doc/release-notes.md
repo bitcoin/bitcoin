@@ -23,12 +23,12 @@ shut down (which might take a few minutes for older versions), then run the
 installer (on Windows) or just copy over `/Applications/Bitcoin-Qt` (on Mac)
 or `bitcoind`/`bitcoin-qt` (on Linux).
 
-The first time you run a version newer than 0.15.0, your chainstate database will be converted to a
+The first time you run version 0.15.0 or newer, your chainstate database will be converted to a
 new format, which will take anywhere from a few minutes to half an hour,
 depending on the speed of your machine.
 
 Note that the block database format also changed in version 0.8.0 and there is no
-automatic upgrade code from before version 0.8 to versions higher than 0.15.0. Upgrading
+automatic upgrade code from before version 0.8 to version 0.15.0 or higher. Upgrading
 directly from 0.7.x and earlier without re-downloading the blockchain is not supported.
 However, as usual, old wallet versions are still supported.
 
@@ -65,7 +65,7 @@ A `change_type` argument has been added to the `fundrawtransaction` RPC to overr
 - All segwit keys in the wallet get an implicit redeemscript added, without it being written to the file. This means recovery of an old backup will work, as long as you use new software.
 - All keypool keys that are seen used in transactions explicitly get their redeemscripts added to the wallet files. This means that downgrading after recovering from a backup that includes a segwit address will work
 
-Note that some RPCs do not yet support segwit addresses. Notably, `signmessage`/`verifymessage` doesn't support segwit addresses, nor does `importmulti` at this time. `dumpwallet`/`importwallet` work, but will (in comments) list the corresponding P2PKH addresses for all keys, even those only used in segwit addresses. Support for segwit in those RPCs will continue to be added in future versions.
+Note that some RPCs do not yet support segwit addresses. Notably, `signmessage`/`verifymessage` doesn't support segwit addresses, nor does `importmulti` at this time. Support for segwit in those RPCs will continue to be added in future versions.
 
 P2WPKH change outputs are now used by default if any destination in the transaction is a P2WPKH or P2WSH output. This is done to ensure the change output is as indistinguishable from the other outputs as possible in either case.
 
@@ -81,7 +81,8 @@ A checkbox has been added to the GUI to select whether a Bech32 address or P2SH-
 
 Due to a backward-incompatible change in the wallet database, wallets created
 with version 0.16.0 will be rejected by previous versions. Also, version 0.16.0
-will only create hierarchical deterministic (HD) wallets.
+will only create hierarchical deterministic (HD) wallets. Note that this only applies
+to new wallets; wallets made with previous versions will not be upgraded to be HD.
 
 ### Replace-By-Fee by default in GUI
 
@@ -186,7 +187,7 @@ The `validateaddress` RPC output has been extended with a few new fields, and su
 - Using addresses with the `createmultisig` RPC is now deprecated, and will be removed in a later version. Public keys should be used instead.
 - Blockchain rescans now no longer lock the wallet for the entire rescan process, so other RPCs can now be used at the same time (although results of balances / transactions may be incorrect or incomplete until the rescan is complete).
 - The `logging` RPC has now been made public rather than hidden.
-- An `initialblockdownload` boolean has been added to the `getblockchaininfo` RPC to indicate whether the node is currently in IDB or not.
+- An `initialblockdownload` boolean has been added to the `getblockchaininfo` RPC to indicate whether the node is currently in IBD or not.
 - `minrelaytxfee` is now included in the output of `getmempoolinfo`
 
 Other changed command-line options
@@ -199,12 +200,7 @@ Other changed command-line options
 Testing changes
 ----------------
 - The default regtest JSON-RPC port has been changed to 18443 to avoid conflict with testnet's default of 18332.
-- Segwit is now always active in regtest mode by default.
-
-Known Issues
-------------
-
-- Occasionally shutting down the Bitcoin Core GUI during the startup and loading phase will cause an assertion error.
+- Segwit is now always active in regtest mode by default. Thus, if you upgrade a regtest node you will need to either -reindex or use the old rules by adding `vbparams=segwit:0:999999999999` to your regtest bitcoin.conf. Failure to do this will result in a CheckBlockIndex() assertion failure that will look like: Assertion `(pindexFirstNeverProcessed != nullptr) == (pindex->nChainTx == 0)' failed.
 
 0.16.0 change log
 ------------------
@@ -226,6 +222,8 @@ Known Issues
 - #12118 `44080a9` Sort mempool by min(feerate, ancestor_feerate) (sdaftuar)
 - #8498 `0e3a411` Minimize the number of times it is checked that no money... (jtimon)
 - #12368 `3f5012b` Hold mempool.cs for the duration of ATMP (TheBlueMatt)
+- #12401 `d44cd7e` Reset pblocktree before deleting LevelDB file (Sjors)
+- #12415 `f893824` Interrupt loading thread after shutdown request (promag)
 
 ### P2P protocol and network code
 - #10596 `6866b49` Add vConnect to CConnman::Options (benma)
@@ -243,6 +241,7 @@ Known Issues
 - #11512 `6e89de5` Use GetDesireableServiceFlags in seeds, dnsseeds, fixing static seed adding (TheBlueMatt)
 - #12262 `16bac24` Hardcoded seed update (laanwj)
 - #12270 `9cf6393` Update chainTxData for 0.16 (laanwj)
+- #12392 `0f61651` Fix ignoring tx data requests when fPauseSend is set on a peer (TheBlueMatt)
 
 ### Wallet
 - #11039 `fc51565` Avoid second mapWallet lookup (promag)
@@ -321,6 +320,7 @@ Known Issues
 - #11055 `95e14dc` RPC getreceivedbyaddress should return error if called with address not owned by the wallet (jnewbery)
 - #12366 `93de37a` http: Join worker threads before deleting work queue (laanwj)
 - #12315 `758a41e` Bech32 addresses in dumpwallet (fivepiece)
+- #12427 `3762ac1` Make signrawtransaction accept P2SH-P2WSH redeemscripts (sipa)
 
 ### GUI
 - #10964 `64e66bb` Pass SendCoinsRecipient (208 bytes) by reference (practicalswift)
@@ -354,6 +354,7 @@ Known Issues
 - #11448 `d473e6d` reset addrProxy/addrSeparateProxyTor if colon char missing (mess110)
 - #12377 `604f289` qt: Poll ShutdownTimer after init is done (MarcoFalke)
 - #12374 `daaae36` qt: Make sure splash screen is freed on AppInitMain fail (laanwj)
+- #12349 `ad10b90` shutdown: fix crash on shutdown with reindex-chainstate (theuni)
 
 ### Build system
 - #10923 `2c9f5ec` travis: Build with --enable-werror under OS X (practicalswift)
@@ -455,6 +456,8 @@ Known Issues
 - #11789 `60d739e` [travis-ci] Combine logs on failure (jnewbery)
 - #11838 `3e50024` Add getrawtransaction in_active_chain=False test (MarcoFalke)
 - #12206 `898f560` Sync with validationinterface queue in sync_mempools (MarcoFalke)
+- #12424 `ff44101` Fix rescan test failure due to unset g_address_type, g_change_type (ryanofsky)
+- #12388 `e2431d1` travis: Full clone for git subtree check (MarcoFalke)
 
 ### Documentation
 - #10680 `6366941` Fix inconsistencies and grammar in various files (MeshCollider)
@@ -607,6 +610,7 @@ Known Issues
 - #12269 `2ae7cf8` Update defaultAssumeValid to block 506067 (gmaxwell)
 - #11952 `9ab9963` univalue: Bump subtree (MarcoFalke)
 - #12367 `09fc859` Fix two fast-shutdown bugs (TheBlueMatt)
+- #12422 `4d54e7a` util: Make LockDirectory thread-safe, consistent, and fix OpenBSD 6.2 build (laanwj)
 
 Credits
 =======
