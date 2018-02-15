@@ -4,7 +4,7 @@ variables:
   MAKEJOBS: "-j4"
   CCACHE_SIZE: "100M"
   GOAL: "install"
-  CROWN_CONFIG_ALL: "--disable-tests --disable-dependency-tracking --prefix=$CI_PROJECT_DIR/depends/$HOST --bindir=$CI_PROJECT_DIR/$OUTDIR/bin --libdir=$CI_PROJECT_DIR/$OUTDIR/lib"
+  CROWN_CONFIG_ALL: "--disable-tests --disable-reduced-exports --disable-dependency-tracking --prefix=$CI_PROJECT_DIR/depends/$HOST --bindir=$CI_PROJECT_DIR/$OUTDIR/bin --libdir=$CI_PROJECT_DIR/$OUTDIR/lib"
   SDK_URL: "https://bitcoincore.org/depends-sources/sdks"
   WINEDEBUG: "fixme-all"
 
@@ -26,7 +26,7 @@ cache:
   script:
     - ./autogen.sh
     - mkdir build && cd build
-    - ../configure --disable-reduced-exports --cache-file=config.cache $CROWN_CONFIG_ALL $CROWN_CONFIG
+    - ../configure --cache-file=config.cache $CROWN_CONFIG_ALL $CROWN_CONFIG
     - make distdir VERSION=$HOST
     - cd crown-$HOST
     - ./configure --cache-file=../config.cache $CROWN_CONFIG_ALL $CROWN_CONFIG
