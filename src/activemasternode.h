@@ -9,9 +9,14 @@
 #include "key.h"
 #include "net.h"
 #include "primitives/transaction.h"
+#include "validationinterface.h"
+
+#include "evo/providertx.h"
+#include "evo/deterministicmns.h"
 
 struct CActiveMasternodeInfo;
 class CActiveLegacyMasternodeManager;
+class CActiveDeterministicMasternodeManager;
 
 static const int ACTIVE_MASTERNODE_INITIAL          = 0; // initial state
 static const int ACTIVE_MASTERNODE_SYNC_IN_PROCESS  = 1;
@@ -21,6 +26,7 @@ static const int ACTIVE_MASTERNODE_STARTED          = 4;
 
 extern CActiveMasternodeInfo activeMasternodeInfo;
 extern CActiveLegacyMasternodeManager legacyActiveMasternodeManager;
+extern CActiveDeterministicMasternodeManager* activeMasternodeManager;
 
 struct CActiveMasternodeInfo {
     // Keys for the active Masternode
@@ -32,7 +38,39 @@ struct CActiveMasternodeInfo {
     CService service;
 };
 
-// Responsible for activating the Masternode and pinging the network
+
+class CActiveDeterministicMasternodeManager : public CValidationInterface
+{
+public:
+    enum masternode_state_t {
+        MASTERNODE_WAITING_FOR_PROTX,
+        MASTERNODE_POSE_BANNED,
+        MASTERNODE_REMOVED,
+        MASTERNODE_READY,
+        MASTERNODE_ERROR,
+    };
+
+private:
+    CDeterministicMNCPtr mnListEntry;
+    masternode_state_t state{MASTERNODE_WAITING_FOR_PROTX};
+    std::string strError;
+
+public:
+    virtual void UpdatedBlockTip(const CBlockIndex* pindexNew, const CBlockIndex* pindexFork, bool fInitialDownload);
+
+    void Init();
+
+    CDeterministicMNCPtr GetDMN() const { return mnListEntry; }
+
+    masternode_state_t GetState() const { return state; }
+    std::string GetStateString() const;
+    std::string GetStatus() const;
+
+private:
+    bool GetLocalAddress(CService &addrRet);
+};
+
+// Responsible for activating the Masternode and pinging the network (legacy MN list)
 class CActiveLegacyMasternodeManager
 {
 public:
