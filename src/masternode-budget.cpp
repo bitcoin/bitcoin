@@ -1705,7 +1705,7 @@ bool CFinalizedBudget::AddOrUpdateVote(const CFinalizedBudgetVote& vote, std::st
     auto voteHash = vote.GetHash();
     auto found = mapVotes.find(masternodeHash);
 
-    if(found != std::end(mapVotes)){
+    if(found != mapVotes.end()){
         auto&& previousVote = found->second;
         if (previousVote.GetHash() == vote.GetHash()) {
             LogPrint("mnbudget", "CFinalizedBudget::AddOrUpdateVote - Already have the vote\n");
