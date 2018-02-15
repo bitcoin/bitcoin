@@ -1753,7 +1753,7 @@ void CFinalizedBudget::AutoCheck()
     }
 
     // Auto-check votes with an interval that does not allow to submit votes to soon
-    if (voteSubmittedTime && GetTime() - voteSubmittedTime.value() < FINAL_BUDGET_VOTE_UPDATE_MIN)
+    if (voteSubmittedTime && GetTime() - voteSubmittedTime.get() < FINAL_BUDGET_VOTE_UPDATE_MIN)
         return;
 
     fAutoChecked = true; //we only need to check this once
