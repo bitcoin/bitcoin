@@ -7,7 +7,7 @@
 #define SYSCOIN_CRYPTO_COMMON_H
 
 #if defined(HAVE_CONFIG_H)
-#include "syscoin-config.h"
+#include "config/syscoin-config.h"
 #endif
 
 #include <stdint.h>
