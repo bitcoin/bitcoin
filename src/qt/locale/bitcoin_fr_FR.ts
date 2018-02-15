@@ -326,6 +326,14 @@
         <translation>Cliquez pour désactiver l'activité du réseau.</translation>
     </message>
     <message>
+        <source>Network activity disabled.</source>
+        <translation>Activité réseau désactivée</translation>
+    </message>
+    <message>
+        <source>Click to enable network activity again.</source>
+        <translation>Cliquez pour réactiver l'activité réseau</translation>
+    </message>
+    <message>
         <source>Syncing Headers (%1%)...</source>
         <translation>Synchronisation des entêtes (%1%)...</translation>
     </message>
@@ -390,6 +398,10 @@
         <translation>Signer vos messages avec vos adresses Bitcoin pour prouver que vous les détenez</translation>
     </message>
     <message>
+        <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
+        <translation>Vérifier les messages pour s'assurer qu'ils soient signés avec les adresses Bitcoin spécifiées</translation>
+    </message>
+    <message>
         <source>&amp;File</source>
         <translation>&amp;Fichier</translation>
     </message>
@@ -414,6 +426,10 @@
         <translation>Montrer la liste des adresses d'envois utilisées et les étiquettes</translation>
     </message>
     <message>
+        <source>Show the list of used receiving addresses and labels</source>
+        <translation>Afficher la liste des labels et adresses de réception utilisées</translation>
+    </message>
+    <message>
         <source>Open a bitcoin: URI or payment request</source>
         <translation>Ouvrir un bitcoin: URI ou demande de paiement</translation>
     </message>
@@ -421,9 +437,17 @@
         <source>&amp;Command-line options</source>
         <translation>&amp;Options de ligne de commande</translation>
     </message>
+    <message numerus="yes">
+        <source>%n active connection(s) to Bitcoin network</source>
+        <translation><numerusform>%n connexion active avec le réseau Bitcoin</numerusform><numerusform>%n connexions actives avec le réseau Bitcoin</numerusform></translation>
+    </message>
     <message>
         <source>Indexing blocks on disk...</source>
         <translation>Indexation des blocs sur le disque...</translation>
+    </message>
+    <message>
+        <source>Processing blocks on disk...</source>
+        <translation>Traitement des blocs sur le disque</translation>
     </message>
     <message>
         <source>%1 behind</source>
@@ -454,8 +478,16 @@
         <translation>À jour</translation>
     </message>
     <message>
+        <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
+        <translation>Afficher le %1 message d'aide pour récupérer une liste des options de ligne de commande Bitcoin</translation>
+    </message>
+    <message>
         <source>%1 client</source>
         <translation>%1 client</translation>
+    </message>
+    <message>
+        <source>Connecting to peers...</source>
+        <translation>Connexion au pairs...</translation>
     </message>
     <message>
         <source>Catching up...</source>
@@ -500,6 +532,14 @@
         <translation>Transaction entrante</translation>
     </message>
     <message>
+        <source>HD key generation is &lt;b&gt;enabled&lt;/b&gt;</source>
+        <translation>Génération de clé HD &lt;b&gt;activée&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <source>HD key generation is &lt;b&gt;disabled&lt;/b&gt;</source>
+        <translation>Génération de clé HD &lt;b&gt;désactivée&lt;/b&gt;</translation>
+    </message>
+    <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
         <translation>Le porte-monnaie est &lt;b&gt;chiffré&lt;/b&gt; et est actuellement &lt;b&gt;déverrouillé&lt;/b&gt;</translation>
     </message>
@@ -507,7 +547,11 @@
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>Le porte-monnaie est &lt;b&gt;chiffré&lt;/b&gt; et est actuellement &lt;b&gt;verrouillé&lt;/b&gt;</translation>
     </message>
-    </context>
+    <message>
+        <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
+        <translation>Une erreur fatale a eu lieu. Bitcoin ne peut plus continuer en toute sécurité et va s'éteindre</translation>
+    </message>
+</context>
 <context>
     <name>CoinControlDialog</name>
     <message>
@@ -639,6 +683,10 @@
         <translation>non</translation>
     </message>
     <message>
+        <source>This label turns red if any recipient receives an amount smaller than the current dust threshold.</source>
+        <translation>Cette étiquette devient rouge si un bénéficiaire reçoit une somme plus basse que la limite actuelle de poussière.</translation>
+    </message>
+    <message>
         <source>Can vary +/- %1 satoshi(s) per input.</source>
         <translation>Peut varier de +/- %1 satoshi(s) par entrée.</translation>
     </message>
@@ -664,6 +712,14 @@
     <message>
         <source>&amp;Label</source>
         <translation>&amp;Étiquette</translation>
+    </message>
+    <message>
+        <source>The label associated with this address list entry</source>
+        <translation>L'étiquette associée à cette entrée du carnet d'adresses</translation>
+    </message>
+    <message>
+        <source>The address associated with this address list entry. This can only be modified for sending addresses.</source>
+        <translation>L'adresse associée avec cette entrée du carnet d'adresses. Ne peut être modifiée que pour les adresses d'envoi.</translation>
     </message>
     <message>
         <source>&amp;Address</source>
@@ -713,6 +769,10 @@
         <translation>nom</translation>
     </message>
     <message>
+        <source>Directory already exists. Add %1 if you intend to create a new directory here.</source>
+        <translation>Le répertoire existe déjà. Ajouter %1 si vous voulez créer un nouveau répertoire ici.</translation>
+    </message>
+    <message>
         <source>Path already exists, and is not a directory.</source>
         <translation>Le chemin existe déjà et ce n'est pas un répertoire. </translation>
     </message>
@@ -752,8 +812,16 @@
         <translation>Options interface graphique:</translation>
     </message>
     <message>
+        <source>Set language, for example "de_DE" (default: system locale)</source>
+        <translation>Définir la langue, par exemple "de_DE" (défaut: locale système)</translation>
+    </message>
+    <message>
         <source>Start minimized</source>
         <translation>Démarrer sous forme minimisée</translation>
+    </message>
+    <message>
+        <source>Set SSL root certificates for payment request (default: -system-)</source>
+        <translation>Définir les certificats SSL racines pour les requêtes de paiement (défaut:-système-)</translation>
     </message>
     </context>
 <context>
@@ -2257,6 +2325,14 @@ Importation ...</translation>
     <message>
         <source>Information</source>
         <translation>Information</translation>
+    </message>
+    <message>
+        <source>Invalid -onion address or hostname: '%s'</source>
+        <translation>Adresse ou nom d'hôte -onion invalide: '%s'</translation>
+    </message>
+    <message>
+        <source>Invalid -proxy address or hostname: '%s'</source>
+        <translation>Adresse -proxy invalide: '%s'</translation>
     </message>
     <message>
         <source>Node relay options:</source>

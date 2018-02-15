@@ -1809,6 +1809,10 @@
         <translation>Tast %1 for en oversigt over de tilgængelige kommandoer.</translation>
     </message>
     <message>
+        <source>For more information on using this console type %1.</source>
+        <translation>For mere information om at bruge denne konsol, tast %1.</translation>
+    </message>
+    <message>
         <source>WARNING: Scammers have been active, telling users to type commands here, stealing their wallet contents. Do not use this console without fully understanding the ramifications of a command.</source>
         <translation>ADVARSEL: Svindlere har tidligere aktivt bedt brugere om at indtaste kommandoer her for at stjæle indholdet af deres tegnebøger. Brug ikke denne konsol uden fuldt ud at forstå følgerne af en kommando.</translation>
     </message>
@@ -1894,6 +1898,10 @@
     <message>
         <source>&amp;Request payment</source>
         <translation>&amp;Anmod om betaling</translation>
+    </message>
+    <message>
+        <source>Bech32 addresses (BIP-173) are cheaper to spend from and offer better protection against typos. When unchecked a P2SH wrapped SegWit address will be created, compatible with older wallets.</source>
+        <translation>Bech32-adresser (BIP-173) er billigere at betale fra og tilbyder bedre beskyttelse imod tastefejl. Hvis denne ikke er markeret, vil en SegWit-adresse pakket ind i P2SH, som er kompatibel med ældre tegnebøger, blive oprettet.</translation>
     </message>
     <message>
         <source>Generate Bech32 address</source>
@@ -3198,6 +3206,14 @@
         <translation>Kan ikke opnå en lås på datamappe %s. %s kører sansynligvis allerede.</translation>
     </message>
     <message>
+        <source>Cannot provide specific connections and have addrman find outgoing connections at the same.</source>
+        <translation>Kan ikke give specifikke forbindelser og få addrman til at finde udgående forbindelser på samme tid.</translation>
+    </message>
+    <message>
+        <source>Connect only to the specified node(s); -connect=0 disables automatic connections (the rules for this peer are the same as for -addnode)</source>
+        <translation>Forbind kun til de specificerede knuder; -connect=0 deaktiverer automatiske forbindelser (reglerne for denne knude er de samme som for -addnode)</translation>
+    </message>
+    <message>
         <source>Delete all wallet transactions and only recover those parts of the blockchain through -rescan on startup</source>
         <translation>Slet alle transaktioner i tegnebogen og genskab kun disse dele af blokkæden gennem -rescan under opstart</translation>
     </message>
@@ -3386,6 +3402,10 @@
         <translation>Aktivér transaktionserstatning i hukommelsespuljen (standard: %u)</translation>
     </message>
     <message>
+        <source>Error creating %s: You can't create non-HD wallets with this version.</source>
+        <translation>Fejl under oprettelse af %s: Du kan ikke oprette ikke-HD-tegnebøger med denne version.</translation>
+    </message>
+    <message>
         <source>Error initializing block database</source>
         <translation>Klargøring af blokdatabase mislykkedes</translation>
     </message>
@@ -3422,6 +3442,10 @@
         <translation>Lytning på enhver port mislykkedes. Brug -listen=0, hvis du ønsker dette.</translation>
     </message>
     <message>
+        <source>Failed to rescan the wallet during initialization</source>
+        <translation>Genindlæsning af tegnebogen under initialisering mislykkedes</translation>
+    </message>
+    <message>
         <source>Importing...</source>
         <translation>Importerer…</translation>
     </message>
@@ -3431,7 +3455,7 @@
     </message>
     <message>
         <source>Initialization sanity check failed. %s is shutting down.</source>
-        <translation>Klargøring af sundhedstjek mislykkedes. %s lukker ned.</translation>
+        <translation>Sundhedstjek under initialisering mislykkedes. %s lukker ned.</translation>
     </message>
     <message>
         <source>Invalid amount for -%s=&lt;amount&gt;: '%s'</source>
@@ -3500,6 +3524,10 @@
     <message>
         <source>Rewinding blocks...</source>
         <translation>Spoler blokke tilbage…</translation>
+    </message>
+    <message>
+        <source>Send transactions with full-RBF opt-in enabled (RPC only, default: %u)</source>
+        <translation>Send transaktioner med fuld-RBF opt-in aktiveret (kun RPC, standard: %u)</translation>
     </message>
     <message>
         <source>Set database cache size in megabytes (%d to %d, default: %d)</source>
@@ -3750,6 +3778,10 @@
         <translation>Ikke i stand til at tildele til %s på denne computer (bind returnerede fejl %s)</translation>
     </message>
     <message>
+        <source>Unable to generate initial keys</source>
+        <translation>Kan ikke generere indledningsvise nøgler</translation>
+    </message>
+    <message>
         <source>Upgrade wallet to latest format on startup</source>
         <translation>Opgradér tegnebog til seneste format under opstart</translation>
     </message>
@@ -3760,6 +3792,10 @@
     <message>
         <source>Verifying wallet(s)...</source>
         <translation>Verificerer tegnebøger…</translation>
+    </message>
+    <message>
+        <source>Wallet %s resides outside wallet directory %s</source>
+        <translation>Tegnebog %s findes uden for tegnebogsmappen %s</translation>
     </message>
     <message>
         <source>Warning</source>
@@ -3850,8 +3886,20 @@
         <translation>Udskriv fejlsøgningsinformation (standard: %u, angivelse af &lt;kategori&gt; er valgfri)</translation>
     </message>
     <message>
+        <source>Set maximum BIP141 block weight to this * 4. Deprecated, use blockmaxweight</source>
+        <translation>Sæt maksimal BIP141-blokvægt til dette * 4. Uddateret; brug blockmaxweight</translation>
+    </message>
+    <message>
         <source>Sets the serialization of raw transaction or block hex returned in non-verbose mode, non-segwit(0) or segwit(1) (default: %d)</source>
         <translation>Indstiller serialiseringen af rå transaktioner eller blok-hex returneret i ikke-verbose tilstand, non-segwit(0) eller sigwit(1) (standard: %d)</translation>
+    </message>
+    <message>
+        <source>Specify directory to hold wallets (default: &lt;datadir&gt;/wallets if it exists, otherwise &lt;datadir&gt;)</source>
+        <translation>Angiv mappe, der skal indeholde tegnebøger (standard: &lt;datadir&gt;/wallets hvis den eksisterer, ellers &lt;datadir&gt;)</translation>
+    </message>
+    <message>
+        <source>Specify location of debug log file: this can be an absolute path or a path relative to the data directory (default: %s)</source>
+        <translation>Angiv placering af logfil til fejlretning: Dette kan være en absolut sti eller en sti relativ til datamappen (standard: %s)</translation>
     </message>
     <message>
         <source>Support filtering of blocks and transaction with bloom filters (default: %u)</source>

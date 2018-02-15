@@ -2871,6 +2871,10 @@
         <translation>Diğer</translation>
     </message>
     <message>
+        <source>Enter address, transaction id, or label to search</source>
+        <translation>Aramak için adres, gönderim numarası ya da etiket yazınız</translation>
+    </message>
+    <message>
         <source>Min amount</source>
         <translation>En düşük tutar</translation>
     </message>
