@@ -125,6 +125,22 @@ CMasternode::CollateralStatus CMasternode::CheckCollateral(const COutPoint& outp
         return COLLATERAL_INVALID_PUBKEY;
     }
 
+    CTransactionRef tx;
+    uint256 hashBlock;
+    if (!GetTransaction(outpoint.hash, tx, Params().GetConsensus(), hashBlock, true)) {
+        // should not happen
+        return COLLATERAL_UTXO_NOT_FOUND;
+    }
+    if (tx->nType != TRANSACTION_PROVIDER_REGISTER) {
+        assert(mapBlockIndex.count(hashBlock));
+
+        CBlockIndex *pindex = mapBlockIndex[hashBlock];
+        if (VersionBitsState(pindex->pprev, Params().GetConsensus(), Consensus::DEPLOYMENT_DIP0003, versionbitscache) == THRESHOLD_ACTIVE) {
+            LogPrintf("CMasternode::CheckCollateral -- ERROR: Collateral of masternode %s was created after DIP3 activation and is not a ProTx\n", outpoint.ToStringShort());
+            return COLLATERAL_UTXO_NOT_PROTX;
+        }
+    }
+
     nHeightRet = coin.nHeight;
     return COLLATERAL_OK;
 }
@@ -551,6 +567,11 @@ bool CMasternodeBroadcast::CheckOutpoint(int& nDos)
     CollateralStatus err = CheckCollateral(outpoint, keyIDCollateralAddress, nHeight);
     if (err == COLLATERAL_UTXO_NOT_FOUND) {
         LogPrint("masternode", "CMasternodeBroadcast::CheckOutpoint -- Failed to find Masternode UTXO, masternode=%s\n", outpoint.ToStringShort());
+        return false;
+    }
+
+    if (err == COLLATERAL_UTXO_NOT_PROTX) {
+        LogPrint("masternode", "CMasternodeBroadcast::CheckOutpoint -- Masternode UTXO should be a ProTx, masternode=%s\n", outpoint.ToStringShort());
         return false;
     }
 
