@@ -342,7 +342,7 @@ def run_tests(test_list, src_dir, build_dir, exeext, tmpdir, jobs=1, enable_cove
                 print('\n============')
                 print('{}Combined log for {}:{}'.format(BOLD[1], testdir, BOLD[0]))
                 print('============\n')
-                combined_logs, _ = subprocess.Popen([sys.executble, os.path.join(tests_dir, 'combine_logs.py'), '-c', testdir], universal_newlines=True, stdout=subprocess.PIPE).communicate()
+                combined_logs, _ = subprocess.Popen([sys.executable, os.path.join(tests_dir, 'combine_logs.py'), '-c', testdir], universal_newlines=True, stdout=subprocess.PIPE).communicate()
                 print("\n".join(deque(combined_logs.splitlines(), combined_logs_len)))
 
     print_results(test_results, max_len_name, (int(time.time() - time0)))
