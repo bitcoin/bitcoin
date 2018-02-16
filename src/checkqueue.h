@@ -1,21 +1,22 @@
-// Copyright (c) 2012-2015 The Bitcoin Core developers
+// Copyright (c) 2012-2017 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_CHECKQUEUE_H
 #define BITCOIN_CHECKQUEUE_H
 
+#include <sync.h>
+
 #include <algorithm>
 #include <vector>
 
 #include <boost/thread/condition_variable.hpp>
-#include <boost/thread/locks.hpp>
 #include <boost/thread/mutex.hpp>
 
 template <typename T>
 class CCheckQueueControl;
 
-/** 
+/**
  * Queue for verifications that have to be performed.
   * The verifications are represented by a type T, which must provide an
   * operator(), returning a bool.
@@ -58,9 +59,6 @@ private:
      */
     unsigned int nTodo;
 
-    //! Whether we're shutting down.
-    bool fQuit;
-
     //! The maximum number of elements to be processed in one batch
     unsigned int nBatchSize;
 
@@ -88,7 +86,7 @@ private:
                 }
                 // logically, the do loop starts here
                 while (queue.empty()) {
-                    if ((fMaster || fQuit) && nTodo == 0) {
+                    if (fMaster && nTodo == 0) {
                         nTotal--;
                         bool fRet = fAllOk;
                         // reset the status for new work later
@@ -126,8 +124,11 @@ private:
     }
 
 public:
+    //! Mutex to ensure only one concurrent CCheckQueueControl
+    boost::mutex ControlMutex;
+
     //! Create a new check queue
-    explicit CCheckQueue(unsigned int nBatchSizeIn) : nIdle(0), nTotal(0), fAllOk(true), nTodo(0), fQuit(false), nBatchSize(nBatchSizeIn) {}
+    explicit CCheckQueue(unsigned int nBatchSizeIn) : nIdle(0), nTotal(0), fAllOk(true), nTodo(0), nBatchSize(nBatchSizeIn) {}
 
     //! Worker thread
     void Thread()
@@ -160,15 +161,9 @@ public:
     {
     }
 
-    bool IsIdle()
-    {
-        boost::unique_lock<boost::mutex> lock(mutex);
-        return (nTotal == nIdle && nTodo == 0 && fAllOk == true);
-    }
-
 };
 
-/** 
+/**
  * RAII-style controller object for a CCheckQueue that guarantees the passed
  * queue is finished before continuing.
  */
@@ -176,16 +171,18 @@ template <typename T>
 class CCheckQueueControl
 {
 private:
-    CCheckQueue<T>* pqueue;
+    CCheckQueue<T> * const pqueue;
     bool fDone;
 
 public:
-    CCheckQueueControl(CCheckQueue<T>* pqueueIn) : pqueue(pqueueIn), fDone(false)
+    CCheckQueueControl() = delete;
+    CCheckQueueControl(const CCheckQueueControl&) = delete;
+    CCheckQueueControl& operator=(const CCheckQueueControl&) = delete;
+    explicit CCheckQueueControl(CCheckQueue<T> * const pqueueIn) : pqueue(pqueueIn), fDone(false)
     {
         // passed queue is supposed to be unused, or nullptr
         if (pqueue != nullptr) {
-            bool isIdle = pqueue->IsIdle();
-            assert(isIdle);
+            ENTER_CRITICAL_SECTION(pqueue->ControlMutex);
         }
     }
 
@@ -208,6 +205,9 @@ public:
     {
         if (!fDone)
             Wait();
+        if (pqueue != nullptr) {
+            LEAVE_CRITICAL_SECTION(pqueue->ControlMutex);
+        }
     }
 };
 
