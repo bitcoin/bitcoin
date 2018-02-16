@@ -8,7 +8,6 @@
 #include <key.h>
 #include <net.h>
 #include <validation.h>
-#include <timedata.h>
 
 class CMasternode;
 class CMasternodeBroadcast;

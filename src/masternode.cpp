@@ -12,6 +12,7 @@
 #include <masternode-sync.h>
 #include <masternodeman.h>
 #include <messagesigner.h>
+#include <script/standard.h>
 #include <util.h>
 #ifdef ENABLE_WALLET
 #include <wallet/wallet.h>
@@ -344,6 +345,7 @@ void CMasternode::UpdateLastPaid(const CBlockIndex *pindex, int nMaxBlocksToScan
     // LogPrint("masternode", "CMasternode::UpdateLastPaidBlock -- searching for block with payment to %s -- keeping old %d\n", vin.prevout.ToStringShort(), nBlockLastPaid);
 }
 
+#ifdef ENABLE_WALLET
 bool CMasternodeBroadcast::Create(std::string strService, std::string strKeyMasternode, std::string strTxHash, std::string strOutputIndex, std::string& strErrorRet, CMasternodeBroadcast &mnbRet, bool fOffline)
 {
     COutPoint outpoint;
@@ -414,6 +416,7 @@ bool CMasternodeBroadcast::Create(const COutPoint& outpoint, const CService& ser
 
     return true;
 }
+#endif // ENABLE_WALLET
 
 bool CMasternodeBroadcast::SimpleCheck(int& nDos)
 {
@@ -652,6 +655,12 @@ bool CMasternodeBroadcast::CheckSignature(int& nDos)
 
 void CMasternodeBroadcast::Relay(CConnman* connman)
 {
+    // Do not relay until fully synced
+    if(!masternodeSync.IsSynced()) {
+        LogPrint("masternode", "CMasternodeBroadcast::Relay -- won't relay until fully synced\n");
+        return;
+    }
+
     CInv inv(MSG_MASTERNODE_ANNOUNCE, GetHash());
     connman->RelayInv(inv);
 }
@@ -811,6 +820,12 @@ bool CMasternodePing::CheckAndUpdate(CMasternode* pmn, bool fFromNewBroadcast, i
 
 void CMasternodePing::Relay(CConnman* connman)
 {
+    // Do not relay until fully synced
+    if(!masternodeSync.IsSynced()) {
+        LogPrint("masternode", "CMasternodePing::Relay -- won't relay until fully synced\n");
+        return;
+    }
+
     CInv inv(MSG_MASTERNODE_PING, GetHash());
     connman->RelayInv(inv);
 }

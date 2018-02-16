@@ -333,6 +333,11 @@ void CMasternodePayments::ProcessMessage(CNode* pfrom, std::string& strCommand, 
 
         pfrom->setAskFor.erase(nHash);
 
+        // TODO: clear setAskFor for MSG_MASTERNODE_PAYMENT_BLOCK too
+
+        // Ignore any payments messages until masternode list is synced
+        if(!masternodeSync.IsMasternodeListSynced()) return;
+
         {
             LOCK(cs_mapMasternodePaymentVotes);
             if(mapMasternodePaymentVotes.count(nHash)) {
@@ -820,11 +825,14 @@ void CMasternodePayments::CheckPreviousBlockVotes(int nPrevBlockHeight)
 
 void CMasternodePaymentVote::Relay(CConnman* connman)
 {
-    // do not relay until synced
-    if (!masternodeSync.IsWinnersListSynced()) return;
+    // Do not relay until fully synced
+    if(!masternodeSync.IsSynced()) {
+        LogPrint("mnpayments", "CMasternodePayments::Relay -- won't relay until fully synced\n");
+        return;
+    }
+
     CInv inv(MSG_MASTERNODE_PAYMENT_VOTE, GetHash());
-    // relay votes only strictly to new nodes until DIP0001 is locked in to avoid being banned by majority of (old) masternodes
-    connman->RelayInv(inv, MIN_GOVERNANCE_PEER_PROTO_VERSION);
+    connman->RelayInv(inv);
 }
 
 bool CMasternodePaymentVote::CheckSignature(const CPubKey& pubKeyMasternode, int nValidationHeight, int &nDos)

@@ -813,7 +813,7 @@ UniValue submitblock(const JSONRPCRequest& request)
 
     submitblock_StateCatcher sc(block.GetHash());
     RegisterValidationInterface(&sc);
-    bool fAccepted = ProcessNewBlock(Params(), &block, true, NULL, NULL);
+    bool fAccepted = ProcessNewBlock(Params(), &block, true, nullptr, nullptr);
     UnregisterValidationInterface(&sc);
     if (fBlockPresent)
     {
