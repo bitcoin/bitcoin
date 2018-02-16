@@ -295,7 +295,6 @@ def initialize_datadir(dirname, n):
         f.write("keypool=1\n")
         f.write("discover=0\n")
         f.write("listenonion=0\n")
-        f.write("bind=127.0.0.1\n")
     return datadir
 
 def get_datadir_path(dirname, n):
