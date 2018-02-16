@@ -23,6 +23,7 @@
 #include "warnings.h"
 
 #include "evo/deterministicmns.h"
+#include "evo/providertx.h"
 
 /** Masternode manager */
 CMasternodeMan mnodeman;
@@ -389,20 +390,32 @@ void CMasternodeMan::Clear()
 int CMasternodeMan::CountMasternodes(int nProtocolVersion)
 {
     LOCK(cs);
+
     int nCount = 0;
     nProtocolVersion = nProtocolVersion == -1 ? mnpayments.GetMinMasternodePaymentsProto() : nProtocolVersion;
 
-    for (const auto& mnpair : mapMasternodes) {
-        if(mnpair.second.nProtocolVersion < nProtocolVersion) continue;
-        nCount++;
+    if (deterministicMNManager->IsDeterministicMNsSporkActive()) {
+        auto mnList = deterministicMNManager->GetListAtChainTip();
+        for (const auto& dmn : mnList.valid_range()) {
+            if (dmn->pdmnState->nProtocolVersion < nProtocolVersion) continue;
+            nCount++;
+        }
+    } else {
+        for (const auto& mnpair : mapMasternodes) {
+            if(mnpair.second.nProtocolVersion < nProtocolVersion) continue;
+            nCount++;
+        }
     }
-
     return nCount;
 }
 
 int CMasternodeMan::CountEnabled(int nProtocolVersion)
 {
     LOCK(cs);
+
+    if (deterministicMNManager->IsDeterministicMNsSporkActive())
+        return CountMasternodes(nProtocolVersion);
+
     int nCount = 0;
     nProtocolVersion = nProtocolVersion == -1 ? mnpayments.GetMinMasternodePaymentsProto() : nProtocolVersion;
 
@@ -464,43 +477,77 @@ void CMasternodeMan::DsegUpdate(CNode* pnode, CConnman& connman)
 CMasternode* CMasternodeMan::Find(const COutPoint &outpoint)
 {
     LOCK(cs);
-    auto it = mapMasternodes.find(outpoint);
-    return it == mapMasternodes.end() ? nullptr : &(it->second);
+
+    if (deterministicMNManager->IsDeterministicMNsSporkActive()) {
+        // This code keeps compatibility to old code depending on the non-deterministic MN lists
+        // When deterministic MN lists get activated, we stop relying on the MNs we encountered due to MNBs and start
+        // using the MNs found in the deterministic MN manager. To keep compatibility, we create CMasternode entries
+        // for these and return them here. This is needed because we also need to track some data per MN that is not
+        // on-chain, like vote counts
+
+        auto mnList = deterministicMNManager->GetListAtChainTip();
+        if (!mnList.IsMNValid(outpoint.hash)) {
+            return nullptr;
+        }
+        auto dmn = mnList.GetMN(outpoint.hash);
+        if (!dmn) {
+            return nullptr;
+        }
+
+        auto it = mapMasternodes.find(outpoint);
+        if (it != mapMasternodes.end()) {
+            return &(it->second);
+        } else {
+            // MN is not in mapMasternodes but in the deterministic list. Create an entry in mapMasternodes for compatibility with legacy code
+            CMasternode mn(outpoint.hash, dmn);
+            it = mapMasternodes.emplace(outpoint, mn).first;
+            return &(it->second);
+        }
+    } else {
+        auto it = mapMasternodes.find(outpoint);
+        return it == mapMasternodes.end() ? nullptr : &(it->second);
+    }
 }
 
 bool CMasternodeMan::Get(const COutPoint& outpoint, CMasternode& masternodeRet)
 {
     // Theses mutexes are recursive so double locking by the same thread is safe.
     LOCK(cs);
-    auto it = mapMasternodes.find(outpoint);
-    if (it == mapMasternodes.end()) {
+    CMasternode* mn = Find(outpoint);
+    if (!mn)
         return false;
-    }
-
-    masternodeRet = it->second;
+    masternodeRet = *mn;
     return true;
 }
 
 bool CMasternodeMan::GetMasternodeInfo(const COutPoint& outpoint, masternode_info_t& mnInfoRet)
 {
     LOCK(cs);
-    auto it = mapMasternodes.find(outpoint);
-    if (it == mapMasternodes.end()) {
+    CMasternode* mn = Find(outpoint);
+    if (!mn)
         return false;
-    }
-    mnInfoRet = it->second.GetInfo();
+    mnInfoRet = mn->GetInfo();
     return true;
 }
 
 bool CMasternodeMan::GetMasternodeInfo(const CKeyID& keyIDOperator, masternode_info_t& mnInfoRet) {
     LOCK(cs);
-    for (const auto& mnpair : mapMasternodes) {
-        if (mnpair.second.keyIDOperator == keyIDOperator) {
-            mnInfoRet = mnpair.second.GetInfo();
-            return true;
+    if (deterministicMNManager->IsDeterministicMNsSporkActive()) {
+        auto mnList = deterministicMNManager->GetListAtChainTip();
+        auto dmn = mnList.GetMNByOperatorKey(keyIDOperator);
+        if (dmn) {
+            return GetMasternodeInfo(COutPoint(dmn->proTxHash, dmn->nCollateralIndex), mnInfoRet);
         }
+        return false;
+    } else {
+        for (const auto& mnpair : mapMasternodes) {
+            if (mnpair.second.keyIDOperator == keyIDOperator) {
+                mnInfoRet = mnpair.second.GetInfo();
+                return true;
+            }
+        }
+        return false;
     }
-    return false;
 }
 
 bool CMasternodeMan::GetMasternodeInfo(const CPubKey& pubKeyOperator, masternode_info_t& mnInfoRet)
@@ -527,7 +574,11 @@ bool CMasternodeMan::GetMasternodeInfo(const CScript& payee, masternode_info_t& 
 bool CMasternodeMan::Has(const COutPoint& outpoint)
 {
     LOCK(cs);
-    return mapMasternodes.find(outpoint) != mapMasternodes.end();
+    if (deterministicMNManager->IsDeterministicMNsSporkActive()) {
+        return deterministicMNManager->HasValidMNAtChainTip(outpoint.hash);
+    } else {
+        return mapMasternodes.find(outpoint) != mapMasternodes.end();
+    }
 }
 
 //
@@ -1546,12 +1597,17 @@ std::string CMasternodeMan::ToString() const
 {
     std::ostringstream info;
 
-    info << "Masternodes: " << (int)mapMasternodes.size() <<
-            ", peers who asked us for Masternode list: " << (int)mAskedUsForMasternodeList.size() <<
-            ", peers we asked for Masternode list: " << (int)mWeAskedForMasternodeList.size() <<
-            ", entries in Masternode list we asked for: " << (int)mWeAskedForMasternodeListEntry.size() <<
-            ", nDsqCount: " << (int)nDsqCount;
-
+    if (deterministicMNManager->IsDeterministicMNsSporkActive()) {
+        info << "Masternodes: masternode object count: " << (int)mapMasternodes.size() <<
+                ", deterministic masternode count: " << deterministicMNManager->GetListAtChainTip().size() <<
+                ", nDsqCount: " << (int)nDsqCount;
+    } else {
+        info << "Masternodes: " << (int)mapMasternodes.size() <<
+                ", peers who asked us for Masternode list: " << (int)mAskedUsForMasternodeList.size() <<
+                ", peers we asked for Masternode list: " << (int)mWeAskedForMasternodeList.size() <<
+                ", entries in Masternode list we asked for: " << (int)mWeAskedForMasternodeListEntry.size() <<
+                ", nDsqCount: " << (int)nDsqCount;
+    }
     return info.str();
 }
 
@@ -1802,7 +1858,7 @@ void CMasternodeMan::WarnMasternodeDaemonUpdates()
     fWarned = true;
 }
 
-void CMasternodeMan::NotifyMasternodeUpdates(CConnman& connman)
+void CMasternodeMan::NotifyMasternodeUpdates(CConnman& connman, bool forceAddedChecks, bool forceRemovedChecks)
 {
     // Avoid double locking
     bool fMasternodesAddedLocal = false;
@@ -1813,11 +1869,11 @@ void CMasternodeMan::NotifyMasternodeUpdates(CConnman& connman)
         fMasternodesRemovedLocal = fMasternodesRemoved;
     }
 
-    if(fMasternodesAddedLocal) {
+    if(fMasternodesAddedLocal || forceAddedChecks) {
         governance.CheckMasternodeOrphanObjects(connman);
         governance.CheckMasternodeOrphanVotes(connman);
     }
-    if(fMasternodesRemovedLocal) {
+    if(fMasternodesRemovedLocal || forceRemovedChecks) {
         governance.UpdateCachesAndClean();
     }
 

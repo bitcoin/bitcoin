@@ -243,7 +243,7 @@ public:
      * Called to notify CGovernanceManager that the masternode index has been updated.
      * Must be called while not holding the CMasternodeMan::cs mutex
      */
-    void NotifyMasternodeUpdates(CConnman& connman);
+    void NotifyMasternodeUpdates(CConnman& connman, bool forceAddedChecks = false, bool forceRemovedChecks = false);
 
     void DoMaintenance(CConnman &connman);
 };
