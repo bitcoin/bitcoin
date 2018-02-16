@@ -414,7 +414,7 @@ Status DBImpl::RecoverLogFile(uint64_t log_number, bool last_log,
          status.ok()) {
     if (record.size() < 12) {
       reporter.Corruption(
-          record.size(), Status::Corruption("log record too small"));
+          record.size(), Status::Corruption("log record too small", fname));
       continue;
     }
     WriteBatchInternal::SetContents(&batch, record);
