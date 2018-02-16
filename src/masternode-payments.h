@@ -134,7 +134,7 @@ public:
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action) {
         int nVersion = s.GetVersion();
-        if (nVersion == 70208) {
+        if (nVersion == 70208 && (s.GetType() & SER_NETWORK)) {
             // converting from/to old format
             CTxIn txin{};
             if (ser_action.ForRead()) {
@@ -150,19 +150,16 @@ public:
         }
         READWRITE(nBlockHeight);
         READWRITE(*(CScriptBase*)(&payee));
-        READWRITE(vchSig);
+        if (!(s.GetType() & SER_GETHASH)) {
+            READWRITE(vchSig);
+        }
     }
 
-    uint256 GetHash() const {
-        CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
-        ss << *(CScriptBase*)(&payee);
-        ss << nBlockHeight;
-        ss << masternodeOutpoint;
-        return ss.GetHash();
-    }
+    uint256 GetHash() const;
+    uint256 GetSignatureHash() const;
 
     bool Sign();
-    bool CheckSignature(const CPubKey& pubKeyMasternode, int nValidationHeight, int &nDos);
+    bool CheckSignature(const CPubKey& pubKeyMasternode, int nValidationHeight, int &nDos) const;
 
     bool IsValid(CNode* pnode, int nValidationHeight, std::string& strError, CConnman& connman);
     void Relay(CConnman& connman);

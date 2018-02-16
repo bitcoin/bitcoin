@@ -258,6 +258,7 @@ public:
     bool CheckSignature(const CPubKey& pubKeyMasternode);
 
     std::string GetSignatureMessage() const;
+    uint256 GetSignatureHash() const;
 
     // CORE OBJECT FUNCTIONS
 
@@ -310,7 +311,7 @@ public:
         READWRITE(nRevision);
         READWRITE(nTime);
         READWRITE(nCollateralHash);
-        if (nVersion == 70208) {
+        if (nVersion == 70208 && (s.GetType() & SER_NETWORK)) {
             // converting from/to old format
             std::string strDataHex;
             if (ser_action.ForRead()) {
@@ -325,7 +326,7 @@ public:
             READWRITE(vchData);
         }
         READWRITE(nObjectType);
-        if (nVersion == 70208) {
+        if (nVersion == 70208 && (s.GetType() & SER_NETWORK)) {
             // converting from/to old format
             CTxIn txin;
             if (ser_action.ForRead()) {
@@ -339,7 +340,9 @@ public:
             // using new format directly
             READWRITE(masternodeOutpoint);
         }
-        READWRITE(vchSig);
+        if (!(s.GetType() & SER_GETHASH)) {
+            READWRITE(vchSig);
+        }
         if(s.GetType() & SER_DISK) {
             // Only include these for the disk file format
             LogPrint("gobject", "CGovernanceObject::SerializationOp Reading/writing votes from/to disk\n");

@@ -99,6 +99,9 @@ Every few minutes, masternodes ping the network with a message that propagates t
 | 32 | blockHash | uint256 | Current chaintip blockhash minus 12
 | 8 | sigTime | int64_t | Signature time for this ping
 | 71-73 | vchSig | char[] | Signature of this message by masternode (verifiable via pubKeyMasternode)
+| 1 | fSentinelIsCurrent | bool | true if last sentinel ping was current
+| 4 | nSentinelVersion | uint32_t | The version of Sentinel running on the masternode which is signing the message
+| 4 | nDaemonVersion | uint32_t | The version of dashd of the masternode which is signing the message (i.e. CLIENT_VERSION)
 
 ### MASTERNODEPAYMENTVOTE - "mnw"
 
@@ -254,7 +257,7 @@ Spork
 | 10001 | 2 | INSTANTSEND_ENABLED | Turns on and off InstantSend network wide
 | 10002 | 3 | INSTANTSEND_BLOCK_FILTERING | Turns on and off InstantSend block filtering
 | 10004 | 5 | INSTANTSEND_MAX_VALUE | Controls the max value for an InstantSend transaction (currently 2000 dash)
-| 10005 | 6 | NEW_SIGS | Turns on and off new signature format for some messages (mnp, mnw, dsq)
+| 10005 | 6 | NEW_SIGS | Turns on and off new signature format for Dash-specific messages
 | 10007 | 8 | MASTERNODE_PAYMENT_ENFORCEMENT | Requires masternodes to be paid by miners when blocks are processed
 | 10008 | 9 | SUPERBLOCKS_ENABLED | Superblocks are enabled (the 10% comes to fund the dash treasury)
 | 10009 | 10 | MASTERNODE_PAY_UPDATED_NODES | Only current protocol version masternode's will be paid (not older nodes)

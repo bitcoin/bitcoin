@@ -224,6 +224,31 @@ std::string CGovernanceObject::GetSignatureMessage() const
     return strMessage;
 }
 
+uint256 CGovernanceObject::GetHash() const
+{
+    // Note: doesn't match serialization
+
+    // CREATE HASH OF ALL IMPORTANT PIECES OF DATA
+
+    CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
+    ss << nHashParent;
+    ss << nRevision;
+    ss << nTime;
+    ss << GetDataAsHexString();
+    ss << masternodeOutpoint << uint8_t{} << 0xffffffff; // adding dummy values here to match old hashing
+    ss << vchSig;
+    // fee_tx is left out on purpose
+
+    DBG( printf("CGovernanceObject::GetHash %i %li %s\n", nRevision, nTime, GetDataAsHexString().c_str()); );
+
+    return ss.GetHash();
+}
+
+uint256 CGovernanceObject::GetSignatureHash() const
+{
+    return SerializeHash(*this);
+}
+
 void CGovernanceObject::SetMasternodeOutpoint(const COutPoint& outpoint)
 {
     masternodeOutpoint = outpoint;
@@ -232,23 +257,34 @@ void CGovernanceObject::SetMasternodeOutpoint(const COutPoint& outpoint)
 bool CGovernanceObject::Sign(const CKey& keyMasternode, const CPubKey& pubKeyMasternode)
 {
     std::string strError;
-    std::string strMessage = GetSignatureMessage();
 
-    LOCK(cs);
+    if (sporkManager.IsSporkActive(SPORK_6_NEW_SIGS)) {
+        uint256 hash = GetSignatureHash();
 
-    if(!CMessageSigner::SignMessage(strMessage, vchSig, keyMasternode)) {
-        LogPrintf("CGovernanceObject::Sign -- SignMessage() failed\n");
-        return false;
-    }
+        if (!CHashSigner::SignHash(hash, keyMasternode, vchSig)) {
+            LogPrintf("CGovernanceObject::Sign -- SignHash() failed\n");
+            return false;
+        }
 
-    if(!CMessageSigner::VerifyMessage(pubKeyMasternode, vchSig, strMessage, strError)) {
-        LogPrintf("CGovernanceObject::Sign -- VerifyMessage() failed, error: %s\n", strError);
-        return false;
+        if (!CHashSigner::VerifyHash(hash, pubKeyMasternode, vchSig, strError)) {
+            LogPrintf("CGovernanceObject::Sign -- VerifyHash() failed, error: %s\n", strError);
+            return false;
+        }
+    } else {
+        std::string strMessage = GetSignatureMessage();
+        if (!CMessageSigner::SignMessage(strMessage, vchSig, keyMasternode)) {
+            LogPrintf("CGovernanceObject::Sign -- SignMessage() failed\n");
+            return false;
+        }
+
+        if (!CMessageSigner::VerifyMessage(pubKeyMasternode, vchSig, strMessage, strError)) {
+            LogPrintf("CGovernanceObject::Sign -- VerifyMessage() failed, error: %s\n", strError);
+            return false;
+        }
     }
 
     LogPrint("gobject", "CGovernanceObject::Sign -- pubkey id = %s, masternode = %s\n",
              pubKeyMasternode.GetID().ToString(), masternodeOutpoint.ToStringShort());
-
 
     return true;
 }
@@ -257,33 +293,29 @@ bool CGovernanceObject::CheckSignature(const CPubKey& pubKeyMasternode)
 {
     std::string strError;
 
-    std::string strMessage = GetSignatureMessage();
+    if (sporkManager.IsSporkActive(SPORK_6_NEW_SIGS)) {
+        uint256 hash = GetSignatureHash();
 
-    LOCK(cs);
-    if(!CMessageSigner::VerifyMessage(pubKeyMasternode, vchSig, strMessage, strError)) {
-        LogPrintf("CGovernance::CheckSignature -- VerifyMessage() failed, error: %s\n", strError);
-        return false;
+        if (!CHashSigner::VerifyHash(hash, pubKeyMasternode, vchSig, strError)) {
+            // could be an old object
+            std::string strMessage = GetSignatureMessage();
+
+            if (!CMessageSigner::VerifyMessage(pubKeyMasternode, vchSig, strMessage, strError)) {
+                // nope, not in old format either
+                LogPrintf("CGovernance::CheckSignature -- VerifyMessage() failed, error: %s\n", strError);
+                return false;
+            }
+        }
+    } else {
+        std::string strMessage = GetSignatureMessage();
+
+        if (!CMessageSigner::VerifyMessage(pubKeyMasternode, vchSig, strMessage, strError)) {
+            LogPrintf("CGovernance::CheckSignature -- VerifyMessage() failed, error: %s\n", strError);
+            return false;
+        }
     }
 
     return true;
-}
-
-uint256 CGovernanceObject::GetHash() const
-{
-    // CREATE HASH OF ALL IMPORTANT PIECES OF DATA
-
-    CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
-    ss << nHashParent;
-    ss << nRevision;
-    ss << nTime;
-    ss << GetDataAsHexString();
-    ss << masternodeOutpoint << uint8_t{} << 0xffffffff;
-    ss << vchSig;
-    // fee_tx is left out on purpose
-
-    DBG( printf("CGovernanceObject::GetHash %i %li %s\n", nRevision, nTime, GetDataAsHexString().c_str()); );
-
-    return ss.GetHash();
 }
 
 /**

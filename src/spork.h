@@ -77,20 +77,16 @@ public:
         READWRITE(nSporkID);
         READWRITE(nValue);
         READWRITE(nTimeSigned);
-        READWRITE(vchSig);
+        if (!(s.GetType() & SER_GETHASH)) {
+            READWRITE(vchSig);
+        }
     }
 
-    uint256 GetHash() const
-    {
-        CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
-        ss << nSporkID;
-        ss << nValue;
-        ss << nTimeSigned;
-        return ss.GetHash();
-    }
+    uint256 GetHash() const;
+    uint256 GetSignatureHash() const;
 
     bool Sign(const std::string& strSignKey);
-    bool CheckSignature();
+    bool CheckSignature() const;
     void Relay(CConnman& connman);
 };
 

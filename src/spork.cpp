@@ -218,41 +218,77 @@ bool CSporkManager::SetPrivKey(const std::string& strPrivKey)
     }
 }
 
+uint256 CSporkMessage::GetHash() const
+{
+    return SerializeHash(*this);
+}
+
+uint256 CSporkMessage::GetSignatureHash() const
+{
+    return GetHash();
+}
+
 bool CSporkMessage::Sign(const std::string& strSignKey)
 {
     CKey key;
     CPubKey pubkey;
     std::string strError = "";
-    std::string strMessage = boost::lexical_cast<std::string>(nSporkID) + boost::lexical_cast<std::string>(nValue) + boost::lexical_cast<std::string>(nTimeSigned);
 
     if(!CMessageSigner::GetKeysFromSecret(strSignKey, key, pubkey)) {
         LogPrintf("CSporkMessage::Sign -- GetKeysFromSecret() failed, invalid spork key %s\n", strSignKey);
         return false;
     }
 
-    if(!CMessageSigner::SignMessage(strMessage, vchSig, key)) {
-        LogPrintf("CSporkMessage::Sign -- SignMessage() failed\n");
-        return false;
-    }
+    if (sporkManager.IsSporkActive(SPORK_6_NEW_SIGS)) {
+        uint256 hash = GetSignatureHash();
 
-    if(!CMessageSigner::VerifyMessage(pubkey, vchSig, strMessage, strError)) {
-        LogPrintf("CSporkMessage::Sign -- VerifyMessage() failed, error: %s\n", strError);
-        return false;
+        if(!CHashSigner::SignHash(hash, key, vchSig)) {
+            LogPrintf("CSporkMessage::Sign -- SignHash() failed\n");
+            return false;
+        }
+
+        if (!CHashSigner::VerifyHash(hash, pubkey, vchSig, strError)) {
+            LogPrintf("CSporkMessage::Sign -- VerifyHash() failed, error: %s\n", strError);
+            return false;
+        }
+    } else {
+        std::string strMessage = boost::lexical_cast<std::string>(nSporkID) + boost::lexical_cast<std::string>(nValue) + boost::lexical_cast<std::string>(nTimeSigned);
+
+        if(!CMessageSigner::SignMessage(strMessage, vchSig, key)) {
+            LogPrintf("CSporkMessage::Sign -- SignMessage() failed\n");
+            return false;
+        }
+
+        if(!CMessageSigner::VerifyMessage(pubkey, vchSig, strMessage, strError)) {
+            LogPrintf("CSporkMessage::Sign -- VerifyMessage() failed, error: %s\n", strError);
+            return false;
+        }
     }
 
     return true;
 }
 
-bool CSporkMessage::CheckSignature()
+bool CSporkMessage::CheckSignature() const
 {
-    //note: need to investigate why this is failing
     std::string strError = "";
-    std::string strMessage = boost::lexical_cast<std::string>(nSporkID) + boost::lexical_cast<std::string>(nValue) + boost::lexical_cast<std::string>(nTimeSigned);
     CPubKey pubkey(ParseHex(Params().SporkPubKey()));
 
-    if(!CMessageSigner::VerifyMessage(pubkey, vchSig, strMessage, strError)) {
-        LogPrintf("CSporkMessage::CheckSignature -- VerifyMessage() failed, error: %s\n", strError);
-        return false;
+    if (sporkManager.IsSporkActive(SPORK_6_NEW_SIGS)) {
+        uint256 hash = GetSignatureHash();
+
+        if (!CHashSigner::VerifyHash(hash, pubkey, vchSig, strError)) {
+            // Note: unlike for many other messages when SPORK_6_NEW_SIGS is ON sporks with sigs in old format
+            // and newer timestamps should not be accepted, so if we failed here - that's it
+            LogPrintf("CSporkMessage::CheckSignature -- VerifyHash() failed, error: %s\n", strError);
+            return false;
+        }
+    } else {
+        std::string strMessage = boost::lexical_cast<std::string>(nSporkID) + boost::lexical_cast<std::string>(nValue) + boost::lexical_cast<std::string>(nTimeSigned);
+
+        if (!CMessageSigner::VerifyMessage(pubkey, vchSig, strMessage, strError)){
+            LogPrintf("CSporkMessage::CheckSignature -- VerifyMessage() failed, error: %s\n", strError);
+            return false;
+        }
     }
 
     return true;

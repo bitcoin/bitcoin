@@ -122,6 +122,7 @@ public:
     void SetSignature(const std::vector<unsigned char>& vchSigIn) { vchSig = vchSigIn; }
 
     bool Sign(const CKey& keyMasternode, const CPubKey& pubKeyMasternode);
+    bool CheckSignature(const CPubKey& pubKeyMasternode) const;
     bool IsValid(bool fSignatureCheck) const;
     void Relay(CConnman& connman) const;
 
@@ -137,16 +138,8 @@ public:
     *   GET UNIQUE HASH WITH DETERMINISTIC VALUE OF THIS SPECIFIC VOTE
     */
 
-    uint256 GetHash() const
-    {
-        CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
-        ss << masternodeOutpoint << uint8_t{} << 0xffffffff;
-        ss << nParentHash;
-        ss << nVoteSignal;
-        ss << nVoteOutcome;
-        ss << nTime;
-        return ss.GetHash();
-    }
+    uint256 GetHash() const;
+    uint256 GetSignatureHash() const;
 
     std::string ToString() const
     {
@@ -191,7 +184,7 @@ public:
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action) {
         int nVersion = s.GetVersion();
-        if (nVersion == 70208) {
+        if (nVersion == 70208 && (s.GetType() & SER_NETWORK)) {
             // converting from/to old format
             CTxIn txin{};
             if (ser_action.ForRead()) {
@@ -209,7 +202,9 @@ public:
         READWRITE(nVoteOutcome);
         READWRITE(nVoteSignal);
         READWRITE(nTime);
-        READWRITE(vchSig);
+        if (!(s.GetType() & SER_GETHASH)) {
+            READWRITE(vchSig);
+        }
     }
 
 };

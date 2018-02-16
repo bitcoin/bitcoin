@@ -207,10 +207,13 @@ public:
         READWRITE(txHash);
         READWRITE(outpoint);
         READWRITE(outpointMasternode);
-        READWRITE(vchMasternodeSignature);
+        if (!(s.GetType() & SER_GETHASH)) {
+            READWRITE(vchMasternodeSignature);
+        }
     }
 
     uint256 GetHash() const;
+    uint256 GetSignatureHash() const;
 
     uint256 GetTxHash() const { return txHash; }
     COutPoint GetOutpoint() const { return outpoint; }
