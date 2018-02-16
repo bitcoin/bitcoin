@@ -106,6 +106,15 @@ class RawTransactionsTest(BitcoinTestFramework):
         # Test `createrawtransaction` invalid `replaceable`
         assert_raises_rpc_error(-3, "Expected type bool", self.nodes[0].createrawtransaction, [], {}, 0, 'foo')
 
+        # Test `signrawtransactionwithwallet` required parameters
+        assert_raises_rpc_error(-22, "TX decode failed", self.nodes[0].signrawtransactionwithwallet, 'foo')
+
+        # Test `decoderawtransaction`required parameters
+        assert_raises_rpc_error(-22, "TX decode failed", self.nodes[0].decoderawtransaction, 'foo')
+
+        # Test `sendrawtransaction` required parameters
+        assert_raises_rpc_error(-22, "TX decode failed", self.nodes[0].sendrawtransaction, 'foo')
+
         self.log.info('Check that createrawtransaction accepts an array and object as outputs')
         tx = CTransaction()
         # One output
