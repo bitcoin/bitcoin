@@ -1,3 +1,9 @@
+peercoin (0.6.2-2) stable; urgency=low
+
+  * More polish for the package.
+
+ --  <peerchemist@protonmail.ch>  Mon, 14 Feb 2018 20:56:20 +0000
+
 peercoin (0.6.2-1) stable; urgency=low
 
   * Upgrade to v0.6.2
