@@ -36,6 +36,7 @@ class CTxBudgetPayment;
 static const CAmount BUDGET_FEE_TX = (25*COIN);
 static const int64_t BUDGET_FEE_CONFIRMATIONS = 6;
 static const int64_t BUDGET_VOTE_UPDATE_MIN = 60*60;
+static const int64_t FINAL_BUDGET_VOTE_UPDATE_MIN = 30*60;
 
 extern std::vector<CBudgetProposalBroadcast> vecImmatureBudgetProposals;
 extern std::vector<CFinalizedBudgetBroadcast> vecImmatureFinalizedBudgets;
@@ -214,6 +215,7 @@ private:
     // critical section to protect the inner data structures
     mutable CCriticalSection cs;
     bool fAutoChecked; //If it matches what we see, we'll auto vote for it (masternode only)
+    boost::optional<int> voteSubmittedTime;
 
 public:
     bool fValid;
@@ -228,19 +230,20 @@ public:
     CFinalizedBudget(const CFinalizedBudget& other);
 
     void CleanAndRemove(bool fSignatureCheck);
-    bool AddOrUpdateVote(CFinalizedBudgetVote& vote, std::string& strError);
-    double GetScore();
-    bool HasMinimumRequiredSupport();
+    bool AddOrUpdateVote(const CFinalizedBudgetVote& vote, std::string& strError);
 
-    bool IsValid(std::string& strError, bool fCheckCollateral=true);
+    bool IsValid(std::string& strError, bool fCheckCollateral=true) const;
+    bool IsValid(bool fCheckCollateral=true) const;
+    bool IsVoteSubmitted() const { return voteSubmittedTime.is_initialized(); }
+    void ResetAutoChecked();
 
     std::string GetName() {return strBudgetName; }
     std::string GetProposals();
-    int GetBlockStart() {return nBlockStart;}
-    int GetBlockEnd() {return nBlockStart + (int)(vecBudgetPayments.size() - 1);}
-    int GetVoteCount() {return (int)mapVotes.size();}
+    int GetBlockStart() const {return nBlockStart;}
+    int GetBlockEnd() const {return nBlockStart + (int)(vecBudgetPayments.size() - 1);}
+    int GetVoteCount() const {return (int)mapVotes.size();}
     bool IsTransactionValid(const CTransaction& txNew, int nBlockHeight);
-    bool GetBudgetPaymentByBlock(int64_t nBlockHeight, CTxBudgetPayment& payment)
+    bool GetBudgetPaymentByBlock(int64_t nBlockHeight, CTxBudgetPayment& payment) const
     {
         LOCK(cs);
 
@@ -250,7 +253,7 @@ public:
         payment = vecBudgetPayments[i];
         return true;
     }
-    bool GetPayeeAndAmount(int64_t nBlockHeight, CScript& payee, CAmount& nAmount)
+    bool GetPayeeAndAmount(int64_t nBlockHeight, CScript& payee, CAmount& nAmount) const
     {
         LOCK(cs);
 
@@ -265,14 +268,14 @@ public:
     //check to see if we should vote on this
     void AutoCheck();
     //total crown paid out by this budget
-    CAmount GetTotalPayout();
+    CAmount GetTotalPayout() const;
     //vote on this finalized budget as a masternode
     void SubmitVote();
 
     //checks the hashes to make sure we know about them
-    string GetStatus();
+    std::string GetStatus() const;
 
-    uint256 GetHash(){
+    uint256 GetHash() const{
         CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
         ss << strBudgetName;
         ss << nBlockStart;
@@ -366,7 +369,7 @@ public:
     bool SignatureValid(bool fSignatureCheck);
     void Relay();
 
-    uint256 GetHash(){
+    uint256 GetHash() const{
         CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
         ss << vin;
         ss << nBudgetHash;
@@ -436,23 +439,23 @@ public:
             return nTime < GetTime() - 15 * 60; // 15 minutes for testing purposes
     }
 
-    std::string GetName() {return strProposalName; }
-    std::string GetURL() {return strURL; }
-    int GetBlockStart() {return nBlockStart;}
-    int GetBlockEnd() {return nBlockEnd;}
-    CScript GetPayee() {return address;}
-    int GetTotalPaymentCount();
-    int GetRemainingPaymentCount();
-    int GetBlockStartCycle();
-    int GetBlockCurrentCycle();
-    int GetBlockEndCycle();
-    double GetRatio();
-    int GetYeas();
-    int GetNays();
-    int GetAbstains();
-    CAmount GetAmount() {return nAmount;}
+    std::string GetName() const {return strProposalName; }
+    std::string GetURL() const {return strURL; }
+    int GetBlockStart() const {return nBlockStart;}
+    int GetBlockEnd() const {return nBlockEnd;}
+    CScript GetPayee() const {return address;}
+    int GetTotalPaymentCount() const;
+    int GetRemainingPaymentCount() const;
+    int GetBlockStartCycle() const;
+    int GetBlockCurrentCycle() const;
+    int GetBlockEndCycle() const;
+    double GetRatio() const;
+    int GetYeas() const;
+    int GetNays() const;
+    int GetAbstains() const;
+    CAmount GetAmount() const {return nAmount;}
     void SetAllotted(CAmount nAllotedIn) {nAlloted = nAllotedIn;}
-    CAmount GetAllotted() {return nAlloted;}
+    CAmount GetAllotted() const {return nAlloted;}
 
     void CleanAndRemove(bool fSignatureCheck);
 

@@ -49,7 +49,7 @@ public:
     std::string ToString() const;
     std::string ToStringShort() const;
 
-    uint256 GetHash();
+    uint256 GetHash() const;
 
 };
 
