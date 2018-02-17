@@ -61,9 +61,17 @@ fi
 CPPFLAGS="-I$depends_prefix/include/ $CPPFLAGS"
 LDFLAGS="-L$depends_prefix/lib $LDFLAGS"
 
-CC="@CC@"
-CXX="@CXX@"
-OBJC="${CC}"
+# Only set these if they're not already set. This allows them to be passed to
+# subconfigures without being reset to the config.site value
+if test -z "$ac_cv_prog_CC"; then
+  ac_cv_prog_CC="@CC@"
+fi
+if test -z "$ac_cv_prog_CXX"; then
+  ac_cv_prog_CXX="@CXX@"
+fi
+if test -z "$ac_cv_prog_OBJC"; then
+  ac_cv_prog_OBJC="${ac_cv_prog_CC}"
+fi
 PYTHONPATH=$depends_prefix/native/lib/python/dist-packages:$PYTHONPATH
 
 if test -n "@AR@"; then
