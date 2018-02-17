@@ -706,9 +706,12 @@ public:
 
     CStoredExtKey *ChainAccount()
     {
-        if (vExtKeys.size() < 1)
-            return nullptr;
-        return vExtKeys[0];
+        return vExtKeys.size() < 1 ? nullptr : vExtKeys[0];
+    };
+
+    const CStoredExtKey *ChainAccount() const
+    {
+        return vExtKeys.size() < 1 ? nullptr : vExtKeys[0];
     };
 
     int AddLookBehind(uint32_t nChain, uint32_t nKeys);
@@ -841,7 +844,7 @@ bool IsBIP32(const char *base58);
 
 int AppendChainPath(const CStoredExtKey *pc, std::vector<uint32_t> &vPath);
 int AppendChainPath(const CStoredExtKey *pc, std::vector<uint8_t> &vPath);
-
+int AppendPath(const CStoredExtKey *pc, std::vector<uint32_t> &vPath);
 
 #endif // EXT_KEY_H
 

@@ -211,6 +211,9 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "smsgsend", 4, "days_retention" },
     { "smsgsend", 5, "testfee" },
 
+    { "devicesignrawtransaction", 1, "prevtxs" },
+    { "devicesignrawtransaction", 2, "privkeys" },
+
 
     { "logging", 0, "include" },
     { "logging", 1, "exclude" },

@@ -1402,7 +1402,6 @@ UniValue extkey(const JSONRPCRequest &request)
                 // Try key in memory first
                 CStoredExtKey *pSek;
                 ExtKeyMap::iterator it = pwallet->mapExtKeys.find(id);
-
                 if (it != pwallet->mapExtKeys.end())
                 {
                     pSek = it->second;

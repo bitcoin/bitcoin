@@ -4471,6 +4471,8 @@ const std::string& FormatOutputType(OutputType type)
 
 void CWallet::LearnRelatedScripts(const CPubKey& key, OutputType type)
 {
+    if (fParticlMode)
+        return;
     if (key.IsCompressed() && (type == OUTPUT_TYPE_P2SH_SEGWIT || type == OUTPUT_TYPE_BECH32)) {
         CTxDestination witdest = WitnessV0KeyHash(key.GetID());
         CScript witprog = GetScriptForDestination(witdest);

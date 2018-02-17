@@ -679,9 +679,7 @@ int CExtKeyAccount::GetKey(const CKeyID &id, CKey &keyOut, CEKAKey &ak, CKeyID &
 
     // [rm] necessary?
     if (LogAcceptCategory(BCLog::HDWALLET) && keyOut.GetPubKey().GetID() != id)
-    {
         return error("Stored key mismatch.");
-    };
     return rv;
 };
 
@@ -1138,4 +1136,21 @@ int AppendChainPath(const CStoredExtKey *pc, std::vector<uint8_t> &vPath)
     return 0;
 };
 
+int AppendPath(const CStoredExtKey *pc, std::vector<uint32_t> &vPath)
+{
+    // Path on account chain is relative to master key
+    mapEKValue_t::const_iterator mvi = pc->mapValue.find(EKVT_PATH);
+    if (mvi == pc->mapValue.end())
+        return 1;
+
+    assert(mvi->second.size() % 4 == 0);
+    for (size_t i = 0; i < mvi->second.size(); i+=4)
+    {
+        uint32_t tmp;
+        memcpy(&tmp, &mvi->second[i], 4);
+        vPath.push_back(tmp);
+    };
+
+    return 0;
+};
 

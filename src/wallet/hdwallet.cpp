@@ -7277,6 +7277,32 @@ int CHDWallet::ExtKeyUpdateLooseKey(const CExtKeyPair &ek, uint32_t nKey, bool f
     return 0;
 };
 
+bool CHDWallet::GetFullChainPath(const CExtKeyAccount *pa, size_t nChain, std::vector<uint32_t> &vPath) const
+{
+    vPath.clear();
+    if (!pa->idMaster.IsNull())
+    {
+        ExtKeyMap::const_iterator it = mapExtKeys.find(pa->idMaster);
+        if (it == mapExtKeys.end())
+        {
+            CBitcoinAddress addr;
+            addr.Set(pa->idMaster, CChainParams::EXT_KEY_HASH);
+            return error("%s: Unknown master key %s.", __func__, addr.ToString());
+        };
+        const CStoredExtKey *pSek = it->second;
+        if (0 != AppendPath(pSek, vPath))
+            return error("%s: AppendPath failed.", __func__);
+    };
+
+    const CStoredExtKey *sekChain = pa->GetChain(nChain);
+    if (!sekChain)
+        return error("%s: Unknown chain %d.", __func__, nChain);
+
+    if (0 != AppendPath(sekChain, vPath))
+        return error("%s: AppendPath failed.", __func__);
+    return true;
+};
+
 int CHDWallet::ScanChainFromTime(int64_t nTimeStartScan)
 {
     LogPrintf("%s: %d\n", __func__, nTimeStartScan);
@@ -11213,17 +11239,27 @@ int LoopExtAccountsInDB(CHDWallet *pwallet, bool fInactive, LoopExtKeyCallback &
     return 0;
 };
 
-bool IsHDWallet(CWallet *win)
+bool IsHDWallet(const CKeyStore *win)
 {
-    return win && dynamic_cast<CHDWallet*>(win);
+    return win && dynamic_cast<const CHDWallet*>(win);
 };
 
-CHDWallet *GetHDWallet(CWallet *win)
+CHDWallet *GetHDWallet(CKeyStore *win)
 {
     CHDWallet *rv;
     if (!win)
         throw std::runtime_error("Wallet pointer is null.");
     if (!(rv = dynamic_cast<CHDWallet*>(win)))
+        throw std::runtime_error("Wallet pointer is not an instance of class CHDWallet.");
+    return rv;
+};
+
+const CHDWallet *GetHDWallet(const CKeyStore *win)
+{
+    const CHDWallet *rv;
+    if (!win)
+        throw std::runtime_error("Wallet pointer is null.");
+    if (!(rv = dynamic_cast<const CHDWallet*>(win)))
         throw std::runtime_error("Wallet pointer is not an instance of class CHDWallet.");
     return rv;
 };

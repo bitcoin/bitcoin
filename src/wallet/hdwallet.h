@@ -598,6 +598,8 @@ public:
     int ExtKeyGetDestination(const CExtKeyPair &ek, CPubKey &pkDest, uint32_t &nKey);
     int ExtKeyUpdateLooseKey(const CExtKeyPair &ek, uint32_t nKey, bool fAddToAddressBook);
 
+    bool GetFullChainPath(const CExtKeyAccount *pa, size_t nChain, std::vector<uint32_t> &vPath) const;
+
     int ScanChainFromTime(int64_t nTimeStartScan);
     int ScanChainFromHeight(int nHeight);
 
@@ -759,7 +761,9 @@ public:
 int LoopExtKeysInDB(CHDWallet *pwallet, bool fInactive, bool fInAccount, LoopExtKeyCallback &callback);
 int LoopExtAccountsInDB(CHDWallet *pwallet, bool fInactive, LoopExtKeyCallback &callback);
 
-bool IsHDWallet(CWallet *win);
-CHDWallet *GetHDWallet(CWallet *win);
+bool IsHDWallet(const CKeyStore *win);
+CHDWallet *GetHDWallet(CKeyStore *win);
+const CHDWallet *GetHDWallet(const CKeyStore *win);
 
 #endif // PARTICL_WALLET_HDWALLET_H
+

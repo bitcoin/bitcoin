@@ -269,5 +269,46 @@ BOOST_AUTO_TEST_CASE(opiscoinstake_test)
     BOOST_CHECK(script_h256.IsPayToScriptHash256_CS());
 }
 
+BOOST_AUTO_TEST_CASE(varints)
+{
+    // encode
+
+    uint8_t c[128];
+    std::vector<uint8_t> v;
+
+    size_t size = 0;
+    for (int i = 0; i < 100000; i++) {
+        size_t sz = GetSizeOfVarInt(i);
+        BOOST_CHECK(sz = PutVarInt(c, i));
+        BOOST_CHECK(0 == PutVarInt(v, i));
+        BOOST_CHECK(0 == memcmp(c, &v[size], sz));
+        size += sz;
+        BOOST_CHECK(size == v.size());
+    }
+
+    for (uint64_t i = 0;  i < 100000000000ULL; i += 999999937) {
+        BOOST_CHECK(0 == PutVarInt(v, i));
+        size += GetSizeOfVarInt(i);
+        BOOST_CHECK(size == v.size());
+    }
+
+
+    // decode
+    size_t nB = 0, o = 0;
+    for (int i = 0; i < 100000; i++) {
+        uint64_t j = -1;
+        BOOST_CHECK(0 == GetVarInt(v, o, j, nB));
+        BOOST_CHECK_MESSAGE(i == (int)j, "decoded:" << j << " expected:" << i);
+        o += nB;
+    }
+
+    for (uint64_t i = 0;  i < 100000000000ULL; i += 999999937) {
+        uint64_t j = -1;
+        BOOST_CHECK(0 == GetVarInt(v, o, j, nB));
+        BOOST_CHECK_MESSAGE(i == j, "decoded:" << j << " expected:" << i);
+        o += nB;
+    }
+}
+
 
 BOOST_AUTO_TEST_SUITE_END()
