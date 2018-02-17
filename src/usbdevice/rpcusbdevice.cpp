@@ -583,7 +583,7 @@ static const CRPCCommand commands[] =
     { "usbdevice",          "getdevicepublickey",       &getdevicepublickey,       {"path","accountpath"} },
     { "usbdevice",          "getdevicexpub",            &getdevicexpub,            {"path","accountpath"} },
     { "usbdevice",          "devicesignmessage",        &devicesignmessage,        {"path","message","accountpath"} },
-    { "usbdevice",          "devicesignrawtransaction", &devicesignrawtransaction, {"path","message","accountpath"} },
+    { "usbdevice",          "devicesignrawtransaction", &devicesignrawtransaction, {"hexstring","prevtxs","privkeypaths","sighashtype","accountpath"} }, /* uses wallet if enabled */
 };
 
 void RegisterUSBDeviceRPC(CRPCTable &t)

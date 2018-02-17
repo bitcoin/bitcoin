@@ -1,53 +1,93 @@
-<TS language="en_US" version="2.1">
+<TS language="zh-Hans" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation>Right-click to edit address or label</translation>
+        <translation>右击编辑地址或标签</translation>
     </message>
     <message>
         <source>Create a new address</source>
-        <translation>Create a new address</translation>
+        <translation>创建一个新的地址</translation>
     </message>
     <message>
         <source>&amp;New</source>
-        <translation>&amp;New</translation>
+        <translation>新建</translation>
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation>Copy the currently selected address to the system clipboard</translation>
+        <translation>复制选定的地址到系统剪切板</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
-        <translation>&amp;Copy</translation>
+        <translation>复制</translation>
     </message>
     <message>
         <source>C&amp;lose</source>
-        <translation>C&amp;lose</translation>
+        <translation>关闭</translation>
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
-        <translation>Delete the currently selected address from the list</translation>
+        <translation>从列表删除选定的地址</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation>Export the data in the current tab to a file</translation>
+        <translation>导出当前数据到文件</translation>
     </message>
     <message>
         <source>&amp;Export</source>
-        <translation>&amp;Export</translation>
+        <translation>导出</translation>
     </message>
     <message>
         <source>&amp;Delete</source>
-        <translation>&amp;Delete</translation>
+        <translation>删除</translation>
     </message>
     <message>
         <source>Choose the address to send coins to</source>
-        <translation>选择你要发送币的目的地址</translation>
+        <translation>选择发送比特币地址</translation>
     </message>
     <message>
         <source>Choose the address to receive coins with</source>
-        <translation>选择接收币的地址</translation>
+        <translation>选择接收比特币地址</translation>
+    </message>
+    <message>
+        <source>C&amp;hoose</source>
+        <translation>选择</translation>
+    </message>
+    <message>
+        <source>Sending addresses</source>
+        <translation>发送地址</translation>
+    </message>
+    <message>
+        <source>Receiving addresses</source>
+        <translation>接收地址</translation>
+    </message>
+    <message>
+        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation>这是你的比特币发币地址。发送前请确认发送数量和接收地址</translation>
+    </message>
+    <message>
+        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
+        <translation>这是你的比特币接收地址。建议每次交易都使用新地址</translation>
+    </message>
+    <message>
+        <source>&amp;Copy Address</source>
+        <translation>复制地址</translation>
+    </message>
+    <message>
+        <source>Copy &amp;Label</source>
+        <translation>复制标签</translation>
+    </message>
+    <message>
+        <source>&amp;Edit</source>
+        <translation>编辑</translation>
+    </message>
+    <message>
+        <source>Export Address List</source>
+        <translation>导出地址列表</translation>
+    </message>
+    <message>
+        <source>Exporting Failed</source>
+        <translation>导出失败</translation>
     </message>
     </context>
 <context>
@@ -56,20 +96,8 @@
 <context>
     <name>AskPassphraseDialog</name>
     <message>
-        <source>Passphrase Dialog</source>
-        <translation>Passphrase Dialog</translation>
-    </message>
-    <message>
-        <source>Enter passphrase</source>
-        <translation>Enter passphrase</translation>
-    </message>
-    <message>
-        <source>New passphrase</source>
-        <translation>New passphrase</translation>
-    </message>
-    <message>
-        <source>Repeat new passphrase</source>
-        <translation>Repeat new passphrase</translation>
+        <source>Encrypt wallet</source>
+        <translation>加密钱包</translation>
     </message>
     </context>
 <context>
@@ -164,6 +192,10 @@
     </context>
 <context>
     <name>TransactionView</name>
+    <message>
+        <source>Exporting Failed</source>
+        <translation>导出失败</translation>
+    </message>
     </context>
 <context>
     <name>UnitDisplayStatusBarControl</name>
@@ -178,11 +210,11 @@
     <name>WalletView</name>
     <message>
         <source>&amp;Export</source>
-        <translation>&amp;Export</translation>
+        <translation>导出</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation>Export the data in the current tab to a file</translation>
+        <translation>导出当前数据到文件</translation>
     </message>
     </context>
 <context>

@@ -32,6 +32,10 @@
     </context>
 <context>
     <name>Intro</name>
+    <message>
+        <source>Particl</source>
+        <translation>Particl</translation>
+    </message>
     </context>
 <context>
     <name>ModalOverlay</name>

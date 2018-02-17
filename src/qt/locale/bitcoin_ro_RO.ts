@@ -3198,6 +3198,14 @@
         <translation>Nu se poate obține o blocare a directorului de date %s. %s probabil rulează deja.</translation>
     </message>
     <message>
+        <source>Cannot provide specific connections and have addrman find outgoing connections at the same.</source>
+        <translation>Nu se pot furniza conexiuni specifice in acelasi timp in care addrman este folosit pentru a gasi conexiuni de iesire.</translation>
+    </message>
+    <message>
+        <source>Connect only to the specified node(s); -connect=0 disables automatic connections (the rules for this peer are the same as for -addnode)</source>
+        <translation>Conectare doar la nodul(rile) specificate; -connect=0 dezactiveaza conexiuni automate (regula pentru aceasta pereche este aceiasi ca pentru -addnode)</translation>
+    </message>
+    <message>
         <source>Delete all wallet transactions and only recover those parts of the blockchain through -rescan on startup</source>
         <translation>Sterge toate tranzactiile din portofel si recupereaza doar acele parti din blockchain prin -rescan la startup</translation>
     </message>
@@ -3386,6 +3394,10 @@
         <translation>Activeaza inlocuirea tranzactiei in mempool (implicit: %u)</translation>
     </message>
     <message>
+        <source>Error creating %s: You can't create non-HD wallets with this version.</source>
+        <translation>Eroare la crearea %s: Nu se pot crea portofele non-HD cu aceasta versiune.</translation>
+    </message>
+    <message>
         <source>Error initializing block database</source>
         <translation>Eroare la iniţializarea bazei de date de blocuri</translation>
     </message>
@@ -3420,6 +3432,10 @@
     <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation>Nu s-a reuşit ascultarea pe orice port. Folosiţi -listen=0 dacă vreţi asta.</translation>
+    </message>
+    <message>
+        <source>Failed to rescan the wallet during initialization</source>
+        <translation>Rescanarea portofelului in timpul initializarii a esuat.</translation>
     </message>
     <message>
         <source>Importing...</source>
@@ -3500,6 +3516,10 @@
     <message>
         <source>Rewinding blocks...</source>
         <translation>Se deruleaza blocurile...</translation>
+    </message>
+    <message>
+        <source>Send transactions with full-RBF opt-in enabled (RPC only, default: %u)</source>
+        <translation>Trimite tranzactii cu optiunea full-RBF activata (doar RPC, implicit: %u)</translation>
     </message>
     <message>
         <source>Set database cache size in megabytes (%d to %d, default: %d)</source>
@@ -3714,6 +3734,14 @@
         <translation>Nu s-a reuşit semnarea tranzacţiei</translation>
     </message>
     <message>
+        <source>Specified -walletdir "%s" does not exist</source>
+        <translation>Nu exista -walletdir "%s" specificat</translation>
+    </message>
+    <message>
+        <source>Specified -walletdir "%s" is a relative path</source>
+        <translation>-walletdir "%s" specificat este o cale relativa</translation>
+    </message>
+    <message>
         <source>The transaction amount is too small to pay the fee</source>
         <translation>Suma tranzactiei este prea mica pentru plata taxei</translation>
     </message>
@@ -3746,6 +3774,10 @@
         <translation>Nu se poate lega la %s pe acest calculator. (Legarea a întors eroarea %s)</translation>
     </message>
     <message>
+        <source>Unable to generate initial keys</source>
+        <translation>Nu s-au putut genera cheile initiale</translation>
+    </message>
+    <message>
         <source>Upgrade wallet to latest format on startup</source>
         <translation>Actualizează portofelul la ultimul format la pornire</translation>
     </message>
@@ -3756,6 +3788,10 @@
     <message>
         <source>Verifying wallet(s)...</source>
         <translation>Se verifică portofelul(ele)...</translation>
+    </message>
+    <message>
+        <source>Wallet %s resides outside wallet directory %s</source>
+        <translation>Portofelul %s se află în afara directorului portofelului %s</translation>
     </message>
     <message>
         <source>Warning</source>
@@ -3846,8 +3882,20 @@
         <translation>Produce toate informaţiile de depanare (implicit: %u &lt;category&gt; furnizată este opţională)</translation>
     </message>
     <message>
+        <source>Set maximum BIP141 block weight to this * 4. Deprecated, use blockmaxweight</source>
+        <translation>Seteaza greutatea maxima a blocurilor BIP141 la aceasta valoare *4. In caz de depreciere, foloseste blockmaxwheight</translation>
+    </message>
+    <message>
         <source>Sets the serialization of raw transaction or block hex returned in non-verbose mode, non-segwit(0) or segwit(1) (default: %d)</source>
         <translation>Stabileste serializarea tranzactiilor brute sau hexul blocurile returnate in mod non-verbose, non-segwit(0) sau segwit(1) (implicit: %d)</translation>
+    </message>
+    <message>
+        <source>Specify directory to hold wallets (default: &lt;datadir&gt;/wallets if it exists, otherwise &lt;datadir&gt;)</source>
+        <translation>Specifica directorul in care vor fi tinute portofelele (implicit:&lt;datadir&gt;/wallets daca exista, alternativ &lt;datadir&gt;)</translation>
+    </message>
+    <message>
+        <source>Specify location of debug log file: this can be an absolute path or a path relative to the data directory (default: %s)</source>
+        <translation>Specifica locatia fisierului de log pentru depanare: aceasta poate fi o cale absoluta sau o cale relativa la directorul de date (implicit: %s)</translation>
     </message>
     <message>
         <source>Support filtering of blocks and transaction with bloom filters (default: %u)</source>

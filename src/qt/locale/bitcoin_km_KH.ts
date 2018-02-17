@@ -1,82 +1,102 @@
-<TS language="en_US" version="2.1">
+<TS language="km_KH" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation>Right-click to edit address or label</translation>
+        <translation>ចុចខាងស្តាំដើម្បីកែអាស្រយដ្ឋាន​ ឬ ស្លាក</translation>
     </message>
     <message>
         <source>Create a new address</source>
-        <translation>Create a new address</translation>
+        <translation>  បង្កើតអាស្រយដ្ឋានថ្មីមួយ</translation>
     </message>
     <message>
         <source>&amp;New</source>
-        <translation>&amp;New</translation>
+        <translation>&amp;ថ្មី</translation>
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation>Copy the currently selected address to the system clipboard</translation>
+        <translation>ចម្លងអាសយដ្ឋានដែលបានរើស</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
-        <translation>&amp;Copy</translation>
+        <translation>&amp;ចម្លង</translation>
     </message>
     <message>
         <source>C&amp;lose</source>
-        <translation>C&amp;lose</translation>
+        <translation>&amp;បិទ</translation>
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
-        <translation>Delete the currently selected address from the list</translation>
-    </message>
-    <message>
-        <source>Export the data in the current tab to a file</source>
-        <translation>Export the data in the current tab to a file</translation>
+        <translation>លុប​អាសយដ្ឋានដែល​បាន​រើស​ពី​បញ្ជី</translation>
     </message>
     <message>
         <source>&amp;Export</source>
-        <translation>&amp;Export</translation>
+        <translation>&amp;នាំចេញ</translation>
     </message>
     <message>
         <source>&amp;Delete</source>
-        <translation>&amp;Delete</translation>
+        <translation>&amp;លុប</translation>
     </message>
     <message>
-        <source>Choose the address to send coins to</source>
-        <translation>选择你要发送币的目的地址</translation>
+        <source>Sending addresses</source>
+        <translation>អាសយដ្ឋានផ្ញើ</translation>
     </message>
     <message>
-        <source>Choose the address to receive coins with</source>
-        <translation>选择接收币的地址</translation>
+        <source>Receiving addresses</source>
+        <translation>អាសយដ្ឋានទទួួល</translation>
     </message>
     </context>
 <context>
     <name>AddressTableModel</name>
+    <message>
+        <source>Address</source>
+        <translation>អាសយដ្ឋាន</translation>
+    </message>
     </context>
 <context>
     <name>AskPassphraseDialog</name>
     <message>
-        <source>Passphrase Dialog</source>
-        <translation>Passphrase Dialog</translation>
-    </message>
-    <message>
         <source>Enter passphrase</source>
-        <translation>Enter passphrase</translation>
+        <translation>បញ្ចូលពាក្យសម្ងាត់</translation>
     </message>
     <message>
         <source>New passphrase</source>
-        <translation>New passphrase</translation>
+        <translation>ពាក្យសម្ងាត់ថ្មី</translation>
     </message>
     <message>
         <source>Repeat new passphrase</source>
-        <translation>Repeat new passphrase</translation>
+        <translation>វាយពាក្យសម្ងាត់ម្ដងទៀត</translation>
+    </message>
+    <message>
+        <source>Unlock wallet</source>
+        <translation>ដោះសោរកាបូបលុយ</translation>
+    </message>
+    <message>
+        <source>Change passphrase</source>
+        <translation>ប្ដូរពាក្យសម្ងាត់</translation>
+    </message>
+    <message>
+        <source>Wallet unlock failed</source>
+        <translation>បរាជ័យដោះសោរកាបូប</translation>
     </message>
     </context>
 <context>
     <name>BanTableModel</name>
-    </context>
+    <message>
+        <source>Banned Until</source>
+        <translation>ផ្អាកដល់</translation>
+    </message>
+</context>
 <context>
     <name>BitcoinGUI</name>
+    <message>
+        <source>Send coins to a Bitcoin address</source>
+        <translation>ផ្ញើកាក់ទៅកាន់ អាសយដ្ឋាន Bitcoin មួយ</translation>
+    </message>
+    <message>
+        <source>Wallet</source>
+        <translation>កាបូប</translation>
+    </message>
     </context>
 <context>
     <name>CoinControlDialog</name>
@@ -128,6 +148,10 @@
     </context>
 <context>
     <name>ReceiveRequestDialog</name>
+    <message>
+        <source>Address</source>
+        <translation>អាសយដ្ឋាន</translation>
+    </message>
     </context>
 <context>
     <name>RecentRequestsTableModel</name>
@@ -164,6 +188,10 @@
     </context>
 <context>
     <name>TransactionView</name>
+    <message>
+        <source>Address</source>
+        <translation>អាសយដ្ឋាន</translation>
+    </message>
     </context>
 <context>
     <name>UnitDisplayStatusBarControl</name>
@@ -178,11 +206,7 @@
     <name>WalletView</name>
     <message>
         <source>&amp;Export</source>
-        <translation>&amp;Export</translation>
-    </message>
-    <message>
-        <source>Export the data in the current tab to a file</source>
-        <translation>Export the data in the current tab to a file</translation>
+        <translation>&amp;នាំចេញ</translation>
     </message>
     </context>
 <context>

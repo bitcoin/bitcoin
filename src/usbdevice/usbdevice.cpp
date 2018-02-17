@@ -459,7 +459,7 @@ int CUSBDevice::SignTransaction(hid_device *handle, const std::vector<uint32_t> 
     memcpy(&fakeamount[0], &nFakeValue, 8);
     // The total input amount is checked when processing the outputs, pass a large fake value here to bypass
 
-    for (int i = 0; i < tx->vin.size(); ++i)
+    for (size_t i = 0; i < tx->vin.size(); ++i)
     {
         printf("\ntxin %d\n", i);
         const auto &txin = tx->vin[i];
@@ -483,7 +483,7 @@ int CUSBDevice::SignTransaction(hid_device *handle, const std::vector<uint32_t> 
         memcpy(&in[apduSize], fakeamount.data(), amount.size());
         apduSize += fakeamount.size();
 
-        if (i == nIn)
+        if ((int)i == nIn)
         {
             apduSize += PutVarInt(&in[apduSize], scriptCode.size());
         } else
@@ -499,7 +499,7 @@ int CUSBDevice::SignTransaction(hid_device *handle, const std::vector<uint32_t> 
 
         size_t offset = 0;
         const size_t blockLength = 255;
-        if (i == nIn)
+        if ((int)i == nIn)
         while(offset < scriptCode.size())
         {
             size_t dataLength = (offset + blockLength) < scriptCode.size()
@@ -710,12 +710,11 @@ int CUSBDevice::SignTransaction(const std::vector<uint32_t> &vPath, const CTrans
     int nIn, const CScript &scriptCode, int hashType, const std::vector<uint8_t> &amount, SigVersion sigversion,
     std::vector<uint8_t> &vchSig, std::string &sError)
 {
-    if (nIn > tx->vin.size())
+    if (nIn > (int)tx->vin.size())
         return errorN(1, sError, __func__, _("nIn out of range.").c_str());
 
     if (vPath.size() < 1 || vPath.size() > MAX_BIP32_PATH) // 10, in firmware
         return errorN(1, sError, __func__, _("Path depth out of range.").c_str());
-    size_t lenPath = vPath.size();
 
     if (0 != Open())
         return errorN(1, sError, __func__, "Failed to open device.");

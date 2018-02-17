@@ -30,6 +30,22 @@
         <translation>ప్రస్తుతం ఎంచుకున్న చిరునామా ను జాబితా నుండి తీసివేయండి</translation>
     </message>
     <message>
+        <source>&amp;Export</source>
+        <translation>ఎగుమతి చేయండి</translation>
+    </message>
+    <message>
+        <source>&amp;Delete</source>
+        <translation>తొలగించండి</translation>
+    </message>
+    <message>
+        <source>Choose the address to send coins to</source>
+        <translation>కోయిన్స్ పంపుటకు చిరునామా ను ఎంచుకోండి</translation>
+    </message>
+    <message>
+        <source>C&amp;hoose</source>
+        <translation>ఎంచుకోండి</translation>
+    </message>
+    <message>
         <source>Sending addresses</source>
         <translation>పంపించే చిరునామాలు</translation>
     </message>
@@ -46,6 +62,10 @@
         <translation>ఇవి మీరు అందుకునే చెల్లింపుల బిట్‌కాయిన్ చిరునామాలు. ప్రతీ లావాదేవీకి క్రొత్త అందుకునే చిరునామా వాడటం మంచిది.</translation>
     </message>
     <message>
+        <source>&amp;Edit</source>
+        <translation>సవరించు</translation>
+    </message>
+    <message>
         <source>Export Address List</source>
         <translation>చిరునామా జాబితాను ఎగుమతి చేయండి</translation>
     </message>
@@ -59,6 +79,10 @@
     <message>
         <source>Label</source>
         <translation>ఉల్లాకు</translation>
+    </message>
+    <message>
+        <source>Address</source>
+        <translation>చిరునామా</translation>
     </message>
     </context>
 <context>
@@ -84,6 +108,10 @@
         <translation>జోలెకు క్రొత్త సంకేతపదము ఇవ్వండి.&lt;br/&gt; &lt;b&gt;పది లేదా ఎక్కువ యాదృచ్ఛిక అక్షరాలు&lt;/b&gt;, లేక &lt;b&gt;ఎనిమిది కంటే ఎక్కువ పదాలు&lt;/b&gt; కలిగి ఉన్న సంకేతపదము దయచేసి వాడండి.</translation>
     </message>
     <message>
+        <source>Unlock wallet</source>
+        <translation>వాలెట్ అన్లాక్</translation>
+    </message>
+    <message>
         <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
         <translation>హెచ్చరిక: మీ జోలెని సంకేతపరిచి మీ సంకేతపదము కోల్పోతే, &lt;b&gt;మీ బిట్‌కాయిన్లు అన్నీ కోల్పోతారు&lt;/b&gt;</translation>
     </message>
@@ -105,6 +133,22 @@
     </context>
 <context>
     <name>BitcoinGUI</name>
+    <message>
+        <source>E&amp;xit</source>
+        <translation>నిష్క్రమించు</translation>
+    </message>
+    <message>
+        <source>Bitcoin</source>
+        <translation>బిట్కోయిన్</translation>
+    </message>
+    <message>
+        <source>Wallet</source>
+        <translation>వాలెట్</translation>
+    </message>
+    <message>
+        <source>&amp;Send</source>
+        <translation>పంపు</translation>
+    </message>
     <message>
         <source>Error</source>
         <translation>లోపం</translation>
@@ -136,6 +180,10 @@
         <source>Quantity:</source>
         <translation>పరిమాణం</translation>
     </message>
+    <message>
+        <source>Date</source>
+        <translation>తేదీ</translation>
+    </message>
     </context>
 <context>
     <name>EditAddressDialog</name>
@@ -149,6 +197,10 @@
 <context>
     <name>Intro</name>
     <message>
+        <source>Bitcoin</source>
+        <translation>బిట్కోయిన్</translation>
+    </message>
+    <message>
         <source>Error</source>
         <translation>లోపం</translation>
     </message>
@@ -161,6 +213,10 @@
     </context>
 <context>
     <name>OptionsDialog</name>
+    <message>
+        <source>Error</source>
+        <translation>లోపం</translation>
+    </message>
     </context>
 <context>
     <name>OverviewPage</name>
@@ -173,7 +229,11 @@
     </context>
 <context>
     <name>QObject</name>
-    </context>
+    <message>
+        <source>unknown</source>
+        <translation>తెలియదు</translation>
+    </message>
+</context>
 <context>
     <name>QObject::QObject</name>
     </context>
@@ -189,15 +249,31 @@
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
+        <source>Address</source>
+        <translation>చిరునామా</translation>
+    </message>
+    <message>
         <source>Label</source>
         <translation>ఉల్లాకు</translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation>సందేశం</translation>
     </message>
     </context>
 <context>
     <name>RecentRequestsTableModel</name>
     <message>
+        <source>Date</source>
+        <translation>తేదీ</translation>
+    </message>
+    <message>
         <source>Label</source>
         <translation>ఉల్లాకు</translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation>సందేశం</translation>
     </message>
     </context>
 <context>
@@ -227,12 +303,44 @@
     </context>
 <context>
     <name>TransactionDesc</name>
+    <message>
+        <source>Status</source>
+        <translation>స్థితి</translation>
+    </message>
+    <message>
+        <source>Date</source>
+        <translation>తేదీ</translation>
+    </message>
+    <message>
+        <source>From</source>
+        <translation>నుండి</translation>
+    </message>
+    <message>
+        <source>unknown</source>
+        <translation>తెలియదు</translation>
+    </message>
+    <message>
+        <source>To</source>
+        <translation>కు</translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation>సందేశం</translation>
+    </message>
+    <message>
+        <source>Merchant</source>
+        <translation>వర్తకుడు</translation>
+    </message>
     </context>
 <context>
     <name>TransactionDescDialog</name>
     </context>
 <context>
     <name>TransactionTableModel</name>
+    <message>
+        <source>Date</source>
+        <translation>తేదీ</translation>
+    </message>
     <message>
         <source>Label</source>
         <translation>ఉల్లాకు</translation>
@@ -241,8 +349,20 @@
 <context>
     <name>TransactionView</name>
     <message>
+        <source>Date</source>
+        <translation>తేదీ</translation>
+    </message>
+    <message>
         <source>Label</source>
         <translation>ఉల్లాకు</translation>
+    </message>
+    <message>
+        <source>Address</source>
+        <translation>చిరునామా</translation>
+    </message>
+    <message>
+        <source>ID</source>
+        <translation>గుర్తింపు</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
@@ -260,9 +380,17 @@
     </context>
 <context>
     <name>WalletView</name>
+    <message>
+        <source>&amp;Export</source>
+        <translation>ఎగుమతి చేయండి</translation>
+    </message>
     </context>
 <context>
     <name>bitcoin-core</name>
+    <message>
+        <source>Particl Core</source>
+        <translation>బిట్కోయిన్ కోర్</translation>
+    </message>
     <message>
         <source>Information</source>
         <translation>వర్తమానము</translation>

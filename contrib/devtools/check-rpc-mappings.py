@@ -22,6 +22,7 @@ SOURCES = [
     "src/wallet/rpchdwallet.cpp",
     "src/rpc/mnemonic.cpp",
     "src/smsg/rpcsmessage.cpp",
+    "src/usbdevice/rpcusbdevice.cpp",
 ]
 
 # Source file (relative to root) containing conversion mapping
