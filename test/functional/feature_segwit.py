@@ -96,7 +96,7 @@ class SegWitTest(BitcoinTestFramework):
         wit_ids = [] # wit_ids[NODE][VER] is an array of txids that spend to a witness version VER pkscript to an address for NODE via bare witness
         for i in range(3):
             newaddress = self.nodes[i].getnewaddress()
-            self.pubkey.append(self.nodes[i].validateaddress(newaddress)["pubkey"])
+            self.pubkey.append(self.nodes[i].getaddressinfo(newaddress)["pubkey"])
             multiscript = CScript([OP_1, hex_str_to_bytes(self.pubkey[-1]), OP_1, OP_CHECKMULTISIG])
             p2sh_addr = self.nodes[i].addwitnessaddress(newaddress)
             bip173_addr = self.nodes[i].addwitnessaddress(newaddress, False)
@@ -274,8 +274,8 @@ class SegWitTest(BitcoinTestFramework):
         uncompressed_spendable_address = ["mvozP4UwyGD2mGZU4D2eMvMLPB9WkMmMQu"]
         self.nodes[0].importprivkey("cNC8eQ5dg3mFAVePDX4ddmPYpPbw41r9bm2jd1nLJT77e6RrzTRR")
         compressed_spendable_address = ["mmWQubrDomqpgSYekvsU7HWEVjLFHAakLe"]
-        assert ((self.nodes[0].validateaddress(uncompressed_spendable_address[0])['iscompressed'] == False))
-        assert ((self.nodes[0].validateaddress(compressed_spendable_address[0])['iscompressed'] == True))
+        assert ((self.nodes[0].getaddressinfo(uncompressed_spendable_address[0])['iscompressed'] == False))
+        assert ((self.nodes[0].getaddressinfo(compressed_spendable_address[0])['iscompressed'] == True))
 
         self.nodes[0].importpubkey(pubkeys[0])
         compressed_solvable_address = [key_to_p2pkh(pubkeys[0])]
@@ -308,7 +308,7 @@ class SegWitTest(BitcoinTestFramework):
         solvable_after_importaddress.append(CScript([OP_HASH160, hash160(script), OP_EQUAL]))
 
         for i in compressed_spendable_address:
-            v = self.nodes[0].validateaddress(i)
+            v = self.nodes[0].getaddressinfo(i)
             if (v['isscript']):
                 [bare, p2sh, p2wsh, p2sh_p2wsh] = self.p2sh_address_to_script(v)
                 # bare and p2sh multisig with compressed keys should always be spendable
@@ -325,7 +325,7 @@ class SegWitTest(BitcoinTestFramework):
                 spendable_anytime.extend([p2wpkh, p2sh_p2wpkh])
 
         for i in uncompressed_spendable_address:
-            v = self.nodes[0].validateaddress(i)
+            v = self.nodes[0].getaddressinfo(i)
             if (v['isscript']):
                 [bare, p2sh, p2wsh, p2sh_p2wsh] = self.p2sh_address_to_script(v)
                 # bare and p2sh multisig with uncompressed keys should always be spendable
@@ -342,7 +342,7 @@ class SegWitTest(BitcoinTestFramework):
                 unseen_anytime.extend([p2wpkh, p2sh_p2wpkh, p2wsh_p2pk, p2wsh_p2pkh, p2sh_p2wsh_p2pk, p2sh_p2wsh_p2pkh])
 
         for i in compressed_solvable_address:
-            v = self.nodes[0].validateaddress(i)
+            v = self.nodes[0].getaddressinfo(i)
             if (v['isscript']):
                 # Multisig without private is not seen after addmultisigaddress, but seen after importaddress
                 [bare, p2sh, p2wsh, p2sh_p2wsh] = self.p2sh_address_to_script(v)
@@ -355,7 +355,7 @@ class SegWitTest(BitcoinTestFramework):
                 solvable_after_importaddress.extend([p2sh_p2pk, p2sh_p2pkh, p2wsh_p2pk, p2wsh_p2pkh, p2sh_p2wsh_p2pk, p2sh_p2wsh_p2pkh])
 
         for i in uncompressed_solvable_address:
-            v = self.nodes[0].validateaddress(i)
+            v = self.nodes[0].getaddressinfo(i)
             if (v['isscript']):
                 [bare, p2sh, p2wsh, p2sh_p2wsh] = self.p2sh_address_to_script(v)
                 # Base uncompressed multisig without private is not seen after addmultisigaddress, but seen after importaddress
@@ -395,7 +395,7 @@ class SegWitTest(BitcoinTestFramework):
 
         importlist = []
         for i in compressed_spendable_address + uncompressed_spendable_address + compressed_solvable_address + uncompressed_solvable_address:
-            v = self.nodes[0].validateaddress(i)
+            v = self.nodes[0].getaddressinfo(i)
             if (v['isscript']):
                 bare = hex_str_to_bytes(v['hex'])
                 importlist.append(bytes_to_hex_str(bare))
@@ -473,7 +473,7 @@ class SegWitTest(BitcoinTestFramework):
         premature_witaddress = []
 
         for i in compressed_spendable_address:
-            v = self.nodes[0].validateaddress(i)
+            v = self.nodes[0].getaddressinfo(i)
             if (v['isscript']):
                 [bare, p2sh, p2wsh, p2sh_p2wsh] = self.p2sh_address_to_script(v)
                 # P2WSH and P2SH(P2WSH) multisig with compressed keys are spendable after addwitnessaddress
@@ -485,7 +485,7 @@ class SegWitTest(BitcoinTestFramework):
                 spendable_anytime.extend([p2wpkh, p2sh_p2wpkh])
 
         for i in uncompressed_spendable_address + uncompressed_solvable_address:
-            v = self.nodes[0].validateaddress(i)
+            v = self.nodes[0].getaddressinfo(i)
             if (v['isscript']):
                 [bare, p2sh, p2wsh, p2sh_p2wsh] = self.p2sh_address_to_script(v)
                 # P2WSH and P2SH(P2WSH) multisig with uncompressed keys are never seen
@@ -496,7 +496,7 @@ class SegWitTest(BitcoinTestFramework):
                 unseen_anytime.extend([p2wpkh, p2sh_p2wpkh])
 
         for i in compressed_solvable_address:
-            v = self.nodes[0].validateaddress(i)
+            v = self.nodes[0].getaddressinfo(i)
             if (v['isscript']):
                 # P2WSH multisig without private key are seen after addwitnessaddress
                 [bare, p2sh, p2wsh, p2sh_p2wsh] = self.p2sh_address_to_script(v)
@@ -519,7 +519,7 @@ class SegWitTest(BitcoinTestFramework):
             assert_raises_rpc_error(-4, "Public key or redeemscript not known to wallet, or the key is uncompressed", self.nodes[0].addwitnessaddress, i)
 
         # after importaddress it should pass addwitnessaddress
-        v = self.nodes[0].validateaddress(compressed_solvable_address[1])
+        v = self.nodes[0].getaddressinfo(compressed_solvable_address[1])
         self.nodes[0].importaddress(v['hex'],"",False,True)
         for i in compressed_spendable_address + compressed_solvable_address + premature_witaddress:
             witaddress = self.nodes[0].addwitnessaddress(i)
