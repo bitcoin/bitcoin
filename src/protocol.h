@@ -278,7 +278,6 @@ enum ServiceFlags : uint64_t {
     // BIP process.
 };
 
-extern std::atomic<bool> g_initial_block_download_completed;
 /**
  * Gets the set of service flags which are "desirable" for a given peer.
  *
@@ -303,12 +302,10 @@ extern std::atomic<bool> g_initial_block_download_completed;
  * If the NODE_NONE return value is changed, contrib/seeds/makeseeds.py
  * should be updated appropriately to filter for the same nodes.
  */
-static ServiceFlags GetDesirableServiceFlags(ServiceFlags services) {
-    if ((services & NODE_NETWORK_LIMITED) && g_initial_block_download_completed) {
-        return ServiceFlags(NODE_NETWORK_LIMITED | NODE_WITNESS);
-    }
-    return ServiceFlags(NODE_NETWORK | NODE_WITNESS);
-}
+ServiceFlags GetDesirableServiceFlags(ServiceFlags services);
+
+/** Set the current IBD status in order to figure out the desirable service flags */
+void SetServiceFlagsIBDCache(bool status);
 
 /**
  * A shortcut for (services & GetDesirableServiceFlags(services))
