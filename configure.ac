@@ -1321,7 +1321,11 @@ unset PKG_CONFIG_LIBDIR
 PKG_CONFIG_LIBDIR="$PKGCONFIG_LIBDIR_TEMP"
 
 if test x$need_bundled_univalue = xyes; then
-  AX_SUBDIRS_CONFIGURE([src/univalue])
+  dnl CXX might've been modified above to force a c++ std version, one that may
+  dnl not match the version that univalue would use. Pass ours down, overriding
+  dnl any manually set value, since this one can only be an improvement.
+  dnl ac_cv_prog_CXX is used rather than CXX to avoid breaking the config cache.
+  AX_SUBDIRS_CONFIGURE([src/univalue],[],[],[[ac_cv_prog_CXX=${CXX}]])
 fi
 
 AX_SUBDIRS_CONFIGURE([src/secp256k1],[[--disable-shared],[--with-pic],[--with-bignum=no],[--enable-module-recovery],[--disable-jni]])
