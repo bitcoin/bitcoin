@@ -1303,7 +1303,7 @@ void BitcoinGUI::handleRestart(QStringList args)
 
 void BitcoinGUI::checkUpdate()
 {
-    if (updater.Check())
+    if (updater.GetStatus() != boost::none && updater.GetStatus())
     {
         UpdateDialog::GetInstance()->setCurrentVersion(QString::fromStdString(FormatVersion(CLIENT_VERSION)));
         UpdateDialog::GetInstance()->setUpdateVersion(QString::fromStdString(FormatVersion(updater.GetVersion())));

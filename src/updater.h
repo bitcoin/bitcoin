@@ -31,7 +31,7 @@ public:
         MAC_OS,
     };
     Updater();
-    boost::optional<bool> Check();
+    boost::optional<bool> GetStatus();
     int GetVersion() const
     {
         return version;
@@ -71,6 +71,7 @@ private:
     std::string GetUrl(const Value& value);
     std::string GetSha256sum(Value value);
     void SetCAPath(CURL* curl);
+    void CheckAndUpdateStatus(const std::string& updateData);
 };
 
 #endif

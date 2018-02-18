@@ -116,27 +116,27 @@ bool Updater::LoadUpdateInfo()
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, GetUpdateData);
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, &updateData);
         res = curl_easy_perform(curl);
+        if (res == CURLE_OK)
+        {
+            long response_code;
+            curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
+            if (response_code == 200)
+            {
+                CheckAndUpdateStatus(updateData);
+                result = true;
+            }
+            else
+            {
+                LogPrintf("Updater::GetUpdateInfo() - Error! Server response code - %d\n", response_code);
+            }
+        }
+        else
+        {
+            LogPrintf("Updater::GetUpdateInfo() - Error! Couldn't get data json. Error code - %d\n", res);
+        }
         curl_easy_cleanup(curl);
     }
 
-    if (res == CURLE_OK)
-    {
-        jsonData = ParseJson(updateData);
-        version = GetVersionFromJson();
-        LogPrintf("Updater::GetUpdateInfo() - Got version from json: %d\n", version);
-        if (version > CLIENT_VERSION && NeedToBeUpdated())
-        {
-            LogPrintf("Updater::GetUpdateInfo() - Version is old\n");
-            // There is an update
-            status = true;
-        }
-        result = true;
-    }
-    else 
-    {
-        LogPrintf("Updater::GetUpdateInfo() - Error! Couldn't get data json. Error code - %d\n", res);
-        result = false;
-    }
     return result;
 }
 
@@ -271,7 +271,20 @@ void Updater::StopDownload()
     stopDownload = true;
 }
 
-boost::optional<bool> Updater::Check()
+void Updater::CheckAndUpdateStatus(const std::string& updateData)
+{
+    jsonData = ParseJson(updateData);
+    version = GetVersionFromJson();
+    LogPrintf("Updater::GetUpdateInfo() - Got version from json: %d\n", version);
+    if (version > CLIENT_VERSION && NeedToBeUpdated())
+    {
+        LogPrintf("Updater::GetUpdateInfo() - Version is old\n");
+        // There is an update
+        status = true;
+    }
+}
+
+boost::optional<bool> Updater::GetStatus()
 {
     boost::optional<bool> result = boost::none;
     if (LoadUpdateInfo())
