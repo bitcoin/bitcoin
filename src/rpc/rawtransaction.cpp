@@ -698,7 +698,7 @@ UniValue signrawtransaction(const JSONRPCRequest& request)
             "         \"txid\":\"id\",             (string, required) The transaction id\n"
             "         \"vout\":n,                  (numeric, required) The output number\n"
             "         \"scriptPubKey\": \"hex\",   (string, required) script key\n"
-            "         \"redeemScript\": \"hex\",   (string, required for P2SH or P2WSH) redeem script\n"
+            "         \"redeemScript\": \"hex\" | [\"hex\", ... ],   (string or array, required for P2SH or P2WSH) redeem script\n"
             "         \"amount\": value            (numeric, required) The amount spent\n"
             "       }\n"
             "       ,...\n"
@@ -833,20 +833,28 @@ UniValue signrawtransaction(const JSONRPCRequest& request)
                 view.AddCoin(out, std::move(newcoin), true);
             }
 
-            // if redeemScript given and not using the local wallet (private keys
-            // given), add redeemScript to the tempKeystore so it can be signed:
-            if (fGivenKeys && (scriptPubKey.IsPayToScriptHash() || scriptPubKey.IsPayToWitnessScriptHash())) {
-                RPCTypeCheckObj(prevOut,
-                    {
-                        {"txid", UniValueType(UniValue::VSTR)},
-                        {"vout", UniValueType(UniValue::VNUM)},
-                        {"scriptPubKey", UniValueType(UniValue::VSTR)},
-                        {"redeemScript", UniValueType(UniValue::VSTR)},
-                    });
-                UniValue v = find_value(prevOut, "redeemScript");
-                if (!v.isNull()) {
-                    std::vector<unsigned char> rsData(ParseHexV(v, "redeemScript"));
-                    CScript redeemScript(rsData.begin(), rsData.end());
+            // if redeemScript given add redeemScript to the tempKeystore so it can be signed:
+            UniValue rs = find_value(prevOut, "redeemScript");
+            if (rs.getType() != UniValue::VNULL) {
+                if (!(scriptPubKey.IsPayToScriptHash() || scriptPubKey.IsPayToWitnessScriptHash())) {
+                    // if this isnt P2SH or P2WSH, scripts should not be provided
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, "Scripts should not be provided if P2SH or P2WSH are not being used");
+                } else if (!fGivenKeys) {
+                    // if private keys aren't given, assume we are using the local wallet, so we don't currently support accepting scripts
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, "Scripts cannot be provided when using local wallet (no keys given)");
+                }
+                std::vector<std::string> scripts;
+                if (rs.getType() == UniValue::VARR) {
+                    // If redeemScript is an array, iterate over all scripts provided
+                    for (const auto& r : rs.getValues()) {
+                        scripts.push_back(r.get_str());
+                    }
+                } else {
+                    scripts.push_back(rs.get_str());
+                }
+                for (const std::string& script : scripts) {
+                    std::vector<unsigned char> script_data(ParseHexV(script, "redeemScript"));
+                    CScript redeemScript(script_data.begin(), script_data.end());
                     tempKeystore.AddCScript(redeemScript);
                     // Automatically also add the P2WSH wrapped version of the script (to deal with P2SH-P2WSH).
                     tempKeystore.AddCScript(GetScriptForWitness(redeemScript));
