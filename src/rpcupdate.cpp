@@ -184,7 +184,7 @@ Value update(const Array& params, bool fHelp)
         {
             throw runtime_error("An error occurred while checking for an update. \nCheck debug.log for more info.\n");
         }
-        else if (updater.Check())
+        else if (updater.Check().get())
         {
             // There is an update
             Object obj;
@@ -204,7 +204,7 @@ Value update(const Array& params, bool fHelp)
         {
             throw runtime_error("An error occurred while checking for an update. \nCheck debug.log for more info.\n");
         }
-        else if (!updater.Check())
+        else if (!updater.Check().get())
         {
             return "You are running the latest version of Crown - " + FormatVersion(CLIENT_VERSION);
         }
@@ -243,7 +243,7 @@ Value update(const Array& params, bool fHelp)
         {
             throw runtime_error("An error occurred while checking for an update. \nCheck debug.log for more info.\n");
         }
-        else if (!updater.Check())
+        else if (!updater.Check().get())
         {
             return "You are running the latest version of Crown - " + FormatVersion(CLIENT_VERSION);
         }

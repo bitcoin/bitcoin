@@ -1,6 +1,7 @@
 #include "updatedialog.h"
 #include "ui_updatedialog.h"
 #include "util.h"
+#include "clientversion.h"
 #include <QPushButton>
 #include <QFileDialog>
 #include <QMessageBox>
@@ -208,4 +209,13 @@ void UpdateDialog::done(int r)
         QDialog::done(r);
         return;
     }
+}
+
+int UpdateDialog::exec()
+{
+    // Set according values and exec
+    setCurrentVersion(QString::fromStdString(FormatVersion(CLIENT_VERSION)));
+    setUpdateVersion(QString::fromStdString(FormatVersion(updater.GetVersion())));
+    setOS(updater.GetOS());
+    return QDialog::exec();
 }

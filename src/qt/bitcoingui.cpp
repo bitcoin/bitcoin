@@ -91,6 +91,7 @@ BitcoinGUI::BitcoinGUI(const NetworkStyle *networkStyle, QWidget *parent) :
     signMessageAction(0),
     verifyMessageAction(0),
     aboutAction(0),
+    updateAction(0),
     receiveCoinsAction(0),
     optionsAction(0),
     toggleHideAction(0),
@@ -106,7 +107,8 @@ BitcoinGUI::BitcoinGUI(const NetworkStyle *networkStyle, QWidget *parent) :
     notificator(0),
     rpcConsole(0),
     prevBlocks(0),
-    spinnerFrame(0)
+    spinnerFrame(0),
+    updateChecked(false)
 {
     /* Open CSS when configured */
     this->setStyleSheet(GUIUtil::loadStyleSheet());
@@ -348,6 +350,8 @@ void BitcoinGUI::createActions(const NetworkStyle *networkStyle)
     aboutAction = new QAction(networkStyle->getAppIcon(), tr("&About Crown Core"), this);
     aboutAction->setStatusTip(tr("Show information about Crown Core"));
     aboutAction->setMenuRole(QAction::AboutRole);
+    updateAction = new QAction(QIcon(":/icons/notsynced"), tr("&Check for Updates"), this);
+    updateAction->setStatusTip(tr("Check for availalbe updates"));
 #if QT_VERSION < 0x050000
     aboutQtAction = new QAction(QIcon(":/trolltech/qmessagebox/images/qtlogo-64.png"), tr("About &Qt"), this);
 #else
@@ -406,6 +410,7 @@ void BitcoinGUI::createActions(const NetworkStyle *networkStyle)
 
     connect(quitAction, SIGNAL(triggered()), qApp, SLOT(quit()));
     connect(aboutAction, SIGNAL(triggered()), this, SLOT(aboutClicked()));
+    connect(updateAction, SIGNAL(triggered()), this, SLOT(updateClicked()));
     connect(aboutQtAction, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
     connect(optionsAction, SIGNAL(triggered()), this, SLOT(optionsClicked()));
     connect(toggleHideAction, SIGNAL(triggered()), this, SLOT(toggleHidden()));
@@ -484,6 +489,7 @@ void BitcoinGUI::createMenuBar()
     help->addAction(showHelpMessageAction);
     help->addSeparator();
     help->addAction(aboutAction);
+    help->addAction(updateAction);
     help->addAction(aboutQtAction);
 }
 
@@ -715,6 +721,11 @@ void BitcoinGUI::aboutClicked()
 
     HelpMessageDialog dlg(this, true);
     dlg.exec();
+}
+
+void BitcoinGUI::updateClicked()
+{
+    checkUpdate(true);
 }
 
 void BitcoinGUI::showHelpMessageClicked()
@@ -1301,15 +1312,37 @@ void BitcoinGUI::handleRestart(QStringList args)
         emit requestedRestart(args);
 }
 
-void BitcoinGUI::checkUpdate()
+void BitcoinGUI::checkUpdate(bool askedToCheck)
 {
-    if (updater.Check())
+    if (!askedToCheck && updateChecked)
     {
-        UpdateDialog::GetInstance()->setCurrentVersion(QString::fromStdString(FormatVersion(CLIENT_VERSION)));
-        UpdateDialog::GetInstance()->setUpdateVersion(QString::fromStdString(FormatVersion(updater.GetVersion())));
-
-        UpdateDialog::GetInstance()->setOS(updater.GetOS());
+        // Do nothing if update status is checked once by user.
+        return;
+    }
+    updateChecked = true;
+    boost::optional<bool> status = updater.Check();
+    if (status && status.get())
+    {
         UpdateDialog::GetInstance()->exec();
+    }
+    else
+    {
+        // Handle else case only if check is initiated by user
+        if (askedToCheck)
+        {
+            if (status == boost::none)
+            {
+                QMessageBox::warning(this, tr("Update Check Error"),
+                        tr("An error occurred while checking for an update. "
+                            "\nCheck debug.log for more info.\n"));
+            }
+            else
+            {
+                QMessageBox::information(this, tr("Check for Update"),
+                        tr("You are running the latest version of Crown - %1")
+                        .arg(QString::fromStdString(FormatVersion(CLIENT_VERSION))));
+            }
+        }
     }
 }
 
