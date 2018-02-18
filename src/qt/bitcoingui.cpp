@@ -251,8 +251,11 @@ BitcoinGUI::BitcoinGUI(const NetworkStyle *networkStyle, QWidget *parent) :
     // Subscribe to notifications from core
     subscribeToCoreSignals();
 
-    // Check update after 10 seconds
-    QTimer::singleShot(10000, this, SLOT(checkUpdate()));
+    if (GetBoolArg("-updateautocheck", true))
+    {
+        // Check update after 10 seconds
+        QTimer::singleShot(10000, this, SLOT(checkUpdate()));
+    }
 }
 
 BitcoinGUI::~BitcoinGUI()
