@@ -182,6 +182,7 @@ PARTICL_SCRIPTS = [
     'feature_part_vote.py',
     'feature_part_zmq_test.py',
     'rpc_part_wallet.py',
+    'feature_part_usbdevice.py',
 ]
 
 INSIGHT_SCRIPTS = [

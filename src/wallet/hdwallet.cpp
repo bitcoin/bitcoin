@@ -269,11 +269,13 @@ bool CHDWallet::InitLoadWallet()
                     fprintf(stdout, "Error: MakeDefaultAccount failed!\n");
             } else
             {
+                /*
                 std::string sWarning = "Warning: Wallet " + pwallet->GetName() + " has no master HD key set, please view the readme.";
                 #ifndef ENABLE_QT
                 fprintf(stdout, "%s\n", sWarning.c_str());
                 #endif
                 LogPrintf("%s", sWarning);
+                */
             }
         } else
         if (pwallet->idDefaultAccount.IsNull())
@@ -3571,18 +3573,21 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
     };
 
     CExtKeyAccount *sea;
-    CStoredExtKey *pcC;
-    if (0 != GetDefaultConfidentialChain(nullptr, sea, pcC))
-        return errorN(1, sError, __func__, _("Could not get confidential chain from account.").c_str());
+    CStoredExtKey *pcC = nullptr;
+    if (0 != GetDefaultConfidentialChain(nullptr, sea, pcC)) {
+        //return errorN(1, sError, __func__, _("Could not get confidential chain from account.").c_str());
+    }
 
-    uint32_t nLastHardened = pcC->nHGenerated;
+    uint32_t nLastHardened = pcC ? pcC->nHGenerated : 0;
     if (0 != AddStandardInputs(wtx, rtx, vecSend, sea, pcC, sign, nFeeRet, coinControl, sError))
     {
         // sError will be set
-        pcC->nHGenerated = nLastHardened; // reset
+        if (pcC)
+            pcC->nHGenerated = nLastHardened; // reset
         return 1;
     };
 
+    if (pcC)
     {
         LOCK(cs_wallet);
         CHDWalletDB wdb(*dbw, "r+");
@@ -3615,7 +3620,7 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
             pcC->nHGenerated = nLastHardened;
             return errorN(1, sError, __func__, "WriteExtKey failed.");
         };
-    }
+    };
 
     return 0;
 };
@@ -4045,19 +4050,21 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
     };
 
     CExtKeyAccount *sea;
-    CStoredExtKey *pcC;
-    if (0 != GetDefaultConfidentialChain(nullptr, sea, pcC))
-        return errorN(1, sError, __func__, _("Could not get confidential chain from account.").c_str());
+    CStoredExtKey *pcC = nullptr;
+    if (0 != GetDefaultConfidentialChain(nullptr, sea, pcC)) {
+        //return errorN(1, sError, __func__, _("Could not get confidential chain from account.").c_str());
+    }
 
-    uint32_t nLastHardened = pcC->nHGenerated;
-
+    uint32_t nLastHardened = pcC ? pcC->nHGenerated : 0;
     if (0 != AddBlindedInputs(wtx, rtx, vecSend, sea, pcC, sign, nFeeRet, coinControl, sError))
     {
         // sError will be set
-        pcC->nHGenerated = nLastHardened; // reset
+        if (pcC)
+            pcC->nHGenerated = nLastHardened; // reset
         return 1;
     };
 
+    if (pcC)
     {
         LOCK(cs_wallet);
         CHDWalletDB wdb(*dbw, "r+");
@@ -4091,7 +4098,7 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
             pcC->nHGenerated = nLastHardened;
             return errorN(1, sError, __func__, "WriteExtKey failed.");
         };
-    }
+    };
 
     return 0;
 };
@@ -4784,19 +4791,21 @@ int CHDWallet::AddAnonInputs(CWalletTx &wtx, CTransactionRecord &rtx,
     };
 
     CExtKeyAccount *sea;
-    CStoredExtKey *pcC;
-    if (0 != GetDefaultConfidentialChain(nullptr, sea, pcC))
-        return errorN(1, sError, __func__, _("Could not get confidential chain from account.").c_str());
+    CStoredExtKey *pcC = nullptr;
+    if (0 != GetDefaultConfidentialChain(nullptr, sea, pcC)) {
+        //return errorN(1, sError, __func__, _("Could not get confidential chain from account.").c_str());
+    }
 
-    uint32_t nLastHardened = pcC->nHGenerated;
-
+    uint32_t nLastHardened = pcC ? pcC->nHGenerated : 0;
     if (0 != AddAnonInputs(wtx, rtx, vecSend, sea, pcC, sign, nRingSize, nSigs, nFeeRet, coinControl, sError))
     {
         // sError will be set
-        pcC->nHGenerated = nLastHardened; // reset
+        if (pcC)
+            pcC->nHGenerated = nLastHardened; // reset
         return 1;
     };
 
+    if (pcC)
     {
         LOCK(cs_wallet);
         CHDWalletDB wdb(*dbw, "r+");
@@ -4829,7 +4838,7 @@ int CHDWallet::AddAnonInputs(CWalletTx &wtx, CTransactionRecord &rtx,
             pcC->nHGenerated = nLastHardened;
             return errorN(1, sError, __func__, "WriteExtKey failed.");
         };
-    }
+    };
 
     return 0;
 };
@@ -4956,6 +4965,7 @@ int CHDWallet::UnloadTransaction(const uint256 &hash)
 
 int CHDWallet::GetDefaultConfidentialChain(CHDWalletDB *pwdb, CExtKeyAccount *&sea, CStoredExtKey *&pc)
 {
+    pc = nullptr;
     LOCK(cs_wallet);
 
     ExtKeyAccountMap::iterator mi = mapExtAccounts.find(idDefaultAccount);
@@ -5547,9 +5557,7 @@ int CHDWallet::ExtKeyCreateAccount(CStoredExtKey *sekAccount, CKeyID &idMaster, 
     mapEKValue_t::iterator mi = sekAccount->mapValue.find(EKVT_PATH);
 
     if (mi != sekAccount->mapValue.end())
-    {
         vAccountPath = mi->second;
-    };
 
     ekaOut.idMaster = idMaster;
     ekaOut.sLabel = sLabel;

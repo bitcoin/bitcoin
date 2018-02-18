@@ -13,16 +13,19 @@
 #include <key/extkey.h>
 #include <script/sign.h>
 #include <keystore.h>
-
+#include <memory>
 
 enum DeviceTypeID {
     USBDEVICE_UNKNOWN = -1,
-    USBDEVICE_LEDGER_NANO_S = 0,
+    USBDEVICE_DEBUG = 0,
+    USBDEVICE_LEDGER_NANO_S = 1,
+    USBDEVICE_SIZE,
 };
 
 class UniValue;
 struct hid_device_;
 typedef struct hid_device_ hid_device;
+class CCoinsViewCache;
 
 class CPathKey
 {
@@ -83,9 +86,12 @@ public:
     DeviceTypeID type = USBDEVICE_UNKNOWN;
 };
 
+extern const DeviceType usbDeviceTypes[];
+
 class CUSBDevice
 {
 public:
+    CUSBDevice() {};
     CUSBDevice(const DeviceType *pType_, const char *cPath_, const char *cSerialNo_, int nInterface_) : pType(pType_)
     {
         assert(strlen(cPath_) < sizeof(cPath));
@@ -97,24 +103,23 @@ public:
         nInterface = nInterface_;
     };
 
-    int Open();
-    int Close();
+    virtual int Open() { return 0; };
+    virtual int Close() { return 0; };
 
-    int GetFirmwareVersion(std::string &sFirmware, std::string &sError);
-    int GetInfo(UniValue &info, std::string &sError);
+    virtual int GetFirmwareVersion(std::string &sFirmware, std::string &sError);
+    virtual int GetInfo(UniValue &info, std::string &sError);
 
-    int GetPubKey(const std::vector<uint32_t> &vPath, CPubKey &pk, std::string &sError);
-    int GetXPub(const std::vector<uint32_t> &vPath, CExtPubKey &ekp, std::string &sError);
+    virtual int GetPubKey(const std::vector<uint32_t> &vPath, CPubKey &pk, std::string &sError) { return 0; };
+    virtual int GetXPub(const std::vector<uint32_t> &vPath, CExtPubKey &ekp, std::string &sError) { return 0; };
 
-    int SignMessage(const std::vector<uint32_t> &vPath, const std::string &sMessage, std::vector<uint8_t> &vchSig, std::string &sError);
+    virtual int SignMessage(const std::vector<uint32_t> &vPath, const std::string &sMessage, std::vector<uint8_t> &vchSig, std::string &sError) { return 0; };
+
+    virtual int PrepareTransaction(const CTransaction *tx, const CCoinsViewCache &view) { return 0; };
 
     //int SignHash(const std::vector<uint32_t> &vPath, const uint256 &hash, std::vector<uint8_t> &vchSig, std::string &sError);
-    int SignTransaction(hid_device *handle, const std::vector<uint32_t> &vPath, const CTransaction *tx,
+    virtual int SignTransaction(const std::vector<uint32_t> &vPath, const CTransaction *tx,
         int nIn, const CScript &scriptCode, int hashType, const std::vector<uint8_t> &amount, SigVersion sigversion,
-        std::vector<uint8_t> &vchSig, std::string &sError);
-    int SignTransaction(const std::vector<uint32_t> &vPath, const CTransaction *tx,
-        int nIn, const CScript &scriptCode, int hashType, const std::vector<uint8_t> &amount, SigVersion sigversion,
-        std::vector<uint8_t> &vchSig, std::string &sError);
+        std::vector<uint8_t> &vchSig, std::string &sError) { return 0; };
 
 
     const DeviceType *pType = nullptr;
@@ -123,13 +128,19 @@ public:
     int nInterface;
     std::string sError;
 
-private:
+protected:
     hid_device *handle = nullptr;
 };
 
-void ListDevices(std::vector<CUSBDevice> &vDevices);
+void ListDevices(std::vector<std::unique_ptr<CUSBDevice> > &vDevices);
 
+/*
+class QueuedSignature
+{
+public:
 
+};
+*/
 /** A signature creator for transactions. */
 class DeviceSignatureCreator : public BaseSignatureCreator {
     const CTransaction* txTo;

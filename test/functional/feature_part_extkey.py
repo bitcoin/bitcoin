@@ -34,8 +34,8 @@ class ExtKeyTest(ParticlTestFramework):
         assert(node.getwalletinfo()['total_balance'] == 100000)
 
         # Start staking
-        ro = node.walletsettings('stakelimit', {'height':1})
-        ro = node.reservebalance(False)
+        node.walletsettings('stakelimit', {'height':1})
+        node.reservebalance(False)
 
         assert(self.wait_for_height(node, 1))
 

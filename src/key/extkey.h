@@ -37,6 +37,7 @@ enum EKAddonValueTypes
     EKVT_N_LOOKAHEAD        = 7,
     EKVT_INDEX              = 8, // 4byte index to full identifier in local wallet db
     EKVT_CONFIDENTIAL_CHAIN = 9,
+    EKVT_HARDWARE_DEVICE    = 10, // 4bytes nVendorId, 4bytes nProductId
 };
 
 extern CCriticalSection cs_extKey;
@@ -167,11 +168,11 @@ struct CExtKey {
 class CExtKeyPair
 {
 public:
-    //unsigned char nFlags; ? crypted
-    unsigned char nDepth;
-    unsigned char vchFingerprint[4];
-    unsigned int nChild;
-    unsigned char vchChainCode[32];
+    //uint8_t nFlags; ? crypted
+    uint8_t nDepth;
+    uint8_t vchFingerprint[4];
+    uint32_t nChild;
+    uint8_t vchChainCode[32];
     CKey key;
     CPubKey pubkey;
 
@@ -184,6 +185,16 @@ public:
         memcpy(vchChainCode, vk.vchChainCode, sizeof(vchChainCode));
         key = vk.key;
         pubkey = key.GetPubKey();
+    };
+
+    CExtKeyPair(CExtPubKey &pk)
+    {
+        nDepth = pk.nDepth;
+        memcpy(vchFingerprint, pk.vchFingerprint, sizeof(vchFingerprint));
+        nChild = pk.nChild;
+        memcpy(vchChainCode, pk.vchChainCode, sizeof(vchChainCode));
+        key.Clear();
+        pubkey = pk.pubkey;
     };
 
     CExtKey GetExtKey() const
@@ -355,6 +366,8 @@ public:
     {
         return fHardened ? nHGenerated : nGenerated;
     };
+
+    int SetPath(const std::vector<uint32_t> &vPath_);
 
     template<typename Stream>
     void Serialize(Stream &s) const
@@ -621,9 +634,9 @@ class CExtKeyAccount
 public:
     CExtKeyAccount()
     {
-        nActiveExternal = 0;
-        nActiveInternal = 0;
-        nActiveStealth = 0;
+        nActiveExternal = 0xFFFFFFFF;
+        nActiveInternal = 0xFFFFFFFF;
+        nActiveStealth = 0xFFFFFFFF;
         nHeightCheckedUncrypted = 0;
         nFlags = 0;
         nPack = 0;
@@ -712,6 +725,19 @@ public:
     const CStoredExtKey *ChainAccount() const
     {
         return vExtKeys.size() < 1 ? nullptr : vExtKeys[0];
+    };
+
+    void InsertChain(CStoredExtKey *sekChain)
+    {
+        vExtKeyIDs.push_back(sekChain->GetID());
+        vExtKeys.push_back(sekChain);
+    };
+
+    size_t NumChains()
+    {
+        if (vExtKeys.size() < 1) // vExtKeys[0] is account key
+            return 0;
+        return vExtKeys.size() - 1;
     };
 
     int AddLookBehind(uint32_t nChain, uint32_t nKeys);

@@ -158,9 +158,7 @@ int ExtKeyPathV(const std::string &sPath, const std::vector<uint8_t> &vchKey, Un
 
     CExtKey vk;
     vk.Decode(&vchKey[4]);
-
-    CExtKey vkOut;
-    CExtKey vkWork = vk;
+    CExtKey vkOut, vkWork = vk;
 
     std::vector<uint32_t> vPath;
     int rv;
@@ -195,8 +193,7 @@ int ExtKeyPathP(const std::string &sPath, const std::vector<uint8_t> &vchKey, Un
     CExtPubKey pk;
     pk.Decode(&vchKey[4]);
 
-    CExtPubKey pkOut;
-    CExtPubKey pkWork = pk;
+    CExtPubKey pkOut, pkWork = pk;
 
     std::vector<uint32_t> vPath;
     int rv;
@@ -242,6 +239,20 @@ int AccountInfo(CHDWallet *pwallet, CExtKeyAccount *pa, int nShowKeys, bool fAll
         int64_t nCreatedAt;
         GetCompressedInt64(mvi->second, (uint64_t&)nCreatedAt);
         obj.pushKV("created_at", nCreatedAt);
+    };
+
+    mvi = pa->mapValue.find(EKVT_HARDWARE_DEVICE);
+    if (mvi != pa->mapValue.end())
+    {
+#if ENABLE_USBDEVICE
+
+#endif
+        if (mvi->second.size() >= 8)
+        {
+            int nVendorId = *((int*)mvi->second.data());
+            int nProductId = *((int*)mvi->second.data() + 4);
+            obj.pushKV("hardware_device", strprintf("%04x %04x", nVendorId, nProductId));
+        };
     };
 
     obj.pushKV("id", pa->GetIDString58());
@@ -3547,7 +3558,6 @@ UniValue filteraddresses(const JSONRPCRequest &request)
 
         result.pushKV("num_receive", nReceive);
         result.pushKV("num_send", nSend);
-
         return result;
     };
 

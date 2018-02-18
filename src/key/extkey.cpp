@@ -565,6 +565,16 @@ std::string CStoredExtKey::GetIDString58() const
     return addr.ToString();
 };
 
+int CStoredExtKey::SetPath(const std::vector<uint32_t> &vPath_)
+{
+    if (vPath_.size() < 1)
+        return 1;
+    std::vector<uint8_t> vPath(4 * vPath_.size());
+    memcpy(vPath.data(), vPath_.data(), vPath.size());
+    mapValue[EKVT_PATH] = vPath;
+    return 0;
+};
+
 std::string CExtKeyAccount::GetIDString58() const
 {
     // 0th chain is always account chain

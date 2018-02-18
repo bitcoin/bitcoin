@@ -3405,7 +3405,8 @@ UniValue getwalletinfo(const JSONRPCRequest& request)
             "  \"encryptionstatus\":              (string) unencrypted/locked/unlocked\n"
             "  \"unlocked_until\": ttt,           (numeric) the timestamp in seconds since epoch (midnight Jan 1 1970 GMT) that the wallet is unlocked for transfers, or 0 if the wallet is locked\n"
             "  \"paytxfee\": x.xxxx,              (numeric) the transaction fee configuration, set in " + CURRENCY_UNIT + "/kB\n"
-            "  \"hdmasterkeyid\": \"<hash160>\"   (string) the Hash160 of the HD master pubkey\n"
+            //"  \"hdmasterkeyid\": \"<hash160>\"   (string) the Hash160 of the HD master pubkey\n"
+            "  \"hdmasterkeyid\": \"<hash160>\"   (string) the Hash160 of the HD account pubkey\n"
             "}\n"
             "\nExamples:\n"
             + HelpExampleCli("getwalletinfo", "")
@@ -3479,8 +3480,7 @@ UniValue getwalletinfo(const JSONRPCRequest& request)
         if (pwhd->IsCrypted())
             obj.push_back(Pair("unlocked_until", pwallet->nRelockTime));
 
-        if (pwhd->pEKMaster)
-            masterKeyID = pwhd->pEKMaster->GetID();
+        masterKeyID = pwhd->idDefaultAccount;
     } else
     {
         obj.pushKV("keypoololdest", pwallet->GetOldestKeyPoolTime());

@@ -293,6 +293,10 @@ libparticl_usbdevice_a_SOURCES = \
   usbdevice/ledger/dongleCommHidHidapi.h \
   usbdevice/ledger/dongleCommHidHidapi.c \
   usbdevice/usbdevice.cpp \
+  usbdevice/debugdevice.h \
+  usbdevice/debugdevice.cpp \
+  usbdevice/ledgerdevice.h \
+  usbdevice/ledgerdevice.cpp \
   usbdevice/rpcusbdevice.cpp
 endif
 
