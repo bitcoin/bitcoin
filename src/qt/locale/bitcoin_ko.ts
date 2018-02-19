@@ -50,12 +50,12 @@
         <translation>받을 주소</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>이것은 비트코인 전송을 위한 주소입니다. 코인을 보내기 전에 항상 받는 주소와 수량을 확인하세요</translation>
+        <source>These are your Litecoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation>이것은 라이트코인을 전송을 위한 주소입니다. 코인을 보내기 전에 항상 받는 주소와 수량을 확인하세요</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>이것은 비트코인 수신을 위한 주소입니다. 코인을 받을 때 마다 항상 다른 주소를 사용 하시는 것을 권장합니다.</translation>
+        <source>These are your Litecoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
+        <translation>이것은 라이트코인을 수신을 위한 주소입니다. 코인을 받을 때 마다 항상 다른 주소를 사용 하시는 것을 권장합니다.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -132,8 +132,8 @@
         <translation>지갑 암호화 확인</translation>
     </message>
     <message>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
-        <translation>경고: 지갑이 암호화된 상태로 당신의 암호문을 잃어버리셨다면, 당신은 &lt;b&gt;모든 비트코인을 잃게됩니다&lt;/b&gt;!</translation>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR LITECOINS&lt;/b&gt;!</source>
+        <translation>경고: 지갑이 암호화된 상태로 당신의 암호문을 잃어버리셨다면, 당신은 &lt;b&gt;모든 라이트코인을을 잃게됩니다&lt;/b&gt;!</translation>
     </message>
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
@@ -144,8 +144,8 @@
         <translation>지갑 암호화</translation>
     </message>
     <message>
-        <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>%1 이(가) 암호화 작업을 위해 종료됩니다. 이 암호화 작업이 바이러스로부터 비트코인을 완전히 지키지 못한다는 점을 기억하십시요.</translation>
+        <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your litecoins from being stolen by malware infecting your computer.</source>
+        <translation>%1 이(가) 암호화 작업을 위해 종료됩니다. 이 암호화 작업이 바이러스로부터 라이트코인을을 완전히 지키지 못한다는 점을 기억하십시요.</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
@@ -286,8 +286,8 @@
         <translation>디스크에서 블럭 불러오는 중</translation>
     </message>
     <message>
-        <source>Send coins to a Bitcoin address</source>
-        <translation>비트코인 주소로 코인 보내기</translation>
+        <source>Send coins to a Litecoin address</source>
+        <translation>라이트코인을 주소로 코인 보내기</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
