@@ -69,9 +69,6 @@
            <height>0</height>
           </size>
          </property>
-         <property name="editable">
-          <bool>true</bool>
-         </property>
         </widget>
        </item>
        <item>

@@ -14,7 +14,6 @@ UpdateDialog::UpdateDialog(QWidget *parent) :
 {
     ui->setupUi(this);
     ui->progressBar->setVisible(false);
-    ui->osComboBox->lineEdit()->setReadOnly(true);
     ui->buttonBox->button(QDialogButtonBox::Ok)->setText("Download");
     ui->buttonBox->button(QDialogButtonBox::Cancel)->setText("Not Now");
     connect(ui->osComboBox , SIGNAL(currentIndexChanged(int)),this,SLOT(selectionChanged(int)));
