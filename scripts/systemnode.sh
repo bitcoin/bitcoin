@@ -3,6 +3,11 @@
 # Distributed under the MIT/X11 software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+# Usage: ./systemnode.sh <privkey>
+#
+# The script will download and install the given
+# version of Crown or update if it already exists
+
 LATEST_RELEASE="v0.12.3.0"
 
 install_dependencies() {
@@ -34,6 +39,7 @@ download_package() {
         dir=$HOME/crown-temp
         mkdir -p $dir
     fi
+    # Change this later to take latest release version.
     wget "https://github.com/Crowndev/crowncoin/releases/download/$LATEST_RELEASE/Crown-Linux64.zip" -O $dir/crown.zip
 }
 
