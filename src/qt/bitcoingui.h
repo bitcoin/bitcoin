@@ -114,7 +114,10 @@ private:
     QAction *backupWalletAction;
     QAction *changePassphraseAction;
     QAction *aboutQtAction;
+    QAction *openInfoAction;
     QAction *openRPCConsoleAction;
+    QAction *openGraphAction;
+    QAction *openPeersAction;
     QAction *openConfEditorAction;
     QAction *openMNConfEditorAction;
     QAction *showBackupsAction;
@@ -229,8 +232,12 @@ private Q_SLOTS:
     void aboutClicked();
     /** Show debug window */
     void showDebugWindow();
-    /** Show debug window and set focus to the console */
-    void showDebugWindowActivateConsole();
+
+    /** Show debug window and set focus to the appropriate tab */
+    void showInfo();
+    void showConsole();
+    void showGraph();
+    void showPeers();
 
     /** Open external (default) editor with chaincoin.conf */
     void showConfEditor();

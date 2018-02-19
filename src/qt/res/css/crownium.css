@@ -743,10 +743,6 @@ QDialog#RPCConsole QWidget#tab_info {
 border-image: url(':/images/crownium/drkblue_walletFrame_bg') 0 0 0 0 stretch stretch;
 }
 
-QDialog#RPCConsole QWidget#tab_repair  {
-border-image: url(':/images/crownium/drkblue_walletFrame_bg') 0 0 0 0 stretch stretch;
-}
-
 /* HELP MENU */
 
 /* Command Line Options Dialog */
