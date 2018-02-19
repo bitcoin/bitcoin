@@ -52,7 +52,7 @@ public:
         READWRITE(blockHash);
         READWRITE(sigTime);
         READWRITE(vchSig);
-        if(ser_action.ForRead() && (GetSerializeSize(s, 0) == 0))
+        if(ser_action.ForRead() && (GetSerializeSize(s, SER_NETWORK, PROTOCOL_VERSION) == 0))
         {
             fSentinelIsCurrent = false;
             nSentinelVersion = DEFAULT_SENTINEL_VERSION;

@@ -1107,21 +1107,27 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                             pushed = true;
                         }
                     }
-
-/*                    if (!pushed && inv.type == MSG_MASTERNODE_ANNOUNCE) {
+                    // TODO: pass raw data to netmessagemaker
+                    if (!pushed && inv.type == MSG_MASTERNODE_ANNOUNCE) {
                         if(mnodeman.mapSeenMasternodeBroadcast.count(inv.hash)){
-                            connman.PushMessage(pfrom, CNetMsgMaker(pfrom->GetSendVersion()).Make(NetMsgType::MNANNOUNCE, mnodeman.mapSeenMasternodeBroadcast[inv.hash].second));
+                            CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
+                            ss.reserve(1000);
+                            ss << mnodeman.mapSeenMasternodeBroadcast[inv.hash].second;
+                            connman.PushMessage(pfrom, CNetMsgMaker(pfrom->GetSendVersion()).Make(NetMsgType::MNANNOUNCE, ss));
                             pushed = true;
                         }
                     }
 
                     if (!pushed && inv.type == MSG_MASTERNODE_PING) {
                         if(mnodeman.mapSeenMasternodePing.count(inv.hash)) {
-                            connman.PushMessage(pfrom, CNetMsgMaker(pfrom->GetSendVersion()).Make(NetMsgType::MNPING, mnodeman.mapSeenMasternodePing[inv.hash]));
+                            CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
+                            ss.reserve(1000);
+                            ss << mnodeman.mapSeenMasternodePing[inv.hash];
+                            connman.PushMessage(pfrom, CNetMsgMaker(pfrom->GetSendVersion()).Make(NetMsgType::MNPING, ss));
                             pushed = true;
                         }
                     }
-*/
+
                     if (!pushed && inv.type == MSG_DSTX) {
                         CDarksendBroadcastTx dstx = CPrivateSend::GetDSTX(inv.hash);
                         if(dstx) {
