@@ -51,7 +51,6 @@ public:
 
     // static because also called from sendcoinsdialog
     static void updateLabels(WalletModel*, QDialog*);
-    static QString getPriorityLabel(double dPriority, double mempoolEstimatePriority);
 
     static QList<CAmount> payAmounts;
     static CCoinControl *coinControl;
@@ -71,7 +70,6 @@ private:
 
     const PlatformStyle *platformStyle;
 
-    QString strPad(QString, int, QString);
     void sortView(int, Qt::SortOrder);
     void updateView();
 

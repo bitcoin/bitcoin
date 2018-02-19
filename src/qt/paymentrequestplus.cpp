@@ -22,7 +22,7 @@
 class SSLVerifyError : public std::runtime_error
 {
 public:
-    explicit SSLVerifyError(std::string err) : std::runtime_error(err) { }
+    SSLVerifyError(std::string err) : std::runtime_error(err) { }
 };
 
 bool PaymentRequestPlus::parse(const QByteArray& data)

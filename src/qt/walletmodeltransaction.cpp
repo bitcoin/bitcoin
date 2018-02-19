@@ -7,8 +7,8 @@
 
 #include <wallet/wallet.h>
 
-WalletModelTransaction::WalletModelTransaction(const QList<SendCoinsRecipient> &recipients) :
-    recipients(recipients),
+WalletModelTransaction::WalletModelTransaction(const QList<SendCoinsRecipient> &_recipients) :
+    recipients(_recipients),
     walletTransaction(0),
     keyChange(0),
     fee(0)
@@ -27,7 +27,7 @@ QList<SendCoinsRecipient> WalletModelTransaction::getRecipients()
     return recipients;
 }
 
-CWalletTx *WalletModelTransaction::getTransaction() const
+CWalletTx *WalletModelTransaction::getTransaction()
 {
     return walletTransaction;
 }
@@ -37,7 +37,7 @@ unsigned int WalletModelTransaction::getTransactionSize()
     return (!walletTransaction ? 0 : ::GetVirtualTransactionSize(*walletTransaction));
 }
 
-CAmount WalletModelTransaction::getTransactionFee() const
+CAmount WalletModelTransaction::getTransactionFee()
 {
     return fee;
 }
@@ -79,7 +79,7 @@ void WalletModelTransaction::reassignAmounts(int nChangePosRet)
     }
 }
 
-CAmount WalletModelTransaction::getTotalTransactionAmount() const
+CAmount WalletModelTransaction::getTotalTransactionAmount()
 {
     CAmount totalTransactionAmount = 0;
     for (const SendCoinsRecipient &rcp : recipients)

@@ -93,7 +93,7 @@ class FreedesktopImage
 {
 public:
     FreedesktopImage() {}
-    explicit FreedesktopImage(const QImage &img);
+    FreedesktopImage(const QImage &img);
 
     static int metaType();
 

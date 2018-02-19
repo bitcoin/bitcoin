@@ -147,7 +147,7 @@ public:
 
     /** Return whether a status update is needed.
      */
-    bool statusUpdateNeeded() const;
+    bool statusUpdateNeeded();
 };
 
 #endif // BITCOIN_QT_TRANSACTIONRECORD_H

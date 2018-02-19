@@ -115,7 +115,6 @@ private:
     QAction *changePassphraseAction;
     QAction *aboutQtAction;
     QAction *openRPCConsoleAction;
-    QAction *openRepairAction;
     QAction *openConfEditorAction;
     QAction *openMNConfEditorAction;
     QAction *showBackupsAction;

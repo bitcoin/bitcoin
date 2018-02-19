@@ -33,7 +33,7 @@ public Q_SLOTS:
     void showHide(bool hide = false, bool userRequested = false);
     void closeClicked();
     void hideForever();
-    bool isLayerVisible() const { return layerIsVisible; }
+    bool isLayerVisible() { return layerIsVisible; }
 
 protected:
     bool eventFilter(QObject * obj, QEvent * ev);

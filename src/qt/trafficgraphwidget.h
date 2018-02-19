@@ -29,7 +29,7 @@ protected:
 
 public Q_SLOTS:
     void updateRates();
-    void setGraphRangeMins(int value);
+    void setGraphRangeMins(int mins);
     void clear();
 
 private:
