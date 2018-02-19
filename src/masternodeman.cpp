@@ -759,6 +759,8 @@ masternode_info_t CMasternodeMan::FindRandomNotInVec(const std::vector<COutPoint
             }
         }
         if(fExclude) continue;
+        if (deterministicMNManager->IsDeterministicMNsSporkActive() && !deterministicMNManager->HasValidMNAtChainTip(pmn->outpoint.hash))
+            continue;
         // found the one not in vecToExclude
         LogPrint("masternode", "CMasternodeMan::FindRandomNotInVec -- found, masternode=%s\n", pmn->outpoint.ToStringShort());
         return pmn->GetInfo();
@@ -799,6 +801,9 @@ bool CMasternodeMan::GetMasternodeScores(const uint256& nBlockHash, CMasternodeM
 
     // calculate scores
     for (const auto& mnpair : mapMasternodes) {
+        if (deterministicMNManager->IsDeterministicMNsSporkActive() && !deterministicMNManager->HasValidMNAtChainTip(mnpair.second.outpoint.hash))
+            continue;
+
         if (mnpair.second.nProtocolVersion >= nMinProtocol) {
             vecMasternodeScoresRet.push_back(std::make_pair(mnpair.second.CalculateScore(nBlockHash), &mnpair.second));
         }
