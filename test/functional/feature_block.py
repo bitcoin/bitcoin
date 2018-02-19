@@ -579,7 +579,7 @@ class FullBlockTest(BitcoinTestFramework):
         self.move_tip(44)
         b47 = self.next_block(47, solve=False)
         target = uint256_from_compact(b47.nBits)
-        while b47.sha256 < target:
+        while b47.scrypt256 < target:
             b47.nNonce += 1
             b47.rehash()
         self.sync_blocks([b47], False, request_block=False)
