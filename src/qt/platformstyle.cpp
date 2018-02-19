@@ -72,10 +72,10 @@ QIcon ColorizeIcon(const QString& filename, const QColor& colorbase)
 }
 
 
-PlatformStyle::PlatformStyle(const QString &name, bool imagesOnButtons, bool colorizeIcons, bool useExtraSpacing):
-    name(name),
-    imagesOnButtons(imagesOnButtons),
-    colorizeIcons(colorizeIcons),
+PlatformStyle::PlatformStyle(const QString &_name, bool _imagesOnButtons, bool _colorizeIcons, bool useExtraSpacing):
+    name(_name),
+    imagesOnButtons(_imagesOnButtons),
+    colorizeIcons(_colorizeIcons),
     useExtraSpacing(useExtraSpacing),
     singleColor(0,0,0),
     textColor(0,0,0)

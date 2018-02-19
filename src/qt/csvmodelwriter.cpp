@@ -14,9 +14,9 @@ CSVModelWriter::CSVModelWriter(const QString &filename, QObject *parent) :
 {
 }
 
-void CSVModelWriter::setModel(const QAbstractItemModel *model)
+void CSVModelWriter::setModel(const QAbstractItemModel *_model)
 {
-    this->model = model;
+    this->model = _model;
 }
 
 void CSVModelWriter::addColumn(const QString &title, int column, int role)
