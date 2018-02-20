@@ -10,6 +10,7 @@
 #include <span.h>
 #include <support/allocators/zeroafterfree.h>
 #include <util/overflow.h>
+#include <util/system.h>
 
 #include <algorithm>
 #include <assert.h>
@@ -616,11 +617,10 @@ protected:
 
 public:
     CBufferedFile(FILE* fileIn, uint64_t nBufSize, uint64_t nRewindIn, int nTypeIn, int nVersionIn)
-        : nType(nTypeIn), nVersion(nVersionIn), nSrcPos(0), m_read_pos(0), nReadLimit(std::numeric_limits<uint64_t>::max()), nRewind(nRewindIn), vchBuf(nBufSize, std::byte{0})
+        : nType(nTypeIn), nVersion(nVersionIn), src(AdviseSequential(fileIn)), nSrcPos(0), m_read_pos(0), nReadLimit(std::numeric_limits<uint64_t>::max()), nRewind(nRewindIn), vchBuf(nBufSize, std::byte{0})
     {
         if (nRewindIn >= nBufSize)
             throw std::ios_base::failure("Rewind limit must be less than buffer size");
-        src = fileIn;
     }
 
     ~CBufferedFile()
@@ -638,7 +638,7 @@ public:
     void fclose()
     {
         if (src) {
-            ::fclose(src);
+            CloseAndUncache(src);
             src = nullptr;
         }
     }
