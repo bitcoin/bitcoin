@@ -862,7 +862,7 @@ void BitcoinGUI::updateNetworkState()
         tooltip = tr("%n active connection(s) to Bitcoin network", "", count) + QString(".<br>") + tr("Click to disable network activity.");
     } else {
         tooltip = tr("Network activity disabled.") + QString("<br>") + tr("Click to enable network activity again.");
-        icon = ":/icons/network_disabled";
+        icon = ":/icons/" + theme + "/network_disabled";
     }
 
     // Don't word-wrap this (fixed-width) tooltip

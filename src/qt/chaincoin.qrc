@@ -393,6 +393,7 @@
         <file alias="transaction_confirmed">res/icons/green/transaction_confirmed.png</file>
         <file alias="about">res/icons/green/about.png</file>
         <file alias="peer">res/icons/green/peers.png</file>
+        <file alias="network_disabled">res/icons/green/network_disabled.png</file>
     </qresource>
     <qresource prefix="/images/green">
         <file alias="about">res/images/green/about.png</file>

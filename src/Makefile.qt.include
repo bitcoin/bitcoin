@@ -447,7 +447,9 @@ RES_ICONS = \
   qt/res/icons/green/tx_input.png \
   qt/res/icons/green/tx_mined.png \
   qt/res/icons/green/tx_output.png \
-  qt/res/icons/green/verify.png
+  qt/res/icons/green/verify.png\
+  qt/res/icons/green/network_disabled.png 
+
 
 BITCOIN_QT_BASE_CPP = \
   qt/bantablemodel.cpp \
