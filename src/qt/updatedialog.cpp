@@ -14,8 +14,8 @@ UpdateDialog::UpdateDialog(QWidget *parent) :
 {
     ui->setupUi(this);
     ui->progressBar->setVisible(false);
-    ui->buttonBox->button(QDialogButtonBox::Ok)->setText("Download");
-    ui->buttonBox->button(QDialogButtonBox::Cancel)->setText("Not Now");
+    ui->buttonBox->button(QDialogButtonBox::Ok)->setText(tr("Download"));
+    ui->buttonBox->button(QDialogButtonBox::Cancel)->setText(tr("Not Now"));
     connect(ui->osComboBox , SIGNAL(currentIndexChanged(int)),this,SLOT(selectionChanged(int)));
 
     setPossibleOS();
