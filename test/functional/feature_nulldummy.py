@@ -102,7 +102,7 @@ class NULLDUMMYTest(BitcoinTestFramework):
         inputs = [{ "txid" : txid, "vout" : 0}]
         outputs = { to_address : amount }
         rawtx = node.createrawtransaction(inputs, outputs)
-        signresult = node.signrawtransaction(rawtx)
+        signresult = node.signrawtransactionwithwallet(rawtx)
         tx = CTransaction()
         f = BytesIO(hex_str_to_bytes(signresult['hex']))
         tx.deserialize(f)
