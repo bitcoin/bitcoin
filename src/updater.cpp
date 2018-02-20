@@ -27,9 +27,7 @@ Updater::Updater() :
     status(false),
     version(-1),
     stopDownload(false),
-    testnetUrl("https://raw.githubusercontent.com/Crowndev/crowncoin/master/update_testnet.json"),
-    //mainnetUrl("https://raw.githubusercontent.com/Crowndev/crowncoin/master/update.json")
-    mainnetUrl("https://raw.githubusercontent.com/ashotkhachatryan/crowncoin/systemnode/update1.json")
+    url("https://raw.githubusercontent.com/Crowndev/crowncoin/master/update.json")
 {
 }
 
@@ -89,16 +87,10 @@ bool Updater::NeedToBeUpdated()
 
 void Updater::SetJsonPath()
 {
-    if (updaterInfoUrl.empty())
+    updaterInfoUrl = url;
+    if (mapArgs.count("-updateurl"))
     {
-        if (Params().NetworkID() == CBaseChainParams::MAIN)
-        {
-            updaterInfoUrl = mainnetUrl;
-        }
-        else
-        {
-            updaterInfoUrl = testnetUrl;
-        }
+        updaterInfoUrl = mapArgs["-updateurl"];
     }
 }
 

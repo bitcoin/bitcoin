@@ -58,8 +58,7 @@ private:
     int version;
     bool stopDownload;
     Value jsonData;
-    const std::string testnetUrl;
-    const std::string mainnetUrl;
+    const std::string url;
 
 private:
     bool LoadUpdateInfo();
