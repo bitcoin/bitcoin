@@ -329,7 +329,8 @@ void SendCoinsDialog::on_sendButton_clicked()
 
         // append transaction size
         questionString.append(" (");
-        questionString.append(QString::number(txSize / 1000) + " kB");
+        questionString.append(GUIUtil::formatBytes(txSize));
+
 
         // append sat/vbyte as another representation of the fee
         questionString.append(" at " + QString::number(satPerVByte) + " sat/vbyte");
