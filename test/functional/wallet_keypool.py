@@ -25,9 +25,7 @@ class KeyPoolTest(BitcoinTestFramework):
         assert(addr_before_encrypting_data['hdseedid'] == wallet_info_old['hdseedid'])
 
         # Encrypt wallet and wait to terminate
-        nodes[0].node_encrypt_wallet('test')
-        # Restart node 0
-        self.start_node(0)
+        nodes[0].encryptwallet('test')
         # Keep creating keys
         addr = nodes[0].getnewaddress()
         addr_data = nodes[0].getaddressinfo(addr)
