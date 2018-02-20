@@ -116,10 +116,10 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nTimeout = 1548979200; // Feb 1st, 2019.
 
         // The best chain should have at least this much work.
-        consensus.nMinimumChainWork = uint256S("0x0000000000000000000000000000000000000000000000000298679dd6a9ca29"); // 1300980 // PM-Tech: ChainCoin
+        consensus.nMinimumChainWork = uint256S("0x00000000000000000000000000000000000000000000000003dcd8432dc91bbf"); // 1396940 // PM-Tech: ChainCoin
 
         // By default assume that the signatures in ancestors of this block are valid.
-        consensus.defaultAssumeValid = uint256S("0x00000000006ca24b6c4eaf5235cae10e6fa3cb8717280cc1d79d438c46c01978"); //1300980 // PM-Tech: ChainCoin
+        consensus.defaultAssumeValid = uint256S("0x0000000000cad6be92824a5050ebb98a5c835e85a76922b2ebdefb1962d2ce51"); //1396940 // PM-Tech: ChainCoin
 
         /**
          * The message start string is designed to be unlikely to occur in normal data.
@@ -185,10 +185,11 @@ public:
             ( 189046, uint256S("0x00000000bd507c435b46ee8a13b25b85ec38fdb0eb5b00faeaa0611cd6a483d3"))
             ( 277316, uint256S("0x00000016a20503fe496e79d34fb85c33f633059315c046ffa1b4826d08a1e856"))
             ( 483849, uint256S("0x000001eb7f8124282ab62296e63d3145ff6c84cf18afae4d4b8e02cd3182b6a8"))
-            (1066428, uint256S("0x000000012dc5256d977b50270d1ca5642726308dcf26b6c219985edb8f2ab8f6")),
+            (1066428, uint256S("0x000000012dc5256d977b50270d1ca5642726308dcf26b6c219985edb8f2ab8f6"))
+            (1300730, uint256S("0x0000000001fdf11c0b4238b448c9a9643c7862575124fe0d7ee6fe7b5e7dba30")),
 
-            1490629503, // * UNIX timestamp of last checkpoint block
-            1179921,    // * total number of transactions between genesis and last checkpoint
+            1510775469, // * UNIX timestamp of last checkpoint block
+            1543387,    // * total number of transactions between genesis and last checkpoint
                         //   (the tx=... number in the SetBestChain debug.log lines)
             960.0       // * estimated number of transactions per day after checkpoint
         };
