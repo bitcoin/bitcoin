@@ -4,21 +4,23 @@
 #include <QPushButton>
 #include <QFileDialog>
 #include <QMessageBox>
+#include <QLineEdit>
 
 UpdateDialog::UpdateDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::UpdateDialog),
-    finished(false)
+    finished(false),
+    iconSize(40)
 {
     ui->setupUi(this);
     ui->progressBar->setVisible(false);
-    ui->buttonBox->button(QDialogButtonBox::Ok)->setText("Download Crown");
-    ui->buttonBox->button(QDialogButtonBox::Cancel)->setText("Don't Download");
-
+    ui->buttonBox->button(QDialogButtonBox::Ok)->setText(tr("Download"));
+    ui->buttonBox->button(QDialogButtonBox::Cancel)->setText(tr("Not Now"));
     connect(ui->osComboBox , SIGNAL(currentIndexChanged(int)),this,SLOT(selectionChanged(int)));
 
     setPossibleOS();
     setProgressValue(0);
+    setIcon();
 }
 
 UpdateDialog* UpdateDialog::instance = 0;
@@ -82,22 +84,7 @@ void UpdateDialog::setPossibleOS()
     ui->osComboBox->addItem(getOSString(Updater::WINDOWS_32));
     ui->osComboBox->addItem(getOSString(Updater::WINDOWS_64));
     ui->osComboBox->addItem(getOSString(Updater::MAC_OS));
-    ui->osComboBox->addItem(getOSString());
 }
-
-void UpdateDialog::selectionChanged(int index)
-{
-    if (ui->osComboBox->count() > 1)
-    {
-        // If tha last item is choosen
-        if (index == ui->osComboBox->count() - 1)
-        {
-            ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(false);
-        } else {
-            ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(true);
-        }
-    }
-};
 
 void UpdateProgressBar(curl_off_t now, curl_off_t total)
 {
@@ -208,4 +195,11 @@ void UpdateDialog::done(int r)
         QDialog::done(r);
         return;
     }
+}
+
+void UpdateDialog::setIcon() const
+{
+    QIcon icon = this->style()->standardIcon(QStyle::SP_MessageBoxInformation);
+    ui->iconLabel->setPixmap(icon.pixmap(iconSize, iconSize));
+    ui->iconLabel->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
 }

@@ -33,15 +33,14 @@ private:
     explicit UpdateDialog(QWidget *parent = 0);
     void setPossibleOS();
     void shaError(const QString& error);
+    void setIcon() const;
 
 private:
     Ui::UpdateDialog *ui;
     bool finished;
     static UpdateDialog *instance;
     QString fileName;
-
-public slots:
-    void selectionChanged(int index);
+    const int iconSize;
 };
 
 #endif // UPDATEDIALOG_H

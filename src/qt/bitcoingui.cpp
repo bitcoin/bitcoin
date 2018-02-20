@@ -1306,6 +1306,7 @@ void BitcoinGUI::handleRestart(QStringList args)
 
 void BitcoinGUI::checkUpdate()
 {
+    UpdateDialog::GetInstance()->setParent(this, Qt::Dialog);
     if (updater.Check())
     {
         UpdateDialog::GetInstance()->setCurrentVersion(QString::fromStdString(FormatVersion(CLIENT_VERSION)));
