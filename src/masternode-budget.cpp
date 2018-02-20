@@ -1296,7 +1296,7 @@ bool CBudgetManager::UpdateProposal(CBudgetVote& vote, CNode* pfrom, std::string
     }
 
 
-    CBudgetProposal proposal = mapProposals[vote.nProposalHash];
+    CBudgetProposal& proposal = mapProposals[vote.nProposalHash];
     if(!proposal.AddOrUpdateVote(vote, strError))
         return false;
 
