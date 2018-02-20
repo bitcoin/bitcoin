@@ -1314,35 +1314,31 @@ void BitcoinGUI::handleRestart(QStringList args)
 
 void BitcoinGUI::checkUpdate(bool askedToCheck)
 {
-    if (!askedToCheck && updateChecked)
+    try
     {
-        // Do nothing if update status is checked once by user.
-        return;
-    }
-    updateChecked = true;
-    boost::optional<bool> status = updater.Check();
-    if (status && status.get())
-    {
-        UpdateDialog::GetInstance()->exec();
-    }
-    else
-    {
-        // Handle else case only if check is initiated by user
-        if (askedToCheck)
+        if (!askedToCheck && updateChecked)
         {
-            if (status == boost::none)
-            {
-                QMessageBox::warning(this, tr("Update Check Error"),
-                        tr("An error occurred while checking for an update. "
-                            "\nCheck debug.log for more info.\n"));
-            }
-            else
-            {
-                QMessageBox::information(this, tr("Check for Update"),
-                        tr("You are running the latest version of Crown - %1")
-                        .arg(QString::fromStdString(FormatVersion(CLIENT_VERSION))));
-            }
+            // Do nothing if update status is checked once by user.
+            return;
         }
+        updateChecked = true;
+        bool hasUpdate = updater.Check();
+        if (hasUpdate)
+        {
+            UpdateDialog::GetInstance()->exec();
+        }
+        else if (askedToCheck)
+        {
+            QMessageBox::information(this, tr("Check for Update"),
+                    tr("You are running the latest version of Crown - %1")
+                    .arg(QString::fromStdString(FormatVersion(CLIENT_VERSION))));
+
+        }
+    }
+    catch(const std::exception& e)
+    {
+        QMessageBox::warning(this, tr("Update Check Error"),
+                tr(e.what()));
     }
 }
 

@@ -102,9 +102,8 @@ void Updater::SetJsonPath()
     }
 }
 
-bool Updater::LoadUpdateInfo()
+void Updater::LoadUpdateInfo()
 {
-    bool result = false;
     CURL *curl;
     std::string updateData;
     SetJsonPath();
@@ -130,14 +129,12 @@ bool Updater::LoadUpdateInfo()
             // There is an update
             status = true;
         }
-        result = true;
     }
     else 
     {
         LogPrintf("Updater::GetUpdateInfo() - Error! Couldn't get data json. Error code - %d\n", res);
-        result = false;
+        throw std::runtime_error(strprintf("Error! Couldn't get data json. Error code - %d\n", res));
     }
-    return result;
 }
 
 std::string Updater::GetOsString(boost::optional<OS> os)
@@ -271,12 +268,8 @@ void Updater::StopDownload()
     stopDownload = true;
 }
 
-boost::optional<bool> Updater::Check()
+bool Updater::Check()
 {
-    boost::optional<bool> result = boost::none;
-    if (LoadUpdateInfo())
-    {
-        result = status;
-    }
-    return result;
+    LoadUpdateInfo();
+    return status;
 }

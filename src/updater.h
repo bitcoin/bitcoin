@@ -31,7 +31,7 @@ public:
         MAC_OS,
     };
     Updater();
-    boost::optional<bool> Check();
+    bool Check();
     int GetVersion() const
     {
         return version;
@@ -62,7 +62,7 @@ private:
     const std::string mainnetUrl;
 
 private:
-    bool LoadUpdateInfo();
+    void LoadUpdateInfo();
     Value ParseJson(std::string info);
     void SetJsonPath();
     static OS DetectOS();
