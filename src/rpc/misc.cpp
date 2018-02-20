@@ -19,11 +19,6 @@
 #include <timedata.h>
 #include <util.h>
 #include <utilstrencodings.h>
-#ifdef ENABLE_WALLET
-#include <wallet/rpcwallet.h>
-#include <wallet/wallet.h>
-#include <wallet/walletdb.h>
-#endif
 #include <warnings.h>
 
 #include <stdint.h>
@@ -67,28 +62,17 @@ static UniValue validateaddress(const JSONRPCRequest& request)
     ret.pushKV("isvalid", isValid);
     if (isValid)
     {
+        std::string currentAddress = EncodeDestination(dest);
+        ret.pushKV("address", currentAddress);
 
-#ifdef ENABLE_WALLET
-        if (HasWallets() && IsDeprecatedRPCEnabled("validateaddress")) {
-            ret.pushKVs(getaddressinfo(request));
-        }
-#endif
-        if (ret["address"].isNull()) {
-            std::string currentAddress = EncodeDestination(dest);
-            ret.pushKV("address", currentAddress);
+        CScript scriptPubKey = GetScriptForDestination(dest);
+        ret.pushKV("scriptPubKey", HexStr(scriptPubKey.begin(), scriptPubKey.end()));
 
-            CScript scriptPubKey = GetScriptForDestination(dest);
-            ret.pushKV("scriptPubKey", HexStr(scriptPubKey.begin(), scriptPubKey.end()));
-
-            UniValue detail = DescribeAddress(dest);
-            ret.pushKVs(detail);
-        }
+        UniValue detail = DescribeAddress(dest);
+        ret.pushKVs(detail);
     }
     return ret;
 }
-
-// Needed even with !ENABLE_WALLET, to pass (ignored) pointers around
-class CWallet;
 
 static UniValue createmultisig(const JSONRPCRequest& request)
 {
@@ -461,7 +445,7 @@ static const CRPCCommand commands[] =
   //  --------------------- ------------------------  -----------------------  ----------
     { "control",            "getmemoryinfo",          &getmemoryinfo,          {"mode"} },
     { "control",            "logging",                &logging,                {"include", "exclude"}},
-    { "util",               "validateaddress",        &validateaddress,        {"address"} }, /* uses wallet if enabled */
+    { "util",               "validateaddress",        &validateaddress,        {"address"} },
     { "util",               "createmultisig",         &createmultisig,         {"nrequired","keys"} },
     { "util",               "verifymessage",          &verifymessage,          {"address","signature","message"} },
     { "util",               "signmessagewithprivkey", &signmessagewithprivkey, {"privkey","message"} },
