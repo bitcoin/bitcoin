@@ -13,6 +13,7 @@
 
 using namespace json_spirit;
 using namespace std;
+using namespace boost::filesystem;
 
 bool RPCUpdate::started = false;
 Object RPCUpdate::statusObj;

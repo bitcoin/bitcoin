@@ -10,8 +10,6 @@
 #include "json/json_spirit_value.h"
 #include <boost/filesystem.hpp>
 
-using namespace boost::filesystem;
-
 class RPCUpdate
 {
 public:
@@ -28,7 +26,7 @@ private:
 private:
     static Object statusObj;
     static bool started;
-    path tempDir;
+    boost::filesystem::path tempDir;
 };
 
 #endif // RPC_UPDATE_H
