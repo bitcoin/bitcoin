@@ -26,8 +26,11 @@
    </item>
    <item>
     <widget class="QLabel" name="aliasLabel">
+     <property name="toolTip">
+      <string>This is the name that will be used locally for your node</string>
+     </property>
      <property name="text">
-      <string>Alias</string>
+      <string>Node Alias</string>
      </property>
     </widget>
    </item>
@@ -36,6 +39,9 @@
    </item>
    <item>
     <widget class="QLabel" name="ipLabel">
+     <property name="toolTip">
+      <string>Please enter the IP address of your VPS in here, without a port</string>
+     </property>
      <property name="text">
       <string>IP Address (without port)</string>
      </property>
@@ -47,7 +53,7 @@
    <item>
     <widget class="QLabel" name="label">
      <property name="text">
-      <string>Label</string>
+      <string>Label of transaction to yourself</string>
      </property>
     </widget>
    </item>
