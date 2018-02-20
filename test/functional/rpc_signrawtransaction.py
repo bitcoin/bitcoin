@@ -2,7 +2,7 @@
 # Copyright (c) 2015-2016 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-"""Test transaction signing using the signrawtransaction RPC."""
+"""Test transaction signing using the signrawtransaction* RPCs."""
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
@@ -12,6 +12,7 @@ class SignRawTransactionsTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
+        self.extra_args = [["-deprecatedrpc=signrawtransaction"]]
 
     def successful_signing_test(self):
         """Create and sign a valid raw transaction with one input.
@@ -33,14 +34,17 @@ class SignRawTransactionsTest(BitcoinTestFramework):
         outputs = {'ycwedq2f3sz2Yf9JqZsBCQPxp18WU3Hp4J': 0.1}
 
         rawTx = self.nodes[0].createrawtransaction(inputs, outputs)
-        rawTxSigned = self.nodes[0].signrawtransaction(rawTx, inputs, privKeys)
+        rawTxSigned = self.nodes[0].signrawtransactionwithkey(rawTx, privKeys, inputs)
 
         # 1) The transaction has a complete set of signatures
-        assert 'complete' in rawTxSigned
-        assert_equal(rawTxSigned['complete'], True)
+        assert rawTxSigned['complete']
 
         # 2) No script verification error occurred
         assert 'errors' not in rawTxSigned
+
+        # Perform the same test on signrawtransaction
+        rawTxSigned2 = self.nodes[0].signrawtransaction(rawTx, inputs, privKeys)
+        assert_equal(rawTxSigned, rawTxSigned2)
 
     def script_verification_error_test(self):
         """Create and sign a raw transaction with valid (vin 0), invalid (vin 1) and one missing (vin 2) input script.
@@ -84,11 +88,10 @@ class SignRawTransactionsTest(BitcoinTestFramework):
         # Make sure decoderawtransaction throws if there is extra data
         assert_raises_rpc_error(-22, "TX decode failed", self.nodes[0].decoderawtransaction, rawTx + "00")
 
-        rawTxSigned = self.nodes[0].signrawtransaction(rawTx, scripts, privKeys)
+        rawTxSigned = self.nodes[0].signrawtransactionwithkey(rawTx, privKeys, scripts)
 
         # 3) The transaction has no complete set of signatures
-        assert 'complete' in rawTxSigned
-        assert_equal(rawTxSigned['complete'], False)
+        assert not rawTxSigned['complete']
 
         # 4) Two script verification errors occurred
         assert 'errors' in rawTxSigned
@@ -106,6 +109,10 @@ class SignRawTransactionsTest(BitcoinTestFramework):
         assert_equal(rawTxSigned['errors'][0]['vout'], inputs[1]['vout'])
         assert_equal(rawTxSigned['errors'][1]['txid'], inputs[2]['txid'])
         assert_equal(rawTxSigned['errors'][1]['vout'], inputs[2]['vout'])
+
+        # Perform same test with signrawtransaction
+        rawTxSigned2 = self.nodes[0].signrawtransaction(p2wpkh_raw_tx)
+        assert_equal(rawTxSigned, rawTxSigned2)
 
     def run_test(self):
         self.successful_signing_test()

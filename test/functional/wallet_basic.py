@@ -148,7 +148,7 @@ class WalletTest(BitcoinTestFramework):
             inputs.append({ "txid" : utxo["txid"], "vout" : utxo["vout"]})
             outputs[self.nodes[2].getnewaddress("from1")] = utxo["amount"] - fee_per_input
             raw_tx = self.nodes[0].createrawtransaction(inputs, outputs)
-            txns_to_send.append(self.nodes[0].signrawtransaction(raw_tx))
+            txns_to_send.append(self.nodes[0].signrawtransactionwithwallet(raw_tx))
             totalfee += fee_per_input
 
         # Have node 1 (miner) send the transactions
@@ -234,7 +234,7 @@ class WalletTest(BitcoinTestFramework):
 
         rawTx = self.nodes[1].createrawtransaction(inputs, outputs).replace("c0833842", "00000000") #replace 11.11 with 0.0 (int32)
         decRawTx = self.nodes[1].decoderawtransaction(rawTx)
-        signedRawTx = self.nodes[1].signrawtransaction(rawTx)
+        signedRawTx = self.nodes[1].signrawtransactionwithwallet(rawTx)
         decRawTx = self.nodes[1].decoderawtransaction(signedRawTx['hex'])
         zeroValueTxid= decRawTx['txid']
         self.nodes[1].sendrawtransaction(signedRawTx['hex'])
@@ -409,7 +409,7 @@ class WalletTest(BitcoinTestFramework):
         node0_balance = self.nodes[0].getbalance()
         # Split into two chains
         rawtx = self.nodes[0].createrawtransaction([{"txid":singletxid, "vout":0}], {chain_addrs[0]:node0_balance/2-Decimal('0.01'), chain_addrs[1]:node0_balance/2-Decimal('0.01')})
-        signedtx = self.nodes[0].signrawtransaction(rawtx)
+        signedtx = self.nodes[0].signrawtransactionwithwallet(rawtx)
         singletxid = self.nodes[0].sendrawtransaction(signedtx["hex"])
         self.nodes[0].generate(1)
 
