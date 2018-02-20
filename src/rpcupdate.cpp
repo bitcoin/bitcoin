@@ -9,29 +9,41 @@
 #include "rpcserver.h"
 #include "util.h"
 
-#include <boost/filesystem.hpp>
 #include <boost/thread.hpp>
 
 using namespace json_spirit;
 using namespace std;
+using namespace boost::filesystem;
 
 bool RPCUpdate::started = false;
 Object RPCUpdate::statusObj;
 
-void RPCUpdate::Download()
+std::string RPCUpdate::GetArchivePath() const
+{
+    std::string url = updater.GetDownloadUrl();
+    return (tempDir / path(url).filename()).string();
+}
+
+bool RPCUpdate::Download()
 {
     statusObj.clear();
     // Create temporary directory
-    boost::filesystem::path dir = boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
-    bool result = TryCreateDirectory(dir);
+    tempDir = GetTempPath() / unique_path();
+    bool result = TryCreateDirectory(tempDir);
     if (!result) {
-        throw runtime_error("Failed to create directory" + dir.string());
+        throw runtime_error("Failed to create directory" + tempDir.string());
     }
 
     // Download archive
-    std::string url = updater.GetDownloadUrl();
-    std::string archivePath = (dir / boost::filesystem::path(url).filename()).string();
-    updater.DownloadFile(url, archivePath, &ProgressFunction);
+    std::string archivePath = GetArchivePath();
+    updater.DownloadFile(updater.GetDownloadUrl(), archivePath, &ProgressFunction);
+    if (updater.GetStopDownload())
+    {
+        started = false;
+        statusObj[0] = Pair("Download", "Stopped");
+        remove_all(tempDir);
+        return false;
+    }
     if (CheckSha(archivePath))
     {
         statusObj[0] = Pair("Download", "Done - " + archivePath);
@@ -39,41 +51,25 @@ void RPCUpdate::Download()
     else
     {
         statusObj[0] = Pair("Download", "Error. SHA-256 verification failed.");
-        boost::filesystem::remove_all(dir);
+        remove_all(tempDir);
+        return false;
     }
+    return true;
 }
 
 void RPCUpdate::Install()
 {
     statusObj.clear();
-    // Create temporary directory
-    boost::filesystem::path dir = GetTempPath() / boost::filesystem::unique_path();
-    bool result = TryCreateDirectory(dir);
-    if (!result) {
-        throw runtime_error("Failed to create directory" + dir.string());
-    }
-
-    // Download archive
-    std::string url = updater.GetDownloadUrl();
-    std::string archivePath = (dir / boost::filesystem::path(url).filename()).string();
-    updater.DownloadFile(url, archivePath, &ProgressFunction);
-    if (CheckSha(archivePath))
+    if (!Download())
     {
-        statusObj[0] = Pair("Download", "Done");
-    }
-    else
-    {
-        statusObj[0] = Pair("Download", "Error. SHA-256 verification failed.");
-        boost::filesystem::remove_all(dir);
         return;
     }
-
     // Extract archive
-    result = TryCreateDirectory(dir / "archive");
+    bool result = TryCreateDirectory(tempDir / "archive");
     if (!result) {
-        throw runtime_error("Failed to create directory" + (dir / "archive").string());
+        throw runtime_error(strprintf("Failed to create directory %s", (tempDir / "archive").string()));
     }
-    std::string strCommand = "unzip -q " + archivePath + " -d " + (dir / "archive").string();
+    std::string strCommand = strprintf("unzip -q %s -d %s", GetArchivePath(), (tempDir / "archive").string());
     int nErr = ::system(strCommand.c_str());
     if (nErr) {
         LogPrintf("runCommand error: system(%s) returned %d\n", strCommand, nErr);
@@ -84,7 +80,7 @@ void RPCUpdate::Install()
 
     // Copy files to /usr/
     if (!nErr) {
-        strCommand = "cp -r " + (dir / "archive/*/*").string() + " /usr/";
+        strCommand = strprintf("cp -rf %s /usr/local/", (tempDir / "archive/*/*").string());
         nErr = ::system(strCommand.c_str());
         if (nErr) {
             LogPrintf("runCommand error: system(%s) returned %d\n", strCommand, nErr);
@@ -97,7 +93,7 @@ void RPCUpdate::Install()
         StartRestart();
     }
 
-    boost::filesystem::remove_all(dir);
+    boost::filesystem::remove_all(tempDir);
 }
 
 void RPCUpdate::ProgressFunction(curl_off_t now, curl_off_t total)
@@ -160,7 +156,8 @@ Value update(const Array& params, bool fHelp)
     if (params.size() >= 1)
         strCommand = params[0].get_str();
 
-    if (fHelp  || (strCommand != "check" && strCommand != "download" && strCommand != "status" && strCommand != "install"))
+    if (fHelp  || (strCommand != "check" && strCommand != "download" && strCommand != "status" && 
+                   strCommand != "install" && strCommand != "stop"))
         throw runtime_error(
                 "update \"command\"... ( \"passphrase\" )\n"
                 "Set of commands to check and download application updates\n"
@@ -172,6 +169,7 @@ Value update(const Array& params, bool fHelp)
                 "  download     - Download a new version\n"
                 "  status       - Check download status\n"
                 "  install      - Install update\n"
+                "  stop         - Stop update/install\n"
                 );
 
     if (strCommand == "check")
@@ -211,6 +209,12 @@ Value update(const Array& params, bool fHelp)
     if (strCommand == "status")
     {
         return rpcUpdate.GetStatusObject();
+    }
+
+    if (strCommand == "stop")
+    {
+        updater.StopDownload();
+        return "Crown download stopped.";
     }
 
     if (strCommand == "install")

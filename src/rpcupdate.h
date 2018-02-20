@@ -8,20 +8,25 @@
 #include "updater.h"
 #include "json/json_spirit_utils.h"
 #include "json/json_spirit_value.h"
+#include <boost/filesystem.hpp>
 
 class RPCUpdate
 {
 public:
-    void Download();
+    bool Download();
     void Install();
     bool IsStarted() const;
     Object GetStatusObject() const;
     static void ProgressFunction(curl_off_t now, curl_off_t total);
 
 private:
+    bool CheckSha(const std::string& fileName) const;
+    std::string GetArchivePath() const;
+
+private:
     static Object statusObj;
     static bool started;
-    bool CheckSha(const std::string& fileName) const;
+    boost::filesystem::path tempDir;
 };
 
 #endif // RPC_UPDATE_H
