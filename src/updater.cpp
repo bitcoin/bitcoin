@@ -5,6 +5,7 @@
 #include "clientversion.h"
 #include "util.h"
 #include "chainparams.h"
+#include "rpcprotocol.h"
 
 #include <stdio.h>
 #include <curl/curl.h>
@@ -120,7 +121,7 @@ bool Updater::LoadUpdateInfo()
         {
             long response_code;
             curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
-            if (response_code == 200)
+            if (response_code == HTTP_OK)
             {
                 CheckAndUpdateStatus(updateData);
                 result = true;
