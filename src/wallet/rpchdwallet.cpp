@@ -250,8 +250,8 @@ int AccountInfo(CHDWallet *pwallet, CExtKeyAccount *pa, int nShowKeys, bool fAll
         if (mvi->second.size() >= 8)
         {
             int nVendorId = *((int*)mvi->second.data());
-            int nProductId = *((int*)mvi->second.data() + 4);
-            obj.pushKV("hardware_device", strprintf("%04x %04x", nVendorId, nProductId));
+            int nProductId = *((int*)(mvi->second.data() + 4));
+            obj.pushKV("hardware_device", strprintf("0x%04x 0x%04x", nVendorId, nProductId));
         };
     };
 
@@ -424,6 +424,7 @@ int KeyInfo(CHDWallet *pwallet, CKeyID &idMaster, CKeyID &idKey, CStoredExtKey &
     obj.pushKV("active", sek.nFlags & EAF_ACTIVE ? "true" : "false");
     obj.pushKV("receive_on", sek.nFlags & EAF_RECEIVE_ON ? "true" : "false");
     obj.pushKV("encrypted", sek.nFlags & EAF_IS_CRYPTED ? "true" : "false");
+    obj.pushKV("hardware_device", sek.nFlags & EAF_HARDWARE_DEVICE ? "true" : "false");
     obj.pushKV("label", sek.sLabel);
 
     if (reversePlace(&sek.kp.vchFingerprint[0]) == 0)
@@ -1641,6 +1642,18 @@ UniValue extkeyimportinternal(const JSONRPCRequest &request, bool fGenesisChain)
     if (0 != pwallet->ScanChainFromTime(nScanFrom))
         throw std::runtime_error("ScanChainFromTime failed.");
 
+    UniValue warnings(UniValue::VARR);
+    // Check for coldstaking outputs without coldstakingaddress set
+    if (pwallet->CountColdstakeOutputs() > 0)
+    {
+        UniValue jsonSettings;
+        if (!pwallet->GetSetting("changeaddress", jsonSettings)
+            || !jsonSettings["coldstakingaddress"].isStr())
+        {
+            warnings.push_back("Wallet has coldstaking outputs. Please remember to set a coldstakingaddress.");
+        };
+    };
+
     CBitcoinAddress addr;
     addr.Set(idDerived, CChainParams::EXT_KEY_HASH);
     result.pushKV("result", "Success.");
@@ -1651,6 +1664,9 @@ UniValue extkeyimportinternal(const JSONRPCRequest &request, bool fGenesisChain)
     result.pushKV("account_label", sea->sLabel);
 
     result.pushKV("note", "Please backup your wallet.");
+
+    if (warnings.size() > 0)
+        result.pushKV("warnings", warnings);
 
     return result;
 }
@@ -2565,7 +2581,8 @@ UniValue deriverangekeys(const JSONRPCRequest &request)
             if (fSave)
             {
                 CEKAKey ak(nChain, nChildOut);
-                if (1 != sea->HaveKey(idk, false, ak))
+                isminetype ismine;
+                if (HK_YES != sea->HaveKey(idk, false, ak, ismine))
                 {
                     if (0 != pwallet->ExtKeySaveKey(sea, idk, ak))
                         throw JSONRPCError(RPC_WALLET_ERROR, "ExtKeySaveKey failed.");
@@ -4758,7 +4775,6 @@ static UniValue SendToInner(const JSONRPCRequest &request, OutputTypes typeIn, O
         {
             if (!uvCoinControl["replaceable"].isBool())
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Replaceable parameter must be boolean.");
-
             coincontrol.signalRbf = uvCoinControl["replaceable"].get_bool();
         };
 
@@ -4766,7 +4782,6 @@ static UniValue SendToInner(const JSONRPCRequest &request, OutputTypes typeIn, O
         {
             if (!uvCoinControl["conf_target"].isNum())
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "conf_target parameter must be numeric.");
-
             coincontrol.m_confirm_target = ParseConfirmTarget(uvCoinControl["conf_target"]);
         };
 
@@ -4774,7 +4789,6 @@ static UniValue SendToInner(const JSONRPCRequest &request, OutputTypes typeIn, O
         {
             if (!uvCoinControl["estimate_mode"].isStr())
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "estimate_mode parameter must be a string.");
-
             if (!FeeModeFromString(uvCoinControl["estimate_mode"].get_str(), coincontrol.m_fee_mode))
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid estimate_mode parameter");
         };
@@ -4841,7 +4855,6 @@ static UniValue SendToInner(const JSONRPCRequest &request, OutputTypes typeIn, O
             objChangedOutputs.pushKV(v.first, v.second);
 
         result.pushKV("outputs_fee", objChangedOutputs);
-
         return result;
     };
 
@@ -5241,6 +5254,8 @@ UniValue debugwallet(const JSONRPCRequest &request)
     EnsureWalletIsUnlocked(pwallet);
 
     UniValue result(UniValue::VOBJ);
+    UniValue errors(UniValue::VARR);
+    UniValue warnings(UniValue::VARR);
     result.pushKV("wallet_name", pwallet->GetName());
 
 
@@ -5351,13 +5366,68 @@ UniValue debugwallet(const JSONRPCRequest &request)
                     tmp.pushKV("account", sea->GetIDString58());
                     tmp.pushKV("chain", sek->GetIDString58());
                     tmp.pushKV("missing_keys", rva);
-                    result.pushKV("error", tmp);
+                    errors.push_back(tmp);
                 };
 
                 // TODO: Check hardened keys, must detect stealth key chain
             };
         };
+
+        {
+            CHDWalletDB wdb(pwallet->GetDBHandle(), "r+");
+            for (const auto &ri : pwallet->mapRecords)
+            {
+                const uint256 &txhash = ri.first;
+                const CTransactionRecord &rtx = ri.second;
+
+                if (!pwallet->IsTrusted(txhash, rtx.blockHash, rtx.nIndex))
+                    continue;
+
+                for (const auto &r : rtx.vout)
+                {
+                    if ((r.nType == OUTPUT_CT || r.nType == OUTPUT_RINGCT)
+                        && (r.nFlags & ORF_OWNED || r.nFlags & ORF_STAKEONLY)
+                        && !pwallet->IsSpent(txhash, r.n))
+                    {
+                        CStoredTransaction stx;
+                        if (!wdb.ReadStoredTx(txhash, stx))
+                        {
+                            UniValue tmp(UniValue::VOBJ);
+                            tmp.pushKV("type", "Missing stored txn.");
+                            tmp.pushKV("txid", txhash.ToString());
+                            tmp.pushKV("n", r.n);
+                            errors.push_back(tmp);
+                            continue;
+                        };
+
+                        uint256 tmp;
+                        if (!stx.GetBlind(r.n, tmp.begin()))
+                        {
+                            UniValue tmp(UniValue::VOBJ);
+                            tmp.pushKV("type", "Missing blinding factor.");
+                            tmp.pushKV("txid", txhash.ToString());
+                            tmp.pushKV("n", r.n);
+                            errors.push_back(tmp);
+                        };
+                    };
+                };
+            };
+        }
+        if (pwallet->CountColdstakeOutputs() > 0)
+        {
+            UniValue jsonSettings;
+            if (!pwallet->GetSetting("changeaddress", jsonSettings)
+                || !jsonSettings["coldstakingaddress"].isStr())
+            {
+                UniValue tmp(UniValue::VOBJ);
+                tmp.pushKV("type", "Wallet has coldstaking outputs with coldstakingaddress unset.");
+                warnings.push_back(tmp);
+            };
+        };
     }
+
+    result.pushKV("errors", errors);
+    result.pushKV("warnings", warnings);
 
     return result;
 };

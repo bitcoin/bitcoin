@@ -3801,6 +3801,9 @@ UniValue listunspent(const JSONRPCRequest& request)
         if (fIncludeImmature)
             entry.push_back(Pair("mature", out.fMature));
 
+        if (out.fNeedHardwareKey)
+            entry.push_back(Pair("ondevice", out.fNeedHardwareKey));
+
         results.push_back(entry);
     }
 

@@ -1027,21 +1027,21 @@ bool CHDWallet::Unlock(const SecureString &strWalletPassphrase)
     return true;
 };
 
-bool CHDWallet::HaveAddress(const CTxDestination &dest)
+isminetype CHDWallet::HaveAddress(const CTxDestination &dest)
 {
     LOCK(cs_wallet);
 
     if (dest.type() == typeid(CKeyID))
     {
         CKeyID id = boost::get<CKeyID>(dest);
-        return HaveKey(id);
+        return IsMine(id);
     };
 
     if (dest.type() == typeid(CKeyID256))
     {
         CKeyID256 id256 = boost::get<CKeyID256>(dest);
         CKeyID id(id256);
-        return HaveKey(id);
+        return IsMine(id);
     };
 
     if (dest.type() == typeid(CExtKeyPair))
@@ -1057,10 +1057,10 @@ bool CHDWallet::HaveAddress(const CTxDestination &dest)
         return HaveStealthAddress(sx);
     };
 
-    return false;
+    return ISMINE_NO;
 };
 
-bool CHDWallet::HaveKey(const CKeyID &address, CEKAKey &ak, CExtKeyAccount *&pa) const
+isminetype CHDWallet::HaveKey(const CKeyID &address, CEKAKey &ak, CExtKeyAccount *&pa) const
 {
     AssertLockHeld(cs_wallet);
     //LOCK(cs_wallet);
@@ -1070,22 +1070,28 @@ bool CHDWallet::HaveKey(const CKeyID &address, CEKAKey &ak, CExtKeyAccount *&pa)
     for (it = mapExtAccounts.begin(); it != mapExtAccounts.end(); ++it)
     {
         pa = it->second;
-        rv = pa->HaveKey(address, true, ak);
-        if (rv == 1)
-            return true;
-        if (rv == 3)
+        isminetype ismine = ISMINE_NO;
+        rv = pa->HaveKey(address, true, ak, ismine);
+        if (rv == HK_YES)
+            return ismine;
+        if (rv == HK_LOOKAHEAD_DO_UPDATE)
         {
             if (0 != ExtKeySaveKey(it->second, address, ak))
-                return error("%s: ExtKeySaveKey failed.", __func__);
-            return true;
+            {
+                LogPrintf("%s: ExtKeySaveKey failed.", __func__);
+                return ISMINE_NO;
+            };
+            return ismine;
         };
     };
 
     pa = nullptr;
-    return CCryptoKeyStore::HaveKey(address);
+    if (CCryptoKeyStore::HaveKey(address))
+        return ISMINE_SPENDABLE;
+    return ISMINE_NO;
 };
 
-bool CHDWallet::HaveKey(const CKeyID &address) const
+isminetype CHDWallet::IsMine(const CKeyID &address) const
 {
     LOCK(cs_wallet);
 
@@ -1094,17 +1100,26 @@ bool CHDWallet::HaveKey(const CKeyID &address) const
     return HaveKey(address, ak, pa);
 };
 
-bool CHDWallet::HaveExtKey(const CKeyID &keyID) const
+bool CHDWallet::HaveKey(const CKeyID &address) const
 {
     LOCK(cs_wallet);
-    // NOTE: This only checks keys currently in memory (mapExtKeys)
+
+    CEKAKey ak;
+    CExtKeyAccount *pa = nullptr;
+    return HaveKey(address, ak, pa) & ISMINE_SPENDABLE ? true : false;
+};
+
+isminetype CHDWallet::HaveExtKey(const CKeyID &keyID) const
+{
+    LOCK(cs_wallet);
+    // NOTE: This only checks the extkeys currently in memory (mapExtKeys)
     //       There may be other extkeys in the db.
 
     ExtKeyMap::const_iterator it = mapExtKeys.find(keyID);
     if (it != mapExtKeys.end())
-        return true;
+        return it->second->IsMine();
 
-    return false;
+    return ISMINE_NO;
 };
 
 bool CHDWallet::GetExtKey(const CKeyID &keyID, CStoredExtKey &extKeyOut) const
@@ -1186,12 +1201,18 @@ bool CHDWallet::GetKeyFromPool(CPubKey &key, bool internal)
     return 0 == NewKeyFromAccount(key, true, false, false, false, nullptr);
 };
 
-bool CHDWallet::HaveStealthAddress(const CStealthAddress &sxAddr) const
+isminetype CHDWallet::HaveStealthAddress(const CStealthAddress &sxAddr) const
 {
     AssertLockHeld(cs_wallet);
 
-    if (stealthAddresses.count(sxAddr))
-        return true;
+    std::set<CStealthAddress>::const_iterator si = stealthAddresses.find(sxAddr);
+    if (si != stealthAddresses.end())
+    {
+        isminetype imSpend = IsMine(si->spend_secret_id);
+        if (imSpend & ISMINE_SPENDABLE)
+            return imSpend; // Retain ISMINE_HARDWARE_DEVICE flag if present
+        return ISMINE_WATCH_SOLVABLE;
+    };
 
     CKeyID sxId = CPubKey(sxAddr.scan_pubkey).GetID();
 
@@ -1202,13 +1223,18 @@ bool CHDWallet::HaveStealthAddress(const CStealthAddress &sxAddr) const
 
         if (ea->mapStealthKeys.size() < 1)
             continue;
-
-        AccStealthKeyMap::iterator it = ea->mapStealthKeys.find(sxId);
+        AccStealthKeyMap::const_iterator it = ea->mapStealthKeys.find(sxId);
         if (it != ea->mapStealthKeys.end())
-            return true;
+        {
+            const CStoredExtKey *sek = ea->GetChain(it->second.akSpend.nParent);
+            if (sek)
+                return sek->IsMine();
+
+            break;
+        };
     };
 
-    return false;
+    return ISMINE_NO;
 };
 
 bool CHDWallet::GetStealthAddressScanKey(CStealthAddress &sxAddr) const
@@ -1566,9 +1592,7 @@ isminetype CHDWallet::IsMine(const CScript &scriptPubKey, CKeyID &keyID,
             isInvalid = true;
             return ISMINE_NO;
         }
-        if (HaveKey(keyID, ak, pa))
-            return ISMINE_SPENDABLE;
-        break;
+        return HaveKey(keyID, ak, pa);
     case TX_PUBKEYHASH:
     case TX_TIMELOCKED_PUBKEYHASH:
     case TX_PUBKEYHASH256:
@@ -1586,9 +1610,7 @@ isminetype CHDWallet::IsMine(const CScript &scriptPubKey, CKeyID &keyID,
                 return ISMINE_NO;
             }
         }
-        if (HaveKey(keyID, ak, pa))
-            return ISMINE_SPENDABLE;
-        break;
+        return HaveKey(keyID, ak, pa);
     case TX_SCRIPTHASH:
     case TX_TIMELOCKED_SCRIPTHASH:
     case TX_SCRIPTHASH256:
@@ -3020,14 +3042,12 @@ bool CHDWallet::SetChangeDest(const CCoinControl *coinControl, CTempRecipient &r
                     return errorN(0, sError, __func__, "Invalid address setting.");
 
                 r.address = addr.Get();
-
                 if (!ExpandChangeAddress(this, r, sError))
                     return false;
 
                 fIsSet = true;
             };
         };
-
 
         if (!fIsSet)
         {
@@ -3377,6 +3397,9 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                     return errorN(1, sError, __func__, "Dummy signature failed.");
                 UpdateTransaction(txNew, nIn, sigdata);
                 nIn++;
+
+                if (IsMine(coin.txoutBase.get()) & ISMINE_HARDWARE_DEVICE)
+                    coinControl->fNeedHardwareKey = true;
             };
 
             nBytes = GetVirtualTransactionSize(txNew);
@@ -3487,6 +3510,11 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
 
         if (sign)
         {
+            if (coinControl->fNeedHardwareKey)
+            {
+                return errorN(1, sError, __func__, "Need key from hardware: TODO");
+            };
+
             CTransaction txNewConst(txNew);
             int nIn = 0;
             for (const auto &coin : setCoins)
@@ -3907,10 +3935,8 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
 
         nValueOutPlain += nFeeRet;
 
-        std::vector<uint8_t> vInputBlinds;
+        std::vector<uint8_t> vInputBlinds(32 * setCoins.size());
         std::vector<uint8_t*> vpBlinds;
-
-        vInputBlinds.resize(32 * setCoins.size());
 
         int nIn = 0;
         for (const auto &coin : setCoins)
@@ -7300,6 +7326,12 @@ bool CHDWallet::GetFullChainPath(const CExtKeyAccount *pa, size_t nChain, std::v
         const CStoredExtKey *pSek = it->second;
         if (0 != AppendPath(pSek, vPath))
             return error("%s: AppendPath failed.", __func__);
+    } else
+    {
+        const CStoredExtKey *sek = pa->GetChain(0);
+        if (sek && 0 != AppendPath(sek, vPath))
+            return error("%s: AppendPath failed.", __func__);
+        vPath.pop_back();
     };
 
     const CStoredExtKey *sekChain = pa->GetChain(nChain);
@@ -9495,8 +9527,9 @@ void CHDWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, con
 
             bool fSpendableIn = ((mine & ISMINE_SPENDABLE) != ISMINE_NO) || (coinControl && coinControl->fAllowWatchOnly && (mine & ISMINE_WATCH_SOLVABLE) != ISMINE_NO);
             bool fSolvableIn = (mine & (ISMINE_SPENDABLE | ISMINE_WATCH_SOLVABLE)) != ISMINE_NO;
+            bool fNeedHardwareKey = (mine & ISMINE_HARDWARE_DEVICE);
 
-            vCoins.emplace_back(&wtx, i, nDepth, fSpendableIn, fSolvableIn, safeTx, fMature);
+            vCoins.emplace_back(&wtx, i, nDepth, fSpendableIn, fSolvableIn, safeTx, fMature, fNeedHardwareKey);
 
             // Checks the sum amount of all UTXO's.
             if (nMinimumSumAmount != MAX_MONEY) {
@@ -10494,6 +10527,30 @@ bool CHDWallet::EraseSetting(const std::string &setting)
         return false;
 
     return true;
+};
+
+size_t CHDWallet::CountColdstakeOutputs()
+{
+    size_t nColdstakeOutputs = 0;
+
+    CCoinControl coinControl;
+    std::vector<COutput> vAvailableCoins;
+    CAmount nMinimumAmount = 0, nMaximumAmount = MAX_MONEY, nMinimumSumAmount = 0;
+    uint64_t nMaximumCount = 0;
+    int nMinDepth = 0, nMaxDepth = 0x7FFFFFFF;
+    bool fIncludeImmature = true;
+    AvailableCoins(vAvailableCoins, false, &coinControl, nMinimumAmount, nMaximumAmount, nMinimumSumAmount, nMaximumCount, nMinDepth, nMaxDepth, fIncludeImmature);
+    for (auto &coin : vAvailableCoins)
+    {
+        assert(coin.i < (int)coin.tx->tx->GetNumVOuts());
+        auto txoutBase = coin.tx->tx->vpout[coin.i];
+        if (!txoutBase->IsStandardOutput())
+            continue;
+        if (HasIsCoinstakeOp(*txoutBase->GetPScriptPubKey()))
+            nColdstakeOutputs++;
+    };
+
+    return nColdstakeOutputs;
 };
 
 bool CHDWallet::GetScriptForAddress(CScript &script, const CBitcoinAddress &addr, bool fUpdate, std::vector<uint8_t> *vData)

@@ -121,7 +121,6 @@ class SmsgPaidTest(ParticlTestFramework):
 
         self.sync_all()
         self.stakeBlocks(1, nStakeNode=1)
-        self.sync_all()
         self.waitForSmsgExchange(4, 1, 0)
 
         ro = nodes[0].walletpassphrase("qwerty234", 300)

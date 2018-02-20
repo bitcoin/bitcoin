@@ -595,7 +595,7 @@ int CExtKeyAccount::HaveSavedKey(const CKeyID &id)
     return 0;
 };
 
-int CExtKeyAccount::HaveKey(const CKeyID &id, bool fUpdate, CEKAKey &ak)
+int CExtKeyAccount::HaveKey(const CKeyID &id, bool fUpdate, CEKAKey &ak, isminetype &ismine)
 {
     LOCK(cs_account);
     // If fUpdate, promote key if found in look ahead
@@ -603,6 +603,7 @@ int CExtKeyAccount::HaveKey(const CKeyID &id, bool fUpdate, CEKAKey &ak)
     if (mi != mapKeys.end())
     {
         ak = mi->second;
+        ismine = IsMine(ak.nParent);
         return HK_YES;
     };
 
@@ -611,6 +612,7 @@ int CExtKeyAccount::HaveKey(const CKeyID &id, bool fUpdate, CEKAKey &ak)
     {
         if (LogAcceptCategory(BCLog::HDWALLET))
             LogPrintf("HaveKey in lookAhead %s\n", CBitcoinAddress(mi->first).ToString());
+        ismine = IsMine(ak.nParent);
         if (fUpdate)
         {
             ak = mi->second; // pass up for save to db
@@ -621,8 +623,11 @@ int CExtKeyAccount::HaveKey(const CKeyID &id, bool fUpdate, CEKAKey &ak)
 
     AccKeySCMap::const_iterator miSck = mapStealthChildKeys.find(id);
     if (miSck != mapStealthChildKeys.end())
+    {
+        ismine = IsMine(ak.nParent);
         return HK_YES;
-
+    }
+    ismine = ISMINE_NO;
     return HK_NO;
 };
 
@@ -786,7 +791,8 @@ bool CExtKeyAccount::SaveKey(const CKeyID &id, CEKAKey &keyIn)
                 };
 
                 CEKAKey ak;
-                if (1 != HaveKey(pk.GetID(), false, ak))
+                isminetype ismine;
+                if (HK_YES != HaveKey(pk.GetID(), false, ak, ismine))
                     break;
 
                 pc->nGenerated = i;

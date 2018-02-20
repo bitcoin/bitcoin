@@ -13,6 +13,7 @@
 #include <key/keyutil.h>
 #include <key/types.h>
 #include <sync.h>
+#include <script/ismine.h>
 
 static const uint32_t MAX_DERIVE_TRIES = 16;
 static const uint32_t BIP32_KEY_LEN = 82;       // raw, 74 + 4 bytes id + 4 checksum
@@ -50,6 +51,7 @@ enum MainExtKeyTypes
     EKT_EXTERNAL,
     EKT_STEALTH,
     EKT_CONFIDENTIAL,
+    EKT_STEALTH_SCAN,
     EKT_MAX_TYPES,
 };
 
@@ -60,6 +62,7 @@ enum AccountFlagTypes
     EAF_IS_CRYPTED       = (1 << 2),
     EAF_RECEIVE_ON       = (1 << 3), // CStoredExtKey with this flag set generate look ahead keys
     EAF_IN_ACCOUNT       = (1 << 4), // CStoredExtKey is part of an account
+    EAF_HARDWARE_DEVICE  = (1 << 5), // Have private key in hardware device.
 };
 
 enum {HK_NO = 0, HK_YES, HK_LOOKAHEAD, HK_LOOKAHEAD_DO_UPDATE};
@@ -362,12 +365,21 @@ public:
         return 0;
     };
 
-    uint32_t GetCounter(bool fHardened)
+    uint32_t GetCounter(bool fHardened) const
     {
         return fHardened ? nHGenerated : nGenerated;
     };
 
     int SetPath(const std::vector<uint32_t> &vPath_);
+
+    isminetype IsMine() const
+    {
+        if (kp.key.IsValid() || (nFlags & EAF_IS_CRYPTED))
+            return ISMINE_SPENDABLE;
+        if ((nFlags & EAF_HARDWARE_DEVICE))
+            return (isminetype)((int)ISMINE_SPENDABLE | (int)ISMINE_HARDWARE_DEVICE);
+        return ISMINE_WATCH_SOLVABLE;
+    };
 
     template<typename Stream>
     void Serialize(Stream &s) const
@@ -666,7 +678,7 @@ public:
     };
 
     int HaveSavedKey(const CKeyID &id);
-    int HaveKey(const CKeyID &id, bool fUpdate, CEKAKey &ak);
+    int HaveKey(const CKeyID &id, bool fUpdate, CEKAKey &ak, isminetype &ismine);
     bool GetKey(const CKeyID &id, CKey &keyOut) const;
     bool GetKey(const CEKAKey &ak, CKey &keyOut) const;
     bool GetKey(const CEKASCKey &asck, CKey &keyOut) const;
@@ -733,11 +745,17 @@ public:
         vExtKeys.push_back(sekChain);
     };
 
-    size_t NumChains()
+    size_t NumChains() const
     {
         if (vExtKeys.size() < 1) // vExtKeys[0] is account key
             return 0;
         return vExtKeys.size() - 1;
+    };
+
+    isminetype IsMine(uint32_t nChain) const
+    {
+        CStoredExtKey *p = GetChain(nChain);
+        return p ? p->IsMine() : ISMINE_NO;
     };
 
     int AddLookBehind(uint32_t nChain, uint32_t nKeys);

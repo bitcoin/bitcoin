@@ -99,8 +99,9 @@ isminetype IsMine(const CKeyStore &keystore, const CScript& scriptPubKey, bool& 
             isInvalid = true;
             return ISMINE_NO;
         }
-        if (keystore.HaveKey(keyID))
-            return ISMINE_SPENDABLE;
+        return keystore.IsMine(keyID);
+        //if (keystore.HaveKey(keyID))
+        //    return ISMINE_SPENDABLE;
         break;
     case TX_WITNESS_V0_KEYHASH:
     {
@@ -132,8 +133,9 @@ isminetype IsMine(const CKeyStore &keystore, const CScript& scriptPubKey, bool& 
                 return ISMINE_NO;
             }
         }
-        if (keystore.HaveKey(keyID))
-            return ISMINE_SPENDABLE;
+        return keystore.IsMine(keyID);
+        //if (keystore.HaveKey(keyID))
+        //    return ISMINE_SPENDABLE;
         break;
     case TX_SCRIPTHASH:
     case TX_TIMELOCKED_SCRIPTHASH:

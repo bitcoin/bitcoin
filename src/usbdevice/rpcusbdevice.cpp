@@ -653,16 +653,16 @@ UniValue initaccountfromdevice(const JSONRPCRequest &request)
 
 
         CStoredExtKey *sekAccount = new CStoredExtKey();
-        sekAccount->nFlags |= EAF_ACTIVE | EAF_IN_ACCOUNT;
+        sekAccount->nFlags |= EAF_ACTIVE | EAF_IN_ACCOUNT | EAF_HARDWARE_DEVICE;
         sekAccount->kp = ekp;
         sekAccount->SetPath(vPath); // EKVT_PATH
+
         std::vector<uint8_t> vData;
-
-
         CExtKeyAccount *sea = new CExtKeyAccount();
         sea->sLabel = sLabel;
-        sea->nFlags |= EAF_ACTIVE;
+        sea->nFlags |= EAF_ACTIVE | EAF_HARDWARE_DEVICE;
         sea->mapValue[EKVT_CREATED_AT] = SetCompressedInt64(vData, GetTime());
+        vData.clear();
         PushUInt32(vData, pDevice->pType->nVendorId);
         PushUInt32(vData, pDevice->pType->nProductId);
         sea->mapValue[EKVT_HARDWARE_DEVICE] = vData;
@@ -683,7 +683,7 @@ UniValue initaccountfromdevice(const JSONRPCRequest &request)
         sekExternal->kp = epExternal;
         vChainPath.push_back(nExternal);
         sekExternal->SetPath(vChainPath);
-        sekExternal->nFlags |= EAF_ACTIVE | EAF_RECEIVE_ON | EAF_IN_ACCOUNT;
+        sekExternal->nFlags |= EAF_ACTIVE | EAF_RECEIVE_ON | EAF_IN_ACCOUNT | EAF_HARDWARE_DEVICE;
         sekExternal->mapValue[EKVT_KEY_TYPE] = SetChar(vData, EKT_INTERNAL);
         sea->InsertChain(sekExternal);
         sea->nActiveExternal = sea->NumChains();
@@ -693,7 +693,7 @@ UniValue initaccountfromdevice(const JSONRPCRequest &request)
         vChainPath.pop_back();
         vChainPath.push_back(nInternal);
         sekInternal->SetPath(vChainPath);
-        sekInternal->nFlags |= EAF_ACTIVE | EAF_RECEIVE_ON | EAF_IN_ACCOUNT;
+        sekInternal->nFlags |= EAF_ACTIVE | EAF_RECEIVE_ON | EAF_IN_ACCOUNT | EAF_HARDWARE_DEVICE;
         sekInternal->mapValue[EKVT_KEY_TYPE] = SetChar(vData, EKT_EXTERNAL);
         sea->InsertChain(sekInternal);
         sea->nActiveInternal = sea->NumChains();

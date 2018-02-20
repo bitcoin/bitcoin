@@ -95,8 +95,6 @@ bool DeviceSignatureCreator::CreateSig(std::vector<unsigned char> &vchSig, const
             return error("%s: GetFullAccountPath failed.", __func__);
 
         vPath.push_back(ak.nKey);
-        std::string sPath;
-        PathToString(vPath, sPath);
 
         if (0 != pDevice->SignTransaction(vPath, txTo, nIn, scriptCode, nHashType, amount, sigversion, vchSig, pDevice->sError))
             return error("%s: SignTransaction faile.", __func__);

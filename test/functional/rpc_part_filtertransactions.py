@@ -137,7 +137,6 @@ class FilterTransactionsTest(ParticlTestFramework):
 
         ro = nodes[0].scanchain()
         self.stakeBlocks(1)
-        self.sync_all()
 
         #
         # general

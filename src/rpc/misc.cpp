@@ -283,16 +283,17 @@ UniValue validateaddress(const JSONRPCRequest& request)
         if (IsHDWallet(pwallet))
         {
             CHDWallet *phdw = GetHDWallet(pwallet);
+            isminetype mine = ISMINE_NO;
             if (dest.type() == typeid(CExtKeyPair))
             {
                 CExtKeyPair ek = boost::get<CExtKeyPair>(dest);
                 CKeyID id = ek.GetID();
-                ret.push_back(Pair("ismine", phdw->HaveExtKey(id)));
+                mine = phdw->HaveExtKey(id);
             } else
             if (dest.type() == typeid(CStealthAddress))
             {
                 const CStealthAddress &sxAddr = boost::get<CStealthAddress>(dest);
-                ret.push_back(Pair("ismine", phdw->HaveStealthAddress(sxAddr)));
+                mine = phdw->HaveStealthAddress(sxAddr);
             } else
             if (dest.type() == typeid(CKeyID))
             {
@@ -300,14 +301,24 @@ UniValue validateaddress(const JSONRPCRequest& request)
                 CEKAKey ak;
                 CExtKeyAccount *pa = nullptr;
                 bool isInvalid;
-                isminetype mine = phdw->IsMine(scriptPubKey, idk, ak, pa, isInvalid);
-                ret.push_back(Pair("ismine", bool(mine & ISMINE_SPENDABLE)));
-                ret.push_back(Pair("iswatchonly", bool(mine & ISMINE_WATCH_ONLY)));
+                mine = phdw->IsMine(scriptPubKey, idk, ak, pa, isInvalid);
 
                 if (pa && ak.nParent > 0 && ak.nParent < pa->vExtKeys.size())
                 {
-                    CStoredExtKey *sek = pa->vExtKeys[ak.nParent];
-                    ret.pushKV("from_ext_address_id", sek->GetIDString58());
+                    CStoredExtKey *sek = pa->GetChain(ak.nParent);
+                    if (sek)
+                    {
+                        ret.pushKV("from_ext_address_id", sek->GetIDString58());
+                        std::string sPath;
+                        std::vector<uint32_t> vPath;
+                        AppendChainPath(sek, vPath);
+                        vPath.push_back(ak.nKey);
+                        PathToString(vPath, sPath);
+                        ret.pushKV("path", sPath);
+                    } else
+                    {
+                        ret.pushKV("error", "Unknown chain.");
+                    };
                 } else
                 {
                     CStealthAddress sx;
@@ -317,10 +328,12 @@ UniValue validateaddress(const JSONRPCRequest& request)
                 };
             } else
             {
-                isminetype mine = pwallet ? IsMine(*pwallet, dest) : ISMINE_NO;
-                ret.push_back(Pair("ismine", bool(mine & ISMINE_SPENDABLE)));
-                ret.push_back(Pair("iswatchonly", bool(mine & ISMINE_WATCH_ONLY)));
-            }
+                mine = phdw ? IsMine(*phdw, dest) : ISMINE_NO;
+            };
+            ret.push_back(Pair("ismine", bool(mine & ISMINE_SPENDABLE)));
+            ret.push_back(Pair("iswatchonly", bool(mine & ISMINE_WATCH_ONLY)));
+            if (mine & ISMINE_HARDWARE_DEVICE)
+                ret.push_back(Pair("isondevice", true));
         } else
         {
             isminetype mine = pwallet ? IsMine(*pwallet, dest) : ISMINE_NO;

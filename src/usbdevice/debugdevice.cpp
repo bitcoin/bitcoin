@@ -104,6 +104,22 @@ int CDebugDevice::SignTransaction(const std::vector<uint32_t> &vPath, const CTra
     int nIn, const CScript &scriptCode, int hashType, const std::vector<uint8_t> &amount, SigVersion sigversion,
     std::vector<uint8_t> &vchSig, std::string &sError)
 {
+    uint256 hash = SignatureHash(scriptCode, *tx, nIn, hashType, amount, sigversion);
+
+
+    CExtKey vkOut, vkWork = ekv;
+    for (auto it = vPath.begin(); it != vPath.end(); ++it)
+    {
+        if (!vkWork.Derive(vkOut, *it))
+            return errorN(1, sError, __func__, "CExtKey Derive failed");
+        vkWork = vkOut;
+    };
+
+    CKey key = vkOut.key;
+
+    if (!key.Sign(hash, vchSig))
+        return false;
+    vchSig.push_back((unsigned char)hashType);
 
     return 0;
 };

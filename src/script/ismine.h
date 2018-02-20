@@ -14,7 +14,7 @@ class CKeyStore;
 class CScript;
 
 /** IsMine() return codes */
-enum isminetype
+enum isminetype : uint8_t
 {
     ISMINE_NO = 0,
     //! Indicates that we don't know how to create a scriptSig that would solve this if we were given the appropriate private keys
@@ -24,6 +24,7 @@ enum isminetype
     ISMINE_WATCH_COLDSTAKE = (1 << 7),
     ISMINE_WATCH_ONLY = ISMINE_WATCH_SOLVABLE | ISMINE_WATCH_UNSOLVABLE | ISMINE_WATCH_COLDSTAKE,
     ISMINE_SPENDABLE = 4,
+    ISMINE_HARDWARE_DEVICE = (1 << 6), // Pivate key is on external device
     ISMINE_ALL = ISMINE_WATCH_ONLY | ISMINE_SPENDABLE
 };
 /** used for bitflags of isminetype */

@@ -495,7 +495,6 @@ bool CBitcoinAddress::IsValid(CChainParams::Base58Type prefix) const
         };
 
         return false;
-        return false;
     };
 
     bool fKnownVersion = vchVersion == Params().Base58Prefix(prefix);

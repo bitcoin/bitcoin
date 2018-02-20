@@ -48,7 +48,8 @@ public:
     bool signalRbf;
     //! Fee estimation mode to control arguments to estimateSmartFee
     FeeEstimateMode m_fee_mode;
-    mutable bool fHaveAnonOutputs;
+    mutable bool fHaveAnonOutputs = false;
+    mutable bool fNeedHardwareKey = false;
     CAmount m_extrafee;
 
     CCoinControl()

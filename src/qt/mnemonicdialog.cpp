@@ -74,6 +74,11 @@ void MnemonicDialog::on_btnImport_clicked()
     if (walletModel->tryCallRpc(sCommand, rv))
     {
         close();
+        if (!rv["warnings"].isNull())
+        {
+            for (size_t i = 0; i < rv["warnings"].size(); ++i)
+                walletModel->warningBox(tr("Import"), QString::fromStdString(rv["warnings"][i].get_str()));
+        };
     };
 }
 

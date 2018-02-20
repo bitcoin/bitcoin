@@ -407,11 +407,12 @@ public:
     bool Unlock(const SecureString &strWalletPassphrase) override;
 
 
-    bool HaveAddress(const CTxDestination &dest);
-    bool HaveKey(const CKeyID &address, CEKAKey &ak, CExtKeyAccount *&pa) const;
+    isminetype HaveAddress(const CTxDestination &dest);
+    isminetype HaveKey(const CKeyID &address, CEKAKey &ak, CExtKeyAccount *&pa) const;
+    isminetype IsMine(const CKeyID &address) const override;
     bool HaveKey(const CKeyID &address) const override;
 
-    bool HaveExtKey(const CKeyID &keyID) const;
+    isminetype HaveExtKey(const CKeyID &keyID) const;
     bool GetExtKey(const CKeyID &keyID, CStoredExtKey &extKeyOut) const;
 
     bool HaveTransaction(const uint256 &txhash) const;
@@ -423,7 +424,7 @@ public:
 
     bool GetKeyFromPool(CPubKey &key, bool internal = false) override;
 
-    bool HaveStealthAddress(const CStealthAddress &sxAddr) const;
+    isminetype HaveStealthAddress(const CStealthAddress &sxAddr) const;
     bool GetStealthAddressScanKey(CStealthAddress &sxAddr) const;
 
     bool ImportStealthAddress(const CStealthAddress &sxAddr, const CKey &skSpend);
@@ -689,6 +690,8 @@ public:
     bool GetSetting(const std::string &setting, UniValue &json);
     bool SetSetting(const std::string &setting, const UniValue &json);
     bool EraseSetting(const std::string &setting);
+
+    size_t CountColdstakeOutputs();
 
     /* Return a script for a simple address type (normal/extended) */
     bool GetScriptForAddress(CScript &script, const CBitcoinAddress &addr, bool fUpdate = false, std::vector<uint8_t> *vData = NULL);
