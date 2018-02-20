@@ -1,6 +1,7 @@
 #include "updatedialog.h"
 #include "ui_updatedialog.h"
 #include "util.h"
+#include "clientversion.h"
 #include <QPushButton>
 #include <QFileDialog>
 #include <QMessageBox>
@@ -202,4 +203,13 @@ void UpdateDialog::setIcon() const
     QIcon icon = this->style()->standardIcon(QStyle::SP_MessageBoxInformation);
     ui->iconLabel->setPixmap(icon.pixmap(iconSize, iconSize));
     ui->iconLabel->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+}
+
+int UpdateDialog::exec()
+{
+    // Set according values and exec
+    setCurrentVersion(QString::fromStdString(FormatVersion(CLIENT_VERSION)));
+    setUpdateVersion(QString::fromStdString(FormatVersion(updater.GetVersion())));
+    setOS(updater.GetOS());
+    return QDialog::exec();
 }

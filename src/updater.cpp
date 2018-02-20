@@ -95,9 +95,8 @@ void Updater::SetJsonPath()
     }
 }
 
-bool Updater::LoadUpdateInfo()
+void Updater::LoadUpdateInfo()
 {
-    bool result = false;
     CURL *curl;
     std::string updateData;
     SetJsonPath();
@@ -116,21 +115,20 @@ bool Updater::LoadUpdateInfo()
             if (response_code == HTTP_OK)
             {
                 CheckAndUpdateStatus(updateData);
-                result = true;
             }
             else
             {
                 LogPrintf("Updater::GetUpdateInfo() - Error! Server response code - %d\n", response_code);
+                throw std::runtime_error(strprintf("Error! Failed to get update information. \nServer response code - %d\n", response_code));
             }
         }
         else
         {
             LogPrintf("Updater::GetUpdateInfo() - Error! Couldn't get data json. Error code - %d\n", res);
+            throw std::runtime_error(strprintf("Error! Couldn't get data json. Error code - %d\n", res));
         }
         curl_easy_cleanup(curl);
     }
-
-    return result;
 }
 
 std::string Updater::GetOsString(boost::optional<OS> os)
@@ -277,12 +275,8 @@ void Updater::CheckAndUpdateStatus(const std::string& updateData)
     }
 }
 
-boost::optional<bool> Updater::GetStatus()
+bool Updater::GetStatus()
 {
-    boost::optional<bool> result = boost::none;
-    if (LoadUpdateInfo())
-    {
-        result = status;
-    }
-    return result;
+    LoadUpdateInfo();
+    return status;
 }

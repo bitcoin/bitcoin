@@ -26,6 +26,7 @@ public:
     static UpdateDialog* GetInstance();
     void setProgressMaximum(int max);
     void done(int);
+    int exec();
     void setProgressValue(int value);
     ~UpdateDialog();
 

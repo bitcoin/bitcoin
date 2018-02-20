@@ -103,6 +103,7 @@ private:
     QAction *verifyMessageAction;
     QAction *multisigAction;
     QAction *aboutAction;
+    QAction *updateAction;
     QAction *receiveCoinsAction;
     QAction *optionsAction;
     QAction *toggleHideAction;
@@ -135,6 +136,8 @@ private:
     /** Keep track of previous number of blocks, to detect progress */
     int prevBlocks;
     int spinnerFrame;
+
+    bool updateChecked;
 
     /** Create the main UI actions. */
     void createActions(const NetworkStyle *networkStyle);
@@ -224,12 +227,17 @@ private slots:
     /** Show open dialog */
     void openClicked();
 
-    void checkUpdate();
+    /** Check if update is available and ask to download it.
+      @param[in] askedToCheck true when the check is initiated by user.
+    */
+    void checkUpdate(bool askedToCheck=false);
 #endif // ENABLE_WALLET
     /** Show configuration dialog */
     void optionsClicked();
     /** Show about dialog */
     void aboutClicked();
+    /** Show update dialog */
+    void updateClicked();
     /** Show help message dialog */
     void showHelpMessageClicked();
 #ifndef Q_OS_MAC
