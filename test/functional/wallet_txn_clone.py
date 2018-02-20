@@ -78,7 +78,7 @@ class TxnMallTest(BitcoinTestFramework):
 
         # Use a different signature hash type to sign.  This creates an equivalent but malleated clone.
         # Don't send the clone anywhere yet
-        tx1_clone = self.nodes[0].signrawtransaction(clone_raw, None, None, "ALL|ANYONECANPAY")
+        tx1_clone = self.nodes[0].signrawtransactionwithwallet(clone_raw, None, "ALL|ANYONECANPAY")
         assert_equal(tx1_clone["complete"], True)
 
         # Have node0 mine a block, if requested:
