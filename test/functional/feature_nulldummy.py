@@ -21,7 +21,7 @@ from test_framework.script import CScript
 from io import BytesIO
 import time
 
-NULLDUMMY_ERROR = "64: non-mandatory-script-verify-flag (Dummy CHECKMULTISIG argument must be zero)"
+NULLDUMMY_ERROR = "non-mandatory-script-verify-flag (Dummy CHECKMULTISIG argument must be zero) (code 64)"
 
 def trueDummy(tx):
     scriptSig = CScript(tx.vin[0].scriptSig)
@@ -102,7 +102,7 @@ class NULLDUMMYTest(BitcoinTestFramework):
         inputs = [{ "txid" : txid, "vout" : 0}]
         outputs = { to_address : amount }
         rawtx = node.createrawtransaction(inputs, outputs)
-        signresult = node.signrawtransaction(rawtx)
+        signresult = node.signrawtransactionwithwallet(rawtx)
         tx = CTransaction()
         f = BytesIO(hex_str_to_bytes(signresult['hex']))
         tx.deserialize(f)

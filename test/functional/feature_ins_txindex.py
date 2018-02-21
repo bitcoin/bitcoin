@@ -63,11 +63,11 @@ class TxIndexTest(ParticlTestFramework):
         str0 = json.dumps(verbose['vout'][0], indent=4, default=self.jsonDecimal)
         str1 = json.dumps(verbose['vout'][1], indent=4, default=self.jsonDecimal)
         if addr1 in str0:
-            assert_equal(verbose['vout'][0]['valueSat'], 500000000);
-            assert_equal(verbose['vout'][0]['value'], 5);
+            assert_equal(verbose['vout'][0]['valueSat'], 500000000)
+            assert_equal(verbose['vout'][0]['value'], 5)
         elif addr1 in str1:
-            assert_equal(verbose['vout'][1]['valueSat'], 500000000);
-            assert_equal(verbose['vout'][1]['value'], 5);
+            assert_equal(verbose['vout'][1]['valueSat'], 500000000)
+            assert_equal(verbose['vout'][1]['value'], 5)
         else:
             assert(False)
 

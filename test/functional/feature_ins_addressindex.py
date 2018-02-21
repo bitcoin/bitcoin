@@ -148,8 +148,7 @@ class AddressIndexTest(ParticlTestFramework):
         #ro = self.nodes[0].decoderawtransaction(txfunded['hex'])
         #print(json.dumps(ro, indent=4, default=self.jsonDecimal))
 
-        txsigned = self.nodes[0].signrawtransaction(txfunded['hex'])
-
+        txsigned = self.nodes[0].signrawtransactionwithwallet(txfunded['hex'])
         sent_txid = self.nodes[0].sendrawtransaction(txsigned['hex'], True)
 
         self.stakeBlocks(1)
@@ -177,7 +176,7 @@ class AddressIndexTest(ParticlTestFramework):
         tx = self.nodes[2].createrawtransaction(inputs,outputs)
         txfunded = self.nodes[2].fundrawtransaction(tx)
 
-        txsigned = self.nodes[2].signrawtransaction(txfunded['hex'])
+        txsigned = self.nodes[2].signrawtransactionwithwallet(txfunded['hex'])
         sent_txid = self.nodes[2].sendrawtransaction(txsigned['hex'], True)
         print("sent_txid", sent_txid)
         ro = self.nodes[0].decoderawtransaction(txsigned['hex'])
@@ -194,7 +193,7 @@ class AddressIndexTest(ParticlTestFramework):
         assert(balance0["balance"] < 45 * 100000000)
 
 
-         # Check that deltas are returned correctly
+        # Check that deltas are returned correctly
         deltas = self.nodes[1].getaddressdeltas({"addresses": ['pqavEUgLCZeGh8o9sTcCfYVAsrTgnQTUsK'], "start": 1, "end": 200})
         balance3 = 0
         for delta in deltas:
@@ -352,8 +351,8 @@ class AddressIndexTest(ParticlTestFramework):
         assert_equal(mempool[2]["txid"], memtxid2)
         assert_equal(mempool[2]["index"], 1)
 
-        blk_hashes = self.nodes[2].generate(1);
-        self.sync_all();
+        blk_hashes = self.nodes[2].generate(1)
+        self.sync_all()
         mempool2 = self.nodes[2].getaddressmempool({"addresses": [address3]})
         assert_equal(len(mempool2), 0)
 
@@ -414,15 +413,15 @@ class AddressIndexTest(ParticlTestFramework):
             "end": 200,
             "chainInfo": True
         })
-        start_block_hash = self.nodes[1].getblockhash(1);
-        end_block_hash = self.nodes[1].getblockhash(200);
+        start_block_hash = self.nodes[1].getblockhash(1)
+        end_block_hash = self.nodes[1].getblockhash(200)
         assert_equal(deltas_with_info["start"]["height"], 1)
         assert_equal(deltas_with_info["start"]["hash"], start_block_hash)
         assert_equal(deltas_with_info["end"]["height"], 200)
         assert_equal(deltas_with_info["end"]["hash"], end_block_hash)
 
         utxos_with_info = self.nodes[1].getaddressutxos({"addresses": [address2], "chainInfo": True})
-        expected_tip_block_hash = self.nodes[1].getblockhash(267);
+        expected_tip_block_hash = self.nodes[1].getblockhash(267)
         assert_equal(utxos_with_info["height"], 267)
         assert_equal(utxos_with_info["hash"], expected_tip_block_hash)
         """

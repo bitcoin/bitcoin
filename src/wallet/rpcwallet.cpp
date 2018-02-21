@@ -16,6 +16,7 @@
 #include <policy/policy.h>
 #include <policy/rbf.h>
 #include <rpc/mining.h>
+#include <rpc/rawtransaction.h>
 #include <rpc/safemode.h>
 #include <rpc/server.h>
 #include <rpc/util.h>
@@ -25,6 +26,7 @@
 #include <utilmoneystr.h>
 #include <wallet/coincontrol.h>
 #include <wallet/feebumper.h>
+#include <wallet/rpcwallet.h>
 #include <wallet/wallet.h>
 #include <wallet/walletdb.h>
 #include <wallet/walletutil.h>
@@ -94,24 +96,24 @@ void WalletTxToJSON(
     bool fFilterMode
 ) {
     int confirms = wtx.GetDepthInMainChain();
-    entry.push_back(Pair("confirmations", confirms));
+    entry.pushKV("confirmations", confirms);
     if (wtx.IsCoinBase())
-        entry.push_back(Pair("generated", true));
+        entry.pushKV("generated", true);
     if (confirms > 0)
     {
-        entry.push_back(Pair("blockhash", wtx.hashBlock.GetHex()));
-        entry.push_back(Pair("blockindex", wtx.nIndex));
+        entry.pushKV("blockhash", wtx.hashBlock.GetHex());
+        entry.pushKV("blockindex", wtx.nIndex);
         PushTime(entry, "blocktime", mapBlockIndex[wtx.hashBlock]->GetBlockTime());
     } else {
-        entry.push_back(Pair("trusted", wtx.IsTrusted()));
+        entry.pushKV("trusted", wtx.IsTrusted());
     }
     uint256 hash = wtx.GetHash();
-    entry.push_back(Pair("txid", hash.GetHex()));
+    entry.pushKV("txid", hash.GetHex());
     UniValue conflicts(UniValue::VARR);
     for (const uint256& conflict : wtx.GetConflicts())
         conflicts.push_back(conflict.GetHex());
     if (conflicts.size() > 0 || !fFilterMode)
-        entry.push_back(Pair("walletconflicts", conflicts));
+        entry.pushKV("walletconflicts", conflicts);
     PushTime(entry, "time", wtx.GetTxTime());
     PushTime(entry, "timereceived", wtx.nTimeReceived);
 
@@ -125,11 +127,11 @@ void WalletTxToJSON(
         else if (rbfState == RBF_TRANSACTIONSTATE_REPLACEABLE_BIP125)
             rbfStatus = "yes";
     }
-    entry.push_back(Pair("bip125_replaceable", rbfStatus));
+    entry.pushKV("bip125_replaceable", rbfStatus);
 
     if (!fFilterMode)
         for (const std::pair<std::string, std::string>& item : wtx.mapValue)
-            entry.push_back(Pair(item.first, item.second));
+            entry.pushKV(item.first, item.second);
 }
 
 void RecordTxToJSON(CHDWallet *phdw, const uint256 &hash, const CTransactionRecord& rtx, UniValue &entry)
@@ -563,7 +565,7 @@ static void SendMoney(CWallet * const pwallet, const CTxDestination &address, CA
     }
     CValidationState state;
     if (!pwallet->CommitTransaction(wtxNew, reservekey, g_connman.get(), state)) {
-        strError = strprintf("Error: The transaction was rejected! Reason given: %s", state.GetRejectReason());
+        strError = strprintf("Error: The transaction was rejected! Reason given: %s", FormatStateMessage(state));
         throw JSONRPCError(RPC_WALLET_ERROR, strError);
     }
 }
@@ -1446,7 +1448,7 @@ UniValue sendmany(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, strFailReason);
     CValidationState state;
     if (!pwallet->CommitTransaction(wtx, keyChange, g_connman.get(), state)) {
-        strFailReason = strprintf("Transaction commit failed:: %s", state.GetRejectReason());
+        strFailReason = strprintf("Transaction commit failed:: %s", FormatStateMessage(state));
         throw JSONRPCError(RPC_WALLET_ERROR, strFailReason);
     }
 
@@ -1480,8 +1482,10 @@ UniValue addmultisigaddress(const JSONRPCRequest& request)
             "5. 256bit             (bool, optional) Use 256bit hash.\n"
 
             "\nResult:\n"
-            "\"address\"         (string) A particl address associated with the keys.\n"
-
+            "{\n"
+            "  \"address\":\"multisigaddress\",    (string) The value of the new multisig address.\n"
+            "  \"redeemScript\":\"script\"         (string) The string value of the hex-encoded redemption script.\n"
+            "}\n"
             "\nExamples:\n"
             "\nAdd a multisig address from 2 addresses\n"
             + HelpExampleCli("addmultisigaddress", "2 \"[\\\"PbpVcjgYatnkKgveaeqhkeQBFwjqR7jKBR\\\",\\\"PswXnorAgjpAtaySWkPSmWQe3Fc8LmviVc\\\"]\"") +
@@ -1511,8 +1515,6 @@ UniValue addmultisigaddress(const JSONRPCRequest& request)
     }
 
     OutputType output_type = g_address_type;
-
-
 
     // Construct using pay-to-script-hash:
     CScript inner = CreateMultisigRedeemscript(required, pubkeys);
@@ -1785,13 +1787,13 @@ UniValue ListReceived(CWallet * const pwallet, const UniValue& params, bool fByA
         {
             UniValue obj(UniValue::VOBJ);
             if(fIsWatchonly)
-                obj.push_back(Pair("involvesWatchonly", true));
-            obj.push_back(Pair("address",       EncodeDestination(dest)));
-            obj.push_back(Pair("account",       strAccount));
-            obj.push_back(Pair("amount",        ValueFromAmount(nAmount)));
-            obj.push_back(Pair("confirmations", (nConf == std::numeric_limits<int>::max() ? 0 : nConf)));
+                obj.pushKV("involvesWatchonly", true);
+            obj.pushKV("address",       EncodeDestination(dest));
+            obj.pushKV("account",       strAccount);
+            obj.pushKV("amount",        ValueFromAmount(nAmount));
+            obj.pushKV("confirmations", (nConf == std::numeric_limits<int>::max() ? 0 : nConf));
             if (!fByAccounts)
-                obj.push_back(Pair("label", strAccount));
+                obj.pushKV("label", strAccount);
             UniValue transactions(UniValue::VARR);
             if (it != mapTally.end())
             {
@@ -1800,7 +1802,7 @@ UniValue ListReceived(CWallet * const pwallet, const UniValue& params, bool fByA
                     transactions.push_back(_item.GetHex());
                 }
             }
-            obj.push_back(Pair("txids", transactions));
+            obj.pushKV("txids", transactions);
             ret.push_back(obj);
         }
     }
@@ -1813,10 +1815,10 @@ UniValue ListReceived(CWallet * const pwallet, const UniValue& params, bool fByA
             int nConf = entry.second.nConf;
             UniValue obj(UniValue::VOBJ);
             if (entry.second.fIsWatchonly)
-                obj.push_back(Pair("involvesWatchonly", true));
-            obj.push_back(Pair("account",       entry.first));
-            obj.push_back(Pair("amount",        ValueFromAmount(nAmount)));
-            obj.push_back(Pair("confirmations", (nConf == std::numeric_limits<int>::max() ? 0 : nConf)));
+                obj.pushKV("involvesWatchonly", true);
+            obj.pushKV("account",       entry.first);
+            obj.pushKV("amount",        ValueFromAmount(nAmount));
+            obj.pushKV("confirmations", (nConf == std::numeric_limits<int>::max() ? 0 : nConf));
             ret.push_back(obj);
         }
     }
@@ -1922,7 +1924,7 @@ UniValue listreceivedbyaccount(const JSONRPCRequest& request)
 static void MaybePushAddress(UniValue & entry, const CTxDestination &dest)
 {
     if (IsValidDestination(dest)) {
-        entry.push_back(Pair("address", EncodeDestination(dest)));
+        entry.pushKV("address", EncodeDestination(dest));
     }
 }
 
@@ -1957,19 +1959,19 @@ void ListTransactions(CWallet* const pwallet, const CWalletTx& wtx, const std::s
         {
             UniValue entry(UniValue::VOBJ);
             if (involvesWatchonly || (s.ismine & ISMINE_WATCH_ONLY)) {
-                entry.push_back(Pair("involvesWatchonly", true));
+                entry.pushKV("involvesWatchonly", true);
             }
-            entry.push_back(Pair("account", strSentAccount));
+            entry.pushKV("account", strSentAccount);
             MaybePushAddress(entry, s.destination);
             if (s.destStake.type() != typeid(CNoDestination))
-                entry.push_back(Pair("coldstake_address", CBitcoinAddress(s.destStake).ToString()));
-            entry.push_back(Pair("category", "send"));
-            entry.push_back(Pair("amount", ValueFromAmount(-s.amount)));
+                entry.pushKV("coldstake_address", CBitcoinAddress(s.destStake).ToString());
+            entry.pushKV("category", "send");
+            entry.pushKV("amount", ValueFromAmount(-s.amount));
             if (pwallet->mapAddressBook.count(s.destination)) {
-                entry.push_back(Pair("label", pwallet->mapAddressBook[s.destination].name));
+                entry.pushKV("label", pwallet->mapAddressBook[s.destination].name);
             }
-            entry.push_back(Pair("vout", s.vout));
-            entry.push_back(Pair("fee", ValueFromAmount(-nFee)));
+            entry.pushKV("vout", s.vout);
+            entry.pushKV("fee", ValueFromAmount(-nFee));
             if (fLong)
                 WalletTxToJSON(wtx, entry);
             else
@@ -1977,9 +1979,9 @@ void ListTransactions(CWallet* const pwallet, const CWalletTx& wtx, const std::s
                 std::string sNarrKey = strprintf("n%d", s.vout);
                 mapValue_t::const_iterator mi = wtx.mapValue.find(sNarrKey);
                 if (mi != wtx.mapValue.end() && !mi->second.empty())
-                    entry.push_back(Pair("narration", mi->second));
+                    entry.pushKV("narration", mi->second);
             };
-            entry.push_back(Pair("abandoned", wtx.isAbandoned()));
+            entry.pushKV("abandoned", wtx.isAbandoned());
 
             ret.push_back(entry);
         }
@@ -1998,9 +2000,9 @@ void ListTransactions(CWallet* const pwallet, const CWalletTx& wtx, const std::s
             {
                 UniValue entry(UniValue::VOBJ);
                 if (involvesWatchonly || (r.ismine & ISMINE_WATCH_ONLY)) {
-                    entry.push_back(Pair("involvesWatchonly", true));
+                    entry.pushKV("involvesWatchonly", true);
                 }
-                entry.push_back(Pair("account", account));
+                entry.pushKV("account", account);
 
                 if (fParticlWallet
                     && r.destination.type() == typeid(CKeyID))
@@ -2009,36 +2011,36 @@ void ListTransactions(CWallet* const pwallet, const CWalletTx& wtx, const std::s
                     CKeyID idK = boost::get<CKeyID>(r.destination);
                     if (GetHDWallet(pwallet)->GetStealthLinked(idK, sx))
                     {
-                        entry.push_back(Pair("stealth_address", sx.Encoded()));
+                        entry.pushKV("stealth_address", sx.Encoded());
                     };
                 };
 
                 MaybePushAddress(entry, r.destination);
                 if (r.destStake.type() != typeid(CNoDestination))
-                    entry.push_back(Pair("coldstake_address", CBitcoinAddress(r.destStake).ToString()));
+                    entry.pushKV("coldstake_address", CBitcoinAddress(r.destStake).ToString());
                 if (wtx.IsCoinBase())
                 {
                     if (wtx.GetDepthInMainChain() < 1)
-                        entry.push_back(Pair("category", "orphan"));
+                        entry.pushKV("category", "orphan");
                     else if (wtx.GetBlocksToMaturity() > 0)
-                        entry.push_back(Pair("category", "immature"));
+                        entry.pushKV("category", "immature");
                     else
                     {
                         if (fParticlMode)
-                            entry.push_back(Pair("category", "coinbase"));
+                            entry.pushKV("category", "coinbase");
                         else
-                            entry.push_back(Pair("category", "generate"));
+                            entry.pushKV("category", "generate");
                     }
                 }
                 else
                 {
-                    entry.push_back(Pair("category", "receive"));
+                    entry.pushKV("category", "receive");
                 }
-                entry.push_back(Pair("amount", ValueFromAmount(r.amount)));
+                entry.pushKV("amount", ValueFromAmount(r.amount));
                 if (pwallet->mapAddressBook.count(r.destination)) {
-                    entry.push_back(Pair("label", account));
+                    entry.pushKV("label", account);
                 }
-                entry.push_back(Pair("vout", r.vout));
+                entry.pushKV("vout", r.vout);
                 if (fLong)
                     WalletTxToJSON(wtx, entry);
                 else
@@ -2046,7 +2048,7 @@ void ListTransactions(CWallet* const pwallet, const CWalletTx& wtx, const std::s
                     std::string sNarrKey = strprintf("n%d", r.vout);
                     mapValue_t::const_iterator mi = wtx.mapValue.find(sNarrKey);
                     if (mi != wtx.mapValue.end() && !mi->second.empty())
-                        entry.push_back(Pair("narration", mi->second));
+                        entry.pushKV("narration", mi->second);
                 }
                 ret.push_back(entry);
             };
@@ -2226,12 +2228,12 @@ void AcentryToJSON(const CAccountingEntry& acentry, const std::string& strAccoun
     if (fAllAccounts || acentry.strAccount == strAccount)
     {
         UniValue entry(UniValue::VOBJ);
-        entry.push_back(Pair("account", acentry.strAccount));
-        entry.push_back(Pair("category", "move"));
-        entry.push_back(Pair("time", acentry.nTime));
-        entry.push_back(Pair("amount", ValueFromAmount(acentry.nCreditDebit)));
-        entry.push_back(Pair("otheraccount", acentry.strOtherAccount));
-        entry.push_back(Pair("comment", acentry.strComment));
+        entry.pushKV("account", acentry.strAccount);
+        entry.pushKV("category", "move");
+        entry.pushKV("time", acentry.nTime);
+        entry.pushKV("amount", ValueFromAmount(acentry.nCreditDebit));
+        entry.pushKV("otheraccount", acentry.strOtherAccount);
+        entry.pushKV("comment", acentry.strComment);
         ret.push_back(entry);
     }
 }
@@ -2312,8 +2314,6 @@ UniValue listtransactions(const JSONRPCRequest& request)
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
 
-    LOCK2(cs_main, pwallet->cs_wallet);
-
     std::string strAccount = "*";
     if (!request.params[0].isNull())
         strAccount = request.params[0].get_str();
@@ -2341,21 +2341,25 @@ UniValue listtransactions(const JSONRPCRequest& request)
     UniValue ret(UniValue::VARR);
     UniValue retReversed(UniValue::VARR);
 
-    const CWallet::TxItems &txOrdered = pwallet->wtxOrdered;
-
-    // iterate backwards until we have nCount items to return:
-    for (CWallet::TxItems::const_reverse_iterator it = txOrdered.rbegin(); it != txOrdered.rend(); ++it)
     {
-        CWalletTx *const pwtx = (*it).second.first;
-        if (pwtx != 0)
-            ListTransactions(pwallet, *pwtx, strAccount, 0, true, retReversed, filter);
-        CAccountingEntry *const pacentry = (*it).second.second;
-        if (pacentry != 0)
-            AcentryToJSON(*pacentry, strAccount, retReversed);
+        LOCK2(cs_main, pwallet->cs_wallet);
+        const CWallet::TxItems &txOrdered = pwallet->wtxOrdered;
 
-        if ((int)retReversed.size() >= nCount + nFrom)
-            break;
-    };
+        // iterate backwards until we have nCount items to return:
+        for (CWallet::TxItems::const_reverse_iterator it = txOrdered.rbegin(); it != txOrdered.rend(); ++it)
+        {
+            CWalletTx *const pwtx = (*it).second.first;
+            if (pwtx != 0)
+                ListTransactions(pwallet, *pwtx, strAccount, 0, true, retReversed, filter);
+            CAccountingEntry *const pacentry = (*it).second.second;
+            if (pacentry != 0)
+                AcentryToJSON(*pacentry, strAccount, retReversed);
+
+            if ((int)retReversed.size() >= nCount + nFrom)
+                break;
+        };
+    }
+    // ret is newest to oldest
 
     // TODO: neater to add reverse to Univalue?
     for (size_t i = retReversed.size(); i-- > 0; )
@@ -2365,6 +2369,8 @@ UniValue listtransactions(const JSONRPCRequest& request)
 
     if (IsHDWallet(pwallet))
     {
+        LOCK2(cs_main, pwallet->cs_wallet);
+
         CHDWallet *phdw = GetHDWallet(pwallet);
         const RtxOrdered_t &txOrdered = phdw->rtxOrdered;
 
@@ -2493,7 +2499,7 @@ UniValue listaccounts(const JSONRPCRequest& request)
 
     UniValue ret(UniValue::VOBJ);
     for (const std::pair<std::string, CAmount>& accountBalance : mapAccountBalances) {
-        ret.push_back(Pair(accountBalance.first, ValueFromAmount(accountBalance.second)));
+        ret.pushKV(accountBalance.first, ValueFromAmount(accountBalance.second));
     }
     return ret;
 }
@@ -2657,9 +2663,9 @@ UniValue listsinceblock(const JSONRPCRequest& request)
     uint256 lastblock = pblockLast ? pblockLast->GetBlockHash() : uint256();
 
     UniValue ret(UniValue::VOBJ);
-    ret.push_back(Pair("transactions", transactions));
-    if (include_removed) ret.push_back(Pair("removed", removed));
-    ret.push_back(Pair("lastblock", lastblock.GetHex()));
+    ret.pushKV("transactions", transactions);
+    if (include_removed) ret.pushKV("removed", removed);
+    ret.pushKV("lastblock", lastblock.GetHex());
 
     return ret;
 }
@@ -2770,18 +2776,18 @@ UniValue gettransaction(const JSONRPCRequest& request)
     CAmount nNet = nCredit - nDebit;
     CAmount nFee = (wtx.IsFromMe(filter) ? wtx.tx->GetValueOut() - nDebit : 0);
 
-    entry.push_back(Pair("amount", ValueFromAmount(nNet - nFee)));
+    entry.pushKV("amount", ValueFromAmount(nNet - nFee));
     if (wtx.IsFromMe(filter))
-        entry.push_back(Pair("fee", ValueFromAmount(nFee)));
+        entry.pushKV("fee", ValueFromAmount(nFee));
 
     WalletTxToJSON(wtx, entry);
 
     UniValue details(UniValue::VARR);
     ListTransactions(pwallet, wtx, "*", 0, false, details, filter);
-    entry.push_back(Pair("details", details));
+    entry.pushKV("details", details);
 
     std::string strHex = EncodeHexTx(*wtx.tx, RPCSerializationFlags());
-    entry.push_back(Pair("hex", strHex));
+    entry.pushKV("hex", strHex);
 
     return entry;
 }
@@ -2793,14 +2799,14 @@ UniValue abandontransaction(const JSONRPCRequest& request)
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() != 1)
+    if (request.fHelp || request.params.size() != 1) {
         throw std::runtime_error(
             "abandontransaction \"txid\"\n"
             "\nMark in-wallet transaction <txid> as abandoned\n"
             "This will mark this transaction and all its in-wallet descendants as abandoned which will allow\n"
             "for their inputs to be re-spent.  It can be used to replace \"stuck\" or evicted transactions.\n"
             "It only works on transactions which are not included in a block and are not currently in the mempool.\n"
-            "It has no effect on transactions which are already conflicted or abandoned.\n"
+            "It has no effect on transactions which are already abandoned.\n"
             "\nArguments:\n"
             "1. \"txid\"    (string, required) The transaction id\n"
             "\nResult:\n"
@@ -2808,6 +2814,7 @@ UniValue abandontransaction(const JSONRPCRequest& request)
             + HelpExampleCli("abandontransaction", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
             + HelpExampleRpc("abandontransaction", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
         );
+    }
 
     ObserveSafeMode();
 
@@ -3339,8 +3346,8 @@ UniValue listlockunspent(const JSONRPCRequest& request)
     for (COutPoint &outpt : vOutpts) {
         UniValue o(UniValue::VOBJ);
 
-        o.push_back(Pair("txid", outpt.hash.GetHex()));
-        o.push_back(Pair("vout", (int)outpt.n));
+        o.pushKV("txid", outpt.hash.GetHex());
+        o.pushKV("vout", (int)outpt.n);
         ret.push_back(o);
     }
 
@@ -3422,48 +3429,48 @@ UniValue getwalletinfo(const JSONRPCRequest& request)
     LOCK2(cs_main, pwallet->cs_wallet);
 
     UniValue obj(UniValue::VOBJ);
-    obj.push_back(Pair("walletname", pwallet->GetName()));
-    obj.push_back(Pair("walletversion", pwallet->GetVersion()));
+    obj.pushKV("walletname", pwallet->GetName());
+    obj.pushKV("walletversion", pwallet->GetVersion());
 
     if (fParticlWallet)
     {
         CHDWalletBalances bal;
         ((CHDWallet*)pwallet)->GetBalances(bal);
 
-        obj.push_back(Pair("total_balance",         ValueFromAmount(
+        obj.pushKV("total_balance",         ValueFromAmount(
             bal.nPart + bal.nPartUnconf + bal.nPartStaked + bal.nPartImmature
             + bal.nBlind + bal.nBlindUnconf
-            + bal.nAnon + bal.nAnonUnconf)));
+            + bal.nAnon + bal.nAnonUnconf));
 
-        obj.push_back(Pair("balance",               ValueFromAmount(bal.nPart)));
+        obj.pushKV("balance",               ValueFromAmount(bal.nPart));
 
-        obj.push_back(Pair("blind_balance",         ValueFromAmount(bal.nBlind)));
-        obj.push_back(Pair("anon_balance",          ValueFromAmount(bal.nAnon)));
-        obj.push_back(Pair("staked_balance",        ValueFromAmount(bal.nPartStaked)));
+        obj.pushKV("blind_balance",         ValueFromAmount(bal.nBlind));
+        obj.pushKV("anon_balance",          ValueFromAmount(bal.nAnon));
+        obj.pushKV("staked_balance",        ValueFromAmount(bal.nPartStaked));
 
-        obj.push_back(Pair("unconfirmed_balance",   ValueFromAmount(bal.nPartUnconf)));
-        obj.push_back(Pair("unconfirmed_blind",     ValueFromAmount(bal.nBlindUnconf)));
-        obj.push_back(Pair("unconfirmed_anon",      ValueFromAmount(bal.nAnonUnconf)));
-        obj.push_back(Pair("immature_balance",      ValueFromAmount(bal.nPartImmature)));
+        obj.pushKV("unconfirmed_balance",   ValueFromAmount(bal.nPartUnconf));
+        obj.pushKV("unconfirmed_blind",     ValueFromAmount(bal.nBlindUnconf));
+        obj.pushKV("unconfirmed_anon",      ValueFromAmount(bal.nAnonUnconf));
+        obj.pushKV("immature_balance",      ValueFromAmount(bal.nPartImmature));
 
         if (bal.nPartWatchOnly > 0 || bal.nPartWatchOnlyUnconf > 0 || bal.nPartWatchOnlyStaked > 0)
         {
-            obj.push_back(Pair("watchonly_balance",                 ValueFromAmount(bal.nPartWatchOnly)));
-            obj.push_back(Pair("watchonly_staked_balance",          ValueFromAmount(bal.nPartWatchOnlyStaked)));
-            obj.push_back(Pair("watchonly_unconfirmed_balance",     ValueFromAmount(bal.nPartWatchOnlyUnconf)));
-            obj.push_back(Pair("watchonly_total_balance",
-                ValueFromAmount(bal.nPartWatchOnly + bal.nPartWatchOnlyStaked + bal.nPartWatchOnlyUnconf)));
+            obj.pushKV("watchonly_balance",                 ValueFromAmount(bal.nPartWatchOnly));
+            obj.pushKV("watchonly_staked_balance",          ValueFromAmount(bal.nPartWatchOnlyStaked));
+            obj.pushKV("watchonly_unconfirmed_balance",     ValueFromAmount(bal.nPartWatchOnlyUnconf));
+            obj.pushKV("watchonly_total_balance",
+                ValueFromAmount(bal.nPartWatchOnly + bal.nPartWatchOnlyStaked + bal.nPartWatchOnlyUnconf));
         };
     } else
     {
-        obj.push_back(Pair("balance",       ValueFromAmount(pwallet->GetBalance())));
-        obj.push_back(Pair("unconfirmed_balance", ValueFromAmount(pwallet->GetUnconfirmedBalance())));
-        obj.push_back(Pair("immature_balance",    ValueFromAmount(pwallet->GetImmatureBalance())));
+        obj.pushKV("balance",       ValueFromAmount(pwallet->GetBalance()));
+        obj.pushKV("unconfirmed_balance", ValueFromAmount(pwallet->GetUnconfirmedBalance()));
+        obj.pushKV("immature_balance",    ValueFromAmount(pwallet->GetImmatureBalance()));
     };
 
     int nTxCount = (int)pwallet->mapWallet.size() + (fParticlWallet ? (int)((CHDWallet*)pwallet)->mapRecords.size() : 0);
 
-    obj.push_back(Pair("txcount",       (int)nTxCount));
+    obj.pushKV("txcount",       (int)nTxCount);
 
     CKeyID masterKeyID;
     if (IsHDWallet(pwallet))
@@ -3473,29 +3480,32 @@ UniValue getwalletinfo(const JSONRPCRequest& request)
         obj.pushKV("keypoololdest", pwhd->GetOldestActiveAccountTime());
         obj.pushKV("keypoolsize",   pwhd->CountActiveAccountKeys());
 
-        obj.push_back(Pair("reserve",   ValueFromAmount(pwhd->nReserveBalance)));
+        obj.pushKV("reserve",   ValueFromAmount(pwhd->nReserveBalance));
 
-        obj.push_back(Pair("encryptionstatus", !pwhd->IsCrypted()
-        ? "Unencrypted" : pwhd->IsLocked() ? "Locked" : pwhd->fUnlockForStakingOnly ? "Unlocked, staking only" : "Unlocked"));
-        if (pwhd->IsCrypted())
-            obj.push_back(Pair("unlocked_until", pwallet->nRelockTime));
+        obj.pushKV("encryptionstatus", !pwhd->IsCrypted()
+        ? "Unencrypted" : pwhd->IsLocked() ? "Locked" : pwhd->fUnlockForStakingOnly ? "Unlocked, staking only" : "Unlocked");
 
         masterKeyID = pwhd->idDefaultAccount;
     } else
     {
+        size_t kpExternalSize = pwallet->KeypoolCountExternalKeys();
         obj.pushKV("keypoololdest", pwallet->GetOldestKeyPoolTime());
         obj.pushKV("keypoolsize",   (int)pwallet->GetKeyPoolSize());
+        masterKeyID = pwallet->GetHDChain().masterKeyID;
+        if (!masterKeyID.IsNull() && pwallet->CanSupportFeature(FEATURE_HD_SPLIT)) {
+            obj.pushKV("keypoolsize_hd_internal",   (int64_t)(pwallet->GetKeyPoolSize() - kpExternalSize));
+        }
 
         obj.push_back(Pair("encryptionstatus", !pwallet->IsCrypted()
         ? "Unencrypted" : pwallet->IsLocked() ? "Locked" : "Unlocked"));
-        if (pwallet->IsCrypted())
-            obj.push_back(Pair("unlocked_until", pwallet->nRelockTime));
-        masterKeyID = pwallet->GetHDChain().masterKeyID;
     }
 
-    obj.push_back(Pair("paytxfee",      ValueFromAmount(payTxFee.GetFeePerK())));
+    if (pwallet->IsCrypted())
+        obj.pushKV("unlocked_until", pwallet->nRelockTime);
+
+    obj.pushKV("paytxfee",      ValueFromAmount(payTxFee.GetFeePerK()));
     if (!masterKeyID.IsNull())
-         obj.push_back(Pair("hdmasterkeyid", masterKeyID.GetHex()));
+         obj.pushKV("hdmasterkeyid", masterKeyID.GetHex());
 
     return obj;
 }
@@ -3745,21 +3755,21 @@ UniValue listunspent(const JSONRPCRequest& request)
             continue;
 
         UniValue entry(UniValue::VOBJ);
-        entry.push_back(Pair("txid", out.tx->GetHash().GetHex()));
-        entry.push_back(Pair("vout", out.i));
+        entry.pushKV("txid", out.tx->GetHash().GetHex());
+        entry.pushKV("vout", out.i);
 
         if (fValidAddress) {
-            entry.push_back(Pair("address", EncodeDestination(address)));
+            entry.pushKV("address", EncodeDestination(address));
 
             if (pwallet->mapAddressBook.count(address)) {
-                entry.push_back(Pair("account", pwallet->mapAddressBook[address].name));
+                entry.pushKV("account", pwallet->mapAddressBook[address].name);
             }
 
             if (scriptPubKey->IsPayToScriptHash()) {
                 const CScriptID& hash = boost::get<CScriptID>(address);
                 CScript redeemScript;
                 if (pwallet->GetCScript(hash, redeemScript)) {
-                    entry.push_back(Pair("redeemScript", HexStr(redeemScript.begin(), redeemScript.end())));
+                    entry.pushKV("redeemScript", HexStr(redeemScript.begin(), redeemScript.end()));
                 }
             }
             if (scriptPubKey->IsPayToScriptHash256()) {
@@ -3783,26 +3793,26 @@ UniValue listunspent(const JSONRPCRequest& request)
             };
         };
 
-        entry.push_back(Pair("scriptPubKey", HexStr(scriptPubKey->begin(), scriptPubKey->end())));
+        entry.pushKV("scriptPubKey", HexStr(scriptPubKey->begin(), scriptPubKey->end()));
 
         if (fCCFormat)
         {
-            entry.push_back(Pair("time", out.tx->GetTxTime()));
-            entry.push_back(Pair("amount", nValue));
+            entry.pushKV("time", out.tx->GetTxTime());
+            entry.pushKV("amount", nValue);
         } else
         {
-            entry.push_back(Pair("amount", ValueFromAmount(nValue)));
+            entry.pushKV("amount", ValueFromAmount(nValue));
         };
 
-        entry.push_back(Pair("confirmations", out.nDepth));
-        entry.push_back(Pair("spendable", out.fSpendable));
-        entry.push_back(Pair("solvable", out.fSolvable));
-        entry.push_back(Pair("safe", out.fSafe));
+        entry.pushKV("confirmations", out.nDepth);
+        entry.pushKV("spendable", out.fSpendable);
+        entry.pushKV("solvable", out.fSolvable);
+        entry.pushKV("safe", out.fSafe);
         if (fIncludeImmature)
-            entry.push_back(Pair("mature", out.fMature));
+            entry.pushKV("mature", out.fMature);
 
         if (out.fNeedHardwareKey)
-            entry.push_back(Pair("ondevice", out.fNeedHardwareKey));
+            entry.pushKV("ondevice", out.fNeedHardwareKey);
 
         results.push_back(entry);
     }
@@ -3905,7 +3915,6 @@ UniValue fundrawtransaction(const JSONRPCRequest& request)
                 {"change_type", UniValueType(UniValue::VSTR)},
                 {"includeWatching", UniValueType(UniValue::VBOOL)},
                 {"lockUnspents", UniValueType(UniValue::VBOOL)},
-                {"reserveChangeKey", UniValueType(UniValue::VBOOL)}, // DEPRECATED (and ignored), should be removed in 0.16 or so.
                 {"feeRate", UniValueType()}, // will be checked below
                 {"subtractFeeFromOutputs", UniValueType(UniValue::VARR)},
                 {"replaceable", UniValueType(UniValue::VBOOL)},
@@ -4006,11 +4015,80 @@ UniValue fundrawtransaction(const JSONRPCRequest& request)
     }
 
     UniValue result(UniValue::VOBJ);
-    result.push_back(Pair("hex", EncodeHexTx(tx)));
-    result.push_back(Pair("changepos", changePosition));
-    result.push_back(Pair("fee", ValueFromAmount(nFeeOut)));
+    result.pushKV("hex", EncodeHexTx(tx));
+    result.pushKV("changepos", changePosition);
+    result.pushKV("fee", ValueFromAmount(nFeeOut));
 
     return result;
+}
+
+UniValue signrawtransactionwithwallet(const JSONRPCRequest& request)
+{
+    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
+        return NullUniValue;
+    }
+
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 3)
+        throw std::runtime_error(
+            "signrawtransactionwithwallet \"hexstring\" ( [{\"txid\":\"id\",\"vout\":n,\"scriptPubKey\":\"hex\",\"redeemScript\":\"hex\"},...] sighashtype )\n"
+            "\nSign inputs for raw transaction (serialized, hex-encoded).\n"
+            "The second optional argument (may be null) is an array of previous transaction outputs that\n"
+            "this transaction depends on but may not yet be in the block chain.\n"
+            + HelpRequiringPassphrase(pwallet) + "\n"
+
+            "\nArguments:\n"
+            "1. \"hexstring\"                      (string, required) The transaction hex string\n"
+            "2. \"prevtxs\"                        (string, optional) An json array of previous dependent transaction outputs\n"
+            "     [                              (json array of json objects, or 'null' if none provided)\n"
+            "       {\n"
+            "         \"txid\":\"id\",               (string, required) The transaction id\n"
+            "         \"vout\":n,                  (numeric, required) The output number\n"
+            "         \"scriptPubKey\": \"hex\",     (string, required) script key\n"
+            "         \"redeemScript\": \"hex\",     (string, required for P2SH or P2WSH) redeem script\n"
+            "         \"amount\": value            (numeric, required) The amount spent\n"
+            "       }\n"
+            "       ,...\n"
+            "    ]\n"
+            "3. \"sighashtype\"                    (string, optional, default=ALL) The signature hash type. Must be one of\n"
+            "       \"ALL\"\n"
+            "       \"NONE\"\n"
+            "       \"SINGLE\"\n"
+            "       \"ALL|ANYONECANPAY\"\n"
+            "       \"NONE|ANYONECANPAY\"\n"
+            "       \"SINGLE|ANYONECANPAY\"\n"
+
+            "\nResult:\n"
+            "{\n"
+            "  \"hex\" : \"value\",                  (string) The hex-encoded raw transaction with signature(s)\n"
+            "  \"complete\" : true|false,          (boolean) If the transaction has a complete set of signatures\n"
+            "  \"errors\" : [                      (json array of objects) Script verification errors (if there are any)\n"
+            "    {\n"
+            "      \"txid\" : \"hash\",              (string) The hash of the referenced, previous transaction\n"
+            "      \"vout\" : n,                   (numeric) The index of the output to spent and used as input\n"
+            "      \"scriptSig\" : \"hex\",          (string) The hex-encoded signature script\n"
+            "      \"sequence\" : n,               (numeric) Script sequence number\n"
+            "      \"error\" : \"text\"              (string) Verification or signing error related to the input\n"
+            "    }\n"
+            "    ,...\n"
+            "  ]\n"
+            "}\n"
+
+            "\nExamples:\n"
+            + HelpExampleCli("signrawtransactionwithwallet", "\"myhex\"")
+            + HelpExampleRpc("signrawtransactionwithwallet", "\"myhex\"")
+        );
+
+    RPCTypeCheck(request.params, {UniValue::VSTR, UniValue::VARR, UniValue::VSTR}, true);
+
+    CMutableTransaction mtx;
+    if (!DecodeHexTx(mtx, request.params[0].get_str(), true)) {
+        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed");
+    }
+
+    // Sign the transaction
+    LOCK2(cs_main, pwallet->cs_wallet);
+    return SignTransaction(mtx, request.params[1], pwallet, false, request.params[2]);
 }
 
 UniValue bumpfee(const JSONRPCRequest& request)
@@ -4029,8 +4107,8 @@ UniValue bumpfee(const JSONRPCRequest& request)
             "If the change output is not big enough to cover the increased fee, the command will currently fail\n"
             "instead of adding new inputs to compensate. (A future implementation could improve this.)\n"
             "The command will fail if the wallet or mempool contains a transaction that spends one of T's outputs.\n"
-            "By default, the new fee will be calculated automatically using estimatefee.\n"
-            "The user can specify a confirmation target for estimatefee.\n"
+            "By default, the new fee will be calculated automatically using estimatesmartfee.\n"
+            "The user can specify a confirmation target for estimatesmartfee.\n"
             "Alternatively, the user can specify totalFee, or use RPC settxfee to set a higher fee rate.\n"
             "At a minimum, the new fee rate must be high enough to pay an additional new relay fee (incrementalfee\n"
             "returned by getnetworkinfo) to enter the node's mempool.\n"
@@ -4150,14 +4228,14 @@ UniValue bumpfee(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_WALLET_ERROR, errors[0]);
     }
     UniValue result(UniValue::VOBJ);
-    result.push_back(Pair("txid", txid.GetHex()));
-    result.push_back(Pair("origfee", ValueFromAmount(old_fee)));
-    result.push_back(Pair("fee", ValueFromAmount(new_fee)));
+    result.pushKV("txid", txid.GetHex());
+    result.pushKV("origfee", ValueFromAmount(old_fee));
+    result.pushKV("fee", ValueFromAmount(new_fee));
     UniValue result_errors(UniValue::VARR);
     for (const std::string& error : errors) {
         result_errors.push_back(error);
     }
-    result.push_back(Pair("errors", result_errors));
+    result.pushKV("errors", result_errors);
 
     return result;
 }
@@ -4292,6 +4370,305 @@ UniValue rescanblockchain(const JSONRPCRequest& request)
     return response;
 }
 
+class DescribeWalletAddressVisitor : public boost::static_visitor<UniValue>
+{
+public:
+    CWallet * const pwallet;
+
+    void ProcessSubScript(const CScript& subscript, UniValue& obj, bool include_addresses = false) const
+    {
+        // Always present: script type and redeemscript
+        txnouttype which_type;
+        std::vector<std::vector<unsigned char>> solutions_data;
+        Solver(subscript, which_type, solutions_data);
+        obj.pushKV("script", GetTxnOutputType(which_type));
+        obj.pushKV("hex", HexStr(subscript.begin(), subscript.end()));
+
+        CTxDestination embedded;
+        UniValue a(UniValue::VARR);
+        if (ExtractDestination(subscript, embedded)) {
+            // Only when the script corresponds to an address.
+            UniValue subobj(UniValue::VOBJ);
+            UniValue detail = DescribeAddress(embedded);
+            subobj.pushKVs(detail);
+            UniValue wallet_detail = boost::apply_visitor(*this, embedded);
+            subobj.pushKVs(wallet_detail);
+            subobj.pushKV("address", EncodeDestination(embedded));
+            subobj.pushKV("scriptPubKey", HexStr(subscript.begin(), subscript.end()));
+            // Always report the pubkey at the top level, so that `getnewaddress()['pubkey']` always works.
+            if (subobj.exists("pubkey")) obj.pushKV("pubkey", subobj["pubkey"]);
+            obj.pushKV("embedded", std::move(subobj));
+            if (include_addresses) a.push_back(EncodeDestination(embedded));
+        } else if (which_type == TX_MULTISIG) {
+            // Also report some information on multisig scripts (which do not have a corresponding address).
+            // TODO: abstract out the common functionality between this logic and ExtractDestinations.
+            obj.pushKV("sigsrequired", solutions_data[0][0]);
+            UniValue pubkeys(UniValue::VARR);
+            for (size_t i = 1; i < solutions_data.size() - 1; ++i) {
+                CPubKey key(solutions_data[i].begin(), solutions_data[i].end());
+                if (include_addresses) a.push_back(EncodeDestination(key.GetID()));
+                pubkeys.push_back(HexStr(key.begin(), key.end()));
+            }
+            obj.pushKV("pubkeys", std::move(pubkeys));
+        }
+
+        // The "addresses" field is confusing because it refers to public keys using their P2PKH address.
+        // For that reason, only add the 'addresses' field when needed for backward compatibility. New applications
+        // can use the 'embedded'->'address' field for P2SH or P2WSH wrapped addresses, and 'pubkeys' for
+        // inspecting multisig participants.
+        if (include_addresses) obj.pushKV("addresses", std::move(a));
+    }
+
+    explicit DescribeWalletAddressVisitor(CWallet* _pwallet) : pwallet(_pwallet) {}
+
+    UniValue operator()(const CNoDestination& dest) const { return UniValue(UniValue::VOBJ); }
+
+    UniValue operator()(const CKeyID& keyID) const
+    {
+        UniValue obj(UniValue::VOBJ);
+        CPubKey vchPubKey;
+        if (pwallet && pwallet->GetPubKey(keyID, vchPubKey)) {
+            obj.pushKV("pubkey", HexStr(vchPubKey));
+            obj.pushKV("iscompressed", vchPubKey.IsCompressed());
+        }
+        return obj;
+    }
+
+    UniValue operator()(const CScriptID& scriptID) const
+    {
+        UniValue obj(UniValue::VOBJ);
+        CScript subscript;
+        if (pwallet && pwallet->GetCScript(scriptID, subscript)) {
+            ProcessSubScript(subscript, obj, IsDeprecatedRPCEnabled("validateaddress"));
+        }
+        return obj;
+    }
+
+    UniValue operator()(const WitnessV0KeyHash& id) const
+    {
+        UniValue obj(UniValue::VOBJ);
+        CPubKey pubkey;
+        if (pwallet && pwallet->GetPubKey(CKeyID(id), pubkey)) {
+            obj.pushKV("pubkey", HexStr(pubkey));
+        }
+        return obj;
+    }
+
+    UniValue operator()(const WitnessV0ScriptHash& id) const
+    {
+        UniValue obj(UniValue::VOBJ);
+        CScript subscript;
+        CRIPEMD160 hasher;
+        uint160 hash;
+        hasher.Write(id.begin(), 32).Finalize(hash.begin());
+        if (pwallet && pwallet->GetCScript(CScriptID(hash), subscript)) {
+            ProcessSubScript(subscript, obj);
+        }
+        return obj;
+    }
+
+    UniValue operator()(const CExtKeyPair &ekp) const {
+        UniValue obj(UniValue::VOBJ);
+        obj.push_back(Pair("isextkey", true));
+        return obj;
+    }
+
+    UniValue operator()(const CStealthAddress &sxAddr) const {
+        UniValue obj(UniValue::VOBJ);
+        obj.push_back(Pair("isstealthaddress", true));
+        obj.push_back(Pair("prefix_num_bits", sxAddr.prefix.number_bits));
+        obj.push_back(Pair("prefix_bitfield", strprintf("0x%04x", sxAddr.prefix.bitfield)));
+        return obj;
+    }
+
+    UniValue operator()(const CKeyID256 &idk256) const {
+        UniValue obj(UniValue::VOBJ);
+        CPubKey vchPubKey;
+        obj.push_back(Pair("is256bit", true));
+        CKeyID id160(idk256);
+        if (pwallet && pwallet->GetPubKey(id160, vchPubKey)) {
+            obj.pushKV("pubkey", HexStr(vchPubKey));
+            obj.pushKV("iscompressed", vchPubKey.IsCompressed());
+        }
+        return obj;
+    }
+
+    UniValue operator()(const CScriptID256 &scriptID256) const {
+        UniValue obj(UniValue::VOBJ);
+        CScript subscript;
+        obj.push_back(Pair("isscript", true));
+        CScriptID scriptID;
+        scriptID.Set(scriptID256);
+        if (pwallet && pwallet->GetCScript(scriptID, subscript)) {
+            ProcessSubScript(subscript, obj);
+        }
+        return obj;
+    }
+
+    UniValue operator()(const WitnessUnknown& id) const { return UniValue(UniValue::VOBJ); }
+};
+
+UniValue DescribeWalletAddress(CWallet* pwallet, const CTxDestination& dest)
+{
+    UniValue ret(UniValue::VOBJ);
+    UniValue detail = DescribeAddress(dest);
+    ret.pushKVs(detail);
+    ret.pushKVs(boost::apply_visitor(DescribeWalletAddressVisitor(pwallet), dest));
+    return ret;
+}
+
+UniValue getaddressinfo(const JSONRPCRequest& request)
+{
+    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
+        return NullUniValue;
+    }
+
+    if (request.fHelp || request.params.size() != 1) {
+        throw std::runtime_error(
+            "getaddressinfo \"address\"\n"
+            "\nReturn information about the given particl address. Some information requires the address\n"
+            "to be in the wallet.\n"
+            "\nArguments:\n"
+            "1. \"address\"                    (string, required) The particl address to get the information of.\n"
+            "\nResult:\n"
+            "{\n"
+            "  \"address\" : \"address\",        (string) The particl address validated\n"
+            "  \"scriptPubKey\" : \"hex\",       (string) The hex encoded scriptPubKey generated by the address\n"
+            "  \"ismine\" : true|false,        (boolean) If the address is yours or not\n"
+            "  \"iswatchonly\" : true|false,   (boolean) If the address is watchonly\n"
+            "  \"isscript\" : true|false,      (boolean) If the key is a script\n"
+            "  \"iswitness\" : true|false,     (boolean) If the address is a witness address\n"
+            "  \"witness_version\" : version   (numeric, optional) The version number of the witness program\n"
+            "  \"witness_program\" : \"hex\"     (string, optional) The hex value of the witness program\n"
+            "  \"script\" : \"type\"             (string, optional) The output script type. Only if \"isscript\" is true and the redeemscript is known. Possible types: nonstandard, pubkey, pubkeyhash, scripthash, multisig, nulldata, witness_v0_keyhash, witness_v0_scripthash, witness_unknown\n"
+            "  \"hex\" : \"hex\",                (string, optional) The redeemscript for the p2sh address\n"
+            "  \"pubkeys\"                     (string, optional) Array of pubkeys associated with the known redeemscript (only if \"script\" is \"multisig\")\n"
+            "    [\n"
+            "      \"pubkey\"\n"
+            "      ,...\n"
+            "    ]\n"
+            "  \"sigsrequired\" : xxxxx        (numeric, optional) Number of signatures required to spend multisig output (only if \"script\" is \"multisig\")\n"
+            "  \"pubkey\" : \"publickeyhex\",    (string, optional) The hex value of the raw public key, for single-key addresses (possibly embedded in P2SH or P2WSH)\n"
+            "  \"embedded\" : {...},           (object, optional) Information about the address embedded in P2SH or P2WSH, if relevant and known. It includes all getaddressinfo output fields for the embedded address, excluding metadata (\"timestamp\", \"hdkeypath\", \"hdmasterkeyid\") and relation to the wallet (\"ismine\", \"iswatchonly\", \"account\").\n"
+            "  \"iscompressed\" : true|false,  (boolean) If the address is compressed\n"
+            "  \"account\" : \"account\"         (string) The account associated with the address, \"\" is the default account\n"
+            "  \"timestamp\" : timestamp,      (number, optional) The creation time of the key if available in seconds since epoch (Jan 1 1970 GMT)\n"
+            "  \"hdkeypath\" : \"keypath\"       (string, optional) The HD keypath if the key is HD and available\n"
+            "  \"hdmasterkeyid\" : \"<hash160>\" (string, optional) The Hash160 of the HD master pubkey\n"
+            "}\n"
+            "\nExamples:\n"
+            + HelpExampleCli("getaddressinfo", "\"1PSSGeFHDnKNxiEyFrD1wcEaHr9hrQDDWc\"")
+            + HelpExampleRpc("getaddressinfo", "\"1PSSGeFHDnKNxiEyFrD1wcEaHr9hrQDDWc\"")
+        );
+    }
+
+    LOCK(pwallet->cs_wallet);
+
+    UniValue ret(UniValue::VOBJ);
+    std::string s = request.params[0].get_str();
+    bool fBech32 = bech32::Decode(s).second.size() > 0;
+    CTxDestination dest = DecodeDestination(s);
+
+    // Make sure the destination is valid
+    if (!IsValidDestination(dest)) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
+    }
+
+    std::string currentAddress = EncodeDestination(dest, fBech32);
+    ret.pushKV("address", currentAddress);
+
+    CScript scriptPubKey = GetScriptForDestination(dest);
+    ret.pushKV("scriptPubKey", HexStr(scriptPubKey.begin(), scriptPubKey.end()));
+
+    isminetype mine = ISMINE_NO;
+    if (IsHDWallet(pwallet))
+    {
+        CHDWallet *phdw = GetHDWallet(pwallet);
+        if (dest.type() == typeid(CExtKeyPair))
+        {
+            CExtKeyPair ek = boost::get<CExtKeyPair>(dest);
+            CKeyID id = ek.GetID();
+            mine = phdw->HaveExtKey(id);
+        } else
+        if (dest.type() == typeid(CStealthAddress))
+        {
+            const CStealthAddress &sxAddr = boost::get<CStealthAddress>(dest);
+            mine = phdw->HaveStealthAddress(sxAddr);
+        } else
+        if (dest.type() == typeid(CKeyID))
+        {
+            CKeyID idk;
+            CEKAKey ak;
+            CExtKeyAccount *pa = nullptr;
+            bool isInvalid;
+            mine = phdw->IsMine(scriptPubKey, idk, ak, pa, isInvalid);
+
+            if (pa && ak.nParent > 0 && ak.nParent < pa->vExtKeys.size())
+            {
+                CStoredExtKey *sek = pa->GetChain(ak.nParent);
+                if (sek)
+                {
+                    ret.pushKV("from_ext_address_id", sek->GetIDString58());
+                    std::string sPath;
+                    std::vector<uint32_t> vPath;
+                    AppendChainPath(sek, vPath);
+                    vPath.push_back(ak.nKey);
+                    PathToString(vPath, sPath);
+                    ret.pushKV("path", sPath);
+                } else
+                {
+                    ret.pushKV("error", "Unknown chain.");
+                };
+            } else
+            {
+                CStealthAddress sx;
+                idk = boost::get<CKeyID>(dest);
+                if (phdw->GetStealthLinked(idk, sx))
+                ret.pushKV("from_stealth_address", sx.Encoded());
+            };
+        } else
+        {
+            mine = phdw ? IsMine(*phdw, dest) : ISMINE_NO;
+        };
+        if (mine & ISMINE_HARDWARE_DEVICE)
+            ret.pushKV("isondevice", true);
+    } else
+    {
+        mine = IsMine(*pwallet, dest);
+    };
+
+    ret.pushKV("ismine", bool(mine & ISMINE_SPENDABLE));
+    ret.pushKV("iswatchonly", bool(mine & ISMINE_WATCH_ONLY));
+    UniValue detail = DescribeWalletAddress(pwallet, dest);
+    ret.pushKVs(detail);
+    if (pwallet->mapAddressBook.count(dest)) {
+        ret.pushKV("account", pwallet->mapAddressBook[dest].name);
+    }
+    const CKeyMetadata* meta = nullptr;
+    CKeyID key_id = GetKeyForDestination(*pwallet, dest);
+    if (!key_id.IsNull()) {
+        auto it = pwallet->mapKeyMetadata.find(key_id);
+        if (it != pwallet->mapKeyMetadata.end()) {
+            meta = &it->second;
+        }
+    }
+    if (!meta) {
+        auto it = pwallet->m_script_metadata.find(CScriptID(scriptPubKey));
+        if (it != pwallet->m_script_metadata.end()) {
+            meta = &it->second;
+        }
+    }
+    if (meta) {
+        ret.pushKV("timestamp", meta->nCreateTime);
+        if (!meta->hdKeypath.empty()) {
+            ret.pushKV("hdkeypath", meta->hdKeypath);
+            ret.pushKV("hdmasterkeyid", meta->hdMasterKeyID.GetHex());
+        }
+    }
+    return ret;
+}
+
 extern UniValue abortrescan(const JSONRPCRequest& request); // in rpcdump.cpp
 extern UniValue dumpprivkey(const JSONRPCRequest& request); // in rpcdump.cpp
 extern UniValue importprivkey(const JSONRPCRequest& request);
@@ -4305,61 +4682,63 @@ extern UniValue importmulti(const JSONRPCRequest& request);
 extern UniValue rescanblockchain(const JSONRPCRequest& request);
 
 static const CRPCCommand commands[] =
-{ //  category              name                        actor (function)           argNames
-  //  --------------------- ------------------------    -----------------------    ----------
-    { "rawtransactions",    "fundrawtransaction",       &fundrawtransaction,       {"hexstring","options","iswitness"} },
-    { "hidden",             "resendwallettransactions", &resendwallettransactions, {} },
-    { "wallet",             "abandontransaction",       &abandontransaction,       {"txid"} },
-    { "wallet",             "abortrescan",              &abortrescan,              {} },
-    { "wallet",             "addmultisigaddress",       &addmultisigaddress,       {"nrequired","keys","account","bech32","256bit"} },
-    //{ "wallet",             "addwitnessaddress",        &addwitnessaddress,        {"address"} },
-    { "wallet",             "backupwallet",             &backupwallet,             {"destination"} },
-    { "wallet",             "bumpfee",                  &bumpfee,                  {"txid", "options"} },
-    { "wallet",             "dumpprivkey",              &dumpprivkey,              {"address"}  },
-    { "wallet",             "dumpwallet",               &dumpwallet,               {"filename"} },
-    { "wallet",             "encryptwallet",            &encryptwallet,            {"passphrase"} },
-    { "wallet",             "getaccountaddress",        &getaccountaddress,        {"account"} },
-    { "wallet",             "getaccount",               &getaccount,               {"address"} },
-    { "wallet",             "getaddressesbyaccount",    &getaddressesbyaccount,    {"account"} },
-    { "wallet",             "getbalance",               &getbalance,               {"account","minconf","include_watchonly"} },
-    { "wallet",             "getnewaddress",            &getnewaddress,            {"account","bech32","hardened","256bit"} },
-    { "wallet",             "getrawchangeaddress",      &getrawchangeaddress,      {} },
-    { "wallet",             "getreceivedbyaccount",     &getreceivedbyaccount,     {"account","minconf"} },
-    { "wallet",             "getreceivedbyaddress",     &getreceivedbyaddress,     {"address","minconf"} },
-    { "wallet",             "gettransaction",           &gettransaction,           {"txid","include_watchonly"} },
-    { "wallet",             "getunconfirmedbalance",    &getunconfirmedbalance,    {} },
-    { "wallet",             "getwalletinfo",            &getwalletinfo,            {} },
-    { "wallet",             "importmulti",              &importmulti,              {"requests","options"} },
-    { "wallet",             "importprivkey",            &importprivkey,            {"privkey","label","rescan"} },
-    { "wallet",             "importwallet",             &importwallet,             {"filename"} },
-    { "wallet",             "importaddress",            &importaddress,            {"address","label","rescan","p2sh"} },
-    { "wallet",             "importprunedfunds",        &importprunedfunds,        {"rawtransaction","txoutproof"} },
-    { "wallet",             "importpubkey",             &importpubkey,             {"pubkey","label","rescan"} },
-    { "wallet",             "keypoolrefill",            &keypoolrefill,            {"newsize"} },
-    { "wallet",             "listaccounts",             &listaccounts,             {"minconf","include_watchonly"} },
-    { "wallet",             "listaddressgroupings",     &listaddressgroupings,     {} },
-    { "wallet",             "listlockunspent",          &listlockunspent,          {} },
-    { "wallet",             "listreceivedbyaccount",    &listreceivedbyaccount,    {"minconf","include_empty","include_watchonly"} },
-    { "wallet",             "listreceivedbyaddress",    &listreceivedbyaddress,    {"minconf","include_empty","include_watchonly"} },
-    { "wallet",             "listsinceblock",           &listsinceblock,           {"blockhash","target_confirmations","include_watchonly","include_removed"} },
-    { "wallet",             "listtransactions",         &listtransactions,         {"account","count","skip","include_watchonly"} },
-    { "wallet",             "listunspent",              &listunspent,              {"minconf","maxconf","addresses","include_unsafe","query_options"} },
-    { "wallet",             "listwallets",              &listwallets,              {} },
-    { "wallet",             "lockunspent",              &lockunspent,              {"unlock","transactions"} },
-    { "wallet",             "move",                     &movecmd,                  {"fromaccount","toaccount","amount","minconf","comment"} },
-    //{ "wallet",             "sendfrom",                 &sendfrom,                 {"fromaccount","toaddress","amount","minconf","comment","comment_to"} },
-    { "wallet",             "sendmany",                 &sendmany,                 {"fromaccount","amounts","minconf","comment","subtractfeefrom","replaceable","conf_target","estimate_mode"} },
-    { "wallet",             "sendtoaddress",            &sendtoaddress,            {"address","amount","comment","comment_to","subtractfeefromamount","replaceable","conf_target","estimate_mode"} },
-    { "wallet",             "setaccount",               &setaccount,               {"address","account"} },
-    { "wallet",             "settxfee",                 &settxfee,                 {"amount"} },
-    { "wallet",             "signmessage",              &signmessage,              {"address","message"} },
-    { "wallet",             "walletlock",               &walletlock,               {} },
-    { "wallet",             "walletpassphrasechange",   &walletpassphrasechange,   {"oldpassphrase","newpassphrase"} },
-    { "wallet",             "walletpassphrase",         &walletpassphrase,         {"passphrase","timeout","stakingonly"} },
-    { "wallet",             "removeprunedfunds",        &removeprunedfunds,        {"txid"} },
-    { "wallet",             "rescanblockchain",         &rescanblockchain,         {"start_height", "stop_height"} },
+{ //  category              name                                actor (function)                argNames
+    //  --------------------- ------------------------          -----------------------         ----------
+    { "rawtransactions",    "fundrawtransaction",               &fundrawtransaction,            {"hexstring","options","iswitness"} },
+    { "hidden",             "resendwallettransactions",         &resendwallettransactions,      {} },
+    { "wallet",             "abandontransaction",               &abandontransaction,            {"txid"} },
+    { "wallet",             "abortrescan",                      &abortrescan,                   {} },
+    { "wallet",             "addmultisigaddress",               &addmultisigaddress,            {"nrequired","keys","account","bech32","256bit"} },
+    //{ "hidden",             "addwitnessaddress",                &addwitnessaddress,             {"address","p2sh"} },
+    { "wallet",             "backupwallet",                     &backupwallet,                  {"destination"} },
+    { "wallet",             "bumpfee",                          &bumpfee,                       {"txid", "options"} },
+    { "wallet",             "dumpprivkey",                      &dumpprivkey,                   {"address"}  },
+    { "wallet",             "dumpwallet",                       &dumpwallet,                    {"filename"} },
+    { "wallet",             "encryptwallet",                    &encryptwallet,                 {"passphrase"} },
+    { "wallet",             "getaccountaddress",                &getaccountaddress,             {"account"} },
+    { "wallet",             "getaccount",                       &getaccount,                    {"address"} },
+    { "wallet",             "getaddressesbyaccount",            &getaddressesbyaccount,         {"account"} },
+    { "wallet",             "getaddressinfo",                   &getaddressinfo,                {"address"} },
+    { "wallet",             "getbalance",                       &getbalance,                    {"account","minconf","include_watchonly"} },
+    { "wallet",             "getnewaddress",                    &getnewaddress,                 {"account","address_type"} },
+    { "wallet",             "getrawchangeaddress",              &getrawchangeaddress,           {"address_type"} },
+    { "wallet",             "getreceivedbyaccount",             &getreceivedbyaccount,          {"account","minconf"} },
+    { "wallet",             "getreceivedbyaddress",             &getreceivedbyaddress,          {"address","minconf"} },
+    { "wallet",             "gettransaction",                   &gettransaction,                {"txid","include_watchonly"} },
+    { "wallet",             "getunconfirmedbalance",            &getunconfirmedbalance,         {} },
+    { "wallet",             "getwalletinfo",                    &getwalletinfo,                 {} },
+    { "wallet",             "importmulti",                      &importmulti,                   {"requests","options"} },
+    { "wallet",             "importprivkey",                    &importprivkey,                 {"privkey","label","rescan"} },
+    { "wallet",             "importwallet",                     &importwallet,                  {"filename"} },
+    { "wallet",             "importaddress",                    &importaddress,                 {"address","label","rescan","p2sh"} },
+    { "wallet",             "importprunedfunds",                &importprunedfunds,             {"rawtransaction","txoutproof"} },
+    { "wallet",             "importpubkey",                     &importpubkey,                  {"pubkey","label","rescan"} },
+    { "wallet",             "keypoolrefill",                    &keypoolrefill,                 {"newsize"} },
+    { "wallet",             "listaccounts",                     &listaccounts,                  {"minconf","include_watchonly"} },
+    { "wallet",             "listaddressgroupings",             &listaddressgroupings,          {} },
+    { "wallet",             "listlockunspent",                  &listlockunspent,               {} },
+    { "wallet",             "listreceivedbyaccount",            &listreceivedbyaccount,         {"minconf","include_empty","include_watchonly"} },
+    { "wallet",             "listreceivedbyaddress",            &listreceivedbyaddress,         {"minconf","include_empty","include_watchonly"} },
+    { "wallet",             "listsinceblock",                   &listsinceblock,                {"blockhash","target_confirmations","include_watchonly","include_removed"} },
+    { "wallet",             "listtransactions",                 &listtransactions,              {"account","count","skip","include_watchonly"} },
+    { "wallet",             "listunspent",                      &listunspent,                   {"minconf","maxconf","addresses","include_unsafe","query_options"} },
+    { "wallet",             "listwallets",                      &listwallets,                   {} },
+    { "wallet",             "lockunspent",                      &lockunspent,                   {"unlock","transactions"} },
+    { "wallet",             "move",                             &movecmd,                       {"fromaccount","toaccount","amount","minconf","comment"} },
+    //{ "wallet",             "sendfrom",                         &sendfrom,                      {"fromaccount","toaddress","amount","minconf","comment","comment_to"} },
+    { "wallet",             "sendmany",                         &sendmany,                      {"fromaccount","amounts","minconf","comment","subtractfeefrom","replaceable","conf_target","estimate_mode"} },
+    { "wallet",             "sendtoaddress",                    &sendtoaddress,                 {"address","amount","comment","comment_to","subtractfeefromamount","replaceable","conf_target","estimate_mode"} },
+    { "wallet",             "setaccount",                       &setaccount,                    {"address","account"} },
+    { "wallet",             "settxfee",                         &settxfee,                      {"amount"} },
+    { "wallet",             "signmessage",                      &signmessage,                   {"address","message"} },
+    { "wallet",             "signrawtransactionwithwallet",     &signrawtransactionwithwallet,  {"hexstring","prevtxs","sighashtype"} },
+    { "wallet",             "walletlock",                       &walletlock,                    {} },
+    { "wallet",             "walletpassphrasechange",           &walletpassphrasechange,        {"oldpassphrase","newpassphrase"} },
+    { "wallet",             "walletpassphrase",                 &walletpassphrase,              {"passphrase","timeout","stakingonly"} },
+    { "wallet",             "removeprunedfunds",                &removeprunedfunds,             {"txid"} },
+    { "wallet",             "rescanblockchain",                 &rescanblockchain,              {"start_height", "stop_height"} },
 
-    { "generating",         "generate",                 &generate,                 {"nblocks","maxtries"} },
+    { "generating",         "generate",                         &generate,                      {"nblocks","maxtries"} },
 };
 
 void RegisterWalletRPCCommands(CRPCTable &t)

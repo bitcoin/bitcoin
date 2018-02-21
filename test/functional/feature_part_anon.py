@@ -122,7 +122,7 @@ class AnonTest(ParticlTestFramework):
         ro = nodes[1].sendtypeto('anon', 'part', outputs, 'comment_to', 'comment_from', 4, 64, True)
         assert(ro['bytes'] > 0)
 
-        txnHash = nodes[1].sendtypeto('anon', 'part', outputs);
+        txnHash = nodes[1].sendtypeto('anon', 'part', outputs)
         txnHashes = [txnHash,]
 
 

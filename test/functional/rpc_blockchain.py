@@ -100,6 +100,8 @@ class BlockchainTest(BitcoinTestFramework):
         assert_greater_than(res['size_on_disk'], 0)
 
     def _test_getchaintxstats(self):
+        self.log.info("Test getchaintxstats")
+
         chaintxstats = self.nodes[0].getchaintxstats(1)
         # 200 txs plus genesis tx
         assert_equal(chaintxstats['txcount'], 201)
@@ -107,21 +109,25 @@ class BlockchainTest(BitcoinTestFramework):
         # we have to round because of binary math
         assert_equal(round(chaintxstats['txrate'] * 600, 10), Decimal(1))
 
-        b1 = self.nodes[0].getblock(self.nodes[0].getblockhash(1))
-        b200 = self.nodes[0].getblock(self.nodes[0].getblockhash(200))
+        b1_hash = self.nodes[0].getblockhash(1)
+        b1 = self.nodes[0].getblock(b1_hash)
+        b200_hash = self.nodes[0].getblockhash(200)
+        b200 = self.nodes[0].getblock(b200_hash)
         time_diff = b200['mediantime'] - b1['mediantime']
 
         chaintxstats = self.nodes[0].getchaintxstats()
         assert_equal(chaintxstats['time'], b200['time'])
         assert_equal(chaintxstats['txcount'], 201)
+        assert_equal(chaintxstats['window_final_block_hash'], b200_hash)
         assert_equal(chaintxstats['window_block_count'], 199)
         assert_equal(chaintxstats['window_tx_count'], 199)
         assert_equal(chaintxstats['window_interval'], time_diff)
         assert_equal(round(chaintxstats['txrate'] * time_diff, 10), Decimal(199))
 
-        chaintxstats = self.nodes[0].getchaintxstats(blockhash=b1['hash'])
+        chaintxstats = self.nodes[0].getchaintxstats(blockhash=b1_hash)
         assert_equal(chaintxstats['time'], b1['time'])
         assert_equal(chaintxstats['txcount'], 2)
+        assert_equal(chaintxstats['window_final_block_hash'], b1_hash)
         assert_equal(chaintxstats['window_block_count'], 0)
         assert('window_tx_count' not in chaintxstats)
         assert('window_interval' not in chaintxstats)
@@ -173,8 +179,7 @@ class BlockchainTest(BitcoinTestFramework):
     def _test_getblockheader(self):
         node = self.nodes[0]
 
-        assert_raises_rpc_error(-5, "Block not found",
-                              node.getblockheader, "nonsense")
+        assert_raises_rpc_error(-5, "Block not found", node.getblockheader, "nonsense")
 
         besthash = node.getbestblockhash()
         secondbesthash = node.getblockhash(199)

@@ -163,13 +163,14 @@ BITCOIN_CORE_H = \
   rpc/safemode.h \
   rpc/server.h \
   rpc/rpcutil.h \
+  rpc/rawtransaction.h \
   rpc/register.h \
   rpc/util.h \
   scheduler.h \
+  script/ismine.h \
   script/sigcache.h \
   script/sign.h \
   script/standard.h \
-  script/ismine.h \
   streams.h \
   smsg/db.h \
   smsg/crypter.h \
@@ -262,7 +263,6 @@ libparticl_server_a_SOURCES = \
   rpc/client.cpp \
   rpc/rpcutil.cpp \
   script/sigcache.cpp \
-  script/ismine.cpp \
   timedata.cpp \
   torcontrol.cpp \
   txdb.cpp \
@@ -413,6 +413,7 @@ libparticl_common_a_SOURCES = \
   policy/feerate.cpp \
   protocol.cpp \
   scheduler.cpp \
+  script/ismine.cpp \
   script/sign.cpp \
   script/standard.cpp \
   warnings.cpp \
@@ -486,10 +487,10 @@ endif
 
 particld_LDADD = \
   $(LIBPARTICL_SERVER) \
+  $(LIBPARTICL_WALLET) \
   $(LIBPARTICL_COMMON) \
   $(LIBUNIVALUE) \
   $(LIBPARTICL_UTIL) \
-  $(LIBPARTICL_WALLET) \
   $(LIBPARTICL_ZMQ) \
   $(LIBPARTICL_CONSENSUS) \
   $(LIBPARTICL_CRYPTO) \

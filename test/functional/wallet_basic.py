@@ -140,7 +140,7 @@ class WalletTest(BitcoinTestFramework):
             inputs.append({ "txid" : utxo["txid"], "vout" : utxo["vout"]})
             outputs[self.nodes[2].getnewaddress("from1")] = utxo["amount"] - 3
             raw_tx = self.nodes[0].createrawtransaction(inputs, outputs)
-            txns_to_send.append(self.nodes[0].signrawtransaction(raw_tx))
+            txns_to_send.append(self.nodes[0].signrawtransactionwithwallet(raw_tx))
 
         # Have node 1 (miner) send the transactions
         self.nodes[1].sendrawtransaction(txns_to_send[0]["hex"], True)
@@ -225,7 +225,7 @@ class WalletTest(BitcoinTestFramework):
 
         rawTx = self.nodes[1].createrawtransaction(inputs, outputs).replace("c0833842", "00000000") #replace 11.11 with 0.0 (int32)
         decRawTx = self.nodes[1].decoderawtransaction(rawTx)
-        signedRawTx = self.nodes[1].signrawtransaction(rawTx)
+        signedRawTx = self.nodes[1].signrawtransactionwithwallet(rawTx)
         decRawTx = self.nodes[1].decoderawtransaction(signedRawTx['hex'])
         zeroValueTxid= decRawTx['txid']
         self.nodes[1].sendrawtransaction(signedRawTx['hex'])
@@ -317,7 +317,7 @@ class WalletTest(BitcoinTestFramework):
         self.nodes[1].importaddress(address_to_import)
 
         # 3. Validate that the imported address is watch-only on node1
-        assert(self.nodes[1].validateaddress(address_to_import)["iswatchonly"])
+        assert(self.nodes[1].getaddressinfo(address_to_import)["iswatchonly"])
 
         # 4. Check that the unspents after import are not spendable
         assert_array_result(self.nodes[1].listunspent(),
@@ -400,7 +400,7 @@ class WalletTest(BitcoinTestFramework):
         node0_balance = self.nodes[0].getbalance()
         # Split into two chains
         rawtx = self.nodes[0].createrawtransaction([{"txid":singletxid, "vout":0}], {chain_addrs[0]:node0_balance/2-Decimal('0.01'), chain_addrs[1]:node0_balance/2-Decimal('0.01')})
-        signedtx = self.nodes[0].signrawtransaction(rawtx)
+        signedtx = self.nodes[0].signrawtransactionwithwallet(rawtx)
         singletxid = self.nodes[0].sendrawtransaction(signedtx["hex"])
         self.nodes[0].generate(1)
 
@@ -441,6 +441,15 @@ class WalletTest(BitcoinTestFramework):
 
         # Verify nothing new in wallet
         assert_equal(total_txs, len(self.nodes[0].listtransactions("*",99999)))
+
+        # Test getaddressinfo. Note that these addresses are taken from disablewallet.py
+        assert_raises_rpc_error(-5, "Invalid address", self.nodes[0].getaddressinfo, "3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy")
+        address_info = self.nodes[0].getaddressinfo("mneYUmWYsuk7kySiURxCi3AGxrAqZxLgPZ")
+        assert_equal(address_info['address'], "mneYUmWYsuk7kySiURxCi3AGxrAqZxLgPZ")
+        assert_equal(address_info["scriptPubKey"], "76a9144e3854046c7bd1594ac904e4793b6a45b36dea0988ac")
+        assert not address_info["ismine"]
+        assert not address_info["iswatchonly"]
+        assert not address_info["isscript"]
 
 if __name__ == '__main__':
     WalletTest().main()

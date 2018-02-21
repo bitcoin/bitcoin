@@ -74,7 +74,7 @@ class SpentIndexTest(ParticlTestFramework):
         # Add change output
         txfunded = nodes[0].fundrawtransaction(tx)
 
-        txsigned = nodes[0].signrawtransaction(txfunded['hex'])
+        txsigned = nodes[0].signrawtransactionwithwallet(txfunded['hex'])
 
         txd = nodes[0].decoderawtransaction(txsigned['hex'])
 

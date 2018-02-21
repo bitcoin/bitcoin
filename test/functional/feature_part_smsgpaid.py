@@ -68,11 +68,11 @@ class SmsgPaidTest(ParticlTestFramework):
         assert(ro['messages'][0]['text'] == text_1)
 
 
-        ro = nodes[0].smsgimportprivkey('7pHSJFY1tNwi6d68UttGzB8YnXq2wFWrBVoadLv4Y6ekJD3L1iKs', 'smsg test key');
+        ro = nodes[0].smsgimportprivkey('7pHSJFY1tNwi6d68UttGzB8YnXq2wFWrBVoadLv4Y6ekJD3L1iKs', 'smsg test key')
 
         address0_1 = 'pasdoMwEn35xQUXFvsChWAQjuG8rEKJQW9'
         text_2 = "['data':'test','value':2]"
-        ro = nodes[0].smsglocalkeys();
+        ro = nodes[0].smsglocalkeys()
         assert(len(ro['smsg_keys']) == 1)
         assert(ro['smsg_keys'][0]['address'] == address0_1)
 
@@ -101,14 +101,14 @@ class SmsgPaidTest(ParticlTestFramework):
         ro = nodes[0].getwalletinfo()
         assert(ro['encryptionstatus'] == 'Locked')
 
-        localkeys0 = nodes[0].smsglocalkeys();
+        localkeys0 = nodes[0].smsglocalkeys()
         assert(len(localkeys0['smsg_keys']) == 1)
         assert(len(localkeys0['wallet_keys']) == 1)
         assert(localkeys0['smsg_keys'][0]['address'] == address0_1)
         assert(localkeys0['wallet_keys'][0]['address'] == address0)
 
         text_3 = "['data':'test','value':3]"
-        ro = nodes[0].smsglocalkeys();
+        ro = nodes[0].smsglocalkeys()
         assert(len(ro['smsg_keys']) == 1)
         assert(ro['smsg_keys'][0]['address'] == address0_1)
 

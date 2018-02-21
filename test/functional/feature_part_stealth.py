@@ -39,7 +39,7 @@ class StealthTest(ParticlTestFramework):
         sxAddrTo1 = nodes[1].getnewstealthaddress()
         assert(sxAddrTo1 == 'TetbYTGv5LiqyFiUD3a5HHbpSinQ9KiRYDGAMvRzPfz4RnHMbKGAwDr1fjLGJ5Eqg1XDwpeGyqWMiwdK3qM3zKWjzHNpaatdoHVzzA')
 
-        ro = nodes[1].validateaddress(sxAddrTo1)
+        ro = nodes[1].getaddressinfo(sxAddrTo1)
         assert(ro['ismine'] == True)
         assert(ro['isstealthaddress'] == True)
 
@@ -53,8 +53,7 @@ class StealthTest(ParticlTestFramework):
         assert(ro[0]['stealth_address'] == sxAddrTo1)
         assert(isclose(ro[0]['amount'], 1))
 
-        ro = nodes[1].validateaddress(ro[0]['address'])
-        assert(ro['isvalid'] == True)
+        ro = nodes[1].getaddressinfo(ro[0]['address'])
         assert(ro['ismine'] == True)
         assert(ro['from_stealth_address'] == sxAddrTo1)
 

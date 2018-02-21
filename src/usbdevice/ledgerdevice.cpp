@@ -570,7 +570,7 @@ int CLedgerDevice::PrepareTransaction(const CTransaction *tx, const CCoinsViewCa
         apduSize += dataLength;
 
         result = sendApduHidHidapi(handle, 1, in, apduSize, out, sizeof(out), &sw);
-        if (sw != SW_OK)
+        if (sw != SW_OK || result < 0)
             return errorN(1, sError, __func__, "Dongle error: %.4x %s", sw, GetLedgerString(sw));
 
         offset += dataLength;

@@ -119,7 +119,7 @@ public:
     CBlock(const CBlockHeader &header)
     {
         SetNull();
-        *((CBlockHeader*)this) = header;
+        *(static_cast<CBlockHeader*>(this)) = header;
     }
 
     bool IsProofOfStake() const
@@ -136,7 +136,7 @@ public:
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action) {
-        READWRITE(*(CBlockHeader*)this);
+        READWRITE(*static_cast<CBlockHeader*>(this));
         READWRITE(vtx);
 
         if (nVersion == PARTICL_BLOCK_VERSION)

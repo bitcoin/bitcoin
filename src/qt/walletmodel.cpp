@@ -48,6 +48,7 @@ WalletModel::WalletModel(const PlatformStyle *platformStyle, CWallet *_wallet, O
     transactionTableModel(0),
     recentRequestsTableModel(0),
     cachedBalance(0), cachedStaked(0), cachedUnconfirmedBalance(0), cachedImmatureBalance(0),
+    cachedWatchOnlyBalance{0}, cachedWatchUnconfBalance{0}, cachedWatchImmatureBalance{0},
     cachedEncryptionStatus(Unencrypted),
     cachedNumBlocks(0)
 {
@@ -882,7 +883,7 @@ bool WalletModel::bumpFee(uint256 hash)
     questionString.append("</td></tr></table>");
     SendConfirmationDialog confirmationDialog(tr("Confirm fee bump"), questionString);
     confirmationDialog.exec();
-    QMessageBox::StandardButton retval = (QMessageBox::StandardButton)confirmationDialog.result();
+    QMessageBox::StandardButton retval = static_cast<QMessageBox::StandardButton>(confirmationDialog.result());
 
     // cancel sign&broadcast if users doesn't want to bump the fee
     if (retval != QMessageBox::Yes) {

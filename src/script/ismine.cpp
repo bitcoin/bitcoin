@@ -15,16 +15,13 @@
 
 //typedef std::vector<unsigned char> valtype;
 
-unsigned int HaveKeys(const std::vector<valtype>& pubkeys, const CKeyStore& keystore)
+bool HaveKeys(const std::vector<valtype>& pubkeys, const CKeyStore& keystore)
 {
-    unsigned int nResult = 0;
-    for (const valtype& pubkey : pubkeys)
-    {
+    for (const valtype& pubkey : pubkeys) {
         CKeyID keyID = CPubKey(pubkey).GetID();
-        if (keystore.HaveKey(keyID))
-            ++nResult;
+        if (!keystore.HaveKey(keyID)) return false;
     }
-    return nResult;
+    return true;
 }
 
 isminetype IsMine(const CKeyStore& keystore, const CScript& scriptPubKey, SigVersion sigversion)
@@ -191,7 +188,7 @@ isminetype IsMine(const CKeyStore &keystore, const CScript& scriptPubKey, bool& 
                 }
             }
         }
-        if (HaveKeys(keys, keystore) == keys.size())
+        if (HaveKeys(keys, keystore))
             return ISMINE_SPENDABLE;
         break;
     }

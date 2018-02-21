@@ -58,7 +58,7 @@ class BlindTest(ParticlTestFramework):
 
         self.stakeBlocks(2)
 
-        mnemonic2 = nodes[2].mnemonic('new');
+        mnemonic2 = nodes[2].mnemonic('new')
         ro = nodes[2].extkeyimportmaster(mnemonic2['master'])
         sxAddrTo2_1 = nodes[2].getnewstealthaddress()
 
@@ -92,7 +92,7 @@ class BlindTest(ParticlTestFramework):
         assert(e['stealth_address'] == sxAddrTo2_1)
 
 
-        sxAddrTo2_2 = nodes[2].getnewextaddress();
+        sxAddrTo2_2 = nodes[2].getnewextaddress()
         txnHash4 = nodes[1].sendblindtopart(sxAddrTo2_1, 0.5, '', '', False, 'node1 -> node2 b->p')
 
         ro = nodes[1].getwalletinfo()
@@ -118,8 +118,8 @@ class BlindTest(ParticlTestFramework):
 
 
 
-        sxAddrTo2_3 = nodes[2].getnewstealthaddress('n2 sx+prefix', '4', '0xaaaa');
-        ro = nodes[2].validateaddress(sxAddrTo2_3);
+        sxAddrTo2_3 = nodes[2].getnewstealthaddress('n2 sx+prefix', '4', '0xaaaa')
+        ro = nodes[2].validateaddress(sxAddrTo2_3)
         assert(ro['isvalid'] == True)
         assert(ro['isstealthaddress'] == True)
         assert(ro['prefix_num_bits'] == 4)
@@ -138,7 +138,7 @@ class BlindTest(ParticlTestFramework):
         ro = nodes[0].getwalletinfo()
         # Some of the balance will have staked
         assert(isclose(ro['balance'] + ro['staked_balance'], 99996.09498274))
-        availableBalance = ro['balance'];
+        availableBalance = ro['balance']
 
 
         # Check node0 can spend remaining coin

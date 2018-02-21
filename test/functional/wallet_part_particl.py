@@ -311,10 +311,10 @@ class WalletParticlTest(ParticlTestFramework):
         path key0: m/44'/1'/0'/0/0
         """
         testPubkeys = [
-            '02250e74b8ef97412bc9e5664df28ec0f67dd2952c75b055a87f030b96edeb939b', \
-            '025aed9dc12d41ecd3977245c90744df87c625fe00aeb5957972f50d11e149c6c4', \
-            '02c889478e0eb53dc819bb744bd81d59dfe83e3705a7fba7d14da2a5a7bf104681', \
-            '02fe68bafd05bb9d4ee22e50f73b2c9ceb80b4ed98c026d6de93f445fab14a1d12', \
+            '02250e74b8ef97412bc9e5664df28ec0f67dd2952c75b055a87f030b96edeb939b',
+            '025aed9dc12d41ecd3977245c90744df87c625fe00aeb5957972f50d11e149c6c4',
+            '02c889478e0eb53dc819bb744bd81d59dfe83e3705a7fba7d14da2a5a7bf104681',
+            '02fe68bafd05bb9d4ee22e50f73b2c9ceb80b4ed98c026d6de93f445fab14a1d12',
             '0334ba8f8e3ee869c61d20d4d2c3d4424b73d4f81fc98a469c35abb9088f23ed79']
 
 
@@ -562,15 +562,17 @@ class WalletParticlTest(ParticlTestFramework):
                 break
         assert(sPath == "m/0/0'")
 
-        ro = nodes[0].getnewaddress('', 'false', 'false', 'true')
-        ro = nodes[0].validateaddress(ro)
+        addr = nodes[0].getnewaddress('', 'false', 'false', 'true')
+        ro = nodes[0].validateaddress(addr)
         assert(ro['isvalid'] == True)
+        ro = nodes[0].getaddressinfo(addr)
         assert(ro['ismine'] == True)
 
-        ro = nodes[0].getnewaddress('', 'true', 'false', 'true')
-        ro = nodes[0].validateaddress(ro)
-        assert(ro['address'].startswith('tpl1'))
+        addr = nodes[0].getnewaddress('', 'true', 'false', 'true')
+        ro = nodes[0].validateaddress(addr)
         assert(ro['isvalid'] == True)
+        ro = nodes[0].getaddressinfo(addr)
+        assert(ro['address'].startswith('tpl1'))
         assert(ro['ismine'] == True)
 
         #sAddrStake = sHardenedAddr
@@ -587,7 +589,7 @@ class WalletParticlTest(ParticlTestFramework):
         outputs = [{'address':sAddrSpend, 'amount':1, 'narr':'not change'},]
         ro = nodes[2].sendtypeto('part', 'part', outputs, 'comment', 'comment-to', 4, 32, True, coincontrol)
 
-        ro = nodes[2].decoderawtransaction(ro['hex']);
+        ro = nodes[2].decoderawtransaction(ro['hex'])
         fFound = False
         for output in ro['vout']:
             if output['type'] != 'standard':

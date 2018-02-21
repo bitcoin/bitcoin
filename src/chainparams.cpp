@@ -509,7 +509,11 @@ public:
         assert(genesis.hashMerkleRoot == uint256S("0xc95fb023cf4bc02ddfed1a59e2b2f53edd1a726683209e2780332edf554f1e3e"));
         assert(genesis.hashWitnessMerkleRoot == uint256S("0x619e94a7f9f04c8a1d018eb8bcd9c42d3c23171ebed8f351872256e36959d66c"));
 
-        // Note that of those with the service bits flag, most only support a subset of possible options
+        // Note that of those which support the service bits prefix, most only support a subset of
+        // possible options.
+        // This is fine at runtime as we'll fall back to using them as a oneshot if they don't support the
+        // service bits we want, but we should get them updated to support all service bits wanted by any
+        // release ASAP to avoid it where possible.
         vSeeds.emplace_back("mainnet-seed.particl.io", true);
         vSeeds.emplace_back("dnsseed-mainnet.particl.io", true);
         vSeeds.emplace_back("mainnet.particl.io", true);

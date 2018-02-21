@@ -73,7 +73,7 @@ class USBDeviceTest(ParticlTestFramework):
         assert(ro[0]['owned'] == 'true')
         assert(ro[0]['label'] == 'lbl1_0')
 
-        va_addr1_0 = nodes[1].validateaddress(addr1_0)
+        va_addr1_0 = nodes[1].getaddressinfo(addr1_0)
         assert(va_addr1_0['ismine'] == True)
         assert(va_addr1_0['iswatchonly'] == False)
         assert(va_addr1_0['isondevice'] == True)
@@ -86,7 +86,7 @@ class USBDeviceTest(ParticlTestFramework):
         else:
             assert(False)
 
-        txnid0 = nodes[0].sendtoaddress(addr1_0, 10);
+        txnid0 = nodes[0].sendtoaddress(addr1_0, 10)
 
         self.stakeBlocks(1)
 

@@ -53,7 +53,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         assert_equal(rawmatch["changepos"], -1)
 
         watchonly_address = self.nodes[0].getnewaddress()
-        watchonly_pubkey = self.nodes[0].validateaddress(watchonly_address)["pubkey"]
+        watchonly_pubkey = self.nodes[0].getaddressinfo(watchonly_address)["pubkey"]
         watchonly_amount = Decimal(200)
         self.nodes[3].importpubkey(watchonly_pubkey, "", True)
         watchonly_txid = self.nodes[0].sendtoaddress(watchonly_address, watchonly_amount)
@@ -181,6 +181,9 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         assert_raises_rpc_error(-3, "Unexpected key foo", self.nodes[2].fundrawtransaction, rawtx, {'foo':'bar'})
 
+        # reserveChangeKey was deprecated and is now removed
+        assert_raises_rpc_error(-3, "Unexpected key reserveChangeKey", lambda: self.nodes[2].fundrawtransaction(hexstring=rawtx, options={'reserveChangeKey': True}))
+
         ############################################################
         # test a fundrawtransaction with an invalid change address #
         ############################################################
@@ -223,8 +226,8 @@ class RawTransactionsTest(BitcoinTestFramework):
         assert_raises_rpc_error(-1, "JSON value is not a string as expected", self.nodes[2].fundrawtransaction, rawtx, {'change_type': None})
         assert_raises_rpc_error(-5, "Unknown change type", self.nodes[2].fundrawtransaction, rawtx, {'change_type': ''})
         rawtx = self.nodes[2].fundrawtransaction(rawtx, {'change_type': 'bech32'})
-        tx  = self.nodes[2].decoderawtransaction(rawtx['hex'])
-        assert_equal('witness_v0_keyhash', tx['vout'][rawtx['changepos']]['scriptPubKey']['type'])
+        dec_tx = self.nodes[2].decoderawtransaction(rawtx['hex'])
+        assert_equal('witness_v0_keyhash', dec_tx['vout'][rawtx['changepos']]['scriptPubKey']['type'])
 
         #########################################################################
         # test a fundrawtransaction with a VIN smaller than the required amount #
@@ -368,8 +371,8 @@ class RawTransactionsTest(BitcoinTestFramework):
         addr1 = self.nodes[1].getnewaddress()
         addr2 = self.nodes[1].getnewaddress()
 
-        addr1Obj = self.nodes[1].validateaddress(addr1)
-        addr2Obj = self.nodes[1].validateaddress(addr2)
+        addr1Obj = self.nodes[1].getaddressinfo(addr1)
+        addr2Obj = self.nodes[1].getaddressinfo(addr2)
 
         mSigObj = self.nodes[1].addmultisigaddress(2, [addr1Obj['pubkey'], addr2Obj['pubkey']])['address']
 
@@ -398,11 +401,11 @@ class RawTransactionsTest(BitcoinTestFramework):
         addr4 = self.nodes[1].getnewaddress()
         addr5 = self.nodes[1].getnewaddress()
 
-        addr1Obj = self.nodes[1].validateaddress(addr1)
-        addr2Obj = self.nodes[1].validateaddress(addr2)
-        addr3Obj = self.nodes[1].validateaddress(addr3)
-        addr4Obj = self.nodes[1].validateaddress(addr4)
-        addr5Obj = self.nodes[1].validateaddress(addr5)
+        addr1Obj = self.nodes[1].getaddressinfo(addr1)
+        addr2Obj = self.nodes[1].getaddressinfo(addr2)
+        addr3Obj = self.nodes[1].getaddressinfo(addr3)
+        addr4Obj = self.nodes[1].getaddressinfo(addr4)
+        addr5Obj = self.nodes[1].getaddressinfo(addr5)
 
         mSigObj = self.nodes[1].addmultisigaddress(4, [addr1Obj['pubkey'], addr2Obj['pubkey'], addr3Obj['pubkey'], addr4Obj['pubkey'], addr5Obj['pubkey']])['address']
 
@@ -428,8 +431,8 @@ class RawTransactionsTest(BitcoinTestFramework):
         addr1 = self.nodes[2].getnewaddress()
         addr2 = self.nodes[2].getnewaddress()
 
-        addr1Obj = self.nodes[2].validateaddress(addr1)
-        addr2Obj = self.nodes[2].validateaddress(addr2)
+        addr1Obj = self.nodes[2].getaddressinfo(addr1)
+        addr2Obj = self.nodes[2].getaddressinfo(addr2)
 
         mSigObj = self.nodes[2].addmultisigaddress(2, [addr1Obj['pubkey'], addr2Obj['pubkey']])['address']
 
@@ -446,7 +449,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         rawtx = self.nodes[2].createrawtransaction(inputs, outputs)
         fundedTx = self.nodes[2].fundrawtransaction(rawtx)
 
-        signedTx = self.nodes[2].signrawtransaction(fundedTx['hex'])
+        signedTx = self.nodes[2].signrawtransactionwithwallet(fundedTx['hex'])
         txId = self.nodes[2].sendrawtransaction(signedTx['hex'])
         self.sync_all()
         self.nodes[1].generate(1)
@@ -500,7 +503,7 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         #now we need to unlock
         self.nodes[1].walletpassphrase("test", 600)
-        signedTx = self.nodes[1].signrawtransaction(fundedTx['hex'])
+        signedTx = self.nodes[1].signrawtransactionwithwallet(fundedTx['hex'])
         txId = self.nodes[1].sendrawtransaction(signedTx['hex'])
         self.nodes[1].generate(1)
         self.sync_all()
@@ -561,7 +564,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         outputs = {self.nodes[0].getnewaddress():0.15,self.nodes[0].getnewaddress():0.04}
         rawtx = self.nodes[1].createrawtransaction(inputs, outputs)
         fundedTx = self.nodes[1].fundrawtransaction(rawtx)
-        fundedAndSignedTx = self.nodes[1].signrawtransaction(fundedTx['hex'])
+        fundedAndSignedTx = self.nodes[1].signrawtransactionwithwallet(fundedTx['hex'])
         txId = self.nodes[1].sendrawtransaction(fundedAndSignedTx['hex'])
         self.sync_all()
         self.nodes[0].generate(1)
@@ -619,9 +622,9 @@ class RawTransactionsTest(BitcoinTestFramework):
         assert_greater_than(result["changepos"], -1)
         assert_equal(result["fee"] + res_dec["vout"][result["changepos"]]["value"], watchonly_amount / 10)
 
-        signedtx = self.nodes[3].signrawtransaction(result["hex"])
+        signedtx = self.nodes[3].signrawtransactionwithwallet(result["hex"])
         assert(not signedtx["complete"])
-        signedtx = self.nodes[0].signrawtransaction(signedtx["hex"])
+        signedtx = self.nodes[0].signrawtransactionwithwallet(signedtx["hex"])
         assert(signedtx["complete"])
         self.nodes[0].sendrawtransaction(signedtx["hex"])
         self.nodes[0].generate(1)
@@ -676,7 +679,7 @@ class RawTransactionsTest(BitcoinTestFramework):
                   self.nodes[3].fundrawtransaction(rawtx, {"feeRate": 2*min_relay_tx_fee}),
                   self.nodes[3].fundrawtransaction(rawtx, {"feeRate": 2*min_relay_tx_fee, "subtractFeeFromOutputs": [0]})]
 
-        dec_tx = [self.nodes[3].decoderawtransaction(tx['hex']) for tx in result]
+        dec_tx = [self.nodes[3].decoderawtransaction(tx_['hex']) for tx_ in result]
         output = [d['vout'][1 - r['changepos']]['value'] for d, r in zip(dec_tx, result)]
         change = [d['vout'][r['changepos']]['value'] for d, r in zip(dec_tx, result)]
 

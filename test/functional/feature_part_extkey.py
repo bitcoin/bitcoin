@@ -49,9 +49,8 @@ class ExtKeyTest(ParticlTestFramework):
         extAddrTo = node1.getnewextaddress()
         assert(extAddrTo == 'pparszNYZ1cpWxnNieFqHCV2rtXmG74a4WAXHHhXaRATzzU6kMixjy1rXDM1UM4LVgkXRpLNM1rQNvkgLf7kUeMXiyaBMK8aSR3td4b4cX4epnHF')
 
-        ro = node1.validateaddress(extAddrTo)
+        ro = node1.getaddressinfo(extAddrTo)
         print(json.dumps(ro, indent=4, default=self.jsonDecimal))
-        assert(ro['isvalid'] == True)
         assert(ro['ismine'] == True)
         assert(ro['isextkey'] == True)
 

@@ -31,10 +31,10 @@ enum isminetype : uint8_t
 typedef uint8_t isminefilter;
 
 typedef std::vector<unsigned char> valtype;
-unsigned int HaveKeys(const std::vector<valtype>& pubkeys, const CKeyStore& keystore);
+bool HaveKeys(const std::vector<valtype>& pubkeys, const CKeyStore& keystore);
 
 /* isInvalid becomes true when the script is found invalid by consensus or policy. This will terminate the recursion
- * and return a ISMINE_NO immediately, as an invalid script should never be considered as "mine". This is needed as
+ * and return ISMINE_NO immediately, as an invalid script should never be considered as "mine". This is needed as
  * different SIGVERSION may have different network rules. Currently the only use of isInvalid is indicate uncompressed
  * keys in SIGVERSION_WITNESS_V0 script, but could also be used in similar cases in the future
  */

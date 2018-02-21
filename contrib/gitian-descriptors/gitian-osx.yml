@@ -1,5 +1,5 @@
 ---
-name: "particl-osx-0.16.0.1"
+name: "particl-osx-0.16.99.1"
 enable_cache: true
 suites:
 - "trusty"

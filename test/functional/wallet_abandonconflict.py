@@ -8,10 +8,11 @@
  descendants as abandoned which allows their inputs to be respent. It can be
  used to replace "stuck" or evicted transactions. It only works on transactions
  which are not included in a block and are not currently in the mempool. It has
- no effect on transactions which are already conflicted or abandoned.
+ no effect on transactions which are already abandoned.
 """
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
+
 
 class AbandonConflictTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -27,6 +28,11 @@ class AbandonConflictTest(BitcoinTestFramework):
         txC = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), Decimal("10"))
         sync_mempools(self.nodes)
         self.nodes[1].generate(1)
+
+        # Can not abandon non-wallet transaction
+        assert_raises_rpc_error(-5, 'Invalid or non-wallet transaction id', lambda: self.nodes[0].abandontransaction(txid='ff' * 32))
+        # Can not abandon confirmed transaction
+        assert_raises_rpc_error(-5, 'Transaction not eligible for abandonment', lambda: self.nodes[0].abandontransaction(txid=txA))
 
         sync_blocks(self.nodes)
         newbalance = self.nodes[0].getbalance()
@@ -49,7 +55,7 @@ class AbandonConflictTest(BitcoinTestFramework):
 
         outputs[self.nodes[0].getnewaddress()] = Decimal("14.99998")
         outputs[self.nodes[1].getnewaddress()] = Decimal("5")
-        signed = self.nodes[0].signrawtransaction(self.nodes[0].createrawtransaction(inputs, outputs))
+        signed = self.nodes[0].signrawtransactionwithwallet(self.nodes[0].createrawtransaction(inputs, outputs))
         txAB1 = self.nodes[0].sendrawtransaction(signed["hex"])
 
         # Identify the 14.99998btc output
@@ -61,7 +67,7 @@ class AbandonConflictTest(BitcoinTestFramework):
         inputs.append({"txid":txC, "vout":nC})
         outputs = {}
         outputs[self.nodes[0].getnewaddress()] = Decimal("24.9996")
-        signed2 = self.nodes[0].signrawtransaction(self.nodes[0].createrawtransaction(inputs, outputs))
+        signed2 = self.nodes[0].signrawtransactionwithwallet(self.nodes[0].createrawtransaction(inputs, outputs))
         txABC2 = self.nodes[0].sendrawtransaction(signed2["hex"])
 
         # In mempool txs from self should increase balance from change
@@ -132,7 +138,7 @@ class AbandonConflictTest(BitcoinTestFramework):
         outputs = {}
         outputs[self.nodes[1].getnewaddress()] = Decimal("9.9999")
         tx = self.nodes[0].createrawtransaction(inputs, outputs)
-        signed = self.nodes[0].signrawtransaction(tx)
+        signed = self.nodes[0].signrawtransactionwithwallet(tx)
         self.nodes[1].sendrawtransaction(signed["hex"])
         self.nodes[1].generate(1)
 

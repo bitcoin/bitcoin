@@ -154,7 +154,7 @@ BOOST_AUTO_TEST_CASE(rpc_hdwallet_timelocks)
 
 
 
-    sCmd = "signrawtransaction " + sResult + " " + sTxn;
+    sCmd = "signrawtransactionwithwallet " + sResult + " " + sTxn;
 
     BOOST_REQUIRE_NO_THROW(rv = CallRPC(sCmd));
     BOOST_CHECK(rv["errors"][0]["error"].getValStr() == "Locktime requirement not satisfied");
@@ -169,7 +169,7 @@ BOOST_AUTO_TEST_CASE(rpc_hdwallet_timelocks)
     BOOST_REQUIRE_NO_THROW(rv = CallRPC(sCmd));
     sResult = StripQuotes(rv.write());
 
-    sCmd = "signrawtransaction " + sResult + " " + sTxn;
+    sCmd = "signrawtransactionwithwallet " + sResult + " " + sTxn;
     BOOST_REQUIRE_NO_THROW(rv = CallRPC(sCmd));
     BOOST_CHECK(rv["complete"].getBool() == true);
     sResult = rv["hex"].getValStr();
@@ -202,7 +202,7 @@ BOOST_AUTO_TEST_CASE(rpc_hdwallet_timelocks)
     sResult = StripQuotes(rv.write());
 
 
-    sCmd = "signrawtransaction " + sResult + " " + sTxn;
+    sCmd = "signrawtransactionwithwallet " + sResult + " " + sTxn;
     BOOST_REQUIRE_NO_THROW(rv = CallRPC(sCmd));
     BOOST_CHECK(rv["errors"][0]["error"].getValStr() == "Locktime requirement not satisfied");
 
@@ -224,7 +224,7 @@ BOOST_AUTO_TEST_CASE(rpc_hdwallet_timelocks)
     sResult = StripQuotes(rv.write());
 
 
-    sCmd = "signrawtransaction " + sResult + " " + sTxn;
+    sCmd = "signrawtransactionwithwallet " + sResult + " " + sTxn;
     BOOST_REQUIRE_NO_THROW(rv = CallRPC(sCmd));
     BOOST_CHECK(rv["complete"].getBool() == true);
     sResult = rv["hex"].getValStr();

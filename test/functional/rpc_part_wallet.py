@@ -33,8 +33,8 @@ class WalletRPCTest(ParticlTestFramework):
 
         nodes[1].extkeyimportmaster(nodes[1].mnemonic('new')['master'])
 
-        addr1 = nodes[1].getnewaddress();
-        addr2 = nodes[1].getnewstealthaddress();
+        addr1 = nodes[1].getnewaddress()
+        addr2 = nodes[1].getnewstealthaddress()
 
         txnid = nodes[0].sendmany(
             fromaccount='',
