@@ -1847,7 +1847,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     nInstantSendDepth = GetArg("-instantsenddepth", DEFAULT_INSTANTSEND_DEPTH);
     nInstantSendDepth = std::min(std::max(nInstantSendDepth, MIN_INSTANTSEND_DEPTH), MAX_INSTANTSEND_DEPTH);
 
-    //lite mode disables all Masternode and Darksend related functionality
+    //lite mode disables all Dash-specific functionality
     fLiteMode = GetBoolArg("-litemode", false);
     if(fMasternodeMode && fLiteMode){
         return InitError("You can not start a masternode in litemode");

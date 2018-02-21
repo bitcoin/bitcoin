@@ -334,10 +334,10 @@ enum GetDataMsg {
     MSG_SPORK = 6,
     MSG_MASTERNODE_PAYMENT_VOTE = 7,
     MSG_MASTERNODE_PAYMENT_BLOCK = 8, // reusing, was MSG_MASTERNODE_SCANNING_ERROR previousely, was NOT used in 12.0
-    MSG_BUDGET_VOTE = 9, // depreciated since 12.1
-    MSG_BUDGET_PROPOSAL = 10, // depreciated since 12.1
-    MSG_BUDGET_FINALIZED = 11, // depreciated since 12.1
-    MSG_BUDGET_FINALIZED_VOTE = 12, // depreciated since 12.1
+    MSG_BUDGET_VOTE = 9, // deprecated since 12.1
+    MSG_BUDGET_PROPOSAL = 10, // deprecated since 12.1
+    MSG_BUDGET_FINALIZED = 11, // deprecated since 12.1
+    MSG_BUDGET_FINALIZED_VOTE = 12, // deprecated since 12.1
     MSG_MASTERNODE_QUORUM = 13, // not implemented
     MSG_MASTERNODE_ANNOUNCE = 14,
     MSG_MASTERNODE_PING = 15,

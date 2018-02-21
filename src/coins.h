@@ -15,8 +15,6 @@
 
 #include <assert.h>
 #include <stdint.h>
-
-#include <boost/foreach.hpp>
 #include <unordered_map>
 
 /**

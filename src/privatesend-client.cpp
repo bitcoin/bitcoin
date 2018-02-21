@@ -969,7 +969,7 @@ bool CPrivateSendClient::StartNewQueue(CAmount nValueMin, CAmount nBalanceNeedsA
 
 void CPrivateSendClient::ProcessPendingDsaRequest(CConnman& connman)
 {
-    if (pendingDsaRequest == CPendingDsaRequest()) return;
+    if (!pendingDsaRequest) return;
 
     bool fDone = connman.ForNode(pendingDsaRequest.GetAddr(), [&](CNode* pnode) {
         LogPrint("privatesend", "-- processing dsa queue for addr=%s\n", pnode->addr.ToString());

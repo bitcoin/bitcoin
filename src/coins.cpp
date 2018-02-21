@@ -9,6 +9,7 @@
 #include "random.h"
 
 #include <assert.h>
+#include <boost/foreach.hpp>
 
 bool CCoinsView::GetCoin(const COutPoint &outpoint, Coin &coin) const { return false; }
 uint256 CCoinsView::GetBestBlock() const { return uint256(); }

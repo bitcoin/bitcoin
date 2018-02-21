@@ -50,23 +50,23 @@ struct CompareByAddr
     }
 };
 
-CMasternodeMan::CMasternodeMan()
-: cs(),
-  mapMasternodes(),
-  mAskedUsForMasternodeList(),
-  mWeAskedForMasternodeList(),
-  mWeAskedForMasternodeListEntry(),
-  mWeAskedForVerification(),
-  mMnbRecoveryRequests(),
-  mMnbRecoveryGoodReplies(),
-  listScheduledMnbRequestConnections(),
-  fMasternodesAdded(false),
-  fMasternodesRemoved(false),
-  vecDirtyGovernanceObjectHashes(),
-  nLastWatchdogVoteTime(0),
-  mapSeenMasternodeBroadcast(),
-  mapSeenMasternodePing(),
-  nDsqCount(0)
+CMasternodeMan::CMasternodeMan():
+    cs(),
+    mapMasternodes(),
+    mAskedUsForMasternodeList(),
+    mWeAskedForMasternodeList(),
+    mWeAskedForMasternodeListEntry(),
+    mWeAskedForVerification(),
+    mMnbRecoveryRequests(),
+    mMnbRecoveryGoodReplies(),
+    listScheduledMnbRequestConnections(),
+    fMasternodesAdded(false),
+    fMasternodesRemoved(false),
+    vecDirtyGovernanceObjectHashes(),
+    nLastWatchdogVoteTime(0),
+    mapSeenMasternodeBroadcast(),
+    mapSeenMasternodePing(),
+    nDsqCount(0)
 {}
 
 bool CMasternodeMan::Add(CMasternode &mn)
@@ -160,6 +160,8 @@ void CMasternodeMan::Check()
     LogPrint("masternode", "CMasternodeMan::Check -- nLastWatchdogVoteTime=%d, IsWatchdogActive()=%d\n", nLastWatchdogVoteTime, IsWatchdogActive());
 
     for (auto& mnpair : mapMasternodes) {
+        // NOTE: internally it checks only every MASTERNODE_CHECK_SECONDS seconds
+        // since the last time, so expect some MNs to skip this
         mnpair.second.Check();
     }
 }
@@ -888,7 +890,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, const std::string& strCommand,
 
         LOCK(cs);
 
-        if(masternodeOutpoint == COutPoint()) {
+        if(masternodeOutpoint.IsNull()) {
             SyncAll(pfrom, connman);
         } else {
             SyncSingle(pfrom, masternodeOutpoint, connman);
@@ -896,7 +898,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, const std::string& strCommand,
 
     } else if (strCommand == NetMsgType::MNVERIFY) { // Masternode Verify
 
-        // Need LOCK2 here to ensure consistent locking order because the all functions below call GetBlockHash which locks cs_main
+        // Need LOCK2 here to ensure consistent locking order because all functions below call GetBlockHash which locks cs_main
         LOCK2(cs_main, cs);
 
         CMasternodeVerification mnv;
@@ -991,14 +993,14 @@ void CMasternodeMan::PushDsegInvs(CNode* pnode, const CMasternode& mn)
 
 void CMasternodeMan::DoFullVerificationStep(CConnman& connman)
 {
-    if(activeMasternode.outpoint == COutPoint()) return;
+    if(activeMasternode.outpoint.IsNull()) return;
     if(!masternodeSync.IsSynced()) return;
 
     rank_pair_vec_t vecMasternodeRanks;
     GetMasternodeRanks(vecMasternodeRanks, nCachedBlockHeight - 1, MIN_POSE_PROTO_VERSION);
 
     // Need LOCK2 here to ensure consistent locking order because the SendVerifyRequest call below locks cs_main
-    // through GetHeight() signal in ConnectNode
+    // through InitializeNode signal in OpenNetworkConnection
     LOCK2(cs_main, cs);
 
     int nCount = 0;
@@ -1295,7 +1297,7 @@ void CMasternodeMan::ProcessVerifyReply(CNode* pnode, CMasternodeVerification& m
                     netfulfilledman.AddFulfilledRequest(pnode->addr, strprintf("%s", NetMsgType::MNVERIFY)+"-done");
 
                     // we can only broadcast it if we are an activated masternode
-                    if(activeMasternode.outpoint == COutPoint()) continue;
+                    if(activeMasternode.outpoint.IsNull()) continue;
                     // update ...
                     mnv.addr = mnpair.second.addr;
                     mnv.masternodeOutpoint1 = mnpair.second.outpoint;

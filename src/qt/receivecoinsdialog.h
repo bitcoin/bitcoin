@@ -47,8 +47,8 @@ public:
 
 public Q_SLOTS:
     void clear();
-    void reject();
-    void accept();
+    void reject() override;
+    void accept() override;
 
 protected:
     virtual void keyPressEvent(QKeyEvent *event) override;

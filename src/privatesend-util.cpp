@@ -33,7 +33,8 @@ CScript CKeyHolderStorage::AddKey(CWallet* pwallet)
     return storage.back()->GetScriptForDestination();
 }
 
-void CKeyHolderStorage::KeepAll(){
+void CKeyHolderStorage::KeepAll()
+{
     LOCK(cs_storage);
     if (storage.size() > 0) {
         for (auto &key : storage) {
