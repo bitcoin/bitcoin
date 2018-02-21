@@ -851,7 +851,7 @@ UniValue estimatefee(const JSONRPCRequest& request)
 UniValue estimatepriority(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
-        throw runtime_error(
+        throw std::runtime_error(
             "estimatepriority nblocks\n"
             "\nDEPRECATED. Estimates the approximate priority a zero-fee transaction needs to begin\n"
             "confirmation within nblocks blocks.\n"
@@ -914,7 +914,7 @@ UniValue estimatesmartfee(const JSONRPCRequest& request)
 UniValue estimatesmartpriority(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
-        throw runtime_error(
+        throw std::runtime_error(
             "estimatesmartpriority nblocks\n"
             "\nDEPRECATED. WARNING: This interface is unstable and may disappear or change!\n"
             "\nEstimates the approximate priority a zero-fee transaction needs to begin\n"

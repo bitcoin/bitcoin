@@ -29,7 +29,7 @@ std::string CGovernanceVoting::ConvertOutcomeToString(vote_outcome_enum_t nOutco
 
 std::string CGovernanceVoting::ConvertSignalToString(vote_signal_enum_t nSignal)
 {
-    string strReturn = "NONE";
+    std::string strReturn = "NONE";
     switch(nSignal)
     {
         case VOTE_SIGNAL_NONE:

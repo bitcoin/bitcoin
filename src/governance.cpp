@@ -1015,7 +1015,7 @@ void CGovernanceManager::CheckMasternodeOrphanObjects(CConnman& connman)
         CGovernanceObject& govobj = pair.first;
 
         if(pair.second.nExpirationTime >= nNow) {
-            string strError;
+            std::string strError;
             bool fMasternodeMissing = false;
             bool fConfirmationsMissing = false;
             bool fIsValid = govobj.IsValidLocally(strError, fMasternodeMissing, fConfirmationsMissing, true);

@@ -8,8 +8,6 @@
 #include "masternode.h"
 #include "sync.h"
 
-using namespace std;
-
 class CMasternodeMan;
 class CConnman;
 
