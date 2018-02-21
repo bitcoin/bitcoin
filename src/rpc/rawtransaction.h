@@ -6,7 +6,7 @@
 #define BITCOIN_RPC_RAWTRANSACTION_H
 
 class CBasicKeyStore;
-class CMutableTransaction;
+struct CMutableTransaction;
 class UniValue;
 
 /** Sign a transaction with the given keystore and previous transactions */
