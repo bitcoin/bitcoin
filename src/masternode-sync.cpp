@@ -202,8 +202,12 @@ void CMasternodeSync::ProcessTick(CConnman& connman)
             } else if(nRequestedMasternodeAttempt < 4) {
                 mnodeman.DsegUpdate(pnode, connman);
             } else if(nRequestedMasternodeAttempt < 6) {
-                int nMnCount = mnodeman.CountMasternodes();
-                connman.PushMessage(pnode, msgMaker.Make(NetMsgType::MASTERNODEPAYMENTSYNC, nMnCount)); //sync payment votes
+                //sync payment votes
+                if(pnode->nVersion == 70208) {
+                    connman.PushMessage(pnode, msgMaker.Make(NetMsgType::MASTERNODEPAYMENTSYNC, mnpayments.GetStorageLimit())); //sync payment votes
+                } else {
+                    connman.PushMessage(pnode, msgMaker.Make(NetMsgType::MASTERNODEPAYMENTSYNC)); //sync payment votes
+                }
                 SendGovernanceSyncRequest(pnode, connman);
             } else {
                 nRequestedMasternodeAssets = MASTERNODE_SYNC_FINISHED;
@@ -320,7 +324,12 @@ void CMasternodeSync::ProcessTick(CConnman& connman)
                 nRequestedMasternodeAttempt++;
 
                 // ask node for all payment votes it has (new nodes will only return votes for future payments)
-                connman.PushMessage(pnode, msgMaker.Make(NetMsgType::MASTERNODEPAYMENTSYNC, mnpayments.GetStorageLimit()));
+                //sync payment votes
+                if(pnode->nVersion == 70208) {
+                    connman.PushMessage(pnode, msgMaker.Make(NetMsgType::MASTERNODEPAYMENTSYNC, mnpayments.GetStorageLimit()));
+                } else {
+                    connman.PushMessage(pnode, msgMaker.Make(NetMsgType::MASTERNODEPAYMENTSYNC));
+                }
                 // ask node for missing pieces only (old nodes will not be asked)
                 mnpayments.RequestLowDataPaymentBlocks(pnode, connman);
 

@@ -349,5 +349,6 @@ Masternode Payment Sync
 
 | Field Size | Field Name | Data type | Description |
 | ---------- | ----------- | --------- | ---------- |
-| 4 | nMnCount | int | |
+| 4 | nMnCount | int | | (DEPRECATED)
 
+*NOTE: There are no fields in this mesasge starting from protocol 70209*
