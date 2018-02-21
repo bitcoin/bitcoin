@@ -205,9 +205,7 @@ public:
 
     std::string ToString() const;
 
-    /// Update masternode list and maps using provided CMasternodeBroadcast
-    void UpdateMasternodeList(CMasternodeBroadcast mnb, CConnman& connman);
-    /// Perform complete check and only then update list and maps
+    /// Perform complete check and only then update masternode list and maps using provided CMasternodeBroadcast
     bool CheckMnbAndUpdateMasternodeList(CNode* pfrom, CMasternodeBroadcast mnb, int& nDos, CConnman& connman);
     bool IsMnbRecoveryRequested(const uint256& hash) { return mMnbRecoveryRequests.count(hash); }
 

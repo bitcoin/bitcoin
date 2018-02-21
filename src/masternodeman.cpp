@@ -1495,28 +1495,6 @@ std::string CMasternodeMan::ToString() const
     return info.str();
 }
 
-void CMasternodeMan::UpdateMasternodeList(CMasternodeBroadcast mnb, CConnman& connman)
-{
-    LOCK2(cs_main, cs);
-    mapSeenMasternodePing.insert(std::make_pair(mnb.lastPing.GetHash(), mnb.lastPing));
-    mapSeenMasternodeBroadcast.insert(std::make_pair(mnb.GetHash(), std::make_pair(GetTime(), mnb)));
-
-    LogPrintf("CMasternodeMan::UpdateMasternodeList -- masternode=%s  addr=%s\n", mnb.outpoint.ToStringShort(), mnb.addr.ToString());
-
-    CMasternode* pmn = Find(mnb.outpoint);
-    if(pmn == NULL) {
-        if(Add(mnb)) {
-            masternodeSync.BumpAssetLastTime("CMasternodeMan::UpdateMasternodeList - new");
-        }
-    } else {
-        CMasternodeBroadcast mnbOld = mapSeenMasternodeBroadcast[CMasternodeBroadcast(*pmn).GetHash()].second;
-        if(pmn->UpdateFromNewBroadcast(mnb, connman)) {
-            masternodeSync.BumpAssetLastTime("CMasternodeMan::UpdateMasternodeList - seen");
-            mapSeenMasternodeBroadcast.erase(mnbOld.GetHash());
-        }
-    }
-}
-
 bool CMasternodeMan::CheckMnbAndUpdateMasternodeList(CNode* pfrom, CMasternodeBroadcast mnb, int& nDos, CConnman& connman)
 {
     // Need to lock cs_main here to ensure consistent locking order because the SimpleCheck call below locks cs_main
