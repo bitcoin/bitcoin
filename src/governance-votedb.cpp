@@ -34,13 +34,13 @@ bool CGovernanceObjectVoteFile::HasVote(const uint256& nHash) const
     return true;
 }
 
-bool CGovernanceObjectVoteFile::GetVote(const uint256& nHash, CGovernanceVote& vote) const
+bool CGovernanceObjectVoteFile::SerializeVoteToStream(const uint256& nHash, CDataStream& ss) const
 {
     vote_m_cit it = mapVoteIndex.find(nHash);
     if(it == mapVoteIndex.end()) {
         return false;
     }
-    vote = *(it->second);
+    ss << *(it->second);
     return true;
 }
 
@@ -66,14 +66,6 @@ void CGovernanceObjectVoteFile::RemoveVotesFromMasternode(const COutPoint& outpo
             ++it;
         }
     }
-}
-
-CGovernanceObjectVoteFile& CGovernanceObjectVoteFile::operator=(const CGovernanceObjectVoteFile& other)
-{
-    nMemoryVotes = other.nMemoryVotes;
-    listVotes = other.listVotes;
-    RebuildIndex();
-    return *this;
 }
 
 void CGovernanceObjectVoteFile::RebuildIndex()

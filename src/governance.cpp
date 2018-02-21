@@ -90,12 +90,10 @@ bool CGovernanceManager::SerializeVoteForHash(uint256 nHash, CDataStream& ss)
         return false;
     }
 
-    CGovernanceVote vote;
-    if(!pGovobj->GetVoteFile().GetVote(nHash, vote)) {
+    if(!pGovobj->GetVoteFile().SerializeVoteToStream(nHash, ss)) {
         return false;
     }
 
-    ss << vote;
     return true;
 }
 

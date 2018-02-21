@@ -214,7 +214,7 @@ CGovernanceVote::CGovernanceVote()
       vchSig()
 {}
 
-CGovernanceVote::CGovernanceVote(COutPoint outpointMasternodeIn, uint256 nParentHashIn, vote_signal_enum_t eVoteSignalIn, vote_outcome_enum_t eVoteOutcomeIn)
+CGovernanceVote::CGovernanceVote(const COutPoint& outpointMasternodeIn, const uint256& nParentHashIn, vote_signal_enum_t eVoteSignalIn, vote_outcome_enum_t eVoteOutcomeIn)
     : fValid(true),
       fSynced(false),
       nVoteSignal(eVoteSignalIn),
@@ -223,7 +223,9 @@ CGovernanceVote::CGovernanceVote(COutPoint outpointMasternodeIn, uint256 nParent
       nVoteOutcome(eVoteOutcomeIn),
       nTime(GetAdjustedTime()),
       vchSig()
-{}
+{
+    UpdateHash();
+}
 
 void CGovernanceVote::Relay(CConnman& connman) const
 {
@@ -237,7 +239,7 @@ void CGovernanceVote::Relay(CConnman& connman) const
     connman.RelayInv(inv, MIN_GOVERNANCE_PEER_PROTO_VERSION);
 }
 
-uint256 CGovernanceVote::GetHash() const
+void CGovernanceVote::UpdateHash() const
 {
     // Note: doesn't match serialization
 
@@ -247,7 +249,12 @@ uint256 CGovernanceVote::GetHash() const
     ss << nVoteSignal;
     ss << nVoteOutcome;
     ss << nTime;
-    return ss.GetHash();
+    *const_cast<uint256*>(&hash) = ss.GetHash();
+}
+
+uint256 CGovernanceVote::GetHash() const
+{
+    return hash;
 }
 
 uint256 CGovernanceVote::GetSignatureHash() const

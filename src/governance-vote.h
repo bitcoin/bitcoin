@@ -101,9 +101,13 @@ private:
     int64_t nTime;
     std::vector<unsigned char> vchSig;
 
+    /** Memory only. */
+    const uint256 hash;
+    void UpdateHash() const;
+
 public:
     CGovernanceVote();
-    CGovernanceVote(COutPoint outpointMasternodeIn, uint256 nParentHashIn, vote_signal_enum_t eVoteSignalIn, vote_outcome_enum_t eVoteOutcomeIn);
+    CGovernanceVote(const COutPoint& outpointMasternodeIn, const uint256& nParentHashIn, vote_signal_enum_t eVoteSignalIn, vote_outcome_enum_t eVoteOutcomeIn);
 
     bool IsValid() const { return fValid; }
 
@@ -117,7 +121,7 @@ public:
 
     const uint256& GetParentHash() const { return nParentHash; }
 
-    void SetTime(int64_t nTimeIn) { nTime = nTimeIn; }
+    void SetTime(int64_t nTimeIn) { nTime = nTimeIn; UpdateHash(); }
 
     void SetSignature(const std::vector<unsigned char>& vchSigIn) { vchSig = vchSigIn; }
 
@@ -177,6 +181,8 @@ public:
         if (!(s.GetType() & SER_GETHASH)) {
             READWRITE(vchSig);
         }
+        if (ser_action.ForRead())
+            UpdateHash();
     }
 
 };
