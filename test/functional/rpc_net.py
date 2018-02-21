@@ -15,6 +15,7 @@ from test_framework.util import (
     assert_raises_rpc_error,
     connect_nodes_bi,
     p2p_port,
+    wait_until,
 )
 
 class NetTest(BitcoinTestFramework):
@@ -47,14 +48,13 @@ class NetTest(BitcoinTestFramework):
         # the bytes sent/received should change
         # note ping and pong are 32 bytes each
         self.nodes[0].ping()
-        time.sleep(0.1)
+        wait_until(lambda: (net_totals['totalbytessent'] + 32*2) == self.nodes[0].getnettotals()['totalbytessent'], timeout=1)
+        wait_until(lambda: (net_totals['totalbytesrecv'] + 32*2) == self.nodes[0].getnettotals()['totalbytesrecv'], timeout=1)
+
         peer_info_after_ping = self.nodes[0].getpeerinfo()
-        net_totals_after_ping = self.nodes[0].getnettotals()
         for before, after in zip(peer_info, peer_info_after_ping):
             assert_equal(before['bytesrecv_per_msg']['pong'] + 32, after['bytesrecv_per_msg']['pong'])
             assert_equal(before['bytessent_per_msg']['ping'] + 32, after['bytessent_per_msg']['ping'])
-        assert_equal(net_totals['totalbytesrecv'] + 32*2, net_totals_after_ping['totalbytesrecv'])
-        assert_equal(net_totals['totalbytessent'] + 32*2, net_totals_after_ping['totalbytessent'])
 
     def _test_getnetworkinginfo(self):
         assert_equal(self.nodes[0].getnetworkinfo()['networkactive'], True)
