@@ -342,7 +342,7 @@ UniValue createmultisig(const JSONRPCRequest& request)
             "\nCreates a multi-signature address with n signature of m keys required.\n"
             "It returns a json object with the address and redeemScript.\n"
             "\nArguments:\n"
-            "1. nrequired                    (numeric, required) The number of required signatures out of the n keys or addresses.\n"
+            "1. nrequired                    (numeric, required) The number of required signatures out of the n keys.\n"
             "2. \"keys\"                       (string, required) A json array of hex-encoded public keys\n"
             "     [\n"
             "       \"key\"                    (string) The hex-encoded public key\n"
