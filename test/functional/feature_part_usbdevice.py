@@ -116,12 +116,13 @@ class USBDeviceTest(ParticlTestFramework):
         ro = nodes[1].listunspent()
         assert(ro[0]['ondevice'] == True)
 
-        try:
-            ro = nodes[1].sendtoaddress(addr0_0, 0.1)
-        except JSONRPCException as e:
-            pass
-        else:
-            assert(False)
+
+        txnid2 = nodes[1].sendtoaddress(addr0_0, 0.1)
+
+        self.sync_all()
+
+        ro = nodes[0].filtertransactions()
+        assert(ro[0]['txid'] == txnid2)
 
 
 

@@ -32,6 +32,10 @@
 #include <wallet/fees.h>
 #include <wallet/init.h>
 
+#if ENABLE_USBDEVICE
+#include <usbdevice/usbdevice.h>
+#endif
+
 #include <univalue.h>
 
 #include <secp256k1_mlsag.h>
@@ -3510,17 +3514,19 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
 
         if (sign)
         {
-            if (coinControl->fNeedHardwareKey)
-            {
-                return errorN(1, sError, __func__, "Need key from hardware: TODO");
-            };
-
             CTransaction txNewConst(txNew);
             int nIn = 0;
             for (const auto &coin : setCoins)
             {
                 const CTxOutStandard *prevOut = coin.txoutBase->GetStandardOutput();
                 const CScript& scriptPubKey = prevOut->scriptPubKey;
+
+                // TODO: ismine field on CInputCoin
+                if (coinControl->fNeedHardwareKey && (IsMine(prevOut) & ISMINE_HARDWARE_DEVICE))
+                {
+                    nIn++;
+                    continue;
+                };
 
                 std::vector<uint8_t> vchAmount;
                 prevOut->PutValue(vchAmount);
@@ -3533,6 +3539,91 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
 
                 nIn++;
             };
+
+#if ENABLE_USBDEVICE
+            if (coinControl->fNeedHardwareKey)
+            {
+                CTransaction txNewConst(txNew);
+
+
+                CCoinsView viewDummy;
+                CCoinsViewCache view(&viewDummy);
+                for (const auto &coin : setCoins)
+                {
+                    const CTxOutStandard *prevOut = coin.txoutBase->GetStandardOutput();
+                    Coin newcoin;
+                    newcoin.out.scriptPubKey = prevOut->scriptPubKey;
+                    newcoin.out.nValue = prevOut->GetValue();
+                    newcoin.nHeight = 1;
+                    view.AddCoin(coin.outpoint, std::move(newcoin), true);
+                };
+                std::vector<std::unique_ptr<CUSBDevice> > vDevices;
+                CUSBDevice *pDevice = SelectDevice(vDevices, sError);
+                if (!pDevice)
+                    return 1; // sError is set
+
+                if (0 != pDevice->Open())
+                    return errorN(1, sError, __func__, _("Failed to open dongle").c_str());
+
+                NotifyWaitingForDevice(false);
+
+                pDevice->PrepareTransaction(&txNewConst, view);
+                if (!pDevice->sError.empty())
+                {
+                    pDevice->Close();
+                    NotifyWaitingForDevice(true);
+                    return errorN(1, sError, __func__, _("PrepareTransaction for device failed: %s").c_str(), pDevice->sError);
+                };
+
+                int nIn = 0;
+                for (const auto &coin : setCoins)
+                {
+                    const CTxOutStandard *prevOut = coin.txoutBase->GetStandardOutput();
+                    const CScript& scriptPubKey = prevOut->scriptPubKey;
+
+                    if (!(IsMine(prevOut) & ISMINE_HARDWARE_DEVICE))
+                    {
+                        nIn++;
+                        continue;
+                    };
+
+                    std::vector<uint8_t> vchAmount;
+                    prevOut->PutValue(vchAmount);
+
+                    pDevice->sError.clear();
+                    SignatureData sigdata;
+                    ProduceSignature(DeviceSignatureCreator(pDevice, this, &txNewConst, nIn, vchAmount, SIGHASH_ALL), scriptPubKey, sigdata);
+
+                    if (!pDevice->sError.empty())
+                    {
+                        pDevice->Close();
+                        NotifyWaitingForDevice(true);
+                        return errorN(1, sError, __func__, _("ProduceSignature from device failed: %s").c_str(), pDevice->sError);
+                    };
+                    UpdateTransaction(txNew, nIn, sigdata);
+
+                    /*
+                    ScriptError serror = SCRIPT_ERR_OK;
+                    if (!VerifyScript(txin.scriptSig, prevPubKey, &txin.scriptWitness, STANDARD_SCRIPT_VERIFY_FLAGS, TransactionSignatureChecker(&txConst, i, vchAmount), &serror)) {
+                        if (serror == SCRIPT_ERR_INVALID_STACK_OPERATION) {
+                            // Unable to sign input and verification failed (possible attempt to partially sign).
+                            TxInErrorToJSON(txin, vErrors, "Unable to sign input, invalid stack size (possibly missing key)");
+                        } else {
+                            TxInErrorToJSON(txin, vErrors, ScriptErrorString(serror));
+                        }
+                    }
+                    */
+
+                    nIn++;
+                };
+
+                pDevice->Close();
+                //return errorN(1, sError, __func__, "Need key from hardware: TODO"); // []
+
+                NotifyWaitingForDevice(true);
+
+            };
+#endif
         };
 
         rtx.nFee = nFeeRet;

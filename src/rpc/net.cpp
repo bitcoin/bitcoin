@@ -68,7 +68,7 @@ UniValue ping(const JSONRPCRequest& request)
 std::string ServicesToString(ServiceFlags nSerivces)
 {
     std::string rv = "";
-    
+
     if (nSerivces & NODE_NETWORK)
         rv += std::string(rv.length() > 0 ? " | " : "") + "NETWORK";
     if (nSerivces & NODE_GETUTXO)
@@ -81,7 +81,7 @@ std::string ServicesToString(ServiceFlags nSerivces)
         rv += std::string(rv.length() > 0 ? " | " : "") + "XTHIN";
     if (nSerivces & NODE_SMSG)
         rv += std::string(rv.length() > 0 ? " | " : "") + "SMSG";
-    
+
     return rv;
 };
 

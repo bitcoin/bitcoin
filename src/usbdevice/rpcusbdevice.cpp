@@ -88,19 +88,11 @@ static std::vector<uint32_t> GetPath(std::vector<uint32_t> &vPath, const UniValu
 
 CUSBDevice *SelectDevice(std::vector<std::unique_ptr<CUSBDevice> > &vDevices)
 {
-    if (Params().NetworkIDString() == "regtest")
-    {
-        vDevices.push_back(std::unique_ptr<CUSBDevice>(new CDebugDevice()));
-        return vDevices[0].get();
-    };
-
-    ListDevices(vDevices);
-    if (vDevices.size() < 1)
-        throw JSONRPCError(RPC_INTERNAL_ERROR, "No device found.");
-    if (vDevices.size() > 1) // TODO: Select device
-        throw JSONRPCError(RPC_INTERNAL_ERROR, "Multiple devices found.");
-
-    return vDevices[0].get();
+    std::string sError;
+    CUSBDevice *rv = SelectDevice(vDevices, sError);
+    if (!rv)
+        throw JSONRPCError(RPC_INTERNAL_ERROR, sError);
+    return rv;
 };
 
 UniValue listdevices(const JSONRPCRequest &request)
@@ -533,9 +525,8 @@ UniValue devicesignrawtransaction(const JSONRPCRequest &request)
         // Only sign SIGHASH_SINGLE if there's a corresponding output:
         if (!fHashSingle || (i < mtx.GetNumVOuts()))
         {
-            CTransaction tx(mtx);
             pDevice->sError.clear();
-            ProduceSignature(DeviceSignatureCreator(pDevice, &keystore, &tx, i, vchAmount, nHashType), prevPubKey, sigdata);
+            ProduceSignature(DeviceSignatureCreator(pDevice, &keystore, &txConst, i, vchAmount, nHashType), prevPubKey, sigdata);
 
             if (!pDevice->sError.empty())
             {

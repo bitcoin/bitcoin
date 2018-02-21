@@ -69,6 +69,29 @@ void ListDevices(std::vector<std::unique_ptr<CUSBDevice> > &vDevices)
     return;
 };
 
+CUSBDevice *SelectDevice(std::vector<std::unique_ptr<CUSBDevice> > &vDevices, std::string &sError)
+{
+    if (Params().NetworkIDString() == "regtest")
+    {
+        vDevices.push_back(std::unique_ptr<CUSBDevice>(new CDebugDevice()));
+        return vDevices[0].get();
+    };
+
+    ListDevices(vDevices);
+    if (vDevices.size() < 1)
+    {
+        sError = "No device found.";
+        return NULL;
+    };
+     if (vDevices.size() > 1) // TODO: Select device
+    {
+        sError = "Multiple devices found.";
+        return NULL;
+    };
+
+    return vDevices[0].get();
+};
+
 DeviceSignatureCreator::DeviceSignatureCreator(CUSBDevice *pDeviceIn, const CKeyStore *keystoreIn, const CTransaction *txToIn,
     unsigned int nInIn, const std::vector<uint8_t> &amountIn, int nHashTypeIn)
     : BaseSignatureCreator(keystoreIn), txTo(txToIn), nIn(nInIn), nHashType(nHashTypeIn), amount(amountIn), checker(txTo, nIn, amountIn), pDevice(pDeviceIn)

@@ -680,7 +680,7 @@ int CLedgerDevice::SignTransaction(const std::vector<uint32_t> &vPath, const CTr
 
     in[apduSize++] = 0x00; // len(pin)
 
-    memcpy(&in[apduSize], &tx->nLockTime, 4);
+    WriteBE32(&in[apduSize], tx->nLockTime);
     apduSize += 4;
     in[apduSize++] = hashType;
 

@@ -133,6 +133,7 @@ protected:
 };
 
 void ListDevices(std::vector<std::unique_ptr<CUSBDevice> > &vDevices);
+CUSBDevice *SelectDevice(std::vector<std::unique_ptr<CUSBDevice> > &vDevices, std::string &sError);
 
 /*
 class QueuedSignature

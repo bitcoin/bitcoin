@@ -461,6 +461,13 @@ void SendCoinsDialog::on_sendButton_clicked()
     }
     questionString.append("</span>");
 
+    if (rv["need_hwdevice"].get_bool() == true)
+    {
+        questionString.append("<hr /><span><b>");
+        questionString.append(tr("Your hardware device must be connected to sign this txn."));
+        questionString.append("</b></span>");
+    }
+
 
     SendConfirmationDialog confirmationDialog(tr("Confirm send coins"),
         questionString.arg(formatted.join("<br />")), SEND_CONFIRM_DELAY, this);

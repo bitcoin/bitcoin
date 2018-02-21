@@ -157,6 +157,19 @@ void WalletModel::reserveBalanceChanged(CAmount nReserveBalanceNew)
         phdw->SetReserveBalance(nReserveBalanceNew);
 };
 
+void WalletModel::waitingForDevice(bool fComplete)
+{
+    if (!fComplete)
+    {
+        mbDevice.setText("Waiting for device.");
+        mbDevice.show();
+    } else
+    {
+         if (mbDevice.isVisible())
+            mbDevice.hide();
+    };
+};
+
 void WalletModel::checkBalanceChanged()
 {
     CAmount newBalance = 0;
@@ -555,6 +568,12 @@ static void NotifyWatchonlyChanged(WalletModel *walletmodel, bool fHaveWatchonly
                               Q_ARG(bool, fHaveWatchonly));
 }
 
+static void NotifyWaitingForDevice(WalletModel *walletmodel, bool fCompleted)
+{
+    QMetaObject::invokeMethod(walletmodel, "waitingForDevice", Qt::QueuedConnection,
+                              Q_ARG(bool, fCompleted));
+}
+
 void WalletModel::subscribeToCoreSignals()
 {
     // Connect signals to wallet
@@ -563,6 +582,12 @@ void WalletModel::subscribeToCoreSignals()
     wallet->NotifyTransactionChanged.connect(boost::bind(NotifyTransactionChanged, this, _1, _2, _3));
     wallet->ShowProgress.connect(boost::bind(ShowProgress, this, _1, _2));
     wallet->NotifyWatchonlyChanged.connect(boost::bind(NotifyWatchonlyChanged, this, _1));
+
+    if (IsHDWallet(wallet))
+    {
+        CHDWallet *phdw = GetHDWallet(wallet);
+        phdw->NotifyWaitingForDevice.connect(boost::bind(NotifyWaitingForDevice, this, _1));
+    };
 }
 
 void WalletModel::unsubscribeFromCoreSignals()
@@ -573,6 +598,12 @@ void WalletModel::unsubscribeFromCoreSignals()
     wallet->NotifyTransactionChanged.disconnect(boost::bind(NotifyTransactionChanged, this, _1, _2, _3));
     wallet->ShowProgress.disconnect(boost::bind(ShowProgress, this, _1, _2));
     wallet->NotifyWatchonlyChanged.disconnect(boost::bind(NotifyWatchonlyChanged, this, _1));
+
+    if (IsHDWallet(wallet))
+    {
+        CHDWallet *phdw = GetHDWallet(wallet);
+        phdw->NotifyWaitingForDevice.disconnect(boost::bind(NotifyWaitingForDevice, this, _1));
+    };
 }
 
 // WalletModel::UnlockContext implementation

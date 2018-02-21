@@ -16,6 +16,7 @@
 #include <vector>
 
 #include <QObject>
+#include <QMessageBox>
 
 enum OutputType : int;
 
@@ -273,6 +274,8 @@ private:
     void subscribeToCoreSignals();
     void unsubscribeFromCoreSignals();
 
+    QMessageBox mbDevice;
+
 Q_SIGNALS:
     // Signal that balance in wallet changed
     void balanceChanged(const CAmount& balance, const CAmount& staked, const CAmount& blindBalance, const CAmount& anonBalance, const CAmount& unconfirmedBalance, const CAmount& immatureBalance,
@@ -310,7 +313,11 @@ public Q_SLOTS:
     /* Current, immature or unconfirmed balance might have changed - emit 'balanceChanged' if so */
     void pollBalanceChanged();
 
+
     void reserveBalanceChanged(CAmount nReserveBalanceNew);
+
+    // Waiting for hardware device
+    void waitingForDevice(bool fCompleted);
 
 };
 

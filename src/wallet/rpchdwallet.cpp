@@ -4828,6 +4828,7 @@ static UniValue SendToInner(const JSONRPCRequest &request, OutputTypes typeIn, O
         UniValue result(UniValue::VOBJ);
         result.pushKV("fee", ValueFromAmount(nFeeRet));
         result.pushKV("bytes", (int)GetVirtualTransactionSize(*(wtx.tx)));
+        result.pushKV("need_hwdevice", UniValue(coincontrol.fNeedHardwareKey ? true : false));
 
         if (fShowHex)
         {
