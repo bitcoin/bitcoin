@@ -842,7 +842,7 @@
                  <item>
                   <widget class="QLabel" name="labelCustomPerKilobyte">
                    <property name="toolTip">
-                    <string>If the custom fee is set to 1000 chuffs and the transaction is only 250 bytes, then &quot;per kilobyte&quot; only pays 250 chuffs in fee,&lt;br /&gt;while &quot;at least&quot; pays 1000 chuffs. For transactions bigger than a kilobyte both pay by kilobyte.</string>
+                    <string>Specify a custom fee per kB (1,000 bytes) of the transaction's virtual size. Note:  Since the fee is calculated on a per-byte basis, a fee of "100 chuffs per kB" for a transaction size of 500 bytes (half of 1 kB) would ultimately yield a fee of only 50 chuffs.</string>
                    </property>
                    <property name="text">
                     <string>per kilobyte</string>
