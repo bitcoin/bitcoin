@@ -46,6 +46,10 @@ class SignRawTransactionsTest(BitcoinTestFramework):
         rawTxSigned2 = self.nodes[0].signrawtransaction(rawTx, inputs, privKeys)
         assert_equal(rawTxSigned, rawTxSigned2)
 
+        # Try with verbose=false
+        rawTxSigned3 = self.nodes[0].signrawtransactionwithkey(rawTx, privKeys, inputs, None, False)
+        assert_equal(rawTxSigned3, rawTxSigned['hex'])
+
     def script_verification_error_test(self):
         """Create and sign a raw transaction with valid (vin 0), invalid (vin 1) and one missing (vin 2) input script.
 
@@ -143,6 +147,10 @@ class SignRawTransactionsTest(BitcoinTestFramework):
         # Perform same test with signrawtransaction
         rawTxSigned2 = self.nodes[0].signrawtransaction(p2wpkh_raw_tx)
         assert_equal(rawTxSigned, rawTxSigned2)
+
+        # Try with verbose=false
+        rawTxSigned3 = self.nodes[0].signrawtransactionwithwallet(hexstring=p2wpkh_raw_tx, verbose=False)
+        assert_equal(rawTxSigned3, rawTxSigned['hex'])
 
     def run_test(self):
         self.successful_signing_test()
