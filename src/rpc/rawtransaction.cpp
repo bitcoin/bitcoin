@@ -672,7 +672,7 @@ UniValue combinerawtransaction(const JSONRPCRequest& request)
     return EncodeHexTx(mergedTx);
 }
 
-UniValue SignTransaction(CMutableTransaction& mtx, const UniValue& prevTxsUnival, CBasicKeyStore *keystore, bool is_temp_keystore, const UniValue& hashType)
+UniValue SignTransaction(CMutableTransaction& mtx, const UniValue& prevTxsUnival, CBasicKeyStore *keystore, bool is_temp_keystore, const UniValue& hashType, bool verbose_mode)
 {
     // Fetch previous transactions (inputs):
     CCoinsView viewDummy;
@@ -815,6 +815,11 @@ UniValue SignTransaction(CMutableTransaction& mtx, const UniValue& prevTxsUnival
             }
         }
     }
+
+    if (!verbose_mode) {
+        return EncodeHexTx(mtx);
+    }
+
     bool fComplete = vErrors.empty();
 
     UniValue result(UniValue::VOBJ);

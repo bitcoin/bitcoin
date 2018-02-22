@@ -10,6 +10,6 @@ struct CMutableTransaction;
 class UniValue;
 
 /** Sign a transaction with the given keystore and previous transactions */
-UniValue SignTransaction(CMutableTransaction& mtx, const UniValue& prevTxs, CBasicKeyStore *keystore, bool tempKeystore, const UniValue& hashType);
+UniValue SignTransaction(CMutableTransaction& mtx, const UniValue& prevTxs, CBasicKeyStore *keystore, bool tempKeystore, const UniValue& hashType, bool verbose_mode = true);
 
 #endif // BITCOIN_RPC_RAWTRANSACTION_H
