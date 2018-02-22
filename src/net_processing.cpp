@@ -128,6 +128,9 @@ namespace {
     /** Relay map, protected by cs_main. */
     typedef std::map<uint256, CTransactionRef> MapRelay;
     MapRelay mapRelay;
+    typedef std::map<uint256, CInv> MapRelayInv;
+    MapRelayInv mapRelayInv;
+
     /** Expiration-time ordered list of (expire time, relay map entry) pairs, protected by cs_main). */
     std::deque<std::pair<int64_t, MapRelay::iterator>> vRelayExpiration;
 } // anon namespace
@@ -959,6 +962,7 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                 return;
 
             it++;
+            bool pushed = false;
 
             if (inv.type == MSG_BLOCK || inv.type == MSG_FILTERED_BLOCK || inv.type == MSG_CMPCT_BLOCK || inv.type == MSG_WITNESS_BLOCK)
             {
@@ -1058,46 +1062,54 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                     }
                 }
             }
-            else if (inv.IsKnownType())
+            else if (inv.type == MSG_TX || inv.type == MSG_WITNESS_TX)
             {
                 // Send stream from relay memory
-                bool pushed = false;
                 auto mi = mapRelay.find(inv.hash);
                 int nSendFlags = (inv.type == MSG_TX ? SERIALIZE_TRANSACTION_NO_WITNESS : 0);
                 if (mi != mapRelay.end()) {
-                    if (inv.type == MSG_TX || inv.type == MSG_WITNESS_TX) {
-                        connman.PushMessage(pfrom, msgMaker.Make(nSendFlags, NetMsgType::TX, *mi->second));
-                            pushed = true;
+                    connman.PushMessage(pfrom, msgMaker.Make(nSendFlags, NetMsgType::TX, *mi->second));
+                    pushed = true;
+                } else if (pfrom->timeLastMempoolReq) {
+                    auto txinfo = mempool.info(inv.hash);
+                    // To protect privacy, do not answer getdata using the mempool when
+                    // that TX couldn't have been INVed in reply to a MEMPOOL request.
+                    if (txinfo.tx && txinfo.nTime <= pfrom->timeLastMempoolReq) {
+                        connman.PushMessage(pfrom, msgMaker.Make(nSendFlags, NetMsgType::TX, *txinfo.tx));
+                        pushed = true;
                     }
-
-                    if (!pushed && inv.type == MSG_TXLOCK_REQUEST) {
+                }
+            }
+            else if (inv.IsKnownType())
+            {
+                // Send from relay memory
+                auto mi1 = mapRelayInv.find(inv.hash);
+                if (mi1 != mapRelayInv.end()) {
+                    if (inv.type == MSG_TXLOCK_REQUEST) {
                         CTxLockRequest txLockRequest;
                         if(instantsend.GetTxLockRequest(inv.hash, txLockRequest)) {
                             connman.PushMessage(pfrom, CNetMsgMaker(pfrom->GetSendVersion()).Make(NetMsgType::TXLOCKREQUEST, txLockRequest));
                             pushed = true;
                         }
                     }
-
-                    if (!pushed && inv.type == MSG_TXLOCK_VOTE) {
+                    else if (!pushed && inv.type == MSG_TXLOCK_VOTE) {
                         CTxLockVote vote;
                         if(instantsend.GetTxLockVote(inv.hash, vote)) {
                             connman.PushMessage(pfrom, CNetMsgMaker(pfrom->GetSendVersion()).Make(NetMsgType::TXLOCKVOTE, vote));
                             pushed = true;
                         }
                     }
-
-                    if (!pushed && inv.type == MSG_MASTERNODE_PAYMENT_VOTE) {
+                    else if (inv.type == MSG_MASTERNODE_PAYMENT_VOTE) {
                         if(mnpayments.HasVerifiedPaymentVote(inv.hash)) {
                             connman.PushMessage(pfrom, CNetMsgMaker(pfrom->GetSendVersion()).Make(NetMsgType::MASTERNODEPAYMENTVOTE, mnpayments.mapMasternodePaymentVotes[inv.hash]));
                             pushed = true;
                         }
                     }
-
-                    if (!pushed && inv.type == MSG_MASTERNODE_PAYMENT_BLOCK) {
-                        BlockMap::iterator mi = mapBlockIndex.find(inv.hash);
+                    else if (inv.type == MSG_MASTERNODE_PAYMENT_BLOCK) {
+                        BlockMap::iterator mi2 = mapBlockIndex.find(inv.hash);
                         LOCK(cs_mapMasternodeBlocks);
-                        if (mi != mapBlockIndex.end() && mnpayments.mapMasternodeBlocks.count(mi->second->nHeight)) {
-                            for (CMasternodePayee& payee : mnpayments.mapMasternodeBlocks[mi->second->nHeight].vecPayees) {
+                        if (mi2 != mapBlockIndex.end() && mnpayments.mapMasternodeBlocks.count(mi2->second->nHeight)) {
+                            for (CMasternodePayee& payee : mnpayments.mapMasternodeBlocks[mi2->second->nHeight].vecPayees) {
                                 std::vector<uint256> vecVoteHashes = payee.GetVoteHashes();
                                 for (uint256& hash : vecVoteHashes) {
                                     if(mnpayments.HasVerifiedPaymentVote(hash)) {
@@ -1109,7 +1121,7 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                         }
                     }
                     // TODO: pass raw data to netmessagemaker
-                    if (!pushed && inv.type == MSG_MASTERNODE_ANNOUNCE) {
+                    else if (inv.type == MSG_MASTERNODE_ANNOUNCE) {
                         if(mnodeman.mapSeenMasternodeBroadcast.count(inv.hash)){
                             CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                             ss.reserve(1000);
@@ -1118,8 +1130,7 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                             pushed = true;
                         }
                     }
-
-                    if (!pushed && inv.type == MSG_MASTERNODE_PING) {
+                    else if (inv.type == MSG_MASTERNODE_PING) {
                         if(mnodeman.mapSeenMasternodePing.count(inv.hash)) {
                             CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                             ss.reserve(1000);
@@ -1128,16 +1139,14 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                             pushed = true;
                         }
                     }
-
-                    if (!pushed && inv.type == MSG_DSTX) {
+                    else if (inv.type == MSG_DSTX) {
                         CDarksendBroadcastTx dstx = CPrivateSend::GetDSTX(inv.hash);
                         if(dstx) {
                             connman.PushMessage(pfrom, CNetMsgMaker(pfrom->GetSendVersion()).Make(NetMsgType::DSTX, dstx));
                             pushed = true;
                         }
                     }
-
-                    if (!pushed && inv.type == MSG_GOVERNANCE_OBJECT) {
+                    else if (!pushed && inv.type == MSG_GOVERNANCE_OBJECT) {
                         if(governance.HaveObjectForHash(inv.hash)) {
                             CGovernanceObject obj;
                             if(governance.GetObjectForHash(inv.hash, obj)) {
@@ -1148,7 +1157,7 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                         }
                     }
 
-                    if (!pushed && inv.type == MSG_GOVERNANCE_OBJECT_VOTE) {
+                    else if (inv.type == MSG_GOVERNANCE_OBJECT_VOTE) {
                         if(governance.HaveVoteForHash(inv.hash)) {
                             CGovernanceVote vote;
                             if(governance.GetVoteForHash(inv.hash, vote)) {
@@ -1159,20 +1168,11 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                         }
                     }
 
-                    if (!pushed && inv.type == MSG_MASTERNODE_VERIFY) {
+                    else if (inv.type == MSG_MASTERNODE_VERIFY) {
                         if(mnodeman.mapSeenMasternodeVerification.count(inv.hash)) {
                             connman.PushMessage(pfrom, CNetMsgMaker(pfrom->GetSendVersion()).Make(NetMsgType::MNVERIFY, mnodeman.mapSeenMasternodeVerification[inv.hash]));
                             pushed = true;
                         }
-                    }
-                }
-                else if ((inv.type == MSG_TX || inv.type == MSG_WITNESS_TX) && (pfrom->timeLastMempoolReq)) {
-                    auto txinfo = mempool.info(inv.hash);
-                    // To protect privacy, do not answer getdata using the mempool when
-                    // that TX couldn't have been INVed in reply to a MEMPOOL request.
-                    if (txinfo.tx && txinfo.nTime <= pfrom->timeLastMempoolReq) {
-                        connman.PushMessage(pfrom, msgMaker.Make(nSendFlags, NetMsgType::TX, *txinfo.tx));
-                        pushed = true;
                     }
                 }
                 if (!pushed) {
